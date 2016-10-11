@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<title>Kurento Room Demo</title>
+<meta name="author" content="kurento.org">
+<link rel="shortcut icon" href="img/kurento.png" type="image/png" />
+
+<!-- Bower CSS styles -->
+<link type="text/css" rel="stylesheet"
+	href="webjars/jquery-ui/jquery-ui.min.css">
+<link type="text/css" rel="stylesheet"
+	href="webjars/material-design-iconic-font/css/material-design-iconic-font.min.css">
+<link type="text/css" rel="stylesheet"
+	href="webjars/lumx/dist/css/lumx.css">
+
+<!-- Custom CSS styles -->
+<link type="text/css" rel="stylesheet" href="./css/room.css" />
+<link type="text/css" rel="stylesheet" href="./css/googleapis-fonts.css">
+
+<!-- Bower JavaScript dependencies -->
+<script src="webjars/adapter.js/adapter.js"></script>
+<script src="webjars/jquery/dist/jquery.min.js"></script>
+<script src="webjars/jquery-ui/jquery-ui.min.js"></script>
+<script src="webjars/angular/angular.min.js"></script>
+<script src="webjars/angular-clipboard/angular-clipboard.js"></script>
+<script src="webjars/angular-route/angular-route.js"></script>
+<script src="webjars/angular-fullscreen/src/angular-fullscreen.js"></script>
+<script src="webjars/velocity/velocity.js"></script>
+<script src="webjars/moment/min/moment-with-locales.min.js"></script>
+<script src="webjars/lumx/dist/js/lumx.min.js"></script>
+<script src="webjars/EventEmitter.js/EventEmitter.min.js"></script>
+
+<!-- Kurento JavaScript dependencies -->
+<script src="./js/kurento-utils.js"></script>
+<script src="./js/kurento-jsonrpc.js"></script>
+<script src="./js/KurentoRoom.js"></script>
+
+<!-- Custom JavaScript dependencies -->
+<script src="./angular/app.js"></script>
+<script src="./angular/call/callController.js"></script>
+<script src="./angular/login/loginController.js"></script>
+<script src="./angular/services/Participants.js"></script>
+<script src="./angular/services/serviceParticipant.js"></script>
+<script src="./angular/services/serviceRoom.js"></script>
+</head>
+
+<body ng-app="kurento_room">
+	<div ng-view>
+		<!--display the view (login/call) with route system-->
+	</div>
+</body>
+</html>

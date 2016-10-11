@@ -1,0 +1,50 @@
+<html>
+<head>
+<title>Room Example</title>
+
+<meta charset="utf-8">
+<link rel="styleSheet" href="style.css" type="text/css" media="screen">
+
+<script src="./js/adapter.js"></script>
+<script src="./js/jquery-2.1.1.min.js"></script>
+<script src="./js/kurento-utils.js"></script>
+<script src="./js/kurento-jsonrpc.js"></script>
+<script src="./js/console.js"></script>
+<script src="./js/EventEmitter.js"></script>
+<script src="./js/KurentoRoom.js"></script>
+<script src="./js/demo.js"></script>
+<script src="./js/color.js"></script>
+<script src="./js/stats.js"></script>
+
+</head>
+<body>
+	<div id="container">
+		<div id="wrapper">
+			<div id="join" class="animate join">
+				<h1>Join a Room</h1>
+				<form onsubmit="register(); return false;" accept-charset="UTF-8">
+					<p>
+						<input type="text" name="name" value="" id="name"
+							placeholder="Username" required>
+					</p>
+					<p>
+						<input type="text" name="room" value="" id="roomName"
+							placeholder="Room" required>
+					</p>
+					<p class="submit">
+						<input type="submit" name="commit" value="Join!" id="joinBtn">
+					</p>
+				</form>
+			</div>
+			<div id="room" style="display: none;">
+				<h2 id="room-header"></h2>
+				<div id="myVideo"></div>
+				<div id="participants"></div>
+				<input type="button" id="buttonLeaveRoom" onmouseup="leaveRoom();"
+					value="Leave room">
+			</div>
+		</div>
+	</div>
+	<div id="console"></div>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>org.kurento</groupId>
+		<artifactId>kurento-parent-pom</artifactId>
+		<version>6.6.1-SNAPSHOT</version>
+	</parent>
+
+	<groupId>org.openvidu</groupId>
+	<artifactId>openvidu</artifactId>
+	<packaging>pom</packaging>
+
+	<name>Kurento Room</name>
+	<description>
+        Kurento Room modules: sdk, client, server, demo and test
+    </description>
+	<url>http://www.kurento.org/docs/${project.version}</url>
+
+	<licenses>
+		<license>
+			<name>Apache 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<organization>
+		<name>Kurento</name>
+		<url>http://www.kurento.org</url>
+	</organization>
+
+	<scm>
+		<url>${openvidu.scm.url}</url>
+		<connection>scm:git:${openvidu.scm.connection}</connection>
+		<developerConnection>scm:git:${openvidu.scm.connection}</developerConnection>
+		<tag>develop</tag>
+	</scm>
+
+	<developers>
+		<developer>
+			<id>kurento.org</id>
+			<name>-kurento.org Community</name>
+			<organization>Kurento.org</organization>
+			<organizationUrl>http://www.kurento.org</organizationUrl>
+		</developer>
+	</developers>
+
+	<properties>
+		<!-- Kurento versions -->
+		<version.kurento.room>6.6.1-SNAPSHOT</version.kurento.room>
+
+		<version.kurento.jsonrpc.js>5.1.4-SNAPSHOT</version.kurento.jsonrpc.js>
+
+		<maven.compiler.target>1.8</maven.compiler.target>
+		<maven.compiler.source>1.8</maven.compiler.source>
+
+		<openvidu.scm.url>https://github.com/Kurento/openvidu</openvidu.scm.url>
+		<openvidu.scm.connection>git@github.com:Kurento/openvidu.git</openvidu.scm.connection>
+	</properties>
+
+	<profiles>
+		<profile>
+			<id>default</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<modules>
+				<module>openvidu-server</module>
+				<module>openvidu-client</module>
+				<module>openvidu-client-js</module>
+				<module>openvidu-test</module>
+				<module>openvidu-demo</module>
+				<module>openvidu-sampleapp-minimal</module>
+			</modules>
+		</profile>
+		<profile>
+			<id>deploy</id>
+			<modules>
+				<module>openvidu-server</module>
+				<module>openvidu-client</module>
+				<module>openvidu-client-js</module>
+				<module>openvidu-test</module>
+			</modules>
+		</profile>
+		<profile>
+			<id>integration</id>
+			<modules>
+				<module>openvidu-demo</module>
+				<module>openvidu-sampleapp-minimal</module>
+			</modules>
+		</profile>
+	</profiles>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.openvidu</groupId>
+				<artifactId>openvidu-sdk</artifactId>
+				<version>${version.kurento.room}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.openvidu</groupId>
+				<artifactId>openvidu-server</artifactId>
+				<version>${version.kurento.room}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.openvidu</groupId>
+				<artifactId>openvidu-client</artifactId>
+				<version>${version.kurento.room}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.openvidu</groupId>
+				<artifactId>openvidu-client-js</artifactId>
+				<version>${version.kurento.room}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.openvidu</groupId>
+				<artifactId>openvidu-test</artifactId>
+				<version>${version.kurento.room}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.openvidu</groupId>
+				<artifactId>openvidu-demo</artifactId>
+				<version>${version.kurento.room}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.openvidu</groupId>
+				<artifactId>openvidu-basicapp</artifactId>
+				<version>${version.kurento.room}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.kurento</groupId>
+				<artifactId>kurento-jsonrpc-js</artifactId>
+				<version>${version.kurento.jsonrpc.js}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+</project>

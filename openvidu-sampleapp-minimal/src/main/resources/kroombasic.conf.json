@@ -1,0 +1,13 @@
+{
+   "kms": {
+      "uris": [
+         "ws://127.0.0.1:8888/kurento"
+      ]
+   },
+   "kurento": {
+      "client": {
+         //milliseconds
+         "requestTimeout": 20000
+      }
+   }
+}

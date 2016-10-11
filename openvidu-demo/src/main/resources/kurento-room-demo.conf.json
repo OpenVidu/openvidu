@@ -1,0 +1,49 @@
+{
+   "kms": {
+      "uris": ["ws://localhost:8888/kurento", "ws://127.0.0.1:8888/kurento"]
+   },
+   "app": {
+      //has to accessible from the KMS in order to load filter imgs
+      "uri": "https://localhost:8443/"
+   },
+   "kurento": {
+      "client": {
+         //milliseconds
+         "requestTimeout": 20000
+      }
+   },
+   "demo": {
+      //marker or hat
+      "filterType" : "marker",
+
+      //markerdetector img(s) in order of preference
+      "markerUrls": {
+        "0": "kurento-rect-logo.png"
+      },
+
+      //mario-wings.png or wizard.png
+      "hatUrl": "mario-wings.png",
+      "hatCoords": {
+         // mario-wings hat
+         "offsetXPercent": -0.35F,
+         "offsetYPercent": -1.2F,
+         "widthPercent": 1.6F,
+         "heightPercent": 1.6F
+         
+         //wizard hat
+         //"offsetXPercent": -0.2F,
+         //"offsetYPercent": -1.35F,
+         //"widthPercent": 1.5F,
+         //"heightPercent": 1.5F
+      },
+      "loopback" : {
+         "remote": true,
+         //matters only when remote is true
+         "andLocal": false
+      },
+      "authRegex": ".*",
+      "kmsLimit": 1000
+   },
+   "updateSpeakerInterval": 1800,
+   "thresholdSpeaker": -50
+}

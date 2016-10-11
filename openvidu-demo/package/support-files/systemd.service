@@ -1,0 +1,9 @@
+[Unit]
+Description=${project.description}
+
+[Service]
+User=kurento
+ExecStart=/var/lib/kurento/${project.artifactId}.jar run
+
+[Install]
+WantedBy=multi-user.target

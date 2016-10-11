@@ -1,0 +1,50 @@
+<assembly
+	xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0 http://maven.apache.org/xsd/assembly-1.1.0.xsd">
+	<id>bin</id>
+	<formats>
+		<format>zip</format>
+	</formats>
+	<includeBaseDirectory>false</includeBaseDirectory>
+
+	<files>
+		<file>
+			<source>target/${project.artifactId}-${project.version}.jar</source>
+			<outputDirectory>lib</outputDirectory>
+			<destName>${project.artifactId}.jar</destName>
+		</file>
+		<file>
+			<source>package/config/application.conf</source>
+			<outputDirectory></outputDirectory>
+			<destName>config/${project.artifactId}.conf</destName>
+			<filtered>true</filtered>
+		</file>
+		<file>
+			<source>package/config/application.properties</source>
+			<outputDirectory></outputDirectory>
+			<destName>config/${project.artifactId}.properties</destName>
+			<filtered>true</filtered>
+		</file>
+		<file>
+			<source>package/support-files/keystore.jks</source>
+			<outputDirectory></outputDirectory>
+			<destName>support-files/keystore.jks</destName>
+			<filtered>false</filtered>
+		</file>
+	</files>
+
+	<fileSets>
+		<fileSet>
+			<directory>package</directory>
+			<outputDirectory></outputDirectory>
+			<excludes>
+				<exclude>config/application.conf</exclude>
+				<exclude>config/application.properties</exclude>
+				<exclude>support-files/keystore.jks</exclude>
+			</excludes>
+			<filtered>true</filtered>
+		</fileSet>
+	</fileSets>
+</assembly>
+

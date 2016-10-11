@@ -1,0 +1,74 @@
+
+<div class="join">
+    <div id="join-title">Kurento Room</div>
+
+    <div class="card" id="join">
+        <form role="form" ng-submit="register(room)" accept-charset="UTF-8">
+
+            <div class="card__content">
+                <lx-text-field label="Username" error="!nameValidation(room.userName)">
+                    <input type="text" id="name" ng-model="room.userName" required>
+                </lx-text-field>
+
+                <span class="text-field-error" ng-if="!nameValidation(room.userName)">Invalid, please use:
+                    <em>a-zA-Z0-9</em></span>
+
+                <div class="grid">
+
+                    <div ng-class="roomPickerClass">
+                        <lx-text-field label="{{roomPickerLabel}}" error="!nameValidation(room.roomName)">
+                            <input type="text" id="roomName" ng-model="room.roomName" required
+                                ng-change="nameValidation(room.roomName) && updateRoomUrl(room.roomName)"
+                                ng-disabled="existingRoomName">
+                        </lx-text-field>
+
+                        <span class="text-field-error" ng-if="!nameValidation(room.roomName)">Allowed chars:
+                            <em>a-zA-Z0-9</em></span>
+                    </div>
+
+                    <div class="grid__col6" ng-if="!existingRoomName">
+                        <lx-select ng-model="room.roomName" placeholder="Current rooms" choices="listRooms" floating-label>
+                            <lx-select-selected>
+                                {{ $selected }}
+                            </lx-select-selected>
+
+                            <lx-select-choices>
+                                {{ $choice }}
+                            </lx-select-choices>
+                        </lx-select>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="card__actions">
+                <div class="grid">
+                    <div class="grid__col6">
+                        <button class="btn btn--l btn--blue btn--raised" lx-ripple type="button" ng-click="clear()" title="Clear fields">Clear</button>
+                    </div>
+                    <div class="grid__col6">
+                        <button id="joinBtn" class="btn btn--l btn--green btn--raised" lx-ripple type="submit" ng-disabled="!nameValidation(room.userName) || !nameValidation(room.roomName) || joinInProcess">Join room!</button>
+                    </div>
+                </div>
+                <br>
+            </div>
+
+        </form>
+    </div>
+
+    <div class="card bgc-grey-600 roomUrl" ng-if="!existingRoomName">
+        <div class="card__content">
+            <lx-text-field label="Share this URL for direct room access" theme="dark">
+                <input type="text" id="roomUrlId" ng-model="roomUrl" ng-disabled="true">
+            </lx-text-field>
+        </div>
+
+        <div class="card__actions">
+            <button class="btn btn--l btn--grey btn--raised" lx-ripple type="button" clipboard
+                text="roomUrl" ng-disabled="!nameValidation(room.roomName)">Copy to clipboard</button>
+        </div>
+    </div>
+
+</div>
+

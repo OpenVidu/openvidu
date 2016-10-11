@@ -1,0 +1,240 @@
+html, body {
+    height: 100%;
+}
+
+#buttonActions>button{
+    font-size: 1.9rem;
+}
+
+#room{
+    height: 100%;
+}
+
+* {
+    margin: 0px;
+    padding: 0px;
+    overflow: hidden
+}
+
+body {
+    font-family: 'Open Sans', sans-serif;
+}
+
+.roomUrl {
+	margin: 40px auto 30px;
+}
+
+#main-video {
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+}
+
+#main-video>video {
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+}
+
+#main-video video {
+    object-fit: contain;
+}
+
+video {
+    width: 100%;
+}
+
+#content {
+    background-color: black;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    right: 70%;
+    height: 100%;
+    width: 100%;
+}
+
+#participants {
+    position: absolute;
+    bottom: 0px;
+    right: 0px;
+    box-sizing: border-box;
+    width: 100%;
+    float: right;
+    margin: 1em;
+}
+
+.name {
+    position: absolute;
+    top: 0px;
+    bottom: 0px;
+    left: 0px;
+    z-index: 99;
+    background-color: transparent;
+    margin: 0.5em;
+    text-shadow: 0px 0px 10px #000000;
+}
+
+.active-video {
+    border: 2px solid white;
+}
+
+.active-audio {
+    border: 2px solid blue;
+}
+
+.blinking {
+
+  animation-name: blinking;
+  animation-duration: 2s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+
+  -webkit-animation-name: blinking;
+  -webkit-animation-duration: 2s;
+  -webkit-animation-timing-function: linear;
+  -webkit-animation-iteration-count: infinite;
+}
+
+@-moz-keyframes blinking{
+  0% { opacity: 1.0; }
+  50% { opacity: 0.0; }
+  100% { opacity: 1.0; }
+}
+
+@-webkit-keyframes blinking {
+  0% { opacity: 1.0; }
+  50% { opacity: 0.0; }
+   100% { opacity: 1.0; }
+}
+
+@keyframes blinking {
+  0% { opacity: 1.0; }
+   50% { opacity: 0.0; }
+  100% { opacity: 1.0; }
+}
+
+.video {
+    width: 23%;
+    /* whatever width you want */
+    position: relative;
+    float: right;
+    display: block;
+}
+
+.video:after {
+    padding-top: 56.25%;
+    /* 16:9 ratio */
+    display: block;
+    content: '';
+}
+
+.video>div {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    width: 100%;
+    /* fill parent */
+    background-color: #000000;
+    /* let's see it! */
+    color: white;
+    display: flex;
+    justify-content: center;
+    /* align horizontal */
+    align-items: center;
+}
+
+#logo {
+    position: absolute;
+    display: inline;
+    left: 0px;
+    top: 0px;
+    margin: 1em;
+}
+
+#room-name {
+    display: inline;
+    width: 100%;
+    position: absolute;
+    margin: auto;
+    background-color: transparent;
+    margin: 0.5em;
+    text-shadow: 0px 0px 10px #000000;
+    text-align: center;
+    color: white;
+    font-weight: bold;
+    font-size: 2em;
+}
+
+.join {
+    position: relative;
+    margin: auto;
+    width: 500px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+#join-title {
+    display: inline-flex;
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #555;
+    padding-left: 70px;
+    padding-bottom: 35px;
+    padding-top: 35px;
+    background-image: url("../img/kurento.png");
+    background-repeat: no-repeat;
+    background-position: left;
+    margin: auto 0 auto 0;
+}
+
+/*.join p {
+    margin: 20px 0 0;
+}
+
+.join p:first-child {
+    margin-top: 0;
+}
+
+.join input[type=text], .join input[type=password] {
+    width: 278px;
+}
+
+.join p.submit {
+    text-align: center;
+}*/
+
+:-moz-placeholder {
+    color: #c9c9c9 !important;
+    font-size: 13px;
+}
+
+::-webkit-input-placeholder {
+    color: #ccc;
+    font-size: 13px;
+}
+
+/*chat effect*/
+
+#effect {
+    position: relative;
+    padding: 0.4em;
+}
+
+.card__content {
+    padding: 16px;
+}
+
+.card__actions {
+	border-top-width: 0px;
+}
