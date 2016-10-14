@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2016 Kurento (http://kurento.org/)
+ * (C) Copyright 2016 OpenVidu (http://openVidu.org/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -362,7 +362,7 @@ function Participants() {
     };
     
     function relogin($window, contextPath) {
-        //TODO call leaveRoom() in kurento
+        //TODO call leaveRoom() in openVidu
         contextPath = contextPath || '/';
         $window.location.href = contextPath; //'#/login';
     }

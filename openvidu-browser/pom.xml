@@ -8,12 +8,12 @@
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>openvidu-client</artifactId>
+	<artifactId>openvidu-browser</artifactId>
 	<packaging>jar</packaging>
 
-	<name>Kurento Room Client</name>
+	<name>Kurento Room Client JS</name>
 	<description>
-        Kurento Room library for the client-side of Kurento Room Server
+        Kurento Room JS library for the client-side
     </description>
 	<url>http://www.kurento.org/docs/${project.version}</url>
 
@@ -46,28 +46,43 @@
 		</developer>
 	</developers>
 
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<configuration>
+					<mainClass>${start-class}</mainClass>
+				</configuration>
+			</plugin>
+		</plugins>
+
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>false</filtering>
+			</resource>
+		</resources>
+	</build>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.kurento</groupId>
-			<artifactId>kurento-jsonrpc-client</artifactId>
+			<artifactId>kurento-utils-js</artifactId>
 		</dependency>
-		<!--  <dependency>
-			<groupId>org.openvidu</groupId>
-			<artifactId>openvidu-server</artifactId>
-		</dependency>-->
 		<dependency>
 			<groupId>org.kurento</groupId>
-			<artifactId>kurento-jsonrpc-client-jetty</artifactId>
+			<artifactId>kurento-jsonrpc-js</artifactId>
 		</dependency>
+		
 		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<scope>test</scope>
+			<groupId>org.webjars.bower</groupId>
+			<artifactId>adapter.js</artifactId>
 		</dependency>
+		
 		<dependency>
-			<groupId>org.mockito</groupId>
-			<artifactId>mockito-core</artifactId>
-			<scope>test</scope>
+			<groupId>org.webjars.bower</groupId>
+			<artifactId>EventEmitter.js</artifactId>
 		</dependency>
 	</dependencies>
 

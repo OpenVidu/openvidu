@@ -3,17 +3,17 @@
  * @author Raquel Díaz González
  */
 
-kurento_room.controller('callController', function ($scope, $window, ServiceParticipant, ServiceRoom, Fullscreen, LxNotificationService) {
+openVidu_room.controller('callController', function ($scope, $window, ServiceParticipant, ServiceRoom, Fullscreen, LxNotificationService) {
 
     $scope.roomName = ServiceRoom.getRoomName();
     $scope.userName = ServiceRoom.getUserName();
     $scope.participants = ServiceParticipant.getParticipants();
-    $scope.kurento = ServiceRoom.getKurento();
+    $scope.openVidu = ServiceRoom.getOpenVidu();
     $scope.filter = ServiceRoom.getFilterRequestParam();
 
     $scope.leaveRoom = function () {
 
-        ServiceRoom.closeKurento();
+        ServiceRoom.closeOpenVidu();
 
         ServiceParticipant.removeParticipants();
 
@@ -24,14 +24,14 @@ kurento_room.controller('callController', function ($scope, $window, ServicePart
     window.onbeforeunload = function () {
         //not necessary if not connected
         if (ServiceParticipant.isConnected()) {
-            ServiceRoom.closeKurento();
+            ServiceRoom.closeOpenVidu();
         }
     };
 
     $scope.$on("$locationChangeStart", function () {
         console.log("Changed location to: " + document.location);
         if (ServiceParticipant.isConnected()) {
-            ServiceRoom.closeKurento();
+            ServiceRoom.closeOpenVidu();
             ServiceParticipant.removeParticipants();
         }
     });
@@ -97,7 +97,7 @@ kurento_room.controller('callController', function ($scope, $window, ServicePart
             return false;
         }
         ServiceParticipant.disconnectParticipant(participant);
-        ServiceRoom.getKurento().disconnectParticipant(participant.getStream());
+        ServiceRoom.getOpenVidu().disconnectParticipant(participant.getStream());
     }
 
     //chat
@@ -105,8 +105,8 @@ kurento_room.controller('callController', function ($scope, $window, ServicePart
 
     $scope.sendMessage = function () {
         console.log("Sending message", $scope.message);
-        var kurento = ServiceRoom.getKurento();
-        kurento.sendMessage($scope.roomName, $scope.userName, $scope.message);
+        var openVidu = ServiceRoom.getOpenVidu();
+        openVidu.sendMessage($scope.roomName, $scope.userName, $scope.message);
         $scope.message = "";
     };
 
@@ -160,7 +160,7 @@ kurento_room.controller('callController', function ($scope, $window, ServicePart
             }
         }
 
-        ServiceRoom.getKurento().sendCustomRequest(reqParams, function (error, response) {
+        ServiceRoom.getOpenVidu().sendCustomRequest(reqParams, function (error, response) {
             if (error) {
                 console.error("Unable to toggle filter, currently " +
                     $scope.filterState, error);

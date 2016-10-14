@@ -10,6 +10,7 @@
 
 	<groupId>org.openvidu</groupId>
 	<artifactId>openvidu</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>Kurento Room</name>
@@ -49,7 +50,7 @@
 
 	<properties>
 		<!-- Kurento versions -->
-		<version.kurento.room>6.6.1-SNAPSHOT</version.kurento.room>
+		<version.openvidu>0.0.1-SNAPSHOT</version.openvidu>
 
 		<version.kurento.jsonrpc.js>5.1.4-SNAPSHOT</version.kurento.jsonrpc.js>
 
@@ -69,10 +70,10 @@
 			<modules>
 				<module>openvidu-server</module>
 				<module>openvidu-client</module>
-				<module>openvidu-client-js</module>
+				<module>openvidu-browser</module>
 				<module>openvidu-test</module>
 				<module>openvidu-demo</module>
-				<module>openvidu-sampleapp-minimal</module>
+				<module>openvidu-testapp</module>
 			</modules>
 		</profile>
 		<profile>
@@ -98,37 +99,37 @@
 			<dependency>
 				<groupId>org.openvidu</groupId>
 				<artifactId>openvidu-sdk</artifactId>
-				<version>${version.kurento.room}</version>
+				<version>${version.openvidu}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.openvidu</groupId>
 				<artifactId>openvidu-server</artifactId>
-				<version>${version.kurento.room}</version>
+				<version>${version.openvidu}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.openvidu</groupId>
 				<artifactId>openvidu-client</artifactId>
-				<version>${version.kurento.room}</version>
+				<version>${version.openvidu}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.openvidu</groupId>
-				<artifactId>openvidu-client-js</artifactId>
-				<version>${version.kurento.room}</version>
+				<artifactId>openvidu-browser</artifactId>
+				<version>${version.openvidu}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.openvidu</groupId>
 				<artifactId>openvidu-test</artifactId>
-				<version>${version.kurento.room}</version>
+				<version>${version.openvidu}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.openvidu</groupId>
 				<artifactId>openvidu-demo</artifactId>
-				<version>${version.kurento.room}</version>
+				<version>${version.openvidu}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.openvidu</groupId>
 				<artifactId>openvidu-basicapp</artifactId>
-				<version>${version.kurento.room}</version>
+				<version>${version.openvidu}</version>
 			</dependency>
 
 			<dependency>

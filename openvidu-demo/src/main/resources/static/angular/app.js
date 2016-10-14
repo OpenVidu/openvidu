@@ -1,6 +1,6 @@
-var kurento_room = angular.module('kurento_room', ['ngRoute', 'FBAngular', 'lumx', 'angular-clipboard']);
+var openVidu_room = angular.module('openVidu_room', ['ngRoute', 'FBAngular', 'lumx', 'angular-clipboard']);
 
-kurento_room.config(['$routeProvider', function ($routeProvider) {
+openVidu_room.config(['$routeProvider', function ($routeProvider) {
    $routeProvider
         .when('/', {
             templateUrl: 'angular/login/login.html',

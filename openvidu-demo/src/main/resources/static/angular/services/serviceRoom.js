@@ -2,24 +2,24 @@
  * @author Raquel Díaz González
  */
 
-kurento_room.service('ServiceRoom', function () {
+openVidu_room.service('ServiceRoom', function () {
 
-    var kurento;
+    var openVidu;
     var roomName;
     var userName;
     var localStream;
     var filterRequestParam;
 
-    this.getKurento = function () {
-        return kurento;
+    this.getOpenVidu = function () {
+        return openVidu;
     };
 
     this.getRoomName = function () {
         return roomName;
     };
 
-    this.setKurento = function (value) {
-        kurento = value;
+    this.setOpenVidu = function (value) {
+        openVidu = value;
     };
 
     this.setRoomName = function (value) {
@@ -42,11 +42,11 @@ kurento_room.service('ServiceRoom', function () {
         userName = value;
     };
 
-    this.closeKurento = function () {
-       if (kurento && kurento instanceof KurentoRoom) {
-           kurento.close();
+    this.closeOpenVidu = function () {
+       if (openVidu && openVidu instanceof OpenVidu) {
+           openVidu.close();
        } else {
-           console.log('KurentoRoom instance is not set');
+           console.log('OpenVidu instance is not set');
        }
     };
 

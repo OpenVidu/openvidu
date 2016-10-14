@@ -6,13 +6,16 @@
 		<groupId>org.openvidu</groupId>
 		<artifactId>openvidu</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
+		<relativePath>../</relativePath>
 	</parent>
 	
-	<artifactId>openvidu-demo</artifactId>
+	<artifactId>openvidu-testapp</artifactId>
 	<packaging>jar</packaging>
 
-	<name>Kurento Room Demo</name>
-	<description>Kurento Room Demo application</description>
+	<name>OpenVidu Sample App "Minimal"</name>
+	<description>
+			This project contains a minimal sample app using OpenVidu platorm.
+	</description>
 	<url>http://www.kurento.org/docs/${project.version}</url>
 
 	<licenses>
@@ -46,86 +49,10 @@
 
 	<properties>
 		<!-- Main class -->
-		<start-class>org.openvidu.room.demo.KurentoRoomDemoApp</start-class>
+		<start-class>org.openvidu.room.basic.KurentoRoomBasicApp</start-class>
 	</properties>
 
-	<dependencies>
-		<dependency>
-			<groupId>org.openvidu</groupId>
-			<artifactId>openvidu-server</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>org.springframework.boot</groupId>
-					<artifactId>spring-boot-starter-logging</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>org.openvidu</groupId>
-			<artifactId>openvidu-browser</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.openvidu</groupId>
-			<artifactId>openvidu-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.kurento.module</groupId>
-			<artifactId>markerdetector</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-log4j2</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>org.webjars</groupId>
-			<artifactId>webjars-locator</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.webjars.bower</groupId>
-			<artifactId>jquery</artifactId>
-			<version>2.2.4</version>
-		</dependency>
-		<dependency>
-			<groupId>org.webjars</groupId>
-			<artifactId>jquery-ui</artifactId>
-			<version>1.11.4</version>
-		</dependency>
-		<dependency>
-			<groupId>org.webjars.bower</groupId>
-			<artifactId>angular</artifactId>
-			<version>1.5.7</version>
-		</dependency>
-		<dependency>
-			<groupId>org.webjars.bower</groupId>
-			<artifactId>angular-route</artifactId>
-			<version>1.5.7</version>
-		</dependency>
-		<dependency>
-			<groupId>org.webjars.bower</groupId>
-			<artifactId>angular-fullscreen</artifactId>
-			<version>1.0.1</version>
-		</dependency>
-		<dependency>
-			<groupId>org.webjars.bower</groupId>
-			<artifactId>material-design-iconic-font</artifactId>
-			<version>1.1.1</version>
-		</dependency>
-		<dependency>
-			<groupId>org.webjars.bower</groupId>
-			<artifactId>lumx</artifactId>
-			<version>0.2.50</version>
-		</dependency>
-		<dependency>
-			<groupId>org.webjars.bower</groupId>
-			<artifactId>angular-clipboard</artifactId>
-			<version>1.4.2</version>
-		</dependency>
-	</dependencies>
-
 	<build>
-		<!-- Filtering resources (${label}) -->
 		<resources>
 			<resource>
 				<directory>src/main/resources</directory>
@@ -147,7 +74,6 @@
 				<configuration>
 					<mainClass>${start-class}</mainClass>
 					<layout>ZIP</layout>
-					<executable>true</executable>
 				</configuration>
 				<executions>
 					<execution>
@@ -157,16 +83,21 @@
 					</execution>
 				</executions>
 			</plugin>
-
-			<!-- Call to bower install when compiling -->
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>exec-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>java</id>
+						<goals>
+							<goal>java</goal>
+						</goals>
+					</execution>
+				</executions>
 				<configuration>
 					<mainClass>${start-class}</mainClass>
 				</configuration>
 			</plugin>
-
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
@@ -201,7 +132,94 @@
 				</executions>
 			</plugin>
 		</plugins>
+
+		<pluginManagement>
+			<plugins>
+				<!--This plugin's configuration is used to store Eclipse m2e settings
+					only. It has no influence on the Maven build itself. -->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>
+											org.codehaus.mojo
+										</groupId>
+										<artifactId>
+											exec-maven-plugin
+										</artifactId>
+										<versionRange>
+											[1.0.0,)
+										</versionRange>
+										<goals>
+											<goal>exec</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore />
+									</action>
+								</pluginExecution>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>
+											org.apache.maven.plugins
+										</groupId>
+										<artifactId>
+											maven-dependency-plugin
+										</artifactId>
+										<versionRange>
+											[2.8,)
+										</versionRange>
+										<goals>
+											<goal>unpack</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore />
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 	</build>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.openvidu</groupId>
+			<artifactId>openvidu-server</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-logging</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.openvidu</groupId>
+			<artifactId>openvidu-browser</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-log4j2</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.openvidu</groupId>
+			<artifactId>openvidu-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.webjars.bower</groupId>
+			<artifactId>system.js</artifactId>
+			<version>0.19.17</version>
+		</dependency>
+	</dependencies>
 
 	<profiles>
 		<profile>

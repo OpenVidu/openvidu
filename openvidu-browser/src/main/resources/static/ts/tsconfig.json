@@ -1,0 +1,27 @@
+{
+	"compilerOptions": {
+		"target": "es5",
+		"module": "system",
+		//"noImplicitAny": true,
+		"noImplicitThis": true,
+		//"noUnusedLocals": true,
+		//"noUnusedParameters": true,
+		"skipDefaultLibCheck": true,
+		"skipLibCheck": true,
+		"suppressExcessPropertyErrors": true,
+		"suppressImplicitAnyIndexErrors": true,
+		//"allowUnusedLabels": true,
+		"noImplicitReturns": true,
+		"noFallthroughCasesInSwitch": true,
+		//"allowUnreachableCode": true,
+		"forceConsistentCasingInFileNames": true,
+		"allowSyntheticDefaultImports": true,
+		"strictNullChecks": true,
+		"outFile": "../ts_js/OpenVidu.js",				
+		"emitBOM": false,
+		"preserveConstEnums": true,
+		"sourceMap": true
+	},
+	//"buildOnSave": true,
+	"compileOnSave":true
+}
