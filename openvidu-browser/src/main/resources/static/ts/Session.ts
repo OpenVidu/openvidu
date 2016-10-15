@@ -4,37 +4,43 @@ import { Participant, ParticipantOptions } from './Participant';
 
 declare let EventEmitter;
 
-export interface RoomOptions {
-    room: string;
-    user: string;
-    subscribeToStreams: boolean;
-    updateSpeakerInterval: number;
-    thresholdSpeaker: number;
+export interface SessionOptions {
+    sessionId: string;
+    participantId: string;
+    subscribeToStreams?: boolean;
+    updateSpeakerInterval?: number;
+    thresholdSpeaker?: number;
 }
 
-export class Room {
+export class Session {
 
-    private name: string;
+    private id: string;
     private ee = new EventEmitter();
     private streams = {};
     private participants = {};
     private participantsSpeaking: Participant[] = [];
     private connected = false;
-    private localParticipant;
+    private localParticipant: Participant;
     private subscribeToStreams: boolean;
     private updateSpeakerInterval: number;
     public thresholdSpeaker: number;
+    private options: SessionOptions
 
-    constructor( private openVidu: OpenVidu, private options: RoomOptions ) {
+    constructor( private openVidu: OpenVidu ) {
+        this.localParticipant = new Participant( this.openVidu, true, this );
+    }
 
-        this.name = options.room;
+    configure( options: SessionOptions ) {
+
+        this.options = options;
+        this.id = options.sessionId;
         this.subscribeToStreams = options.subscribeToStreams || true;
         this.updateSpeakerInterval = options.updateSpeakerInterval || 1500;
         this.thresholdSpeaker = options.thresholdSpeaker || -50;
-
+        this.localParticipant.setId( options.participantId );
         this.activateUpdateMainSpeaker();
-        this.localParticipant = new Participant(openVidu, true, this, { id: options.user });
-        this.participants[options.user] = this.localParticipant;
+
+        this.participants[options.participantId] = this.localParticipant;
     }
 
     private activateUpdateMainSpeaker() {
@@ -63,8 +69,8 @@ export class Room {
     connect() {
 
         let joinParams = {
-            user: this.options.user,
-            room: this.options.room,
+            user: this.options.participantId,
+            room: this.options.sessionId,
             dataChannels: false
         }
 
@@ -101,7 +107,7 @@ export class Room {
                     let participant = new Participant( this.openVidu, false, this,
                         exParticipants[i] );
 
-                    this.participants[participant.getID()] = participant;
+                    this.participants[participant.getId()] = participant;
 
                     roomEvent.participants.push( participant );
 
@@ -115,6 +121,12 @@ export class Room {
                 }
 
                 this.ee.emitEvent( 'room-connected', [roomEvent] );
+
+                if ( this.subscribeToStreams ) {
+                    for ( let stream of roomEvent.streams ) {
+                        this.ee.emitEvent( 'stream-added', [{ stream }] );
+                    }
+                }
             }
         });
     }
@@ -128,7 +140,7 @@ export class Room {
 
         let participant = new Participant( this.openVidu, false, this, options );
 
-        let pid = participant.getID();
+        let pid = participant.getId();
         if ( !( pid in this.participants ) ) {
             console.info( "Publisher not found in participants list by its id", pid );
         } else {
@@ -137,9 +149,7 @@ export class Room {
         //replacing old participant (this one has streams)
         this.participants[pid] = participant;
 
-        this.ee.emitEvent( 'participant-published', [{
-            participant: participant
-        }] );
+        this.ee.emitEvent( 'participant-published', [{ participant }] );
 
         let streams = participant.getStreams();
         for ( let key in streams ) {
@@ -147,9 +157,7 @@ export class Room {
 
             if ( this.subscribeToStreams ) {
                 stream.subscribe();
-                this.ee.emitEvent( 'stream-added', [{
-                    stream: stream
-                }] );
+                this.ee.emitEvent( 'stream-added', [{ stream }] );
             }
         }
     }
@@ -158,7 +166,7 @@ export class Room {
 
         let participant = new Participant( this.openVidu, false, this, msg );
 
-        let pid = participant.getID();
+        let pid = participant.getId();
         if ( !( pid in this.participants ) ) {
             console.log( "New participant to participants list with id", pid );
             this.participants[pid] = participant;
@@ -274,10 +282,10 @@ export class Room {
             return;
         }
 
-        console.log( 'Lost connection in room ' + this.name );
-        let room = this.name;
+        console.log( 'Lost connection in room ' + this.id );
+        let room = this.id;
         if ( room !== undefined ) {
-            this.ee.emitEvent( 'lost-connection', [{room}] );
+            this.ee.emitEvent( 'lost-connection', [{ room }] );
         } else {
             console.error( 'Room undefined when lost connection' );
         }
@@ -324,7 +332,7 @@ export class Room {
         }
     }
 
-    disconnect( stream ) {
+    disconnect( stream: Stream ) {
 
         let participant = stream.getParticipant();
         if ( !participant ) {
@@ -332,12 +340,12 @@ export class Room {
             return;
         }
 
-        delete this.participants[participant.getID()];
+        delete this.participants[participant.getId()];
         participant.dispose();
 
         if ( participant === this.localParticipant ) {
-            
-            console.log( "Unpublishing my media (I'm " + participant.getID() + ")" );
+
+            console.log( "Unpublishing my media (I'm " + participant.getId() + ")" );
             delete this.localParticipant;
             this.openVidu.sendRequest( 'unpublishVideo', function( error, response ) {
                 if ( error ) {
@@ -349,15 +357,15 @@ export class Room {
 
         } else {
 
-            console.log( "Unsubscribing from " + stream.getGlobalID() );
+            console.log( "Unsubscribing from " + stream.getId() );
             this.openVidu.sendRequest( 'unsubscribeFromVideo', {
-                sender: stream.getGlobalID()
+                sender: stream.getId()
             },
                 function( error, response ) {
                     if ( error ) {
                         console.error( error );
                     } else {
-                        console.info( "Unsubscribed correctly from " + stream.getGlobalID() );
+                        console.info( "Unsubscribed correctly from " + stream.getId() );
                     }
                 });
         }

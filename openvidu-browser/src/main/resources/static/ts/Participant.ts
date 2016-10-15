@@ -1,7 +1,7 @@
 // Participant --------------------------------
 import { Stream, StreamOptions } from './Stream';
 import { OpenVidu } from './OpenVidu';
-import { Room } from './Room';
+import { Session } from './Session';
 
 type ObjMap<T> = { [s: string]: T; }
 
@@ -16,43 +16,44 @@ export class Participant {
     private streams: ObjMap<Stream> = {};
     private streamsOpts: StreamOptions[] = [];
 
-    constructor( private openVidu: OpenVidu, private local: boolean, private room: Room, private options: ParticipantOptions ) {
+    constructor( private openVidu: OpenVidu, private local: boolean, private room: Session, private options?: ParticipantOptions ) {
 
-        this.id = options.id;
+        if ( options ) {
 
-        if ( options.streams ) {
+            this.id = options.id;
 
-            for ( let streamOptions of options.streams ) {
+            if ( options.streams ) {
 
-                let streamOpts = {
-                    id: streamOptions.id,
-                    participant: this,
-                    recvVideo: ( streamOptions.recvVideo == undefined ? true : streamOptions.recvVideo ),
-                    recvAudio: ( streamOptions.recvAudio == undefined ? true : streamOptions.recvAudio ),
-                    audio: streamOptions.audio,
-                    video: streamOptions.video,
-                    data: streamOptions.data
+                for ( let streamOptions of options.streams ) {
+
+                    let streamOpts = {
+                        id: streamOptions.id,
+                        participant: this,
+                        recvVideo: ( streamOptions.recvVideo == undefined ? true : streamOptions.recvVideo ),
+                        recvAudio: ( streamOptions.recvAudio == undefined ? true : streamOptions.recvAudio ),
+                        audio: streamOptions.audio,
+                        video: streamOptions.video,
+                        data: streamOptions.data
+                    }
+                    let stream = new Stream( openVidu, false, room, streamOpts );
+
+                    this.addStream( stream );
+                    this.streamsOpts.push( streamOpts );
                 }
-                let stream = new Stream( openVidu, false, room, streamOpts );
-
-                this.addStream( stream );
-                this.streamsOpts.push( streamOpts );
             }
         }
-
+        
         console.log( "New " + ( local ? "local " : "remote " ) + "participant " + this.id
             + ", streams opts: ", this.streamsOpts );
-
-
     }
 
     setId( newId ) {
         this.id = newId;
     }
 
-    addStream( stream ) {
-        this.streams[stream.getID()] = stream;
-        this.room.getStreams()[stream.getID()] = stream;
+    addStream( stream: Stream ) {
+        this.streams[stream.getIdInParticipant()] = stream;
+        this.room.getStreams()[stream.getIdInParticipant()] = stream;
     }
 
     getStreams() {
@@ -65,17 +66,17 @@ export class Participant {
         }
     }
 
-    getID() {
+    getId() {
         return this.id;
     }
 
     sendIceCandidate( candidate ) {
 
         console.debug(( this.local ? "Local" : "Remote" ), "candidate for",
-            this.getID(), JSON.stringify( candidate ) );
-        
+            this.getId(), JSON.stringify( candidate ) );
+
         this.openVidu.sendRequest( "onIceCandidate", {
-            endpointName: this.getID(),
+            endpointName: this.getId(),
             candidate: candidate.candidate,
             sdpMid: candidate.sdpMid,
             sdpMLineIndex: candidate.sdpMLineIndex

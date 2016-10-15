@@ -14,15 +14,15 @@
  * limitations under the License.
  *
  */
-System.register("OpenVidu", ["Room", "Stream"], function(exports_1, context_1) {
+System.register("OpenVidu", ["Session", "Stream"], function(exports_1, context_1) {
     "use strict";
     var __moduleName = context_1 && context_1.id;
-    var Room_1, Stream_1;
+    var Session_1, Stream_1;
     var OpenVidu;
     return {
         setters:[
-            function (Room_1_1) {
-                Room_1 = Room_1_1;
+            function (Session_1_1) {
+                Session_1 = Session_1_1;
             },
             function (Stream_1_1) {
                 Stream_1 = Stream_1_1;
@@ -31,9 +31,14 @@ System.register("OpenVidu", ["Room", "Stream"], function(exports_1, context_1) {
             OpenVidu = (function () {
                 function OpenVidu(wsUri) {
                     this.wsUri = wsUri;
+                    if (this.wsUri.charAt(wsUri.length - 1) != '/') {
+                        this.wsUri = '/';
+                    }
+                    this.wsUri += 'room';
+                    this.session = new Session_1.Session(this);
                 }
                 OpenVidu.prototype.getRoom = function () {
-                    return this.room;
+                    return this.session;
                 };
                 OpenVidu.prototype.connect = function (callback) {
                     this.callback = callback;
@@ -69,7 +74,7 @@ System.register("OpenVidu", ["Room", "Stream"], function(exports_1, context_1) {
                 };
                 OpenVidu.prototype.customNotification = function (params) {
                     if (this.isRoomAvailable()) {
-                        this.room.emitEvent("custom-message-received", [{ params: params }]);
+                        this.session.emitEvent("custom-message-received", [{ params: params }]);
                     }
                 };
                 OpenVidu.prototype.connectCallback = function (error) {
@@ -81,7 +86,7 @@ System.register("OpenVidu", ["Room", "Stream"], function(exports_1, context_1) {
                     }
                 };
                 OpenVidu.prototype.isRoomAvailable = function () {
-                    if (this.room !== undefined && this.room instanceof Room_1.Room) {
+                    if (this.session !== undefined && this.session instanceof Session_1.Session) {
                         return true;
                     }
                     else {
@@ -92,7 +97,7 @@ System.register("OpenVidu", ["Room", "Stream"], function(exports_1, context_1) {
                 OpenVidu.prototype.disconnectCallback = function () {
                     console.log('Websocket connection lost');
                     if (this.isRoomAvailable()) {
-                        this.room.onLostConnection();
+                        this.session.onLostConnection();
                     }
                     else {
                         alert('Connection error. Please reload page.');
@@ -101,7 +106,7 @@ System.register("OpenVidu", ["Room", "Stream"], function(exports_1, context_1) {
                 OpenVidu.prototype.reconnectingCallback = function () {
                     console.log('Websocket connection lost (reconnecting)');
                     if (this.isRoomAvailable()) {
-                        this.room.onLostConnection();
+                        this.session.onLostConnection();
                     }
                     else {
                         alert('Connection error. Please reload page.');
@@ -112,42 +117,42 @@ System.register("OpenVidu", ["Room", "Stream"], function(exports_1, context_1) {
                 };
                 OpenVidu.prototype.onParticipantJoined = function (params) {
                     if (this.isRoomAvailable()) {
-                        this.room.onParticipantJoined(params);
+                        this.session.onParticipantJoined(params);
                     }
                 };
                 OpenVidu.prototype.onParticipantPublished = function (params) {
                     if (this.isRoomAvailable()) {
-                        this.room.onParticipantPublished(params);
+                        this.session.onParticipantPublished(params);
                     }
                 };
                 OpenVidu.prototype.onParticipantLeft = function (params) {
                     if (this.isRoomAvailable()) {
-                        this.room.onParticipantLeft(params);
+                        this.session.onParticipantLeft(params);
                     }
                 };
                 OpenVidu.prototype.onParticipantEvicted = function (params) {
                     if (this.isRoomAvailable()) {
-                        this.room.onParticipantEvicted(params);
+                        this.session.onParticipantEvicted(params);
                     }
                 };
                 OpenVidu.prototype.onNewMessage = function (params) {
                     if (this.isRoomAvailable()) {
-                        this.room.onNewMessage(params);
+                        this.session.onNewMessage(params);
                     }
                 };
                 OpenVidu.prototype.iceCandidateEvent = function (params) {
                     if (this.isRoomAvailable()) {
-                        this.room.recvIceCandidate(params);
+                        this.session.recvIceCandidate(params);
                     }
                 };
                 OpenVidu.prototype.onRoomClosed = function (params) {
                     if (this.isRoomAvailable()) {
-                        this.room.onRoomClosed(params);
+                        this.session.onRoomClosed(params);
                     }
                 };
                 OpenVidu.prototype.onMediaError = function (params) {
                     if (this.isRoomAvailable()) {
-                        this.room.onMediaError(params);
+                        this.session.onMediaError(params);
                     }
                 };
                 OpenVidu.prototype.setRpcParams = function (params) {
@@ -172,28 +177,36 @@ System.register("OpenVidu", ["Room", "Stream"], function(exports_1, context_1) {
                 };
                 OpenVidu.prototype.close = function (forced) {
                     if (this.isRoomAvailable()) {
-                        this.room.leave(forced, this.jsonRpcClient);
+                        this.session.leave(forced, this.jsonRpcClient);
                     }
                 };
                 ;
                 OpenVidu.prototype.disconnectParticipant = function (stream) {
                     if (this.isRoomAvailable()) {
-                        this.room.disconnect(stream);
+                        this.session.disconnect(stream);
                     }
                 };
-                OpenVidu.prototype.Stream = function (room, options) {
+                OpenVidu.prototype.getCamera = function (options) {
+                    if (this.camera) {
+                        return this.camera;
+                    }
                     options = options || {
                         audio: true,
                         video: true,
                         data: true
                     };
-                    options.participant = room.getLocalParticipant();
-                    return new Stream_1.Stream(this, true, room, options);
+                    options.participant = this.session.getLocalParticipant();
+                    this.camera = new Stream_1.Stream(this, true, this.session, options);
+                    return this.camera;
                 };
                 ;
-                OpenVidu.prototype.Room = function (options) {
-                    var room = new Room_1.Room(this, options);
-                    return room;
+                OpenVidu.prototype.joinSession = function (options, callback) {
+                    var _this = this;
+                    this.session.configure(options);
+                    this.session.connect();
+                    this.session.addEventListener('room-connected', function (roomEvent) { return callback(undefined, _this.session); });
+                    this.session.addEventListener('error-room', function (error) { return callback(error); });
+                    return this.session;
                 };
                 ;
                 //CHAT
@@ -238,22 +251,24 @@ System.register("Participant", ["Stream"], function(exports_2, context_2) {
                     this.options = options;
                     this.streams = {};
                     this.streamsOpts = [];
-                    this.id = options.id;
-                    if (options.streams) {
-                        for (var _i = 0, _a = options.streams; _i < _a.length; _i++) {
-                            var streamOptions = _a[_i];
-                            var streamOpts = {
-                                id: streamOptions.id,
-                                participant: this,
-                                recvVideo: (streamOptions.recvVideo == undefined ? true : streamOptions.recvVideo),
-                                recvAudio: (streamOptions.recvAudio == undefined ? true : streamOptions.recvAudio),
-                                audio: streamOptions.audio,
-                                video: streamOptions.video,
-                                data: streamOptions.data
-                            };
-                            var stream = new Stream_2.Stream(openVidu, false, room, streamOpts);
-                            this.addStream(stream);
-                            this.streamsOpts.push(streamOpts);
+                    if (options) {
+                        this.id = options.id;
+                        if (options.streams) {
+                            for (var _i = 0, _a = options.streams; _i < _a.length; _i++) {
+                                var streamOptions = _a[_i];
+                                var streamOpts = {
+                                    id: streamOptions.id,
+                                    participant: this,
+                                    recvVideo: (streamOptions.recvVideo == undefined ? true : streamOptions.recvVideo),
+                                    recvAudio: (streamOptions.recvAudio == undefined ? true : streamOptions.recvAudio),
+                                    audio: streamOptions.audio,
+                                    video: streamOptions.video,
+                                    data: streamOptions.data
+                                };
+                                var stream = new Stream_2.Stream(openVidu, false, room, streamOpts);
+                                this.addStream(stream);
+                                this.streamsOpts.push(streamOpts);
+                            }
                         }
                     }
                     console.log("New " + (local ? "local " : "remote ") + "participant " + this.id
@@ -263,8 +278,8 @@ System.register("Participant", ["Stream"], function(exports_2, context_2) {
                     this.id = newId;
                 };
                 Participant.prototype.addStream = function (stream) {
-                    this.streams[stream.getID()] = stream;
-                    this.room.getStreams()[stream.getID()] = stream;
+                    this.streams[stream.getIdInParticipant()] = stream;
+                    this.room.getStreams()[stream.getIdInParticipant()] = stream;
                 };
                 Participant.prototype.getStreams = function () {
                     return this.streams;
@@ -274,13 +289,13 @@ System.register("Participant", ["Stream"], function(exports_2, context_2) {
                         this.streams[key].dispose();
                     }
                 };
-                Participant.prototype.getID = function () {
+                Participant.prototype.getId = function () {
                     return this.id;
                 };
                 Participant.prototype.sendIceCandidate = function (candidate) {
-                    console.debug((this.local ? "Local" : "Remote"), "candidate for", this.getID(), JSON.stringify(candidate));
+                    console.debug((this.local ? "Local" : "Remote"), "candidate for", this.getId(), JSON.stringify(candidate));
                     this.openVidu.sendRequest("onIceCandidate", {
-                        endpointName: this.getID(),
+                        endpointName: this.getId(),
                         candidate: candidate.candidate,
                         sdpMid: candidate.sdpMid,
                         sdpMLineIndex: candidate.sdpMLineIndex
@@ -353,7 +368,7 @@ System.register("Stream", [], function(exports_3, context_3) {
                     return this.localMirrored;
                 };
                 Stream.prototype.getChannelName = function () {
-                    return this.getGlobalID() + '_' + this.chanId++;
+                    return this.getId() + '_' + this.chanId++;
                 };
                 Stream.prototype.isDataChannelEnabled = function () {
                     return this.dataChannel;
@@ -390,7 +405,7 @@ System.register("Stream", [], function(exports_3, context_3) {
                 };
                 Stream.prototype.showSpinner = function (spinnerParentId) {
                     var progress = document.createElement('div');
-                    progress.id = 'progress-' + this.getGlobalID();
+                    progress.id = 'progress-' + this.getId();
                     progress.style.background = "center transparent url('img/spinner.gif') no-repeat";
                     var spinnerParent = document.getElementById(spinnerParentId);
                     if (spinnerParent) {
@@ -398,12 +413,12 @@ System.register("Stream", [], function(exports_3, context_3) {
                     }
                 };
                 Stream.prototype.hideSpinner = function (spinnerId) {
-                    spinnerId = (spinnerId === undefined) ? this.getGlobalID() : spinnerId;
+                    spinnerId = (spinnerId === undefined) ? this.getId() : spinnerId;
                     $(jq('progress-' + spinnerId)).hide();
                 };
                 Stream.prototype.playOnlyVideo = function (parentElement, thumbnailId) {
                     this.video = document.createElement('video');
-                    this.video.id = 'native-video-' + this.getGlobalID();
+                    this.video.id = 'native-video-' + this.getId();
                     this.video.autoplay = true;
                     this.video.controls = false;
                     if (this.wrStream) {
@@ -412,7 +427,7 @@ System.register("Stream", [], function(exports_3, context_3) {
                         this.hideSpinner();
                     }
                     else {
-                        console.log("No wrStream yet for", this.getGlobalID());
+                        console.log("No wrStream yet for", this.getId());
                     }
                     this.videoElements.push({
                         thumb: thumbnailId,
@@ -435,7 +450,7 @@ System.register("Stream", [], function(exports_3, context_3) {
                 Stream.prototype.playThumbnail = function (thumbnailId) {
                     var container = document.createElement('div');
                     container.className = "participant";
-                    container.id = this.getGlobalID();
+                    container.id = this.getId();
                     var thumbnail = document.getElementById(thumbnailId);
                     if (thumbnail) {
                         thumbnail.appendChild(container);
@@ -443,32 +458,32 @@ System.register("Stream", [], function(exports_3, context_3) {
                     this.elements.push(container);
                     var name = document.createElement('div');
                     container.appendChild(name);
-                    var userName = this.getGlobalID().replace('_webcam', '');
+                    var userName = this.getId().replace('_webcam', '');
                     if (userName.length >= 16) {
                         userName = userName.substring(0, 16) + "...";
                     }
                     name.appendChild(document.createTextNode(userName));
-                    name.id = "name-" + this.getGlobalID();
+                    name.id = "name-" + this.getId();
                     name.className = "name";
-                    name.title = this.getGlobalID();
+                    name.title = this.getId();
                     this.showSpinner(thumbnailId);
                     return this.playOnlyVideo(container, thumbnailId);
                 };
-                Stream.prototype.getID = function () {
+                Stream.prototype.getIdInParticipant = function () {
                     return this.id;
                 };
                 Stream.prototype.getParticipant = function () {
                     return this.participant;
                 };
-                Stream.prototype.getGlobalID = function () {
+                Stream.prototype.getId = function () {
                     if (this.participant) {
-                        return this.participant.getID() + "_" + this.id;
+                        return this.participant.getId() + "_" + this.id;
                     }
                     else {
                         return this.id + "_webcam";
                     }
                 };
-                Stream.prototype.init = function () {
+                Stream.prototype.requestCameraAccess = function (callback) {
                     var _this = this;
                     this.participant.addStream(this);
                     var constraints = {
@@ -484,10 +499,10 @@ System.register("Stream", [], function(exports_3, context_3) {
                     };
                     getUserMedia(constraints, function (userStream) {
                         _this.wrStream = userStream;
-                        _this.ee.emitEvent('access-accepted', null);
+                        callback(undefined, _this);
                     }, function (error) {
                         console.error("Access denied", error);
-                        _this.ee.emitEvent('access-denied', null);
+                        callback(error, undefined);
                     });
                 };
                 Stream.prototype.publishVideoCallback = function (error, sdpOfferParam, wp) {
@@ -497,7 +512,7 @@ System.register("Stream", [], function(exports_3, context_3) {
                             + JSON.stringify(error));
                     }
                     console.log("Sending SDP offer to publish as "
-                        + this.getGlobalID(), sdpOfferParam);
+                        + this.getId(), sdpOfferParam);
                     this.openVidu.sendRequest("publishVideo", {
                         sdpOffer: sdpOfferParam,
                         doLoopback: this.displayMyRemote() || false
@@ -520,9 +535,9 @@ System.register("Stream", [], function(exports_3, context_3) {
                             + JSON.stringify(error));
                     }
                     console.log("Sending SDP offer to subscribe to "
-                        + this.getGlobalID(), sdpOfferParam);
+                        + this.getId(), sdpOfferParam);
                     this.openVidu.sendRequest("receiveVideoFrom", {
-                        sender: this.getGlobalID(),
+                        sender: this.getId(),
                         sdpOffer: sdpOfferParam
                     }, function (error, response) {
                         if (error) {
@@ -585,7 +600,7 @@ System.register("Stream", [], function(exports_3, context_3) {
                         });
                     }
                     console.log("Waiting for SDP offer to be generated ("
-                        + (this.local ? "local" : "remote") + " peer: " + this.getGlobalID() + ")");
+                        + (this.local ? "local" : "remote") + " peer: " + this.getId() + ")");
                 };
                 Stream.prototype.publish = function () {
                     // FIXME: Throw error when stream is not local
@@ -606,8 +621,8 @@ System.register("Stream", [], function(exports_3, context_3) {
                         type: 'answer',
                         sdp: sdpAnswer,
                     });
-                    console.log(this.getGlobalID() + ": set peer connection with recvd SDP answer", sdpAnswer);
-                    var participantId = this.getGlobalID();
+                    console.log(this.getId() + ": set peer connection with recvd SDP answer", sdpAnswer);
+                    var participantId = this.getId();
                     var pc = this.wp.peerConnection;
                     pc.setRemoteDescription(answer, function () {
                         // Avoids to subscribe to your own stream remotely 
@@ -635,9 +650,9 @@ System.register("Stream", [], function(exports_3, context_3) {
                                 var video = videoElement.video;
                                 video.src = URL.createObjectURL(_this.wrStream);
                                 video.onplay = function () {
-                                    console.log(_this.getGlobalID() + ': ' + 'Video playing');
+                                    console.log(_this.getId() + ': ' + 'Video playing');
                                     $(jq(thumbnailId)).show();
-                                    _this.hideSpinner(_this.getGlobalID());
+                                    _this.hideSpinner(_this.getId());
                                 };
                             };
                             for (var _i = 0, _a = _this.videoElements; _i < _a.length; _i++) {
@@ -649,7 +664,7 @@ System.register("Stream", [], function(exports_3, context_3) {
                                 }]);
                         }
                     }, function (error) {
-                        console.error(_this.getGlobalID() + ": Error setting SDP to the peer connection: "
+                        console.error(_this.getId() + ": Error setting SDP to the peer connection: "
                             + JSON.stringify(error));
                     });
                 };
@@ -670,7 +685,7 @@ System.register("Stream", [], function(exports_3, context_3) {
                     if (this.speechEvent) {
                         this.speechEvent.stop();
                     }
-                    console.log(this.getGlobalID() + ": Stream '" + this.id + "' unpublished");
+                    console.log(this.getId() + ": Stream '" + this.id + "' unpublished");
                 };
                 Stream.prototype.dispose = function () {
                     function disposeElement(element) {
@@ -680,7 +695,7 @@ System.register("Stream", [], function(exports_3, context_3) {
                     }
                     this.elements.forEach(function (e) { return disposeElement(e); });
                     this.videoElements.forEach(function (ve) { return disposeElement(ve); });
-                    disposeElement("progress-" + this.getGlobalID());
+                    disposeElement("progress-" + this.getId());
                     if (this.wp) {
                         this.wp.dispose();
                     }
@@ -697,7 +712,7 @@ System.register("Stream", [], function(exports_3, context_3) {
                     if (this.speechEvent) {
                         this.speechEvent.stop();
                     }
-                    console.log(this.getGlobalID() + ": Stream '" + this.id + "' disposed");
+                    console.log(this.getId() + ": Stream '" + this.id + "' disposed");
                 };
                 return Stream;
             }());
@@ -705,35 +720,38 @@ System.register("Stream", [], function(exports_3, context_3) {
         }
     }
 });
-System.register("Room", ["Participant"], function(exports_4, context_4) {
+System.register("Session", ["Participant"], function(exports_4, context_4) {
     "use strict";
     var __moduleName = context_4 && context_4.id;
     var Participant_1;
-    var Room;
+    var Session;
     return {
         setters:[
             function (Participant_1_1) {
                 Participant_1 = Participant_1_1;
             }],
         execute: function() {
-            Room = (function () {
-                function Room(openVidu, options) {
+            Session = (function () {
+                function Session(openVidu) {
                     this.openVidu = openVidu;
-                    this.options = options;
                     this.ee = new EventEmitter();
                     this.streams = {};
                     this.participants = {};
                     this.participantsSpeaking = [];
                     this.connected = false;
-                    this.name = options.room;
+                    this.localParticipant = new Participant_1.Participant(this.openVidu, true, this);
+                }
+                Session.prototype.configure = function (options) {
+                    this.options = options;
+                    this.id = options.sessionId;
                     this.subscribeToStreams = options.subscribeToStreams || true;
                     this.updateSpeakerInterval = options.updateSpeakerInterval || 1500;
                     this.thresholdSpeaker = options.thresholdSpeaker || -50;
+                    this.localParticipant.setId(options.participantId);
                     this.activateUpdateMainSpeaker();
-                    this.localParticipant = new Participant_1.Participant(openVidu, true, this, { id: options.user });
-                    this.participants[options.user] = this.localParticipant;
-                }
-                Room.prototype.activateUpdateMainSpeaker = function () {
+                    this.participants[options.participantId] = this.localParticipant;
+                };
+                Session.prototype.activateUpdateMainSpeaker = function () {
                     var _this = this;
                     setInterval(function () {
                         if (_this.participantsSpeaking.length > 0) {
@@ -743,20 +761,20 @@ System.register("Room", ["Participant"], function(exports_4, context_4) {
                         }
                     }, this.updateSpeakerInterval);
                 };
-                Room.prototype.getLocalParticipant = function () {
+                Session.prototype.getLocalParticipant = function () {
                     return this.localParticipant;
                 };
-                Room.prototype.addEventListener = function (eventName, listener) {
+                Session.prototype.addEventListener = function (eventName, listener) {
                     this.ee.addListener(eventName, listener);
                 };
-                Room.prototype.emitEvent = function (eventName, eventsArray) {
+                Session.prototype.emitEvent = function (eventName, eventsArray) {
                     this.ee.emitEvent(eventName, eventsArray);
                 };
-                Room.prototype.connect = function () {
+                Session.prototype.connect = function () {
                     var _this = this;
                     var joinParams = {
-                        user: this.options.user,
-                        room: this.options.room,
+                        user: this.options.participantId,
+                        room: this.options.sessionId,
                         dataChannels: false
                     };
                     if (this.localParticipant) {
@@ -783,7 +801,7 @@ System.register("Room", ["Participant"], function(exports_4, context_4) {
                             var length_1 = exParticipants.length;
                             for (var i = 0; i < length_1; i++) {
                                 var participant = new Participant_1.Participant(_this.openVidu, false, _this, exParticipants[i]);
-                                _this.participants[participant.getID()] = participant;
+                                _this.participants[participant.getId()] = participant;
                                 roomEvent.participants.push(participant);
                                 var streams = participant.getStreams();
                                 for (var key in streams) {
@@ -794,15 +812,21 @@ System.register("Room", ["Participant"], function(exports_4, context_4) {
                                 }
                             }
                             _this.ee.emitEvent('room-connected', [roomEvent]);
+                            if (_this.subscribeToStreams) {
+                                for (var _i = 0, _a = roomEvent.streams; _i < _a.length; _i++) {
+                                    var stream = _a[_i];
+                                    _this.ee.emitEvent('stream-added', [{ stream: stream }]);
+                                }
+                            }
                         }
                     });
                 };
-                Room.prototype.subscribe = function (stream) {
+                Session.prototype.subscribe = function (stream) {
                     stream.subscribe();
                 };
-                Room.prototype.onParticipantPublished = function (options) {
+                Session.prototype.onParticipantPublished = function (options) {
                     var participant = new Participant_1.Participant(this.openVidu, false, this, options);
-                    var pid = participant.getID();
+                    var pid = participant.getId();
                     if (!(pid in this.participants)) {
                         console.info("Publisher not found in participants list by its id", pid);
                     }
@@ -811,23 +835,19 @@ System.register("Room", ["Participant"], function(exports_4, context_4) {
                     }
                     //replacing old participant (this one has streams)
                     this.participants[pid] = participant;
-                    this.ee.emitEvent('participant-published', [{
-                            participant: participant
-                        }]);
+                    this.ee.emitEvent('participant-published', [{ participant: participant }]);
                     var streams = participant.getStreams();
                     for (var key in streams) {
                         var stream = streams[key];
                         if (this.subscribeToStreams) {
                             stream.subscribe();
-                            this.ee.emitEvent('stream-added', [{
-                                    stream: stream
-                                }]);
+                            this.ee.emitEvent('stream-added', [{ stream: stream }]);
                         }
                     }
                 };
-                Room.prototype.onParticipantJoined = function (msg) {
+                Session.prototype.onParticipantJoined = function (msg) {
                     var participant = new Participant_1.Participant(this.openVidu, false, this, msg);
-                    var pid = participant.getID();
+                    var pid = participant.getId();
                     if (!(pid in this.participants)) {
                         console.log("New participant to participants list with id", pid);
                         this.participants[pid] = participant;
@@ -842,7 +862,7 @@ System.register("Room", ["Participant"], function(exports_4, context_4) {
                             participant: participant
                         }]);
                 };
-                Room.prototype.onParticipantLeft = function (msg) {
+                Session.prototype.onParticipantLeft = function (msg) {
                     var participant = this.participants[msg.name];
                     if (participant !== undefined) {
                         delete this.participants[msg.name];
@@ -864,13 +884,13 @@ System.register("Room", ["Participant"], function(exports_4, context_4) {
                     }
                 };
                 ;
-                Room.prototype.onParticipantEvicted = function (msg) {
+                Session.prototype.onParticipantEvicted = function (msg) {
                     this.ee.emitEvent('participant-evicted', [{
                             localParticipant: this.localParticipant
                         }]);
                 };
                 ;
-                Room.prototype.onNewMessage = function (msg) {
+                Session.prototype.onNewMessage = function (msg) {
                     console.log("New message: " + JSON.stringify(msg));
                     var room = msg.room;
                     var user = msg.user;
@@ -886,7 +906,7 @@ System.register("Room", ["Participant"], function(exports_4, context_4) {
                         console.error("User undefined in new message:", msg);
                     }
                 };
-                Room.prototype.recvIceCandidate = function (msg) {
+                Session.prototype.recvIceCandidate = function (msg) {
                     var candidate = {
                         candidate: msg.candidate,
                         sdpMid: msg.sdpMid,
@@ -913,7 +933,7 @@ System.register("Room", ["Participant"], function(exports_4, context_4) {
                         _loop_2(key);
                     }
                 };
-                Room.prototype.onRoomClosed = function (msg) {
+                Session.prototype.onRoomClosed = function (msg) {
                     console.log("Room closed: " + JSON.stringify(msg));
                     var room = msg.room;
                     if (room !== undefined) {
@@ -925,13 +945,13 @@ System.register("Room", ["Participant"], function(exports_4, context_4) {
                         console.error("Room undefined in on room closed", msg);
                     }
                 };
-                Room.prototype.onLostConnection = function () {
+                Session.prototype.onLostConnection = function () {
                     if (!this.connected) {
                         console.warn('Not connected to room, ignoring lost connection notification');
                         return;
                     }
-                    console.log('Lost connection in room ' + this.name);
-                    var room = this.name;
+                    console.log('Lost connection in room ' + this.id);
+                    var room = this.id;
                     if (room !== undefined) {
                         this.ee.emitEvent('lost-connection', [{ room: room }]);
                     }
@@ -939,7 +959,7 @@ System.register("Room", ["Participant"], function(exports_4, context_4) {
                         console.error('Room undefined when lost connection');
                     }
                 };
-                Room.prototype.onMediaError = function (params) {
+                Session.prototype.onMediaError = function (params) {
                     console.error("Media error: " + JSON.stringify(params));
                     var error = params.error;
                     if (error) {
@@ -954,7 +974,7 @@ System.register("Room", ["Participant"], function(exports_4, context_4) {
                 /*
                  * forced means the user was evicted, no need to send the 'leaveRoom' request
                  */
-                Room.prototype.leave = function (forced, jsonRpcClient) {
+                Session.prototype.leave = function (forced, jsonRpcClient) {
                     forced = !!forced;
                     console.log("Leaving room (forced=" + forced + ")");
                     if (this.connected && !forced) {
@@ -976,16 +996,16 @@ System.register("Room", ["Participant"], function(exports_4, context_4) {
                         }
                     }
                 };
-                Room.prototype.disconnect = function (stream) {
+                Session.prototype.disconnect = function (stream) {
                     var participant = stream.getParticipant();
                     if (!participant) {
                         console.error("Stream to disconnect has no participant", stream);
                         return;
                     }
-                    delete this.participants[participant.getID()];
+                    delete this.participants[participant.getId()];
                     participant.dispose();
                     if (participant === this.localParticipant) {
-                        console.log("Unpublishing my media (I'm " + participant.getID() + ")");
+                        console.log("Unpublishing my media (I'm " + participant.getId() + ")");
                         delete this.localParticipant;
                         this.openVidu.sendRequest('unpublishVideo', function (error, response) {
                             if (error) {
@@ -997,26 +1017,26 @@ System.register("Room", ["Participant"], function(exports_4, context_4) {
                         });
                     }
                     else {
-                        console.log("Unsubscribing from " + stream.getGlobalID());
+                        console.log("Unsubscribing from " + stream.getId());
                         this.openVidu.sendRequest('unsubscribeFromVideo', {
-                            sender: stream.getGlobalID()
+                            sender: stream.getId()
                         }, function (error, response) {
                             if (error) {
                                 console.error(error);
                             }
                             else {
-                                console.info("Unsubscribed correctly from " + stream.getGlobalID());
+                                console.info("Unsubscribed correctly from " + stream.getId());
                             }
                         });
                     }
                 };
-                Room.prototype.getStreams = function () {
+                Session.prototype.getStreams = function () {
                     return this.streams;
                 };
-                Room.prototype.addParticipantSpeaking = function (participantId) {
+                Session.prototype.addParticipantSpeaking = function (participantId) {
                     this.participantsSpeaking.push(participantId);
                 };
-                Room.prototype.removeParticipantSpeaking = function (participantId) {
+                Session.prototype.removeParticipantSpeaking = function (participantId) {
                     var pos = -1;
                     for (var i = 0; i < this.participantsSpeaking.length; i++) {
                         if (this.participantsSpeaking[i] == participantId) {
@@ -1028,20 +1048,20 @@ System.register("Room", ["Participant"], function(exports_4, context_4) {
                         this.participantsSpeaking.splice(pos, 1);
                     }
                 };
-                return Room;
+                return Session;
             }());
-            exports_4("Room", Room);
+            exports_4("Session", Session);
         }
     }
 });
-System.register("Main", ["Room", "Participant", "Stream", "OpenVidu"], function(exports_5, context_5) {
+System.register("Main", ["Session", "Participant", "Stream", "OpenVidu"], function(exports_5, context_5) {
     "use strict";
     var __moduleName = context_5 && context_5.id;
     return {
         setters:[
-            function (Room_2_1) {
+            function (Session_2_1) {
                 exports_5({
-                    "Room": Room_2_1["Room"]
+                    "Session": Session_2_1["Session"]
                 });
             },
             function (Participant_2_1) {

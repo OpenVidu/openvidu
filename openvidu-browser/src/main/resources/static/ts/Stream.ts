@@ -6,8 +6,8 @@
  * stream.hasAudio(); stream.hasVideo(); stream.hasData();
  */
 import { Participant } from './Participant';
-import { Room } from './Room';
-import { OpenVidu } from './OpenVidu';
+import { Session } from './Session';
+import { OpenVidu, Callback } from './OpenVidu';
 
 declare type JQuery = any;
 declare var $: JQuery;
@@ -54,7 +54,7 @@ export class Stream {
     private dataChannel: boolean;
     private dataChannelOpened = false;
 
-    constructor( private openVidu: OpenVidu, private local: boolean, private room: Room, options: StreamOptions ) {
+    constructor( private openVidu: OpenVidu, private local: boolean, private room: Session, options: StreamOptions ) {
 
         if ( options.id ) {
             this.id = options.id;
@@ -98,7 +98,7 @@ export class Stream {
     }
 
     getChannelName() {
-        return this.getGlobalID() + '_' + this.chanId++;
+        return this.getId() + '_' + this.chanId++;
     }
 
 
@@ -146,7 +146,7 @@ export class Stream {
 
     showSpinner( spinnerParentId: string ) {
         let progress = document.createElement( 'div' );
-        progress.id = 'progress-' + this.getGlobalID();
+        progress.id = 'progress-' + this.getId();
         progress.style.background = "center transparent url('img/spinner.gif') no-repeat";
         let spinnerParent = document.getElementById( spinnerParentId );
         if(spinnerParent){
@@ -155,14 +155,14 @@ export class Stream {
     }
 
     hideSpinner( spinnerId?: string ) {
-        spinnerId = ( spinnerId === undefined ) ? this.getGlobalID() : spinnerId;
+        spinnerId = ( spinnerId === undefined ) ? this.getId() : spinnerId;
         $( jq( 'progress-' + spinnerId ) ).hide();
     }
 
     playOnlyVideo( parentElement, thumbnailId ) {
         this.video = document.createElement( 'video' );
 
-        this.video.id = 'native-video-' + this.getGlobalID();
+        this.video.id = 'native-video-' + this.getId();
         this.video.autoplay = true;
         this.video.controls = false;
         if ( this.wrStream ) {
@@ -170,7 +170,7 @@ export class Stream {
             $( jq( thumbnailId ) ).show();
             this.hideSpinner();
         } else {
-            console.log( "No wrStream yet for", this.getGlobalID() );
+            console.log( "No wrStream yet for", this.getId() );
         }
 
         this.videoElements.push( {
@@ -198,7 +198,7 @@ export class Stream {
 
         let container = document.createElement( 'div' );
         container.className = "participant";
-        container.id = this.getGlobalID();
+        container.id = this.getId();
         let thumbnail = document.getElementById( thumbnailId );
         if(thumbnail){
             thumbnail.appendChild( container );
@@ -208,21 +208,21 @@ export class Stream {
 
         let name = document.createElement( 'div' );
         container.appendChild( name );
-        let userName = this.getGlobalID().replace( '_webcam', '' );
+        let userName = this.getId().replace( '_webcam', '' );
         if ( userName.length >= 16 ) {
             userName = userName.substring( 0, 16 ) + "...";
         }
         name.appendChild( document.createTextNode( userName ) );
-        name.id = "name-" + this.getGlobalID();
+        name.id = "name-" + this.getId();
         name.className = "name";
-        name.title = this.getGlobalID();
+        name.title = this.getId();
 
         this.showSpinner( thumbnailId );
 
         return this.playOnlyVideo( container, thumbnailId );
     }
 
-    getID() {
+    getIdInParticipant() {
         return this.id;
     }
 
@@ -230,15 +230,15 @@ export class Stream {
         return this.participant;
     }
 
-    getGlobalID() {
+    getId() {
         if ( this.participant ) {
-            return this.participant.getID() + "_" + this.id;
+            return this.participant.getId() + "_" + this.id;
         } else {
             return this.id + "_webcam";
         }
     }
 
-    init() {
+    requestCameraAccess(callback: Callback<Stream>) {
 
         this.participant.addStream( this );
 
@@ -256,21 +256,22 @@ export class Stream {
 
         getUserMedia( constraints, userStream => {
             this.wrStream = userStream;
-            this.ee.emitEvent( 'access-accepted', null );
+            callback(undefined, this);
         },  error => {
             console.error( "Access denied", error );
-            this.ee.emitEvent( 'access-denied', null );
+            callback(error, undefined);
         });
     }
 
     publishVideoCallback( error, sdpOfferParam, wp ) {
+        
         if ( error ) {
             return console.error( "(publish) SDP offer error: "
                 + JSON.stringify( error ) );
         }
 
         console.log( "Sending SDP offer to publish as "
-            + this.getGlobalID(), sdpOfferParam );
+            + this.getId(), sdpOfferParam );
 
         this.openVidu.sendRequest( "publishVideo", {
             sdpOffer: sdpOfferParam,
@@ -293,9 +294,9 @@ export class Stream {
                 + JSON.stringify( error ) );
         }
         console.log( "Sending SDP offer to subscribe to "
-            + this.getGlobalID(), sdpOfferParam );
+            + this.getId(), sdpOfferParam );
         this.openVidu.sendRequest( "receiveVideoFrom", {
-            sender: this.getGlobalID(),
+            sender: this.getId(),
             sdpOffer: sdpOfferParam
         }, ( error, response ) => {
             if ( error ) {
@@ -359,7 +360,7 @@ export class Stream {
             });
         }
         console.log( "Waiting for SDP offer to be generated ("
-            + ( this.local ? "local" : "remote" ) + " peer: " + this.getGlobalID() + ")" );
+            + ( this.local ? "local" : "remote" ) + " peer: " + this.getId() + ")" );
     }
 
     publish() {
@@ -389,9 +390,9 @@ export class Stream {
             type: 'answer',
             sdp: sdpAnswer,
         });
-        console.log( this.getGlobalID() + ": set peer connection with recvd SDP answer",
+        console.log( this.getId() + ": set peer connection with recvd SDP answer",
             sdpAnswer );
-        let participantId = this.getGlobalID();
+        let participantId = this.getId();
         let pc = this.wp.peerConnection;
         pc.setRemoteDescription( answer, () => {
             // Avoids to subscribe to your own stream remotely 
@@ -423,9 +424,9 @@ export class Stream {
                     let video = videoElement.video;
                     video.src = URL.createObjectURL( this.wrStream );
                     video.onplay = () => {
-                        console.log( this.getGlobalID() + ': ' + 'Video playing' );
+                        console.log( this.getId() + ': ' + 'Video playing' );
                         $( jq( thumbnailId ) ).show();
-                        this.hideSpinner( this.getGlobalID() );
+                        this.hideSpinner( this.getId() );
                     };
                 }
                 this.room.emitEvent( 'stream-subscribed', [{
@@ -433,7 +434,7 @@ export class Stream {
                 }] );
             }
         }, error => {
-            console.error( this.getGlobalID() + ": Error setting SDP to the peer connection: "
+            console.error( this.getId() + ": Error setting SDP to the peer connection: "
                 + JSON.stringify( error ) );
         });
     }
@@ -456,7 +457,7 @@ export class Stream {
             this.speechEvent.stop();
         }
 
-        console.log( this.getGlobalID() + ": Stream '" + this.id + "' unpublished" );
+        console.log( this.getId() + ": Stream '" + this.id + "' unpublished" );
     }
 
     dispose() {
@@ -471,7 +472,7 @@ export class Stream {
 
         this.videoElements.forEach( ve => disposeElement( ve ) );
 
-        disposeElement( "progress-" + this.getGlobalID() );
+        disposeElement( "progress-" + this.getId() );
 
         if ( this.wp ) {
             this.wp.dispose();
@@ -490,6 +491,6 @@ export class Stream {
             this.speechEvent.stop();
         }
 
-        console.log( this.getGlobalID() + ": Stream '" + this.id + "' disposed" );
+        console.log( this.getId() + ": Stream '" + this.id + "' disposed" );
     }
 }

@@ -15,25 +15,32 @@
  *
  */
 
-import { Room } from './Room';
+import { Session, SessionOptions } from './Session';
 import { Stream } from './Stream';
 
 declare var RpcBuilder: any;
 
-type Callback<T> = ( error?: any, openVidu?: T ) => void;
+export type Callback<T> = ( error?: any, openVidu?: T ) => void;
 
 export class OpenVidu {
 
-    private room: Room;
-    private userName: string;
+    private session: Session;
     private jsonRpcClient: any;
     private rpcParams: any;
     private callback: Callback<OpenVidu>;
-
-    constructor( private wsUri: string ) { }
+    private camera: Stream;
+    
+    constructor( private wsUri: string ) {
+        if(this.wsUri.charAt(wsUri.length-1) != '/'){
+            this.wsUri = '/';
+        }
+        this.wsUri += 'room';
+        
+        this.session = new Session(this);
+    }
 
     getRoom() {
-        return this.room;
+        return this.session;
     }
 
     connect( callback: Callback<OpenVidu> ): void {
@@ -77,7 +84,7 @@ export class OpenVidu {
 
     private customNotification( params ) {
         if ( this.isRoomAvailable() ) {
-            this.room.emitEvent( "custom-message-received", [{ params: params }] );
+            this.session.emitEvent( "custom-message-received", [{ params: params }] );
         }
     }
 
@@ -90,7 +97,7 @@ export class OpenVidu {
     }
 
     private isRoomAvailable() {
-        if ( this.room !== undefined && this.room instanceof Room ) {
+        if ( this.session !== undefined && this.session instanceof Session ) {
             return true;
         } else {
             console.warn( 'Room instance not found' );
@@ -101,7 +108,7 @@ export class OpenVidu {
     private disconnectCallback() {
         console.log( 'Websocket connection lost' );
         if ( this.isRoomAvailable() ) {
-            this.room.onLostConnection();
+            this.session.onLostConnection();
         } else {
             alert( 'Connection error. Please reload page.' );
         }
@@ -110,7 +117,7 @@ export class OpenVidu {
     private reconnectingCallback() {
         console.log( 'Websocket connection lost (reconnecting)' );
         if ( this.isRoomAvailable() ) {
-            this.room.onLostConnection();
+            this.session.onLostConnection();
         } else {
             alert( 'Connection error. Please reload page.' );
         }
@@ -122,49 +129,49 @@ export class OpenVidu {
 
     private onParticipantJoined( params ) {
         if ( this.isRoomAvailable() ) {
-            this.room.onParticipantJoined( params );
+            this.session.onParticipantJoined( params );
         }
     }
 
     private onParticipantPublished( params ) {
         if ( this.isRoomAvailable() ) {
-            this.room.onParticipantPublished( params );
+            this.session.onParticipantPublished( params );
         }
     }
 
     private onParticipantLeft( params ) {
         if ( this.isRoomAvailable() ) {
-            this.room.onParticipantLeft( params );
+            this.session.onParticipantLeft( params );
         }
     }
 
     private onParticipantEvicted( params ) {
         if ( this.isRoomAvailable() ) {
-            this.room.onParticipantEvicted( params );
+            this.session.onParticipantEvicted( params );
         }
     }
 
     private onNewMessage( params ) {
         if ( this.isRoomAvailable() ) {
-            this.room.onNewMessage( params );
+            this.session.onNewMessage( params );
         }
     }
 
     private iceCandidateEvent( params ) {
         if ( this.isRoomAvailable() ) {
-            this.room.recvIceCandidate( params );
+            this.session.recvIceCandidate( params );
         }
     }
 
     private onRoomClosed( params ) {
         if ( this.isRoomAvailable() ) {
-            this.room.onRoomClosed( params );
+            this.session.onRoomClosed( params );
         }
     }
 
     private onMediaError( params ) {
         if ( this.isRoomAvailable() ) {
-            this.room.onMediaError( params );
+            this.session.onMediaError( params );
         }
     }
 
@@ -198,31 +205,44 @@ export class OpenVidu {
 
     close( forced ) {
         if ( this.isRoomAvailable() ) {
-            this.room.leave( forced, this.jsonRpcClient );
+            this.session.leave( forced, this.jsonRpcClient );
         }
     };
 
     disconnectParticipant( stream ) {
         if ( this.isRoomAvailable() ) {
-            this.room.disconnect( stream );
+            this.session.disconnect( stream );
         }
     }
 
-    Stream( room, options ) {
+    getCamera(options?) {
 
+        if(this.camera){
+            return this.camera;
+        }
+        
         options = options || {
             audio: true,
             video: true,
             data: true
         }
 
-        options.participant = room.getLocalParticipant();
-        return new Stream( this, true, room, options );
+        options.participant = this.session.getLocalParticipant();
+        this.camera = new Stream( this, true, this.session, options );
+        return this.camera;
     };
 
-    Room( options ) {
-        let room = new Room( this, options );
-        return room;
+    joinSession(options: SessionOptions, callback: Callback<Session>) {
+        
+        this.session.configure(options);
+        
+        this.session.connect();
+        
+        this.session.addEventListener('room-connected', roomEvent => callback(undefined,this.session));
+        
+        this.session.addEventListener('error-room', error => callback(error));
+        
+        return this.session;
     };
 
     //CHAT

@@ -15,86 +15,86 @@
  *
  */
 var openVidu;
-var room;
+var session;
 
 window.onload = function() {
 	console = new Console('console', console);
 }
 
-function playVideo(stream) {
-	
-	var elementId = "video-" + stream.getGlobalID();
+function addVideoTag(stream) {
+
+	var elementId = "video-" + stream.getId();
 	var div = document.createElement('div');
 	div.setAttribute("id", elementId);
 	document.getElementById("participants").appendChild(div);
-	
+
 	stream.playThumbnail(elementId);
 
 	// Check color
 	var videoTag = document.getElementById("native-" + elementId);
-	var userId = stream.getGlobalID();
+	var userId = stream.getId();
 	var canvas = document.createElement('CANVAS');
 	checkColor(videoTag, canvas, userId);
 }
 
-function register() {
-
-	var userId = document.getElementById('name').value;
-	var roomId = document.getElementById('roomName').value;
-
-	var wsUri = 'wss://' + location.host + '/room';
-
-	openVidu = new Main.OpenVidu(wsUri);
+function removeVideoTag(stream){
 	
+	var elementId = "video-" + stream.getId();	
+	var element = document.getElementById(elementId);
+	if (element) {
+		element.parentNode.removeChild(element);
+	}
+}
+
+function joinRoom() {
+
+	var sessionId = document.getElementById('roomId').value;
+	var participantId = document.getElementById('userId').value;
+
+	openVidu = new OpenVidu('wss://' + location.host + '/');
+
 	openVidu.connect(function(error, openVidu) {
 
 		if (error)
 			return console.log(error);
 
-		room = openVidu.Room({
-			room : roomId,
-			user : userId,
-			subscribeToStreams : true
-		});
+		var camera = openVidu.getCamera();
 
-		var camera = openVidu.Stream(room);
+		camera.requestCameraAccess(function(error, camera) {
 
-		camera.addEventListener("access-accepted", function() {
+			if (error)
+				return console.log(error);
 
-			room.addEventListener("room-connected", function(roomEvent) {
+			var sessionOptions = {
+					sessionId : sessionId,
+					participantId : participantId
+				}
+			
+			openVidu.joinSession(sessionOptions, function(error, session) {
+				
+				if (error)
+					return console.log(error);
 
 				document.getElementById('room-header').innerText = 'ROOM \"'
-						+ room.name + '\"';
+						+ session.name + '\"';
+				
 				document.getElementById('join').style.display = 'none';
 				document.getElementById('room').style.display = 'block';
 
+				addVideoTag(camera);
+				
 				camera.publish();
+				
+				session.addEventListener("stream-added", function(streamEvent) {
+					addVideoTag(streamEvent.stream);
+				});
 
-				var streams = roomEvent.streams;
-				for (var i = 0; i < streams.length; i++) {
-					playVideo(streams[i]);
-				}
-			});
-
-			room.addEventListener("stream-added", function(streamEvent) {
-				playVideo(streamEvent.stream);
-			});
-
-			room.addEventListener("stream-removed", function(streamEvent) {
-				var element = document.getElementById("video-"
-						+ streamEvent.stream.getGlobalID());
-				if (element !== undefined) {
-					element.parentNode.removeChild(element);
-				}
-			});
-
-			playVideo(camera);
-
-			room.connect();
+				session.addEventListener("stream-removed", function(streamEvent) {
+					removeVideoTag(streamEvent.stream);
+				});
+				
+			});						
 		});
-
-		camera.init();
-
 	});
 }
 
@@ -103,15 +103,6 @@ function leaveRoom() {
 	document.getElementById('join').style.display = 'block';
 	document.getElementById('room').style.display = 'none';
 
-	var streams = room.getStreams();
-	for (var index in streams) {
-		var stream = streams[index];
-		var element = document.getElementById("video-" + stream.getGlobalID());
-		if (element) {
-			element.parentNode.removeChild(element);
-		}
-	}
-	
 	openVidu.close();
 }
 

@@ -18,7 +18,7 @@
 <script src="./js/stats.js"></script>
 
 <script>
-    System.import('Main').then(function(m){ Main = m; }, console.error.bind(console));
+    System.import('Main').then(function(m){ OpenVidu = m.OpenVidu; }, console.error.bind(console));
 </script>
 
 </head>
@@ -27,13 +27,13 @@
 		<div id="wrapper">
 			<div id="join" class="animate join">
 				<h1>Join a Room</h1>
-				<form onsubmit="register(); return false;" accept-charset="UTF-8">
+				<form onsubmit="joinRoom(); return false;" accept-charset="UTF-8">
 					<p>
-						<input type="text" name="name" value="" id="name"
-							placeholder="Username" required>
+						<input type="text" name="user" value="" id="userId"
+							placeholder="User" required>
 					</p>
 					<p>
-						<input type="text" name="room" value="" id="roomName"
+						<input type="text" name="room" value="" id="roomId"
 							placeholder="Room" required>
 					</p>
 					<p class="submit">
