@@ -77,7 +77,7 @@ function joinRoom() {
 					return console.log(error);
 
 				document.getElementById('room-header').innerText = 'ROOM \"'
-						+ session.name + '\"';
+						+ session.getId() + '\"';
 				
 				document.getElementById('join').style.display = 'none';
 				document.getElementById('room').style.display = 'block';

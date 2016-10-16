@@ -41,6 +41,10 @@ export class Session {
 
         this.participants[options.participantId] = this.localParticipant;
     }
+    
+    getId(){
+        return this.id;
+    }
 
     private activateUpdateMainSpeaker() {
 

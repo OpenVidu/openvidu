@@ -16,14 +16,17 @@
 <body>
 	<div id="container">
 		<div id="wrapper">
+			
 			<div id="join" class="animate join">
 				<h1>Join a Room</h1>
 				<form onsubmit="joinRoom(); return false;" accept-charset="UTF-8">
 					<p>
+						<label for="userId">User:</label>
 						<input type="text" name="user" value="" id="userId"
 							placeholder="User" required>
 					</p>
 					<p>
+						<label for="roomId">Room:</label>
 						<input type="text" name="room" value="a" id="roomId"
 							placeholder="Room" required>
 					</p>
@@ -32,12 +35,12 @@
 					</p>
 				</form>
 			</div>
+			
 			<div id="room" style="display: none;">
 				<h2 id="room-header"></h2>
-				<div id="myVideo"></div>
-				<div id="participants"></div>
 				<input type="button" id="buttonLeaveRoom" onmouseup="leaveRoom();"
 					value="Leave room">
+				<div id="participants"></div>				
 			</div>
 		</div>
 	</div>

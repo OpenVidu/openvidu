@@ -11,15 +11,12 @@ import { OpenVidu, Callback } from './OpenVidu';
 import EventEmitter = require('wolfy87-eventemitter');
 import * as kurentoUtils from 'kurento-utils';
 
-//See http://stackoverflow.com/questions/37112074/how-to-use-webrtc-adapter-adapter-js-shim-in-webpack
-//declare function require(moduleName: string)
-//require('webrtc-adapter');
 import 'webrtc-adapter';
 declare var navigator: any;
 declare var RTCSessionDescription: any;
 
 function jq(id: string):string {
-    return /*"#" +*/ id.replace(/(@|:|\.|\[|\]|,)/g, "\\$1");
+    return id.replace(/(@|:|\.|\[|\]|,)/g, "\\$1");
 }
 
 function show(id: string){
