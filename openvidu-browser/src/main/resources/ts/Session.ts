@@ -1,8 +1,7 @@
 import { Stream } from './Stream';
 import { OpenVidu } from './OpenVidu';
 import { Participant, ParticipantOptions } from './Participant';
-
-declare let EventEmitter;
+import EventEmitter = require('wolfy87-eventemitter');
 
 export interface SessionOptions {
     sessionId: string;

@@ -8,16 +8,26 @@
 import { Participant } from './Participant';
 import { Session } from './Session';
 import { OpenVidu, Callback } from './OpenVidu';
+import EventEmitter = require('wolfy87-eventemitter');
+import * as kurentoUtils from 'kurento-utils';
 
-declare type JQuery = any;
-declare var $: JQuery;
-declare var kurentoUtils: any;
-declare var getUserMedia: any;
+//See http://stackoverflow.com/questions/37112074/how-to-use-webrtc-adapter-adapter-js-shim-in-webpack
+//declare function require(moduleName: string)
+//require('webrtc-adapter');
+import 'webrtc-adapter';
+declare var navigator: any;
 declare var RTCSessionDescription: any;
-declare var EventEmitter: any;
 
-function jq(id: string) {
-    return "#" + id.replace(/(@|:|\.|\[|\]|,)/g, "\\$1");
+function jq(id: string):string {
+    return /*"#" +*/ id.replace(/(@|:|\.|\[|\]|,)/g, "\\$1");
+}
+
+function show(id: string){
+    document.getElementById(jq(id))!.style.display = 'block';
+}
+
+function hide(id: string){
+    document.getElementById(jq(id))!.style.display = 'none';
 }
 
 export interface StreamOptions {
@@ -156,7 +166,7 @@ export class Stream {
 
     hideSpinner( spinnerId?: string ) {
         spinnerId = ( spinnerId === undefined ) ? this.getId() : spinnerId;
-        $( jq( 'progress-' + spinnerId ) ).hide();
+        hide( 'progress-' + spinnerId );
     }
 
     playOnlyVideo( parentElement, thumbnailId ) {
@@ -167,7 +177,7 @@ export class Stream {
         this.video.controls = false;
         if ( this.wrStream ) {
             this.video.src = URL.createObjectURL( this.wrStream );
-            $( jq( thumbnailId ) ).show();
+            show( thumbnailId );
             this.hideSpinner();
         } else {
             console.log( "No wrStream yet for", this.getId() );
@@ -254,7 +264,7 @@ export class Stream {
             }
         };
 
-        getUserMedia( constraints, userStream => {
+        navigator.getUserMedia( constraints, userStream => {
             this.wrStream = userStream;
             callback(undefined, this);
         },  error => {
@@ -425,7 +435,7 @@ export class Stream {
                     video.src = URL.createObjectURL( this.wrStream );
                     video.onplay = () => {
                         console.log( this.getId() + ': ' + 'Video playing' );
-                        $( jq( thumbnailId ) ).show();
+                        show(thumbnailId);
                         this.hideSpinner( this.getId() );
                     };
                 }

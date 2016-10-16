@@ -5,21 +5,12 @@
 <meta charset="utf-8">
 <link rel="styleSheet" href="style.css" type="text/css" media="screen">
 
-<script src="./js/adapter.js"></script>
-<script src="./js/jquery-2.1.1.min.js"></script>
-<script src="./js/kurento-utils.js"></script>
-<script src="./js/kurento-jsonrpc.js"></script>
+<script src="./js/OpenVidu.js"></script>
+
 <script src="./js/console.js"></script>
-<script src="./js/EventEmitter.js"></script>
-<script src="webjars/system.js/0.19.17/dist/system.js"></script>
-<script src="./ts_js/OpenVidu.js"></script>
 <script src="./js/testapp.js"></script>
 <script src="./js/color.js"></script>
 <script src="./js/stats.js"></script>
-
-<script>
-    System.import('Main').then(function(m){ OpenVidu = m.OpenVidu; }, console.error.bind(console));
-</script>
 
 </head>
 <body>
@@ -33,7 +24,7 @@
 							placeholder="User" required>
 					</p>
 					<p>
-						<input type="text" name="room" value="" id="roomId"
+						<input type="text" name="room" value="a" id="roomId"
 							placeholder="Room" required>
 					</p>
 					<p class="submit">
@@ -52,4 +43,5 @@
 	</div>
 	<div id="console"></div>
 </body>
+
 </html>

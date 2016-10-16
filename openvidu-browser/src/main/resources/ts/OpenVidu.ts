@@ -14,11 +14,9 @@
  * limitations under the License.
  *
  */
-
 import { Session, SessionOptions } from './Session';
 import { Stream } from './Stream';
-
-declare var RpcBuilder: any;
+import * as RpcBuilder from 'kurento-jsonrpc';
 
 export type Callback<T> = ( error?: any, openVidu?: T ) => void;
 

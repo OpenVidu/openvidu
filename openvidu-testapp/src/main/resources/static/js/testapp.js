@@ -17,9 +17,10 @@
 var openVidu;
 var session;
 
-window.onload = function() {
+window.addEventListener('load', function(){ 
 	console = new Console('console', console);
-}
+	document.getElementById("userId").value = Math.floor(Math.random() * 100);	
+});
 
 function addVideoTag(stream) {
 
