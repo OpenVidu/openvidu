@@ -1,5 +1,6 @@
 {
 	"compilerOptions": {
+		"declaration": true,
 		"target": "es5",
 		"module": "commonjs",
 		//"noImplicitAny": true,
@@ -17,7 +18,7 @@
 		"forceConsistentCasingInFileNames": true,
 		"allowSyntheticDefaultImports": true,
 		"strictNullChecks": true,
-		"outFile": "../ts_js/OpenVidu.js",				
+		"outDir": "../lib",
 		"emitBOM": false,
 		"preserveConstEnums": true,
 		"sourceMap": true

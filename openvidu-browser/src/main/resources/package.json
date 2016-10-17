@@ -1,11 +1,13 @@
 {
-	"name": "openvidu",
-	"version": "0.0.1",
+	"name": "openvidu-browser",
+	"version": "0.0.2",
 	"description": "OpenVidu Browser",
-	"main": "OpenVidu.js",
+	"main": "lib/index.js",
+	"types": "lib/index.d.ts",
 	"scripts": {
 		"browserify": "cd ts && watchify Main.ts -p [ tsify ] --exclude kurento-browser-extensions --debug -o ../static/js/OpenVidu.js -v",
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"prepublish": "cd ts && tsc"
 	},
 	"author": "",
 	"license": "Apache-2.0",
