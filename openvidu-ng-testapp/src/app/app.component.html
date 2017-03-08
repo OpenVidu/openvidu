@@ -1,0 +1,24 @@
+<div *ngIf="!session">
+	<h1>Join a video session</h1>
+	<form (submit)="joinSession()" accept-charset="UTF-8">
+		<p>
+			<label>Participant:</label>
+			<input type="text" name="participantId" [(ngModel)]="participantId" required>
+		</p>
+		<p>
+			<label>Session:</label>
+			<input type="text" name="sessionId" [(ngModel)]="sessionId" required>
+		</p>
+		<p>
+			<input type="submit" name="commit" value="Join!">
+		</p>
+	</form>
+</div>
+
+<div *ngIf="session">
+	<h2>{{sessionId}}</h2>
+	<input type="button" (click)="leaveSession()" value="Leave session">
+	<div>
+		<stream *ngFor="let s of streams" [stream]="s"></stream>
+	</div>
+</div>

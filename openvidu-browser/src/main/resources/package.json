@@ -7,7 +7,8 @@
 	"scripts": {
 		"browserify": "cd ts && watchify Main.ts -p [ tsify ] --exclude kurento-browser-extensions --debug -o ../static/js/OpenVidu.js -v",
 		"test": "echo \"Error: no test specified\" && exit 1",
-		"prepublish": "cd ts && tsc"
+		"prepublish": "cd ts && tsc",
+		"developing": "cd ts && tsc -w"
 	},
 	"author": "",
 	"license": "Apache-2.0",
