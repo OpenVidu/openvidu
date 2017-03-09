@@ -35,6 +35,7 @@ export interface StreamOptions {
     video: boolean;
     audio: boolean;
     data: boolean;
+    mediaConstraints: any;
 }
 
 export interface VideoOptions {
@@ -55,6 +56,9 @@ export class Stream {
     private speechEvent: any;
     private recvVideo: any;
     private recvAudio: any;
+    private sendVideo: boolean;
+    private sendAudio: boolean;
+    private mediaConstraints: any;
     private showMyRemote = false;
     private localMirrored = false;
     private chanId = 0;
@@ -73,6 +77,9 @@ export class Stream {
         this.recvVideo = options.recvVideo;
         this.recvAudio = options.recvAudio;
         this.dataChannel = options.data || false;
+        this.sendVideo = options.video;
+        this.sendAudio = options.audio;
+        this.mediaConstraints = options.mediaConstraints;
     }
 
     getRecvVideo() {
@@ -262,6 +269,9 @@ export class Stream {
         };
 
         navigator.getUserMedia( constraints, userStream => {
+            userStream.getAudioTracks()[0].enabled = this.sendAudio;
+            userStream.getVideoTracks()[0].enabled = this.sendVideo;
+
             this.wrStream = userStream;
             callback(undefined, this);
         },  error => {
@@ -316,9 +326,15 @@ export class Stream {
 
     private initWebRtcPeer( sdpOfferCallback ) {
         if ( this.local ) {
+
+            let userMediaConstraints = {
+                audio : this.sendAudio,
+                video : this.sendVideo
+            }
             
             let options: any = {
                 videoStream: this.wrStream,
+                mediaConstraints: userMediaConstraints,
                 onicecandidate: this.participant.sendIceCandidate.bind( this.participant ),
             }
             

@@ -10,6 +10,12 @@
 			<input type="text" name="sessionId" [(ngModel)]="sessionId" required>
 		</p>
 		<p>
+			<input type="checkbox" [(ngModel)]="joinWithVideo" id="join-with-video" name="join-with-video"> Send video
+		</p>
+		<p>
+			<input type="checkbox" [(ngModel)]="joinWithAudio" id="join-with-audio" name="join-with-audio"> Send audio
+		</p>
+		<p>
 			<input type="submit" name="commit" value="Join!">
 		</p>
 	</form>
@@ -18,6 +24,10 @@
 <div *ngIf="session">
 	<h2>{{sessionId}}</h2>
 	<input type="button" (click)="leaveSession()" value="Leave session">
+	<input type="checkbox" id="toggle-video" name="toggle-video" 
+		[checked]="toggleVideo" (change)="updateToggleVideo($event)"> Toggle your video
+	<input type="checkbox" id="toggle-audio" name="toggle-audio" 
+		[checked]="toggleAudio" (change)="updateToggleAudio($event)"> Toggle your audio
 	<div>
 		<stream *ngFor="let s of streams" [stream]="s"></stream>
 	</div>

@@ -9,13 +9,19 @@ export class AppComponent {
 
   private openVidu: OpenVidu;
 
-  //Join form
+  // Join form
   sessionId: string;
   participantId: string;
 
-  //Session
+  // Session
   session: Session;
   streams: Stream[] = [];
+
+  // Publish options
+  joinWithVideo: boolean = true;
+  joinWithAudio: boolean = true;
+  toggleVideo: boolean;
+  toggleAudio: boolean;
 
   constructor() {
     this.generateParticipantInfo();
@@ -24,22 +30,35 @@ export class AppComponent {
     }
   }
 
-  private generateParticipantInfo(){
+  private generateParticipantInfo() {
     this.sessionId = "SessionA";
-    this.participantId = "Participant"+Math.floor(Math.random() * 100);
+    this.participantId = "Participant" + Math.floor(Math.random() * 100);
   }
 
-  private addVideoTag(stream:Stream){
+  private addVideoTag(stream: Stream) {
     console.log("Stream added");
     this.streams.push(stream);
   }
 
-  private removeVideoTag(stream:Stream){
+  private removeVideoTag(stream: Stream) {
     console.log("Stream removed");
     this.streams.slice(this.streams.indexOf(stream), 1);
   }
 
   joinSession() {
+    var cameraOptions = {
+      audio: this.joinWithAudio,
+      video: this.joinWithVideo,
+      data: true,
+      mediaConstraints: {}
+    }
+    this.joinSessionShared(cameraOptions);
+  }
+
+  joinSessionShared(cameraOptions) {
+
+    this.toggleVideo = this.joinWithVideo;
+    this.toggleAudio = this.joinWithAudio;
 
     this.openVidu = new OpenVidu("wss://127.0.0.1:8443/");
 
@@ -48,7 +67,7 @@ export class AppComponent {
       if (error)
         return console.log(error);
 
-      let camera = openVidu.getCamera();
+      let camera = openVidu.getCamera(cameraOptions);
 
       camera.requestCameraAccess((error, camera) => {
 
@@ -72,11 +91,11 @@ export class AppComponent {
           camera.publish();
 
           session.addEventListener("stream-added", streamEvent => {
-            this.addVideoTag(streamEvent.stream);            
+            this.addVideoTag(streamEvent.stream);
           });
 
           session.addEventListener("stream-removed", streamEvent => {
-            this.removeVideoTag(streamEvent.stream);            
+            this.removeVideoTag(streamEvent.stream);
           });
 
         });
@@ -89,6 +108,36 @@ export class AppComponent {
     this.streams = [];
     this.openVidu.close(true);
     this.generateParticipantInfo();
+  }
+
+  updateToggleVideo(event) {
+    this.toggleVideoTrack(event.target.checked);
+    let msg = (event.target.checked) ? 'Publishing video...' : 'Unpublishing video...'
+    console.log(msg);
+  }
+
+  updateToggleAudio(event) {
+    this.toggleAudioTrack(event.target.checked);
+    let msg = (event.target.checked) ? 'Publishing audio...' : 'Unpublishing audio...'
+    console.log(msg);
+  }
+
+  toggleVideoTrack(activate: boolean) {
+    this.openVidu.getCamera().getWebRtcPeer().videoEnabled = activate;
+  }
+
+  toggleAudioTrack(activate: boolean) {
+    this.openVidu.getCamera().getWebRtcPeer().audioEnabled = activate;
+  }
+
+  publishVideoAudio() {
+    this.toggleVideoTrack(true);
+    this.toggleAudioTrack(true);
+  }
+
+  unpublishVideoAudio() {
+    this.toggleVideoTrack(false);
+    this.toggleAudioTrack(false);
   }
 
 }

@@ -90,8 +90,15 @@ mvn install -DskipTests=true
 ```
 **/openvidu/openvidu-server**
 ```
-mvn compile exec:java -Dexec.mainClass="org.openvidu.server.OpenViduServer"
+mvn compile exec:java
 ```
+
+*(or if you prefer you can just run the Java application in your favourite IDE)*
+
+
+----------
+
+
 At these point, you can start modifying *openvidu-ng-testapp*, *openvidu-browser* or *openvidu-server*.
 
  - *openvidu-ng-testapp*:  the previous "ng serve" command will take care of refreshing the browser's page whenever any change takes place.
@@ -105,7 +112,6 @@ At these point, you can start modifying *openvidu-ng-testapp*, *openvidu-browser
 
  **/openvidu/openvidu-server** 
  ``` 
- mvn compile exec:java -Dexec.mainClass="org.openvidu.server.OpenViduServer"
+ mvn compile exec:java
   ```
-
-
+*(or re-launch the Java application in your IDE)*

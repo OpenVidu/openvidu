@@ -33,7 +33,8 @@ export class Participant {
                         recvAudio: ( streamOptions.recvAudio == undefined ? true : streamOptions.recvAudio ),
                         audio: streamOptions.audio,
                         video: streamOptions.video,
-                        data: streamOptions.data
+                        data: streamOptions.data,
+                        mediaConstraints: streamOptions.mediaConstraints
                     }
                     let stream = new Stream( openVidu, false, room, streamOpts );
 
