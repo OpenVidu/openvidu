@@ -45,6 +45,11 @@
 			<organizationUrl>http://www.kurento.org</organizationUrl>
 		</developer>
 	</developers>
+	
+	<properties>
+		<!-- Main class -->
+		<start-class>org.openvidu.server.OpenViduServer</start-class>
+	</properties>
 
 	<build>
 		<resources>
@@ -60,6 +65,16 @@
 				</includes>
 			</resource>
 		</resources>
+		
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<configuration>
+					<mainClass>${start-class}</mainClass>
+				</configuration>
+			</plugin>
+		</plugins>
 	</build>
 
 	<dependencies>		
