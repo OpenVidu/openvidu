@@ -268,15 +268,26 @@ export class Stream {
             }
         };
 
-        navigator.getUserMedia( constraints, userStream => {
+         navigator.mediaDevices.getUserMedia({
+            audio: true,
+            video: {
+                width: {
+                    ideal: 1280
+                },
+                frameRate: {
+                    ideal: 15
+                }
+            }
+        })
+        .then(userStream => {
             userStream.getAudioTracks()[0].enabled = this.sendAudio;
             userStream.getVideoTracks()[0].enabled = this.sendVideo;
 
             this.wrStream = userStream;
-            callback(undefined, this);
-        },  error => {
-            console.error( "Access denied", error );
-            callback(error, undefined);
+            callback(undefined, this);})
+        .catch(function(e) {
+            console.error( "Access denied", e );
+            callback(e, undefined);
         });
     }
 

@@ -30,7 +30,7 @@ export class OpenVidu {
     
     constructor( private wsUri: string ) {
         if(this.wsUri.charAt(wsUri.length-1) != '/'){
-            this.wsUri = '/';
+            this.wsUri += '/';
         }
         this.wsUri += 'room';
         
@@ -261,5 +261,24 @@ export class OpenVidu {
     };
 
 
+
+
+    toggleLocalVideoTrack(activate: boolean){
+        this.getCamera().getWebRtcPeer().videoEnabled = activate;
+    }
+
+    toggleLocalAudioTrack(activate: boolean){
+        this.getCamera().getWebRtcPeer().audioEnabled = activate;
+    }
+
+    publishLocalVideoAudio() {
+        this.toggleLocalVideoTrack(true);
+        this.toggleLocalAudioTrack(true);  
+    }
+    
+    unpublishLocalVideoAudio() {
+        this.toggleLocalVideoTrack(false);
+        this.toggleLocalAudioTrack(false);
+    }
 
 }

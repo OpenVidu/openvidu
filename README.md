@@ -17,20 +17,13 @@ First of all, you will need these packages:
 
 ```sudo apt-get update```
 
-**node**
-```sudo apt-get install nodejs```
-
-**npm**
-```sudo apt-get install npm```
-
-**maven**
-```sudo apt-get install maven```
-
-**angular-cli**
-```sudo npm install -g @angular/cli```
-
-**typescript**
-```sudo npm install -g typescript```
+| Dependecy     | Command                                |
+| ------------- | -------------------------------------- |
+| node          | ```sudo apt-get install -g nodejs```   |
+| npm           | ```sudo apt-get install -g npm```      |
+| maven         | ```sudo apt-get install -g maven```    |
+| angular-cli   | ```sudo npm install -g @angular/cli``` |
+| typescript    | ```sudo npm install -g typescript```   |
 
 
 OpenVidu structure
@@ -40,12 +33,13 @@ OpenVidu is composed by several modules which require some interconnections in o
 
 Here's a simple summary about the structure of OpenVidu:
 
-![OpenVidu structure](https://drive.google.com/uc?export=view&id=0B61cQ4sbhmWScEVBaG00N3l4N00)
+<center>![OpenVidu structure](https://drive.google.com/uc?export=view&id=0B61cQ4sbhmWSQ1AwaXlnRTR4djA)</center>
 
 
- - **Kurento Media Server**: External module which provides the low-level functionalities related to the media transmission. 
+- **Kurento Media Server**: External module which provides the low-level functionalities related to the media transmission. 
 How to *install* and *run* KMS in your development machine:
 
+Ubuntu 14.04 LTS Trusty (64 bits)
 ```
 echo "deb http://ubuntu.kurento.org trusty kms6" | sudo tee /etc/apt/sources.list.d/kurento.list
 wget -O - http://ubuntu.kurento.org/kurento.gpg.key | sudo apt-key add -
@@ -53,16 +47,26 @@ sudo apt-get update
 sudo apt-get install kurento-media-server-6.0
 ```
 
+Ubuntu 16.04 LTS Xenial (64 bits)
+```
+echo "deb http://ubuntu.kurento.org xenial kms6" | sudo tee /etc/apt/sources.list.d/kurento.list
+wget -O - http://ubuntu.kurento.org/kurento.gpg.key | sudo apt-key add -
+sudo apt-get update
+sudo apt-get install kurento-media-server-6.0
+```
+
+Start and stop the service
 ```
 sudo service kurento-media-server-6.0 start
 sudo service kurento-media-server-6.0 stop
 ```
 
-[Here](http://doc-kurento.readthedocs.io/en/stable/installation_guide.html) you can check the Kurento's official documentation.
+[Here](http://doc-kurento.readthedocs.io/en/stable/installation_guide.html) you can check Kurento's official documentation.
 
- - [**openvidu-browser**](https://github.com/pabloFuente/openvidu/tree/master/openvidu-browser): Javascript library used to connect the application with openvidu-server
- - [**openvidu-server**](https://github.com/pabloFuente/openvidu/tree/master/openvidu-server): Java API which provides the connection with Kurento Media Server
- - **app**: The application that makes use of OpenVidu. In this repo, [**openvidu-ng-testapp**](https://github.com/pabloFuente/openvidu/tree/master/openvidu-ng-testapp).
+- [**openvidu-browser**](https://github.com/pabloFuente/openvidu/tree/master/openvidu-browser): Javascript library used to connect the application with openvidu-server
+- [**kurento-utils-js**](https://github.com/pabloFuente/openvidu/tree/master/kurento-utils-js): Javascript set of reusable components that have been found useful during the development of WebRTC applications with Kurento
+- [**openvidu-server**](https://github.com/pabloFuente/openvidu/tree/master/openvidu-server): Java API which provides the connection with Kurento Media Server
+- **app**: The application that makes use of OpenVidu. In this repo, [**openvidu-ng-testapp**](https://github.com/pabloFuente/openvidu/tree/master/openvidu-ng-testapp).
 
 
 Setup for development
@@ -72,16 +76,15 @@ After installing Kurento Media Server and forking or downloading the repo, these
 ```
 sudo service kurento-media-server-6.0 start
 ```
-
 **/openvidu/openvidu-browser/src/main/resources**
 ```
 npm install
-npm link
+sudo npm link
 ```
 **/openvidu/openvidu-ng-testapp**
 ```
 npm install
-npm link openvidu-browser
+sudo npm link openvidu-browser
 ng serve
 ```
 **/openvidu**

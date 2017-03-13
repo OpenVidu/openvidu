@@ -7,12 +7,15 @@
 
 Copyright © 2013-2016 [Kurento]. Licensed under [Apache 2.0 License].
 
-kurento-room-client-js
+openvidu-browser
 ======================
 
-Kurento Room Client JS is a Javascript library that can be used to implement
-the client-side of group communications applications based on WebRTC.
+openvidu-browser is a Javascript library that can be used to implement the client-side of group communications applications based on WebRTC.
 It uses WebSockets and JSON-RPC to interact with the server-side of the Room API.
+
+Typescript is currently used to develop openvidu-browser. The class diagram is shown below:
+
+<center>![OpenVidu structure](https://drive.google.com/uc?export=view&id=0B61cQ4sbhmWSM1N3SmE5amt3TzA)</center>
 
 What is Kurento
 ---------------

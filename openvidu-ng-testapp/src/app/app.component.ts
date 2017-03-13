@@ -92,10 +92,12 @@ export class AppComponent {
 
           session.addEventListener("stream-added", streamEvent => {
             this.addVideoTag(streamEvent.stream);
+            console.log("Stream " + streamEvent.stream + " added");
           });
 
           session.addEventListener("stream-removed", streamEvent => {
             this.removeVideoTag(streamEvent.stream);
+            console.log("Stream " + streamEvent.stream + " removed");
           });
 
         });
@@ -111,33 +113,15 @@ export class AppComponent {
   }
 
   updateToggleVideo(event) {
-    this.toggleVideoTrack(event.target.checked);
+    this.openVidu.toggleLocalVideoTrack(event.target.checked);
     let msg = (event.target.checked) ? 'Publishing video...' : 'Unpublishing video...'
     console.log(msg);
   }
 
   updateToggleAudio(event) {
-    this.toggleAudioTrack(event.target.checked);
+    this.openVidu.toggleLocalAudioTrack(event.target.checked);
     let msg = (event.target.checked) ? 'Publishing audio...' : 'Unpublishing audio...'
     console.log(msg);
-  }
-
-  toggleVideoTrack(activate: boolean) {
-    this.openVidu.getCamera().getWebRtcPeer().videoEnabled = activate;
-  }
-
-  toggleAudioTrack(activate: boolean) {
-    this.openVidu.getCamera().getWebRtcPeer().audioEnabled = activate;
-  }
-
-  publishVideoAudio() {
-    this.toggleVideoTrack(true);
-    this.toggleAudioTrack(true);
-  }
-
-  unpublishVideoAudio() {
-    this.toggleVideoTrack(false);
-    this.toggleAudioTrack(false);
   }
 
 }
