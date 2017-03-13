@@ -118,3 +118,51 @@ At these point, you can start modifying *openvidu-ng-testapp*, *openvidu-browser
  mvn compile exec:java
   ```
 *(or re-launch the Java application in your IDE)*
+
+
+Setup for advanced development (publishing in local server)
+------------------
+You can also use different machines in the same network to build a more advanced development environment, so you can test the application in different devices at the same time. It's very similar to the process outlined above:
+
+You will need a server for the built app (if you don't have any, we recommend *http-server*):
+```npm install -g http-server```
+
+Then...
+
+```
+sudo service kurento-media-server-6.0 start
+```
+**/openvidu/openvidu-browser/src/main/resources**
+```
+npm install
+sudo npm link
+```
+**/openvidu/openvidu-ng-testapp**
+```
+npm install
+sudo npm link openvidu-browser
+```
+**/openvidu**
+```
+mvn install -DskipTests=true
+```
+**/openvidu/openvidu-server**
+```
+mvn compile exec:java
+```
+*(or if you prefer you can just run the Java application in your favourite IDE)*
+
+
+The following commands will be the ones which you should relaunch to update your changes:
+**/openvidu/openvidu-ng-testapp**
+```
+ng build
+cd dist
+openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -keyout key.pem -out cert.pem  [ACCEPT ALL FIELDS]
+http-server -S
+```
+These commands build the Angular project, generate a self-signed certificate (which unfortunately is a mandatory requirement for http-server SSL) and serves the content in http-server.
+
+Finally, to launch the app connect to https://127.0.0.1:8080 in the machine running the http-server and to https://[HOST]:8080 in other devices of the same network ([HOST] the IP of the machine running the http-server).
+
+Don't forget to accept the certificate! (accepting https://[HOST]:8443/room may also be necessary)

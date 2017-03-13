@@ -60,7 +60,7 @@ export class AppComponent {
     this.toggleVideo = this.joinWithVideo;
     this.toggleAudio = this.joinWithAudio;
 
-    this.openVidu = new OpenVidu("wss://127.0.0.1:8443/");
+    this.openVidu = new OpenVidu("wss://" + location.hostname + ":8443/");
 
     this.openVidu.connect((error, openVidu) => {
 
