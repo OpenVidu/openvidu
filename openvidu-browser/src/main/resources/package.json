@@ -1,24 +1,24 @@
 {
-	"name": "openvidu-browser",
-	"version": "0.0.2",
-	"description": "OpenVidu Browser",
-	"main": "lib/index.js",
-	"types": "lib/index.d.ts",
-	"scripts": {
-		"browserify": "cd ts && watchify Main.ts -p [ tsify ] --exclude kurento-browser-extensions --debug -o ../static/js/OpenVidu.js -v",
-		"test": "echo \"Error: no test specified\" && exit 1",
-		"prepublish": "cd ts && tsc",
-		"developing": "cd ts && tsc -w"
-	},
-	"author": "",
-	"license": "Apache-2.0",
-	"dependencies": {
-		"kurento-jsonrpc": "5.1.3",
-		"wolfy87-eventemitter": "4.2.9",
-		"@types/wolfy87-eventemitter": "4.2.31",
-		"webrtc-adapter":"3.2.0",
-		"kurento-utils":"6.6.0",
-		"uuid": "~2.0.1",
-		"sdp-translator": "^0.1.15"
-	}
+  "name": "openvidu-browser",
+  "version": "0.1.0",
+  "description": "OpenVidu Browser",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "scripts": {
+    "browserify": "cd ts && watchify Main.ts -p [ tsify ] --exclude kurento-browser-extensions --debug -o ../static/js/OpenVidu.js -v",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepublish": "cd ts && tsc",
+    "developing": "cd ts && tsc -w"
+  },
+  "author": "",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "kurento-jsonrpc": "5.1.3",
+    "wolfy87-eventemitter": "4.2.9",
+    "@types/wolfy87-eventemitter": "4.2.31",
+    "webrtc-adapter": "3.2.0",
+    "kurento-utils": "6.6.0",
+    "uuid": "~2.0.1",
+    "sdp-translator": "^0.1.15"
+  }
 }

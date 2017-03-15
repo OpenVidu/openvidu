@@ -268,17 +268,7 @@ export class Stream {
             }
         };
 
-         navigator.mediaDevices.getUserMedia({
-            audio: true,
-            video: {
-                width: {
-                    ideal: 1280
-                },
-                frameRate: {
-                    ideal: 15
-                }
-            }
-        })
+         navigator.mediaDevices.getUserMedia(constraints)
         .then(userStream => {
             userStream.getAudioTracks()[0].enabled = this.sendAudio;
             userStream.getVideoTracks()[0].enabled = this.sendVideo;

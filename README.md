@@ -163,6 +163,6 @@ http-server -S
 ```
 These commands build the Angular project, generate a self-signed certificate (which unfortunately is a mandatory requirement for http-server SSL) and serves the content in http-server.
 
-Finally, to launch the app connect to https://127.0.0.1:8080 in the machine running the http-server and to https://[HOST]:8080 in other devices of the same network ([HOST] the IP of the machine running the http-server).
+Finally, to launch the app connect to *https://127.0.0.1:8080* in the machine running the http-server and to *https://[HOST]:8080* in other devices of the same network ([HOST] the IP of the machine running the http-server).
 
-Don't forget to accept the certificate! (accepting https://[HOST]:8443/room may also be necessary)
+Don't forget to accept the certificate! (accepting *https://[HOST]:8443/room* may also be necessary)
