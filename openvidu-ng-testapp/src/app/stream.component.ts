@@ -7,12 +7,10 @@ import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
     styles: [`    
         .participant {
 	        float: left;
-	        width: 20%;
 	        margin: 10px;
         }
         .participant video {
-	        width: 100%;
-	        height: auto;
+            
         }`],
     template: `
         <div class='participant'>

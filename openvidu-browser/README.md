@@ -15,7 +15,7 @@ It uses WebSockets and JSON-RPC to interact with the server-side of the Room API
 
 Typescript is currently used to develop openvidu-browser. The class diagram is shown below:
 
-<center>![OpenVidu structure](https://drive.google.com/uc?export=view&id=0B61cQ4sbhmWSM1N3SmE5amt3TzA)</center>
+![OpenVidu structure](https://drive.google.com/uc?export=view&id=0B61cQ4sbhmWSM1N3SmE5amt3TzA)
 
 What is Kurento
 ---------------

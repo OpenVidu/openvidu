@@ -1,34 +1,75 @@
 <div *ngIf="!session">
-	<h1>Join a video session</h1>
-	<form (submit)="joinSession()" accept-charset="UTF-8">
-		<p>
-			<label>Participant:</label>
-			<input type="text" name="participantId" [(ngModel)]="participantId" required>
-		</p>
-		<p>
-			<label>Session:</label>
-			<input type="text" name="sessionId" [(ngModel)]="sessionId" required>
-		</p>
-		<p>
-			<input type="checkbox" [(ngModel)]="joinWithVideo" id="join-with-video" name="join-with-video"> Send video
-		</p>
-		<p>
-			<input type="checkbox" [(ngModel)]="joinWithAudio" id="join-with-audio" name="join-with-audio"> Send audio
-		</p>
-		<p>
-			<input type="submit" name="commit" value="Join!">
-		</p>
-	</form>
+  <h1>Join a video session</h1>
+  <form (submit)="joinSession()" accept-charset="UTF-8">
+    <div>
+      <label>Participant:</label>
+      <input type="text" name="participantId" [(ngModel)]="participantId" required>
+    </div>
+    <div>
+      <label>Session:</label>
+      <input type="text" name="sessionId" [(ngModel)]="sessionId" required>
+    </div>
+    <div>
+      <input type="checkbox" [(ngModel)]="joinWithVideo" id="join-with-video" name="join-with-video"> Send video
+      <div *ngIf="joinWithVideo">
+        <table>
+          <tr>
+            <th>Constraint</th>
+            <th>Value</th>
+          </tr>
+          <tr>
+            <td>width</td>
+            <td><input type="text" id="width" required></td>
+          </tr>
+          <tr>
+            <td>height</td>
+            <td><input type="text" id="height" required></td>
+          </tr>
+          <tr>
+            <td>frameRate</td>
+            <td><input type="text" id="frameRate" required></td>
+          </tr>
+        </table>
+      </div>
+    </div>
+    <div>
+      <input type="checkbox" [(ngModel)]="joinWithAudio" id="join-with-audio" name="join-with-audio"> Send audio
+    </div>
+    <div>
+      <input type="submit" name="commit" value="Join!">
+    </div>
+  </form>
 </div>
 
 <div *ngIf="session">
-	<h2>{{sessionId}}</h2>
-	<input type="button" (click)="leaveSession()" value="Leave session">
-	<input type="checkbox" id="toggle-video" name="toggle-video" 
-		[checked]="toggleVideo" (change)="updateToggleVideo($event)"> Toggle your video
-	<input type="checkbox" id="toggle-audio" name="toggle-audio" 
-		[checked]="toggleAudio" (change)="updateToggleAudio($event)"> Toggle your audio
-	<div>
-		<stream *ngFor="let s of streams" [stream]="s"></stream>
-	</div>
+  <h2>{{sessionId}}</h2>
+  <input type="button" (click)="leaveSession()" value="Leave session">
+  <input type="checkbox" id="toggle-video" name="toggle-video" [checked]="toggleVideo" (change)="updateToggleVideo($event)">  Toggle your video
+  <input type="checkbox" id="toggle-audio" name="toggle-audio" [checked]="toggleAudio" (change)="updateToggleAudio($event)">  Toggle your audio
+  <div>
+    <div *ngFor="let s of streams; let i = index" style="display: table-row;">
+      <div style="display: inline; top: 0;">
+        <stream [stream]="s"></stream>
+      </div>
+      <div *ngIf="stats[i]" style="display: inline-block;">
+        <div style="display: inline; margin-left: 50px;">
+          <div *ngIf="stats[i].bitrate">
+            <h2>Bitrate: {{stats[i].bitrate}}</h2>
+          </div>
+          <table>
+            <tr>
+              <th>Type</th>
+              <th>Time</th>
+              <th>Other attributes</th>
+            </tr>
+            <tr *ngFor="let st of stats[i].statsArray">
+              <td>{{st.type}}</td>
+              <td>{{st.timestamp}}</td>
+              <td>{{getStatAttributes(st.res)}}</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

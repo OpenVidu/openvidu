@@ -33,7 +33,7 @@ OpenVidu is composed by several modules which require some interconnections in o
 
 Here's a simple summary about the structure of OpenVidu:
 
-<center>![OpenVidu structure](https://drive.google.com/uc?export=view&id=0B61cQ4sbhmWSQ1AwaXlnRTR4djA)</center>
+![OpenVidu structure](https://drive.google.com/uc?export=view&id=0B61cQ4sbhmWSQ1AwaXlnRTR4djA)
 
 
 - **Kurento Media Server**: External module which provides the low-level functionalities related to the media transmission. 
