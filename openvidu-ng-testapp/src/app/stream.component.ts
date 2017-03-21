@@ -6,7 +6,6 @@ import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
     selector: 'stream',
     styles: [`    
         .participant {
-	        float: left;
 	        margin: 10px;
         }
         .participant video {

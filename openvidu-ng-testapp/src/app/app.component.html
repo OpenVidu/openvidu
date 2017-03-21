@@ -47,16 +47,22 @@
   <input type="checkbox" id="toggle-video" name="toggle-video" [checked]="toggleVideo" (change)="updateToggleVideo($event)">  Toggle your video
   <input type="checkbox" id="toggle-audio" name="toggle-audio" [checked]="toggleAudio" (change)="updateToggleAudio($event)">  Toggle your audio
   <div>
-    <div *ngFor="let s of streams; let i = index" style="display: table-row;">
-      <div style="display: inline; top: 0;">
+    <div *ngFor="let s of streams; let i = index">
+      <div style="top: 0;">
         <stream [stream]="s"></stream>
       </div>
-      <div *ngIf="stats[i]" style="display: inline-block;">
-        <div style="display: inline; margin-left: 50px;">
+      <div *ngIf="stats[i]">
+        <div style="margin-left: 50px;">
+          <input type="checkbox" id="toggle-state" name="toggle-state" [checked]="true" (change)="updateToggleState(i)">  Show conexion state
+          <div [attr.id]="'state-' + i" style="display: block;">
+            <p><b>Signaling state:</b> {{signalingState[i]}}</p>
+            <p><b>Ice connection state:</b> {{iceConnectionState[i]}}</p>
+          </div>
+          <input type="checkbox" id="toggle-statistics" name="toggle-statistics" (change)="updateToggleStatistics(i)">  Show statistics
           <div *ngIf="stats[i].bitrate">
             <h2>Bitrate: {{stats[i].bitrate}}</h2>
           </div>
-          <table>
+          <table [attr.id]="'table-' + i" style="display: none;">
             <tr>
               <th>Type</th>
               <th>Time</th>

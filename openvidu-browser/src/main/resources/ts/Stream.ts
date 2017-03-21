@@ -252,6 +252,10 @@ export class Stream {
         }
     }
 
+    getRTCPeerConnection(){
+        return this.getWebRtcPeer().peerConnection;
+    }
+
     requestCameraAccess(callback: Callback<Stream>) {
 
         this.participant.addStream(this);

@@ -29,6 +29,8 @@ export class AppComponent {
   stats = [];
   bytesPrev = [];
   timestampPrev = [];
+  signalingState = [];
+  iceConnectionState = [];
 
 
   constructor() {
@@ -47,7 +49,26 @@ export class AppComponent {
 
   private addVideoTag(stream: Stream) {
     console.log("Stream added");
-    this.streams.push(stream);
+    let ind = (this.streams.push(stream) - 1);
+
+    this.signalingState[ind] = '';
+    this.iceConnectionState[ind] = '';
+
+    //Connection events
+    stream.getRTCPeerConnection().onsignalingstatechange = (event) => {
+      this.signalingState[ind] += " => " + stream.getRTCPeerConnection().signalingState;
+      console.info("Stream " + stream.getId() + " signaling state: " + stream.getRTCPeerConnection().signalingState);
+    }
+
+    stream.getRTCPeerConnection().oniceconnectionstatechange = (event) => {
+      /*if (stream.getRTCPeerConnection().iceconnectionstate === "failed" ||
+          stream.getRTCPeerConnection().iceconnectionstate === "disconnected" ||
+          stream.getRTCPeerConnection().iceconnectionstate === "closed") {
+        // Handle the failure
+    };*/
+      this.iceConnectionState[ind] += " => " + stream.getRTCPeerConnection().iceConnectionState;
+      console.info("Stream " + stream.getId() + " ice connection state: " + stream.getRTCPeerConnection().iceConnectionState);
+    }
 
     //For statistics
     this.timestampPrev.push(0);
@@ -62,6 +83,9 @@ export class AppComponent {
     this.stats.splice(index, 1);
     this.timestampPrev.splice(index, 1);
     this.bytesPrev.splice(index, 1);
+
+    this.signalingState.splice(index, 1);
+    this.iceConnectionState.splice(index, 1);
   }
 
   joinSession() {
@@ -109,9 +133,9 @@ export class AppComponent {
 
           this.session = session;
 
-          this.addVideoTag(camera);
-
           camera.publish();
+
+          this.addVideoTag(camera);
 
           this.intervalStats().subscribe();
 
@@ -147,6 +171,16 @@ export class AppComponent {
     this.openVidu.toggleLocalAudioTrack(event.target.checked);
     let msg = (event.target.checked) ? 'Publishing audio...' : 'Unpublishing audio...'
     console.log(msg);
+  }
+
+  updateToggleStatistics(i) {
+    let table = (<HTMLInputElement>document.getElementById('table-' + i));
+    (table.style.display == "none") ? table.style.display = "block" : table.style.display = "none";
+  }
+
+  updateToggleState(i) {
+    let state = (<HTMLInputElement>document.getElementById('state-' + i));
+    (state.style.display == "none") ? state.style.display = "block" : state.style.display = "none";
   }
 
   /*obtainSupportedConstraints() {
