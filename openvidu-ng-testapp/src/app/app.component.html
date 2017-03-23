@@ -56,11 +56,12 @@
           <input type="checkbox" id="toggle-state" name="toggle-state" [checked]="true" (change)="updateToggleState(i)">  Show conexion state
           <div [attr.id]="'state-' + i" style="display: block;">
             <p><b>Signaling state:</b> {{signalingState[i]}}</p>
-            <p><b>Ice connection state:</b> {{iceConnectionState[i]}}</p>
+            <p><b>ICE connection state:</b> {{iceConnectionState[i]}}</p>
           </div>
           <input type="checkbox" id="toggle-statistics" name="toggle-statistics" (change)="updateToggleStatistics(i)">  Show statistics
-          <div *ngIf="stats[i].bitrate">
-            <h2>Bitrate: {{stats[i].bitrate}}</h2>
+          <div>
+            <h2 *ngIf="stats[i].bitrate">Bitrate: {{stats[i].bitrate}}</h2>
+            <h2 *ngIf="stats[i].framerate">Framerate: {{stats[i].framerate}}</h2>
           </div>
           <table [attr.id]="'table-' + i" style="display: none;">
             <tr>

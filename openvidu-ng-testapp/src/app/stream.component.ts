@@ -14,7 +14,8 @@ import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
     template: `
         <div class='participant'>
           <p>{{stream.getId()}}</p>
-          <video autoplay="true" [src]="videoSrc"></video>
+          <video *ngIf="!stream.local" autoplay="true" [src]="videoSrc"></video>
+          <video *ngIf="stream.local" autoplay="true" [src]="videoSrc" muted></video>
         </div>`
 })
 export class StreamComponent {

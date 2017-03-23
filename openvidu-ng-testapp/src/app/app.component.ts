@@ -28,6 +28,7 @@ export class AppComponent {
   //Statistics
   stats = [];
   bytesPrev = [];
+  framesPrev = [];
   timestampPrev = [];
   signalingState = [];
   iceConnectionState = [];
@@ -73,6 +74,7 @@ export class AppComponent {
     //For statistics
     this.timestampPrev.push(0);
     this.bytesPrev.push(0);
+    this.framesPrev.push(0);
   }
 
   private removeVideoTag(stream: Stream) {
@@ -83,6 +85,7 @@ export class AppComponent {
     this.stats.splice(index, 1);
     this.timestampPrev.splice(index, 1);
     this.bytesPrev.splice(index, 1);
+    this.framesPrev.splice(index, 1);
 
     this.signalingState.splice(index, 1);
     this.iceConnectionState.splice(index, 1);
@@ -231,6 +234,7 @@ export class AppComponent {
     stream.getWebRtcPeer().peerConnection.getStats(null)
       .then((results) => {
         this.stats[i] = this.dumpStats(results, i);
+        console.info(results);
       });
   }
 
@@ -238,6 +242,7 @@ export class AppComponent {
   dumpStats(results, i) {
     var statsArray = [];
     let bitrate;
+    let frames;
 
     results.forEach((res) => {
       let date = new Date(res.timestamp);
@@ -249,10 +254,14 @@ export class AppComponent {
         // firefox calculates the bitrate for us
         // https://bugzilla.mozilla.org/show_bug.cgi?id=951496
         bitrate = Math.floor(res.bitrateMean / 1024);
+        if (res.framerateMean !== undefined && res.frameRate != "0") {
+          frames = (res.framerateMean).toFixed(2);
+        }
 
       } else if (res.type === 'ssrc' && res.bytesReceived && res.googFrameRateReceived) {
         // chrome does not so we need to do it ourselves
         var bytes = res.bytesReceived;
+        frames = (res.googFrameRateOutput == "0") ? Number(this.framesPrev[i]) : Number(res.googFrameRateOutput);
         if (this.timestampPrev[i]) {
           bitrate = 8 * (bytes - this.bytesPrev[i]) / (now - this.timestampPrev[i]);
           bitrate = Math.floor(bitrate);
@@ -265,7 +274,11 @@ export class AppComponent {
     if (bitrate) {
       bitrate += ' kbits/sec';
     }
-    return { statsArray: statsArray, bitrate: bitrate };
+    if (frames) {
+      this.framesPrev[i] = frames;
+      frames += ' fps';
+    }
+    return { statsArray: statsArray, bitrate: bitrate, framerate: frames };
   }
 
   getStatAttributes(stat) {

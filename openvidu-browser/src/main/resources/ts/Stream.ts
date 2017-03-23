@@ -11,9 +11,13 @@ import { OpenVidu, Callback } from './OpenVidu';
 import EventEmitter = require('wolfy87-eventemitter');
 import * as kurentoUtils from 'kurento-utils';
 
-import 'webrtc-adapter';
+import * as adapter from 'webrtc-adapter';
 declare var navigator: any;
 declare var RTCSessionDescription: any;
+
+if (window) {
+    window["adapter"] = adapter;
+}
 
 function jq(id: string): string {
     return id.replace(/(@|:|\.|\[|\]|,)/g, "\\$1");
@@ -252,7 +256,7 @@ export class Stream {
         }
     }
 
-    getRTCPeerConnection(){
+    getRTCPeerConnection() {
         return this.getWebRtcPeer().peerConnection;
     }
 
