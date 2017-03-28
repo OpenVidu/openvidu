@@ -25,113 +25,135 @@ export class Session {
     public thresholdSpeaker: number;
     private options: SessionOptions
 
-    constructor( private openVidu: OpenVidu ) {
-        this.localParticipant = new Participant( this.openVidu, true, this );
+    constructor(private openVidu: OpenVidu, private sessionId: string) {
+        this.localParticipant = new Participant(this.openVidu, true, this);
     }
 
-    configure( options: SessionOptions ) {
+
+
+    /* NEW METHODS */
+    connect(token, callback) {
+
+        this.openVidu.connect((error) => {
+            if (error) {
+                callback('ERROR CONNECTING TO OPENVIDU');
+            }
+            else {
+                this.configure({
+                    sessionId: this.sessionId,
+                    participantId: token
+                });
+
+                let joinParams = {
+                    user: token,
+                    room: this.sessionId,
+                    dataChannels: false
+                }
+
+                if (this.localParticipant) {
+                    if (Object.keys(this.localParticipant.getStreams()).some(streamId =>
+                        this.streams[streamId].isDataChannelEnabled())) {
+                        joinParams.dataChannels = true;
+                    }
+                }
+
+                this.openVidu.sendRequest('joinRoom', joinParams, (error, response) => {
+
+                    if (error) {
+                        callback('UNABLE TO JOIN ROOM');
+                    } else {
+
+                        this.connected = true;
+
+                        let exParticipants = response.value;
+
+                        let roomEvent = {
+                            participants: new Array<Participant>(),
+                            streams: new Array<Stream>()
+                        }
+
+                        let length = exParticipants.length;
+                        for (let i = 0; i < length; i++) {
+
+                            let participant = new Participant(this.openVidu, false, this,
+                                exParticipants[i]);
+
+                            this.participants[participant.getId()] = participant;
+
+                            roomEvent.participants.push(participant);
+
+                            let streams = participant.getStreams();
+                            for (let key in streams) {
+                                roomEvent.streams.push(streams[key]);
+                                if (this.subscribeToStreams) {
+                                    streams[key].subscribe();
+                                }
+                            }
+                        }
+
+                        if (this.subscribeToStreams) {
+                            for (let stream of roomEvent.streams) {
+                                this.ee.emitEvent('stream-added', [{ stream }]);
+
+                                // Adding the remote stream to the OpenVidu object
+                                this.openVidu.getRemoteStreams().push(stream);
+                            }
+                        }
+
+                        callback(undefined);
+                    }
+                });
+            }
+        });
+    }
+
+    publish() {
+        this.openVidu.getCamera().publish();
+    }
+    /* NEW METHODS */
+
+
+
+
+
+    configure(options: SessionOptions) {
 
         this.options = options;
         this.id = options.sessionId;
         this.subscribeToStreams = options.subscribeToStreams || true;
         this.updateSpeakerInterval = options.updateSpeakerInterval || 1500;
         this.thresholdSpeaker = options.thresholdSpeaker || -50;
-        this.localParticipant.setId( options.participantId );
+        this.localParticipant.setId(options.participantId);
         this.activateUpdateMainSpeaker();
 
         this.participants[options.participantId] = this.localParticipant;
     }
-    
-    getId(){
+
+    getId() {
         return this.id;
     }
 
     private activateUpdateMainSpeaker() {
 
         setInterval(() => {
-            if ( this.participantsSpeaking.length > 0 ) {
-                this.ee.emitEvent( 'update-main-speaker', [{
+            if (this.participantsSpeaking.length > 0) {
+                this.ee.emitEvent('update-main-speaker', [{
                     participantId: this.participantsSpeaking[this.participantsSpeaking.length - 1]
-                }] );
+                }]);
             }
-        }, this.updateSpeakerInterval );
+        }, this.updateSpeakerInterval);
     }
 
     getLocalParticipant() {
         return this.localParticipant;
     }
 
-    addEventListener( eventName, listener ) {
-        this.ee.addListener( eventName, listener );
+    addEventListener(eventName, listener) {
+        this.ee.addListener(eventName, listener);
     }
 
-    emitEvent( eventName, eventsArray ) {
-        this.ee.emitEvent( eventName, eventsArray );
-    }
-
-    connect() {
-
-        let joinParams = {
-            user: this.options.participantId,
-            room: this.options.sessionId,
-            dataChannels: false
-        }
-
-        if ( this.localParticipant ) {
-            if ( Object.keys( this.localParticipant.getStreams() ).some( streamId =>
-                this.streams[streamId].isDataChannelEnabled() ) ) {
-                joinParams.dataChannels = true;
-            }
-        }
-
-        this.openVidu.sendRequest( 'joinRoom', joinParams, ( error, response ) => {
-
-            if ( error ) {
-
-                console.warn( 'Unable to join room', error );
-                this.ee.emitEvent( 'error-room', [{
-                    error: error
-                }] );
-
-            } else {
-
-                this.connected = true;
-
-                let exParticipants = response.value;
-
-                let roomEvent = {
-                    participants: new Array<Participant>(),
-                    streams: new Array<Stream>()
-                }
-
-                let length = exParticipants.length;
-                for ( let i = 0; i < length; i++ ) {
-
-                    let participant = new Participant( this.openVidu, false, this,
-                        exParticipants[i] );
-
-                    this.participants[participant.getId()] = participant;
-
-                    roomEvent.participants.push( participant );
-
-                    let streams = participant.getStreams();
-                    for ( let key in streams ) {
-                        roomEvent.streams.push( streams[key] );
-                        if ( this.subscribeToStreams ) {
-                            streams[key].subscribe();
-                        }
-                    }
-                }
-
-                this.ee.emitEvent( 'room-connected', [roomEvent] );
-
-                if ( this.subscribeToStreams ) {
-                    for ( let stream of roomEvent.streams ) {
-                        this.ee.emitEvent( 'stream-added', [{ stream }] );
-                    }
-                }
-            }
-        });
+    emitEvent(eventName, eventsArray) {
+        this.ee.emitEvent(eventName, eventsArray);
     }
 
 
@@ -161,6 +183,9 @@ export class Session {
             if ( this.subscribeToStreams ) {
                 stream.subscribe();
                 this.ee.emitEvent( 'stream-added', [{ stream }] );
+
+                // Adding the remote stream to the OpenVidu object
+                this.openVidu.getRemoteStreams().push(stream);
             }
         }
     }
@@ -201,6 +226,10 @@ export class Session {
                 this.ee.emitEvent( 'stream-removed', [{
                     stream: streams[key]
                 }] );
+
+                // Deleting the removed stream from the OpenVidu object
+                let index = this.openVidu.getRemoteStreams().indexOf(streams[key]);
+                this.openVidu.getRemoteStreams().splice(index, 1);
             }
 
             participant.dispose();

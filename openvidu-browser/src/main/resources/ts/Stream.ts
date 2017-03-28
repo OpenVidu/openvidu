@@ -69,6 +69,8 @@ export class Stream {
     private dataChannel: boolean;
     private dataChannelOpened = false;
 
+    private videoSrc: string;
+
     constructor(private openVidu: OpenVidu, private local: boolean, private room: Session, options: StreamOptions) {
 
         if (options.id) {
@@ -84,7 +86,31 @@ export class Stream {
         this.sendVideo = options.video;
         this.sendAudio = options.audio;
         this.mediaConstraints = options.mediaConstraints;
+
+        this.addEventListener('src-added', (srcEvent) => {
+            this.videoSrc = srcEvent.src;
+            if (this.video) this.video.src = srcEvent.src;
+            console.warn("Videosrc [" + srcEvent.src + "] added to stream [" + this.getId() + "]");
+        });
     }
+
+    emitSrcEvent(wrstream) {
+        this.ee.emitEvent('src-added', [{
+            src: URL.createObjectURL(wrstream)
+        }]);
+    }
+
+    getVideoSrc() {
+        return this.videoSrc;
+    }
+
+    removeVideo(parentElement) {
+        document.getElementById(parentElement)!.removeChild(this.video);
+    }
+
+
+
+
 
     getRecvVideo() {
         return this.recvVideo;
@@ -108,6 +134,7 @@ export class Stream {
         this.localMirrored = true;
         if (wr) {
             this.wrStream = wr;
+            this.emitSrcEvent(this.wrStream);
         }
     }
 
@@ -183,13 +210,7 @@ export class Stream {
         this.video.id = 'native-video-' + this.getId();
         this.video.autoplay = true;
         this.video.controls = false;
-        if (this.wrStream) {
-            this.video.src = URL.createObjectURL(this.wrStream);
-            show(thumbnailId);
-            this.hideSpinner();
-        } else {
-            console.log("No wrStream yet for", this.getId());
-        }
+        this.video.src = this.videoSrc;
 
         this.videoElements.push({
             thumb: thumbnailId,
@@ -203,10 +224,10 @@ export class Stream {
         if (typeof parentElement === "string") {
             let parentElementDom = document.getElementById(parentElement);
             if (parentElementDom) {
-                parentElementDom.appendChild(this.video);
+                this.video = parentElementDom.appendChild(this.video);
             }
         } else {
-            parentElement.appendChild(this.video);
+            this.video = parentElement.appendChild(this.video);
         }
 
         return this.video;
@@ -278,12 +299,14 @@ export class Stream {
             }
         };
 
-        navigator.mediaDevices.getUserMedia(constraints)
+        navigator.mediaDevices.getUserMedia(constraints2)
             .then(userStream => {
                 userStream.getAudioTracks()[0].enabled = this.sendAudio;
                 userStream.getVideoTracks()[0].enabled = this.sendVideo;
 
                 this.wrStream = userStream;
+                this.emitSrcEvent(this.wrStream);
+
                 callback(undefined, this);
             })
             .catch(function (e) {
@@ -438,6 +461,8 @@ export class Stream {
 
                 if (this.wrStream != undefined) {
 
+                    this.emitSrcEvent(this.wrStream);
+
                     this.speechEvent = kurentoUtils.WebRtcPeer.hark(this.wrStream, { threshold: this.room.thresholdSpeaker });
 
                     this.speechEvent.on('speaking', () => {
@@ -460,8 +485,8 @@ export class Stream {
                     video.src = URL.createObjectURL(this.wrStream);
                     video.onplay = () => {
                         console.log(this.getId() + ': ' + 'Video playing');
-                        show(thumbnailId);
-                        this.hideSpinner(this.getId());
+                        //show(thumbnailId);
+                        //this.hideSpinner(this.getId());
                     };
                 }
                 this.room.emitEvent('stream-subscribed', [{

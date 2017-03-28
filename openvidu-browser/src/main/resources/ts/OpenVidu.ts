@@ -27,15 +27,57 @@ export class OpenVidu {
     private rpcParams: any;
     private callback: Callback<OpenVidu>;
     private camera: Stream;
+    private remoteStreams: Stream[] = [];
     
     constructor( private wsUri: string ) {
         if(this.wsUri.charAt(wsUri.length-1) != '/'){
             this.wsUri += '/';
         }
         this.wsUri += 'room';
-        
-        this.session = new Session(this);
     }
+
+
+
+
+
+    /* NEW METHODS */
+    initSession(sessionId) {
+        console.log("Session initialized!");
+        this.session = new Session(this, sessionId);
+        return this.session;
+    }
+
+    initPublisherTagged(parentId: string, cameraOptions: any) {
+        console.log("Publisher tagged initialized!");
+
+        let camera = this.getCamera(cameraOptions);
+        camera.requestCameraAccess((error, camera) => {
+            if (error) return console.log(error);
+            camera!.playOnlyVideo(parentId, null);
+        });
+    }
+
+    initPublisher(cameraOptions: any) {
+        console.log("Publisher initialized!");
+
+        let camera = this.getCamera(cameraOptions);
+        camera.requestCameraAccess((error, camera) => {
+            if (error) return console.log(error);
+        });
+    }
+
+    getLocalStream() {
+        return this.camera;
+    }
+
+    getRemoteStreams() {
+        return this.remoteStreams;
+    }
+    /* NEW METHODS */
+
+
+
+
 
     getRoom() {
         return this.session;
@@ -230,7 +272,7 @@ export class OpenVidu {
         return this.camera;
     };
 
-    joinSession(options: SessionOptions, callback: Callback<Session>) {
+    /*joinSession(options: SessionOptions, callback: Callback<Session>) {
         
         this.session.configure(options);
         
@@ -241,7 +283,7 @@ export class OpenVidu {
         this.session.addEventListener('error-room', error => callback(error));
         
         return this.session;
-    };
+    };*/
 
     //CHAT
     sendMessage( room, user, message ) {
