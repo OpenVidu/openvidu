@@ -110,6 +110,60 @@ export class Session {
     publish() {
         this.openVidu.getCamera().publish();
     }
+
+    onStreamAddedOV(callback) {
+        this.addEventListener("stream-added", streamEvent => {
+            callback(streamEvent.stream);
+        });
+    }
+
+    onStreamRemovedOV(callback) {
+        this.addEventListener("stream-removed", streamEvent => {
+            callback(streamEvent.stream);
+        });
+    }
+
+    onParticipantJoinedOV(callback) {
+        this.addEventListener("participant-joined", participantEvent => {
+            callback(participantEvent.participant);
+        });
+    }
+
+    onParticipantLeftOV(callback) {
+        this.addEventListener("participant-left", participantEvent => {
+            callback(participantEvent.participant);
+        });
+    }
+
+    onParticipantPublishedOV(callback) {
+        this.addEventListener("participant-published", participantEvent => {
+            callback(participantEvent.participant);
+        });
+    }
+
+    onParticipantEvictedOV(callback) {
+        this.addEventListener("participant-evicted", participantEvent => {
+            callback(participantEvent.participant);
+        });
+    }
+
+    onRoomClosedOV(callback) {
+        this.addEventListener("room-closed", roomEvent => {
+            callback(roomEvent.room);
+        });
+    }
+
+    onLostConnectionOV(callback) {
+        this.addEventListener("lost-connection", roomEvent => {
+            callback(roomEvent.room);
+        });
+    }
+
+    onMediaErrorOV(callback) {
+        this.addEventListener("error-media", errorEvent => {
+            callback(errorEvent.error)
+        });
+    }
     /* NEW METHODS */
 
 

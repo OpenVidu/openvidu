@@ -219,6 +219,8 @@ export class Stream {
 
         if (this.local) {
             this.video.muted = true;
+        } else {
+            this.video.title = this.getId();
         }
 
         if (typeof parentElement === "string") {
