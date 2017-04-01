@@ -22,6 +22,8 @@ import java.util.Set;
 
 import org.openvidu.server.core.NotificationRoomManager;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -51,5 +53,15 @@ public class RoomController {
   @RequestMapping("/getThresholdSpeaker")
   public Integer getThresholdSpeaker() {
     return Integer.valueOf(getProperty("thresholdSpeaker", THRESHOLD_SPEAKER_DEFAULT));
+  }
+  
+  @RequestMapping("/getSessionId")
+  public ResponseEntity<String> getSessionId() {
+	  return new ResponseEntity<String>("SUPER_SESSIONID", HttpStatus.OK);
+  }
+  
+  @RequestMapping("/getToken")
+  public ResponseEntity<String> getToken() {
+	  return new ResponseEntity<String>("SUPER_TOKEN", HttpStatus.OK);
   }
 }

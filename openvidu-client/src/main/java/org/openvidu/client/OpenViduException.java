@@ -36,7 +36,9 @@ public class OpenViduException extends RuntimeException {
 
     USER_NOT_STREAMING_ERROR_CODE(105), EXISTING_USER_IN_ROOM_ERROR_CODE(
         104), USER_CLOSED_ERROR_CODE(
-            103), USER_NOT_FOUND_ERROR_CODE(102), USER_GENERIC_ERROR_CODE(101);
+            103), USER_NOT_FOUND_ERROR_CODE(102), USER_GENERIC_ERROR_CODE(101),
+    
+    USER_UNAUTHORIZED(401);
 
     private int value;
 
