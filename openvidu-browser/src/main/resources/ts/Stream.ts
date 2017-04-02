@@ -301,7 +301,7 @@ export class Stream {
             }
         };
 
-        navigator.mediaDevices.getUserMedia(constraints2)
+        navigator.mediaDevices.getUserMedia(constraints)
             .then(userStream => {
                 userStream.getAudioTracks()[0].enabled = this.sendAudio;
                 userStream.getVideoTracks()[0].enabled = this.sendVideo;
