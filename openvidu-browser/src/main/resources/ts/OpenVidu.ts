@@ -47,22 +47,28 @@ export class OpenVidu {
         return this.session;
     }
 
-    initPublisherTagged(parentId: string, cameraOptions: any) {
+    initPublisherTagged(parentId: string, cameraOptions: any, callback) {
         console.log("Publisher tagged initialized!");
 
-        let camera = this.getCamera(cameraOptions);
-        camera.requestCameraAccess((error, camera) => {
-            if (error) return console.log(error);
-            camera!.playOnlyVideo(parentId, null);
+        this.getCamera(cameraOptions);
+        this.camera.requestCameraAccess((error, camera) => {
+            if (error){
+                callback(error);
+            }
+            else {
+                this.camera.playOnlyVideo(parentId, null);
+                callback(undefined);
+            }
         });
     }
 
-    initPublisher(cameraOptions: any) {
+    initPublisher(cameraOptions: any, callback) {
         console.log("Publisher initialized!");
 
-        let camera = this.getCamera(cameraOptions);
-        camera.requestCameraAccess((error, camera) => {
-            if (error) return console.log(error);
+        this.getCamera(cameraOptions);
+        this.camera.requestCameraAccess((error, camera) => {
+            if (error) callback(error);
+            else callback(undefined);
         });
     }
 
@@ -132,7 +138,7 @@ export class OpenVidu {
         if ( error ) {
             this.callback( error );
         } else {
-            this.callback( null, this );
+            this.callback( null );
         }
     }
 
@@ -276,7 +282,7 @@ export class OpenVidu {
         
         this.session.configure(options);
         
-        this.session.connect();
+        this.session.connect2();
         
         this.session.addEventListener('room-connected', roomEvent => callback(undefined,this.session));
         

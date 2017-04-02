@@ -38,7 +38,7 @@ public class ParticipantSecurity extends Participant{
 		if (this.isPublisher()){
 			super.createPublishingEndpoint();
 		} else {
-			throw new OpenViduException(Code.USER_UNAUTHORIZED,
+			throw new OpenViduException(Code.GENERIC_ERROR_CODE,
 			          "Unable to create publisher endpoint");
 		}
 	}

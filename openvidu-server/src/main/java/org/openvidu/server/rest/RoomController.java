@@ -18,12 +18,15 @@ package org.openvidu.server.rest;
 
 import static org.kurento.commons.PropertiesManager.getProperty;
 
+import java.util.Map;
 import java.util.Set;
 
 import org.openvidu.server.core.NotificationRoomManager;
+import org.openvidu.server.security.ParticipantRoles;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -57,11 +60,14 @@ public class RoomController {
   
   @RequestMapping("/getSessionId")
   public ResponseEntity<String> getSessionId() {
-	  return new ResponseEntity<String>("SUPER_SESSIONID", HttpStatus.OK);
+	  String sessionId = roomManager.newSessionId();
+	  return new ResponseEntity<String>(sessionId, HttpStatus.OK);
   }
   
   @RequestMapping("/getToken")
-  public ResponseEntity<String> getToken() {
-	  return new ResponseEntity<String>("SUPER_TOKEN", HttpStatus.OK);
+  public ResponseEntity<String> getToken(@RequestBody Map sessionIdAndRole) {
+	  System.out.println("SESSIONID: " + sessionIdAndRole.get("0") + " - ROLE: " + sessionIdAndRole.get("1"));
+	  String token = roomManager.newToken((String) sessionIdAndRole.get("0"), ParticipantRoles.valueOf((String) sessionIdAndRole.get("1")));
+	  return new ResponseEntity<String>(token, HttpStatus.OK);
   }
 }

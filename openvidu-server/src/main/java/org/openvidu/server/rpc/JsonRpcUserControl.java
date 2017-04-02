@@ -23,6 +23,7 @@ import org.kurento.jsonrpc.Session;
 import org.kurento.jsonrpc.Transaction;
 import org.kurento.jsonrpc.message.Request;
 import org.openvidu.client.OpenViduException;
+import org.openvidu.client.OpenViduException.Code;
 import org.openvidu.client.internal.ProtocolElements;
 import org.openvidu.server.core.NotificationRoomManager;
 import org.openvidu.server.core.api.pojo.ParticipantRequest;
@@ -54,27 +55,49 @@ public class JsonRpcUserControl {
       ExecutionException {
     String roomName = getStringParam(request, ProtocolElements.JOINROOM_ROOM_PARAM);
     String userName = getStringParam(request, ProtocolElements.JOINROOM_USER_PARAM);
+    
+    if(roomManager.getRoomManager().isParticipantInRoom(userName, roomName)){
 
-    boolean dataChannels = false;
-    if (request.getParams().has(ProtocolElements.JOINROOM_DATACHANNELS_PARAM)) {
-      dataChannels = request.getParams().get(ProtocolElements.JOINROOM_DATACHANNELS_PARAM)
-          .getAsBoolean();
+	    boolean dataChannels = false;
+	    if (request.getParams().has(ProtocolElements.JOINROOM_DATACHANNELS_PARAM)) {
+	      dataChannels = request.getParams().get(ProtocolElements.JOINROOM_DATACHANNELS_PARAM)
+	          .getAsBoolean();
+	    }
+	
+	    ParticipantSession participantSession = getParticipantSession(transaction);
+	    participantSession.setParticipantName(userName);
+	    participantSession.setRoomName(roomName);
+	    participantSession.setDataChannels(dataChannels);
+	
+	    roomManager.joinRoom(userName, roomName, dataChannels, true, participantRequest);
+	    
     }
-
-    ParticipantSession participantSession = getParticipantSession(transaction);
-    participantSession.setParticipantName(userName);
-    participantSession.setRoomName(roomName);
-    participantSession.setDataChannels(dataChannels);
-
-    roomManager.joinRoom(userName, roomName, dataChannels, true, participantRequest);
+    else {
+    	System.out.println("Error: sessionId or token not valid");
+    	throw new OpenViduException(Code.GENERIC_ERROR_CODE,
+				  "Unable to join room. The user does not have a valid token");
+    }
   }
 
   public void publishVideo(Transaction transaction, Request<JsonObject> request,
       ParticipantRequest participantRequest) {
-    String sdpOffer = getStringParam(request, ProtocolElements.PUBLISHVIDEO_SDPOFFER_PARAM);
-    boolean doLoopback = getBooleanParam(request, ProtocolElements.PUBLISHVIDEO_DOLOOPBACK_PARAM);
-
-    roomManager.publishMedia(participantRequest, sdpOffer, doLoopback);
+	  
+	  String pid = participantRequest.getParticipantId();
+	  String participantName = roomManager.getRoomManager().getParticipantName(pid);
+	  String roomName = roomManager.getRoomManager().getRoomNameFromParticipantId(pid);
+	  
+	  if (roomManager.getRoomManager().isPublisherInRoom(participantName, roomName)) {
+	  
+	    String sdpOffer = getStringParam(request, ProtocolElements.PUBLISHVIDEO_SDPOFFER_PARAM);
+	    boolean doLoopback = getBooleanParam(request, ProtocolElements.PUBLISHVIDEO_DOLOOPBACK_PARAM);
+	
+	    roomManager.publishMedia(participantRequest, sdpOffer, doLoopback);
+	  }
+	  else {
+		  System.out.println("Error: user is not a publisher");
+		  throw new OpenViduException(Code.GENERIC_ERROR_CODE,
+				  "Unable to join room. The user does not have a valid token");
+	  }
   }
 
   public void unpublishVideo(Transaction transaction, Request<JsonObject> request,
@@ -186,6 +209,7 @@ public class JsonRpcUserControl {
     if (request.getParams() == null || request.getParams().get(key) == null) {
       throw new RuntimeException("Request element '" + key + "' is missing");
     }
+    System.out.println(request.getParams().get(key));
     return request.getParams().get(key).getAsString();
   }
 

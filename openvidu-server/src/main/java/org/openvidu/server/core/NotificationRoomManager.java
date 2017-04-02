@@ -17,6 +17,9 @@
 package org.openvidu.server.core;
 
 import javax.annotation.PreDestroy;
+
+import java.math.BigInteger;
+import java.security.SecureRandom;
 import java.util.Set;
 
 import org.kurento.client.MediaElement;
@@ -33,6 +36,7 @@ import org.openvidu.server.core.api.pojo.ParticipantRequest;
 import org.openvidu.server.core.api.pojo.UserParticipant;
 import org.openvidu.server.core.internal.DefaultKurentoClientSessionInfo;
 import org.openvidu.server.core.internal.DefaultNotificationRoomHandler;
+import org.openvidu.server.security.ParticipantRoles;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -442,5 +446,15 @@ public class NotificationRoomManager {
 
   public void updateFilter(String roomId, String filterId) {
     internalManager.updateFilter(roomId, filterId);
+  }
+  
+  
+  
+  public String newSessionId(){
+	  return this.internalManager.newSessionId();
+  }
+  
+  public String newToken(String sessionId, ParticipantRoles role){
+	  return this.internalManager.newToken(sessionId, role);
   }
 }

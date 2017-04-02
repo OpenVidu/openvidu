@@ -17,12 +17,16 @@
 package org.openvidu.server.core;
 
 import javax.annotation.PreDestroy;
+
+import java.math.BigInteger;
+import java.security.SecureRandom;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 import org.kurento.client.IceCandidate;
 import org.kurento.client.KurentoClient;
@@ -41,6 +45,7 @@ import org.openvidu.server.core.api.pojo.UserParticipant;
 import org.openvidu.server.core.endpoint.SdpType;
 import org.openvidu.server.core.internal.Participant;
 import org.openvidu.server.core.internal.Room;
+import org.openvidu.server.security.ParticipantRoles;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,6 +66,9 @@ public class RoomManager {
   private KurentoClientProvider kcProvider;
 
   private final ConcurrentMap<String, Room> rooms = new ConcurrentHashMap<String, Room>();
+  
+  private final ConcurrentMap<String, ConcurrentHashMap<String, ParticipantRoles>> sessionIdTokenRole = new ConcurrentHashMap<>();
+
 
   private volatile boolean closed = false;
 
@@ -153,6 +161,9 @@ public class RoomManager {
               + "' but it is closing");
     }
     room.leave(participantId);
+    
+    this.sessionIdTokenRole.get(roomName).remove(participantId);
+    
     Set<UserParticipant> remainingParticipants = null;
     try {
       remainingParticipants = getParticipants(roomName);
@@ -164,6 +175,9 @@ public class RoomManager {
       log.debug("No more participants in room '{}', removing it and closing it", roomName);
       room.close();
       rooms.remove(roomName);
+      
+      sessionIdTokenRole.remove(roomName);
+      
       log.warn("Room '{}' removed and closed", roomName);
     }
     return remainingParticipants;
@@ -830,6 +844,9 @@ public class RoomManager {
     }
     room.close();
     rooms.remove(roomName);
+    
+    sessionIdTokenRole.remove(roomName);
+    
     log.warn("Room '{}' removed and closed", roomName);
     return participants;
   }
@@ -905,5 +922,48 @@ public class RoomManager {
     Room room = rooms.get(roomId);
 
     room.updateFilter(filterId);
+  }
+  
+  
+  
+  
+  
+  
+  public String getRoomNameFromParticipantId(String pid){
+	  return getParticipant(pid).getRoom().getName();
+  }
+  
+  public boolean isParticipantInRoom(String participantName, String roomName) {
+	  return this.sessionIdTokenRole.get(roomName).containsKey(participantName);
+  }
+  
+  public boolean isPublisherInRoom(String participantName, String roomName) {
+	  return this.sessionIdTokenRole.get(roomName).get(participantName).equals(ParticipantRoles.PUBLISHER);
+  }
+  
+  public String newSessionId(){
+	  String sessionId = new BigInteger(130, new SecureRandom()).toString(32);
+	  
+	  this.sessionIdTokenRole.put(sessionId, new ConcurrentHashMap<>());
+	  
+	  System.out.println(this.sessionIdTokenRole.toString());
+	  
+	  return sessionId;
+  }
+  
+  public String newToken(String sessionId, ParticipantRoles role){
+	  if (this.sessionIdTokenRole.get(sessionId) != null) {
+		  String token = new BigInteger(130, new SecureRandom()).toString(32);
+		  
+		  this.sessionIdTokenRole.get(sessionId).put(token, role);
+		  
+		  System.out.println(this.sessionIdTokenRole.toString());
+		  
+		  return token;
+	  } else {
+		  System.out.println("Error: the sessionId [" + sessionId + "] is not valid");
+		  throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE,
+				  "[" + sessionId +"] is not a valid sessionId");
+	  }
   }
 }
