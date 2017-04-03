@@ -35,7 +35,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configureUrlAuthorization(HttpSecurity http) throws Exception {
     	http.csrf().disable()
 	        .authorizeRequests()
-	        .antMatchers(HttpMethod.POST, "/getSessionId").authenticated()
+	        .antMatchers(HttpMethod.GET, "/getSessionId").authenticated()
 	        .antMatchers(HttpMethod.POST, "/getToken").authenticated()
 	        .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
     }

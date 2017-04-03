@@ -74,7 +74,7 @@ public class JsonRpcUserControl {
     }
     else {
     	System.out.println("Error: sessionId or token not valid");
-    	throw new OpenViduException(Code.GENERIC_ERROR_CODE,
+    	throw new OpenViduException(Code.USER_UNAUTHORIZED,
 				  "Unable to join room. The user does not have a valid token");
     }
   }
@@ -95,7 +95,7 @@ public class JsonRpcUserControl {
 	  }
 	  else {
 		  System.out.println("Error: user is not a publisher");
-		  throw new OpenViduException(Code.GENERIC_ERROR_CODE,
+		  throw new OpenViduException(Code.USER_UNAUTHORIZED,
 				  "Unable to join room. The user does not have a valid token");
 	  }
   }

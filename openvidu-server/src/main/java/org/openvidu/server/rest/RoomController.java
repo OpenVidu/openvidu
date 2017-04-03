@@ -22,12 +22,13 @@ import java.util.Map;
 import java.util.Set;
 
 import org.openvidu.server.core.NotificationRoomManager;
-import org.openvidu.server.security.ParticipantRoles;
+import org.openvidu.server.security.ParticipantRole;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -58,16 +59,16 @@ public class RoomController {
     return Integer.valueOf(getProperty("thresholdSpeaker", THRESHOLD_SPEAKER_DEFAULT));
   }
   
-  @RequestMapping("/getSessionId")
+  @RequestMapping(value = "/getSessionId", method = RequestMethod.GET)
   public ResponseEntity<String> getSessionId() {
 	  String sessionId = roomManager.newSessionId();
 	  return new ResponseEntity<String>(sessionId, HttpStatus.OK);
   }
   
-  @RequestMapping("/getToken")
+  @RequestMapping(value = "/newToken", method = RequestMethod.POST)
   public ResponseEntity<String> getToken(@RequestBody Map sessionIdAndRole) {
 	  System.out.println("SESSIONID: " + sessionIdAndRole.get("0") + " - ROLE: " + sessionIdAndRole.get("1"));
-	  String token = roomManager.newToken((String) sessionIdAndRole.get("0"), ParticipantRoles.valueOf((String) sessionIdAndRole.get("1")));
+	  String token = roomManager.newToken((String) sessionIdAndRole.get("0"), ParticipantRole.valueOf((String) sessionIdAndRole.get("1")));
 	  return new ResponseEntity<String>(token, HttpStatus.OK);
   }
 }

@@ -1,6 +1,6 @@
 package org.openvidu.server.security;
 
-public enum ParticipantRoles {
+public enum ParticipantRole {
 	SUBSCRIBER,
 	PUBLISHER,
 	MODERATOR;

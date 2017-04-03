@@ -36,7 +36,7 @@ import org.openvidu.server.core.api.pojo.ParticipantRequest;
 import org.openvidu.server.core.api.pojo.UserParticipant;
 import org.openvidu.server.core.internal.DefaultKurentoClientSessionInfo;
 import org.openvidu.server.core.internal.DefaultNotificationRoomHandler;
-import org.openvidu.server.security.ParticipantRoles;
+import org.openvidu.server.security.ParticipantRole;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -454,7 +454,7 @@ public class NotificationRoomManager {
 	  return this.internalManager.newSessionId();
   }
   
-  public String newToken(String sessionId, ParticipantRoles role){
+  public String newToken(String sessionId, ParticipantRole role){
 	  return this.internalManager.newToken(sessionId, role);
   }
 }

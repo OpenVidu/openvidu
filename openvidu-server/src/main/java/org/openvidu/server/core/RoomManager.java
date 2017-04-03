@@ -45,7 +45,7 @@ import org.openvidu.server.core.api.pojo.UserParticipant;
 import org.openvidu.server.core.endpoint.SdpType;
 import org.openvidu.server.core.internal.Participant;
 import org.openvidu.server.core.internal.Room;
-import org.openvidu.server.security.ParticipantRoles;
+import org.openvidu.server.security.ParticipantRole;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,7 +67,7 @@ public class RoomManager {
 
   private final ConcurrentMap<String, Room> rooms = new ConcurrentHashMap<String, Room>();
   
-  private final ConcurrentMap<String, ConcurrentHashMap<String, ParticipantRoles>> sessionIdTokenRole = new ConcurrentHashMap<>();
+  private final ConcurrentMap<String, ConcurrentHashMap<String, ParticipantRole>> sessionIdTokenRole = new ConcurrentHashMap<>();
 
 
   private volatile boolean closed = false;
@@ -938,7 +938,7 @@ public class RoomManager {
   }
   
   public boolean isPublisherInRoom(String participantName, String roomName) {
-	  return this.sessionIdTokenRole.get(roomName).get(participantName).equals(ParticipantRoles.PUBLISHER);
+	  return this.sessionIdTokenRole.get(roomName).get(participantName).equals(ParticipantRole.PUBLISHER);
   }
   
   public String newSessionId(){
@@ -951,7 +951,7 @@ public class RoomManager {
 	  return sessionId;
   }
   
-  public String newToken(String sessionId, ParticipantRoles role){
+  public String newToken(String sessionId, ParticipantRole role){
 	  if (this.sessionIdTokenRole.get(sessionId) != null) {
 		  String token = new BigInteger(130, new SecureRandom()).toString(32);
 		  
