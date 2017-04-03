@@ -162,7 +162,7 @@ public class RoomManager {
     }
     room.leave(participantId);
     
-    this.sessionIdTokenRole.get(roomName).remove(participantId);
+    this.sessionIdTokenRole.get(roomName).remove(participant.getName());
     
     Set<UserParticipant> remainingParticipants = null;
     try {
