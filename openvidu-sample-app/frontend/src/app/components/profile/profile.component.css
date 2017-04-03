@@ -1,0 +1,9 @@
+table {
+  margin-top: 15px;
+  border-collapse: separate;
+  border-spacing: 15px 17px;
+}
+
+th {
+  text-align: left;
+}

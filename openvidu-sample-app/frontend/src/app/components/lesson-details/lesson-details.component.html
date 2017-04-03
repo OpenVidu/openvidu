@@ -1,0 +1,66 @@
+<div *ngIf="lesson" fxLayout="row" fxLayoutAlign="center center">
+  <div class="div-inner-main" [style.xs]="{'width': '100%'}">
+
+    <div *ngIf="!editingTitle" fxLayout="row" fxLayoutAlign="center center">
+      <md-icon fxFlex="15%" fxLayoutAlign="start center" (click)="router.navigate(['/lessons'])" [title]="'Back to lessons'">keyboard_arrow_left</md-icon>
+      <h2 fxFlex="70%">{{lesson.title}}</h2>
+      <md-icon fxFlex="15%" fxLayoutAlign="end center" (click)="editingTitle = true; titleEdited = lesson.title" [title]="'Edit lesson'">mode_edit</md-icon>
+    </div>
+
+    <div *ngIf="editingTitle" fxLayout="row" fxLayoutAlign="start center">
+      <form #editLessonForm (ngSubmit)="editLesson(); editLessonForm.reset()" [class.filtered]="sumbitEditLesson">
+        <md-input-container>
+          <input mdInput placeholder="Title" [(ngModel)]="titleEdited" name="lessonTitle" type="text" autocomplete="off" required>
+        </md-input-container>
+        <div class="block-btn">
+          <button md-button type="submit" [disabled]="sumbitEditLesson">Send</button>
+          <a md-button (click)="editingTitle = false; titleEdited = ''" [disabled]="sumbitEditLesson">Cancel</a>
+          <a md-button (click)="deleteLesson()" [disabled]="sumbitEditLesson">Delete lesson</a>
+        </div>
+      </form>
+    </div>
+
+    <form #addAttendersForm (ngSubmit)="addLessonAttenders(); addAttendersForm.reset()" [class.filtered]="sumbitAddAttenders">
+      <h4 id="new-attender-title">New attender</h4>
+      <md-input-container>
+        <input mdInput placeholder="Email" [(ngModel)]="emailAttender" name="attenderEmail" type="text" autocomplete="off" required>
+      </md-input-container>
+      <div class="block-btn">
+        <button md-button type="submit" [disabled]="sumbitAddAttenders">Send</button>
+        <a md-button (click)="addAttendersForm.reset()" [disabled]="sumbitAddAttenders || emailAttender == null">Cancel</a>
+      </div>
+    </form>
+
+    <app-error-message *ngIf="addAttendersCorrect" (eventShowable)="addAttendersCorrect = false" [errorTitle]="attCorrectTitle"
+      [errorContent]="attCorrectContent" [customClass]="'correct'" [closable]="true"></app-error-message>
+    <app-error-message *ngIf="addAttendersError" (eventShowable)="addAttendersError = false" [errorTitle]="attErrorTitle" [errorContent]="attErrorContent"
+      [customClass]="'fail'" [closable]="true"></app-error-message>
+
+    <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="20px" fxLayoutAlign="space-between center" fxLayoutAlign.xs="start"
+      class="attender-row">
+      <div fxFlex="90%" class="no-margin-bottom">
+        <div fxLayout="row" fxLayout.xs="column" fxLayoutAlign="space-between center" fxLayoutAlign.xs="start" fxLayoutGap="20px">
+          <div class="no-margin-bottom" fxFlex>{{authenticationService.getCurrentUser().nickName}}</div>
+          <div class="attender-email" fxFlex>{{authenticationService.getCurrentUser().name}}</div>
+        </div>
+      </div>
+      <div fxFlex="10%"></div>
+    </div>
+    <div *ngFor="let attender of lesson.attenders; let i = index">
+      <div *ngIf="attender.id != authenticationService.getCurrentUser().id" fxLayout="row" fxLayoutAlign.xs="start" fxLayoutGap="20px"
+        class="attender-row">
+        <div fxFlex="90%">
+          <div fxLayout="row" fxLayout.xs="column" fxLayoutAlign="space-between center" fxLayoutAlign.xs="start" fxLayoutGap="20px">
+            <div class="no-margin-bottom" fxFlex>{{attender.nickName}}</div>
+            <div class="attender-email" fxFlex>{{attender.name}}</div>
+          </div>
+        </div>
+        <div fxFlex="10%">
+          <md-icon *ngIf="!this.arrayOfAttDels[i]" (click)="deleteLessonAttender(i, attender)" [title]="'Remove attender'">clear</md-icon>
+          <md-icon *ngIf="this.arrayOfAttDels[i]" class="rotating">cached</md-icon>
+        </div>
+      </div>
+    </div>
+    
+  </div>
+</div>

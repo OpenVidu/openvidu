@@ -1,0 +1,5 @@
+<md-card [ngClass]="customClass">
+  <md-icon *ngIf="closable" (click)="closeAlert()">clear</md-icon>
+  <md-card-title>{{this.errorTitle}}</md-card-title>
+  <md-card-subtitle [innerHTML]="this.errorContent"></md-card-subtitle>
+</md-card>

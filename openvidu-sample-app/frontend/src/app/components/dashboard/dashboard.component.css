@@ -1,0 +1,11 @@
+md-card {
+  margin-top: 20px;
+}
+
+md-card md-icon {
+  text-align: center;
+}
+
+span.teacher {
+  font-size: 12px;
+}

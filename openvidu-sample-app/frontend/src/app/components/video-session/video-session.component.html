@@ -1,0 +1,9 @@
+<div id="header-div">
+    <md-icon id="back-btn" (click)="location.back()" [title]="'Back to lessons'">keyboard_arrow_left</md-icon>
+    <md-icon class="right-btn" (click)="toggleFullScreen()" [title]="'Fullscreen'">{{fullscreenIcon}}</md-icon>
+    <md-icon class="right-btn" (click)="toggleLocalVideo()" [title]="'Toggle video'">{{videoIcon}}</md-icon>
+    <md-icon class="right-btn" (click)="toggleLocalAudio()" [title]="'Toggle audio'">{{audioIcon}}</md-icon>
+    <h1>{{lesson?.title}}</h1>
+</div>
+<div id="local-stream"></div>
+<div id="remote-streams"></div>

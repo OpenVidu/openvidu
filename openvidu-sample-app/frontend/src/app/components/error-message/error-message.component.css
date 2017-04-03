@@ -1,0 +1,26 @@
+.fail {
+  background-color: rgba(167, 56, 65, 0.2);
+  color: #a73841;
+}
+
+.warning {
+  background-color: rgba(175, 110, 0, 0.2);
+  color: #af6e00;
+}
+
+.correct {
+  background-color: rgba(55, 86, 70, 0.25);
+  color: #375546;
+}
+
+md-icon {
+  cursor: pointer;
+  float: right;
+}
+
+md-card {
+  max-width: 400px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  box-shadow: none;
+}

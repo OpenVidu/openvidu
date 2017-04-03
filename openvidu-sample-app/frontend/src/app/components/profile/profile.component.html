@@ -1,0 +1,17 @@
+<div fxLayout="row" fxLayoutAlign="center center">
+  <div class="div-inner-main" [style.xs]="{'width': '100%'}">
+
+    <div>MY PROFILE</div>
+    <table>
+      <tr>
+        <td>Name</td>
+        <th>{{authenticationService.getCurrentUser().nickName}}</th>
+      </tr>
+      <tr>
+        <td>Email</td>
+        <th>{{authenticationService.getCurrentUser().name}}</th>
+      </tr>
+    </table>
+    
+  </div>
+</div>

@@ -1,0 +1,71 @@
+<div fxLayout="row" fxLayoutAlign="center center">
+  <div class="div-inner-main" [style.xs]="{'width': '100%'}">
+
+    <h1>OpenVidu Demo</h1>
+
+    <div fxLayout="column" fxLayoutAlign="space-around center">
+
+      <md-card>
+        <md-card-content>
+
+          <div *ngIf="submitProcessing" class="cssload-container">
+            <div class="cssload-tube-tunnel"></div>
+          </div>
+
+          <form #myForm (ngSubmit)="onSubmit()" [class.filtered]="submitProcessing">
+
+            <div>
+              <md-input-container>
+                <input mdInput placeholder="Email" [(ngModel)]="email" name="email" id="email" type="email" required>
+              </md-input-container>
+            </div>
+
+            <div *ngIf="!loginView">
+              <md-input-container>
+                <input mdInput placeholder="Name" [(ngModel)]="nickName" name="nickName" id="nickName" type="text" autocomplete="off" required>
+              </md-input-container>
+            </div>
+
+            <div>
+              <md-input-container>
+                <input mdInput placeholder="Password" [(ngModel)]="password" name="password" id="password" type="password" required>
+              </md-input-container>
+            </div>
+
+            <div *ngIf="!loginView">
+              <md-input-container>
+                <input mdInput placeholder="Confirm password" [(ngModel)]="confirmPassword" name="confirmPassword" id="confirmPassword" type="password"
+                  autocomplete="off" required>
+              </md-input-container>
+            </div>
+
+            <div *ngIf="!loginView" class="radio-button-div">
+              <span id="sign-up-as">Sign up as...</span>
+              <md-radio-group [(ngModel)]="roleUserSignup" name="roleUserSignup" id="roleUserSignup">
+                <md-radio-button value='student'>Student</md-radio-button>
+                <md-radio-button value='teacher'>Teacher</md-radio-button>
+              </md-radio-group>
+            </div>
+
+            <app-error-message *ngIf="fieldsIncorrect" (eventShowable)="fieldsIncorrect = false" [errorTitle]="errorTitle" [errorContent]="errorContent"
+              [customClass]="customClass" [closable]="true"></app-error-message>
+
+            <div class="btn-container">
+              <button md-raised-button color="accent" type="submit" *ngIf="loginView" id="log-in-btn">Log in</button>
+              <button md-raised-button color="primary" type="submit" *ngIf="!loginView" id="sign-up-btn">Sign up</button>
+            </div>
+
+          </form>
+        </md-card-content>
+
+        <md-card-actions>
+          <div *ngIf="loginView">Not registered yet?<button md-button (click)="setLoginView(false); myForm.reset()" class="card-button">Sign up</button></div>
+          <div *ngIf="!loginView">Already registered?<button md-button (click)="setLoginView(true); myForm.reset()" class="card-button">Log in</button></div>
+        </md-card-actions>
+
+      </md-card>
+
+    </div>
+    
+  </div>
+</div>
