@@ -167,6 +167,13 @@ export class VideoSessionComponent implements OnInit {
     }
 
     ngOnDestroy() {
+        this.videoSessionService.removeUser(this.lesson.id).subscribe(
+            response => {
+                    console.warn("You have succesfully left the lesson");
+                },
+                error => {
+                    console.log(error);
+                });
         this.toggleScrollPage("auto");
         this.exitFullScreen();
         if (this.OV) this.OV.close(false);

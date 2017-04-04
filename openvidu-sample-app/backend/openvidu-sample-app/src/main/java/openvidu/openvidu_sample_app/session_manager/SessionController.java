@@ -6,6 +6,7 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -46,7 +47,8 @@ public class SessionController {
 	@Autowired
 	private UserComponent user;
 	
-	private Map<Long, String> sessionIdMap = new ConcurrentHashMap<>();
+	private Map<Long, String> lessonIdSessionId = new ConcurrentHashMap<>();
+	private Map<String, Map<Long, String>> sessionIdUserIdToken = new ConcurrentHashMap<>();
 	
 	private final String OPENVIDU_URL = "https://localhost:8443/";
 	private final String SECRET ="MY_SECRET";
@@ -95,10 +97,10 @@ public class SessionController {
 			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 		
-		if(this.sessionIdMap.get(id_lesson) != null) {
+		if(this.lessonIdSessionId.get(id_lesson) != null) {
 			
 			// If there's already a valid sessionId for this lesson, not necessary to ask for a new one 
-			return new ResponseEntity<>(this.sessionIdMap.get(id_lesson), HttpStatus.OK);
+			return new ResponseEntity<>(this.lessonIdSessionId.get(id_lesson), HttpStatus.OK);
 			
 		} else {
 		
@@ -114,7 +116,8 @@ public class SessionController {
 				BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
 				String sessionId = br.readLine();
 				
-				this.sessionIdMap.put(id_lesson, sessionId);
+				this.lessonIdSessionId.put(id_lesson, sessionId);
+				this.sessionIdUserIdToken.put(sessionId, new HashMap<>());
 				
 				return new ResponseEntity<>(sessionId, HttpStatus.OK);
 			} else {
@@ -144,7 +147,7 @@ public class SessionController {
 			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 		
-		if (this.sessionIdMap.get(id_lesson) == null){
+		if (this.lessonIdSessionId.get(id_lesson) == null){
 			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 		
@@ -155,7 +158,7 @@ public class SessionController {
 		*/
 		
 		JSONObject json = new JSONObject();
-		json.put(0, this.sessionIdMap.get(id_lesson));
+		json.put(0, this.lessonIdSessionId.get(id_lesson));
 		json.put(1, role);
 		
 		HttpPost request = 	new HttpPost(OPENVIDU_URL + "newToken");
@@ -171,13 +174,55 @@ public class SessionController {
 			BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
 			String token = br.readLine();
 			
+			this.sessionIdUserIdToken.get(this.lessonIdSessionId.get(id_lesson)).put(this.user.getLoggedUser().getId(), token);
+			
 			JSONObject responseJson = new JSONObject();
-			responseJson.put(0, this.sessionIdMap.get(id_lesson));
+			responseJson.put(0, this.lessonIdSessionId.get(id_lesson));
 			responseJson.put(1, token);
 			
 			return new ResponseEntity<>(responseJson, HttpStatus.OK);
 		} else {
 			System.out.println("Problems with openvidu-server");
+			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+	
+	
+	@RequestMapping(value = "/remove-user", method = RequestMethod.POST)
+	public ResponseEntity<JSONObject> removeUser(@RequestBody String lessonId) throws Exception {
+		
+		if (!this.userIsLogged()) {
+			return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+		}
+		
+		long id_lesson = -1;
+		try{
+			id_lesson = Long.parseLong(lessonId);
+		}catch(NumberFormatException e){
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		}
+		
+		Lesson c = lessonRepository.findOne(id_lesson);
+		
+		if (!checkAuthorizationUsers(c, c.getAttenders())){
+			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+		
+		if (this.lessonIdSessionId.get(id_lesson) == null){
+			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+		
+		String sessionId = this.lessonIdSessionId.get(id_lesson);
+		if (this.sessionIdUserIdToken.get(sessionId).remove(this.user.getLoggedUser().getId()) != null){
+			// This user has left the lesson
+			if(this.sessionIdUserIdToken.get(sessionId).isEmpty()){
+				// The last user has left the lesson
+				this.lessonIdSessionId.remove(id_lesson);
+				this.sessionIdUserIdToken.remove(sessionId);
+			}
+			return new ResponseEntity<>(HttpStatus.OK);
+		} else {
+			System.out.println("Problems in the app server: the user didn't have a valid token");
 			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}

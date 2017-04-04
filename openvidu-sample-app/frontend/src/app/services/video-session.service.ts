@@ -34,6 +34,15 @@ export class VideoSessionService {
             .catch(error => this.handleError(error));
     }
 
+    removeUser(lessonId: number) {
+        let body = JSON.stringify(lessonId);
+        let headers = new Headers({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + this.authenticationService.token });
+        let options = new RequestOptions({ headers });
+        return this.http.post('/api-sessions/remove-user', body, options)
+            .map(response => response)
+            .catch(error => this.handleError(error));
+    }
+
     private handleError(error: any) {
         console.error(error);
         return Observable.throw('Server error (' + error.status + '): ' + error.text())
