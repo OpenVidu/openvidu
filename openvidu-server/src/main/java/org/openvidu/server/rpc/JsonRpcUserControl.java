@@ -96,7 +96,7 @@ public class JsonRpcUserControl {
 	  else {
 		  System.out.println("Error: user is not a publisher");
 		  throw new OpenViduException(Code.USER_UNAUTHORIZED,
-				  "Unable to join room. The user does not have a valid token");
+				  "Unable to publish video. The user does not have a valid token");
 	  }
   }
 

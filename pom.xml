@@ -74,6 +74,8 @@
 				<module>openvidu-test</module>
 				<module>openvidu-demo</module>
 				<module>openvidu-testapp</module>
+				<module>openvidu-sample-app</module>
+				<module>openvidu-backend-client</module>
 			</modules>
 		</profile>
 		<profile>

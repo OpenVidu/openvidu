@@ -164,6 +164,8 @@ public class RoomManager {
     
     this.sessionIdTokenRole.get(roomName).remove(participant.getName());
     
+    showMap();
+    
     Set<UserParticipant> remainingParticipants = null;
     try {
       remainingParticipants = getParticipants(roomName);
@@ -177,6 +179,8 @@ public class RoomManager {
       rooms.remove(roomName);
       
       sessionIdTokenRole.remove(roomName);
+      
+      showMap();
       
       log.warn("Room '{}' removed and closed", roomName);
     }
@@ -927,7 +931,11 @@ public class RoomManager {
   
   
   
-  
+  private void showMap(){
+	  System.out.println("------------------------------");
+	  System.out.println(this.sessionIdTokenRole.toString());
+	  System.out.println("------------------------------");
+  }
   
   public String getRoomNameFromParticipantId(String pid){
 	  return getParticipant(pid).getRoom().getName();
@@ -946,7 +954,7 @@ public class RoomManager {
 	  
 	  this.sessionIdTokenRole.put(sessionId, new ConcurrentHashMap<>());
 	  
-	  System.out.println(this.sessionIdTokenRole.toString());
+	  showMap();
 	  
 	  return sessionId;
   }
@@ -957,7 +965,7 @@ public class RoomManager {
 		  
 		  this.sessionIdTokenRole.get(sessionId).put(token, role);
 		  
-		  System.out.println(this.sessionIdTokenRole.toString());
+		  showMap();
 		  
 		  return token;
 	  } else {

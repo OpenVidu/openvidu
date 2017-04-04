@@ -67,7 +67,6 @@ public class RoomController {
   
   @RequestMapping(value = "/newToken", method = RequestMethod.POST)
   public ResponseEntity<String> getToken(@RequestBody Map sessionIdAndRole) {
-	  System.out.println("SESSIONID: " + sessionIdAndRole.get("0") + " - ROLE: " + sessionIdAndRole.get("1"));
 	  String token = roomManager.newToken((String) sessionIdAndRole.get("0"), ParticipantRole.valueOf((String) sessionIdAndRole.get("1")));
 	  return new ResponseEntity<String>(token, HttpStatus.OK);
   }
