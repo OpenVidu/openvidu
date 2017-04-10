@@ -1,6 +1,7 @@
 package org.openvidu.server.security;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -13,7 +14,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 @EnableGlobalAuthentication
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	
-	private final String SECRET ="MY_SECRET";
+	@Value("${openvidu.secret}")
+	private String SECRET;
 	
 	@Autowired
     public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {

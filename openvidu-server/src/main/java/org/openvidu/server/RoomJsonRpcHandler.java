@@ -43,17 +43,14 @@ public class RoomJsonRpcHandler extends DefaultJsonRpcHandler<JsonObject> {
   private static final Logger log = LoggerFactory.getLogger(RoomJsonRpcHandler.class);
 
   private static final String HANDLER_THREAD_NAME = "handler";
-
+  
+  @Autowired
   private JsonRpcUserControl userControl;
-
+  
+  @Autowired
   private JsonRpcNotificationService notificationService;
 
-  @Autowired
-  public RoomJsonRpcHandler(JsonRpcUserControl userControl,
-      JsonRpcNotificationService notificationService) {
-    this.userControl = userControl;
-    this.notificationService = notificationService;
-  }
+  public RoomJsonRpcHandler() {}
 
   @Override
   public List<String> allowedOrigins() {

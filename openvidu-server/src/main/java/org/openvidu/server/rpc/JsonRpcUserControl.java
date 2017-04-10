@@ -42,13 +42,11 @@ import com.google.gson.JsonObject;
 public class JsonRpcUserControl {
 
   private static final Logger log = LoggerFactory.getLogger(JsonRpcUserControl.class);
-
+  
+  @Autowired
   protected NotificationRoomManager roomManager;
 
-  @Autowired
-  public JsonRpcUserControl(NotificationRoomManager roomManager) {
-    this.roomManager = roomManager;
-  }
+  public JsonRpcUserControl() {}
 
   public void joinRoom(Transaction transaction, Request<JsonObject> request,
       ParticipantRequest participantRequest) throws IOException, InterruptedException,

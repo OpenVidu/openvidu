@@ -144,7 +144,7 @@ public class NotificationRoomManagerWithDefaultHandlerTest {
 
   @Before
   public void setup() {
-    manager = new NotificationRoomManager(notificationService, kcProvider);
+    manager = new NotificationRoomManager();
 
     doAnswer(new Answer<KurentoClient>() {
       @Override

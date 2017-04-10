@@ -24,7 +24,10 @@ import org.kurento.jsonrpc.internal.server.config.JsonRpcConfiguration;
 import org.kurento.jsonrpc.server.JsonRpcConfigurer;
 import org.kurento.jsonrpc.server.JsonRpcHandlerRegistry;
 import org.openvidu.server.core.NotificationRoomManager;
+import org.openvidu.server.core.RoomManager;
 import org.openvidu.server.core.api.KurentoClientProvider;
+import org.openvidu.server.core.api.NotificationRoomHandler;
+import org.openvidu.server.core.internal.DefaultNotificationRoomHandler;
 import org.openvidu.server.kms.FixedOneKmsManager;
 import org.openvidu.server.rpc.JsonRpcNotificationService;
 import org.openvidu.server.rpc.JsonRpcUserControl;
@@ -88,20 +91,32 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
   @Bean
   @ConditionalOnMissingBean
-  public NotificationRoomManager roomManager() {
-    return new NotificationRoomManager(notificationService(), kmsManager());
+  public NotificationRoomHandler defaultNotificationRoomHandler() {
+    return new DefaultNotificationRoomHandler(notificationService());
+  }
+  
+  @Bean
+  @ConditionalOnMissingBean
+  public RoomManager roomManager() {
+    return new RoomManager();
+  }
+
+  @Bean
+  @ConditionalOnMissingBean
+  public NotificationRoomManager notificationRoomManager() {
+    return new NotificationRoomManager();
   }
 
   @Bean
   @ConditionalOnMissingBean
   public JsonRpcUserControl userControl() {
-    return new JsonRpcUserControl(roomManager());
+    return new JsonRpcUserControl();
   }
 
   @Bean
   @ConditionalOnMissingBean
   public RoomJsonRpcHandler roomHandler() {
-    return new RoomJsonRpcHandler(userControl(), notificationService());
+    return new RoomJsonRpcHandler();
   }
 
   @Override

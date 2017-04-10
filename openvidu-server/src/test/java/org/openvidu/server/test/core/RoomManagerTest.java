@@ -207,7 +207,7 @@ public class RoomManagerTest {
 
   @Before
   public void setup() {
-    manager = new RoomManager(roomHandler, kcProvider);
+    manager = new RoomManager();
 
     when(kcProvider.getKurentoClient(any(KurentoClientSessionInfo.class)))
     .thenReturn(kurentoClient);

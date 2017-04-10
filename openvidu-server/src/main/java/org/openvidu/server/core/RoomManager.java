@@ -26,7 +26,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ConcurrentSkipListSet;
 
 import org.kurento.client.IceCandidate;
 import org.kurento.client.KurentoClient;
@@ -48,6 +47,8 @@ import org.openvidu.server.core.internal.Room;
 import org.openvidu.server.security.ParticipantRole;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 
 /**
  * The Kurento room manager represents an SDK for any developer that wants to implement the Room
@@ -61,28 +62,24 @@ import org.slf4j.LoggerFactory;
  */
 public class RoomManager {
   private final Logger log = LoggerFactory.getLogger(RoomManager.class);
-
+  
+  @Autowired
   private RoomHandler roomHandler;
+  
+  @Autowired
   private KurentoClientProvider kcProvider;
 
   private final ConcurrentMap<String, Room> rooms = new ConcurrentHashMap<String, Room>();
   
   private final ConcurrentMap<String, ConcurrentHashMap<String, ParticipantRole>> sessionIdTokenRole = new ConcurrentHashMap<>();
 
-
+  @Value("${openvidu.security}")
+  private boolean SECURITY_ENABLED;
+  
   private volatile boolean closed = false;
 
-  /**
-   * Provides an instance of the room manager by setting a room handler and the
-   * {@link KurentoClient} provider.
-   *
-   * @param roomHandler the room handler implementation
-   * @param kcProvider  enables the manager to obtain Kurento Client instances
-   */
-  public RoomManager(RoomHandler roomHandler, KurentoClientProvider kcProvider) {
+  public RoomManager() {
     super();
-    this.roomHandler = roomHandler;
-    this.kcProvider = kcProvider;
   }
 
   /**
@@ -942,11 +939,11 @@ public class RoomManager {
   }
   
   public boolean isParticipantInRoom(String participantName, String roomName) {
-	  return this.sessionIdTokenRole.get(roomName).containsKey(participantName);
+	  return (this.sessionIdTokenRole.get(roomName).containsKey(participantName)  || !SECURITY_ENABLED );
   }
   
   public boolean isPublisherInRoom(String participantName, String roomName) {
-	  return this.sessionIdTokenRole.get(roomName).get(participantName).equals(ParticipantRole.PUBLISHER);
+	  return (this.sessionIdTokenRole.get(roomName).get(participantName).equals(ParticipantRole.PUBLISHER) || !SECURITY_ENABLED );
   }
   
   public String newSessionId(){

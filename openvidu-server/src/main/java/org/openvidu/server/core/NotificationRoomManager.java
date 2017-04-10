@@ -18,8 +18,6 @@ package org.openvidu.server.core;
 
 import javax.annotation.PreDestroy;
 
-import java.math.BigInteger;
-import java.security.SecureRandom;
 import java.util.Set;
 
 import org.kurento.client.MediaElement;
@@ -31,7 +29,6 @@ import org.openvidu.server.core.api.KurentoClientProvider;
 import org.openvidu.server.core.api.KurentoClientSessionInfo;
 import org.openvidu.server.core.api.MutedMediaType;
 import org.openvidu.server.core.api.NotificationRoomHandler;
-import org.openvidu.server.core.api.UserNotificationService;
 import org.openvidu.server.core.api.pojo.ParticipantRequest;
 import org.openvidu.server.core.api.pojo.UserParticipant;
 import org.openvidu.server.core.internal.DefaultKurentoClientSessionInfo;
@@ -39,6 +36,7 @@ import org.openvidu.server.core.internal.DefaultNotificationRoomHandler;
 import org.openvidu.server.security.ParticipantRole;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * The Kurento room manager represents an SDK for any developer that wants to implement the Room
@@ -52,36 +50,15 @@ import org.slf4j.LoggerFactory;
  */
 public class NotificationRoomManager {
   private final Logger log = LoggerFactory.getLogger(NotificationRoomManager.class);
-
+  
+  @Autowired
   private NotificationRoomHandler notificationRoomHandler;
+  
+  @Autowired
   private RoomManager internalManager;
 
-  /**
-   * Provides an instance of the room manager by setting an user notification service that will be
-   * used by the default event handler to send responses and notifications back to the clients.
-   *
-   * @param notificationService encapsulates the communication layer, used to instantiate
-   *                            {@link DefaultNotificationRoomHandler}
-   * @param kcProvider          enables the manager to obtain Kurento Client instances
-   */
-  public NotificationRoomManager(UserNotificationService notificationService,
-      KurentoClientProvider kcProvider) {
+  public NotificationRoomManager() {
     super();
-    this.notificationRoomHandler = new DefaultNotificationRoomHandler(notificationService);
-    this.internalManager = new RoomManager(notificationRoomHandler, kcProvider);
-  }
-
-  /**
-   * Provides an instance of the room manager by setting an event handler.
-   *
-   * @param notificationRoomHandler the room event handler implementation
-   * @param kcProvider              enables the manager to obtain Kurento Client instances
-   */
-  public NotificationRoomManager(NotificationRoomHandler notificationRoomHandler,
-      KurentoClientProvider kcProvider) {
-    super();
-    this.notificationRoomHandler = notificationRoomHandler;
-    this.internalManager = new RoomManager(notificationRoomHandler, kcProvider);
   }
 
   // ----------------- CLIENT-ORIGINATED REQUESTS ------------

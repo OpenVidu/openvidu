@@ -10,6 +10,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.openvidu.client.OpenVidu;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -37,12 +38,12 @@ public class SessionController {
 	private Map<Long, String> lessonIdSessionId = new ConcurrentHashMap<>();
 	private Map<String, Map<Long, String>> sessionIdUserIdToken = new ConcurrentHashMap<>();
 	
-	private HttpClient myHttpClient;
-	
 	private final String OPENVIDU_URL = "https://localhost:8443/";
-	private final String SECRET ="MY_SECRET";
 	
-	public SessionController(){
+	private String SECRET;
+	
+	public SessionController(@Value("${openvidu.secret}") String secret){
+		this.SECRET = secret;
 		this.openVidu = new OpenVidu(OPENVIDU_URL, SECRET);
 	}
 	
