@@ -70,6 +70,7 @@ export class Stream {
     private dataChannelOpened = false;
 
     private videoSrc: string;
+    public isReady: boolean = false;
 
     constructor(private openVidu: OpenVidu, private local: boolean, private room: Session, options: StreamOptions) {
 
@@ -98,6 +99,10 @@ export class Stream {
         this.ee.emitEvent('src-added', [{
             src: URL.createObjectURL(wrstream)
         }]);
+    }
+
+    emitStreamReadyEvent(){
+        this.ee.emitEvent('stream-ready'), [{}];
     }
 
     getVideoSrc() {
@@ -426,8 +431,13 @@ export class Stream {
     publish() {
 
         // FIXME: Throw error when stream is not local
-
-        this.initWebRtcPeer(this.publishVideoCallback);
+        if (this.isReady) {
+            this.initWebRtcPeer(this.publishVideoCallback);
+        } else {
+            this.addEventListener('stream-ready', streamEvent => {
+                this.publish();
+            });
+        }
 
         // FIXME: Now we have coupled connecting to a room and adding a
         // stream to this room. But in the new API, there are two steps.

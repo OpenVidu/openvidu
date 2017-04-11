@@ -47,19 +47,35 @@ export class OpenVidu {
         return this.session;
     }
 
-    initPublisherTagged(parentId: string, cameraOptions: any, callback) {
+    initPublisherTagged(parentId: string, cameraOptions: any, callback?) {
         console.log("Publisher tagged initialized!");
 
         this.getCamera(cameraOptions);
-        this.camera.requestCameraAccess((error, camera) => {
-            if (error){
-                callback(error);
-            }
-            else {
-                this.camera.playOnlyVideo(parentId, null);
-                callback(undefined);
-            }
-        });
+
+        if (callback == null) {
+            this.camera.requestCameraAccess((error, camera) => {
+                if (error) {
+                    console.log("Error accessing the camera");
+                }
+                else {
+                    this.camera.playOnlyVideo(parentId, null);
+                    this.camera.isReady = true;
+                    this.camera.emitStreamReadyEvent();
+                }
+            });
+            return this.camera;
+        } else {
+            this.camera.requestCameraAccess((error, camera) => {
+                if (error){
+                    callback(error);
+                }
+                else {
+                    this.camera.playOnlyVideo(parentId, null);
+                    callback(undefined);
+                }
+            });
+            return this.camera;
+        }
     }
 
     initPublisher(cameraOptions: any, callback) {

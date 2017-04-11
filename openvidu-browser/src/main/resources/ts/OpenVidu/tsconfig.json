@@ -18,7 +18,7 @@
 		"forceConsistentCasingInFileNames": true,
 		"allowSyntheticDefaultImports": true,
 		"strictNullChecks": true,
-		"outDir": "../lib",
+		"outDir": "../../lib/OpenVidu",
 		"emitBOM": false,
 		"preserveConstEnums": true,
 		"sourceMap": true

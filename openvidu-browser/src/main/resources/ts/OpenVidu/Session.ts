@@ -41,7 +41,8 @@ export class Session {
             else {
                 this.configure({
                     sessionId: this.sessionId,
-                    participantId: token
+                    participantId: token,
+                    subscribeToStreams: this.subscribeToStreams
                 });
 
                 let joinParams = {
@@ -91,14 +92,14 @@ export class Session {
                             }
                         }
 
-                        if (this.subscribeToStreams) {
+                        //if (this.subscribeToStreams) {
                             for (let stream of roomEvent.streams) {
                                 this.ee.emitEvent('stream-added', [{ stream }]);
 
                                 // Adding the remote stream to the OpenVidu object
                                 this.openVidu.getRemoteStreams().push(stream);
                             }
-                        }
+                        //}
 
                         callback(undefined);
                     }
@@ -174,7 +175,7 @@ export class Session {
 
         this.options = options;
         this.id = options.sessionId;
-        this.subscribeToStreams = options.subscribeToStreams || true;
+        this.subscribeToStreams = options.subscribeToStreams == null ? true : options.subscribeToStreams;
         this.updateSpeakerInterval = options.updateSpeakerInterval || 1500;
         this.thresholdSpeaker = options.thresholdSpeaker || -50;
         this.localParticipant.setId(options.participantId);
@@ -185,6 +186,10 @@ export class Session {
 
     getId() {
         return this.id;
+    }
+
+    getSessionId(){
+        return this.sessionId;
     }
 
     private activateUpdateMainSpeaker() {
@@ -236,11 +241,10 @@ export class Session {
 
             if ( this.subscribeToStreams ) {
                 stream.subscribe();
-                this.ee.emitEvent( 'stream-added', [{ stream }] );
-
-                // Adding the remote stream to the OpenVidu object
-                this.openVidu.getRemoteStreams().push(stream);
             }
+            this.ee.emitEvent( 'stream-added', [{ stream }] );
+            // Adding the remote stream to the OpenVidu object
+            this.openVidu.getRemoteStreams().push(stream);
         }
     }
 
@@ -454,6 +458,31 @@ export class Session {
                         console.info( "Unsubscribed correctly from " + stream.getId() );
                     }
                 });
+        }
+    }
+
+    unpublish(stream: Stream){
+
+        let participant = stream.getParticipant();
+        if ( !participant ) {
+            console.error( "Stream to disconnect has no participant", stream );
+            return;
+        }
+
+        if ( participant === this.localParticipant ) {
+
+            delete this.participants[participant.getId()];
+            participant.dispose();
+
+            console.log( "Unpublishing my media (I'm " + participant.getId() + ")" );
+            delete this.localParticipant;
+            this.openVidu.sendRequest( 'unpublishVideo', function( error, response ) {
+                if ( error ) {
+                    console.error( error );
+                } else {
+                    console.info( "Media unpublished correctly" );
+                }
+            });
         }
     }
 
