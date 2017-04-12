@@ -159,7 +159,9 @@ public class RoomManager {
     }
     room.leave(participantId);
     
-    this.sessionIdTokenRole.get(roomName).remove(participant.getName());
+    if (this.sessionIdTokenRole.get(roomName) != null){
+      this.sessionIdTokenRole.get(roomName).remove(participant.getName());
+    }
     
     showMap();
     
@@ -939,11 +941,31 @@ public class RoomManager {
   }
   
   public boolean isParticipantInRoom(String participantName, String roomName) {
-	  return (this.sessionIdTokenRole.get(roomName).containsKey(participantName)  || !SECURITY_ENABLED );
+    if (SECURITY_ENABLED) {
+      if (this.sessionIdTokenRole.get(roomName) != null) {
+        return this.sessionIdTokenRole.get(roomName).containsKey(participantName);
+      } else{
+        return false;
+      }
+    } else {
+      return true;
+    }
   }
   
   public boolean isPublisherInRoom(String participantName, String roomName) {
-	  return (this.sessionIdTokenRole.get(roomName).get(participantName).equals(ParticipantRole.PUBLISHER) || !SECURITY_ENABLED );
+    if (SECURITY_ENABLED) {
+      if (this.sessionIdTokenRole.get(roomName) != null){
+        if (this.sessionIdTokenRole.get(roomName).get(participantName) != null){
+          return (this.sessionIdTokenRole.get(roomName).get(participantName).equals(ParticipantRole.PUBLISHER));
+        } else {
+          return false;
+        }
+      } else{
+        return false;
+      }
+    } else {
+      return true;
+    }
   }
   
   public String newSessionId(){
