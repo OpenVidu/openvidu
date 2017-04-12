@@ -38,8 +38,23 @@ export class OpenViduTokBox {
         }
     }
 
-    initPublisher(parentId: string, cameraOptions: any): PublisherTokBox {
-        return new PublisherTokBox(this.openVidu.initPublisherTagged(parentId, cameraOptions));
+    initPublisher(parentId: string, cameraOptions: any): PublisherTokBox;
+    initPublisher(parentId: string, cameraOptions: any, callback: any): PublisherTokBox;
+
+    initPublisher(parentId: string, cameraOptions: any, callback?): PublisherTokBox {
+        if (!("audio" in cameraOptions && "data" in cameraOptions && "mediaConstraints" in cameraOptions &&
+            "video" in cameraOptions && (Object.keys(cameraOptions).length === 4))) {
+            cameraOptions = {
+                audio: true,
+                video: true,
+                data: true,
+                mediaConstraints: {
+                    audio: true,
+                    video: { width: { ideal: 1280 } }
+                }
+            }
+        }
+        return new PublisherTokBox(this.openVidu.initPublisherTagged(parentId, cameraOptions, callback));
     }
 
 }

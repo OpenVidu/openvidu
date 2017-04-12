@@ -18,13 +18,12 @@ export class VideoSessionComponent implements OnInit {
 
     OV: OpenViduTokBox;
     session: SessionTokBox;
+    publisher: PublisherTokBox;
 
     sessionId: string;
     token: string;
 
     cameraOptions: any;
-    localParentId: string = 'local-stream';
-    remoteParentId: string = 'remote-streams';
 
     localVideoActivated: boolean;
     localAudioActivated: boolean;
@@ -45,29 +44,37 @@ export class VideoSessionComponent implements OnInit {
 
         // 1) Initialize OpenVidu and your Session
         this.OV = new OpenViduTokBox("wss://" + location.hostname + ":8443/");
-        this.session = this.OV.initSession(this.sessionId);
+        this.session = this.OV.initSession("apikey", this.sessionId);
 
         // 2) Specify the actions when events take place
         this.session.on('streamCreated', (event) => {
-            console.warn("Stream created:");
-            console.warn(event.stream);
-            this.session.subscribe(event.stream, this.remoteParentId);
+            this.session.subscribe(event.stream, 'subscriber', {
+                insertMode: 'append',
+                width: '100%',
+                height: '100%'
+            });
         });
 
         // 3) Connect to the session
         this.session.connect(this.token, (error) => {
+
+            // If the connection is successful, initialize a publisher and publish to the session
             if (!error) {
+
                 // 4) Get your own camera stream with the desired resolution and publish it, only if the user is supposed to do so
-                let publisher = this.OV.initPublisher(this.localParentId, this.cameraOptions);
+                this.publisher = this.OV.initPublisher('publisher', {
+                    insertMode: 'append',
+                    width: '100%',
+                    height: '100%'
+                });
+
                 // 5) Publish your stream
-                this.session.publish(publisher);
-            }
-            else {
-                return console.log("There was an error: " + error);
-            }
+                this.session.publish(this.publisher);
 
+            } else {
+                console.log('There was an error connecting to the session:', error.code, error.message);
+            }
         });
-
     }
 
 
@@ -140,6 +147,51 @@ export class VideoSessionComponent implements OnInit {
     toggleScrollPage(scroll: string) {
         let content = <HTMLElement>document.getElementsByClassName("mat-sidenav-content")[0];
         content.style.overflow = scroll;
+    }
+
+    toggleLocalVideo() {
+        this.localVideoActivated = !this.localVideoActivated;
+        this.publisher.publishVideo(this.localVideoActivated);
+        this.videoIcon = this.localVideoActivated ? 'videocam' : 'videocam_off';
+    }
+
+    toggleLocalAudio() {
+        this.localAudioActivated = !this.localAudioActivated;
+        this.publisher.publishAudio(this.localAudioActivated);
+        this.audioIcon = this.localAudioActivated ? 'mic' : 'mic_off';
+    }
+
+    toggleFullScreen() {
+        let document: any = window.document;
+        let fs = document.getElementsByTagName('html')[0];
+        if (!document.fullscreenElement &&
+            !document.mozFullScreenElement &&
+            !document.webkitFullscreenElement &&
+            !document.msFullscreenElement) {
+            console.log("enter FULLSCREEN!");
+            this.fullscreenIcon = 'fullscreen_exit';
+            if (fs.requestFullscreen) {
+                fs.requestFullscreen();
+            } else if (fs.msRequestFullscreen) {
+                fs.msRequestFullscreen();
+            } else if (fs.mozRequestFullScreen) {
+                fs.mozRequestFullScreen();
+            } else if (fs.webkitRequestFullscreen) {
+                fs.webkitRequestFullscreen();
+            }
+        } else {
+            console.log("exit FULLSCREEN!");
+            this.fullscreenIcon = 'fullscreen';
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.msExitFullscreen) {
+                document.msExitFullscreen();
+            } else if (document.mozCancelFullScreen) {
+                document.mozCancelFullScreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            }
+        }
     }
 
     exitFullScreen() {

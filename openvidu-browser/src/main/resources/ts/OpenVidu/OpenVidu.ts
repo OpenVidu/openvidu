@@ -18,7 +18,7 @@ import { Session, SessionOptions } from './Session';
 import { Stream } from './Stream';
 import * as RpcBuilder from 'kurento-jsonrpc';
 
-export type Callback<T> = ( error?: any, openVidu?: T ) => void;
+export type Callback<T> = (error?: any, openVidu?: T) => void;
 
 export class OpenVidu {
 
@@ -28,9 +28,9 @@ export class OpenVidu {
     private callback: Callback<OpenVidu>;
     private camera: Stream;
     private remoteStreams: Stream[] = [];
-    
-    constructor( private wsUri: string ) {
-        if(this.wsUri.charAt(wsUri.length-1) != '/'){
+
+    constructor(private wsUri: string) {
+        if (this.wsUri.charAt(wsUri.length - 1) != '/') {
             this.wsUri += '/';
         }
         this.wsUri += 'room';
@@ -58,24 +58,29 @@ export class OpenVidu {
                     console.log("Error accessing the camera");
                 }
                 else {
-                    this.camera.playOnlyVideo(parentId, null);
-                    this.camera.isReady = true;
-                    this.camera.emitStreamReadyEvent();
+                    this.cameraReady(camera!, parentId);
                 }
             });
             return this.camera;
         } else {
             this.camera.requestCameraAccess((error, camera) => {
-                if (error){
+                if (error) {
                     callback(error);
                 }
                 else {
-                    this.camera.playOnlyVideo(parentId, null);
+                    this.cameraReady(camera!, parentId);
                     callback(undefined);
                 }
             });
             return this.camera;
         }
+    }
+
+    cameraReady(camera: Stream, parentId: string) {
+        this.camera = camera;
+        this.camera.playOnlyVideo(parentId, null);
+        this.camera.isReady = true;
+        this.camera.emitStreamReadyEvent();
     }
 
     initPublisher(cameraOptions: any, callback) {
@@ -105,14 +110,14 @@ export class OpenVidu {
         return this.session;
     }
 
-    connect( callback: Callback<OpenVidu> ): void {
+    connect(callback: Callback<OpenVidu>): void {
 
         this.callback = callback;
 
-        this.initJsonRpcClient( this.wsUri );
+        this.initJsonRpcClient(this.wsUri);
     }
 
-    private initJsonRpcClient( wsUri: string ): void {
+    private initJsonRpcClient(wsUri: string): void {
 
         let config = {
             heartbeat: 3000,
@@ -120,177 +125,181 @@ export class OpenVidu {
             ws: {
                 uri: wsUri,
                 useSockJS: false,
-                onconnected: this.connectCallback.bind( this ),
-                ondisconnect: this.disconnectCallback.bind( this ),
-                onreconnecting: this.reconnectingCallback.bind( this ),
-                onreconnected: this.reconnectedCallback.bind( this )
+                onconnected: this.connectCallback.bind(this),
+                ondisconnect: this.disconnectCallback.bind(this),
+                onreconnecting: this.reconnectingCallback.bind(this),
+                onreconnected: this.reconnectedCallback.bind(this)
             },
             rpc: {
                 requestTimeout: 15000,
                 //notifications
-                participantJoined: this.onParticipantJoined.bind( this ),
-                participantPublished: this.onParticipantPublished.bind( this ),
-                participantUnpublished: this.onParticipantLeft.bind( this ),
-                participantLeft: this.onParticipantLeft.bind( this ),
-                participantEvicted: this.onParticipantEvicted.bind( this ),
-                sendMessage: this.onNewMessage.bind( this ),
-                iceCandidate: this.iceCandidateEvent.bind( this ),
-                mediaError: this.onMediaError.bind( this ),
-                custonNotification: this.customNotification.bind( this )
+                participantJoined: this.onParticipantJoined.bind(this),
+                participantPublished: this.onParticipantPublished.bind(this),
+                participantUnpublished: this.onParticipantLeft.bind(this),
+                participantLeft: this.onParticipantLeft.bind(this),
+                participantEvicted: this.onParticipantEvicted.bind(this),
+                sendMessage: this.onNewMessage.bind(this),
+                iceCandidate: this.iceCandidateEvent.bind(this),
+                mediaError: this.onMediaError.bind(this),
+                custonNotification: this.customNotification.bind(this)
             }
         };
 
-        this.jsonRpcClient = new RpcBuilder.clients.JsonRpcClient( config );
+        this.jsonRpcClient = new RpcBuilder.clients.JsonRpcClient(config);
     }
 
 
-    private customNotification( params ) {
-        if ( this.isRoomAvailable() ) {
-            this.session.emitEvent( "custom-message-received", [{ params: params }] );
+    private customNotification(params) {
+        if (this.isRoomAvailable()) {
+            this.session.emitEvent("custom-message-received", [{ params: params }]);
         }
     }
 
-    private connectCallback( error ) {
-        if ( error ) {
-            this.callback( error );
+    private connectCallback(error) {
+        if (error) {
+            this.callback(error);
         } else {
-            this.callback( null );
+            this.callback(null);
         }
     }
 
     private isRoomAvailable() {
-        if ( this.session !== undefined && this.session instanceof Session ) {
+        if (this.session !== undefined && this.session instanceof Session) {
             return true;
         } else {
-            console.warn( 'Room instance not found' );
+            console.warn('Room instance not found');
             return false;
         }
     }
 
     private disconnectCallback() {
-        console.log( 'Websocket connection lost' );
-        if ( this.isRoomAvailable() ) {
+        console.log('Websocket connection lost');
+        if (this.isRoomAvailable()) {
             this.session.onLostConnection();
         } else {
-            alert( 'Connection error. Please reload page.' );
+            alert('Connection error. Please reload page.');
         }
     }
 
     private reconnectingCallback() {
-        console.log( 'Websocket connection lost (reconnecting)' );
-        if ( this.isRoomAvailable() ) {
+        console.log('Websocket connection lost (reconnecting)');
+        if (this.isRoomAvailable()) {
             this.session.onLostConnection();
         } else {
-            alert( 'Connection error. Please reload page.' );
+            alert('Connection error. Please reload page.');
         }
     }
 
     private reconnectedCallback() {
-        console.log( 'Websocket reconnected' );
+        console.log('Websocket reconnected');
     }
 
-    private onParticipantJoined( params ) {
-        if ( this.isRoomAvailable() ) {
-            this.session.onParticipantJoined( params );
+    private onParticipantJoined(params) {
+        if (this.isRoomAvailable()) {
+            this.session.onParticipantJoined(params);
         }
     }
 
-    private onParticipantPublished( params ) {
-        if ( this.isRoomAvailable() ) {
-            this.session.onParticipantPublished( params );
+    private onParticipantPublished(params) {
+        if (this.isRoomAvailable()) {
+            this.session.onParticipantPublished(params);
         }
     }
 
-    private onParticipantLeft( params ) {
-        if ( this.isRoomAvailable() ) {
-            this.session.onParticipantLeft( params );
+    private onParticipantLeft(params) {
+        if (this.isRoomAvailable()) {
+            this.session.onParticipantLeft(params);
         }
     }
 
-    private onParticipantEvicted( params ) {
-        if ( this.isRoomAvailable() ) {
-            this.session.onParticipantEvicted( params );
+    private onParticipantEvicted(params) {
+        if (this.isRoomAvailable()) {
+            this.session.onParticipantEvicted(params);
         }
     }
 
-    private onNewMessage( params ) {
-        if ( this.isRoomAvailable() ) {
-            this.session.onNewMessage( params );
+    private onNewMessage(params) {
+        if (this.isRoomAvailable()) {
+            this.session.onNewMessage(params);
         }
     }
 
-    private iceCandidateEvent( params ) {
-        if ( this.isRoomAvailable() ) {
-            this.session.recvIceCandidate( params );
+    private iceCandidateEvent(params) {
+        if (this.isRoomAvailable()) {
+            this.session.recvIceCandidate(params);
         }
     }
 
-    private onRoomClosed( params ) {
-        if ( this.isRoomAvailable() ) {
-            this.session.onRoomClosed( params );
+    private onRoomClosed(params) {
+        if (this.isRoomAvailable()) {
+            this.session.onRoomClosed(params);
         }
     }
 
-    private onMediaError( params ) {
-        if ( this.isRoomAvailable() ) {
-            this.session.onMediaError( params );
+    private onMediaError(params) {
+        if (this.isRoomAvailable()) {
+            this.session.onMediaError(params);
         }
     }
 
 
-    setRpcParams( params: any ) {
+    setRpcParams(params: any) {
         this.rpcParams = params;
     }
 
-    sendRequest( method, params, callback?) {
+    sendRequest(method, params, callback?) {
 
-        if ( params && params instanceof Function ) {
+        if (params && params instanceof Function) {
             callback = params;
             params = undefined;
         }
 
         params = params || {};
 
-        if ( this.rpcParams && this.rpcParams !== null && this.rpcParams !== undefined ) {
-            for ( let index in this.rpcParams ) {
-                if ( this.rpcParams.hasOwnProperty( index ) ) {
+        if (this.rpcParams && this.rpcParams !== null && this.rpcParams !== undefined) {
+            for (let index in this.rpcParams) {
+                if (this.rpcParams.hasOwnProperty(index)) {
                     params[index] = this.rpcParams[index];
-                    console.log( 'RPC param added to request {' + index + ': ' + this.rpcParams[index] + '}' );
+                    console.log('RPC param added to request {' + index + ': ' + this.rpcParams[index] + '}');
                 }
             }
         }
 
-        console.log( 'Sending request: { method:"' + method + '", params: ' + JSON.stringify( params ) + ' }' );
+        console.log('Sending request: { method:"' + method + '", params: ' + JSON.stringify(params) + ' }');
 
-        this.jsonRpcClient.send( method, params, callback );
+        this.jsonRpcClient.send(method, params, callback);
     }
 
-    close( forced ) {
-        if ( this.isRoomAvailable() ) {
-            this.session.leave( forced, this.jsonRpcClient );
+    close(forced) {
+        if (this.isRoomAvailable()) {
+            this.session.leave(forced, this.jsonRpcClient);
         }
     };
 
-    disconnectParticipant( stream ) {
-        if ( this.isRoomAvailable() ) {
-            this.session.disconnect( stream );
+    disconnectParticipant(stream) {
+        if (this.isRoomAvailable()) {
+            this.session.disconnect(stream);
         }
     }
 
     getCamera(options?) {
 
-        if(this.camera){
+        if (this.camera) {
             return this.camera;
         }
-        
+
         options = options || {
             audio: true,
             video: true,
-            data: true
+            data: true,
+            mediaConstraints: {
+                audio: true,
+                video: { width: { ideal: 1280 } }
+            }
         }
 
         options.participant = this.session.getLocalParticipant();
-        this.camera = new Stream( this, true, this.session, options );
+        this.camera = new Stream(this, true, this.session, options);
         return this.camera;
     };
 
@@ -308,38 +317,38 @@ export class OpenVidu {
     };*/
 
     //CHAT
-    sendMessage( room, user, message ) {
-        this.sendRequest( 'sendMessage', {
+    sendMessage(room, user, message) {
+        this.sendRequest('sendMessage', {
             message: message,
             userMessage: user,
             roomMessage: room
-        }, function( error, response ) {
-            if ( error ) {
-                console.error( error );
+        }, function (error, response) {
+            if (error) {
+                console.error(error);
             }
         });
     };
 
-    sendCustomRequest( params, callback ) {
-        this.sendRequest( 'customRequest', params, callback );
+    sendCustomRequest(params, callback) {
+        this.sendRequest('customRequest', params, callback);
     };
 
 
 
 
-    toggleLocalVideoTrack(activate: boolean){
+    toggleLocalVideoTrack(activate: boolean) {
         this.getCamera().getWebRtcPeer().videoEnabled = activate;
     }
 
-    toggleLocalAudioTrack(activate: boolean){
+    toggleLocalAudioTrack(activate: boolean) {
         this.getCamera().getWebRtcPeer().audioEnabled = activate;
     }
 
     publishLocalVideoAudio() {
         this.toggleLocalVideoTrack(true);
-        this.toggleLocalAudioTrack(true);  
+        this.toggleLocalAudioTrack(true);
     }
-    
+
     unpublishLocalVideoAudio() {
         this.toggleLocalVideoTrack(false);
         this.toggleLocalAudioTrack(false);

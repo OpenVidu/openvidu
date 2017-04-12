@@ -66,21 +66,21 @@ md-icon:hover {
   display: inline-block;
 }
 
-#local-stream {
+#publisher {
   position: absolute;
   width: 100%;
 }
 
-#local-stream video {
+#publisher video {
   width: 100%;
 }
 
-#remote-streams {
+#subscriber {
   position: absolute;
   bottom: 0;
 }
 
-#remote-streams video {
+#subscriber video {
   width: 350px;
 }
 

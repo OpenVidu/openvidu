@@ -434,7 +434,7 @@ export class Stream {
         if (this.isReady) {
             this.initWebRtcPeer(this.publishVideoCallback);
         } else {
-            this.addEventListener('stream-ready', streamEvent => {
+            this.ee.once('stream-ready', streamEvent => {
                 this.publish();
             });
         }

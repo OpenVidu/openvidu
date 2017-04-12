@@ -13,8 +13,16 @@ export class PublisherTokBox {
 
     stream: Stream;
 
-    constructor(stream: Stream) { 
+    constructor(stream: Stream) {
         this.stream = stream;
     }
 
+    publishAudio(value: boolean) {
+        this.stream.getWebRtcPeer().audioEnabled = value;
+    }
+
+    publishVideo(value: boolean) {
+         this.stream.getWebRtcPeer().videoEnabled = value;
+    }
+    
 }
