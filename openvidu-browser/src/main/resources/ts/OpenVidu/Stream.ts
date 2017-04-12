@@ -462,7 +462,7 @@ export class Stream {
         });
         console.log(this.getId() + ": set peer connection with recvd SDP answer",
             sdpAnswer);
-        let participantId = this.getId();
+        let streamId = this.getId();
         let pc = this.wp.peerConnection;
         pc.setRemoteDescription(answer, () => {
             // Avoids to subscribe to your own stream remotely 
@@ -478,16 +478,16 @@ export class Stream {
                     this.speechEvent = kurentoUtils.WebRtcPeer.hark(this.wrStream, { threshold: this.room.thresholdSpeaker });
 
                     this.speechEvent.on('speaking', () => {
-                        this.room.addParticipantSpeaking(participantId);
+                        this.room.addParticipantSpeaking(streamId);
                         this.room.emitEvent('stream-speaking', [{
-                            participantId: participantId
+                            streamId: streamId
                         }]);
                     });
 
                     this.speechEvent.on('stopped_speaking', () => {
-                        this.room.removeParticipantSpeaking(participantId);
+                        this.room.removeParticipantSpeaking(streamId);
                         this.room.emitEvent('stream-stopped-speaking', [{
-                            participantId: participantId
+                            streamId: streamId
                         }]);
                     });
                 }
