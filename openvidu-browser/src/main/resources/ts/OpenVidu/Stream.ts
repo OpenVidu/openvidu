@@ -326,11 +326,18 @@ export class Stream {
                 this.wrStream = userStream;
                 this.emitSrcEvent(this.wrStream);
 
+                this.ee.emitEvent('camera-access-changed', [{
+                    accessAllowed: true
+                }]);
+
                 callback(undefined, this);
             })
-            .catch(function (e) {
-                console.error("Access denied", e);
-                callback(e, undefined);
+            .catch(error => {
+                console.error("Access denied", error);
+                this.ee.emitEvent('camera-access-changed', [{
+                    accessAllowed: false
+                }]);
+                callback(error, undefined);
             });
     }
 
@@ -353,7 +360,7 @@ export class Stream {
             } else {
                 this.room.emitEvent('stream-published', [{
                     stream: this
-                }])
+                }]);
                 this.processSdpAnswer(response.sdpAnswer);
             }
         });

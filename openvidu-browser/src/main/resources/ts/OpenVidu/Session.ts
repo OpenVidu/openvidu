@@ -93,12 +93,12 @@ export class Session {
                         }
 
                         //if (this.subscribeToStreams) {
-                            for (let stream of roomEvent.streams) {
-                                this.ee.emitEvent('stream-added', [{ stream }]);
+                        for (let stream of roomEvent.streams) {
+                            this.ee.emitEvent('stream-added', [{ stream }]);
 
-                                // Adding the remote stream to the OpenVidu object
-                                this.openVidu.getRemoteStreams().push(stream);
-                            }
+                            // Adding the remote stream to the OpenVidu object
+                            this.openVidu.getRemoteStreams().push(stream);
+                        }
                         //}
 
                         callback(undefined);
@@ -188,7 +188,7 @@ export class Session {
         return this.id;
     }
 
-    getSessionId(){
+    getSessionId() {
         return this.sessionId;
     }
 
@@ -208,7 +208,15 @@ export class Session {
     }
 
     addEventListener(eventName, listener) {
-        this.ee.addListener(eventName, listener);
+        this.ee.on(eventName, listener);
+    }
+
+    addOnceEventListener(eventName, listener) {
+        this.ee.once(eventName, listener);
+    }
+
+    removeListener(eventName, listener) {
+        this.ee.off(eventName, listener);
     }
 
     emitEvent(eventName, eventsArray) {
@@ -216,78 +224,82 @@ export class Session {
     }
 
 
-    subscribe( stream ) {
+    subscribe(stream: Stream) {
         stream.subscribe();
     }
 
-    onParticipantPublished( options ) {
+    unsuscribe(stream) {
 
-        let participant = new Participant( this.openVidu, false, this, options );
+    }
+
+    onParticipantPublished(options) {
+
+        let participant = new Participant(this.openVidu, false, this, options);
 
         let pid = participant.getId();
-        if ( !( pid in this.participants ) ) {
-            console.info( "Publisher not found in participants list by its id", pid );
+        if (!(pid in this.participants)) {
+            console.info("Publisher not found in participants list by its id", pid);
         } else {
-            console.log( "Publisher found in participants list by its id", pid );
+            console.log("Publisher found in participants list by its id", pid);
         }
         //replacing old participant (this one has streams)
         this.participants[pid] = participant;
 
-        this.ee.emitEvent( 'participant-published', [{ participant }] );
+        this.ee.emitEvent('participant-published', [{ participant }]);
 
         let streams = participant.getStreams();
-        for ( let key in streams ) {
+        for (let key in streams) {
             let stream = streams[key];
 
-            if ( this.subscribeToStreams ) {
+            if (this.subscribeToStreams) {
                 stream.subscribe();
             }
-            this.ee.emitEvent( 'stream-added', [{ stream }] );
+            this.ee.emitEvent('stream-added', [{ stream }]);
             // Adding the remote stream to the OpenVidu object
             this.openVidu.getRemoteStreams().push(stream);
         }
     }
 
-    onParticipantJoined( msg ) {
+    onParticipantJoined(msg) {
 
-        let participant = new Participant( this.openVidu, false, this, msg );
+        let participant = new Participant(this.openVidu, false, this, msg);
 
         let pid = participant.getId();
-        if ( !( pid in this.participants ) ) {
-            console.log( "New participant to participants list with id", pid );
+        if (!(pid in this.participants)) {
+            console.log("New participant to participants list with id", pid);
             this.participants[pid] = participant;
         } else {
             //use existing so that we don't lose streams info
-            console.info( "Participant already exists in participants list with " +
-                "the same id, old:", this.participants[pid], ", joined now:", participant );
+            console.info("Participant already exists in participants list with " +
+                "the same id, old:", this.participants[pid], ", joined now:", participant);
             participant = this.participants[pid];
         }
 
-        this.ee.emitEvent( 'participant-joined', [{
+        this.ee.emitEvent('participant-joined', [{
             participant: participant
-        }] );
+        }]);
     }
 
-    onParticipantLeft( msg ) {
+    onParticipantLeft(msg) {
 
         let participant = this.participants[msg.name];
 
-        if ( participant !== undefined ) {
+        if (participant !== undefined) {
             delete this.participants[msg.name];
 
-            this.ee.emitEvent( 'participant-left', [{
+            this.ee.emitEvent('participant-left', [{
                 participant: participant
-            }] );
+            }]);
 
             let streams = participant.getStreams();
-            for ( let key in streams ) {
-                this.ee.emitEvent( 'stream-removed', [{
+            for (let key in streams) {
+                this.ee.emitEvent('stream-removed', [{
                     stream: streams[key],
-                    preventDefault: () => {this.ee.removeEvent('stream-removed-default');}
-                }] );
-                this.ee.emitEvent( 'stream-removed-default', [{
+                    preventDefault: () => { this.ee.removeEvent('stream-removed-default'); }
+                }]);
+                this.ee.emitEvent('stream-removed-default', [{
                     stream: streams[key]
-                }] );
+                }]);
 
                 // Deleting the removed stream from the OpenVidu object
                 let index = this.openVidu.getRemoteStreams().indexOf(streams[key]);
@@ -297,37 +309,37 @@ export class Session {
             participant.dispose();
 
         } else {
-            console.warn( "Participant " + msg.name
+            console.warn("Participant " + msg.name
                 + " unknown. Participants: "
-                + JSON.stringify( this.participants ) );
+                + JSON.stringify(this.participants));
         }
     };
 
-    onParticipantEvicted( msg ) {
-        this.ee.emitEvent( 'participant-evicted', [{
+    onParticipantEvicted(msg) {
+        this.ee.emitEvent('participant-evicted', [{
             localParticipant: this.localParticipant
-        }] );
+        }]);
     };
 
-    onNewMessage( msg ) {
+    onNewMessage(msg) {
 
-        console.log( "New message: " + JSON.stringify( msg ) );
+        console.log("New message: " + JSON.stringify(msg));
         let room = msg.room;
         let user = msg.user;
         let message = msg.message;
 
-        if ( user !== undefined ) {
-            this.ee.emitEvent( 'newMessage', [{
+        if (user !== undefined) {
+            this.ee.emitEvent('newMessage', [{
                 room: room,
                 user: user,
                 message: message
-            }] );
+            }]);
         } else {
-            console.error( "User undefined in new message:", msg );
+            console.error("User undefined in new message:", msg);
         }
     }
 
-    recvIceCandidate( msg ) {
+    recvIceCandidate(msg) {
 
         let candidate = {
             candidate: msg.candidate,
@@ -336,81 +348,81 @@ export class Session {
         }
 
         let participant = this.participants[msg.endpointName];
-        if ( !participant ) {
-            console.error( "Participant not found for endpoint " +
+        if (!participant) {
+            console.error("Participant not found for endpoint " +
                 msg.endpointName + ". Ice candidate will be ignored.",
-                candidate );
+                candidate);
             return;
         }
 
         let streams = participant.getStreams();
-        for ( let key in streams ) {
+        for (let key in streams) {
             let stream = streams[key];
-            stream.getWebRtcPeer().addIceCandidate( candidate, function( error ) {
-                if ( error ) {
-                    console.error( "Error adding candidate for " + key
+            stream.getWebRtcPeer().addIceCandidate(candidate, function (error) {
+                if (error) {
+                    console.error("Error adding candidate for " + key
                         + " stream of endpoint " + msg.endpointName
-                        + ": " + error );
+                        + ": " + error);
                 }
             });
         }
     }
 
-    onRoomClosed( msg ) {
+    onRoomClosed(msg) {
 
-        console.log( "Room closed: " + JSON.stringify( msg ) );
+        console.log("Room closed: " + JSON.stringify(msg));
         let room = msg.room;
-        if ( room !== undefined ) {
-            this.ee.emitEvent( 'room-closed', [{
+        if (room !== undefined) {
+            this.ee.emitEvent('room-closed', [{
                 room: room
-            }] );
+            }]);
         } else {
-            console.error( "Room undefined in on room closed", msg );
+            console.error("Room undefined in on room closed", msg);
         }
     }
 
     onLostConnection() {
 
-        if ( !this.connected ) {
-            console.warn( 'Not connected to room, ignoring lost connection notification' );
+        if (!this.connected) {
+            console.warn('Not connected to room, ignoring lost connection notification');
             return;
         }
 
-        console.log( 'Lost connection in room ' + this.id );
+        console.log('Lost connection in room ' + this.id);
         let room = this.id;
-        if ( room !== undefined ) {
-            this.ee.emitEvent( 'lost-connection', [{ room }] );
+        if (room !== undefined) {
+            this.ee.emitEvent('lost-connection', [{ room }]);
         } else {
-            console.error( 'Room undefined when lost connection' );
+            console.error('Room undefined when lost connection');
         }
     }
 
-    onMediaError( params ) {
+    onMediaError(params) {
 
-        console.error( "Media error: " + JSON.stringify( params ) );
+        console.error("Media error: " + JSON.stringify(params));
         let error = params.error;
-        if ( error ) {
-            this.ee.emitEvent( 'error-media', [{
+        if (error) {
+            this.ee.emitEvent('error-media', [{
                 error: error
-            }] );
+            }]);
         } else {
-            console.error( "Received undefined media error. Params:", params );
+            console.error("Received undefined media error. Params:", params);
         }
     }
 
     /*
      * forced means the user was evicted, no need to send the 'leaveRoom' request
      */
-    leave( forced, jsonRpcClient ) {
+    leave(forced, jsonRpcClient) {
 
         forced = !!forced;
 
-        console.log( "Leaving room (forced=" + forced + ")" );
+        console.log("Leaving room (forced=" + forced + ")");
 
-        if ( this.connected && !forced ) {
-            this.openVidu.sendRequest( 'leaveRoom', function( error, response ) {
-                if ( error ) {
-                    console.error( error );
+        if (this.connected && !forced) {
+            this.openVidu.sendRequest('leaveRoom', function (error, response) {
+                if (error) {
+                    console.error(error);
                 }
                 jsonRpcClient.close();
             });
@@ -418,73 +430,73 @@ export class Session {
             jsonRpcClient.close();
         }
         this.connected = false;
-        if ( this.participants ) {
-            for ( let pid in this.participants ) {
+        if (this.participants) {
+            for (let pid in this.participants) {
                 this.participants[pid].dispose();
                 delete this.participants[pid];
             }
         }
     }
 
-    disconnect( stream: Stream ) {
+    disconnect(stream: Stream) {
 
         let participant = stream.getParticipant();
-        if ( !participant ) {
-            console.error( "Stream to disconnect has no participant", stream );
+        if (!participant) {
+            console.error("Stream to disconnect has no participant", stream);
             return;
         }
 
         delete this.participants[participant.getId()];
         participant.dispose();
 
-        if ( participant === this.localParticipant ) {
+        if (participant === this.localParticipant) {
 
-            console.log( "Unpublishing my media (I'm " + participant.getId() + ")" );
+            console.log("Unpublishing my media (I'm " + participant.getId() + ")");
             delete this.localParticipant;
-            this.openVidu.sendRequest( 'unpublishVideo', function( error, response ) {
-                if ( error ) {
-                    console.error( error );
+            this.openVidu.sendRequest('unpublishVideo', function (error, response) {
+                if (error) {
+                    console.error(error);
                 } else {
-                    console.info( "Media unpublished correctly" );
+                    console.info("Media unpublished correctly");
                 }
             });
 
         } else {
 
-            console.log( "Unsubscribing from " + stream.getId() );
-            this.openVidu.sendRequest( 'unsubscribeFromVideo', {
+            console.log("Unsubscribing from " + stream.getId());
+            this.openVidu.sendRequest('unsubscribeFromVideo', {
                 sender: stream.getId()
             },
-                function( error, response ) {
-                    if ( error ) {
-                        console.error( error );
+                function (error, response) {
+                    if (error) {
+                        console.error(error);
                     } else {
-                        console.info( "Unsubscribed correctly from " + stream.getId() );
+                        console.info("Unsubscribed correctly from " + stream.getId());
                     }
                 });
         }
     }
 
-    unpublish(stream: Stream){
+    unpublish(stream: Stream) {
 
         let participant = stream.getParticipant();
-        if ( !participant ) {
-            console.error( "Stream to disconnect has no participant", stream );
+        if (!participant) {
+            console.error("Stream to disconnect has no participant", stream);
             return;
         }
 
-        if ( participant === this.localParticipant ) {
+        if (participant === this.localParticipant) {
 
             delete this.participants[participant.getId()];
             participant.dispose();
 
-            console.log( "Unpublishing my media (I'm " + participant.getId() + ")" );
+            console.log("Unpublishing my media (I'm " + participant.getId() + ")");
             delete this.localParticipant;
-            this.openVidu.sendRequest( 'unpublishVideo', function( error, response ) {
-                if ( error ) {
-                    console.error( error );
+            this.openVidu.sendRequest('unpublishVideo', function (error, response) {
+                if (error) {
+                    console.error(error);
                 } else {
-                    console.info( "Media unpublished correctly" );
+                    console.info("Media unpublished correctly");
                 }
             });
         }
@@ -494,20 +506,20 @@ export class Session {
         return this.streams;
     }
 
-    addParticipantSpeaking( participantId ) {
-        this.participantsSpeaking.push( participantId );
+    addParticipantSpeaking(participantId) {
+        this.participantsSpeaking.push(participantId);
     }
 
-    removeParticipantSpeaking( participantId ) {
+    removeParticipantSpeaking(participantId) {
         let pos = -1;
-        for ( let i = 0; i < this.participantsSpeaking.length; i++ ) {
-            if ( this.participantsSpeaking[i] == participantId ) {
+        for (let i = 0; i < this.participantsSpeaking.length; i++) {
+            if (this.participantsSpeaking[i] == participantId) {
                 pos = i;
                 break;
             }
         }
-        if ( pos != -1 ) {
-            this.participantsSpeaking.splice( pos, 1 );
+        if (pos != -1) {
+            this.participantsSpeaking.splice(pos, 1);
         }
     }
 }

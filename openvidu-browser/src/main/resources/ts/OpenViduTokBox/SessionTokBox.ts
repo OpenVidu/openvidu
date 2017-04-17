@@ -27,6 +27,7 @@ export class SessionTokBox {
     }
 
     publish(publisher: PublisherTokBox) {
+        publisher.session = this;
         publisher.stream.publish();
     }
 
@@ -38,16 +39,52 @@ export class SessionTokBox {
         let realEventName = '';
         switch (eventName) {
             case 'streamCreated':
-                realEventName = 'stream-added'
+                realEventName = 'stream-added';
                 break;
             case 'streamDestroyed':
-                realEventName = 'stream-removed'
+                realEventName = 'stream-removed';
                 break;
         }
         if (realEventName != '') {
             this.session.addEventListener(realEventName, event => {
                 callback(event);
             });
+        } else {
+            console.warn("That is not a supported event!");
+        }
+    }
+
+    once(eventName: string, callback) {
+        let realEventName = '';
+        switch (eventName) {
+            case 'streamCreated':
+                realEventName = 'stream-added';
+                break;
+            case 'streamDestroyed':
+                realEventName = 'stream-removed';
+                break;
+        }
+        if (realEventName != '') {
+            this.session.addOnceEventListener(realEventName, event => {
+                callback(event);
+            });
+        } else {
+            console.warn("That is not a supported event!");
+        }
+    }
+
+    off(eventName: string, eventHandler) {
+        let realEventName = '';
+        switch (eventName) {
+            case 'streamCreated':
+                realEventName = 'stream-added';
+                break;
+            case 'streamDestroyed':
+                realEventName = 'stream-removed';
+                break;
+        }
+        if (realEventName != '') {
+            this.session.removeListener(realEventName, eventHandler);
         } else {
             console.warn("That is not a supported event!");
         }

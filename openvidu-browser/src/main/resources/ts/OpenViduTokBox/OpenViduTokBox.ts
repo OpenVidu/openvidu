@@ -65,7 +65,7 @@ export class OpenViduTokBox {
                     }
                 }
             }
-            return new PublisherTokBox(this.openVidu.initPublisherTagged(parentId, cameraOptions, callback));
+            return new PublisherTokBox(this.openVidu.initPublisherTagged(parentId, cameraOptions, callback), parentId);
         } else {
             alert("Browser not supported");
         }
@@ -79,5 +79,14 @@ export class OpenViduTokBox {
         } else {
             return 1;
         }
+    }
+
+    getDevices(callback) {
+        navigator.mediaDevices.enumerateDevices().then((deviceInfos) => {
+            callback(null, deviceInfos);
+        }).catch((error) => {
+            console.log("Error getting devices: " + error);
+            callback(error, null);
+        });
     }
 }
