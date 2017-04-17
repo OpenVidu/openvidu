@@ -70,6 +70,7 @@ export class Stream {
     private dataChannelOpened = false;
 
     private videoSrc: string;
+    private parentId: string;
     public isReady: boolean = false;
 
     constructor(private openVidu: OpenVidu, private local: boolean, private room: Session, options: StreamOptions) {
@@ -101,7 +102,7 @@ export class Stream {
         }]);
     }
 
-    emitStreamReadyEvent(){
+    emitStreamReadyEvent() {
         this.ee.emitEvent('stream-ready'), [{}];
     }
 
@@ -109,9 +110,17 @@ export class Stream {
         return this.videoSrc;
     }
 
-    removeVideo(parentElement) {
-        document.getElementById(parentElement)!.removeChild(this.video);
+    removeVideo(parentElement?) {
+        if (parentElement) {
+            document.getElementById(parentElement)!.removeChild(this.video);
+        } else {
+            if (document.getElementById(this.parentId)) {
+                document.getElementById(this.parentId)!.removeChild(this.video);
+            }
+        }
     }
+
+
 
 
 
@@ -229,11 +238,14 @@ export class Stream {
         }
 
         if (typeof parentElement === "string") {
+            this.parentId = parentElement;
+
             let parentElementDom = document.getElementById(parentElement);
             if (parentElementDom) {
                 this.video = parentElementDom.appendChild(this.video);
             }
         } else {
+            this.parentId = parentElement.id;
             this.video = parentElement.appendChild(this.video);
         }
 

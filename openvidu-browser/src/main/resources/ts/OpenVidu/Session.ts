@@ -282,6 +282,10 @@ export class Session {
             let streams = participant.getStreams();
             for ( let key in streams ) {
                 this.ee.emitEvent( 'stream-removed', [{
+                    stream: streams[key],
+                    preventDefault: () => {this.ee.removeEvent('stream-removed-default');}
+                }] );
+                this.ee.emitEvent( 'stream-removed-default', [{
                     stream: streams[key]
                 }] );
 

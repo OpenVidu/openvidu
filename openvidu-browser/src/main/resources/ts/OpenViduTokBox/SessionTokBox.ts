@@ -6,7 +6,11 @@ import { PublisherTokBox } from './PublisherTokBox';
 
 export class SessionTokBox {
 
-    constructor(private session: Session, private openVidu: OpenViduTokBox) { }
+    constructor(private session: Session, private openVidu: OpenViduTokBox) {
+        this.session.addEventListener('stream-removed-default', event => {
+            event.stream.removeVideo();
+        });
+    }
 
     connect(token, callback) {
         // Early configuration to deactivate automatic subscription to streams
