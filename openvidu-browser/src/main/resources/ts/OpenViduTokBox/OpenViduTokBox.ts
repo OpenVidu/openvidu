@@ -19,6 +19,12 @@ import { OpenVidu } from '../OpenVidu/OpenVidu';
 import { SessionTokBox } from './SessionTokBox';
 import { PublisherTokBox } from './PublisherTokBox';
 
+import * as adapter from 'webrtc-adapter';
+
+if (window) {
+    window["adapter"] = adapter;
+}
+
 export class OpenViduTokBox {
 
     openVidu: OpenVidu;
@@ -31,30 +37,47 @@ export class OpenViduTokBox {
     initSession(sessionId: string): SessionTokBox;
 
     initSession(param1, param2?): any {
-        if (typeof param2 == "string") {
-            return new SessionTokBox(this.openVidu.initSession(param2), this);
+        if (this.checkSystemRequirements()){
+            if (typeof param2 == "string") {
+                return new SessionTokBox(this.openVidu.initSession(param2), this);
+            } else {
+                return new SessionTokBox(this.openVidu.initSession(param1), this);
+            }
         } else {
-            return new SessionTokBox(this.openVidu.initSession(param1), this);
+            alert("Browser not supported");
         }
     }
 
     initPublisher(parentId: string, cameraOptions: any): PublisherTokBox;
     initPublisher(parentId: string, cameraOptions: any, callback: any): PublisherTokBox;
 
-    initPublisher(parentId: string, cameraOptions: any, callback?): PublisherTokBox {
-        if (!("audio" in cameraOptions && "data" in cameraOptions && "mediaConstraints" in cameraOptions &&
-            "video" in cameraOptions && (Object.keys(cameraOptions).length === 4))) {
-            cameraOptions = {
-                audio: true,
-                video: true,
-                data: true,
-                mediaConstraints: {
+    initPublisher(parentId: string, cameraOptions: any, callback?): any {
+        if (this.checkSystemRequirements()){
+            if (!("audio" in cameraOptions && "data" in cameraOptions && "mediaConstraints" in cameraOptions &&
+                "video" in cameraOptions && (Object.keys(cameraOptions).length === 4))) {
+                cameraOptions = {
                     audio: true,
-                    video: { width: { ideal: 1280 } }
+                    video: true,
+                    data: true,
+                    mediaConstraints: {
+                        audio: true,
+                        video: { width: { ideal: 1280 } }
+                    }
                 }
             }
+            return new PublisherTokBox(this.openVidu.initPublisherTagged(parentId, cameraOptions, callback));
+        } else {
+            alert("Browser not supported");
         }
-        return new PublisherTokBox(this.openVidu.initPublisherTagged(parentId, cameraOptions, callback));
     }
 
+    checkSystemRequirements(): number {
+        let browser = adapter.browserDetails.browser;
+        let version = adapter.browserDetails.version;
+        if ((version == null) && ((browser != 'chrome') && (browser != 'firefox') && (browser != 'edge') && (browser != 'safari'))) {
+            return 0;
+        } else {
+            return 1;
+        }
+    }
 }
