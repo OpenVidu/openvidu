@@ -74,10 +74,15 @@ export class OpenViduTokBox {
     checkSystemRequirements(): number {
         let browser = adapter.browserDetails.browser;
         let version = adapter.browserDetails.version;
-        if ((version == null) && ((browser != 'chrome') && (browser != 'firefox') && (browser != 'edge') && (browser != 'safari'))) {
-            return 0;
-        } else {
+
+        //Bug fix: 'navigator.userAgent' in Firefox for Ubuntu 14.04 does not return "Firefox/[version]" in the string, so version returned is null
+        if ((browser == 'firefox') && (version == null)) {
             return 1;
+        }
+        if (((browser == 'chrome') && (version >= 28)) || ((browser == 'edge') && (version >= 12)) || ((browser == 'firefox') && (version >= 22))) {
+            return 1;
+        } else {
+            return 0;
         }
     }
 

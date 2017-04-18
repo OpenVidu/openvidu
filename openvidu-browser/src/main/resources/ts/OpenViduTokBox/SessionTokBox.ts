@@ -3,6 +3,7 @@ import { Stream } from '../OpenVidu/Stream';
 
 import { OpenViduTokBox } from './OpenViduTokBox';
 import { PublisherTokBox } from './PublisherTokBox';
+import { SubscriberTokBox } from './SubscriberTokBox';
 
 export class SessionTokBox {
 
@@ -90,13 +91,18 @@ export class SessionTokBox {
         }
     }
 
-    subscribe(stream: Stream, htmlId: string, videoOptions: any);
-    subscribe(stream: Stream, htmlId: string);
+    subscribe(stream: Stream, htmlId: string, videoOptions: any): SubscriberTokBox;
+    subscribe(stream: Stream, htmlId: string): SubscriberTokBox;
     
-    subscribe(param1, param2, param3?) {
+    subscribe(param1, param2, param3?): SubscriberTokBox {
         // Subscription
         this.session.subscribe(param1);
         param1.playOnlyVideo(param2, null);
+        return new SubscriberTokBox(param1, param2);
+    }
+
+    unsuscribe(subscriber: SubscriberTokBox) {
+        this.session.unsuscribe(subscriber.stream);
     }
 
 

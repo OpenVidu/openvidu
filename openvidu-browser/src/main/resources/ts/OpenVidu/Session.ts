@@ -229,7 +229,17 @@ export class Session {
     }
 
     unsuscribe(stream) {
-
+        console.log("Unsubscribing from " + stream.getId());
+        this.openVidu.sendRequest('unsubscribeFromVideo', {
+            sender: stream.getId()
+        },
+            function (error, response) {
+                if (error) {
+                    console.error(error);
+                } else {
+                    console.info("Unsubscribed correctly from " + stream.getId());
+                }
+            });
     }
 
     onParticipantPublished(options) {
@@ -462,18 +472,7 @@ export class Session {
             });
 
         } else {
-
-            console.log("Unsubscribing from " + stream.getId());
-            this.openVidu.sendRequest('unsubscribeFromVideo', {
-                sender: stream.getId()
-            },
-                function (error, response) {
-                    if (error) {
-                        console.error(error);
-                    } else {
-                        console.info("Unsubscribed correctly from " + stream.getId());
-                    }
-                });
+            this.unsuscribe(stream);
         }
     }
 
