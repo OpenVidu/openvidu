@@ -19,10 +19,10 @@ export class PublisherTokBox {
     element: Element;
     id: string;
     stream: Stream;
-    session: SessionTokBox;
+    session: SessionTokBox; //Initialized by SessionTokBox.publish(PublisherTokBox)
 
     constructor(stream: Stream, parentId: string) {
-        this.accessAllowed = false;
+        this.stream = stream;
 
         this.ee.on('camera-access-changed', (event) => {
             this.accessAllowed = event.accessAllowed;
@@ -33,7 +33,6 @@ export class PublisherTokBox {
             }
         });
 
-        this.stream = stream;
         if (document.getElementById(parentId) != null) {
             this.element = document.getElementById(parentId)!!;
         }
@@ -47,4 +46,31 @@ export class PublisherTokBox {
         this.stream.getWebRtcPeer().videoEnabled = value;
     }
 
+    destroy() {
+        this.session.unpublish(this);
+        this.stream.dispose();
+        this.stream.removeVideo(this.element);
+        return this;
+    }
+
+    on(eventName: string, callback) {
+        this.ee.addListener(eventName, event => {
+            callback(event);
+        });
+        if (eventName == 'videoElementCreated') {
+            if (this.stream.isReady) {
+                this.ee.emitEvent('videoElementCreated', [{
+                    element: this.stream.getVideoElement()
+                }]);
+            } else {
+                this.stream.addEventListener('video-element-created-by-stream', element => {
+                    console.warn("Publisher emitting videoElementCreated");
+                    this.id = element.id;
+                    this.ee.emitEvent('videoElementCreated', [{
+                        element: element
+                    }]);
+                });
+            }
+        }
+    }
 }

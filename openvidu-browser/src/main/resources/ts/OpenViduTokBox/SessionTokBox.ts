@@ -7,7 +7,12 @@ import { SubscriberTokBox } from './SubscriberTokBox';
 
 export class SessionTokBox {
 
+    //capabilities: Capabilities
+    //connection: Connection
+    sessionId: String;
+
     constructor(private session: Session, private openVidu: OpenViduTokBox) {
+        this.sessionId = session.getSessionId();
         this.session.addEventListener('stream-removed-default', event => {
             event.stream.removeVideo();
         });
@@ -51,7 +56,9 @@ export class SessionTokBox {
                 callback(event);
             });
         } else {
-            console.warn("That is not a supported event!");
+            this.session.addEventListener(eventName, event => {
+                callback(event);
+            });
         }
     }
 
@@ -70,7 +77,9 @@ export class SessionTokBox {
                 callback(event);
             });
         } else {
-            console.warn("That is not a supported event!");
+            this.session.addOnceEventListener(eventName, event => {
+                callback(event);
+            });
         }
     }
 
@@ -87,7 +96,7 @@ export class SessionTokBox {
         if (realEventName != '') {
             this.session.removeListener(realEventName, eventHandler);
         } else {
-            console.warn("That is not a supported event!");
+            this.session.removeListener(eventName, eventHandler);
         }
     }
 
@@ -97,12 +106,14 @@ export class SessionTokBox {
     subscribe(param1, param2, param3?): SubscriberTokBox {
         // Subscription
         this.session.subscribe(param1);
+        let subscriber = new SubscriberTokBox(param1, param2);
         param1.playOnlyVideo(param2, null);
-        return new SubscriberTokBox(param1, param2);
+        return subscriber;
     }
 
-    unsuscribe(subscriber: SubscriberTokBox) {
+    unsubscribe(subscriber: SubscriberTokBox) {
         this.session.unsuscribe(subscriber.stream);
+        subscriber.stream.removeVideo();
     }
 
 

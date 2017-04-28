@@ -58,7 +58,7 @@ export class OpenVidu {
                     console.log("Error accessing the camera");
                 }
                 else {
-                    this.cameraReady(camera!, parentId);
+                    this.camera.setVideoElement(this.cameraReady(camera!, parentId));
                 }
             });
             return this.camera;
@@ -68,7 +68,7 @@ export class OpenVidu {
                     callback(error);
                 }
                 else {
-                    this.cameraReady(camera!, parentId);
+                    this.camera.setVideoElement(this.cameraReady(camera!, parentId));
                     callback(undefined);
                 }
             });
@@ -78,9 +78,9 @@ export class OpenVidu {
 
     cameraReady(camera: Stream, parentId: string) {
         this.camera = camera;
-        this.camera.playOnlyVideo(parentId, null);
-        this.camera.isReady = true;
+        let videoElement = this.camera.playOnlyVideo(parentId, null);
         this.camera.emitStreamReadyEvent();
+        return videoElement;
     }
 
     initPublisher(cameraOptions: any, callback) {

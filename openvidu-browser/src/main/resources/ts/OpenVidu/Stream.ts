@@ -110,16 +110,30 @@ export class Stream {
         return this.videoSrc;
     }
 
+    removeVideo(parentElement: string);
+    removeVideo(parentElement: Element);
+    removeVideo();
+
     removeVideo(parentElement?) {
-        if (parentElement) {
+        if (typeof parentElement === "string") {
             document.getElementById(parentElement)!.removeChild(this.video);
-        } else {
+        } else if (parentElement instanceof Element) {
+            parentElement.removeChild(this.video);
+        }
+        else if (!parentElement) {
             if (document.getElementById(this.parentId)) {
                 document.getElementById(this.parentId)!.removeChild(this.video);
             }
         }
     }
 
+    getVideoElement(): HTMLVideoElement {
+        return this.video;
+    }
+
+    setVideoElement(video: HTMLVideoElement) {
+        this.video = video;
+    }
 
 
 
@@ -203,6 +217,14 @@ export class Stream {
         this.ee.addListener(eventName, listener);
     }
 
+    addOnceEventListener(eventName: string, listener: any) {
+        this.ee.addOnceListener(eventName, listener);
+    }
+
+    removeListener(eventName){
+        this.ee.removeAllListeners(eventName);
+    }
+
     showSpinner(spinnerParentId: string) {
         let progress = document.createElement('div');
         progress.id = 'progress-' + this.getId();
@@ -248,6 +270,12 @@ export class Stream {
             this.parentId = parentElement.id;
             this.video = parentElement.appendChild(this.video);
         }
+
+        this.ee.emitEvent('video-element-created-by-stream', [{
+            element: this.video
+        }]);
+
+        this.isReady = true;
 
         return this.video;
     }

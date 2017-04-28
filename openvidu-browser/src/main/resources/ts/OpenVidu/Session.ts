@@ -345,7 +345,7 @@ export class Session {
                 message: message
             }]);
         } else {
-            console.error("User undefined in new message:", msg);
+            console.warn("User undefined in new message:", msg);
         }
     }
 
@@ -387,7 +387,7 @@ export class Session {
                 room: room
             }]);
         } else {
-            console.error("Room undefined in on room closed", msg);
+            console.warn("Room undefined in on room closed", msg);
         }
     }
 
@@ -403,7 +403,7 @@ export class Session {
         if (room !== undefined) {
             this.ee.emitEvent('lost-connection', [{ room }]);
         } else {
-            console.error('Room undefined when lost connection');
+            console.warn('Room undefined when lost connection');
         }
     }
 
@@ -416,7 +416,7 @@ export class Session {
                 error: error
             }]);
         } else {
-            console.error("Received undefined media error. Params:", params);
+            console.warn("Received undefined media error. Params:", params);
         }
     }
 
