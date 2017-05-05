@@ -103,7 +103,7 @@ public class OpenViduSampleApp extends OpenViduServer {
 
   @Override
   public JsonRpcUserControl userControl() {
-    DemoJsonRpcUserControl uc = new DemoJsonRpcUserControl(roomManager());
+    DemoJsonRpcUserControl uc = new DemoJsonRpcUserControl(notificationRoomManager());
 
     KmsFilterType type = KmsFilterType.parseType(DEMO_FILTER_TYPE);
     log.info("Configuring demo with filter type: {} (parsed is {})", DEMO_FILTER_TYPE, type);
@@ -126,7 +126,7 @@ public class OpenViduSampleApp extends OpenViduServer {
   }
 
   @Bean
-  public NotificationRoomManager roomManager() {
+  public NotificationRoomManager notificationRoomManager() {
     DemoNotificationRoomHandler notificationRoomHandler =
         new DemoNotificationRoomHandler(notificationService());
 
@@ -142,7 +142,7 @@ public class OpenViduSampleApp extends OpenViduServer {
       default:
     }
 
-    return new NotificationRoomManager(notificationRoomHandler, kmsManager());
+    return new NotificationRoomManager();
   }
 
   private void getMarkerUrls(SortedMap<Integer, String> sortedUrls) {

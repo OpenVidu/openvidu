@@ -54,7 +54,7 @@ public class DemoJsonRpcUserControl extends JsonRpcUserControl {
   private SortedMap<Integer, String> markerUrls;
 
   public DemoJsonRpcUserControl(NotificationRoomManager roomManager) {
-    super(roomManager);
+    //super(roomManager);
   }
 
   public void setFilterType(KmsFilterType type) {
