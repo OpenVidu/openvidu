@@ -1,13 +1,333 @@
-OpenVidu
+What is OpenVidu?
 ========
 
-OpenVidu is a platform for adding group video calls in your web or mobile 
-application. It is based on [Kurento](http://www.kurento.org), the WebRTC platform
-for multimedia applications.
+OpenVidu is a platform to facilitate the addition of video calls in your web or mobile 
+application, either group or one-to-one calls. In fact, any combination you come up with is easy to implement with OpenVidu.
+
+It is based on [Kurento](http://www.kurento.org), the WebRTC platform for multimedia applications.
 
 OpenVidu and Kurento are licensed under Apache License v2.
 
 OpenVidu was forked from [KurentoRoom project](https://github.com/Kurento/kurento-room).
+
+
+----------
+
+
+Running a sample app
+===================
+
+
+## Basic plain JavaScript app
+
+ - Run openvidu-server (non-secure mode) and KMS with docker
+   
+   ```
+   docker run -p 8443:8443 --rm -e KMS_STUN_IP=193.147.51.12 -e KMS_STUN_PORT=3478 -e openvidu.security=false openvidu/openvidu-server-kms
+   ```
+ - Clone the following repo
+   
+   ```
+   git clone https://github.com/OpenVidu/openvidu-sample-basic-plainjs.git
+   ```
+ - Serve the app locally with your favourite tool (we recommend http-server: `npm install -g http-server`)
+   
+   ```
+   cd openvidu-sample-basic-plainjs/web
+   http-server
+   ```
+   
+ - Accept certificate at `https://localhost:8443` / `https://127.0.0.1:8443` and go to `localhost:[your_port]`
+
+There you have the app!
+   
+## Basic Angular app
+ - Run openvidu-server (non-secure mode) and KMS with docker  (no difference at all with the sample above)
+   
+   ```
+   docker run -p 8443:8443 --rm -e KMS_STUN_IP=193.147.51.12 -e KMS_STUN_PORT=3478 -e openvidu.security=false openvidu/openvidu-server-kms
+   ```
+ - Clone the following repo
+   
+   ```
+   git clone https://github.com/OpenVidu/openvidu-sample-basic-ng2.git
+   ```
+ - Install npm dependencies and serve the app with angular-cli (be sure to have the latest release! `npm install -g @angular/cli` )
+   
+   ```
+   cd openvidu-sample-basic-ng2
+   npm install
+   ng serve
+   ```
+ - Accept certificate if needed at `https://localhost:8443` / `https://127.0.0.1:8443` and go to `localhost:4200`
+
+There you have the app!   
+
+## Advanced secure app
+
+This is a more realistic example running the secure version of OpenVidu. The app has an Angular frontend, a real backend (a SpringBoot application) and a real database (MySQL managed by Hibernate). 
+
+Users must log in or register in order to access the application and connect to video calls. 
+
+ - Run openvidu-server (secure mode) and KMS with docker
+   
+   ```
+   docker run -p 8443:8443 --rm -e KMS_STUN_IP=193.147.51.12 -e KMS_STUN_PORT=3478 -e openvidu.security=true -e openvidu.secret=MY_SECRET openvidu/openvidu-server-kms
+   ```
+ - Clone the following repo (it contains our advanced application)
+   
+   ```
+   git clone https://github.com/OpenVidu/openvidu.git
+   ```
+ - You will need MySQL and a new schema ready to be used by the app. If you don't want to change the `application.properties` file, just enter _pass_ as the password of MySQL when required. 
+   
+    ```
+    sudo apt-get update
+    sudo apt-get install mysql-server
+    mysql -u root -p
+    CREATE DATABASE openvidu_sample_app;
+    exit
+    ```
+    If you already have up and running mysql-server, just open `openvidu-sample-app/src/main/resources/application.properties` and replace properties `spring.datasource.url`, `spring.datasource.username`, `spring.datasource.password` with your desired data.
+
+
+
+
+
+
+ - Build and run the application. This is pretty simple: 
+   
+    ```
+    cd openvidu/openvidu-sample-app/src/main/resources/frontend
+	npm install
+	cd ..
+	./BuildFrontWarAndRun.sh
+    ```
+    Script `BuildFrontWarAndRun.sh` just builds the Angular project in the correct folder and packages and runs the app.
+
+ - Accept certificate if needed at `https://localhost:8443` / `https://127.0.0.1:8443` and go to `localhost:5000`
+
+There you have the app!   
+
+----------
+
+
+Integrating OpenVidu in your project
+===================
+First of all, let's make clear how OpenVidu works. You have a secure version and a non-secure version available.
+
+## Non-secure OpenVidu
+
+![Unsecured](https://docs.google.com/uc?id=0B61cQ4sbhmWSNF9ZWHREUXo3QlE)
+
+In the image above you can see the three modules that make up OpenVidu in its simplest form.
+
+- **openvidu-browser**: JavaScript / TypeScript library to be used in your frontend. You can manage your video calls, rooms and participants with its API.
+- **openvidu-server**: Java application to handle all operations over Kurento Media Server
+- **Kurento Media Server**: a media server which finally handles the processing and transmission of media streams
+
+The good news for developers are that a fully functional version of **openvidu-server** and **Kurento Media Server** are provided, waiting to be downloaded and run. So the only effort you have to make is adding **openvidu-browser** in your frontend app and calling the necessary methods exposed by the API.
+
+
+## Secure OpenVidu
+![Secured](https://docs.google.com/uc?id=0B61cQ4sbhmWSeDNIekd5R2ZhQUE)
+
+Probably you don't want unauthorized users swamping your video calls. To achieve this, a little further work is requiered.
+
+The image above shows the main difference with the non-secure version: the presence of a backend application. This is quite obvious, since you cannot have a safe and secure app if you cannot identify your users.
+The important thing here is the new module **openvidu-backend-client**, a Java package to make easy the process of authorizing users.
+
+OpenVidu securization is based on **tokens**: only users with a valid token can connect to a certain video call. This process is deeply simplified by using openvidu-browser and openvidu-backend-client in conjuction. 
+Essentially, these are the steps you will need to follow:
+
+1. **Identify your user** (and probably his role for a particular video call).
+2. Use openvidu-backend-client to generate a new valid **token** for that video call. If you are creating the video call (and not letting a user join an existing one), you will first need to generate an **identifier** for the new video call. openvidu-backend-client actually wraps the secure communication process between your backend application and openvidu-server, which is ultimately responsible for generating, storing and deleting all your identifiers and tokens.
+3. **Return the identifier and token** to your frontend.
+4. Use openvidu-browser to **connect the user to the video call**, passing the identifier and the token as parameters.
+
+## How do I include OpenVidu in my app?
+
+### Backend ###
+As explained in the sections above, OpenVidu requires having up and running **Kurento Media Server** and **openvidu-server**. You can make your own decision at this particular point attending to your needs and resources: run openvidu-server and Kurento Media Server in different machines, run both of them in the same machine or use the docker image provided to make it even simplier. Furthermore, if your application has a backend on its own, you could even run it in the same machine. 
+
+This is all up to you and your resources. 
+We recommend testing different scenarios to find the best approach for your particular needs. Have in mind that the Docker image will always be the easiest way to get everything working.
+
+### Client: Non-secure OpenVidu ###
+
+> _openvidu-browser_ can be used in two different ways: by importing
+> **OpenVidu** or **OpenViduTokBox** . OpenViduTokBox is being built to be compatible with
+> [TokBox](https://tokbox.com) platform. It provides the highest level
+> of abstraction in the use of the client side, so if you just want an
+> easy way to get started it is the best approach, and it is the strategy that will be explained in the sections below.
+
+For plain JavaScript, include this file ([OpenViduTokBox.js](https://github.com/OpenVidu/openvidu/blob/master/openvidu-browser/src/main/resources/static/js/OpenViduTokBox.js)) in your frontend app.
+We recommend trying [this sample app](#basic-plain-javascript-app).
+
+For npm projects, you have an [openvidu-browser](https://www.npmjs.com/package/openvidu-browser) package ready to be added to your _package.json_.
+We recommend trying [this sample Angular app](#basic-angular-app).
+
+#### ***Step by step*** ####
+
+1. Get an *OpenViduTokBox* object and initialize a session with a *sessionId*. Remember this is the field that defines which video call to connect.
+
+	```javascript
+	var OV = new OpenViduTokBox("wss://" + OPENVIDU_SERVER_IP + ":8443/");
+    var session = OV.initSession(sessionId);
+    ```
+2. Set the events to be listened by your session. For example, this snippet below will automatically append the new participants videos to HTML element with 'subscriber' id. Available events are detailed in [API section](#api-reference).
+
+	```javascript
+	session.on('streamCreated', function (event) {
+		session.subscribe(event.stream, 'subscriber', {
+			insertMode: 'append',
+			width: '100%',
+			height: '100%'
+		});
+	});
+    ```
+3. Connect to the session. For a non-secure approach, the value of *token* parameter is irrelevant. You can pass as second parameter a callback to be executed after connection is stablished. A common use-case for users that want to stream their own video is the following one: if the connection to the session has been succesful, get a PublisherTokBox object (appended to HTML element with id 'publisher') and publish it. The rest of participants will receive the stream.
+
+	```javascript
+	session.connect(token, function (error) {
+		// If connection successful, get a publisher and publish to the session
+		if (!error) {
+			
+			var publisher = OV.initPublisher('publisher', {
+				insertMode: 'append',
+				width: '100%',
+				height: '100%'
+			});
+			
+			session.publish(publisher);
+
+		} else {
+			console.log('Error while connecting to the session');
+		}
+	});
+    ```
+
+
+### Client: Secure OpenVidu ###
+Your fronted will have to include plain JavaScript or openvidu-browser dependency just as in the non-secure architecture. 
+And here is the good part: there's really no difference between a secure and a non-secure client. You just need to get a valid **sessionId** and a valid **token** from your backend to pass as parameters in `OpenViduTokBox.initSession(sessionId)` and `SessionTokBox.connect(token, callback)` methods. And it is here where _openvidu-backend-client_ comes into play.
+
+Your backend will need _openvidu-backend-client_ dependency. Easy maven integration is provided by the following dependency:
+
+```xml
+<dependency>
+    <groupId>org.openvidu</groupId>
+    <artifactId>openvidu-backend-client</artifactId>
+    <version>...</version>
+</dependency>
+```
+
+[Here](https://github.com/OpenVidu/openvidu/tree/master/openvidu-backend-client/src/main/java/org/openvidu/client) you have the source code of openvidu-backend-client. Please note that [this](https://github.com/OpenVidu/openvidu/blob/76a7531a69eec884666fe70a2eedd0c82395a081/openvidu-backend-client/src/main/java/org/openvidu/client/OpenVidu.java#L47-L58) snippet is a fix to avoid SSL problems caused by the use of a self-signed certificate.
+
+We recommend trying [this sample app](#advanced-secure-app).
+
+#### ***Step by step*** ####
+
+1. Import OpenVidu package and get an *OpenVidu* object. You need to provide to the constructor the IP of your OpenVidu Server and the secret shared with it (initialized by `openvidu.secret=MY_SECRET` property, as you can see [here](#advanced-secure-app) in the snippet which starts Docker container).
+
+	```java
+	import org.openvidu.client.OpenVidu;
+	...
+	
+	OpenVidu openVidu = new OpenVidu(OPENVIDU_SERVER_IP, YOUR_SECRET);
+    ```
+2. Get all the sessionId and tokens you need by calling the following methods. This process is up to you. As the developer of your app, you will have to decide when and how to return to clients these parameters, as well as the way they should be stored, reused and finally deleted. 
+In [this class](https://github.com/OpenVidu/openvidu/blob/master/openvidu-sample-app/src/main/java/openvidu/openvidu_sample_app/session_manager/SessionController.java) of the secure sample app you have a way of dealing with it by using some concurrent maps and some REST controllers, but you can handle it as you wish.
+
+	```java
+	String sessionId = openVidu.createSession();
+	...
+	String token = openVidu.generateToken(sessionId, role);
+	```
+
+----------
+
+
+API reference
+===================
+## openvidu-browser
+
+| Class     | Description   										     |
+| --------- | ---------------------------------------------------------- |
+| [OpenViduTokBox](#openvidutokbox)    | Use it to initialize your sessions and publishers |
+| [SessionTokBox](#sessiontokbox)     | Represents a video call. It can also be seen as a room where multiple users can connect. Participants who publish their videos to a session will be seen by the rest of users connected to that specific session  |
+| [PublisherTokBox](#publishertokbox)   | Packs local media streams. Users can publish it to a session |
+| [SubscriberTokBox](#subscribertokbox)  | Packs remote media streams. Users automatically receive them when others publish their streams|
+| [Stream](#stream)  | Represents each of the videos send and receive by a user in a session. Therefore each PublisherTokBox and SubscriberTokBox has an attribute of type Stream |
+
+#### **OpenViduTokBox**
+| Method           | Returns | Parameters (show in order, optional italic) | Description |
+| ---------------- | ------- | ------------------------------------------- | ----------- |
+| `initSession`    | [SessionTokBox](#sessiontokbox) | _`apikey:string`_<br/>`sessionId:string` | Returns a session with id **sessionId** |
+| `initPublisher`  | [PublisherTokBox](#publishertokbox) | `parentId:string`<br/>`cameraOptions:any`<br/>_`callback:function`_ | Starts local video stream, appending it to **parentId** HTML element, with the specific **cameraOptions** settings and executing **callback** function in the end |
+| `checkSystemRequirements`  | Number |  | Returns 1 if the browser supports WebRTC, 0 otherwise|
+| `getDevices` | Promise | `callback(error, deviceInfo):function` | Collects information about the media input and output devices available on the system, returned in **deviceInfo** array |
+
+#### **SessionTokBox**
+| Method           | Returns | Parameters (show in order, optional italic) | Description |
+| ---------------- | ------- | ------------------------------------------- | ----------- |
+| `connect`    |  | `token:string`<br/>`callback(error):function` | Connects to the session using **token** and executes **callback** in the end (_error_ parameter null if success)|
+| `disconnect`  |  | | Leaves the session, destroying all streams and deleting the user as a participant |
+| `publish`  | | `publisher:PublisherTokBox` | Publishes the specific user's local stream contained in PublisherTokBox object to the session |
+| `unpublish` | | `publisher:PublisherTokBox` | Unpublishes the specific user's local stream contained in PublisherTokBox object |
+| `on` | | `eventName:string`<br/>`callback:function` | **callback** function will be triggered each time **eventName** event is recieved |
+| `once` | | `eventName:string`<br/>`callback:function` | **callback** function will be triggered once when **eventName** event is recieved. The listener is removed immediately |
+| `off` | | `eventName:string`<br/>`eventHandler:any` | Removes **eventHandler** handler for **eventName** event |
+| `subscribe` | [SubscriberTokBox](#subscribertokbox) | `stream:Stream`<br/>`htmlId:string`<br/>_`videoOptions:any`_ | Subscribes to **stream**, appending a new HTML Video element to DOM element of **htmlId** id, with **videoOptions** settings. This method is usually called in the callback of _streamCreated_ event |
+| `unsubscribe` | | `subscriber:SubscriberTokBox` | Unsubscribes from **subscriber**, automatically removing its HTML Video element |
+
+| Property    | Type   | Description                  |
+| ------------| ------ | ---------------------------- |
+| `sessionId` | string | The unique id of the session |
+
+
+#### **PublisherTokBox**
+| Method         | Returns | Parameters (show in order, optional italic) | Description |
+| -------------- | ------- | ------------------------------------------- | ----------- |
+| `publishAudio` |  | `value:boolean`| Enable or disable the audio track depending on whether value is _true_ or _false_ |
+| `publishVideo` |  | `value:boolean`| Enable or disable the video track depending on whether value is _true_ or _false_ |
+| `destroy`      | [PublisherTokBox](#publishertokbox) || Delets the publisher object and removes it from DOM. The rest of users will trigger a _streamDestroyed_ event |
+
+| Property    | Type   | Description                  |
+| ------------| ------ | ---------------------------- |
+| `accessAllowed` | boolean | _true_ if the user has granted access to the camera, _false_ otherwise |
+| `element` | Element | The parent HTML Element which contains the publisher |
+| `id` | string | The id of the HTML Video element of the publisher |
+| `stream` | Stream | The stream object of the publisher |
+| `session` | [SessionTokBox](#sessiontokbox) | The session to which the publisher belongs |
+
+#### **SubscriberTokBox**
+| Method         | Returns | Parameters (show in order, optional italic) | Description |
+| -------------- | ------- | ------------------------------------------- | ----------- |
+| | | | |
+
+
+| Property    | Type   | Description                  |
+| ------------| ------ | ---------------------------- |
+| `element` | Element | The parent HTML Element which contains the subscriber |
+| `id` | string | The id of the HTML Video element of the subscriber |
+| `stream` | Stream | The stream object of the subscriber |
+
+## openvidu-backend-client
+
+| Class     | Description   										     |
+| --------- | ---------------------------------------------------------- |
+| [`OpenVidu`](#openvidu-backend-client)    |  |
+
+
+----------
+
+
+Deploying on AWS
+===================
+Coming soon ...
+
+----------
 
 
 Developing OpenVidu
@@ -17,13 +337,13 @@ First of all, you will need these packages:
 
 ```sudo apt-get update```
 
-| Dependecy     | Command                                |
-| ------------- | -------------------------------------- |
-| node          | ```sudo apt-get install -g nodejs```   |
-| npm           | ```sudo apt-get install -g npm```      |
-| maven         | ```sudo apt-get install -g maven```    |
-| angular-cli   | ```sudo npm install -g @angular/cli``` |
-| typescript    | ```sudo npm install -g typescript```   |
+| Dependecy     | Check version | Install                            |
+| ------------- | ------------- |----------------------------------- |
+| node          | `nodejs -v`   | `sudo apt-get install -g nodejs`   |
+| npm           | `npm -v`      | `sudo apt-get install -g npm`      |
+| maven         | `mvn -v`      | `sudo apt-get install -g maven`    |
+| angular-cli   | `ng -v`       | `sudo npm install -g @angular/cli` |
+| typescript    | `tsc -v`      | `sudo npm install -g typescript`   |
 
 
 OpenVidu structure

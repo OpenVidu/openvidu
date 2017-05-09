@@ -20,6 +20,7 @@
     	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     	<java.version>1.8</java.version>
     	<start-class>openvidu.openvidu_sample_app.App</start-class>
+		<docker.image.prefix>openvidu</docker.image.prefix>
   	</properties>
   	
   	<build>
@@ -71,6 +72,23 @@
 		            <packagingExcludes>src/main/resources/frontend/**</packagingExcludes>
 		        </configuration>
 		    </plugin>
+
+			<plugin>
+	            <groupId>com.spotify</groupId>
+	            <artifactId>docker-maven-plugin</artifactId>
+	            <version>0.2.3</version>
+	            <configuration>
+	                <imageName>${docker.image.prefix}/${project.artifactId}</imageName>
+	                <dockerDirectory>src/main/docker</dockerDirectory>
+	                <resources>
+	                    <resource>
+	                        <targetPath>/</targetPath>
+	                        <directory>${project.build.directory}</directory>
+	                        <include>${project.build.finalName}.war</include>
+	                    </resource>
+	                </resources>
+	            </configuration>
+        	</plugin>
 		    
 		</plugins>
 	</build>
