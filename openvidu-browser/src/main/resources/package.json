@@ -2,11 +2,10 @@
   "name": "openvidu-browser",
   "version": "0.2.0",
   "description": "OpenVidu Browser",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "lib/OpenVidu/index.js",
+  "types": "lib/OpenVidu/index.d.ts",
   "scripts": {
-    "browserify1": "cd ts/OpenVidu && browserify Main.ts -p [ tsify ] --exclude kurento-browser-extensions --debug -o ../../static/js/OpenVidu.js -v",
-    "browserify2": "cd ts/OpenViduTokBox && browserify Main.ts -p [ tsify ] --exclude kurento-browser-extensions --debug -o ../../static/js/OpenViduTokBox.js -v",
+    "browserify": "cd ts/OpenVidu && browserify Main.ts -p [ tsify ] --exclude kurento-browser-extensions --debug -o ../../static/js/OpenVidu.js -v",
     "test": "echo \"Error: no test specified\" && exit 1",
     "prepublish": "cd ts && tsc",
     "developing": "cd ts && tsc -w"

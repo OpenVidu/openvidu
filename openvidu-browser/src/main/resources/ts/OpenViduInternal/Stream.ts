@@ -5,9 +5,9 @@
  *
  * stream.hasAudio(); stream.hasVideo(); stream.hasData();
  */
-import { Participant } from './Participant';
-import { Session } from './Session';
-import { OpenVidu, Callback } from './OpenVidu';
+import { ParticipantInternal } from './ParticipantInternal';
+import { SessionInternal } from './SessionInternal';
+import { OpenViduInternal, Callback } from './OpenViduInternal';
 import EventEmitter = require('wolfy87-eventemitter');
 import * as kurentoUtils from 'kurento-utils';
 
@@ -33,7 +33,7 @@ function hide(id: string) {
 
 export interface StreamOptions {
     id: string;
-    participant: Participant;
+    participant: ParticipantInternal;
     recvVideo: any;
     recvAudio: any;
     video: boolean;
@@ -56,7 +56,7 @@ export class Stream {
     private video: HTMLVideoElement;
     private videoElements: VideoOptions[] = [];
     private elements: HTMLDivElement[] = [];
-    private participant: Participant;
+    private participant: ParticipantInternal;
     private speechEvent: any;
     private recvVideo: any;
     private recvAudio: any;
@@ -73,7 +73,7 @@ export class Stream {
     private parentId: string;
     public isReady: boolean = false;
 
-    constructor(private openVidu: OpenVidu, private local: boolean, private room: Session, options: StreamOptions) {
+    constructor(private openVidu: OpenViduInternal, private local: boolean, private room: SessionInternal, options: StreamOptions) {
 
         if (options.id) {
             this.id = options.id;

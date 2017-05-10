@@ -1,7 +1,7 @@
 // Participant --------------------------------
 import { Stream, StreamOptions } from './Stream';
-import { OpenVidu } from './OpenVidu';
-import { Session } from './Session';
+import { OpenViduInternal } from './OpenViduInternal';
+import { SessionInternal } from './SessionInternal';
 
 type ObjMap<T> = { [s: string]: T; }
 
@@ -10,13 +10,13 @@ export interface ParticipantOptions {
     streams?: StreamOptions[];
 }
 
-export class Participant {
+export class ParticipantInternal {
 
     private id: string;
     private streams: ObjMap<Stream> = {};
     private streamsOpts: StreamOptions[] = [];
 
-    constructor( private openVidu: OpenVidu, private local: boolean, private room: Session, private options?: ParticipantOptions ) {
+    constructor( private openVidu: OpenViduInternal, private local: boolean, private room: SessionInternal, private options?: ParticipantOptions ) {
 
         if ( options ) {
 

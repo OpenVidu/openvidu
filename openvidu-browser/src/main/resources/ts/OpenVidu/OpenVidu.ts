@@ -14,344 +14,84 @@
  * limitations under the License.
  *
  */
-import { Session, SessionOptions } from './Session';
-import { Stream } from './Stream';
-import * as RpcBuilder from 'kurento-jsonrpc';
+import { OpenViduInternal } from '../OpenViduInternal/OpenViduInternal';
 
-export type Callback<T> = (error?: any, openVidu?: T) => void;
+import { Session } from './Session';
+import { Publisher } from './Publisher';
+
+import * as adapter from 'webrtc-adapter';
+
+if (window) {
+    window["adapter"] = adapter;
+}
 
 export class OpenVidu {
 
-    private session: Session;
-    private jsonRpcClient: any;
-    private rpcParams: any;
-    private callback: Callback<OpenVidu>;
-    private camera: Stream;
-    private remoteStreams: Stream[] = [];
+    openVidu: OpenViduInternal;
 
     constructor(private wsUri: string) {
-        if (this.wsUri.charAt(wsUri.length - 1) != '/') {
-            this.wsUri += '/';
-        }
-        this.wsUri += 'room';
+        this.openVidu = new OpenViduInternal(wsUri);
     }
 
+    initSession(apiKey: string, sessionId: string): Session;
+    initSession(sessionId: string): Session;
 
-
-
-
-    /* NEW METHODS */
-    initSession(sessionId) {
-        console.log("Session initialized!");
-        this.session = new Session(this, sessionId);
-        return this.session;
-    }
-
-    initPublisherTagged(parentId: string, cameraOptions: any, callback?) {
-        console.log("Publisher tagged initialized!");
-
-        this.getCamera(cameraOptions);
-
-        if (callback == null) {
-            this.camera.requestCameraAccess((error, camera) => {
-                if (error) {
-                    console.log("Error accessing the camera");
-                }
-                else {
-                    this.camera.setVideoElement(this.cameraReady(camera!, parentId));
-                }
-            });
-            return this.camera;
+    initSession(param1, param2?): any {
+        if (this.checkSystemRequirements()){
+            if (typeof param2 == "string") {
+                return new Session(this.openVidu.initSession(param2), this);
+            } else {
+                return new Session(this.openVidu.initSession(param1), this);
+            }
         } else {
-            this.camera.requestCameraAccess((error, camera) => {
-                if (error) {
-                    callback(error);
-                }
-                else {
-                    this.camera.setVideoElement(this.cameraReady(camera!, parentId));
-                    callback(undefined);
-                }
-            });
-            return this.camera;
+            alert("Browser not supported");
         }
     }
 
-    cameraReady(camera: Stream, parentId: string) {
-        this.camera = camera;
-        let videoElement = this.camera.playOnlyVideo(parentId, null);
-        this.camera.emitStreamReadyEvent();
-        return videoElement;
+    initPublisher(parentId: string, cameraOptions: any): Publisher;
+    initPublisher(parentId: string, cameraOptions: any, callback: any): Publisher;
+
+    initPublisher(parentId: string, cameraOptions: any, callback?): any {
+        if (this.checkSystemRequirements()){
+            if (!("audio" in cameraOptions && "data" in cameraOptions && "mediaConstraints" in cameraOptions &&
+                "video" in cameraOptions && (Object.keys(cameraOptions).length === 4))) {
+                cameraOptions = {
+                    audio: cameraOptions.audio != null ? cameraOptions.audio : true,
+                    video: cameraOptions.video != null ? cameraOptions.video : true,
+                    data: true,
+                    mediaConstraints: {
+                        audio: true,
+                        video: { width: { ideal: 1280 } }
+                    }
+                }
+            }
+            return new Publisher(this.openVidu.initPublisherTagged(parentId, cameraOptions, callback), parentId);
+        } else {
+            alert("Browser not supported");
+        }
     }
 
-    initPublisher(cameraOptions: any, callback) {
-        console.log("Publisher initialized!");
+    checkSystemRequirements(): number {
+        let browser = adapter.browserDetails.browser;
+        let version = adapter.browserDetails.version;
 
-        this.getCamera(cameraOptions);
-        this.camera.requestCameraAccess((error, camera) => {
-            if (error) callback(error);
-            else callback(undefined);
+        //Bug fix: 'navigator.userAgent' in Firefox for Ubuntu 14.04 does not return "Firefox/[version]" in the string, so version returned is null
+        if ((browser == 'firefox') && (version == null)) {
+            return 1;
+        }
+        if (((browser == 'chrome') && (version >= 28)) || ((browser == 'edge') && (version >= 12)) || ((browser == 'firefox') && (version >= 22))) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
+    getDevices(callback) {
+        navigator.mediaDevices.enumerateDevices().then((deviceInfos) => {
+            callback(null, deviceInfos);
+        }).catch((error) => {
+            console.log("Error getting devices: " + error);
+            callback(error, null);
         });
     }
-
-    getLocalStream() {
-        return this.camera;
-    }
-
-    getRemoteStreams() {
-        return this.remoteStreams;
-    }
-    /* NEW METHODS */
-
-
-
-
-
-    getRoom() {
-        return this.session;
-    }
-
-    connect(callback: Callback<OpenVidu>): void {
-
-        this.callback = callback;
-
-        this.initJsonRpcClient(this.wsUri);
-    }
-
-    private initJsonRpcClient(wsUri: string): void {
-
-        let config = {
-            heartbeat: 3000,
-            sendCloseMessage: false,
-            ws: {
-                uri: wsUri,
-                useSockJS: false,
-                onconnected: this.connectCallback.bind(this),
-                ondisconnect: this.disconnectCallback.bind(this),
-                onreconnecting: this.reconnectingCallback.bind(this),
-                onreconnected: this.reconnectedCallback.bind(this)
-            },
-            rpc: {
-                requestTimeout: 15000,
-                //notifications
-                participantJoined: this.onParticipantJoined.bind(this),
-                participantPublished: this.onParticipantPublished.bind(this),
-                participantUnpublished: this.onParticipantLeft.bind(this),
-                participantLeft: this.onParticipantLeft.bind(this),
-                participantEvicted: this.onParticipantEvicted.bind(this),
-                sendMessage: this.onNewMessage.bind(this),
-                iceCandidate: this.iceCandidateEvent.bind(this),
-                mediaError: this.onMediaError.bind(this),
-                custonNotification: this.customNotification.bind(this)
-            }
-        };
-
-        this.jsonRpcClient = new RpcBuilder.clients.JsonRpcClient(config);
-    }
-
-
-    private customNotification(params) {
-        if (this.isRoomAvailable()) {
-            this.session.emitEvent("custom-message-received", [{ params: params }]);
-        }
-    }
-
-    private connectCallback(error) {
-        if (error) {
-            this.callback(error);
-        } else {
-            this.callback(null);
-        }
-    }
-
-    private isRoomAvailable() {
-        if (this.session !== undefined && this.session instanceof Session) {
-            return true;
-        } else {
-            console.warn('Room instance not found');
-            return false;
-        }
-    }
-
-    private disconnectCallback() {
-        console.log('Websocket connection lost');
-        if (this.isRoomAvailable()) {
-            this.session.onLostConnection();
-        } else {
-            alert('Connection error. Please reload page.');
-        }
-    }
-
-    private reconnectingCallback() {
-        console.log('Websocket connection lost (reconnecting)');
-        if (this.isRoomAvailable()) {
-            this.session.onLostConnection();
-        } else {
-            alert('Connection error. Please reload page.');
-        }
-    }
-
-    private reconnectedCallback() {
-        console.log('Websocket reconnected');
-    }
-
-    private onParticipantJoined(params) {
-        if (this.isRoomAvailable()) {
-            this.session.onParticipantJoined(params);
-        }
-    }
-
-    private onParticipantPublished(params) {
-        if (this.isRoomAvailable()) {
-            this.session.onParticipantPublished(params);
-        }
-    }
-
-    private onParticipantLeft(params) {
-        if (this.isRoomAvailable()) {
-            this.session.onParticipantLeft(params);
-        }
-    }
-
-    private onParticipantEvicted(params) {
-        if (this.isRoomAvailable()) {
-            this.session.onParticipantEvicted(params);
-        }
-    }
-
-    private onNewMessage(params) {
-        if (this.isRoomAvailable()) {
-            this.session.onNewMessage(params);
-        }
-    }
-
-    private iceCandidateEvent(params) {
-        if (this.isRoomAvailable()) {
-            this.session.recvIceCandidate(params);
-        }
-    }
-
-    private onRoomClosed(params) {
-        if (this.isRoomAvailable()) {
-            this.session.onRoomClosed(params);
-        }
-    }
-
-    private onMediaError(params) {
-        if (this.isRoomAvailable()) {
-            this.session.onMediaError(params);
-        }
-    }
-
-
-    setRpcParams(params: any) {
-        this.rpcParams = params;
-    }
-
-    sendRequest(method, params, callback?) {
-
-        if (params && params instanceof Function) {
-            callback = params;
-            params = undefined;
-        }
-
-        params = params || {};
-
-        if (this.rpcParams && this.rpcParams !== null && this.rpcParams !== undefined) {
-            for (let index in this.rpcParams) {
-                if (this.rpcParams.hasOwnProperty(index)) {
-                    params[index] = this.rpcParams[index];
-                    console.log('RPC param added to request {' + index + ': ' + this.rpcParams[index] + '}');
-                }
-            }
-        }
-
-        console.log('Sending request: { method:"' + method + '", params: ' + JSON.stringify(params) + ' }');
-
-        this.jsonRpcClient.send(method, params, callback);
-    }
-
-    close(forced) {
-        if (this.isRoomAvailable()) {
-            this.session.leave(forced, this.jsonRpcClient);
-        }
-    };
-
-    disconnectParticipant(stream) {
-        if (this.isRoomAvailable()) {
-            this.session.disconnect(stream);
-        }
-    }
-
-    getCamera(options?) {
-
-        if (this.camera) {
-            return this.camera;
-        }
-
-        options = options || {
-            audio: true,
-            video: true,
-            data: true,
-            mediaConstraints: {
-                audio: true,
-                video: { width: { ideal: 1280 } }
-            }
-        }
-
-        options.participant = this.session.getLocalParticipant();
-        this.camera = new Stream(this, true, this.session, options);
-        return this.camera;
-    };
-
-    /*joinSession(options: SessionOptions, callback: Callback<Session>) {
-        
-        this.session.configure(options);
-        
-        this.session.connect2();
-        
-        this.session.addEventListener('room-connected', roomEvent => callback(undefined,this.session));
-        
-        this.session.addEventListener('error-room', error => callback(error));
-        
-        return this.session;
-    };*/
-
-    //CHAT
-    sendMessage(room, user, message) {
-        this.sendRequest('sendMessage', {
-            message: message,
-            userMessage: user,
-            roomMessage: room
-        }, function (error, response) {
-            if (error) {
-                console.error(error);
-            }
-        });
-    };
-
-    sendCustomRequest(params, callback) {
-        this.sendRequest('customRequest', params, callback);
-    };
-
-
-
-
-    toggleLocalVideoTrack(activate: boolean) {
-        this.getCamera().getWebRtcPeer().videoEnabled = activate;
-    }
-
-    toggleLocalAudioTrack(activate: boolean) {
-        this.getCamera().getWebRtcPeer().audioEnabled = activate;
-    }
-
-    publishLocalVideoAudio() {
-        this.toggleLocalVideoTrack(true);
-        this.toggleLocalAudioTrack(true);
-    }
-
-    unpublishLocalVideoAudio() {
-        this.toggleLocalVideoTrack(false);
-        this.toggleLocalAudioTrack(false);
-    }
-
 }

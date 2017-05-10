@@ -1,11 +1,11 @@
-import { OpenViduTokBox } from './OpenViduTokBox';
+import { OpenViduInternal } from './OpenViduInternal';
 
 //This export with --standalone option allows using OpenVidu from bowser with namespace
 //export { OpenVidu } from './OpenVidu';
 
 //This "hack" allows to use OpenVidu from the global space window
 if(window){
-    window["OpenViduTokBox"] = OpenViduTokBox;
+    window["OpenViduInternal"] = OpenViduInternal;
 }
 
 //Command to generate bundle.js without namespace

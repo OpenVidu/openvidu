@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Location } from '@angular/common';
-import { OpenViduTokBox, SessionTokBox, PublisherTokBox } from 'openvidu-browser';
+import { OpenVidu, Session, Publisher } from 'openvidu-browser';
 
 import { VideoSessionService } from '../../services/video-session.service';
 import { AuthenticationService } from '../../services/authentication.service';
@@ -16,9 +16,9 @@ export class VideoSessionComponent implements OnInit {
 
     lesson: Lesson;
 
-    OV: OpenViduTokBox;
-    session: SessionTokBox;
-    publisher: PublisherTokBox;
+    OV: OpenVidu;
+    session: Session;
+    publisher: Publisher;
 
     sessionId: string;
     token: string;
@@ -43,7 +43,7 @@ export class VideoSessionComponent implements OnInit {
         // In this case, the method ngOnInit takes care of it
 
         // 1) Initialize OpenVidu and your Session
-        this.OV = new OpenViduTokBox("wss://" + location.hostname + ":8443/");
+        this.OV = new OpenVidu("wss://" + location.hostname + ":8443/");
         this.session = this.OV.initSession("apikey", this.sessionId);
 
         // 2) Specify the actions when events take place

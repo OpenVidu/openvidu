@@ -1,10 +1,8 @@
-import { Stream, StreamOptions, VideoOptions } from '../OpenVidu/Stream';
-import { OpenViduTokBox } from './OpenViduTokBox';
-import { SessionTokBox } from './SessionTokBox';
+import { Stream, StreamOptions, VideoOptions } from '../OpenViduInternal/Stream';
 
 import EventEmitter = require('wolfy87-eventemitter');
 
-export class SubscriberTokBox {
+export class Subscriber {
 
     private ee = new EventEmitter();
 

@@ -47,18 +47,18 @@
   <input type="checkbox" id="toggle-video" name="toggle-video" [checked]="toggleVideo" (change)="updateToggleVideo($event)">  Toggle your video
   <input type="checkbox" id="toggle-audio" name="toggle-audio" [checked]="toggleAudio" (change)="updateToggleAudio($event)">  Toggle your audio
   <div>
+    <div id="publisher"></div>
+    <div id="subscriber"></div>
     <div *ngFor="let s of streams; let i = index">
-      <div style="top: 0;">
-        <stream [stream]="s"></stream>
-      </div>
       <div *ngIf="stats[i]">
         <div style="margin-left: 50px;">
-          <input type="checkbox" id="toggle-state" name="toggle-state" [checked]="true" (change)="updateToggleState(i)">  Show conexion state
+          <input type="checkbox" id="toggle-state" name="toggle-state" [checked]="true" (change)="updateToggleState(i)">          Show conexion state
           <div [attr.id]="'state-' + i" style="display: block;">
             <p><b>Signaling state:</b> {{signalingState[i]}}</p>
             <p><b>ICE connection state:</b> {{iceConnectionState[i]}}</p>
           </div>
-          <input type="checkbox" id="toggle-statistics" name="toggle-statistics" (change)="updateToggleStatistics(i)">  Show statistics
+          <input type="checkbox" id="toggle-statistics" name="toggle-statistics" (change)="updateToggleStatistics(i)"> Show
+          statistics
           <div>
             <h2 *ngIf="stats[i].bitrate">Bitrate: {{stats[i].bitrate}}</h2>
             <h2 *ngIf="stats[i].framerate">Framerate: {{stats[i].framerate}}</h2>

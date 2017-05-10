@@ -155,13 +155,7 @@ We recommend testing different scenarios to find the best approach for your part
 
 ### Client: Non-secure OpenVidu ###
 
-> _openvidu-browser_ can be used in two different ways: by importing
-> **OpenVidu** or **OpenViduTokBox** . OpenViduTokBox is being built to be compatible with
-> [TokBox](https://tokbox.com) platform. It provides the highest level
-> of abstraction in the use of the client side, so if you just want an
-> easy way to get started it is the best approach, and it is the strategy that will be explained in the sections below.
-
-For plain JavaScript, include this file ([OpenViduTokBox.js](https://github.com/OpenVidu/openvidu/blob/master/openvidu-browser/src/main/resources/static/js/OpenViduTokBox.js)) in your frontend app.
+For plain JavaScript, include this file ([OpenVidu.js](https://github.com/OpenVidu/openvidu/blob/master/openvidu-browser/src/main/resources/static/js/OpenVidu.js)) in your frontend app.
 We recommend trying [this sample app](#basic-plain-javascript-app).
 
 For npm projects, you have an [openvidu-browser](https://www.npmjs.com/package/openvidu-browser) package ready to be added to your _package.json_.
@@ -169,10 +163,10 @@ We recommend trying [this sample Angular app](#basic-angular-app).
 
 #### ***Step by step*** ####
 
-1. Get an *OpenViduTokBox* object and initialize a session with a *sessionId*. Remember this is the field that defines which video call to connect.
+1. Get an *OpenVidu* object and initialize a session with a *sessionId*. Remember this is the field that defines which video call to connect.
 
 	```javascript
-	var OV = new OpenViduTokBox("wss://" + OPENVIDU_SERVER_IP + ":8443/");
+	var OV = new OpenVidu("wss://" + OPENVIDU_SERVER_IP + ":8443/");
     var session = OV.initSession(sessionId);
     ```
 2. Set the events to be listened by your session. For example, this snippet below will automatically append the new participants videos to HTML element with 'subscriber' id. Available events are detailed in [API section](#api-reference).
@@ -186,7 +180,7 @@ We recommend trying [this sample Angular app](#basic-angular-app).
 		});
 	});
     ```
-3. Connect to the session. For a non-secure approach, the value of *token* parameter is irrelevant. You can pass as second parameter a callback to be executed after connection is stablished. A common use-case for users that want to stream their own video is the following one: if the connection to the session has been succesful, get a PublisherTokBox object (appended to HTML element with id 'publisher') and publish it. The rest of participants will receive the stream.
+3. Connect to the session. For a non-secure approach, the value of *token* parameter is irrelevant. You can pass as second parameter a callback to be executed after connection is stablished. A common use-case for users that want to stream their own video is the following one: if the connection to the session has been succesful, get a Publisher object (appended to HTML element with id 'publisher') and publish it. The rest of participants will receive the stream.
 
 	```javascript
 	session.connect(token, function (error) {
@@ -210,7 +204,7 @@ We recommend trying [this sample Angular app](#basic-angular-app).
 
 ### Client: Secure OpenVidu ###
 Your fronted will have to include plain JavaScript or openvidu-browser dependency just as in the non-secure architecture. 
-And here is the good part: there's really no difference between a secure and a non-secure client. You just need to get a valid **sessionId** and a valid **token** from your backend to pass as parameters in `OpenViduTokBox.initSession(sessionId)` and `SessionTokBox.connect(token, callback)` methods. And it is here where _openvidu-backend-client_ comes into play.
+And here is the good part: there's really no difference between a secure and a non-secure client. You just need to get a valid **sessionId** and a valid **token** from your backend to pass as parameters in `OpenVidu.initSession(sessionId)` and `Session.connect(token, callback)` methods. And it is here where _openvidu-backend-client_ comes into play.
 
 Your backend will need _openvidu-backend-client_ dependency. Easy maven integration is provided by the following dependency:
 
@@ -254,44 +248,44 @@ API reference
 
 | Class     | Description   										     |
 | --------- | ---------------------------------------------------------- |
-| [OpenViduTokBox](#openvidutokbox)    | Use it to initialize your sessions and publishers |
-| [SessionTokBox](#sessiontokbox)     | Represents a video call. It can also be seen as a room where multiple users can connect. Participants who publish their videos to a session will be seen by the rest of users connected to that specific session  |
-| [PublisherTokBox](#publishertokbox)   | Packs local media streams. Users can publish it to a session |
-| [SubscriberTokBox](#subscribertokbox)  | Packs remote media streams. Users automatically receive them when others publish their streams|
-| [Stream](#stream)  | Represents each of the videos send and receive by a user in a session. Therefore each PublisherTokBox and SubscriberTokBox has an attribute of type Stream |
+| [OpenVidu](#openvidu)    | Use it to initialize your sessions and publishers |
+| [Session](#session)     | Represents a video call. It can also be seen as a room where multiple users can connect. Participants who publish their videos to a session will be seen by the rest of users connected to that specific session  |
+| [Publisher](#publisher)   | Packs local media streams. Users can publish it to a session |
+| [Subscriber](#subscriber)  | Packs remote media streams. Users automatically receive them when others publish their streams|
+| [Stream](#stream)  | Represents each of the videos send and receive by a user in a session. Therefore each Publisher and Subscriber has an attribute of type Stream |
 
-#### **OpenViduTokBox**
+#### **OpenVidu**
 | Method           | Returns | Parameters (show in order, optional italic) | Description |
 | ---------------- | ------- | ------------------------------------------- | ----------- |
-| `initSession`    | [SessionTokBox](#sessiontokbox) | _`apikey:string`_<br/>`sessionId:string` | Returns a session with id **sessionId** |
-| `initPublisher`  | [PublisherTokBox](#publishertokbox) | `parentId:string`<br/>`cameraOptions:any`<br/>_`callback:function`_ | Starts local video stream, appending it to **parentId** HTML element, with the specific **cameraOptions** settings and executing **callback** function in the end |
+| `initSession`    | [Session](#session) | _`apikey:string`_<br/>`sessionId:string` | Returns a session with id **sessionId** |
+| `initPublisher`  | [Publisher](#publisher) | `parentId:string`<br/>`cameraOptions:any`<br/>_`callback:function`_ | Starts local video stream, appending it to **parentId** HTML element, with the specific **cameraOptions** settings and executing **callback** function in the end |
 | `checkSystemRequirements`  | Number |  | Returns 1 if the browser supports WebRTC, 0 otherwise|
 | `getDevices` | Promise | `callback(error, deviceInfo):function` | Collects information about the media input and output devices available on the system, returned in **deviceInfo** array |
 
-#### **SessionTokBox**
+#### **Session**
 | Method           | Returns | Parameters (show in order, optional italic) | Description |
 | ---------------- | ------- | ------------------------------------------- | ----------- |
 | `connect`    |  | `token:string`<br/>`callback(error):function` | Connects to the session using **token** and executes **callback** in the end (_error_ parameter null if success)|
 | `disconnect`  |  | | Leaves the session, destroying all streams and deleting the user as a participant |
-| `publish`  | | `publisher:PublisherTokBox` | Publishes the specific user's local stream contained in PublisherTokBox object to the session |
-| `unpublish` | | `publisher:PublisherTokBox` | Unpublishes the specific user's local stream contained in PublisherTokBox object |
+| `publish`  | | `publisher:Publisher` | Publishes the specific user's local stream contained in Publisher object to the session |
+| `unpublish` | | `publisher:Publisher` | Unpublishes the specific user's local stream contained in Publisher object |
 | `on` | | `eventName:string`<br/>`callback:function` | **callback** function will be triggered each time **eventName** event is recieved |
 | `once` | | `eventName:string`<br/>`callback:function` | **callback** function will be triggered once when **eventName** event is recieved. The listener is removed immediately |
 | `off` | | `eventName:string`<br/>`eventHandler:any` | Removes **eventHandler** handler for **eventName** event |
-| `subscribe` | [SubscriberTokBox](#subscribertokbox) | `stream:Stream`<br/>`htmlId:string`<br/>_`videoOptions:any`_ | Subscribes to **stream**, appending a new HTML Video element to DOM element of **htmlId** id, with **videoOptions** settings. This method is usually called in the callback of _streamCreated_ event |
-| `unsubscribe` | | `subscriber:SubscriberTokBox` | Unsubscribes from **subscriber**, automatically removing its HTML Video element |
+| `subscribe` | [Subscriber](#subscriber) | `stream:Stream`<br/>`htmlId:string`<br/>_`videoOptions:any`_ | Subscribes to **stream**, appending a new HTML Video element to DOM element of **htmlId** id, with **videoOptions** settings. This method is usually called in the callback of _streamCreated_ event |
+| `unsubscribe` | | `subscriber:Subscriber` | Unsubscribes from **subscriber**, automatically removing its HTML Video element |
 
 | Property    | Type   | Description                  |
 | ------------| ------ | ---------------------------- |
 | `sessionId` | string | The unique id of the session |
 
 
-#### **PublisherTokBox**
+#### **Publisher**
 | Method         | Returns | Parameters (show in order, optional italic) | Description |
 | -------------- | ------- | ------------------------------------------- | ----------- |
 | `publishAudio` |  | `value:boolean`| Enable or disable the audio track depending on whether value is _true_ or _false_ |
 | `publishVideo` |  | `value:boolean`| Enable or disable the video track depending on whether value is _true_ or _false_ |
-| `destroy`      | [PublisherTokBox](#publishertokbox) || Delets the publisher object and removes it from DOM. The rest of users will trigger a _streamDestroyed_ event |
+| `destroy`      | [Publisher](#publisher) || Delets the publisher object and removes it from DOM. The rest of users will trigger a _streamDestroyed_ event |
 
 | Property    | Type   | Description                  |
 | ------------| ------ | ---------------------------- |
@@ -299,9 +293,9 @@ API reference
 | `element` | Element | The parent HTML Element which contains the publisher |
 | `id` | string | The id of the HTML Video element of the publisher |
 | `stream` | Stream | The stream object of the publisher |
-| `session` | [SessionTokBox](#sessiontokbox) | The session to which the publisher belongs |
+| `session` | [Session](#session) | The session to which the publisher belongs |
 
-#### **SubscriberTokBox**
+#### **Subscriber**
 | Method         | Returns | Parameters (show in order, optional italic) | Description |
 | -------------- | ------- | ------------------------------------------- | ----------- |
 | | | | |

@@ -5,13 +5,12 @@
  *
  * stream.hasAudio(); stream.hasVideo(); stream.hasData();
  */
-import { Stream, StreamOptions, VideoOptions } from '../OpenVidu/Stream';
-import { OpenViduTokBox } from './OpenViduTokBox';
-import { SessionTokBox } from './SessionTokBox';
+import { Stream, StreamOptions, VideoOptions } from '../OpenViduInternal/Stream';
+import { Session } from './Session';
 
 import EventEmitter = require('wolfy87-eventemitter');
 
-export class PublisherTokBox {
+export class Publisher {
 
     private ee = new EventEmitter();
 
@@ -19,7 +18,7 @@ export class PublisherTokBox {
     element: Element;
     id: string;
     stream: Stream;
-    session: SessionTokBox; //Initialized by SessionTokBox.publish(PublisherTokBox)
+    session: Session; //Initialized by Session.publish(Publisher)
 
     constructor(stream: Stream, parentId: string) {
         this.stream = stream;
