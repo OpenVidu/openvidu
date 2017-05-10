@@ -1,6 +1,6 @@
 {
   "name": "openvidu-browser",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "description": "OpenVidu Browser",
   "main": "lib/OpenVidu/index.js",
   "types": "lib/OpenVidu/index.d.ts",

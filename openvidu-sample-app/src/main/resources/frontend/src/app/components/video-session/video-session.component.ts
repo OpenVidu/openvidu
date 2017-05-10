@@ -62,11 +62,7 @@ export class VideoSessionComponent implements OnInit {
             if (!error) {
 
                 // 4) Get your own camera stream with the desired resolution and publish it, only if the user is supposed to do so
-                this.publisher = this.OV.initPublisher('publisher', {
-                    insertMode: 'append',
-                    width: '100%',
-                    height: '100%'
-                });
+                this.publisher = this.OV.initPublisher('publisher', this.cameraOptions);
 
                 // 5) Publish your stream
                 this.session.publish(this.publisher);
