@@ -20,7 +20,7 @@ import static org.kurento.commons.PropertiesManager.getProperty;
 
 import java.util.Map;
 import java.util.Set;
-
+import org.json.simple.JSONObject;
 import org.openvidu.server.core.NotificationRoomManager;
 import org.openvidu.server.security.ParticipantRole;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,14 +60,29 @@ public class RoomController {
   }
   
   @RequestMapping(value = "/getSessionId", method = RequestMethod.GET)
-  public ResponseEntity<String> getSessionId() {
+  public ResponseEntity<JSONObject> getSessionId() {
 	  String sessionId = roomManager.newSessionId();
-	  return new ResponseEntity<String>(sessionId, HttpStatus.OK);
+	  JSONObject responseJson = new JSONObject();
+	  responseJson.put(0, sessionId);
+	  return new ResponseEntity<JSONObject>(responseJson, HttpStatus.OK);
   }
   
   @RequestMapping(value = "/newToken", method = RequestMethod.POST)
-  public ResponseEntity<String> getToken(@RequestBody Map sessionIdAndRole) {
-	  String token = roomManager.newToken((String) sessionIdAndRole.get("0"), ParticipantRole.valueOf((String) sessionIdAndRole.get("1")));
-	  return new ResponseEntity<String>(token, HttpStatus.OK);
+  public ResponseEntity<JSONObject> getToken(@RequestBody Map sessionIdAndRole) {
+	  JSONObject responseJson = new JSONObject();
+	  try {
+		  ParticipantRole role = ParticipantRole.valueOf((String) sessionIdAndRole.get("1"));
+		  String token = roomManager.newToken((String) sessionIdAndRole.get("0"), role);	  
+		  responseJson.put(0, token);
+		  return new ResponseEntity<JSONObject>(responseJson, HttpStatus.OK);
+	  }
+	  catch (IllegalArgumentException e){
+		  responseJson.put("timestamp", System.currentTimeMillis());
+		  responseJson.put("status", HttpStatus.BAD_REQUEST.value());
+		  responseJson.put("error", HttpStatus.BAD_REQUEST.getReasonPhrase());
+		  responseJson.put("message", "Role " + sessionIdAndRole.get("1") + " is not defined");
+		  responseJson.put("path", "/newToken");
+		  return new ResponseEntity<JSONObject>(responseJson, HttpStatus.BAD_REQUEST);
+	  }
   }
 }

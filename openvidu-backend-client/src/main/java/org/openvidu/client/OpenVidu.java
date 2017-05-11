@@ -10,7 +10,6 @@ import java.security.NoSuchAlgorithmException;
 import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -22,6 +21,8 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.openvidu.client.OpenViduException.Code;
 
 public class OpenVidu {
@@ -59,23 +60,20 @@ public class OpenVidu {
 			}
     }
     
-    public String createSession() throws OpenViduException, ClientProtocolException, IOException {
+    public JSONObject createSession() throws IOException, ParseException {
     	
     	HttpResponse response = myHttpClient.execute(new HttpGet(this.urlOpenViduServer + "getSessionId"));
-		 
+    	
 		int statusCode = response.getStatusLine().getStatusCode();
-		if ((statusCode == org.apache.http.HttpStatus.SC_OK) && (response.getEntity().getContentLength() > 0)){
+		if ((statusCode == org.apache.http.HttpStatus.SC_OK)){
 			System.out.println("Returning a SESSIONID");
-			BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
-			String sessionId = br.readLine();
-			
-			return sessionId;
+			return this.httpResponseToJsonObject(response);
 		} else {
-			throw new OpenViduException(Code.TRANSPORT_REQUEST_ERROR_CODE, "Unable to generate a sessionID");
+			throw new OpenViduException(Code.SESSIONID_CANNOT_BE_CREATED_ERROR_CODE, "Unable to generate a sessionID");
 		}
     }
     
-    public String generateToken(String sessionId, String role) throws OpenViduException, ClientProtocolException, IOException {
+    public JSONObject generateToken(String sessionId, String role) throws IOException, ParseException {
     	JSONObject json = new JSONObject();
 		json.put(0, sessionId);
 		json.put(1, role);
@@ -86,16 +84,24 @@ public class OpenVidu {
 	    request.setEntity(params);
 		
 		HttpResponse response = myHttpClient.execute(request);
-		 
+		
 		int statusCode = response.getStatusLine().getStatusCode();
-		if ((statusCode == org.apache.http.HttpStatus.SC_OK) && (response.getEntity().getContentLength() > 0)){
+		if ((statusCode == org.apache.http.HttpStatus.SC_OK)){
 			System.out.println("Returning a TOKEN");
-			BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
-			String token = br.readLine();
-			
-			return token;
+			return this.httpResponseToJsonObject(response);
 		} else {
-			throw new OpenViduException(Code.TRANSPORT_REQUEST_ERROR_CODE, "Unable to generate a token");
+			throw new OpenViduException(Code.TOKEN_CANNOT_BE_CREATED_ERROR_CODE, "Unable to generate a token");
 		}
+    }
+    
+    private JSONObject httpResponseToJsonObject(HttpResponse response) throws ParseException, UnsupportedOperationException, IOException{
+    	BufferedReader rd = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
+    	StringBuffer buf = new StringBuffer();
+    	String line = "";
+		while ((line = rd.readLine()) != null) {
+		    buf.append(line);
+		}
+		JSONParser parser = new JSONParser();
+		return ((JSONObject) parser.parse(buf.toString()));
     }
 }

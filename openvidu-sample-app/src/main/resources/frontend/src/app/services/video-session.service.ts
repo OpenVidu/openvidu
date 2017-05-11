@@ -14,13 +14,13 @@ export class VideoSessionService {
 
     constructor(private http: Http, private authenticationService: AuthenticationService) { }
 
-    // Returns "sessionId"
+    // Returns {0: sessionId}
     createSession(lessonId: number) {
         let body = JSON.stringify(lessonId);
         let headers = new Headers({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + this.authenticationService.token });
         let options = new RequestOptions({ headers });
         return this.http.post('/api-sessions/create-session', body, options)
-            .map(response => response.text())
+            .map(response => response.json())
             .catch(error => this.handleError(error));
     }
 

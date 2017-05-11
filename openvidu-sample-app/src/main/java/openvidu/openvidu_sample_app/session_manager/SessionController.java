@@ -5,9 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.http.client.HttpClient;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 import org.openvidu.client.OpenVidu;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -48,7 +46,7 @@ public class SessionController {
 	}
 	
 	@RequestMapping(value = "/create-session", method = RequestMethod.POST)
-	public ResponseEntity<String> createSession(@RequestBody String lessonId) {
+	public ResponseEntity<JSONObject> createSession(@RequestBody String lessonId) {
 		
 		if (!this.userIsLogged()) {
 			return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
@@ -71,27 +69,33 @@ public class SessionController {
 			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 		
+		JSONObject responseJson = new JSONObject();
+		
 		if(this.lessonIdSessionId.get(id_lesson) != null) {
 			// If there's already a valid sessionId for this lesson, not necessary to ask for a new one 
-			return new ResponseEntity<>(this.lessonIdSessionId.get(id_lesson), HttpStatus.OK);
+			responseJson.put(0, this.lessonIdSessionId.get(id_lesson));
+			return new ResponseEntity<>(responseJson, HttpStatus.OK);
 		}
 		else {
 			try {
-				String sessionId = this.openVidu.createSession();
+				JSONObject json = this.openVidu.createSession();
+				String sessionId = (String) json.get("0");
 				this.lessonIdSessionId.put(id_lesson, sessionId);
 				this.sessionIdUserIdToken.put(sessionId, new HashMap<>());
 				
 				showMap();
 				
-				return new ResponseEntity<>(sessionId, HttpStatus.OK);
+				responseJson.put(0, sessionId);
+				
+				return new ResponseEntity<>(responseJson, HttpStatus.OK);
 			} catch (Exception e) {
-				return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+				return getErrorResponse(e);
 			}
 		}
 	}
 	
 	@RequestMapping(value = "/generate-token", method = RequestMethod.POST)
-	public ResponseEntity<JSONObject> generateToken(@RequestBody String lessonId) throws Exception {
+	public ResponseEntity<JSONObject> generateToken(@RequestBody String lessonId) {
 		
 		if (!this.userIsLogged()) {
 			return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
@@ -119,12 +123,12 @@ public class SessionController {
 		String sessionId = this.lessonIdSessionId.get(id_lesson);
 		String role = user.hasRoleTeacher() ? "PUBLISHER" : "SUBSCRIBER";
 		
+		JSONObject responseJson = new JSONObject();
+		
 		try {
-			
-			String token = this.openVidu.generateToken(sessionId, role);
+			String token = (String) this.openVidu.generateToken(sessionId, role).get("0");
 			this.sessionIdUserIdToken.get(sessionId).put(this.user.getLoggedUser().getId(), token);
 			
-			JSONObject responseJson = new JSONObject();
 			responseJson.put(0, sessionId);
 			responseJson.put(1, token);
 			
@@ -132,9 +136,7 @@ public class SessionController {
 			
 			return new ResponseEntity<>(responseJson, HttpStatus.OK);
 		} catch (Exception e) {
-			JSONParser parser = new JSONParser();
-			JSONObject json = (JSONObject) parser.parse(e.getMessage());
-			return new ResponseEntity<>(json, HttpStatus.INTERNAL_SERVER_ERROR);
+			return getErrorResponse(e);
 		}
 	}
 	
@@ -196,6 +198,14 @@ public class SessionController {
 			return false;
 		}
 		return true; 
+	}
+	
+	private ResponseEntity<JSONObject> getErrorResponse(Exception e){
+		JSONObject json = new JSONObject();
+		json.put("cause", e.getCause());
+		json.put("error", e.getMessage());
+		json.put("exception", e.getClass());
+		return new ResponseEntity<>(json, HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 	
 	// Authorization checking for creating or joining a certain lesson

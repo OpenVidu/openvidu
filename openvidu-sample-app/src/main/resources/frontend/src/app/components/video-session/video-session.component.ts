@@ -84,10 +84,12 @@ export class VideoSessionComponent implements OnInit {
 
             // If the user is the teacher: creates the session and gets a token (with PUBLISHER role)
             this.videoSessionService.createSession(this.lesson.id).subscribe(
-                sessionId => {
-                    this.sessionId = sessionId;
+                sessionId => { // {0: sessionId}
+                    console.warn(sessionId);
+                    this.sessionId = sessionId[0];
                     this.videoSessionService.generateToken(this.lesson.id).subscribe(
                         sessionIdAndToken => {
+                            console.warn(sessionIdAndToken);
                             this.token = sessionIdAndToken[1];
                             console.warn("Token: " + this.token);
                             console.warn("SessionId: " + this.sessionId);
@@ -106,7 +108,7 @@ export class VideoSessionComponent implements OnInit {
 
             // If the user is a student: gets a token (with SUBSCRIBER role)
             this.videoSessionService.generateToken(this.lesson.id).subscribe(
-                sessionIdAndToken => {
+                sessionIdAndToken => { // {0: sessionId, 1: token}
                     this.sessionId = sessionIdAndToken[0];
                     this.token = sessionIdAndToken[1];
                     console.warn("Token: " + this.token);
