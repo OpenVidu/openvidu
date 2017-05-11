@@ -88,7 +88,7 @@ Users must log in or register in order to access the application and connect to 
     CREATE DATABASE openvidu_sample_app;
     exit
     ```
-    If you already have up and running mysql-server, just open `openvidu-sample-app/src/main/resources/application.properties` and replace properties `spring.datasource.url`, `spring.datasource.username`, `spring.datasource.password` with your desired data.
+    If you already have up and running mysql-server (you can check with `service mysql status`), just open `openvidu-sample-app/src/main/resources/application.properties` and replace properties `spring.datasource.url`, `spring.datasource.username`, `spring.datasource.password` with your desired data.
 
 
 
@@ -238,6 +238,33 @@ In [this class](https://github.com/OpenVidu/openvidu/blob/master/openvidu-sample
 	...
 	String token = openVidu.generateToken(sessionId, role);
 	```
+
+
+#### ***REST API*** ####
+You can always directly implement the REST API wrapped by artifact openvidu-backend-client. Two operations are available, matching the two methods exposed by openvidu-backend-client: one for getting a new **sessionId** and other to create and receive a new **token** for a certain session and role.
+
+Both of them have in common the header referred to authorization. It is implemented via Basic Auth, and it is as simple as applying Base64 encoding to the username (always "OPENVIDUAPP") and the password (your secret). An example is shown below:
+
+For secret "MY_SECRET", the final header would be
+
+> Authorization:Basic T1BFTlZJRFVBUFA6TVlfU0VDUkVU
+
+
+| _GET A SESSION ID_ | _PARAMETERS_ |
+| ---------       | -- |
+| **Operation** | GET |
+| **URL** | https://[YOUR_OPENVIDUSERVER_IP]/getSessionId |
+| **Headers** | Authorization:Basic _EncodeBase64(OPENVIDUAPP:[YOUR_SECRET])_ |
+| **Returns** | {"0": "SESSIONID"} |
+
+| _CREATE NEW TOKEN_ | _PARAMETERS_ |
+| ---------       | -- |
+| **Operation** | POST |
+| **URL** | https://[YOUR_OPENVIDUSERVER_IP]/newToken |
+| **Headers** | Authorization:Basic _EncodeBase64(OPENVIDUAPP:[YOUR_SECRET])_<br/>Content-Type:application/json |
+| **Body** | {"0": "SESSIONID", "1": "ROLE"} |
+| **Returns** | {"0": "TOKEN"} |
+
 
 ----------
 
