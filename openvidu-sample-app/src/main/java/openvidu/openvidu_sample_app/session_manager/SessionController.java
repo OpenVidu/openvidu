@@ -7,6 +7,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.json.simple.JSONObject;
 import org.openvidu.client.OpenVidu;
+import org.openvidu.client.OpenVidu.Session;
+import org.openvidu.client.OpenViduRole;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -33,7 +35,7 @@ public class SessionController {
 	@Autowired
 	private UserComponent user;
 	
-	private Map<Long, String> lessonIdSessionId = new ConcurrentHashMap<>();
+	private Map<Long, Session> lessonIdSession = new ConcurrentHashMap<>();
 	private Map<String, Map<Long, String>> sessionIdUserIdToken = new ConcurrentHashMap<>();
 	
 	private final String OPENVIDU_URL = "https://localhost:8443/";
@@ -71,16 +73,18 @@ public class SessionController {
 		
 		JSONObject responseJson = new JSONObject();
 		
-		if(this.lessonIdSessionId.get(id_lesson) != null) {
+		if(this.lessonIdSession.get(id_lesson) != null) {
 			// If there's already a valid sessionId for this lesson, not necessary to ask for a new one 
-			responseJson.put(0, this.lessonIdSessionId.get(id_lesson));
+			responseJson.put(0, this.lessonIdSession.get(id_lesson).getSessionId());
 			return new ResponseEntity<>(responseJson, HttpStatus.OK);
 		}
 		else {
 			try {
-				JSONObject json = this.openVidu.createSession();
-				String sessionId = (String) json.get("0");
-				this.lessonIdSessionId.put(id_lesson, sessionId);
+				
+				Session session = this.openVidu.createSession();
+				String sessionId = session.getSessionId();
+				
+				this.lessonIdSession.put(id_lesson, session);
 				this.sessionIdUserIdToken.put(sessionId, new HashMap<>());
 				
 				showMap();
@@ -115,21 +119,21 @@ public class SessionController {
 			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 		
-		if (this.lessonIdSessionId.get(id_lesson) == null){
-			System.out.println("There's no sessionId fot this lesson");
+		if (this.lessonIdSession.get(id_lesson) == null){
+			System.out.println("There's no Session fot this lesson");
 			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 		
-		String sessionId = this.lessonIdSessionId.get(id_lesson);
-		String role = user.hasRoleTeacher() ? "PUBLISHER" : "SUBSCRIBER";
+		Session session = this.lessonIdSession.get(id_lesson);
+		OpenViduRole role = user.hasRoleTeacher() ? OpenViduRole.PUBLISHER : OpenViduRole.SUBSCRIBER;
 		
 		JSONObject responseJson = new JSONObject();
 		
 		try {
-			String token = (String) this.openVidu.generateToken(sessionId, role).get("0");
-			this.sessionIdUserIdToken.get(sessionId).put(this.user.getLoggedUser().getId(), token);
+			String token = (String) this.lessonIdSession.get(id_lesson).generateToken(role);
+			this.sessionIdUserIdToken.get(session.getSessionId()).put(this.user.getLoggedUser().getId(), token);
 			
-			responseJson.put(0, sessionId);
+			responseJson.put(0, session.getSessionId());
 			responseJson.put(1, token);
 			
 			showMap();
@@ -161,16 +165,16 @@ public class SessionController {
 			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 		
-		if (this.lessonIdSessionId.get(id_lesson) == null){
+		if (this.lessonIdSession.get(id_lesson) == null){
 			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 		
-		String sessionId = this.lessonIdSessionId.get(id_lesson);
+		String sessionId = this.lessonIdSession.get(id_lesson).getSessionId();
 		if (this.sessionIdUserIdToken.get(sessionId).remove(this.user.getLoggedUser().getId()) != null){
 			// This user has left the lesson
 			if(this.sessionIdUserIdToken.get(sessionId).isEmpty()){
 				// The last user has left the lesson
-				this.lessonIdSessionId.remove(id_lesson);
+				this.lessonIdSession.remove(id_lesson);
 				this.sessionIdUserIdToken.remove(sessionId);
 			}
 			
@@ -186,7 +190,7 @@ public class SessionController {
 	
 	private void showMap(){
 		System.out.println("------------------------------");
-		System.out.println(this.lessonIdSessionId.toString());
+		System.out.println(this.lessonIdSession.toString());
 		System.out.println(this.sessionIdUserIdToken.toString());
 		System.out.println("------------------------------");
 	}

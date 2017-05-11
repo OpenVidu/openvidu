@@ -163,7 +163,7 @@ We recommend trying [this sample Angular app](#basic-angular-app).
 
 #### ***Step by step*** ####
 
-1. Get an *OpenVidu* object and initialize a session with a *sessionId*. Remember this is the field that defines which video call to connect.
+1. Get an *OpenVidu* object and initialize a session with a *sessionId*. Remember that this is the parameter that defines which video call to connect.
 
 	```javascript
 	var OV = new OpenVidu("wss://" + OPENVIDU_SERVER_IP + ":8443/");
@@ -222,7 +222,7 @@ We recommend trying [this sample app](#advanced-secure-app).
 
 #### ***Step by step*** ####
 
-1. Import OpenVidu package and get an *OpenVidu* object. You need to provide to the constructor the IP of your OpenVidu Server and the secret shared with it (initialized by `openvidu.secret=MY_SECRET` property, as you can see [here](#advanced-secure-app) in the snippet which starts Docker container).
+1. Import OpenVidu package and get an **OpenVidu** object. You need to provide to the constructor the IP of your OpenVidu Server and the secret shared with it (initialized by `openvidu.secret=MY_SECRET` property, as you can see [here](#advanced-secure-app) in the snippet which starts Docker container).
 
 	```java
 	import org.openvidu.client.OpenVidu;
@@ -230,13 +230,13 @@ We recommend trying [this sample app](#advanced-secure-app).
 	
 	OpenVidu openVidu = new OpenVidu(OPENVIDU_SERVER_IP, YOUR_SECRET);
     ```
-2. Get all the sessionId and tokens you need by calling the following methods. This process is up to you. As the developer of your app, you will have to decide when and how to return to clients these parameters, as well as the way they should be stored, reused and finally deleted. 
+2. Get all the **sessionId** and **tokens** you need by calling the following methods. This process is up to you. As the developer of your app, you will have to decide when and how to return to clients these parameters, as well as the way they should be stored, reused and finally deleted. 
 In [this class](https://github.com/OpenVidu/openvidu/blob/master/openvidu-sample-app/src/main/java/openvidu/openvidu_sample_app/session_manager/SessionController.java) of the secure sample app you have a way of dealing with it by using some concurrent maps and some REST controllers, but you can handle it as you wish.
 
 	```java
-	String sessionId = openVidu.createSession();
-	...
-	String token = openVidu.generateToken(sessionId, role);
+	Session session = openVidu.createSession();
+	String sessionId = session.getSessionId();
+	String token = session.generateToken(OpenViduRole.PUSBLISHER);
 	```
 
 
@@ -266,6 +266,14 @@ For secret "MY_SECRET", the final header would be
 | **Returns** | {"0": "TOKEN"} |
 
 
+> **ROLE** value in Body field of POST to "/newToken" can be:
+> 
+> - SUBSCRIBER
+> - PUBLISHER
+> - MODERATOR
+
+
+
 ----------
 
 
@@ -273,24 +281,24 @@ API reference
 ===================
 ## openvidu-browser
 
-| Class     | Description   										     |
-| --------- | ---------------------------------------------------------- |
-| [OpenVidu](#openvidu)    | Use it to initialize your sessions and publishers |
-| [Session](#session)     | Represents a video call. It can also be seen as a room where multiple users can connect. Participants who publish their videos to a session will be seen by the rest of users connected to that specific session  |
-| [Publisher](#publisher)   | Packs local media streams. Users can publish it to a session |
-| [Subscriber](#subscriber)  | Packs remote media streams. Users automatically receive them when others publish their streams|
-| [Stream](#stream)  | Represents each of the videos send and receive by a user in a session. Therefore each Publisher and Subscriber has an attribute of type Stream |
+| Class      | Description   										     |
+| ---------- | ---------------------------------------------------------- |
+| OpenVidu   | Use it to initialize your sessions and publishers |
+| Session    | Represents a video call. It can also be seen as a room where multiple users can connect. Participants who publish their videos to a session will be seen by the rest of users connected to that specific session  |
+| Publisher  | Packs local media streams. Users can publish it to a session |
+| Subscriber | Packs remote media streams. Users automatically receive them when others publish their streams|
+| Stream     | Represents each of the videos send and receive by a user in a session. Therefore each Publisher and Subscriber has an attribute of type Stream |
 
 #### **OpenVidu**
-| Method           | Returns | Parameters (show in order, optional italic) | Description |
+| Method           | Returns | Parameters (show in order, optional _italic_) | Description |
 | ---------------- | ------- | ------------------------------------------- | ----------- |
-| `initSession`    | [Session](#session) | _`apikey:string`_<br/>`sessionId:string` | Returns a session with id **sessionId** |
-| `initPublisher`  | [Publisher](#publisher) | `parentId:string`<br/>`cameraOptions:any`<br/>_`callback:function`_ | Starts local video stream, appending it to **parentId** HTML element, with the specific **cameraOptions** settings and executing **callback** function in the end |
+| `initSession`    | Session | _`apikey:string`_<br/>`sessionId:string` | Returns a session with id **sessionId** |
+| `initPublisher`  | Publisher | `parentId:string`<br/>`cameraOptions:any`<br/>_`callback:function`_ | Starts local video stream, appending it to **parentId** HTML element, with the specific **cameraOptions** settings and executing **callback** function in the end |
 | `checkSystemRequirements`  | Number |  | Returns 1 if the browser supports WebRTC, 0 otherwise|
 | `getDevices` | Promise | `callback(error, deviceInfo):function` | Collects information about the media input and output devices available on the system, returned in **deviceInfo** array |
 
 #### **Session**
-| Method           | Returns | Parameters (show in order, optional italic) | Description |
+| Method           | Returns | Parameters (show in order, optional _italic_) | Description |
 | ---------------- | ------- | ------------------------------------------- | ----------- |
 | `connect`    |  | `token:string`<br/>`callback(error):function` | Connects to the session using **token** and executes **callback** in the end (_error_ parameter null if success)|
 | `disconnect`  |  | | Leaves the session, destroying all streams and deleting the user as a participant |
@@ -299,7 +307,7 @@ API reference
 | `on` | | `eventName:string`<br/>`callback:function` | **callback** function will be triggered each time **eventName** event is recieved |
 | `once` | | `eventName:string`<br/>`callback:function` | **callback** function will be triggered once when **eventName** event is recieved. The listener is removed immediately |
 | `off` | | `eventName:string`<br/>`eventHandler:any` | Removes **eventHandler** handler for **eventName** event |
-| `subscribe` | [Subscriber](#subscriber) | `stream:Stream`<br/>`htmlId:string`<br/>_`videoOptions:any`_ | Subscribes to **stream**, appending a new HTML Video element to DOM element of **htmlId** id, with **videoOptions** settings. This method is usually called in the callback of _streamCreated_ event |
+| `subscribe` | Subscriber | `stream:Stream`<br/>`htmlId:string`<br/>_`videoOptions:any`_ | Subscribes to **stream**, appending a new HTML Video element to DOM element of **htmlId** id, with **videoOptions** settings. This method is usually called in the callback of _streamCreated_ event |
 | `unsubscribe` | | `subscriber:Subscriber` | Unsubscribes from **subscriber**, automatically removing its HTML Video element |
 
 | Property    | Type   | Description                  |
@@ -308,11 +316,11 @@ API reference
 
 
 #### **Publisher**
-| Method         | Returns | Parameters (show in order, optional italic) | Description |
+| Method         | Returns | Parameters (show in order, optional _italic_) | Description |
 | -------------- | ------- | ------------------------------------------- | ----------- |
 | `publishAudio` |  | `value:boolean`| Enable or disable the audio track depending on whether value is _true_ or _false_ |
 | `publishVideo` |  | `value:boolean`| Enable or disable the video track depending on whether value is _true_ or _false_ |
-| `destroy`      | [Publisher](#publisher) || Delets the publisher object and removes it from DOM. The rest of users will trigger a _streamDestroyed_ event |
+| `destroy`      | Publisher || Delets the publisher object and removes it from DOM. The rest of users will trigger a _streamDestroyed_ event |
 
 | Property    | Type   | Description                  |
 | ------------| ------ | ---------------------------- |
@@ -320,10 +328,10 @@ API reference
 | `element` | Element | The parent HTML Element which contains the publisher |
 | `id` | string | The id of the HTML Video element of the publisher |
 | `stream` | Stream | The stream object of the publisher |
-| `session` | [Session](#session) | The session to which the publisher belongs |
+| `session` | Session | The session to which the publisher belongs |
 
 #### **Subscriber**
-| Method         | Returns | Parameters (show in order, optional italic) | Description |
+| Method         | Returns | Parameters (show in order, optional _italic_) | Description |
 | -------------- | ------- | ------------------------------------------- | ----------- |
 | | | | |
 
@@ -336,9 +344,23 @@ API reference
 
 ## openvidu-backend-client
 
-| Class     | Description   										     |
-| --------- | ---------------------------------------------------------- |
-| [`OpenVidu`](#openvidu-backend-client)    |  |
+| Class    | Description   										     |
+| -------- | ------------------------------------------------------- |
+| OpenVidu | Use it to create all the sessions you need |
+| Session  | Allows the creation of tokens with different roles |
+
+#### **OpenVidu**
+| Method         | Returns | Parameters (show in order, optional _italic_) | Description |
+| -------------- | ------- | --------------------------------------------- | ----------- |
+| OpenVidu() | | `String urlOpenViduServer`<br>`String secret` | The constructor receives the URL of your OpenVidu Server and the secret shared with it |
+| createSession() | Session |  | Get a Session object by calling this method. You can then store it as you want |
+
+#### **Session**
+| Method         | Returns | Parameters (show in order, optional _italic_) | Description |
+| -------------- | ------- | --------------------------------------------- | ----------- |
+| getSessionId() | String |  | Returns the unique identifier of the session. You will need to return this parameter to the client side to pass it during the connection process to the session |
+| generateToken() | String | _OpenViduRole_ | You can choose which role each user has in a certain session. The value returned is required in the client side just as the sessionId in order to connect to a session. The input parameter can be _OpenViduRole.SUBSCRIBER_, _OpenViduRole.PUBLISHER_ or _OpenViduRole.MODERATOR_. The default value if it is void is _OpenViduRole.PUBLISHER_ |
+
 
 
 ----------
