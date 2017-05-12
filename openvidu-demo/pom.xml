@@ -11,8 +11,8 @@
 	<artifactId>openvidu-demo</artifactId>
 	<packaging>jar</packaging>
 
-	<name>Kurento Room Demo</name>
-	<description>Kurento Room Demo application</description>
+	<name>OpenVidu Demo</name>
+	<description>OpenVidu Demo application</description>
 	<url>http://www.kurento.org/docs/${project.version}</url>
 
 	<licenses>
@@ -46,7 +46,7 @@
 
 	<properties>
 		<!-- Main class -->
-		<start-class>org.openvidu.room.demo.KurentoRoomDemoApp</start-class>
+		<start-class>org.openvidu.demo.OpenViduSampleApp</start-class>
 	</properties>
 
 	<dependencies>

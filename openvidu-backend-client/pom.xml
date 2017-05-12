@@ -11,7 +11,7 @@
   <artifactId>openvidu-backend-client</artifactId>
   <packaging>jar</packaging>
 
-  <name>client</name>
+  <name>OpenVidu Java Backend Client</name>
   <url>http://maven.apache.org</url>
 
 	<properties>

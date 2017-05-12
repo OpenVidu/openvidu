@@ -11,13 +11,13 @@
 	<artifactId>openvidu-test</artifactId>
 	<packaging>jar</packaging>
 
-	<name>Kurento Room Test</name>
+	<name>OpenVidu Test</name>
 	<description>
-			Kurento Room Tests Framework
+			OpenVidu Tests Framework
 
 			This project contains the test framework for the openvidu projects
 	</description>
-	<url>http://www.kurento.org/docs/${project.version}</url>
+	<url>https://github.com/OpenVidu/openvidu</url>
 
 	<licenses>
 		<license>
@@ -28,8 +28,8 @@
 	</licenses>
 
 	<organization>
-		<name>Kurento</name>
-		<url>http://www.kurento.org</url>
+		<name>OpenVidu</name>
+		<url>https://github.com/OpenVidu/openvidu</url>
 	</organization>
 
     <scm>
@@ -41,10 +41,10 @@
 
 	<developers>
 		<developer>
-			<id>kurento.org</id>
-			<name>-kurento.org Community</name>
-			<organization>Kurento.org</organization>
-			<organizationUrl>http://www.kurento.org</organizationUrl>
+			<id>openvidu.org</id>
+			<name>-openvidu.org Community</name>
+			<organization>OpenVidu.org</organization>
+			<organizationUrl>https://github.com/OpenVidu/openvidu</organizationUrl>
 		</developer>
 	</developers>
 

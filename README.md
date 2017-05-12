@@ -347,7 +347,7 @@ API reference
 | Class    | Description   										     |
 | -------- | ------------------------------------------------------- |
 | OpenVidu | Use it to create all the sessions you need |
-| Session  | Allows the creation of tokens with different roles |
+| Session  | Allows for the creation of tokens with different roles |
 
 #### **OpenVidu**
 | Method         | Returns | Parameters (show in order, optional _italic_) | Description |

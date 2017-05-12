@@ -13,11 +13,11 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
-	<name>Kurento Room</name>
+	<name>OpenVidu</name>
 	<description>
-        Kurento Room modules: sdk, client, server, demo and test
+        OpenVidu modules: sdk, client, server, demos, test
     </description>
-	<url>http://www.kurento.org/docs/${project.version}</url>
+	<url>https://github.com/OpenVidu/openvidu</url>
 
 	<licenses>
 		<license>
@@ -28,8 +28,8 @@
 	</licenses>
 
 	<organization>
-		<name>Kurento</name>
-		<url>http://www.kurento.org</url>
+		<name>OpenVidu</name>
+		<url>https://github.com/OpenVidu/openvidu</url>
 	</organization>
 
 	<scm>
@@ -41,15 +41,15 @@
 
 	<developers>
 		<developer>
-			<id>kurento.org</id>
-			<name>-kurento.org Community</name>
-			<organization>Kurento.org</organization>
-			<organizationUrl>http://www.kurento.org</organizationUrl>
+			<id>openvidu.org</id>
+			<name>-openvidu.org Community</name>
+			<organization>OpenVidu.org</organization>
+			<organizationUrl>https://github.com/OpenVidu/openvidu</organizationUrl>
 		</developer>
 	</developers>
 
 	<properties>
-		<!-- Kurento versions -->
+		<!-- OpenVidu versions -->
 		<version.openvidu>0.0.1-SNAPSHOT</version.openvidu>
 
 		<version.kurento.jsonrpc.js>5.1.4-SNAPSHOT</version.kurento.jsonrpc.js>
@@ -57,8 +57,8 @@
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<maven.compiler.source>1.8</maven.compiler.source>
 
-		<openvidu.scm.url>https://github.com/Kurento/openvidu</openvidu.scm.url>
-		<openvidu.scm.connection>git@github.com:Kurento/openvidu.git</openvidu.scm.connection>
+		<openvidu.scm.url>https://github.com/OpenVidu/openvidu</openvidu.scm.url>
+		<openvidu.scm.connection>git@github.com:OpenVidu/openvidu.git</openvidu.scm.connection>
 	</properties>
 
 	<profiles>
