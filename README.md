@@ -262,7 +262,7 @@ For secret "MY_SECRET", the final header would be
 | **Operation** | POST |
 | **URL** | https://[YOUR_OPENVIDUSERVER_IP]/newToken |
 | **Headers** | Authorization:Basic _EncodeBase64(OPENVIDUAPP:[YOUR_SECRET])_<br/>Content-Type:application/json |
-| **Body** | {"0": "SESSIONID", "1": "ROLE"} |
+| **Body** | {"0": "SESSIONID", "1": "ROLE", "2": "METADATA"} |
 | **Returns** | {"0": "TOKEN"} |
 
 
@@ -279,6 +279,9 @@ For secret "MY_SECRET", the final header would be
 
 API reference
 ===================
+
+> NOTE: all input parameters ("Parameters" columns) are listed in strict order, optional ones in _italics_
+
 ## openvidu-browser
 
 | Class      | Description   										     |
@@ -290,7 +293,7 @@ API reference
 | Stream     | Represents each of the videos send and receive by a user in a session. Therefore each Publisher and Subscriber has an attribute of type Stream |
 
 #### **OpenVidu**
-| Method           | Returns | Parameters (show in order, optional _italic_) | Description |
+| Method           | Returns | Parameters | Description |
 | ---------------- | ------- | ------------------------------------------- | ----------- |
 | `initSession`    | Session | _`apikey:string`_<br/>`sessionId:string` | Returns a session with id **sessionId** |
 | `initPublisher`  | Publisher | `parentId:string`<br/>`cameraOptions:any`<br/>_`callback:function`_ | Starts local video stream, appending it to **parentId** HTML element, with the specific **cameraOptions** settings and executing **callback** function in the end |
@@ -298,12 +301,12 @@ API reference
 | `getDevices` | Promise | `callback(error, deviceInfo):function` | Collects information about the media input and output devices available on the system, returned in **deviceInfo** array |
 
 #### **Session**
-| Method           | Returns | Parameters (show in order, optional _italic_) | Description |
+| Method           | Returns | Parameters | Description |
 | ---------------- | ------- | ------------------------------------------- | ----------- |
-| `connect`    |  | `token:string`<br/>`callback(error):function` | Connects to the session using **token** and executes **callback** in the end (_error_ parameter null if success)|
+| `connect`    |  | `token:string`<br/>_`metadata:string`_<br/>`callback(error):function` | Connects to the session using **token** and executes **callback** in the end (_error_ parameter null if success). **metadata** parameter allows you to pass a string as extra data to share with other users when they receive _participantJoined_ event. You can also add metadata through openvidu-backend-client when generating tokens (see [TokenOptions](#tokenoptions)). The structure of this string is up to you (maybe some standarized format as JSON or XML is a good idea), the only restriction is a maximum length of 1000 chars |
 | `disconnect`  |  | | Leaves the session, destroying all streams and deleting the user as a participant |
-| `publish`  | | `publisher:Publisher` | Publishes the specific user's local stream contained in Publisher object to the session |
-| `unpublish` | | `publisher:Publisher` | Unpublishes the specific user's local stream contained in Publisher object |
+| `publish`  | | `publisher:Publisher` | Publishes the specific user's local stream contained in **publisher** object to the session |
+| `unpublish` | | `publisher:Publisher` | Unpublishes the specific user's local stream contained in **publisher** object |
 | `on` | | `eventName:string`<br/>`callback:function` | **callback** function will be triggered each time **eventName** event is recieved |
 | `once` | | `eventName:string`<br/>`callback:function` | **callback** function will be triggered once when **eventName** event is recieved. The listener is removed immediately |
 | `off` | | `eventName:string`<br/>`eventHandler:any` | Removes **eventHandler** handler for **eventName** event |
@@ -316,7 +319,7 @@ API reference
 
 
 #### **Publisher**
-| Method         | Returns | Parameters (show in order, optional _italic_) | Description |
+| Method         | Returns | Parameters | Description |
 | -------------- | ------- | ------------------------------------------- | ----------- |
 | `publishAudio` |  | `value:boolean`| Enable or disable the audio track depending on whether value is _true_ or _false_ |
 | `publishVideo` |  | `value:boolean`| Enable or disable the video track depending on whether value is _true_ or _false_ |
@@ -331,7 +334,7 @@ API reference
 | `session` | Session | The session to which the publisher belongs |
 
 #### **Subscriber**
-| Method         | Returns | Parameters (show in order, optional _italic_) | Description |
+| Method         | Returns | Parameters | Description |
 | -------------- | ------- | ------------------------------------------- | ----------- |
 | | | | |
 
@@ -344,23 +347,45 @@ API reference
 
 ## openvidu-backend-client
 
-| Class    | Description   										     |
-| -------- | ------------------------------------------------------- |
-| OpenVidu | Use it to create all the sessions you need |
-| Session  | Allows for the creation of tokens with different roles |
+| Class        | Description   										     |
+| ------------ | ------------------------------------------------------- |
+| OpenVidu     | Use it to create all the sessions you need |
+| Session      | Allows for the creation of tokens |
+| OpenViduRole | Enum that defines the values accepted by _TokenOptions.Builder.role(OpenViduRole role)_ method |
+| TokenOptions | Customize each token with this class when generating them |
 
 #### **OpenVidu**
-| Method         | Returns | Parameters (show in order, optional _italic_) | Description |
+| Method         | Returns | Parameters | Description |
 | -------------- | ------- | --------------------------------------------- | ----------- |
-| OpenVidu() | | `String urlOpenViduServer`<br>`String secret` | The constructor receives the URL of your OpenVidu Server and the secret shared with it |
+| OpenVidu() | | `String:urlOpenViduServer`<br>`String:secret` | The constructor receives the URL of your OpenVidu Server and the secret shared with it |
 | createSession() | Session |  | Get a Session object by calling this method. You can then store it as you want |
 
 #### **Session**
-| Method         | Returns | Parameters (show in order, optional _italic_) | Description |
+| Method         | Returns | Parameters  | Description |
 | -------------- | ------- | --------------------------------------------- | ----------- |
 | getSessionId() | String |  | Returns the unique identifier of the session. You will need to return this parameter to the client side to pass it during the connection process to the session |
-| generateToken() | String | _OpenViduRole_ | You can choose which role each user has in a certain session. The value returned is required in the client side just as the sessionId in order to connect to a session. The input parameter can be _OpenViduRole.SUBSCRIBER_, _OpenViduRole.PUBLISHER_ or _OpenViduRole.MODERATOR_. The default value if it is void is _OpenViduRole.PUBLISHER_ |
+| generateToken() | String | _`TokenOptions:tokenOptions`_  | The value returned is required in the client side just as the sessionId in order to connect to a session |
 
+#### **OpenViduRole**
+| Enum       | Description |
+| ---------- | ------- |
+| SUBSCRIBER | They can subscribe to published streams of other users |
+| PUBLISHER  | They can subscribe to published streams of other users and publish their own streams|
+| MODERATOR  | They can subscribe to published streams of other users, publish their own streams and force _unpublish()_ and _disconnect()_ over a third-party stream or user |
+
+#### **TokenOptions**
+| Method         | Returns | Parameters | Description |
+| -------------- | ------- | -------------------------------------------| -- |
+| getData() | String |        | Returns the metadata associated to the token |
+| getRole() | OpenViduRole |  | Returns the role associated to the token     |
+
+##### **TokenOptions.Builder** _(inner static class)_
+| Method         | Returns | Parameters | Description |
+| -------------- | ------- | --------------------------------------------- | ----------- |
+| TokenOptions.Builder() |  |  | Constructor |
+| build() | TokenOptions |  | Returns a new **TokenOptions** object with the stablished properties. Default values if methods _data()_ and _role()_ are not called are an empty string and OpenViduRole.PUBLISHER, respectively |
+| data() | TokenOptions.Builder | `String:data` | Some extra metadata to be associated to the user through its token. The structure of this string is up to you (maybe some standarized format as JSON or XML is a good idea), the only restriction is a maximum length of 1000 chars |
+| role() | TokenOptions.Builder | `OpenViduRole:role` | The role associated to this token |
 
 
 ----------

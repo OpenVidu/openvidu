@@ -51,26 +51,35 @@ public class JsonRpcUserControl {
   public void joinRoom(Transaction transaction, Request<JsonObject> request,
       ParticipantRequest participantRequest) throws IOException, InterruptedException,
       ExecutionException {
-    String roomName = getStringParam(request, ProtocolElements.JOINROOM_ROOM_PARAM);
-    String userName = getStringParam(request, ProtocolElements.JOINROOM_USER_PARAM);
+	  
+    String session = getStringParam(request, ProtocolElements.JOINROOM_ROOM_PARAM);
+    String user = getStringParam(request, ProtocolElements.JOINROOM_USER_PARAM);
+    String userData = getStringParam(request, ProtocolElements.JOINROOM_METADATA_PARAM);
     
-    if(roomManager.getRoomManager().isParticipantInRoom(userName, roomName)){
-
-	    boolean dataChannels = false;
-	    if (request.getParams().has(ProtocolElements.JOINROOM_DATACHANNELS_PARAM)) {
-	      dataChannels = request.getParams().get(ProtocolElements.JOINROOM_DATACHANNELS_PARAM)
-	          .getAsBoolean();
-	    }
-	
-	    ParticipantSession participantSession = getParticipantSession(transaction);
-	    participantSession.setParticipantName(userName);
-	    participantSession.setRoomName(roomName);
-	    participantSession.setDataChannels(dataChannels);
-	
-	    roomManager.joinRoom(userName, roomName, dataChannels, true, participantRequest);
-	    
-    }
-    else {
+    if(roomManager.getRoomManager().isParticipantInRoom(user, session)){
+    	
+    	if(roomManager.getRoomManager().metadataFormatCorrect(userData)){
+    		
+    		this.roomManager.getRoomManager().setTokenClientMetadata(user, session, userData);
+    		
+    		boolean dataChannels = false;
+    	    if (request.getParams().has(ProtocolElements.JOINROOM_DATACHANNELS_PARAM)) {
+    	      dataChannels = request.getParams().get(ProtocolElements.JOINROOM_DATACHANNELS_PARAM)
+    	          .getAsBoolean();
+    	    }
+    	
+    	    ParticipantSession participantSession = getParticipantSession(transaction);
+    	    participantSession.setParticipantName(user);
+    	    participantSession.setRoomName(session);
+    	    participantSession.setDataChannels(dataChannels);
+    	
+    	    roomManager.joinRoom(user, session, dataChannels, true, participantRequest);
+    	} else {
+    		System.out.println("Error: metadata format is incorrect");
+        	throw new OpenViduException(Code.USER_METADATA_FORMAT_INVALID_ERROR_CODE,
+    				  "Unable to join room. The metadata received has an invalid format");
+    	}	    
+    } else {
     	System.out.println("Error: sessionId or token not valid");
     	throw new OpenViduException(Code.USER_UNAUTHORIZED_ERROR_CODE,
 				  "Unable to join room. The user does not have a valid token");

@@ -33,8 +33,9 @@ public class ProtocolElements {
   public static final String LEAVEROOM_METHOD = "leaveRoom";
 
   public static final String JOINROOM_METHOD = "joinRoom";
-  public static final String JOINROOM_USER_PARAM = "user";
-  public static final String JOINROOM_ROOM_PARAM = "room";
+  public static final String JOINROOM_USER_PARAM = "token";
+  public static final String JOINROOM_ROOM_PARAM = "session";
+  public static final String JOINROOM_METADATA_PARAM = "metadata";
   public static final String JOINROOM_DATACHANNELS_PARAM = "dataChannels";
   public static final String JOINROOM_PEERID_PARAM = "id";
   public static final String JOINROOM_PEERSTREAMS_PARAM = "streams";
@@ -67,6 +68,7 @@ public class ProtocolElements {
 
   public static final String PARTICIPANTJOINED_METHOD = "participantJoined";
   public static final String PARTICIPANTJOINED_USER_PARAM = "id";
+  public static final String PARTICIPANTJOINED_METADATA_PARAM = "metadata";
 
   public static final String PARTICIPANTLEFT_METHOD = "participantLeft";
   public static final String PARTICIPANTLEFT_NAME_PARAM = "name";

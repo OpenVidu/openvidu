@@ -7,7 +7,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.json.simple.JSONObject;
 import org.openvidu.client.OpenVidu;
-import org.openvidu.client.OpenVidu.Session;
+import org.openvidu.client.Session;
+import org.openvidu.client.TokenOptions;
 import org.openvidu.client.OpenViduRole;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -80,9 +81,10 @@ public class SessionController {
 		}
 		else {
 			try {
-				
+				// IMPORTANT STUFF
 				Session session = this.openVidu.createSession();
 				String sessionId = session.getSessionId();
+				// END IMPORTANT STUFF
 				
 				this.lessonIdSession.put(id_lesson, session);
 				this.sessionIdUserIdToken.put(sessionId, new HashMap<>());
@@ -130,7 +132,14 @@ public class SessionController {
 		JSONObject responseJson = new JSONObject();
 		
 		try {
-			String token = (String) this.lessonIdSession.get(id_lesson).generateToken(role);
+			// IMPORTANT STUFF
+			TokenOptions tokenOpts = new TokenOptions.Builder()
+			          .role(role)
+			          .data("mydata=mydata")
+			          .build();
+			String token = (String) this.lessonIdSession.get(id_lesson).generateToken(tokenOpts);
+			// END IMPORTANT STUFF
+			
 			this.sessionIdUserIdToken.get(session.getSessionId()).put(this.user.getLoggedUser().getId(), token);
 			
 			responseJson.put(0, session.getSessionId());

@@ -78,6 +78,10 @@ public class DefaultNotificationRoomHandler implements NotificationRoomHandler {
 
       JsonObject notifParams = new JsonObject();
       notifParams.addProperty(ProtocolElements.PARTICIPANTJOINED_USER_PARAM, newUserName);
+      
+      // TO-DO: Return metadata associated to each participant
+      //notifParams.addProperty(ProtocolElements.PARTICIPANTJOINED_METADATA_PARAM, participant.getUserName());
+      
       notifService.sendNotification(participant.getParticipantId(),
           ProtocolElements.PARTICIPANTJOINED_METHOD, notifParams);
     }

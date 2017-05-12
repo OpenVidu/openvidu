@@ -45,6 +45,7 @@ import org.openvidu.server.core.endpoint.SdpType;
 import org.openvidu.server.core.internal.Participant;
 import org.openvidu.server.core.internal.Room;
 import org.openvidu.server.security.ParticipantRole;
+import org.openvidu.server.security.Token;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,7 +72,7 @@ public class RoomManager {
 
   private final ConcurrentMap<String, Room> rooms = new ConcurrentHashMap<String, Room>();
   
-  private final ConcurrentMap<String, ConcurrentHashMap<String, ParticipantRole>> sessionIdTokenRole = new ConcurrentHashMap<>();
+  private final ConcurrentMap<String, ConcurrentHashMap<String, Token>> sessionIdToken = new ConcurrentHashMap<>();
 
   @Value("${openvidu.security}")
   private boolean SECURITY_ENABLED;
@@ -107,30 +108,30 @@ public class RoomManager {
    * @return set of existing peers of type {@link UserParticipant}, can be empty if first
    * @throws OpenViduException on error while joining (like the room is not found or is closing)
    */
-  public Set<UserParticipant> joinRoom(String userName, String roomName, boolean dataChannels,
+  public Set<UserParticipant> joinRoom(String user, String session, boolean dataChannels,
       boolean webParticipant, KurentoClientSessionInfo kcSessionInfo, String participantId)
       throws OpenViduException {
     log.debug("Request [JOIN_ROOM] user={}, room={}, web={} " + "kcSessionInfo.room={} ({})",
-        userName, roomName, webParticipant,
+    	user, session, webParticipant,
         kcSessionInfo != null ? kcSessionInfo.getRoomName() : null, participantId);
-    Room room = rooms.get(roomName);
+    Room room = rooms.get(session);
     if (room == null && kcSessionInfo != null) {
       createRoom(kcSessionInfo);
     }
-    room = rooms.get(roomName);
+    room = rooms.get(session);
     if (room == null) {
       log.warn("Room '{}' not found");
       throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE,
-          "Room '" + roomName + "' was not found, must be created before '" + userName
+          "Room '" + session + "' was not found, must be created before '" + session
               + "' can join");
     }
     if (room.isClosed()) {
-      log.warn("'{}' is trying to join room '{}' but it is closing", userName, roomName);
+      log.warn("'{}' is trying to join room '{}' but it is closing", user, session);
       throw new OpenViduException(Code.ROOM_CLOSED_ERROR_CODE,
-          "'" + userName + "' is trying to join room '" + roomName + "' but it is closing");
+          "'" + user + "' is trying to join room '" + session + "' but it is closing");
     }
-    Set<UserParticipant> existingParticipants = getParticipants(roomName);
-    room.join(participantId, userName, dataChannels, webParticipant);
+    Set<UserParticipant> existingParticipants = getParticipants(session);
+    room.join(participantId, user, dataChannels, webParticipant);
     return existingParticipants;
   }
 
@@ -159,8 +160,8 @@ public class RoomManager {
     }
     room.leave(participantId);
     
-    if (this.sessionIdTokenRole.get(roomName) != null){
-      this.sessionIdTokenRole.get(roomName).remove(participant.getName());
+    if (this.sessionIdToken.get(roomName) != null){
+      this.sessionIdToken.get(roomName).remove(participant.getName());
     }
     
     showMap();
@@ -177,7 +178,7 @@ public class RoomManager {
       room.close();
       rooms.remove(roomName);
       
-      sessionIdTokenRole.remove(roomName);
+      sessionIdToken.remove(roomName);
       
       showMap();
       
@@ -848,7 +849,7 @@ public class RoomManager {
     room.close();
     rooms.remove(roomName);
     
-    sessionIdTokenRole.remove(roomName);
+    sessionIdToken.remove(roomName);
     
     log.warn("Room '{}' removed and closed", roomName);
     return participants;
@@ -932,7 +933,7 @@ public class RoomManager {
   
   private void showMap(){
 	  System.out.println("------------------------------");
-	  System.out.println(this.sessionIdTokenRole.toString());
+	  System.out.println(this.sessionIdToken.toString());
 	  System.out.println("------------------------------");
   }
   
@@ -940,10 +941,10 @@ public class RoomManager {
 	  return getParticipant(pid).getRoom().getName();
   }
   
-  public boolean isParticipantInRoom(String participantName, String roomName) {
+  public boolean isParticipantInRoom(String token, String session) {
     if (SECURITY_ENABLED) {
-      if (this.sessionIdTokenRole.get(roomName) != null) {
-        return this.sessionIdTokenRole.get(roomName).containsKey(participantName);
+      if (this.sessionIdToken.get(session) != null) {
+        return this.sessionIdToken.get(session).containsKey(token);
       } else{
         return false;
       }
@@ -952,11 +953,11 @@ public class RoomManager {
     }
   }
   
-  public boolean isPublisherInRoom(String participantName, String roomName) {
+  public boolean isPublisherInRoom(String token, String session) {
     if (SECURITY_ENABLED) {
-      if (this.sessionIdTokenRole.get(roomName) != null){
-        if (this.sessionIdTokenRole.get(roomName).get(participantName) != null){
-          return (this.sessionIdTokenRole.get(roomName).get(participantName).equals(ParticipantRole.PUBLISHER));
+      if (this.sessionIdToken.get(session) != null){
+        if (this.sessionIdToken.get(session).get(token) != null){
+          return (this.sessionIdToken.get(session).get(token).getRole().equals(ParticipantRole.PUBLISHER));
         } else {
           return false;
         }
@@ -968,29 +969,41 @@ public class RoomManager {
     }
   }
   
+  public void setTokenClientMetadata(String token, String session, String metadata){
+	  if (this.sessionIdToken.get(session) != null){
+	        if (this.sessionIdToken.get(session).get(token) != null){
+	          this.sessionIdToken.get(session).get(token).setClientMetadata(metadata);
+	        }
+	  }
+  }
+  
   public String newSessionId(){
 	  String sessionId = new BigInteger(130, new SecureRandom()).toString(32);
-	  
-	  this.sessionIdTokenRole.put(sessionId, new ConcurrentHashMap<>());
-	  
+	  this.sessionIdToken.put(sessionId, new ConcurrentHashMap<>());
 	  showMap();
-	  
 	  return sessionId;
   }
   
-  public String newToken(String sessionId, ParticipantRole role){
-	  if (this.sessionIdTokenRole.get(sessionId) != null) {
-		  String token = new BigInteger(130, new SecureRandom()).toString(32);
-		  
-		  this.sessionIdTokenRole.get(sessionId).put(token, role);
-		  
-		  showMap();
-		  
-		  return token;
+  public String newToken(String session, ParticipantRole role, String metadata){
+	  if (this.sessionIdToken.get(session) != null) {
+		  if(metadataFormatCorrect(metadata)){
+			  String token = new BigInteger(130, new SecureRandom()).toString(32);
+			  this.sessionIdToken.get(session).put(token, new Token(token, role, metadata));
+			  showMap();
+			  return token;
+		  }
+		  else {
+			  throw new OpenViduException(Code.GENERIC_ERROR_CODE, "Data invalid format. Max length allowed is 1000 chars");
+		  }
 	  } else {
-		  System.out.println("Error: the sessionId [" + sessionId + "] is not valid");
+		  System.out.println("Error: the sessionId [" + session + "] is not valid");
 		  throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE,
-				  "[" + sessionId +"] is not a valid sessionId");
+				  "[" + session +"] is not a valid sessionId");
 	  }
+  }
+  
+  public boolean metadataFormatCorrect(String metadata){
+	  // Max 1000 chars
+	  return (metadata.length() <= 1000);
   }
 }

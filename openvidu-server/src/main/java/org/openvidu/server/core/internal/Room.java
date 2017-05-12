@@ -91,25 +91,25 @@ public class Room {
     return this.pipeline;
   }
 
-  public synchronized void join(String participantId, String userName, boolean dataChannels,
+  public synchronized void join(String participantId, String user, boolean dataChannels,
       boolean webParticipant) throws OpenViduException {
 
     checkClosed();
 
-    if (userName == null || userName.isEmpty()) {
+    if (user == null || user.isEmpty()) {
       throw new OpenViduException(Code.GENERIC_ERROR_CODE, "Empty user name is not allowed");
     }
     for (Participant p : participants.values()) {
-      if (p.getName().equals(userName)) {
+      if (p.getName().equals(user)) {
         throw new OpenViduException(Code.EXISTING_USER_IN_ROOM_ERROR_CODE,
-            "User '" + userName + "' already exists in room '" + name + "'");
+            "User '" + user + "' already exists in room '" + name + "'");
       }
     }
 
     createPipeline();
 
     Participant participant =
-        new Participant(participantId, userName, this, getPipeline(), dataChannels, webParticipant);
+        new Participant(participantId, user, this, getPipeline(), dataChannels, webParticipant);
     participants.put(participantId, participant);
 
     filterStates.forEach((filterId, state) -> {
@@ -117,7 +117,7 @@ public class Room {
       roomHandler.updateFilter(name, participant, filterId, state);
     });
 
-    log.info("ROOM {}: Added participant {}", name, userName);
+    log.info("ROOM {}: Added participant {}", name, user);
   }
 
   public void newPublisher(Participant participant) {

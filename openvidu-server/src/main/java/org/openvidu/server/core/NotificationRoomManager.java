@@ -76,22 +76,22 @@ public class NotificationRoomManager {
    *                when responding back to the client)
    * @see RoomManager#joinRoom(String, String, boolean, boolean, KurentoClientSessionInfo, String)
    */
-  public void joinRoom(String userName, String roomName, boolean dataChannels,
+  public void joinRoom(String user, String session, boolean dataChannels,
       boolean webParticipant, ParticipantRequest request) {
     Set<UserParticipant> existingParticipants = null;
     try {
       KurentoClientSessionInfo kcSessionInfo =
-          new DefaultKurentoClientSessionInfo(request.getParticipantId(), roomName);
+          new DefaultKurentoClientSessionInfo(request.getParticipantId(), session);
       existingParticipants = internalManager
-          .joinRoom(userName, roomName, dataChannels, webParticipant, kcSessionInfo,
+          .joinRoom(user, session, dataChannels, webParticipant, kcSessionInfo,
               request.getParticipantId());
     } catch (OpenViduException e) {
-      log.warn("PARTICIPANT {}: Error joining/creating room {}", userName, roomName, e);
-      notificationRoomHandler.onParticipantJoined(request, roomName, userName, null, e);
+      log.warn("PARTICIPANT {}: Error joining/creating room {}", user, session, e);
+      notificationRoomHandler.onParticipantJoined(request, session, user, null, e);
     }
     if (existingParticipants != null) {
       notificationRoomHandler
-          .onParticipantJoined(request, roomName, userName, existingParticipants, null);
+          .onParticipantJoined(request, session, user, existingParticipants, null);
     }
   }
 
@@ -431,7 +431,7 @@ public class NotificationRoomManager {
 	  return this.internalManager.newSessionId();
   }
   
-  public String newToken(String sessionId, ParticipantRole role){
-	  return this.internalManager.newToken(sessionId, role);
+  public String newToken(String sessionId, ParticipantRole role, String metaData){
+	  return this.internalManager.newToken(sessionId, role, metaData);
   }
 }

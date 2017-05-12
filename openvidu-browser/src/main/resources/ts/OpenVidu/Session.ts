@@ -18,14 +18,28 @@ export class Session {
         });
     }
 
-    connect(token, callback) {
+    connect(token: string, callback: any);
+    connect(token:string, metadata: string, callback: any);
+    
+    connect(param1, param2, param3?) {
         // Early configuration to deactivate automatic subscription to streams
-        this.session.configure({
-            sessionId: this.session.getSessionId(),
-            participantId: token,
-            subscribeToStreams: false
-        });
-        this.session.connect(token, callback);
+        if (typeof param2 == "string") {
+            this.session.configure({
+                sessionId: this.session.getSessionId(),
+                participantId: param1,
+                metadata: param2,
+                subscribeToStreams: false
+            });
+            this.session.connect(param1, param3);
+        } else {
+            this.session.configure({
+                sessionId: this.session.getSessionId(),
+                participantId: param1,
+                metadata: '',
+                subscribeToStreams: false
+            });
+            this.session.connect(param1, param2);
+        }
     }
 
     disconnect() {

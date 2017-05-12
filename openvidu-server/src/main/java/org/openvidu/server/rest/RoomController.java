@@ -21,6 +21,7 @@ import static org.kurento.commons.PropertiesManager.getProperty;
 import java.util.Map;
 import java.util.Set;
 import org.json.simple.JSONObject;
+import org.openvidu.client.OpenViduException;
 import org.openvidu.server.core.NotificationRoomManager;
 import org.openvidu.server.security.ParticipantRole;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,21 +69,30 @@ public class RoomController {
   }
   
   @RequestMapping(value = "/newToken", method = RequestMethod.POST)
-  public ResponseEntity<JSONObject> getToken(@RequestBody Map sessionIdAndRole) {
-	  JSONObject responseJson = new JSONObject();
+  public ResponseEntity<JSONObject> getToken(@RequestBody Map sessionIdRoleMetadata) { // {0: sessionID, 1: role, 2: metadata}
+	  String errorMessage = "";
 	  try {
-		  ParticipantRole role = ParticipantRole.valueOf((String) sessionIdAndRole.get("1"));
-		  String token = roomManager.newToken((String) sessionIdAndRole.get("0"), role);	  
+		  ParticipantRole role = ParticipantRole.valueOf((String) sessionIdRoleMetadata.get("1"));
+		  String metadata = (String) sessionIdRoleMetadata.get("2");
+		  String token = roomManager.newToken((String) sessionIdRoleMetadata.get("0"), role, metadata);
+		  JSONObject responseJson = new JSONObject();
 		  responseJson.put(0, token);
 		  return new ResponseEntity<JSONObject>(responseJson, HttpStatus.OK);
 	  }
 	  catch (IllegalArgumentException e){
-		  responseJson.put("timestamp", System.currentTimeMillis());
-		  responseJson.put("status", HttpStatus.BAD_REQUEST.value());
-		  responseJson.put("error", HttpStatus.BAD_REQUEST.getReasonPhrase());
-		  responseJson.put("message", "Role " + sessionIdAndRole.get("1") + " is not defined");
-		  responseJson.put("path", "/newToken");
-		  return new ResponseEntity<JSONObject>(responseJson, HttpStatus.BAD_REQUEST);
+		  return this.generateErrorResponse("Role " + sessionIdRoleMetadata.get("1") + " is not defined");
+	  } catch (OpenViduException e) {
+		  return this.generateErrorResponse("Metadata [" + sessionIdRoleMetadata.get("2") + "] unexpected format. Max length allowed is 1000 chars");
 	  }
+  }
+  
+  private ResponseEntity<JSONObject> generateErrorResponse(String errorMessage){
+	  JSONObject responseJson = new JSONObject();
+	  responseJson.put("timestamp", System.currentTimeMillis());
+	  responseJson.put("status", HttpStatus.BAD_REQUEST.value());
+	  responseJson.put("error", HttpStatus.BAD_REQUEST.getReasonPhrase());
+	  responseJson.put("message", errorMessage);
+	  responseJson.put("path", "/newToken");
+	  return new ResponseEntity<JSONObject>(responseJson, HttpStatus.BAD_REQUEST);
   }
 }
