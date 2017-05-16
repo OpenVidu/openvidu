@@ -7,10 +7,30 @@ public class Token {
 	String serverMetadata;
 	String clientMetadata ;
 	
+	public Token(String token) {
+		this.token = token;
+	}
+	
 	public Token(String token, ParticipantRole role, String metadata) {
 		this.token = token;
 		this.role = role;
 		this.serverMetadata = metadata;
+	}
+	
+	public String getServerMetadata() {
+		return serverMetadata;
+	}
+
+	public void setServerMetadata(String serverMetadata) {
+		this.serverMetadata = serverMetadata;
+	}
+
+	public String getClientMetadata() {
+		return clientMetadata;
+	}
+	
+	public void setClientMetadata(String metadata){
+		this.clientMetadata = metadata;
 	}
 
 	public String getToken() {
@@ -21,13 +41,12 @@ public class Token {
 		return role;
 	}
 	
-	public void setClientMetadata(String metadata){
-		this.clientMetadata = metadata;
-	}
-	
 	@Override
 	public String toString(){
-		return this.role.name();
+		if (this.role != null)
+			return this.role.name();
+		else
+			return this.token;
 	}
 	
 }

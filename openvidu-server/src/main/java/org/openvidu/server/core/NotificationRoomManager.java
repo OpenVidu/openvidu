@@ -25,14 +25,13 @@ import org.kurento.client.MediaPipeline;
 import org.kurento.client.MediaType;
 import org.openvidu.client.OpenViduException;
 import org.openvidu.client.OpenViduException.Code;
-import org.openvidu.server.core.api.KurentoClientProvider;
+import org.openvidu.server.core.RoomManager.JoinRoomReturnValue;
 import org.openvidu.server.core.api.KurentoClientSessionInfo;
 import org.openvidu.server.core.api.MutedMediaType;
 import org.openvidu.server.core.api.NotificationRoomHandler;
 import org.openvidu.server.core.api.pojo.ParticipantRequest;
 import org.openvidu.server.core.api.pojo.UserParticipant;
 import org.openvidu.server.core.internal.DefaultKurentoClientSessionInfo;
-import org.openvidu.server.core.internal.DefaultNotificationRoomHandler;
 import org.openvidu.server.security.ParticipantRole;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,22 +75,27 @@ public class NotificationRoomManager {
    *                when responding back to the client)
    * @see RoomManager#joinRoom(String, String, boolean, boolean, KurentoClientSessionInfo, String)
    */
-  public void joinRoom(String user, String session, boolean dataChannels,
+  public void joinRoom(String token, String roomId, boolean dataChannels,
       boolean webParticipant, ParticipantRequest request) {
     Set<UserParticipant> existingParticipants = null;
+    UserParticipant newParticipant = null;
     try {
       KurentoClientSessionInfo kcSessionInfo =
-          new DefaultKurentoClientSessionInfo(request.getParticipantId(), session);
-      existingParticipants = internalManager
-          .joinRoom(user, session, dataChannels, webParticipant, kcSessionInfo,
+          new DefaultKurentoClientSessionInfo(request.getParticipantId(), roomId);
+      
+      JoinRoomReturnValue returnValue = internalManager
+          .joinRoom(token, roomId, dataChannels, webParticipant, kcSessionInfo,
               request.getParticipantId());
+      existingParticipants = returnValue.existingParticipants;
+      newParticipant = returnValue.newParticipant;
+      
     } catch (OpenViduException e) {
-      log.warn("PARTICIPANT {}: Error joining/creating room {}", user, session, e);
-      notificationRoomHandler.onParticipantJoined(request, session, user, null, e);
+      log.warn("PARTICIPANT {}: Error joining/creating room {}", token, roomId, e);
+      notificationRoomHandler.onParticipantJoined(request, roomId, null, null, e);
     }
     if (existingParticipants != null) {
       notificationRoomHandler
-          .onParticipantJoined(request, session, user, existingParticipants, null);
+          .onParticipantJoined(request, roomId, newParticipant, existingParticipants, null);
     }
   }
 

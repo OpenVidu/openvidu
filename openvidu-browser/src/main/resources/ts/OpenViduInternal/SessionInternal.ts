@@ -6,6 +6,7 @@ import EventEmitter = require('wolfy87-eventemitter');
 export interface SessionOptions {
     sessionId: string;
     participantId: string;
+    metadata: string;
     subscribeToStreams?: boolean;
     updateSpeakerInterval?: number;
     thresholdSpeaker?: number;
@@ -39,16 +40,11 @@ export class SessionInternal {
                 callback('ERROR CONNECTING TO OPENVIDU');
             }
             else {
-                this.configure({
-                    sessionId: this.sessionId,
-                    participantId: token,
-                    subscribeToStreams: this.subscribeToStreams
-                });
 
                 let joinParams = {
                     token: token,
                     session: this.sessionId,
-                    metadata: '',
+                    metadata: this.options.metadata,
                     dataChannels: false
                 }
 
@@ -91,6 +87,10 @@ export class SessionInternal {
                                     streams[key].subscribe();
                                 }
                             }
+                        }
+
+                        for (let part of roomEvent.participants) {
+                            this.ee.emitEvent('connectionCreated', [{ connection: part }]);
                         }
 
                         //if (this.subscribeToStreams) {
@@ -235,6 +235,11 @@ export class SessionInternal {
         this.ee.emitEvent('participant-joined', [{
             participant: participant
         }]);
+
+        this.ee.emitEvent('connectionCreated', [{
+            connection: participant
+        }]);
+        
     }
 
     onParticipantLeft(msg) {

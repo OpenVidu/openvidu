@@ -53,6 +53,8 @@ public class Participant {
 
   private String id;
   private String name;
+  private String clientMetadata;
+  private String serverMetadata;
   private boolean web = false;
   private boolean dataChannels = false;
 
@@ -71,10 +73,12 @@ public class Participant {
   private volatile boolean streaming = false;
   private volatile boolean closed;
 
-  public Participant(String id, String name, Room room, MediaPipeline pipeline,
+  public Participant(String id, String name, String clientMetadata, String serverMetadata, Room room, MediaPipeline pipeline,
       boolean dataChannels, boolean web) {
     this.id = id;
     this.name = name;
+    this.clientMetadata = clientMetadata;
+    this.serverMetadata = serverMetadata;
     this.web = web;
     this.dataChannels = dataChannels;
     this.pipeline = pipeline;
@@ -102,6 +106,14 @@ public class Participant {
 
   public String getName() {
     return name;
+  }
+  
+  public String getClientMetadata() {
+    return clientMetadata;
+  }
+  
+  public String getServerMetadata() {
+    return serverMetadata;
   }
 
   public void shapePublisherMedia(MediaElement element, MediaType type) {

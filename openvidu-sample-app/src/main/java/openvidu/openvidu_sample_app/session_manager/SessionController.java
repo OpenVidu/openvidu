@@ -135,7 +135,7 @@ public class SessionController {
 			// IMPORTANT STUFF
 			TokenOptions tokenOpts = new TokenOptions.Builder()
 			          .role(role)
-			          .data("mydata=mydata")
+			          .data("SERVER=" + this.user.getLoggedUser().getName())
 			          .build();
 			String token = (String) this.lessonIdSession.get(id_lesson).generateToken(tokenOpts);
 			// END IMPORTANT STUFF

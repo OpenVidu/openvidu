@@ -126,7 +126,7 @@ public class RoomProtocolTest {
 
         log.debug("joinRoom -> {} to {}, preq: {}", userName, roomName, preq);
 
-        roomEventHandler.onParticipantJoined(preq, roomName, userName, existingParticipants, null);
+        roomEventHandler.onParticipantJoined(preq, roomName, new UserParticipant(userName, userName), existingParticipants, null);
 
         if (userName.equalsIgnoreCase("user0")) {
           existingParticipants.add(new UserParticipant(preq.getParticipantId(), "user0", true));

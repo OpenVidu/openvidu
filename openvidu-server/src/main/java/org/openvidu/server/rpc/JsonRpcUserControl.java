@@ -50,17 +50,17 @@ public class JsonRpcUserControl {
 
   public void joinRoom(Transaction transaction, Request<JsonObject> request,
       ParticipantRequest participantRequest) throws IOException, InterruptedException,
-      ExecutionException {
+      ExecutionException, OpenViduException {
 	  
-    String session = getStringParam(request, ProtocolElements.JOINROOM_ROOM_PARAM);
-    String user = getStringParam(request, ProtocolElements.JOINROOM_USER_PARAM);
-    String userData = getStringParam(request, ProtocolElements.JOINROOM_METADATA_PARAM);
+    String roomId = getStringParam(request, ProtocolElements.JOINROOM_ROOM_PARAM);
+    String token = getStringParam(request, ProtocolElements.JOINROOM_USER_PARAM);
+    String clientMetadata = getStringParam(request, ProtocolElements.JOINROOM_METADATA_PARAM);
     
-    if(roomManager.getRoomManager().isParticipantInRoom(user, session)){
+    if(roomManager.getRoomManager().isParticipantInRoom(token, roomId)){
     	
-    	if(roomManager.getRoomManager().metadataFormatCorrect(userData)){
+    	if(roomManager.getRoomManager().metadataFormatCorrect(clientMetadata)){
     		
-    		this.roomManager.getRoomManager().setTokenClientMetadata(user, session, userData);
+    		this.roomManager.getRoomManager().setTokenClientMetadata(token, roomId, clientMetadata);
     		
     		boolean dataChannels = false;
     	    if (request.getParams().has(ProtocolElements.JOINROOM_DATACHANNELS_PARAM)) {
@@ -69,11 +69,11 @@ public class JsonRpcUserControl {
     	    }
     	
     	    ParticipantSession participantSession = getParticipantSession(transaction);
-    	    participantSession.setParticipantName(user);
-    	    participantSession.setRoomName(session);
+    	    participantSession.setParticipantName(token);
+    	    participantSession.setRoomName(roomId);
     	    participantSession.setDataChannels(dataChannels);
     	
-    	    roomManager.joinRoom(user, session, dataChannels, true, participantRequest);
+    	    roomManager.joinRoom(token, roomId, dataChannels, true, participantRequest);
     	} else {
     		System.out.println("Error: metadata format is incorrect");
         	throw new OpenViduException(Code.USER_METADATA_FORMAT_INVALID_ERROR_CODE,

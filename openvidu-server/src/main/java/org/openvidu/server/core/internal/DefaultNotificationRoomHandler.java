@@ -55,7 +55,7 @@ public class DefaultNotificationRoomHandler implements NotificationRoomHandler {
   }
 
   @Override
-  public void onParticipantJoined(ParticipantRequest request, String roomName, String newUserName,
+  public void onParticipantJoined(ParticipantRequest request, String roomName, UserParticipant newParticipant,
       Set<UserParticipant> existingParticipants, OpenViduException error) {
     if (error != null) {
       notifService.sendErrorResponse(request, null, error);
@@ -67,6 +67,11 @@ public class DefaultNotificationRoomHandler implements NotificationRoomHandler {
       JsonObject participantJson = new JsonObject();
       participantJson
           .addProperty(ProtocolElements.JOINROOM_PEERID_PARAM, participant.getUserName());
+      
+      // Metadata associated to each existing participant
+      participantJson
+      	  .addProperty(ProtocolElements.JOINROOM_METADATA_PARAM, participant.getClientMetadata() + "--" +  participant.getServerMetadata());
+      
       if (participant.isStreaming()) {
         JsonObject stream = new JsonObject();
         stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMID_PARAM, "webcam");
@@ -77,10 +82,10 @@ public class DefaultNotificationRoomHandler implements NotificationRoomHandler {
       result.add(participantJson);
 
       JsonObject notifParams = new JsonObject();
-      notifParams.addProperty(ProtocolElements.PARTICIPANTJOINED_USER_PARAM, newUserName);
       
-      // TO-DO: Return metadata associated to each participant
-      //notifParams.addProperty(ProtocolElements.PARTICIPANTJOINED_METADATA_PARAM, participant.getUserName());
+      // Metadata associated to new participant
+      notifParams.addProperty(ProtocolElements.PARTICIPANTJOINED_USER_PARAM, newParticipant.getUserName());
+      notifParams.addProperty(ProtocolElements.PARTICIPANTJOINED_METADATA_PARAM, newParticipant.getClientMetadata() + "--" +  newParticipant.getServerMetadata());
       
       notifService.sendNotification(participant.getParticipantId(),
           ProtocolElements.PARTICIPANTJOINED_METHOD, notifParams);

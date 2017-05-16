@@ -517,7 +517,7 @@ public class RoomManagerTest {
         public String getRoomName() {
           return room;
         }
-      }, usersParticipantIds.get(user));
+      }, usersParticipantIds.get(user)).existingParticipants;
       if (peers.isEmpty()) {
         assertEquals("Expected one peer in room " + room + ": " + user, 1,
             manager.getParticipants(room).size());
@@ -1357,7 +1357,7 @@ public class RoomManagerTest {
     }
 
     Set<UserParticipant> existingPeers = manager.joinRoom(user, room, false, webParticipant, kcsi,
-        pid);
+        pid).existingParticipants;
 
     // verifies create media pipeline was called once
     verify(kurentoClient, times(1)).createMediaPipeline(kurentoClientCaptor.capture());

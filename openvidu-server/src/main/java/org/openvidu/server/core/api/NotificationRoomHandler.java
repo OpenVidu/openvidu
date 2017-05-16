@@ -57,7 +57,7 @@ public interface NotificationRoomHandler extends RoomHandler {
    *          instance of {@link OpenViduException} POJO, includes a code and error message. If not
    *          null, then the join was unsuccessful and the user should be responded accordingly.
    */
-  void onParticipantJoined(ParticipantRequest request, String roomName, String newUserName,
+  void onParticipantJoined(ParticipantRequest request, String roomName, UserParticipant newParticipant,
       Set<UserParticipant> existingParticipants, OpenViduException error);
 
   /**

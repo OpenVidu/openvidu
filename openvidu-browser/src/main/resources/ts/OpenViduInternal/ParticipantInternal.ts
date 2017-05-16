@@ -7,12 +7,14 @@ type ObjMap<T> = { [s: string]: T; }
 
 export interface ParticipantOptions {
     id: string;
+    metadata: string;
     streams?: StreamOptions[];
 }
 
 export class ParticipantInternal {
 
     private id: string;
+    private metadata: string;
     private streams: ObjMap<Stream> = {};
     private streamsOpts: StreamOptions[] = [];
 
@@ -21,6 +23,7 @@ export class ParticipantInternal {
         if ( options ) {
 
             this.id = options.id;
+            this.metadata = options.metadata;
 
             if ( options.streams ) {
 

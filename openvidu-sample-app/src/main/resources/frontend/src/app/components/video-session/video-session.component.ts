@@ -55,17 +55,25 @@ export class VideoSessionComponent implements OnInit {
             });
         });
 
+        this.session.on('connectionCreated', (event) => {
+            console.warn(event);
+        });
+
         // 3) Connect to the session
-        this.session.connect(this.token, (error) => {
+        this.session.connect(this.token, "CLIENT:" + this.authenticationService.getCurrentUser().name ,(error) => {
 
             // If the connection is successful, initialize a publisher and publish to the session
             if (!error) {
 
-                // 4) Get your own camera stream with the desired resolution and publish it, only if the user is supposed to do so
-                this.publisher = this.OV.initPublisher('publisher', this.cameraOptions);
+                if (this.authenticationService.isTeacher()){
 
-                // 5) Publish your stream
-                this.session.publish(this.publisher);
+                    // 4) Get your own camera stream with the desired resolution and publish it, only if the user is supposed to do so
+                    this.publisher = this.OV.initPublisher('publisher', this.cameraOptions);
+
+                    // 5) Publish your stream
+                    this.session.publish(this.publisher);
+
+                }
 
             } else {
                 console.log('There was an error connecting to the session:', error.code, error.message);

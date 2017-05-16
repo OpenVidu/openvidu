@@ -25,12 +25,23 @@ package org.openvidu.server.core.api.pojo;
 public class UserParticipant {
   private String participantId;
   private String userName;
+  private String clientMetadata;
+  private String serverMetadata;
   private boolean streaming = false;
 
   public UserParticipant(String participantId, String userName, boolean streaming) {
     super();
     this.participantId = participantId;
     this.userName = userName;
+    this.streaming = streaming;
+  }
+  
+  public UserParticipant(String participantId, String userName, String clientMetadata, String serverMetadata, boolean streaming) {
+    super();
+    this.participantId = participantId;
+    this.userName = userName;
+    this.clientMetadata = clientMetadata;
+    this.serverMetadata = serverMetadata;
     this.streaming = streaming;
   }
 
@@ -54,6 +65,22 @@ public class UserParticipant {
 
   public void setUserName(String userName) {
     this.userName = userName;
+  }
+
+  public String getClientMetadata() {
+	return clientMetadata;
+  }
+
+  public void setClientMetadata(String clientMetadata) {
+	this.clientMetadata = clientMetadata;
+  }
+  
+  public String getServerMetadata() {
+	return serverMetadata;
+  }
+
+  public void setServerMetadata(String serverMetadata) {
+	this.serverMetadata = serverMetadata;
   }
 
   public boolean isStreaming() {

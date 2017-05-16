@@ -62,6 +62,17 @@ import org.springframework.beans.factory.annotation.Value;
  * @author <a href="mailto:rvlad@naevatec.com">Radu Tom Vlad</a>
  */
 public class RoomManager {
+	
+  public class JoinRoomReturnValue {
+	  public UserParticipant newParticipant;
+	  public Set<UserParticipant> existingParticipants;
+	  
+	  public JoinRoomReturnValue(UserParticipant newParticipant, Set<UserParticipant> existingParticipants){
+		  this.newParticipant = newParticipant;
+		  this.existingParticipants = existingParticipants;
+	  }
+  }
+	
   private final Logger log = LoggerFactory.getLogger(RoomManager.class);
   
   @Autowired
@@ -108,31 +119,31 @@ public class RoomManager {
    * @return set of existing peers of type {@link UserParticipant}, can be empty if first
    * @throws OpenViduException on error while joining (like the room is not found or is closing)
    */
-  public Set<UserParticipant> joinRoom(String user, String session, boolean dataChannels,
+  public JoinRoomReturnValue joinRoom(String token, String roomId, boolean dataChannels,
       boolean webParticipant, KurentoClientSessionInfo kcSessionInfo, String participantId)
       throws OpenViduException {
     log.debug("Request [JOIN_ROOM] user={}, room={}, web={} " + "kcSessionInfo.room={} ({})",
-    	user, session, webParticipant,
+    		token, roomId, webParticipant,
         kcSessionInfo != null ? kcSessionInfo.getRoomName() : null, participantId);
-    Room room = rooms.get(session);
+    Room room = rooms.get(roomId);
     if (room == null && kcSessionInfo != null) {
       createRoom(kcSessionInfo);
     }
-    room = rooms.get(session);
+    room = rooms.get(roomId);
     if (room == null) {
       log.warn("Room '{}' not found");
       throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE,
-          "Room '" + session + "' was not found, must be created before '" + session
+          "Room '" + roomId + "' was not found, must be created before '" + roomId
               + "' can join");
     }
     if (room.isClosed()) {
-      log.warn("'{}' is trying to join room '{}' but it is closing", user, session);
+      log.warn("'{}' is trying to join room '{}' but it is closing", token, roomId);
       throw new OpenViduException(Code.ROOM_CLOSED_ERROR_CODE,
-          "'" + user + "' is trying to join room '" + session + "' but it is closing");
+          "'" + token + "' is trying to join room '" + roomId + "' but it is closing");
     }
-    Set<UserParticipant> existingParticipants = getParticipants(session);
-    room.join(participantId, user, dataChannels, webParticipant);
-    return existingParticipants;
+    Set<UserParticipant> existingParticipants = getParticipants(roomId);
+    UserParticipant newParticipant = room.join(participantId, token, getTokenClientMetadata(token, roomId), getTokenServerMetadata(token, roomId), dataChannels, webParticipant);
+    return new JoinRoomReturnValue(newParticipant, existingParticipants);
   }
 
   /**
@@ -646,7 +657,7 @@ public class RoomManager {
     Set<UserParticipant> userParts = new HashSet<UserParticipant>();
     for (Participant p : participants) {
       if (!p.isClosed()) {
-        userParts.add(new UserParticipant(p.getId(), p.getName(), p.isStreaming()));
+        userParts.add(new UserParticipant(p.getId(), p.getName(), p.getClientMetadata(), p.getServerMetadata(), p.isStreaming()));
       }
     }
     return userParts;
@@ -941,23 +952,30 @@ public class RoomManager {
 	  return getParticipant(pid).getRoom().getName();
   }
   
-  public boolean isParticipantInRoom(String token, String session) {
+  public boolean isParticipantInRoom(String token, String roomId) throws OpenViduException {
     if (SECURITY_ENABLED) {
-      if (this.sessionIdToken.get(session) != null) {
-        return this.sessionIdToken.get(session).containsKey(token);
+      if (this.sessionIdToken.get(roomId) != null) {
+        return this.sessionIdToken.get(roomId).containsKey(token);
       } else{
         return false;
       }
     } else {
-      return true;
+    	this.sessionIdToken.putIfAbsent(roomId, new ConcurrentHashMap<>());
+    	if (this.sessionIdToken.get(roomId).containsKey(token)){
+    		// If the user already exists
+    		throw new OpenViduException(Code.EXISTING_USER_IN_ROOM_ERROR_CODE, "The user " + token + " already exists in room " + roomId);
+    	} else {
+	    	this.sessionIdToken.get(roomId).put(token, new Token(token));
+	    	return true;
+    	}
     }
   }
   
-  public boolean isPublisherInRoom(String token, String session) {
+  public boolean isPublisherInRoom(String token, String roomId) {
     if (SECURITY_ENABLED) {
-      if (this.sessionIdToken.get(session) != null){
-        if (this.sessionIdToken.get(session).get(token) != null){
-          return (this.sessionIdToken.get(session).get(token).getRole().equals(ParticipantRole.PUBLISHER));
+      if (this.sessionIdToken.get(roomId) != null){
+        if (this.sessionIdToken.get(roomId).get(token) != null){
+          return (this.sessionIdToken.get(roomId).get(token).getRole().equals(ParticipantRole.PUBLISHER));
         } else {
           return false;
         }
@@ -969,11 +987,39 @@ public class RoomManager {
     }
   }
   
-  public void setTokenClientMetadata(String token, String session, String metadata){
-	  if (this.sessionIdToken.get(session) != null){
-	        if (this.sessionIdToken.get(session).get(token) != null){
-	          this.sessionIdToken.get(session).get(token).setClientMetadata(metadata);
+  public String getTokenClientMetadata(String token, String roomId) throws OpenViduException {
+	  if (this.sessionIdToken.get(roomId) != null){
+	        if (this.sessionIdToken.get(roomId).get(token) != null){
+	          return this.sessionIdToken.get(roomId).get(token).getClientMetadata();
+	        } else {
+	        	throw new OpenViduException(Code.USER_NOT_FOUND_ERROR_CODE, roomId);
 	        }
+	  } else {
+		  throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE, token);
+	  }
+  }
+  
+  public String getTokenServerMetadata(String token, String roomId) throws OpenViduException {
+	  if (this.sessionIdToken.get(roomId) != null){
+	        if (this.sessionIdToken.get(roomId).get(token) != null){
+	          return this.sessionIdToken.get(roomId).get(token).getServerMetadata();
+	        } else {
+	        	throw new OpenViduException(Code.USER_NOT_FOUND_ERROR_CODE, roomId);
+	        }
+	  } else {
+		  throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE, token);
+	  }
+  }
+  
+  public void setTokenClientMetadata(String token, String roomId, String metadata)  throws OpenViduException {
+	  if (this.sessionIdToken.get(roomId) != null){
+	        if (this.sessionIdToken.get(roomId).get(token) != null){
+	          this.sessionIdToken.get(roomId).get(token).setClientMetadata(metadata);
+	        } else {
+	        	throw new OpenViduException(Code.USER_NOT_FOUND_ERROR_CODE, roomId);
+	        }
+	  } else {
+		  throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE, token);
 	  }
   }
   
@@ -984,11 +1030,11 @@ public class RoomManager {
 	  return sessionId;
   }
   
-  public String newToken(String session, ParticipantRole role, String metadata){
-	  if (this.sessionIdToken.get(session) != null) {
+  public String newToken(String roomId, ParticipantRole role, String metadata){
+	  if (this.sessionIdToken.get(roomId) != null) {
 		  if(metadataFormatCorrect(metadata)){
 			  String token = new BigInteger(130, new SecureRandom()).toString(32);
-			  this.sessionIdToken.get(session).put(token, new Token(token, role, metadata));
+			  this.sessionIdToken.get(roomId).put(token, new Token(token, role, metadata));
 			  showMap();
 			  return token;
 		  }
@@ -996,9 +1042,9 @@ public class RoomManager {
 			  throw new OpenViduException(Code.GENERIC_ERROR_CODE, "Data invalid format. Max length allowed is 1000 chars");
 		  }
 	  } else {
-		  System.out.println("Error: the sessionId [" + session + "] is not valid");
+		  System.out.println("Error: the sessionId [" + roomId + "] is not valid");
 		  throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE,
-				  "[" + session +"] is not a valid sessionId");
+				  "[" + roomId +"] is not a valid sessionId");
 	  }
   }
   

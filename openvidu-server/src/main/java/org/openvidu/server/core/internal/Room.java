@@ -33,6 +33,7 @@ import org.kurento.client.MediaPipeline;
 import org.openvidu.client.OpenViduException;
 import org.openvidu.client.OpenViduException.Code;
 import org.openvidu.server.core.api.RoomHandler;
+import org.openvidu.server.core.api.pojo.UserParticipant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -91,7 +92,7 @@ public class Room {
     return this.pipeline;
   }
 
-  public synchronized void join(String participantId, String user, boolean dataChannels,
+  public synchronized UserParticipant join(String participantId, String user, String clientMetadata, String serverMetadata, boolean dataChannels,
       boolean webParticipant) throws OpenViduException {
 
     checkClosed();
@@ -108,16 +109,18 @@ public class Room {
 
     createPipeline();
 
-    Participant participant =
-        new Participant(participantId, user, this, getPipeline(), dataChannels, webParticipant);
-    participants.put(participantId, participant);
+    Participant p =
+        new Participant(participantId, user, clientMetadata, serverMetadata, this, getPipeline(), dataChannels, webParticipant);
+    participants.put(participantId, p);
 
     filterStates.forEach((filterId, state) -> {
       log.info("Adding filter {}", filterId);
-      roomHandler.updateFilter(name, participant, filterId, state);
+      roomHandler.updateFilter(name, p, filterId, state);
     });
 
     log.info("ROOM {}: Added participant {}", name, user);
+    
+	return new UserParticipant(p.getId(), p.getName(), p.getClientMetadata(), p.getServerMetadata(), p.isStreaming());
   }
 
   public void newPublisher(Participant participant) {
