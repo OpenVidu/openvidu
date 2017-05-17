@@ -20,94 +20,15 @@ Running a sample app
 
 ## Basic plain JavaScript app
 
- - Run openvidu-server (non-secure mode) and KMS with docker
+ - Run the docker container. It wraps **openvidu-server** (initialize in non-secure mode), **KMS** and a **web page** being served in port 8080
    
    ```
-   docker run -p 8443:8443 --rm -e KMS_STUN_IP=193.147.51.12 -e KMS_STUN_PORT=3478 -e openvidu.security=false openvidu/openvidu-server-kms
-   ```
- - Clone the following repo
-   
-   ```
-   git clone https://github.com/OpenVidu/openvidu-sample-basic-plainjs.git
-   ```
- - Serve the app locally with your favourite tool (we recommend http-server: `npm install -g http-server`)
-   
-   ```
-   cd openvidu-sample-basic-plainjs/web
-   http-server
+   docker run -p 8080:8080 -p 8443:8443 -e KMS_STUN_IP=193.147.51.12 -e KMS_STUN_PORT=3478 -e openvidu.security=false openvidu/openvidu-plainjs-demo
    ```
    
- - Accept certificate at `https://localhost:8443` / `https://127.0.0.1:8443` and go to `localhost:[your_port]`
+ - Accept certificate at `https://localhost:8443` / `https://127.0.0.1:8443` if necessary and go to `localhost:8080`
 
 There you have the app!
-   
-## Basic Angular app
- - Run openvidu-server (non-secure mode) and KMS with docker  (no difference at all with the sample above)
-   
-   ```
-   docker run -p 8443:8443 --rm -e KMS_STUN_IP=193.147.51.12 -e KMS_STUN_PORT=3478 -e openvidu.security=false openvidu/openvidu-server-kms
-   ```
- - Clone the following repo
-   
-   ```
-   git clone https://github.com/OpenVidu/openvidu-sample-basic-ng2.git
-   ```
- - Install npm dependencies and serve the app with angular-cli (be sure to have the latest release! `npm install -g @angular/cli` )
-   
-   ```
-   cd openvidu-sample-basic-ng2
-   npm install
-   ng serve
-   ```
- - Accept certificate if needed at `https://localhost:8443` / `https://127.0.0.1:8443` and go to `localhost:4200`
-
-There you have the app!   
-
-## Advanced secure app
-
-This is a more realistic example running the secure version of OpenVidu. The app has an Angular frontend, a real backend (a SpringBoot application) and a real database (MySQL managed by Hibernate). 
-
-Users must log in or register in order to access the application and connect to video calls. 
-
- - Run openvidu-server (secure mode) and KMS with docker
-   
-   ```
-   docker run -p 8443:8443 --rm -e KMS_STUN_IP=193.147.51.12 -e KMS_STUN_PORT=3478 -e openvidu.security=true -e openvidu.secret=MY_SECRET openvidu/openvidu-server-kms
-   ```
- - Clone the following repo (it contains our advanced application)
-   
-   ```
-   git clone https://github.com/OpenVidu/openvidu.git
-   ```
- - You will need MySQL and a new schema ready to be used by the app. If you don't want to change the `application.properties` file, just enter _pass_ as the password of MySQL when required. 
-   
-    ```
-    sudo apt-get update
-    sudo apt-get install mysql-server
-    mysql -u root -p
-    CREATE DATABASE openvidu_sample_app;
-    exit
-    ```
-    If you already have up and running mysql-server (you can check with `service mysql status`), just open `openvidu-sample-app/src/main/resources/application.properties` and replace properties `spring.datasource.url`, `spring.datasource.username`, `spring.datasource.password` with your desired data.
-
-
-
-
-
-
- - Build and run the application. This is pretty simple: 
-   
-    ```
-    cd openvidu/openvidu-sample-app/src/main/resources/frontend
-	npm install
-	cd ..
-	./BuildFrontWarAndRun.sh
-    ```
-    Script `BuildFrontWarAndRun.sh` just builds the Angular project in the correct folder and packages and runs the app.
-
- - Accept certificate if needed at `https://localhost:8443` / `https://127.0.0.1:8443` and go to `localhost:5000`
-
-There you have the app!   
 
 ----------
 
