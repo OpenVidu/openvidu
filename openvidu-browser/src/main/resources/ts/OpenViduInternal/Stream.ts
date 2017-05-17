@@ -5,7 +5,7 @@
  *
  * stream.hasAudio(); stream.hasVideo(); stream.hasData();
  */
-import { ParticipantInternal } from './ParticipantInternal';
+import { Connection } from './Connection';
 import { SessionInternal } from './SessionInternal';
 import { OpenViduInternal, Callback } from './OpenViduInternal';
 import EventEmitter = require('wolfy87-eventemitter');
@@ -33,7 +33,7 @@ function hide(id: string) {
 
 export interface StreamOptions {
     id: string;
-    participant: ParticipantInternal;
+    participant: Connection;
     recvVideo: any;
     recvAudio: any;
     video: boolean;
@@ -56,7 +56,7 @@ export class Stream {
     private video: HTMLVideoElement;
     private videoElements: VideoOptions[] = [];
     private elements: HTMLDivElement[] = [];
-    private participant: ParticipantInternal;
+    private participant: Connection;
     private speechEvent: any;
     private recvVideo: any;
     private recvAudio: any;

@@ -33,6 +33,8 @@ public class UserParticipant {
     super();
     this.participantId = participantId;
     this.userName = userName;
+    this.clientMetadata = "";
+    this.serverMetadata = "";
     this.streaming = streaming;
   }
   
@@ -89,6 +91,10 @@ public class UserParticipant {
 
   public void setStreaming(boolean streaming) {
     this.streaming = streaming;
+  }
+  
+  public String getFullMetadata(){
+	  return this.clientMetadata + "-/-" + this.serverMetadata;
   }
 
   @Override

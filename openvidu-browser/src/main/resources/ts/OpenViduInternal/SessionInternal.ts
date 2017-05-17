@@ -1,6 +1,6 @@
 import { Stream } from './Stream';
 import { OpenViduInternal } from './OpenViduInternal';
-import { ParticipantInternal, ParticipantOptions } from './ParticipantInternal';
+import { Connection, ConnectionOptions } from './Connection';
 import EventEmitter = require('wolfy87-eventemitter');
 
 export interface SessionOptions {
@@ -18,16 +18,16 @@ export class SessionInternal {
     private ee = new EventEmitter();
     private streams = {};
     private participants = {};
-    private participantsSpeaking: ParticipantInternal[] = [];
+    private participantsSpeaking: Connection[] = [];
     private connected = false;
-    private localParticipant: ParticipantInternal;
+    public localParticipant: Connection;
     private subscribeToStreams: boolean;
     private updateSpeakerInterval: number;
     public thresholdSpeaker: number;
     private options: SessionOptions
 
     constructor(private openVidu: OpenViduInternal, private sessionId: string) {
-        this.localParticipant = new ParticipantInternal(this.openVidu, true, this);
+        this.localParticipant = new Connection(this.openVidu, true, this);
     }
 
 
@@ -66,15 +66,16 @@ export class SessionInternal {
                         let exParticipants = response.value;
 
                         let roomEvent = {
-                            participants: new Array<ParticipantInternal>(),
+                            participants: new Array<Connection>(),
                             streams: new Array<Stream>()
                         }
 
                         let length = exParticipants.length;
                         for (let i = 0; i < length; i++) {
 
-                            let participant = new ParticipantInternal(this.openVidu, false, this,
+                            let participant = new Connection(this.openVidu, false, this,
                                 exParticipants[i]);
+                            participant.creationTime = new Date().getTime();
 
                             this.participants[participant.getId()] = participant;
 
@@ -89,6 +90,16 @@ export class SessionInternal {
                             }
                         }
 
+                        // Update local Connection object properties with values returned by server
+                        this.localParticipant.data = response.metadata;
+                        this.localParticipant.creationTime = new Date().getTime();
+
+                        // Updates the value of property 'connection' in Session object
+                        this.ee.emitEvent('update-connection-object', [{ connection: this.localParticipant }]);
+                        // Own connection created event
+                        this.ee.emitEvent('connectionCreated', [{ connection: this.localParticipant }]);
+
+                        // One connection created event for each existing participant in the session
                         for (let part of roomEvent.participants) {
                             this.ee.emitEvent('connectionCreated', [{ connection: part }]);
                         }
@@ -191,7 +202,9 @@ export class SessionInternal {
 
     onParticipantPublished(options) {
 
-        let participant = new ParticipantInternal(this.openVidu, false, this, options);
+        options.metadata = this.participants[options.id].data;
+
+        let participant = new Connection(this.openVidu, false, this, options);
 
         let pid = participant.getId();
         if (!(pid in this.participants)) {
@@ -200,6 +213,7 @@ export class SessionInternal {
             console.log("Publisher found in participants list by its id", pid);
         }
         //replacing old participant (this one has streams)
+        participant.creationTime = this.participants[pid].creationTime;
         this.participants[pid] = participant;
 
         this.ee.emitEvent('participant-published', [{ participant }]);
@@ -219,7 +233,8 @@ export class SessionInternal {
 
     onParticipantJoined(msg) {
 
-        let participant = new ParticipantInternal(this.openVidu, false, this, msg);
+        let participant = new Connection(this.openVidu, false, this, msg);
+        participant.creationTime = new Date().getTime();
 
         let pid = participant.getId();
         if (!(pid in this.participants)) {
@@ -269,6 +284,10 @@ export class SessionInternal {
             }
 
             participant.dispose();
+
+            this.ee.emitEvent('connectionDestroyed', [{
+                connection: participant
+            }]);
 
         } else {
             console.warn("Participant " + msg.name

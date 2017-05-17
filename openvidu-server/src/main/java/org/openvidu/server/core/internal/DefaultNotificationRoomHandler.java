@@ -61,8 +61,9 @@ public class DefaultNotificationRoomHandler implements NotificationRoomHandler {
       notifService.sendErrorResponse(request, null, error);
       return;
     }
-
-    JsonArray result = new JsonArray();
+    
+    JsonObject result = new JsonObject();
+    JsonArray resultArray = new JsonArray();
     for (UserParticipant participant : existingParticipants) {
       JsonObject participantJson = new JsonObject();
       participantJson
@@ -79,17 +80,21 @@ public class DefaultNotificationRoomHandler implements NotificationRoomHandler {
         streamsArray.add(stream);
         participantJson.add(ProtocolElements.JOINROOM_PEERSTREAMS_PARAM, streamsArray);
       }
-      result.add(participantJson);
+      resultArray.add(participantJson);
 
       JsonObject notifParams = new JsonObject();
       
       // Metadata associated to new participant
       notifParams.addProperty(ProtocolElements.PARTICIPANTJOINED_USER_PARAM, newParticipant.getUserName());
-      notifParams.addProperty(ProtocolElements.PARTICIPANTJOINED_METADATA_PARAM, newParticipant.getClientMetadata() + "--" +  newParticipant.getServerMetadata());
+      notifParams.addProperty(ProtocolElements.PARTICIPANTJOINED_METADATA_PARAM, newParticipant.getFullMetadata());
       
       notifService.sendNotification(participant.getParticipantId(),
           ProtocolElements.PARTICIPANTJOINED_METHOD, notifParams);
     }
+    result.addProperty(ProtocolElements.PARTICIPANTJOINED_USER_PARAM, newParticipant.getUserName());
+    result.addProperty(ProtocolElements.PARTICIPANTJOINED_METADATA_PARAM, newParticipant.getFullMetadata());
+    result.add("value", resultArray);
+    
     notifService.sendResponse(request, result);
   }
 

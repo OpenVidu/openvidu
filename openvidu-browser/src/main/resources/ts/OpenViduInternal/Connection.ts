@@ -5,25 +5,26 @@ import { SessionInternal } from './SessionInternal';
 
 type ObjMap<T> = { [s: string]: T; }
 
-export interface ParticipantOptions {
+export interface ConnectionOptions {
     id: string;
     metadata: string;
     streams?: StreamOptions[];
 }
 
-export class ParticipantInternal {
+export class Connection {
 
-    private id: string;
-    private metadata: string;
+    public connectionId: string;
+    public data: string;
+    public creationTime: number;
     private streams: ObjMap<Stream> = {};
     private streamsOpts: StreamOptions[] = [];
 
-    constructor( private openVidu: OpenViduInternal, private local: boolean, private room: SessionInternal, private options?: ParticipantOptions ) {
+    constructor( private openVidu: OpenViduInternal, private local: boolean, private room: SessionInternal, private options?: ConnectionOptions ) {
 
         if ( options ) {
 
-            this.id = options.id;
-            this.metadata = options.metadata;
+            this.connectionId = options.id;
+            this.data = options.metadata;
 
             if ( options.streams ) {
 
@@ -47,12 +48,12 @@ export class ParticipantInternal {
             }
         }
         
-        console.log( "New " + ( local ? "local " : "remote " ) + "participant " + this.id
+        console.log( "New " + ( local ? "local " : "remote " ) + "participant " + this.connectionId
             + ", streams opts: ", this.streamsOpts );
     }
 
     setId( newId ) {
-        this.id = newId;
+        this.connectionId = newId;
     }
 
     addStream( stream: Stream ) {
@@ -71,7 +72,7 @@ export class ParticipantInternal {
     }
 
     getId() {
-        return this.id;
+        return this.connectionId;
     }
 
     sendIceCandidate( candidate ) {

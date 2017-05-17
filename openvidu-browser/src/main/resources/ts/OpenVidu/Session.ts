@@ -1,20 +1,32 @@
 import { SessionInternal, SessionOptions } from '../OpenViduInternal/SessionInternal';
 import { Stream } from '../OpenViduInternal/Stream';
+import { Connection } from "../OpenViduInternal/Connection";
 
 import { OpenVidu } from './OpenVidu';
 import { Publisher} from './Publisher';
 import { Subscriber } from './Subscriber';
 
+import EventEmitter = require('wolfy87-eventemitter');
+
 export class Session {
 
-    //capabilities: Capabilities
-    //connection: Connection
     sessionId: String;
+    //capabilities: Capabilities
+    connection: Connection;
+
+    private ee = new EventEmitter();
 
     constructor(private session: SessionInternal, private openVidu: OpenVidu) {
         this.sessionId = session.getSessionId();
+
+        // Listens to the deactivation of the default behaviour upon the deletion of a Stream object
         this.session.addEventListener('stream-removed-default', event => {
             event.stream.removeVideo();
+        });
+
+        // Sets or updates the value of 'connection' property. Triggered by SessionInternal when succesful connection
+        this.session.addEventListener('update-connection-object', event => {
+            this.connection = event.connection;
         });
     }
 

@@ -6,6 +6,7 @@
   "types": "lib/OpenVidu/index.d.ts",
   "scripts": {
     "browserify": "cd ts/OpenVidu && browserify Main.ts -p [ tsify ] --exclude kurento-browser-extensions --debug -o ../../static/js/OpenVidu.js -v",
+    "updatets": "cd ts/OpenViduInternal && tsc && cd ../OpenVidu && tsc",
     "test": "echo \"Error: no test specified\" && exit 1",
     "prepublish": "cd ts && tsc",
     "developing": "cd ts && tsc -w"

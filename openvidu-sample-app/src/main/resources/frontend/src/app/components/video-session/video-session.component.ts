@@ -42,9 +42,11 @@ export class VideoSessionComponent implements OnInit {
         // 0) Obtain 'sessionId' and 'token' from server
         // In this case, the method ngOnInit takes care of it
 
+
         // 1) Initialize OpenVidu and your Session
         this.OV = new OpenVidu("wss://" + location.hostname + ":8443/");
         this.session = this.OV.initSession("apikey", this.sessionId);
+
 
         // 2) Specify the actions when events take place
         this.session.on('streamCreated', (event) => {
@@ -55,9 +57,26 @@ export class VideoSessionComponent implements OnInit {
             });
         });
 
+        this.session.on('streamDestroyed', (event) => {
+            console.warn("STREAM DESTROYED!");
+            console.warn(event.stream);
+        });
+
         this.session.on('connectionCreated', (event) => {
+            if (event.connection.connectionId == this.session.connection.connectionId){
+                console.warn("YOUR OWN CONNECTION CREATED!");
+            } else {
+                console.warn("OTHER USER'S CONNECTION CREATED!");
+            }
             console.warn(event);
         });
+
+        this.session.on('connectionDestroyed', (event) => {
+            console.warn("OTHER USER'S CONNECTION DESTROYED!");
+            console.warn(event);
+        });
+
+
 
         // 3) Connect to the session
         this.session.connect(this.token, "CLIENT:" + this.authenticationService.getCurrentUser().name ,(error) => {
