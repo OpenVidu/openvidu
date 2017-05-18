@@ -1034,7 +1034,9 @@ public class RoomManager {
 	  if (this.sessionIdToken.get(roomId) != null) {
 		  if(metadataFormatCorrect(metadata)){
 			  String token = new BigInteger(130, new SecureRandom()).toString(32);
-			  this.sessionIdToken.get(roomId).put(token, new Token(token, role, metadata));
+			  if (SECURITY_ENABLED) { // Store the token only if security is enabled
+				  this.sessionIdToken.get(roomId).put(token, new Token(token, role, metadata));
+			  }
 			  showMap();
 			  return token;
 		  }

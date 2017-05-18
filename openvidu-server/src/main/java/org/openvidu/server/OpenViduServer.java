@@ -33,6 +33,7 @@ import org.openvidu.server.rpc.JsonRpcNotificationService;
 import org.openvidu.server.rpc.JsonRpcUserControl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -41,6 +42,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.web.socket.server.standard.ServletServerContainerFactoryBean;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 
 /**
@@ -57,6 +59,9 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
   public static final String KMSS_URIS_PROPERTY = "kms.uris";
   public static final String KMSS_URIS_DEFAULT = "[ \"ws://localhost:8888/kurento\" ]";
+  
+  @Value("${kms.uris}")
+  private String KMSS_CUSTOM_URIS;
 
   private static final Logger log = LoggerFactory.getLogger(OpenViduServer.class);
 
@@ -66,6 +71,11 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
     JsonArray kmsUris = getPropertyJson(KMSS_URIS_PROPERTY, KMSS_URIS_DEFAULT, JsonArray.class);
     List<String> kmsWsUris = JsonUtils.toStringList(kmsUris);
+    
+    if ((KMSS_CUSTOM_URIS != null) && (!KMSS_CUSTOM_URIS.isEmpty())) {
+    	List<String> uris = new Gson().fromJson( KMSS_CUSTOM_URIS, List.class );
+    	kmsWsUris.addAll(0, uris);
+    }
 
     if (kmsWsUris.isEmpty()) {
       throw new IllegalArgumentException(KMSS_URIS_PROPERTY
