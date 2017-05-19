@@ -8,6 +8,19 @@ It is based on [Kurento](http://www.kurento.org), the WebRTC platform for multim
 
 OpenVidu and Kurento are licensed under Apache License v2.
 
+----------
+
+
+Table of contents
+========
+
+* [Running a videocall demo](#running-a-videocall-demo-application)
+* [Building a simple app](#building-a-simple-app-with-openvidu)
+* [Securization](#securization)
+* [API Reference](#api-reference)
+* [Deploying on AWS](#deploying-on-aws)
+* [Developing OpenVidu](#developing-openvidu)
+* [Acknowledgments](#acknowledgments)
 
 ----------
 
@@ -36,14 +49,19 @@ Building a simple app with OpenVidu
 </p>
 
 OpenVidu has a traditional **Client - Server** architecture built on three modules that are shown in the image above. To run **openvidu-server** and **Kurento Media Server** you can execute the following container: 
+
 ```
 docker run -p 8443:8443 --rm -e KMS_STUN_IP=193.147.51.12 -e KMS_STUN_PORT=3478 -e openvidu.security=false openvidu/openvidu-server-kms
- ```
+```
+ 
+ 
 Then, you have to use the library **openvidu-browser** in your JavaScript browser application (frontend). This library is packaged in [OpenVidu.js] file that you can download from https://github.com/OpenVidu/openvidu/blob/master/openvidu-browser/src/main/resources/static/js/OpenVidu.js. Then add the file in your HTML with `<script src="OpenVidu.js"></script>`.
 
 With the **openvidu-browser** library you can handle all available operations straight away from your client, as creating video calls, joining users to them or publishing/unpublishing video and audio
 
+
 ## Sample application
+
 
 Once you have up and running Kurento Media Server and openvidu-server, you just need to add a few lines of code in your frontend to make your first video call with OpenVidu. You can take a look to the sample application in GitHub https://github.com/OpenVidu/openvidu-sample-basic-plainjs.
 
@@ -57,6 +75,7 @@ You can clone the repo and serve the app locally with your favourite tool (we re
 You can now start editing HTML, JS and CSS files. Just reload your browser to see your changes.
 
 ### Code description
+
 
 1. Get an *OpenVidu* object and initialize a session with a *sessionId*. Have in mind that this is the parameter that defines which video call to connect.
 
@@ -90,9 +109,7 @@ You can now start editing HTML, JS and CSS files. Just reload your browser to se
 	session.disconnect();
     ```
 
-With these few lines of code you will already have a functional
-video-call capability in your app. Check [Securization](#securization)
-section to learn how to easily make your app ready for production
+With these few lines of code you will already have a functional video-call capability in your app. Check [Securization](#securization) section to learn how to easily make your app ready for production
 
 If you prefer, there's an Angular version of the sample app that uses _openvidu-browser_ npm package. Check it out [here](https://github.com/OpenVidu/openvidu-sample-basic-ng2)
 
@@ -101,7 +118,9 @@ If you prefer, there's an Angular version of the sample app that uses _openvidu-
 Securization
 ===================
 
+
 ## Why?
+
 
 In a production environment probably you don't want unauthorized users swamping your video calls. It's not possible to control access to them with the first approach we have seen in the sections above: anyone who knows the _sessionId_ could connect to your video call, and if it turns out that the _sessionId_ doesn't belong to an existing session, a new one would be created.
 
@@ -110,6 +129,7 @@ In addition, a secure version also means you can choose the role each user has i
 Thus, a non-secure version of OpenVidu is only intended for development environments. Don't worry, adding securization is not a difficult task.
 
 ## How?
+
 
 <p align="center">
   <img src="https://docs.google.com/uc?id=0B61cQ4sbhmWSeDNIekd5R2ZhQUE">
@@ -158,6 +178,7 @@ For secret "MY_SECRET", the final header would be
 #### openvidu-backend-client
 A Java package that wraps the HTTP REST operations for making them even easier. Maven dependecy is available:
 
+
 ```xml
 <dependency>
     <groupId>org.openvidu</groupId>
@@ -167,6 +188,7 @@ A Java package that wraps the HTTP REST operations for making them even easier. 
 ```
 
 The usage is quite simple: import OpenVidu package and get an **OpenVidu** object. You need to provide to the constructor the IP of your OpenVidu Server and the secret shared with it (initialized by `openvidu.secret=MY_SECRET` property). Then just call the following methods to get a shiny new sessionId or token to be returned to your frontend.
+
 
 ```java
 import org.openvidu.client.OpenVidu;
@@ -179,12 +201,13 @@ String token = session.generateToken();
 // Send sessionId and token to frontend
 ```
 
+
 ## A sequence diagram to sum up
 
 
 
 <p align="center">
-  <img src="http://www.plantuml.com/plantuml/png/ZP3H2e8m68NlVOeVhnHotGS5LX8BSL4IH7XXEc84c-ZKrs-6cgcLb-C_tpbd9mbJoIAMX5o2BXBA2nRdrYqLPKPJNKkwvul8KrY7qOFok7TgIKKL5QWDpS1QzJnW0LUNxB07vE0SRHyJBvWCxedYpdZh4DZOhXje224L-wcho7ut1S_lL9vebZ71SQmD5ME1UjO0-jGKJajVACdK15c9VxktcwW5EercDVjrlZ636eSbgABDosXDpRzUxw_M48e4vpIIngkD-GG0">
+  <img src="http://www.plantuml.com/plantuml/png/ZPBB2i8m44Nt-OeXAmMjUq6nFgaK8re4aIvAEqXH9oL9zVUDsaff5Ls59EVScGaPQHCfar_EBBDh6gTPH0RuNkOAvagIuHyknb5ygftB3EcQ9dbNexgYuenLCw0xhAhGXuCl5juAn7gsSGDFhC9V_59OVETDPm8chk-7p76SiiWBUZZrDgpPEwBPejQf92zXJQ9HYkkIvd_b4zu2UKBwAziyo6PkTNOxRAM5Jg5yUw2tL2Wm0DjGkMkzWzfD_yCm1Ux4aWXZqthMRhCHKcB_o1q0">
 </p>
 
  1. Identify your user and listen to a request for joining a video call (represented by [LOGIN OPERATION] and [JOIN VIDEO CALL] in the diagram). This process is entirely up to you.
@@ -192,7 +215,7 @@ String token = session.generateToken();
  3. You also need a new valid _token_ for this session. Ask openvidu-server for it passing the _sessionId_.
  4. Finally return both parameters to your frontend, where using openvidu-browser you may initilize your session with _sessionId_ and then connect to it with _token_. Good news: **the code is exactly the same as explained before in [Code](#code) section**
 
-> Communication between _Your Backend_ and _openvidu-server_ modules is outlined in the diagram, but it does not correspond to the real methods. Remember you can handle this from your backend by consuming the REST API or by using _openvidu-backend-client_ package.
+> Communication between _Your Backend_ and _openvidu-server_ modules is outlined in the diagram, but it does not correspond to the real methods. Remember you can handle this from your backend by consuming the [REST API](#rest-api) or by using _openvidu-backend-client_ package.
 
 ----------
 
@@ -338,10 +361,56 @@ API reference
 
 Deploying on AWS
 ===================
-Coming soon ...
+Here you have a step by step guide to deploy a production version of OpenVidu in an Ubuntu machine. In this case, KMS and openvidu-server run in the same machine, the first one as a native service and the second one in a Docker container.
+
+1. Install KMS (in first command: ***xenial*** for 16.04, ***trusty*** for 14.04)
+	```bash
+	echo "deb http://ubuntu.kurento.org xenial kms6" | sudo tee /etc/apt/sources.list.d/kurento.list
+	wget -O - http://ubuntu.kurento.org/kurento.gpg.key | sudo apt-key add -
+	sudo apt-get update
+	sudo apt-get install kurento-media-server-6.0
+	```
+
+2. Install COTURN
+	```
+	sudo apt-get install coturn
+	```
+
+3. File `/etc/kurento/modules/kurento/WebRtcEndpoint.conf.ini`
+	```
+	turnURL=**user**:**pass**@**YOUR_MACHINES'S_PUBLIC_IP**:3478
+	```
+
+4. File `/etc/turnserver.conf`
+	```
+	external-ip=**YOUR_MACHINES'S_PUBLIC_IP**
+	fingerprint
+	user=**user**:**pass**
+	lt-cred-mech
+	realm=kurento.org
+	log-file=/var/log/turnserver/turnserver.log
+	simple-log
+	```
+
+5. File `/etc/default/coturn`
+	```
+	TURNSERVER_ENABLED=1
+	```
+
+6. Init services
+	```bash
+	sudo service coturn restart
+	sudo service kurento-media-server-6.0 restart
+	```
+
+7. Init openvidu-server Docker container (securization enabled)
+	
+	```bash
+	sudo docker run -d -p 8443:8443 -e openvidu.security=true -e openvidu.secret=YOUR_SECRET -e kms.uris=[\"ws://YOUR_MACHINE'S_INTERNAL_IP:8888/kurento\"] openvidu/openvidu-server
+	```
+
 
 ----------
-
 
 Developing OpenVidu
 ===================
@@ -361,6 +430,7 @@ Packages required:
 
 OpenVidu with KMS
 ------------------
+
 How to *install* and *run* KMS in your development machine:
 
 Ubuntu 14.04 LTS Trusty (64 bits)
@@ -389,6 +459,7 @@ sudo service kurento-media-server-6.0 stop
 
 Setup for development
 ------------------
+
 Here we show how to develop an Angular app with OpenVidu having all packages linked in your local machine, so you can modify them and check the final result. After installing Kurento Media Server and forking or downloading the repo, these are the necessary steps to start developing **openvidu-ng-testapp**:
 
 ```
@@ -492,7 +563,8 @@ Don't forget to accept the certificate at *https://[HOST]:8443* !
 
 Acknowledgments
 ===============
-OpenVidu platform has been supported under project LERNIM (RTC-2016-4674-7) confunded by the _Ministry of Economy, Finance and Competitiveness_ of Spain, as well as by the _European Union_ FEDER, whose main goal with this funds is to promote techonlogical development, innovation and high-quality research.
+OpenVidu platform has been supported under project LERNIM (RTC-2016-4674-7) confunded by the _Ministry of Economy, Finance and Competitiveness_ of Spain, as well as by the _European Union_ FEDER, whose main goal with this funds is to promote technological development, innovation and high-quality research.
+
 <p align="center">
   <img width="400px" src="https://docs.google.com/uc?id=0B61cQ4sbhmWSQzNLQnF4SnhFLWc">
 </p>
@@ -500,9 +572,6 @@ OpenVidu platform has been supported under project LERNIM (RTC-2016-4674-7) conf
 <p align="center">
   <img width="400px" src="https://docs.google.com/uc?id=0B61cQ4sbhmWSa205YXNkSW9VNUE">
 </p>
-
-
-
 
 
 
