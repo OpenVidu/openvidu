@@ -12,79 +12,51 @@ OpenVidu and Kurento are licensed under Apache License v2.
 ----------
 
 
-Running a demo
-===================
+Running a videocall demo application
+====================================
+We have implemented a very basic demo application to see OpenVidu in action. To ease the installation, we have packaged it as a docker image. 
 
+ - Please be sure that you have [docker CE installed](https://store.docker.com/search?type=edition&offering=community)
  - Run this Docker container
    
    ```
    docker run -p 8080:8080 -p 8443:8443 -e KMS_STUN_IP=193.147.51.12 -e KMS_STUN_PORT=3478 -e openvidu.security=false openvidu/openvidu-plainjs-demo
    ```
    
- - Accept certificate at [`https://localhost:8443`](https://localhost:8443)/[`https://127.0.0.1:8443`](https://127.0.0.1:8443) if necessary and go to [`localhost:8080`](http://localhost:8080). **There you have the app!**
-
+ - Go to [`https://localhost:8443`](https://localhost:8443) and accept the selfsigned unsecure certificate
+ - Go to [`http://localhost:8080`](http://localhost:8080) to enjoy your app.
+ 
 ----------
 
 Building a simple app with OpenVidu
 ===================
 
-## Architecture
 <p align="center">
   <img src="https://docs.google.com/uc?id=0B61cQ4sbhmWSNF9ZWHREUXo3QlE">
 </p>
 
-OpenVidu has a traditional **Client - Server** architecture built on three modules that are shown in the image above. 
-It is as simple as...
+OpenVidu has a traditional **Client - Server** architecture built on three modules that are shown in the image above. To run **openvidu-server** and **Kurento Media Server** you can execute the following container: 
+```
+docker run -p 8443:8443 --rm -e KMS_STUN_IP=193.147.51.12 -e KMS_STUN_PORT=3478 -e openvidu.security=false openvidu/openvidu-server-kms
+ ```
+Then, you have to use the library **openvidu-browser** in your JavaScript browser application (frontend). This library is packaged in [OpenVidu.js] file that you can download from https://github.com/OpenVidu/openvidu/blob/master/openvidu-browser/src/main/resources/static/js/OpenVidu.js. Then add the file in your HTML with `<script src="OpenVidu.js"></script>`.
 
- 1. Run directly **openvidu-server** and **Kurento Media Server** in the backend of your application. You have differente choices here:
-	 - Docker container wrapping both of them: 
-		###### KMS + openvidu-server
-		 ```
-		 docker run -p 8443:8443 --rm -e KMS_STUN_IP=193.147.51.12 -e KMS_STUN_PORT=3478 -e openvidu.security=false openvidu/openvidu-server-kms
-		 ```
+With the **openvidu-browser** library you can handle all available operations straight away from your client, as creating video calls, joining users to them or publishing/unpublishing video and audio
 
-	 - Different Docker containers for each module: 
-		 ###### KMS
-		 ```
-		 docker run -p 8888:8888 -p 9091:9091 -e KMS_STUN_IP=193.147.51.12 -e KMS_STUN_PORT=3478 openvidu/openvidu-kms
-		 ```
-		 ###### openvidu-server
-		 ```
-		 docker run -p 8443:8443 -e openvidu.security=false -e kms.uris=[\"ws://YOUR_KMS_URL:8888/kurento\"] openvidu/openvidu-server
-		 ```
-		 
-	 - Download, build and run the modules by yourself with no containers involved: 
-		 ###### KMS (First command: ***trusty*** for Ubuntu 14.04 | ***xenial*** for ubuntu 16.04 )
-		 ```
-		 echo "deb http://ubuntu.kurento.org trusty kms6" | sudo tee /etc/apt/sources.list.d/kurento.list
-		 wget -O - http://ubuntu.kurento.org/kurento.gpg.key | sudo apt-key add -
-		 sudo apt-get update
-		 sudo apt-get install kurento-media-server-6.0
-		 sudo service kurento-media-server-6.0 start
-		 ```
-		 ###### openvidu-server
-		 ```
-		 git clone https://github.com/OpenVidu/openvidu.git
-		 cd openvidu
-		 mvn -DskipTests=true install
-		 cd openvidu-server
-		 mvn clean package
-		 java -jar /target/openvidu-server-0.0.1-SNAPSHOT.jar --openvidu.security=false
-		 ```
-	 
- 2. Integrate **openvidu-browser** in your frontend. For the moment, there is a plain JavaScript version and a TypeScript package:
-	 - Add [OpenVidu.js](https://github.com/OpenVidu/openvidu/blob/master/openvidu-browser/src/main/resources/static/js/OpenVidu.js) file to your frontend (a simple `<script src="OpenVidu.js"></script>` in your HTML will do the trick)
-	 - Or if you are developing a npm project: `npm i openvidu-browser`
+## Sample application
 
-> The key is that **by consuming openvidu-browser's API you can handle all**
-> **available operations straight away from your client**, as creating video calls, joining users to them or
-> publishing/unpublishing video and audio
+Once you have up and running Kurento Media Server and openvidu-server, you just need to add a few lines of code in your frontend to make your first video call with OpenVidu. You can take a look to the sample application in GitHub https://github.com/OpenVidu/openvidu-sample-basic-plainjs.
 
-## Code
+You can clone the repo and serve the app locally with your favourite tool (we recommend http-server: `npm install -g http-server`)
 
-Once you have up and running Kurento Media Server and openvidu-server, you just need to add a few lines of code in your frontend to make your first video call with OpenVidu.
+   ```
+   git clone https://github.com/OpenVidu/openvidu-sample-basic-plainjs.git
+   cd openvidu-sample-basic-plainjs/web
+   http-server
+   ```
+You can now start editing HTML, JS and CSS files. Just reload your browser to see your changes.
 
-#### ***Step by step*** ####
+### Code description
 
 1. Get an *OpenVidu* object and initialize a session with a *sessionId*. Have in mind that this is the parameter that defines which video call to connect.
 
@@ -118,29 +90,11 @@ Once you have up and running Kurento Media Server and openvidu-server, you just 
 	session.disconnect();
     ```
 
-> With these few lines of code you will already have a functional
-> video-call capability in your app. Check [Securization](#securization)
-> section to learn how to easily make your app ready for production
+With these few lines of code you will already have a functional
+video-call capability in your app. Check [Securization](#securization)
+section to learn how to easily make your app ready for production
 
-
-## How to start based on the sample app
-
-- Start Kurento Media Server and openvidu-server
-
-   ```
-   docker run -p 8443:8443 --rm -e KMS_STUN_IP=193.147.51.12 -e KMS_STUN_PORT=3478 -e openvidu.security=false openvidu/openvidu-server-kms
-   ```
-
-- Clone the repo and serve the app locally with your favourite tool (we recommend http-server: `npm install -g http-server`)
-
-   ```
-   git clone https://github.com/OpenVidu/openvidu-sample-basic-plainjs.git
-   cd openvidu-sample-basic-plainjs/web
-   http-server
-   ```
-- You can now start editing HTML, JS and CSS files. Just reload your browser to see your changes.
-
-> If you prefer, there's an Angular version of the sample app that uses _openvidu-browser_ npm package. Check it out [here](https://github.com/OpenVidu/openvidu-sample-basic-ng2)
+If you prefer, there's an Angular version of the sample app that uses _openvidu-browser_ npm package. Check it out [here](https://github.com/OpenVidu/openvidu-sample-basic-ng2)
 
 ----------
 
