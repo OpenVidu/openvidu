@@ -354,4 +354,34 @@ export class OpenViduInternal {
         this.toggleLocalAudioTrack(false);
     }
 
+    generateMediaConstraints(quality: string) {
+        let mediaConstraints = {
+            audio: true,
+            video: {}
+        }
+        let w, h;
+        switch (quality) {
+            case 'LOW':
+                w = 320;
+                h = 240;
+                break;
+            case 'MEDIUM':
+                w = 640;
+                h = 480;
+                break;
+            case 'HIGH':
+                w = 1280;
+                h = 720;
+                break;
+            default:
+                w = 640;
+                h = 480;
+        }
+        mediaConstraints.video['width'] = { exact: w };
+        mediaConstraints.video['height'] = { exact: h };
+        //mediaConstraints.video['frameRate'] = { ideal: Number((<HTMLInputElement>document.getElementById('frameRate')).value) };
+
+        return mediaConstraints;
+    }
+
 }

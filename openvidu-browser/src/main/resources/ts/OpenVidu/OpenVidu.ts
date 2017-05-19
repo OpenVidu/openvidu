@@ -48,16 +48,24 @@ export class OpenVidu {
         }
     }
 
+    initPublisher(parentId: string): Publisher;
     initPublisher(parentId: string, cameraOptions: any): Publisher;
     initPublisher(parentId: string, cameraOptions: any, callback: any): Publisher;
 
-    initPublisher(parentId: string, cameraOptions: any, callback?): any {
-        if (this.checkSystemRequirements()){
-            if (!("audio" in cameraOptions && "data" in cameraOptions && "mediaConstraints" in cameraOptions &&
-                "video" in cameraOptions && (Object.keys(cameraOptions).length === 4))) {
-                cameraOptions = {
+    initPublisher(parentId: string, cameraOptions?: any, callback?: Function): any {
+        if (this.checkSystemRequirements()) {
+            if (cameraOptions != null){
+                let cameraOptionsAux = {
                     audio: cameraOptions.audio != null ? cameraOptions.audio : true,
                     video: cameraOptions.video != null ? cameraOptions.video : true,
+                    data: true,
+                    mediaConstraints: this.openVidu.generateMediaConstraints(cameraOptions.quality)
+                };
+                cameraOptions = cameraOptionsAux;
+            } else {
+                cameraOptions = {
+                    audio: true,
+                    video: true,
                     data: true,
                     mediaConstraints: {
                         audio: true,
@@ -65,7 +73,9 @@ export class OpenVidu {
                     }
                 }
             }
+
             return new Publisher(this.openVidu.initPublisherTagged(parentId, cameraOptions, callback), parentId);
+
         } else {
             alert("Browser not supported");
         }
@@ -94,4 +104,5 @@ export class OpenVidu {
             callback(error, null);
         });
     }
+
 }

@@ -72,7 +72,7 @@ You can clone the repo and serve the app locally with your favourite tool (we re
    cd openvidu-sample-basic-plainjs/web
    http-server
    ```
-You can now start editing HTML, JS and CSS files. Just reload your browser to see your changes.
+You can now start editing HTML, JS and CSS files. Just reload your browser to see your changes (mind the browser's cache!).
 
 ### Code description
 
@@ -97,7 +97,11 @@ You can now start editing HTML, JS and CSS files. Just reload your browser to se
 		// If connection successful, get a publisher and publish to the session
 		if (!error) {
 			var publisher = OV.initPublisher('publisher');
-			session.publish(publisher);
+			session.publish(publisher, {
+				audio: true,
+				video: true,
+				quality: 'MEDIUM' //'LOW','MEDIUM','HIGH'
+			});
 		} else {
 			console.log('Error while connecting to the session');
 		}
@@ -109,9 +113,9 @@ You can now start editing HTML, JS and CSS files. Just reload your browser to se
 	session.disconnect();
     ```
 
-With these few lines of code you will already have a functional video-call capability in your app. Check [Securization](#securization) section to learn how to easily make your app ready for production
+With these few lines of code you will already have a functional video-call capability in your app. Check [Securization](#securization) section to learn how to easily make your app ready for production.
 
-If you prefer, there's an Angular version of the sample app that uses _openvidu-browser_ npm package. Check it out [here](https://github.com/OpenVidu/openvidu-sample-basic-ng2)
+If you prefer, there's an Angular version of the sample app that uses _openvidu-browser_ npm package. Check it out [here](https://github.com/OpenVidu/openvidu-sample-basic-ng2).
 
 ----------
 
@@ -213,9 +217,9 @@ String token = session.generateToken();
  1. Identify your user and listen to a request for joining a video call (represented by [LOGIN OPERATION] and [JOIN VIDEO CALL] in the diagram). This process is entirely up to you.
  2. You must get a _sessionId_: a new one if the video call is being created or an existing one for an active video call. In the first case you need to ask openvidu-server for it (as shown in the diagram), in the second case you must retrieve it from wherever you stored it when it was created (a data-base or maybe your backend itself).
  3. You also need a new valid _token_ for this session. Ask openvidu-server for it passing the _sessionId_.
- 4. Finally return both parameters to your frontend, where using openvidu-browser you may initilize your session with _sessionId_ and then connect to it with _token_. Good news: **the code is exactly the same as explained before in [Code](#code) section**
+ 4. Finally return both parameters to your frontend, where using openvidu-browser you may initilize your session with _sessionId_ and then connect to it with _token_. Good news: **the code is exactly the same as explained before in [Code description](#code-description) section**
 
-> Communication between _Your Backend_ and _openvidu-server_ modules is outlined in the diagram, but it does not correspond to the real methods. Remember you can handle this from your backend by consuming the [REST API](#rest-api) or by using _openvidu-backend-client_ package.
+> Communication between _Your Back_ and _openvidu-server_ modules is outlined in the diagram, but it does not correspond to the real methods. Remember you can handle this from your backend by consuming the [REST API](#rest-api) or by using _openvidu-backend-client_ package.
 
 ----------
 
@@ -240,7 +244,7 @@ API reference
 | Method           | Returns | Parameters | Description |
 | ---------------- | ------- | ------------------------------------------- | ----------- |
 | `initSession`    | Session | _`apikey:string`_<br/>`sessionId:string` | Returns a session with id **sessionId** |
-| `initPublisher`  | Publisher | `parentId:string`<br/>`cameraOptions:any`<br/>_`callback:function`_ | Starts local video stream, appending it to **parentId** HTML element, with the specific **cameraOptions** settings and executing **callback** function in the end |
+| `initPublisher`  | Publisher | `parentId:string`<br/>_`cameraOptions:any`_<br/>_`callback:function`_ | Starts local video stream, appending it to **parentId** HTML element, with the specific **cameraOptions** settings and executing **callback** function in the end. _cameraOptions_ must be an object with three properties: **{audio:boolean, video:boolean, quality:string}**, being _audio_/_video_ false if you want to initialize them muted (_Publisher.publishAudio(true)_ and _Publisher.publishVideo(true)_ can unmute them later) and _quality_ must be 'LOW', 'MEDIUM' or 'HIGH'|
 | `checkSystemRequirements`  | Number |  | Returns 1 if the browser supports WebRTC, 0 otherwise|
 | `getDevices` | Promise | `callback(error, deviceInfo):function` | Collects information about the media input and output devices available on the system, returned in **deviceInfo** array |
 
@@ -533,6 +537,7 @@ npm link openvidu-browser
 ```
 **/openvidu**
 ```
+mvn compile -DskipTests=true
 mvn install -DskipTests=true
 ```
 **/openvidu/openvidu-server**
