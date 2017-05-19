@@ -536,9 +536,9 @@ Don't forget to accept the certificate at *https://[HOST]:8443* !
 ----------
 
 
-Collaborators
-===================
-OpenVidu platform has been funded by the _Ministry of Economy, Finance and Competitiveness_ of Spain, as well as by the _European Union_, whose main goal with this funds is to promote techonlogical development, innovation and high-quality research.
+Acknowledgments
+===============
+OpenVidu platform has been supported under project LERNIM (RTC-2016-4674-7) confunded by the _Ministry of Economy, Finance and Competitiveness_ of Spain, as well as by the _European Union_ FEDER, whose main goal with this funds is to promote techonlogical development, innovation and high-quality research.
 <p align="center">
   <img width="400px" src="https://docs.google.com/uc?id=0B61cQ4sbhmWSQzNLQnF4SnhFLWc">
 </p>
