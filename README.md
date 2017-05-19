@@ -36,8 +36,7 @@ We have implemented a very basic demo application to see OpenVidu in action. To 
    docker run -p 8080:8080 -p 8443:8443 -e KMS_STUN_IP=193.147.51.12 -e KMS_STUN_PORT=3478 -e openvidu.security=false openvidu/openvidu-plainjs-demo
    ```
    
- - Go to [`https://localhost:8443`](https://localhost:8443) and accept the selfsigned unsecure certificate
- - Go to [`http://localhost:8080`](http://localhost:8080) to enjoy your app.
+ - Go to [`https://localhost:8443`](https://localhost:8443) and accept the self-signed certificate to enjoy your app. You should mute your speakers to avoid disruptive audio feedback.
  
 ----------
 
