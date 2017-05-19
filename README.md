@@ -96,12 +96,12 @@ You can now start editing HTML, JS and CSS files. Just reload your browser to se
 	session.connect(token, function (error) {
 		// If connection successful, get a publisher and publish to the session
 		if (!error) {
-			var publisher = OV.initPublisher('publisher');
-			session.publish(publisher, {
+			var publisher = OV.initPublisher('publisher', {
 				audio: true,
 				video: true,
 				quality: 'MEDIUM' //'LOW','MEDIUM','HIGH'
 			});
+			session.publish(publisher);
 		} else {
 			console.log('Error while connecting to the session');
 		}
