@@ -381,14 +381,14 @@ Here you have a step by step guide to deploy a production version of OpenVidu in
 
 3. File `/etc/kurento/modules/kurento/WebRtcEndpoint.conf.ini`
 	```
-	turnURL=**user**:**pass**@**YOUR_MACHINES'S_PUBLIC_IP**:3478
+	turnURL=USER:PASS@YOUR_MACHINES'S_PUBLIC_IP:3478
 	```
 
 4. File `/etc/turnserver.conf`
 	```
-	external-ip=**YOUR_MACHINES'S_PUBLIC_IP**
+	external-ip=YOUR_MACHINES'S_PUBLIC_IP
 	fingerprint
-	user=**user**:**pass**
+	user=USER:PASS
 	lt-cred-mech
 	realm=kurento.org
 	log-file=/var/log/turnserver/turnserver.log
