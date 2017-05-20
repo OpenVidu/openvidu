@@ -220,6 +220,26 @@ String token = session.generateToken();
 
 > Communication between _Your Back_ and _openvidu-server_ modules is outlined in the diagram, but it does not correspond to the real methods. Remember you can handle this from your backend by consuming the [REST API](#rest-api) or by using _openvidu-backend-client_ package.
 
+
+## A sample advanced app
+Wanna try a real sample application that makes use of everything we have talked about? Take a look at this app. It wraps a backend built with Spring and a MySQL database:
+
+ - Please be sure that you have docker-compose (`sudo apt-get install docker-compose`)
+ - Download the `docker-compose.yml` file and run it:
+   
+   ```
+   wget -O docker-compose.yml https://raw.githubusercontent.com/OpenVidu/openvidu-docker/master/openvidu-sample-app/docker-compose.yml
+   docker-compose up
+   ```
+ - Wait until you see an output like `Started App in 13.986 seconds (JVM running for 15.501)`
+   
+ - Go to [`https://localhost:8443`](https://localhost:8443) and accept the self-signed certificate. Then you can access the app through [`http://localhost:5000`](http://localhost:5000). Here you have a couple registered users (use a standard window and an incognito window to test both of them at the same time):
+
+	| user                             | password |
+	| -------------------------- | ----------- |
+	| teacher@<span></span>gmail.com   | pass         |
+	| student1@<span></span>gmail.com | pass         |
+
 ----------
 
 
@@ -408,7 +428,7 @@ Here you have a step by step guide to deploy a production version of OpenVidu in
 
 7. Init openvidu-server Docker container (securization enabled)
 	
-	```bash
+	```
 	sudo docker run -d -p 8443:8443 -e openvidu.security=true -e openvidu.secret=YOUR_SECRET -e kms.uris=[\"ws://YOUR_MACHINE'S_INTERNAL_IP:8888/kurento\"] openvidu/openvidu-server
 	```
 

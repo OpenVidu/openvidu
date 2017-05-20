@@ -39,12 +39,12 @@ public class SessionController {
 	private Map<Long, Session> lessonIdSession = new ConcurrentHashMap<>();
 	private Map<String, Map<Long, String>> sessionIdUserIdToken = new ConcurrentHashMap<>();
 	
-	private final String OPENVIDU_URL = "https://localhost:8443/";
-	
+	private String OPENVIDU_URL;
 	private String SECRET;
 	
-	public SessionController(@Value("${openvidu.secret}") String secret){
+	public SessionController(@Value("${openvidu.secret}") String secret, @Value("${openvidu.url}") String openviduUrl){
 		this.SECRET = secret;
+		this.OPENVIDU_URL = openviduUrl;
 		this.openVidu = new OpenVidu(OPENVIDU_URL, SECRET);
 	}
 	
