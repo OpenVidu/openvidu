@@ -4,8 +4,8 @@ public class Token {
 	
 	String token;
 	ParticipantRole role;
-	String serverMetadata;
-	String clientMetadata ;
+	String serverMetadata = "";
+	String clientMetadata = "";
 	
 	public Token(String token) {
 		this.token = token;

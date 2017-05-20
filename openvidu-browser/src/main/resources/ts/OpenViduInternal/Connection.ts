@@ -1,4 +1,3 @@
-// Participant --------------------------------
 import { Stream, StreamOptions } from './Stream';
 import { OpenViduInternal } from './OpenViduInternal';
 import { SessionInternal } from './SessionInternal';

@@ -23,18 +23,19 @@ package org.openvidu.server.core.api.pojo;
  *
  */
 public class UserParticipant {
+	
   private String participantId;
   private String userName;
-  private String clientMetadata;
-  private String serverMetadata;
+  private String clientMetadata = "";
+  private String serverMetadata = "";
   private boolean streaming = false;
+  
+  private final String METADATA_SEPARATOR = "%/%";
 
   public UserParticipant(String participantId, String userName, boolean streaming) {
     super();
     this.participantId = participantId;
     this.userName = userName;
-    this.clientMetadata = "";
-    this.serverMetadata = "";
     this.streaming = streaming;
   }
   
@@ -94,7 +95,14 @@ public class UserParticipant {
   }
   
   public String getFullMetadata(){
-	  return this.clientMetadata + "-/-" + this.serverMetadata;
+	  String fullMetadata;
+	  if ((!this.clientMetadata.isEmpty()) && (!this.serverMetadata.isEmpty())){
+		  fullMetadata = this.clientMetadata + METADATA_SEPARATOR + this.serverMetadata;
+	  }
+	  else {
+		  fullMetadata = this.clientMetadata + this.serverMetadata;
+	  }
+	  return fullMetadata;
   }
 
   @Override

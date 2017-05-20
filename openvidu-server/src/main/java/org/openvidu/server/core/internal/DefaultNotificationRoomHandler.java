@@ -71,7 +71,7 @@ public class DefaultNotificationRoomHandler implements NotificationRoomHandler {
       
       // Metadata associated to each existing participant
       participantJson
-      	  .addProperty(ProtocolElements.JOINROOM_METADATA_PARAM, participant.getClientMetadata() + "--" +  participant.getServerMetadata());
+      	  .addProperty(ProtocolElements.JOINROOM_METADATA_PARAM, participant.getFullMetadata());
       
       if (participant.isStreaming()) {
         JsonObject stream = new JsonObject();

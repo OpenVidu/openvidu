@@ -33,7 +33,7 @@ We have implemented a very basic demo application to see OpenVidu in action. To 
  - Run this Docker container
    
    ```
-   docker run -p 8080:8080 -p 8443:8443 -e KMS_STUN_IP=193.147.51.12 -e KMS_STUN_PORT=3478 -e openvidu.security=false openvidu/openvidu-plainjs-demo
+   docker run -p 8443:8443 -e KMS_STUN_IP=193.147.51.12 -e KMS_STUN_PORT=3478 -e openvidu.security=false openvidu/openvidu-plainjs-demo
    ```
    
  - Go to [`https://localhost:8443`](https://localhost:8443) and accept the self-signed certificate to enjoy your app. You should mute your speakers to avoid disruptive audio feedback.
@@ -307,13 +307,13 @@ API reference
 
 | Event                  | Properties            | Description                  |
 | -----------------------| --------------------- | ---------------------------- |
-| `videoElementCreated`      | element:HTMLVideoElement | Triggered by Publisher object inmediately after a new video element has been added to DOM |
+| `videoElementCreated`      | element:HTMLVideoElement | Triggered by Subscriber object inmediately after a new video element has been added to DOM |
 
 #### **Connection**
 | Property    | Type   | Description                  |
 | ------------| ------ | ---------------------------- |
 | `connectionId` | string | Unique identifier of the connection |
-| `data` | string | Data associated to this connection (and therefore to the user). This is an important field: it allows you to broadcast all the information you want for each user (a username, for example)  |
+| `data` | string | Data associated to this connection (and therefore to certain user). This is an important field: it allows you to broadcast all the information you want for each user (a username, for example)  |
 | `creationTime` | number | Time when this connection was created |
 
 ## openvidu-backend-client
@@ -481,6 +481,7 @@ ng serve
 ```
 **/openvidu**
 ```
+mvn compile -DskipTests=true
 mvn install -DskipTests=true
 ```
 **/openvidu/openvidu-server**
