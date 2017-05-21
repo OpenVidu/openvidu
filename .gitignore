@@ -1,5 +1,7 @@
-*~
-target
+!*/target/
+*/target/*
+!openvidu-backend-client/target/openvidu-backend-client.jar
+
 .classpath
 .project
 .settings
