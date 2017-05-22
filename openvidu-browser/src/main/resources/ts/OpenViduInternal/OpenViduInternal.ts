@@ -298,7 +298,7 @@ export class OpenViduInternal {
             }
         }
 
-        options.participant = this.session.getLocalParticipant();
+        options.connection = this.session.getLocalParticipant();
         this.camera = new Stream(this, true, this.session, options);
         return this.camera;
     };

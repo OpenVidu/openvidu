@@ -191,9 +191,8 @@ A Java package that wraps the HTTP REST operations for making them even easier
 	```
 
 - Jar
-	```
-	https://github.com/OpenVidu/openvidu/tree/master/openvidu-backend-client/target/openvidu-backend-client.jar
-	```
+	
+	[```https://github.com/OpenVidu/openvidu/tree/master/openvidu-backend-client/target/openvidu-backend-client.jar```](https://github.com/OpenVidu/openvidu/tree/master/openvidu-backend-client/target/openvidu-backend-client.jar)
 
 The usage is quite simple: import OpenVidu package and get an **OpenVidu** object. You need to provide to the constructor the IP of your OpenVidu Server and the secret shared with it (initialized by `openvidu.secret=MY_SECRET` property). Then just call the following methods to get a shiny new sessionId or token to be returned to your frontend.
 

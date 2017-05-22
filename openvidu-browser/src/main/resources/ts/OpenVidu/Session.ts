@@ -56,6 +56,13 @@ export class Session {
 
     disconnect() {
         this.openVidu.openVidu.close(false);
+        let s: Stream;
+        for (s of this.openVidu.openVidu.getRemoteStreams()){
+            s.removeVideo();
+        }
+        for (let streamId in this.connection.getStreams()) {
+            this.connection.getStreams()[streamId].removeVideo();
+        }
     }
 
     publish(publisher: Publisher) {
@@ -161,25 +168,25 @@ export class Session {
 
     onParticipantJoined(callback) {
         this.session.addEventListener("participant-joined", participantEvent => {
-            callback(participantEvent.participant);
+            callback(participantEvent.connection);
         });
     }
 
     onParticipantLeft(callback) {
         this.session.addEventListener("participant-left", participantEvent => {
-            callback(participantEvent.participant);
+            callback(participantEvent.connection);
         });
     }
 
     onParticipantPublished(callback) {
         this.session.addEventListener("participant-published", participantEvent => {
-            callback(participantEvent.participant);
+            callback(participantEvent.connection);
         });
     }
 
     onParticipantEvicted(callback) {
         this.session.addEventListener("participant-evicted", participantEvent => {
-            callback(participantEvent.participant);
+            callback(participantEvent.connection);
         });
     }
 

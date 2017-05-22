@@ -33,7 +33,7 @@ function hide(id: string) {
 
 export interface StreamOptions {
     id: string;
-    participant: Connection;
+    connection: Connection;
     recvVideo: any;
     recvAudio: any;
     video: boolean;
@@ -49,6 +49,8 @@ export interface VideoOptions {
 
 export class Stream {
 
+    public connection: Connection;
+
     private ee = new EventEmitter();
     private wrStream: any;
     private wp: any;
@@ -56,7 +58,6 @@ export class Stream {
     private video: HTMLVideoElement;
     private videoElements: VideoOptions[] = [];
     private elements: HTMLDivElement[] = [];
-    private participant: Connection;
     private speechEvent: any;
     private recvVideo: any;
     private recvAudio: any;
@@ -81,7 +82,7 @@ export class Stream {
             this.id = "webcam";
         }
 
-        this.participant = options.participant;
+        this.connection = options.connection;
         this.recvVideo = options.recvVideo;
         this.recvAudio = options.recvAudio;
         this.dataChannel = options.data || false;
@@ -313,12 +314,12 @@ export class Stream {
     }
 
     getParticipant() {
-        return this.participant;
+        return this.connection;
     }
 
     getId() {
-        if (this.participant) {
-            return this.participant.getId() + "_" + this.id;
+        if (this.connection) {
+            return this.connection.getId() + "_" + this.id;
         } else {
             return this.id + "_webcam";
         }
@@ -330,7 +331,7 @@ export class Stream {
 
     requestCameraAccess(callback: Callback<Stream>) {
 
-        this.participant.addStream(this);
+        this.connection.addStream(this);
 
         let constraints = this.mediaConstraints;
 
@@ -424,7 +425,7 @@ export class Stream {
             let options: any = {
                 videoStream: this.wrStream,
                 mediaConstraints: userMediaConstraints,
-                onicecandidate: this.participant.sendIceCandidate.bind(this.participant),
+                onicecandidate: this.connection.sendIceCandidate.bind(this.connection),
             }
 
             if (this.dataChannel) {
@@ -461,7 +462,7 @@ export class Stream {
             console.log("Constraints of generate SDP offer (subscribing)",
                 offerConstraints);
             let options = {
-                onicecandidate: this.participant.sendIceCandidate.bind(this.participant),
+                onicecandidate: this.connection.sendIceCandidate.bind(this.connection),
                 connectionConstraints: offerConstraints
             }
             this.wp = new kurentoUtils.WebRtcPeer.WebRtcPeerRecvonly(options, error => {

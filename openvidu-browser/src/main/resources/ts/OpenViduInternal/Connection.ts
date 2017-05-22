@@ -31,7 +31,7 @@ export class Connection {
 
                     let streamOpts = {
                         id: streamOptions.id,
-                        participant: this,
+                        connection: this,
                         recvVideo: ( streamOptions.recvVideo == undefined ? true : streamOptions.recvVideo ),
                         recvAudio: ( streamOptions.recvAudio == undefined ? true : streamOptions.recvAudio ),
                         audio: streamOptions.audio,

@@ -73,15 +73,15 @@ export class SessionInternal {
                         let length = exParticipants.length;
                         for (let i = 0; i < length; i++) {
 
-                            let participant = new Connection(this.openVidu, false, this,
+                            let connection = new Connection(this.openVidu, false, this,
                                 exParticipants[i]);
-                            participant.creationTime = new Date().getTime();
+                            connection.creationTime = new Date().getTime();
 
-                            this.participants[participant.getId()] = participant;
+                            this.participants[connection.getId()] = connection;
 
-                            roomEvent.participants.push(participant);
+                            roomEvent.participants.push(connection);
 
-                            let streams = participant.getStreams();
+                            let streams = connection.getStreams();
                             for (let key in streams) {
                                 roomEvent.streams.push(streams[key]);
                                 if (this.subscribeToStreams) {
@@ -99,7 +99,7 @@ export class SessionInternal {
                         // Own connection created event
                         this.ee.emitEvent('connectionCreated', [{ connection: this.localParticipant }]);
 
-                        // One connection created event for each existing participant in the session
+                        // One connection created event for each existing connection in the session
                         for (let part of roomEvent.participants) {
                             this.ee.emitEvent('connectionCreated', [{ connection: part }]);
                         }
@@ -204,21 +204,21 @@ export class SessionInternal {
 
         options.metadata = this.participants[options.id].data;
 
-        let participant = new Connection(this.openVidu, false, this, options);
+        let connection = new Connection(this.openVidu, false, this, options);
 
-        let pid = participant.getId();
+        let pid = connection.getId();
         if (!(pid in this.participants)) {
             console.info("Publisher not found in participants list by its id", pid);
         } else {
             console.log("Publisher found in participants list by its id", pid);
         }
-        //replacing old participant (this one has streams)
-        participant.creationTime = this.participants[pid].creationTime;
-        this.participants[pid] = participant;
+        //replacing old connection (this one has streams)
+        connection.creationTime = this.participants[pid].creationTime;
+        this.participants[pid] = connection;
 
-        this.ee.emitEvent('participant-published', [{ participant }]);
+        this.ee.emitEvent('participant-published', [{ connection }]);
 
-        let streams = participant.getStreams();
+        let streams = connection.getStreams();
         for (let key in streams) {
             let stream = streams[key];
 
@@ -233,42 +233,42 @@ export class SessionInternal {
 
     onParticipantJoined(msg) {
 
-        let participant = new Connection(this.openVidu, false, this, msg);
-        participant.creationTime = new Date().getTime();
+        let connection = new Connection(this.openVidu, false, this, msg);
+        connection.creationTime = new Date().getTime();
 
-        let pid = participant.getId();
+        let pid = connection.getId();
         if (!(pid in this.participants)) {
             console.log("New participant to participants list with id", pid);
-            this.participants[pid] = participant;
+            this.participants[pid] = connection;
         } else {
             //use existing so that we don't lose streams info
             console.info("Participant already exists in participants list with " +
-                "the same id, old:", this.participants[pid], ", joined now:", participant);
-            participant = this.participants[pid];
+                "the same id, old:", this.participants[pid], ", joined now:", connection);
+            connection = this.participants[pid];
         }
 
         this.ee.emitEvent('participant-joined', [{
-            participant: participant
+            connection: connection
         }]);
 
         this.ee.emitEvent('connectionCreated', [{
-            connection: participant
+            connection: connection
         }]);
         
     }
 
     onParticipantLeft(msg) {
 
-        let participant = this.participants[msg.name];
+        let connection = this.participants[msg.name];
 
-        if (participant !== undefined) {
+        if (connection !== undefined) {
             delete this.participants[msg.name];
 
             this.ee.emitEvent('participant-left', [{
-                participant: participant
+                connection: connection
             }]);
 
-            let streams = participant.getStreams();
+            let streams = connection.getStreams();
             for (let key in streams) {
                 this.ee.emitEvent('stream-removed', [{
                     stream: streams[key],
@@ -283,10 +283,10 @@ export class SessionInternal {
                 this.openVidu.getRemoteStreams().splice(index, 1);
             }
 
-            participant.dispose();
+            connection.dispose();
 
             this.ee.emitEvent('connectionDestroyed', [{
-                connection: participant
+                connection: connection
             }]);
 
         } else {
@@ -328,15 +328,15 @@ export class SessionInternal {
             sdpMLineIndex: msg.sdpMLineIndex
         }
 
-        let participant = this.participants[msg.endpointName];
-        if (!participant) {
+        let connection = this.participants[msg.endpointName];
+        if (!connection) {
             console.error("Participant not found for endpoint " +
                 msg.endpointName + ". Ice candidate will be ignored.",
                 candidate);
             return;
         }
 
-        let streams = participant.getStreams();
+        let streams = connection.getStreams();
         for (let key in streams) {
             let stream = streams[key];
             stream.getWebRtcPeer().addIceCandidate(candidate, function (error) {
@@ -421,18 +421,18 @@ export class SessionInternal {
 
     disconnect(stream: Stream) {
 
-        let participant = stream.getParticipant();
-        if (!participant) {
+        let connection = stream.getParticipant();
+        if (!connection) {
             console.error("Stream to disconnect has no participant", stream);
             return;
         }
 
-        delete this.participants[participant.getId()];
-        participant.dispose();
+        delete this.participants[connection.getId()];
+        connection.dispose();
 
-        if (participant === this.localParticipant) {
+        if (connection === this.localParticipant) {
 
-            console.log("Unpublishing my media (I'm " + participant.getId() + ")");
+            console.log("Unpublishing my media (I'm " + connection.getId() + ")");
             delete this.localParticipant;
             this.openVidu.sendRequest('unpublishVideo', function (error, response) {
                 if (error) {
@@ -449,18 +449,18 @@ export class SessionInternal {
 
     unpublish(stream: Stream) {
 
-        let participant = stream.getParticipant();
-        if (!participant) {
+        let connection = stream.getParticipant();
+        if (!connection) {
             console.error("Stream to disconnect has no participant", stream);
             return;
         }
 
-        if (participant === this.localParticipant) {
+        if (connection === this.localParticipant) {
 
-            delete this.participants[participant.getId()];
-            participant.dispose();
+            delete this.participants[connection.getId()];
+            connection.dispose();
 
-            console.log("Unpublishing my media (I'm " + participant.getId() + ")");
+            console.log("Unpublishing my media (I'm " + connection.getId() + ")");
             delete this.localParticipant;
             this.openVidu.sendRequest('unpublishVideo', function (error, response) {
                 if (error) {
