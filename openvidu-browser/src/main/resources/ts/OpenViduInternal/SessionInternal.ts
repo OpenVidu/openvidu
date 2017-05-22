@@ -177,6 +177,10 @@ export class SessionInternal {
         this.ee.off(eventName, listener);
     }
 
+    removeEvent(eventName){
+        this.ee.removeEvent(eventName);
+    }
+
     emitEvent(eventName, eventsArray) {
         this.ee.emitEvent(eventName, eventsArray);
     }
