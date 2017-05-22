@@ -292,9 +292,10 @@ API reference
 | Event                  | Properties            | Description                  |
 | -----------------------| --------------------- | ---------------------------- |
 | `streamCreated`        | stream:Stream         | Triggered by Session object when a new Stream has been created and added to it |
-| `streamDestroyed`      | stream:Stream         | Triggered by Session object when an existing Stream has been destroyed. The default behaviour is deleting the HTML video element associated to it. To prevent it, call _preventDefault()_ method on the event object  |
+| `streamDestroyed`      | stream:Stream<br/>preventDefault():Function | Triggered by Session object when an existing Stream has been destroyed. The default behaviour is the deletion of the HTML video element associated to it. To prevent it, call `preventDefault()` method on the event object  |
 | `connectionCreated`    | connection:Connection | Triggered by Session object whenever any user has joined the session. This includes dispatching one event for each user that joins the session when you are already connected to it, one for each existing participant the first time you connect to the session and once for your own local connection |
 | `connectionDestroyed`  | connection:Connection | Triggered by Session object whenever a user leaves the session. This event can also mean that `streamDestroyed` events could be dispatched, depending on the streams associated to it  |
+| `sessionDisconnected`  | preventDefault():Function | Triggered by Session object when the user disconnects from the Session. Default behaviour is the deletion of all HTML video elements. Call `preventDefault()` on event object to prevent it and delete them by yourself |
 
 #### **Publisher**
 | Method         | Returns | Parameters | Description |
