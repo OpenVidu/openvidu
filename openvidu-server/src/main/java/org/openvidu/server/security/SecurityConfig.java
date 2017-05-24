@@ -39,6 +39,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	        .authorizeRequests()
 	        .antMatchers(HttpMethod.GET, "/getSessionId").authenticated()
 	        .antMatchers(HttpMethod.POST, "/newToken").authenticated()
+	        .antMatchers("/").authenticated()
 	        .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
     }
 

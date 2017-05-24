@@ -53,7 +53,7 @@ import com.google.gson.JsonArray;
  * @author Radu Tom Vlad (rvlad@naevatec.com)
  * @since 1.0.0
  */
-@Import(JsonRpcConfiguration.class)
+@Import({JsonRpcConfiguration.class, InfoSocketConfig.class})
 @SpringBootApplication
 public class OpenViduServer implements JsonRpcConfigurer {
 

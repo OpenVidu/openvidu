@@ -34,7 +34,9 @@ import org.kurento.client.SdpEndpoint;
 import org.kurento.client.internal.server.KurentoServerException;
 import org.openvidu.client.OpenViduException;
 import org.openvidu.client.OpenViduException.Code;
+import org.openvidu.server.InfoHandler;
 import org.openvidu.server.core.api.MutedMediaType;
+import org.openvidu.server.core.endpoint.MediaEndpoint;
 import org.openvidu.server.core.endpoint.PublisherEndpoint;
 import org.openvidu.server.core.endpoint.SdpType;
 import org.openvidu.server.core.endpoint.SubscriberEndpoint;
@@ -72,9 +74,11 @@ public class Participant {
 
   private volatile boolean streaming = false;
   private volatile boolean closed;
+  
+  private InfoHandler infoHandler;
 
   public Participant(String id, String name, String clientMetadata, String serverMetadata, Room room, MediaPipeline pipeline,
-      boolean dataChannels, boolean web) {
+      boolean dataChannels, boolean web, InfoHandler infoHandler) {
     this.id = id;
     this.name = name;
     this.clientMetadata = clientMetadata;
@@ -84,7 +88,9 @@ public class Participant {
     this.pipeline = pipeline;
     this.room = room;
     this.publisher = new PublisherEndpoint(web, dataChannels, this, name, pipeline);
-
+    
+    this.infoHandler = infoHandler;
+    
     for (Participant other : room.getParticipants()) {
       if (!other.getName().equals(this.name)) {
         getNewOrExistingSubscriber(other.getName());
@@ -98,6 +104,8 @@ public class Participant {
       throw new OpenViduException(Code.MEDIA_ENDPOINT_ERROR_CODE,
           "Unable to create publisher endpoint");
     }
+    this.publisher.getEndpoint().addTag("name", "PUBLISHER " + this.name);
+    addEndpointListeners(this.publisher);
   }
 
   public String getId() {
@@ -305,6 +313,10 @@ public class Participant {
         throw new OpenViduException(Code.MEDIA_ENDPOINT_ERROR_CODE,
             "Unable to create subscriber endpoint");
       }
+      
+      subscriber.getEndpoint().addTag("name", "SUBSCRIBER " + senderName + " for user " + this.name);
+      addEndpointListeners(subscriber);
+      
     } catch (OpenViduException e) {
       this.subscribers.remove(senderName);
       throw e;
@@ -545,4 +557,92 @@ public class Participant {
     }
     return true;
   }
+  
+  private void addEndpointListeners(MediaEndpoint endpoint) {
+	  
+	  endpoint.getEndpoint().addElementConnectedListener((element) -> { 
+		  	String msg = "                  Element connected (" + endpoint.getEndpoint().getTag("name") + ") -> " 
+				+ "SINK: " + element.getSink().getName()
+				+ " | SOURCE: " + element.getSource().getName()
+				+ " | MEDIATYPE: " + element.getMediaType();
+			System.out.println(msg);
+			this.infoHandler.sendInfo(msg);
+	  });
+
+	  /*endpoint.getEndpoint().addElementDisconnectedListener((event) -> { 
+		  	String msg = "                  Element disconnected (" + endpoint.getEndpoint().getTag("name") + ") -> " 
+					+ "SINK: " + event.getSinkMediaDescription()
+					+ " | SOURCE: " + event.getSourceMediaDescription()
+					+ " | MEDIATYPE: " + event.getMediaType();
+			System.out.println(msg);
+			this.infoHandler.sendInfo(msg);
+  	  });*/
+	
+	  endpoint.getEndpoint().addErrorListener((event) -> { 
+		  	String msg = "                  Error (PUBLISHER) -> "
+					+ "ERRORCODE: " + event.getErrorCode()
+					+ " | DESCRIPTION: " + event.getDescription();
+			System.out.println(msg);
+			this.infoHandler.sendInfo(msg);
+	  });
+	
+	  endpoint.getEndpoint().addMediaFlowInStateChangeListener((event) -> { 
+		  	String msg1 = "                  Media flow in state change (" + endpoint.getEndpoint().getTag("name") + ") -> " 
+					+ "STATE: " + event.getState()
+					+ " | SOURCE: " + event.getSource().getName()					
+					+ " | PAD: " + event.getPadName()
+					+ " | MEDIATYPE: " + event.getMediaType();
+	  
+  			endpoint.flowInMedia.put(event.getSource().getName()+"/"+event.getMediaType(), event.getSource());
+  			
+  			String msg2;
+  			
+			if (endpoint.flowInMedia.values().size() != 2){
+				msg2 = "                        THERE ARE LESS FLOW IN MEDIA'S THAN EXPECTED IN " + endpoint.getEndpoint().getTag("name") + " (" + endpoint.flowInMedia.values().size() + ")";
+			} else {
+				msg2 = "                        NUMBER OF FLOW IN MEDIA'S IS NOW CORRECT IN " + endpoint.getEndpoint().getTag("name") + " (" + endpoint.flowInMedia.values().size() + ")";
+			}
+			
+			System.out.println(msg1);
+			System.out.println(msg2);
+			this.infoHandler.sendInfo(msg1);
+			this.infoHandler.sendInfo(msg2);
+	  });
+	
+	  endpoint.getEndpoint().addMediaFlowOutStateChangeListener((event) -> { 
+		  	String msg1 = "                  Media flow out state change (" + endpoint.getEndpoint().getTag("name") + ") -> " 
+					+ "STATE: " + event.getState()
+					+ " | SOURCE: " + event.getSource().getName()
+					+ " | PAD: " + event.getPadName()
+					+ " | MEDIATYPE: " + event.getMediaType();
+	  
+	  		endpoint.flowOutMedia.put(event.getSource().getName()+"/"+event.getMediaType(), event.getSource());
+	  				
+			String msg2;
+			
+			if (endpoint.flowOutMedia.values().size() != 2){
+				msg2 = "                        THERE ARE LESS FLOW OUT MEDIA'S THAN EXPECTED IN " + endpoint.getEndpoint().getTag("name") + " (" + endpoint.flowOutMedia.values().size() + ")";
+			} else {
+				msg2 = "                        NUMBER OF FLOW OUT MEDIA'S IS NOW CORRECT IN " + endpoint.getEndpoint().getTag("name") + " (" + endpoint.flowOutMedia.values().size() + ")";
+			}
+			
+			System.out.println(msg1);
+			System.out.println(msg2);
+			this.infoHandler.sendInfo(msg1);
+			this.infoHandler.sendInfo(msg2);
+		  });
+	
+	  endpoint.getEndpoint().addMediaSessionStartedListener((event) -> { 
+		  String msg = "                  Media session started (" + endpoint.getEndpoint().getTag("name") + ")";
+		  System.out.println(msg);
+		  this.infoHandler.sendInfo(msg);
+	  });
+	
+	  endpoint.getEndpoint().addMediaSessionTerminatedListener((event) -> {
+		  String msg = "                  Media session terminated (" + endpoint.getEndpoint().getTag("name") + ")";
+		  System.out.println(msg);
+		  this.infoHandler.sendInfo(msg);
+	  });
+  }
+  
 }

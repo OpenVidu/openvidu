@@ -17,6 +17,8 @@
 package org.openvidu.server.core.endpoint;
 
 import java.util.LinkedList;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 
 import org.kurento.client.Continuation;
@@ -25,6 +27,7 @@ import org.kurento.client.EventListener;
 import org.kurento.client.IceCandidate;
 import org.kurento.client.ListenerSubscription;
 import org.kurento.client.MediaElement;
+import org.kurento.client.MediaObject;
 import org.kurento.client.MediaPipeline;
 import org.kurento.client.OnIceCandidateEvent;
 import org.kurento.client.RtpEndpoint;
@@ -62,6 +65,9 @@ public abstract class MediaEndpoint {
   private LinkedList<IceCandidate> candidates = new LinkedList<IceCandidate>();
 
   private MutedMediaType muteType;
+  
+  public Map<String, MediaObject> flowInMedia = new ConcurrentHashMap<>();
+  public Map<String, MediaObject> flowOutMedia = new ConcurrentHashMap<>();
 
   /**
    * Constructor to set the owner, the endpoint's name and the media pipeline.

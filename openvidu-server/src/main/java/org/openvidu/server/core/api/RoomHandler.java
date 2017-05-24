@@ -19,6 +19,7 @@ package org.openvidu.server.core.api;
 import java.util.Set;
 
 import org.kurento.client.IceCandidate;
+import org.openvidu.server.InfoHandler;
 import org.openvidu.server.core.internal.Participant;
 
 /**
@@ -79,4 +80,7 @@ public interface RoomHandler {
    * @return Then new state of the filter
    */
   String getNextFilterState(String filterId, String state);
+  
+  InfoHandler getInfoHandler();
+
 }

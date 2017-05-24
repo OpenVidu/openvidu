@@ -32,6 +32,7 @@ import org.kurento.client.KurentoClient;
 import org.kurento.client.MediaPipeline;
 import org.openvidu.client.OpenViduException;
 import org.openvidu.client.OpenViduException.Code;
+import org.openvidu.server.InfoHandler;
 import org.openvidu.server.core.api.RoomHandler;
 import org.openvidu.server.core.api.pojo.UserParticipant;
 import org.slf4j.Logger;
@@ -110,7 +111,7 @@ public class Room {
     createPipeline();
 
     Participant p =
-        new Participant(participantId, user, clientMetadata, serverMetadata, this, getPipeline(), dataChannels, webParticipant);
+        new Participant(participantId, user, clientMetadata, serverMetadata, this, getPipeline(), dataChannels, webParticipant, this.roomHandler.getInfoHandler());
     participants.put(participantId, p);
 
     filterStates.forEach((filterId, state) -> {
@@ -347,5 +348,9 @@ public class Room {
     for (Participant participant : participants.values()) {
       roomHandler.updateFilter(getName(), participant, filterId, newState);
     }
+  }
+  
+  public InfoHandler getInfoHandler() {
+	  return this.roomHandler.getInfoHandler();
   }
 }

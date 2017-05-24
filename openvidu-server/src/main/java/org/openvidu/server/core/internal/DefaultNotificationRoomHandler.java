@@ -21,10 +21,12 @@ import java.util.Set;
 import org.kurento.client.IceCandidate;
 import org.openvidu.client.OpenViduException;
 import org.openvidu.client.internal.ProtocolElements;
+import org.openvidu.server.InfoHandler;
 import org.openvidu.server.core.api.NotificationRoomHandler;
 import org.openvidu.server.core.api.UserNotificationService;
 import org.openvidu.server.core.api.pojo.ParticipantRequest;
 import org.openvidu.server.core.api.pojo.UserParticipant;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -38,6 +40,9 @@ import com.google.gson.JsonObject;
 public class DefaultNotificationRoomHandler implements NotificationRoomHandler {
 
   private UserNotificationService notifService;
+  
+  @Autowired
+  private InfoHandler infoHandler;
 
   public DefaultNotificationRoomHandler(UserNotificationService notifService) {
     this.notifService = notifService;
@@ -274,5 +279,10 @@ public class DefaultNotificationRoomHandler implements NotificationRoomHandler {
   @Override
   public String getNextFilterState(String filterId, String state) {
     return null;
+  }
+  
+  @Override
+  public InfoHandler getInfoHandler(){
+	  return this.infoHandler;
   }
 }

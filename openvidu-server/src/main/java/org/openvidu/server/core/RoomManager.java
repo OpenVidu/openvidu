@@ -36,6 +36,7 @@ import org.kurento.client.RtpEndpoint;
 import org.kurento.client.WebRtcEndpoint;
 import org.openvidu.client.OpenViduException;
 import org.openvidu.client.OpenViduException.Code;
+import org.openvidu.server.InfoHandler;
 import org.openvidu.server.core.api.KurentoClientProvider;
 import org.openvidu.server.core.api.KurentoClientSessionInfo;
 import org.openvidu.server.core.api.MutedMediaType;
@@ -825,6 +826,9 @@ public class RoomManager {
     }
     log.warn("No room '{}' exists yet. Created one " + "using KurentoClient '{}'.", roomName,
         kcName);
+    
+    this.roomHandler.getInfoHandler().sendInfo("New room " + roomName);
+    
   }
 
   /**
