@@ -214,7 +214,7 @@ String token = session.generateToken();
 
 
 <p align="center">
-  <img src="http://www.plantuml.com/plantuml/png/ZPBB2i8m44Nt-OeXAmMjUq6nFgaK8re4aIvAEqXH9oL9zVUDsaff5Ls59EVScGaPQHCfar_EBBDh6gTPH0RuNkOAvagIuHyknb5ygftB3EcQ9dbNexgYuenLCw0xhAhGXuCl5juAn7gsSGDFhC9V_59OVETDPm8chk-7p76SiiWBUZZrDgpPEwBPejQf92zXJQ9HYkkIvd_b4zu2UKBwAziyo6PkTNOxRAM5Jg5yUw2tL2Wm0DjGkMkzWzfD_yCm1Ux4aWXZqthMRhCHKcB_o1q0">
+  <img src="http://www.plantuml.com/plantuml/png/ZP9TIyCm58QlcrznY3SJNFsus8KNmgPJAcKPRWWYkyYQT8HXKfBiu-URkcn4cxhUji_xdFSSOjP2LbJJBnYf_PGo9kGARcyGSX-jA4H5fGNyeJOQdhMI5l_-eIekju9j-akjTePhZ11QgZtW7vXBXk623ygxiaH9gp4vetGQSD9Ofn4jrcsLN7ORDAhHKw6I3sA53hhaVz-fJhW4z1z21zp3PqvUiWcGwVXjEC_8P76EVoKEVy-UnWGUXtc-G6cQ7eSSe3hpjuvBNg-udN5ZX98PGqsYCGgR8uqx-INVpPKxNYUthSccDzpTBHjKkFAHo84QRy55NHdms_O2ooMAqCt1Fj1jb8VJGad92zlpHLj7nMxdizy0">
 </p>
 
  1. Identify your user and listen to a request for joining a video call (represented by [LOGIN OPERATION] and [JOIN VIDEO CALL] in the diagram). This process is entirely up to you.
@@ -406,6 +406,8 @@ Here you have a step by step guide to deploy a production version of OpenVidu in
 
 3. File `/etc/kurento/modules/kurento/WebRtcEndpoint.conf.ini`
 	```
+	stunServerAddress=STUN_IP
+	stunServerPort=STUN_PORT
 	turnURL=USER:PASS@YOUR_MACHINES'S_PUBLIC_IP:3478
 	```
 
