@@ -222,11 +222,27 @@ String token = session.generateToken();
  3. You also need a new valid _token_ for this session. Ask openvidu-server for it passing the _sessionId_.
  4. Finally return both parameters to your frontend, where using openvidu-browser you may initilize your session with _sessionId_ and then connect to it with _token_. Good news: **the code is exactly the same as explained before in [Code description](#code-description) section**
 
-> Communication between _Your Back_ and _openvidu-server_ modules is outlined in the diagram, but it does not correspond to the real methods. Remember you can handle this from your backend by consuming the [REST API](#rest-api) or by using _openvidu-backend-client_ package.
+> Communication between _Your Back_ and _openvidu-server_ modules is outlined in the diagram, but it does not correspond to the real methods. Remember you can handle this from your backend by consuming the [REST API](#rest-api) or by using [openvidu-backend-client](#openvidu-backend-client) package.
 
 
-## A sample advanced app
-Wanna try a real sample application that makes use of everything we have talked about? Take a look at this app. It wraps a backend built with Spring and a MySQL database:
+## Running a secure videocall application
+We have implemented a very basic [demo application](https://github.com/OpenVidu/openvidu-sample-secure) to see the secure version of OpenVidu in action. It has a Java backend to manage the user sessions and the securization process with OpenVidu Server.
+
+ - Please be sure that you have docker-compose (`sudo apt-get install docker-compose`)
+ - Download the `docker-compose.yml` file and run it:
+   
+   ```
+   wget -O docker-compose.yml https://raw.githubusercontent.com/OpenVidu/openvidu-docker/master/openvidu-sample-secure/docker-compose.yml
+   docker-compose up
+   ```
+ 
+ - Wait until you see an output like `Started App in XXX seconds (JVM running for XXX)`
+ - Go to [`https://localhost:5000`](https://localhost:5000) and accept the self-signed certificate to enjoy your app (use a standard window and an incognito window to test a couple of users at the same time)
+ 
+
+
+## Running a sample advanced app
+Wanna try a [real sample application](https://github.com/OpenVidu/openvidu/tree/master/openvidu-sample-app) that makes use of everything we have talked about? Take a look at this app. It wraps a frontend built with Angular, a backend built with Spring and a MySQL database:
 
  - Please be sure that you have docker-compose (`sudo apt-get install docker-compose`)
  - Download the `docker-compose.yml` file and run it:
@@ -235,9 +251,9 @@ Wanna try a real sample application that makes use of everything we have talked 
    wget -O docker-compose.yml https://raw.githubusercontent.com/OpenVidu/openvidu-docker/master/openvidu-sample-app/docker-compose.yml
    docker-compose up
    ```
- - Wait until you see an output like `Started App in 13.986 seconds (JVM running for 15.501)`
+ - Wait until you see an output like `Started App in XXX seconds (JVM running for XXX)`
    
- - Go to [`https://localhost:8443`](https://localhost:8443) and accept the self-signed certificate. Then you can access the app through [`http://localhost:5000`](http://localhost:5000). Here you have a couple registered users (use a standard window and an incognito window to test both of them at the same time):
+ - Go to [`https://localhost:5000`](https://localhost:5000) and accept the self-signed certificate. Here you have a couple registered users (use a standard window and an incognito window to test both of them at the same time):
 
 	| user                             | password |
 	| -------------------------- | ----------- |
@@ -292,7 +308,7 @@ API reference
 | Event                  | Properties            | Description                  |
 | -----------------------| --------------------- | ---------------------------- |
 | `streamCreated`        | stream:Stream         | Triggered by Session object when a new Stream has been created and added to it |
-| `streamDestroyed`      | stream:Stream<br/>preventDefault():Function | Triggered by Session object when an existing Stream has been destroyed. The default behaviour is the deletion of the HTML video element associated to it. To prevent it, call `preventDefault()` method on the event object  |
+| `streamDestroyed`      | stream:Stream<br/>preventDefault():Function | Triggered by Session object when an existing Stream has been destroyed. The default behaviour is the deletion of the HTML video element associated to it. To prevent it, call `preventDefault()` method on the event object  |
 | `connectionCreated`    | connection:Connection | Triggered by Session object whenever any user has joined the session. This includes dispatching one event for each user that joins the session when you are already connected to it, one for each existing participant the first time you connect to the session and once for your own local connection |
 | `connectionDestroyed`  | connection:Connection | Triggered by Session object whenever a user leaves the session. This event can also mean that `streamDestroyed` events could be dispatched, depending on the streams associated to it  |
 | `sessionDisconnected`  | preventDefault():Function | Triggered by Session object when the user disconnects from the Session. Default behaviour is the deletion of all HTML video elements. Call `preventDefault()` on event object to prevent it and delete them by yourself |
