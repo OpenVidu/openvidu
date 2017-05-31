@@ -177,7 +177,7 @@ export class SessionInternal {
         this.ee.off(eventName, listener);
     }
 
-    removeEvent(eventName){
+    removeEvent(eventName) {
         this.ee.removeEvent(eventName);
     }
 
@@ -258,7 +258,7 @@ export class SessionInternal {
         this.ee.emitEvent('connectionCreated', [{
             connection: connection
         }]);
-        
+
     }
 
     onParticipantLeft(msg) {
@@ -369,7 +369,10 @@ export class SessionInternal {
     onLostConnection() {
 
         if (!this.connected) {
-            console.warn('Not connected to room, ignoring lost connection notification');
+            console.warn('Not connected to room: if you are not debugging, this is probably a certificate error');
+            if (window.confirm('If you are not debugging, this is probably a certificate error at \"' + this.openVidu.getOpenViduServerURL() + '\"\n\nClick OK to navigate and accept it')) {
+                location.assign(this.openVidu.getOpenViduServerURL());
+            };
             return;
         }
 

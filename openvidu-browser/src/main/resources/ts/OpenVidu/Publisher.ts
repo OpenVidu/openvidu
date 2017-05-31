@@ -23,7 +23,7 @@ export class Publisher {
     constructor(stream: Stream, parentId: string) {
         this.stream = stream;
 
-        this.ee.on('camera-access-changed', (event) => {
+        this.stream.addEventListener('camera-access-changed', (event) => {
             this.accessAllowed = event.accessAllowed;
             if (this.accessAllowed) {
                 this.ee.emitEvent('accessAllowed');
@@ -62,12 +62,40 @@ export class Publisher {
                     element: this.stream.getVideoElement()
                 }]);
             } else {
-                this.stream.addEventListener('video-element-created-by-stream', element => {
-                    console.warn("Publisher emitting videoElementCreated");
+                this.stream.addEventListener('video-element-created-by-stream', (element) => {
+                    console.warn('Publisher emitting videoElementCreated');
                     this.id = element.id;
                     this.ee.emitEvent('videoElementCreated', [{
                         element: element
                     }]);
+                });
+            }
+        }
+        if (eventName == 'streamCreated') {
+            if (this.stream.isReady) {
+                this.ee.emitEvent('streamCreated', [{ stream: this.stream }]);
+            } else {
+                this.stream.addEventListener('stream-created-by-publisher', () => {
+                    console.warn('Publisher emitting streamCreated');
+                    this.ee.emitEvent('streamCreated', [{ stream: this.stream }]);
+                });
+            }
+        }
+        if (eventName == 'accessAllowed') {
+            if (this.stream.accessIsAllowed) {
+                this.ee.emitEvent('accessAllowed');
+            } else {
+                this.stream.addEventListener('access-allowed-by-publisher', () => {
+                    this.ee.emitEvent('accessAllowed');
+                });
+            }
+        }
+        if (eventName == 'accessDenied') {
+            if (this.stream.accessIsDenied) {
+                this.ee.emitEvent('accessDenied');
+            } else {
+                this.stream.addEventListener('access-denied-by-publisher', () => {
+                    this.ee.emitEvent('accessDenied');
                 });
             }
         }

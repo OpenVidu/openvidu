@@ -73,6 +73,8 @@ export class Stream {
     private videoSrc: string;
     private parentId: string;
     public isReady: boolean = false;
+    public accessIsAllowed: boolean = false;
+    public accessIsDenied: boolean = false;
 
     constructor(private openVidu: OpenViduInternal, private local: boolean, private room: SessionInternal, options: StreamOptions) {
 
@@ -276,6 +278,8 @@ export class Stream {
             element: this.video
         }]);
 
+        this.ee.emitEvent('stream-created-by-publisher');
+
         this.isReady = true;
 
         return this.video;
@@ -349,24 +353,25 @@ export class Stream {
 
         navigator.mediaDevices.getUserMedia(constraints)
             .then(userStream => {
+                this.accessIsAllowed = true;
+                this.accessIsDenied = false;
+                this.ee.emitEvent('access-allowed-by-publisher');
+
                 userStream.getAudioTracks()[0].enabled = this.sendAudio;
                 userStream.getVideoTracks()[0].enabled = this.sendVideo;
 
                 this.wrStream = userStream;
                 this.emitSrcEvent(this.wrStream);
 
-                this.ee.emitEvent('camera-access-changed', [{
-                    accessAllowed: true
-                }]);
-
                 callback(undefined, this);
             })
             .catch(error => {
+                this.accessIsDenied = true;
+                this.accessIsAllowed = false;
+                this.ee.emitEvent('access-denied-by-publisher');
+
                 console.error("Access denied", error);
-                this.ee.emitEvent('camera-access-changed', [{
-                    accessAllowed: false
-                }]);
-                callback(error, undefined);
+                callback(error, this);
             });
     }
 

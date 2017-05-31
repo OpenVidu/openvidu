@@ -104,7 +104,9 @@ export class OpenViduInternal {
 
 
 
-
+    getOpenViduServerURL() {
+        return 'https://' + this.wsUri.split("wss://")[1].split("/room")[0];
+    }
 
     getRoom() {
         return this.session;
