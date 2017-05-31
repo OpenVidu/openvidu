@@ -1,0 +1,11 @@
+<md-card id="log">
+  <md-card-title>Server events</md-card-title>
+  <md-divider></md-divider>
+  <md-card-content #scrollMe id="log-content">
+    <md-list>
+      <md-list-item *ngFor="let i of info">
+        <p>{{i}}</p>
+      </md-list-item>
+    </md-list>
+  </md-card-content>
+</md-card>

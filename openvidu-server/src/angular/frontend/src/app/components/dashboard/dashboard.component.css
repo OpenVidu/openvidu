@@ -1,0 +1,14 @@
+#log {
+  height: 100%;
+}
+
+#log-content {
+  height: 90%;
+  font-family: Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+  overflow-y: auto;
+  overflow-x: hidden
+}
+
+ul {
+  margin: 0;
+}

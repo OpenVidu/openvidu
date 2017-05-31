@@ -1,0 +1,17 @@
+@import '~@angular/material/prebuilt-themes/deeppurple-amber.css';
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0.05);
+}
+
+main {
+  height: 90%;
+  padding: 20px;
+}
+
+li {
+  list-style: none;
+}
