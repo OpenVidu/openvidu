@@ -50,6 +50,8 @@ export class VideoSessionComponent implements OnInit {
 
         // 2) Specify the actions when events take place
         this.session.on('streamCreated', (event) => {
+            console.warn("STREAM CREATED!");
+            console.warn(event.stream);
             this.session.subscribe(event.stream, 'subscriber', {
                 insertMode: 'append',
                 width: '100%',
@@ -63,31 +65,42 @@ export class VideoSessionComponent implements OnInit {
         });
 
         this.session.on('connectionCreated', (event) => {
-            if (event.connection.connectionId == this.session.connection.connectionId){
+            if (event.connection.connectionId == this.session.connection.connectionId) {
                 console.warn("YOUR OWN CONNECTION CREATED!");
             } else {
                 console.warn("OTHER USER'S CONNECTION CREATED!");
             }
-            console.warn(event);
+            console.warn(event.connection);
         });
 
         this.session.on('connectionDestroyed', (event) => {
             console.warn("OTHER USER'S CONNECTION DESTROYED!");
-            console.warn(event);
+            console.warn(event.connection);
         });
 
 
 
         // 3) Connect to the session
-        this.session.connect(this.token, "CLIENT:" + this.authenticationService.getCurrentUser().name ,(error) => {
+        this.session.connect(this.token, "CLIENT:" + this.authenticationService.getCurrentUser().name, (error) => {
 
             // If the connection is successful, initialize a publisher and publish to the session
             if (!error) {
 
-                if (this.authenticationService.isTeacher()){
+                if (this.authenticationService.isTeacher()) {
 
                     // 4) Get your own camera stream with the desired resolution and publish it, only if the user is supposed to do so
                     this.publisher = this.OV.initPublisher('publisher', this.cameraOptions);
+
+                    this.publisher.on('accessAllowed', () => {
+                        console.warn("CAMERA ACCESS ALLOWED!");
+                    });
+                    this.publisher.on('accessDenied', () => {
+                        console.warn("CAMERA ACCESS DENIED!");
+                    });
+                    this.publisher.on('streamCreated', (event) => {
+                        console.warn("STREAM CREATED BY PUBLISHER!");
+                        console.warn(event.stream);
+                    })
 
                     // 5) Publish your stream
                     this.session.publish(this.publisher);
@@ -112,11 +125,9 @@ export class VideoSessionComponent implements OnInit {
             // If the user is the teacher: creates the session and gets a token (with PUBLISHER role)
             this.videoSessionService.createSession(this.lesson.id).subscribe(
                 sessionId => { // {0: sessionId}
-                    console.warn(sessionId);
                     this.sessionId = sessionId[0];
                     this.videoSessionService.generateToken(this.lesson.id).subscribe(
                         sessionIdAndToken => {
-                            console.warn(sessionIdAndToken);
                             this.token = sessionIdAndToken[1];
                             console.warn("Token: " + this.token);
                             console.warn("SessionId: " + this.sessionId);
