@@ -56,9 +56,6 @@
 			<resource>
 				<directory>src/main/resources</directory>
 				<filtering>false</filtering>
-				<excludes>
-                    <exclude>frontend/**</exclude>
-                </excludes>
 			</resource>
 			<resource>
 				<directory>src/main/resources</directory>

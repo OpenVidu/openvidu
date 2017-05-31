@@ -115,7 +115,7 @@ public abstract class MediaEndpoint {
     }
   }
 
-  protected WebRtcEndpoint getWebEndpoint() {
+  public WebRtcEndpoint getWebEndpoint() {
     return webEndpoint;
   }
 

@@ -560,16 +560,16 @@ public class Participant {
   
   private void addEndpointListeners(MediaEndpoint endpoint) {
 	  
-	  endpoint.getEndpoint().addElementConnectedListener((element) -> { 
+	  /*endpoint.getWebEndpoint().addElementConnectedListener((element) -> { 
 		  	String msg = "                  Element connected (" + endpoint.getEndpoint().getTag("name") + ") -> " 
 				+ "SINK: " + element.getSink().getName()
 				+ " | SOURCE: " + element.getSource().getName()
 				+ " | MEDIATYPE: " + element.getMediaType();
 			System.out.println(msg);
 			this.infoHandler.sendInfo(msg);
-	  });
+	  });*/
 
-	  /*endpoint.getEndpoint().addElementDisconnectedListener((event) -> { 
+	  /*endpoint.getWebEndpoint().addElementDisconnectedListener((event) -> { 
 		  	String msg = "                  Element disconnected (" + endpoint.getEndpoint().getTag("name") + ") -> " 
 					+ "SINK: " + event.getSinkMediaDescription()
 					+ " | SOURCE: " + event.getSourceMediaDescription()
@@ -578,20 +578,22 @@ public class Participant {
 			this.infoHandler.sendInfo(msg);
   	  });*/
 	
-	  endpoint.getEndpoint().addErrorListener((event) -> { 
+	  endpoint.getWebEndpoint().addErrorListener((event) -> { 
 		  	String msg = "                  Error (PUBLISHER) -> "
 					+ "ERRORCODE: " + event.getErrorCode()
-					+ " | DESCRIPTION: " + event.getDescription();
+					+ " | DESCRIPTION: " + event.getDescription()
+					+ " | TIMESTAMP: " + System.currentTimeMillis();
 			System.out.println(msg);
 			this.infoHandler.sendInfo(msg);
 	  });
 	
-	  endpoint.getEndpoint().addMediaFlowInStateChangeListener((event) -> { 
+	  endpoint.getWebEndpoint().addMediaFlowInStateChangeListener((event) -> { 
 		  	String msg1 = "                  Media flow in state change (" + endpoint.getEndpoint().getTag("name") + ") -> " 
 					+ "STATE: " + event.getState()
 					+ " | SOURCE: " + event.getSource().getName()					
 					+ " | PAD: " + event.getPadName()
-					+ " | MEDIATYPE: " + event.getMediaType();
+					+ " | MEDIATYPE: " + event.getMediaType()
+					+ " | TIMESTAMP: " + System.currentTimeMillis();
 	  
   			endpoint.flowInMedia.put(event.getSource().getName()+"/"+event.getMediaType(), event.getSource());
   			
@@ -609,12 +611,13 @@ public class Participant {
 			this.infoHandler.sendInfo(msg2);
 	  });
 	
-	  endpoint.getEndpoint().addMediaFlowOutStateChangeListener((event) -> { 
+	  endpoint.getWebEndpoint().addMediaFlowOutStateChangeListener((event) -> { 
 		  	String msg1 = "                  Media flow out state change (" + endpoint.getEndpoint().getTag("name") + ") -> " 
 					+ "STATE: " + event.getState()
 					+ " | SOURCE: " + event.getSource().getName()
 					+ " | PAD: " + event.getPadName()
-					+ " | MEDIATYPE: " + event.getMediaType();
+					+ " | MEDIATYPE: " + event.getMediaType()
+					+ " | TIMESTAMP: " + System.currentTimeMillis();
 	  
 	  		endpoint.flowOutMedia.put(event.getSource().getName()+"/"+event.getMediaType(), event.getSource());
 	  				
@@ -632,17 +635,52 @@ public class Participant {
 			this.infoHandler.sendInfo(msg2);
 		  });
 	
-	  endpoint.getEndpoint().addMediaSessionStartedListener((event) -> { 
-		  String msg = "                  Media session started (" + endpoint.getEndpoint().getTag("name") + ")";
+	  endpoint.getWebEndpoint().addMediaSessionStartedListener((event) -> { 
+		  String msg = "                  Media session started (" + endpoint.getEndpoint().getTag("name") + ") | TIMESTAMP: " + System.currentTimeMillis();
 		  System.out.println(msg);
 		  this.infoHandler.sendInfo(msg);
 	  });
 	
-	  endpoint.getEndpoint().addMediaSessionTerminatedListener((event) -> {
-		  String msg = "                  Media session terminated (" + endpoint.getEndpoint().getTag("name") + ")";
+	  endpoint.getWebEndpoint().addMediaSessionTerminatedListener((event) -> {
+		  String msg = "                  Media session terminated (" + endpoint.getEndpoint().getTag("name") + ") | TIMESTAMP: " + System.currentTimeMillis();
 		  System.out.println(msg);
 		  this.infoHandler.sendInfo(msg);
 	  });
+	  
+	  endpoint.getWebEndpoint().addMediaStateChangedListener((event) -> {
+		  String msg = "                  Media state changed (" + endpoint.getEndpoint().getTag("name") + ") from " + event.getOldState() + " to " + event.getNewState();
+		  System.out.println(msg);
+		  this.infoHandler.sendInfo(msg);
+	  });
+	  
+	  endpoint.getWebEndpoint().addConnectionStateChangedListener((event) -> {
+		  String msg = "                  Connection state changed (" + endpoint.getEndpoint().getTag("name") + ") from " + event.getOldState() + " to " + event.getNewState()
+		  								+ " | TIMESTAMP: " + System.currentTimeMillis();
+		  System.out.println(msg);
+		  this.infoHandler.sendInfo(msg);
+	  });
+	  
+	  endpoint.getWebEndpoint().addIceCandidateFoundListener((event) -> {
+		  String msg = "                  ICE CANDIDATE FOUND (" + endpoint.getEndpoint().getTag("name") + "): CANDIDATE: " + event.getCandidate().getCandidate()
+				  	+ " | TIMESTAMP: " + System.currentTimeMillis();
+		  System.out.println(msg);
+		  this.infoHandler.sendInfo(msg);
+	  });
+	  
+	  endpoint.getWebEndpoint().addIceComponentStateChangeListener((event) -> {
+		  String msg = "                  ICE COMPONENT STATE CHANGE (" + endpoint.getEndpoint().getTag("name") + "): for component " + event.getComponentId() + " - STATE: " + event.getState()
+		  			+ " | TIMESTAMP: " + System.currentTimeMillis();
+		  System.out.println(msg);
+		  this.infoHandler.sendInfo(msg);
+	  });
+	  
+	  endpoint.getWebEndpoint().addIceGatheringDoneListener((event) -> {
+		  String msg = "                  ICE GATHERING DONE! (" + endpoint.getEndpoint().getTag("name") + ")"
+				  	+ " | TIMESTAMP: " + System.currentTimeMillis();
+		  System.out.println(msg);
+		  this.infoHandler.sendInfo(msg);
+	  });
+
   }
   
 }
