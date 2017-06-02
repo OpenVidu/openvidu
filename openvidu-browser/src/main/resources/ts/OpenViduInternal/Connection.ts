@@ -51,10 +51,6 @@ export class Connection {
             + ", streams opts: ", this.streamsOpts );
     }
 
-    setId( newId ) {
-        this.connectionId = newId;
-    }
-
     addStream( stream: Stream ) {
         this.streams[stream.getIdInParticipant()] = stream;
         this.room.getStreams()[stream.getIdInParticipant()] = stream;
@@ -70,17 +66,13 @@ export class Connection {
         }
     }
 
-    getId() {
-        return this.connectionId;
-    }
-
     sendIceCandidate( candidate ) {
 
         console.debug(( this.local ? "Local" : "Remote" ), "candidate for",
-            this.getId(), JSON.stringify( candidate ) );
+            this.connectionId, JSON.stringify( candidate ) );
 
         this.openVidu.sendRequest( "onIceCandidate", {
-            endpointName: this.getId(),
+            endpointName: this.connectionId,
             candidate: candidate.candidate,
             sdpMid: candidate.sdpMid,
             sdpMLineIndex: candidate.sdpMLineIndex

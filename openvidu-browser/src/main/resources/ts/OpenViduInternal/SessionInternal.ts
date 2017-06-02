@@ -65,6 +65,10 @@ export class SessionInternal {
 
                         let exParticipants = response.value;
 
+                        // IMPORTANT: Update connectionId with value send by server
+                        this.localParticipant.connectionId = response.id;
+                        this.participants[response.id] = this.localParticipant;
+
                         let roomEvent = {
                             participants: new Array<Connection>(),
                             streams: new Array<Stream>()
@@ -77,7 +81,7 @@ export class SessionInternal {
                                 exParticipants[i]);
                             connection.creationTime = new Date().getTime();
 
-                            this.participants[connection.getId()] = connection;
+                            this.participants[connection.connectionId] = connection;
 
                             roomEvent.participants.push(connection);
 
@@ -130,16 +134,12 @@ export class SessionInternal {
 
 
     configure(options: SessionOptions) {
-
         this.options = options;
         this.id = options.sessionId;
         this.subscribeToStreams = options.subscribeToStreams == null ? true : options.subscribeToStreams;
         this.updateSpeakerInterval = options.updateSpeakerInterval || 1500;
         this.thresholdSpeaker = options.thresholdSpeaker || -50;
-        this.localParticipant.setId(options.participantId);
         this.activateUpdateMainSpeaker();
-
-        this.participants[options.participantId] = this.localParticipant;
     }
 
     getId() {
@@ -210,7 +210,7 @@ export class SessionInternal {
 
         let connection = new Connection(this.openVidu, false, this, options);
 
-        let pid = connection.getId();
+        let pid = connection.connectionId;
         if (!(pid in this.participants)) {
             console.info("Publisher not found in participants list by its id", pid);
         } else {
@@ -240,7 +240,7 @@ export class SessionInternal {
         let connection = new Connection(this.openVidu, false, this, msg);
         connection.creationTime = new Date().getTime();
 
-        let pid = connection.getId();
+        let pid = connection.connectionId;
         if (!(pid in this.participants)) {
             console.log("New participant to participants list with id", pid);
             this.participants[pid] = connection;
@@ -434,12 +434,12 @@ export class SessionInternal {
             return;
         }
 
-        delete this.participants[connection.getId()];
+        delete this.participants[connection.connectionId];
         connection.dispose();
 
         if (connection === this.localParticipant) {
 
-            console.log("Unpublishing my media (I'm " + connection.getId() + ")");
+            console.log("Unpublishing my media (I'm " + connection.connectionId + ")");
             delete this.localParticipant;
             this.openVidu.sendRequest('unpublishVideo', function (error, response) {
                 if (error) {
@@ -464,10 +464,10 @@ export class SessionInternal {
 
         if (connection === this.localParticipant) {
 
-            delete this.participants[connection.getId()];
+            delete this.participants[connection.connectionId];
             connection.dispose();
 
-            console.log("Unpublishing my media (I'm " + connection.getId() + ")");
+            console.log("Unpublishing my media (I'm " + connection.connectionId + ")");
             delete this.localParticipant;
             this.openVidu.sendRequest('unpublishVideo', function (error, response) {
                 if (error) {

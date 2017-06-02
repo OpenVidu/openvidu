@@ -33,7 +33,8 @@ public class ProtocolElements {
   public static final String LEAVEROOM_METHOD = "leaveRoom";
 
   public static final String JOINROOM_METHOD = "joinRoom";
-  public static final String JOINROOM_USER_PARAM = "token";
+  public static final String JOINROOM_USER_PARAM = "user";
+  public static final String JOINROOM_TOKEN_PARAM = "token";
   public static final String JOINROOM_ROOM_PARAM = "session";
   public static final String JOINROOM_METADATA_PARAM = "metadata";
   public static final String JOINROOM_DATACHANNELS_PARAM = "dataChannels";

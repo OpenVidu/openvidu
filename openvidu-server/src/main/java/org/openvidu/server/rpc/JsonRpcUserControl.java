@@ -53,14 +53,15 @@ public class JsonRpcUserControl {
       ExecutionException, OpenViduException {
 	  
     String roomId = getStringParam(request, ProtocolElements.JOINROOM_ROOM_PARAM);
-    String token = getStringParam(request, ProtocolElements.JOINROOM_USER_PARAM);
+    String token = getStringParam(request, ProtocolElements.JOINROOM_TOKEN_PARAM);
+    String userName = roomManager.newRandomUserName(token, roomId);
     String clientMetadata = getStringParam(request, ProtocolElements.JOINROOM_METADATA_PARAM);
     
     if(roomManager.getRoomManager().isParticipantInRoom(token, roomId)){
     	
     	if(roomManager.getRoomManager().metadataFormatCorrect(clientMetadata)){
     		
-    		this.roomManager.getRoomManager().setTokenClientMetadata(token, roomId, clientMetadata);
+    		this.roomManager.getRoomManager().setTokenClientMetadata(userName, roomId, clientMetadata);
     		
     		boolean dataChannels = false;
     	    if (request.getParams().has(ProtocolElements.JOINROOM_DATACHANNELS_PARAM)) {
@@ -69,11 +70,11 @@ public class JsonRpcUserControl {
     	    }
     	
     	    ParticipantSession participantSession = getParticipantSession(transaction);
-    	    participantSession.setParticipantName(token);
+    	    participantSession.setParticipantName(userName);
     	    participantSession.setRoomName(roomId);
     	    participantSession.setDataChannels(dataChannels);
     	
-    	    roomManager.joinRoom(token, roomId, dataChannels, true, participantRequest);
+    	    roomManager.joinRoom(userName, roomId, dataChannels, true, participantRequest);
     	} else {
     		System.out.println("Error: metadata format is incorrect");
         	throw new OpenViduException(Code.USER_METADATA_FORMAT_INVALID_ERROR_CODE,

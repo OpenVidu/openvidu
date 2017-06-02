@@ -323,7 +323,7 @@ export class Stream {
 
     getId() {
         if (this.connection) {
-            return this.connection.getId() + "_" + this.id;
+            return this.connection.connectionId + "_" + this.id;
         } else {
             return this.id + "_webcam";
         }
