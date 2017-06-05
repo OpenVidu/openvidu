@@ -371,7 +371,7 @@ export class SessionInternal {
         if (!this.connected) {
             console.warn('Not connected to room: if you are not debugging, this is probably a certificate error');
             if (window.confirm('If you are not debugging, this is probably a certificate error at \"' + this.openVidu.getOpenViduServerURL() + '\"\n\nClick OK to navigate and accept it')) {
-                location.assign(this.openVidu.getOpenViduServerURL());
+                location.assign(this.openVidu.getOpenViduServerURL() + '/accept-certificate');
             };
             return;
         }
