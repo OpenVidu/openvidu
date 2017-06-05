@@ -17,6 +17,7 @@ Table of contents
 * [Running a videocall demo](#running-a-videocall-demo-application)
 * [Building a simple app](#building-a-simple-app-with-openvidu)
 * [Securization](#securization)
+* [Sharing data between users](#sharing-data-between-users)
 * [API Reference](#api-reference)
 * [Deploying on AWS](#deploying-on-aws)
 * [Developing OpenVidu](#developing-openvidu)
@@ -262,6 +263,41 @@ Wanna try a [real sample application](https://github.com/OpenVidu/openvidu/tree/
 
 ----------
 
+
+Sharing data between users
+===================
+Whatever app you are developing, chances are you will need to pass some data for each user, at least a nickname. You can do it in two different places:
+
+- **openvidu-browser**: when calling `session.connect` method
+	```
+	session.connect(token, DATA, function (error) { ... });
+	```
+
+- **API REST**: when asking for a token to */newToken*, you can pass data as third parameter in the BODY of the POST request 
+	```
+	{“0”: “sessionId”, “1”: “role”, “2”: "DATA"}
+	```
+
+	> **openvidu-backend-client** allows you to pass data when creating a Token object: </br>
+	> `Token t = new TokenOptions.Builder().data("DATA").build();`
+
+The result will be that in all clients *Connection* objects will have in their *data* property the pertinent value you have provided for each user. So, an easy way to get the data associated to any user would be:
+
+```javascript
+session.on('streamCreated', function (event) {
+    session.subscribe(event.stream, 'subscriber');
+    console.log('USER DATA: ' + event.stream.connection.data);
+});
+```
+
+Some clarifications:
+
+- *Connection.data* will be a simple string if you have provided data only with one of the methods, and will be a string with the following format if you provide data both from openvidu-browser and your backend: "OPENVIDUBROWSER_DATA%/%APIREST_DATA" 
+
+- Using only first option is not secure, as clients could modify the value of the second parameter. It is intended only in development environments. If you want total control over shared data, please use the second way.
+- You can choose whatever format you like for the data string, but if you are planning to share more than a simple field, maybe a standard format as JSON would be a wise choice.
+
+----------
 
 API reference
 ===================
