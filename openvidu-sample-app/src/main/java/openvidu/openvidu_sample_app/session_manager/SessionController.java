@@ -6,10 +6,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.json.simple.JSONObject;
-import org.openvidu.client.OpenVidu;
-import org.openvidu.client.Session;
-import org.openvidu.client.TokenOptions;
-import org.openvidu.client.OpenViduRole;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -18,6 +14,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+
+import io.openvidu.java.client.OpenVidu;
+import io.openvidu.java.client.Session;
+import io.openvidu.java.client.TokenOptions;
+import io.openvidu.java.client.OpenViduRole;
 
 import openvidu.openvidu_sample_app.lesson.Lesson;
 import openvidu.openvidu_sample_app.lesson.LessonRepository;

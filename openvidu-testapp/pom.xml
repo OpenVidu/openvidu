@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>org.openvidu</groupId>
+		<groupId>io.openvidu</groupId>
 		<artifactId>openvidu</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 		<relativePath>../</relativePath>
@@ -40,16 +40,16 @@
 
 	<developers>
 		<developer>
-			<id>openvidu.org</id>
-			<name>-openvidu.org Community</name>
-			<organization>OpenVidu.org</organization>
-			<organizationUrl>https://github.com/OpenVidu/openvidu</organizationUrl>
+			<id>openvidu.io</id>
+			<name>-openvidu.io Community</name>
+			<organization>OpenVidu</organization>
+			<organizationUrl>http://openvidu.io</organizationUrl>
 		</developer>
 	</developers>
 
 	<properties>
 		<!-- Main class -->
-		<start-class>org.openvidu.testapp.OpenViduTestApp</start-class>
+		<start-class>io.openvidu.testapp.OpenViduTestApp</start-class>
 	</properties>
 
 	<build>
@@ -192,7 +192,7 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>org.openvidu</groupId>
+			<groupId>io.openvidu</groupId>
 			<artifactId>openvidu-server</artifactId>
 			<exclusions>
 				<exclusion>
@@ -202,7 +202,7 @@
 			</exclusions>
 		</dependency>
 		<dependency>
-			<groupId>org.openvidu</groupId>
+			<groupId>io.openvidu</groupId>
 			<artifactId>openvidu-browser</artifactId>
 		</dependency>
 		<dependency>
@@ -210,7 +210,7 @@
 			<artifactId>spring-boot-starter-log4j2</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.openvidu</groupId>
+			<groupId>io.openvidu</groupId>
 			<artifactId>openvidu-test</artifactId>
 			<scope>test</scope>
 		</dependency>

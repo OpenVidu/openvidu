@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>org.openvidu</groupId>
+		<groupId>io.openvidu</groupId>
 		<artifactId>openvidu</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
@@ -39,10 +39,10 @@
 
 	<developers>
 		<developer>
-			<id>openvidu.org</id>
-			<name>-openvidu.org Community</name>
-			<organization>OpenVidu.org</organization>
-			<organizationUrl>https://github.com/OpenVidu/openvidu</organizationUrl>
+			<id>openvidu.io</id>
+			<name>-openvidu.io Community</name>
+			<organization>OpenVidu</organization>
+			<organizationUrl>http://openvidu.io</organizationUrl>
 		</developer>
 	</developers>
 

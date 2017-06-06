@@ -185,8 +185,8 @@ A Java package that wraps the HTTP REST operations for making them even easier
 - Maven dependency
 	```xml
 	<dependency>
-	    <groupId>org.openvidu</groupId>
-	    <artifactId>openvidu-backend-client</artifactId>
+	    <groupId>io.openvidu</groupId>
+	    <artifactId>openvidu-java-client</artifactId>
 	    <version>...</version>
 	</dependency>
 	```
@@ -199,7 +199,7 @@ The usage is quite simple: import OpenVidu package and get an **OpenVidu** objec
 
 
 ```java
-import org.openvidu.client.OpenVidu;
+import io.openvidu.java.client.OpenVidu;
 
 OpenVidu openVidu = new OpenVidu(OPENVIDU_SERVER_IP, YOUR_SECRET);
 
