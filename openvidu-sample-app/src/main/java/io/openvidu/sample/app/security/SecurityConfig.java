@@ -1,4 +1,4 @@
-package openvidu.openvidu_sample_app.security;
+package io.openvidu.sample.app.security;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;

@@ -1,4 +1,4 @@
-package openvidu.openvidu_sample_app.user;
+package io.openvidu.sample.app.user;
 
 import java.util.List;
 import java.util.Set;
@@ -18,7 +18,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import openvidu.openvidu_sample_app.lesson.Lesson;
+import io.openvidu.sample.app.lesson.Lesson;
 
 @Entity
 public class User {

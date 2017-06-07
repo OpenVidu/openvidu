@@ -1,4 +1,4 @@
-package openvidu.openvidu_sample_app.session_manager;
+package io.openvidu.sample.app.session_manager;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -18,12 +18,11 @@ import org.springframework.web.bind.annotation.RestController;
 import io.openvidu.java.client.OpenVidu;
 import io.openvidu.java.client.Session;
 import io.openvidu.java.client.TokenOptions;
+import io.openvidu.sample.app.lesson.Lesson;
+import io.openvidu.sample.app.lesson.LessonRepository;
+import io.openvidu.sample.app.user.User;
+import io.openvidu.sample.app.user.UserComponent;
 import io.openvidu.java.client.OpenViduRole;
-
-import openvidu.openvidu_sample_app.lesson.Lesson;
-import openvidu.openvidu_sample_app.lesson.LessonRepository;
-import openvidu.openvidu_sample_app.user.User;
-import openvidu.openvidu_sample_app.user.UserComponent;
 
 @RestController
 @RequestMapping("/api-sessions")

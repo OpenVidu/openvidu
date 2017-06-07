@@ -1,4 +1,4 @@
-package openvidu.openvidu_sample_app.lesson;
+package io.openvidu.sample.app.lesson;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -14,9 +14,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import openvidu.openvidu_sample_app.user.User;
-import openvidu.openvidu_sample_app.user.UserComponent;
-import openvidu.openvidu_sample_app.user.UserRepository;
+import io.openvidu.sample.app.user.User;
+import io.openvidu.sample.app.user.UserComponent;
+import io.openvidu.sample.app.user.UserRepository;
 
 @RestController
 @RequestMapping("/api-lessons")

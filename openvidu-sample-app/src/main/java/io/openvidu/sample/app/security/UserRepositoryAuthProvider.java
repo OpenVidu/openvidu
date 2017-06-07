@@ -1,4 +1,4 @@
-package openvidu.openvidu_sample_app.security;
+package io.openvidu.sample.app.security;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,9 +14,9 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import openvidu.openvidu_sample_app.user.UserRepository;
-import openvidu.openvidu_sample_app.user.UserComponent;
-import openvidu.openvidu_sample_app.user.User;
+import io.openvidu.sample.app.user.User;
+import io.openvidu.sample.app.user.UserComponent;
+import io.openvidu.sample.app.user.UserRepository;
 /**
  * This class is used to check http credentials against database data. Also it
  * is responsible to set database user info into userComponent, a session scoped

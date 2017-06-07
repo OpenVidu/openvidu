@@ -1,4 +1,4 @@
-package openvidu.openvidu_sample_app.user;
+package io.openvidu.sample.app.user;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

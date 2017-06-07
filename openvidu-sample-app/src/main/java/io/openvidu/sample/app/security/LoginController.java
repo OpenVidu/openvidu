@@ -1,4 +1,4 @@
-package openvidu.openvidu_sample_app.security;
+package io.openvidu.sample.app.security;
 
 import javax.servlet.http.HttpSession;
 
@@ -10,8 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import openvidu.openvidu_sample_app.user.User;
-import openvidu.openvidu_sample_app.user.UserComponent;
+import io.openvidu.sample.app.user.User;
+import io.openvidu.sample.app.user.UserComponent;
 
 /**
  * This class is used to provide REST endpoints to logIn and logOut to the

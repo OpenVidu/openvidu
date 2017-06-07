@@ -1,4 +1,4 @@
-package openvidu.openvidu_sample_app.lesson;
+package io.openvidu.sample.app.lesson;
 
 import java.util.Set;
 import java.util.HashSet;
@@ -11,7 +11,8 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 
 import com.fasterxml.jackson.annotation.JsonView;
-import openvidu.openvidu_sample_app.user.User;
+
+import io.openvidu.sample.app.user.User;
 
 @Entity
 public class Lesson {

@@ -1,4 +1,4 @@
-package openvidu.openvidu_sample_app;
+package io.openvidu.sample.app.test;
 
 import junit.framework.Test;
 import junit.framework.TestCase;

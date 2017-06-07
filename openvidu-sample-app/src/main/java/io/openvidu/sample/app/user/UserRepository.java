@@ -1,10 +1,10 @@
-package openvidu.openvidu_sample_app.user;
+package io.openvidu.sample.app.user;
 
 import java.util.Collection;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import openvidu.openvidu_sample_app.lesson.Lesson;
+import io.openvidu.sample.app.lesson.Lesson;
 
 public interface UserRepository extends JpaRepository<User, Long>{
 	

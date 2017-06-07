@@ -1,13 +1,13 @@
-package openvidu.openvidu_sample_app;
+package io.openvidu.sample.app;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Controller;
 
-import openvidu.openvidu_sample_app.user.UserRepository;
-import openvidu.openvidu_sample_app.user.User;
-import openvidu.openvidu_sample_app.lesson.LessonRepository;
-import openvidu.openvidu_sample_app.lesson.Lesson;
+import io.openvidu.sample.app.lesson.Lesson;
+import io.openvidu.sample.app.lesson.LessonRepository;
+import io.openvidu.sample.app.user.User;
+import io.openvidu.sample.app.user.UserRepository;
 
 @Controller
 public class DatabaseInitializer implements CommandLineRunner {
