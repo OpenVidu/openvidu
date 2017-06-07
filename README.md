@@ -34,10 +34,10 @@ We have implemented a very basic demo application to see OpenVidu in action. To 
  - Run this Docker container
    
    ```
-   docker run -p 8443:8443 -e KMS_STUN_IP=193.147.51.12 -e KMS_STUN_PORT=3478 -e openvidu.security=false openvidu/openvidu-plainjs-demo
+   docker run -p 5000:5000 -p 4040:4040 -e KMS_STUN_IP=193.147.51.12 -e KMS_STUN_PORT=3478 -e openvidu.security=false openvidu/openvidu-plainjs-demo
    ```
    
- - Go to [`https://localhost:8443`](https://localhost:8443) and accept the self-signed certificate to enjoy your app. You should mute your speakers to avoid disruptive audio feedback.
+ - Wait until you see a public URL ended with _ngrok.io_. You can share this URL with anyone you want to tests the app over the Internet!
  
 ----------
 
