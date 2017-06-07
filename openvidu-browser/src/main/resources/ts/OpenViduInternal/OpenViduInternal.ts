@@ -33,11 +33,21 @@ export class OpenViduInternal {
         if (this.wsUri.charAt(wsUri.length - 1) != '/') {
             this.wsUri += '/';
         }
+        this.checkNgrokUri();
         this.wsUri += 'room';
     }
 
 
+    checkNgrokUri() {
+        if (this.wsUri.indexOf(".ngrok.io") !== -1) {
+            // OpenVidu server URL referes to a ngrok IP: delete port of URL
+            let regex = /\.ngrok\.io:\d+/;
+            this.wsUri = this.wsUri.replace(regex, ".ngrok.io");
+        } else if (this.wsUri.indexOf("localhost") !== -1) {
+            // OpenVidu server URL referes to localhost IP
 
+        }
+    }
 
 
     /* NEW METHODS */

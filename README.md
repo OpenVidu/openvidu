@@ -157,18 +157,18 @@ For secret "MY_SECRET", the final header would be
 
 | _GET A SESSION ID_ | _PARAMETERS_ |
 | ---------       | -- |
-| **Operation** | GET |
-| **URL** | https://[YOUR_OPENVIDUSERVER_IP]/getSessionId |
+| **Operation** | POST |
+| **URL** | https://[YOUR_OPENVIDUSERVER_IP]/sessions |
 | **Headers** | Authorization:Basic _EncodeBase64(OPENVIDUAPP:[YOUR_SECRET])_ |
-| **Returns** | {"0": "SESSIONID"} |
+| **Returns** | {"id": "SESSIONID"} |
 
 | _CREATE NEW TOKEN_ | _PARAMETERS_ |
 | ---------       | -- |
 | **Operation** | POST |
-| **URL** | https://[YOUR_OPENVIDUSERVER_IP]/newToken |
+| **URL** | https://[YOUR_OPENVIDUSERVER_IP]/tokens |
 | **Headers** | Authorization:Basic _EncodeBase64(OPENVIDUAPP:[YOUR_SECRET])_<br/>Content-Type:application/json |
-| **Body** | {"0": "SESSIONID", "1": "ROLE", "2": "METADATA"} |
-| **Returns** | {"0": "TOKEN"} |
+| **Body** | {"session": "SESSIONID", "role": "ROLE", "data": "DATA"} |
+| **Returns** | {"token": "TOKEN", "session": "SESSIONID", "role": "ROLE", "data": "DATA", "id": "TOKEN"} |
 
 
 > **ROLE** value in Body field of POST to "/newToken" can be:
@@ -193,7 +193,7 @@ A Java package that wraps the HTTP REST operations for making them even easier
 
 - Jar
 	
-	[```https://github.com/OpenVidu/openvidu/tree/master/openvidu-backend-client/target/openvidu-backend-client.jar```](https://github.com/OpenVidu/openvidu/tree/master/openvidu-backend-client/target/openvidu-backend-client.jar)
+	[```https://github.com/OpenVidu/openvidu/tree/master/openvidu-java-client/target/openvidu-java-client.jar```](https://github.com/OpenVidu/openvidu/tree/master/openvidu-java-client/target/openvidu-java-client.jar)
 
 The usage is quite simple: import OpenVidu package and get an **OpenVidu** object. You need to provide to the constructor the IP of your OpenVidu Server and the secret shared with it (initialized by `openvidu.secret=MY_SECRET` property). Then just call the following methods to get a shiny new sessionId or token to be returned to your frontend.
 

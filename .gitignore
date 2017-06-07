@@ -1,6 +1,6 @@
 !*/target/
 */target/*
-!openvidu-backend-client/target/openvidu-backend-client.jar
+!openvidu-java-client/target/openvidu-java-client.jar
 
 .classpath
 .project

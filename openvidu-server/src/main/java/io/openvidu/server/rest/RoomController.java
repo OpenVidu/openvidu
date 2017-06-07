@@ -38,6 +38,7 @@ import io.openvidu.server.security.ParticipantRole;
  * @author Raquel Díaz González
  */
 @RestController
+@RequestMapping("/api")
 public class RoomController {
 
   private static final int UPDATE_SPEAKER_INTERVAL_DEFAULT = 1800;
@@ -61,23 +62,28 @@ public class RoomController {
     return Integer.valueOf(getProperty("thresholdSpeaker", THRESHOLD_SPEAKER_DEFAULT));
   }
   
-  @RequestMapping(value = "/getSessionId", method = RequestMethod.GET)
+  @RequestMapping(value = "/sessions", method = RequestMethod.POST)
   public ResponseEntity<JSONObject> getSessionId() {
 	  String sessionId = roomManager.newSessionId();
 	  JSONObject responseJson = new JSONObject();
-	  responseJson.put(0, sessionId);
+	  responseJson.put("id", sessionId);
 	  return new ResponseEntity<JSONObject>(responseJson, HttpStatus.OK);
   }
   
-  @RequestMapping(value = "/newToken", method = RequestMethod.POST)
+  @RequestMapping(value = "/tokens", method = RequestMethod.POST)
   public ResponseEntity<JSONObject> newToken(@RequestBody Map sessionIdRoleMetadata) { // {0: sessionID, 1: role, 2: metadata}
 	  String errorMessage = "";
 	  try {
-		  ParticipantRole role = ParticipantRole.valueOf((String) sessionIdRoleMetadata.get("1"));
-		  String metadata = (String) sessionIdRoleMetadata.get("2");
-		  String token = roomManager.newToken((String) sessionIdRoleMetadata.get("0"), role, metadata);
+		  String sessionId = (String) sessionIdRoleMetadata.get("session");
+		  ParticipantRole role = ParticipantRole.valueOf((String) sessionIdRoleMetadata.get("role"));
+		  String metadata = (String) sessionIdRoleMetadata.get("data");
+		  String token = roomManager.newToken(sessionId, role, metadata);
 		  JSONObject responseJson = new JSONObject();
-		  responseJson.put(0, token);
+		  responseJson.put("id", token);
+		  responseJson.put("session", sessionId);
+		  responseJson.put("role", role.toString());
+		  responseJson.put("data", metadata);
+		  responseJson.put("token", token);
 		  return new ResponseEntity<JSONObject>(responseJson, HttpStatus.OK);
 	  }
 	  catch (IllegalArgumentException e){

@@ -17,9 +17,7 @@ export class VideoSessionService {
     // Returns {0: sessionId}
     createSession(lessonId: number) {
         let body = JSON.stringify(lessonId);
-        let headers = new Headers({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + this.authenticationService.token });
-        let options = new RequestOptions({ headers });
-        return this.http.post('/api-sessions/create-session', body, options)
+        return this.http.post('/api-sessions/create-session', body)
             .map(response => response.json())
             .catch(error => this.handleError(error));
     }
@@ -27,7 +25,7 @@ export class VideoSessionService {
     // Returns {0: sessionId, 1: token}
     generateToken(lessonId: number) {
         let body = JSON.stringify(lessonId);
-        let headers = new Headers({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + this.authenticationService.token });
+        let headers = new Headers({ 'Content-Type': 'application/json' });
         let options = new RequestOptions({ headers });
         return this.http.post('/api-sessions/generate-token', body, options)
             .map(response => response.json())
@@ -36,7 +34,7 @@ export class VideoSessionService {
 
     removeUser(lessonId: number) {
         let body = JSON.stringify(lessonId);
-        let headers = new Headers({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + this.authenticationService.token });
+        let headers = new Headers({ 'Content-Type': 'application/json' });
         let options = new RequestOptions({ headers });
         return this.http.post('/api-sessions/remove-user', body, options)
             .map(response => response)

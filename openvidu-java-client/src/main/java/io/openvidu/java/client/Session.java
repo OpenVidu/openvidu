@@ -34,7 +34,7 @@ public class Session {
 		}
 
 		try {
-			HttpResponse response = httpClient.execute(new HttpGet(this.urlOpenViduServer + "getSessionId"));
+			HttpResponse response = httpClient.execute(new HttpPost(this.urlOpenViduServer + "api/sessions"));
 			int statusCode = response.getStatusLine().getStatusCode();
 			if ((statusCode == org.apache.http.HttpStatus.SC_OK)){
 				System.out.println("Returning a SESSIONID");
@@ -64,11 +64,11 @@ public class Session {
 		try {
 			
 			JSONObject json = new JSONObject();
-			json.put(0, this.sessionId);
-			json.put(1, tokenOptions.getRole().name());
-			json.put(2, tokenOptions.getData());
+			json.put("session", this.sessionId);
+			json.put("role", tokenOptions.getRole().name());
+			json.put("data", tokenOptions.getData());
 			
-			HttpPost request = 	new HttpPost(this.urlOpenViduServer + "newToken");
+			HttpPost request = 	new HttpPost(this.urlOpenViduServer + "api/tokens");
 			StringEntity params = new StringEntity(json.toString());
 			request.addHeader("content-type", "application/json");
 		    request.setEntity(params);
@@ -101,7 +101,7 @@ public class Session {
 		    buf.append(line);
 		}
 		JSONParser parser = new JSONParser();
-		return ((String) ((JSONObject) parser.parse(buf.toString())).get("0"));
+		return ((String) ((JSONObject) parser.parse(buf.toString())).get("id"));
     }
 	
 	private boolean hasSessionId() {
