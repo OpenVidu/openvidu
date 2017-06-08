@@ -37,7 +37,7 @@ We have implemented a very basic demo application to see OpenVidu in action. To 
    docker run -p 5000:5000 -p 4040:4040 -e KMS_STUN_IP=193.147.51.12 -e KMS_STUN_PORT=3478 -e openvidu.security=false openvidu/openvidu-plainjs-demo
    ```
    
- - Wait until you see a public URL ended with _ngrok.io_. You can share this URL with anyone you want to tests the app over the Internet!
+ - Wait until you see a public URL ended with `.ngrok.io`. You can connect locally in [`localhost:5000`](http://localhost:5000) or by using the ngrok public URL. You can also share this URL with anyone you want to test the app over the Internet!
  
 ----------
 
