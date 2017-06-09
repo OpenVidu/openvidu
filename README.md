@@ -63,13 +63,13 @@ With the **openvidu-browser** library you can handle all available operations st
 ## Sample application
 
 
-Once you have up and running Kurento Media Server and openvidu-server, you just need to add a few lines of code in your frontend to make your first video call with OpenVidu. You can take a look to the sample application in GitHub https://github.com/OpenVidu/openvidu-sample-basic-plainjs.
+Once you have up and running Kurento Media Server and openvidu-server, you just need to add a few lines of code in your frontend to make your first video call with OpenVidu. You can take a look to the simplest sample application in GitHub https://github.com/OpenVidu/openvidu-tutorials/tree/master/openvidu-insecure-js.
 
 You can clone the repo and serve the app locally with your favourite tool (we recommend http-server: `npm install -g http-server`)
 
    ```
-   git clone https://github.com/OpenVidu/openvidu-sample-basic-plainjs.git
-   cd openvidu-sample-basic-plainjs/web
+   git clone https://github.com/OpenVidu/openvidu-tutorials.git
+   cd openvidu-tutorials/openvidu-insecure-js/web
    http-server
    ```
 You can now start editing HTML, JS and CSS files. Just reload your browser to see your changes (mind the browser's cache!).
@@ -115,7 +115,7 @@ You can now start editing HTML, JS and CSS files. Just reload your browser to se
 
 With these few lines of code you will already have a functional video-call capability in your app. Check [Securization](#securization) section to learn how to easily make your app ready for production.
 
-If you prefer, there's an Angular version of the sample app that uses _openvidu-browser_ npm package. Check it out [here](https://github.com/OpenVidu/openvidu-sample-basic-ng2).
+If you prefer, there's an Angular version of the sample app that uses _openvidu-browser_ npm package. Check it out [here](https://github.com/OpenVidu/openvidu-tutorials/tree/master/openvidu-insecure-angular).
 
 ----------
 
@@ -227,7 +227,7 @@ String token = session.generateToken();
 
 
 ## Running a secure videocall application
-We have implemented a very basic [demo application](https://github.com/OpenVidu/openvidu-sample-secure) to see the secure version of OpenVidu in action. It has a Java backend to manage the user sessions and the securization process with OpenVidu Server.
+We have implemented a very basic [demo application](https://github.com/OpenVidu/openvidu-tutorials/tree/master/openvidu-js-java) to see the secure version of OpenVidu in action. It has a Java backend to manage the user sessions and the securization process with OpenVidu Server.
 
  - Please be sure that you have docker-compose (`sudo apt-get install docker-compose`)
  - Download the `docker-compose.yml` file and run it:
