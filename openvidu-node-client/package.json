@@ -1,0 +1,19 @@
+{
+  "name": "openvidu-node-client",
+  "version": "1.0.0",
+  "license": "MIT",
+  "main": "lib/index.js",
+  "typings": "lib/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "private": true,
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^6.0.78",
+    "codelyzer": "~2.0.0",
+    "ts-node": "~2.0.0",
+    "tslint": "~4.5.0",
+    "typescript": "2.3.4"
+  }
+}
