@@ -1,7 +1,7 @@
 cd openvidu-browser/src/main/resources
 
 npm run updatetsc
-npm run browserify
+npm run browserify-prod
 
 cd ../../../../
 
