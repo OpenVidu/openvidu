@@ -275,13 +275,13 @@ Whatever app you are developing, chances are you will need to pass some data for
 
 - **API REST**: when asking for a token to */newToken*, you can pass data as third parameter in the BODY of the POST request 
 	```
-	{“0”: “sessionId”, “1”: “role”, “2”: "DATA"}
+	{“session”: “sessionId”, “role”: “role”, “data”: "DATA"}
 	```
 
 	> **openvidu-backend-client** allows you to pass data when creating a Token object: </br>
 	> `Token t = new TokenOptions.Builder().data("DATA").build();`
 
-The result will be that in all clients *Connection* objects will have in their *data* property the pertinent value you have provided for each user. So, an easy way to get the data associated to any user would be:
+The result will be that in all clients, *Connection* objects will have in their *data* property the pertinent value you have provided for each user. So, an easy way to get the data associated to any user would be:
 
 ```javascript
 session.on('streamCreated', function (event) {

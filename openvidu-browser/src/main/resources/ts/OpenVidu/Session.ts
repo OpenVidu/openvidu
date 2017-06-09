@@ -30,8 +30,10 @@ export class Session {
             for (s of this.openVidu.openVidu.getRemoteStreams()) {
                 s.removeVideo();
             }
-            for (let streamId in this.connection.getStreams()) {
-                this.connection.getStreams()[streamId].removeVideo();
+            if (this.connection) {
+                for (let streamId in this.connection.getStreams()) {
+                    this.connection.getStreams()[streamId].removeVideo();
+                }
             }
         });
 
