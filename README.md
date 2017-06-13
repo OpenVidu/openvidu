@@ -155,23 +155,23 @@ For secret "MY_SECRET", the final header would be
 > Authorization:Basic T1BFTlZJRFVBUFA6TVlfU0VDUkVU
 
 
-| _GET A SESSION ID_ | _PARAMETERS_ |
+| _NEW SESSIONID_ | _PARAMETERS_ |
 | ---------       | -- |
 | **Operation** | POST |
-| **URL** | https://[YOUR_OPENVIDUSERVER_IP]/sessions |
+| **URL** | https://[YOUR_OPENVIDUSERVER_IP]/api/sessions |
 | **Headers** | Authorization:Basic _EncodeBase64(OPENVIDUAPP:[YOUR_SECRET])_ |
 | **Returns** | {"id": "SESSIONID"} |
 
-| _CREATE NEW TOKEN_ | _PARAMETERS_ |
+| _NEW TOKEN_ | _PARAMETERS_ |
 | ---------       | -- |
 | **Operation** | POST |
-| **URL** | https://[YOUR_OPENVIDUSERVER_IP]/tokens |
+| **URL** | https://[YOUR_OPENVIDUSERVER_IP]/api/tokens |
 | **Headers** | Authorization:Basic _EncodeBase64(OPENVIDUAPP:[YOUR_SECRET])_<br/>Content-Type:application/json |
 | **Body** | {"session": "SESSIONID", "role": "ROLE", "data": "DATA"} |
 | **Returns** | {"token": "TOKEN", "session": "SESSIONID", "role": "ROLE", "data": "DATA", "id": "TOKEN"} |
 
 
-> **ROLE** value in Body field of POST to "/newToken" can be:
+> **ROLE** value in Body field of POST to "/api/tokens" can be:
 > 
 > - SUBSCRIBER
 > - PUBLISHER
@@ -273,13 +273,13 @@ Whatever app you are developing, chances are you will need to pass some data for
 	session.connect(token, DATA, function (error) { ... });
 	```
 
-- **API REST**: when asking for a token to */newToken*, you can pass data as third parameter in the BODY of the POST request 
+- **API REST**: when asking for a token to */api/tokens*, you can pass data as third parameter in the BODY of the POST request 
 	```
 	{“session”: “sessionId”, “role”: “role”, “data”: "DATA"}
 	```
 
-	> **openvidu-backend-client** allows you to pass data when creating a Token object: </br>
-	> `Token t = new TokenOptions.Builder().data("DATA").build();`
+	> Java and Node clients (_openvidu-java-client_ and _openvidu-node-client_) allow you to pass data when creating a Token object: </br>
+	> `tokenOptions = new TokenOptions.Builder().data("DATA").build();`
 
 The result will be that in all clients, *Connection* objects will have in their *data* property the pertinent value you have provided for each user. So, an easy way to get the data associated to any user would be:
 

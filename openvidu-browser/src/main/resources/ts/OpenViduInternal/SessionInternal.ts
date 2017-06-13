@@ -110,7 +110,7 @@ export class SessionInternal {
 
                         //if (this.subscribeToStreams) {
                         for (let stream of roomEvent.streams) {
-                            this.ee.emitEvent('stream-added', [{ stream }]);
+                            this.ee.emitEvent('streamCreated', [{ stream }]);
 
                             // Adding the remote stream to the OpenVidu object
                             this.openVidu.getRemoteStreams().push(stream);
@@ -229,7 +229,7 @@ export class SessionInternal {
             if (this.subscribeToStreams) {
                 stream.subscribe();
             }
-            this.ee.emitEvent('stream-added', [{ stream }]);
+            this.ee.emitEvent('streamCreated', [{ stream }]);
             // Adding the remote stream to the OpenVidu object
             this.openVidu.getRemoteStreams().push(stream);
         }
@@ -274,11 +274,11 @@ export class SessionInternal {
 
             let streams = connection.getStreams();
             for (let key in streams) {
-                this.ee.emitEvent('stream-removed', [{
+                this.ee.emitEvent('streamDestroyed', [{
                     stream: streams[key],
-                    preventDefault: () => { this.ee.removeEvent('stream-removed-default'); }
+                    preventDefault: () => { this.ee.removeEvent('stream-destroyed-default'); }
                 }]);
-                this.ee.emitEvent('stream-removed-default', [{
+                this.ee.emitEvent('stream-destroyed-default', [{
                     stream: streams[key]
                 }]);
 

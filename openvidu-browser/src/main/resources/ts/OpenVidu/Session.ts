@@ -20,7 +20,7 @@ export class Session {
         this.sessionId = session.getSessionId();
 
         // Listens to the deactivation of the default behaviour upon the deletion of a Stream object
-        this.session.addEventListener('stream-removed-default', event => {
+        this.session.addEventListener('stream-destroyed-default', event => {
             event.stream.removeVideo();
         });
 
@@ -85,62 +85,19 @@ export class Session {
     }
 
     on(eventName: string, callback) {
-        let realEventName = '';
-        switch (eventName) {
-            case 'streamCreated':
-                realEventName = 'stream-added';
-                break;
-            case 'streamDestroyed':
-                realEventName = 'stream-removed';
-                break;
-        }
-        if (realEventName != '') {
-            this.session.addEventListener(realEventName, event => {
-                callback(event);
-            });
-        } else {
-            this.session.addEventListener(eventName, event => {
-                callback(event);
-            });
-        }
+        this.session.addEventListener(eventName, event => {
+            callback(event);
+        });
     }
 
     once(eventName: string, callback) {
-        let realEventName = '';
-        switch (eventName) {
-            case 'streamCreated':
-                realEventName = 'stream-added';
-                break;
-            case 'streamDestroyed':
-                realEventName = 'stream-removed';
-                break;
-        }
-        if (realEventName != '') {
-            this.session.addOnceEventListener(realEventName, event => {
-                callback(event);
-            });
-        } else {
-            this.session.addOnceEventListener(eventName, event => {
-                callback(event);
-            });
-        }
+        this.session.addOnceEventListener(eventName, event => {
+            callback(event);
+        });
     }
 
     off(eventName: string, eventHandler) {
-        let realEventName = '';
-        switch (eventName) {
-            case 'streamCreated':
-                realEventName = 'stream-added';
-                break;
-            case 'streamDestroyed':
-                realEventName = 'stream-removed';
-                break;
-        }
-        if (realEventName != '') {
-            this.session.removeListener(realEventName, eventHandler);
-        } else {
-            this.session.removeListener(eventName, eventHandler);
-        }
+        this.session.removeListener(eventName, eventHandler);
     }
 
     subscribe(stream: Stream, htmlId: string, videoOptions: any): Subscriber;
@@ -165,13 +122,13 @@ export class Session {
     /* Shortcut event API */
 
     onStreamCreated(callback) {
-        this.session.addEventListener("stream-added", streamEvent => {
+        this.session.addEventListener("streamCreated", streamEvent => {
             callback(streamEvent.stream);
         });
     }
 
     onStreamDestroyed(callback) {
-        this.session.addEventListener("stream-removed", streamEvent => {
+        this.session.addEventListener("streamDestroyed", streamEvent => {
             callback(streamEvent.stream);
         });
     }
