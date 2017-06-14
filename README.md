@@ -229,16 +229,14 @@ String token = session.generateToken();
 ## Running a secure videocall application
 We have implemented a very basic [demo application](https://github.com/OpenVidu/openvidu-tutorials/tree/master/openvidu-js-java) to see the secure version of OpenVidu in action. It has a Java backend to manage the user sessions and the securization process with OpenVidu Server.
 
- - Please be sure that you have docker-compose (`sudo apt-get install docker-compose`)
- - Download the `docker-compose.yml` file and run it:
+ - Please be sure that you have [docker CE installed](https://store.docker.com/search?type=edition&offering=community)
+ - Run this Docker container
    
    ```
-   wget -O docker-compose.yml https://raw.githubusercontent.com/OpenVidu/openvidu-docker/master/openvidu-sample-secure/docker-compose.yml
-   docker-compose up
+   docker run -p 5000:5000 -p 3000:3000 -p 4040:4040 -e KMS_STUN_IP=193.147.51.12 -e KMS_STUN_PORT=3478 openvidu/openvidu-sample-secure
    ```
  
- - Wait until you see an output like `Started App in XXX seconds (JVM running for XXX)`
- - Go to [`https://localhost:5000`](https://localhost:5000) and accept the self-signed certificate to enjoy your app (use a standard window and an incognito window to test a couple of users at the same time)
+ - Wait until you see a public URL ended with `.ngrok.io`. You can connect locally in [`localhost:3000`](http://localhost:3000) or by using the ngrok public URL. You can also share this URL with anyone you want to test the app over the Internet!
  
 
 
