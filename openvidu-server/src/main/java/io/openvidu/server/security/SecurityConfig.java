@@ -1,7 +1,6 @@
 package io.openvidu.server.security;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -14,13 +13,13 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 @EnableGlobalAuthentication
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	
-	@Value("${openvidu.secret}")
-	private String SECRET;
+	@Autowired
+	OpenviduConfiguration openviduConf;
 	
 	@Autowired
     public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
         auth.inMemoryAuthentication()
-          .withUser("OPENVIDUAPP").password(SECRET).roles("ADMIN");
+          .withUser("OPENVIDUAPP").password(openviduConf.getOpenViduSecret()).roles("ADMIN");
     }
 	
 	@Override

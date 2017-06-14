@@ -12,8 +12,7 @@ public class InfoSocketConfig implements WebSocketConfigurer {
 	
 	@Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(infoHandler(), "/info");
-        	//.setAllowedOrigins("*");
+        registry.addHandler(infoHandler(), "/info").setAllowedOrigins("*");
     }
 
     @Bean

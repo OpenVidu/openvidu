@@ -59,7 +59,9 @@ var AppComponent = (function () {
     }
     AppComponent.prototype.ngOnInit = function () {
         var _this = this;
-        this.websocket = new WebSocket('wss://' + location.hostname + ':8443/info');
+        var protocol = location.protocol.includes('https') ? 'wss://' : 'ws://';
+        var port = (location.port) ? (':' + location.port) : '';
+        this.websocket = new WebSocket(protocol + location.hostname + port + '/info');
         this.websocket.onopen = function (event) {
             console.log('Info websocket connected');
         };

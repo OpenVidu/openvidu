@@ -37,11 +37,10 @@ import org.kurento.client.WebRtcEndpoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
-import io.openvidu.server.InfoHandler;
+import io.openvidu.server.OpenViduServer;
 import io.openvidu.server.core.api.KurentoClientProvider;
 import io.openvidu.server.core.api.KurentoClientSessionInfo;
 import io.openvidu.server.core.api.MutedMediaType;
@@ -50,6 +49,7 @@ import io.openvidu.server.core.api.pojo.UserParticipant;
 import io.openvidu.server.core.endpoint.SdpType;
 import io.openvidu.server.core.internal.Participant;
 import io.openvidu.server.core.internal.Room;
+import io.openvidu.server.security.OpenviduConfiguration;
 import io.openvidu.server.security.ParticipantRole;
 import io.openvidu.server.security.Token;
 
@@ -82,13 +82,13 @@ public class RoomManager {
   
   @Autowired
   private KurentoClientProvider kcProvider;
+  
+  @Autowired
+  private OpenviduConfiguration openviduConf;
 
   private final ConcurrentMap<String, Room> rooms = new ConcurrentHashMap<String, Room>();
   private final ConcurrentMap<String, ConcurrentHashMap<String, Token>> sessionidTokenTokenobj = new ConcurrentHashMap<>();
   private final ConcurrentMap<String, ConcurrentHashMap<String, String>> sessionidUsernameToken = new ConcurrentHashMap<>();
-
-  @Value("${openvidu.security}")
-  private boolean SECURITY_ENABLED;
   
   private volatile boolean closed = false;
 
@@ -963,7 +963,7 @@ public class RoomManager {
   }
   
   public boolean isParticipantInRoom(String token, String roomId) throws OpenViduException {
-    if (SECURITY_ENABLED) {
+    if (openviduConf.getOpenViduSecurity()) {
       if (this.sessionidTokenTokenobj.get(roomId) != null) {
         return this.sessionidTokenTokenobj.get(roomId).containsKey(token);
       } else{
@@ -979,7 +979,7 @@ public class RoomManager {
   }
   
   public boolean isPublisherInRoom(String userName, String roomId) {
-    if (SECURITY_ENABLED) {
+    if (openviduConf.getOpenViduSecurity()) {
       if (this.sessionidUsernameToken.get(roomId) != null){
     	String token = this.sessionidUsernameToken.get(roomId).get(userName);
         if (token != null){
@@ -1035,7 +1035,8 @@ public class RoomManager {
   }
   
   public String newSessionId(){
-	  String sessionId = new BigInteger(130, new SecureRandom()).toString(32);
+	  String sessionId = OpenViduServer.publicUrl;
+	  sessionId += "/" + new BigInteger(130, new SecureRandom()).toString(32);
 	  
 	  this.sessionidTokenTokenobj.put(sessionId, new ConcurrentHashMap<>());
 	  this.sessionidUsernameToken.put(sessionId, new ConcurrentHashMap<>());
@@ -1048,7 +1049,7 @@ public class RoomManager {
 	  if (this.sessionidUsernameToken.get(roomId) != null && this.sessionidTokenTokenobj.get(roomId) != null) {
 		  if(metadataFormatCorrect(metadata)){
 			  String token = new BigInteger(130, new SecureRandom()).toString(32);
-			  if (SECURITY_ENABLED) { // Store the token only if security is enabled
+			  if (openviduConf.getOpenViduSecurity()) { // Store the token only if security is enabled
 				  this.sessionidTokenTokenobj.get(roomId).put(token, new Token(token, role, metadata));
 			  }
 			  showMap();
@@ -1065,7 +1066,7 @@ public class RoomManager {
   }
   
   public String newRandomUserName(String token, String roomId) {
-	  if (SECURITY_ENABLED) {
+	  if (openviduConf.getOpenViduSecurity()) {
 		  if (this.sessionidUsernameToken.get(roomId) != null && this.sessionidTokenTokenobj.get(roomId) != null) {
 			  if (this.sessionidTokenTokenobj.get(roomId).get(token) != null) {
 				  return this.generateAndStoreUserName(token, roomId);

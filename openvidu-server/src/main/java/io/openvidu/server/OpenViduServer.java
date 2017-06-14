@@ -46,6 +46,7 @@ import io.openvidu.server.kms.FixedOneKmsManager;
 import io.openvidu.server.rest.NgrokController;
 import io.openvidu.server.rpc.JsonRpcNotificationService;
 import io.openvidu.server.rpc.JsonRpcUserControl;
+import io.openvidu.server.security.OpenviduConfiguration;
 
 /**
  * Room server application.
@@ -55,113 +56,126 @@ import io.openvidu.server.rpc.JsonRpcUserControl;
  * @author Radu Tom Vlad (rvlad@naevatec.com)
  * @since 1.0.0
  */
-@Import({JsonRpcConfiguration.class, InfoSocketConfig.class})
+@Import({ JsonRpcConfiguration.class, InfoSocketConfig.class })
 @SpringBootApplication
 public class OpenViduServer implements JsonRpcConfigurer {
 
-  public static final String KMSS_URIS_PROPERTY = "kms.uris";
-  public static final String KMSS_URIS_DEFAULT = "[ \"ws://localhost:8888/kurento\" ]";
-  
-  @Value("${kms.uris}")
-  private String KMSS_CUSTOM_URIS;
+	public static final String KMSS_URIS_PROPERTY = "kms.uris";
+	public static final String KMSS_URIS_DEFAULT = "[ \"ws://localhost:8888/kurento\" ]";
 
-  private static final Logger log = LoggerFactory.getLogger(OpenViduServer.class);
+	@Value("${kms.uris}")
+	private String KMSS_CUSTOM_URIS;
 
-  @Bean
-  @ConditionalOnMissingBean
-  public KurentoClientProvider kmsManager() {
+	public static String publicUrl;
 
-    JsonArray kmsUris = getPropertyJson(KMSS_URIS_PROPERTY, KMSS_URIS_DEFAULT, JsonArray.class);
-    List<String> kmsWsUris = JsonUtils.toStringList(kmsUris);
-    
-    if ((KMSS_CUSTOM_URIS != null) && (!KMSS_CUSTOM_URIS.isEmpty())) {
-    	List<String> uris = new Gson().fromJson( KMSS_CUSTOM_URIS, List.class );
-    	kmsWsUris.addAll(0, uris);
-    }
+	private static final Logger log = LoggerFactory.getLogger(OpenViduServer.class);
 
-    if (kmsWsUris.isEmpty()) {
-      throw new IllegalArgumentException(KMSS_URIS_PROPERTY
-          + " should contain at least one kms url");
-    }
+	@Bean
+	@ConditionalOnMissingBean
+	public KurentoClientProvider kmsManager() {
 
-    String firstKmsWsUri = kmsWsUris.get(0);
+		JsonArray kmsUris = getPropertyJson(KMSS_URIS_PROPERTY, KMSS_URIS_DEFAULT, JsonArray.class);
+		List<String> kmsWsUris = JsonUtils.toStringList(kmsUris);
 
-    if (firstKmsWsUri.equals("autodiscovery")) {
-      log.info("Using autodiscovery rules to locate KMS on every pipeline");
-      return new AutodiscoveryKurentoClientProvider();
-    } else {
-      log.info("Configuring Kurento Room Server to use first of the following kmss: " + kmsWsUris);
-      return new FixedOneKmsManager(firstKmsWsUri);
-    }
-  }
+		if ((KMSS_CUSTOM_URIS != null) && (!KMSS_CUSTOM_URIS.isEmpty())) {
+			List<String> uris = new Gson().fromJson(KMSS_CUSTOM_URIS, List.class);
+			kmsWsUris.addAll(0, uris);
+		}
 
-  @Bean
-  @ConditionalOnMissingBean
-  public JsonRpcNotificationService notificationService() {
-    return new JsonRpcNotificationService();
-  }
+		if (kmsWsUris.isEmpty()) {
+			throw new IllegalArgumentException(KMSS_URIS_PROPERTY + " should contain at least one kms url");
+		}
 
-  @Bean
-  @ConditionalOnMissingBean
-  public NotificationRoomHandler defaultNotificationRoomHandler() {
-    return new DefaultNotificationRoomHandler(notificationService());
-  }
-  
-  @Bean
-  @ConditionalOnMissingBean
-  public RoomManager roomManager() {
-    return new RoomManager();
-  }
+		String firstKmsWsUri = kmsWsUris.get(0);
 
-  @Bean
-  @ConditionalOnMissingBean
-  public NotificationRoomManager notificationRoomManager() {
-    return new NotificationRoomManager();
-  }
+		if (firstKmsWsUri.equals("autodiscovery")) {
+			log.info("Using autodiscovery rules to locate KMS on every pipeline");
+			return new AutodiscoveryKurentoClientProvider();
+		} else {
+			log.info("Configuring Kurento Room Server to use first of the following kmss: " + kmsWsUris);
+			return new FixedOneKmsManager(firstKmsWsUri);
+		}
+	}
 
-  @Bean
-  @ConditionalOnMissingBean
-  public JsonRpcUserControl userControl() {
-    return new JsonRpcUserControl();
-  }
+	@Bean
+	@ConditionalOnMissingBean
+	public JsonRpcNotificationService notificationService() {
+		return new JsonRpcNotificationService();
+	}
 
-  @Bean
-  @ConditionalOnMissingBean
-  public RoomJsonRpcHandler roomHandler() {
-    return new RoomJsonRpcHandler();
-  }
+	@Bean
+	@ConditionalOnMissingBean
+	public NotificationRoomHandler defaultNotificationRoomHandler() {
+		return new DefaultNotificationRoomHandler(notificationService());
+	}
 
-  @Override
-  public void registerJsonRpcHandlers(JsonRpcHandlerRegistry registry) {
-    registry.addHandler(roomHandler().withPingWatchdog(true), "/room");
-  }
+	@Bean
+	@ConditionalOnMissingBean
+	public RoomManager roomManager() {
+		return new RoomManager();
+	}
 
-  @Bean
-  public ServletServerContainerFactoryBean createWebSocketContainer() {
-    ServletServerContainerFactoryBean container = new ServletServerContainerFactoryBean();
-    container.setMaxTextMessageBufferSize(1000000); // chars
-    container.setMaxBinaryMessageBufferSize(1000000); // bytes
-    return container;
-  }
+	@Bean
+	@ConditionalOnMissingBean
+	public NotificationRoomManager notificationRoomManager() {
+		return new NotificationRoomManager();
+	}
 
-  public static void main(String[] args) throws Exception {
-    start(args);
-    try {
-	    NgrokController ngrok = new NgrokController();
-	    System.out.println();
-	    System.out.println("        PUBLIC IP        ");
-	    System.out.println("-------------------------");
-	    System.out.println(ngrok.getNgrokPublicUrl());
-	    System.out.println("-------------------------");
-	    System.out.println();
-    } catch(Exception e) {
-    	System.out.println("   No ngrok connection   ");
-    }
-  }
+	@Bean
+	@ConditionalOnMissingBean
+	public JsonRpcUserControl userControl() {
+		return new JsonRpcUserControl();
+	}
 
-  public static ConfigurableApplicationContext start(String[] args) {
-    log.info("Using /dev/urandom for secure random generation");
-    System.setProperty("java.security.egd", "file:/dev/./urandom");
-    return SpringApplication.run(OpenViduServer.class, args);
-  }
+	@Bean
+	@ConditionalOnMissingBean
+	public RoomJsonRpcHandler roomHandler() {
+		return new RoomJsonRpcHandler();
+	}
+
+	@Override
+	public void registerJsonRpcHandlers(JsonRpcHandlerRegistry registry) {
+		registry.addHandler(roomHandler().withPingWatchdog(true), "/room");
+	}
+
+	@Bean
+	public ServletServerContainerFactoryBean createWebSocketContainer() {
+		ServletServerContainerFactoryBean container = new ServletServerContainerFactoryBean();
+		container.setMaxTextMessageBufferSize(1000000); // chars
+		container.setMaxBinaryMessageBufferSize(1000000); // bytes
+		return container;
+	}
+
+	public static void main(String[] args) throws Exception {
+		ConfigurableApplicationContext context = start(args);
+		OpenviduConfiguration openviduConf = context.getBean(OpenviduConfiguration.class);
+		OpenViduServer.publicUrl = "wss://localhost:" + openviduConf.getServerPort();
+
+		if (openviduConf.getOpenViduPublicUrl().equals("ngrok")) {
+			try {
+				NgrokController ngrok = new NgrokController();
+				System.out.println();
+				System.out.println("        PUBLIC IP        ");
+				System.out.println("-------------------------");
+				System.out.println(ngrok.getNgrokAppUrl());
+				System.out.println("-------------------------");
+				System.out.println();
+				OpenViduServer.publicUrl = ngrok.getNgrokServerUrl().replaceFirst("https://", "wss://");
+			} catch (Exception e) {
+				System.out.println("   No ngrok connection   ");
+			}
+		} else if (!openviduConf.getOpenViduPublicUrl().equals("local")) {
+			System.out.println("CUSTOM URL");
+			OpenViduServer.publicUrl = openviduConf.getOpenViduPublicUrl().replaceFirst("https://", "wss://");
+			if (!OpenViduServer.publicUrl.startsWith("wss://")) {
+				OpenViduServer.publicUrl = "wss://" + OpenViduServer.publicUrl;
+			}
+		}
+	}
+
+	public static ConfigurableApplicationContext start(String[] args) {
+		log.info("Using /dev/urandom for secure random generation");
+		System.setProperty("java.security.egd", "file:/dev/./urandom");
+		return SpringApplication.run(OpenViduServer.class, args);
+	}
 }
