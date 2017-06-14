@@ -15,7 +15,11 @@ export class AppComponent implements OnInit, OnDestroy {
   constructor(private infoService: InfoService) { }
 
   ngOnInit() {
-    this.websocket = new WebSocket('wss://' + location.hostname + ':8443/info');
+
+    const protocol = location.protocol.includes('https') ? 'wss://' : 'ws://';
+    const port = (location.port) ? (':' + location.port) : '';
+
+    this.websocket = new WebSocket(protocol + location.hostname + port + '/info');
 
     this.websocket.onopen = (event) => {
       console.log('Info websocket connected');
