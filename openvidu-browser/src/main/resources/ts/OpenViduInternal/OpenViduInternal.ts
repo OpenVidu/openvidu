@@ -22,6 +22,7 @@ export type Callback<T> = (error?: any, openVidu?: T) => void;
 
 export class OpenViduInternal {
 
+    private wsUri;
     private session: SessionInternal;
     private jsonRpcClient: any;
     private rpcParams: any;
@@ -29,12 +30,17 @@ export class OpenViduInternal {
     private camera: Stream;
     private remoteStreams: Stream[] = [];
 
-    constructor(private wsUri: string) {
-        if (this.wsUri.charAt(wsUri.length - 1) != '/') {
-            this.wsUri += '/';
+    constructor();
+    constructor(wsUri: string);
+    constructor(wsUri?: string) {
+        if (wsUri) {
+            this.wsUri = wsUri;
+            if (this.wsUri.charAt(wsUri.length - 1) != '/') {
+                this.wsUri += '/';
+            }
+            this.checkNgrokUri();
+            this.wsUri += 'room';
         }
-        this.checkNgrokUri();
-        this.wsUri += 'room';
     }
 
 
@@ -113,7 +119,13 @@ export class OpenViduInternal {
     }
     /* NEW METHODS */
 
+    getWsUri() {
+        return this.wsUri;
+    }
 
+    setWsUri(wsUri: string) {
+        this.wsUri = wsUri;
+    }
 
     getOpenViduServerURL() {
         return 'https://' + this.wsUri.split("wss://")[1].split("/room")[0];

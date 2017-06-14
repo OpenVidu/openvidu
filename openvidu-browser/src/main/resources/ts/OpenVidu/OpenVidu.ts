@@ -29,8 +29,14 @@ export class OpenVidu {
 
     openVidu: OpenViduInternal;
 
-    constructor(private wsUri: string) {
-        this.openVidu = new OpenViduInternal(wsUri);
+    constructor();
+    constructor(wsUri: string);
+    constructor(wsUri?: string) {
+        if (wsUri) {
+            this.openVidu = new OpenViduInternal(wsUri);
+        } else {
+            this.openVidu = new OpenViduInternal();
+        }
     }
 
     initSession(apiKey: string, sessionId: string): Session;

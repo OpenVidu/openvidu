@@ -28,6 +28,9 @@ export class SessionInternal {
 
     constructor(private openVidu: OpenViduInternal, private sessionId: string) {
         this.localParticipant = new Connection(this.openVidu, true, this);
+        if (!this.openVidu.getWsUri()) {
+            this.openVidu.setWsUri(this.sessionId.substring(0, this.sessionId.lastIndexOf('/')) + '/room');
+        }
     }
 
 
