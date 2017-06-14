@@ -7,7 +7,6 @@
   "scripts": {
     "build": "tsc"
   },
-  "private": true,
   "dependencies": {},
   "devDependencies": {
     "@types/node": "^6.0.78",
