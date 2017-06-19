@@ -9,7 +9,8 @@ export declare class Session {
     private port;
     constructor(urlOpenViduServer: string, secret: string);
     getSessionId(callback: Function): string;
-    generateToken(tokenOptions: TokenOptions, callback: Function): void;
+    generateToken(callback: Function): any;
+    generateToken(tokenOptions: TokenOptions, callback: Function): any;
     private getBasicAuth();
     private setHostnameAndPort();
 }

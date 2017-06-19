@@ -1,4 +1,5 @@
 import { TokenOptions } from './TokenOptions';
+import { OpenViduRole } from './OpenViduRole';
 
 declare const Buffer;
 declare const require;
@@ -52,12 +53,28 @@ export class Session {
         req.end();
     }
 
-    public generateToken(tokenOptions: TokenOptions, callback: Function) {
-        var requestBody = JSON.stringify({
-            'session': this.sessionId,
-            'role': tokenOptions.getRole(),
-            'data': tokenOptions.getData()
-        });
+
+    public generateToken(callback: Function);
+    public generateToken(tokenOptions: TokenOptions, callback: Function);
+
+    public generateToken(tokenOptions: any, callback?: any) {
+        var requestBody;
+
+        if (callback) {
+            requestBody = JSON.stringify({
+                'session': this.sessionId,
+                'role': tokenOptions.getRole(),
+                'data': tokenOptions.getData()
+            });
+        } else {
+            requestBody = JSON.stringify({
+                'session': this.sessionId,
+                'role': OpenViduRole.PUBLISHER,
+                'data': ''
+            });
+            callback = tokenOptions;
+        }
+
         var options = {
             hostname: this.hostname,
             port: this.port,

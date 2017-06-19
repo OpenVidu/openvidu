@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+var OpenViduRole_1 = require("./OpenViduRole");
 var https = require('https');
 var Session = (function () {
     function Session(urlOpenViduServer, secret) {
@@ -43,11 +44,22 @@ var Session = (function () {
         req.end();
     };
     Session.prototype.generateToken = function (tokenOptions, callback) {
-        var requestBody = JSON.stringify({
-            'session': this.sessionId,
-            'role': tokenOptions.getRole(),
-            'data': tokenOptions.getData()
-        });
+        var requestBody;
+        if (callback) {
+            requestBody = JSON.stringify({
+                'session': this.sessionId,
+                'role': tokenOptions.getRole(),
+                'data': tokenOptions.getData()
+            });
+        }
+        else {
+            requestBody = JSON.stringify({
+                'session': this.sessionId,
+                'role': OpenViduRole_1.OpenViduRole.PUBLISHER,
+                'data': ''
+            });
+            callback = tokenOptions;
+        }
         var options = {
             hostname: this.hostname,
             port: this.port,
