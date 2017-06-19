@@ -1,4 +1,4 @@
-# openvidu-backend-client
+# openvidu-java-client
 Java package that wraps the HTTP REST operations of openvidu-server.
 
 - Maven dependency
@@ -14,7 +14,7 @@ Java package that wraps the HTTP REST operations of openvidu-server.
 	
 	[```https://github.com/OpenVidu/openvidu/tree/master/openvidu-java-client/target/openvidu-java-client.jar```](https://github.com/OpenVidu/openvidu/tree/master/openvidu-java-client/target/openvidu-java-client.jar)
 
-The usage is quite simple: import OpenVidu package and get an **OpenVidu** object. You need to provide to the constructor the IP of your OpenVidu Server and the secret shared with it (initialized by `openvidu.secret=MY_SECRET` property). Then just call the following methods to get a shiny new sessionId or token to be returned to your frontend.
+The usage is quite simple: import OpenVidu package and get an **OpenVidu** object. You need to provide to the constructor the IP of your OpenVidu Server and the secret shared with it (initialized by `openvidu.secret` property on launch). Then just call the following methods to get a shiny new sessionId or token to be returned to your frontend.
 
 
 ```java
@@ -25,7 +25,19 @@ OpenVidu openVidu = new OpenVidu(OPENVIDU_SERVER_IP, YOUR_SECRET);
 Session session = this.openVidu.createSession();
 String sessionId = session.getSessionId();
 String token = session.generateToken();
-// Send sessionId and token to frontend
+
+// Send sessionId and token to your client
+```
+
+To customize your tokens you can use [TokenOptions](#tokenoptions) class. Initialize it with its _Builder_ inner class:
+
+```javascript
+TokenOptions tokenOptions = new TokenOptions.Builder()
+	.data("serverData")
+	.role(OpenViduRole.SUBSCRIBER)
+	.build();
+	
+String token = session.generateToken(tokenOptions);
 ```
 
 ## API Reference

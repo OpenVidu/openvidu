@@ -1,28 +1,83 @@
-# OpenviduNodeClient
+# openvidu-node-client
+NPM package that wraps the HTTP REST operations of openvidu-server.
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 1.0.2.
+- NPM installation
 
-## Development server
+	```
+	npm install openvidu-node-client
+	```
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
+The usage is quite simple: import OpenVidu dependencies and get an **OpenVidu** object. You need to provide to the constructor the IP of your OpenVidu Server and the secret shared with it (initialized by `openvidu.secret` property on launch). Then just call the following methods to get a shiny new sessionId or token to be returned to your frontend.
 
-## Code scaffolding
+```javascript
+var OpenVidu = require('openvidu-node-client').OpenVidu;
+var Session  = require('openvidu-node-client').Session;
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|module`.
+var openVidu = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET);
 
-## Build
+var session = openVidu.createSession();
+session.getSessionId( function (sessionId) {
+    session.generateToken( function (token) {
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `-prod` flag for a production build.
+        // Send sessionId and token back to your client
 
-## Running unit tests
+    });
+});
+```
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+To customize your tokens you can use [TokenOptions](#tokenoptions) class. Initialize it with its _Builder_ inner class:
 
-## Running end-to-end tests
+```javascript
+var tokenOptions = new TokenOptions.Builder()
+	.data('serverData')
+	.role(OpenViduRole.SUBSCRIBER)
+	.build();
+	
+session.generateToken(tokenOptions, function (token) {
 
-Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
-Before running the tests make sure you are serving the app via `ng serve`.
+	// Send sessionId and token back to your client
 
-## Further help
+});
+```
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).
+## API Reference
+
+| Class        | Description   										     |
+| ------------ | ------------------------------------------------------- |
+| OpenVidu     | Use it to create all the sessions you need |
+| Session      | Allows for the creation of tokens |
+| OpenViduRole | Enum that defines the values accepted by _TokenOptions.Builder.role(OpenViduRole role)_ method |
+| TokenOptions | Customize each token with this class when generating them |
+
+#### **OpenVidu**
+| Method         | Returns | Parameters | Description |
+| -------------- | ------- | --------------------------------------------- | ----------- |
+| OpenVidu() | | `String:urlOpenViduServer`<br>`String:secret` | The constructor receives the URL of your OpenVidu Server and the secret shared with it |
+| createSession() | Session |  | Get a Session object by calling this method. You can then store it as you want |
+
+#### **Session**
+| Method         | Returns | Parameters  | Description |
+| -------------- | ------- | --------------------------------------------- | ----------- |
+| getSessionId() | String | `callback(sessionId:string):Function` | The callback receives as parameter the unique identifier of the Session. You will need to return this parameter to the client side to pass it during the connection process to the session |
+| generateToken() | String | _`TokenOptions:tokenOptions`_<br>`callback(token:string):Function`  | The callback receives as parameter the new created token. The value returned is required in the client side just as the sessionId in order to connect to a session |
+
+#### **OpenViduRole**
+| Enum       | Description |
+| ---------- | ------- |
+| SUBSCRIBER | They can subscribe to published streams of other users |
+| PUBLISHER  | They can subscribe to published streams of other users and publish their own streams|
+| MODERATOR  | They can subscribe to published streams of other users, publish their own streams and force _unpublish()_ and _disconnect()_ over a third-party stream or user |
+
+#### **TokenOptions**
+| Method         | Returns | Parameters | Description |
+| -------------- | ------- | -------------------------------------------| -- |
+| getData() | String |        | Returns the metadata associated to the token |
+| getRole() | OpenViduRole |  | Returns the role associated to the token     |
+
+##### **TokenOptions.Builder** _(inner class)_
+| Method         | Returns | Parameters | Description |
+| -------------- | ------- | --------------------------------------------- | ----------- |
+| TokenOptions.Builder() |  |  | Constructor |
+| build() | TokenOptions |  | Returns a new **TokenOptions** object with the stablished properties. Default values if methods _data()_ and _role()_ are not called are an empty string and OpenViduRole.PUBLISHER, respectively |
+| data() | TokenOptions.Builder | `String:data` | Some extra metadata to be associated to the user through its token. The structure of this string is up to you (maybe some standarized format as JSON or XML is a good idea), the only restriction is a maximum length of 1000 chars |
+| role() | TokenOptions.Builder | `OpenViduRole:role` | The role associated to this token |
