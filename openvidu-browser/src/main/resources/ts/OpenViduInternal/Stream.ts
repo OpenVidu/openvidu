@@ -224,7 +224,7 @@ export class Stream {
         this.ee.addOnceListener(eventName, listener);
     }
 
-    removeListener(eventName){
+    removeListener(eventName) {
         this.ee.removeAllListeners(eventName);
     }
 
@@ -244,6 +244,9 @@ export class Stream {
     }
 
     playOnlyVideo(parentElement, thumbnailId) {
+
+        // TO-DO: check somehow if the stream is audio only, so the element created is <audio> instead of <video>
+    
         this.video = document.createElement('video');
 
         this.video.id = 'native-video-' + this.getId();
@@ -339,7 +342,7 @@ export class Stream {
 
         let constraints = this.mediaConstraints;
 
-        let constraints2 = {
+        /*let constraints2 = {
             audio: true,
             video: {
                 width: {
@@ -349,16 +352,32 @@ export class Stream {
                     ideal: 15
                 }
             }
-        };
+        };*/
 
+        this.userMediaHasVideo((hasVideo) => {
+            if (!hasVideo) {
+                constraints.video = false;
+                this.sendVideo = false;
+                this.requestCameraAccesAux(constraints, callback);
+            } else {
+                this.requestCameraAccesAux(constraints, callback);
+            }
+        });
+    }
+
+    private requestCameraAccesAux(constraints, callback) {
         navigator.mediaDevices.getUserMedia(constraints)
             .then(userStream => {
                 this.accessIsAllowed = true;
                 this.accessIsDenied = false;
                 this.ee.emitEvent('access-allowed-by-publisher');
 
-                userStream.getAudioTracks()[0].enabled = this.sendAudio;
-                userStream.getVideoTracks()[0].enabled = this.sendVideo;
+                if (userStream.getAudioTracks()[0] != null) {
+                    userStream.getAudioTracks()[0].enabled = this.sendAudio;
+                }
+                if (userStream.getVideoTracks()[0] != null) {
+                    userStream.getVideoTracks()[0].enabled = this.sendVideo;
+                }
 
                 this.wrStream = userStream;
                 this.emitSrcEvent(this.wrStream);
@@ -373,6 +392,15 @@ export class Stream {
                 console.error("Access denied", error);
                 callback(error, this);
             });
+    }
+
+    private userMediaHasVideo(callback) {
+        navigator.mediaDevices.enumerateDevices().then(function (mediaDevices) {
+            var videoInput = mediaDevices.filter(function (deviceInfo) {
+                return deviceInfo.kind === 'videoinput';
+            })[0];
+            callback(videoInput != null);
+        });
     }
 
     publishVideoCallback(error, sdpOfferParam, wp) {
