@@ -58,8 +58,8 @@ session.generateToken(tokenOptions, function (token) {
 #### **Session**
 | Method         | Returns | Parameters  | Description |
 | -------------- | ------- | --------------------------------------------- | ----------- |
-| getSessionId() | String | `callback(sessionId:string):Function` | The callback receives as parameter the unique identifier of the Session. You will need to return this parameter to the client side to pass it during the connection process to the session |
-| generateToken() | String | _`TokenOptions:tokenOptions`_<br>`callback(token:string):Function`  | The callback receives as parameter the new created token. The value returned is required in the client side just as the sessionId in order to connect to a session |
+| getSessionId() | | `callback(sessionId:string):Function` | The callback receives as parameter the unique identifier of the Session. You will need to return this parameter to the client side to pass it during the connection process to the session |
+| generateToken() | | _`TokenOptions:tokenOptions`_<br>`callback(token:string):Function`  | The callback receives as parameter the new created token. The value returned is required in the client side just as the sessionId in order to connect to a session |
 
 #### **OpenViduRole**
 | Enum       | Description |
