@@ -24,5 +24,4 @@ Feature: Connecting To Session
     | ['User1']                     | ['User2']                   | Session1 | 7             |
     | ['User1', 'User3']            | ['User2']                   | Session2 | 7             |
     | ['User1']                     | ['User2', 'User3']          | Session3 | 7             |
-    | ['User1', 'User3']            | ['User2', 'User4']          | Session4 | 7             |
-    | ['User1', 'User3', 'User5']   | ['User2', 'User4', 'User6'] | Session4 | 7             |     
+    | ['User1', 'User3']            | ['User2', 'User4']          | Session4 | 10            |    

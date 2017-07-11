@@ -1,7 +1,5 @@
 package io.openvidu.test.e2e.stepdefinition;
 
-import static org.junit.Assert.assertTrue;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -86,8 +84,7 @@ public class StepsConnectingToSession {
 			throws Throwable {
 		for (BrowserUser user : this.browserUsers.values()) {
 			new Thread(() -> {
-				By byXpath = By.xpath("//div[(@id='" + strArg2 + "')]/video");
-				user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(byXpath, Integer.parseInt(strArg1)));
+				user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.cssSelector("#" + strArg2 + " video"), Integer.parseInt(strArg1)));
 			}).run();
 		}
 	}
@@ -95,10 +92,9 @@ public class StepsConnectingToSession {
 	@And("^\"([^\"]*)\" video element/s in \"([^\"]*)\" should be playing media$")
 	public void something_video_elements_in_something_should_be_playing_media(String strArg1, String strArg2)
 			throws Throwable {
-		By byXpath = By.xpath("//div[(@id='" + strArg2 + "')]/video");
 		for (BrowserUser user : this.browserUsers.values()) {
 			new Thread(() -> {
-				List<WebElement> videos = user.getDriver().findElements(byXpath);
+				List<WebElement> videos = user.getDriver().findElements(By.cssSelector("#" + strArg2 + " video"));
 				int numOfVideosPlaying = 0;
 				for (int i = 0; i < videos.size(); i++) {
 					if (this.checkVideoPlaying(user, videos.get(i), strArg2)) {
@@ -114,18 +110,16 @@ public class StepsConnectingToSession {
 	public void all_video_elements_should_be_shown_in_element_with_id_something(String strArg1) throws Throwable {
 		for (BrowserUser user : this.browserUsers.values()) {
 			new Thread(() -> {
-				By byXpath = By.xpath("//div[(@id='" + strArg1 + "')]/video");
-				user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(byXpath, this.browserUsers.size() - 1));
+				user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.cssSelector("#" + strArg1 + " video"), this.browserUsers.size() - 1));
 			}).run();
 		}
 	}
 
 	@And("^all video elements in \"([^\"]*)\" should be playing media$")
 	public void all_video_elements_in_something_should_be_playing_media(String strArg1) throws Throwable {
-		By byXpath = By.xpath("//div[(@id='" + strArg1 + "')]/video");
 		for (BrowserUser user : this.browserUsers.values()) {
 			new Thread(() -> {
-				List<WebElement> videos = user.getDriver().findElements(byXpath);
+				List<WebElement> videos = user.getDriver().findElements(By.cssSelector("#" + strArg1 + " video"));
 				int numOfVideosPlaying = 0;
 				for (int i = 0; i < videos.size(); i++) {
 					if (this.checkVideoPlaying(user, videos.get(i), strArg1)) {
@@ -143,8 +137,7 @@ public class StepsConnectingToSession {
 			new Thread(() -> {
 				for (Entry<String, BrowserUser> entry : this.browserUsers.entrySet()) {
 					if (entry.getValue().getUserName() != user.getUserName()) {
-						By byXpath = By.xpath("//div[(@id='subscriber')]/p[@id='data-" + entry.getKey() + "']");
-						user.getWaiter().until(ExpectedConditions.textToBePresentInElementLocated(byXpath, entry.getKey()));
+						user.getWaiter().until(ExpectedConditions.textToBePresentInElementLocated(By.cssSelector("div#subscriber p#data-" + entry.getKey()), entry.getKey()));
 					}
 				}
 			}).run();
@@ -180,9 +173,7 @@ public class StepsConnectingToSession {
 				if (users.contains(user.getUserName())) {
 					for (String u : users) {
 						if (!u.equals(user.getUserName())) {
-							By byXpath = By
-									.xpath("//div[(@id='" + strArg1 + "')]/video[@id='native-video-" + u + "_webcam']");
-							user.getWaiter().until(ExpectedConditions.presenceOfElementLocated(byXpath));
+							user.getWaiter().until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("#" + strArg1 + " video#" + "native-video-" + u + "_webcam")));
 						}
 					}
 				}
@@ -205,7 +196,7 @@ public class StepsConnectingToSession {
 	private boolean checkVideoPlaying(BrowserUser user, WebElement videoElement, String containerId) {
 
 		// Video element should be in 'readyState'='HAVE_ENOUGH_DATA'
-		//user.getWaiter().until(ExpectedConditions.attributeToBe(videoElement, "readyState", "4"));
+		user.getWaiter().until(ExpectedConditions.attributeToBe(videoElement, "readyState", "4"));
 		// Video should have a valid 'src' value
 		user.getWaiter().until(ExpectedConditions.attributeToBeNotEmpty(videoElement, "src"));
 		// Video should have a srcObject (type MediaStream) with the
