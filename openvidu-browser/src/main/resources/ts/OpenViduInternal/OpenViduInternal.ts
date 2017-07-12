@@ -30,31 +30,7 @@ export class OpenViduInternal {
     private camera: Stream;
     private remoteStreams: Stream[] = [];
 
-    constructor();
-    constructor(wsUri: string);
-    constructor(wsUri?: string) {
-        if (wsUri) {
-            this.wsUri = wsUri;
-            if (this.wsUri.charAt(wsUri.length - 1) != '/') {
-                this.wsUri += '/';
-            }
-            this.checkNgrokUri();
-            this.wsUri += 'room';
-        }
-    }
-
-
-    checkNgrokUri() {
-        if (this.wsUri.indexOf(".ngrok.io") !== -1) {
-            // OpenVidu server URL referes to a ngrok IP: secure wss protocol and delete port of URL
-            this.wsUri = this.wsUri.replace("ws://", "wss://");
-            let regex = /\.ngrok\.io:\d+/;
-            this.wsUri = this.wsUri.replace(regex, ".ngrok.io");
-        } else if (this.wsUri.indexOf("localhost") !== -1) {
-            // OpenVidu server URL referes to localhost IP
-
-        }
-    }
+    constructor() { };
 
 
     /* NEW METHODS */

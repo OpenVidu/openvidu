@@ -29,21 +29,15 @@ export class OpenVidu {
 
     openVidu: OpenViduInternal;
 
-    constructor();
-    constructor(wsUri: string);
-    constructor(wsUri?: string) {
-        if (wsUri) {
-            this.openVidu = new OpenViduInternal(wsUri);
-        } else {
-            this.openVidu = new OpenViduInternal();
-        }
-    }
+    constructor() {
+        this.openVidu = new OpenViduInternal();
+    };
 
     initSession(apiKey: string, sessionId: string): Session;
     initSession(sessionId: string): Session;
 
     initSession(param1, param2?): any {
-        if (this.checkSystemRequirements()){
+        if (this.checkSystemRequirements()) {
             if (typeof param2 == "string") {
                 return new Session(this.openVidu.initSession(param2), this);
             } else {
@@ -60,7 +54,7 @@ export class OpenVidu {
 
     initPublisher(parentId: string, cameraOptions?: any, callback?: Function): any {
         if (this.checkSystemRequirements()) {
-            if (cameraOptions != null){
+            if (cameraOptions != null) {
                 let cameraOptionsAux = {
                     audio: cameraOptions.audio != null ? cameraOptions.audio : true,
                     video: cameraOptions.video != null ? cameraOptions.video : true,

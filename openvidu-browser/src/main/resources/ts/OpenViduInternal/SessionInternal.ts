@@ -29,8 +29,22 @@ export class SessionInternal {
     constructor(private openVidu: OpenViduInternal, private sessionId: string) {
         this.localParticipant = new Connection(this.openVidu, true, this);
         if (!this.openVidu.getWsUri()) {
-            this.openVidu.setWsUri(this.sessionId.substring(0, this.sessionId.lastIndexOf('/')) + '/room');
+            this.openVidu.setWsUri(this.checkNgrokUri(sessionId));
         }
+    }
+
+    checkNgrokUri(sessionId: string): string {
+        sessionId = sessionId.substring(0, sessionId.lastIndexOf('/')) + '/room';
+        if (sessionId.indexOf(".ngrok.io") !== -1) {
+            // OpenVidu server URL referes to a ngrok IP: secure wss protocol and delete port of URL
+            sessionId = sessionId.replace("ws://", "wss://");
+            let regex = /\.ngrok\.io:\d+/;
+            sessionId = sessionId.replace(regex, ".ngrok.io");
+        } else if ((sessionId.indexOf("localhost") !== -1) || (sessionId.indexOf("127.0.0.1") != -1)) {
+            // OpenVidu server URL referes to localhost IP
+
+        }
+        return sessionId;
     }
 
 
