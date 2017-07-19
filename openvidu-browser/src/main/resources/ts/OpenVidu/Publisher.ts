@@ -57,7 +57,7 @@ export class Publisher {
             callback(event);
         });
         if (eventName == 'videoElementCreated') {
-            if (this.stream.isReady) {
+            if (this.stream.isVideoELementCreated) {
                 this.ee.emitEvent('videoElementCreated', [{
                     element: this.stream.getVideoElement()
                 }]);
@@ -66,7 +66,7 @@ export class Publisher {
                     console.warn('Publisher emitting videoElementCreated');
                     this.id = element.id;
                     this.ee.emitEvent('videoElementCreated', [{
-                        element: element
+                        element: element.element
                     }]);
                 });
             }

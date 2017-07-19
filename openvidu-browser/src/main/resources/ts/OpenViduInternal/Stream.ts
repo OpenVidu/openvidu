@@ -73,6 +73,7 @@ export class Stream {
     private videoSrc: string;
     private parentId: string;
     public isReady: boolean = false;
+    public isVideoELementCreated: boolean = false;
     public accessIsAllowed: boolean = false;
     public accessIsDenied: boolean = false;
 
@@ -246,7 +247,7 @@ export class Stream {
     playOnlyVideo(parentElement, thumbnailId) {
 
         // TO-DO: check somehow if the stream is audio only, so the element created is <audio> instead of <video>
-    
+
         this.video = document.createElement('video');
 
         this.video.id = 'native-video-' + this.getId();
@@ -271,15 +272,15 @@ export class Stream {
             let parentElementDom = document.getElementById(parentElement);
             if (parentElementDom) {
                 this.video = parentElementDom.appendChild(this.video);
+                this.ee.emitEvent('video-element-created-by-stream', [{
+                    element: this.video
+                }]);
+                this.isVideoELementCreated = true;
             }
         } else {
             this.parentId = parentElement.id;
             this.video = parentElement.appendChild(this.video);
         }
-
-        this.ee.emitEvent('video-element-created-by-stream', [{
-            element: this.video
-        }]);
 
         this.ee.emitEvent('stream-created-by-publisher');
 
