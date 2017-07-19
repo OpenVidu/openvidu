@@ -110,7 +110,7 @@ public class StepsConnectingToSession {
 	public void all_video_elements_should_be_shown_in_element_with_id_something(String strArg1) throws Throwable {
 		for (BrowserUser user : this.browserUsers.values()) {
 			new Thread(() -> {
-				user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.cssSelector("#" + strArg1 + " video"), this.browserUsers.size() - 1));
+				user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.cssSelector("#" + strArg1 + " video"), this.browserUsers.size()));
 			}).run();
 		}
 	}
@@ -126,19 +126,17 @@ public class StepsConnectingToSession {
 						numOfVideosPlaying++;
 					}
 				}
-				Assert.assertEquals(numOfVideosPlaying, this.browserUsers.size() - 1);
+				Assert.assertEquals(numOfVideosPlaying, this.browserUsers.size());
 			}).run();
 		}
 	}
 
-	@Then("^users should see other users nicknames in paragraph element$")
+	@Then("^users should see other users nicknames$")
 	public void users_should_see_other_users_nicknames_in_paragraph_element() throws Throwable {
 		for (BrowserUser user : this.browserUsers.values()) {
 			new Thread(() -> {
 				for (Entry<String, BrowserUser> entry : this.browserUsers.entrySet()) {
-					if (entry.getValue().getUserName() != user.getUserName()) {
-						user.getWaiter().until(ExpectedConditions.textToBePresentInElementLocated(By.cssSelector("div#subscriber p#data-" + entry.getKey()), entry.getKey()));
-					}
+					user.getWaiter().until(ExpectedConditions.textToBePresentInElementLocated(By.cssSelector("#data-" + entry.getKey() + " p"), entry.getKey()));
 				}
 			}).run();
 		}
@@ -172,9 +170,7 @@ public class StepsConnectingToSession {
 				List<String> users = this.fromArrayStringifyToList(usersInRoom);
 				if (users.contains(user.getUserName())) {
 					for (String u : users) {
-						if (!u.equals(user.getUserName())) {
-							user.getWaiter().until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("#" + strArg1 + " video#" + "native-video-" + u + "_webcam")));
-						}
+						user.getWaiter().until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("#" + strArg1 + " video#" + "native-video-" + u + "_webcam")));
 					}
 				}
 			}).run();

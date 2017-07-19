@@ -9,14 +9,14 @@ Feature: Connecting To Session
     And users fill "sessionId" input with session name <session>
     When users click on "commit" button
     Then users should see title <session> in element with id "session-header"
-    And "1" video element/s should be shown in element with id "publisher"
-    And "1" video element/s in "publisher" should be playing media
-    And users should see other users nicknames in paragraph element
-		And all video elements should be shown in element with id "subscriber"
-		And all video elements in "subscriber" should be playing media
+    And "1" video element/s should be shown in element with id "main-video"
+    And "1" video element/s in "main-video" should be playing media
+    And users should see other users nicknames
+		And all video elements should be shown in element with id "video-container"
+		And all video elements in "video-container" should be playing media
 		And <firefoxUsers> leave session
 	  And <firefoxUsers> see "Join a video session" text in "h1" element
-	  And <chromeUsers> div "subscriber" should have <chromeUsers> videos
+	  And <chromeUsers> div "video-container" should have <chromeUsers> videos
 		And close all browsers
 
   Examples:
