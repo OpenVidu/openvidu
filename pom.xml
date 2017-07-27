@@ -10,7 +10,7 @@
 
 	<groupId>io.openvidu</groupId>
 	<artifactId>openvidu</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0-beta.1</version>
 	<packaging>pom</packaging>
 
 	<name>OpenVidu</name>
@@ -72,9 +72,7 @@
 				<module>openvidu-client</module>
 				<module>openvidu-browser</module>
 				<module>openvidu-test</module>
-				<module>openvidu-demo</module>
 				<module>openvidu-testapp</module>
-				<module>openvidu-sample-app</module>
 				<module>openvidu-java-client</module>
 			</modules>
 		</profile>
@@ -121,11 +119,6 @@
 			<dependency>
 				<groupId>io.openvidu</groupId>
 				<artifactId>openvidu-test</artifactId>
-				<version>${version.openvidu}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.openvidu</groupId>
-				<artifactId>openvidu-demo</artifactId>
 				<version>${version.openvidu}</version>
 			</dependency>
 			<dependency>
