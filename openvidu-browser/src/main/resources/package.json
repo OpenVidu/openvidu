@@ -5,8 +5,8 @@
   "main": "lib/OpenVidu/index.js",
   "types": "lib/OpenVidu/index.d.ts",
   "scripts": {
-    "browserify": "cd ts/OpenVidu && browserify Main.ts -p [ tsify ] --exclude kurento-browser-extensions --debug -o ../../static/js/OpenVidu.js -v",
-    "browserify-prod": "cd ts/OpenVidu && browserify --debug Main.ts -p [ tsify ] --exclude kurento-browser-extensions | uglifyjs --source-map content=inline --output ../../static/js/OpenVidu.min.js",
+    "browserify": "VERSION=${VERSION:-}; cd ts/OpenVidu && browserify Main.ts -p [ tsify ] --exclude kurento-browser-extensions --debug -o ../../static/js/openvidu-browser-$VERSION.js -v",
+    "browserify-prod": "VERSION=${VERSION:-}; cd ts/OpenVidu && browserify --debug Main.ts -p [ tsify ] --exclude kurento-browser-extensions | uglifyjs --source-map content=inline --output ../../static/js/openvidu-browser-$VERSION.min.js",
     "updatetsc": "cd ts/OpenViduInternal && tsc && cd ../OpenVidu && tsc",
     "test": "echo \"Error: no test specified\" && exit 1",
     "prepublish": "cd ts && tsc",
