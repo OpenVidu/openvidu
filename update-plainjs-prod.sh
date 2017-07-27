@@ -19,3 +19,6 @@ cp openvidu-browser/src/main/resources/static/js/OpenVidu.js ../openvidu-tutoria
 
 # openvidu-mvc-node
 cp openvidu-browser/src/main/resources/static/js/OpenVidu.js ../openvidu-tutorials/openvidu-mvc-node/public/OpenVidu.js
+
+# openvidu-getaroom
+cp openvidu-browser/src/main/resources/static/js/OpenVidu.js ../openvidu-tutorials/openvidu-getaroom/web/OpenVidu.js
