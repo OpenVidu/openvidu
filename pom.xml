@@ -50,7 +50,7 @@
 
 	<properties>
 		<!-- OpenVidu versions -->
-		<version.openvidu>0.0.1-SNAPSHOT</version.openvidu>
+		<version.openvidu>1.0.0-beta.1</version.openvidu>
 
 		<version.kurento.jsonrpc.js>5.1.4-SNAPSHOT</version.kurento.jsonrpc.js>
 
@@ -98,11 +98,6 @@
 		<dependencies>
 			<dependency>
 				<groupId>io.openvidu</groupId>
-				<artifactId>openvidu-sdk</artifactId>
-				<version>${version.openvidu}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.openvidu</groupId>
 				<artifactId>openvidu-server</artifactId>
 				<version>${version.openvidu}</version>
 			</dependency>
@@ -123,7 +118,7 @@
 			</dependency>
 			<dependency>
 				<groupId>io.openvidu</groupId>
-				<artifactId>openvidu-basicapp</artifactId>
+				<artifactId>openvidu-testapp</artifactId>
 				<version>${version.openvidu}</version>
 			</dependency>
 

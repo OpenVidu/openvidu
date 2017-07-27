@@ -4,7 +4,7 @@
 
 	<groupId>io.openvidu</groupId>
 	<artifactId>testapp</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0-beta.1</version>
 	<packaging>jar</packaging>
 
 	<name>openvidu-test-e2e</name>

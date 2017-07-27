@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>io.openvidu</groupId>
 		<artifactId>openvidu</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
+		<version>1.0.0-beta.1</version>
 	</parent>
 
 	<artifactId>openvidu-java-client</artifactId>
@@ -78,6 +78,24 @@
 	</dependencies>
 
 	<profiles>
+		<profile>
+			<id>default</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-javadoc-plugin</artifactId>
+						<version>2.10.4</version>
+						<configuration>
+							
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
 		<profile>
 			<id>release-sign-artifacts</id>
 			<activation>
