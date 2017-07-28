@@ -3,6 +3,8 @@ import { Subscription } from 'rxjs/Subscription';
 
 import { InfoService } from '../../services/info.service';
 
+import { OpenVidu } from 'openvidu-browser';
+
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
@@ -30,6 +32,28 @@ export class DashboardComponent implements OnInit, AfterViewChecked {
 
   ngAfterViewChecked() {
     this.scrollToBottom();
+  }
+
+  testVideo() {
+    let OV = new OpenVidu();
+    let session = OV.initSession('wss://' + location.hostname + ':8443/testSession');
+
+    session.on('streamCreated', (event) => {
+      session.subscribe(event.stream, 'mirrored-video');
+    });
+
+    session.connect('token', (error) => {
+      if (!error) {
+        let publisher = OV.initPublisher('local-video', {
+          audio: true,
+          video: true,
+          quality: 'MEDIUM'
+        });
+
+        publisher.stream.subscribeToMyRemote();
+        session.publish(publisher);
+      }
+    });
   }
 
   scrollToBottom(): void {

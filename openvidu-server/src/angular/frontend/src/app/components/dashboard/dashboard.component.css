@@ -1,3 +1,7 @@
+#dashboard-div {
+  padding: 20px;
+}
+
 #log {
   height: 100%;
 }
@@ -11,4 +15,8 @@
 
 ul {
   margin: 0;
+}
+
+md-card-title a {
+  float: right;  
 }

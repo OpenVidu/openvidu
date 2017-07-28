@@ -4,12 +4,12 @@ body {
   height: 100%;
   margin: 0;
   padding: 0;
+  background: #4d4d4d;
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0.05);
 }
 
 main {
-  height: 90%;
-  padding: 20px;
+  height: 100%;
 }
 
 li {
