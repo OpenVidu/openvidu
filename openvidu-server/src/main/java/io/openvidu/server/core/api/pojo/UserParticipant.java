@@ -30,6 +30,8 @@ public class UserParticipant {
   private String serverMetadata = "";
   private boolean streaming = false;
   
+  private boolean audioOnly = false;
+  
   private final String METADATA_SEPARATOR = "%/%";
 
   public UserParticipant(String participantId, String userName, boolean streaming) {
@@ -47,7 +49,17 @@ public class UserParticipant {
     this.serverMetadata = serverMetadata;
     this.streaming = streaming;
   }
-
+  
+  public UserParticipant(String participantId, String userName, String clientMetadata, String serverMetadata, boolean streaming, boolean audioOnly) {
+	    super();
+	    this.participantId = participantId;
+	    this.userName = userName;
+	    this.clientMetadata = clientMetadata;
+	    this.serverMetadata = serverMetadata;
+	    this.streaming = streaming;
+	    this.audioOnly = audioOnly;
+  }
+  
   public UserParticipant(String participantId, String userName) {
     super();
     this.participantId = participantId;
@@ -92,6 +104,14 @@ public class UserParticipant {
 
   public void setStreaming(boolean streaming) {
     this.streaming = streaming;
+  }
+  
+  public boolean isAudioOnly() {
+	return audioOnly;
+  }
+
+  public void setAudioOnly(boolean audioOnly) {
+    this.audioOnly = audioOnly;
   }
   
   public String getFullMetadata(){

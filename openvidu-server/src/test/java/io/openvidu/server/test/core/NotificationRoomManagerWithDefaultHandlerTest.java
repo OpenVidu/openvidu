@@ -973,7 +973,7 @@ public class NotificationRoomManagerWithDefaultHandlerTest {
     }).when(notificationService).sendResponse(eq(participantRequest),
         Matchers.isA(JsonObject.class));
 
-    manager.publishMedia(participantRequest, SDP_OFFER, false);
+    manager.publishMedia(participantRequest, SDP_OFFER, false, false);
   }
 
   private void participantUnpublish(final ParticipantRequest participantRequest) {

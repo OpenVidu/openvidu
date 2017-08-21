@@ -82,6 +82,7 @@ public class DefaultNotificationRoomHandler implements NotificationRoomHandler {
       if (participant.isStreaming()) {
         JsonObject stream = new JsonObject();
         stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMID_PARAM, "webcam");
+        stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMAUDIOONLY_PARAM, participant.isAudioOnly());
         JsonArray streamsArray = new JsonArray();
         streamsArray.add(stream);
         participantJson.add(ProtocolElements.JOINROOM_PEERSTREAMS_PARAM, streamsArray);
@@ -126,7 +127,7 @@ public class DefaultNotificationRoomHandler implements NotificationRoomHandler {
 
   @Override
   public void onPublishMedia(ParticipantRequest request, String publisherName, String sdpAnswer,
-      Set<UserParticipant> participants, OpenViduException error) {
+      boolean audioOnly, Set<UserParticipant> participants, OpenViduException error) {
     if (error != null) {
       notifService.sendErrorResponse(request, null, error);
       return;
@@ -139,6 +140,7 @@ public class DefaultNotificationRoomHandler implements NotificationRoomHandler {
     params.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_USER_PARAM, publisherName);
     JsonObject stream = new JsonObject();
     stream.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_STREAMID_PARAM, "webcam");
+    stream.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_AUDIOONLY_PARAM, audioOnly);
     JsonArray streamsArray = new JsonArray();
     streamsArray.add(stream);
     params.add(ProtocolElements.PARTICIPANTPUBLISHED_STREAMS_PARAM, streamsArray);

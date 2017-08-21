@@ -8,6 +8,7 @@ export interface ConnectionOptions {
     id: string;
     metadata: string;
     streams?: StreamOptions[];
+    audioOnly: boolean;
 }
 
 export class Connection {
@@ -37,7 +38,8 @@ export class Connection {
                         audio: streamOptions.audio,
                         video: streamOptions.video,
                         data: streamOptions.data,
-                        mediaConstraints: streamOptions.mediaConstraints
+                        mediaConstraints: streamOptions.mediaConstraints,
+                        audioOnly: streamOptions.audioOnly
                     }
                     let stream = new Stream( openVidu, false, room, streamOpts );
 

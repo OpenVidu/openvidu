@@ -663,7 +663,7 @@ public class RoomManager {
     Set<UserParticipant> userParts = new HashSet<UserParticipant>();
     for (Participant p : participants) {
       if (!p.isClosed()) {
-        userParts.add(new UserParticipant(p.getId(), p.getName(), p.getClientMetadata(), p.getServerMetadata(), p.isStreaming()));
+        userParts.add(new UserParticipant(p.getId(), p.getName(), p.getClientMetadata(), p.getServerMetadata(), p.isStreaming(), p.isAudioOnly()));
       }
     }
     return userParts;
@@ -941,6 +941,11 @@ public class RoomManager {
     }
     throw new OpenViduException(Code.USER_NOT_FOUND_ERROR_CODE,
         "No participant with id '" + pid + "' was found");
+  }
+  
+  public void updateParticipantAudioOnly(String pid, boolean audioOnly) {
+	  Participant p = this.getParticipant(pid);
+	  p.setAudioOnly(audioOnly);
   }
 
   public void updateFilter(String roomId, String filterId) {

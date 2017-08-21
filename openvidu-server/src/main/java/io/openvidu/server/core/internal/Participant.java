@@ -74,6 +74,7 @@ public class Participant {
       new ConcurrentHashMap<String, SubscriberEndpoint>();
 
   private volatile boolean streaming = false;
+  private volatile boolean audioOnly = false;
   private volatile boolean closed;
   
   private InfoHandler infoHandler;
@@ -212,7 +213,15 @@ public class Participant {
   public boolean isStreaming() {
     return streaming;
   }
+  
+  public boolean isAudioOnly() {
+	  return this.audioOnly;
+  }
 
+  public void setAudioOnly(boolean audioOnly) {
+	  this.audioOnly = audioOnly;
+  }
+  
   public boolean isSubscribed() {
     for (SubscriberEndpoint se : subscribers.values()) {
       if (se.isConnectedToPublisher()) {

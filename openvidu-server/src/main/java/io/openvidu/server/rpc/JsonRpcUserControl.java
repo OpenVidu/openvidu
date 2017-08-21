@@ -98,9 +98,10 @@ public class JsonRpcUserControl {
 	  if (roomManager.getRoomManager().isPublisherInRoom(participantName, roomName)) {
 	  
 	    String sdpOffer = getStringParam(request, ProtocolElements.PUBLISHVIDEO_SDPOFFER_PARAM);
+	    boolean audioOnly = getBooleanParam(request, ProtocolElements.PUBLISHVIDEO_AUDIOONLY_PARAM);
 	    boolean doLoopback = getBooleanParam(request, ProtocolElements.PUBLISHVIDEO_DOLOOPBACK_PARAM);
 	
-	    roomManager.publishMedia(participantRequest, sdpOffer, doLoopback);
+	    roomManager.publishMedia(participantRequest, sdpOffer, audioOnly, doLoopback);
 	  }
 	  else {
 		  System.out.println("Error: user is not a publisher");

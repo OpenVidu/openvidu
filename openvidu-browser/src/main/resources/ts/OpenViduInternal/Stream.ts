@@ -40,6 +40,7 @@ export interface StreamOptions {
     audio: boolean;
     data: boolean;
     mediaConstraints: any;
+    audioOnly: boolean;
 }
 
 export interface VideoOptions {
@@ -70,6 +71,8 @@ export class Stream {
     private dataChannel: boolean;
     private dataChannelOpened = false;
 
+    private audioOnly = false;
+
     private videoSrc: string;
     private parentId: string;
     public isReady: boolean = false;
@@ -92,6 +95,7 @@ export class Stream {
         this.sendVideo = options.video;
         this.sendAudio = options.audio;
         this.mediaConstraints = options.mediaConstraints;
+        this.audioOnly = options.audioOnly || false;
 
         this.addEventListener('src-added', (srcEvent) => {
             this.videoSrc = srcEvent.src;
@@ -359,6 +363,7 @@ export class Stream {
             if (!hasVideo) {
                 constraints.video = false;
                 this.sendVideo = false;
+                this.audioOnly = true;
                 this.requestCameraAccesAux(constraints, callback);
             } else {
                 this.requestCameraAccesAux(constraints, callback);
@@ -416,7 +421,8 @@ export class Stream {
 
         this.openVidu.sendRequest("publishVideo", {
             sdpOffer: sdpOfferParam,
-            doLoopback: this.displayMyRemote() || false
+            doLoopback: this.displayMyRemote() || false,
+            audioOnly: this.audioOnly
         }, (error, response) => {
             if (error) {
                 console.error("Error on publishVideo: " + JSON.stringify(error));
@@ -488,16 +494,14 @@ export class Stream {
             }
         } else {
             let offerConstraints = {
-                mandatory: {
-                    OfferToReceiveVideo: this.recvVideo,
-                    OfferToReceiveAudio: this.recvAudio
-                }
+                audio: this.recvAudio,
+                video: !this.audioOnly
             };
             console.log("Constraints of generate SDP offer (subscribing)",
                 offerConstraints);
             let options = {
                 onicecandidate: this.connection.sendIceCandidate.bind(this.connection),
-                connectionConstraints: offerConstraints
+                mediaConstraints: offerConstraints
             }
             this.wp = new kurentoUtils.WebRtcPeer.WebRtcPeerRecvonly(options, error => {
                 if (error) {
