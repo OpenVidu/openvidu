@@ -374,30 +374,44 @@ export class Stream {
     private requestCameraAccesAux(constraints, callback) {
         navigator.mediaDevices.getUserMedia(constraints)
             .then(userStream => {
-                this.accessIsAllowed = true;
-                this.accessIsDenied = false;
-                this.ee.emitEvent('access-allowed-by-publisher');
-
-                if (userStream.getAudioTracks()[0] != null) {
-                    userStream.getAudioTracks()[0].enabled = this.sendAudio;
-                }
-                if (userStream.getVideoTracks()[0] != null) {
-                    userStream.getVideoTracks()[0].enabled = this.sendVideo;
-                }
-
-                this.wrStream = userStream;
-                this.emitSrcEvent(this.wrStream);
-
-                callback(undefined, this);
+                this.cameraAccessSuccess(userStream, callback);
             })
             .catch(error => {
-                this.accessIsDenied = true;
-                this.accessIsAllowed = false;
-                this.ee.emitEvent('access-denied-by-publisher');
+                //  Try to ask for microphone only
+                navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+                    .then(userStream => {
+                        constraints.video = false;
+                        this.sendVideo = false;
+                        this.audioOnly = true;
+                        this.cameraAccessSuccess(userStream, callback);
+                    })
+                    .catch(error => {
+                        this.accessIsDenied = true;
+                        this.accessIsAllowed = false;
+                        this.ee.emitEvent('access-denied-by-publisher');
 
-                console.error("Access denied", error);
-                callback(error, this);
+                        console.error("Access denied", error);
+                        callback(error, this);
+                    });
             });
+    }
+
+    private cameraAccessSuccess(userStream, callback) {
+        this.accessIsAllowed = true;
+        this.accessIsDenied = false;
+        this.ee.emitEvent('access-allowed-by-publisher');
+
+        if (userStream.getAudioTracks()[0] != null) {
+            userStream.getAudioTracks()[0].enabled = this.sendAudio;
+        }
+        if (userStream.getVideoTracks()[0] != null) {
+            userStream.getVideoTracks()[0].enabled = this.sendVideo;
+        }
+
+        this.wrStream = userStream;
+        this.emitSrcEvent(this.wrStream);
+
+        callback(undefined, this);
     }
 
     private userMediaHasVideo(callback) {
