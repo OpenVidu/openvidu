@@ -15,3 +15,11 @@ main {
 li {
   list-style: none;
 }
+
+video {
+  width: 100%;
+}
+
+.mat-spinner path {
+  stroke: #4d4d4d;
+}

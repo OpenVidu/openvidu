@@ -4,11 +4,29 @@ import {
     MdButtonModule,
     MdCheckboxModule,
     MdCardModule,
-    MdInputModule
+    MdInputModule,
+    MdProgressSpinnerModule,
+    MdTooltipModule
 } from '@angular/material';
 
 @NgModule({
-    imports: [BrowserAnimationsModule, MdButtonModule, MdCheckboxModule, MdCardModule, MdInputModule],
-    exports: [BrowserAnimationsModule, MdButtonModule, MdCheckboxModule, MdCardModule, MdInputModule],
+    imports: [
+        BrowserAnimationsModule,
+        MdButtonModule,
+        MdCheckboxModule,
+        MdCardModule,
+        MdInputModule,
+        MdProgressSpinnerModule,
+        MdTooltipModule
+    ],
+    exports: [
+        BrowserAnimationsModule,
+        MdButtonModule,
+        MdCheckboxModule,
+        MdCardModule,
+        MdInputModule,
+        MdProgressSpinnerModule,
+        MdTooltipModule
+    ],
 })
 export class AppMaterialModule { }

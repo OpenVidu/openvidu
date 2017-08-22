@@ -16,10 +16,27 @@
 
   <div fxLayout="column" fxFlex="33%" fxFlexOrder="2" fxFlexOrder.xs="1">
     <md-card id="video-loop">
-      <md-card-title>Test the connection<a md-raised-button (click)="testVideo()">Test</a></md-card-title>
+      <md-card-title>Test the connection
+        <button [class]="testStatus == 'DISCONNECTED' ? 'blue' : (testStatus == 'PLAYING' ? 'yellow' : 'disabled')" md-raised-button (click)="toggleTestVideo()" [disabled]="testStatus==='CONNECTING' || testStatus==='CONNECTED'">{{testButton}}</button></md-card-title>
       <md-card-content #scrollMe id="log-content">
-        <div id="local-video"></div>
-        <div id="mirrored-video"></div>
+        <div id="mirrored-video">
+          <div *ngIf="showSpinner" id="loader">
+          <div class="loader-1 center"><span></span></div>
+          </div>
+          <!--<md-spinner *ngIf="showSpinner" [color]="color"></md-spinner>-->
+          <div *ngIf="session" id="tick-div">
+            <div id="tooltip-tick" *ngIf="testStatus=='PLAYING'" mdTooltip="The connection is successful" mdTooltipPosition="below"></div>
+            <div [class]="testStatus=='PLAYING' ? 'trigger drawn' : 'trigger'"></div>
+            <svg version="1.1" id="tick" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+              viewBox="-1 -1 39 39" style="enable-background:new 0 0 37 37;" xml:space="preserve">
+              <path class="circ path" style="fill:none;stroke:#06d362;stroke-width:4;stroke-linejoin:round;stroke-miterlimit:10;" d="
+	M30.5,6.5L30.5,6.5c6.6,6.6,6.6,17.4,0,24l0,0c-6.6,6.6-17.4,6.6-24,0l0,0c-6.6-6.6-6.6-17.4,0-24l0,0C13.1-0.2,23.9-0.2,30.5,6.5z"
+              />
+              <polyline class="tick path" style="fill:none;stroke:#06d362;stroke-width:4;stroke-linejoin:round;stroke-miterlimit:10;" points="
+	11.6,20 15.9,24.2 26.4,13.8 " />
+            </svg>
+          </div>
+        </div>
       </md-card-content>
     </md-card>
   </div>
