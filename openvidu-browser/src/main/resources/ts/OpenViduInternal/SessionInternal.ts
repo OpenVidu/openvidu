@@ -75,7 +75,7 @@ export class SessionInternal {
                 this.openVidu.sendRequest('joinRoom', joinParams, (error, response) => {
 
                     if (error) {
-                        callback('UNABLE TO JOIN ROOM');
+                        callback(error);
                     } else {
 
                         this.connected = true;

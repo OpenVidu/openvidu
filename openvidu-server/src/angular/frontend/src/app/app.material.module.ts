@@ -6,7 +6,8 @@ import {
     MdCardModule,
     MdInputModule,
     MdProgressSpinnerModule,
-    MdTooltipModule
+    MdTooltipModule,
+    MdDialogModule
 } from '@angular/material';
 
 @NgModule({
@@ -17,7 +18,8 @@ import {
         MdCardModule,
         MdInputModule,
         MdProgressSpinnerModule,
-        MdTooltipModule
+        MdTooltipModule,
+        MdDialogModule
     ],
     exports: [
         BrowserAnimationsModule,
@@ -26,7 +28,8 @@ import {
         MdCardModule,
         MdInputModule,
         MdProgressSpinnerModule,
-        MdTooltipModule
+        MdTooltipModule,
+        MdDialogModule
     ],
 })
 export class AppMaterialModule { }

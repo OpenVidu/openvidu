@@ -9,17 +9,20 @@ import { routing } from './app.routing';
 import { AppMaterialModule } from 'app/app.material.module';
 
 import { InfoService } from './services/info.service';
+import { CredentialsService } from './services/credentials.service';
 
 import { AppComponent } from './app.component';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { SessionDetailsComponent } from './components/session-details/session-details.component';
+import { CredentialsDialogComponent } from './components/dashboard/credentials-dialog.component';
 
 
 @NgModule({
   declarations: [
     AppComponent,
     DashboardComponent,
-    SessionDetailsComponent
+    SessionDetailsComponent,
+    CredentialsDialogComponent,
   ],
   imports: [
     BrowserModule,
@@ -29,7 +32,10 @@ import { SessionDetailsComponent } from './components/session-details/session-de
     AppMaterialModule,
     FlexLayoutModule
   ],
-  providers: [InfoService],
+  entryComponents: [
+    CredentialsDialogComponent,
+  ],
+  providers: [InfoService, CredentialsService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

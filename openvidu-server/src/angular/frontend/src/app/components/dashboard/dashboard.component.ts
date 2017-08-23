@@ -1,9 +1,12 @@
 import { Component, OnInit, AfterViewChecked, ViewChild, ElementRef, HostListener, OnDestroy } from '@angular/core';
+import { MdDialog, MdDialogRef } from '@angular/material';
 import { Subscription } from 'rxjs/Subscription';
 
 import { InfoService } from '../../services/info.service';
+import { CredentialsService } from '../../services/credentials.service';
 
 import { OpenVidu, Session } from 'openvidu-browser';
+import { CredentialsDialogComponent } from './credentials-dialog.component';
 
 declare const $;
 
@@ -26,7 +29,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewChecked {
   tickClass = 'trigger';
   showSpinner = false;
 
-  constructor(private infoService: InfoService) {
+  constructor(private infoService: InfoService, private credentialsService: CredentialsService, public dialog: MdDialog) {
 
     // Subscription to info updated event raised by InfoService
     this.infoSubscription = this.infoService.newInfo$.subscribe(
@@ -68,7 +71,11 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewChecked {
 
   testVideo() {
     let OV = new OpenVidu();
-    this.session = OV.initSession('wss://' + location.hostname + ':8443/testSession');
+    this.connectToSession(OV, 'wss://' + location.hostname + ':8443/testSession', 'token');
+  }
+
+  connectToSession(OV: OpenVidu, mySessionId: string, myToken: string) {
+    this.session = OV.initSession(mySessionId);
 
     this.session.on('streamCreated', (event) => {
       this.session.subscribe(event.stream, 'mirrored-video');
@@ -77,7 +84,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.testStatus = 'CONNECTING';
     this.testButton = 'Testing...';
 
-    this.session.connect('token', (error) => {
+    this.session.connect(myToken, (error) => {
       if (!error) {
 
         this.testStatus = 'CONNECTED';
@@ -102,6 +109,32 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewChecked {
 
         publisherRemote.stream.subscribeToMyRemote();
         this.session.publish(publisherRemote);
+      } else {
+        if (error.code === 401) { // User unauthorized error. OpenVidu security is active
+          this.endTestVideo();
+          let dialogRef: MdDialogRef<CredentialsDialogComponent>;
+          dialogRef = this.dialog.open(CredentialsDialogComponent);
+          dialogRef.componentInstance.myReference = dialogRef;
+
+          dialogRef.afterClosed().subscribe(secret => {
+            if (secret) {
+              this.credentialsService.getSessionId(secret).subscribe(
+                sessionId => {
+                  this.credentialsService.getToken(sessionId.id, secret).subscribe(
+                    token => {
+                      this.connectToSession(OV, sessionId.id, token.token);
+                    }
+                  )
+                },
+                err => {
+                  console.log(err);
+                }
+              );
+            }
+          });
+        } else {
+          console.error(error);
+        }
       }
     });
   }

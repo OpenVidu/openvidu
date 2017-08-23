@@ -17,7 +17,9 @@
 
 package io.openvidu.client;
 
-public class OpenViduException extends RuntimeException {
+import org.kurento.jsonrpc.JsonRpcErrorException;
+
+public class OpenViduException extends JsonRpcErrorException {
   private static final long serialVersionUID = 1L;
 
   public static enum Code {
@@ -57,12 +59,8 @@ public class OpenViduException extends RuntimeException {
   private Code code = Code.GENERIC_ERROR_CODE;
 
   public OpenViduException(Code code, String message) {
-    super(message);
+    super(code.getValue(), message);
     this.code = code;
-  }
-
-  public Code getCode() {
-    return code;
   }
 
   public int getCodeValue() {
@@ -71,7 +69,7 @@ public class OpenViduException extends RuntimeException {
 
   @Override
   public String toString() {
-    return "Code: " + getCodeValue() + " " + super.toString();
+    return "CODE: " + getCodeValue() + ". EXCEPTION: " + super.toString();
   }
 
 }

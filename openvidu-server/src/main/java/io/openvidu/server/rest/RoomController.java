@@ -71,7 +71,7 @@ public class RoomController {
   }
   
   @RequestMapping(value = "/tokens", method = RequestMethod.POST)
-  public ResponseEntity<JSONObject> newToken(@RequestBody Map sessionIdRoleMetadata) { // {0: sessionID, 1: role, 2: metadata}
+  public ResponseEntity<JSONObject> newToken(@RequestBody Map sessionIdRoleMetadata) {
 	  String errorMessage = "";
 	  try {
 		  String sessionId = (String) sessionIdRoleMetadata.get("session");

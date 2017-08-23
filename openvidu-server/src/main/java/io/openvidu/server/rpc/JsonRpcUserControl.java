@@ -55,10 +55,11 @@ public class JsonRpcUserControl {
 	  
     String roomId = getStringParam(request, ProtocolElements.JOINROOM_ROOM_PARAM);
     String token = getStringParam(request, ProtocolElements.JOINROOM_TOKEN_PARAM);
-    String userName = roomManager.newRandomUserName(token, roomId);
-    String clientMetadata = getStringParam(request, ProtocolElements.JOINROOM_METADATA_PARAM);
     
     if(roomManager.getRoomManager().isParticipantInRoom(token, roomId)){
+    	
+    	String userName = roomManager.newRandomUserName(token, roomId);
+	    String clientMetadata = getStringParam(request, ProtocolElements.JOINROOM_METADATA_PARAM);
     	
     	if(roomManager.getRoomManager().metadataFormatCorrect(clientMetadata)){
     		
