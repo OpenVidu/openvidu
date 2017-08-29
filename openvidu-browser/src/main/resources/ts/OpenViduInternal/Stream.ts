@@ -642,7 +642,7 @@ export class Stream {
 
         this.elements.forEach(e => disposeElement(e));
 
-        this.videoElements.forEach(ve => disposeElement(ve));
+        //this.videoElements.forEach(ve => disposeElement(ve.video));
 
         disposeElement("progress-" + this.getId());
 

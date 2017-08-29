@@ -21,7 +21,7 @@ export class Session {
     public getSessionId(callback: Function) {
 
         if (this.sessionId) {
-            return this.sessionId;
+            callback(this.sessionId);
         }
 
         let options = {

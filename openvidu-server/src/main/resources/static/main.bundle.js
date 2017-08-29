@@ -1,6 +1,6 @@
 webpackJsonp([1,4],{
 
-/***/ 105:
+/***/ 104:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8,7 +8,7 @@ webpackJsonp([1,4],{
 Object.defineProperty(exports, "__esModule", { value: true });
 var EventEmitter = __webpack_require__(52);
 var kurentoUtils = __webpack_require__(277);
-var adapter = __webpack_require__(176);
+var adapter = __webpack_require__(175);
 if (window) {
     window["adapter"] = adapter;
 }
@@ -515,7 +515,7 @@ var Stream = (function () {
             }
         }
         this.elements.forEach(function (e) { return disposeElement(e); });
-        this.videoElements.forEach(function (ve) { return disposeElement(ve); });
+        //this.videoElements.forEach(ve => disposeElement(ve.video));
         disposeElement("progress-" + this.getId());
         if (this.wp) {
             this.wp.dispose();
@@ -585,11 +585,10 @@ CredentialsDialogComponent = __decorate([
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_material__ = __webpack_require__(119);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__services_info_service__ = __webpack_require__(70);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__services_credentials_service__ = __webpack_require__(123);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_openvidu_browser__ = __webpack_require__(371);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_openvidu_browser___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_openvidu_browser__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__credentials_dialog_component__ = __webpack_require__(120);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__services_info_service__ = __webpack_require__(69);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_openvidu_browser__ = __webpack_require__(371);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_openvidu_browser___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_openvidu_browser__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__credentials_dialog_component__ = __webpack_require__(120);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return DashboardComponent; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -605,13 +604,12 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
-
 var DashboardComponent = (function () {
-    function DashboardComponent(infoService, credentialsService, dialog) {
+    function DashboardComponent(infoService, dialog) {
         var _this = this;
         this.infoService = infoService;
-        this.credentialsService = credentialsService;
         this.dialog = dialog;
+        this.lockScroll = false;
         this.info = [];
         this.testStatus = 'DISCONNECTED';
         this.testButton = 'Test';
@@ -620,6 +618,7 @@ var DashboardComponent = (function () {
         // Subscription to info updated event raised by InfoService
         this.infoSubscription = this.infoService.newInfo$.subscribe(function (info) {
             _this.info.push(info);
+            _this.scrollToBottom();
         });
     }
     DashboardComponent.prototype.ngOnInit = function () {
@@ -636,9 +635,6 @@ var DashboardComponent = (function () {
             this.endTestVideo();
         }
     };
-    DashboardComponent.prototype.ngAfterViewChecked = function () {
-        this.scrollToBottom();
-    };
     DashboardComponent.prototype.toggleTestVideo = function () {
         if (!this.session) {
             this.testVideo();
@@ -648,18 +644,26 @@ var DashboardComponent = (function () {
         }
     };
     DashboardComponent.prototype.testVideo = function () {
-        var OV = new __WEBPACK_IMPORTED_MODULE_4_openvidu_browser__["OpenVidu"]();
-        this.connectToSession(OV, 'wss://' + location.hostname + ':8443/testSession', 'token');
-    };
-    DashboardComponent.prototype.connectToSession = function (OV, mySessionId, myToken) {
         var _this = this;
+        var dialogRef;
+        dialogRef = this.dialog.open(__WEBPACK_IMPORTED_MODULE_4__credentials_dialog_component__["a" /* CredentialsDialogComponent */]);
+        dialogRef.componentInstance.myReference = dialogRef;
+        dialogRef.afterClosed().subscribe(function (secret) {
+            if (secret) {
+                _this.connectToSession('wss://' + location.hostname + ':8443/testSession?secret=' + secret);
+            }
+        });
+    };
+    DashboardComponent.prototype.connectToSession = function (mySessionId) {
+        var _this = this;
+        var OV = new __WEBPACK_IMPORTED_MODULE_3_openvidu_browser__["OpenVidu"]();
         this.session = OV.initSession(mySessionId);
         this.session.on('streamCreated', function (event) {
             _this.session.subscribe(event.stream, 'mirrored-video');
         });
         this.testStatus = 'CONNECTING';
         this.testButton = 'Testing...';
-        this.session.connect(myToken, function (error) {
+        this.session.connect('token', function (error) {
             if (!error) {
                 _this.testStatus = 'CONNECTED';
                 var publisherRemote = OV.initPublisher('mirrored-video', {
@@ -683,17 +687,11 @@ var DashboardComponent = (function () {
                 if (error.code === 401) {
                     _this.endTestVideo();
                     var dialogRef = void 0;
-                    dialogRef = _this.dialog.open(__WEBPACK_IMPORTED_MODULE_5__credentials_dialog_component__["a" /* CredentialsDialogComponent */]);
+                    dialogRef = _this.dialog.open(__WEBPACK_IMPORTED_MODULE_4__credentials_dialog_component__["a" /* CredentialsDialogComponent */]);
                     dialogRef.componentInstance.myReference = dialogRef;
                     dialogRef.afterClosed().subscribe(function (secret) {
                         if (secret) {
-                            _this.credentialsService.getSessionId(secret).subscribe(function (sessionId) {
-                                _this.credentialsService.getToken(sessionId.id, secret).subscribe(function (token) {
-                                    _this.connectToSession(OV, sessionId.id, token.token);
-                                });
-                            }, function (err) {
-                                console.log(err);
-                            });
+                            _this.connectToSession('wss://' + location.hostname + ':8443/testSession?secret=' + secret);
                         }
                     });
                 }
@@ -709,20 +707,23 @@ var DashboardComponent = (function () {
         this.testStatus = 'DISCONNECTED';
         this.testButton = 'Test';
         this.showSpinner = false;
+        this.info = [];
     };
     DashboardComponent.prototype.scrollToBottom = function () {
         try {
-            this.myScrollContainer.nativeElement.scrollTop = this.myScrollContainer.nativeElement.scrollHeight;
+            if (!this.lockScroll) {
+                this.myScrollContainer.nativeElement.scrollTop = this.myScrollContainer.nativeElement.scrollHeight;
+            }
         }
         catch (err) {
-            console.log('[Error]:' + err.toString());
+            console.error('[Error]:' + err.toString());
         }
     };
     return DashboardComponent;
 }());
 __decorate([
     __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_7" /* ViewChild */])('scrollMe'),
-    __metadata("design:type", typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_0__angular_core__["M" /* ElementRef */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_0__angular_core__["M" /* ElementRef */]) === "function" && _a || Object)
+    __metadata("design:type", typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_0__angular_core__["l" /* ElementRef */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_0__angular_core__["l" /* ElementRef */]) === "function" && _a || Object)
 ], DashboardComponent.prototype, "myScrollContainer", void 0);
 __decorate([
     __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_12" /* HostListener */])('window:beforeunload'),
@@ -734,12 +735,12 @@ DashboardComponent = __decorate([
     __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_4" /* Component */])({
         selector: 'app-dashboard',
         template: __webpack_require__(283),
-        styles: [__webpack_require__(262)],
+        styles: [__webpack_require__(261)],
     }),
-    __metadata("design:paramtypes", [typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_2__services_info_service__["a" /* InfoService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_2__services_info_service__["a" /* InfoService */]) === "function" && _b || Object, typeof (_c = typeof __WEBPACK_IMPORTED_MODULE_3__services_credentials_service__["a" /* CredentialsService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_3__services_credentials_service__["a" /* CredentialsService */]) === "function" && _c || Object, typeof (_d = typeof __WEBPACK_IMPORTED_MODULE_1__angular_material__["h" /* MdDialog */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1__angular_material__["h" /* MdDialog */]) === "function" && _d || Object])
+    __metadata("design:paramtypes", [typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_2__services_info_service__["a" /* InfoService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_2__services_info_service__["a" /* InfoService */]) === "function" && _b || Object, typeof (_c = typeof __WEBPACK_IMPORTED_MODULE_1__angular_material__["j" /* MdDialog */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1__angular_material__["j" /* MdDialog */]) === "function" && _c || Object])
 ], DashboardComponent);
 
-var _a, _b, _c, _d;
+var _a, _b, _c;
 //# sourceMappingURL=dashboard.component.js.map
 
 /***/ }),
@@ -771,7 +772,7 @@ SessionDetailsComponent = __decorate([
     __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_4" /* Component */])({
         selector: 'app-session-details',
         template: __webpack_require__(284),
-        styles: [__webpack_require__(263)]
+        styles: [__webpack_require__(262)]
     }),
     __metadata("design:paramtypes", [])
 ], SessionDetailsComponent);
@@ -780,66 +781,7 @@ SessionDetailsComponent = __decorate([
 
 /***/ }),
 
-/***/ 123:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_http__ = __webpack_require__(69);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs_Observable__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_rxjs_Observable__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return CredentialsService; });
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-
-
-
-var CredentialsService = (function () {
-    function CredentialsService(http) {
-        this.http = http;
-        this.url = 'https://' + location.hostname + ':8443';
-    }
-    CredentialsService.prototype.getSessionId = function (secret) {
-        var _this = this;
-        var headers = new __WEBPACK_IMPORTED_MODULE_1__angular_http__["b" /* Headers */]({ 'Authorization': 'Basic ' + btoa('OPENVIDUAPP:' + secret) });
-        var options = new __WEBPACK_IMPORTED_MODULE_1__angular_http__["c" /* RequestOptions */]({ headers: headers });
-        return this.http.post('api/sessions', options)
-            .map(function (response) { return response.json(); })
-            .catch(function (error) { return _this.handleError(error); });
-    };
-    CredentialsService.prototype.getToken = function (sessionId, secret) {
-        var _this = this;
-        var body = JSON.stringify({ "session": sessionId, "role": "PUBLISHER", "data": "" });
-        var headers = new __WEBPACK_IMPORTED_MODULE_1__angular_http__["b" /* Headers */]({ 'Authorization': 'Basic ' + btoa('OPENVIDUAPP:' + secret), 'Content-Type': 'application/json' });
-        var options = new __WEBPACK_IMPORTED_MODULE_1__angular_http__["c" /* RequestOptions */]({ headers: headers });
-        return this.http.post('api/tokens', body, options)
-            .map(function (response) { return response.json(); })
-            .catch(function (error) { return _this.handleError(error); });
-    };
-    CredentialsService.prototype.handleError = function (error) {
-        console.error(error);
-        return __WEBPACK_IMPORTED_MODULE_2_rxjs_Observable__["Observable"].throw('Server error (' + error.status + '): ' + error.text());
-    };
-    return CredentialsService;
-}());
-CredentialsService = __decorate([
-    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["c" /* Injectable */])(),
-    __metadata("design:paramtypes", [typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_1__angular_http__["d" /* Http */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1__angular_http__["d" /* Http */]) === "function" && _a || Object])
-], CredentialsService);
-
-var _a;
-//# sourceMappingURL=credentials.service.js.map
-
-/***/ }),
-
-/***/ 169:
+/***/ 168:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -937,13 +879,13 @@ exports.Publisher = Publisher;
 
 /***/ }),
 
-/***/ 170:
+/***/ 169:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var Subscriber_1 = __webpack_require__(171);
+var Subscriber_1 = __webpack_require__(170);
 var EventEmitter = __webpack_require__(52);
 var Session = (function () {
     function Session(session, openVidu) {
@@ -1087,7 +1029,7 @@ exports.Session = Session;
 
 /***/ }),
 
-/***/ 171:
+/***/ 170:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1131,13 +1073,13 @@ exports.Subscriber = Subscriber;
 
 /***/ }),
 
-/***/ 172:
+/***/ 171:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var Stream_1 = __webpack_require__(105);
+var Stream_1 = __webpack_require__(104);
 var Connection = (function () {
     function Connection(openVidu, local, room, options) {
         this.openVidu = openVidu;
@@ -1205,7 +1147,7 @@ exports.Connection = Connection;
 
 /***/ }),
 
-/***/ 177:
+/***/ 176:
 /***/ (function(module, exports) {
 
 function webpackEmptyContext(req) {
@@ -1214,20 +1156,20 @@ function webpackEmptyContext(req) {
 webpackEmptyContext.keys = function() { return []; };
 webpackEmptyContext.resolve = webpackEmptyContext;
 module.exports = webpackEmptyContext;
-webpackEmptyContext.id = 177;
+webpackEmptyContext.id = 176;
 
 
 /***/ }),
 
-/***/ 178:
+/***/ 177:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_platform_browser_dynamic__ = __webpack_require__(198);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__app_app_module__ = __webpack_require__(203);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__environments_environment__ = __webpack_require__(205);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_platform_browser_dynamic__ = __webpack_require__(197);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__app_app_module__ = __webpack_require__(202);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__environments_environment__ = __webpack_require__(204);
 
 
 
@@ -1240,12 +1182,12 @@ __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__angular_platform_browser_dyna
 
 /***/ }),
 
-/***/ 201:
+/***/ 200:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_services_info_service__ = __webpack_require__(70);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_services_info_service__ = __webpack_require__(69);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AppComponent; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -1301,7 +1243,7 @@ AppComponent = __decorate([
     __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_4" /* Component */])({
         selector: 'app-root',
         template: __webpack_require__(282),
-        styles: [__webpack_require__(261)]
+        styles: [__webpack_require__(260)]
     }),
     __metadata("design:paramtypes", [typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_1_app_services_info_service__["a" /* InfoService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_app_services_info_service__["a" /* InfoService */]) === "function" && _a || Object])
 ], AppComponent);
@@ -1311,12 +1253,12 @@ var _a;
 
 /***/ }),
 
-/***/ 202:
+/***/ 201:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_platform_browser_animations__ = __webpack_require__(199);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_platform_browser_animations__ = __webpack_require__(198);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_material__ = __webpack_require__(119);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AppMaterialModule; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
@@ -1338,22 +1280,26 @@ AppMaterialModule = __decorate([
         imports: [
             __WEBPACK_IMPORTED_MODULE_1__angular_platform_browser_animations__["a" /* BrowserAnimationsModule */],
             __WEBPACK_IMPORTED_MODULE_2__angular_material__["a" /* MdButtonModule */],
-            __WEBPACK_IMPORTED_MODULE_2__angular_material__["b" /* MdCheckboxModule */],
-            __WEBPACK_IMPORTED_MODULE_2__angular_material__["c" /* MdCardModule */],
-            __WEBPACK_IMPORTED_MODULE_2__angular_material__["d" /* MdInputModule */],
-            __WEBPACK_IMPORTED_MODULE_2__angular_material__["e" /* MdProgressSpinnerModule */],
-            __WEBPACK_IMPORTED_MODULE_2__angular_material__["f" /* MdTooltipModule */],
-            __WEBPACK_IMPORTED_MODULE_2__angular_material__["g" /* MdDialogModule */]
+            __WEBPACK_IMPORTED_MODULE_2__angular_material__["b" /* MdIconModule */],
+            __WEBPACK_IMPORTED_MODULE_2__angular_material__["c" /* MdCheckboxModule */],
+            __WEBPACK_IMPORTED_MODULE_2__angular_material__["d" /* MdCardModule */],
+            __WEBPACK_IMPORTED_MODULE_2__angular_material__["e" /* MdInputModule */],
+            __WEBPACK_IMPORTED_MODULE_2__angular_material__["f" /* MdProgressSpinnerModule */],
+            __WEBPACK_IMPORTED_MODULE_2__angular_material__["g" /* MdTooltipModule */],
+            __WEBPACK_IMPORTED_MODULE_2__angular_material__["h" /* MdDialogModule */],
+            __WEBPACK_IMPORTED_MODULE_2__angular_material__["i" /* MdSlideToggleModule */]
         ],
         exports: [
             __WEBPACK_IMPORTED_MODULE_1__angular_platform_browser_animations__["a" /* BrowserAnimationsModule */],
             __WEBPACK_IMPORTED_MODULE_2__angular_material__["a" /* MdButtonModule */],
-            __WEBPACK_IMPORTED_MODULE_2__angular_material__["b" /* MdCheckboxModule */],
-            __WEBPACK_IMPORTED_MODULE_2__angular_material__["c" /* MdCardModule */],
-            __WEBPACK_IMPORTED_MODULE_2__angular_material__["d" /* MdInputModule */],
-            __WEBPACK_IMPORTED_MODULE_2__angular_material__["e" /* MdProgressSpinnerModule */],
-            __WEBPACK_IMPORTED_MODULE_2__angular_material__["f" /* MdTooltipModule */],
-            __WEBPACK_IMPORTED_MODULE_2__angular_material__["g" /* MdDialogModule */]
+            __WEBPACK_IMPORTED_MODULE_2__angular_material__["b" /* MdIconModule */],
+            __WEBPACK_IMPORTED_MODULE_2__angular_material__["c" /* MdCheckboxModule */],
+            __WEBPACK_IMPORTED_MODULE_2__angular_material__["d" /* MdCardModule */],
+            __WEBPACK_IMPORTED_MODULE_2__angular_material__["e" /* MdInputModule */],
+            __WEBPACK_IMPORTED_MODULE_2__angular_material__["f" /* MdProgressSpinnerModule */],
+            __WEBPACK_IMPORTED_MODULE_2__angular_material__["g" /* MdTooltipModule */],
+            __WEBPACK_IMPORTED_MODULE_2__angular_material__["h" /* MdDialogModule */],
+            __WEBPACK_IMPORTED_MODULE_2__angular_material__["i" /* MdSlideToggleModule */]
         ],
     })
 ], AppMaterialModule);
@@ -1362,20 +1308,21 @@ AppMaterialModule = __decorate([
 
 /***/ }),
 
-/***/ 203:
+/***/ 202:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_platform_browser__ = __webpack_require__(22);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_flex_layout__ = __webpack_require__(195);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_flex_layout__ = __webpack_require__(194);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__angular_forms__ = __webpack_require__(118);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__angular_http__ = __webpack_require__(69);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__app_routing__ = __webpack_require__(204);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_app_app_material_module__ = __webpack_require__(202);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__services_info_service__ = __webpack_require__(70);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__services_credentials_service__ = __webpack_require__(123);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__app_component__ = __webpack_require__(201);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__angular_forms__ = __webpack_require__(117);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__angular_http__ = __webpack_require__(118);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_hammerjs__ = __webpack_require__(264);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_hammerjs___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_hammerjs__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__app_routing__ = __webpack_require__(203);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_app_app_material_module__ = __webpack_require__(201);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__services_info_service__ = __webpack_require__(69);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__app_component__ = __webpack_require__(200);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__components_dashboard_dashboard_component__ = __webpack_require__(121);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__components_session_details_session_details_component__ = __webpack_require__(122);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__components_dashboard_credentials_dialog_component__ = __webpack_require__(120);
@@ -1416,14 +1363,14 @@ AppModule = __decorate([
             __WEBPACK_IMPORTED_MODULE_0__angular_platform_browser__["a" /* BrowserModule */],
             __WEBPACK_IMPORTED_MODULE_3__angular_forms__["a" /* FormsModule */],
             __WEBPACK_IMPORTED_MODULE_4__angular_http__["a" /* HttpModule */],
-            __WEBPACK_IMPORTED_MODULE_5__app_routing__["a" /* routing */],
-            __WEBPACK_IMPORTED_MODULE_6_app_app_material_module__["a" /* AppMaterialModule */],
+            __WEBPACK_IMPORTED_MODULE_6__app_routing__["a" /* routing */],
+            __WEBPACK_IMPORTED_MODULE_7_app_app_material_module__["a" /* AppMaterialModule */],
             __WEBPACK_IMPORTED_MODULE_1__angular_flex_layout__["a" /* FlexLayoutModule */]
         ],
         entryComponents: [
             __WEBPACK_IMPORTED_MODULE_12__components_dashboard_credentials_dialog_component__["a" /* CredentialsDialogComponent */],
         ],
-        providers: [__WEBPACK_IMPORTED_MODULE_7__services_info_service__["a" /* InfoService */], __WEBPACK_IMPORTED_MODULE_8__services_credentials_service__["a" /* CredentialsService */]],
+        providers: [__WEBPACK_IMPORTED_MODULE_8__services_info_service__["a" /* InfoService */]],
         bootstrap: [__WEBPACK_IMPORTED_MODULE_9__app_component__["a" /* AppComponent */]]
     })
 ], AppModule);
@@ -1432,11 +1379,11 @@ AppModule = __decorate([
 
 /***/ }),
 
-/***/ 204:
+/***/ 203:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_router__ = __webpack_require__(200);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_router__ = __webpack_require__(199);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_components_dashboard_dashboard_component__ = __webpack_require__(121);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_app_components_session_details_session_details_component__ = __webpack_require__(122);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return routing; });
@@ -1458,7 +1405,7 @@ var routing = __WEBPACK_IMPORTED_MODULE_0__angular_router__["a" /* RouterModule 
 
 /***/ }),
 
-/***/ 205:
+/***/ 204:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1475,7 +1422,7 @@ var environment = {
 
 /***/ }),
 
-/***/ 261:
+/***/ 260:
 /***/ (function(module, exports, __webpack_require__) {
 
 exports = module.exports = __webpack_require__(37)(false);
@@ -1493,7 +1440,7 @@ module.exports = module.exports.toString();
 
 /***/ }),
 
-/***/ 262:
+/***/ 261:
 /***/ (function(module, exports, __webpack_require__) {
 
 exports = module.exports = __webpack_require__(37)(false);
@@ -1511,7 +1458,7 @@ module.exports = module.exports.toString();
 
 /***/ }),
 
-/***/ 263:
+/***/ 262:
 /***/ (function(module, exports, __webpack_require__) {
 
 exports = module.exports = __webpack_require__(37)(false);
@@ -1539,7 +1486,7 @@ module.exports = "<main>\n  <router-outlet></router-outlet>\n</main>"
 /***/ 283:
 /***/ (function(module, exports) {
 
-module.exports = "<div id=\"dashboard-div\" fxLayout=\"row\" fxLayout.xs=\"column\" fxLayoutGap=\"20px\" fxFlexFill>\n\n  <div fxLayout=\"column\" fxFlex=\"66%\" fxFlexOrder=\"1\" fxFlexOrder.xs=\"2\">\n    <md-card id=\"log\">\n      <md-card-title>Server events</md-card-title>\n      <md-divider></md-divider>\n      <md-card-content #scrollMe id=\"log-content\">\n        <md-list>\n          <md-list-item *ngFor=\"let i of info\">\n            <p>{{i}}</p>\n          </md-list-item>\n        </md-list>\n      </md-card-content>\n    </md-card>\n  </div>\n\n  <div fxLayout=\"column\" fxFlex=\"33%\" fxFlexOrder=\"2\" fxFlexOrder.xs=\"1\">\n    <md-card id=\"video-loop\">\n      <md-card-title>Test the connection\n        <button [class]=\"testStatus == 'DISCONNECTED' ? 'blue' : (testStatus == 'PLAYING' ? 'yellow' : 'disabled')\" md-raised-button (click)=\"toggleTestVideo()\" [disabled]=\"testStatus==='CONNECTING' || testStatus==='CONNECTED'\">{{testButton}}</button></md-card-title>\n      <md-card-content #scrollMe id=\"log-content\">\n        <div id=\"mirrored-video\">\n          <div *ngIf=\"showSpinner\" id=\"loader\">\n          <div class=\"loader-1 center\"><span></span></div>\n          </div>\n          <!--<md-spinner *ngIf=\"showSpinner\" [color]=\"color\"></md-spinner>-->\n          <div *ngIf=\"session\" id=\"tick-div\">\n            <div id=\"tooltip-tick\" *ngIf=\"testStatus=='PLAYING'\" mdTooltip=\"The connection is successful\" mdTooltipPosition=\"below\"></div>\n            <div [class]=\"testStatus=='PLAYING' ? 'trigger drawn' : 'trigger'\"></div>\n            <svg version=\"1.1\" id=\"tick\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\"\n              viewBox=\"-1 -1 39 39\" style=\"enable-background:new 0 0 37 37;\" xml:space=\"preserve\">\n              <path class=\"circ path\" style=\"fill:none;stroke:#06d362;stroke-width:4;stroke-linejoin:round;stroke-miterlimit:10;\" d=\"\n\tM30.5,6.5L30.5,6.5c6.6,6.6,6.6,17.4,0,24l0,0c-6.6,6.6-17.4,6.6-24,0l0,0c-6.6-6.6-6.6-17.4,0-24l0,0C13.1-0.2,23.9-0.2,30.5,6.5z\"\n              />\n              <polyline class=\"tick path\" style=\"fill:none;stroke:#06d362;stroke-width:4;stroke-linejoin:round;stroke-miterlimit:10;\" points=\"\n\t11.6,20 15.9,24.2 26.4,13.8 \" />\n            </svg>\n          </div>\n        </div>\n      </md-card-content>\n    </md-card>\n  </div>\n\n</div>\n"
+module.exports = "<div id=\"dashboard-div\" fxLayout=\"row\" fxLayout.xs=\"column\" fxLayoutGap=\"20px\" fxFlexFill>\n\n  <div fxLayout=\"column\" fxFlex=\"66%\" fxFlexOrder=\"1\" fxFlexOrder.xs=\"2\">\n    <md-card id=\"log\">\n      <md-card-title>Server events\n        <md-slide-toggle title=\"Lock Scroll\" [(ngModel)]=\"lockScroll\" style=\"float: right; margin-left: auto;\">\n          <md-icon>lock_outline</md-icon>\n        </md-slide-toggle>\n      </md-card-title>\n      <md-divider></md-divider>\n      <md-card-content #scrollMe id=\"log-content\">\n        <ul>\n          <li *ngFor=\"let i of info\">\n            <p>{{i}}</p>\n          </li>\n        </ul>\n      </md-card-content>\n    </md-card>\n  </div>\n\n  <div fxLayout=\"column\" fxFlex=\"33%\" fxFlexOrder=\"2\" fxFlexOrder.xs=\"1\">\n    <md-card id=\"video-loop\">\n      <md-card-title>Test the connection\n        <button [class]=\"testStatus == 'DISCONNECTED' ? 'blue' : (testStatus == 'PLAYING' ? 'yellow' : 'disabled')\" md-raised-button\n          (click)=\"toggleTestVideo()\" [disabled]=\"testStatus==='CONNECTING' || testStatus==='CONNECTED'\">{{testButton}}</button></md-card-title>\n      <md-card-content #scrollMe id=\"log-content\">\n        <div id=\"mirrored-video\">\n          <div *ngIf=\"showSpinner\" id=\"loader\">\n            <div class=\"loader-1 center\"><span></span></div>\n          </div>\n          <!--<md-spinner *ngIf=\"showSpinner\" [color]=\"color\"></md-spinner>-->\n          <div *ngIf=\"session\" id=\"tick-div\">\n            <div id=\"tooltip-tick\" *ngIf=\"testStatus=='PLAYING'\" mdTooltip=\"The connection is successful\" mdTooltipPosition=\"below\"></div>\n            <div [class]=\"testStatus=='PLAYING' ? 'trigger drawn' : 'trigger'\"></div>\n            <svg version=\"1.1\" id=\"tick\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\"\n              viewBox=\"-1 -1 39 39\" style=\"enable-background:new 0 0 37 37;\" xml:space=\"preserve\">\n              <path class=\"circ path\" style=\"fill:none;stroke:#06d362;stroke-width:4;stroke-linejoin:round;stroke-miterlimit:10;\" d=\"\n\tM30.5,6.5L30.5,6.5c6.6,6.6,6.6,17.4,0,24l0,0c-6.6,6.6-17.4,6.6-24,0l0,0c-6.6-6.6-6.6-17.4,0-24l0,0C13.1-0.2,23.9-0.2,30.5,6.5z\"\n              />\n              <polyline class=\"tick path\" style=\"fill:none;stroke:#06d362;stroke-width:4;stroke-linejoin:round;stroke-miterlimit:10;\" points=\"\n\t11.6,20 15.9,24.2 26.4,13.8 \" />\n            </svg>\n          </div>\n        </div>\n      </md-card-content>\n    </md-card>\n  </div>\n\n</div>\n"
 
 /***/ }),
 
@@ -1573,9 +1520,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
  *
  */
 var OpenViduInternal_1 = __webpack_require__(372);
-var Session_1 = __webpack_require__(170);
-var Publisher_1 = __webpack_require__(169);
-var adapter = __webpack_require__(176);
+var Session_1 = __webpack_require__(169);
+var Publisher_1 = __webpack_require__(168);
+var adapter = __webpack_require__(175);
 if (window) {
     window["adapter"] = adapter;
 }
@@ -1664,11 +1611,11 @@ function __export(m) {
 }
 Object.defineProperty(exports, "__esModule", { value: true });
 __export(__webpack_require__(370));
-__export(__webpack_require__(170));
 __export(__webpack_require__(169));
+__export(__webpack_require__(168));
+__export(__webpack_require__(170));
+__export(__webpack_require__(104));
 __export(__webpack_require__(171));
-__export(__webpack_require__(105));
-__export(__webpack_require__(172));
 
 
 /***/ }),
@@ -1696,8 +1643,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
  *
  */
 var SessionInternal_1 = __webpack_require__(373);
-var Stream_1 = __webpack_require__(105);
-var RpcBuilder = __webpack_require__(137);
+var Stream_1 = __webpack_require__(104);
+var RpcBuilder = __webpack_require__(136);
 var OpenViduInternal = (function () {
     function OpenViduInternal() {
         this.remoteStreams = [];
@@ -1765,6 +1712,12 @@ var OpenViduInternal = (function () {
     };
     OpenViduInternal.prototype.setWsUri = function (wsUri) {
         this.wsUri = wsUri;
+    };
+    OpenViduInternal.prototype.getSecret = function () {
+        return this.secret;
+    };
+    OpenViduInternal.prototype.setSecret = function (secret) {
+        this.secret = secret;
     };
     OpenViduInternal.prototype.getOpenViduServerURL = function () {
         return 'https://' + this.wsUri.split("wss://")[1].split("/room")[0];
@@ -2020,34 +1973,52 @@ exports.OpenViduInternal = OpenViduInternal;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var Connection_1 = __webpack_require__(172);
+var Connection_1 = __webpack_require__(171);
 var EventEmitter = __webpack_require__(52);
+var SECRET_PARAM = '?secret=';
 var SessionInternal = (function () {
     function SessionInternal(openVidu, sessionId) {
         this.openVidu = openVidu;
-        this.sessionId = sessionId;
         this.ee = new EventEmitter();
         this.streams = {};
         this.participants = {};
         this.participantsSpeaking = [];
         this.connected = false;
+        this.sessionId = this.getUrlWithoutSecret(sessionId);
         this.localParticipant = new Connection_1.Connection(this.openVidu, true, this);
         if (!this.openVidu.getWsUri()) {
-            this.openVidu.setWsUri(this.checkNgrokUri(sessionId));
+            this.processOpenViduUrl(sessionId);
         }
     }
-    SessionInternal.prototype.checkNgrokUri = function (sessionId) {
-        sessionId = sessionId.substring(0, sessionId.lastIndexOf('/')) + '/room';
-        if (sessionId.indexOf(".ngrok.io") !== -1) {
-            // OpenVidu server URL referes to a ngrok IP: secure wss protocol and delete port of URL
-            sessionId = sessionId.replace("ws://", "wss://");
-            var regex = /\.ngrok\.io:\d+/;
-            sessionId = sessionId.replace(regex, ".ngrok.io");
+    SessionInternal.prototype.processOpenViduUrl = function (url) {
+        this.openVidu.setSecret(this.getSecretFromUrl(url));
+        this.openVidu.setWsUri(this.getFinalUrl(url));
+    };
+    SessionInternal.prototype.getSecretFromUrl = function (url) {
+        var secret = '';
+        if (url.indexOf(SECRET_PARAM) !== -1) {
+            secret = url.substring(url.lastIndexOf(SECRET_PARAM) + SECRET_PARAM.length, url.length);
         }
-        else if ((sessionId.indexOf("localhost") !== -1) || (sessionId.indexOf("127.0.0.1") != -1)) {
+        return secret;
+    };
+    SessionInternal.prototype.getUrlWithoutSecret = function (url) {
+        if (url.indexOf(SECRET_PARAM) !== -1) {
+            url = url.substring(0, url.lastIndexOf(SECRET_PARAM));
+        }
+        return url;
+    };
+    SessionInternal.prototype.getFinalUrl = function (url) {
+        url = this.getUrlWithoutSecret(url).substring(0, url.lastIndexOf('/')) + '/room';
+        if (url.indexOf(".ngrok.io") !== -1) {
+            // OpenVidu server URL referes to a ngrok IP: secure wss protocol and delete port of URL
+            url = url.replace("ws://", "wss://");
+            var regex = /\.ngrok\.io:\d+/;
+            url = url.replace(regex, ".ngrok.io");
+        }
+        else if ((url.indexOf("localhost") !== -1) || (url.indexOf("127.0.0.1") != -1)) {
             // OpenVidu server URL referes to localhost IP
         }
-        return sessionId;
+        return url;
     };
     /* NEW METHODS */
     SessionInternal.prototype.connect = function (token, callback) {
@@ -2061,6 +2032,7 @@ var SessionInternal = (function () {
                     token: token,
                     session: _this.sessionId,
                     metadata: _this.options.metadata,
+                    secret: _this.openVidu.getSecret(),
                     dataChannels: false
                 };
                 if (_this.localParticipant) {
@@ -2454,12 +2426,12 @@ exports.SessionInternal = SessionInternal;
 /***/ 389:
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(178);
+module.exports = __webpack_require__(177);
 
 
 /***/ }),
 
-/***/ 70:
+/***/ 69:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";

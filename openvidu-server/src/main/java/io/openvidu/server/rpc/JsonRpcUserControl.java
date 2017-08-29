@@ -34,6 +34,7 @@ import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.server.core.NotificationRoomManager;
 import io.openvidu.server.core.api.pojo.ParticipantRequest;
 import io.openvidu.server.core.api.pojo.UserParticipant;
+import io.openvidu.server.security.OpenviduConfiguration;
 
 /**
  * Controls the user interactions by delegating her JSON-RPC requests to the room API.
@@ -46,6 +47,9 @@ public class JsonRpcUserControl {
   
   @Autowired
   protected NotificationRoomManager roomManager;
+  
+  @Autowired
+  OpenviduConfiguration openviduConf;
 
   public JsonRpcUserControl() {}
 
@@ -55,15 +59,21 @@ public class JsonRpcUserControl {
 	  
     String roomId = getStringParam(request, ProtocolElements.JOINROOM_ROOM_PARAM);
     String token = getStringParam(request, ProtocolElements.JOINROOM_TOKEN_PARAM);
+    String pid = participantRequest.getParticipantId();
     
-    if(roomManager.getRoomManager().isParticipantInRoom(token, roomId)){
+    if (openviduConf.isOpenViduSecret(getStringParam(request, ProtocolElements.JOINROOM_SECRET_PARAM))) {
+    	roomManager.newInsecureUser(pid);
+    }
+    
+    if(roomManager.getRoomManager().isParticipantInRoom(token, roomId, pid)){
     	
-    	String userName = roomManager.newRandomUserName(token, roomId);
 	    String clientMetadata = getStringParam(request, ProtocolElements.JOINROOM_METADATA_PARAM);
     	
     	if(roomManager.getRoomManager().metadataFormatCorrect(clientMetadata)){
     		
-    		this.roomManager.getRoomManager().setTokenClientMetadata(userName, roomId, clientMetadata);
+    		String userName = roomManager.newRandomUserName(token, roomId);
+    		
+    		roomManager.getRoomManager().setTokenClientMetadata(userName, roomId, clientMetadata);
     		
     		boolean dataChannels = false;
     	    if (request.getParams().has(ProtocolElements.JOINROOM_DATACHANNELS_PARAM)) {
@@ -85,7 +95,7 @@ public class JsonRpcUserControl {
     } else {
     	System.out.println("Error: sessionId or token not valid");
     	throw new OpenViduException(Code.USER_UNAUTHORIZED_ERROR_CODE,
-				  "Unable to join room. The user does not have a valid token");
+				  "Unable to join room. The user is not authorized");
     }
   }
 
@@ -96,7 +106,7 @@ public class JsonRpcUserControl {
 	  String participantName = roomManager.getRoomManager().getParticipantName(pid);
 	  String roomName = roomManager.getRoomManager().getRoomNameFromParticipantId(pid);
 	  
-	  if (roomManager.getRoomManager().isPublisherInRoom(participantName, roomName)) {
+	  if (roomManager.getRoomManager().isPublisherInRoom(participantName, roomName, pid)) {
 	  
 	    String sdpOffer = getStringParam(request, ProtocolElements.PUBLISHVIDEO_SDPOFFER_PARAM);
 	    boolean audioOnly = getBooleanParam(request, ProtocolElements.PUBLISHVIDEO_AUDIOONLY_PARAM);

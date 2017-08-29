@@ -30,6 +30,8 @@ export class OpenViduInternal {
     private camera: Stream;
     private remoteStreams: Stream[] = [];
 
+    private secret: string;
+
     constructor() { };
 
 
@@ -101,6 +103,14 @@ export class OpenViduInternal {
 
     setWsUri(wsUri: string) {
         this.wsUri = wsUri;
+    }
+
+    getSecret() {
+        return this.secret;
+    }
+
+    setSecret(secret: string) {
+        this.secret = secret;
     }
 
     getOpenViduServerURL() {

@@ -444,4 +444,8 @@ public class NotificationRoomManager {
   public String newRandomUserName(String token, String roomId){
 	  return this.internalManager.newRandomUserName(token, roomId);
   }
+  
+  public void newInsecureUser(String pid){
+	  this.internalManager.newInsecureUser(pid);
+  }
 }

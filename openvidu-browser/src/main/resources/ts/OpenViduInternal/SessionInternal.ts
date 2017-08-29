@@ -3,6 +3,8 @@ import { OpenViduInternal } from './OpenViduInternal';
 import { Connection, ConnectionOptions } from './Connection';
 import EventEmitter = require('wolfy87-eventemitter');
 
+const SECRET_PARAM = '?secret=';
+
 export interface SessionOptions {
     sessionId: string;
     participantId: string;
@@ -15,6 +17,7 @@ export interface SessionOptions {
 export class SessionInternal {
 
     private id: string;
+    private sessionId: string;
     private ee = new EventEmitter();
     private streams = {};
     private participants = {};
@@ -24,27 +27,48 @@ export class SessionInternal {
     private subscribeToStreams: boolean;
     private updateSpeakerInterval: number;
     public thresholdSpeaker: number;
-    private options: SessionOptions
+    private options: SessionOptions;
 
-    constructor(private openVidu: OpenViduInternal, private sessionId: string) {
+    constructor(private openVidu: OpenViduInternal, sessionId: string) {
+        this.sessionId = this.getUrlWithoutSecret(sessionId);
         this.localParticipant = new Connection(this.openVidu, true, this);
         if (!this.openVidu.getWsUri()) {
-            this.openVidu.setWsUri(this.checkNgrokUri(sessionId));
+            this.processOpenViduUrl(sessionId);
         }
     }
 
-    checkNgrokUri(sessionId: string): string {
-        sessionId = sessionId.substring(0, sessionId.lastIndexOf('/')) + '/room';
-        if (sessionId.indexOf(".ngrok.io") !== -1) {
+    private processOpenViduUrl(url: string) {
+        this.openVidu.setSecret(this.getSecretFromUrl(url));
+        this.openVidu.setWsUri(this.getFinalUrl(url));
+    }
+
+    private getSecretFromUrl(url: string): string {
+        let secret = '';
+        if (url.indexOf(SECRET_PARAM) !== -1) {
+            secret = url.substring(url.lastIndexOf(SECRET_PARAM) + SECRET_PARAM.length, url.length);
+        }
+        return secret;
+    }
+
+    private getUrlWithoutSecret(url: string): string {
+        if (url.indexOf(SECRET_PARAM) !== -1) {
+            url = url.substring(0, url.lastIndexOf(SECRET_PARAM));
+        }
+        return url;
+    }
+
+    private getFinalUrl(url: string): string {
+        url = this.getUrlWithoutSecret(url).substring(0, url.lastIndexOf('/')) + '/room';
+        if (url.indexOf(".ngrok.io") !== -1) {
             // OpenVidu server URL referes to a ngrok IP: secure wss protocol and delete port of URL
-            sessionId = sessionId.replace("ws://", "wss://");
+            url = url.replace("ws://", "wss://");
             let regex = /\.ngrok\.io:\d+/;
-            sessionId = sessionId.replace(regex, ".ngrok.io");
-        } else if ((sessionId.indexOf("localhost") !== -1) || (sessionId.indexOf("127.0.0.1") != -1)) {
+            url = url.replace(regex, ".ngrok.io");
+        } else if ((url.indexOf("localhost") !== -1) || (url.indexOf("127.0.0.1") != -1)) {
             // OpenVidu server URL referes to localhost IP
 
         }
-        return sessionId;
+        return url;
     }
 
 
@@ -62,6 +86,7 @@ export class SessionInternal {
                     token: token,
                     session: this.sessionId,
                     metadata: this.options.metadata,
+                    secret: this.openVidu.getSecret(),
                     dataChannels: false
                 }
 

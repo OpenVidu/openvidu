@@ -1,9 +1,8 @@
-import { Component, OnInit, AfterViewChecked, ViewChild, ElementRef, HostListener, OnDestroy } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, HostListener, OnDestroy } from '@angular/core';
 import { MdDialog, MdDialogRef } from '@angular/material';
 import { Subscription } from 'rxjs/Subscription';
 
 import { InfoService } from '../../services/info.service';
-import { CredentialsService } from '../../services/credentials.service';
 
 import { OpenVidu, Session } from 'openvidu-browser';
 import { CredentialsDialogComponent } from './credentials-dialog.component';
@@ -15,9 +14,10 @@ declare const $;
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css'],
 })
-export class DashboardComponent implements OnInit, OnDestroy, AfterViewChecked {
+export class DashboardComponent implements OnInit, OnDestroy {
 
   @ViewChild('scrollMe') private myScrollContainer: ElementRef;
+  lockScroll = false;
 
   infoSubscription: Subscription;
   info = [];
@@ -29,12 +29,12 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewChecked {
   tickClass = 'trigger';
   showSpinner = false;
 
-  constructor(private infoService: InfoService, private credentialsService: CredentialsService, public dialog: MdDialog) {
-
+  constructor(private infoService: InfoService, public dialog: MdDialog) {
     // Subscription to info updated event raised by InfoService
     this.infoSubscription = this.infoService.newInfo$.subscribe(
       info => {
         this.info.push(info);
+        this.scrollToBottom();
       });
   }
 
@@ -57,10 +57,6 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewChecked {
     }
   }
 
-  ngAfterViewChecked() {
-    this.scrollToBottom();
-  }
-
   toggleTestVideo() {
     if (!this.session) {
       this.testVideo();
@@ -70,11 +66,19 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   testVideo() {
-    let OV = new OpenVidu();
-    this.connectToSession(OV, 'wss://' + location.hostname + ':8443/testSession', 'token');
+    let dialogRef: MdDialogRef<CredentialsDialogComponent>;
+    dialogRef = this.dialog.open(CredentialsDialogComponent);
+    dialogRef.componentInstance.myReference = dialogRef;
+
+    dialogRef.afterClosed().subscribe(secret => {
+      if (secret) {
+        this.connectToSession('wss://' + location.hostname + ':8443/testSession?secret=' + secret);
+      }
+    });
   }
 
-  connectToSession(OV: OpenVidu, mySessionId: string, myToken: string) {
+  connectToSession(mySessionId: string) {
+    let OV = new OpenVidu();
     this.session = OV.initSession(mySessionId);
 
     this.session.on('streamCreated', (event) => {
@@ -84,7 +88,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.testStatus = 'CONNECTING';
     this.testButton = 'Testing...';
 
-    this.session.connect(myToken, (error) => {
+    this.session.connect('token', (error) => {
       if (!error) {
 
         this.testStatus = 'CONNECTED';
@@ -118,18 +122,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewChecked {
 
           dialogRef.afterClosed().subscribe(secret => {
             if (secret) {
-              this.credentialsService.getSessionId(secret).subscribe(
-                sessionId => {
-                  this.credentialsService.getToken(sessionId.id, secret).subscribe(
-                    token => {
-                      this.connectToSession(OV, sessionId.id, token.token);
-                    }
-                  )
-                },
-                err => {
-                  console.log(err);
-                }
-              );
+              this.connectToSession('wss://' + location.hostname + ':8443/testSession?secret=' + secret);
             }
           });
         } else {
@@ -145,13 +138,16 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.testStatus = 'DISCONNECTED';
     this.testButton = 'Test';
     this.showSpinner = false;
+    this.info = [];
   }
 
   scrollToBottom(): void {
     try {
-      this.myScrollContainer.nativeElement.scrollTop = this.myScrollContainer.nativeElement.scrollHeight;
+      if (!this.lockScroll) {
+        this.myScrollContainer.nativeElement.scrollTop = this.myScrollContainer.nativeElement.scrollHeight;
+      }
     } catch (err) {
-      console.log('[Error]:' + err.toString());
+      console.error('[Error]:' + err.toString());
     }
   }
 

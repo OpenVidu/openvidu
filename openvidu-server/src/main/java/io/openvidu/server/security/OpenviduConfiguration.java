@@ -15,9 +15,6 @@ public class OpenviduConfiguration {
 	@Value("${openvidu.secret}")
 	private String openviduSecret;
 
-	@Value("${openvidu.security}")
-	private boolean openviduSecurity; // true, false
-
 	public String getOpenViduPublicUrl() {
 		return this.openviduPublicUrl;
 	}
@@ -29,9 +26,9 @@ public class OpenviduConfiguration {
 	public String getOpenViduSecret() {
 		return this.openviduSecret;
 	}
-
-	public boolean getOpenViduSecurity() {
-		return this.openviduSecurity;
+	
+	public boolean isOpenViduSecret(String secret) {
+		return secret.equals(this.getOpenViduSecret());
 	}
 
 }

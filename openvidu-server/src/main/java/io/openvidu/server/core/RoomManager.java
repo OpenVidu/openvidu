@@ -90,6 +90,8 @@ public class RoomManager {
   private final ConcurrentMap<String, ConcurrentHashMap<String, Token>> sessionidTokenTokenobj = new ConcurrentHashMap<>();
   private final ConcurrentMap<String, ConcurrentHashMap<String, String>> sessionidUsernameToken = new ConcurrentHashMap<>();
   
+  private final ConcurrentMap<String, Boolean> usernameInsecure = new ConcurrentHashMap<>();
+  
   private volatile boolean closed = false;
 
   public RoomManager() {
@@ -177,6 +179,16 @@ public class RoomManager {
       String token = sessionidUsernameToken.get(roomName).remove(participant.getName());
       if (sessionidTokenTokenobj.get(roomName) != null) {
     	  sessionidTokenTokenobj.get(roomName).remove(token);
+      }
+      boolean stillParticipant = false;
+      for (Room r : rooms.values()) {
+    	  if (r.getParticipant(participantId) != null){
+    		  stillParticipant = true;
+    		  break;
+    	  }
+      }
+      if (!stillParticipant) {
+    	  usernameInsecure.remove(participantId);
       }
     }
     
@@ -967,8 +979,8 @@ public class RoomManager {
 	  return getParticipant(pid).getRoom().getName();
   }
   
-  public boolean isParticipantInRoom(String token, String roomId) throws OpenViduException {
-    if (openviduConf.getOpenViduSecurity()) {
+  public boolean isParticipantInRoom(String token, String roomId, String pid) throws OpenViduException {
+    if (!this.isInsecureUser(pid)) {
       if (this.sessionidTokenTokenobj.get(roomId) != null) {
         return this.sessionidTokenTokenobj.get(roomId).containsKey(token);
       } else{
@@ -983,8 +995,8 @@ public class RoomManager {
     }
   }
   
-  public boolean isPublisherInRoom(String userName, String roomId) {
-    if (openviduConf.getOpenViduSecurity()) {
+  public boolean isPublisherInRoom(String userName, String roomId, String pid) {
+	if (!this.isInsecureUser(pid)) {
       if (this.sessionidUsernameToken.get(roomId) != null){
     	String token = this.sessionidUsernameToken.get(roomId).get(userName);
         if (token != null){
@@ -998,6 +1010,14 @@ public class RoomManager {
     } else {
       return true;
     }
+  }
+  
+  public boolean isInsecureUser(String pid) {
+	  if(this.usernameInsecure.containsKey(pid)) {
+		  System.out.println("The user with pid " + pid + " is an INSECURE user");
+		  return true;
+	  }
+	  return false;
   }
   
   public String getTokenClientMetadata(String userName, String roomId) throws OpenViduException {
@@ -1054,9 +1074,7 @@ public class RoomManager {
 	  if (this.sessionidUsernameToken.get(roomId) != null && this.sessionidTokenTokenobj.get(roomId) != null) {
 		  if(metadataFormatCorrect(metadata)){
 			  String token = new BigInteger(130, new SecureRandom()).toString(32);
-			  if (openviduConf.getOpenViduSecurity()) { // Store the token only if security is enabled
-				  this.sessionidTokenTokenobj.get(roomId).put(token, new Token(token, role, metadata));
-			  }
+			  this.sessionidTokenTokenobj.get(roomId).put(token, new Token(token, role, metadata));
 			  showMap();
 			  return token;
 		  }
@@ -1071,19 +1089,19 @@ public class RoomManager {
   }
   
   public String newRandomUserName(String token, String roomId) {
-	  if (openviduConf.getOpenViduSecurity()) {
-		  if (this.sessionidUsernameToken.get(roomId) != null && this.sessionidTokenTokenobj.get(roomId) != null) {
-			  if (this.sessionidTokenTokenobj.get(roomId).get(token) != null) {
-				  return this.generateAndStoreUserName(token, roomId);
-			  } else {
-				  throw new OpenViduException(Code.USER_NOT_FOUND_ERROR_CODE, token);
-			  }
+	  if (this.sessionidUsernameToken.get(roomId) != null && this.sessionidTokenTokenobj.get(roomId) != null) {
+		  if (this.sessionidTokenTokenobj.get(roomId).get(token) != null) {
+			  return this.generateAndStoreUserName(token, roomId);
 		  } else {
-			  throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE, roomId);
+			  throw new OpenViduException(Code.USER_NOT_FOUND_ERROR_CODE, token);
 		  }
 	  } else {
-		  return token;
+		  throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE, roomId);
 	  }
+  }
+  
+  public void newInsecureUser(String pid){
+	  this.usernameInsecure.put(pid, true);
   }
   
   private String generateAndStoreUserName(String token, String roomId) {
