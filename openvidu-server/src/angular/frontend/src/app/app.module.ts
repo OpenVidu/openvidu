@@ -10,7 +10,6 @@ import { routing } from './app.routing';
 import { AppMaterialModule } from 'app/app.material.module';
 
 import { InfoService } from './services/info.service';
-import { CredentialsService } from './services/credentials.service';
 
 import { AppComponent } from './app.component';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
@@ -36,7 +35,7 @@ import { CredentialsDialogComponent } from './components/dashboard/credentials-d
   entryComponents: [
     CredentialsDialogComponent,
   ],
-  providers: [InfoService, CredentialsService],
+  providers: [InfoService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
