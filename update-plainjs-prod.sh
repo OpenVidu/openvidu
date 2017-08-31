@@ -1,9 +1,4 @@
-cd openvidu-browser/src/main/resources
-
-npm run updatetsc
-VERSION="$1" npm run browserify-prod
-
-cd ../../../../
+VERSION="$1"
 
 # openvidu-insecure-js
 cp openvidu-browser/src/main/resources/static/js/openvidu-browser-"$1".min.js ../openvidu-tutorials/openvidu-insecure-js/web/openvidu-browser-"$1".min.js

@@ -34,7 +34,7 @@ We have implemented a very basic demo application to see OpenVidu in action. To 
  - Run this Docker container
    
    ```
-   docker run -p 5000:5000 -p 4040:4040 -e KMS_STUN_IP=193.147.51.12 -e KMS_STUN_PORT=3478 -e openvidu.security=false openvidu/openvidu-plainjs-demo
+   docker run -p 5000:5000 -p 4040:4040 -e KMS_STUN_IP=193.147.51.12 -e KMS_STUN_PORT=3478 openvidu/openvidu-plainjs-demo
    ```
    
  - Wait until you see a public URL ended with `.ngrok.io`. You can connect locally in [`localhost:5000`](http://localhost:5000) or by using the ngrok public URL. You can also share this URL with anyone you want to test the app over the Internet!
@@ -51,7 +51,7 @@ Building a simple app with OpenVidu
 OpenVidu has a traditional **Client - Server** architecture built on three modules that are shown in the image above. To run **openvidu-server** and **Kurento Media Server** you can execute the following container: 
 
 ```
-docker run -p 8443:8443 --rm -e KMS_STUN_IP=193.147.51.12 -e KMS_STUN_PORT=3478 -e openvidu.security=false openvidu/openvidu-server-kms
+docker run -p 8443:8443 --rm -e KMS_STUN_IP=193.147.51.12 -e KMS_STUN_PORT=3478 openvidu/openvidu-server-kms
 ```
  
  
@@ -486,7 +486,7 @@ Here you have a step by step guide to deploy a production version of OpenVidu in
 7. Init openvidu-server Docker container (securization enabled)
 	
 	```
-	sudo docker run -d -p 8443:8443 -e openvidu.security=true -e openvidu.secret=YOUR_SECRET -e kms.uris=[\"ws://YOUR_MACHINE'S_INTERNAL_IP:8888/kurento\"] openvidu/openvidu-server
+	sudo docker run -d -p 8443:8443 -e openvidu.secret=YOUR_SECRET -e kms.uris=[\"ws://YOUR_MACHINE'S_INTERNAL_IP:8888/kurento\"] openvidu/openvidu-server
 	```
 
 
