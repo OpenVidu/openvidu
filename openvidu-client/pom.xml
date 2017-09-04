@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>io.openvidu</groupId>
 		<artifactId>openvidu</artifactId>
-		<version>1.0.0-beta.1</version>
+		<version>1.0.0-beta.3</version>
 	</parent>
 
 	<artifactId>openvidu-client</artifactId>

@@ -14,7 +14,7 @@ var Session = (function () {
     Session.prototype.getSessionId = function (callback) {
         var _this = this;
         if (this.sessionId) {
-            return this.sessionId;
+            callback(this.sessionId);
         }
         var options = {
             hostname: this.hostname,
