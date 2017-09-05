@@ -4,11 +4,16 @@ MAINTAINER openvidu@gmail.com
 # Install Java
 RUN apt-get update && apt-get install -y openjdk-8-jdk && rm -rf /var/lib/apt/lists/*
 
-# Install OpenVidu Server
-COPY openvidu-server.jar openvidu-server.jar
+# Configure Supervisor
+RUN mkdir -p /var/log/supervisor
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+RUN apt-get update && apt-get install -y supervisor && rm -rf /var/lib/apt/lists/*
+
+# Copy OpenVidu Server
+COPY openvidu-server.jar /
 
 EXPOSE 8443
 EXPOSE 8888
 
 # Exec supervisord
-CMD java -jar /openvidu-server.jar
+CMD ["/usr/bin/supervisord"]
