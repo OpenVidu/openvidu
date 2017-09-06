@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.kurento</groupId>
 		<artifactId>kurento-parent-pom</artifactId>
-		<version>6.6.1-SNAPSHOT</version>
+		<version>6.6.2</version>
 	</parent>
 
 	<groupId>io.openvidu</groupId>
