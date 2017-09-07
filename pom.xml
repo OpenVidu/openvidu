@@ -212,8 +212,18 @@
 			</dependency>
 			<dependency>
 				<groupId>io.openvidu</groupId>
+				<artifactId>openvidu-test-e2e</artifactId>
+				<version>${version.openvidu}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.openvidu</groupId>
 				<artifactId>openvidu-testapp</artifactId>
 				<version>${version.openvidu}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.openvidu</groupId>
+				<artifactId>openvidu-java-client</artifactId>
+				<version>1.0.1-beta.3</version>
 			</dependency>
 
 			<dependency>

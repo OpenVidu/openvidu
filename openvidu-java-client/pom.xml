@@ -9,6 +9,7 @@
 	</parent>
 
 	<artifactId>openvidu-java-client</artifactId>
+	<version>1.0.1-beta.3</version>
 	<packaging>jar</packaging>
 
 	<name>OpenVidu Java Client</name>
