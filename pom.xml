@@ -5,18 +5,16 @@
 	<parent>
 		<groupId>org.kurento</groupId>
 		<artifactId>kurento-parent-pom</artifactId>
-		<version>6.6.3-SNAPSHOT</version>
+		<version>6.6.2</version>
 	</parent>
 
 	<groupId>io.openvidu</groupId>
-	<artifactId>openvidu</artifactId>
+	<artifactId>openvidu-parent</artifactId>
 	<version>1.0.0-beta.3</version>
 	<packaging>pom</packaging>
 
 	<name>OpenVidu</name>
-	<description>
-        OpenVidu modules: sdk, client, server, demos, test
-    </description>
+	<description>OpenVidu parent pom: versioning, dependencies and plugins for all OpenVidu artifacts</description>
 	<url>http://openvidu.io</url>
 
 	<licenses>
@@ -33,9 +31,9 @@
 	</organization>
 
 	<scm>
-		<url>${openvidu.scm.url}</url>
-		<connection>scm:git:${openvidu.scm.connection}</connection>
-		<developerConnection>scm:git:${openvidu.scm.connection}</developerConnection>
+		<url>https://github.com/OpenVidu/openvidu.git</url>
+		<connection>scm:git:https://github.com/OpenVidu/openvidu.git</connection>
+		<developerConnection>scm:git:https://github.com/OpenVidu/openvidu.git</developerConnection>
 		<tag>develop</tag>
 	</scm>
 
@@ -52,7 +50,7 @@
 		<!-- OpenVidu versions -->
 		<version.openvidu>1.0.0-beta.3</version.openvidu>
 
-		<version.kurento.jsonrpc.js>5.1.4-SNAPSHOT</version.kurento.jsonrpc.js>
+		<version.kurento.jsonrpc.js>5.1.3</version.kurento.jsonrpc.js>
 
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<maven.compiler.source>1.8</maven.compiler.source>
@@ -60,6 +58,17 @@
 		<openvidu.scm.url>https://github.com/OpenVidu/openvidu</openvidu.scm.url>
 		<openvidu.scm.connection>git@github.com:OpenVidu/openvidu.git</openvidu.scm.connection>
 	</properties>
+	
+	<distributionManagement>
+		<snapshotRepository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+		<repository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+		</repository>
+	</distributionManagement>
 
 	<profiles>
 		<profile>
@@ -72,6 +81,7 @@
 				<module>openvidu-client</module>
 				<module>openvidu-browser</module>
 				<module>openvidu-test</module>
+				<module>openvidu-test-e2e</module>
 				<module>openvidu-testapp</module>
 				<module>openvidu-java-client</module>
 			</modules>
@@ -81,8 +91,8 @@
 			<modules>
 				<module>openvidu-server</module>
 				<module>openvidu-client</module>
-				<module>openvidu-client-js</module>
 				<module>openvidu-test</module>
+				<module>openvidu-test-e2e</module>
 			</modules>
 		</profile>
 		<profile>
@@ -91,6 +101,90 @@
 				<module>openvidu-demo</module>
 				<module>openvidu-sampleapp-minimal</module>
 			</modules>
+		</profile>
+		<profile>
+			<id>release-sign-artifacts</id>
+			<activation>
+				<property>
+					<name>performRelease</name>
+					<value>true</value>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-source-plugin</artifactId>
+						<version>3.0.1</version>
+						<executions>
+							<execution>
+								<id>attach-sources</id>
+								<goals>
+									<goal>jar-no-fork</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-javadoc-plugin</artifactId>
+						<version>2.10.4</version>
+						<executions>
+							<execution>
+								<id>attach-javadocs</id>
+								<goals>
+									<goal>jar</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<version>1.6</version>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.sonatype.plugins</groupId>
+						<artifactId>nexus-staging-maven-plugin</artifactId>
+						<version>1.6.8</version>
+						<extensions>true</extensions>
+						<configuration>
+							<serverId>ossrh</serverId>
+							<nexusUrl>https://oss.sonatype.org/</nexusUrl>
+							<autoReleaseAfterClose>false</autoReleaseAfterClose>
+						</configuration>
+					</plugin>
+					<plugin>
+						<artifactId>maven-resources-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>copy-resources</id>
+								<phase>validate</phase>
+								<goals>
+									<goal>copy-resources</goal>
+								</goals>
+								<configuration>
+									<outputDirectory>${basedir}/target/classes/static/</outputDirectory>
+									<resources>
+										<resource>
+											<directory>${basedir}/../elastest-torm-gui/dist</directory>
+										</resource>
+									</resources>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
 		</profile>
 	</profiles>
 

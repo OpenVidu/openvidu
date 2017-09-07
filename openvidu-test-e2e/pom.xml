@@ -1,13 +1,18 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
+	
+	<parent>
+		<groupId>io.openvidu</groupId>
+		<artifactId>openvidu-parent</artifactId>
+		<version>1.0.0-beta.3</version>
+	</parent>
 
-	<groupId>io.openvidu</groupId>
-	<artifactId>testapp</artifactId>
-	<version>1.0.0-beta.3</version>
+	<artifactId>openvidu-test-e2e</artifactId>
 	<packaging>jar</packaging>
 
-	<name>openvidu-test-e2e</name>
+	<name>OpenVidu Test e2e</name>
+	<description>e2e tests for OpenVidu Tutorials</description>
 	<url>http://maven.apache.org</url>
 
 	<properties>
@@ -22,13 +27,11 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.12</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.seleniumhq.selenium</groupId>
 			<artifactId>selenium-java</artifactId>
-			<version>3.4.0</version>
 		</dependency>
 		<dependency>
 			<groupId>info.cukes</groupId>
