@@ -81,7 +81,6 @@
 				<module>openvidu-client</module>
 				<module>openvidu-browser</module>
 				<module>openvidu-test</module>
-				<module>openvidu-test-e2e</module>
 				<module>openvidu-testapp</module>
 				<module>openvidu-java-client</module>
 			</modules>
@@ -92,7 +91,6 @@
 				<module>openvidu-server</module>
 				<module>openvidu-client</module>
 				<module>openvidu-test</module>
-				<module>openvidu-test-e2e</module>
 			</modules>
 		</profile>
 		<profile>
