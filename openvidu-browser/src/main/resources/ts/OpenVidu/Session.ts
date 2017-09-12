@@ -44,15 +44,15 @@ export class Session {
     }
 
     connect(token: string, callback: any);
-    connect(token: string, metadata: string, callback: any);
+    connect(token: string, metadata: any, callback: any);
 
     connect(param1, param2, param3?) {
         // Early configuration to deactivate automatic subscription to streams
-        if (typeof param2 == "string") {
+        if (param3) {
             this.session.configure({
                 sessionId: this.session.getSessionId(),
                 participantId: param1,
-                metadata: param2,
+                metadata: this.session.stringClientMetadata(param2),
                 subscribeToStreams: false
             });
             this.session.connect(param1, param3);

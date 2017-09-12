@@ -82,6 +82,10 @@ export class SessionInternal {
             }
             else {
 
+                if (!token) {
+                    token = this.randomToken();
+                }
+
                 let joinParams = {
                     token: token,
                     session: this.sessionId,
@@ -541,4 +545,17 @@ export class SessionInternal {
             this.participantsSpeaking.splice(pos, 1);
         }
     }
+
+    stringClientMetadata(metadata): string {
+        if (!(typeof metadata === 'string')) {
+            return JSON.stringify(metadata);
+        } else {
+            return metadata;
+        }
+    }
+    
+    private randomToken(): string {
+        return Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+    }
+
 }
