@@ -154,12 +154,13 @@ public class OpenViduServer implements JsonRpcConfigurer {
 		if (openviduConf.getOpenViduPublicUrl().equals("ngrok")) {
 			try {
 				NgrokController ngrok = new NgrokController();
-				System.out.println();
-				System.out.println("        PUBLIC IP        ");
-				System.out.println("-------------------------");
-				System.out.println(ngrok.getNgrokAppUrl());
-				System.out.println("-------------------------");
-				System.out.println();
+				final String NEW_LINE = System.getProperty("line.separator");
+				String str = 							  NEW_LINE +
+						"        PUBLIC IP        " 	+ NEW_LINE +
+						"-------------------------" 	+ NEW_LINE +
+						ngrok.getNgrokAppUrl()      	+ NEW_LINE +
+						"-------------------------" 	+ NEW_LINE;
+				System.out.println(str);
 				OpenViduServer.publicUrl = ngrok.getNgrokServerUrl().replaceFirst("https://", "wss://");
 			} catch (Exception e) {
 				System.out.println("   No ngrok connection   ");
