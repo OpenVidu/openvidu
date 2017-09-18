@@ -12,9 +12,8 @@
 	<packaging>jar</packaging>
 
 	<name>OpenVidu Server</name>
-	<description>
-        OpenVidu Server
-    </description>
+	<version>1.0.0-beta.3</version>
+	<description>OpenVidu Server</description>
 	<url>https://github.com/OpenVidu/openvidu</url>
 
 	<licenses>
