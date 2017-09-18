@@ -53,6 +53,11 @@ public class RoomJsonRpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 	public RoomJsonRpcHandler() {
 	}
+	
+	public RoomJsonRpcHandler(JsonRpcUserControl userControl, JsonRpcNotificationService notificationService) {
+		this.userControl = userControl;
+		this.notificationService = notificationService;
+	}
 
 	@Override
 	public List<String> allowedOrigins() {

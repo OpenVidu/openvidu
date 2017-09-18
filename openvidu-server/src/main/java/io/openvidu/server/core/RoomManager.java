@@ -97,6 +97,13 @@ public class RoomManager {
   public RoomManager() {
     super();
   }
+  
+  public RoomManager(RoomHandler roomHandler, KurentoClientProvider kcProvider) {
+    super();
+    this.roomHandler = roomHandler;
+    this.kcProvider = kcProvider;
+  }
+
 
   /**
    * Represents a client's request to join a room. The room must exist in order to perform the
@@ -844,7 +851,7 @@ public class RoomManager {
     log.warn("No room '{}' exists yet. Created one " + "using KurentoClient '{}'.", roomName,
         kcName);
     
-    this.roomHandler.getInfoHandler().sendInfo("New room " + roomName);
+    //this.roomHandler.getInfoHandler().sendInfo("New room " + roomName);
     
   }
 

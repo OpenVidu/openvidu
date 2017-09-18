@@ -97,7 +97,7 @@ public class RoomProtocolTest {
   public void init() {
     notificationService = new JsonRpcNotificationService();
     roomEventHandler = new DefaultNotificationRoomHandler(notificationService);
-    roomJsonRpcHandler = new RoomJsonRpcHandler();
+    roomJsonRpcHandler = new RoomJsonRpcHandler(userControl, notificationService);
   }
 
   @Test
