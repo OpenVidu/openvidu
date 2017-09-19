@@ -15,6 +15,7 @@ var Session = (function () {
         var _this = this;
         if (this.sessionId) {
             callback(this.sessionId);
+            return;
         }
         var options = {
             hostname: this.hostname,

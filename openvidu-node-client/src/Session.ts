@@ -22,6 +22,7 @@ export class Session {
 
         if (this.sessionId) {
             callback(this.sessionId);
+            return;
         }
 
         let options = {
