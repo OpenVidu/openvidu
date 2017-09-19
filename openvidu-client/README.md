@@ -9,3 +9,5 @@ openvidu-client
 ===
 
 Internal Java client used by [openvidu-server](https://github.com/OpenVidu/openvidu/tree/master/openvidu-server). Can be used to implement an Android client.
+
+[OpenViduLogo]: https://secure.gravatar.com/avatar/5daba1d43042f2e4e85849733c8e5702?s=120

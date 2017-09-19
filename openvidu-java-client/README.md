@@ -7,7 +7,7 @@
 openvidu-java-client
 ===
 
-- **Description**: Library for your JAVA server. It makes easier the retrieval of the necessary params from OpenVidu Server for securing your application (sessionIds and tokens). It is a simple alternative to the REST API.
+- **Description**: Library for your JAVA server. It makes easier the retrieval of the necessary params from OpenVidu Server for securing your application (_sessionId_'s and _token_'s). It is a simple alternative to the REST API.
 
 - **Docs**: [openvidu-java-client API](http://openvidu.io/docs/reference-docs/openvidu-java-client/)
 
