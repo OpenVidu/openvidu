@@ -28,6 +28,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   testButton = 'Test';
   tickClass = 'trigger';
   showSpinner = false;
+  msgChain = [];
 
   constructor(private infoService: InfoService, public dialog: MdDialog) {
     // Subscription to info updated event raised by InfoService
@@ -78,12 +79,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   connectToSession(mySessionId: string) {
-    let OV = new OpenVidu();
-    this.session = OV.initSession(mySessionId);
+    this.msgChain = [];
 
-    this.session.on('streamCreated', (event) => {
-      this.session.subscribe(event.stream, 'mirrored-video');
-    });
+    const OV = new OpenVidu();
+    this.session = OV.initSession(mySessionId);
 
     this.testStatus = 'CONNECTING';
     this.testButton = 'Testing...';
@@ -99,19 +98,28 @@ export class DashboardComponent implements OnInit, OnDestroy {
           quality: 'MEDIUM'
         });
 
-        publisherRemote.on('videoElementCreated', (video) => {
-
-          this.showSpinner = true;
-
-          video.element.addEventListener('playing', () => {
-            console.warn('PLAYING!!');
-            this.testButton = 'End test';
-            this.testStatus = 'PLAYING';
-            this.showSpinner = false;
-          });
+        publisherRemote.on('accessAllowed', () => {
+          this.msgChain.push('Camera access allowed');
         });
 
-        publisherRemote.stream.subscribeToMyRemote();
+        publisherRemote.on('accessDenied', () => {
+          this.endTestVideo();
+          this.msgChain.push('Camera access denied');
+        });
+
+        publisherRemote.on('videoElementCreated', (video) => {
+          this.showSpinner = true;
+          this.msgChain.push('Video element created');
+        });
+
+        publisherRemote.on('remoteVideoPlaying', (video) => {
+          this.msgChain.push('Remote video playing');
+          this.testButton = 'End test';
+          this.testStatus = 'PLAYING';
+          this.showSpinner = false;
+        });
+
+        publisherRemote.subscribeToRemote();
         this.session.publish(publisherRemote);
       } else {
         if (error.code === 401) { // User unauthorized error. OpenVidu security is active
@@ -139,6 +147,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.testButton = 'Test';
     this.showSpinner = false;
     this.info = [];
+    this.msgChain = [];
   }
 
   scrollToBottom(): void {

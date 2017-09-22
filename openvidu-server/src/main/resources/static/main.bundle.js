@@ -1,548 +1,6 @@
 webpackJsonp([1,4],{
 
-/***/ 104:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var EventEmitter = __webpack_require__(52);
-var kurentoUtils = __webpack_require__(277);
-var adapter = __webpack_require__(175);
-if (window) {
-    window["adapter"] = adapter;
-}
-function jq(id) {
-    return id.replace(/(@|:|\.|\[|\]|,)/g, "\\$1");
-}
-function show(id) {
-    document.getElementById(jq(id)).style.display = 'block';
-}
-function hide(id) {
-    document.getElementById(jq(id)).style.display = 'none';
-}
-var Stream = (function () {
-    function Stream(openVidu, local, room, options) {
-        var _this = this;
-        this.openVidu = openVidu;
-        this.local = local;
-        this.room = room;
-        this.ee = new EventEmitter();
-        this.videoElements = [];
-        this.elements = [];
-        this.showMyRemote = false;
-        this.localMirrored = false;
-        this.chanId = 0;
-        this.dataChannelOpened = false;
-        this.audioOnly = false;
-        this.isReady = false;
-        this.isVideoELementCreated = false;
-        this.accessIsAllowed = false;
-        this.accessIsDenied = false;
-        if (options.id) {
-            this.id = options.id;
-        }
-        else {
-            this.id = "webcam";
-        }
-        this.connection = options.connection;
-        this.recvVideo = options.recvVideo;
-        this.recvAudio = options.recvAudio;
-        this.dataChannel = options.data || false;
-        this.sendVideo = options.video;
-        this.sendAudio = options.audio;
-        this.mediaConstraints = options.mediaConstraints;
-        this.audioOnly = options.audioOnly || false;
-        this.addEventListener('src-added', function (srcEvent) {
-            _this.videoSrc = srcEvent.src;
-            if (_this.video)
-                _this.video.src = srcEvent.src;
-            console.warn("Videosrc [" + srcEvent.src + "] added to stream [" + _this.getId() + "]");
-        });
-    }
-    Stream.prototype.emitSrcEvent = function (wrstream) {
-        this.ee.emitEvent('src-added', [{
-                src: URL.createObjectURL(wrstream)
-            }]);
-    };
-    Stream.prototype.emitStreamReadyEvent = function () {
-        this.ee.emitEvent('stream-ready'), [{}];
-    };
-    Stream.prototype.getVideoSrc = function () {
-        return this.videoSrc;
-    };
-    Stream.prototype.removeVideo = function (parentElement) {
-        if (typeof parentElement === "string") {
-            document.getElementById(parentElement).removeChild(this.video);
-        }
-        else if (parentElement instanceof Element) {
-            parentElement.removeChild(this.video);
-        }
-        else if (!parentElement) {
-            if (document.getElementById(this.parentId)) {
-                document.getElementById(this.parentId).removeChild(this.video);
-            }
-        }
-    };
-    Stream.prototype.getVideoElement = function () {
-        return this.video;
-    };
-    Stream.prototype.setVideoElement = function (video) {
-        this.video = video;
-    };
-    Stream.prototype.getRecvVideo = function () {
-        return this.recvVideo;
-    };
-    Stream.prototype.getRecvAudio = function () {
-        return this.recvAudio;
-    };
-    Stream.prototype.subscribeToMyRemote = function () {
-        this.showMyRemote = true;
-    };
-    Stream.prototype.displayMyRemote = function () {
-        return this.showMyRemote;
-    };
-    Stream.prototype.mirrorLocalStream = function (wr) {
-        this.showMyRemote = true;
-        this.localMirrored = true;
-        if (wr) {
-            this.wrStream = wr;
-            this.emitSrcEvent(this.wrStream);
-        }
-    };
-    Stream.prototype.isLocalMirrored = function () {
-        return this.localMirrored;
-    };
-    Stream.prototype.getChannelName = function () {
-        return this.getId() + '_' + this.chanId++;
-    };
-    Stream.prototype.isDataChannelEnabled = function () {
-        return this.dataChannel;
-    };
-    Stream.prototype.isDataChannelOpened = function () {
-        return this.dataChannelOpened;
-    };
-    Stream.prototype.onDataChannelOpen = function (event) {
-        console.log('Data channel is opened');
-        this.dataChannelOpened = true;
-    };
-    Stream.prototype.onDataChannelClosed = function (event) {
-        console.log('Data channel is closed');
-        this.dataChannelOpened = false;
-    };
-    Stream.prototype.sendData = function (data) {
-        if (this.wp === undefined) {
-            throw new Error('WebRTC peer has not been created yet');
-        }
-        if (!this.dataChannelOpened) {
-            throw new Error('Data channel is not opened');
-        }
-        console.log("Sending through data channel: " + data);
-        this.wp.send(data);
-    };
-    Stream.prototype.getWrStream = function () {
-        return this.wrStream;
-    };
-    Stream.prototype.getWebRtcPeer = function () {
-        return this.wp;
-    };
-    Stream.prototype.addEventListener = function (eventName, listener) {
-        this.ee.addListener(eventName, listener);
-    };
-    Stream.prototype.addOnceEventListener = function (eventName, listener) {
-        this.ee.addOnceListener(eventName, listener);
-    };
-    Stream.prototype.removeListener = function (eventName) {
-        this.ee.removeAllListeners(eventName);
-    };
-    Stream.prototype.showSpinner = function (spinnerParentId) {
-        var progress = document.createElement('div');
-        progress.id = 'progress-' + this.getId();
-        progress.style.background = "center transparent url('img/spinner.gif') no-repeat";
-        var spinnerParent = document.getElementById(spinnerParentId);
-        if (spinnerParent) {
-            spinnerParent.appendChild(progress);
-        }
-    };
-    Stream.prototype.hideSpinner = function (spinnerId) {
-        spinnerId = (spinnerId === undefined) ? this.getId() : spinnerId;
-        hide('progress-' + spinnerId);
-    };
-    Stream.prototype.playOnlyVideo = function (parentElement, thumbnailId) {
-        // TO-DO: check somehow if the stream is audio only, so the element created is <audio> instead of <video>
-        this.video = document.createElement('video');
-        this.video.id = 'native-video-' + this.getId();
-        this.video.autoplay = true;
-        this.video.controls = false;
-        this.video.src = this.videoSrc;
-        this.videoElements.push({
-            thumb: thumbnailId,
-            video: this.video
-        });
-        if (this.local) {
-            this.video.muted = true;
-        }
-        else {
-            this.video.title = this.getId();
-        }
-        if (typeof parentElement === "string") {
-            this.parentId = parentElement;
-            var parentElementDom = document.getElementById(parentElement);
-            if (parentElementDom) {
-                this.video = parentElementDom.appendChild(this.video);
-                this.ee.emitEvent('video-element-created-by-stream', [{
-                        element: this.video
-                    }]);
-                this.isVideoELementCreated = true;
-            }
-        }
-        else {
-            this.parentId = parentElement.id;
-            this.video = parentElement.appendChild(this.video);
-        }
-        this.ee.emitEvent('stream-created-by-publisher');
-        this.isReady = true;
-        return this.video;
-    };
-    Stream.prototype.playThumbnail = function (thumbnailId) {
-        var container = document.createElement('div');
-        container.className = "participant";
-        container.id = this.getId();
-        var thumbnail = document.getElementById(thumbnailId);
-        if (thumbnail) {
-            thumbnail.appendChild(container);
-        }
-        this.elements.push(container);
-        var name = document.createElement('div');
-        container.appendChild(name);
-        var userName = this.getId().replace('_webcam', '');
-        if (userName.length >= 16) {
-            userName = userName.substring(0, 16) + "...";
-        }
-        name.appendChild(document.createTextNode(userName));
-        name.id = "name-" + this.getId();
-        name.className = "name";
-        name.title = this.getId();
-        this.showSpinner(thumbnailId);
-        return this.playOnlyVideo(container, thumbnailId);
-    };
-    Stream.prototype.getIdInParticipant = function () {
-        return this.id;
-    };
-    Stream.prototype.getParticipant = function () {
-        return this.connection;
-    };
-    Stream.prototype.getId = function () {
-        if (this.connection) {
-            return this.connection.connectionId + "_" + this.id;
-        }
-        else {
-            return this.id + "_webcam";
-        }
-    };
-    Stream.prototype.getRTCPeerConnection = function () {
-        return this.getWebRtcPeer().peerConnection;
-    };
-    Stream.prototype.requestCameraAccess = function (callback) {
-        var _this = this;
-        this.connection.addStream(this);
-        var constraints = this.mediaConstraints;
-        /*let constraints2 = {
-            audio: true,
-            video: {
-                width: {
-                    ideal: 1280
-                },
-                frameRate: {
-                    ideal: 15
-                }
-            }
-        };*/
-        this.userMediaHasVideo(function (hasVideo) {
-            if (!hasVideo) {
-                constraints.video = false;
-                _this.sendVideo = false;
-                _this.audioOnly = true;
-                _this.requestCameraAccesAux(constraints, callback);
-            }
-            else {
-                _this.requestCameraAccesAux(constraints, callback);
-            }
-        });
-    };
-    Stream.prototype.requestCameraAccesAux = function (constraints, callback) {
-        var _this = this;
-        navigator.mediaDevices.getUserMedia(constraints)
-            .then(function (userStream) {
-            _this.cameraAccessSuccess(userStream, callback);
-        })
-            .catch(function (error) {
-            //  Try to ask for microphone only
-            navigator.mediaDevices.getUserMedia({ audio: true, video: false })
-                .then(function (userStream) {
-                constraints.video = false;
-                _this.sendVideo = false;
-                _this.audioOnly = true;
-                _this.cameraAccessSuccess(userStream, callback);
-            })
-                .catch(function (error) {
-                _this.accessIsDenied = true;
-                _this.accessIsAllowed = false;
-                _this.ee.emitEvent('access-denied-by-publisher');
-                console.error("Access denied", error);
-                callback(error, _this);
-            });
-        });
-    };
-    Stream.prototype.cameraAccessSuccess = function (userStream, callback) {
-        this.accessIsAllowed = true;
-        this.accessIsDenied = false;
-        this.ee.emitEvent('access-allowed-by-publisher');
-        if (userStream.getAudioTracks()[0] != null) {
-            userStream.getAudioTracks()[0].enabled = this.sendAudio;
-        }
-        if (userStream.getVideoTracks()[0] != null) {
-            userStream.getVideoTracks()[0].enabled = this.sendVideo;
-        }
-        this.wrStream = userStream;
-        this.emitSrcEvent(this.wrStream);
-        callback(undefined, this);
-    };
-    Stream.prototype.userMediaHasVideo = function (callback) {
-        navigator.mediaDevices.enumerateDevices().then(function (mediaDevices) {
-            var videoInput = mediaDevices.filter(function (deviceInfo) {
-                return deviceInfo.kind === 'videoinput';
-            })[0];
-            callback(videoInput != null);
-        });
-    };
-    Stream.prototype.publishVideoCallback = function (error, sdpOfferParam, wp) {
-        var _this = this;
-        if (error) {
-            return console.error("(publish) SDP offer error: "
-                + JSON.stringify(error));
-        }
-        console.log("Sending SDP offer to publish as "
-            + this.getId(), sdpOfferParam);
-        this.openVidu.sendRequest("publishVideo", {
-            sdpOffer: sdpOfferParam,
-            doLoopback: this.displayMyRemote() || false,
-            audioOnly: this.audioOnly
-        }, function (error, response) {
-            if (error) {
-                console.error("Error on publishVideo: " + JSON.stringify(error));
-            }
-            else {
-                _this.room.emitEvent('stream-published', [{
-                        stream: _this
-                    }]);
-                _this.processSdpAnswer(response.sdpAnswer);
-            }
-        });
-    };
-    Stream.prototype.startVideoCallback = function (error, sdpOfferParam, wp) {
-        var _this = this;
-        if (error) {
-            return console.error("(subscribe) SDP offer error: "
-                + JSON.stringify(error));
-        }
-        console.log("Sending SDP offer to subscribe to "
-            + this.getId(), sdpOfferParam);
-        this.openVidu.sendRequest("receiveVideoFrom", {
-            sender: this.getId(),
-            sdpOffer: sdpOfferParam
-        }, function (error, response) {
-            if (error) {
-                console.error("Error on recvVideoFrom: " + JSON.stringify(error));
-            }
-            else {
-                _this.processSdpAnswer(response.sdpAnswer);
-            }
-        });
-    };
-    Stream.prototype.initWebRtcPeer = function (sdpOfferCallback) {
-        var _this = this;
-        if (this.local) {
-            var userMediaConstraints = {
-                audio: this.sendAudio,
-                video: this.sendVideo
-            };
-            var options = {
-                videoStream: this.wrStream,
-                mediaConstraints: userMediaConstraints,
-                onicecandidate: this.connection.sendIceCandidate.bind(this.connection),
-            };
-            if (this.dataChannel) {
-                options.dataChannelConfig = {
-                    id: this.getChannelName(),
-                    onopen: this.onDataChannelOpen,
-                    onclose: this.onDataChannelClosed
-                };
-                options.dataChannels = true;
-            }
-            if (this.displayMyRemote()) {
-                this.wp = new kurentoUtils.WebRtcPeer.WebRtcPeerSendrecv(options, function (error) {
-                    if (error) {
-                        return console.error(error);
-                    }
-                    _this.wp.generateOffer(sdpOfferCallback.bind(_this));
-                });
-            }
-            else {
-                this.wp = new kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(options, function (error) {
-                    if (error) {
-                        return console.error(error);
-                    }
-                    _this.wp.generateOffer(sdpOfferCallback.bind(_this));
-                });
-            }
-        }
-        else {
-            var offerConstraints = {
-                audio: this.recvAudio,
-                video: !this.audioOnly
-            };
-            console.log("Constraints of generate SDP offer (subscribing)", offerConstraints);
-            var options = {
-                onicecandidate: this.connection.sendIceCandidate.bind(this.connection),
-                mediaConstraints: offerConstraints
-            };
-            this.wp = new kurentoUtils.WebRtcPeer.WebRtcPeerRecvonly(options, function (error) {
-                if (error) {
-                    return console.error(error);
-                }
-                _this.wp.generateOffer(sdpOfferCallback.bind(_this));
-            });
-        }
-        console.log("Waiting for SDP offer to be generated ("
-            + (this.local ? "local" : "remote") + " peer: " + this.getId() + ")");
-    };
-    Stream.prototype.publish = function () {
-        var _this = this;
-        // FIXME: Throw error when stream is not local
-        if (this.isReady) {
-            this.initWebRtcPeer(this.publishVideoCallback);
-        }
-        else {
-            this.ee.once('stream-ready', function (streamEvent) {
-                _this.publish();
-            });
-        }
-        // FIXME: Now we have coupled connecting to a room and adding a
-        // stream to this room. But in the new API, there are two steps.
-        // This is the second step. For now, it do nothing.
-    };
-    Stream.prototype.subscribe = function () {
-        // FIXME: In the current implementation all participants are subscribed
-        // automatically to all other participants. We use this method only to
-        // negotiate SDP
-        this.initWebRtcPeer(this.startVideoCallback);
-    };
-    Stream.prototype.processSdpAnswer = function (sdpAnswer) {
-        var _this = this;
-        var answer = new RTCSessionDescription({
-            type: 'answer',
-            sdp: sdpAnswer,
-        });
-        console.log(this.getId() + ": set peer connection with recvd SDP answer", sdpAnswer);
-        var participantId = this.getId();
-        var pc = this.wp.peerConnection;
-        pc.setRemoteDescription(answer, function () {
-            // Avoids to subscribe to your own stream remotely 
-            // except when showMyRemote is true
-            if (!_this.local || _this.displayMyRemote()) {
-                _this.wrStream = pc.getRemoteStreams()[0];
-                console.log("Peer remote stream", _this.wrStream);
-                if (_this.wrStream != undefined) {
-                    _this.emitSrcEvent(_this.wrStream);
-                    _this.speechEvent = kurentoUtils.WebRtcPeer.hark(_this.wrStream, { threshold: _this.room.thresholdSpeaker });
-                    _this.speechEvent.on('speaking', function () {
-                        _this.room.addParticipantSpeaking(participantId);
-                        _this.room.emitEvent('stream-speaking', [{
-                                participantId: participantId
-                            }]);
-                    });
-                    _this.speechEvent.on('stopped_speaking', function () {
-                        _this.room.removeParticipantSpeaking(participantId);
-                        _this.room.emitEvent('stream-stopped-speaking', [{
-                                participantId: participantId
-                            }]);
-                    });
-                }
-                for (var _i = 0, _a = _this.videoElements; _i < _a.length; _i++) {
-                    var videoElement = _a[_i];
-                    var thumbnailId = videoElement.thumb;
-                    var video = videoElement.video;
-                    video.src = URL.createObjectURL(_this.wrStream);
-                    video.onplay = function () {
-                        console.log(_this.getId() + ': ' + 'Video playing');
-                        //show(thumbnailId);
-                        //this.hideSpinner(this.getId());
-                    };
-                }
-                _this.room.emitEvent('stream-subscribed', [{
-                        stream: _this
-                    }]);
-            }
-        }, function (error) {
-            console.error(_this.getId() + ": Error setting SDP to the peer connection: "
-                + JSON.stringify(error));
-        });
-    };
-    Stream.prototype.unpublish = function () {
-        if (this.wp) {
-            this.wp.dispose();
-        }
-        else {
-            if (this.wrStream) {
-                this.wrStream.getAudioTracks().forEach(function (track) {
-                    track.stop && track.stop();
-                });
-                this.wrStream.getVideoTracks().forEach(function (track) {
-                    track.stop && track.stop();
-                });
-            }
-        }
-        if (this.speechEvent) {
-            this.speechEvent.stop();
-        }
-        console.log(this.getId() + ": Stream '" + this.id + "' unpublished");
-    };
-    Stream.prototype.dispose = function () {
-        function disposeElement(element) {
-            if (element && element.parentNode) {
-                element.parentNode.removeChild(element);
-            }
-        }
-        this.elements.forEach(function (e) { return disposeElement(e); });
-        //this.videoElements.forEach(ve => disposeElement(ve.video));
-        disposeElement("progress-" + this.getId());
-        if (this.wp) {
-            this.wp.dispose();
-        }
-        else {
-            if (this.wrStream) {
-                this.wrStream.getAudioTracks().forEach(function (track) {
-                    track.stop && track.stop();
-                });
-                this.wrStream.getVideoTracks().forEach(function (track) {
-                    track.stop && track.stop();
-                });
-            }
-        }
-        if (this.speechEvent) {
-            this.speechEvent.stop();
-        }
-        console.log(this.getId() + ": Stream '" + this.id + "' disposed");
-    };
-    return Stream;
-}());
-exports.Stream = Stream;
-
-
-/***/ }),
-
-/***/ 120:
+/***/ 102:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -579,16 +37,16 @@ CredentialsDialogComponent = __decorate([
 
 /***/ }),
 
-/***/ 121:
+/***/ 103:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_material__ = __webpack_require__(119);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__services_info_service__ = __webpack_require__(69);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_openvidu_browser__ = __webpack_require__(371);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_material__ = __webpack_require__(101);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__services_info_service__ = __webpack_require__(55);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_openvidu_browser__ = __webpack_require__(308);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_openvidu_browser___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_openvidu_browser__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__credentials_dialog_component__ = __webpack_require__(120);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__credentials_dialog_component__ = __webpack_require__(102);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return DashboardComponent; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -615,6 +73,7 @@ var DashboardComponent = (function () {
         this.testButton = 'Test';
         this.tickClass = 'trigger';
         this.showSpinner = false;
+        this.msgChain = [];
         // Subscription to info updated event raised by InfoService
         this.infoSubscription = this.infoService.newInfo$.subscribe(function (info) {
             _this.info.push(info);
@@ -656,11 +115,9 @@ var DashboardComponent = (function () {
     };
     DashboardComponent.prototype.connectToSession = function (mySessionId) {
         var _this = this;
+        this.msgChain = [];
         var OV = new __WEBPACK_IMPORTED_MODULE_3_openvidu_browser__["OpenVidu"]();
         this.session = OV.initSession(mySessionId);
-        this.session.on('streamCreated', function (event) {
-            _this.session.subscribe(event.stream, 'mirrored-video');
-        });
         this.testStatus = 'CONNECTING';
         this.testButton = 'Testing...';
         this.session.connect('token', function (error) {
@@ -671,16 +128,24 @@ var DashboardComponent = (function () {
                     video: true,
                     quality: 'MEDIUM'
                 });
+                publisherRemote.on('accessAllowed', function () {
+                    _this.msgChain.push('Camera access allowed');
+                });
+                publisherRemote.on('accessDenied', function () {
+                    _this.endTestVideo();
+                    _this.msgChain.push('Camera access denied');
+                });
                 publisherRemote.on('videoElementCreated', function (video) {
                     _this.showSpinner = true;
-                    video.element.addEventListener('playing', function () {
-                        console.warn('PLAYING!!');
-                        _this.testButton = 'End test';
-                        _this.testStatus = 'PLAYING';
-                        _this.showSpinner = false;
-                    });
+                    _this.msgChain.push('Video element created');
                 });
-                publisherRemote.stream.subscribeToMyRemote();
+                publisherRemote.on('remoteVideoPlaying', function (video) {
+                    _this.msgChain.push('Remote video playing');
+                    _this.testButton = 'End test';
+                    _this.testStatus = 'PLAYING';
+                    _this.showSpinner = false;
+                });
+                publisherRemote.subscribeToRemote();
                 _this.session.publish(publisherRemote);
             }
             else {
@@ -708,6 +173,7 @@ var DashboardComponent = (function () {
         this.testButton = 'Test';
         this.showSpinner = false;
         this.info = [];
+        this.msgChain = [];
     };
     DashboardComponent.prototype.scrollToBottom = function () {
         try {
@@ -734,8 +200,8 @@ __decorate([
 DashboardComponent = __decorate([
     __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_4" /* Component */])({
         selector: 'app-dashboard',
-        template: __webpack_require__(283),
-        styles: [__webpack_require__(261)],
+        template: __webpack_require__(238),
+        styles: [__webpack_require__(227)],
     }),
     __metadata("design:paramtypes", [typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_2__services_info_service__["a" /* InfoService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_2__services_info_service__["a" /* InfoService */]) === "function" && _b || Object, typeof (_c = typeof __WEBPACK_IMPORTED_MODULE_1__angular_material__["j" /* MdDialog */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1__angular_material__["j" /* MdDialog */]) === "function" && _c || Object])
 ], DashboardComponent);
@@ -745,7 +211,7 @@ var _a, _b, _c;
 
 /***/ }),
 
-/***/ 122:
+/***/ 104:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -771,8 +237,8 @@ var SessionDetailsComponent = (function () {
 SessionDetailsComponent = __decorate([
     __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_4" /* Component */])({
         selector: 'app-session-details',
-        template: __webpack_require__(284),
-        styles: [__webpack_require__(262)]
+        template: __webpack_require__(239),
+        styles: [__webpack_require__(228)]
     }),
     __metadata("design:paramtypes", [])
 ], SessionDetailsComponent);
@@ -781,14 +247,850 @@ SessionDetailsComponent = __decorate([
 
 /***/ }),
 
-/***/ 168:
+/***/ 136:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(global) {/*
+ * (C) Copyright 2013-2015 Kurento (http://kurento.org/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+var BrowserWebSocket = global.WebSocket || global.MozWebSocket;
+var Logger = console;
+/**
+ * Get either the `WebSocket` or `MozWebSocket` globals
+ * in the browser or try to resolve WebSocket-compatible
+ * interface exposed by `ws` for Node-like environment.
+ */
+/*var WebSocket = BrowserWebSocket;
+if (!WebSocket && typeof window === 'undefined') {
+    try {
+        WebSocket = require('ws');
+    } catch (e) { }
+}*/
+//var SockJS = require('sockjs-client');
+var MAX_RETRIES = 2000; // Forever...
+var RETRY_TIME_MS = 3000; // FIXME: Implement exponential wait times...
+var CONNECTING = 0;
+var OPEN = 1;
+var CLOSING = 2;
+var CLOSED = 3;
+/*
+config = {
+        uri : wsUri,
+        useSockJS : true (use SockJS) / false (use WebSocket) by default,
+        onconnected : callback method to invoke when connection is successful,
+        ondisconnect : callback method to invoke when the connection is lost,
+        onreconnecting : callback method to invoke when the client is reconnecting,
+        onreconnected : callback method to invoke when the client succesfully reconnects,
+    };
+*/
+function WebSocketWithReconnection(config) {
+    var closing = false;
+    var registerMessageHandler;
+    var wsUri = config.uri;
+    var useSockJS = config.useSockJS;
+    var reconnecting = false;
+    var forcingDisconnection = false;
+    var ws;
+    if (useSockJS) {
+        ws = new SockJS(wsUri);
+    }
+    else {
+        ws = new WebSocket(wsUri);
+    }
+    ws.onopen = function () {
+        logConnected(ws, wsUri);
+        if (config.onconnected) {
+            config.onconnected();
+        }
+    };
+    ws.onerror = function (error) {
+        Logger.error("Could not connect to " + wsUri + " (invoking onerror if defined)", error);
+        if (config.onerror) {
+            config.onerror(error);
+        }
+    };
+    function logConnected(ws, wsUri) {
+        try {
+            Logger.debug("WebSocket connected to " + wsUri);
+        }
+        catch (e) {
+            Logger.error(e);
+        }
+    }
+    var reconnectionOnClose = function () {
+        if (ws.readyState === CLOSED) {
+            if (closing) {
+                Logger.debug("Connection closed by user");
+            }
+            else {
+                Logger.debug("Connection closed unexpectecly. Reconnecting...");
+                reconnectToSameUri(MAX_RETRIES, 1);
+            }
+        }
+        else {
+            Logger.debug("Close callback from previous websocket. Ignoring it");
+        }
+    };
+    ws.onclose = reconnectionOnClose;
+    function reconnectToSameUri(maxRetries, numRetries) {
+        Logger.debug("reconnectToSameUri (attempt #" + numRetries + ", max=" + maxRetries + ")");
+        if (numRetries === 1) {
+            if (reconnecting) {
+                Logger.warn("Trying to reconnectToNewUri when reconnecting... Ignoring this reconnection.");
+                return;
+            }
+            else {
+                reconnecting = true;
+            }
+            if (config.onreconnecting) {
+                config.onreconnecting();
+            }
+        }
+        if (forcingDisconnection) {
+            reconnectToNewUri(maxRetries, numRetries, wsUri);
+        }
+        else {
+            if (config.newWsUriOnReconnection) {
+                config.newWsUriOnReconnection(function (error, newWsUri) {
+                    if (error) {
+                        Logger.debug(error);
+                        setTimeout(function () {
+                            reconnectToSameUri(maxRetries, numRetries + 1);
+                        }, RETRY_TIME_MS);
+                    }
+                    else {
+                        reconnectToNewUri(maxRetries, numRetries, newWsUri);
+                    }
+                });
+            }
+            else {
+                reconnectToNewUri(maxRetries, numRetries, wsUri);
+            }
+        }
+    }
+    // TODO Test retries. How to force not connection?
+    function reconnectToNewUri(maxRetries, numRetries, reconnectWsUri) {
+        Logger.debug("Reconnection attempt #" + numRetries);
+        ws.close();
+        wsUri = reconnectWsUri || wsUri;
+        var newWs;
+        if (useSockJS) {
+            newWs = new SockJS(wsUri);
+        }
+        else {
+            newWs = new WebSocket(wsUri);
+        }
+        newWs.onopen = function () {
+            Logger.debug("Reconnected after " + numRetries + " attempts...");
+            logConnected(newWs, wsUri);
+            reconnecting = false;
+            registerMessageHandler();
+            if (config.onreconnected()) {
+                config.onreconnected();
+            }
+            newWs.onclose = reconnectionOnClose;
+        };
+        var onErrorOrClose = function (error) {
+            Logger.warn("Reconnection error: ", error);
+            if (numRetries === maxRetries) {
+                if (config.ondisconnect) {
+                    config.ondisconnect();
+                }
+            }
+            else {
+                setTimeout(function () {
+                    reconnectToSameUri(maxRetries, numRetries + 1);
+                }, RETRY_TIME_MS);
+            }
+        };
+        newWs.onerror = onErrorOrClose;
+        ws = newWs;
+    }
+    this.close = function () {
+        closing = true;
+        ws.close();
+    };
+    // This method is only for testing
+    this.forceClose = function (millis) {
+        Logger.debug("Testing: Force WebSocket close");
+        if (millis) {
+            Logger.debug("Testing: Change wsUri for " + millis + " millis to simulate net failure");
+            var goodWsUri = wsUri;
+            wsUri = "wss://21.234.12.34.4:443/";
+            forcingDisconnection = true;
+            setTimeout(function () {
+                Logger.debug("Testing: Recover good wsUri " + goodWsUri);
+                wsUri = goodWsUri;
+                forcingDisconnection = false;
+            }, millis);
+        }
+        ws.close();
+    };
+    this.reconnectWs = function () {
+        Logger.debug("reconnectWs");
+        reconnectToSameUri(MAX_RETRIES, 1, wsUri);
+    };
+    this.send = function (message) {
+        ws.send(message);
+    };
+    this.addEventListener = function (type, callback) {
+        registerMessageHandler = function () {
+            ws.addEventListener(type, callback);
+        };
+        registerMessageHandler();
+    };
+}
+module.exports = WebSocketWithReconnection;
+
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(13)))
+
+/***/ }),
+
+/***/ 137:
+/***/ (function(module, exports, __webpack_require__) {
+
+/*
+ * (C) Copyright 2014 Kurento (http://kurento.org/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+var defineProperty_IE8 = false;
+if (Object.defineProperty) {
+    try {
+        Object.defineProperty({}, "x", {});
+    }
+    catch (e) {
+        defineProperty_IE8 = true;
+    }
+}
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind
+if (!Function.prototype.bind) {
+    Function.prototype.bind = function (oThis) {
+        if (typeof this !== 'function') {
+            // closest thing possible to the ECMAScript 5
+            // internal IsCallable function
+            throw new TypeError('Function.prototype.bind - what is trying to be bound is not callable');
+        }
+        var aArgs = Array.prototype.slice.call(arguments, 1), fToBind = this, fNOP = function () { }, fBound = function () {
+            return fToBind.apply(this instanceof fNOP && oThis
+                ? this
+                : oThis, aArgs.concat(Array.prototype.slice.call(arguments)));
+        };
+        fNOP.prototype = this.prototype;
+        fBound.prototype = new fNOP();
+        return fBound;
+    };
+}
+var EventEmitter = __webpack_require__(116).EventEmitter;
+var inherits = __webpack_require__(117);
+var packers = __webpack_require__(304);
+var Mapper = __webpack_require__(298);
+var BASE_TIMEOUT = 5000;
+function unifyResponseMethods(responseMethods) {
+    if (!responseMethods)
+        return {};
+    for (var key in responseMethods) {
+        var value = responseMethods[key];
+        if (typeof value == 'string')
+            responseMethods[key] =
+                {
+                    response: value
+                };
+    }
+    ;
+    return responseMethods;
+}
+;
+function unifyTransport(transport) {
+    if (!transport)
+        return;
+    // Transport as a function
+    if (transport instanceof Function)
+        return { send: transport };
+    // WebSocket & DataChannel
+    if (transport.send instanceof Function)
+        return transport;
+    // Message API (Inter-window & WebWorker)
+    if (transport.postMessage instanceof Function) {
+        transport.send = transport.postMessage;
+        return transport;
+    }
+    // Stream API
+    if (transport.write instanceof Function) {
+        transport.send = transport.write;
+        return transport;
+    }
+    // Transports that only can receive messages, but not send
+    if (transport.onmessage !== undefined)
+        return;
+    if (transport.pause instanceof Function)
+        return;
+    throw new SyntaxError("Transport is not a function nor a valid object");
+}
+;
+/**
+ * Representation of a RPC notification
+ *
+ * @class
+ *
+ * @constructor
+ *
+ * @param {String} method -method of the notification
+ * @param params - parameters of the notification
+ */
+function RpcNotification(method, params) {
+    if (defineProperty_IE8) {
+        this.method = method;
+        this.params = params;
+    }
+    else {
+        Object.defineProperty(this, 'method', { value: method, enumerable: true });
+        Object.defineProperty(this, 'params', { value: params, enumerable: true });
+    }
+}
+;
+/**
+ * @class
+ *
+ * @constructor
+ *
+ * @param {object} packer
+ *
+ * @param {object} [options]
+ *
+ * @param {object} [transport]
+ *
+ * @param {Function} [onRequest]
+ */
+function RpcBuilder(packer, options, transport, onRequest) {
+    var self = this;
+    if (!packer)
+        throw new SyntaxError('Packer is not defined');
+    if (!packer.pack || !packer.unpack)
+        throw new SyntaxError('Packer is invalid');
+    var responseMethods = unifyResponseMethods(packer.responseMethods);
+    if (options instanceof Function) {
+        if (transport != undefined)
+            throw new SyntaxError("There can't be parameters after onRequest");
+        onRequest = options;
+        transport = undefined;
+        options = undefined;
+    }
+    ;
+    if (options && options.send instanceof Function) {
+        if (transport && !(transport instanceof Function))
+            throw new SyntaxError("Only a function can be after transport");
+        onRequest = transport;
+        transport = options;
+        options = undefined;
+    }
+    ;
+    if (transport instanceof Function) {
+        if (onRequest != undefined)
+            throw new SyntaxError("There can't be parameters after onRequest");
+        onRequest = transport;
+        transport = undefined;
+    }
+    ;
+    if (transport && transport.send instanceof Function)
+        if (onRequest && !(onRequest instanceof Function))
+            throw new SyntaxError("Only a function can be after transport");
+    options = options || {};
+    EventEmitter.call(this);
+    if (onRequest)
+        this.on('request', onRequest);
+    if (defineProperty_IE8)
+        this.peerID = options.peerID;
+    else
+        Object.defineProperty(this, 'peerID', { value: options.peerID });
+    var max_retries = options.max_retries || 0;
+    function transportMessage(event) {
+        self.decode(event.data || event);
+    }
+    ;
+    this.getTransport = function () {
+        return transport;
+    };
+    this.setTransport = function (value) {
+        // Remove listener from old transport
+        if (transport) {
+            // W3C transports
+            if (transport.removeEventListener)
+                transport.removeEventListener('message', transportMessage);
+            else if (transport.removeListener)
+                transport.removeListener('data', transportMessage);
+        }
+        ;
+        // Set listener on new transport
+        if (value) {
+            // W3C transports
+            if (value.addEventListener)
+                value.addEventListener('message', transportMessage);
+            else if (value.addListener)
+                value.addListener('data', transportMessage);
+        }
+        ;
+        transport = unifyTransport(value);
+    };
+    if (!defineProperty_IE8)
+        Object.defineProperty(this, 'transport', {
+            get: this.getTransport.bind(this),
+            set: this.setTransport.bind(this)
+        });
+    this.setTransport(transport);
+    var request_timeout = options.request_timeout || BASE_TIMEOUT;
+    var ping_request_timeout = options.ping_request_timeout || request_timeout;
+    var response_timeout = options.response_timeout || BASE_TIMEOUT;
+    var duplicates_timeout = options.duplicates_timeout || BASE_TIMEOUT;
+    var requestID = 0;
+    var requests = new Mapper();
+    var responses = new Mapper();
+    var processedResponses = new Mapper();
+    var message2Key = {};
+    /**
+     * Store the response to prevent to process duplicate request later
+     */
+    function storeResponse(message, id, dest) {
+        var response = {
+            message: message,
+            /** Timeout to auto-clean old responses */
+            timeout: setTimeout(function () {
+                responses.remove(id, dest);
+            }, response_timeout)
+        };
+        responses.set(response, id, dest);
+    }
+    ;
+    /**
+     * Store the response to ignore duplicated messages later
+     */
+    function storeProcessedResponse(ack, from) {
+        var timeout = setTimeout(function () {
+            processedResponses.remove(ack, from);
+        }, duplicates_timeout);
+        processedResponses.set(timeout, ack, from);
+    }
+    ;
+    /**
+     * Representation of a RPC request
+     *
+     * @class
+     * @extends RpcNotification
+     *
+     * @constructor
+     *
+     * @param {String} method -method of the notification
+     * @param params - parameters of the notification
+     * @param {Integer} id - identifier of the request
+     * @param [from] - source of the notification
+     */
+    function RpcRequest(method, params, id, from, transport) {
+        RpcNotification.call(this, method, params);
+        this.getTransport = function () {
+            return transport;
+        };
+        this.setTransport = function (value) {
+            transport = unifyTransport(value);
+        };
+        if (!defineProperty_IE8)
+            Object.defineProperty(this, 'transport', {
+                get: this.getTransport.bind(this),
+                set: this.setTransport.bind(this)
+            });
+        var response = responses.get(id, from);
+        /**
+         * @constant {Boolean} duplicated
+         */
+        if (!(transport || self.getTransport())) {
+            if (defineProperty_IE8)
+                this.duplicated = Boolean(response);
+            else
+                Object.defineProperty(this, 'duplicated', {
+                    value: Boolean(response)
+                });
+        }
+        var responseMethod = responseMethods[method];
+        this.pack = packer.pack.bind(packer, this, id);
+        /**
+         * Generate a response to this request
+         *
+         * @param {Error} [error]
+         * @param {*} [result]
+         *
+         * @returns {string}
+         */
+        this.reply = function (error, result, transport) {
+            // Fix optional parameters
+            if (error instanceof Function || error && error.send instanceof Function) {
+                if (result != undefined)
+                    throw new SyntaxError("There can't be parameters after callback");
+                transport = error;
+                result = null;
+                error = undefined;
+            }
+            else if (result instanceof Function
+                || result && result.send instanceof Function) {
+                if (transport != undefined)
+                    throw new SyntaxError("There can't be parameters after callback");
+                transport = result;
+                result = null;
+            }
+            ;
+            transport = unifyTransport(transport);
+            // Duplicated request, remove old response timeout
+            if (response)
+                clearTimeout(response.timeout);
+            if (from != undefined) {
+                if (error)
+                    error.dest = from;
+                if (result)
+                    result.dest = from;
+            }
+            ;
+            var message;
+            // New request or overriden one, create new response with provided data
+            if (error || result != undefined) {
+                if (self.peerID != undefined) {
+                    if (error)
+                        error.from = self.peerID;
+                    else
+                        result.from = self.peerID;
+                }
+                // Protocol indicates that responses has own request methods
+                if (responseMethod) {
+                    if (responseMethod.error == undefined && error)
+                        message =
+                            {
+                                error: error
+                            };
+                    else {
+                        var method = error
+                            ? responseMethod.error
+                            : responseMethod.response;
+                        message =
+                            {
+                                method: method,
+                                params: error || result
+                            };
+                    }
+                }
+                else
+                    message =
+                        {
+                            error: error,
+                            result: result
+                        };
+                message = packer.pack(message, id);
+            }
+            else if (response)
+                message = response.message;
+            else
+                message = packer.pack({ result: null }, id);
+            // Store the response to prevent to process a duplicated request later
+            storeResponse(message, id, from);
+            // Return the stored response so it can be directly send back
+            transport = transport || this.getTransport() || self.getTransport();
+            if (transport)
+                return transport.send(message);
+            return message;
+        };
+    }
+    ;
+    inherits(RpcRequest, RpcNotification);
+    function cancel(message) {
+        var key = message2Key[message];
+        if (!key)
+            return;
+        delete message2Key[message];
+        var request = requests.pop(key.id, key.dest);
+        if (!request)
+            return;
+        clearTimeout(request.timeout);
+        // Start duplicated responses timeout
+        storeProcessedResponse(key.id, key.dest);
+    }
+    ;
+    /**
+     * Allow to cancel a request and don't wait for a response
+     *
+     * If `message` is not given, cancel all the request
+     */
+    this.cancel = function (message) {
+        if (message)
+            return cancel(message);
+        for (var message in message2Key)
+            cancel(message);
+    };
+    this.close = function () {
+        // Prevent to receive new messages
+        var transport = this.getTransport();
+        if (transport && transport.close)
+            transport.close();
+        // Request & processed responses
+        this.cancel();
+        processedResponses.forEach(clearTimeout);
+        // Responses
+        responses.forEach(function (response) {
+            clearTimeout(response.timeout);
+        });
+    };
+    /**
+     * Generates and encode a JsonRPC 2.0 message
+     *
+     * @param {String} method -method of the notification
+     * @param params - parameters of the notification
+     * @param [dest] - destination of the notification
+     * @param {object} [transport] - transport where to send the message
+     * @param [callback] - function called when a response to this request is
+     *   received. If not defined, a notification will be send instead
+     *
+     * @returns {string} A raw JsonRPC 2.0 request or notification string
+     */
+    this.encode = function (method, params, dest, transport, callback) {
+        // Fix optional parameters
+        if (params instanceof Function) {
+            if (dest != undefined)
+                throw new SyntaxError("There can't be parameters after callback");
+            callback = params;
+            transport = undefined;
+            dest = undefined;
+            params = undefined;
+        }
+        else if (dest instanceof Function) {
+            if (transport != undefined)
+                throw new SyntaxError("There can't be parameters after callback");
+            callback = dest;
+            transport = undefined;
+            dest = undefined;
+        }
+        else if (transport instanceof Function) {
+            if (callback != undefined)
+                throw new SyntaxError("There can't be parameters after callback");
+            callback = transport;
+            transport = undefined;
+        }
+        ;
+        if (self.peerID != undefined) {
+            params = params || {};
+            params.from = self.peerID;
+        }
+        ;
+        if (dest != undefined) {
+            params = params || {};
+            params.dest = dest;
+        }
+        ;
+        // Encode message
+        var message = {
+            method: method,
+            params: params
+        };
+        if (callback) {
+            var id = requestID++;
+            var retried = 0;
+            message = packer.pack(message, id);
+            function dispatchCallback(error, result) {
+                self.cancel(message);
+                callback(error, result);
+            }
+            ;
+            var request = {
+                message: message,
+                callback: dispatchCallback,
+                responseMethods: responseMethods[method] || {}
+            };
+            var encode_transport = unifyTransport(transport);
+            function sendRequest(transport) {
+                var rt = (method === 'ping' ? ping_request_timeout : request_timeout);
+                request.timeout = setTimeout(timeout, rt * Math.pow(2, retried++));
+                message2Key[message] = { id: id, dest: dest };
+                requests.set(request, id, dest);
+                transport = transport || encode_transport || self.getTransport();
+                if (transport)
+                    return transport.send(message);
+                return message;
+            }
+            ;
+            function retry(transport) {
+                transport = unifyTransport(transport);
+                console.warn(retried + ' retry for request message:', message);
+                var timeout = processedResponses.pop(id, dest);
+                clearTimeout(timeout);
+                return sendRequest(transport);
+            }
+            ;
+            function timeout() {
+                if (retried < max_retries)
+                    return retry(transport);
+                var error = new Error('Request has timed out');
+                error.request = message;
+                error.retry = retry;
+                dispatchCallback(error);
+            }
+            ;
+            return sendRequest(transport);
+        }
+        ;
+        // Return the packed message
+        message = packer.pack(message);
+        transport = transport || this.getTransport();
+        if (transport)
+            return transport.send(message);
+        return message;
+    };
+    /**
+     * Decode and process a JsonRPC 2.0 message
+     *
+     * @param {string} message - string with the content of the message
+     *
+     * @returns {RpcNotification|RpcRequest|undefined} - the representation of the
+     *   notification or the request. If a response was processed, it will return
+     *   `undefined` to notify that it was processed
+     *
+     * @throws {TypeError} - Message is not defined
+     */
+    this.decode = function (message, transport) {
+        if (!message)
+            throw new TypeError("Message is not defined");
+        try {
+            message = packer.unpack(message);
+        }
+        catch (e) {
+            // Ignore invalid messages
+            return console.debug(e, message);
+        }
+        ;
+        var id = message.id;
+        var ack = message.ack;
+        var method = message.method;
+        var params = message.params || {};
+        var from = params.from;
+        var dest = params.dest;
+        // Ignore messages send by us
+        if (self.peerID != undefined && from == self.peerID)
+            return;
+        // Notification
+        if (id == undefined && ack == undefined) {
+            var notification = new RpcNotification(method, params);
+            if (self.emit('request', notification))
+                return;
+            return notification;
+        }
+        ;
+        function processRequest() {
+            // If we have a transport and it's a duplicated request, reply inmediatly
+            transport = unifyTransport(transport) || self.getTransport();
+            if (transport) {
+                var response = responses.get(id, from);
+                if (response)
+                    return transport.send(response.message);
+            }
+            ;
+            var idAck = (id != undefined) ? id : ack;
+            var request = new RpcRequest(method, params, idAck, from, transport);
+            if (self.emit('request', request))
+                return;
+            return request;
+        }
+        ;
+        function processResponse(request, error, result) {
+            request.callback(error, result);
+        }
+        ;
+        function duplicatedResponse(timeout) {
+            console.warn("Response already processed", message);
+            // Update duplicated responses timeout
+            clearTimeout(timeout);
+            storeProcessedResponse(ack, from);
+        }
+        ;
+        // Request, or response with own method
+        if (method) {
+            // Check if it's a response with own method
+            if (dest == undefined || dest == self.peerID) {
+                var request = requests.get(ack, from);
+                if (request) {
+                    var responseMethods = request.responseMethods;
+                    if (method == responseMethods.error)
+                        return processResponse(request, params);
+                    if (method == responseMethods.response)
+                        return processResponse(request, null, params);
+                    return processRequest();
+                }
+                var processed = processedResponses.get(ack, from);
+                if (processed)
+                    return duplicatedResponse(processed);
+            }
+            // Request
+            return processRequest();
+        }
+        ;
+        var error = message.error;
+        var result = message.result;
+        // Ignore responses not send to us
+        if (error && error.dest && error.dest != self.peerID)
+            return;
+        if (result && result.dest && result.dest != self.peerID)
+            return;
+        // Response
+        var request = requests.get(ack, from);
+        if (!request) {
+            var processed = processedResponses.get(ack, from);
+            if (processed)
+                return duplicatedResponse(processed);
+            return console.warn("No callback was defined for this message", message);
+        }
+        ;
+        // Process response
+        processResponse(request, error, result);
+    };
+}
+;
+inherits(RpcBuilder, EventEmitter);
+RpcBuilder.RpcNotification = RpcNotification;
+module.exports = RpcBuilder;
+var clients = __webpack_require__(299);
+var transports = __webpack_require__(301);
+RpcBuilder.clients = clients;
+RpcBuilder.clients.transports = transports;
+RpcBuilder.packers = packers;
+
+
+/***/ }),
+
+/***/ 138:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var EventEmitter = __webpack_require__(52);
-var Publisher = (function () {
+var EventEmitter = __webpack_require__(40);
+var Publisher = /** @class */ (function () {
     function Publisher(stream, parentId) {
         var _this = this;
         this.ee = new EventEmitter();
@@ -819,9 +1121,18 @@ var Publisher = (function () {
         this.stream.removeVideo(this.element);
         return this;
     };
+    Publisher.prototype.subscribeToRemote = function () {
+        this.stream.subscribeToMyRemote();
+    };
     Publisher.prototype.on = function (eventName, callback) {
         var _this = this;
         this.ee.addListener(eventName, function (event) {
+            if (event) {
+                console.info("Event '" + eventName + "' triggered by 'Publisher'", event);
+            }
+            else {
+                console.info("Event '" + eventName + "' triggered by 'Publisher'");
+            }
             callback(event);
         });
         if (eventName == 'videoElementCreated') {
@@ -831,10 +1142,47 @@ var Publisher = (function () {
                     }]);
             }
             else {
-                this.stream.addEventListener('video-element-created-by-stream', function (element) {
-                    console.warn('Publisher emitting videoElementCreated');
+                this.stream.addOnceEventListener('video-element-created-by-stream', function (element) {
                     _this.id = element.id;
                     _this.ee.emitEvent('videoElementCreated', [{
+                            element: element.element
+                        }]);
+                });
+            }
+        }
+        if (eventName == 'videoPlaying') {
+            var video = this.stream.getVideoElement();
+            if (!this.stream.displayMyRemote() && video &&
+                video.currentTime > 0 &&
+                video.paused == false &&
+                video.ended == false &&
+                video.readyState == 4) {
+                this.ee.emitEvent('videoPlaying', [{
+                        element: this.stream.getVideoElement()
+                    }]);
+            }
+            else {
+                this.stream.addOnceEventListener('video-is-playing', function (element) {
+                    _this.ee.emitEvent('videoPlaying', [{
+                            element: element.element
+                        }]);
+                });
+            }
+        }
+        if (eventName == 'remoteVideoPlaying') {
+            var video = this.stream.getVideoElement();
+            if (this.stream.displayMyRemote() && video &&
+                video.currentTime > 0 &&
+                video.paused == false &&
+                video.ended == false &&
+                video.readyState == 4) {
+                this.ee.emitEvent('remoteVideoPlaying', [{
+                        element: this.stream.getVideoElement()
+                    }]);
+            }
+            else {
+                this.stream.addOnceEventListener('remote-video-is-playing', function (element) {
+                    _this.ee.emitEvent('remoteVideoPlaying', [{
                             element: element.element
                         }]);
                 });
@@ -879,15 +1227,15 @@ exports.Publisher = Publisher;
 
 /***/ }),
 
-/***/ 169:
+/***/ 139:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var Subscriber_1 = __webpack_require__(170);
-var EventEmitter = __webpack_require__(52);
-var Session = (function () {
+var Subscriber_1 = __webpack_require__(140);
+var EventEmitter = __webpack_require__(40);
+var Session = /** @class */ (function () {
     function Session(session, openVidu) {
         var _this = this;
         this.session = session;
@@ -918,11 +1266,11 @@ var Session = (function () {
     }
     Session.prototype.connect = function (param1, param2, param3) {
         // Early configuration to deactivate automatic subscription to streams
-        if (typeof param2 == "string") {
+        if (param3) {
             this.session.configure({
                 sessionId: this.session.getSessionId(),
                 participantId: param1,
-                metadata: param2,
+                metadata: this.session.stringClientMetadata(param2),
                 subscribeToStreams: false
             });
             this.session.connect(param1, param3);
@@ -954,6 +1302,12 @@ var Session = (function () {
     };
     Session.prototype.on = function (eventName, callback) {
         this.session.addEventListener(eventName, function (event) {
+            if (event) {
+                console.info("Event '" + eventName + "' triggered by 'Session'", event);
+            }
+            else {
+                console.info("Event '" + eventName + "' triggered by 'Session'");
+            }
             callback(event);
         });
     };
@@ -1029,14 +1383,14 @@ exports.Session = Session;
 
 /***/ }),
 
-/***/ 170:
+/***/ 140:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var EventEmitter = __webpack_require__(52);
-var Subscriber = (function () {
+var EventEmitter = __webpack_require__(40);
+var Subscriber = /** @class */ (function () {
     function Subscriber(stream, parentId) {
         this.ee = new EventEmitter();
         this.stream = stream;
@@ -1047,6 +1401,12 @@ var Subscriber = (function () {
     Subscriber.prototype.on = function (eventName, callback) {
         var _this = this;
         this.ee.addListener(eventName, function (event) {
+            if (event) {
+                console.info("Event '" + eventName + "' triggered by 'Subscriber'", event);
+            }
+            else {
+                console.info("Event '" + eventName + "' triggered by 'Subscriber'");
+            }
             callback(event);
         });
         if (eventName == 'videoElementCreated') {
@@ -1056,11 +1416,30 @@ var Subscriber = (function () {
                     }]);
             }
             else {
-                this.stream.addEventListener('video-element-created-by-stream', function (element) {
+                this.stream.addOnceEventListener('video-element-created-by-stream', function (element) {
                     console.warn("Subscriber emitting videoElementCreated");
                     _this.id = element.id;
                     _this.ee.emitEvent('videoElementCreated', [{
                             element: element
+                        }]);
+                });
+            }
+        }
+        if (eventName == 'videoPlaying') {
+            var video = this.stream.getVideoElement();
+            if (!this.stream.displayMyRemote() && video &&
+                video.currentTime > 0 &&
+                video.paused == false &&
+                video.ended == false &&
+                video.readyState == 4) {
+                this.ee.emitEvent('videoPlaying', [{
+                        element: this.stream.getVideoElement()
+                    }]);
+            }
+            else {
+                this.stream.addOnceEventListener('video-is-playing', function (element) {
+                    _this.ee.emitEvent('videoPlaying', [{
+                            element: element.element
                         }]);
                 });
             }
@@ -1073,14 +1452,14 @@ exports.Subscriber = Subscriber;
 
 /***/ }),
 
-/***/ 171:
+/***/ 141:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var Stream_1 = __webpack_require__(104);
-var Connection = (function () {
+var Stream_1 = __webpack_require__(86);
+var Connection = /** @class */ (function () {
     function Connection(openVidu, local, room, options) {
         this.openVidu = openVidu;
         this.local = local;
@@ -1088,31 +1467,14 @@ var Connection = (function () {
         this.options = options;
         this.streams = {};
         this.streamsOpts = [];
+        console.info("'Connection' created (" + (local ? "local" : "remote") + ")" + (local ? "" : ", with 'connectionId' [" + (options ? options.id : '') + "] "));
         if (options) {
             this.connectionId = options.id;
             this.data = options.metadata;
             if (options.streams) {
-                for (var _i = 0, _a = options.streams; _i < _a.length; _i++) {
-                    var streamOptions = _a[_i];
-                    var streamOpts = {
-                        id: streamOptions.id,
-                        connection: this,
-                        recvVideo: (streamOptions.recvVideo == undefined ? true : streamOptions.recvVideo),
-                        recvAudio: (streamOptions.recvAudio == undefined ? true : streamOptions.recvAudio),
-                        audio: streamOptions.audio,
-                        video: streamOptions.video,
-                        data: streamOptions.data,
-                        mediaConstraints: streamOptions.mediaConstraints,
-                        audioOnly: streamOptions.audioOnly
-                    };
-                    var stream = new Stream_1.Stream(openVidu, false, room, streamOpts);
-                    this.addStream(stream);
-                    this.streamsOpts.push(streamOpts);
-                }
+                this.initStreams(options);
             }
         }
-        console.log("New " + (local ? "local " : "remote ") + "participant " + this.connectionId
-            + ", streams opts: ", this.streamsOpts);
     }
     Connection.prototype.addStream = function (stream) {
         this.streams[stream.getIdInParticipant()] = stream;
@@ -1140,6 +1502,26 @@ var Connection = (function () {
             }
         });
     };
+    Connection.prototype.initStreams = function (options) {
+        for (var _i = 0, _a = options.streams; _i < _a.length; _i++) {
+            var streamOptions = _a[_i];
+            var streamOpts = {
+                id: streamOptions.id,
+                connection: this,
+                recvVideo: (streamOptions.recvVideo == undefined ? true : streamOptions.recvVideo),
+                recvAudio: (streamOptions.recvAudio == undefined ? true : streamOptions.recvAudio),
+                audio: streamOptions.audio,
+                video: streamOptions.video,
+                data: streamOptions.data,
+                mediaConstraints: streamOptions.mediaConstraints,
+                audioOnly: streamOptions.audioOnly,
+            };
+            var stream = new Stream_1.Stream(this.openVidu, false, this.room, streamOpts);
+            this.addStream(stream);
+            this.streamsOpts.push(streamOpts);
+        }
+        console.info("Remote 'Connection' with 'connectionId' [" + this.connectionId + "] is now configured for receiving Streams with options: ", this.streamsOpts);
+    };
     return Connection;
 }());
 exports.Connection = Connection;
@@ -1147,7 +1529,7 @@ exports.Connection = Connection;
 
 /***/ }),
 
-/***/ 176:
+/***/ 143:
 /***/ (function(module, exports) {
 
 function webpackEmptyContext(req) {
@@ -1156,20 +1538,20 @@ function webpackEmptyContext(req) {
 webpackEmptyContext.keys = function() { return []; };
 webpackEmptyContext.resolve = webpackEmptyContext;
 module.exports = webpackEmptyContext;
-webpackEmptyContext.id = 176;
+webpackEmptyContext.id = 143;
 
 
 /***/ }),
 
-/***/ 177:
+/***/ 144:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_platform_browser_dynamic__ = __webpack_require__(197);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__app_app_module__ = __webpack_require__(202);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__environments_environment__ = __webpack_require__(204);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_platform_browser_dynamic__ = __webpack_require__(164);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__app_app_module__ = __webpack_require__(169);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__environments_environment__ = __webpack_require__(171);
 
 
 
@@ -1182,12 +1564,12 @@ __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__angular_platform_browser_dyna
 
 /***/ }),
 
-/***/ 200:
+/***/ 167:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_services_info_service__ = __webpack_require__(69);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_services_info_service__ = __webpack_require__(55);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AppComponent; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -1242,8 +1624,8 @@ __decorate([
 AppComponent = __decorate([
     __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_4" /* Component */])({
         selector: 'app-root',
-        template: __webpack_require__(282),
-        styles: [__webpack_require__(260)]
+        template: __webpack_require__(237),
+        styles: [__webpack_require__(226)]
     }),
     __metadata("design:paramtypes", [typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_1_app_services_info_service__["a" /* InfoService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_app_services_info_service__["a" /* InfoService */]) === "function" && _a || Object])
 ], AppComponent);
@@ -1253,13 +1635,13 @@ var _a;
 
 /***/ }),
 
-/***/ 201:
+/***/ 168:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_platform_browser_animations__ = __webpack_require__(198);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_material__ = __webpack_require__(119);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_platform_browser_animations__ = __webpack_require__(165);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_material__ = __webpack_require__(101);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AppMaterialModule; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -1308,24 +1690,24 @@ AppMaterialModule = __decorate([
 
 /***/ }),
 
-/***/ 202:
+/***/ 169:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_platform_browser__ = __webpack_require__(22);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_flex_layout__ = __webpack_require__(194);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_platform_browser__ = __webpack_require__(16);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_flex_layout__ = __webpack_require__(161);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__angular_forms__ = __webpack_require__(117);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__angular_http__ = __webpack_require__(118);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_hammerjs__ = __webpack_require__(264);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__angular_forms__ = __webpack_require__(99);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__angular_http__ = __webpack_require__(100);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_hammerjs__ = __webpack_require__(230);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_hammerjs___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_hammerjs__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__app_routing__ = __webpack_require__(203);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_app_app_material_module__ = __webpack_require__(201);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__services_info_service__ = __webpack_require__(69);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__app_component__ = __webpack_require__(200);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__components_dashboard_dashboard_component__ = __webpack_require__(121);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__components_session_details_session_details_component__ = __webpack_require__(122);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__components_dashboard_credentials_dialog_component__ = __webpack_require__(120);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__app_routing__ = __webpack_require__(170);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_app_app_material_module__ = __webpack_require__(168);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__services_info_service__ = __webpack_require__(55);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__app_component__ = __webpack_require__(167);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__components_dashboard_dashboard_component__ = __webpack_require__(103);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__components_session_details_session_details_component__ = __webpack_require__(104);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__components_dashboard_credentials_dialog_component__ = __webpack_require__(102);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AppModule; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -1379,13 +1761,13 @@ AppModule = __decorate([
 
 /***/ }),
 
-/***/ 203:
+/***/ 170:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_router__ = __webpack_require__(199);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_components_dashboard_dashboard_component__ = __webpack_require__(121);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_app_components_session_details_session_details_component__ = __webpack_require__(122);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_router__ = __webpack_require__(166);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_components_dashboard_dashboard_component__ = __webpack_require__(103);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_app_components_session_details_session_details_component__ = __webpack_require__(104);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return routing; });
 
 
@@ -1405,7 +1787,7 @@ var routing = __WEBPACK_IMPORTED_MODULE_0__angular_router__["a" /* RouterModule 
 
 /***/ }),
 
-/***/ 204:
+/***/ 171:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1422,10 +1804,10 @@ var environment = {
 
 /***/ }),
 
-/***/ 260:
+/***/ 226:
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(37)(false);
+exports = module.exports = __webpack_require__(30)(false);
 // imports
 
 
@@ -1440,15 +1822,15 @@ module.exports = module.exports.toString();
 
 /***/ }),
 
-/***/ 261:
+/***/ 227:
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(37)(false);
+exports = module.exports = __webpack_require__(30)(false);
 // imports
 
 
 // module
-exports.push([module.i, "#dashboard-div {\n  padding: 20px;\n}\n\n#log {\n  height: 90%;\n}\n\n#log-content {\n  height: 90%;\n  font-family: Consolas, 'Liberation Mono', Menlo, Courier, monospace;\n  overflow-y: auto;\n  overflow-x: hidden\n}\n\nul {\n  margin: 0;\n}\n\nbutton.mat-raised-button {\n  text-transform: uppercase;\n  float: right;\n}\n\nmd-card-title button.blue {\n  color: #ffffff;\n  background-color: #0088aa;\n}\n\nmd-card-title button.yellow {\n  color: rgba(0, 0, 0, 0.87);\n  background-color: #ffcc00;\n}\n\nmd-spinner {\n  position: absolute;\n  top: 55%;\n  left: 50%;\n  -webkit-transform: translate(-50%, -50%);\n          transform: translate(-50%, -50%);\n}\n\n#tick-div {\n  width: 100px;\n  height: 100px;\n  z-index: 1;\n  position: absolute;\n  top: 55%;\n  left: 50%;\n  -webkit-transform: translate(-50%, -50%);\n          transform: translate(-50%, -50%);\n}\n\n#tooltip-tick {\n  position: absolute;\n  width: 100%;\n  height: 100%;\n  z-index: 2;\n}\n\n.circ {\n  opacity: 0;\n  stroke-dasharray: 130;\n  stroke-dashoffset: 130;\n  transition: all 1s;\n}\n\n.tick {\n  stroke-dasharray: 50;\n  stroke-dashoffset: 50;\n  transition: stroke-dashoffset 1s 0.5s ease-out;\n}\n\n.drawn+svg .path {\n  opacity: 1;\n  stroke-dashoffset: 0;\n}\n\n\n/* Pure CSS loader */\n\n#loader {\n  width: 100px;\n  height: 100px;\n  z-index: 1;\n  position: absolute;\n  top: 55%;\n  left: 50%;\n  -webkit-transform: translate(-50%, -50%);\n  transform: translate(-50%, -50%);\n}\n\n#loader * {\n  box-sizing: border-box;\n}\n\n#loader ::after {\n  box-sizing: border-box;\n}\n\n#loader ::before {\n  box-sizing: border-box;\n}\n\n.loader-1 {\n  height: 100px;\n  width: 100px;\n  -webkit-animation: loader-1-1 4.8s linear infinite;\n  animation: loader-1-1 4.8s linear infinite;\n}\n\n@-webkit-keyframes loader-1-1 {\n  0% {\n    -webkit-transform: rotate(0deg);\n  }\n  100% {\n    -webkit-transform: rotate(360deg);\n  }\n}\n\n@keyframes loader-1-1 {\n  0% {\n    -webkit-transform: rotate(0deg);\n            transform: rotate(0deg);\n  }\n  100% {\n    -webkit-transform: rotate(360deg);\n            transform: rotate(360deg);\n  }\n}\n\n.loader-1 span {\n  display: block;\n  position: absolute;\n  top: 0;\n  left: 0;\n  bottom: 0;\n  right: 0;\n  margin: auto;\n  height: 100px;\n  width: 100px;\n  clip: rect(0, 100px, 100px, 50px);\n  -webkit-animation: loader-1-2 1.2s linear infinite;\n  animation: loader-1-2 1.2s linear infinite;\n}\n\n@-webkit-keyframes loader-1-2 {\n  0% {\n    -webkit-transform: rotate(0deg);\n  }\n  100% {\n    -webkit-transform: rotate(220deg);\n  }\n}\n\n@keyframes loader-1-2 {\n  0% {\n    -webkit-transform: rotate(0deg);\n            transform: rotate(0deg);\n  }\n  100% {\n    -webkit-transform: rotate(220deg);\n            transform: rotate(220deg);\n  }\n}\n\n.loader-1 span::after {\n  content: \"\";\n  position: absolute;\n  top: 0;\n  left: 0;\n  bottom: 0;\n  right: 0;\n  margin: auto;\n  height: 100px;\n  width: 100px;\n  clip: rect(0, 100px, 100px, 50px);\n  border: 8px solid #4d4d4d;\n  border-radius: 50%;\n  -webkit-animation: loader-1-3 1.2s cubic-bezier(0.770, 0.000, 0.175, 1.000) infinite;\n  animation: loader-1-3 1.2s cubic-bezier(0.770, 0.000, 0.175, 1.000) infinite;\n}\n\n@-webkit-keyframes loader-1-3 {\n  0% {\n    -webkit-transform: rotate(-140deg);\n  }\n  50% {\n    -webkit-transform: rotate(-160deg);\n  }\n  100% {\n    -webkit-transform: rotate(140deg);\n  }\n}\n\n@keyframes loader-1-3 {\n  0% {\n    -webkit-transform: rotate(-140deg);\n            transform: rotate(-140deg);\n  }\n  50% {\n    -webkit-transform: rotate(-160deg);\n            transform: rotate(-160deg);\n  }\n  100% {\n    -webkit-transform: rotate(140deg);\n            transform: rotate(140deg);\n  }\n}", ""]);
+exports.push([module.i, "#dashboard-div {\n  padding: 20px;\n}\n\n#log {\n  height: 90%;\n}\n\n#log-content {\n  height: 90%;\n  font-family: Consolas, 'Liberation Mono', Menlo, Courier, monospace;\n  overflow-y: auto;\n  overflow-x: hidden\n}\n\nul {\n  margin: 0;\n}\n\nbutton.mat-raised-button {\n  text-transform: uppercase;\n  float: right;\n}\n\nmd-card-title button.blue {\n  color: #ffffff;\n  background-color: #0088aa;\n}\n\nmd-card-title button.yellow {\n  color: rgba(0, 0, 0, 0.87);\n  background-color: #ffcc00;\n}\n\nmd-spinner {\n  position: absolute;\n  top: 50%;\n  left: 50%;\n  -webkit-transform: translate(-50%, -50%);\n          transform: translate(-50%, -50%);\n}\n\n#tick-div {\n  width: 100px;\n  height: 100px;\n  z-index: 1;\n  position: absolute;\n  top: 50%;\n  left: 50%;\n  -webkit-transform: translate(-50%, -50%);\n          transform: translate(-50%, -50%);\n}\n\n#tooltip-tick {\n  position: absolute;\n  width: 100%;\n  height: 100%;\n  z-index: 2;\n}\n\n.circ {\n  opacity: 0;\n  stroke-dasharray: 130;\n  stroke-dashoffset: 130;\n  transition: all 1s;\n}\n\n.tick {\n  stroke-dasharray: 50;\n  stroke-dashoffset: 50;\n  transition: stroke-dashoffset 1s 0.5s ease-out;\n}\n\n.drawn+svg .path {\n  opacity: 1;\n  stroke-dashoffset: 0;\n}\n\n#mirrored-video {\n  position: relative;\n}\n\n\n/* Pure CSS loader */\n\n#loader {\n  width: 100px;\n  height: 100px;\n  z-index: 1;\n  position: absolute;\n  top: 50%;\n  left: 50%;\n  -webkit-transform: translate(-50%, -50%);\n  transform: translate(-50%, -50%);\n}\n\n#loader * {\n  box-sizing: border-box;\n}\n\n#loader ::after {\n  box-sizing: border-box;\n}\n\n#loader ::before {\n  box-sizing: border-box;\n}\n\n.loader-1 {\n  height: 100px;\n  width: 100px;\n  -webkit-animation: loader-1-1 4.8s linear infinite;\n  animation: loader-1-1 4.8s linear infinite;\n}\n\n@-webkit-keyframes loader-1-1 {\n  0% {\n    -webkit-transform: rotate(0deg);\n  }\n  100% {\n    -webkit-transform: rotate(360deg);\n  }\n}\n\n@keyframes loader-1-1 {\n  0% {\n    -webkit-transform: rotate(0deg);\n            transform: rotate(0deg);\n  }\n  100% {\n    -webkit-transform: rotate(360deg);\n            transform: rotate(360deg);\n  }\n}\n\n.loader-1 span {\n  display: block;\n  position: absolute;\n  top: 0;\n  left: 0;\n  bottom: 0;\n  right: 0;\n  margin: auto;\n  height: 100px;\n  width: 100px;\n  clip: rect(0, 100px, 100px, 50px);\n  -webkit-animation: loader-1-2 1.2s linear infinite;\n  animation: loader-1-2 1.2s linear infinite;\n}\n\n@-webkit-keyframes loader-1-2 {\n  0% {\n    -webkit-transform: rotate(0deg);\n  }\n  100% {\n    -webkit-transform: rotate(220deg);\n  }\n}\n\n@keyframes loader-1-2 {\n  0% {\n    -webkit-transform: rotate(0deg);\n            transform: rotate(0deg);\n  }\n  100% {\n    -webkit-transform: rotate(220deg);\n            transform: rotate(220deg);\n  }\n}\n\n.loader-1 span::after {\n  content: \"\";\n  position: absolute;\n  top: 0;\n  left: 0;\n  bottom: 0;\n  right: 0;\n  margin: auto;\n  height: 100px;\n  width: 100px;\n  clip: rect(0, 100px, 100px, 50px);\n  border: 8px solid #4d4d4d;\n  border-radius: 50%;\n  -webkit-animation: loader-1-3 1.2s cubic-bezier(0.770, 0.000, 0.175, 1.000) infinite;\n  animation: loader-1-3 1.2s cubic-bezier(0.770, 0.000, 0.175, 1.000) infinite;\n}\n\n@-webkit-keyframes loader-1-3 {\n  0% {\n    -webkit-transform: rotate(-140deg);\n  }\n  50% {\n    -webkit-transform: rotate(-160deg);\n  }\n  100% {\n    -webkit-transform: rotate(140deg);\n  }\n}\n\n@keyframes loader-1-3 {\n  0% {\n    -webkit-transform: rotate(-140deg);\n            transform: rotate(-140deg);\n  }\n  50% {\n    -webkit-transform: rotate(-160deg);\n            transform: rotate(-160deg);\n  }\n  100% {\n    -webkit-transform: rotate(140deg);\n            transform: rotate(140deg);\n  }\n}", ""]);
 
 // exports
 
@@ -1458,10 +1840,10 @@ module.exports = module.exports.toString();
 
 /***/ }),
 
-/***/ 262:
+/***/ 228:
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(37)(false);
+exports = module.exports = __webpack_require__(30)(false);
 // imports
 
 
@@ -1476,35 +1858,84 @@ module.exports = module.exports.toString();
 
 /***/ }),
 
-/***/ 282:
+/***/ 237:
 /***/ (function(module, exports) {
 
 module.exports = "<main>\n  <router-outlet></router-outlet>\n</main>"
 
 /***/ }),
 
-/***/ 283:
+/***/ 238:
 /***/ (function(module, exports) {
 
-module.exports = "<div id=\"dashboard-div\" fxLayout=\"row\" fxLayout.xs=\"column\" fxLayoutGap=\"20px\" fxFlexFill>\n\n  <div fxLayout=\"column\" fxFlex=\"66%\" fxFlexOrder=\"1\" fxFlexOrder.xs=\"2\">\n    <md-card id=\"log\">\n      <md-card-title>Server events\n        <md-slide-toggle title=\"Lock Scroll\" [(ngModel)]=\"lockScroll\" style=\"float: right; margin-left: auto;\">\n          <md-icon>lock_outline</md-icon>\n        </md-slide-toggle>\n      </md-card-title>\n      <md-divider></md-divider>\n      <md-card-content #scrollMe id=\"log-content\">\n        <ul>\n          <li *ngFor=\"let i of info\">\n            <p>{{i}}</p>\n          </li>\n        </ul>\n      </md-card-content>\n    </md-card>\n  </div>\n\n  <div fxLayout=\"column\" fxFlex=\"33%\" fxFlexOrder=\"2\" fxFlexOrder.xs=\"1\">\n    <md-card id=\"video-loop\">\n      <md-card-title>Test the connection\n        <button [class]=\"testStatus == 'DISCONNECTED' ? 'blue' : (testStatus == 'PLAYING' ? 'yellow' : 'disabled')\" md-raised-button\n          (click)=\"toggleTestVideo()\" [disabled]=\"testStatus==='CONNECTING' || testStatus==='CONNECTED'\">{{testButton}}</button></md-card-title>\n      <md-card-content #scrollMe id=\"log-content\">\n        <div id=\"mirrored-video\">\n          <div *ngIf=\"showSpinner\" id=\"loader\">\n            <div class=\"loader-1 center\"><span></span></div>\n          </div>\n          <!--<md-spinner *ngIf=\"showSpinner\" [color]=\"color\"></md-spinner>-->\n          <div *ngIf=\"session\" id=\"tick-div\">\n            <div id=\"tooltip-tick\" *ngIf=\"testStatus=='PLAYING'\" mdTooltip=\"The connection is successful\" mdTooltipPosition=\"below\"></div>\n            <div [class]=\"testStatus=='PLAYING' ? 'trigger drawn' : 'trigger'\"></div>\n            <svg version=\"1.1\" id=\"tick\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\"\n              viewBox=\"-1 -1 39 39\" style=\"enable-background:new 0 0 37 37;\" xml:space=\"preserve\">\n              <path class=\"circ path\" style=\"fill:none;stroke:#06d362;stroke-width:4;stroke-linejoin:round;stroke-miterlimit:10;\" d=\"\n\tM30.5,6.5L30.5,6.5c6.6,6.6,6.6,17.4,0,24l0,0c-6.6,6.6-17.4,6.6-24,0l0,0c-6.6-6.6-6.6-17.4,0-24l0,0C13.1-0.2,23.9-0.2,30.5,6.5z\"\n              />\n              <polyline class=\"tick path\" style=\"fill:none;stroke:#06d362;stroke-width:4;stroke-linejoin:round;stroke-miterlimit:10;\" points=\"\n\t11.6,20 15.9,24.2 26.4,13.8 \" />\n            </svg>\n          </div>\n        </div>\n      </md-card-content>\n    </md-card>\n  </div>\n\n</div>\n"
+module.exports = "<div id=\"dashboard-div\" fxLayout=\"row\" fxLayout.xs=\"column\" fxLayoutGap=\"20px\" fxFlexFill>\n\n  <div fxLayout=\"column\" fxFlex=\"66%\" fxFlexOrder=\"1\" fxFlexOrder.xs=\"2\">\n    <md-card id=\"log\">\n      <md-card-title>Server events\n        <md-slide-toggle title=\"Lock Scroll\" [(ngModel)]=\"lockScroll\" style=\"float: right; margin-left: auto;\">\n          <md-icon>lock_outline</md-icon>\n        </md-slide-toggle>\n      </md-card-title>\n      <md-divider></md-divider>\n      <md-card-content #scrollMe id=\"log-content\">\n        <ul>\n          <li *ngFor=\"let i of info\">\n            <p>{{i}}</p>\n          </li>\n        </ul>\n      </md-card-content>\n    </md-card>\n  </div>\n\n  <div fxLayout=\"column\" fxFlex=\"33%\" fxFlexOrder=\"2\" fxFlexOrder.xs=\"1\">\n    <md-card id=\"video-loop\">\n      <md-card-title>Test the connection\n        <button [class]=\"testStatus == 'DISCONNECTED' ? 'blue' : (testStatus == 'PLAYING' ? 'yellow' : 'disabled')\" md-raised-button\n          (click)=\"toggleTestVideo()\" [disabled]=\"testStatus==='CONNECTING' || testStatus==='CONNECTED'\">{{testButton}}</button></md-card-title>\n      <md-card-content #scrollMe id=\"log-content\">\n        <div id=\"mirrored-video\">\n          <div *ngIf=\"showSpinner\" id=\"loader\">\n            <div class=\"loader-1 center\"><span></span></div>\n          </div>\n          <!--<md-spinner *ngIf=\"showSpinner\" [color]=\"color\"></md-spinner>-->\n          <div *ngIf=\"session\" id=\"tick-div\">\n            <div id=\"tooltip-tick\" *ngIf=\"testStatus=='PLAYING'\" mdTooltip=\"The connection is successful\" mdTooltipPosition=\"below\"></div>\n            <div [class]=\"testStatus=='PLAYING' ? 'trigger drawn' : 'trigger'\"></div>\n            <svg version=\"1.1\" id=\"tick\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\"\n              viewBox=\"-1 -1 39 39\" style=\"enable-background:new 0 0 37 37;\" xml:space=\"preserve\">\n              <path class=\"circ path\" style=\"fill:none;stroke:#06d362;stroke-width:4;stroke-linejoin:round;stroke-miterlimit:10;\" d=\"\n\tM30.5,6.5L30.5,6.5c6.6,6.6,6.6,17.4,0,24l0,0c-6.6,6.6-17.4,6.6-24,0l0,0c-6.6-6.6-6.6-17.4,0-24l0,0C13.1-0.2,23.9-0.2,30.5,6.5z\"\n              />\n              <polyline class=\"tick path\" style=\"fill:none;stroke:#06d362;stroke-width:4;stroke-linejoin:round;stroke-miterlimit:10;\" points=\"\n\t11.6,20 15.9,24.2 26.4,13.8 \" />\n            </svg>\n          </div>\n        </div>\n        <div id=\"msg-chain\"><p *ngFor=\"let msg of msgChain\">{{msg}}</p></div>\n      </md-card-content>\n    </md-card>\n  </div>\n\n</div>\n"
 
 /***/ }),
 
-/***/ 284:
+/***/ 239:
 /***/ (function(module, exports) {
 
 module.exports = "<p>\n  session-details works!\n</p>\n"
 
 /***/ }),
 
-/***/ 370:
+/***/ 298:
+/***/ (function(module, exports) {
+
+function Mapper() {
+    var sources = {};
+    this.forEach = function (callback) {
+        for (var key in sources) {
+            var source = sources[key];
+            for (var key2 in source)
+                callback(source[key2]);
+        }
+        ;
+    };
+    this.get = function (id, source) {
+        var ids = sources[source];
+        if (ids == undefined)
+            return undefined;
+        return ids[id];
+    };
+    this.remove = function (id, source) {
+        var ids = sources[source];
+        if (ids == undefined)
+            return;
+        delete ids[id];
+        // Check it's empty
+        for (var i in ids) {
+            return false;
+        }
+        delete sources[source];
+    };
+    this.set = function (value, id, source) {
+        if (value == undefined)
+            return this.remove(id, source);
+        var ids = sources[source];
+        if (ids == undefined)
+            sources[source] = ids = {};
+        ids[id] = value;
+    };
+}
+;
+Mapper.prototype.pop = function (id, source) {
+    var value = this.get(id, source);
+    if (value == undefined)
+        return undefined;
+    this.remove(id, source);
+    return value;
+};
+module.exports = Mapper;
+
+
+/***/ }),
+
+/***/ 299:
 /***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
 /*
- * (C) Copyright 2016 OpenVidu (http://kurento.org/)
+ * (C) Copyright 2014 Kurento (http://kurento.org/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1519,16 +1950,1127 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * limitations under the License.
  *
  */
-var OpenViduInternal_1 = __webpack_require__(372);
-var Session_1 = __webpack_require__(169);
-var Publisher_1 = __webpack_require__(168);
-var adapter = __webpack_require__(175);
+var JsonRpcClient = __webpack_require__(300);
+exports.JsonRpcClient = JsonRpcClient;
+
+
+/***/ }),
+
+/***/ 300:
+/***/ (function(module, exports, __webpack_require__) {
+
+/*
+ * (C) Copyright 2014 Kurento (http://kurento.org/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+var RpcBuilder = __webpack_require__(137);
+var WebSocketWithReconnection = __webpack_require__(136);
+Date.now = Date.now || function () {
+    return +new Date;
+};
+var PING_INTERVAL = 5000;
+var RECONNECTING = 'RECONNECTING';
+var CONNECTED = 'CONNECTED';
+var DISCONNECTED = 'DISCONNECTED';
+var Logger = console;
+/**
+ *
+ * heartbeat: interval in ms for each heartbeat message,
+ * sendCloseMessage : true / false, before closing the connection, it sends a closeSession message
+ * <pre>
+ * ws : {
+ * 	uri : URI to conntect to,
+ *  useSockJS : true (use SockJS) / false (use WebSocket) by default,
+ * 	onconnected : callback method to invoke when connection is successful,
+ * 	ondisconnect : callback method to invoke when the connection is lost,
+ * 	onreconnecting : callback method to invoke when the client is reconnecting,
+ * 	onreconnected : callback method to invoke when the client succesfully reconnects,
+ * 	onerror : callback method to invoke when there is an error
+ * },
+ * rpc : {
+ * 	requestTimeout : timeout for a request,
+ * 	sessionStatusChanged: callback method for changes in session status,
+ * 	mediaRenegotiation: mediaRenegotiation
+ * }
+ * </pre>
+ */
+function JsonRpcClient(configuration) {
+    var self = this;
+    var wsConfig = configuration.ws;
+    var notReconnectIfNumLessThan = -1;
+    var pingNextNum = 0;
+    var enabledPings = true;
+    var pingPongStarted = false;
+    var pingInterval;
+    var status = DISCONNECTED;
+    var onreconnecting = wsConfig.onreconnecting;
+    var onreconnected = wsConfig.onreconnected;
+    var onconnected = wsConfig.onconnected;
+    var onerror = wsConfig.onerror;
+    configuration.rpc.pull = function (params, request) {
+        request.reply(null, "push");
+    };
+    wsConfig.onreconnecting = function () {
+        Logger.debug("--------- ONRECONNECTING -----------");
+        if (status === RECONNECTING) {
+            Logger.error("Websocket already in RECONNECTING state when receiving a new ONRECONNECTING message. Ignoring it");
+            return;
+        }
+        status = RECONNECTING;
+        if (onreconnecting) {
+            onreconnecting();
+        }
+    };
+    wsConfig.onreconnected = function () {
+        Logger.debug("--------- ONRECONNECTED -----------");
+        if (status === CONNECTED) {
+            Logger.error("Websocket already in CONNECTED state when receiving a new ONRECONNECTED message. Ignoring it");
+            return;
+        }
+        status = CONNECTED;
+        enabledPings = true;
+        updateNotReconnectIfLessThan();
+        usePing();
+        if (onreconnected) {
+            onreconnected();
+        }
+    };
+    wsConfig.onconnected = function () {
+        Logger.debug("--------- ONCONNECTED -----------");
+        if (status === CONNECTED) {
+            Logger.error("Websocket already in CONNECTED state when receiving a new ONCONNECTED message. Ignoring it");
+            return;
+        }
+        status = CONNECTED;
+        enabledPings = true;
+        usePing();
+        if (onconnected) {
+            onconnected();
+        }
+    };
+    wsConfig.onerror = function (error) {
+        Logger.debug("--------- ONERROR -----------");
+        status = DISCONNECTED;
+        if (onerror) {
+            onerror(error);
+        }
+    };
+    var ws = new WebSocketWithReconnection(wsConfig);
+    Logger.debug('Connecting websocket to URI: ' + wsConfig.uri);
+    var rpcBuilderOptions = {
+        request_timeout: configuration.rpc.requestTimeout,
+        ping_request_timeout: configuration.rpc.heartbeatRequestTimeout
+    };
+    var rpc = new RpcBuilder(RpcBuilder.packers.JsonRPC, rpcBuilderOptions, ws, function (request) {
+        Logger.debug('Received request: ' + JSON.stringify(request));
+        try {
+            var func = configuration.rpc[request.method];
+            if (func === undefined) {
+                Logger.error("Method " + request.method + " not registered in client");
+            }
+            else {
+                func(request.params, request);
+            }
+        }
+        catch (err) {
+            Logger.error('Exception processing request: ' + JSON.stringify(request));
+            Logger.error(err);
+        }
+    });
+    this.send = function (method, params, callback) {
+        if (method !== 'ping') {
+            Logger.debug('Request: method:' + method + " params:" + JSON.stringify(params));
+        }
+        var requestTime = Date.now();
+        rpc.encode(method, params, function (error, result) {
+            if (error) {
+                try {
+                    Logger.error("ERROR:" + error.message + " in Request: method:" +
+                        method + " params:" + JSON.stringify(params) + " request:" +
+                        error.request);
+                    if (error.data) {
+                        Logger.error("ERROR DATA:" + JSON.stringify(error.data));
+                    }
+                }
+                catch (e) { }
+                error.requestTime = requestTime;
+            }
+            if (callback) {
+                if (result != undefined && result.value !== 'pong') {
+                    Logger.debug('Response: ' + JSON.stringify(result));
+                }
+                callback(error, result);
+            }
+        });
+    };
+    function updateNotReconnectIfLessThan() {
+        Logger.debug("notReconnectIfNumLessThan = " + pingNextNum + ' (old=' +
+            notReconnectIfNumLessThan + ')');
+        notReconnectIfNumLessThan = pingNextNum;
+    }
+    function sendPing() {
+        if (enabledPings) {
+            var params = null;
+            if (pingNextNum == 0 || pingNextNum == notReconnectIfNumLessThan) {
+                params = {
+                    interval: configuration.heartbeat || PING_INTERVAL
+                };
+            }
+            pingNextNum++;
+            self.send('ping', params, (function (pingNum) {
+                return function (error, result) {
+                    if (error) {
+                        Logger.debug("Error in ping request #" + pingNum + " (" +
+                            error.message + ")");
+                        if (pingNum > notReconnectIfNumLessThan) {
+                            enabledPings = false;
+                            updateNotReconnectIfLessThan();
+                            Logger.debug("Server did not respond to ping message #" +
+                                pingNum + ". Reconnecting... ");
+                            ws.reconnectWs();
+                        }
+                    }
+                };
+            })(pingNextNum));
+        }
+        else {
+            Logger.debug("Trying to send ping, but ping is not enabled");
+        }
+    }
+    /*
+    * If configuration.hearbeat has any value, the ping-pong will work with the interval
+    * of configuration.hearbeat
+    */
+    function usePing() {
+        if (!pingPongStarted) {
+            Logger.debug("Starting ping (if configured)");
+            pingPongStarted = true;
+            if (configuration.heartbeat != undefined) {
+                pingInterval = setInterval(sendPing, configuration.heartbeat);
+                sendPing();
+            }
+        }
+    }
+    this.close = function () {
+        Logger.debug("Closing jsonRpcClient explicitly by client");
+        if (pingInterval != undefined) {
+            Logger.debug("Clearing ping interval");
+            clearInterval(pingInterval);
+        }
+        pingPongStarted = false;
+        enabledPings = false;
+        if (configuration.sendCloseMessage) {
+            Logger.debug("Sending close message");
+            this.send('closeSession', null, function (error, result) {
+                if (error) {
+                    Logger.error("Error sending close message: " + JSON.stringify(error));
+                }
+                ws.close();
+            });
+        }
+        else {
+            ws.close();
+        }
+    };
+    // This method is only for testing
+    this.forceClose = function (millis) {
+        ws.forceClose(millis);
+    };
+    this.reconnect = function () {
+        ws.reconnectWs();
+    };
+}
+module.exports = JsonRpcClient;
+
+
+/***/ }),
+
+/***/ 301:
+/***/ (function(module, exports, __webpack_require__) {
+
+/*
+ * (C) Copyright 2014 Kurento (http://kurento.org/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+var WebSocketWithReconnection = __webpack_require__(136);
+exports.WebSocketWithReconnection = WebSocketWithReconnection;
+
+
+/***/ }),
+
+/***/ 302:
+/***/ (function(module, exports) {
+
+/**
+ * JsonRPC 2.0 packer
+ */
+/**
+ * Pack a JsonRPC 2.0 message
+ *
+ * @param {Object} message - object to be packaged. It requires to have all the
+ *   fields needed by the JsonRPC 2.0 message that it's going to be generated
+ *
+ * @return {String} - the stringified JsonRPC 2.0 message
+ */
+function pack(message, id) {
+    var result = {
+        jsonrpc: "2.0"
+    };
+    // Request
+    if (message.method) {
+        result.method = message.method;
+        if (message.params)
+            result.params = message.params;
+        // Request is a notification
+        if (id != undefined)
+            result.id = id;
+    }
+    else if (id != undefined) {
+        if (message.error) {
+            if (message.result !== undefined)
+                throw new TypeError("Both result and error are defined");
+            result.error = message.error;
+        }
+        else if (message.result !== undefined)
+            result.result = message.result;
+        else
+            throw new TypeError("No result or error is defined");
+        result.id = id;
+    }
+    ;
+    return JSON.stringify(result);
+}
+;
+/**
+ * Unpack a JsonRPC 2.0 message
+ *
+ * @param {String} message - string with the content of the JsonRPC 2.0 message
+ *
+ * @throws {TypeError} - Invalid JsonRPC version
+ *
+ * @return {Object} - object filled with the JsonRPC 2.0 message content
+ */
+function unpack(message) {
+    var result = message;
+    if (typeof message === 'string' || message instanceof String) {
+        result = JSON.parse(message);
+    }
+    // Check if it's a valid message
+    var version = result.jsonrpc;
+    if (version !== '2.0')
+        throw new TypeError("Invalid JsonRPC version '" + version + "': " + message);
+    // Response
+    if (result.method == undefined) {
+        if (result.id == undefined)
+            throw new TypeError("Invalid message: " + message);
+        var result_defined = result.result !== undefined;
+        var error_defined = result.error !== undefined;
+        // Check only result or error is defined, not both or none
+        if (result_defined && error_defined)
+            throw new TypeError("Both result and error are defined: " + message);
+        if (!result_defined && !error_defined)
+            throw new TypeError("No result or error is defined: " + message);
+        result.ack = result.id;
+        delete result.id;
+    }
+    // Return unpacked message
+    return result;
+}
+;
+exports.pack = pack;
+exports.unpack = unpack;
+
+
+/***/ }),
+
+/***/ 303:
+/***/ (function(module, exports) {
+
+function pack(message) {
+    throw new TypeError("Not yet implemented");
+}
+;
+function unpack(message) {
+    throw new TypeError("Not yet implemented");
+}
+;
+exports.pack = pack;
+exports.unpack = unpack;
+
+
+/***/ }),
+
+/***/ 304:
+/***/ (function(module, exports, __webpack_require__) {
+
+var JsonRPC = __webpack_require__(302);
+var XmlRPC = __webpack_require__(303);
+exports.JsonRPC = JsonRPC;
+exports.XmlRPC = XmlRPC;
+
+
+/***/ }),
+
+/***/ 305:
+/***/ (function(module, exports, __webpack_require__) {
+
+/*
+ * (C) Copyright 2014-2015 Kurento (http://kurento.org/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+var freeice = __webpack_require__(229);
+var inherits = __webpack_require__(117);
+var UAParser = __webpack_require__(312);
+var uuid = __webpack_require__(314);
+var hark = __webpack_require__(231);
+var EventEmitter = __webpack_require__(116).EventEmitter;
+var recursive = __webpack_require__(235).recursive.bind(undefined, true);
+var sdpTranslator = __webpack_require__(294);
+var logger = window.Logger || console;
+// var gUM = navigator.mediaDevices.getUserMedia || function (constraints) {
+//   return new Promise(navigator.getUserMedia(constraints, function (stream) {
+//     videoStream = stream
+//     start()
+//   }).eror(callback));
+// }
+try {
+    __webpack_require__(234);
+}
+catch (error) {
+    if (typeof getScreenConstraints === 'undefined') {
+        logger.warn('screen sharing is not available');
+        getScreenConstraints = function getScreenConstraints(sendSource, callback) {
+            callback(new Error("This library is not enabled for screen sharing"));
+        };
+    }
+}
+var MEDIA_CONSTRAINTS = {
+    audio: true,
+    video: {
+        width: 640,
+        framerate: 15
+    }
+};
+// Somehow, the UAParser constructor gets an empty window object.
+// We need to pass the user agent string in order to get information
+var ua = (window && window.navigator) ? window.navigator.userAgent : '';
+var parser = new UAParser(ua);
+var browser = parser.getBrowser();
+var usePlanB = false;
+if (browser.name === 'Chrome' || browser.name === 'Chromium') {
+    logger.debug(browser.name + ": using SDP PlanB");
+    usePlanB = true;
+}
+function noop(error) {
+    if (error)
+        logger.error(error);
+}
+function trackStop(track) {
+    track.stop && track.stop();
+}
+function streamStop(stream) {
+    stream.getTracks().forEach(trackStop);
+}
+/**
+ * Returns a string representation of a SessionDescription object.
+ */
+var dumpSDP = function (description) {
+    if (typeof description === 'undefined' || description === null) {
+        return '';
+    }
+    return 'type: ' + description.type + '\r\n' + description.sdp;
+};
+function bufferizeCandidates(pc, onerror) {
+    var candidatesQueue = [];
+    pc.addEventListener('signalingstatechange', function () {
+        if (this.signalingState === 'stable') {
+            while (candidatesQueue.length) {
+                var entry = candidatesQueue.shift();
+                this.addIceCandidate(entry.candidate, entry.callback, entry.callback);
+            }
+        }
+    });
+    return function (candidate, callback) {
+        callback = callback || onerror;
+        switch (pc.signalingState) {
+            case 'closed':
+                callback(new Error('PeerConnection object is closed'));
+                break;
+            case 'stable':
+                if (pc.remoteDescription) {
+                    pc.addIceCandidate(candidate, callback, callback);
+                    break;
+                }
+            default:
+                candidatesQueue.push({
+                    candidate: candidate,
+                    callback: callback
+                });
+        }
+    };
+}
+/* Simulcast utilities */
+function removeFIDFromOffer(sdp) {
+    var n = sdp.indexOf("a=ssrc-group:FID");
+    if (n > 0) {
+        return sdp.slice(0, n);
+    }
+    else {
+        return sdp;
+    }
+}
+function getSimulcastInfo(videoStream) {
+    var videoTracks = videoStream.getVideoTracks();
+    if (!videoTracks.length) {
+        logger.warn('No video tracks available in the video stream');
+        return '';
+    }
+    var lines = [
+        'a=x-google-flag:conference',
+        'a=ssrc-group:SIM 1 2 3',
+        'a=ssrc:1 cname:localVideo',
+        'a=ssrc:1 msid:' + videoStream.id + ' ' + videoTracks[0].id,
+        'a=ssrc:1 mslabel:' + videoStream.id,
+        'a=ssrc:1 label:' + videoTracks[0].id,
+        'a=ssrc:2 cname:localVideo',
+        'a=ssrc:2 msid:' + videoStream.id + ' ' + videoTracks[0].id,
+        'a=ssrc:2 mslabel:' + videoStream.id,
+        'a=ssrc:2 label:' + videoTracks[0].id,
+        'a=ssrc:3 cname:localVideo',
+        'a=ssrc:3 msid:' + videoStream.id + ' ' + videoTracks[0].id,
+        'a=ssrc:3 mslabel:' + videoStream.id,
+        'a=ssrc:3 label:' + videoTracks[0].id
+    ];
+    lines.push('');
+    return lines.join('\n');
+}
+/**
+ * Wrapper object of an RTCPeerConnection. This object is aimed to simplify the
+ * development of WebRTC-based applications.
+ *
+ * @constructor module:kurentoUtils.WebRtcPeer
+ *
+ * @param {String} mode Mode in which the PeerConnection will be configured.
+ *  Valid values are: 'recv', 'send', and 'sendRecv'
+ * @param localVideo Video tag for the local stream
+ * @param remoteVideo Video tag for the remote stream
+ * @param {MediaStream} videoStream Stream to be used as primary source
+ *  (typically video and audio, or only video if combined with audioStream) for
+ *  localVideo and to be added as stream to the RTCPeerConnection
+ * @param {MediaStream} audioStream Stream to be used as second source
+ *  (typically for audio) for localVideo and to be added as stream to the
+ *  RTCPeerConnection
+ */
+function WebRtcPeer(mode, options, callback) {
+    if (!(this instanceof WebRtcPeer)) {
+        return new WebRtcPeer(mode, options, callback);
+    }
+    WebRtcPeer.super_.call(this);
+    if (options instanceof Function) {
+        callback = options;
+        options = undefined;
+    }
+    options = options || {};
+    callback = (callback || noop).bind(this);
+    var self = this;
+    var localVideo = options.localVideo;
+    var remoteVideo = options.remoteVideo;
+    var videoStream = options.videoStream;
+    var audioStream = options.audioStream;
+    var mediaConstraints = options.mediaConstraints;
+    var connectionConstraints = options.connectionConstraints;
+    var pc = options.peerConnection;
+    var sendSource = options.sendSource || 'webcam';
+    var dataChannelConfig = options.dataChannelConfig;
+    var useDataChannels = options.dataChannels || false;
+    var dataChannel;
+    var guid = uuid.v4();
+    var configuration = recursive({
+        iceServers: freeice()
+    }, options.configuration);
+    var onicecandidate = options.onicecandidate;
+    if (onicecandidate)
+        this.on('icecandidate', onicecandidate);
+    var oncandidategatheringdone = options.oncandidategatheringdone;
+    if (oncandidategatheringdone) {
+        this.on('candidategatheringdone', oncandidategatheringdone);
+    }
+    var simulcast = options.simulcast;
+    var multistream = options.multistream;
+    var interop = new sdpTranslator.Interop();
+    var candidatesQueueOut = [];
+    var candidategatheringdone = false;
+    Object.defineProperties(this, {
+        'peerConnection': {
+            get: function () {
+                return pc;
+            }
+        },
+        'id': {
+            value: options.id || guid,
+            writable: false
+        },
+        'remoteVideo': {
+            get: function () {
+                return remoteVideo;
+            }
+        },
+        'localVideo': {
+            get: function () {
+                return localVideo;
+            }
+        },
+        'dataChannel': {
+            get: function () {
+                return dataChannel;
+            }
+        },
+        /**
+         * @member {(external:ImageData|undefined)} currentFrame
+         */
+        'currentFrame': {
+            get: function () {
+                // [ToDo] Find solution when we have a remote stream but we didn't set
+                // a remoteVideo tag
+                if (!remoteVideo)
+                    return;
+                if (remoteVideo.readyState < remoteVideo.HAVE_CURRENT_DATA)
+                    throw new Error('No video stream data available');
+                var canvas = document.createElement('canvas');
+                canvas.width = remoteVideo.videoWidth;
+                canvas.height = remoteVideo.videoHeight;
+                canvas.getContext('2d').drawImage(remoteVideo, 0, 0);
+                return canvas;
+            }
+        }
+    });
+    // Init PeerConnection
+    if (!pc) {
+        pc = new RTCPeerConnection(configuration);
+        if (useDataChannels && !dataChannel) {
+            var dcId = 'WebRtcPeer-' + self.id;
+            var dcOptions = undefined;
+            if (dataChannelConfig) {
+                dcId = dataChannelConfig.id || dcId;
+                dcOptions = dataChannelConfig.options;
+            }
+            dataChannel = pc.createDataChannel(dcId, dcOptions);
+            if (dataChannelConfig) {
+                dataChannel.onopen = dataChannelConfig.onopen;
+                dataChannel.onclose = dataChannelConfig.onclose;
+                dataChannel.onmessage = dataChannelConfig.onmessage;
+                dataChannel.onbufferedamountlow = dataChannelConfig.onbufferedamountlow;
+                dataChannel.onerror = dataChannelConfig.onerror || noop;
+            }
+        }
+    }
+    pc.addEventListener('icecandidate', function (event) {
+        var candidate = event.candidate;
+        if (EventEmitter.listenerCount(self, 'icecandidate') ||
+            EventEmitter.listenerCount(self, 'candidategatheringdone')) {
+            if (candidate) {
+                var cand;
+                if (multistream && usePlanB) {
+                    cand = interop.candidateToUnifiedPlan(candidate);
+                }
+                else {
+                    cand = candidate;
+                }
+                self.emit('icecandidate', cand);
+                candidategatheringdone = false;
+            }
+            else if (!candidategatheringdone) {
+                self.emit('candidategatheringdone');
+                candidategatheringdone = true;
+            }
+        }
+        else if (!candidategatheringdone) {
+            // Not listening to 'icecandidate' or 'candidategatheringdone' events, queue
+            // the candidate until one of them is listened
+            candidatesQueueOut.push(candidate);
+            if (!candidate)
+                candidategatheringdone = true;
+        }
+    });
+    pc.ontrack = options.onaddstream;
+    pc.onnegotiationneeded = options.onnegotiationneeded;
+    this.on('newListener', function (event, listener) {
+        if (event === 'icecandidate' || event === 'candidategatheringdone') {
+            while (candidatesQueueOut.length) {
+                var candidate = candidatesQueueOut.shift();
+                if (!candidate === (event === 'candidategatheringdone')) {
+                    listener(candidate);
+                }
+            }
+        }
+    });
+    var addIceCandidate = bufferizeCandidates(pc);
+    /**
+     * Callback function invoked when an ICE candidate is received. Developers are
+     * expected to invoke this function in order to complete the SDP negotiation.
+     *
+     * @function module:kurentoUtils.WebRtcPeer.prototype.addIceCandidate
+     *
+     * @param iceCandidate - Literal object with the ICE candidate description
+     * @param callback - Called when the ICE candidate has been added.
+     */
+    this.addIceCandidate = function (iceCandidate, callback) {
+        var candidate;
+        if (multistream && usePlanB) {
+            candidate = interop.candidateToPlanB(iceCandidate);
+        }
+        else {
+            candidate = new RTCIceCandidate(iceCandidate);
+        }
+        logger.debug('Remote ICE candidate received', iceCandidate);
+        callback = (callback || noop).bind(this);
+        addIceCandidate(candidate, callback);
+    };
+    this.generateOffer = function (callback) {
+        callback = callback.bind(this);
+        var offerAudio = true;
+        var offerVideo = true;
+        // Constraints must have both blocks
+        if (mediaConstraints) {
+            offerAudio = (typeof mediaConstraints.audio === 'boolean') ?
+                mediaConstraints.audio : true;
+            offerVideo = (typeof mediaConstraints.video === 'boolean') ?
+                mediaConstraints.video : true;
+        }
+        var browserDependantConstraints = {
+            offerToReceiveAudio: (mode !== 'sendonly' && offerAudio),
+            offerToReceiveVideo: (mode !== 'sendonly' && offerVideo)
+        };
+        //FIXME: clarify possible constraints passed to createOffer()
+        /*var constraints = recursive(browserDependantConstraints,
+          connectionConstraints)*/
+        var constraints = browserDependantConstraints;
+        logger.debug('constraints: ' + JSON.stringify(constraints));
+        pc.createOffer(constraints).then(function (offer) {
+            logger.debug('Created SDP offer');
+            offer = mangleSdpToAddSimulcast(offer);
+            return pc.setLocalDescription(offer);
+        }).then(function () {
+            var localDescription = pc.localDescription;
+            logger.debug('Local description set', localDescription.sdp);
+            if (multistream && usePlanB) {
+                localDescription = interop.toUnifiedPlan(localDescription);
+                logger.debug('offer::origPlanB->UnifiedPlan', dumpSDP(localDescription));
+            }
+            callback(null, localDescription.sdp, self.processAnswer.bind(self));
+        }).catch(callback);
+    };
+    this.getLocalSessionDescriptor = function () {
+        return pc.localDescription;
+    };
+    this.getRemoteSessionDescriptor = function () {
+        return pc.remoteDescription;
+    };
+    function setRemoteVideo() {
+        if (remoteVideo) {
+            var stream = pc.getRemoteStreams()[0];
+            var url = stream ? URL.createObjectURL(stream) : '';
+            remoteVideo.pause();
+            remoteVideo.src = url;
+            remoteVideo.load();
+            logger.debug('Remote URL:', url);
+        }
+    }
+    this.showLocalVideo = function () {
+        localVideo.src = URL.createObjectURL(videoStream);
+        localVideo.muted = true;
+    };
+    this.send = function (data) {
+        if (dataChannel && dataChannel.readyState === 'open') {
+            dataChannel.send(data);
+        }
+        else {
+            logger.warn('Trying to send data over a non-existing or closed data channel');
+        }
+    };
+    /**
+     * Callback function invoked when a SDP answer is received. Developers are
+     * expected to invoke this function in order to complete the SDP negotiation.
+     *
+     * @function module:kurentoUtils.WebRtcPeer.prototype.processAnswer
+     *
+     * @param sdpAnswer - Description of sdpAnswer
+     * @param callback -
+     *            Invoked after the SDP answer is processed, or there is an error.
+     */
+    this.processAnswer = function (sdpAnswer, callback) {
+        callback = (callback || noop).bind(this);
+        var answer = new RTCSessionDescription({
+            type: 'answer',
+            sdp: sdpAnswer
+        });
+        if (multistream && usePlanB) {
+            var planBAnswer = interop.toPlanB(answer);
+            logger.debug('asnwer::planB', dumpSDP(planBAnswer));
+            answer = planBAnswer;
+        }
+        logger.debug('SDP answer received, setting remote description');
+        if (pc.signalingState === 'closed') {
+            return callback('PeerConnection is closed');
+        }
+        pc.setRemoteDescription(answer, function () {
+            setRemoteVideo();
+            callback();
+        }, callback);
+    };
+    /**
+     * Callback function invoked when a SDP offer is received. Developers are
+     * expected to invoke this function in order to complete the SDP negotiation.
+     *
+     * @function module:kurentoUtils.WebRtcPeer.prototype.processOffer
+     *
+     * @param sdpOffer - Description of sdpOffer
+     * @param callback - Called when the remote description has been set
+     *  successfully.
+     */
+    this.processOffer = function (sdpOffer, callback) {
+        callback = callback.bind(this);
+        var offer = new RTCSessionDescription({
+            type: 'offer',
+            sdp: sdpOffer
+        });
+        if (multistream && usePlanB) {
+            var planBOffer = interop.toPlanB(offer);
+            logger.debug('offer::planB', dumpSDP(planBOffer));
+            offer = planBOffer;
+        }
+        logger.debug('SDP offer received, setting remote description');
+        if (pc.signalingState === 'closed') {
+            return callback('PeerConnection is closed');
+        }
+        pc.setRemoteDescription(offer).then(function () {
+            return setRemoteVideo();
+        }).then(function () {
+            return pc.createAnswer();
+        }).then(function (answer) {
+            answer = mangleSdpToAddSimulcast(answer);
+            logger.debug('Created SDP answer');
+            return pc.setLocalDescription(answer);
+        }).then(function () {
+            var localDescription = pc.localDescription;
+            if (multistream && usePlanB) {
+                localDescription = interop.toUnifiedPlan(localDescription);
+                logger.debug('answer::origPlanB->UnifiedPlan', dumpSDP(localDescription));
+            }
+            logger.debug('Local description set', localDescription.sdp);
+            callback(null, localDescription.sdp);
+        }).catch(callback);
+    };
+    function mangleSdpToAddSimulcast(answer) {
+        if (simulcast) {
+            if (browser.name === 'Chrome' || browser.name === 'Chromium') {
+                logger.debug('Adding multicast info');
+                answer = new RTCSessionDescription({
+                    'type': answer.type,
+                    'sdp': removeFIDFromOffer(answer.sdp) + getSimulcastInfo(videoStream)
+                });
+            }
+            else {
+                logger.warn('Simulcast is only available in Chrome browser.');
+            }
+        }
+        return answer;
+    }
+    /**
+     * This function creates the RTCPeerConnection object taking into account the
+     * properties received in the constructor. It starts the SDP negotiation
+     * process: generates the SDP offer and invokes the onsdpoffer callback. This
+     * callback is expected to send the SDP offer, in order to obtain an SDP
+     * answer from another peer.
+     */
+    function start() {
+        if (pc.signalingState === 'closed') {
+            callback('The peer connection object is in "closed" state. This is most likely due to an invocation of the dispose method before accepting in the dialogue');
+        }
+        if (videoStream && localVideo) {
+            self.showLocalVideo();
+        }
+        if (videoStream) {
+            pc.addStream(videoStream);
+        }
+        if (audioStream) {
+            pc.addStream(audioStream);
+        }
+        // [Hack] https://code.google.com/p/chromium/issues/detail?id=443558
+        var browser = parser.getBrowser();
+        if (mode === 'sendonly' &&
+            (browser.name === 'Chrome' || browser.name === 'Chromium') &&
+            browser.major === 39) {
+            mode = 'sendrecv';
+        }
+        callback();
+    }
+    if (mode !== 'recvonly' && !videoStream && !audioStream) {
+        function getMedia(constraints) {
+            if (constraints === undefined) {
+                constraints = MEDIA_CONSTRAINTS;
+            }
+            navigator.mediaDevices.getUserMedia(constraints).then(function (stream) {
+                videoStream = stream;
+                start();
+            }).catch(callback);
+        }
+        if (sendSource === 'webcam') {
+            getMedia(mediaConstraints);
+        }
+        else {
+            getScreenConstraints(sendSource, function (error, constraints_) {
+                if (error)
+                    return callback(error);
+                constraints = [mediaConstraints];
+                constraints.unshift(constraints_);
+                getMedia(recursive.apply(undefined, constraints));
+            }, guid);
+        }
+    }
+    else {
+        setTimeout(start, 0);
+    }
+    this.on('_dispose', function () {
+        if (localVideo) {
+            localVideo.pause();
+            localVideo.src = '';
+            localVideo.load();
+            //Unmute local video in case the video tag is later used for remote video
+            localVideo.muted = false;
+        }
+        if (remoteVideo) {
+            remoteVideo.pause();
+            remoteVideo.src = '';
+            remoteVideo.load();
+        }
+        self.removeAllListeners();
+        if (window.cancelChooseDesktopMedia !== undefined) {
+            window.cancelChooseDesktopMedia(guid);
+        }
+    });
+}
+inherits(WebRtcPeer, EventEmitter);
+function createEnableDescriptor(type) {
+    var method = 'get' + type + 'Tracks';
+    return {
+        enumerable: true,
+        get: function () {
+            // [ToDo] Should return undefined if not all tracks have the same value?
+            if (!this.peerConnection)
+                return;
+            var streams = this.peerConnection.getLocalStreams();
+            if (!streams.length)
+                return;
+            for (var i = 0, stream; stream = streams[i]; i++) {
+                var tracks = stream[method]();
+                for (var j = 0, track; track = tracks[j]; j++)
+                    if (!track.enabled)
+                        return false;
+            }
+            return true;
+        },
+        set: function (value) {
+            function trackSetEnable(track) {
+                track.enabled = value;
+            }
+            this.peerConnection.getLocalStreams().forEach(function (stream) {
+                stream[method]().forEach(trackSetEnable);
+            });
+        }
+    };
+}
+Object.defineProperties(WebRtcPeer.prototype, {
+    'enabled': {
+        enumerable: true,
+        get: function () {
+            return this.audioEnabled && this.videoEnabled;
+        },
+        set: function (value) {
+            this.audioEnabled = this.videoEnabled = value;
+        }
+    },
+    'audioEnabled': createEnableDescriptor('Audio'),
+    'videoEnabled': createEnableDescriptor('Video')
+});
+WebRtcPeer.prototype.getLocalStream = function (index) {
+    if (this.peerConnection) {
+        return this.peerConnection.getLocalStreams()[index || 0];
+    }
+};
+WebRtcPeer.prototype.getRemoteStream = function (index) {
+    if (this.peerConnection) {
+        return this.peerConnection.getRemoteStreams()[index || 0];
+    }
+};
+/**
+ * @description This method frees the resources used by WebRtcPeer.
+ *
+ * @function module:kurentoUtils.WebRtcPeer.prototype.dispose
+ */
+WebRtcPeer.prototype.dispose = function () {
+    logger.debug('Disposing WebRtcPeer');
+    var pc = this.peerConnection;
+    var dc = this.dataChannel;
+    try {
+        if (dc) {
+            if (dc.signalingState === 'closed')
+                return;
+            dc.close();
+        }
+        if (pc) {
+            if (pc.signalingState === 'closed')
+                return;
+            pc.getLocalStreams().forEach(streamStop);
+            // FIXME This is not yet implemented in firefox
+            // if(videoStream) pc.removeStream(videoStream);
+            // if(audioStream) pc.removeStream(audioStream);
+            pc.close();
+        }
+    }
+    catch (err) {
+        logger.warn('Exception disposing webrtc peer ' + err);
+    }
+    this.emit('_dispose');
+};
+//
+// Specialized child classes
+//
+function WebRtcPeerRecvonly(options, callback) {
+    if (!(this instanceof WebRtcPeerRecvonly)) {
+        return new WebRtcPeerRecvonly(options, callback);
+    }
+    WebRtcPeerRecvonly.super_.call(this, 'recvonly', options, callback);
+}
+inherits(WebRtcPeerRecvonly, WebRtcPeer);
+function WebRtcPeerSendonly(options, callback) {
+    if (!(this instanceof WebRtcPeerSendonly)) {
+        return new WebRtcPeerSendonly(options, callback);
+    }
+    WebRtcPeerSendonly.super_.call(this, 'sendonly', options, callback);
+}
+inherits(WebRtcPeerSendonly, WebRtcPeer);
+function WebRtcPeerSendrecv(options, callback) {
+    if (!(this instanceof WebRtcPeerSendrecv)) {
+        return new WebRtcPeerSendrecv(options, callback);
+    }
+    WebRtcPeerSendrecv.super_.call(this, 'sendrecv', options, callback);
+}
+inherits(WebRtcPeerSendrecv, WebRtcPeer);
+function harkUtils(stream, options) {
+    return hark(stream, options);
+}
+exports.bufferizeCandidates = bufferizeCandidates;
+exports.WebRtcPeerRecvonly = WebRtcPeerRecvonly;
+exports.WebRtcPeerSendonly = WebRtcPeerSendonly;
+exports.WebRtcPeerSendrecv = WebRtcPeerSendrecv;
+exports.hark = harkUtils;
+
+
+/***/ }),
+
+/***/ 306:
+/***/ (function(module, exports, __webpack_require__) {
+
+/*
+ * (C) Copyright 2014 Kurento (http://kurento.org/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+/**
+ * This module contains a set of reusable components that have been found useful
+ * during the development of the WebRTC applications with Kurento.
+ *
+ * @module kurentoUtils
+ *
+ * @copyright 2014 Kurento (http://kurento.org/)
+ * @license ALv2
+ */
+var WebRtcPeer = __webpack_require__(305);
+exports.WebRtcPeer = WebRtcPeer;
+
+
+/***/ }),
+
+/***/ 307:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+/*
+ * (C) Copyright 2017 OpenVidu (http://openvidu.io/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+var OpenViduInternal_1 = __webpack_require__(309);
+var Session_1 = __webpack_require__(139);
+var Publisher_1 = __webpack_require__(138);
+var adapter = __webpack_require__(142);
 if (window) {
     window["adapter"] = adapter;
 }
-var OpenVidu = (function () {
+var OpenVidu = /** @class */ (function () {
     function OpenVidu() {
         this.openVidu = new OpenViduInternal_1.OpenViduInternal();
+        console.info("'OpenVidu' initialized");
     }
     ;
     OpenVidu.prototype.initSession = function (param1, param2) {
@@ -1566,7 +3108,9 @@ var OpenVidu = (function () {
                     }
                 };
             }
-            return new Publisher_1.Publisher(this.openVidu.initPublisherTagged(parentId, cameraOptions, callback), parentId);
+            var publisher = new Publisher_1.Publisher(this.openVidu.initPublisherTagged(parentId, cameraOptions, callback), parentId);
+            console.info("'Publisher' initialized");
+            return publisher;
         }
         else {
             alert("Browser not supported");
@@ -1590,9 +3134,15 @@ var OpenVidu = (function () {
         navigator.mediaDevices.enumerateDevices().then(function (deviceInfos) {
             callback(null, deviceInfos);
         }).catch(function (error) {
-            console.log("Error getting devices: " + error);
+            console.error("Error getting devices", error);
             callback(error, null);
         });
+    };
+    OpenVidu.prototype.enableProdMode = function () {
+        console.log = function () { };
+        console.debug = function () { };
+        console.info = function () { };
+        console.warn = function () { };
     };
     return OpenVidu;
 }());
@@ -1601,7 +3151,7 @@ exports.OpenVidu = OpenVidu;
 
 /***/ }),
 
-/***/ 371:
+/***/ 308:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1610,24 +3160,24 @@ function __export(m) {
     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 }
 Object.defineProperty(exports, "__esModule", { value: true });
-__export(__webpack_require__(370));
-__export(__webpack_require__(169));
-__export(__webpack_require__(168));
-__export(__webpack_require__(170));
-__export(__webpack_require__(104));
-__export(__webpack_require__(171));
+__export(__webpack_require__(307));
+__export(__webpack_require__(139));
+__export(__webpack_require__(138));
+__export(__webpack_require__(140));
+__export(__webpack_require__(86));
+__export(__webpack_require__(141));
 
 
 /***/ }),
 
-/***/ 372:
+/***/ 309:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 /*
- * (C) Copyright 2016 OpenVidu (http://kurento.org/)
+ * (C) Copyright 2017 OpenVidu (http://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1642,28 +3192,27 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * limitations under the License.
  *
  */
-var SessionInternal_1 = __webpack_require__(373);
-var Stream_1 = __webpack_require__(104);
-var RpcBuilder = __webpack_require__(136);
-var OpenViduInternal = (function () {
+var SessionInternal_1 = __webpack_require__(310);
+var Stream_1 = __webpack_require__(86);
+var RpcBuilder = __webpack_require__(137);
+var OpenViduInternal = /** @class */ (function () {
     function OpenViduInternal() {
         this.remoteStreams = [];
     }
     ;
     /* NEW METHODS */
     OpenViduInternal.prototype.initSession = function (sessionId) {
-        console.log("Session initialized!");
+        console.info("'Session' initialized with 'sessionId' [" + sessionId + "]");
         this.session = new SessionInternal_1.SessionInternal(this, sessionId);
         return this.session;
     };
     OpenViduInternal.prototype.initPublisherTagged = function (parentId, cameraOptions, callback) {
         var _this = this;
-        console.log("Publisher tagged initialized!");
         this.getCamera(cameraOptions);
         if (callback == null) {
             this.camera.requestCameraAccess(function (error, camera) {
                 if (error) {
-                    console.log("Error accessing the camera");
+                    console.error("Error accessing the camera", error);
                 }
                 else {
                     _this.camera.setVideoElement(_this.cameraReady(camera, parentId));
@@ -1691,7 +3240,6 @@ var OpenViduInternal = (function () {
         return videoElement;
     };
     OpenViduInternal.prototype.initPublisher = function (cameraOptions, callback) {
-        console.log("Publisher initialized!");
         this.getCamera(cameraOptions);
         this.camera.requestCameraAccess(function (error, camera) {
             if (error)
@@ -1780,7 +3328,7 @@ var OpenViduInternal = (function () {
         }
     };
     OpenViduInternal.prototype.disconnectCallback = function () {
-        console.log('Websocket connection lost');
+        console.warn('Websocket connection lost');
         if (this.isRoomAvailable()) {
             this.session.onLostConnection();
         }
@@ -1789,7 +3337,7 @@ var OpenViduInternal = (function () {
         }
     };
     OpenViduInternal.prototype.reconnectingCallback = function () {
-        console.log('Websocket connection lost (reconnecting)');
+        console.warn('Websocket connection lost (reconnecting)');
         if (this.isRoomAvailable()) {
             this.session.onLostConnection();
         }
@@ -1798,7 +3346,7 @@ var OpenViduInternal = (function () {
         }
     };
     OpenViduInternal.prototype.reconnectedCallback = function () {
-        console.log('Websocket reconnected');
+        console.warn('Websocket reconnected');
     };
     OpenViduInternal.prototype.onParticipantJoined = function (params) {
         if (this.isRoomAvailable()) {
@@ -1853,11 +3401,11 @@ var OpenViduInternal = (function () {
             for (var index in this.rpcParams) {
                 if (this.rpcParams.hasOwnProperty(index)) {
                     params[index] = this.rpcParams[index];
-                    console.log('RPC param added to request {' + index + ': ' + this.rpcParams[index] + '}');
+                    console.debug('RPC param added to request {' + index + ': ' + this.rpcParams[index] + '}');
                 }
             }
         }
-        console.log('Sending request: { method:"' + method + '", params: ' + JSON.stringify(params) + ' }');
+        console.debug('Sending request: {method:"' + method + '", params: ' + JSON.stringify(params) + '}');
         this.jsonRpcClient.send(method, params, callback);
     };
     OpenViduInternal.prototype.close = function (forced) {
@@ -1967,16 +3515,16 @@ exports.OpenViduInternal = OpenViduInternal;
 
 /***/ }),
 
-/***/ 373:
+/***/ 310:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var Connection_1 = __webpack_require__(171);
-var EventEmitter = __webpack_require__(52);
+var Connection_1 = __webpack_require__(141);
+var EventEmitter = __webpack_require__(40);
 var SECRET_PARAM = '?secret=';
-var SessionInternal = (function () {
+var SessionInternal = /** @class */ (function () {
     function SessionInternal(openVidu, sessionId) {
         this.openVidu = openVidu;
         this.ee = new EventEmitter();
@@ -2028,6 +3576,9 @@ var SessionInternal = (function () {
                 callback('ERROR CONNECTING TO OPENVIDU');
             }
             else {
+                if (!token) {
+                    token = _this.randomToken();
+                }
                 var joinParams = {
                     token: token,
                     session: _this.sessionId,
@@ -2146,12 +3697,12 @@ var SessionInternal = (function () {
         stream.subscribe();
     };
     SessionInternal.prototype.unsuscribe = function (stream) {
-        console.log("Unsubscribing from " + stream.getId());
+        console.info("Unsubscribing from " + stream.getId());
         this.openVidu.sendRequest('unsubscribeFromVideo', {
             sender: stream.getId()
         }, function (error, response) {
             if (error) {
-                console.error(error);
+                console.error("Error unsubscribing from Subscriber", error);
             }
             else {
                 console.info("Unsubscribed correctly from " + stream.getId());
@@ -2160,15 +3711,25 @@ var SessionInternal = (function () {
     };
     SessionInternal.prototype.onParticipantPublished = function (options) {
         options.metadata = this.participants[options.id].data;
-        var connection = new Connection_1.Connection(this.openVidu, false, this, options);
-        var pid = connection.connectionId;
-        if (!(pid in this.participants)) {
-            console.info("Publisher not found in participants list by its id", pid);
+        // Get the existing Connection created on 'onParticipantJoined' for
+        // existing participants or create a new one for new participants
+        var connection = this.participants[options.id];
+        if (connection) {
+            // Update existing Connection
+            connection.options = options;
+            connection.initStreams(options);
         }
         else {
-            console.log("Publisher found in participants list by its id", pid);
+            // Create new Connection
+            connection = new Connection_1.Connection(this.openVidu, false, this, options);
         }
-        //replacing old connection (this one has streams)
+        var pid = connection.connectionId;
+        if (!(pid in this.participants)) {
+            console.debug("Remote Connection not found in connections list by its id [" + pid + "]");
+        }
+        else {
+            console.debug("Remote Connection found in connections list by its id [" + pid + "]");
+        }
         connection.creationTime = this.participants[pid].creationTime;
         this.participants[pid] = connection;
         this.ee.emitEvent('participant-published', [{ connection: connection }]);
@@ -2188,13 +3749,12 @@ var SessionInternal = (function () {
         connection.creationTime = new Date().getTime();
         var pid = connection.connectionId;
         if (!(pid in this.participants)) {
-            console.log("New participant to participants list with id", pid);
             this.participants[pid] = connection;
         }
         else {
             //use existing so that we don't lose streams info
-            console.info("Participant already exists in participants list with " +
-                "the same id, old:", this.participants[pid], ", joined now:", connection);
+            console.warn("Connection already exists in connections list with " +
+                "the same connectionId, old:", this.participants[pid], ", joined now:", connection);
             connection = this.participants[pid];
         }
         this.ee.emitEvent('participant-joined', [{
@@ -2244,7 +3804,7 @@ var SessionInternal = (function () {
     };
     ;
     SessionInternal.prototype.onNewMessage = function (msg) {
-        console.log("New message: " + JSON.stringify(msg));
+        console.info("New message: " + JSON.stringify(msg));
         var room = msg.room;
         var user = msg.user;
         var message = msg.message;
@@ -2287,7 +3847,7 @@ var SessionInternal = (function () {
         }
     };
     SessionInternal.prototype.onRoomClosed = function (msg) {
-        console.log("Room closed: " + JSON.stringify(msg));
+        console.info("Room closed: " + JSON.stringify(msg));
         var room = msg.room;
         if (room !== undefined) {
             this.ee.emitEvent('room-closed', [{
@@ -2307,7 +3867,7 @@ var SessionInternal = (function () {
             ;
             return;
         }
-        console.log('Lost connection in room ' + this.id);
+        console.warn('Lost connection in Session ' + this.id);
         var room = this.id;
         if (room !== undefined) {
             this.ee.emitEvent('lost-connection', [{ room: room }]);
@@ -2333,7 +3893,7 @@ var SessionInternal = (function () {
      */
     SessionInternal.prototype.leave = function (forced, jsonRpcClient) {
         forced = !!forced;
-        console.log("Leaving room (forced=" + forced + ")");
+        console.info("Leaving Session (forced=" + forced + ")");
         if (this.connected && !forced) {
             this.openVidu.sendRequest('leaveRoom', function (error, response) {
                 if (error) {
@@ -2362,7 +3922,7 @@ var SessionInternal = (function () {
         delete this.participants[connection.connectionId];
         connection.dispose();
         if (connection === this.localParticipant) {
-            console.log("Unpublishing my media (I'm " + connection.connectionId + ")");
+            console.info("Unpublishing my media (I'm " + connection.connectionId + ")");
             delete this.localParticipant;
             this.openVidu.sendRequest('unpublishVideo', function (error, response) {
                 if (error) {
@@ -2386,7 +3946,7 @@ var SessionInternal = (function () {
         if (connection === this.localParticipant) {
             delete this.participants[connection.connectionId];
             connection.dispose();
-            console.log("Unpublishing my media (I'm " + connection.connectionId + ")");
+            console.info("Unpublishing my media (I'm " + connection.connectionId + ")");
             delete this.localParticipant;
             this.openVidu.sendRequest('unpublishVideo', function (error, response) {
                 if (error) {
@@ -2416,6 +3976,17 @@ var SessionInternal = (function () {
             this.participantsSpeaking.splice(pos, 1);
         }
     };
+    SessionInternal.prototype.stringClientMetadata = function (metadata) {
+        if (!(typeof metadata === 'string')) {
+            return JSON.stringify(metadata);
+        }
+        else {
+            return metadata;
+        }
+    };
+    SessionInternal.prototype.randomToken = function () {
+        return Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+    };
     return SessionInternal;
 }());
 exports.SessionInternal = SessionInternal;
@@ -2423,20 +3994,20 @@ exports.SessionInternal = SessionInternal;
 
 /***/ }),
 
-/***/ 389:
+/***/ 327:
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(177);
+module.exports = __webpack_require__(144);
 
 
 /***/ }),
 
-/***/ 69:
+/***/ 55:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs_Subject__ = __webpack_require__(31);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs_Subject__ = __webpack_require__(24);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs_Subject___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_rxjs_Subject__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return InfoService; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
@@ -2470,7 +4041,560 @@ InfoService = __decorate([
 
 //# sourceMappingURL=info.service.js.map
 
+/***/ }),
+
+/***/ 86:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var EventEmitter = __webpack_require__(40);
+var kurentoUtils = __webpack_require__(306);
+var adapter = __webpack_require__(142);
+if (window) {
+    window["adapter"] = adapter;
+}
+function jq(id) {
+    return id.replace(/(@|:|\.|\[|\]|,)/g, "\\$1");
+}
+function show(id) {
+    document.getElementById(jq(id)).style.display = 'block';
+}
+function hide(id) {
+    document.getElementById(jq(id)).style.display = 'none';
+}
+var Stream = /** @class */ (function () {
+    function Stream(openVidu, local, room, options) {
+        var _this = this;
+        this.openVidu = openVidu;
+        this.local = local;
+        this.room = room;
+        this.ee = new EventEmitter();
+        this.videoElements = [];
+        this.elements = [];
+        this.showMyRemote = false;
+        this.localMirrored = false;
+        this.chanId = 0;
+        this.dataChannelOpened = false;
+        this.audioOnly = false;
+        this.isReady = false;
+        this.isVideoELementCreated = false;
+        this.accessIsAllowed = false;
+        this.accessIsDenied = false;
+        if (options.id) {
+            this.id = options.id;
+        }
+        else {
+            this.id = "webcam";
+        }
+        this.connection = options.connection;
+        this.recvVideo = options.recvVideo;
+        this.recvAudio = options.recvAudio;
+        this.dataChannel = options.data || false;
+        this.sendVideo = options.video;
+        this.sendAudio = options.audio;
+        this.mediaConstraints = options.mediaConstraints;
+        this.audioOnly = options.audioOnly || false;
+        this.addEventListener('src-added', function (srcEvent) {
+            _this.videoSrcObject = srcEvent.srcObject;
+            if (_this.video)
+                _this.video.srcObject = srcEvent.srcObject;
+            console.debug("Video srcObject [" + srcEvent.srcObject + "] added to stream [" + _this.getId() + "]");
+        });
+    }
+    Stream.prototype.emitSrcEvent = function (wrstream) {
+        this.ee.emitEvent('src-added', [{
+                srcObject: wrstream
+            }]);
+    };
+    Stream.prototype.emitStreamReadyEvent = function () {
+        this.ee.emitEvent('stream-ready'), [{}];
+    };
+    Stream.prototype.getVideoSrcObject = function () {
+        return this.videoSrcObject;
+    };
+    Stream.prototype.removeVideo = function (parentElement) {
+        if (typeof parentElement === "string") {
+            document.getElementById(parentElement).removeChild(this.video);
+        }
+        else if (parentElement instanceof Element) {
+            parentElement.removeChild(this.video);
+        }
+        else if (!parentElement) {
+            if (document.getElementById(this.parentId)) {
+                document.getElementById(this.parentId).removeChild(this.video);
+            }
+        }
+    };
+    Stream.prototype.getVideoElement = function () {
+        return this.video;
+    };
+    Stream.prototype.setVideoElement = function (video) {
+        this.video = video;
+    };
+    Stream.prototype.getRecvVideo = function () {
+        return this.recvVideo;
+    };
+    Stream.prototype.getRecvAudio = function () {
+        return this.recvAudio;
+    };
+    Stream.prototype.subscribeToMyRemote = function () {
+        this.showMyRemote = true;
+    };
+    Stream.prototype.displayMyRemote = function () {
+        return this.showMyRemote;
+    };
+    Stream.prototype.mirrorLocalStream = function (wr) {
+        this.showMyRemote = true;
+        this.localMirrored = true;
+        if (wr) {
+            this.wrStream = wr;
+            this.emitSrcEvent(this.wrStream);
+        }
+    };
+    Stream.prototype.isLocalMirrored = function () {
+        return this.localMirrored;
+    };
+    Stream.prototype.getChannelName = function () {
+        return this.getId() + '_' + this.chanId++;
+    };
+    Stream.prototype.isDataChannelEnabled = function () {
+        return this.dataChannel;
+    };
+    Stream.prototype.isDataChannelOpened = function () {
+        return this.dataChannelOpened;
+    };
+    Stream.prototype.onDataChannelOpen = function (event) {
+        console.debug('Data channel is opened');
+        this.dataChannelOpened = true;
+    };
+    Stream.prototype.onDataChannelClosed = function (event) {
+        console.debug('Data channel is closed');
+        this.dataChannelOpened = false;
+    };
+    Stream.prototype.sendData = function (data) {
+        if (this.wp === undefined) {
+            throw new Error('WebRTC peer has not been created yet');
+        }
+        if (!this.dataChannelOpened) {
+            throw new Error('Data channel is not opened');
+        }
+        console.info("Sending through data channel: " + data);
+        this.wp.send(data);
+    };
+    Stream.prototype.getWrStream = function () {
+        return this.wrStream;
+    };
+    Stream.prototype.getWebRtcPeer = function () {
+        return this.wp;
+    };
+    Stream.prototype.addEventListener = function (eventName, listener) {
+        this.ee.addListener(eventName, listener);
+    };
+    Stream.prototype.addOnceEventListener = function (eventName, listener) {
+        this.ee.addOnceListener(eventName, listener);
+    };
+    Stream.prototype.removeListener = function (eventName) {
+        this.ee.removeAllListeners(eventName);
+    };
+    Stream.prototype.showSpinner = function (spinnerParentId) {
+        var progress = document.createElement('div');
+        progress.id = 'progress-' + this.getId();
+        progress.style.background = "center transparent url('img/spinner.gif') no-repeat";
+        var spinnerParent = document.getElementById(spinnerParentId);
+        if (spinnerParent) {
+            spinnerParent.appendChild(progress);
+        }
+    };
+    Stream.prototype.hideSpinner = function (spinnerId) {
+        spinnerId = (spinnerId === undefined) ? this.getId() : spinnerId;
+        hide('progress-' + spinnerId);
+    };
+    Stream.prototype.playOnlyVideo = function (parentElement, thumbnailId) {
+        // TO-DO: check somehow if the stream is audio only, so the element created is <audio> instead of <video>
+        var _this = this;
+        this.video = document.createElement('video');
+        this.video.id = (this.local ? 'local-' : 'remote-') + 'video-' + this.getId();
+        this.video.autoplay = true;
+        this.video.controls = false;
+        this.video.srcObject = this.videoSrcObject;
+        this.videoElements.push({
+            thumb: thumbnailId,
+            video: this.video
+        });
+        if (this.local && !this.displayMyRemote()) {
+            this.video.muted = true;
+            this.video.onplay = function () {
+                console.info("Local 'Stream' with id [" + _this.getId() + "] video is now playing");
+                _this.ee.emitEvent('video-is-playing', [{
+                        element: _this.video
+                    }]);
+            };
+        }
+        else {
+            this.video.title = this.getId();
+        }
+        if (typeof parentElement === "string") {
+            this.parentId = parentElement;
+            var parentElementDom = document.getElementById(parentElement);
+            if (parentElementDom) {
+                this.video = parentElementDom.appendChild(this.video);
+                this.ee.emitEvent('video-element-created-by-stream', [{
+                        element: this.video
+                    }]);
+                this.isVideoELementCreated = true;
+            }
+        }
+        else {
+            this.parentId = parentElement.id;
+            this.video = parentElement.appendChild(this.video);
+        }
+        this.ee.emitEvent('stream-created-by-publisher');
+        this.isReady = true;
+        return this.video;
+    };
+    Stream.prototype.playThumbnail = function (thumbnailId) {
+        var container = document.createElement('div');
+        container.className = "participant";
+        container.id = this.getId();
+        var thumbnail = document.getElementById(thumbnailId);
+        if (thumbnail) {
+            thumbnail.appendChild(container);
+        }
+        this.elements.push(container);
+        var name = document.createElement('div');
+        container.appendChild(name);
+        var userName = this.getId().replace('_webcam', '');
+        if (userName.length >= 16) {
+            userName = userName.substring(0, 16) + "...";
+        }
+        name.appendChild(document.createTextNode(userName));
+        name.id = "name-" + this.getId();
+        name.className = "name";
+        name.title = this.getId();
+        this.showSpinner(thumbnailId);
+        return this.playOnlyVideo(container, thumbnailId);
+    };
+    Stream.prototype.getIdInParticipant = function () {
+        return this.id;
+    };
+    Stream.prototype.getParticipant = function () {
+        return this.connection;
+    };
+    Stream.prototype.getId = function () {
+        return this.connection.connectionId + "_" + this.id;
+    };
+    Stream.prototype.getRTCPeerConnection = function () {
+        return this.getWebRtcPeer().peerConnection;
+    };
+    Stream.prototype.requestCameraAccess = function (callback) {
+        var _this = this;
+        this.connection.addStream(this);
+        var constraints = this.mediaConstraints;
+        /*let constraints2 = {
+            audio: true,
+            video: {
+                width: {
+                    ideal: 1280
+                },
+                frameRate: {
+                    ideal: 15
+                }
+            }
+        };*/
+        this.userMediaHasVideo(function (hasVideo) {
+            if (!hasVideo) {
+                constraints.video = false;
+                _this.sendVideo = false;
+                _this.audioOnly = true;
+                _this.requestCameraAccesAux(constraints, callback);
+            }
+            else {
+                _this.requestCameraAccesAux(constraints, callback);
+            }
+        });
+    };
+    Stream.prototype.requestCameraAccesAux = function (constraints, callback) {
+        var _this = this;
+        navigator.mediaDevices.getUserMedia(constraints)
+            .then(function (userStream) {
+            _this.cameraAccessSuccess(userStream, callback);
+        })
+            .catch(function (error) {
+            //  Try to ask for microphone only
+            navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+                .then(function (userStream) {
+                constraints.video = false;
+                _this.sendVideo = false;
+                _this.audioOnly = true;
+                _this.cameraAccessSuccess(userStream, callback);
+            })
+                .catch(function (error) {
+                _this.accessIsDenied = true;
+                _this.accessIsAllowed = false;
+                _this.ee.emitEvent('access-denied-by-publisher');
+                console.error("Access denied", error);
+                callback(error, _this);
+            });
+        });
+    };
+    Stream.prototype.cameraAccessSuccess = function (userStream, callback) {
+        this.accessIsAllowed = true;
+        this.accessIsDenied = false;
+        this.ee.emitEvent('access-allowed-by-publisher');
+        if (userStream.getAudioTracks()[0] != null) {
+            userStream.getAudioTracks()[0].enabled = this.sendAudio;
+        }
+        if (userStream.getVideoTracks()[0] != null) {
+            userStream.getVideoTracks()[0].enabled = this.sendVideo;
+        }
+        this.wrStream = userStream;
+        this.emitSrcEvent(this.wrStream);
+        callback(undefined, this);
+    };
+    Stream.prototype.userMediaHasVideo = function (callback) {
+        navigator.mediaDevices.enumerateDevices().then(function (mediaDevices) {
+            var videoInput = mediaDevices.filter(function (deviceInfo) {
+                return deviceInfo.kind === 'videoinput';
+            })[0];
+            callback(videoInput != null);
+        });
+    };
+    Stream.prototype.publishVideoCallback = function (error, sdpOfferParam, wp) {
+        var _this = this;
+        if (error) {
+            return console.error("(publish) SDP offer error: "
+                + JSON.stringify(error));
+        }
+        console.debug("Sending SDP offer to publish as "
+            + this.getId(), sdpOfferParam);
+        this.openVidu.sendRequest("publishVideo", {
+            sdpOffer: sdpOfferParam,
+            doLoopback: this.displayMyRemote() || false,
+            audioOnly: this.audioOnly
+        }, function (error, response) {
+            if (error) {
+                console.error("Error on publishVideo: " + JSON.stringify(error));
+            }
+            else {
+                _this.processSdpAnswer(response.sdpAnswer);
+                console.info("'Publisher' succesfully published to session");
+            }
+        });
+    };
+    Stream.prototype.startVideoCallback = function (error, sdpOfferParam, wp) {
+        var _this = this;
+        if (error) {
+            return console.error("(subscribe) SDP offer error: "
+                + JSON.stringify(error));
+        }
+        console.debug("Sending SDP offer to subscribe to "
+            + this.getId(), sdpOfferParam);
+        this.openVidu.sendRequest("receiveVideoFrom", {
+            sender: this.getId(),
+            sdpOffer: sdpOfferParam
+        }, function (error, response) {
+            if (error) {
+                console.error("Error on recvVideoFrom: " + JSON.stringify(error));
+            }
+            else {
+                _this.processSdpAnswer(response.sdpAnswer);
+            }
+        });
+    };
+    Stream.prototype.initWebRtcPeer = function (sdpOfferCallback) {
+        var _this = this;
+        if (this.local) {
+            var userMediaConstraints = {
+                audio: this.sendAudio,
+                video: this.sendVideo
+            };
+            var options = {
+                videoStream: this.wrStream,
+                mediaConstraints: userMediaConstraints,
+                onicecandidate: this.connection.sendIceCandidate.bind(this.connection),
+            };
+            if (this.dataChannel) {
+                options.dataChannelConfig = {
+                    id: this.getChannelName(),
+                    onopen: this.onDataChannelOpen,
+                    onclose: this.onDataChannelClosed
+                };
+                options.dataChannels = true;
+            }
+            if (this.displayMyRemote()) {
+                this.wp = kurentoUtils.WebRtcPeer.WebRtcPeerSendrecv(options, function (error) {
+                    if (error) {
+                        return console.error(error);
+                    }
+                    _this.wp.generateOffer(sdpOfferCallback.bind(_this));
+                });
+            }
+            else {
+                this.wp = kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(options, function (error) {
+                    if (error) {
+                        return console.error(error);
+                    }
+                    _this.wp.generateOffer(sdpOfferCallback.bind(_this));
+                });
+            }
+        }
+        else {
+            var offerConstraints = {
+                audio: this.recvAudio,
+                video: !this.audioOnly
+            };
+            console.debug("'Session.subscribe(Stream)' called. Constraints of generate SDP offer", offerConstraints);
+            var options = {
+                onicecandidate: this.connection.sendIceCandidate.bind(this.connection),
+                mediaConstraints: offerConstraints
+            };
+            this.wp = kurentoUtils.WebRtcPeer.WebRtcPeerRecvonly(options, function (error) {
+                if (error) {
+                    return console.error(error);
+                }
+                _this.wp.generateOffer(sdpOfferCallback.bind(_this));
+            });
+        }
+        console.debug("Waiting for SDP offer to be generated ("
+            + (this.local ? "local" : "remote") + " 'Stream': " + this.getId() + ")");
+    };
+    Stream.prototype.publish = function () {
+        var _this = this;
+        // FIXME: Throw error when stream is not local
+        if (this.isReady) {
+            this.initWebRtcPeer(this.publishVideoCallback);
+        }
+        else {
+            this.ee.once('stream-ready', function (streamEvent) {
+                _this.publish();
+            });
+        }
+        // FIXME: Now we have coupled connecting to a room and adding a
+        // stream to this room. But in the new API, there are two steps.
+        // This is the second step. For now, it do nothing.
+    };
+    Stream.prototype.subscribe = function () {
+        // FIXME: In the current implementation all participants are subscribed
+        // automatically to all other participants. We use this method only to
+        // negotiate SDP
+        this.initWebRtcPeer(this.startVideoCallback);
+    };
+    Stream.prototype.processSdpAnswer = function (sdpAnswer) {
+        var _this = this;
+        var answer = new RTCSessionDescription({
+            type: 'answer',
+            sdp: sdpAnswer,
+        });
+        console.debug(this.getId() + ": set peer connection with recvd SDP answer", sdpAnswer);
+        var participantId = this.getId();
+        var pc = this.wp.peerConnection;
+        pc.setRemoteDescription(answer, function () {
+            // Avoids to subscribe to your own stream remotely 
+            // except when showMyRemote is true
+            if (!_this.local || _this.displayMyRemote()) {
+                _this.wrStream = pc.getRemoteStreams()[0];
+                console.debug("Peer remote stream", _this.wrStream);
+                if (_this.wrStream != undefined) {
+                    _this.emitSrcEvent(_this.wrStream);
+                    _this.speechEvent = kurentoUtils.WebRtcPeer.hark(_this.wrStream, { threshold: _this.room.thresholdSpeaker });
+                    _this.speechEvent.on('speaking', function () {
+                        _this.room.addParticipantSpeaking(participantId);
+                        _this.room.emitEvent('stream-speaking', [{
+                                participantId: participantId
+                            }]);
+                    });
+                    _this.speechEvent.on('stopped_speaking', function () {
+                        _this.room.removeParticipantSpeaking(participantId);
+                        _this.room.emitEvent('stream-stopped-speaking', [{
+                                participantId: participantId
+                            }]);
+                    });
+                }
+                for (var _i = 0, _a = _this.videoElements; _i < _a.length; _i++) {
+                    var videoElement = _a[_i];
+                    var thumbnailId = videoElement.thumb;
+                    var video = videoElement.video;
+                    video.srcObject = _this.wrStream;
+                    video.onplay = function () {
+                        if (_this.local && _this.displayMyRemote()) {
+                            console.info("Your own remote 'Stream' with id [" + _this.getId() + "] video is now playing");
+                            _this.ee.emitEvent('remote-video-is-playing', [{
+                                    element: _this.video
+                                }]);
+                        }
+                        else if (!_this.local && !_this.displayMyRemote()) {
+                            console.info("Remote 'Stream' with id [" + _this.getId() + "] video is now playing");
+                            _this.ee.emitEvent('video-is-playing', [{
+                                    element: _this.video
+                                }]);
+                        }
+                        //show(thumbnailId);
+                        //this.hideSpinner(this.getId());
+                    };
+                }
+                _this.room.emitEvent('stream-subscribed', [{
+                        stream: _this
+                    }]);
+            }
+        }, function (error) {
+            console.error(_this.getId() + ": Error setting SDP to the peer connection: "
+                + JSON.stringify(error));
+        });
+    };
+    Stream.prototype.unpublish = function () {
+        if (this.wp) {
+            this.wp.dispose();
+        }
+        else {
+            if (this.wrStream) {
+                this.wrStream.getAudioTracks().forEach(function (track) {
+                    track.stop && track.stop();
+                });
+                this.wrStream.getVideoTracks().forEach(function (track) {
+                    track.stop && track.stop();
+                });
+            }
+        }
+        if (this.speechEvent) {
+            this.speechEvent.stop();
+        }
+        console.info(this.getId() + ": Stream '" + this.id + "' unpublished");
+    };
+    Stream.prototype.dispose = function () {
+        function disposeElement(element) {
+            if (element && element.parentNode) {
+                element.parentNode.removeChild(element);
+            }
+        }
+        this.elements.forEach(function (e) { return disposeElement(e); });
+        //this.videoElements.forEach(ve => disposeElement(ve.video));
+        disposeElement("progress-" + this.getId());
+        if (this.wp) {
+            this.wp.dispose();
+        }
+        else {
+            if (this.wrStream) {
+                this.wrStream.getAudioTracks().forEach(function (track) {
+                    track.stop && track.stop();
+                });
+                this.wrStream.getVideoTracks().forEach(function (track) {
+                    track.stop && track.stop();
+                });
+            }
+        }
+        if (this.speechEvent) {
+            this.speechEvent.stop();
+        }
+        console.info((this.local ? "Local " : "Remote ") + "'Stream' with id [" + this.getId() + "]' has been succesfully disposed");
+    };
+    return Stream;
+}());
+exports.Stream = Stream;
+
+
 /***/ })
 
-},[389]);
+},[327]);
 //# sourceMappingURL=main.bundle.js.map
