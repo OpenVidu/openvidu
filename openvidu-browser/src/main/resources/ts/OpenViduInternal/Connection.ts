@@ -21,36 +21,18 @@ export class Connection {
 
     constructor( private openVidu: OpenViduInternal, private local: boolean, private room: SessionInternal, private options?: ConnectionOptions ) {
 
+        console.info( "'Connection' created (" + ( local ? "local" : "remote" ) + ")" + ( local ? "" : ", with 'connectionId' [" + (options ? options.id : '') + "] " ));
+
         if ( options ) {
 
             this.connectionId = options.id;
             this.data = options.metadata;
 
             if ( options.streams ) {
-
-                for ( let streamOptions of options.streams ) {
-
-                    let streamOpts = {
-                        id: streamOptions.id,
-                        connection: this,
-                        recvVideo: ( streamOptions.recvVideo == undefined ? true : streamOptions.recvVideo ),
-                        recvAudio: ( streamOptions.recvAudio == undefined ? true : streamOptions.recvAudio ),
-                        audio: streamOptions.audio,
-                        video: streamOptions.video,
-                        data: streamOptions.data,
-                        mediaConstraints: streamOptions.mediaConstraints,
-                        audioOnly: streamOptions.audioOnly
-                    }
-                    let stream = new Stream( openVidu, false, room, streamOpts );
-
-                    this.addStream( stream );
-                    this.streamsOpts.push( streamOpts );
-                }
+                this.initStreams(options);
             }
         }
         
-        console.log( "New " + ( local ? "local " : "remote " ) + "participant " + this.connectionId
-            + ", streams opts: ", this.streamsOpts );
     }
 
     addStream( stream: Stream ) {
@@ -84,5 +66,28 @@ export class Connection {
                     + JSON.stringify( error ) );
             }
         });
+    }
+
+    initStreams(options) {
+        for ( let streamOptions of options.streams ) {
+            
+            let streamOpts = {
+                id: streamOptions.id,
+                connection: this,
+                recvVideo: ( streamOptions.recvVideo == undefined ? true : streamOptions.recvVideo ),
+                recvAudio: ( streamOptions.recvAudio == undefined ? true : streamOptions.recvAudio ),
+                audio: streamOptions.audio,
+                video: streamOptions.video,
+                data: streamOptions.data,
+                mediaConstraints: streamOptions.mediaConstraints,
+                audioOnly: streamOptions.audioOnly,
+            }
+            let stream = new Stream(this.openVidu, false, this.room, streamOpts );
+
+            this.addStream( stream );
+            this.streamsOpts.push( streamOpts );
+        }
+
+        console.info("Remote 'Connection' with 'connectionId' [" + this.connectionId + "] is now configured for receiving Streams with options: ", this.streamsOpts );
     }
 }

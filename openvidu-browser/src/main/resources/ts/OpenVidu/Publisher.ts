@@ -52,8 +52,17 @@ export class Publisher {
         return this;
     }
 
+    subscribeToRemote() {
+        this.stream.subscribeToMyRemote();
+    }
+
     on(eventName: string, callback) {
         this.ee.addListener(eventName, event => {
+            if (event) {
+                console.info("Event '" + eventName + "' triggered by 'Publisher'", event);
+            } else {
+                console.info("Event '" + eventName + "' triggered by 'Publisher'");
+            }
             callback(event);
         });
         if (eventName == 'videoElementCreated') {
@@ -62,10 +71,45 @@ export class Publisher {
                     element: this.stream.getVideoElement()
                 }]);
             } else {
-                this.stream.addEventListener('video-element-created-by-stream', (element) => {
-                    console.warn('Publisher emitting videoElementCreated');
+                this.stream.addOnceEventListener('video-element-created-by-stream', (element) => {
                     this.id = element.id;
                     this.ee.emitEvent('videoElementCreated', [{
+                        element: element.element
+                    }]);
+                });
+            }
+        }
+        if (eventName == 'videoPlaying') {
+            var video = this.stream.getVideoElement();
+            if (!this.stream.displayMyRemote() && video &&
+                video.currentTime > 0 && 
+                video.paused == false && 
+                video.ended == false &&
+                video.readyState == 4) {
+                    this.ee.emitEvent('videoPlaying', [{
+                        element: this.stream.getVideoElement()
+                    }]);
+            } else {
+                this.stream.addOnceEventListener('video-is-playing', (element) => {
+                    this.ee.emitEvent('videoPlaying', [{
+                        element: element.element
+                    }]);
+                });
+            }
+        }
+        if (eventName == 'remoteVideoPlaying') {
+            var video = this.stream.getVideoElement();
+            if (this.stream.displayMyRemote() && video &&
+                video.currentTime > 0 && 
+                video.paused == false && 
+                video.ended == false &&
+                video.readyState == 4) {
+                    this.ee.emitEvent('remoteVideoPlaying', [{
+                        element: this.stream.getVideoElement()
+                    }]);
+            } else {
+                this.stream.addOnceEventListener('remote-video-is-playing', (element) => {
+                    this.ee.emitEvent('remoteVideoPlaying', [{
                         element: element.element
                     }]);
                 });

@@ -86,6 +86,11 @@ export class Session {
 
     on(eventName: string, callback) {
         this.session.addEventListener(eventName, event => {
+            if (event) {
+                console.info("Event '" + eventName + "' triggered by 'Session'", event);
+            } else {
+                console.info("Event '" + eventName + "' triggered by 'Session'");
+            }
             callback(event);
         });
     }

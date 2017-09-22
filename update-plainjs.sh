@@ -1,5 +1,8 @@
 VERSION="$1"
 
+# openvidu-hello-world
+cp openvidu-browser/src/main/resources/static/js/openvidu-browser-"$1".js ../openvidu-tutorials/openvidu-hello-world/web/openvidu-browser-"$1".js
+
 # openvidu-insecure-js
 cp openvidu-browser/src/main/resources/static/js/openvidu-browser-"$1".js ../openvidu-tutorials/openvidu-insecure-js/web/openvidu-browser-"$1".js
 

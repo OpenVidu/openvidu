@@ -9,7 +9,7 @@ import { Connection } from './Connection';
 import { SessionInternal } from './SessionInternal';
 import { OpenViduInternal, Callback } from './OpenViduInternal';
 import EventEmitter = require('wolfy87-eventemitter');
-import * as kurentoUtils from 'kurento-utils';
+import * as kurentoUtils from '../KurentoUtils/kurento-utils-js';
 
 import * as adapter from 'webrtc-adapter';
 declare var navigator: any;
@@ -73,7 +73,7 @@ export class Stream {
 
     private audioOnly = false;
 
-    private videoSrc: string;
+    private videoSrcObject: MediaStream | null;
     private parentId: string;
     public isReady: boolean = false;
     public isVideoELementCreated: boolean = false;
@@ -98,15 +98,15 @@ export class Stream {
         this.audioOnly = options.audioOnly || false;
 
         this.addEventListener('src-added', (srcEvent) => {
-            this.videoSrc = srcEvent.src;
-            if (this.video) this.video.src = srcEvent.src;
-            console.warn("Videosrc [" + srcEvent.src + "] added to stream [" + this.getId() + "]");
+            this.videoSrcObject = srcEvent.srcObject;
+            if (this.video) this.video.srcObject = srcEvent.srcObject;
+            console.debug("Video srcObject [" + srcEvent.srcObject + "] added to stream [" + this.getId() + "]");
         });
     }
 
     emitSrcEvent(wrstream) {
         this.ee.emitEvent('src-added', [{
-            src: URL.createObjectURL(wrstream)
+            srcObject: wrstream
         }]);
     }
 
@@ -114,8 +114,8 @@ export class Stream {
         this.ee.emitEvent('stream-ready'), [{}];
     }
 
-    getVideoSrc() {
-        return this.videoSrc;
+    getVideoSrcObject() {
+        return this.videoSrcObject;
     }
 
     removeVideo(parentElement: string);
@@ -193,12 +193,12 @@ export class Stream {
     }
 
     onDataChannelOpen(event) {
-        console.log('Data channel is opened');
+        console.debug('Data channel is opened');
         this.dataChannelOpened = true;
     }
 
     onDataChannelClosed(event) {
-        console.log('Data channel is closed');
+        console.debug('Data channel is closed');
         this.dataChannelOpened = false;
     }
 
@@ -209,7 +209,7 @@ export class Stream {
         if (!this.dataChannelOpened) {
             throw new Error('Data channel is not opened');
         }
-        console.log("Sending through data channel: " + data);
+        console.info("Sending through data channel: " + data);
         this.wp.send(data);
     }
 
@@ -254,18 +254,24 @@ export class Stream {
 
         this.video = document.createElement('video');
 
-        this.video.id = 'native-video-' + this.getId();
+        this.video.id = (this.local ? 'local-' : 'remote-') + 'video-' + this.getId();
         this.video.autoplay = true;
         this.video.controls = false;
-        this.video.src = this.videoSrc;
+        this.video.srcObject = this.videoSrcObject;
 
         this.videoElements.push({
             thumb: thumbnailId,
             video: this.video
         });
 
-        if (this.local) {
+        if (this.local && !this.displayMyRemote()) {
             this.video.muted = true;
+            this.video.onplay = () => {
+                console.info("Local 'Stream' with id [" + this.getId() + "] video is now playing");
+                this.ee.emitEvent('video-is-playing', [{
+                    element: this.video
+                }]);
+            };
         } else {
             this.video.title = this.getId();
         }
@@ -330,11 +336,7 @@ export class Stream {
     }
 
     getId() {
-        if (this.connection) {
-            return this.connection.connectionId + "_" + this.id;
-        } else {
-            return this.id + "_webcam";
-        }
+        return this.connection.connectionId + "_" + this.id;
     }
 
     getRTCPeerConnection() {
@@ -430,7 +432,7 @@ export class Stream {
                 + JSON.stringify(error));
         }
 
-        console.log("Sending SDP offer to publish as "
+        console.debug("Sending SDP offer to publish as "
             + this.getId(), sdpOfferParam);
 
         this.openVidu.sendRequest("publishVideo", {
@@ -441,10 +443,8 @@ export class Stream {
             if (error) {
                 console.error("Error on publishVideo: " + JSON.stringify(error));
             } else {
-                this.room.emitEvent('stream-published', [{
-                    stream: this
-                }]);
                 this.processSdpAnswer(response.sdpAnswer);
+                console.info("'Publisher' succesfully published to session");
             }
         });
     }
@@ -454,7 +454,7 @@ export class Stream {
             return console.error("(subscribe) SDP offer error: "
                 + JSON.stringify(error));
         }
-        console.log("Sending SDP offer to subscribe to "
+        console.debug("Sending SDP offer to subscribe to "
             + this.getId(), sdpOfferParam);
         this.openVidu.sendRequest("receiveVideoFrom", {
             sender: this.getId(),
@@ -492,14 +492,14 @@ export class Stream {
             }
 
             if (this.displayMyRemote()) {
-                this.wp = new kurentoUtils.WebRtcPeer.WebRtcPeerSendrecv(options, error => {
+                this.wp = kurentoUtils.WebRtcPeer.WebRtcPeerSendrecv(options, error => {
                     if (error) {
                         return console.error(error);
                     }
                     this.wp.generateOffer(sdpOfferCallback.bind(this));
                 });
             } else {
-                this.wp = new kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(options, error => {
+                this.wp = kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(options, error => {
                     if (error) {
                         return console.error(error);
                     }
@@ -511,21 +511,21 @@ export class Stream {
                 audio: this.recvAudio,
                 video: !this.audioOnly
             };
-            console.log("Constraints of generate SDP offer (subscribing)",
+            console.debug("'Session.subscribe(Stream)' called. Constraints of generate SDP offer",
                 offerConstraints);
             let options = {
                 onicecandidate: this.connection.sendIceCandidate.bind(this.connection),
                 mediaConstraints: offerConstraints
             }
-            this.wp = new kurentoUtils.WebRtcPeer.WebRtcPeerRecvonly(options, error => {
+            this.wp = kurentoUtils.WebRtcPeer.WebRtcPeerRecvonly(options, error => {
                 if (error) {
                     return console.error(error);
                 }
                 this.wp.generateOffer(sdpOfferCallback.bind(this));
             });
         }
-        console.log("Waiting for SDP offer to be generated ("
-            + (this.local ? "local" : "remote") + " peer: " + this.getId() + ")");
+        console.debug("Waiting for SDP offer to be generated ("
+            + (this.local ? "local" : "remote") + " 'Stream': " + this.getId() + ")");
     }
 
     publish() {
@@ -560,7 +560,7 @@ export class Stream {
             type: 'answer',
             sdp: sdpAnswer,
         });
-        console.log(this.getId() + ": set peer connection with recvd SDP answer",
+        console.debug(this.getId() + ": set peer connection with recvd SDP answer",
             sdpAnswer);
         let participantId = this.getId();
         let pc = this.wp.peerConnection;
@@ -569,7 +569,7 @@ export class Stream {
             // except when showMyRemote is true
             if (!this.local || this.displayMyRemote()) {
                 this.wrStream = pc.getRemoteStreams()[0];
-                console.log("Peer remote stream", this.wrStream);
+                console.debug("Peer remote stream", this.wrStream);
 
                 if (this.wrStream != undefined) {
 
@@ -594,9 +594,19 @@ export class Stream {
                 for (let videoElement of this.videoElements) {
                     let thumbnailId = videoElement.thumb;
                     let video = videoElement.video;
-                    video.src = URL.createObjectURL(this.wrStream);
+                    video.srcObject = this.wrStream;
                     video.onplay = () => {
-                        console.log(this.getId() + ': ' + 'Video playing');
+                        if (this.local && this.displayMyRemote()) {
+                            console.info("Your own remote 'Stream' with id [" + this.getId() + "] video is now playing");
+                            this.ee.emitEvent('remote-video-is-playing', [{
+                                element: this.video
+                            }]);
+                        } else if (!this.local && !this.displayMyRemote()) {
+                            console.info("Remote 'Stream' with id [" + this.getId() + "] video is now playing");
+                            this.ee.emitEvent('video-is-playing', [{
+                                element: this.video
+                            }]);
+                        }
                         //show(thumbnailId);
                         //this.hideSpinner(this.getId());
                     };
@@ -629,7 +639,7 @@ export class Stream {
             this.speechEvent.stop();
         }
 
-        console.log(this.getId() + ": Stream '" + this.id + "' unpublished");
+        console.info(this.getId() + ": Stream '" + this.id + "' unpublished");
     }
 
     dispose() {
@@ -663,6 +673,6 @@ export class Stream {
             this.speechEvent.stop();
         }
 
-        console.log(this.getId() + ": Stream '" + this.id + "' disposed");
+        console.info((this.local ? "Local " : "Remote ") + "'Stream' with id [" + this.getId() + "]' has been succesfully disposed");
     }
 }

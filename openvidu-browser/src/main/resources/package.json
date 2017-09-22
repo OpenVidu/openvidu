@@ -15,13 +15,18 @@
   "author": "",
   "license": "Apache-2.0",
   "dependencies": {
-    "kurento-jsonrpc": "5.1.3",
     "wolfy87-eventemitter": "4.2.9",
     "@types/wolfy87-eventemitter": "4.2.31",
-    "webrtc-adapter": "3.3.2",
-    "kurento-utils": "6.6.2",
+    "webrtc-adapter": "5.0.4",
     "uuid": "~2.0.1",
-    "sdp-translator": "^0.1.15"
+    "freeice": "2.2.0",
+    "inherits": "^2.0.3",
+    "merge": "^1.2.0",
+    "ua-parser-js": "^0.7.7",
+    "hark": "1.1.3",
+    "bufferutil": "3.0.2",
+    "utf-8-validate": "3.0.3",
+    "sdp-translator": "0.1.24"
   },
   "devDependencies": {
     "typescript": "2.5.2",

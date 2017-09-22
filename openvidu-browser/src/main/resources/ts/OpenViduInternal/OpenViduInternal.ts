@@ -16,7 +16,7 @@
  */
 import { SessionInternal, SessionOptions } from './SessionInternal';
 import { Stream } from './Stream';
-import * as RpcBuilder from 'kurento-jsonrpc';
+import * as RpcBuilder from '../KurentoUtils/kurento-jsonrpc';
 
 export type Callback<T> = (error?: any, openVidu?: T) => void;
 
@@ -37,20 +37,19 @@ export class OpenViduInternal {
 
     /* NEW METHODS */
     initSession(sessionId) {
-        console.log("Session initialized!");
+        console.info("'Session' initialized with 'sessionId' [" + sessionId + "]");
         this.session = new SessionInternal(this, sessionId);
         return this.session;
     }
 
     initPublisherTagged(parentId: string, cameraOptions: any, callback?) {
-        console.log("Publisher tagged initialized!");
 
         this.getCamera(cameraOptions);
 
         if (callback == null) {
             this.camera.requestCameraAccess((error, camera) => {
                 if (error) {
-                    console.log("Error accessing the camera");
+                    console.error("Error accessing the camera", error);
                 }
                 else {
                     this.camera.setVideoElement(this.cameraReady(camera!, parentId));
@@ -79,8 +78,6 @@ export class OpenViduInternal {
     }
 
     initPublisher(cameraOptions: any, callback) {
-        console.log("Publisher initialized!");
-
         this.getCamera(cameraOptions);
         this.camera.requestCameraAccess((error, camera) => {
             if (error) callback(error);
@@ -184,7 +181,7 @@ export class OpenViduInternal {
     }
 
     private disconnectCallback() {
-        console.log('Websocket connection lost');
+        console.warn('Websocket connection lost');
         if (this.isRoomAvailable()) {
             this.session.onLostConnection();
         } else {
@@ -193,7 +190,7 @@ export class OpenViduInternal {
     }
 
     private reconnectingCallback() {
-        console.log('Websocket connection lost (reconnecting)');
+        console.warn('Websocket connection lost (reconnecting)');
         if (this.isRoomAvailable()) {
             this.session.onLostConnection();
         } else {
@@ -202,7 +199,7 @@ export class OpenViduInternal {
     }
 
     private reconnectedCallback() {
-        console.log('Websocket reconnected');
+        console.warn('Websocket reconnected');
     }
 
     private onParticipantJoined(params) {
@@ -271,12 +268,12 @@ export class OpenViduInternal {
             for (let index in this.rpcParams) {
                 if (this.rpcParams.hasOwnProperty(index)) {
                     params[index] = this.rpcParams[index];
-                    console.log('RPC param added to request {' + index + ': ' + this.rpcParams[index] + '}');
+                    console.debug('RPC param added to request {' + index + ': ' + this.rpcParams[index] + '}');
                 }
             }
         }
 
-        console.log('Sending request: { method:"' + method + '", params: ' + JSON.stringify(params) + ' }');
+        console.debug('Sending request: {method:"' + method + '", params: ' + JSON.stringify(params) + '}');
 
         this.jsonRpcClient.send(method, params, callback);
     }

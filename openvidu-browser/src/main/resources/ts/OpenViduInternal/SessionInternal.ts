@@ -237,13 +237,13 @@ export class SessionInternal {
     }
 
     unsuscribe(stream) {
-        console.log("Unsubscribing from " + stream.getId());
+        console.info("Unsubscribing from " + stream.getId());
         this.openVidu.sendRequest('unsubscribeFromVideo', {
             sender: stream.getId()
         },
             function (error, response) {
                 if (error) {
-                    console.error(error);
+                    console.error("Error unsubscribing from Subscriber", error);
                 } else {
                     console.info("Unsubscribed correctly from " + stream.getId());
                 }
@@ -254,15 +254,25 @@ export class SessionInternal {
 
         options.metadata = this.participants[options.id].data;
 
-        let connection = new Connection(this.openVidu, false, this, options);
+        // Get the existing Connection created on 'onParticipantJoined' for
+        // existing participants or create a new one for new participants
+        let connection = this.participants[options.id];
+        if (connection) {
+            // Update existing Connection
+            connection.options = options;
+            connection.initStreams(options);
+        } else {
+            // Create new Connection
+            connection = new Connection(this.openVidu, false, this, options);
+        }
 
         let pid = connection.connectionId;
         if (!(pid in this.participants)) {
-            console.info("Publisher not found in participants list by its id", pid);
+            console.debug("Remote Connection not found in connections list by its id [" + pid + "]");
         } else {
-            console.log("Publisher found in participants list by its id", pid);
+            console.debug("Remote Connection found in connections list by its id [" + pid + "]");
         }
-        //replacing old connection (this one has streams)
+
         connection.creationTime = this.participants[pid].creationTime;
         this.participants[pid] = connection;
 
@@ -288,12 +298,11 @@ export class SessionInternal {
 
         let pid = connection.connectionId;
         if (!(pid in this.participants)) {
-            console.log("New participant to participants list with id", pid);
             this.participants[pid] = connection;
         } else {
             //use existing so that we don't lose streams info
-            console.info("Participant already exists in participants list with " +
-                "the same id, old:", this.participants[pid], ", joined now:", connection);
+            console.warn("Connection already exists in connections list with " +
+                "the same connectionId, old:", this.participants[pid], ", joined now:", connection);
             connection = this.participants[pid];
         }
 
@@ -354,7 +363,7 @@ export class SessionInternal {
 
     onNewMessage(msg) {
 
-        console.log("New message: " + JSON.stringify(msg));
+        console.info("New message: " + JSON.stringify(msg));
         let room = msg.room;
         let user = msg.user;
         let message = msg.message;
@@ -401,7 +410,7 @@ export class SessionInternal {
 
     onRoomClosed(msg) {
 
-        console.log("Room closed: " + JSON.stringify(msg));
+        console.info("Room closed: " + JSON.stringify(msg));
         let room = msg.room;
         if (room !== undefined) {
             this.ee.emitEvent('room-closed', [{
@@ -422,7 +431,7 @@ export class SessionInternal {
             return;
         }
 
-        console.log('Lost connection in room ' + this.id);
+        console.warn('Lost connection in Session ' + this.id);
         let room = this.id;
         if (room !== undefined) {
             this.ee.emitEvent('lost-connection', [{ room }]);
@@ -451,7 +460,7 @@ export class SessionInternal {
 
         forced = !!forced;
 
-        console.log("Leaving room (forced=" + forced + ")");
+        console.info("Leaving Session (forced=" + forced + ")");
 
         if (this.connected && !forced) {
             this.openVidu.sendRequest('leaveRoom', function (error, response) {
@@ -485,7 +494,7 @@ export class SessionInternal {
 
         if (connection === this.localParticipant) {
 
-            console.log("Unpublishing my media (I'm " + connection.connectionId + ")");
+            console.info("Unpublishing my media (I'm " + connection.connectionId + ")");
             delete this.localParticipant;
             this.openVidu.sendRequest('unpublishVideo', function (error, response) {
                 if (error) {
@@ -513,7 +522,7 @@ export class SessionInternal {
             delete this.participants[connection.connectionId];
             connection.dispose();
 
-            console.log("Unpublishing my media (I'm " + connection.connectionId + ")");
+            console.info("Unpublishing my media (I'm " + connection.connectionId + ")");
             delete this.localParticipant;
             this.openVidu.sendRequest('unpublishVideo', function (error, response) {
                 if (error) {

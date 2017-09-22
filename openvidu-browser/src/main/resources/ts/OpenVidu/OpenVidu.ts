@@ -31,6 +31,7 @@ export class OpenVidu {
 
     constructor() {
         this.openVidu = new OpenViduInternal();
+        console.info("'OpenVidu' initialized");
     };
 
     initSession(apiKey: string, sessionId: string): Session;
@@ -73,8 +74,10 @@ export class OpenVidu {
                     }
                 }
             }
-
-            return new Publisher(this.openVidu.initPublisherTagged(parentId, cameraOptions, callback), parentId);
+            var publisher = new Publisher(this.openVidu.initPublisherTagged(parentId, cameraOptions, callback), parentId);
+            
+            console.info("'Publisher' initialized");
+            return publisher;
 
         } else {
             alert("Browser not supported");
@@ -100,9 +103,16 @@ export class OpenVidu {
         navigator.mediaDevices.enumerateDevices().then((deviceInfos) => {
             callback(null, deviceInfos);
         }).catch((error) => {
-            console.log("Error getting devices: " + error);
+            console.error("Error getting devices", error);
             callback(error, null);
         });
+    }
+
+    enableProdMode() {
+        console.log = function() {};
+        console.debug = function() {};
+        console.info = function() {};
+        console.warn = function() {};
     }
 
 }
