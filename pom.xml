@@ -10,7 +10,7 @@
 
 	<groupId>io.openvidu</groupId>
 	<artifactId>openvidu-parent</artifactId>
-	<version>1.0.0-beta.3</version>
+	<version>1.0.0</version>
 	<packaging>pom</packaging>
 
 	<name>OpenVidu</name>
@@ -48,7 +48,7 @@
 
 	<properties>
 		<!-- OpenVidu versions -->
-		<version.openvidu>1.0.0-beta.3</version.openvidu>
+		<version.openvidu>1.0.0</version.openvidu>
 
 		<version.kurento.jsonrpc.js>5.1.3</version.kurento.jsonrpc.js>
 
@@ -210,7 +210,7 @@
 			<dependency>
 				<groupId>io.openvidu</groupId>
 				<artifactId>openvidu-java-client</artifactId>
-				<version>1.0.1-beta.3</version>
+				<version>${version.openvidu}</version>
 			</dependency>
 
 			<dependency>

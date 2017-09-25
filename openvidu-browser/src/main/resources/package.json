@@ -1,6 +1,6 @@
 {
   "name": "openvidu-browser",
-  "version": "1.0.5-beta.3",
+  "version": "1.0.0",
   "description": "OpenVidu Browser",
   "main": "lib/OpenVidu/index.js",
   "types": "lib/OpenVidu/index.d.ts",
@@ -12,7 +12,7 @@
     "prepublish": "cd ts && tsc",
     "developing": "cd ts && tsc -w"
   },
-  "author": "",
+  "author": "OpenVidu",
   "license": "Apache-2.0",
   "dependencies": {
     "wolfy87-eventemitter": "4.2.9",
