@@ -12,6 +12,7 @@
 	<packaging>jar</packaging>
 
 	<name>OpenVidu Browser</name>
+	<version>1.1.0</version>
 	<description>
         OpenVidu JS/TS library for the client-side
     </description>
