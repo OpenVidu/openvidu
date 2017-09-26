@@ -24,6 +24,7 @@ import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -38,6 +39,7 @@ import io.openvidu.server.security.ParticipantRole;
  * @author Raquel Díaz González
  */
 @RestController
+@CrossOrigin(origins = "*")
 @RequestMapping("/api")
 public class RoomController {
 
