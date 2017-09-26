@@ -79,7 +79,6 @@
 			<modules>
 				<module>openvidu-server</module>
 				<module>openvidu-client</module>
-				<module>openvidu-browser</module>
 				<module>openvidu-test</module>
 				<module>openvidu-java-client</module>
 			</modules>
@@ -195,11 +194,6 @@
 			<dependency>
 				<groupId>io.openvidu</groupId>
 				<artifactId>openvidu-client</artifactId>
-				<version>${version.openvidu}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.openvidu</groupId>
-				<artifactId>openvidu-browser</artifactId>
 				<version>${version.openvidu}</version>
 			</dependency>
 			<dependency>

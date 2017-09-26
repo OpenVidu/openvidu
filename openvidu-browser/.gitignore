@@ -1,1 +1,4 @@
-/target/
+/node_modules/
+/yarn.lock
+/npm-debug.log
+/lib/
