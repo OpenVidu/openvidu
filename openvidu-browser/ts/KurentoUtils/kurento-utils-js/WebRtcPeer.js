@@ -32,7 +32,7 @@ var logger = window.Logger || console
 //   }).eror(callback));
 // }
 
-try {
+/*try {
   require('kurento-browser-extensions')
 } catch (error) {
   if (typeof getScreenConstraints === 'undefined') {
@@ -42,7 +42,7 @@ try {
       callback(new Error("This library is not enabled for screen sharing"))
     }
   }
-}
+}*/
 
 var MEDIA_CONSTRAINTS = {
   audio: true,

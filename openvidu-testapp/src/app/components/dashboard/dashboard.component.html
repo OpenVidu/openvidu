@@ -1,0 +1,47 @@
+<md-tab-group class="demo-tab-group" dynamicHeight="true">
+  <md-tab id="audio-video" label="Audio + Video">
+    <div class="demo-tab-content">
+
+    </div>
+  </md-tab>
+  <md-tab id="audio-only" label="Audio only">
+    <div class="demo-tab-content">
+
+    </div>
+  </md-tab>
+  <md-tab id="video-only" label="Video only">
+
+  </md-tab>
+  <md-tab id="screen-audio" label="Screen + Audio">
+    <div class="demo-tab-content">
+
+    </div>
+  </md-tab>
+  <md-tab id="screen-only" label="Screen only">
+
+  </md-tab>
+  <md-tab id="api-rest" label="API REST">
+      <button md-raised-button color="primary" (click)="getSessionId()">Get sessionId</button>
+      <button md-raised-button color="primary" (click)="getToken()">Get token</button>
+  </md-tab>
+</md-tab-group>
+
+<!--<div id="join">
+  <div id="img-div"><img src="assets/images/openvidu_grey_bg_transp_cropped.png" /></div>
+  <div id="join-dialog" class="jumbotron vertical-center">
+    <h1>Join a video session</h1>
+    <form class="form-group" (submit)="joinSession()">
+      <p>
+        <label>Participant</label>
+        <input class="form-control" type="text" id="clientData" name="clientData" [(ngModel)]="clientData" required>
+      </p>
+      <p>
+        <label>Session</label>
+        <input class="form-control" type="text" id="sessionName" name="sessionName" [(ngModel)]="sessionName" required>
+      </p>
+      <p class="text-center">
+        <input class="btn btn-lg btn-success" type="submit" name="commit" value="Join!">
+      </p>
+    </form>
+  </div>
+</div>-->
