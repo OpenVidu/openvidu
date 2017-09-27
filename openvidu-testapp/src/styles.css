@@ -20,3 +20,7 @@ ul {
   list-style: none;
   padding-left: 0;
 }
+
+video {
+  max-width: 300px;
+}

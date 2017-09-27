@@ -31,7 +31,6 @@ export class OpenviduRestService {
   getToken(openviduURL: string, openviduSecret: string, sessionId: string, role: string, serverData: string): Promise<string> {
     console.warn(sessionId);
 
-    const OV = new OpenViduAPI(openviduURL, openviduSecret);
     const session: SessionAPI = this.sessionIdSession.get(sessionId);
     const OVRole: OpenViduRoleAPI = OpenViduRoleAPI[role];
 

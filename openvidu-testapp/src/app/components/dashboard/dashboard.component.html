@@ -1,43 +1,82 @@
-<md-form-field class="example-full-width">
+<md-form-field>
   <input mdInput placeholder="OpenVidu Server URL" [(ngModel)]="openviduURL">
 </md-form-field>
 
-<md-tab-group class="demo-tab-group" dynamicHeight="true" selectedIndex="5">
-  <md-tab id="audio-video" label="Audio + Video">
+<md-form-field>
+  <input mdInput placeholder="OpenVidu Server Secret" [(ngModel)]="openviduSecret">
+</md-form-field>
+
+<md-tab-group class="demo-tab-group" dynamicHeight="true">
+
+  <md-tab id="audio-video" label="Test session">
     <div class="demo-tab-content">
 
-    </div>
-  </md-tab>
-  <md-tab id="audio-only" label="Audio only">
-    <div class="demo-tab-content">
+      <div fxLayout="row" fxLayoutGap="20px" fxFlex="40" fxLayoutAlign="start start">
+        <md-card class="join-card">
+          <md-card-title>Join a session</md-card-title>
+          <md-card-content>
+            <form>
+              <md-form-field class="full-width">
+                <input mdInput placeholder="Client data" name="clientData" [(ngModel)]="clientData">
+              </md-form-field>
+              <md-form-field class="full-width">
+                <input mdInput placeholder="Session name" name="sessionName" [(ngModel)]="sessionName">
+              </md-form-field>
+              <div class="inner-card">
+                <h4>Send...</h4>
+                <p>
+                  <md-checkbox [(ngModel)]="sendVideo" name="sendVideo">Video</md-checkbox>
+                </p>
+                <p>
+                  <md-radio-group [(ngModel)]="optionVideo" name="optionVideo" [disabled]="!sendVideo">
+                    <md-radio-button value="video">Video</md-radio-button>
+                    <md-radio-button value="screen">Screen</md-radio-button>
+                  </md-radio-group>
+                </p>
+                <p>
+                  <md-checkbox [(ngModel)]="sendAudio" name="sendAudio">Audio</md-checkbox>
+                </p>
+              </div>
+              <div class="inner-card">
+                <h4>Enter with active...</h4>
+                <md-checkbox [(ngModel)]="activeVideo" name="activeVideo" [disabled]="!sendVideo">Video</md-checkbox>
+                <md-checkbox [(ngModel)]="activeAudio" name="activeAudio" [disabled]="!sendAudio">Audio</md-checkbox>
+              </div>
+            </form>
+          </md-card-content>
+          <md-card-actions>
+            <button md-button id="join-btn" (click)="joinSession()">JOIN</button>
+          </md-card-actions>
+        </md-card>
+      </div>
 
+      <div *ngIf="session" fxLayout="row" fxLayoutGap="20px" fxFlex="60" fxLayoutAlign="start start">
+        <div id="session">
+          <div id="session-header">
+            <h1 id="session-title">{{sessionName}}</h1>
+            <button md-raised-button color="warn" (click)="leaveSession()">Leave session</button>
+          </div>
+          <div id="video-container"></div>
+        </div>
+      </div>
     </div>
   </md-tab>
-  <md-tab id="video-only" label="Video only">
 
-  </md-tab>
-  <md-tab id="screen-audio" label="Screen + Audio">
-    <div class="demo-tab-content">
+  <div fxLayout="row" fxLayoutGap="20px" fxLayoutAlign="start space-around">
 
-    </div>
-  </md-tab>
-  <md-tab id="screen-only" label="Screen only">
-    <div class="demo-tab-content">
-    </div>
-  </md-tab>
+  </div>
+
   <md-tab id="api-rest" label="API REST">
     <div class="demo-tab-content">
-      <md-form-field>
-        <input mdInput placeholder="OpenVidu Server Secret" [(ngModel)]="openviduSecret">
-      </md-form-field>
-      <button md-raised-button color="primary" (click)="cleanAllSessions()" style="float: right">Clean sessions</button>
-
       <div fxLayout="row" fxLayoutGap="20px" fxLayoutAlign="start space-around">
-        <div fxLayout="column" fxFlex="50" fxFlexAlign="center" fxFill>
+        <div fxLayout="column" fxFlex="45" fxFlexAlign="center" fxFill>
           <button md-raised-button color="primary" (click)="getSessionId()">Get sessionId</button>
         </div>
-        <div fxLayout="column" fxFlex="50" fxFlexAlign="center" fxFill>
+        <div fxLayout="column" fxFlex="45" fxFlexAlign="center" fxFill>
           <button md-raised-button color="primary" (click)="getToken()" [disabled]="getTokenDisabled()">Get token</button>
+        </div>
+        <div fxLayout="column" fxFlex="10" fxFlexAlign="center" fxFill>
+          <button md-raised-button color="warn" (click)="cleanAllSessions()" [disabled]="data.length == 0">Clean sessions</button>
         </div>
       </div>
 
@@ -90,23 +129,3 @@
     </div>
   </md-tab>
 </md-tab-group>
-
-<!--<div id="join">
-  <div id="img-div"><img src="assets/images/openvidu_grey_bg_transp_cropped.png" /></div>
-  <div id="join-dialog" class="jumbotron vertical-center">
-    <h1>Join a video session</h1>
-    <form class="form-group" (submit)="joinSession()">
-      <p>
-        <label>Participant</label>
-        <input class="form-control" type="text" id="clientData" name="clientData" [(ngModel)]="clientData" required>
-      </p>
-      <p>
-        <label>Session</label>
-        <input class="form-control" type="text" id="sessionName" name="sessionName" [(ngModel)]="sessionName" required>
-      </p>
-      <p class="text-center">
-        <input class="btn btn-lg btn-success" type="submit" name="commit" value="Join!">
-      </p>
-    </form>
-  </div>
-</div>-->
