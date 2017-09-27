@@ -26,7 +26,9 @@ import { OpenviduRestService } from './services/openvidu-rest.service';
     FlexLayoutModule,
     routing
   ],
-  providers: [OpenviduRestService],
+  providers: [
+    OpenviduRestService
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

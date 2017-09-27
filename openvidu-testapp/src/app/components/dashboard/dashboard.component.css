@@ -1,93 +1,125 @@
-#join-dialog h1 {
-	color: #4d4d4d;
+.demo-tab-content {
+  margin-top: 50px;
+}
+
+table {
+  width: 100%;
+}
+
+table tr {
+  text-align: left;
+}
+
+#table-row {
+  margin-top: 40px;
+}
+
+.first-col {
+  padding-right: 20px;
+}
+
+th {
+  padding-bottom: 20px;
+}
+
+#server-data-field {
+  padding-top: 16px;
+}
+
+md-card {
 	font-weight: bold;
-	text-align: center;
+}
+
+#join-dialog h1 {
+  color: #4d4d4d;
+  font-weight: bold;
+  text-align: center;
 }
 
 #img-div {
-	text-align: center;
-	position: absolute;
-	top: 19%;
-	left: 50%;
-	transform: translate(-50%, -50%);
+  text-align: center;
+  position: absolute;
+  top: 19%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 #img-div img {
-	height: 15%;
+  height: 15%;
 }
 
 #join-dialog label {
-	color: #0088aa;
+  color: #0088aa;
 }
 
 #join-dialog input.btn {
-	margin-top: 15px;
+  margin-top: 15px;
 }
 
 #session-header {
-	margin-bottom: 20px;
+  margin-bottom: 20px;
 }
 
 #session-title {
-	display: inline-block;
+  display: inline-block;
 }
 
 #buttonLeaveSession {
-	float: right;
-	margin-top: 20px;
+  float: right;
+  margin-top: 20px;
 }
 
 #video-container video {
-	position: relative;
-	float: left;
-	cursor: pointer;
+  position: relative;
+  float: left;
+  cursor: pointer;
 }
 
 #video-container p {
-	display: inline-block;
-	background: #f8f8f8;
-	padding-right: 5px;
-	padding-left: 5px;
-	color: #777777;
-	font-weight: bold;
-	border-bottom-right-radius: 4px;
+  display: inline-block;
+  background: #f8f8f8;
+  padding-right: 5px;
+  padding-left: 5px;
+  color: #777777;
+  font-weight: bold;
+  border-bottom-right-radius: 4px;
 }
 
 video {
-	width: 100%;
-	height: auto;
+  width: 100%;
+  height: auto;
 }
 
 #main-video p {
-	position: absolute;
-	display: inline-block;
-	background: #f8f8f8;
-	padding-right: 5px;
-	padding-left: 5px;
-	left: 0;
-	font-size: 22px;
-	color: #777777;
-	font-weight: bold;
-	border-bottom-right-radius: 4px;
+  position: absolute;
+  display: inline-block;
+  background: #f8f8f8;
+  padding-right: 5px;
+  padding-left: 5px;
+  left: 0;
+  font-size: 22px;
+  color: #777777;
+  font-weight: bold;
+  border-bottom-right-radius: 4px;
 }
 
 #main-video video {
-	cursor: initial;
+  cursor: initial;
 }
 
 #session img {
-	width: 100%;
-	height: auto;
-	display: inline-block;
-	object-fit: contain;
-	vertical-align: baseline;
+  width: 100%;
+  height: auto;
+  display: inline-block;
+  object-fit: contain;
+  vertical-align: baseline;
 }
 
 #session #video-container img {
-	position: relative;
-	float: left;
-	width: 50%;
-	cursor: pointer;
-	object-fit: cover;
-	height: 180px;
+  position: relative;
+  float: left;
+  width: 50%;
+  cursor: pointer;
+  object-fit: cover;
+  height: 180px;
 }

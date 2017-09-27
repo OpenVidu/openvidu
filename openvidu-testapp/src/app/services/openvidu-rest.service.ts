@@ -10,29 +10,49 @@ import { environment } from '../../environments/environment';
 @Injectable()
 export class OpenviduRestService {
 
+  sessionIdSession: Map<string, SessionAPI> = new Map();
+  sessionIdTokenOpenViduRole: Map<string, Map<string, OpenViduRoleAPI>> = new Map();
+
   constructor() { }
 
-  getSessionId(): Promise<String> {
-    const OV = new OpenViduAPI(environment.OPENVIDU_URL, environment.OPENVIDU_SECRET);
+  getSessionId(openviduURL: string, openviduSecret: string): Promise<string> {
+    const OV = new OpenViduAPI(openviduURL, openviduSecret);
     const session = OV.createSession();
 
     return new Promise(resolve => {
       session.getSessionId((sessionId) => {
+        this.sessionIdSession.set(sessionId, session);
+        this.sessionIdTokenOpenViduRole.set(sessionId, new Map());
         resolve(sessionId);
       });
     });
   }
 
-  getToken(): Promise<String> {
-    const OV = new OpenViduAPI(environment.OPENVIDU_URL, environment.OPENVIDU_SECRET);
-    const session = OV.createSession();
+  getToken(openviduURL: string, openviduSecret: string, sessionId: string, role: string, serverData: string): Promise<string> {
+    console.warn(sessionId);
+
+    const OV = new OpenViduAPI(openviduURL, openviduSecret);
+    const session: SessionAPI = this.sessionIdSession.get(sessionId);
+    const OVRole: OpenViduRoleAPI = OpenViduRoleAPI[role];
 
     return new Promise(resolve => {
-      let tokenOptions: TokenOptionsAPI;
-      session.generateToken((token) => {
+      const tokenOptions: TokenOptionsAPI = new TokenOptionsAPI.Builder()
+        .role(OVRole)
+        .data(serverData)
+        .build();
+      session.generateToken(tokenOptions, (token) => {
+        this.sessionIdTokenOpenViduRole.get(sessionId).set(token, OVRole);
         resolve(token);
       });
     });
+  }
+
+  getAvailableParams(): Map<string, string[]> {
+    const params = new Map<string, string[]>();
+    this.sessionIdSession.forEach((sessionApi, sessionId, map) => {
+      params.set(sessionId, Array.from(this.sessionIdTokenOpenViduRole.get(sessionId).keys()));
+    });
+    return params;
   }
 
 }
