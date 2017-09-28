@@ -1,5 +1,7 @@
 .demo-tab-content {
-  margin-top: 50px;
+  margin-top: 30px;
+  padding-left: 10px;
+  padding-right: 10px;
 }
 
 table {
@@ -26,32 +28,6 @@ th {
   padding-top: 16px;
 }
 
-md-card {
-  background-color: rgba(77, 77, 77, 0.05);
-}
-
-.join-card {
-  width: fit-content;
-  margin: auto;
-  margin-bottom: 50px;
-  margin-top: 50px;
-}
-
-.full-width {
-  width: 100%;
-}
-
-.inner-card {
-  border: 1px solid #e1e1e1;
-  padding: 16px;
-  background: #ffffff;
-  margin-top: 20px;
-}
-
-.inner-card h4 {
-  margin-top: 0;
-}
-
-.inner-card md-radio-group {
-  padding-left: 20px;
+app-openvidu-instance {
+  display: inline-block;
 }

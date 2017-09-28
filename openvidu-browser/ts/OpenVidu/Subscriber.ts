@@ -27,7 +27,7 @@ export class Subscriber {
             callback(event);
         });
         if (eventName == 'videoElementCreated') {
-            if (this.stream.isReady) {
+            if (this.stream.isVideoELementCreated) {
                 this.ee.emitEvent('videoElementCreated', [{
                     element: this.stream.getVideoElement()
                 }]);

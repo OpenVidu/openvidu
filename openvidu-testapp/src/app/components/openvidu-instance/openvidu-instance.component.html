@@ -1,0 +1,69 @@
+<div fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="start stretch">
+
+  <div fxFlex="noshrink">
+    <md-card class="join-card">
+
+      <md-card-content>
+        <form class="session-form">
+
+          <md-form-field style="margin-right: 10px">
+            <input mdInput placeholder="Session name" name="sessionName" [(ngModel)]="sessionName">
+          </md-form-field>
+
+          <md-form-field>
+            <input mdInput placeholder="Client data" name="clientData" [(ngModel)]="clientData">
+          </md-form-field>
+
+          <div class="inner-card" fxLayout="row" fxLayoutWrap="wrap">
+
+            <div fxFlex="60">
+              <div>
+                <h4>Send...</h4>
+                <div>
+                  <md-checkbox id="send-audio-check" [(ngModel)]="sendAudio" name="sendAudio" class="input-right">Audio</md-checkbox>
+                  <md-checkbox id="send-video-check" [(ngModel)]="sendVideo" name="sendVideo" (click)="toggleRadio()">Video</md-checkbox>
+                </div>
+              </div>
+              <div style="padding-top: 5px;">
+                <h4>Enter with<br>active...</h4>
+                <div>
+                  <md-checkbox id="active-audio-check" [(ngModel)]="activeAudio" name="activeAudio" [checked]="sendAudio" [disabled]="!sendAudio"
+                    class="input-right">Audio</md-checkbox>
+                  <md-checkbox id="active-video-check" [(ngModel)]="activeVideo" name="activeVideo" [checked]="sendVideo" [disabled]="!sendVideo">Video</md-checkbox>
+                </div>
+              </div>
+            </div>
+
+            <div fxFlex="40">
+              <md-radio-group [(ngModel)]="optionVideo" name="optionVideo" [disabled]="!sendVideo">
+                <md-radio-button id="send-video-radio" value="video" [checked]="sendVideo || sendVideoRadio">Video</md-radio-button>
+                <md-radio-button id="send-screen-radio" value="screen" [checked]="sendVideo && !sendVideoRadio" class="input-right">Screen</md-radio-button>
+              </md-radio-group>
+            </div>
+
+          </div>
+
+        </form>
+      </md-card-content>
+
+      <md-card-actions>
+        <button id="join-session-btn" md-button (click)="joinSession()" [disabled]="session">JOIN SESSION</button>
+      </md-card-actions>
+
+    </md-card>
+  </div>
+
+  <div *ngIf="session" fxFlex>
+    <md-card>
+      {{sessionName}}
+      <button md-mini-fab color="warn" (click)="leaveSession()">
+        <md-icon class="md-24" aria-label="Leave icon">clear</md-icon>
+      </button>
+      <div *ngIf="session.connection" fxLayout>
+        <div [attr.id]="'local-vid-' + session.connection.connectionId" fxFlex="135px" class="video-container"></div>
+        <div [attr.id]="'remote-vid-' + session.connection.connectionId" fxFlex="270px" class="video-container"></div>
+      </div>
+    </md-card>
+  </div>
+
+</div>

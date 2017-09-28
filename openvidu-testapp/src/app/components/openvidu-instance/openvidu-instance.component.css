@@ -1,0 +1,40 @@
+md-card {
+  background-color: rgba(77, 77, 77, 0.05);
+  margin: 20px 0 5px 0;
+  padding: 20px;
+}
+
+.session-form md-form-field {
+  width: 130px;
+}
+
+.join-card {
+  width: fit-content;
+}
+
+.join-card md-card-content {
+  margin-bottom: 0;
+}
+
+.inner-card {
+  border: 1px solid #e1e1e1;
+  padding: 10px 15px 10px 15px;
+  background: #ffffff;
+}
+
+.inner-card h4 {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+#join-session-btn {
+  margin: 0 0 4px 4px;
+}
+
+md-radio-button {
+  margin-bottom: 8px;
+}
+
+.video-container {
+  min-width: 140px;
+}

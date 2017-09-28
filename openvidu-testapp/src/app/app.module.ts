@@ -10,11 +10,13 @@ import { AppComponent } from './app.component';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
 
 import { OpenviduRestService } from './services/openvidu-rest.service';
+import { OpenviduInstanceComponent } from './components/openvidu-instance/openvidu-instance.component';
 
 @NgModule({
   declarations: [
     AppComponent,
-    DashboardComponent
+    DashboardComponent,
+    OpenviduInstanceComponent
   ],
   imports: [
     BrowserModule,

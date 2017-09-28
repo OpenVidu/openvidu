@@ -266,7 +266,7 @@ export class Stream {
 
         if (this.local && !this.displayMyRemote()) {
             this.video.muted = true;
-            this.video.onplay = () => {
+            this.video.onplaying = () => {
                 console.info("Local 'Stream' with id [" + this.getId() + "] video is now playing");
                 this.ee.emitEvent('video-is-playing', [{
                     element: this.video
@@ -595,7 +595,7 @@ export class Stream {
                     let thumbnailId = videoElement.thumb;
                     let video = videoElement.video;
                     video.srcObject = this.wrStream;
-                    video.onplay = () => {
+                    video.onplaying = () => {
                         if (this.local && this.displayMyRemote()) {
                             console.info("Your own remote 'Stream' with id [" + this.getId() + "] video is now playing");
                             this.ee.emitEvent('remote-video-is-playing', [{

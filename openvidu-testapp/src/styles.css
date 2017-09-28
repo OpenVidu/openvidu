@@ -22,5 +22,14 @@ ul {
 }
 
 video {
-  max-width: 300px;
+  max-width: 125px;
+  margin-top: -5px;
+}
+
+button {
+  font-weight: bold !important;
+}
+
+.session-form label {
+  font-size: 12px;
 }
