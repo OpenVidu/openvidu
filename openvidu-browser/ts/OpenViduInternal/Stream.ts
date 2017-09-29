@@ -34,13 +34,14 @@ function hide(id: string) {
 export interface StreamOptions {
     id: string;
     connection: Connection;
-    recvVideo: any;
-    recvAudio: any;
-    video: boolean;
-    audio: boolean;
+    recvVideo: boolean;
+    recvAudio: boolean;
+    sendVideo: boolean;
+    sendAudio: boolean;
+    activeAudio: boolean;
+    activeVideo: boolean;
     data: boolean;
     mediaConstraints: any;
-    audioOnly: boolean;
 }
 
 export interface VideoOptions {
@@ -60,8 +61,8 @@ export class Stream {
     private videoElements: VideoOptions[] = [];
     private elements: HTMLDivElement[] = [];
     private speechEvent: any;
-    private recvVideo: any;
-    private recvAudio: any;
+    private recvVideo: boolean;
+    private recvAudio: boolean;
     private sendVideo: boolean;
     private sendAudio: boolean;
     private mediaConstraints: any;
@@ -71,7 +72,8 @@ export class Stream {
     private dataChannel: boolean;
     private dataChannelOpened = false;
 
-    private audioOnly = false;
+    private activeAudio = true;
+    private activeVideo = true;
 
     private videoSrcObject: MediaStream | null;
     private parentId: string;
@@ -89,13 +91,14 @@ export class Stream {
         }
 
         this.connection = options.connection;
-        this.recvVideo = options.recvVideo;
-        this.recvAudio = options.recvAudio;
+        this.recvVideo = options.recvVideo || false;
+        this.recvAudio = options.recvAudio || false;
+        this.sendVideo = options.sendVideo;
+        this.sendAudio = options.sendAudio;
+        this.activeAudio = options.activeAudio;
+        this.activeVideo = options.activeVideo;
         this.dataChannel = options.data || false;
-        this.sendVideo = options.video;
-        this.sendAudio = options.audio;
         this.mediaConstraints = options.mediaConstraints;
-        this.audioOnly = options.audioOnly || false;
 
         this.addEventListener('src-added', (srcEvent) => {
             this.videoSrcObject = srcEvent.srcObject;
@@ -365,7 +368,6 @@ export class Stream {
             if (!hasVideo) {
                 constraints.video = false;
                 this.sendVideo = false;
-                this.audioOnly = true;
                 this.requestCameraAccesAux(constraints, callback);
             } else {
                 this.requestCameraAccesAux(constraints, callback);
@@ -379,22 +381,21 @@ export class Stream {
                 this.cameraAccessSuccess(userStream, callback);
             })
             .catch(error => {
-                //  Try to ask for microphone only
+                /*//  Try to ask for microphone only
                 navigator.mediaDevices.getUserMedia({ audio: true, video: false })
                     .then(userStream => {
                         constraints.video = false;
                         this.sendVideo = false;
-                        this.audioOnly = true;
+                        this.sendAudio = true;
                         this.cameraAccessSuccess(userStream, callback);
                     })
-                    .catch(error => {
-                        this.accessIsDenied = true;
-                        this.accessIsAllowed = false;
-                        this.ee.emitEvent('access-denied-by-publisher');
+                    .catch(error => {*/
+                this.accessIsDenied = true;
+                this.accessIsAllowed = false;
+                this.ee.emitEvent('access-denied-by-publisher');
 
-                        console.error("Access denied", error);
-                        callback(error, this);
-                    });
+                console.error("Access denied", error);
+                callback(error, this);
             });
     }
 
@@ -404,10 +405,10 @@ export class Stream {
         this.ee.emitEvent('access-allowed-by-publisher');
 
         if (userStream.getAudioTracks()[0] != null) {
-            userStream.getAudioTracks()[0].enabled = this.sendAudio;
+            userStream.getAudioTracks()[0].enabled = this.activeAudio;
         }
         if (userStream.getVideoTracks()[0] != null) {
-            userStream.getVideoTracks()[0].enabled = this.sendVideo;
+            userStream.getVideoTracks()[0].enabled = this.activeVideo;
         }
 
         this.wrStream = userStream;
@@ -438,7 +439,8 @@ export class Stream {
         this.openVidu.sendRequest("publishVideo", {
             sdpOffer: sdpOfferParam,
             doLoopback: this.displayMyRemote() || false,
-            audioOnly: this.audioOnly
+            audioActive: this.sendAudio,
+            videoActive: this.sendVideo
         }, (error, response) => {
             if (error) {
                 console.error("Error on publishVideo: " + JSON.stringify(error));
@@ -509,7 +511,7 @@ export class Stream {
         } else {
             let offerConstraints = {
                 audio: this.recvAudio,
-                video: !this.audioOnly
+                video: this.recvVideo
             };
             console.debug("'Session.subscribe(Stream)' called. Constraints of generate SDP offer",
                 offerConstraints);

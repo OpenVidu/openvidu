@@ -8,7 +8,8 @@ export interface ConnectionOptions {
     id: string;
     metadata: string;
     streams?: StreamOptions[];
-    audioOnly: boolean;
+    audioActive: boolean;
+    videoActive: boolean;
 }
 
 export class Connection {
@@ -74,13 +75,14 @@ export class Connection {
             let streamOpts = {
                 id: streamOptions.id,
                 connection: this,
-                recvVideo: ( streamOptions.recvVideo == undefined ? true : streamOptions.recvVideo ),
-                recvAudio: ( streamOptions.recvAudio == undefined ? true : streamOptions.recvAudio ),
-                audio: streamOptions.audio,
-                video: streamOptions.video,
+                sendAudio: streamOptions.sendAudio,
+                sendVideo: streamOptions.sendVideo,
+                recvAudio: ( streamOptions.audioActive == undefined ? true : streamOptions.audioActive ),
+                recvVideo: ( streamOptions.videoActive == undefined ? true : streamOptions.videoActive ),
+                activeAudio: streamOptions.activeAudio,
+                activeVideo: streamOptions.activeVideo,
                 data: streamOptions.data,
-                mediaConstraints: streamOptions.mediaConstraints,
-                audioOnly: streamOptions.audioOnly,
+                mediaConstraints: streamOptions.mediaConstraints
             }
             let stream = new Stream(this.openVidu, false, this.room, streamOpts );
 

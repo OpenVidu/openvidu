@@ -43,13 +43,15 @@ public class ProtocolElements {
   public static final String JOINROOM_PEERID_PARAM = "id";
   public static final String JOINROOM_PEERSTREAMS_PARAM = "streams";
   public static final String JOINROOM_PEERSTREAMID_PARAM = "id";
-  public static final String JOINROOM_PEERSTREAMAUDIOONLY_PARAM = "audioOnly";
+  public static final String JOINROOM_PEERSTREAMAUDIOACTIVE_PARAM = "audioActive";
+  public static final String JOINROOM_PEERSTREAMVIDEOACTIVE_PARAM = "videoActive";
 
   public static final String PUBLISHVIDEO_METHOD = "publishVideo";
   public static final String PUBLISHVIDEO_SDPOFFER_PARAM = "sdpOffer";
   public static final String PUBLISHVIDEO_DOLOOPBACK_PARAM = "doLoopback";
   public static final String PUBLISHVIDEO_SDPANSWER_PARAM = "sdpAnswer";
-  public static final String PUBLISHVIDEO_AUDIOONLY_PARAM = "audioOnly";
+  public static final String PUBLISHVIDEO_AUDIOACTIVE_PARAM = "audioActive";
+  public static final String PUBLISHVIDEO_VIDEOACTIVE_PARAM = "videoActive";
 
   public static final String UNPUBLISHVIDEO_METHOD = "unpublishVideo";
 
@@ -84,7 +86,8 @@ public class ProtocolElements {
   public static final String PARTICIPANTPUBLISHED_USER_PARAM = "id";
   public static final String PARTICIPANTPUBLISHED_STREAMS_PARAM = "streams";
   public static final String PARTICIPANTPUBLISHED_STREAMID_PARAM = "id";
-  public static final String PARTICIPANTPUBLISHED_AUDIOONLY_PARAM = "audioOnly";
+  public static final String PARTICIPANTPUBLISHED_AUDIOACTIVE_PARAM = "audioActive";
+  public static final String PARTICIPANTPUBLISHED_VIDEOACTIVE_PARAM = "videoActive";
 
   public static final String PARTICIPANTUNPUBLISHED_METHOD = "participantUnpublished";
   public static final String PARTICIPANTUNPUBLISHED_NAME_PARAM = "name";

@@ -57,16 +57,20 @@ export class OpenVidu {
         if (this.checkSystemRequirements()) {
             if (cameraOptions != null) {
                 let cameraOptionsAux = {
-                    audio: cameraOptions.audio != null ? cameraOptions.audio : true,
-                    video: cameraOptions.video != null ? cameraOptions.video : true,
+                    sendAudio: cameraOptions.audio != null ? cameraOptions.audio : true,
+                    sendVideo: cameraOptions.video != null ? cameraOptions.video : true,
+                    activeAudio: cameraOptions.activeAudio != null ? cameraOptions.activeAudio : true,
+                    activeVideo: cameraOptions.activeVideo != null ? cameraOptions.activeVideo : true,
                     data: true,
-                    mediaConstraints: this.openVidu.generateMediaConstraints(cameraOptions.quality)
+                    mediaConstraints: this.openVidu.generateMediaConstraints(cameraOptions)
                 };
                 cameraOptions = cameraOptionsAux;
             } else {
                 cameraOptions = {
-                    audio: true,
-                    video: true,
+                    sendAudio: true,
+                    sendVideo: true,
+                    activeAudio: true,
+                    activeVideo: true,
                     data: true,
                     mediaConstraints: {
                         audio: true,

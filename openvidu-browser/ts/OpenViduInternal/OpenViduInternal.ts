@@ -297,32 +297,21 @@ export class OpenViduInternal {
         }
 
         options = options || {
-            audio: true,
-            video: true,
+            sendAudio: true,
+            sendVideo: true,
+            activeAudio: true,
+            activeVideo: true,
             data: true,
             mediaConstraints: {
                 audio: true,
                 video: { width: { ideal: 1280 } }
             }
         }
-
         options.connection = this.session.getLocalParticipant();
+
         this.camera = new Stream(this, true, this.session, options);
         return this.camera;
     };
-
-    /*joinSession(options: SessionOptions, callback: Callback<Session>) {
-        
-        this.session.configure(options);
-        
-        this.session.connect2();
-        
-        this.session.addEventListener('room-connected', roomEvent => callback(undefined,this.session));
-        
-        this.session.addEventListener('error-room', error => callback(error));
-        
-        return this.session;
-    };*/
 
     //CHAT
     sendMessage(room, user, message) {
@@ -362,33 +351,36 @@ export class OpenViduInternal {
         this.toggleLocalAudioTrack(false);
     }
 
-    generateMediaConstraints(quality: string) {
+    generateMediaConstraints(cameraOptions: any) {
         let mediaConstraints = {
-            audio: true,
+            audio: cameraOptions.audio,
             video: {}
         }
-        let w, h;
-        switch (quality) {
-            case 'LOW':
-                w = 320;
-                h = 240;
-                break;
-            case 'MEDIUM':
-                w = 640;
-                h = 480;
-                break;
-            case 'HIGH':
-                w = 1280;
-                h = 720;
-                break;
-            default:
-                w = 640;
-                h = 480;
+        if (!cameraOptions.video) {
+            mediaConstraints.video = false
+        } else {
+            let w, h;
+            switch (cameraOptions.quality) {
+                case 'LOW':
+                    w = 320;
+                    h = 240;
+                    break;
+                case 'MEDIUM':
+                    w = 640;
+                    h = 480;
+                    break;
+                case 'HIGH':
+                    w = 1280;
+                    h = 720;
+                    break;
+                default:
+                    w = 640;
+                    h = 480;
+            }
+            mediaConstraints.video['width'] = { exact: w };
+            mediaConstraints.video['height'] = { exact: h };
+            //mediaConstraints.video['frameRate'] = { ideal: Number((<HTMLInputElement>document.getElementById('frameRate')).value) };
         }
-        mediaConstraints.video['width'] = { exact: w };
-        mediaConstraints.video['height'] = { exact: h };
-        //mediaConstraints.video['frameRate'] = { ideal: Number((<HTMLInputElement>document.getElementById('frameRate')).value) };
-
         return mediaConstraints;
     }
 

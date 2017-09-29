@@ -128,7 +128,7 @@ public class NotificationRoomManager {
    * MediaElement...)
    */
   public void publishMedia(ParticipantRequest request, boolean isOffer, String sdp,
-      MediaElement loopbackAlternativeSrc, MediaType loopbackConnectionType, boolean audioOnly, boolean doLoopback,
+      MediaElement loopbackAlternativeSrc, MediaType loopbackConnectionType, boolean audioActive, boolean videoActive, boolean doLoopback,
       MediaElement... mediaElements) {
     String pid = request.getParticipantId();
     String userName = null;
@@ -139,14 +139,14 @@ public class NotificationRoomManager {
       sdpAnswer = internalManager
           .publishMedia(request.getParticipantId(), isOffer, sdp, loopbackAlternativeSrc,
               loopbackConnectionType, doLoopback, mediaElements);
-      internalManager.updateParticipantAudioOnly(pid, audioOnly);
+      internalManager.updateParticipantStreamsActive(pid, audioActive, videoActive);
       participants = internalManager.getParticipants(internalManager.getRoomName(pid));
     } catch (OpenViduException e) {
       log.warn("PARTICIPANT {}: Error publishing media", userName, e);
-      notificationRoomHandler.onPublishMedia(request, null, null, false, null, e);
+      notificationRoomHandler.onPublishMedia(request, null, null, true, true, null, e);
     }
     if (sdpAnswer != null) {
-      notificationRoomHandler.onPublishMedia(request, userName, sdpAnswer, audioOnly, participants, null);
+      notificationRoomHandler.onPublishMedia(request, userName, sdpAnswer, audioActive, videoActive, participants, null);
     }
   }
 
@@ -154,9 +154,9 @@ public class NotificationRoomManager {
    * @param request instance of {@link ParticipantRequest} POJO
    * @see RoomManager#publishMedia(String, String, boolean, MediaElement...)
    */
-  public void publishMedia(ParticipantRequest request, String sdpOffer, boolean audioOnly, boolean doLoopback,
+  public void publishMedia(ParticipantRequest request, String sdpOffer, boolean audioActive, boolean videoActive, boolean doLoopback,
       MediaElement... mediaElements) {
-    this.publishMedia(request, true, sdpOffer, null, null, audioOnly, doLoopback, mediaElements);
+    this.publishMedia(request, true, sdpOffer, null, null, audioActive, videoActive, doLoopback, mediaElements);
   }
 
   /**

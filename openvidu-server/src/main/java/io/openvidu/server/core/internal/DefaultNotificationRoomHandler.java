@@ -82,7 +82,8 @@ public class DefaultNotificationRoomHandler implements NotificationRoomHandler {
       if (participant.isStreaming()) {
         JsonObject stream = new JsonObject();
         stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMID_PARAM, "webcam");
-        stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMAUDIOONLY_PARAM, participant.isAudioOnly());
+        stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMAUDIOACTIVE_PARAM, participant.isAudioActive());
+        stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMVIDEOACTIVE_PARAM, participant.isVideoActive());
         JsonArray streamsArray = new JsonArray();
         streamsArray.add(stream);
         participantJson.add(ProtocolElements.JOINROOM_PEERSTREAMS_PARAM, streamsArray);
@@ -127,7 +128,7 @@ public class DefaultNotificationRoomHandler implements NotificationRoomHandler {
 
   @Override
   public void onPublishMedia(ParticipantRequest request, String publisherName, String sdpAnswer,
-      boolean audioOnly, Set<UserParticipant> participants, OpenViduException error) {
+      boolean audioActive, boolean videoActive, Set<UserParticipant> participants, OpenViduException error) {
     if (error != null) {
       notifService.sendErrorResponse(request, null, error);
       return;
@@ -140,7 +141,8 @@ public class DefaultNotificationRoomHandler implements NotificationRoomHandler {
     params.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_USER_PARAM, publisherName);
     JsonObject stream = new JsonObject();
     stream.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_STREAMID_PARAM, "webcam");
-    stream.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_AUDIOONLY_PARAM, audioOnly);
+    stream.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_AUDIOACTIVE_PARAM, audioActive);
+        stream.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_VIDEOACTIVE_PARAM, videoActive);
     JsonArray streamsArray = new JsonArray();
     streamsArray.add(stream);
     params.add(ProtocolElements.PARTICIPANTPUBLISHED_STREAMS_PARAM, streamsArray);
