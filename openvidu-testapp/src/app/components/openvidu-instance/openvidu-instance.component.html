@@ -66,8 +66,8 @@
       <div class="session-card-inner">
         <div class="session-title">{{sessionName}}</div>
         <div class="session-actions">
-          <button><md-icon class="md-24" aria-label="Mute video button" (click)="toggleVideo()">{{videoIcon}}</md-icon></button>
-          <button><md-icon class="md-24" aria-label="Mute audio button" (click)="toggleAudio()">{{audioIcon}}</md-icon></button>
+          <button><md-icon *ngIf="publishTo && sendVideo" class="md-24" aria-label="Mute video button" (click)="toggleVideo()">{{videoIcon}}</md-icon></button>
+          <button><md-icon *ngIf="publishTo && sendAudio" class="md-24" aria-label="Mute audio button" (click)="toggleAudio()">{{audioIcon}}</md-icon></button>
           <button><md-icon class="md-24" aria-label="Leave button" (click)="leaveSession()">clear</md-icon></button>
         </div>
       </div>
