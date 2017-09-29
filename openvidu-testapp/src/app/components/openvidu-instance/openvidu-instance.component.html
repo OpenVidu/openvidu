@@ -16,8 +16,8 @@
 
         <div>
           <button id="join-btn" md-button (click)="joinSession()" [disabled]="session">JOIN</button>
-          <md-checkbox [(ngModel)]="subscribeTo" name="subscribeTo" [disabled]="session">Subscribe</md-checkbox>
-          <md-checkbox [(ngModel)]="publishTo" name="publishTo" (click)="toggleRadio()" [disabled]="session">Publish</md-checkbox>
+          <md-checkbox name="subscribeTo" (change)="toggleSubscribeTo()" [checked]="subscribeTo && checkSubscribeTo" [disabled]="disableSubscribeTo">Subscribe</md-checkbox>
+          <md-checkbox name="publishTo" (change)="togglePublishTo()" [checked]="publishTo && checkPublishTo" [disabled]="disablePublishTo">Publish</md-checkbox>
         </div>
 
         <div class="inner-card" fxLayout="row" fxLayoutAlign="start start">
@@ -26,30 +26,29 @@
             <div>
               <h4>Send</h4>
               <div>
-                <md-checkbox name="sendAudio" [(ngModel)]="sendAudio" [disabled]="!publishTo || session" [checked]="sendAudio && publishTo">Audio</md-checkbox>
-                <md-checkbox name="sendVideo" [(ngModel)]="sendVideo" [disabled]="!publishTo || session" [checked]="sendVideo && publishTo"
-                  (click)="toggleRadio()">Video</md-checkbox>
+                <md-checkbox name="sendAudio" (change)="toggleSendAudio()" [checked]="sendAudio && checkSendAudio" [disabled]="disableSendAudio">Audio</md-checkbox>
+                <md-checkbox name="sendVideo" (change)="toggleSendVideo()" [checked]="sendVideo && checkSendVideo" [disabled]="disableSendVideo">Video</md-checkbox>
               </div>
             </div>
             <div style="padding-top: 5px;">
               <h4>Enter active</h4>
               <div>
-                <md-checkbox name="activeAudio" [(ngModel)]="activeAudio" [disabled]="!sendAudio || !publishTo || session" [checked]="activeAudio && sendAudio && publishTo">Audio</md-checkbox>
-                <md-checkbox name="activeVideo" [(ngModel)]="activeVideo" [disabled]="!sendVideo || !publishTo || session" [checked]="activeVideo && sendVideo && publishTo">Video</md-checkbox>
+                <md-checkbox name="activeAudio" (change)="toggleActiveAudio()" [checked]="activeAudio && checkActiveAudio" [disabled]="disableActiveAudio">Audio</md-checkbox>
+                <md-checkbox name="activeVideo" (change)="toggleActiveVideo()" [checked]="activeVideo && checkActiveVideo" [disabled]="disableActiveVideo">Video</md-checkbox>
               </div>
             </div>
           </div>
 
           <div fxFlex="40">
-            <md-radio-group [(ngModel)]="optionVideo" [disabled]="!sendVideo || !publishTo || session" [ngModelOptions]="{standalone: true}">
+            <md-radio-group [(ngModel)]="optionsVideo" [disabled]="disableRadioButtons" [ngModelOptions]="{standalone: true}">
               <div>
-                <md-radio-button value="video" [checked]="publishTo && sendVideo">Video</md-radio-button>
+                <md-radio-button value="video" [checked]="checkRadioVideo && optionsVideo==='video'">Video</md-radio-button>
               </div>
               <div>
-                <md-radio-button value="screen" [checked]="publishTo && sendVideo && optionVideo==='screen'">Screen</md-radio-button>
+                <md-radio-button value="screen" [checked]="checkRadioScreen && optionsVideo==='screen'">Screen</md-radio-button>
               </div>
             </md-radio-group>
-            <md-checkbox class="subscribe-remote-check" name="subscribeToRemote" [(ngModel)]="subscribeToRemote" [disabled]="(!sendAudio && !sendVideo) || !publishTo || session"
+            <md-checkbox class="subscribe-remote-check" name="subscribeToRemote" (change)="subscribeToRemote = !subscribeToRemote" [disabled]="(!sendAudio && !sendVideo) || !publishTo || session"
               [checked]="(sendAudio || sendVideo) && publishTo && subscribeToRemote">Subscribe<br>to remote</md-checkbox>
           </div>
 

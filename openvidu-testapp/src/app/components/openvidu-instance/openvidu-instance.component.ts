@@ -16,25 +16,44 @@ export class OpenviduInstanceComponent implements OnInit, OnDestroy {
   @Input()
   openviduSecret: string;
 
+  // Session join data
+  clientData: string;
+  sessionName: string;
+
+  // Session options
   subscribeTo = true;
   publishTo = true;
   sendAudio = true;
   sendVideo = true;
   activeAudio = true;
   activeVideo = true;
-  optionVideo = 'video';
   sendVideoRadio = true;
   subscribeToRemote = false;
+  optionsVideo = 'video';
 
-  // Join form
-  clientData: string;
-  sessionName: string;
+  // Form 'check' and 'disable' attributes
+  checkSubscribeTo = true;
+  checkPublishTo = true;
+  checkSendAudio = true;
+  checkSendVideo = true;
+  checkActiveAudio = true;
+  checkActiveVideo = true;
+  checkRadioVideo = true;
+  checkRadioScreen = false;
+  disableSubscribeTo = false;
+  disablePublishTo = false;
+  disableSendAudio = false;
+  disableSendVideo = false;
+  disableActiveAudio = false;
+  disableActiveVideo = false;
+  disableRadioButtons = false;
 
   // OpenVidu objects
   OV: OpenVidu;
   session: Session;
   publisher: Publisher;
 
+  // Session audio and video status
   audioMuted = false;
   videoMuted = false;
   audioIcon = 'mic';
@@ -108,8 +127,10 @@ export class OpenviduInstanceComponent implements OnInit, OnDestroy {
           this.updateVideoIcon();
 
           this.publisher = OV.initPublisher('local-vid-' + this.session.connection.connectionId, {
-            audio: this.activeAudio,
-            video: this.activeVideo,
+            audio: this.sendAudio,
+            video: this.sendVideo,
+            activeAudio: this.activeAudio,
+            activeVideo: this.activeVideo,
             quality: 'MEDIUM'
           });
 
@@ -173,10 +194,82 @@ export class OpenviduInstanceComponent implements OnInit, OnDestroy {
     $('#remote-vid-' + this.session.connection.connectionId).find('#data-' + connection.connectionId).remove();
   }
 
-  private toggleRadio(): void {
-    if (this.publishTo && this.sendVideo) {
-      this.optionVideo = 'video';
+  toggleSubscribeTo(): void {
+    this.subscribeTo = !this.subscribeTo;
+  }
+
+  togglePublishTo(): void {
+    this.publishTo = !this.publishTo;
+
+    this.sendAudio = this.publishTo;
+    this.sendVideo = this.publishTo;
+    this.activeAudio = this.publishTo;
+    this.activeVideo = this.publishTo;
+
+    this.checkPublishTo = this.publishTo;
+    this.checkSendAudio = this.publishTo;
+    this.checkSendVideo = this.publishTo;
+    this.checkActiveAudio = this.publishTo;
+    this.checkActiveVideo = this.publishTo;
+
+    if (this.publishTo) {
+      this.checkRadioVideo = true;
+      this.optionsVideo = 'video';
+    } else {
+      this.checkRadioVideo = false;
+      this.optionsVideo = '';
     }
+
+    this.disableSendAudio = !this.publishTo;
+    this.disableSendVideo = !this.publishTo;
+    this.disableActiveAudio = !this.publishTo;
+    this.disableActiveVideo = !this.publishTo;
+    this.disableRadioButtons = !this.publishTo;
+
+    this.subscribeToRemote = false;
+  }
+
+  toggleSendAudio(): void {
+    this.sendAudio = !this.sendAudio;
+
+    this.activeAudio = this.sendAudio;
+    this.checkActiveAudio = this.sendAudio;
+    this.disableActiveAudio = !this.sendAudio;
+
+    if (!this.sendAudio && !this.sendVideo && this.publishTo) {
+      this.togglePublishTo();
+    }
+  }
+
+  toggleSendVideo(): void {
+    this.sendVideo = !this.sendVideo;
+
+    this.activeVideo = this.sendVideo;
+
+    this.checkActiveVideo = this.sendVideo;
+    this.checkRadioScreen = false;
+    if (this.sendVideo) {
+      this.checkRadioVideo = true;
+      this.optionsVideo = 'video';
+    } else {
+      this.checkRadioVideo = false;
+      this.optionsVideo = '';
+    }
+
+    this.disableActiveVideo = !this.sendVideo;
+    this.disableRadioButtons = !this.sendVideo;
+
+    if (!this.sendAudio && !this.sendVideo && this.publishTo) {
+      this.togglePublishTo();
+    }
+  }
+
+  toggleActiveAudio(): void {
+    this.activeAudio = !this.activeAudio;
+  }
+
+  toggleActiveVideo(): void {
+    this.activeVideo = !this.activeVideo;
   }
 
 }
