@@ -1,5 +1,5 @@
 import { Component, Input, HostListener, ChangeDetectorRef, OnInit, OnDestroy } from '@angular/core';
-import { OpenVidu, Session, Subscriber, Stream } from 'openvidu-browser';
+import { OpenVidu, Session, Subscriber, Publisher, Stream } from 'openvidu-browser';
 
 declare var $: any;
 
@@ -16,12 +16,15 @@ export class OpenviduInstanceComponent implements OnInit, OnDestroy {
   @Input()
   openviduSecret: string;
 
+  subscribeTo = true;
+  publishTo = true;
   sendAudio = true;
   sendVideo = true;
-  optionVideo = 'video';
   activeAudio = true;
   activeVideo = true;
+  optionVideo = 'video';
   sendVideoRadio = true;
+  subscribeToRemote = false;
 
   // Join form
   clientData: string;
@@ -30,6 +33,12 @@ export class OpenviduInstanceComponent implements OnInit, OnDestroy {
   // OpenVidu objects
   OV: OpenVidu;
   session: Session;
+  publisher: Publisher;
+
+  audioMuted = false;
+  videoMuted = false;
+  audioIcon = 'mic';
+  videoIcon = 'videocam';
 
   constructor(private changeDetector: ChangeDetectorRef) {
     this.generateSessionInfo();
@@ -71,12 +80,14 @@ export class OpenviduInstanceComponent implements OnInit, OnDestroy {
 
       this.changeDetector.detectChanges();
 
-      const subscriber: Subscriber = this.session.subscribe(event.stream, 'remote-vid-' + this.session.connection.connectionId);
-      subscriber.on('videoElementCreated', (e) => {
-        this.appendUserData(e.element, subscriber.stream.connection.data, subscriber.stream.connection);
-      });
-      subscriber.on('videoPlaying', (e) => {
-      });
+      if (this.subscribeTo) {
+        const subscriber: Subscriber = this.session.subscribe(event.stream, 'remote-vid-' + this.session.connection.connectionId);
+        subscriber.on('videoElementCreated', (e) => {
+          this.appendUserData(e.element, subscriber.stream.connection.data, subscriber.stream.connection);
+        });
+        subscriber.on('videoPlaying', (e) => {
+        });
+      }
     });
 
     this.session.on('streamDestroyed', (event) => {
@@ -89,22 +100,32 @@ export class OpenviduInstanceComponent implements OnInit, OnDestroy {
 
     this.session.connect(null, this.clientData, (error) => {
       if (!error) {
+        if (this.publishTo) {
 
-        const publisher = OV.initPublisher('local-vid-' + this.session.connection.connectionId, {
-          audio: true,
-          video: true,
-          quality: 'MEDIUM'
-        });
+          this.audioMuted = !this.activeAudio;
+          this.videoMuted = !this.activeVideo;
+          this.updateAudioIcon();
+          this.updateVideoIcon();
 
-        publisher.on('videoElementCreated', (event) => {
-          this.appendUserData(event.element, this.clientData, null);
-        });
+          this.publisher = OV.initPublisher('local-vid-' + this.session.connection.connectionId, {
+            audio: this.activeAudio,
+            video: this.activeVideo,
+            quality: 'MEDIUM'
+          });
 
-        publisher.on('videoPlaying', (e) => {
-        });
+          this.publisher.on('videoElementCreated', (event) => {
+          });
 
-        this.session.publish(publisher);
+          this.publisher.on('videoPlaying', (e) => {
+          });
 
+          if (this.subscribeToRemote) {
+            this.publisher.subscribeToRemote();
+          }
+
+          this.session.publish(this.publisher);
+
+        }
       } else {
         console.log('There was an error connecting to the session:', error.code, error.message);
       }
@@ -118,30 +139,44 @@ export class OpenviduInstanceComponent implements OnInit, OnDestroy {
     }
     this.session = null;
     this.OV = null;
-    this.removeAllUserData();
+  }
+
+  private toggleAudio() {
+    this.publisher.publishAudio(this.audioMuted);
+    this.audioMuted = !this.audioMuted;
+    this.updateAudioIcon();
+  }
+
+  private updateAudioIcon() {
+    this.audioMuted ? this.audioIcon = 'mic_off' : this.audioIcon = 'mic';
+  }
+
+  private toggleVideo() {
+    this.publisher.publishVideo(this.videoMuted);
+    this.videoMuted = !this.videoMuted;
+    this.updateVideoIcon();
+  }
+
+  private updateVideoIcon() {
+    this.videoMuted ? this.videoIcon = 'videocam_off' : this.videoIcon = 'videocam';
   }
 
   private appendUserData(videoElement, data, connection): void {
-    /*const dataNode = document.createElement('div');
+    const dataNode = document.createElement('div');
     dataNode.className = 'data-node';
     dataNode.id = 'data-' + (connection ? connection.connectionId : data);
     dataNode.innerHTML = '<p>' + data + '</p>';
-    videoElement.parentNode.insertBefore(dataNode, videoElement.nextSibling);*/
+    videoElement.parentNode.insertBefore(dataNode, videoElement.nextSibling);
   }
 
   private removeUserData(connection): void {
-    /*$('#data-' + connection.connectionId).remove();*/
-  }
-
-  private removeAllUserData() {
-    /*const nicknameElements = $('.data-node');
-    while (nicknameElements[0]) {
-      nicknameElements[0].remove();
-    }*/
+    $('#remote-vid-' + this.session.connection.connectionId).find('#data-' + connection.connectionId).remove();
   }
 
   private toggleRadio(): void {
-    this.sendVideoRadio = !this.sendVideo;
+    if (this.publishTo && this.sendVideo) {
+      this.optionVideo = 'video';
+    }
   }
 
 }

@@ -29,5 +29,9 @@ th {
 }
 
 app-openvidu-instance {
-  display: inline-block;
+  display: inline-flex;
+  margin: 15px 25px 0 0;
+  background-color: #797979;
+  padding: 10px;
+  border-radius: 2px;
 }

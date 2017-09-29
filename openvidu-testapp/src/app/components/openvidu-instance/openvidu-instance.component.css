@@ -1,7 +1,12 @@
 md-card {
-  background-color: rgba(77, 77, 77, 0.05);
-  margin: 20px 0 5px 0;
+  background-color: #ffffff;
+  margin: 0;
   padding: 20px;
+}
+
+md-card.session-card {
+  padding: 15px;
+  margin-left: 10px;
 }
 
 .session-form md-form-field {
@@ -27,8 +32,16 @@ md-card {
   margin-bottom: 0;
 }
 
-#join-session-btn {
+#join-btn {
   margin: 0 0 4px 4px;
+}
+
+#leave-btn {
+  position: absolute;
+  right: 0;
+  top: 0;
+  margin-top: 8px;
+  margin-right: 8px;
 }
 
 md-radio-button {
@@ -37,4 +50,34 @@ md-radio-button {
 
 .video-container {
   min-width: 140px;
+}
+
+.session-card-header {
+  display: flex;
+}
+
+.session-card-inner {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.session-card-inner .session-title {
+  float: left;
+}
+
+.session-card-inner .session-actions {
+  float: right;
+  margin-top: -5px;
+}
+
+.session-actions button {
+  outline: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.session-actions button:hover {
+  color: #4d4d4d;
 }

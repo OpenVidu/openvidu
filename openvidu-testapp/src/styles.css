@@ -23,7 +23,6 @@ ul {
 
 video {
   max-width: 125px;
-  margin-top: -5px;
 }
 
 button {
@@ -32,4 +31,29 @@ button {
 
 .session-form label {
   font-size: 12px;
+}
+
+.subscribe-remote-check .mat-checkbox-label {
+  line-height: 15px !important;
+}
+
+.video-container video {
+	float: left;
+}
+
+.video-container div {
+  float: left;
+  position: relative;
+  margin-left: -46%;
+  margin-top: -5%;
+}
+
+.video-container p {
+  background: #ffffff;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #4d4d4d;
+  font-weight: 100;
+  font-size: 14px;
+  border-bottom-right-radius: 2px;
 }
