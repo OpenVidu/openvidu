@@ -1,0 +1,23 @@
+table {
+  width: 100%;
+}
+
+table tr {
+  text-align: left;
+}
+
+#table-row {
+  margin-top: 40px;
+}
+
+.first-col {
+  padding-right: 20px;
+}
+
+th {
+  padding-bottom: 20px;
+}
+
+#server-data-field {
+  padding-top: 16px;
+}

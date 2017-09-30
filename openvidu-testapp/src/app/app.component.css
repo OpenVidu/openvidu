@@ -6,3 +6,13 @@
 main {
   padding: 30px 50px 30px 50px;
 }
+
+#nav-logo {
+  padding-right: 20px;
+  font-weight: inherit;
+}
+
+md-toolbar a {
+  padding: 0 10px 0 10px;
+  font-weight: bold;
+}

@@ -1,3 +1,10 @@
+.div-wrapper {
+  display: inline-flex;
+  background-color: #797979;
+  padding: 10px;
+  border-radius: 2px;
+}
+
 md-card {
   background-color: #ffffff;
   margin: 0;
@@ -80,4 +87,35 @@ md-radio-button {
 
 .session-actions button:hover {
   color: #4d4d4d;
+}
+
+.event-list {
+  display: inline-block;
+  width: 125px;
+  max-height: 77.75px;
+  margin-top: 12px;
+  overflow-y: auto;
+}
+
+md-chip {
+  line-height: 6px;
+  font-size: 9.5px;
+  padding: 6px 9px !important;
+  margin-bottom: 3.5px !important;
+  margin-right: 5px !important;
+}
+
+.scroll-custom::-webkit-scrollbar-track {
+  -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+  background-color: #F5F5F5;
+}
+
+.scroll-custom::-webkit-scrollbar {
+  width: 8px;
+  background-color: #F5F5F5;
+}
+
+.scroll-custom::-webkit-scrollbar-thumb {
+  background-color: #797979;
 }

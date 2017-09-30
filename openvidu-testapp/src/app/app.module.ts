@@ -7,16 +7,18 @@ import { AppMaterialModule } from './app.material.module';
 
 import { routing } from './app.routing';
 import { AppComponent } from './app.component';
-import { DashboardComponent } from './components/dashboard/dashboard.component';
-
-import { OpenviduRestService } from './services/openvidu-rest.service';
+import { TestSessionsComponent } from './components/test-sessions/test-sessions.component';
+import { TestApirestComponent } from './components/test-apirest/test-apirest.component';
 import { OpenviduInstanceComponent } from './components/openvidu-instance/openvidu-instance.component';
+import { OpenviduRestService } from './services/openvidu-rest.service';
+import { OpenviduParamsService } from './services/openvidu-params.service';
 
 @NgModule({
   declarations: [
     AppComponent,
-    DashboardComponent,
-    OpenviduInstanceComponent
+    OpenviduInstanceComponent,
+    TestSessionsComponent,
+    TestApirestComponent
   ],
   imports: [
     BrowserModule,
@@ -27,7 +29,8 @@ import { OpenviduInstanceComponent } from './components/openvidu-instance/openvi
     routing
   ],
   providers: [
-    OpenviduRestService
+    OpenviduRestService,
+    OpenviduParamsService
   ],
   bootstrap: [AppComponent]
 })

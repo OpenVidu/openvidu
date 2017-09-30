@@ -1,13 +1,13 @@
-* {
-  font-family: 'Exo 2', sans-serif;
-}
-
 html,
 body {
   height: 100%;
   margin: 0;
   padding: 0;
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0.05);
+}
+
+body {
+  font-family: Roboto, Helvetica Neue Light, Helvetica Neue, Helvetica, Arial, Lucida Grande, sans-serif;
 }
 
 a {
@@ -22,7 +22,7 @@ ul {
 }
 
 video {
-  max-width: 125px;
+  width: 125px;
 }
 
 button {
@@ -38,14 +38,14 @@ button {
 }
 
 .video-container video {
-	float: left;
+  float: left;
 }
 
-.video-container div {
+.video-container div.data-node {
   float: left;
   position: relative;
-  margin-left: -46%;
-  margin-top: -5%;
+  margin-left: -125px;
+  margin-top: -14px;
 }
 
 .video-container p {

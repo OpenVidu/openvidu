@@ -1,12 +1,20 @@
 import { ModuleWithProviders } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 
-import { DashboardComponent } from './components/dashboard/dashboard.component';
+import { TestSessionsComponent } from './components/test-sessions/test-sessions.component';
+import { TestApirestComponent } from './components/test-apirest/test-apirest.component';
 
 const appRoutes: Routes = [
   {
-    path: '',
-    component: DashboardComponent
+    path: '', redirectTo: '/test-sessions', pathMatch: 'full'
+  },
+  {
+    path: 'test-sessions',
+    component: TestSessionsComponent
+  },
+  {
+    path: 'test-apirest',
+    component: TestApirestComponent
   }
 ];
 

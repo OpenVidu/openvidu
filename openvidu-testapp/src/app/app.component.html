@@ -1,10 +1,18 @@
 <md-sidenav-container fullscreen>
   <md-toolbar class="mat-elevation-z5" color="primary">
     <div layout-align='center center' layout='column'>
-		<a routerLink="/"><img id="nav-img" src="assets/images/openvidu_vert_white_bg_trans_cropped.png"/> TestApp</a>
-	</div>
+      <a id="nav-logo" routerLink="/"><img id="nav-img" src="assets/images/openvidu_vert_white_bg_trans_cropped.png"/> TestApp</a>
+      <a md-button routerLink="/test-sessions"><span>SESSIONS</span></a>
+      <a md-button routerLink="/test-apirest"><span>API REST</span></a>
+    </div>
   </md-toolbar>
   <main>
+    <md-form-field>
+      <input mdInput placeholder="OpenVidu Server URL" [ngModel]="openviduURL" (ngModelChange)="updateUrl($event)">
+    </md-form-field>
+    <md-form-field>
+      <input mdInput placeholder="OpenVidu Server Secret" [ngModel]="openviduSecret" (ngModelChange)="updateSecret($event)">
+    </md-form-field>
     <router-outlet></router-outlet>
   </main>
 </md-sidenav-container>

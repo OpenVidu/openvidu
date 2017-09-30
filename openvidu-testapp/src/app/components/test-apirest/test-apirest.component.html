@@ -1,0 +1,60 @@
+<div>
+  <div fxLayout="row" fxLayoutGap="20px" fxLayoutAlign="start space-around">
+    <div fxLayout="column" fxFlex="45" fxFlexAlign="center" fxFill>
+      <button md-raised-button color="primary" (click)="getSessionId()">GET SESSIONID</button>
+    </div>
+    <div fxLayout="column" fxFlex="45" fxFlexAlign="center" fxFill>
+      <button md-raised-button color="primary" (click)="getToken()" [disabled]="getTokenDisabled()">GET TOKEN</button>
+    </div>
+    <div fxLayout="column" fxFlex="10" fxFlexAlign="center" fxFill>
+      <button md-raised-button color="warn" (click)="cleanAllSessions()" [disabled]="data.length == 0">CLEAN</button>
+    </div>
+  </div>
+
+  <div id="table-row" fxLayout="row" fxLayoutGap="20px" fxLayoutAlign="start">
+    <div fxLayout="column" fxFlex="65" fxFlexAlign="start" fxFill>
+      <table>
+        <tr>
+          <th class="first-col">sessionIds</th>
+          <th>tokens</th>
+          <th>Session</th>
+        </tr>
+        <tr *ngFor="let sid of this.data; let ind = index">
+          <td class="first-col">
+            <md-card [style.background]="getBackgroundColor(ind)">{{sid[0]}}</md-card>
+          </td>
+          <td>
+            <md-card *ngIf="sid[1].length > 0" [style.background]="getBackgroundColor(ind)">
+              <p *ngFor="let token of sid[1]">{{token}}</p>
+            </md-card>
+          </td>
+          <td style="text-align: center">
+            <md-radio-button [checked]="selectedRadioIndex === ind" (click)="selectedRadioIndex = ind" name="sidOption"></md-radio-button>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div fxLayout="column" fxFlex="35" fxFlexAlign="start" fxFill>
+      <table>
+        <tr>
+          <th>OpenVidu Role</th>
+          <th>Server data</th>
+        </tr>
+        <tr id="tr-token-options" *ngIf="data.length > 0">
+          <td>
+            <md-select placeholder="OpenVidu Role" [(ngModel)]="selectedRole">
+              <md-option *ngFor="let role of openViduRoles" [value]="role">
+                {{ role }}
+              </md-option>
+            </md-select>
+          </td>
+          <td>
+            <md-form-field id="server-data-field">
+              <input mdInput placeholder="Server Data" [(ngModel)]="serverData">
+            </md-form-field>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>

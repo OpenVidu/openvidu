@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
+import { OpenviduParamsService } from './services/openvidu-params.service';
 
 @Component({
   selector: 'app-root',
@@ -8,10 +9,23 @@ import { Router } from '@angular/router';
 })
 export class AppComponent {
 
-  constructor(private router: Router) { }
+  openviduURL = 'https://localhost:8443';
+  openviduSecret = 'MY_SECRET';
 
-  isVideoSessionUrl() {
-    return (this.router.url.substring(0, '/lesson/'.length) === '/lesson/');
+  constructor(private router: Router, private openviduParamsService: OpenviduParamsService) { }
+
+  updateUrl(url) {
+    this.openviduURL = url;
+    this.updateParams();
+  }
+
+  updateSecret(secret) {
+    this.openviduSecret = secret;
+    this.updateParams();
+  }
+
+  updateParams() {
+    this.openviduParamsService.updateParams({ openviduUrl: this.openviduURL, openviduSecret: this.openviduSecret });
   }
 
 }

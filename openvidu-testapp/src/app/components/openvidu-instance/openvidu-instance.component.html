@@ -1,80 +1,91 @@
-<div>
-  <md-card class="join-card">
+<div class="div-wrapper">
 
-    <md-card-content>
-      <form class="session-form">
+  <div>
+    <md-card class="join-card">
 
-        <div>
-          <md-form-field style="margin-right: 10px">
-            <input mdInput placeholder="Session name" name="sessionName" [(ngModel)]="sessionName" [disabled]="session">
-          </md-form-field>
+      <md-card-content>
+        <form class="session-form">
 
-          <md-form-field>
-            <input mdInput placeholder="Client data" name="clientData" [(ngModel)]="clientData" [disabled]="session">
-          </md-form-field>
-        </div>
+          <div>
+            <md-form-field style="margin-right: 10px">
+              <input mdInput placeholder="Session name" name="sessionName" [(ngModel)]="sessionName" [disabled]="session">
+            </md-form-field>
 
-        <div>
-          <button id="join-btn" md-button (click)="joinSession()" [disabled]="session">JOIN</button>
-          <md-checkbox name="subscribeTo" (change)="toggleSubscribeTo()" [checked]="subscribeTo && checkSubscribeTo" [disabled]="disableSubscribeTo">Subscribe</md-checkbox>
-          <md-checkbox name="publishTo" (change)="togglePublishTo()" [checked]="publishTo && checkPublishTo" [disabled]="disablePublishTo">Publish</md-checkbox>
-        </div>
-
-        <div class="inner-card" fxLayout="row" fxLayoutAlign="start start">
-
-          <div fxFlex="60">
-            <div>
-              <h4>Send</h4>
-              <div>
-                <md-checkbox name="sendAudio" (change)="toggleSendAudio()" [checked]="sendAudio && checkSendAudio" [disabled]="disableSendAudio">Audio</md-checkbox>
-                <md-checkbox name="sendVideo" (change)="toggleSendVideo()" [checked]="sendVideo && checkSendVideo" [disabled]="disableSendVideo">Video</md-checkbox>
-              </div>
-            </div>
-            <div style="padding-top: 5px;">
-              <h4>Enter active</h4>
-              <div>
-                <md-checkbox name="activeAudio" (change)="toggleActiveAudio()" [checked]="activeAudio && checkActiveAudio" [disabled]="disableActiveAudio">Audio</md-checkbox>
-                <md-checkbox name="activeVideo" (change)="toggleActiveVideo()" [checked]="activeVideo && checkActiveVideo" [disabled]="disableActiveVideo">Video</md-checkbox>
-              </div>
-            </div>
+            <md-form-field>
+              <input mdInput placeholder="Client data" name="clientData" [(ngModel)]="clientData" [disabled]="session">
+            </md-form-field>
           </div>
 
-          <div fxFlex="40">
-            <md-radio-group [(ngModel)]="optionsVideo" [disabled]="disableRadioButtons" [ngModelOptions]="{standalone: true}">
-              <div>
-                <md-radio-button value="video" [checked]="checkRadioVideo && optionsVideo==='video'">Video</md-radio-button>
-              </div>
-              <div>
-                <md-radio-button value="screen" [checked]="checkRadioScreen && optionsVideo==='screen'">Screen</md-radio-button>
-              </div>
-            </md-radio-group>
-            <md-checkbox class="subscribe-remote-check" name="subscribeToRemote" (change)="subscribeToRemote = !subscribeToRemote" [disabled]="(!sendAudio && !sendVideo) || !publishTo || session"
-              [checked]="(sendAudio || sendVideo) && publishTo && subscribeToRemote">Subscribe<br>to remote</md-checkbox>
+          <div>
+            <button id="join-btn" md-button (click)="joinSession()" [disabled]="session">JOIN</button>
+            <md-checkbox name="subscribeTo" (change)="toggleSubscribeTo()" [checked]="subscribeTo && checkSubscribeTo" [disabled]="session || disableSubscribeTo">Subscribe</md-checkbox>
+            <md-checkbox name="publishTo" (change)="togglePublishTo()" [checked]="publishTo && checkPublishTo" [disabled]="session || disablePublishTo">Publish</md-checkbox>
           </div>
 
-        </div>
+          <div class="inner-card" fxLayout="row" fxLayoutAlign="start start">
 
-      </form>
-    </md-card-content>
+            <div fxFlex="60">
+              <div>
+                <h4>Send</h4>
+                <div>
+                  <md-checkbox name="sendAudio" (change)="toggleSendAudio()" [checked]="sendAudio && checkSendAudio" [disabled]="session || disableSendAudio">Audio</md-checkbox>
+                  <md-checkbox name="sendVideo" (change)="toggleSendVideo()" [checked]="sendVideo && checkSendVideo" [disabled]="session || disableSendVideo">Video</md-checkbox>
+                </div>
+              </div>
+              <div style="padding-top: 5px;">
+                <h4>Enter active</h4>
+                <div>
+                  <md-checkbox name="activeAudio" (change)="toggleActiveAudio()" [checked]="activeAudio && checkActiveAudio" [disabled]="session || disableActiveAudio">Audio</md-checkbox>
+                  <md-checkbox name="activeVideo" (change)="toggleActiveVideo()" [checked]="activeVideo && checkActiveVideo" [disabled]="session || disableActiveVideo">Video</md-checkbox>
+                </div>
+              </div>
+            </div>
 
-  </md-card>
-</div>
+            <div fxFlex="40">
+              <md-radio-group [(ngModel)]="optionsVideo" [disabled]="session || disableRadioButtons" [ngModelOptions]="{standalone: true}">
+                <div>
+                  <md-radio-button value="video" [checked]="checkRadioVideo && optionsVideo==='video'">Video</md-radio-button>
+                </div>
+                <div>
+                  <md-radio-button value="screen" [checked]="checkRadioScreen && optionsVideo==='screen'">Screen</md-radio-button>
+                </div>
+              </md-radio-group>
+              <md-checkbox class="subscribe-remote-check" name="subscribeToRemote" (change)="subscribeToRemote = !subscribeToRemote" [disabled]="(!sendAudio && !sendVideo) || !publishTo || session"
+                [checked]="(sendAudio || sendVideo) && publishTo && subscribeToRemote">Subscribe<br>to remote</md-checkbox>
+            </div>
 
-<div *ngIf="session">
-  <md-card class="session-card">
-    <div class="session-card-header">
-      <div class="session-card-inner">
-        <div class="session-title">{{sessionName}}</div>
-        <div class="session-actions">
-          <button><md-icon *ngIf="publishTo && sendVideo" class="md-24" aria-label="Mute video button" (click)="toggleVideo()">{{videoIcon}}</md-icon></button>
-          <button><md-icon *ngIf="publishTo && sendAudio" class="md-24" aria-label="Mute audio button" (click)="toggleAudio()">{{audioIcon}}</md-icon></button>
-          <button><md-icon class="md-24" aria-label="Leave button" (click)="leaveSession()">clear</md-icon></button>
+          </div>
+
+        </form>
+      </md-card-content>
+
+    </md-card>
+  </div>
+
+  <div *ngIf="session">
+    <md-card class="session-card">
+      <div class="session-card-header">
+        <div class="session-card-inner">
+          <div class="session-title">{{sessionName}}</div>
+          <div class="session-actions">
+            <button><md-icon *ngIf="publishTo && sendVideo" aria-label="Mute video button" (click)="toggleVideo()">{{videoIcon}}</md-icon></button>
+            <button><md-icon *ngIf="publishTo && sendAudio" aria-label="Mute audio button" (click)="toggleAudio()">{{audioIcon}}</md-icon></button>
+            <button><md-icon aria-label="Leave button" (click)="leaveSession()">clear</md-icon></button>
+          </div>
         </div>
       </div>
-    </div>
-    <div *ngIf="session.connection" fxLayout>
-      <div [attr.id]="'local-vid-' + session.connection.connectionId" fxFlex="135px" class="video-container"></div>
-      <div [attr.id]="'remote-vid-' + session.connection.connectionId" fxFlex="270px" class="video-container"></div>
-    </div>
-  </md-card>
+      <div *ngIf="session.connection" fxLayout>
+        <div fxFlex="135px" class="video-container">
+          <div [attr.id]="'local-vid-' + session.connection.connectionId"></div>
+          <div #scrollMe class="event-list scroll-custom" [scrollTop]="scrollMe.scrollHeight">
+            <md-chip-list class="mat-chip-list-stacked" aria-orientation="vertical">
+              <md-chip *ngFor="let event of events">{{event}}</md-chip>
+            </md-chip-list>
+          </div>
+        </div>
+        <div [attr.id]="'remote-vid-' + session.connection.connectionId" fxFlex="270px" class="video-container"></div>
+      </div>
+    </md-card>
+  </div>
+
 </div>

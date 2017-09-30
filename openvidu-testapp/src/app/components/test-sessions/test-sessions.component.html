@@ -1,0 +1,11 @@
+<div>
+  <div>
+    <button id="add-user-btn" md-raised-button color="primary" (click)="users.push(true)">ADD USER</button>
+    <button id="remove-user-btn" md-raised-button color="primary" (click)="users.pop()" [disabled]="!users.length">REMOVE USER</button>
+    <div class="scenario-div">
+      Load scenario
+
+    </div>
+  </div>
+  <app-openvidu-instance *ngFor="let user of users; let i = index" [openviduUrl]="openviduUrl" [openviduSecret]="openviduSecret"></app-openvidu-instance>
+</div>

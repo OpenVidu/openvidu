@@ -1,26 +1,22 @@
-import { Component, HostListener, OnInit } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy } from '@angular/core';
+import { Subscription } from 'rxjs/Subscription';
 import { OpenviduRestService } from '../../services/openvidu-rest.service';
-import { DataSource } from '@angular/cdk/table';
-import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/observable/of';
+import { OpenviduParamsService } from '../../services/openvidu-params.service';
 
 import * as colormap from 'colormap';
 const numColors = 64;
 
-declare var $: any;
-
 @Component({
-  selector: 'app-dashboard',
-  templateUrl: './dashboard.component.html',
-  styleUrls: ['./dashboard.component.css'],
+  selector: 'app-test-apirest',
+  templateUrl: './test-apirest.component.html',
+  styleUrls: ['./test-apirest.component.css']
 })
-export class DashboardComponent implements OnInit {
+export class TestApirestComponent implements OnInit, OnDestroy {
 
-  openviduURL = 'https://localhost:8443';
-  openviduSecret = 'MY_SECRET';
+  openviduUrl: string;
+  openviduSecret: string;
 
-  // OpenViduInstance collection
-  users = [true];
+  paramsSubscription: Subscription;
 
   // API REST params
   serverData = 'data_test';
@@ -33,7 +29,7 @@ export class DashboardComponent implements OnInit {
 
   cg;
 
-  constructor(private openviduRestService: OpenviduRestService) {
+  constructor(private openviduRestService: OpenviduRestService, private openviduParamsService: OpenviduParamsService) {
     const options = {
       colormap: [
         { 'index': 0, 'rgb': [135, 196, 213] },
@@ -44,16 +40,24 @@ export class DashboardComponent implements OnInit {
     this.cg = colormap(options);
   }
 
-  ngOnInit() { }
+  ngOnInit() {
+    const openviduParams = this.openviduParamsService.getParams();
+    this.openviduUrl = openviduParams.openviduUrl;
+    this.openviduSecret = openviduParams.openviduSecret;
 
-  private addUser() {
-    this.users.push(true);
+    this.paramsSubscription = this.openviduParamsService.newParams$.subscribe(
+      params => {
+        this.openviduUrl = params.openviduUrl;
+        this.openviduSecret = params.openviduSecret;
+      });
   }
 
-  /* API REST TAB */
+  ngOnDestroy() {
+    this.paramsSubscription.unsubscribe();
+  }
 
   private getSessionId() {
-    this.openviduRestService.getSessionId(this.openviduURL, this.openviduSecret)
+    this.openviduRestService.getSessionId(this.openviduUrl, this.openviduSecret)
       .then((sessionId) => {
         this.updateData();
       })
@@ -65,7 +69,7 @@ export class DashboardComponent implements OnInit {
   private getToken() {
     const sessionId = this.data[this.selectedRadioIndex][0];
 
-    this.openviduRestService.getToken(this.openviduURL, this.openviduSecret, sessionId, this.selectedRole, this.serverData)
+    this.openviduRestService.getToken(this.openviduUrl, this.openviduSecret, sessionId, this.selectedRole, this.serverData)
       .then((token) => {
         this.updateData();
       })
@@ -91,7 +95,5 @@ export class DashboardComponent implements OnInit {
     this.openviduRestService.sessionIdSession.clear();
     this.openviduRestService.sessionIdTokenOpenViduRole.clear();
   }
-
-  /* API REST TAB */
 
 }
