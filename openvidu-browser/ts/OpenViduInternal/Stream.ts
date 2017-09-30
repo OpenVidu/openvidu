@@ -54,7 +54,7 @@ export class Stream {
     public connection: Connection;
 
     private ee = new EventEmitter();
-    private wrStream: any;
+    private wrStream: MediaStream;
     private wp: any;
     private id: string;
     private video: HTMLVideoElement;
@@ -577,21 +577,25 @@ export class Stream {
 
                     this.emitSrcEvent(this.wrStream);
 
-                    this.speechEvent = kurentoUtils.WebRtcPeer.hark(this.wrStream, { threshold: this.room.thresholdSpeaker });
+                    if (this.wrStream.getAudioTracks()[0] != null) {
 
-                    this.speechEvent.on('speaking', () => {
-                        this.room.addParticipantSpeaking(participantId);
-                        this.room.emitEvent('stream-speaking', [{
-                            participantId: participantId
-                        }]);
-                    });
+                        this.speechEvent = kurentoUtils.WebRtcPeer.hark(this.wrStream, { threshold: this.room.thresholdSpeaker });
 
-                    this.speechEvent.on('stopped_speaking', () => {
-                        this.room.removeParticipantSpeaking(participantId);
-                        this.room.emitEvent('stream-stopped-speaking', [{
-                            participantId: participantId
-                        }]);
-                    });
+                        this.speechEvent.on('speaking', () => {
+                            this.room.addParticipantSpeaking(participantId);
+                            this.room.emitEvent('stream-speaking', [{
+                                participantId: participantId
+                            }]);
+                        });
+
+                        this.speechEvent.on('stopped_speaking', () => {
+                            this.room.removeParticipantSpeaking(participantId);
+                            this.room.emitEvent('stream-stopped-speaking', [{
+                                participantId: participantId
+                            }]);
+                        });
+                        
+                    }
                 }
                 for (let videoElement of this.videoElements) {
                     let thumbnailId = videoElement.thumb;
