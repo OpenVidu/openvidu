@@ -161,7 +161,6 @@ export class SessionInternal {
                             // Adding the remote stream to the OpenVidu object
                             this.openVidu.getRemoteStreams().push(stream);
                         }
-                        //}
 
                         callback(undefined);
                     }
@@ -252,13 +251,12 @@ export class SessionInternal {
 
     onParticipantPublished(options) {
 
-        options.metadata = this.participants[options.id].data;
-
         // Get the existing Connection created on 'onParticipantJoined' for
         // existing participants or create a new one for new participants
         let connection = this.participants[options.id];
         if (connection) {
             // Update existing Connection
+            options.metadata = connection.data;
             connection.options = options;
             connection.initStreams(options);
         } else {
@@ -273,7 +271,7 @@ export class SessionInternal {
             console.debug("Remote Connection found in connections list by its id [" + pid + "]");
         }
 
-        connection.creationTime = this.participants[pid].creationTime;
+        
         this.participants[pid] = connection;
 
         this.ee.emitEvent('participant-published', [{ connection }]);

@@ -295,8 +295,6 @@ export class Stream {
             this.video = parentElement.appendChild(this.video);
         }
 
-        this.ee.emitEvent('stream-created-by-publisher');
-
         this.isReady = true;
 
         return this.video;
