@@ -18,7 +18,7 @@
 
           <div>
             <button id="join-btn" md-button (click)="joinSession()" [disabled]="session">JOIN</button>
-            <md-checkbox name="subscribeTo" (change)="toggleSubscribeTo()" [checked]="subscribeTo && checkSubscribeTo" [disabled]="session || disableSubscribeTo">Subscribe</md-checkbox>
+            <md-checkbox name="subscribeTo" (change)="toggleSubscribeTo()" [checked]="subscribeTo && checkSubscribeTo" [disabled]="session">Subscribe</md-checkbox>
             <md-checkbox name="publishTo" (change)="togglePublishTo()" [checked]="publishTo && checkPublishTo" [disabled]="session || disablePublishTo">Publish</md-checkbox>
           </div>
 
@@ -68,22 +68,30 @@
         <div class="session-card-inner">
           <div class="session-title">{{sessionName}}</div>
           <div class="session-actions">
-            <button><md-icon *ngIf="publishTo && sendVideo" aria-label="Mute video button" (click)="toggleVideo()">{{videoIcon}}</md-icon></button>
-            <button><md-icon *ngIf="publishTo && sendAudio" aria-label="Mute audio button" (click)="toggleAudio()">{{audioIcon}}</md-icon></button>
-            <button><md-icon aria-label="Leave button" (click)="leaveSession()">clear</md-icon></button>
+            <button *ngIf="publishTo && sendVideo" (click)="toggleVideo()"><md-icon aria-label="Mute video button">{{videoIcon}}</md-icon></button>
+            <button *ngIf="publishTo && sendAudio" (click)="toggleAudio()"><md-icon aria-label="Mute audio button">{{audioIcon}}</md-icon></button>
+            <button (click)="leaveSession()"><md-icon aria-label="Leave button">clear</md-icon></button>
           </div>
         </div>
       </div>
       <div *ngIf="session.connection" fxLayout>
         <div fxFlex="135px" class="video-container">
-          <div [attr.id]="'local-vid-' + session.connection.connectionId"></div>
-          <div #scrollMe class="event-list scroll-custom" [scrollTop]="scrollMe.scrollHeight">
-            <md-chip-list class="mat-chip-list-stacked" aria-orientation="vertical">
+          
+          <div class="event-list scroll-custom">
+              <md-accordion>
+                    <md-expansion-panel *ngFor="let event of events">
+                      <md-expansion-panel-header [collapsedHeight]="'20px'" [expandedHeight]="'20px'">
+                          {{event.name}}
+                      </md-expansion-panel-header>
+                      {{event.content}}
+                    </md-expansion-panel>
+                  </md-accordion>
+            <!--<md-chip-list class="mat-chip-list-stacked" aria-orientation="vertical">
               <md-chip *ngFor="let event of events">{{event}}</md-chip>
-            </md-chip-list>
+            </md-chip-list>-->
           </div>
         </div>
-        <div [attr.id]="'remote-vid-' + session.connection.connectionId" fxFlex="270px" class="video-container"></div>
+        <div [attr.id]="'remote-vid-' + session.connection.connectionId" fxFlex="270px" class="video-container"><div [attr.id]="'local-vid-' + session.connection.connectionId"></div></div>
       </div>
     </md-card>
   </div>

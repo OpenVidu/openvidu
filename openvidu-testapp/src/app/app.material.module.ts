@@ -16,6 +16,7 @@ import {
     MdRadioModule,
     MdSelectModule,
     MdChipsModule,
+    MdExpansionModule,
     MdSlideToggleModule
 } from '@angular/material';
 
@@ -37,6 +38,7 @@ import {
         MdRadioModule,
         MdSelectModule,
         MdChipsModule,
+        MdExpansionModule,
         MdSlideToggleModule
     ],
 })

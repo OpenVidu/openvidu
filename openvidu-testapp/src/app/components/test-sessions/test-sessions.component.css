@@ -3,6 +3,27 @@ app-openvidu-instance {
   margin: 25px 5px 0px 0px;
 }
 
+.top-div {
+  display: inline-block;
+  width: 100%;
+}
+
+.controls-div {
+  float: left;
+}
+
 .scenario-div {
   float: right;
+}
+
+.instance-div {
+  display: inline-block;
+}
+
+md-form-field {
+  width: 30px;
+}
+
+.auto-join-check {
+  margin-right: 10px;
 }

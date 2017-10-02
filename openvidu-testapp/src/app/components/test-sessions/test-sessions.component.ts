@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Subscription } from 'rxjs/Subscription';
 import { OpenviduParamsService } from '../../services/openvidu-params.service';
+import { SessionConf } from '../openvidu-instance/openvidu-instance.component';
 
 @Component({
   selector: 'app-test-sessions',
@@ -15,7 +16,10 @@ export class TestSessionsComponent implements OnInit, OnDestroy {
   paramsSubscription: Subscription;
 
   // OpenViduInstance collection
-  users = [true];
+  users: SessionConf[] = [];
+
+  numberSubs = 3;
+  autoJoin = false;
 
   constructor(private openviduParamsService: OpenviduParamsService) { }
 
@@ -35,8 +39,57 @@ export class TestSessionsComponent implements OnInit, OnDestroy {
     this.paramsSubscription.unsubscribe();
   }
 
-  private addUser() {
-    this.users.push(true);
+  private addUser(): void {
+    this.users.push({
+      subscribeTo: true,
+      publishTo: true,
+      sendAudio: true,
+      sendVideo: true,
+      startSession: false
+    });
+  }
+
+  private loadSubsPubs(n: number): void {
+    for (let i = 0; i < n; i++) {
+      this.users.push({
+        subscribeTo: true,
+        publishTo: true,
+        sendAudio: true,
+        sendVideo: true,
+        startSession: this.autoJoin
+      });
+    }
+  }
+
+  private loadSubs(n: number): void {
+    for (let i = 0; i < n; i++) {
+      this.users.push({
+        subscribeTo: true,
+        publishTo: false,
+        sendAudio: false,
+        sendVideo: false,
+        startSession: this.autoJoin
+      });
+    }
+  }
+
+  private loadPubs(n: number): void {
+    for (let i = 0; i < n; i++) {
+      this.users.push({
+        subscribeTo: false,
+        publishTo: true,
+        sendAudio: true,
+        sendVideo: true,
+        startSession: this.autoJoin
+      });
+    }
+  }
+
+  private loadScenario(subsPubs: number, pubs: number, subs: number, ): void {
+    this.users = [];
+    this.loadSubsPubs(subsPubs);
+    this.loadPubs(pubs);
+    this.loadSubs(subs);
   }
 
 }

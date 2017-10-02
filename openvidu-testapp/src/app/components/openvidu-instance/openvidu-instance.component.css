@@ -92,9 +92,9 @@ md-radio-button {
 .event-list {
   display: inline-block;
   width: 125px;
-  max-height: 77.75px;
-  margin-top: 12px;
+  height: 183.5px;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 md-chip {
@@ -103,6 +103,8 @@ md-chip {
   padding: 6px 9px !important;
   margin-bottom: 3.5px !important;
   margin-right: 5px !important;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 .scroll-custom::-webkit-scrollbar-track {
@@ -112,10 +114,20 @@ md-chip {
 }
 
 .scroll-custom::-webkit-scrollbar {
-  width: 8px;
+  width: 7px;
   background-color: #F5F5F5;
 }
 
 .scroll-custom::-webkit-scrollbar-thumb {
   background-color: #797979;
+}
+
+md-expansion-panel {
+  background: #e0e0e0 !important;
+  margin-right: 0 !important;
+}
+
+md-expansion-panel-header {
+  font-size: 10.5px !important;
+  padding: 0 7px 0 9px !important;
 }

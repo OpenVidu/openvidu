@@ -6,6 +6,19 @@ import { OpenVidu, Session, Subscriber, Publisher, Stream } from 'openvidu-brows
 
 declare var $: any;
 
+export interface SessionConf {
+  subscribeTo: boolean;
+  publishTo: boolean;
+  sendAudio: boolean;
+  sendVideo: boolean;
+  startSession: boolean;
+}
+
+export interface OpenViduEvent {
+  name: string;
+  content: string;
+}
+
 @Component({
   selector: 'app-openvidu-instance',
   templateUrl: './openvidu-instance.component.html',
@@ -19,15 +32,18 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   @Input()
   openviduSecret: string;
 
+  @Input()
+  sessionConf: SessionConf;
+
   // Session join data
   clientData: string;
   sessionName: string;
 
   // Session options
-  subscribeTo = true;
-  publishTo = true;
-  sendAudio = true;
-  sendVideo = true;
+  subscribeTo;
+  publishTo;
+  sendAudio;
+  sendVideo;
   activeAudio = true;
   activeVideo = true;
   sendVideoRadio = true;
@@ -43,7 +59,6 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   checkActiveVideo = true;
   checkRadioVideo = true;
   checkRadioScreen = false;
-  disableSubscribeTo = false;
   disablePublishTo = false;
   disableSendAudio = false;
   disableSendVideo = false;
@@ -62,13 +77,27 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   audioIcon = 'mic';
   videoIcon = 'videocam';
 
-  events: string[] = [];
+  events: OpenViduEvent[] = [];
 
   constructor(private changeDetector: ChangeDetectorRef) {
     this.generateSessionInfo();
   }
 
-  ngOnInit() { }
+  ngOnInit() {
+    this.subscribeTo = this.sessionConf.subscribeTo;
+    this.publishTo = this.sessionConf.publishTo;
+    this.sendAudio = this.sessionConf.sendAudio;
+    this.sendVideo = this.sessionConf.sendVideo;
+
+    if (!this.publishTo) {
+      this.publishTo = !this.publishTo;
+      this.togglePublishTo();
+    }
+
+    if (this.sessionConf.startSession) {
+      this.joinSession();
+    }
+  }
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes.openviduSecret) {
@@ -105,7 +134,6 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
 
     this.session = OV.initSession('wss://'
       + this.removeHttps(this.openviduUrl)
-      + '/'
       + this.sessionName + '?secret='
       + this.openviduSecret);
 
@@ -116,29 +144,33 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       if (this.subscribeTo) {
         const subscriber: Subscriber = this.session.subscribe(event.stream, 'remote-vid-' + this.session.connection.connectionId);
         subscriber.on('videoElementCreated', (e) => {
+          if (!event.stream.getRecvVideo()) {
+            $(e.element).css({ 'background-color': '#4d4d4d' });
+            $(e.element).attr('poster', 'assets/images/volume.png');
+          }
           this.appendUserData(e.element, subscriber.stream.connection.data, subscriber.stream.connection);
-          this.updateEventList('videoElementCreated');
+          this.updateEventList('videoElementCreated', e.element.id);
         });
         subscriber.on('videoPlaying', (e) => {
-          this.updateEventList('videoPlaying');
+          this.updateEventList('videoPlaying', e.element.id);
         });
       }
-      this.updateEventList('streamCreated');
+      this.updateEventList('streamCreated', event.stream.connection.connectionId);
     });
 
     this.session.on('streamDestroyed', (event) => {
       this.removeUserData(event.stream.connection);
-      this.updateEventList('streamDestroyed');
+      this.updateEventList('streamDestroyed', event.stream.connection.connectionId);
     });
 
     this.session.on('connectionCreated', (event) => {
-      this.updateEventList('connectionCreated');
+      this.updateEventList('connectionCreated', event.connection.connectionId);
     });
     this.session.on('connetionDestroyed', (event) => {
-      this.updateEventList('connetionDestroyed');
+      this.updateEventList('connetionDestroyed', event.connection.connectionId);
     });
     this.session.on('sessionDisconnected', (event) => {
-      this.updateEventList('sessionDisconnected');
+      this.updateEventList('sessionDisconnected', 'No data');
     });
 
     this.session.connect(null, this.clientData, (error) => {
@@ -159,15 +191,28 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
           });
 
           this.publisher.on('videoElementCreated', (event) => {
-            this.updateEventList('videoElementCreated');
+            if (this.publishTo && !this.sendVideo) {
+              $(event.element).css({ 'background-color': '#4d4d4d' });
+              $(event.element).attr('poster', 'assets/images/volume.png');
+            }
+            this.updateEventList('videoElementCreated', event.element.id);
           });
 
+          this.publisher.on('accessAllowed', (e) => {
+            this.updateEventList('accessAllowed', '');
+          });
+
+          this.publisher.on('accessDenied', (e) => {
+            this.updateEventList('accessDenied', '');
+          });
+
+
           this.publisher.on('videoPlaying', (e) => {
-            this.updateEventList('videoPlaying');
+            this.updateEventList('videoPlaying', e.element.id);
           });
 
           this.publisher.on('remoteVideoPlaying', (e) => {
-            this.updateEventList('remoteVideoPlaying');
+            this.updateEventList('remoteVideoPlaying', e.element.id);
           });
 
           if (this.subscribeToRemote) {
@@ -224,8 +269,8 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     $('#remote-vid-' + this.session.connection.connectionId).find('#data-' + connection.connectionId).remove();
   }
 
-  private updateEventList(event: string) {
-    this.events.push(event);
+  private updateEventList(event: string, content: string) {
+    this.events.push({ name: event, content: content });
   }
 
   toggleSubscribeTo(): void {

@@ -1,11 +1,23 @@
 <div>
-  <div>
-    <button id="add-user-btn" md-raised-button color="primary" (click)="users.push(true)">ADD USER</button>
-    <button id="remove-user-btn" md-raised-button color="primary" (click)="users.pop()" [disabled]="!users.length">REMOVE USER</button>
+  <div class="top-div">
+    <div class="controls-div">
+      <button id="add-user-btn" md-raised-button color="primary" (click)="addUser()">ADD USER</button>
+      <button id="remove-user-btn" md-raised-button color="primary" (click)="users.pop()" [disabled]="!users.length">REMOVE USER</button>
+      <button id="remove-user-btn" md-raised-button color="primary" (click)="users = []" [disabled]="!users.length">REMOVE ALL</button>
+    </div>
     <div class="scenario-div">
-      Load scenario
-
+      <md-checkbox class="auto-join-check" [(ngModel)]="autoJoin" name="autoJoin">Auto join</md-checkbox>
+      <button id="remove-user-btn" md-raised-button color="primary" (click)="loadScenario(2,0,0)">1:1</button>
+      <button id="remove-user-btn" md-raised-button color="primary" (click)="loadScenario(0,1,numberSubs)">1:{{numberSubs}}</button>
+      <md-form-field>
+        <input mdInput [(ngModel)]="numberSubs">
+      </md-form-field>
     </div>
   </div>
-  <app-openvidu-instance *ngFor="let user of users; let i = index" [openviduUrl]="openviduUrl" [openviduSecret]="openviduSecret"></app-openvidu-instance>
+
+  <div class="instance-div">
+    <app-openvidu-instance *ngFor="let user of users" [openviduUrl]="openviduUrl" [openviduSecret]="openviduSecret" [sessionConf]="user">
+    </app-openvidu-instance>
+  </div>
+
 </div>
