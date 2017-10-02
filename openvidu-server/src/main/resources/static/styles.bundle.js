@@ -1,43 +1,15 @@
 webpackJsonp([2,4],{
 
-/***/ 13:
-/***/ (function(module, exports) {
-
-var g;
-
-// This works in non-strict mode
-g = (function() {
-	return this;
-})();
-
-try {
-	// This works if eval is allowed (see CSP)
-	g = g || Function("return this")() || (1,eval)("this");
-} catch(e) {
-	// This works if the window reference is available
-	if(typeof window === "object")
-		g = window;
-}
-
-// g can still be undefined, but nothing to do about it...
-// We return undefined, instead of nothing here, so it's
-// easier to handle this case. if(!global) { ...}
-
-module.exports = g;
-
-
-/***/ }),
-
-/***/ 146:
+/***/ 122:
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(225);
+var content = __webpack_require__(187);
 if(typeof content === 'string') content = [[module.i, content, '']];
 // add the styles to the DOM
-var update = __webpack_require__(311)(content, {});
+var update = __webpack_require__(274)(content, {});
 if(content.locals) module.exports = content.locals;
 // Hot Module Replacement
 if(false) {
@@ -55,10 +27,10 @@ if(false) {
 
 /***/ }),
 
-/***/ 224:
+/***/ 186:
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(30)(false);
+exports = module.exports = __webpack_require__(21)(false);
 // imports
 
 
@@ -70,12 +42,12 @@ exports.push([module.i, ".mat-elevation-z0{box-shadow:0 0 0 0 rgba(0,0,0,.2),0 0
 
 /***/ }),
 
-/***/ 225:
+/***/ 187:
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(30)(false);
+exports = module.exports = __webpack_require__(21)(false);
 // imports
-exports.i(__webpack_require__(224), "");
+exports.i(__webpack_require__(186), "");
 
 // module
 exports.push([module.i, "html,\nbody {\n  height: 100%;\n  margin: 0;\n  padding: 0;\n  background: #4d4d4d;\n  -webkit-tap-highlight-color: rgba(0, 0, 0, 0.05);\n}\n\nmain {\n  height: 100%;\n}\n\nli {\n  list-style: none;\n}\n\nvideo {\n  width: 100%;\n}\n\n.mat-spinner path {\n  stroke: #4d4d4d;\n}", ""]);
@@ -85,7 +57,7 @@ exports.push([module.i, "html,\nbody {\n  height: 100%;\n  margin: 0;\n  padding
 
 /***/ }),
 
-/***/ 30:
+/***/ 21:
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {/*
@@ -164,11 +136,11 @@ function toComment(sourceMap) {
   return '/*# ' + data + ' */';
 }
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(57).Buffer))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(45).Buffer))
 
 /***/ }),
 
-/***/ 311:
+/***/ 274:
 /***/ (function(module, exports) {
 
 /*
@@ -421,15 +393,15 @@ function updateLink(linkElement, obj) {
 
 /***/ }),
 
-/***/ 329:
+/***/ 293:
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(146);
+module.exports = __webpack_require__(122);
 
 
 /***/ }),
 
-/***/ 56:
+/***/ 44:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -551,7 +523,7 @@ function fromByteArray (uint8) {
 
 /***/ }),
 
-/***/ 57:
+/***/ 45:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -565,9 +537,9 @@ function fromByteArray (uint8) {
 
 
 
-var base64 = __webpack_require__(56)
-var ieee754 = __webpack_require__(74)
-var isArray = __webpack_require__(75)
+var base64 = __webpack_require__(44)
+var ieee754 = __webpack_require__(61)
+var isArray = __webpack_require__(62)
 
 exports.Buffer = Buffer
 exports.SlowBuffer = SlowBuffer
@@ -2345,11 +2317,11 @@ function isnan (val) {
   return val !== val // eslint-disable-line no-self-compare
 }
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(13)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(9)))
 
 /***/ }),
 
-/***/ 74:
+/***/ 61:
 /***/ (function(module, exports) {
 
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
@@ -2440,7 +2412,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
 
 /***/ }),
 
-/***/ 75:
+/***/ 62:
 /***/ (function(module, exports) {
 
 var toString = {}.toString;
@@ -2450,7 +2422,35 @@ module.exports = Array.isArray || function (arr) {
 };
 
 
+/***/ }),
+
+/***/ 9:
+/***/ (function(module, exports) {
+
+var g;
+
+// This works in non-strict mode
+g = (function() {
+	return this;
+})();
+
+try {
+	// This works if eval is allowed (see CSP)
+	g = g || Function("return this")() || (1,eval)("this");
+} catch(e) {
+	// This works if the window reference is available
+	if(typeof window === "object")
+		g = window;
+}
+
+// g can still be undefined, but nothing to do about it...
+// We return undefined, instead of nothing here, so it's
+// easier to handle this case. if(!global) { ...}
+
+module.exports = g;
+
+
 /***/ })
 
-},[329]);
+},[293]);
 //# sourceMappingURL=styles.bundle.js.map

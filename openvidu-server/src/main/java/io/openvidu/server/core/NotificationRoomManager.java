@@ -76,7 +76,7 @@ public class NotificationRoomManager {
    *                when responding back to the client)
    * @see RoomManager#joinRoom(String, String, boolean, boolean, KurentoClientSessionInfo, String)
    */
-  public void joinRoom(String userName, String roomId, boolean dataChannels,
+  public synchronized void joinRoom(String userName, String roomId, boolean dataChannels,
       boolean webParticipant, ParticipantRequest request) {
     Set<UserParticipant> existingParticipants = null;
     UserParticipant newParticipant = null;

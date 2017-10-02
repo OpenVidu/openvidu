@@ -95,6 +95,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
         const publisherRemote = OV.initPublisher('mirrored-video', {
           audio: true,
           video: true,
+          audioActive: true,
+          videoActive: true,
           quality: 'MEDIUM'
         });
 

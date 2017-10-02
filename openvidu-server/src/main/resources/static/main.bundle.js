@@ -1,253 +1,6 @@
 webpackJsonp([1,4],{
 
-/***/ 102:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return CredentialsDialogComponent; });
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-
-var CredentialsDialogComponent = (function () {
-    function CredentialsDialogComponent() {
-    }
-    CredentialsDialogComponent.prototype.testVideo = function () {
-        this.myReference.close(this.secret);
-    };
-    return CredentialsDialogComponent;
-}());
-CredentialsDialogComponent = __decorate([
-    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_4" /* Component */])({
-        selector: 'app-credentials-dialog',
-        template: "\n        <div>\n            <h1 md-dialog-title>\n                Insert your secret\n            </h1>\n            <form #dialogForm (ngSubmit)=\"testVideo()\">\n                <md-dialog-content>\n                    <md-input-container>\n                        <input mdInput name=\"secret\" type=\"password\" [(ngModel)]=\"secret\">\n                    </md-input-container>\n                </md-dialog-content>\n                <md-dialog-actions>\n                    <button md-button md-dialog-close>CANCEL</button>\n                    <button md-button id=\"join-btn\" type=\"submit\">TEST</button>\n                </md-dialog-actions>\n            </form>\n        </div>\n    ",
-        styles: ["\n        #quality-div {\n            margin-top: 20px;\n        }\n        #join-div {\n            margin-top: 25px;\n            margin-bottom: 20px;\n        }\n        #quality-tag {\n            display: block;\n        }\n        h5 {\n            margin-bottom: 10px;\n            text-align: left;\n        }\n        #joinWithVideo {\n            margin-right: 50px;\n        }\n        md-dialog-actions {\n            display: block;\n        }\n        #join-btn {\n            float: right;\n        }\n    "],
-    }),
-    __metadata("design:paramtypes", [])
-], CredentialsDialogComponent);
-
-//# sourceMappingURL=credentials-dialog.component.js.map
-
-/***/ }),
-
-/***/ 103:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_material__ = __webpack_require__(101);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__services_info_service__ = __webpack_require__(55);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_openvidu_browser__ = __webpack_require__(308);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_openvidu_browser___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_openvidu_browser__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__credentials_dialog_component__ = __webpack_require__(102);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return DashboardComponent; });
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-
-
-
-
-
-var DashboardComponent = (function () {
-    function DashboardComponent(infoService, dialog) {
-        var _this = this;
-        this.infoService = infoService;
-        this.dialog = dialog;
-        this.lockScroll = false;
-        this.info = [];
-        this.testStatus = 'DISCONNECTED';
-        this.testButton = 'Test';
-        this.tickClass = 'trigger';
-        this.showSpinner = false;
-        this.msgChain = [];
-        // Subscription to info updated event raised by InfoService
-        this.infoSubscription = this.infoService.newInfo$.subscribe(function (info) {
-            _this.info.push(info);
-            _this.scrollToBottom();
-        });
-    }
-    DashboardComponent.prototype.ngOnInit = function () {
-    };
-    DashboardComponent.prototype.beforeunloadHandler = function () {
-        // On window closed leave test session
-        if (this.session) {
-            this.endTestVideo();
-        }
-    };
-    DashboardComponent.prototype.ngOnDestroy = function () {
-        // On component destroyed leave test session
-        if (this.session) {
-            this.endTestVideo();
-        }
-    };
-    DashboardComponent.prototype.toggleTestVideo = function () {
-        if (!this.session) {
-            this.testVideo();
-        }
-        else {
-            this.endTestVideo();
-        }
-    };
-    DashboardComponent.prototype.testVideo = function () {
-        var _this = this;
-        var dialogRef;
-        dialogRef = this.dialog.open(__WEBPACK_IMPORTED_MODULE_4__credentials_dialog_component__["a" /* CredentialsDialogComponent */]);
-        dialogRef.componentInstance.myReference = dialogRef;
-        dialogRef.afterClosed().subscribe(function (secret) {
-            if (secret) {
-                _this.connectToSession('wss://' + location.hostname + ':8443/testSession?secret=' + secret);
-            }
-        });
-    };
-    DashboardComponent.prototype.connectToSession = function (mySessionId) {
-        var _this = this;
-        this.msgChain = [];
-        var OV = new __WEBPACK_IMPORTED_MODULE_3_openvidu_browser__["OpenVidu"]();
-        this.session = OV.initSession(mySessionId);
-        this.testStatus = 'CONNECTING';
-        this.testButton = 'Testing...';
-        this.session.connect('token', function (error) {
-            if (!error) {
-                _this.testStatus = 'CONNECTED';
-                var publisherRemote = OV.initPublisher('mirrored-video', {
-                    audio: true,
-                    video: true,
-                    quality: 'MEDIUM'
-                });
-                publisherRemote.on('accessAllowed', function () {
-                    _this.msgChain.push('Camera access allowed');
-                });
-                publisherRemote.on('accessDenied', function () {
-                    _this.endTestVideo();
-                    _this.msgChain.push('Camera access denied');
-                });
-                publisherRemote.on('videoElementCreated', function (video) {
-                    _this.showSpinner = true;
-                    _this.msgChain.push('Video element created');
-                });
-                publisherRemote.on('remoteVideoPlaying', function (video) {
-                    _this.msgChain.push('Remote video playing');
-                    _this.testButton = 'End test';
-                    _this.testStatus = 'PLAYING';
-                    _this.showSpinner = false;
-                });
-                publisherRemote.subscribeToRemote();
-                _this.session.publish(publisherRemote);
-            }
-            else {
-                if (error.code === 401) {
-                    _this.endTestVideo();
-                    var dialogRef = void 0;
-                    dialogRef = _this.dialog.open(__WEBPACK_IMPORTED_MODULE_4__credentials_dialog_component__["a" /* CredentialsDialogComponent */]);
-                    dialogRef.componentInstance.myReference = dialogRef;
-                    dialogRef.afterClosed().subscribe(function (secret) {
-                        if (secret) {
-                            _this.connectToSession('wss://' + location.hostname + ':8443/testSession?secret=' + secret);
-                        }
-                    });
-                }
-                else {
-                    console.error(error);
-                }
-            }
-        });
-    };
-    DashboardComponent.prototype.endTestVideo = function () {
-        this.session.disconnect();
-        this.session = null;
-        this.testStatus = 'DISCONNECTED';
-        this.testButton = 'Test';
-        this.showSpinner = false;
-        this.info = [];
-        this.msgChain = [];
-    };
-    DashboardComponent.prototype.scrollToBottom = function () {
-        try {
-            if (!this.lockScroll) {
-                this.myScrollContainer.nativeElement.scrollTop = this.myScrollContainer.nativeElement.scrollHeight;
-            }
-        }
-        catch (err) {
-            console.error('[Error]:' + err.toString());
-        }
-    };
-    return DashboardComponent;
-}());
-__decorate([
-    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_7" /* ViewChild */])('scrollMe'),
-    __metadata("design:type", typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_0__angular_core__["l" /* ElementRef */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_0__angular_core__["l" /* ElementRef */]) === "function" && _a || Object)
-], DashboardComponent.prototype, "myScrollContainer", void 0);
-__decorate([
-    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_12" /* HostListener */])('window:beforeunload'),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", void 0)
-], DashboardComponent.prototype, "beforeunloadHandler", null);
-DashboardComponent = __decorate([
-    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_4" /* Component */])({
-        selector: 'app-dashboard',
-        template: __webpack_require__(238),
-        styles: [__webpack_require__(227)],
-    }),
-    __metadata("design:paramtypes", [typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_2__services_info_service__["a" /* InfoService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_2__services_info_service__["a" /* InfoService */]) === "function" && _b || Object, typeof (_c = typeof __WEBPACK_IMPORTED_MODULE_1__angular_material__["j" /* MdDialog */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1__angular_material__["j" /* MdDialog */]) === "function" && _c || Object])
-], DashboardComponent);
-
-var _a, _b, _c;
-//# sourceMappingURL=dashboard.component.js.map
-
-/***/ }),
-
-/***/ 104:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return SessionDetailsComponent; });
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-
-var SessionDetailsComponent = (function () {
-    function SessionDetailsComponent() {
-    }
-    SessionDetailsComponent.prototype.ngOnInit = function () {
-    };
-    return SessionDetailsComponent;
-}());
-SessionDetailsComponent = __decorate([
-    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_4" /* Component */])({
-        selector: 'app-session-details',
-        template: __webpack_require__(239),
-        styles: [__webpack_require__(228)]
-    }),
-    __metadata("design:paramtypes", [])
-], SessionDetailsComponent);
-
-//# sourceMappingURL=session-details.component.js.map
-
-/***/ }),
-
-/***/ 136:
+/***/ 112:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -456,11 +209,11 @@ function WebSocketWithReconnection(config) {
 }
 module.exports = WebSocketWithReconnection;
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(13)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(9)))
 
 /***/ }),
 
-/***/ 137:
+/***/ 113:
 /***/ (function(module, exports, __webpack_require__) {
 
 /*
@@ -506,10 +259,10 @@ if (!Function.prototype.bind) {
         return fBound;
     };
 }
-var EventEmitter = __webpack_require__(116).EventEmitter;
-var inherits = __webpack_require__(117);
-var packers = __webpack_require__(304);
-var Mapper = __webpack_require__(298);
+var EventEmitter = __webpack_require__(91).EventEmitter;
+var inherits = __webpack_require__(92);
+var packers = __webpack_require__(267);
+var Mapper = __webpack_require__(261);
 var BASE_TIMEOUT = 5000;
 function unifyResponseMethods(responseMethods) {
     if (!responseMethods)
@@ -1074,8 +827,8 @@ function RpcBuilder(packer, options, transport, onRequest) {
 inherits(RpcBuilder, EventEmitter);
 RpcBuilder.RpcNotification = RpcNotification;
 module.exports = RpcBuilder;
-var clients = __webpack_require__(299);
-var transports = __webpack_require__(301);
+var clients = __webpack_require__(262);
+var transports = __webpack_require__(264);
 RpcBuilder.clients = clients;
 RpcBuilder.clients.transports = transports;
 RpcBuilder.packers = packers;
@@ -1083,13 +836,13 @@ RpcBuilder.packers = packers;
 
 /***/ }),
 
-/***/ 138:
+/***/ 114:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var EventEmitter = __webpack_require__(40);
+var EventEmitter = __webpack_require__(32);
 var Publisher = /** @class */ (function () {
     function Publisher(stream, parentId) {
         var _this = this;
@@ -1227,14 +980,14 @@ exports.Publisher = Publisher;
 
 /***/ }),
 
-/***/ 139:
+/***/ 115:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var Subscriber_1 = __webpack_require__(140);
-var EventEmitter = __webpack_require__(40);
+var Subscriber_1 = __webpack_require__(116);
+var EventEmitter = __webpack_require__(32);
 var Session = /** @class */ (function () {
     function Session(session, openVidu) {
         var _this = this;
@@ -1383,13 +1136,13 @@ exports.Session = Session;
 
 /***/ }),
 
-/***/ 140:
+/***/ 116:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var EventEmitter = __webpack_require__(40);
+var EventEmitter = __webpack_require__(32);
 var Subscriber = /** @class */ (function () {
     function Subscriber(stream, parentId) {
         this.ee = new EventEmitter();
@@ -1410,7 +1163,7 @@ var Subscriber = /** @class */ (function () {
             callback(event);
         });
         if (eventName == 'videoElementCreated') {
-            if (this.stream.isReady) {
+            if (this.stream.isVideoELementCreated) {
                 this.ee.emitEvent('videoElementCreated', [{
                         element: this.stream.getVideoElement()
                     }]);
@@ -1452,13 +1205,13 @@ exports.Subscriber = Subscriber;
 
 /***/ }),
 
-/***/ 141:
+/***/ 117:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var Stream_1 = __webpack_require__(86);
+var Stream_1 = __webpack_require__(72);
 var Connection = /** @class */ (function () {
     function Connection(openVidu, local, room, options) {
         this.openVidu = openVidu;
@@ -1508,13 +1261,14 @@ var Connection = /** @class */ (function () {
             var streamOpts = {
                 id: streamOptions.id,
                 connection: this,
-                recvVideo: (streamOptions.recvVideo == undefined ? true : streamOptions.recvVideo),
-                recvAudio: (streamOptions.recvAudio == undefined ? true : streamOptions.recvAudio),
-                audio: streamOptions.audio,
-                video: streamOptions.video,
+                sendAudio: streamOptions.sendAudio,
+                sendVideo: streamOptions.sendVideo,
+                recvAudio: (streamOptions.audioActive == undefined ? true : streamOptions.audioActive),
+                recvVideo: (streamOptions.videoActive == undefined ? true : streamOptions.videoActive),
+                activeAudio: streamOptions.activeAudio,
+                activeVideo: streamOptions.activeVideo,
                 data: streamOptions.data,
-                mediaConstraints: streamOptions.mediaConstraints,
-                audioOnly: streamOptions.audioOnly,
+                mediaConstraints: streamOptions.mediaConstraints
             };
             var stream = new Stream_1.Stream(this.openVidu, false, this.room, streamOpts);
             this.addStream(stream);
@@ -1529,7 +1283,7 @@ exports.Connection = Connection;
 
 /***/ }),
 
-/***/ 143:
+/***/ 119:
 /***/ (function(module, exports) {
 
 function webpackEmptyContext(req) {
@@ -1538,20 +1292,20 @@ function webpackEmptyContext(req) {
 webpackEmptyContext.keys = function() { return []; };
 webpackEmptyContext.resolve = webpackEmptyContext;
 module.exports = webpackEmptyContext;
-webpackEmptyContext.id = 143;
+webpackEmptyContext.id = 119;
 
 
 /***/ }),
 
-/***/ 144:
+/***/ 120:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_platform_browser_dynamic__ = __webpack_require__(164);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__app_app_module__ = __webpack_require__(169);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__environments_environment__ = __webpack_require__(171);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_platform_browser_dynamic__ = __webpack_require__(126);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__app_app_module__ = __webpack_require__(131);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__environments_environment__ = __webpack_require__(133);
 
 
 
@@ -1564,12 +1318,12 @@ __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__angular_platform_browser_dyna
 
 /***/ }),
 
-/***/ 167:
+/***/ 129:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_services_info_service__ = __webpack_require__(55);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_services_info_service__ = __webpack_require__(43);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AppComponent; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -1616,16 +1370,16 @@ var AppComponent = (function () {
     return AppComponent;
 }());
 __decorate([
-    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_12" /* HostListener */])('window:beforeunload', ['$event']),
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_13" /* HostListener */])('window:beforeunload', ['$event']),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], AppComponent.prototype, "beforeUnloadHander", null);
 AppComponent = __decorate([
-    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_4" /* Component */])({
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_5" /* Component */])({
         selector: 'app-root',
-        template: __webpack_require__(237),
-        styles: [__webpack_require__(226)]
+        template: __webpack_require__(198),
+        styles: [__webpack_require__(188)]
     }),
     __metadata("design:paramtypes", [typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_1_app_services_info_service__["a" /* InfoService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_app_services_info_service__["a" /* InfoService */]) === "function" && _a || Object])
 ], AppComponent);
@@ -1635,13 +1389,13 @@ var _a;
 
 /***/ }),
 
-/***/ 168:
+/***/ 130:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_platform_browser_animations__ = __webpack_require__(165);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_material__ = __webpack_require__(101);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_platform_browser_animations__ = __webpack_require__(127);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_material__ = __webpack_require__(75);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AppMaterialModule; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -1690,24 +1444,24 @@ AppMaterialModule = __decorate([
 
 /***/ }),
 
-/***/ 169:
+/***/ 131:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_platform_browser__ = __webpack_require__(16);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_flex_layout__ = __webpack_require__(161);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__angular_forms__ = __webpack_require__(99);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__angular_http__ = __webpack_require__(100);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_hammerjs__ = __webpack_require__(230);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_platform_browser__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_flex_layout__ = __webpack_require__(125);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_core__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__angular_forms__ = __webpack_require__(73);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__angular_http__ = __webpack_require__(74);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_hammerjs__ = __webpack_require__(192);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_hammerjs___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_hammerjs__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__app_routing__ = __webpack_require__(170);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_app_app_material_module__ = __webpack_require__(168);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__services_info_service__ = __webpack_require__(55);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__app_component__ = __webpack_require__(167);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__components_dashboard_dashboard_component__ = __webpack_require__(103);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__components_session_details_session_details_component__ = __webpack_require__(104);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__components_dashboard_credentials_dialog_component__ = __webpack_require__(102);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__app_routing__ = __webpack_require__(132);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_app_app_material_module__ = __webpack_require__(130);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__services_info_service__ = __webpack_require__(43);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__app_component__ = __webpack_require__(129);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__components_dashboard_dashboard_component__ = __webpack_require__(77);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__components_session_details_session_details_component__ = __webpack_require__(78);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__components_dashboard_credentials_dialog_component__ = __webpack_require__(76);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AppModule; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -1761,13 +1515,13 @@ AppModule = __decorate([
 
 /***/ }),
 
-/***/ 170:
+/***/ 132:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_router__ = __webpack_require__(166);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_components_dashboard_dashboard_component__ = __webpack_require__(103);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_app_components_session_details_session_details_component__ = __webpack_require__(104);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_router__ = __webpack_require__(128);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_components_dashboard_dashboard_component__ = __webpack_require__(77);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_app_components_session_details_session_details_component__ = __webpack_require__(78);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return routing; });
 
 
@@ -1787,7 +1541,7 @@ var routing = __WEBPACK_IMPORTED_MODULE_0__angular_router__["a" /* RouterModule 
 
 /***/ }),
 
-/***/ 171:
+/***/ 133:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1804,10 +1558,10 @@ var environment = {
 
 /***/ }),
 
-/***/ 226:
+/***/ 188:
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(30)(false);
+exports = module.exports = __webpack_require__(21)(false);
 // imports
 
 
@@ -1822,10 +1576,10 @@ module.exports = module.exports.toString();
 
 /***/ }),
 
-/***/ 227:
+/***/ 189:
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(30)(false);
+exports = module.exports = __webpack_require__(21)(false);
 // imports
 
 
@@ -1840,10 +1594,10 @@ module.exports = module.exports.toString();
 
 /***/ }),
 
-/***/ 228:
+/***/ 190:
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(30)(false);
+exports = module.exports = __webpack_require__(21)(false);
 // imports
 
 
@@ -1858,28 +1612,28 @@ module.exports = module.exports.toString();
 
 /***/ }),
 
-/***/ 237:
+/***/ 198:
 /***/ (function(module, exports) {
 
 module.exports = "<main>\n  <router-outlet></router-outlet>\n</main>"
 
 /***/ }),
 
-/***/ 238:
+/***/ 199:
 /***/ (function(module, exports) {
 
-module.exports = "<div id=\"dashboard-div\" fxLayout=\"row\" fxLayout.xs=\"column\" fxLayoutGap=\"20px\" fxFlexFill>\n\n  <div fxLayout=\"column\" fxFlex=\"66%\" fxFlexOrder=\"1\" fxFlexOrder.xs=\"2\">\n    <md-card id=\"log\">\n      <md-card-title>Server events\n        <md-slide-toggle title=\"Lock Scroll\" [(ngModel)]=\"lockScroll\" style=\"float: right; margin-left: auto;\">\n          <md-icon>lock_outline</md-icon>\n        </md-slide-toggle>\n      </md-card-title>\n      <md-divider></md-divider>\n      <md-card-content #scrollMe id=\"log-content\">\n        <ul>\n          <li *ngFor=\"let i of info\">\n            <p>{{i}}</p>\n          </li>\n        </ul>\n      </md-card-content>\n    </md-card>\n  </div>\n\n  <div fxLayout=\"column\" fxFlex=\"33%\" fxFlexOrder=\"2\" fxFlexOrder.xs=\"1\">\n    <md-card id=\"video-loop\">\n      <md-card-title>Test the connection\n        <button [class]=\"testStatus == 'DISCONNECTED' ? 'blue' : (testStatus == 'PLAYING' ? 'yellow' : 'disabled')\" md-raised-button\n          (click)=\"toggleTestVideo()\" [disabled]=\"testStatus==='CONNECTING' || testStatus==='CONNECTED'\">{{testButton}}</button></md-card-title>\n      <md-card-content #scrollMe id=\"log-content\">\n        <div id=\"mirrored-video\">\n          <div *ngIf=\"showSpinner\" id=\"loader\">\n            <div class=\"loader-1 center\"><span></span></div>\n          </div>\n          <!--<md-spinner *ngIf=\"showSpinner\" [color]=\"color\"></md-spinner>-->\n          <div *ngIf=\"session\" id=\"tick-div\">\n            <div id=\"tooltip-tick\" *ngIf=\"testStatus=='PLAYING'\" mdTooltip=\"The connection is successful\" mdTooltipPosition=\"below\"></div>\n            <div [class]=\"testStatus=='PLAYING' ? 'trigger drawn' : 'trigger'\"></div>\n            <svg version=\"1.1\" id=\"tick\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\"\n              viewBox=\"-1 -1 39 39\" style=\"enable-background:new 0 0 37 37;\" xml:space=\"preserve\">\n              <path class=\"circ path\" style=\"fill:none;stroke:#06d362;stroke-width:4;stroke-linejoin:round;stroke-miterlimit:10;\" d=\"\n\tM30.5,6.5L30.5,6.5c6.6,6.6,6.6,17.4,0,24l0,0c-6.6,6.6-17.4,6.6-24,0l0,0c-6.6-6.6-6.6-17.4,0-24l0,0C13.1-0.2,23.9-0.2,30.5,6.5z\"\n              />\n              <polyline class=\"tick path\" style=\"fill:none;stroke:#06d362;stroke-width:4;stroke-linejoin:round;stroke-miterlimit:10;\" points=\"\n\t11.6,20 15.9,24.2 26.4,13.8 \" />\n            </svg>\n          </div>\n        </div>\n        <div id=\"msg-chain\"><p *ngFor=\"let msg of msgChain\">{{msg}}</p></div>\n      </md-card-content>\n    </md-card>\n  </div>\n\n</div>\n"
+module.exports = "<div id=\"dashboard-div\" fxLayout=\"row\" fxLayout.xs=\"column\" fxLayoutGap=\"20px\" fxFlexFill>\n\n  <div fxLayout=\"column\" fxFlex=\"66%\" fxFlexOrder=\"1\" fxFlexOrder.xs=\"2\">\n    <md-card id=\"log\">\n      <md-card-title>Server events\n        <md-slide-toggle title=\"Lock Scroll\" [(ngModel)]=\"lockScroll\" style=\"float: right; margin-left: auto;\">\n          <md-icon>lock_outline</md-icon>\n        </md-slide-toggle>\n      </md-card-title>\n      <md-divider></md-divider>\n      <md-card-content #scrollMe id=\"log-content\">\n        <ul>\n          <li *ngFor=\"let i of info\">\n            <p>{{i}}</p>\n          </li>\n        </ul>\n      </md-card-content>\n    </md-card>\n  </div>\n\n  <div fxLayout=\"column\" fxFlex=\"33%\" fxFlexOrder=\"2\" fxFlexOrder.xs=\"1\">\n    <md-card id=\"video-loop\">\n      <md-card-title>Test the connection\n        <button [class]=\"testStatus == 'DISCONNECTED' ? 'blue' : (testStatus == 'PLAYING' ? 'yellow' : 'disabled')\" md-raised-button\n          (click)=\"toggleTestVideo()\" [disabled]=\"testStatus==='CONNECTING' || testStatus==='CONNECTED'\">{{testButton}}</button></md-card-title>\n      <md-card-content>\n        <div id=\"mirrored-video\">\n          <div *ngIf=\"showSpinner\" id=\"loader\">\n            <div class=\"loader-1 center\"><span></span></div>\n          </div>\n          <!--<md-spinner *ngIf=\"showSpinner\" [color]=\"color\"></md-spinner>-->\n          <div *ngIf=\"session\" id=\"tick-div\">\n            <div id=\"tooltip-tick\" *ngIf=\"testStatus=='PLAYING'\" mdTooltip=\"The connection is successful\" mdTooltipPosition=\"below\"></div>\n            <div [class]=\"testStatus=='PLAYING' ? 'trigger drawn' : 'trigger'\"></div>\n            <svg version=\"1.1\" id=\"tick\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\"\n              viewBox=\"-1 -1 39 39\" style=\"enable-background:new 0 0 37 37;\" xml:space=\"preserve\">\n              <path class=\"circ path\" style=\"fill:none;stroke:#06d362;stroke-width:4;stroke-linejoin:round;stroke-miterlimit:10;\" d=\"\n\tM30.5,6.5L30.5,6.5c6.6,6.6,6.6,17.4,0,24l0,0c-6.6,6.6-17.4,6.6-24,0l0,0c-6.6-6.6-6.6-17.4,0-24l0,0C13.1-0.2,23.9-0.2,30.5,6.5z\"\n              />\n              <polyline class=\"tick path\" style=\"fill:none;stroke:#06d362;stroke-width:4;stroke-linejoin:round;stroke-miterlimit:10;\" points=\"\n\t11.6,20 15.9,24.2 26.4,13.8 \" />\n            </svg>\n          </div>\n        </div>\n        <div id=\"msg-chain\"><p *ngFor=\"let msg of msgChain\">{{msg}}</p></div>\n      </md-card-content>\n    </md-card>\n  </div>\n\n</div>\n"
 
 /***/ }),
 
-/***/ 239:
+/***/ 200:
 /***/ (function(module, exports) {
 
 module.exports = "<p>\n  session-details works!\n</p>\n"
 
 /***/ }),
 
-/***/ 298:
+/***/ 261:
 /***/ (function(module, exports) {
 
 function Mapper() {
@@ -1931,7 +1685,7 @@ module.exports = Mapper;
 
 /***/ }),
 
-/***/ 299:
+/***/ 262:
 /***/ (function(module, exports, __webpack_require__) {
 
 /*
@@ -1950,13 +1704,13 @@ module.exports = Mapper;
  * limitations under the License.
  *
  */
-var JsonRpcClient = __webpack_require__(300);
+var JsonRpcClient = __webpack_require__(263);
 exports.JsonRpcClient = JsonRpcClient;
 
 
 /***/ }),
 
-/***/ 300:
+/***/ 263:
 /***/ (function(module, exports, __webpack_require__) {
 
 /*
@@ -1975,8 +1729,8 @@ exports.JsonRpcClient = JsonRpcClient;
  * limitations under the License.
  *
  */
-var RpcBuilder = __webpack_require__(137);
-var WebSocketWithReconnection = __webpack_require__(136);
+var RpcBuilder = __webpack_require__(113);
+var WebSocketWithReconnection = __webpack_require__(112);
 Date.now = Date.now || function () {
     return +new Date;
 };
@@ -2197,7 +1951,7 @@ module.exports = JsonRpcClient;
 
 /***/ }),
 
-/***/ 301:
+/***/ 264:
 /***/ (function(module, exports, __webpack_require__) {
 
 /*
@@ -2216,13 +1970,13 @@ module.exports = JsonRpcClient;
  * limitations under the License.
  *
  */
-var WebSocketWithReconnection = __webpack_require__(136);
+var WebSocketWithReconnection = __webpack_require__(112);
 exports.WebSocketWithReconnection = WebSocketWithReconnection;
 
 
 /***/ }),
 
-/***/ 302:
+/***/ 265:
 /***/ (function(module, exports) {
 
 /**
@@ -2307,7 +2061,7 @@ exports.unpack = unpack;
 
 /***/ }),
 
-/***/ 303:
+/***/ 266:
 /***/ (function(module, exports) {
 
 function pack(message) {
@@ -2324,18 +2078,18 @@ exports.unpack = unpack;
 
 /***/ }),
 
-/***/ 304:
+/***/ 267:
 /***/ (function(module, exports, __webpack_require__) {
 
-var JsonRPC = __webpack_require__(302);
-var XmlRPC = __webpack_require__(303);
+var JsonRPC = __webpack_require__(265);
+var XmlRPC = __webpack_require__(266);
 exports.JsonRPC = JsonRPC;
 exports.XmlRPC = XmlRPC;
 
 
 /***/ }),
 
-/***/ 305:
+/***/ 268:
 /***/ (function(module, exports, __webpack_require__) {
 
 /*
@@ -2353,14 +2107,14 @@ exports.XmlRPC = XmlRPC;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var freeice = __webpack_require__(229);
-var inherits = __webpack_require__(117);
-var UAParser = __webpack_require__(312);
-var uuid = __webpack_require__(314);
-var hark = __webpack_require__(231);
-var EventEmitter = __webpack_require__(116).EventEmitter;
-var recursive = __webpack_require__(235).recursive.bind(undefined, true);
-var sdpTranslator = __webpack_require__(294);
+var freeice = __webpack_require__(191);
+var inherits = __webpack_require__(92);
+var UAParser = __webpack_require__(275);
+var uuid = __webpack_require__(277);
+var hark = __webpack_require__(193);
+var EventEmitter = __webpack_require__(91).EventEmitter;
+var recursive = __webpack_require__(196).recursive.bind(undefined, true);
+var sdpTranslator = __webpack_require__(258);
 var logger = window.Logger || console;
 // var gUM = navigator.mediaDevices.getUserMedia || function (constraints) {
 //   return new Promise(navigator.getUserMedia(constraints, function (stream) {
@@ -2368,17 +2122,17 @@ var logger = window.Logger || console;
 //     start()
 //   }).eror(callback));
 // }
-try {
-    __webpack_require__(234);
-}
-catch (error) {
-    if (typeof getScreenConstraints === 'undefined') {
-        logger.warn('screen sharing is not available');
-        getScreenConstraints = function getScreenConstraints(sendSource, callback) {
-            callback(new Error("This library is not enabled for screen sharing"));
-        };
+/*try {
+  require('kurento-browser-extensions')
+} catch (error) {
+  if (typeof getScreenConstraints === 'undefined') {
+    logger.warn('screen sharing is not available')
+
+    getScreenConstraints = function getScreenConstraints(sendSource, callback) {
+      callback(new Error("This library is not enabled for screen sharing"))
     }
-}
+  }
+}*/
 var MEDIA_CONSTRAINTS = {
     audio: true,
     video: {
@@ -3004,7 +2758,7 @@ exports.hark = harkUtils;
 
 /***/ }),
 
-/***/ 306:
+/***/ 269:
 /***/ (function(module, exports, __webpack_require__) {
 
 /*
@@ -3032,13 +2786,13 @@ exports.hark = harkUtils;
  * @copyright 2014 Kurento (http://kurento.org/)
  * @license ALv2
  */
-var WebRtcPeer = __webpack_require__(305);
+var WebRtcPeer = __webpack_require__(268);
 exports.WebRtcPeer = WebRtcPeer;
 
 
 /***/ }),
 
-/***/ 307:
+/***/ 270:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3060,10 +2814,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * limitations under the License.
  *
  */
-var OpenViduInternal_1 = __webpack_require__(309);
-var Session_1 = __webpack_require__(139);
-var Publisher_1 = __webpack_require__(138);
-var adapter = __webpack_require__(142);
+var OpenViduInternal_1 = __webpack_require__(272);
+var Session_1 = __webpack_require__(115);
+var Publisher_1 = __webpack_require__(114);
+var adapter = __webpack_require__(118);
 if (window) {
     window["adapter"] = adapter;
 }
@@ -3090,17 +2844,21 @@ var OpenVidu = /** @class */ (function () {
         if (this.checkSystemRequirements()) {
             if (cameraOptions != null) {
                 var cameraOptionsAux = {
-                    audio: cameraOptions.audio != null ? cameraOptions.audio : true,
-                    video: cameraOptions.video != null ? cameraOptions.video : true,
+                    sendAudio: cameraOptions.audio != null ? cameraOptions.audio : true,
+                    sendVideo: cameraOptions.video != null ? cameraOptions.video : true,
+                    activeAudio: cameraOptions.activeAudio != null ? cameraOptions.activeAudio : true,
+                    activeVideo: cameraOptions.activeVideo != null ? cameraOptions.activeVideo : true,
                     data: true,
-                    mediaConstraints: this.openVidu.generateMediaConstraints(cameraOptions.quality)
+                    mediaConstraints: this.openVidu.generateMediaConstraints(cameraOptions)
                 };
                 cameraOptions = cameraOptionsAux;
             }
             else {
                 cameraOptions = {
-                    audio: true,
-                    video: true,
+                    sendAudio: true,
+                    sendVideo: true,
+                    activeAudio: true,
+                    activeVideo: true,
                     data: true,
                     mediaConstraints: {
                         audio: true,
@@ -3151,7 +2909,7 @@ exports.OpenVidu = OpenVidu;
 
 /***/ }),
 
-/***/ 308:
+/***/ 271:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3160,17 +2918,17 @@ function __export(m) {
     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 }
 Object.defineProperty(exports, "__esModule", { value: true });
-__export(__webpack_require__(307));
-__export(__webpack_require__(139));
-__export(__webpack_require__(138));
-__export(__webpack_require__(140));
-__export(__webpack_require__(86));
-__export(__webpack_require__(141));
+__export(__webpack_require__(270));
+__export(__webpack_require__(115));
+__export(__webpack_require__(114));
+__export(__webpack_require__(116));
+__export(__webpack_require__(72));
+__export(__webpack_require__(117));
 
 
 /***/ }),
 
-/***/ 309:
+/***/ 272:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3192,9 +2950,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * limitations under the License.
  *
  */
-var SessionInternal_1 = __webpack_require__(310);
-var Stream_1 = __webpack_require__(86);
-var RpcBuilder = __webpack_require__(137);
+var SessionInternal_1 = __webpack_require__(273);
+var Stream_1 = __webpack_require__(72);
+var RpcBuilder = __webpack_require__(113);
 var OpenViduInternal = /** @class */ (function () {
     function OpenViduInternal() {
         this.remoteStreams = [];
@@ -3424,8 +3182,10 @@ var OpenViduInternal = /** @class */ (function () {
             return this.camera;
         }
         options = options || {
-            audio: true,
-            video: true,
+            sendAudio: true,
+            sendVideo: true,
+            activeAudio: true,
+            activeVideo: true,
             data: true,
             mediaConstraints: {
                 audio: true,
@@ -3437,18 +3197,6 @@ var OpenViduInternal = /** @class */ (function () {
         return this.camera;
     };
     ;
-    /*joinSession(options: SessionOptions, callback: Callback<Session>) {
-        
-        this.session.configure(options);
-        
-        this.session.connect2();
-        
-        this.session.addEventListener('room-connected', roomEvent => callback(undefined,this.session));
-        
-        this.session.addEventListener('error-room', error => callback(error));
-        
-        return this.session;
-    };*/
     //CHAT
     OpenViduInternal.prototype.sendMessage = function (room, user, message) {
         this.sendRequest('sendMessage', {
@@ -3480,32 +3228,37 @@ var OpenViduInternal = /** @class */ (function () {
         this.toggleLocalVideoTrack(false);
         this.toggleLocalAudioTrack(false);
     };
-    OpenViduInternal.prototype.generateMediaConstraints = function (quality) {
+    OpenViduInternal.prototype.generateMediaConstraints = function (cameraOptions) {
         var mediaConstraints = {
-            audio: true,
+            audio: cameraOptions.audio,
             video: {}
         };
-        var w, h;
-        switch (quality) {
-            case 'LOW':
-                w = 320;
-                h = 240;
-                break;
-            case 'MEDIUM':
-                w = 640;
-                h = 480;
-                break;
-            case 'HIGH':
-                w = 1280;
-                h = 720;
-                break;
-            default:
-                w = 640;
-                h = 480;
+        if (!cameraOptions.video) {
+            mediaConstraints.video = false;
         }
-        mediaConstraints.video['width'] = { exact: w };
-        mediaConstraints.video['height'] = { exact: h };
-        //mediaConstraints.video['frameRate'] = { ideal: Number((<HTMLInputElement>document.getElementById('frameRate')).value) };
+        else {
+            var w = void 0, h = void 0;
+            switch (cameraOptions.quality) {
+                case 'LOW':
+                    w = 320;
+                    h = 240;
+                    break;
+                case 'MEDIUM':
+                    w = 640;
+                    h = 480;
+                    break;
+                case 'HIGH':
+                    w = 1280;
+                    h = 720;
+                    break;
+                default:
+                    w = 640;
+                    h = 480;
+            }
+            mediaConstraints.video['width'] = { exact: w };
+            mediaConstraints.video['height'] = { exact: h };
+            //mediaConstraints.video['frameRate'] = { ideal: Number((<HTMLInputElement>document.getElementById('frameRate')).value) };
+        }
         return mediaConstraints;
     };
     return OpenViduInternal;
@@ -3515,14 +3268,14 @@ exports.OpenViduInternal = OpenViduInternal;
 
 /***/ }),
 
-/***/ 310:
+/***/ 273:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var Connection_1 = __webpack_require__(141);
-var EventEmitter = __webpack_require__(40);
+var Connection_1 = __webpack_require__(117);
+var EventEmitter = __webpack_require__(32);
 var SECRET_PARAM = '?secret=';
 var SessionInternal = /** @class */ (function () {
     function SessionInternal(openVidu, sessionId) {
@@ -3710,12 +3463,12 @@ var SessionInternal = /** @class */ (function () {
         });
     };
     SessionInternal.prototype.onParticipantPublished = function (options) {
-        options.metadata = this.participants[options.id].data;
         // Get the existing Connection created on 'onParticipantJoined' for
         // existing participants or create a new one for new participants
         var connection = this.participants[options.id];
         if (connection) {
             // Update existing Connection
+            options.metadata = connection.data;
             connection.options = options;
             connection.initStreams(options);
         }
@@ -3730,7 +3483,6 @@ var SessionInternal = /** @class */ (function () {
         else {
             console.debug("Remote Connection found in connections list by its id [" + pid + "]");
         }
-        connection.creationTime = this.participants[pid].creationTime;
         this.participants[pid] = connection;
         this.ee.emitEvent('participant-published', [{ connection: connection }]);
         var streams = connection.getStreams();
@@ -3994,20 +3746,20 @@ exports.SessionInternal = SessionInternal;
 
 /***/ }),
 
-/***/ 327:
+/***/ 291:
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(144);
+module.exports = __webpack_require__(120);
 
 
 /***/ }),
 
-/***/ 55:
+/***/ 43:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs_Subject__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs_Subject__ = __webpack_require__(20);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs_Subject___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_rxjs_Subject__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return InfoService; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
@@ -4043,15 +3795,15 @@ InfoService = __decorate([
 
 /***/ }),
 
-/***/ 86:
+/***/ 72:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var EventEmitter = __webpack_require__(40);
-var kurentoUtils = __webpack_require__(306);
-var adapter = __webpack_require__(142);
+var EventEmitter = __webpack_require__(32);
+var kurentoUtils = __webpack_require__(269);
+var adapter = __webpack_require__(118);
 if (window) {
     window["adapter"] = adapter;
 }
@@ -4077,7 +3829,8 @@ var Stream = /** @class */ (function () {
         this.localMirrored = false;
         this.chanId = 0;
         this.dataChannelOpened = false;
-        this.audioOnly = false;
+        this.activeAudio = true;
+        this.activeVideo = true;
         this.isReady = false;
         this.isVideoELementCreated = false;
         this.accessIsAllowed = false;
@@ -4089,13 +3842,14 @@ var Stream = /** @class */ (function () {
             this.id = "webcam";
         }
         this.connection = options.connection;
-        this.recvVideo = options.recvVideo;
-        this.recvAudio = options.recvAudio;
+        this.recvVideo = options.recvVideo || false;
+        this.recvAudio = options.recvAudio || false;
+        this.sendVideo = options.sendVideo;
+        this.sendAudio = options.sendAudio;
+        this.activeAudio = options.activeAudio;
+        this.activeVideo = options.activeVideo;
         this.dataChannel = options.data || false;
-        this.sendVideo = options.video;
-        this.sendAudio = options.audio;
         this.mediaConstraints = options.mediaConstraints;
-        this.audioOnly = options.audioOnly || false;
         this.addEventListener('src-added', function (srcEvent) {
             _this.videoSrcObject = srcEvent.srcObject;
             if (_this.video)
@@ -4225,7 +3979,7 @@ var Stream = /** @class */ (function () {
         });
         if (this.local && !this.displayMyRemote()) {
             this.video.muted = true;
-            this.video.onplay = function () {
+            this.video.onplaying = function () {
                 console.info("Local 'Stream' with id [" + _this.getId() + "] video is now playing");
                 _this.ee.emitEvent('video-is-playing', [{
                         element: _this.video
@@ -4307,7 +4061,6 @@ var Stream = /** @class */ (function () {
             if (!hasVideo) {
                 constraints.video = false;
                 _this.sendVideo = false;
-                _this.audioOnly = true;
                 _this.requestCameraAccesAux(constraints, callback);
             }
             else {
@@ -4322,21 +4075,20 @@ var Stream = /** @class */ (function () {
             _this.cameraAccessSuccess(userStream, callback);
         })
             .catch(function (error) {
-            //  Try to ask for microphone only
+            /*//  Try to ask for microphone only
             navigator.mediaDevices.getUserMedia({ audio: true, video: false })
-                .then(function (userStream) {
-                constraints.video = false;
-                _this.sendVideo = false;
-                _this.audioOnly = true;
-                _this.cameraAccessSuccess(userStream, callback);
-            })
-                .catch(function (error) {
-                _this.accessIsDenied = true;
-                _this.accessIsAllowed = false;
-                _this.ee.emitEvent('access-denied-by-publisher');
-                console.error("Access denied", error);
-                callback(error, _this);
-            });
+                .then(userStream => {
+                    constraints.video = false;
+                    this.sendVideo = false;
+                    this.sendAudio = true;
+                    this.cameraAccessSuccess(userStream, callback);
+                })
+                .catch(error => {*/
+            _this.accessIsDenied = true;
+            _this.accessIsAllowed = false;
+            _this.ee.emitEvent('access-denied-by-publisher');
+            console.error("Access denied", error);
+            callback(error, _this);
         });
     };
     Stream.prototype.cameraAccessSuccess = function (userStream, callback) {
@@ -4344,10 +4096,10 @@ var Stream = /** @class */ (function () {
         this.accessIsDenied = false;
         this.ee.emitEvent('access-allowed-by-publisher');
         if (userStream.getAudioTracks()[0] != null) {
-            userStream.getAudioTracks()[0].enabled = this.sendAudio;
+            userStream.getAudioTracks()[0].enabled = this.activeAudio;
         }
         if (userStream.getVideoTracks()[0] != null) {
-            userStream.getVideoTracks()[0].enabled = this.sendVideo;
+            userStream.getVideoTracks()[0].enabled = this.activeVideo;
         }
         this.wrStream = userStream;
         this.emitSrcEvent(this.wrStream);
@@ -4372,7 +4124,8 @@ var Stream = /** @class */ (function () {
         this.openVidu.sendRequest("publishVideo", {
             sdpOffer: sdpOfferParam,
             doLoopback: this.displayMyRemote() || false,
-            audioOnly: this.audioOnly
+            audioActive: this.sendAudio,
+            videoActive: this.sendVideo
         }, function (error, response) {
             if (error) {
                 console.error("Error on publishVideo: " + JSON.stringify(error));
@@ -4443,7 +4196,7 @@ var Stream = /** @class */ (function () {
         else {
             var offerConstraints = {
                 audio: this.recvAudio,
-                video: !this.audioOnly
+                video: this.recvVideo
             };
             console.debug("'Session.subscribe(Stream)' called. Constraints of generate SDP offer", offerConstraints);
             var options = {
@@ -4498,26 +4251,28 @@ var Stream = /** @class */ (function () {
                 console.debug("Peer remote stream", _this.wrStream);
                 if (_this.wrStream != undefined) {
                     _this.emitSrcEvent(_this.wrStream);
-                    _this.speechEvent = kurentoUtils.WebRtcPeer.hark(_this.wrStream, { threshold: _this.room.thresholdSpeaker });
-                    _this.speechEvent.on('speaking', function () {
-                        _this.room.addParticipantSpeaking(participantId);
-                        _this.room.emitEvent('stream-speaking', [{
-                                participantId: participantId
-                            }]);
-                    });
-                    _this.speechEvent.on('stopped_speaking', function () {
-                        _this.room.removeParticipantSpeaking(participantId);
-                        _this.room.emitEvent('stream-stopped-speaking', [{
-                                participantId: participantId
-                            }]);
-                    });
+                    if (_this.wrStream.getAudioTracks()[0] != null) {
+                        _this.speechEvent = kurentoUtils.WebRtcPeer.hark(_this.wrStream, { threshold: _this.room.thresholdSpeaker });
+                        _this.speechEvent.on('speaking', function () {
+                            _this.room.addParticipantSpeaking(participantId);
+                            _this.room.emitEvent('stream-speaking', [{
+                                    participantId: participantId
+                                }]);
+                        });
+                        _this.speechEvent.on('stopped_speaking', function () {
+                            _this.room.removeParticipantSpeaking(participantId);
+                            _this.room.emitEvent('stream-stopped-speaking', [{
+                                    participantId: participantId
+                                }]);
+                        });
+                    }
                 }
                 for (var _i = 0, _a = _this.videoElements; _i < _a.length; _i++) {
                     var videoElement = _a[_i];
                     var thumbnailId = videoElement.thumb;
                     var video = videoElement.video;
                     video.srcObject = _this.wrStream;
-                    video.onplay = function () {
+                    video.onplaying = function () {
                         if (_this.local && _this.displayMyRemote()) {
                             console.info("Your own remote 'Stream' with id [" + _this.getId() + "] video is now playing");
                             _this.ee.emitEvent('remote-video-is-playing', [{
@@ -4594,7 +4349,256 @@ var Stream = /** @class */ (function () {
 exports.Stream = Stream;
 
 
+/***/ }),
+
+/***/ 76:
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(2);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return CredentialsDialogComponent; });
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+
+var CredentialsDialogComponent = (function () {
+    function CredentialsDialogComponent() {
+    }
+    CredentialsDialogComponent.prototype.testVideo = function () {
+        this.myReference.close(this.secret);
+    };
+    return CredentialsDialogComponent;
+}());
+CredentialsDialogComponent = __decorate([
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_5" /* Component */])({
+        selector: 'app-credentials-dialog',
+        template: "\n        <div>\n            <h1 md-dialog-title>\n                Insert your secret\n            </h1>\n            <form #dialogForm (ngSubmit)=\"testVideo()\">\n                <md-dialog-content>\n                    <md-input-container>\n                        <input mdInput name=\"secret\" type=\"password\" [(ngModel)]=\"secret\">\n                    </md-input-container>\n                </md-dialog-content>\n                <md-dialog-actions>\n                    <button md-button md-dialog-close>CANCEL</button>\n                    <button md-button id=\"join-btn\" type=\"submit\">TEST</button>\n                </md-dialog-actions>\n            </form>\n        </div>\n    ",
+        styles: ["\n        #quality-div {\n            margin-top: 20px;\n        }\n        #join-div {\n            margin-top: 25px;\n            margin-bottom: 20px;\n        }\n        #quality-tag {\n            display: block;\n        }\n        h5 {\n            margin-bottom: 10px;\n            text-align: left;\n        }\n        #joinWithVideo {\n            margin-right: 50px;\n        }\n        md-dialog-actions {\n            display: block;\n        }\n        #join-btn {\n            float: right;\n        }\n    "],
+    }),
+    __metadata("design:paramtypes", [])
+], CredentialsDialogComponent);
+
+//# sourceMappingURL=credentials-dialog.component.js.map
+
+/***/ }),
+
+/***/ 77:
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_material__ = __webpack_require__(75);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__services_info_service__ = __webpack_require__(43);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_openvidu_browser__ = __webpack_require__(271);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_openvidu_browser___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_openvidu_browser__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__credentials_dialog_component__ = __webpack_require__(76);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return DashboardComponent; });
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+
+
+
+
+
+var DashboardComponent = (function () {
+    function DashboardComponent(infoService, dialog) {
+        var _this = this;
+        this.infoService = infoService;
+        this.dialog = dialog;
+        this.lockScroll = false;
+        this.info = [];
+        this.testStatus = 'DISCONNECTED';
+        this.testButton = 'Test';
+        this.tickClass = 'trigger';
+        this.showSpinner = false;
+        this.msgChain = [];
+        // Subscription to info updated event raised by InfoService
+        this.infoSubscription = this.infoService.newInfo$.subscribe(function (info) {
+            _this.info.push(info);
+            _this.scrollToBottom();
+        });
+    }
+    DashboardComponent.prototype.ngOnInit = function () {
+    };
+    DashboardComponent.prototype.beforeunloadHandler = function () {
+        // On window closed leave test session
+        if (this.session) {
+            this.endTestVideo();
+        }
+    };
+    DashboardComponent.prototype.ngOnDestroy = function () {
+        // On component destroyed leave test session
+        if (this.session) {
+            this.endTestVideo();
+        }
+    };
+    DashboardComponent.prototype.toggleTestVideo = function () {
+        if (!this.session) {
+            this.testVideo();
+        }
+        else {
+            this.endTestVideo();
+        }
+    };
+    DashboardComponent.prototype.testVideo = function () {
+        var _this = this;
+        var dialogRef;
+        dialogRef = this.dialog.open(__WEBPACK_IMPORTED_MODULE_4__credentials_dialog_component__["a" /* CredentialsDialogComponent */]);
+        dialogRef.componentInstance.myReference = dialogRef;
+        dialogRef.afterClosed().subscribe(function (secret) {
+            if (secret) {
+                _this.connectToSession('wss://' + location.hostname + ':8443/testSession?secret=' + secret);
+            }
+        });
+    };
+    DashboardComponent.prototype.connectToSession = function (mySessionId) {
+        var _this = this;
+        this.msgChain = [];
+        var OV = new __WEBPACK_IMPORTED_MODULE_3_openvidu_browser__["OpenVidu"]();
+        this.session = OV.initSession(mySessionId);
+        this.testStatus = 'CONNECTING';
+        this.testButton = 'Testing...';
+        this.session.connect('token', function (error) {
+            if (!error) {
+                _this.testStatus = 'CONNECTED';
+                var publisherRemote = OV.initPublisher('mirrored-video', {
+                    audio: true,
+                    video: true,
+                    audioActive: true,
+                    videoActive: true,
+                    quality: 'MEDIUM'
+                });
+                publisherRemote.on('accessAllowed', function () {
+                    _this.msgChain.push('Camera access allowed');
+                });
+                publisherRemote.on('accessDenied', function () {
+                    _this.endTestVideo();
+                    _this.msgChain.push('Camera access denied');
+                });
+                publisherRemote.on('videoElementCreated', function (video) {
+                    _this.showSpinner = true;
+                    _this.msgChain.push('Video element created');
+                });
+                publisherRemote.on('remoteVideoPlaying', function (video) {
+                    _this.msgChain.push('Remote video playing');
+                    _this.testButton = 'End test';
+                    _this.testStatus = 'PLAYING';
+                    _this.showSpinner = false;
+                });
+                publisherRemote.subscribeToRemote();
+                _this.session.publish(publisherRemote);
+            }
+            else {
+                if (error.code === 401) {
+                    _this.endTestVideo();
+                    var dialogRef = void 0;
+                    dialogRef = _this.dialog.open(__WEBPACK_IMPORTED_MODULE_4__credentials_dialog_component__["a" /* CredentialsDialogComponent */]);
+                    dialogRef.componentInstance.myReference = dialogRef;
+                    dialogRef.afterClosed().subscribe(function (secret) {
+                        if (secret) {
+                            _this.connectToSession('wss://' + location.hostname + ':8443/testSession?secret=' + secret);
+                        }
+                    });
+                }
+                else {
+                    console.error(error);
+                }
+            }
+        });
+    };
+    DashboardComponent.prototype.endTestVideo = function () {
+        this.session.disconnect();
+        this.session = null;
+        this.testStatus = 'DISCONNECTED';
+        this.testButton = 'Test';
+        this.showSpinner = false;
+        this.info = [];
+        this.msgChain = [];
+    };
+    DashboardComponent.prototype.scrollToBottom = function () {
+        try {
+            if (!this.lockScroll) {
+                this.myScrollContainer.nativeElement.scrollTop = this.myScrollContainer.nativeElement.scrollHeight;
+            }
+        }
+        catch (err) {
+            console.error('[Error]:' + err.toString());
+        }
+    };
+    return DashboardComponent;
+}());
+__decorate([
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_8" /* ViewChild */])('scrollMe'),
+    __metadata("design:type", typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_0__angular_core__["l" /* ElementRef */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_0__angular_core__["l" /* ElementRef */]) === "function" && _a || Object)
+], DashboardComponent.prototype, "myScrollContainer", void 0);
+__decorate([
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_13" /* HostListener */])('window:beforeunload'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], DashboardComponent.prototype, "beforeunloadHandler", null);
+DashboardComponent = __decorate([
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_5" /* Component */])({
+        selector: 'app-dashboard',
+        template: __webpack_require__(199),
+        styles: [__webpack_require__(189)],
+    }),
+    __metadata("design:paramtypes", [typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_2__services_info_service__["a" /* InfoService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_2__services_info_service__["a" /* InfoService */]) === "function" && _b || Object, typeof (_c = typeof __WEBPACK_IMPORTED_MODULE_1__angular_material__["j" /* MdDialog */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1__angular_material__["j" /* MdDialog */]) === "function" && _c || Object])
+], DashboardComponent);
+
+var _a, _b, _c;
+//# sourceMappingURL=dashboard.component.js.map
+
+/***/ }),
+
+/***/ 78:
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(2);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return SessionDetailsComponent; });
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+
+var SessionDetailsComponent = (function () {
+    function SessionDetailsComponent() {
+    }
+    SessionDetailsComponent.prototype.ngOnInit = function () {
+    };
+    return SessionDetailsComponent;
+}());
+SessionDetailsComponent = __decorate([
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_5" /* Component */])({
+        selector: 'app-session-details',
+        template: __webpack_require__(200),
+        styles: [__webpack_require__(190)]
+    }),
+    __metadata("design:paramtypes", [])
+], SessionDetailsComponent);
+
+//# sourceMappingURL=session-details.component.js.map
+
 /***/ })
 
-},[327]);
+},[291]);
 //# sourceMappingURL=main.bundle.js.map

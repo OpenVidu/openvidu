@@ -23,7 +23,7 @@
       <md-card-title>Test the connection
         <button [class]="testStatus == 'DISCONNECTED' ? 'blue' : (testStatus == 'PLAYING' ? 'yellow' : 'disabled')" md-raised-button
           (click)="toggleTestVideo()" [disabled]="testStatus==='CONNECTING' || testStatus==='CONNECTED'">{{testButton}}</button></md-card-title>
-      <md-card-content #scrollMe id="log-content">
+      <md-card-content>
         <div id="mirrored-video">
           <div *ngIf="showSpinner" id="loader">
             <div class="loader-1 center"><span></span></div>
