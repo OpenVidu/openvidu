@@ -20,6 +20,8 @@ import { Session } from './Session';
 import { Publisher } from './Publisher';
 
 import * as adapter from 'webrtc-adapter';
+import * as screenSharing from '../ScreenSharing/Screen-Capturing.js';
+import * as screenSharingAuto from '../ScreenSharing/Screen-Capturing-Auto.js';
 
 if (window) {
     window["adapter"] = adapter;
@@ -55,16 +57,112 @@ export class OpenVidu {
 
     initPublisher(parentId: string, cameraOptions?: any, callback?: Function): any {
         if (this.checkSystemRequirements()) {
+            let publisher: Publisher;
             if (cameraOptions != null) {
-                let cameraOptionsAux = {
-                    sendAudio: cameraOptions.audio != null ? cameraOptions.audio : true,
-                    sendVideo: cameraOptions.video != null ? cameraOptions.video : true,
-                    activeAudio: cameraOptions.activeAudio != null ? cameraOptions.activeAudio : true,
-                    activeVideo: cameraOptions.activeVideo != null ? cameraOptions.activeVideo : true,
-                    data: true,
-                    mediaConstraints: this.openVidu.generateMediaConstraints(cameraOptions)
-                };
-                cameraOptions = cameraOptionsAux;
+                if (!cameraOptions.screen) {
+                    // Webcam and/or microphone is being requested
+
+                    let cameraOptionsAux = {
+                        sendAudio: cameraOptions.audio != null ? cameraOptions.audio : true,
+                        sendVideo: cameraOptions.video != null ? cameraOptions.video : true,
+                        activeAudio: cameraOptions.activeAudio != null ? cameraOptions.activeAudio : true,
+                        activeVideo: cameraOptions.activeVideo != null ? cameraOptions.activeVideo : true,
+                        data: true,
+                        mediaConstraints: this.openVidu.generateMediaConstraints(cameraOptions)
+                    };
+                    cameraOptions = cameraOptionsAux;
+                    publisher = new Publisher(this.openVidu.initPublisherTagged(parentId, cameraOptions, callback), parentId, false);
+                    console.info("'Publisher' initialized");
+                    return publisher;
+
+                } else {
+                    if (adapter.browserDetails.browser === 'firefox' && adapter.browserDetails.version >= 52) {
+                        publisher = new Publisher(this.openVidu.initPublisherScreen(parentId), parentId, true);
+                        screenSharingAuto.getScreenId((error, sourceId, screenConstraints) => {
+                            cameraOptions = {
+                                sendAudio: cameraOptions.audio != null ? cameraOptions.audio : true,
+                                sendVideo: cameraOptions.video != null ? cameraOptions.video : true,
+                                activeAudio: cameraOptions.activeAudio != null ? cameraOptions.activeAudio : true,
+                                activeVideo: cameraOptions.activeVideo != null ? cameraOptions.activeVideo : true,
+                                data: true,
+                                mediaConstraints: {
+                                    video: screenConstraints.video,
+                                    audio: false
+                                }
+                            }
+                            publisher.stream.configureScreenOptions(cameraOptions);
+                            console.info("'Publisher' initialized");
+                        });
+                        return publisher;
+                    } else if (adapter.browserDetails.browser === 'chrome') {
+                        // Screen is being requested
+
+                        /*screenSharing.isChromeExtensionAvailable((availability) => {
+                            switch (availability) {
+                                case 'available':
+                                    console.warn('EXTENSION AVAILABLE!!!');
+                                    screenSharing.getScreenConstraints((error, screenConstraints) => {
+                                        if (!error) {
+                                            console.warn(screenConstraints);
+                                        }
+                                    });
+                                    break;
+                                case 'unavailable':
+                                    console.warn('EXTENSION NOT AVAILABLE!!!');
+                                    break;
+                                case 'isFirefox':
+                                    console.warn('IT IS FIREFOX!!!');
+                                    screenSharing.getScreenConstraints((error, screenConstraints) => {
+                                        if (!error) {
+                                            console.warn(screenConstraints);
+                                        }
+                                    });
+                                    break;
+                            }
+                        });*/
+                        screenSharingAuto.getScreenId((error, sourceId, screenConstraints) => {
+
+                            if (error === 'not-installed') {
+                                console.error('Error capturing the screen: an extension is needed');
+                                if (confirm('You need an extension to share your screen!\n\n' +
+                                    'This is the URL where you can install it:\n' +
+                                    'https://chrome.google.com/webstore/detail/screen-capturing/ajhifddimkapgcifgcodmmfdlknahffk\n\n' +
+                                    'Click OK to install it (Pop-Up can be blocked) and then reload this page')) {
+                                    window.open(
+                                        'https://chrome.google.com/webstore/detail/screen-capturing/ajhifddimkapgcifgcodmmfdlknahffk',
+                                        '_blank'
+                                    );
+                                }
+                                return;
+                            } else if (error === 'permission-denied') {
+                                console.error('Error capturing the screen: Permission Denied');
+                                return;
+                            }
+
+                            cameraOptions = {
+                                sendAudio: cameraOptions.audio != null ? cameraOptions.audio : true,
+                                sendVideo: cameraOptions.video != null ? cameraOptions.video : true,
+                                activeAudio: cameraOptions.activeAudio != null ? cameraOptions.activeAudio : true,
+                                activeVideo: cameraOptions.activeVideo != null ? cameraOptions.activeVideo : true,
+                                data: true,
+                                mediaConstraints: {
+                                    video: screenConstraints.video,
+                                    audio: false
+                                }
+                            }
+                            publisher.stream.configureScreenOptions(cameraOptions);
+
+                        }, (error) => {
+                            console.error('getScreenId error', error);
+                            return;
+                        });
+                        publisher = new Publisher(this.openVidu.initPublisherScreen(parentId), parentId, true);
+                        console.info("'Publisher' initialized");
+                        return publisher;
+                    } else {
+                        console.error('Screen sharing not supported on ' + adapter.browserDetails.browser);
+                    }
+                }
             } else {
                 cameraOptions = {
                     sendAudio: true,
@@ -77,12 +175,10 @@ export class OpenVidu {
                         video: { width: { ideal: 1280 } }
                     }
                 }
+                publisher = new Publisher(this.openVidu.initPublisherTagged(parentId, cameraOptions, callback), parentId, false);
+                console.info("'Publisher' initialized");
+                return publisher;
             }
-            var publisher = new Publisher(this.openVidu.initPublisherTagged(parentId, cameraOptions, callback), parentId);
-            
-            console.info("'Publisher' initialized");
-            return publisher;
-
         } else {
             alert("Browser not supported");
         }
@@ -113,10 +209,10 @@ export class OpenVidu {
     }
 
     enableProdMode() {
-        console.log = function() {};
-        console.debug = function() {};
-        console.info = function() {};
-        console.warn = function() {};
+        console.log = function () { };
+        console.debug = function () { };
+        console.info = function () { };
+        console.warn = function () { };
     }
 
 }

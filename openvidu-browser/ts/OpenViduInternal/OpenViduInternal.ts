@@ -42,32 +42,65 @@ export class OpenViduInternal {
         return this.session;
     }
 
-    initPublisherTagged(parentId: string, cameraOptions: any, callback?) {
+    initPublisherTagged(parentId: string, cameraOptions: any, callback?: Function): Stream {
 
         this.getCamera(cameraOptions);
 
-        if (callback == null) {
-            this.camera.requestCameraAccess((error, camera) => {
-                if (error) {
-                    console.error("Error accessing the camera", error);
-                }
-                else {
-                    this.camera.setVideoElement(this.cameraReady(camera!, parentId));
-                }
-            });
-            return this.camera;
-        } else {
-            this.camera.requestCameraAccess((error, camera) => {
-                if (error) {
+        this.camera.requestCameraAccess((error, camera) => {
+            if (error) {
+                console.error("Error accessing the camera", error);
+                if (callback) {
                     callback(error);
                 }
-                else {
-                    this.camera.setVideoElement(this.cameraReady(camera!, parentId));
+            } else {
+                this.camera.setVideoElement(this.cameraReady(camera!, parentId));
+                if (callback) {
                     callback(undefined);
                 }
+            }
+        });
+        return this.camera;
+    }
+
+    initPublisherScreen(parentId: string, callback?): Stream {
+        this.camera = new Stream(this, true, this.session, 'screen-options');
+        this.camera.addOnceEventListener('can-request-screen', () => {
+            this.camera.requestCameraAccess((error, camera) => {
+                if (error) {
+                    console.error("Error capturing the screen", error);
+                    if (callback) {
+                        callback(error);
+                    }
+                }
+                else {
+                    this.camera.setVideoElement(this.cameraReady(camera!, parentId));
+                    if (this.camera.getSendAudio()) {
+                        // If the user wants to send audio with the screen capturing
+                        navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+                            .then(userStream => {
+                                this.camera.getWrStream().addTrack(userStream.getAudioTracks()[0]);
+                                this.camera.isScreenRequestedReady = true;
+                                this.camera.ee.emitEvent('screen-ready');
+                                if (callback) {
+                                    callback(undefined);
+                                }
+                            })
+                            .catch(error => {
+                                this.camera.ee.emitEvent('access-denied-by-publisher');
+                                console.error("Access denied", error);
+                                if (callback) callback(error, this);
+                            });
+                    } else {
+                        this.camera.isScreenRequestedReady = true;
+                        this.camera.ee.emitEvent('screen-ready');
+                        if (callback) {
+                            callback(undefined);
+                        }
+                    }
+                }
             });
-            return this.camera;
-        }
+        });
+        return this.camera;
     }
 
     cameraReady(camera: Stream, parentId: string) {

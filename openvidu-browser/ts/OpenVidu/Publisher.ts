@@ -19,9 +19,11 @@ export class Publisher {
     id: string;
     stream: Stream;
     session: Session; //Initialized by Session.publish(Publisher)
+    isScreenRequested: boolean = false;
 
-    constructor(stream: Stream, parentId: string) {
+    constructor(stream: Stream, parentId: string, isScreenRequested: boolean) {
         this.stream = stream;
+        this.isScreenRequested = isScreenRequested;
 
         this.stream.addEventListener('camera-access-changed', (event) => {
             this.accessAllowed = event.accessAllowed;
@@ -82,13 +84,13 @@ export class Publisher {
         if (eventName == 'videoPlaying') {
             var video = this.stream.getVideoElement();
             if (!this.stream.displayMyRemote() && video &&
-                video.currentTime > 0 && 
-                video.paused == false && 
+                video.currentTime > 0 &&
+                video.paused == false &&
                 video.ended == false &&
                 video.readyState == 4) {
-                    this.ee.emitEvent('videoPlaying', [{
-                        element: this.stream.getVideoElement()
-                    }]);
+                this.ee.emitEvent('videoPlaying', [{
+                    element: this.stream.getVideoElement()
+                }]);
             } else {
                 this.stream.addOnceEventListener('video-is-playing', (element) => {
                     this.ee.emitEvent('videoPlaying', [{
@@ -100,13 +102,13 @@ export class Publisher {
         if (eventName == 'remoteVideoPlaying') {
             var video = this.stream.getVideoElement();
             if (this.stream.displayMyRemote() && video &&
-                video.currentTime > 0 && 
-                video.paused == false && 
+                video.currentTime > 0 &&
+                video.paused == false &&
                 video.ended == false &&
                 video.readyState == 4) {
-                    this.ee.emitEvent('remoteVideoPlaying', [{
-                        element: this.stream.getVideoElement()
-                    }]);
+                this.ee.emitEvent('remoteVideoPlaying', [{
+                    element: this.stream.getVideoElement()
+                }]);
             } else {
                 this.stream.addOnceEventListener('remote-video-is-playing', (element) => {
                     this.ee.emitEvent('remoteVideoPlaying', [{

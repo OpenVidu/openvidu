@@ -76,8 +76,15 @@ export class Session {
     }
 
     publish(publisher: Publisher) {
-        publisher.session = this;
-        publisher.stream.publish();
+        if (publisher.isScreenRequested && !publisher.stream.isScreenRequestedReady) {
+            publisher.stream.addOnceEventListener('screen-ready', () => {
+                publisher.session = this;
+                publisher.stream.publish();
+            });
+        } else {
+            publisher.session = this;
+            publisher.stream.publish();
+        }
     }
 
     unpublish(publisher: Publisher) {
@@ -121,64 +128,4 @@ export class Session {
         subscriber.stream.removeVideo();
     }
 
-
-
-
-    /* Shortcut event API */
-
-    onStreamCreated(callback) {
-        this.session.addEventListener("streamCreated", streamEvent => {
-            callback(streamEvent.stream);
-        });
-    }
-
-    onStreamDestroyed(callback) {
-        this.session.addEventListener("streamDestroyed", streamEvent => {
-            callback(streamEvent.stream);
-        });
-    }
-
-    onParticipantJoined(callback) {
-        this.session.addEventListener("participant-joined", participantEvent => {
-            callback(participantEvent.connection);
-        });
-    }
-
-    onParticipantLeft(callback) {
-        this.session.addEventListener("participant-left", participantEvent => {
-            callback(participantEvent.connection);
-        });
-    }
-
-    onParticipantPublished(callback) {
-        this.session.addEventListener("participant-published", participantEvent => {
-            callback(participantEvent.connection);
-        });
-    }
-
-    onParticipantEvicted(callback) {
-        this.session.addEventListener("participant-evicted", participantEvent => {
-            callback(participantEvent.connection);
-        });
-    }
-
-    onRoomClosed(callback) {
-        this.session.addEventListener("room-closed", roomEvent => {
-            callback(roomEvent.room);
-        });
-    }
-
-    onLostConnection(callback) {
-        this.session.addEventListener("lost-connection", roomEvent => {
-            callback(roomEvent.room);
-        });
-    }
-
-    onMediaError(callback) {
-        this.session.addEventListener("error-media", errorEvent => {
-            callback(errorEvent.error)
-        });
-    }
-
-    /* Shortcut event API */
 }

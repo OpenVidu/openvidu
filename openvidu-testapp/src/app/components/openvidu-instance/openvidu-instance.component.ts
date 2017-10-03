@@ -187,7 +187,8 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
             video: this.sendVideo,
             activeAudio: this.activeAudio,
             activeVideo: this.activeVideo,
-            quality: 'MEDIUM'
+            quality: 'MEDIUM',
+            screen: this.optionsVideo === 'screen' ? true : false
           });
 
           this.publisher.on('videoElementCreated', (event) => {

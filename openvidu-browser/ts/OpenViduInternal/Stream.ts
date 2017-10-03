@@ -53,7 +53,7 @@ export class Stream {
 
     public connection: Connection;
 
-    private ee = new EventEmitter();
+    ee = new EventEmitter();
     private wrStream: MediaStream;
     private wp: any;
     private id: string;
@@ -81,25 +81,14 @@ export class Stream {
     public isVideoELementCreated: boolean = false;
     public accessIsAllowed: boolean = false;
     public accessIsDenied: boolean = false;
+    public isScreenRequestedReady: boolean = false;
 
-    constructor(private openVidu: OpenViduInternal, private local: boolean, private room: SessionInternal, options: StreamOptions) {
-
-        if (options.id) {
-            this.id = options.id;
+    constructor(private openVidu: OpenViduInternal, private local: boolean, private room: SessionInternal, options: any) {
+        if (options !== 'screen-options') {
+            this.configureOptions(options);
         } else {
-            this.id = "webcam";
+            this.connection = this.room.getLocalParticipant();
         }
-
-        this.connection = options.connection;
-        this.recvVideo = options.recvVideo || false;
-        this.recvAudio = options.recvAudio || false;
-        this.sendVideo = options.sendVideo;
-        this.sendAudio = options.sendAudio;
-        this.activeAudio = options.activeAudio;
-        this.activeVideo = options.activeVideo;
-        this.dataChannel = options.data || false;
-        this.mediaConstraints = options.mediaConstraints;
-
         this.addEventListener('src-added', (srcEvent) => {
             this.videoSrcObject = srcEvent.srcObject;
             if (this.video) this.video.srcObject = srcEvent.srcObject;
@@ -157,6 +146,14 @@ export class Stream {
 
     getRecvAudio() {
         return this.recvAudio;
+    }
+
+    getSendVideo() {
+        return this.sendVideo;
+    }
+
+    getSendAudio() {
+        return this.sendAudio;
     }
 
 
@@ -397,7 +394,7 @@ export class Stream {
             });
     }
 
-    private cameraAccessSuccess(userStream, callback) {
+    private cameraAccessSuccess(userStream: MediaStream, callback: Function) {
         this.accessIsAllowed = true;
         this.accessIsDenied = false;
         this.ee.emitEvent('access-allowed-by-publisher');
@@ -592,7 +589,7 @@ export class Stream {
                                 participantId: participantId
                             }]);
                         });
-                        
+
                     }
                 }
                 for (let videoElement of this.videoElements) {
@@ -678,5 +675,40 @@ export class Stream {
         }
 
         console.info((this.local ? "Local " : "Remote ") + "'Stream' with id [" + this.getId() + "]' has been succesfully disposed");
+    }
+
+    private configureOptions(options) {
+        if (options.id) {
+            this.id = options.id;
+        } else {
+            this.id = "webcam";
+        }
+        this.connection = options.connection;
+        this.recvVideo = options.recvVideo || false;
+        this.recvAudio = options.recvAudio || false;
+        this.sendVideo = options.sendVideo;
+        this.sendAudio = options.sendAudio;
+        this.activeAudio = options.activeAudio;
+        this.activeVideo = options.activeVideo;
+        this.dataChannel = options.data || false;
+        this.mediaConstraints = options.mediaConstraints;
+    }
+
+    configureScreenOptions(options) {
+        if (options.id) {
+            this.id = options.id;
+        } else {
+            this.id = "screen";
+        }
+        this.recvVideo = options.recvVideo || false;
+        this.recvAudio = options.recvAudio || false;
+        this.sendVideo = options.sendVideo;
+        this.sendAudio = options.sendAudio;
+        this.activeAudio = options.activeAudio;
+        this.activeVideo = options.activeVideo;
+        this.dataChannel = options.data || false;
+        this.mediaConstraints = options.mediaConstraints;
+
+        this.ee.emitEvent('can-request-screen');
     }
 }
