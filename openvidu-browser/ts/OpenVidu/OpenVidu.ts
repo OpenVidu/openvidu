@@ -18,6 +18,7 @@ import { OpenViduInternal } from '../OpenViduInternal/OpenViduInternal';
 
 import { Session } from './Session';
 import { Publisher } from './Publisher';
+import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/OpenViduError';
 
 import * as adapter from 'webrtc-adapter';
 import * as screenSharing from '../ScreenSharing/Screen-Capturing.js';
@@ -77,7 +78,7 @@ export class OpenVidu {
 
                 } else {
                     if (adapter.browserDetails.browser === 'firefox' && adapter.browserDetails.version >= 52) {
-                        publisher = new Publisher(this.openVidu.initPublisherScreen(parentId), parentId, true);
+                        publisher = new Publisher(this.openVidu.initPublisherScreen(parentId, callback), parentId, true);
                         screenSharingAuto.getScreenId((error, sourceId, screenConstraints) => {
                             cameraOptions = {
                                 sendAudio: cameraOptions.audio != null ? cameraOptions.audio : true,
@@ -123,19 +124,14 @@ export class OpenVidu {
                         screenSharingAuto.getScreenId((error, sourceId, screenConstraints) => {
 
                             if (error === 'not-installed') {
-                                console.error('Error capturing the screen: an extension is needed');
-                                if (confirm('You need an extension to share your screen!\n\n' +
-                                    'This is the URL where you can install it:\n' +
-                                    'https://chrome.google.com/webstore/detail/screen-capturing/ajhifddimkapgcifgcodmmfdlknahffk\n\n' +
-                                    'Click OK to install it (Pop-Up can be blocked) and then reload this page')) {
-                                    window.open(
-                                        'https://chrome.google.com/webstore/detail/screen-capturing/ajhifddimkapgcifgcodmmfdlknahffk',
-                                        '_blank'
-                                    );
-                                }
+                                let error = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_NOT_INSTALLED, 'https://chrome.google.com/webstore/detail/screen-capturing/ajhifddimkapgcifgcodmmfdlknahffk');
+                                console.error(error);
+                                if (callback) callback(error);
                                 return;
                             } else if (error === 'permission-denied') {
-                                console.error('Error capturing the screen: Permission Denied');
+                                let error = new OpenViduError(OpenViduErrorName.SCREEN_CAPTURE_DENIED, 'You must allow access to one window of your desktop');
+                                console.error(error);
+                                if (callback) callback(error);
                                 return;
                             }
 
@@ -156,7 +152,7 @@ export class OpenVidu {
                             console.error('getScreenId error', error);
                             return;
                         });
-                        publisher = new Publisher(this.openVidu.initPublisherScreen(parentId), parentId, true);
+                        publisher = new Publisher(this.openVidu.initPublisherScreen(parentId, callback), parentId, true);
                         console.info("'Publisher' initialized");
                         return publisher;
                     } else {

@@ -8,6 +8,7 @@
 import { Connection } from './Connection';
 import { SessionInternal } from './SessionInternal';
 import { OpenViduInternal, Callback } from './OpenViduInternal';
+import { OpenViduError, OpenViduErrorName } from './OpenViduError';
 import EventEmitter = require('wolfy87-eventemitter');
 import * as kurentoUtils from '../KurentoUtils/kurento-utils-js';
 
@@ -82,11 +83,13 @@ export class Stream {
     public accessIsAllowed: boolean = false;
     public accessIsDenied: boolean = false;
     public isScreenRequestedReady: boolean = false;
+    private isScreenRequested = false;
 
     constructor(private openVidu: OpenViduInternal, private local: boolean, private room: SessionInternal, options: any) {
         if (options !== 'screen-options') {
             this.configureOptions(options);
         } else {
+            this.isScreenRequested = true;
             this.connection = this.room.getLocalParticipant();
         }
         this.addEventListener('src-added', (srcEvent) => {
@@ -361,9 +364,16 @@ export class Stream {
 
         this.userMediaHasVideo((hasVideo) => {
             if (!hasVideo) {
-                constraints.video = false;
-                this.sendVideo = false;
-                this.requestCameraAccesAux(constraints, callback);
+                if (this.sendVideo) {
+                    callback(new OpenViduError(OpenViduErrorName.NO_VIDEO_DEVICE, 'You have requested camera access but there is no video input device available. Trying to connect with an audio input device only'), this);
+                }
+                if (!this.sendAudio) {
+                    callback(new OpenViduError(OpenViduErrorName.NO_INPUT_DEVICE, 'You must init Publisher object with audio or video streams enabled'), undefined);
+                } else {
+                    constraints.video = false;
+                    this.sendVideo = false;
+                    this.requestCameraAccesAux(constraints, callback);
+                }
             } else {
                 this.requestCameraAccesAux(constraints, callback);
             }
@@ -376,21 +386,16 @@ export class Stream {
                 this.cameraAccessSuccess(userStream, callback);
             })
             .catch(error => {
-                /*//  Try to ask for microphone only
-                navigator.mediaDevices.getUserMedia({ audio: true, video: false })
-                    .then(userStream => {
-                        constraints.video = false;
-                        this.sendVideo = false;
-                        this.sendAudio = true;
-                        this.cameraAccessSuccess(userStream, callback);
-                    })
-                    .catch(error => {*/
                 this.accessIsDenied = true;
                 this.accessIsAllowed = false;
-                this.ee.emitEvent('access-denied-by-publisher');
-
-                console.error("Access denied", error);
-                callback(error, this);
+                let errorName: OpenViduErrorName;
+                let errorMessage = error.toString();;
+                if (!this.isScreenRequested) {
+                    errorName = this.sendVideo ? OpenViduErrorName.CAMERA_ACCESS_DENIED : OpenViduErrorName.MICROPHONE_ACCESS_DENIED;
+                } else {
+                    errorName = OpenViduErrorName.SCREEN_CAPTURE_DENIED; // This code is only reachable for Firefox
+                }
+                callback(new OpenViduError(errorName, errorMessage), undefined);
             });
     }
 
@@ -413,12 +418,19 @@ export class Stream {
     }
 
     private userMediaHasVideo(callback) {
-        navigator.mediaDevices.enumerateDevices().then(function (mediaDevices) {
-            var videoInput = mediaDevices.filter(function (deviceInfo) {
-                return deviceInfo.kind === 'videoinput';
-            })[0];
-            callback(videoInput != null);
-        });
+        // If the user is going to publish its screen there's a video source
+        if (this.isScreenRequested) {
+            callback(true);
+            return;
+        } else {
+            // List all input devices and serach for a video kind
+            navigator.mediaDevices.enumerateDevices().then(function (mediaDevices) {
+                var videoInput = mediaDevices.filter(function (deviceInfo) {
+                    return deviceInfo.kind === 'videoinput';
+                })[0];
+                callback(videoInput != null);
+            });
+        }
     }
 
     publishVideoCallback(error, sdpOfferParam, wp) {

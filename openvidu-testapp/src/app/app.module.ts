@@ -10,6 +10,7 @@ import { AppComponent } from './app.component';
 import { TestSessionsComponent } from './components/test-sessions/test-sessions.component';
 import { TestApirestComponent } from './components/test-apirest/test-apirest.component';
 import { OpenviduInstanceComponent } from './components/openvidu-instance/openvidu-instance.component';
+import { ExtensionDialogComponent } from './components/openvidu-instance/extension-dialog.component';
 import { OpenviduRestService } from './services/openvidu-rest.service';
 import { OpenviduParamsService } from './services/openvidu-params.service';
 
@@ -18,7 +19,8 @@ import { OpenviduParamsService } from './services/openvidu-params.service';
     AppComponent,
     OpenviduInstanceComponent,
     TestSessionsComponent,
-    TestApirestComponent
+    TestApirestComponent,
+    ExtensionDialogComponent
   ],
   imports: [
     BrowserModule,
@@ -32,6 +34,7 @@ import { OpenviduParamsService } from './services/openvidu-params.service';
     OpenviduRestService,
     OpenviduParamsService
   ],
+  entryComponents: [ ExtensionDialogComponent ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

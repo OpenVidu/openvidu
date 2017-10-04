@@ -3,6 +3,8 @@ import {
   OnInit, OnDestroy, OnChanges
 } from '@angular/core';
 import { OpenVidu, Session, Subscriber, Publisher, Stream } from 'openvidu-browser';
+import { MdDialog, MdDialogRef } from '@angular/material';
+import { ExtensionDialogComponent } from './extension-dialog.component';
 
 declare var $: any;
 
@@ -79,7 +81,9 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
 
   events: OpenViduEvent[] = [];
 
-  constructor(private changeDetector: ChangeDetectorRef) {
+  openviduError: any;
+
+  constructor(private changeDetector: ChangeDetectorRef, public extensionDialog: MdDialog) {
     this.generateSessionInfo();
   }
 
@@ -182,17 +186,37 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
           this.updateAudioIcon();
           this.updateVideoIcon();
 
-          this.publisher = OV.initPublisher('local-vid-' + this.session.connection.connectionId, {
-            audio: this.sendAudio,
-            video: this.sendVideo,
-            activeAudio: this.activeAudio,
-            activeVideo: this.activeVideo,
-            quality: 'MEDIUM',
-            screen: this.optionsVideo === 'screen' ? true : false
-          });
+          this.publisher = OV.initPublisher(
+            'local-vid-' + this.session.connection.connectionId,
+            {
+              audio: this.sendAudio,
+              video: this.sendVideo,
+              activeAudio: this.activeAudio,
+              activeVideo: this.activeVideo,
+              quality: 'MEDIUM',
+              screen: this.optionsVideo === 'screen' ? true : false
+            },
+            (err) => {
+              if (err) {
+                console.warn(err);
+                this.openviduError = err;
+                if (err.name === 'SCREEN_EXTENSION_NOT_INSTALLED') {
+                  this.extensionDialog.open(ExtensionDialogComponent, {
+                    data: { url: err.message },
+                    disableClose: true,
+                    width: '250px'
+                  });
+                }
+              }
+            });
 
           this.publisher.on('videoElementCreated', (event) => {
-            if (this.publishTo && !this.sendVideo) {
+            if (this.publishTo &&
+              (!this.sendVideo ||
+                this.sendVideo &&
+                !(this.optionsVideo !== 'screen') &&
+                this.openviduError &&
+                this.openviduError.name === 'NO_VIDEO_DEVICE')) {
               $(event.element).css({ 'background-color': '#4d4d4d' });
               $(event.element).attr('poster', 'assets/images/volume.png');
             }

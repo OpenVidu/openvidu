@@ -76,22 +76,24 @@
       </div>
       <div *ngIf="session.connection" fxLayout>
         <div fxFlex="135px" class="video-container">
-          
+
           <div class="event-list scroll-custom">
-              <md-accordion>
-                    <md-expansion-panel *ngFor="let event of events">
-                      <md-expansion-panel-header [collapsedHeight]="'20px'" [expandedHeight]="'20px'">
-                          {{event.name}}
-                      </md-expansion-panel-header>
-                      {{event.content}}
-                    </md-expansion-panel>
-                  </md-accordion>
+            <md-accordion>
+              <md-expansion-panel *ngFor="let event of events">
+                <md-expansion-panel-header [collapsedHeight]="'20px'" [expandedHeight]="'20px'">
+                  {{event.name}}
+                </md-expansion-panel-header>
+                {{event.content}}
+              </md-expansion-panel>
+            </md-accordion>
             <!--<md-chip-list class="mat-chip-list-stacked" aria-orientation="vertical">
               <md-chip *ngFor="let event of events">{{event}}</md-chip>
             </md-chip-list>-->
           </div>
         </div>
-        <div [attr.id]="'remote-vid-' + session.connection.connectionId" fxFlex="270px" class="video-container"><div [attr.id]="'local-vid-' + session.connection.connectionId"></div></div>
+        <div [attr.id]="'remote-vid-' + session.connection.connectionId" fxFlex="270px" class="video-container">
+          <div [attr.id]="'local-vid-' + session.connection.connectionId"></div>
+        </div>
       </div>
     </md-card>
   </div>

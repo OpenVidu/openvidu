@@ -15,6 +15,7 @@
  *
  */
 import { SessionInternal, SessionOptions } from './SessionInternal';
+import { OpenViduError, OpenViduErrorName } from './OpenViduError';
 import { Stream } from './Stream';
 import * as RpcBuilder from '../KurentoUtils/kurento-jsonrpc';
 
@@ -48,10 +49,12 @@ export class OpenViduInternal {
 
         this.camera.requestCameraAccess((error, camera) => {
             if (error) {
-                console.error("Error accessing the camera", error);
+                // Neither camera or microphone device is allowed/able to capture media
+                console.error(error);
                 if (callback) {
                     callback(error);
                 }
+                this.camera.ee.emitEvent('access-denied-by-publisher');
             } else {
                 this.camera.setVideoElement(this.cameraReady(camera!, parentId));
                 if (callback) {
@@ -67,9 +70,13 @@ export class OpenViduInternal {
         this.camera.addOnceEventListener('can-request-screen', () => {
             this.camera.requestCameraAccess((error, camera) => {
                 if (error) {
-                    console.error("Error capturing the screen", error);
+                    this.camera.ee.emitEvent('access-denied-by-publisher');
+                    let errorName: OpenViduErrorName = OpenViduErrorName.SCREEN_CAPTURE_DENIED;
+                    let errorMessage = 'You must allow access to one window of your desktop';
+                    let e = new OpenViduError(errorName, errorMessage);
+                    console.error(e);
                     if (callback) {
-                        callback(error);
+                        callback(e);
                     }
                 }
                 else {
@@ -87,8 +94,12 @@ export class OpenViduInternal {
                             })
                             .catch(error => {
                                 this.camera.ee.emitEvent('access-denied-by-publisher');
-                                console.error("Access denied", error);
-                                if (callback) callback(error, this);
+                                console.error("Error accessing the microphone", error);
+                                if (callback) {
+                                    let errorName: OpenViduErrorName = OpenViduErrorName.MICROPHONE_ACCESS_DENIED;
+                                    let errorMessage = error.toString();
+                                    callback(new OpenViduError(errorName, errorMessage));
+                                }
                             });
                     } else {
                         this.camera.isScreenRequestedReady = true;
