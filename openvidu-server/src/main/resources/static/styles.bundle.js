@@ -1,15 +1,15 @@
 webpackJsonp([2,4],{
 
-/***/ 122:
+/***/ 123:
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(187);
+var content = __webpack_require__(188);
 if(typeof content === 'string') content = [[module.i, content, '']];
 // add the styles to the DOM
-var update = __webpack_require__(274)(content, {});
+var update = __webpack_require__(276)(content, {});
 if(content.locals) module.exports = content.locals;
 // Hot Module Replacement
 if(false) {
@@ -27,7 +27,7 @@ if(false) {
 
 /***/ }),
 
-/***/ 186:
+/***/ 187:
 /***/ (function(module, exports, __webpack_require__) {
 
 exports = module.exports = __webpack_require__(21)(false);
@@ -42,12 +42,12 @@ exports.push([module.i, ".mat-elevation-z0{box-shadow:0 0 0 0 rgba(0,0,0,.2),0 0
 
 /***/ }),
 
-/***/ 187:
+/***/ 188:
 /***/ (function(module, exports, __webpack_require__) {
 
 exports = module.exports = __webpack_require__(21)(false);
 // imports
-exports.i(__webpack_require__(186), "");
+exports.i(__webpack_require__(187), "");
 
 // module
 exports.push([module.i, "html,\nbody {\n  height: 100%;\n  margin: 0;\n  padding: 0;\n  background: #4d4d4d;\n  -webkit-tap-highlight-color: rgba(0, 0, 0, 0.05);\n}\n\nmain {\n  height: 100%;\n}\n\nli {\n  list-style: none;\n}\n\nvideo {\n  width: 100%;\n}\n\n.mat-spinner path {\n  stroke: #4d4d4d;\n}", ""]);
@@ -140,7 +140,7 @@ function toComment(sourceMap) {
 
 /***/ }),
 
-/***/ 274:
+/***/ 276:
 /***/ (function(module, exports) {
 
 /*
@@ -393,10 +393,10 @@ function updateLink(linkElement, obj) {
 
 /***/ }),
 
-/***/ 293:
+/***/ 295:
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(122);
+module.exports = __webpack_require__(123);
 
 
 /***/ }),
@@ -2452,5 +2452,5 @@ module.exports = g;
 
 /***/ })
 
-},[293]);
+},[295]);
 //# sourceMappingURL=styles.bundle.js.map
