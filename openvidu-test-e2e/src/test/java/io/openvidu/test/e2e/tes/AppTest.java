@@ -1,4 +1,4 @@
-package example.openvidu.testapp;
+package io.openvidu.test.e2e.tes;
 
 import junit.framework.Test;
 import junit.framework.TestCase;

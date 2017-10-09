@@ -1,7 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	
+
 	<parent>
 		<groupId>io.openvidu</groupId>
 		<artifactId>openvidu-parent</artifactId>
@@ -9,47 +9,142 @@
 	</parent>
 
 	<artifactId>openvidu-test-e2e</artifactId>
+	<version>1.1.1</version>
 	<packaging>jar</packaging>
 
 	<name>OpenVidu Test e2e</name>
-	<description>e2e tests for OpenVidu Tutorials</description>
-	<url>http://maven.apache.org</url>
+	<description>End2End tests for OpenVidu TestApp</description>
+	<url>http://openvidu.io</url>
+
+	<licenses>
+		<license>
+			<name>Apache 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<organization>
+		<name>OpenVidu</name>
+		<url>http://openvidu.io</url>
+	</organization>
+
+	<scm>
+		<url>https://github.com/OpenVidu/openvidu.git</url>
+		<connection>scm:git:https://github.com/OpenVidu/openvidu.git</connection>
+		<developerConnection>scm:git:https://github.com/OpenVidu/openvidu.git</developerConnection>
+		<tag>develop</tag>
+	</scm>
+
+	<developers>
+		<developer>
+			<id>openvidu.io</id>
+			<name>-openvidu.io Community</name>
+			<organization>openvidu.io</organization>
+			<organizationUrl>http://openvidu.io</organizationUrl>
+		</developer>
+	</developers>
 
 	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<start-class>example.openvidu.testapp.cucumbertest.TestRunner</start-class>
+		<!-- Java 8 -->
 		<java.version>1.8</java.version>
-		<maven.compiler.source>1.8</maven.compiler.source>
-		<maven.compiler.target>1.8</maven.compiler.target>
+		<maven.compiler.source>${java.version}</maven.compiler.source>
+		<maven.compiler.target>${java.version}</maven.compiler.target>
+
+		<!-- Encoding -->
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+		<!-- Test dependencies version -->
+		<junit.jupiter.version>5.0.0</junit.jupiter.version>
+		<junit.platform.version>1.0.0</junit.platform.version>
+		<selenium-jupiter.version>1.1.2</selenium-jupiter.version>
+		<slf4j.version>1.7.25</slf4j.version>
+
+		<!-- Plugins versions -->
+		<maven-surefire-plugin.version>2.19.1</maven-surefire-plugin.version>
+		<jacoco-maven-plugin.version>0.7.9</jacoco-maven-plugin.version>
 	</properties>
 
 	<dependencies>
 		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-api</artifactId>
+			<version>${junit.jupiter.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.github.bonigarcia</groupId>
+			<artifactId>selenium-jupiter</artifactId>
+			<version>${selenium-jupiter.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+
+		<dependency>
+			<groupId>org.seleniumhq.selenium</groupId>
+			<artifactId>selenium-java</artifactId>
+			<version>3.4.0</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.seleniumhq.selenium</groupId>
-			<artifactId>selenium-java</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>info.cukes</groupId>
-			<artifactId>cucumber-java</artifactId>
-			<version>1.2.5</version>
-		</dependency>
-		<!-- https://mvnrepository.com/artifact/info.cukes/cucumber-core -->
-		<dependency>
-			<groupId>info.cukes</groupId>
-			<artifactId>cucumber-core</artifactId>
-			<version>1.2.5</version>
+			<artifactId>selenium-chrome-driver</artifactId>
+			<version>3.4.0</version>
 			<scope>test</scope>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/info.cukes/cucumber-junit -->
 		<dependency>
-			<groupId>info.cukes</groupId>
-			<artifactId>cucumber-junit</artifactId>
-			<version>1.2.5</version>
+			<groupId>org.seleniumhq.selenium</groupId>
+			<artifactId>selenium-firefox-driver</artifactId>
+			<version>3.4.0</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.seleniumhq.selenium</groupId>
+			<artifactId>selenium-api</artifactId>
+			<version>3.4.0</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.seleniumhq.selenium</groupId>
+			<artifactId>selenium-remote-driver</artifactId>
+			<version>3.4.0</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>21.0</version>
+			<scope>test</scope>
+		</dependency>
+
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.junit.platform</groupId>
+			<artifactId>junit-platform-runner</artifactId>
+			<version>1.0.1</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-engine</artifactId>
+			<version>${junit.jupiter.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.googlecode.json-simple</groupId>
+			<artifactId>json-simple</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>xml-apis</groupId>
+			<artifactId>xml-apis</artifactId>
+			<version>1.4.01</version>
 		</dependency>
 	</dependencies>
+
 </project>

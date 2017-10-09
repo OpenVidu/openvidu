@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Subscription } from 'rxjs/Subscription';
 import { OpenviduParamsService } from '../../services/openvidu-params.service';
+import { TestFeedService } from '../../services/test-feed.service';
 import { SessionConf } from '../openvidu-instance/openvidu-instance.component';
 
 @Component({
@@ -14,6 +15,7 @@ export class TestSessionsComponent implements OnInit, OnDestroy {
   openviduSecret: string;
 
   paramsSubscription: Subscription;
+  eventsInfoSubscription: Subscription;
 
   // OpenViduInstance collection
   users: SessionConf[] = [];
@@ -21,7 +23,7 @@ export class TestSessionsComponent implements OnInit, OnDestroy {
   numberSubs = 3;
   autoJoin = false;
 
-  constructor(private openviduParamsService: OpenviduParamsService) { }
+  constructor(private openviduParamsService: OpenviduParamsService, private testFeedService: TestFeedService) { }
 
   ngOnInit() {
     const openviduParams = this.openviduParamsService.getParams();
@@ -32,6 +34,11 @@ export class TestSessionsComponent implements OnInit, OnDestroy {
       params => {
         this.openviduUrl = params.openviduUrl;
         this.openviduSecret = params.openviduSecret;
+      });
+
+    this.eventsInfoSubscription = this.testFeedService.newLastEvent$.subscribe(
+      newEvent => {
+        (window as any).myEvents += ('<br>' + JSON.stringify(newEvent));
       });
   }
 
@@ -47,6 +54,14 @@ export class TestSessionsComponent implements OnInit, OnDestroy {
       sendVideo: true,
       startSession: false
     });
+  }
+
+  private removeUser(): void {
+    this.users.pop();
+  }
+
+  private removeAllUsers(): void {
+    this.users = [];
   }
 
   private loadSubsPubs(n: number): void {

@@ -5,6 +5,7 @@ import {
 import { OpenVidu, Session, Subscriber, Publisher, Stream } from 'openvidu-browser';
 import { MdDialog, MdDialogRef } from '@angular/material';
 import { ExtensionDialogComponent } from './extension-dialog.component';
+import { TestFeedService } from '../../services/test-feed.service';
 
 declare var $: any;
 
@@ -83,7 +84,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
 
   openviduError: any;
 
-  constructor(private changeDetector: ChangeDetectorRef, public extensionDialog: MdDialog) {
+  constructor(private changeDetector: ChangeDetectorRef, public extensionDialog: MdDialog, public testFeedService: TestFeedService) {
     this.generateSessionInfo();
   }
 
@@ -296,6 +297,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
 
   private updateEventList(event: string, content: string) {
     this.events.push({ name: event, content: content });
+    this.testFeedService.pushNewEvent(this.sessionName, this.session.connection.connectionId, event, content);
   }
 
   toggleSubscribeTo(): void {

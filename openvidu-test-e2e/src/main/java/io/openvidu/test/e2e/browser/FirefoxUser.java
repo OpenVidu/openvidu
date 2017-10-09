@@ -1,14 +1,15 @@
-package io.openvidu.test.e2e.cucumbertest;
+package io.openvidu.test.e2e.browser;
 
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxProfile;
-import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
 public class FirefoxUser extends BrowserUser {
 
 	public FirefoxUser(String userName, int timeOfWait) {
 		super(userName, timeOfWait);
+		
+		System.setProperty("webdriver.gecko.driver", "/home/geckodriver");
 
 		DesiredCapabilities capabilities = new DesiredCapabilities();
 		capabilities.setCapability("acceptInsecureCerts", true);
@@ -21,9 +22,10 @@ public class FirefoxUser extends BrowserUser {
 		profile.setPreference("media.navigator.streams.fake", true);
 
 		capabilities.setCapability(FirefoxDriver.PROFILE, profile);
-		this.driver = new FirefoxDriver(capabilities);
 
-		this.configWaiterAndScript();
+		this.driver = new FirefoxDriver(capabilities);
+		
+		this.configureDriver();
 	}
 
 }

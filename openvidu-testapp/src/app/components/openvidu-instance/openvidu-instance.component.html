@@ -44,10 +44,10 @@
             <div fxFlex="40">
               <md-radio-group [(ngModel)]="optionsVideo" [disabled]="session || disableRadioButtons" [ngModelOptions]="{standalone: true}">
                 <div>
-                  <md-radio-button value="video" [checked]="checkRadioVideo && optionsVideo==='video'">Video</md-radio-button>
+                  <md-radio-button class="video-radio" value="video" [checked]="checkRadioVideo && optionsVideo==='video'">Video</md-radio-button>
                 </div>
                 <div>
-                  <md-radio-button value="screen" [checked]="checkRadioScreen && optionsVideo==='screen'">Screen</md-radio-button>
+                  <md-radio-button class="screen-radio" value="screen" [checked]="checkRadioScreen && optionsVideo==='screen'">Screen</md-radio-button>
                 </div>
               </md-radio-group>
               <md-checkbox class="subscribe-remote-check" name="subscribeToRemote" (change)="subscribeToRemote = !subscribeToRemote" [disabled]="(!sendAudio && !sendVideo) || !publishTo || session"
@@ -68,27 +68,24 @@
         <div class="session-card-inner">
           <div class="session-title">{{sessionName}}</div>
           <div class="session-actions">
-            <button *ngIf="publishTo && sendVideo" (click)="toggleVideo()"><md-icon aria-label="Mute video button">{{videoIcon}}</md-icon></button>
-            <button *ngIf="publishTo && sendAudio" (click)="toggleAudio()"><md-icon aria-label="Mute audio button">{{audioIcon}}</md-icon></button>
-            <button (click)="leaveSession()"><md-icon aria-label="Leave button">clear</md-icon></button>
+            <button class="video-btn" *ngIf="publishTo && sendVideo" (click)="toggleVideo()"><md-icon aria-label="Mute video button">{{videoIcon}}</md-icon></button>
+            <button class="audio-btn" *ngIf="publishTo && sendAudio" (click)="toggleAudio()"><md-icon aria-label="Mute audio button">{{audioIcon}}</md-icon></button>
+            <button class="leave-btn" (click)="leaveSession()"><md-icon aria-label="Leave button">clear</md-icon></button>
           </div>
         </div>
       </div>
       <div *ngIf="session.connection" fxLayout>
         <div fxFlex="135px" class="video-container">
 
-          <div class="event-list scroll-custom">
-            <md-accordion>
-              <md-expansion-panel *ngFor="let event of events">
-                <md-expansion-panel-header [collapsedHeight]="'20px'" [expandedHeight]="'20px'">
+          <div class="event-list-div scroll-custom">
+            <md-accordion [attr.id]="'events-' + session.connection.connectionId" class="event-list">
+              <md-expansion-panel *ngFor="let event of events" class="event-item">
+                <md-expansion-panel-header [attr.id]="event.name + '-' + session.connection.connectionId" [collapsedHeight]="'20px'" [expandedHeight]="'20px'" class="event-name">
                   {{event.name}}
                 </md-expansion-panel-header>
-                {{event.content}}
+                <div class="event-content">{{event.content}}</div>
               </md-expansion-panel>
             </md-accordion>
-            <!--<md-chip-list class="mat-chip-list-stacked" aria-orientation="vertical">
-              <md-chip *ngFor="let event of events">{{event}}</md-chip>
-            </md-chip-list>-->
           </div>
         </div>
         <div [attr.id]="'remote-vid-' + session.connection.connectionId" fxFlex="270px" class="video-container">

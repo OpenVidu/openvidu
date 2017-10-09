@@ -13,6 +13,7 @@ import { OpenviduInstanceComponent } from './components/openvidu-instance/openvi
 import { ExtensionDialogComponent } from './components/openvidu-instance/extension-dialog.component';
 import { OpenviduRestService } from './services/openvidu-rest.service';
 import { OpenviduParamsService } from './services/openvidu-params.service';
+import { TestFeedService } from './services/test-feed.service';
 
 @NgModule({
   declarations: [
@@ -32,7 +33,8 @@ import { OpenviduParamsService } from './services/openvidu-params.service';
   ],
   providers: [
     OpenviduRestService,
-    OpenviduParamsService
+    OpenviduParamsService,
+    TestFeedService
   ],
   entryComponents: [ ExtensionDialogComponent ],
   bootstrap: [AppComponent]
