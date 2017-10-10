@@ -1,3 +1,20 @@
+/*
+ * (C) Copyright 2017 OpenVidu (http://openvidu.io/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package io.openvidu.test.e2e;
 
 import java.util.Map;
@@ -16,12 +33,22 @@ import java.util.function.Consumer;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.junit.Assert;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
-public class OpenViduEventManager {
 
+/**
+ * Manager event class for BrowserUser. Collects, cleans and stores
+ * events from openvidu-testapp
+ *
+ * @author Pablo Fuente (pablo.fuente@urjc.es)
+ * @since 1.1.1
+ */
+public class OpenViduEventManager {
+	
 	private static class RunnableCallback implements Runnable {
 
 		private final Consumer<JSONObject> callback;
@@ -43,25 +70,32 @@ public class OpenViduEventManager {
 
 	private Thread pollingThread;
 	private ExecutorService execService = Executors.newCachedThreadPool();
-	private final int LATCH_TIMEOUT = 10000;
 	private WebDriver driver;
-	private WebDriverWait waiter;
 	private Queue<JSONObject> eventQueue;
 	private Map<String, RunnableCallback> eventCallbacks;
 	private Map<String, AtomicInteger> eventNumbers;
 	private Map<String, CountDownLatch> eventCountdowns;
 	private AtomicBoolean isInterrupted = new AtomicBoolean(false);
+	private int timeOfWaitInSeconds;
 
-	public OpenViduEventManager(WebDriver driver, WebDriverWait waiter) {
+	public OpenViduEventManager(WebDriver driver, WebDriverWait waiter, int timeOfWaitInSeconds) {
 		this.driver = driver;
-		this.waiter = waiter;
 		this.eventQueue = new ConcurrentLinkedQueue<JSONObject>();
 		this.eventCallbacks = new ConcurrentHashMap<>();
 		this.eventNumbers = new ConcurrentHashMap<>();
 		this.eventCountdowns = new ConcurrentHashMap<>();
+		this.timeOfWaitInSeconds = timeOfWaitInSeconds;
 	}
 
 	public void startPolling() {
+		
+		Thread.UncaughtExceptionHandler h = new Thread.UncaughtExceptionHandler() {
+		    public void uncaughtException(Thread th, Throwable ex) {
+		    	if (ex.getClass().getSimpleName().equals("NoSuchSessionException")) {
+		    		System.err.println("Disposing driver when running 'executeScript'");
+		    	}
+		    }
+		};
 		
 		this.pollingThread = new Thread(() -> {
 			while (!this.isInterrupted.get()) {
@@ -69,6 +103,7 @@ public class OpenViduEventManager {
 				this.emitEvents();
 			}
 		});
+		this.pollingThread.setUncaughtExceptionHandler(h);
 		this.pollingThread.start();
 	}
 
@@ -88,7 +123,7 @@ public class OpenViduEventManager {
 		CountDownLatch eventSignal = new CountDownLatch(eventNumber);
 		this.setCountDown(eventName, eventSignal);
 		try {
-			if (!eventSignal.await(LATCH_TIMEOUT, TimeUnit.MILLISECONDS)) {
+			if (!eventSignal.await(this.timeOfWaitInSeconds*1000, TimeUnit.MILLISECONDS)) {
 				throw(new TimeoutException());
 			}
 		} catch (InterruptedException | TimeoutException e) {
@@ -151,6 +186,27 @@ public class OpenViduEventManager {
 		String events = (String) ((JavascriptExecutor) driver)
 				.executeScript("var e = window.myEvents; window.myEvents = ''; return e;");
 		return events;
+	}
+	
+	public boolean assertMediaTracks(Iterable<WebElement> videoElements, boolean audioTransmission, boolean videoTransmission) {
+		boolean success = true;
+		for (WebElement video : videoElements) {
+			success = success && (audioTransmission == this.hasAudioTracks(video)) && (videoTransmission == this.hasVideoTracks(video));
+			if (!success) break;
+		}
+		return success;
+	}
+	
+	public boolean hasAudioTracks(WebElement videoElement) {
+		long numberAudioTracks = (long) ((JavascriptExecutor) driver)
+				.executeScript("return $('#" + videoElement.getAttribute("id") + "').prop('srcObject').getAudioTracks().length;");
+		return (numberAudioTracks > 0);
+	}
+	
+	public boolean hasVideoTracks(WebElement videoElement) {
+		long numberAudioTracks = (long) ((JavascriptExecutor) driver)
+				.executeScript("return $('#" + videoElement.getAttribute("id") + "').prop('srcObject').getVideoTracks().length;");
+		return (numberAudioTracks > 0);
 	}
 
 }

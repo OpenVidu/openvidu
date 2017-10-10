@@ -58,7 +58,7 @@
 		<openvidu.scm.url>https://github.com/OpenVidu/openvidu</openvidu.scm.url>
 		<openvidu.scm.connection>git@github.com:OpenVidu/openvidu.git</openvidu.scm.connection>
 	</properties>
-	
+
 	<distributionManagement>
 		<snapshotRepository>
 			<id>ossrh</id>
@@ -80,6 +80,7 @@
 				<module>openvidu-server</module>
 				<module>openvidu-client</module>
 				<module>openvidu-test</module>
+				<module>openvidu-test-e2e</module>
 				<module>openvidu-java-client</module>
 			</modules>
 		</profile>
@@ -89,6 +90,7 @@
 				<module>openvidu-server</module>
 				<module>openvidu-client</module>
 				<module>openvidu-test</module>
+				<module>openvidu-test-e2e</module>
 			</modules>
 		</profile>
 		<profile>
@@ -199,6 +201,11 @@
 			<dependency>
 				<groupId>io.openvidu</groupId>
 				<artifactId>openvidu-test</artifactId>
+				<version>${version.openvidu}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.openvidu</groupId>
+				<artifactId>openvidu-test-e2e</artifactId>
 				<version>${version.openvidu}</version>
 			</dependency>
 			<dependency>

@@ -17,9 +17,9 @@
           </div>
 
           <div>
-            <button id="join-btn" md-button (click)="joinSession()" [disabled]="session">JOIN</button>
-            <md-checkbox name="subscribeTo" (change)="toggleSubscribeTo()" [checked]="subscribeTo && checkSubscribeTo" [disabled]="session">Subscribe</md-checkbox>
-            <md-checkbox name="publishTo" (change)="togglePublishTo()" [checked]="publishTo && checkPublishTo" [disabled]="session || disablePublishTo">Publish</md-checkbox>
+            <button class="join-btn" md-button (click)="joinSession()" [disabled]="session">JOIN</button>
+            <md-checkbox class="subscribe-checkbox" name="subscribeTo" (change)="toggleSubscribeTo()" [checked]="subscribeTo && checkSubscribeTo" [disabled]="session">Subscribe</md-checkbox>
+            <md-checkbox class="publish-checkbox" name="publishTo" (change)="togglePublishTo()" [checked]="publishTo && checkPublishTo" [disabled]="session || disablePublishTo">Publish</md-checkbox>
           </div>
 
           <div class="inner-card" fxLayout="row" fxLayoutAlign="start start">
@@ -28,15 +28,15 @@
               <div>
                 <h4>Send</h4>
                 <div>
-                  <md-checkbox name="sendAudio" (change)="toggleSendAudio()" [checked]="sendAudio && checkSendAudio" [disabled]="session || disableSendAudio">Audio</md-checkbox>
-                  <md-checkbox name="sendVideo" (change)="toggleSendVideo()" [checked]="sendVideo && checkSendVideo" [disabled]="session || disableSendVideo">Video</md-checkbox>
+                  <md-checkbox class="send-audio-checkbox" name="sendAudio" (change)="toggleSendAudio()" [checked]="sendAudio && checkSendAudio" [disabled]="session || disableSendAudio">Audio</md-checkbox>
+                  <md-checkbox class="send-video-checkbox" name="sendVideo" (change)="toggleSendVideo()" [checked]="sendVideo && checkSendVideo" [disabled]="session || disableSendVideo">Video</md-checkbox>
                 </div>
               </div>
               <div style="padding-top: 5px;">
                 <h4>Enter active</h4>
                 <div>
-                  <md-checkbox name="activeAudio" (change)="toggleActiveAudio()" [checked]="activeAudio && checkActiveAudio" [disabled]="session || disableActiveAudio">Audio</md-checkbox>
-                  <md-checkbox name="activeVideo" (change)="toggleActiveVideo()" [checked]="activeVideo && checkActiveVideo" [disabled]="session || disableActiveVideo">Video</md-checkbox>
+                  <md-checkbox class="active-audio-checkbox" name="activeAudio" (change)="toggleActiveAudio()" [checked]="activeAudio && checkActiveAudio" [disabled]="session || disableActiveAudio">Audio</md-checkbox>
+                  <md-checkbox class="active-video-checkbox" name="activeVideo" (change)="toggleActiveVideo()" [checked]="activeVideo && checkActiveVideo" [disabled]="session || disableActiveVideo">Video</md-checkbox>
                 </div>
               </div>
             </div>
