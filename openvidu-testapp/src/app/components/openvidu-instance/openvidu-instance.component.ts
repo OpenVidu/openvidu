@@ -3,7 +3,7 @@ import {
   OnInit, OnDestroy, OnChanges
 } from '@angular/core';
 import { OpenVidu, Session, Subscriber, Publisher, Stream } from 'openvidu-browser';
-import { MdDialog, MdDialogRef } from '@angular/material';
+import { MatDialog } from '@angular/material';
 import { ExtensionDialogComponent } from './extension-dialog.component';
 import { TestFeedService } from '../../services/test-feed.service';
 
@@ -88,7 +88,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   openviduError: any;
 
   constructor(private changeDetector: ChangeDetectorRef,
-    private extensionDialog: MdDialog,
+    private extensionDialog: MatDialog,
     private testFeedService: TestFeedService) {
     this.generateSessionInfo();
   }

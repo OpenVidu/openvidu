@@ -1,18 +1,18 @@
-<md-sidenav-container fullscreen>
-  <md-toolbar class="mat-elevation-z5" color="primary">
+<mat-sidenav-container fullscreen>
+  <mat-toolbar class="mat-elevation-z5" color="primary">
     <div layout-align='center center' layout='column'>
       <a id="nav-logo" routerLink="/"><img id="nav-img" src="assets/images/openvidu_vert_white_bg_trans_cropped.png"/> TestApp</a>
-      <a md-button routerLink="/test-sessions"><span>SESSIONS</span></a>
-      <a md-button routerLink="/test-apirest"><span>API REST</span></a>
+      <a mat-button routerLink="/test-sessions"><span>SESSIONS</span></a>
+      <a mat-button routerLink="/test-apirest"><span>API REST</span></a>
     </div>
-  </md-toolbar>
+  </mat-toolbar>
   <main>
-    <md-form-field>
-      <input id="openvidu-url" mdInput placeholder="OpenVidu Server URL" [ngModel]="openviduURL" (ngModelChange)="updateUrl($event)">
-    </md-form-field>
-    <md-form-field>
-      <input id="openvidu-secret" mdInput placeholder="OpenVidu Server Secret" [ngModel]="openviduSecret" (ngModelChange)="updateSecret($event)">
-    </md-form-field>
+    <mat-form-field>
+      <input id="openvidu-url" matInput placeholder="OpenVidu Server URL" [ngModel]="openviduURL" (ngModelChange)="updateUrl($event)">
+    </mat-form-field>
+    <mat-form-field>
+      <input id="openvidu-secret" matInput placeholder="OpenVidu Server Secret" [ngModel]="openviduSecret" (ngModelChange)="updateSecret($event)">
+    </mat-form-field>
     <router-outlet></router-outlet>
   </main>
-</md-sidenav-container>
+</mat-sidenav-container>

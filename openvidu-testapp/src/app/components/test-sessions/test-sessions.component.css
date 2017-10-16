@@ -20,7 +20,7 @@ app-openvidu-instance {
   display: inline-block;
 }
 
-md-form-field {
+mat-form-field {
   width: 30px;
 }
 

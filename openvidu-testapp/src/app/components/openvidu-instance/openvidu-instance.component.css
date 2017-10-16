@@ -5,19 +5,19 @@
   border-radius: 2px;
 }
 
-md-card {
+mat-card {
   background-color: #ffffff;
   margin: 0;
   padding: 20px;
   padding-top: 10px;
 }
 
-md-card.session-card {
+mat-card.session-card {
   padding: 15px;
   margin-left: 10px;
 }
 
-.session-form md-form-field {
+.session-form mat-form-field {
   width: 130px;
 }
 
@@ -25,7 +25,7 @@ md-card.session-card {
   width: fit-content;
 }
 
-.join-card md-card-content {
+.join-card mat-card-content {
   margin-bottom: 0;
 }
 
@@ -52,7 +52,7 @@ md-card.session-card {
   margin-right: 8px;
 }
 
-md-radio-button {
+mat-radio-button {
   margin-bottom: 8px;
 }
 
@@ -98,7 +98,7 @@ md-radio-button {
   overflow-x: hidden;
 }
 
-md-chip {
+mat-chip {
   line-height: 6px;
   font-size: 9.5px;
   padding: 6px 9px !important;
@@ -123,20 +123,20 @@ md-chip {
   background-color: #797979;
 }
 
-md-expansion-panel {
+mat-expansion-panel {
   background: #e0e0e0 !important;
   margin-right: 0 !important;
 }
 
-md-expansion-panel-header {
+mat-expansion-panel-header {
   font-size: 10.5px !important;
   padding: 0 7px 0 9px !important;
 }
 
-.secure-div md-checkbox {
+.secure-div mat-checkbox {
   padding-right: 10px;
 }
 
-.secure-div md-form-field {
+.secure-div mat-form-field {
   max-width: 80px;
 }

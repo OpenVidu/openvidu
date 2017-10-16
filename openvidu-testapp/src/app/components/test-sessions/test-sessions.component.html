@@ -1,17 +1,17 @@
 <div>
   <div class="top-div">
     <div class="controls-div">
-      <button id="add-user-btn" md-raised-button color="primary" (click)="addUser()">ADD USER</button>
-      <button id="remove-user-btn" md-raised-button color="primary" (click)="removeUser()" [disabled]="!users.length">REMOVE USER</button>
-      <button id="remove-all-users-btn" md-raised-button color="primary" (click)="removeAllUsers()" [disabled]="!users.length">REMOVE ALL</button>
+      <button id="add-user-btn" mat-raised-button color="primary" (click)="addUser()">ADD USER</button>
+      <button id="remove-user-btn" mat-raised-button color="primary" (click)="removeUser()" [disabled]="!users.length">REMOVE USER</button>
+      <button id="remove-all-users-btn" mat-raised-button color="primary" (click)="removeAllUsers()" [disabled]="!users.length">REMOVE ALL</button>
     </div>
     <div class="scenario-div">
-      <md-checkbox id="auto-join-checkbox" class="auto-join-check" [(ngModel)]="autoJoin" name="autoJoin">Auto join</md-checkbox>
-      <button id="one2one-btn" md-raised-button color="primary" (click)="loadScenario(2,0,0)">1:1</button>
-      <button id="one2many-btn" md-raised-button color="primary" (click)="loadScenario(0,1,numberSubs)">1:{{numberSubs}}</button>
-      <md-form-field>
-        <input mdInput [(ngModel)]="numberSubs">
-      </md-form-field>
+      <mat-checkbox id="auto-join-checkbox" class="auto-join-check" [(ngModel)]="autoJoin" name="autoJoin">Auto join</mat-checkbox>
+      <button id="one2one-btn" mat-raised-button color="primary" (click)="loadScenario(2,0,0)">1:1</button>
+      <button id="one2many-btn" mat-raised-button color="primary" (click)="loadScenario(0,1,numberSubs)">1:{{numberSubs}}</button>
+      <mat-form-field>
+        <input matInput [(ngModel)]="numberSubs">
+      </mat-form-field>
     </div>
   </div>
 
