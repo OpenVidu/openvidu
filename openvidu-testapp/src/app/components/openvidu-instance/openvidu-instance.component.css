@@ -9,6 +9,7 @@ md-card {
   background-color: #ffffff;
   margin: 0;
   padding: 20px;
+  padding-top: 10px;
 }
 
 md-card.session-card {
@@ -130,4 +131,12 @@ md-expansion-panel {
 md-expansion-panel-header {
   font-size: 10.5px !important;
   padding: 0 7px 0 9px !important;
+}
+
+.secure-div md-checkbox {
+  padding-right: 10px;
+}
+
+.secure-div md-form-field {
+  max-width: 80px;
 }

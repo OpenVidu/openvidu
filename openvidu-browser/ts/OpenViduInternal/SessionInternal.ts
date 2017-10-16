@@ -51,6 +51,9 @@ export class SessionInternal {
     }
 
     private getUrlWithoutSecret(url: string): string {
+        if (!url) {
+            console.error('sessionId is not defined');
+        }
         if (url.indexOf(SECRET_PARAM) !== -1) {
             url = url.substring(0, url.lastIndexOf(SECRET_PARAM));
         }
@@ -271,7 +274,7 @@ export class SessionInternal {
             console.debug("Remote Connection found in connections list by its id [" + pid + "]");
         }
 
-        
+
         this.participants[pid] = connection;
 
         this.ee.emitEvent('participant-published', [{ connection }]);
@@ -560,7 +563,7 @@ export class SessionInternal {
             return metadata;
         }
     }
-    
+
     private randomToken(): string {
         return Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
     }

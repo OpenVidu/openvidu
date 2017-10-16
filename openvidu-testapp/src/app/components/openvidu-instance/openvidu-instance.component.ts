@@ -39,8 +39,11 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   sessionConf: SessionConf;
 
   // Session join data
+  secureSession = false;
   clientData: string;
   sessionName: string;
+  sessionIdInput: string;
+  tokenInput: string;
 
   // Session options
   subscribeTo;
@@ -84,7 +87,9 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
 
   openviduError: any;
 
-  constructor(private changeDetector: ChangeDetectorRef, public extensionDialog: MdDialog, public testFeedService: TestFeedService) {
+  constructor(private changeDetector: ChangeDetectorRef,
+    private extensionDialog: MdDialog,
+    private testFeedService: TestFeedService) {
     this.generateSessionInfo();
   }
 
@@ -135,12 +140,27 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       this.leaveSession();
     }
 
+    let sessionId;
+    let token;
+
+    if (this.secureSession) {
+      sessionId = this.sessionIdInput;
+      token = this.tokenInput;
+    } else {
+      sessionId = 'wss://'
+        + this.removeHttps(this.openviduUrl)
+        + this.sessionName + '?secret='
+        + this.openviduSecret;
+      token = null;
+    }
+    this.joinSessionShared(sessionId, token);
+  }
+
+  private joinSessionShared(sId, token): void {
+
     const OV: OpenVidu = new OpenVidu();
 
-    this.session = OV.initSession('wss://'
-      + this.removeHttps(this.openviduUrl)
-      + this.sessionName + '?secret='
-      + this.openviduSecret);
+    this.session = OV.initSession(sId);
 
     this.session.on('streamCreated', (event) => {
 
@@ -178,7 +198,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       this.updateEventList('sessionDisconnected', 'No data');
     });
 
-    this.session.connect(null, this.clientData, (error) => {
+    this.session.connect(token, this.clientData, (error) => {
       if (!error) {
         if (this.publishTo) {
 

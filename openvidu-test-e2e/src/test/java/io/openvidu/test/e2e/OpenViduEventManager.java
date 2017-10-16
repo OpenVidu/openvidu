@@ -33,7 +33,6 @@ import java.util.function.Consumer;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-import org.junit.Assert;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -119,7 +118,7 @@ public class OpenViduEventManager {
 		this.eventCallbacks.put(eventName, new RunnableCallback(callback));
 	}
 
-	public void waitUntilNumberOfEvent(String eventName, int eventNumber) {
+	public void waitUntilNumberOfEvent(String eventName, int eventNumber) throws Exception {
 		CountDownLatch eventSignal = new CountDownLatch(eventNumber);
 		this.setCountDown(eventName, eventSignal);
 		try {
@@ -128,7 +127,17 @@ public class OpenViduEventManager {
 			}
 		} catch (InterruptedException | TimeoutException e) {
 			e.printStackTrace();
+			throw e;
 		}
+	}
+	
+	public boolean assertMediaTracks(Iterable<WebElement> videoElements, boolean audioTransmission, boolean videoTransmission) {
+		boolean success = true;
+		for (WebElement video : videoElements) {
+			success = success && (audioTransmission == this.hasAudioTracks(video)) && (videoTransmission == this.hasVideoTracks(video));
+			if (!success) break;
+		}
+		return success;
 	}
 
 	private AtomicInteger getNumEvents(String eventName) {
@@ -181,29 +190,20 @@ public class OpenViduEventManager {
 			}
 		}
 	}
-
+	
 	private String getAndClearEventsInBrowser() {
 		String events = (String) ((JavascriptExecutor) driver)
 				.executeScript("var e = window.myEvents; window.myEvents = ''; return e;");
 		return events;
 	}
 	
-	public boolean assertMediaTracks(Iterable<WebElement> videoElements, boolean audioTransmission, boolean videoTransmission) {
-		boolean success = true;
-		for (WebElement video : videoElements) {
-			success = success && (audioTransmission == this.hasAudioTracks(video)) && (videoTransmission == this.hasVideoTracks(video));
-			if (!success) break;
-		}
-		return success;
-	}
-	
-	public boolean hasAudioTracks(WebElement videoElement) {
+	private boolean hasAudioTracks(WebElement videoElement) {
 		long numberAudioTracks = (long) ((JavascriptExecutor) driver)
 				.executeScript("return $('#" + videoElement.getAttribute("id") + "').prop('srcObject').getAudioTracks().length;");
 		return (numberAudioTracks > 0);
 	}
 	
-	public boolean hasVideoTracks(WebElement videoElement) {
+	private boolean hasVideoTracks(WebElement videoElement) {
 		long numberAudioTracks = (long) ((JavascriptExecutor) driver)
 				.executeScript("return $('#" + videoElement.getAttribute("id") + "').prop('srcObject').getVideoTracks().length;");
 		return (numberAudioTracks > 0);

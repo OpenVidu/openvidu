@@ -36,7 +36,7 @@ import { TestFeedService } from './services/test-feed.service';
     OpenviduParamsService,
     TestFeedService
   ],
-  entryComponents: [ ExtensionDialogComponent ],
+  entryComponents: [ExtensionDialogComponent],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

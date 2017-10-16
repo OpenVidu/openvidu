@@ -145,6 +145,12 @@
 			<artifactId>xml-apis</artifactId>
 			<version>1.4.01</version>
 		</dependency>
+
+		<dependency>
+			<groupId>io.openvidu</groupId>
+			<artifactId>openvidu-java-client</artifactId>
+			<version>1.1.0</version>
+		</dependency>
 	</dependencies>
 
 </project>

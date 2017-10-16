@@ -6,6 +6,16 @@
       <md-card-content>
         <form class="session-form">
 
+          <div class="secure-div">
+            <md-checkbox class="secure-session-checkbox" [disabled]="session" [(ngModel)]="secureSession" name="secureSession">SECURE</md-checkbox>
+            <md-form-field style="margin-right: 10px">
+              <input class="sessionIdInput" mdInput placeholder="SESSIONID" name="sessionIdInput" [(ngModel)]="sessionIdInput" [disabled]="!secureSession">
+            </md-form-field>
+            <md-form-field>
+              <input class="tokenInput" mdInput placeholder="TOKEN" name="tokenInput" [(ngModel)]="tokenInput" [disabled]="!secureSession">
+            </md-form-field>
+          </div>
+
           <div>
             <md-form-field style="margin-right: 10px">
               <input mdInput placeholder="Session name" name="sessionName" [(ngModel)]="sessionName" [disabled]="session">
@@ -18,8 +28,10 @@
 
           <div>
             <button class="join-btn" md-button (click)="joinSession()" [disabled]="session">JOIN</button>
-            <md-checkbox class="subscribe-checkbox" name="subscribeTo" (change)="toggleSubscribeTo()" [checked]="subscribeTo && checkSubscribeTo" [disabled]="session">Subscribe</md-checkbox>
-            <md-checkbox class="publish-checkbox" name="publishTo" (change)="togglePublishTo()" [checked]="publishTo && checkPublishTo" [disabled]="session || disablePublishTo">Publish</md-checkbox>
+            <md-checkbox class="subscribe-checkbox" name="subscribeTo" (change)="toggleSubscribeTo()" [checked]="subscribeTo && checkSubscribeTo"
+              [disabled]="session">Subscribe</md-checkbox>
+            <md-checkbox class="publish-checkbox" name="publishTo" (change)="togglePublishTo()" [checked]="publishTo && checkPublishTo"
+              [disabled]="session || disablePublishTo">Publish</md-checkbox>
           </div>
 
           <div class="inner-card" fxLayout="row" fxLayoutAlign="start start">
@@ -28,15 +40,19 @@
               <div>
                 <h4>Send</h4>
                 <div>
-                  <md-checkbox class="send-audio-checkbox" name="sendAudio" (change)="toggleSendAudio()" [checked]="sendAudio && checkSendAudio" [disabled]="session || disableSendAudio">Audio</md-checkbox>
-                  <md-checkbox class="send-video-checkbox" name="sendVideo" (change)="toggleSendVideo()" [checked]="sendVideo && checkSendVideo" [disabled]="session || disableSendVideo">Video</md-checkbox>
+                  <md-checkbox class="send-audio-checkbox" name="sendAudio" (change)="toggleSendAudio()" [checked]="sendAudio && checkSendAudio"
+                    [disabled]="session || disableSendAudio">Audio</md-checkbox>
+                  <md-checkbox class="send-video-checkbox" name="sendVideo" (change)="toggleSendVideo()" [checked]="sendVideo && checkSendVideo"
+                    [disabled]="session || disableSendVideo">Video</md-checkbox>
                 </div>
               </div>
               <div style="padding-top: 5px;">
                 <h4>Enter active</h4>
                 <div>
-                  <md-checkbox class="active-audio-checkbox" name="activeAudio" (change)="toggleActiveAudio()" [checked]="activeAudio && checkActiveAudio" [disabled]="session || disableActiveAudio">Audio</md-checkbox>
-                  <md-checkbox class="active-video-checkbox" name="activeVideo" (change)="toggleActiveVideo()" [checked]="activeVideo && checkActiveVideo" [disabled]="session || disableActiveVideo">Video</md-checkbox>
+                  <md-checkbox class="active-audio-checkbox" name="activeAudio" (change)="toggleActiveAudio()" [checked]="activeAudio && checkActiveAudio"
+                    [disabled]="session || disableActiveAudio">Audio</md-checkbox>
+                  <md-checkbox class="active-video-checkbox" name="activeVideo" (change)="toggleActiveVideo()" [checked]="activeVideo && checkActiveVideo"
+                    [disabled]="session || disableActiveVideo">Video</md-checkbox>
                 </div>
               </div>
             </div>
@@ -51,7 +67,8 @@
                 </div>
               </md-radio-group>
               <md-checkbox class="subscribe-remote-check" name="subscribeToRemote" (change)="subscribeToRemote = !subscribeToRemote" [disabled]="(!sendAudio && !sendVideo) || !publishTo || session"
-                [checked]="(sendAudio || sendVideo) && publishTo && subscribeToRemote">Subscribe<br>to remote</md-checkbox>
+                [checked]="(sendAudio || sendVideo) && publishTo && subscribeToRemote">Subscribe
+                <br>to remote</md-checkbox>
             </div>
 
           </div>
@@ -68,9 +85,15 @@
         <div class="session-card-inner">
           <div class="session-title">{{sessionName}}</div>
           <div class="session-actions">
-            <button class="video-btn" *ngIf="publishTo && sendVideo" (click)="toggleVideo()"><md-icon aria-label="Mute video button">{{videoIcon}}</md-icon></button>
-            <button class="audio-btn" *ngIf="publishTo && sendAudio" (click)="toggleAudio()"><md-icon aria-label="Mute audio button">{{audioIcon}}</md-icon></button>
-            <button class="leave-btn" (click)="leaveSession()"><md-icon aria-label="Leave button">clear</md-icon></button>
+            <button class="video-btn" *ngIf="publishTo && sendVideo" (click)="toggleVideo()">
+              <md-icon aria-label="Mute video button">{{videoIcon}}</md-icon>
+            </button>
+            <button class="audio-btn" *ngIf="publishTo && sendAudio" (click)="toggleAudio()">
+              <md-icon aria-label="Mute audio button">{{audioIcon}}</md-icon>
+            </button>
+            <button class="leave-btn" (click)="leaveSession()">
+              <md-icon aria-label="Leave button">clear</md-icon>
+            </button>
           </div>
         </div>
       </div>
@@ -80,7 +103,8 @@
           <div class="event-list-div scroll-custom">
             <md-accordion [attr.id]="'events-' + session.connection.connectionId" class="event-list">
               <md-expansion-panel *ngFor="let event of events" class="event-item">
-                <md-expansion-panel-header [attr.id]="event.name + '-' + session.connection.connectionId" [collapsedHeight]="'20px'" [expandedHeight]="'20px'" class="event-name">
+                <md-expansion-panel-header [attr.id]="event.name + '-' + session.connection.connectionId" [collapsedHeight]="'20px'" [expandedHeight]="'20px'"
+                  class="event-name">
                   {{event.name}}
                 </md-expansion-panel-header>
                 <div class="event-content">{{event.content}}</div>
