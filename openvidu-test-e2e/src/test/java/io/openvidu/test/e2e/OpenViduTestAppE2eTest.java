@@ -19,9 +19,12 @@ package io.openvidu.test.e2e;
 
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
+import static java.lang.System.getProperty;
 
 import java.util.List;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -53,24 +56,44 @@ import io.openvidu.test.e2e.browser.FirefoxUser;
 @ExtendWith(SeleniumExtension.class)
 @RunWith(JUnitPlatform.class)
 public class OpenViduTestAppE2eTest {
-	
+
+	static String OPENVIDU_SECRET = "MY_SECRET";
+	static String OPENVIDU_URL = "https://localhost:8443/";
+	static String APP_URL = "http://localhost:4200/";
 	static Exception ex = null;
-    private final Object lock = new Object();
+	private final Object lock = new Object();
 
-	final Logger log = getLogger(lookup().lookupClass());
-
-	final String OPENVIDU_URL = "https://localhost:8443/";
-	final String OPENVIDU_SECRET = "MY_SECRET";
-
-	final String DEFAULT_APP_URL = "http://localhost:4200/";
+	final static Logger log = getLogger(lookup().lookupClass());
 
 	BrowserUser user;
 
+	@BeforeAll()
+	static void setupAll() {
+		String appUrl = getProperty("app.url");
+		if (appUrl != null) {
+			APP_URL = appUrl;
+		}
+		log.info("Using URL {} to connect to openvidu-testapp", APP_URL);
+
+		String openviduUrl = getProperty("openvidu.url");
+		if (openviduUrl != null) {
+			OPENVIDU_URL = openviduUrl;
+		}
+		log.info("Using URL {} to connect to openvidu-server", OPENVIDU_URL);
+
+		String openvidusecret = getProperty("openvidu.secret");
+		if (openvidusecret != null) {
+			OPENVIDU_SECRET = openvidusecret;
+		}
+		log.info("Using secret {} to connect to openvidu-server", OPENVIDU_SECRET);
+	}
+
 	@BeforeEach
 	void setup() {
-		this.user = new ChromeUser("TestUser", 30);
 
-		user.getDriver().get(DEFAULT_APP_URL);
+		this.user = new ChromeUser("TestUser", 45);
+
+		user.getDriver().get(APP_URL);
 
 		WebElement urlInput = user.getDriver().findElement(By.id("openvidu-url"));
 		urlInput.clear();
@@ -80,6 +103,11 @@ public class OpenViduTestAppE2eTest {
 		secretInput.sendKeys(OPENVIDU_SECRET);
 
 		user.getEventManager().startPolling();
+	}
+	
+	@AfterEach
+	void dispose() {
+		user.dispose();
 	}
 
 	@Test
@@ -139,8 +167,6 @@ public class OpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.id("remove-user-btn")).click();
 
 		user.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 2);
-
-		user.dispose();
 	}
 
 	@Test
@@ -176,8 +202,6 @@ public class OpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.id("remove-user-btn")).click();
 
 		user.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 2);
-
-		user.dispose();
 	}
 
 	@Test
@@ -194,8 +218,6 @@ public class OpenViduTestAppE2eTest {
 		user.getDriver().findElements(By.className(("leave-btn"))).get(0).click();
 
 		user.getEventManager().waitUntilNumberOfEvent("streamDestroyed", 3);
-
-		user.dispose();
 	}
 
 	@Test
@@ -217,8 +239,6 @@ public class OpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.className(("leave-btn"))).click();
 
 		user.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 1);
-
-		user.dispose();
 	}
 
 	@Test
@@ -241,8 +261,6 @@ public class OpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.className(("leave-btn"))).click();
 
 		user.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 1);
-
-		user.dispose();
 	}
 
 	@Test
@@ -282,11 +300,10 @@ public class OpenViduTestAppE2eTest {
 
 		user.getDriver().findElement(By.id(("remove-user-btn"))).sendKeys(Keys.ENTER);
 		user.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 4);
-
-		user.dispose();
 	}
 
 	@Test
+
 	@DisplayName("Secure Test")
 	void secureTest() throws Exception {
 
@@ -343,26 +360,25 @@ public class OpenViduTestAppE2eTest {
 
 		user.getDriver().findElement(By.id(("remove-user-btn"))).sendKeys(Keys.ENTER);
 		user.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 4);
-
-		user.dispose();
 	}
-	
+
 	@Test
+
 	@DisplayName("Cross-Browser test")
 	void crossBrowserTest() throws Exception {
-		
+
 		Thread.UncaughtExceptionHandler h = new Thread.UncaughtExceptionHandler() {
-		    public void uncaughtException(Thread th, Throwable ex) {
-		        System.out.println("Uncaught exception: " + ex);
-		        synchronized(lock) {
-		        	OpenViduTestAppE2eTest.ex = new Exception(ex);
-		        }
-		    }
+			public void uncaughtException(Thread th, Throwable ex) {
+				System.out.println("Uncaught exception: " + ex);
+				synchronized (lock) {
+					OpenViduTestAppE2eTest.ex = new Exception(ex);
+				}
+			}
 		};
-		
+
 		Thread t = new Thread(() -> {
-			BrowserUser user2 = new FirefoxUser("TestUser", 10);
-			user2.getDriver().get(DEFAULT_APP_URL);
+			BrowserUser user2 = new FirefoxUser("TestUser", 30);
+			user2.getDriver().get(APP_URL);
 			WebElement urlInput = user2.getDriver().findElement(By.id("openvidu-url"));
 			urlInput.clear();
 			urlInput.sendKeys(OPENVIDU_URL);
@@ -371,13 +387,13 @@ public class OpenViduTestAppE2eTest {
 			secretInput.sendKeys(OPENVIDU_SECRET);
 
 			user2.getEventManager().startPolling();
-			
+
 			user2.getDriver().findElement(By.id("add-user-btn")).click();
 			user2.getDriver().findElement(By.className("join-btn")).click();
 			try {
 				user2.getEventManager().waitUntilNumberOfEvent("videoPlaying", 2);
-				Assert.assertTrue(user2.getEventManager().assertMediaTracks(user2.getDriver().findElements(By.tagName("video")),
-						true, true));
+				Assert.assertTrue(user2.getEventManager()
+						.assertMediaTracks(user2.getDriver().findElements(By.tagName("video")), true, true));
 				user2.getEventManager().waitUntilNumberOfEvent("streamDestroyed", 1);
 				user2.getDriver().findElement(By.id("remove-user-btn")).click();
 				user2.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 1);
@@ -389,26 +405,22 @@ public class OpenViduTestAppE2eTest {
 		});
 		t.setUncaughtExceptionHandler(h);
 		t.start();
-		
-		
+
 		user.getDriver().findElement(By.id("add-user-btn")).click();
 		user.getDriver().findElement(By.className("join-btn")).click();
-		
+
 		user.getEventManager().waitUntilNumberOfEvent("videoPlaying", 2);
-		
 
 		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
 				true, true));
-		
+
 		user.getDriver().findElement(By.id("remove-user-btn")).click();
-		
+
 		user.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 1);
 
-		user.dispose();
-		
 		t.join();
-		
-		synchronized(lock) {
+
+		synchronized (lock) {
 			if (OpenViduTestAppE2eTest.ex != null) {
 				throw OpenViduTestAppE2eTest.ex;
 			}
