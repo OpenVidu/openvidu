@@ -39,6 +39,8 @@ import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 
 import io.github.bonigarcia.SeleniumExtension;
+import io.github.bonigarcia.wdm.ChromeDriverManager;
+import io.github.bonigarcia.wdm.FirefoxDriverManager;
 import io.openvidu.java.client.OpenVidu;
 import io.openvidu.java.client.Session;
 import io.openvidu.test.e2e.browser.BrowserUser;
@@ -69,6 +71,9 @@ public class OpenViduTestAppE2eTest {
 
 	@BeforeAll()
 	static void setupAll() {
+		ChromeDriverManager.getInstance().setup();
+		FirefoxDriverManager.getInstance().setup();
+		
 		String appUrl = getProperty("app.url");
 		if (appUrl != null) {
 			APP_URL = appUrl;

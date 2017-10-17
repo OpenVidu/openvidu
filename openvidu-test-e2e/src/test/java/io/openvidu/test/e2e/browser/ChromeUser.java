@@ -28,8 +28,6 @@ public class ChromeUser extends BrowserUser {
 	public ChromeUser(String userName, int timeOfWaitInSeconds) {
 		super(userName, timeOfWaitInSeconds);
 
-		System.setProperty("webdriver.chrome.driver", "/home/chromedriver");
-
 		ChromeOptions options = new ChromeOptions();
 		// This flag avoids to grant the user media
 		options.addArguments("--use-fake-ui-for-media-stream");

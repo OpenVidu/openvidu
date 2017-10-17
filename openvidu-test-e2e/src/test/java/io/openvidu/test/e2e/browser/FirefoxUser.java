@@ -26,8 +26,6 @@ public class FirefoxUser extends BrowserUser {
 	public FirefoxUser(String userName, int timeOfWaitInSeconds) {
 		super(userName, timeOfWaitInSeconds);
 		
-		System.setProperty("webdriver.gecko.driver", "/home/geckodriver");
-
 		DesiredCapabilities capabilities = new DesiredCapabilities();
 		capabilities.setCapability("acceptInsecureCerts", true);
 		FirefoxProfile profile = new FirefoxProfile();
