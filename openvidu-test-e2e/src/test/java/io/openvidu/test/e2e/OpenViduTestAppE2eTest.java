@@ -96,10 +96,18 @@ public class OpenViduTestAppE2eTest {
 		log.info("Using secret {} to connect to openvidu-server", OPENVIDU_SECRET);
 	}
 
-	@BeforeEach
-	void setup() {
-
-		this.user = new ChromeUser("TestUser", 100);
+	void setupBrowser(String browser) {
+		
+		switch (browser) {
+			case "chrome":
+				this.user = new ChromeUser("TestUser", 50);
+				break;
+			case "firefox":
+				this.user = new FirefoxUser("TestUser", 50);
+				break;
+			default:
+				this.user = new ChromeUser("TestUser", 50);
+		}
 
 		user.getDriver().get(APP_URL);
 
@@ -119,10 +127,46 @@ public class OpenViduTestAppE2eTest {
 	}
 
 	@Test
-	@DisplayName("One2One [Video + Audio]")
-	void oneToOneVideoAudioSession() throws Exception {
+	@DisplayName("One2One Chrome [Video + Audio]")
+	void oneToOneVideoAudioSessionChrome() throws Exception {
+		
+		setupBrowser("chrome");
 
-		log.info("One2One [Video + Audio]");
+		log.info("One2One Chrome [Video + Audio]");
+
+		user.getDriver().findElement(By.id("auto-join-checkbox")).click();
+		user.getDriver().findElement(By.id("one2one-btn")).click();
+
+		user.getEventManager().waitUntilNumberOfEvent("videoPlaying", 4);
+		
+		try {
+			System.out.println(getBase64Screenshot(user));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
+				true, true));
+
+		user.getDriver().findElement(By.id("remove-user-btn")).click();
+
+		user.getEventManager().waitUntilNumberOfEvent("streamDestroyed", 1);
+		user.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 1);
+
+		user.getDriver().findElement(By.id("remove-user-btn")).click();
+
+		user.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 2);
+
+		user.dispose();
+	}
+	
+	@Test
+	@DisplayName("One2One Firefox [Video + Audio]")
+	void oneToOneVideoAudioSessionFirefox() throws Exception {
+		
+		setupBrowser("firefox");
+
+		log.info("One2One Firefox [Video + Audio]");
 
 		user.getDriver().findElement(By.id("auto-join-checkbox")).click();
 		user.getDriver().findElement(By.id("one2one-btn")).click();
@@ -153,6 +197,8 @@ public class OpenViduTestAppE2eTest {
 	@Test
 	@DisplayName("One2One [Audio]")
 	void oneToOneAudioSession() throws Exception {
+		
+		setupBrowser("chrome");
 
 		log.info("One2One [Audio]");
 
@@ -196,6 +242,8 @@ public class OpenViduTestAppE2eTest {
 	@Test
 	@DisplayName("One2One [Video]")
 	void oneToOneVideoSession() throws Exception {
+		
+		setupBrowser("chrome");
 
 		log.info("One2One [Video]");
 
@@ -239,6 +287,8 @@ public class OpenViduTestAppE2eTest {
 	@Test
 	@DisplayName("One2Many [Video + Audio]")
 	void oneToManyVideoAudioSession() throws Exception {
+		
+		setupBrowser("chrome");
 
 		log.info("One2Many [Video + Audio]");
 
@@ -263,6 +313,8 @@ public class OpenViduTestAppE2eTest {
 	@Test
 	@DisplayName("Unique user remote subscription [Video + Audio]")
 	void oneRemoteSubscription() throws Exception {
+		
+		setupBrowser("chrome");
 
 		log.info("Unique user remote subscription [Video + Audio]");
 
@@ -292,6 +344,8 @@ public class OpenViduTestAppE2eTest {
 	@Test
 	@DisplayName("Unique user remote subscription [ScreenShare + Audio]")
 	void oneRemoteSubscriptionScreen() throws Exception {
+		
+		setupBrowser("chrome");
 
 		log.info("Unique user remote subscription [ScreenShare + Audio]");
 
@@ -322,6 +376,8 @@ public class OpenViduTestAppE2eTest {
 	@Test
 	@DisplayName("Many2Many [Video + Audio]")
 	void manyToManyVideoAudioSession() throws Exception {
+		
+		setupBrowser("chrome");
 
 		log.info("Many2Many [Video + Audio]");
 
@@ -367,9 +423,10 @@ public class OpenViduTestAppE2eTest {
 	}
 
 	@Test
-
 	@DisplayName("Secure Test")
 	void secureTest() throws Exception {
+		
+		setupBrowser("chrome");
 
 		log.info("Secure Test");
 
@@ -435,9 +492,10 @@ public class OpenViduTestAppE2eTest {
 	}
 
 	@Test
-
 	@DisplayName("Cross-Browser test")
 	void crossBrowserTest() throws Exception {
+		
+		setupBrowser("chrome");
 
 		log.info("Cross-Browser test");
 
