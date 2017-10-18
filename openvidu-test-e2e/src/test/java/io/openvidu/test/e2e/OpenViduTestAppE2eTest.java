@@ -27,7 +27,6 @@ import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -160,7 +159,7 @@ public class OpenViduTestAppE2eTest {
 		user.dispose();
 	}
 	
-	@Test
+	/*@Test
 	@DisplayName("One2One Firefox [Video + Audio]")
 	void oneToOneVideoAudioSessionFirefox() throws Exception {
 		
@@ -192,7 +191,7 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 2);
 
 		user.dispose();
-	}
+	}*/
 
 	@Test
 	@DisplayName("One2One [Audio]")
@@ -491,7 +490,7 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 4);
 	}
 
-	@Test
+	/*@Test
 	@DisplayName("Cross-Browser test")
 	void crossBrowserTest() throws Exception {
 		
@@ -563,7 +562,7 @@ public class OpenViduTestAppE2eTest {
 				throw OpenViduTestAppE2eTest.ex;
 			}
 		}
-	}
+	}*/
 
 	private String getBase64Screenshot(BrowserUser user) throws Exception {
 		String screenshotBase64 = ((TakesScreenshot) user.getDriver()).getScreenshotAs(BASE64);

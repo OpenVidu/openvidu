@@ -1,0 +1,30 @@
+node('container') {
+  def mycontainer = docker.image('openvidu/openvidu-test-e2e:latest')
+  mycontainer.pull()
+  mycontainer.inside("-u root -v /var/run/docker.sock:/var/run/docker.sock:rw -v /dev/shm:/dev/shm") {
+    stage('Preparation') {
+      sh 'rm -rf ~/openvidu || true'
+      sh '/usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf &'
+      sh 'git clone https://github.com/OpenVidu/openvidu.git ~/openvidu'
+    }
+    stage('OpenVidu parent build') {
+      sh 'cd ~/openvidu && mvn -DskipTests=true compile && mvn -DskipTests=true install'
+    }
+    stage('OpenVidu Browser build') {
+      sh 'cd ~/openvidu/openvidu-browser && npm install --unsafe-perm && npm link --unsafe-perm'
+    }
+    stage('OpenVidu TestApp build') {
+      sh 'cd ~/openvidu/openvidu-testapp && npm install && npm link openvidu-browser && ng build'
+    }
+    stage ("Environment Launch") {
+      sh 'http-server -p 4200 ~/openvidu/openvidu-testapp/dist &> ~/openvidu/openvidu-testapp/testapp.log &'
+      sh 'service kurento-media-server-6.0 start'
+      sh 'cd ~/openvidu/openvidu-server && mvn -DskipTests=true clean compile package exec:java &> ~/openvidu/openvidu-server/openvidu-server.log &'
+      sh 'until $(curl --insecure --output /dev/null --silent --head --fail https://OPENVIDUAPP:MY_SECRET@localhost:8443/); do echo "Waiting for openvidu-server..."; sleep 5; done'
+    }
+    stage ("E2E tests") {
+      sh "cd ~/openvidu/openvidu-test-e2e && mvn test"
+      step([$class: 'JUnitResultArchiver', testResults: '**/target/surefire-reports/TEST-*.xml'])
+    }
+  }
+}
