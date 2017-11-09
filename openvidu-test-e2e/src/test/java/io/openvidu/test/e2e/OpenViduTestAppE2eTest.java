@@ -27,6 +27,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -159,40 +160,6 @@ public class OpenViduTestAppE2eTest {
 		user.dispose();
 	}
 	
-	/*@Test
-	@DisplayName("One2One Firefox [Video + Audio]")
-	void oneToOneVideoAudioSessionFirefox() throws Exception {
-		
-		setupBrowser("firefox");
-
-		log.info("One2One Firefox [Video + Audio]");
-
-		user.getDriver().findElement(By.id("auto-join-checkbox")).click();
-		user.getDriver().findElement(By.id("one2one-btn")).click();
-
-		user.getEventManager().waitUntilNumberOfEvent("videoPlaying", 4);
-		
-		try {
-			System.out.println(getBase64Screenshot(user));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
-				true, true));
-
-		user.getDriver().findElement(By.id("remove-user-btn")).click();
-
-		user.getEventManager().waitUntilNumberOfEvent("streamDestroyed", 1);
-		user.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 1);
-
-		user.getDriver().findElement(By.id("remove-user-btn")).click();
-
-		user.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 2);
-
-		user.dispose();
-	}*/
-
 	@Test
 	@DisplayName("One2One [Audio]")
 	void oneToOneAudioSession() throws Exception {
@@ -489,8 +456,44 @@ public class OpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.id(("remove-user-btn"))).sendKeys(Keys.ENTER);
 		user.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 4);
 	}
+	
+	@Disabled
+	@Test
+	@DisplayName("One2One Firefox [Video + Audio]")
+	void oneToOneVideoAudioSessionFirefox() throws Exception {
+		
+		setupBrowser("firefox");
 
-	/*@Test
+		log.info("One2One Firefox [Video + Audio]");
+
+		user.getDriver().findElement(By.id("auto-join-checkbox")).click();
+		user.getDriver().findElement(By.id("one2one-btn")).click();
+
+		user.getEventManager().waitUntilNumberOfEvent("videoPlaying", 4);
+		
+		try {
+			System.out.println(getBase64Screenshot(user));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
+				true, true));
+
+		user.getDriver().findElement(By.id("remove-user-btn")).click();
+
+		user.getEventManager().waitUntilNumberOfEvent("streamDestroyed", 1);
+		user.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 1);
+
+		user.getDriver().findElement(By.id("remove-user-btn")).click();
+
+		user.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 2);
+
+		user.dispose();
+	}
+	
+	@Disabled
+	@Test
 	@DisplayName("Cross-Browser test")
 	void crossBrowserTest() throws Exception {
 		
@@ -562,7 +565,7 @@ public class OpenViduTestAppE2eTest {
 				throw OpenViduTestAppE2eTest.ex;
 			}
 		}
-	}*/
+	}
 
 	private String getBase64Screenshot(BrowserUser user) throws Exception {
 		String screenshotBase64 = ((TakesScreenshot) user.getDriver()).getScreenshotAs(BASE64);
