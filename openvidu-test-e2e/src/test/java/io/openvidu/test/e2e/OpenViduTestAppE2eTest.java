@@ -570,6 +570,6 @@ public class OpenViduTestAppE2eTest {
 	private String getBase64Screenshot(BrowserUser user) throws Exception {
 		String screenshotBase64 = ((TakesScreenshot) user.getDriver()).getScreenshotAs(BASE64);
 		return "data:image/png;base64," + screenshotBase64;
-	}
+	} 
 
 }
