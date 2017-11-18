@@ -78,7 +78,8 @@ export class Stream {
 
     private videoSrcObject: MediaStream | null;
     private parentId: string;
-    public isReady: boolean = false;
+    public isReadyToPublish: boolean = false;
+    public isPublisherPublished: boolean = false;
     public isVideoELementCreated: boolean = false;
     public accessIsAllowed: boolean = false;
     public accessIsDenied: boolean = false;
@@ -253,8 +254,6 @@ export class Stream {
 
     playOnlyVideo(parentElement, thumbnailId) {
 
-        // TO-DO: check somehow if the stream is audio only, so the element created is <audio> instead of <video>
-
         this.video = document.createElement('video');
 
         this.video.id = (this.local ? 'local-' : 'remote-') + 'video-' + this.getId();
@@ -295,7 +294,7 @@ export class Stream {
             this.video = parentElement.appendChild(this.video);
         }
 
-        this.isReady = true;
+        this.isReadyToPublish = true;
 
         return this.video;
     }
@@ -515,6 +514,8 @@ export class Stream {
                     this.wp.generateOffer(sdpOfferCallback.bind(this));
                 });
             }
+            this.isPublisherPublished = true;
+            this.ee.emitEvent('stream-created-by-publisher');
         } else {
             let offerConstraints = {
                 audio: this.recvAudio,
@@ -540,7 +541,7 @@ export class Stream {
     publish() {
 
         // FIXME: Throw error when stream is not local
-        if (this.isReady) {
+        if (this.isReadyToPublish) {
             this.initWebRtcPeer(this.publishVideoCallback);
         } else {
             this.ee.once('stream-ready', streamEvent => {

@@ -67,6 +67,16 @@ export class Publisher {
             }
             callback(event);
         });
+        if (eventName == 'streamCreated') {
+            if (this.stream.isPublisherPublished) {
+                this.ee.emitEvent('streamCreated', [{ stream: this.stream }]);
+            } else {
+                this.stream.addEventListener('stream-created-by-publisher', () => {
+                    console.warn('Publisher emitting streamCreated');
+                    this.ee.emitEvent('streamCreated', [{ stream: this.stream }]);
+                });
+            }
+        }
         if (eventName == 'videoElementCreated') {
             if (this.stream.isVideoELementCreated) {
                 this.ee.emitEvent('videoElementCreated', [{

@@ -60,14 +60,18 @@ export class OpenVidu {
         if (this.checkSystemRequirements()) {
             let publisher: Publisher;
             if (cameraOptions != null) {
+
+                cameraOptions.audio = cameraOptions.audio != null ? cameraOptions.audio : true;
+                cameraOptions.video = cameraOptions.video != null ? cameraOptions.video : true;
+
                 if (!cameraOptions.screen) {
                     // Webcam and/or microphone is being requested
 
                     let cameraOptionsAux = {
                         sendAudio: cameraOptions.audio != null ? cameraOptions.audio : true,
                         sendVideo: cameraOptions.video != null ? cameraOptions.video : true,
-                        activeAudio: cameraOptions.activeAudio != null ? cameraOptions.activeAudio : true,
-                        activeVideo: cameraOptions.activeVideo != null ? cameraOptions.activeVideo : true,
+                        activeAudio: cameraOptions.audioActive != null ? cameraOptions.audioActive : true,
+                        activeVideo: cameraOptions.videoActive != null ? cameraOptions.videoActive : true,
                         data: true,
                         mediaConstraints: this.openVidu.generateMediaConstraints(cameraOptions)
                     };
@@ -81,10 +85,10 @@ export class OpenVidu {
                         publisher = new Publisher(this.openVidu.initPublisherScreen(parentId, callback), parentId, true);
                         screenSharingAuto.getScreenId((error, sourceId, screenConstraints) => {
                             cameraOptions = {
-                                sendAudio: cameraOptions.audio != null ? cameraOptions.audio : true,
-                                sendVideo: cameraOptions.video != null ? cameraOptions.video : true,
-                                activeAudio: cameraOptions.activeAudio != null ? cameraOptions.activeAudio : true,
-                                activeVideo: cameraOptions.activeVideo != null ? cameraOptions.activeVideo : true,
+                                sendAudio: cameraOptions.audio,
+                                sendVideo: cameraOptions.video,
+                                activeAudio: cameraOptions.audioActive != null ? cameraOptions.audioActive : true,
+                                activeVideo: cameraOptions.videoActive != null ? cameraOptions.videoActive : true,
                                 data: true,
                                 mediaConstraints: {
                                     video: screenConstraints.video,
@@ -138,8 +142,8 @@ export class OpenVidu {
                             cameraOptions = {
                                 sendAudio: cameraOptions.audio != null ? cameraOptions.audio : true,
                                 sendVideo: cameraOptions.video != null ? cameraOptions.video : true,
-                                activeAudio: cameraOptions.activeAudio != null ? cameraOptions.activeAudio : true,
-                                activeVideo: cameraOptions.activeVideo != null ? cameraOptions.activeVideo : true,
+                                activeAudio: cameraOptions.audioActive != null ? cameraOptions.audioActive : true,
+                                activeVideo: cameraOptions.videoActive != null ? cameraOptions.videoActive : true,
                                 data: true,
                                 mediaConstraints: {
                                     video: screenConstraints.video,

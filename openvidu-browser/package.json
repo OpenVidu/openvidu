@@ -31,9 +31,9 @@
     "sdp-translator": "0.1.24"
   },
   "devDependencies": {
-    "typescript": "2.5.2",
-    "browserify": "14.4.0",
-    "tsify": "3.0.1",
-    "uglify-js": "3.0.15"
+    "typescript": "2.6.1",
+    "browserify": "14.5.0",
+    "tsify": "3.0.3",
+    "uglify-js": "3.1.9"
   }
 }

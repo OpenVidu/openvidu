@@ -105,13 +105,13 @@ function bufferizeCandidates(pc, onerror) {
 
     switch (pc.signalingState) {
     case 'closed':
-      callback(new Error('PeerConnection object is closed'))
-      break
+      callback(new Error('PeerConnection object is closed'));
+      break;
     case 'stable':
       if (pc.remoteDescription) {
-        pc.addIceCandidate(candidate, callback, callback)
-        break
+        pc.addIceCandidate(candidate, callback, callback);
       }
+      break;
     default:
       candidatesQueue.push({
         candidate: candidate,
