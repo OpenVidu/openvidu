@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 public class OpenviduConfiguration {
 
 	@Value("${openvidu.publicurl}")
-	private String openviduPublicUrl; //local, ngrok, FINAL_URL
+	private String openviduPublicUrl; //local, ngrok, docker, FINAL_URL
 
 	@Value("${server.port}")
 	private String serverPort;

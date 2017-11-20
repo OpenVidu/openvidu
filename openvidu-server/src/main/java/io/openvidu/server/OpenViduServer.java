@@ -17,6 +17,7 @@ package io.openvidu.server;
 
 import static org.kurento.commons.PropertiesManager.getPropertyJson;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.kurento.jsonrpc.JsonUtils;
@@ -149,9 +150,12 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	public static void main(String[] args) throws Exception {
 		ConfigurableApplicationContext context = start(args);
 		OpenviduConfiguration openviduConf = context.getBean(OpenviduConfiguration.class);
-		OpenViduServer.publicUrl = "wss://localhost:" + openviduConf.getServerPort();
-
-		if (openviduConf.getOpenViduPublicUrl().equals("ngrok")) {
+		
+		String publicUrl = openviduConf.getOpenViduPublicUrl();
+		String type = publicUrl;
+		
+		switch (publicUrl) {
+		case "ngrok":
 			try {
 				NgrokController ngrok = new NgrokController();
 				final String NEW_LINE = System.getProperty("line.separator");
@@ -162,18 +166,47 @@ public class OpenViduServer implements JsonRpcConfigurer {
 						"-------------------------" 	+ NEW_LINE;
 				System.out.println(str);
 				OpenViduServer.publicUrl = ngrok.getNgrokServerUrl().replaceFirst("https://", "wss://");
+				
 			} catch (Exception e) {
-				System.out.println("   No ngrok connection   ");
+				System.err.println("Ngrok URL was configured, but there was an error connecting to ngrok: "+e.getClass().getName()+" "+e.getMessage());
+				System.err.println("Fallback to local URL");
+			}		
+
+			break;
+			
+		case "docker":
+			try {
+				OpenViduServer.publicUrl = "wss://"+getContainerIP() + ":" + openviduConf.getServerPort();
+			} catch(Exception e) {
+				System.err.println("Docker container IP was configured, but there was an error obtaining IP: "+e.getClass().getName()+" "+e.getMessage());
+				System.err.println("Fallback to local URL");
 			}
-		} else if (!openviduConf.getOpenViduPublicUrl().equals("local")) {
-			System.out.println("CUSTOM URL");
-			OpenViduServer.publicUrl = openviduConf.getOpenViduPublicUrl().replaceFirst("https://", "wss://");
+			break;
+
+		case "local":
+			break;
+			
+		default:
+			type = "custom";
+			OpenViduServer.publicUrl = publicUrl.replaceFirst("https://", "wss://");
 			if (!OpenViduServer.publicUrl.startsWith("wss://")) {
 				OpenViduServer.publicUrl = "wss://" + OpenViduServer.publicUrl;
-			}
+			}			
+			break;
 		}
+		
+		if(OpenViduServer.publicUrl == null) {
+			type = "local";
+			OpenViduServer.publicUrl = "wss://localhost:" + openviduConf.getServerPort();
+		}				
+		
+		System.out.println("OpenVidu Server using "+type+" URL: "+OpenViduServer.publicUrl);
 	}
 
+	private static String getContainerIP() throws IOException, InterruptedException {
+		return CommandExecutor.execCommand("/bin/sh","-c","hostname -i | awk '{print $1}'");
+	}
+	
 	public static ConfigurableApplicationContext start(String[] args) {
 		log.info("Using /dev/urandom for secure random generation");
 		System.setProperty("java.security.egd", "file:/dev/./urandom");
