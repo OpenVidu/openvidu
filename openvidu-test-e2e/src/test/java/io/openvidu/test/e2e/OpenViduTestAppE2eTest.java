@@ -457,7 +457,6 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 4);
 	}
 	
-	@Disabled
 	@Test
 	@DisplayName("One2One Firefox [Video + Audio]")
 	void oneToOneVideoAudioSessionFirefox() throws Exception {
@@ -492,7 +491,6 @@ public class OpenViduTestAppE2eTest {
 		user.dispose();
 	}
 	
-	@Disabled
 	@Test
 	@DisplayName("Cross-Browser test")
 	void crossBrowserTest() throws Exception {
