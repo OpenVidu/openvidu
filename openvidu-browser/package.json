@@ -13,10 +13,9 @@
   "scripts": {
     "browserify": "VERSION=${VERSION:-}; cd ts/OpenVidu && browserify Main.ts -p [ tsify ] --exclude kurento-browser-extensions --debug -o ../../static/js/openvidu-browser-$VERSION.js -v",
     "browserify-prod": "VERSION=${VERSION:-}; cd ts/OpenVidu && browserify --debug Main.ts -p [ tsify ] --exclude kurento-browser-extensions | uglifyjs --source-map content=inline --output ../../static/js/openvidu-browser-$VERSION.min.js",
-    "updatetsc": "cd ts/OpenViduInternal && tsc && cd ../OpenVidu && tsc",
+    "updatetsc": "cd ts/OpenViduInternal && tsc && cd ../OpenVidu && tsc && cd ../.. && tsc --declaration ts/OpenVidu/index.ts --outDir lib --sourceMap && tsc --declaration ts/OpenVidu/Main.ts --outDir lib --sourceMap",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "prepublish": "cd ts/OpenViduInternal && tsc && cd ../OpenVidu && tsc",
-    "developing": "cd ts/OpenViduInternal && tsc -w && cd ../OpenVidu && tsc -w"
+    "prepublish": "cd ts/OpenViduInternal && tsc && cd ../OpenVidu && tsc && cd ../.. && tsc --declaration ts/OpenVidu/index.ts --outDir lib --sourceMap && tsc --declaration ts/OpenVidu/Main.ts --outDir lib --sourceMap"
   },
   "dependencies": {
     "wolfy87-eventemitter": "4.2.9",
