@@ -458,6 +458,7 @@ public class OpenViduTestAppE2eTest {
 	}
 	
 	@Test
+	@Disabled
 	@DisplayName("One2One Firefox [Video + Audio]")
 	void oneToOneVideoAudioSessionFirefox() throws Exception {
 		
@@ -492,6 +493,7 @@ public class OpenViduTestAppE2eTest {
 	}
 	
 	@Test
+	@Disabled
 	@DisplayName("Cross-Browser test")
 	void crossBrowserTest() throws Exception {
 		
