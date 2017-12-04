@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewChild, ElementRef, HostListener, OnDestroy } from '@angular/core';
-import { MdDialog, MdDialogRef } from '@angular/material';
+import { MatDialog, MatDialogRef } from '@angular/material';
 import { Subscription } from 'rxjs/Subscription';
 
 import { InfoService } from '../../services/info.service';
@@ -30,7 +30,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   showSpinner = false;
   msgChain = [];
 
-  constructor(private infoService: InfoService, public dialog: MdDialog) {
+  constructor(private infoService: InfoService, public dialog: MatDialog) {
     // Subscription to info updated event raised by InfoService
     this.infoSubscription = this.infoService.newInfo$.subscribe(
       info => {
@@ -67,7 +67,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   testVideo() {
-    let dialogRef: MdDialogRef<CredentialsDialogComponent>;
+    let dialogRef: MatDialogRef<CredentialsDialogComponent>;
     dialogRef = this.dialog.open(CredentialsDialogComponent);
     dialogRef.componentInstance.myReference = dialogRef;
 
@@ -126,7 +126,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       } else {
         if (error.code === 401) { // User unauthorized error. OpenVidu security is active
           this.endTestVideo();
-          let dialogRef: MdDialogRef<CredentialsDialogComponent>;
+          let dialogRef: MatDialogRef<CredentialsDialogComponent>;
           dialogRef = this.dialog.open(CredentialsDialogComponent);
           dialogRef.componentInstance.myReference = dialogRef;
 

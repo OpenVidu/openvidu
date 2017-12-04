@@ -17,22 +17,22 @@ ul {
   margin: 0;
 }
 
-button.mat-raised-button {
+#test-btn {
   text-transform: uppercase;
   float: right;
 }
 
-md-card-title button.blue {
+mat-card-title button.blue {
   color: #ffffff;
   background-color: #0088aa;
 }
 
-md-card-title button.yellow {
+mat-card-title button.yellow {
   color: rgba(0, 0, 0, 0.87);
   background-color: #ffcc00;
 }
 
-md-spinner {
+mat-spinner {
   position: absolute;
   top: 50%;
   left: 50%;

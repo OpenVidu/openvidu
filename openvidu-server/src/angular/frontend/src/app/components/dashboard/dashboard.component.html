@@ -1,37 +1,36 @@
 <div id="dashboard-div" fxLayout="row" fxLayout.xs="column" fxLayoutGap="20px" fxFlexFill>
 
   <div fxLayout="column" fxFlex="66%" fxFlexOrder="1" fxFlexOrder.xs="2">
-    <md-card id="log">
-      <md-card-title>Server events
-        <md-slide-toggle title="Lock Scroll" [(ngModel)]="lockScroll" style="float: right; margin-left: auto;">
-          <md-icon>lock_outline</md-icon>
-        </md-slide-toggle>
-      </md-card-title>
-      <md-divider></md-divider>
-      <md-card-content #scrollMe id="log-content">
+    <mat-card id="log">
+      <mat-card-title>Server events
+        <mat-slide-toggle title="Lock Scroll" [(ngModel)]="lockScroll" style="float: right; margin-left: auto;">
+          <mat-icon>lock_outline</mat-icon>
+        </mat-slide-toggle>
+      </mat-card-title>
+      <mat-divider></mat-divider>
+      <mat-card-content #scrollMe id="log-content">
         <ul>
           <li *ngFor="let i of info">
             <p>{{i}}</p>
           </li>
         </ul>
-      </md-card-content>
-    </md-card>
+      </mat-card-content>
+    </mat-card>
   </div>
 
   <div fxLayout="column" fxFlex="33%" fxFlexOrder="2" fxFlexOrder.xs="1">
-    <md-card id="video-loop">
-      <md-card-title>Test the connection
-        <button [class]="testStatus == 'DISCONNECTED' ? 'blue' : (testStatus == 'PLAYING' ? 'yellow' : 'disabled')" md-raised-button
-          (click)="toggleTestVideo()" [disabled]="testStatus==='CONNECTING' || testStatus==='CONNECTED'">{{testButton}}</button></md-card-title>
-      <md-card-content>
+    <mat-card id="video-loop">
+      <mat-card-title>Test the connection
+        <button id="test-btn" mat-raised-button [ngClass]="testStatus == 'DISCONNECTED' ? 'blue' : (testStatus == 'PLAYING' ? 'yellow' : 'disabled')" (click)="toggleTestVideo()" [disabled]="testStatus==='CONNECTING' || testStatus==='CONNECTED'">{{testButton}}</button>
+      </mat-card-title>
+      <mat-card-content>
         <div id="mirrored-video">
           <div *ngIf="showSpinner" id="loader">
             <div class="loader-1 center"><span></span></div>
           </div>
-          <!--<md-spinner *ngIf="showSpinner" [color]="color"></md-spinner>-->
           <div *ngIf="session" id="tick-div">
-            <div id="tooltip-tick" *ngIf="testStatus=='PLAYING'" mdTooltip="The connection is successful" mdTooltipPosition="below"></div>
-            <div [class]="testStatus=='PLAYING' ? 'trigger drawn' : 'trigger'"></div>
+            <div id="tooltip-tick" *ngIf="testStatus=='PLAYING'" matTooltip="The connection is successful" matTooltipPosition="below"></div>
+            <div [ngClass]="testStatus=='PLAYING' ? 'trigger drawn' : 'trigger'"></div>
             <svg version="1.1" id="tick" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
               viewBox="-1 -1 39 39" style="enable-background:new 0 0 37 37;" xml:space="preserve">
               <path class="circ path" style="fill:none;stroke:#06d362;stroke-width:4;stroke-linejoin:round;stroke-miterlimit:10;" d="
@@ -43,8 +42,7 @@
           </div>
         </div>
         <div id="msg-chain"><p *ngFor="let msg of msgChain">{{msg}}</p></div>
-      </md-card-content>
-    </md-card>
+      </mat-card-content>
+    </mat-card>
   </div>
-
 </div>

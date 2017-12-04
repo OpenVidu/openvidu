@@ -1,23 +1,23 @@
 import { Component } from '@angular/core';
-import { MdDialogRef } from '@angular/material';
+import { MatDialogRef } from '@angular/material';
 
 @Component({
     selector: 'app-credentials-dialog',
     template: `
         <div>
-            <h1 md-dialog-title>
+            <h1 mat-dialog-title>
                 Insert your secret
             </h1>
             <form #dialogForm (ngSubmit)="testVideo()">
-                <md-dialog-content>
-                    <md-input-container>
-                        <input mdInput name="secret" type="password" [(ngModel)]="secret">
-                    </md-input-container>
-                </md-dialog-content>
-                <md-dialog-actions>
-                    <button md-button md-dialog-close>CANCEL</button>
-                    <button md-button id="join-btn" type="submit">TEST</button>
-                </md-dialog-actions>
+                <mat-dialog-content>
+                    <mat-input-container>
+                        <input matInput name="secret" type="password" [(ngModel)]="secret">
+                    </mat-input-container>
+                </mat-dialog-content>
+                <mat-dialog-actions>
+                    <button mat-button mat-dialog-close>CANCEL</button>
+                    <button mat-button id="join-btn" type="submit">TEST</button>
+                </mat-dialog-actions>
             </form>
         </div>
     `,
@@ -39,7 +39,7 @@ import { MdDialogRef } from '@angular/material';
         #joinWithVideo {
             margin-right: 50px;
         }
-        md-dialog-actions {
+        mat-dialog-actions {
             display: block;
         }
         #join-btn {
@@ -49,7 +49,7 @@ import { MdDialogRef } from '@angular/material';
 })
 export class CredentialsDialogComponent {
 
-    public myReference: MdDialogRef<CredentialsDialogComponent>;
+    public myReference: MatDialogRef<CredentialsDialogComponent>;
     secret: string;
 
     constructor() { }
