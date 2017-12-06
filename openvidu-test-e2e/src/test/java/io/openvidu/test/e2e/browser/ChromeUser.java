@@ -18,15 +18,22 @@
 package io.openvidu.test.e2e.browser;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.concurrent.TimeUnit;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.remote.RemoteWebDriver;
 import org.springframework.core.io.ClassPathResource;
 
 public class ChromeUser extends BrowserUser {
 
 	public ChromeUser(String userName, int timeOfWaitInSeconds) {
 		super(userName, timeOfWaitInSeconds);
+		
+		DesiredCapabilities capabilities = DesiredCapabilities.chrome();
+		capabilities.setAcceptInsecureCerts(true);
 
 		ChromeOptions options = new ChromeOptions();
 		// This flag avoids to grant the user media
@@ -42,10 +49,23 @@ public class ChromeUser extends BrowserUser {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
-		this.driver = new ChromeDriver(options);
-		this.driver.manage().timeouts().setScriptTimeout(this.timeOfWaitInSeconds, TimeUnit.SECONDS);
 		
+		capabilities.setCapability(ChromeOptions.CAPABILITY, options);
+		
+		String REMOTE_URL = System.getProperty("REMOTE_URL_CHROME");
+		if (REMOTE_URL != null) {
+			log.info("Using URL {} to connect to remote web driver", REMOTE_URL);
+			try {
+				this.driver = new RemoteWebDriver(new URL(REMOTE_URL), capabilities);
+			} catch (MalformedURLException e) {
+				e.printStackTrace();
+			}
+		} else {
+			log.info("Using local web driver");
+			this.driver = new ChromeDriver(capabilities);
+		}
+		
+		this.driver.manage().timeouts().setScriptTimeout(this.timeOfWaitInSeconds, TimeUnit.SECONDS);
 		this.configureDriver();
 	}
 

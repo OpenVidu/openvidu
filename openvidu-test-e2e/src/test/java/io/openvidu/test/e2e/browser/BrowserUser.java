@@ -17,12 +17,18 @@
 
 package io.openvidu.test.e2e.browser;
 
+import static java.lang.invoke.MethodHandles.lookup;
+import static org.slf4j.LoggerFactory.getLogger;
+
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.slf4j.Logger;
 
 import io.openvidu.test.e2e.OpenViduEventManager;
 
 public class BrowserUser {
+	
+	final static Logger log = getLogger(lookup().lookupClass());
 
 	protected WebDriver driver;
 	protected WebDriverWait waiter;

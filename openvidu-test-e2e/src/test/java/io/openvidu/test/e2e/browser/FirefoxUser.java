@@ -17,28 +17,42 @@
 
 package io.openvidu.test.e2e.browser;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxProfile;
 import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.remote.RemoteWebDriver;
 
 public class FirefoxUser extends BrowserUser {
 
 	public FirefoxUser(String userName, int timeOfWaitInSeconds) {
 		super(userName, timeOfWaitInSeconds);
 		
-		DesiredCapabilities capabilities = new DesiredCapabilities();
-		capabilities.setCapability("acceptInsecureCerts", true);
+		DesiredCapabilities capabilities = DesiredCapabilities.firefox();
+		capabilities.setAcceptInsecureCerts(true);
 		FirefoxProfile profile = new FirefoxProfile();
 
 		// This flag avoids granting the access to the camera
 		profile.setPreference("media.navigator.permission.disabled", true);
-		// This flag force to use fake user media (synthetic video of multiple
-		// color)
+		// This flag force to use fake user media (synthetic video of multiple color)
 		profile.setPreference("media.navigator.streams.fake", true);
 
 		capabilities.setCapability(FirefoxDriver.PROFILE, profile);
-
-		this.driver = new FirefoxDriver(capabilities);
+		
+		String REMOTE_URL = System.getProperty("REMOTE_URL_FIREFOX");
+		if (REMOTE_URL != null) {
+			log.info("Using URL {} to connect to remote web driver", REMOTE_URL);
+			try {
+				this.driver = new RemoteWebDriver(new URL(REMOTE_URL), capabilities);
+			} catch (MalformedURLException e) {
+				e.printStackTrace();
+			}
+		} else {
+			log.info("Using local web driver");
+			this.driver = new FirefoxDriver(capabilities);
+		}
 		
 		this.configureDriver();
 	}

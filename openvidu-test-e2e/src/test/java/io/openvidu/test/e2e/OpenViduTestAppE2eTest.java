@@ -19,7 +19,6 @@ package io.openvidu.test.e2e;
 
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
-import static java.lang.System.getProperty;
 
 import static org.openqa.selenium.OutputType.BASE64;
 
@@ -77,19 +76,19 @@ public class OpenViduTestAppE2eTest {
 		ChromeDriverManager.getInstance().setup();
 		FirefoxDriverManager.getInstance().setup();
 
-		String appUrl = getProperty("app.url");
+		String appUrl = System.getProperty("APP_URL");
 		if (appUrl != null) {
 			APP_URL = appUrl;
 		}
 		log.info("Using URL {} to connect to openvidu-testapp", APP_URL);
 
-		String openviduUrl = getProperty("openvidu.url");
+		String openviduUrl = System.getProperty("OPENVIDU_URL");
 		if (openviduUrl != null) {
 			OPENVIDU_URL = openviduUrl;
 		}
 		log.info("Using URL {} to connect to openvidu-server", OPENVIDU_URL);
 
-		String openvidusecret = getProperty("openvidu.secret");
+		String openvidusecret = System.getProperty("OPENVIDU_SECRET");
 		if (openvidusecret != null) {
 			OPENVIDU_SECRET = openvidusecret;
 		}
@@ -458,7 +457,6 @@ public class OpenViduTestAppE2eTest {
 	}
 	
 	@Test
-	@Disabled
 	@DisplayName("One2One Firefox [Video + Audio]")
 	void oneToOneVideoAudioSessionFirefox() throws Exception {
 		
@@ -493,7 +491,6 @@ public class OpenViduTestAppE2eTest {
 	}
 	
 	@Test
-	@Disabled
 	@DisplayName("Cross-Browser test")
 	void crossBrowserTest() throws Exception {
 		
