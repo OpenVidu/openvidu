@@ -305,6 +305,34 @@ public class OpenViduTestAppE2eTest {
 
 		user.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 1);
 	}
+	
+	@Test
+	@DisplayName("Unique user remote subscription Firefox [Video + Audio]")
+	void oneRemoteSubscriptionFirefox() throws Exception {
+		
+		setupBrowser("firefox");
+
+		log.info("Unique user remote subscription Firefox [Video + Audio]");
+
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.className("subscribe-remote-check")).click();
+		user.getDriver().findElement(By.className("join-btn")).click();
+
+		user.getEventManager().waitUntilNumberOfEvent("connectionCreated", 1);
+		user.getEventManager().waitUntilNumberOfEvent("accessAllowed", 1);
+		
+		Thread.sleep(3000);
+		
+		try {
+			System.out.println(getBase64Screenshot(user));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		user.getDriver().findElement(By.className(("leave-btn"))).click();
+
+		user.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 1);
+	}
 
 	@Test
 	@DisplayName("Unique user remote subscription [ScreenShare + Audio]")
