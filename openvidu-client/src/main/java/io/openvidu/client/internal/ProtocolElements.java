@@ -93,9 +93,9 @@ public class ProtocolElements {
   public static final String PARTICIPANTUNPUBLISHED_NAME_PARAM = "name";
 
   public static final String PARTICIPANTSENDMESSAGE_METHOD = "sendMessage";
-  public static final String PARTICIPANTSENDMESSAGE_USER_PARAM = "user";
-  public static final String PARTICIPANTSENDMESSAGE_ROOM_PARAM = "room";
-  public static final String PARTICIPANTSENDMESSAGE_MESSAGE_PARAM = "message";
+  public static final String PARTICIPANTSENDMESSAGE_DATA_PARAM = "data";
+  public static final String PARTICIPANTSENDMESSAGE_FROM_PARAM = "from";
+  public static final String PARTICIPANTSENDMESSAGE_TYPE_PARAM = "type";
 
   public static final String ROOMCLOSED_METHOD = "roomClosed";
   public static final String ROOMCLOSED_ROOM_PARAM = "room";

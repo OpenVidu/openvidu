@@ -16,15 +16,20 @@
 
 package io.openvidu.server.core.internal;
 
+import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.kurento.client.IceCandidate;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import io.openvidu.client.OpenViduException;
+import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.server.InfoHandler;
 import io.openvidu.server.core.api.NotificationRoomHandler;
@@ -200,23 +205,54 @@ public class DefaultNotificationRoomHandler implements NotificationRoomHandler {
   }
 
   @Override
-  public void onSendMessage(ParticipantRequest request, String message, String userName,
+  public void onSendMessage(ParticipantRequest request, JsonObject message, String userName,
       String roomName, Set<UserParticipant> participants, OpenViduException error) {
     if (error != null) {
       notifService.sendErrorResponse(request, null, error);
       return;
     }
-    notifService.sendResponse(request, new JsonObject());
 
     JsonObject params = new JsonObject();
-    params.addProperty(ProtocolElements.PARTICIPANTSENDMESSAGE_ROOM_PARAM, roomName);
-    params.addProperty(ProtocolElements.PARTICIPANTSENDMESSAGE_USER_PARAM, userName);
-    params.addProperty(ProtocolElements.PARTICIPANTSENDMESSAGE_MESSAGE_PARAM, message);
-
-    for (UserParticipant participant : participants) {
-      notifService.sendNotification(participant.getParticipantId(),
-          ProtocolElements.PARTICIPANTSENDMESSAGE_METHOD, params);
+    params.addProperty(ProtocolElements.PARTICIPANTSENDMESSAGE_DATA_PARAM, message.get("data").getAsString());
+    params.addProperty(ProtocolElements.PARTICIPANTSENDMESSAGE_FROM_PARAM, userName);
+    params.addProperty(ProtocolElements.PARTICIPANTSENDMESSAGE_TYPE_PARAM, message.get("type").getAsString());
+    
+    Set<String> toSet = new HashSet<String>();
+    
+    if (message.has("to")) {
+	    JsonArray toJson = message.get("to").getAsJsonArray();
+	    for (int i=0; i < toJson.size(); i++) {
+	    	JsonElement el = toJson.get(i);
+	    	if (el.isJsonNull()) {
+	    		throw new OpenViduException(Code.SIGNAL_TO_INVALID_ERROR_CODE, "Signal \"to\" field invalid format: null");
+	    	}
+	        toSet.add(el.getAsString());
+	    }
     }
+    
+    if (toSet.isEmpty()) {
+    	for (UserParticipant participant : participants) {
+    		notifService.sendNotification(participant.getParticipantId(),
+    	          ProtocolElements.PARTICIPANTSENDMESSAGE_METHOD, params);
+        }
+    } else {
+    	Set<String> participantNames = participants.stream()
+    			.map(UserParticipant::getUserName)
+    			.collect(Collectors.toSet());
+    	for (String to : toSet) {
+    		if (participantNames.contains(to)) {
+				Optional<UserParticipant> p = participants.stream()
+	                    .filter(x -> to.equals(x.getUserName()))
+	                    .findFirst();
+      	      notifService.sendNotification(p.get().getParticipantId(),
+      	          ProtocolElements.PARTICIPANTSENDMESSAGE_METHOD, params);
+          	} else {
+          		throw new OpenViduException(Code.SIGNAL_TO_INVALID_ERROR_CODE, "Signal \"to\" field invalid format: Connection [" + to + "] does not exist");
+          	}
+    	}
+    }
+    
+    notifService.sendResponse(request, new JsonObject());
   }
 
   @Override

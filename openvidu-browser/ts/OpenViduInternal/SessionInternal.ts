@@ -14,6 +14,12 @@ export interface SessionOptions {
     thresholdSpeaker?: number;
 }
 
+export interface SignalOptions {
+    type?: string;
+    to?: Connection[];
+    data?: string;
+}
+
 export class SessionInternal {
 
     private id: string;
@@ -364,20 +370,20 @@ export class SessionInternal {
 
     onNewMessage(msg) {
 
-        console.info("New message: " + JSON.stringify(msg));
-        let room = msg.room;
-        let user = msg.user;
-        let message = msg.message;
+        console.info("New signal: " + JSON.stringify(msg));
 
-        if (user !== undefined) {
-            this.ee.emitEvent('newMessage', [{
-                room: room,
-                user: user,
-                message: message
-            }]);
-        } else {
-            console.warn("User undefined in new message:", msg);
-        }
+        this.ee.emitEvent('signal', [{
+            data: msg.data,
+            from: this.participants[msg.from],
+            type: msg.type
+        }]);
+
+        this.ee.emitEvent('signal:' + msg.type, [{
+            data: msg.data,
+            from: this.participants[msg.from],
+            type: msg.type
+        }]);
+
     }
 
     recvIceCandidate(msg) {

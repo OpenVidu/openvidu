@@ -1,4 +1,4 @@
-import { SessionInternal, SessionOptions } from '../OpenViduInternal/SessionInternal';
+import { SessionInternal, SessionOptions, SignalOptions } from '../OpenViduInternal/SessionInternal';
 import { Stream } from '../OpenViduInternal/Stream';
 import { Connection } from "../OpenViduInternal/Connection";
 
@@ -126,6 +126,25 @@ export class Session {
     unsubscribe(subscriber: Subscriber) {
         this.session.unsuscribe(subscriber.stream);
         subscriber.stream.removeVideo();
+    }
+
+    signal(signal: SignalOptions, completionHandler?: Function) {
+        var signalMessage = {};
+
+        if (signal.to && signal.to.length > 0) {
+            let connectionIds: string[] = [];
+            for (let i = 0; i < signal.to.length; i++) {
+                connectionIds.push(signal.to[i].connectionId);
+            }
+            signalMessage['to'] = connectionIds;
+        } else {
+            signalMessage['to'] = [];
+        }
+
+        signalMessage['data'] = signal.data ? signal.data : '';
+        signalMessage['type'] = signal.type ? signal.type : '';
+
+        this.openVidu.openVidu.sendMessage(this.sessionId, this.connection.connectionId, JSON.stringify(signalMessage));
     }
 
 }

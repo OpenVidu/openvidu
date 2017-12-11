@@ -27,6 +27,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
+
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.server.core.RoomManager.JoinRoomReturnValue;
@@ -265,10 +269,17 @@ public class NotificationRoomManager {
         throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE,
             "Provided room name '" + roomName + "' differs from the participant's room");
       }
-      notificationRoomHandler.onSendMessage(request, message, userName, roomName,
-          internalManager.getParticipants(roomName), null);
+      try {
+    	  JsonObject messageJSON =  new JsonParser().parse(message).getAsJsonObject();
+    	  
+    	  notificationRoomHandler.onSendMessage(request, messageJSON, userName, roomName, internalManager.getParticipants(roomName), null);
+    	  
+      } catch (JsonSyntaxException | IllegalStateException e) {
+    	  throw new OpenViduException(Code.SIGNAL_FORMAT_INVALID_ERROR_CODE,
+    	    "Provided signal object '" + message + "' has not a valid JSON format");
+      }
     } catch (OpenViduException e) {
-      log.warn("PARTICIPANT {}: Error sending message", userName, e);
+      log.warn("PARTICIPANT {}: Error sending signal", userName, e);
       notificationRoomHandler.onSendMessage(request, null, null, null, null, e);
     }
   }

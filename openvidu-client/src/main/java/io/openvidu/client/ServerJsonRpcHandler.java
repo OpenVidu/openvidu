@@ -109,13 +109,13 @@ public class ServerJsonRpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
   private Notification participantSendMessage(Transaction transaction,
       Request<JsonObject> request) {
-    String room = JsonRoomUtils.getRequestParam(request,
-        ProtocolElements.PARTICIPANTSENDMESSAGE_ROOM_PARAM, String.class);
-    String user = JsonRoomUtils.getRequestParam(request,
-        ProtocolElements.PARTICIPANTSENDMESSAGE_USER_PARAM, String.class);
-    String message = JsonRoomUtils.getRequestParam(request,
-        ProtocolElements.PARTICIPANTSENDMESSAGE_MESSAGE_PARAM, String.class);
-    SendMessageInfo eventInfo = new SendMessageInfo(room, user, message);
+    String data = JsonRoomUtils.getRequestParam(request,
+        ProtocolElements.PARTICIPANTSENDMESSAGE_DATA_PARAM, String.class);
+    String from = JsonRoomUtils.getRequestParam(request,
+        ProtocolElements.PARTICIPANTSENDMESSAGE_FROM_PARAM, String.class);
+    String type = JsonRoomUtils.getRequestParam(request,
+        ProtocolElements.PARTICIPANTSENDMESSAGE_TYPE_PARAM, String.class);
+    SendMessageInfo eventInfo = new SendMessageInfo(data, from, type);
     log.debug("Recvd send message event {}", eventInfo);
     return eventInfo;
   }

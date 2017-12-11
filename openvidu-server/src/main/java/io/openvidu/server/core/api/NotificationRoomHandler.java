@@ -20,6 +20,8 @@ import java.util.Set;
 
 import org.kurento.client.MediaElement;
 
+import com.google.gson.JsonObject;
+
 import io.openvidu.client.OpenViduException;
 import io.openvidu.server.core.NotificationRoomManager;
 import io.openvidu.server.core.api.pojo.ParticipantRequest;
@@ -190,7 +192,7 @@ public interface NotificationRoomHandler extends RoomHandler {
    *          null, then the operation was unsuccessful and the user should be responded
    *          accordingly.
    */
-  void onSendMessage(ParticipantRequest request, String message, String userName, String roomName,
+  void onSendMessage(ParticipantRequest request, JsonObject message, String userName, String roomName,
       Set<UserParticipant> participants, OpenViduException error);
 
   /**
