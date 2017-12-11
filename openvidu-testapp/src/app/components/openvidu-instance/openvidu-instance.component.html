@@ -85,6 +85,9 @@
         <div class="session-card-inner">
           <div class="session-title">{{sessionName}}</div>
           <div class="session-actions">
+            <button class="message-btn" (click)="sendMessage()">
+              <mat-icon aria-label="Send message button">chat</mat-icon>
+            </button>
             <button class="video-btn" *ngIf="publishTo && sendVideo" (click)="toggleVideo()">
               <mat-icon aria-label="Mute video button">{{videoIcon}}</mat-icon>
             </button>

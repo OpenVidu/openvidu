@@ -2,7 +2,7 @@ import {
   Component, Input, HostListener, ChangeDetectorRef, SimpleChanges, ElementRef, ViewChild,
   OnInit, OnDestroy, OnChanges
 } from '@angular/core';
-import { OpenVidu, Session, Subscriber, Publisher, Stream } from 'openvidu-browser';
+import { OpenVidu, Session, Subscriber, Publisher, Stream, Connection } from 'openvidu-browser';
 import { MatDialog } from '@angular/material';
 import { ExtensionDialogComponent } from './extension-dialog.component';
 import { TestFeedService } from '../../services/test-feed.service';
@@ -187,7 +187,6 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       this.removeUserData(event.stream.connection);
       this.updateEventList('streamDestroyed', event.stream.connection.connectionId);
     });
-
     this.session.on('connectionCreated', (event) => {
       this.updateEventList('connectionCreated', event.connection.connectionId);
     });
@@ -196,6 +195,9 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     });
     this.session.on('sessionDisconnected', (event) => {
       this.updateEventList('sessionDisconnected', 'No data');
+    });
+    this.session.on('signal', (event) => {
+      this.updateEventList('signal', event.from.connectionId + '-' + event.data);
     });
 
     this.session.connect(token, this.clientData, (error) => {
@@ -396,6 +398,14 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
 
   toggleActiveVideo(): void {
     this.activeVideo = !this.activeVideo;
+  }
+
+  sendMessage(): void {
+    this.session.signal({
+      data: 'Test message',
+      to: [],
+      type: 'chat'
+    });
   }
 
 }
