@@ -124,7 +124,7 @@ export class Session {
     }
 
     unsubscribe(subscriber: Subscriber) {
-        this.session.unsuscribe(subscriber.stream);
+        this.session.unsubscribe(subscriber.stream);
         subscriber.stream.removeVideo();
     }
 

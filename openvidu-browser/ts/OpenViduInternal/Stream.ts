@@ -53,11 +53,14 @@ export interface VideoOptions {
 export class Stream {
 
     public connection: Connection;
+    public streamId: string;
+    public hasVideo: boolean;
+    public hasAudio: boolean;
+    public typeOfVideo: string; // 'CAMERA' or 'SCREEN'
 
     ee = new EventEmitter();
     private wrStream: MediaStream;
     private wp: any;
-    private id: string;
     private video: HTMLVideoElement;
     private videoElements: VideoOptions[] = [];
     private elements: HTMLDivElement[] = [];
@@ -96,7 +99,7 @@ export class Stream {
         this.addEventListener('src-added', (srcEvent) => {
             this.videoSrcObject = srcEvent.srcObject;
             if (this.video) this.video.srcObject = srcEvent.srcObject;
-            console.debug("Video srcObject [" + srcEvent.srcObject + "] added to stream [" + this.getId() + "]");
+            console.debug("Video srcObject [" + srcEvent.srcObject + "] added to stream [" + this.streamId + "]");
         });
     }
 
@@ -139,11 +142,6 @@ export class Stream {
         this.video = video;
     }
 
-
-
-
-
-
     getRecvVideo() {
         return this.recvVideo;
     }
@@ -183,7 +181,7 @@ export class Stream {
     }
 
     getChannelName() {
-        return this.getId() + '_' + this.chanId++;
+        return this.streamId + '_' + this.chanId++;
     }
 
 
@@ -239,7 +237,7 @@ export class Stream {
 
     showSpinner(spinnerParentId: string) {
         let progress = document.createElement('div');
-        progress.id = 'progress-' + this.getId();
+        progress.id = 'progress-' + this.streamId;
         progress.style.background = "center transparent url('img/spinner.gif') no-repeat";
         let spinnerParent = document.getElementById(spinnerParentId);
         if (spinnerParent) {
@@ -248,7 +246,7 @@ export class Stream {
     }
 
     hideSpinner(spinnerId?: string) {
-        spinnerId = (spinnerId === undefined) ? this.getId() : spinnerId;
+        spinnerId = (spinnerId === undefined) ? this.streamId : spinnerId;
         hide('progress-' + spinnerId);
     }
 
@@ -256,7 +254,7 @@ export class Stream {
 
         this.video = document.createElement('video');
 
-        this.video.id = (this.local ? 'local-' : 'remote-') + 'video-' + this.getId();
+        this.video.id = (this.local ? 'local-' : 'remote-') + 'video-' + this.streamId;
         this.video.autoplay = true;
         this.video.controls = false;
         this.video.srcObject = this.videoSrcObject;
@@ -269,13 +267,13 @@ export class Stream {
         if (this.local && !this.displayMyRemote()) {
             this.video.muted = true;
             this.video.oncanplay = () => {
-                console.info("Local 'Stream' with id [" + this.getId() + "] video is now playing");
+                console.info("Local 'Stream' with id [" + this.streamId + "] video is now playing");
                 this.ee.emitEvent('video-is-playing', [{
                     element: this.video
                 }]);
             };
         } else {
-            this.video.title = this.getId();
+            this.video.title = this.streamId;
         }
 
         if (typeof parentElement === "string") {
@@ -303,7 +301,7 @@ export class Stream {
 
         let container = document.createElement('div');
         container.className = "participant";
-        container.id = this.getId();
+        container.id = this.streamId;
         let thumbnail = document.getElementById(thumbnailId);
         if (thumbnail) {
             thumbnail.appendChild(container);
@@ -313,30 +311,22 @@ export class Stream {
 
         let name = document.createElement('div');
         container.appendChild(name);
-        let userName = this.getId().replace('_webcam', '');
+        let userName = this.streamId.replace('_webcam', '');
         if (userName.length >= 16) {
             userName = userName.substring(0, 16) + "...";
         }
         name.appendChild(document.createTextNode(userName));
-        name.id = "name-" + this.getId();
+        name.id = "name-" + this.streamId;
         name.className = "name";
-        name.title = this.getId();
+        name.title = this.streamId;
 
         this.showSpinner(thumbnailId);
 
         return this.playOnlyVideo(container, thumbnailId);
     }
 
-    getIdInParticipant() {
-        return this.id;
-    }
-
     getParticipant() {
         return this.connection;
-    }
-
-    getId() {
-        return this.connection.connectionId + "_" + this.id;
     }
 
     getRTCPeerConnection() {
@@ -440,13 +430,14 @@ export class Stream {
         }
 
         console.debug("Sending SDP offer to publish as "
-            + this.getId(), sdpOfferParam);
+            + this.streamId, sdpOfferParam);
 
         this.openVidu.sendRequest("publishVideo", {
             sdpOffer: sdpOfferParam,
             doLoopback: this.displayMyRemote() || false,
             audioActive: this.sendAudio,
-            videoActive: this.sendVideo
+            videoActive: this.sendVideo,
+            typeOfVideo: ((this.sendVideo) ? ((this.isScreenRequested) ? 'SCREEN' :'CAMERA') : '')
         }, (error, response) => {
             if (error) {
                 console.error("Error on publishVideo: " + JSON.stringify(error));
@@ -463,9 +454,9 @@ export class Stream {
                 + JSON.stringify(error));
         }
         console.debug("Sending SDP offer to subscribe to "
-            + this.getId(), sdpOfferParam);
+            + this.streamId, sdpOfferParam);
         this.openVidu.sendRequest("receiveVideoFrom", {
-            sender: this.getId(),
+            sender: this.streamId,
             sdpOffer: sdpOfferParam
         }, (error, response) => {
             if (error) {
@@ -535,7 +526,7 @@ export class Stream {
             });
         }
         console.debug("Waiting for SDP offer to be generated ("
-            + (this.local ? "local" : "remote") + " 'Stream': " + this.getId() + ")");
+            + (this.local ? "local" : "remote") + " 'Stream': " + this.streamId + ")");
     }
 
     publish() {
@@ -570,9 +561,9 @@ export class Stream {
             type: 'answer',
             sdp: sdpAnswer,
         });
-        console.debug(this.getId() + ": set peer connection with recvd SDP answer",
+        console.debug(this.streamId + ": set peer connection with recvd SDP answer",
             sdpAnswer);
-        let participantId = this.getId();
+        let participantId = this.streamId;
         let pc = this.wp.peerConnection;
         pc.setRemoteDescription(answer, () => {
             // Avoids to subscribe to your own stream remotely 
@@ -590,16 +581,18 @@ export class Stream {
                         this.speechEvent = kurentoUtils.WebRtcPeer.hark(this.wrStream, { threshold: this.room.thresholdSpeaker });
 
                         this.speechEvent.on('speaking', () => {
-                            this.room.addParticipantSpeaking(participantId);
-                            this.room.emitEvent('stream-speaking', [{
-                                participantId: participantId
+                            //this.room.addParticipantSpeaking(participantId);
+                            this.room.emitEvent('publisherStartSpeaking', [{
+                                connection: this.connection,
+                                streamId: this.streamId
                             }]);
                         });
 
                         this.speechEvent.on('stopped_speaking', () => {
-                            this.room.removeParticipantSpeaking(participantId);
-                            this.room.emitEvent('stream-stopped-speaking', [{
-                                participantId: participantId
+                            //this.room.removeParticipantSpeaking(participantId);
+                            this.room.emitEvent('publisherStopSpeaking', [{
+                                connection: this.connection,
+                                streamId: this.streamId
                             }]);
                         });
 
@@ -611,18 +604,18 @@ export class Stream {
                     video.srcObject = this.wrStream;
                     video.oncanplay = () => {
                         if (this.local && this.displayMyRemote()) {
-                            console.info("Your own remote 'Stream' with id [" + this.getId() + "] video is now playing");
+                            console.info("Your own remote 'Stream' with id [" + this.streamId + "] video is now playing");
                             this.ee.emitEvent('remote-video-is-playing', [{
                                 element: video
                             }]);
                         } else if (!this.local && !this.displayMyRemote()) {
-                            console.info("Remote 'Stream' with id [" + this.getId() + "] video is now playing");
+                            console.info("Remote 'Stream' with id [" + this.streamId + "] video is now playing");
                             this.ee.emitEvent('video-is-playing', [{
                                 element: video
                             }]);
                         }
                         //show(thumbnailId);
-                        //this.hideSpinner(this.getId());
+                        //this.hideSpinner(this.streamId);
                     };
                 }
                 this.room.emitEvent('stream-subscribed', [{
@@ -630,7 +623,7 @@ export class Stream {
                 }]);
             }
         }, error => {
-            console.error(this.getId() + ": Error setting SDP to the peer connection: "
+            console.error(this.streamId + ": Error setting SDP to the peer connection: "
                 + JSON.stringify(error));
         });
     }
@@ -653,7 +646,7 @@ export class Stream {
             this.speechEvent.stop();
         }
 
-        console.info(this.getId() + ": Stream '" + this.id + "' unpublished");
+        console.info(this.streamId + ": Stream '" + this.streamId + "' unpublished");
     }
 
     dispose() {
@@ -668,7 +661,7 @@ export class Stream {
 
         //this.videoElements.forEach(ve => disposeElement(ve.video));
 
-        disposeElement("progress-" + this.getId());
+        disposeElement("progress-" + this.streamId);
 
         if (this.wp) {
             this.wp.dispose();
@@ -687,14 +680,14 @@ export class Stream {
             this.speechEvent.stop();
         }
 
-        console.info((this.local ? "Local " : "Remote ") + "'Stream' with id [" + this.getId() + "]' has been succesfully disposed");
+        console.info((this.local ? "Local " : "Remote ") + "'Stream' with id [" + this.streamId + "]' has been succesfully disposed");
     }
 
     private configureOptions(options) {
         if (options.id) {
-            this.id = options.id;
+            this.streamId = options.id;
         } else {
-            this.id = "webcam";
+            this.streamId = "WEBCAM";
         }
         this.connection = options.connection;
         this.recvVideo = options.recvVideo || false;
@@ -705,13 +698,17 @@ export class Stream {
         this.activeVideo = options.activeVideo;
         this.dataChannel = options.data || false;
         this.mediaConstraints = options.mediaConstraints;
+
+        this.hasAudio = ((this.recvAudio || this.sendAudio) != undefined) ? (this.recvAudio || this.sendAudio) : false;
+        this.hasVideo = ((this.recvVideo || this.sendVideo) != undefined) ? (this.recvVideo || this.sendVideo) : false;
+        this.typeOfVideo = options.typeOfVideo;
     }
 
     configureScreenOptions(options) {
         if (options.id) {
-            this.id = options.id;
+            this.streamId = options.id;
         } else {
-            this.id = "screen";
+            this.streamId = "SCREEN";
         }
         this.recvVideo = options.recvVideo || false;
         this.recvAudio = options.recvAudio || false;

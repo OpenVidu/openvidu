@@ -27,7 +27,7 @@ export class SessionInternal {
     private ee = new EventEmitter();
     private streams = {};
     private participants = {};
-    private participantsSpeaking: Connection[] = [];
+    private publishersSpeaking: Connection[] = [];
     private connected = false;
     public localParticipant: Connection;
     private subscribeToStreams: boolean;
@@ -206,13 +206,13 @@ export class SessionInternal {
 
     private activateUpdateMainSpeaker() {
 
-        setInterval(() => {
-            if (this.participantsSpeaking.length > 0) {
-                this.ee.emitEvent('update-main-speaker', [{
-                    participantId: this.participantsSpeaking[this.participantsSpeaking.length - 1]
+        /*setInterval(() => {
+            if (this.publishersSpeaking.length > 0) {
+                this.ee.emitEvent('publisherStartSpeaking', [{
+                    participantId: this.publishersSpeaking[this.publishersSpeaking.length - 1]
                 }]);
             }
-        }, this.updateSpeakerInterval);
+        }, this.updateSpeakerInterval);*/
     }
 
     getLocalParticipant() {
@@ -244,16 +244,16 @@ export class SessionInternal {
         stream.subscribe();
     }
 
-    unsuscribe(stream) {
-        console.info("Unsubscribing from " + stream.getId());
+    unsubscribe(stream) {
+        console.info("Unsubscribing from " + stream.streamId);
         this.openVidu.sendRequest('unsubscribeFromVideo', {
-            sender: stream.getId()
+            sender: stream.streamId
         },
             function (error, response) {
                 if (error) {
                     console.error("Error unsubscribing from Subscriber", error);
                 } else {
-                    console.info("Unsubscribed correctly from " + stream.getId());
+                    console.info("Unsubscribed correctly from " + stream.streamId);
                 }
             });
     }
@@ -512,7 +512,7 @@ export class SessionInternal {
             });
 
         } else {
-            this.unsuscribe(stream);
+            this.unsubscribe(stream);
         }
     }
 
@@ -546,19 +546,25 @@ export class SessionInternal {
     }
 
     addParticipantSpeaking(participantId) {
-        this.participantsSpeaking.push(participantId);
+        this.publishersSpeaking.push(participantId);
+        this.ee.emitEvent('publisherStartSpeaking', [{
+            participantId: participantId
+        }]);
     }
 
     removeParticipantSpeaking(participantId) {
         let pos = -1;
-        for (let i = 0; i < this.participantsSpeaking.length; i++) {
-            if (this.participantsSpeaking[i] == participantId) {
+        for (let i = 0; i < this.publishersSpeaking.length; i++) {
+            if (this.publishersSpeaking[i] == participantId) {
                 pos = i;
                 break;
             }
         }
         if (pos != -1) {
-            this.participantsSpeaking.splice(pos, 1);
+            this.publishersSpeaking.splice(pos, 1);
+            this.ee.emitEvent('publisherStopSpeaking', [{
+                participantId: participantId
+            }]);
         }
     }
 

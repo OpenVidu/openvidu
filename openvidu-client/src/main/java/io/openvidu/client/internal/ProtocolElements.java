@@ -45,6 +45,7 @@ public class ProtocolElements {
   public static final String JOINROOM_PEERSTREAMID_PARAM = "id";
   public static final String JOINROOM_PEERSTREAMAUDIOACTIVE_PARAM = "audioActive";
   public static final String JOINROOM_PEERSTREAMVIDEOACTIVE_PARAM = "videoActive";
+  public static final String JOINROOM_PEERSTREAMTYPEOFVIDEO_PARAM = "typeOfVideo";
 
   public static final String PUBLISHVIDEO_METHOD = "publishVideo";
   public static final String PUBLISHVIDEO_SDPOFFER_PARAM = "sdpOffer";
@@ -52,6 +53,7 @@ public class ProtocolElements {
   public static final String PUBLISHVIDEO_SDPANSWER_PARAM = "sdpAnswer";
   public static final String PUBLISHVIDEO_AUDIOACTIVE_PARAM = "audioActive";
   public static final String PUBLISHVIDEO_VIDEOACTIVE_PARAM = "videoActive";
+  public static final String PUBLISHVIDEO_TYPEOFVIDEO_PARAM = "typeOfVideo";
 
   public static final String UNPUBLISHVIDEO_METHOD = "unpublishVideo";
 
@@ -88,6 +90,7 @@ public class ProtocolElements {
   public static final String PARTICIPANTPUBLISHED_STREAMID_PARAM = "id";
   public static final String PARTICIPANTPUBLISHED_AUDIOACTIVE_PARAM = "audioActive";
   public static final String PARTICIPANTPUBLISHED_VIDEOACTIVE_PARAM = "videoActive";
+  public static final String PARTICIPANTPUBLISHED_TYPEOFVIDEO_PARAM = "typeOfVideo";
 
   public static final String PARTICIPANTUNPUBLISHED_METHOD = "participantUnpublished";
   public static final String PARTICIPANTUNPUBLISHED_NAME_PARAM = "name";

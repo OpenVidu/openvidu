@@ -32,6 +32,7 @@ public class UserParticipant {
   
   private boolean audioActive = true;
   private boolean videoActive = true;
+  private String typeOfVideo;
   
   private final String METADATA_SEPARATOR = "%/%";
 
@@ -51,7 +52,7 @@ public class UserParticipant {
     this.streaming = streaming;
   }
   
-  public UserParticipant(String participantId, String userName, String clientMetadata, String serverMetadata, boolean streaming, boolean audioActive, boolean videoActive) {
+  public UserParticipant(String participantId, String userName, String clientMetadata, String serverMetadata, boolean streaming, boolean audioActive, boolean videoActive, String typeOfVideo) {
 	    super();
 	    this.participantId = participantId;
 	    this.userName = userName;
@@ -59,7 +60,8 @@ public class UserParticipant {
 	    this.serverMetadata = serverMetadata;
 	    this.streaming = streaming;
 	    this.audioActive = audioActive;
-      this.videoActive = videoActive;
+	    this.videoActive = videoActive;
+	    this.typeOfVideo = typeOfVideo;
   }
   
   public UserParticipant(String participantId, String userName) {
@@ -112,7 +114,7 @@ public class UserParticipant {
 	return audioActive;
   }
 
-  public void setAudioACtive(boolean active) {
+  public void setAudioActive(boolean active) {
     this.audioActive = active;
   }
 
@@ -120,8 +122,16 @@ public class UserParticipant {
 	  return videoActive;
   }
 
-  public void setVideoACtive(boolean active) {
+  public void setVideoActive(boolean active) {
     this.videoActive = active;
+  }
+  
+  public String getTypeOfVideo() {
+	  return this.typeOfVideo;
+  }
+
+  public void setTypeOfVideo(String typeOfVideo) {
+    this.typeOfVideo = typeOfVideo;
   }
   
   public String getFullMetadata(){

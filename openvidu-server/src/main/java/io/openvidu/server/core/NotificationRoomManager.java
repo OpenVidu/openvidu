@@ -132,7 +132,7 @@ public class NotificationRoomManager {
    * MediaElement...)
    */
   public void publishMedia(ParticipantRequest request, boolean isOffer, String sdp,
-      MediaElement loopbackAlternativeSrc, MediaType loopbackConnectionType, boolean audioActive, boolean videoActive, boolean doLoopback,
+      MediaElement loopbackAlternativeSrc, MediaType loopbackConnectionType, boolean audioActive, boolean videoActive, String typeOfVideo, boolean doLoopback,
       MediaElement... mediaElements) {
     String pid = request.getParticipantId();
     String userName = null;
@@ -143,14 +143,14 @@ public class NotificationRoomManager {
       sdpAnswer = internalManager
           .publishMedia(request.getParticipantId(), isOffer, sdp, loopbackAlternativeSrc,
               loopbackConnectionType, doLoopback, mediaElements);
-      internalManager.updateParticipantStreamsActive(pid, audioActive, videoActive);
+      internalManager.updateParticipantStreamsActive(pid, audioActive, videoActive, typeOfVideo);
       participants = internalManager.getParticipants(internalManager.getRoomName(pid));
     } catch (OpenViduException e) {
       log.warn("PARTICIPANT {}: Error publishing media", userName, e);
-      notificationRoomHandler.onPublishMedia(request, null, null, true, true, null, e);
+      notificationRoomHandler.onPublishMedia(request, null, null, true, true, "", null, e);
     }
     if (sdpAnswer != null) {
-      notificationRoomHandler.onPublishMedia(request, userName, sdpAnswer, audioActive, videoActive, participants, null);
+      notificationRoomHandler.onPublishMedia(request, userName, sdpAnswer, audioActive, videoActive, typeOfVideo, participants, null);
     }
   }
 
@@ -158,9 +158,9 @@ public class NotificationRoomManager {
    * @param request instance of {@link ParticipantRequest} POJO
    * @see RoomManager#publishMedia(String, String, boolean, MediaElement...)
    */
-  public void publishMedia(ParticipantRequest request, String sdpOffer, boolean audioActive, boolean videoActive, boolean doLoopback,
+  public void publishMedia(ParticipantRequest request, String sdpOffer, boolean audioActive, boolean videoActive, String typeOfVideo, boolean doLoopback,
       MediaElement... mediaElements) {
-    this.publishMedia(request, true, sdpOffer, null, null, audioActive, videoActive, doLoopback, mediaElements);
+    this.publishMedia(request, true, sdpOffer, null, null, audioActive, videoActive, typeOfVideo, doLoopback, mediaElements);
   }
 
   /**

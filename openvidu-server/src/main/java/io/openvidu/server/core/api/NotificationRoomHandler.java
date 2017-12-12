@@ -119,7 +119,7 @@ public interface NotificationRoomHandler extends RoomHandler {
    *          accordingly.
    */
   void onPublishMedia(ParticipantRequest request, String publisherName, String sdpAnswer,
-      boolean audioActive, boolean videoActive, Set<UserParticipant> participants, OpenViduException error);
+      boolean audioActive, boolean videoActive, String typeOfVideo, Set<UserParticipant> participants, OpenViduException error);
 
   /**
    * Called as a result of {@link NotificationRoomManager#unpublishMedia(ParticipantRequest)}. The

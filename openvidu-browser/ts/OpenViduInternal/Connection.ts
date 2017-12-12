@@ -37,8 +37,8 @@ export class Connection {
     }
 
     addStream( stream: Stream ) {
-        this.streams[stream.getIdInParticipant()] = stream;
-        this.room.getStreams()[stream.getIdInParticipant()] = stream;
+        this.streams[stream.streamId] = stream;
+        this.room.getStreams()[stream.streamId] = stream;
     }
 
     getStreams() {
@@ -79,6 +79,7 @@ export class Connection {
                 sendVideo: streamOptions.sendVideo,
                 recvAudio: ( streamOptions.audioActive == undefined ? true : streamOptions.audioActive ),
                 recvVideo: ( streamOptions.videoActive == undefined ? true : streamOptions.videoActive ),
+                typeOfVideo: streamOptions.typeOfVideo,
                 activeAudio: streamOptions.activeAudio,
                 activeVideo: streamOptions.activeVideo,
                 data: streamOptions.data,

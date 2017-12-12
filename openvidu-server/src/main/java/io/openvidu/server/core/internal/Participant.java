@@ -76,9 +76,11 @@ public class Participant {
   private volatile boolean streaming = false;
   private volatile boolean audioActive = true;
   private volatile boolean videoActive = true;
+  private volatile String typeOfVideo;
   private volatile boolean closed;
   
   private InfoHandler infoHandler;
+
 
   public Participant(String id, String name, String clientMetadata, String serverMetadata, Room room, MediaPipeline pipeline,
       boolean dataChannels, boolean web, InfoHandler infoHandler) {
@@ -229,6 +231,14 @@ public class Participant {
 
   public void setVideoActive(boolean active) {
 	  this.videoActive = active;
+  }
+  
+  public String getTypeOfVideo() {
+	  return this.typeOfVideo;
+  }
+  
+  public void setTypeOfVideo(String typeOfVideo) {
+	  this.typeOfVideo = typeOfVideo;
   }
   
   public boolean isSubscribed() {

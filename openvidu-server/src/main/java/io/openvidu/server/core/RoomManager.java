@@ -682,7 +682,7 @@ public class RoomManager {
     Set<UserParticipant> userParts = new HashSet<UserParticipant>();
     for (Participant p : participants) {
       if (!p.isClosed()) {
-        userParts.add(new UserParticipant(p.getId(), p.getName(), p.getClientMetadata(), p.getServerMetadata(), p.isStreaming(), p.isAudioActive(), p.isVideoActive()));
+        userParts.add(new UserParticipant(p.getId(), p.getName(), p.getClientMetadata(), p.getServerMetadata(), p.isStreaming(), p.isAudioActive(), p.isVideoActive(), p.getTypeOfVideo()));
       }
     }
     return userParts;
@@ -962,10 +962,11 @@ public class RoomManager {
         "No participant with id '" + pid + "' was found");
   }
   
-  public void updateParticipantStreamsActive(String pid, boolean audioActive, boolean videoActive) {
+  public void updateParticipantStreamsActive(String pid, boolean audioActive, boolean videoActive, String typeOfVideo) {
 	  Participant p = this.getParticipant(pid);
 	  p.setAudioActive(audioActive);
-    p.setVideoActive(videoActive);
+	  p.setVideoActive(videoActive);
+	  p.setTypeOfVideo(typeOfVideo);
   }
 
   public void updateFilter(String roomId, String filterId) {

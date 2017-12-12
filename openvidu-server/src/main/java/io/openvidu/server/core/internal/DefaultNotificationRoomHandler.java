@@ -85,10 +85,22 @@ public class DefaultNotificationRoomHandler implements NotificationRoomHandler {
       	  .addProperty(ProtocolElements.JOINROOM_METADATA_PARAM, participant.getFullMetadata());
       
       if (participant.isStreaming()) {
+    	  
+    	String streamId = "";
+		if ("SCREEN".equals(participant.getTypeOfVideo())) {
+			streamId = "SCREEN";
+		} else if (participant.isVideoActive()) {
+			streamId = "CAMERA";
+		} else if (participant.isAudioActive()) {
+		    streamId = "MICRO";
+		}
+    	  
         JsonObject stream = new JsonObject();
-        stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMID_PARAM, "webcam");
+        stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMID_PARAM, participant.getUserName() + "_" + streamId);
         stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMAUDIOACTIVE_PARAM, participant.isAudioActive());
         stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMVIDEOACTIVE_PARAM, participant.isVideoActive());
+        stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMTYPEOFVIDEO_PARAM, participant.getTypeOfVideo());
+        
         JsonArray streamsArray = new JsonArray();
         streamsArray.add(stream);
         participantJson.add(ProtocolElements.JOINROOM_PEERSTREAMS_PARAM, streamsArray);
@@ -133,7 +145,7 @@ public class DefaultNotificationRoomHandler implements NotificationRoomHandler {
 
   @Override
   public void onPublishMedia(ParticipantRequest request, String publisherName, String sdpAnswer,
-      boolean audioActive, boolean videoActive, Set<UserParticipant> participants, OpenViduException error) {
+      boolean audioActive, boolean videoActive, String typeOfVideo, Set<UserParticipant> participants, OpenViduException error) {
     if (error != null) {
       notifService.sendErrorResponse(request, null, error);
       return;
@@ -145,9 +157,21 @@ public class DefaultNotificationRoomHandler implements NotificationRoomHandler {
     JsonObject params = new JsonObject();
     params.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_USER_PARAM, publisherName);
     JsonObject stream = new JsonObject();
-    stream.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_STREAMID_PARAM, "webcam");
+    
+    String streamId = "";
+    if ("SCREEN".equals(typeOfVideo)) {
+    	streamId = "SCREEN";
+    } else if (videoActive) {
+    	streamId = "CAMERA";
+    } else if (audioActive) {
+    	streamId = "MICRO";
+    }
+    
+    stream.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_STREAMID_PARAM, publisherName + "_" + streamId);
     stream.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_AUDIOACTIVE_PARAM, audioActive);
-        stream.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_VIDEOACTIVE_PARAM, videoActive);
+    stream.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_VIDEOACTIVE_PARAM, videoActive);
+    stream.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_TYPEOFVIDEO_PARAM, typeOfVideo);
+    
     JsonArray streamsArray = new JsonArray();
     streamsArray.add(stream);
     params.add(ProtocolElements.PARTICIPANTPUBLISHED_STREAMS_PARAM, streamsArray);
