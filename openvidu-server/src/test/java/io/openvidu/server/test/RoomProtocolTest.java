@@ -106,7 +106,7 @@ public class RoomProtocolTest {
 
     final Map<String, List<String>> expectedPeersList = new HashMap<String, List<String>>();
     List<String> user0Streams = new ArrayList<String>();
-    user0Streams.add("webcam");
+    user0Streams.add("user0_CAMERA");
     expectedPeersList.put("user0", user0Streams);
 
     final Set<UserParticipant> existingParticipants = new HashSet<UserParticipant>();

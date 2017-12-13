@@ -51,23 +51,23 @@
 		<dependency>
 			<groupId>org.kurento</groupId>
 			<artifactId>kurento-jsonrpc-client</artifactId>
+			<version>${version.kurento}</version>
 		</dependency>
-		<!--  <dependency>
-			<groupId>io.openvidu</groupId>
-			<artifactId>openvidu-server</artifactId>
-		</dependency>-->
 		<dependency>
 			<groupId>org.kurento</groupId>
 			<artifactId>kurento-jsonrpc-client-jetty</artifactId>
+			<version>${version.kurento}</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
+			<version>${version.junit}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
+			<version>${version.mockito}</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
