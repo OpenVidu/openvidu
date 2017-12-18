@@ -16,12 +16,12 @@
 
 package io.openvidu.server.core.internal;
 
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.kurento.client.IceCandidate;
+import org.kurento.client.MediaFlowState;
+import org.kurento.client.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.gson.JsonArray;
@@ -304,6 +304,32 @@ public class DefaultNotificationRoomHandler implements NotificationRoomHandler {
   public void onParticipantEvicted(UserParticipant participant) {
     notifService.sendNotification(participant.getParticipantId(),
         ProtocolElements.PARTICIPANTEVICTED_METHOD, new JsonObject());
+  }
+
+  @Override
+  public void onMediaFlowInChange(String roomName, String participantId, MediaType mediaType,
+                                  MediaFlowState newState, Collection<Participant> participants) {
+    JsonObject notifParams = new JsonObject();
+    notifParams.addProperty(ProtocolElements.MEDIAFLOWINCHANGE_USER_PARAM, participantId);
+    notifParams.addProperty(ProtocolElements.MEDIAFLOWINCHANGE_MEDIATYPE_PARAM, mediaType.toString());
+    notifParams.addProperty(ProtocolElements.MEDIAFLOWINCHANGE_NEWSTATE_PARAM, newState.toString());
+    for (Participant participant : participants) {
+      notifService.sendNotification(participant.getId(),
+              ProtocolElements.MEDIAFLOWINCHANGE_METHOD, notifParams);
+    }
+  }
+
+  @Override
+  public void onMediaFlowOutChange(String roomName, String participantId, MediaType mediaType,
+                                  MediaFlowState newState, Collection<Participant> participants) {
+    JsonObject notifParams = new JsonObject();
+    notifParams.addProperty(ProtocolElements.MEDIAFLOWOUTCHANGE_USER_PARAM, participantId);
+    notifParams.addProperty(ProtocolElements.MEDIAFLOWOUTCHANGE_MEDIATYPE_PARAM, mediaType.toString());
+    notifParams.addProperty(ProtocolElements.MEDIAFLOWOUTCHANGE_NEWSTATE_PARAM, newState.toString());
+    for (Participant participant : participants) {
+      notifService.sendNotification(participant.getId(),
+              ProtocolElements.MEDIAFLOWOUTCHANGE_METHOD, notifParams);
+    }
   }
 
   // ------------ EVENTS FROM ROOM HANDLER -----

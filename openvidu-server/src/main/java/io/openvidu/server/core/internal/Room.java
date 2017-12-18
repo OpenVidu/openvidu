@@ -24,12 +24,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.kurento.client.Continuation;
-import org.kurento.client.ErrorEvent;
-import org.kurento.client.EventListener;
-import org.kurento.client.IceCandidate;
-import org.kurento.client.KurentoClient;
-import org.kurento.client.MediaPipeline;
+import org.kurento.client.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -234,6 +229,16 @@ public class Room {
 
   public void sendIceCandidate(String participantId, String endpointName, IceCandidate candidate) {
     this.roomHandler.onIceCandidate(name, participantId, endpointName, candidate);
+  }
+
+  public void sendMediaFlowInChange(String participantId, MediaType mediaType,
+                                    MediaFlowState newState){
+    this.roomHandler.onMediaFlowInChange(name,participantId, mediaType, newState, participants.values());
+  }
+
+  public void sendMediaFlowOutChange(String participantId, MediaType mediaType,
+                                    MediaFlowState newState){
+    this.roomHandler.onMediaFlowOutChange(name,participantId, mediaType, newState, participants.values());
   }
 
   public void sendMediaError(String participantId, String description) {
