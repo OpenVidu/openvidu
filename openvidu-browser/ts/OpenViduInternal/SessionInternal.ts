@@ -460,6 +460,21 @@ export class SessionInternal {
         }
     }
 
+    onMediaFlowInChange(params) {
+        console.info("Media flow in change: " + JSON.stringify(params));
+    }
+
+    onMediaFlowOutChange(params) {
+        console.info("Media flow out change: " + JSON.stringify(params));
+        for(let streamId in this.streams){
+            this.streams[streamId].onMediaFlowOutChange({
+                id: params.id,
+                mediaType: params.mediaType,
+                newState: params.newState
+            });
+        }
+    }
+
     /*
      * forced means the user was evicted, no need to send the 'leaveRoom' request
      */

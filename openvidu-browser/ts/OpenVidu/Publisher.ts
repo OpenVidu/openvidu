@@ -20,6 +20,8 @@ export class Publisher {
     stream: Stream;
     session: Session; //Initialized by Session.publish(Publisher)
     isScreenRequested: boolean = false;
+    flowOutAudio: boolean = false;
+    flowOutVideo: boolean = false;
 
     constructor(stream: Stream, parentId: string, isScreenRequested: boolean) {
         this.stream = stream;
@@ -31,6 +33,22 @@ export class Publisher {
                 this.ee.emitEvent('accessAllowed');
             } else {
                 this.ee.emitEvent('accessDenied');
+            }
+        });
+
+        this.stream.addEventListener('media-flow-out-changed', (event) => {
+            let wasFlowing = this.flowOutAudio || this.flowOutVideo;
+            if(event.mediaType == "AUDIO"){
+                this.flowOutAudio = event.newState == "FLOWING"
+            }
+            if(event.mediaType == "VIDEO"){
+                this.flowOutVideo = event.newState == "FLOWING"
+            }
+            if(wasFlowing && !this.flowOutAudio && !this.flowOutVideo){
+                this.ee.emitEvent('flowStopped');
+            }
+            if (!wasFlowing && (this.flowOutAudio || this.flowOutVideo)) {
+                this.ee.emitEvent('flowStarted');
             }
         });
 

@@ -193,7 +193,9 @@ export class OpenViduInternal {
                 sendMessage: this.onNewMessage.bind(this),
                 iceCandidate: this.iceCandidateEvent.bind(this),
                 mediaError: this.onMediaError.bind(this),
-                custonNotification: this.customNotification.bind(this)
+                custonNotification: this.customNotification.bind(this),
+                mediaFlowInChange: this.onMediaFlowInChange.bind(this),
+                mediaFlowOutChange: this.onMediaFlowOutChange.bind(this),
             }
         };
 
@@ -294,6 +296,17 @@ export class OpenViduInternal {
         }
     }
 
+    private onMediaFlowOutChange(params) {
+        if (this.isRoomAvailable()) {
+            this.session.onMediaFlowOutChange(params);
+        }
+    }
+
+    private onMediaFlowInChange(params) {
+        if (this.isRoomAvailable()) {
+            this.session.onMediaFlowInChange(params);
+        }
+    }
 
     setRpcParams(params: any) {
         this.rpcParams = params;
