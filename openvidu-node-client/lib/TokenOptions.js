@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var TokenOptions = (function () {
+var TokenOptions = /** @class */ (function () {
     function TokenOptions(data, role) {
         this.data = data;
         this.role = role;
@@ -17,7 +17,7 @@ var TokenOptions = (function () {
 }());
 exports.TokenOptions = TokenOptions;
 (function (TokenOptions) {
-    var Builder = (function () {
+    var Builder = /** @class */ (function () {
         function Builder() {
         }
         Builder.prototype.build = function () {

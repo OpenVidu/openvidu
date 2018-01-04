@@ -5,14 +5,15 @@
  *
  * stream.hasAudio(); stream.hasVideo(); stream.hasData();
  */
-import { Connection } from './Connection';
-import { SessionInternal } from './SessionInternal';
-import { OpenViduInternal, Callback } from './OpenViduInternal';
-import { OpenViduError, OpenViduErrorName } from './OpenViduError';
+import {Connection} from './Connection';
+import {SessionInternal} from './SessionInternal';
+import {OpenViduInternal, Callback} from './OpenViduInternal';
+import {OpenViduError, OpenViduErrorName} from './OpenViduError';
 import EventEmitter = require('wolfy87-eventemitter');
 import * as kurentoUtils from '../KurentoUtils/kurento-utils-js';
 
 import * as adapter from 'webrtc-adapter';
+
 declare var navigator: any;
 declare var RTCSessionDescription: any;
 
@@ -235,6 +236,13 @@ export class Stream {
         this.ee.removeAllListeners(eventName);
     }
 
+    onMediaFlowOutChange(event) {
+        if (event.id !== this.connection.connectionId) {
+            return;
+        }
+        this.ee.emit('media-flow-out-changed',event);
+    }
+
     showSpinner(spinnerParentId: string) {
         let progress = document.createElement('div');
         progress.id = 'progress-' + this.streamId;
@@ -378,7 +386,8 @@ export class Stream {
                 this.accessIsDenied = true;
                 this.accessIsAllowed = false;
                 let errorName: OpenViduErrorName;
-                let errorMessage = error.toString();;
+                let errorMessage = error.toString();
+                ;
                 if (!this.isScreenRequested) {
                     errorName = this.sendVideo ? OpenViduErrorName.CAMERA_ACCESS_DENIED : OpenViduErrorName.MICROPHONE_ACCESS_DENIED;
                 } else {
@@ -437,7 +446,7 @@ export class Stream {
             doLoopback: this.displayMyRemote() || false,
             audioActive: this.sendAudio,
             videoActive: this.sendVideo,
-            typeOfVideo: ((this.sendVideo) ? ((this.isScreenRequested) ? 'SCREEN' :'CAMERA') : '')
+            typeOfVideo: ((this.sendVideo) ? ((this.isScreenRequested) ? 'SCREEN' : 'CAMERA') : '')
         }, (error, response) => {
             if (error) {
                 console.error("Error on publishVideo: " + JSON.stringify(error));
@@ -578,7 +587,7 @@ export class Stream {
 
                     if (this.wrStream.getAudioTracks()[0] != null) {
 
-                        this.speechEvent = kurentoUtils.WebRtcPeer.hark(this.wrStream, { threshold: this.room.thresholdSpeaker });
+                        this.speechEvent = kurentoUtils.WebRtcPeer.hark(this.wrStream, {threshold: this.room.thresholdSpeaker});
 
                         this.speechEvent.on('speaking', () => {
                             //this.room.addParticipantSpeaking(participantId);

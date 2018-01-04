@@ -112,5 +112,15 @@ public class ProtocolElements {
   public static final String ICECANDIDATE_SDPMID_PARAM = "sdpMid";
   public static final String ICECANDIDATE_SDPMLINEINDEX_PARAM = "sdpMLineIndex";
 
+  public static final String MEDIAFLOWINCHANGE_METHOD = "mediaFlowInChange";
+  public static final String MEDIAFLOWINCHANGE_MEDIATYPE_PARAM = "mediaType";
+  public static final String MEDIAFLOWINCHANGE_NEWSTATE_PARAM = "newState";
+  public static final String MEDIAFLOWINCHANGE_USER_PARAM = "id";
+
+  public static final String MEDIAFLOWOUTCHANGE_METHOD = "mediaFlowOutChange";
+  public static final String MEDIAFLOWOUTCHANGE_MEDIATYPE_PARAM = "mediaType";
+  public static final String MEDIAFLOWOUTCHANGE_NEWSTATE_PARAM = "newState";
+  public static final String MEDIAFLOWOUTCHANGE_USER_PARAM = "id";
+
   public static final String CUSTOM_NOTIFICATION = "custonNotification";
 }

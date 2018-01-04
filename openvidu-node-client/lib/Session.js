@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 var OpenViduRole_1 = require("./OpenViduRole");
 var https = require('https');
-var Session = (function () {
+var Session = /** @class */ (function () {
     function Session(urlOpenViduServer, secret) {
         this.urlOpenViduServer = urlOpenViduServer;
         this.secret = secret;

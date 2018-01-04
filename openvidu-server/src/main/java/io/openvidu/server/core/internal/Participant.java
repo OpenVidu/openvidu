@@ -23,14 +23,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import org.kurento.client.Continuation;
-import org.kurento.client.ErrorEvent;
-import org.kurento.client.Filter;
-import org.kurento.client.IceCandidate;
-import org.kurento.client.MediaElement;
-import org.kurento.client.MediaPipeline;
-import org.kurento.client.MediaType;
-import org.kurento.client.SdpEndpoint;
+import org.kurento.client.*;
 import org.kurento.client.internal.server.KurentoServerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -498,6 +491,16 @@ public class Participant {
     room.sendMediaError(id, desc);
   }
 
+  public void sendMediaFlowInChange(MediaFlowInStateChangeEvent event) {
+    log.warn("PARTICIPANT {}: Media flow in: {}", name, event.getState());
+    room.sendMediaFlowInChange(name, event.getMediaType(),event.getState());
+  }
+
+  public void sendMediaFlowOutChange(MediaFlowOutStateChangeEvent event) {
+    log.warn("PARTICIPANT {}: Media flow out: {}", name, event.getState());
+    room.sendMediaFlowOutChange(name, event.getMediaType(),event.getState());
+  }
+
   private void releasePublisherEndpoint() {
     if (publisher != null && publisher.getEndpoint() != null) {
       this.streaming = false;
@@ -638,6 +641,7 @@ public class Participant {
 			System.out.println(msg2);
 			this.infoHandler.sendInfo(msg1);
 			this.infoHandler.sendInfo(msg2);
+            this.sendMediaFlowInChange(event);
 	  });
 	
 	  endpoint.getWebEndpoint().addMediaFlowOutStateChangeListener((event) -> { 
@@ -662,6 +666,7 @@ public class Participant {
 			System.out.println(msg2);
 			this.infoHandler.sendInfo(msg1);
 			this.infoHandler.sendInfo(msg2);
+			this.sendMediaFlowOutChange(event);
 		  });
 	
 	  endpoint.getWebEndpoint().addMediaSessionStartedListener((event) -> { 

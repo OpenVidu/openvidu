@@ -16,12 +16,17 @@
 
 package io.openvidu.server.core.api;
 
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Set;
 
+import io.openvidu.server.core.api.pojo.UserParticipant;
 import org.kurento.client.IceCandidate;
 
 import io.openvidu.server.InfoHandler;
 import io.openvidu.server.core.internal.Participant;
+import org.kurento.client.MediaFlowState;
+import org.kurento.client.MediaType;
 
 /**
  * Handler for events triggered from media objects.
@@ -72,6 +77,26 @@ public interface RoomHandler {
    * @param state
    */
   void updateFilter(String roomName, Participant participant, String filterId, String state);
+
+  /**
+   * Called as a result of started or interrupted media flow. All participants should be notified.
+   * @param participantId
+   * @param mediaType
+   * @param newState
+   * @param participants
+   */
+  void onMediaFlowInChange(String roomName, String participantId, MediaType mediaType,
+                           MediaFlowState newState, Collection<Participant> participants);
+
+  /**
+   * Called as a result of started or interrupted media flow. All participants should be notified.
+   * @param participantId
+   * @param mediaType
+   * @param newState
+   * @param participants
+   */
+  void onMediaFlowOutChange(String roomName, String participantId, MediaType mediaType,
+                           MediaFlowState newState, Collection<Participant> participants);
 
   /**
    * Called to get the next state of a filter when requested by a call to updateFilter

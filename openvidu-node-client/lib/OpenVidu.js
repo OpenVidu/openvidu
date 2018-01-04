@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var Session_1 = require("./Session");
-var OpenVidu = (function () {
+var OpenVidu = /** @class */ (function () {
     function OpenVidu(urlOpenViduServer, secret) {
         this.urlOpenViduServer = urlOpenViduServer;
         this.secret = secret;
