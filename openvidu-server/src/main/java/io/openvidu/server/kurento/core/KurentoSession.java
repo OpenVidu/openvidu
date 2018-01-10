@@ -167,7 +167,7 @@ public class KurentoSession implements Session {
 
 			closePipeline();
 
-			log.debug("Room {} closed", this.sessionId);
+			log.debug("Session {} closed", this.sessionId);
 
 			if (destroyKurentoClient) {
 				kurentoClient.destroy();
@@ -204,7 +204,7 @@ public class KurentoSession implements Session {
 
 		participants.remove(participant.getParticipantPrivateId());
 
-		log.debug("SESSION {}: Cancel receiving media from user '{}' for other users", this.sessionId, participant.getParticipantPublicId());
+		log.debug("SESSION {}: Cancel receiving media from participant '{}' for other participant", this.sessionId, participant.getParticipantPublicId());
 		for (KurentoParticipant other : participants.values()) {
 			other.cancelReceivingMedia(participant.getParticipantPublicId());
 		}

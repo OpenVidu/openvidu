@@ -108,7 +108,7 @@ public class KurentoSessionManager extends SessionManager {
 			}
 		}
 
-		showMap();
+		showTokens();
 
 		Set<Participant> remainingParticipants = null;
 		try {
@@ -125,7 +125,7 @@ public class KurentoSessionManager extends SessionManager {
 			sessionidParticipantpublicidParticipant.remove(sessionId);
 			sessionidTokenTokenobj.remove(sessionId);
 
-			showMap();
+			showTokens();
 
 			log.warn("Session '{}' removed and closed", sessionId);
 		}

@@ -27,7 +27,6 @@ public abstract class SessionManager {
 	protected ConcurrentMap<String, Session> sessions = new ConcurrentHashMap<>();
 	protected ConcurrentMap<String, ConcurrentHashMap<String, Token>> sessionidTokenTokenobj = new ConcurrentHashMap<>();
 	protected ConcurrentMap<String, ConcurrentHashMap<String, Participant>> sessionidParticipantpublicidParticipant = new ConcurrentHashMap<>();
-
 	protected ConcurrentMap<String, Boolean> insecureUsers = new ConcurrentHashMap<>();
 
 	private volatile boolean closed = false;
@@ -152,7 +151,7 @@ public abstract class SessionManager {
 		this.sessionidTokenTokenobj.put(sessionId, new ConcurrentHashMap<>());
 		this.sessionidParticipantpublicidParticipant.put(sessionId, new ConcurrentHashMap<>());
 
-		showMap();
+		showTokens();
 		return sessionId;
 	}
 
@@ -162,7 +161,7 @@ public abstract class SessionManager {
 			if (isMetadataFormatCorrect(serverMetadata)) {
 				String token = new BigInteger(130, new SecureRandom()).toString(32);
 				this.sessionidTokenTokenobj.get(sessionId).put(token, new Token(token, role, serverMetadata));
-				showMap();
+				showTokens();
 				return token;
 			} else {
 				throw new OpenViduException(Code.GENERIC_ERROR_CODE,
@@ -184,14 +183,7 @@ public abstract class SessionManager {
 		} else {
 			this.sessionidParticipantpublicidParticipant.putIfAbsent(sessionId, new ConcurrentHashMap<>());
 			this.sessionidTokenTokenobj.putIfAbsent(sessionId, new ConcurrentHashMap<>());
-
 			this.sessionidTokenTokenobj.get(sessionId).putIfAbsent(token, new Token(token));
-			/*
-			 * this.sessionidParticipantpublicidParticipant.get(sessionId).putIfAbsent(
-			 * token, new Participant());
-			 * this.sessionidTokenTokenobj.get(sessionId).putIfAbsent(token, new
-			 * Token(token));
-			 */
 			return true;
 		}
 	}
@@ -268,10 +260,16 @@ public abstract class SessionManager {
 		}
 	}
 
-	protected void showMap() {
-		System.out.println("------------------------------");
-		System.out.println(this.sessionidTokenTokenobj.toString());
-		System.out.println("------------------------------");
+	public void showTokens() {
+		log.info("<SESSIONID, TOKENS>: {}", this.sessionidTokenTokenobj.toString());
+	}
+	
+	public void showInsecureParticipants() {
+		log.info("<INSECURE_PARTICIPANTS>: {}", this.insecureUsers.toString());
+	}
+	
+	public void showAllParticipants() {
+		log.info("<SESSIONID, PARTICIPANTS>: {}", this.sessionidParticipantpublicidParticipant.toString());
 	}
 
 	

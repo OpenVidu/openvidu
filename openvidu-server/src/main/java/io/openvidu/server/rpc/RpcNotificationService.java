@@ -15,7 +15,7 @@ import com.google.gson.JsonObject;
 import io.openvidu.client.OpenViduException;
 
 public class RpcNotificationService {
-	
+
 	private static final Logger log = LoggerFactory.getLogger(RpcNotificationService.class);
 
 	private static ConcurrentMap<String, RpcConnection> rpcConnections = new ConcurrentHashMap<>();
@@ -38,7 +38,8 @@ public class RpcNotificationService {
 	public void sendResponse(String participantPrivateId, Integer transactionId, Object result) {
 		Transaction t = getAndRemoveTransaction(participantPrivateId, transactionId);
 		if (t == null) {
-			log.error("No transaction {} found for paticipant with private id {}, unable to send result {}", transactionId, participantPrivateId, result);
+			log.error("No transaction {} found for paticipant with private id {}, unable to send result {}",
+					transactionId, participantPrivateId, result);
 			return;
 		}
 		try {
@@ -48,10 +49,12 @@ public class RpcNotificationService {
 		}
 	}
 
-	public void sendErrorResponse(String participantPrivateId, Integer transactionId, Object data, OpenViduException error) {
+	public void sendErrorResponse(String participantPrivateId, Integer transactionId, Object data,
+			OpenViduException error) {
 		Transaction t = getAndRemoveTransaction(participantPrivateId, transactionId);
 		if (t == null) {
-			log.error("No transaction {} found for paticipant with private id {}, unable to send result {}", transactionId, participantPrivateId, data);
+			log.error("No transaction {} found for paticipant with private id {}, unable to send result {}",
+					transactionId, participantPrivateId, data);
 			return;
 		}
 		try {
@@ -65,7 +68,8 @@ public class RpcNotificationService {
 	public void sendNotification(final String participantPrivateId, final String method, final Object params) {
 		RpcConnection rpcSession = rpcConnections.get(participantPrivateId);
 		if (rpcSession == null || rpcSession.getSession() == null) {
-			log.error("No rpc session found for private id {}, unable to send notification {}: {}", participantPrivateId, method, params);
+			log.error("No rpc session found for private id {}, unable to send notification {}: {}",
+					participantPrivateId, method, params);
 			return;
 		}
 		Session s = rpcSession.getSession();
@@ -73,7 +77,8 @@ public class RpcNotificationService {
 		try {
 			s.sendNotification(method, params);
 		} catch (Exception e) {
-			log.error("Exception sending notification '{}': {} to participant with private id {}", method, params, participantPrivateId, e);
+			log.error("Exception sending notification '{}': {} to participant with private id {}", method, params,
+					participantPrivateId, e);
 		}
 	}
 
@@ -92,7 +97,7 @@ public class RpcNotificationService {
 		}
 		rpcConnections.remove(participantPrivateId);
 	}
-	
+
 	private Transaction getAndRemoveTransaction(String participantPrivateId, Integer transactionId) {
 		RpcConnection rpcSession = rpcConnections.get(participantPrivateId);
 		if (rpcSession == null) {
@@ -103,6 +108,10 @@ public class RpcNotificationService {
 		Transaction t = rpcSession.getTransaction(transactionId);
 		rpcSession.removeTransaction(transactionId);
 		return t;
+	}
+
+	public void showRpcConnections() {
+		log.info("<PRIVATE_ID, RPC_CONNECTION>: {}", RpcNotificationService.rpcConnections.toString());
 	}
 
 }

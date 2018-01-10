@@ -2,6 +2,8 @@ package io.openvidu.server.rpc;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.kurento.jsonrpc.DefaultJsonRpcHandler;
 import org.kurento.jsonrpc.Session;
@@ -35,6 +37,8 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 	@Autowired
 	RpcNotificationService notificationService;
 
+	private ConcurrentMap<String, Boolean> webSocketTransportError = new ConcurrentHashMap<>();
+
 	@Override
 	public void handleRequest(Transaction transaction, Request<JsonObject> request) throws Exception {
 
@@ -49,9 +53,6 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		log.debug("WebSocket session #{} - Request: {}", participantPrivateId, request);
 
 		RpcConnection rpcConnection = notificationService.addTransaction(transaction, request);
-
-		// ParticipantRequest participantRequest = new ParticipantRequest(rpcSessionId,
-		// Integer.toString(request.getId()));
 
 		transaction.startAsync();
 
@@ -111,12 +112,12 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 				sessionManager.joinRoom(participant, sessionId, request.getId());
 
 			} else {
-				System.out.println("Error: metadata format is incorrect");
+				log.error("ERROR: Metadata format is incorrect");
 				throw new OpenViduException(Code.USER_METADATA_FORMAT_INVALID_ERROR_CODE,
 						"Unable to join room. The metadata received has an invalid format");
 			}
 		} else {
-			System.out.println("Error: sessionId or token not valid");
+			log.error("ERROR: sessionId or token not valid");
 			throw new OpenViduException(Code.USER_UNAUTHORIZED_ERROR_CODE,
 					"Unable to join room. The user is not authorized");
 		}
@@ -210,7 +211,7 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 		sessionManager.sendMessage(participant, message, request.getId());
 	}
-	
+
 	private void unpublishVideo(RpcConnection rpcConnection, Request<JsonObject> request) {
 
 		String participantPrivateId = rpcConnection.getParticipantPrivateId();
@@ -238,18 +239,31 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 	@Override
 	public void afterConnectionClosed(Session rpcSession, String status) throws Exception {
 		log.info("Connection closed for WebSocket session: {} - Status: {}", rpcSession.getSessionId(), status);
+		this.notificationService.showRpcConnections();
+		String rpcSessionId = rpcSession.getSessionId();
+		if (this.webSocketTransportError.get(rpcSessionId) != null) {
+			log.warn(
+					"Evicting participant with private id {} because a transport error took place and its web socket connection is now closed",
+					rpcSession.getSessionId());
+			this.leaveRoomAfterConnClosed(rpcSessionId);
+			this.webSocketTransportError.remove(rpcSessionId);
+		}
 	}
 
 	@Override
 	public void handleTransportError(Session rpcSession, Throwable exception) throws Exception {
 		log.error("Transport exception for WebSocket session: {} - Exception: {}", rpcSession.getSessionId(),
-				exception.getMessage());
+				exception);
+		if ("EOFException".equals(exception.getClass().getSimpleName())) {
+			// Store WebSocket connection interrupted exception for this web socket to
+			// automatically evict the participant on "afterConnectionClosed" event
+			this.webSocketTransportError.put(rpcSession.getSessionId(), true);
+		}
 	}
 
 	@Override
 	public void handleUncaughtException(Session rpcSession, Exception exception) {
-		log.error("Uncaught exception for WebSocket session: {} - Exception: {}", rpcSession.getSessionId(),
-				exception.getMessage());
+		log.error("Uncaught exception for WebSocket session: {} - Exception: {}", rpcSession.getSessionId(), exception);
 	}
 
 	@Override
