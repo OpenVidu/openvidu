@@ -37,10 +37,10 @@ import org.springframework.context.ConfigurableApplicationContext;
 import com.google.common.base.StandardSystemProperty;
 
 import io.openvidu.server.OpenViduServer;
-import io.openvidu.server.core.NotificationRoomManager;
-import io.openvidu.server.core.RoomManager;
-import io.openvidu.server.core.api.KurentoClientSessionInfo;
-import io.openvidu.server.core.internal.DefaultKurentoClientSessionInfo;
+import io.openvidu.server.core.Participant;
+import io.openvidu.server.core.SessionManager;
+import io.openvidu.server.core.Token;
+import io.openvidu.server.kurento.core.KurentoSessionManager;
 
 /**
  * Integration server test, checks the autodiscovery of KMS URLs.
@@ -88,7 +88,7 @@ public class AutodiscoveryKmsUrlTest {
   @Test
   public void test() throws IOException {
 
-    Path backup = null;
+    /*Path backup = null;
 
     Path configFile = Paths.get(StandardSystemProperty.USER_HOME.value(), ".kurento",
         "config.properties");
@@ -117,18 +117,14 @@ public class AutodiscoveryKmsUrlTest {
       ConfigurableApplicationContext app = OpenViduServer
           .start(new String[] { "--server.port=7777" });
 
-      NotificationRoomManager notifRoomManager = app.getBean(NotificationRoomManager.class);
-
-      final RoomManager roomManager = notifRoomManager.getRoomManager();
-
-      final KurentoClientSessionInfo kcSessionInfo = new DefaultKurentoClientSessionInfo(
-          "participantId", "roomName");
+      final SessionManager roomManager = app.getBean(KurentoSessionManager.class);
 
       new Thread(new Runnable() {
         @Override
         public void run() {
+        	Participant p = new Participant("privateId", "publicId", new Token("token"), "clientMetadata");
           roomManager
-              .joinRoom("userName", "roomName", false, false, kcSessionInfo, "participantId");
+              .joinRoom(p, "sessionId", 1);
         }
       }).start();
 
@@ -154,7 +150,7 @@ public class AutodiscoveryKmsUrlTest {
       if (backup != null) {
         Files.move(backup, configFile);
       }
-    }
+    }*/
   }
 
 }

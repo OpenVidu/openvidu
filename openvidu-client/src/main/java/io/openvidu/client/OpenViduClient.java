@@ -40,8 +40,6 @@ import static io.openvidu.client.internal.ProtocolElements.RECEIVEVIDEO_SDPOFFER
 import static io.openvidu.client.internal.ProtocolElements.RECEIVEVIDEO_SENDER_PARAM;
 import static io.openvidu.client.internal.ProtocolElements.SENDMESSAGE_MESSAGE_PARAM;
 import static io.openvidu.client.internal.ProtocolElements.SENDMESSAGE_ROOM_METHOD;
-import static io.openvidu.client.internal.ProtocolElements.SENDMESSAGE_ROOM_PARAM;
-import static io.openvidu.client.internal.ProtocolElements.SENDMESSAGE_USER_PARAM;
 import static io.openvidu.client.internal.ProtocolElements.UNPUBLISHVIDEO_METHOD;
 import static io.openvidu.client.internal.ProtocolElements.UNSUBSCRIBEFROMVIDEO_METHOD;
 import static io.openvidu.client.internal.ProtocolElements.UNSUBSCRIBEFROMVIDEO_SENDER_PARAM;
@@ -200,8 +198,6 @@ public class OpenViduClient {
 
   public void sendMessage(String userName, String roomName, String message) throws IOException {
     JsonObject params = new JsonObject();
-    params.addProperty(SENDMESSAGE_USER_PARAM, userName);
-    params.addProperty(SENDMESSAGE_ROOM_PARAM, roomName);
     params.addProperty(SENDMESSAGE_MESSAGE_PARAM, message);
     client.sendRequest(SENDMESSAGE_ROOM_METHOD, params);
   }

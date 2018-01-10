@@ -26,8 +26,6 @@ public class ProtocolElements {
   // ---------------------------- CLIENT REQUESTS -----------------------
 
   public static final String SENDMESSAGE_ROOM_METHOD = "sendMessage";
-  public static final String SENDMESSAGE_USER_PARAM = "userMessage";
-  public static final String SENDMESSAGE_ROOM_PARAM = "roomMessage";
   public static final String SENDMESSAGE_MESSAGE_PARAM = "message";
 
   public static final String LEAVEROOM_METHOD = "leaveRoom";
