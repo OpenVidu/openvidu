@@ -35,6 +35,7 @@ export class OpenViduInternal {
 
     constructor() { };
 
+    storedPublisherOptions: any;
 
     /* NEW METHODS */
     initSession(sessionId) {
@@ -66,7 +67,9 @@ export class OpenViduInternal {
     }
 
     initPublisherScreen(parentId: string, callback?): Stream {
-        this.camera = new Stream(this, true, this.session, 'screen-options');
+        if (!this.camera) {
+            this.camera = new Stream(this, true, this.session, 'screen-options');
+        }
         this.camera.addOnceEventListener('can-request-screen', () => {
             this.camera.requestCameraAccess((error, camera) => {
                 if (error) {
@@ -119,14 +122,6 @@ export class OpenViduInternal {
         let videoElement = this.camera.playOnlyVideo(parentId, null);
         this.camera.emitStreamReadyEvent();
         return videoElement;
-    }
-
-    initPublisher(cameraOptions: any, callback) {
-        this.getCamera(cameraOptions);
-        this.camera.requestCameraAccess((error, camera) => {
-            if (error) callback(error);
-            else callback(undefined);
-        });
     }
 
     getLocalStream() {
@@ -187,24 +182,16 @@ export class OpenViduInternal {
                 //notifications
                 participantJoined: this.onParticipantJoined.bind(this),
                 participantPublished: this.onParticipantPublished.bind(this),
-                participantUnpublished: this.onParticipantLeft.bind(this),
+                participantUnpublished: this.onParticipantUnpublished.bind(this),
                 participantLeft: this.onParticipantLeft.bind(this),
                 participantEvicted: this.onParticipantEvicted.bind(this),
                 sendMessage: this.onNewMessage.bind(this),
                 iceCandidate: this.iceCandidateEvent.bind(this),
                 mediaError: this.onMediaError.bind(this),
-                custonNotification: this.customNotification.bind(this)
             }
         };
 
         this.jsonRpcClient = new RpcBuilder.clients.JsonRpcClient(config);
-    }
-
-
-    private customNotification(params) {
-        if (this.isRoomAvailable()) {
-            this.session.emitEvent("custom-message-received", [{ params: params }]);
-        }
     }
 
     private connectCallback(error) {
@@ -255,6 +242,12 @@ export class OpenViduInternal {
     private onParticipantPublished(params) {
         if (this.isRoomAvailable()) {
             this.session.onParticipantPublished(params);
+        }
+    }
+
+    private onParticipantUnpublished(params) {
+        if (this.isRoomAvailable()) {
+            this.session.onParticipantUnpublished(params);
         }
     }
 
@@ -358,22 +351,15 @@ export class OpenViduInternal {
     };
 
     //CHAT
-    sendMessage(room, user, message) {
+    sendMessage(message) {
         this.sendRequest('sendMessage', {
-            message: message,
-            userMessage: user,
-            roomMessage: room
+            message: message
         }, function (error, response) {
             if (error) {
                 console.error(error);
             }
         });
     };
-
-    sendCustomRequest(params, callback) {
-        this.sendRequest('customRequest', params, callback);
-    };
-
 
 
 

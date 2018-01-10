@@ -58,6 +58,7 @@ export class OpenVidu {
 
     initPublisher(parentId: string, cameraOptions?: any, callback?: Function): any {
         if (this.checkSystemRequirements()) {
+            this.openVidu.storedPublisherOptions = cameraOptions;
             let publisher: Publisher;
             if (cameraOptions != null) {
 
@@ -81,8 +82,8 @@ export class OpenVidu {
                     return publisher;
 
                 } else {
+                    publisher = new Publisher(this.openVidu.initPublisherScreen(parentId, callback), parentId, true);
                     if (adapter.browserDetails.browser === 'firefox' && adapter.browserDetails.version >= 52) {
-                        publisher = new Publisher(this.openVidu.initPublisherScreen(parentId, callback), parentId, true);
                         screenSharingAuto.getScreenId((error, sourceId, screenConstraints) => {
                             cameraOptions = {
                                 sendAudio: cameraOptions.audio,
@@ -156,7 +157,6 @@ export class OpenVidu {
                             console.error('getScreenId error', error);
                             return;
                         });
-                        publisher = new Publisher(this.openVidu.initPublisherScreen(parentId, callback), parentId, true);
                         console.info("'Publisher' initialized");
                         return publisher;
                     } else {

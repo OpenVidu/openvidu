@@ -2,6 +2,7 @@ import { Stream } from './Stream';
 import { OpenViduInternal } from './OpenViduInternal';
 import { Connection, ConnectionOptions } from './Connection';
 import EventEmitter = require('wolfy87-eventemitter');
+import { Publisher } from '../OpenVidu/Publisher';
 
 const SECRET_PARAM = '?secret=';
 
@@ -177,10 +178,6 @@ export class SessionInternal {
             }
         });
     }
-
-    publish() {
-        this.openVidu.getCamera().publish();
-    }
     /* NEW METHODS */
 
 
@@ -244,18 +241,19 @@ export class SessionInternal {
         stream.subscribe();
     }
 
-    unsubscribe(stream) {
-        console.info("Unsubscribing from " + stream.streamId);
+    unsubscribe(stream: Stream) {
+        console.info("Unsubscribing from " + stream.connection.connectionId);
         this.openVidu.sendRequest('unsubscribeFromVideo', {
-            sender: stream.streamId
+            sender: stream.connection.connectionId
         },
-            function (error, response) {
-                if (error) {
-                    console.error("Error unsubscribing from Subscriber", error);
-                } else {
-                    console.info("Unsubscribed correctly from " + stream.streamId);
-                }
-            });
+        (error, response) => {
+            if (error) {
+                console.error("Error unsubscribing from Subscriber", error);
+            } else {
+                console.info("Unsubscribed correctly from " + stream.connection.connectionId);
+            }
+            stream.dispose();
+        });
     }
 
     onParticipantPublished(options) {
@@ -293,8 +291,41 @@ export class SessionInternal {
                 stream.subscribe();
             }
             this.ee.emitEvent('streamCreated', [{ stream }]);
+            
             // Adding the remote stream to the OpenVidu object
             this.openVidu.getRemoteStreams().push(stream);
+        }
+    }
+
+    onParticipantUnpublished(msg) {
+        let connection: Connection = this.participants[msg.name];
+
+        if (connection !== undefined) {
+
+            let streams = connection.getStreams();
+            for (let key in streams) {
+                this.ee.emitEvent('streamDestroyed', [{
+                    stream: streams[key],
+                    preventDefault: () => { this.ee.removeEvent('stream-destroyed-default'); }
+                }]);
+                this.ee.emitEvent('stream-destroyed-default', [{
+                    stream: streams[key]
+                }]);
+
+                // Deleting the removed stream from the OpenVidu object
+                let index = this.openVidu.getRemoteStreams().indexOf(streams[key]);
+                let stream = this.openVidu.getRemoteStreams()[index];
+
+
+                stream.dispose();
+                this.openVidu.getRemoteStreams().splice(index, 1);
+                delete this.streams[stream.streamId];
+
+            }
+        } else {
+            console.warn("Participant " + msg.name
+                + " unknown. Participants: "
+                + JSON.stringify(this.participants));
         }
     }
 
@@ -325,7 +356,7 @@ export class SessionInternal {
 
     onParticipantLeft(msg) {
 
-        let connection = this.participants[msg.name];
+        let connection: Connection = this.participants[msg.name];
 
         if (connection !== undefined) {
             delete this.participants[msg.name];
@@ -516,21 +547,22 @@ export class SessionInternal {
         }
     }
 
-    unpublish(stream: Stream) {
+    unpublish(publisher: Publisher) {
 
-        let connection = stream.getParticipant();
-        if (!connection) {
-            console.error("Stream to disconnect has no participant", stream);
+        let stream = publisher.stream;
+
+        if (!stream.connection) {
+            console.error("The associated Connection object of this Publisher is null", stream);
             return;
-        }
+        } else if (stream.connection !== this.localParticipant) {
+            console.error("The associated Connection object of this Publisher is not your local Connection." +
+                            "Only moderators can force unpublish on remote Streams via 'forceUnpublish' method", stream);
+            return;
+        } else {
+            stream.dispose();
 
-        if (connection === this.localParticipant) {
+            console.info("Unpublishing local media (" + stream.connection.connectionId + ")");
 
-            delete this.participants[connection.connectionId];
-            connection.dispose();
-
-            console.info("Unpublishing my media (I'm " + connection.connectionId + ")");
-            delete this.localParticipant;
             this.openVidu.sendRequest('unpublishVideo', function (error, response) {
                 if (error) {
                     console.error(error);
@@ -538,6 +570,17 @@ export class SessionInternal {
                     console.info("Media unpublished correctly");
                 }
             });
+
+            stream.isReadyToPublish = false;
+            stream.isScreenRequestedReady = false;
+
+            publisher.ee.emitEvent('streamDestroyed', [{
+                stream: publisher.stream,
+                preventDefault: () => { this.ee.removeEvent('stream-destroyed-default'); }
+            }]);
+            publisher.ee.emitEvent('stream-destroyed-default', [{
+                stream: publisher.stream
+            }]);
         }
     }
 

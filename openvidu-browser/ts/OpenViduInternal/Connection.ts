@@ -18,7 +18,7 @@ export class Connection {
     public data: string;
     public creationTime: number;
     private streams: ObjMap<Stream> = {};
-    private streamsOpts: StreamOptions[] = [];
+    private streamsOpts: StreamOptions;
 
     constructor( private openVidu: OpenViduInternal, private local: boolean, private room: SessionInternal, private options?: ConnectionOptions ) {
 
@@ -39,6 +39,12 @@ export class Connection {
     addStream( stream: Stream ) {
         this.streams[stream.streamId] = stream;
         this.room.getStreams()[stream.streamId] = stream;
+    }
+
+    removeStream( key: string ) {
+        delete this.streams[key];
+        delete this.room.getStreams()[key];
+        delete this.streamsOpts;
     }
 
     getStreams() {
@@ -88,7 +94,7 @@ export class Connection {
             let stream = new Stream(this.openVidu, false, this.room, streamOpts );
 
             this.addStream( stream );
-            this.streamsOpts.push( streamOpts );
+            this.streamsOpts = streamOpts;
         }
 
         console.info("Remote 'Connection' with 'connectionId' [" + this.connectionId + "] is now configured for receiving Streams with options: ", this.streamsOpts );

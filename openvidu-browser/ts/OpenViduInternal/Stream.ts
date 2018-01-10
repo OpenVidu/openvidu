@@ -45,11 +45,6 @@ export interface StreamOptions {
     mediaConstraints: any;
 }
 
-export interface VideoOptions {
-    thumb: string;
-    video: HTMLVideoElement;
-}
-
 export class Stream {
 
     public connection: Connection;
@@ -62,8 +57,6 @@ export class Stream {
     private wrStream: MediaStream;
     private wp: any;
     private video: HTMLVideoElement;
-    private videoElements: VideoOptions[] = [];
-    private elements: HTMLDivElement[] = [];
     private speechEvent: any;
     private recvVideo: boolean;
     private recvAudio: boolean;
@@ -79,7 +72,7 @@ export class Stream {
     private activeAudio = true;
     private activeVideo = true;
 
-    private videoSrcObject: MediaStream | null;
+    private videoSrcObject: MediaStream;
     private parentId: string;
     public isReadyToPublish: boolean = false;
     public isPublisherPublished: boolean = false;
@@ -122,15 +115,18 @@ export class Stream {
     removeVideo();
 
     removeVideo(parentElement?) {
-        if (typeof parentElement === "string") {
-            document.getElementById(parentElement)!.removeChild(this.video);
-        } else if (parentElement instanceof Element) {
-            parentElement.removeChild(this.video);
-        }
-        else if (!parentElement) {
-            if (document.getElementById(this.parentId)) {
-                document.getElementById(this.parentId)!.removeChild(this.video);
+        if (this.video) {
+            if (typeof parentElement === "string") {
+                document.getElementById(parentElement)!.removeChild(this.video);
+            } else if (parentElement instanceof Element) {
+                parentElement.removeChild(this.video);
             }
+            else if (!parentElement) {
+                if (document.getElementById(this.parentId)) {
+                    document.getElementById(this.parentId)!.removeChild(this.video);
+                }
+            }
+            delete this.video;
         }
     }
 
@@ -140,6 +136,10 @@ export class Stream {
 
     setVideoElement(video: HTMLVideoElement) {
         this.video = video;
+    }
+
+    getParentId() {
+        return this.parentId;
     }
 
     getRecvVideo() {
@@ -259,11 +259,6 @@ export class Stream {
         this.video.controls = false;
         this.video.srcObject = this.videoSrcObject;
 
-        this.videoElements.push({
-            thumb: thumbnailId,
-            video: this.video
-        });
-
         if (this.local && !this.displayMyRemote()) {
             this.video.muted = true;
             this.video.oncanplay = () => {
@@ -306,8 +301,6 @@ export class Stream {
         if (thumbnail) {
             thumbnail.appendChild(container);
         }
-
-        this.elements.push(container);
 
         let name = document.createElement('div');
         container.appendChild(name);
@@ -598,26 +591,23 @@ export class Stream {
 
                     }
                 }
-                for (let videoElement of this.videoElements) {
-                    let thumbnailId = videoElement.thumb;
-                    let video = videoElement.video;
-                    video.srcObject = this.wrStream;
-                    video.oncanplay = () => {
-                        if (this.local && this.displayMyRemote()) {
-                            console.info("Your own remote 'Stream' with id [" + this.streamId + "] video is now playing");
-                            this.ee.emitEvent('remote-video-is-playing', [{
-                                element: video
-                            }]);
-                        } else if (!this.local && !this.displayMyRemote()) {
-                            console.info("Remote 'Stream' with id [" + this.streamId + "] video is now playing");
-                            this.ee.emitEvent('video-is-playing', [{
-                                element: video
-                            }]);
-                        }
-                        //show(thumbnailId);
-                        //this.hideSpinner(this.streamId);
-                    };
-                }
+                //let thumbnailId = this.video.thumb;
+                this.video.srcObject = this.wrStream;
+                this.video.oncanplay = () => {
+                    if (this.local && this.displayMyRemote()) {
+                        console.info("Your own remote 'Stream' with id [" + this.streamId + "] video is now playing");
+                        this.ee.emitEvent('remote-video-is-playing', [{
+                            element: this.video
+                        }]);
+                    } else if (!this.local && !this.displayMyRemote()) {
+                        console.info("Remote 'Stream' with id [" + this.streamId + "] video is now playing");
+                        this.ee.emitEvent('video-is-playing', [{
+                            element: this.video
+                        }]);
+                    }
+                    //show(thumbnailId);
+                    //this.hideSpinner(this.streamId);
+                };
                 this.room.emitEvent('stream-subscribed', [{
                     stream: this
                 }]);
@@ -656,10 +646,6 @@ export class Stream {
                 element.parentNode.removeChild(element);
             }
         }
-
-        this.elements.forEach(e => disposeElement(e));
-
-        //this.videoElements.forEach(ve => disposeElement(ve.video));
 
         disposeElement("progress-" + this.streamId);
 

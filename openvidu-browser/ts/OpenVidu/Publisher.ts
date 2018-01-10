@@ -5,14 +5,14 @@
  *
  * stream.hasAudio(); stream.hasVideo(); stream.hasData();
  */
-import { Stream, StreamOptions, VideoOptions } from '../OpenViduInternal/Stream';
+import { Stream, StreamOptions } from '../OpenViduInternal/Stream';
 import { Session } from './Session';
 
 import EventEmitter = require('wolfy87-eventemitter');
 
 export class Publisher {
 
-    private ee = new EventEmitter();
+    ee = new EventEmitter();
 
     accessAllowed = false;
     element: Element;
@@ -25,13 +25,9 @@ export class Publisher {
         this.stream = stream;
         this.isScreenRequested = isScreenRequested;
 
-        this.stream.addEventListener('camera-access-changed', (event) => {
-            this.accessAllowed = event.accessAllowed;
-            if (this.accessAllowed) {
-                this.ee.emitEvent('accessAllowed');
-            } else {
-                this.ee.emitEvent('accessDenied');
-            }
+        // Listens to the deactivation of the default behaviour upon the deletion of a Stream object
+        this.ee.addListener('stream-destroyed-default', event => {
+            event.stream.removeVideo();
         });
 
         if (document.getElementById(parentId) != null) {
@@ -72,7 +68,6 @@ export class Publisher {
                 this.ee.emitEvent('streamCreated', [{ stream: this.stream }]);
             } else {
                 this.stream.addEventListener('stream-created-by-publisher', () => {
-                    console.warn('Publisher emitting streamCreated');
                     this.ee.emitEvent('streamCreated', [{ stream: this.stream }]);
                 });
             }
@@ -83,7 +78,7 @@ export class Publisher {
                     element: this.stream.getVideoElement()
                 }]);
             } else {
-                this.stream.addOnceEventListener('video-element-created-by-stream', (element) => {
+                this.stream.addEventListener('video-element-created-by-stream', (element) => {
                     this.id = element.id;
                     this.ee.emitEvent('videoElementCreated', [{
                         element: element.element
@@ -102,7 +97,7 @@ export class Publisher {
                     element: this.stream.getVideoElement()
                 }]);
             } else {
-                this.stream.addOnceEventListener('video-is-playing', (element) => {
+                this.stream.addEventListener('video-is-playing', (element) => {
                     this.ee.emitEvent('videoPlaying', [{
                         element: element.element
                     }]);
@@ -120,7 +115,7 @@ export class Publisher {
                     element: this.stream.getVideoElement()
                 }]);
             } else {
-                this.stream.addOnceEventListener('remote-video-is-playing', (element) => {
+                this.stream.addEventListener('remote-video-is-playing', (element) => {
                     this.ee.emitEvent('remoteVideoPlaying', [{
                         element: element.element
                     }]);

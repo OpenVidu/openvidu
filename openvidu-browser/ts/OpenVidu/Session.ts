@@ -76,19 +76,37 @@ export class Session {
     }
 
     publish(publisher: Publisher) {
-        if (publisher.isScreenRequested && !publisher.stream.isScreenRequestedReady) {
-            publisher.stream.addOnceEventListener('screen-ready', () => {
-                publisher.session = this;
-                publisher.stream.publish();
-            });
-        } else {
-            publisher.session = this;
-            publisher.stream.publish();
+        if (!publisher.stream.isPublisherPublished) { // 'Session.unpublish(Publisher)' has NOT been called
+            if (publisher.isScreenRequested) { // Screen sharing Publisher
+                if (!publisher.stream.isScreenRequestedReady) { // Screen video stream is not available yet
+                    publisher.stream.addOnceEventListener('screen-ready', () => {
+                        this.streamPublish(publisher);
+                    });
+                } else { // // Screen video stream is already available
+                    this.streamPublish(publisher);
+                }
+            } else { // Audio-Video Publisher
+                this.streamPublish(publisher);
+            }
+        } else { // 'Session.unpublish(Publisher)' has been called
+            let mypublisher = this.openVidu.initPublisher(publisher.stream.getParentId(), this.openVidu.openVidu.storedPublisherOptions);
+            if (mypublisher.isScreenRequested && !mypublisher.stream.isScreenRequestedReady) { // Screen sharing Publisher and video stream not available yet
+                mypublisher.stream.addOnceEventListener('screen-ready', () => {
+                    this.streamPublish(mypublisher);
+                });
+            } else { // Video stream already available
+                this.streamPublish(mypublisher);
+            }
         }
+    }
+    
+    private streamPublish(publisher: Publisher) {
+        publisher.session = this;
+        publisher.stream.publish();
     }
 
     unpublish(publisher: Publisher) {
-        this.session.unpublish(publisher.stream);
+        this.session.unpublish(publisher);
     }
 
     on(eventName: string, callback) {
@@ -144,7 +162,7 @@ export class Session {
         signalMessage['data'] = signal.data ? signal.data : '';
         signalMessage['type'] = signal.type ? signal.type : '';
 
-        this.openVidu.openVidu.sendMessage(this.sessionId, this.connection.connectionId, JSON.stringify(signalMessage));
+        this.openVidu.openVidu.sendMessage(JSON.stringify(signalMessage));
     }
 
 }
