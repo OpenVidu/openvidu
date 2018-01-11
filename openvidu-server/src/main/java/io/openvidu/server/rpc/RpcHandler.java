@@ -273,21 +273,21 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 	public static String getStringParam(Request<JsonObject> request, String key) {
 		if (request.getParams() == null || request.getParams().get(key) == null) {
-			throw new RuntimeException("Request element '" + key + "' is missing");
+			throw new RuntimeException("Request element '" + key + "' is missing in method '" + request.getMethod() + "'. CHECK THAT 'openvidu-server' AND 'openvidu-browser' SHARE THE SAME VERSION NUMBER");
 		}
 		return request.getParams().get(key).getAsString();
 	}
 
 	public static int getIntParam(Request<JsonObject> request, String key) {
 		if (request.getParams() == null || request.getParams().get(key) == null) {
-			throw new RuntimeException("Request element '" + key + "' is missing");
+			throw new RuntimeException("Request element '" + key + "' is missing in method '" + request.getMethod() + "'. CHECK THAT 'openvidu-server' AND 'openvidu-browser' SHARE THE SAME VERSION NUMBER");
 		}
 		return request.getParams().get(key).getAsInt();
 	}
 
 	public static boolean getBooleanParam(Request<JsonObject> request, String key) {
 		if (request.getParams() == null || request.getParams().get(key) == null) {
-			throw new RuntimeException("Request element '" + key + "' is missing");
+			throw new RuntimeException("Request element '" + key + "' is missing in method '" + request.getMethod() + "'. CHECK THAT 'openvidu-server' AND 'openvidu-browser' SHARE THE SAME VERSION NUMBER");
 		}
 		return request.getParams().get(key).getAsBoolean();
 	}
