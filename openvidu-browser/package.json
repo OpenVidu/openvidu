@@ -1,12 +1,12 @@
 {
     "license": "Apache-2.0", 
-    "name": "openvidu-browser", 
+    "version": "1.4.0", 
     "repository": {
         "url": "git://github.com/OpenVidu/openvidu", 
         "type": "git"
     }, 
     "author": "OpenVidu", 
-    "version": "1.4.0", 
+    "description": "OpenVidu Browser", 
     "dependencies": {
         "inherits": "2.0.3", 
         "wolfy87-eventemitter": "5.2.4", 
@@ -22,8 +22,8 @@
         "test": "echo \"Error: no test specified\" && exit 1", 
         "browserify-prod": "VERSION=${VERSION:-}; cd ts/OpenVidu && browserify --debug Main.ts -p [ tsify ] --exclude kurento-browser-extensions | uglifyjs --source-map content=inline --output ../../static/js/openvidu-browser-$VERSION.min.js", 
         "browserify": "VERSION=${VERSION:-}; cd ts/OpenVidu && browserify Main.ts -p [ tsify ] --exclude kurento-browser-extensions --debug -o ../../static/js/openvidu-browser-$VERSION.js -v", 
-        "prepublish": "cd ts/OpenViduInternal && tsc && cd ../OpenVidu && tsc && cd ../.. && tsc --declaration ts/OpenVidu/index.ts --outDir lib --sourceMap && tsc --declaration ts/OpenVidu/Main.ts --outDir lib --sourceMap", 
-        "updatetsc": "cd ts/OpenViduInternal && tsc && cd ../OpenVidu && tsc && cd ../.. && tsc --declaration ts/OpenVidu/index.ts --outDir lib --sourceMap && tsc --declaration ts/OpenVidu/Main.ts --outDir lib --sourceMap"
+        "updatetsc": "cd ts/OpenViduInternal && tsc && cd ../OpenVidu && tsc && cd ../.. && tsc --declaration ts/OpenVidu/index.ts --outDir lib --sourceMap && tsc --declaration ts/OpenVidu/Main.ts --outDir lib --sourceMap", 
+        "prepublish": "cd ts/OpenViduInternal && tsc && cd ../OpenVidu && tsc && cd ../.. && tsc --declaration ts/OpenVidu/index.ts --outDir lib --sourceMap && tsc --declaration ts/OpenVidu/Main.ts --outDir lib --sourceMap"
     }, 
     "devDependencies": {
         "tsify": "3.0.4", 
@@ -33,5 +33,5 @@
     }, 
     "main": "lib/OpenVidu/index.js", 
     "types": "lib/OpenVidu/index.d.ts", 
-    "description": "OpenVidu Browser"
+    "name": "openvidu-browser"
 }
