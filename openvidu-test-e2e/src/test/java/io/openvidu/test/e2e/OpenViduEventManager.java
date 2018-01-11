@@ -38,16 +38,15 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
-
 /**
- * Manager event class for BrowserUser. Collects, cleans and stores
- * events from openvidu-testapp
+ * Manager event class for BrowserUser. Collects, cleans and stores events from
+ * openvidu-testapp
  *
- * @author Pablo Fuente (pablo.fuente@urjc.es)
+ * @author Pablo Fuente (pablofuenteperez@gmail.com)
  * @since 1.1.1
  */
 public class OpenViduEventManager {
-	
+
 	private static class RunnableCallback implements Runnable {
 
 		private final Consumer<JSONObject> callback;
@@ -87,15 +86,15 @@ public class OpenViduEventManager {
 	}
 
 	public void startPolling() {
-		
+
 		Thread.UncaughtExceptionHandler h = new Thread.UncaughtExceptionHandler() {
-		    public void uncaughtException(Thread th, Throwable ex) {
-		    	if (ex.getClass().getSimpleName().equals("NoSuchSessionException")) {
-		    		System.err.println("Disposing driver when running 'executeScript'");
-		    	}
-		    }
+			public void uncaughtException(Thread th, Throwable ex) {
+				if (ex.getClass().getSimpleName().equals("NoSuchSessionException")) {
+					System.err.println("Disposing driver when running 'executeScript'");
+				}
+			}
 		};
-		
+
 		this.pollingThread = new Thread(() -> {
 			while (!this.isInterrupted.get()) {
 				this.getEventsFromBrowser();
@@ -117,25 +116,29 @@ public class OpenViduEventManager {
 	public void on(String eventName, Consumer<JSONObject> callback) {
 		this.eventCallbacks.put(eventName, new RunnableCallback(callback));
 	}
-
-	public void waitUntilNumberOfEvent(String eventName, int eventNumber) throws Exception {
+	
+	// 'eventNumber' is accumulative for event 'eventName' for one page while it is not refreshed
+	public void waitUntilEventReaches(String eventName, int eventNumber) throws Exception {
 		CountDownLatch eventSignal = new CountDownLatch(eventNumber);
 		this.setCountDown(eventName, eventSignal);
 		try {
-			if (!eventSignal.await(this.timeOfWaitInSeconds*1000, TimeUnit.MILLISECONDS)) {
-				throw(new TimeoutException());
+			if (!eventSignal.await(this.timeOfWaitInSeconds * 1000, TimeUnit.MILLISECONDS)) {
+				throw (new TimeoutException());
 			}
 		} catch (InterruptedException | TimeoutException e) {
 			e.printStackTrace();
 			throw e;
 		}
 	}
-	
-	public boolean assertMediaTracks(Iterable<WebElement> videoElements, boolean audioTransmission, boolean videoTransmission) {
+
+	public boolean assertMediaTracks(Iterable<WebElement> videoElements, boolean audioTransmission,
+			boolean videoTransmission) {
 		boolean success = true;
 		for (WebElement video : videoElements) {
-			success = success && (audioTransmission == this.hasAudioTracks(video)) && (videoTransmission == this.hasVideoTracks(video));
-			if (!success) break;
+			success = success && (audioTransmission == this.hasAudioTracks(video))
+					&& (videoTransmission == this.hasVideoTracks(video));
+			if (!success)
+				break;
 		}
 		return success;
 	}
@@ -146,7 +149,7 @@ public class OpenViduEventManager {
 
 	private void setCountDown(String eventName, CountDownLatch cd) {
 		this.eventCountdowns.put(eventName, cd);
-		for(int i=0; i< getNumEvents(eventName).get(); i++){
+		for (int i = 0; i < getNumEvents(eventName).get(); i++) {
 			cd.countDown();
 		}
 	}
@@ -154,9 +157,9 @@ public class OpenViduEventManager {
 	private void emitEvents() {
 		while (!this.eventQueue.isEmpty()) {
 			JSONObject event = this.eventQueue.poll();
-			
+
 			System.out.println(event.get("event") + ": " + event);
-			
+
 			RunnableCallback callback = this.eventCallbacks.get(event.get("event"));
 			if (callback != null) {
 				callback.setEventResult(event);
@@ -178,10 +181,10 @@ public class OpenViduEventManager {
 			try {
 				JSONObject event = (JSONObject) parser.parse(e);
 				String eventName = (String) event.get("event");
-				
-				this.eventQueue.add(event);				
+
+				this.eventQueue.add(event);
 				getNumEvents(eventName).incrementAndGet();
-				
+
 				if (this.eventCountdowns.get(eventName) != null) {
 					this.eventCountdowns.get(eventName).countDown();
 				}
@@ -190,22 +193,22 @@ public class OpenViduEventManager {
 			}
 		}
 	}
-	
+
 	private String getAndClearEventsInBrowser() {
 		String events = (String) ((JavascriptExecutor) driver)
 				.executeScript("var e = window.myEvents; window.myEvents = ''; return e;");
 		return events;
 	}
-	
+
 	private boolean hasAudioTracks(WebElement videoElement) {
-		long numberAudioTracks = (long) ((JavascriptExecutor) driver)
-				.executeScript("return $('#" + videoElement.getAttribute("id") + "').prop('srcObject').getAudioTracks().length;");
+		long numberAudioTracks = (long) ((JavascriptExecutor) driver).executeScript(
+				"return $('#" + videoElement.getAttribute("id") + "').prop('srcObject').getAudioTracks().length;");
 		return (numberAudioTracks > 0);
 	}
-	
+
 	private boolean hasVideoTracks(WebElement videoElement) {
-		long numberAudioTracks = (long) ((JavascriptExecutor) driver)
-				.executeScript("return $('#" + videoElement.getAttribute("id") + "').prop('srcObject').getVideoTracks().length;");
+		long numberAudioTracks = (long) ((JavascriptExecutor) driver).executeScript(
+				"return $('#" + videoElement.getAttribute("id") + "').prop('srcObject').getVideoTracks().length;");
 		return (numberAudioTracks > 0);
 	}
 

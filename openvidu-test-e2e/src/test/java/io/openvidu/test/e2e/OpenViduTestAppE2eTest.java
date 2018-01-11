@@ -38,6 +38,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.slf4j.Logger;
 
 import io.github.bonigarcia.SeleniumExtension;
@@ -52,7 +53,7 @@ import io.openvidu.test.e2e.browser.FirefoxUser;
 /**
  * E2E tests for openvidu-testapp.
  *
- * @author Pablo Fuente (pablo.fuente@urjc.es)
+ * @author Pablo Fuente (pablofuenteperez@gmail.com)
  * @since 1.1.1
  */
 @Tag("e2e")
@@ -136,7 +137,7 @@ public class OpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.id("auto-join-checkbox")).click();
 		user.getDriver().findElement(By.id("one2one-btn")).click();
 
-		user.getEventManager().waitUntilNumberOfEvent("videoPlaying", 4);
+		user.getEventManager().waitUntilEventReaches("videoPlaying", 4);
 		
 		try {
 			System.out.println(getBase64Screenshot(user));
@@ -146,17 +147,8 @@ public class OpenViduTestAppE2eTest {
 
 		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
 				true, true));
-
-		user.getDriver().findElement(By.id("remove-user-btn")).click();
-
-		user.getEventManager().waitUntilNumberOfEvent("streamDestroyed", 1);
-		user.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 1);
-
-		user.getDriver().findElement(By.id("remove-user-btn")).click();
-
-		user.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 2);
-
-		user.dispose();
+		
+		gracefullyLeaveParticipants(2);
 	}
 	
 	@Test
@@ -179,11 +171,11 @@ public class OpenViduTestAppE2eTest {
 			el.click();
 		}
 
-		user.getEventManager().waitUntilNumberOfEvent("connectionCreated", 4);
-		user.getEventManager().waitUntilNumberOfEvent("accessAllowed", 2);
-		user.getEventManager().waitUntilNumberOfEvent("videoElementCreated", 4);
-		user.getEventManager().waitUntilNumberOfEvent("streamCreated", 1);
-		user.getEventManager().waitUntilNumberOfEvent("videoPlaying", 4);
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 2);
+		user.getEventManager().waitUntilEventReaches("videoElementCreated", 4);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 1);
+		user.getEventManager().waitUntilEventReaches("videoPlaying", 4);
 		
 		try {
 			System.out.println(getBase64Screenshot(user));
@@ -193,15 +185,8 @@ public class OpenViduTestAppE2eTest {
 
 		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
 				true, false));
-
-		user.getDriver().findElement(By.id("remove-user-btn")).click();
-
-		user.getEventManager().waitUntilNumberOfEvent("streamDestroyed", 1);
-		user.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 1);
-
-		user.getDriver().findElement(By.id("remove-user-btn")).click();
-
-		user.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 2);
+		
+		gracefullyLeaveParticipants(2);
 	}
 
 	@Test
@@ -224,11 +209,11 @@ public class OpenViduTestAppE2eTest {
 			el.click();
 		}
 
-		user.getEventManager().waitUntilNumberOfEvent("connectionCreated", 4);
-		user.getEventManager().waitUntilNumberOfEvent("accessAllowed", 2);
-		user.getEventManager().waitUntilNumberOfEvent("videoElementCreated", 4);
-		user.getEventManager().waitUntilNumberOfEvent("streamCreated", 1);
-		user.getEventManager().waitUntilNumberOfEvent("videoPlaying", 4);
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 2);
+		user.getEventManager().waitUntilEventReaches("videoElementCreated", 4);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 1);
+		user.getEventManager().waitUntilEventReaches("videoPlaying", 4);
 		
 		try {
 			System.out.println(getBase64Screenshot(user));
@@ -238,15 +223,8 @@ public class OpenViduTestAppE2eTest {
 
 		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
 				false, true));
-
-		user.getDriver().findElement(By.id("remove-user-btn")).click();
-
-		user.getEventManager().waitUntilNumberOfEvent("streamDestroyed", 1);
-		user.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 1);
-
-		user.getDriver().findElement(By.id("remove-user-btn")).click();
-
-		user.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 2);
+		
+		gracefullyLeaveParticipants(2);
 	}
 
 	@Test
@@ -260,7 +238,7 @@ public class OpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.id("auto-join-checkbox")).click();
 		user.getDriver().findElement(By.id("one2many-btn")).click();
 
-		user.getEventManager().waitUntilNumberOfEvent("videoPlaying", 4);
+		user.getEventManager().waitUntilEventReaches("videoPlaying", 4);
 		
 		try {
 			System.out.println(getBase64Screenshot(user));
@@ -269,10 +247,8 @@ public class OpenViduTestAppE2eTest {
 		}
 
 		user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true);
-
-		user.getDriver().findElements(By.className(("leave-btn"))).get(0).click();
-
-		user.getEventManager().waitUntilNumberOfEvent("streamDestroyed", 3);
+		
+		gracefullyLeaveParticipants(4);
 	}
 
 	@Test
@@ -287,10 +263,10 @@ public class OpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.className("subscribe-remote-check")).click();
 		user.getDriver().findElement(By.className("join-btn")).click();
 
-		user.getEventManager().waitUntilNumberOfEvent("connectionCreated", 1);
-		user.getEventManager().waitUntilNumberOfEvent("accessAllowed", 1);
-		user.getEventManager().waitUntilNumberOfEvent("videoElementCreated", 1);
-		user.getEventManager().waitUntilNumberOfEvent("remoteVideoPlaying", 1);
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
+		user.getEventManager().waitUntilEventReaches("videoElementCreated", 1);
+		user.getEventManager().waitUntilEventReaches("remoteVideoPlaying", 1);
 		
 		try {
 			System.out.println(getBase64Screenshot(user));
@@ -300,10 +276,8 @@ public class OpenViduTestAppE2eTest {
 
 		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
 				true, true));
-
-		user.getDriver().findElement(By.className(("leave-btn"))).click();
-
-		user.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 1);
+		
+		gracefullyLeaveParticipants(1);
 	}
 	
 	@Test
@@ -318,8 +292,8 @@ public class OpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.className("subscribe-remote-check")).click();
 		user.getDriver().findElement(By.className("join-btn")).click();
 
-		user.getEventManager().waitUntilNumberOfEvent("connectionCreated", 1);
-		user.getEventManager().waitUntilNumberOfEvent("accessAllowed", 1);
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
 		
 		Thread.sleep(3000);
 		
@@ -328,10 +302,8 @@ public class OpenViduTestAppE2eTest {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
-		user.getDriver().findElement(By.className(("leave-btn"))).click();
-
-		user.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 1);
+		
+		gracefullyLeaveParticipants(1);
 	}
 
 	@Test
@@ -347,10 +319,10 @@ public class OpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.className("subscribe-remote-check")).click();
 		user.getDriver().findElement(By.className("join-btn")).click();
 
-		user.getEventManager().waitUntilNumberOfEvent("connectionCreated", 1);
-		user.getEventManager().waitUntilNumberOfEvent("accessAllowed", 1);
-		user.getEventManager().waitUntilNumberOfEvent("videoElementCreated", 1);
-		user.getEventManager().waitUntilNumberOfEvent("remoteVideoPlaying", 1);
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
+		user.getEventManager().waitUntilEventReaches("videoElementCreated", 1);
+		user.getEventManager().waitUntilEventReaches("remoteVideoPlaying", 1);
 		
 		try {
 			System.out.println(getBase64Screenshot(user));
@@ -360,10 +332,8 @@ public class OpenViduTestAppE2eTest {
 
 		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
 				true, true));
-
-		user.getDriver().findElement(By.className(("leave-btn"))).click();
-
-		user.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 1);
+		
+		gracefullyLeaveParticipants(1);
 	}
 
 	@Test
@@ -384,11 +354,11 @@ public class OpenViduTestAppE2eTest {
 			el.sendKeys(Keys.ENTER);
 		}
 
-		user.getEventManager().waitUntilNumberOfEvent("connectionCreated", 16);
-		user.getEventManager().waitUntilNumberOfEvent("accessAllowed", 4);
-		user.getEventManager().waitUntilNumberOfEvent("videoElementCreated", 16);
-		user.getEventManager().waitUntilNumberOfEvent("streamCreated", 6);
-		user.getEventManager().waitUntilNumberOfEvent("videoPlaying", 16);
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 16);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 4);
+		user.getEventManager().waitUntilEventReaches("videoElementCreated", 16);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 6);
+		user.getEventManager().waitUntilEventReaches("videoPlaying", 16);
 		
 		try {
 			System.out.println(getBase64Screenshot(user));
@@ -398,21 +368,8 @@ public class OpenViduTestAppE2eTest {
 
 		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
 				true, true));
-
-		user.getDriver().findElement(By.id(("remove-user-btn"))).sendKeys(Keys.ENTER);
-		user.getEventManager().waitUntilNumberOfEvent("streamDestroyed", 3);
-		user.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 1);
-
-		user.getDriver().findElement(By.id(("remove-user-btn"))).sendKeys(Keys.ENTER);
-		user.getEventManager().waitUntilNumberOfEvent("streamDestroyed", 4);
-		user.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 2);
-
-		user.getDriver().findElement(By.id(("remove-user-btn"))).sendKeys(Keys.ENTER);
-		user.getEventManager().waitUntilNumberOfEvent("streamDestroyed", 5);
-		user.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 3);
-
-		user.getDriver().findElement(By.id(("remove-user-btn"))).sendKeys(Keys.ENTER);
-		user.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 4);
+		
+		gracefullyLeaveParticipants(4);
 	}
 
 	@Test
@@ -453,11 +410,11 @@ public class OpenViduTestAppE2eTest {
 			el.sendKeys(Keys.ENTER);
 		}
 
-		user.getEventManager().waitUntilNumberOfEvent("connectionCreated", 16);
-		user.getEventManager().waitUntilNumberOfEvent("accessAllowed", 4);
-		user.getEventManager().waitUntilNumberOfEvent("videoElementCreated", 16);
-		user.getEventManager().waitUntilNumberOfEvent("streamCreated", 6);
-		user.getEventManager().waitUntilNumberOfEvent("videoPlaying", 16);
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 16);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 4);
+		user.getEventManager().waitUntilEventReaches("videoElementCreated", 16);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 6);
+		user.getEventManager().waitUntilEventReaches("videoPlaying", 16);
 		
 		try {
 			System.out.println(getBase64Screenshot(user));
@@ -467,21 +424,8 @@ public class OpenViduTestAppE2eTest {
 
 		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
 				true, true));
-
-		user.getDriver().findElement(By.id(("remove-user-btn"))).sendKeys(Keys.ENTER);
-		user.getEventManager().waitUntilNumberOfEvent("streamDestroyed", 3);
-		user.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 1);
-
-		user.getDriver().findElement(By.id(("remove-user-btn"))).sendKeys(Keys.ENTER);
-		user.getEventManager().waitUntilNumberOfEvent("streamDestroyed", 4);
-		user.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 2);
-
-		user.getDriver().findElement(By.id(("remove-user-btn"))).sendKeys(Keys.ENTER);
-		user.getEventManager().waitUntilNumberOfEvent("streamDestroyed", 5);
-		user.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 3);
-
-		user.getDriver().findElement(By.id(("remove-user-btn"))).sendKeys(Keys.ENTER);
-		user.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 4);
+		
+		gracefullyLeaveParticipants(4);
 	}
 	
 	@Test
@@ -495,7 +439,7 @@ public class OpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.id("auto-join-checkbox")).click();
 		user.getDriver().findElement(By.id("one2one-btn")).click();
 
-		user.getEventManager().waitUntilNumberOfEvent("videoPlaying", 4);
+		user.getEventManager().waitUntilEventReaches("videoPlaying", 4);
 		
 		try {
 			System.out.println(getBase64Screenshot(user));
@@ -505,17 +449,8 @@ public class OpenViduTestAppE2eTest {
 
 		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
 				true, true));
-
-		user.getDriver().findElement(By.id("remove-user-btn")).click();
-
-		user.getEventManager().waitUntilNumberOfEvent("streamDestroyed", 1);
-		user.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 1);
-
-		user.getDriver().findElement(By.id("remove-user-btn")).click();
-
-		user.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 2);
-
-		user.dispose();
+		
+		gracefullyLeaveParticipants(2);
 	}
 	
 	@Test
@@ -550,12 +485,12 @@ public class OpenViduTestAppE2eTest {
 			user2.getDriver().findElement(By.id("add-user-btn")).click();
 			user2.getDriver().findElement(By.className("join-btn")).click();
 			try {
-				user2.getEventManager().waitUntilNumberOfEvent("videoPlaying", 2);
+				user2.getEventManager().waitUntilEventReaches("videoPlaying", 2);
 				Assert.assertTrue(user2.getEventManager()
 						.assertMediaTracks(user2.getDriver().findElements(By.tagName("video")), true, true));
-				user2.getEventManager().waitUntilNumberOfEvent("streamDestroyed", 1);
+				user2.getEventManager().waitUntilEventReaches("streamDestroyed", 1);
 				user2.getDriver().findElement(By.id("remove-user-btn")).click();
-				user2.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 1);
+				user2.getEventManager().waitUntilEventReaches("sessionDisconnected", 1);
 			} catch (Exception e) {
 				e.printStackTrace();
 				Thread.currentThread().interrupt();
@@ -568,7 +503,7 @@ public class OpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.id("add-user-btn")).click();
 		user.getDriver().findElement(By.className("join-btn")).click();
 
-		user.getEventManager().waitUntilNumberOfEvent("videoPlaying", 2);
+		user.getEventManager().waitUntilEventReaches("videoPlaying", 2);
 		
 		try {
 			System.out.println(getBase64Screenshot(user));
@@ -578,10 +513,8 @@ public class OpenViduTestAppE2eTest {
 
 		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
 				true, true));
-
-		user.getDriver().findElement(By.id("remove-user-btn")).click();
-
-		user.getEventManager().waitUntilNumberOfEvent("sessionDisconnected", 1);
+		
+		gracefullyLeaveParticipants(1);
 
 		t.join();
 
@@ -591,10 +524,122 @@ public class OpenViduTestAppE2eTest {
 			}
 		}
 	}
+	
+	@Test
+	@DisplayName("Signal message")
+	void oneToManySignalMessage() throws Exception {
+		
+		setupBrowser("chrome");
+
+		log.info("Signal message");
+
+		WebElement addUser = user.getDriver().findElement(By.id("add-user-btn"));
+		for (int i = 0; i < 4; i++) {
+			addUser.click();
+		}
+		
+		List<WebElement> publishCheckboxes = user.getDriver().findElements(By.className("publish-checkbox"));
+		for (WebElement el : publishCheckboxes) {
+			el.click();
+		}
+		
+		List<WebElement> joinButtons = user.getDriver().findElements(By.className("join-btn"));
+		for (WebElement el : joinButtons) {
+			el.sendKeys(Keys.ENTER);
+		}
+
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 16);
+		user.getDriver().findElements(By.className(("message-btn"))).get(0).click();
+		user.getEventManager().waitUntilEventReaches("signal", 4);
+		
+		gracefullyLeaveParticipants(4);
+		
+	}
+	
+	@Test
+	@DisplayName("Subscribe Unsubscribe")
+	void subscribeUnsubscribeTest() throws Exception {
+		
+		setupBrowser("chrome");
+
+		log.info("Signal message");
+
+		user.getDriver().findElement(By.id("one2one-btn")).click();
+		user.getDriver().findElements(By.className("publish-checkbox")).get(0).click();
+		
+		List<WebElement> joinButtons = user.getDriver().findElements(By.className("join-btn"));
+		for (WebElement el : joinButtons) {
+			el.sendKeys(Keys.ENTER);
+		}
+
+		user.getEventManager().waitUntilEventReaches("videoPlaying", 2);
+		
+		Assert.assertEquals(user.getDriver().findElements(By.tagName("video")).size(), 2);
+		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
+				true, true));
+		
+		user.getDriver().findElements(By.className(("sub-btn"))).get(0).click();
+		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 1));
+		user.getDriver().findElements(By.className(("sub-btn"))).get(0).click();
+		user.getEventManager().waitUntilEventReaches("videoPlaying", 3);
+		
+		Assert.assertEquals(user.getDriver().findElements(By.tagName("video")).size(), 2);
+		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
+				true, true));
+		
+		gracefullyLeaveParticipants(2);
+		
+	}
+	
+	@Test
+	@DisplayName("Publish Unpublish")
+	void publishUnpublishTest() throws Exception {
+		
+		setupBrowser("chrome");
+
+		log.info("Signal message");
+
+		user.getDriver().findElement(By.id("auto-join-checkbox")).click();
+		user.getDriver().findElement(By.id("one2one-btn")).click();
+
+		user.getEventManager().waitUntilEventReaches("videoPlaying", 4);
+
+		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
+				true, true));
+
+		List<WebElement> publishButtons = user.getDriver().findElements(By.className("publish-btn"));
+		for (WebElement el : publishButtons) {
+			el.click();
+		}
+		
+		user.getEventManager().waitUntilEventReaches("streamDestroyed", 4);
+		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 0));
+		
+		for (WebElement el : publishButtons) {
+			el.click();
+		}
+		
+		user.getEventManager().waitUntilEventReaches("videoPlaying", 8);
+		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
+				true, true));
+		
+		gracefullyLeaveParticipants(2);
+		
+	}
+	
+	private void gracefullyLeaveParticipants(int numberOfParticipants) throws Exception {
+		int accumulatedConnectionDestroyed = 0;
+		for (int j = 1; j <= numberOfParticipants; j++) {
+			user.getDriver().findElement(By.id("remove-user-btn")).sendKeys(Keys.ENTER);
+			user.getEventManager().waitUntilEventReaches("sessionDisconnected", j);
+			accumulatedConnectionDestroyed = (j != numberOfParticipants) ? (accumulatedConnectionDestroyed + numberOfParticipants - j) : (accumulatedConnectionDestroyed);
+			user.getEventManager().waitUntilEventReaches("connectionDestroyed", accumulatedConnectionDestroyed);
+		}
+	}
 
 	private String getBase64Screenshot(BrowserUser user) throws Exception {
 		String screenshotBase64 = ((TakesScreenshot) user.getDriver()).getScreenshotAs(BASE64);
 		return "data:image/png;base64," + screenshotBase64;
-	} 
+	}
 
 }
