@@ -18,21 +18,20 @@
     "prepublish": "cd ts/OpenViduInternal && tsc && cd ../OpenVidu && tsc && cd ../.. && tsc --declaration ts/OpenVidu/index.ts --outDir lib --sourceMap && tsc --declaration ts/OpenVidu/Main.ts --outDir lib --sourceMap"
   },
   "dependencies": {
-    "wolfy87-eventemitter": "4.2.9",
-    "@types/wolfy87-eventemitter": "4.2.31",
-    "webrtc-adapter": "5.0.4",
-    "uuid": "~2.0.1",
+    "wolfy87-eventemitter": "5.2.4",
+    "webrtc-adapter": "6.0.4",
+    "uuid": "3.1.0",
     "freeice": "2.2.0",
-    "inherits": "^2.0.3",
-    "merge": "^1.2.0",
-    "ua-parser-js": "^0.7.7",
+    "inherits": "2.0.3",
+    "merge": "1.2.0",
+    "ua-parser-js": "0.7.17",
     "hark": "1.1.6",
     "sdp-translator": "0.1.24"
   },
   "devDependencies": {
-    "typescript": "2.6.1",
-    "browserify": "14.5.0",
-    "tsify": "3.0.3",
-    "uglify-js": "3.1.9"
+    "typescript": "2.6.2",
+    "browserify": "15.1.0",
+    "tsify": "3.0.4",
+    "uglify-js": "3.3.5"
   }
 }

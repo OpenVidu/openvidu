@@ -95,7 +95,7 @@ export class Stream {
     }
 
     emitStreamReadyEvent() {
-        this.ee.emitEvent('stream-ready'), [{}];
+        this.ee.emitEvent('stream-ready');
     }
 
     removeVideo(parentElement: string);
