@@ -54,7 +54,7 @@ export class Stream {
     public typeOfVideo: string; // 'CAMERA' or 'SCREEN'
 
     ee = new EventEmitter();
-    private wrStream: MediaStream;
+    private mediaStream: MediaStream;
     private wp: any;
     private video: HTMLVideoElement;
     private speechEvent: any;
@@ -72,7 +72,6 @@ export class Stream {
     private activeAudio = true;
     private activeVideo = true;
 
-    private videoSrcObject: MediaStream;
     private parentId: string;
     public isReadyToPublish: boolean = false;
     public isPublisherPublished: boolean = false;
@@ -89,25 +88,14 @@ export class Stream {
             this.isScreenRequested = true;
             this.connection = this.room.getLocalParticipant();
         }
-        this.addEventListener('src-added', (srcEvent) => {
-            this.videoSrcObject = srcEvent.srcObject;
-            if (this.video) this.video.srcObject = srcEvent.srcObject;
-            console.debug("Video srcObject [" + srcEvent.srcObject + "] added to stream [" + this.streamId + "]");
+        this.addEventListener('mediastream-updated', () => {
+            if (this.video) this.video.srcObject = this.mediaStream;
+            console.debug("Video srcObject [" + this.mediaStream + "] added to stream [" + this.streamId + "]");
         });
-    }
-
-    emitSrcEvent(wrstream) {
-        this.ee.emitEvent('src-added', [{
-            srcObject: wrstream
-        }]);
     }
 
     emitStreamReadyEvent() {
         this.ee.emitEvent('stream-ready'), [{}];
-    }
-
-    getVideoSrcObject() {
-        return this.videoSrcObject;
     }
 
     removeVideo(parentElement: string);
@@ -171,8 +159,8 @@ export class Stream {
         this.showMyRemote = true;
         this.localMirrored = true;
         if (wr) {
-            this.wrStream = wr;
-            this.emitSrcEvent(this.wrStream);
+            this.mediaStream = wr;
+            this.ee.emitEvent('mediastream-updated');
         }
     }
 
@@ -215,8 +203,8 @@ export class Stream {
         this.wp.send(data);
     }
 
-    getWrStream() {
-        return this.wrStream;
+    getMediaStream() {
+        return this.mediaStream;
     }
 
     getWebRtcPeer() {
@@ -257,7 +245,7 @@ export class Stream {
         this.video.id = (this.local ? 'local-' : 'remote-') + 'video-' + this.streamId;
         this.video.autoplay = true;
         this.video.controls = false;
-        this.video.srcObject = this.videoSrcObject;
+        this.ee.emitEvent('mediastream-updated');
 
         if (this.local && !this.displayMyRemote()) {
             this.video.muted = true;
@@ -393,8 +381,8 @@ export class Stream {
             userStream.getVideoTracks()[0].enabled = this.activeVideo;
         }
 
-        this.wrStream = userStream;
-        this.emitSrcEvent(this.wrStream);
+        this.mediaStream = userStream;
+        this.ee.emitEvent('mediastream-updated');
 
         callback(undefined, this);
     }
@@ -469,7 +457,7 @@ export class Stream {
             }
 
             let options: any = {
-                videoStream: this.wrStream,
+                videoStream: this.mediaStream,
                 mediaConstraints: userMediaConstraints,
                 onicecandidate: this.connection.sendIceCandidate.bind(this.connection),
             }
@@ -562,16 +550,16 @@ export class Stream {
             // Avoids to subscribe to your own stream remotely 
             // except when showMyRemote is true
             if (!this.local || this.displayMyRemote()) {
-                this.wrStream = pc.getRemoteStreams()[0];
-                console.debug("Peer remote stream", this.wrStream);
+                this.mediaStream = pc.getRemoteStreams()[0];
+                console.debug("Peer remote stream", this.mediaStream);
 
-                if (this.wrStream != undefined) {
+                if (this.mediaStream != undefined) {
 
-                    this.emitSrcEvent(this.wrStream);
+                    this.ee.emitEvent('mediastream-updated');
 
-                    if (this.wrStream.getAudioTracks()[0] != null) {
+                    if (this.mediaStream.getAudioTracks()[0] != null) {
 
-                        this.speechEvent = kurentoUtils.WebRtcPeer.hark(this.wrStream, { threshold: this.room.thresholdSpeaker });
+                        this.speechEvent = kurentoUtils.WebRtcPeer.hark(this.mediaStream, { threshold: this.room.thresholdSpeaker });
 
                         this.speechEvent.on('speaking', () => {
                             //this.room.addParticipantSpeaking(participantId);
@@ -591,8 +579,7 @@ export class Stream {
 
                     }
                 }
-                //let thumbnailId = this.video.thumb;
-                this.video.srcObject = this.wrStream;
+                // let thumbnailId = this.video.thumb;
                 this.video.oncanplay = () => {
                     if (this.local && this.displayMyRemote()) {
                         console.info("Your own remote 'Stream' with id [" + this.streamId + "] video is now playing");
@@ -622,11 +609,11 @@ export class Stream {
         if (this.wp) {
             this.wp.dispose();
         } else {
-            if (this.wrStream) {
-                this.wrStream.getAudioTracks().forEach(function (track) {
+            if (this.mediaStream) {
+                this.mediaStream.getAudioTracks().forEach(function (track) {
                     track.stop && track.stop()
                 })
-                this.wrStream.getVideoTracks().forEach(function (track) {
+                this.mediaStream.getVideoTracks().forEach(function (track) {
                     track.stop && track.stop()
                 })
             }
@@ -652,11 +639,11 @@ export class Stream {
         if (this.wp) {
             this.wp.dispose();
         } else {
-            if (this.wrStream) {
-                this.wrStream.getAudioTracks().forEach(function (track) {
+            if (this.mediaStream) {
+                this.mediaStream.getAudioTracks().forEach(function (track) {
                     track.stop && track.stop()
                 })
-                this.wrStream.getVideoTracks().forEach(function (track) {
+                this.mediaStream.getVideoTracks().forEach(function (track) {
                     track.stop && track.stop()
                 })
             }
@@ -670,11 +657,6 @@ export class Stream {
     }
 
     private configureOptions(options) {
-        if (options.id) {
-            this.streamId = options.id;
-        } else {
-            this.streamId = "WEBCAM";
-        }
         this.connection = options.connection;
         this.recvVideo = options.recvVideo || false;
         this.recvAudio = options.recvAudio || false;
@@ -688,6 +670,12 @@ export class Stream {
         this.hasAudio = ((this.recvAudio || this.sendAudio) != undefined) ? (this.recvAudio || this.sendAudio) : false;
         this.hasVideo = ((this.recvVideo || this.sendVideo) != undefined) ? (this.recvVideo || this.sendVideo) : false;
         this.typeOfVideo = options.typeOfVideo;
+
+        if (options.id) {
+            this.streamId = options.id;
+        } else {
+            this.streamId =  this.sendVideo ? "WEBCAM" : "MICRO";
+        }
     }
 
     configureScreenOptions(options) {

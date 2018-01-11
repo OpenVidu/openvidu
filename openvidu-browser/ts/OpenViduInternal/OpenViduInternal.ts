@@ -88,7 +88,7 @@ export class OpenViduInternal {
                         // If the user wants to send audio with the screen capturing
                         navigator.mediaDevices.getUserMedia({ audio: true, video: false })
                             .then(userStream => {
-                                this.camera.getWrStream().addTrack(userStream.getAudioTracks()[0]);
+                                this.camera.getMediaStream().addTrack(userStream.getAudioTracks()[0]);
                                 this.camera.isScreenRequestedReady = true;
                                 this.camera.ee.emitEvent('screen-ready');
                                 if (callback) {
