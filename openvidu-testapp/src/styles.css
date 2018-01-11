@@ -43,13 +43,17 @@ button {
 }
 
 .video-container div.data-node {
+  width: 120px;
+  height: 90px;
   float: left;
   position: relative;
   margin-left: -120px;
-  margin-top: -14px;
+  margin-top: 0;
 }
 
 .video-container p {
+  margin-top: 0;
+  width: fit-content;
   background: #ffffff;
   padding-left: 5px;
   padding-right: 5px;
@@ -57,6 +61,26 @@ button {
   font-weight: 100;
   font-size: 14px;
   border-bottom-right-radius: 2px;
+}
+
+.video-container div.data-node .sub-btn {
+  outline: 0;
+  border: none;
+  background: white;
+  cursor: pointer;
+  padding: 0;
+  margin-top: 40px;
+  border-top-right-radius: 2px;
+}
+
+.video-container div.data-node .sub-btn:hover {
+  color: #4d4d4d;
+}
+
+.video-container div.data-node .material-icons {
+  font-size: 17px;
+  width: 17px;
+  height: 17px;
 }
 
 .mat-expansion-panel-body {
