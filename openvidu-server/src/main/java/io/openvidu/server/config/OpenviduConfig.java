@@ -14,6 +14,9 @@ public class OpenviduConfig {
 
 	@Value("${openvidu.secret}")
 	private String openviduSecret;
+	
+	@Value("${openvidu.cdr}")
+	private boolean openviduCdr;
 
 	public String getOpenViduPublicUrl() {
 		return this.openviduPublicUrl;
@@ -29,6 +32,10 @@ public class OpenviduConfig {
 	
 	public boolean isOpenViduSecret(String secret) {
 		return secret.equals(this.getOpenViduSecret());
+	}
+	
+	public boolean isCdrEnabled() {
+		return this.openviduCdr;
 	}
 
 }

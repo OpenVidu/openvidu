@@ -92,7 +92,7 @@ import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.core.Token;
 import io.openvidu.server.kurento.KurentoClientProvider;
 import io.openvidu.server.kurento.KurentoClientSessionInfo;
-import io.openvidu.server.kurento.core.KurentoSessionHandler;
+import io.openvidu.server.kurento.core.KurentoSessionEventsHandler;
 import io.openvidu.server.kurento.core.KurentoSessionManager;
 
 /**
@@ -126,7 +126,7 @@ public class RoomManagerTest {
   @Mock
   private KurentoClientProvider kcProvider;
   @Mock
-  private KurentoSessionHandler roomHandler;
+  private KurentoSessionEventsHandler roomHandler;
 
   @Mock
   private KurentoClient kurentoClient;
@@ -1351,7 +1351,7 @@ public class RoomManagerTest {
   private Set<Participant> userJoinRoom(final String room, String user, String pid,
       boolean joinMustSucceed) {
     return userJoinRoom(room, user, pid, joinMustSucceed, true);
-  }*/
+  }
 
   private Set<Participant> userJoinRoom(final String room, String user, String pid,
       boolean joinMustSucceed) {
@@ -1376,5 +1376,5 @@ public class RoomManagerTest {
     verify(kurentoClient, times(0)).createMediaPipeline(kurentoClientCaptor.capture());
 
     return existingPeers;
-  }
+  }*/
 }

@@ -36,7 +36,7 @@ public class KurentoSessionManager extends SessionManager {
 	private KurentoClientProvider kcProvider;
 
 	@Autowired
-	private KurentoSessionHandler sessionHandler;
+	private KurentoSessionEventsHandler sessionHandler;
 
 	@Override
 	public synchronized void joinRoom(Participant participant, String sessionId, Integer transactionId) {
@@ -190,7 +190,7 @@ public class KurentoSessionManager extends SessionManager {
 			OpenViduException e = new OpenViduException(Code.MEDIA_SDP_ERROR_CODE,
 					"Error generating SDP response for publishing user " + participant.getParticipantPublicId());
 			log.error("PARTICIPANT {}: Error publishing media", participant.getParticipantPublicId(), e);
-			sessionHandler.onPublishMedia(participant, transactionId, mediaOptions, sdpAnswer, participants, e);
+			sessionHandler.onPublishMedia(participant, session.getSessionId(), transactionId, mediaOptions, sdpAnswer, participants, e);
 		}
 
 		session.newPublisher(participant);
@@ -202,35 +202,44 @@ public class KurentoSessionManager extends SessionManager {
 		participants = kurentoParticipant.getSession().getParticipants();
 
 		if (sdpAnswer != null) {
-			sessionHandler.onPublishMedia(participant, transactionId, mediaOptions, sdpAnswer, participants, null);
+			sessionHandler.onPublishMedia(participant, session.getSessionId(), transactionId, mediaOptions, sdpAnswer, participants, null);
 		}
 	}
-
+	
 	@Override
-	public void onIceCandidate(Participant participant, String endpointName, String candidate, int sdpMLineIndex,
-			String sdpMid, Integer transactionId) {
+	public void unpublishVideo(Participant participant, Integer transactionId) {
 		try {
 			KurentoParticipant kParticipant = (KurentoParticipant) participant;
-			log.debug("Request [ICE_CANDIDATE] endpoint={} candidate={} " + "sdpMLineIdx={} sdpMid={} ({})",
-					endpointName, candidate, sdpMLineIndex, sdpMid, participant.getParticipantPublicId());
-			kParticipant.addIceCandidate(endpointName, new IceCandidate(candidate, sdpMid, sdpMLineIndex));
-			sessionHandler.onRecvIceCandidate(participant, transactionId, null);
+			KurentoSession session = kParticipant.getSession();
+
+			log.debug("Request [UNPUBLISH_MEDIA] ({})", participant.getParticipantPublicId());
+			if (!participant.isStreaming()) {
+				throw new OpenViduException(Code.USER_NOT_STREAMING_ERROR_CODE,
+						"Participant '" + participant.getParticipantPublicId() + "' is not streaming media");
+			}
+			kParticipant.unpublishMedia();
+			session.cancelPublisher(participant);
+
+			Set<Participant> participants = session.getParticipants();
+			
+			sessionHandler.onUnpublishMedia(participant, participants, transactionId, null);
+
 		} catch (OpenViduException e) {
-			log.error("PARTICIPANT {}: Error receiving ICE " + "candidate (epName={}, candidate={})",
-					participant.getParticipantPublicId(), endpointName, candidate, e);
-			sessionHandler.onRecvIceCandidate(participant, transactionId, e);
+			log.warn("PARTICIPANT {}: Error unpublishing media", participant.getParticipantPublicId(), e);
+			sessionHandler.onUnpublishMedia(participant, null, transactionId, e);
 		}
 	}
-
+	
 	@Override
 	public void subscribe(Participant participant, String senderName, String sdpOffer, Integer transactionId) {
 		String sdpAnswer = null;
+		Session session = null;
 		try {
 			log.debug("Request [SUBSCRIBE] remoteParticipant={} sdpOffer={} ({})", senderName, sdpOffer,
 					participant.getParticipantPublicId());
 
 			KurentoParticipant kParticipant = (KurentoParticipant) participant;
-			Session session = ((KurentoParticipant) participant).getSession();
+			session = ((KurentoParticipant) participant).getSession();
 			Participant senderParticipant = session.getParticipantByPublicId(senderName);
 
 			if (senderParticipant == null) {
@@ -258,10 +267,10 @@ public class KurentoSessionManager extends SessionManager {
 			}
 		} catch (OpenViduException e) {
 			log.error("PARTICIPANT {}: Error subscribing to {}", participant.getParticipantPublicId(), senderName, e);
-			sessionHandler.onSubscribe(participant, null, transactionId, e);
+			sessionHandler.onSubscribe(participant, session.getSessionId(), senderName, null, transactionId, e);
 		}
 		if (sdpAnswer != null) {
-			sessionHandler.onSubscribe(participant, sdpAnswer, transactionId, null);
+			sessionHandler.onSubscribe(participant, session.getSessionId(), senderName, sdpAnswer, transactionId, null);
 		}
 	}
 
@@ -284,7 +293,7 @@ public class KurentoSessionManager extends SessionManager {
 
 		kParticipant.cancelReceivingMedia(senderName);
 
-		sessionHandler.onUnsubscribe(participant, transactionId, null);
+		sessionHandler.onUnsubscribe(participant, senderName, transactionId, null);
 	}
 
 	@Override
@@ -301,27 +310,21 @@ public class KurentoSessionManager extends SessionManager {
 	}
 
 	@Override
-	public void unpublishVideo(Participant participant, Integer transactionId) {
+	public void onIceCandidate(Participant participant, String endpointName, String candidate, int sdpMLineIndex,
+			String sdpMid, Integer transactionId) {
 		try {
 			KurentoParticipant kParticipant = (KurentoParticipant) participant;
-			KurentoSession session = kParticipant.getSession();
-
-			log.debug("Request [UNPUBLISH_MEDIA] ({})", participant.getParticipantPublicId());
-			if (!participant.isStreaming()) {
-				throw new OpenViduException(Code.USER_NOT_STREAMING_ERROR_CODE,
-						"Participant '" + participant.getParticipantPublicId() + "' is not streaming media");
-			}
-			kParticipant.unpublishMedia();
-			session.cancelPublisher(participant);
-
-			Set<Participant> participants = session.getParticipants();
-			sessionHandler.onUnpublishMedia(participant, participants, transactionId, null);
-
+			log.debug("Request [ICE_CANDIDATE] endpoint={} candidate={} " + "sdpMLineIdx={} sdpMid={} ({})",
+					endpointName, candidate, sdpMLineIndex, sdpMid, participant.getParticipantPublicId());
+			kParticipant.addIceCandidate(endpointName, new IceCandidate(candidate, sdpMid, sdpMLineIndex));
+			sessionHandler.onRecvIceCandidate(participant, transactionId, null);
 		} catch (OpenViduException e) {
-			log.warn("PARTICIPANT {}: Error unpublishing media", participant.getParticipantPublicId(), e);
-			sessionHandler.onUnpublishMedia(participant, null, transactionId, e);
+			log.error("PARTICIPANT {}: Error receiving ICE " + "candidate (epName={}, candidate={})",
+					participant.getParticipantPublicId(), endpointName, candidate, e);
+			sessionHandler.onRecvIceCandidate(participant, transactionId, e);
 		}
 	}
+
 
 	/**
 	 * Creates a session if it doesn't already exist. The session's id will be

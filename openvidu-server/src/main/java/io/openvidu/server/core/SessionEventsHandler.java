@@ -1,11 +1,10 @@
-package io.openvidu.server.kurento.core;
+package io.openvidu.server.core;
 
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.kurento.client.IceCandidate;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.gson.JsonArray;
@@ -15,21 +14,24 @@ import com.google.gson.JsonObject;
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
+import io.openvidu.server.cdr.CallDetailRecord;
 import io.openvidu.server.config.InfoHandler;
-import io.openvidu.server.core.MediaOptions;
-import io.openvidu.server.core.Participant;
+import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.rpc.RpcNotificationService;
 
-public class KurentoSessionHandler {
+public class SessionEventsHandler {
 
 	@Autowired
-	private RpcNotificationService rpcNotificationService;
+	protected RpcNotificationService rpcNotificationService;
 
 	@Autowired
-	private InfoHandler infoHandler;
+	protected InfoHandler infoHandler;
 
-	public KurentoSessionHandler() {
-	}
+	@Autowired
+	protected CallDetailRecord CDR;
+	
+	@Autowired
+	protected OpenviduConfig openviduConfig;
 
 	public void onSessionClosed(String sessionId, Set<Participant> participants) {
 		JsonObject notifParams = new JsonObject();
@@ -103,12 +105,22 @@ public class KurentoSessionHandler {
 			rpcNotificationService.sendErrorResponse(participant.getParticipantPrivateId(), transactionId, null, error);
 			return;
 		}
+		
+		boolean isPublishing = false;
+		if (openviduConfig.isCdrEnabled()) {
+			isPublishing = CDR.stopPublisher(participant.getParticipantPublicId());
+			CDR.stopAllSubscriptions(participant.getParticipantPublicId());
+		}
 
 		JsonObject params = new JsonObject();
 		params.addProperty(ProtocolElements.PARTICIPANTLEFT_NAME_PARAM, participant.getParticipantPublicId());
 		for (Participant p : remainingParticipants) {
 			rpcNotificationService.sendNotification(p.getParticipantPrivateId(),
 					ProtocolElements.PARTICIPANTLEFT_METHOD, params);
+			
+			if (isPublishing && openviduConfig.isCdrEnabled()) {
+				CDR.stopSubscriber(p.getParticipantPublicId(), participant.getParticipantPublicId());
+			}
 		}
 
 		if (transactionId != null) {
@@ -117,9 +129,10 @@ public class KurentoSessionHandler {
 			rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, new JsonObject());
 		}
 		rpcNotificationService.closeRpcSession(participant.getParticipantPrivateId());
+
 	}
 
-	public void onPublishMedia(Participant participant, Integer transactionId, MediaOptions mediaOptions,
+	public void onPublishMedia(Participant participant, String sessionId, Integer transactionId, MediaOptions mediaOptions,
 			String sdpAnswer, Set<Participant> participants, OpenViduException error) {
 		if (error != null) {
 			rpcNotificationService.sendErrorResponse(participant.getParticipantPrivateId(), transactionId, null, error);
@@ -160,17 +173,42 @@ public class KurentoSessionHandler {
 						ProtocolElements.PARTICIPANTPUBLISHED_METHOD, params);
 			}
 		}
+
+		if (openviduConfig.isCdrEnabled()) {
+			CDR.recordNewPublisher(participant, sessionId, mediaOptions);
+		}
 	}
 
-	public void onRecvIceCandidate(Participant participant, Integer transactionId, OpenViduException error) {
+	public void onUnpublishMedia(Participant participant, Set<Participant> participants, Integer transactionId,
+			OpenViduException error) {
 		if (error != null) {
 			rpcNotificationService.sendErrorResponse(participant.getParticipantPrivateId(), transactionId, null, error);
 			return;
 		}
 		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, new JsonObject());
+		
+		if (openviduConfig.isCdrEnabled()) {
+			CDR.stopPublisher(participant.getParticipantPublicId());
+		}
+
+		JsonObject params = new JsonObject();
+		params.addProperty(ProtocolElements.PARTICIPANTUNPUBLISHED_NAME_PARAM, participant.getParticipantPublicId());
+
+		for (Participant p : participants) {
+			if (p.getParticipantPrivateId().equals(participant.getParticipantPrivateId())) {
+				continue;
+			} else {
+				rpcNotificationService.sendNotification(p.getParticipantPrivateId(),
+						ProtocolElements.PARTICIPANTUNPUBLISHED_METHOD, params);
+				if (openviduConfig.isCdrEnabled()) {
+					CDR.stopSubscriber(p.getParticipantPublicId(), participant.getParticipantPublicId());
+				}
+			}
+		}
 	}
 
-	public void onSubscribe(Participant participant, String sdpAnswer, Integer transactionId, OpenViduException error) {
+	public void onSubscribe(Participant participant, String sessionId, String senderName, String sdpAnswer, Integer transactionId,
+			OpenViduException error) {
 		if (error != null) {
 			rpcNotificationService.sendErrorResponse(participant.getParticipantPrivateId(), transactionId, null, error);
 			return;
@@ -178,14 +216,22 @@ public class KurentoSessionHandler {
 		JsonObject result = new JsonObject();
 		result.addProperty(ProtocolElements.RECEIVEVIDEO_SDPANSWER_PARAM, sdpAnswer);
 		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, result);
+
+		if (openviduConfig.isCdrEnabled()) {
+			CDR.recordNewSubscriber(participant, sessionId, senderName);
+		}
 	}
 
-	public void onUnsubscribe(Participant participant, Integer transactionId, OpenViduException error) {
+	public void onUnsubscribe(Participant participant, String senderName, Integer transactionId, OpenViduException error) {
 		if (error != null) {
 			rpcNotificationService.sendErrorResponse(participant.getParticipantPrivateId(), transactionId, null, error);
 			return;
 		}
 		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, new JsonObject());
+
+		if (openviduConfig.isCdrEnabled()) {
+			CDR.stopSubscriber(participant.getParticipantPublicId(), senderName);
+		}
 	}
 
 	public void onSendMessage(Participant participant, JsonObject message, Set<Participant> participants,
@@ -238,25 +284,12 @@ public class KurentoSessionHandler {
 		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, new JsonObject());
 	}
 
-	public void onUnpublishMedia(Participant participant, Set<Participant> participants, Integer transactionId,
-			OpenViduException error) {
+	public void onRecvIceCandidate(Participant participant, Integer transactionId, OpenViduException error) {
 		if (error != null) {
 			rpcNotificationService.sendErrorResponse(participant.getParticipantPrivateId(), transactionId, null, error);
 			return;
 		}
 		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, new JsonObject());
-
-		JsonObject params = new JsonObject();
-		params.addProperty(ProtocolElements.PARTICIPANTUNPUBLISHED_NAME_PARAM, participant.getParticipantPublicId());
-
-		for (Participant p : participants) {
-			if (p.getParticipantPrivateId().equals(participant.getParticipantPrivateId())) {
-				continue;
-			} else {
-				rpcNotificationService.sendNotification(p.getParticipantPrivateId(),
-						ProtocolElements.PARTICIPANTUNPUBLISHED_METHOD, params);
-			}
-		}
 	}
 
 	public void onParticipantEvicted(Participant participant) {
@@ -264,41 +297,7 @@ public class KurentoSessionHandler {
 				ProtocolElements.PARTICIPANTEVICTED_METHOD, new JsonObject());
 	}
 
-	// ------------ EVENTS FROM ROOM HANDLER -----
-
-	public void onIceCandidate(String roomName, String participantId, String endpointName, IceCandidate candidate) {
-		JsonObject params = new JsonObject();
-		params.addProperty(ProtocolElements.ICECANDIDATE_EPNAME_PARAM, endpointName);
-		params.addProperty(ProtocolElements.ICECANDIDATE_SDPMLINEINDEX_PARAM, candidate.getSdpMLineIndex());
-		params.addProperty(ProtocolElements.ICECANDIDATE_SDPMID_PARAM, candidate.getSdpMid());
-		params.addProperty(ProtocolElements.ICECANDIDATE_CANDIDATE_PARAM, candidate.getCandidate());
-		rpcNotificationService.sendNotification(participantId, ProtocolElements.ICECANDIDATE_METHOD, params);
-	}
-
-	public void onPipelineError(String roomName, Set<Participant> participants, String description) {
-		JsonObject notifParams = new JsonObject();
-		notifParams.addProperty(ProtocolElements.MEDIAERROR_ERROR_PARAM, description);
-		for (Participant p : participants) {
-			rpcNotificationService.sendNotification(p.getParticipantPrivateId(), ProtocolElements.MEDIAERROR_METHOD,
-					notifParams);
-		}
-	}
-
-	public void onMediaElementError(String roomName, String participantId, String description) {
-		JsonObject notifParams = new JsonObject();
-		notifParams.addProperty(ProtocolElements.MEDIAERROR_ERROR_PARAM, description);
-		rpcNotificationService.sendNotification(participantId, ProtocolElements.MEDIAERROR_METHOD, notifParams);
-	}
-
-	public void updateFilter(String roomName, Participant participant, String filterId, String state) {
-	}
-
-	public String getNextFilterState(String filterId, String state) {
-		return null;
-	}
-
 	public InfoHandler getInfoHandler() {
 		return this.infoHandler;
 	}
-
 }

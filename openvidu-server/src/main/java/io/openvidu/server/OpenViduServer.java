@@ -37,11 +37,12 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
+import io.openvidu.server.cdr.CallDetailRecord;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.kurento.AutodiscoveryKurentoClientProvider;
 import io.openvidu.server.kurento.KurentoClientProvider;
-import io.openvidu.server.kurento.core.KurentoSessionHandler;
+import io.openvidu.server.kurento.core.KurentoSessionEventsHandler;
 import io.openvidu.server.kurento.core.KurentoSessionManager;
 import io.openvidu.server.kurento.kms.FixedOneKmsManager;
 import io.openvidu.server.rest.NgrokRestController;
@@ -111,8 +112,14 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public KurentoSessionHandler kurentoSessionHandler() {
-		return new KurentoSessionHandler();
+	public KurentoSessionEventsHandler kurentoSessionEventsHandler() {
+		return new KurentoSessionEventsHandler();
+	}
+	
+	@Bean
+	@ConditionalOnMissingBean
+	public CallDetailRecord cdr() {
+		return new CallDetailRecord();
 	}
 
 	@Override

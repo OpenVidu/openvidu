@@ -17,9 +17,6 @@ public class Participant {
 
 	private final String METADATA_SEPARATOR = "%/%";
 
-	public Participant() {
-	}
-
 	public Participant(String participantPrivatetId, String participantPublicId, Token token, String clientMetadata) {
 		this.participantPrivatetId = participantPrivatetId;
 		this.participantPublicId = participantPublicId;

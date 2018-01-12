@@ -37,7 +37,7 @@ public class KurentoSession implements Session {
 	private CountDownLatch pipelineLatch = new CountDownLatch(1);
 
 	private KurentoClient kurentoClient;
-	private KurentoSessionHandler kurentoSessionHandler;
+	private KurentoSessionEventsHandler kurentoSessionHandler;
 
 	private volatile boolean closed = false;
 	
@@ -49,7 +49,7 @@ public class KurentoSession implements Session {
 	private volatile boolean pipelineReleased = false;
 	private boolean destroyKurentoClient;
 
-	public KurentoSession(String sessionId, KurentoClient kurentoClient, KurentoSessionHandler kurentoSessionHandler,
+	public KurentoSession(String sessionId, KurentoClient kurentoClient, KurentoSessionEventsHandler kurentoSessionHandler,
 			boolean destroyKurentoClient) {
 		this.sessionId = sessionId;
 		this.kurentoClient = kurentoClient;
@@ -119,7 +119,7 @@ public class KurentoSession implements Session {
 		KurentoParticipant participant = participants.get(participantPrivateId);
 		if (participant == null) {
 			throw new OpenViduException(Code.USER_NOT_FOUND_ERROR_CODE,
-					"User #" + participantPrivateId + " not found in session '" + sessionId + "'");
+					"Participant with private id " + participantPrivateId + " not found in session '" + sessionId + "'");
 		}
 		participant.releaseAllFilters();
 

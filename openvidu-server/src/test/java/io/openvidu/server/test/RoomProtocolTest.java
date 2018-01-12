@@ -60,7 +60,7 @@ import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.client.internal.Notification.Method;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Token;
-import io.openvidu.server.kurento.core.KurentoSessionHandler;
+import io.openvidu.server.kurento.core.KurentoSessionEventsHandler;
 import io.openvidu.server.rpc.RpcConnection;
 import io.openvidu.server.rpc.RpcHandler;
 import io.openvidu.server.rpc.RpcNotificationService;
@@ -83,7 +83,7 @@ public class RoomProtocolTest {
   @Mock
   private RpcHandler userControl;
   
-  private KurentoSessionHandler sessionHandler;
+  private KurentoSessionEventsHandler sessionHandler;
 
   private JsonRpcClientLocal localClient0;
   private OpenViduClient client0;

@@ -39,21 +39,21 @@ public abstract class SessionManager {
 
 	public void publishVideo(Participant participant, MediaOptions mediaOptions, Integer transactionId) {
 	}
-
-	public void onIceCandidate(Participant participant, String endpointName, String candidate, int sdpMLineIndex,
-			String sdpMid, Integer transactionId) {
+	
+	public void unpublishVideo(Participant participant, Integer transactionId) {
 	}
-
+	
 	public void subscribe(Participant participant, String senderName, String sdpOffer, Integer transactionId) {
 	}
 
 	public void unsubscribe(Participant participant, String senderName, Integer transactionId) {
 	}
-
+	
 	public void sendMessage(Participant participant, String message, Integer transactionId) {
 	}
 
-	public void unpublishVideo(Participant participant, Integer transactionId) {
+	public void onIceCandidate(Participant participant, String endpointName, String candidate, int sdpMLineIndex,
+			String sdpMid, Integer transactionId) {
 	}
 
 	/**
