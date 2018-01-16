@@ -68,10 +68,10 @@ public class KurentoSessionManager extends SessionManager {
 		} catch (OpenViduException e) {
 			log.warn("PARTICIPANT {}: Error joining/creating session {}", participant.getParticipantPublicId(),
 					sessionId, e);
-			sessionHandler.onParticipantJoined(participant, transactionId, null, e);
+			sessionHandler.onParticipantJoined(participant, sessionId, null, transactionId, e);
 		}
 		if (existingParticipants != null) {
-			sessionHandler.onParticipantJoined(participant, transactionId, existingParticipants, null);
+			sessionHandler.onParticipantJoined(participant, sessionId, existingParticipants, transactionId, null);
 		}
 	}
 
@@ -119,7 +119,9 @@ public class KurentoSessionManager extends SessionManager {
 		}
 		if (remainingParticipants.isEmpty()) {
 			log.debug("No more participants in session '{}', removing it and closing it", sessionId);
-			session.close();
+			if (session.close()) {
+				sessionHandler.onSessionClosed(sessionId);
+			}
 			sessions.remove(sessionId);
 
 			sessionidParticipantpublicidParticipant.remove(sessionId);
@@ -130,7 +132,7 @@ public class KurentoSessionManager extends SessionManager {
 			log.warn("Session '{}' removed and closed", sessionId);
 		}
 
-		sessionHandler.onParticipantLeft(participant, transactionId, remainingParticipants, null);
+		sessionHandler.onParticipantLeft(participant, sessionId, remainingParticipants, transactionId, null);
 	}
 
 	/**
@@ -190,7 +192,7 @@ public class KurentoSessionManager extends SessionManager {
 			OpenViduException e = new OpenViduException(Code.MEDIA_SDP_ERROR_CODE,
 					"Error generating SDP response for publishing user " + participant.getParticipantPublicId());
 			log.error("PARTICIPANT {}: Error publishing media", participant.getParticipantPublicId(), e);
-			sessionHandler.onPublishMedia(participant, session.getSessionId(), transactionId, mediaOptions, sdpAnswer, participants, e);
+			sessionHandler.onPublishMedia(participant, session.getSessionId(), mediaOptions, sdpAnswer, participants, transactionId, e);
 		}
 
 		session.newPublisher(participant);
@@ -202,7 +204,7 @@ public class KurentoSessionManager extends SessionManager {
 		participants = kurentoParticipant.getSession().getParticipants();
 
 		if (sdpAnswer != null) {
-			sessionHandler.onPublishMedia(participant, session.getSessionId(), transactionId, mediaOptions, sdpAnswer, participants, null);
+			sessionHandler.onPublishMedia(participant, session.getSessionId(), mediaOptions, sdpAnswer, participants, transactionId, null);
 		}
 	}
 	
@@ -357,6 +359,8 @@ public class KurentoSessionManager extends SessionManager {
 			kcName = kurentoClient.getServerManager().getName();
 		}
 		log.warn("No session '{}' exists yet. Created one using KurentoClient '{}'.", sessionId, kcName);
+		
+		sessionHandler.onSessionCreated(sessionId);
 	}
 
 	/**

@@ -155,7 +155,7 @@ public class KurentoSession implements Session {
 	}
 	
 	@Override
-	public void close() {
+	public boolean close() {
 		if (!closed) {
 
 			for (KurentoParticipant participant : participants.values()) {
@@ -174,8 +174,10 @@ public class KurentoSession implements Session {
 			}
 
 			this.closed = true;
+			return true;
 		} else {
 			log.warn("Closing an already closed session '{}'", this.sessionId);
+			return false;
 		}
 	}
 

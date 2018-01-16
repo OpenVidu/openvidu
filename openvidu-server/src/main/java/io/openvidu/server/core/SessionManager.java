@@ -31,30 +31,22 @@ public abstract class SessionManager {
 
 	private volatile boolean closed = false;
 
-	public void joinRoom(Participant participant, String sessionId, Integer transactionId) {
-	}
+	public abstract void joinRoom(Participant participant, String sessionId, Integer transactionId);
 
-	public void leaveRoom(Participant participant, Integer transactionId) {
-	}
+	public abstract void leaveRoom(Participant participant, Integer transactionId);
 
-	public void publishVideo(Participant participant, MediaOptions mediaOptions, Integer transactionId) {
-	}
-	
-	public void unpublishVideo(Participant participant, Integer transactionId) {
-	}
-	
-	public void subscribe(Participant participant, String senderName, String sdpOffer, Integer transactionId) {
-	}
+	public abstract void publishVideo(Participant participant, MediaOptions mediaOptions, Integer transactionId);
 
-	public void unsubscribe(Participant participant, String senderName, Integer transactionId) {
-	}
-	
-	public void sendMessage(Participant participant, String message, Integer transactionId) {
-	}
+	public abstract void unpublishVideo(Participant participant, Integer transactionId);
 
-	public void onIceCandidate(Participant participant, String endpointName, String candidate, int sdpMLineIndex,
-			String sdpMid, Integer transactionId) {
-	}
+	public abstract void subscribe(Participant participant, String senderName, String sdpOffer, Integer transactionId);
+
+	public abstract void unsubscribe(Participant participant, String senderName, Integer transactionId);
+
+	public abstract void sendMessage(Participant participant, String message, Integer transactionId);
+
+	public abstract void onIceCandidate(Participant participant, String endpointName, String candidate,
+			int sdpMLineIndex, String sdpMid, Integer transactionId);
 
 	/**
 	 * Application-originated request to remove a participant from a session. <br/>
@@ -200,7 +192,8 @@ public abstract class SessionManager {
 	public boolean isPublisherInSession(String sessionId, Participant participant) {
 		if (!this.isInsecureParticipant(participant.getParticipantPrivateId())) {
 			if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
-				return ParticipantRole.PUBLISHER.equals(participant.getToken().getRole());
+				return (ParticipantRole.PUBLISHER.equals(participant.getToken().getRole())
+						|| ParticipantRole.MODERATOR.equals(participant.getToken().getRole()));
 			} else {
 				return false;
 			}
@@ -263,17 +256,15 @@ public abstract class SessionManager {
 	public void showTokens() {
 		log.info("<SESSIONID, TOKENS>: {}", this.sessionidTokenTokenobj.toString());
 	}
-	
+
 	public void showInsecureParticipants() {
 		log.info("<INSECURE_PARTICIPANTS>: {}", this.insecureUsers.toString());
 	}
-	
+
 	public void showAllParticipants() {
 		log.info("<SESSIONID, PARTICIPANTS>: {}", this.sessionidParticipantpublicidParticipant.toString());
 	}
 
-	
-	
 	/**
 	 * Closes all resources. This method has been annotated with the @PreDestroy
 	 * directive (javax.annotation package) so that it will be automatically called
@@ -298,15 +289,15 @@ public abstract class SessionManager {
 
 	/**
 	 * Closes an existing session by releasing all resources that were allocated for
-	 * it. Once closed, the session can be reopened (will be empty and it will
-	 * use another Media Pipeline). Existing participants will be evicted. <br/>
-	 * <strong>Dev advice:</strong> The session event handler should send notifications
-	 * to the existing participants in the session to inform that it was forcibly
-	 * closed.
+	 * it. Once closed, the session can be reopened (will be empty and it will use
+	 * another Media Pipeline). Existing participants will be evicted. <br/>
+	 * <strong>Dev advice:</strong> The session event handler should send
+	 * notifications to the existing participants in the session to inform that it
+	 * was forcibly closed.
 	 *
 	 * @param sessionId
 	 *            identifier of the session
-	 * @return 
+	 * @return
 	 * @return set of {@link Participant} POJOS representing the session's
 	 *         participants
 	 * @throws OpenViduException
@@ -322,9 +313,7 @@ public abstract class SessionManager {
 		}
 		Set<Participant> participants = getParticipants(sessionId);
 		// copy the ids as they will be removed from the map
-		Set<String> pids = participants.stream()
-	              .map(Participant::getParticipantPrivateId)
-	              .collect(Collectors.toSet());
+		Set<String> pids = participants.stream().map(Participant::getParticipantPrivateId).collect(Collectors.toSet());
 		for (String pid : pids) {
 			try {
 				session.leave(pid);

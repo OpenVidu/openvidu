@@ -10,7 +10,7 @@ public interface Session {
 	
 	void leave(String participantPrivateId);
 	
-	void close();
+	boolean close();
 
 	boolean isClosed();
 

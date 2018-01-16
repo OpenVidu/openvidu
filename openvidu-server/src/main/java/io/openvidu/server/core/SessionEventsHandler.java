@@ -32,18 +32,21 @@ public class SessionEventsHandler {
 	
 	@Autowired
 	protected OpenviduConfig openviduConfig;
-
-	public void onSessionClosed(String sessionId, Set<Participant> participants) {
-		JsonObject notifParams = new JsonObject();
-		notifParams.addProperty(ProtocolElements.ROOMCLOSED_ROOM_PARAM, sessionId);
-		for (Participant participant : participants) {
-			rpcNotificationService.sendNotification(participant.getParticipantPrivateId(),
-					ProtocolElements.ROOMCLOSED_METHOD, notifParams);
+	
+	public void onSessionCreated(String sessionId) {
+		if (openviduConfig.isCdrEnabled()) {
+			CDR.recordSessionCreated(sessionId);
 		}
 	}
 
-	public void onParticipantJoined(Participant participant, Integer transactionId,
-			Set<Participant> existingParticipants, OpenViduException error) {
+	public void onSessionClosed(String sessionId) {
+		if (openviduConfig.isCdrEnabled()) {
+			CDR.recordSessionDestroyed(sessionId);
+		}
+	}
+
+	public void onParticipantJoined(Participant participant, String sessionId,
+			Set<Participant> existingParticipants, Integer transactionId, OpenViduException error) {
 		if (error != null) {
 			rpcNotificationService.sendErrorResponse(participant.getParticipantPrivateId(), transactionId, null, error);
 			return;
@@ -97,10 +100,14 @@ public class SessionEventsHandler {
 		result.add("value", resultArray);
 
 		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, result);
+		
+		if (openviduConfig.isCdrEnabled()) {
+			CDR.recordParticipantJoined(participant, sessionId);
+		}
 	}
 
-	public void onParticipantLeft(Participant participant, Integer transactionId,
-			Set<Participant> remainingParticipants, OpenViduException error) {
+	public void onParticipantLeft(Participant participant, String sessionId,
+			Set<Participant> remainingParticipants, Integer transactionId, OpenViduException error) {
 		if (error != null) {
 			rpcNotificationService.sendErrorResponse(participant.getParticipantPrivateId(), transactionId, null, error);
 			return;
@@ -129,11 +136,15 @@ public class SessionEventsHandler {
 			rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, new JsonObject());
 		}
 		rpcNotificationService.closeRpcSession(participant.getParticipantPrivateId());
+		
+		if (openviduConfig.isCdrEnabled()) {
+			CDR.recordParticipantLeft(participant, sessionId);
+		}
 
 	}
 
-	public void onPublishMedia(Participant participant, String sessionId, Integer transactionId, MediaOptions mediaOptions,
-			String sdpAnswer, Set<Participant> participants, OpenViduException error) {
+	public void onPublishMedia(Participant participant, String sessionId, MediaOptions mediaOptions,
+			String sdpAnswer, Set<Participant> participants, Integer transactionId, OpenViduException error) {
 		if (error != null) {
 			rpcNotificationService.sendErrorResponse(participant.getParticipantPrivateId(), transactionId, null, error);
 			return;

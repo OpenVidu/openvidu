@@ -7,14 +7,14 @@ import org.springframework.stereotype.Component;
 public class OpenviduConfig {
 
 	@Value("${openvidu.publicurl}")
-	private String openviduPublicUrl; //local, ngrok, docker, [FINAL_URL]
+	private String openviduPublicUrl; // local, ngrok, docker, [FINAL_URL]
 
 	@Value("${server.port}")
 	private String serverPort;
 
 	@Value("${openvidu.secret}")
 	private String openviduSecret;
-	
+
 	@Value("${openvidu.cdr}")
 	private boolean openviduCdr;
 
@@ -29,11 +29,11 @@ public class OpenviduConfig {
 	public String getOpenViduSecret() {
 		return this.openviduSecret;
 	}
-	
+
 	public boolean isOpenViduSecret(String secret) {
 		return secret.equals(this.getOpenViduSecret());
 	}
-	
+
 	public boolean isCdrEnabled() {
 		return this.openviduCdr;
 	}

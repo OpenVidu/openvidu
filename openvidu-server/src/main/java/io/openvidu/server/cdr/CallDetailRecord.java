@@ -31,42 +31,68 @@ import io.openvidu.server.core.Participant;
 public class CallDetailRecord {
 
 	private Logger log = LoggerFactory.getLogger(CallDetailRecord.class);
-
-	private Map<String, CDRTransmission> publications = new ConcurrentHashMap<>();
-	private Map<String, Set<CDRTransmission>> subscriptions = new ConcurrentHashMap<>();
+	
+	private Map<String, CDREvent> sessions = new ConcurrentHashMap<>();
+	private Map<String, CDREvent> participants = new ConcurrentHashMap<>();
+	private Map<String, CDREvent> publications = new ConcurrentHashMap<>();
+	private Map<String, Set<CDREvent>> subscriptions = new ConcurrentHashMap<>();
+	
+	public void recordSessionCreated(String sessionId) {
+		CDREvent e = new CDREvent(CDREvent.SESSION_CREATED, sessionId);
+		this.sessions.put(sessionId, e);
+		log.info("{}", e);
+	}
+	
+	public void recordSessionDestroyed(String sessionId) {
+		CDREvent e = this.sessions.remove(sessionId);
+		log.info("{}", new CDREvent(CDREvent.SESSION_DESTROYED, e));
+	}
+	
+	public void recordParticipantJoined(Participant participant, String sessionId) {
+		CDREvent e = new CDREvent(CDREvent.PARTICIPANT_JOINED, participant, sessionId);
+		this.participants.put(participant.getParticipantPublicId(), e);
+		log.info("{}", e);
+	}
+	
+	public void recordParticipantLeft(Participant participant, String sessionId) {
+		CDREvent e = this.participants.remove(participant.getParticipantPublicId());
+		log.info("{}", new CDREvent(CDREvent.PARTICIPANT_LEFT, e));
+	}
 	
 	public void recordNewPublisher(Participant participant, String sessionId, MediaOptions mediaOptions) {
-		CDRTransmission publisher = new CDRTransmission(participant, sessionId, mediaOptions, null);
+		CDREvent publisher = new CDREvent(CDREvent.CONNECTION_CREATED, participant, sessionId, mediaOptions, null, System.currentTimeMillis());
 		this.publications.put(participant.getParticipantPublicId(), publisher);
+		log.info("{}", publisher);
 	}
 
 	public void recordNewSubscriber(Participant participant, String sessionId, String senderPublicId) {
-		CDRTransmission publisher = this.publications.get(senderPublicId);
-		CDRTransmission subscriber = new CDRTransmission(participant, sessionId, publisher.getMediaOptions(), publisher);
+		CDREvent publisher = this.publications.get(senderPublicId);
+		CDREvent subscriber = new CDREvent(CDREvent.CONNECTION_CREATED, participant, sessionId, publisher.getMediaOptions(), publisher.getParticipantPublicId(), System.currentTimeMillis());
 		this.subscriptions.putIfAbsent(participant.getParticipantPublicId(), new ConcurrentSkipListSet<>());
 		this.subscriptions.get(participant.getParticipantPublicId()).add(subscriber);
+		log.info("{}", subscriber);
 	}
 
 	public boolean stopPublisher(String participantPublicId) {
-		CDRTransmission publisher = this.publications.remove(participantPublicId);
+		CDREvent publisher = this.publications.remove(participantPublicId);
 		if (publisher != null) {
-			publisher.endCall();
-			log.info("{}", getTransmissionMessage(publisher));
+			publisher = new CDREvent(CDREvent.CONNECTION_DESTROYED, publisher);
+			log.info("{}", publisher);
 			return true;
 		}
 		return false;
 	}
 
 	public boolean stopSubscriber(String participantPublicId, String senderPublicId) {
-		Set<CDRTransmission> participantSubscriptions = this.subscriptions.get(participantPublicId);
+		Set<CDREvent> participantSubscriptions = this.subscriptions.get(participantPublicId);
 		if (participantSubscriptions != null) {
-			CDRTransmission subscription;
-			for (Iterator<CDRTransmission> it = participantSubscriptions.iterator(); it.hasNext();) {
+			CDREvent subscription;
+			for (Iterator<CDREvent> it = participantSubscriptions.iterator(); it.hasNext();) {
 				subscription = it.next();
-				if (subscription.getReceivingFrom().getParticipant().getParticipantPublicId().equals(senderPublicId)) {
+				if (subscription.getReceivingFrom().equals(senderPublicId)) {
 					it.remove();
-					subscription.endCall();
-					log.info("{}", getTransmissionMessage(subscription));
+					subscription = new CDREvent(CDREvent.CONNECTION_DESTROYED, subscription);
+					log.info("{}", subscription);
 					return true;
 				}
 			}
@@ -75,35 +101,16 @@ public class CallDetailRecord {
 	}
 
 	public void stopAllSubscriptions(String participantPublicId) {
-		Set<CDRTransmission> participantSubscriptions = this.subscriptions.get(participantPublicId);
+		Set<CDREvent> participantSubscriptions = this.subscriptions.get(participantPublicId);
 		if (participantSubscriptions != null) {
-			CDRTransmission subscription;
-			for (Iterator<CDRTransmission> it = participantSubscriptions.iterator(); it.hasNext();) {
+			CDREvent subscription;
+			for (Iterator<CDREvent> it = participantSubscriptions.iterator(); it.hasNext();) {
 				subscription = it.next();
-				subscription.endCall();
-				log.info("{}", getTransmissionMessage(subscription));
+				subscription = new CDREvent(CDREvent.CONNECTION_DESTROYED, subscription);
+				log.info("{}", subscription);
 			}
 			this.subscriptions.remove(participantPublicId).clear();
 		}
 	}
 	
-	private String getTransmissionMessage(CDRTransmission cdr) {
-		StringBuffer sb = new StringBuffer();
-		sb.append("<participant>\n");
-		sb.append("\t<id>").append(cdr.getParticipant().getParticipantPublicId()).append("</id>\n");
-		sb.append("\t<session>").append(cdr.getSessionId()).append("</session>\n");
-		sb.append("\t<connection>").append((cdr.getReceivingFrom() != null) ? "INBOUND" : "OUTBOUND").append("</connection>\n");
-		if (cdr.getReceivingFrom() != null) sb.append("\t<from>").append((cdr.getReceivingFrom() != null)
-				? cdr.getReceivingFrom().getParticipant().getParticipantPublicId()
-				: "").append("</from>\n");
-		sb.append("\t<audio-enabled>").append(cdr.getAudioEnabled()).append("</audio-enabled>\n");
-		sb.append("\t<video-enabled>").append(cdr.getVideoEnabled()).append("</video-enabled>\n");
-		if (cdr.getVideoEnabled()) sb.append("\t<videosource>").append(cdr.typeOfVideo()).append("</videosource>\n");
-		sb.append("\t<start-time>").append(cdr.getDateOfStart()).append("</start-time>\n");
-		sb.append("\t<end-time>").append(cdr.getDateOfEnd()).append("</end-time>\n");
-		sb.append("\t<duration>").append(cdr.totalCallDuration()).append("</duration>\n");
-		sb.append("</participant>\n");
-		return sb.toString();
-	}
-
 }
