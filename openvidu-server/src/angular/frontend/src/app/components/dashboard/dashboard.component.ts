@@ -73,7 +73,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     dialogRef.afterClosed().subscribe(secret => {
       if (secret) {
-        this.connectToSession('wss://' + location.hostname + ':8443/testSession?secret=' + secret);
+        const port = (location.port) ? location.port : '8443';
+        this.connectToSession('wss://' + location.hostname + ':' + port + '/testSession?secret=' + secret);
       }
     });
   }
