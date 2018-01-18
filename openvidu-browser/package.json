@@ -1,37 +1,37 @@
 {
-    "license": "Apache-2.0", 
-    "version": "1.4.0", 
-    "repository": {
-        "url": "git://github.com/OpenVidu/openvidu", 
-        "type": "git"
-    }, 
     "author": "OpenVidu", 
-    "description": "OpenVidu Browser", 
     "dependencies": {
-        "inherits": "2.0.3", 
-        "wolfy87-eventemitter": "5.2.4", 
-        "hark": "1.1.6", 
-        "uuid": "3.1.0", 
-        "sdp-translator": "0.1.24", 
         "freeice": "2.2.0", 
+        "hark": "1.1.6", 
+        "inherits": "2.0.3", 
         "merge": "1.2.0", 
+        "sdp-translator": "0.1.24", 
         "ua-parser-js": "0.7.17", 
-        "webrtc-adapter": "6.0.4"
+        "uuid": "3.1.0", 
+        "webrtc-adapter": "6.0.4", 
+        "wolfy87-eventemitter": "5.2.4"
     }, 
-    "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1", 
-        "browserify-prod": "VERSION=${VERSION:-}; cd ts/OpenVidu && browserify --debug Main.ts -p [ tsify ] --exclude kurento-browser-extensions | uglifyjs --source-map content=inline --output ../../static/js/openvidu-browser-$VERSION.min.js", 
-        "browserify": "VERSION=${VERSION:-}; cd ts/OpenVidu && browserify Main.ts -p [ tsify ] --exclude kurento-browser-extensions --debug -o ../../static/js/openvidu-browser-$VERSION.js -v", 
-        "updatetsc": "cd ts/OpenViduInternal && tsc && cd ../OpenVidu && tsc && cd ../.. && tsc --declaration ts/OpenVidu/index.ts --outDir lib --sourceMap && tsc --declaration ts/OpenVidu/Main.ts --outDir lib --sourceMap", 
-        "prepublish": "cd ts/OpenViduInternal && tsc && cd ../OpenVidu && tsc && cd ../.. && tsc --declaration ts/OpenVidu/index.ts --outDir lib --sourceMap && tsc --declaration ts/OpenVidu/Main.ts --outDir lib --sourceMap"
-    }, 
+    "description": "OpenVidu Browser", 
     "devDependencies": {
+        "browserify": "15.1.0", 
         "tsify": "3.0.4", 
         "typescript": "2.6.2", 
-        "browserify": "15.1.0", 
         "uglify-js": "3.3.5"
     }, 
+    "license": "Apache-2.0", 
     "main": "lib/OpenVidu/index.js", 
+    "name": "openvidu-browser", 
+    "repository": {
+        "type": "git", 
+        "url": "git://github.com/OpenVidu/openvidu"
+    }, 
+    "scripts": {
+        "browserify": "VERSION=${VERSION:-}; cd ts/OpenVidu && browserify Main.ts -p [ tsify ] --exclude kurento-browser-extensions --debug -o ../../static/js/openvidu-browser-$VERSION.js -v", 
+        "browserify-prod": "VERSION=${VERSION:-}; cd ts/OpenVidu && browserify --debug Main.ts -p [ tsify ] --exclude kurento-browser-extensions | uglifyjs --source-map content=inline --output ../../static/js/openvidu-browser-$VERSION.min.js", 
+        "prepublish": "cd ts/OpenViduInternal && tsc && cd ../OpenVidu && tsc && cd ../.. && tsc --declaration ts/OpenVidu/index.ts --outDir lib --sourceMap && tsc --declaration ts/OpenVidu/Main.ts --outDir lib --sourceMap", 
+        "test": "echo \"Error: no test specified\" && exit 1", 
+        "updatetsc": "cd ts/OpenViduInternal && tsc && cd ../OpenVidu && tsc && cd ../.. && tsc --declaration ts/OpenVidu/index.ts --outDir lib --sourceMap && tsc --declaration ts/OpenVidu/Main.ts --outDir lib --sourceMap"
+    }, 
     "types": "lib/OpenVidu/index.d.ts", 
-    "name": "openvidu-browser"
+    "version": "1.5.0"
 }
