@@ -85,19 +85,22 @@
         <div class="session-card-inner">
           <div class="session-title">{{sessionName}}</div>
           <div class="session-actions">
-            <button class="publish-btn" *ngIf="publishTo" (click)="publishUnpublish()">
+            <button class="change-publisher-btn" *ngIf="publishTo" (click)="changePublisher()" title="Change publisher">
+              <mat-icon aria-label="Change publisher button">switch_video</mat-icon>
+            </button>
+            <button class="publish-btn" *ngIf="publishTo" (click)="publishUnpublish()" title="Publish/Unpublish">
               <mat-icon aria-label="Publish Unpublish button">{{publishIcon}}</mat-icon>
             </button>
-            <button class="message-btn" (click)="sendMessage()">
+            <button class="message-btn" (click)="sendMessage()" title="Broadcast message">
               <mat-icon aria-label="Send message button" style="font-size: 20px">chat</mat-icon>
             </button>
-            <button class="video-btn" *ngIf="publishTo && sendVideo" (click)="toggleVideo()">
+            <button class="video-btn" *ngIf="publishTo && sendVideoChange" (click)="toggleVideo()" title="Mute/Unmute video">
               <mat-icon aria-label="Mute video button">{{videoIcon}}</mat-icon>
             </button>
-            <button class="audio-btn" *ngIf="publishTo && sendAudio" (click)="toggleAudio()">
+            <button class="audio-btn" *ngIf="publishTo && sendAudioChange" (click)="toggleAudio()" title="Mute/Unmute audio">
               <mat-icon aria-label="Mute audio button">{{audioIcon}}</mat-icon>
             </button>
-            <button class="leave-btn" (click)="leaveSession()">
+            <button class="leave-btn" (click)="leaveSession()" title="Leave session">
               <mat-icon aria-label="Leave button">clear</mat-icon>
             </button>
           </div>

@@ -10,7 +10,7 @@
       <button id="one2one-btn" mat-raised-button color="primary" (click)="loadScenario(2,0,0)">1:1</button>
       <button id="one2many-btn" mat-raised-button color="primary" (click)="loadScenario(0,1,numberSubs)">1:{{numberSubs}}</button>
       <mat-form-field>
-        <input matInput [(ngModel)]="numberSubs">
+        <input id="one2many-input" matInput [(ngModel)]="numberSubs">
       </mat-form-field>
     </div>
   </div>
