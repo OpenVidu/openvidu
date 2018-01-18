@@ -19,31 +19,31 @@ package io.openvidu.test.e2e;
 
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
-
+import static org.hamcrest.CoreMatchers.is;
 import static org.openqa.selenium.OutputType.BASE64;
+import org.slf4j.Logger;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.runner.RunWith;
 import org.junit.platform.runner.JUnitPlatform;
+import org.json.simple.JSONObject;
 import org.junit.Assert;
+
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.slf4j.Logger;
 
 import io.github.bonigarcia.SeleniumExtension;
 import io.github.bonigarcia.wdm.ChromeDriverManager;
 import io.github.bonigarcia.wdm.FirefoxDriverManager;
+
 import io.openvidu.java.client.OpenVidu;
 import io.openvidu.java.client.Session;
 import io.openvidu.test.e2e.browser.BrowserUser;
@@ -620,6 +620,71 @@ public class OpenViduTestAppE2eTest {
 		}
 		
 		user.getEventManager().waitUntilEventReaches("videoPlaying", 8);
+		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
+				true, true));
+		
+		gracefullyLeaveParticipants(2);
+		
+	}
+	
+	@Test
+	@DisplayName("Change publisher dynamically")
+	void changePublisher() throws Exception {
+		
+		List<Boolean> listOfThreadAssertions = new ArrayList<>();
+		
+		setupBrowser("chrome");
+
+		log.info("Change publisher dynamically");
+		
+		WebElement oneToManyInput = user.getDriver().findElement(By.id("one2many-input"));
+		oneToManyInput.clear();
+		oneToManyInput.sendKeys("1");
+		
+		user.getDriver().findElement(By.id("auto-join-checkbox")).click();
+		
+		// First publication (audio + video [CAMERA])
+		user.getEventManager().on("videoPlaying", (event)-> {
+			listOfThreadAssertions.add(((String)event.get("eventContent")).contains("CAMERA"));
+		});
+		user.getDriver().findElement(By.id("one2many-btn")).click();
+		user.getEventManager().waitUntilEventReaches("videoPlaying", 2);
+		user.getEventManager().off("videoPlaying");
+		for (Iterator<Boolean> iter = listOfThreadAssertions.iterator(); iter.hasNext();) {
+			Assert.assertTrue(iter.next());
+			iter.remove();
+		}
+
+		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
+				true, true));
+		
+		// Second publication (only video (SCREEN))
+		user.getEventManager().on("videoPlaying", (event)-> {
+			listOfThreadAssertions.add(((String)event.get("eventContent")).contains("SCREEN"));
+		});
+		user.getDriver().findElements(By.className("change-publisher-btn")).get(0).click();
+		user.getEventManager().waitUntilEventReaches("videoPlaying", 4);
+		user.getEventManager().off("videoPlaying");
+		for (Iterator<Boolean> iter = listOfThreadAssertions.iterator(); iter.hasNext();) {
+			Assert.assertTrue(iter.next());
+			iter.remove();
+		}
+		
+		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
+				false, true));
+		
+		// Third publication (audio + video [CAMERA])
+		user.getEventManager().on("videoPlaying", (event)-> {
+			listOfThreadAssertions.add(((String)event.get("eventContent")).contains("CAMERA"));
+		});
+		user.getDriver().findElements(By.className("change-publisher-btn")).get(0).click();
+		user.getEventManager().waitUntilEventReaches("videoPlaying", 6);
+		user.getEventManager().off("videoPlaying");
+		for (Iterator<Boolean> iter = listOfThreadAssertions.iterator(); iter.hasNext();) {
+			Assert.assertTrue(iter.next());
+			iter.remove();
+		}
+		
 		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
 				true, true));
 		

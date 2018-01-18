@@ -117,6 +117,10 @@ public class OpenViduEventManager {
 		this.eventCallbacks.put(eventName, new RunnableCallback(callback));
 	}
 	
+	public void off(String eventName) {
+		this.eventCallbacks.remove(eventName);
+	}
+	
 	// 'eventNumber' is accumulative for event 'eventName' for one page while it is not refreshed
 	public void waitUntilEventReaches(String eventName, int eventNumber) throws Exception {
 		CountDownLatch eventSignal = new CountDownLatch(eventNumber);
