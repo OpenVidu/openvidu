@@ -16,6 +16,7 @@
 package io.openvidu.server;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.List;
 
 import org.kurento.jsonrpc.JsonUtils;
@@ -168,11 +169,22 @@ public class OpenViduServer implements JsonRpcConfigurer {
 			break;
 
 		default:
+			
+			URL url = new URL(publicUrl);
+			int port = url.getPort();
+			
 			type = "custom";
 			OpenViduServer.publicUrl = publicUrl.replaceFirst("https://", "wss://");
 			if (!OpenViduServer.publicUrl.startsWith("wss://")) {
 				OpenViduServer.publicUrl = "wss://" + OpenViduServer.publicUrl;
 			}
+			if (OpenViduServer.publicUrl.endsWith("/")) {
+				OpenViduServer.publicUrl = OpenViduServer.publicUrl.substring(0, OpenViduServer.publicUrl.length() - 1);
+			}
+			if (port == -1) {
+				OpenViduServer.publicUrl += ":" + openviduConf.getServerPort();
+			}
+			
 			break;
 		}
 

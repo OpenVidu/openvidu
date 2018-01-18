@@ -24,5 +24,5 @@
 		"sourceMap": true
 	},
 	//"buildOnSave": true,
-	"compileOnSave":true
+	"compileOnSave": true
 }
