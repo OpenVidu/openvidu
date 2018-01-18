@@ -1,4 +1,4 @@
-import { Stream, StreamOptions } from './Stream';
+import { Stream, StreamOptionsServer, InboundStreamOptions } from './Stream';
 import { OpenViduInternal } from './OpenViduInternal';
 import { SessionInternal } from './SessionInternal';
 
@@ -7,9 +7,7 @@ type ObjMap<T> = { [s: string]: T; }
 export interface ConnectionOptions {
     id: string;
     metadata: string;
-    streams?: StreamOptions[];
-    audioActive: boolean;
-    videoActive: boolean;
+    streams: StreamOptionsServer[];
 }
 
 export class Connection {
@@ -18,7 +16,7 @@ export class Connection {
     public data: string;
     public creationTime: number;
     private streams: ObjMap<Stream> = {};
-    private streamsOpts: StreamOptions;
+    private inboundStreamsOpts: InboundStreamOptions;
 
     constructor( private openVidu: OpenViduInternal, private local: boolean, private room: SessionInternal, private options?: ConnectionOptions ) {
 
@@ -27,10 +25,11 @@ export class Connection {
         if ( options ) {
 
             this.connectionId = options.id;
-            this.data = options.metadata;
-
-            if ( options.streams ) {
-                this.initStreams(options);
+            if (options.metadata) {
+                this.data = options.metadata;
+            }
+            if (options.streams) {
+                this.initRemoteStreams(options);
             }
         }
         
@@ -44,7 +43,11 @@ export class Connection {
     removeStream( key: string ) {
         delete this.streams[key];
         delete this.room.getStreams()[key];
-        delete this.streamsOpts;
+        delete this.inboundStreamsOpts;
+    }
+
+    setOptions(options: ConnectionOptions) {
+        this.options = options;
     }
 
     getStreams() {
@@ -75,28 +78,23 @@ export class Connection {
         });
     }
 
-    initStreams(options) {
-        for ( let streamOptions of options.streams ) {
+    initRemoteStreams(options: ConnectionOptions) {
+        let opts: StreamOptionsServer;
+        for ( opts of options.streams ) {
             
-            let streamOpts = {
-                id: streamOptions.id,
+            let streamOptions: InboundStreamOptions = {
+                id: opts.id,
                 connection: this,
-                sendAudio: streamOptions.sendAudio,
-                sendVideo: streamOptions.sendVideo,
-                recvAudio: ( streamOptions.audioActive == undefined ? true : streamOptions.audioActive ),
-                recvVideo: ( streamOptions.videoActive == undefined ? true : streamOptions.videoActive ),
-                typeOfVideo: streamOptions.typeOfVideo,
-                activeAudio: streamOptions.activeAudio,
-                activeVideo: streamOptions.activeVideo,
-                data: streamOptions.data,
-                mediaConstraints: streamOptions.mediaConstraints
+                recvAudio: ( opts.audioActive == null ? true : opts.audioActive ),
+                recvVideo: ( opts.videoActive == null ? true : opts.videoActive ),
+                typeOfVideo: opts.typeOfVideo,
             }
-            let stream = new Stream(this.openVidu, false, this.room, streamOpts );
+            let stream = new Stream(this.openVidu, false, this.room, streamOptions);
 
-            this.addStream( stream );
-            this.streamsOpts = streamOpts;
+            this.addStream(stream);
+            this.inboundStreamsOpts = streamOptions;
         }
 
-        console.info("Remote 'Connection' with 'connectionId' [" + this.connectionId + "] is now configured for receiving Streams with options: ", this.streamsOpts );
+        console.info("Remote 'Connection' with 'connectionId' [" + this.connectionId + "] is now configured for receiving Streams with options: ", this.inboundStreamsOpts );
     }
 }

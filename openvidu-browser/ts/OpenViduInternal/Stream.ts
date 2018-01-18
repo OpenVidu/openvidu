@@ -32,17 +32,29 @@ function hide(id: string) {
     document.getElementById(jq(id))!.style.display = 'none';
 }
 
-export interface StreamOptions {
+export interface StreamOptionsServer {
+    id: string;
+    audioActive: boolean;
+    videoActive: boolean;
+    typeOfVideo: string;
+}
+
+export interface InboundStreamOptions {
     id: string;
     connection: Connection;
-    recvVideo: boolean;
     recvAudio: boolean;
-    sendVideo: boolean;
-    sendAudio: boolean;
+    recvVideo: boolean;
+    typeOfVideo: string;
+}
+
+export interface OutboundStreamOptions {
     activeAudio: boolean;
     activeVideo: boolean;
-    data: boolean;
+    connection: Connection;
+    dataChannel: boolean;
     mediaConstraints: any;
+    sendAudio: boolean;
+    sendVideo: boolean;
 }
 
 export class Stream {
@@ -58,19 +70,13 @@ export class Stream {
     private wp: any;
     private video: HTMLVideoElement;
     private speechEvent: any;
-    private recvVideo: boolean;
-    private recvAudio: boolean;
-    private sendVideo: boolean;
-    private sendAudio: boolean;
-    private mediaConstraints: any;
     private showMyRemote = false;
     private localMirrored = false;
     private chanId = 0;
-    private dataChannel: boolean;
     private dataChannelOpened = false;
 
-    private activeAudio = true;
-    private activeVideo = true;
+    inboundOptions: InboundStreamOptions;
+    outboundOptions: OutboundStreamOptions;
 
     private parentId: string;
     public isReadyToPublish: boolean = false;
@@ -83,9 +89,17 @@ export class Stream {
 
     constructor(private openVidu: OpenViduInternal, private local: boolean, private room: SessionInternal, options: any) {
         if (options !== 'screen-options') {
-            this.configureOptions(options);
+            if ('id' in options) {
+                this.inboundOptions = options;
+            } else {
+                this.outboundOptions = options;
+            }
+            this.streamId = (options.id != null) ? options.id : ((options.sendVideo) ? "CAMERA" : "MICRO");
+            this.typeOfVideo = (options.typeOfVideo != null) ? options.typeOfVideo : '';
+            this.connection = options.connection;
         } else {
             this.isScreenRequested = true;
+            this.typeOfVideo = 'SCREEN';
             this.connection = this.room.getLocalParticipant();
         }
         this.addEventListener('mediastream-updated', () => {
@@ -131,19 +145,19 @@ export class Stream {
     }
 
     getRecvVideo() {
-        return this.recvVideo;
+        return this.inboundOptions.recvVideo;
     }
 
     getRecvAudio() {
-        return this.recvAudio;
+        return this.inboundOptions.recvAudio;
     }
 
     getSendVideo() {
-        return this.sendVideo;
+        return this.outboundOptions.sendVideo;
     }
 
     getSendAudio() {
-        return this.sendAudio;
+        return this.outboundOptions.sendAudio;
     }
 
 
@@ -174,7 +188,7 @@ export class Stream {
 
 
     isDataChannelEnabled() {
-        return this.dataChannel;
+        return this.outboundOptions.dataChannel;
     }
 
 
@@ -318,7 +332,7 @@ export class Stream {
 
         this.connection.addStream(this);
 
-        let constraints = this.mediaConstraints;
+        let constraints = this.outboundOptions.mediaConstraints;
 
         /*let constraints2 = {
             audio: true,
@@ -334,14 +348,14 @@ export class Stream {
 
         this.userMediaHasVideo((hasVideo) => {
             if (!hasVideo) {
-                if (this.sendVideo) {
+                if (this.outboundOptions.sendVideo) {
                     callback(new OpenViduError(OpenViduErrorName.NO_VIDEO_DEVICE, 'You have requested camera access but there is no video input device available. Trying to connect with an audio input device only'), this);
                 }
-                if (!this.sendAudio) {
+                if (!this.outboundOptions.sendAudio) {
                     callback(new OpenViduError(OpenViduErrorName.NO_INPUT_DEVICE, 'You must init Publisher object with audio or video streams enabled'), undefined);
                 } else {
                     constraints.video = false;
-                    this.sendVideo = false;
+                    this.outboundOptions.sendVideo = false;
                     this.requestCameraAccesAux(constraints, callback);
                 }
             } else {
@@ -351,6 +365,7 @@ export class Stream {
     }
 
     private requestCameraAccesAux(constraints, callback) {
+        console.log(constraints);
         navigator.mediaDevices.getUserMedia(constraints)
             .then(userStream => {
                 this.cameraAccessSuccess(userStream, callback);
@@ -361,7 +376,7 @@ export class Stream {
                 let errorName: OpenViduErrorName;
                 let errorMessage = error.toString();;
                 if (!this.isScreenRequested) {
-                    errorName = this.sendVideo ? OpenViduErrorName.CAMERA_ACCESS_DENIED : OpenViduErrorName.MICROPHONE_ACCESS_DENIED;
+                    errorName = this.outboundOptions.sendVideo ? OpenViduErrorName.CAMERA_ACCESS_DENIED : OpenViduErrorName.MICROPHONE_ACCESS_DENIED;
                 } else {
                     errorName = OpenViduErrorName.SCREEN_CAPTURE_DENIED; // This code is only reachable for Firefox
                 }
@@ -375,10 +390,10 @@ export class Stream {
         this.ee.emitEvent('access-allowed-by-publisher');
 
         if (userStream.getAudioTracks()[0] != null) {
-            userStream.getAudioTracks()[0].enabled = this.activeAudio;
+            userStream.getAudioTracks()[0].enabled = this.outboundOptions.activeAudio;
         }
         if (userStream.getVideoTracks()[0] != null) {
-            userStream.getVideoTracks()[0].enabled = this.activeVideo;
+            userStream.getVideoTracks()[0].enabled = this.outboundOptions.activeVideo;
         }
 
         this.mediaStream = userStream;
@@ -416,9 +431,9 @@ export class Stream {
         this.openVidu.sendRequest("publishVideo", {
             sdpOffer: sdpOfferParam,
             doLoopback: this.displayMyRemote() || false,
-            audioActive: this.sendAudio,
-            videoActive: this.sendVideo,
-            typeOfVideo: ((this.sendVideo) ? ((this.isScreenRequested) ? 'SCREEN' :'CAMERA') : '')
+            audioActive: this.outboundOptions.sendAudio,
+            videoActive: this.outboundOptions.sendVideo,
+            typeOfVideo: ((this.outboundOptions.sendVideo) ? ((this.isScreenRequested) ? 'SCREEN' :'CAMERA') : '')
         }, (error, response) => {
             if (error) {
                 console.error("Error on publishVideo: " + JSON.stringify(error));
@@ -452,8 +467,8 @@ export class Stream {
         if (this.local) {
 
             let userMediaConstraints = {
-                audio: this.sendAudio,
-                video: this.sendVideo
+                audio: this.outboundOptions.sendAudio,
+                video: this.outboundOptions.sendVideo
             }
 
             let options: any = {
@@ -462,7 +477,7 @@ export class Stream {
                 onicecandidate: this.connection.sendIceCandidate.bind(this.connection),
             }
 
-            if (this.dataChannel) {
+            if (this.outboundOptions.dataChannel) {
                 options.dataChannelConfig = {
                     id: this.getChannelName(),
                     onopen: this.onDataChannelOpen,
@@ -490,8 +505,8 @@ export class Stream {
             this.ee.emitEvent('stream-created-by-publisher');
         } else {
             let offerConstraints = {
-                audio: this.recvAudio,
-                video: this.recvVideo
+                audio: this.inboundOptions.recvAudio,
+                video: this.inboundOptions.recvVideo
             };
             console.debug("'Session.subscribe(Stream)' called. Constraints of generate SDP offer",
                 offerConstraints);
@@ -656,43 +671,8 @@ export class Stream {
         console.info((this.local ? "Local " : "Remote ") + "'Stream' with id [" + this.streamId + "]' has been succesfully disposed");
     }
 
-    private configureOptions(options) {
-        this.connection = options.connection;
-        this.recvVideo = options.recvVideo || false;
-        this.recvAudio = options.recvAudio || false;
-        this.sendVideo = options.sendVideo;
-        this.sendAudio = options.sendAudio;
-        this.activeAudio = options.activeAudio;
-        this.activeVideo = options.activeVideo;
-        this.dataChannel = options.data || false;
-        this.mediaConstraints = options.mediaConstraints;
-
-        this.hasAudio = ((this.recvAudio || this.sendAudio) != undefined) ? (this.recvAudio || this.sendAudio) : false;
-        this.hasVideo = ((this.recvVideo || this.sendVideo) != undefined) ? (this.recvVideo || this.sendVideo) : false;
-        this.typeOfVideo = options.typeOfVideo;
-
-        if (options.id) {
-            this.streamId = options.id;
-        } else {
-            this.streamId =  this.sendVideo ? "WEBCAM" : "MICRO";
-        }
-    }
-
-    configureScreenOptions(options) {
-        if (options.id) {
-            this.streamId = options.id;
-        } else {
-            this.streamId = "SCREEN";
-        }
-        this.recvVideo = options.recvVideo || false;
-        this.recvAudio = options.recvAudio || false;
-        this.sendVideo = options.sendVideo;
-        this.sendAudio = options.sendAudio;
-        this.activeAudio = options.activeAudio;
-        this.activeVideo = options.activeVideo;
-        this.dataChannel = options.data || false;
-        this.mediaConstraints = options.mediaConstraints;
-
-        this.ee.emitEvent('can-request-screen');
+    configureScreenOptions(options: OutboundStreamOptions) {
+        this.outboundOptions = options;
+        this.streamId = "SCREEN";
     }
 }

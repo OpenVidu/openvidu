@@ -16,7 +16,7 @@
  */
 import { SessionInternal, SessionOptions } from './SessionInternal';
 import { OpenViduError, OpenViduErrorName } from './OpenViduError';
-import { Stream } from './Stream';
+import { Stream, OutboundStreamOptions } from './Stream';
 import * as RpcBuilder from '../KurentoUtils/kurento-jsonrpc';
 
 export type Callback<T> = (error?: any, openVidu?: T) => void;
@@ -28,14 +28,9 @@ export class OpenViduInternal {
     private jsonRpcClient: any;
     private rpcParams: any;
     private callback: Callback<OpenViduInternal>;
-    private camera: Stream;
+    private localStream: Stream;
     private remoteStreams: Stream[] = [];
-
     private secret: string;
-
-    constructor() { };
-
-    storedPublisherOptions: any;
 
     /* NEW METHODS */
     initSession(sessionId) {
@@ -44,36 +39,56 @@ export class OpenViduInternal {
         return this.session;
     }
 
-    initPublisherTagged(parentId: string, cameraOptions: any, callback?: Function): Stream {
+    initPublisherTagged(parentId: string, cameraOptions: OutboundStreamOptions, newStream: boolean, callback?: Function): Stream {
 
-        this.getCamera(cameraOptions);
+        if (newStream) {
+            if (cameraOptions == null) {
+                cameraOptions = {
+                    connection: this.session.getLocalParticipant(),
+                    sendAudio: true,
+                    sendVideo: true,
+                    activeAudio: true,
+                    activeVideo: true,
+                    dataChannel: true,
+                    mediaConstraints: {
+                        audio: true,
+                        video: { width: { ideal: 1280 } }
+                    }
+                }
+            } else {
+                cameraOptions.connection = this.session.getLocalParticipant();
+            }
+            this.localStream = new Stream(this, true, this.session, cameraOptions);
+        }
 
-        this.camera.requestCameraAccess((error, camera) => {
+        this.localStream.requestCameraAccess((error, localStream) => {
             if (error) {
-                // Neither camera or microphone device is allowed/able to capture media
+                // Neither localStream or microphone device is allowed/able to capture media
                 console.error(error);
                 if (callback) {
                     callback(error);
                 }
-                this.camera.ee.emitEvent('access-denied-by-publisher');
+                this.localStream.ee.emitEvent('access-denied-by-publisher');
             } else {
-                this.camera.setVideoElement(this.cameraReady(camera!, parentId));
+                this.localStream.setVideoElement(this.cameraReady(localStream!, parentId));
                 if (callback) {
                     callback(undefined);
                 }
             }
         });
-        return this.camera;
+        return this.localStream;
     }
 
-    initPublisherScreen(parentId: string, callback?): Stream {
-        if (!this.camera) {
-            this.camera = new Stream(this, true, this.session, 'screen-options');
+    initPublisherScreen(parentId: string, newStream: boolean, callback?): Stream {
+
+        if (newStream) {
+            this.localStream = new Stream(this, true, this.session, 'screen-options');
         }
-        this.camera.addOnceEventListener('can-request-screen', () => {
-            this.camera.requestCameraAccess((error, camera) => {
+
+        this.localStream.addOnceEventListener('can-request-screen', () => {
+            this.localStream.requestCameraAccess((error, localStream) => {
                 if (error) {
-                    this.camera.ee.emitEvent('access-denied-by-publisher');
+                    this.localStream.ee.emitEvent('access-denied-by-publisher');
                     let errorName: OpenViduErrorName = OpenViduErrorName.SCREEN_CAPTURE_DENIED;
                     let errorMessage = 'You must allow access to one window of your desktop';
                     let e = new OpenViduError(errorName, errorMessage);
@@ -83,20 +98,26 @@ export class OpenViduInternal {
                     }
                 }
                 else {
-                    this.camera.setVideoElement(this.cameraReady(camera!, parentId));
-                    if (this.camera.getSendAudio()) {
+                    this.localStream.setVideoElement(this.cameraReady(localStream!, parentId));
+                    if (this.localStream.getSendAudio()) {
                         // If the user wants to send audio with the screen capturing
                         navigator.mediaDevices.getUserMedia({ audio: true, video: false })
                             .then(userStream => {
-                                this.camera.getMediaStream().addTrack(userStream.getAudioTracks()[0]);
-                                this.camera.isScreenRequestedReady = true;
-                                this.camera.ee.emitEvent('screen-ready');
+                                this.localStream.getMediaStream().addTrack(userStream.getAudioTracks()[0]);
+
+                                // Mute audio if 'activeAudio' property is false
+                                if (userStream.getAudioTracks()[0] != null) {
+                                    userStream.getAudioTracks()[0].enabled = this.localStream.outboundOptions.activeAudio;
+                                }
+
+                                this.localStream.isScreenRequestedReady = true;
+                                this.localStream.ee.emitEvent('screen-ready');
                                 if (callback) {
                                     callback(undefined);
                                 }
                             })
                             .catch(error => {
-                                this.camera.ee.emitEvent('access-denied-by-publisher');
+                                this.localStream.ee.emitEvent('access-denied-by-publisher');
                                 console.error("Error accessing the microphone", error);
                                 if (callback) {
                                     let errorName: OpenViduErrorName = OpenViduErrorName.MICROPHONE_ACCESS_DENIED;
@@ -105,8 +126,8 @@ export class OpenViduInternal {
                                 }
                             });
                     } else {
-                        this.camera.isScreenRequestedReady = true;
-                        this.camera.ee.emitEvent('screen-ready');
+                        this.localStream.isScreenRequestedReady = true;
+                        this.localStream.ee.emitEvent('screen-ready');
                         if (callback) {
                             callback(undefined);
                         }
@@ -114,18 +135,18 @@ export class OpenViduInternal {
                 }
             });
         });
-        return this.camera;
+        return this.localStream;
     }
 
-    cameraReady(camera: Stream, parentId: string) {
-        this.camera = camera;
-        let videoElement = this.camera.playOnlyVideo(parentId, null);
-        this.camera.emitStreamReadyEvent();
+    cameraReady(localStream: Stream, parentId: string): HTMLVideoElement {
+        this.localStream = localStream;
+        let videoElement = this.localStream.playOnlyVideo(parentId, null);
+        this.localStream.emitStreamReadyEvent();
         return videoElement;
     }
 
     getLocalStream() {
-        return this.camera;
+        return this.localStream;
     }
 
     getRemoteStreams() {
@@ -327,29 +348,6 @@ export class OpenViduInternal {
         }
     }
 
-    getCamera(options?) {
-
-        if (this.camera) {
-            return this.camera;
-        }
-
-        options = options || {
-            sendAudio: true,
-            sendVideo: true,
-            activeAudio: true,
-            activeVideo: true,
-            data: true,
-            mediaConstraints: {
-                audio: true,
-                video: { width: { ideal: 1280 } }
-            }
-        }
-        options.connection = this.session.getLocalParticipant();
-
-        this.camera = new Stream(this, true, this.session, options);
-        return this.camera;
-    };
-
     //CHAT
     sendMessage(message) {
         this.sendRequest('sendMessage', {
@@ -360,26 +358,6 @@ export class OpenViduInternal {
             }
         });
     };
-
-
-
-    toggleLocalVideoTrack(activate: boolean) {
-        this.getCamera().getWebRtcPeer().videoEnabled = activate;
-    }
-
-    toggleLocalAudioTrack(activate: boolean) {
-        this.getCamera().getWebRtcPeer().audioEnabled = activate;
-    }
-
-    publishLocalVideoAudio() {
-        this.toggleLocalVideoTrack(true);
-        this.toggleLocalAudioTrack(true);
-    }
-
-    unpublishLocalVideoAudio() {
-        this.toggleLocalVideoTrack(false);
-        this.toggleLocalAudioTrack(false);
-    }
 
     generateMediaConstraints(cameraOptions: any) {
         let mediaConstraints = {

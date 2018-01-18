@@ -11,7 +11,6 @@ import EventEmitter = require('wolfy87-eventemitter');
 export class Session {
 
     sessionId: String;
-    //capabilities: Capabilities
     connection: Connection;
 
     private ee = new EventEmitter();
@@ -89,13 +88,14 @@ export class Session {
                 this.streamPublish(publisher);
             }
         } else { // 'Session.unpublish(Publisher)' has been called
-            let mypublisher = this.openVidu.initPublisher(publisher.stream.getParentId(), this.openVidu.openVidu.storedPublisherOptions);
-            if (mypublisher.isScreenRequested && !mypublisher.stream.isScreenRequestedReady) { // Screen sharing Publisher and video stream not available yet
-                mypublisher.stream.addOnceEventListener('screen-ready', () => {
-                    this.streamPublish(mypublisher);
+            publisher = this.openVidu.reinitPublisher(publisher);
+
+            if (publisher.isScreenRequested && !publisher.stream.isScreenRequestedReady) { // Screen sharing Publisher and video stream not available yet
+                publisher.stream.addOnceEventListener('screen-ready', () => {
+                    this.streamPublish(publisher);
                 });
             } else { // Video stream already available
-                this.streamPublish(mypublisher);
+                this.streamPublish(publisher);
             }
         }
     }

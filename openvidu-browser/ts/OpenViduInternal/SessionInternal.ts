@@ -1,8 +1,9 @@
-import { Stream } from './Stream';
+import { Stream, StreamOptionsServer } from './Stream';
 import { OpenViduInternal } from './OpenViduInternal';
 import { Connection, ConnectionOptions } from './Connection';
-import EventEmitter = require('wolfy87-eventemitter');
 import { Publisher } from '../OpenVidu/Publisher';
+
+import EventEmitter = require('wolfy87-eventemitter');
 
 const SECRET_PARAM = '?secret=';
 
@@ -119,7 +120,7 @@ export class SessionInternal {
 
                         this.connected = true;
 
-                        let exParticipants = response.value;
+                        let exParticipants: ConnectionOptions[] = response.value;
 
                         // IMPORTANT: Update connectionId with value send by server
                         this.localParticipant.connectionId = response.id;
@@ -256,19 +257,19 @@ export class SessionInternal {
         });
     }
 
-    onParticipantPublished(options) {
+    onParticipantPublished(response: ConnectionOptions) {
 
         // Get the existing Connection created on 'onParticipantJoined' for
         // existing participants or create a new one for new participants
-        let connection = this.participants[options.id];
-        if (connection) {
+        let connection: Connection = this.participants[response.id];
+        if (connection != null) {
             // Update existing Connection
-            options.metadata = connection.data;
-            connection.options = options;
-            connection.initStreams(options);
+            response.metadata = connection.data;
+            connection.setOptions(response);
+            connection.initRemoteStreams(response);
         } else {
             // Create new Connection
-            connection = new Connection(this.openVidu, false, this, options);
+            connection = new Connection(this.openVidu, false, this, response);
         }
 
         let pid = connection.connectionId;
@@ -320,6 +321,7 @@ export class SessionInternal {
                 stream.dispose();
                 this.openVidu.getRemoteStreams().splice(index, 1);
                 delete this.streams[stream.streamId];
+                connection.removeStream(stream.streamId);
 
             }
         } else {
@@ -329,9 +331,9 @@ export class SessionInternal {
         }
     }
 
-    onParticipantJoined(msg) {
+    onParticipantJoined(response: ConnectionOptions) {
 
-        let connection = new Connection(this.openVidu, false, this, msg);
+        let connection = new Connection(this.openVidu, false, this, response);
         connection.creationTime = new Date().getTime();
 
         let pid = connection.connectionId;
@@ -573,6 +575,8 @@ export class SessionInternal {
 
             stream.isReadyToPublish = false;
             stream.isScreenRequestedReady = false;
+
+            delete stream.connection.getStreams()[stream.streamId];
 
             publisher.ee.emitEvent('streamDestroyed', [{
                 stream: publisher.stream,

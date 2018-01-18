@@ -5,7 +5,7 @@
  *
  * stream.hasAudio(); stream.hasVideo(); stream.hasData();
  */
-import { Stream, StreamOptions } from '../OpenViduInternal/Stream';
+import { Stream } from '../OpenViduInternal/Stream';
 import { Session } from './Session';
 
 import EventEmitter = require('wolfy87-eventemitter');

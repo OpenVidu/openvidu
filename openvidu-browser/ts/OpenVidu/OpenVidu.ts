@@ -19,6 +19,7 @@ import { OpenViduInternal } from '../OpenViduInternal/OpenViduInternal';
 import { Session } from './Session';
 import { Publisher } from './Publisher';
 import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/OpenViduError';
+import { OutboundStreamOptions } from '../OpenViduInternal/index';
 
 import * as adapter from 'webrtc-adapter';
 import * as screenSharing from '../ScreenSharing/Screen-Capturing.js';
@@ -58,7 +59,6 @@ export class OpenVidu {
 
     initPublisher(parentId: string, cameraOptions?: any, callback?: Function): any {
         if (this.checkSystemRequirements()) {
-            this.openVidu.storedPublisherOptions = cameraOptions;
             let publisher: Publisher;
             if (cameraOptions != null) {
 
@@ -66,6 +66,7 @@ export class OpenVidu {
                 cameraOptions.video = cameraOptions.video != null ? cameraOptions.video : true;
 
                 if (!cameraOptions.screen) {
+
                     // Webcam and/or microphone is being requested
 
                     let cameraOptionsAux = {
@@ -73,16 +74,19 @@ export class OpenVidu {
                         sendVideo: cameraOptions.video != null ? cameraOptions.video : true,
                         activeAudio: cameraOptions.audioActive != null ? cameraOptions.audioActive : true,
                         activeVideo: cameraOptions.videoActive != null ? cameraOptions.videoActive : true,
-                        data: true,
+                        dataChannel: true,
                         mediaConstraints: this.openVidu.generateMediaConstraints(cameraOptions)
                     };
                     cameraOptions = cameraOptionsAux;
-                    publisher = new Publisher(this.openVidu.initPublisherTagged(parentId, cameraOptions, callback), parentId, false);
+
+                    publisher = new Publisher(this.openVidu.initPublisherTagged(parentId, cameraOptions, true, callback), parentId, false);
                     console.info("'Publisher' initialized");
+
                     return publisher;
 
                 } else {
-                    publisher = new Publisher(this.openVidu.initPublisherScreen(parentId, callback), parentId, true);
+
+                    publisher = new Publisher(this.openVidu.initPublisherScreen(parentId, true, callback), parentId, true);
                     if (adapter.browserDetails.browser === 'firefox' && adapter.browserDetails.version >= 52) {
                         screenSharingAuto.getScreenId((error, sourceId, screenConstraints) => {
                             cameraOptions = {
@@ -90,14 +94,17 @@ export class OpenVidu {
                                 sendVideo: cameraOptions.video,
                                 activeAudio: cameraOptions.audioActive != null ? cameraOptions.audioActive : true,
                                 activeVideo: cameraOptions.videoActive != null ? cameraOptions.videoActive : true,
-                                data: true,
+                                dataChannel: true,
                                 mediaConstraints: {
                                     video: screenConstraints.video,
                                     audio: false
                                 }
                             }
+
                             publisher.stream.configureScreenOptions(cameraOptions);
                             console.info("'Publisher' initialized");
+
+                            publisher.stream.ee.emitEvent('can-request-screen');
                         });
                         return publisher;
                     } else if (adapter.browserDetails.browser === 'chrome') {
@@ -145,14 +152,16 @@ export class OpenVidu {
                                 sendVideo: cameraOptions.video != null ? cameraOptions.video : true,
                                 activeAudio: cameraOptions.audioActive != null ? cameraOptions.audioActive : true,
                                 activeVideo: cameraOptions.videoActive != null ? cameraOptions.videoActive : true,
-                                data: true,
+                                dataChannel: true,
                                 mediaConstraints: {
                                     video: screenConstraints.video,
                                     audio: false
                                 }
                             }
+
                             publisher.stream.configureScreenOptions(cameraOptions);
 
+                            publisher.stream.ee.emitEvent('can-request-screen');
                         }, (error) => {
                             console.error('getScreenId error', error);
                             return;
@@ -169,18 +178,63 @@ export class OpenVidu {
                     sendVideo: true,
                     activeAudio: true,
                     activeVideo: true,
-                    data: true,
+                    dataChannel: true,
                     mediaConstraints: {
                         audio: true,
                         video: { width: { ideal: 1280 } }
                     }
                 }
-                publisher = new Publisher(this.openVidu.initPublisherTagged(parentId, cameraOptions, callback), parentId, false);
+                publisher = new Publisher(this.openVidu.initPublisherTagged(parentId, cameraOptions, true, callback), parentId, false);
                 console.info("'Publisher' initialized");
+
                 return publisher;
             }
         } else {
             alert("Browser not supported");
+        }
+    }
+
+    reinitPublisher(publisher: Publisher): any {
+        if (publisher.stream.typeOfVideo !== 'SCREEN') {
+            publisher = new Publisher(this.openVidu.initPublisherTagged(publisher.stream.getParentId(), publisher.stream.outboundOptions, false), publisher.stream.getParentId(), false);
+            console.info("'Publisher' initialized");
+            return publisher;
+        } else {
+            publisher = new Publisher(this.openVidu.initPublisherScreen(publisher.stream.getParentId(), false), publisher.stream.getParentId(), true);
+            if (adapter.browserDetails.browser === 'firefox' && adapter.browserDetails.version >= 52) {
+                screenSharingAuto.getScreenId((error, sourceId, screenConstraints) => {
+
+                    publisher.stream.outboundOptions.mediaConstraints.video = screenConstraints.video;
+                    publisher.stream.configureScreenOptions(publisher.stream.outboundOptions);
+                    console.info("'Publisher' initialized");
+
+                    publisher.stream.ee.emitEvent('can-request-screen');
+                });
+                return publisher;
+            } else if (adapter.browserDetails.browser === 'chrome') {
+                screenSharingAuto.getScreenId((error, sourceId, screenConstraints) => {
+                    if (error === 'not-installed') {
+                        let error = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_NOT_INSTALLED, 'https://chrome.google.com/webstore/detail/screen-capturing/ajhifddimkapgcifgcodmmfdlknahffk');
+                        console.error(error);
+                        return;
+                    } else if (error === 'permission-denied') {
+                        let error = new OpenViduError(OpenViduErrorName.SCREEN_CAPTURE_DENIED, 'You must allow access to one window of your desktop');
+                        console.error(error);
+                        return;
+                    }
+                    publisher.stream.outboundOptions.mediaConstraints.video = screenConstraints.video;
+                    publisher.stream.configureScreenOptions(publisher.stream.outboundOptions);
+
+                    publisher.stream.ee.emitEvent('can-request-screen');
+                }, (error) => {
+                    console.error('getScreenId error', error);
+                    return;
+                });
+                console.info("'Publisher' initialized");
+                return publisher;
+            } else {
+                console.error('Screen sharing not supported on ' + adapter.browserDetails.browser);
+            }
         }
     }
 

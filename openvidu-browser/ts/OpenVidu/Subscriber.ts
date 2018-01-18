@@ -1,4 +1,4 @@
-import { Stream, StreamOptions } from '../OpenViduInternal/Stream';
+import { Stream } from '../OpenViduInternal/Stream';
 
 import EventEmitter = require('wolfy87-eventemitter');
 
