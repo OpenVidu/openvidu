@@ -54,4 +54,17 @@ public class OpenVidu {
     	return s;
     }
     
+    public Session createSession(SessionProperties properties) throws OpenViduException {
+    	Session s = new Session(myHttpClient, urlOpenViduServer, properties);
+    	return s;
+    }
+    
+    public void startArchive(String sessionId) {
+    	// TODO: REST POST to start recording in OpenVidu Server
+    }
+    
+    public void stopArchive(String sessionId) {
+    	// TODO: REST POST to end recording in OpenVidu Server
+    }
+    
 }

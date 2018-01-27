@@ -26,7 +26,7 @@ public class TokenOptions {
 		
 	}
 	
-	public TokenOptions(String data, OpenViduRole role){
+	private TokenOptions(String data, OpenViduRole role){
 		this.data = data;
 		this.role = role;
 	}
