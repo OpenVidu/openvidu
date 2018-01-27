@@ -2,8 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 var OpenViduRole;
 (function (OpenViduRole) {
-    OpenViduRole[OpenViduRole["SUBSCRIBER"] = 'SUBSCRIBER'] = "SUBSCRIBER";
-    OpenViduRole[OpenViduRole["PUBLISHER"] = 'PUBLISHER'] = "PUBLISHER";
-    OpenViduRole[OpenViduRole["MODERATOR"] = 'MODERATOR'] = "MODERATOR";
+    OpenViduRole["SUBSCRIBER"] = "SUBSCRIBER";
+    OpenViduRole["PUBLISHER"] = "PUBLISHER";
+    OpenViduRole["MODERATOR"] = "MODERATOR"; // SUBSCRIBER + PUBLIHSER permissions + can force unpublish() and disconnect() over a third-party stream or user
 })(OpenViduRole = exports.OpenViduRole || (exports.OpenViduRole = {}));
 //# sourceMappingURL=OpenViduRole.js.map

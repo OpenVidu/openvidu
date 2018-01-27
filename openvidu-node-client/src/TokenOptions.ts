@@ -2,16 +2,13 @@ import { OpenViduRole } from "./OpenViduRole";
 
 export class TokenOptions {
 
-    constructor(private data: string, private role: OpenViduRole) {
-        this.data = data;
-        this.role = role;
-    }
+    constructor(private data: string, private role: OpenViduRole) { }
 
-    public getData(): string {
+    getData(): string {
         return this.data;
     }
 
-    public getRole(): OpenViduRole {
+    getRole(): OpenViduRole {
         return this.role;
     }
 }

@@ -7,4 +7,8 @@ __export(require("./OpenVidu"));
 __export(require("./OpenViduRole"));
 __export(require("./Session"));
 __export(require("./TokenOptions"));
+__export(require("./MediaMode"));
+__export(require("./ArchiveLayout"));
+__export(require("./ArchiveMode"));
+__export(require("./SessionProperties"));
 //# sourceMappingURL=index.js.map

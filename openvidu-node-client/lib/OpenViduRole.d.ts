@@ -1,5 +1,5 @@
 export declare enum OpenViduRole {
-    SUBSCRIBER,
-    PUBLISHER,
-    MODERATOR,
+    SUBSCRIBER = "SUBSCRIBER",
+    PUBLISHER = "PUBLISHER",
+    MODERATOR = "MODERATOR",
 }

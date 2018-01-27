@@ -1,1 +1,1 @@
-{"version":3,"file":"OpenViduRole.js","sourceRoot":"","sources":["../src/OpenViduRole.ts"],"names":[],"mappings":";;AAAA,IAAY,YAIX;AAJD,WAAY,YAAY;IACvB,0CAAkB,YAAY,gBAAA,CAAA;IAC9B,yCAAiB,WAAW,eAAA,CAAA;IAC5B,yCAAiB,WAAW,eAAA,CAAA;AAC7B,CAAC,EAJW,YAAY,GAAZ,oBAAY,KAAZ,oBAAY,QAIvB"}
+{"version":3,"file":"OpenViduRole.js","sourceRoot":"","sources":["../src/OpenViduRole.ts"],"names":[],"mappings":";;AAAA,IAAY,YAIX;AAJD,WAAY,YAAY;IACvB,yCAAyB,CAAA;IACzB,uCAAuB,CAAA;IACvB,uCAAuB,CAAA,CAAE,gHAAgH;AAC1I,CAAC,EAJW,YAAY,GAAZ,oBAAY,KAAZ,oBAAY,QAIvB"}

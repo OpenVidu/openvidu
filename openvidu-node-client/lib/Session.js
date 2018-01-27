@@ -1,14 +1,21 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var OpenViduRole_1 = require("./OpenViduRole");
+var SessionProperties_1 = require("./SessionProperties");
 var https = require('https');
-var Session = (function () {
-    function Session(urlOpenViduServer, secret) {
+var Session = /** @class */ (function () {
+    function Session(urlOpenViduServer, secret, properties) {
         this.urlOpenViduServer = urlOpenViduServer;
         this.secret = secret;
         this.sessionIdURL = '/api/sessions';
         this.tokenURL = '/api/tokens';
         this.sessionId = "";
+        if (properties == null) {
+            this.properties = new SessionProperties_1.SessionProperties.Builder().build();
+        }
+        else {
+            this.properties = properties;
+        }
         this.setHostnameAndPort();
     }
     Session.prototype.getSessionId = function (callback) {
@@ -17,13 +24,20 @@ var Session = (function () {
             callback(this.sessionId);
             return;
         }
+        var requestBody = JSON.stringify({
+            'archiveLayout': this.properties.archiveLayout(),
+            'archiveMode': this.properties.archiveMode(),
+            'mediaMode': this.properties.mediaMode()
+        });
         var options = {
             hostname: this.hostname,
             port: this.port,
             path: this.sessionIdURL,
             method: 'POST',
             headers: {
-                'Authorization': this.getBasicAuth()
+                'Authorization': this.getBasicAuth(),
+                'Content-Type': 'application/json',
+                'Content-Length': Buffer.byteLength(requestBody)
             }
         };
         var req = https.request(options, function (res) {
@@ -42,6 +56,7 @@ var Session = (function () {
         req.on('error', function (e) {
             console.error(e);
         });
+        req.write(requestBody);
         req.end();
     };
     Session.prototype.generateToken = function (tokenOptions, callback) {
@@ -89,6 +104,9 @@ var Session = (function () {
         });
         req.write(requestBody);
         req.end();
+    };
+    Session.prototype.getProperties = function () {
+        return this.properties;
     };
     Session.prototype.getBasicAuth = function () {
         return 'Basic ' + (new Buffer('OPENVIDUAPP:' + this.secret).toString('base64'));
