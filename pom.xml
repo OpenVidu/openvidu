@@ -105,6 +105,7 @@
 					validate phase. -->
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-enforcer-plugin</artifactId>
+				<version>${version.enforcer.plugin}</version>
 				<executions>
 					<execution>
 						<id>enforce-java-version</id>
