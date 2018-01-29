@@ -24,7 +24,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         .antMatchers("/").authenticated();
         
         if (openviduConf.getOpenViduRecordingFreeAccess()) {
-        	conf = conf.antMatchers("/recordings/*").anonymous();
+        	conf = conf.antMatchers("/recordings/*").permitAll();
         } else {
         	conf = conf.antMatchers("/recordings/*").authenticated();
         }
