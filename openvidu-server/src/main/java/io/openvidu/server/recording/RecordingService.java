@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.ws.rs.ProcessingException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -104,6 +106,8 @@ public class RecordingService {
 			imageExists = true;
 		} catch (NotFoundException nfe) {
 			imageExists = false;
+		} catch (ProcessingException e) {
+            throw e;
 		}
 		return imageExists;
 	}

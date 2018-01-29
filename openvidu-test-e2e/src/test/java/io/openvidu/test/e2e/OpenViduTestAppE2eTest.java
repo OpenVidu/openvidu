@@ -19,7 +19,6 @@ package io.openvidu.test.e2e;
 
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
-import static org.hamcrest.CoreMatchers.is;
 import static org.openqa.selenium.OutputType.BASE64;
 import org.slf4j.Logger;
 
@@ -31,7 +30,6 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.runner.RunWith;
 import org.junit.platform.runner.JUnitPlatform;
-import org.json.simple.JSONObject;
 import org.junit.Assert;
 
 import org.openqa.selenium.By;

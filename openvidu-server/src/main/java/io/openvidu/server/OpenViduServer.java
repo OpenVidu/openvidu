@@ -19,6 +19,8 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 
+import javax.ws.rs.ProcessingException;
+
 import org.kurento.jsonrpc.JsonUtils;
 import org.kurento.jsonrpc.internal.server.config.JsonRpcConfiguration;
 import org.kurento.jsonrpc.server.JsonRpcConfigurer;
@@ -199,7 +201,15 @@ public class OpenViduServer implements JsonRpcConfigurer {
 			RecordingService recordingService = context.getBean(RecordingService.class);
 			System.out.println("Recording module required: Downloading openvidu/openvidu-recording Docker image (800 MB aprox)");
 			
-			if (recordingService.recordingImageExistsLocally()) {
+			boolean imageExists = false;
+            try {
+                imageExists = recordingService.recordingImageExistsLocally();
+            } catch (ProcessingException exception) {
+                log.error("Exception connecting to Docker daemon: you need Docker installed in this machine to enable OpenVidu recorder service");
+                throw new RuntimeException("Exception connecting to Docker daemon: you need Docker installed in this machine to enable OpenVidu recorder service");
+            }
+            
+            if (imageExists) {
 				System.out.println("Docker image already exists locally");
 			} else {
 				Thread t = new Thread(() -> {
