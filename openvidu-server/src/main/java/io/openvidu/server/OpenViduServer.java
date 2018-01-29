@@ -46,6 +46,7 @@ import io.openvidu.server.kurento.KurentoClientProvider;
 import io.openvidu.server.kurento.core.KurentoSessionEventsHandler;
 import io.openvidu.server.kurento.core.KurentoSessionManager;
 import io.openvidu.server.kurento.kms.FixedOneKmsManager;
+import io.openvidu.server.recording.RecordingService;
 import io.openvidu.server.rest.NgrokRestController;
 import io.openvidu.server.rpc.RpcHandler;
 import io.openvidu.server.rpc.RpcNotificationService;
@@ -116,7 +117,7 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	public KurentoSessionEventsHandler kurentoSessionEventsHandler() {
 		return new KurentoSessionEventsHandler();
 	}
-	
+
 	@Bean
 	@ConditionalOnMissingBean
 	public CallDetailRecord cdr() {
@@ -169,10 +170,10 @@ public class OpenViduServer implements JsonRpcConfigurer {
 			break;
 
 		default:
-			
+
 			URL url = new URL(publicUrl);
 			int port = url.getPort();
-			
+
 			type = "custom";
 			OpenViduServer.publicUrl = publicUrl.replaceFirst("https://", "wss://");
 			if (!OpenViduServer.publicUrl.startsWith("wss://")) {
@@ -184,13 +185,42 @@ public class OpenViduServer implements JsonRpcConfigurer {
 			if (port == -1) {
 				OpenViduServer.publicUrl += ":" + openviduConf.getServerPort();
 			}
-			
+
 			break;
 		}
 
 		if (OpenViduServer.publicUrl == null) {
 			type = "local";
 			OpenViduServer.publicUrl = "wss://localhost:" + openviduConf.getServerPort();
+		}
+
+		boolean recordingModuleEnabled = openviduConf.isRecordingModuleEnabled();
+		if (recordingModuleEnabled) {
+			RecordingService recordingService = context.getBean(RecordingService.class);
+			System.out.println("Recording module required: Downloading openvidu/openvidu-recording Docker image (800 MB aprox)");
+			
+			if (recordingService.recordingImageExistsLocally()) {
+				System.out.println("Docker image already exists locally");
+			} else {
+				Thread t = new Thread(() -> {
+					boolean keep = true;
+					System.out.print("Downloading ");
+					while (keep) {
+						System.out.print(".");
+						try {
+							Thread.sleep(1000);
+						} catch (InterruptedException e) {
+							keep = false;
+							System.out.println("\nDownload complete");
+						}
+					}
+				});
+				t.start();
+				recordingService.downloadRecordingImage();
+				t.interrupt();
+				t.join();
+				System.out.println("Docker image available");
+			}
 		}
 
 		System.out.println("OpenVidu Server using " + type + " URL: " + OpenViduServer.publicUrl);

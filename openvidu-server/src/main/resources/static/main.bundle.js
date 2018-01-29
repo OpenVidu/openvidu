@@ -2764,6 +2764,7 @@ var RpcBuilder = __webpack_require__("../../../../../../../../../openvidu-browse
 var OpenViduInternal = /** @class */ (function () {
     function OpenViduInternal() {
         this.remoteStreams = [];
+        this.recorder = false;
     }
     /* NEW METHODS */
     OpenViduInternal.prototype.initSession = function (sessionId) {
@@ -2890,6 +2891,12 @@ var OpenViduInternal = /** @class */ (function () {
     };
     OpenViduInternal.prototype.setSecret = function (secret) {
         this.secret = secret;
+    };
+    OpenViduInternal.prototype.getRecorder = function () {
+        return this.recorder;
+    };
+    OpenViduInternal.prototype.setRecorder = function (recorder) {
+        this.recorder = recorder;
     };
     OpenViduInternal.prototype.getOpenViduServerURL = function () {
         return 'https://' + this.wsUri.split("wss://")[1].split("/room")[0];
@@ -3102,6 +3109,7 @@ exports.__esModule = true;
 var Connection_1 = __webpack_require__("../../../../../../../../../openvidu-browser/lib/OpenViduInternal/Connection.js");
 var EventEmitter = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/wolfy87-eventemitter/EventEmitter.js");
 var SECRET_PARAM = '?secret=';
+var RECORDER_PARAM = '&recorder=';
 var SessionInternal = /** @class */ (function () {
     function SessionInternal(openVidu, sessionId) {
         this.openVidu = openVidu;
@@ -3117,15 +3125,36 @@ var SessionInternal = /** @class */ (function () {
         }
     }
     SessionInternal.prototype.processOpenViduUrl = function (url) {
-        this.openVidu.setSecret(this.getSecretFromUrl(url));
+        var secret = this.getSecretFromUrl(url);
+        var recorder = this.getRecorderFromUrl(url);
+        if (!(secret == null)) {
+            this.openVidu.setSecret(secret);
+        }
+        if (!(recorder == null)) {
+            this.openVidu.setRecorder(recorder);
+        }
         this.openVidu.setWsUri(this.getFinalUrl(url));
     };
     SessionInternal.prototype.getSecretFromUrl = function (url) {
         var secret = '';
         if (url.indexOf(SECRET_PARAM) !== -1) {
-            secret = url.substring(url.lastIndexOf(SECRET_PARAM) + SECRET_PARAM.length, url.length);
+            var endOfSecret = url.lastIndexOf(RECORDER_PARAM);
+            if (endOfSecret !== -1) {
+                secret = url.substring(url.lastIndexOf(SECRET_PARAM) + SECRET_PARAM.length, endOfSecret);
+            }
+            else {
+                secret = url.substring(url.lastIndexOf(SECRET_PARAM) + SECRET_PARAM.length, url.length);
+            }
         }
         return secret;
+    };
+    SessionInternal.prototype.getRecorderFromUrl = function (url) {
+        var recorder = '';
+        if (url.indexOf(RECORDER_PARAM) !== -1) {
+            recorder = url.substring(url.lastIndexOf(RECORDER_PARAM) + RECORDER_PARAM.length, url.length);
+        }
+        return new Boolean(recorder).valueOf();
+        ;
     };
     SessionInternal.prototype.getUrlWithoutSecret = function (url) {
         if (!url) {
@@ -3165,6 +3194,7 @@ var SessionInternal = /** @class */ (function () {
                     session: _this.sessionId,
                     metadata: _this.options.metadata,
                     secret: _this.openVidu.getSecret(),
+                    recorder: _this.openVidu.getRecorder(),
                     dataChannels: false
                 };
                 if (_this.localParticipant) {
@@ -9819,9 +9849,9 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/**
     } else {
         // requirejs env (optional)
         if ("function" === FUNC_TYPE && __webpack_require__("../../../../webpack/buildin/amd-options.js")) {
-            !(__WEBPACK_AMD_DEFINE_RESULT__ = function () {
+            !(__WEBPACK_AMD_DEFINE_RESULT__ = (function () {
                 return UAParser;
-            }.call(exports, __webpack_require__, exports, module),
+            }).call(exports, __webpack_require__, exports, module),
 				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
         } else if (window) {
             // browser env
@@ -13071,9 +13101,9 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/*!
 
     // Expose the class either via AMD, CommonJS or the global object
     if (true) {
-        !(__WEBPACK_AMD_DEFINE_RESULT__ = function () {
+        !(__WEBPACK_AMD_DEFINE_RESULT__ = (function () {
             return EventEmitter;
-        }.call(exports, __webpack_require__, exports, module),
+        }).call(exports, __webpack_require__, exports, module),
 				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
     }
     else if (typeof module === 'object' && module.exports){
@@ -13135,62 +13165,22 @@ module.exports = "<main>\n  <router-outlet></router-outlet>\n</main>"
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AppComponent; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__("../../../core/esm5/core.js");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_services_info_service__ = __webpack_require__("../../../../../src/app/services/info.service.ts");
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-
 
 var AppComponent = (function () {
-    function AppComponent(infoService) {
-        this.infoService = infoService;
+    function AppComponent() {
     }
-    AppComponent.prototype.ngOnInit = function () {
-        var _this = this;
-        var protocol = location.protocol.includes('https') ? 'wss://' : 'ws://';
-        var port = (location.port) ? (':' + location.port) : '';
-        this.websocket = new WebSocket(protocol + location.hostname + port + '/info');
-        this.websocket.onopen = function (event) {
-            console.log('Info websocket connected');
-        };
-        this.websocket.onclose = function (event) {
-            console.log('Info websocket closed');
-        };
-        this.websocket.onerror = function (event) {
-            console.log('Info websocket error');
-        };
-        this.websocket.onmessage = function (event) {
-            console.log('Info websocket message');
-            console.log(event.data);
-            _this.infoService.updateInfo(event.data);
-        };
-    };
-    AppComponent.prototype.ngOnDestroy = function () {
-        this.websocket.close();
-    };
-    AppComponent.prototype.beforeUnloadHander = function (event) {
-        console.warn('Closing info websocket');
-        this.websocket.close();
-    };
-    __decorate([
-        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["A" /* HostListener */])('window:beforeunload', ['$event']),
-        __metadata("design:type", Function),
-        __metadata("design:paramtypes", [Object]),
-        __metadata("design:returntype", void 0)
-    ], AppComponent.prototype, "beforeUnloadHander", null);
     AppComponent = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
             selector: 'app-root',
             template: __webpack_require__("../../../../../src/app/app.component.html"),
             styles: [__webpack_require__("../../../../../src/app/app.component.css")]
-        }),
-        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_app_services_info_service__["a" /* InfoService */]])
+        })
     ], AppComponent);
     return AppComponent;
 }());
@@ -13275,12 +13265,14 @@ var AppMaterialModule = (function () {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__components_dashboard_dashboard_component__ = __webpack_require__("../../../../../src/app/components/dashboard/dashboard.component.ts");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__components_session_details_session_details_component__ = __webpack_require__("../../../../../src/app/components/session-details/session-details.component.ts");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__components_dashboard_credentials_dialog_component__ = __webpack_require__("../../../../../src/app/components/dashboard/credentials-dialog.component.ts");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_13__components_layouts_layout_best_fit_layout_best_fit_component__ = __webpack_require__("../../../../../src/app/components/layouts/layout-best-fit/layout-best-fit.component.ts");
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+
 
 
 
@@ -13304,6 +13296,7 @@ var AppModule = (function () {
                 __WEBPACK_IMPORTED_MODULE_10__components_dashboard_dashboard_component__["a" /* DashboardComponent */],
                 __WEBPACK_IMPORTED_MODULE_11__components_session_details_session_details_component__["a" /* SessionDetailsComponent */],
                 __WEBPACK_IMPORTED_MODULE_12__components_dashboard_credentials_dialog_component__["a" /* CredentialsDialogComponent */],
+                __WEBPACK_IMPORTED_MODULE_13__components_layouts_layout_best_fit_layout_best_fit_component__["a" /* LayoutBestFitComponent */],
             ],
             imports: [
                 __WEBPACK_IMPORTED_MODULE_0__angular_platform_browser__["a" /* BrowserModule */],
@@ -13335,20 +13328,29 @@ var AppModule = (function () {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_router__ = __webpack_require__("../../../router/esm5/router.js");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_components_dashboard_dashboard_component__ = __webpack_require__("../../../../../src/app/components/dashboard/dashboard.component.ts");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_app_components_session_details_session_details_component__ = __webpack_require__("../../../../../src/app/components/session-details/session-details.component.ts");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_app_components_layouts_layout_best_fit_layout_best_fit_component__ = __webpack_require__("../../../../../src/app/components/layouts/layout-best-fit/layout-best-fit.component.ts");
+
 
 
 
 var appRoutes = [
     {
         path: '',
-        component: __WEBPACK_IMPORTED_MODULE_1_app_components_dashboard_dashboard_component__["a" /* DashboardComponent */]
+        component: __WEBPACK_IMPORTED_MODULE_1_app_components_dashboard_dashboard_component__["a" /* DashboardComponent */],
+        pathMatch: 'full'
     },
     {
-        path: 'session/:id',
-        component: __WEBPACK_IMPORTED_MODULE_2_app_components_session_details_session_details_component__["a" /* SessionDetailsComponent */]
+        path: 'session/:sessionId',
+        component: __WEBPACK_IMPORTED_MODULE_2_app_components_session_details_session_details_component__["a" /* SessionDetailsComponent */],
+        pathMatch: 'full'
+    },
+    {
+        path: 'layout-best-fit/:sessionId/:secret',
+        component: __WEBPACK_IMPORTED_MODULE_3_app_components_layouts_layout_best_fit_layout_best_fit_component__["a" /* LayoutBestFitComponent */],
+        pathMatch: 'full'
     }
 ];
-var routing = __WEBPACK_IMPORTED_MODULE_0__angular_router__["a" /* RouterModule */].forRoot(appRoutes);
+var routing = __WEBPACK_IMPORTED_MODULE_0__angular_router__["b" /* RouterModule */].forRoot(appRoutes, { useHash: true });
 
 
 /***/ }),
@@ -13398,7 +13400,7 @@ exports = module.exports = __webpack_require__("../../../../css-loader/lib/css-b
 
 
 // module
-exports.push([module.i, "#dashboard-div {\n  padding: 20px;\n}\n\n#log {\n  height: 90%;\n}\n\n#log-content {\n  height: 90%;\n  font-family: Consolas, 'Liberation Mono', Menlo, Courier, monospace;\n  overflow-y: auto;\n  overflow-x: hidden\n}\n\nul {\n  margin: 0;\n}\n\n#test-btn {\n  text-transform: uppercase;\n  float: right;\n}\n\nmat-card-title button.blue {\n  color: #ffffff;\n  background-color: #0088aa;\n}\n\nmat-card-title button.yellow {\n  color: rgba(0, 0, 0, 0.87);\n  background-color: #ffcc00;\n}\n\nmat-spinner {\n  position: absolute;\n  top: 50%;\n  left: 50%;\n  -webkit-transform: translate(-50%, -50%);\n          transform: translate(-50%, -50%);\n}\n\n#tick-div {\n  width: 100px;\n  height: 100px;\n  z-index: 1;\n  position: absolute;\n  top: 50%;\n  left: 50%;\n  -webkit-transform: translate(-50%, -50%);\n          transform: translate(-50%, -50%);\n}\n\n#tooltip-tick {\n  position: absolute;\n  width: 100%;\n  height: 100%;\n  z-index: 2;\n}\n\n.circ {\n  opacity: 0;\n  stroke-dasharray: 130;\n  stroke-dashoffset: 130;\n  transition: all 1s;\n}\n\n.tick {\n  stroke-dasharray: 50;\n  stroke-dashoffset: 50;\n  transition: stroke-dashoffset 1s 0.5s ease-out;\n}\n\n.drawn+svg .path {\n  opacity: 1;\n  stroke-dashoffset: 0;\n}\n\n#mirrored-video {\n  position: relative;\n}\n\n\n/* Pure CSS loader */\n\n#loader {\n  width: 100px;\n  height: 100px;\n  z-index: 1;\n  position: absolute;\n  top: 50%;\n  left: 50%;\n  -webkit-transform: translate(-50%, -50%);\n  transform: translate(-50%, -50%);\n}\n\n#loader * {\n  box-sizing: border-box;\n}\n\n#loader ::after {\n  box-sizing: border-box;\n}\n\n#loader ::before {\n  box-sizing: border-box;\n}\n\n.loader-1 {\n  height: 100px;\n  width: 100px;\n  -webkit-animation: loader-1-1 4.8s linear infinite;\n  animation: loader-1-1 4.8s linear infinite;\n}\n\n@-webkit-keyframes loader-1-1 {\n  0% {\n    -webkit-transform: rotate(0deg);\n  }\n  100% {\n    -webkit-transform: rotate(360deg);\n  }\n}\n\n@keyframes loader-1-1 {\n  0% {\n    -webkit-transform: rotate(0deg);\n            transform: rotate(0deg);\n  }\n  100% {\n    -webkit-transform: rotate(360deg);\n            transform: rotate(360deg);\n  }\n}\n\n.loader-1 span {\n  display: block;\n  position: absolute;\n  top: 0;\n  left: 0;\n  bottom: 0;\n  right: 0;\n  margin: auto;\n  height: 100px;\n  width: 100px;\n  clip: rect(0, 100px, 100px, 50px);\n  -webkit-animation: loader-1-2 1.2s linear infinite;\n  animation: loader-1-2 1.2s linear infinite;\n}\n\n@-webkit-keyframes loader-1-2 {\n  0% {\n    -webkit-transform: rotate(0deg);\n  }\n  100% {\n    -webkit-transform: rotate(220deg);\n  }\n}\n\n@keyframes loader-1-2 {\n  0% {\n    -webkit-transform: rotate(0deg);\n            transform: rotate(0deg);\n  }\n  100% {\n    -webkit-transform: rotate(220deg);\n            transform: rotate(220deg);\n  }\n}\n\n.loader-1 span::after {\n  content: \"\";\n  position: absolute;\n  top: 0;\n  left: 0;\n  bottom: 0;\n  right: 0;\n  margin: auto;\n  height: 100px;\n  width: 100px;\n  clip: rect(0, 100px, 100px, 50px);\n  border: 8px solid #4d4d4d;\n  border-radius: 50%;\n  -webkit-animation: loader-1-3 1.2s cubic-bezier(0.770, 0.000, 0.175, 1.000) infinite;\n  animation: loader-1-3 1.2s cubic-bezier(0.770, 0.000, 0.175, 1.000) infinite;\n}\n\n@-webkit-keyframes loader-1-3 {\n  0% {\n    -webkit-transform: rotate(-140deg);\n  }\n  50% {\n    -webkit-transform: rotate(-160deg);\n  }\n  100% {\n    -webkit-transform: rotate(140deg);\n  }\n}\n\n@keyframes loader-1-3 {\n  0% {\n    -webkit-transform: rotate(-140deg);\n            transform: rotate(-140deg);\n  }\n  50% {\n    -webkit-transform: rotate(-160deg);\n            transform: rotate(-160deg);\n  }\n  100% {\n    -webkit-transform: rotate(140deg);\n            transform: rotate(140deg);\n  }\n}", ""]);
+exports.push([module.i, "#dashboard-div {\n  padding: 20px;\n}\n\n#log {\n  height: 90%;\n}\n\n#log-content {\n  height: 90%;\n  font-family: Consolas, 'Liberation Mono', Menlo, Courier, monospace;\n  overflow-y: auto;\n  overflow-x: hidden\n}\n\nul {\n  margin: 0;\n}\n\n#test-btn {\n  text-transform: uppercase;\n  float: right;\n}\n\nmat-card-title button.blue {\n  color: #ffffff;\n  background-color: #0088aa;\n}\n\nmat-card-title button.yellow {\n  color: rgba(0, 0, 0, 0.87);\n  background-color: #ffcc00;\n}\n\nmat-spinner {\n  position: absolute;\n  top: 50%;\n  left: 50%;\n  -webkit-transform: translate(-50%, -50%);\n          transform: translate(-50%, -50%);\n}\n\n#tick-div {\n  width: 100px;\n  height: 100px;\n  z-index: 1;\n  position: absolute;\n  top: 50%;\n  left: 50%;\n  -webkit-transform: translate(-50%, -50%);\n          transform: translate(-50%, -50%);\n}\n\n#tooltip-tick {\n  position: absolute;\n  width: 100%;\n  height: 100%;\n  z-index: 2;\n}\n\n.circ {\n  opacity: 0;\n  stroke-dasharray: 130;\n  stroke-dashoffset: 130;\n  -webkit-transition: all 1s;\n  transition: all 1s;\n}\n\n.tick {\n  stroke-dasharray: 50;\n  stroke-dashoffset: 50;\n  -webkit-transition: stroke-dashoffset 1s 0.5s ease-out;\n  transition: stroke-dashoffset 1s 0.5s ease-out;\n}\n\n.drawn+svg .path {\n  opacity: 1;\n  stroke-dashoffset: 0;\n}\n\n#mirrored-video {\n  position: relative;\n}\n\n/* Pure CSS loader */\n\n#loader {\n  width: 100px;\n  height: 100px;\n  z-index: 1;\n  position: absolute;\n  top: 50%;\n  left: 50%;\n  -webkit-transform: translate(-50%, -50%);\n  transform: translate(-50%, -50%);\n}\n\n#loader * {\n  -webkit-box-sizing: border-box;\n  box-sizing: border-box;\n}\n\n#loader ::after {\n  -webkit-box-sizing: border-box;\n  box-sizing: border-box;\n}\n\n#loader ::before {\n  -webkit-box-sizing: border-box;\n  box-sizing: border-box;\n}\n\n.loader-1 {\n  height: 100px;\n  width: 100px;\n  -webkit-animation: loader-1-1 4.8s linear infinite;\n  animation: loader-1-1 4.8s linear infinite;\n}\n\n@-webkit-keyframes loader-1-1 {\n  0% {\n    -webkit-transform: rotate(0deg);\n  }\n  100% {\n    -webkit-transform: rotate(360deg);\n  }\n}\n\n@keyframes loader-1-1 {\n  0% {\n    -webkit-transform: rotate(0deg);\n            transform: rotate(0deg);\n  }\n  100% {\n    -webkit-transform: rotate(360deg);\n            transform: rotate(360deg);\n  }\n}\n\n.loader-1 span {\n  display: block;\n  position: absolute;\n  top: 0;\n  left: 0;\n  bottom: 0;\n  right: 0;\n  margin: auto;\n  height: 100px;\n  width: 100px;\n  clip: rect(0, 100px, 100px, 50px);\n  -webkit-animation: loader-1-2 1.2s linear infinite;\n  animation: loader-1-2 1.2s linear infinite;\n}\n\n@-webkit-keyframes loader-1-2 {\n  0% {\n    -webkit-transform: rotate(0deg);\n  }\n  100% {\n    -webkit-transform: rotate(220deg);\n  }\n}\n\n@keyframes loader-1-2 {\n  0% {\n    -webkit-transform: rotate(0deg);\n            transform: rotate(0deg);\n  }\n  100% {\n    -webkit-transform: rotate(220deg);\n            transform: rotate(220deg);\n  }\n}\n\n.loader-1 span::after {\n  content: \"\";\n  position: absolute;\n  top: 0;\n  left: 0;\n  bottom: 0;\n  right: 0;\n  margin: auto;\n  height: 100px;\n  width: 100px;\n  clip: rect(0, 100px, 100px, 50px);\n  border: 8px solid #4d4d4d;\n  border-radius: 50%;\n  -webkit-animation: loader-1-3 1.2s cubic-bezier(0.770, 0.000, 0.175, 1.000) infinite;\n  animation: loader-1-3 1.2s cubic-bezier(0.770, 0.000, 0.175, 1.000) infinite;\n}\n\n@-webkit-keyframes loader-1-3 {\n  0% {\n    -webkit-transform: rotate(-140deg);\n  }\n  50% {\n    -webkit-transform: rotate(-160deg);\n  }\n  100% {\n    -webkit-transform: rotate(140deg);\n  }\n}\n\n@keyframes loader-1-3 {\n  0% {\n    -webkit-transform: rotate(-140deg);\n            transform: rotate(-140deg);\n  }\n  50% {\n    -webkit-transform: rotate(-160deg);\n            transform: rotate(-160deg);\n  }\n  100% {\n    -webkit-transform: rotate(140deg);\n            transform: rotate(140deg);\n  }\n}", ""]);
 
 // exports
 
@@ -13459,18 +13461,38 @@ var DashboardComponent = (function () {
         });
     }
     DashboardComponent.prototype.ngOnInit = function () {
+        var _this = this;
+        var protocol = location.protocol.includes('https') ? 'wss://' : 'ws://';
+        var port = (location.port) ? (':' + location.port) : '';
+        this.websocket = new WebSocket(protocol + location.hostname + port + '/info');
+        this.websocket.onopen = function (event) {
+            console.log('Info websocket connected');
+        };
+        this.websocket.onclose = function (event) {
+            console.log('Info websocket closed');
+        };
+        this.websocket.onerror = function (event) {
+            console.log('Info websocket error');
+        };
+        this.websocket.onmessage = function (event) {
+            console.log('Info websocket message');
+            console.log(event.data);
+            _this.infoService.updateInfo(event.data);
+        };
     };
     DashboardComponent.prototype.beforeunloadHandler = function () {
-        // On window closed leave test session
+        // On window closed leave test session and close info websocket
         if (this.session) {
             this.endTestVideo();
         }
+        this.websocket.close();
     };
     DashboardComponent.prototype.ngOnDestroy = function () {
-        // On component destroyed leave test session
+        // On component destroyed leave test session and close info websocket
         if (this.session) {
             this.endTestVideo();
         }
+        this.websocket.close();
     };
     DashboardComponent.prototype.toggleTestVideo = function () {
         if (!this.session) {
@@ -13585,6 +13607,188 @@ var DashboardComponent = (function () {
         __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_2__services_info_service__["a" /* InfoService */], __WEBPACK_IMPORTED_MODULE_1__angular_material__["d" /* MatDialog */]])
     ], DashboardComponent);
     return DashboardComponent;
+}());
+
+
+
+/***/ }),
+
+/***/ "../../../../../src/app/components/layouts/layout-best-fit/layout-best-fit.component.css":
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__("../../../../css-loader/lib/css-base.js")(false);
+// imports
+
+
+// module
+exports.push([module.i, ".bounds {\n  background-color: black;\n  height: 100%;\n  overflow: hidden;\n  cursor: none !important;\n}\n\nvideo {\n  height: 100%;\n}\n", ""]);
+
+// exports
+
+
+/*** EXPORTS FROM exports-loader ***/
+module.exports = module.exports.toString();
+
+/***/ }),
+
+/***/ "../../../../../src/app/components/layouts/layout-best-fit/layout-best-fit.component.html":
+/***/ (function(module, exports) {
+
+module.exports = "<div class=\"bounds\">\n  <div *ngFor=\"let streams of remoteStreams\" class=\"content\" fxLayout=\"row\" fxFlexFill [style.height]=\"100 / remoteStreams.length + '%'\"\n    [style.min-height]=\"100 / remoteStreams.length + '%'\">\n    <div *ngFor=\"let s of streams\" [fxFlex]=\"100 / streams\">\n      <video [id]=\"'native-video-' + s.streamId\" autoplay=\"true\" [srcObject]=\"s.getMediaStream()\"></video>\n    </div>\n  </div>\n</div>\n"
+
+/***/ }),
+
+/***/ "../../../../../src/app/components/layouts/layout-best-fit/layout-best-fit.component.ts":
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return LayoutBestFitComponent; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__("../../../core/esm5/core.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_router__ = __webpack_require__("../../../router/esm5/router.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_openvidu_browser__ = __webpack_require__("../../../../../../../../../openvidu-browser/lib/OpenVidu/index.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_openvidu_browser___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_openvidu_browser__);
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+
+
+
+var LayoutBestFitComponent = (function () {
+    function LayoutBestFitComponent(route) {
+        var _this = this;
+        this.route = route;
+        this.numberOfVideos = 0;
+        this.remoteStreams = [];
+        this.route.params.subscribe(function (params) {
+            _this.sessionId = params.sessionId;
+            _this.secret = params.secret;
+        });
+    }
+    LayoutBestFitComponent.prototype.beforeunloadHandler = function () {
+        this.leaveSession();
+    };
+    LayoutBestFitComponent.prototype.ngOnDestroy = function () {
+        this.leaveSession();
+    };
+    LayoutBestFitComponent.prototype.ngOnInit = function () {
+        var _this = this;
+        var OV = new __WEBPACK_IMPORTED_MODULE_2_openvidu_browser__["OpenVidu"]();
+        var fullSessionId = 'wss://' + location.hostname + ':8443/' + this.sessionId + '?secret=' + this.secret + '&recorder=true';
+        this.session = OV.initSession(fullSessionId);
+        this.session.on('streamCreated', function (event) {
+            _this.numberOfVideos++;
+            _this.addRemoteStream(event.stream);
+            _this.session.subscribe(event.stream, '');
+        });
+        this.session.on('streamDestroyed', function (event) {
+            _this.numberOfVideos--;
+            event.preventDefault();
+            _this.deleteRemoteStream(event.stream);
+        });
+        this.session.connect(null, function (error) {
+            if (error) {
+                console.error(error);
+            }
+        });
+    };
+    LayoutBestFitComponent.prototype.addRemoteStream = function (stream) {
+        switch (true) {
+            case (this.numberOfVideos <= 2):
+                if (this.remoteStreams[0] == null) {
+                    this.remoteStreams[0] = [];
+                }
+                this.remoteStreams[0].push(stream);
+                break;
+            case (this.numberOfVideos <= 4):
+                if (this.remoteStreams[1] == null) {
+                    this.remoteStreams[1] = [];
+                }
+                this.remoteStreams[1].push(stream);
+                break;
+            case (this.numberOfVideos <= 5):
+                this.remoteStreams[0].push(stream);
+                break;
+            case (this.numberOfVideos <= 6):
+                this.remoteStreams[1].push(stream);
+                break;
+            default:
+                if (this.remoteStreams[2] == null) {
+                    this.remoteStreams[2] = [];
+                }
+                this.remoteStreams[2].push(stream);
+                break;
+        }
+    };
+    LayoutBestFitComponent.prototype.deleteRemoteStream = function (stream) {
+        for (var i = 0; i < this.remoteStreams.length; i++) {
+            var index = this.remoteStreams[i].indexOf(stream, 0);
+            if (index > -1) {
+                this.remoteStreams[i].splice(index, 1);
+                this.reArrangeVideos();
+                break;
+            }
+        }
+    };
+    LayoutBestFitComponent.prototype.reArrangeVideos = function () {
+        switch (true) {
+            case (this.numberOfVideos === 1):
+                if (this.remoteStreams[0].length === 0) {
+                    this.remoteStreams[0].push(this.remoteStreams[1].pop());
+                }
+                break;
+            case (this.numberOfVideos === 2):
+                if (this.remoteStreams[0].length === 1) {
+                    this.remoteStreams[0].push(this.remoteStreams[1].pop());
+                }
+                break;
+            case (this.numberOfVideos === 3):
+                if (this.remoteStreams[0].length === 1) {
+                    this.remoteStreams[0].push(this.remoteStreams[1].pop());
+                }
+                break;
+            case (this.numberOfVideos === 4):
+                if (this.remoteStreams[0].length === 3) {
+                    this.remoteStreams[1].unshift(this.remoteStreams[0].pop());
+                }
+                break;
+            case (this.numberOfVideos === 5):
+                if (this.remoteStreams[0].length === 2) {
+                    this.remoteStreams[0].push(this.remoteStreams[1].shift());
+                }
+                break;
+        }
+        this.remoteStreams = this.remoteStreams.filter(function (array) { return array.length > 0; });
+    };
+    LayoutBestFitComponent.prototype.leaveSession = function () {
+        if (this.session) {
+            this.session.disconnect();
+        }
+        ;
+        this.remoteStreams = [];
+        this.numberOfVideos = 0;
+        this.session = null;
+    };
+    __decorate([
+        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["A" /* HostListener */])('window:beforeunload'),
+        __metadata("design:type", Function),
+        __metadata("design:paramtypes", []),
+        __metadata("design:returntype", void 0)
+    ], LayoutBestFitComponent.prototype, "beforeunloadHandler", null);
+    LayoutBestFitComponent = __decorate([
+        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
+            selector: 'app-layout-best-fit',
+            template: __webpack_require__("../../../../../src/app/components/layouts/layout-best-fit/layout-best-fit.component.html"),
+            styles: [__webpack_require__("../../../../../src/app/components/layouts/layout-best-fit/layout-best-fit.component.css")]
+        }),
+        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1__angular_router__["a" /* ActivatedRoute */]])
+    ], LayoutBestFitComponent);
+    return LayoutBestFitComponent;
 }());
 
 

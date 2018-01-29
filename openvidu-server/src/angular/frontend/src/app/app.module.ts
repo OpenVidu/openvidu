@@ -15,6 +15,7 @@ import { AppComponent } from './app.component';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { SessionDetailsComponent } from './components/session-details/session-details.component';
 import { CredentialsDialogComponent } from './components/dashboard/credentials-dialog.component';
+import { LayoutBestFitComponent } from './components/layouts/layout-best-fit/layout-best-fit.component';
 
 
 @NgModule({
@@ -23,6 +24,7 @@ import { CredentialsDialogComponent } from './components/dashboard/credentials-d
     DashboardComponent,
     SessionDetailsComponent,
     CredentialsDialogComponent,
+    LayoutBestFitComponent,
   ],
   imports: [
     BrowserModule,

@@ -93,9 +93,22 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		String token = getStringParam(request, ProtocolElements.JOINROOM_TOKEN_PARAM);
 		String secret = getStringParam(request, ProtocolElements.JOINROOM_SECRET_PARAM);
 		String participantPrivatetId = rpcConnection.getParticipantPrivateId();
+		
+		boolean recorder = false;
+		
+		try {
+			recorder = getBooleanParam(request, ProtocolElements.JOINROOM_RECORDER_PARAM);
+		} catch (RuntimeException e) {
+			// Nothing happens. 'recorder' param to false
+		}
+		
+		boolean generateRecorderParticipant = false;
 
 		if (openviduConfig.isOpenViduSecret(secret)) {
 			sessionManager.newInsecureParticipant(participantPrivatetId);
+			if (recorder) {
+				generateRecorderParticipant = true;
+			}
 		}
 
 		if (sessionManager.isTokenValidInSession(token, sessionId, participantPrivatetId)) {
@@ -105,9 +118,16 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 			if (sessionManager.isMetadataFormatCorrect(clientMetadata)) {
 
 				Token tokenObj = sessionManager.consumeToken(sessionId, participantPrivatetId, token);
-				Participant participant = sessionManager.newParticipant(sessionId, participantPrivatetId, tokenObj,
-						clientMetadata);
-
+				Participant participant;
+				
+				if (generateRecorderParticipant) {
+					participant = sessionManager.newRecorderParticipant(sessionId, participantPrivatetId, tokenObj,
+							clientMetadata);
+				} else {
+					participant = sessionManager.newParticipant(sessionId, participantPrivatetId, tokenObj,
+							clientMetadata);
+				}
+				
 				rpcConnection.setSessionId(sessionId);
 				sessionManager.joinRoom(participant, sessionId, request.getId());
 

@@ -16,6 +16,8 @@ declare const $;
 })
 export class DashboardComponent implements OnInit, OnDestroy {
 
+  websocket: WebSocket;
+
   @ViewChild('scrollMe') private myScrollContainer: ElementRef;
   lockScroll = false;
 
@@ -41,21 +43,43 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
 
+    const protocol = location.protocol.includes('https') ? 'wss://' : 'ws://';
+    const port = (location.port) ? (':' + location.port) : '';
+
+    this.websocket = new WebSocket(protocol + location.hostname + port + '/info');
+
+    this.websocket.onopen = (event) => {
+      console.log('Info websocket connected');
+    };
+    this.websocket.onclose = (event) => {
+      console.log('Info websocket closed');
+    };
+    this.websocket.onerror = (event) => {
+      console.log('Info websocket error');
+    };
+    this.websocket.onmessage = (event) => {
+      console.log('Info websocket message');
+      console.log(event.data);
+      this.infoService.updateInfo(event.data);
+
+    };
   }
 
   @HostListener('window:beforeunload')
   beforeunloadHandler() {
-    // On window closed leave test session
+    // On window closed leave test session and close info websocket
     if (this.session) {
       this.endTestVideo();
     }
+    this.websocket.close();
   }
 
   ngOnDestroy() {
-    // On component destroyed leave test session
+    // On component destroyed leave test session and close info websocket
     if (this.session) {
       this.endTestVideo();
     }
+    this.websocket.close();
   }
 
   toggleTestVideo() {

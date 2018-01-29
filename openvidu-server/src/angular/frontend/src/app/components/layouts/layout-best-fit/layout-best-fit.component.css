@@ -1,0 +1,10 @@
+.bounds {
+  background-color: black;
+  height: 100%;
+  overflow: hidden;
+  cursor: none !important;
+}
+
+video {
+  height: 100%;
+}

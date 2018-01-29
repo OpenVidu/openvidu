@@ -18,12 +18,17 @@ import com.google.gson.JsonSyntaxException;
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
+import io.openvidu.java.client.ArchiveMode;
+import io.openvidu.java.client.MediaMode;
+import io.openvidu.java.client.SessionProperties;
 import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.kurento.KurentoClientProvider;
 import io.openvidu.server.kurento.KurentoClientSessionInfo;
 import io.openvidu.server.kurento.OpenViduKurentoClientSessionInfo;
 import io.openvidu.server.kurento.endpoint.SdpType;
+import io.openvidu.server.recording.RecordingService;
 import io.openvidu.server.rpc.RpcHandler;
+import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
@@ -38,6 +43,12 @@ public class KurentoSessionManager extends SessionManager {
 	@Autowired
 	private KurentoSessionEventsHandler sessionHandler;
 
+	@Autowired
+	private RecordingService recordingService;
+
+	@Autowired
+	OpenviduConfig openviduConfig;
+
 	@Override
 	public synchronized void joinRoom(Participant participant, String sessionId, Integer transactionId) {
 		Set<Participant> existingParticipants = null;
@@ -48,7 +59,12 @@ public class KurentoSessionManager extends SessionManager {
 
 			KurentoSession session = (KurentoSession) sessions.get(sessionId);
 			if (session == null && kcSessionInfo != null) {
-				createSession(kcSessionInfo);
+				SessionProperties properties = sessionProperties.get(sessionId);
+				if (properties == null && this.isInsecureParticipant(participant.getParticipantPrivateId())) {
+					properties = new SessionProperties.Builder().mediaMode(MediaMode.ROUTED)
+							.archiveMode(ArchiveMode.ALWAYS).build();
+				}
+				createSession(kcSessionInfo, properties);
 			}
 			session = (KurentoSession) sessions.get(sessionId);
 			if (session == null) {
@@ -78,7 +94,7 @@ public class KurentoSessionManager extends SessionManager {
 	@Override
 	public void leaveRoom(Participant participant, Integer transactionId) {
 		log.debug("Request [LEAVE_ROOM] ({})", participant.getParticipantPublicId());
-
+		
 		KurentoParticipant kParticipant = (KurentoParticipant) participant;
 		KurentoSession session = kParticipant.getSession();
 		String sessionId = session.getSessionId();
@@ -118,20 +134,30 @@ public class KurentoSessionManager extends SessionManager {
 			remainingParticipants = Collections.emptySet();
 		}
 		if (remainingParticipants.isEmpty()) {
-			log.debug("No more participants in session '{}', removing it and closing it", sessionId);
+			log.info("No more participants in session '{}', removing it and closing it", sessionId);
 			if (session.close()) {
 				sessionHandler.onSessionClosed(sessionId);
 			}
 			sessions.remove(sessionId);
 
+			sessionProperties.remove(sessionId);
 			sessionidParticipantpublicidParticipant.remove(sessionId);
 			sessionidTokenTokenobj.remove(sessionId);
 
 			showTokens();
 
 			log.warn("Session '{}' removed and closed", sessionId);
+		} 
+		if (
+			remainingParticipants.size() == 1 &&
+			openviduConfig.isRecordingModuleEnabled() &&
+			MediaMode.ROUTED.equals(session.getSessionProperties().mediaMode()) &&
+			ProtocolElements.RECORDER_PARTICIPANT_ID_PUBLICID.equals(remainingParticipants.iterator().next().getParticipantPublicId())
+			) {
+				log.info("Last participant left. Stopping recording for session {}", sessionId);
+				evictParticipant(session.getParticipantByPublicId("RECORDER").getParticipantPrivateId());
+				recordingService.stopRecording(session);
 		}
-
 		sessionHandler.onParticipantLeft(participant, sessionId, remainingParticipants, transactionId, null);
 	}
 
@@ -192,7 +218,15 @@ public class KurentoSessionManager extends SessionManager {
 			OpenViduException e = new OpenViduException(Code.MEDIA_SDP_ERROR_CODE,
 					"Error generating SDP response for publishing user " + participant.getParticipantPublicId());
 			log.error("PARTICIPANT {}: Error publishing media", participant.getParticipantPublicId(), e);
-			sessionHandler.onPublishMedia(participant, session.getSessionId(), mediaOptions, sdpAnswer, participants, transactionId, e);
+			sessionHandler.onPublishMedia(participant, session.getSessionId(), mediaOptions, sdpAnswer, participants,
+					transactionId, e);
+		}
+
+		if (this.openviduConfig.isRecordingModuleEnabled()
+				&& MediaMode.ROUTED.equals(session.getSessionProperties().mediaMode())
+				&& ArchiveMode.ALWAYS.equals(session.getSessionProperties().archiveMode())
+				&& session.getActivePublishers() == 0) {
+			recordingService.startRecording(session);
 		}
 
 		session.newPublisher(participant);
@@ -204,10 +238,11 @@ public class KurentoSessionManager extends SessionManager {
 		participants = kurentoParticipant.getSession().getParticipants();
 
 		if (sdpAnswer != null) {
-			sessionHandler.onPublishMedia(participant, session.getSessionId(), mediaOptions, sdpAnswer, participants, transactionId, null);
+			sessionHandler.onPublishMedia(participant, session.getSessionId(), mediaOptions, sdpAnswer, participants,
+					transactionId, null);
 		}
 	}
-	
+
 	@Override
 	public void unpublishVideo(Participant participant, Integer transactionId) {
 		try {
@@ -223,7 +258,7 @@ public class KurentoSessionManager extends SessionManager {
 			session.cancelPublisher(participant);
 
 			Set<Participant> participants = session.getParticipants();
-			
+
 			sessionHandler.onUnpublishMedia(participant, participants, transactionId, null);
 
 		} catch (OpenViduException e) {
@@ -231,7 +266,7 @@ public class KurentoSessionManager extends SessionManager {
 			sessionHandler.onUnpublishMedia(participant, null, transactionId, e);
 		}
 	}
-	
+
 	@Override
 	public void subscribe(Participant participant, String senderName, String sdpOffer, Integer transactionId) {
 		String sdpAnswer = null;
@@ -327,7 +362,6 @@ public class KurentoSessionManager extends SessionManager {
 		}
 	}
 
-
 	/**
 	 * Creates a session if it doesn't already exist. The session's id will be
 	 * indicated by the session info bean.
@@ -339,7 +373,8 @@ public class KurentoSessionManager extends SessionManager {
 	 * @throws OpenViduException
 	 *             in case of error while creating the session
 	 */
-	public void createSession(KurentoClientSessionInfo kcSessionInfo) throws OpenViduException {
+	public void createSession(KurentoClientSessionInfo kcSessionInfo, SessionProperties sessionProperties)
+			throws OpenViduException {
 		String sessionId = kcSessionInfo.getRoomName();
 		KurentoSession session = (KurentoSession) sessions.get(sessionId);
 		if (session != null) {
@@ -347,7 +382,8 @@ public class KurentoSessionManager extends SessionManager {
 					"Session '" + sessionId + "' already exists");
 		}
 		KurentoClient kurentoClient = kcProvider.getKurentoClient(kcSessionInfo);
-		session = new KurentoSession(sessionId, kurentoClient, sessionHandler, kcProvider.destroyWhenUnused());
+		session = new KurentoSession(sessionId, sessionProperties, kurentoClient, sessionHandler,
+				kcProvider.destroyWhenUnused());
 
 		KurentoSession oldSession = (KurentoSession) sessions.putIfAbsent(sessionId, session);
 		if (oldSession != null) {
@@ -359,7 +395,7 @@ public class KurentoSessionManager extends SessionManager {
 			kcName = kurentoClient.getServerManager().getName();
 		}
 		log.warn("No session '{}' exists yet. Created one using KurentoClient '{}'.", sessionId, kcName);
-		
+
 		sessionHandler.onSessionCreated(sessionId);
 	}
 

@@ -6,6 +6,7 @@ import { Publisher } from '../OpenVidu/Publisher';
 import EventEmitter = require('wolfy87-eventemitter');
 
 const SECRET_PARAM = '?secret=';
+const RECORDER_PARAM = '&recorder=';
 
 export interface SessionOptions {
     sessionId: string;
@@ -46,16 +47,36 @@ export class SessionInternal {
     }
 
     private processOpenViduUrl(url: string) {
-        this.openVidu.setSecret(this.getSecretFromUrl(url));
+        let secret = this.getSecretFromUrl(url);
+        let recorder = this.getRecorderFromUrl(url);
+        if (!(secret == null)) {
+            this.openVidu.setSecret(secret);
+        }
+        if (!(recorder == null)) {
+            this.openVidu.setRecorder(recorder);
+        }
         this.openVidu.setWsUri(this.getFinalUrl(url));
     }
 
     private getSecretFromUrl(url: string): string {
         let secret = '';
         if (url.indexOf(SECRET_PARAM) !== -1) {
-            secret = url.substring(url.lastIndexOf(SECRET_PARAM) + SECRET_PARAM.length, url.length);
+            let endOfSecret = url.lastIndexOf(RECORDER_PARAM);
+            if (endOfSecret !== -1) {
+                secret = url.substring(url.lastIndexOf(SECRET_PARAM) + SECRET_PARAM.length, endOfSecret);
+            } else {
+                secret = url.substring(url.lastIndexOf(SECRET_PARAM) + SECRET_PARAM.length, url.length);
+            }
         }
         return secret;
+    }
+
+    private getRecorderFromUrl(url: string): boolean {
+        let recorder = '';
+        if (url.indexOf(RECORDER_PARAM) !== -1) {
+            recorder = url.substring(url.lastIndexOf(RECORDER_PARAM) + RECORDER_PARAM.length, url.length);
+        }
+        return new Boolean(recorder).valueOf();;
     }
 
     private getUrlWithoutSecret(url: string): string {
@@ -102,6 +123,7 @@ export class SessionInternal {
                     session: this.sessionId,
                     metadata: this.options.metadata,
                     secret: this.openVidu.getSecret(),
+                    recorder: this.openVidu.getRecorder(),
                     dataChannels: false
                 }
 

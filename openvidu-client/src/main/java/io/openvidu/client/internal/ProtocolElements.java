@@ -36,6 +36,7 @@ public class ProtocolElements {
   public static final String JOINROOM_ROOM_PARAM = "session";
   public static final String JOINROOM_METADATA_PARAM = "metadata";
   public static final String JOINROOM_SECRET_PARAM = "secret";
+  public static final String JOINROOM_RECORDER_PARAM = "recorder";
   
   public static final String JOINROOM_DATACHANNELS_PARAM = "dataChannels";
   public static final String JOINROOM_PEERID_PARAM = "id";
@@ -111,4 +112,6 @@ public class ProtocolElements {
   public static final String ICECANDIDATE_SDPMLINEINDEX_PARAM = "sdpMLineIndex";
 
   public static final String CUSTOM_NOTIFICATION = "custonNotification";
+  
+  public static final String RECORDER_PARTICIPANT_ID_PUBLICID = "RECORDER";
 }

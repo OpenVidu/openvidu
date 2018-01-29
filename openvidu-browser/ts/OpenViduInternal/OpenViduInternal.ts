@@ -31,6 +31,7 @@ export class OpenViduInternal {
     private localStream: Stream;
     private remoteStreams: Stream[] = [];
     private secret: string;
+    private recorder: boolean = false;
 
     /* NEW METHODS */
     initSession(sessionId) {
@@ -168,6 +169,14 @@ export class OpenViduInternal {
 
     setSecret(secret: string) {
         this.secret = secret;
+    }
+
+    getRecorder() {
+        return this.recorder;
+    }
+
+    setRecorder(recorder: boolean) {
+        this.recorder = recorder;
     }
 
     getOpenViduServerURL() {

@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
+import io.openvidu.java.client.SessionProperties;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
 
@@ -32,6 +33,7 @@ public class KurentoSession implements Session {
 
 	private final ConcurrentMap<String, KurentoParticipant> participants = new ConcurrentHashMap<>();
 	private String sessionId;
+	private SessionProperties sessionProperties;
 
 	private MediaPipeline pipeline;
 	private CountDownLatch pipelineLatch = new CountDownLatch(1);
@@ -40,7 +42,7 @@ public class KurentoSession implements Session {
 	private KurentoSessionEventsHandler kurentoSessionHandler;
 
 	private volatile boolean closed = false;
-	
+
 	private final ConcurrentHashMap<String, String> filterStates = new ConcurrentHashMap<>();
 	private AtomicInteger activePublishers = new AtomicInteger(0);
 
@@ -49,9 +51,10 @@ public class KurentoSession implements Session {
 	private volatile boolean pipelineReleased = false;
 	private boolean destroyKurentoClient;
 
-	public KurentoSession(String sessionId, KurentoClient kurentoClient, KurentoSessionEventsHandler kurentoSessionHandler,
+	public KurentoSession(String sessionId, SessionProperties sessionProperties, KurentoClient kurentoClient, KurentoSessionEventsHandler kurentoSessionHandler,
 			boolean destroyKurentoClient) {
 		this.sessionId = sessionId;
+		this.sessionProperties = sessionProperties;
 		this.kurentoClient = kurentoClient;
 		this.destroyKurentoClient = destroyKurentoClient;
 		this.kurentoSessionHandler = kurentoSessionHandler;
@@ -61,6 +64,11 @@ public class KurentoSession implements Session {
 	@Override
 	public String getSessionId() {
 		return this.sessionId;
+	}
+	
+	@Override
+	public SessionProperties getSessionProperties() {
+		return this.sessionProperties;
 	}
 
 	@Override

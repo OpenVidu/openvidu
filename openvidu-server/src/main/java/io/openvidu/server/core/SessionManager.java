@@ -18,6 +18,8 @@ import com.google.gson.JsonObject;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
+import io.openvidu.client.internal.ProtocolElements;
+import io.openvidu.java.client.SessionProperties;
 import io.openvidu.server.OpenViduServer;
 
 public abstract class SessionManager {
@@ -25,6 +27,7 @@ public abstract class SessionManager {
 	private static final Logger log = LoggerFactory.getLogger(SessionManager.class);
 
 	protected ConcurrentMap<String, Session> sessions = new ConcurrentHashMap<>();
+	protected ConcurrentMap<String, SessionProperties> sessionProperties = new ConcurrentHashMap<>();
 	protected ConcurrentMap<String, ConcurrentHashMap<String, Token>> sessionidTokenTokenobj = new ConcurrentHashMap<>();
 	protected ConcurrentMap<String, ConcurrentHashMap<String, Participant>> sessionidParticipantpublicidParticipant = new ConcurrentHashMap<>();
 	protected ConcurrentMap<String, Boolean> insecureUsers = new ConcurrentHashMap<>();
@@ -136,12 +139,13 @@ public abstract class SessionManager {
 		return null;
 	}
 
-	public String newSessionId() {
+	public String newSessionId(SessionProperties sessionProperties) {
 		String sessionId = OpenViduServer.publicUrl;
 		sessionId += "/" + new BigInteger(130, new SecureRandom()).toString(32);
 
 		this.sessionidTokenTokenobj.put(sessionId, new ConcurrentHashMap<>());
 		this.sessionidParticipantpublicidParticipant.put(sessionId, new ConcurrentHashMap<>());
+		this.sessionProperties.put(sessionId, sessionProperties);
 
 		showTokens();
 		return sessionId;
@@ -237,6 +241,18 @@ public abstract class SessionManager {
 		}
 	}
 
+	public Participant newRecorderParticipant(String sessionId, String participantPrivatetId, Token token,
+			String clientMetadata) {
+		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
+			String participantPublicId = ProtocolElements.RECORDER_PARTICIPANT_ID_PUBLICID;
+			Participant p = new Participant(participantPrivatetId, participantPublicId, token, clientMetadata);
+			this.sessionidParticipantpublicidParticipant.get(sessionId).put(participantPublicId, p);
+			return p;
+		} else {
+			throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE, sessionId);
+		}
+	}
+
 	public Token consumeToken(String sessionId, String participantPrivateId, String token) {
 		if (this.sessionidTokenTokenobj.get(sessionId) != null) {
 			Token t = this.sessionidTokenTokenobj.get(sessionId).remove(token);
@@ -324,6 +340,7 @@ public abstract class SessionManager {
 		session.close();
 		sessions.remove(sessionId);
 
+		sessionProperties.remove(sessionId);
 		sessionidParticipantpublicidParticipant.remove(sessionId);
 		sessionidTokenTokenobj.remove(sessionId);
 

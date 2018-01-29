@@ -2,9 +2,13 @@ package io.openvidu.server.core;
 
 import java.util.Set;
 
+import io.openvidu.java.client.SessionProperties;
+
 public interface Session {
 
 	String getSessionId();
+	
+	SessionProperties getSessionProperties();
 
 	void join(Participant participant);
 	

@@ -8,6 +8,9 @@ RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key
   apt-get update && apt-get install -y google-chrome-stable
 
 # Install media packages
+RUN apt-get install -y software-properties-common
+RUN add-apt-repository ppa:mc3man/xerus-media
+RUN apt-get update
 RUN apt-get install -y ffmpeg pulseaudio xvfb
 
 # Clean

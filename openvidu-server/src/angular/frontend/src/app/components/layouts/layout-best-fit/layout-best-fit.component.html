@@ -1,0 +1,8 @@
+<div class="bounds">
+  <div *ngFor="let streams of remoteStreams" class="content" fxLayout="row" fxFlexFill [style.height]="100 / remoteStreams.length + '%'"
+    [style.min-height]="100 / remoteStreams.length + '%'">
+    <div *ngFor="let s of streams" [fxFlex]="100 / streams">
+      <video [id]="'native-video-' + s.streamId" autoplay="true" [srcObject]="s.getMediaStream()"></video>
+    </div>
+  </div>
+</div>

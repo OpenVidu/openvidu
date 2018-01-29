@@ -18,6 +18,15 @@ public class OpenviduConfig {
 	@Value("${openvidu.cdr}")
 	private boolean openviduCdr;
 
+	@Value("${openvidu.recording}")
+	private boolean openviduRecording;
+
+	@Value("${openvidu.recording.path}")
+	private String openviduRecordingPath;
+
+	@Value("${openvidu.recording.free-access}")
+	boolean openviduRecordingFreeAccess;
+
 	public String getOpenViduPublicUrl() {
 		return this.openviduPublicUrl;
 	}
@@ -36,6 +45,18 @@ public class OpenviduConfig {
 
 	public boolean isCdrEnabled() {
 		return this.openviduCdr;
+	}
+
+	public boolean isRecordingModuleEnabled() {
+		return this.openviduRecording;
+	}
+
+	public String getOpenViduRecordingPath() {
+		return this.openviduRecordingPath;
+	}
+
+	public boolean getOpenViduRecordingFreeAccess() {
+		return this.openviduRecordingFreeAccess;
 	}
 
 }

@@ -32,6 +32,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.openvidu.client.OpenViduException;
+import io.openvidu.java.client.ArchiveLayout;
+import io.openvidu.java.client.ArchiveMode;
+import io.openvidu.java.client.MediaMode;
+import io.openvidu.java.client.SessionProperties;
 import io.openvidu.server.core.ParticipantRole;
 import io.openvidu.server.core.SessionManager;
 
@@ -67,8 +71,37 @@ public class SessionRestController {
 
 	@SuppressWarnings("unchecked")
 	@RequestMapping(value = "/sessions", method = RequestMethod.POST)
-	public ResponseEntity<JSONObject> getSessionId() {
-		String sessionId = sessionManager.newSessionId();
+	public ResponseEntity<JSONObject> getSessionId(@RequestBody(required = false) Map<?, ?> params) {
+		
+		SessionProperties.Builder builder = new SessionProperties.Builder();
+		if (params != null) {
+			String archiveModeString = (String) params.get("archiveMode");
+			String archiveLayoutString = (String) params.get("archiveLayout");
+			String mediaModeString = (String) params.get("mediaMode");
+
+			try {
+				if (archiveModeString != null) {
+					ArchiveMode archiveMode = ArchiveMode.valueOf(archiveModeString);
+					builder = builder.archiveMode(archiveMode);
+				}
+				if (archiveLayoutString != null) {
+					ArchiveLayout archiveLayout = ArchiveLayout.valueOf(archiveLayoutString);
+					builder = builder.archiveLayout(archiveLayout);
+				}
+				if (mediaModeString != null) {
+					MediaMode mediaMode = MediaMode.valueOf(mediaModeString);
+					builder = builder.mediaMode(mediaMode);
+				}
+			} catch (IllegalArgumentException e) {
+				return this.generateErrorResponse("ArchiveMode " + params.get("archiveMode") + " | " + "ArchiveLayout "
+						+ params.get("archiveLayout") + " | " + "MediaMode " + params.get("mediaMode")
+						+ " are not defined", "/api/tokens");
+			}
+		}
+
+		SessionProperties sessionProperties = builder.build();
+
+		String sessionId = sessionManager.newSessionId(sessionProperties);
 		JSONObject responseJson = new JSONObject();
 		responseJson.put("id", sessionId);
 		return new ResponseEntity<JSONObject>(responseJson, HttpStatus.OK);
@@ -76,11 +109,13 @@ public class SessionRestController {
 
 	@SuppressWarnings("unchecked")
 	@RequestMapping(value = "/tokens", method = RequestMethod.POST)
-	public ResponseEntity<JSONObject> newToken(@RequestBody Map<?, ?> sessionIdRoleMetadata) {
+	public ResponseEntity<JSONObject> newToken(@RequestBody Map<?, ?> params) {
 		try {
-			String sessionId = (String) sessionIdRoleMetadata.get("session");
-			ParticipantRole role = ParticipantRole.valueOf((String) sessionIdRoleMetadata.get("role"));
-			String metadata = (String) sessionIdRoleMetadata.get("data");
+
+			String sessionId = (String) params.get("session");
+			ParticipantRole role = ParticipantRole.valueOf((String) params.get("role"));
+			String metadata = (String) params.get("data");
+
 			String token = sessionManager.newToken(sessionId, role, metadata);
 			JSONObject responseJson = new JSONObject();
 			responseJson.put("id", token);
@@ -89,12 +124,13 @@ public class SessionRestController {
 			responseJson.put("data", metadata);
 			responseJson.put("token", token);
 			return new ResponseEntity<JSONObject>(responseJson, HttpStatus.OK);
+
 		} catch (IllegalArgumentException e) {
-			return this.generateErrorResponse("Role " + sessionIdRoleMetadata.get("1") + " is not defined",
-					"/api/tokens");
+			return this.generateErrorResponse("Role " + params.get("role") + " is not defined", "/api/tokens");
 		} catch (OpenViduException e) {
-			return this.generateErrorResponse("Metadata [" + sessionIdRoleMetadata.get("2")
-					+ "] unexpected format. Max length allowed is 1000 chars", "/api/tokens");
+			return this.generateErrorResponse(
+					"Metadata [" + params.get("data") + "] unexpected format. Max length allowed is 1000 chars",
+					"/api/tokens");
 		}
 	}
 
