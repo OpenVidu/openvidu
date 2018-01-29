@@ -31,8 +31,8 @@
 
 	<scm>
 		<url>https://github.com/OpenVidu/openvidu.git</url>
-		<connection>scm:git:https://github.com/OpenVidu/openvidu.git</connection>
-		<developerConnection>scm:git:https://github.com/OpenVidu/openvidu.git</developerConnection>
+		<connection>scm:git:git://github.com/OpenVidu/openvidu.git</connection>
+		<developerConnection>scm:git:git@github.com:OpenVidu/openvidu.git</developerConnection>
 		<tag>develop</tag>
 	</scm>
 
