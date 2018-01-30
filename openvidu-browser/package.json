@@ -33,5 +33,5 @@
         "updatetsc": "cd ts/OpenViduInternal && tsc && cd ../OpenVidu && tsc && cd ../.. && tsc --declaration ts/OpenVidu/index.ts --outDir lib --sourceMap && tsc --declaration ts/OpenVidu/Main.ts --outDir lib --sourceMap"
     }, 
     "types": "lib/OpenVidu/index.d.ts", 
-    "version": "1.5.0"
+    "version": "1.7.0"
 }
