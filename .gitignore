@@ -17,3 +17,6 @@ nbactions.xml
 .externalToolBuilders
 *bin/
 /.vscode
+
+.idea/
+*.iml

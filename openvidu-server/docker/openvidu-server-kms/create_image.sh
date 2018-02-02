@@ -1,5 +1,5 @@
-cp ../../target/openvidu-server-"$1".jar ./openvidu-server.jar
+cp ../../target/openvidu-server-"$1".jar ./openvidu-server-cbx.jar
 
-docker build -t openvidu/openvidu-server-kms .
+docker build -t councilbox/server-kms .
 
-rm ./openvidu-server.jar
+rm ./openvidu-server-cbx.jar
