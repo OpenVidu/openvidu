@@ -1,28 +1,42 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-	<timestamp key="myTimestamp" timeReference="contextBirth" datePattern="HH-mm-ss"/>
+	<timestamp key="myTimestamp" timeReference="contextBirth"
+		datePattern="HH-mm-ss" />
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
 		<layout class="ch.qos.logback.classic.PatternLayout">
 			<Pattern>[%p] %d [%.12t] %c \(%M\) - %msg%n</Pattern>
 		</layout>
 	</appender>
-	<appender name="CDR"
-		class="ch.qos.logback.core.rolling.RollingFileAppender">
-		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-			<FileNamePattern>log/CDR.%d{yyyy-MM-dd}_${myTimestamp}.log</FileNamePattern>
-			<MaxHistory>30</MaxHistory>
-			<TotalSizeCap>20GB</TotalSizeCap>
-		</rollingPolicy>
-		<layout>
-			<pattern>%m\n</pattern>
-		</layout>
-	</appender>
-	<logger name="io.openvidu.server.cdr.CallDetailRecord">
-		<level value="INFO" />
-		<appender-ref ref="CDR" />
-	</logger>
 	<root>
 		<level value="INFO" />
 		<appender-ref ref="STDOUT" />
 	</root>
+	<if condition='property("spring.profiles.active").contains("ngrok")'>
+		<then>
+			<property scope="context" resource="application-ngrok.properties" />
+		</then>
+		<else>
+			<property scope="context" resource="application.properties" />
+		</else>
+	</if>
+	<if condition='property("openvidu.cdr").contains("true")'>
+		<then>
+			<appender name="CDR"
+				class="ch.qos.logback.core.rolling.RollingFileAppender">
+				<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+					<FileNamePattern>log/CDR.%d{yyyy-MM-dd}_${myTimestamp}.log
+					</FileNamePattern>
+					<MaxHistory>30</MaxHistory>
+					<TotalSizeCap>20GB</TotalSizeCap>
+				</rollingPolicy>
+				<layout>
+					<pattern>%m\n</pattern>
+				</layout>
+			</appender>
+			<logger name="io.openvidu.server.cdr.CallDetailRecord">
+				<level value="INFO" />
+				<appender-ref ref="CDR" />
+			</logger>
+		</then>
+	</if>
 </configuration>

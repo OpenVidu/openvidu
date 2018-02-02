@@ -14,6 +14,7 @@ import io.openvidu.server.core.Participant;
 
 /**
  * CDR logger to register all information of each WebRTC connection:
+ * Enabled by property 'openvidu.cdr=true'
  * 
  * - Participant unique identifier
  * - Session unique identifier
