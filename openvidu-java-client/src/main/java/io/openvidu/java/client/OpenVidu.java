@@ -59,11 +59,11 @@ public class OpenVidu {
     	return s;
     }
     
-    public void startArchive(String sessionId) {
+    public void startRecording(String sessionId) {
     	// TODO: REST POST to start recording in OpenVidu Server
     }
     
-    public void stopArchive(String sessionId) {
+    public void stopRecording(String sessionId) {
     	// TODO: REST POST to end recording in OpenVidu Server
     }
     

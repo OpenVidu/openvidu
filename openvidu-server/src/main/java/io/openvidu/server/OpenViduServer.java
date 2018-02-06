@@ -181,9 +181,6 @@ public class OpenViduServer implements JsonRpcConfigurer {
 			if (!OpenViduServer.publicUrl.startsWith("wss://")) {
 				OpenViduServer.publicUrl = "wss://" + OpenViduServer.publicUrl;
 			}
-			if (OpenViduServer.publicUrl.endsWith("/")) {
-				OpenViduServer.publicUrl = OpenViduServer.publicUrl.substring(0, OpenViduServer.publicUrl.length() - 1);
-			}
 			if (port == -1) {
 				OpenViduServer.publicUrl += ":" + openviduConf.getServerPort();
 			}
@@ -194,6 +191,10 @@ public class OpenViduServer implements JsonRpcConfigurer {
 		if (OpenViduServer.publicUrl == null) {
 			type = "local";
 			OpenViduServer.publicUrl = "wss://localhost:" + openviduConf.getServerPort();
+		}
+		
+		if (OpenViduServer.publicUrl.endsWith("/")) {
+			OpenViduServer.publicUrl = OpenViduServer.publicUrl.substring(0, OpenViduServer.publicUrl.length() - 1);
 		}
 
 		boolean recordingModuleEnabled = openviduConf.isRecordingModuleEnabled();
@@ -233,7 +234,7 @@ public class OpenViduServer implements JsonRpcConfigurer {
 			}
 		}
 
-		System.out.println("OpenVidu Server using " + type + " URL: " + OpenViduServer.publicUrl);
+		System.out.println("OpenVidu Server using " + type + " URL: [" + OpenViduServer.publicUrl + "]");
 	}
 
 	private static String getContainerIp() throws IOException, InterruptedException {

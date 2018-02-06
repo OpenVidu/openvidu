@@ -9,11 +9,11 @@ export class OpenVidu {
     return new Session(this.urlOpenViduServer, this.secret, properties);
   }
 
-  public startArchive(sessionId: string) {
+  public startRecording(sessionId: string) {
     // TODO: REST POST to start recording in OpenVidu Server
   }
 
-  public stopArchive(sessionId: string) {
+  public stopRecording(sessionId: string) {
     // TODO: REST POST to end recording in OpenVidu Server
   }
 

@@ -30,6 +30,7 @@ import com.github.dockerjava.core.command.ExecStartResultCallback;
 import com.github.dockerjava.core.command.PullImageResultCallback;
 
 import io.openvidu.server.CommandExecutor;
+import io.openvidu.server.OpenViduServer;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.Session;
 
@@ -67,8 +68,10 @@ public class RecordingService {
 		} catch (IOException | InterruptedException e) {
 			e.printStackTrace();
 		}
+		
+		String location = OpenViduServer.publicUrl.replaceFirst("wss://", "");
 
-		envs.add("URL=https://OPENVIDUAPP:" + secret + "@localhost:8443/#/layout-best-fit/" + shortSessionId + "/"
+		envs.add("URL=https://OPENVIDUAPP:" + secret + "@" + location + "/#/layout-best-fit/" + shortSessionId + "/"
 				+ secret);
 		envs.add("RESOLUTION=1920x1080");
 		envs.add("FRAMERATE=30");
