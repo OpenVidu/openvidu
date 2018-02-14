@@ -1,6 +1,8 @@
 #!/bin/bash
 
 
+### Variables ###
+
 CURRENT_UID="$(id -u $USER)"
 if [[ $CURRENT_UID != $USER_ID ]]; then
   adduser --uid $USER_ID --disabled-password --gecos "" myuser
@@ -12,11 +14,15 @@ FRAMERATE="${FRAMERATE:-24}"
 VIDEO_SIZE="$RESOLUTION"
 ARRAY=(${VIDEO_SIZE//x/ })
 VIDEO_NAME="${VIDEO_NAME:-video}"
-VIDEO_FORMAT="${VIDEO_FORMAT:-mp4}"
+VIDEO_FORMAT="${VIDEO_FORMAT:-mkv}"
 
 echo "----------------------------------------"
 echo "Recording URL -> $URL"
 echo "----------------------------------------"
+
+
+
+### Get a free display identificator ###
 
 DISPLAY_NUM=99
 DONE="no"
@@ -37,11 +43,19 @@ done
 echo "First available display -> :$DISPLAY_NUM"
 echo "----------------------------------------"
 
+
+
+### Start pulseaudio ###
+
 if [[ $CURRENT_UID != $USER_ID ]]; then
     su myuser -c "pulseaudio -D"
 else
     pulseaudio -D
 fi
+
+
+
+### Start Chrome in headless mode with xvfb, using the display num previously obtained ###
 
 touch xvfb.log
 chmod 777 xvfb.log
@@ -63,6 +77,24 @@ sleep 3
 #su myuser -c "<./stop ffmpeg -y -video_size $RESOLUTION -s $RESOLUTION -framerate $FRAMERATE -f x11grab -i :${DISPLAY_NUM} -f alsa -ac 2 -i pulse -async 1 -acodec copy -vcodec libx264 -preset medium -crf 0 -threads 0 -y /recordings/${VIDEO_NAME}.mkv"
 
 #su myuser -c "<./stop ffmpeg -y -f alsa -i pulse -video_size $RESOLUTION -f x11grab -i :${DISPLAY_NUM} -r 24 -c:a libmp3lame -b:a 32k -c:v libx264 -b:v 500k /recordings/${VIDEO_NAME}.mkv"
+
+
+
+### Avoiding file name collision (if 'video.mkv' exists, name the file 'video(1).mkv' and so on) ###
+
+VIDEO_NUMBER=0
+VIDEO_NUMBER_STR=""
+
+while [[ -e /recordings/${VIDEO_NAME}${VIDEO_NUMBER_STR}.mkv ]]; do
+	VIDEO_NUMBER=$((VIDEO_NUMBER+1))
+	VIDEO_NUMBER_STR="(${VIDEO_NUMBER})";
+done
+
+VIDEO_NAME="${VIDEO_NAME}${VIDEO_NUMBER_STR}";
+
+
+
+### Start recording with ffmpeg ###
 
 if [[ $CURRENT_UID != $USER_ID ]]; then
     su myuser -c "<./stop ffmpeg -y -f alsa -i pulse -f x11grab -framerate 25 -video_size $RESOLUTION -i :${DISPLAY_NUM} -c:a libfdk_aac -c:v libx264 -preset ultrafast -crf 28 -refs 4 -qmin 4 -pix_fmt yuv420p -filter:v fps=25 '/recordings/${VIDEO_NAME}.mkv'"
