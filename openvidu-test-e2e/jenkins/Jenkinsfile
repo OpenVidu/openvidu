@@ -26,7 +26,7 @@ node('container') {
         }
         stage ('E2E tests') {
           sh 'cd ~/openvidu/openvidu-test-e2e && mvn -DAPP_URL=https://172.17.0.1:4200/ -DOPENVIDU_URL=https://172.17.0.1:8443/ -DREMOTE_URL_CHROME=http://172.17.0.1:4444/wd/hub/ -DREMOTE_URL_FIREFOX=http://172.17.0.1:4445/wd/hub/ test'
-          junit "~/openvidu/openvidu-test-e2e/**/target/surefire-reports/TEST-*.xml"
+          junit '~/openvidu/openvidu-test-e2e/target/surefire-reports/TEST-*.xml'
         }
       }
     }
