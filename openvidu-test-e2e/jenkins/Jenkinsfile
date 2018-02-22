@@ -6,29 +6,29 @@ node('container') {
       mycontainer.inside("-p 4200:4200 -p 8443:8443 -u root -v /var/run/docker.sock:/var/run/docker.sock:rw -v /dev/shm:/dev/shm") {
         stage('Preparation') {
           sh 'rm -rf ~/openvidu || true'
-          sh 'git clone https://github.com/OpenVidu/openvidu.git ~/openvidu'
+          sh 'git clone https://github.com/OpenVidu/openvidu.git'
         }
         stage('OpenVidu parent build') {
-          sh 'cd ~/openvidu && mvn -DskipTests=true install'
+          sh 'mvn -DskipTests=true install'
         }
         stage('OpenVidu Browser build') {
-          sh 'cd ~/openvidu/openvidu-browser && npm install && npm run updatetsc && npm link'
+          sh 'cd openvidu-browser && npm install && npm run updatetsc && npm link'
         }
         stage('OpenVidu TestApp build') {
-          sh 'cd ~/openvidu/openvidu-testapp && npm install && npm link openvidu-browser && ng build'
+          sh 'cd openvidu-testapp && npm install && npm link openvidu-browser && ng build'
         }
         stage ('Environment Launch') {
           sh 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/CN=www.mydom.com/O=My Company LTD./C=US" -keyout ~/openvidu/openvidu-testapp/dist/key.pem -out ~/openvidu/openvidu-testapp/dist/cert.pem'  
-          sh 'cd ~/openvidu/openvidu-testapp/dist && http-server -S -p 4200 &> ~/openvidu/openvidu-testapp/testapp.log &'
+          sh 'cd openvidu-testapp/dist && http-server -S -p 4200 &> ~/openvidu/openvidu-testapp/testapp.log &'
           sh 'service kurento-media-server-6.0 start'
-          sh 'cd ~/openvidu/openvidu-server && mvn -DskipTests=true clean -DskipTests=true compile -DskipTests=true package -DskipTests=true -Dopenvidu.publicurl=https://172.17.0.1:8443/ exec:java &> ~/openvidu/openvidu-server/openvidu-server.log &'
+          sh 'cd openvidu-server && mvn -DskipTests=true clean -DskipTests=true compile -DskipTests=true package -DskipTests=true -Dopenvidu.publicurl=https://172.17.0.1:8443/ exec:java &> ~/openvidu/openvidu-server/openvidu-server.log &'
           sh 'until $(curl --insecure --output /dev/null --silent --head --fail https://OPENVIDUAPP:MY_SECRET@localhost:8443/); do echo "Waiting for openvidu-server..."; sleep 5; done'
         }
         stage ('E2E tests') {
-          sh 'cd ~/openvidu/openvidu-test-e2e && mvn -DAPP_URL=https://172.17.0.1:4200/ -DOPENVIDU_URL=https://172.17.0.1:8443/ -DREMOTE_URL_CHROME=http://172.17.0.1:4444/wd/hub/ -DREMOTE_URL_FIREFOX=http://172.17.0.1:4445/wd/hub/ test'
+          sh 'cd openvidu-test-e2e && mvn -DAPP_URL=https://172.17.0.1:4200/ -DOPENVIDU_URL=https://172.17.0.1:8443/ -DREMOTE_URL_CHROME=http://172.17.0.1:4444/wd/hub/ -DREMOTE_URL_FIREFOX=http://172.17.0.1:4445/wd/hub/ test'
         }
         stage ('Test report') {
-          junit "**/target/surefire-reports/TEST-*.xml"
+          junit "openvidu-test-e2e/**/target/surefire-reports/TEST-*.xml"
         }
       }
     }
