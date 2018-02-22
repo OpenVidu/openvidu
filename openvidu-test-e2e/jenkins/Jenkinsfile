@@ -18,10 +18,10 @@ node('container') {
           sh 'cd openvidu/openvidu-testapp && npm install && npm link openvidu-browser && ng build'
         }
         stage ('Environment Launch') {
-          sh 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/CN=www.mydom.com/O=My Company LTD./C=US" -keyout ~/openvidu/openvidu-testapp/dist/key.pem -out ~/openvidu/openvidu-testapp/dist/cert.pem'  
-          sh 'cd openvidu/openvidu-testapp/dist && http-server -S -p 4200 &> ~/openvidu/openvidu-testapp/testapp.log &'
+          sh 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/CN=www.mydom.com/O=My Company LTD./C=US" -keyout openvidu/openvidu-testapp/dist/key.pem -out openvidu/openvidu-testapp/dist/cert.pem'  
+          sh 'cd openvidu/openvidu-testapp/dist && http-server -S -p 4200 &> openvidu/openvidu-testapp/testapp.log &'
           sh 'service kurento-media-server-6.0 start'
-          sh 'cd openvidu/openvidu-server && mvn -DskipTests=true clean -DskipTests=true compile -DskipTests=true package -DskipTests=true -Dopenvidu.publicurl=https://172.17.0.1:8443/ exec:java &> ~/openvidu/openvidu-server/openvidu-server.log &'
+          sh 'cd openvidu/openvidu-server && mvn -DskipTests=true clean -DskipTests=true compile -DskipTests=true package -DskipTests=true -Dopenvidu.publicurl=https://172.17.0.1:8443/ exec:java &> openvidu/openvidu-server/openvidu-server.log &'
           sh 'until $(curl --insecure --output /dev/null --silent --head --fail https://OPENVIDUAPP:MY_SECRET@localhost:8443/); do echo "Waiting for openvidu-server..."; sleep 5; done'
         }
         stage ('E2E tests') {
