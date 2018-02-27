@@ -99,7 +99,7 @@ export class Session {
             }
         }
     }
-    
+
     private streamPublish(publisher: Publisher) {
         publisher.session = this;
         publisher.stream.publish();

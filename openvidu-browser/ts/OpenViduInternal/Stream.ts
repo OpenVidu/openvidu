@@ -9,10 +9,12 @@ import { Connection } from './Connection';
 import { SessionInternal } from './SessionInternal';
 import { OpenViduInternal, Callback } from './OpenViduInternal';
 import { OpenViduError, OpenViduErrorName } from './OpenViduError';
+import { WebRtcStats } from './WebRtcStats';
 import EventEmitter = require('wolfy87-eventemitter');
 import * as kurentoUtils from '../KurentoUtils/kurento-utils-js';
 
 import * as adapter from 'webrtc-adapter';
+
 declare var navigator: any;
 declare var RTCSessionDescription: any;
 
@@ -87,6 +89,8 @@ export class Stream {
     public isScreenRequestedReady: boolean = false;
     private isScreenRequested = false;
 
+    private webRtcStats: WebRtcStats;
+
     constructor(private openVidu: OpenViduInternal, private local: boolean, private room: SessionInternal, options: any) {
         if (options !== 'screen-options') {
             if ('id' in options) {
@@ -120,12 +124,14 @@ export class Stream {
         if (this.video) {
             if (typeof parentElement === "string") {
                 document.getElementById(parentElement)!.removeChild(this.video);
+                this.ee.emitEvent('video-removed');
             } else if (parentElement instanceof Element) {
                 parentElement.removeChild(this.video);
-            }
-            else if (!parentElement) {
+                this.ee.emitEvent('video-removed');
+            } else if (!parentElement) {
                 if (document.getElementById(this.parentId)) {
                     document.getElementById(this.parentId)!.removeChild(this.video);
+                    this.ee.emitEvent('video-removed');
                 }
             }
             delete this.video;
@@ -225,6 +231,10 @@ export class Stream {
         return this.wp;
     }
 
+    getRTCPeerConnection() {
+        return this.wp.peerConnection;
+    }
+
     addEventListener(eventName: string, listener: any) {
         this.ee.addListener(eventName, listener);
     }
@@ -322,10 +332,6 @@ export class Stream {
 
     getParticipant() {
         return this.connection;
-    }
-
-    getRTCPeerConnection() {
-        return this.getWebRtcPeer().peerConnection;
     }
 
     requestCameraAccess(callback: Callback<Stream>) {
@@ -433,7 +439,7 @@ export class Stream {
             doLoopback: this.displayMyRemote() || false,
             audioActive: this.outboundOptions.sendAudio,
             videoActive: this.outboundOptions.sendVideo,
-            typeOfVideo: ((this.outboundOptions.sendVideo) ? ((this.isScreenRequested) ? 'SCREEN' :'CAMERA') : '')
+            typeOfVideo: ((this.outboundOptions.sendVideo) ? ((this.isScreenRequested) ? 'SCREEN' : 'CAMERA') : '')
         }, (error, response) => {
             if (error) {
                 console.error("Error on publishVideo: " + JSON.stringify(error));
@@ -614,6 +620,9 @@ export class Stream {
                     stream: this
                 }]);
             }
+
+            this.initWebRtcStats();
+
         }, error => {
             console.error(this.streamId + ": Error setting SDP to the peer connection: "
                 + JSON.stringify(error));
@@ -668,6 +677,8 @@ export class Stream {
             this.speechEvent.stop();
         }
 
+        this.stopWebRtcStats();
+
         console.info((this.local ? "Local " : "Remote ") + "'Stream' with id [" + this.streamId + "]' has been succesfully disposed");
     }
 
@@ -675,4 +686,16 @@ export class Stream {
         this.outboundOptions = options;
         this.streamId = "SCREEN";
     }
+
+    private initWebRtcStats(): void {
+        this.webRtcStats = new WebRtcStats(this);
+        this.webRtcStats.initWebRtcStats();
+    }
+
+    private stopWebRtcStats() {
+        if (this.webRtcStats.isEnabled()) {
+            this.webRtcStats.stopWebRtcStats();
+        }
+    }
+
 }

@@ -236,7 +236,7 @@ export class OpenViduInternal {
         if (this.session !== undefined && this.session instanceof SessionInternal) {
             return true;
         } else {
-            console.warn('Room instance not found');
+            console.warn('Session instance not found');
             return false;
         }
     }

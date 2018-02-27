@@ -27,7 +27,11 @@ export class Publisher {
 
         // Listens to the deactivation of the default behaviour upon the deletion of a Stream object
         this.ee.addListener('stream-destroyed-default', event => {
-            event.stream.removeVideo();
+            let s: Stream = event.stream;
+            s.addOnceEventListener('video-removed', () => {
+                this.ee.emitEvent('videoElementDestroyed');
+            });
+            s.removeVideo();
         });
 
         if (document.getElementById(parentId) != null) {

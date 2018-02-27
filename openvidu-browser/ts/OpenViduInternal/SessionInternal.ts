@@ -472,21 +472,21 @@ export class SessionInternal {
 
     onRoomClosed(msg) {
 
-        console.info("Room closed: " + JSON.stringify(msg));
+        console.info("Session closed: " + JSON.stringify(msg));
         let room = msg.room;
         if (room !== undefined) {
             this.ee.emitEvent('room-closed', [{
                 room: room
             }]);
         } else {
-            console.warn("Room undefined in on room closed", msg);
+            console.warn("Session undefined on session closed", msg);
         }
     }
 
     onLostConnection() {
 
         if (!this.connected) {
-            console.warn('Not connected to room: if you are not debugging, this is probably a certificate error');
+            console.warn('Not connected to session: if you are not debugging, this is probably a certificate error');
             if (window.confirm('If you are not debugging, this is probably a certificate error at \"' + this.openVidu.getOpenViduServerURL() + '\"\n\nClick OK to navigate and accept it')) {
                 location.assign(this.openVidu.getOpenViduServerURL() + '/accept-certificate');
             };
@@ -498,7 +498,7 @@ export class SessionInternal {
         if (room !== undefined) {
             this.ee.emitEvent('lost-connection', [{ room }]);
         } else {
-            console.warn('Room undefined when lost connection');
+            console.warn('Session undefined when lost connection');
         }
     }
 

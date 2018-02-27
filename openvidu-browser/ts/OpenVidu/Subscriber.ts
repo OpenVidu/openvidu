@@ -15,6 +15,11 @@ export class Subscriber {
         if (document.getElementById(parentId) != null) {
             this.element = document.getElementById(parentId)!!;
         }
+
+        // Listens to deletion of the HTML video element of the Subscriber
+        this.stream.addEventListener('video-removed', () => {
+            this.ee.emitEvent('videoElementDestroyed');
+        });
     }
 
     on(eventName: string, callback) {
@@ -33,7 +38,6 @@ export class Subscriber {
                 }]);
             } else {
                 this.stream.addOnceEventListener('video-element-created-by-stream', element => {
-                    console.warn("Subscriber emitting videoElementCreated");
                     this.id = element.id;
                     this.ee.emitEvent('videoElementCreated', [{
                         element: element
