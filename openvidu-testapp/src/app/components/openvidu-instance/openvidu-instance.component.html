@@ -107,7 +107,7 @@
         </div>
       </div>
       <div *ngIf="session.connection" fxLayout>
-        <div fxFlex="135px" class="video-container">
+        <div fxFlex="140px" class="video-container">
 
           <div class="event-list-div scroll-custom">
             <mat-accordion [attr.id]="'events-' + session.connection.connectionId" class="event-list">
@@ -121,7 +121,7 @@
             </mat-accordion>
           </div>
         </div>
-        <div [attr.id]="'remote-vid-' + session.connection.connectionId" fxFlex="270px" class="video-container">
+        <div [attr.id]="'remote-vid-' + session.connection.connectionId" fxFlex="240px" class="video-container">
           <div [attr.id]="'local-vid-' + session.connection.connectionId"></div>
         </div>
       </div>

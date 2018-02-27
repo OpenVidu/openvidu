@@ -439,10 +439,10 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
           }
         }
       });
-      this.addPublisherEvents(this.publisher);
-      this.session.publish(this.publisher);
+    this.addPublisherEvents(this.publisher);
+    this.session.publish(this.publisher);
 
-      this.publisherChanged = !this.publisherChanged;
+    this.publisherChanged = !this.publisherChanged;
   }
 
   subUnsubFromSubscriber(connectionId: string) {
@@ -487,6 +487,9 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         });
         subscriber.on('videoPlaying', (e) => {
           this.updateEventList('videoPlaying', e.element.id);
+        });
+        subscriber.on('videoElementDestroyed', (e) => {
+          this.updateEventList('videoElementDestroyed', '(Subscriber)');
         });
         this.subscribers[subscriber.stream.connection.connectionId] = { 'subscriber': subscriber, 'subbed': true };
       }
@@ -558,6 +561,10 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
 
     publisher.on('streamDestroyed', (e) => {
       this.updateEventList('streamDestroyed', e.stream.connection.connectionId);
+    });
+
+    publisher.on('videoElementDestroyed', (e) => {
+      this.updateEventList('videoElementDestroyed', '(Publisher)');
     });
   }
 

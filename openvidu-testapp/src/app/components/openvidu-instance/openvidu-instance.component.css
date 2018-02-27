@@ -92,7 +92,7 @@ mat-radio-button {
 
 .event-list-div {
   display: inline-block;
-  width: 125px;
+  width: 130px;
   height: 183.5px;
   overflow-y: auto;
   overflow-x: hidden;
@@ -115,7 +115,7 @@ mat-chip {
 }
 
 .scroll-custom::-webkit-scrollbar {
-  width: 7px;
+  width: 5px;
   background-color: #F5F5F5;
 }
 
