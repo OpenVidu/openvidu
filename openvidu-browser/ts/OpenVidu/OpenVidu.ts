@@ -20,6 +20,8 @@ import { Session } from './Session';
 import { Publisher } from './Publisher';
 import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/OpenViduError';
 import { OutboundStreamOptions } from '../OpenViduInternal/index';
+import { Stream } from '../OpenViduInternal/Stream';
+import { LocalRecorder } from '../OpenViduInternal/LocalRecorder';
 
 import * as adapter from 'webrtc-adapter';
 import * as screenSharing from '../ScreenSharing/Screen-Capturing.js';
@@ -267,6 +269,10 @@ export class OpenVidu {
         console.debug = function () { };
         console.info = function () { };
         console.warn = function () { };
+    }
+
+    initLocalRecorder(stream: Stream): LocalRecorder {
+        return new LocalRecorder(stream);
     }
 
 }

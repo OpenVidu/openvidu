@@ -82,7 +82,7 @@ export class WebRtcStats {
             http.open("POST", url, true);
 
             http.setRequestHeader("Content-type", "application/json");
-
+            
             http.onreadystatechange = () => { // Call a function when the state changes.
                 if (http.readyState == 4 && http.status == 200) {
                     console.log("WebRtc stats succesfully sent to " + url + " for stream " + this.stream.streamId + " of connection " + this.stream.connection.connectionId);

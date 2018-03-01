@@ -693,7 +693,7 @@ export class Stream {
     }
 
     private stopWebRtcStats() {
-        if (this.webRtcStats.isEnabled()) {
+        if (this.webRtcStats != null && this.webRtcStats.isEnabled()) {
             this.webRtcStats.stopWebRtcStats();
         }
     }
