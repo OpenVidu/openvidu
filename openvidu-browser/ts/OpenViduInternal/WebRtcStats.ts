@@ -88,7 +88,7 @@ export class WebRtcStats {
                     console.log("WebRtc stats succesfully sent to " + url + " for stream " + this.stream.streamId + " of connection " + this.stream.connection.connectionId);
                 }
             }
-            http.send(JSON.stringify(json));
+            http.send(json);
         }
 
         let f = (stats) => {
