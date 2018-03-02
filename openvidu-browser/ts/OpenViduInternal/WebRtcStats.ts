@@ -140,8 +140,9 @@ export class WebRtcStats {
                             "@timestamp": new Date(stat.timestamp).toISOString(),
                             "exec": instrumentation.exec,
                             "component": instrumentation.component,
+                            "stream": "webRtc",
                             "type": metricId,
-                            "stream_type": "composed_metric",
+                            "stream_type": "composed_metrics",
                             "units": units
                         }
                         json[metricId] = metrics;
@@ -179,8 +180,9 @@ export class WebRtcStats {
                             "@timestamp": new Date(stat.timestamp).toISOString(),
                             "exec": instrumentation.exec,
                             "component": instrumentation.component,
+                            "stream": "webRtc",
                             "type": metricId,
-                            "stream_type": "composed_metric",
+                            "stream_type": "composed_metrics",
                             "units": units
                         }
                         json[metricId] = metrics;
@@ -232,8 +234,9 @@ export class WebRtcStats {
                                 "@timestamp": new Date(stat.timestamp).toISOString(),
                                 "exec": instrumentation.exec,
                                 "component": instrumentation.component,
+                                "stream": "webRtc",
                                 "type": metricId,
-                                "stream_type": "composed_metric",
+                                "stream_type": "composed_metrics",
                                 "units": units
                             }
                             json[metricId] = metrics;
@@ -265,8 +268,9 @@ export class WebRtcStats {
                                 "@timestamp": new Date(stat.timestamp).toISOString(),
                                 "exec": instrumentation.exec,
                                 "component": instrumentation.component,
+                                "stream": "webRtc",
                                 "type": metricId,
-                                "stream_type": "composed_metric",
+                                "stream_type": "composed_metrics",
                                 "units": units
                             }
                             json[metricId] = metrics;

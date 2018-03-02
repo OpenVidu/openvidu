@@ -52,7 +52,6 @@ export interface InboundStreamOptions {
 export interface OutboundStreamOptions {
     activeAudio: boolean;
     activeVideo: boolean;
-    connection: Connection;
     dataChannel: boolean;
     mediaConstraints: any;
     sendAudio: boolean;
@@ -93,6 +92,7 @@ export class Stream {
 
     constructor(private openVidu: OpenViduInternal, private local: boolean, private room: SessionInternal, options: any) {
         if (options !== 'screen-options') {
+            // Outbound stream (not screen share) or Inbound stream
             if ('id' in options) {
                 this.inboundOptions = options;
             } else {
@@ -100,11 +100,15 @@ export class Stream {
             }
             this.streamId = (options.id != null) ? options.id : ((options.sendVideo) ? "CAMERA" : "MICRO");
             this.typeOfVideo = (options.typeOfVideo != null) ? options.typeOfVideo : '';
-            this.connection = options.connection;
+
+            if ('recvAudio' in options) {
+                // Set Connection for an Inbound stream (for Outbound streams will be set on Session.Publish(Publisher))
+                this.connection = options.connection;
+            }
         } else {
+            // Outbound stream for screen share
             this.isScreenRequested = true;
             this.typeOfVideo = 'SCREEN';
-            this.connection = this.room.getLocalParticipant();
         }
         this.addEventListener('mediastream-updated', () => {
             if (this.video) this.video.srcObject = this.mediaStream;
@@ -335,8 +339,6 @@ export class Stream {
     }
 
     requestCameraAccess(callback: Callback<Stream>) {
-
-        this.connection.addStream(this);
 
         let constraints = this.outboundOptions.mediaConstraints;
 

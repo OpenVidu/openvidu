@@ -48,7 +48,7 @@ export class Publisher {
     }
 
     destroy() {
-        this.session.unpublish(this);
+        if (!!this.session) this.session.unpublish(this);
         this.stream.dispose();
         this.stream.removeVideo(this.element);
         return this;

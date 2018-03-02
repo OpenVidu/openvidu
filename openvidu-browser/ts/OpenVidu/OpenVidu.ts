@@ -19,7 +19,6 @@ import { OpenViduInternal } from '../OpenViduInternal/OpenViduInternal';
 import { Session } from './Session';
 import { Publisher } from './Publisher';
 import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/OpenViduError';
-import { OutboundStreamOptions } from '../OpenViduInternal/index';
 import { Stream } from '../OpenViduInternal/Stream';
 import { LocalRecorder } from '../OpenViduInternal/LocalRecorder';
 

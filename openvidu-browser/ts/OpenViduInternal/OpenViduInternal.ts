@@ -15,6 +15,7 @@
  *
  */
 import { SessionInternal, SessionOptions } from './SessionInternal';
+import { Connection } from './Connection';
 import { OpenViduError, OpenViduErrorName } from './OpenViduError';
 import { Stream, OutboundStreamOptions } from './Stream';
 import * as RpcBuilder from '../KurentoUtils/kurento-jsonrpc';
@@ -45,7 +46,6 @@ export class OpenViduInternal {
         if (newStream) {
             if (cameraOptions == null) {
                 cameraOptions = {
-                    connection: this.session.getLocalParticipant(),
                     sendAudio: true,
                     sendVideo: true,
                     activeAudio: true,
@@ -56,8 +56,6 @@ export class OpenViduInternal {
                         video: { width: { ideal: 1280 } }
                     }
                 }
-            } else {
-                cameraOptions.connection = this.session.getLocalParticipant();
             }
             this.localStream = new Stream(this, true, this.session, cameraOptions);
         }

@@ -41,7 +41,7 @@ export class SessionInternal {
     constructor(private openVidu: OpenViduInternal, sessionId: string) {
         this.sessionId = this.getUrlWithoutSecret(sessionId);
         this.localParticipant = new Connection(this.openVidu, true, this);
-        if (!this.openVidu.getWsUri()) {
+        if (!this.openVidu.getWsUri() && !!sessionId) {
             this.processOpenViduUrl(sessionId);
         }
     }
@@ -214,6 +214,10 @@ export class SessionInternal {
         this.updateSpeakerInterval = options.updateSpeakerInterval || 1500;
         this.thresholdSpeaker = options.thresholdSpeaker || -50;
         this.activateUpdateMainSpeaker();
+
+        if (!this.openVidu.getWsUri()) {
+            this.processOpenViduUrl(options.sessionId);
+        }
     }
 
     getId() {

@@ -102,6 +102,7 @@ export class Session {
 
     private streamPublish(publisher: Publisher) {
         publisher.session = this;
+        this.connection.addStream(publisher.stream);
         publisher.stream.publish();
     }
 
