@@ -14,6 +14,7 @@ export class LocalRecorder {
     state: LocalRecoderState;
 
     private stream: Stream;
+    private connectionId: string;
 
     private mediaRecorder: any;
     private chunks: any[] = [];
@@ -27,7 +28,8 @@ export class LocalRecorder {
 
     constructor(stream: Stream) {
         this.stream = stream;
-        this.id = this.stream.streamId + '_' + this.stream.connection.connectionId + '_localrecord';
+        this.connectionId = (!!this.stream.connection) ? this.stream.connection.connectionId : 'default-connection';
+        this.id = this.stream.streamId + '_' + this.connectionId + '_localrecord';
         this.state = LocalRecoderState.READY;
     }
 
@@ -39,7 +41,7 @@ export class LocalRecorder {
         if (this.state !== LocalRecoderState.READY) {
             throw (Error('\'LocalRecord.record()\' needs \'LocalRecord.state\' to be \'READY\' (current value: \'' + this.state + '\'). Call \'LocalRecorder.clean()\' or init a new LocalRecorder before'));
         }
-        console.log("Starting local recording of stream '" + this.stream.streamId + "' of connection '" + this.stream.connection.connectionId + "'");
+        console.log("Starting local recording of stream '" + this.stream.streamId + "' of connection '" + this.connectionId + "'");
         if (typeof MediaRecorder.isTypeSupported == 'function') {
             let options;
             if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) {
