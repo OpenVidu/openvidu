@@ -28,7 +28,7 @@ export class Session {
     public getSessionId(callback: Function) {
 
         if (this.sessionId) {
-            callback(this.sessionId);
+            callback(null, this.sessionId);
             return;
         }
 
@@ -59,12 +59,13 @@ export class Session {
                 // Data reception is done
                 let parsed = JSON.parse(body);
                 this.sessionId = parsed.id;
-                callback(parsed.id);
+                callback(null, parsed.id);
             });
         });
 
         req.on('error', (e) => {
             console.error(e);
+	    callback(e);			
         });
         req.write(requestBody);
         req.end();
@@ -111,12 +112,13 @@ export class Session {
             res.on('end', () => {
                 // Data reception is done
                 let parsed = JSON.parse(body);
-                callback(parsed.id);
+                callback(null, parsed.id);
             });
         });
 
         req.on('error', (e) => {
             console.error(e);
+	    callback(e);	
         });
         req.write(requestBody);
         req.end();
