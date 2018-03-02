@@ -207,8 +207,9 @@ export class LocalRecorder {
                 http.open("POST", endpoint, true);
                 http.onreadystatechange = () => {
                     if (http.readyState === 4) {
-                        if (http.status === 200) {
-                            resolve("File uploaded");
+                        if (http.status.toString().charAt(0) === '2') {
+                            // Success response from server (HTTP status standard: 2XX is success)
+                            resolve(http.responseText);
                         } else {
                             reject(Error("Upload error: " + http.status));
                         }
@@ -233,8 +234,9 @@ export class LocalRecorder {
 
                 http.onreadystatechange = () => {
                     if (http.readyState === 4) {
-                        if (http.status === 200) {
-                            resolve("File uploaded");
+                        if (http.status.toString().charAt(0) === '2') {
+                            // Success response from server (HTTP status standard: 2XX is success)
+                            resolve(http.responseText);
                         } else {
                             reject(Error("Upload error: " + http.status));
                         }
