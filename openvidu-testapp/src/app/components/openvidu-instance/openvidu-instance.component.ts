@@ -247,6 +247,14 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
 
 
   private leaveSession(): void {
+    if (!!this.publisherRecorder) {
+      this.restartPublisherRecord();
+    }
+    Object.keys(this.subscribers).forEach((key) => {
+      if (!!this.subscribers[key].recorder) {
+        this.restartSubscriberRecord(key);
+      }
+    });
     if (this.session) {
       this.session.disconnect();
     }
@@ -446,13 +454,12 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
             this.afterOpenPreview(this.publisherRecorder);
           });
           dialogRef.afterClosed().subscribe(() => {
-            this.afterClosePreview(this.publisherRecorder);
+            this.afterClosePreview();
           });
         })
         .catch((error) => {
           console.error('Error stopping LocalRecorder: ' + error);
         });
-      this.restartPublisherRecord();
     }
   }
 
@@ -492,13 +499,12 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
             this.afterOpenPreview(this.subscribers[connectionId].recorder);
           });
           dialogRef.afterClosed().subscribe(() => {
-            this.afterClosePreview(this.subscribers[connectionId].recorder);
+            this.afterClosePreview(connectionId);
           });
         })
         .catch((error) => {
           console.error('Error stopping LocalRecorder: ' + error);
         });
-      this.restartSubscriberRecord(connectionId);
     }
   }
 
@@ -519,9 +525,6 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     if (this.unpublished) {
       this.session.publish(this.publisher);
     } else {
-      if (!!this.publisherRecorder && this.publisherRecording) {
-        this.publisherRecorder.clean();
-      }
       this.session.unpublish(this.publisher);
       this.removeUserData(this.session.connection.connectionId);
       this.restartPublisherRecord();
@@ -535,6 +538,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     if (!this.unpublished) {
       this.session.unpublish(this.publisher);
       this.removeUserData(this.session.connection.connectionId);
+      this.restartPublisherRecord();
     }
 
     let screenChange;
@@ -600,9 +604,6 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   subUnsubFromSubscriber(connectionId: string) {
     let subscriber: Subscriber = this.subscribers[connectionId].subscriber;
     if (this.subscribers[connectionId].subbed) {
-      if (!!this.subscribers[connectionId].recorder && this.subscribers[connectionId].recording) {
-        this.subscribers[connectionId].recorder.clean();
-      }
       this.session.unsubscribe(subscriber);
       this.restartSubscriberRecord(connectionId);
       document.getElementById('data-' + this.session.connection.connectionId + '-' + connectionId).style.marginLeft = '0';
@@ -738,46 +739,61 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
 
   private afterOpenPreview(recorder: LocalRecorder): void {
     this.muteSubscribersService.updateMuted(true);
-    recorder.preview('local-recorder-preview').controls = true;
+    recorder.preview('recorder-preview').controls = true;
   }
 
-  private afterClosePreview(recorder: LocalRecorder): void {
+  private afterClosePreview(connectionId?: string): void {
     this.muteSubscribersService.updateMuted(false);
-    recorder.clean();
+    if (!!connectionId) {
+      this.restartSubscriberRecord(connectionId);
+    } else {
+      this.restartPublisherRecord();
+    }
   }
 
   private restartPublisherRecord(): void {
-    let el: HTMLElement = document.getElementById('local-record-icon-' + this.session.connection.connectionId);
-    if (!!el) {
-      el.innerHTML = 'fiber_manual_record';
-    }
-    el = document.getElementById('local-pause-icon-' + this.session.connection.connectionId);
-    if (!!el) {
-      el.innerHTML = 'pause';
-    }
-    el = document.getElementById('local-pause-btn-' + this.session.connection.connectionId);
-    if (!!el) {
-      el.style.display = 'none';
+    if (!!this.session) {
+      let el: HTMLElement = document.getElementById('local-record-icon-' + this.session.connection.connectionId);
+      if (!!el) {
+        el.innerHTML = 'fiber_manual_record';
+      }
+      el = document.getElementById('local-pause-icon-' + this.session.connection.connectionId);
+      if (!!el) {
+        el.innerHTML = 'pause';
+      }
+      el = document.getElementById('local-pause-btn-' + this.session.connection.connectionId);
+      if (!!el) {
+        el.style.display = 'none';
+      }
     }
     this.publisherPaused = false;
     this.publisherRecording = false;
+    if (!!this.publisherRecorder) {
+      this.publisherRecorder.clean();
+    }
   }
 
   private restartSubscriberRecord(connectionId: string): void {
-    let el: HTMLElement = document.getElementById('record-icon-' + this.session.connection.connectionId + '-' + connectionId);
-    if (!!el) {
-      el.innerHTML = 'fiber_manual_record';
-    }
-    el = document.getElementById('pause-icon-' + this.session.connection.connectionId + '-' + connectionId);
-    if (!!el) {
-      el.innerHTML = 'pause';
-    }
-    el = document.getElementById('pause-btn-' + this.session.connection.connectionId + '-' + connectionId);
-    if (!!el) {
-      el.style.display = 'none';
+    if (!!this.session) {
+      let el: HTMLElement = document.getElementById('record-icon-' + this.session.connection.connectionId + '-' + connectionId);
+      if (!!el) {
+        el.innerHTML = 'fiber_manual_record';
+      }
+      el = document.getElementById('pause-icon-' + this.session.connection.connectionId + '-' + connectionId);
+      if (!!el) {
+        el.innerHTML = 'pause';
+      }
+      el = document.getElementById('pause-btn-' + this.session.connection.connectionId + '-' + connectionId);
+      if (!!el) {
+        el.style.display = 'none';
+      }
     }
     this.subscribers[connectionId].recording = false;
     this.subscribers[connectionId].paused = false;
+
+    if (!!this.subscribers[connectionId].recorder) {
+      this.subscribers[connectionId].recorder.clean();
+    }
   }
 
 }

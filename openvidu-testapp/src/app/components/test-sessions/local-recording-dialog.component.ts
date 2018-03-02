@@ -6,7 +6,7 @@ import { LocalRecorder } from 'openvidu-browser';
     selector: 'app-local-recording-dialog',
     template: `
         <div mat-dialog-content>
-            <div id="local-recorder-preview"></div>
+            <div id="recorder-preview"></div>
         </div>
         <div mat-dialog-actions>
             <button mat-button mat-dialog-close>Close</button>
