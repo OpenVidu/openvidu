@@ -1,6 +1,6 @@
 webpackJsonp(["main"],{
 
-/***/ "../../../../../../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/Mapper.js":
+/***/ "../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/Mapper.js":
 /***/ (function(module, exports) {
 
 function Mapper() {
@@ -52,7 +52,7 @@ module.exports = Mapper;
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/clients/index.js":
+/***/ "../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/clients/index.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 /*
@@ -71,13 +71,13 @@ module.exports = Mapper;
  * limitations under the License.
  *
  */
-var JsonRpcClient = __webpack_require__("../../../../../../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/clients/jsonrpcclient.js");
+var JsonRpcClient = __webpack_require__("../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/clients/jsonrpcclient.js");
 exports.JsonRpcClient = JsonRpcClient;
 //# sourceMappingURL=index.js.map
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/clients/jsonrpcclient.js":
+/***/ "../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/clients/jsonrpcclient.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 /*
@@ -96,8 +96,8 @@ exports.JsonRpcClient = JsonRpcClient;
  * limitations under the License.
  *
  */
-var RpcBuilder = __webpack_require__("../../../../../../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/index.js");
-var WebSocketWithReconnection = __webpack_require__("../../../../../../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/clients/transports/webSocketWithReconnection.js");
+var RpcBuilder = __webpack_require__("../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/index.js");
+var WebSocketWithReconnection = __webpack_require__("../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/clients/transports/webSocketWithReconnection.js");
 Date.now = Date.now || function () {
     return +new Date;
 };
@@ -318,7 +318,7 @@ module.exports = JsonRpcClient;
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/clients/transports/index.js":
+/***/ "../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/clients/transports/index.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 /*
@@ -337,13 +337,13 @@ module.exports = JsonRpcClient;
  * limitations under the License.
  *
  */
-var WebSocketWithReconnection = __webpack_require__("../../../../../../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/clients/transports/webSocketWithReconnection.js");
+var WebSocketWithReconnection = __webpack_require__("../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/clients/transports/webSocketWithReconnection.js");
 exports.WebSocketWithReconnection = WebSocketWithReconnection;
 //# sourceMappingURL=index.js.map
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/clients/transports/webSocketWithReconnection.js":
+/***/ "../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/clients/transports/webSocketWithReconnection.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -552,11 +552,11 @@ function WebSocketWithReconnection(config) {
 }
 module.exports = WebSocketWithReconnection;
 //# sourceMappingURL=webSocketWithReconnection.js.map
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__("../../../../webpack/buildin/global.js")))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__("./node_modules/webpack/buildin/global.js")))
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/index.js":
+/***/ "../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/index.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 /*
@@ -602,10 +602,10 @@ if (!Function.prototype.bind) {
         return fBound;
     };
 }
-var EventEmitter = __webpack_require__("../../../../events/events.js").EventEmitter;
-var inherits = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/inherits/inherits_browser.js");
-var packers = __webpack_require__("../../../../../../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/packers/index.js");
-var Mapper = __webpack_require__("../../../../../../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/Mapper.js");
+var EventEmitter = __webpack_require__("./node_modules/events/events.js").EventEmitter;
+var inherits = __webpack_require__("../../../../openvidu-browser/node_modules/inherits/inherits_browser.js");
+var packers = __webpack_require__("../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/packers/index.js");
+var Mapper = __webpack_require__("../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/Mapper.js");
 var BASE_TIMEOUT = 5000;
 function unifyResponseMethods(responseMethods) {
     if (!responseMethods)
@@ -1170,8 +1170,8 @@ function RpcBuilder(packer, options, transport, onRequest) {
 inherits(RpcBuilder, EventEmitter);
 RpcBuilder.RpcNotification = RpcNotification;
 module.exports = RpcBuilder;
-var clients = __webpack_require__("../../../../../../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/clients/index.js");
-var transports = __webpack_require__("../../../../../../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/clients/transports/index.js");
+var clients = __webpack_require__("../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/clients/index.js");
+var transports = __webpack_require__("../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/clients/transports/index.js");
 RpcBuilder.clients = clients;
 RpcBuilder.clients.transports = transports;
 RpcBuilder.packers = packers;
@@ -1179,7 +1179,7 @@ RpcBuilder.packers = packers;
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/packers/JsonRPC.js":
+/***/ "../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/packers/JsonRPC.js":
 /***/ (function(module, exports) {
 
 /**
@@ -1264,7 +1264,7 @@ exports.unpack = unpack;
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/packers/XmlRPC.js":
+/***/ "../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/packers/XmlRPC.js":
 /***/ (function(module, exports) {
 
 function pack(message) {
@@ -1281,18 +1281,18 @@ exports.unpack = unpack;
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/packers/index.js":
+/***/ "../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/packers/index.js":
 /***/ (function(module, exports, __webpack_require__) {
 
-var JsonRPC = __webpack_require__("../../../../../../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/packers/JsonRPC.js");
-var XmlRPC = __webpack_require__("../../../../../../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/packers/XmlRPC.js");
+var JsonRPC = __webpack_require__("../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/packers/JsonRPC.js");
+var XmlRPC = __webpack_require__("../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/packers/XmlRPC.js");
 exports.JsonRPC = JsonRPC;
 exports.XmlRPC = XmlRPC;
 //# sourceMappingURL=index.js.map
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/lib/KurentoUtils/kurento-utils-js/WebRtcPeer.js":
+/***/ "../../../../openvidu-browser/lib/KurentoUtils/kurento-utils-js/WebRtcPeer.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 /*
@@ -1310,14 +1310,14 @@ exports.XmlRPC = XmlRPC;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var freeice = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/freeice/index.js");
-var inherits = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/inherits/inherits_browser.js");
-var UAParser = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/ua-parser-js/src/ua-parser.js");
-var uuid = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/uuid/index.js");
-var hark = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/hark/hark.js");
-var EventEmitter = __webpack_require__("../../../../events/events.js").EventEmitter;
-var recursive = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/merge/merge.js").recursive.bind(undefined, true);
-var sdpTranslator = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/sdp-translator/lib/index.js");
+var freeice = __webpack_require__("../../../../openvidu-browser/node_modules/freeice/index.js");
+var inherits = __webpack_require__("../../../../openvidu-browser/node_modules/inherits/inherits_browser.js");
+var UAParser = __webpack_require__("../../../../openvidu-browser/node_modules/ua-parser-js/src/ua-parser.js");
+var uuid = __webpack_require__("../../../../openvidu-browser/node_modules/uuid/index.js");
+var hark = __webpack_require__("../../../../openvidu-browser/node_modules/hark/hark.js");
+var EventEmitter = __webpack_require__("./node_modules/events/events.js").EventEmitter;
+var recursive = __webpack_require__("../../../../openvidu-browser/node_modules/merge/merge.js").recursive.bind(undefined, true);
+var sdpTranslator = __webpack_require__("../../../../openvidu-browser/node_modules/sdp-translator/lib/index.js");
 var logger = window.Logger || console;
 // var gUM = navigator.mediaDevices.getUserMedia || function (constraints) {
 //   return new Promise(navigator.getUserMedia(constraints, function (stream) {
@@ -1961,7 +1961,7 @@ exports.hark = harkUtils;
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/lib/KurentoUtils/kurento-utils-js/index.js":
+/***/ "../../../../openvidu-browser/lib/KurentoUtils/kurento-utils-js/index.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 /*
@@ -1989,13 +1989,13 @@ exports.hark = harkUtils;
  * @copyright 2014 Kurento (http://kurento.org/)
  * @license ALv2
  */
-var WebRtcPeer = __webpack_require__("../../../../../../../../../openvidu-browser/lib/KurentoUtils/kurento-utils-js/WebRtcPeer.js");
+var WebRtcPeer = __webpack_require__("../../../../openvidu-browser/lib/KurentoUtils/kurento-utils-js/WebRtcPeer.js");
 exports.WebRtcPeer = WebRtcPeer;
 //# sourceMappingURL=index.js.map
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/lib/OpenVidu/OpenVidu.js":
+/***/ "../../../../openvidu-browser/lib/OpenVidu/OpenVidu.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2017,12 +2017,13 @@ exports.__esModule = true;
  * limitations under the License.
  *
  */
-var OpenViduInternal_1 = __webpack_require__("../../../../../../../../../openvidu-browser/lib/OpenViduInternal/OpenViduInternal.js");
-var Session_1 = __webpack_require__("../../../../../../../../../openvidu-browser/lib/OpenVidu/Session.js");
-var Publisher_1 = __webpack_require__("../../../../../../../../../openvidu-browser/lib/OpenVidu/Publisher.js");
-var OpenViduError_1 = __webpack_require__("../../../../../../../../../openvidu-browser/lib/OpenViduInternal/OpenViduError.js");
-var adapter = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/adapter_core.js");
-var screenSharingAuto = __webpack_require__("../../../../../../../../../openvidu-browser/lib/ScreenSharing/Screen-Capturing-Auto.js");
+var OpenViduInternal_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/OpenViduInternal.js");
+var Session_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/Session.js");
+var Publisher_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/Publisher.js");
+var OpenViduError_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/OpenViduError.js");
+var LocalRecorder_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/LocalRecorder.js");
+var adapter = __webpack_require__("../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/adapter_core.js");
+var screenSharingAuto = __webpack_require__("../../../../openvidu-browser/lib/ScreenSharing/Screen-Capturing-Auto.js");
 if (window) {
     window["adapter"] = adapter;
 }
@@ -2245,6 +2246,9 @@ var OpenVidu = /** @class */ (function () {
         console.info = function () { };
         console.warn = function () { };
     };
+    OpenVidu.prototype.initLocalRecorder = function (stream) {
+        return new LocalRecorder_1.LocalRecorder(stream);
+    };
     return OpenVidu;
 }());
 exports.OpenVidu = OpenVidu;
@@ -2252,15 +2256,16 @@ exports.OpenVidu = OpenVidu;
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/lib/OpenVidu/Publisher.js":
+/***/ "../../../../openvidu-browser/lib/OpenVidu/Publisher.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 exports.__esModule = true;
-var EventEmitter = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/wolfy87-eventemitter/EventEmitter.js");
+var EventEmitter = __webpack_require__("../../../../openvidu-browser/node_modules/wolfy87-eventemitter/EventEmitter.js");
 var Publisher = /** @class */ (function () {
     function Publisher(stream, parentId, isScreenRequested) {
+        var _this = this;
         this.ee = new EventEmitter();
         this.accessAllowed = false;
         this.isScreenRequested = false;
@@ -2268,7 +2273,11 @@ var Publisher = /** @class */ (function () {
         this.isScreenRequested = isScreenRequested;
         // Listens to the deactivation of the default behaviour upon the deletion of a Stream object
         this.ee.addListener('stream-destroyed-default', function (event) {
-            event.stream.removeVideo();
+            var s = event.stream;
+            s.addOnceEventListener('video-removed', function () {
+                _this.ee.emitEvent('videoElementDestroyed');
+            });
+            s.removeVideo();
         });
         if (document.getElementById(parentId) != null) {
             this.element = document.getElementById(parentId);
@@ -2281,7 +2290,8 @@ var Publisher = /** @class */ (function () {
         this.stream.getWebRtcPeer().videoEnabled = value;
     };
     Publisher.prototype.destroy = function () {
-        this.session.unpublish(this);
+        if (!!this.session)
+            this.session.unpublish(this);
         this.stream.dispose();
         this.stream.removeVideo(this.element);
         return this;
@@ -2391,14 +2401,14 @@ exports.Publisher = Publisher;
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/lib/OpenVidu/Session.js":
+/***/ "../../../../openvidu-browser/lib/OpenVidu/Session.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 exports.__esModule = true;
-var Subscriber_1 = __webpack_require__("../../../../../../../../../openvidu-browser/lib/OpenVidu/Subscriber.js");
-var EventEmitter = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/wolfy87-eventemitter/EventEmitter.js");
+var Subscriber_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/Subscriber.js");
+var EventEmitter = __webpack_require__("../../../../openvidu-browser/node_modules/wolfy87-eventemitter/EventEmitter.js");
 var Session = /** @class */ (function () {
     function Session(session, openVidu) {
         var _this = this;
@@ -2488,6 +2498,7 @@ var Session = /** @class */ (function () {
     };
     Session.prototype.streamPublish = function (publisher) {
         publisher.session = this;
+        this.connection.addStream(publisher.stream);
         publisher.stream.publish();
     };
     Session.prototype.unpublish = function (publisher) {
@@ -2546,20 +2557,25 @@ exports.Session = Session;
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/lib/OpenVidu/Subscriber.js":
+/***/ "../../../../openvidu-browser/lib/OpenVidu/Subscriber.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 exports.__esModule = true;
-var EventEmitter = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/wolfy87-eventemitter/EventEmitter.js");
+var EventEmitter = __webpack_require__("../../../../openvidu-browser/node_modules/wolfy87-eventemitter/EventEmitter.js");
 var Subscriber = /** @class */ (function () {
     function Subscriber(stream, parentId) {
+        var _this = this;
         this.ee = new EventEmitter();
         this.stream = stream;
         if (document.getElementById(parentId) != null) {
             this.element = document.getElementById(parentId);
         }
+        // Listens to deletion of the HTML video element of the Subscriber
+        this.stream.addEventListener('video-removed', function () {
+            _this.ee.emitEvent('videoElementDestroyed');
+        });
     }
     Subscriber.prototype.on = function (eventName, callback) {
         var _this = this;
@@ -2580,7 +2596,6 @@ var Subscriber = /** @class */ (function () {
             }
             else {
                 this.stream.addOnceEventListener('video-element-created-by-stream', function (element) {
-                    console.warn("Subscriber emitting videoElementCreated");
                     _this.id = element.id;
                     _this.ee.emitEvent('videoElementCreated', [{
                             element: element
@@ -2615,7 +2630,7 @@ exports.Subscriber = Subscriber;
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/lib/OpenVidu/index.js":
+/***/ "../../../../openvidu-browser/lib/OpenVidu/index.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2624,23 +2639,24 @@ function __export(m) {
     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 }
 exports.__esModule = true;
-__export(__webpack_require__("../../../../../../../../../openvidu-browser/lib/OpenVidu/OpenVidu.js"));
-__export(__webpack_require__("../../../../../../../../../openvidu-browser/lib/OpenVidu/Session.js"));
-__export(__webpack_require__("../../../../../../../../../openvidu-browser/lib/OpenVidu/Publisher.js"));
-__export(__webpack_require__("../../../../../../../../../openvidu-browser/lib/OpenVidu/Subscriber.js"));
-__export(__webpack_require__("../../../../../../../../../openvidu-browser/lib/OpenViduInternal/Stream.js"));
-__export(__webpack_require__("../../../../../../../../../openvidu-browser/lib/OpenViduInternal/Connection.js"));
+__export(__webpack_require__("../../../../openvidu-browser/lib/OpenVidu/OpenVidu.js"));
+__export(__webpack_require__("../../../../openvidu-browser/lib/OpenVidu/Session.js"));
+__export(__webpack_require__("../../../../openvidu-browser/lib/OpenVidu/Publisher.js"));
+__export(__webpack_require__("../../../../openvidu-browser/lib/OpenVidu/Subscriber.js"));
+__export(__webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Stream.js"));
+__export(__webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Connection.js"));
+__export(__webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/LocalRecorder.js"));
 //# sourceMappingURL=index.js.map
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/lib/OpenViduInternal/Connection.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/Connection.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 exports.__esModule = true;
-var Stream_1 = __webpack_require__("../../../../../../../../../openvidu-browser/lib/OpenViduInternal/Stream.js");
+var Stream_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Stream.js");
 var Connection = /** @class */ (function () {
     function Connection(openVidu, local, room, options) {
         this.openVidu = openVidu;
@@ -2649,7 +2665,7 @@ var Connection = /** @class */ (function () {
         this.options = options;
         this.streams = {};
         console.info("'Connection' created (" + (local ? "local" : "remote") + ")" + (local ? "" : ", with 'connectionId' [" + (options ? options.id : '') + "] "));
-        if (options) {
+        if (options && !local) {
             this.connectionId = options.id;
             if (options.metadata) {
                 this.data = options.metadata;
@@ -2660,6 +2676,7 @@ var Connection = /** @class */ (function () {
         }
     }
     Connection.prototype.addStream = function (stream) {
+        stream.connection = this;
         this.streams[stream.streamId] = stream;
         this.room.getStreams()[stream.streamId] = stream;
     };
@@ -2717,7 +2734,236 @@ exports.Connection = Connection;
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/lib/OpenViduInternal/OpenViduError.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/LocalRecorder.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+exports.__esModule = true;
+var LocalRecorder = /** @class */ (function () {
+    function LocalRecorder(stream) {
+        this.chunks = [];
+        this.count = 0;
+        this.stream = stream;
+        this.connectionId = (!!this.stream.connection) ? this.stream.connection.connectionId : 'default-connection';
+        this.id = this.stream.streamId + '_' + this.connectionId + '_localrecord';
+        this.state = "READY" /* READY */;
+    }
+    LocalRecorder.prototype.record = function () {
+        var _this = this;
+        if (typeof MediaRecorder === 'undefined') {
+            console.error('MediaRecorder not supported on your browser. See compatibility in https://caniuse.com/#search=MediaRecorder');
+            throw (Error('MediaRecorder not supported on your browser. See compatibility in https://caniuse.com/#search=MediaRecorder'));
+        }
+        if (this.state !== "READY" /* READY */) {
+            throw (Error('\'LocalRecord.record()\' needs \'LocalRecord.state\' to be \'READY\' (current value: \'' + this.state + '\'). Call \'LocalRecorder.clean()\' or init a new LocalRecorder before'));
+        }
+        console.log("Starting local recording of stream '" + this.stream.streamId + "' of connection '" + this.connectionId + "'");
+        if (typeof MediaRecorder.isTypeSupported == 'function') {
+            var options = void 0;
+            if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) {
+                options = { mimeType: 'video/webm;codecs=vp9' };
+            }
+            else if (MediaRecorder.isTypeSupported('video/webm;codecs=h264')) {
+                options = { mimeType: 'video/webm;codecs=h264' };
+            }
+            else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8')) {
+                options = { mimeType: 'video/webm;codecs=vp8' };
+            }
+            console.log('Using mimeType ' + options.mimeType);
+            this.mediaRecorder = new MediaRecorder(this.stream.getMediaStream(), options);
+        }
+        else {
+            console.warn('isTypeSupported is not supported, using default codecs for browser');
+            this.mediaRecorder = new MediaRecorder(this.stream.getMediaStream());
+        }
+        this.mediaRecorder.start(10);
+        this.mediaRecorder.ondataavailable = function (e) {
+            _this.chunks.push(e.data);
+        };
+        this.mediaRecorder.onerror = function (e) {
+            console.error('MediaRecorder error: ', e);
+        };
+        this.mediaRecorder.onstart = function () {
+            console.log('MediaRecorder started (state=' + _this.mediaRecorder.state + ")");
+        };
+        this.mediaRecorder.onstop = function () {
+            _this.onStopDefault();
+        };
+        this.mediaRecorder.onpause = function () {
+            console.log('MediaRecorder paused (state=' + _this.mediaRecorder.state + ")");
+        };
+        this.mediaRecorder.onresume = function () {
+            console.log('MediaRecorder resumed (state=' + _this.mediaRecorder.state + ")");
+        };
+        this.mediaRecorder.onwarning = function (e) {
+            console.log('MediaRecorder warning: ' + e);
+        };
+        this.state = "RECORDING" /* RECORDING */;
+    };
+    LocalRecorder.prototype.stop = function () {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            try {
+                if (_this.state === "READY" /* READY */ || _this.state === "FINISHED" /* FINISHED */) {
+                    throw (Error('\'LocalRecord.stop()\' needs \'LocalRecord.state\' to be \'RECORDING\' or \'PAUSED\' (current value: \'' + _this.state + '\'). Call \'LocalRecorder.start()\' before'));
+                }
+                _this.mediaRecorder.onstop = function () {
+                    _this.onStopDefault();
+                    resolve();
+                };
+            }
+            catch (e) {
+                reject(e);
+            }
+            try {
+                _this.mediaRecorder.stop();
+            }
+            catch (e) {
+                reject(e);
+            }
+        });
+    };
+    LocalRecorder.prototype.pause = function () {
+        if (this.state !== "RECORDING" /* RECORDING */) {
+            throw (Error('\'LocalRecord.pause()\' needs \'LocalRecord.state\' to be \'RECORDING\' (current value: \'' + this.state + '\'). Call \'LocalRecorder.start()\' or \'LocalRecorder.resume()\' before'));
+        }
+        this.mediaRecorder.pause();
+        this.state = "PAUSED" /* PAUSED */;
+    };
+    LocalRecorder.prototype.resume = function () {
+        if (this.state !== "PAUSED" /* PAUSED */) {
+            throw (Error('\'LocalRecord.resume()\' needs \'LocalRecord.state\' to be \'PAUSED\' (current value: \'' + this.state + '\'). Call \'LocalRecorder.pause()\' before'));
+        }
+        this.mediaRecorder.resume();
+        this.state = "RECORDING" /* RECORDING */;
+    };
+    LocalRecorder.prototype.preview = function (parentElement) {
+        if (this.state !== "FINISHED" /* FINISHED */) {
+            throw (Error('\'LocalRecord.preview()\' needs \'LocalRecord.state\' to be \'FINISHED\' (current value: \'' + this.state + '\'). Call \'LocalRecorder.stop()\' before'));
+        }
+        this.videoPreview = document.createElement('video');
+        this.videoPreview.id = this.id;
+        this.videoPreview.autoplay = true;
+        if (typeof parentElement === "string") {
+            this.htmlParentElementId = parentElement;
+            var parentElementDom = document.getElementById(parentElement);
+            if (parentElementDom) {
+                this.videoPreview = parentElementDom.appendChild(this.videoPreview);
+            }
+        }
+        else {
+            this.htmlParentElementId = parentElement.id;
+            this.videoPreview = parentElement.appendChild(this.videoPreview);
+        }
+        this.videoPreview.src = this.videoPreviewSrc;
+        return this.videoPreview;
+    };
+    LocalRecorder.prototype.clean = function () {
+        var _this = this;
+        var f = function () {
+            delete _this.blob;
+            _this.chunks = [];
+            _this.count = 0;
+            delete _this.mediaRecorder;
+            _this.state = "READY" /* READY */;
+        };
+        if (this.state === "RECORDING" /* RECORDING */ || this.state === "PAUSED" /* PAUSED */) {
+            this.stop().then(function () { return f(); })["catch"](function () { return f(); });
+        }
+        else {
+            f();
+        }
+    };
+    LocalRecorder.prototype.download = function () {
+        if (this.state !== "FINISHED" /* FINISHED */) {
+            throw (Error('\'LocalRecord.download()\' needs \'LocalRecord.state\' to be \'FINISHED\' (current value: \'' + this.state + '\'). Call \'LocalRecorder.stop()\' before'));
+        }
+        else {
+            var a = document.createElement("a");
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            var url = window.URL.createObjectURL(this.blob);
+            a.href = url;
+            a.download = this.id + '.webm';
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }
+    };
+    LocalRecorder.prototype.getBlob = function () {
+        if (this.state !== "FINISHED" /* FINISHED */) {
+            throw (Error('Call \'LocalRecord.stop()\' before getting Blob file'));
+        }
+        else {
+            return this.blob;
+        }
+    };
+    LocalRecorder.prototype.uploadAsBinary = function (endpoint) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            if (_this.state !== "FINISHED" /* FINISHED */) {
+                reject(Error('\'LocalRecord.uploadAsBinary()\' needs \'LocalRecord.state\' to be \'FINISHED\' (current value: \'' + _this.state + '\'). Call \'LocalRecorder.stop()\' before'));
+            }
+            else {
+                var http_1 = new XMLHttpRequest();
+                http_1.open("POST", endpoint, true);
+                http_1.onreadystatechange = function () {
+                    if (http_1.readyState === 4) {
+                        if (http_1.status.toString().charAt(0) === '2') {
+                            // Success response from server (HTTP status standard: 2XX is success)
+                            resolve(http_1.responseText);
+                        }
+                        else {
+                            reject(Error("Upload error: " + http_1.status));
+                        }
+                    }
+                };
+                http_1.send(_this.blob);
+            }
+        });
+    };
+    LocalRecorder.prototype.uploadAsMultipartfile = function (endpoint) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            if (_this.state !== "FINISHED" /* FINISHED */) {
+                reject(Error('\'LocalRecord.uploadAsMultipartfile()\' needs \'LocalRecord.state\' to be \'FINISHED\' (current value: \'' + _this.state + '\'). Call \'LocalRecorder.stop()\' before'));
+            }
+            else {
+                var http_2 = new XMLHttpRequest();
+                http_2.open("POST", endpoint, true);
+                var sendable = new FormData();
+                sendable.append("file", _this.blob, _this.id + ".webm");
+                http_2.onreadystatechange = function () {
+                    if (http_2.readyState === 4) {
+                        if (http_2.status.toString().charAt(0) === '2') {
+                            // Success response from server (HTTP status standard: 2XX is success)
+                            resolve(http_2.responseText);
+                        }
+                        else {
+                            reject(Error("Upload error: " + http_2.status));
+                        }
+                    }
+                };
+                http_2.send(sendable);
+            }
+        });
+    };
+    LocalRecorder.prototype.onStopDefault = function () {
+        console.log('MediaRecorder stopped  (state=' + this.mediaRecorder.state + ")");
+        this.blob = new Blob(this.chunks, { type: "video/webm" });
+        this.chunks = [];
+        this.videoPreviewSrc = window.URL.createObjectURL(this.blob);
+        this.state = "FINISHED" /* FINISHED */;
+    };
+    return LocalRecorder;
+}());
+exports.LocalRecorder = LocalRecorder;
+//# sourceMappingURL=LocalRecorder.js.map
+
+/***/ }),
+
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/OpenViduError.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2735,7 +2981,7 @@ exports.OpenViduError = OpenViduError;
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/lib/OpenViduInternal/OpenViduInternal.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/OpenViduInternal.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2757,10 +3003,10 @@ exports.__esModule = true;
  * limitations under the License.
  *
  */
-var SessionInternal_1 = __webpack_require__("../../../../../../../../../openvidu-browser/lib/OpenViduInternal/SessionInternal.js");
-var OpenViduError_1 = __webpack_require__("../../../../../../../../../openvidu-browser/lib/OpenViduInternal/OpenViduError.js");
-var Stream_1 = __webpack_require__("../../../../../../../../../openvidu-browser/lib/OpenViduInternal/Stream.js");
-var RpcBuilder = __webpack_require__("../../../../../../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/index.js");
+var SessionInternal_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/SessionInternal.js");
+var OpenViduError_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/OpenViduError.js");
+var Stream_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Stream.js");
+var RpcBuilder = __webpack_require__("../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/index.js");
 var OpenViduInternal = /** @class */ (function () {
     function OpenViduInternal() {
         this.remoteStreams = [];
@@ -2777,7 +3023,6 @@ var OpenViduInternal = /** @class */ (function () {
         if (newStream) {
             if (cameraOptions == null) {
                 cameraOptions = {
-                    connection: this.session.getLocalParticipant(),
                     sendAudio: true,
                     sendVideo: true,
                     activeAudio: true,
@@ -2788,9 +3033,6 @@ var OpenViduInternal = /** @class */ (function () {
                         video: { width: { ideal: 1280 } }
                     }
                 };
-            }
-            else {
-                cameraOptions.connection = this.session.getLocalParticipant();
             }
             this.localStream = new Stream_1.Stream(this, true, this.session, cameraOptions);
         }
@@ -2948,7 +3190,7 @@ var OpenViduInternal = /** @class */ (function () {
             return true;
         }
         else {
-            console.warn('Room instance not found');
+            console.warn('Session instance not found');
             return false;
         }
     };
@@ -3100,14 +3342,14 @@ exports.OpenViduInternal = OpenViduInternal;
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/lib/OpenViduInternal/SessionInternal.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/SessionInternal.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 exports.__esModule = true;
-var Connection_1 = __webpack_require__("../../../../../../../../../openvidu-browser/lib/OpenViduInternal/Connection.js");
-var EventEmitter = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/wolfy87-eventemitter/EventEmitter.js");
+var Connection_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Connection.js");
+var EventEmitter = __webpack_require__("../../../../openvidu-browser/node_modules/wolfy87-eventemitter/EventEmitter.js");
 var SECRET_PARAM = '?secret=';
 var RECORDER_PARAM = '&recorder=';
 var SessionInternal = /** @class */ (function () {
@@ -3120,7 +3362,7 @@ var SessionInternal = /** @class */ (function () {
         this.connected = false;
         this.sessionId = this.getUrlWithoutSecret(sessionId);
         this.localParticipant = new Connection_1.Connection(this.openVidu, true, this);
-        if (!this.openVidu.getWsUri()) {
+        if (!this.openVidu.getWsUri() && !!sessionId) {
             this.processOpenViduUrl(sessionId);
         }
     }
@@ -3265,6 +3507,9 @@ var SessionInternal = /** @class */ (function () {
         this.updateSpeakerInterval = options.updateSpeakerInterval || 1500;
         this.thresholdSpeaker = options.thresholdSpeaker || -50;
         this.activateUpdateMainSpeaker();
+        if (!this.openVidu.getWsUri()) {
+            this.processOpenViduUrl(options.sessionId);
+        }
     };
     SessionInternal.prototype.getId = function () {
         return this.id;
@@ -3478,7 +3723,7 @@ var SessionInternal = /** @class */ (function () {
         }
     };
     SessionInternal.prototype.onRoomClosed = function (msg) {
-        console.info("Room closed: " + JSON.stringify(msg));
+        console.info("Session closed: " + JSON.stringify(msg));
         var room = msg.room;
         if (room !== undefined) {
             this.ee.emitEvent('room-closed', [{
@@ -3486,12 +3731,12 @@ var SessionInternal = /** @class */ (function () {
                 }]);
         }
         else {
-            console.warn("Room undefined in on room closed", msg);
+            console.warn("Session undefined on session closed", msg);
         }
     };
     SessionInternal.prototype.onLostConnection = function () {
         if (!this.connected) {
-            console.warn('Not connected to room: if you are not debugging, this is probably a certificate error');
+            console.warn('Not connected to session: if you are not debugging, this is probably a certificate error');
             if (window.confirm('If you are not debugging, this is probably a certificate error at \"' + this.openVidu.getOpenViduServerURL() + '\"\n\nClick OK to navigate and accept it')) {
                 location.assign(this.openVidu.getOpenViduServerURL() + '/accept-certificate');
             }
@@ -3504,7 +3749,7 @@ var SessionInternal = /** @class */ (function () {
             this.ee.emitEvent('lost-connection', [{ room: room }]);
         }
         else {
-            console.warn('Room undefined when lost connection');
+            console.warn('Session undefined when lost connection');
         }
     };
     SessionInternal.prototype.onMediaError = function (params) {
@@ -3645,16 +3890,17 @@ exports.SessionInternal = SessionInternal;
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/lib/OpenViduInternal/Stream.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/Stream.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 exports.__esModule = true;
-var OpenViduError_1 = __webpack_require__("../../../../../../../../../openvidu-browser/lib/OpenViduInternal/OpenViduError.js");
-var EventEmitter = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/wolfy87-eventemitter/EventEmitter.js");
-var kurentoUtils = __webpack_require__("../../../../../../../../../openvidu-browser/lib/KurentoUtils/kurento-utils-js/index.js");
-var adapter = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/adapter_core.js");
+var OpenViduError_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/OpenViduError.js");
+var WebRtcStats_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/WebRtcStats.js");
+var EventEmitter = __webpack_require__("../../../../openvidu-browser/node_modules/wolfy87-eventemitter/EventEmitter.js");
+var kurentoUtils = __webpack_require__("../../../../openvidu-browser/lib/KurentoUtils/kurento-utils-js/index.js");
+var adapter = __webpack_require__("../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/adapter_core.js");
 if (window) {
     window["adapter"] = adapter;
 }
@@ -3686,6 +3932,7 @@ var Stream = /** @class */ (function () {
         this.isScreenRequestedReady = false;
         this.isScreenRequested = false;
         if (options !== 'screen-options') {
+            // Outbound stream (not screen share) or Inbound stream
             if ('id' in options) {
                 this.inboundOptions = options;
             }
@@ -3694,12 +3941,15 @@ var Stream = /** @class */ (function () {
             }
             this.streamId = (options.id != null) ? options.id : ((options.sendVideo) ? "CAMERA" : "MICRO");
             this.typeOfVideo = (options.typeOfVideo != null) ? options.typeOfVideo : '';
-            this.connection = options.connection;
+            if ('recvAudio' in options) {
+                // Set Connection for an Inbound stream (for Outbound streams will be set on Session.Publish(Publisher))
+                this.connection = options.connection;
+            }
         }
         else {
+            // Outbound stream for screen share
             this.isScreenRequested = true;
             this.typeOfVideo = 'SCREEN';
-            this.connection = this.room.getLocalParticipant();
         }
         this.addEventListener('mediastream-updated', function () {
             if (_this.video)
@@ -3714,13 +3964,16 @@ var Stream = /** @class */ (function () {
         if (this.video) {
             if (typeof parentElement === "string") {
                 document.getElementById(parentElement).removeChild(this.video);
+                this.ee.emitEvent('video-removed');
             }
             else if (parentElement instanceof Element) {
                 parentElement.removeChild(this.video);
+                this.ee.emitEvent('video-removed');
             }
             else if (!parentElement) {
                 if (document.getElementById(this.parentId)) {
                     document.getElementById(this.parentId).removeChild(this.video);
+                    this.ee.emitEvent('video-removed');
                 }
             }
             delete this.video;
@@ -3730,7 +3983,8 @@ var Stream = /** @class */ (function () {
         return this.video;
     };
     Stream.prototype.setVideoElement = function (video) {
-        this.video = video;
+        if (!!video)
+            this.video = video;
     };
     Stream.prototype.getParentId = function () {
         return this.parentId;
@@ -3797,6 +4051,9 @@ var Stream = /** @class */ (function () {
     Stream.prototype.getWebRtcPeer = function () {
         return this.wp;
     };
+    Stream.prototype.getRTCPeerConnection = function () {
+        return this.wp.peerConnection;
+    };
     Stream.prototype.addEventListener = function (eventName, listener) {
         this.ee.addListener(eventName, listener);
     };
@@ -3821,40 +4078,43 @@ var Stream = /** @class */ (function () {
     };
     Stream.prototype.playOnlyVideo = function (parentElement, thumbnailId) {
         var _this = this;
-        this.video = document.createElement('video');
-        this.video.id = (this.local ? 'local-' : 'remote-') + 'video-' + this.streamId;
-        this.video.autoplay = true;
-        this.video.controls = false;
-        this.ee.emitEvent('mediastream-updated');
-        if (this.local && !this.displayMyRemote()) {
-            this.video.muted = true;
-            this.video.oncanplay = function () {
-                console.info("Local 'Stream' with id [" + _this.streamId + "] video is now playing");
-                _this.ee.emitEvent('video-is-playing', [{
-                        element: _this.video
-                    }]);
-            };
-        }
-        else {
-            this.video.title = this.streamId;
-        }
-        if (typeof parentElement === "string") {
-            this.parentId = parentElement;
-            var parentElementDom = document.getElementById(parentElement);
-            if (parentElementDom) {
-                this.video = parentElementDom.appendChild(this.video);
-                this.ee.emitEvent('video-element-created-by-stream', [{
-                        element: this.video
-                    }]);
-                this.isVideoELementCreated = true;
+        if (!!parentElement) {
+            this.video = document.createElement('video');
+            this.video.id = (this.local ? 'local-' : 'remote-') + 'video-' + this.streamId;
+            this.video.autoplay = true;
+            this.video.controls = false;
+            this.ee.emitEvent('mediastream-updated');
+            if (this.local && !this.displayMyRemote()) {
+                this.video.muted = true;
+                this.video.onplaying = function () {
+                    console.info("Local 'Stream' with id [" + _this.streamId + "] video is now playing");
+                    _this.ee.emitEvent('video-is-playing', [{
+                            element: _this.video
+                        }]);
+                };
             }
+            else {
+                this.video.title = this.streamId;
+            }
+            if (typeof parentElement === "string") {
+                this.parentId = parentElement;
+                var parentElementDom = document.getElementById(parentElement);
+                if (parentElementDom) {
+                    this.video = parentElementDom.appendChild(this.video);
+                    this.ee.emitEvent('video-element-created-by-stream', [{
+                            element: this.video
+                        }]);
+                    this.isVideoELementCreated = true;
+                }
+            }
+            else {
+                this.parentId = parentElement.id;
+                this.video = parentElement.appendChild(this.video);
+            }
+            this.isReadyToPublish = true;
+            return this.video;
         }
-        else {
-            this.parentId = parentElement.id;
-            this.video = parentElement.appendChild(this.video);
-        }
-        this.isReadyToPublish = true;
-        return this.video;
+        return null;
     };
     Stream.prototype.playThumbnail = function (thumbnailId) {
         var container = document.createElement('div');
@@ -3880,12 +4140,8 @@ var Stream = /** @class */ (function () {
     Stream.prototype.getParticipant = function () {
         return this.connection;
     };
-    Stream.prototype.getRTCPeerConnection = function () {
-        return this.getWebRtcPeer().peerConnection;
-    };
     Stream.prototype.requestCameraAccess = function (callback) {
         var _this = this;
-        this.connection.addStream(this);
         var constraints = this.outboundOptions.mediaConstraints;
         /*let constraints2 = {
             audio: true,
@@ -4127,27 +4383,30 @@ var Stream = /** @class */ (function () {
                         });
                     }
                 }
-                // let thumbnailId = this.video.thumb;
-                _this.video.oncanplay = function () {
-                    if (_this.local && _this.displayMyRemote()) {
-                        console.info("Your own remote 'Stream' with id [" + _this.streamId + "] video is now playing");
-                        _this.ee.emitEvent('remote-video-is-playing', [{
-                                element: _this.video
-                            }]);
-                    }
-                    else if (!_this.local && !_this.displayMyRemote()) {
-                        console.info("Remote 'Stream' with id [" + _this.streamId + "] video is now playing");
-                        _this.ee.emitEvent('video-is-playing', [{
-                                element: _this.video
-                            }]);
-                    }
-                    //show(thumbnailId);
-                    //this.hideSpinner(this.streamId);
-                };
+                if (!!_this.video) {
+                    // let thumbnailId = this.video.thumb;
+                    _this.video.onplaying = function () {
+                        if (_this.local && _this.displayMyRemote()) {
+                            console.info("Your own remote 'Stream' with id [" + _this.streamId + "] video is now playing");
+                            _this.ee.emitEvent('remote-video-is-playing', [{
+                                    element: _this.video
+                                }]);
+                        }
+                        else if (!_this.local && !_this.displayMyRemote()) {
+                            console.info("Remote 'Stream' with id [" + _this.streamId + "] video is now playing");
+                            _this.ee.emitEvent('video-is-playing', [{
+                                    element: _this.video
+                                }]);
+                        }
+                        //show(thumbnailId);
+                        //this.hideSpinner(this.streamId);
+                    };
+                }
                 _this.room.emitEvent('stream-subscribed', [{
                         stream: _this
                     }]);
             }
+            _this.initWebRtcStats();
         }, function (error) {
             console.error(_this.streamId + ": Error setting SDP to the peer connection: "
                 + JSON.stringify(error));
@@ -4195,11 +4454,21 @@ var Stream = /** @class */ (function () {
         if (this.speechEvent) {
             this.speechEvent.stop();
         }
+        this.stopWebRtcStats();
         console.info((this.local ? "Local " : "Remote ") + "'Stream' with id [" + this.streamId + "]' has been succesfully disposed");
     };
     Stream.prototype.configureScreenOptions = function (options) {
         this.outboundOptions = options;
         this.streamId = "SCREEN";
+    };
+    Stream.prototype.initWebRtcStats = function () {
+        this.webRtcStats = new WebRtcStats_1.WebRtcStats(this);
+        this.webRtcStats.initWebRtcStats();
+    };
+    Stream.prototype.stopWebRtcStats = function () {
+        if (this.webRtcStats != null && this.webRtcStats.isEnabled()) {
+            this.webRtcStats.stopWebRtcStats();
+        }
     };
     return Stream;
 }());
@@ -4208,7 +4477,294 @@ exports.Stream = Stream;
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/lib/ScreenSharing/Screen-Capturing-Auto.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/WebRtcStats.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+exports.__esModule = true;
+var adapter = __webpack_require__("../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/adapter_core.js");
+var WebRtcStats = /** @class */ (function () {
+    function WebRtcStats(stream) {
+        this.stream = stream;
+        this.webRtcStatsEnabled = false;
+        this.statsInterval = 1;
+        this.stats = {
+            "inbound": {
+                "audio": {
+                    "bytesReceived": 0,
+                    "packetsReceived": 0,
+                    "packetsLost": 0
+                },
+                "video": {
+                    "bytesReceived": 0,
+                    "packetsReceived": 0,
+                    "packetsLost": 0,
+                    "framesDecoded": 0,
+                    "nackCount": 0
+                }
+            },
+            "outbound": {
+                "audio": {
+                    "bytesSent": 0,
+                    "packetsSent": 0
+                },
+                "video": {
+                    "bytesSent": 0,
+                    "packetsSent": 0,
+                    "framesEncoded": 0,
+                    "nackCount": 0
+                }
+            }
+        };
+    }
+    WebRtcStats.prototype.isEnabled = function () {
+        return this.webRtcStatsEnabled;
+    };
+    WebRtcStats.prototype.initWebRtcStats = function () {
+        var _this = this;
+        var elastestInstrumentation = localStorage.getItem('elastest-instrumentation');
+        if (elastestInstrumentation) {
+            // ElasTest instrumentation object found in local storage
+            console.warn("WebRtc stats enabled for stream " + this.stream.streamId + " of connection " + this.stream.connection.connectionId);
+            this.webRtcStatsEnabled = true;
+            var instrumentation_1 = JSON.parse(elastestInstrumentation);
+            this.statsInterval = instrumentation_1.webrtc.interval; // Interval in seconds
+            console.warn("localStorage item: " + JSON.stringify(instrumentation_1));
+            this.webRtcStatsIntervalId = setInterval(function () {
+                _this.sendStatsToHttpEndpoint(instrumentation_1);
+            }, this.statsInterval * 1000);
+            return;
+        }
+        console.debug("WebRtc stats not enabled");
+    };
+    WebRtcStats.prototype.stopWebRtcStats = function () {
+        if (this.webRtcStatsEnabled) {
+            clearInterval(this.webRtcStatsIntervalId);
+            console.warn("WebRtc stats stopped for disposed stream " + this.stream.streamId + " of connection " + this.stream.connection.connectionId);
+        }
+    };
+    WebRtcStats.prototype.sendStatsToHttpEndpoint = function (instrumentation) {
+        var _this = this;
+        var sendPost = function (json) {
+            var http = new XMLHttpRequest();
+            var url = instrumentation.webrtc.httpEndpoint;
+            http.open("POST", url, true);
+            http.setRequestHeader("Content-type", "application/json");
+            http.onreadystatechange = function () {
+                if (http.readyState == 4 && http.status == 200) {
+                    console.log("WebRtc stats succesfully sent to " + url + " for stream " + _this.stream.streamId + " of connection " + _this.stream.connection.connectionId);
+                }
+            };
+            http.send(json);
+        };
+        var f = function (stats) {
+            if (adapter.browserDetails.browser === 'firefox') {
+                stats.forEach(function (stat) {
+                    var json = {};
+                    if ((stat.type === 'inbound-rtp') &&
+                        (
+                        // Avoid firefox empty outbound-rtp statistics
+                        stat.nackCount != null &&
+                            stat.isRemote === false &&
+                            stat.id.startsWith('inbound') &&
+                            stat.remoteId.startsWith('inbound'))) {
+                        var metricId = 'webrtc_inbound_' + stat.mediaType + '_' + stat.ssrc;
+                        var jitter = stat.jitter * 1000;
+                        var metrics = {
+                            "bytesReceived": (stat.bytesReceived - _this.stats.inbound[stat.mediaType].bytesReceived) / _this.statsInterval,
+                            "jitter": jitter,
+                            "packetsReceived": (stat.packetsReceived - _this.stats.inbound[stat.mediaType].packetsReceived) / _this.statsInterval,
+                            "packetsLost": (stat.packetsLost - _this.stats.inbound[stat.mediaType].packetsLost) / _this.statsInterval
+                        };
+                        var units = {
+                            "bytesReceived": "bytes",
+                            "jitter": "ms",
+                            "packetsReceived": "packets",
+                            "packetsLost": "packets"
+                        };
+                        if (stat.mediaType === 'video') {
+                            metrics['framesDecoded'] = (stat.framesDecoded - _this.stats.inbound.video.framesDecoded) / _this.statsInterval;
+                            metrics['nackCount'] = (stat.nackCount - _this.stats.inbound.video.nackCount) / _this.statsInterval;
+                            units['framesDecoded'] = "frames";
+                            units['nackCount'] = "packets";
+                            _this.stats.inbound.video.framesDecoded = stat.framesDecoded;
+                            _this.stats.inbound.video.nackCount = stat.nackCount;
+                        }
+                        _this.stats.inbound[stat.mediaType].bytesReceived = stat.bytesReceived;
+                        _this.stats.inbound[stat.mediaType].packetsReceived = stat.packetsReceived;
+                        _this.stats.inbound[stat.mediaType].packetsLost = stat.packetsLost;
+                        json = {
+                            "@timestamp": new Date(stat.timestamp).toISOString(),
+                            "exec": instrumentation.exec,
+                            "component": instrumentation.component,
+                            "stream": "webRtc",
+                            "type": metricId,
+                            "stream_type": "composed_metrics",
+                            "units": units
+                        };
+                        json[metricId] = metrics;
+                        sendPost(JSON.stringify(json));
+                    }
+                    else if ((stat.type === 'outbound-rtp') &&
+                        (
+                        // Avoid firefox empty inbound-rtp statistics
+                        stat.isRemote === false &&
+                            stat.id.toLowerCase().includes('outbound'))) {
+                        var metricId = 'webrtc_outbound_' + stat.mediaType + '_' + stat.ssrc;
+                        var metrics = {
+                            "bytesSent": (stat.bytesSent - _this.stats.outbound[stat.mediaType].bytesSent) / _this.statsInterval,
+                            "packetsSent": (stat.packetsSent - _this.stats.outbound[stat.mediaType].packetsSent) / _this.statsInterval
+                        };
+                        var units = {
+                            "bytesSent": "bytes",
+                            "packetsSent": "packets"
+                        };
+                        if (stat.mediaType === 'video') {
+                            metrics['framesEncoded'] = (stat.framesEncoded - _this.stats.outbound.video.framesEncoded) / _this.statsInterval;
+                            units['framesEncoded'] = "frames";
+                            _this.stats.outbound.video.framesEncoded = stat.framesEncoded;
+                        }
+                        _this.stats.outbound[stat.mediaType].bytesSent = stat.bytesSent;
+                        _this.stats.outbound[stat.mediaType].packetsSent = stat.packetsSent;
+                        json = {
+                            "@timestamp": new Date(stat.timestamp).toISOString(),
+                            "exec": instrumentation.exec,
+                            "component": instrumentation.component,
+                            "stream": "webRtc",
+                            "type": metricId,
+                            "stream_type": "composed_metrics",
+                            "units": units
+                        };
+                        json[metricId] = metrics;
+                        sendPost(JSON.stringify(json));
+                    }
+                });
+            }
+            else if (adapter.browserDetails.browser === 'chrome') {
+                for (var _i = 0, _a = Object.keys(stats); _i < _a.length; _i++) {
+                    var key = _a[_i];
+                    var stat = stats[key];
+                    if (stat.type === 'ssrc') {
+                        var json = {};
+                        if ('bytesReceived' in stat && ((stat.mediaType === 'audio' && 'audioOutputLevel' in stat) ||
+                            (stat.mediaType === 'video' && 'qpSum' in stat))) {
+                            // inbound-rtp
+                            var metricId = 'webrtc_inbound_' + stat.mediaType + '_' + stat.ssrc;
+                            var metrics = {
+                                "bytesReceived": (stat.bytesReceived - _this.stats.inbound[stat.mediaType].bytesReceived) / _this.statsInterval,
+                                "jitter": stat.googJitterBufferMs,
+                                "packetsReceived": (stat.packetsReceived - _this.stats.inbound[stat.mediaType].packetsReceived) / _this.statsInterval,
+                                "packetsLost": (stat.packetsLost - _this.stats.inbound[stat.mediaType].packetsLost) / _this.statsInterval
+                            };
+                            var units = {
+                                "bytesReceived": "bytes",
+                                "jitter": "ms",
+                                "packetsReceived": "packets",
+                                "packetsLost": "packets"
+                            };
+                            if (stat.mediaType === 'video') {
+                                metrics['framesDecoded'] = (stat.framesDecoded - _this.stats.inbound.video.framesDecoded) / _this.statsInterval;
+                                metrics['nackCount'] = (stat.googNacksSent - _this.stats.inbound.video.nackCount) / _this.statsInterval;
+                                units['framesDecoded'] = "frames";
+                                units['nackCount'] = "packets";
+                                _this.stats.inbound.video.framesDecoded = stat.framesDecoded;
+                                _this.stats.inbound.video.nackCount = stat.googNacksSent;
+                            }
+                            _this.stats.inbound[stat.mediaType].bytesReceived = stat.bytesReceived;
+                            _this.stats.inbound[stat.mediaType].packetsReceived = stat.packetsReceived;
+                            _this.stats.inbound[stat.mediaType].packetsLost = stat.packetsLost;
+                            json = {
+                                "@timestamp": new Date(stat.timestamp).toISOString(),
+                                "exec": instrumentation.exec,
+                                "component": instrumentation.component,
+                                "stream": "webRtc",
+                                "type": metricId,
+                                "stream_type": "composed_metrics",
+                                "units": units
+                            };
+                            json[metricId] = metrics;
+                            sendPost(JSON.stringify(json));
+                        }
+                        else if ('bytesSent' in stat) {
+                            // outbound-rtp
+                            var metricId = 'webrtc_outbound_' + stat.mediaType + '_' + stat.ssrc;
+                            var metrics = {
+                                "bytesSent": (stat.bytesSent - _this.stats.outbound[stat.mediaType].bytesSent) / _this.statsInterval,
+                                "packetsSent": (stat.packetsSent - _this.stats.outbound[stat.mediaType].packetsSent) / _this.statsInterval
+                            };
+                            var units = {
+                                "bytesSent": "bytes",
+                                "packetsSent": "packets"
+                            };
+                            if (stat.mediaType === 'video') {
+                                metrics['framesEncoded'] = (stat.framesEncoded - _this.stats.outbound.video.framesEncoded) / _this.statsInterval;
+                                units['framesEncoded'] = "frames";
+                                _this.stats.outbound.video.framesEncoded = stat.framesEncoded;
+                            }
+                            _this.stats.outbound[stat.mediaType].bytesSent = stat.bytesSent;
+                            _this.stats.outbound[stat.mediaType].packetsSent = stat.packetsSent;
+                            json = {
+                                "@timestamp": new Date(stat.timestamp).toISOString(),
+                                "exec": instrumentation.exec,
+                                "component": instrumentation.component,
+                                "stream": "webRtc",
+                                "type": metricId,
+                                "stream_type": "composed_metrics",
+                                "units": units
+                            };
+                            json[metricId] = metrics;
+                            sendPost(JSON.stringify(json));
+                        }
+                    }
+                }
+            }
+        };
+        this.getStatsAgnostic(this.stream.getRTCPeerConnection(), null, f, function (error) { console.log(error); });
+    };
+    WebRtcStats.prototype.standardizeReport = function (response) {
+        if (adapter.browserDetails.browser === 'firefox') {
+            return response;
+        }
+        var standardReport = {};
+        response.result().forEach(function (report) {
+            var standardStats = {
+                id: report.id,
+                timestamp: report.timestamp,
+                type: report.type
+            };
+            report.names().forEach(function (name) {
+                standardStats[name] = report.stat(name);
+            });
+            standardReport[standardStats.id] = standardStats;
+        });
+        return standardReport;
+    };
+    WebRtcStats.prototype.getStatsAgnostic = function (pc, selector, successCb, failureCb) {
+        var _this = this;
+        if (adapter.browserDetails.browser === 'firefox') {
+            // getStats takes args in different order in Chrome and Firefox
+            return pc.getStats(selector, function (response) {
+                var report = _this.standardizeReport(response);
+                successCb(report);
+            }, failureCb);
+        }
+        else if (adapter.browserDetails.browser === 'chrome') {
+            // In Chrome, the first two arguments are reversed
+            return pc.getStats(function (response) {
+                var report = _this.standardizeReport(response);
+                successCb(report);
+            }, selector, failureCb);
+        }
+    };
+    return WebRtcStats;
+}());
+exports.WebRtcStats = WebRtcStats;
+//# sourceMappingURL=WebRtcStats.js.map
+
+/***/ }),
+
+/***/ "../../../../openvidu-browser/lib/ScreenSharing/Screen-Capturing-Auto.js":
 /***/ (function(module, exports) {
 
 // Last time updated at Feb 16, 2017, 08:32:23
@@ -4351,14 +4907,14 @@ exports.getChromeExtensionStatus = getChromeExtensionStatus;
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/node_modules/freeice/index.js":
+/***/ "../../../../openvidu-browser/node_modules/freeice/index.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* jshint node: true */
 
 
-var normalice = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/normalice/index.js");
+var normalice = __webpack_require__("../../../../openvidu-browser/node_modules/normalice/index.js");
 
 /**
   # freeice
@@ -4423,8 +4979,8 @@ var normalice = __webpack_require__("../../../../../../../../../openvidu-browser
 var freeice = module.exports = function(opts) {
   // if a list of servers has been provided, then use it instead of defaults
   var servers = {
-    stun: (opts || {}).stun || __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/freeice/stun.json"),
-    turn: (opts || {}).turn || __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/freeice/turn.json")
+    stun: (opts || {}).stun || __webpack_require__("../../../../openvidu-browser/node_modules/freeice/stun.json"),
+    turn: (opts || {}).turn || __webpack_require__("../../../../openvidu-browser/node_modules/freeice/turn.json")
   };
 
   var stunCount = (opts || {}).stunCount || 2;
@@ -4464,24 +5020,24 @@ var freeice = module.exports = function(opts) {
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/node_modules/freeice/stun.json":
+/***/ "../../../../openvidu-browser/node_modules/freeice/stun.json":
 /***/ (function(module, exports) {
 
 module.exports = ["stun.l.google.com:19302","stun1.l.google.com:19302","stun2.l.google.com:19302","stun3.l.google.com:19302","stun4.l.google.com:19302","stun.ekiga.net","stun.ideasip.com","stun.schlund.de","stun.stunprotocol.org:3478","stun.voiparound.com","stun.voipbuster.com","stun.voipstunt.com","stun.voxgratia.org","stun.services.mozilla.com"]
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/node_modules/freeice/turn.json":
+/***/ "../../../../openvidu-browser/node_modules/freeice/turn.json":
 /***/ (function(module, exports) {
 
 module.exports = []
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/node_modules/hark/hark.js":
+/***/ "../../../../openvidu-browser/node_modules/hark/hark.js":
 /***/ (function(module, exports, __webpack_require__) {
 
-var WildEmitter = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/wildemitter/wildemitter.js");
+var WildEmitter = __webpack_require__("../../../../openvidu-browser/node_modules/wildemitter/wildemitter.js");
 
 function getMaxVolume (analyser, fftBins) {
   var maxVolume = -Infinity;
@@ -4618,7 +5174,7 @@ module.exports = function(stream, options) {
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/node_modules/inherits/inherits_browser.js":
+/***/ "../../../../openvidu-browser/node_modules/inherits/inherits_browser.js":
 /***/ (function(module, exports) {
 
 if (typeof Object.create === 'function') {
@@ -4648,7 +5204,7 @@ if (typeof Object.create === 'function') {
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/node_modules/merge/merge.js":
+/***/ "../../../../openvidu-browser/node_modules/merge/merge.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(module) {/*!
@@ -4826,11 +5382,11 @@ if (typeof Object.create === 'function') {
 	}
 
 })(typeof module === 'object' && module && typeof module.exports === 'object' && module.exports);
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__("../../../../webpack/buildin/module.js")(module)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__("./node_modules/webpack/buildin/module.js")(module)))
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/node_modules/normalice/index.js":
+/***/ "../../../../openvidu-browser/node_modules/normalice/index.js":
 /***/ (function(module, exports) {
 
 /**
@@ -4897,7 +5453,7 @@ module.exports = function(input) {
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/node_modules/rtcpeerconnection-shim/rtcpeerconnection.js":
+/***/ "../../../../openvidu-browser/node_modules/rtcpeerconnection-shim/rtcpeerconnection.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4911,7 +5467,7 @@ module.exports = function(input) {
  /* eslint-env node */
 
 
-var SDPUtils = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/sdp/sdp.js");
+var SDPUtils = __webpack_require__("../../../../openvidu-browser/node_modules/sdp/sdp.js");
 
 function writeMediaSection(transceiver, caps, type, stream, dtlsRole) {
   var sdp = SDPUtils.writeRtpDescription(transceiver.kind, caps);
@@ -4938,14 +5494,18 @@ function writeMediaSection(transceiver, caps, type, stream, dtlsRole) {
   }
 
   if (transceiver.rtpSender) {
+    var trackId = transceiver.rtpSender._initialTrackId ||
+        transceiver.rtpSender.track.id;
+    transceiver.rtpSender._initialTrackId = trackId;
     // spec.
     var msid = 'msid:' + (stream ? stream.id : '-') + ' ' +
-        transceiver.rtpSender.track.id + '\r\n';
+        trackId + '\r\n';
     sdp += 'a=' + msid;
-
-    // for Chrome.
+    // for Chrome. Legacy should no longer be required.
     sdp += 'a=ssrc:' + transceiver.sendEncodingParameters[0].ssrc +
         ' ' + msid;
+
+    // RTX
     if (transceiver.sendEncodingParameters[0].rtx) {
       sdp += 'a=ssrc:' + transceiver.sendEncodingParameters[0].rtx.ssrc +
           ' ' + msid;
@@ -5118,6 +5678,14 @@ function maybeAddCandidate(iceTransport, candidate) {
 function makeError(name, description) {
   var e = new Error(description);
   e.name = name;
+  // legacy error codes from https://heycam.github.io/webidl/#idl-DOMException-error-names
+  e.code = {
+    NotSupportedError: 9,
+    InvalidStateError: 11,
+    InvalidAccessError: 15,
+    TypeError: undefined,
+    OperationError: undefined
+  }[name];
   return e;
 }
 
@@ -5169,6 +5737,7 @@ module.exports = function(window, edgeVersion) {
 
     this.signalingState = 'stable';
     this.iceConnectionState = 'new';
+    this.connectionState = 'new';
     this.iceGatheringState = 'new';
 
     config = JSON.parse(JSON.stringify(config || {}));
@@ -5235,6 +5804,7 @@ module.exports = function(window, edgeVersion) {
   RTCPeerConnection.prototype.onremovestream = null;
   RTCPeerConnection.prototype.onsignalingstatechange = null;
   RTCPeerConnection.prototype.oniceconnectionstatechange = null;
+  RTCPeerConnection.prototype.onconnectionstatechange = null;
   RTCPeerConnection.prototype.onicegatheringstatechange = null;
   RTCPeerConnection.prototype.onnegotiationneeded = null;
   RTCPeerConnection.prototype.ondatachannel = null;
@@ -5267,8 +5837,8 @@ module.exports = function(window, edgeVersion) {
   };
 
   // internal helper to create a transceiver object.
-  // (whih is not yet the same as the WebRTC 1.0 transceiver)
-  RTCPeerConnection.prototype._createTransceiver = function(kind) {
+  // (which is not yet the same as the WebRTC 1.0 transceiver)
+  RTCPeerConnection.prototype._createTransceiver = function(kind, doNotAdd) {
     var hasBundleTransport = this.transceivers.length > 0;
     var transceiver = {
       track: null,
@@ -5295,7 +5865,9 @@ module.exports = function(window, edgeVersion) {
       transceiver.iceTransport = transports.iceTransport;
       transceiver.dtlsTransport = transports.dtlsTransport;
     }
-    this.transceivers.push(transceiver);
+    if (!doNotAdd) {
+      this.transceivers.push(transceiver);
+    }
     return transceiver;
   };
 
@@ -5504,15 +6076,17 @@ module.exports = function(window, edgeVersion) {
       }
 
       // update local description.
-      var sections = SDPUtils.splitSections(pc.localDescription.sdp);
+      var sections = SDPUtils.getMediaSections(pc.localDescription.sdp);
       if (!end) {
-        sections[event.candidate.sdpMLineIndex + 1] +=
+        sections[event.candidate.sdpMLineIndex] +=
             'a=' + event.candidate.candidate + '\r\n';
       } else {
-        sections[event.candidate.sdpMLineIndex + 1] +=
+        sections[event.candidate.sdpMLineIndex] +=
             'a=end-of-candidates\r\n';
       }
-      pc.localDescription.sdp = sections.join('');
+      pc.localDescription.sdp =
+          SDPUtils.getDescription(pc.localDescription.sdp) +
+          sections.join('');
       var complete = pc.transceivers.every(function(transceiver) {
         return transceiver.iceGatherer &&
             transceiver.iceGatherer.state === 'completed';
@@ -5548,6 +6122,7 @@ module.exports = function(window, edgeVersion) {
     var pc = this;
     var iceTransport = new window.RTCIceTransport(null);
     iceTransport.onicestatechange = function() {
+      pc._updateIceConnectionState();
       pc._updateConnectionState();
     };
 
@@ -5617,6 +6192,8 @@ module.exports = function(window, edgeVersion) {
       }
       if (transceiver.recvEncodingParameters.length) {
         params.encodings = transceiver.recvEncodingParameters;
+      } else {
+        params.encodings = [{}];
       }
       params.rtcp = {
         compound: transceiver.rtcpParameters.compound
@@ -5679,7 +6256,7 @@ module.exports = function(window, edgeVersion) {
         var rejected = SDPUtils.isRejected(mediaSection) &&
             SDPUtils.matchPrefix(mediaSection, 'a=bundle-only').length === 0;
 
-        if (!rejected && !transceiver.isDatachannel) {
+        if (!rejected && !transceiver.rejected) {
           var remoteIceParameters = SDPUtils.getIceParameters(
               mediaSection, sessionpart);
           var remoteDtlsParameters = SDPUtils.getDtlsParameters(
@@ -5776,12 +6353,21 @@ module.exports = function(window, edgeVersion) {
       var mid = SDPUtils.getMid(mediaSection) || SDPUtils.generateIdentifier();
 
       // Reject datachannels which are not implemented yet.
-      if (kind === 'application' && protocol === 'DTLS/SCTP') {
+      if ((kind === 'application' && protocol === 'DTLS/SCTP') || rejected) {
+        // TODO: this is dangerous in the case where a non-rejected m-line
+        //     becomes rejected.
         pc.transceivers[sdpMLineIndex] = {
           mid: mid,
-          isDatachannel: true
+          kind: kind,
+          rejected: true
         };
         return;
+      }
+
+      if (!rejected && pc.transceivers[sdpMLineIndex] &&
+          pc.transceivers[sdpMLineIndex].rejected) {
+        // recycle a rejected transceiver.
+        pc.transceivers[sdpMLineIndex] = pc._createTransceiver(kind, true);
       }
 
       var transceiver;
@@ -6113,6 +6699,44 @@ module.exports = function(window, edgeVersion) {
     }, 0);
   };
 
+  // Update the ice connection state.
+  RTCPeerConnection.prototype._updateIceConnectionState = function() {
+    var newState;
+    var states = {
+      'new': 0,
+      closed: 0,
+      checking: 0,
+      connected: 0,
+      completed: 0,
+      disconnected: 0,
+      failed: 0
+    };
+    this.transceivers.forEach(function(transceiver) {
+      states[transceiver.iceTransport.state]++;
+    });
+
+    newState = 'new';
+    if (states.failed > 0) {
+      newState = 'failed';
+    } else if (states.checking > 0) {
+      newState = 'checking';
+    } else if (states.disconnected > 0) {
+      newState = 'disconnected';
+    } else if (states.new > 0) {
+      newState = 'new';
+    } else if (states.connected > 0) {
+      newState = 'connected';
+    } else if (states.completed > 0) {
+      newState = 'completed';
+    }
+
+    if (newState !== this.iceConnectionState) {
+      this.iceConnectionState = newState;
+      var event = new Event('iceconnectionstatechange');
+      this._dispatchEvent('iceconnectionstatechange', event);
+    }
+  };
+
   // Update the connection state.
   RTCPeerConnection.prototype._updateConnectionState = function() {
     var newState;
@@ -6120,7 +6744,6 @@ module.exports = function(window, edgeVersion) {
       'new': 0,
       closed: 0,
       connecting: 0,
-      checking: 0,
       connected: 0,
       completed: 0,
       disconnected: 0,
@@ -6136,20 +6759,20 @@ module.exports = function(window, edgeVersion) {
     newState = 'new';
     if (states.failed > 0) {
       newState = 'failed';
-    } else if (states.connecting > 0 || states.checking > 0) {
+    } else if (states.connecting > 0) {
       newState = 'connecting';
     } else if (states.disconnected > 0) {
       newState = 'disconnected';
     } else if (states.new > 0) {
       newState = 'new';
-    } else if (states.connected > 0 || states.completed > 0) {
+    } else if (states.connected > 0) {
       newState = 'connected';
     }
 
-    if (newState !== this.iceConnectionState) {
-      this.iceConnectionState = newState;
-      var event = new Event('iceconnectionstatechange');
-      this._dispatchEvent('iceconnectionstatechange', event);
+    if (newState !== this.connectionState) {
+      this.connectionState = newState;
+      var event = new Event('connectionstatechange');
+      this._dispatchEvent('connectionstatechange', event);
     }
   };
 
@@ -6253,6 +6876,27 @@ module.exports = function(window, edgeVersion) {
             codec.parameters['level-asymmetry-allowed'] === undefined) {
           codec.parameters['level-asymmetry-allowed'] = '1';
         }
+
+        // for subsequent offers, we might have to re-use the payload
+        // type of the last offer.
+        if (transceiver.remoteCapabilities &&
+            transceiver.remoteCapabilities.codecs) {
+          transceiver.remoteCapabilities.codecs.forEach(function(remoteCodec) {
+            if (codec.name.toLowerCase() === remoteCodec.name.toLowerCase() &&
+                codec.clockRate === remoteCodec.clockRate) {
+              codec.preferredPayloadType = remoteCodec.payloadType;
+            }
+          });
+        }
+      });
+      localCapabilities.headerExtensions.forEach(function(hdrExt) {
+        var remoteExtensions = transceiver.remoteCapabilities &&
+            transceiver.remoteCapabilities.headerExtensions || [];
+        remoteExtensions.forEach(function(rHdrExt) {
+          if (hdrExt.uri === rHdrExt.uri) {
+            hdrExt.id = rHdrExt.id;
+          }
+        });
       });
 
       // generate an ssrc now, to be used later in rtpSender.send
@@ -6319,6 +6963,12 @@ module.exports = function(window, edgeVersion) {
           'Can not call createAnswer after close'));
     }
 
+    if (!(pc.signalingState === 'have-remote-offer' ||
+        pc.signalingState === 'have-local-pranswer')) {
+      return Promise.reject(makeError('InvalidStateError',
+          'Can not call createAnswer in signalingState ' + pc.signalingState));
+    }
+
     var sdp = SDPUtils.writeSessionBoilerplate(pc._sdpSessionId,
         pc._sdpSessionVersion++);
     if (pc.usingBundle) {
@@ -6326,15 +6976,24 @@ module.exports = function(window, edgeVersion) {
         return t.mid;
       }).join(' ') + '\r\n';
     }
-    var mediaSectionsInOffer = SDPUtils.splitSections(
-        pc.remoteDescription.sdp).length - 1;
+    var mediaSectionsInOffer = SDPUtils.getMediaSections(
+        pc.remoteDescription.sdp).length;
     pc.transceivers.forEach(function(transceiver, sdpMLineIndex) {
       if (sdpMLineIndex + 1 > mediaSectionsInOffer) {
         return;
       }
-      if (transceiver.isDatachannel) {
-        sdp += 'm=application 0 DTLS/SCTP 5000\r\n' +
-            'c=IN IP4 0.0.0.0\r\n' +
+      if (transceiver.rejected) {
+        if (transceiver.kind === 'application') {
+          sdp += 'm=application 0 DTLS/SCTP 5000\r\n';
+        } else if (transceiver.kind === 'audio') {
+          sdp += 'm=audio 0 UDP/TLS/RTP/SAVPF 0\r\n' +
+              'a=rtpmap:0 PCMU/8000\r\n';
+        } else if (transceiver.kind === 'video') {
+          sdp += 'm=video 0 UDP/TLS/RTP/SAVPF 120\r\n' +
+              'a=rtpmap:120 VP8/90000\r\n';
+        }
+        sdp += 'c=IN IP4 0.0.0.0\r\n' +
+            'a=inactive\r\n' +
             'a=mid:' + transceiver.mid + '\r\n';
         return;
       }
@@ -6400,13 +7059,15 @@ module.exports = function(window, edgeVersion) {
             'Can not add ICE candidate without a remote description'));
       } else if (!candidate || candidate.candidate === '') {
         for (var j = 0; j < pc.transceivers.length; j++) {
-          if (pc.transceivers[j].isDatachannel) {
+          if (pc.transceivers[j].rejected) {
             continue;
           }
           pc.transceivers[j].iceTransport.addRemoteCandidate({});
-          sections = SDPUtils.splitSections(pc.remoteDescription.sdp);
-          sections[j + 1] += 'a=end-of-candidates\r\n';
-          pc.remoteDescription.sdp = sections.join('');
+          sections = SDPUtils.getMediaSections(pc.remoteDescription.sdp);
+          sections[j] += 'a=end-of-candidates\r\n';
+          pc.remoteDescription.sdp =
+              SDPUtils.getDescription(pc.remoteDescription.sdp) +
+              sections.join('');
           if (pc.usingBundle) {
             break;
           }
@@ -6423,7 +7084,7 @@ module.exports = function(window, edgeVersion) {
         }
         var transceiver = pc.transceivers[sdpMLineIndex];
         if (transceiver) {
-          if (transceiver.isDatachannel) {
+          if (transceiver.rejected) {
             return resolve();
           }
           var cand = Object.keys(candidate.candidate).length > 0 ?
@@ -6451,8 +7112,8 @@ module.exports = function(window, edgeVersion) {
           if (candidateString.indexOf('a=') === 0) {
             candidateString = candidateString.substr(2);
           }
-          sections = SDPUtils.splitSections(pc.remoteDescription.sdp);
-          sections[sdpMLineIndex + 1] += 'a=' +
+          sections = SDPUtils.getMediaSections(pc.remoteDescription.sdp);
+          sections[sdpMLineIndex] += 'a=' +
               (cand.type ? candidateString : 'end-of-candidates')
               + '\r\n';
           pc.remoteDescription.sdp = sections.join('');
@@ -6568,7 +7229,7 @@ module.exports = function(window, edgeVersion) {
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/node_modules/sdp-transform/lib/grammar.js":
+/***/ "../../../../openvidu-browser/node_modules/sdp-transform/lib/grammar.js":
 /***/ (function(module, exports) {
 
 var grammar = module.exports = {
@@ -6832,11 +7493,11 @@ Object.keys(grammar).forEach(function (key) {
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/node_modules/sdp-transform/lib/index.js":
+/***/ "../../../../openvidu-browser/node_modules/sdp-transform/lib/index.js":
 /***/ (function(module, exports, __webpack_require__) {
 
-var parser = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/sdp-transform/lib/parser.js");
-var writer = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/sdp-transform/lib/writer.js");
+var parser = __webpack_require__("../../../../openvidu-browser/node_modules/sdp-transform/lib/parser.js");
+var writer = __webpack_require__("../../../../openvidu-browser/node_modules/sdp-transform/lib/writer.js");
 
 exports.write = writer;
 exports.parse = parser.parse;
@@ -6847,7 +7508,7 @@ exports.parseRemoteCandidates = parser.parseRemoteCandidates;
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/node_modules/sdp-transform/lib/parser.js":
+/***/ "../../../../openvidu-browser/node_modules/sdp-transform/lib/parser.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 var toIntIfInt = function (v) {
@@ -6886,7 +7547,7 @@ var parseReg = function (obj, location, content) {
   }
 };
 
-var grammar = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/sdp-transform/lib/grammar.js");
+var grammar = __webpack_require__("../../../../openvidu-browser/node_modules/sdp-transform/lib/grammar.js");
 var validLine = RegExp.prototype.test.bind(/^([a-z])=(.*)/);
 
 exports.parse = function (sdp) {
@@ -6947,10 +7608,10 @@ exports.parseRemoteCandidates = function (str) {
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/node_modules/sdp-transform/lib/writer.js":
+/***/ "../../../../openvidu-browser/node_modules/sdp-transform/lib/writer.js":
 /***/ (function(module, exports, __webpack_require__) {
 
-var grammar = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/sdp-transform/lib/grammar.js");
+var grammar = __webpack_require__("../../../../openvidu-browser/node_modules/sdp-transform/lib/grammar.js");
 
 // customized util.format - discards excess arguments and can void middle ones
 var formatRegExp = /%[sdv%]/g;
@@ -7068,7 +7729,7 @@ module.exports = function (session, opts) {
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/node_modules/sdp-translator/lib/array-equals.js":
+/***/ "../../../../openvidu-browser/node_modules/sdp-translator/lib/array-equals.js":
 /***/ (function(module, exports) {
 
 /* Copyright @ 2015 Atlassian Pty Ltd
@@ -7114,7 +7775,7 @@ module.exports = function arrayEquals(array) {
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/node_modules/sdp-translator/lib/index.js":
+/***/ "../../../../openvidu-browser/node_modules/sdp-translator/lib/index.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 /* Copyright @ 2015 Atlassian Pty Ltd
@@ -7132,12 +7793,12 @@ module.exports = function arrayEquals(array) {
  * limitations under the License.
  */
 
-exports.Interop = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/sdp-translator/lib/interop.js");
+exports.Interop = __webpack_require__("../../../../openvidu-browser/node_modules/sdp-translator/lib/interop.js");
 
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/node_modules/sdp-translator/lib/interop.js":
+/***/ "../../../../openvidu-browser/node_modules/sdp-translator/lib/interop.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7161,8 +7822,8 @@ exports.Interop = __webpack_require__("../../../../../../../../../openvidu-brows
 /* jshint -W097 */
 
 
-var transform = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/sdp-translator/lib/transform.js");
-var arrayEquals = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/sdp-translator/lib/array-equals.js");
+var transform = __webpack_require__("../../../../openvidu-browser/node_modules/sdp-translator/lib/transform.js");
+var arrayEquals = __webpack_require__("../../../../openvidu-browser/node_modules/sdp-translator/lib/array-equals.js");
 
 function Interop() {
 
@@ -8028,7 +8689,7 @@ Interop.prototype.toUnifiedPlan = function(desc) {
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/node_modules/sdp-translator/lib/transform.js":
+/***/ "../../../../openvidu-browser/node_modules/sdp-translator/lib/transform.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 /* Copyright @ 2015 Atlassian Pty Ltd
@@ -8046,7 +8707,7 @@ Interop.prototype.toUnifiedPlan = function(desc) {
  * limitations under the License.
  */
 
-var transform = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/sdp-transform/lib/index.js");
+var transform = __webpack_require__("../../../../openvidu-browser/node_modules/sdp-transform/lib/index.js");
 
 exports.write = function(session, opts) {
 
@@ -8147,7 +8808,7 @@ exports.parse = function(sdp) {
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/node_modules/sdp/sdp.js":
+/***/ "../../../../openvidu-browser/node_modules/sdp/sdp.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8178,6 +8839,19 @@ SDPUtils.splitSections = function(blob) {
   return parts.map(function(part, index) {
     return (index > 0 ? 'm=' + part : part).trim() + '\r\n';
   });
+};
+
+// returns the session description.
+SDPUtils.getDescription = function(blob) {
+  var sections = SDPUtils.splitSections(blob);
+  return sections && sections[0];
+};
+
+// returns the individual media sections.
+SDPUtils.getMediaSections = function(blob) {
+  var sections = SDPUtils.splitSections(blob);
+  sections.shift();
+  return sections;
 };
 
 // Returns lines that start with a certain prefix.
@@ -8788,14 +9462,27 @@ SDPUtils.isRejected = function(mediaSection) {
 
 SDPUtils.parseMLine = function(mediaSection) {
   var lines = SDPUtils.splitLines(mediaSection);
-  var mline = lines[0].split(' ');
+  var parts = lines[0].substr(2).split(' ');
   return {
-    kind: mline[0].substr(2),
-    port: parseInt(mline[1], 10),
-    protocol: mline[2],
-    fmt: mline.slice(3).join(' ')
+    kind: parts[0],
+    port: parseInt(parts[1], 10),
+    protocol: parts[2],
+    fmt: parts.slice(3).join(' ')
   };
 };
+
+SDPUtils.parseOLine = function(mediaSection) {
+  var line = SDPUtils.matchPrefix(mediaSection, 'o=')[0];
+  var parts = line.substr(2).split(' ');
+  return {
+    username: parts[0],
+    sessionId: parts[1],
+    sessionVersion: parseInt(parts[2], 10),
+    netType: parts[3],
+    addressType: parts[4],
+    address: parts[5],
+  };
+}
 
 // Expose public methods.
 if (true) {
@@ -8805,7 +9492,7 @@ if (true) {
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/node_modules/ua-parser-js/src/ua-parser.js":
+/***/ "../../../../openvidu-browser/node_modules/ua-parser-js/src/ua-parser.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_RESULT__;/**
@@ -9848,7 +10535,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/**
         exports.UAParser = UAParser;
     } else {
         // requirejs env (optional)
-        if ("function" === FUNC_TYPE && __webpack_require__("../../../../webpack/buildin/amd-options.js")) {
+        if ("function" === FUNC_TYPE && __webpack_require__("./node_modules/webpack/buildin/amd-options.js")) {
             !(__WEBPACK_AMD_DEFINE_RESULT__ = (function () {
                 return UAParser;
             }).call(exports, __webpack_require__, exports, module),
@@ -9885,11 +10572,11 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/**
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/node_modules/uuid/index.js":
+/***/ "../../../../openvidu-browser/node_modules/uuid/index.js":
 /***/ (function(module, exports, __webpack_require__) {
 
-var v1 = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/uuid/v1.js");
-var v4 = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/uuid/v4.js");
+var v1 = __webpack_require__("../../../../openvidu-browser/node_modules/uuid/v1.js");
+var v4 = __webpack_require__("../../../../openvidu-browser/node_modules/uuid/v4.js");
 
 var uuid = v4;
 uuid.v1 = v1;
@@ -9900,7 +10587,7 @@ module.exports = uuid;
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/node_modules/uuid/lib/bytesToUuid.js":
+/***/ "../../../../openvidu-browser/node_modules/uuid/lib/bytesToUuid.js":
 /***/ (function(module, exports) {
 
 /**
@@ -9930,7 +10617,7 @@ module.exports = bytesToUuid;
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/node_modules/uuid/lib/rng-browser.js":
+/***/ "../../../../openvidu-browser/node_modules/uuid/lib/rng-browser.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {// Unique ID creation requires a high quality random # generator.  In the
@@ -9967,15 +10654,15 @@ if (!rng) {
 
 module.exports = rng;
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__("../../../../webpack/buildin/global.js")))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__("./node_modules/webpack/buildin/global.js")))
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/node_modules/uuid/v1.js":
+/***/ "../../../../openvidu-browser/node_modules/uuid/v1.js":
 /***/ (function(module, exports, __webpack_require__) {
 
-var rng = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/uuid/lib/rng-browser.js");
-var bytesToUuid = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/uuid/lib/bytesToUuid.js");
+var rng = __webpack_require__("../../../../openvidu-browser/node_modules/uuid/lib/rng-browser.js");
+var bytesToUuid = __webpack_require__("../../../../openvidu-browser/node_modules/uuid/lib/bytesToUuid.js");
 
 // **`v1()` - Generate time-based UUID**
 //
@@ -10078,11 +10765,11 @@ module.exports = v1;
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/node_modules/uuid/v4.js":
+/***/ "../../../../openvidu-browser/node_modules/uuid/v4.js":
 /***/ (function(module, exports, __webpack_require__) {
 
-var rng = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/uuid/lib/rng-browser.js");
-var bytesToUuid = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/uuid/lib/bytesToUuid.js");
+var rng = __webpack_require__("../../../../openvidu-browser/node_modules/uuid/lib/rng-browser.js");
+var bytesToUuid = __webpack_require__("../../../../openvidu-browser/node_modules/uuid/lib/bytesToUuid.js");
 
 function v4(options, buf, offset) {
   var i = buf && offset || 0;
@@ -10114,7 +10801,7 @@ module.exports = v4;
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/adapter_core.js":
+/***/ "../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/adapter_core.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10129,14 +10816,14 @@ module.exports = v4;
 
 
 
-var adapterFactory = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/adapter_factory.js");
+var adapterFactory = __webpack_require__("../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/adapter_factory.js");
 module.exports = adapterFactory({window: global.window});
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__("../../../../webpack/buildin/global.js")))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__("./node_modules/webpack/buildin/global.js")))
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/adapter_factory.js":
+/***/ "../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/adapter_factory.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10151,7 +10838,7 @@ module.exports = adapterFactory({window: global.window});
 
 
 
-var utils = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/utils.js");
+var utils = __webpack_require__("../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/utils.js");
 // Shimming starts here.
 module.exports = function(dependencies, opts) {
   var window = dependencies && dependencies.window;
@@ -10173,14 +10860,6 @@ module.exports = function(dependencies, opts) {
   var logging = utils.log;
   var browserDetails = utils.detectBrowser(window);
 
-  // Export to the adapter global object visible in the browser.
-  var adapter = {
-    browserDetails: browserDetails,
-    extractVersion: utils.extractVersion,
-    disableLog: utils.disableLog,
-    disableWarnings: utils.disableWarnings
-  };
-
   // Uncomment the line below if you want logging to occur, including logging
   // for the switch statement below. Can also be turned on in the browser via
   // adapter.disableLog(false), but then logging from the switch statement below
@@ -10188,11 +10867,20 @@ module.exports = function(dependencies, opts) {
   // require('./utils').disableLog(false);
 
   // Browser shims.
-  var chromeShim = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/chrome/chrome_shim.js") || null;
-  var edgeShim = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/edge/edge_shim.js") || null;
-  var firefoxShim = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/firefox/firefox_shim.js") || null;
-  var safariShim = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/safari/safari_shim.js") || null;
-  var commonShim = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/common_shim.js") || null;
+  var chromeShim = __webpack_require__("../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/chrome/chrome_shim.js") || null;
+  var edgeShim = __webpack_require__("../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/edge/edge_shim.js") || null;
+  var firefoxShim = __webpack_require__("../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/firefox/firefox_shim.js") || null;
+  var safariShim = __webpack_require__("../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/safari/safari_shim.js") || null;
+  var commonShim = __webpack_require__("../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/common_shim.js") || null;
+
+  // Export to the adapter global object visible in the browser.
+  var adapter = {
+    browserDetails: browserDetails,
+    commonShim: commonShim,
+    extractVersion: utils.extractVersion,
+    disableLog: utils.disableLog,
+    disableWarnings: utils.disableWarnings
+  };
 
   // Shim browser if found.
   switch (browserDetails.browser) {
@@ -10216,6 +10904,8 @@ module.exports = function(dependencies, opts) {
       chromeShim.shimGetSendersWithDtmf(window);
 
       commonShim.shimRTCIceCandidate(window);
+      commonShim.shimMaxMessageSize(window);
+      commonShim.shimSendThrowTypeError(window);
       break;
     case 'firefox':
       if (!firefoxShim || !firefoxShim.shimPeerConnection ||
@@ -10235,6 +10925,8 @@ module.exports = function(dependencies, opts) {
       firefoxShim.shimRemoveStream(window);
 
       commonShim.shimRTCIceCandidate(window);
+      commonShim.shimMaxMessageSize(window);
+      commonShim.shimSendThrowTypeError(window);
       break;
     case 'edge':
       if (!edgeShim || !edgeShim.shimPeerConnection || !options.shimEdge) {
@@ -10251,6 +10943,9 @@ module.exports = function(dependencies, opts) {
       edgeShim.shimReplaceTrack(window);
 
       // the edge shim implements the full RTCIceCandidate object.
+
+      commonShim.shimMaxMessageSize(window);
+      commonShim.shimSendThrowTypeError(window);
       break;
     case 'safari':
       if (!safariShim || !options.shimSafari) {
@@ -10271,6 +10966,8 @@ module.exports = function(dependencies, opts) {
       safariShim.shimCreateOfferLegacy(window);
 
       commonShim.shimRTCIceCandidate(window);
+      commonShim.shimMaxMessageSize(window);
+      commonShim.shimSendThrowTypeError(window);
       break;
     default:
       logging('Unsupported browser!');
@@ -10283,7 +10980,7 @@ module.exports = function(dependencies, opts) {
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/chrome/chrome_shim.js":
+/***/ "../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/chrome/chrome_shim.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10297,11 +10994,11 @@ module.exports = function(dependencies, opts) {
  */
  /* eslint-env node */
 
-var utils = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/utils.js");
+var utils = __webpack_require__("../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/utils.js");
 var logging = utils.log;
 
 module.exports = {
-  shimGetUserMedia: __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/chrome/getusermedia.js"),
+  shimGetUserMedia: __webpack_require__("../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/chrome/getusermedia.js"),
   shimMediaStream: function(window) {
     window.MediaStream = window.MediaStream || window.webkitMediaStream;
   },
@@ -10366,6 +11063,13 @@ module.exports = {
         }
         return origSetRemoteDescription.apply(pc, arguments);
       };
+    } else if (!('RTCRtpTransceiver' in window)) {
+      utils.wrapPeerConnectionEvent(window, 'track', function(e) {
+        if (!e.transceiver) {
+          e.transceiver = {receiver: e.receiver};
+        }
+        return e;
+      });
     }
   },
 
@@ -10836,7 +11540,7 @@ module.exports = {
     var browserDetails = utils.detectBrowser(window);
 
     // The RTCPeerConnection object.
-    if (!window.RTCPeerConnection) {
+    if (!window.RTCPeerConnection && window.webkitRTCPeerConnection) {
       window.RTCPeerConnection = function(pcConfig, pcConstraints) {
         // Translate iceTransportPolicy to iceTransports,
         // see https://code.google.com/p/webrtc/issues/detail?id=4869
@@ -11029,7 +11733,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/chrome/getusermedia.js":
+/***/ "../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/chrome/getusermedia.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11042,7 +11746,7 @@ module.exports = {
  */
  /* eslint-env node */
 
-var utils = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/utils.js");
+var utils = __webpack_require__("../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/utils.js");
 var logging = utils.log;
 
 // Expose public methods.
@@ -11277,7 +11981,7 @@ module.exports = function(window) {
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/common_shim.js":
+/***/ "../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/common_shim.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11291,59 +11995,8 @@ module.exports = function(window) {
  /* eslint-env node */
 
 
-var SDPUtils = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/sdp/sdp.js");
-var utils = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/utils.js");
-
-// Wraps the peerconnection event eventNameToWrap in a function
-// which returns the modified event object.
-function wrapPeerConnectionEvent(window, eventNameToWrap, wrapper) {
-  if (!window.RTCPeerConnection) {
-    return;
-  }
-  var proto = window.RTCPeerConnection.prototype;
-  var nativeAddEventListener = proto.addEventListener;
-  proto.addEventListener = function(nativeEventName, cb) {
-    if (nativeEventName !== eventNameToWrap) {
-      return nativeAddEventListener.apply(this, arguments);
-    }
-    var wrappedCallback = function(e) {
-      cb(wrapper(e));
-    };
-    this._eventMap = this._eventMap || {};
-    this._eventMap[cb] = wrappedCallback;
-    return nativeAddEventListener.apply(this, [nativeEventName,
-      wrappedCallback]);
-  };
-
-  var nativeRemoveEventListener = proto.removeEventListener;
-  proto.removeEventListener = function(nativeEventName, cb) {
-    if (nativeEventName !== eventNameToWrap || !this._eventMap
-        || !this._eventMap[cb]) {
-      return nativeRemoveEventListener.apply(this, arguments);
-    }
-    var unwrappedCb = this._eventMap[cb];
-    delete this._eventMap[cb];
-    return nativeRemoveEventListener.apply(this, [nativeEventName,
-      unwrappedCb]);
-  };
-
-  Object.defineProperty(proto, 'on' + eventNameToWrap, {
-    get: function() {
-      return this['_on' + eventNameToWrap];
-    },
-    set: function(cb) {
-      if (this['_on' + eventNameToWrap]) {
-        this.removeEventListener(eventNameToWrap,
-            this['_on' + eventNameToWrap]);
-        delete this['_on' + eventNameToWrap];
-      }
-      if (cb) {
-        this.addEventListener(eventNameToWrap,
-            this['_on' + eventNameToWrap] = cb);
-      }
-    }
-  });
-}
+var SDPUtils = __webpack_require__("../../../../openvidu-browser/node_modules/sdp/sdp.js");
+var utils = __webpack_require__("../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/utils.js");
 
 module.exports = {
   shimRTCIceCandidate: function(window) {
@@ -11383,7 +12036,7 @@ module.exports = {
 
     // Hook up the augmented candidate in onicecandidate and
     // addEventListener('icecandidate', ...)
-    wrapPeerConnectionEvent(window, 'icecandidate', function(e) {
+    utils.wrapPeerConnectionEvent(window, 'icecandidate', function(e) {
       if (e.candidate) {
         Object.defineProperty(e, 'candidate', {
           value: new window.RTCIceCandidate(e.candidate),
@@ -11445,13 +12098,172 @@ module.exports = {
       }
       return nativeSetAttribute.apply(this, arguments);
     };
+  },
+
+  shimMaxMessageSize: function(window) {
+    if (window.RTCSctpTransport || !window.RTCPeerConnection) {
+      return;
+    }
+    var browserDetails = utils.detectBrowser(window);
+
+    if (!('sctp' in window.RTCPeerConnection.prototype)) {
+      Object.defineProperty(window.RTCPeerConnection.prototype, 'sctp', {
+        get: function() {
+          return typeof this._sctp === 'undefined' ? null : this._sctp;
+        }
+      });
+    }
+
+    var sctpInDescription = function(description) {
+      var sections = SDPUtils.splitSections(description.sdp);
+      sections.shift();
+      return sections.some(function(mediaSection) {
+        var mLine = SDPUtils.parseMLine(mediaSection);
+        return mLine && mLine.kind === 'application'
+            && mLine.protocol.indexOf('SCTP') !== -1;
+      });
+    };
+
+    var getRemoteFirefoxVersion = function(description) {
+      // TODO: Is there a better solution for detecting Firefox?
+      var match = description.sdp.match(/mozilla...THIS_IS_SDPARTA-(\d+)/);
+      if (match === null || match.length < 2) {
+        return -1;
+      }
+      var version = parseInt(match[1], 10);
+      // Test for NaN (yes, this is ugly)
+      return version !== version ? -1 : version;
+    };
+
+    var getCanSendMaxMessageSize = function(remoteIsFirefox) {
+      // Every implementation we know can send at least 64 KiB.
+      // Note: Although Chrome is technically able to send up to 256 KiB, the
+      //       data does not reach the other peer reliably.
+      //       See: https://bugs.chromium.org/p/webrtc/issues/detail?id=8419
+      var canSendMaxMessageSize = 65536;
+      if (browserDetails.browser === 'firefox') {
+        if (browserDetails.version < 57) {
+          if (remoteIsFirefox === -1) {
+            // FF < 57 will send in 16 KiB chunks using the deprecated PPID
+            // fragmentation.
+            canSendMaxMessageSize = 16384;
+          } else {
+            // However, other FF (and RAWRTC) can reassemble PPID-fragmented
+            // messages. Thus, supporting ~2 GiB when sending.
+            canSendMaxMessageSize = 2147483637;
+          }
+        } else {
+          // Currently, all FF >= 57 will reset the remote maximum message size
+          // to the default value when a data channel is created at a later
+          // stage. :(
+          // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1426831
+          canSendMaxMessageSize =
+            browserDetails.version === 57 ? 65535 : 65536;
+        }
+      }
+      return canSendMaxMessageSize;
+    };
+
+    var getMaxMessageSize = function(description, remoteIsFirefox) {
+      // Note: 65536 bytes is the default value from the SDP spec. Also,
+      //       every implementation we know supports receiving 65536 bytes.
+      var maxMessageSize = 65536;
+
+      // FF 57 has a slightly incorrect default remote max message size, so
+      // we need to adjust it here to avoid a failure when sending.
+      // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1425697
+      if (browserDetails.browser === 'firefox'
+           && browserDetails.version === 57) {
+        maxMessageSize = 65535;
+      }
+
+      var match = SDPUtils.matchPrefix(description.sdp, 'a=max-message-size:');
+      if (match.length > 0) {
+        maxMessageSize = parseInt(match[0].substr(19), 10);
+      } else if (browserDetails.browser === 'firefox' &&
+                  remoteIsFirefox !== -1) {
+        // If the maximum message size is not present in the remote SDP and
+        // both local and remote are Firefox, the remote peer can receive
+        // ~2 GiB.
+        maxMessageSize = 2147483637;
+      }
+      return maxMessageSize;
+    };
+
+    var origSetRemoteDescription =
+        window.RTCPeerConnection.prototype.setRemoteDescription;
+    window.RTCPeerConnection.prototype.setRemoteDescription = function() {
+      var pc = this;
+      pc._sctp = null;
+
+      if (sctpInDescription(arguments[0])) {
+        // Check if the remote is FF.
+        var isFirefox = getRemoteFirefoxVersion(arguments[0]);
+
+        // Get the maximum message size the local peer is capable of sending
+        var canSendMMS = getCanSendMaxMessageSize(isFirefox);
+
+        // Get the maximum message size of the remote peer.
+        var remoteMMS = getMaxMessageSize(arguments[0], isFirefox);
+
+        // Determine final maximum message size
+        var maxMessageSize;
+        if (canSendMMS === 0 && remoteMMS === 0) {
+          maxMessageSize = Number.POSITIVE_INFINITY;
+        } else if (canSendMMS === 0 || remoteMMS === 0) {
+          maxMessageSize = Math.max(canSendMMS, remoteMMS);
+        } else {
+          maxMessageSize = Math.min(canSendMMS, remoteMMS);
+        }
+
+        // Create a dummy RTCSctpTransport object and the 'maxMessageSize'
+        // attribute.
+        var sctp = {};
+        Object.defineProperty(sctp, 'maxMessageSize', {
+          get: function() {
+            return maxMessageSize;
+          }
+        });
+        pc._sctp = sctp;
+      }
+
+      return origSetRemoteDescription.apply(pc, arguments);
+    };
+  },
+
+  shimSendThrowTypeError: function(window) {
+    // Note: Although Firefox >= 57 has a native implementation, the maximum
+    //       message size can be reset for all data channels at a later stage.
+    //       See: https://bugzilla.mozilla.org/show_bug.cgi?id=1426831
+
+    var origCreateDataChannel =
+      window.RTCPeerConnection.prototype.createDataChannel;
+    window.RTCPeerConnection.prototype.createDataChannel = function() {
+      var pc = this;
+      var dataChannel = origCreateDataChannel.apply(pc, arguments);
+      var origDataChannelSend = dataChannel.send;
+
+      // Patch 'send' method
+      dataChannel.send = function() {
+        var dc = this;
+        var data = arguments[0];
+        var length = data.length || data.size || data.byteLength;
+        if (length > pc.sctp.maxMessageSize) {
+          throw new DOMException('Message too large (can send a maximum of ' +
+            pc.sctp.maxMessageSize + ' bytes)', 'TypeError');
+        }
+        return origDataChannelSend.apply(dc, arguments);
+      };
+
+      return dataChannel;
+    };
   }
 };
 
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/edge/edge_shim.js":
+/***/ "../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/edge/edge_shim.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11465,11 +12277,11 @@ module.exports = {
  /* eslint-env node */
 
 
-var utils = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/utils.js");
-var shimRTCPeerConnection = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/rtcpeerconnection-shim/rtcpeerconnection.js");
+var utils = __webpack_require__("../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/utils.js");
+var shimRTCPeerConnection = __webpack_require__("../../../../openvidu-browser/node_modules/rtcpeerconnection-shim/rtcpeerconnection.js");
 
 module.exports = {
-  shimGetUserMedia: __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/edge/getusermedia.js"),
+  shimGetUserMedia: __webpack_require__("../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/edge/getusermedia.js"),
   shimPeerConnection: function(window) {
     var browserDetails = utils.detectBrowser(window);
 
@@ -11539,7 +12351,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/edge/getusermedia.js":
+/***/ "../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/edge/getusermedia.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11581,7 +12393,7 @@ module.exports = function(window) {
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/firefox/firefox_shim.js":
+/***/ "../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/firefox/firefox_shim.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11595,10 +12407,10 @@ module.exports = function(window) {
  /* eslint-env node */
 
 
-var utils = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/utils.js");
+var utils = __webpack_require__("../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/utils.js");
 
 module.exports = {
-  shimGetUserMedia: __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/firefox/getusermedia.js"),
+  shimGetUserMedia: __webpack_require__("../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/firefox/getusermedia.js"),
   shimOnTrack: function(window) {
     if (typeof window === 'object' && window.RTCPeerConnection && !('ontrack' in
         window.RTCPeerConnection.prototype)) {
@@ -11806,7 +12618,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/firefox/getusermedia.js":
+/***/ "../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/firefox/getusermedia.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11820,7 +12632,7 @@ module.exports = {
  /* eslint-env node */
 
 
-var utils = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/utils.js");
+var utils = __webpack_require__("../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/utils.js");
 var logging = utils.log;
 
 // Expose public methods.
@@ -12023,7 +12835,7 @@ module.exports = function(window) {
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/safari/safari_shim.js":
+/***/ "../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/safari/safari_shim.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12035,7 +12847,7 @@ module.exports = function(window) {
  *  tree.
  */
 
-var utils = __webpack_require__("../../../../../../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/utils.js");
+var utils = __webpack_require__("../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/utils.js");
 
 module.exports = {
   shimLocalStreamsAPI: function(window) {
@@ -12131,24 +12943,26 @@ module.exports = {
           return this._onaddstream;
         },
         set: function(f) {
+          var pc = this;
           if (this._onaddstream) {
             this.removeEventListener('addstream', this._onaddstream);
             this.removeEventListener('track', this._onaddstreampoly);
           }
           this.addEventListener('addstream', this._onaddstream = f);
           this.addEventListener('track', this._onaddstreampoly = function(e) {
-            var stream = e.streams[0];
-            if (!this._remoteStreams) {
-              this._remoteStreams = [];
-            }
-            if (this._remoteStreams.indexOf(stream) >= 0) {
-              return;
-            }
-            this._remoteStreams.push(stream);
-            var event = new Event('addstream');
-            event.stream = e.streams[0];
-            this.dispatchEvent(event);
-          }.bind(this));
+            e.streams.forEach(function(stream) {
+              if (!pc._remoteStreams) {
+                pc._remoteStreams = [];
+              }
+              if (pc._remoteStreams.indexOf(stream) >= 0) {
+                return;
+              }
+              pc._remoteStreams.push(stream);
+              var event = new Event('addstream');
+              event.stream = stream;
+              pc.dispatchEvent(event);
+            });
+          });
         }
       });
     }
@@ -12288,9 +13102,17 @@ module.exports = {
         });
         if (offerOptions.offerToReceiveAudio === false && audioTransceiver) {
           if (audioTransceiver.direction === 'sendrecv') {
-            audioTransceiver.setDirection('sendonly');
+            if (audioTransceiver.setDirection) {
+              audioTransceiver.setDirection('sendonly');
+            } else {
+              audioTransceiver.direction = 'sendonly';
+            }
           } else if (audioTransceiver.direction === 'recvonly') {
-            audioTransceiver.setDirection('inactive');
+            if (audioTransceiver.setDirection) {
+              audioTransceiver.setDirection('inactive');
+            } else {
+              audioTransceiver.direction = 'inactive';
+            }
           }
         } else if (offerOptions.offerToReceiveAudio === true &&
             !audioTransceiver) {
@@ -12320,7 +13142,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/utils.js":
+/***/ "../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/utils.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12350,9 +13172,61 @@ function extractVersion(uastring, expr, pos) {
   return match && match.length >= pos && parseInt(match[pos], 10);
 }
 
+// Wraps the peerconnection event eventNameToWrap in a function
+// which returns the modified event object.
+function wrapPeerConnectionEvent(window, eventNameToWrap, wrapper) {
+  if (!window.RTCPeerConnection) {
+    return;
+  }
+  var proto = window.RTCPeerConnection.prototype;
+  var nativeAddEventListener = proto.addEventListener;
+  proto.addEventListener = function(nativeEventName, cb) {
+    if (nativeEventName !== eventNameToWrap) {
+      return nativeAddEventListener.apply(this, arguments);
+    }
+    var wrappedCallback = function(e) {
+      cb(wrapper(e));
+    };
+    this._eventMap = this._eventMap || {};
+    this._eventMap[cb] = wrappedCallback;
+    return nativeAddEventListener.apply(this, [nativeEventName,
+      wrappedCallback]);
+  };
+
+  var nativeRemoveEventListener = proto.removeEventListener;
+  proto.removeEventListener = function(nativeEventName, cb) {
+    if (nativeEventName !== eventNameToWrap || !this._eventMap
+        || !this._eventMap[cb]) {
+      return nativeRemoveEventListener.apply(this, arguments);
+    }
+    var unwrappedCb = this._eventMap[cb];
+    delete this._eventMap[cb];
+    return nativeRemoveEventListener.apply(this, [nativeEventName,
+      unwrappedCb]);
+  };
+
+  Object.defineProperty(proto, 'on' + eventNameToWrap, {
+    get: function() {
+      return this['_on' + eventNameToWrap];
+    },
+    set: function(cb) {
+      if (this['_on' + eventNameToWrap]) {
+        this.removeEventListener(eventNameToWrap,
+            this['_on' + eventNameToWrap]);
+        delete this['_on' + eventNameToWrap];
+      }
+      if (cb) {
+        this.addEventListener(eventNameToWrap,
+            this['_on' + eventNameToWrap] = cb);
+      }
+    }
+  });
+}
+
 // Utility methods.
 module.exports = {
   extractVersion: extractVersion,
+  wrapPeerConnectionEvent: wrapPeerConnectionEvent,
   disableLog: function(bool) {
     if (typeof bool !== 'boolean') {
       return new Error('Argument type: ' + typeof bool +
@@ -12418,36 +13292,23 @@ module.exports = {
       return result;
     }
 
-    // Firefox.
-    if (navigator.mozGetUserMedia) {
+    if (navigator.mozGetUserMedia) { // Firefox.
       result.browser = 'firefox';
       result.version = extractVersion(navigator.userAgent,
           /Firefox\/(\d+)\./, 1);
     } else if (navigator.webkitGetUserMedia) {
-      // Chrome, Chromium, Webview, Opera, all use the chrome shim for now
-      if (window.webkitRTCPeerConnection) {
-        result.browser = 'chrome';
-        result.version = extractVersion(navigator.userAgent,
+      // Chrome, Chromium, Webview, Opera.
+      // Version matches Chrome/WebRTC version.
+      result.browser = 'chrome';
+      result.version = extractVersion(navigator.userAgent,
           /Chrom(e|ium)\/(\d+)\./, 2);
-      } else { // Safari (in an unpublished version) or unknown webkit-based.
-        if (navigator.userAgent.match(/Version\/(\d+).(\d+)/)) {
-          result.browser = 'safari';
-          result.version = extractVersion(navigator.userAgent,
-            /AppleWebKit\/(\d+)\./, 1);
-        } else { // unknown webkit-based browser.
-          result.browser = 'Unsupported webkit-based browser ' +
-              'with GUM support but no WebRTC support.';
-          return result;
-        }
-      }
     } else if (navigator.mediaDevices &&
         navigator.userAgent.match(/Edge\/(\d+).(\d+)$/)) { // Edge.
       result.browser = 'edge';
       result.version = extractVersion(navigator.userAgent,
           /Edge\/(\d+).(\d+)$/, 2);
     } else if (navigator.mediaDevices &&
-        navigator.userAgent.match(/AppleWebKit\/(\d+)\./)) {
-        // Safari, with webkitGetUserMedia removed.
+        navigator.userAgent.match(/AppleWebKit\/(\d+)\./)) { // Safari.
       result.browser = 'safari';
       result.version = extractVersion(navigator.userAgent,
           /AppleWebKit\/(\d+)\./, 1);
@@ -12463,7 +13324,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/node_modules/wildemitter/wildemitter.js":
+/***/ "../../../../openvidu-browser/node_modules/wildemitter/wildemitter.js":
 /***/ (function(module, exports) {
 
 /*
@@ -12623,7 +13484,7 @@ WildEmitter.mixin(WildEmitter);
 
 /***/ }),
 
-/***/ "../../../../../../../../../openvidu-browser/node_modules/wolfy87-eventemitter/EventEmitter.js":
+/***/ "../../../../openvidu-browser/node_modules/wolfy87-eventemitter/EventEmitter.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -13117,7 +13978,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/*!
 
 /***/ }),
 
-/***/ "../../../../../src/$$_lazy_route_resource lazy recursive":
+/***/ "./src/$$_lazy_route_resource lazy recursive":
 /***/ (function(module, exports) {
 
 function webpackEmptyAsyncContext(req) {
@@ -13130,41 +13991,30 @@ function webpackEmptyAsyncContext(req) {
 webpackEmptyAsyncContext.keys = function() { return []; };
 webpackEmptyAsyncContext.resolve = webpackEmptyAsyncContext;
 module.exports = webpackEmptyAsyncContext;
-webpackEmptyAsyncContext.id = "../../../../../src/$$_lazy_route_resource lazy recursive";
+webpackEmptyAsyncContext.id = "./src/$$_lazy_route_resource lazy recursive";
 
 /***/ }),
 
-/***/ "../../../../../src/app/app.component.css":
-/***/ (function(module, exports, __webpack_require__) {
+/***/ "./src/app/app.component.css":
+/***/ (function(module, exports) {
 
-exports = module.exports = __webpack_require__("../../../../css-loader/lib/css-base.js")(false);
-// imports
-
-
-// module
-exports.push([module.i, "", ""]);
-
-// exports
-
-
-/*** EXPORTS FROM exports-loader ***/
-module.exports = module.exports.toString();
+module.exports = ""
 
 /***/ }),
 
-/***/ "../../../../../src/app/app.component.html":
+/***/ "./src/app/app.component.html":
 /***/ (function(module, exports) {
 
 module.exports = "<main>\n  <router-outlet></router-outlet>\n</main>"
 
 /***/ }),
 
-/***/ "../../../../../src/app/app.component.ts":
+/***/ "./src/app/app.component.ts":
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AppComponent; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__("../../../core/esm5/core.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__("./node_modules/@angular/core/esm5/core.js");
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -13178,8 +14028,8 @@ var AppComponent = (function () {
     AppComponent = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
             selector: 'app-root',
-            template: __webpack_require__("../../../../../src/app/app.component.html"),
-            styles: [__webpack_require__("../../../../../src/app/app.component.css")]
+            template: __webpack_require__("./src/app/app.component.html"),
+            styles: [__webpack_require__("./src/app/app.component.css")]
         })
     ], AppComponent);
     return AppComponent;
@@ -13189,14 +14039,14 @@ var AppComponent = (function () {
 
 /***/ }),
 
-/***/ "../../../../../src/app/app.material.module.ts":
+/***/ "./src/app/app.material.module.ts":
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AppMaterialModule; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__("../../../core/esm5/core.js");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_platform_browser_animations__ = __webpack_require__("../../../platform-browser/esm5/animations.js");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_material__ = __webpack_require__("../../../material/esm5/material.es5.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__("./node_modules/@angular/core/esm5/core.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_platform_browser_animations__ = __webpack_require__("./node_modules/@angular/platform-browser/esm5/animations.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_material__ = __webpack_require__("./node_modules/@angular/material/esm5/material.es5.js");
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -13246,26 +14096,26 @@ var AppMaterialModule = (function () {
 
 /***/ }),
 
-/***/ "../../../../../src/app/app.module.ts":
+/***/ "./src/app/app.module.ts":
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AppModule; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_platform_browser__ = __webpack_require__("../../../platform-browser/esm5/platform-browser.js");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_flex_layout__ = __webpack_require__("../../../flex-layout/esm5/flex-layout.es5.js");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_core__ = __webpack_require__("../../../core/esm5/core.js");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__angular_forms__ = __webpack_require__("../../../forms/esm5/forms.js");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__angular_http__ = __webpack_require__("../../../http/esm5/http.js");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_hammerjs__ = __webpack_require__("../../../../hammerjs/hammer.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_platform_browser__ = __webpack_require__("./node_modules/@angular/platform-browser/esm5/platform-browser.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_flex_layout__ = __webpack_require__("./node_modules/@angular/flex-layout/esm5/flex-layout.es5.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_core__ = __webpack_require__("./node_modules/@angular/core/esm5/core.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__angular_forms__ = __webpack_require__("./node_modules/@angular/forms/esm5/forms.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__angular_http__ = __webpack_require__("./node_modules/@angular/http/esm5/http.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_hammerjs__ = __webpack_require__("./node_modules/hammerjs/hammer.js");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_hammerjs___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_hammerjs__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__app_routing__ = __webpack_require__("../../../../../src/app/app.routing.ts");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_app_app_material_module__ = __webpack_require__("../../../../../src/app/app.material.module.ts");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__services_info_service__ = __webpack_require__("../../../../../src/app/services/info.service.ts");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__app_component__ = __webpack_require__("../../../../../src/app/app.component.ts");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__components_dashboard_dashboard_component__ = __webpack_require__("../../../../../src/app/components/dashboard/dashboard.component.ts");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__components_session_details_session_details_component__ = __webpack_require__("../../../../../src/app/components/session-details/session-details.component.ts");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__components_dashboard_credentials_dialog_component__ = __webpack_require__("../../../../../src/app/components/dashboard/credentials-dialog.component.ts");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_13__components_layouts_layout_best_fit_layout_best_fit_component__ = __webpack_require__("../../../../../src/app/components/layouts/layout-best-fit/layout-best-fit.component.ts");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__app_routing__ = __webpack_require__("./src/app/app.routing.ts");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_app_app_material_module__ = __webpack_require__("./src/app/app.material.module.ts");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__services_info_service__ = __webpack_require__("./src/app/services/info.service.ts");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__app_component__ = __webpack_require__("./src/app/app.component.ts");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__components_dashboard_dashboard_component__ = __webpack_require__("./src/app/components/dashboard/dashboard.component.ts");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__components_session_details_session_details_component__ = __webpack_require__("./src/app/components/session-details/session-details.component.ts");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__components_dashboard_credentials_dialog_component__ = __webpack_require__("./src/app/components/dashboard/credentials-dialog.component.ts");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_13__components_layouts_layout_best_fit_layout_best_fit_component__ = __webpack_require__("./src/app/components/layouts/layout-best-fit/layout-best-fit.component.ts");
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -13320,15 +14170,15 @@ var AppModule = (function () {
 
 /***/ }),
 
-/***/ "../../../../../src/app/app.routing.ts":
+/***/ "./src/app/app.routing.ts":
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return routing; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_router__ = __webpack_require__("../../../router/esm5/router.js");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_components_dashboard_dashboard_component__ = __webpack_require__("../../../../../src/app/components/dashboard/dashboard.component.ts");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_app_components_session_details_session_details_component__ = __webpack_require__("../../../../../src/app/components/session-details/session-details.component.ts");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_app_components_layouts_layout_best_fit_layout_best_fit_component__ = __webpack_require__("../../../../../src/app/components/layouts/layout-best-fit/layout-best-fit.component.ts");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_router__ = __webpack_require__("./node_modules/@angular/router/esm5/router.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_components_dashboard_dashboard_component__ = __webpack_require__("./src/app/components/dashboard/dashboard.component.ts");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_app_components_session_details_session_details_component__ = __webpack_require__("./src/app/components/session-details/session-details.component.ts");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_app_components_layouts_layout_best_fit_layout_best_fit_component__ = __webpack_require__("./src/app/components/layouts/layout-best-fit/layout-best-fit.component.ts");
 
 
 
@@ -13355,12 +14205,12 @@ var routing = __WEBPACK_IMPORTED_MODULE_0__angular_router__["b" /* RouterModule 
 
 /***/ }),
 
-/***/ "../../../../../src/app/components/dashboard/credentials-dialog.component.ts":
+/***/ "./src/app/components/dashboard/credentials-dialog.component.ts":
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return CredentialsDialogComponent; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__("../../../core/esm5/core.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__("./node_modules/@angular/core/esm5/core.js");
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -13392,42 +14242,31 @@ var CredentialsDialogComponent = (function () {
 
 /***/ }),
 
-/***/ "../../../../../src/app/components/dashboard/dashboard.component.css":
-/***/ (function(module, exports, __webpack_require__) {
+/***/ "./src/app/components/dashboard/dashboard.component.css":
+/***/ (function(module, exports) {
 
-exports = module.exports = __webpack_require__("../../../../css-loader/lib/css-base.js")(false);
-// imports
-
-
-// module
-exports.push([module.i, "#dashboard-div {\n  padding: 20px;\n}\n\n#log {\n  height: 90%;\n}\n\n#log-content {\n  height: 90%;\n  font-family: Consolas, 'Liberation Mono', Menlo, Courier, monospace;\n  overflow-y: auto;\n  overflow-x: hidden\n}\n\nul {\n  margin: 0;\n}\n\n#test-btn {\n  text-transform: uppercase;\n  float: right;\n}\n\nmat-card-title button.blue {\n  color: #ffffff;\n  background-color: #0088aa;\n}\n\nmat-card-title button.yellow {\n  color: rgba(0, 0, 0, 0.87);\n  background-color: #ffcc00;\n}\n\nmat-spinner {\n  position: absolute;\n  top: 50%;\n  left: 50%;\n  -webkit-transform: translate(-50%, -50%);\n          transform: translate(-50%, -50%);\n}\n\n#tick-div {\n  width: 100px;\n  height: 100px;\n  z-index: 1;\n  position: absolute;\n  top: 50%;\n  left: 50%;\n  -webkit-transform: translate(-50%, -50%);\n          transform: translate(-50%, -50%);\n}\n\n#tooltip-tick {\n  position: absolute;\n  width: 100%;\n  height: 100%;\n  z-index: 2;\n}\n\n.circ {\n  opacity: 0;\n  stroke-dasharray: 130;\n  stroke-dashoffset: 130;\n  -webkit-transition: all 1s;\n  transition: all 1s;\n}\n\n.tick {\n  stroke-dasharray: 50;\n  stroke-dashoffset: 50;\n  -webkit-transition: stroke-dashoffset 1s 0.5s ease-out;\n  transition: stroke-dashoffset 1s 0.5s ease-out;\n}\n\n.drawn+svg .path {\n  opacity: 1;\n  stroke-dashoffset: 0;\n}\n\n#mirrored-video {\n  position: relative;\n}\n\n/* Pure CSS loader */\n\n#loader {\n  width: 100px;\n  height: 100px;\n  z-index: 1;\n  position: absolute;\n  top: 50%;\n  left: 50%;\n  -webkit-transform: translate(-50%, -50%);\n  transform: translate(-50%, -50%);\n}\n\n#loader * {\n  -webkit-box-sizing: border-box;\n  box-sizing: border-box;\n}\n\n#loader ::after {\n  -webkit-box-sizing: border-box;\n  box-sizing: border-box;\n}\n\n#loader ::before {\n  -webkit-box-sizing: border-box;\n  box-sizing: border-box;\n}\n\n.loader-1 {\n  height: 100px;\n  width: 100px;\n  -webkit-animation: loader-1-1 4.8s linear infinite;\n  animation: loader-1-1 4.8s linear infinite;\n}\n\n@-webkit-keyframes loader-1-1 {\n  0% {\n    -webkit-transform: rotate(0deg);\n  }\n  100% {\n    -webkit-transform: rotate(360deg);\n  }\n}\n\n@keyframes loader-1-1 {\n  0% {\n    -webkit-transform: rotate(0deg);\n            transform: rotate(0deg);\n  }\n  100% {\n    -webkit-transform: rotate(360deg);\n            transform: rotate(360deg);\n  }\n}\n\n.loader-1 span {\n  display: block;\n  position: absolute;\n  top: 0;\n  left: 0;\n  bottom: 0;\n  right: 0;\n  margin: auto;\n  height: 100px;\n  width: 100px;\n  clip: rect(0, 100px, 100px, 50px);\n  -webkit-animation: loader-1-2 1.2s linear infinite;\n  animation: loader-1-2 1.2s linear infinite;\n}\n\n@-webkit-keyframes loader-1-2 {\n  0% {\n    -webkit-transform: rotate(0deg);\n  }\n  100% {\n    -webkit-transform: rotate(220deg);\n  }\n}\n\n@keyframes loader-1-2 {\n  0% {\n    -webkit-transform: rotate(0deg);\n            transform: rotate(0deg);\n  }\n  100% {\n    -webkit-transform: rotate(220deg);\n            transform: rotate(220deg);\n  }\n}\n\n.loader-1 span::after {\n  content: \"\";\n  position: absolute;\n  top: 0;\n  left: 0;\n  bottom: 0;\n  right: 0;\n  margin: auto;\n  height: 100px;\n  width: 100px;\n  clip: rect(0, 100px, 100px, 50px);\n  border: 8px solid #4d4d4d;\n  border-radius: 50%;\n  -webkit-animation: loader-1-3 1.2s cubic-bezier(0.770, 0.000, 0.175, 1.000) infinite;\n  animation: loader-1-3 1.2s cubic-bezier(0.770, 0.000, 0.175, 1.000) infinite;\n}\n\n@-webkit-keyframes loader-1-3 {\n  0% {\n    -webkit-transform: rotate(-140deg);\n  }\n  50% {\n    -webkit-transform: rotate(-160deg);\n  }\n  100% {\n    -webkit-transform: rotate(140deg);\n  }\n}\n\n@keyframes loader-1-3 {\n  0% {\n    -webkit-transform: rotate(-140deg);\n            transform: rotate(-140deg);\n  }\n  50% {\n    -webkit-transform: rotate(-160deg);\n            transform: rotate(-160deg);\n  }\n  100% {\n    -webkit-transform: rotate(140deg);\n            transform: rotate(140deg);\n  }\n}", ""]);
-
-// exports
-
-
-/*** EXPORTS FROM exports-loader ***/
-module.exports = module.exports.toString();
+module.exports = "#dashboard-div {\n  padding: 20px;\n}\n\n#log {\n  height: 90%;\n}\n\n#log-content {\n  height: 90%;\n  font-family: Consolas, 'Liberation Mono', Menlo, Courier, monospace;\n  overflow-y: auto;\n  overflow-x: hidden\n}\n\nul {\n  margin: 0;\n}\n\n#test-btn {\n  text-transform: uppercase;\n  float: right;\n}\n\nmat-card-title button.blue {\n  color: #ffffff;\n  background-color: #0088aa;\n}\n\nmat-card-title button.yellow {\n  color: rgba(0, 0, 0, 0.87);\n  background-color: #ffcc00;\n}\n\nmat-spinner {\n  position: absolute;\n  top: 50%;\n  left: 50%;\n  -webkit-transform: translate(-50%, -50%);\n          transform: translate(-50%, -50%);\n}\n\n#tick-div {\n  width: 100px;\n  height: 100px;\n  z-index: 1;\n  position: absolute;\n  top: 50%;\n  left: 50%;\n  -webkit-transform: translate(-50%, -50%);\n          transform: translate(-50%, -50%);\n}\n\n#tooltip-tick {\n  position: absolute;\n  width: 100%;\n  height: 100%;\n  z-index: 2;\n}\n\n.circ {\n  opacity: 0;\n  stroke-dasharray: 130;\n  stroke-dashoffset: 130;\n  -webkit-transition: all 1s;\n  transition: all 1s;\n}\n\n.tick {\n  stroke-dasharray: 50;\n  stroke-dashoffset: 50;\n  -webkit-transition: stroke-dashoffset 1s 0.5s ease-out;\n  transition: stroke-dashoffset 1s 0.5s ease-out;\n}\n\n.drawn+svg .path {\n  opacity: 1;\n  stroke-dashoffset: 0;\n}\n\n#mirrored-video {\n  position: relative;\n}\n\n/* Pure CSS loader */\n\n#loader {\n  width: 100px;\n  height: 100px;\n  z-index: 1;\n  position: absolute;\n  top: 50%;\n  left: 50%;\n  -webkit-transform: translate(-50%, -50%);\n  transform: translate(-50%, -50%);\n}\n\n#loader * {\n  -webkit-box-sizing: border-box;\n  box-sizing: border-box;\n}\n\n#loader ::after {\n  -webkit-box-sizing: border-box;\n  box-sizing: border-box;\n}\n\n#loader ::before {\n  -webkit-box-sizing: border-box;\n  box-sizing: border-box;\n}\n\n.loader-1 {\n  height: 100px;\n  width: 100px;\n  -webkit-animation: loader-1-1 4.8s linear infinite;\n  animation: loader-1-1 4.8s linear infinite;\n}\n\n@-webkit-keyframes loader-1-1 {\n  0% {\n    -webkit-transform: rotate(0deg);\n  }\n  100% {\n    -webkit-transform: rotate(360deg);\n  }\n}\n\n@keyframes loader-1-1 {\n  0% {\n    -webkit-transform: rotate(0deg);\n            transform: rotate(0deg);\n  }\n  100% {\n    -webkit-transform: rotate(360deg);\n            transform: rotate(360deg);\n  }\n}\n\n.loader-1 span {\n  display: block;\n  position: absolute;\n  top: 0;\n  left: 0;\n  bottom: 0;\n  right: 0;\n  margin: auto;\n  height: 100px;\n  width: 100px;\n  clip: rect(0, 100px, 100px, 50px);\n  -webkit-animation: loader-1-2 1.2s linear infinite;\n  animation: loader-1-2 1.2s linear infinite;\n}\n\n@-webkit-keyframes loader-1-2 {\n  0% {\n    -webkit-transform: rotate(0deg);\n  }\n  100% {\n    -webkit-transform: rotate(220deg);\n  }\n}\n\n@keyframes loader-1-2 {\n  0% {\n    -webkit-transform: rotate(0deg);\n            transform: rotate(0deg);\n  }\n  100% {\n    -webkit-transform: rotate(220deg);\n            transform: rotate(220deg);\n  }\n}\n\n.loader-1 span::after {\n  content: \"\";\n  position: absolute;\n  top: 0;\n  left: 0;\n  bottom: 0;\n  right: 0;\n  margin: auto;\n  height: 100px;\n  width: 100px;\n  clip: rect(0, 100px, 100px, 50px);\n  border: 8px solid #4d4d4d;\n  border-radius: 50%;\n  -webkit-animation: loader-1-3 1.2s cubic-bezier(0.770, 0.000, 0.175, 1.000) infinite;\n  animation: loader-1-3 1.2s cubic-bezier(0.770, 0.000, 0.175, 1.000) infinite;\n}\n\n@-webkit-keyframes loader-1-3 {\n  0% {\n    -webkit-transform: rotate(-140deg);\n  }\n  50% {\n    -webkit-transform: rotate(-160deg);\n  }\n  100% {\n    -webkit-transform: rotate(140deg);\n  }\n}\n\n@keyframes loader-1-3 {\n  0% {\n    -webkit-transform: rotate(-140deg);\n            transform: rotate(-140deg);\n  }\n  50% {\n    -webkit-transform: rotate(-160deg);\n            transform: rotate(-160deg);\n  }\n  100% {\n    -webkit-transform: rotate(140deg);\n            transform: rotate(140deg);\n  }\n}"
 
 /***/ }),
 
-/***/ "../../../../../src/app/components/dashboard/dashboard.component.html":
+/***/ "./src/app/components/dashboard/dashboard.component.html":
 /***/ (function(module, exports) {
 
 module.exports = "<div id=\"dashboard-div\" fxLayout=\"row\" fxLayout.xs=\"column\" fxLayoutGap=\"20px\" fxFlexFill>\n\n  <div fxLayout=\"column\" fxFlex=\"66%\" fxFlexOrder=\"1\" fxFlexOrder.xs=\"2\">\n    <mat-card id=\"log\">\n      <mat-card-title>Server events\n        <mat-slide-toggle title=\"Lock Scroll\" [(ngModel)]=\"lockScroll\" style=\"float: right; margin-left: auto;\">\n          <mat-icon>lock_outline</mat-icon>\n        </mat-slide-toggle>\n      </mat-card-title>\n      <mat-divider></mat-divider>\n      <mat-card-content #scrollMe id=\"log-content\">\n        <ul>\n          <li *ngFor=\"let i of info\">\n            <p>{{i}}</p>\n          </li>\n        </ul>\n      </mat-card-content>\n    </mat-card>\n  </div>\n\n  <div fxLayout=\"column\" fxFlex=\"33%\" fxFlexOrder=\"2\" fxFlexOrder.xs=\"1\">\n    <mat-card id=\"video-loop\">\n      <mat-card-title>Test the connection\n        <button id=\"test-btn\" mat-raised-button [ngClass]=\"testStatus == 'DISCONNECTED' ? 'blue' : (testStatus == 'PLAYING' ? 'yellow' : 'disabled')\" (click)=\"toggleTestVideo()\" [disabled]=\"testStatus==='CONNECTING' || testStatus==='CONNECTED'\">{{testButton}}</button>\n      </mat-card-title>\n      <mat-card-content>\n        <div id=\"mirrored-video\">\n          <div *ngIf=\"showSpinner\" id=\"loader\">\n            <div class=\"loader-1 center\"><span></span></div>\n          </div>\n          <div *ngIf=\"session\" id=\"tick-div\">\n            <div id=\"tooltip-tick\" *ngIf=\"testStatus=='PLAYING'\" matTooltip=\"The connection is successful\" matTooltipPosition=\"below\"></div>\n            <div [ngClass]=\"testStatus=='PLAYING' ? 'trigger drawn' : 'trigger'\"></div>\n            <svg version=\"1.1\" id=\"tick\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\"\n              viewBox=\"-1 -1 39 39\" style=\"enable-background:new 0 0 37 37;\" xml:space=\"preserve\">\n              <path class=\"circ path\" style=\"fill:none;stroke:#06d362;stroke-width:4;stroke-linejoin:round;stroke-miterlimit:10;\" d=\"\n\tM30.5,6.5L30.5,6.5c6.6,6.6,6.6,17.4,0,24l0,0c-6.6,6.6-17.4,6.6-24,0l0,0c-6.6-6.6-6.6-17.4,0-24l0,0C13.1-0.2,23.9-0.2,30.5,6.5z\"\n              />\n              <polyline class=\"tick path\" style=\"fill:none;stroke:#06d362;stroke-width:4;stroke-linejoin:round;stroke-miterlimit:10;\" points=\"\n\t11.6,20 15.9,24.2 26.4,13.8 \" />\n            </svg>\n          </div>\n        </div>\n        <div id=\"msg-chain\"><p *ngFor=\"let msg of msgChain\">{{msg}}</p></div>\n      </mat-card-content>\n    </mat-card>\n  </div>\n</div>\n"
 
 /***/ }),
 
-/***/ "../../../../../src/app/components/dashboard/dashboard.component.ts":
+/***/ "./src/app/components/dashboard/dashboard.component.ts":
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return DashboardComponent; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__("../../../core/esm5/core.js");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_material__ = __webpack_require__("../../../material/esm5/material.es5.js");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__services_info_service__ = __webpack_require__("../../../../../src/app/services/info.service.ts");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_openvidu_browser__ = __webpack_require__("../../../../../../../../../openvidu-browser/lib/OpenVidu/index.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__("./node_modules/@angular/core/esm5/core.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_material__ = __webpack_require__("./node_modules/@angular/material/esm5/material.es5.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__services_info_service__ = __webpack_require__("./src/app/services/info.service.ts");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_openvidu_browser__ = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/index.js");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_openvidu_browser___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_openvidu_browser__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__credentials_dialog_component__ = __webpack_require__("../../../../../src/app/components/dashboard/credentials-dialog.component.ts");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__credentials_dialog_component__ = __webpack_require__("./src/app/components/dashboard/credentials-dialog.component.ts");
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -13601,8 +14440,8 @@ var DashboardComponent = (function () {
     DashboardComponent = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
             selector: 'app-dashboard',
-            template: __webpack_require__("../../../../../src/app/components/dashboard/dashboard.component.html"),
-            styles: [__webpack_require__("../../../../../src/app/components/dashboard/dashboard.component.css")],
+            template: __webpack_require__("./src/app/components/dashboard/dashboard.component.html"),
+            styles: [__webpack_require__("./src/app/components/dashboard/dashboard.component.css")],
         }),
         __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_2__services_info_service__["a" /* InfoService */], __WEBPACK_IMPORTED_MODULE_1__angular_material__["d" /* MatDialog */]])
     ], DashboardComponent);
@@ -13613,40 +14452,30 @@ var DashboardComponent = (function () {
 
 /***/ }),
 
-/***/ "../../../../../src/app/components/layouts/layout-best-fit/layout-best-fit.component.css":
-/***/ (function(module, exports, __webpack_require__) {
-
-exports = module.exports = __webpack_require__("../../../../css-loader/lib/css-base.js")(false);
-// imports
-
-
-// module
-exports.push([module.i, ".bounds {\n  background-color: black;\n  height: 100%;\n  overflow: hidden;\n  cursor: none !important;\n}\n\nvideo {\n  height: 100%;\n}\n", ""]);
-
-// exports
-
-
-/*** EXPORTS FROM exports-loader ***/
-module.exports = module.exports.toString();
-
-/***/ }),
-
-/***/ "../../../../../src/app/components/layouts/layout-best-fit/layout-best-fit.component.html":
+/***/ "./src/app/components/layouts/layout-best-fit/layout-best-fit.component.css":
 /***/ (function(module, exports) {
 
-module.exports = "<div class=\"bounds\">\n  <div *ngFor=\"let streams of remoteStreams\" class=\"content\" fxLayout=\"row\" fxFlexFill [style.height]=\"100 / remoteStreams.length + '%'\"\n    [style.min-height]=\"100 / remoteStreams.length + '%'\">\n    <div *ngFor=\"let s of streams\" [fxFlex]=\"100 / streams\">\n      <video [id]=\"'native-video-' + s.streamId\" autoplay=\"true\" [srcObject]=\"s.getMediaStream()\"></video>\n    </div>\n  </div>\n</div>\n"
+module.exports = ".bounds {\n  background-color: black;\n  overflow: hidden;\n  cursor: none !important;\n  position: absolute;\n  left: 0;\n  right: 0;\n  top: 0;\n  bottom: 0;\n}\n\nvideo {\n  -o-object-fit: cover;\n  object-fit: cover;\n  display: block;\n  position: absolute;\n  width: 100%;\n  height: 100%;\n  color: #ffffff;\n  margin: 0;\n  padding: 0;\n  border: 0;\n  font-size: 100%;\n  font-family: Arial, Helvetica, sans-serif;\n}\n\n/*!\n * Copyright (c) 2017 TokBox, Inc.\n * Released under the MIT license\n * http://opensource.org/licenses/MIT\n */\n\n.custom-class {\n  min-height: 0px !important;\n}\n\n/**\n * OT Base styles\n */\n\n/* Root OT object, this is where our CSS reset happens */\n\n.OT_root,\n.OT_root * {\n  color: #ffffff;\n  margin: 0;\n  padding: 0;\n  border: 0;\n  font-size: 100%;\n  font-family: Arial, Helvetica, sans-serif;\n  vertical-align: baseline;\n}\n\n.OT_dialog-centering {\n  display: table;\n  width: 100%;\n  height: 100%;\n}\n\n.OT_dialog-centering-child {\n  display: table-cell;\n  vertical-align: middle;\n}\n\n.OT_dialog {\n  position: relative;\n\n  -webkit-box-sizing: border-box;\n\n          box-sizing: border-box;\n  max-width: 576px;\n  margin-right: auto;\n  margin-left: auto;\n  padding: 36px;\n  text-align: center; /* centers all the inline content */\n\n  background-color: #363636;\n  color: #fff;\n  -webkit-box-shadow: 2px 4px 6px #999;\n          box-shadow: 2px 4px 6px #999;\n  font-family: 'Didact Gothic', sans-serif;\n  font-size: 13px;\n  line-height: 1.4;\n}\n\n.OT_dialog * {\n  font-family: inherit;\n  -webkit-box-sizing: inherit;\n          box-sizing: inherit;\n}\n\n.OT_closeButton {\n  color: #999999;\n  cursor: pointer;\n  font-size: 32px;\n  line-height: 36px;\n  position: absolute;\n  right: 18px;\n  top: 0;\n}\n\n.OT_dialog-messages {\n  text-align: center;\n}\n\n.OT_dialog-messages-main {\n  margin-bottom: 36px;\n  line-height: 36px;\n\n  font-weight: 300;\n  font-size: 24px;\n}\n\n.OT_dialog-messages-minor {\n  margin-bottom: 18px;\n\n  font-size: 13px;\n  line-height: 18px;\n  color: #A4A4A4;\n}\n\n.OT_dialog-messages-minor strong {\n  color: #ffffff;\n}\n\n.OT_dialog-actions-card {\n  display: inline-block;\n}\n\n.OT_dialog-button-title {\n  margin-bottom: 18px;\n  line-height: 18px;\n\n  font-weight: 300;\n  text-align: center;\n  font-size: 14px;\n  color: #999999;\n}\n\n.OT_dialog-button-title label {\n  color: #999999;\n}\n\n.OT_dialog-button-title a,\n.OT_dialog-button-title a:link,\n.OT_dialog-button-title a:active {\n  color: #02A1DE;\n}\n\n.OT_dialog-button-title strong {\n  color: #ffffff;\n  font-weight: 100;\n  display: block;\n}\n\n.OT_dialog-button {\n  display: inline-block;\n\n  margin-bottom: 18px;\n  padding: 0 1em;\n\n  background-color: #1CA3DC;\n  text-align: center;\n  cursor: pointer;\n}\n\n.OT_dialog-button:disabled {\n  cursor: not-allowed;\n  opacity: 0.5;\n}\n\n.OT_dialog-button-large {\n  line-height: 36px;\n  padding-top: 9px;\n  padding-bottom: 9px;\n\n  font-weight: 100;\n  font-size: 24px;\n}\n\n.OT_dialog-button-small {\n  line-height: 18px;\n  padding-top: 9px;\n  padding-bottom: 9px;\n\n  background-color: #444444;\n  color: #999999;\n  font-size: 16px;\n}\n\n.OT_dialog-progress-bar {\n  display: inline-block; /* prevents margin collapse */\n  width: 100%;\n  margin-top: 5px;\n  margin-bottom: 41px;\n\n  border: 1px solid #4E4E4E;\n  height: 8px;\n}\n\n.OT_dialog-progress-bar-fill {\n  height: 100%;\n\n  background-color: #29A4DA;\n}\n\n.OT_dialog-plugin-upgrading .OT_dialog-plugin-upgrade-percentage {\n  line-height: 54px;\n\n  font-size: 48px;\n  font-weight: 100;\n}\n\n/* Helpers */\n\n.OT_centered {\n  position: fixed;\n  left: 50%;\n  top: 50%;\n  margin: 0;\n}\n\n.OT_dialog-hidden {\n  display: none;\n}\n\n.OT_dialog-button-block {\n  display: block;\n}\n\n.OT_dialog-no-natural-margin {\n  margin-bottom: 0;\n}\n\n/* Publisher and Subscriber styles */\n\n.OT_publisher, .OT_subscriber {\n  position: relative;\n  min-width: 48px;\n  min-height: 48px;\n}\n\n.OT_publisher .OT_video-element,\n.OT_subscriber .OT_video-element {\n  display: block;\n  position: absolute;\n  width: 100%;\n  height: 100%;\n\n  -webkit-transform-origin: 0 0;\n\n          transform-origin: 0 0;\n}\n\n/* Styles that are applied when the video element should be mirrored */\n\n.OT_publisher.OT_mirrored .OT_video-element {\n  -webkit-transform: scale(-1, 1);\n          transform: scale(-1, 1);\n  -webkit-transform-origin: 50% 50%;\n          transform-origin: 50% 50%;\n}\n\n.OT_subscriber_error {\n  background-color: #000;\n  color: #fff;\n  text-align: center;\n}\n\n.OT_subscriber_error > p {\n  padding: 20px;\n}\n\n/* The publisher/subscriber name/mute background */\n\n.OT_publisher .OT_bar,\n.OT_subscriber .OT_bar,\n.OT_publisher .OT_name,\n.OT_subscriber .OT_name,\n.OT_publisher .OT_archiving,\n.OT_subscriber .OT_archiving,\n.OT_publisher .OT_archiving-status,\n.OT_subscriber .OT_archiving-status,\n.OT_publisher .OT_archiving-light-box,\n.OT_subscriber .OT_archiving-light-box {\n  -webkit-box-sizing: border-box;\n  -ms-box-sizing: border-box;\n  box-sizing: border-box;\n  top: 0;\n  left: 0;\n  right: 0;\n  display: block;\n  height: 34px;\n  position: absolute;\n}\n\n.OT_publisher .OT_bar,\n.OT_subscriber .OT_bar {\n  background: rgba(0, 0, 0, 0.4);\n}\n\n.OT_publisher .OT_edge-bar-item,\n.OT_subscriber .OT_edge-bar-item {\n  z-index: 1; /* required to get audio level meter underneath */\n}\n\n/* The publisher/subscriber name panel/archiving status bar */\n\n.OT_publisher .OT_name,\n.OT_subscriber .OT_name {\n  background-color: transparent;\n  color: #ffffff;\n  font-size: 15px;\n  line-height: 34px;\n  font-weight: normal;\n  padding: 0 4px 0 36px;\n}\n\n.OT_publisher .OT_archiving-status,\n.OT_subscriber .OT_archiving-status {\n  background: rgba(0, 0, 0, 0.4);\n  top: auto;\n  bottom: 0;\n  left: 34px;\n  padding: 0 4px;\n  color: rgba(255, 255, 255, 0.8);\n  font-size: 15px;\n  line-height: 34px;\n  font-weight: normal;\n}\n\n.OT_micro .OT_archiving-status,\n.OT_micro:hover .OT_archiving-status,\n.OT_mini .OT_archiving-status,\n.OT_mini:hover .OT_archiving-status {\n  display: none;\n}\n\n.OT_publisher .OT_archiving-light-box,\n.OT_subscriber .OT_archiving-light-box {\n  background: rgba(0, 0, 0, 0.4);\n  top: auto;\n  bottom: 0;\n  right: auto;\n  width: 34px;\n  height: 34px;\n}\n\n.OT_archiving-light {\n  width: 7px;\n  height: 7px;\n  border-radius: 30px;\n  position: absolute;\n  top: 14px;\n  left: 14px;\n  background-color: #575757;\n  -webkit-box-shadow: 0 0 5px 1px #575757;\n  box-shadow: 0 0 5px 1px #575757;\n}\n\n.OT_archiving-light.OT_active {\n  background-color: #970d13;\n  animation: OT_pulse 1.3s ease-in;\n  -webkit-animation: OT_pulse 1.3s ease-in;\n  -moz-animation: OT_pulse 1.3s ease-in;\n  -webkit-animation: OT_pulse 1.3s ease-in;\n  animation-iteration-count: infinite;\n  -webkit-animation-iteration-count: infinite;\n  -moz-animation-iteration-count: infinite;\n  -webkit-animation-iteration-count: infinite;\n}\n\n@-webkit-keyframes OT_pulse {\n  0% {\n    -webkit-box-shadow: 0 0 0px 0px #c70019;\n    box-shadow: 0 0 0px 0px #c70019;\n  }\n\n  30% {\n    -webkit-box-shadow: 0 0 5px 1px #c70019;\n    box-shadow: 0 0 5px 1px #c70019;\n  }\n\n  50% {\n    -webkit-box-shadow: 0 0 5px 1px #c70019;\n    box-shadow: 0 0 5px 1px #c70019;\n  }\n\n  80% {\n    -webkit-box-shadow: 0 0 0px 0px #c70019;\n    box-shadow: 0 0 0px 0px #c70019;\n  }\n\n  100% {\n    -webkit-box-shadow: 0 0 0px 0px #c70019;\n    box-shadow: 0 0 0px 0px #c70019;\n  }\n}\n\n@-webkit-keyframes OT_pulse {\n  0% {\n    -webkit-box-shadow: 0 0 0px 0px #c70019;\n    box-shadow: 0 0 0px 0px #c70019;\n  }\n\n  30% {\n    -webkit-box-shadow: 0 0 5px 1px #c70019;\n    box-shadow: 0 0 5px 1px #c70019;\n  }\n\n  50% {\n    -webkit-box-shadow: 0 0 5px 1px #c70019;\n    box-shadow: 0 0 5px 1px #c70019;\n  }\n\n  80% {\n    -webkit-box-shadow: 0 0 0px 0px #c70019;\n    box-shadow: 0 0 0px 0px #c70019;\n  }\n\n  100% {\n    -webkit-box-shadow: 0 0 0px 0px #c70019;\n    box-shadow: 0 0 0px 0px #c70019;\n  }\n}\n\n.OT_mini .OT_bar,\n.OT_bar.OT_mode-mini,\n.OT_bar.OT_mode-mini-auto {\n  bottom: 0;\n  height: auto;\n}\n\n.OT_mini .OT_name.OT_mode-off,\n.OT_mini .OT_name.OT_mode-on,\n.OT_mini .OT_name.OT_mode-auto,\n.OT_mini:hover .OT_name.OT_mode-auto {\n  display: none;\n}\n\n.OT_publisher .OT_name,\n.OT_subscriber .OT_name {\n    left: 10px;\n    right: 37px;\n    height: 34px;\n    padding-left: 0;\n}\n\n.OT_publisher .OT_mute,\n.OT_subscriber .OT_mute {\n    border: none;\n    cursor: pointer;\n    display: block;\n    position: absolute;\n    text-align: center;\n    text-indent: -9999em;\n    background-color: transparent;\n    background-repeat: no-repeat;\n}\n\n.OT_publisher .OT_mute,\n.OT_subscriber .OT_mute {\n  right: 0;\n  top: 0;\n  border-left: 1px solid rgba(255, 255, 255, 0.2);\n  height: 36px;\n  width: 37px;\n}\n\n.OT_mini .OT_mute,\n.OT_publisher.OT_mini .OT_mute.OT_mode-auto.OT_mode-on-hold,\n.OT_subscriber.OT_mini .OT_mute.OT_mode-auto.OT_mode-on-hold {\n  top: 50%;\n  left: 50%;\n  right: auto;\n  margin-top: -18px;\n  margin-left: -18.5px;\n  border-left: none;\n}\n\n.OT_publisher .OT_mute {\n  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABMAAAAcCAMAAAC02HQrAAAA1VBMVEUAAAD3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pn3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pn3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj39/j3+Pj3+Pn4+Pk/JRMlAAAAQ3RSTlMABAUHCQoLDhAQERwdHiAjLjAxOD9ASFBRVl1mbnZ6fH2LjI+QkaWqrrC1uLzAwcXJycrL1NXj5Ofo6u3w9fr7/P3+d4M3+QAAAQBJREFUGBlVwYdCglAABdCLlr5Unijm3hMUtBzlBLSr//9JgUToOQgVJgceJgU8aHgMeA38K50ZOpcQmTPwcyXn+JM8M3JJIqQypiIkeXelTyIkGZPwKS1NMia1lgKTVkaE3oQQGYsmHNqSMWnTgUFbMiZtGlD2dpaxrL1XgM0i4ZK8MeAmFhsAs29MGZniawagS63oMOQUNXYB5D0D1RMDpyoMLw/fiE2og/V+PVDR5AiBl0/2Uwik+vx4xV3a5G5Ye68Nd1czjUjZckm6VhmPciRzeCZICjwTJAViQq+3e+St167rAoHK8sLYZVkBYPCZAZ/eGa+2R5LH7Wrc0YFf/O9J3yBDFaoAAAAASUVORK5CYII=);\n  background-position: 9px 5px;\n}\n\n.OT_publisher .OT_mute.OT_active {\n  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAdCAYAAABFRCf7AAADcElEQVRIiaWVXWhcRRTHf7NNd2aDtUKMIjTpg4ufFIuiUOmDEWm0Vi3VYhXRqIggQh4sWJFSig9+oOhTKSpIRUWMIBIr2kptoTbgU6ooxCiIjR+14kcJmf9sNceHnd3ebnc3Uv9wuXfOzPzmnDMz5zozGwdWAbc65w5RUJQ8cC2wDJgFJioh/MJCMrNxq2vOzK4HmIvRRemxKP0RJWt53o7S+d2Yzsx6gQ+AIUDAnUqpBLzXZd4RYFUlhB/bdZacc3PAOmAcCMC7wfvFwLNdoAPAyx09bXyYWRl4E7gDmAdGlNKFwLYu8GolhO9O87RJd64GbMrgEvB68P4osMWdXLtVV7czlooNpVRWSs8DO7NpR/B+3rBHsvetCgtCMTxwQCm9BbyQrc8F7/uBex3uRCeXO0PrUZ4NfKyUPgWeyj3bg/crDNsIRGwBaJQGorQ3Svdn2wHgc2BUKb0DPJHtjwfvbwRucc7tz+N+i9LFUdoXpfVN36I0CVwBTFI/q9e1LPxT8P4qYEdu70q12mYzWw1MYQzjeJF6zq+shHC4B7jklOBPP/TzSunh4P0DwKvAfb5c9krpe+CcwsEoZdbhEvBM9wxRAl5RShcA9wAngE3B+8tLpdLuwrhp4MNmK0pfRWkySr7NXS8+L5nZbWZWy/Vin1IaitJnUTqvwevJ71lgSSWEFKUfHG7Q2m/xqFJaGry/GXgfGPLl8mJgrXPur2JoUC8Qy3OpG+sAbGhEKT0ErAWOA6uBPWbW1wr9BOgFbgKezot0kAPYqJQA1gC/A9cA+82svzksSn1R+jNKX0SpnM/e1x3yqig92JhrZivM7FjO8bSZLSuCR/Ok16K0KMNHojQWpYko7Y7S1igN5PE3ROl4lNaZ2UVmNpPBU01orvZvZPCeKFXbBR+lEKVtUapFaSZKg9njqpl9aWYTrmXCImA7sCWb9lK/jj9TrwkrgA1AH3AQuKsSwkzbrLfxpgpsBtYDxf/R3xm2ExirhNCuHHZXTsmRwiat+S/zSt06eysVA/4pmGr/G3qm6ik28v29FKgCg8BS6pvS0KNRGgZ+Bb4FpsxsOkfUlMuwDcBWYOUZOHYM2AU8WQmhBifDv70O7PjX7KZ+4G7g3FM8zd6uBIaBy4AqxnIcZwFLCovPAhE4Sj38b4BDwEeVEFKD9S94Khjn486v3QAAAABJRU5ErkJggg==);\n  background-position: 9px 4px;\n}\n\n.OT_subscriber .OT_mute {\n  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABcAAAATCAYAAAB7u5a2AAABx0lEQVQ4jaWUv48NURiGn3ONmCs32ZBd28ht1gqyZAkF21ylQkEiSp2ehpDlD1BoFGqqVdJohYKI7MaPxMoVNghCWMF+7ybLUewnOXfcMWO9yeQ857zne8+XmZOBGjJpr0kvTIomvTZpS526UCO4DUwD64FjwCFgqZnnR+oc8LfgzKQ73vGsr42ZtGjSQFV9o8KfBCacZwCaef4YmAf2rzjcpN3A2WSpm/AssKcqPDNpDBjs410CViXzTwk/A7b1C4wxDgOngAsZcAXY2buDfp/6S4F3lDS8DjgBzDWAjX/Y/e/QgYS/AhsKHa+OMQ6GEJ4Cj4BOAxgq6aCowyZtdf4OtAr+FHDO+R4wWnVbihr3cQnICt4boO38GWj9a/icjwOACt4m4K3zEPA+AxaAtTWCnwN3lzHkEL8V/OPAGud9wK2GF9XR1Wae/1zG2AI+pGYI4VUIoRtjHAc2A9cz4LRPevYCZ+i9/4sJt4GXJU10gaPAzdI2TTro/5Tfz8XEe2LSZGmxq/SDNvP8BnA5WRrx4BwYBe6vONx1EnjovGvBLAAd4Adwuyq8UiaNmDTvr+a8SQ9MuvbfwckBHZPe+QEfTdpep+4XZmPBHiHgz74AAAAASUVORK5CYII=);\n  background-position: 8px 7px;\n}\n\n.OT_subscriber .OT_mute.OT_active {\n  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAUCAYAAACXtf2DAAACtklEQVQ4jZ2VSYiURxTHf+/T9Nc9iRrBuYySmIsXUU9iFMEFERRBvAjJLUQi5ioiHvSScfTmgqC4XAT1ZIgLuJHkICaaQAgKI2hAUBT30bjUq7bbv4eukXK029F3+eqtv/fqK6qQdEnSNUmT6CDB/bvgfjO4N9zj2RD8007xg1IABkwEzkma0qb4PGAPMBZYLtSD8eNwAEjqTlNI0gNJM4YU7w7ut4O7gvuhZFsR3C8NC5BBLiTIY0mzM8AvqbiC++pk+zLpE95XuwAws3vAQuBPYDRwWtL84P4tsDSLv5oaug4EYOawAMF9jMdoLxqNZcDvQA04UVYqL4G/svj7AF21mhJscrvCksYBFO7xc2AAGGg2mrdjvf4rcAyomNn+slLZmUEGBgsYdh945xZJmgvckDSrEJpK6ySBgV6q12O8ABwGPjGzfWWlsjdN9rpjoSfA+DYDXARGAksK4Is3XC1Ub4z1f4CDQGFmu6tleQSYk0U+p7WVeefLJc00s4fAeWB6Qeunvj0m2ugx9gO7kmlrtSxvBfcy6fXUZS6rgG/S+jLQUwCVNmMC9HqM14EtSe+rluWazN8YEv8IqKZ1E1qnaIDO0ucx3gX6kv6TpM3AM+D/IbGjgP60/gq4WQA33gMA2OQxPgHWJX1ttSwL4FAeZGYLgB2SasBs4A8L7qOBf9M0uXQB3a+TMYSmVctyDrA9mfcBK82smSdKWgCcAaa1bTm4fxbc/8uuCQX3RanAD5Ka6Wo5IGnE0HxJPZ03pQX5Org3MsD3AO5xXLPZXJ9BjkrqdFg6QjZkgG3Jtsw93pG0VFI9QU5K6voYQBHcTydAfwheBI9HgvvPAJIWS3qeIL9JGvUxkO7gfi1BrqTvwkG/pPmSnibIqTzXPgAyEVgBjAEu1qrVPbk/PVTHgb/NbPGg/RVIzOQqzSTBaQAAAABJRU5ErkJggg==);\n  background-position: 7px 7px;\n}\n\n/**\n * Styles for display modes\n *\n * Note: It's important that these completely control the display and opacity\n * attributes, no other selectors should atempt to change them.\n */\n\n/* Default display mode transitions for various chrome elements */\n\n.OT_publisher .OT_edge-bar-item,\n.OT_subscriber .OT_edge-bar-item {\n  -webkit-transition-property: top, bottom, opacity;\n  transition-property: top, bottom, opacity;\n  -webkit-transition-duration: 0.5s;\n          transition-duration: 0.5s;\n  -webkit-transition-timing-function: ease-in;\n          transition-timing-function: ease-in;\n}\n\n.OT_publisher .OT_edge-bar-item.OT_mode-off,\n.OT_subscriber .OT_edge-bar-item.OT_mode-off,\n.OT_publisher .OT_edge-bar-item.OT_mode-auto,\n.OT_subscriber .OT_edge-bar-item.OT_mode-auto,\n.OT_publisher .OT_edge-bar-item.OT_mode-mini-auto,\n.OT_subscriber .OT_edge-bar-item.OT_mode-mini-auto {\n  top: -25px;\n  opacity: 0;\n}\n\n.OT_publisher .OT_edge-bar-item.OT_mode-off,\n.OT_subscriber .OT_edge-bar-item.OT_mode-off {\n  display: none;\n}\n\n.OT_mini .OT_mute.OT_mode-auto,\n.OT_publisher .OT_mute.OT_mode-mini-auto,\n.OT_subscriber .OT_mute.OT_mode-mini-auto {\n  top: 50%;\n}\n\n.OT_publisher .OT_edge-bar-item.OT_edge-bottom.OT_mode-off,\n.OT_subscriber .OT_edge-bar-item.OT_edge-bottom.OT_mode-off,\n.OT_publisher .OT_edge-bar-item.OT_edge-bottom.OT_mode-auto,\n.OT_subscriber .OT_edge-bar-item.OT_edge-bottom.OT_mode-auto,\n.OT_publisher .OT_edge-bar-item.OT_edge-bottom.OT_mode-mini-auto,\n.OT_subscriber .OT_edge-bar-item.OT_edge-bottom.OT_mode-mini-auto {\n  top: auto;\n  bottom: -25px;\n}\n\n.OT_publisher .OT_edge-bar-item.OT_mode-on,\n.OT_subscriber .OT_edge-bar-item.OT_mode-on,\n.OT_publisher .OT_edge-bar-item.OT_mode-auto.OT_mode-on-hold,\n.OT_subscriber .OT_edge-bar-item.OT_mode-auto.OT_mode-on-hold,\n.OT_publisher:hover .OT_edge-bar-item.OT_mode-auto,\n.OT_subscriber:hover .OT_edge-bar-item.OT_mode-auto,\n.OT_publisher:hover .OT_edge-bar-item.OT_mode-mini-auto,\n.OT_subscriber:hover .OT_edge-bar-item.OT_mode-mini-auto {\n  top: 0;\n  opacity: 1;\n}\n\n.OT_mini .OT_mute.OT_mode-on,\n.OT_mini:hover .OT_mute.OT_mode-auto,\n.OT_mute.OT_mode-mini,\n.OT_root:hover .OT_mute.OT_mode-mini-auto {\n  top: 50%;\n}\n\n.OT_publisher .OT_edge-bar-item.OT_edge-bottom.OT_mode-on,\n.OT_subscriber .OT_edge-bar-item.OT_edge-bottom.OT_mode-on,\n.OT_publisher:hover .OT_edge-bar-item.OT_edge-bottom.OT_mode-auto,\n.OT_subscriber:hover .OT_edge-bar-item.OT_edge-bottom.OT_mode-auto {\n  top: auto;\n  bottom: 0;\n  opacity: 1;\n}\n\n/* Contains the video element, used to fix video letter-boxing */\n\n.OT_widget-container {\n  position: absolute;\n  background-color: #000000;\n  overflow: hidden;\n}\n\n/* Load animation */\n\n.OT_root .OT_video-loading {\n  position: absolute;\n  z-index: 1;\n  width: 100%;\n  height: 100%;\n  display: none;\n\n  background-color: rgba(0, 0, 0, .75);\n}\n\n.OT_root .OT_video-loading .OT_video-loading-spinner {\n  background: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9Ii0yMCAtMjAgMjQwIDI0MCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJhIiB4Mj0iMCIgeTI9IjEiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2ZmZiIgc3RvcC1vcGFjaXR5PSIwIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjZmZmIiBzdG9wLW9wYWNpdHk9IjAiLz48L2xpbmVhckdyYWRpZW50PjxsaW5lYXJHcmFkaWVudCBpZD0iYiIgeDE9IjEiIHgyPSIwIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmZmIiBzdG9wLW9wYWNpdHk9IjAiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNmZmYiIHN0b3Atb3BhY2l0eT0iLjA4Ii8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImMiIHgxPSIxIiB4Mj0iMCIgeTE9IjEiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2ZmZiIgc3RvcC1vcGFjaXR5PSIuMDgiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNmZmYiIHN0b3Atb3BhY2l0eT0iLjE2Ii8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImQiIHgyPSIwIiB5MT0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmZmIiBzdG9wLW9wYWNpdHk9Ii4xNiIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2ZmZiIgc3RvcC1vcGFjaXR5PSIuMzMiLz48L2xpbmVhckdyYWRpZW50PjxsaW5lYXJHcmFkaWVudCBpZD0iZSIgeDI9IjEiIHkxPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNmZmYiIHN0b3Atb3BhY2l0eT0iLjMzIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjZmZmIiBzdG9wLW9wYWNpdHk9Ii42NiIvPjwvbGluZWFyR3JhZGllbnQ+PGxpbmVhckdyYWRpZW50IGlkPSJmIiB4Mj0iMSIgeTI9IjEiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2ZmZiIgc3RvcC1vcGFjaXR5PSIuNjYiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNmZmYiLz48L2xpbmVhckdyYWRpZW50PjxtYXNrIGlkPSJnIj48ZyBmaWxsPSJub25lIiBzdHJva2Utd2lkdGg9IjQwIj48cGF0aCBzdHJva2U9InVybCgjYSkiIGQ9Ik04Ni42LTUwYTEwMCAxMDAgMCAwIDEgMCAxMDAiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDEwMCAxMDApIi8+PHBhdGggc3Ryb2tlPSJ1cmwoI2IpIiBkPSJNODYuNiA1MEExMDAgMTAwIDAgMCAxIDAgMTAwIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMDAgMTAwKSIvPjxwYXRoIHN0cm9rZT0idXJsKCNjKSIgZD0iTTAgMTAwYTEwMCAxMDAgMCAwIDEtODYuNi01MCIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTAwIDEwMCkiLz48cGF0aCBzdHJva2U9InVybCgjZCkiIGQ9Ik0tODYuNiA1MGExMDAgMTAwIDAgMCAxIDAtMTAwIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMDAgMTAwKSIvPjxwYXRoIHN0cm9rZT0idXJsKCNlKSIgZD0iTS04Ni42LTUwQTEwMCAxMDAgMCAwIDEgMC0xMDAiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDEwMCAxMDApIi8+PHBhdGggc3Ryb2tlPSJ1cmwoI2YpIiBkPSJNMC0xMDBhMTAwIDEwMCAwIDAgMSA4Ni42IDUwIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMDAgMTAwKSIvPjwvZz48L21hc2s+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIHg9Ii0yMCIgeT0iLTIwIiBtYXNrPSJ1cmwoI2cpIiBmaWxsPSIjZmZmIi8+PC9zdmc+) no-repeat;\n  position: absolute;\n  width: 32px;\n  height: 32px;\n  left: 50%;\n  top: 50%;\n  margin-left: -16px;\n  margin-top: -16px;\n  -webkit-animation: OT_spin 2s linear infinite;\n  animation: OT_spin 2s linear infinite;\n}\n\n@-webkit-keyframes OT_spin {\n  100% {\n    -webkit-transform: rotate(360deg);\n  }\n}\n\n@keyframes OT_spin {\n  100% {\n    -webkit-transform: rotate(360deg);\n            transform: rotate(360deg);\n  }\n}\n\n.OT_publisher.OT_loading .OT_video-loading,\n.OT_subscriber.OT_loading .OT_video-loading {\n  display: block;\n}\n\n.OT_video-centering {\n  display: table;\n  width: 100%;\n  height: 100%;\n}\n\n.OT_video-container {\n  display: table-cell;\n  vertical-align: middle;\n}\n\n.OT_video-poster {\n  position: absolute;\n  z-index: 1;\n  width: 100%;\n  height: 100%;\n  display: none;\n\n  opacity: .25;\n\n  background-repeat: no-repeat;\n  background-image: url(data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgNDcxIDQ2NCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48bGluZWFyR3JhZGllbnQgaWQ9ImEiIHgyPSIwIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSI2Ni42NiUiIHN0b3AtY29sb3I9IiNmZmYiLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNmZmYiIHN0b3Atb3BhY2l0eT0iMCIvPjwvbGluZWFyR3JhZGllbnQ+PHBhdGggZmlsbD0idXJsKCNhKSIgZD0iTTc5IDMwOGMxNC4yNS02LjUgNTQuMjUtMTkuNzUgNzEtMjkgOS0zLjI1IDI1LTIxIDI1LTIxczMuNzUtMTMgMy0yMmMtMS43NS02Ljc1LTE1LTQzLTE1LTQzLTIuNSAzLTQuNzQxIDMuMjU5LTcgMS0zLjI1LTcuNS0yMC41LTQ0LjUtMTYtNTcgMS4yNS03LjUgMTAtNiAxMC02LTExLjI1LTMzLjc1LTgtNjctOC02N3MuMDczLTcuMzQ2IDYtMTVjLTMuNDguNjM3LTkgNC05IDQgMi41NjMtMTEuNzI3IDE1LTIxIDE1LTIxIC4xNDgtLjMxMi0xLjMyMS0xLjQ1NC0xMCAxIDEuNS0yLjc4IDE2LjY3NS04LjY1NCAzMC0xMSAzLjc4Ny05LjM2MSAxMi43ODItMTcuMzk4IDIyLTIyLTIuMzY1IDMuMTMzLTMgNi0zIDZzMTUuNjQ3LTguMDg4IDQxLTZjLTE5Ljc1IDItMjQgNi0yNCA2czc0LjUtMTAuNzUgMTA0IDM3YzcuNSA5LjUgMjQuNzUgNTUuNzUgMTAgODkgMy43NS0xLjUgNC41LTQuNSA5IDEgLjI1IDE0Ljc1LTExLjUgNjMtMTkgNjItMi43NSAxLTQtMy00LTMtMTAuNzUgMjkuNS0xNCAzOC0xNCAzOC0yIDQuMjUtMy43NSAxOC41LTEgMjIgMS4yNSA0LjUgMjMgMjMgMjMgMjNsMTI3IDUzYzM3IDM1IDIzIDEzNSAyMyAxMzVMMCA0NjRzLTMtOTYuNzUgMTQtMTIwYzUuMjUtNi4yNSAyMS43NS0xOS43NSA2NS0zNnoiLz48L3N2Zz4=);\n  background-size: auto 76%;\n}\n\n.OT_fit-mode-cover .OT_video-element {\n  -o-object-fit: cover;\n     object-fit: cover;\n}\n\n/* Workaround for iOS freezing issue when cropping videos */\n\n/* https://bugs.webkit.org/show_bug.cgi?id=176439 */\n\n@media only screen\n  and (orientation: portrait) {\n  .OT_subscriber.OT_ForceContain.OT_fit-mode-cover .OT_video-element {\n    -o-object-fit: contain !important;\n       object-fit: contain !important;\n  }\n}\n\n.OT_fit-mode-contain .OT_video-element {\n  -o-object-fit: contain;\n     object-fit: contain;\n}\n\n.OT_fit-mode-cover .OT_video-poster {\n  background-position: center bottom;\n}\n\n.OT_fit-mode-contain .OT_video-poster {\n  background-position: center;\n}\n\n.OT_audio-level-meter {\n  position: absolute;\n  width: 25%;\n  max-width: 224px;\n  min-width: 21px;\n  top: 0;\n  right: 0;\n  overflow: hidden;\n}\n\n.OT_audio-level-meter:before {\n  /* makes the height of the container equals its width */\n  content: '';\n  display: block;\n  padding-top: 100%;\n}\n\n.OT_audio-level-meter__bar {\n  position: absolute;\n  width: 192%; /* meter value can overflow of 8% */\n  height: 192%;\n  top: -96% /* half of the size */;\n  right: -96%;\n  border-radius: 50%;\n\n  background-color: rgba(0, 0, 0, .8);\n}\n\n.OT_audio-level-meter__audio-only-img {\n  position: absolute;\n  top: 22%;\n  right: 15%;\n  width: 40%;\n\n  opacity: .7;\n\n  background: url(data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgNzkgODYiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgZmlsbD0iI2ZmZiI+PHBhdGggZD0iTTkuNzU3IDQwLjkyNGMzLjczOC01LjE5MSAxMi43MTEtNC4zMDggMTIuNzExLTQuMzA4IDIuMjIzIDMuMDE0IDUuMTI2IDI0LjU4NiAzLjYyNCAyOC43MTgtMS40MDEgMS4zMDEtMTEuNjExIDEuNjI5LTEzLjM4LTEuNDM2LTEuMjI2LTguODA0LTIuOTU1LTIyLjk3NS0yLjk1NS0yMi45NzV6bTU4Ljc4NSAwYy0zLjczNy01LjE5MS0xMi43MTEtNC4zMDgtMTIuNzExLTQuMzA4LTIuMjIzIDMuMDE0LTUuMTI2IDI0LjU4Ni0zLjYyNCAyOC43MTggMS40MDEgMS4zMDEgMTEuNjExIDEuNjI5IDEzLjM4LTEuNDM2IDEuMjI2LTguODA0IDIuOTU1LTIyLjk3NSAyLjk1NS0yMi45NzV6Ii8+PHBhdGggZD0iTTY4LjY0NyA1OC42Yy43MjktNC43NTMgMi4zOC05LjU2MSAyLjM4LTE0LjgwNCAwLTIxLjQxMi0xNC4xMTUtMzguNzctMzEuNTI4LTM4Ljc3LTE3LjQxMiAwLTMxLjUyNyAxNy4zNTgtMzEuNTI3IDM4Ljc3IDAgNC41NDEuNTE1IDguOTM2IDEuODAyIDEyLjk1IDEuNjk4IDUuMjk1LTUuNTQyIDYuOTkxLTYuNjE2IDIuMDczQzIuNDEgNTUuMzk0IDAgNTEuNzg3IDAgNDguMTAzIDAgMjEuNTM2IDE3LjY4NSAwIDM5LjUgMCA2MS4zMTYgMCA3OSAyMS41MzYgNzkgNDguMTAzYzAgLjcxOC0yLjg5OSA5LjY5My0zLjI5MiAxMS40MDgtLjc1NCAzLjI5My03Ljc1MSAzLjU4OS03LjA2MS0uOTEyeiIvPjxwYXRoIGQ9Ik01LjA4NCA1MS4zODVjLS44MDQtMy43ODIuNTY5LTcuMzM1IDMuMTM0LTcuOTIxIDIuNjM2LS42MDMgNS40ODUgMi4xNSA2LjI4OSA2LjEzMi43OTcgMy45NDgtLjc1MiA3LjQ1Ny0zLjM4OCA3Ljg1OS0yLjU2Ni4zOTEtNS4yMzctMi4zMTgtNi4wMzQtNi4wN3ptNjguODM0IDBjLjgwNC0zLjc4Mi0uNTY4LTcuMzM1LTMuMTMzLTcuOTIxLTIuNjM2LS42MDMtNS40ODUgMi4xNS02LjI4OSA2LjEzMi0uNzk3IDMuOTQ4Ljc1MiA3LjQ1NyAzLjM4OSA3Ljg1OSAyLjU2NS4zOTEgNS4yMzctMi4zMTggNi4wMzQtNi4wN3ptLTIuMDM4IDguMjg4Yy0uOTI2IDE5LjY1OS0xNS4xMTIgMjQuNzU5LTI1Ljg1OSAyMC40NzUtNS40MDUtLjYwNi0zLjAzNCAxLjI2Mi0zLjAzNCAxLjI2MiAxMy42NjEgMy41NjIgMjYuMTY4IDMuNDk3IDMxLjI3My0yMC41NDktLjU4NS00LjUxMS0yLjM3OS0xLjE4Ny0yLjM3OS0xLjE4N3oiLz48cGF0aCBkPSJNNDEuNjYyIDc4LjQyMmw3LjU1My41NWMxLjE5Mi4xMDcgMi4xMiAxLjE1MyAyLjA3MiAyLjMzNWwtLjEwOSAyLjczOGMtLjA0NyAxLjE4Mi0xLjA1MSAyLjA1NC0yLjI0MyAxLjk0NmwtNy41NTMtLjU1Yy0xLjE5MS0uMTA3LTIuMTE5LTEuMTUzLTIuMDcyLTIuMzM1bC4xMDktMi43MzdjLjA0Ny0xLjE4MiAxLjA1Mi0yLjA1NCAyLjI0My0xLjk0N3oiLz48L2c+PC9zdmc+) no-repeat center;\n}\n\n.OT_audio-level-meter__audio-only-img:before {\n  /* makes the height of the container equals its width */\n  content: '';\n  display: block;\n  padding-top: 100%;\n}\n\n.OT_audio-level-meter__value {\n  position: absolute;\n  border-radius: 50%;\n  background-image: radial-gradient(circle, rgba(151, 206, 0, 1) 0%, rgba(151, 206, 0, 0) 100%);\n}\n\n.OT_audio-level-meter.OT_mode-off {\n    display: none;\n}\n\n.OT_audio-level-meter.OT_mode-on,\n.OT_audio-only .OT_audio-level-meter.OT_mode-auto {\n  display: block;\n}\n\n.OT_audio-only.OT_publisher .OT_video-element,\n.OT_audio-only.OT_subscriber .OT_video-element {\n  display: none;\n}\n\n.OT_video-disabled-indicator {\n  opacity: 1;\n  border: none;\n  display: none;\n  position: absolute;\n  background-color: transparent;\n  background-repeat: no-repeat;\n  background-position: bottom right;\n  pointer-events: none;\n  top: 0;\n  left: 0;\n  bottom: 3px;\n  right: 3px;\n}\n\n.OT_video-disabled {\n  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFIAAAAoCAYAAABtla08AAAINUlEQVR42u2aaUxUVxTHcRBmAAEBRVTK4sKwDIsg+wCK7CqIw1CN1YobbbS2qYlJ06Qx1UpdqMbYWq2pSzWmH6ytNbXWJY1Lq7VuqBERtW64V0XFLYae0/xvcp3MMAMzDz6IyT/ge2ce5/7ucpY3Ts3NzZ1ygF57AJ0gO0G2jyZPmdbFyclJSAV1EeoEaUUSLGdSV5KLLFxzFmA7QVqGqDqjixhWkxCVeyRVl38wM6bwj6yYItYK47BAuu9B0gCqs6Ng2r494KQtkj/Dz2jHraw6qw2fdSE4rNmcCPCvZONP8iF1I6kdBdMaQJWZLeJqRWa2kPJAxXY+GxE+zxLI03GRh8lGSwoi9WCY8FWlCEh+8JOnT7MfPGjMuXX7Tt61hoaCi/9cKmKdv3BxeEtim/UbNpnbQiqF4MmT7kqrbr4lkMcTo46TTSpJB5g+8NHuVWnWuaampvhmO/7duHmrGluoO4C6OsJZGRrkDIld43ZqUOTnlkDSmXmabAoBU0vqBf+6KgFSxQ9++uzZ8rZApM81TJ8xM5me0Z/UF7PuBmdVdkGEb5gYDeQmyZNW3SJLIP9Kj64lGyMpmxRN6sOfIbkoAhKOdnv2/PmB1kB88eLFo+olyyrps3rSINIAzLonnqlqK8R9w+L86vtrt5L2nhug3Vc3ULu/Liz8AOuXESlZZONH6kmr7gtLIA9lRNeRzVukAvj3BslLnJNKgfScO69K+/Lly0ZbQW7e8tNK+pwBjqaSIjDrXgJkW1ciAZvbQjQ+RDahpBBKd5ZZsqN758hmImk4KQHnpDd8UwSkCyJarx07d4+3BeKJmlMHyX4qaRxpBCmNFE4KENvHDpAutVERn1kCVBMfeRRgYvZnx62wZPdnZkw92VQA5GClQXYRBze2S+iJmpPVVoJLA9l9QKokjcWKTCT1R5rhLg70NuSsziT16diIKkuAjibrTpJNDkn/e17CahtAjlAWJAYkb29Sb1LE9Rs391kILk8mVkyuIpuZcLKUlEmKkra1WuSTNuesEPzwoEploSVAh9Oiz+BIyd9dOHhtx4OEpFpVg6gbNK3yXX1j48N6U5Dz5i/gc/FDrMY3sTLiSMEkXxGxzUEUAGnbxlPaksMlHUXWAlHS8URCPseSohZbCSLjSSU7ixLXdzhIWVKq4Y7t2a/2bN0qGeKly1fYsVmk6RgIDz4J0bonyUOcjeYqm/8hRoYbWkigV2NH9CHAS60EkUkkw47hSRs6FqT1LR5AVcsrueXlK1d5AO+RpmBrZZEiefByytPCanRGNLZY0uF52gNDYr9sCRB8MHY0SJu2OJWKS2WQV65e4y31DmkCImEi0hBfufRime0RIhpbKen0/Ny9OYNW2ghyYytABjNIaxNuKttAWk6HPLn0k0FevdZwFinPWFIuKZbUV16NVko6jbWSDoPO3pOf8K0jQWLSQ0S9bdpkYck+m7vfWpAiHfKgBsZiGSSt0FqcTeU8WETqAHE2CgcAVd3Gkm4MD3xXYeI6B4NMItvKbcUpQ9gP+KMWnSsW+TaYJtoo+avBWLoKoK0CCSDud+7eXWQGZAXqV3YoQjQCfixJ8+fzj9ta3JHhlUeJ8wJOY2ws6eRKpPS3oqTvHAESEz9ya0naXL5WH6pt3FqSOhTHkTcKEXc6k1POh4Q9YJu/03TT4a8PoGMFI4i2EqSbOZAYaBkpCyD92RkG6KCSbjI/H0HEISBnlOZPFdcEzI2GTO4KBZICGKyAKLTEmJOB2txf5MbgohBINCl4FTqmpJMB2W+HiRn1Q2l6lXyPmiEP6VVE2TfGoaMYrHyPdtAnyI0jEOn9RLWmNEhvBBE7SjpFQZaShtLK+1S+T12lRwxUvrZlVPp8jE1PikeO7C/nyEqBDCB1t7+kUx4kKUWclea0yZC5BIGpiJSNSD9QgFR0RQKkL6KxHSWdsiARHJNYewoGrzG1/bk4dTPSunL2EyDjcbb7MQ+lQfZmkKiN7SjpFAM5CWAyGcwyY84YsZ1lUcbRNNtQMAdtQWGvQ0DyVjzYAKQfQFodeAeC1C8vzymXIZqD+ZEh/2OyLSalS/3VbnJZ+VqDXGjMrTCFuK4s66vVZUNfqaDolcbjOcb899sLpEE+I20GifywXe2QR3KElu99PzqjGufhREqB1pjCnG3IL3fY1v733r2FMsiGhutn0LAoJWWIGbPxjKwgjUbF0m52mPhigrpdXOecEq9pR6MkHbu2LOtrcZ9y3d0ODTb15y9MePz48aF79+8fvXnr9sljx2u2I7KNxDuaMPGVECoRs7mC4eT7SIruFNfNHK15MKuM2evwNq+4qjxvGnd5CHwNNynawW4cOlUZdG8b55IIJHmkItwrZHH6QxB3OSL9kTtAGpIvZiQB3Z4SKBfXQtEE9sashWAW87Bt3sYZNR6zn4uzJwWDKUKXfaKCdqUoBpLxSjYe9nqGiwWRBGipuGZ3Qm76itYLbbJI/PEhUApfw73uOIy9xfse3M9F9BuFJHcYrseSouGkHtCVtkuGTTikI8XgZzhg9SeF4VqcvSWiaSvNHQ8JwkNjIfEHemCmNLD1RaEfLs18mlgNuN6PFALHo7CyU5W2g00gFAQF4ozvibH04muwDbWraSFAyt/AAMzewgGR8uCeWn77xzBxPxgzPRCDDMZ14bQ/3jqGKGoHf2Hjgx3kw5LbaJDYWb52t9FMgw4AuWNWukNeuOYqOsmQi2jgws4PA/DD/z0B2x0/veCs4naw0cgybezid7X9jV3rX2RSs0wfLkll4pBGcgifg+NYxe1kJ2ycTaRq66uG/wBOl0vjcw70xwAAAABJRU5ErkJggg==);\n  background-size: 33px auto;\n}\n\n.OT_video-disabled-warning {\n  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFIAAAAoCAYAAABtla08AAAGMElEQVR4Ae2aA7D0yBaAc7oH12vbRmlLaxYWb23btm3btm2899a2bWuYtPZ01cmtU9lJrib315yqr9I3Oem/5/s7acwEnehEJzoxCcX2O+wEeIgRBDDaGjAZOgQ6ihRpLklHZDJIXK1WWymMIhGGkVBKCWMM+Iv/f/b5t7faYtM/sGgIS7j8RNLjceUVl41GvGN1BFiHy9sgtRWaYbhvuVQ6o1VOvV5/tLe3dyssKoZuh8xClkDEi2MMS6ZjR0cScxdK/+HgnJsmLccYOx0e/PUGUqfTJDEHkV5go9lcMQoj4R8RpSIRRUr4a9baTJFCCNfqESKJ7RYJibK0xoi05EhFRTxMi1Rit6xHAuLaKRLwEVi6q1x+EhlVpd3d3Wfh4VQkQhRhxthYLg7SRGqdLlIp7UVOHf+JhEhEMscUolVje3p63saeeOFoKsT7fjj++BNuw2I/0ouUENmGaQcQEilQvUU6xuWC0kqmVWCt8df6kG7WLoFA20VSCOyNh0RKPT+SyrTWtQsvuvTYCy84z3+oAdbgAiLGIvHjTz6bFuu/B3lKKfVkFKknwih6EnnipZdfXQZzepAupXSGSCfwUGZtkrx3t/0dSQGnnXbmdocdetArQoj+4VR23wMP3bj/vnv9Sv/rBmkish09ca655thHSrlWq4TFF1vkNDxsgjiUnPqZnHPABIq47jx7pPMcecShfz7x1DO7D6eit99576X1113nVd8rqLGAuDaNitJonTGIqHgQGQjDsJglMrUH5iDSEQbRa6y2yrNvv/PuWVmV/PTzLz8steTit1B9FtGJeZrJksmWdBzBMcami4xUkaY1A1Qe94WIaPGBApJhaERrLrXkElf8+NPPz6YMLs1DDjn0Wn9PnI/UiQadM4jNEkhzVsEGE8nIHESM1j5/KqRX+/IEiOQ/yifNBlEkpnb00cccesbpp13T3983H88/48xzrrvm6it/8U5JXgX5G6nSvSq1R5LATR7aYGkwMG1RSwkWABH+4jUb3vT/uJ1Z0xpjraTBRltrxUQhksIRmgTJyy69+Pv99tv3qYX6FxgU+fU33352xGEHf5wisU7nNWJpZRMkAjZ6aIN1mwV7h29Jo2wCHlveu/GV169z65E+T6koexCh6c+EEiky3lnxQKFjUeVyOeI5AOBzIiayRhJryd7YYnkIHgvB0qk9Tdql6N3XH4bRUIOIIIKJSiRb0hkSEpZKRd1CpEq8GxtIyCVmDSgFl94GacTgaJw1rUlYhYng0c4ewaUsmKRIJjpiqMSOCh9QeI+UYECmtQIsxEu6OorEcv6Rl0gu0woh8MhFkmSCTXVI4pC704WCFRJvSRNJSzrMMEZO2iKZTCHAZYnmvXCny7ed5vfZK3viHSBdIFCKEFj2+nt+73nw8m2uedcLJlktA++VNMEPaR45aYukcKnnCfY3/DFbZS8t7eHxNgsPM0N1hXhJJwwM1QbpoQFlog2R13a/zBxEYHAQEUYUM6qiVwEyBYoM6JFNF2kFLelI5KQf+fVI4dJFCguDS7oAyx2R6SFQJKRedSDj/cMg/RXQ6ZE05GSIDAaXdCi1I3L021SQWNJ1RLY5OiIdL4/yvuw8ADfWPFrSciaMyH8tEQPwf1uGG54g5+KlJGTmsrxsQdl5PKidnPFe2QS///7Hu+VS6WX/HYnf0sevGL7lXydwod2/9DykZq0s5yff0sgSWCigNOH7TPHL7ufj+/TH8P/+qYpL4HkBDiRYpEXeM8/89/9zzjn7EtY64dfd1nqccM7Bs8+9MKy8555/8TnKS+5MufH6EZVASkgPzf+mJXroet17JirU0ALST3nT0y5ONyLpeo1y64ih+vuQfsoTOeRFSJXa+SvyB90TUmdw49EjLaKpMQ0mzEeTzkWsd/oI6fzfiKM8gWg6X6OjpXstu5ZHnmIb0GFiu29MIUfUewkmVrEN3RqVQ/bY8FzNcquMBv/pCNUZ5pHHem01KdN/I/DG66/lLhKSvTO5M84kav5C5z2ZfyAivi9i9VGd45RH7UWJbjwGG/7NYsRECt7jiOToHedKAui8SW4CsxyRc54mKH/8f7ELhCCACyNcIl/wI+FaAJyc8yzRtinQPzWzuFZrFHq/AAAAAElFTkSuQmCC);\n  background-size: 33px auto;\n}\n\n.OT_video-disabled-indicator.OT_active {\n  display: block;\n}\n\n.OT_audio-blocked-indicator {\n  opacity: 1;\n  border: none;\n  display: none;\n  position: absolute;\n  background-color: transparent;\n  background-repeat: no-repeat;\n  background-position: center;\n  pointer-events: none;\n  top: 0;\n  left: 0;\n  bottom: 0;\n  right: 0;\n}\n\n.OT_audio-blocked {\n  background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB3aWR0aD0iMTUwIiBoZWlnaHQ9IjkwIj48ZGVmcz48cGF0aCBkPSJNNjcgMTJMNi40NDggNzIuNTUyIDAgMzFWMThMMjYgMGw0MSAxMnptMyA3bDYgNDctMjkgMTgtMzUuNTAyLTYuNDk4TDcwIDE5eiIgaWQ9ImEiLz48L2RlZnM+PHJlY3Qgd2lkdGg9IjE1MCIgaGVpZ2h0PSI5MCIgcng9IjM1IiByeT0iNDUiIG9wYWNpdHk9Ii41Ii8+PGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzNikiPjxtYXNrIGlkPSJiIiBmaWxsPSIjZmZmIj48dXNlIHhsaW5rOmhyZWY9IiNhIi8+PC9tYXNrPjxwYXRoIGQ9Ik0zOS4yNDkgNTEuMzEyYy42OTcgMTAuMzcgMi43ODUgMTcuODk3IDUuMjUxIDE3Ljg5NyAzLjAzOCAwIDUuNS0xMS40MTcgNS41LTI1LjVzLTIuNDYyLTI1LjUtNS41LTI1LjVjLTIuNTEgMC00LjYyOCA3Ljc5Ny01LjI4NyAxOC40NTNBOC45ODkgOC45ODkgMCAwIDEgNDMgNDRhOC45ODggOC45ODggMCAwIDEtMy43NTEgNy4zMTJ6TTIwLjk4NSAzMi4yMjRsMTUuNzQ2LTE2Ljg3N2E3LjM4NSA3LjM4NSAwIDAgMSAxMC4zNzQtLjQyQzUxLjcwMiAxOS4xMTQgNTQgMjkuMjA4IDU0IDQ1LjIwOGMwIDE0LjUyNy0yLjM0MyAyMy44OC03LjAzIDI4LjA1OGE3LjI4IDcuMjggMCAwIDEtMTAuMTY4LS40NjhMMjAuNDA1IDU1LjIyNEgxMmE1IDUgMCAwIDEtNS01di0xM2E1IDUgMCAwIDEgNS01aDguOTg1eiIgZmlsbD0iI0ZGRiIgbWFzaz0idXJsKCNiKSIvPjwvZz48cGF0aCBkPSJNMTA2LjUgMTMuNUw0NC45OTggNzUuMDAyIiBzdHJva2U9IiNGRkYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9nPjwvc3ZnPg==);\n  background-size: 90px auto;\n}\n\n.OT_container-audio-blocked {\n  cursor: pointer;\n}\n\n.OT_container-audio-blocked.OT_mini .OT_edge-bar-item {\n  display: none;\n}\n\n.OT_container-audio-blocked .OT_mute {\n  display: none;\n}\n\n.OT_audio-blocked-indicator.OT_active {\n  display: block;\n}\n\n.OT_video-unsupported {\n  opacity: 1;\n  border: none;\n  display: none;\n  position: absolute;\n  background-color: transparent;\n  background-repeat: no-repeat;\n  background-position: center;\n  background-image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOTciIGhlaWdodD0iOTAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiPjxkZWZzPjxwYXRoIGQ9Ik03MCAxMkw5LjQ0OCA3Mi41NTIgMCA2MmwzLTQ0TDI5IDBsNDEgMTJ6bTggMmwxIDUyLTI5IDE4LTM1LjUwMi02LjQ5OEw3OCAxNHoiIGlkPSJhIi8+PC9kZWZzPjxnIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoOCAzKSI+PG1hc2sgaWQ9ImIiIGZpbGw9IiNmZmYiPjx1c2UgeGxpbms6aHJlZj0iI2EiLz48L21hc2s+PHBhdGggZD0iTTkuMTEgMjAuOTY4SDQ4LjFhNSA1IDAgMCAxIDUgNVY1OC4xOGE1IDUgMCAwIDEtNSA1SDkuMTFhNSA1IDAgMCAxLTUtNVYyNS45N2E1IDUgMCAwIDEgNS01em00Ny4wOCAxMy4zOTRjMC0uMzQ1IDUuNDcyLTMuMTU5IDE2LjQxNS04LjQ0M2EzIDMgMCAwIDEgNC4zMDQgMi43MDJ2MjYuODM1YTMgMyAwIDAgMS00LjMwNSAyLjcwMWMtMTAuOTQyLTUuMjg2LTE2LjQxMy04LjEtMTYuNDEzLTguNDQ2VjM0LjM2MnoiIGZpbGw9IiNGRkYiIG1hc2s9InVybCgjYikiLz48L2c+PHBhdGggZD0iTTgxLjUgMTYuNUwxOS45OTggNzguMDAyIiBzdHJva2U9IiNGRkYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9nPjwvc3ZnPg==);\n  background-size: 58px auto;\n  pointer-events: none;\n  top: 0;\n  left: 0;\n  bottom: 0;\n  right: 0;\n  margin-top: -30px;\n}\n\n.OT_video-unsupported-bar {\n  display: none;\n  position: absolute;\n  width: 192%; /* copy the size of the audio meter bar for symmetry */\n  height: 192%;\n  top: -96% /* half of the size */;\n  left: -96%;\n  border-radius: 50%;\n\n  background-color: rgba(0, 0, 0, .8);\n}\n\n.OT_video-unsupported-img {\n  display: none;\n  position: absolute;\n  top: 11%;\n  left: 15%;\n  width: 70%;\n  opacity: .7;\n  background-image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOTciIGhlaWdodD0iOTAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiPjxkZWZzPjxwYXRoIGQ9Ik03MCAxMkw5LjQ0OCA3Mi41NTIgMCA2MmwzLTQ0TDI5IDBsNDEgMTJ6bTggMmwxIDUyLTI5IDE4LTM1LjUwMi02LjQ5OEw3OCAxNHoiIGlkPSJhIi8+PC9kZWZzPjxnIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoOCAzKSI+PG1hc2sgaWQ9ImIiIGZpbGw9IiNmZmYiPjx1c2UgeGxpbms6aHJlZj0iI2EiLz48L21hc2s+PHBhdGggZD0iTTkuMTEgMjAuOTY4SDQ4LjFhNSA1IDAgMCAxIDUgNVY1OC4xOGE1IDUgMCAwIDEtNSA1SDkuMTFhNSA1IDAgMCAxLTUtNVYyNS45N2E1IDUgMCAwIDEgNS01em00Ny4wOCAxMy4zOTRjMC0uMzQ1IDUuNDcyLTMuMTU5IDE2LjQxNS04LjQ0M2EzIDMgMCAwIDEgNC4zMDQgMi43MDJ2MjYuODM1YTMgMyAwIDAgMS00LjMwNSAyLjcwMWMtMTAuOTQyLTUuMjg2LTE2LjQxMy04LjEtMTYuNDEzLTguNDQ2VjM0LjM2MnoiIGZpbGw9IiNGRkYiIG1hc2s9InVybCgjYikiLz48L2c+PHBhdGggZD0iTTgxLjUgMTYuNUwxOS45OTggNzguMDAyIiBzdHJva2U9IiNGRkYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9nPjwvc3ZnPg==);\n  background-repeat: no-repeat;\n  background-position: center;\n  background-size: 100% auto;\n}\n\n.OT_video-unsupported-img:before {\n  /* makes the height of the container 93% of its width (90/97 px) */\n  content: '';\n  display: block;\n  padding-top: 93%;\n}\n\n.OT_video-unsupported-text {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-pack: center;\n      -ms-flex-pack: center;\n          justify-content: center;\n  -webkit-box-align: center;\n      -ms-flex-align: center;\n          align-items: center;\n  text-align: center;\n  height: 100%;\n  margin-top: 40px;\n}\n"
 
 /***/ }),
 
-/***/ "../../../../../src/app/components/layouts/layout-best-fit/layout-best-fit.component.ts":
+/***/ "./src/app/components/layouts/layout-best-fit/layout-best-fit.component.html":
+/***/ (function(module, exports) {
+
+module.exports = "<div id=\"layout\" class=\"bounds\">\n  <div *ngFor=\"let s of streams\" class=\"OT_root OT_publisher custom-class\">\n    <div class=\"OT_widget-container\" style=\"width: 100%; height: 100%;\">\n      <video [id]=\"'native-video-' + s.streamId\" autoplay=\"true\" [srcObject]=\"s.getMediaStream()\" (playing)=\"onVideoPlaying($event)\"></video>\n    </div>\n  </div>\n</div>\n"
+
+/***/ }),
+
+/***/ "./src/app/components/layouts/layout-best-fit/layout-best-fit.component.ts":
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return LayoutBestFitComponent; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__("../../../core/esm5/core.js");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_router__ = __webpack_require__("../../../router/esm5/router.js");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_openvidu_browser__ = __webpack_require__("../../../../../../../../../openvidu-browser/lib/OpenVidu/index.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__("./node_modules/@angular/core/esm5/core.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_router__ = __webpack_require__("./node_modules/@angular/router/esm5/router.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_openvidu_browser__ = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/index.js");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_openvidu_browser___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_openvidu_browser__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__openvidu_layout__ = __webpack_require__("./src/app/components/layouts/openvidu-layout.ts");
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -13659,12 +14488,13 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
+
 var LayoutBestFitComponent = (function () {
-    function LayoutBestFitComponent(route) {
+    function LayoutBestFitComponent(route, appRef) {
         var _this = this;
         this.route = route;
-        this.numberOfVideos = 0;
-        this.remoteStreams = [];
+        this.appRef = appRef;
+        this.streams = [];
         this.route.params.subscribe(function (params) {
             _this.sessionId = params.sessionId;
             _this.secret = params.secret;
@@ -13672,6 +14502,13 @@ var LayoutBestFitComponent = (function () {
     }
     LayoutBestFitComponent.prototype.beforeunloadHandler = function () {
         this.leaveSession();
+    };
+    LayoutBestFitComponent.prototype.sizeChange = function (event) {
+        var _this = this;
+        clearTimeout(this.resizeTimeout);
+        this.resizeTimeout = setTimeout(function () {
+            _this.openviduLayout.updateLayout();
+        }, 20);
     };
     LayoutBestFitComponent.prototype.ngOnDestroy = function () {
         this.leaveSession();
@@ -13682,97 +14519,56 @@ var LayoutBestFitComponent = (function () {
         var fullSessionId = 'wss://' + location.hostname + ':8443/' + this.sessionId + '?secret=' + this.secret + '&recorder=true';
         this.session = OV.initSession(fullSessionId);
         this.session.on('streamCreated', function (event) {
-            _this.numberOfVideos++;
+            var subscriber = _this.session.subscribe(event.stream, '');
             _this.addRemoteStream(event.stream);
-            _this.session.subscribe(event.stream, '');
         });
         this.session.on('streamDestroyed', function (event) {
-            _this.numberOfVideos--;
             event.preventDefault();
             _this.deleteRemoteStream(event.stream);
+            _this.openviduLayout.updateLayout();
         });
         this.session.connect(null, function (error) {
             if (error) {
                 console.error(error);
             }
         });
+        this.openviduLayout = new __WEBPACK_IMPORTED_MODULE_3__openvidu_layout__["a" /* OpenViduLayout */]();
+        this.openviduLayout.initLayoutContainer(document.getElementById('layout'), {
+            maxRatio: 3 / 2,
+            minRatio: 9 / 16,
+            fixedRatio: false,
+            bigClass: 'OV_big',
+            bigPercentage: 0.8,
+            bigFixedRatio: false,
+            bigMaxRatio: 3 / 2,
+            bigMinRatio: 9 / 16,
+            bigFirst: true,
+            animate: true // Whether you want to animate the transitions
+        });
     };
     LayoutBestFitComponent.prototype.addRemoteStream = function (stream) {
-        switch (true) {
-            case (this.numberOfVideos <= 2):
-                if (this.remoteStreams[0] == null) {
-                    this.remoteStreams[0] = [];
-                }
-                this.remoteStreams[0].push(stream);
-                break;
-            case (this.numberOfVideos <= 4):
-                if (this.remoteStreams[1] == null) {
-                    this.remoteStreams[1] = [];
-                }
-                this.remoteStreams[1].push(stream);
-                break;
-            case (this.numberOfVideos <= 5):
-                this.remoteStreams[0].push(stream);
-                break;
-            case (this.numberOfVideos <= 6):
-                this.remoteStreams[1].push(stream);
-                break;
-            default:
-                if (this.remoteStreams[2] == null) {
-                    this.remoteStreams[2] = [];
-                }
-                this.remoteStreams[2].push(stream);
-                break;
-        }
+        this.streams.push(stream);
+        this.appRef.tick();
     };
     LayoutBestFitComponent.prototype.deleteRemoteStream = function (stream) {
-        for (var i = 0; i < this.remoteStreams.length; i++) {
-            var index = this.remoteStreams[i].indexOf(stream, 0);
-            if (index > -1) {
-                this.remoteStreams[i].splice(index, 1);
-                this.reArrangeVideos();
-                break;
-            }
+        var index = this.streams.indexOf(stream, 0);
+        if (index > -1) {
+            this.streams.splice(index, 1);
         }
-    };
-    LayoutBestFitComponent.prototype.reArrangeVideos = function () {
-        switch (true) {
-            case (this.numberOfVideos === 1):
-                if (this.remoteStreams[0].length === 0) {
-                    this.remoteStreams[0].push(this.remoteStreams[1].pop());
-                }
-                break;
-            case (this.numberOfVideos === 2):
-                if (this.remoteStreams[0].length === 1) {
-                    this.remoteStreams[0].push(this.remoteStreams[1].pop());
-                }
-                break;
-            case (this.numberOfVideos === 3):
-                if (this.remoteStreams[0].length === 1) {
-                    this.remoteStreams[0].push(this.remoteStreams[1].pop());
-                }
-                break;
-            case (this.numberOfVideos === 4):
-                if (this.remoteStreams[0].length === 3) {
-                    this.remoteStreams[1].unshift(this.remoteStreams[0].pop());
-                }
-                break;
-            case (this.numberOfVideos === 5):
-                if (this.remoteStreams[0].length === 2) {
-                    this.remoteStreams[0].push(this.remoteStreams[1].shift());
-                }
-                break;
-        }
-        this.remoteStreams = this.remoteStreams.filter(function (array) { return array.length > 0; });
+        this.appRef.tick();
     };
     LayoutBestFitComponent.prototype.leaveSession = function () {
         if (this.session) {
             this.session.disconnect();
         }
         ;
-        this.remoteStreams = [];
-        this.numberOfVideos = 0;
+        this.streams = [];
         this.session = null;
+    };
+    LayoutBestFitComponent.prototype.onVideoPlaying = function (event) {
+        var video = event.target;
+        video.parentElement.parentElement.classList.remove('custom-class');
+        this.openviduLayout.updateLayout();
     };
     __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["A" /* HostListener */])('window:beforeunload'),
@@ -13780,13 +14576,20 @@ var LayoutBestFitComponent = (function () {
         __metadata("design:paramtypes", []),
         __metadata("design:returntype", void 0)
     ], LayoutBestFitComponent.prototype, "beforeunloadHandler", null);
+    __decorate([
+        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["A" /* HostListener */])('window:resize', ['$event']),
+        __metadata("design:type", Function),
+        __metadata("design:paramtypes", [Object]),
+        __metadata("design:returntype", void 0)
+    ], LayoutBestFitComponent.prototype, "sizeChange", null);
     LayoutBestFitComponent = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
             selector: 'app-layout-best-fit',
-            template: __webpack_require__("../../../../../src/app/components/layouts/layout-best-fit/layout-best-fit.component.html"),
-            styles: [__webpack_require__("../../../../../src/app/components/layouts/layout-best-fit/layout-best-fit.component.css")]
+            template: __webpack_require__("./src/app/components/layouts/layout-best-fit/layout-best-fit.component.html"),
+            styles: [__webpack_require__("./src/app/components/layouts/layout-best-fit/layout-best-fit.component.css")],
+            encapsulation: __WEBPACK_IMPORTED_MODULE_0__angular_core__["_15" /* ViewEncapsulation */].None
         }),
-        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1__angular_router__["a" /* ActivatedRoute */]])
+        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1__angular_router__["a" /* ActivatedRoute */], __WEBPACK_IMPORTED_MODULE_0__angular_core__["g" /* ApplicationRef */]])
     ], LayoutBestFitComponent);
     return LayoutBestFitComponent;
 }());
@@ -13795,37 +14598,337 @@ var LayoutBestFitComponent = (function () {
 
 /***/ }),
 
-/***/ "../../../../../src/app/components/session-details/session-details.component.css":
-/***/ (function(module, exports, __webpack_require__) {
+/***/ "./src/app/components/layouts/openvidu-layout.ts":
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
-exports = module.exports = __webpack_require__("../../../../css-loader/lib/css-base.js")(false);
-// imports
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return OpenViduLayout; });
+var OpenViduLayout = (function () {
+    function OpenViduLayout() {
+    }
+    OpenViduLayout.prototype.fixAspectRatio = function (elem, width) {
+        var sub = elem.querySelector('.OT_root');
+        if (sub) {
+            // If this is the parent of a subscriber or publisher then we need
+            // to force the mutation observer on the publisher or subscriber to
+            // trigger to get it to fix it's layout
+            var oldWidth = sub.style.width;
+            sub.style.width = width + 'px';
+            // sub.style.height = height + 'px';
+            sub.style.width = oldWidth || '';
+        }
+    };
+    OpenViduLayout.prototype.positionElement = function (elem, x, y, width, height, animate) {
+        var _this = this;
+        var targetPosition = {
+            left: x + 'px',
+            top: y + 'px',
+            width: width + 'px',
+            height: height + 'px'
+        };
+        this.fixAspectRatio(elem, width);
+        if (animate && $) {
+            $(elem).stop();
+            $(elem).animate(targetPosition, animate.duration || 200, animate.easing || 'swing', function () {
+                _this.fixAspectRatio(elem, width);
+                if (animate.complete) {
+                    animate.complete.call(_this);
+                }
+            });
+        }
+        else {
+            $(elem).css(targetPosition);
+        }
+        this.fixAspectRatio(elem, width);
+    };
+    OpenViduLayout.prototype.getVideoRatio = function (elem) {
+        if (!elem) {
+            return 3 / 4;
+        }
+        var video = elem.querySelector('video');
+        if (video && video.videoHeight && video.videoWidth) {
+            return video.videoHeight / video.videoWidth;
+        }
+        else if (elem.videoHeight && elem.videoWidth) {
+            return elem.videoHeight / elem.videoWidth;
+        }
+        return 3 / 4;
+    };
+    OpenViduLayout.prototype.getCSSNumber = function (elem, prop) {
+        var cssStr = $(elem).css(prop);
+        return cssStr ? parseInt(cssStr, 10) : 0;
+    };
+    // Really cheap UUID function
+    OpenViduLayout.prototype.cheapUUID = function () {
+        return (Math.random() * 100000000).toFixed(0);
+    };
+    OpenViduLayout.prototype.getHeight = function (elem) {
+        var heightStr = $(elem).css('height');
+        return heightStr ? parseInt(heightStr, 10) : 0;
+    };
+    OpenViduLayout.prototype.getWidth = function (elem) {
+        var widthStr = $(elem).css('width');
+        return widthStr ? parseInt(widthStr, 10) : 0;
+    };
+    OpenViduLayout.prototype.getBestDimensions = function (minR, maxR, count, WIDTH, HEIGHT, targetHeight) {
+        var maxArea, targetCols, targetRows, targetWidth, tWidth, tHeight, tRatio;
+        // Iterate through every possible combination of rows and columns
+        // and see which one has the least amount of whitespace
+        for (var i = 1; i <= count; i++) {
+            var colsAux = i;
+            var rowsAux = Math.ceil(count / colsAux);
+            // Try taking up the whole height and width
+            tHeight = Math.floor(HEIGHT / rowsAux);
+            tWidth = Math.floor(WIDTH / colsAux);
+            tRatio = tHeight / tWidth;
+            if (tRatio > maxR) {
+                // We went over decrease the height
+                tRatio = maxR;
+                tHeight = tWidth * tRatio;
+            }
+            else if (tRatio < minR) {
+                // We went under decrease the width
+                tRatio = minR;
+                tWidth = tHeight / tRatio;
+            }
+            var area = (tWidth * tHeight) * count;
+            // If this width and height takes up the most space then we're going with that
+            if (maxArea === undefined || (area > maxArea)) {
+                maxArea = area;
+                targetHeight = tHeight;
+                targetWidth = tWidth;
+                targetCols = colsAux;
+                targetRows = rowsAux;
+            }
+        }
+        return {
+            maxArea: maxArea,
+            targetCols: targetCols,
+            targetRows: targetRows,
+            targetHeight: targetHeight,
+            targetWidth: targetWidth,
+            ratio: targetHeight / targetWidth
+        };
+    };
+    ;
+    OpenViduLayout.prototype.arrange = function (children, WIDTH, HEIGHT, offsetLeft, offsetTop, fixedRatio, minRatio, maxRatio, animate) {
+        var targetHeight;
+        var count = children.length;
+        var dimensions;
+        if (!fixedRatio) {
+            dimensions = this.getBestDimensions(minRatio, maxRatio, count, WIDTH, HEIGHT, targetHeight);
+        }
+        else {
+            // Use the ratio of the first video element we find to approximate
+            var ratio = this.getVideoRatio(children.length > 0 ? children[0] : null);
+            dimensions = this.getBestDimensions(ratio, ratio, count, WIDTH, HEIGHT, targetHeight);
+        }
+        // Loop through each stream in the container and place it inside
+        var x = 0, y = 0;
+        var rows = [];
+        var row;
+        // Iterate through the children and create an array with a new item for each row
+        // and calculate the width of each row so that we know if we go over the size and need
+        // to adjust
+        for (var i = 0; i < children.length; i++) {
+            if (i % dimensions.targetCols === 0) {
+                // This is a new row
+                row = {
+                    children: [],
+                    width: 0,
+                    height: 0
+                };
+                rows.push(row);
+            }
+            var elem = children[i];
+            row.children.push(elem);
+            var targetWidth = dimensions.targetWidth;
+            targetHeight = dimensions.targetHeight;
+            // If we're using a fixedRatio then we need to set the correct ratio for this element
+            if (fixedRatio) {
+                targetWidth = targetHeight / this.getVideoRatio(elem);
+            }
+            row.width += targetWidth;
+            row.height = targetHeight;
+        }
+        // Calculate total row height adjusting if we go too wide
+        var totalRowHeight = 0;
+        var remainingShortRows = 0;
+        for (var i = 0; i < rows.length; i++) {
+            row = rows[i];
+            if (row.width > WIDTH) {
+                // Went over on the width, need to adjust the height proportionally
+                row.height = Math.floor(row.height * (WIDTH / row.width));
+                row.width = WIDTH;
+            }
+            else if (row.width < WIDTH) {
+                remainingShortRows += 1;
+            }
+            totalRowHeight += row.height;
+        }
+        if (totalRowHeight < HEIGHT && remainingShortRows > 0) {
+            // We can grow some of the rows, we're not taking up the whole height
+            var remainingHeightDiff = HEIGHT - totalRowHeight;
+            totalRowHeight = 0;
+            for (var i = 0; i < rows.length; i++) {
+                row = rows[i];
+                if (row.width < WIDTH) {
+                    // Evenly distribute the extra height between the short rows
+                    var extraHeight = remainingHeightDiff / remainingShortRows;
+                    if ((extraHeight / row.height) > ((WIDTH - row.width) / row.width)) {
+                        // We can't go that big or we'll go too wide
+                        extraHeight = Math.floor(((WIDTH - row.width) / row.width) * row.height);
+                    }
+                    row.width += Math.floor((extraHeight / row.height) * row.width);
+                    row.height += extraHeight;
+                    remainingHeightDiff -= extraHeight;
+                    remainingShortRows -= 1;
+                }
+                totalRowHeight += row.height;
+            }
+        }
+        // vertical centering
+        y = ((HEIGHT - (totalRowHeight)) / 2);
+        // Iterate through each row and place each child
+        for (var i = 0; i < rows.length; i++) {
+            row = rows[i];
+            // center the row
+            var rowMarginLeft = ((WIDTH - row.width) / 2);
+            x = rowMarginLeft;
+            for (var j = 0; j < row.children.length; j++) {
+                var elem = row.children[j];
+                var targetWidth = dimensions.targetWidth;
+                targetHeight = row.height;
+                // If we're using a fixedRatio then we need to set the correct ratio for this element
+                if (fixedRatio) {
+                    targetWidth = Math.floor(targetHeight / this.getVideoRatio(elem));
+                }
+                elem.style.position = 'absolute';
+                // $(elem).css('position', 'absolute');
+                var actualWidth = targetWidth - this.getCSSNumber(elem, 'paddingLeft') -
+                    this.getCSSNumber(elem, 'paddingRight') -
+                    this.getCSSNumber(elem, 'marginLeft') -
+                    this.getCSSNumber(elem, 'marginRight') -
+                    this.getCSSNumber(elem, 'borderLeft') -
+                    this.getCSSNumber(elem, 'borderRight');
+                var actualHeight = targetHeight - this.getCSSNumber(elem, 'paddingTop') -
+                    this.getCSSNumber(elem, 'paddingBottom') -
+                    this.getCSSNumber(elem, 'marginTop') -
+                    this.getCSSNumber(elem, 'marginBottom') -
+                    this.getCSSNumber(elem, 'borderTop') -
+                    this.getCSSNumber(elem, 'borderBottom');
+                this.positionElement(elem, x + offsetLeft, y + offsetTop, actualWidth, actualHeight, animate);
+                x += targetWidth;
+            }
+            y += targetHeight;
+        }
+    };
+    OpenViduLayout.prototype.filterDisplayNone = function (element) {
+        return element.style.display !== 'none';
+    };
+    OpenViduLayout.prototype.updateLayout = function () {
+        if (this.layoutContainer.style.display === 'none') {
+            return;
+        }
+        var id = this.layoutContainer.id;
+        if (!id) {
+            id = 'OT_' + this.cheapUUID();
+            this.layoutContainer.id = id;
+        }
+        var HEIGHT = this.getHeight(this.layoutContainer) -
+            this.getCSSNumber(this.layoutContainer, 'borderTop') -
+            this.getCSSNumber(this.layoutContainer, 'borderBottom');
+        var WIDTH = this.getWidth(this.layoutContainer) -
+            this.getCSSNumber(this.layoutContainer, 'borderLeft') -
+            this.getCSSNumber(this.layoutContainer, 'borderRight');
+        var availableRatio = HEIGHT / WIDTH;
+        var offsetLeft = 0;
+        var offsetTop = 0;
+        var bigOffsetTop = 0;
+        var bigOffsetLeft = 0;
+        var bigOnes = Array.prototype.filter.call(this.layoutContainer.querySelectorAll('#' + id + '>.' + this.opts.bigClass), this.filterDisplayNone);
+        var smallOnes = Array.prototype.filter.call(this.layoutContainer.querySelectorAll('#' + id + '>*:not(.' + this.opts.bigClass + ')'), this.filterDisplayNone);
+        if (bigOnes.length > 0 && smallOnes.length > 0) {
+            var bigWidth = void 0, bigHeight = void 0;
+            if (availableRatio > this.getVideoRatio(bigOnes[0])) {
+                // We are tall, going to take up the whole width and arrange small
+                // guys at the bottom
+                bigWidth = WIDTH;
+                bigHeight = Math.floor(HEIGHT * this.opts.bigPercentage);
+                offsetTop = bigHeight;
+                bigOffsetTop = HEIGHT - offsetTop;
+            }
+            else {
+                // We are wide, going to take up the whole height and arrange the small
+                // guys on the right
+                bigHeight = HEIGHT;
+                bigWidth = Math.floor(WIDTH * this.opts.bigPercentage);
+                offsetLeft = bigWidth;
+                bigOffsetLeft = WIDTH - offsetLeft;
+            }
+            if (this.opts.bigFirst) {
+                this.arrange(bigOnes, bigWidth, bigHeight, 0, 0, this.opts.bigFixedRatio, this.opts.bigMinRatio, this.opts.bigMaxRatio, this.opts.animate);
+                this.arrange(smallOnes, WIDTH - offsetLeft, HEIGHT - offsetTop, offsetLeft, offsetTop, this.opts.fixedRatio, this.opts.minRatio, this.opts.maxRatio, this.opts.animate);
+            }
+            else {
+                this.arrange(smallOnes, WIDTH - offsetLeft, HEIGHT - offsetTop, 0, 0, this.opts.fixedRatio, this.opts.minRatio, this.opts.maxRatio, this.opts.animate);
+                this.arrange(bigOnes, bigWidth, bigHeight, bigOffsetLeft, bigOffsetTop, this.opts.bigFixedRatio, this.opts.bigMinRatio, this.opts.bigMaxRatio, this.opts.animate);
+            }
+        }
+        else if (bigOnes.length > 0 && smallOnes.length === 0) {
+            this.
+                // We only have one bigOne just center it
+                arrange(bigOnes, WIDTH, HEIGHT, 0, 0, this.opts.bigFixedRatio, this.opts.bigMinRatio, this.opts.bigMaxRatio, this.opts.animate);
+        }
+        else {
+            this.arrange(smallOnes, WIDTH - offsetLeft, HEIGHT - offsetTop, offsetLeft, offsetTop, this.opts.fixedRatio, this.opts.minRatio, this.opts.maxRatio, this.opts.animate);
+        }
+    };
+    OpenViduLayout.prototype.initLayoutContainer = function (container, opts) {
+        this.opts = {
+            maxRatio: (opts.maxRatio != null) ? opts.maxRatio : 3 / 2,
+            minRatio: (opts.minRatio != null) ? opts.minRatio : 9 / 16,
+            fixedRatio: (opts.fixedRatio != null) ? opts.fixedRatio : false,
+            animate: (opts.animate != null) ? opts.animate : false,
+            bigClass: (opts.bigClass != null) ? opts.bigClass : 'OT_big',
+            bigPercentage: (opts.bigPercentage != null) ? opts.bigPercentage : 0.8,
+            bigFixedRatio: (opts.bigFixedRatio != null) ? opts.bigFixedRatio : false,
+            bigMaxRatio: (opts.bigMaxRatio != null) ? opts.bigMaxRatio : 3 / 2,
+            bigMinRatio: (opts.bigMinRatio != null) ? opts.bigMinRatio : 9 / 16,
+            bigFirst: (opts.bigFirst != null) ? opts.bigFirst : true
+        };
+        this.layoutContainer = typeof (container) === 'string' ? $(container) : container;
+    };
+    OpenViduLayout.prototype.setLayoutOptions = function (options) {
+        this.opts = options;
+    };
+    return OpenViduLayout;
+}());
 
 
-// module
-exports.push([module.i, "", ""]);
-
-// exports
-
-
-/*** EXPORTS FROM exports-loader ***/
-module.exports = module.exports.toString();
 
 /***/ }),
 
-/***/ "../../../../../src/app/components/session-details/session-details.component.html":
+/***/ "./src/app/components/session-details/session-details.component.css":
+/***/ (function(module, exports) {
+
+module.exports = ""
+
+/***/ }),
+
+/***/ "./src/app/components/session-details/session-details.component.html":
 /***/ (function(module, exports) {
 
 module.exports = "<p>\n  session-details works!\n</p>\n"
 
 /***/ }),
 
-/***/ "../../../../../src/app/components/session-details/session-details.component.ts":
+/***/ "./src/app/components/session-details/session-details.component.ts":
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return SessionDetailsComponent; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__("../../../core/esm5/core.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__("./node_modules/@angular/core/esm5/core.js");
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -13844,8 +14947,8 @@ var SessionDetailsComponent = (function () {
     SessionDetailsComponent = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
             selector: 'app-session-details',
-            template: __webpack_require__("../../../../../src/app/components/session-details/session-details.component.html"),
-            styles: [__webpack_require__("../../../../../src/app/components/session-details/session-details.component.css")]
+            template: __webpack_require__("./src/app/components/session-details/session-details.component.html"),
+            styles: [__webpack_require__("./src/app/components/session-details/session-details.component.css")]
         }),
         __metadata("design:paramtypes", [])
     ], SessionDetailsComponent);
@@ -13856,13 +14959,13 @@ var SessionDetailsComponent = (function () {
 
 /***/ }),
 
-/***/ "../../../../../src/app/services/info.service.ts":
+/***/ "./src/app/services/info.service.ts":
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return InfoService; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__("../../../core/esm5/core.js");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs_Subject__ = __webpack_require__("../../../../rxjs/_esm5/Subject.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__("./node_modules/@angular/core/esm5/core.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs_Subject__ = __webpack_require__("./node_modules/rxjs/_esm5/Subject.js");
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -13896,7 +14999,7 @@ var InfoService = (function () {
 
 /***/ }),
 
-/***/ "../../../../../src/environments/environment.ts":
+/***/ "./src/environments/environment.ts":
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -13912,15 +15015,15 @@ var environment = {
 
 /***/ }),
 
-/***/ "../../../../../src/main.ts":
+/***/ "./src/main.ts":
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__("../../../core/esm5/core.js");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_platform_browser_dynamic__ = __webpack_require__("../../../platform-browser-dynamic/esm5/platform-browser-dynamic.js");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__app_app_module__ = __webpack_require__("../../../../../src/app/app.module.ts");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__environments_environment__ = __webpack_require__("../../../../../src/environments/environment.ts");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__("./node_modules/@angular/core/esm5/core.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_platform_browser_dynamic__ = __webpack_require__("./node_modules/@angular/platform-browser-dynamic/esm5/platform-browser-dynamic.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__app_app_module__ = __webpack_require__("./src/app/app.module.ts");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__environments_environment__ = __webpack_require__("./src/environments/environment.ts");
 
 
 
@@ -13936,7 +15039,7 @@ Object(__WEBPACK_IMPORTED_MODULE_1__angular_platform_browser_dynamic__["a" /* pl
 /***/ 0:
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__("../../../../../src/main.ts");
+module.exports = __webpack_require__("./src/main.ts");
 
 
 /***/ })

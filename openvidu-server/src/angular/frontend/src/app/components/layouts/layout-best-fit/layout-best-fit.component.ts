@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, HostListener, ViewEncapsulation, Applicat
 import { ActivatedRoute } from '@angular/router';
 import { OpenVidu, Session, Stream, Subscriber } from 'openvidu-browser';
 
-import { OpenViduLayout } from '../../../../assets/openvidu-layout';
+import { OpenViduLayout } from '../openvidu-layout';
 
 @Component({
   selector: 'app-layout-best-fit',
