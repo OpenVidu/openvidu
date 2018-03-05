@@ -137,7 +137,7 @@ export class OpenViduInternal {
         return this.localStream;
     }
 
-    cameraReady(localStream: Stream, parentId: string): HTMLVideoElement {
+    cameraReady(localStream: Stream, parentId: string) {
         this.localStream = localStream;
         let videoElement = this.localStream.playOnlyVideo(parentId, null);
         this.localStream.emitStreamReadyEvent();

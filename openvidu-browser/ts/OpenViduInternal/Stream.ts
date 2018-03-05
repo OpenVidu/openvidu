@@ -146,8 +146,8 @@ export class Stream {
         return this.video;
     }
 
-    setVideoElement(video: HTMLVideoElement) {
-        this.video = video;
+    setVideoElement(video) {
+        if (!!video) this.video = video;
     }
 
     getParentId() {
@@ -267,45 +267,49 @@ export class Stream {
     }
 
     playOnlyVideo(parentElement, thumbnailId) {
+        if (!!parentElement) {
 
-        this.video = document.createElement('video');
+            this.video = document.createElement('video');
 
-        this.video.id = (this.local ? 'local-' : 'remote-') + 'video-' + this.streamId;
-        this.video.autoplay = true;
-        this.video.controls = false;
-        this.ee.emitEvent('mediastream-updated');
+            this.video.id = (this.local ? 'local-' : 'remote-') + 'video-' + this.streamId;
+            this.video.autoplay = true;
+            this.video.controls = false;
+            this.ee.emitEvent('mediastream-updated');
 
-        if (this.local && !this.displayMyRemote()) {
-            this.video.muted = true;
-            this.video.oncanplay = () => {
-                console.info("Local 'Stream' with id [" + this.streamId + "] video is now playing");
-                this.ee.emitEvent('video-is-playing', [{
-                    element: this.video
-                }]);
-            };
-        } else {
-            this.video.title = this.streamId;
-        }
-
-        if (typeof parentElement === "string") {
-            this.parentId = parentElement;
-
-            let parentElementDom = document.getElementById(parentElement);
-            if (parentElementDom) {
-                this.video = parentElementDom.appendChild(this.video);
-                this.ee.emitEvent('video-element-created-by-stream', [{
-                    element: this.video
-                }]);
-                this.isVideoELementCreated = true;
+            if (this.local && !this.displayMyRemote()) {
+                this.video.muted = true;
+                this.video.onplaying = () => {
+                    console.info("Local 'Stream' with id [" + this.streamId + "] video is now playing");
+                    this.ee.emitEvent('video-is-playing', [{
+                        element: this.video
+                    }]);
+                };
+            } else {
+                this.video.title = this.streamId;
             }
-        } else {
-            this.parentId = parentElement.id;
-            this.video = parentElement.appendChild(this.video);
+
+            if (typeof parentElement === "string") {
+                this.parentId = parentElement;
+
+                let parentElementDom = document.getElementById(parentElement);
+                if (parentElementDom) {
+                    this.video = parentElementDom.appendChild(this.video);
+                    this.ee.emitEvent('video-element-created-by-stream', [{
+                        element: this.video
+                    }]);
+                    this.isVideoELementCreated = true;
+                }
+            } else {
+                this.parentId = parentElement.id;
+                this.video = parentElement.appendChild(this.video);
+            }
+
+            this.isReadyToPublish = true;
+
+            return this.video;
         }
 
-        this.isReadyToPublish = true;
-
-        return this.video;
+        return null;
     }
 
     playThumbnail(thumbnailId) {
@@ -602,22 +606,25 @@ export class Stream {
 
                     }
                 }
-                // let thumbnailId = this.video.thumb;
-                this.video.oncanplay = () => {
-                    if (this.local && this.displayMyRemote()) {
-                        console.info("Your own remote 'Stream' with id [" + this.streamId + "] video is now playing");
-                        this.ee.emitEvent('remote-video-is-playing', [{
-                            element: this.video
-                        }]);
-                    } else if (!this.local && !this.displayMyRemote()) {
-                        console.info("Remote 'Stream' with id [" + this.streamId + "] video is now playing");
-                        this.ee.emitEvent('video-is-playing', [{
-                            element: this.video
-                        }]);
-                    }
-                    //show(thumbnailId);
-                    //this.hideSpinner(this.streamId);
-                };
+
+                if (!!this.video) {
+                    // let thumbnailId = this.video.thumb;
+                    this.video.onplaying = () => {
+                        if (this.local && this.displayMyRemote()) {
+                            console.info("Your own remote 'Stream' with id [" + this.streamId + "] video is now playing");
+                            this.ee.emitEvent('remote-video-is-playing', [{
+                                element: this.video
+                            }]);
+                        } else if (!this.local && !this.displayMyRemote()) {
+                            console.info("Remote 'Stream' with id [" + this.streamId + "] video is now playing");
+                            this.ee.emitEvent('video-is-playing', [{
+                                element: this.video
+                            }]);
+                        }
+                        //show(thumbnailId);
+                        //this.hideSpinner(this.streamId);
+                    };
+                }
                 this.room.emitEvent('stream-subscribed', [{
                     stream: this
                 }]);

@@ -229,8 +229,7 @@ export class LocalRecorder {
                 http.open("POST", endpoint, true);
 
                 let sendable = new FormData();
-                sendable.append("name", this.id);
-                sendable.append("file", this.blob);
+                sendable.append("file", this.blob, this.id + ".webm");
 
                 http.onreadystatechange = () => {
                     if (http.readyState === 4) {
