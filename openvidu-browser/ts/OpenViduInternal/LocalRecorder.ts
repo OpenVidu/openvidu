@@ -198,13 +198,20 @@ export class LocalRecorder {
         }
     }
 
-    uploadAsBinary(endpoint: string): Promise<any> {
+    uploadAsBinary(endpoint: string, headers?: any): Promise<any> {
         return new Promise((resolve, reject) => {
             if (this.state !== LocalRecoderState.FINISHED) {
                 reject(Error('\'LocalRecord.uploadAsBinary()\' needs \'LocalRecord.state\' to be \'FINISHED\' (current value: \'' + this.state + '\'). Call \'LocalRecorder.stop()\' before'));
             } else {
                 let http = new XMLHttpRequest();
                 http.open("POST", endpoint, true);
+                
+                if (typeof headers === 'object') {
+                    for (let key of Object.keys(headers)) {
+                        http.setRequestHeader(key, headers[key]);
+                    }
+                }
+
                 http.onreadystatechange = () => {
                     if (http.readyState === 4) {
                         if (http.status.toString().charAt(0) === '2') {
@@ -220,13 +227,19 @@ export class LocalRecorder {
         });
     }
 
-    uploadAsMultipartfile(endpoint: string): Promise<any> {
+    uploadAsMultipartfile(endpoint: string, headers?: any): Promise<any> {
         return new Promise((resolve, reject) => {
             if (this.state !== LocalRecoderState.FINISHED) {
                 reject(Error('\'LocalRecord.uploadAsMultipartfile()\' needs \'LocalRecord.state\' to be \'FINISHED\' (current value: \'' + this.state + '\'). Call \'LocalRecorder.stop()\' before'));
             } else {
                 let http = new XMLHttpRequest();
                 http.open("POST", endpoint, true);
+
+                if (typeof headers === 'object') {
+                    for (let key of Object.keys(headers)) {
+                        http.setRequestHeader(key, headers[key]);
+                    }
+                }
 
                 let sendable = new FormData();
                 sendable.append("file", this.blob, this.id + ".webm");
