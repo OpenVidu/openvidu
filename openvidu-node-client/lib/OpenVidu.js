@@ -9,10 +9,10 @@ var OpenVidu = /** @class */ (function () {
     OpenVidu.prototype.createSession = function (properties) {
         return new Session_1.Session(this.urlOpenViduServer, this.secret, properties);
     };
-    OpenVidu.prototype.startArchive = function (sessionId) {
+    OpenVidu.prototype.startRecording = function (sessionId) {
         // TODO: REST POST to start recording in OpenVidu Server
     };
-    OpenVidu.prototype.stopArchive = function (sessionId) {
+    OpenVidu.prototype.stopRecording = function (sessionId) {
         // TODO: REST POST to end recording in OpenVidu Server
     };
     return OpenVidu;
