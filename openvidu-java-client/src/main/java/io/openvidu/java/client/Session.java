@@ -1,16 +1,11 @@
 package io.openvidu.java.client;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-
+import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
 import io.openvidu.java.client.OpenViduException.Code;
 
@@ -20,6 +15,9 @@ public class Session {
 	private String urlOpenViduServer;
 	private String sessionId;
 	private SessionProperties properties;
+	
+	final static String API_SESSIONS = "api/sessions";
+	final static String API_TOKENS = "api/tokens";
 
 	protected Session(HttpClient httpClient, String urlOpenViduServer) throws OpenViduException {
 		this.httpClient = httpClient;
@@ -35,6 +33,7 @@ public class Session {
 		this.sessionId = this.getSessionId();
 	}
 
+	@SuppressWarnings("unchecked")
 	public String getSessionId() throws OpenViduException {
 
 		if (this.hasSessionId()) {
@@ -42,15 +41,15 @@ public class Session {
 		}
 
 		try {
+			HttpPost request = new HttpPost(this.urlOpenViduServer + API_SESSIONS);
 			
 			JSONObject json = new JSONObject();
-			json.put("archiveMode", properties.archiveMode().name());
 			json.put("archiveLayout", properties.archiveLayout().name());
+			json.put("archiveMode", properties.archiveMode().name());
 			json.put("mediaMode", properties.mediaMode().name());
-
-			HttpPost request = new HttpPost(this.urlOpenViduServer + "api/sessions");
 			StringEntity params = new StringEntity(json.toString());
-			request.addHeader("content-type", "application/json");
+			
+			request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
 			request.setEntity(params);
 			
 			HttpResponse response = httpClient.execute(request);
@@ -58,7 +57,7 @@ public class Session {
 			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
 				System.out.println("Returning a SESSIONID");
 				String id = "";
-				id = this.httpResponseToString(response);
+				id = (String) OpenVidu.httpResponseToJson(response).get("id");
 				this.sessionId = id;
 				return id;
 			} else {
@@ -75,6 +74,7 @@ public class Session {
 		return this.generateToken(new TokenOptions.Builder().role(OpenViduRole.PUBLISHER).build());
 	}
 
+	@SuppressWarnings("unchecked")
 	public String generateToken(TokenOptions tokenOptions) throws OpenViduException {
 
 		if (!this.hasSessionId()) {
@@ -82,15 +82,15 @@ public class Session {
 		}
 
 		try {
-
+			HttpPost request = new HttpPost(this.urlOpenViduServer + API_TOKENS);
+			
 			JSONObject json = new JSONObject();
 			json.put("session", this.sessionId);
 			json.put("role", tokenOptions.getRole().name());
 			json.put("data", tokenOptions.getData());
-
-			HttpPost request = new HttpPost(this.urlOpenViduServer + "api/tokens");
 			StringEntity params = new StringEntity(json.toString());
-			request.addHeader("content-type", "application/json");
+			
+			request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
 			request.setEntity(params);
 
 			HttpResponse response = httpClient.execute(request);
@@ -98,7 +98,7 @@ public class Session {
 			int statusCode = response.getStatusLine().getStatusCode();
 			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
 				System.out.println("Returning a TOKEN");
-				return this.httpResponseToString(response);
+				return (String) OpenVidu.httpResponseToJson(response).get("id");
 			} else {
 				throw new OpenViduException(Code.TOKEN_CANNOT_BE_CREATED_ERROR_CODE, Integer.toString(statusCode));
 			}
@@ -116,17 +116,6 @@ public class Session {
 	@Override
 	public String toString() {
 		return this.sessionId;
-	}
-
-	private String httpResponseToString(HttpResponse response) throws IOException, ParseException {
-		BufferedReader rd = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
-		StringBuffer buf = new StringBuffer();
-		String line = "";
-		while ((line = rd.readLine()) != null) {
-			buf.append(line);
-		}
-		JSONParser parser = new JSONParser();
-		return ((String) ((JSONObject) parser.parse(buf.toString())).get("id"));
 	}
 
 	private boolean hasSessionId() {
