@@ -273,14 +273,14 @@ export class SessionInternal {
         this.openVidu.sendRequest('unsubscribeFromVideo', {
             sender: stream.connection.connectionId
         },
-        (error, response) => {
-            if (error) {
-                console.error("Error unsubscribing from Subscriber", error);
-            } else {
-                console.info("Unsubscribed correctly from " + stream.connection.connectionId);
-            }
-            stream.dispose();
-        });
+            (error, response) => {
+                if (error) {
+                    console.error("Error unsubscribing from Subscriber", error);
+                } else {
+                    console.info("Unsubscribed correctly from " + stream.connection.connectionId);
+                }
+                stream.dispose();
+            });
     }
 
     onParticipantPublished(response: ConnectionOptions) {
@@ -305,22 +305,26 @@ export class SessionInternal {
             console.debug("Remote Connection found in connections list by its id [" + pid + "]");
         }
 
-
         this.participants[pid] = connection;
-
-        this.ee.emitEvent('participant-published', [{ connection }]);
 
         let streams = connection.getStreams();
         for (let key in streams) {
             let stream = streams[key];
 
-            if (this.subscribeToStreams) {
-                stream.subscribe();
+            if (!this.streams[stream.streamId]) {
+                // Avoid race condition between stream.subscribe() in "onParticipantPublished" and in "joinRoom" rpc callback
+                // This condition is false if openvidu-server sends "participantPublished" event to a subscriber participant that has
+                // already subscribed to certain stream in the callback of "joinRoom" method
+
+                if (this.subscribeToStreams) {
+                    stream.subscribe();
+                }
+                this.ee.emitEvent('streamCreated', [{ stream }]);
+
+                // Adding the remote stream to the OpenVidu object
+                this.openVidu.getRemoteStreams().push(stream);
+
             }
-            this.ee.emitEvent('streamCreated', [{ stream }]);
-            
-            // Adding the remote stream to the OpenVidu object
-            this.openVidu.getRemoteStreams().push(stream);
         }
     }
 
@@ -584,7 +588,7 @@ export class SessionInternal {
             return;
         } else if (stream.connection !== this.localParticipant) {
             console.error("The associated Connection object of this Publisher is not your local Connection." +
-                            "Only moderators can force unpublish on remote Streams via 'forceUnpublish' method", stream);
+                "Only moderators can force unpublish on remote Streams via 'forceUnpublish' method", stream);
             return;
         } else {
             stream.dispose();
