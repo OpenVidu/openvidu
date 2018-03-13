@@ -1,6 +1,6 @@
 <div id="layout" class="bounds">
   <div *ngFor="let s of streams" class="OT_root OT_publisher custom-class">
-    <div class="OT_widget-container" style="width: 100%; height: 100%;">
+    <div class="OT_widget-container">
       <video [id]="'native-video-' + s.streamId" autoplay="true" [srcObject]="s.getMediaStream()" (playing)="onVideoPlaying($event)"></video>
     </div>
   </div>
