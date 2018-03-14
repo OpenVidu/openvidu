@@ -2423,11 +2423,10 @@ var Session = /** @class */ (function () {
         // Listens to the deactivation of the default behaviour upon the disconnection of a Session
         this.session.addEventListener('session-disconnected-default', function () {
             var s;
-            for (var _i = 0, _a = _this.openVidu.openVidu.getRemoteStreams(); _i < _a.length; _i++) {
-                s = _a[_i];
-                s.removeVideo();
+            for (var streamId in _this.session.getRemoteStreams()) {
+                _this.session.getRemoteStreams()[streamId].removeVideo();
             }
-            if (_this.connection) {
+            if (_this.connection && (Object.keys(_this.connection.getStreams()).length > 0)) {
                 for (var streamId in _this.connection.getStreams()) {
                     _this.connection.getStreams()[streamId].removeVideo();
                 }
@@ -2678,11 +2677,11 @@ var Connection = /** @class */ (function () {
     Connection.prototype.addStream = function (stream) {
         stream.connection = this;
         this.streams[stream.streamId] = stream;
-        this.room.getStreams()[stream.streamId] = stream;
+        //this.room.getStreams()[stream.streamId] = stream;
     };
     Connection.prototype.removeStream = function (key) {
         delete this.streams[key];
-        delete this.room.getStreams()[key];
+        //delete this.room.getStreams()[key];
         delete this.inboundStreamsOpts;
     };
     Connection.prototype.setOptions = function (options) {
@@ -3021,7 +3020,6 @@ var Stream_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInt
 var RpcBuilder = __webpack_require__("../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/index.js");
 var OpenViduInternal = /** @class */ (function () {
     function OpenViduInternal() {
-        this.remoteStreams = [];
         this.recorder = false;
     }
     /* NEW METHODS */
@@ -3129,9 +3127,6 @@ var OpenViduInternal = /** @class */ (function () {
     };
     OpenViduInternal.prototype.getLocalStream = function () {
         return this.localStream;
-    };
-    OpenViduInternal.prototype.getRemoteStreams = function () {
-        return this.remoteStreams;
     };
     /* NEW METHODS */
     OpenViduInternal.prototype.getWsUri = function () {
@@ -3368,7 +3363,7 @@ var SessionInternal = /** @class */ (function () {
     function SessionInternal(openVidu, sessionId) {
         this.openVidu = openVidu;
         this.ee = new EventEmitter();
-        this.streams = {};
+        this.remoteStreams = {};
         this.participants = {};
         this.publishersSpeaking = [];
         this.connected = false;
@@ -3453,7 +3448,7 @@ var SessionInternal = /** @class */ (function () {
                 };
                 if (_this.localParticipant) {
                     if (Object.keys(_this.localParticipant.getStreams()).some(function (streamId) {
-                        return _this.streams[streamId].isDataChannelEnabled();
+                        return _this.remoteStreams[streamId].isDataChannelEnabled();
                     })) {
                         joinParams.dataChannels = true;
                     }
@@ -3502,8 +3497,8 @@ var SessionInternal = /** @class */ (function () {
                         for (var _b = 0, _c = roomEvent.streams; _b < _c.length; _b++) {
                             var stream = _c[_b];
                             _this.ee.emitEvent('streamCreated', [{ stream: stream }]);
-                            // Adding the remote stream to the OpenVidu object
-                            _this.openVidu.getRemoteStreams().push(stream);
+                            // Store the remote stream
+                            _this.remoteStreams[stream.streamId] = stream;
                         }
                         callback(undefined);
                     }
@@ -3598,14 +3593,16 @@ var SessionInternal = /** @class */ (function () {
         var streams = connection.getStreams();
         for (var key in streams) {
             var stream = streams[key];
-            if (!this.streams[stream.streamId]) {
+            if (!this.remoteStreams[stream.streamId]) {
                 // Avoid race condition between stream.subscribe() in "onParticipantPublished" and in "joinRoom" rpc callback
+                // This condition is false if openvidu-server sends "participantPublished" event to a subscriber participant that has
+                // already subscribed to certain stream in the callback of "joinRoom" method
                 if (this.subscribeToStreams) {
                     stream.subscribe();
                 }
                 this.ee.emitEvent('streamCreated', [{ stream: stream }]);
-                // Adding the remote stream to the OpenVidu object
-                this.openVidu.getRemoteStreams().push(stream);
+                // Store the remote stream
+                this.remoteStreams[stream.streamId] = stream;
             }
         }
     };
@@ -3622,12 +3619,11 @@ var SessionInternal = /** @class */ (function () {
                 this.ee.emitEvent('stream-destroyed-default', [{
                         stream: streams[key]
                     }]);
-                // Deleting the removed stream from the OpenVidu object
-                var index = this.openVidu.getRemoteStreams().indexOf(streams[key]);
-                var stream = this.openVidu.getRemoteStreams()[index];
+                // Deleting the remote stream
+                var streamId = streams[key].streamId;
+                var stream = this.remoteStreams[streamId];
                 stream.dispose();
-                this.openVidu.getRemoteStreams().splice(index, 1);
-                delete this.streams[stream.streamId];
+                delete this.remoteStreams[stream.streamId];
                 connection.removeStream(stream.streamId);
             }
         }
@@ -3661,7 +3657,6 @@ var SessionInternal = /** @class */ (function () {
         var _this = this;
         var connection = this.participants[msg.name];
         if (connection !== undefined) {
-            delete this.participants[msg.name];
             this.ee.emitEvent('participant-left', [{
                     connection: connection
                 }]);
@@ -3674,11 +3669,12 @@ var SessionInternal = /** @class */ (function () {
                 this.ee.emitEvent('stream-destroyed-default', [{
                         stream: streams[key]
                     }]);
-                // Deleting the removed stream from the OpenVidu object
-                var index = this.openVidu.getRemoteStreams().indexOf(streams[key]);
-                this.openVidu.getRemoteStreams().splice(index, 1);
+                // Deleting the remote stream
+                var streamId = streams[key].streamId;
+                delete this.remoteStreams[streamId];
             }
             connection.dispose();
+            delete this.participants[msg.name];
             this.ee.emitEvent('connectionDestroyed', [{
                     connection: connection
                 }]);
@@ -3862,8 +3858,8 @@ var SessionInternal = /** @class */ (function () {
                 }]);
         }
     };
-    SessionInternal.prototype.getStreams = function () {
-        return this.streams;
+    SessionInternal.prototype.getRemoteStreams = function () {
+        return this.remoteStreams;
     };
     SessionInternal.prototype.addParticipantSpeaking = function (participantId) {
         this.publishersSpeaking.push(participantId);
