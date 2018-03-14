@@ -26,10 +26,10 @@ export class Session {
         // Listens to the deactivation of the default behaviour upon the disconnection of a Session
         this.session.addEventListener('session-disconnected-default', () => {
             let s: Stream;
-            for (s of this.openVidu.openVidu.getRemoteStreams()) {
-                s.removeVideo();
+            for (let streamId in this.session.getRemoteStreams()) {
+                this.session.getRemoteStreams()[streamId].removeVideo();
             }
-            if (this.connection) {
+            if (this.connection && (Object.keys(this.connection.getStreams()).length > 0)) {
                 for (let streamId in this.connection.getStreams()) {
                     this.connection.getStreams()[streamId].removeVideo();
                 }

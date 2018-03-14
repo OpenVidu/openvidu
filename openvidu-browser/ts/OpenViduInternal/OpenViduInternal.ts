@@ -30,7 +30,6 @@ export class OpenViduInternal {
     private rpcParams: any;
     private callback: Callback<OpenViduInternal>;
     private localStream: Stream;
-    private remoteStreams: Stream[] = [];
     private secret: string;
     private recorder: boolean = false;
 
@@ -148,9 +147,6 @@ export class OpenViduInternal {
         return this.localStream;
     }
 
-    getRemoteStreams() {
-        return this.remoteStreams;
-    }
     /* NEW METHODS */
 
     getWsUri() {

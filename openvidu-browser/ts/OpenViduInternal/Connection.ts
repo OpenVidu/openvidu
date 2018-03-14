@@ -38,12 +38,12 @@ export class Connection {
     addStream( stream: Stream ) {
         stream.connection = this;
         this.streams[stream.streamId] = stream;
-        this.room.getStreams()[stream.streamId] = stream;
+        //this.room.getStreams()[stream.streamId] = stream;
     }
 
     removeStream( key: string ) {
         delete this.streams[key];
-        delete this.room.getStreams()[key];
+        //delete this.room.getStreams()[key];
         delete this.inboundStreamsOpts;
     }
 

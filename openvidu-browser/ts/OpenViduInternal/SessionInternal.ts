@@ -5,6 +5,8 @@ import { Publisher } from '../OpenVidu/Publisher';
 
 import EventEmitter = require('wolfy87-eventemitter');
 
+type ObjMap<T> = { [s: string]: T; }
+
 const SECRET_PARAM = '?secret=';
 const RECORDER_PARAM = '&recorder=';
 
@@ -28,7 +30,7 @@ export class SessionInternal {
     private id: string;
     private sessionId: string;
     private ee = new EventEmitter();
-    private streams = {};
+    private remoteStreams: ObjMap<Stream> = {};
     private participants = {};
     private publishersSpeaking: Connection[] = [];
     private connected = false;
@@ -129,7 +131,7 @@ export class SessionInternal {
 
                 if (this.localParticipant) {
                     if (Object.keys(this.localParticipant.getStreams()).some(streamId =>
-                        this.streams[streamId].isDataChannelEnabled())) {
+                        this.remoteStreams[streamId].isDataChannelEnabled())) {
                         joinParams.dataChannels = true;
                     }
                 }
@@ -191,8 +193,8 @@ export class SessionInternal {
                         for (let stream of roomEvent.streams) {
                             this.ee.emitEvent('streamCreated', [{ stream }]);
 
-                            // Adding the remote stream to the OpenVidu object
-                            this.openVidu.getRemoteStreams().push(stream);
+                            // Store the remote stream
+                            this.remoteStreams[stream.streamId] = stream;
                         }
 
                         callback(undefined);
@@ -311,7 +313,7 @@ export class SessionInternal {
         for (let key in streams) {
             let stream = streams[key];
 
-            if (!this.streams[stream.streamId]) {
+            if (!this.remoteStreams[stream.streamId]) {
                 // Avoid race condition between stream.subscribe() in "onParticipantPublished" and in "joinRoom" rpc callback
                 // This condition is false if openvidu-server sends "participantPublished" event to a subscriber participant that has
                 // already subscribed to certain stream in the callback of "joinRoom" method
@@ -321,10 +323,10 @@ export class SessionInternal {
                 }
                 this.ee.emitEvent('streamCreated', [{ stream }]);
 
-                // Adding the remote stream to the OpenVidu object
-                this.openVidu.getRemoteStreams().push(stream);
+                // Store the remote stream
+                this.remoteStreams[stream.streamId] = stream;
 
-            }
+           }
         }
     }
 
@@ -343,14 +345,12 @@ export class SessionInternal {
                     stream: streams[key]
                 }]);
 
-                // Deleting the removed stream from the OpenVidu object
-                let index = this.openVidu.getRemoteStreams().indexOf(streams[key]);
-                let stream = this.openVidu.getRemoteStreams()[index];
-
+                // Deleting the remote stream
+                let streamId: string = streams[key].streamId;
+                let stream: Stream = this.remoteStreams[streamId];
 
                 stream.dispose();
-                this.openVidu.getRemoteStreams().splice(index, 1);
-                delete this.streams[stream.streamId];
+                delete this.remoteStreams[stream.streamId];
                 connection.removeStream(stream.streamId);
 
             }
@@ -391,7 +391,6 @@ export class SessionInternal {
         let connection: Connection = this.participants[msg.name];
 
         if (connection !== undefined) {
-            delete this.participants[msg.name];
 
             this.ee.emitEvent('participant-left', [{
                 connection: connection
@@ -407,12 +406,14 @@ export class SessionInternal {
                     stream: streams[key]
                 }]);
 
-                // Deleting the removed stream from the OpenVidu object
-                let index = this.openVidu.getRemoteStreams().indexOf(streams[key]);
-                this.openVidu.getRemoteStreams().splice(index, 1);
+                // Deleting the remote stream
+                let streamId: string = streams[key].streamId;
+                delete this.remoteStreams[streamId];
             }
 
             connection.dispose();
+
+            delete this.participants[msg.name];
 
             this.ee.emitEvent('connectionDestroyed', [{
                 connection: connection
@@ -618,8 +619,8 @@ export class SessionInternal {
         }
     }
 
-    getStreams() {
-        return this.streams;
+    getRemoteStreams() {
+        return this.remoteStreams;
     }
 
     addParticipantSpeaking(participantId) {
