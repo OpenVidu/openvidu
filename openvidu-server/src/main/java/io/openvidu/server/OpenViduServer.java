@@ -182,8 +182,13 @@ public class OpenViduServer implements JsonRpcConfigurer {
 			int port = url.getPort();
 
 			type = "custom";
-			OpenViduServer.publicUrl = publicUrl.replaceFirst("https://", "wss://");
-			OpenViduServer.publicUrl = publicUrl.replaceFirst("http://", "wss://");
+			
+			if (publicUrl.startsWith("https://")) {
+				OpenViduServer.publicUrl = publicUrl.replace("https://", "wss://");
+			} else if (publicUrl.startsWith("http://")) {
+				OpenViduServer.publicUrl = publicUrl.replace("http://", "wss://");
+			}
+			
 			openviduConf.setFinalUrl(url.toString());
 
 			if (!OpenViduServer.publicUrl.startsWith("wss://")) {
