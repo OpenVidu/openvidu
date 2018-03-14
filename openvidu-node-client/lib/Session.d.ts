@@ -10,7 +10,7 @@ export declare class Session {
     private hostname;
     private port;
     constructor(urlOpenViduServer: string, secret: string, properties?: SessionProperties);
-    getSessionId(callback: Function): void;
+    getSessionId(callback: Function): Promise<{}>;
     generateToken(callback: Function): any;
     generateToken(tokenOptions: TokenOptions, callback: Function): any;
     getProperties(): SessionProperties;

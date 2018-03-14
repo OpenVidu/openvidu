@@ -20,90 +20,94 @@ var Session = /** @class */ (function () {
     }
     Session.prototype.getSessionId = function (callback) {
         var _this = this;
-        if (this.sessionId) {
-            callback(this.sessionId);
-            return;
-        }
-        var requestBody = JSON.stringify({
-            'archiveLayout': this.properties.archiveLayout(),
-            'archiveMode': this.properties.archiveMode(),
-            'mediaMode': this.properties.mediaMode()
-        });
-        var options = {
-            hostname: this.hostname,
-            port: this.port,
-            path: this.sessionIdURL,
-            method: 'POST',
-            headers: {
-                'Authorization': this.getBasicAuth(),
-                'Content-Type': 'application/json',
-                'Content-Length': Buffer.byteLength(requestBody)
+        return new Promise(function (resolve, reject) {
+            if (_this.sessionId) {
+                resolve(_this.sessionId);
             }
-        };
-        var req = https.request(options, function (res) {
-            var body = '';
-            res.on('data', function (d) {
-                // Continuously update stream with data
-                body += d;
+            var requestBody = JSON.stringify({
+                'archiveLayout': _this.properties.archiveLayout(),
+                'archiveMode': _this.properties.archiveMode(),
+                'mediaMode': _this.properties.mediaMode()
             });
-            res.on('end', function () {
-                // Data reception is done
-                var parsed = JSON.parse(body);
-                _this.sessionId = parsed.id;
-                callback(parsed.id);
+            var options = {
+                hostname: _this.hostname,
+                port: _this.port,
+                path: _this.sessionIdURL,
+                method: 'POST',
+                headers: {
+                    'Authorization': _this.getBasicAuth(),
+                    'Content-Type': 'application/json',
+                    'Content-Length': Buffer.byteLength(requestBody)
+                }
+            };
+            var req = https.request(options, function (res) {
+                var body = '';
+                res.on('data', function (d) {
+                    // Continuously update stream with data
+                    body += d;
+                });
+                res.on('end', function () {
+                    // Data reception is done
+                    var parsed = JSON.parse(body);
+                    _this.sessionId = parsed.id;
+                    resolve(parsed.id);
+                });
             });
+            req.on('error', function (e) {
+                reject(e);
+            });
+            req.write(requestBody);
+            req.end();
         });
-        req.on('error', function (e) {
-            console.error(e);
-        });
-        req.write(requestBody);
-        req.end();
     };
     Session.prototype.generateToken = function (tokenOptions, callback) {
-        var requestBody;
-        if (callback) {
-            requestBody = JSON.stringify({
-                'session': this.sessionId,
-                'role': tokenOptions.getRole(),
-                'data': tokenOptions.getData()
-            });
-        }
-        else {
-            requestBody = JSON.stringify({
-                'session': this.sessionId,
-                'role': OpenViduRole_1.OpenViduRole.PUBLISHER,
-                'data': ''
-            });
-            callback = tokenOptions;
-        }
-        var options = {
-            hostname: this.hostname,
-            port: this.port,
-            path: this.tokenURL,
-            method: 'POST',
-            headers: {
-                'Authorization': this.getBasicAuth(),
-                'Content-Type': 'application/json',
-                'Content-Length': Buffer.byteLength(requestBody)
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            var requestBody;
+            if (callback) {
+                requestBody = JSON.stringify({
+                    'session': _this.sessionId,
+                    'role': tokenOptions.getRole(),
+                    'data': tokenOptions.getData()
+                });
             }
-        };
-        var req = https.request(options, function (res) {
-            var body = '';
-            res.on('data', function (d) {
-                // Continuously update stream with data
-                body += d;
+            else {
+                requestBody = JSON.stringify({
+                    'session': _this.sessionId,
+                    'role': OpenViduRole_1.OpenViduRole.PUBLISHER,
+                    'data': ''
+                });
+                callback = tokenOptions;
+            }
+            var options = {
+                hostname: _this.hostname,
+                port: _this.port,
+                path: _this.tokenURL,
+                method: 'POST',
+                headers: {
+                    'Authorization': _this.getBasicAuth(),
+                    'Content-Type': 'application/json',
+                    'Content-Length': Buffer.byteLength(requestBody)
+                }
+            };
+            var req = https.request(options, function (res) {
+                var body = '';
+                res.on('data', function (d) {
+                    // Continuously update stream with data
+                    body += d;
+                });
+                res.on('end', function () {
+                    // Data reception is done
+                    var parsed = JSON.parse(body);
+                    resolve(parsed.id);
+                });
             });
-            res.on('end', function () {
-                // Data reception is done
-                var parsed = JSON.parse(body);
-                callback(parsed.id);
+            req.on('error', function (e) {
+                reject(e);
             });
+            req.write(requestBody);
+            req.end();
         });
-        req.on('error', function (e) {
-            console.error(e);
-        });
-        req.write(requestBody);
-        req.end();
     };
     Session.prototype.getProperties = function () {
         return this.properties;

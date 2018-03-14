@@ -5,6 +5,6 @@ export declare class OpenVidu {
     private secret;
     constructor(urlOpenViduServer: string, secret: string);
     createSession(properties?: SessionProperties): Session;
-    startArchive(sessionId: string): void;
-    stopArchive(sessionId: string): void;
+    startRecording(sessionId: string): void;
+    stopRecording(sessionId: string): void;
 }
