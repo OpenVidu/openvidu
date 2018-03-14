@@ -16,4 +16,5 @@ nbactions.xml
 *bower_components/
 .externalToolBuilders
 *bin/
-/.vscode
+*/.vscode/*
+*/.sts4-cache/*
