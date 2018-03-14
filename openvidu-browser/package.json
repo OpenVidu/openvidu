@@ -28,7 +28,7 @@
   "scripts": {
     "browserify": "VERSION=${VERSION:-}; cd ts/OpenVidu && browserify Main.ts -p [ tsify ] --exclude kurento-browser-extensions --debug -o ../../static/js/openvidu-browser-$VERSION.js -v",
     "browserify-prod": "VERSION=${VERSION:-}; cd ts/OpenVidu && browserify --debug Main.ts -p [ tsify ] --exclude kurento-browser-extensions | uglifyjs --source-map content=inline --output ../../static/js/openvidu-browser-$VERSION.min.js",
-    "prepublish": "cd ts/OpenViduInternal && tsc && cd ../OpenVidu && tsc && cd ../.. && tsc --declaration ts/OpenVidu/index.ts --outDir lib --sourceMap && tsc --declaration ts/OpenVidu/Main.ts --outDir lib --sourceMap",
+    "prepublish": "cd ts/OpenViduInternal && tsc && cd ../OpenVidu && tsc && cd ../.. && tsc --declaration ts/OpenVidu/index.ts --outDir lib --sourceMap --lib dom,es5,es2015.promise,scripthost && tsc --declaration ts/OpenVidu/Main.ts --outDir lib --sourceMap --lib dom,es5,es2015.promise,scripthost",
     "test": "echo \"Error: no test specified\" && exit 1",
     "updatetsc": "cd ts/OpenViduInternal && tsc && cd ../OpenVidu && tsc && cd ../.. && tsc --declaration ts/OpenVidu/index.ts --outDir lib --sourceMap --lib dom,es5,es2015.promise,scripthost && tsc --declaration ts/OpenVidu/Main.ts --outDir lib --sourceMap --lib dom,es5,es2015.promise,scripthost"
   },
