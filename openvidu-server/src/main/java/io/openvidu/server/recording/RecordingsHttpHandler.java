@@ -19,6 +19,8 @@ public class RecordingsHttpHandler extends WebMvcConfigurerAdapter {
 		String recordingsPath = openviduConfig.getOpenViduRecordingPath();
 		recordingsPath = recordingsPath.endsWith("/") ? recordingsPath : recordingsPath + "/";
 
+		openviduConfig.setOpenViduRecordingPath(recordingsPath);
+
 		registry.addResourceHandler("/recordings/**").addResourceLocations("file:" + recordingsPath);
 	}
 

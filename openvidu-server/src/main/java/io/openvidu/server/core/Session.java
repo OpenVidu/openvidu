@@ -24,4 +24,6 @@ public interface Session {
 
 	Participant getParticipantByPublicId(String participantPublicId);
 
+	int getActivePublishers();
+
 }

@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 public class OpenviduConfig {
 
 	@Value("${openvidu.publicurl}")
-	private String openviduPublicUrl; // local, ngrok, docker, [FINAL_URL]
+	private String openviduPublicUrl; // local, docker-local, ngrok, docker, [FINAL_URL]
 
 	@Value("${server.port}")
 	private String serverPort;
@@ -26,6 +26,8 @@ public class OpenviduConfig {
 
 	@Value("${openvidu.recording.free-access}")
 	boolean openviduRecordingFreeAccess;
+
+	private String finalUrl;
 
 	public String getOpenViduPublicUrl() {
 		return this.openviduPublicUrl;
@@ -57,6 +59,18 @@ public class OpenviduConfig {
 
 	public boolean getOpenViduRecordingFreeAccess() {
 		return this.openviduRecordingFreeAccess;
+	}
+
+	public void setOpenViduRecordingPath(String recordingPath) {
+		this.openviduRecordingPath = recordingPath;
+	}
+
+	public String getFinalUrl() {
+		return finalUrl;
+	}
+
+	public void setFinalUrl(String finalUrl) {
+		this.finalUrl = finalUrl.endsWith("/") ? (finalUrl) : (finalUrl + "/");
 	}
 
 }
