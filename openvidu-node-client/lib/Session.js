@@ -4,11 +4,10 @@ var OpenViduRole_1 = require("./OpenViduRole");
 var SessionProperties_1 = require("./SessionProperties");
 var https = require('https');
 var Session = /** @class */ (function () {
-    function Session(urlOpenViduServer, secret, properties) {
-        this.urlOpenViduServer = urlOpenViduServer;
-        this.secret = secret;
-        this.sessionIdURL = '/api/sessions';
-        this.tokenURL = '/api/tokens';
+    function Session(hostname, port, basicAuth, properties) {
+        this.hostname = hostname;
+        this.port = port;
+        this.basicAuth = basicAuth;
         this.sessionId = "";
         if (properties == null) {
             this.properties = new SessionProperties_1.SessionProperties.Builder().build();
@@ -16,7 +15,6 @@ var Session = /** @class */ (function () {
         else {
             this.properties = properties;
         }
-        this.setHostnameAndPort();
     }
     Session.prototype.getSessionId = function (callback) {
         var _this = this;
@@ -32,10 +30,10 @@ var Session = /** @class */ (function () {
         var options = {
             hostname: this.hostname,
             port: this.port,
-            path: this.sessionIdURL,
+            path: Session.API_SESSIONS,
             method: 'POST',
             headers: {
-                'Authorization': this.getBasicAuth(),
+                'Authorization': this.basicAuth,
                 'Content-Type': 'application/json',
                 'Content-Length': Buffer.byteLength(requestBody)
             }
@@ -47,10 +45,16 @@ var Session = /** @class */ (function () {
                 body += d;
             });
             res.on('end', function () {
-                // Data reception is done
-                var parsed = JSON.parse(body);
-                _this.sessionId = parsed.id;
-                callback(parsed.id);
+                if (res.statusCode === 200) {
+                    // SUCCESS response from openvidu-server. Resolve sessionId
+                    var parsed = JSON.parse(body);
+                    _this.sessionId = parsed.id;
+                    callback(parsed.id);
+                }
+                else {
+                    // ERROR response from openvidu-server. Resolve HTTP status
+                    console.error(res.statusCode);
+                }
             });
         });
         req.on('error', function (e) {
@@ -79,10 +83,10 @@ var Session = /** @class */ (function () {
         var options = {
             hostname: this.hostname,
             port: this.port,
-            path: this.tokenURL,
+            path: Session.API_TOKENS,
             method: 'POST',
             headers: {
-                'Authorization': this.getBasicAuth(),
+                'Authorization': this.basicAuth,
                 'Content-Type': 'application/json',
                 'Content-Length': Buffer.byteLength(requestBody)
             }
@@ -94,9 +98,15 @@ var Session = /** @class */ (function () {
                 body += d;
             });
             res.on('end', function () {
-                // Data reception is done
-                var parsed = JSON.parse(body);
-                callback(parsed.id);
+                if (res.statusCode === 200) {
+                    // SUCCESS response from openvidu-server. Resolve token
+                    var parsed = JSON.parse(body);
+                    callback(parsed.id);
+                }
+                else {
+                    // ERROR response from openvidu-server. Resolve HTTP status
+                    console.error(res.statusCode);
+                }
             });
         });
         req.on('error', function (e) {
@@ -108,23 +118,8 @@ var Session = /** @class */ (function () {
     Session.prototype.getProperties = function () {
         return this.properties;
     };
-    Session.prototype.getBasicAuth = function () {
-        return 'Basic ' + (new Buffer('OPENVIDUAPP:' + this.secret).toString('base64'));
-    };
-    Session.prototype.setHostnameAndPort = function () {
-        var urlSplitted = this.urlOpenViduServer.split(':');
-        if (urlSplitted.length === 3) {
-            this.hostname = this.urlOpenViduServer.split(':')[1].replace(/\//g, '');
-            this.port = parseInt(this.urlOpenViduServer.split(':')[2].replace(/\//g, ''));
-        }
-        else if (urlSplitted.length == 2) {
-            this.hostname = this.urlOpenViduServer.split(':')[0].replace(/\//g, '');
-            this.port = parseInt(this.urlOpenViduServer.split(':')[1].replace(/\//g, ''));
-        }
-        else {
-            console.error("URL format incorrect: it must contain hostname and port (current value: '" + this.urlOpenViduServer + "')");
-        }
-    };
+    Session.API_SESSIONS = '/api/sessions';
+    Session.API_TOKENS = '/api/tokens';
     return Session;
 }());
 exports.Session = Session;

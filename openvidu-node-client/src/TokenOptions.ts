@@ -16,8 +16,8 @@ export class TokenOptions {
 export namespace TokenOptions {
     export class Builder {
 
-        private dataProp: string;
-        private roleProp: OpenViduRole;
+        private dataProp: string = '';
+        private roleProp: OpenViduRole = OpenViduRole.PUBLISHER;
 
         build(): TokenOptions {
             return new TokenOptions(this.dataProp, this.roleProp);
