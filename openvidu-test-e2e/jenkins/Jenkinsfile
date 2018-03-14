@@ -15,10 +15,10 @@ node('container') {
           sh 'cd openvidu/openvidu-browser && npm install && npm run updatetsc && npm link'
         }
         stage('OpenVidu Node Client build') {
-          sh 'cd openvidu/openvidu-node-client && npm install && npm run build && npm link'
+          sh 'cd openvidu/openvidu-node-client && npm install --unsafe-perm && npm run build && npm link'
         }
         stage('OpenVidu TestApp build') {
-          sh 'cd openvidu/openvidu-testapp && npm install && npm link openvidu-browser && npm link openvidu-node-client && ng build'
+          sh 'cd openvidu/openvidu-testapp && npm install --unsafe-perm && npm link openvidu-browser && npm link openvidu-node-client && ng build'
         }
         stage ('Environment Launch') {
           sh 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/CN=www.mydom.com/O=My Company LTD./C=US" -keyout openvidu/openvidu-testapp/dist/key.pem -out openvidu/openvidu-testapp/dist/cert.pem'  
