@@ -15,7 +15,7 @@ node('container') {
           sh 'cd openvidu/openvidu-browser && npm install && npm run updatetsc && npm link'
         }
         stage('OpenVidu Node Client build') {
-          sh 'cd openvidu/openvidu-node-client && npm install && tsc && npm link'
+          sh 'cd openvidu/openvidu-node-client && npm install && npm run build && npm link'
         }
         stage('OpenVidu TestApp build') {
           sh 'cd openvidu/openvidu-testapp && npm install && npm link openvidu-browser && npm link openvidu-node-client && ng build'
