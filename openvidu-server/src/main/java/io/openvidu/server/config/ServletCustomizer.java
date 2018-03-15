@@ -8,10 +8,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class ServletCustomizer implements EmbeddedServletContainerCustomizer {
 
-    @Override
-    public void customize(ConfigurableEmbeddedServletContainer container) {
-        MimeMappings mappings = new MimeMappings(MimeMappings.DEFAULT);
-        mappings.add("mkv","video/x-matroska");
-        container.setMimeMappings(mappings);
-    }
+	@Override
+	public void customize(ConfigurableEmbeddedServletContainer container) {
+		MimeMappings mappings = new MimeMappings(MimeMappings.DEFAULT);
+		mappings.add("mp4", "video/mp4");
+		container.setMimeMappings(mappings);
+	}
+
 }

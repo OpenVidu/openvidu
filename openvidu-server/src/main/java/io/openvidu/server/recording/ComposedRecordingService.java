@@ -103,7 +103,7 @@ public class ComposedRecordingService {
 		envs.add("RESOLUTION=1920x1080");
 		envs.add("FRAMERATE=30");
 		envs.add("VIDEO_NAME=" + videoId);
-		envs.add("VIDEO_FORMAT=mkv");
+		envs.add("VIDEO_FORMAT=mp4");
 		envs.add("USER_ID=" + uid);
 		envs.add("RECORDING_JSON=" + recording.toJson().toJSONString());
 
@@ -178,7 +178,7 @@ public class ComposedRecordingService {
 			recording.setHasVideo(infoUtils.hasVideo());
 
 			if (openviduConfig.getOpenViduRecordingFreeAccess()) {
-				recording.setUrl(this.openviduConfig.getFinalUrl() + "recordings/" + recording.getName() + ".mkv");
+				recording.setUrl(this.openviduConfig.getFinalUrl() + "recordings/" + recording.getName() + ".mp4");
 			}
 
 		} catch (IOException | ParseException e) {
@@ -311,7 +311,7 @@ public class ComposedRecordingService {
 					if (Recording.Status.stopped.equals(recording.getStatus())) {
 						recording.setStatus(Recording.Status.available);
 						recording.setUrl(
-								this.openviduConfig.getFinalUrl() + "recordings/" + recording.getName() + ".mkv");
+								this.openviduConfig.getFinalUrl() + "recordings/" + recording.getName() + ".mp4");
 					}
 				}
 				recordingEntities.add(recording);
@@ -361,7 +361,7 @@ public class ComposedRecordingService {
 	}
 
 	private boolean isFileFromRecording(File file, String recordingId) {
-		return (((recordingId + ".info").equals(file.getName())) || ((recordingId + ".mkv").equals(file.getName()))
+		return (((recordingId + ".info").equals(file.getName())) || ((recordingId + ".mp4").equals(file.getName()))
 				|| ((".recording." + recordingId).equals(file.getName())));
 	}
 
@@ -385,7 +385,7 @@ public class ComposedRecordingService {
 		while (!isPresent) {
 			try {
 				Thread.sleep(150);
-				File f = new File(this.openviduConfig.getOpenViduRecordingPath() + recordingId + ".mkv");
+				File f = new File(this.openviduConfig.getOpenViduRecordingPath() + recordingId + ".mp4");
 				isPresent = ((f.isFile()) && (f.length() > 0));
 			} catch (InterruptedException e) {
 				e.printStackTrace();
