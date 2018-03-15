@@ -1,12 +1,14 @@
 import { SessionInternal, SessionOptions, SignalOptions } from '../OpenViduInternal/SessionInternal';
 import { Stream } from '../OpenViduInternal/Stream';
-import { Connection } from "../OpenViduInternal/Connection";
+import { Connection } from '../OpenViduInternal/Connection';
+import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/OpenViduError';
 
 import { OpenVidu } from './OpenVidu';
 import { Publisher } from './Publisher';
 import { Subscriber } from './Subscriber';
 
 import EventEmitter = require('wolfy87-eventemitter');
+import * as DetectRTC from '../KurentoUtils/DetectRTC';
 
 export class Session {
 
@@ -48,21 +50,29 @@ export class Session {
     connect(param1, param2, param3?) {
         // Early configuration to deactivate automatic subscription to streams
         if (param3) {
-            this.session.configure({
-                sessionId: this.session.getSessionId(),
-                participantId: param1,
-                metadata: this.session.stringClientMetadata(param2),
-                subscribeToStreams: false
-            });
-            this.session.connect(param1, param3);
+            if (this.openVidu.checkSystemRequirements()) {
+                this.session.configure({
+                    sessionId: this.session.getSessionId(),
+                    participantId: param1,
+                    metadata: this.session.stringClientMetadata(param2),
+                    subscribeToStreams: false
+                });
+                this.session.connect(param1, param3);
+            } else {
+                param3(new OpenViduError(OpenViduErrorName.BROWSER_NOT_SUPPORTED, 'Browser ' + DetectRTC.browser.name + ' ' + DetectRTC.browser.version + ' is not supported in OpenVidu'));
+            }
         } else {
-            this.session.configure({
-                sessionId: this.session.getSessionId(),
-                participantId: param1,
-                metadata: '',
-                subscribeToStreams: false
-            });
-            this.session.connect(param1, param2);
+            if (this.openVidu.checkSystemRequirements()) {
+                this.session.configure({
+                    sessionId: this.session.getSessionId(),
+                    participantId: param1,
+                    metadata: '',
+                    subscribeToStreams: false
+                });
+                this.session.connect(param1, param2);
+            } else {
+                param2(new OpenViduError(OpenViduErrorName.BROWSER_NOT_SUPPORTED, 'Browser ' + DetectRTC.browser.name + ' ' + DetectRTC.browser.version + ' is not supported in OpenVidu'));
+            }
         }
     }
 

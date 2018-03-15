@@ -1,5 +1,6 @@
 import { Stream } from './Stream';
 import * as adapter from 'webrtc-adapter';
+import * as DetectRTC from '../KurentoUtils/DetectRTC';
 
 export class WebRtcStats {
 
@@ -93,7 +94,7 @@ export class WebRtcStats {
 
         let f = (stats) => {
 
-            if (adapter.browserDetails.browser === 'firefox') {
+            if (DetectRTC.browser.name === 'Firefox') {
                 stats.forEach((stat) => {
 
                     let json = {};
@@ -190,7 +191,7 @@ export class WebRtcStats {
                         sendPost(JSON.stringify(json));
                     }
                 });
-            } else if (adapter.browserDetails.browser === 'chrome') {
+            } else if (DetectRTC.browser.name === 'Chrome') {
                 for (let key of Object.keys(stats)) {
                     let stat = stats[key];
                     if (stat.type === 'ssrc') {
@@ -286,7 +287,7 @@ export class WebRtcStats {
     }
 
     private standardizeReport(response) {
-        if (adapter.browserDetails.browser === 'firefox') {
+        if (DetectRTC.browser.name === 'Firefox') {
             return response;
         }
 
@@ -307,13 +308,13 @@ export class WebRtcStats {
     }
 
     private getStatsAgnostic(pc, selector, successCb, failureCb) {
-        if (adapter.browserDetails.browser === 'firefox') {
+        if (DetectRTC.browser.name === 'Firefox') {
             // getStats takes args in different order in Chrome and Firefox
             return pc.getStats(selector, (response) => {
                 var report = this.standardizeReport(response);
                 successCb(report);
             }, failureCb);
-        } else if (adapter.browserDetails.browser === 'chrome') {
+        } else if (DetectRTC.browser.name === 'Chrome') {
             // In Chrome, the first two arguments are reversed
             return pc.getStats((response) => {
                 var report = this.standardizeReport(response);
