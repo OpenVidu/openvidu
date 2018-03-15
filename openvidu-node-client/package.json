@@ -1,6 +1,6 @@
 {
   "name": "openvidu-node-client",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "description": "OpenVidu Node Client",
   "author": "OpenVidu",
   "license": "Apache-2.0",
