@@ -2987,136 +2987,129 @@ var OpenVidu = /** @class */ (function () {
         }
     };
     OpenVidu.prototype.initPublisher = function (parentId, cameraOptions, callback) {
-        if (this.checkSystemRequirements()) {
-            var publisher_1;
-            if (cameraOptions != null) {
-                cameraOptions.audio = cameraOptions.audio != null ? cameraOptions.audio : true;
-                cameraOptions.video = cameraOptions.video != null ? cameraOptions.video : true;
-                if (!cameraOptions.screen) {
-                    // Webcam and/or microphone is being requested
-                    var cameraOptionsAux = {
-                        sendAudio: cameraOptions.audio != null ? cameraOptions.audio : true,
-                        sendVideo: cameraOptions.video != null ? cameraOptions.video : true,
-                        activeAudio: cameraOptions.audioActive != null ? cameraOptions.audioActive : true,
-                        activeVideo: cameraOptions.videoActive != null ? cameraOptions.videoActive : true,
-                        dataChannel: true,
-                        mediaConstraints: this.openVidu.generateMediaConstraints(cameraOptions)
-                    };
-                    cameraOptions = cameraOptionsAux;
-                    publisher_1 = new Publisher_1.Publisher(this.openVidu.initPublisherTagged(parentId, cameraOptions, true, callback), parentId, false);
-                    console.info("'Publisher' initialized");
-                    return publisher_1;
-                }
-                else {
-                    // Screen share is being requested
-                    publisher_1 = new Publisher_1.Publisher(this.openVidu.initPublisherScreen(parentId, true, callback), parentId, true);
-                    if (DetectRTC.browser.name === 'Firefox' && DetectRTC.browser.version >= 52) {
-                        screenSharingAuto.getScreenId(function (error, sourceId, screenConstraints) {
-                            cameraOptions = {
-                                sendAudio: cameraOptions.audio,
-                                sendVideo: cameraOptions.video,
-                                activeAudio: cameraOptions.audioActive != null ? cameraOptions.audioActive : true,
-                                activeVideo: cameraOptions.videoActive != null ? cameraOptions.videoActive : true,
-                                dataChannel: true,
-                                mediaConstraints: {
-                                    video: screenConstraints.video,
-                                    audio: false
-                                }
-                            };
-                            publisher_1.stream.configureScreenOptions(cameraOptions);
-                            console.info("'Publisher' initialized");
-                            publisher_1.stream.ee.emitEvent('can-request-screen');
-                        });
-                        return publisher_1;
-                    }
-                    else if (DetectRTC.browser.name === 'Chrome') {
-                        // Screen is being requested
-                        /*screenSharing.isChromeExtensionAvailable((availability) => {
-                            switch (availability) {
-                                case 'available':
-                                    console.warn('EXTENSION AVAILABLE!!!');
-                                    screenSharing.getScreenConstraints((error, screenConstraints) => {
-                                        if (!error) {
-                                            console.warn(screenConstraints);
-                                        }
-                                    });
-                                    break;
-                                case 'unavailable':
-                                    console.warn('EXTENSION NOT AVAILABLE!!!');
-                                    break;
-                                case 'isFirefox':
-                                    console.warn('IT IS FIREFOX!!!');
-                                    screenSharing.getScreenConstraints((error, screenConstraints) => {
-                                        if (!error) {
-                                            console.warn(screenConstraints);
-                                        }
-                                    });
-                                    break;
-                            }
-                        });*/
-                        screenSharingAuto.getScreenId(function (error, sourceId, screenConstraints) {
-                            if (error === 'not-installed') {
-                                var error_1 = new OpenViduError_1.OpenViduError("SCREEN_EXTENSION_NOT_INSTALLED" /* SCREEN_EXTENSION_NOT_INSTALLED */, 'https://chrome.google.com/webstore/detail/screen-capturing/ajhifddimkapgcifgcodmmfdlknahffk');
-                                console.error(error_1);
-                                if (callback)
-                                    callback(error_1);
-                                return;
-                            }
-                            else if (error === 'permission-denied') {
-                                var error_2 = new OpenViduError_1.OpenViduError("SCREEN_CAPTURE_DENIED" /* SCREEN_CAPTURE_DENIED */, 'You must allow access to one window of your desktop');
-                                console.error(error_2);
-                                if (callback)
-                                    callback(error_2);
-                                return;
-                            }
-                            cameraOptions = {
-                                sendAudio: cameraOptions.audio != null ? cameraOptions.audio : true,
-                                sendVideo: cameraOptions.video != null ? cameraOptions.video : true,
-                                activeAudio: cameraOptions.audioActive != null ? cameraOptions.audioActive : true,
-                                activeVideo: cameraOptions.videoActive != null ? cameraOptions.videoActive : true,
-                                dataChannel: true,
-                                mediaConstraints: {
-                                    video: screenConstraints.video,
-                                    audio: false
-                                }
-                            };
-                            publisher_1.stream.configureScreenOptions(cameraOptions);
-                            publisher_1.stream.ee.emitEvent('can-request-screen');
-                        }, function (error) {
-                            console.error('getScreenId error', error);
-                            return;
-                        });
-                        console.info("'Publisher' initialized");
-                        return publisher_1;
-                    }
-                    else {
-                        console.error('Screen sharing not supported on ' + DetectRTC.browser.name);
-                        if (!!callback)
-                            callback(new OpenViduError_1.OpenViduError("SCREEN_SHARING_NOT_SUPPORTED" /* SCREEN_SHARING_NOT_SUPPORTED */, 'Screen sharing not supported on ' + DetectRTC.browser.name + ' ' + DetectRTC.browser.version));
-                    }
-                }
+        var publisher;
+        if (cameraOptions != null) {
+            cameraOptions.audio = cameraOptions.audio != null ? cameraOptions.audio : true;
+            cameraOptions.video = cameraOptions.video != null ? cameraOptions.video : true;
+            if (!cameraOptions.screen) {
+                // Webcam and/or microphone is being requested
+                var cameraOptionsAux = {
+                    sendAudio: cameraOptions.audio != null ? cameraOptions.audio : true,
+                    sendVideo: cameraOptions.video != null ? cameraOptions.video : true,
+                    activeAudio: cameraOptions.audioActive != null ? cameraOptions.audioActive : true,
+                    activeVideo: cameraOptions.videoActive != null ? cameraOptions.videoActive : true,
+                    dataChannel: true,
+                    mediaConstraints: this.openVidu.generateMediaConstraints(cameraOptions)
+                };
+                cameraOptions = cameraOptionsAux;
+                publisher = new Publisher_1.Publisher(this.openVidu.initPublisherTagged(parentId, cameraOptions, true, callback), parentId, false);
+                console.info("'Publisher' initialized");
+                return publisher;
             }
             else {
-                cameraOptions = {
-                    sendAudio: true,
-                    sendVideo: true,
-                    activeAudio: true,
-                    activeVideo: true,
-                    dataChannel: true,
-                    mediaConstraints: {
-                        audio: true,
-                        video: { width: { ideal: 1280 } }
-                    }
-                };
-                publisher_1 = new Publisher_1.Publisher(this.openVidu.initPublisherTagged(parentId, cameraOptions, true, callback), parentId, false);
-                console.info("'Publisher' initialized");
-                return publisher_1;
+                // Screen share is being requested
+                publisher = new Publisher_1.Publisher(this.openVidu.initPublisherScreen(parentId, true, callback), parentId, true);
+                if (DetectRTC.browser.name === 'Firefox' && DetectRTC.browser.version >= 52) {
+                    screenSharingAuto.getScreenId(function (error, sourceId, screenConstraints) {
+                        cameraOptions = {
+                            sendAudio: cameraOptions.audio,
+                            sendVideo: cameraOptions.video,
+                            activeAudio: cameraOptions.audioActive != null ? cameraOptions.audioActive : true,
+                            activeVideo: cameraOptions.videoActive != null ? cameraOptions.videoActive : true,
+                            dataChannel: true,
+                            mediaConstraints: {
+                                video: screenConstraints.video,
+                                audio: false
+                            }
+                        };
+                        publisher.stream.configureScreenOptions(cameraOptions);
+                        console.info("'Publisher' initialized");
+                        publisher.stream.ee.emitEvent('can-request-screen');
+                    });
+                    return publisher;
+                }
+                else if (DetectRTC.browser.name === 'Chrome') {
+                    // Screen is being requested
+                    /*screenSharing.isChromeExtensionAvailable((availability) => {
+                        switch (availability) {
+                            case 'available':
+                                console.warn('EXTENSION AVAILABLE!!!');
+                                screenSharing.getScreenConstraints((error, screenConstraints) => {
+                                    if (!error) {
+                                        console.warn(screenConstraints);
+                                    }
+                                });
+                                break;
+                            case 'unavailable':
+                                console.warn('EXTENSION NOT AVAILABLE!!!');
+                                break;
+                            case 'isFirefox':
+                                console.warn('IT IS FIREFOX!!!');
+                                screenSharing.getScreenConstraints((error, screenConstraints) => {
+                                    if (!error) {
+                                        console.warn(screenConstraints);
+                                    }
+                                });
+                                break;
+                        }
+                    });*/
+                    screenSharingAuto.getScreenId(function (error, sourceId, screenConstraints) {
+                        if (error === 'not-installed') {
+                            var error_1 = new OpenViduError_1.OpenViduError("SCREEN_EXTENSION_NOT_INSTALLED" /* SCREEN_EXTENSION_NOT_INSTALLED */, 'https://chrome.google.com/webstore/detail/screen-capturing/ajhifddimkapgcifgcodmmfdlknahffk');
+                            console.error(error_1);
+                            if (callback)
+                                callback(error_1);
+                            return;
+                        }
+                        else if (error === 'permission-denied') {
+                            var error_2 = new OpenViduError_1.OpenViduError("SCREEN_CAPTURE_DENIED" /* SCREEN_CAPTURE_DENIED */, 'You must allow access to one window of your desktop');
+                            console.error(error_2);
+                            if (callback)
+                                callback(error_2);
+                            return;
+                        }
+                        cameraOptions = {
+                            sendAudio: cameraOptions.audio != null ? cameraOptions.audio : true,
+                            sendVideo: cameraOptions.video != null ? cameraOptions.video : true,
+                            activeAudio: cameraOptions.audioActive != null ? cameraOptions.audioActive : true,
+                            activeVideo: cameraOptions.videoActive != null ? cameraOptions.videoActive : true,
+                            dataChannel: true,
+                            mediaConstraints: {
+                                video: screenConstraints.video,
+                                audio: false
+                            }
+                        };
+                        publisher.stream.configureScreenOptions(cameraOptions);
+                        publisher.stream.ee.emitEvent('can-request-screen');
+                    }, function (error) {
+                        console.error('getScreenId error', error);
+                        return;
+                    });
+                    console.info("'Publisher' initialized");
+                    return publisher;
+                }
+                else {
+                    console.error('Screen sharing not supported on ' + DetectRTC.browser.name);
+                    if (!!callback)
+                        callback(new OpenViduError_1.OpenViduError("SCREEN_SHARING_NOT_SUPPORTED" /* SCREEN_SHARING_NOT_SUPPORTED */, 'Screen sharing not supported on ' + DetectRTC.browser.name + ' ' + DetectRTC.browser.version));
+                }
             }
         }
         else {
-            console.error('Browser not supported');
-            if (!!callback)
-                callback(new OpenViduError_1.OpenViduError("BROWSER_NOT_SUPPORTED" /* BROWSER_NOT_SUPPORTED */, 'Browser ' + DetectRTC.browser.name + ' ' + DetectRTC.browser.version + ' is not supported in OpenVidu'));
+            cameraOptions = {
+                sendAudio: true,
+                sendVideo: true,
+                activeAudio: true,
+                activeVideo: true,
+                dataChannel: true,
+                mediaConstraints: {
+                    audio: true,
+                    video: { width: { ideal: 1280 } }
+                }
+            };
+            publisher = new Publisher_1.Publisher(this.openVidu.initPublisherTagged(parentId, cameraOptions, true, callback), parentId, false);
+            console.info("'Publisher' initialized");
+            return publisher;
         }
     };
     OpenVidu.prototype.reinitPublisher = function (publisher) {
