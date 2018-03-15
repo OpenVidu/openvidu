@@ -64,6 +64,7 @@ public class ComposedRecordingService {
 	private Map<String, Recording> sessionsRecordings = new ConcurrentHashMap<>();
 
 	private final String IMAGE_NAME = "openvidu/openvidu-recording";
+	private String IMAGE_TAG;
 	private final String RECORDING_ENTITY_FILE = ".recording.";
 
 	private DockerClient dockerClient;
@@ -192,7 +193,7 @@ public class ComposedRecordingService {
 	public boolean recordingImageExistsLocally() {
 		boolean imageExists = false;
 		try {
-			dockerClient.inspectImageCmd(IMAGE_NAME).exec();
+			dockerClient.inspectImageCmd(IMAGE_NAME + ":" + IMAGE_TAG).exec();
 			imageExists = true;
 		} catch (NotFoundException nfe) {
 			imageExists = false;
@@ -204,15 +205,15 @@ public class ComposedRecordingService {
 
 	public void downloadRecordingImage() {
 		try {
-			dockerClient.pullImageCmd(IMAGE_NAME).exec(new PullImageResultCallback()).awaitSuccess();
+			dockerClient.pullImageCmd(IMAGE_NAME + ":" + IMAGE_TAG).exec(new PullImageResultCallback()).awaitSuccess();
 		} catch (NotFoundException | InternalServerErrorException e) {
-			if (imageExistsLocally(IMAGE_NAME)) {
-				log.info("Docker image '{}' exists locally", IMAGE_NAME);
+			if (imageExistsLocally(IMAGE_NAME + ":" + IMAGE_TAG)) {
+				log.info("Docker image '{}' exists locally", IMAGE_NAME + ":" + IMAGE_TAG);
 			} else {
 				throw e;
 			}
 		} catch (DockerClientException e) {
-			log.info("Error on Pulling '{}' image. Probably because the user has stopped the execution", IMAGE_NAME);
+			log.info("Error on Pulling '{}' image. Probably because the user has stopped the execution", IMAGE_NAME + ":" + IMAGE_TAG);
 			throw e;
 		}
 	}
@@ -231,7 +232,7 @@ public class ComposedRecordingService {
 
 	private String runRecordingContainer(List<String> envs, String containerName) {
 		Volume volume1 = new Volume("/recordings");
-		CreateContainerCmd cmd = dockerClient.createContainerCmd(IMAGE_NAME).withName(containerName).withEnv(envs)
+		CreateContainerCmd cmd = dockerClient.createContainerCmd(IMAGE_NAME + ":" + IMAGE_TAG).withName(containerName).withEnv(envs)
 				.withNetworkMode("host").withVolumes(volume1)
 				.withBinds(new Bind(openviduConfig.getOpenViduRecordingPath(), volume1));
 		CreateContainerResponse container = null;
@@ -397,6 +398,10 @@ public class ComposedRecordingService {
 		this.stopDockerContainer(containerId);
 		this.removeDockerContainer(containerId);
 		throw e;
+	}
+	
+	public void setRecordingVersion(String version) {
+		this.IMAGE_TAG = version;
 	}
 
 }

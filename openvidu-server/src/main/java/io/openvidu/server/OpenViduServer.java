@@ -172,7 +172,7 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 		case "local":
 			break;
-			
+
 		case "docker-local":
 			break;
 
@@ -182,13 +182,13 @@ public class OpenViduServer implements JsonRpcConfigurer {
 			int port = url.getPort();
 
 			type = "custom";
-			
+
 			if (publicUrl.startsWith("https://")) {
 				OpenViduServer.publicUrl = publicUrl.replace("https://", "wss://");
 			} else if (publicUrl.startsWith("http://")) {
 				OpenViduServer.publicUrl = publicUrl.replace("http://", "wss://");
 			}
-			
+
 			openviduConf.setFinalUrl(url.toString());
 
 			if (!OpenViduServer.publicUrl.startsWith("wss://")) {
@@ -214,8 +214,9 @@ public class OpenViduServer implements JsonRpcConfigurer {
 		boolean recordingModuleEnabled = openviduConf.isRecordingModuleEnabled();
 		if (recordingModuleEnabled) {
 			ComposedRecordingService recordingService = context.getBean(ComposedRecordingService.class);
-			System.out.println(
-					"Recording module required: Downloading openvidu/openvidu-recording Docker image (800 MB aprox)");
+			recordingService.setRecordingVersion(openviduConf.getOpenViduRecordingVersion());
+			System.out.println("Recording module required: Downloading openvidu/openvidu-recording:"
+					+ openviduConf.getOpenViduRecordingVersion() + " Docker image (800 MB aprox)");
 
 			boolean imageExists = false;
 			try {

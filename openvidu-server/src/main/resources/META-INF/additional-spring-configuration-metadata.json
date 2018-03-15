@@ -16,12 +16,12 @@
   },
   {
     "name": "openvidu.cdr",
-    "type": "java.lang.String",
+    "type": "java.lang.Boolean",
     "description": "Whether to enable Call Detail Record or not"
   },
   {
     "name": "openvidu.recording",
-    "type": "java.lang.String",
+    "type": "java.lang.Boolean",
     "description": "Whether to start OpenVidu Server with recording module service available or not (a Docker image will be downloaded during the first execution). Apart from setting this param to true, it is also necessary to explicitly configure sessions to be recorded"
   },
   {
@@ -31,7 +31,12 @@
   },
   {
     "name": "openvidu.recording.free-access",
-    "type": "java.lang.String",
+    "type": "java.lang.Boolean",
     "description": "'true' to allow free access to the video files specified in 'openviu.recording.path'. 'false' to only allow access to authenticated users"
+  },
+    {
+    "name": "openvidu.recording.version",
+    "type": "java.lang.String",
+    "description": "Tag for openvidu/openvidu-recording Docker image"
   }
 ]}

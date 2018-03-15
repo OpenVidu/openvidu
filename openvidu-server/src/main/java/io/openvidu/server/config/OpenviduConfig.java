@@ -27,6 +27,9 @@ public class OpenviduConfig {
 	@Value("${openvidu.recording.free-access}")
 	boolean openviduRecordingFreeAccess;
 
+	@Value("${openvidu.recording.version}")
+	String openviduRecordingVersion;
+
 	private String finalUrl;
 
 	public String getOpenViduPublicUrl() {
@@ -71,6 +74,10 @@ public class OpenviduConfig {
 
 	public void setFinalUrl(String finalUrl) {
 		this.finalUrl = finalUrl.endsWith("/") ? (finalUrl) : (finalUrl + "/");
+	}
+
+	public String getOpenViduRecordingVersion() {
+		return this.openviduRecordingVersion;
 	}
 
 }
