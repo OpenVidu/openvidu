@@ -21,3 +21,7 @@ nbactions.xml
 */.project
 */.classpath
 */.settings/*
+.idea/
+log/
+\.vscode/
+*.iml
