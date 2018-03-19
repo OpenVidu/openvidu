@@ -12,7 +12,7 @@
 	<packaging>jar</packaging>
 
 	<name>OpenVidu Server</name>
-	<version>1.8.0</version>
+	<version>1.9.0-beta-1</version>
 	<description>OpenVidu Server</description>
 	<url>https://github.com/OpenVidu/openvidu</url>
 

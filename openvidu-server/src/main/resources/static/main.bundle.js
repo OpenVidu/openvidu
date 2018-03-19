@@ -5070,6 +5070,7 @@ var Stream = /** @class */ (function () {
             this.isReadyToPublish = true;
             return this.video;
         }
+        this.isReadyToPublish = true;
         return null;
     };
     Stream.prototype.playThumbnail = function (thumbnailId) {
