@@ -12,7 +12,7 @@
 	<packaging>jar</packaging>
 
 	<name>OpenVidu Server</name>
-	<version>1.7.0</version>
+	<version>1.8.0</version>
 	<description>OpenVidu Server</description>
 	<url>https://github.com/OpenVidu/openvidu</url>
 
@@ -209,7 +209,17 @@
 		<dependency>
 			<groupId>io.openvidu</groupId>
 			<artifactId>openvidu-java-client</artifactId>
-			<version>1.7.0</version>
+			<version>1.8.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.codehaus.janino</groupId>
+			<artifactId>janino</artifactId>
+			<version>3.0.7</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.7</version>
 		</dependency>
 
 		<!-- Test dependencies -->

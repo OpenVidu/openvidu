@@ -21,8 +21,9 @@
 		"outDir": "../../lib/OpenViduInternal",
 		"emitBOM": false,
 		"preserveConstEnums": true,
-		"sourceMap": true
+		"sourceMap": true,
+		"lib": ["dom","es5","es2015.promise","scripthost"]
 	},
 	//"buildOnSave": true,
-	"compileOnSave":true
+	"compileOnSave": true
 }

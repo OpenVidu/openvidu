@@ -9,10 +9,12 @@ import { Connection } from './Connection';
 import { SessionInternal } from './SessionInternal';
 import { OpenViduInternal, Callback } from './OpenViduInternal';
 import { OpenViduError, OpenViduErrorName } from './OpenViduError';
+import { WebRtcStats } from './WebRtcStats';
 import EventEmitter = require('wolfy87-eventemitter');
 import * as kurentoUtils from '../KurentoUtils/kurento-utils-js';
 
 import * as adapter from 'webrtc-adapter';
+
 declare var navigator: any;
 declare var RTCSessionDescription: any;
 
@@ -50,7 +52,6 @@ export interface InboundStreamOptions {
 export interface OutboundStreamOptions {
     activeAudio: boolean;
     activeVideo: boolean;
-    connection: Connection;
     dataChannel: boolean;
     mediaConstraints: any;
     sendAudio: boolean;
@@ -87,8 +88,11 @@ export class Stream {
     public isScreenRequestedReady: boolean = false;
     private isScreenRequested = false;
 
+    private webRtcStats: WebRtcStats;
+
     constructor(private openVidu: OpenViduInternal, private local: boolean, private room: SessionInternal, options: any) {
         if (options !== 'screen-options') {
+            // Outbound stream (not screen share) or Inbound stream
             if ('id' in options) {
                 this.inboundOptions = options;
             } else {
@@ -96,11 +100,15 @@ export class Stream {
             }
             this.streamId = (options.id != null) ? options.id : ((options.sendVideo) ? "CAMERA" : "MICRO");
             this.typeOfVideo = (options.typeOfVideo != null) ? options.typeOfVideo : '';
-            this.connection = options.connection;
+
+            if ('recvAudio' in options) {
+                // Set Connection for an Inbound stream (for Outbound streams will be set on Session.Publish(Publisher))
+                this.connection = options.connection;
+            }
         } else {
+            // Outbound stream for screen share
             this.isScreenRequested = true;
             this.typeOfVideo = 'SCREEN';
-            this.connection = this.room.getLocalParticipant();
         }
         this.addEventListener('mediastream-updated', () => {
             if (this.video) this.video.srcObject = this.mediaStream;
@@ -120,12 +128,14 @@ export class Stream {
         if (this.video) {
             if (typeof parentElement === "string") {
                 document.getElementById(parentElement)!.removeChild(this.video);
+                this.ee.emitEvent('video-removed');
             } else if (parentElement instanceof Element) {
                 parentElement.removeChild(this.video);
-            }
-            else if (!parentElement) {
+                this.ee.emitEvent('video-removed');
+            } else if (!parentElement) {
                 if (document.getElementById(this.parentId)) {
                     document.getElementById(this.parentId)!.removeChild(this.video);
+                    this.ee.emitEvent('video-removed');
                 }
             }
             delete this.video;
@@ -136,8 +146,8 @@ export class Stream {
         return this.video;
     }
 
-    setVideoElement(video: HTMLVideoElement) {
-        this.video = video;
+    setVideoElement(video) {
+        if (!!video) this.video = video;
     }
 
     getParentId() {
@@ -225,6 +235,10 @@ export class Stream {
         return this.wp;
     }
 
+    getRTCPeerConnection() {
+        return this.wp.peerConnection;
+    }
+
     addEventListener(eventName: string, listener: any) {
         this.ee.addListener(eventName, listener);
     }
@@ -253,45 +267,49 @@ export class Stream {
     }
 
     playOnlyVideo(parentElement, thumbnailId) {
+        if (!!parentElement) {
 
-        this.video = document.createElement('video');
+            this.video = document.createElement('video');
 
-        this.video.id = (this.local ? 'local-' : 'remote-') + 'video-' + this.streamId;
-        this.video.autoplay = true;
-        this.video.controls = false;
-        this.ee.emitEvent('mediastream-updated');
+            this.video.id = (this.local ? 'local-' : 'remote-') + 'video-' + this.streamId;
+            this.video.autoplay = true;
+            this.video.controls = false;
+            this.ee.emitEvent('mediastream-updated');
 
-        if (this.local && !this.displayMyRemote()) {
-            this.video.muted = true;
-            this.video.oncanplay = () => {
-                console.info("Local 'Stream' with id [" + this.streamId + "] video is now playing");
-                this.ee.emitEvent('video-is-playing', [{
-                    element: this.video
-                }]);
-            };
-        } else {
-            this.video.title = this.streamId;
-        }
-
-        if (typeof parentElement === "string") {
-            this.parentId = parentElement;
-
-            let parentElementDom = document.getElementById(parentElement);
-            if (parentElementDom) {
-                this.video = parentElementDom.appendChild(this.video);
-                this.ee.emitEvent('video-element-created-by-stream', [{
-                    element: this.video
-                }]);
-                this.isVideoELementCreated = true;
+            if (this.local && !this.displayMyRemote()) {
+                this.video.muted = true;
+                this.video.oncanplay = () => {
+                    console.info("Local 'Stream' with id [" + this.streamId + "] video is now playing");
+                    this.ee.emitEvent('video-is-playing', [{
+                        element: this.video
+                    }]);
+                };
+            } else {
+                this.video.title = this.streamId;
             }
-        } else {
-            this.parentId = parentElement.id;
-            this.video = parentElement.appendChild(this.video);
+
+            if (typeof parentElement === "string") {
+                this.parentId = parentElement;
+
+                let parentElementDom = document.getElementById(parentElement);
+                if (parentElementDom) {
+                    this.video = parentElementDom.appendChild(this.video);
+                    this.ee.emitEvent('video-element-created-by-stream', [{
+                        element: this.video
+                    }]);
+                    this.isVideoELementCreated = true;
+                }
+            } else {
+                this.parentId = parentElement.id;
+                this.video = parentElement.appendChild(this.video);
+            }
+
+            this.isReadyToPublish = true;
+
+            return this.video;
         }
 
-        this.isReadyToPublish = true;
-
-        return this.video;
+        return null;
     }
 
     playThumbnail(thumbnailId) {
@@ -324,13 +342,7 @@ export class Stream {
         return this.connection;
     }
 
-    getRTCPeerConnection() {
-        return this.getWebRtcPeer().peerConnection;
-    }
-
     requestCameraAccess(callback: Callback<Stream>) {
-
-        this.connection.addStream(this);
 
         let constraints = this.outboundOptions.mediaConstraints;
 
@@ -433,7 +445,7 @@ export class Stream {
             doLoopback: this.displayMyRemote() || false,
             audioActive: this.outboundOptions.sendAudio,
             videoActive: this.outboundOptions.sendVideo,
-            typeOfVideo: ((this.outboundOptions.sendVideo) ? ((this.isScreenRequested) ? 'SCREEN' :'CAMERA') : '')
+            typeOfVideo: ((this.outboundOptions.sendVideo) ? ((this.isScreenRequested) ? 'SCREEN' : 'CAMERA') : '')
         }, (error, response) => {
             if (error) {
                 console.error("Error on publishVideo: " + JSON.stringify(error));
@@ -594,26 +606,32 @@ export class Stream {
 
                     }
                 }
-                // let thumbnailId = this.video.thumb;
-                this.video.oncanplay = () => {
-                    if (this.local && this.displayMyRemote()) {
-                        console.info("Your own remote 'Stream' with id [" + this.streamId + "] video is now playing");
-                        this.ee.emitEvent('remote-video-is-playing', [{
-                            element: this.video
-                        }]);
-                    } else if (!this.local && !this.displayMyRemote()) {
-                        console.info("Remote 'Stream' with id [" + this.streamId + "] video is now playing");
-                        this.ee.emitEvent('video-is-playing', [{
-                            element: this.video
-                        }]);
-                    }
-                    //show(thumbnailId);
-                    //this.hideSpinner(this.streamId);
-                };
+
+                if (!!this.video) {
+                    // let thumbnailId = this.video.thumb;
+                    this.video.oncanplay = () => {
+                        if (this.local && this.displayMyRemote()) {
+                            console.info("Your own remote 'Stream' with id [" + this.streamId + "] video is now playing");
+                            this.ee.emitEvent('remote-video-is-playing', [{
+                                element: this.video
+                            }]);
+                        } else if (!this.local && !this.displayMyRemote()) {
+                            console.info("Remote 'Stream' with id [" + this.streamId + "] video is now playing");
+                            this.ee.emitEvent('video-is-playing', [{
+                                element: this.video
+                            }]);
+                        }
+                        //show(thumbnailId);
+                        //this.hideSpinner(this.streamId);
+                    };
+                }
                 this.room.emitEvent('stream-subscribed', [{
                     stream: this
                 }]);
             }
+
+            this.initWebRtcStats();
+
         }, error => {
             console.error(this.streamId + ": Error setting SDP to the peer connection: "
                 + JSON.stringify(error));
@@ -668,6 +686,8 @@ export class Stream {
             this.speechEvent.stop();
         }
 
+        this.stopWebRtcStats();
+
         console.info((this.local ? "Local " : "Remote ") + "'Stream' with id [" + this.streamId + "]' has been succesfully disposed");
     }
 
@@ -675,4 +695,16 @@ export class Stream {
         this.outboundOptions = options;
         this.streamId = "SCREEN";
     }
+
+    private initWebRtcStats(): void {
+        this.webRtcStats = new WebRtcStats(this);
+        this.webRtcStats.initWebRtcStats();
+    }
+
+    private stopWebRtcStats() {
+        if (this.webRtcStats != null && this.webRtcStats.isEnabled()) {
+            this.webRtcStats.stopWebRtcStats();
+        }
+    }
+
 }

@@ -14,12 +14,15 @@ COPY kms.sh /kms.sh
 # Install Java
 RUN apt-get update && apt-get install -y openjdk-8-jdk && rm -rf /var/lib/apt/lists/*
 
-# Configure Supervisor
-RUN mkdir -p /var/log/supervisor
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+# Install supervisor
 RUN apt-get update && apt-get install -y supervisor && rm -rf /var/lib/apt/lists/*
 
-# Install OpenVidu Server
+# Configure supervisor
+RUN mkdir -p /var/log/supervisor
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+
+# Copy OpenVidu Server
 COPY openvidu-server-cbx.jar openvidu-server-cbx.jar
 
 EXPOSE 8888

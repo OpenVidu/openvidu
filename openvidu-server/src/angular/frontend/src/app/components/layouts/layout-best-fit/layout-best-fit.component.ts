@@ -1,22 +1,28 @@
-import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ViewEncapsulation, ApplicationRef } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { OpenVidu, Session, Stream } from 'openvidu-browser';
+import { OpenVidu, Session, Stream, Subscriber } from 'openvidu-browser';
+
+import { OpenViduLayout } from '../openvidu-layout';
 
 @Component({
   selector: 'app-layout-best-fit',
   templateUrl: './layout-best-fit.component.html',
-  styleUrls: ['./layout-best-fit.component.css']
+  styleUrls: ['./layout-best-fit.component.css'],
+  encapsulation: ViewEncapsulation.None
 })
 export class LayoutBestFitComponent implements OnInit, OnDestroy {
 
+  openviduLayout: OpenViduLayout;
   sessionId: string;
   secret: string;
 
   session: Session;
-  numberOfVideos = 0;
-  remoteStreams = [];
+  streams = [];
 
-  constructor(private route: ActivatedRoute) {
+  layout: any;
+  resizeTimeout;
+
+  constructor(private route: ActivatedRoute, private appRef: ApplicationRef) {
     this.route.params.subscribe(params => {
       this.sessionId = params.sessionId;
       this.secret = params.secret;
@@ -26,6 +32,14 @@ export class LayoutBestFitComponent implements OnInit, OnDestroy {
   @HostListener('window:beforeunload')
   beforeunloadHandler() {
     this.leaveSession();
+  }
+
+  @HostListener('window:resize', ['$event'])
+  sizeChange(event) {
+    clearTimeout(this.resizeTimeout);
+    this.resizeTimeout = setTimeout(() => {
+      this.openviduLayout.updateLayout();
+    }, 20);
   }
 
   ngOnDestroy() {
@@ -39,15 +53,14 @@ export class LayoutBestFitComponent implements OnInit, OnDestroy {
     this.session = OV.initSession(fullSessionId);
 
     this.session.on('streamCreated', (event) => {
-      this.numberOfVideos++;
+      const subscriber: Subscriber = this.session.subscribe(event.stream, '');
       this.addRemoteStream(event.stream);
-      this.session.subscribe(event.stream, '');
     });
 
     this.session.on('streamDestroyed', (event) => {
-      this.numberOfVideos--;
       event.preventDefault();
       this.deleteRemoteStream(event.stream);
+      this.openviduLayout.updateLayout();
     });
 
     this.session.connect(null, (error) => {
@@ -55,79 +68,46 @@ export class LayoutBestFitComponent implements OnInit, OnDestroy {
         console.error(error);
       }
     });
+
+    this.openviduLayout = new OpenViduLayout();
+    this.openviduLayout.initLayoutContainer(document.getElementById('layout'), {
+      maxRatio: 3 / 2,      // The narrowest ratio that will be used (default 2x3)
+      minRatio: 9 / 16,     // The widest ratio that will be used (default 16x9)
+      fixedRatio: false,    /* If this is true then the aspect ratio of the video is maintained
+      and minRatio and maxRatio are ignored (default false) */
+      bigClass: 'OV_big',   // The class to add to elements that should be sized bigger
+      bigPercentage: 0.8,   // The maximum percentage of space the big ones should take up
+      bigFixedRatio: false, // fixedRatio for the big ones
+      bigMaxRatio: 3 / 2,   // The narrowest ratio to use for the big elements (default 2x3)
+      bigMinRatio: 9 / 16,  // The widest ratio to use for the big elements (default 16x9)
+      bigFirst: true,       // Whether to place the big one in the top left (true) or bottom right
+      animate: true         // Whether you want to animate the transitions
+    });
   }
 
   private addRemoteStream(stream: Stream): void {
-    switch (true) {
-      case (this.numberOfVideos <= 2):
-        if (this.remoteStreams[0] == null) { this.remoteStreams[0] = []; }
-        this.remoteStreams[0].push(stream);
-        break;
-      case (this.numberOfVideos <= 4):
-        if (this.remoteStreams[1] == null) { this.remoteStreams[1] = []; }
-        this.remoteStreams[1].push(stream);
-        break;
-      case (this.numberOfVideos <= 5):
-        this.remoteStreams[0].push(stream);
-        break;
-      case (this.numberOfVideos <= 6):
-        this.remoteStreams[1].push(stream);
-        break;
-      default:
-        if (this.remoteStreams[2] == null) { this.remoteStreams[2] = []; }
-        this.remoteStreams[2].push(stream);
-        break;
-    }
+    this.streams.push(stream);
+    this.appRef.tick();
   }
 
   private deleteRemoteStream(stream: Stream): void {
-    for (let i = 0; i < this.remoteStreams.length; i++) {
-      const index = this.remoteStreams[i].indexOf(stream, 0);
-      if (index > -1) {
-        this.remoteStreams[i].splice(index, 1);
-        this.reArrangeVideos();
-        break;
-      }
+    const index = this.streams.indexOf(stream, 0);
+    if (index > -1) {
+      this.streams.splice(index, 1);
     }
-  }
-
-  private reArrangeVideos(): void {
-    switch (true) {
-      case (this.numberOfVideos === 1):
-        if (this.remoteStreams[0].length === 0) {
-          this.remoteStreams[0].push(this.remoteStreams[1].pop());
-        }
-        break;
-      case (this.numberOfVideos === 2):
-        if (this.remoteStreams[0].length === 1) {
-          this.remoteStreams[0].push(this.remoteStreams[1].pop());
-        }
-        break;
-      case (this.numberOfVideos === 3):
-        if (this.remoteStreams[0].length === 1) {
-          this.remoteStreams[0].push(this.remoteStreams[1].pop());
-        }
-        break;
-      case (this.numberOfVideos === 4):
-        if (this.remoteStreams[0].length === 3) {
-          this.remoteStreams[1].unshift(this.remoteStreams[0].pop());
-        }
-        break;
-      case (this.numberOfVideos === 5):
-        if (this.remoteStreams[0].length === 2) {
-          this.remoteStreams[0].push(this.remoteStreams[1].shift());
-        }
-        break;
-    }
-    this.remoteStreams = this.remoteStreams.filter((array) => { return array.length > 0 });
-
+    this.appRef.tick();
   }
 
   leaveSession() {
     if (this.session) { this.session.disconnect(); };
-    this.remoteStreams = [];
-    this.numberOfVideos = 0;
+    this.streams = [];
     this.session = null;
+  }
+
+  onVideoPlaying(event) {
+    const video: HTMLVideoElement = event.target;
+    video.parentElement.parentElement.classList.remove('custom-class');
+    this.openviduLayout.updateLayout();
   }
 
 }

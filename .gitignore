@@ -16,7 +16,13 @@ nbactions.xml
 *bower_components/
 .externalToolBuilders
 *bin/
-/.vscode
-
+*/.vscode/*
+*/.sts4-cache/*
+*/.project
+*/.classpath
+*/.settings/*
 .idea/
+log/
+\.vscode/
 *.iml
+

@@ -219,7 +219,8 @@ public class KurentoSession implements Session {
 			other.cancelReceivingMedia(participant.getParticipantPublicId());
 		}
 	}
-
+	
+	@Override
 	public int getActivePublishers() {
 		return activePublishers.get();
 	}

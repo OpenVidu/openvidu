@@ -1,7 +1,5 @@
 package io.openvidu.server.core;
 
-import java.math.BigInteger;
-import java.security.SecureRandom;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -10,6 +8,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PreDestroy;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.kurento.jsonrpc.message.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,6 +58,15 @@ public abstract class SessionManager {
 	 *
 	 */
 	public void evictParticipant(String participantPrivateId) throws OpenViduException {
+	}
+	
+	/**
+	 * Returns a Session given its id
+	 *
+	 * @return Session
+	 */
+	public Session getSession(String sessionId) {
+		return sessions.get(sessionId);
 	}
 
 	/**
@@ -141,7 +149,7 @@ public abstract class SessionManager {
 
 	public String newSessionId(SessionProperties sessionProperties) {
 		String sessionId = OpenViduServer.publicUrl;
-		sessionId += "/" + new BigInteger(130, new SecureRandom()).toString(32);
+		sessionId += "/" + RandomStringUtils.randomAlphanumeric(16).toLowerCase();
 
 		this.sessionidTokenTokenobj.put(sessionId, new ConcurrentHashMap<>());
 		this.sessionidParticipantpublicidParticipant.put(sessionId, new ConcurrentHashMap<>());
@@ -155,7 +163,7 @@ public abstract class SessionManager {
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null
 				&& this.sessionidTokenTokenobj.get(sessionId) != null) {
 			if (isMetadataFormatCorrect(serverMetadata)) {
-				String token = new BigInteger(130, new SecureRandom()).toString(32);
+				String token = RandomStringUtils.randomAlphanumeric(16).toLowerCase();
 				this.sessionidTokenTokenobj.get(sessionId).put(token, new Token(token, role, serverMetadata));
 				showTokens();
 				return token;
@@ -226,12 +234,12 @@ public abstract class SessionManager {
 	public Participant newParticipant(String sessionId, String participantPrivatetId, Token token,
 			String clientMetadata) {
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
-			String participantPublicId = new BigInteger(130, new SecureRandom()).toString(32);
+			String participantPublicId = RandomStringUtils.randomAlphanumeric(16).toLowerCase();
 			ConcurrentHashMap<String, Participant> participantpublicidParticipant = this.sessionidParticipantpublicidParticipant
 					.get(sessionId);
 			while (participantpublicidParticipant.containsKey(participantPublicId)) {
 				// Avoid random 'participantpublicid' collisions
-				participantPublicId = new BigInteger(130, new SecureRandom()).toString(32);
+				participantPublicId = RandomStringUtils.randomAlphanumeric(16).toLowerCase();
 			}
 			Participant p = new Participant(participantPrivatetId, participantPublicId, token, clientMetadata);
 			this.sessionidParticipantpublicidParticipant.get(sessionId).put(participantPublicId, p);

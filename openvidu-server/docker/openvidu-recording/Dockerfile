@@ -13,6 +13,9 @@ RUN add-apt-repository ppa:mc3man/xerus-media
 RUN apt-get update
 RUN apt-get install -y ffmpeg pulseaudio xvfb
 
+# Install jq for managing JSON
+RUN apt-get install -y jq
+
 # Clean
 RUN apt-get autoclean
 

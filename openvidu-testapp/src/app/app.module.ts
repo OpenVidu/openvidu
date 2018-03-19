@@ -11,9 +11,12 @@ import { TestSessionsComponent } from './components/test-sessions/test-sessions.
 import { TestApirestComponent } from './components/test-apirest/test-apirest.component';
 import { OpenviduInstanceComponent } from './components/openvidu-instance/openvidu-instance.component';
 import { ExtensionDialogComponent } from './components/openvidu-instance/extension-dialog.component';
+import { LocalRecordingDialogComponent } from './components/test-sessions/local-recording-dialog.component';
+
 import { OpenviduRestService } from './services/openvidu-rest.service';
 import { OpenviduParamsService } from './services/openvidu-params.service';
 import { TestFeedService } from './services/test-feed.service';
+import { MuteSubscribersService } from './services/mute-subscribers.service';
 
 @NgModule({
   declarations: [
@@ -21,7 +24,8 @@ import { TestFeedService } from './services/test-feed.service';
     OpenviduInstanceComponent,
     TestSessionsComponent,
     TestApirestComponent,
-    ExtensionDialogComponent
+    ExtensionDialogComponent,
+    LocalRecordingDialogComponent
   ],
   imports: [
     BrowserModule,
@@ -34,9 +38,13 @@ import { TestFeedService } from './services/test-feed.service';
   providers: [
     OpenviduRestService,
     OpenviduParamsService,
-    TestFeedService
+    TestFeedService,
+    MuteSubscribersService
   ],
-  entryComponents: [ExtensionDialogComponent],
+  entryComponents: [
+    ExtensionDialogComponent,
+    LocalRecordingDialogComponent
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

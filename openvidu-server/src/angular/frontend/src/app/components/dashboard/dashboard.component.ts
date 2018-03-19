@@ -123,7 +123,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
           audioActive: true,
           videoActive: true,
           quality: 'MEDIUM'
-        });
+        },
+        e => {
+          if (!!e) {
+            console.error(e);
+          }
+        }
+      );
 
         publisherRemote.on('accessAllowed', () => {
           this.msgChain.push('Camera access allowed');

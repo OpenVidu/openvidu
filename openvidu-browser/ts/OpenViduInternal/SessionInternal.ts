@@ -5,6 +5,8 @@ import { Publisher } from '../OpenVidu/Publisher';
 
 import EventEmitter = require('wolfy87-eventemitter');
 
+type ObjMap<T> = { [s: string]: T; }
+
 const SECRET_PARAM = '?secret=';
 const RECORDER_PARAM = '&recorder=';
 
@@ -28,7 +30,7 @@ export class SessionInternal {
     private id: string;
     private sessionId: string;
     private ee = new EventEmitter();
-    private streams = {};
+    private remoteStreams: ObjMap<Stream> = {};
     private participants = {};
     private publishersSpeaking: Connection[] = [];
     private connected = false;
@@ -41,7 +43,7 @@ export class SessionInternal {
     constructor(private openVidu: OpenViduInternal, sessionId: string) {
         this.sessionId = this.getUrlWithoutSecret(sessionId);
         this.localParticipant = new Connection(this.openVidu, true, this);
-        if (!this.openVidu.getWsUri()) {
+        if (!this.openVidu.getWsUri() && !!sessionId) {
             this.processOpenViduUrl(sessionId);
         }
     }
@@ -129,7 +131,7 @@ export class SessionInternal {
 
                 if (this.localParticipant) {
                     if (Object.keys(this.localParticipant.getStreams()).some(streamId =>
-                        this.streams[streamId].isDataChannelEnabled())) {
+                        this.remoteStreams[streamId].isDataChannelEnabled())) {
                         joinParams.dataChannels = true;
                     }
                 }
@@ -191,8 +193,8 @@ export class SessionInternal {
                         for (let stream of roomEvent.streams) {
                             this.ee.emitEvent('streamCreated', [{ stream }]);
 
-                            // Adding the remote stream to the OpenVidu object
-                            this.openVidu.getRemoteStreams().push(stream);
+                            // Store the remote stream
+                            this.remoteStreams[stream.streamId] = stream;
                         }
 
                         callback(undefined);
@@ -214,6 +216,10 @@ export class SessionInternal {
         this.updateSpeakerInterval = options.updateSpeakerInterval || 1500;
         this.thresholdSpeaker = options.thresholdSpeaker || -50;
         this.activateUpdateMainSpeaker();
+
+        if (!this.openVidu.getWsUri()) {
+            this.processOpenViduUrl(options.sessionId);
+        }
     }
 
     getId() {
@@ -269,14 +275,14 @@ export class SessionInternal {
         this.openVidu.sendRequest('unsubscribeFromVideo', {
             sender: stream.connection.connectionId
         },
-        (error, response) => {
-            if (error) {
-                console.error("Error unsubscribing from Subscriber", error);
-            } else {
-                console.info("Unsubscribed correctly from " + stream.connection.connectionId);
-            }
-            stream.dispose();
-        });
+            (error, response) => {
+                if (error) {
+                    console.error("Error unsubscribing from Subscriber", error);
+                } else {
+                    console.info("Unsubscribed correctly from " + stream.connection.connectionId);
+                }
+                stream.dispose();
+            });
     }
 
     onParticipantPublished(response: ConnectionOptions) {
@@ -301,22 +307,26 @@ export class SessionInternal {
             console.debug("Remote Connection found in connections list by its id [" + pid + "]");
         }
 
-
         this.participants[pid] = connection;
-
-        this.ee.emitEvent('participant-published', [{ connection }]);
 
         let streams = connection.getStreams();
         for (let key in streams) {
             let stream = streams[key];
 
-            if (this.subscribeToStreams) {
-                stream.subscribe();
-            }
-            this.ee.emitEvent('streamCreated', [{ stream }]);
-            
-            // Adding the remote stream to the OpenVidu object
-            this.openVidu.getRemoteStreams().push(stream);
+            if (!this.remoteStreams[stream.streamId]) {
+                // Avoid race condition between stream.subscribe() in "onParticipantPublished" and in "joinRoom" rpc callback
+                // This condition is false if openvidu-server sends "participantPublished" event to a subscriber participant that has
+                // already subscribed to certain stream in the callback of "joinRoom" method
+
+                if (this.subscribeToStreams) {
+                    stream.subscribe();
+                }
+                this.ee.emitEvent('streamCreated', [{ stream }]);
+
+                // Store the remote stream
+                this.remoteStreams[stream.streamId] = stream;
+
+           }
         }
     }
 
@@ -335,14 +345,12 @@ export class SessionInternal {
                     stream: streams[key]
                 }]);
 
-                // Deleting the removed stream from the OpenVidu object
-                let index = this.openVidu.getRemoteStreams().indexOf(streams[key]);
-                let stream = this.openVidu.getRemoteStreams()[index];
-
+                // Deleting the remote stream
+                let streamId: string = streams[key].streamId;
+                let stream: Stream = this.remoteStreams[streamId];
 
                 stream.dispose();
-                this.openVidu.getRemoteStreams().splice(index, 1);
-                delete this.streams[stream.streamId];
+                delete this.remoteStreams[stream.streamId];
                 connection.removeStream(stream.streamId);
 
             }
@@ -383,7 +391,6 @@ export class SessionInternal {
         let connection: Connection = this.participants[msg.name];
 
         if (connection !== undefined) {
-            delete this.participants[msg.name];
 
             this.ee.emitEvent('participant-left', [{
                 connection: connection
@@ -399,12 +406,14 @@ export class SessionInternal {
                     stream: streams[key]
                 }]);
 
-                // Deleting the removed stream from the OpenVidu object
-                let index = this.openVidu.getRemoteStreams().indexOf(streams[key]);
-                this.openVidu.getRemoteStreams().splice(index, 1);
+                // Deleting the remote stream
+                let streamId: string = streams[key].streamId;
+                delete this.remoteStreams[streamId];
             }
 
             connection.dispose();
+
+            delete this.participants[msg.name];
 
             this.ee.emitEvent('connectionDestroyed', [{
                 connection: connection
@@ -472,21 +481,21 @@ export class SessionInternal {
 
     onRoomClosed(msg) {
 
-        console.info("Room closed: " + JSON.stringify(msg));
+        console.info("Session closed: " + JSON.stringify(msg));
         let room = msg.room;
         if (room !== undefined) {
             this.ee.emitEvent('room-closed', [{
                 room: room
             }]);
         } else {
-            console.warn("Room undefined in on room closed", msg);
+            console.warn("Session undefined on session closed", msg);
         }
     }
 
     onLostConnection() {
 
         if (!this.connected) {
-            console.warn('Not connected to room: if you are not debugging, this is probably a certificate error');
+            console.warn('Not connected to session: if you are not debugging, this is probably a certificate error');
             if (window.confirm('If you are not debugging, this is probably a certificate error at \"' + this.openVidu.getOpenViduServerURL() + '\"\n\nClick OK to navigate and accept it')) {
                 location.assign(this.openVidu.getOpenViduServerURL() + '/accept-certificate');
             };
@@ -498,7 +507,7 @@ export class SessionInternal {
         if (room !== undefined) {
             this.ee.emitEvent('lost-connection', [{ room }]);
         } else {
-            console.warn('Room undefined when lost connection');
+            console.warn('Session undefined when lost connection');
         }
     }
 
@@ -580,7 +589,7 @@ export class SessionInternal {
             return;
         } else if (stream.connection !== this.localParticipant) {
             console.error("The associated Connection object of this Publisher is not your local Connection." +
-                            "Only moderators can force unpublish on remote Streams via 'forceUnpublish' method", stream);
+                "Only moderators can force unpublish on remote Streams via 'forceUnpublish' method", stream);
             return;
         } else {
             stream.dispose();
@@ -610,8 +619,8 @@ export class SessionInternal {
         }
     }
 
-    getStreams() {
-        return this.streams;
+    getRemoteStreams() {
+        return this.remoteStreams;
     }
 
     addParticipantSpeaking(participantId) {

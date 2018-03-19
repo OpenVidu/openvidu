@@ -9,20 +9,18 @@ let https = require('https');
 
 export class Session {
 
-    private sessionIdURL: string = '/api/sessions';
-    private tokenURL: string = '/api/tokens';
+    private static readonly API_SESSIONS: string = '/api/sessions';
+    private static readonly API_TOKENS: string = '/api/tokens';
+
     private sessionId: string = "";
     private properties: SessionProperties;
-    private hostname: string;
-    private port: number;
 
-    constructor(private urlOpenViduServer: string, private secret: string, properties?: SessionProperties) {
+    constructor(private hostname: string, private port: number, private basicAuth: string, properties?: SessionProperties) {
         if (properties == null) {
             this.properties = new SessionProperties.Builder().build();
         } else {
             this.properties = properties;
         }
-        this.setHostnameAndPort();
     }
 
     public getSessionId(callback: Function) {
@@ -41,10 +39,10 @@ export class Session {
         let options = {
             hostname: this.hostname,
             port: this.port,
-            path: this.sessionIdURL,
+            path: Session.API_SESSIONS,
             method: 'POST',
             headers: {
-                'Authorization': this.getBasicAuth(),
+                'Authorization': this.basicAuth,
                 'Content-Type': 'application/json',
                 'Content-Length': Buffer.byteLength(requestBody)
             }
@@ -56,10 +54,15 @@ export class Session {
                 body += d;
             });
             res.on('end', () => {
-                // Data reception is done
-                let parsed = JSON.parse(body);
-                this.sessionId = parsed.id;
-                callback(parsed.id);
+                if (res.statusCode === 200) {
+                    // SUCCESS response from openvidu-server. Resolve sessionId
+                    let parsed = JSON.parse(body);
+                    this.sessionId = parsed.id;
+                    callback(parsed.id);
+                } else {
+                    // ERROR response from openvidu-server. Resolve HTTP status
+                    console.error(res.statusCode);
+                }
             });
         });
 
@@ -94,10 +97,10 @@ export class Session {
         let options = {
             hostname: this.hostname,
             port: this.port,
-            path: this.tokenURL,
+            path: Session.API_TOKENS,
             method: 'POST',
             headers: {
-                'Authorization': this.getBasicAuth(),
+                'Authorization': this.basicAuth,
                 'Content-Type': 'application/json',
                 'Content-Length': Buffer.byteLength(requestBody)
             }
@@ -109,9 +112,14 @@ export class Session {
                 body += d;
             });
             res.on('end', () => {
-                // Data reception is done
-                let parsed = JSON.parse(body);
-                callback(parsed.id);
+                if (res.statusCode === 200) {
+                    // SUCCESS response from openvidu-server. Resolve token
+                    let parsed = JSON.parse(body);
+                    callback(parsed.id);
+                } else {
+                    // ERROR response from openvidu-server. Resolve HTTP status
+                    console.error(res.statusCode);
+                }
             });
         });
 
@@ -123,24 +131,7 @@ export class Session {
     }
 
     public getProperties(): SessionProperties {
-		return this.properties;
-	}
-
-    private getBasicAuth() {
-        return 'Basic ' + (new Buffer('OPENVIDUAPP:' + this.secret).toString('base64'));
-    }
-
-    private setHostnameAndPort() {
-        let urlSplitted = this.urlOpenViduServer.split(':');
-        if (urlSplitted.length === 3) { // URL has format: http:// + hostname + :port
-            this.hostname = this.urlOpenViduServer.split(':')[1].replace(/\//g, '');
-            this.port = parseInt(this.urlOpenViduServer.split(':')[2].replace(/\//g, ''));
-        } else if (urlSplitted.length == 2) { // URL has format: hostname + :port
-            this.hostname = this.urlOpenViduServer.split(':')[0].replace(/\//g, '');
-            this.port = parseInt(this.urlOpenViduServer.split(':')[1].replace(/\//g, ''));
-        } else {
-            console.error("URL format incorrect: it must contain hostname and port (current value: '" + this.urlOpenViduServer + "')");
-        }
+        return this.properties;
     }
 
 }

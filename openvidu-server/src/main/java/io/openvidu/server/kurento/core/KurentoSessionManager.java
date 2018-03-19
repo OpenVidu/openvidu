@@ -18,6 +18,7 @@ import com.google.gson.JsonSyntaxException;
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
+import io.openvidu.java.client.ArchiveLayout;
 import io.openvidu.java.client.ArchiveMode;
 import io.openvidu.java.client.MediaMode;
 import io.openvidu.java.client.SessionProperties;
@@ -26,7 +27,7 @@ import io.openvidu.server.kurento.KurentoClientProvider;
 import io.openvidu.server.kurento.KurentoClientSessionInfo;
 import io.openvidu.server.kurento.OpenViduKurentoClientSessionInfo;
 import io.openvidu.server.kurento.endpoint.SdpType;
-import io.openvidu.server.recording.RecordingService;
+import io.openvidu.server.recording.ComposedRecordingService;
 import io.openvidu.server.rpc.RpcHandler;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.MediaOptions;
@@ -44,7 +45,7 @@ public class KurentoSessionManager extends SessionManager {
 	private KurentoSessionEventsHandler sessionHandler;
 
 	@Autowired
-	private RecordingService recordingService;
+	private ComposedRecordingService recordingService;
 
 	@Autowired
 	OpenviduConfig openviduConfig;
@@ -62,7 +63,7 @@ public class KurentoSessionManager extends SessionManager {
 				SessionProperties properties = sessionProperties.get(sessionId);
 				if (properties == null && this.isInsecureParticipant(participant.getParticipantPrivateId())) {
 					properties = new SessionProperties.Builder().mediaMode(MediaMode.ROUTED)
-							.archiveMode(ArchiveMode.ALWAYS).build();
+							.archiveMode(ArchiveMode.ALWAYS).archiveLayout(ArchiveLayout.BEST_FIT).build();
 				}
 				createSession(kcSessionInfo, properties);
 			}
@@ -94,7 +95,7 @@ public class KurentoSessionManager extends SessionManager {
 	@Override
 	public void leaveRoom(Participant participant, Integer transactionId) {
 		log.debug("Request [LEAVE_ROOM] ({})", participant.getParticipantPublicId());
-		
+
 		KurentoParticipant kParticipant = (KurentoParticipant) participant;
 		KurentoSession session = kParticipant.getSession();
 		String sessionId = session.getSessionId();
@@ -147,16 +148,15 @@ public class KurentoSessionManager extends SessionManager {
 			showTokens();
 
 			log.warn("Session '{}' removed and closed", sessionId);
-		} 
-		if (
-			remainingParticipants.size() == 1 &&
-			openviduConfig.isRecordingModuleEnabled() &&
-			MediaMode.ROUTED.equals(session.getSessionProperties().mediaMode()) &&
-			ProtocolElements.RECORDER_PARTICIPANT_ID_PUBLICID.equals(remainingParticipants.iterator().next().getParticipantPublicId())
-			) {
-				log.info("Last participant left. Stopping recording for session {}", sessionId);
-				evictParticipant(session.getParticipantByPublicId("RECORDER").getParticipantPrivateId());
-				recordingService.stopRecording(session);
+		}
+		if (remainingParticipants.size() == 1 && openviduConfig.isRecordingModuleEnabled()
+				&& MediaMode.ROUTED.equals(session.getSessionProperties().mediaMode())
+				&& ArchiveMode.ALWAYS.equals(session.getSessionProperties().archiveMode())
+				&& ProtocolElements.RECORDER_PARTICIPANT_ID_PUBLICID
+						.equals(remainingParticipants.iterator().next().getParticipantPublicId())) {
+			log.info("Last participant left. Stopping recording for session {}", sessionId);
+			evictParticipant(session.getParticipantByPublicId("RECORDER").getParticipantPrivateId());
+			recordingService.stopRecording(session);
 		}
 		sessionHandler.onParticipantLeft(participant, sessionId, remainingParticipants, transactionId, null);
 	}

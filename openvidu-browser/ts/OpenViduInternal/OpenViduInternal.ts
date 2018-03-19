@@ -15,6 +15,7 @@
  *
  */
 import { SessionInternal, SessionOptions } from './SessionInternal';
+import { Connection } from './Connection';
 import { OpenViduError, OpenViduErrorName } from './OpenViduError';
 import { Stream, OutboundStreamOptions } from './Stream';
 import * as RpcBuilder from '../KurentoUtils/kurento-jsonrpc';
@@ -29,7 +30,6 @@ export class OpenViduInternal {
     private rpcParams: any;
     private callback: Callback<OpenViduInternal>;
     private localStream: Stream;
-    private remoteStreams: Stream[] = [];
     private secret: string;
     private recorder: boolean = false;
 
@@ -45,7 +45,6 @@ export class OpenViduInternal {
         if (newStream) {
             if (cameraOptions == null) {
                 cameraOptions = {
-                    connection: this.session.getLocalParticipant(),
                     sendAudio: true,
                     sendVideo: true,
                     activeAudio: true,
@@ -56,8 +55,6 @@ export class OpenViduInternal {
                         video: { width: { ideal: 1280 } }
                     }
                 }
-            } else {
-                cameraOptions.connection = this.session.getLocalParticipant();
             }
             this.localStream = new Stream(this, true, this.session, cameraOptions);
         }
@@ -139,7 +136,7 @@ export class OpenViduInternal {
         return this.localStream;
     }
 
-    cameraReady(localStream: Stream, parentId: string): HTMLVideoElement {
+    cameraReady(localStream: Stream, parentId: string) {
         this.localStream = localStream;
         let videoElement = this.localStream.playOnlyVideo(parentId, null);
         this.localStream.emitStreamReadyEvent();
@@ -150,9 +147,6 @@ export class OpenViduInternal {
         return this.localStream;
     }
 
-    getRemoteStreams() {
-        return this.remoteStreams;
-    }
     /* NEW METHODS */
 
     getWsUri() {
@@ -236,7 +230,7 @@ export class OpenViduInternal {
         if (this.session !== undefined && this.session instanceof SessionInternal) {
             return true;
         } else {
-            console.warn('Room instance not found');
+            console.warn('Session instance not found');
             return false;
         }
     }

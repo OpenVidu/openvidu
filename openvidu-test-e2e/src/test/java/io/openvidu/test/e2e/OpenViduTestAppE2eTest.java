@@ -605,6 +605,8 @@ public class OpenViduTestAppE2eTest {
 		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
 				true, true));
 
+		Thread.sleep(2000);
+
 		List<WebElement> publishButtons = user.getDriver().findElements(By.className("publish-btn"));
 		for (WebElement el : publishButtons) {
 			el.click();

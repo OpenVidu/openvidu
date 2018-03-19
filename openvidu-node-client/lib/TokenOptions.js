@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+var OpenViduRole_1 = require("./OpenViduRole");
 var TokenOptions = /** @class */ (function () {
     function TokenOptions(data, role) {
         this.data = data;
@@ -17,6 +18,8 @@ exports.TokenOptions = TokenOptions;
 (function (TokenOptions) {
     var Builder = /** @class */ (function () {
         function Builder() {
+            this.dataProp = '';
+            this.roleProp = OpenViduRole_1.OpenViduRole.PUBLISHER;
         }
         Builder.prototype.build = function () {
             return new TokenOptions(this.dataProp, this.roleProp);

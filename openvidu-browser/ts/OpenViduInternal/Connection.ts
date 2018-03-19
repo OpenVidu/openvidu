@@ -22,7 +22,7 @@ export class Connection {
 
         console.info( "'Connection' created (" + ( local ? "local" : "remote" ) + ")" + ( local ? "" : ", with 'connectionId' [" + (options ? options.id : '') + "] " ));
 
-        if ( options ) {
+        if ( options && !local ) {
 
             this.connectionId = options.id;
             if (options.metadata) {
@@ -36,13 +36,14 @@ export class Connection {
     }
 
     addStream( stream: Stream ) {
+        stream.connection = this;
         this.streams[stream.streamId] = stream;
-        this.room.getStreams()[stream.streamId] = stream;
+        //this.room.getStreams()[stream.streamId] = stream;
     }
 
     removeStream( key: string ) {
         delete this.streams[key];
-        delete this.room.getStreams()[key];
+        //delete this.room.getStreams()[key];
         delete this.inboundStreamsOpts;
     }
 
