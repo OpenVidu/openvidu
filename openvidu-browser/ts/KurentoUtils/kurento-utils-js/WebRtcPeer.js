@@ -94,8 +94,7 @@ function bufferizeCandidates(pc, onerror) {
     if (this.signalingState === 'stable') {
       while (candidatesQueue.length) {
         var entry = candidatesQueue.shift()
-
-        this.addIceCandidate(entry.candidate, entry.callback, entry.callback)
+        pc.addIceCandidate(entry.candidate, entry.callback, entry.callback)
       }
     }
   })
@@ -332,7 +331,7 @@ function WebRtcPeer(mode, options, callback) {
     }
   })
 
-  pc.ontrack = options.onaddstream
+  pc.onaddstream = options.onaddstream
   pc.onnegotiationneeded = options.onnegotiationneeded
   this.on('newListener', function (event, listener) {
     if (event === 'icecandidate' || event === 'candidategatheringdone') {
@@ -424,19 +423,18 @@ function WebRtcPeer(mode, options, callback) {
 
   function setRemoteVideo() {
     if (remoteVideo) {
-      var stream = pc.getRemoteStreams()[0]
-      var url = stream ? URL.createObjectURL(stream) : ''
-
       remoteVideo.pause()
-      remoteVideo.src = url
-      remoteVideo.load()
 
-      logger.debug('Remote URL:', url)
+      var stream = pc.getRemoteStreams()[0]
+      remoteVideo.srcObject = stream
+      logger.debug('Remote stream:', stream)
+
+      remoteVideo.load()
     }
   }
 
   this.showLocalVideo = function () {
-    localVideo.src = URL.createObjectURL(videoStream)
+    localVideo.srcObject = videoStream
     localVideo.muted = true
   }
 
@@ -621,14 +619,14 @@ function WebRtcPeer(mode, options, callback) {
   this.on('_dispose', function () {
     if (localVideo) {
       localVideo.pause()
-      localVideo.src = ''
+      localVideo.srcObject = null
       localVideo.load()
       //Unmute local video in case the video tag is later used for remote video
       localVideo.muted = false
     }
     if (remoteVideo) {
       remoteVideo.pause()
-      remoteVideo.src = ''
+      remoteVideo.srcObject = null
       remoteVideo.load()
     }
     self.removeAllListeners()

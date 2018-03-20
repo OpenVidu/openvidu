@@ -242,7 +242,7 @@ export class OpenVidu {
         let browser = DetectRTC.browser.name;
         let version = DetectRTC.browser.version;
 
-        if ((browser !== 'Chrome') && (browser !== 'Firefox') && (browser !== 'Opera')) {
+        if ((browser !== 'Chrome') && (browser !== 'Firefox') && (browser !== 'Opera') && (browser !== 'Safari')) {
             return 0;
         } else {
             return defaultWebRTCSupport ? 1 : 0;

@@ -2322,7 +2322,7 @@ function bufferizeCandidates(pc, onerror) {
         if (this.signalingState === 'stable') {
             while (candidatesQueue.length) {
                 var entry = candidatesQueue.shift();
-                this.addIceCandidate(entry.candidate, entry.callback, entry.callback);
+                pc.addIceCandidate(entry.candidate, entry.callback, entry.callback);
             }
         }
     });
@@ -2528,7 +2528,7 @@ function WebRtcPeer(mode, options, callback) {
                 candidategatheringdone = true;
         }
     });
-    pc.ontrack = options.onaddstream;
+    pc.onaddstream = options.onaddstream;
     pc.onnegotiationneeded = options.onnegotiationneeded;
     this.on('newListener', function (event, listener) {
         if (event === 'icecandidate' || event === 'candidategatheringdone') {
@@ -2604,16 +2604,15 @@ function WebRtcPeer(mode, options, callback) {
     };
     function setRemoteVideo() {
         if (remoteVideo) {
-            var stream = pc.getRemoteStreams()[0];
-            var url = stream ? URL.createObjectURL(stream) : '';
             remoteVideo.pause();
-            remoteVideo.src = url;
+            var stream = pc.getRemoteStreams()[0];
+            remoteVideo.srcObject = stream;
+            logger.debug('Remote stream:', stream);
             remoteVideo.load();
-            logger.debug('Remote URL:', url);
         }
     }
     this.showLocalVideo = function () {
-        localVideo.src = URL.createObjectURL(videoStream);
+        localVideo.srcObject = videoStream;
         localVideo.muted = true;
     };
     this.send = function (data) {
@@ -2770,14 +2769,14 @@ function WebRtcPeer(mode, options, callback) {
     this.on('_dispose', function () {
         if (localVideo) {
             localVideo.pause();
-            localVideo.src = '';
+            localVideo.srcObject = null;
             localVideo.load();
             //Unmute local video in case the video tag is later used for remote video
             localVideo.muted = false;
         }
         if (remoteVideo) {
             remoteVideo.pause();
-            remoteVideo.src = '';
+            remoteVideo.srcObject = null;
             remoteVideo.load();
         }
         self.removeAllListeners();
@@ -3160,7 +3159,7 @@ var OpenVidu = /** @class */ (function () {
         var defaultWebRTCSupport = DetectRTC.isWebRTCSupported;
         var browser = DetectRTC.browser.name;
         var version = DetectRTC.browser.version;
-        if ((browser !== 'Chrome') && (browser !== 'Firefox') && (browser !== 'Opera')) {
+        if ((browser !== 'Chrome') && (browser !== 'Firefox') && (browser !== 'Opera') && (browser !== 'Safari')) {
             return 0;
         }
         else {
@@ -5071,6 +5070,7 @@ var Stream = /** @class */ (function () {
             this.isReadyToPublish = true;
             return this.video;
         }
+        this.isReadyToPublish = true;
         return null;
     };
     Stream.prototype.playThumbnail = function (thumbnailId) {
@@ -12832,12 +12832,16 @@ module.exports = function(window) {
     return {
       name: {
         PermissionDeniedError: 'NotAllowedError',
-        InvalidStateError: 'NotReadableError',
+        PermissionDismissedError: 'NotAllowedError',
+        InvalidStateError: 'NotAllowedError',
         DevicesNotFoundError: 'NotFoundError',
         ConstraintNotSatisfiedError: 'OverconstrainedError',
         TrackStartError: 'NotReadableError',
-        MediaDeviceFailedDueToShutdown: 'NotReadableError',
-        MediaDeviceKillSwitchOn: 'NotReadableError'
+        MediaDeviceFailedDueToShutdown: 'NotAllowedError',
+        MediaDeviceKillSwitchOn: 'NotAllowedError',
+        TabCaptureError: 'AbortError',
+        ScreenCaptureError: 'AbortError',
+        DeviceCaptureError: 'AbortError'
       }[e.name] || e.name,
       message: e.message,
       constraint: e.constraintName,
@@ -12959,8 +12963,8 @@ module.exports = {
   shimRTCIceCandidate: function(window) {
     // foundation is arbitrarily chosen as an indicator for full support for
     // https://w3c.github.io/webrtc-pc/#rtcicecandidate-interface
-    if (window.RTCIceCandidate && 'foundation' in
-        window.RTCIceCandidate.prototype) {
+    if (!window.RTCIceCandidate || (window.RTCIceCandidate && 'foundation' in
+        window.RTCIceCandidate.prototype)) {
       return;
     }
 
@@ -12973,23 +12977,27 @@ module.exports = {
         args.candidate = args.candidate.substr(2);
       }
 
-      // Augment the native candidate with the parsed fields.
-      var nativeCandidate = new NativeRTCIceCandidate(args);
-      var parsedCandidate = SDPUtils.parseCandidate(args.candidate);
-      var augmentedCandidate = Object.assign(nativeCandidate,
-          parsedCandidate);
+      if (args.candidate && args.candidate.length) {
+        // Augment the native candidate with the parsed fields.
+        var nativeCandidate = new NativeRTCIceCandidate(args);
+        var parsedCandidate = SDPUtils.parseCandidate(args.candidate);
+        var augmentedCandidate = Object.assign(nativeCandidate,
+            parsedCandidate);
 
-      // Add a serializer that does not serialize the extra attributes.
-      augmentedCandidate.toJSON = function() {
-        return {
-          candidate: augmentedCandidate.candidate,
-          sdpMid: augmentedCandidate.sdpMid,
-          sdpMLineIndex: augmentedCandidate.sdpMLineIndex,
-          usernameFragment: augmentedCandidate.usernameFragment,
+        // Add a serializer that does not serialize the extra attributes.
+        augmentedCandidate.toJSON = function() {
+          return {
+            candidate: augmentedCandidate.candidate,
+            sdpMid: augmentedCandidate.sdpMid,
+            sdpMLineIndex: augmentedCandidate.sdpMLineIndex,
+            usernameFragment: augmentedCandidate.usernameFragment,
+          };
         };
-      };
-      return augmentedCandidate;
+        return augmentedCandidate;
+      }
+      return new NativeRTCIceCandidate(args);
     };
+    window.RTCIceCandidate.prototype = NativeRTCIceCandidate.prototype;
 
     // Hook up the augmented candidate in onicecandidate and
     // addEventListener('icecandidate', ...)
@@ -13189,6 +13197,10 @@ module.exports = {
   },
 
   shimSendThrowTypeError: function(window) {
+    if (!window.RTCPeerConnection) {
+      return;
+    }
+
     // Note: Although Firefox >= 57 has a native implementation, the maximum
     //       message size can be reset for all data channels at a later stage.
     //       See: https://bugzilla.mozilla.org/show_bug.cgi?id=1426831
@@ -13243,16 +13255,11 @@ module.exports = {
     var browserDetails = utils.detectBrowser(window);
 
     if (window.RTCIceGatherer) {
-      // ORTC defines an RTCIceCandidate object but no constructor.
-      // Not implemented in Edge.
       if (!window.RTCIceCandidate) {
         window.RTCIceCandidate = function(args) {
           return args;
         };
       }
-      // ORTC does not have a session description object but
-      // other browsers (i.e. Chrome) that will support both PC and ORTC
-      // in the future might have this defined already.
       if (!window.RTCSessionDescription) {
         window.RTCSessionDescription = function(args) {
           return args;
@@ -13290,6 +13297,11 @@ module.exports = {
           return this._dtmf;
         }
       });
+    }
+    // Edge currently only implements the RTCDtmfSender, not the
+    // RTCDTMFSender alias. See http://draft.ortc.org/#rtcdtmfsender2*
+    if (window.RTCDtmfSender && !window.RTCDTMFSender) {
+      window.RTCDTMFSender = window.RTCDtmfSender;
     }
 
     window.RTCPeerConnection =
@@ -14264,7 +14276,7 @@ module.exports = {
       result.browser = 'edge';
       result.version = extractVersion(navigator.userAgent,
           /Edge\/(\d+).(\d+)$/, 2);
-    } else if (navigator.mediaDevices &&
+    } else if (window.RTCPeerConnection &&
         navigator.userAgent.match(/AppleWebKit\/(\d+)\./)) { // Safari.
       result.browser = 'safari';
       result.version = extractVersion(navigator.userAgent,

@@ -308,7 +308,8 @@ export class Stream {
 
             return this.video;
         }
-
+        
+        this.isReadyToPublish = true;
         return null;
     }
 
