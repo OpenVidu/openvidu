@@ -148,14 +148,14 @@ public class OpenViduServer implements JsonRpcConfigurer {
 								NEW_LINE + ngrok.getNgrokAppUrl() + 
 								NEW_LINE + "-------------------------" + 
 								NEW_LINE;
-				System.out.println(str);
+				log.info(str);
 				OpenViduServer.publicUrl = ngrok.getNgrokServerUrl().replaceFirst("https://", "wss://");
 				openviduConf.setFinalUrl(ngrok.getNgrokServerUrl());
 
 			} catch (Exception e) {
-				System.err.println("Ngrok URL was configured, but there was an error connecting to ngrok: "
+				log.error("Ngrok URL was configured, but there was an error connecting to ngrok: "
 						+ e.getClass().getName() + " " + e.getMessage());
-				System.err.println("Fallback to local URL");
+				log.error("Fallback to local URL");
 			}
 			break;
 
@@ -164,16 +164,13 @@ public class OpenViduServer implements JsonRpcConfigurer {
 				OpenViduServer.publicUrl = "wss://" + getContainerIp() + ":" + openviduConf.getServerPort();
 				openviduConf.setFinalUrl("https://" + getContainerIp() + ":" + openviduConf.getServerPort());
 			} catch (Exception e) {
-				System.err.println("Docker container IP was configured, but there was an error obtaining IP: "
+				log.error("Docker container IP was configured, but there was an error obtaining IP: "
 						+ e.getClass().getName() + " " + e.getMessage());
-				System.err.println("Fallback to local URL");
+				log.error("Fallback to local URL");
 			}
 			break;
 
 		case "local":
-			break;
-
-		case "docker-local":
 			break;
 
 		default:
@@ -215,7 +212,7 @@ public class OpenViduServer implements JsonRpcConfigurer {
 		if (recordingModuleEnabled) {
 			ComposedRecordingService recordingService = context.getBean(ComposedRecordingService.class);
 			recordingService.setRecordingVersion(openviduConf.getOpenViduRecordingVersion());
-			System.out.println("Recording module required: Downloading openvidu/openvidu-recording:"
+			log.info("Recording module required: Downloading openvidu/openvidu-recording:"
 					+ openviduConf.getOpenViduRecordingVersion() + " Docker image (800 MB aprox)");
 
 			boolean imageExists = false;
@@ -223,28 +220,34 @@ public class OpenViduServer implements JsonRpcConfigurer {
 				imageExists = recordingService.recordingImageExistsLocally();
 			} catch (ProcessingException exception) {
 				String message = "Exception connecting to Docker daemon: ";
-				if ("docker-local".equals(openviduConf.getOpenViduPublicUrl())) {
-					message += "make sure you include flag \"-v /var/run/docker.sock:/var/run/docker.sock\" in \"docker run\" command";
+				if ("docker".equals(openviduConf.getSpringProfile())) {
+					final String NEW_LINE = System.getProperty("line.separator");
+					message +=	"make sure you include the following flags in your \"docker run\" command:" +
+								NEW_LINE + "    -e openvidu.recording.path=/YOUR/PATH/TO/VIDEO/FILES" +
+								NEW_LINE + "    -e MY_UID=$(id -u $USER)" +
+								NEW_LINE + "    -v /var/run/docker.sock:/var/run/docker.sock" +
+								NEW_LINE + "    -v /YOUR/PATH/TO/VIDEO/FILES:/YOUR/PATH/TO/VIDEO/FILES" +
+								NEW_LINE;
 				} else {
-					message += "you need Docker installed in this machine to enable OpenVidu recorder service";
+					message += "you need Docker installed in this machine to enable OpenVidu recording service";
 				}
 				log.error(message);
 				throw new RuntimeException(message);
 			}
 
 			if (imageExists) {
-				System.out.println("Docker image already exists locally");
+				log.info("Docker image already exists locally");
 			} else {
 				Thread t = new Thread(() -> {
 					boolean keep = true;
-					System.out.print("Downloading ");
+					log.info("Downloading ");
 					while (keep) {
 						System.out.print(".");
 						try {
 							Thread.sleep(1000);
 						} catch (InterruptedException e) {
 							keep = false;
-							System.out.println("\nDownload complete");
+							log.info("\nDownload complete");
 						}
 					}
 				});
@@ -252,11 +255,13 @@ public class OpenViduServer implements JsonRpcConfigurer {
 				recordingService.downloadRecordingImage();
 				t.interrupt();
 				t.join();
-				System.out.println("Docker image available");
+				log.info("Docker image available");
 			}
+			
+			recordingService.initRecordingPath();
 		}
 
-		System.out.println("OpenVidu Server using " + type + " URL: [" + OpenViduServer.publicUrl + "]");
+		log.info("OpenVidu Server using " + type + " URL: [" + OpenViduServer.publicUrl + "]");
 	}
 
 	private static String getContainerIp() throws IOException, InterruptedException {

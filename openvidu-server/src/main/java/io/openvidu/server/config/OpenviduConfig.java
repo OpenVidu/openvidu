@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 public class OpenviduConfig {
 
 	@Value("${openvidu.publicurl}")
-	private String openviduPublicUrl; // local, docker-local, ngrok, docker, [FINAL_URL]
+	private String openviduPublicUrl; // local, ngrok, docker, [FINAL_URL]
 
 	@Value("${server.port}")
 	private String serverPort;
@@ -29,6 +29,9 @@ public class OpenviduConfig {
 
 	@Value("${openvidu.recording.version}")
 	String openviduRecordingVersion;
+	
+	@Value("#{'${spring.profiles.active:}'.length() > 0 ? '${spring.profiles.active:}'.split(',') : \"default\"}")
+	private String springProfile;
 
 	private String finalUrl;
 
@@ -78,6 +81,10 @@ public class OpenviduConfig {
 
 	public String getOpenViduRecordingVersion() {
 		return this.openviduRecordingVersion;
+	}
+
+	public String getSpringProfile() {
+		return springProfile;
 	}
 
 }

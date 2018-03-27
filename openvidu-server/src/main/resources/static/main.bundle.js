@@ -15080,11 +15080,12 @@ var AppMaterialModule = (function () {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__app_routing__ = __webpack_require__("./src/app/app.routing.ts");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_app_app_material_module__ = __webpack_require__("./src/app/app.material.module.ts");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__services_info_service__ = __webpack_require__("./src/app/services/info.service.ts");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__app_component__ = __webpack_require__("./src/app/app.component.ts");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__components_dashboard_dashboard_component__ = __webpack_require__("./src/app/components/dashboard/dashboard.component.ts");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__components_session_details_session_details_component__ = __webpack_require__("./src/app/components/session-details/session-details.component.ts");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__components_dashboard_credentials_dialog_component__ = __webpack_require__("./src/app/components/dashboard/credentials-dialog.component.ts");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_13__components_layouts_layout_best_fit_layout_best_fit_component__ = __webpack_require__("./src/app/components/layouts/layout-best-fit/layout-best-fit.component.ts");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__services_rest_service__ = __webpack_require__("./src/app/services/rest.service.ts");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__app_component__ = __webpack_require__("./src/app/app.component.ts");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__components_dashboard_dashboard_component__ = __webpack_require__("./src/app/components/dashboard/dashboard.component.ts");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__components_session_details_session_details_component__ = __webpack_require__("./src/app/components/session-details/session-details.component.ts");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_13__components_dashboard_credentials_dialog_component__ = __webpack_require__("./src/app/components/dashboard/credentials-dialog.component.ts");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_14__components_layouts_layout_best_fit_layout_best_fit_component__ = __webpack_require__("./src/app/components/layouts/layout-best-fit/layout-best-fit.component.ts");
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -15105,17 +15106,18 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 
 
 
+
 var AppModule = (function () {
     function AppModule() {
     }
     AppModule = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_2__angular_core__["K" /* NgModule */])({
             declarations: [
-                __WEBPACK_IMPORTED_MODULE_9__app_component__["a" /* AppComponent */],
-                __WEBPACK_IMPORTED_MODULE_10__components_dashboard_dashboard_component__["a" /* DashboardComponent */],
-                __WEBPACK_IMPORTED_MODULE_11__components_session_details_session_details_component__["a" /* SessionDetailsComponent */],
-                __WEBPACK_IMPORTED_MODULE_12__components_dashboard_credentials_dialog_component__["a" /* CredentialsDialogComponent */],
-                __WEBPACK_IMPORTED_MODULE_13__components_layouts_layout_best_fit_layout_best_fit_component__["a" /* LayoutBestFitComponent */],
+                __WEBPACK_IMPORTED_MODULE_10__app_component__["a" /* AppComponent */],
+                __WEBPACK_IMPORTED_MODULE_11__components_dashboard_dashboard_component__["a" /* DashboardComponent */],
+                __WEBPACK_IMPORTED_MODULE_12__components_session_details_session_details_component__["a" /* SessionDetailsComponent */],
+                __WEBPACK_IMPORTED_MODULE_13__components_dashboard_credentials_dialog_component__["a" /* CredentialsDialogComponent */],
+                __WEBPACK_IMPORTED_MODULE_14__components_layouts_layout_best_fit_layout_best_fit_component__["a" /* LayoutBestFitComponent */],
             ],
             imports: [
                 __WEBPACK_IMPORTED_MODULE_0__angular_platform_browser__["a" /* BrowserModule */],
@@ -15126,10 +15128,10 @@ var AppModule = (function () {
                 __WEBPACK_IMPORTED_MODULE_1__angular_flex_layout__["a" /* FlexLayoutModule */]
             ],
             entryComponents: [
-                __WEBPACK_IMPORTED_MODULE_12__components_dashboard_credentials_dialog_component__["a" /* CredentialsDialogComponent */],
+                __WEBPACK_IMPORTED_MODULE_13__components_dashboard_credentials_dialog_component__["a" /* CredentialsDialogComponent */],
             ],
-            providers: [__WEBPACK_IMPORTED_MODULE_8__services_info_service__["a" /* InfoService */]],
-            bootstrap: [__WEBPACK_IMPORTED_MODULE_9__app_component__["a" /* AppComponent */]]
+            providers: [__WEBPACK_IMPORTED_MODULE_8__services_info_service__["a" /* InfoService */], __WEBPACK_IMPORTED_MODULE_9__services_rest_service__["a" /* RestService */]],
+            bootstrap: [__WEBPACK_IMPORTED_MODULE_10__app_component__["a" /* AppComponent */]]
         })
     ], AppModule);
     return AppModule;
@@ -15233,9 +15235,10 @@ module.exports = "<div id=\"dashboard-div\" fxLayout=\"row\" fxLayout.xs=\"colum
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__("./node_modules/@angular/core/esm5/core.js");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_material__ = __webpack_require__("./node_modules/@angular/material/esm5/material.es5.js");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__services_info_service__ = __webpack_require__("./src/app/services/info.service.ts");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_openvidu_browser__ = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/index.js");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_openvidu_browser___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_openvidu_browser__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__credentials_dialog_component__ = __webpack_require__("./src/app/components/dashboard/credentials-dialog.component.ts");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__services_rest_service__ = __webpack_require__("./src/app/services/rest.service.ts");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_openvidu_browser__ = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/index.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_openvidu_browser___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_openvidu_browser__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__credentials_dialog_component__ = __webpack_require__("./src/app/components/dashboard/credentials-dialog.component.ts");
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -15250,10 +15253,12 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
+
 var DashboardComponent = (function () {
-    function DashboardComponent(infoService, dialog) {
+    function DashboardComponent(infoService, restService, dialog) {
         var _this = this;
         this.infoService = infoService;
+        this.restService = restService;
         this.dialog = dialog;
         this.lockScroll = false;
         this.info = [];
@@ -15287,6 +15292,13 @@ var DashboardComponent = (function () {
             console.log(event.data);
             _this.infoService.updateInfo(event.data);
         };
+        this.restService.getOpenViduPublicUrl()
+            .then(function (url) {
+            _this.openviduPublicUrl = url.replace('https://', 'wss://').replace('http://', 'ws://');
+        })
+            .catch(function (error) {
+            console.error(error);
+        });
     };
     DashboardComponent.prototype.beforeunloadHandler = function () {
         // On window closed leave test session and close info websocket
@@ -15313,19 +15325,30 @@ var DashboardComponent = (function () {
     DashboardComponent.prototype.testVideo = function () {
         var _this = this;
         var dialogRef;
-        dialogRef = this.dialog.open(__WEBPACK_IMPORTED_MODULE_4__credentials_dialog_component__["a" /* CredentialsDialogComponent */]);
+        dialogRef = this.dialog.open(__WEBPACK_IMPORTED_MODULE_5__credentials_dialog_component__["a" /* CredentialsDialogComponent */]);
         dialogRef.componentInstance.myReference = dialogRef;
         dialogRef.afterClosed().subscribe(function (secret) {
             if (secret) {
-                var port = (location.port) ? location.port : '8443';
-                _this.connectToSession('wss://' + location.hostname + ':' + port + '/testSession?secret=' + secret);
+                if (!_this.openviduPublicUrl) {
+                    _this.restService.getOpenViduPublicUrl()
+                        .then((function (url) {
+                        _this.openviduPublicUrl = url.replace('https://', 'wss://').replace('http://', 'ws://');
+                        _this.connectToSession(_this.openviduPublicUrl + 'testSession?secret=' + secret);
+                    }))
+                        .catch(function (error) {
+                        console.error(error);
+                    });
+                }
+                else {
+                    _this.connectToSession(_this.openviduPublicUrl + 'testSession?secret=' + secret);
+                }
             }
         });
     };
     DashboardComponent.prototype.connectToSession = function (mySessionId) {
         var _this = this;
         this.msgChain = [];
-        var OV = new __WEBPACK_IMPORTED_MODULE_3_openvidu_browser__["OpenVidu"]();
+        var OV = new __WEBPACK_IMPORTED_MODULE_4_openvidu_browser__["OpenVidu"]();
         this.session = OV.initSession(mySessionId);
         this.testStatus = 'CONNECTING';
         this.testButton = 'Testing...';
@@ -15367,7 +15390,7 @@ var DashboardComponent = (function () {
                 if (error.code === 401) {
                     _this.endTestVideo();
                     var dialogRef = void 0;
-                    dialogRef = _this.dialog.open(__WEBPACK_IMPORTED_MODULE_4__credentials_dialog_component__["a" /* CredentialsDialogComponent */]);
+                    dialogRef = _this.dialog.open(__WEBPACK_IMPORTED_MODULE_5__credentials_dialog_component__["a" /* CredentialsDialogComponent */]);
                     dialogRef.componentInstance.myReference = dialogRef;
                     dialogRef.afterClosed().subscribe(function (secret) {
                         if (secret) {
@@ -15416,7 +15439,7 @@ var DashboardComponent = (function () {
             template: __webpack_require__("./src/app/components/dashboard/dashboard.component.html"),
             styles: [__webpack_require__("./src/app/components/dashboard/dashboard.component.css")],
         }),
-        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_2__services_info_service__["a" /* InfoService */], __WEBPACK_IMPORTED_MODULE_1__angular_material__["d" /* MatDialog */]])
+        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_2__services_info_service__["a" /* InfoService */], __WEBPACK_IMPORTED_MODULE_3__services_rest_service__["a" /* RestService */], __WEBPACK_IMPORTED_MODULE_1__angular_material__["d" /* MatDialog */]])
     ], DashboardComponent);
     return DashboardComponent;
 }());
@@ -15966,6 +15989,59 @@ var InfoService = (function () {
         __metadata("design:paramtypes", [])
     ], InfoService);
     return InfoService;
+}());
+
+
+
+/***/ }),
+
+/***/ "./src/app/services/rest.service.ts":
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return RestService; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__("./node_modules/@angular/core/esm5/core.js");
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+
+var RestService = (function () {
+    function RestService() {
+    }
+    RestService.prototype.getOpenViduPublicUrl = function () {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            if (!!_this.openviduPublicUrl) {
+                resolve(_this.openviduPublicUrl);
+            }
+            else {
+                var url = location.protocol + '//' + location.hostname + ':' + (!!location.port ? location.port : '8443') +
+                    '/config/openvidu-publicurl';
+                var http_1 = new XMLHttpRequest();
+                http_1.onreadystatechange = function () {
+                    if (http_1.readyState === 4) {
+                        if (http_1.status === 200) {
+                            _this.openviduPublicUrl = http_1.responseText;
+                            resolve(http_1.responseText);
+                        }
+                        else {
+                            reject('Error getting OpenVidu publicurl');
+                        }
+                    }
+                    ;
+                };
+                http_1.open('GET', url, true);
+                http_1.send();
+            }
+        });
+    };
+    RestService = __decorate([
+        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["C" /* Injectable */])()
+    ], RestService);
+    return RestService;
 }());
 
 

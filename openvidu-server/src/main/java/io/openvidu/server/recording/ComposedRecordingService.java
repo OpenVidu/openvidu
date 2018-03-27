@@ -3,6 +3,9 @@ package io.openvidu.server.recording;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -52,7 +55,7 @@ import io.openvidu.server.core.Session;
 @Service
 public class ComposedRecordingService {
 
-	private Logger log = LoggerFactory.getLogger(ComposedRecordingService.class);
+	private static final Logger log = LoggerFactory.getLogger(ComposedRecordingService.class);
 
 	@Autowired
 	OpenviduConfig openviduConfig;
@@ -82,7 +85,7 @@ public class ComposedRecordingService {
 		String secret = openviduConfig.getOpenViduSecret();
 
 		Recording recording = new Recording(session.getSessionId(), videoId, videoId);
-		
+
 		this.sessionsRecordings.put(session.getSessionId(), recording);
 		this.startingRecordings.put(recording.getId(), recording);
 
@@ -119,7 +122,7 @@ public class ComposedRecordingService {
 		this.sessionsContainers.put(session.getSessionId(), containerId);
 
 		recording.setStatus(Recording.Status.started);
-		
+
 		this.startedRecordings.put(recording.getId(), recording);
 		this.startingRecordings.remove(recording.getId());
 
@@ -213,7 +216,8 @@ public class ComposedRecordingService {
 				throw e;
 			}
 		} catch (DockerClientException e) {
-			log.info("Error on Pulling '{}' image. Probably because the user has stopped the execution", IMAGE_NAME + ":" + IMAGE_TAG);
+			log.info("Error on Pulling '{}' image. Probably because the user has stopped the execution",
+					IMAGE_NAME + ":" + IMAGE_TAG);
 			throw e;
 		}
 	}
@@ -225,15 +229,15 @@ public class ComposedRecordingService {
 	public Recording getStartedRecording(String recordingId) {
 		return this.startedRecordings.get(recordingId);
 	}
-	
+
 	public Recording getStartingRecording(String recordingId) {
 		return this.startingRecordings.get(recordingId);
 	}
 
 	private String runRecordingContainer(List<String> envs, String containerName) {
 		Volume volume1 = new Volume("/recordings");
-		CreateContainerCmd cmd = dockerClient.createContainerCmd(IMAGE_NAME + ":" + IMAGE_TAG).withName(containerName).withEnv(envs)
-				.withNetworkMode("host").withVolumes(volume1)
+		CreateContainerCmd cmd = dockerClient.createContainerCmd(IMAGE_NAME + ":" + IMAGE_TAG).withName(containerName)
+				.withEnv(envs).withNetworkMode("host").withVolumes(volume1)
 				.withBinds(new Bind(openviduConfig.getOpenViduRecordingPath(), volume1));
 		CreateContainerResponse container = null;
 		try {
@@ -273,7 +277,7 @@ public class ComposedRecordingService {
 	public Collection<Recording> getAllRecordings() {
 		return this.getRecordingEntitiesFromHost();
 	}
-	
+
 	public Collection<Recording> getStartingRecordings() {
 		return this.startingRecordings.values();
 	}
@@ -289,9 +293,33 @@ public class ComposedRecordingService {
 				.collect(Collectors.toSet());
 	}
 
+	public File initRecordingPath() throws OpenViduException {
+		try {
+			Path path = Files.createDirectories(Paths.get(this.openviduConfig.getOpenViduRecordingPath()));
+
+			if (!Files.isWritable(path)) {
+				throw new OpenViduException(Code.RECORDING_PATH_NOT_VALID,
+						"The recording path '" + this.openviduConfig.getOpenViduRecordingPath()
+								+ "' is not valid. Reason: OpenVidu Server process needs write permissions");
+			}
+
+			log.info("Recording path: {}", this.openviduConfig.getOpenViduRecordingPath());
+			return path.toFile();
+		} catch (IOException e) {
+			throw new OpenViduException(Code.RECORDING_PATH_NOT_VALID,
+					"The recording path '" + this.openviduConfig.getOpenViduRecordingPath() + "' is not valid. Reason: "
+							+ e.getClass().getName());
+		}
+	}
+
 	private Set<String> getRecordingIdsFromHost() {
 		File folder = new File(this.openviduConfig.getOpenViduRecordingPath());
 		File[] files = folder.listFiles();
+
+		if (files == null) {
+			files = initRecordingPath().listFiles();
+		}
+
 		Set<String> fileNamesNoExtension = new HashSet<>();
 		for (int i = 0; i < files.length; i++) {
 			if (files[i].isFile() && !files[i].getName().startsWith(RECORDING_ENTITY_FILE)) {
@@ -304,6 +332,11 @@ public class ComposedRecordingService {
 	private Set<Recording> getRecordingEntitiesFromHost() {
 		File folder = new File(this.openviduConfig.getOpenViduRecordingPath());
 		File[] files = folder.listFiles();
+		
+		if (files == null) {
+			files = initRecordingPath().listFiles();
+		}
+		
 		Set<Recording> recordingEntities = new HashSet<>();
 		for (int i = 0; i < files.length; i++) {
 			Recording recording = this.getRecordingFromFile(files[i]);
@@ -399,7 +432,7 @@ public class ComposedRecordingService {
 		this.removeDockerContainer(containerId);
 		throw e;
 	}
-	
+
 	public void setRecordingVersion(String version) {
 		this.IMAGE_TAG = version;
 	}

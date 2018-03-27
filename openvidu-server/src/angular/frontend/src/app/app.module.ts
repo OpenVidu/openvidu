@@ -10,6 +10,7 @@ import { routing } from './app.routing';
 import { AppMaterialModule } from 'app/app.material.module';
 
 import { InfoService } from './services/info.service';
+import { RestService } from './services/rest.service';
 
 import { AppComponent } from './app.component';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
@@ -37,7 +38,7 @@ import { LayoutBestFitComponent } from './components/layouts/layout-best-fit/lay
   entryComponents: [
     CredentialsDialogComponent,
   ],
-  providers: [InfoService],
+  providers: [InfoService, RestService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
