@@ -11,7 +11,7 @@ export class RestService {
             if (!!this.openviduPublicUrl) {
                 resolve(this.openviduPublicUrl);
             } else {
-                const url = location.protocol + '//' + location.hostname + ':' + (!!location.port ? location.port : '8443') +
+                const url = location.protocol + '//' + location.hostname + ((!!location.port) ? (':' + location.port) : '') +
                     '/config/openvidu-publicurl';
                 const http = new XMLHttpRequest();
 

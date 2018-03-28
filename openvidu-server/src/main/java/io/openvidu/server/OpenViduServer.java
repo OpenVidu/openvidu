@@ -16,9 +16,11 @@
 package io.openvidu.server;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 
+import javax.annotation.PostConstruct;
 import javax.ws.rs.ProcessingException;
 
 import org.kurento.jsonrpc.JsonUtils;
@@ -31,7 +33,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
@@ -125,15 +126,37 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	public CallDetailRecord cdr() {
 		return new CallDetailRecord();
 	}
+	
+	@Bean
+	@ConditionalOnMissingBean
+	public OpenviduConfig openviduConfig() {
+		return new OpenviduConfig();
+	}
+	
+	@Bean
+	@ConditionalOnMissingBean
+	public ComposedRecordingService composedRecordingService() {
+		return new ComposedRecordingService();
+	}
 
 	@Override
 	public void registerJsonRpcHandlers(JsonRpcHandlerRegistry registry) {
 		registry.addHandler(rpcHandler().withPingWatchdog(true), "/room");
 	}
 
+	private static String getContainerIp() throws IOException, InterruptedException {
+		return CommandExecutor.execCommand("/bin/sh", "-c", "hostname -i | awk '{print $1}'");
+	}
+	
 	public static void main(String[] args) throws Exception {
-		ConfigurableApplicationContext context = start(args);
-		OpenviduConfig openviduConf = context.getBean(OpenviduConfig.class);
+		log.info("Using /dev/urandom for secure random generation");
+		System.setProperty("java.security.egd", "file:/dev/./urandom");
+		SpringApplication.run(OpenViduServer.class, args);
+	}
+	
+	@PostConstruct
+    public void init() throws MalformedURLException, InterruptedException {
+		OpenviduConfig openviduConf = openviduConfig();
 
 		String publicUrl = openviduConf.getOpenViduPublicUrl();
 		String type = publicUrl;
@@ -142,10 +165,15 @@ public class OpenViduServer implements JsonRpcConfigurer {
 		case "ngrok":
 			try {
 				NgrokRestController ngrok = new NgrokRestController();
+				String ngrokAppUrl = ngrok.getNgrokAppUrl();
+				if (ngrokAppUrl.isEmpty()) {
+					ngrokAppUrl = "(No tunnel 'app' found in ngrok.yml)";
+				}
 				final String NEW_LINE = System.getProperty("line.separator");
-				String str = 	NEW_LINE + "        PUBLIC IP        " + 
+				String str = 	NEW_LINE +
+								NEW_LINE + "      APP PUBLIC IP      " + 
 								NEW_LINE + "-------------------------" + 
-								NEW_LINE + ngrok.getNgrokAppUrl() + 
+								NEW_LINE + ngrokAppUrl + 
 								NEW_LINE + "-------------------------" + 
 								NEW_LINE;
 				log.info(str);
@@ -210,7 +238,7 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 		boolean recordingModuleEnabled = openviduConf.isRecordingModuleEnabled();
 		if (recordingModuleEnabled) {
-			ComposedRecordingService recordingService = context.getBean(ComposedRecordingService.class);
+			ComposedRecordingService recordingService = composedRecordingService();
 			recordingService.setRecordingVersion(openviduConf.getOpenViduRecordingVersion());
 			log.info("Recording module required: Downloading openvidu/openvidu-recording:"
 					+ openviduConf.getOpenViduRecordingVersion() + " Docker image (800 MB aprox)");
@@ -257,21 +285,10 @@ public class OpenViduServer implements JsonRpcConfigurer {
 				t.join();
 				log.info("Docker image available");
 			}
-			
+
 			recordingService.initRecordingPath();
 		}
-
 		log.info("OpenVidu Server using " + type + " URL: [" + OpenViduServer.publicUrl + "]");
-	}
-
-	private static String getContainerIp() throws IOException, InterruptedException {
-		return CommandExecutor.execCommand("/bin/sh", "-c", "hostname -i | awk '{print $1}'");
-	}
-
-	public static ConfigurableApplicationContext start(String[] args) {
-		log.info("Using /dev/urandom for secure random generation");
-		System.setProperty("java.security.egd", "file:/dev/./urandom");
-		return SpringApplication.run(OpenViduServer.class, args);
 	}
 
 }

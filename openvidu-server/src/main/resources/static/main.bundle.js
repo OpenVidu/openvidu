@@ -16018,7 +16018,7 @@ var RestService = (function () {
                 resolve(_this.openviduPublicUrl);
             }
             else {
-                var url = location.protocol + '//' + location.hostname + ':' + (!!location.port ? location.port : '8443') +
+                var url = location.protocol + '//' + location.hostname + ((!!location.port) ? (':' + location.port) : '') +
                     '/config/openvidu-publicurl';
                 var http_1 = new XMLHttpRequest();
                 http_1.onreadystatechange = function () {
