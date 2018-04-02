@@ -356,7 +356,7 @@ export class OpenViduInternal {
             message: message
         }, (error, response) => {
             if (!!completionHandler) {
-                completionHandler(!!error ? new Error(error) : null);
+                completionHandler(!!error ? new Error(error.message) : null);
             }
         });
     };
