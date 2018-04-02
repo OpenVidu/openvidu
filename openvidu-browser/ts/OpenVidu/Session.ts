@@ -173,7 +173,7 @@ export class Session {
         signalMessage['data'] = signal.data ? signal.data : '';
         signalMessage['type'] = signal.type ? signal.type : '';
 
-        this.openVidu.openVidu.sendMessage(JSON.stringify(signalMessage));
+        this.openVidu.openVidu.sendMessage(JSON.stringify(signalMessage), completionHandler);
     }
 
 }

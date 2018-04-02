@@ -428,7 +428,14 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       data: 'Test message',
       to: [],
       type: 'chat'
-    });
+    },
+      error => {
+        if (error) {
+          console.error(error);
+        } else {
+          console.log('Message succesfully sent');
+        }
+      });
   }
 
   recordPublisher(): void {
