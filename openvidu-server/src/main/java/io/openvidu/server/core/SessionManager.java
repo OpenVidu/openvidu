@@ -149,7 +149,7 @@ public abstract class SessionManager {
 
 	public String newSessionId(SessionProperties sessionProperties) {
 		String sessionId = OpenViduServer.publicUrl;
-		sessionId += "/" + RandomStringUtils.randomAlphanumeric(16).toLowerCase();
+		sessionId += "/" + this.generateRandomChain();
 
 		this.sessionidTokenTokenobj.put(sessionId, new ConcurrentHashMap<>());
 		this.sessionidParticipantpublicidParticipant.put(sessionId, new ConcurrentHashMap<>());
@@ -163,7 +163,7 @@ public abstract class SessionManager {
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null
 				&& this.sessionidTokenTokenobj.get(sessionId) != null) {
 			if (isMetadataFormatCorrect(serverMetadata)) {
-				String token = RandomStringUtils.randomAlphanumeric(16).toLowerCase();
+				String token = this.generateRandomChain();
 				this.sessionidTokenTokenobj.get(sessionId).put(token, new Token(token, role, serverMetadata));
 				showTokens();
 				return token;
@@ -234,12 +234,12 @@ public abstract class SessionManager {
 	public Participant newParticipant(String sessionId, String participantPrivatetId, Token token,
 			String clientMetadata) {
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
-			String participantPublicId = RandomStringUtils.randomAlphanumeric(16).toLowerCase();
+			String participantPublicId = this.generateRandomChain();
 			ConcurrentHashMap<String, Participant> participantpublicidParticipant = this.sessionidParticipantpublicidParticipant
 					.get(sessionId);
 			while (participantpublicidParticipant.containsKey(participantPublicId)) {
 				// Avoid random 'participantpublicid' collisions
-				participantPublicId = RandomStringUtils.randomAlphanumeric(16).toLowerCase();
+				participantPublicId = this.generateRandomChain();
 			}
 			Participant p = new Participant(participantPrivatetId, participantPublicId, token, clientMetadata);
 			this.sessionidParticipantpublicidParticipant.get(sessionId).put(participantPublicId, p);
@@ -267,9 +267,6 @@ public abstract class SessionManager {
 			if (t != null) {
 				return t;
 			} else {
-				if (isInsecureParticipant(participantPrivateId)) {
-					return null;
-				}
 				throw new OpenViduException(Code.TOKEN_CANNOT_BE_CREATED_ERROR_CODE, sessionId);
 			}
 		} else {
@@ -287,6 +284,10 @@ public abstract class SessionManager {
 
 	public void showAllParticipants() {
 		log.info("<SESSIONID, PARTICIPANTS>: {}", this.sessionidParticipantpublicidParticipant.toString());
+	}
+	
+	public String generateRandomChain() {
+		return RandomStringUtils.randomAlphanumeric(16).toLowerCase();
 	}
 
 	/**

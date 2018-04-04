@@ -21,6 +21,7 @@ import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
+import io.openvidu.server.core.ParticipantRole;
 import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.core.Token;
 
@@ -129,6 +130,7 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 		if (openviduConfig.isOpenViduSecret(secret)) {
 			sessionManager.newInsecureParticipant(participantPrivatetId);
+			token = sessionManager.generateRandomChain();
 			if (recorder) {
 				generateRecorderParticipant = true;
 			}
