@@ -126,14 +126,6 @@ export class SessionInternal {
                     metadata: this.options.metadata,
                     secret: this.openVidu.getSecret(),
                     recorder: this.openVidu.getRecorder(),
-                    dataChannels: false
-                }
-
-                if (this.localParticipant) {
-                    if (Object.keys(this.localParticipant.getStreams()).some(streamId =>
-                        this.remoteStreams[streamId].isDataChannelEnabled())) {
-                        joinParams.dataChannels = true;
-                    }
                 }
 
                 this.openVidu.sendRequest('joinRoom', joinParams, (error, response) => {

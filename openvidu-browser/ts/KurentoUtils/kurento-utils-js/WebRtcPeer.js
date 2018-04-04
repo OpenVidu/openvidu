@@ -203,9 +203,9 @@ function WebRtcPeer(mode, options, callback) {
   var pc = options.peerConnection
   var sendSource = options.sendSource || 'webcam'
 
-  var dataChannelConfig = options.dataChannelConfig
+  /*var dataChannelConfig = options.dataChannelConfig
   var useDataChannels = options.dataChannels || false
-  var dataChannel
+  var dataChannel*/
 
   var guid = uuid.v4()
   var configuration = recursive({
@@ -251,11 +251,11 @@ function WebRtcPeer(mode, options, callback) {
       }
     },
 
-    'dataChannel': {
+    /*'dataChannel': {
       get: function () {
         return dataChannel
       }
-    },
+    },*/
 
     /**
      * @member {(external:ImageData|undefined)} currentFrame
@@ -283,7 +283,7 @@ function WebRtcPeer(mode, options, callback) {
   // Init PeerConnection
   if (!pc) {
     pc = new RTCPeerConnection(configuration);
-    if (useDataChannels && !dataChannel) {
+    /*if (useDataChannels && !dataChannel) {
       var dcId = 'WebRtcPeer-' + self.id
       var dcOptions = undefined
       if (dataChannelConfig) {
@@ -298,7 +298,7 @@ function WebRtcPeer(mode, options, callback) {
         dataChannel.onbufferedamountlow = dataChannelConfig.onbufferedamountlow;
         dataChannel.onerror = dataChannelConfig.onerror || noop;
       }
-    }
+    }*/
   }
 
   pc.addEventListener('icecandidate', function (event) {
@@ -438,14 +438,14 @@ function WebRtcPeer(mode, options, callback) {
     localVideo.muted = true
   }
 
-  this.send = function (data) {
+  /*this.send = function (data) {
     if (dataChannel && dataChannel.readyState === 'open') {
       dataChannel.send(data)
     } else {
       logger.warn(
         'Trying to send data over a non-existing or closed data channel')
     }
-  }
+  }*/
 
   /**
    * Callback function invoked when a SDP answer is received. Developers are
@@ -706,13 +706,13 @@ WebRtcPeer.prototype.dispose = function () {
   logger.debug('Disposing WebRtcPeer')
 
   var pc = this.peerConnection
-  var dc = this.dataChannel
+  //var dc = this.dataChannel
   try {
-    if (dc) {
+    /*if (dc) {
       if (dc.signalingState === 'closed') return
 
       dc.close()
-    }
+    }*/
 
     if (pc) {
       if (pc.signalingState === 'closed') return

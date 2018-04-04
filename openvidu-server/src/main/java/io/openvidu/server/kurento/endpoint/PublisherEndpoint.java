@@ -55,9 +55,9 @@ public class PublisherEndpoint extends MediaEndpoint {
   private Map<String, ListenerSubscription> elementsErrorSubscriptions =
       new HashMap<String, ListenerSubscription>();
 
-  public PublisherEndpoint(boolean web, boolean dataChannels, KurentoParticipant owner,
+  public PublisherEndpoint(boolean web, KurentoParticipant owner,
       String endpointName, MediaPipeline pipeline) {
-    super(web, dataChannels, owner, endpointName, pipeline, log);
+    super(web, owner, endpointName, pipeline, log);
   }
 
   @Override

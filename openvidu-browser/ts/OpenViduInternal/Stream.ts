@@ -52,7 +52,6 @@ export interface InboundStreamOptions {
 export interface OutboundStreamOptions {
     activeAudio: boolean;
     activeVideo: boolean;
-    dataChannel: boolean;
     mediaConstraints: any;
     sendAudio: boolean;
     sendVideo: boolean;
@@ -74,7 +73,6 @@ export class Stream {
     private showMyRemote = false;
     private localMirrored = false;
     private chanId = 0;
-    private dataChannelOpened = false;
 
     inboundOptions: InboundStreamOptions;
     outboundOptions: OutboundStreamOptions;
@@ -194,37 +192,6 @@ export class Stream {
 
     getChannelName() {
         return this.streamId + '_' + this.chanId++;
-    }
-
-
-    isDataChannelEnabled() {
-        return this.outboundOptions.dataChannel;
-    }
-
-
-    isDataChannelOpened() {
-        return this.dataChannelOpened;
-    }
-
-    onDataChannelOpen(event) {
-        console.debug('Data channel is opened');
-        this.dataChannelOpened = true;
-    }
-
-    onDataChannelClosed(event) {
-        console.debug('Data channel is closed');
-        this.dataChannelOpened = false;
-    }
-
-    sendData(data) {
-        if (this.wp === undefined) {
-            throw new Error('WebRTC peer has not been created yet');
-        }
-        if (!this.dataChannelOpened) {
-            throw new Error('Data channel is not opened');
-        }
-        console.info("Sending through data channel: " + data);
-        this.wp.send(data);
     }
 
     getMediaStream() {
@@ -488,15 +455,6 @@ export class Stream {
                 videoStream: this.mediaStream,
                 mediaConstraints: userMediaConstraints,
                 onicecandidate: this.connection.sendIceCandidate.bind(this.connection),
-            }
-
-            if (this.outboundOptions.dataChannel) {
-                options.dataChannelConfig = {
-                    id: this.getChannelName(),
-                    onopen: this.onDataChannelOpen,
-                    onclose: this.onDataChannelClosed
-                };
-                options.dataChannels = true;
             }
 
             if (this.displayMyRemote()) {

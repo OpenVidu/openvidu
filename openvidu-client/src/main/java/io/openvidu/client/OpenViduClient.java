@@ -17,7 +17,6 @@
 package io.openvidu.client;
 
 import static io.openvidu.client.internal.ProtocolElements.CUSTOMREQUEST_METHOD;
-import static io.openvidu.client.internal.ProtocolElements.JOINROOM_DATACHANNELS_PARAM;
 import static io.openvidu.client.internal.ProtocolElements.JOINROOM_METHOD;
 import static io.openvidu.client.internal.ProtocolElements.JOINROOM_PEERID_PARAM;
 import static io.openvidu.client.internal.ProtocolElements.JOINROOM_PEERSTREAMID_PARAM;
@@ -121,14 +120,13 @@ public class OpenViduClient {
     this.client.close();
   }
 
-  public Map<String, List<String>> joinRoom(String roomName, String userName, Boolean dataChannels)
+  public Map<String, List<String>> joinRoom(String roomName, String userName)
       throws IOException {
+        
     JsonObject params = new JsonObject();
     params.addProperty(JOINROOM_ROOM_PARAM, roomName);
     params.addProperty(JOINROOM_USER_PARAM, userName);
-    if (dataChannels != null) {
-      params.addProperty(JOINROOM_DATACHANNELS_PARAM, dataChannels);
-    }
+
     JsonElement result = client.sendRequest(JOINROOM_METHOD, params);
     Map<String, List<String>> peers = new HashMap<String, List<String>>();
     JsonArray jsonPeers = JsonRoomUtils.getResponseProperty(result, "value", JsonArray.class);

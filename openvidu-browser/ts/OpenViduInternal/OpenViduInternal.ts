@@ -49,7 +49,6 @@ export class OpenViduInternal {
                     sendVideo: true,
                     activeAudio: true,
                     activeVideo: true,
-                    dataChannel: true,
                     mediaConstraints: {
                         audio: true,
                         video: { width: { ideal: 1280 } }

@@ -72,7 +72,6 @@ export class OpenVidu {
                     sendVideo: cameraOptions.video != null ? cameraOptions.video : true,
                     activeAudio: cameraOptions.audioActive != null ? cameraOptions.audioActive : true,
                     activeVideo: cameraOptions.videoActive != null ? cameraOptions.videoActive : true,
-                    dataChannel: true,
                     mediaConstraints: this.openVidu.generateMediaConstraints(cameraOptions)
                 };
                 cameraOptions = cameraOptionsAux;
@@ -94,7 +93,6 @@ export class OpenVidu {
                             sendVideo: cameraOptions.video,
                             activeAudio: cameraOptions.audioActive != null ? cameraOptions.audioActive : true,
                             activeVideo: cameraOptions.videoActive != null ? cameraOptions.videoActive : true,
-                            dataChannel: true,
                             mediaConstraints: {
                                 video: screenConstraints.video,
                                 audio: false
@@ -152,7 +150,6 @@ export class OpenVidu {
                             sendVideo: cameraOptions.video != null ? cameraOptions.video : true,
                             activeAudio: cameraOptions.audioActive != null ? cameraOptions.audioActive : true,
                             activeVideo: cameraOptions.videoActive != null ? cameraOptions.videoActive : true,
-                            dataChannel: true,
                             mediaConstraints: {
                                 video: screenConstraints.video,
                                 audio: false
@@ -179,7 +176,6 @@ export class OpenVidu {
                 sendVideo: true,
                 activeAudio: true,
                 activeVideo: true,
-                dataChannel: true,
                 mediaConstraints: {
                     audio: true,
                     video: { width: { ideal: 1280 } }
