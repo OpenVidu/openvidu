@@ -157,9 +157,9 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 				sessionManager.joinRoom(participant, sessionId, request.getId());
 
 			} else {
-				log.error("ERROR: Metadata format is incorrect");
+				log.error("ERROR: Metadata format set in client-side is incorrect");
 				throw new OpenViduException(Code.USER_METADATA_FORMAT_INVALID_ERROR_CODE,
-						"Unable to join room. The metadata received has an invalid format");
+						"Unable to join room. The metadata received from the client-side has an invalid format (max length allowed is 10000 chars)");
 			}
 		} else {
 			log.error("ERROR: sessionId or token not valid");

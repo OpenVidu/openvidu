@@ -159,7 +159,7 @@ public abstract class SessionManager {
 		return sessionId;
 	}
 
-	public String newToken(String sessionId, ParticipantRole role, String serverMetadata) {
+	public String newToken(String sessionId, ParticipantRole role, String serverMetadata) throws OpenViduException {
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null
 				&& this.sessionidTokenTokenobj.get(sessionId) != null) {
 			if (isMetadataFormatCorrect(serverMetadata)) {
@@ -169,7 +169,7 @@ public abstract class SessionManager {
 				return token;
 			} else {
 				throw new OpenViduException(Code.GENERIC_ERROR_CODE,
-						"Data invalid format. Max length allowed is 1000 chars");
+						"Data invalid format. Max length allowed is 10000 chars");
 			}
 		} else {
 			System.out.println("Error: the sessionId [" + sessionId + "] is not valid");
@@ -223,8 +223,8 @@ public abstract class SessionManager {
 	}
 
 	public boolean isMetadataFormatCorrect(String metadata) {
-		// Max 1000 chars
-		return (metadata.length() <= 1000);
+		// Max 10000 chars
+		return (metadata.length() <= 10000);
 	}
 
 	public void newInsecureParticipant(String participantPrivateId) {
