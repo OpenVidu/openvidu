@@ -194,6 +194,9 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
 
     this.session.connect(token, this.clientData, (error) => {
       if (!error) {
+
+        this.changeDetector.detectChanges();
+
         if (this.publishTo) {
 
           this.audioMuted = !this.activeAudio;
