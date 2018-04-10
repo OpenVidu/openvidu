@@ -5,7 +5,7 @@ import * as DetectRTC from '../KurentoUtils/DetectRTC';
 export class WebRtcStats {
 
     private webRtcStatsEnabled: boolean = false;
-    private webRtcStatsIntervalId: number;
+    private webRtcStatsIntervalId: any;
     private statsInterval: number = 1;
     private stats: any = {
         "inbound": {

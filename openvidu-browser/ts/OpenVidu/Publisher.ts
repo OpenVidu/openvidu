@@ -144,5 +144,14 @@ export class Publisher {
                 });
             }
         }
+        if (eventName == 'screen-stopped-by-user') {
+            if (this.stream.isScreenRequestedReady) {
+                this.ee.emitEvent('screen-stopped-by-user');
+            } else {
+                this.stream.addEventListener('screen-stopped-by-user', () => {
+                    this.ee.emitEvent('screen-stopped-by-user');
+                });
+            }
+        }
     }
 }

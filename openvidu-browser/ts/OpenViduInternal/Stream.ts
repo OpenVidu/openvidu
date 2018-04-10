@@ -543,6 +543,10 @@ export class Stream {
         // FIXME: Throw error when stream is not local
         if (this.isReadyToPublish) {
             this.initWebRtcPeer(this.publishVideoCallback);
+            let that = this;
+            this.mediaStream.getVideoTracks()[0].onended = function() {
+                that.ee.emitEvent('screen-stopped-by-user');
+            }
         } else {
             this.ee.once('stream-ready', streamEvent => {
                 this.publish();

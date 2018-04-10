@@ -192,6 +192,70 @@ export class OpenVidu {
         }
     }
 
+    requestScreen(cameraOptions?: any, callback?: Function) {
+        if (DetectRTC.browser.name === 'Firefox' && DetectRTC.browser.version >= 52) {
+            screenSharingAuto.getScreenId((error, sourceId, screenConstraints) => {
+                cameraOptions = {
+                    sendAudio: cameraOptions.audio,
+                    sendVideo: cameraOptions.video,
+                    activeAudio: cameraOptions.audioActive != null ? cameraOptions.audioActive : true,
+                    activeVideo: cameraOptions.videoActive != null ? cameraOptions.videoActive : true,
+                    dataChannel: true,
+                    mediaConstraints: {
+                        video: screenConstraints.video,
+                        audio: false
+                    }
+                }
+                if (callback) {
+                    callback(cameraOptions);
+                }
+            });
+
+
+        }else if (DetectRTC.browser.name === 'Chrome') {
+            screenSharingAuto.getScreenId((error, sourceId, screenConstraints) => {
+                if (error === 'not-installed') {
+                    let error = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_NOT_INSTALLED, 'https://chrome.google.com/webstore/detail/screen-capturing/ajhifddimkapgcifgcodmmfdlknahffk');
+                    console.error(error);
+                    if (callback) callback('not-installed');
+                    return;
+                }else if (error === 'permission-denied') {
+                    let error = new OpenViduError(OpenViduErrorName.SCREEN_CAPTURE_DENIED, 'You must allow access to one window of your desktop');
+                    console.error(error);
+                    if (callback) callback('permission-denied');
+                    return;
+                } else {
+                    cameraOptions = {
+                        sendAudio: cameraOptions.audio != null ? cameraOptions.audio : true,
+                        sendVideo: cameraOptions.video != null ? cameraOptions.video : true,
+                        activeAudio: cameraOptions.audioActive != null ? cameraOptions.audioActive : true,
+                        activeVideo: cameraOptions.videoActive != null ? cameraOptions.videoActive : true,
+                        dataChannel: true,
+                        mediaConstraints: {
+                            video: screenConstraints.video,
+                            audio: false
+                        }
+                    }
+                    if (callback) {
+                        callback(cameraOptions);
+                    }
+                }
+            }, (error) => {
+                console.error('getScreenId error', error);
+                return;
+            });
+
+        }
+
+    }
+
+    initScreenPublisher(parentId: string, cameraOptions: any, callback?: Function): any{
+        let publisher = new Publisher(this.openVidu.initPublisherScreen(parentId, true, callback), parentId, true);
+        publisher.stream.configureScreenOptions(cameraOptions);
+        publisher.stream.ee.emitEvent('can-request-screen');
+        return publisher;
+    }
+
     reinitPublisher(publisher: Publisher): any {
         if (publisher.stream.typeOfVideo !== 'SCREEN') {
             publisher = new Publisher(this.openVidu.initPublisherTagged(publisher.stream.getParentId(), publisher.stream.outboundOptions, false), publisher.stream.getParentId(), false);
