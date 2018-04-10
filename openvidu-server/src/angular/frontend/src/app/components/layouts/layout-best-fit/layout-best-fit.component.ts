@@ -17,7 +17,7 @@ export class LayoutBestFitComponent implements OnInit, OnDestroy {
   secret: string;
 
   session: Session;
-  streams = [];
+  streams: Stream[] = [];
 
   layout: any;
   resizeTimeout;
@@ -91,7 +91,14 @@ export class LayoutBestFitComponent implements OnInit, OnDestroy {
   }
 
   private deleteRemoteStream(stream: Stream): void {
-    const index = this.streams.indexOf(stream, 0);
+    let index = -1;
+    for (let i = 0; i < this.streams.length; i++) {
+      if (this.streams[i].streamId === stream.streamId) {
+        index = i;
+        break;
+      }
+    }
+
     if (index > -1) {
       this.streams.splice(index, 1);
     }

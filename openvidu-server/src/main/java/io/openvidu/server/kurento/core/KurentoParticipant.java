@@ -35,7 +35,6 @@ public class KurentoParticipant extends Participant {
 
 	private InfoHandler infoHandler;
 
-	private boolean dataChannels = false;
 	private boolean webParticipant = true;
 
 	private final KurentoSession session;
@@ -52,7 +51,7 @@ public class KurentoParticipant extends Participant {
 				participant.getClientMetadata());
 		this.session = kurentoSession;
 		this.pipeline = pipeline;
-		this.publisher = new PublisherEndpoint(webParticipant, dataChannels, this, participant.getParticipantPublicId(),
+		this.publisher = new PublisherEndpoint(webParticipant, this, participant.getParticipantPublicId(),
 				pipeline);
 
 		for (Participant other : session.getParticipants()) {
@@ -199,7 +198,7 @@ public class KurentoParticipant extends Participant {
 		log.info("PARTICIPANT {}: unpublishing media stream from room {}", this.getParticipantPublicId(),
 				this.session.getSessionId());
 		releasePublisherEndpoint();
-		this.publisher = new PublisherEndpoint(webParticipant, dataChannels, this, this.getParticipantPublicId(),
+		this.publisher = new PublisherEndpoint(webParticipant, this, this.getParticipantPublicId(),
 				pipeline);
 		log.info(
 				"PARTICIPANT {}: released publisher endpoint and left it initialized (ready for future streaming)",

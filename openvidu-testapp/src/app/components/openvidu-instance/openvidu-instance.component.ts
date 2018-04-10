@@ -194,6 +194,9 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
 
     this.session.connect(token, this.clientData, (error) => {
       if (!error) {
+
+        this.changeDetector.detectChanges();
+
         if (this.publishTo) {
 
           this.audioMuted = !this.activeAudio;
@@ -428,7 +431,14 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       data: 'Test message',
       to: [],
       type: 'chat'
-    });
+    },
+      error => {
+        if (error) {
+          console.error(error);
+        } else {
+          console.log('Message succesfully sent');
+        }
+      });
   }
 
   recordPublisher(): void {

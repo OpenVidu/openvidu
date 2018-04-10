@@ -68,7 +68,7 @@ public class OpenViduClientTest {
     Map<String, List<String>> joinResult = new HashMap<String, List<String>>();
 
     when(jsonRpcClient.sendRequest(JOINROOM_METHOD, params)).thenReturn(result);
-    assertThat(client.joinRoom("room", "user", null), is(joinResult));
+    assertThat(client.joinRoom("room", "user"), is(joinResult));
 
   }
 }

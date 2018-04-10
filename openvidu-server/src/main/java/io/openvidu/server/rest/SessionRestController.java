@@ -140,7 +140,7 @@ public class SessionRestController {
 					HttpStatus.BAD_REQUEST);
 		} catch (OpenViduException e) {
 			return this.generateErrorResponse(
-					"Metadata [" + params.get("data") + "] unexpected format. Max length allowed is 1000 chars",
+					"Metadata [" + params.get("data") + "] unexpected format. Max length allowed is 10000 chars",
 					"/api/tokens", HttpStatus.BAD_REQUEST);
 		}
 	}

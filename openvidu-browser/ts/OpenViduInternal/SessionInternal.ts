@@ -116,24 +116,12 @@ export class SessionInternal {
             }
             else {
 
-                if (!token) {
-                    token = this.randomToken();
-                }
-
                 let joinParams = {
-                    token: token,
+                    token: (!!token) ? token : '',
                     session: this.sessionId,
                     metadata: this.options.metadata,
                     secret: this.openVidu.getSecret(),
                     recorder: this.openVidu.getRecorder(),
-                    dataChannels: false
-                }
-
-                if (this.localParticipant) {
-                    if (Object.keys(this.localParticipant.getStreams()).some(streamId =>
-                        this.remoteStreams[streamId].isDataChannelEnabled())) {
-                        joinParams.dataChannels = true;
-                    }
                 }
 
                 this.openVidu.sendRequest('joinRoom', joinParams, (error, response) => {
@@ -652,10 +640,6 @@ export class SessionInternal {
         } else {
             return metadata;
         }
-    }
-
-    private randomToken(): string {
-        return Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
     }
 
 }

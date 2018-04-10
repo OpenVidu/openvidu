@@ -21,6 +21,7 @@ import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
+import io.openvidu.server.core.ParticipantRole;
 import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.core.Token;
 
@@ -52,7 +53,30 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 		log.debug("WebSocket session #{} - Request: {}", participantPrivateId, request);
 
-		RpcConnection rpcConnection = notificationService.addTransaction(transaction, request);
+		RpcConnection rpcConnection;
+		if (ProtocolElements.JOINROOM_METHOD.equals(request.getMethod())) {
+			// Store new RpcConnection information if method 'joinRoom'
+			rpcConnection = notificationService.newRpcConnection(transaction, request);
+		} else if (notificationService.getRpcConnection(participantPrivateId) == null) {
+			// Throw exception if any method is called before 'joinRoom'
+			log.warn(
+					"No connection found for participant with privateId {} when trying to execute method '{}'. Method 'Session.connect()' must be the first operation called in any session",
+					participantPrivateId, request.getMethod());
+			throw new OpenViduException(Code.TRANSPORT_ERROR_CODE,
+					"No connection found for participant with privateId " + participantPrivateId
+							+ ". Method 'Session.connect()' must be the first operation called in any session");
+		}
+		rpcConnection = notificationService.addTransaction(transaction, request);
+
+		String sessionId = rpcConnection.getSessionId();
+		if (sessionId == null && !ProtocolElements.JOINROOM_METHOD.equals(request.getMethod())) {
+			log.warn(
+					"No session information found for participant with privateId {} when trying to execute method '{}'. Method 'Session.connect()' must be the first operation called in any session",
+					participantPrivateId, request.getMethod());
+			throw new OpenViduException(Code.TRANSPORT_ERROR_CODE,
+					"No session information found for participant with privateId " + participantPrivateId
+							+ ". Method 'Session.connect()' must be the first operation called in any session");
+		}
 
 		transaction.startAsync();
 
@@ -93,19 +117,20 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		String token = getStringParam(request, ProtocolElements.JOINROOM_TOKEN_PARAM);
 		String secret = getStringParam(request, ProtocolElements.JOINROOM_SECRET_PARAM);
 		String participantPrivatetId = rpcConnection.getParticipantPrivateId();
-		
+
 		boolean recorder = false;
-		
+
 		try {
 			recorder = getBooleanParam(request, ProtocolElements.JOINROOM_RECORDER_PARAM);
 		} catch (RuntimeException e) {
 			// Nothing happens. 'recorder' param to false
 		}
-		
+
 		boolean generateRecorderParticipant = false;
 
 		if (openviduConfig.isOpenViduSecret(secret)) {
 			sessionManager.newInsecureParticipant(participantPrivatetId);
+			token = sessionManager.generateRandomChain();
 			if (recorder) {
 				generateRecorderParticipant = true;
 			}
@@ -119,7 +144,7 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 				Token tokenObj = sessionManager.consumeToken(sessionId, participantPrivatetId, token);
 				Participant participant;
-				
+
 				if (generateRecorderParticipant) {
 					participant = sessionManager.newRecorderParticipant(sessionId, participantPrivatetId, tokenObj,
 							clientMetadata);
@@ -127,14 +152,14 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 					participant = sessionManager.newParticipant(sessionId, participantPrivatetId, tokenObj,
 							clientMetadata);
 				}
-				
+
 				rpcConnection.setSessionId(sessionId);
 				sessionManager.joinRoom(participant, sessionId, request.getId());
 
 			} else {
-				log.error("ERROR: Metadata format is incorrect");
+				log.error("ERROR: Metadata format set in client-side is incorrect");
 				throw new OpenViduException(Code.USER_METADATA_FORMAT_INVALID_ERROR_CODE,
-						"Unable to join room. The metadata received has an invalid format");
+						"Unable to join room. The metadata received from the client-side has an invalid format (max length allowed is 10000 chars)");
 			}
 		} else {
 			log.error("ERROR: sessionId or token not valid");
@@ -259,6 +284,16 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 	@Override
 	public void afterConnectionClosed(Session rpcSession, String status) throws Exception {
 		log.info("Connection closed for WebSocket session: {} - Status: {}", rpcSession.getSessionId(), status);
+
+		RpcConnection rpc = this.notificationService.closeRpcSession(rpcSession.getSessionId());
+
+		if (rpc != null && rpc.getSessionId() != null) {
+			io.openvidu.server.core.Session session = this.sessionManager.getSession(rpc.getSessionId());
+			if (session != null && session.getParticipantByPrivateId(rpc.getParticipantPrivateId()) != null) {
+				leaveRoomAfterConnClosed(rpc.getParticipantPrivateId());
+			}
+		}
+
 		this.notificationService.showRpcConnections();
 		String rpcSessionId = rpcSession.getSessionId();
 		if (this.webSocketTransportError.get(rpcSessionId) != null) {
@@ -293,21 +328,24 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 	public static String getStringParam(Request<JsonObject> request, String key) {
 		if (request.getParams() == null || request.getParams().get(key) == null) {
-			throw new RuntimeException("Request element '" + key + "' is missing in method '" + request.getMethod() + "'. CHECK THAT 'openvidu-server' AND 'openvidu-browser' SHARE THE SAME VERSION NUMBER");
+			throw new RuntimeException("Request element '" + key + "' is missing in method '" + request.getMethod()
+					+ "'. CHECK THAT 'openvidu-server' AND 'openvidu-browser' SHARE THE SAME VERSION NUMBER");
 		}
 		return request.getParams().get(key).getAsString();
 	}
 
 	public static int getIntParam(Request<JsonObject> request, String key) {
 		if (request.getParams() == null || request.getParams().get(key) == null) {
-			throw new RuntimeException("Request element '" + key + "' is missing in method '" + request.getMethod() + "'. CHECK THAT 'openvidu-server' AND 'openvidu-browser' SHARE THE SAME VERSION NUMBER");
+			throw new RuntimeException("Request element '" + key + "' is missing in method '" + request.getMethod()
+					+ "'. CHECK THAT 'openvidu-server' AND 'openvidu-browser' SHARE THE SAME VERSION NUMBER");
 		}
 		return request.getParams().get(key).getAsInt();
 	}
 
 	public static boolean getBooleanParam(Request<JsonObject> request, String key) {
 		if (request.getParams() == null || request.getParams().get(key) == null) {
-			throw new RuntimeException("Request element '" + key + "' is missing in method '" + request.getMethod() + "'. CHECK THAT 'openvidu-server' AND 'openvidu-browser' SHARE THE SAME VERSION NUMBER");
+			throw new RuntimeException("Request element '" + key + "' is missing in method '" + request.getMethod()
+					+ "'. CHECK THAT 'openvidu-server' AND 'openvidu-browser' SHARE THE SAME VERSION NUMBER");
 		}
 		return request.getParams().get(key).getAsBoolean();
 	}

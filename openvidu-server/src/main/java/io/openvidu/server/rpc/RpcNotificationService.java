@@ -18,19 +18,22 @@ public class RpcNotificationService {
 
 	private static final Logger log = LoggerFactory.getLogger(RpcNotificationService.class);
 
-	private static ConcurrentMap<String, RpcConnection> rpcConnections = new ConcurrentHashMap<>();
+	private ConcurrentMap<String, RpcConnection> rpcConnections = new ConcurrentHashMap<>();
+
+	public RpcConnection newRpcConnection(Transaction t, Request<JsonObject> request) {
+		String participantPrivateId = t.getSession().getSessionId();
+		RpcConnection connection = new RpcConnection(t.getSession());
+		RpcConnection oldConnection = rpcConnections.putIfAbsent(participantPrivateId, connection);
+		if (oldConnection != null) {
+			log.warn("Concurrent initialization of rpcSession #{}", participantPrivateId);
+			connection = oldConnection;
+		}
+		return connection;
+	}
 
 	public RpcConnection addTransaction(Transaction t, Request<JsonObject> request) {
 		String participantPrivateId = t.getSession().getSessionId();
 		RpcConnection connection = rpcConnections.get(participantPrivateId);
-		if (connection == null) {
-			connection = new RpcConnection(t.getSession());
-			RpcConnection oldConnection = rpcConnections.putIfAbsent(participantPrivateId, connection);
-			if (oldConnection != null) {
-				log.warn("Concurrent initialization of rpcSession #{}", participantPrivateId);
-				connection = oldConnection;
-			}
-		}
 		connection.addTransaction(request.getId(), t);
 		return connection;
 	}
@@ -82,20 +85,21 @@ public class RpcNotificationService {
 		}
 	}
 
-	public void closeRpcSession(String participantPrivateId) {
-		RpcConnection rpcSession = rpcConnections.get(participantPrivateId);
+	public RpcConnection closeRpcSession(String participantPrivateId) {
+		RpcConnection rpcSession = rpcConnections.remove(participantPrivateId);
 		if (rpcSession == null || rpcSession.getSession() == null) {
 			log.error("No session found for private id {}, unable to cleanup", participantPrivateId);
-			return;
+			return null;
 		}
 		Session s = rpcSession.getSession();
 		try {
 			s.close();
 			log.info("Closed session for participant with private id {}", participantPrivateId);
+			return rpcSession;
 		} catch (IOException e) {
 			log.error("Error closing session for participant with private id {}", participantPrivateId, e);
 		}
-		rpcConnections.remove(participantPrivateId);
+		return null;
 	}
 
 	private Transaction getAndRemoveTransaction(String participantPrivateId, Integer transactionId) {
@@ -111,7 +115,11 @@ public class RpcNotificationService {
 	}
 
 	public void showRpcConnections() {
-		log.info("<PRIVATE_ID, RPC_CONNECTION>: {}", RpcNotificationService.rpcConnections.toString());
+		log.info("<PRIVATE_ID, RPC_CONNECTION>: {}", this.rpcConnections.toString());
+	}
+
+	public RpcConnection getRpcConnection(String participantPrivateId) {
+		return this.rpcConnections.get(participantPrivateId);
 	}
 
 }

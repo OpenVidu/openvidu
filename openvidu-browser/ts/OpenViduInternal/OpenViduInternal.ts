@@ -49,7 +49,6 @@ export class OpenViduInternal {
                     sendVideo: true,
                     activeAudio: true,
                     activeVideo: true,
-                    dataChannel: true,
                     mediaConstraints: {
                         audio: true,
                         video: { width: { ideal: 1280 } }
@@ -351,13 +350,12 @@ export class OpenViduInternal {
         }
     }
 
-    //CHAT
-    sendMessage(message) {
+    sendMessage(message: any, completionHandler?: Function) {
         this.sendRequest('sendMessage', {
             message: message
-        }, function (error, response) {
-            if (error) {
-                console.error(error);
+        }, (error, response) => {
+            if (!!completionHandler) {
+                completionHandler(!!error ? new Error(error.message) : null);
             }
         });
     };

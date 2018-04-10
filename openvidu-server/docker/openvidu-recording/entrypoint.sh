@@ -107,13 +107,11 @@ if [[ $CURRENT_UID != $USER_ID ]]; then
 	DURATION=$(su myuser -c "echo '$INFO' | jq '.format.duration | tonumber'")
 	STATUS="stopped"
 
-	# su myuser -c "echo 'TMP=${TMP}, SIZE=${SIZE}, DURATION=${DURATION}, STATUS=${STATUS}, HAS_AUDIO=${HAS_AUDIO}, HAS_VIDEO=${HAS_VIDEO}' > /recordings/.${VIDEO_NAME}.if.vars"
-
 	su myuser -c "jq -c -r \".hasAudio=${HAS_AUDIO} | .hasVideo=${HAS_VIDEO} | .duration=${DURATION} | .size=${SIZE} | .status=\\\"${STATUS}\\\"\" \"/recordings/.recording.${VIDEO_NAME}\" > ${TMP} && mv ${TMP} \"/recordings/.recording.${VIDEO_NAME}\""
 
 else
 
-	TMP=$(mktemp /recordings/.${VIDEO_NAME}.XXXXXXXXXXXXXXXXXXXXXXX.if.json)
+	TMP=$(mktemp /recordings/.${VIDEO_NAME}.XXXXXXXXXXXXXXXXXXXXXXX.else.json)
 	INFO=$(cat /recordings/${VIDEO_NAME}.info | jq '.')
 	HAS_AUDIO_AUX=$(echo "$INFO" | jq '.streams[] | select(.codec_type == "audio")')
 	if [ -z "$HAS_AUDIO_AUX" ]; then HAS_AUDIO=false; else HAS_AUDIO=true; fi
@@ -122,8 +120,6 @@ else
 	SIZE=$(echo "$INFO" | jq '.format.size | tonumber')
 	DURATION=$(echo "$INFO" | jq '.format.duration | tonumber')
 	STATUS="stopped"
-
-	# echo "TMP=${TMP}, SIZE=${SIZE}, DURATION=${DURATION}, STATUS=${STATUS}, HAS_AUDIO=${HAS_AUDIO}, HAS_VIDEO=${HAS_VIDEO}" > /recordings/.${VIDEO_NAME}.if.vars
 
 	jq -c -r ".hasAudio=${HAS_AUDIO} | .hasVideo=${HAS_VIDEO} | .duration=${DURATION} | .size=${SIZE} | .status=\"${STATUS}\"" "/recordings/.recording.${VIDEO_NAME}" > ${TMP} && mv ${TMP} "/recordings/.recording.${VIDEO_NAME}"
 

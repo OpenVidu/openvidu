@@ -26,6 +26,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         .antMatchers(HttpMethod.GET, "/api/recordings").authenticated()
         .antMatchers(HttpMethod.GET, "/api/recordings/**").authenticated()
         .antMatchers(HttpMethod.DELETE, "/api/recordings/**").authenticated()
+        .antMatchers(HttpMethod.GET, "/config/**").authenticated()
         .antMatchers("/").authenticated();
         
         if (openviduConf.getOpenViduRecordingFreeAccess()) {
