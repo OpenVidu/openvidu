@@ -326,7 +326,7 @@ public class SessionEventsHandler {
 	public void sendRecordingStartedNotification(Session session, Recording recording) {
 
 		if (openviduConfig.isCdrEnabled()) {
-			CDR.recordRecordingStarted(session.getSessionId());
+			CDR.recordRecordingStarted(session.getSessionId(), recording);
 		}
 
 		// Filter participants by roles according to "openvidu.recording.notification"
@@ -345,7 +345,7 @@ public class SessionEventsHandler {
 	public void sendRecordingStoppedNotification(Session session, Recording recording) {
 
 		if (openviduConfig.isCdrEnabled()) {
-			CDR.recordRecordingStopped(session.getSessionId());
+			CDR.recordRecordingStopped(session.getSessionId(), recording);
 		}
 
 		// Be sure to clean this map (this should return null)

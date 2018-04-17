@@ -4,6 +4,7 @@ import org.json.simple.JSONObject;
 
 import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
+import io.openvidu.server.recording.Recording;
 
 public class CDREvent implements Comparable<CDREvent> {
 
@@ -25,6 +26,12 @@ public class CDREvent implements Comparable<CDREvent> {
 	private MediaOptions mediaOptions;
 	private String receivingFrom;
 	private String reason;
+	
+	// Recording events
+	private Long size;
+	private String id;
+	private Boolean hasAudio;
+	private Boolean hasVideo;
 
 	public CDREvent(String eventName, CDREvent event) {
 		this(eventName, event.participant, event.sessionId, event.mediaOptions, event.receivingFrom, event.startTime, event.reason);
@@ -45,6 +52,20 @@ public class CDREvent implements Comparable<CDREvent> {
 		}
 		this.timeStamp = System.currentTimeMillis();
 		this.startTime = this.timeStamp;
+	}
+	
+	public CDREvent(String eventName, String sessionId, Recording recording) {
+		this.eventName = eventName;
+		if ((sessionId.indexOf('/')) != -1) {
+			this.sessionId = sessionId.substring(sessionId.lastIndexOf('/') + 1, sessionId.length());
+		} else {
+			this.sessionId = sessionId;
+		}
+		this.timeStamp = System.currentTimeMillis();
+		this.id = recording.getId();
+		this.size = recording.getSize();
+		this.hasAudio = recording.hasAudio();
+		this.hasVideo = recording.hasVideo();
 	}
 
 	public CDREvent(String eventName, Participant participant, String sessionId) {
@@ -105,6 +126,18 @@ public class CDREvent implements Comparable<CDREvent> {
 		
 		if (this.reason != null) {
 			json.put("reason", this.reason);
+		}
+		if (this.id != null) {
+			json.put("id", this.id);
+		}
+		if (this.size != null) {
+			json.put("size", this.size);
+		}
+		if (this.hasAudio != null) {
+			json.put("hasAudio", this.hasAudio);
+		}
+		if (this.hasVideo != null) {
+			json.put("hasVideo", this.hasVideo);
 		}
 
 		JSONObject root = new JSONObject();

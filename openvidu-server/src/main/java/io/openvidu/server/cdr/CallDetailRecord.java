@@ -11,19 +11,20 @@ import org.slf4j.LoggerFactory;
 
 import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
+import io.openvidu.server.recording.Recording;
 
 /**
  * CDR logger to register all information of a Session.
  * Enabled by property 'openvidu.cdr=true'
  * 
  * - 'sessionCreated':				{sessionId, timestamp}
- * - 'sessionDestroyed':			{sessionId, timestamp, startTime, endTime, duration }
+ * - 'sessionDestroyed':			{sessionId, timestamp, startTime, endTime, duration, reason}
  * - 'participantJoined':			{sessionId, timestamp, participantId}
  * - 'participantLeft':				{sessionId, timestamp, participantId, startTime, endTime, duration, reason}
- * - 'webrtcConnectionCreated'		{sessionId, timestamp, participantId, connection, [receivingFrom], audioEnabled, videoEnabled, [videoSource], [videoFramerate] }
- * - 'webrtcConnectionDestroyed'	{sessionId, timestamp, participantId, connection, [receivingFrom], audioEnabled, videoEnabled, [videoSource], [videoFramerate], reason }
- * - 'recordingStarted'				{sessionId, timestamp}
- * - 'recordingStopped'				{sessionId, timestamp}
+ * - 'webrtcConnectionCreated'		{sessionId, timestamp, participantId, connection, [receivingFrom], audioEnabled, videoEnabled, [videoSource], [videoFramerate]}
+ * - 'webrtcConnectionDestroyed'	{sessionId, timestamp, participantId, startTime, endTime, duration, connection, [receivingFrom], audioEnabled, videoEnabled, [videoSource], [videoFramerate], reason}
+ * - 'recordingStarted'				{sessionId, timestamp, id, hasAudio, hasVideo, size}
+ * - 'recordingStopped'				{sessionId, timestamp, id, hasAudio, hasVideo, size}
  * 
  * PROPERTIES VALUES:
  * 
@@ -39,6 +40,10 @@ import io.openvidu.server.core.Participant;
  * - videoEnabled: 		boolean
  * - videoSource: 		"CAMERA", "SCREEN"
  * - videoFramerate:	number
+ * - id:				string
+ * - hasAudio:			boolean
+ * - hasVideo:			boolean
+ * - size: 				number
  * - webrtcConnectionDestroyed.reason: 	"unsubscribe", "unpublish", "disconnect", "networkDisconnect", "openviduServerDestroyed"
  * - participantLeft.reason: 			"unsubscribe", "unpublish", "disconnect", "networkDisconnect", "openviduServerDestroyed"
  * - sessionDestroyed.reason: 			"lastParticipantLeft", "openviduServerDestroyed"
@@ -124,14 +129,12 @@ public class CallDetailRecord {
 		return false;
 	}
 
-	public void recordRecordingStarted(String sessionId) {
-		CDREvent recording = new CDREvent(CDREvent.RECORDING_STARTED, sessionId);
-		log.info("{}", recording);
+	public void recordRecordingStarted(String sessionId, Recording recording) {
+		log.info("{}", new CDREvent(CDREvent.RECORDING_STARTED, sessionId, recording));
 	}
 
-	public void recordRecordingStopped(String sessionId) {
-		CDREvent recording = new CDREvent(CDREvent.RECORDING_STOPPED, sessionId);
-		log.info("{}", recording);
+	public void recordRecordingStopped(String sessionId, Recording recording) {
+		log.info("{}", new CDREvent(CDREvent.RECORDING_STOPPED, sessionId, recording));
 	}
 
 }
