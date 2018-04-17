@@ -63,6 +63,7 @@ public class CDREvent implements Comparable<CDREvent> {
 		}
 		this.timeStamp = System.currentTimeMillis();
 		this.id = recording.getId();
+		this.duration = (int) recording.getDuration();
 		this.size = recording.getSize();
 		this.hasAudio = recording.hasAudio();
 		this.hasVideo = recording.hasVideo();
@@ -118,12 +119,13 @@ public class CDREvent implements Comparable<CDREvent> {
 				json.put("receivingFrom", this.receivingFrom);
 			}
 		}
-		if (this.duration != null) {
+		if (this.startTime != null && this.duration != null) {
 			json.put("startTime", this.startTime);
 			json.put("endTime", this.timeStamp);
 			json.put("duration", (this.timeStamp - this.startTime) / 1000);
+		} else if (this.duration != null) {
+			json.put("duration", duration);
 		}
-		
 		if (this.reason != null) {
 			json.put("reason", this.reason);
 		}
