@@ -209,37 +209,8 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
           this.sendAudioChange = this.sendAudio;
           this.sendVideoChange = this.sendVideo;
 
-          this.publisher = this.OV.initPublisher(
-            'local-vid-' + this.session.connection.connectionId,
-            {
-              audio: this.sendAudio,
-              video: this.sendVideo,
-              audioActive: this.activeAudio,
-              videoActive: this.activeVideo,
-              quality: 'MEDIUM',
-              screen: this.optionsVideo === 'screen' ? true : false
-            },
-            (err) => {
-              if (err) {
-                console.warn(err);
-                this.openviduError = err;
-                if (err.name === 'SCREEN_EXTENSION_NOT_INSTALLED') {
-                  this.extensionDialog.open(ExtensionDialogComponent, {
-                    data: { url: err.message },
-                    disableClose: true,
-                    width: '250px'
-                  });
-                }
-              }
-            });
-
-          this.addPublisherEvents(this.publisher);
-
-          if (this.subscribeToRemote) {
-            this.publisher.subscribeToRemote();
-          }
-
-          this.session.publish(this.publisher);
+          // this.asyncInitPublisher();
+          this.syncInitPublisher();
 
         }
       } else {
@@ -439,6 +410,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
           console.log('Message succesfully sent');
         }
       });
+      // this.initGrayVideo();
   }
 
   recordPublisher(): void {
@@ -533,7 +505,13 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
 
   publishUnpublish(): void {
     if (this.unpublished) {
-      this.session.publish(this.publisher);
+      this.session.publish(this.publisher)
+        .then(() => {
+          console.log(this.publisher);
+        })
+        .catch(e => {
+          console.error(e);
+        });
     } else {
       this.session.unpublish(this.publisher);
       this.removeUserData(this.session.connection.connectionId);
@@ -585,12 +563,13 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     this.publisher = this.OV.initPublisher(
       'local-vid-' + this.session.connection.connectionId,
       {
-        audio: this.sendAudioChange,
-        video: this.sendVideoChange,
-        audioActive: (!this.publisherChanged) ? true : !this.audioMuted,
-        videoActive: (!this.publisherChanged) ? true : !this.videoMuted,
-        quality: 'MEDIUM',
-        screen: screenChange
+        audioSource: this.sendAudioChange ? undefined : false,
+        videoSource: this.sendVideoChange ? (screenChange ? 'screen' : undefined) : false,
+        publishAudio: (!this.publisherChanged) ? true : !this.audioMuted,
+        publishVideo: (!this.publisherChanged) ? true : !this.videoMuted,
+        resolution: '640x480',
+        frameRate: 30,
+        insertMode: 'APPEND'
       },
       (err) => {
         if (err) {
@@ -621,10 +600,35 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       document.getElementById('record-btn-' + this.session.connection.connectionId + '-' + connectionId).remove();
       document.getElementById('pause-btn-' + this.session.connection.connectionId + '-' + connectionId).remove();
     } else {
-      subscriber = this.session.subscribe(subscriber.stream, 'remote-vid-' + this.session.connection.connectionId);
+
+
+      this.session.subscribeAsync(subscriber.stream, 'remote-vid-' + this.session.connection.connectionId)
+        .then(sub => {
+          subscriber = sub;
+          this.subscribers[connectionId].subscriber = subscriber;
+          subscriber.on('videoElementCreated', (e) => {
+            if (!subscriber.stream.hasVideo) {
+              $(e.element).css({ 'background-color': '#4d4d4d' });
+              $(e.element).attr('poster', 'assets/images/volume.png');
+            }
+            this.subscribers[connectionId].videoElement = e.element;
+            this.updateEventList('videoElementCreated', e.element.id);
+          });
+          subscriber.on('videoPlaying', (e) => {
+            this.removeUserData(connectionId);
+            this.appendSubscriberData(e.element, subscriber.stream.connection);
+            this.updateEventList('videoPlaying', e.element.id);
+          });
+        })
+        .catch(err => {
+          console.error(err);
+        });
+
+
+      /*subscriber = this.session.subscribe(subscriber.stream, 'remote-vid-' + this.session.connection.connectionId);
       this.subscribers[connectionId].subscriber = subscriber;
       subscriber.on('videoElementCreated', (e) => {
-        if (!subscriber.stream.getRecvVideo()) {
+        if (!subscriber.stream.hasVideo) {
           $(e.element).css({ 'background-color': '#4d4d4d' });
           $(e.element).attr('poster', 'assets/images/volume.png');
         }
@@ -635,7 +639,9 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         this.removeUserData(connectionId);
         this.appendSubscriberData(e.element, subscriber.stream.connection);
         this.updateEventList('videoPlaying', e.element.id);
-      });
+      });*/
+
+
     }
     this.subscribers[connectionId].subbed = !this.subscribers[connectionId].subbed;
   }
@@ -646,30 +652,8 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       this.changeDetector.detectChanges();
 
       if (this.subscribeTo) {
-        const subscriber: Subscriber = session.subscribe(event.stream, 'remote-vid-' + session.connection.connectionId);
-        this.subscribers[subscriber.stream.connection.connectionId] = {
-          'subscriber': subscriber,
-          'subbed': true,
-          'recorder': undefined,
-          'recording': false,
-          'paused': false,
-          'videoElement': undefined
-        };
-        subscriber.on('videoElementCreated', (e) => {
-          if (!event.stream.getRecvVideo()) {
-            $(e.element).css({ 'background-color': '#4d4d4d' });
-            $(e.element).attr('poster', 'assets/images/volume.png');
-          }
-          this.subscribers[subscriber.stream.connection.connectionId].videoElement = e.element;
-          this.updateEventList('videoElementCreated', e.element.id);
-        });
-        subscriber.on('videoPlaying', (e) => {
-          this.appendSubscriberData(e.element, subscriber.stream.connection);
-          this.updateEventList('videoPlaying', e.element.id);
-        });
-        subscriber.on('videoElementDestroyed', (e) => {
-          this.updateEventList('videoElementDestroyed', '(Subscriber)');
-        });
+        // this.syncSubscribe(session, event);
+        this.asyncSubscribe(session, event);
       }
       this.updateEventList('streamCreated', event.stream.connection.connectionId);
     });
@@ -686,9 +670,21 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     });
     session.on('sessionDisconnected', (event) => {
       this.updateEventList('sessionDisconnected', 'No data');
+      if (event.reason === 'networkDisconnect') {
+        this.session = null;
+        this.OV = null;
+      }
     });
     session.on('signal', (event) => {
       this.updateEventList('signal', event.from.connectionId + '-' + event.data);
+    });
+
+    session.on('recordingStarted', (event) => {
+      this.updateEventList('recordingStarted', event.id);
+    });
+
+    session.on('recordingStopped', (event) => {
+      this.updateEventList('recordingStopped', event.id);
     });
 
     /*session.on('publisherStartSpeaking', (event) => {
@@ -722,6 +718,14 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
 
     publisher.on('accessDenied', (e) => {
       this.updateEventList('accessDenied', '');
+    });
+
+    publisher.on('accessDialogOpened', (e) => {
+      this.updateEventList('accessDialogOpened', '');
+    });
+
+    publisher.on('accessDialogClosed', (e) => {
+      this.updateEventList('accessDialogClosed', '');
     });
 
     publisher.on('videoPlaying', (e) => {
@@ -804,6 +808,194 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     if (!!this.subscribers[connectionId].recorder) {
       this.subscribers[connectionId].recorder.clean();
     }
+  }
+
+  syncInitPublisher() {
+    this.publisher = this.OV.initPublisher(
+      'local-vid-' + this.session.connection.connectionId,
+      {
+        audioSource: this.sendAudio ? undefined : false,
+        videoSource: this.sendVideo ? (this.optionsVideo === 'screen' ? 'screen' : undefined) : false,
+        publishAudio: this.activeAudio,
+        publishVideo: this.activeVideo,
+        resolution: '640x480',
+        frameRate: 30,
+        insertMode: 'APPEND'
+      },
+      (err) => {
+        if (err) {
+          console.warn(err);
+          this.openviduError = err;
+          if (err.name === 'SCREEN_EXTENSION_NOT_INSTALLED') {
+            this.extensionDialog.open(ExtensionDialogComponent, {
+              data: { url: err.message },
+              disableClose: true,
+              width: '250px'
+            });
+          }
+        }
+      });
+
+    this.addPublisherEvents(this.publisher);
+
+    if (this.subscribeToRemote) {
+      this.publisher.subscribeToRemote();
+    }
+
+    this.session.publish(this.publisher);
+  }
+
+  asyncInitPublisher() {
+    this.OV.initPublisherAsync(
+      'local-vid-' + this.session.connection.connectionId,
+      {
+        audioSource: this.sendAudio ? undefined : false,
+        videoSource: this.sendVideo ? (this.optionsVideo === 'screen' ? 'screen' : undefined) : false,
+        publishAudio: this.activeAudio,
+        publishVideo: this.activeVideo,
+        resolution: '640x480',
+        frameRate: 30,
+        insertMode: 'APPEND'
+      })
+      .then(publisher => {
+        this.publisher = publisher;
+        this.addPublisherEvents(this.publisher);
+        if (this.subscribeToRemote) {
+          this.publisher.subscribeToRemote();
+        }
+        this.session.publish(this.publisher)
+          .then(() => {
+            console.log(this.publisher);
+          })
+          .catch(e => {
+            console.error(e);
+          });
+      })
+      .catch(err => {
+        if (err) {
+          console.error(err);
+          this.openviduError = err;
+          if (err.name === 'SCREEN_EXTENSION_NOT_INSTALLED') {
+            this.extensionDialog.open(ExtensionDialogComponent, {
+              data: { url: err.message },
+              disableClose: true,
+              width: '250px'
+            });
+          }
+        }
+      });
+  }
+
+  syncSubscribe(session: Session, event) {
+    const subscriber: Subscriber = session.subscribe(event.stream, 'remote-vid-' + session.connection.connectionId);
+    this.subscribers[subscriber.stream.connection.connectionId] = {
+      'subscriber': subscriber,
+      'subbed': true,
+      'recorder': undefined,
+      'recording': false,
+      'paused': false,
+      'videoElement': undefined
+    };
+    subscriber.on('videoElementCreated', (e) => {
+      if (!event.stream.hasVideo) {
+        $(e.element).css({ 'background-color': '#4d4d4d' });
+        $(e.element).attr('poster', 'assets/images/volume.png');
+      }
+      this.subscribers[subscriber.stream.connection.connectionId].videoElement = e.element;
+      this.updateEventList('videoElementCreated', e.element.id);
+    });
+    subscriber.on('videoPlaying', (e) => {
+      this.appendSubscriberData(e.element, subscriber.stream.connection);
+      this.updateEventList('videoPlaying', e.element.id);
+    });
+    subscriber.on('videoElementDestroyed', (e) => {
+      this.updateEventList('videoElementDestroyed', '(Subscriber)');
+    });
+  }
+
+  asyncSubscribe(session: Session, event) {
+    session.subscribeAsync(event.stream, 'remote-vid-' + session.connection.connectionId)
+      .then(subscriber => {
+        this.subscribers[subscriber.stream.connection.connectionId] = {
+          'subscriber': subscriber,
+          'subbed': true,
+          'recorder': undefined,
+          'recording': false,
+          'paused': false,
+          'videoElement': undefined
+        };
+        subscriber.on('videoElementCreated', (e) => {
+          if (!event.stream.hasVideo) {
+            $(e.element).css({ 'background-color': '#4d4d4d' });
+            $(e.element).attr('poster', 'assets/images/volume.png');
+          }
+          this.subscribers[subscriber.stream.connection.connectionId].videoElement = e.element;
+          this.updateEventList('videoElementCreated', e.element.id);
+        });
+        subscriber.on('videoPlaying', (e) => {
+          this.appendSubscriberData(e.element, subscriber.stream.connection);
+          this.updateEventList('videoPlaying', e.element.id);
+        });
+        subscriber.on('videoElementDestroyed', (e) => {
+          this.updateEventList('videoElementDestroyed', '(Subscriber)');
+        });
+      })
+      .catch(err => {
+        console.error(err);
+      });
+  }
+
+  enableSpeakingEvents() {
+    this.session.on('publisherStartSpeaking', (event) => {
+    });
+
+    this.session.on('publisherStopSpeaking', (event) => {
+    });
+  }
+
+  disableSpeakingEvents() {
+    this.session.off('publisherStartSpeaking');
+    this.session.off('publisherStopSpeaking');
+  }
+
+  initGrayVideo(): void {
+    this.OV.getUserMedia(
+      {
+        videoSource: undefined,
+        resolution: '1280x720',
+        frameRate: 10,
+      }
+    )
+    .then((mediaStream: MediaStream) => {
+      const videoStreamTrack = mediaStream.getVideoTracks()[0];
+      const video = document.createElement('video');
+      video.srcObject = new MediaStream([videoStreamTrack]);
+      video.play();
+      const canvas = document.createElement('canvas') as any;
+      const ctx = canvas.getContext('2d');
+      ctx.filter = 'grayscale(100%)';
+
+      video.addEventListener('play', () => {
+        const loop = () => {
+          if (!video.paused && !video.ended) {
+            ctx.drawImage(video, 0, 0, 300, 170);
+            setTimeout(loop, 100); // Drawing at 10fps
+          }
+        };
+        loop();
+      });
+      const grayVideoTrack = canvas.captureStream(30).getVideoTracks()[0];
+      this.OV.initPublisher(
+          document.body,
+        {
+          audioSource: false,
+          videoSource: grayVideoTrack,
+          insertMode: 'APPEND'
+        });
+      })
+    .catch(error => {
+      console.error(error);
+    });
   }
 
 }

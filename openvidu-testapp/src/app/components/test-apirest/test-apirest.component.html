@@ -11,15 +11,54 @@
     </div>
   </div>
 
+  <div>
+    <h3>Session Properties</h3>
+    <table>
+      <tr>
+        <th>Archive Mode</th>
+        <th>Archive Layout</th>
+        <th>Media Mode</th>
+      </tr>
+      <tr id="tr-session-properties">
+        <td>
+          <mat-select placeholder="ArchiveMode" [(ngModel)]="selectedArchiveMode">
+            <mat-option *ngFor="let archiveMode of archiveModes" [value]="archiveMode">
+              {{ archiveMode }}
+            </mat-option>
+          </mat-select>
+        </td>
+        <td>
+          <mat-select placeholder="ArchiveLayout" [(ngModel)]="selectedArchiveLayout">
+            <mat-option *ngFor="let archiveLayout of archiveLayouts" [value]="archiveLayout">
+              {{ archiveLayout }}
+            </mat-option>
+          </mat-select>
+        </td>
+        <td>
+          <mat-select placeholder="MediaMode" [(ngModel)]="selectedMediaMode">
+            <mat-option *ngFor="let mediaMode of mediaModes" [value]="mediaMode">
+              {{ mediaMode }}
+            </mat-option>
+          </mat-select>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <hr style="margin: 30px 0 30px 0">
+
   <div id="table-row" fxLayout="row" fxLayoutGap="20px" fxLayoutAlign="start">
     <div fxLayout="column" fxFlex="65" fxFlexAlign="start" fxFill>
       <table>
         <tr>
-          <th class="first-col">sessionIds</th>
-          <th>tokens</th>
-          <th>Session</th>
+          <th *ngIf="this.data.length > 1">Selection</th>
+          <th class="first-col">Session IDs</th>
+          <th>Tokens</th>
         </tr>
         <tr *ngFor="let sid of this.data; let ind = index">
+          <td *ngIf="this.data.length > 1" style="text-align: center">
+                <mat-radio-button [checked]="selectedRadioIndex === ind" (click)="selectedRadioIndex = ind" name="sidOption"></mat-radio-button>
+          </td>
           <td class="first-col">
             <mat-card [style.background]="getBackgroundColor(ind)">{{sid[0]}}</mat-card>
           </td>
@@ -27,9 +66,6 @@
             <mat-card *ngIf="sid[1].length > 0" [style.background]="getBackgroundColor(ind)">
               <p *ngFor="let token of sid[1]">{{token}}</p>
             </mat-card>
-          </td>
-          <td style="text-align: center">
-            <mat-radio-button [checked]="selectedRadioIndex === ind" (click)="selectedRadioIndex = ind" name="sidOption"></mat-radio-button>
           </td>
         </tr>
       </table>

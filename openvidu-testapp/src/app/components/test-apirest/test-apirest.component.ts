@@ -2,6 +2,7 @@ import { Component, Input, OnInit, OnDestroy } from '@angular/core';
 import { Subscription } from 'rxjs/Subscription';
 import { OpenviduRestService } from '../../services/openvidu-rest.service';
 import { OpenviduParamsService } from '../../services/openvidu-params.service';
+import { SessionProperties, ArchiveMode, ArchiveLayout, MediaMode } from 'openvidu-node-client';
 
 import * as colormap from 'colormap';
 const numColors = 64;
@@ -21,8 +22,19 @@ export class TestApirestComponent implements OnInit, OnDestroy {
   // API REST params
   serverData = 'data_test';
   selectedRadioIndex = 0;
-  selectedRole = 'PUBLISHER';
+
   openViduRoles = ['SUBSCRIBER', 'PUBLISHER', 'MODERATOR'];
+  selectedRole = 'PUBLISHER';
+
+  archiveModes = ['ALWAYS', 'MANUAL'];
+  selectedArchiveMode = 'MANUAL';
+
+  archiveLayouts = ['BEST_FIT'];
+  selectedArchiveLayout = 'BEST_FIT';
+
+  mediaModes = ['ROUTED'];
+  selectedMediaMode = 'ROUTED';
+
 
   // API REST data collected
   data = [];
@@ -57,7 +69,12 @@ export class TestApirestComponent implements OnInit, OnDestroy {
   }
 
   private getSessionId() {
-    this.openviduRestService.getSessionId(this.openviduUrl, this.openviduSecret)
+    this.openviduRestService.getSessionId(this.openviduUrl, this.openviduSecret,
+      new SessionProperties.Builder()
+        .archiveMode(ArchiveMode[this.selectedArchiveMode])
+        .archiveLayout(ArchiveLayout[this.selectedArchiveLayout])
+        .mediaMode(MediaMode[this.selectedMediaMode])
+        .build())
       .then((sessionId) => {
         this.updateData();
       })

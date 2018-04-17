@@ -3,7 +3,8 @@ import {
   OpenVidu as OpenViduAPI,
   Session as SessionAPI,
   TokenOptions as TokenOptionsAPI,
-  OpenViduRole as OpenViduRoleAPI
+  OpenViduRole as OpenViduRoleAPI,
+  SessionProperties as SessionPropertiesAPI
 } from 'openvidu-node-client';
 import { environment } from '../../environments/environment';
 
@@ -15,9 +16,9 @@ export class OpenviduRestService {
 
   constructor() { }
 
-  getSessionId(openviduURL: string, openviduSecret: string): Promise<string> {
+  getSessionId(openviduURL: string, openviduSecret: string, sessionProperties: SessionPropertiesAPI): Promise<string> {
     const OV = new OpenViduAPI(openviduURL, openviduSecret);
-    const session = OV.createSession();
+    const session = OV.createSession(sessionProperties);
 
     return new Promise(resolve => {
       session.getSessionId((sessionId) => {
