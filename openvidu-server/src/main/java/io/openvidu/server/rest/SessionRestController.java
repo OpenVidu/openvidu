@@ -16,8 +16,6 @@
  */
 package io.openvidu.server.rest;
 
-import static org.kurento.commons.PropertiesManager.getProperty;
-
 import java.util.Collection;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -36,6 +34,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.openvidu.client.OpenViduException;
+import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.ArchiveLayout;
 import io.openvidu.java.client.ArchiveMode;
 import io.openvidu.java.client.MediaMode;
@@ -55,9 +54,6 @@ import io.openvidu.server.recording.ComposedRecordingService;
 @RequestMapping("/api")
 public class SessionRestController {
 
-	private static final int UPDATE_SPEAKER_INTERVAL_DEFAULT = 1800;
-	private static final int THRESHOLD_SPEAKER_DEFAULT = -50;
-
 	@Autowired
 	private SessionManager sessionManager;
 
@@ -67,16 +63,6 @@ public class SessionRestController {
 	@RequestMapping(value = "/sessions", method = RequestMethod.GET)
 	public Set<String> getAllSessions() {
 		return sessionManager.getSessions();
-	}
-
-	@RequestMapping("/getUpdateSpeakerInterval")
-	public Integer getUpdateSpeakerInterval() {
-		return Integer.valueOf(getProperty("updateSpeakerInterval", UPDATE_SPEAKER_INTERVAL_DEFAULT));
-	}
-
-	@RequestMapping("/getThresholdSpeaker")
-	public Integer getThresholdSpeaker() {
-		return Integer.valueOf(getProperty("thresholdSpeaker", THRESHOLD_SPEAKER_DEFAULT));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -197,9 +183,14 @@ public class SessionRestController {
 			// Session is not being recorded
 			return new ResponseEntity<JSONObject>(HttpStatus.CONFLICT);
 		}
-
+		
+		Session session = sessionManager.getSession(recording.getSessionId());
+		
 		Recording stoppedRecording = this.recordingService
-				.stopRecording(sessionManager.getSession(recording.getSessionId()));
+				.stopRecording(session);
+		
+		sessionManager.evictParticipant(session.getParticipantByPublicId(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID).getParticipantPrivateId(), "EVICT_RECORDER");
+		
 		return new ResponseEntity<>(stoppedRecording.toJson(), HttpStatus.OK);
 	}
 

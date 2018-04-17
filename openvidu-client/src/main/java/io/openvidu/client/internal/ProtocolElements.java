@@ -44,6 +44,7 @@ public class ProtocolElements {
   public static final String JOINROOM_PEERSTREAMAUDIOACTIVE_PARAM = "audioActive";
   public static final String JOINROOM_PEERSTREAMVIDEOACTIVE_PARAM = "videoActive";
   public static final String JOINROOM_PEERSTREAMTYPEOFVIDEO_PARAM = "typeOfVideo";
+  public static final String JOINROOM_PEERSTREAMFRAMERATE_PARAM = "frameRate";
 
   public static final String PUBLISHVIDEO_METHOD = "publishVideo";
   public static final String PUBLISHVIDEO_SDPOFFER_PARAM = "sdpOffer";
@@ -52,6 +53,7 @@ public class ProtocolElements {
   public static final String PUBLISHVIDEO_AUDIOACTIVE_PARAM = "audioActive";
   public static final String PUBLISHVIDEO_VIDEOACTIVE_PARAM = "videoActive";
   public static final String PUBLISHVIDEO_TYPEOFVIDEO_PARAM = "typeOfVideo";
+  public static final String PUBLISHVIDEO_FRAMERATE_PARAM = "frameRate";
 
   public static final String UNPUBLISHVIDEO_METHOD = "unpublishVideo";
 
@@ -79,6 +81,7 @@ public class ProtocolElements {
 
   public static final String PARTICIPANTLEFT_METHOD = "participantLeft";
   public static final String PARTICIPANTLEFT_NAME_PARAM = "name";
+  public static final String PARTICIPANTLEFT_REASON_PARAM = "reason";
 
   public static final String PARTICIPANTEVICTED_METHOD = "participantEvicted";
 
@@ -89,9 +92,11 @@ public class ProtocolElements {
   public static final String PARTICIPANTPUBLISHED_AUDIOACTIVE_PARAM = "audioActive";
   public static final String PARTICIPANTPUBLISHED_VIDEOACTIVE_PARAM = "videoActive";
   public static final String PARTICIPANTPUBLISHED_TYPEOFVIDEO_PARAM = "typeOfVideo";
-
+  public static final String PARTICIPANTPUBLISHED_FRAMERATE_PARAM = "frameRate";
+  
   public static final String PARTICIPANTUNPUBLISHED_METHOD = "participantUnpublished";
   public static final String PARTICIPANTUNPUBLISHED_NAME_PARAM = "name";
+  public static final String PARTICIPANTUNPUBLISHED_REASON_PARAM = "reason";
 
   public static final String PARTICIPANTSENDMESSAGE_METHOD = "sendMessage";
   public static final String PARTICIPANTSENDMESSAGE_DATA_PARAM = "data";
@@ -109,8 +114,14 @@ public class ProtocolElements {
   public static final String ICECANDIDATE_CANDIDATE_PARAM = "candidate";
   public static final String ICECANDIDATE_SDPMID_PARAM = "sdpMid";
   public static final String ICECANDIDATE_SDPMLINEINDEX_PARAM = "sdpMLineIndex";
+  
+  public static final String RECORDINGSTARTED_METHOD = "recordingStarted";
+  public static final String RECORDINGSTARTED_ID_PARAM = "id";
+  
+  public static final String RECORDINGSTOPPED_METHOD = "recordingStopped";
+  public static final String RECORDINGSTOPPED_ID_PARAM = "id";
 
   public static final String CUSTOM_NOTIFICATION = "custonNotification";
   
-  public static final String RECORDER_PARTICIPANT_ID_PUBLICID = "RECORDER";
+  public static final String RECORDER_PARTICIPANT_PUBLICID = "RECORDER";
 }

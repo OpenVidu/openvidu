@@ -30,11 +30,16 @@
     "description": "Where to store the recorded video files"
   },
   {
-    "name": "openvidu.recording.free-access",
+    "name": "openvidu.recording.public-access",
     "type": "java.lang.Boolean",
-    "description": "'true' to allow free access to the video files specified in 'openviu.recording.path'. 'false' to only allow access to authenticated users"
+    "description": "'true' to allow public access to the video files specified in 'openviu.recording.path'. 'false' to only allow access to authenticated users"
   },
-    {
+  {
+    "name": "openvidu.recording.notification",
+    "type": "java.lang.String",
+    "description": "Which users will receive a notfication (client events 'recordingStarted' and 'recordingStopped') when recording starts and stops: 'none', 'publisher_moderator', 'all'"
+  },
+  {
     "name": "openvidu.recording.version",
     "type": "java.lang.String",
     "description": "Tag for openvidu/openvidu-recording Docker image"

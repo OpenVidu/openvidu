@@ -11,6 +11,7 @@ public class Participant {
 	protected boolean audioActive = true;
 	protected boolean videoActive = true;
 	protected String typeOfVideo; // CAMERA, SCREEN
+	protected int frameRate;
 
 	protected boolean streaming = false;
 	protected volatile boolean closed;
@@ -100,6 +101,14 @@ public class Participant {
 
 	public void setTypeOfVideo(String typeOfVideo) {
 		this.typeOfVideo = typeOfVideo;
+	}
+	
+	public int getFrameRate() {
+		return this.frameRate;
+	}
+
+	public void setFrameRate(int frameRate) {
+		this.frameRate = frameRate;
 	}
 
 	public String getFullMetadata() {

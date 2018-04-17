@@ -3,6 +3,8 @@ package io.openvidu.server.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import io.openvidu.server.core.ParticipantRole;
+
 @Component
 public class OpenviduConfig {
 
@@ -24,12 +26,15 @@ public class OpenviduConfig {
 	@Value("${openvidu.recording.path}")
 	private String openviduRecordingPath;
 
-	@Value("${openvidu.recording.free-access}")
-	boolean openviduRecordingFreeAccess;
+	@Value("${openvidu.recording.public-access}")
+	boolean openviduRecordingPublicAccess;
+
+	@Value("${openvidu.recording.notification}")
+	String openviduRecordingNotification;
 
 	@Value("${openvidu.recording.version}")
 	String openviduRecordingVersion;
-	
+
 	@Value("#{'${spring.profiles.active:}'.length() > 0 ? '${spring.profiles.active:}'.split(',') : \"default\"}")
 	private String springProfile;
 
@@ -63,8 +68,8 @@ public class OpenviduConfig {
 		return this.openviduRecordingPath;
 	}
 
-	public boolean getOpenViduRecordingFreeAccess() {
-		return this.openviduRecordingFreeAccess;
+	public boolean getOpenViduRecordingPublicAccess() {
+		return this.openviduRecordingPublicAccess;
 	}
 
 	public void setOpenViduRecordingPath(String recordingPath) {
@@ -85,6 +90,25 @@ public class OpenviduConfig {
 
 	public String getSpringProfile() {
 		return springProfile;
+	}
+
+	public ParticipantRole[] getRolesFromRecordingNotification() {
+		ParticipantRole[] roles;
+		switch (this.openviduRecordingNotification) {
+		case "none":
+			roles = new ParticipantRole[0];
+			break;
+		case "publisher_moderator":
+			roles = new ParticipantRole[] { ParticipantRole.PUBLISHER, ParticipantRole.MODERATOR };
+			break;
+		case "all":
+			roles = new ParticipantRole[] { ParticipantRole.SUBSCRIBER, ParticipantRole.PUBLISHER,
+					ParticipantRole.MODERATOR };
+			break;
+		default:
+			roles = new ParticipantRole[] { ParticipantRole.PUBLISHER, ParticipantRole.MODERATOR };
+		}
+		return roles;
 	}
 
 }

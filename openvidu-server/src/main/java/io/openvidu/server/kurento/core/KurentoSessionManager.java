@@ -27,9 +27,7 @@ import io.openvidu.server.kurento.KurentoClientProvider;
 import io.openvidu.server.kurento.KurentoClientSessionInfo;
 import io.openvidu.server.kurento.OpenViduKurentoClientSessionInfo;
 import io.openvidu.server.kurento.endpoint.SdpType;
-import io.openvidu.server.recording.ComposedRecordingService;
 import io.openvidu.server.rpc.RpcHandler;
-import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
@@ -42,13 +40,7 @@ public class KurentoSessionManager extends SessionManager {
 	private KurentoClientProvider kcProvider;
 
 	@Autowired
-	private KurentoSessionEventsHandler sessionHandler;
-
-	@Autowired
-	private ComposedRecordingService recordingService;
-
-	@Autowired
-	OpenviduConfig openviduConfig;
+	private KurentoSessionEventsHandler kurentoSessionEventsHandler;
 
 	@Override
 	public synchronized void joinRoom(Participant participant, String sessionId, Integer transactionId) {
@@ -57,8 +49,8 @@ public class KurentoSessionManager extends SessionManager {
 
 			KurentoClientSessionInfo kcSessionInfo = new OpenViduKurentoClientSessionInfo(
 					participant.getParticipantPrivateId(), sessionId);
-
 			KurentoSession session = (KurentoSession) sessions.get(sessionId);
+
 			if (session == null && kcSessionInfo != null) {
 				SessionProperties properties = sessionProperties.get(sessionId);
 				if (properties == null && this.isInsecureParticipant(participant.getParticipantPrivateId())) {
@@ -85,27 +77,30 @@ public class KurentoSessionManager extends SessionManager {
 		} catch (OpenViduException e) {
 			log.warn("PARTICIPANT {}: Error joining/creating session {}", participant.getParticipantPublicId(),
 					sessionId, e);
-			sessionHandler.onParticipantJoined(participant, sessionId, null, transactionId, e);
+			sessionEventsHandler.onParticipantJoined(participant, sessionId, null, transactionId, e);
 		}
 		if (existingParticipants != null) {
-			sessionHandler.onParticipantJoined(participant, sessionId, existingParticipants, transactionId, null);
+			sessionEventsHandler.onParticipantJoined(participant, sessionId, existingParticipants, transactionId, null);
 		}
 	}
 
 	@Override
-	public void leaveRoom(Participant participant, Integer transactionId) {
+	public void leaveRoom(Participant participant, Integer transactionId, String reason) {
 		log.debug("Request [LEAVE_ROOM] ({})", participant.getParticipantPublicId());
 
 		KurentoParticipant kParticipant = (KurentoParticipant) participant;
 		KurentoSession session = kParticipant.getSession();
 		String sessionId = session.getSessionId();
+
 		if (session.isClosed()) {
 			log.warn("'{}' is trying to leave from session '{}' but it is closing",
 					participant.getParticipantPublicId(), sessionId);
 			throw new OpenViduException(Code.ROOM_CLOSED_ERROR_CODE, "'" + participant.getParticipantPublicId()
 					+ "' is trying to leave from session '" + sessionId + "' but it is closing");
 		}
-		session.leave(participant.getParticipantPrivateId());
+		session.leave(participant.getParticipantPrivateId(), reason);
+
+		// Update control data structures
 
 		if (sessionidParticipantpublicidParticipant.get(sessionId) != null) {
 			Participant p = sessionidParticipantpublicidParticipant.get(sessionId)
@@ -127,6 +122,8 @@ public class KurentoSessionManager extends SessionManager {
 
 		showTokens();
 
+		// Close Session if no more participants
+
 		Set<Participant> remainingParticipants = null;
 		try {
 			remainingParticipants = getParticipants(sessionId);
@@ -134,10 +131,15 @@ public class KurentoSessionManager extends SessionManager {
 			log.debug("Possible collision when closing the session '{}' (not found)");
 			remainingParticipants = Collections.emptySet();
 		}
+
+		sessionEventsHandler.onParticipantLeft(participant, sessionId, remainingParticipants, transactionId, null,
+				reason);
+
 		if (remainingParticipants.isEmpty()) {
+
 			log.info("No more participants in session '{}', removing it and closing it", sessionId);
-			if (session.close()) {
-				sessionHandler.onSessionClosed(sessionId);
+			if (session.close(reason)) {
+				sessionEventsHandler.onSessionClosed(sessionId, "lastParticipantLeft");
 			}
 			sessions.remove(sessionId);
 
@@ -148,17 +150,21 @@ public class KurentoSessionManager extends SessionManager {
 			showTokens();
 
 			log.warn("Session '{}' removed and closed", sessionId);
-		}
-		if (remainingParticipants.size() == 1 && openviduConfig.isRecordingModuleEnabled()
+
+		} else if (remainingParticipants.size() == 1 && openviduConfig.isRecordingModuleEnabled()
 				&& MediaMode.ROUTED.equals(session.getSessionProperties().mediaMode())
 				&& ArchiveMode.ALWAYS.equals(session.getSessionProperties().archiveMode())
-				&& ProtocolElements.RECORDER_PARTICIPANT_ID_PUBLICID
+				&& ProtocolElements.RECORDER_PARTICIPANT_PUBLICID
 						.equals(remainingParticipants.iterator().next().getParticipantPublicId())) {
+
 			log.info("Last participant left. Stopping recording for session {}", sessionId);
-			evictParticipant(session.getParticipantByPublicId("RECORDER").getParticipantPrivateId());
 			recordingService.stopRecording(session);
+			evictParticipant(session.getParticipantByPublicId(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID)
+					.getParticipantPrivateId(), "EVICT_RECORDER");
 		}
-		sessionHandler.onParticipantLeft(participant, sessionId, remainingParticipants, transactionId, null);
+
+		// Finally close websocket session
+		sessionEventsHandler.closeRpcSession(participant.getParticipantPrivateId());
 	}
 
 	/**
@@ -205,7 +211,7 @@ public class KurentoSessionManager extends SessionManager {
 		SdpType sdpType = kurentoOptions.isOffer ? SdpType.OFFER : SdpType.ANSWER;
 		KurentoSession session = kurentoParticipant.getSession();
 
-		kurentoParticipant.createPublishingEndpoint();
+		kurentoParticipant.createPublishingEndpoint(mediaOptions);
 
 		for (MediaElement elem : kurentoOptions.mediaElements) {
 			kurentoParticipant.getPublisher().apply(elem);
@@ -218,13 +224,14 @@ public class KurentoSessionManager extends SessionManager {
 			OpenViduException e = new OpenViduException(Code.MEDIA_SDP_ERROR_CODE,
 					"Error generating SDP response for publishing user " + participant.getParticipantPublicId());
 			log.error("PARTICIPANT {}: Error publishing media", participant.getParticipantPublicId(), e);
-			sessionHandler.onPublishMedia(participant, session.getSessionId(), mediaOptions, sdpAnswer, participants,
-					transactionId, e);
+			sessionEventsHandler.onPublishMedia(participant, session.getSessionId(), mediaOptions, sdpAnswer,
+					participants, transactionId, e);
 		}
 
 		if (this.openviduConfig.isRecordingModuleEnabled()
 				&& MediaMode.ROUTED.equals(session.getSessionProperties().mediaMode())
 				&& ArchiveMode.ALWAYS.equals(session.getSessionProperties().archiveMode())
+				&& !recordingService.sessionIsBeingRecorded(session.getSessionId())
 				&& session.getActivePublishers() == 0) {
 			recordingService.startRecording(session);
 		}
@@ -234,17 +241,18 @@ public class KurentoSessionManager extends SessionManager {
 		kurentoParticipant.setAudioActive(kurentoOptions.audioActive);
 		kurentoParticipant.setVideoActive(kurentoOptions.videoActive);
 		kurentoParticipant.setTypeOfVideo(kurentoOptions.typeOfVideo);
+		kurentoParticipant.setFrameRate(kurentoOptions.frameRate);
 
 		participants = kurentoParticipant.getSession().getParticipants();
 
 		if (sdpAnswer != null) {
-			sessionHandler.onPublishMedia(participant, session.getSessionId(), mediaOptions, sdpAnswer, participants,
-					transactionId, null);
+			sessionEventsHandler.onPublishMedia(participant, session.getSessionId(), mediaOptions, sdpAnswer,
+					participants, transactionId, null);
 		}
 	}
 
 	@Override
-	public void unpublishVideo(Participant participant, Integer transactionId) {
+	public void unpublishVideo(Participant participant, Integer transactionId, String reason) {
 		try {
 			KurentoParticipant kParticipant = (KurentoParticipant) participant;
 			KurentoSession session = kParticipant.getSession();
@@ -254,16 +262,16 @@ public class KurentoSessionManager extends SessionManager {
 				throw new OpenViduException(Code.USER_NOT_STREAMING_ERROR_CODE,
 						"Participant '" + participant.getParticipantPublicId() + "' is not streaming media");
 			}
-			kParticipant.unpublishMedia();
-			session.cancelPublisher(participant);
+			kParticipant.unpublishMedia(reason);
+			session.cancelPublisher(participant, reason);
 
 			Set<Participant> participants = session.getParticipants();
 
-			sessionHandler.onUnpublishMedia(participant, participants, transactionId, null);
+			sessionEventsHandler.onUnpublishMedia(participant, participants, transactionId, null, reason);
 
 		} catch (OpenViduException e) {
 			log.warn("PARTICIPANT {}: Error unpublishing media", participant.getParticipantPublicId(), e);
-			sessionHandler.onUnpublishMedia(participant, null, transactionId, e);
+			sessionEventsHandler.onUnpublishMedia(participant, null, transactionId, e, "");
 		}
 	}
 
@@ -304,10 +312,10 @@ public class KurentoSessionManager extends SessionManager {
 			}
 		} catch (OpenViduException e) {
 			log.error("PARTICIPANT {}: Error subscribing to {}", participant.getParticipantPublicId(), senderName, e);
-			sessionHandler.onSubscribe(participant, session.getSessionId(), senderName, null, transactionId, e);
+			sessionEventsHandler.onSubscribe(participant, session, senderName, null, transactionId, e);
 		}
 		if (sdpAnswer != null) {
-			sessionHandler.onSubscribe(participant, session.getSessionId(), senderName, sdpAnswer, transactionId, null);
+			sessionEventsHandler.onSubscribe(participant, session, senderName, sdpAnswer, transactionId, null);
 		}
 	}
 
@@ -328,9 +336,9 @@ public class KurentoSessionManager extends SessionManager {
 					"User " + senderName + " not found in room " + session.getSessionId());
 		}
 
-		kParticipant.cancelReceivingMedia(senderName);
+		kParticipant.cancelReceivingMedia(senderName, "unsubscribe");
 
-		sessionHandler.onUnsubscribe(participant, senderName, transactionId, null);
+		sessionEventsHandler.onUnsubscribe(participant, senderName, transactionId, null);
 	}
 
 	@Override
@@ -338,7 +346,7 @@ public class KurentoSessionManager extends SessionManager {
 		try {
 			JsonObject messageJSON = new JsonParser().parse(message).getAsJsonObject();
 			KurentoParticipant kParticipant = (KurentoParticipant) participant;
-			sessionHandler.onSendMessage(participant, messageJSON,
+			sessionEventsHandler.onSendMessage(participant, messageJSON,
 					getParticipants(kParticipant.getSession().getSessionId()), transactionId, null);
 		} catch (JsonSyntaxException | IllegalStateException e) {
 			throw new OpenViduException(Code.SIGNAL_FORMAT_INVALID_ERROR_CODE,
@@ -354,11 +362,11 @@ public class KurentoSessionManager extends SessionManager {
 			log.debug("Request [ICE_CANDIDATE] endpoint={} candidate={} " + "sdpMLineIdx={} sdpMid={} ({})",
 					endpointName, candidate, sdpMLineIndex, sdpMid, participant.getParticipantPublicId());
 			kParticipant.addIceCandidate(endpointName, new IceCandidate(candidate, sdpMid, sdpMLineIndex));
-			sessionHandler.onRecvIceCandidate(participant, transactionId, null);
+			sessionEventsHandler.onRecvIceCandidate(participant, transactionId, null);
 		} catch (OpenViduException e) {
 			log.error("PARTICIPANT {}: Error receiving ICE " + "candidate (epName={}, candidate={})",
 					participant.getParticipantPublicId(), endpointName, candidate, e);
-			sessionHandler.onRecvIceCandidate(participant, transactionId, e);
+			sessionEventsHandler.onRecvIceCandidate(participant, transactionId, e);
 		}
 	}
 
@@ -382,8 +390,8 @@ public class KurentoSessionManager extends SessionManager {
 					"Session '" + sessionId + "' already exists");
 		}
 		KurentoClient kurentoClient = kcProvider.getKurentoClient(kcSessionInfo);
-		session = new KurentoSession(sessionId, sessionProperties, kurentoClient, sessionHandler,
-				kcProvider.destroyWhenUnused());
+		session = new KurentoSession(sessionId, sessionProperties, kurentoClient, kurentoSessionEventsHandler,
+				kcProvider.destroyWhenUnused(), this.CDR);
 
 		KurentoSession oldSession = (KurentoSession) sessions.putIfAbsent(sessionId, session);
 		if (oldSession != null) {
@@ -396,7 +404,7 @@ public class KurentoSessionManager extends SessionManager {
 		}
 		log.warn("No session '{}' exists yet. Created one using KurentoClient '{}'.", sessionId, kcName);
 
-		sessionHandler.onSessionCreated(sessionId);
+		sessionEventsHandler.onSessionCreated(sessionId);
 	}
 
 	/**
@@ -407,10 +415,10 @@ public class KurentoSessionManager extends SessionManager {
 	 *
 	 */
 	@Override
-	public void evictParticipant(String participantPrivateId) throws OpenViduException {
+	public void evictParticipant(String participantPrivateId, String reason) throws OpenViduException {
 		Participant participant = this.getParticipant(participantPrivateId);
-		this.leaveRoom(participant, null);
-		sessionHandler.onParticipantEvicted(participant);
+		this.leaveRoom(participant, null, reason);
+		sessionEventsHandler.onParticipantEvicted(participant);
 	}
 
 	@Override
@@ -420,9 +428,11 @@ public class KurentoSessionManager extends SessionManager {
 		boolean audioActive = RpcHandler.getBooleanParam(request, ProtocolElements.PUBLISHVIDEO_AUDIOACTIVE_PARAM);
 		boolean videoActive = RpcHandler.getBooleanParam(request, ProtocolElements.PUBLISHVIDEO_VIDEOACTIVE_PARAM);
 		String typeOfVideo = RpcHandler.getStringParam(request, ProtocolElements.PUBLISHVIDEO_TYPEOFVIDEO_PARAM);
+		int frameRate = RpcHandler.getIntParam(request, ProtocolElements.PUBLISHVIDEO_FRAMERATE_PARAM);
 		boolean doLoopback = RpcHandler.getBooleanParam(request, ProtocolElements.PUBLISHVIDEO_DOLOOPBACK_PARAM);
 
-		return new KurentoMediaOptions(true, sdpOffer, null, null, audioActive, videoActive, typeOfVideo, doLoopback);
+		return new KurentoMediaOptions(true, sdpOffer, null, null, audioActive, videoActive, typeOfVideo, frameRate,
+				doLoopback);
 	}
 
 }

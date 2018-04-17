@@ -13,18 +13,26 @@ public class CDREvent implements Comparable<CDREvent> {
 	static final String PARTICIPANT_LEFT = "participantLeft";
 	static final String CONNECTION_CREATED = "webrtcConnectionCreated";
 	static final String CONNECTION_DESTROYED = "webrtcConnectionDestroyed";
+	static final String RECORDING_STARTED = "recordingStarted";
+	static final String RECORDING_STOPPED = "recordingStopped";
 
 	protected String eventName;
 	protected String sessionId;
+	protected Long timeStamp;
+	private Long startTime;
+	private Integer duration;
 	private Participant participant;
 	private MediaOptions mediaOptions;
 	private String receivingFrom;
-	private Long startTime;
-	private Integer duration;
-	protected Long timeStamp;
+	private String reason;
 
 	public CDREvent(String eventName, CDREvent event) {
-		this(eventName, event.participant, event.sessionId, event.mediaOptions, event.receivingFrom, event.startTime);
+		this(eventName, event.participant, event.sessionId, event.mediaOptions, event.receivingFrom, event.startTime, event.reason);
+		this.duration = (int) (this.timeStamp - this.startTime / 1000);
+	}
+	
+	public CDREvent(String eventName, CDREvent event, String reason) {
+		this(eventName, event.participant, event.sessionId, event.mediaOptions, event.receivingFrom, event.startTime, reason);
 		this.duration = (int) (this.timeStamp - this.startTime / 1000);
 	}
 
@@ -46,12 +54,13 @@ public class CDREvent implements Comparable<CDREvent> {
 	}
 
 	public CDREvent(String eventName, Participant participant, String sessionId, MediaOptions mediaOptions,
-			String receivingFrom, Long startTime) {
+			String receivingFrom, Long startTime, String reason) {
 		this(eventName, sessionId);
 		this.participant = participant;
 		this.mediaOptions = mediaOptions;
 		this.receivingFrom = receivingFrom;
 		this.startTime = startTime;
+		this.reason = reason;
 	}
 
 	public MediaOptions getMediaOptions() {
@@ -82,6 +91,7 @@ public class CDREvent implements Comparable<CDREvent> {
 			json.put("videoEnabled", this.mediaOptions.videoActive);
 			if (this.mediaOptions.videoActive) {
 				json.put("videoSource", this.mediaOptions.typeOfVideo);
+				json.put("videoFramerate", this.mediaOptions.frameRate);
 			}
 			if (this.receivingFrom != null) {
 				json.put("receivingFrom", this.receivingFrom);
@@ -92,11 +102,15 @@ public class CDREvent implements Comparable<CDREvent> {
 			json.put("endTime", this.timeStamp);
 			json.put("duration", (this.timeStamp - this.startTime) / 1000);
 		}
+		
+		if (this.reason != null) {
+			json.put("reason", this.reason);
+		}
 
 		JSONObject root = new JSONObject();
 		root.put(this.eventName, json);
 
-		return root.toString();
+		return root.toJSONString();
 	}
 
 	@Override

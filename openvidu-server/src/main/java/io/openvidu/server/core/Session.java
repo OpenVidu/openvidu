@@ -12,9 +12,9 @@ public interface Session {
 
 	void join(Participant participant);
 	
-	void leave(String participantPrivateId);
+	void leave(String participantPrivateId, String reason);
 	
-	boolean close();
+	boolean close(String reason);
 
 	boolean isClosed();
 

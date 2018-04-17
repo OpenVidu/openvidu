@@ -21,7 +21,6 @@ import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
-import io.openvidu.server.core.ParticipantRole;
 import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.core.Token;
 
@@ -176,18 +175,18 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		if (sessionId == null) { // null when afterConnectionClosed
 			log.warn("No session information found for participant with privateId {}. "
 					+ "Using the admin method to evict the user.", participantPrivateId);
-			leaveRoomAfterConnClosed(participantPrivateId);
+			leaveRoomAfterConnClosed(participantPrivateId, "");
 		} else {
 			// Sanity check: don't call leaveRoom unless the id checks out
 			Participant participant = sessionManager.getParticipant(sessionId, participantPrivateId);
 			if (participant != null) {
 				log.info("Participant {} is leaving session {}", participant.getParticipantPublicId(), sessionId);
-				sessionManager.leaveRoom(participant, request.getId());
+				sessionManager.leaveRoom(participant, request.getId(), "disconnect");
 				log.info("Participant {} has left session {}", participant.getParticipantPublicId(), sessionId);
 			} else {
 				log.warn("Participant with private id {} not found in session {}. "
 						+ "Using the admin method to evict the user.", participantPrivateId, sessionId);
-				leaveRoomAfterConnClosed(participantPrivateId);
+				leaveRoomAfterConnClosed(participantPrivateId, "");
 			}
 		}
 	}
@@ -263,12 +262,12 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		String sessionId = rpcConnection.getSessionId();
 		Participant participant = sessionManager.getParticipant(sessionId, participantPrivateId);
 
-		sessionManager.unpublishVideo(participant, request.getId());
+		sessionManager.unpublishVideo(participant, request.getId(), "unpublish");
 	}
 
-	public void leaveRoomAfterConnClosed(String participantPrivateId) {
+	public void leaveRoomAfterConnClosed(String participantPrivateId, String reason) {
 		try {
-			sessionManager.evictParticipant(participantPrivateId);
+			sessionManager.evictParticipant(participantPrivateId, reason);
 			log.info("Evicted participant with privateId {}", participantPrivateId);
 		} catch (OpenViduException e) {
 			log.warn("Unable to evict: {}", e.getMessage());
@@ -290,7 +289,7 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		if (rpc != null && rpc.getSessionId() != null) {
 			io.openvidu.server.core.Session session = this.sessionManager.getSession(rpc.getSessionId());
 			if (session != null && session.getParticipantByPrivateId(rpc.getParticipantPrivateId()) != null) {
-				leaveRoomAfterConnClosed(rpc.getParticipantPrivateId());
+				leaveRoomAfterConnClosed(rpc.getParticipantPrivateId(), "networkDisconnect");
 			}
 		}
 
@@ -300,7 +299,7 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 			log.warn(
 					"Evicting participant with private id {} because a transport error took place and its web socket connection is now closed",
 					rpcSession.getSessionId());
-			this.leaveRoomAfterConnClosed(rpcSessionId);
+			this.leaveRoomAfterConnClosed(rpcSessionId, "networkDisconnect");
 			this.webSocketTransportError.remove(rpcSessionId);
 		}
 	}

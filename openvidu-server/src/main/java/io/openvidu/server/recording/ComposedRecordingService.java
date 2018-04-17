@@ -51,6 +51,7 @@ import io.openvidu.server.CommandExecutor;
 import io.openvidu.server.OpenViduServer;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.Session;
+import io.openvidu.server.core.SessionEventsHandler;
 
 @Service
 public class ComposedRecordingService {
@@ -59,6 +60,9 @@ public class ComposedRecordingService {
 
 	@Autowired
 	OpenviduConfig openviduConfig;
+	
+	@Autowired
+	private SessionEventsHandler sessionHandler;
 
 	private Map<String, String> containers = new ConcurrentHashMap<>();
 	private Map<String, String> sessionsContainers = new ConcurrentHashMap<>();
@@ -81,12 +85,13 @@ public class ComposedRecordingService {
 		List<String> envs = new ArrayList<>();
 		String shortSessionId = session.getSessionId().substring(session.getSessionId().lastIndexOf('/') + 1,
 				session.getSessionId().length());
-		String videoId = this.getFreeRecordingId(session.getSessionId(), shortSessionId);
+		String recordingId = this.getFreeRecordingId(session.getSessionId(), shortSessionId);
 		String secret = openviduConfig.getOpenViduSecret();
 
-		Recording recording = new Recording(session.getSessionId(), videoId, videoId);
+		Recording recording = new Recording(session.getSessionId(), recordingId, recordingId);
 
 		this.sessionsRecordings.put(session.getSessionId(), recording);
+		this.sessionHandler.setRecordingStarted(session.getSessionId(), recording);
 		this.startingRecordings.put(recording.getId(), recording);
 
 		String uid = null;
@@ -106,7 +111,7 @@ public class ComposedRecordingService {
 				+ "/" + secret);
 		envs.add("RESOLUTION=1920x1080");
 		envs.add("FRAMERATE=30");
-		envs.add("VIDEO_NAME=" + videoId);
+		envs.add("VIDEO_NAME=" + recordingId);
 		envs.add("VIDEO_FORMAT=mp4");
 		envs.add("USER_ID=" + uid);
 		envs.add("RECORDING_JSON=" + recording.toJson().toJSONString());
@@ -115,9 +120,9 @@ public class ComposedRecordingService {
 		log.debug("Recorder connecting to url {}",
 				"https://OPENVIDUAPP:" + secret + "@localhost:8443/#/layout-best-fit/" + shortSessionId + "/" + secret);
 
-		String containerId = this.runRecordingContainer(envs, "recording_" + videoId);
+		String containerId = this.runRecordingContainer(envs, "recording_" + recordingId);
 
-		this.waitForVideoFileNotEmpty(videoId);
+		this.waitForVideoFileNotEmpty(recordingId);
 
 		this.sessionsContainers.put(session.getSessionId(), containerId);
 
@@ -171,7 +176,7 @@ public class ComposedRecordingService {
 			RecordingInfoUtils infoUtils = new RecordingInfoUtils(
 					this.openviduConfig.getOpenViduRecordingPath() + recording.getName() + ".info");
 
-			if (openviduConfig.getOpenViduRecordingFreeAccess()) {
+			if (openviduConfig.getOpenViduRecordingPublicAccess()) {
 				recording.setStatus(Recording.Status.available);
 			} else {
 				recording.setStatus(Recording.Status.stopped);
@@ -181,7 +186,7 @@ public class ComposedRecordingService {
 			recording.setHasAudio(infoUtils.hasAudio());
 			recording.setHasVideo(infoUtils.hasVideo());
 
-			if (openviduConfig.getOpenViduRecordingFreeAccess()) {
+			if (openviduConfig.getOpenViduRecordingPublicAccess()) {
 				recording.setUrl(this.openviduConfig.getFinalUrl() + "recordings/" + recording.getName() + ".mp4");
 			}
 
@@ -189,7 +194,9 @@ public class ComposedRecordingService {
 			throw new OpenViduException(Code.RECORDING_REPORT_ERROR_CODE,
 					"There was an error generating the metadata report file for the recording");
 		}
-
+		
+		this.sessionHandler.sendRecordingStoppedNotification(session, recording);
+		
 		return recording;
 	}
 
@@ -341,7 +348,7 @@ public class ComposedRecordingService {
 		for (int i = 0; i < files.length; i++) {
 			Recording recording = this.getRecordingFromFile(files[i]);
 			if (recording != null) {
-				if (openviduConfig.getOpenViduRecordingFreeAccess()) {
+				if (openviduConfig.getOpenViduRecordingPublicAccess()) {
 					if (Recording.Status.stopped.equals(recording.getStatus())) {
 						recording.setStatus(Recording.Status.available);
 						recording.setUrl(
