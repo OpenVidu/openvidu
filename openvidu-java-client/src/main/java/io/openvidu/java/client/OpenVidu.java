@@ -75,7 +75,7 @@ public class OpenVidu {
 
 		this.myHttpClient = HttpClients.custom().setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE)
 				.setSSLContext(sslContext).setDefaultCredentialsProvider(provider).build();
-		
+
 	}
 
 	public Session createSession() throws OpenViduException {
@@ -89,12 +89,13 @@ public class OpenVidu {
 	}
 
 	@SuppressWarnings("unchecked")
-	public Recording startRecording(String sessionId) throws OpenViduException {
+	public Recording startRecording(String sessionId, RecordingProperties properties) throws OpenViduException {
 		try {
 			HttpPost request = new HttpPost(this.urlOpenViduServer + API_RECORDINGS + API_RECORDINGS_START);
 
 			JSONObject json = new JSONObject();
 			json.put("session", sessionId);
+			json.put("name", properties.name());
 			StringEntity params = new StringEntity(json.toString());
 
 			request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
@@ -112,6 +113,17 @@ public class OpenVidu {
 			throw new OpenViduException(Code.RECORDING_START_ERROR_CODE,
 					"Unable to start recording for session '" + sessionId + "': " + e.getMessage());
 		}
+	}
+
+	public Recording startRecording(String sessionId, String name) throws OpenViduException {
+		if (name == null) {
+			name = "";
+		}
+		return this.startRecording(sessionId, new RecordingProperties.Builder().name(name).build());
+	}
+
+	public Recording startRecording(String sessionId) throws OpenViduException {
+		return this.startRecording(sessionId, "");
 	}
 
 	public Recording stopRecording(String recordingId) throws OpenViduException {
@@ -144,7 +156,8 @@ public class OpenVidu {
 				throw new OpenViduException(Code.RECORDING_LIST_ERROR_CODE, Integer.toString(statusCode));
 			}
 		} catch (Exception e) {
-			throw new OpenViduException(Code.RECORDING_LIST_ERROR_CODE, "Unable to get recording '" + recordingId + "': " + e.getMessage());
+			throw new OpenViduException(Code.RECORDING_LIST_ERROR_CODE,
+					"Unable to get recording '" + recordingId + "': " + e.getMessage());
 		}
 	}
 
