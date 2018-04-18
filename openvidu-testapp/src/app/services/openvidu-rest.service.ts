@@ -20,12 +20,15 @@ export class OpenviduRestService {
     const OV = new OpenViduAPI(openviduURL, openviduSecret);
     const session = OV.createSession(sessionProperties);
 
-    return new Promise(resolve => {
-      session.getSessionId((sessionId) => {
-        this.sessionIdSession.set(sessionId, session);
-        this.sessionIdTokenOpenViduRole.set(sessionId, new Map());
-        resolve(sessionId);
-      });
+    return new Promise((resolve, reject) => {
+      session.getSessionId()
+        .then(sessionId => {
+          this.sessionIdSession.set(sessionId, session);
+          this.sessionIdTokenOpenViduRole.set(sessionId, new Map());
+          resolve(sessionId);
+        }).catch(error => {
+          reject(error);
+        });
     });
   }
 
@@ -33,15 +36,18 @@ export class OpenviduRestService {
     const session: SessionAPI = this.sessionIdSession.get(sessionId);
     const OVRole: OpenViduRoleAPI = OpenViduRoleAPI[role];
 
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
       const tokenOptions: TokenOptionsAPI = new TokenOptionsAPI.Builder()
         .role(OVRole)
         .data(serverData)
         .build();
-      session.generateToken(tokenOptions, (token) => {
-        this.sessionIdTokenOpenViduRole.get(sessionId).set(token, OVRole);
-        resolve(token);
-      });
+      session.generateToken(tokenOptions)
+        .then(token => {
+          this.sessionIdTokenOpenViduRole.get(sessionId).set(token, OVRole);
+          resolve(token);
+        }).catch(error => {
+          reject(error);
+        });
     });
   }
 

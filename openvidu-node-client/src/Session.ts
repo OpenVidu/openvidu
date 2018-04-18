@@ -23,111 +23,111 @@ export class Session {
         }
     }
 
-    public getSessionId(callback: Function) {
+    public getSessionId(): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
 
-        if (this.sessionId) {
-            callback(this.sessionId);
-            return;
-        }
-
-        let requestBody = JSON.stringify({
-            'recordingLayout': this.properties.recordingLayout(),
-            'recordingMode': this.properties.recordingMode(),
-            'mediaMode': this.properties.mediaMode()
-        });
-
-        let options = {
-            hostname: this.hostname,
-            port: this.port,
-            path: Session.API_SESSIONS,
-            method: 'POST',
-            headers: {
-                'Authorization': this.basicAuth,
-                'Content-Type': 'application/json',
-                'Content-Length': Buffer.byteLength(requestBody)
+            if (this.sessionId) {
+                resolve(this.sessionId);
             }
-        }
-        const req = https.request(options, (res) => {
-            let body = '';
-            res.on('data', (d) => {
-                // Continuously update stream with data
-                body += d;
-            });
-            res.on('end', () => {
-                if (res.statusCode === 200) {
-                    // SUCCESS response from openvidu-server. Resolve sessionId
-                    let parsed = JSON.parse(body);
-                    this.sessionId = parsed.id;
-                    callback(parsed.id);
-                } else {
-                    // ERROR response from openvidu-server. Resolve HTTP status
-                    console.error(res.statusCode);
-                }
-            });
-        });
 
-        req.on('error', (e) => {
-            console.error(e);
+            let requestBody = JSON.stringify({
+                'recordingLayout': this.properties.recordingLayout(),
+                'recordingMode': this.properties.recordingMode(),
+                'mediaMode': this.properties.mediaMode()
+            });
+
+            let options = {
+                hostname: this.hostname,
+                port: this.port,
+                path: Session.API_SESSIONS,
+                method: 'POST',
+                headers: {
+                    'Authorization': this.basicAuth,
+                    'Content-Type': 'application/json',
+                    'Content-Length': Buffer.byteLength(requestBody)
+                }
+            }
+            const req = https.request(options, (res) => {
+                let body = '';
+                res.on('data', (d) => {
+                    // Continuously update stream with data
+                    body += d;
+                });
+                res.on('end', () => {
+                    if (res.statusCode === 200) {
+                        // SUCCESS response from openvidu-server. Resolve sessionId
+                        let parsed = JSON.parse(body);
+                        this.sessionId = parsed.id;
+                        resolve(parsed.id);
+                    } else {
+                        // ERROR response from openvidu-server. Resolve HTTP status
+                        reject(new Error(res.statusCode));
+                    }
+                });
+            });
+
+            req.on('error', (e) => {
+                reject(e);
+            });
+            req.write(requestBody);
+            req.end();
         });
-        req.write(requestBody);
-        req.end();
     }
 
-    public generateToken(callback: Function);
-    public generateToken(tokenOptions: TokenOptions, callback: Function);
+    public generateToken(tokenOptions?: TokenOptions): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
 
-    public generateToken(tokenOptions: any, callback?: any) {
-        let requestBody;
+            let requestBody;
 
-        if (callback) {
-            requestBody = JSON.stringify({
-                'session': this.sessionId,
-                'role': tokenOptions.getRole(),
-                'data': tokenOptions.getData()
-            });
-        } else {
-            requestBody = JSON.stringify({
-                'session': this.sessionId,
-                'role': OpenViduRole.PUBLISHER,
-                'data': ''
-            });
-            callback = tokenOptions;
-        }
-
-        let options = {
-            hostname: this.hostname,
-            port: this.port,
-            path: Session.API_TOKENS,
-            method: 'POST',
-            headers: {
-                'Authorization': this.basicAuth,
-                'Content-Type': 'application/json',
-                'Content-Length': Buffer.byteLength(requestBody)
+            if (!!tokenOptions) {
+                requestBody = JSON.stringify({
+                    'session': this.sessionId,
+                    'role': tokenOptions.getRole(),
+                    'data': tokenOptions.getData()
+                });
+            } else {
+                requestBody = JSON.stringify({
+                    'session': this.sessionId,
+                    'role': OpenViduRole.PUBLISHER,
+                    'data': ''
+                });
             }
-        };
-        const req = https.request(options, (res) => {
-            let body = '';
-            res.on('data', (d) => {
-                // Continuously update stream with data
-                body += d;
-            });
-            res.on('end', () => {
-                if (res.statusCode === 200) {
-                    // SUCCESS response from openvidu-server. Resolve token
-                    let parsed = JSON.parse(body);
-                    callback(parsed.id);
-                } else {
-                    // ERROR response from openvidu-server. Resolve HTTP status
-                    console.error(res.statusCode);
-                }
-            });
-        });
 
-        req.on('error', (e) => {
-            console.error(e);
+            let options = {
+                hostname: this.hostname,
+                port: this.port,
+                path: Session.API_TOKENS,
+                method: 'POST',
+                headers: {
+                    'Authorization': this.basicAuth,
+                    'Content-Type': 'application/json',
+                    'Content-Length': Buffer.byteLength(requestBody)
+                }
+            };
+            const req = https.request(options, (res) => {
+                let body = '';
+                res.on('data', (d) => {
+                    // Continuously update stream with data
+                    body += d;
+                });
+                res.on('end', () => {
+                    if (res.statusCode === 200) {
+                        // SUCCESS response from openvidu-server. Resolve token
+                        let parsed = JSON.parse(body);
+                        resolve(parsed.id);
+                    } else {
+                        // ERROR response from openvidu-server. Resolve HTTP status
+                        reject(new Error(res.statusCode));
+                    }
+                });
+            });
+
+            req.on('error', (e) => {
+                reject(e);
+            });
+            req.write(requestBody);
+            req.end();
         });
-        req.write(requestBody);
-        req.end();
     }
 
     public getProperties(): SessionProperties {

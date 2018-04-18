@@ -9,8 +9,7 @@ export declare class Session {
     private sessionId;
     private properties;
     constructor(hostname: string, port: number, basicAuth: string, properties?: SessionProperties);
-    getSessionId(callback: Function): void;
-    generateToken(callback: Function): any;
-    generateToken(tokenOptions: TokenOptions, callback: Function): any;
+    getSessionId(): Promise<string>;
+    generateToken(tokenOptions?: TokenOptions): Promise<string>;
     getProperties(): SessionProperties;
 }
