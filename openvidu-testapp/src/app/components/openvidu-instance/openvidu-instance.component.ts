@@ -522,13 +522,6 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   changePublisher() {
-
-    if (!this.unpublished) {
-      this.session.unpublish(this.publisher);
-      this.removeUserData(this.session.connection.connectionId);
-      this.restartPublisherRecord();
-    }
-
     let screenChange;
     if (!this.publisherChanged) {
       if (this.sendAudio && !this.sendVideo) {
@@ -560,7 +553,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     this.updateVideoIcon();
     this.updatePublishIcon();
 
-    this.publisher = this.OV.initPublisher(
+    const otherPublisher = this.OV.initPublisher(
       'local-vid-' + this.session.connection.connectionId,
       {
         audioSource: this.sendAudioChange ? undefined : false,
@@ -584,8 +577,17 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
           }
         }
       });
-    this.addPublisherEvents(this.publisher);
-    this.session.publish(this.publisher);
+    this.addPublisherEvents(otherPublisher);
+
+    otherPublisher.once('accessAllowed', () => {
+      if (!this.unpublished) {
+        this.session.unpublish(this.publisher);
+        this.publisher = otherPublisher;
+        this.removeUserData(this.session.connection.connectionId);
+        this.restartPublisherRecord();
+      }
+      this.session.publish(otherPublisher);
+    });
 
     this.publisherChanged = !this.publisherChanged;
   }
