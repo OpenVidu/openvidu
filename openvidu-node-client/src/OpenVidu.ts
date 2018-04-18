@@ -18,7 +18,7 @@
 import { Session } from "./Session";
 import { SessionProperties } from "./SessionProperties";
 import { Recording } from "./Recording";
-import { RecordingProperties } from "RecordingProperties";
+import { RecordingProperties } from "./RecordingProperties";
 
 declare const Buffer;
 let https = require('https');
