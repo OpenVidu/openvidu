@@ -89,7 +89,7 @@ public class OpenVidu {
 	}
 
 	@SuppressWarnings("unchecked")
-	public Archive startRecording(String sessionId) throws OpenViduException {
+	public Recording startRecording(String sessionId) throws OpenViduException {
 		try {
 			HttpPost request = new HttpPost(this.urlOpenViduServer + API_RECORDINGS + API_RECORDINGS_START);
 
@@ -104,7 +104,7 @@ public class OpenVidu {
 
 			int statusCode = response.getStatusLine().getStatusCode();
 			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
-				return new Archive(OpenVidu.httpResponseToJson(response));
+				return new Recording(OpenVidu.httpResponseToJson(response));
 			} else {
 				throw new OpenViduException(Code.RECORDING_START_ERROR_CODE, Integer.toString(statusCode));
 			}
@@ -114,7 +114,7 @@ public class OpenVidu {
 		}
 	}
 
-	public Archive stopRecording(String recordingId) throws OpenViduException {
+	public Recording stopRecording(String recordingId) throws OpenViduException {
 		try {
 			HttpPost request = new HttpPost(
 					this.urlOpenViduServer + API_RECORDINGS + API_RECORDINGS_STOP + "/" + recordingId);
@@ -122,7 +122,7 @@ public class OpenVidu {
 
 			int statusCode = response.getStatusLine().getStatusCode();
 			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
-				return new Archive(OpenVidu.httpResponseToJson(response));
+				return new Recording(OpenVidu.httpResponseToJson(response));
 			} else {
 				throw new OpenViduException(Code.RECORDING_STOP_ERROR_CODE, Integer.toString(statusCode));
 			}
@@ -132,14 +132,14 @@ public class OpenVidu {
 		}
 	}
 
-	public Archive getRecording(String recordingId) throws OpenViduException {
+	public Recording getRecording(String recordingId) throws OpenViduException {
 		try {
 			HttpGet request = new HttpGet(this.urlOpenViduServer + API_RECORDINGS + "/" + recordingId);
 			HttpResponse response = myHttpClient.execute(request);
 
 			int statusCode = response.getStatusLine().getStatusCode();
 			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
-				return new Archive(OpenVidu.httpResponseToJson(response));
+				return new Recording(OpenVidu.httpResponseToJson(response));
 			} else {
 				throw new OpenViduException(Code.RECORDING_LIST_ERROR_CODE, Integer.toString(statusCode));
 			}
@@ -149,20 +149,20 @@ public class OpenVidu {
 	}
 
 	@SuppressWarnings("unchecked")
-	public List<Archive> listRecordings() throws OpenViduException {
+	public List<Recording> listRecordings() throws OpenViduException {
 		try {
 			HttpGet request = new HttpGet(this.urlOpenViduServer + API_RECORDINGS);
 			HttpResponse response = myHttpClient.execute(request);
 
 			int statusCode = response.getStatusLine().getStatusCode();
 			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
-				List<Archive> archives = new ArrayList<>();
+				List<Recording> recordings = new ArrayList<>();
 				JSONObject json = OpenVidu.httpResponseToJson(response);
 				JSONArray array = (JSONArray) json.get("items");
 				array.forEach(item -> {
-					archives.add(new Archive((JSONObject) item));
+					recordings.add(new Recording((JSONObject) item));
 				});
-				return archives;
+				return recordings;
 			} else {
 				throw new OpenViduException(Code.RECORDING_LIST_ERROR_CODE, Integer.toString(statusCode));
 			}

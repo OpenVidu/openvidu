@@ -18,8 +18,8 @@ import com.google.gson.JsonSyntaxException;
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
-import io.openvidu.java.client.ArchiveLayout;
-import io.openvidu.java.client.ArchiveMode;
+import io.openvidu.java.client.RecordingLayout;
+import io.openvidu.java.client.RecordingMode;
 import io.openvidu.java.client.MediaMode;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.server.core.SessionManager;
@@ -55,7 +55,7 @@ public class KurentoSessionManager extends SessionManager {
 				SessionProperties properties = sessionProperties.get(sessionId);
 				if (properties == null && this.isInsecureParticipant(participant.getParticipantPrivateId())) {
 					properties = new SessionProperties.Builder().mediaMode(MediaMode.ROUTED)
-							.archiveMode(ArchiveMode.ALWAYS).archiveLayout(ArchiveLayout.BEST_FIT).build();
+							.recordingMode(RecordingMode.ALWAYS).recordingLayout(RecordingLayout.BEST_FIT).build();
 				}
 				createSession(kcSessionInfo, properties);
 			}
@@ -153,7 +153,7 @@ public class KurentoSessionManager extends SessionManager {
 
 		} else if (remainingParticipants.size() == 1 && openviduConfig.isRecordingModuleEnabled()
 				&& MediaMode.ROUTED.equals(session.getSessionProperties().mediaMode())
-				&& ArchiveMode.ALWAYS.equals(session.getSessionProperties().archiveMode())
+				&& RecordingMode.ALWAYS.equals(session.getSessionProperties().recordingMode())
 				&& ProtocolElements.RECORDER_PARTICIPANT_PUBLICID
 						.equals(remainingParticipants.iterator().next().getParticipantPublicId())) {
 
@@ -230,7 +230,7 @@ public class KurentoSessionManager extends SessionManager {
 
 		if (this.openviduConfig.isRecordingModuleEnabled()
 				&& MediaMode.ROUTED.equals(session.getSessionProperties().mediaMode())
-				&& ArchiveMode.ALWAYS.equals(session.getSessionProperties().archiveMode())
+				&& RecordingMode.ALWAYS.equals(session.getSessionProperties().recordingMode())
 				&& !recordingService.sessionIsBeingRecorded(session.getSessionId())
 				&& session.getActivePublishers() == 0) {
 			recordingService.startRecording(session);

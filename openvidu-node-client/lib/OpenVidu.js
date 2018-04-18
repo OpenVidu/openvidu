@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var Session_1 = require("./Session");
-var Archive_1 = require("./Archive");
+var Recording_1 = require("./Recording");
 var https = require('https');
 var OpenVidu = /** @class */ (function () {
     function OpenVidu(urlOpenViduServer, secret) {
@@ -37,8 +37,8 @@ var OpenVidu = /** @class */ (function () {
                 });
                 res.on('end', function () {
                     if (res.statusCode === 200) {
-                        // SUCCESS response from openvidu-server (Archive in JSON format). Resolve new Archive
-                        resolve(new Archive_1.Archive(JSON.parse(body)));
+                        // SUCCESS response from openvidu-server (Recording in JSON format). Resolve new Recording
+                        resolve(new Recording_1.Recording(JSON.parse(body)));
                     }
                     else {
                         // ERROR response from openvidu-server. Resolve HTTP status
@@ -74,8 +74,8 @@ var OpenVidu = /** @class */ (function () {
                 });
                 res.on('end', function () {
                     if (res.statusCode === 200) {
-                        // SUCCESS response from openvidu-server (Archive in JSON format). Resolve new Archive
-                        resolve(new Archive_1.Archive(JSON.parse(body)));
+                        // SUCCESS response from openvidu-server (Recording in JSON format). Resolve new Recording
+                        resolve(new Recording_1.Recording(JSON.parse(body)));
                     }
                     else {
                         // ERROR response from openvidu-server. Resolve HTTP status
@@ -111,8 +111,8 @@ var OpenVidu = /** @class */ (function () {
                 });
                 res.on('end', function () {
                     if (res.statusCode === 200) {
-                        // SUCCESS response from openvidu-server (Archive in JSON format). Resolve new Archive
-                        resolve(new Archive_1.Archive(JSON.parse(body)));
+                        // SUCCESS response from openvidu-server (Recording in JSON format). Resolve new Recording
+                        resolve(new Recording_1.Recording(JSON.parse(body)));
                     }
                     else {
                         // ERROR response from openvidu-server. Resolve HTTP status
@@ -148,13 +148,13 @@ var OpenVidu = /** @class */ (function () {
                 });
                 res.on('end', function () {
                     if (res.statusCode === 200) {
-                        // SUCCESS response from openvidu-server (JSON arrays of Archives in JSON format). Resolve list of new Archives
-                        var archiveArray = [];
+                        // SUCCESS response from openvidu-server (JSON arrays of recordings in JSON format). Resolve list of new recordings
+                        var recordingArray = [];
                         var responseItems = JSON.parse(body)['items'];
                         for (var i = 0; i < responseItems.length; i++) {
-                            archiveArray.push(new Archive_1.Archive(responseItems[i]));
+                            recordingArray.push(new Recording_1.Recording(responseItems[i]));
                         }
-                        resolve(archiveArray);
+                        resolve(recordingArray);
                     }
                     else {
                         // ERROR response from openvidu-server. Resolve HTTP status

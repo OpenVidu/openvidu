@@ -9,7 +9,7 @@ __export(require("./Session"));
 __export(require("./SessionProperties"));
 __export(require("./TokenOptions"));
 __export(require("./MediaMode"));
-__export(require("./ArchiveLayout"));
-__export(require("./ArchiveMode"));
-__export(require("./Archive"));
+__export(require("./RecordingLayout"));
+__export(require("./RecordingMode"));
+__export(require("./Recording"));
 //# sourceMappingURL=index.js.map

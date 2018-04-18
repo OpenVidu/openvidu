@@ -356,7 +356,7 @@ public class SessionEventsHandler {
 		try {
 			existingParticipants = session.getParticipants();
 		} catch (OpenViduException exception) {
-			// Session is already closed. This happens when ArchiveMode.ALWAYS and last
+			// Session is already closed. This happens when RecordingMode.ALWAYS and last
 			// participant has left the session. No notification needs to be sent
 			log.warn("Session already closed when trying to send 'recordingStopped' notification");
 			return;

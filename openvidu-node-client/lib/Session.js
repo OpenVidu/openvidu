@@ -23,8 +23,8 @@ var Session = /** @class */ (function () {
             return;
         }
         var requestBody = JSON.stringify({
-            'archiveLayout': this.properties.archiveLayout(),
-            'archiveMode': this.properties.archiveMode(),
+            'recordingLayout': this.properties.recordingLayout(),
+            'recordingMode': this.properties.recordingMode(),
             'mediaMode': this.properties.mediaMode()
         });
         var options = {

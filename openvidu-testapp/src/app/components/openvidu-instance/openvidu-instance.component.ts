@@ -689,12 +689,10 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
 
     /*session.on('publisherStartSpeaking', (event) => {
       console.log('Publisher start speaking');
-      console.log(event);
     });
 
     session.on('publisherStopSpeaking', (event) => {
       console.log('Publisher stop speaking');
-      console.log(event);
     });*/
   }
 

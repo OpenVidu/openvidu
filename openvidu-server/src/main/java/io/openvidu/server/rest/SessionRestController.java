@@ -35,8 +35,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.internal.ProtocolElements;
-import io.openvidu.java.client.ArchiveLayout;
-import io.openvidu.java.client.ArchiveMode;
+import io.openvidu.java.client.RecordingLayout;
+import io.openvidu.java.client.RecordingMode;
 import io.openvidu.java.client.MediaMode;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.server.core.ParticipantRole;
@@ -71,26 +71,26 @@ public class SessionRestController {
 
 		SessionProperties.Builder builder = new SessionProperties.Builder();
 		if (params != null) {
-			String archiveModeString = (String) params.get("archiveMode");
-			String archiveLayoutString = (String) params.get("archiveLayout");
+			String recordingModeString = (String) params.get("recordingMode");
+			String recordingLayoutString = (String) params.get("recordingLayout");
 			String mediaModeString = (String) params.get("mediaMode");
 
 			try {
-				if (archiveModeString != null) {
-					ArchiveMode archiveMode = ArchiveMode.valueOf(archiveModeString);
-					builder = builder.archiveMode(archiveMode);
+				if (recordingModeString != null) {
+					RecordingMode recordingMode = RecordingMode.valueOf(recordingModeString);
+					builder = builder.recordingMode(recordingMode);
 				}
-				if (archiveLayoutString != null) {
-					ArchiveLayout archiveLayout = ArchiveLayout.valueOf(archiveLayoutString);
-					builder = builder.archiveLayout(archiveLayout);
+				if (recordingLayoutString != null) {
+					RecordingLayout recordingLayout = RecordingLayout.valueOf(recordingLayoutString);
+					builder = builder.recordingLayout(recordingLayout);
 				}
 				if (mediaModeString != null) {
 					MediaMode mediaMode = MediaMode.valueOf(mediaModeString);
 					builder = builder.mediaMode(mediaMode);
 				}
 			} catch (IllegalArgumentException e) {
-				return this.generateErrorResponse("ArchiveMode " + params.get("archiveMode") + " | " + "ArchiveLayout "
-						+ params.get("archiveLayout") + " | " + "MediaMode " + params.get("mediaMode")
+				return this.generateErrorResponse("RecordingMode " + params.get("recordingMode") + " | " + "RecordingLayout "
+						+ params.get("recordingLayout") + " | " + "MediaMode " + params.get("mediaMode")
 						+ " are not defined", "/api/tokens", HttpStatus.BAD_REQUEST);
 			}
 		}

@@ -1,6 +1,6 @@
 import { Session } from "./Session";
 import { SessionProperties } from "./SessionProperties";
-import { Archive } from "./Archive";
+import { Recording } from "./Recording";
 
 declare const Buffer;
 let https = require('https');
@@ -24,8 +24,8 @@ export class OpenVidu {
     return new Session(this.hostname, this.port, this.basicAuth, properties);
   }
 
-  public startRecording(sessionId: string): Promise<Archive> {
-    return new Promise<Archive>((resolve, reject) => {
+  public startRecording(sessionId: string): Promise<Recording> {
+    return new Promise<Recording>((resolve, reject) => {
 
       let requestBody = JSON.stringify({
         'session': sessionId
@@ -50,8 +50,8 @@ export class OpenVidu {
         });
         res.on('end', () => {
           if (res.statusCode === 200) {
-            // SUCCESS response from openvidu-server (Archive in JSON format). Resolve new Archive
-            resolve(new Archive(JSON.parse(body)));
+            // SUCCESS response from openvidu-server (Recording in JSON format). Resolve new Recording
+            resolve(new Recording(JSON.parse(body)));
           } else {
             // ERROR response from openvidu-server. Resolve HTTP status
             reject(new Error(res.statusCode));
@@ -68,8 +68,8 @@ export class OpenVidu {
     });
   }
 
-  public stopRecording(recordingId: string): Promise<Archive> {
-    return new Promise<Archive>((resolve, reject) => {
+  public stopRecording(recordingId: string): Promise<Recording> {
+    return new Promise<Recording>((resolve, reject) => {
 
       let options = {
         hostname: this.hostname,
@@ -89,8 +89,8 @@ export class OpenVidu {
         });
         res.on('end', () => {
           if (res.statusCode === 200) {
-            // SUCCESS response from openvidu-server (Archive in JSON format). Resolve new Archive
-            resolve(new Archive(JSON.parse(body)));
+            // SUCCESS response from openvidu-server (Recording in JSON format). Resolve new Recording
+            resolve(new Recording(JSON.parse(body)));
           } else {
             // ERROR response from openvidu-server. Resolve HTTP status
             reject(new Error(res.statusCode));
@@ -107,8 +107,8 @@ export class OpenVidu {
     });
   }
 
-  public getRecording(recordingId: string): Promise<Archive> {
-    return new Promise<Archive>((resolve, reject) => {
+  public getRecording(recordingId: string): Promise<Recording> {
+    return new Promise<Recording>((resolve, reject) => {
 
       let options = {
         hostname: this.hostname,
@@ -128,8 +128,8 @@ export class OpenVidu {
         });
         res.on('end', () => {
           if (res.statusCode === 200) {
-            // SUCCESS response from openvidu-server (Archive in JSON format). Resolve new Archive
-            resolve(new Archive(JSON.parse(body)));
+            // SUCCESS response from openvidu-server (Recording in JSON format). Resolve new Recording
+            resolve(new Recording(JSON.parse(body)));
           } else {
             // ERROR response from openvidu-server. Resolve HTTP status
             reject(new Error(res.statusCode));
@@ -146,8 +146,8 @@ export class OpenVidu {
     });
   }
 
-  public listRecordings(): Promise<Archive[]> {
-    return new Promise<Archive[]>((resolve, reject) => {
+  public listRecordings(): Promise<Recording[]> {
+    return new Promise<Recording[]>((resolve, reject) => {
 
       let options = {
         hostname: this.hostname,
@@ -167,13 +167,13 @@ export class OpenVidu {
         });
         res.on('end', () => {
           if (res.statusCode === 200) {
-            // SUCCESS response from openvidu-server (JSON arrays of Archives in JSON format). Resolve list of new Archives
-            let archiveArray: Archive[] = [];
+            // SUCCESS response from openvidu-server (JSON arrays of recordings in JSON format). Resolve list of new recordings
+            let recordingArray: Recording[] = [];
             let responseItems = JSON.parse(body)['items'];
             for (let i = 0; i < responseItems.length; i++) {
-              archiveArray.push(new Archive(responseItems[i]));
+              recordingArray.push(new Recording(responseItems[i]));
             }
-            resolve(archiveArray);
+            resolve(recordingArray);
           } else {
             // ERROR response from openvidu-server. Resolve HTTP status
             reject(new Error(res.statusCode));

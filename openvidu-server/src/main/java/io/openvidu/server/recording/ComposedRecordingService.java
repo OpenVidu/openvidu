@@ -105,7 +105,7 @@ public class ComposedRecordingService {
 		}
 
 		String location = OpenViduServer.publicUrl.replaceFirst("wss://", "");
-		String layoutUrl = session.getSessionProperties().archiveLayout().name().toLowerCase().replaceAll("_", "-");
+		String layoutUrl = session.getSessionProperties().recordingLayout().name().toLowerCase().replaceAll("_", "-");
 
 		envs.add("URL=https://OPENVIDUAPP:" + secret + "@" + location + "/#/layout-" + layoutUrl + "/" + shortSessionId
 				+ "/" + secret);

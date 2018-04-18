@@ -15,22 +15,22 @@
     <h3>Session Properties</h3>
     <table>
       <tr>
-        <th>Archive Mode</th>
-        <th>Archive Layout</th>
+        <th>Recording Mode</th>
+        <th>Recording Layout</th>
         <th>Media Mode</th>
       </tr>
       <tr id="tr-session-properties">
         <td>
-          <mat-select placeholder="ArchiveMode" [(ngModel)]="selectedArchiveMode">
-            <mat-option *ngFor="let archiveMode of archiveModes" [value]="archiveMode">
-              {{ archiveMode }}
+          <mat-select placeholder="RecordingMode" [(ngModel)]="selectedRecordingMode">
+            <mat-option *ngFor="let recordingMode of recordingModes" [value]="recordingMode">
+              {{ recordingMode }}
             </mat-option>
           </mat-select>
         </td>
         <td>
-          <mat-select placeholder="ArchiveLayout" [(ngModel)]="selectedArchiveLayout">
-            <mat-option *ngFor="let archiveLayout of archiveLayouts" [value]="archiveLayout">
-              {{ archiveLayout }}
+          <mat-select placeholder="RecordingLayout" [(ngModel)]="selectedRecordingLayout">
+            <mat-option *ngFor="let recordingLayout of recordingLayouts" [value]="recordingLayout">
+              {{ recordingLayout }}
             </mat-option>
           </mat-select>
         </td>

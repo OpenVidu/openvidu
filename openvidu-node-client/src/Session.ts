@@ -31,8 +31,8 @@ export class Session {
         }
 
         let requestBody = JSON.stringify({
-            'archiveLayout': this.properties.archiveLayout(),
-            'archiveMode': this.properties.archiveMode(),
+            'recordingLayout': this.properties.recordingLayout(),
+            'recordingMode': this.properties.recordingMode(),
             'mediaMode': this.properties.mediaMode()
         });
 

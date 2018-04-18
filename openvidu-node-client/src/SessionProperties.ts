@@ -1,21 +1,21 @@
 import { MediaMode } from "./MediaMode";
-import { ArchiveMode } from "./ArchiveMode";
-import { ArchiveLayout } from "./ArchiveLayout";
+import { RecordingMode } from "./RecordingMode";
+import { RecordingLayout } from "./RecordingLayout";
 
 export class SessionProperties {
 
-	constructor(private mediaModeProp: MediaMode, private archiveModeProp: ArchiveMode, private archiveLayoutProp: ArchiveLayout) { }
+	constructor(private mediaModeProp: MediaMode, private recordingModeProp: RecordingMode, private recordingLayoutProp: RecordingLayout) { }
 
 	mediaMode(): string {
 		return this.mediaModeProp;
 	}
 
-	archiveMode(): ArchiveMode {
-		return this.archiveModeProp;
+	recordingMode(): RecordingMode {
+		return this.recordingModeProp;
 	}
 
-	archiveLayout(): ArchiveLayout {
-		return this.archiveLayoutProp;
+	recordingLayout(): RecordingLayout {
+		return this.recordingLayoutProp;
 	}
 }
 
@@ -23,11 +23,11 @@ export namespace SessionProperties {
 	export class Builder {
 
 		private mediaModeProp: MediaMode = MediaMode.ROUTED;
-		private archiveModeProp: ArchiveMode = ArchiveMode.MANUAL;
-		private archiveLayoutProp: ArchiveLayout = ArchiveLayout.BEST_FIT;
+		private recordingModeProp: RecordingMode = RecordingMode.MANUAL;
+		private recordingLayoutProp: RecordingLayout = RecordingLayout.BEST_FIT;
 
 		build(): SessionProperties {
-			return new SessionProperties(this.mediaModeProp, this.archiveModeProp, this.archiveLayoutProp);
+			return new SessionProperties(this.mediaModeProp, this.recordingModeProp, this.recordingLayoutProp);
 		}
 
 		mediaMode(mediaMode: MediaMode): Builder {
@@ -35,13 +35,13 @@ export namespace SessionProperties {
 			return this;
 		}
 
-		archiveMode(archiveMode: ArchiveMode): Builder {
-			this.archiveModeProp = archiveMode;
+		recordingMode(recordingMode: RecordingMode): Builder {
+			this.recordingModeProp = recordingMode;
 			return this;
 		}
 
-		archiveLayout(archiveLayout: ArchiveLayout): Builder {
-			this.archiveLayoutProp = archiveLayout;
+		recordingLayout(recordingLayout: RecordingLayout): Builder {
+			this.recordingLayoutProp = recordingLayout;
 			return this;
 		}
 	};

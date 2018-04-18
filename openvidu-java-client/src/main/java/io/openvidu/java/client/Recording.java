@@ -2,7 +2,7 @@ package io.openvidu.java.client;
 
 import org.json.simple.JSONObject;
 
-public class Archive {
+public class Recording {
 
 	public enum Status {
 		starting, // The recording is starting (cannot be stopped)
@@ -13,7 +13,7 @@ public class Archive {
 		failed; // The recording has failed
 	}
 
-	private Archive.Status status;
+	private Recording.Status status;
 
 	private String id;
 	private String name;
@@ -25,7 +25,7 @@ public class Archive {
 	private boolean hasAudio = true;
 	private boolean hasVideo = true;
 
-	public Archive(JSONObject json) {
+	public Recording(JSONObject json) {
 		this.id = (String) json.get("id");
 		this.name = (String) json.get("name");
 		this.sessionId = (String) json.get("sessionId");
@@ -35,10 +35,10 @@ public class Archive {
 		this.url = (String) json.get("url");
 		this.hasAudio = (boolean) json.get("hasAudio");
 		this.hasVideo = (boolean) json.get("hasVideo");
-		this.status = Archive.Status.valueOf((String) json.get("status"));
+		this.status = Recording.Status.valueOf((String) json.get("status"));
 	}
 
-	public Archive.Status getStatus() {
+	public Recording.Status getStatus() {
 		return status;
 	}
 

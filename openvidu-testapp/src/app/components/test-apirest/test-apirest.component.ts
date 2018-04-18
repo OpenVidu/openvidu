@@ -2,7 +2,7 @@ import { Component, Input, OnInit, OnDestroy } from '@angular/core';
 import { Subscription } from 'rxjs/Subscription';
 import { OpenviduRestService } from '../../services/openvidu-rest.service';
 import { OpenviduParamsService } from '../../services/openvidu-params.service';
-import { SessionProperties, ArchiveMode, ArchiveLayout, MediaMode } from 'openvidu-node-client';
+import { SessionProperties, RecordingMode, RecordingLayout, MediaMode } from 'openvidu-node-client';
 
 import * as colormap from 'colormap';
 const numColors = 64;
@@ -26,11 +26,11 @@ export class TestApirestComponent implements OnInit, OnDestroy {
   openViduRoles = ['SUBSCRIBER', 'PUBLISHER', 'MODERATOR'];
   selectedRole = 'PUBLISHER';
 
-  archiveModes = ['ALWAYS', 'MANUAL'];
-  selectedArchiveMode = 'MANUAL';
+  recordingModes = ['ALWAYS', 'MANUAL'];
+  selectedRecordingMode = 'MANUAL';
 
-  archiveLayouts = ['BEST_FIT'];
-  selectedArchiveLayout = 'BEST_FIT';
+  recordingLayouts = ['BEST_FIT'];
+  selectedRecordingLayout = 'BEST_FIT';
 
   mediaModes = ['ROUTED'];
   selectedMediaMode = 'ROUTED';
@@ -71,8 +71,8 @@ export class TestApirestComponent implements OnInit, OnDestroy {
   private getSessionId() {
     this.openviduRestService.getSessionId(this.openviduUrl, this.openviduSecret,
       new SessionProperties.Builder()
-        .archiveMode(ArchiveMode[this.selectedArchiveMode])
-        .archiveLayout(ArchiveLayout[this.selectedArchiveLayout])
+        .recordingMode(RecordingMode[this.selectedRecordingMode])
+        .recordingLayout(RecordingLayout[this.selectedRecordingLayout])
         .mediaMode(MediaMode[this.selectedMediaMode])
         .build())
       .then((sessionId) => {

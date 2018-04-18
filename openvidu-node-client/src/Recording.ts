@@ -1,4 +1,4 @@
-export class Archive {
+export class Recording {
 
     private id: string;
     private name: string;
@@ -9,7 +9,7 @@ export class Archive {
     private url: string;
     private hasaudio: boolean = true;
     private hasvideo: boolean = true;
-    private status: Archive.Status;
+    private status: Recording.Status;
 
     constructor(json: JSON) {
         this.id = json['id'];
@@ -24,7 +24,7 @@ export class Archive {
         this.status = json['status'];
     }
 
-    public getStatus(): Archive.Status {
+    public getStatus(): Recording.Status {
         return this.status;
     }
 
@@ -65,7 +65,7 @@ export class Archive {
     }
 }
 
-export namespace Archive {
+export namespace Recording {
     export enum Status {
         starting,   // The recording is starting (cannot be stopped)
         started,    // The recording has started and is going on
