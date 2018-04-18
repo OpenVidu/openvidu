@@ -268,9 +268,8 @@ public abstract class SessionManager {
 	public Participant newRecorderParticipant(String sessionId, String participantPrivatetId, Token token,
 			String clientMetadata) {
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
-			String participantPublicId = ProtocolElements.RECORDER_PARTICIPANT_PUBLICID;
-			Participant p = new Participant(participantPrivatetId, participantPublicId, token, clientMetadata);
-			this.sessionidParticipantpublicidParticipant.get(sessionId).put(participantPublicId, p);
+			Participant p = new Participant(participantPrivatetId, ProtocolElements.RECORDER_PARTICIPANT_PUBLICID, token, clientMetadata);
+			this.sessionidParticipantpublicidParticipant.get(sessionId).put(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID, p);
 			return p;
 		} else {
 			throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE, sessionId);

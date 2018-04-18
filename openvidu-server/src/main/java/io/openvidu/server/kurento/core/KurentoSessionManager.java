@@ -233,7 +233,10 @@ public class KurentoSessionManager extends SessionManager {
 				&& RecordingMode.ALWAYS.equals(session.getSessionProperties().recordingMode())
 				&& !recordingService.sessionIsBeingRecorded(session.getSessionId())
 				&& session.getActivePublishers() == 0) {
-			recordingService.startRecording(session, null);
+			// Insecure session recording
+			new Thread(() -> {
+				recordingService.startRecording(session, null);
+			}).start();
 		}
 
 		session.newPublisher(participant);
