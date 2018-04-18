@@ -1,6 +1,7 @@
 import { Session } from "./Session";
 import { SessionProperties } from "./SessionProperties";
 import { Recording } from "./Recording";
+import { RecordingProperties } from "RecordingProperties";
 
 declare const Buffer;
 let https = require('https');
@@ -24,12 +25,33 @@ export class OpenVidu {
     return new Session(this.hostname, this.port, this.basicAuth, properties);
   }
 
-  public startRecording(sessionId: string): Promise<Recording> {
+  public startRecording(sessionId: string): Promise<Recording>;
+  public startRecording(sessionId: string, name: string): Promise<Recording>;
+  public startRecording(sessionId: string, properties: RecordingProperties): Promise<Recording>;
+
+  public startRecording(sessionId: string, param2?: string | RecordingProperties): Promise<Recording> {
     return new Promise<Recording>((resolve, reject) => {
 
-      let requestBody = JSON.stringify({
-        'session': sessionId
-      });
+      let requestBody;
+
+      if (!!param2) {
+        if (!(typeof param2 === 'string')) {
+          requestBody = JSON.stringify({
+            session: sessionId,
+            name: (<RecordingProperties>param2).name()
+          });
+        } else {
+          requestBody = JSON.stringify({
+            session: sessionId,
+            name: param2
+          });
+        }
+      } else {
+        requestBody = JSON.stringify({
+          session: sessionId,
+          name: ''
+        });
+      }
 
       let options = {
         hostname: this.hostname,

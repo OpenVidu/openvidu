@@ -12,12 +12,30 @@ var OpenVidu = /** @class */ (function () {
     OpenVidu.prototype.createSession = function (properties) {
         return new Session_1.Session(this.hostname, this.port, this.basicAuth, properties);
     };
-    OpenVidu.prototype.startRecording = function (sessionId) {
+    OpenVidu.prototype.startRecording = function (sessionId, param2) {
         var _this = this;
         return new Promise(function (resolve, reject) {
-            var requestBody = JSON.stringify({
-                'session': sessionId
-            });
+            var requestBody;
+            if (!!param2) {
+                if (!(typeof param2 === 'string')) {
+                    requestBody = JSON.stringify({
+                        session: sessionId,
+                        name: param2.name()
+                    });
+                }
+                else {
+                    requestBody = JSON.stringify({
+                        session: sessionId,
+                        name: param2
+                    });
+                }
+            }
+            else {
+                requestBody = JSON.stringify({
+                    session: sessionId,
+                    name: ''
+                });
+            }
             var options = {
                 hostname: _this.hostname,
                 port: _this.port,

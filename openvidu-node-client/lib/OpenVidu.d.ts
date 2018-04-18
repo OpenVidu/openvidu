@@ -1,6 +1,7 @@
 import { Session } from "./Session";
 import { SessionProperties } from "./SessionProperties";
 import { Recording } from "./Recording";
+import { RecordingProperties } from "RecordingProperties";
 export declare class OpenVidu {
     private urlOpenViduServer;
     private static readonly API_RECORDINGS;
@@ -12,6 +13,8 @@ export declare class OpenVidu {
     constructor(urlOpenViduServer: string, secret: string);
     createSession(properties?: SessionProperties): Session;
     startRecording(sessionId: string): Promise<Recording>;
+    startRecording(sessionId: string, name: string): Promise<Recording>;
+    startRecording(sessionId: string, properties: RecordingProperties): Promise<Recording>;
     stopRecording(recordingId: string): Promise<Recording>;
     getRecording(recordingId: string): Promise<Recording>;
     listRecordings(): Promise<Recording[]>;
