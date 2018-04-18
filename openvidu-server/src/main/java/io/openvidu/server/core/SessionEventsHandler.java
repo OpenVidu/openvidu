@@ -335,6 +335,7 @@ public class SessionEventsHandler {
 
 		JsonObject params = new JsonObject();
 		params.addProperty(ProtocolElements.RECORDINGSTARTED_ID_PARAM, recording.getId());
+		params.addProperty(ProtocolElements.RECORDINGSTARTED_NAME_PARAM, recording.getName());
 
 		for (Participant p : filteredParticipants) {
 			rpcNotificationService.sendNotification(p.getParticipantPrivateId(),
@@ -366,6 +367,7 @@ public class SessionEventsHandler {
 
 		JsonObject params = new JsonObject();
 		params.addProperty(ProtocolElements.RECORDINGSTOPPED_ID_PARAM, recording.getId());
+		params.addProperty(ProtocolElements.RECORDINGSTARTED_NAME_PARAM, recording.getName());
 
 		for (Participant p : filteredParticipants) {
 			rpcNotificationService.sendNotification(p.getParticipantPrivateId(),

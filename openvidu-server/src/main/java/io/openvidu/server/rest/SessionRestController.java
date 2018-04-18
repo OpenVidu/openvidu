@@ -135,6 +135,7 @@ public class SessionRestController {
 	public ResponseEntity<JSONObject> startRecordingSession(@RequestBody Map<?, ?> params) {
 
 		String sessionId = (String) params.get("session");
+		String name = (String) params.get("name");
 
 		if (sessionId == null) {
 			// "session" parameter not found
@@ -157,7 +158,7 @@ public class SessionRestController {
 			return new ResponseEntity<JSONObject>(HttpStatus.CONFLICT);
 		}
 
-		Recording startedRecording = this.recordingService.startRecording(session);
+		Recording startedRecording = this.recordingService.startRecording(session, name);
 		return new ResponseEntity<>(startedRecording.toJson(), HttpStatus.OK);
 	}
 

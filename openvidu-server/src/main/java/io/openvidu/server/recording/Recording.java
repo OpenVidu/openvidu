@@ -29,7 +29,7 @@ public class Recording {
 		this.sessionId = sessionId;
 		this.createdAt = System.currentTimeMillis();
 		this.id = id;
-		this.name = id; // For now the name of the recording file is the same as its id
+		this.name = name;
 		this.status = Status.started;
 	}
 

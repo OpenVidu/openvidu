@@ -30,6 +30,7 @@ public class CDREvent implements Comparable<CDREvent> {
 	// Recording events
 	private Long size;
 	private String id;
+	private String name;
 	private Boolean hasAudio;
 	private Boolean hasVideo;
 
@@ -63,6 +64,7 @@ public class CDREvent implements Comparable<CDREvent> {
 		}
 		this.timeStamp = System.currentTimeMillis();
 		this.id = recording.getId();
+		this.name = recording.getName();
 		this.duration = (int) recording.getDuration();
 		this.size = recording.getSize();
 		this.hasAudio = recording.hasAudio();
@@ -131,6 +133,9 @@ public class CDREvent implements Comparable<CDREvent> {
 		}
 		if (this.id != null) {
 			json.put("id", this.id);
+		}
+		if (this.name != null) {
+			json.put("name", this.name);
 		}
 		if (this.size != null) {
 			json.put("size", this.size);

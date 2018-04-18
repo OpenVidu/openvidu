@@ -23,8 +23,8 @@ import io.openvidu.server.recording.Recording;
  * - 'participantLeft':				{sessionId, timestamp, participantId, startTime, endTime, duration, reason}
  * - 'webrtcConnectionCreated'		{sessionId, timestamp, participantId, connection, [receivingFrom], audioEnabled, videoEnabled, [videoSource], [videoFramerate]}
  * - 'webrtcConnectionDestroyed'	{sessionId, timestamp, participantId, startTime, endTime, duration, connection, [receivingFrom], audioEnabled, videoEnabled, [videoSource], [videoFramerate], reason}
- * - 'recordingStarted'				{sessionId, timestamp, id, hasAudio, hasVideo, size}
- * - 'recordingStopped'				{sessionId, timestamp, id, hasAudio, hasVideo, size}
+ * - 'recordingStarted'				{sessionId, timestamp, id, name, hasAudio, hasVideo, size}
+ * - 'recordingStopped'				{sessionId, timestamp, id, name, hasAudio, hasVideo, size}
  * 
  * PROPERTIES VALUES:
  * 
@@ -41,6 +41,7 @@ import io.openvidu.server.recording.Recording;
  * - videoSource: 		"CAMERA", "SCREEN"
  * - videoFramerate:	number
  * - id:				string
+ * - name:				string
  * - hasAudio:			boolean
  * - hasVideo:			boolean
  * - size: 				number
