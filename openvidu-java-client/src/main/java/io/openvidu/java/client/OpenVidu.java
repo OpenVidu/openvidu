@@ -96,6 +96,8 @@ public class OpenVidu {
 			JSONObject json = new JSONObject();
 			json.put("session", sessionId);
 			json.put("name", properties.name());
+			json.put("recordingLayout",
+					(properties.recordingLayout() != null) ? properties.recordingLayout().name() : "");
 			StringEntity params = new StringEntity(json.toString());
 
 			request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");

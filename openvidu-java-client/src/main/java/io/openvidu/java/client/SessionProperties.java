@@ -4,16 +4,16 @@ public class SessionProperties {
 
 	private MediaMode mediaMode;
 	private RecordingMode recordingMode;
-	private RecordingLayout recordingLayout;
+	private RecordingLayout defaultRecordingLayout;
 
 	public static class Builder {
 
 		private MediaMode mediaMode = MediaMode.ROUTED;
 		private RecordingMode recordingMode = RecordingMode.MANUAL;
-		private RecordingLayout recordingLayout = RecordingLayout.BEST_FIT;
+		private RecordingLayout defaultRecordingLayout = RecordingLayout.BEST_FIT;
 
 		public SessionProperties build() {
-			return new SessionProperties(this.mediaMode, this.recordingMode, this.recordingLayout);
+			return new SessionProperties(this.mediaMode, this.recordingMode, this.defaultRecordingLayout);
 		}
 
 		public SessionProperties.Builder mediaMode(MediaMode mediaMode) {
@@ -26,8 +26,8 @@ public class SessionProperties {
 			return this;
 		}
 
-		public SessionProperties.Builder recordingLayout(RecordingLayout recordingLayout) {
-			this.recordingLayout = recordingLayout;
+		public SessionProperties.Builder defaultRecordingLayout(RecordingLayout layout) {
+			this.defaultRecordingLayout = layout;
 			return this;
 		}
 
@@ -36,13 +36,13 @@ public class SessionProperties {
 	protected SessionProperties() {
 		this.mediaMode = MediaMode.ROUTED;
 		this.recordingMode = RecordingMode.MANUAL;
-		this.recordingLayout = RecordingLayout.BEST_FIT;
+		this.defaultRecordingLayout = RecordingLayout.BEST_FIT;
 	}
 
-	private SessionProperties(MediaMode mediaMode, RecordingMode recordingMode, RecordingLayout recordingLayout) {
+	private SessionProperties(MediaMode mediaMode, RecordingMode recordingMode, RecordingLayout layout) {
 		this.mediaMode = mediaMode;
 		this.recordingMode = recordingMode;
-		this.recordingLayout = recordingLayout;
+		this.defaultRecordingLayout = layout;
 	}
 
 	public RecordingMode recordingMode() {
@@ -53,8 +53,8 @@ public class SessionProperties {
 		return this.mediaMode;
 	}
 
-	public RecordingLayout recordingLayout() {
-		return this.recordingLayout;
+	public RecordingLayout defaultRecordingLayout() {
+		return this.defaultRecordingLayout;
 	}
 
 }

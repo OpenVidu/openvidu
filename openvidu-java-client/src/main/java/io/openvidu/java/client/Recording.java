@@ -16,7 +16,6 @@ public class Recording {
 	private Recording.Status status;
 
 	private String id;
-	private String name;
 	private String sessionId;
 	private long createdAt; // milliseconds (UNIX Epoch time)
 	private long size = 0; // bytes
@@ -24,10 +23,10 @@ public class Recording {
 	private String url;
 	private boolean hasAudio = true;
 	private boolean hasVideo = true;
+	private RecordingProperties recordingProperties;
 
 	public Recording(JSONObject json) {
 		this.id = (String) json.get("id");
-		this.name = (String) json.get("name");
 		this.sessionId = (String) json.get("sessionId");
 		this.createdAt = (long) json.get("createdAt");
 		this.size = (long) json.get("size");
@@ -36,6 +35,8 @@ public class Recording {
 		this.hasAudio = (boolean) json.get("hasAudio");
 		this.hasVideo = (boolean) json.get("hasVideo");
 		this.status = Recording.Status.valueOf((String) json.get("status"));
+		this.recordingProperties = new RecordingProperties.Builder().name((String) json.get("name"))
+				.recordingLayout(RecordingLayout.valueOf((String) json.get("layout"))).build();
 	}
 
 	public Recording.Status getStatus() {
@@ -47,7 +48,11 @@ public class Recording {
 	}
 
 	public String getName() {
-		return name;
+		return this.recordingProperties.name();
+	}
+
+	public RecordingLayout getLayout() {
+		return this.recordingProperties.recordingLayout();
 	}
 
 	public String getSessionId() {
