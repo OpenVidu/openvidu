@@ -29,8 +29,8 @@ export class TestApirestComponent implements OnInit, OnDestroy {
   recordingModes = ['ALWAYS', 'MANUAL'];
   selectedRecordingMode = 'MANUAL';
 
-  recordingLayouts = ['BEST_FIT'];
-  selectedRecordingLayout = 'BEST_FIT';
+  defaultRecordingLayouts = ['BEST_FIT'];
+  selectedDefaultRecordingLayout = 'BEST_FIT';
 
   mediaModes = ['ROUTED'];
   selectedMediaMode = 'ROUTED';
@@ -72,7 +72,7 @@ export class TestApirestComponent implements OnInit, OnDestroy {
     this.openviduRestService.getSessionId(this.openviduUrl, this.openviduSecret,
       new SessionProperties.Builder()
         .recordingMode(RecordingMode[this.selectedRecordingMode])
-        .recordingLayout(RecordingLayout[this.selectedRecordingLayout])
+        .defaultRecordingLayout(RecordingLayout[this.selectedDefaultRecordingLayout])
         .mediaMode(MediaMode[this.selectedMediaMode])
         .build())
       .then((sessionId) => {
