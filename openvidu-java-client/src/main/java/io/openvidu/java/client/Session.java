@@ -44,9 +44,10 @@ public class Session {
 			HttpPost request = new HttpPost(this.urlOpenViduServer + API_SESSIONS);
 			
 			JSONObject json = new JSONObject();
-			json.put("defaultRecordingLayout", properties.defaultRecordingLayout().name());
-			json.put("recordingMode", properties.recordingMode().name());
 			json.put("mediaMode", properties.mediaMode().name());
+			json.put("recordingMode", properties.recordingMode().name());
+			json.put("defaultRecordingLayout", properties.defaultRecordingLayout().name());
+			json.put("defaultCustomLayout", properties.defaultCustomLayout());
 			StringEntity params = new StringEntity(json.toString());
 			
 			request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");

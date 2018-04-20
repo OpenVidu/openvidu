@@ -98,6 +98,8 @@ public class OpenVidu {
 			json.put("name", properties.name());
 			json.put("recordingLayout",
 					(properties.recordingLayout() != null) ? properties.recordingLayout().name() : "");
+			json.put("customLayout",
+					(properties.customLayout() != null) ? properties.customLayout() : "");
 			StringEntity params = new StringEntity(json.toString());
 
 			request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");

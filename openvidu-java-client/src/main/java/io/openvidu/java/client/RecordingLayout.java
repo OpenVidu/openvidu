@@ -4,5 +4,6 @@ public enum RecordingLayout {
 	BEST_FIT,					// All the videos are evenly distributed, taking up as much space as possible
 	PICTURE_IN_PICTURE,
 	VERTICAL_PRESENTATION,
-	HORIZONTAL_PRESENTATION
+	HORIZONTAL_PRESENTATION,
+	CUSTOM
 }
