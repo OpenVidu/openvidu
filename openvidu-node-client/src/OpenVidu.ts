@@ -19,6 +19,7 @@ import { Session } from "./Session";
 import { SessionProperties } from "./SessionProperties";
 import { Recording } from "./Recording";
 import { RecordingProperties } from "./RecordingProperties";
+import { RecordingLayout } from "./RecordingLayout";
 
 declare const Buffer;
 let https = require('https');
@@ -53,20 +54,24 @@ export class OpenVidu {
 
       if (!!param2) {
         if (!(typeof param2 === 'string')) {
+          const properties = <RecordingProperties>param2;
           requestBody = JSON.stringify({
             session: sessionId,
-            name: (<RecordingProperties>param2).name()
+            name: properties.name(),
+            recordingLayout: (!!properties.recordingLayout() ? properties.recordingLayout() : '')
           });
         } else {
           requestBody = JSON.stringify({
             session: sessionId,
-            name: param2
+            name: param2,
+            recordingLayout: ''
           });
         }
       } else {
         requestBody = JSON.stringify({
           session: sessionId,
-          name: ''
+          name: '',
+          recordingLayout: ''
         });
       }
 

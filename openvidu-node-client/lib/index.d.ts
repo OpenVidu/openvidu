@@ -7,3 +7,4 @@ export * from './MediaMode';
 export * from './RecordingLayout';
 export * from './RecordingMode';
 export * from './Recording';
+export * from './RecordingProperties';

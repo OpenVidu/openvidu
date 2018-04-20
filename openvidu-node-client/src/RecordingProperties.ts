@@ -15,12 +15,18 @@
  *
  */
 
+import { RecordingLayout } from "./RecordingLayout";
+
 export class RecordingProperties {
 
-    constructor(private rName: string) { }
+    constructor(private rName: string, private recordingLayoutProp: RecordingLayout) { }
 
     name(): string {
         return this.rName;
+    }
+
+    recordingLayout(): RecordingLayout {
+        return this.recordingLayoutProp;
     }
 
 }
@@ -29,13 +35,19 @@ export namespace RecordingProperties {
     export class Builder {
 
         private rName: string = '';
+        private recordingLayoutProp: RecordingLayout;
 
         build(): RecordingProperties {
-            return new RecordingProperties(this.rName);
+            return new RecordingProperties(this.rName, this.recordingLayoutProp);
         }
 
         name(name: string): Builder {
             this.rName = name;
+            return this;
+        }
+
+        recordingLayout(layout: RecordingLayout): Builder {
+            this.recordingLayoutProp = layout;
             return this;
         }
     };

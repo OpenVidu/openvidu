@@ -21,7 +21,7 @@ import { RecordingLayout } from "./RecordingLayout";
 
 export class SessionProperties {
 
-	constructor(private mediaModeProp: MediaMode, private recordingModeProp: RecordingMode, private recordingLayoutProp: RecordingLayout) { }
+	constructor(private mediaModeProp: MediaMode, private recordingModeProp: RecordingMode, private defaultRecordingLayoutProp: RecordingLayout) { }
 
 	mediaMode(): string {
 		return this.mediaModeProp;
@@ -31,8 +31,8 @@ export class SessionProperties {
 		return this.recordingModeProp;
 	}
 
-	recordingLayout(): RecordingLayout {
-		return this.recordingLayoutProp;
+	defaultRecordingLayout(): RecordingLayout {
+		return this.defaultRecordingLayoutProp;
 	}
 }
 
@@ -41,10 +41,10 @@ export namespace SessionProperties {
 
 		private mediaModeProp: MediaMode = MediaMode.ROUTED;
 		private recordingModeProp: RecordingMode = RecordingMode.MANUAL;
-		private recordingLayoutProp: RecordingLayout = RecordingLayout.BEST_FIT;
+		private defaultRecordingLayoutProp: RecordingLayout = RecordingLayout.BEST_FIT;
 
 		build(): SessionProperties {
-			return new SessionProperties(this.mediaModeProp, this.recordingModeProp, this.recordingLayoutProp);
+			return new SessionProperties(this.mediaModeProp, this.recordingModeProp, this.defaultRecordingLayoutProp);
 		}
 
 		mediaMode(mediaMode: MediaMode): Builder {
@@ -57,8 +57,8 @@ export namespace SessionProperties {
 			return this;
 		}
 
-		recordingLayout(recordingLayout: RecordingLayout): Builder {
-			this.recordingLayoutProp = recordingLayout;
+		defaultRecordingLayout(layout: RecordingLayout): Builder {
+			this.defaultRecordingLayoutProp = layout;
 			return this;
 		}
 	};

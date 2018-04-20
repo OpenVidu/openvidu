@@ -12,4 +12,5 @@ __export(require("./MediaMode"));
 __export(require("./RecordingLayout"));
 __export(require("./RecordingMode"));
 __export(require("./Recording"));
+__export(require("./RecordingProperties"));
 //# sourceMappingURL=index.js.map

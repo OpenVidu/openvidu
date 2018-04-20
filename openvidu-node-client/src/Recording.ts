@@ -15,10 +15,12 @@
  *
  */
 
+import { RecordingProperties } from "./RecordingProperties";
+import { RecordingLayout } from "./RecordingLayout";
+
 export class Recording {
 
     private id: string;
-    private name: string;
     private sessionId: string;
     private createdAt: number;
     private size: number = 0;
@@ -27,10 +29,10 @@ export class Recording {
     private hasaudio: boolean = true;
     private hasvideo: boolean = true;
     private status: Recording.Status;
+    private recordingProperties: RecordingProperties;
 
     constructor(json: JSON) {
         this.id = json['id'];
-        this.name = json['name'];
         this.sessionId = json['sessionId'];
         this.createdAt = json['createdAt'];
         this.size = json['size'];
@@ -39,6 +41,7 @@ export class Recording {
         this.hasaudio = json['hasAudio'];
         this.hasvideo = json['hasVideo'];
         this.status = json['status'];
+        this.recordingProperties = new RecordingProperties.Builder().name(json['name']).recordingLayout(json['layout']).build();
     }
 
     public getStatus(): Recording.Status {
@@ -50,7 +53,11 @@ export class Recording {
     }
 
     public getName(): string {
-        return this.name;
+        return this.recordingProperties.name();
+    }
+
+    public getLayout(): RecordingLayout {
+        return this.recordingProperties.recordingLayout();
     }
 
     public getSessionId(): string {

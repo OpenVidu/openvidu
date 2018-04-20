@@ -34,22 +34,26 @@ var OpenVidu = /** @class */ (function () {
             var requestBody;
             if (!!param2) {
                 if (!(typeof param2 === 'string')) {
+                    var properties = param2;
                     requestBody = JSON.stringify({
                         session: sessionId,
-                        name: param2.name()
+                        name: properties.name(),
+                        recordingLayout: (!!properties.recordingLayout() ? properties.recordingLayout() : '')
                     });
                 }
                 else {
                     requestBody = JSON.stringify({
                         session: sessionId,
-                        name: param2
+                        name: param2,
+                        recordingLayout: ''
                     });
                 }
             }
             else {
                 requestBody = JSON.stringify({
                     session: sessionId,
-                    name: ''
+                    name: '',
+                    recordingLayout: ''
                 });
             }
             var options = {

@@ -39,7 +39,7 @@ var Session = /** @class */ (function () {
                 resolve(_this.sessionId);
             }
             var requestBody = JSON.stringify({
-                'recordingLayout': _this.properties.recordingLayout(),
+                'defaultRecordingLayout': _this.properties.defaultRecordingLayout(),
                 'recordingMode': _this.properties.recordingMode(),
                 'mediaMode': _this.properties.mediaMode()
             });
