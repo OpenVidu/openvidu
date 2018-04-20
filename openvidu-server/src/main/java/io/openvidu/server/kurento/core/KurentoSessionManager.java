@@ -237,8 +237,10 @@ public class KurentoSessionManager extends SessionManager {
 				&& session.getActivePublishers() == 0) {
 			// Insecure session recording
 			new Thread(() -> {
-				recordingService.startRecording(session, new RecordingProperties.Builder().name("")
-						.recordingLayout(session.getSessionProperties().defaultRecordingLayout()).build());
+				recordingService.startRecording(session,
+						new RecordingProperties.Builder().name("")
+								.recordingLayout(session.getSessionProperties().defaultRecordingLayout())
+								.customLayout(session.getSessionProperties().defaultCustomLayout()).build());
 			}).start();
 		}
 

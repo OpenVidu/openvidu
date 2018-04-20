@@ -72,23 +72,34 @@ public class SessionRestController {
 
 		SessionProperties.Builder builder = new SessionProperties.Builder();
 		if (params != null) {
+			String mediaModeString = (String) params.get("mediaMode");
 			String recordingModeString = (String) params.get("recordingMode");
 			String defaultRecordingLayoutString = (String) params.get("defaultRecordingLayout");
-			String mediaModeString = (String) params.get("mediaMode");
+			String defaultCustomLayout = (String) params.get("defaultCustomLayout");
 
 			try {
+
+				// Safe parameter retrieval. Default values if not defined
 				if (recordingModeString != null) {
 					RecordingMode recordingMode = RecordingMode.valueOf(recordingModeString);
 					builder = builder.recordingMode(recordingMode);
+				} else {
+					builder = builder.recordingMode(RecordingMode.MANUAL);
 				}
 				if (defaultRecordingLayoutString != null) {
 					RecordingLayout defaultRecordingLayout = RecordingLayout.valueOf(defaultRecordingLayoutString);
 					builder = builder.defaultRecordingLayout(defaultRecordingLayout);
+				} else {
+					builder.defaultRecordingLayout(RecordingLayout.BEST_FIT);
 				}
 				if (mediaModeString != null) {
 					MediaMode mediaMode = MediaMode.valueOf(mediaModeString);
 					builder = builder.mediaMode(mediaMode);
+				} else {
+					builder = builder.mediaMode(MediaMode.ROUTED);
 				}
+				builder = builder.defaultCustomLayout((defaultCustomLayout != null) ? defaultCustomLayout : "");
+
 			} catch (IllegalArgumentException e) {
 				return this.generateErrorResponse("RecordingMode " + params.get("recordingMode") + " | "
 						+ "Default RecordingLayout " + params.get("defaultRecordingLayout") + " | " + "MediaMode "
@@ -120,9 +131,7 @@ public class SessionRestController {
 				role = ParticipantRole.PUBLISHER;
 			}
 
-			if (metadata == null) {
-				metadata = "";
-			}
+			metadata = (metadata != null) ? metadata : "";
 
 			String token = sessionManager.newToken(sessionId, role, metadata);
 			JSONObject responseJson = new JSONObject();
@@ -149,6 +158,7 @@ public class SessionRestController {
 		String sessionId = (String) params.get("session");
 		String name = (String) params.get("name");
 		String recordingLayoutString = (String) params.get("recordingLayout");
+		String customLayout = (String) params.get("customLayout");
 
 		if (sessionId == null) {
 			// "session" parameter not found
@@ -180,9 +190,11 @@ public class SessionRestController {
 		} else {
 			recordingLayout = RecordingLayout.valueOf(recordingLayoutString);
 		}
+		
+		customLayout = (customLayout == null) ? session.getSessionProperties().defaultCustomLayout() : customLayout;
 
 		Recording startedRecording = this.recordingService.startRecording(session,
-				new RecordingProperties.Builder().name(name).recordingLayout(recordingLayout).build());
+				new RecordingProperties.Builder().name(name).recordingLayout(recordingLayout).customLayout(customLayout).build());
 		return new ResponseEntity<>(startedRecording.toJson(), HttpStatus.OK);
 	}
 

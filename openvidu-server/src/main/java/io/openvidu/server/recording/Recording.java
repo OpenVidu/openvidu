@@ -66,21 +66,17 @@ public class Recording {
 		this.id = id;
 	}
 
-    public String getName() {
-        return this.recordingProperties.name();
-    }
-    
-    public String setName() {
-        return this.recordingProperties.name();
-    }
+	public String getName() {
+		return this.recordingProperties.name();
+	}
 
-    public RecordingLayout getLayout() {
-        return this.recordingProperties.recordingLayout();
-    }
-    
-    public RecordingLayout setLayout() {
-        return this.recordingProperties.recordingLayout();
-    }
+	public RecordingLayout getLayout() {
+		return this.recordingProperties.recordingLayout();
+	}
+
+	public String getCustomLayout() {
+		return this.recordingProperties.customLayout();
+	}
 
 	public String getSessionId() {
 		return sessionId;

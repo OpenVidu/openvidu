@@ -40,6 +40,11 @@
     "description": "Which users will receive a notfication (client events 'recordingStarted' and 'recordingStopped') when recording starts and stops: 'none', 'publisher_moderator', 'all'"
   },
   {
+    "name": "openvidu.recording.custom-layout",
+    "type": "java.lang.String",
+    "description": "Where should OpenVidu Server look for custom recording layouts"
+  },
+  {
     "name": "openvidu.recording.version",
     "type": "java.lang.String",
     "description": "Tag for openvidu/openvidu-recording Docker image"

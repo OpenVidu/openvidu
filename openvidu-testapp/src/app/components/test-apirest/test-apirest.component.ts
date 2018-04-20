@@ -29,7 +29,7 @@ export class TestApirestComponent implements OnInit, OnDestroy {
   recordingModes = ['ALWAYS', 'MANUAL'];
   selectedRecordingMode = 'MANUAL';
 
-  defaultRecordingLayouts = ['BEST_FIT'];
+  defaultRecordingLayouts = ['BEST_FIT', 'CUSTOM'];
   selectedDefaultRecordingLayout = 'BEST_FIT';
 
   mediaModes = ['ROUTED'];
