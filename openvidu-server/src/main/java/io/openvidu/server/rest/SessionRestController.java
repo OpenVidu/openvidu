@@ -37,6 +37,7 @@ import io.openvidu.client.OpenViduException;
 import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.java.client.RecordingMode;
+import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.java.client.MediaMode;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.server.core.ParticipantRole;
@@ -72,7 +73,7 @@ public class SessionRestController {
 		SessionProperties.Builder builder = new SessionProperties.Builder();
 		if (params != null) {
 			String recordingModeString = (String) params.get("recordingMode");
-			String recordingLayoutString = (String) params.get("recordingLayout");
+			String defaultRecordingLayoutString = (String) params.get("defaultRecordingLayout");
 			String mediaModeString = (String) params.get("mediaMode");
 
 			try {
@@ -80,18 +81,18 @@ public class SessionRestController {
 					RecordingMode recordingMode = RecordingMode.valueOf(recordingModeString);
 					builder = builder.recordingMode(recordingMode);
 				}
-				if (recordingLayoutString != null) {
-					RecordingLayout recordingLayout = RecordingLayout.valueOf(recordingLayoutString);
-					builder = builder.recordingLayout(recordingLayout);
+				if (defaultRecordingLayoutString != null) {
+					RecordingLayout defaultRecordingLayout = RecordingLayout.valueOf(defaultRecordingLayoutString);
+					builder = builder.defaultRecordingLayout(defaultRecordingLayout);
 				}
 				if (mediaModeString != null) {
 					MediaMode mediaMode = MediaMode.valueOf(mediaModeString);
 					builder = builder.mediaMode(mediaMode);
 				}
 			} catch (IllegalArgumentException e) {
-				return this.generateErrorResponse("RecordingMode " + params.get("recordingMode") + " | " + "RecordingLayout "
-						+ params.get("recordingLayout") + " | " + "MediaMode " + params.get("mediaMode")
-						+ " are not defined", "/api/tokens", HttpStatus.BAD_REQUEST);
+				return this.generateErrorResponse("RecordingMode " + params.get("recordingMode") + " | "
+						+ "Default RecordingLayout " + params.get("defaultRecordingLayout") + " | " + "MediaMode "
+						+ params.get("mediaMode") + " are not defined", "/api/tokens", HttpStatus.BAD_REQUEST);
 			}
 		}
 
@@ -109,8 +110,19 @@ public class SessionRestController {
 		try {
 
 			String sessionId = (String) params.get("session");
-			ParticipantRole role = ParticipantRole.valueOf((String) params.get("role"));
+			String roleString = (String) params.get("role");
 			String metadata = (String) params.get("data");
+
+			ParticipantRole role;
+			if (roleString != null) {
+				role = ParticipantRole.valueOf(roleString);
+			} else {
+				role = ParticipantRole.PUBLISHER;
+			}
+
+			if (metadata == null) {
+				metadata = "";
+			}
 
 			String token = sessionManager.newToken(sessionId, role, metadata);
 			JSONObject responseJson = new JSONObject();
@@ -136,6 +148,7 @@ public class SessionRestController {
 
 		String sessionId = (String) params.get("session");
 		String name = (String) params.get("name");
+		String recordingLayoutString = (String) params.get("recordingLayout");
 
 		if (sessionId == null) {
 			// "session" parameter not found
@@ -158,7 +171,18 @@ public class SessionRestController {
 			return new ResponseEntity<JSONObject>(HttpStatus.CONFLICT);
 		}
 
-		Recording startedRecording = this.recordingService.startRecording(session, name);
+		RecordingLayout recordingLayout;
+		if (recordingLayoutString == null || recordingLayoutString.isEmpty()) {
+			// "recordingLayout" parameter not defined. Use global layout from
+			// SessionProperties
+			// (it is always configured as it has RecordingLayout.BEST_FIT as default value)
+			recordingLayout = session.getSessionProperties().defaultRecordingLayout();
+		} else {
+			recordingLayout = RecordingLayout.valueOf(recordingLayoutString);
+		}
+
+		Recording startedRecording = this.recordingService.startRecording(session,
+				new RecordingProperties.Builder().name(name).recordingLayout(recordingLayout).build());
 		return new ResponseEntity<>(startedRecording.toJson(), HttpStatus.OK);
 	}
 
@@ -184,14 +208,14 @@ public class SessionRestController {
 			// Session is not being recorded
 			return new ResponseEntity<JSONObject>(HttpStatus.CONFLICT);
 		}
-		
+
 		Session session = sessionManager.getSession(recording.getSessionId());
-		
-		Recording stoppedRecording = this.recordingService
-				.stopRecording(session);
-		
-		sessionManager.evictParticipant(session.getParticipantByPublicId(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID).getParticipantPrivateId(), "EVICT_RECORDER");
-		
+
+		Recording stoppedRecording = this.recordingService.stopRecording(session);
+
+		sessionManager.evictParticipant(session.getParticipantByPublicId(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID)
+				.getParticipantPrivateId(), "EVICT_RECORDER");
+
 		return new ResponseEntity<>(stoppedRecording.toJson(), HttpStatus.OK);
 	}
 

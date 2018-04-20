@@ -20,6 +20,7 @@ import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.java.client.RecordingMode;
+import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.java.client.MediaMode;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.server.core.SessionManager;
@@ -55,7 +56,8 @@ public class KurentoSessionManager extends SessionManager {
 				SessionProperties properties = sessionProperties.get(sessionId);
 				if (properties == null && this.isInsecureParticipant(participant.getParticipantPrivateId())) {
 					properties = new SessionProperties.Builder().mediaMode(MediaMode.ROUTED)
-							.recordingMode(RecordingMode.ALWAYS).recordingLayout(RecordingLayout.BEST_FIT).build();
+							.recordingMode(RecordingMode.ALWAYS).defaultRecordingLayout(RecordingLayout.BEST_FIT)
+							.build();
 				}
 				createSession(kcSessionInfo, properties);
 			}
@@ -235,7 +237,8 @@ public class KurentoSessionManager extends SessionManager {
 				&& session.getActivePublishers() == 0) {
 			// Insecure session recording
 			new Thread(() -> {
-				recordingService.startRecording(session, null);
+				recordingService.startRecording(session, new RecordingProperties.Builder().name("")
+						.recordingLayout(session.getSessionProperties().defaultRecordingLayout()).build());
 			}).start();
 		}
 

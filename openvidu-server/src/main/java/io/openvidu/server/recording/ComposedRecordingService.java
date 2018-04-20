@@ -47,6 +47,7 @@ import com.github.dockerjava.core.command.PullImageResultCallback;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
+import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.server.CommandExecutor;
 import io.openvidu.server.OpenViduServer;
 import io.openvidu.server.config.OpenviduConfig;
@@ -81,19 +82,20 @@ public class ComposedRecordingService {
 		this.dockerClient = DockerClientBuilder.getInstance(config).build();
 	}
 
-	public Recording startRecording(Session session, String name) {
+	public Recording startRecording(Session session, RecordingProperties properties) {
 		List<String> envs = new ArrayList<>();
 		String shortSessionId = session.getSessionId().substring(session.getSessionId().lastIndexOf('/') + 1,
 				session.getSessionId().length());
 		String recordingId = this.getFreeRecordingId(session.getSessionId(), shortSessionId);
 		String secret = openviduConfig.getOpenViduSecret();
 
-		if (name == null || name.isEmpty()) {
+		if (properties.name() == null || properties.name().isEmpty()) {
 			// No name provided for the recording file
-			name = recordingId;
+			properties = new RecordingProperties.Builder().name(recordingId)
+					.recordingLayout(properties.recordingLayout()).build();
 		}
 
-		Recording recording = new Recording(session.getSessionId(), recordingId, name);
+		Recording recording = new Recording(session.getSessionId(), recordingId, properties);
 
 		this.sessionsRecordings.put(session.getSessionId(), recording);
 		this.sessionHandler.setRecordingStarted(session.getSessionId(), recording);
@@ -110,14 +112,14 @@ public class ComposedRecordingService {
 		}
 
 		String location = OpenViduServer.publicUrl.replaceFirst("wss://", "");
-		String layoutUrl = session.getSessionProperties().recordingLayout().name().toLowerCase().replaceAll("_", "-");
+		String layoutUrl = properties.recordingLayout().name().toLowerCase().replaceAll("_", "-");
 
 		envs.add("URL=https://OPENVIDUAPP:" + secret + "@" + location + "/#/layout-" + layoutUrl + "/" + shortSessionId
 				+ "/" + secret);
 		envs.add("RESOLUTION=1920x1080");
 		envs.add("FRAMERATE=30");
 		envs.add("VIDEO_ID=" + recordingId);
-		envs.add("VIDEO_NAME=" + name);
+		envs.add("VIDEO_NAME=" + properties.name());
 		envs.add("VIDEO_FORMAT=mp4");
 		envs.add("USER_ID=" + uid);
 		envs.add("RECORDING_JSON=" + recording.toJson().toJSONString());
@@ -128,7 +130,7 @@ public class ComposedRecordingService {
 
 		String containerId = this.runRecordingContainer(envs, "recording_" + recordingId);
 
-		this.waitForVideoFileNotEmpty(name);
+		this.waitForVideoFileNotEmpty(properties.name());
 
 		this.sessionsContainers.put(session.getSessionId(), containerId);
 
@@ -378,7 +380,7 @@ public class ComposedRecordingService {
 			// Cannot delete an active recording
 			return HttpStatus.CONFLICT;
 		}
-		
+
 		String name = getRecordingFromHost(recordingId).getName();
 
 		File folder = new File(this.openviduConfig.getOpenViduRecordingPath());

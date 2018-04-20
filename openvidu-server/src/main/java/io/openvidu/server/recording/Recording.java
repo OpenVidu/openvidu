@@ -2,6 +2,9 @@ package io.openvidu.server.recording;
 
 import org.json.simple.JSONObject;
 
+import io.openvidu.java.client.RecordingLayout;
+import io.openvidu.java.client.RecordingProperties;
+
 public class Recording {
 
 	public enum Status {
@@ -9,14 +12,13 @@ public class Recording {
 		started, // The recording has started and is going on
 		stopped, // The recording has finished OK
 		available, // The recording is available for downloading. This status is reached for all
-								// stopped recordings if property 'openvidu.recording.free-access' is true
+					// stopped recordings if property 'openvidu.recording.free-access' is true
 		failed; // The recording has failed
 	}
 
-	private Status status;
+	private Recording.Status status;
 
 	private String id;
-	private String name;
 	private String sessionId;
 	private long createdAt; // milliseconds (UNIX Epoch time)
 	private long size = 0; // bytes
@@ -24,18 +26,18 @@ public class Recording {
 	private String url;
 	private boolean hasAudio = true;
 	private boolean hasVideo = true;
+	private RecordingProperties recordingProperties;
 
-	public Recording(String sessionId, String id, String name) {
+	public Recording(String sessionId, String id, RecordingProperties recordingProperties) {
 		this.sessionId = sessionId;
 		this.createdAt = System.currentTimeMillis();
 		this.id = id;
-		this.name = name;
 		this.status = Status.started;
+		this.recordingProperties = recordingProperties;
 	}
 
 	public Recording(JSONObject json) {
 		this.id = (String) json.get("id");
-		this.name = (String) json.get("name");
 		this.sessionId = (String) json.get("sessionId");
 		this.createdAt = (long) json.get("createdAt");
 		this.size = (long) json.get("size");
@@ -44,6 +46,8 @@ public class Recording {
 		this.hasAudio = (boolean) json.get("hasAudio");
 		this.hasVideo = (boolean) json.get("hasVideo");
 		this.status = Status.valueOf((String) json.get("status"));
+		this.recordingProperties = new RecordingProperties.Builder().name((String) json.get("name"))
+				.recordingLayout(RecordingLayout.valueOf((String) json.get("layout"))).build();
 	}
 
 	public Status getStatus() {
@@ -62,13 +66,21 @@ public class Recording {
 		this.id = id;
 	}
 
-	public String getName() {
-		return name;
-	}
+    public String getName() {
+        return this.recordingProperties.name();
+    }
+    
+    public String setName() {
+        return this.recordingProperties.name();
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public RecordingLayout getLayout() {
+        return this.recordingProperties.recordingLayout();
+    }
+    
+    public RecordingLayout setLayout() {
+        return this.recordingProperties.recordingLayout();
+    }
 
 	public String getSessionId() {
 		return sessionId;
@@ -130,7 +142,8 @@ public class Recording {
 	public JSONObject toJson() {
 		JSONObject json = new JSONObject();
 		json.put("id", this.id);
-		json.put("name", this.name);
+		json.put("name", this.recordingProperties.name());
+		json.put("layout", this.recordingProperties.recordingLayout().name());
 		json.put("sessionId", this.sessionId);
 		json.put("createdAt", this.createdAt);
 		json.put("size", this.size);

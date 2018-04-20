@@ -2,6 +2,7 @@ package io.openvidu.server.cdr;
 
 import org.json.simple.JSONObject;
 
+import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.recording.Recording;
@@ -33,6 +34,7 @@ public class CDREvent implements Comparable<CDREvent> {
 	private String name;
 	private Boolean hasAudio;
 	private Boolean hasVideo;
+	private RecordingLayout layout;
 
 	public CDREvent(String eventName, CDREvent event) {
 		this(eventName, event.participant, event.sessionId, event.mediaOptions, event.receivingFrom, event.startTime, event.reason);
@@ -69,6 +71,7 @@ public class CDREvent implements Comparable<CDREvent> {
 		this.size = recording.getSize();
 		this.hasAudio = recording.hasAudio();
 		this.hasVideo = recording.hasVideo();
+		this.layout = recording.getLayout();
 	}
 
 	public CDREvent(String eventName, Participant participant, String sessionId) {
@@ -145,6 +148,9 @@ public class CDREvent implements Comparable<CDREvent> {
 		}
 		if (this.hasVideo != null) {
 			json.put("hasVideo", this.hasVideo);
+		}
+		if (this.layout != null) {
+			json.put("layout", this.layout.name());
 		}
 
 		JSONObject root = new JSONObject();
