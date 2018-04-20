@@ -19,7 +19,7 @@ import { RecordingLayout } from "./RecordingLayout";
 
 export class RecordingProperties {
 
-    constructor(private rName: string, private recordingLayoutProp: RecordingLayout) { }
+    constructor(private rName: string, private recordingLayoutProp: RecordingLayout, private customLayoutProp: string) { }
 
     name(): string {
         return this.rName;
@@ -29,6 +29,10 @@ export class RecordingProperties {
         return this.recordingLayoutProp;
     }
 
+    customLayout(): string {
+        return this.customLayoutProp;
+    }
+
 }
 
 export namespace RecordingProperties {
@@ -36,9 +40,10 @@ export namespace RecordingProperties {
 
         private rName: string = '';
         private recordingLayoutProp: RecordingLayout;
+        private customLayoutProp: string;
 
         build(): RecordingProperties {
-            return new RecordingProperties(this.rName, this.recordingLayoutProp);
+            return new RecordingProperties(this.rName, this.recordingLayoutProp, this.customLayoutProp);
         }
 
         name(name: string): Builder {
@@ -48,6 +53,11 @@ export namespace RecordingProperties {
 
         recordingLayout(layout: RecordingLayout): Builder {
             this.recordingLayoutProp = layout;
+            return this;
+        }
+
+        customLayout(path: string): Builder {
+            this.customLayoutProp = path;
             return this;
         }
     };

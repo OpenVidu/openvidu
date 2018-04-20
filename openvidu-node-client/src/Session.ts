@@ -48,9 +48,10 @@ export class Session {
             }
 
             let requestBody = JSON.stringify({
-                'defaultRecordingLayout': this.properties.defaultRecordingLayout(),
+                'mediaMode': this.properties.mediaMode(),
                 'recordingMode': this.properties.recordingMode(),
-                'mediaMode': this.properties.mediaMode()
+                'defaultRecordingLayout': this.properties.defaultRecordingLayout(),
+                'defaultCustomLayout': this.properties.defaultCustomLayout()
             });
 
             let options = {

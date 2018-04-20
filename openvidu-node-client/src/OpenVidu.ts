@@ -58,20 +58,23 @@ export class OpenVidu {
           requestBody = JSON.stringify({
             session: sessionId,
             name: properties.name(),
-            recordingLayout: (!!properties.recordingLayout() ? properties.recordingLayout() : '')
+            recordingLayout: (!!properties.recordingLayout() ? properties.recordingLayout() : ''),
+            customLayout: (!!properties.customLayout() ? properties.customLayout() : '')
           });
         } else {
           requestBody = JSON.stringify({
             session: sessionId,
             name: param2,
-            recordingLayout: ''
+            recordingLayout: '',
+            customLayout: ''
           });
         }
       } else {
         requestBody = JSON.stringify({
           session: sessionId,
           name: '',
-          recordingLayout: ''
+          recordingLayout: '',
+          customLayout: ''
         });
       }
 
