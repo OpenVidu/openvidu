@@ -37,11 +37,10 @@ export class OpenviduRestService {
     const OVRole: OpenViduRoleAPI = OpenViduRoleAPI[role];
 
     return new Promise((resolve, reject) => {
-      const tokenOptions: TokenOptionsAPI = new TokenOptionsAPI.Builder()
-        .role(OVRole)
-        .data(serverData)
-        .build();
-      session.generateToken(tokenOptions)
+      session.generateToken({
+        role: OVRole,
+        data: serverData
+      })
         .then(token => {
           this.sessionIdTokenOpenViduRole.get(sessionId).set(token, OVRole);
           resolve(token);

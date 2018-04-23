@@ -966,36 +966,36 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         frameRate: 10,
       }
     )
-    .then((mediaStream: MediaStream) => {
-      const videoStreamTrack = mediaStream.getVideoTracks()[0];
-      const video = document.createElement('video');
-      video.srcObject = new MediaStream([videoStreamTrack]);
-      video.play();
-      const canvas = document.createElement('canvas') as any;
-      const ctx = canvas.getContext('2d');
-      ctx.filter = 'grayscale(100%)';
+      .then((mediaStream: MediaStream) => {
+        const videoStreamTrack = mediaStream.getVideoTracks()[0];
+        const video = document.createElement('video');
+        video.srcObject = new MediaStream([videoStreamTrack]);
+        video.play();
+        const canvas = document.createElement('canvas') as any;
+        const ctx = canvas.getContext('2d');
+        ctx.filter = 'grayscale(100%)';
 
-      video.addEventListener('play', () => {
-        const loop = () => {
-          if (!video.paused && !video.ended) {
-            ctx.drawImage(video, 0, 0, 300, 170);
-            setTimeout(loop, 100); // Drawing at 10fps
-          }
-        };
-        loop();
-      });
-      const grayVideoTrack = canvas.captureStream(30).getVideoTracks()[0];
-      this.OV.initPublisher(
-          document.body,
-        {
-          audioSource: false,
-          videoSource: grayVideoTrack,
-          insertMode: 'APPEND'
+        video.addEventListener('play', () => {
+          const loop = () => {
+            if (!video.paused && !video.ended) {
+              ctx.drawImage(video, 0, 0, 300, 170);
+              setTimeout(loop, 100); // Drawing at 10fps
+            }
+          };
+          loop();
         });
+        const grayVideoTrack = canvas.captureStream(30).getVideoTracks()[0];
+        this.OV.initPublisher(
+          document.body,
+          {
+            audioSource: false,
+            videoSource: grayVideoTrack,
+            insertMode: 'APPEND'
+          });
       })
-    .catch(error => {
-      console.error(error);
-    });
+      .catch(error => {
+        console.error(error);
+      });
   }
 
 }

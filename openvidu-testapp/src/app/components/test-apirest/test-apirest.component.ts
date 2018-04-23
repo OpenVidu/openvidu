@@ -70,11 +70,11 @@ export class TestApirestComponent implements OnInit, OnDestroy {
 
   private getSessionId() {
     this.openviduRestService.getSessionId(this.openviduUrl, this.openviduSecret,
-      new SessionProperties.Builder()
-        .recordingMode(RecordingMode[this.selectedRecordingMode])
-        .defaultRecordingLayout(RecordingLayout[this.selectedDefaultRecordingLayout])
-        .mediaMode(MediaMode[this.selectedMediaMode])
-        .build())
+      {
+        recordingMode: RecordingMode[this.selectedRecordingMode],
+        defaultRecordingLayout: RecordingLayout[this.selectedDefaultRecordingLayout],
+        mediaMode: MediaMode[this.selectedMediaMode]
+      })
       .then((sessionId) => {
         this.updateData();
       })
