@@ -1,0 +1,8 @@
+{
+    "editor.formatOnSave": false,
+    "[typescript]": {
+        "editor.formatOnSave": true
+    },
+    "tslint.configFile": "config/tslint.json",
+    "tslint.enable": true
+}
