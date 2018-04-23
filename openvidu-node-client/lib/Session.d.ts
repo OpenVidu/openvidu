@@ -1,5 +1,5 @@
-import { TokenOptions } from './TokenOptions';
 import { SessionProperties } from './SessionProperties';
+import { TokenOptions } from './TokenOptions';
 export declare class Session {
     private hostname;
     private port;

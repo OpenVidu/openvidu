@@ -15,61 +15,13 @@
  *
  */
 
-import { MediaMode } from "./MediaMode";
-import { RecordingMode } from "./RecordingMode";
-import { RecordingLayout } from "./RecordingLayout";
+import { MediaMode } from './MediaMode';
+import { RecordingLayout } from './RecordingLayout';
+import { RecordingMode } from './RecordingMode';
 
-export class SessionProperties {
-
-	constructor(private mediaModeProp: MediaMode, private recordingModeProp: RecordingMode, private defaultRecordingLayoutProp: RecordingLayout, private defaultCustomLayoutProp: string) { }
-
-	mediaMode(): string {
-		return this.mediaModeProp;
-	}
-
-	recordingMode(): RecordingMode {
-		return this.recordingModeProp;
-	}
-
-	defaultRecordingLayout(): RecordingLayout {
-		return this.defaultRecordingLayoutProp;
-	}
-
-	defaultCustomLayout(): string {
-		return this.defaultCustomLayoutProp;
-	}
-}
-
-export namespace SessionProperties {
-	export class Builder {
-
-		private mediaModeProp: MediaMode = MediaMode.ROUTED;
-		private recordingModeProp: RecordingMode = RecordingMode.MANUAL;
-		private defaultRecordingLayoutProp: RecordingLayout = RecordingLayout.BEST_FIT;
-		private defaultCustomLayoutProp: string = '';
-
-		build(): SessionProperties {
-			return new SessionProperties(this.mediaModeProp, this.recordingModeProp, this.defaultRecordingLayoutProp, this.defaultCustomLayoutProp);
-		}
-
-		mediaMode(mediaMode: MediaMode): Builder {
-			this.mediaModeProp = mediaMode;
-			return this;
-		}
-
-		recordingMode(recordingMode: RecordingMode): Builder {
-			this.recordingModeProp = recordingMode;
-			return this;
-		}
-
-		defaultRecordingLayout(layout: RecordingLayout): Builder {
-			this.defaultRecordingLayoutProp = layout;
-			return this;
-		}
-
-		defaultCustomLayout(path: string): Builder {
-			this.defaultCustomLayoutProp = path;
-			return this;
-		}
-	};
+export interface SessionProperties {
+	mediaMode?: MediaMode;
+	recordingMode?: RecordingMode;
+	defaultRecordingLayout?: RecordingLayout;
+	defaultCustomLayout?: string;
 }

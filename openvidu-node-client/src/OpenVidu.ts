@@ -15,14 +15,14 @@
  *
  */
 
-import { Session } from "./Session";
-import { SessionProperties } from "./SessionProperties";
-import { Recording } from "./Recording";
-import { RecordingProperties } from "./RecordingProperties";
-import { RecordingLayout } from "./RecordingLayout";
+import { Session } from './Session';
+import { SessionProperties } from './SessionProperties';
+import { Recording } from './Recording';
+import { RecordingLayout } from './RecordingLayout';
+import { RecordingProperties } from './RecordingProperties';
 
 declare const Buffer;
-let https = require('https');
+const https = require('https');
 
 export class OpenVidu {
 
@@ -57,9 +57,9 @@ export class OpenVidu {
           const properties = <RecordingProperties>param2;
           requestBody = JSON.stringify({
             session: sessionId,
-            name: properties.name(),
-            recordingLayout: (!!properties.recordingLayout() ? properties.recordingLayout() : ''),
-            customLayout: (!!properties.customLayout() ? properties.customLayout() : '')
+            name: !!properties.name ? properties.name : '',
+            recordingLayout: !!properties.recordingLayout ? properties.recordingLayout : '',
+            customLayout: !!properties.customLayout ? properties.customLayout : ''
           });
         } else {
           requestBody = JSON.stringify({
@@ -78,7 +78,7 @@ export class OpenVidu {
         });
       }
 
-      let options = {
+      const options = {
         hostname: this.hostname,
         port: this.port,
         path: OpenVidu.API_RECORDINGS + OpenVidu.API_RECORDINGS_START,
@@ -88,7 +88,8 @@ export class OpenVidu {
           'Content-Type': 'application/json',
           'Content-Length': Buffer.byteLength(requestBody)
         }
-      }
+      };
+
       const req = https.request(options, (res) => {
         let body = '';
         res.on('data', (d) => {
@@ -118,7 +119,7 @@ export class OpenVidu {
   public stopRecording(recordingId: string): Promise<Recording> {
     return new Promise<Recording>((resolve, reject) => {
 
-      let options = {
+      const options = {
         hostname: this.hostname,
         port: this.port,
         path: OpenVidu.API_RECORDINGS + OpenVidu.API_RECORDINGS_STOP + '/' + recordingId,
@@ -127,7 +128,8 @@ export class OpenVidu {
           'Authorization': this.basicAuth,
           'Content-Type': 'application/x-www-form-urlencoded'
         }
-      }
+      };
+
       const req = https.request(options, (res) => {
         let body = '';
         res.on('data', (d) => {
@@ -148,7 +150,7 @@ export class OpenVidu {
       req.on('error', (e) => {
         reject(new Error(e));
       });
-      //req.write();
+      // req.write();
       req.end();
 
     });
@@ -157,7 +159,7 @@ export class OpenVidu {
   public getRecording(recordingId: string): Promise<Recording> {
     return new Promise<Recording>((resolve, reject) => {
 
-      let options = {
+      const options = {
         hostname: this.hostname,
         port: this.port,
         path: OpenVidu.API_RECORDINGS + '/' + recordingId,
@@ -166,7 +168,8 @@ export class OpenVidu {
           'Authorization': this.basicAuth,
           'Content-Type': 'application/x-www-form-urlencoded'
         }
-      }
+      };
+
       const req = https.request(options, (res) => {
         let body = '';
         res.on('data', (d) => {
@@ -187,7 +190,7 @@ export class OpenVidu {
       req.on('error', (e) => {
         reject(new Error(e));
       });
-      //req.write();
+      // req.write();
       req.end();
 
     });
@@ -196,7 +199,7 @@ export class OpenVidu {
   public listRecordings(): Promise<Recording[]> {
     return new Promise<Recording[]>((resolve, reject) => {
 
-      let options = {
+      const options = {
         hostname: this.hostname,
         port: this.port,
         path: OpenVidu.API_RECORDINGS,
@@ -205,7 +208,8 @@ export class OpenVidu {
           'Authorization': this.basicAuth,
           'Content-Type': 'application/x-www-form-urlencoded'
         }
-      }
+      };
+
       const req = https.request(options, (res) => {
         let body = '';
         res.on('data', (d) => {
@@ -215,10 +219,10 @@ export class OpenVidu {
         res.on('end', () => {
           if (res.statusCode === 200) {
             // SUCCESS response from openvidu-server (JSON arrays of recordings in JSON format). Resolve list of new recordings
-            let recordingArray: Recording[] = [];
-            let responseItems = JSON.parse(body)['items'];
-            for (let i = 0; i < responseItems.length; i++) {
-              recordingArray.push(new Recording(responseItems[i]));
+            const recordingArray: Recording[] = [];
+            const responseItems = JSON.parse(body).items;
+            for (const item of responseItems) {
+              recordingArray.push(new Recording(item));
             }
             resolve(recordingArray);
           } else {
@@ -231,7 +235,7 @@ export class OpenVidu {
       req.on('error', (e) => {
         reject(new Error(e));
       });
-      //req.write();
+      // req.write();
       req.end();
 
     });
@@ -240,7 +244,7 @@ export class OpenVidu {
   public deleteRecording(recordingId: string): Promise<Error> {
     return new Promise<Error>((resolve, reject) => {
 
-      let options = {
+      const options = {
         hostname: this.hostname,
         port: this.port,
         path: OpenVidu.API_RECORDINGS + '/' + recordingId,
@@ -249,7 +253,8 @@ export class OpenVidu {
           'Authorization': this.basicAuth,
           'Content-Type': 'application/x-www-form-urlencoded'
         }
-      }
+      };
+
       const req = https.request(options, (res) => {
         let body = '';
         res.on('data', (d) => {
@@ -270,7 +275,7 @@ export class OpenVidu {
       req.on('error', (e) => {
         reject(new Error(e));
       });
-      //req.write();
+      // req.write();
       req.end();
 
     });
@@ -281,11 +286,11 @@ export class OpenVidu {
   }
 
   private setHostnameAndPort(): void {
-    let urlSplitted = this.urlOpenViduServer.split(':');
+    const urlSplitted = this.urlOpenViduServer.split(':');
     if (urlSplitted.length === 3) { // URL has format: http:// + hostname + :port
       this.hostname = this.urlOpenViduServer.split(':')[1].replace(/\//g, '');
       this.port = parseInt(this.urlOpenViduServer.split(':')[2].replace(/\//g, ''));
-    } else if (urlSplitted.length == 2) { // URL has format: hostname + :port
+    } else if (urlSplitted.length === 2) { // URL has format: hostname + :port
       this.hostname = this.urlOpenViduServer.split(':')[0].replace(/\//g, '');
       this.port = parseInt(this.urlOpenViduServer.split(':')[1].replace(/\//g, ''));
     } else {

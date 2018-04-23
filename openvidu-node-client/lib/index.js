@@ -6,11 +6,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 __export(require("./OpenVidu"));
 __export(require("./OpenViduRole"));
 __export(require("./Session"));
-__export(require("./SessionProperties"));
-__export(require("./TokenOptions"));
 __export(require("./MediaMode"));
 __export(require("./RecordingLayout"));
 __export(require("./RecordingMode"));
 __export(require("./Recording"));
-__export(require("./RecordingProperties"));
 //# sourceMappingURL=index.js.map

@@ -20,6 +20,6 @@ var OpenViduRole;
 (function (OpenViduRole) {
     OpenViduRole["SUBSCRIBER"] = "SUBSCRIBER";
     OpenViduRole["PUBLISHER"] = "PUBLISHER";
-    OpenViduRole["MODERATOR"] = "MODERATOR"; // SUBSCRIBER + PUBLIHSER permissions + can force unpublish() and disconnect() over a third-party stream or user
+    OpenViduRole["MODERATOR"] = "MODERATOR";
 })(OpenViduRole = exports.OpenViduRole || (exports.OpenViduRole = {}));
 //# sourceMappingURL=OpenViduRole.js.map

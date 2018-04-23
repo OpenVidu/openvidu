@@ -16,17 +16,19 @@
  *
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+var MediaMode_1 = require("./MediaMode");
 var OpenViduRole_1 = require("./OpenViduRole");
-var SessionProperties_1 = require("./SessionProperties");
+var RecordingLayout_1 = require("./RecordingLayout");
+var RecordingMode_1 = require("./RecordingMode");
 var https = require('https');
 var Session = /** @class */ (function () {
     function Session(hostname, port, basicAuth, properties) {
         this.hostname = hostname;
         this.port = port;
         this.basicAuth = basicAuth;
-        this.sessionId = "";
-        if (properties == null) {
-            this.properties = new SessionProperties_1.SessionProperties.Builder().build();
+        this.sessionId = '';
+        if (properties === null) {
+            this.properties = {};
         }
         else {
             this.properties = properties;
@@ -39,10 +41,10 @@ var Session = /** @class */ (function () {
                 resolve(_this.sessionId);
             }
             var requestBody = JSON.stringify({
-                'mediaMode': _this.properties.mediaMode(),
-                'recordingMode': _this.properties.recordingMode(),
-                'defaultRecordingLayout': _this.properties.defaultRecordingLayout(),
-                'defaultCustomLayout': _this.properties.defaultCustomLayout()
+                mediaMode: !!_this.properties.mediaMode ? _this.properties.mediaMode : MediaMode_1.MediaMode.ROUTED,
+                recordingMode: !!_this.properties.recordingMode ? _this.properties.recordingMode : RecordingMode_1.RecordingMode.MANUAL,
+                defaultRecordingLayout: !!_this.properties.defaultRecordingLayout ? _this.properties.defaultRecordingLayout : RecordingLayout_1.RecordingLayout.BEST_FIT,
+                defaultCustomLayout: !!_this.properties.defaultCustomLayout ? _this.properties.defaultCustomLayout : ''
             });
             var options = {
                 hostname: _this.hostname,
@@ -84,21 +86,11 @@ var Session = /** @class */ (function () {
     Session.prototype.generateToken = function (tokenOptions) {
         var _this = this;
         return new Promise(function (resolve, reject) {
-            var requestBody;
-            if (!!tokenOptions) {
-                requestBody = JSON.stringify({
-                    'session': _this.sessionId,
-                    'role': tokenOptions.getRole(),
-                    'data': tokenOptions.getData()
-                });
-            }
-            else {
-                requestBody = JSON.stringify({
-                    'session': _this.sessionId,
-                    'role': OpenViduRole_1.OpenViduRole.PUBLISHER,
-                    'data': ''
-                });
-            }
+            var requestBody = JSON.stringify({
+                session: _this.sessionId,
+                role: !!tokenOptions.role ? tokenOptions.role : OpenViduRole_1.OpenViduRole.PUBLISHER,
+                data: !!tokenOptions.data ? tokenOptions.data : ''
+            });
             var options = {
                 hostname: _this.hostname,
                 port: _this.port,

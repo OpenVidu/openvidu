@@ -15,50 +15,10 @@
  *
  */
 
-import { RecordingLayout } from "./RecordingLayout";
+import { RecordingLayout } from './RecordingLayout';
 
-export class RecordingProperties {
-
-    constructor(private rName: string, private recordingLayoutProp: RecordingLayout, private customLayoutProp: string) { }
-
-    name(): string {
-        return this.rName;
-    }
-
-    recordingLayout(): RecordingLayout {
-        return this.recordingLayoutProp;
-    }
-
-    customLayout(): string {
-        return this.customLayoutProp;
-    }
-
-}
-
-export namespace RecordingProperties {
-    export class Builder {
-
-        private rName: string = '';
-        private recordingLayoutProp: RecordingLayout;
-        private customLayoutProp: string;
-
-        build(): RecordingProperties {
-            return new RecordingProperties(this.rName, this.recordingLayoutProp, this.customLayoutProp);
-        }
-
-        name(name: string): Builder {
-            this.rName = name;
-            return this;
-        }
-
-        recordingLayout(layout: RecordingLayout): Builder {
-            this.recordingLayoutProp = layout;
-            return this;
-        }
-
-        customLayout(path: string): Builder {
-            this.customLayoutProp = path;
-            return this;
-        }
-    };
+export interface RecordingProperties {
+    name?: string;
+    recordingLayout?: RecordingLayout;
+    customLayout?: string;
 }

@@ -37,9 +37,9 @@ var OpenVidu = /** @class */ (function () {
                     var properties = param2;
                     requestBody = JSON.stringify({
                         session: sessionId,
-                        name: properties.name(),
-                        recordingLayout: (!!properties.recordingLayout() ? properties.recordingLayout() : ''),
-                        customLayout: (!!properties.customLayout() ? properties.customLayout() : '')
+                        name: !!properties.name ? properties.name : '',
+                        recordingLayout: !!properties.recordingLayout ? properties.recordingLayout : '',
+                        customLayout: !!properties.customLayout ? properties.customLayout : ''
                     });
                 }
                 else {
@@ -127,7 +127,7 @@ var OpenVidu = /** @class */ (function () {
             req.on('error', function (e) {
                 reject(new Error(e));
             });
-            //req.write();
+            // req.write();
             req.end();
         });
     };
@@ -164,7 +164,7 @@ var OpenVidu = /** @class */ (function () {
             req.on('error', function (e) {
                 reject(new Error(e));
             });
-            //req.write();
+            // req.write();
             req.end();
         });
     };
@@ -191,9 +191,10 @@ var OpenVidu = /** @class */ (function () {
                     if (res.statusCode === 200) {
                         // SUCCESS response from openvidu-server (JSON arrays of recordings in JSON format). Resolve list of new recordings
                         var recordingArray = [];
-                        var responseItems = JSON.parse(body)['items'];
-                        for (var i = 0; i < responseItems.length; i++) {
-                            recordingArray.push(new Recording_1.Recording(responseItems[i]));
+                        var responseItems = JSON.parse(body).items;
+                        for (var _i = 0, responseItems_1 = responseItems; _i < responseItems_1.length; _i++) {
+                            var item = responseItems_1[_i];
+                            recordingArray.push(new Recording_1.Recording(item));
                         }
                         resolve(recordingArray);
                     }
@@ -206,7 +207,7 @@ var OpenVidu = /** @class */ (function () {
             req.on('error', function (e) {
                 reject(new Error(e));
             });
-            //req.write();
+            // req.write();
             req.end();
         });
     };
@@ -243,7 +244,7 @@ var OpenVidu = /** @class */ (function () {
             req.on('error', function (e) {
                 reject(new Error(e));
             });
-            //req.write();
+            // req.write();
             req.end();
         });
     };
@@ -256,7 +257,7 @@ var OpenVidu = /** @class */ (function () {
             this.hostname = this.urlOpenViduServer.split(':')[1].replace(/\//g, '');
             this.port = parseInt(this.urlOpenViduServer.split(':')[2].replace(/\//g, ''));
         }
-        else if (urlSplitted.length == 2) {
+        else if (urlSplitted.length === 2) {
             this.hostname = this.urlOpenViduServer.split(':')[0].replace(/\//g, '');
             this.port = parseInt(this.urlOpenViduServer.split(':')[1].replace(/\//g, ''));
         }
