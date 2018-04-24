@@ -16,20 +16,63 @@
  */
 
 import { RecordingLayout } from './RecordingLayout';
-import { RecordingProperties } from './RecordingProperties';
 
 export class Recording {
 
-    private id: string;
-    private sessionId: string;
-    private createdAt: number;
-    private size = 0;
-    private duration = 0;
-    private url: string;
-    private hasaudio = true;
-    private hasvideo = true;
-    private status: Recording.Status;
-    private recordingProperties: RecordingProperties;
+    /**
+     * Recording unique identifier
+     */
+    id: string;
+
+    /**
+     * Session associated to the recording
+     */
+    sessionId: string;
+
+    /**
+     * Time when the recording started in UTC milliseconds
+     */
+    createdAt: number;
+
+    /**
+     * Size of the recording in bytes (0 until the recording is stopped)
+     */
+    size = 0;
+
+    /**
+     * Duration of the recording in seconds (0 until the recording is stopped)
+     */
+    duration = 0;
+
+    /**
+     * URL of the recording. You can access the file from there. It is `null` until recording is stopped or if OpenVidu Server configuration property `openvidu.recording.public-access` is false
+     */
+    url: string;
+
+    /**
+     * `true` if the recording has an audio track, `false` otherwise (currently fixed to true)
+     */
+    hasAudio = true;
+
+    /**
+     * `true` if the recording has a video track, `false` otherwise (currently fixed to true)
+     */
+    hasVideo = true;
+
+    /**
+     * Status of the recording
+     */
+    status: Recording.Status;
+
+    /**
+     * Name of the Recording. The video file will be named after this property
+     */
+    name: string;
+
+    /**
+     * The layout used in this Recording
+     */
+    recordingLayout: RecordingLayout;
 
     /* tslint:disable:no-string-literal */
     constructor(json: JSON) {
@@ -39,56 +82,13 @@ export class Recording {
         this.size = json['size'];
         this.duration = json['duration'];
         this.url = json['url'];
-        this.hasaudio = json['hasAudio'];
-        this.hasvideo = json['hasVideo'];
+        this.hasAudio = json['hasAudio'];
+        this.hasVideo = json['hasVideo'];
         this.status = json['status'];
-        this.recordingProperties = { name: json['name'], recordingLayout: json['layout'] };
+        this.name = json['name'];
+        this.recordingLayout = json['recordingLayout'];
     }
     /* tslint:enable:no-string-literal */
-
-    public getStatus(): Recording.Status {
-        return this.status;
-    }
-
-    public getId(): string {
-        return this.id;
-    }
-
-    public getName(): string {
-        return this.recordingProperties.name;
-    }
-
-    public getLayout(): RecordingLayout {
-        return this.recordingProperties.recordingLayout;
-    }
-
-    public getSessionId(): string {
-        return this.sessionId;
-    }
-
-    public getCreatedAt(): number {
-        return this.createdAt;
-    }
-
-    public getSize(): number {
-        return this.size;
-    }
-
-    public getDuration(): number {
-        return this.duration;
-    }
-
-    public getUrl(): string {
-        return this.url;
-    }
-
-    public hasAudio(): boolean {
-        return this.hasaudio;
-    }
-
-    public hasVideo(): boolean {
-        return this.hasvideo;
-    }
 }
 
 export namespace Recording {

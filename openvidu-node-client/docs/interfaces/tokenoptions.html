@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>TokenOptions | OpenVidu Browser</title>
+	<title>TokenOptions | OpenVidu Node Client</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -22,7 +22,7 @@
 						<li class="state loading">Preparing search index...</li>
 						<li class="state failure">The search index is not available</li>
 					</ul>
-					<a href="../index.html" class="title">OpenVidu Browser</a>
+					<a href="../index.html" class="title">OpenVidu Node Client</a>
 				</div>
 				<div class="table-cell" id="tsd-widgets">
 					<div id="tsd-filter">
@@ -51,7 +51,7 @@
 		<div class="container">
 			<ul class="tsd-breadcrumb">
 				<li>
-					<a href="../globals.html">Globals</a>
+					<a href="../index.html">Globals</a>
 				</li>
 				<li>
 					<a href="tokenoptions.html">TokenOptions</a>
@@ -94,9 +94,19 @@
 					<div class="tsd-signature tsd-kind-icon">data<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/TokenOptions.ts#L22">TokenOptions.ts:22</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/TokenOptions.ts#L28">TokenOptions.ts:28</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Secure (server-side) data associated to this token. Every client will receive this data in property <code>Connection.data</code>. Object <code>Connection</code> can be retrieved by subscribing to event <code>connectionCreated</code> of Session object.</p>
+							<ul>
+								<li>If you have provided no data in your clients when calling method <code>Session.connect(TOKEN, DATA)</code> (<code>DATA</code> not defined), then <code>Connection.data</code> will only have this <a href="tokenoptions.html#data">TokenOptions.data</a> property.</li>
+								<li>If you have provided some data when calling <code>Session.connect(TOKEN, DATA)</code> (<code>DATA</code> defined), then <code>Connection.data</code> will have the following structure: <code>&quot;CLIENT_DATA%/%SERVER_DATA&quot;</code>, being <code>CLIENT_DATA</code> the second
+								parameter passed in OpenVidu Browser in method <code>Session.connect</code> and <code>SERVER_DATA</code> this <a href="tokenoptions.html#data">TokenOptions.data</a> property.</li>
+							</ul>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
 					<a name="role" class="tsd-anchor"></a>
@@ -104,7 +114,7 @@
 					<div class="tsd-signature tsd-kind-icon">role<span class="tsd-signature-symbol">:</span> <a href="../enums/openvidurole.html" class="tsd-signature-type">OpenViduRole</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/TokenOptions.ts#L23">TokenOptions.ts:23</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/TokenOptions.ts#L30">TokenOptions.ts:30</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -114,7 +124,7 @@
 			<nav class="tsd-navigation primary">
 				<ul>
 					<li class="globals  ">
-						<a href="../globals.html"><em>Globals</em></a>
+						<a href="../index.html"><em>Globals</em></a>
 					</li>
 				</ul>
 			</nav>
@@ -163,13 +173,13 @@
 				</ul>
 				<ul class="after-current">
 					<li class=" tsd-kind-variable tsd-is-not-exported">
-						<a href="../globals.html#buffer" class="tsd-kind-icon">Buffer</a>
+						<a href="../index.html#buffer" class="tsd-kind-icon">Buffer</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-is-not-exported">
-						<a href="../globals.html#https" class="tsd-kind-icon">https</a>
+						<a href="../index.html#https" class="tsd-kind-icon">https</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-is-not-exported">
-						<a href="../globals.html#require" class="tsd-kind-icon">require</a>
+						<a href="../index.html#require" class="tsd-kind-icon">require</a>
 					</li>
 				</ul>
 			</nav>

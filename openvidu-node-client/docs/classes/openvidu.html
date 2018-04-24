@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>OpenVidu | OpenVidu Browser</title>
+	<title>OpenVidu | OpenVidu Node Client</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -22,7 +22,7 @@
 						<li class="state loading">Preparing search index...</li>
 						<li class="state failure">The search index is not available</li>
 					</ul>
-					<a href="../index.html" class="title">OpenVidu Browser</a>
+					<a href="../index.html" class="title">OpenVidu Node Client</a>
 				</div>
 				<div class="table-cell" id="tsd-widgets">
 					<div id="tsd-filter">
@@ -51,7 +51,7 @@
 		<div class="container">
 			<ul class="tsd-breadcrumb">
 				<li>
-					<a href="../globals.html">Globals</a>
+					<a href="../index.html">Globals</a>
 				</li>
 				<li>
 					<a href="openvidu.html">OpenVidu</a>
@@ -108,16 +108,28 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu.ts#L35">OpenVidu.ts:35</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/OpenVidu.ts#L35">OpenVidu.ts:35</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
 									<h5>urlOpenViduServer: <span class="tsd-signature-type">string</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<div class="lead">
+											<p>Public accessible IP where your instance of OpenVidu Server is up an running</p>
+										</div>
+									</div>
 								</li>
 								<li>
 									<h5>secret: <span class="tsd-signature-type">string</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<div class="lead">
+											<p>Secret used on OpenVidu Server initialization</p>
+										</div>
+									</div>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <a href="openvidu.html" class="tsd-signature-type">OpenVidu</a></h4>
@@ -137,7 +149,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu.ts#L42">OpenVidu.ts:42</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/OpenVidu.ts#L46">OpenVidu.ts:46</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -160,16 +172,28 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu.ts#L240">OpenVidu.ts:240</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/OpenVidu.ts#L290">OpenVidu.ts:290</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Deletes a <a href="recording.html">Recording</a>. The recording must have status <code>stopped</code> or <code>available</code></p>
+								</div>
+							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
 									<h5>recordingId: <span class="tsd-signature-type">string</span></h5>
+									<div class="tsd-comment tsd-typography">
+									</div>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Error</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<p>A Promise that is resolved if the Recording was successfully deleted and rejected with an Error object if not. This Error object has as <code>message</code> property with the following values:</p>
+							<ul>
+								<li><code>404</code>: no recording exists for the passed <code>recordingId</code></li>
+								<li><code>409</code>: the recording has <code>started</code> status. Stop it before deletion</li>
+							</ul>
 						</li>
 					</ul>
 				</section>
@@ -183,16 +207,28 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu.ts#L157">OpenVidu.ts:157</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/OpenVidu.ts#L191">OpenVidu.ts:191</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Gets an existing <a href="recording.html">Recording</a></p>
+								</div>
+							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
 									<h5>recordingId: <span class="tsd-signature-type">string</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The <code>id</code> property of the <a href="recording.html">Recording</a> you want to retrieve</p>
+									</div>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="recording.html" class="tsd-signature-type">Recording</a><span class="tsd-signature-symbol">&gt;</span></h4>
+							<p>A Promise that is resolved to the <a href="recording.html">Recording</a> if it successfully stopped and rejected with an Error object if not. This Error object has as <code>message</code> property with the following values:</p>
+							<ul>
+								<li><code>404</code>: no recording exists for the passed <code>recordingId</code></li>
+							</ul>
 						</li>
 					</ul>
 				</section>
@@ -206,10 +242,16 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu.ts#L196">OpenVidu.ts:196</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/OpenVidu.ts#L236">OpenVidu.ts:236</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Lists all existing recordings</p>
+								</div>
+							</div>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="recording.html" class="tsd-signature-type">Recording</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<p>A Promise that is resolved to an array with all existing recordings</p>
 						</li>
 					</ul>
 				</section>
@@ -225,50 +267,103 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu.ts#L46">OpenVidu.ts:46</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/OpenVidu.ts#L50">OpenVidu.ts:50</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Starts the recording of a <a href="session.html">Session</a></p>
+								</div>
+							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
 									<h5>sessionId: <span class="tsd-signature-type">string</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<div class="lead">
+											<p>The <code>sessionId</code> of the <a href="session.html">Session</a> you want to start recording</p>
+										</div>
+									</div>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="recording.html" class="tsd-signature-type">Recording</a><span class="tsd-signature-symbol">&gt;</span></h4>
+							<p>A Promise that is resolved to the <a href="recording.html">Recording</a> if it successfully started and rejected with an Error object if not. This Error object has as <code>message</code> property with the following values:</p>
+							<ul>
+								<li><code>404</code>: no session exists for the passed <code>sessionId</code></li>
+								<li><code>400</code>: the session has no connected participants</li>
+								<li><code>409</code>: the session is not configured for using <a href="../enums/mediamode.html#routed">MediaMode.ROUTED</a> or it is already being recorded</li>
+							</ul>
 						</li>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu.ts#L47">OpenVidu.ts:47</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/OpenVidu.ts#L51">OpenVidu.ts:51</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Starts the recording of a <a href="session.html">Session</a></p>
+								</div>
+							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
 									<h5>sessionId: <span class="tsd-signature-type">string</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<div class="lead">
+											<p>The <code>sessionId</code> of the <a href="session.html">Session</a> you want to start recording</p>
+										</div>
+									</div>
 								</li>
 								<li>
 									<h5>name: <span class="tsd-signature-type">string</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<div class="lead">
+											<p>The name you want to give to the video file. You can access this same value in your clients on recording events (<code>recordingStarted</code>, <code>recordingStopped</code>)</p>
+										</div>
+									</div>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="recording.html" class="tsd-signature-type">Recording</a><span class="tsd-signature-symbol">&gt;</span></h4>
+							<p>A Promise that is resolved to the <a href="recording.html">Recording</a> if it successfully started and rejected with an Error object if not. This Error object has as <code>message</code> property with the following values:</p>
+							<ul>
+								<li><code>404</code>: no session exists for the passed <code>sessionId</code></li>
+								<li><code>400</code>: the session has no connected participants</li>
+								<li><code>409</code>: the session is not configured for using <a href="../enums/mediamode.html#routed">MediaMode.ROUTED</a> or it is already being recorded</li>
+							</ul>
 						</li>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu.ts#L48">OpenVidu.ts:48</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/OpenVidu.ts#L52">OpenVidu.ts:52</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Starts the recording of a <a href="session.html">Session</a></p>
+								</div>
+							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
 									<h5>sessionId: <span class="tsd-signature-type">string</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<div class="lead">
+											<p>The <code>sessionId</code> of the <a href="session.html">Session</a> you want to start recording</p>
+										</div>
+									</div>
 								</li>
 								<li>
 									<h5>properties: <a href="../interfaces/recordingproperties.html" class="tsd-signature-type">RecordingProperties</a></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="recording.html" class="tsd-signature-type">Recording</a><span class="tsd-signature-symbol">&gt;</span></h4>
+							<p>A Promise that is resolved to the <a href="recording.html">Recording</a> if it successfully started and rejected with an Error object if not. This Error object has as <code>message</code> property with the following values:</p>
+							<ul>
+								<li><code>404</code>: no session exists for the passed <code>sessionId</code></li>
+								<li><code>400</code>: the session has no connected participants</li>
+								<li><code>409</code>: the session is not configured for using <a href="../enums/mediamode.html#routed">MediaMode.ROUTED</a> or it is already being recorded</li>
+							</ul>
 						</li>
 					</ul>
 				</section>
@@ -282,16 +377,29 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu.ts#L118">OpenVidu.ts:118</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/OpenVidu.ts#L143">OpenVidu.ts:143</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Stops the recording of a <a href="session.html">Session</a></p>
+								</div>
+							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
 									<h5>recordingId: <span class="tsd-signature-type">string</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The <code>id</code> property of the <a href="recording.html">Recording</a> you want to stop</p>
+									</div>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="recording.html" class="tsd-signature-type">Recording</a><span class="tsd-signature-symbol">&gt;</span></h4>
+							<p>A Promise that is resolved to the <a href="recording.html">Recording</a> if it successfully stopped and rejected with an Error object if not. This Error object has as <code>message</code> property with the following values:</p>
+							<ul>
+								<li><code>404</code>: no recording exists for the passed <code>recordingId</code></li>
+								<li><code>406</code>: recording has <code>starting</code> status. Wait until <code>started</code> status before stopping the recording</li>
+							</ul>
 						</li>
 					</ul>
 				</section>
@@ -301,7 +409,7 @@
 			<nav class="tsd-navigation primary">
 				<ul>
 					<li class="globals  ">
-						<a href="../globals.html"><em>Globals</em></a>
+						<a href="../index.html"><em>Globals</em></a>
 					</li>
 				</ul>
 			</nav>
@@ -365,13 +473,13 @@
 						<a href="../interfaces/tokenoptions.html" class="tsd-kind-icon">Token<wbr>Options</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-is-not-exported">
-						<a href="../globals.html#buffer" class="tsd-kind-icon">Buffer</a>
+						<a href="../index.html#buffer" class="tsd-kind-icon">Buffer</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-is-not-exported">
-						<a href="../globals.html#https" class="tsd-kind-icon">https</a>
+						<a href="../index.html#https" class="tsd-kind-icon">https</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-is-not-exported">
-						<a href="../globals.html#require" class="tsd-kind-icon">require</a>
+						<a href="../index.html#require" class="tsd-kind-icon">require</a>
 					</li>
 				</ul>
 			</nav>

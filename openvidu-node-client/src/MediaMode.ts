@@ -16,6 +16,14 @@
  */
 
 export enum MediaMode {
-    RELAYED = 'RELAYED',   // The session will attempt to transmit streams directly between clients
-    ROUTED = 'ROUTED'      // The session will transmit streams using OpenVidu Media Server
+
+    /**
+     * _(not available yet)_ The session will attempt to transmit streams directly between clients
+     */
+    RELAYED = 'RELAYED',
+
+    /**
+     * The session will transmit streams using OpenVidu Media Server
+     */
+    ROUTED = 'ROUTED'
 }

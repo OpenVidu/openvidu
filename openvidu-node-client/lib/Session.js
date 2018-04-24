@@ -26,18 +26,23 @@ var Session = /** @class */ (function () {
         this.hostname = hostname;
         this.port = port;
         this.basicAuth = basicAuth;
-        this.sessionId = '';
-        if (properties === null) {
+        if (!properties) {
             this.properties = {};
         }
         else {
             this.properties = properties;
         }
     }
+    /**
+     * Gets the unique identifier of the Session. This translates into a new request to OpenVidu Server if this Session has no `sessionId` yet
+     * or simply returns the existing value if it has already been retrieved
+     *
+     * @returns A Promise that is resolved to the _sessionId_ if success and rejected with an Error object if not (due to a `400 (Bad Request)` error in OpenVidu Server)
+     */
     Session.prototype.getSessionId = function () {
         var _this = this;
         return new Promise(function (resolve, reject) {
-            if (_this.sessionId) {
+            if (!!_this.sessionId) {
                 resolve(_this.sessionId);
             }
             var requestBody = JSON.stringify({
@@ -83,6 +88,11 @@ var Session = /** @class */ (function () {
             req.end();
         });
     };
+    /**
+     * Gets a new token associated to Session object. This translates into a new request to OpenVidu Server
+     *
+     * @returns A Promise that is resolved to the _token_ if success and rejected with an Error object if not (due to a `400 (Bad Request)` error in OpenVidu Server)
+     */
     Session.prototype.generateToken = function (tokenOptions) {
         var _this = this;
         return new Promise(function (resolve, reject) {
@@ -126,9 +136,6 @@ var Session = /** @class */ (function () {
             req.write(requestBody);
             req.end();
         });
-    };
-    Session.prototype.getProperties = function () {
-        return this.properties;
     };
     Session.API_SESSIONS = '/api/sessions';
     Session.API_TOKENS = '/api/tokens';

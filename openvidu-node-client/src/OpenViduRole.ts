@@ -16,7 +16,19 @@
  */
 
 export enum OpenViduRole {
-	SUBSCRIBER = 'SUBSCRIBER',  // Can subscribe to published streams of other users
-	PUBLISHER = 'PUBLISHER',   	// SUBSCRIBER permissions + can subscribe to published streams of other users and publish their own streams
-	MODERATOR = 'MODERATOR',   	// SUBSCRIBER + PUBLIHSER permissions + can force unpublish() and disconnect() over a third-party stream or user
+
+	/**
+	 * Can subscribe to published streams of other users
+	 */
+	SUBSCRIBER = 'SUBSCRIBER',
+
+	/**
+	 * SUBSCRIBER permissions + can publish their own streams
+	 */
+	PUBLISHER = 'PUBLISHER',
+
+	/**
+	 * _(not available yet)_ SUBSCRIBER + PUBLIHSER permissions + can force `unpublish()` and `disconnect()` over a third-party stream or user
+	 */
+	MODERATOR = 'MODERATOR'
 }

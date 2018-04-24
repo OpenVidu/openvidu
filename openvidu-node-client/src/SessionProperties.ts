@@ -20,8 +20,19 @@ import { RecordingLayout } from './RecordingLayout';
 import { RecordingMode } from './RecordingMode';
 
 export interface SessionProperties {
+
 	mediaMode?: MediaMode;
 	recordingMode?: RecordingMode;
+
+	/**
+	 * Default value used to initialize property [[RecordingProperties.recordingLayout]] of every recording of this session.
+	 * You can easily override this value later by setting [[RecordingProperties.recordingLayout]] to any other value
+	 */
 	defaultRecordingLayout?: RecordingLayout;
+
+	/**
+	 * Default value used to initialize property [[RecordingProperties.customLayout]] of every recording of this session.
+	 * You can easily override this value later by setting [[RecordingProperties.customLayout]] to any other value
+	 */
 	defaultCustomLayout?: string;
 }

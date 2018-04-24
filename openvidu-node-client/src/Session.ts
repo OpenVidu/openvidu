@@ -32,21 +32,27 @@ export class Session {
     private static readonly API_SESSIONS = '/api/sessions';
     private static readonly API_TOKENS = '/api/tokens';
 
-    private sessionId = '';
-    private properties: SessionProperties;
+    sessionId: string;
+    properties: SessionProperties;
 
     constructor(private hostname: string, private port: number, private basicAuth: string, properties?: SessionProperties) {
-        if (properties === null) {
+        if (!properties) {
             this.properties = {};
         } else {
             this.properties = properties;
         }
     }
 
+    /**
+     * Gets the unique identifier of the Session. This translates into a new request to OpenVidu Server if this Session has no `sessionId` yet
+     * or simply returns the existing value if it has already been retrieved
+     *
+     * @returns A Promise that is resolved to the _sessionId_ if success and rejected with an Error object if not (due to a `400 (Bad Request)` error in OpenVidu Server)
+     */
     public getSessionId(): Promise<string> {
         return new Promise<string>((resolve, reject) => {
 
-            if (this.sessionId) {
+            if (!!this.sessionId) {
                 resolve(this.sessionId);
             }
 
@@ -96,6 +102,11 @@ export class Session {
         });
     }
 
+    /**
+     * Gets a new token associated to Session object. This translates into a new request to OpenVidu Server
+     *
+     * @returns A Promise that is resolved to the _token_ if success and rejected with an Error object if not (due to a `400 (Bad Request)` error in OpenVidu Server)
+     */
     public generateToken(tokenOptions?: TokenOptions): Promise<string> {
         return new Promise<string>((resolve, reject) => {
 
@@ -141,10 +152,6 @@ export class Session {
             req.write(requestBody);
             req.end();
         });
-    }
-
-    public getProperties(): SessionProperties {
-        return this.properties;
     }
 
 }

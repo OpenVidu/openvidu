@@ -18,7 +18,20 @@
 import { RecordingLayout } from './RecordingLayout';
 
 export interface RecordingProperties {
+
+    /**
+     * The name you want to give to the video file. You can access this same value in your clients on recording events (`recordingStarted`, `recordingStopped`)
+     */
     name?: string;
+
+    /**
+     * The layout to be used in the recording
+     */
     recordingLayout?: RecordingLayout;
+
+    /**
+     * If [[recordingLayout]] is `CUSTOM`, the relative path to the specific custom layout you want to use.
+     * See [Custom recording layouts](http://openvidu.io/docs/advanced-features/recording#custom-recording-layouts) to learn more
+     */
     customLayout?: string;
 }

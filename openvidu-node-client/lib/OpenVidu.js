@@ -20,6 +20,10 @@ var Session_1 = require("./Session");
 var Recording_1 = require("./Recording");
 var https = require('https');
 var OpenVidu = /** @class */ (function () {
+    /**
+     * @param urlOpenViduServer Public accessible IP where your instance of OpenVidu Server is up an running
+     * @param secret Secret used on OpenVidu Server initialization
+     */
     function OpenVidu(urlOpenViduServer, secret) {
         this.urlOpenViduServer = urlOpenViduServer;
         this.setHostnameAndPort();
@@ -28,6 +32,17 @@ var OpenVidu = /** @class */ (function () {
     OpenVidu.prototype.createSession = function (properties) {
         return new Session_1.Session(this.hostname, this.port, this.basicAuth, properties);
     };
+    /**
+     * Starts the recording of a [[Session]]
+     *
+     * @param sessionId The `sessionId` of the [[Session]] you want to start recording
+     * @param name The name you want to give to the video file. You can access this same value in your clients on recording events (`recordingStarted`, `recordingStopped`)
+     *
+     * @returns A Promise that is resolved to the [[Recording]] if it successfully started and rejected with an Error object if not. This Error object has as `message` property with the following values:
+     * - `404`: no session exists for the passed `sessionId`
+     * - `400`: the session has no connected participants
+     * - `409`: the session is not configured for using [[MediaMode.ROUTED]] or it is already being recorded
+     */
     OpenVidu.prototype.startRecording = function (sessionId, param2) {
         var _this = this;
         return new Promise(function (resolve, reject) {
@@ -94,6 +109,15 @@ var OpenVidu = /** @class */ (function () {
             req.end();
         });
     };
+    /**
+     * Stops the recording of a [[Session]]
+     *
+     * @param recordingId The `id` property of the [[Recording]] you want to stop
+     *
+     * @returns A Promise that is resolved to the [[Recording]] if it successfully stopped and rejected with an Error object if not. This Error object has as `message` property with the following values:
+     * - `404`: no recording exists for the passed `recordingId`
+     * - `406`: recording has `starting` status. Wait until `started` status before stopping the recording
+     */
     OpenVidu.prototype.stopRecording = function (recordingId) {
         var _this = this;
         return new Promise(function (resolve, reject) {
@@ -131,6 +155,14 @@ var OpenVidu = /** @class */ (function () {
             req.end();
         });
     };
+    /**
+     * Gets an existing [[Recording]]
+     *
+     * @param recordingId The `id` property of the [[Recording]] you want to retrieve
+     *
+     * @returns A Promise that is resolved to the [[Recording]] if it successfully stopped and rejected with an Error object if not. This Error object has as `message` property with the following values:
+     * - `404`: no recording exists for the passed `recordingId`
+     */
     OpenVidu.prototype.getRecording = function (recordingId) {
         var _this = this;
         return new Promise(function (resolve, reject) {
@@ -168,6 +200,11 @@ var OpenVidu = /** @class */ (function () {
             req.end();
         });
     };
+    /**
+     * Lists all existing recordings
+     *
+     * @returns A Promise that is resolved to an array with all existing recordings
+     */
     OpenVidu.prototype.listRecordings = function () {
         var _this = this;
         return new Promise(function (resolve, reject) {
@@ -211,6 +248,15 @@ var OpenVidu = /** @class */ (function () {
             req.end();
         });
     };
+    /**
+     * Deletes a [[Recording]]. The recording must have status `stopped` or `available`
+     *
+     * @param recordingId
+     *
+     * @returns A Promise that is resolved if the Recording was successfully deleted and rejected with an Error object if not. This Error object has as `message` property with the following values:
+     * - `404`: no recording exists for the passed `recordingId`
+     * - `409`: the recording has `started` status. Stop it before deletion
+     */
     OpenVidu.prototype.deleteRecording = function (recordingId) {
         var _this = this;
         return new Promise(function (resolve, reject) {

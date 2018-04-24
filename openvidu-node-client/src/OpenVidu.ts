@@ -34,6 +34,10 @@ export class OpenVidu {
   private port: number;
   private basicAuth: string;
 
+  /**
+   * @param urlOpenViduServer Public accessible IP where your instance of OpenVidu Server is up an running
+   * @param secret Secret used on OpenVidu Server initialization
+   */
   constructor(private urlOpenViduServer: string, secret: string) {
     this.setHostnameAndPort();
     this.basicAuth = this.getBasicAuth(secret);
@@ -47,6 +51,17 @@ export class OpenVidu {
   public startRecording(sessionId: string, name: string): Promise<Recording>;
   public startRecording(sessionId: string, properties: RecordingProperties): Promise<Recording>;
 
+  /**
+   * Starts the recording of a [[Session]]
+   *
+   * @param sessionId The `sessionId` of the [[Session]] you want to start recording
+   * @param name The name you want to give to the video file. You can access this same value in your clients on recording events (`recordingStarted`, `recordingStopped`)
+   *
+   * @returns A Promise that is resolved to the [[Recording]] if it successfully started and rejected with an Error object if not. This Error object has as `message` property with the following values:
+   * - `404`: no session exists for the passed `sessionId`
+   * - `400`: the session has no connected participants
+   * - `409`: the session is not configured for using [[MediaMode.ROUTED]] or it is already being recorded
+   */
   public startRecording(sessionId: string, param2?: string | RecordingProperties): Promise<Recording> {
     return new Promise<Recording>((resolve, reject) => {
 
@@ -116,6 +131,15 @@ export class OpenVidu {
     });
   }
 
+  /**
+   * Stops the recording of a [[Session]]
+   *
+   * @param recordingId The `id` property of the [[Recording]] you want to stop
+   *
+   * @returns A Promise that is resolved to the [[Recording]] if it successfully stopped and rejected with an Error object if not. This Error object has as `message` property with the following values:
+   * - `404`: no recording exists for the passed `recordingId`
+   * - `406`: recording has `starting` status. Wait until `started` status before stopping the recording
+   */
   public stopRecording(recordingId: string): Promise<Recording> {
     return new Promise<Recording>((resolve, reject) => {
 
@@ -156,6 +180,14 @@ export class OpenVidu {
     });
   }
 
+  /**
+   * Gets an existing [[Recording]]
+   *
+   * @param recordingId The `id` property of the [[Recording]] you want to retrieve
+   *
+   * @returns A Promise that is resolved to the [[Recording]] if it successfully stopped and rejected with an Error object if not. This Error object has as `message` property with the following values:
+   * - `404`: no recording exists for the passed `recordingId`
+   */
   public getRecording(recordingId: string): Promise<Recording> {
     return new Promise<Recording>((resolve, reject) => {
 
@@ -196,6 +228,11 @@ export class OpenVidu {
     });
   }
 
+  /**
+   * Lists all existing recordings
+   *
+   * @returns A Promise that is resolved to an array with all existing recordings
+   */
   public listRecordings(): Promise<Recording[]> {
     return new Promise<Recording[]>((resolve, reject) => {
 
@@ -241,6 +278,15 @@ export class OpenVidu {
     });
   }
 
+  /**
+   * Deletes a [[Recording]]. The recording must have status `stopped` or `available`
+   *
+   * @param recordingId
+   *
+   * @returns A Promise that is resolved if the Recording was successfully deleted and rejected with an Error object if not. This Error object has as `message` property with the following values:
+   * - `404`: no recording exists for the passed `recordingId`
+   * - `409`: the recording has `started` status. Stop it before deletion
+   */
   public deleteRecording(recordingId: string): Promise<Error> {
     return new Promise<Error>((resolve, reject) => {
 
