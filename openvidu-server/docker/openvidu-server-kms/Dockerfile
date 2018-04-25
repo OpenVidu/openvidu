@@ -27,7 +27,7 @@ COPY openvidu-server.jar openvidu-server.jar
 
 EXPOSE 8888
 EXPOSE 9091
-EXPOSE 8443
+EXPOSE 4443
 
 # Exec supervisord
 CMD ["/usr/bin/supervisord"]

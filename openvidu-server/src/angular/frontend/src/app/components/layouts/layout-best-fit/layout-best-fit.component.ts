@@ -48,7 +48,7 @@ export class LayoutBestFitComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     const OV = new OpenVidu();
-    const fullSessionId = 'wss://' + location.hostname + ':8443/' + this.sessionId + '?secret=' + this.secret + '&recorder=true';
+    const fullSessionId = 'wss://' + location.hostname + ':4443/' + this.sessionId + '?secret=' + this.secret + '&recorder=true';
 
     this.session = OV.initSession(fullSessionId);
 

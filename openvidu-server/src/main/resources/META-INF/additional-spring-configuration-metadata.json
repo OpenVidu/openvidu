@@ -12,7 +12,7 @@
   {
     "name": "openvidu.publicurl",
     "type": "java.lang.String",
-    "description": "URL to connect clients to OpenVidu Server. This must be the full IP of your OpenVidu Server, including protocol, host and port (for example: https://my.openvidu.server.ip:8443). If no port argument is provided, 'server.port' param will be appended to it"
+    "description": "URL to connect clients to OpenVidu Server. This must be the full IP of your OpenVidu Server, including protocol, host and port (for example: https://my.openvidu.server.ip:4443). If no port argument is provided, 'server.port' param will be appended to it"
   },
   {
     "name": "openvidu.cdr",
