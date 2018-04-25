@@ -18,6 +18,7 @@
 package io.openvidu.java.client;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -48,8 +49,6 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-
-import io.openvidu.java.client.OpenViduException.Code;
 
 public class OpenVidu {
 
@@ -102,12 +101,29 @@ public class OpenVidu {
 
 	}
 
-	public Session createSession() throws OpenViduException {
+	/**
+	 * Creates an OpenVidu session with the default settings
+	 * 
+	 * @return The created session
+	 * 
+	 * @throws OpenViduJavaClientException
+	 */
+	public Session createSession() throws OpenViduJavaClientException {
 		Session s = new Session(myHttpClient, urlOpenViduServer);
 		return s;
 	}
 
-	public Session createSession(SessionProperties properties) throws OpenViduException {
+	/**
+	 * Creates an OpenVidu session
+	 * 
+	 * @param properties
+	 *            The specific configuration for this session
+	 * 
+	 * @return The created session
+	 * 
+	 * @throws OpenViduJavaClientException
+	 */
+	public Session createSession(SessionProperties properties) throws OpenViduJavaClientException {
 		Session s = new Session(myHttpClient, urlOpenViduServer, properties);
 		return s;
 	}
@@ -125,34 +141,42 @@ public class OpenVidu {
 	 *            The configuration for this recording
 	 *
 	 * @return The new created session
+	 * 
+	 * @throws OpenViduJavaClientException
 	 */
 	@SuppressWarnings("unchecked")
-	public Recording startRecording(String sessionId, RecordingProperties properties) throws OpenViduException {
+	public Recording startRecording(String sessionId, RecordingProperties properties)
+			throws OpenViduJavaClientException {
+
+		HttpPost request = new HttpPost(this.urlOpenViduServer + API_RECORDINGS + API_RECORDINGS_START);
+
+		JSONObject json = new JSONObject();
+		json.put("session", sessionId);
+		json.put("name", properties.name());
+		json.put("recordingLayout", (properties.recordingLayout() != null) ? properties.recordingLayout().name() : "");
+		json.put("customLayout", (properties.customLayout() != null) ? properties.customLayout() : "");
+		StringEntity params = null;
 		try {
-			HttpPost request = new HttpPost(this.urlOpenViduServer + API_RECORDINGS + API_RECORDINGS_START);
+			params = new StringEntity(json.toString());
+		} catch (UnsupportedEncodingException e1) {
+			throw new OpenViduJavaClientException(e1.getMessage(), e1.getCause());
+		}
 
-			JSONObject json = new JSONObject();
-			json.put("session", sessionId);
-			json.put("name", properties.name());
-			json.put("recordingLayout",
-					(properties.recordingLayout() != null) ? properties.recordingLayout().name() : "");
-			json.put("customLayout", (properties.customLayout() != null) ? properties.customLayout() : "");
-			StringEntity params = new StringEntity(json.toString());
+		request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+		request.setEntity(params);
 
-			request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-			request.setEntity(params);
+		HttpResponse response;
+		try {
+			response = myHttpClient.execute(request);
+		} catch (IOException e2) {
+			throw new OpenViduJavaClientException(e2.getMessage(), e2.getCause());
+		}
 
-			HttpResponse response = myHttpClient.execute(request);
-
-			int statusCode = response.getStatusLine().getStatusCode();
-			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
-				return new Recording(httpResponseToJson(response));
-			} else {
-				throw new OpenViduException(Code.RECORDING_START_ERROR_CODE, Integer.toString(statusCode));
-			}
-		} catch (Exception e) {
-			throw new OpenViduException(Code.RECORDING_START_ERROR_CODE,
-					"Unable to start recording for session '" + sessionId + "': " + e.getMessage());
+		int statusCode = response.getStatusLine().getStatusCode();
+		if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
+			return new Recording(httpResponseToJson(response));
+		} else {
+			throw new OpenViduJavaClientException("Unexpected response from OpenVidu Server: " + statusCode);
 		}
 	}
 
@@ -169,8 +193,10 @@ public class OpenVidu {
 	 * @return The started recording. If this method successfully returns the
 	 *         Recording object it means that the recording can be stopped with
 	 *         guarantees
+	 * 
+	 * @throws OpenViduJavaClientException
 	 */
-	public Recording startRecording(String sessionId, String name) throws OpenViduException {
+	public Recording startRecording(String sessionId, String name) throws OpenViduJavaClientException {
 		if (name == null) {
 			name = "";
 		}
@@ -186,8 +212,10 @@ public class OpenVidu {
 	 * @return The started recording. If this method successfully returns the
 	 *         Recording object it means that the recording can be stopped with
 	 *         guarantees
+	 * 
+	 * @throws OpenViduJavaClientException
 	 */
-	public Recording startRecording(String sessionId) throws OpenViduException {
+	public Recording startRecording(String sessionId) throws OpenViduJavaClientException {
 		return this.startRecording(sessionId, "");
 	}
 
@@ -198,22 +226,24 @@ public class OpenVidu {
 	 *            The id property of the recording you want to stop
 	 *
 	 * @return The stopped recording
+	 * 
+	 * @throws OpenViduJavaClientException
 	 */
-	public Recording stopRecording(String recordingId) throws OpenViduException {
+	public Recording stopRecording(String recordingId) throws OpenViduJavaClientException {
+		HttpPost request = new HttpPost(
+				this.urlOpenViduServer + API_RECORDINGS + API_RECORDINGS_STOP + "/" + recordingId);
+		HttpResponse response;
 		try {
-			HttpPost request = new HttpPost(
-					this.urlOpenViduServer + API_RECORDINGS + API_RECORDINGS_STOP + "/" + recordingId);
-			HttpResponse response = myHttpClient.execute(request);
+			response = myHttpClient.execute(request);
+		} catch (IOException e) {
+			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
+		}
 
-			int statusCode = response.getStatusLine().getStatusCode();
-			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
-				return new Recording(httpResponseToJson(response));
-			} else {
-				throw new OpenViduException(Code.RECORDING_STOP_ERROR_CODE, Integer.toString(statusCode));
-			}
-		} catch (Exception e) {
-			throw new OpenViduException(Code.RECORDING_STOP_ERROR_CODE,
-					"Unable to stop recording '" + recordingId + "': " + e.getMessage());
+		int statusCode = response.getStatusLine().getStatusCode();
+		if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
+			return new Recording(httpResponseToJson(response));
+		} else {
+			throw new OpenViduJavaClientException("Unexpected response from OpenVidu Server: " + statusCode);
 		}
 	}
 
@@ -222,21 +252,23 @@ public class OpenVidu {
 	 *
 	 * @param recordingId
 	 *            The id property of the recording you want to retrieve
+	 * 
+	 * @throws OpenViduJavaClientException
 	 */
-	public Recording getRecording(String recordingId) throws OpenViduException {
+	public Recording getRecording(String recordingId) throws OpenViduJavaClientException {
+		HttpGet request = new HttpGet(this.urlOpenViduServer + API_RECORDINGS + "/" + recordingId);
+		HttpResponse response;
 		try {
-			HttpGet request = new HttpGet(this.urlOpenViduServer + API_RECORDINGS + "/" + recordingId);
-			HttpResponse response = myHttpClient.execute(request);
+			response = myHttpClient.execute(request);
+		} catch (IOException e) {
+			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
+		}
 
-			int statusCode = response.getStatusLine().getStatusCode();
-			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
-				return new Recording(httpResponseToJson(response));
-			} else {
-				throw new OpenViduException(Code.RECORDING_LIST_ERROR_CODE, Integer.toString(statusCode));
-			}
-		} catch (Exception e) {
-			throw new OpenViduException(Code.RECORDING_LIST_ERROR_CODE,
-					"Unable to get recording '" + recordingId + "': " + e.getMessage());
+		int statusCode = response.getStatusLine().getStatusCode();
+		if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
+			return new Recording(httpResponseToJson(response));
+		} else {
+			throw new OpenViduJavaClientException("Unexpected response from OpenVidu Server: " + statusCode);
 		}
 	}
 
@@ -244,27 +276,30 @@ public class OpenVidu {
 	 * Lists all existing recordings
 	 *
 	 * @return A {@link java.util.List} with all existing recordings
+	 * 
+	 * @throws OpenViduJavaClientException
 	 */
 	@SuppressWarnings("unchecked")
-	public List<Recording> listRecordings() throws OpenViduException {
+	public List<Recording> listRecordings() throws OpenViduJavaClientException {
+		HttpGet request = new HttpGet(this.urlOpenViduServer + API_RECORDINGS);
+		HttpResponse response;
 		try {
-			HttpGet request = new HttpGet(this.urlOpenViduServer + API_RECORDINGS);
-			HttpResponse response = myHttpClient.execute(request);
+			response = myHttpClient.execute(request);
+		} catch (IOException e) {
+			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
+		}
 
-			int statusCode = response.getStatusLine().getStatusCode();
-			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
-				List<Recording> recordings = new ArrayList<>();
-				JSONObject json = httpResponseToJson(response);
-				JSONArray array = (JSONArray) json.get("items");
-				array.forEach(item -> {
-					recordings.add(new Recording((JSONObject) item));
-				});
-				return recordings;
-			} else {
-				throw new OpenViduException(Code.RECORDING_LIST_ERROR_CODE, Integer.toString(statusCode));
-			}
-		} catch (Exception e) {
-			throw new OpenViduException(Code.RECORDING_LIST_ERROR_CODE, "Unable to list recordings: " + e.getMessage());
+		int statusCode = response.getStatusLine().getStatusCode();
+		if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
+			List<Recording> recordings = new ArrayList<>();
+			JSONObject json = httpResponseToJson(response);
+			JSONArray array = (JSONArray) json.get("items");
+			array.forEach(item -> {
+				recordings.add(new Recording((JSONObject) item));
+			});
+			return recordings;
+		} else {
+			throw new OpenViduJavaClientException("Unexpected response from OpenVidu Server: " + statusCode);
 		}
 	}
 
@@ -274,25 +309,33 @@ public class OpenVidu {
 	 * {@link io.openvidu.java.client.Recording.Status#available}
 	 *
 	 * @param recordingId
+	 * 
+	 * @throws OpenViduJavaClientException
 	 */
-	public void deleteRecording(String recordingId) throws OpenViduException {
+	public void deleteRecording(String recordingId) throws OpenViduJavaClientException {
+		HttpDelete request = new HttpDelete(this.urlOpenViduServer + API_RECORDINGS + "/" + recordingId);
+		HttpResponse response;
 		try {
-			HttpDelete request = new HttpDelete(this.urlOpenViduServer + API_RECORDINGS + "/" + recordingId);
-			HttpResponse response = myHttpClient.execute(request);
+			response = myHttpClient.execute(request);
+		} catch (IOException e) {
+			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
+		}
 
-			int statusCode = response.getStatusLine().getStatusCode();
-			if (!(statusCode == org.apache.http.HttpStatus.SC_NO_CONTENT)) {
-				throw new OpenViduException(Code.RECORDING_DELETE_ERROR_CODE, Integer.toString(statusCode));
-			}
-		} catch (Exception e) {
-			throw new OpenViduException(Code.RECORDING_DELETE_ERROR_CODE,
-					"Unable to delete recording '" + recordingId + "': " + e.getMessage());
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (!(statusCode == org.apache.http.HttpStatus.SC_NO_CONTENT)) {
+			throw new OpenViduJavaClientException("Unexpected response from OpenVidu Server: " + statusCode);
 		}
 	}
 
-	private JSONObject httpResponseToJson(HttpResponse response) throws ParseException, IOException {
+	private JSONObject httpResponseToJson(HttpResponse response) throws OpenViduJavaClientException {
 		JSONParser parser = new JSONParser();
-		return (JSONObject) parser.parse(EntityUtils.toString(response.getEntity()));
+		JSONObject json;
+		try {
+			json = (JSONObject) parser.parse(EntityUtils.toString(response.getEntity()));
+		} catch (org.apache.http.ParseException | ParseException | IOException e) {
+			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
+		}
+		return json;
 	}
 
 }
