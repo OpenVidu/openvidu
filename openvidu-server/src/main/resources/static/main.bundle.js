@@ -943,7 +943,7 @@ var OpenVidu = /** @class */ (function () {
      */
     OpenVidu.prototype.startWs = function (onConnectSucces) {
         var config = {
-            heartbeat: 40000,
+            heartbeat: 5000,
             sendCloseMessage: false,
             ws: {
                 uri: this.wsUri,
@@ -1613,7 +1613,7 @@ var Session = /** @class */ (function () {
     Session.prototype.connect = function (token, metadata, param3) {
         var _this = this;
         // DEPRECATED WARNING
-        return VersionAdapter_1.solveIfCallback('Session.connect', param3, 
+        return VersionAdapter_1.solveIfCallback('Session.connect', (!!param3 && (typeof param3 === 'function')) ? param3 : ((typeof metadata === 'function') ? metadata : ''), 
         /*return */ new Promise(function (resolve, reject) {
             if (_this.openvidu.checkSystemRequirements()) {
                 // Early configuration to deactivate automatic subscription to streams
@@ -1971,7 +1971,7 @@ var Session = /** @class */ (function () {
                     var joinParams = {
                         token: (!!token) ? token : '',
                         session: _this.sessionId,
-                        metadata: _this.options.metadata,
+                        metadata: !!_this.options.metadata ? _this.options.metadata : '',
                         secret: _this.openvidu.getSecret(),
                         recorder: _this.openvidu.getRecorder()
                     };
