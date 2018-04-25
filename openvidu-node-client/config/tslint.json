@@ -41,7 +41,7 @@
         "indent": [
             true,
             "spaces",
-            4
+            2
         ],
         "interface-name": [
             true,

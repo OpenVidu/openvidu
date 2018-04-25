@@ -103,7 +103,7 @@ export class Session {
     }
 
     /**
-     * Gets a new token associated to Session object. This translates into a new request to OpenVidu Server
+     * Gets a new token associated to Session object. This always translates into a new request to OpenVidu Server
      *
      * @returns A Promise that is resolved to the _token_ if success and rejected with an Error object if not (due to a `400 (Bad Request)` error in OpenVidu Server)
      */

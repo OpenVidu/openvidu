@@ -21,18 +21,26 @@ import { RecordingMode } from './RecordingMode';
 
 export interface SessionProperties {
 
-	mediaMode?: MediaMode;
-	recordingMode?: RecordingMode;
+    /**
+     * How the media streams will be sent and received by your clients: routed through OpenVidu Media Server
+     * (`MediaMode.ROUTED`) or attempting direct p2p connections (`MediaMode.RELAYED`, _not available yet_)
+     */
+    mediaMode?: MediaMode;
 
-	/**
-	 * Default value used to initialize property [[RecordingProperties.recordingLayout]] of every recording of this session.
-	 * You can easily override this value later by setting [[RecordingProperties.recordingLayout]] to any other value
-	 */
-	defaultRecordingLayout?: RecordingLayout;
+    /**
+     * Whether the Session will be automatically recorded (`RecordingMode.ALWAYS`) or not (`RecordingMode.MANUAL`)
+     */
+    recordingMode?: RecordingMode;
 
-	/**
-	 * Default value used to initialize property [[RecordingProperties.customLayout]] of every recording of this session.
-	 * You can easily override this value later by setting [[RecordingProperties.customLayout]] to any other value
-	 */
-	defaultCustomLayout?: string;
+    /**
+     * Default value used to initialize property [[RecordingProperties.recordingLayout]] of every recording of this session.
+     * You can easily override this value later by setting [[RecordingProperties.recordingLayout]] to any other value
+     */
+    defaultRecordingLayout?: RecordingLayout;
+
+    /**
+     * Default value used to initialize property [[RecordingProperties.customLayout]] of every recording of this session.
+     * You can easily override this value later by setting [[RecordingProperties.customLayout]] to any other value
+     */
+    defaultCustomLayout?: string;
 }

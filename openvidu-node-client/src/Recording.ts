@@ -65,7 +65,9 @@ export class Recording {
     status: Recording.Status;
 
     /**
-     * Name of the Recording. The video file will be named after this property
+     * Name of the Recording. The video file will be named after this property.
+     * You can access this same value in your clients on recording events
+     * (`recordingStarted`, `recordingStopped`)
      */
     name: string;
 
@@ -93,11 +95,32 @@ export class Recording {
 
 export namespace Recording {
     export enum Status {
-        starting,   // The recording is starting (cannot be stopped)
-        started,    // The recording has started and is going on
-        stopped,    // The recording has finished OK
-        available,  // The recording is available for downloading. This status is reached for all
-        // stopped recordings if property 'openvidu.recording.free-access' is true
-        failed      // The recording has failed
+
+        /**
+         * The recording is starting (cannot be stopped)
+         */
+        starting,
+
+        /**
+         * The recording has started and is going on
+         */
+        started,
+
+        /**
+         * The recording has finished OK
+         */
+        stopped,
+
+        /**
+         * The recording is available for downloading. This status is reached for all
+         * stopped recordings if [OpenVidu Server configuration](http://openvidu.io/docs/reference-docs/openvidu-server-params/)
+         * property <code>openvidu.recording.free-access</code> is true
+         */
+        available,
+
+        /**
+         * The recording has failed
+         */
+        failed
     }
 }

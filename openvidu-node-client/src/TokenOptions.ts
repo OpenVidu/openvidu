@@ -27,5 +27,8 @@ export interface TokenOptions {
      */
     data: string;
 
+    /**
+     * The role assigned to this token
+     */
     role: OpenViduRole;
 }
