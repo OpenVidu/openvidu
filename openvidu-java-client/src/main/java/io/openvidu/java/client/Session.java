@@ -17,12 +17,17 @@
 
 package io.openvidu.java.client;
 
+import java.io.IOException;
+
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.util.EntityUtils;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 import io.openvidu.java.client.OpenViduException.Code;
 
@@ -32,7 +37,7 @@ public class Session {
 	private String urlOpenViduServer;
 	private String sessionId;
 	private SessionProperties properties;
-	
+
 	final static String API_SESSIONS = "api/sessions";
 	final static String API_TOKENS = "api/tokens";
 
@@ -50,6 +55,13 @@ public class Session {
 		this.sessionId = this.getSessionId();
 	}
 
+	/**
+	 * Gets the unique identifier of the Session. This translates into a new request
+	 * to OpenVidu Server if this Session has no <code>sessionId</code> yet or
+	 * simply returns the existing value if it has already been retrieved
+	 *
+	 * @return The sessionId
+	 */
 	@SuppressWarnings("unchecked")
 	public String getSessionId() throws OpenViduException {
 
@@ -59,23 +71,23 @@ public class Session {
 
 		try {
 			HttpPost request = new HttpPost(this.urlOpenViduServer + API_SESSIONS);
-			
+
 			JSONObject json = new JSONObject();
 			json.put("mediaMode", properties.mediaMode().name());
 			json.put("recordingMode", properties.recordingMode().name());
 			json.put("defaultRecordingLayout", properties.defaultRecordingLayout().name());
 			json.put("defaultCustomLayout", properties.defaultCustomLayout());
 			StringEntity params = new StringEntity(json.toString());
-			
+
 			request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
 			request.setEntity(params);
-			
+
 			HttpResponse response = httpClient.execute(request);
 			int statusCode = response.getStatusLine().getStatusCode();
 			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
 				System.out.println("Returning a SESSIONID");
 				String id = "";
-				id = (String) OpenVidu.httpResponseToJson(response).get("id");
+				id = (String) httpResponseToJson(response).get("id");
 				this.sessionId = id;
 				return id;
 			} else {
@@ -88,10 +100,24 @@ public class Session {
 
 	}
 
+	/**
+	 * Gets a new token associated to Session object with default values for
+	 * {@link io.openvidu.java.client.TokenOptions}. This always translates into a
+	 * new request to OpenVidu Server
+	 *
+	 * @returns The generated token
+	 */
 	public String generateToken() throws OpenViduException {
 		return this.generateToken(new TokenOptions.Builder().role(OpenViduRole.PUBLISHER).build());
 	}
 
+	/**
+	 * Gets a new token associated to Session object configured with
+	 * <code>tokenOptions</code>. This always translates into a new request to
+	 * OpenVidu Server
+	 *
+	 * @returns The generated token
+	 */
 	@SuppressWarnings("unchecked")
 	public String generateToken(TokenOptions tokenOptions) throws OpenViduException {
 
@@ -101,13 +127,13 @@ public class Session {
 
 		try {
 			HttpPost request = new HttpPost(this.urlOpenViduServer + API_TOKENS);
-			
+
 			JSONObject json = new JSONObject();
 			json.put("session", this.sessionId);
 			json.put("role", tokenOptions.getRole().name());
 			json.put("data", tokenOptions.getData());
 			StringEntity params = new StringEntity(json.toString());
-			
+
 			request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
 			request.setEntity(params);
 
@@ -116,7 +142,7 @@ public class Session {
 			int statusCode = response.getStatusLine().getStatusCode();
 			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
 				System.out.println("Returning a TOKEN");
-				return (String) OpenVidu.httpResponseToJson(response).get("id");
+				return (String) httpResponseToJson(response).get("id");
 			} else {
 				throw new OpenViduException(Code.TOKEN_CANNOT_BE_CREATED_ERROR_CODE, Integer.toString(statusCode));
 			}
@@ -127,6 +153,9 @@ public class Session {
 		}
 	}
 
+	/**
+	 * Returns the properties defining the session
+	 */
 	public SessionProperties getProperties() {
 		return this.properties;
 	}
@@ -138,6 +167,11 @@ public class Session {
 
 	private boolean hasSessionId() {
 		return (this.sessionId != null && !this.sessionId.isEmpty());
+	}
+
+	private JSONObject httpResponseToJson(HttpResponse response) throws ParseException, IOException {
+		JSONParser parser = new JSONParser();
+		return (JSONObject) parser.parse(EntityUtils.toString(response.getEntity()));
 	}
 
 }

@@ -24,6 +24,9 @@ public class SessionProperties {
 	private RecordingLayout defaultRecordingLayout;
 	private String defaultCustomLayout;
 
+	/**
+	 * Builder for {@link io.openvidu.java.client.SessionProperties}
+	 */
 	public static class Builder {
 
 		private MediaMode mediaMode = MediaMode.ROUTED;
@@ -31,26 +34,63 @@ public class SessionProperties {
 		private RecordingLayout defaultRecordingLayout = RecordingLayout.BEST_FIT;
 		private String defaultCustomLayout = "";
 
+		/**
+		 * Returns the {@link io.openvidu.java.client.SessionProperties} object properly
+		 * configured
+		 */
 		public SessionProperties build() {
 			return new SessionProperties(this.mediaMode, this.recordingMode, this.defaultRecordingLayout,
 					this.defaultCustomLayout);
 		}
 
+		/**
+		 * Call this method to set how the media streams will be sent and received by
+		 * your clients: routed through OpenVidu Media Server
+		 * (<code>MediaMode.ROUTED</code>) or attempting direct p2p connections
+		 * (<code>MediaMode.RELAYED</code>, <i>not available yet</i>)
+		 * 
+		 * Default value is <code>MediaMode.ROUTED</code>
+		 */
 		public SessionProperties.Builder mediaMode(MediaMode mediaMode) {
 			this.mediaMode = mediaMode;
 			return this;
 		}
 
+		/**
+		 * Call this method to set whether the Session will be automatically recorded
+		 * (<code>RecordingMode.ALWAYS</code>) or not
+		 * (<code>RecordingMode.MANUAL</code>)
+		 * 
+		 * Default value is <code>RecordingMode.MANUAL</code>
+		 */
 		public SessionProperties.Builder recordingMode(RecordingMode recordingMode) {
 			this.recordingMode = recordingMode;
 			return this;
 		}
 
+		/**
+		 * Call this method to set the the default value used to initialize property
+		 * {@link io.openvidu.java.client.RecordingProperties#recordingLayout()} of
+		 * every recording of this session. You can easily override this value later
+		 * when initializing a {@link io.openvidu.java.client.Recording} by calling
+		 * {@link io.openvidu.java.client.RecordingProperties.Builder#recordingLayout(RecordingLayout)}
+		 * with any other value
+		 * 
+		 * Default value is <code>RecordingLayout.BEST_FIT</code>
+		 */
 		public SessionProperties.Builder defaultRecordingLayout(RecordingLayout layout) {
 			this.defaultRecordingLayout = layout;
 			return this;
 		}
 
+		/**
+		 * Call this method to set the default value used to initialize property
+		 * {@link io.openvidu.java.client.RecordingProperties#customLayout()} of every
+		 * recording of this session. You can easily override this value later when
+		 * initializing a {@link io.openvidu.java.client.Recording} by calling
+		 * {@link io.openvidu.java.client.RecordingProperties.Builder#customLayout(String)}
+		 * with any other value
+		 */
 		public SessionProperties.Builder defaultCustomLayout(String path) {
 			this.defaultCustomLayout = path;
 			return this;
@@ -73,18 +113,45 @@ public class SessionProperties {
 		this.defaultCustomLayout = defaultCustomLayout;
 	}
 
+	/**
+	 * Defines whether the Session will be automatically recorded
+	 * (<code>RecordingMode.ALWAYS</code>) or not
+	 * (<code>RecordingMode.MANUAL</code>)
+	 */
 	public RecordingMode recordingMode() {
 		return this.recordingMode;
 	}
 
+	/**
+	 * Defines how the media streams will be sent and received by your clients:
+	 * routed through OpenVidu Media Server (<code>MediaMode.ROUTED</code>) or
+	 * attempting direct p2p connections (<code>MediaMode.RELAYED</code>, <i>not
+	 * available yet</i>)
+	 */
 	public MediaMode mediaMode() {
 		return this.mediaMode;
 	}
 
+	/**
+	 * Defines the default value used to initialize property
+	 * {@link io.openvidu.java.client.RecordingProperties#recordingLayout()} of
+	 * every recording of this session. You can easily override this value later
+	 * when initializing a {@link io.openvidu.java.client.Recording} by calling
+	 * {@link io.openvidu.java.client.RecordingProperties.Builder#recordingLayout(RecordingLayout)}
+	 * with any other value
+	 */
 	public RecordingLayout defaultRecordingLayout() {
 		return this.defaultRecordingLayout;
 	}
 
+	/**
+	 * Defines the default value used to initialize property
+	 * {@link io.openvidu.java.client.RecordingProperties#customLayout()} of every
+	 * recording of this session. You can easily override this value later when
+	 * initializing a {@link io.openvidu.java.client.Recording} by calling
+	 * {@link io.openvidu.java.client.RecordingProperties.Builder#customLayout(String)}
+	 * with any other value
+	 */
 	public String defaultCustomLayout() {
 		return this.defaultCustomLayout;
 	}

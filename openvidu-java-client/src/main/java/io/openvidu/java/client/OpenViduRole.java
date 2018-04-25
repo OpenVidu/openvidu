@@ -18,7 +18,21 @@
 package io.openvidu.java.client;
 
 public enum OpenViduRole {
-	SUBSCRIBER, // Can subscribe to published streams of other users
-	PUBLISHER,  // SUBSCRIBER permissions + can subscribe to published streams of other users and publish their own streams
-	MODERATOR;  // SUBSCRIBER + PUBLIHSER permissions + can force unpublish() and disconnect() over a third-party stream or user
+
+	/**
+	 * Can subscribe to published streams of other users
+	 */
+	SUBSCRIBER,
+
+	/**
+	 * SUBSCRIBER permissions + can publish their own streams
+	 */
+	PUBLISHER,
+
+	/**
+	 * <i>(not available yet)</i> SUBSCRIBER and PUBLIHSER permissions + can force
+	 * <code>unpublish()</code> and <code>disconnect()</code> over a third-party
+	 * stream or user
+	 */
+	MODERATOR;
 }

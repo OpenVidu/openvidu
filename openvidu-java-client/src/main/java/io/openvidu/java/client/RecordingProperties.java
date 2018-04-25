@@ -29,20 +29,40 @@ public class RecordingProperties {
 		private RecordingLayout recordingLayout;
 		private String customLayout;
 
+		/**
+		 * Builder for {@link io.openvidu.java.client.RecordingProperties}
+		 */
 		public RecordingProperties build() {
 			return new RecordingProperties(this.name, this.recordingLayout, this.customLayout);
 		}
 
+		/**
+		 * Call this method to set the name of the video file. You can access this same
+		 * value in your clients on recording events (<code>recordingStarted</code>,
+		 * <code>recordingStopped</code>)
+		 */
 		public RecordingProperties.Builder name(String name) {
 			this.name = name;
 			return this;
 		}
 
+		/**
+		 * Call this method to set the layout to be used in the recording
+		 */
 		public RecordingProperties.Builder recordingLayout(RecordingLayout layout) {
 			this.recordingLayout = layout;
 			return this;
 		}
 
+		/**
+		 * If setting
+		 * {@link io.openvidu.java.client.RecordingProperties.Builder#recordingLayout(RecordingLayout)}
+		 * to {@link io.openvidu.java.client.RecordingLayout#CUSTOM} you can call this
+		 * method to set the relative path to the specific custom layout you want to
+		 * use. See <a href=
+		 * "http://openvidu.io/docs/advanced-features/recording#custom-recording-layouts"
+		 * target="_blank">Custom recording layouts</a> to learn more
+		 */
 		public RecordingProperties.Builder customLayout(String path) {
 			this.customLayout = path;
 			return this;
@@ -56,14 +76,30 @@ public class RecordingProperties {
 		this.customLayout = customLayout;
 	}
 
+	/**
+	 * Defines the name you want to give to the video file. You can access this same
+	 * value in your clients on recording events (<code>recordingStarted</code>,
+	 * <code>recordingStopped</code>)
+	 */
 	public String name() {
 		return this.name;
 	}
 
+	/**
+	 * Defines the layout to be used in the recording
+	 */
 	public RecordingLayout recordingLayout() {
 		return this.recordingLayout;
 	}
 
+	/**
+	 * If {@link io.openvidu.java.client.RecordingProperties#recordingLayout()} is
+	 * set to {@link io.openvidu.java.client.RecordingLayout#CUSTOM}, this property
+	 * defines the relative path to the specific custom layout you want to use. See
+	 * <a href=
+	 * "http://openvidu.io/docs/advanced-features/recording#custom-recording-layouts"
+	 * target="_blank">Custom recording layouts</a> to learn more
+	 */
 	public String customLayout() {
 		return this.customLayout;
 	}
