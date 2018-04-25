@@ -51,7 +51,7 @@ public class CDREvent implements Comparable<CDREvent> {
 	private String name;
 	private Boolean hasAudio;
 	private Boolean hasVideo;
-	private RecordingLayout layout;
+	private RecordingLayout recordingLayout;
 
 	public CDREvent(String eventName, CDREvent event) {
 		this(eventName, event.participant, event.sessionId, event.mediaOptions, event.receivingFrom, event.startTime, event.reason);
@@ -88,7 +88,7 @@ public class CDREvent implements Comparable<CDREvent> {
 		this.size = recording.getSize();
 		this.hasAudio = recording.hasAudio();
 		this.hasVideo = recording.hasVideo();
-		this.layout = recording.getLayout();
+		this.recordingLayout = recording.getRecordingLayout();
 	}
 
 	public CDREvent(String eventName, Participant participant, String sessionId) {
@@ -166,8 +166,8 @@ public class CDREvent implements Comparable<CDREvent> {
 		if (this.hasVideo != null) {
 			json.put("hasVideo", this.hasVideo);
 		}
-		if (this.layout != null) {
-			json.put("layout", this.layout.name());
+		if (this.recordingLayout != null) {
+			json.put("recordingLayout", this.recordingLayout.name());
 		}
 
 		JSONObject root = new JSONObject();

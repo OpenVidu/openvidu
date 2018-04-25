@@ -40,8 +40,8 @@ import io.openvidu.server.recording.Recording;
  * - 'participantLeft':				{sessionId, timestamp, participantId, startTime, endTime, duration, reason}
  * - 'webrtcConnectionCreated'		{sessionId, timestamp, participantId, connection, [receivingFrom], audioEnabled, videoEnabled, [videoSource], [videoFramerate]}
  * - 'webrtcConnectionDestroyed'	{sessionId, timestamp, participantId, startTime, endTime, duration, connection, [receivingFrom], audioEnabled, videoEnabled, [videoSource], [videoFramerate], reason}
- * - 'recordingStarted'				{sessionId, timestamp, id, name, hasAudio, hasVideo, size}
- * - 'recordingStopped'				{sessionId, timestamp, id, name, hasAudio, hasVideo, size}
+ * - 'recordingStarted'				{sessionId, timestamp, id, name, hasAudio, hasVideo, recordingLayout, size}
+ * - 'recordingStopped'				{sessionId, timestamp, id, name, hasAudio, hasVideo, recordingLayout, size}
  * 
  * PROPERTIES VALUES:
  * 
@@ -61,6 +61,7 @@ import io.openvidu.server.recording.Recording;
  * - name:				string
  * - hasAudio:			boolean
  * - hasVideo:			boolean
+ * - recordingLayout:	string
  * - size: 				number
  * - webrtcConnectionDestroyed.reason: 	"unsubscribe", "unpublish", "disconnect", "networkDisconnect", "openviduServerDestroyed"
  * - participantLeft.reason: 			"unsubscribe", "unpublish", "disconnect", "networkDisconnect", "openviduServerDestroyed"

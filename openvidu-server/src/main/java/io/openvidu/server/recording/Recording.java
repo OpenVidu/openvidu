@@ -64,7 +64,7 @@ public class Recording {
 		this.hasVideo = (boolean) json.get("hasVideo");
 		this.status = Status.valueOf((String) json.get("status"));
 		this.recordingProperties = new RecordingProperties.Builder().name((String) json.get("name"))
-				.recordingLayout(RecordingLayout.valueOf((String) json.get("layout"))).build();
+				.recordingLayout(RecordingLayout.valueOf((String) json.get("recordingLayout"))).build();
 	}
 
 	public Status getStatus() {
@@ -87,7 +87,7 @@ public class Recording {
 		return this.recordingProperties.name();
 	}
 
-	public RecordingLayout getLayout() {
+	public RecordingLayout getRecordingLayout() {
 		return this.recordingProperties.recordingLayout();
 	}
 
@@ -156,7 +156,7 @@ public class Recording {
 		JSONObject json = new JSONObject();
 		json.put("id", this.id);
 		json.put("name", this.recordingProperties.name());
-		json.put("layout", this.recordingProperties.recordingLayout().name());
+		json.put("recordingLayout", this.recordingProperties.recordingLayout().name());
 		json.put("sessionId", this.sessionId);
 		json.put("createdAt", this.createdAt);
 		json.put("size", this.size);

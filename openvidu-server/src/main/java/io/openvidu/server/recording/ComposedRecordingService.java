@@ -394,26 +394,23 @@ public class ComposedRecordingService {
 			// Cannot delete an active recording
 			return HttpStatus.CONFLICT;
 		}
+		
+		Recording recording = getRecordingFromHost(recordingId);
+		if (recording == null) {
+			return HttpStatus.NOT_FOUND;
+		}
 
 		String name = getRecordingFromHost(recordingId).getName();
 
 		File folder = new File(this.openviduConfig.getOpenViduRecordingPath());
 		File[] files = folder.listFiles();
-		int numFilesDeleted = 0;
 		for (int i = 0; i < files.length; i++) {
 			if (files[i].isFile() && isFileFromRecording(files[i], recordingId, name)) {
 				files[i].delete();
-				numFilesDeleted++;
 			}
 		}
 
-		HttpStatus status;
-		if (numFilesDeleted == 3) {
-			status = HttpStatus.NO_CONTENT;
-		} else {
-			status = HttpStatus.NOT_FOUND;
-		}
-		return status;
+		return HttpStatus.NO_CONTENT;
 	}
 
 	private Recording getRecordingFromEntityFile(File file) {
@@ -475,7 +472,7 @@ public class ComposedRecordingService {
 		String location = OpenViduServer.publicUrl.replaceFirst("wss://", "");
 		String layout, finalUrl;
 
-		if (RecordingLayout.CUSTOM.equals(recording.getLayout())) {
+		if (RecordingLayout.CUSTOM.equals(recording.getRecordingLayout())) {
 			layout = recording.getCustomLayout();
 			layout = layout.startsWith("/") ? layout.substring(1) : layout;
 			layout = layout.endsWith("/") ? layout.substring(0, layout.length() - 1) : layout;
@@ -483,7 +480,7 @@ public class ComposedRecordingService {
 			finalUrl = "https://OPENVIDUAPP:" + secret + "@" + location + "/layouts/custom/" + layout + "/?sessionId="
 					+ shortSessionId + "&secret=" + secret;
 		} else {
-			layout = recording.getLayout().name().toLowerCase().replaceAll("_", "-");
+			layout = recording.getRecordingLayout().name().toLowerCase().replaceAll("_", "-");
 			finalUrl = "https://OPENVIDUAPP:" + secret + "@" + location + "/#/layout-" + layout + "/" + shortSessionId
 					+ "/" + secret;
 		}
