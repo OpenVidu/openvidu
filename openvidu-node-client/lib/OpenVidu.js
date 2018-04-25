@@ -29,8 +29,23 @@ var OpenVidu = /** @class */ (function () {
         this.setHostnameAndPort();
         this.basicAuth = this.getBasicAuth(secret);
     }
+    /**
+     * Creates an OpenVidu session. You can call [[Session.getSessionId]] in the resolved promise to retrieve the `sessionId`
+     *
+     * @returns A Promise that is resolved to the [[Session]] if success and rejected with an Error object if not
+     */
     OpenVidu.prototype.createSession = function (properties) {
-        return new Session_1.Session(this.hostname, this.port, this.basicAuth, properties);
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            var session = new Session_1.Session(_this.hostname, _this.port, _this.basicAuth, properties);
+            session.getSessionIdHttp()
+                .then(function (sessionId) {
+                resolve(session);
+            })
+                .catch(function (error) {
+                reject(error);
+            });
+        });
     };
     /**
      * Starts the recording of a [[Session]]
@@ -38,7 +53,7 @@ var OpenVidu = /** @class */ (function () {
      * @param sessionId The `sessionId` of the [[Session]] you want to start recording
      * @param name The name you want to give to the video file. You can access this same value in your clients on recording events (`recordingStarted`, `recordingStopped`)
      *
-     * @returns A Promise that is resolved to the [[Recording]] if it successfully started and rejected with an Error object if not. This Error object has as `message` property with the following values:
+     * @returns A Promise that is resolved to the [[Recording]] if it successfully started (the recording can be stopped with guarantees) and rejected with an Error object if not. This Error object has as `message` property with the following values:
      * - `404`: no session exists for the passed `sessionId`
      * - `400`: the session has no connected participants
      * - `409`: the session is not configured for using [[MediaMode.ROUTED]] or it is already being recorded

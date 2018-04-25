@@ -15,7 +15,12 @@ export declare class OpenVidu {
      * @param secret Secret used on OpenVidu Server initialization
      */
     constructor(urlOpenViduServer: string, secret: string);
-    createSession(properties?: SessionProperties): Session;
+    /**
+     * Creates an OpenVidu session. You can call [[Session.getSessionId]] in the resolved promise to retrieve the `sessionId`
+     *
+     * @returns A Promise that is resolved to the [[Session]] if success and rejected with an Error object if not
+     */
+    createSession(properties?: SessionProperties): Promise<Session>;
     startRecording(sessionId: string): Promise<Recording>;
     startRecording(sessionId: string, name: string): Promise<Recording>;
     startRecording(sessionId: string, properties: RecordingProperties): Promise<Recording>;

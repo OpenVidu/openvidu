@@ -44,12 +44,68 @@ export class Session {
     }
 
     /**
-     * Gets the unique identifier of the Session. This translates into a new request to OpenVidu Server if this Session has no `sessionId` yet
-     * or simply returns the existing value if it has already been retrieved
-     *
-     * @returns A Promise that is resolved to the _sessionId_ if success and rejected with an Error object if not (due to a `400 (Bad Request)` error in OpenVidu Server)
+     * Gets the unique identifier of the Session
      */
-    public getSessionId(): Promise<string> {
+    public getSessionId(): string {
+        return this.sessionId;
+    }
+
+    /**
+     * Gets a new token associated to Session object
+     *
+     * @returns A Promise that is resolved to the _token_ if success and rejected with an Error object if not
+     */
+    public generateToken(tokenOptions?: TokenOptions): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
+
+            const requestBody = JSON.stringify({
+                session: this.sessionId,
+                role: !!tokenOptions.role ? tokenOptions.role : OpenViduRole.PUBLISHER,
+                data: !!tokenOptions.data ? tokenOptions.data : ''
+            });
+
+            const options = {
+                hostname: this.hostname,
+                port: this.port,
+                path: Session.API_TOKENS,
+                method: 'POST',
+                headers: {
+                    'Authorization': this.basicAuth,
+                    'Content-Type': 'application/json',
+                    'Content-Length': Buffer.byteLength(requestBody)
+                }
+            };
+
+            const req = https.request(options, (res) => {
+                let body = '';
+                res.on('data', (d) => {
+                    // Continuously update stream with data
+                    body += d;
+                });
+                res.on('end', () => {
+                    if (res.statusCode === 200) {
+                        // SUCCESS response from openvidu-server. Resolve token
+                        const parsed = JSON.parse(body);
+                        resolve(parsed.id);
+                    } else {
+                        // ERROR response from openvidu-server. Resolve HTTP status
+                        reject(new Error(res.statusCode));
+                    }
+                });
+            });
+
+            req.on('error', (e) => {
+                reject(e);
+            });
+            req.write(requestBody);
+            req.end();
+        });
+    }
+
+    /**
+     * @hidden
+     */
+    public getSessionIdHttp(): Promise<string> {
         return new Promise<string>((resolve, reject) => {
 
             if (!!this.sessionId) {
@@ -86,58 +142,6 @@ export class Session {
                         // SUCCESS response from openvidu-server. Resolve sessionId
                         const parsed = JSON.parse(body);
                         this.sessionId = parsed.id;
-                        resolve(parsed.id);
-                    } else {
-                        // ERROR response from openvidu-server. Resolve HTTP status
-                        reject(new Error(res.statusCode));
-                    }
-                });
-            });
-
-            req.on('error', (e) => {
-                reject(e);
-            });
-            req.write(requestBody);
-            req.end();
-        });
-    }
-
-    /**
-     * Gets a new token associated to Session object. This always translates into a new request to OpenVidu Server
-     *
-     * @returns A Promise that is resolved to the _token_ if success and rejected with an Error object if not (due to a `400 (Bad Request)` error in OpenVidu Server)
-     */
-    public generateToken(tokenOptions?: TokenOptions): Promise<string> {
-        return new Promise<string>((resolve, reject) => {
-
-            const requestBody = JSON.stringify({
-                session: this.sessionId,
-                role: !!tokenOptions.role ? tokenOptions.role : OpenViduRole.PUBLISHER,
-                data: !!tokenOptions.data ? tokenOptions.data : ''
-            });
-
-            const options = {
-                hostname: this.hostname,
-                port: this.port,
-                path: Session.API_TOKENS,
-                method: 'POST',
-                headers: {
-                    'Authorization': this.basicAuth,
-                    'Content-Type': 'application/json',
-                    'Content-Length': Buffer.byteLength(requestBody)
-                }
-            };
-
-            const req = https.request(options, (res) => {
-                let body = '';
-                res.on('data', (d) => {
-                    // Continuously update stream with data
-                    body += d;
-                });
-                res.on('end', () => {
-                    if (res.statusCode === 200) {
-                        // SUCCESS response from openvidu-server. Resolve token
-                        const parsed = JSON.parse(body);
                         resolve(parsed.id);
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status

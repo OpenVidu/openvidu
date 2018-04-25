@@ -43,8 +43,22 @@ export class OpenVidu {
     this.basicAuth = this.getBasicAuth(secret);
   }
 
-  public createSession(properties?: SessionProperties): Session {
-    return new Session(this.hostname, this.port, this.basicAuth, properties);
+  /**
+   * Creates an OpenVidu session. You can call [[Session.getSessionId]] in the resolved promise to retrieve the `sessionId`
+   *
+   * @returns A Promise that is resolved to the [[Session]] if success and rejected with an Error object if not
+   */
+  public createSession(properties?: SessionProperties): Promise<Session> {
+    return new Promise<Session>((resolve, reject) => {
+      const session = new Session(this.hostname, this.port, this.basicAuth, properties);
+      session.getSessionIdHttp()
+        .then(sessionId => {
+          resolve(session);
+        })
+        .catch(error => {
+          reject(error);
+        });
+    });
   }
 
   public startRecording(sessionId: string): Promise<Recording>;
