@@ -41,6 +41,7 @@ import io.openvidu.java.client.RecordingMode;
 import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.java.client.MediaMode;
 import io.openvidu.java.client.SessionProperties;
+import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.ParticipantRole;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.core.SessionManager;
@@ -61,6 +62,9 @@ public class SessionRestController {
 
 	@Autowired
 	private ComposedRecordingService recordingService;
+	
+	@Autowired
+	private OpenviduConfig openviduConfig;
 
 	@RequestMapping(value = "/sessions", method = RequestMethod.GET)
 	public Set<String> getAllSessions() {
@@ -164,6 +168,11 @@ public class SessionRestController {
 		if (sessionId == null) {
 			// "session" parameter not found
 			return new ResponseEntity<JSONObject>(HttpStatus.BAD_REQUEST);
+		}
+		
+		if (!this.openviduConfig.isRecordingModuleEnabled()) {
+			// OpenVidu Server configuration property "openvidu.recording" is set to false
+			return new ResponseEntity<JSONObject>(HttpStatus.NOT_IMPLEMENTED);
 		}
 
 		Session session = sessionManager.getSession(sessionId);

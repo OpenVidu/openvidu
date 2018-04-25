@@ -78,7 +78,7 @@ public class ComposedRecordingService {
 	private static final Logger log = LoggerFactory.getLogger(ComposedRecordingService.class);
 
 	@Autowired
-	OpenviduConfig openviduConfig;
+	private OpenviduConfig openviduConfig;
 
 	@Autowired
 	private SessionEventsHandler sessionHandler;
