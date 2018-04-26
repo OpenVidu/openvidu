@@ -18,6 +18,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 var Session_1 = require("./Session");
 var Recording_1 = require("./Recording");
+/**
+ * @hidden
+ */
 var https = require('https');
 var OpenVidu = /** @class */ (function () {
     /**

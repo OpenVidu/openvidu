@@ -17,5 +17,11 @@
       "es2016",
       "dom"
     ]
-  }
+  },
+  "exclude": [
+    "config",
+    "docs",
+    "lib",
+    "node_modules"
+  ]
 }

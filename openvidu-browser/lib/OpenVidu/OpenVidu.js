@@ -24,7 +24,13 @@ var RpcBuilder = require("../OpenViduInternal/KurentoUtils/kurento-jsonrpc");
 var screenSharingAuto = require("../OpenViduInternal/ScreenSharing/Screen-Capturing-Auto");
 var screenSharing = require("../OpenViduInternal/ScreenSharing/Screen-Capturing");
 var platform = require("platform");
+/**
+ * @hidden
+ */
 var SECRET_PARAM = '?secret=';
+/**
+ * @hidden
+ */
 var RECORDER_PARAM = '&recorder=';
 /**
  * Entrypoint of OpenVidu Browser library.

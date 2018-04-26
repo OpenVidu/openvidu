@@ -20,6 +20,9 @@ var MediaMode_1 = require("./MediaMode");
 var OpenViduRole_1 = require("./OpenViduRole");
 var RecordingLayout_1 = require("./RecordingLayout");
 var RecordingMode_1 = require("./RecordingMode");
+/**
+ * @hidden
+ */
 var https = require('https');
 var Session = /** @class */ (function () {
     function Session(hostname, port, basicAuth, properties) {
