@@ -1,0 +1,35 @@
+{
+    //"allowUnusedLabels": true,
+    "allowUnreachableCode": false,
+    "buildOnSave": false,
+    "compileOnSave": true,
+    "compilerOptions": {
+        "allowJs": true,
+        "allowSyntheticDefaultImports": true,
+        "emitBOM": false,
+        "forceConsistentCasingInFileNames": true,
+        "lib": [
+            "dom",
+            "es2015.promise",
+            "es5",
+            "scripthost"
+        ],
+        "module": "commonjs",
+        "noFallthroughCasesInSwitch": true,
+        //"noImplicitAny": true,
+        "noImplicitReturns": true,
+        "noImplicitThis": true,
+        //"noUnusedLocals": true,
+        //"noUnusedParameters": true,
+        "outDir": "../../lib",
+        "preserveConstEnums": true,
+        "removeComments": true,
+        "skipDefaultLibCheck": true,
+        "skipLibCheck": true,
+        "sourceMap": true,
+        "strictNullChecks": true,
+        "suppressExcessPropertyErrors": true,
+        "suppressImplicitAnyIndexErrors": true,
+        "target": "es5"
+    }
+}

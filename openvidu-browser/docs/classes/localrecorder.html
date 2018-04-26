@@ -1,0 +1,595 @@
+<!doctype html>
+<html class="default no-js">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>LocalRecorder | OpenVidu Browser</title>
+	<meta name="description" content="">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="../assets/css/main.css">
+</head>
+<body>
+<header>
+	<div class="tsd-page-toolbar">
+		<div class="container">
+			<div class="table-wrap">
+				<div class="table-cell" id="tsd-search" data-index="../assets/js/search.js" data-base="..">
+					<div class="field">
+						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
+						<input id="tsd-search-field" type="text" />
+					</div>
+					<ul class="results">
+						<li class="state loading">Preparing search index...</li>
+						<li class="state failure">The search index is not available</li>
+					</ul>
+					<a href="/docs/reference-docs/openvidu-browser/" class="title"><img class="logo-small" src="/img/logos/openvidu_vert_grey_bg_transp_cropped.png"></a>
+				</div>
+				<div class="table-cell" id="tsd-widgets">
+					<div id="tsd-filter">
+						<a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a>
+						<div class="tsd-filter-group">
+							<div class="tsd-select" id="tsd-filter-visibility">
+								<span class="tsd-select-label">All</span>
+								<ul class="tsd-select-list">
+									<li data-value="public">Public</li>
+									<li data-value="protected">Public/Protected</li>
+									<li data-value="private" class="selected">All</li>
+								</ul>
+							</div>
+							<input type="checkbox" id="tsd-filter-inherited" checked />
+							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
+							<input type="checkbox" id="tsd-filter-only-exported" />
+							<label class="tsd-widget" for="tsd-filter-only-exported">Only exported</label>
+						</div>
+					</div>
+					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="tsd-page-title">
+		<div class="container">
+			<ul class="tsd-breadcrumb">
+				<li>
+					<a href="../index.html">Globals</a>
+				</li>
+				<li>
+					<a href="localrecorder.html">LocalRecorder</a>
+				</li>
+			</ul>
+			<h1>Class LocalRecorder</h1>
+		</div>
+	</div>
+</header>
+<div class="container container-main">
+	<div class="row">
+		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<div class="lead">
+						<p>Easy recording of <a href="stream.html">Stream</a> objects straightaway from the browser.</p>
+					</div>
+					<blockquote>
+						<p>WARNING: Performing browser local recording of <strong>remote streams</strong> may cause some troubles. A long waiting time may be required after calling <em>LocalRecorder.stop()</em> in this case</p>
+					</blockquote>
+				</div>
+			</section>
+			<section class="tsd-panel tsd-hierarchy">
+				<h3>Hierarchy</h3>
+				<ul class="tsd-hierarchy">
+					<li>
+						<span class="target">LocalRecorder</span>
+					</li>
+				</ul>
+			</section>
+			<section class="tsd-panel-group tsd-index-group">
+				<h2>Index</h2>
+				<section class="tsd-panel tsd-index-panel">
+					<div class="tsd-index-content">
+						<section class="tsd-index-section ">
+							<h3>Properties</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="localrecorder.html#state" class="tsd-kind-icon">state</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section ">
+							<h3>Methods</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="localrecorder.html#clean" class="tsd-kind-icon">clean</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="localrecorder.html#download" class="tsd-kind-icon">download</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="localrecorder.html#getblob" class="tsd-kind-icon">get<wbr>Blob</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="localrecorder.html#pause" class="tsd-kind-icon">pause</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="localrecorder.html#preview" class="tsd-kind-icon">preview</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="localrecorder.html#record" class="tsd-kind-icon">record</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="localrecorder.html#resume" class="tsd-kind-icon">resume</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="localrecorder.html#stop" class="tsd-kind-icon">stop</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="localrecorder.html#uploadasbinary" class="tsd-kind-icon">upload<wbr>AsBinary</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="localrecorder.html#uploadasmultipartfile" class="tsd-kind-icon">upload<wbr>AsMultipartfile</a></li>
+							</ul>
+						</section>
+					</div>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Properties</h2>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
+					<a name="state" class="tsd-anchor"></a>
+					<h3>state</h3>
+					<div class="tsd-signature tsd-kind-icon">state<span class="tsd-signature-symbol">:</span> <a href="../enums/localrecoderstate.html" class="tsd-signature-type">LocalRecoderState</a></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/LocalRecorder.ts#L31">OpenVidu/LocalRecorder.ts:31</a></li>
+						</ul>
+					</aside>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Methods</h2>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="clean" class="tsd-anchor"></a>
+					<h3>clean</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">clean<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/LocalRecorder.ts#L222">OpenVidu/LocalRecorder.ts:222</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Gracefully stops and cleans the current recording (WARNING: it is completely dismissed). Sets <a href="localrecorder.html#state">state</a> to <code>READY</code> so the recording can start again</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="download" class="tsd-anchor"></a>
+					<h3>download</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">download<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/LocalRecorder.ts#L241">OpenVidu/LocalRecorder.ts:241</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Downloads the recorded video through the browser. <a href="localrecorder.html#state">state</a> property must be <code>FINISHED</code></p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="getblob" class="tsd-anchor"></a>
+					<h3>get<wbr>Blob</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Blob<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Blob</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/LocalRecorder.ts#L262">OpenVidu/LocalRecorder.ts:262</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Gets the raw Blob file. Methods preview, download, uploadAsBinary and uploadAsMultipartfile use this same file to perform their specific actions. <a href="localrecorder.html#state">state</a> property must be <code>FINISHED</code></p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Blob</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="pause" class="tsd-anchor"></a>
+					<h3>pause</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">pause<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/LocalRecorder.ts#L154">OpenVidu/LocalRecorder.ts:154</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Pauses the recording of the Stream. <a href="localrecorder.html#state">state</a> property must be <code>RECORDING</code>. After method succeeds is set to <code>PAUSED</code></p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<p>A Promise (to which you can optionally subscribe to) that is resolved if the recording was successfully paused and rejected with an Error object if not</p>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="preview" class="tsd-anchor"></a>
+					<h3>preview</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">preview<span class="tsd-signature-symbol">(</span>parentElement<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">HTMLVideoElement</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/LocalRecorder.ts#L190">OpenVidu/LocalRecorder.ts:190</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Previews the recording, appending a new HTMLVideoElement to element with id <code>parentId</code>. <a href="localrecorder.html#state">state</a> property must be <code>FINISHED</code></p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>parentElement: <span class="tsd-signature-type">any</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">HTMLVideoElement</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="record" class="tsd-anchor"></a>
+					<h3>record</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">record<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/LocalRecorder.ts#L56">OpenVidu/LocalRecorder.ts:56</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Starts the recording of the Stream. <a href="localrecorder.html#state">state</a> property must be <code>READY</code>. After method succeeds is set to <code>RECORDING</code></p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<p>A Promise (to which you can optionally subscribe to) that is resolved if the recording successfully started and rejected with an Error object if not</p>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="resume" class="tsd-anchor"></a>
+					<h3>resume</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">resume<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/LocalRecorder.ts#L172">OpenVidu/LocalRecorder.ts:172</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Resumes the recording of the Stream. <a href="localrecorder.html#state">state</a> property must be <code>PAUSED</code>. After method succeeds is set to <code>RECORDING</code></p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<p>A Promise (to which you can optionally subscribe to) that is resolved if the recording was successfully resumed and rejected with an Error object if not</p>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="stop" class="tsd-anchor"></a>
+					<h3>stop</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">stop<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/LocalRecorder.ts#L132">OpenVidu/LocalRecorder.ts:132</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Ends the recording of the Stream. <a href="localrecorder.html#state">state</a> property must be <code>RECORDING</code> or <code>PAUSED</code>. After method succeeds is set to <code>FINISHED</code></p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<p>A Promise (to which you can optionally subscribe to) that is resolved if the recording successfully stopped and rejected with an Error object if not</p>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="uploadasbinary" class="tsd-anchor"></a>
+					<h3>upload<wbr>AsBinary</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">upload<wbr>AsBinary<span class="tsd-signature-symbol">(</span>endpoint<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, headers<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/LocalRecorder.ts#L281">OpenVidu/LocalRecorder.ts:281</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Uploads the recorded video as a binary file performing an HTTP/POST operation to URL <code>endpoint</code>. <a href="localrecorder.html#state">state</a> property must be <code>FINISHED</code>. Optional HTTP headers can be passed as second parameter. For example:</p>
+									<pre><code><span class="hljs-keyword">var</span> headers = {
+ <span class="hljs-string">"Cookie"</span>: <span class="hljs-string">"<span class="hljs-variable">$Version</span>=1; Skin=new;"</span>,
+ <span class="hljs-string">"Authorization"</span>:<span class="hljs-string">"Basic QWxhZGpbjpuIHNlctZQ=="</span>
+}
+</code></pre>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>endpoint: <span class="tsd-signature-type">string</span></h5>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> headers: <span class="tsd-signature-type">any</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<p>A Promise (to which you can optionally subscribe to) that is resolved with the <code>http.responseText</code> from server if the operation was successful and rejected with the failed <code>http.status</code> if not</p>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="uploadasmultipartfile" class="tsd-anchor"></a>
+					<h3>upload<wbr>AsMultipartfile</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">upload<wbr>AsMultipartfile<span class="tsd-signature-symbol">(</span>endpoint<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, headers<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/LocalRecorder.ts#L321">OpenVidu/LocalRecorder.ts:321</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Uploads the recorded video as a multipart file performing an HTTP/POST operation to URL <code>endpoint</code>. <a href="localrecorder.html#state">state</a> property must be <code>FINISHED</code>. Optional HTTP headers can be passed as second parameter. For example:</p>
+									<pre><code><span class="hljs-keyword">var</span> headers = {
+ <span class="hljs-string">"Cookie"</span>: <span class="hljs-string">"<span class="hljs-variable">$Version</span>=1; Skin=new;"</span>,
+ <span class="hljs-string">"Authorization"</span>:<span class="hljs-string">"Basic QWxhZGpbjpuIHNlctZQ=="</span>
+}
+</code></pre>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>endpoint: <span class="tsd-signature-type">string</span></h5>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> headers: <span class="tsd-signature-type">any</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<p>A Promise (to which you can optionally subscribe to) that is resolved with the <code>http.responseText</code> from server if the operation was successful and rejected with the failed <code>http.status</code> if not:</p>
+						</li>
+					</ul>
+				</section>
+			</section>
+		</div>
+		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+			<nav class="tsd-navigation primary">
+				<ul>
+					<li class="globals  ">
+						<a href="../index.html"><em>Globals</em></a>
+					</li>
+				</ul>
+			</nav>
+			<nav class="tsd-navigation secondary menu-sticky">
+				<ul class="before-current">
+					<li class=" tsd-kind-enum">
+						<a href="../enums/localrecoderstate.html" class="tsd-kind-icon">Local<wbr>Recoder<wbr>State</a>
+					</li>
+					<li class=" tsd-kind-enum">
+						<a href="../enums/openviduerrorname.html" class="tsd-kind-icon">Open<wbr>Vidu<wbr>Error<wbr>Name</a>
+					</li>
+					<li class=" tsd-kind-enum">
+						<a href="../enums/videoinsertmode.html" class="tsd-kind-icon">Video<wbr>Insert<wbr>Mode</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="connection.html" class="tsd-kind-icon">Connection</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="connectionevent.html" class="tsd-kind-icon">Connection<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="event.html" class="tsd-kind-icon">Event</a>
+					</li>
+				</ul>
+				<ul class="current">
+					<li class="current tsd-kind-class">
+						<a href="localrecorder.html" class="tsd-kind-icon">Local<wbr>Recorder</a>
+						<ul>
+							<li class=" tsd-kind-property tsd-parent-kind-class">
+								<a href="localrecorder.html#state" class="tsd-kind-icon">state</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="localrecorder.html#clean" class="tsd-kind-icon">clean</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="localrecorder.html#download" class="tsd-kind-icon">download</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="localrecorder.html#getblob" class="tsd-kind-icon">get<wbr>Blob</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="localrecorder.html#pause" class="tsd-kind-icon">pause</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="localrecorder.html#preview" class="tsd-kind-icon">preview</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="localrecorder.html#record" class="tsd-kind-icon">record</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="localrecorder.html#resume" class="tsd-kind-icon">resume</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="localrecorder.html#stop" class="tsd-kind-icon">stop</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="localrecorder.html#uploadasbinary" class="tsd-kind-icon">upload<wbr>AsBinary</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="localrecorder.html#uploadasmultipartfile" class="tsd-kind-icon">upload<wbr>AsMultipartfile</a>
+							</li>
+						</ul>
+					</li>
+				</ul>
+				<ul class="after-current">
+					<li class=" tsd-kind-class">
+						<a href="openvidu.html" class="tsd-kind-icon">Open<wbr>Vidu</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="openviduerror.html" class="tsd-kind-icon">Open<wbr>Vidu<wbr>Error</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="publisher.html" class="tsd-kind-icon">Publisher</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="publisherspeakingevent.html" class="tsd-kind-icon">Publisher<wbr>Speaking<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="recordingevent.html" class="tsd-kind-icon">Recording<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="session.html" class="tsd-kind-icon">Session</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="sessiondisconnectedevent.html" class="tsd-kind-icon">Session<wbr>Disconnected<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="signalevent.html" class="tsd-kind-icon">Signal<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="stream.html" class="tsd-kind-icon">Stream</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="streamevent.html" class="tsd-kind-icon">Stream<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="subscriber.html" class="tsd-kind-icon">Subscriber</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="videoelementevent.html" class="tsd-kind-icon">Video<wbr>Element<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="../interfaces/device.html" class="tsd-kind-icon">Device</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="../interfaces/eventdispatcher.html" class="tsd-kind-icon">Event<wbr>Dispatcher</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="../interfaces/openviduadvancedconfiguration.html" class="tsd-kind-icon">Open<wbr>Vidu<wbr>Advanced<wbr>Configuration</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="../interfaces/publisherproperties.html" class="tsd-kind-icon">Publisher<wbr>Properties</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="../interfaces/signaloptions.html" class="tsd-kind-icon">Signal<wbr>Options</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="../interfaces/subscriberproperties.html" class="tsd-kind-icon">Subscriber<wbr>Properties</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-is-not-exported">
+						<a href="../index.html#mediarecorder" class="tsd-kind-icon">Media<wbr>Recorder</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-is-not-exported">
+						<a href="../index.html#recorder_param" class="tsd-kind-icon">RECORDER_<wbr>PARAM</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-is-not-exported">
+						<a href="../index.html#secret_param" class="tsd-kind-icon">SECRET_<wbr>PARAM</a>
+					</li>
+				</ul>
+			</nav>
+		</div>
+	</div>
+</div>
+<footer class="with-border-bottom">
+	<div class="container">
+		<h2>Legend</h2>
+		<div class="tsd-legend-group">
+			<ul class="tsd-legend">
+				<li class="tsd-kind-module"><span class="tsd-kind-icon">Module</span></li>
+				<li class="tsd-kind-object-literal"><span class="tsd-kind-icon">Object literal</span></li>
+				<li class="tsd-kind-variable"><span class="tsd-kind-icon">Variable</span></li>
+				<li class="tsd-kind-function"><span class="tsd-kind-icon">Function</span></li>
+				<li class="tsd-kind-function tsd-has-type-parameter"><span class="tsd-kind-icon">Function with type parameter</span></li>
+				<li class="tsd-kind-index-signature"><span class="tsd-kind-icon">Index signature</span></li>
+				<li class="tsd-kind-type-alias"><span class="tsd-kind-icon">Type alias</span></li>
+				<li class="tsd-kind-type-alias tsd-has-type-parameter"><span class="tsd-kind-icon">Type alias with type parameter</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-enum"><span class="tsd-kind-icon">Enumeration</span></li>
+				<li class="tsd-kind-enum-member"><span class="tsd-kind-icon">Enumeration member</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-enum"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-enum"><span class="tsd-kind-icon">Method</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-interface"><span class="tsd-kind-icon">Interface</span></li>
+				<li class="tsd-kind-interface tsd-has-type-parameter"><span class="tsd-kind-icon">Interface with type parameter</span></li>
+				<li class="tsd-kind-constructor tsd-parent-kind-interface"><span class="tsd-kind-icon">Constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-interface"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-interface"><span class="tsd-kind-icon">Method</span></li>
+				<li class="tsd-kind-index-signature tsd-parent-kind-interface"><span class="tsd-kind-icon">Index signature</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-class"><span class="tsd-kind-icon">Class</span></li>
+				<li class="tsd-kind-class tsd-has-type-parameter"><span class="tsd-kind-icon">Class with type parameter</span></li>
+				<li class="tsd-kind-constructor tsd-parent-kind-class"><span class="tsd-kind-icon">Constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-class"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class"><span class="tsd-kind-icon">Method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class"><span class="tsd-kind-icon">Accessor</span></li>
+				<li class="tsd-kind-index-signature tsd-parent-kind-class"><span class="tsd-kind-icon">Index signature</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-constructor tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited accessor</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected accessor</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private accessor</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static property</span></li>
+				<li class="tsd-kind-call-signature tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static method</span></li>
+			</ul>
+		</div>
+	</div>
+</footer>
+<div class="container tsd-generator">
+	<p>Generated using <a href="http://typedoc.org/" target="_blank">TypeDoc</a></p>
+</div>
+<div class="overlay"></div>
+<script src="../assets/js/main.js"></script>
+<script>if (location.protocol == 'file:') document.write('<script src="../assets/js/search.js"><' + '/script>');</script>
+</body>
+</html>

@@ -1,0 +1,1040 @@
+<!doctype html>
+<html class="default no-js">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Session | OpenVidu Browser</title>
+	<meta name="description" content="">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="../assets/css/main.css">
+</head>
+<body>
+<header>
+	<div class="tsd-page-toolbar">
+		<div class="container">
+			<div class="table-wrap">
+				<div class="table-cell" id="tsd-search" data-index="../assets/js/search.js" data-base="..">
+					<div class="field">
+						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
+						<input id="tsd-search-field" type="text" />
+					</div>
+					<ul class="results">
+						<li class="state loading">Preparing search index...</li>
+						<li class="state failure">The search index is not available</li>
+					</ul>
+					<a href="/docs/reference-docs/openvidu-browser/" class="title"><img class="logo-small" src="/img/logos/openvidu_vert_grey_bg_transp_cropped.png"></a>
+				</div>
+				<div class="table-cell" id="tsd-widgets">
+					<div id="tsd-filter">
+						<a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a>
+						<div class="tsd-filter-group">
+							<div class="tsd-select" id="tsd-filter-visibility">
+								<span class="tsd-select-label">All</span>
+								<ul class="tsd-select-list">
+									<li data-value="public">Public</li>
+									<li data-value="protected">Public/Protected</li>
+									<li data-value="private" class="selected">All</li>
+								</ul>
+							</div>
+							<input type="checkbox" id="tsd-filter-inherited" checked />
+							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
+							<input type="checkbox" id="tsd-filter-only-exported" />
+							<label class="tsd-widget" for="tsd-filter-only-exported">Only exported</label>
+						</div>
+					</div>
+					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="tsd-page-title">
+		<div class="container">
+			<ul class="tsd-breadcrumb">
+				<li>
+					<a href="../index.html">Globals</a>
+				</li>
+				<li>
+					<a href="session.html">Session</a>
+				</li>
+			</ul>
+			<h1>Class Session</h1>
+		</div>
+	</div>
+</header>
+<div class="container container-main">
+	<div class="row">
+		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<div class="lead">
+						<p>Represents a video call. It can also be seen as a videoconference room where multiple users can connect.
+							Participants who publish their videos to a session will be seen by the rest of users connected to that specific session.
+						Initialized with <a href="openvidu.html#initsession">OpenVidu.initSession</a> method</p>
+					</div>
+				</div>
+			</section>
+			<section class="tsd-panel tsd-hierarchy">
+				<h3>Hierarchy</h3>
+				<ul class="tsd-hierarchy">
+					<li>
+						<span class="target">Session</span>
+					</li>
+				</ul>
+			</section>
+			<section class="tsd-panel">
+				<h3>Implements</h3>
+				<ul class="tsd-hierarchy">
+					<li><a href="../interfaces/eventdispatcher.html" class="tsd-signature-type">EventDispatcher</a></li>
+				</ul>
+			</section>
+			<section class="tsd-panel-group tsd-index-group">
+				<h2>Index</h2>
+				<section class="tsd-panel tsd-index-panel">
+					<div class="tsd-index-content">
+						<section class="tsd-index-section ">
+							<h3>Properties</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="session.html#connection" class="tsd-kind-icon">connection</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="session.html#sessionid" class="tsd-kind-icon">session<wbr>Id</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section ">
+							<h3>Methods</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="session.html#connect" class="tsd-kind-icon">connect</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="session.html#disconnect" class="tsd-kind-icon">disconnect</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="session.html#off" class="tsd-kind-icon">off</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="session.html#on" class="tsd-kind-icon">on</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="session.html#once" class="tsd-kind-icon">once</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="session.html#publish" class="tsd-kind-icon">publish</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="session.html#signal" class="tsd-kind-icon">signal</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="session.html#subscribe" class="tsd-kind-icon">subscribe</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="session.html#subscribeasync" class="tsd-kind-icon">subscribe<wbr>Async</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="session.html#unpublish" class="tsd-kind-icon">unpublish</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="session.html#unsubscribe" class="tsd-kind-icon">unsubscribe</a></li>
+							</ul>
+						</section>
+					</div>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Properties</h2>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
+					<a name="connection" class="tsd-anchor"></a>
+					<h3>connection</h3>
+					<div class="tsd-signature tsd-kind-icon">connection<span class="tsd-signature-symbol">:</span> <a href="connection.html" class="tsd-signature-type">Connection</a></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L49">OpenVidu/Session.ts:49</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Local connection to the Session. This object is defined only after <a href="session.html#connect">Session.connect</a> has been successfully executed, and can be retrieved subscribing to <code>connectionCreated</code> event</p>
+						</div>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
+					<a name="sessionid" class="tsd-anchor"></a>
+					<h3>session<wbr>Id</h3>
+					<div class="tsd-signature tsd-kind-icon">session<wbr>Id<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L54">OpenVidu/Session.ts:54</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Unique identifier of the Session. This is the same value you pass when calling <a href="openvidu.html#initsession">OpenVidu.initSession</a></p>
+						</div>
+					</div>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Methods</h2>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="connect" class="tsd-anchor"></a>
+					<h3>connect</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">connect<span class="tsd-signature-symbol">(</span>token<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">connect<span class="tsd-signature-symbol">(</span>token<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, metadata<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L90">OpenVidu/Session.ts:90</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Connects to the session using <code>token</code>. Parameter <code>metadata</code> allows you to pass extra data to share with other users when
+										they receive <code>streamCreated</code> event. The structure of <code>metadata</code> string is up to you (maybe some standarized format
+									as JSON or XML is a good idea), the only restriction is a maximum length of 10000 chars.</p>
+								</div>
+								<p>This metadata is not considered secure, as it is generated in the client side. To pass securized data, add it as a parameter in the
+								token generation operation (through the API REST, openvidu-java-client or openvidu-node-client).</p>
+								<p>Only after the returned Promise is successfully resolved <a href="session.html#connection">Session.connection</a> object will be available and properly defined.</p>
+								<h4 id="events-dispatched">Events dispatched</h4>
+								<p>The <a href="session.html">Session</a> object of the local participant will first dispatch one or more <code>connectionCreated</code> events upon successful termination of this method:</p>
+								<ul>
+									<li>First one for your own local Connection object, so you can retrieve <a href="session.html#connection">Session.connection</a> property.</li>
+									<li>Then one for each remote Connection previously connected to the Session, if any. Any other remote user connecting to the Session after you have
+									successfully connected will also dispatch a <code>connectionCreated</code> event when they do so.</li>
+								</ul>
+								<p>The <a href="session.html">Session</a> object of the local participant will also dispatch a <code>streamCreated</code> event for each remote active <a href="publisher.html">Publisher</a> after dispatching all remote
+								<code>connectionCreated</code> events.</p>
+								<p>The <a href="session.html">Session</a> object of every other participant connected to the session will dispatch a <code>connectionCreated</code> event.</p>
+								<p>See <a href="connectionevent.html">ConnectionEvent</a> and <a href="streamevent.html">StreamEvent</a> to learn more.</p>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>token: <span class="tsd-signature-type">string</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<p>A Promise to which you must subscribe that is resolved if the recording successfully started and rejected with an Error object if not</p>
+						</li>
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L91">OpenVidu/Session.ts:91</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Connects to the session using <code>token</code>. Parameter <code>metadata</code> allows you to pass extra data to share with other users when
+										they receive <code>streamCreated</code> event. The structure of <code>metadata</code> string is up to you (maybe some standarized format
+									as JSON or XML is a good idea), the only restriction is a maximum length of 10000 chars.</p>
+								</div>
+								<p>This metadata is not considered secure, as it is generated in the client side. To pass securized data, add it as a parameter in the
+								token generation operation (through the API REST, openvidu-java-client or openvidu-node-client).</p>
+								<p>Only after the returned Promise is successfully resolved <a href="session.html#connection">Session.connection</a> object will be available and properly defined.</p>
+								<h4 id="events-dispatched">Events dispatched</h4>
+								<p>The <a href="session.html">Session</a> object of the local participant will first dispatch one or more <code>connectionCreated</code> events upon successful termination of this method:</p>
+								<ul>
+									<li>First one for your own local Connection object, so you can retrieve <a href="session.html#connection">Session.connection</a> property.</li>
+									<li>Then one for each remote Connection previously connected to the Session, if any. Any other remote user connecting to the Session after you have
+									successfully connected will also dispatch a <code>connectionCreated</code> event when they do so.</li>
+								</ul>
+								<p>The <a href="session.html">Session</a> object of the local participant will also dispatch a <code>streamCreated</code> event for each remote active <a href="publisher.html">Publisher</a> after dispatching all remote
+								<code>connectionCreated</code> events.</p>
+								<p>The <a href="session.html">Session</a> object of every other participant connected to the session will dispatch a <code>connectionCreated</code> event.</p>
+								<p>See <a href="connectionevent.html">ConnectionEvent</a> and <a href="streamevent.html">StreamEvent</a> to learn more.</p>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>token: <span class="tsd-signature-type">string</span></h5>
+								</li>
+								<li>
+									<h5>metadata: <span class="tsd-signature-type">any</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<p>A Promise to which you must subscribe that is resolved if the recording successfully started and rejected with an Error object if not</p>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="disconnect" class="tsd-anchor"></a>
+					<h3>disconnect</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">disconnect<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L170">OpenVidu/Session.ts:170</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Leaves the session, destroying all streams and deleting the user as a participant.</p>
+								</div>
+								<h4 id="events-dispatched">Events dispatched</h4>
+								<p>The <a href="session.html">Session</a> object of the local participant will dispatch a <code>sessionDisconnected</code> event.
+									This event will automatically unsubscribe the leaving participant from every Subscriber object of the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks)
+									and also delete the HTML video element associated to it.
+								Call <code>event.preventDefault()</code> to avoid this beahviour and take care of disposing and cleaning all the Subscriber objects yourself. See <a href="sessiondisconnectedevent.html">SessionDisconnectedEvent</a> to learn more.</p>
+								<p>The <a href="publisher.html">Publisher</a> object of the local participant will dispatch a <code>streamDestroyed</code> event if there is a <a href="publisher.html">Publisher</a> object publishing to the session.
+									This event will automatically stop all media tracks and delete the HTML video element associated to it.
+									Call <code>event.preventDefault()</code> if you want clean the Publisher object yourself or re-publish it in a different Session (to do so it is a mandatory
+								requirement to call <code>Session.unpublish()</code> or/and <code>Session.disconnect()</code> in the previous session). See <a href="streamevent.html">StreamEvent</a> to learn more.</p>
+								<p>The <a href="session.html">Session</a> object of every other participant connected to the session will dispatch a <code>streamDestroyed</code> event if the disconnected participant was publishing.
+									This event will automatically unsubscribe the Subscriber object from the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks)
+									and delete the HTML video element associated to it.
+								Call <code>event.preventDefault()</code> to avoid this default behaviour and take care of disposing and cleaning the Subscriber object yourself. See <a href="streamevent.html">StreamEvent</a> to learn more.</p>
+								<p>The <a href="session.html">Session</a> object of every other participant connected to the session will dispatch a <code>connectionDestroyed</code> event in any case. See <a href="connectionevent.html">ConnectionEvent</a> to learn more.</p>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="off" class="tsd-anchor"></a>
+					<h3>off</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">off<span class="tsd-signature-symbol">(</span>type<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, handler<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">function</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="session.html" class="tsd-signature-type">Session</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L497">OpenVidu/Session.ts:497</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>See <a href="../interfaces/eventdispatcher.html#off">EventDispatcher.off</a></p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>type: <span class="tsd-signature-type">string</span></h5>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> handler: <span class="tsd-signature-type">function</span></h5>
+									<ul class="tsd-parameters">
+										<li class="tsd-parameter-siganture">
+											<ul class="tsd-signatures tsd-kind-type-literal tsd-is-not-exported">
+												<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span>event<span class="tsd-signature-symbol">: </span><a href="sessiondisconnectedevent.html" class="tsd-signature-type">SessionDisconnectedEvent</a><span class="tsd-signature-symbol"> | </span><a href="signalevent.html" class="tsd-signature-type">SignalEvent</a><span class="tsd-signature-symbol"> | </span><a href="streamevent.html" class="tsd-signature-type">StreamEvent</a><span class="tsd-signature-symbol"> | </span><a href="connectionevent.html" class="tsd-signature-type">ConnectionEvent</a><span class="tsd-signature-symbol"> | </span><a href="publisherspeakingevent.html" class="tsd-signature-type">PublisherSpeakingEvent</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+											</ul>
+											<ul class="tsd-descriptions">
+												<li class="tsd-description">
+													<h4 class="tsd-parameters-title">Parameters</h4>
+													<ul class="tsd-parameters">
+														<li>
+															<h5>event: <a href="sessiondisconnectedevent.html" class="tsd-signature-type">SessionDisconnectedEvent</a><span class="tsd-signature-symbol"> | </span><a href="signalevent.html" class="tsd-signature-type">SignalEvent</a><span class="tsd-signature-symbol"> | </span><a href="streamevent.html" class="tsd-signature-type">StreamEvent</a><span class="tsd-signature-symbol"> | </span><a href="connectionevent.html" class="tsd-signature-type">ConnectionEvent</a><span class="tsd-signature-symbol"> | </span><a href="publisherspeakingevent.html" class="tsd-signature-type">PublisherSpeakingEvent</a></h5>
+														</li>
+													</ul>
+													<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+												</li>
+											</ul>
+										</li>
+									</ul>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="session.html" class="tsd-signature-type">Session</a></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="on" class="tsd-anchor"></a>
+					<h3>on</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">on<span class="tsd-signature-symbol">(</span>type<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, handler<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">function</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../interfaces/eventdispatcher.html" class="tsd-signature-type">EventDispatcher</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L439">OpenVidu/Session.ts:439</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>See <a href="../interfaces/eventdispatcher.html#on">EventDispatcher.on</a></p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>type: <span class="tsd-signature-type">string</span></h5>
+								</li>
+								<li>
+									<h5>handler: <span class="tsd-signature-type">function</span></h5>
+									<ul class="tsd-parameters">
+										<li class="tsd-parameter-siganture">
+											<ul class="tsd-signatures tsd-kind-type-literal tsd-is-not-exported">
+												<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span>event<span class="tsd-signature-symbol">: </span><a href="sessiondisconnectedevent.html" class="tsd-signature-type">SessionDisconnectedEvent</a><span class="tsd-signature-symbol"> | </span><a href="signalevent.html" class="tsd-signature-type">SignalEvent</a><span class="tsd-signature-symbol"> | </span><a href="streamevent.html" class="tsd-signature-type">StreamEvent</a><span class="tsd-signature-symbol"> | </span><a href="connectionevent.html" class="tsd-signature-type">ConnectionEvent</a><span class="tsd-signature-symbol"> | </span><a href="publisherspeakingevent.html" class="tsd-signature-type">PublisherSpeakingEvent</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+											</ul>
+											<ul class="tsd-descriptions">
+												<li class="tsd-description">
+													<h4 class="tsd-parameters-title">Parameters</h4>
+													<ul class="tsd-parameters">
+														<li>
+															<h5>event: <a href="sessiondisconnectedevent.html" class="tsd-signature-type">SessionDisconnectedEvent</a><span class="tsd-signature-symbol"> | </span><a href="signalevent.html" class="tsd-signature-type">SignalEvent</a><span class="tsd-signature-symbol"> | </span><a href="streamevent.html" class="tsd-signature-type">StreamEvent</a><span class="tsd-signature-symbol"> | </span><a href="connectionevent.html" class="tsd-signature-type">ConnectionEvent</a><span class="tsd-signature-symbol"> | </span><a href="publisherspeakingevent.html" class="tsd-signature-type">PublisherSpeakingEvent</a></h5>
+														</li>
+													</ul>
+													<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+												</li>
+											</ul>
+										</li>
+									</ul>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="../interfaces/eventdispatcher.html" class="tsd-signature-type">EventDispatcher</a></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="once" class="tsd-anchor"></a>
+					<h3>once</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">once<span class="tsd-signature-symbol">(</span>type<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, handler<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">function</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="session.html" class="tsd-signature-type">Session</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L468">OpenVidu/Session.ts:468</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>See <a href="../interfaces/eventdispatcher.html#once">EventDispatcher.once</a></p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>type: <span class="tsd-signature-type">string</span></h5>
+								</li>
+								<li>
+									<h5>handler: <span class="tsd-signature-type">function</span></h5>
+									<ul class="tsd-parameters">
+										<li class="tsd-parameter-siganture">
+											<ul class="tsd-signatures tsd-kind-type-literal tsd-is-not-exported">
+												<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span>event<span class="tsd-signature-symbol">: </span><a href="sessiondisconnectedevent.html" class="tsd-signature-type">SessionDisconnectedEvent</a><span class="tsd-signature-symbol"> | </span><a href="signalevent.html" class="tsd-signature-type">SignalEvent</a><span class="tsd-signature-symbol"> | </span><a href="streamevent.html" class="tsd-signature-type">StreamEvent</a><span class="tsd-signature-symbol"> | </span><a href="connectionevent.html" class="tsd-signature-type">ConnectionEvent</a><span class="tsd-signature-symbol"> | </span><a href="publisherspeakingevent.html" class="tsd-signature-type">PublisherSpeakingEvent</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+											</ul>
+											<ul class="tsd-descriptions">
+												<li class="tsd-description">
+													<h4 class="tsd-parameters-title">Parameters</h4>
+													<ul class="tsd-parameters">
+														<li>
+															<h5>event: <a href="sessiondisconnectedevent.html" class="tsd-signature-type">SessionDisconnectedEvent</a><span class="tsd-signature-symbol"> | </span><a href="signalevent.html" class="tsd-signature-type">SignalEvent</a><span class="tsd-signature-symbol"> | </span><a href="streamevent.html" class="tsd-signature-type">StreamEvent</a><span class="tsd-signature-symbol"> | </span><a href="connectionevent.html" class="tsd-signature-type">ConnectionEvent</a><span class="tsd-signature-symbol"> | </span><a href="publisherspeakingevent.html" class="tsd-signature-type">PublisherSpeakingEvent</a></h5>
+														</li>
+													</ul>
+													<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+												</li>
+											</ul>
+										</li>
+									</ul>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="session.html" class="tsd-signature-type">Session</a></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="publish" class="tsd-anchor"></a>
+					<h3>publish</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">publish<span class="tsd-signature-symbol">(</span>publisher<span class="tsd-signature-symbol">: </span><a href="publisher.html" class="tsd-signature-type">Publisher</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L309">OpenVidu/Session.ts:309</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Publishes the participant&#39;s audio-video stream contained in <code>publisher</code> object to the session</p>
+								</div>
+								<h4 id="events-dispatched">Events dispatched</h4>
+								<p>The local <a href="publisher.html">Publisher</a> object will dispatch a <code>streamCreated</code> event upon successful termination of this method. See <a href="streamevent.html">StreamEvent</a> to learn more.</p>
+								<p>The local <a href="publisher.html">Publisher</a> object will dispatch a <code>remoteVideoPlaying</code> event only if <a href="publisher.html#subscribetoremote">Publisher.subscribeToRemote</a> was called before this method, once the remote video starts playing.
+								See <a href="videoelementevent.html">VideoElementEvent</a> to learn more.</p>
+								<p>The <a href="session.html">Session</a> object of every other participant connected to the session will dispatch a <code>streamCreated</code> event so they can subscribe to it. See <a href="streamevent.html">StreamEvent</a> to learn more.</p>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>publisher: <a href="publisher.html" class="tsd-signature-type">Publisher</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<p>A Promise (to which you can optionally subscribe to) that is resolved if the publisher was successfully published and rejected with an Error object if not</p>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="signal" class="tsd-anchor"></a>
+					<h3>signal</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">signal<span class="tsd-signature-symbol">(</span>signal<span class="tsd-signature-symbol">: </span><a href="../interfaces/signaloptions.html" class="tsd-signature-type">SignalOptions</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L404">OpenVidu/Session.ts:404</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Sends one signal. <code>signal</code> object has the following optional properties:</p>
+									<pre><code class="lang-json">{data:string, to:Connection[], type:string}
+</code></pre>
+									<p>All users subscribed to that signal (<code>session.on(&#39;signal:type&#39;, ...)</code> or <code>session.on(&#39;signal&#39;, ...)</code> for all signals) and whose Connection objects are in <code>to</code> array will receive it. Their local
+									Session objects will dispatch a <code>signal</code> or <code>signal:type</code> event. See <a href="signalevent.html">SignalEvent</a> to learn more.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>signal: <a href="../interfaces/signaloptions.html" class="tsd-signature-type">SignalOptions</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<p>A Promise (to which you can optionally subscribe to) that is resolved if the message successfully reached openvidu-server and rejected with an Error object if not. <em>This doesn&#39;t
+							mean that openvidu-server could resend the message to all the listed receivers.</em></p>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="subscribe" class="tsd-anchor"></a>
+					<h3>subscribe</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">subscribe<span class="tsd-signature-symbol">(</span>stream<span class="tsd-signature-symbol">: </span><a href="stream.html" class="tsd-signature-type">Stream</a>, targetElement<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">HTMLElement</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="subscriber.html" class="tsd-signature-type">Subscriber</a></li>
+						<li class="tsd-signature tsd-kind-icon">subscribe<span class="tsd-signature-symbol">(</span>stream<span class="tsd-signature-symbol">: </span><a href="stream.html" class="tsd-signature-type">Stream</a>, targetElement<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">HTMLElement</span>, properties<span class="tsd-signature-symbol">: </span><a href="../interfaces/subscriberproperties.html" class="tsd-signature-type">SubscriberProperties</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="subscriber.html" class="tsd-signature-type">Subscriber</a></li>
+						<li class="tsd-signature tsd-kind-icon">subscribe<span class="tsd-signature-symbol">(</span>stream<span class="tsd-signature-symbol">: </span><a href="stream.html" class="tsd-signature-type">Stream</a>, targetElement<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">HTMLElement</span>, completionHandler<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">function</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="subscriber.html" class="tsd-signature-type">Subscriber</a></li>
+						<li class="tsd-signature tsd-kind-icon">subscribe<span class="tsd-signature-symbol">(</span>stream<span class="tsd-signature-symbol">: </span><a href="stream.html" class="tsd-signature-type">Stream</a>, targetElement<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">HTMLElement</span>, properties<span class="tsd-signature-symbol">: </span><a href="../interfaces/subscriberproperties.html" class="tsd-signature-type">SubscriberProperties</a>, completionHandler<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">function</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="subscriber.html" class="tsd-signature-type">Subscriber</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L174">OpenVidu/Session.ts:174</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Subscribes to a <code>stream</code>, adding a new HTML video element to DOM with <code>subscriberProperties</code> settings. This method is usually called in the callback of <code>streamCreated</code> event.</p>
+								</div>
+								<h4 id="events-dispatched">Events dispatched</h4>
+								<p>The <a href="subscriber.html">Subscriber</a> object will dispatch a <code>videoElementCreated</code> event once the HTML video element has been added to DOM (if <em>targetElement</em> not null or undefined)</p>
+								<p>The <a href="subscriber.html">Subscriber</a> object will dispatch a <code>videoPlaying</code> event once the remote video starts playing (only if <code>videoElementCreated</code> event has been previously dispatched)</p>
+								<p>See <a href="videoelementevent.html">VideoElementEvent</a> to learn more.</p>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>stream: <a href="stream.html" class="tsd-signature-type">Stream</a></h5>
+									<div class="tsd-comment tsd-typography">
+										<div class="lead">
+											<p>Stream object to subscribe to</p>
+										</div>
+									</div>
+								</li>
+								<li>
+									<h5>targetElement: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">HTMLElement</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<div class="lead">
+											<p>HTML DOM element (or its <code>id</code> attribute) in which the video element of the Subscriber will be inserted (see <a href="../interfaces/subscriberproperties.html#insertmode">SubscriberProperties.insertMode</a>). If null or undefined no default video will be created for this Subscriber
+											(you can always access the native MediaStream object by calling <em>Subscriber.stream.getMediaStream()</em> and use it as <em>srcObject</em> of any HTML video element)</p>
+										</div>
+									</div>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="subscriber.html" class="tsd-signature-type">Subscriber</a></h4>
+						</li>
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L175">OpenVidu/Session.ts:175</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Subscribes to a <code>stream</code>, adding a new HTML video element to DOM with <code>subscriberProperties</code> settings. This method is usually called in the callback of <code>streamCreated</code> event.</p>
+								</div>
+								<h4 id="events-dispatched">Events dispatched</h4>
+								<p>The <a href="subscriber.html">Subscriber</a> object will dispatch a <code>videoElementCreated</code> event once the HTML video element has been added to DOM (if <em>targetElement</em> not null or undefined)</p>
+								<p>The <a href="subscriber.html">Subscriber</a> object will dispatch a <code>videoPlaying</code> event once the remote video starts playing (only if <code>videoElementCreated</code> event has been previously dispatched)</p>
+								<p>See <a href="videoelementevent.html">VideoElementEvent</a> to learn more.</p>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>stream: <a href="stream.html" class="tsd-signature-type">Stream</a></h5>
+									<div class="tsd-comment tsd-typography">
+										<div class="lead">
+											<p>Stream object to subscribe to</p>
+										</div>
+									</div>
+								</li>
+								<li>
+									<h5>targetElement: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">HTMLElement</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<div class="lead">
+											<p>HTML DOM element (or its <code>id</code> attribute) in which the video element of the Subscriber will be inserted (see <a href="../interfaces/subscriberproperties.html#insertmode">SubscriberProperties.insertMode</a>). If null or undefined no default video will be created for this Subscriber
+											(you can always access the native MediaStream object by calling <em>Subscriber.stream.getMediaStream()</em> and use it as <em>srcObject</em> of any HTML video element)</p>
+										</div>
+									</div>
+								</li>
+								<li>
+									<h5>properties: <a href="../interfaces/subscriberproperties.html" class="tsd-signature-type">SubscriberProperties</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="subscriber.html" class="tsd-signature-type">Subscriber</a></h4>
+						</li>
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L176">OpenVidu/Session.ts:176</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Subscribes to a <code>stream</code>, adding a new HTML video element to DOM with <code>subscriberProperties</code> settings. This method is usually called in the callback of <code>streamCreated</code> event.</p>
+								</div>
+								<h4 id="events-dispatched">Events dispatched</h4>
+								<p>The <a href="subscriber.html">Subscriber</a> object will dispatch a <code>videoElementCreated</code> event once the HTML video element has been added to DOM (if <em>targetElement</em> not null or undefined)</p>
+								<p>The <a href="subscriber.html">Subscriber</a> object will dispatch a <code>videoPlaying</code> event once the remote video starts playing (only if <code>videoElementCreated</code> event has been previously dispatched)</p>
+								<p>See <a href="videoelementevent.html">VideoElementEvent</a> to learn more.</p>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>stream: <a href="stream.html" class="tsd-signature-type">Stream</a></h5>
+									<div class="tsd-comment tsd-typography">
+										<div class="lead">
+											<p>Stream object to subscribe to</p>
+										</div>
+									</div>
+								</li>
+								<li>
+									<h5>targetElement: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">HTMLElement</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<div class="lead">
+											<p>HTML DOM element (or its <code>id</code> attribute) in which the video element of the Subscriber will be inserted (see <a href="../interfaces/subscriberproperties.html#insertmode">SubscriberProperties.insertMode</a>). If null or undefined no default video will be created for this Subscriber
+											(you can always access the native MediaStream object by calling <em>Subscriber.stream.getMediaStream()</em> and use it as <em>srcObject</em> of any HTML video element)</p>
+										</div>
+									</div>
+								</li>
+								<li>
+									<h5>completionHandler: <span class="tsd-signature-type">function</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<div class="lead">
+											<p><code>error</code> parameter is null if <code>subscribe</code> succeeds, and is defined if it fails.</p>
+										</div>
+									</div>
+									<ul class="tsd-parameters">
+										<li class="tsd-parameter-siganture">
+											<ul class="tsd-signatures tsd-kind-type-literal tsd-is-not-exported">
+												<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span>error<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Error</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+											</ul>
+											<ul class="tsd-descriptions">
+												<li class="tsd-description">
+													<h4 class="tsd-parameters-title">Parameters</h4>
+													<ul class="tsd-parameters">
+														<li>
+															<h5>error: <span class="tsd-signature-type">Error</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></h5>
+														</li>
+													</ul>
+													<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+												</li>
+											</ul>
+										</li>
+									</ul>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="subscriber.html" class="tsd-signature-type">Subscriber</a></h4>
+						</li>
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L177">OpenVidu/Session.ts:177</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Subscribes to a <code>stream</code>, adding a new HTML video element to DOM with <code>subscriberProperties</code> settings. This method is usually called in the callback of <code>streamCreated</code> event.</p>
+								</div>
+								<h4 id="events-dispatched">Events dispatched</h4>
+								<p>The <a href="subscriber.html">Subscriber</a> object will dispatch a <code>videoElementCreated</code> event once the HTML video element has been added to DOM (if <em>targetElement</em> not null or undefined)</p>
+								<p>The <a href="subscriber.html">Subscriber</a> object will dispatch a <code>videoPlaying</code> event once the remote video starts playing (only if <code>videoElementCreated</code> event has been previously dispatched)</p>
+								<p>See <a href="videoelementevent.html">VideoElementEvent</a> to learn more.</p>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>stream: <a href="stream.html" class="tsd-signature-type">Stream</a></h5>
+									<div class="tsd-comment tsd-typography">
+										<div class="lead">
+											<p>Stream object to subscribe to</p>
+										</div>
+									</div>
+								</li>
+								<li>
+									<h5>targetElement: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">HTMLElement</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<div class="lead">
+											<p>HTML DOM element (or its <code>id</code> attribute) in which the video element of the Subscriber will be inserted (see <a href="../interfaces/subscriberproperties.html#insertmode">SubscriberProperties.insertMode</a>). If null or undefined no default video will be created for this Subscriber
+											(you can always access the native MediaStream object by calling <em>Subscriber.stream.getMediaStream()</em> and use it as <em>srcObject</em> of any HTML video element)</p>
+										</div>
+									</div>
+								</li>
+								<li>
+									<h5>properties: <a href="../interfaces/subscriberproperties.html" class="tsd-signature-type">SubscriberProperties</a></h5>
+								</li>
+								<li>
+									<h5>completionHandler: <span class="tsd-signature-type">function</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<div class="lead">
+											<p><code>error</code> parameter is null if <code>subscribe</code> succeeds, and is defined if it fails.</p>
+										</div>
+									</div>
+									<ul class="tsd-parameters">
+										<li class="tsd-parameter-siganture">
+											<ul class="tsd-signatures tsd-kind-type-literal tsd-is-not-exported">
+												<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span>error<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Error</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+											</ul>
+											<ul class="tsd-descriptions">
+												<li class="tsd-description">
+													<h4 class="tsd-parameters-title">Parameters</h4>
+													<ul class="tsd-parameters">
+														<li>
+															<h5>error: <span class="tsd-signature-type">Error</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></h5>
+														</li>
+													</ul>
+													<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+												</li>
+											</ul>
+										</li>
+									</ul>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="subscriber.html" class="tsd-signature-type">Subscriber</a></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="subscribeasync" class="tsd-anchor"></a>
+					<h3>subscribe<wbr>Async</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">subscribe<wbr>Async<span class="tsd-signature-symbol">(</span>stream<span class="tsd-signature-symbol">: </span><a href="stream.html" class="tsd-signature-type">Stream</a>, targetElement<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">HTMLElement</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="subscriber.html" class="tsd-signature-type">Subscriber</a><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">subscribe<wbr>Async<span class="tsd-signature-symbol">(</span>stream<span class="tsd-signature-symbol">: </span><a href="stream.html" class="tsd-signature-type">Stream</a>, targetElement<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">HTMLElement</span>, properties<span class="tsd-signature-symbol">: </span><a href="../interfaces/subscriberproperties.html" class="tsd-signature-type">SubscriberProperties</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="subscriber.html" class="tsd-signature-type">Subscriber</a><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L241">OpenVidu/Session.ts:241</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Promisified version of <a href="session.html#subscribe">Session.subscribe</a></p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>stream: <a href="stream.html" class="tsd-signature-type">Stream</a></h5>
+								</li>
+								<li>
+									<h5>targetElement: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">HTMLElement</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="subscriber.html" class="tsd-signature-type">Subscriber</a><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L242">OpenVidu/Session.ts:242</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>stream: <a href="stream.html" class="tsd-signature-type">Stream</a></h5>
+								</li>
+								<li>
+									<h5>targetElement: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">HTMLElement</span></h5>
+								</li>
+								<li>
+									<h5>properties: <a href="../interfaces/subscriberproperties.html" class="tsd-signature-type">SubscriberProperties</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="subscriber.html" class="tsd-signature-type">Subscriber</a><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="unpublish" class="tsd-anchor"></a>
+					<h3>unpublish</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">unpublish<span class="tsd-signature-symbol">(</span>publisher<span class="tsd-signature-symbol">: </span><a href="publisher.html" class="tsd-signature-type">Publisher</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L359">OpenVidu/Session.ts:359</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Unpublishes the participant&#39;s audio-video stream contained in <code>publisher</code> object.</p>
+								</div>
+								<h4 id="events-dispatched">Events dispatched</h4>
+								<p>The <a href="publisher.html">Publisher</a> object of the local participant will dispatch a <code>streamDestroyed</code> event.
+									This event will automatically stop all media tracks and delete the HTML video element associated to it.
+								Call <code>event.preventDefault()</code> if you want clean the Publisher object yourself or re-publish it in a different Session.</p>
+								<p>The <a href="session.html">Session</a> object of every other participant connected to the session will dispatch a <code>streamDestroyed</code> event.
+									This event will automatically unsubscribe the Subscriber object from the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks) and delete the HTML video element associated to it.
+								Call <code>event.preventDefault()</code> to avoid this default behaviour and take care of disposing and cleaning the Subscriber object yourself.</p>
+								<p>See <a href="streamevent.html">StreamEvent</a> to learn more.</p>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>publisher: <a href="publisher.html" class="tsd-signature-type">Publisher</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="unsubscribe" class="tsd-anchor"></a>
+					<h3>unsubscribe</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">unsubscribe<span class="tsd-signature-symbol">(</span>subscriber<span class="tsd-signature-symbol">: </span><a href="subscriber.html" class="tsd-signature-type">Subscriber</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L274">OpenVidu/Session.ts:274</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Unsubscribes from <code>subscriber</code>, automatically removing its HTML video element.</p>
+								</div>
+								<h4 id="events-dispatched">Events dispatched</h4>
+								<p>The <a href="subscriber.html">Subscriber</a> object will dispatch a <code>videoElementDestroyed</code> event (only if it previously dispatched a <code>videoElementCreated</code> event). See <a href="videoelementevent.html">VideoElementEvent</a> to learn more</p>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>subscriber: <a href="subscriber.html" class="tsd-signature-type">Subscriber</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+			</section>
+		</div>
+		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+			<nav class="tsd-navigation primary">
+				<ul>
+					<li class="globals  ">
+						<a href="../index.html"><em>Globals</em></a>
+					</li>
+				</ul>
+			</nav>
+			<nav class="tsd-navigation secondary menu-sticky">
+				<ul class="before-current">
+					<li class=" tsd-kind-enum">
+						<a href="../enums/localrecoderstate.html" class="tsd-kind-icon">Local<wbr>Recoder<wbr>State</a>
+					</li>
+					<li class=" tsd-kind-enum">
+						<a href="../enums/openviduerrorname.html" class="tsd-kind-icon">Open<wbr>Vidu<wbr>Error<wbr>Name</a>
+					</li>
+					<li class=" tsd-kind-enum">
+						<a href="../enums/videoinsertmode.html" class="tsd-kind-icon">Video<wbr>Insert<wbr>Mode</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="connection.html" class="tsd-kind-icon">Connection</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="connectionevent.html" class="tsd-kind-icon">Connection<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="event.html" class="tsd-kind-icon">Event</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="localrecorder.html" class="tsd-kind-icon">Local<wbr>Recorder</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="openvidu.html" class="tsd-kind-icon">Open<wbr>Vidu</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="openviduerror.html" class="tsd-kind-icon">Open<wbr>Vidu<wbr>Error</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="publisher.html" class="tsd-kind-icon">Publisher</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="publisherspeakingevent.html" class="tsd-kind-icon">Publisher<wbr>Speaking<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="recordingevent.html" class="tsd-kind-icon">Recording<wbr>Event</a>
+					</li>
+				</ul>
+				<ul class="current">
+					<li class="current tsd-kind-class">
+						<a href="session.html" class="tsd-kind-icon">Session</a>
+						<ul>
+							<li class=" tsd-kind-property tsd-parent-kind-class">
+								<a href="session.html#connection" class="tsd-kind-icon">connection</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class">
+								<a href="session.html#sessionid" class="tsd-kind-icon">session<wbr>Id</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="session.html#connect" class="tsd-kind-icon">connect</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="session.html#disconnect" class="tsd-kind-icon">disconnect</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="session.html#off" class="tsd-kind-icon">off</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="session.html#on" class="tsd-kind-icon">on</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="session.html#once" class="tsd-kind-icon">once</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="session.html#publish" class="tsd-kind-icon">publish</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="session.html#signal" class="tsd-kind-icon">signal</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="session.html#subscribe" class="tsd-kind-icon">subscribe</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="session.html#subscribeasync" class="tsd-kind-icon">subscribe<wbr>Async</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="session.html#unpublish" class="tsd-kind-icon">unpublish</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="session.html#unsubscribe" class="tsd-kind-icon">unsubscribe</a>
+							</li>
+						</ul>
+					</li>
+				</ul>
+				<ul class="after-current">
+					<li class=" tsd-kind-class">
+						<a href="sessiondisconnectedevent.html" class="tsd-kind-icon">Session<wbr>Disconnected<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="signalevent.html" class="tsd-kind-icon">Signal<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="stream.html" class="tsd-kind-icon">Stream</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="streamevent.html" class="tsd-kind-icon">Stream<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="subscriber.html" class="tsd-kind-icon">Subscriber</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="videoelementevent.html" class="tsd-kind-icon">Video<wbr>Element<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="../interfaces/device.html" class="tsd-kind-icon">Device</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="../interfaces/eventdispatcher.html" class="tsd-kind-icon">Event<wbr>Dispatcher</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="../interfaces/openviduadvancedconfiguration.html" class="tsd-kind-icon">Open<wbr>Vidu<wbr>Advanced<wbr>Configuration</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="../interfaces/publisherproperties.html" class="tsd-kind-icon">Publisher<wbr>Properties</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="../interfaces/signaloptions.html" class="tsd-kind-icon">Signal<wbr>Options</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="../interfaces/subscriberproperties.html" class="tsd-kind-icon">Subscriber<wbr>Properties</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-is-not-exported">
+						<a href="../index.html#mediarecorder" class="tsd-kind-icon">Media<wbr>Recorder</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-is-not-exported">
+						<a href="../index.html#recorder_param" class="tsd-kind-icon">RECORDER_<wbr>PARAM</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-is-not-exported">
+						<a href="../index.html#secret_param" class="tsd-kind-icon">SECRET_<wbr>PARAM</a>
+					</li>
+				</ul>
+			</nav>
+		</div>
+	</div>
+</div>
+<footer class="with-border-bottom">
+	<div class="container">
+		<h2>Legend</h2>
+		<div class="tsd-legend-group">
+			<ul class="tsd-legend">
+				<li class="tsd-kind-module"><span class="tsd-kind-icon">Module</span></li>
+				<li class="tsd-kind-object-literal"><span class="tsd-kind-icon">Object literal</span></li>
+				<li class="tsd-kind-variable"><span class="tsd-kind-icon">Variable</span></li>
+				<li class="tsd-kind-function"><span class="tsd-kind-icon">Function</span></li>
+				<li class="tsd-kind-function tsd-has-type-parameter"><span class="tsd-kind-icon">Function with type parameter</span></li>
+				<li class="tsd-kind-index-signature"><span class="tsd-kind-icon">Index signature</span></li>
+				<li class="tsd-kind-type-alias"><span class="tsd-kind-icon">Type alias</span></li>
+				<li class="tsd-kind-type-alias tsd-has-type-parameter"><span class="tsd-kind-icon">Type alias with type parameter</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-enum"><span class="tsd-kind-icon">Enumeration</span></li>
+				<li class="tsd-kind-enum-member"><span class="tsd-kind-icon">Enumeration member</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-enum"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-enum"><span class="tsd-kind-icon">Method</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-interface"><span class="tsd-kind-icon">Interface</span></li>
+				<li class="tsd-kind-interface tsd-has-type-parameter"><span class="tsd-kind-icon">Interface with type parameter</span></li>
+				<li class="tsd-kind-constructor tsd-parent-kind-interface"><span class="tsd-kind-icon">Constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-interface"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-interface"><span class="tsd-kind-icon">Method</span></li>
+				<li class="tsd-kind-index-signature tsd-parent-kind-interface"><span class="tsd-kind-icon">Index signature</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-class"><span class="tsd-kind-icon">Class</span></li>
+				<li class="tsd-kind-class tsd-has-type-parameter"><span class="tsd-kind-icon">Class with type parameter</span></li>
+				<li class="tsd-kind-constructor tsd-parent-kind-class"><span class="tsd-kind-icon">Constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-class"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class"><span class="tsd-kind-icon">Method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class"><span class="tsd-kind-icon">Accessor</span></li>
+				<li class="tsd-kind-index-signature tsd-parent-kind-class"><span class="tsd-kind-icon">Index signature</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-constructor tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited accessor</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected accessor</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private accessor</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static property</span></li>
+				<li class="tsd-kind-call-signature tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static method</span></li>
+			</ul>
+		</div>
+	</div>
+</footer>
+<div class="container tsd-generator">
+	<p>Generated using <a href="http://typedoc.org/" target="_blank">TypeDoc</a></p>
+</div>
+<div class="overlay"></div>
+<script src="../assets/js/main.js"></script>
+<script>if (location.protocol == 'file:') document.write('<script src="../assets/js/search.js"><' + '/script>');</script>
+</body>
+</html>
