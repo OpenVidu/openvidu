@@ -10,8 +10,6 @@ RUN echo "deb http://ubuntu.openvidu.io/6.7.0 xenial kms6" | tee /etc/apt/source
 	&& apt-get -y install openh264-gst-plugins-bad-1.5 \
 	&& rm -rf /var/lib/apt/lists/*
 
-COPY kms.sh /kms.sh
-
 # Install Java
 RUN apt-get update && apt-get install -y openjdk-8-jdk && rm -rf /var/lib/apt/lists/*
 
@@ -24,6 +22,9 @@ COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Copy OpenVidu Server
 COPY openvidu-server.jar openvidu-server.jar
+
+# Copy KMS entrypoint
+COPY kms.sh /kms.sh
 
 EXPOSE 8888
 EXPOSE 9091
