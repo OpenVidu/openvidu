@@ -17,16 +17,15 @@ export class OpenviduRestService {
   constructor() { }
 
   getSessionId(openviduURL: string, openviduSecret: string, sessionProperties: SessionPropertiesAPI): Promise<string> {
-    const OV = new OpenViduAPI(openviduURL, openviduSecret);
-    const session = OV.createSession(sessionProperties);
-
     return new Promise((resolve, reject) => {
-      session.getSessionId()
-        .then(sessionId => {
-          this.sessionIdSession.set(sessionId, session);
-          this.sessionIdTokenOpenViduRole.set(sessionId, new Map());
-          resolve(sessionId);
-        }).catch(error => {
+      const OV = new OpenViduAPI(openviduURL, openviduSecret);
+      OV.createSession(sessionProperties)
+        .then(session => {
+          this.sessionIdSession.set(session.getSessionId(), session);
+          this.sessionIdTokenOpenViduRole.set(session.getSessionId(), new Map());
+          resolve(session.getSessionId());
+        })
+        .catch(error => {
           reject(error);
         });
     });
