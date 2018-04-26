@@ -18,6 +18,9 @@
 import { Stream } from '..';
 import { LocalRecoderState } from '../OpenViduInternal/Enums/LocalRecorderState';
 
+/**
+ * @hidden
+ */
 declare var MediaRecorder: any;
 
 

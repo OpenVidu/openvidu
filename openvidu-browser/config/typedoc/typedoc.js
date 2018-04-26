@@ -17,7 +17,7 @@ module.exports = {
     ],
     excludeExternals: true,
     excludePrivate: true,
-    theme: "./config/typedoc/custom-theme",
+    theme: "./config/typedoc/custom-theme/bin",
     plugin: [
         "typedoc-plugin-sourcefile-url",
     ],

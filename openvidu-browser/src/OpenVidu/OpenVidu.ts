@@ -29,7 +29,13 @@ import * as screenSharing from '../OpenViduInternal/ScreenSharing/Screen-Capturi
 
 import platform = require('platform');
 
+/**
+ * @hidden
+ */
 const SECRET_PARAM = '?secret=';
+/**
+ * @hidden
+ */
 const RECORDER_PARAM = '&recorder=';
 
 

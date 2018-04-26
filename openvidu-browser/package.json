@@ -14,7 +14,7 @@
     "browserify-prod": "VERSION=${VERSION:-}; cd src && browserify --debug Main.ts -p [ tsify ] --exclude kurento-browser-extensions | uglifyjs --source-map content=inline --output ../static/js/openvidu-browser-$VERSION.min.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "updatetsc": "cd src/OpenVidu && tsc && cd ../.. && tsc --declaration src/index.ts --outDir ./lib --sourceMap --lib dom,es5,es2015.promise,scripthost",
-    "docs": "typedoc --options ./config/typedoc/typedoc.js --out ./docs ./src && rm -rf ../../openvidu.io/api/openvidu-browser/* && cp -R ./docs/. ../../openvidu.io/api/openvidu-browser"
+    "docs": "grunt --gruntfile config/typedoc/custom-theme/gruntfile.js && typedoc --options ./config/typedoc/typedoc.js --out ./docs ./src && rm -rf ../../openvidu.io/api/openvidu-browser/* && cp -R ./docs/. ../../openvidu.io/api/openvidu-browser"
   },
   "types": "lib/OpenVidu/index.d.ts",
   "dependencies": {
@@ -37,6 +37,15 @@
     "typedoc": "^0.11.1",
     "typedoc-plugin-sourcefile-url": "^1.0.3",
     "typescript": "2.7.2",
-    "uglify-js": "3.3.20"
+    "uglify-js": "3.3.20",
+    "grunt": "^1.0.1",
+    "grunt-autoprefixer": "^3.0.4",
+    "grunt-cli": "^1.2.0",
+    "grunt-contrib-copy": "^1.0.0",
+    "grunt-contrib-sass": "^1.0.0",
+    "grunt-contrib-uglify": "^2.3.0",
+    "grunt-contrib-watch": "~1.0.0",
+    "grunt-string-replace": "^1.0.0",
+    "grunt-ts": "^5.5.1"
   }
 }

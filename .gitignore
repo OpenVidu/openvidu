@@ -21,3 +21,4 @@ nbactions.xml
 */.project
 */.classpath
 */.settings/*
+*/.tscache/*
