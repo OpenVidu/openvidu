@@ -21,7 +21,9 @@ import { Recording } from './Recording';
 import { RecordingLayout } from './RecordingLayout';
 import { RecordingProperties } from './RecordingProperties';
 
-declare const Buffer;
+/**
+ * @hidden
+ */
 const https = require('https');
 
 export class OpenVidu {

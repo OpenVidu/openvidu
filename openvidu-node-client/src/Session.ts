@@ -22,9 +22,9 @@ import { RecordingMode } from './RecordingMode';
 import { SessionProperties } from './SessionProperties';
 import { TokenOptions } from './TokenOptions';
 
-declare const Buffer;
-declare const require;
-
+/**
+ * @hidden
+ */
 const https = require('https');
 
 export class Session {
