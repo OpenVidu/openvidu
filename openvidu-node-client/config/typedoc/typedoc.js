@@ -21,6 +21,6 @@ module.exports = {
     plugin: [
         "typedoc-plugin-sourcefile-url",
     ],
-    'sourcefile-url-prefix': "https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/",
+    'sourcefile-url-prefix': "https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/",
     readme: "none"
 }

@@ -38,7 +38,7 @@ export enum RecordingLayout {
     HORIZONTAL_PRESENTATION = 'VERTICAL_PRESENTATION',
 
     /**
-     * Use your own custom recording layout. See [Custom recording layouts](http://openvidu.io/docs/advanced-features/recording#custom-recording-layouts) to learn more
+     * Use your own custom recording layout. See [Custom recording layouts](/docs/advanced-features/recording#custom-recording-layouts) to learn more
      */
     CUSTOM = 'CUSTOM'
 }
