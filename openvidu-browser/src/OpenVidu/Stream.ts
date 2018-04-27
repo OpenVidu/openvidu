@@ -333,8 +333,8 @@ export class Stream {
             this.targetElement = targetElement;
             this.parentId = targetElement.id;
 
-            insertMode = !!insertMode ? insertMode : VideoInsertMode.APPEND;
-            this.insertElementWithMode(this.video, insertMode);
+            const insMode = !!insertMode ? insertMode : VideoInsertMode.APPEND;
+            this.insertElementWithMode(this.video, insMode);
 
             this.ee.emitEvent('video-element-created-by-stream', [{
                 element: this.video

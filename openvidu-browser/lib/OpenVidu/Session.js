@@ -150,7 +150,7 @@ var Session = /** @class */ (function () {
         var properties = {};
         if (!!param3 && typeof param3 !== 'function') {
             properties = {
-                insertMode: (typeof param3.insertMode !== 'undefined') ? param3.insertMode : VideoInsertMode_1.VideoInsertMode.APPEND,
+                insertMode: (typeof param3.insertMode !== 'undefined') ? ((typeof param3.insertMode === 'string') ? VideoInsertMode_1.VideoInsertMode[param3.insertMode] : properties.insertMode) : VideoInsertMode_1.VideoInsertMode.APPEND,
                 subscribeToAudio: (typeof param3.subscribeToAudio !== 'undefined') ? param3.subscribeToAudio : true,
                 subscribeToVideo: (typeof param3.subscribeToVideo !== 'undefined') ? param3.subscribeToVideo : true
             };
@@ -330,9 +330,11 @@ var Session = /** @class */ (function () {
      * mean that openvidu-server could resend the message to all the listed receivers._
      */
     /* tslint:disable:no-string-literal */
-    Session.prototype.signal = function (signal) {
+    Session.prototype.signal = function (signal, callback) {
         var _this = this;
-        return new Promise(function (resolve, reject) {
+        // DEPRECATED WARNING
+        return VersionAdapter_1.solveIfCallback('Session.signal', callback, 
+        /*return */ new Promise(function (resolve, reject) {
             var signalMessage = {};
             if (signal.to && signal.to.length > 0) {
                 var connectionIds_1 = [];
@@ -356,7 +358,7 @@ var Session = /** @class */ (function () {
                     resolve();
                 }
             });
-        });
+        }));
     };
     /* tslint:enable:no-string-literal */
     /**

@@ -15,7 +15,7 @@
  *
  */
 
-export enum LocalRecoderState {
+export enum LocalRecorderState {
     READY = 'READY',
     RECORDING = 'RECORDING',
     PAUSED = 'PAUSED',

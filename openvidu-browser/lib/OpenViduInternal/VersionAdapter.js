@@ -38,7 +38,14 @@ function solveIfCallback(methodName, completionHandler, promise) {
 }
 exports.solveIfCallback = solveIfCallback;
 function adaptPublisherProperties(properties) {
-    console.warn("DEPRECATION WANING: In future releases the properties passed to 'OpenVidu.initPublisher' method must match PublisherProperties interface");
+    if ('audio' in properties ||
+        'video' in properties ||
+        'audioActive' in properties ||
+        'videoActive' in properties ||
+        'quality' in properties ||
+        'screen' in properties) {
+        console.warn("DEPRECATION WANING: In future releases the properties passed to 'OpenVidu.initPublisher' method must match PublisherProperties interface. See http://openvidu.io");
+    }
     var scr = (typeof properties.screen !== 'undefined' && properties.screen === true);
     var res = '';
     if (typeof properties.quality === 'string') {

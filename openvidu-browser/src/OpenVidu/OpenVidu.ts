@@ -111,7 +111,7 @@ export class OpenVidu {
       properties = {
         audioSource: (typeof properties.audioSource !== 'undefined') ? properties.audioSource : undefined,
         frameRate: this.isMediaStreamTrack(properties.videoSource) ? undefined : ((typeof properties.frameRate !== 'undefined') ? properties.frameRate : undefined),
-        insertMode: (typeof properties.insertMode !== 'undefined') ? properties.insertMode : VideoInsertMode.APPEND,
+        insertMode: (typeof properties.insertMode !== 'undefined') ? ((typeof properties.insertMode === 'string') ? VideoInsertMode[properties.insertMode] : properties.insertMode) : VideoInsertMode.APPEND,
         mirror: (typeof properties.mirror !== 'undefined') ? properties.mirror : true,
         publishAudio: (typeof properties.publishAudio !== 'undefined') ? properties.publishAudio : true,
         publishVideo: (typeof properties.publishVideo !== 'undefined') ? properties.publishVideo : true,

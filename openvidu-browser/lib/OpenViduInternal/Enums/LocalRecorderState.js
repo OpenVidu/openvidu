@@ -16,11 +16,11 @@
  *
  */
 exports.__esModule = true;
-var LocalRecoderState;
-(function (LocalRecoderState) {
-    LocalRecoderState["READY"] = "READY";
-    LocalRecoderState["RECORDING"] = "RECORDING";
-    LocalRecoderState["PAUSED"] = "PAUSED";
-    LocalRecoderState["FINISHED"] = "FINISHED";
-})(LocalRecoderState = exports.LocalRecoderState || (exports.LocalRecoderState = {}));
+var LocalRecorderState;
+(function (LocalRecorderState) {
+    LocalRecorderState["READY"] = "READY";
+    LocalRecorderState["RECORDING"] = "RECORDING";
+    LocalRecorderState["PAUSED"] = "PAUSED";
+    LocalRecorderState["FINISHED"] = "FINISHED";
+})(LocalRecorderState = exports.LocalRecorderState || (exports.LocalRecorderState = {}));
 //# sourceMappingURL=LocalRecorderState.js.map

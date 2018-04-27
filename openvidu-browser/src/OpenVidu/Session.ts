@@ -91,6 +91,16 @@ export class Session implements EventDispatcher {
     connect(token: string, metadata: any): Promise<any>;
 
     /**
+     * ---
+     * ## DEPRECATED
+     *
+     * _Use promisified version of the method_
+     *
+     * ---
+     */
+    connect(token: string, metadata?: any, callback?): void;
+
+    /**
      * Connects to the session using `token`. Parameter `metadata` allows you to pass extra data to share with other users when
      * they receive `streamCreated` event. The structure of `metadata` string is up to you (maybe some standarized format
      * as JSON or XML is a good idea), the only restriction is a maximum length of 10000 chars.
@@ -196,7 +206,7 @@ export class Session implements EventDispatcher {
         let properties: SubscriberProperties = {};
         if (!!param3 && typeof param3 !== 'function') {
             properties = {
-                insertMode: (typeof param3.insertMode !== 'undefined') ? param3.insertMode : VideoInsertMode.APPEND,
+                insertMode: (typeof param3.insertMode !== 'undefined') ? ((typeof param3.insertMode === 'string') ? VideoInsertMode[param3.insertMode] : properties.insertMode) : VideoInsertMode.APPEND,
                 subscribeToAudio: (typeof param3.subscribeToAudio !== 'undefined') ? param3.subscribeToAudio : true,
                 subscribeToVideo: (typeof param3.subscribeToVideo !== 'undefined') ? param3.subscribeToVideo : true
             };
@@ -230,7 +240,7 @@ export class Session implements EventDispatcher {
                 }
             });
         const subscriber = new Subscriber(stream, targetElement, properties);
-        stream.insertVideo(subscriber.element, properties.insertMode);
+        stream.insertVideo(subscriber.element, <VideoInsertMode>properties.insertMode);
         return subscriber;
     }
 
@@ -389,6 +399,17 @@ export class Session implements EventDispatcher {
     }
 
 
+    signal(signal: SignalOptions): Promise<any>;
+    /**
+     * ---
+     * ## DEPRECATED
+     *
+     * _Use promisified version of the method_
+     *
+     * ---
+     */
+    signal(signal: SignalOptions, callback?): void;
+
     /**
      * Sends one signal. `signal` object has the following optional properties:
      * ```json
@@ -401,34 +422,40 @@ export class Session implements EventDispatcher {
      * mean that openvidu-server could resend the message to all the listed receivers._
      */
     /* tslint:disable:no-string-literal */
-    signal(signal: SignalOptions): Promise<any> {
-        return new Promise((resolve, reject) => {
-            const signalMessage = {};
+    signal(signal: SignalOptions, callback?): Promise<any> {
 
-            if (signal.to && signal.to.length > 0) {
-                const connectionIds: string[] = [];
+        // DEPRECATED WARNING
+        return solveIfCallback('Session.signal', callback,
 
-                signal.to.forEach(connection => {
-                    connectionIds.push(connection.connectionId);
-                });
-                signalMessage['to'] = connectionIds;
-            } else {
-                signalMessage['to'] = [];
-            }
+        /*return */new Promise((resolve, reject) => {
+                const signalMessage = {};
 
-            signalMessage['data'] = signal.data ? signal.data : '';
-            signalMessage['type'] = signal.type ? signal.type : '';
+                if (signal.to && signal.to.length > 0) {
+                    const connectionIds: string[] = [];
 
-            this.openvidu.sendRequest('sendMessage', {
-                message: JSON.stringify(signalMessage)
-            }, (error, response) => {
-                if (!!error) {
-                    reject(error);
+                    signal.to.forEach(connection => {
+                        connectionIds.push(connection.connectionId);
+                    });
+                    signalMessage['to'] = connectionIds;
                 } else {
-                    resolve();
+                    signalMessage['to'] = [];
                 }
-            });
-        });
+
+                signalMessage['data'] = signal.data ? signal.data : '';
+                signalMessage['type'] = signal.type ? signal.type : '';
+
+                this.openvidu.sendRequest('sendMessage', {
+                    message: JSON.stringify(signalMessage)
+                }, (error, response) => {
+                    if (!!error) {
+                        reject(error);
+                    } else {
+                        resolve();
+                    }
+                });
+            }));
+
+
     }
     /* tslint:enable:no-string-literal */
 
@@ -436,7 +463,7 @@ export class Session implements EventDispatcher {
     /**
      * See [[EventDispatcher.on]]
      */
-    on(type: string, handler: (event: SessionDisconnectedEvent | SignalEvent | StreamEvent | ConnectionEvent | PublisherSpeakingEvent) => void): EventDispatcher {
+    on(type: string, handler: (event: SessionDisconnectedEvent | SignalEvent | StreamEvent | ConnectionEvent | PublisherSpeakingEvent | RecordingEvent) => void): EventDispatcher {
 
         this.ee.on(type, event => {
             if (event) {
@@ -465,7 +492,7 @@ export class Session implements EventDispatcher {
     /**
      * See [[EventDispatcher.once]]
      */
-    once(type: string, handler: (event: SessionDisconnectedEvent | SignalEvent | StreamEvent | ConnectionEvent | PublisherSpeakingEvent) => void): Session {
+    once(type: string, handler: (event: SessionDisconnectedEvent | SignalEvent | StreamEvent | ConnectionEvent | PublisherSpeakingEvent | RecordingEvent) => void): Session {
         this.ee.once(type, event => {
             if (event) {
                 console.info("Event '" + type + "' triggered by 'Session'", event);
@@ -494,7 +521,7 @@ export class Session implements EventDispatcher {
     /**
      * See [[EventDispatcher.off]]
      */
-    off(type: string, handler?: (event: SessionDisconnectedEvent | SignalEvent | StreamEvent | ConnectionEvent | PublisherSpeakingEvent) => void): Session {
+    off(type: string, handler?: (event: SessionDisconnectedEvent | SignalEvent | StreamEvent | ConnectionEvent | PublisherSpeakingEvent | RecordingEvent) => void): Session {
 
         if (!handler) {
             this.ee.removeAllListeners(type);

@@ -4,7 +4,11 @@ import {
 } from '@angular/core';
 import { Subscription } from 'rxjs/Subscription';
 
-import { OpenVidu, Session, Subscriber, Publisher, Stream, Connection, LocalRecorder } from 'openvidu-browser';
+import {
+  OpenVidu, Session, Subscriber, Publisher, Stream, Connection,
+  LocalRecorder, VideoInsertMode, StreamEvent, ConnectionEvent,
+  SessionDisconnectedEvent, SignalEvent, RecordingEvent, VideoElementEvent
+} from 'openvidu-browser';
 import { MatDialog, MatDialogRef } from '@angular/material';
 import { ExtensionDialogComponent } from './extension-dialog.component';
 import { LocalRecordingDialogComponent } from '../test-sessions/local-recording-dialog.component';
@@ -410,7 +414,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
           console.log('Message succesfully sent');
         }
       });
-      // this.initGrayVideo();
+    // this.initGrayVideo();
   }
 
   recordPublisher(): void {
@@ -562,7 +566,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         publishVideo: (!this.publisherChanged) ? true : !this.videoMuted,
         resolution: '640x480',
         frameRate: 30,
-        insertMode: 'APPEND'
+        insertMode: VideoInsertMode.APPEND
       },
       (err) => {
         if (err) {
@@ -649,7 +653,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   addSessionEvents(session: Session) {
-    session.on('streamCreated', (event) => {
+    session.on('streamCreated', (event: StreamEvent) => {
 
       this.changeDetector.detectChanges();
 
@@ -660,32 +664,32 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       this.updateEventList('streamCreated', event.stream.connection.connectionId);
     });
 
-    session.on('streamDestroyed', (event) => {
+    session.on('streamDestroyed', (event: StreamEvent) => {
       this.removeUserData(event.stream.connection.connectionId);
       this.updateEventList('streamDestroyed', event.stream.connection.connectionId);
     });
-    session.on('connectionCreated', (event) => {
+    session.on('connectionCreated', (event: ConnectionEvent) => {
       this.updateEventList('connectionCreated', event.connection.connectionId);
     });
-    session.on('connectionDestroyed', (event) => {
+    session.on('connectionDestroyed', (event: ConnectionEvent) => {
       this.updateEventList('connectionDestroyed', event.connection.connectionId);
     });
-    session.on('sessionDisconnected', (event) => {
+    session.on('sessionDisconnected', (event: SessionDisconnectedEvent) => {
       this.updateEventList('sessionDisconnected', 'No data');
       if (event.reason === 'networkDisconnect') {
         this.session = null;
         this.OV = null;
       }
     });
-    session.on('signal', (event) => {
+    session.on('signal', (event: SignalEvent) => {
       this.updateEventList('signal', event.from.connectionId + '-' + event.data);
     });
 
-    session.on('recordingStarted', (event) => {
+    session.on('recordingStarted', (event: RecordingEvent) => {
       this.updateEventList('recordingStarted', event.id);
     });
 
-    session.on('recordingStopped', (event) => {
+    session.on('recordingStopped', (event: RecordingEvent) => {
       this.updateEventList('recordingStopped', event.id);
     });
 
@@ -699,7 +703,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   addPublisherEvents(publisher: Publisher) {
-    publisher.on('videoElementCreated', (event) => {
+    publisher.on('videoElementCreated', (event: VideoElementEvent) => {
       if (this.publishTo &&
         (!this.sendVideoChange ||
           this.sendVideoChange &&
@@ -728,25 +732,25 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       this.updateEventList('accessDialogClosed', '');
     });
 
-    publisher.on('videoPlaying', (e) => {
+    publisher.on('videoPlaying', (e: VideoElementEvent) => {
       this.appendPublisherData(e.element);
       this.updateEventList('videoPlaying', e.element.id);
     });
 
-    publisher.on('remoteVideoPlaying', (e) => {
+    publisher.on('remoteVideoPlaying', (e: VideoElementEvent) => {
       this.appendPublisherData(e.element);
       this.updateEventList('remoteVideoPlaying', e.element.id);
     });
 
-    publisher.on('streamCreated', (e) => {
+    publisher.on('streamCreated', (e: StreamEvent) => {
       this.updateEventList('streamCreated', e.stream.connection.connectionId);
     });
 
-    publisher.on('streamDestroyed', (e) => {
+    publisher.on('streamDestroyed', (e: StreamEvent) => {
       this.updateEventList('streamDestroyed', e.stream.connection.connectionId);
     });
 
-    publisher.on('videoElementDestroyed', (e) => {
+    publisher.on('videoElementDestroyed', (e: VideoElementEvent) => {
       this.updateEventList('videoElementDestroyed', '(Publisher)');
     });
   }
@@ -820,7 +824,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         publishVideo: this.activeVideo,
         resolution: '640x480',
         frameRate: 30,
-        insertMode: 'APPEND'
+        insertMode: VideoInsertMode.APPEND
       },
       (err) => {
         if (err) {
@@ -855,7 +859,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         publishVideo: this.activeVideo,
         resolution: '640x480',
         frameRate: 30,
-        insertMode: 'APPEND'
+        insertMode: VideoInsertMode.APPEND
       })
       .then(publisher => {
         this.publisher = publisher;
@@ -990,7 +994,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
           {
             audioSource: false,
             videoSource: grayVideoTrack,
-            insertMode: 'APPEND'
+            insertMode: VideoInsertMode.APPEND
           });
       })
       .catch(error => {

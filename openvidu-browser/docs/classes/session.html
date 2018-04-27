@@ -161,6 +161,7 @@
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
 						<li class="tsd-signature tsd-kind-icon">connect<span class="tsd-signature-symbol">(</span>token<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
 						<li class="tsd-signature tsd-kind-icon">connect<span class="tsd-signature-symbol">(</span>token<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, metadata<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">connect<span class="tsd-signature-symbol">(</span>token<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, metadata<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">any</span>, callback<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
@@ -238,6 +239,35 @@
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
 							<p>A Promise to which you must subscribe that is resolved if the recording successfully started and rejected with an Error object if not</p>
 						</li>
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L101">OpenVidu/Session.ts:101</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<hr>
+									<h2 id="deprecated">DEPRECATED</h2>
+								</div>
+								<p><em>Use promisified version of the method</em></p>
+								<hr>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>token: <span class="tsd-signature-type">string</span></h5>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> metadata: <span class="tsd-signature-type">any</span></h5>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> callback: <span class="tsd-signature-type">any</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+							<p>A Promise to which you must subscribe that is resolved if the recording successfully started and rejected with an Error object if not</p>
+						</li>
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
@@ -250,7 +280,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L170">OpenVidu/Session.ts:170</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L180">OpenVidu/Session.ts:180</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -286,7 +316,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L497">OpenVidu/Session.ts:497</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L524">OpenVidu/Session.ts:524</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -304,14 +334,14 @@
 									<ul class="tsd-parameters">
 										<li class="tsd-parameter-siganture">
 											<ul class="tsd-signatures tsd-kind-type-literal tsd-is-not-exported">
-												<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span>event<span class="tsd-signature-symbol">: </span><a href="sessiondisconnectedevent.html" class="tsd-signature-type">SessionDisconnectedEvent</a><span class="tsd-signature-symbol"> | </span><a href="signalevent.html" class="tsd-signature-type">SignalEvent</a><span class="tsd-signature-symbol"> | </span><a href="streamevent.html" class="tsd-signature-type">StreamEvent</a><span class="tsd-signature-symbol"> | </span><a href="connectionevent.html" class="tsd-signature-type">ConnectionEvent</a><span class="tsd-signature-symbol"> | </span><a href="publisherspeakingevent.html" class="tsd-signature-type">PublisherSpeakingEvent</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+												<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span>event<span class="tsd-signature-symbol">: </span><a href="sessiondisconnectedevent.html" class="tsd-signature-type">SessionDisconnectedEvent</a><span class="tsd-signature-symbol"> | </span><a href="signalevent.html" class="tsd-signature-type">SignalEvent</a><span class="tsd-signature-symbol"> | </span><a href="streamevent.html" class="tsd-signature-type">StreamEvent</a><span class="tsd-signature-symbol"> | </span><a href="connectionevent.html" class="tsd-signature-type">ConnectionEvent</a><span class="tsd-signature-symbol"> | </span><a href="publisherspeakingevent.html" class="tsd-signature-type">PublisherSpeakingEvent</a><span class="tsd-signature-symbol"> | </span><a href="recordingevent.html" class="tsd-signature-type">RecordingEvent</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 											</ul>
 											<ul class="tsd-descriptions">
 												<li class="tsd-description">
 													<h4 class="tsd-parameters-title">Parameters</h4>
 													<ul class="tsd-parameters">
 														<li>
-															<h5>event: <a href="sessiondisconnectedevent.html" class="tsd-signature-type">SessionDisconnectedEvent</a><span class="tsd-signature-symbol"> | </span><a href="signalevent.html" class="tsd-signature-type">SignalEvent</a><span class="tsd-signature-symbol"> | </span><a href="streamevent.html" class="tsd-signature-type">StreamEvent</a><span class="tsd-signature-symbol"> | </span><a href="connectionevent.html" class="tsd-signature-type">ConnectionEvent</a><span class="tsd-signature-symbol"> | </span><a href="publisherspeakingevent.html" class="tsd-signature-type">PublisherSpeakingEvent</a></h5>
+															<h5>event: <a href="sessiondisconnectedevent.html" class="tsd-signature-type">SessionDisconnectedEvent</a><span class="tsd-signature-symbol"> | </span><a href="signalevent.html" class="tsd-signature-type">SignalEvent</a><span class="tsd-signature-symbol"> | </span><a href="streamevent.html" class="tsd-signature-type">StreamEvent</a><span class="tsd-signature-symbol"> | </span><a href="connectionevent.html" class="tsd-signature-type">ConnectionEvent</a><span class="tsd-signature-symbol"> | </span><a href="publisherspeakingevent.html" class="tsd-signature-type">PublisherSpeakingEvent</a><span class="tsd-signature-symbol"> | </span><a href="recordingevent.html" class="tsd-signature-type">RecordingEvent</a></h5>
 														</li>
 													</ul>
 													<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
@@ -335,7 +365,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L439">OpenVidu/Session.ts:439</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L466">OpenVidu/Session.ts:466</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -353,14 +383,14 @@
 									<ul class="tsd-parameters">
 										<li class="tsd-parameter-siganture">
 											<ul class="tsd-signatures tsd-kind-type-literal tsd-is-not-exported">
-												<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span>event<span class="tsd-signature-symbol">: </span><a href="sessiondisconnectedevent.html" class="tsd-signature-type">SessionDisconnectedEvent</a><span class="tsd-signature-symbol"> | </span><a href="signalevent.html" class="tsd-signature-type">SignalEvent</a><span class="tsd-signature-symbol"> | </span><a href="streamevent.html" class="tsd-signature-type">StreamEvent</a><span class="tsd-signature-symbol"> | </span><a href="connectionevent.html" class="tsd-signature-type">ConnectionEvent</a><span class="tsd-signature-symbol"> | </span><a href="publisherspeakingevent.html" class="tsd-signature-type">PublisherSpeakingEvent</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+												<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span>event<span class="tsd-signature-symbol">: </span><a href="sessiondisconnectedevent.html" class="tsd-signature-type">SessionDisconnectedEvent</a><span class="tsd-signature-symbol"> | </span><a href="signalevent.html" class="tsd-signature-type">SignalEvent</a><span class="tsd-signature-symbol"> | </span><a href="streamevent.html" class="tsd-signature-type">StreamEvent</a><span class="tsd-signature-symbol"> | </span><a href="connectionevent.html" class="tsd-signature-type">ConnectionEvent</a><span class="tsd-signature-symbol"> | </span><a href="publisherspeakingevent.html" class="tsd-signature-type">PublisherSpeakingEvent</a><span class="tsd-signature-symbol"> | </span><a href="recordingevent.html" class="tsd-signature-type">RecordingEvent</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 											</ul>
 											<ul class="tsd-descriptions">
 												<li class="tsd-description">
 													<h4 class="tsd-parameters-title">Parameters</h4>
 													<ul class="tsd-parameters">
 														<li>
-															<h5>event: <a href="sessiondisconnectedevent.html" class="tsd-signature-type">SessionDisconnectedEvent</a><span class="tsd-signature-symbol"> | </span><a href="signalevent.html" class="tsd-signature-type">SignalEvent</a><span class="tsd-signature-symbol"> | </span><a href="streamevent.html" class="tsd-signature-type">StreamEvent</a><span class="tsd-signature-symbol"> | </span><a href="connectionevent.html" class="tsd-signature-type">ConnectionEvent</a><span class="tsd-signature-symbol"> | </span><a href="publisherspeakingevent.html" class="tsd-signature-type">PublisherSpeakingEvent</a></h5>
+															<h5>event: <a href="sessiondisconnectedevent.html" class="tsd-signature-type">SessionDisconnectedEvent</a><span class="tsd-signature-symbol"> | </span><a href="signalevent.html" class="tsd-signature-type">SignalEvent</a><span class="tsd-signature-symbol"> | </span><a href="streamevent.html" class="tsd-signature-type">StreamEvent</a><span class="tsd-signature-symbol"> | </span><a href="connectionevent.html" class="tsd-signature-type">ConnectionEvent</a><span class="tsd-signature-symbol"> | </span><a href="publisherspeakingevent.html" class="tsd-signature-type">PublisherSpeakingEvent</a><span class="tsd-signature-symbol"> | </span><a href="recordingevent.html" class="tsd-signature-type">RecordingEvent</a></h5>
 														</li>
 													</ul>
 													<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
@@ -384,7 +414,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L468">OpenVidu/Session.ts:468</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L495">OpenVidu/Session.ts:495</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -402,14 +432,14 @@
 									<ul class="tsd-parameters">
 										<li class="tsd-parameter-siganture">
 											<ul class="tsd-signatures tsd-kind-type-literal tsd-is-not-exported">
-												<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span>event<span class="tsd-signature-symbol">: </span><a href="sessiondisconnectedevent.html" class="tsd-signature-type">SessionDisconnectedEvent</a><span class="tsd-signature-symbol"> | </span><a href="signalevent.html" class="tsd-signature-type">SignalEvent</a><span class="tsd-signature-symbol"> | </span><a href="streamevent.html" class="tsd-signature-type">StreamEvent</a><span class="tsd-signature-symbol"> | </span><a href="connectionevent.html" class="tsd-signature-type">ConnectionEvent</a><span class="tsd-signature-symbol"> | </span><a href="publisherspeakingevent.html" class="tsd-signature-type">PublisherSpeakingEvent</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+												<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span>event<span class="tsd-signature-symbol">: </span><a href="sessiondisconnectedevent.html" class="tsd-signature-type">SessionDisconnectedEvent</a><span class="tsd-signature-symbol"> | </span><a href="signalevent.html" class="tsd-signature-type">SignalEvent</a><span class="tsd-signature-symbol"> | </span><a href="streamevent.html" class="tsd-signature-type">StreamEvent</a><span class="tsd-signature-symbol"> | </span><a href="connectionevent.html" class="tsd-signature-type">ConnectionEvent</a><span class="tsd-signature-symbol"> | </span><a href="publisherspeakingevent.html" class="tsd-signature-type">PublisherSpeakingEvent</a><span class="tsd-signature-symbol"> | </span><a href="recordingevent.html" class="tsd-signature-type">RecordingEvent</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 											</ul>
 											<ul class="tsd-descriptions">
 												<li class="tsd-description">
 													<h4 class="tsd-parameters-title">Parameters</h4>
 													<ul class="tsd-parameters">
 														<li>
-															<h5>event: <a href="sessiondisconnectedevent.html" class="tsd-signature-type">SessionDisconnectedEvent</a><span class="tsd-signature-symbol"> | </span><a href="signalevent.html" class="tsd-signature-type">SignalEvent</a><span class="tsd-signature-symbol"> | </span><a href="streamevent.html" class="tsd-signature-type">StreamEvent</a><span class="tsd-signature-symbol"> | </span><a href="connectionevent.html" class="tsd-signature-type">ConnectionEvent</a><span class="tsd-signature-symbol"> | </span><a href="publisherspeakingevent.html" class="tsd-signature-type">PublisherSpeakingEvent</a></h5>
+															<h5>event: <a href="sessiondisconnectedevent.html" class="tsd-signature-type">SessionDisconnectedEvent</a><span class="tsd-signature-symbol"> | </span><a href="signalevent.html" class="tsd-signature-type">SignalEvent</a><span class="tsd-signature-symbol"> | </span><a href="streamevent.html" class="tsd-signature-type">StreamEvent</a><span class="tsd-signature-symbol"> | </span><a href="connectionevent.html" class="tsd-signature-type">ConnectionEvent</a><span class="tsd-signature-symbol"> | </span><a href="publisherspeakingevent.html" class="tsd-signature-type">PublisherSpeakingEvent</a><span class="tsd-signature-symbol"> | </span><a href="recordingevent.html" class="tsd-signature-type">RecordingEvent</a></h5>
 														</li>
 													</ul>
 													<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
@@ -433,7 +463,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L309">OpenVidu/Session.ts:309</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L319">OpenVidu/Session.ts:319</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -462,12 +492,13 @@
 					<h3>signal</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
 						<li class="tsd-signature tsd-kind-icon">signal<span class="tsd-signature-symbol">(</span>signal<span class="tsd-signature-symbol">: </span><a href="../interfaces/signaloptions.html" class="tsd-signature-type">SignalOptions</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">signal<span class="tsd-signature-symbol">(</span>signal<span class="tsd-signature-symbol">: </span><a href="../interfaces/signaloptions.html" class="tsd-signature-type">SignalOptions</a>, callback<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L404">OpenVidu/Session.ts:404</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L402">OpenVidu/Session.ts:402</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -489,6 +520,33 @@
 							<p>A Promise (to which you can optionally subscribe to) that is resolved if the message successfully reached openvidu-server and rejected with an Error object if not. <em>This doesn&#39;t
 							mean that openvidu-server could resend the message to all the listed receivers.</em></p>
 						</li>
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L411">OpenVidu/Session.ts:411</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<hr>
+									<h2 id="deprecated">DEPRECATED</h2>
+								</div>
+								<p><em>Use promisified version of the method</em></p>
+								<hr>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>signal: <a href="../interfaces/signaloptions.html" class="tsd-signature-type">SignalOptions</a></h5>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> callback: <span class="tsd-signature-type">any</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+							<p>A Promise (to which you can optionally subscribe to) that is resolved if the message successfully reached openvidu-server and rejected with an Error object if not. <em>This doesn&#39;t
+							mean that openvidu-server could resend the message to all the listed receivers.</em></p>
+						</li>
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
@@ -504,7 +562,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L174">OpenVidu/Session.ts:174</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L184">OpenVidu/Session.ts:184</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -541,7 +599,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L175">OpenVidu/Session.ts:175</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L185">OpenVidu/Session.ts:185</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -581,7 +639,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L176">OpenVidu/Session.ts:176</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L186">OpenVidu/Session.ts:186</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -644,7 +702,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L177">OpenVidu/Session.ts:177</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L187">OpenVidu/Session.ts:187</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -720,7 +778,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L241">OpenVidu/Session.ts:241</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L251">OpenVidu/Session.ts:251</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -742,7 +800,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L242">OpenVidu/Session.ts:242</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L252">OpenVidu/Session.ts:252</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -771,7 +829,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L359">OpenVidu/Session.ts:359</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L369">OpenVidu/Session.ts:369</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -807,7 +865,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L274">OpenVidu/Session.ts:274</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L284">OpenVidu/Session.ts:284</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -840,7 +898,7 @@
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
 					<li class=" tsd-kind-enum">
-						<a href="../enums/localrecoderstate.html" class="tsd-kind-icon">Local<wbr>Recoder<wbr>State</a>
+						<a href="../enums/localrecorderstate.html" class="tsd-kind-icon">Local<wbr>Recorder<wbr>State</a>
 					</li>
 					<li class=" tsd-kind-enum">
 						<a href="../enums/openviduerrorname.html" class="tsd-kind-icon">Open<wbr>Vidu<wbr>Error<wbr>Name</a>

@@ -1,5 +1,5 @@
 import { Stream } from '..';
-import { LocalRecoderState } from '../OpenViduInternal/Enums/LocalRecorderState';
+import { LocalRecorderState } from '../OpenViduInternal/Enums/LocalRecorderState';
 /**
  * Easy recording of [[Stream]] objects straightaway from the browser.
  *
@@ -7,7 +7,7 @@ import { LocalRecoderState } from '../OpenViduInternal/Enums/LocalRecorderState'
  */
 export declare class LocalRecorder {
     private stream;
-    state: LocalRecoderState;
+    state: LocalRecorderState;
     private connectionId;
     private mediaRecorder;
     private chunks;

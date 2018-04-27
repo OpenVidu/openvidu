@@ -7,7 +7,7 @@ export interface SubscriberProperties {
      * How the video element of the subscriber should be inserted in the DOM
      * @default VideoInsertMode.APPEND
      */
-    insertMode?: VideoInsertMode;
+    insertMode?: VideoInsertMode | string;
     /**
      * Whether to initially subscribe to the audio track of the stream or not. You can change the audio state later with [[Subscriber.subscribeToAudio]]
      * @default true

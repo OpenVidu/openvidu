@@ -19,7 +19,7 @@ export interface PublisherProperties {
      * How the video element of the publisher should be inserted in the DOM
      * @default VideoInsertMode.APPEND
      */
-    insertMode?: VideoInsertMode;
+    insertMode?: VideoInsertMode | string;
     /**
      * Whether the publisher's video will be mirrored in the page or not. Only affects the local view of the publisher in the browser (remote streams will not be mirrored). If `videoSource` is set to "screen" this property is fixed to `false`
      * @default true

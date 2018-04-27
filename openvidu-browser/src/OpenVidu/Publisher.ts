@@ -15,7 +15,7 @@
  *
  */
 
-import { OpenVidu, Session, Stream } from '..';
+import { OpenVidu, Session, Stream, VideoInsertMode } from '..';
 import { EventDispatcher } from '../OpenViduInternal/Interfaces/Public/EventDispatcher';
 import { PublisherProperties } from '../OpenViduInternal/Interfaces/Public/PublisherProperties';
 import { InboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/InboundStreamOptions';
@@ -319,7 +319,7 @@ export class Publisher implements EventDispatcher {
                 }
 
                 this.stream.setMediaStream(mediaStream);
-                this.stream.insertVideo(this.element, this.properties.insertMode);
+                this.stream.insertVideo(this.element, <VideoInsertMode>this.properties.insertMode);
 
                 resolve();
             };

@@ -7,6 +7,7 @@ import { ObjMap } from '../OpenViduInternal/Interfaces/Private/ObjMap';
 import { SessionOptions } from '../OpenViduInternal/Interfaces/Private/SessionOptions';
 import { ConnectionEvent } from '../OpenViduInternal/Events/ConnectionEvent';
 import { PublisherSpeakingEvent } from '../OpenViduInternal/Events/PublisherSpeakingEvent';
+import { RecordingEvent } from '../OpenViduInternal/Events/RecordingEvent';
 import { SessionDisconnectedEvent } from '../OpenViduInternal/Events/SessionDisconnectedEvent';
 import { SignalEvent } from '../OpenViduInternal/Events/SignalEvent';
 import { StreamEvent } from '../OpenViduInternal/Events/StreamEvent';
@@ -51,6 +52,15 @@ export declare class Session implements EventDispatcher {
     constructor(sessionId: string, openvidu: OpenVidu);
     connect(token: string): Promise<any>;
     connect(token: string, metadata: any): Promise<any>;
+    /**
+     * ---
+     * ## DEPRECATED
+     *
+     * _Use promisified version of the method_
+     *
+     * ---
+     */
+    connect(token: string, metadata?: any, callback?: any): void;
     /**
      * Leaves the session, destroying all streams and deleting the user as a participant.
      *
@@ -122,30 +132,28 @@ export declare class Session implements EventDispatcher {
      * See [[StreamEvent]] to learn more.
      */
     unpublish(publisher: Publisher): void;
-    /**
-     * Sends one signal. `signal` object has the following optional properties:
-     * ```json
-     * {data:string, to:Connection[], type:string}
-     * ```
-     * All users subscribed to that signal (`session.on('signal:type', ...)` or `session.on('signal', ...)` for all signals) and whose Connection objects are in `to` array will receive it. Their local
-     * Session objects will dispatch a `signal` or `signal:type` event. See [[SignalEvent]] to learn more.
-     *
-     * @returns A Promise (to which you can optionally subscribe to) that is resolved if the message successfully reached openvidu-server and rejected with an Error object if not. _This doesn't
-     * mean that openvidu-server could resend the message to all the listed receivers._
-     */
     signal(signal: SignalOptions): Promise<any>;
+    /**
+     * ---
+     * ## DEPRECATED
+     *
+     * _Use promisified version of the method_
+     *
+     * ---
+     */
+    signal(signal: SignalOptions, callback?: any): void;
     /**
      * See [[EventDispatcher.on]]
      */
-    on(type: string, handler: (event: SessionDisconnectedEvent | SignalEvent | StreamEvent | ConnectionEvent | PublisherSpeakingEvent) => void): EventDispatcher;
+    on(type: string, handler: (event: SessionDisconnectedEvent | SignalEvent | StreamEvent | ConnectionEvent | PublisherSpeakingEvent | RecordingEvent) => void): EventDispatcher;
     /**
      * See [[EventDispatcher.once]]
      */
-    once(type: string, handler: (event: SessionDisconnectedEvent | SignalEvent | StreamEvent | ConnectionEvent | PublisherSpeakingEvent) => void): Session;
+    once(type: string, handler: (event: SessionDisconnectedEvent | SignalEvent | StreamEvent | ConnectionEvent | PublisherSpeakingEvent | RecordingEvent) => void): Session;
     /**
      * See [[EventDispatcher.off]]
      */
-    off(type: string, handler?: (event: SessionDisconnectedEvent | SignalEvent | StreamEvent | ConnectionEvent | PublisherSpeakingEvent) => void): Session;
+    off(type: string, handler?: (event: SessionDisconnectedEvent | SignalEvent | StreamEvent | ConnectionEvent | PublisherSpeakingEvent | RecordingEvent) => void): Session;
     /**
      * @hidden
      */

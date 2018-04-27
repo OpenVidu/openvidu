@@ -247,8 +247,8 @@ var Stream = /** @class */ (function () {
             }
             this.targetElement = targetElement;
             this.parentId = targetElement.id;
-            insertMode = !!insertMode ? insertMode : VideoInsertMode_1.VideoInsertMode.APPEND;
-            this.insertElementWithMode(this.video, insertMode);
+            var insMode = !!insertMode ? insertMode : VideoInsertMode_1.VideoInsertMode.APPEND;
+            this.insertElementWithMode(this.video, insMode);
             this.ee.emitEvent('video-element-created-by-stream', [{
                     element: this.video
                 }]);

@@ -16,7 +16,7 @@
  */
 
 import { Stream } from '..';
-import { LocalRecoderState } from '../OpenViduInternal/Enums/LocalRecorderState';
+import { LocalRecorderState } from '../OpenViduInternal/Enums/LocalRecorderState';
 
 /**
  * @hidden
@@ -31,7 +31,7 @@ declare var MediaRecorder: any;
  */
 export class LocalRecorder {
 
-    state: LocalRecoderState;
+    state: LocalRecorderState;
 
     private connectionId: string;
     private mediaRecorder: any;
@@ -49,7 +49,7 @@ export class LocalRecorder {
     constructor(private stream: Stream) {
         this.connectionId = (!!this.stream.connection) ? this.stream.connection.connectionId : 'default-connection';
         this.id = this.stream.streamId + '_' + this.connectionId + '_localrecord';
-        this.state = LocalRecoderState.READY;
+        this.state = LocalRecorderState.READY;
     }
 
     /**
@@ -65,7 +65,7 @@ export class LocalRecorder {
                     console.error('MediaRecorder not supported on your browser. See compatibility in https://caniuse.com/#search=MediaRecorder');
                     throw (Error('MediaRecorder not supported on your browser. See compatibility in https://caniuse.com/#search=MediaRecorder'));
                 }
-                if (this.state !== LocalRecoderState.READY) {
+                if (this.state !== LocalRecorderState.READY) {
                     throw (Error('\'LocalRecord.record()\' needs \'LocalRecord.state\' to be \'READY\' (current value: \'' + this.state + '\'). Call \'LocalRecorder.clean()\' or init a new LocalRecorder before'));
                 }
                 console.log("Starting local recording of stream '" + this.stream.streamId + "' of connection '" + this.connectionId + "'");
@@ -121,7 +121,7 @@ export class LocalRecorder {
                 console.log('MediaRecorder warning: ' + e);
             };
 
-            this.state = LocalRecoderState.RECORDING;
+            this.state = LocalRecorderState.RECORDING;
             resolve();
 
         });
@@ -135,7 +135,7 @@ export class LocalRecorder {
     stop(): Promise<any> {
         return new Promise((resolve, reject) => {
             try {
-                if (this.state === LocalRecoderState.READY || this.state === LocalRecoderState.FINISHED) {
+                if (this.state === LocalRecorderState.READY || this.state === LocalRecorderState.FINISHED) {
                     throw (Error('\'LocalRecord.stop()\' needs \'LocalRecord.state\' to be \'RECORDING\' or \'PAUSED\' (current value: \'' + this.state + '\'). Call \'LocalRecorder.start()\' before'));
                 }
                 this.mediaRecorder.onstop = () => {
@@ -157,11 +157,11 @@ export class LocalRecorder {
     pause(): Promise<any> {
         return new Promise((resolve, reject) => {
             try {
-                if (this.state !== LocalRecoderState.RECORDING) {
+                if (this.state !== LocalRecorderState.RECORDING) {
                     reject(Error('\'LocalRecord.pause()\' needs \'LocalRecord.state\' to be \'RECORDING\' (current value: \'' + this.state + '\'). Call \'LocalRecorder.start()\' or \'LocalRecorder.resume()\' before'));
                 }
                 this.mediaRecorder.pause();
-                this.state = LocalRecoderState.PAUSED;
+                this.state = LocalRecorderState.PAUSED;
             } catch (error) {
                 reject(error);
             }
@@ -175,11 +175,11 @@ export class LocalRecorder {
     resume(): Promise<any> {
         return new Promise((resolve, reject) => {
             try {
-                if (this.state !== LocalRecoderState.PAUSED) {
+                if (this.state !== LocalRecorderState.PAUSED) {
                     throw (Error('\'LocalRecord.resume()\' needs \'LocalRecord.state\' to be \'PAUSED\' (current value: \'' + this.state + '\'). Call \'LocalRecorder.pause()\' before'));
                 }
                 this.mediaRecorder.resume();
-                this.state = LocalRecoderState.RECORDING;
+                this.state = LocalRecorderState.RECORDING;
             } catch (error) {
                 reject(error);
             }
@@ -192,7 +192,7 @@ export class LocalRecorder {
      */
     preview(parentElement): HTMLVideoElement {
 
-        if (this.state !== LocalRecoderState.FINISHED) {
+        if (this.state !== LocalRecorderState.FINISHED) {
             throw (Error('\'LocalRecord.preview()\' needs \'LocalRecord.state\' to be \'FINISHED\' (current value: \'' + this.state + '\'). Call \'LocalRecorder.stop()\' before'));
         }
 
@@ -228,9 +228,9 @@ export class LocalRecorder {
             this.chunks = [];
             this.count = 0;
             delete this.mediaRecorder;
-            this.state = LocalRecoderState.READY;
+            this.state = LocalRecorderState.READY;
         };
-        if (this.state === LocalRecoderState.RECORDING || this.state === LocalRecoderState.PAUSED) {
+        if (this.state === LocalRecorderState.RECORDING || this.state === LocalRecorderState.PAUSED) {
             this.stop().then(() => f()).catch(() => f());
         } else {
             f();
@@ -242,7 +242,7 @@ export class LocalRecorder {
      * Downloads the recorded video through the browser. [[state]] property must be `FINISHED`
      */
     download(): void {
-        if (this.state !== LocalRecoderState.FINISHED) {
+        if (this.state !== LocalRecorderState.FINISHED) {
             throw (Error('\'LocalRecord.download()\' needs \'LocalRecord.state\' to be \'FINISHED\' (current value: \'' + this.state + '\'). Call \'LocalRecorder.stop()\' before'));
         } else {
             const a: HTMLAnchorElement = document.createElement('a');
@@ -263,7 +263,7 @@ export class LocalRecorder {
      * Gets the raw Blob file. Methods preview, download, uploadAsBinary and uploadAsMultipartfile use this same file to perform their specific actions. [[state]] property must be `FINISHED`
      */
     getBlob(): Blob {
-        if (this.state !== LocalRecoderState.FINISHED) {
+        if (this.state !== LocalRecorderState.FINISHED) {
             throw (Error('Call \'LocalRecord.stop()\' before getting Blob file'));
         } else {
             return this.blob;
@@ -283,7 +283,7 @@ export class LocalRecorder {
      */
     uploadAsBinary(endpoint: string, headers?: any): Promise<any> {
         return new Promise((resolve, reject) => {
-            if (this.state !== LocalRecoderState.FINISHED) {
+            if (this.state !== LocalRecorderState.FINISHED) {
                 reject(Error('\'LocalRecord.uploadAsBinary()\' needs \'LocalRecord.state\' to be \'FINISHED\' (current value: \'' + this.state + '\'). Call \'LocalRecorder.stop()\' before'));
             } else {
                 const http = new XMLHttpRequest();
@@ -323,7 +323,7 @@ export class LocalRecorder {
      */
     uploadAsMultipartfile(endpoint: string, headers?: any): Promise<any> {
         return new Promise((resolve, reject) => {
-            if (this.state !== LocalRecoderState.FINISHED) {
+            if (this.state !== LocalRecorderState.FINISHED) {
                 reject(Error('\'LocalRecord.uploadAsMultipartfile()\' needs \'LocalRecord.state\' to be \'FINISHED\' (current value: \'' + this.state + '\'). Call \'LocalRecorder.stop()\' before'));
             } else {
                 const http = new XMLHttpRequest();
@@ -365,7 +365,7 @@ export class LocalRecorder {
 
         this.videoPreviewSrc = window.URL.createObjectURL(this.blob);
 
-        this.state = LocalRecoderState.FINISHED;
+        this.state = LocalRecorderState.FINISHED;
     }
 
 }
