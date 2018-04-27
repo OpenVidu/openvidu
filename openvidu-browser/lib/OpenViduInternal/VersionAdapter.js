@@ -18,7 +18,9 @@
 exports.__esModule = true;
 var VideoInsertMode_1 = require("./Enums/VideoInsertMode");
 function solveIfCallback(methodName, completionHandler, promise) {
-    console.warn("DEPRECATION WANING: In future releases the 'completionHandler' parameter will be removed from method '" + methodName + "'. Please, refactor your callbacks to Promise API");
+    if (!!completionHandler) {
+        console.warn("DEPRECATION WANING: In future releases the 'completionHandler' parameter will be removed from method '" + methodName + "'. Please, refactor your callbacks to Promise API");
+    }
     return new Promise(function (resolve, reject) {
         if (!!completionHandler && typeof completionHandler === 'function') {
             promise.then(function () {

@@ -19,7 +19,11 @@ import { PublisherProperties } from './Interfaces/Public/PublisherProperties';
 import { VideoInsertMode } from './Enums/VideoInsertMode';
 
 export function solveIfCallback(methodName: string, completionHandler: ((error: Error | undefined) => void) | undefined, promise: Promise<any>): Promise<any> {
-    console.warn("DEPRECATION WANING: In future releases the 'completionHandler' parameter will be removed from method '" + methodName + "'. Please, refactor your callbacks to Promise API");
+
+    if (!!completionHandler) {
+        console.warn("DEPRECATION WANING: In future releases the 'completionHandler' parameter will be removed from method '" + methodName + "'. Please, refactor your callbacks to Promise API");
+    }
+
     return new Promise((resolve, reject) => {
         if (!!completionHandler && typeof completionHandler === 'function') {
             promise.then(() => {
