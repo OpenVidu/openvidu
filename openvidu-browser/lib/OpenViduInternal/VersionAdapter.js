@@ -19,7 +19,7 @@ exports.__esModule = true;
 var VideoInsertMode_1 = require("./Enums/VideoInsertMode");
 function solveIfCallback(methodName, completionHandler, promise) {
     if (!!completionHandler) {
-        console.warn("DEPRECATION WANING: In future releases the 'completionHandler' parameter will be removed from method '" + methodName + "'. Please, refactor your callbacks to Promise API");
+        console.warn("DEPRECATION WANING: In future releases the 'completionHandler' parameter will be removed from method '" + methodName + "'. Refactor your callbacks to Promise API (see http://openvidu.io/api/openvidu-browser/index.html)");
     }
     return new Promise(function (resolve, reject) {
         if (!!completionHandler && typeof completionHandler === 'function') {
@@ -46,7 +46,7 @@ function adaptPublisherProperties(properties) {
         'videoActive' in properties ||
         'quality' in properties ||
         'screen' in properties) {
-        console.warn("DEPRECATION WANING: In future releases the properties passed to 'OpenVidu.initPublisher' method must match PublisherProperties interface. See http://openvidu.io");
+        console.warn("DEPRECATION WANING: In future releases the properties passed to 'OpenVidu.initPublisher' method must match PublisherProperties interface (see http://openvidu.io/api/openvidu-browser/interfaces/publisherproperties.html)");
     }
     var scr = (typeof properties.screen !== 'undefined' && properties.screen === true);
     var res = '';

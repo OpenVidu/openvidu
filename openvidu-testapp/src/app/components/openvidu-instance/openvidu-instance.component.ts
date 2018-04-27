@@ -196,9 +196,8 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
 
     this.addSessionEvents(this.session);
 
-    this.session.connect(token, this.clientData, (error) => {
-      if (!error) {
-
+    this.session.connect(token, this.clientData)
+      .then(() => {
         this.changeDetector.detectChanges();
 
         if (this.publishTo) {
@@ -215,12 +214,11 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
 
           // this.asyncInitPublisher();
           this.syncInitPublisher();
-
         }
-      } else {
+      })
+      .catch(error => {
         console.log('There was an error connecting to the session:', error.code, error.message);
-      }
-    });
+      });
   }
 
 
@@ -406,13 +404,12 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       data: 'Test message',
       to: [],
       type: 'chat'
-    },
-      error => {
-        if (error) {
-          console.error(error);
-        } else {
-          console.log('Message succesfully sent');
-        }
+    })
+      .then(() => {
+        console.log('Message succesfully sent');
+      })
+      .catch(error => {
+        console.error(error);
       });
     // this.initGrayVideo();
   }
