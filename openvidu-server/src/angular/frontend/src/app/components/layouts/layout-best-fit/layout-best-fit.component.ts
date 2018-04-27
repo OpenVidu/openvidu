@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, HostListener, ViewEncapsulation, ApplicationRef } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { OpenVidu, Session, Stream, Subscriber } from 'openvidu-browser';
+import { OpenVidu, Session, Stream, Subscriber, StreamEvent } from 'openvidu-browser';
 
 import { OpenViduLayout } from '../openvidu-layout';
 
@@ -52,22 +52,21 @@ export class LayoutBestFitComponent implements OnInit, OnDestroy {
 
     this.session = OV.initSession(fullSessionId);
 
-    this.session.on('streamCreated', (event) => {
+    this.session.on('streamCreated', (event: StreamEvent) => {
       const subscriber: Subscriber = this.session.subscribe(event.stream, '');
       this.addRemoteStream(event.stream);
     });
 
-    this.session.on('streamDestroyed', (event) => {
+    this.session.on('streamDestroyed', (event: StreamEvent) => {
       event.preventDefault();
       this.deleteRemoteStream(event.stream);
       this.openviduLayout.updateLayout();
     });
 
-    this.session.connect(null, (error) => {
-      if (error) {
+    this.session.connect(null)
+      .catch(error => {
         console.error(error);
-      }
-    });
+      })
 
     this.openviduLayout = new OpenViduLayout();
     this.openviduLayout.initLayoutContainer(document.getElementById('layout'), {

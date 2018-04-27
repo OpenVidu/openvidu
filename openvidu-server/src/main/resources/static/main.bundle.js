@@ -1,6 +1,6 @@
 webpackJsonp(["main"],{
 
-/***/ "../../../../../openvidu-browser2/lib/OpenVidu/Connection.js":
+/***/ "../../../../openvidu-browser/lib/OpenVidu/Connection.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22,7 +22,7 @@ webpackJsonp(["main"],{
  *
  */
 exports.__esModule = true;
-var __1 = __webpack_require__("../../../../../openvidu-browser2/lib/index.js");
+var __1 = __webpack_require__("../../../../openvidu-browser/lib/index.js");
 /**
  * Represents each one of the user's connection to the session (the local one and other user's connections).
  * Therefore each [[Session]] and [[Stream]] object has an attribute of type Connection
@@ -126,7 +126,7 @@ exports.Connection = Connection;
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/lib/OpenVidu/LocalRecorder.js":
+/***/ "../../../../openvidu-browser/lib/OpenVidu/LocalRecorder.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -148,7 +148,7 @@ exports.Connection = Connection;
  *
  */
 exports.__esModule = true;
-var LocalRecorderState_1 = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/Enums/LocalRecorderState.js");
+var LocalRecorderState_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Enums/LocalRecorderState.js");
 /**
  * Easy recording of [[Stream]] objects straightaway from the browser.
  *
@@ -164,7 +164,7 @@ var LocalRecorder = /** @class */ (function () {
         this.count = 0;
         this.connectionId = (!!this.stream.connection) ? this.stream.connection.connectionId : 'default-connection';
         this.id = this.stream.streamId + '_' + this.connectionId + '_localrecord';
-        this.state = LocalRecorderState_1.LocalRecoderState.READY;
+        this.state = LocalRecorderState_1.LocalRecorderState.READY;
     }
     /**
      * Starts the recording of the Stream. [[state]] property must be `READY`. After method succeeds is set to `RECORDING`
@@ -178,7 +178,7 @@ var LocalRecorder = /** @class */ (function () {
                     console.error('MediaRecorder not supported on your browser. See compatibility in https://caniuse.com/#search=MediaRecorder');
                     throw (Error('MediaRecorder not supported on your browser. See compatibility in https://caniuse.com/#search=MediaRecorder'));
                 }
-                if (_this.state !== LocalRecorderState_1.LocalRecoderState.READY) {
+                if (_this.state !== LocalRecorderState_1.LocalRecorderState.READY) {
                     throw (Error('\'LocalRecord.record()\' needs \'LocalRecord.state\' to be \'READY\' (current value: \'' + _this.state + '\'). Call \'LocalRecorder.clean()\' or init a new LocalRecorder before'));
                 }
                 console.log("Starting local recording of stream '" + _this.stream.streamId + "' of connection '" + _this.connectionId + "'");
@@ -226,7 +226,7 @@ var LocalRecorder = /** @class */ (function () {
             _this.mediaRecorder.onwarning = function (e) {
                 console.log('MediaRecorder warning: ' + e);
             };
-            _this.state = LocalRecorderState_1.LocalRecoderState.RECORDING;
+            _this.state = LocalRecorderState_1.LocalRecorderState.RECORDING;
             resolve();
         });
     };
@@ -238,7 +238,7 @@ var LocalRecorder = /** @class */ (function () {
         var _this = this;
         return new Promise(function (resolve, reject) {
             try {
-                if (_this.state === LocalRecorderState_1.LocalRecoderState.READY || _this.state === LocalRecorderState_1.LocalRecoderState.FINISHED) {
+                if (_this.state === LocalRecorderState_1.LocalRecorderState.READY || _this.state === LocalRecorderState_1.LocalRecorderState.FINISHED) {
                     throw (Error('\'LocalRecord.stop()\' needs \'LocalRecord.state\' to be \'RECORDING\' or \'PAUSED\' (current value: \'' + _this.state + '\'). Call \'LocalRecorder.start()\' before'));
                 }
                 _this.mediaRecorder.onstop = function () {
@@ -260,11 +260,11 @@ var LocalRecorder = /** @class */ (function () {
         var _this = this;
         return new Promise(function (resolve, reject) {
             try {
-                if (_this.state !== LocalRecorderState_1.LocalRecoderState.RECORDING) {
+                if (_this.state !== LocalRecorderState_1.LocalRecorderState.RECORDING) {
                     reject(Error('\'LocalRecord.pause()\' needs \'LocalRecord.state\' to be \'RECORDING\' (current value: \'' + _this.state + '\'). Call \'LocalRecorder.start()\' or \'LocalRecorder.resume()\' before'));
                 }
                 _this.mediaRecorder.pause();
-                _this.state = LocalRecorderState_1.LocalRecoderState.PAUSED;
+                _this.state = LocalRecorderState_1.LocalRecorderState.PAUSED;
             }
             catch (error) {
                 reject(error);
@@ -279,11 +279,11 @@ var LocalRecorder = /** @class */ (function () {
         var _this = this;
         return new Promise(function (resolve, reject) {
             try {
-                if (_this.state !== LocalRecorderState_1.LocalRecoderState.PAUSED) {
+                if (_this.state !== LocalRecorderState_1.LocalRecorderState.PAUSED) {
                     throw (Error('\'LocalRecord.resume()\' needs \'LocalRecord.state\' to be \'PAUSED\' (current value: \'' + _this.state + '\'). Call \'LocalRecorder.pause()\' before'));
                 }
                 _this.mediaRecorder.resume();
-                _this.state = LocalRecorderState_1.LocalRecoderState.RECORDING;
+                _this.state = LocalRecorderState_1.LocalRecorderState.RECORDING;
             }
             catch (error) {
                 reject(error);
@@ -294,7 +294,7 @@ var LocalRecorder = /** @class */ (function () {
      * Previews the recording, appending a new HTMLVideoElement to element with id `parentId`. [[state]] property must be `FINISHED`
      */
     LocalRecorder.prototype.preview = function (parentElement) {
-        if (this.state !== LocalRecorderState_1.LocalRecoderState.FINISHED) {
+        if (this.state !== LocalRecorderState_1.LocalRecorderState.FINISHED) {
             throw (Error('\'LocalRecord.preview()\' needs \'LocalRecord.state\' to be \'FINISHED\' (current value: \'' + this.state + '\'). Call \'LocalRecorder.stop()\' before'));
         }
         this.videoPreview = document.createElement('video');
@@ -324,9 +324,9 @@ var LocalRecorder = /** @class */ (function () {
             _this.chunks = [];
             _this.count = 0;
             delete _this.mediaRecorder;
-            _this.state = LocalRecorderState_1.LocalRecoderState.READY;
+            _this.state = LocalRecorderState_1.LocalRecorderState.READY;
         };
-        if (this.state === LocalRecorderState_1.LocalRecoderState.RECORDING || this.state === LocalRecorderState_1.LocalRecoderState.PAUSED) {
+        if (this.state === LocalRecorderState_1.LocalRecorderState.RECORDING || this.state === LocalRecorderState_1.LocalRecorderState.PAUSED) {
             this.stop().then(function () { return f(); })["catch"](function () { return f(); });
         }
         else {
@@ -337,7 +337,7 @@ var LocalRecorder = /** @class */ (function () {
      * Downloads the recorded video through the browser. [[state]] property must be `FINISHED`
      */
     LocalRecorder.prototype.download = function () {
-        if (this.state !== LocalRecorderState_1.LocalRecoderState.FINISHED) {
+        if (this.state !== LocalRecorderState_1.LocalRecorderState.FINISHED) {
             throw (Error('\'LocalRecord.download()\' needs \'LocalRecord.state\' to be \'FINISHED\' (current value: \'' + this.state + '\'). Call \'LocalRecorder.stop()\' before'));
         }
         else {
@@ -356,7 +356,7 @@ var LocalRecorder = /** @class */ (function () {
      * Gets the raw Blob file. Methods preview, download, uploadAsBinary and uploadAsMultipartfile use this same file to perform their specific actions. [[state]] property must be `FINISHED`
      */
     LocalRecorder.prototype.getBlob = function () {
-        if (this.state !== LocalRecorderState_1.LocalRecoderState.FINISHED) {
+        if (this.state !== LocalRecorderState_1.LocalRecorderState.FINISHED) {
             throw (Error('Call \'LocalRecord.stop()\' before getting Blob file'));
         }
         else {
@@ -376,7 +376,7 @@ var LocalRecorder = /** @class */ (function () {
     LocalRecorder.prototype.uploadAsBinary = function (endpoint, headers) {
         var _this = this;
         return new Promise(function (resolve, reject) {
-            if (_this.state !== LocalRecorderState_1.LocalRecoderState.FINISHED) {
+            if (_this.state !== LocalRecorderState_1.LocalRecorderState.FINISHED) {
                 reject(Error('\'LocalRecord.uploadAsBinary()\' needs \'LocalRecord.state\' to be \'FINISHED\' (current value: \'' + _this.state + '\'). Call \'LocalRecorder.stop()\' before'));
             }
             else {
@@ -416,7 +416,7 @@ var LocalRecorder = /** @class */ (function () {
     LocalRecorder.prototype.uploadAsMultipartfile = function (endpoint, headers) {
         var _this = this;
         return new Promise(function (resolve, reject) {
-            if (_this.state !== LocalRecorderState_1.LocalRecoderState.FINISHED) {
+            if (_this.state !== LocalRecorderState_1.LocalRecorderState.FINISHED) {
                 reject(Error('\'LocalRecord.uploadAsMultipartfile()\' needs \'LocalRecord.state\' to be \'FINISHED\' (current value: \'' + _this.state + '\'). Call \'LocalRecorder.stop()\' before'));
             }
             else {
@@ -445,12 +445,13 @@ var LocalRecorder = /** @class */ (function () {
             }
         });
     };
+    /* Private methods */
     LocalRecorder.prototype.onStopDefault = function () {
         console.log('MediaRecorder stopped  (state=' + this.mediaRecorder.state + ')');
         this.blob = new Blob(this.chunks, { type: 'video/webm' });
         this.chunks = [];
         this.videoPreviewSrc = window.URL.createObjectURL(this.blob);
-        this.state = LocalRecorderState_1.LocalRecoderState.FINISHED;
+        this.state = LocalRecorderState_1.LocalRecorderState.FINISHED;
     };
     return LocalRecorder;
 }());
@@ -459,7 +460,7 @@ exports.LocalRecorder = LocalRecorder;
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/lib/OpenVidu/OpenVidu.js":
+/***/ "../../../../openvidu-browser/lib/OpenVidu/OpenVidu.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -481,15 +482,21 @@ exports.LocalRecorder = LocalRecorder;
  *
  */
 exports.__esModule = true;
-var __1 = __webpack_require__("../../../../../openvidu-browser2/lib/index.js");
-var OpenViduError_1 = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/Enums/OpenViduError.js");
-var VideoInsertMode_1 = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/Enums/VideoInsertMode.js");
-var VersionAdapter_1 = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/VersionAdapter.js");
-var RpcBuilder = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/index.js");
-var screenSharingAuto = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/ScreenSharing/Screen-Capturing-Auto.js");
-var screenSharing = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/ScreenSharing/Screen-Capturing.js");
-var platform = __webpack_require__("../../../../../openvidu-browser2/node_modules/platform/platform.js");
+var __1 = __webpack_require__("../../../../openvidu-browser/lib/index.js");
+var OpenViduError_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Enums/OpenViduError.js");
+var VideoInsertMode_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Enums/VideoInsertMode.js");
+var VersionAdapter_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/VersionAdapter.js");
+var RpcBuilder = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/index.js");
+var screenSharingAuto = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/ScreenSharing/Screen-Capturing-Auto.js");
+var screenSharing = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/ScreenSharing/Screen-Capturing.js");
+var platform = __webpack_require__("../../../../openvidu-browser/node_modules/platform/platform.js");
+/**
+ * @hidden
+ */
 var SECRET_PARAM = '?secret=';
+/**
+ * @hidden
+ */
 var RECORDER_PARAM = '&recorder=';
 /**
  * Entrypoint of OpenVidu Browser library.
@@ -542,7 +549,7 @@ var OpenVidu = /** @class */ (function () {
             properties = {
                 audioSource: (typeof properties.audioSource !== 'undefined') ? properties.audioSource : undefined,
                 frameRate: this.isMediaStreamTrack(properties.videoSource) ? undefined : ((typeof properties.frameRate !== 'undefined') ? properties.frameRate : undefined),
-                insertMode: (typeof properties.insertMode !== 'undefined') ? properties.insertMode : VideoInsertMode_1.VideoInsertMode.APPEND,
+                insertMode: (typeof properties.insertMode !== 'undefined') ? ((typeof properties.insertMode === 'string') ? VideoInsertMode_1.VideoInsertMode[properties.insertMode] : properties.insertMode) : VideoInsertMode_1.VideoInsertMode.APPEND,
                 mirror: (typeof properties.mirror !== 'undefined') ? properties.mirror : true,
                 publishAudio: (typeof properties.publishAudio !== 'undefined') ? properties.publishAudio : true,
                 publishVideo: (typeof properties.publishVideo !== 'undefined') ? properties.publishVideo : true,
@@ -740,70 +747,6 @@ var OpenVidu = /** @class */ (function () {
     OpenVidu.prototype.setAdvancedConfiguration = function (configuration) {
         this.advancedConfiguration = configuration;
     };
-    /* Private methods */
-    OpenVidu.prototype.disconnectCallback = function () {
-        console.warn('Websocket connection lost');
-        if (this.isRoomAvailable()) {
-            this.session.onLostConnection();
-        }
-        else {
-            alert('Connection error. Please reload page.');
-        }
-    };
-    OpenVidu.prototype.reconnectingCallback = function () {
-        console.warn('Websocket connection lost (reconnecting)');
-        if (this.isRoomAvailable()) {
-            this.session.onLostConnection();
-        }
-        else {
-            alert('Connection error. Please reload page.');
-        }
-    };
-    OpenVidu.prototype.reconnectedCallback = function () {
-        console.warn('Websocket reconnected');
-    };
-    OpenVidu.prototype.isRoomAvailable = function () {
-        if (this.session !== undefined && this.session instanceof __1.Session) {
-            return true;
-        }
-        else {
-            console.warn('Session instance not found');
-            return false;
-        }
-    };
-    OpenVidu.prototype.getSecretFromUrl = function (url) {
-        var secret = '';
-        if (url.indexOf(SECRET_PARAM) !== -1) {
-            var endOfSecret = url.lastIndexOf(RECORDER_PARAM);
-            if (endOfSecret !== -1) {
-                secret = url.substring(url.lastIndexOf(SECRET_PARAM) + SECRET_PARAM.length, endOfSecret);
-            }
-            else {
-                secret = url.substring(url.lastIndexOf(SECRET_PARAM) + SECRET_PARAM.length, url.length);
-            }
-        }
-        return secret;
-    };
-    OpenVidu.prototype.getRecorderFromUrl = function (url) {
-        var recorder = '';
-        if (url.indexOf(RECORDER_PARAM) !== -1) {
-            recorder = url.substring(url.lastIndexOf(RECORDER_PARAM) + RECORDER_PARAM.length, url.length);
-        }
-        return Boolean(recorder).valueOf();
-    };
-    OpenVidu.prototype.getFinalWsUrl = function (url) {
-        url = this.getUrlWithoutSecret(url).substring(0, url.lastIndexOf('/')) + '/room';
-        if (url.indexOf('.ngrok.io') !== -1) {
-            // OpenVidu server URL referes to a ngrok IP: secure wss protocol and delete port of URL
-            url = url.replace('ws://', 'wss://');
-            var regex = /\.ngrok\.io:\d+/;
-            url = url.replace(regex, '.ngrok.io');
-        }
-        else if ((url.indexOf('localhost') !== -1) || (url.indexOf('127.0.0.1') !== -1)) {
-            // OpenVidu server URL referes to localhost IP
-        }
-        return url;
-    };
     /* Hidden methods */
     /**
      * @hidden
@@ -866,62 +809,69 @@ var OpenVidu = /** @class */ (function () {
                 }
                 if (!!publisherProperties.videoSource && typeof publisherProperties.videoSource === 'string') {
                     if (publisherProperties.videoSource === 'screen') {
-                        if (!!_this.advancedConfiguration.screenShareChromeExtension) {
-                            // Custom screen sharing extension for Chrome
-                            var extensionId = _this.advancedConfiguration.screenShareChromeExtension.split('/').pop().trim();
-                            screenSharing.getChromeExtensionStatus(extensionId, function (status) {
-                                if (status === 'installed-enabled') {
-                                    screenSharing.getScreenConstraints(function (error, screenConstraints) {
-                                        if (!!error && error === 'permission-denied') {
-                                            var error_1 = new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.SCREEN_CAPTURE_DENIED, 'You must allow access to one window of your desktop');
-                                            console.error(error_1);
-                                            reject(error_1);
-                                        }
-                                        else {
-                                            mediaConstraints.video = screenConstraints;
-                                            resolve(mediaConstraints);
-                                        }
-                                    });
-                                }
-                                if (status === 'installed-disabled') {
-                                    var error = new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.SCREEN_EXTENSION_DISABLED, 'You must enable the screen extension');
-                                    console.error(error);
-                                    reject(error);
-                                }
-                                if (status === 'not-installed') {
-                                    var error = new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.SCREEN_EXTENSION_NOT_INSTALLED, _this.advancedConfiguration.screenShareChromeExtension);
-                                    console.error(error);
-                                    reject(error);
-                                }
-                            });
+                        if (platform.name !== 'Chrome' && platform.name !== 'Firefox') {
+                            var error = new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.SCREEN_SHARING_NOT_SUPPORTED, 'You can only screen share in desktop Chrome and Firefox. Detected browser: ' + platform.name);
+                            console.error(error);
+                            reject(error);
                         }
                         else {
-                            // Default screen sharing extension for Chrome
-                            screenSharingAuto.getScreenId(function (error, sourceId, screenConstraints) {
-                                if (!!error) {
-                                    if (error === 'not-installed') {
-                                        var error_2 = new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.SCREEN_EXTENSION_NOT_INSTALLED, 'https://chrome.google.com/webstore/detail/screen-capturing/ajhifddimkapgcifgcodmmfdlknahffk');
-                                        console.error(error_2);
-                                        reject(error_2);
+                            if (!!_this.advancedConfiguration.screenShareChromeExtension) {
+                                // Custom screen sharing extension for Chrome
+                                var extensionId = _this.advancedConfiguration.screenShareChromeExtension.split('/').pop().trim();
+                                screenSharing.getChromeExtensionStatus(extensionId, function (status) {
+                                    if (status === 'installed-enabled') {
+                                        screenSharing.getScreenConstraints(function (error, screenConstraints) {
+                                            if (!!error && error === 'permission-denied') {
+                                                var error_1 = new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.SCREEN_CAPTURE_DENIED, 'You must allow access to one window of your desktop');
+                                                console.error(error_1);
+                                                reject(error_1);
+                                            }
+                                            else {
+                                                mediaConstraints.video = screenConstraints;
+                                                resolve(mediaConstraints);
+                                            }
+                                        });
                                     }
-                                    else if (error === 'installed-disabled') {
-                                        var error_3 = new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.SCREEN_EXTENSION_DISABLED, 'You must enable the screen extension');
-                                        console.error(error_3);
-                                        reject(error_3);
+                                    if (status === 'installed-disabled') {
+                                        var error = new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.SCREEN_EXTENSION_DISABLED, 'You must enable the screen extension');
+                                        console.error(error);
+                                        reject(error);
                                     }
-                                    else if (error === 'permission-denied') {
-                                        var error_4 = new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.SCREEN_CAPTURE_DENIED, 'You must allow access to one window of your desktop');
-                                        console.error(error_4);
-                                        reject(error_4);
+                                    if (status === 'not-installed') {
+                                        var error = new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.SCREEN_EXTENSION_NOT_INSTALLED, _this.advancedConfiguration.screenShareChromeExtension);
+                                        console.error(error);
+                                        reject(error);
                                     }
-                                }
-                                else {
-                                    mediaConstraints.video = screenConstraints.video;
-                                    resolve(mediaConstraints);
-                                }
-                            });
+                                });
+                            }
+                            else {
+                                // Default screen sharing extension for Chrome
+                                screenSharingAuto.getScreenId(function (error, sourceId, screenConstraints) {
+                                    if (!!error) {
+                                        if (error === 'not-installed') {
+                                            var error_2 = new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.SCREEN_EXTENSION_NOT_INSTALLED, 'https://chrome.google.com/webstore/detail/screen-capturing/ajhifddimkapgcifgcodmmfdlknahffk');
+                                            console.error(error_2);
+                                            reject(error_2);
+                                        }
+                                        else if (error === 'installed-disabled') {
+                                            var error_3 = new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.SCREEN_EXTENSION_DISABLED, 'You must enable the screen extension');
+                                            console.error(error_3);
+                                            reject(error_3);
+                                        }
+                                        else if (error === 'permission-denied') {
+                                            var error_4 = new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.SCREEN_CAPTURE_DENIED, 'You must allow access to one window of your desktop');
+                                            console.error(error_4);
+                                            reject(error_4);
+                                        }
+                                    }
+                                    else {
+                                        mediaConstraints.video = screenConstraints.video;
+                                        resolve(mediaConstraints);
+                                    }
+                                });
+                            }
+                            publisherProperties.videoSource = 'screen';
                         }
-                        publisherProperties.videoSource = 'screen';
                     }
                     else {
                         // tslint:disable-next-line:no-string-literal
@@ -1031,6 +981,70 @@ var OpenVidu = /** @class */ (function () {
     OpenVidu.prototype.getRecorder = function () {
         return this.recorder;
     };
+    /* Private methods */
+    OpenVidu.prototype.disconnectCallback = function () {
+        console.warn('Websocket connection lost');
+        if (this.isRoomAvailable()) {
+            this.session.onLostConnection();
+        }
+        else {
+            alert('Connection error. Please reload page.');
+        }
+    };
+    OpenVidu.prototype.reconnectingCallback = function () {
+        console.warn('Websocket connection lost (reconnecting)');
+        if (this.isRoomAvailable()) {
+            this.session.onLostConnection();
+        }
+        else {
+            alert('Connection error. Please reload page.');
+        }
+    };
+    OpenVidu.prototype.reconnectedCallback = function () {
+        console.warn('Websocket reconnected');
+    };
+    OpenVidu.prototype.isRoomAvailable = function () {
+        if (this.session !== undefined && this.session instanceof __1.Session) {
+            return true;
+        }
+        else {
+            console.warn('Session instance not found');
+            return false;
+        }
+    };
+    OpenVidu.prototype.getSecretFromUrl = function (url) {
+        var secret = '';
+        if (url.indexOf(SECRET_PARAM) !== -1) {
+            var endOfSecret = url.lastIndexOf(RECORDER_PARAM);
+            if (endOfSecret !== -1) {
+                secret = url.substring(url.lastIndexOf(SECRET_PARAM) + SECRET_PARAM.length, endOfSecret);
+            }
+            else {
+                secret = url.substring(url.lastIndexOf(SECRET_PARAM) + SECRET_PARAM.length, url.length);
+            }
+        }
+        return secret;
+    };
+    OpenVidu.prototype.getRecorderFromUrl = function (url) {
+        var recorder = '';
+        if (url.indexOf(RECORDER_PARAM) !== -1) {
+            recorder = url.substring(url.lastIndexOf(RECORDER_PARAM) + RECORDER_PARAM.length, url.length);
+        }
+        return Boolean(recorder).valueOf();
+    };
+    OpenVidu.prototype.getFinalWsUrl = function (url) {
+        url = this.getUrlWithoutSecret(url).substring(0, url.lastIndexOf('/')) + '/room';
+        if (url.indexOf('.ngrok.io') !== -1) {
+            // OpenVidu server URL referes to a ngrok IP: secure wss protocol and delete port of URL
+            url = url.replace('ws://', 'wss://');
+            var regex = /\.ngrok\.io:\d+/;
+            url = url.replace(regex, '.ngrok.io');
+        }
+        else if ((url.indexOf('localhost') !== -1) || (url.indexOf('127.0.0.1') !== -1)) {
+            // OpenVidu server URL referes to localhost IP
+        }
+        return url;
+    };
     return OpenVidu;
 }());
 exports.OpenVidu = OpenVidu;
@@ -1038,7 +1052,7 @@ exports.OpenVidu = OpenVidu;
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/lib/OpenVidu/Publisher.js":
+/***/ "../../../../openvidu-browser/lib/OpenVidu/Publisher.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1060,11 +1074,11 @@ exports.OpenVidu = OpenVidu;
  *
  */
 exports.__esModule = true;
-var __1 = __webpack_require__("../../../../../openvidu-browser2/lib/index.js");
-var StreamEvent_1 = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/Events/StreamEvent.js");
-var VideoElementEvent_1 = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/Events/VideoElementEvent.js");
-var OpenViduError_1 = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/Enums/OpenViduError.js");
-var EventEmitter = __webpack_require__("../../../../../openvidu-browser2/node_modules/wolfy87-eventemitter/EventEmitter.js");
+var __1 = __webpack_require__("../../../../openvidu-browser/lib/index.js");
+var StreamEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/StreamEvent.js");
+var VideoElementEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/VideoElementEvent.js");
+var OpenViduError_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Enums/OpenViduError.js");
+var EventEmitter = __webpack_require__("../../../../openvidu-browser/node_modules/wolfy87-eventemitter/EventEmitter.js");
 /**
  * Packs local media streams. Participants can publish it to a session. Initialized with [[OpenVidu.initPublisher]] method
  */
@@ -1291,39 +1305,6 @@ var Publisher = /** @class */ (function () {
         }
         return this;
     };
-    /* Private methods */
-    Publisher.prototype.userMediaHasVideo = function (callback) {
-        var _this = this;
-        return new Promise(function (resolve, reject) {
-            // If the user is going to publish its screen there's a video source
-            if ((typeof _this.properties.videoSource === 'string') && _this.properties.videoSource === 'screen') {
-                resolve(true);
-            }
-            else {
-                _this.openvidu.getDevices()
-                    .then(function (devices) {
-                    resolve(!!(devices.filter(function (device) {
-                        return device.kind === 'videoinput';
-                    })[0]));
-                })["catch"](function (error) {
-                    reject(error);
-                });
-            }
-        });
-    };
-    Publisher.prototype.userMediaHasAudio = function (callback) {
-        var _this = this;
-        return new Promise(function (resolve, reject) {
-            _this.openvidu.getDevices()
-                .then(function (devices) {
-                resolve(!!(devices.filter(function (device) {
-                    return device.kind === 'audioinput';
-                })[0]));
-            })["catch"](function (error) {
-                reject(error);
-            });
-        });
-    };
     /* Hidden methods */
     /**
      * @hidden
@@ -1515,6 +1496,39 @@ var Publisher = /** @class */ (function () {
             this.ee.emitEvent('accessDialogClosed', []);
         }
     };
+    /* Private methods */
+    Publisher.prototype.userMediaHasVideo = function (callback) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            // If the user is going to publish its screen there's a video source
+            if ((typeof _this.properties.videoSource === 'string') && _this.properties.videoSource === 'screen') {
+                resolve(true);
+            }
+            else {
+                _this.openvidu.getDevices()
+                    .then(function (devices) {
+                    resolve(!!(devices.filter(function (device) {
+                        return device.kind === 'videoinput';
+                    })[0]));
+                })["catch"](function (error) {
+                    reject(error);
+                });
+            }
+        });
+    };
+    Publisher.prototype.userMediaHasAudio = function (callback) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            _this.openvidu.getDevices()
+                .then(function (devices) {
+                resolve(!!(devices.filter(function (device) {
+                    return device.kind === 'audioinput';
+                })[0]));
+            })["catch"](function (error) {
+                reject(error);
+            });
+        });
+    };
     return Publisher;
 }());
 exports.Publisher = Publisher;
@@ -1522,7 +1536,7 @@ exports.Publisher = Publisher;
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/lib/OpenVidu/Session.js":
+/***/ "../../../../openvidu-browser/lib/OpenVidu/Session.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1544,17 +1558,17 @@ exports.Publisher = Publisher;
  *
  */
 exports.__esModule = true;
-var __1 = __webpack_require__("../../../../../openvidu-browser2/lib/index.js");
-var StreamEvent_1 = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/Events/StreamEvent.js");
-var ConnectionEvent_1 = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/Events/ConnectionEvent.js");
-var SessionDisconnectedEvent_1 = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/Events/SessionDisconnectedEvent.js");
-var SignalEvent_1 = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/Events/SignalEvent.js");
-var RecordingEvent_1 = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/Events/RecordingEvent.js");
-var OpenViduError_1 = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/Enums/OpenViduError.js");
-var VideoInsertMode_1 = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/Enums/VideoInsertMode.js");
-var VersionAdapter_1 = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/VersionAdapter.js");
-var platform = __webpack_require__("../../../../../openvidu-browser2/node_modules/platform/platform.js");
-var EventEmitter = __webpack_require__("../../../../../openvidu-browser2/node_modules/wolfy87-eventemitter/EventEmitter.js");
+var __1 = __webpack_require__("../../../../openvidu-browser/lib/index.js");
+var ConnectionEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/ConnectionEvent.js");
+var RecordingEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/RecordingEvent.js");
+var SessionDisconnectedEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/SessionDisconnectedEvent.js");
+var SignalEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/SignalEvent.js");
+var StreamEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/StreamEvent.js");
+var OpenViduError_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Enums/OpenViduError.js");
+var VideoInsertMode_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Enums/VideoInsertMode.js");
+var VersionAdapter_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/VersionAdapter.js");
+var platform = __webpack_require__("../../../../openvidu-browser/node_modules/platform/platform.js");
+var EventEmitter = __webpack_require__("../../../../openvidu-browser/node_modules/wolfy87-eventemitter/EventEmitter.js");
 /**
  * Represents a video call. It can also be seen as a videoconference room where multiple users can connect.
  * Participants who publish their videos to a session will be seen by the rest of users connected to that specific session.
@@ -1565,7 +1579,6 @@ var Session = /** @class */ (function () {
      * @hidden
      */
     function Session(sessionId, openvidu) {
-        this.ee = new EventEmitter();
         // This map is only used to avoid race condition between 'joinRoom' response and 'onParticipantPublished' notification
         /**
          * @hidden
@@ -1579,6 +1592,7 @@ var Session = /** @class */ (function () {
          * @hidden
          */
         this.speakingEventsEnabled = false;
+        this.ee = new EventEmitter();
         this.openvidu = openvidu;
         this.sessionId = this.openvidu.getUrlWithoutSecret(sessionId);
         this.openvidu.processOpenViduUrl(sessionId);
@@ -1678,7 +1692,7 @@ var Session = /** @class */ (function () {
         var properties = {};
         if (!!param3 && typeof param3 !== 'function') {
             properties = {
-                insertMode: (typeof param3.insertMode !== 'undefined') ? param3.insertMode : VideoInsertMode_1.VideoInsertMode.APPEND,
+                insertMode: (typeof param3.insertMode !== 'undefined') ? ((typeof param3.insertMode === 'string') ? VideoInsertMode_1.VideoInsertMode[param3.insertMode] : properties.insertMode) : VideoInsertMode_1.VideoInsertMode.APPEND,
                 subscribeToAudio: (typeof param3.subscribeToAudio !== 'undefined') ? param3.subscribeToAudio : true,
                 subscribeToVideo: (typeof param3.subscribeToVideo !== 'undefined') ? param3.subscribeToVideo : true
             };
@@ -1858,9 +1872,11 @@ var Session = /** @class */ (function () {
      * mean that openvidu-server could resend the message to all the listed receivers._
      */
     /* tslint:disable:no-string-literal */
-    Session.prototype.signal = function (signal) {
+    Session.prototype.signal = function (signal, callback) {
         var _this = this;
-        return new Promise(function (resolve, reject) {
+        // DEPRECATED WARNING
+        return VersionAdapter_1.solveIfCallback('Session.signal', callback, 
+        /*return */ new Promise(function (resolve, reject) {
             var signalMessage = {};
             if (signal.to && signal.to.length > 0) {
                 var connectionIds_1 = [];
@@ -1884,7 +1900,7 @@ var Session = /** @class */ (function () {
                     resolve();
                 }
             });
-        });
+        }));
     };
     /* tslint:enable:no-string-literal */
     /**
@@ -1958,100 +1974,6 @@ var Session = /** @class */ (function () {
             }
         }
         return this;
-    };
-    /* Private methods */
-    Session.prototype.connectAux = function (token) {
-        var _this = this;
-        return new Promise(function (resolve, reject) {
-            _this.openvidu.startWs(function (error) {
-                if (!!error) {
-                    reject(error);
-                }
-                else {
-                    var joinParams = {
-                        token: (!!token) ? token : '',
-                        session: _this.sessionId,
-                        metadata: !!_this.options.metadata ? _this.options.metadata : '',
-                        secret: _this.openvidu.getSecret(),
-                        recorder: _this.openvidu.getRecorder()
-                    };
-                    _this.openvidu.sendRequest('joinRoom', joinParams, function (error, response) {
-                        // Initialize local Connection object with values returned by openvidu-server
-                        _this.connection = new __1.Connection(_this);
-                        _this.connection.connectionId = response.id;
-                        _this.connection.data = response.metadata;
-                        // Initialize remote Connections with value returned by openvidu-server
-                        var events = {
-                            connections: new Array(),
-                            streams: new Array()
-                        };
-                        var existingParticipants = response.value;
-                        existingParticipants.forEach(function (participant) {
-                            var connection = new __1.Connection(_this, participant);
-                            _this.remoteConnections[connection.connectionId] = connection;
-                            events.connections.push(connection);
-                            if (!!connection.stream) {
-                                _this.remoteStreamsCreated[connection.stream.streamId] = true;
-                                events.streams.push(connection.stream);
-                            }
-                        });
-                        // Own 'connectionCreated' event
-                        _this.ee.emitEvent('connectionCreated', [new ConnectionEvent_1.ConnectionEvent(false, _this, 'connectionCreated', _this.connection, '')]);
-                        // One 'connectionCreated' event for each existing connection in the session
-                        events.connections.forEach(function (connection) {
-                            _this.ee.emitEvent('connectionCreated', [new ConnectionEvent_1.ConnectionEvent(false, _this, 'connectionCreated', connection, '')]);
-                        });
-                        // One 'streamCreated' event for each active stream in the session
-                        events.streams.forEach(function (stream) {
-                            _this.ee.emitEvent('streamCreated', [new StreamEvent_1.StreamEvent(false, _this, 'streamCreated', stream, '')]);
-                        });
-                        resolve();
-                    });
-                }
-            });
-        });
-    };
-    Session.prototype.stringClientMetadata = function (metadata) {
-        if (typeof metadata !== 'string') {
-            return JSON.stringify(metadata);
-        }
-        else {
-            return metadata;
-        }
-    };
-    Session.prototype.getConnection = function (connectionId, errorMessage) {
-        var _this = this;
-        return new Promise(function (resolve, reject) {
-            var connection = _this.remoteConnections[connectionId];
-            if (!!connection) {
-                // Resolve remote connection
-                resolve(connection);
-            }
-            else {
-                if (_this.connection.connectionId === connectionId) {
-                    // Resolve local connection
-                    resolve(_this.connection);
-                }
-                else {
-                    // Connection not found. Reject with OpenViduError
-                    reject(new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.GENERIC_ERROR, errorMessage));
-                }
-            }
-        });
-    };
-    Session.prototype.getRemoteConnection = function (connectionId, errorMessage) {
-        var _this = this;
-        return new Promise(function (resolve, reject) {
-            var connection = _this.remoteConnections[connectionId];
-            if (!!connection) {
-                // Resolve remote connection
-                resolve(connection);
-            }
-            else {
-                // Remote connection not found. Reject with OpenViduError
-                reject(new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.GENERIC_ERROR, errorMessage));
-            }
-        });
     };
     /* Hidden methods */
     /**
@@ -2299,6 +2221,100 @@ var Session = /** @class */ (function () {
             sessionDisconnectEvent.callDefaultBehaviour();
         }
     };
+    /* Private methods */
+    Session.prototype.connectAux = function (token) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            _this.openvidu.startWs(function (error) {
+                if (!!error) {
+                    reject(error);
+                }
+                else {
+                    var joinParams = {
+                        token: (!!token) ? token : '',
+                        session: _this.sessionId,
+                        metadata: !!_this.options.metadata ? _this.options.metadata : '',
+                        secret: _this.openvidu.getSecret(),
+                        recorder: _this.openvidu.getRecorder()
+                    };
+                    _this.openvidu.sendRequest('joinRoom', joinParams, function (error, response) {
+                        // Initialize local Connection object with values returned by openvidu-server
+                        _this.connection = new __1.Connection(_this);
+                        _this.connection.connectionId = response.id;
+                        _this.connection.data = response.metadata;
+                        // Initialize remote Connections with value returned by openvidu-server
+                        var events = {
+                            connections: new Array(),
+                            streams: new Array()
+                        };
+                        var existingParticipants = response.value;
+                        existingParticipants.forEach(function (participant) {
+                            var connection = new __1.Connection(_this, participant);
+                            _this.remoteConnections[connection.connectionId] = connection;
+                            events.connections.push(connection);
+                            if (!!connection.stream) {
+                                _this.remoteStreamsCreated[connection.stream.streamId] = true;
+                                events.streams.push(connection.stream);
+                            }
+                        });
+                        // Own 'connectionCreated' event
+                        _this.ee.emitEvent('connectionCreated', [new ConnectionEvent_1.ConnectionEvent(false, _this, 'connectionCreated', _this.connection, '')]);
+                        // One 'connectionCreated' event for each existing connection in the session
+                        events.connections.forEach(function (connection) {
+                            _this.ee.emitEvent('connectionCreated', [new ConnectionEvent_1.ConnectionEvent(false, _this, 'connectionCreated', connection, '')]);
+                        });
+                        // One 'streamCreated' event for each active stream in the session
+                        events.streams.forEach(function (stream) {
+                            _this.ee.emitEvent('streamCreated', [new StreamEvent_1.StreamEvent(false, _this, 'streamCreated', stream, '')]);
+                        });
+                        resolve();
+                    });
+                }
+            });
+        });
+    };
+    Session.prototype.stringClientMetadata = function (metadata) {
+        if (typeof metadata !== 'string') {
+            return JSON.stringify(metadata);
+        }
+        else {
+            return metadata;
+        }
+    };
+    Session.prototype.getConnection = function (connectionId, errorMessage) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            var connection = _this.remoteConnections[connectionId];
+            if (!!connection) {
+                // Resolve remote connection
+                resolve(connection);
+            }
+            else {
+                if (_this.connection.connectionId === connectionId) {
+                    // Resolve local connection
+                    resolve(_this.connection);
+                }
+                else {
+                    // Connection not found. Reject with OpenViduError
+                    reject(new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.GENERIC_ERROR, errorMessage));
+                }
+            }
+        });
+    };
+    Session.prototype.getRemoteConnection = function (connectionId, errorMessage) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            var connection = _this.remoteConnections[connectionId];
+            if (!!connection) {
+                // Resolve remote connection
+                resolve(connection);
+            }
+            else {
+                // Remote connection not found. Reject with OpenViduError
+                reject(new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.GENERIC_ERROR, errorMessage));
+            }
+        });
+    };
     return Session;
 }());
 exports.Session = Session;
@@ -2306,7 +2322,7 @@ exports.Session = Session;
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/lib/OpenVidu/Stream.js":
+/***/ "../../../../openvidu-browser/lib/OpenVidu/Stream.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2328,11 +2344,11 @@ exports.Session = Session;
  *
  */
 exports.__esModule = true;
-var WebRtcStats_1 = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/WebRtcStats/WebRtcStats.js");
-var PublisherSpeakingEvent_1 = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/Events/PublisherSpeakingEvent.js");
-var EventEmitter = __webpack_require__("../../../../../openvidu-browser2/node_modules/wolfy87-eventemitter/EventEmitter.js");
-var kurentoUtils = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/KurentoUtils/kurento-utils-js/index.js");
-var VideoInsertMode_1 = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/Enums/VideoInsertMode.js");
+var WebRtcStats_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/WebRtcStats/WebRtcStats.js");
+var PublisherSpeakingEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/PublisherSpeakingEvent.js");
+var EventEmitter = __webpack_require__("../../../../openvidu-browser/node_modules/wolfy87-eventemitter/EventEmitter.js");
+var kurentoUtils = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-utils-js/index.js");
+var VideoInsertMode_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Enums/VideoInsertMode.js");
 /**
  * Represents each one of the videos send and receive by a user in a session.
  * Therefore each [[Publisher]] and [[Subscriber]] has an attribute of type Stream
@@ -2402,6 +2418,7 @@ var Stream = /** @class */ (function () {
             console.debug('Video srcObject [' + _this.mediaStream + '] updated in stream [' + _this.streamId + ']');
         });
     }
+    /* Hidden methods */
     /**
      * @hidden
      */
@@ -2558,8 +2575,8 @@ var Stream = /** @class */ (function () {
             }
             this.targetElement = targetElement;
             this.parentId = targetElement.id;
-            insertMode = !!insertMode ? insertMode : VideoInsertMode_1.VideoInsertMode.APPEND;
-            this.insertElementWithMode(this.video, insertMode);
+            var insMode = !!insertMode ? insertMode : VideoInsertMode_1.VideoInsertMode.APPEND;
+            this.insertElementWithMode(this.video, insMode);
             this.ee.emitEvent('video-element-created-by-stream', [{
                     element: this.video
                 }]);
@@ -2656,6 +2673,7 @@ var Stream = /** @class */ (function () {
         this.speechEvent.stop();
         this.speechEvent = undefined;
     };
+    /* Private methods */
     Stream.prototype.initWebRtcPeerSend = function () {
         var _this = this;
         return new Promise(function (resolve, reject) {
@@ -2858,7 +2876,7 @@ exports.Stream = Stream;
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/lib/OpenVidu/Subscriber.js":
+/***/ "../../../../openvidu-browser/lib/OpenVidu/Subscriber.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2880,8 +2898,8 @@ exports.Stream = Stream;
  *
  */
 exports.__esModule = true;
-var VideoElementEvent_1 = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/Events/VideoElementEvent.js");
-var EventEmitter = __webpack_require__("../../../../../openvidu-browser2/node_modules/wolfy87-eventemitter/EventEmitter.js");
+var VideoElementEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/VideoElementEvent.js");
+var EventEmitter = __webpack_require__("../../../../openvidu-browser/node_modules/wolfy87-eventemitter/EventEmitter.js");
 /**
  * Packs remote media streams. Participants automatically receive them when others publish their streams. Initialized with [[Session.subscribe]] method
  */
@@ -3028,7 +3046,7 @@ exports.Subscriber = Subscriber;
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/lib/OpenViduInternal/Enums/LocalRecorderState.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/Enums/LocalRecorderState.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3050,18 +3068,18 @@ exports.Subscriber = Subscriber;
  *
  */
 exports.__esModule = true;
-var LocalRecoderState;
-(function (LocalRecoderState) {
-    LocalRecoderState["READY"] = "READY";
-    LocalRecoderState["RECORDING"] = "RECORDING";
-    LocalRecoderState["PAUSED"] = "PAUSED";
-    LocalRecoderState["FINISHED"] = "FINISHED";
-})(LocalRecoderState = exports.LocalRecoderState || (exports.LocalRecoderState = {}));
+var LocalRecorderState;
+(function (LocalRecorderState) {
+    LocalRecorderState["READY"] = "READY";
+    LocalRecorderState["RECORDING"] = "RECORDING";
+    LocalRecorderState["PAUSED"] = "PAUSED";
+    LocalRecorderState["FINISHED"] = "FINISHED";
+})(LocalRecorderState = exports.LocalRecorderState || (exports.LocalRecorderState = {}));
 //# sourceMappingURL=LocalRecorderState.js.map
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/lib/OpenViduInternal/Enums/OpenViduError.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/Enums/OpenViduError.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3118,7 +3136,7 @@ exports.OpenViduError = OpenViduError;
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/lib/OpenViduInternal/Enums/VideoInsertMode.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/Enums/VideoInsertMode.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3140,6 +3158,9 @@ exports.OpenViduError = OpenViduError;
  *
  */
 exports.__esModule = true;
+/**
+ * How the video will be inserted in the DOM for Publishers and Subscribers. See [[PublisherProperties.insertMode]] and [[SubscriberProperties.insertMode]]
+ */
 var VideoInsertMode;
 (function (VideoInsertMode) {
     /**
@@ -3167,7 +3188,7 @@ var VideoInsertMode;
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/lib/OpenViduInternal/Events/ConnectionEvent.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/Events/ConnectionEvent.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3199,7 +3220,7 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 exports.__esModule = true;
-var Event_1 = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/Events/Event.js");
+var Event_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/Event.js");
 /**
  * Defines the following events:
  * - `connectionCreated`: dispatched by [[Session]]
@@ -3228,7 +3249,7 @@ exports.ConnectionEvent = ConnectionEvent;
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/lib/OpenViduInternal/Events/Event.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/Events/Event.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3285,7 +3306,7 @@ exports.Event = Event;
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/lib/OpenViduInternal/Events/PublisherSpeakingEvent.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/Events/PublisherSpeakingEvent.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3317,7 +3338,7 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 exports.__esModule = true;
-var Event_1 = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/Events/Event.js");
+var Event_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/Event.js");
 /**
  * Defines the following events:
  * - `publisherStartSpeaking`: dispatched by [[Session]]
@@ -3353,7 +3374,7 @@ exports.PublisherSpeakingEvent = PublisherSpeakingEvent;
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/lib/OpenViduInternal/Events/RecordingEvent.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/Events/RecordingEvent.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3385,7 +3406,7 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 exports.__esModule = true;
-var Event_1 = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/Events/Event.js");
+var Event_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/Event.js");
 /**
  * Defines the following events:
  * - `recordingStarted`: dispatched by [[Session]]
@@ -3416,7 +3437,7 @@ exports.RecordingEvent = RecordingEvent;
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/lib/OpenViduInternal/Events/SessionDisconnectedEvent.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/Events/SessionDisconnectedEvent.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3448,7 +3469,7 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 exports.__esModule = true;
-var Event_1 = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/Events/Event.js");
+var Event_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/Event.js");
 /**
  * Defines event `sessionDisconnected` dispatched by [[Session]]
  */
@@ -3487,7 +3508,7 @@ exports.SessionDisconnectedEvent = SessionDisconnectedEvent;
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/lib/OpenViduInternal/Events/SignalEvent.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/Events/SignalEvent.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3519,7 +3540,7 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 exports.__esModule = true;
-var Event_1 = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/Events/Event.js");
+var Event_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/Event.js");
 /**
  * Defines the following events:
  * - `signal`: dispatched by [[Session]]
@@ -3549,7 +3570,7 @@ exports.SignalEvent = SignalEvent;
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/lib/OpenViduInternal/Events/StreamEvent.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/Events/StreamEvent.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3581,8 +3602,8 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 exports.__esModule = true;
-var Event_1 = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/Events/Event.js");
-var __1 = __webpack_require__("../../../../../openvidu-browser2/lib/index.js");
+var Event_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/Event.js");
+var __1 = __webpack_require__("../../../../openvidu-browser/lib/index.js");
 /**
  * Defines the following events:
  * - `streamCreated`: dispatched by [[Session]] and [[Publisher]]
@@ -3639,7 +3660,7 @@ exports.StreamEvent = StreamEvent;
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/lib/OpenViduInternal/Events/VideoElementEvent.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/Events/VideoElementEvent.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3671,7 +3692,7 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 exports.__esModule = true;
-var Event_1 = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/Events/Event.js");
+var Event_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/Event.js");
 /**
  * Defines the following events:
  * - `videoElementCreated`: dispatched by [[Publisher]] and [[Subscriber]]
@@ -3701,7 +3722,7 @@ exports.VideoElementEvent = VideoElementEvent;
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/Mapper.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/Mapper.js":
 /***/ (function(module, exports) {
 
 function Mapper() {
@@ -3752,20 +3773,20 @@ module.exports = Mapper;
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/clients/index.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/clients/index.js":
 /***/ (function(module, exports, __webpack_require__) {
 
-var JsonRpcClient = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/clients/jsonrpcclient.js");
+var JsonRpcClient = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/clients/jsonrpcclient.js");
 exports.JsonRpcClient = JsonRpcClient;
 //# sourceMappingURL=index.js.map
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/clients/jsonrpcclient.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/clients/jsonrpcclient.js":
 /***/ (function(module, exports, __webpack_require__) {
 
-var RpcBuilder = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/index.js");
-var WebSocketWithReconnection = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/clients/transports/webSocketWithReconnection.js");
+var RpcBuilder = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/index.js");
+var WebSocketWithReconnection = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/clients/transports/webSocketWithReconnection.js");
 Date.now = Date.now || function () {
     return +new Date;
 };
@@ -3960,16 +3981,16 @@ module.exports = JsonRpcClient;
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/clients/transports/index.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/clients/transports/index.js":
 /***/ (function(module, exports, __webpack_require__) {
 
-var WebSocketWithReconnection = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/clients/transports/webSocketWithReconnection.js");
+var WebSocketWithReconnection = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/clients/transports/webSocketWithReconnection.js");
 exports.WebSocketWithReconnection = WebSocketWithReconnection;
 //# sourceMappingURL=index.js.map
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/clients/transports/webSocketWithReconnection.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/clients/transports/webSocketWithReconnection.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4143,7 +4164,7 @@ module.exports = WebSocketWithReconnection;
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/index.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/index.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 var defineProperty_IE8 = false;
@@ -4171,9 +4192,9 @@ if (!Function.prototype.bind) {
     };
 }
 var EventEmitter = __webpack_require__("./node_modules/events/events.js").EventEmitter;
-var inherits = __webpack_require__("../../../../../openvidu-browser2/node_modules/inherits/inherits_browser.js");
-var packers = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/packers/index.js");
-var Mapper = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/Mapper.js");
+var inherits = __webpack_require__("../../../../openvidu-browser/node_modules/inherits/inherits_browser.js");
+var packers = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/packers/index.js");
+var Mapper = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/Mapper.js");
 var BASE_TIMEOUT = 5000;
 function unifyResponseMethods(responseMethods) {
     if (!responseMethods)
@@ -4623,8 +4644,8 @@ function RpcBuilder(packer, options, transport, onRequest) {
 inherits(RpcBuilder, EventEmitter);
 RpcBuilder.RpcNotification = RpcNotification;
 module.exports = RpcBuilder;
-var clients = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/clients/index.js");
-var transports = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/clients/transports/index.js");
+var clients = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/clients/index.js");
+var transports = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/clients/transports/index.js");
 RpcBuilder.clients = clients;
 RpcBuilder.clients.transports = transports;
 RpcBuilder.packers = packers;
@@ -4632,7 +4653,7 @@ RpcBuilder.packers = packers;
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/packers/JsonRPC.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/packers/JsonRPC.js":
 /***/ (function(module, exports) {
 
 function pack(message, id) {
@@ -4691,7 +4712,7 @@ exports.unpack = unpack;
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/packers/XmlRPC.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/packers/XmlRPC.js":
 /***/ (function(module, exports) {
 
 function pack(message) {
@@ -4708,28 +4729,28 @@ exports.unpack = unpack;
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/packers/index.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/packers/index.js":
 /***/ (function(module, exports, __webpack_require__) {
 
-var JsonRPC = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/packers/JsonRPC.js");
-var XmlRPC = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/packers/XmlRPC.js");
+var JsonRPC = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/packers/JsonRPC.js");
+var XmlRPC = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/packers/XmlRPC.js");
 exports.JsonRPC = JsonRPC;
 exports.XmlRPC = XmlRPC;
 //# sourceMappingURL=index.js.map
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/lib/OpenViduInternal/KurentoUtils/kurento-utils-js/WebRtcPeer.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-utils-js/WebRtcPeer.js":
 /***/ (function(module, exports, __webpack_require__) {
 
-var freeice = __webpack_require__("../../../../../openvidu-browser2/node_modules/freeice/index.js");
-var inherits = __webpack_require__("../../../../../openvidu-browser2/node_modules/inherits/inherits_browser.js");
-var UAParser = __webpack_require__("../../../../../openvidu-browser2/node_modules/ua-parser-js/src/ua-parser.js");
-var uuid = __webpack_require__("../../../../../openvidu-browser2/node_modules/uuid/index.js");
-var hark = __webpack_require__("../../../../../openvidu-browser2/node_modules/hark/hark.js");
+var freeice = __webpack_require__("../../../../openvidu-browser/node_modules/freeice/index.js");
+var inherits = __webpack_require__("../../../../openvidu-browser/node_modules/inherits/inherits_browser.js");
+var UAParser = __webpack_require__("../../../../openvidu-browser/node_modules/ua-parser-js/src/ua-parser.js");
+var uuid = __webpack_require__("../../../../openvidu-browser/node_modules/uuid/index.js");
+var hark = __webpack_require__("../../../../openvidu-browser/node_modules/hark/hark.js");
 var EventEmitter = __webpack_require__("./node_modules/events/events.js").EventEmitter;
-var recursive = __webpack_require__("../../../../../openvidu-browser2/node_modules/merge/merge.js").recursive.bind(undefined, true);
-var sdpTranslator = __webpack_require__("../../../../../openvidu-browser2/node_modules/sdp-translator/lib/index.js");
+var recursive = __webpack_require__("../../../../openvidu-browser/node_modules/merge/merge.js").recursive.bind(undefined, true);
+var sdpTranslator = __webpack_require__("../../../../openvidu-browser/node_modules/sdp-translator/lib/index.js");
 var logger = window.Logger || console;
 var MEDIA_CONSTRAINTS = {
     audio: true,
@@ -5232,16 +5253,16 @@ exports.hark = harkUtils;
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/lib/OpenViduInternal/KurentoUtils/kurento-utils-js/index.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-utils-js/index.js":
 /***/ (function(module, exports, __webpack_require__) {
 
-var WebRtcPeer = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/KurentoUtils/kurento-utils-js/WebRtcPeer.js");
+var WebRtcPeer = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-utils-js/WebRtcPeer.js");
 exports.WebRtcPeer = WebRtcPeer;
 //# sourceMappingURL=index.js.map
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/lib/OpenViduInternal/ScreenSharing/Screen-Capturing-Auto.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/ScreenSharing/Screen-Capturing-Auto.js":
 /***/ (function(module, exports) {
 
 window.getScreenId = function (callback) {
@@ -5353,7 +5374,7 @@ exports.getScreenId = getScreenId;
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/lib/OpenViduInternal/ScreenSharing/Screen-Capturing.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/ScreenSharing/Screen-Capturing.js":
 /***/ (function(module, exports) {
 
 var chromeMediaSource = 'screen';
@@ -5464,7 +5485,7 @@ exports.getSourceId = getSourceId;
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/lib/OpenViduInternal/VersionAdapter.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/VersionAdapter.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5486,9 +5507,11 @@ exports.getSourceId = getSourceId;
  *
  */
 exports.__esModule = true;
-var VideoInsertMode_1 = __webpack_require__("../../../../../openvidu-browser2/lib/OpenViduInternal/Enums/VideoInsertMode.js");
+var VideoInsertMode_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Enums/VideoInsertMode.js");
 function solveIfCallback(methodName, completionHandler, promise) {
-    console.warn("DEPRECATION WANING: In future releases the 'completionHandler' parameter will be removed from method '" + methodName + "'. Please, refactor your callbacks to Promise API");
+    if (!!completionHandler) {
+        console.warn("DEPRECATION WANING: In future releases the 'completionHandler' parameter will be removed from method '" + methodName + "'. Refactor your callbacks to Promise API (see http://openvidu.io/api/openvidu-browser/index.html)");
+    }
     return new Promise(function (resolve, reject) {
         if (!!completionHandler && typeof completionHandler === 'function') {
             promise.then(function () {
@@ -5508,7 +5531,14 @@ function solveIfCallback(methodName, completionHandler, promise) {
 }
 exports.solveIfCallback = solveIfCallback;
 function adaptPublisherProperties(properties) {
-    console.warn("DEPRECATION WANING: In future releases the properties passed to 'OpenVidu.initPublisher' method must match PublisherProperties interface");
+    if ('audio' in properties ||
+        'video' in properties ||
+        'audioActive' in properties ||
+        'videoActive' in properties ||
+        'quality' in properties ||
+        'screen' in properties) {
+        console.warn("DEPRECATION WANING: In future releases the properties passed to 'OpenVidu.initPublisher' method must match PublisherProperties interface (see http://openvidu.io/api/openvidu-browser/interfaces/publisherproperties.html)");
+    }
     var scr = (typeof properties.screen !== 'undefined' && properties.screen === true);
     var res = '';
     if (typeof properties.quality === 'string') {
@@ -5541,7 +5571,7 @@ exports.adaptPublisherProperties = adaptPublisherProperties;
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/lib/OpenViduInternal/WebRtcStats/WebRtcStats.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/WebRtcStats/WebRtcStats.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5563,7 +5593,7 @@ exports.adaptPublisherProperties = adaptPublisherProperties;
  *
  */
 exports.__esModule = true;
-var platform = __webpack_require__("../../../../../openvidu-browser2/node_modules/platform/platform.js");
+var platform = __webpack_require__("../../../../openvidu-browser/node_modules/platform/platform.js");
 var WebRtcStats = /** @class */ (function () {
     function WebRtcStats(stream) {
         this.stream = stream;
@@ -5844,38 +5874,60 @@ exports.WebRtcStats = WebRtcStats;
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/lib/index.js":
+/***/ "../../../../openvidu-browser/lib/index.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 exports.__esModule = true;
-var OpenVidu_1 = __webpack_require__("../../../../../openvidu-browser2/lib/OpenVidu/OpenVidu.js");
+var OpenVidu_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/OpenVidu.js");
 exports.OpenVidu = OpenVidu_1.OpenVidu;
-var Session_1 = __webpack_require__("../../../../../openvidu-browser2/lib/OpenVidu/Session.js");
+var Session_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/Session.js");
 exports.Session = Session_1.Session;
-var Publisher_1 = __webpack_require__("../../../../../openvidu-browser2/lib/OpenVidu/Publisher.js");
+var Publisher_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/Publisher.js");
 exports.Publisher = Publisher_1.Publisher;
-var Subscriber_1 = __webpack_require__("../../../../../openvidu-browser2/lib/OpenVidu/Subscriber.js");
+var Subscriber_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/Subscriber.js");
 exports.Subscriber = Subscriber_1.Subscriber;
-var Stream_1 = __webpack_require__("../../../../../openvidu-browser2/lib/OpenVidu/Stream.js");
+var Stream_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/Stream.js");
 exports.Stream = Stream_1.Stream;
-var Connection_1 = __webpack_require__("../../../../../openvidu-browser2/lib/OpenVidu/Connection.js");
+var Connection_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/Connection.js");
 exports.Connection = Connection_1.Connection;
-var LocalRecorder_1 = __webpack_require__("../../../../../openvidu-browser2/lib/OpenVidu/LocalRecorder.js");
+var LocalRecorder_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/LocalRecorder.js");
 exports.LocalRecorder = LocalRecorder_1.LocalRecorder;
+var LocalRecorderState_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Enums/LocalRecorderState.js");
+exports.LocalRecorderState = LocalRecorderState_1.LocalRecorderState;
+var OpenViduError_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Enums/OpenViduError.js");
+exports.OpenViduError = OpenViduError_1.OpenViduError;
+var VideoInsertMode_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Enums/VideoInsertMode.js");
+exports.VideoInsertMode = VideoInsertMode_1.VideoInsertMode;
+var Event_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/Event.js");
+exports.Event = Event_1.Event;
+var ConnectionEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/ConnectionEvent.js");
+exports.ConnectionEvent = ConnectionEvent_1.ConnectionEvent;
+var PublisherSpeakingEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/PublisherSpeakingEvent.js");
+exports.PublisherSpeakingEvent = PublisherSpeakingEvent_1.PublisherSpeakingEvent;
+var RecordingEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/RecordingEvent.js");
+exports.RecordingEvent = RecordingEvent_1.RecordingEvent;
+var SessionDisconnectedEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/SessionDisconnectedEvent.js");
+exports.SessionDisconnectedEvent = SessionDisconnectedEvent_1.SessionDisconnectedEvent;
+var SignalEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/SignalEvent.js");
+exports.SignalEvent = SignalEvent_1.SignalEvent;
+var StreamEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/StreamEvent.js");
+exports.StreamEvent = StreamEvent_1.StreamEvent;
+var VideoElementEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/VideoElementEvent.js");
+exports.VideoElementEvent = VideoElementEvent_1.VideoElementEvent;
 //# sourceMappingURL=index.js.map
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/node_modules/freeice/index.js":
+/***/ "../../../../openvidu-browser/node_modules/freeice/index.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* jshint node: true */
 
 
-var normalice = __webpack_require__("../../../../../openvidu-browser2/node_modules/normalice/index.js");
+var normalice = __webpack_require__("../../../../openvidu-browser/node_modules/normalice/index.js");
 
 /**
   # freeice
@@ -5940,8 +5992,8 @@ var normalice = __webpack_require__("../../../../../openvidu-browser2/node_modul
 var freeice = module.exports = function(opts) {
   // if a list of servers has been provided, then use it instead of defaults
   var servers = {
-    stun: (opts || {}).stun || __webpack_require__("../../../../../openvidu-browser2/node_modules/freeice/stun.json"),
-    turn: (opts || {}).turn || __webpack_require__("../../../../../openvidu-browser2/node_modules/freeice/turn.json")
+    stun: (opts || {}).stun || __webpack_require__("../../../../openvidu-browser/node_modules/freeice/stun.json"),
+    turn: (opts || {}).turn || __webpack_require__("../../../../openvidu-browser/node_modules/freeice/turn.json")
   };
 
   var stunCount = (opts || {}).stunCount || 2;
@@ -5981,24 +6033,24 @@ var freeice = module.exports = function(opts) {
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/node_modules/freeice/stun.json":
+/***/ "../../../../openvidu-browser/node_modules/freeice/stun.json":
 /***/ (function(module, exports) {
 
 module.exports = ["stun.l.google.com:19302","stun1.l.google.com:19302","stun2.l.google.com:19302","stun3.l.google.com:19302","stun4.l.google.com:19302","stun.ekiga.net","stun.ideasip.com","stun.schlund.de","stun.stunprotocol.org:3478","stun.voiparound.com","stun.voipbuster.com","stun.voipstunt.com","stun.voxgratia.org","stun.services.mozilla.com"]
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/node_modules/freeice/turn.json":
+/***/ "../../../../openvidu-browser/node_modules/freeice/turn.json":
 /***/ (function(module, exports) {
 
 module.exports = []
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/node_modules/hark/hark.js":
+/***/ "../../../../openvidu-browser/node_modules/hark/hark.js":
 /***/ (function(module, exports, __webpack_require__) {
 
-var WildEmitter = __webpack_require__("../../../../../openvidu-browser2/node_modules/wildemitter/wildemitter.js");
+var WildEmitter = __webpack_require__("../../../../openvidu-browser/node_modules/wildemitter/wildemitter.js");
 
 function getMaxVolume (analyser, fftBins) {
   var maxVolume = -Infinity;
@@ -6148,7 +6200,7 @@ module.exports = function(stream, options) {
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/node_modules/inherits/inherits_browser.js":
+/***/ "../../../../openvidu-browser/node_modules/inherits/inherits_browser.js":
 /***/ (function(module, exports) {
 
 if (typeof Object.create === 'function') {
@@ -6178,7 +6230,7 @@ if (typeof Object.create === 'function') {
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/node_modules/merge/merge.js":
+/***/ "../../../../openvidu-browser/node_modules/merge/merge.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(module) {/*!
@@ -6360,7 +6412,7 @@ if (typeof Object.create === 'function') {
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/node_modules/normalice/index.js":
+/***/ "../../../../openvidu-browser/node_modules/normalice/index.js":
 /***/ (function(module, exports) {
 
 /**
@@ -6427,7 +6479,7 @@ module.exports = function(input) {
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/node_modules/platform/platform.js":
+/***/ "../../../../openvidu-browser/node_modules/platform/platform.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(module, global) {var __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -7653,7 +7705,7 @@ module.exports = function(input) {
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/node_modules/sdp-transform/lib/grammar.js":
+/***/ "../../../../openvidu-browser/node_modules/sdp-transform/lib/grammar.js":
 /***/ (function(module, exports) {
 
 var grammar = module.exports = {
@@ -7917,11 +7969,11 @@ Object.keys(grammar).forEach(function (key) {
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/node_modules/sdp-transform/lib/index.js":
+/***/ "../../../../openvidu-browser/node_modules/sdp-transform/lib/index.js":
 /***/ (function(module, exports, __webpack_require__) {
 
-var parser = __webpack_require__("../../../../../openvidu-browser2/node_modules/sdp-transform/lib/parser.js");
-var writer = __webpack_require__("../../../../../openvidu-browser2/node_modules/sdp-transform/lib/writer.js");
+var parser = __webpack_require__("../../../../openvidu-browser/node_modules/sdp-transform/lib/parser.js");
+var writer = __webpack_require__("../../../../openvidu-browser/node_modules/sdp-transform/lib/writer.js");
 
 exports.write = writer;
 exports.parse = parser.parse;
@@ -7932,7 +7984,7 @@ exports.parseRemoteCandidates = parser.parseRemoteCandidates;
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/node_modules/sdp-transform/lib/parser.js":
+/***/ "../../../../openvidu-browser/node_modules/sdp-transform/lib/parser.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 var toIntIfInt = function (v) {
@@ -7971,7 +8023,7 @@ var parseReg = function (obj, location, content) {
   }
 };
 
-var grammar = __webpack_require__("../../../../../openvidu-browser2/node_modules/sdp-transform/lib/grammar.js");
+var grammar = __webpack_require__("../../../../openvidu-browser/node_modules/sdp-transform/lib/grammar.js");
 var validLine = RegExp.prototype.test.bind(/^([a-z])=(.*)/);
 
 exports.parse = function (sdp) {
@@ -8032,10 +8084,10 @@ exports.parseRemoteCandidates = function (str) {
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/node_modules/sdp-transform/lib/writer.js":
+/***/ "../../../../openvidu-browser/node_modules/sdp-transform/lib/writer.js":
 /***/ (function(module, exports, __webpack_require__) {
 
-var grammar = __webpack_require__("../../../../../openvidu-browser2/node_modules/sdp-transform/lib/grammar.js");
+var grammar = __webpack_require__("../../../../openvidu-browser/node_modules/sdp-transform/lib/grammar.js");
 
 // customized util.format - discards excess arguments and can void middle ones
 var formatRegExp = /%[sdv%]/g;
@@ -8153,7 +8205,7 @@ module.exports = function (session, opts) {
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/node_modules/sdp-translator/lib/array-equals.js":
+/***/ "../../../../openvidu-browser/node_modules/sdp-translator/lib/array-equals.js":
 /***/ (function(module, exports) {
 
 /* Copyright @ 2015 Atlassian Pty Ltd
@@ -8199,7 +8251,7 @@ module.exports = function arrayEquals(array) {
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/node_modules/sdp-translator/lib/index.js":
+/***/ "../../../../openvidu-browser/node_modules/sdp-translator/lib/index.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 /* Copyright @ 2015 Atlassian Pty Ltd
@@ -8217,12 +8269,12 @@ module.exports = function arrayEquals(array) {
  * limitations under the License.
  */
 
-exports.Interop = __webpack_require__("../../../../../openvidu-browser2/node_modules/sdp-translator/lib/interop.js");
+exports.Interop = __webpack_require__("../../../../openvidu-browser/node_modules/sdp-translator/lib/interop.js");
 
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/node_modules/sdp-translator/lib/interop.js":
+/***/ "../../../../openvidu-browser/node_modules/sdp-translator/lib/interop.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8246,8 +8298,8 @@ exports.Interop = __webpack_require__("../../../../../openvidu-browser2/node_mod
 /* jshint -W097 */
 
 
-var transform = __webpack_require__("../../../../../openvidu-browser2/node_modules/sdp-translator/lib/transform.js");
-var arrayEquals = __webpack_require__("../../../../../openvidu-browser2/node_modules/sdp-translator/lib/array-equals.js");
+var transform = __webpack_require__("../../../../openvidu-browser/node_modules/sdp-translator/lib/transform.js");
+var arrayEquals = __webpack_require__("../../../../openvidu-browser/node_modules/sdp-translator/lib/array-equals.js");
 
 function Interop() {
 
@@ -9113,7 +9165,7 @@ Interop.prototype.toUnifiedPlan = function(desc) {
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/node_modules/sdp-translator/lib/transform.js":
+/***/ "../../../../openvidu-browser/node_modules/sdp-translator/lib/transform.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 /* Copyright @ 2015 Atlassian Pty Ltd
@@ -9131,7 +9183,7 @@ Interop.prototype.toUnifiedPlan = function(desc) {
  * limitations under the License.
  */
 
-var transform = __webpack_require__("../../../../../openvidu-browser2/node_modules/sdp-transform/lib/index.js");
+var transform = __webpack_require__("../../../../openvidu-browser/node_modules/sdp-transform/lib/index.js");
 
 exports.write = function(session, opts) {
 
@@ -9232,7 +9284,7 @@ exports.parse = function(sdp) {
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/node_modules/ua-parser-js/src/ua-parser.js":
+/***/ "../../../../openvidu-browser/node_modules/ua-parser-js/src/ua-parser.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_RESULT__;/**
@@ -10312,11 +10364,11 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/**
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/node_modules/uuid/index.js":
+/***/ "../../../../openvidu-browser/node_modules/uuid/index.js":
 /***/ (function(module, exports, __webpack_require__) {
 
-var v1 = __webpack_require__("../../../../../openvidu-browser2/node_modules/uuid/v1.js");
-var v4 = __webpack_require__("../../../../../openvidu-browser2/node_modules/uuid/v4.js");
+var v1 = __webpack_require__("../../../../openvidu-browser/node_modules/uuid/v1.js");
+var v4 = __webpack_require__("../../../../openvidu-browser/node_modules/uuid/v4.js");
 
 var uuid = v4;
 uuid.v1 = v1;
@@ -10327,7 +10379,7 @@ module.exports = uuid;
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/node_modules/uuid/lib/bytesToUuid.js":
+/***/ "../../../../openvidu-browser/node_modules/uuid/lib/bytesToUuid.js":
 /***/ (function(module, exports) {
 
 /**
@@ -10357,7 +10409,7 @@ module.exports = bytesToUuid;
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/node_modules/uuid/lib/rng-browser.js":
+/***/ "../../../../openvidu-browser/node_modules/uuid/lib/rng-browser.js":
 /***/ (function(module, exports) {
 
 // Unique ID creation requires a high quality random # generator.  In the
@@ -10396,11 +10448,11 @@ if (getRandomValues) {
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/node_modules/uuid/v1.js":
+/***/ "../../../../openvidu-browser/node_modules/uuid/v1.js":
 /***/ (function(module, exports, __webpack_require__) {
 
-var rng = __webpack_require__("../../../../../openvidu-browser2/node_modules/uuid/lib/rng-browser.js");
-var bytesToUuid = __webpack_require__("../../../../../openvidu-browser2/node_modules/uuid/lib/bytesToUuid.js");
+var rng = __webpack_require__("../../../../openvidu-browser/node_modules/uuid/lib/rng-browser.js");
+var bytesToUuid = __webpack_require__("../../../../openvidu-browser/node_modules/uuid/lib/bytesToUuid.js");
 
 // **`v1()` - Generate time-based UUID**
 //
@@ -10512,11 +10564,11 @@ module.exports = v1;
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/node_modules/uuid/v4.js":
+/***/ "../../../../openvidu-browser/node_modules/uuid/v4.js":
 /***/ (function(module, exports, __webpack_require__) {
 
-var rng = __webpack_require__("../../../../../openvidu-browser2/node_modules/uuid/lib/rng-browser.js");
-var bytesToUuid = __webpack_require__("../../../../../openvidu-browser2/node_modules/uuid/lib/bytesToUuid.js");
+var rng = __webpack_require__("../../../../openvidu-browser/node_modules/uuid/lib/rng-browser.js");
+var bytesToUuid = __webpack_require__("../../../../openvidu-browser/node_modules/uuid/lib/bytesToUuid.js");
 
 function v4(options, buf, offset) {
   var i = buf && offset || 0;
@@ -10548,7 +10600,7 @@ module.exports = v4;
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/node_modules/wildemitter/wildemitter.js":
+/***/ "../../../../openvidu-browser/node_modules/wildemitter/wildemitter.js":
 /***/ (function(module, exports) {
 
 /*
@@ -10708,7 +10760,7 @@ WildEmitter.mixin(WildEmitter);
 
 /***/ }),
 
-/***/ "../../../../../openvidu-browser2/node_modules/wolfy87-eventemitter/EventEmitter.js":
+/***/ "../../../../openvidu-browser/node_modules/wolfy87-eventemitter/EventEmitter.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -11491,7 +11543,7 @@ module.exports = "<div id=\"dashboard-div\" fxLayout=\"row\" fxLayout.xs=\"colum
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_material__ = __webpack_require__("./node_modules/@angular/material/esm5/material.es5.js");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__services_info_service__ = __webpack_require__("./src/app/services/info.service.ts");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__services_rest_service__ = __webpack_require__("./src/app/services/rest.service.ts");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_openvidu_browser__ = __webpack_require__("../../../../../openvidu-browser2/lib/index.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_openvidu_browser__ = __webpack_require__("../../../../openvidu-browser/lib/index.js");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_openvidu_browser___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_openvidu_browser__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__credentials_dialog_component__ = __webpack_require__("./src/app/components/dashboard/credentials-dialog.component.ts");
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
@@ -11607,55 +11659,50 @@ var DashboardComponent = (function () {
         this.session = OV.initSession(mySessionId);
         this.testStatus = 'CONNECTING';
         this.testButton = 'Testing...';
-        this.session.connect('token', function (error) {
-            if (!error) {
-                _this.testStatus = 'CONNECTED';
-                var publisherRemote = OV.initPublisher('mirrored-video', {
-                    audio: true,
-                    video: true,
-                    audioActive: true,
-                    videoActive: true,
-                    quality: 'MEDIUM'
-                }, function (e) {
-                    if (!!e) {
-                        console.error(e);
+        this.session.connect(null).then(function () {
+            _this.testStatus = 'CONNECTED';
+            var publisherRemote = OV.initPublisher('mirrored-video', {
+                publishAudio: true,
+                publishVideo: true,
+                resolution: '640x480'
+            }, function (e) {
+                if (!!e) {
+                    console.error(e);
+                }
+            });
+            publisherRemote.on('accessAllowed', function () {
+                _this.msgChain.push('Camera access allowed');
+            });
+            publisherRemote.on('accessDenied', function () {
+                _this.endTestVideo();
+                _this.msgChain.push('Camera access denied');
+            });
+            publisherRemote.on('videoElementCreated', function (video) {
+                _this.showSpinner = true;
+                _this.msgChain.push('Video element created');
+            });
+            publisherRemote.on('remoteVideoPlaying', function (video) {
+                _this.msgChain.push('Remote video playing');
+                _this.testButton = 'End test';
+                _this.testStatus = 'PLAYING';
+                _this.showSpinner = false;
+            });
+            publisherRemote.subscribeToRemote();
+            _this.session.publish(publisherRemote);
+        }).catch(function (error) {
+            if (error.code === 401) {
+                _this.endTestVideo();
+                var dialogRef = void 0;
+                dialogRef = _this.dialog.open(__WEBPACK_IMPORTED_MODULE_5__credentials_dialog_component__["a" /* CredentialsDialogComponent */]);
+                dialogRef.componentInstance.myReference = dialogRef;
+                dialogRef.afterClosed().subscribe(function (secret) {
+                    if (secret) {
+                        _this.connectToSession('wss://' + location.hostname + ':4443/testSession?secret=' + secret);
                     }
                 });
-                publisherRemote.on('accessAllowed', function () {
-                    _this.msgChain.push('Camera access allowed');
-                });
-                publisherRemote.on('accessDenied', function () {
-                    _this.endTestVideo();
-                    _this.msgChain.push('Camera access denied');
-                });
-                publisherRemote.on('videoElementCreated', function (video) {
-                    _this.showSpinner = true;
-                    _this.msgChain.push('Video element created');
-                });
-                publisherRemote.on('remoteVideoPlaying', function (video) {
-                    _this.msgChain.push('Remote video playing');
-                    _this.testButton = 'End test';
-                    _this.testStatus = 'PLAYING';
-                    _this.showSpinner = false;
-                });
-                publisherRemote.subscribeToRemote();
-                _this.session.publish(publisherRemote);
             }
             else {
-                if (error.code === 401) {
-                    _this.endTestVideo();
-                    var dialogRef = void 0;
-                    dialogRef = _this.dialog.open(__WEBPACK_IMPORTED_MODULE_5__credentials_dialog_component__["a" /* CredentialsDialogComponent */]);
-                    dialogRef.componentInstance.myReference = dialogRef;
-                    dialogRef.afterClosed().subscribe(function (secret) {
-                        if (secret) {
-                            _this.connectToSession('wss://' + location.hostname + ':4443/testSession?secret=' + secret);
-                        }
-                    });
-                }
-                else {
-                    console.error(error);
-                }
+                console.error(error);
             }
         });
     };
@@ -11724,7 +11771,7 @@ module.exports = "<div id=\"layout\" class=\"bounds\">\n  <div *ngFor=\"let s of
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return LayoutBestFitComponent; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__("./node_modules/@angular/core/esm5/core.js");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_router__ = __webpack_require__("./node_modules/@angular/router/esm5/router.js");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_openvidu_browser__ = __webpack_require__("../../../../../openvidu-browser2/lib/index.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_openvidu_browser__ = __webpack_require__("../../../../openvidu-browser/lib/index.js");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_openvidu_browser___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_openvidu_browser__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__openvidu_layout__ = __webpack_require__("./src/app/components/layouts/openvidu-layout.ts");
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
@@ -11778,10 +11825,9 @@ var LayoutBestFitComponent = (function () {
             _this.deleteRemoteStream(event.stream);
             _this.openviduLayout.updateLayout();
         });
-        this.session.connect(null, function (error) {
-            if (error) {
-                console.error(error);
-            }
+        this.session.connect(null)
+            .catch(function (error) {
+            console.error(error);
         });
         this.openviduLayout = new __WEBPACK_IMPORTED_MODULE_3__openvidu_layout__["a" /* OpenViduLayout */]();
         this.openviduLayout.initLayoutContainer(document.getElementById('layout'), {

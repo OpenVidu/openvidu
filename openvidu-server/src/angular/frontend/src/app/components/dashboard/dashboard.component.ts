@@ -132,63 +132,60 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.testStatus = 'CONNECTING';
     this.testButton = 'Testing...';
 
-    this.session.connect('token', (error) => {
-      if (!error) {
+    this.session.connect(null).then(() => {
 
-        this.testStatus = 'CONNECTED';
+      this.testStatus = 'CONNECTED';
 
-        const publisherRemote = OV.initPublisher('mirrored-video', {
-          audio: true,
-          video: true,
-          audioActive: true,
-          videoActive: true,
-          quality: 'MEDIUM'
-        },
-          e => {
-            if (!!e) {
-              console.error(e);
-            }
+      const publisherRemote = OV.initPublisher('mirrored-video', {
+        publishAudio: true,
+        publishVideo: true,
+        resolution: '640x480'
+      },
+        e => {
+          if (!!e) {
+            console.error(e);
           }
-        );
-
-        publisherRemote.on('accessAllowed', () => {
-          this.msgChain.push('Camera access allowed');
-        });
-
-        publisherRemote.on('accessDenied', () => {
-          this.endTestVideo();
-          this.msgChain.push('Camera access denied');
-        });
-
-        publisherRemote.on('videoElementCreated', (video) => {
-          this.showSpinner = true;
-          this.msgChain.push('Video element created');
-        });
-
-        publisherRemote.on('remoteVideoPlaying', (video) => {
-          this.msgChain.push('Remote video playing');
-          this.testButton = 'End test';
-          this.testStatus = 'PLAYING';
-          this.showSpinner = false;
-        });
-
-        publisherRemote.subscribeToRemote();
-        this.session.publish(publisherRemote);
-      } else {
-        if (error.code === 401) { // User unauthorized error. OpenVidu security is active
-          this.endTestVideo();
-          let dialogRef: MatDialogRef<CredentialsDialogComponent>;
-          dialogRef = this.dialog.open(CredentialsDialogComponent);
-          dialogRef.componentInstance.myReference = dialogRef;
-
-          dialogRef.afterClosed().subscribe(secret => {
-            if (secret) {
-              this.connectToSession('wss://' + location.hostname + ':4443/testSession?secret=' + secret);
-            }
-          });
-        } else {
-          console.error(error);
         }
+      );
+
+      publisherRemote.on('accessAllowed', () => {
+        this.msgChain.push('Camera access allowed');
+      });
+
+      publisherRemote.on('accessDenied', () => {
+        this.endTestVideo();
+        this.msgChain.push('Camera access denied');
+      });
+
+      publisherRemote.on('videoElementCreated', (video) => {
+        this.showSpinner = true;
+        this.msgChain.push('Video element created');
+      });
+
+      publisherRemote.on('remoteVideoPlaying', (video) => {
+        this.msgChain.push('Remote video playing');
+        this.testButton = 'End test';
+        this.testStatus = 'PLAYING';
+        this.showSpinner = false;
+      });
+
+      publisherRemote.subscribeToRemote();
+      this.session.publish(publisherRemote);
+
+    }).catch(error => {
+      if (error.code === 401) { // User unauthorized error. OpenVidu security is active
+        this.endTestVideo();
+        let dialogRef: MatDialogRef<CredentialsDialogComponent>;
+        dialogRef = this.dialog.open(CredentialsDialogComponent);
+        dialogRef.componentInstance.myReference = dialogRef;
+
+        dialogRef.afterClosed().subscribe(secret => {
+          if (secret) {
+            this.connectToSession('wss://' + location.hostname + ':4443/testSession?secret=' + secret);
+          }
+        });
+      } else {
+        console.error(error);
       }
     });
   }
