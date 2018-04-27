@@ -13,7 +13,7 @@
     "browserify": "VERSION=${VERSION:-}; cd src && browserify Main.ts -p [ tsify ] --exclude kurento-browser-extensions --debug -o ../static/js/openvidu-browser-$VERSION.js -v",
     "browserify-prod": "VERSION=${VERSION:-}; cd src && browserify --debug Main.ts -p [ tsify ] --exclude kurento-browser-extensions | uglifyjs --source-map content=inline --output ../static/js/openvidu-browser-$VERSION.min.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "updatetsc": "cd src/OpenVidu && tsc && cd ../.. && tsc --declaration src/index.ts --outDir ./lib --sourceMap --lib dom,es5,es2015.promise,scripthost",
+    "build": "cd src/OpenVidu && tsc && cd ../.. && tsc --declaration src/index.ts --outDir ./lib --sourceMap --lib dom,es5,es2015.promise,scripthost",
     "docs": "grunt --gruntfile config/typedoc/custom-theme/gruntfile.js && typedoc --options ./config/typedoc/typedoc.js --out ./docs ./src && rm -rf ../../openvidu.io/api/openvidu-browser/* && cp -R ./docs/. ../../openvidu.io/api/openvidu-browser"
   },
   "types": "lib/index.d.ts",
