@@ -35,6 +35,8 @@ export class TestApirestComponent implements OnInit, OnDestroy {
   mediaModes = ['ROUTED'];
   selectedMediaMode = 'ROUTED';
 
+  customLayout = '';
+
 
   // API REST data collected
   data = [];
@@ -73,6 +75,7 @@ export class TestApirestComponent implements OnInit, OnDestroy {
       {
         recordingMode: RecordingMode[this.selectedRecordingMode],
         defaultRecordingLayout: RecordingLayout[this.selectedDefaultRecordingLayout],
+        defaultCustomLayout: this.customLayout,
         mediaMode: MediaMode[this.selectedMediaMode]
       })
       .then((sessionId) => {
