@@ -7,15 +7,14 @@ RUN echo "deb http://ubuntu.openvidu.io/6.7.0 xenial kms6" | tee /etc/apt/source
 	&& apt-get update \
 	&& apt-get -y dist-upgrade \
 	&& apt-get -y install kurento-media-server \
-	&& apt-get -y install openh264-gst-plugins-bad-1.5
-
-COPY kms.sh /kms.sh
+	&& apt-get -y install openh264-gst-plugins-bad-1.5 \
+	&& rm -rf /var/lib/apt/lists/*
 
 # Install Java
-RUN apt-get install -y openjdk-8-jdk
+RUN apt-get update && apt-get install -y openjdk-8-jdk && rm -rf /var/lib/apt/lists/*
 
 # Install supervisor
-RUN apt-get install -y supervisor && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y supervisor && rm -rf /var/lib/apt/lists/*
 
 # Configure supervisor
 RUN mkdir -p /var/log/supervisor
@@ -25,9 +24,12 @@ COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 # Copy OpenVidu Server
 COPY openvidu-server-cbx.jar openvidu-server-cbx.jar
 
+# Copy KMS entrypoint
+COPY kms.sh /kms.sh
+
 EXPOSE 8888
 EXPOSE 9091
-EXPOSE 8443
+EXPOSE 4443
 
 # Exec supervisord
 CMD ["/usr/bin/supervisord"]

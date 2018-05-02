@@ -2,6 +2,7 @@ import { Component, Input, OnInit, OnDestroy } from '@angular/core';
 import { Subscription } from 'rxjs/Subscription';
 import { OpenviduRestService } from '../../services/openvidu-rest.service';
 import { OpenviduParamsService } from '../../services/openvidu-params.service';
+import { SessionProperties, RecordingMode, RecordingLayout, MediaMode } from 'openvidu-node-client';
 
 import * as colormap from 'colormap';
 const numColors = 64;
@@ -21,8 +22,21 @@ export class TestApirestComponent implements OnInit, OnDestroy {
   // API REST params
   serverData = 'data_test';
   selectedRadioIndex = 0;
-  selectedRole = 'PUBLISHER';
+
   openViduRoles = ['SUBSCRIBER', 'PUBLISHER', 'MODERATOR'];
+  selectedRole = 'PUBLISHER';
+
+  recordingModes = ['ALWAYS', 'MANUAL'];
+  selectedRecordingMode = 'MANUAL';
+
+  defaultRecordingLayouts = ['BEST_FIT', 'CUSTOM'];
+  selectedDefaultRecordingLayout = 'BEST_FIT';
+
+  mediaModes = ['ROUTED'];
+  selectedMediaMode = 'ROUTED';
+
+  customLayout = '';
+
 
   // API REST data collected
   data = [];
@@ -57,7 +71,13 @@ export class TestApirestComponent implements OnInit, OnDestroy {
   }
 
   private getSessionId() {
-    this.openviduRestService.getSessionId(this.openviduUrl, this.openviduSecret)
+    this.openviduRestService.getSessionId(this.openviduUrl, this.openviduSecret,
+      {
+        recordingMode: RecordingMode[this.selectedRecordingMode],
+        defaultRecordingLayout: RecordingLayout[this.selectedDefaultRecordingLayout],
+        defaultCustomLayout: this.customLayout,
+        mediaMode: MediaMode[this.selectedMediaMode]
+      })
       .then((sessionId) => {
         this.updateData();
       })

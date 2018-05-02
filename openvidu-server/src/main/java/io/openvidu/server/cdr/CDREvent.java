@@ -1,9 +1,28 @@
+/*
+ * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package io.openvidu.server.cdr;
 
 import org.json.simple.JSONObject;
 
+import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
+import io.openvidu.server.recording.Recording;
 
 public class CDREvent implements Comparable<CDREvent> {
 
@@ -13,18 +32,34 @@ public class CDREvent implements Comparable<CDREvent> {
 	static final String PARTICIPANT_LEFT = "participantLeft";
 	static final String CONNECTION_CREATED = "webrtcConnectionCreated";
 	static final String CONNECTION_DESTROYED = "webrtcConnectionDestroyed";
+	static final String RECORDING_STARTED = "recordingStarted";
+	static final String RECORDING_STOPPED = "recordingStopped";
 
 	protected String eventName;
 	protected String sessionId;
+	protected Long timeStamp;
+	private Long startTime;
+	private Integer duration;
 	private Participant participant;
 	private MediaOptions mediaOptions;
 	private String receivingFrom;
-	private Long startTime;
-	private Integer duration;
-	protected Long timeStamp;
+	private String reason;
+	
+	// Recording events
+	private Long size;
+	private String id;
+	private String name;
+	private Boolean hasAudio;
+	private Boolean hasVideo;
+	private RecordingLayout recordingLayout;
 
 	public CDREvent(String eventName, CDREvent event) {
-		this(eventName, event.participant, event.sessionId, event.mediaOptions, event.receivingFrom, event.startTime);
+		this(eventName, event.participant, event.sessionId, event.mediaOptions, event.receivingFrom, event.startTime, event.reason);
+		this.duration = (int) (this.timeStamp - this.startTime / 1000);
+	}
+	
+	public CDREvent(String eventName, CDREvent event, String reason) {
+		this(eventName, event.participant, event.sessionId, event.mediaOptions, event.receivingFrom, event.startTime, reason);
 		this.duration = (int) (this.timeStamp - this.startTime / 1000);
 	}
 
@@ -38,6 +73,23 @@ public class CDREvent implements Comparable<CDREvent> {
 		this.timeStamp = System.currentTimeMillis();
 		this.startTime = this.timeStamp;
 	}
+	
+	public CDREvent(String eventName, String sessionId, Recording recording) {
+		this.eventName = eventName;
+		if ((sessionId.indexOf('/')) != -1) {
+			this.sessionId = sessionId.substring(sessionId.lastIndexOf('/') + 1, sessionId.length());
+		} else {
+			this.sessionId = sessionId;
+		}
+		this.timeStamp = System.currentTimeMillis();
+		this.id = recording.getId();
+		this.name = recording.getName();
+		this.duration = (int) recording.getDuration();
+		this.size = recording.getSize();
+		this.hasAudio = recording.hasAudio();
+		this.hasVideo = recording.hasVideo();
+		this.recordingLayout = recording.getRecordingLayout();
+	}
 
 	public CDREvent(String eventName, Participant participant, String sessionId) {
 		this(eventName, sessionId);
@@ -46,12 +98,13 @@ public class CDREvent implements Comparable<CDREvent> {
 	}
 
 	public CDREvent(String eventName, Participant participant, String sessionId, MediaOptions mediaOptions,
-			String receivingFrom, Long startTime) {
+			String receivingFrom, Long startTime, String reason) {
 		this(eventName, sessionId);
 		this.participant = participant;
 		this.mediaOptions = mediaOptions;
 		this.receivingFrom = receivingFrom;
 		this.startTime = startTime;
+		this.reason = reason;
 	}
 
 	public MediaOptions getMediaOptions() {
@@ -82,21 +135,45 @@ public class CDREvent implements Comparable<CDREvent> {
 			json.put("videoEnabled", this.mediaOptions.videoActive);
 			if (this.mediaOptions.videoActive) {
 				json.put("videoSource", this.mediaOptions.typeOfVideo);
+				json.put("videoFramerate", this.mediaOptions.frameRate);
 			}
 			if (this.receivingFrom != null) {
 				json.put("receivingFrom", this.receivingFrom);
 			}
 		}
-		if (this.duration != null) {
+		if (this.startTime != null && this.duration != null) {
 			json.put("startTime", this.startTime);
 			json.put("endTime", this.timeStamp);
 			json.put("duration", (this.timeStamp - this.startTime) / 1000);
+		} else if (this.duration != null) {
+			json.put("duration", duration);
+		}
+		if (this.reason != null) {
+			json.put("reason", this.reason);
+		}
+		if (this.id != null) {
+			json.put("id", this.id);
+		}
+		if (this.name != null) {
+			json.put("name", this.name);
+		}
+		if (this.size != null) {
+			json.put("size", this.size);
+		}
+		if (this.hasAudio != null) {
+			json.put("hasAudio", this.hasAudio);
+		}
+		if (this.hasVideo != null) {
+			json.put("hasVideo", this.hasVideo);
+		}
+		if (this.recordingLayout != null) {
+			json.put("recordingLayout", this.recordingLayout.name());
 		}
 
 		JSONObject root = new JSONObject();
 		root.put(this.eventName, json);
 
-		return root.toString();
+		return root.toJSONString();
 	}
 
 	@Override

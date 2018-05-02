@@ -5,6 +5,6 @@
 
 export const environment = {
   production: false,
-  OPENVIDU_URL: 'https://localhost:8443',
+  OPENVIDU_URL: 'https://localhost:4443',
   OPENVIDU_SECRET: 'MY_SECRET'
 };

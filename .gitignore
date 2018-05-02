@@ -25,4 +25,5 @@ nbactions.xml
 log/
 \.vscode/
 *.iml
+*/.tscache/*
 

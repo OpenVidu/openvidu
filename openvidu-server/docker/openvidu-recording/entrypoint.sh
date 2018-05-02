@@ -13,6 +13,7 @@ RESOLUTION="${RESOLUTION:-1920x1080}"
 FRAMERATE="${FRAMERATE:-24}"
 VIDEO_SIZE="$RESOLUTION"
 ARRAY=(${VIDEO_SIZE//x/ })
+VIDEO_ID="${VIDEO_ID:-video}"
 VIDEO_NAME="${VIDEO_NAME:-video}"
 VIDEO_FORMAT="${VIDEO_FORMAT:-mp4}"
 RECORDING_JSON="'${RECORDING_JSON}'"
@@ -21,9 +22,9 @@ RECORDING_JSON="'${RECORDING_JSON}'"
 ### Store Recording json data ###
 
 if [[ $CURRENT_UID != $USER_ID ]]; then
-	su myuser -c "echo ${RECORDING_JSON} > /recordings/.recording.${VIDEO_NAME}"
+	su myuser -c "echo ${RECORDING_JSON} > /recordings/.recording.${VIDEO_ID}"
 else
-	echo ${RECORDING_JSON} > /recordings/.recording.${VIDEO_NAME}
+	echo ${RECORDING_JSON} > /recordings/.recording.${VIDEO_ID}
 fi
 
 
@@ -87,9 +88,9 @@ fi
 ### Generate video report file ###
 
 if [[ $CURRENT_UID != $USER_ID ]]; then
-	su myuser -c "ffprobe -v quiet -print_format json -show_format -show_streams /recordings/${VIDEO_NAME}.${VIDEO_FORMAT} > /recordings/${VIDEO_NAME}.info"
+	su myuser -c "ffprobe -v quiet -print_format json -show_format -show_streams /recordings/${VIDEO_NAME}.${VIDEO_FORMAT} > /recordings/${VIDEO_ID}.info"
 else
-	ffprobe -v quiet -print_format json -show_format -show_streams /recordings/${VIDEO_NAME}.${VIDEO_FORMAT} > /recordings/${VIDEO_NAME}.info
+	ffprobe -v quiet -print_format json -show_format -show_streams /recordings/${VIDEO_NAME}.${VIDEO_FORMAT} > /recordings/${VIDEO_ID}.info
 fi
 
 
@@ -97,8 +98,8 @@ fi
 
 if [[ $CURRENT_UID != $USER_ID ]]; then
 
-	TMP=$(su myuser -c "mktemp /recordings/.${VIDEO_NAME}.XXXXXXXXXXXXXXXXXXXXXXX.if.json")
-	INFO=$(su myuser -c "cat /recordings/${VIDEO_NAME}.info | jq '.'")
+	TMP=$(su myuser -c "mktemp /recordings/.${VIDEO_ID}.XXXXXXXXXXXXXXXXXXXXXXX.if.json")
+	INFO=$(su myuser -c "cat /recordings/${VIDEO_ID}.info | jq '.'")
 	HAS_AUDIO_AUX=$(su myuser -c "echo '$INFO' | jq '.streams[] | select(.codec_type == \"audio\")'")
 	if [ -z "$HAS_AUDIO_AUX" ]; then HAS_AUDIO=false; else HAS_AUDIO=true; fi
 	HAS_VIDEO_AUX=$(su myuser -c "echo '$INFO' | jq '.streams[] | select(.codec_type == \"video\")'")
@@ -107,12 +108,12 @@ if [[ $CURRENT_UID != $USER_ID ]]; then
 	DURATION=$(su myuser -c "echo '$INFO' | jq '.format.duration | tonumber'")
 	STATUS="stopped"
 
-	su myuser -c "jq -c -r \".hasAudio=${HAS_AUDIO} | .hasVideo=${HAS_VIDEO} | .duration=${DURATION} | .size=${SIZE} | .status=\\\"${STATUS}\\\"\" \"/recordings/.recording.${VIDEO_NAME}\" > ${TMP} && mv ${TMP} \"/recordings/.recording.${VIDEO_NAME}\""
+	su myuser -c "jq -c -r \".hasAudio=${HAS_AUDIO} | .hasVideo=${HAS_VIDEO} | .duration=${DURATION} | .size=${SIZE} | .status=\\\"${STATUS}\\\"\" \"/recordings/.recording.${VIDEO_ID}\" > ${TMP} && mv ${TMP} \"/recordings/.recording.${VIDEO_ID}\""
 
 else
 
-	TMP=$(mktemp /recordings/.${VIDEO_NAME}.XXXXXXXXXXXXXXXXXXXXXXX.else.json)
-	INFO=$(cat /recordings/${VIDEO_NAME}.info | jq '.')
+	TMP=$(mktemp /recordings/.${VIDEO_ID}.XXXXXXXXXXXXXXXXXXXXXXX.else.json)
+	INFO=$(cat /recordings/${VIDEO_ID}.info | jq '.')
 	HAS_AUDIO_AUX=$(echo "$INFO" | jq '.streams[] | select(.codec_type == "audio")')
 	if [ -z "$HAS_AUDIO_AUX" ]; then HAS_AUDIO=false; else HAS_AUDIO=true; fi
 	HAS_VIDEO_AUX=$(echo "$INFO" | jq '.streams[] | select(.codec_type == "video")')
@@ -121,7 +122,7 @@ else
 	DURATION=$(echo "$INFO" | jq '.format.duration | tonumber')
 	STATUS="stopped"
 
-	jq -c -r ".hasAudio=${HAS_AUDIO} | .hasVideo=${HAS_VIDEO} | .duration=${DURATION} | .size=${SIZE} | .status=\"${STATUS}\"" "/recordings/.recording.${VIDEO_NAME}" > ${TMP} && mv ${TMP} "/recordings/.recording.${VIDEO_NAME}"
+	jq -c -r ".hasAudio=${HAS_AUDIO} | .hasVideo=${HAS_VIDEO} | .duration=${DURATION} | .size=${SIZE} | .status=\"${STATUS}\"" "/recordings/.recording.${VIDEO_ID}" > ${TMP} && mv ${TMP} "/recordings/.recording.${VIDEO_ID}"
 
 fi
 

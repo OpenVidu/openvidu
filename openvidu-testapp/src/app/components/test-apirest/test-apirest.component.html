@@ -11,15 +11,60 @@
     </div>
   </div>
 
+  <div>
+    <h3>Session Properties</h3>
+    <table>
+      <tr>
+        <th>Recording Mode</th>
+        <th>Default Recording Layout</th>
+        <th *ngIf="this.selectedDefaultRecordingLayout === 'CUSTOM'">Default Custom Layout</th>
+        <th>Media Mode</th>
+      </tr>
+      <tr id="tr-session-properties">
+        <td>
+          <mat-select placeholder="RecordingMode" [(ngModel)]="selectedRecordingMode">
+            <mat-option *ngFor="let recordingMode of recordingModes" [value]="recordingMode">
+              {{ recordingMode }}
+            </mat-option>
+          </mat-select>
+        </td>
+        <td>
+          <mat-select placeholder="DeafaultRecordingLayout" [(ngModel)]="selectedDefaultRecordingLayout">
+            <mat-option *ngFor="let defaultRecordingLayout of defaultRecordingLayouts" [value]="defaultRecordingLayout">
+              {{ defaultRecordingLayout }}
+            </mat-option>
+          </mat-select>
+        </td>
+        <td *ngIf="this.selectedDefaultRecordingLayout === 'CUSTOM'">
+          <mat-form-field id="default-custom-layout-field">
+            <input matInput placeholder="Custom Layout" [(ngModel)]="customLayout">
+          </mat-form-field>
+        </td>
+        <td>
+          <mat-select placeholder="MediaMode" [(ngModel)]="selectedMediaMode">
+            <mat-option *ngFor="let mediaMode of mediaModes" [value]="mediaMode">
+              {{ mediaMode }}
+            </mat-option>
+          </mat-select>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <hr style="margin: 30px 0 30px 0">
+
   <div id="table-row" fxLayout="row" fxLayoutGap="20px" fxLayoutAlign="start">
     <div fxLayout="column" fxFlex="65" fxFlexAlign="start" fxFill>
       <table>
         <tr>
-          <th class="first-col">sessionIds</th>
-          <th>tokens</th>
-          <th>Session</th>
+          <th *ngIf="this.data.length > 1">Selection</th>
+          <th class="first-col">Session IDs</th>
+          <th>Tokens</th>
         </tr>
         <tr *ngFor="let sid of this.data; let ind = index">
+          <td *ngIf="this.data.length > 1" style="text-align: center">
+                <mat-radio-button [checked]="selectedRadioIndex === ind" (click)="selectedRadioIndex = ind" name="sidOption"></mat-radio-button>
+          </td>
           <td class="first-col">
             <mat-card [style.background]="getBackgroundColor(ind)">{{sid[0]}}</mat-card>
           </td>
@@ -27,9 +72,6 @@
             <mat-card *ngIf="sid[1].length > 0" [style.background]="getBackgroundColor(ind)">
               <p *ngFor="let token of sid[1]">{{token}}</p>
             </mat-card>
-          </td>
-          <td style="text-align: center">
-            <mat-radio-button [checked]="selectedRadioIndex === ind" (click)="selectedRadioIndex = ind" name="sidOption"></mat-radio-button>
           </td>
         </tr>
       </table>

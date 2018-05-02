@@ -1,3 +1,20 @@
+/*
+ * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package io.openvidu.server.core;
 
 import java.util.HashSet;
@@ -12,6 +29,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.kurento.jsonrpc.message.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.gson.JsonObject;
 
@@ -20,10 +38,25 @@ import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.server.OpenViduServer;
+import io.openvidu.server.cdr.CallDetailRecord;
+import io.openvidu.server.config.OpenviduConfig;
+import io.openvidu.server.recording.ComposedRecordingService;
 
 public abstract class SessionManager {
 
 	private static final Logger log = LoggerFactory.getLogger(SessionManager.class);
+	
+	@Autowired
+	protected SessionEventsHandler sessionEventsHandler;
+	
+	@Autowired
+	protected ComposedRecordingService recordingService;
+	
+	@Autowired
+	protected CallDetailRecord CDR;
+	
+	@Autowired
+	protected OpenviduConfig openviduConfig;
 
 	protected ConcurrentMap<String, Session> sessions = new ConcurrentHashMap<>();
 	protected ConcurrentMap<String, SessionProperties> sessionProperties = new ConcurrentHashMap<>();
@@ -35,11 +68,11 @@ public abstract class SessionManager {
 
 	public abstract void joinRoom(Participant participant, String sessionId, Integer transactionId);
 
-	public abstract void leaveRoom(Participant participant, Integer transactionId);
+	public abstract void leaveRoom(Participant participant, Integer transactionId, String reason);
 
 	public abstract void publishVideo(Participant participant, MediaOptions mediaOptions, Integer transactionId);
 
-	public abstract void unpublishVideo(Participant participant, Integer transactionId);
+	public abstract void unpublishVideo(Participant participant, Integer transactionId, String reason);
 
 	public abstract void subscribe(Participant participant, String senderName, String sdpOffer, Integer transactionId);
 
@@ -57,7 +90,7 @@ public abstract class SessionManager {
 	 * other participants about the one that's just been evicted.
 	 *
 	 */
-	public void evictParticipant(String participantPrivateId) throws OpenViduException {
+	public void evictParticipant(String participantPrivateId, String reason) throws OpenViduException {
 	}
 	
 	/**
@@ -187,7 +220,7 @@ public abstract class SessionManager {
 		} else {
 			this.sessionidParticipantpublicidParticipant.putIfAbsent(sessionId, new ConcurrentHashMap<>());
 			this.sessionidTokenTokenobj.putIfAbsent(sessionId, new ConcurrentHashMap<>());
-			this.sessionidTokenTokenobj.get(sessionId).putIfAbsent(token, new Token(token));
+			this.sessionidTokenTokenobj.get(sessionId).putIfAbsent(token, new Token(token, ParticipantRole.PUBLISHER, ""));
 			return true;
 		}
 	}
@@ -252,9 +285,8 @@ public abstract class SessionManager {
 	public Participant newRecorderParticipant(String sessionId, String participantPrivatetId, Token token,
 			String clientMetadata) {
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
-			String participantPublicId = ProtocolElements.RECORDER_PARTICIPANT_ID_PUBLICID;
-			Participant p = new Participant(participantPrivatetId, participantPublicId, token, clientMetadata);
-			this.sessionidParticipantpublicidParticipant.get(sessionId).put(participantPublicId, p);
+			Participant p = new Participant(participantPrivatetId, ProtocolElements.RECORDER_PARTICIPANT_PUBLICID, token, clientMetadata);
+			this.sessionidParticipantpublicidParticipant.get(sessionId).put(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID, p);
 			return p;
 		} else {
 			throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE, sessionId);
@@ -305,7 +337,7 @@ public abstract class SessionManager {
 		log.info("Closing all sessions");
 		for (String sessionId : sessions.keySet()) {
 			try {
-				closeSession(sessionId);
+				closeSession(sessionId, "openviduServerDestroyed");
 			} catch (Exception e) {
 				log.warn("Error closing session '{}'", sessionId, e);
 			}
@@ -328,7 +360,7 @@ public abstract class SessionManager {
 	 * @throws OpenViduException
 	 *             in case the session doesn't exist or has been already closed
 	 */
-	private Set<Participant> closeSession(String sessionId) {
+	private Set<Participant> closeSession(String sessionId, String reason) {
 		Session session = sessions.get(sessionId);
 		if (session == null) {
 			throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE, "Session '" + sessionId + "' not found");
@@ -341,12 +373,14 @@ public abstract class SessionManager {
 		Set<String> pids = participants.stream().map(Participant::getParticipantPrivateId).collect(Collectors.toSet());
 		for (String pid : pids) {
 			try {
-				session.leave(pid);
+				session.leave(pid, reason);
 			} catch (OpenViduException e) {
 				log.warn("Error evicting participant with id '{}' from session '{}'", pid, sessionId, e);
 			}
 		}
-		session.close();
+		if (session.close(reason)) {
+			sessionEventsHandler.onSessionClosed(sessionId, reason);
+		}
 		sessions.remove(sessionId);
 
 		sessionProperties.remove(sessionId);
@@ -354,6 +388,11 @@ public abstract class SessionManager {
 		sessionidTokenTokenobj.remove(sessionId);
 
 		log.warn("Session '{}' removed and closed", sessionId);
+		
+		if (recordingService.sessionIsBeingRecorded(session.getSessionId())) {
+			recordingService.stopRecording(session);
+		}
+		
 		return participants;
 	}
 

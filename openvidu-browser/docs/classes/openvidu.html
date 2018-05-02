@@ -1,0 +1,806 @@
+<!doctype html>
+<html class="default no-js">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>OpenVidu | OpenVidu Browser</title>
+	<meta name="description" content="">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="../assets/css/main.css">
+	<link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon">
+</head>
+<body>
+<header>
+	<div class="tsd-page-toolbar">
+		<div class="container">
+			<div class="table-wrap">
+				<div class="table-cell" id="tsd-search" data-index="../assets/js/search.js" data-base="..">
+					<div class="field">
+						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
+						<input id="tsd-search-field" type="text" />
+					</div>
+					<ul class="results">
+						<li class="state loading">Preparing search index...</li>
+						<li class="state failure">The search index is not available</li>
+					</ul>
+					<a style="position: absolute" href="/docs/reference-docs/openvidu-browser/" class="title">
+						<img class="logo-small" style="height: 26px; margin-top: 7px" src="/img/logos/openvidu_vert_grey_bg_transp_cropped.png">
+					</a>
+				</div>
+				<div class="table-cell" id="tsd-widgets">
+					<div id="tsd-filter">
+						<a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a>
+						<div class="tsd-filter-group">
+							<div class="tsd-select" id="tsd-filter-visibility">
+								<span class="tsd-select-label">All</span>
+								<ul class="tsd-select-list">
+									<li data-value="public">Public</li>
+									<li data-value="protected">Public/Protected</li>
+									<li data-value="private" class="selected">All</li>
+								</ul>
+							</div>
+							<input type="checkbox" id="tsd-filter-inherited" checked />
+							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
+							<input type="checkbox" id="tsd-filter-only-exported" />
+							<label class="tsd-widget" for="tsd-filter-only-exported">Only exported</label>
+						</div>
+					</div>
+					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="tsd-page-title">
+		<div class="container">
+			<ul class="tsd-breadcrumb">
+				<li>
+					<a href="../index.html">Globals</a>
+				</li>
+				<li>
+					<a href="openvidu.html">OpenVidu</a>
+				</li>
+			</ul>
+			<h1>Class OpenVidu</h1>
+		</div>
+	</div>
+</header>
+<div class="container container-main">
+	<div class="row">
+		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<div class="lead">
+						<p>Entrypoint of OpenVidu Browser library.
+						Use it to initialize objects of type <a href="session.html">Session</a>, <a href="publisher.html">Publisher</a> and <a href="localrecorder.html">LocalRecorder</a></p>
+					</div>
+				</div>
+			</section>
+			<section class="tsd-panel tsd-hierarchy">
+				<h3>Hierarchy</h3>
+				<ul class="tsd-hierarchy">
+					<li>
+						<span class="target">OpenVidu</span>
+					</li>
+				</ul>
+			</section>
+			<section class="tsd-panel-group tsd-index-group">
+				<h2>Index</h2>
+				<section class="tsd-panel tsd-index-panel">
+					<div class="tsd-index-content">
+						<section class="tsd-index-section ">
+							<h3>Constructors</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-constructor tsd-parent-kind-class"><a href="openvidu.html#constructor" class="tsd-kind-icon">constructor</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section ">
+							<h3>Methods</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="openvidu.html#checksystemrequirements" class="tsd-kind-icon">check<wbr>System<wbr>Requirements</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="openvidu.html#enableprodmode" class="tsd-kind-icon">enable<wbr>Prod<wbr>Mode</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="openvidu.html#getdevices" class="tsd-kind-icon">get<wbr>Devices</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="openvidu.html#getusermedia" class="tsd-kind-icon">get<wbr>User<wbr>Media</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="openvidu.html#initlocalrecorder" class="tsd-kind-icon">init<wbr>Local<wbr>Recorder</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="openvidu.html#initpublisher" class="tsd-kind-icon">init<wbr>Publisher</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="openvidu.html#initpublisherasync" class="tsd-kind-icon">init<wbr>Publisher<wbr>Async</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="openvidu.html#initsession" class="tsd-kind-icon">init<wbr>Session</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="openvidu.html#setadvancedconfiguration" class="tsd-kind-icon">set<wbr>Advanced<wbr>Configuration</a></li>
+							</ul>
+						</section>
+					</div>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Constructors</h2>
+				<section class="tsd-panel tsd-member tsd-kind-constructor tsd-parent-kind-class">
+					<a name="constructor" class="tsd-anchor"></a>
+					<h3>constructor</h3>
+					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Open<wbr>Vidu<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="openvidu.html" class="tsd-signature-type">OpenVidu</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L57">OpenVidu/OpenVidu.ts:57</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-returns-title">Returns <a href="openvidu.html" class="tsd-signature-type">OpenVidu</a></h4>
+						</li>
+					</ul>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Methods</h2>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="checksystemrequirements" class="tsd-anchor"></a>
+					<h3>check<wbr>System<wbr>Requirements</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">check<wbr>System<wbr>Requirements<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L203">OpenVidu/OpenVidu.ts:203</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Checks if the browser supports OpenVidu</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4>
+							<p>1 if the browser supports OpenVidu, 0 otherwise</p>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="enableprodmode" class="tsd-anchor"></a>
+					<h3>enable<wbr>Prod<wbr>Mode</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">enable<wbr>Prod<wbr>Mode<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L320">OpenVidu/OpenVidu.ts:320</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Disable all logging except error level</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="getdevices" class="tsd-anchor"></a>
+					<h3>get<wbr>Devices</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Devices<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/device.html" class="tsd-signature-type">Device</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L221">OpenVidu/OpenVidu.ts:221</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Collects information about the media input devices available on the system. You can pass property <code>deviceId</code> of a <a href="../interfaces/device.html">Device</a> object as value of <code>audioSource</code> or <code>videoSource</code> properties in <a href="openvidu.html#initpublisher">initPublisher</a> method</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/device.html" class="tsd-signature-type">Device</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="getusermedia" class="tsd-anchor"></a>
+					<h3>get<wbr>User<wbr>Media</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>User<wbr>Media<span class="tsd-signature-symbol">(</span>options<span class="tsd-signature-symbol">: </span><a href="../interfaces/publisherproperties.html" class="tsd-signature-type">PublisherProperties</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">MediaStream</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L290">OpenVidu/OpenVidu.ts:290</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Get a MediaStream object that you can customize before calling <a href="openvidu.html#initpublisher">initPublisher</a> (pass <em>MediaStreamTrack</em> property of the <em>MediaStream</em> value resolved by the Promise as <code>audioSource</code> or <code>videoSource</code> properties in <a href="openvidu.html#initpublisher">initPublisher</a>)</p>
+								</div>
+								<p>Parameter <code>options</code> is the same as in <a href="openvidu.html#initpublisher">initPublisher</a> second parameter (of type <a href="../interfaces/publisherproperties.html">PublisherProperties</a>), but only the following properties will be applied: <code>audioSource</code>, <code>videoSource</code>, <code>frameRate</code>, <code>resolution</code></p>
+								<p>To customize the Publisher&#39;s video, the API for HTMLCanvasElement is very useful. For example, to get a black-and-white video at 10 fps and HD resolution with no sound:</p>
+								<pre><code><span class="hljs-keyword">var</span> OV = <span class="hljs-keyword">new</span> OpenVidu();
+<span class="hljs-keyword">var</span> FRAME_RATE = <span class="hljs-number">10</span>;
+
+OV.getUserMedia({
+   audioSource: <span class="hljs-literal">false</span>;
+   videoSource: <span class="hljs-literal">undefined</span>,
+   resolution: <span class="hljs-string">'1280x720'</span>,
+   frameRate: FRAME_RATE
+})
+.then(<span class="hljs-function"><span class="hljs-params">mediaStream</span> =&gt;</span> {
+
+   <span class="hljs-keyword">var</span> videoTrack = mediaStream.getVideoTracks()[<span class="hljs-number">0</span>];
+   <span class="hljs-keyword">var</span> video = <span class="hljs-built_in">document</span>.createElement(<span class="hljs-string">'video'</span>);
+   video.srcObject = <span class="hljs-keyword">new</span> MediaStream([videoTrack]);
+
+   <span class="hljs-keyword">var</span> canvas = <span class="hljs-built_in">document</span>.createElement(<span class="hljs-string">'canvas'</span>);
+   <span class="hljs-keyword">var</span> ctx = canvas.getContext(<span class="hljs-string">'2d'</span>);
+   ctx.filter = <span class="hljs-string">'grayscale(100%)'</span>;
+
+   video.addEventListener(<span class="hljs-string">'play'</span>, <span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> {
+     <span class="hljs-keyword">var</span> loop = <span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> {
+       <span class="hljs-keyword">if</span> (!video.paused &amp;&amp; !video.ended) {
+         ctx.drawImage(video, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">300</span>, <span class="hljs-number">170</span>);
+         setTimeout(loop, <span class="hljs-number">1000</span>/ FRAME_RATE); <span class="hljs-comment">// Drawing at 10 fps</span>
+       }
+     };
+     loop();
+   });
+   video.play();
+
+   <span class="hljs-keyword">var</span> grayVideoTrack = canvas.captureStream(FRAME_RATE).getVideoTracks()[<span class="hljs-number">0</span>];
+   <span class="hljs-keyword">var</span> publisher = <span class="hljs-keyword">this</span>.OV.initPublisher(
+     myHtmlTarget,
+     {
+       audioSource: <span class="hljs-literal">false</span>,
+       videoSource: grayVideoTrack
+     });
+});
+</code></pre>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>options: <a href="../interfaces/publisherproperties.html" class="tsd-signature-type">PublisherProperties</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">MediaStream</span><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="initlocalrecorder" class="tsd-anchor"></a>
+					<h3>init<wbr>Local<wbr>Recorder</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">init<wbr>Local<wbr>Recorder<span class="tsd-signature-symbol">(</span>stream<span class="tsd-signature-symbol">: </span><a href="stream.html" class="tsd-signature-type">Stream</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="localrecorder.html" class="tsd-signature-type">LocalRecorder</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L194">OpenVidu/OpenVidu.ts:194</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Returns a new local recorder for recording streams straight away from the browser</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>stream: <a href="stream.html" class="tsd-signature-type">Stream</a></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>Stream to record</p>
+									</div>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="localrecorder.html" class="tsd-signature-type">LocalRecorder</a></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="initpublisher" class="tsd-anchor"></a>
+					<h3>init<wbr>Publisher</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">init<wbr>Publisher<span class="tsd-signature-symbol">(</span>targetElement<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">HTMLElement</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="publisher.html" class="tsd-signature-type">Publisher</a></li>
+						<li class="tsd-signature tsd-kind-icon">init<wbr>Publisher<span class="tsd-signature-symbol">(</span>targetElement<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">HTMLElement</span>, properties<span class="tsd-signature-symbol">: </span><a href="../interfaces/publisherproperties.html" class="tsd-signature-type">PublisherProperties</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="publisher.html" class="tsd-signature-type">Publisher</a></li>
+						<li class="tsd-signature tsd-kind-icon">init<wbr>Publisher<span class="tsd-signature-symbol">(</span>targetElement<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">HTMLElement</span>, completionHandler<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">function</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="publisher.html" class="tsd-signature-type">Publisher</a></li>
+						<li class="tsd-signature tsd-kind-icon">init<wbr>Publisher<span class="tsd-signature-symbol">(</span>targetElement<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">HTMLElement</span>, properties<span class="tsd-signature-symbol">: </span><a href="../interfaces/publisherproperties.html" class="tsd-signature-type">PublisherProperties</a>, completionHandler<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">function</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="publisher.html" class="tsd-signature-type">Publisher</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L74">OpenVidu/OpenVidu.ts:74</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Returns a new publisher</p>
+								</div>
+								<h4 id="events-dispatched">Events dispatched</h4>
+								<p>The <a href="publisher.html">Publisher</a> object will dispatch an <code>accessDialogOpened</code> event, only if the pop-up shown by the browser to request permissions for the camera is opened. You can use this event to alert the user about granting permissions
+								for your website. An <code>accessDialogClosed</code> event will also be dispatched after user clicks on &quot;Allow&quot; or &quot;Block&quot; in the pop-up.</p>
+								<p>The <a href="publisher.html">Publisher</a> object will dispatch an <code>accessAllowed</code> or <code>accessDenied</code> event once it has been granted access to the requested input devices or not.</p>
+								<p>The <a href="publisher.html">Publisher</a> object will dispatch a <code>videoElementCreated</code> event once the HTML video element has been added to DOM (if <em>targetElement</em> not null or undefined)</p>
+								<p>The <a href="publisher.html">Publisher</a> object will dispatch a <code>videoPlaying</code> event once the local video starts playing (only if <code>videoElementCreated</code> event has been previously dispatched)</p>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>targetElement: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">HTMLElement</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<div class="lead">
+											<p>HTML DOM element (or its <code>id</code> attribute) in which the video element of the Publisher will be inserted (see <a href="../interfaces/publisherproperties.html#insertmode">PublisherProperties.insertMode</a>). If null or undefined no default video will be created for this Publisher
+											(you can always access the native MediaStream object by calling <em>Publisher.stream.getMediaStream()</em> and use it as <em>srcObject</em> of any HTML video element)</p>
+										</div>
+									</div>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="publisher.html" class="tsd-signature-type">Publisher</a></h4>
+						</li>
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L75">OpenVidu/OpenVidu.ts:75</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Returns a new publisher</p>
+								</div>
+								<h4 id="events-dispatched">Events dispatched</h4>
+								<p>The <a href="publisher.html">Publisher</a> object will dispatch an <code>accessDialogOpened</code> event, only if the pop-up shown by the browser to request permissions for the camera is opened. You can use this event to alert the user about granting permissions
+								for your website. An <code>accessDialogClosed</code> event will also be dispatched after user clicks on &quot;Allow&quot; or &quot;Block&quot; in the pop-up.</p>
+								<p>The <a href="publisher.html">Publisher</a> object will dispatch an <code>accessAllowed</code> or <code>accessDenied</code> event once it has been granted access to the requested input devices or not.</p>
+								<p>The <a href="publisher.html">Publisher</a> object will dispatch a <code>videoElementCreated</code> event once the HTML video element has been added to DOM (if <em>targetElement</em> not null or undefined)</p>
+								<p>The <a href="publisher.html">Publisher</a> object will dispatch a <code>videoPlaying</code> event once the local video starts playing (only if <code>videoElementCreated</code> event has been previously dispatched)</p>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>targetElement: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">HTMLElement</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<div class="lead">
+											<p>HTML DOM element (or its <code>id</code> attribute) in which the video element of the Publisher will be inserted (see <a href="../interfaces/publisherproperties.html#insertmode">PublisherProperties.insertMode</a>). If null or undefined no default video will be created for this Publisher
+											(you can always access the native MediaStream object by calling <em>Publisher.stream.getMediaStream()</em> and use it as <em>srcObject</em> of any HTML video element)</p>
+										</div>
+									</div>
+								</li>
+								<li>
+									<h5>properties: <a href="../interfaces/publisherproperties.html" class="tsd-signature-type">PublisherProperties</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="publisher.html" class="tsd-signature-type">Publisher</a></h4>
+						</li>
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L76">OpenVidu/OpenVidu.ts:76</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Returns a new publisher</p>
+								</div>
+								<h4 id="events-dispatched">Events dispatched</h4>
+								<p>The <a href="publisher.html">Publisher</a> object will dispatch an <code>accessDialogOpened</code> event, only if the pop-up shown by the browser to request permissions for the camera is opened. You can use this event to alert the user about granting permissions
+								for your website. An <code>accessDialogClosed</code> event will also be dispatched after user clicks on &quot;Allow&quot; or &quot;Block&quot; in the pop-up.</p>
+								<p>The <a href="publisher.html">Publisher</a> object will dispatch an <code>accessAllowed</code> or <code>accessDenied</code> event once it has been granted access to the requested input devices or not.</p>
+								<p>The <a href="publisher.html">Publisher</a> object will dispatch a <code>videoElementCreated</code> event once the HTML video element has been added to DOM (if <em>targetElement</em> not null or undefined)</p>
+								<p>The <a href="publisher.html">Publisher</a> object will dispatch a <code>videoPlaying</code> event once the local video starts playing (only if <code>videoElementCreated</code> event has been previously dispatched)</p>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>targetElement: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">HTMLElement</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<div class="lead">
+											<p>HTML DOM element (or its <code>id</code> attribute) in which the video element of the Publisher will be inserted (see <a href="../interfaces/publisherproperties.html#insertmode">PublisherProperties.insertMode</a>). If null or undefined no default video will be created for this Publisher
+											(you can always access the native MediaStream object by calling <em>Publisher.stream.getMediaStream()</em> and use it as <em>srcObject</em> of any HTML video element)</p>
+										</div>
+									</div>
+								</li>
+								<li>
+									<h5>completionHandler: <span class="tsd-signature-type">function</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<div class="lead">
+											<p><code>error</code> parameter is null if <code>initPublisher</code> succeeds, and is defined if it fails.
+											<code>completionHandler</code> function is called before the Publisher dispatches an <code>accessAllowed</code> or an <code>accessDenied</code> event</p>
+										</div>
+									</div>
+									<ul class="tsd-parameters">
+										<li class="tsd-parameter-siganture">
+											<ul class="tsd-signatures tsd-kind-type-literal tsd-is-not-exported">
+												<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span>error<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Error</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+											</ul>
+											<ul class="tsd-descriptions">
+												<li class="tsd-description">
+													<h4 class="tsd-parameters-title">Parameters</h4>
+													<ul class="tsd-parameters">
+														<li>
+															<h5>error: <span class="tsd-signature-type">Error</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></h5>
+														</li>
+													</ul>
+													<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+												</li>
+											</ul>
+										</li>
+									</ul>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="publisher.html" class="tsd-signature-type">Publisher</a></h4>
+						</li>
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L77">OpenVidu/OpenVidu.ts:77</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Returns a new publisher</p>
+								</div>
+								<h4 id="events-dispatched">Events dispatched</h4>
+								<p>The <a href="publisher.html">Publisher</a> object will dispatch an <code>accessDialogOpened</code> event, only if the pop-up shown by the browser to request permissions for the camera is opened. You can use this event to alert the user about granting permissions
+								for your website. An <code>accessDialogClosed</code> event will also be dispatched after user clicks on &quot;Allow&quot; or &quot;Block&quot; in the pop-up.</p>
+								<p>The <a href="publisher.html">Publisher</a> object will dispatch an <code>accessAllowed</code> or <code>accessDenied</code> event once it has been granted access to the requested input devices or not.</p>
+								<p>The <a href="publisher.html">Publisher</a> object will dispatch a <code>videoElementCreated</code> event once the HTML video element has been added to DOM (if <em>targetElement</em> not null or undefined)</p>
+								<p>The <a href="publisher.html">Publisher</a> object will dispatch a <code>videoPlaying</code> event once the local video starts playing (only if <code>videoElementCreated</code> event has been previously dispatched)</p>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>targetElement: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">HTMLElement</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<div class="lead">
+											<p>HTML DOM element (or its <code>id</code> attribute) in which the video element of the Publisher will be inserted (see <a href="../interfaces/publisherproperties.html#insertmode">PublisherProperties.insertMode</a>). If null or undefined no default video will be created for this Publisher
+											(you can always access the native MediaStream object by calling <em>Publisher.stream.getMediaStream()</em> and use it as <em>srcObject</em> of any HTML video element)</p>
+										</div>
+									</div>
+								</li>
+								<li>
+									<h5>properties: <a href="../interfaces/publisherproperties.html" class="tsd-signature-type">PublisherProperties</a></h5>
+								</li>
+								<li>
+									<h5>completionHandler: <span class="tsd-signature-type">function</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<div class="lead">
+											<p><code>error</code> parameter is null if <code>initPublisher</code> succeeds, and is defined if it fails.
+											<code>completionHandler</code> function is called before the Publisher dispatches an <code>accessAllowed</code> or an <code>accessDenied</code> event</p>
+										</div>
+									</div>
+									<ul class="tsd-parameters">
+										<li class="tsd-parameter-siganture">
+											<ul class="tsd-signatures tsd-kind-type-literal tsd-is-not-exported">
+												<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span>error<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Error</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+											</ul>
+											<ul class="tsd-descriptions">
+												<li class="tsd-description">
+													<h4 class="tsd-parameters-title">Parameters</h4>
+													<ul class="tsd-parameters">
+														<li>
+															<h5>error: <span class="tsd-signature-type">Error</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></h5>
+														</li>
+													</ul>
+													<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+												</li>
+											</ul>
+										</li>
+									</ul>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="publisher.html" class="tsd-signature-type">Publisher</a></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="initpublisherasync" class="tsd-anchor"></a>
+					<h3>init<wbr>Publisher<wbr>Async</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">init<wbr>Publisher<wbr>Async<span class="tsd-signature-symbol">(</span>targetElement<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">HTMLElement</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="publisher.html" class="tsd-signature-type">Publisher</a><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">init<wbr>Publisher<wbr>Async<span class="tsd-signature-symbol">(</span>targetElement<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">HTMLElement</span>, properties<span class="tsd-signature-symbol">: </span><a href="../interfaces/publisherproperties.html" class="tsd-signature-type">PublisherProperties</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="publisher.html" class="tsd-signature-type">Publisher</a><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L165">OpenVidu/OpenVidu.ts:165</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Promisified version of <a href="openvidu.html#initpublisher">OpenVidu.initPublisher</a></p>
+								</div>
+								<blockquote>
+									<p>WARNING: events <code>accessDialogOpened</code> and <code>accessDialogClosed</code> will not be dispatched if using this method instead of <a href="openvidu.html#initpublisher">OpenVidu.initPublisher</a></p>
+								</blockquote>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>targetElement: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">HTMLElement</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="publisher.html" class="tsd-signature-type">Publisher</a><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L166">OpenVidu/OpenVidu.ts:166</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>targetElement: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">HTMLElement</span></h5>
+								</li>
+								<li>
+									<h5>properties: <a href="../interfaces/publisherproperties.html" class="tsd-signature-type">PublisherProperties</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="publisher.html" class="tsd-signature-type">Publisher</a><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="initsession" class="tsd-anchor"></a>
+					<h3>init<wbr>Session</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">init<wbr>Session<span class="tsd-signature-symbol">(</span>sessionId<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="session.html" class="tsd-signature-type">Session</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L68">OpenVidu/OpenVidu.ts:68</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Returns a session with id <code>sessionId</code></p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>sessionId: <span class="tsd-signature-type">string</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>Session unique ID generated in openvidu-server</p>
+									</div>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="session.html" class="tsd-signature-type">Session</a></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="setadvancedconfiguration" class="tsd-anchor"></a>
+					<h3>set<wbr>Advanced<wbr>Configuration</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">set<wbr>Advanced<wbr>Configuration<span class="tsd-signature-symbol">(</span>configuration<span class="tsd-signature-symbol">: </span><a href="../interfaces/openviduadvancedconfiguration.html" class="tsd-signature-type">OpenViduAdvancedConfiguration</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L335">OpenVidu/OpenVidu.ts:335</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Set OpenVidu advanced configuration options. Currently <code>configuration</code> is an object with the following optional properties (see <a href="../interfaces/openviduadvancedconfiguration.html">OpenViduAdvancedConfiguration</a> for more details):</p>
+									<ul>
+										<li><code>iceServers</code>: set custom STUN/TURN servers to be used by OpenVidu Browser</li>
+										<li><code>screenShareChromeExtension</code>: url to a custom screen share extension for Chrome to be used instead of the default one, based on ours <a href="https://github.com/OpenVidu/openvidu-screen-sharing-chrome-extension">https://github.com/OpenVidu/openvidu-screen-sharing-chrome-extension</a></li>
+										<li><code>publisherSpeakingEventsOptions</code>: custom configuration for the <a href="publisherspeakingevent.html">PublisherSpeakingEvent</a> feature</li>
+									</ul>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>configuration: <a href="../interfaces/openviduadvancedconfiguration.html" class="tsd-signature-type">OpenViduAdvancedConfiguration</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+			</section>
+		</div>
+		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+			<nav class="tsd-navigation primary">
+				<ul>
+					<li class="globals  ">
+						<a href="../index.html"><em>Globals</em></a>
+					</li>
+				</ul>
+			</nav>
+			<nav class="tsd-navigation secondary menu-sticky">
+				<ul class="before-current">
+					<li class=" tsd-kind-enum">
+						<a href="../enums/localrecorderstate.html" class="tsd-kind-icon">Local<wbr>Recorder<wbr>State</a>
+					</li>
+					<li class=" tsd-kind-enum">
+						<a href="../enums/openviduerrorname.html" class="tsd-kind-icon">Open<wbr>Vidu<wbr>Error<wbr>Name</a>
+					</li>
+					<li class=" tsd-kind-enum">
+						<a href="../enums/videoinsertmode.html" class="tsd-kind-icon">Video<wbr>Insert<wbr>Mode</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="connection.html" class="tsd-kind-icon">Connection</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="connectionevent.html" class="tsd-kind-icon">Connection<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="event.html" class="tsd-kind-icon">Event</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="localrecorder.html" class="tsd-kind-icon">Local<wbr>Recorder</a>
+					</li>
+				</ul>
+				<ul class="current">
+					<li class="current tsd-kind-class">
+						<a href="openvidu.html" class="tsd-kind-icon">Open<wbr>Vidu</a>
+						<ul>
+							<li class=" tsd-kind-constructor tsd-parent-kind-class">
+								<a href="openvidu.html#constructor" class="tsd-kind-icon">constructor</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="openvidu.html#checksystemrequirements" class="tsd-kind-icon">check<wbr>System<wbr>Requirements</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="openvidu.html#enableprodmode" class="tsd-kind-icon">enable<wbr>Prod<wbr>Mode</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="openvidu.html#getdevices" class="tsd-kind-icon">get<wbr>Devices</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="openvidu.html#getusermedia" class="tsd-kind-icon">get<wbr>User<wbr>Media</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="openvidu.html#initlocalrecorder" class="tsd-kind-icon">init<wbr>Local<wbr>Recorder</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="openvidu.html#initpublisher" class="tsd-kind-icon">init<wbr>Publisher</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="openvidu.html#initpublisherasync" class="tsd-kind-icon">init<wbr>Publisher<wbr>Async</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="openvidu.html#initsession" class="tsd-kind-icon">init<wbr>Session</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="openvidu.html#setadvancedconfiguration" class="tsd-kind-icon">set<wbr>Advanced<wbr>Configuration</a>
+							</li>
+						</ul>
+					</li>
+				</ul>
+				<ul class="after-current">
+					<li class=" tsd-kind-class">
+						<a href="openviduerror.html" class="tsd-kind-icon">Open<wbr>Vidu<wbr>Error</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="publisher.html" class="tsd-kind-icon">Publisher</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="publisherspeakingevent.html" class="tsd-kind-icon">Publisher<wbr>Speaking<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="recordingevent.html" class="tsd-kind-icon">Recording<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="session.html" class="tsd-kind-icon">Session</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="sessiondisconnectedevent.html" class="tsd-kind-icon">Session<wbr>Disconnected<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="signalevent.html" class="tsd-kind-icon">Signal<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="stream.html" class="tsd-kind-icon">Stream</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="streamevent.html" class="tsd-kind-icon">Stream<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="subscriber.html" class="tsd-kind-icon">Subscriber</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="videoelementevent.html" class="tsd-kind-icon">Video<wbr>Element<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="../interfaces/device.html" class="tsd-kind-icon">Device</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="../interfaces/eventdispatcher.html" class="tsd-kind-icon">Event<wbr>Dispatcher</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="../interfaces/openviduadvancedconfiguration.html" class="tsd-kind-icon">Open<wbr>Vidu<wbr>Advanced<wbr>Configuration</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="../interfaces/publisherproperties.html" class="tsd-kind-icon">Publisher<wbr>Properties</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="../interfaces/signaloptions.html" class="tsd-kind-icon">Signal<wbr>Options</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="../interfaces/subscriberproperties.html" class="tsd-kind-icon">Subscriber<wbr>Properties</a>
+					</li>
+				</ul>
+			</nav>
+		</div>
+	</div>
+</div>
+<footer class="with-border-bottom">
+	<div class="container">
+		<h2>Legend</h2>
+		<div class="tsd-legend-group">
+			<ul class="tsd-legend">
+				<li class="tsd-kind-module"><span class="tsd-kind-icon">Module</span></li>
+				<li class="tsd-kind-object-literal"><span class="tsd-kind-icon">Object literal</span></li>
+				<li class="tsd-kind-variable"><span class="tsd-kind-icon">Variable</span></li>
+				<li class="tsd-kind-function"><span class="tsd-kind-icon">Function</span></li>
+				<li class="tsd-kind-function tsd-has-type-parameter"><span class="tsd-kind-icon">Function with type parameter</span></li>
+				<li class="tsd-kind-index-signature"><span class="tsd-kind-icon">Index signature</span></li>
+				<li class="tsd-kind-type-alias"><span class="tsd-kind-icon">Type alias</span></li>
+				<li class="tsd-kind-type-alias tsd-has-type-parameter"><span class="tsd-kind-icon">Type alias with type parameter</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-enum"><span class="tsd-kind-icon">Enumeration</span></li>
+				<li class="tsd-kind-enum-member"><span class="tsd-kind-icon">Enumeration member</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-enum"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-enum"><span class="tsd-kind-icon">Method</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-interface"><span class="tsd-kind-icon">Interface</span></li>
+				<li class="tsd-kind-interface tsd-has-type-parameter"><span class="tsd-kind-icon">Interface with type parameter</span></li>
+				<li class="tsd-kind-constructor tsd-parent-kind-interface"><span class="tsd-kind-icon">Constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-interface"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-interface"><span class="tsd-kind-icon">Method</span></li>
+				<li class="tsd-kind-index-signature tsd-parent-kind-interface"><span class="tsd-kind-icon">Index signature</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-class"><span class="tsd-kind-icon">Class</span></li>
+				<li class="tsd-kind-class tsd-has-type-parameter"><span class="tsd-kind-icon">Class with type parameter</span></li>
+				<li class="tsd-kind-constructor tsd-parent-kind-class"><span class="tsd-kind-icon">Constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-class"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class"><span class="tsd-kind-icon">Method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class"><span class="tsd-kind-icon">Accessor</span></li>
+				<li class="tsd-kind-index-signature tsd-parent-kind-class"><span class="tsd-kind-icon">Index signature</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-constructor tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited accessor</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected accessor</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private accessor</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static property</span></li>
+				<li class="tsd-kind-call-signature tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static method</span></li>
+			</ul>
+		</div>
+	</div>
+</footer>
+<div class="container tsd-generator">
+	<p>Generated using <a href="http://typedoc.org/" target="_blank">TypeDoc</a></p>
+</div>
+<div class="overlay"></div>
+<script src="../assets/js/main.js"></script>
+<script>if (location.protocol == 'file:') document.write('<script src="../assets/js/search.js"><' + '/script>');</script>
+</body>
+</html>
