@@ -48,7 +48,9 @@ export class OpenVidu {
   /**
    * Creates an OpenVidu session. You can call [[Session.getSessionId]] in the resolved promise to retrieve the `sessionId`
    *
-   * @returns A Promise that is resolved to the [[Session]] if success and rejected with an Error object if not
+   * @returns A Promise that is resolved to the [[Session]] if success and rejected with an Error object if not.
+   * This Error object has as `message` property with the following values:
+   * - `409`: you are trying to assign an already-in-use custom sessionId to the session. See [[SessionProperties.customSessionId]]
    */
   public createSession(properties?: SessionProperties): Promise<Session> {
     return new Promise<Session>((resolve, reject) => {

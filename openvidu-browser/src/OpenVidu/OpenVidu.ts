@@ -29,15 +29,6 @@ import * as screenSharing from '../OpenViduInternal/ScreenSharing/Screen-Capturi
 
 import platform = require('platform');
 
-/**
- * @hidden
- */
-const SECRET_PARAM = '?secret=';
-/**
- * @hidden
- */
-const RECORDER_PARAM = '&recorder=';
-
 
 /**
  * Entrypoint of OpenVidu Browser library.
@@ -46,11 +37,20 @@ const RECORDER_PARAM = '&recorder=';
 export class OpenVidu {
 
   private session: Session;
-  private wsUri: string;
-  private secret = '';
-  private recorder = false;
   private jsonRpcClient: any;
 
+  /**
+   * @hidden
+   */
+  wsUri: string;
+  /**
+   * @hidden
+   */
+  secret = '';
+  /**
+   * @hidden
+   */
+  recorder = false;
   /**
    * @hidden
    */
@@ -61,12 +61,26 @@ export class OpenVidu {
   }
 
 
+  initSession(): Session;
+  /**
+   * ---
+   * ## DEPRECATED
+   *
+   * _No `sessionId` is required. Now every necessary information is received in [[Session.connect]]_
+   *
+   * ---
+   */
+  initSession(sessionId: string): Session;
+
   /**
    * Returns a session with id `sessionId`
    * @param sessionId Session unique ID generated in openvidu-server
    */
-  initSession(sessionId: string): Session {
-    this.session = new Session(sessionId, this);
+  initSession(sessionId?: string): Session {
+    if (!!sessionId) {
+      console.warn("DEPRECATION WANING: In future releases 'OpenVidu.initSession' method won't require a parameter. Remove it (see http://openvidu.io/api/openvidu-browser/interfaces/publisherproperties.html)");
+    }
+    this.session = new Session(this);
     return this.session;
   }
 
@@ -342,19 +356,6 @@ export class OpenVidu {
   /**
    * @hidden
    */
-  getUrlWithoutSecret(url: string): string {
-    if (!url) {
-      console.error('sessionId is not defined');
-    }
-    if (url.indexOf(SECRET_PARAM) !== -1) {
-      url = url.substring(0, url.lastIndexOf(SECRET_PARAM));
-    }
-    return url;
-  }
-
-  /**
-   * @hidden
-   */
   generateMediaConstraints(publisherProperties: PublisherProperties): Promise<MediaStreamConstraints> {
     return new Promise<MediaStreamConstraints>((resolve, reject) => {
       let audio, video;
@@ -527,21 +528,6 @@ export class OpenVidu {
   /**
    * @hidden
    */
-  processOpenViduUrl(url: string): void {
-    const secret = this.getSecretFromUrl(url);
-    const recorder = this.getRecorderFromUrl(url);
-    if (!!secret) {
-      this.secret = secret;
-    }
-    if (!!recorder) {
-      this.recorder = recorder;
-    }
-    this.wsUri = this.getFinalWsUrl(url);
-  }
-
-  /**
-   * @hidden
-   */
   sendRequest(method: string, params: any, callback?): void {
     if (params && params instanceof Function) {
       callback = params;
@@ -618,40 +604,6 @@ export class OpenVidu {
       console.warn('Session instance not found');
       return false;
     }
-  }
-
-  private getSecretFromUrl(url: string): string {
-    let secret = '';
-    if (url.indexOf(SECRET_PARAM) !== -1) {
-      const endOfSecret = url.lastIndexOf(RECORDER_PARAM);
-      if (endOfSecret !== -1) {
-        secret = url.substring(url.lastIndexOf(SECRET_PARAM) + SECRET_PARAM.length, endOfSecret);
-      } else {
-        secret = url.substring(url.lastIndexOf(SECRET_PARAM) + SECRET_PARAM.length, url.length);
-      }
-    }
-    return secret;
-  }
-
-  private getRecorderFromUrl(url: string): boolean {
-    let recorder = '';
-    if (url.indexOf(RECORDER_PARAM) !== -1) {
-      recorder = url.substring(url.lastIndexOf(RECORDER_PARAM) + RECORDER_PARAM.length, url.length);
-    }
-    return Boolean(recorder).valueOf();
-  }
-
-  private getFinalWsUrl(url: string): string {
-    url = this.getUrlWithoutSecret(url).substring(0, url.lastIndexOf('/')) + '/room';
-    if (url.indexOf('.ngrok.io') !== -1) {
-      // OpenVidu server URL referes to a ngrok IP: secure wss protocol and delete port of URL
-      url = url.replace('ws://', 'wss://');
-      const regex = /\.ngrok\.io:\d+/;
-      url = url.replace(regex, '.ngrok.io');
-    } else if ((url.indexOf('localhost') !== -1) || (url.indexOf('127.0.0.1') !== -1)) {
-      // OpenVidu server URL referes to localhost IP
-    }
-    return url;
   }
 
 }
