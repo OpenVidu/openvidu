@@ -62,7 +62,7 @@ public class SessionRestController {
 
 	@Autowired
 	private ComposedRecordingService recordingService;
-	
+
 	@Autowired
 	private OpenviduConfig openviduConfig;
 
@@ -76,11 +76,15 @@ public class SessionRestController {
 	public ResponseEntity<JSONObject> getSessionId(@RequestBody(required = false) Map<?, ?> params) {
 
 		SessionProperties.Builder builder = new SessionProperties.Builder();
+		String customSessionId = null;
+
 		if (params != null) {
 			String mediaModeString = (String) params.get("mediaMode");
 			String recordingModeString = (String) params.get("recordingMode");
 			String defaultRecordingLayoutString = (String) params.get("defaultRecordingLayout");
 			String defaultCustomLayout = (String) params.get("defaultCustomLayout");
+
+			customSessionId = (String) params.get("customSessionId");
 
 			try {
 
@@ -114,7 +118,19 @@ public class SessionRestController {
 
 		SessionProperties sessionProperties = builder.build();
 
-		String sessionId = sessionManager.newSessionId(sessionProperties);
+		String sessionId;
+		if (customSessionId != null && !customSessionId.isEmpty()) {
+			if (sessionManager.sessionIdExists(customSessionId)) {
+				return new ResponseEntity<JSONObject>(HttpStatus.CONFLICT);
+			} else {
+				sessionId = customSessionId;
+				sessionManager.storeSessionId(sessionId, sessionProperties);
+			}
+		} else {
+			sessionId = sessionManager.generateRandomChain();
+			sessionManager.storeSessionId(sessionId, sessionProperties);
+		}
+
 		JSONObject responseJson = new JSONObject();
 		responseJson.put("id", sessionId);
 		return new ResponseEntity<>(responseJson, HttpStatus.OK);
@@ -169,7 +185,7 @@ public class SessionRestController {
 			// "session" parameter not found
 			return new ResponseEntity<JSONObject>(HttpStatus.BAD_REQUEST);
 		}
-		
+
 		if (!this.openviduConfig.isRecordingModuleEnabled()) {
 			// OpenVidu Server configuration property "openvidu.recording" is set to false
 			return new ResponseEntity<JSONObject>(HttpStatus.NOT_IMPLEMENTED);
@@ -200,11 +216,11 @@ public class SessionRestController {
 		} else {
 			recordingLayout = RecordingLayout.valueOf(recordingLayoutString);
 		}
-		
+
 		customLayout = (customLayout == null) ? session.getSessionProperties().defaultCustomLayout() : customLayout;
 
-		Recording startedRecording = this.recordingService.startRecording(session,
-				new RecordingProperties.Builder().name(name).recordingLayout(recordingLayout).customLayout(customLayout).build());
+		Recording startedRecording = this.recordingService.startRecording(session, new RecordingProperties.Builder()
+				.name(name).recordingLayout(recordingLayout).customLayout(customLayout).build());
 		return new ResponseEntity<>(startedRecording.toJson(), HttpStatus.OK);
 	}
 

@@ -43,4 +43,11 @@ export interface SessionProperties {
      * You can easily override this value later by setting [[RecordingProperties.customLayout]] to any other value
      */
     defaultCustomLayout?: string;
+
+    /**
+     * Fix the sessionId that will be assigned to the session with this parameter. You can take advantage of this property
+     * to facilitate the mapping between OpenVidu Server 'session' entities and your own 'session' entities.
+     * If this parameter is undefined or an empty string, OpenVidu Server will generate a random sessionId for you.
+     */
+    customSessionId?: string;
 }

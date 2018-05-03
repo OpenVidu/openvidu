@@ -40,7 +40,8 @@ public class Session {
 	final static String API_SESSIONS = "api/sessions";
 	final static String API_TOKENS = "api/tokens";
 
-	protected Session(HttpClient httpClient, String urlOpenViduServer) throws OpenViduJavaClientException {
+	protected Session(HttpClient httpClient, String urlOpenViduServer)
+			throws OpenViduJavaClientException, OpenViduHttpException {
 		this.httpClient = httpClient;
 		this.urlOpenViduServer = urlOpenViduServer;
 		this.properties = new SessionProperties();
@@ -48,7 +49,7 @@ public class Session {
 	}
 
 	protected Session(HttpClient httpClient, String urlOpenViduServer, SessionProperties properties)
-			throws OpenViduJavaClientException {
+			throws OpenViduJavaClientException, OpenViduHttpException {
 		this.httpClient = httpClient;
 		this.urlOpenViduServer = urlOpenViduServer;
 		this.properties = properties;
@@ -72,8 +73,9 @@ public class Session {
 	 * @returns The generated token
 	 * 
 	 * @throws OpenViduJavaClientException
+	 * @throws OpenViduHttpException
 	 */
-	public String generateToken() throws OpenViduJavaClientException {
+	public String generateToken() throws OpenViduJavaClientException, OpenViduHttpException {
 		return this.generateToken(new TokenOptions.Builder().role(OpenViduRole.PUBLISHER).build());
 	}
 
@@ -85,9 +87,10 @@ public class Session {
 	 * @returns The generated token
 	 * 
 	 * @throws OpenViduJavaClientException
+	 * @throws OpenViduHttpException
 	 */
 	@SuppressWarnings("unchecked")
-	public String generateToken(TokenOptions tokenOptions) throws OpenViduJavaClientException {
+	public String generateToken(TokenOptions tokenOptions) throws OpenViduJavaClientException, OpenViduHttpException {
 
 		if (!this.hasSessionId()) {
 			this.getSessionId();
@@ -121,7 +124,7 @@ public class Session {
 			System.out.println("Returning a TOKEN");
 			return (String) httpResponseToJson(response).get("id");
 		} else {
-			throw new OpenViduJavaClientException("Unexpected response from OpenVidu Server: " + statusCode);
+			throw new OpenViduHttpException(statusCode);
 		}
 	}
 
@@ -142,7 +145,7 @@ public class Session {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void getSessionIdHttp() throws OpenViduJavaClientException {
+	private void getSessionIdHttp() throws OpenViduJavaClientException, OpenViduHttpException {
 		if (this.hasSessionId()) {
 			return;
 		}
@@ -154,6 +157,7 @@ public class Session {
 		json.put("recordingMode", properties.recordingMode().name());
 		json.put("defaultRecordingLayout", properties.defaultRecordingLayout().name());
 		json.put("defaultCustomLayout", properties.defaultCustomLayout());
+		json.put("customSessionId", properties.customSessionId());
 		StringEntity params = null;
 		try {
 			params = new StringEntity(json.toString());
@@ -176,7 +180,7 @@ public class Session {
 			String id = (String) httpResponseToJson(response).get("id");
 			this.sessionId = id;
 		} else {
-			throw new OpenViduJavaClientException("Unexpected response from OpenVidu Server: " + statusCode);
+			throw new OpenViduHttpException(statusCode);
 		}
 	}
 

@@ -94,6 +94,15 @@ public abstract class SessionManager {
 	}
 	
 	/**
+	 * Returns whether a sessionId already exists or not
+	 *
+	 * @return boolean
+	 */
+	public boolean sessionIdExists(String sessionId) {
+		return sessionidTokenTokenobj.containsKey(sessionId);
+	}
+	
+	/**
 	 * Returns a Session given its id
 	 *
 	 * @return Session
@@ -180,23 +189,19 @@ public abstract class SessionManager {
 		return null;
 	}
 
-	public String newSessionId(SessionProperties sessionProperties) {
-		String sessionId = OpenViduServer.publicUrl;
-		sessionId += "/" + this.generateRandomChain();
-
+	public void storeSessionId(String sessionId, SessionProperties sessionProperties) {
 		this.sessionidTokenTokenobj.put(sessionId, new ConcurrentHashMap<>());
 		this.sessionidParticipantpublicidParticipant.put(sessionId, new ConcurrentHashMap<>());
 		this.sessionProperties.put(sessionId, sessionProperties);
-
 		showTokens();
-		return sessionId;
 	}
 
 	public String newToken(String sessionId, ParticipantRole role, String serverMetadata) throws OpenViduException {
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null
 				&& this.sessionidTokenTokenobj.get(sessionId) != null) {
 			if (isMetadataFormatCorrect(serverMetadata)) {
-				String token = this.generateRandomChain();
+				String token = OpenViduServer.publicUrl + "?sessionId=" + sessionId + "&token=";
+				token += this.generateRandomChain();
 				this.sessionidTokenTokenobj.get(sessionId).put(token, new Token(token, role, serverMetadata));
 				showTokens();
 				return token;
