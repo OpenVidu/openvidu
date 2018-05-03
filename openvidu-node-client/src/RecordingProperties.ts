@@ -15,28 +15,23 @@
  *
  */
 
-export class RecordingProperties {
+import { RecordingLayout } from './RecordingLayout';
 
-    constructor(private rName: string) { }
+export interface RecordingProperties {
 
-    name(): string {
-        return this.rName;
-    }
+    /**
+     * The name you want to give to the video file. You can access this same value in your clients on recording events (`recordingStarted`, `recordingStopped`)
+     */
+    name?: string;
 
-}
+    /**
+     * The layout to be used in the recording
+     */
+    recordingLayout?: RecordingLayout;
 
-export namespace RecordingProperties {
-    export class Builder {
-
-        private rName: string = '';
-
-        build(): RecordingProperties {
-            return new RecordingProperties(this.rName);
-        }
-
-        name(name: string): Builder {
-            this.rName = name;
-            return this;
-        }
-    };
+    /**
+     * If [[recordingLayout]] is `CUSTOM`, the relative path to the specific custom layout you want to use.
+     * See [Custom recording layouts](http://openvidu.io/docs/advanced-features/recording#custom-recording-layouts) to learn more
+     */
+    customLayout?: string;
 }

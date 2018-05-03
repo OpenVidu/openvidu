@@ -1,5 +1,5 @@
 FROM ubuntu:16.04
-MAINTAINER openvidu@gmail.com
+MAINTAINER miguel.rodriguez@cocodin.com
 
 # Install Java
 RUN apt-get update && apt-get install -y openjdk-8-jdk && rm -rf /var/lib/apt/lists/*
@@ -13,8 +13,8 @@ COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Copy OpenVidu Server
 COPY openvidu-server.jar /
+COPY openvidu-server-cbx.jar /
 
-EXPOSE 8443
 EXPOSE 8888
 
 # Exec supervisord

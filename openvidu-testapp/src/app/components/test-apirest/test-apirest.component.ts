@@ -29,11 +29,13 @@ export class TestApirestComponent implements OnInit, OnDestroy {
   recordingModes = ['ALWAYS', 'MANUAL'];
   selectedRecordingMode = 'MANUAL';
 
-  recordingLayouts = ['BEST_FIT'];
-  selectedRecordingLayout = 'BEST_FIT';
+  defaultRecordingLayouts = ['BEST_FIT', 'CUSTOM'];
+  selectedDefaultRecordingLayout = 'BEST_FIT';
 
   mediaModes = ['ROUTED'];
   selectedMediaMode = 'ROUTED';
+
+  customLayout = '';
 
 
   // API REST data collected
@@ -70,11 +72,12 @@ export class TestApirestComponent implements OnInit, OnDestroy {
 
   private getSessionId() {
     this.openviduRestService.getSessionId(this.openviduUrl, this.openviduSecret,
-      new SessionProperties.Builder()
-        .recordingMode(RecordingMode[this.selectedRecordingMode])
-        .recordingLayout(RecordingLayout[this.selectedRecordingLayout])
-        .mediaMode(MediaMode[this.selectedMediaMode])
-        .build())
+      {
+        recordingMode: RecordingMode[this.selectedRecordingMode],
+        defaultRecordingLayout: RecordingLayout[this.selectedDefaultRecordingLayout],
+        defaultCustomLayout: this.customLayout,
+        mediaMode: MediaMode[this.selectedMediaMode]
+      })
       .then((sessionId) => {
         this.updateData();
       })

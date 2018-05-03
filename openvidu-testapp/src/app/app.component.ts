@@ -9,7 +9,7 @@ import { OpenviduParamsService } from './services/openvidu-params.service';
 })
 export class AppComponent {
 
-  openviduURL = 'https://localhost:8443/';
+  openviduURL = 'https://localhost:4443/';
   openviduSecret = 'MY_SECRET';
 
   constructor(private router: Router, private openviduParamsService: OpenviduParamsService) { }

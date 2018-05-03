@@ -1,3 +1,20 @@
+/*
+ * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package io.openvidu.server.recording;
 
 import java.io.File;
@@ -47,6 +64,8 @@ import com.github.dockerjava.core.command.PullImageResultCallback;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
+import io.openvidu.java.client.RecordingLayout;
+import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.server.CommandExecutor;
 import io.openvidu.server.OpenViduServer;
 import io.openvidu.server.config.OpenviduConfig;
@@ -59,7 +78,7 @@ public class ComposedRecordingService {
 	private static final Logger log = LoggerFactory.getLogger(ComposedRecordingService.class);
 
 	@Autowired
-	OpenviduConfig openviduConfig;
+	private OpenviduConfig openviduConfig;
 
 	@Autowired
 	private SessionEventsHandler sessionHandler;
@@ -81,19 +100,19 @@ public class ComposedRecordingService {
 		this.dockerClient = DockerClientBuilder.getInstance(config).build();
 	}
 
-	public Recording startRecording(Session session, String name) {
+	public Recording startRecording(Session session, RecordingProperties properties) {
 		List<String> envs = new ArrayList<>();
 		String shortSessionId = session.getSessionId().substring(session.getSessionId().lastIndexOf('/') + 1,
 				session.getSessionId().length());
 		String recordingId = this.getFreeRecordingId(session.getSessionId(), shortSessionId);
-		String secret = openviduConfig.getOpenViduSecret();
 
-		if (name == null || name.isEmpty()) {
+		if (properties.name() == null || properties.name().isEmpty()) {
 			// No name provided for the recording file
-			name = recordingId;
+			properties = new RecordingProperties.Builder().name(recordingId)
+					.recordingLayout(properties.recordingLayout()).customLayout(properties.customLayout()).build();
 		}
 
-		Recording recording = new Recording(session.getSessionId(), recordingId, name);
+		Recording recording = new Recording(session.getSessionId(), recordingId, properties);
 
 		this.sessionsRecordings.put(session.getSessionId(), recording);
 		this.sessionHandler.setRecordingStarted(session.getSessionId(), recording);
@@ -109,26 +128,23 @@ public class ComposedRecordingService {
 			e.printStackTrace();
 		}
 
-		String location = OpenViduServer.publicUrl.replaceFirst("wss://", "");
-		String layoutUrl = session.getSessionProperties().recordingLayout().name().toLowerCase().replaceAll("_", "-");
+		String layoutUrl = this.getLayoutUrl(recording, shortSessionId);
 
-		envs.add("URL=https://OPENVIDUAPP:" + secret + "@" + location + "/#/layout-" + layoutUrl + "/" + shortSessionId
-				+ "/" + secret);
+		envs.add("URL=" + layoutUrl);
 		envs.add("RESOLUTION=1920x1080");
 		envs.add("FRAMERATE=30");
 		envs.add("VIDEO_ID=" + recordingId);
-		envs.add("VIDEO_NAME=" + name);
+		envs.add("VIDEO_NAME=" + properties.name());
 		envs.add("VIDEO_FORMAT=mp4");
 		envs.add("USER_ID=" + uid);
 		envs.add("RECORDING_JSON=" + recording.toJson().toJSONString());
 
 		log.info(recording.toJson().toJSONString());
-		log.debug("Recorder connecting to url {}",
-				"https://OPENVIDUAPP:" + secret + "@localhost:8443/#/layout-best-fit/" + shortSessionId + "/" + secret);
+		log.debug("Recorder connecting to url {}", layoutUrl);
 
 		String containerId = this.runRecordingContainer(envs, "recording_" + recordingId);
 
-		this.waitForVideoFileNotEmpty(name);
+		this.waitForVideoFileNotEmpty(properties.name());
 
 		this.sessionsContainers.put(session.getSessionId(), containerId);
 
@@ -379,25 +395,22 @@ public class ComposedRecordingService {
 			return HttpStatus.CONFLICT;
 		}
 		
+		Recording recording = getRecordingFromHost(recordingId);
+		if (recording == null) {
+			return HttpStatus.NOT_FOUND;
+		}
+
 		String name = getRecordingFromHost(recordingId).getName();
 
 		File folder = new File(this.openviduConfig.getOpenViduRecordingPath());
 		File[] files = folder.listFiles();
-		int numFilesDeleted = 0;
 		for (int i = 0; i < files.length; i++) {
 			if (files[i].isFile() && isFileFromRecording(files[i], recordingId, name)) {
 				files[i].delete();
-				numFilesDeleted++;
 			}
 		}
 
-		HttpStatus status;
-		if (numFilesDeleted == 3) {
-			status = HttpStatus.NO_CONTENT;
-		} else {
-			status = HttpStatus.NOT_FOUND;
-		}
-		return status;
+		return HttpStatus.NO_CONTENT;
 	}
 
 	private Recording getRecordingFromEntityFile(File file) {
@@ -452,6 +465,27 @@ public class ComposedRecordingService {
 		this.stopDockerContainer(containerId);
 		this.removeDockerContainer(containerId);
 		throw e;
+	}
+
+	private String getLayoutUrl(Recording recording, String shortSessionId) {
+		String secret = openviduConfig.getOpenViduSecret();
+		String location = OpenViduServer.publicUrl.replaceFirst("wss://", "");
+		String layout, finalUrl;
+
+		if (RecordingLayout.CUSTOM.equals(recording.getRecordingLayout())) {
+			layout = recording.getCustomLayout();
+			layout = layout.startsWith("/") ? layout.substring(1) : layout;
+			layout = layout.endsWith("/") ? layout.substring(0, layout.length() - 1) : layout;
+			layout += "/index.html";
+			finalUrl = "https://OPENVIDUAPP:" + secret + "@" + location + "/layouts/custom/" + layout + "/?sessionId="
+					+ shortSessionId + "&secret=" + secret;
+		} else {
+			layout = recording.getRecordingLayout().name().toLowerCase().replaceAll("_", "-");
+			finalUrl = "https://OPENVIDUAPP:" + secret + "@" + location + "/#/layout-" + layout + "/" + shortSessionId
+					+ "/" + secret;
+		}
+
+		return finalUrl;
 	}
 
 	public void setRecordingVersion(String version) {

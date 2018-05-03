@@ -1,3 +1,20 @@
+/*
+ * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package io.openvidu.server.config;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -31,6 +48,9 @@ public class OpenviduConfig {
 
 	@Value("${openvidu.recording.notification}")
 	String openviduRecordingNotification;
+
+	@Value("${openvidu.recording.custom-layout}")
+	String openviduRecordingCustomLayout;
 
 	@Value("${openvidu.recording.version}")
 	String openviduRecordingVersion;
@@ -68,12 +88,20 @@ public class OpenviduConfig {
 		return this.openviduRecordingPath;
 	}
 
+	public void setOpenViduRecordingPath(String recordingPath) {
+		this.openviduRecordingPath = recordingPath;
+	}
+
 	public boolean getOpenViduRecordingPublicAccess() {
 		return this.openviduRecordingPublicAccess;
 	}
+	
+	public String getOpenviduRecordingCustomLayout() {
+		return this.openviduRecordingCustomLayout;
+	}
 
-	public void setOpenViduRecordingPath(String recordingPath) {
-		this.openviduRecordingPath = recordingPath;
+	public void setOpenViduRecordingCustomLayout(String recordingCustomLayout) {
+		this.openviduRecordingCustomLayout = recordingCustomLayout;
 	}
 
 	public String getFinalUrl() {

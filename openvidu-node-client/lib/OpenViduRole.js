@@ -18,8 +18,17 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 var OpenViduRole;
 (function (OpenViduRole) {
+    /**
+     * Can subscribe to published streams of other users
+     */
     OpenViduRole["SUBSCRIBER"] = "SUBSCRIBER";
+    /**
+     * SUBSCRIBER permissions + can publish their own streams
+     */
     OpenViduRole["PUBLISHER"] = "PUBLISHER";
-    OpenViduRole["MODERATOR"] = "MODERATOR"; // SUBSCRIBER + PUBLIHSER permissions + can force unpublish() and disconnect() over a third-party stream or user
+    /**
+     * _(not available yet)_ SUBSCRIBER + PUBLIHSER permissions + can force `unpublish()` and `disconnect()` over a third-party stream or user
+     */
+    OpenViduRole["MODERATOR"] = "MODERATOR";
 })(OpenViduRole = exports.OpenViduRole || (exports.OpenViduRole = {}));
 //# sourceMappingURL=OpenViduRole.js.map

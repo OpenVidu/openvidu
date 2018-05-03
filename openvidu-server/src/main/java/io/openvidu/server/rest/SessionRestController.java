@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2017 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
  * limitations under the License.
  *
  */
+
 package io.openvidu.server.rest;
 
 import java.util.Collection;
@@ -37,8 +38,10 @@ import io.openvidu.client.OpenViduException;
 import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.java.client.RecordingMode;
+import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.java.client.MediaMode;
 import io.openvidu.java.client.SessionProperties;
+import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.ParticipantRole;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.core.SessionManager;
@@ -59,6 +62,9 @@ public class SessionRestController {
 
 	@Autowired
 	private ComposedRecordingService recordingService;
+	
+	@Autowired
+	private OpenviduConfig openviduConfig;
 
 	@RequestMapping(value = "/sessions", method = RequestMethod.GET)
 	public Set<String> getAllSessions() {
@@ -71,27 +77,38 @@ public class SessionRestController {
 
 		SessionProperties.Builder builder = new SessionProperties.Builder();
 		if (params != null) {
-			String recordingModeString = (String) params.get("recordingMode");
-			String recordingLayoutString = (String) params.get("recordingLayout");
 			String mediaModeString = (String) params.get("mediaMode");
+			String recordingModeString = (String) params.get("recordingMode");
+			String defaultRecordingLayoutString = (String) params.get("defaultRecordingLayout");
+			String defaultCustomLayout = (String) params.get("defaultCustomLayout");
 
 			try {
+
+				// Safe parameter retrieval. Default values if not defined
 				if (recordingModeString != null) {
 					RecordingMode recordingMode = RecordingMode.valueOf(recordingModeString);
 					builder = builder.recordingMode(recordingMode);
+				} else {
+					builder = builder.recordingMode(RecordingMode.MANUAL);
 				}
-				if (recordingLayoutString != null) {
-					RecordingLayout recordingLayout = RecordingLayout.valueOf(recordingLayoutString);
-					builder = builder.recordingLayout(recordingLayout);
+				if (defaultRecordingLayoutString != null) {
+					RecordingLayout defaultRecordingLayout = RecordingLayout.valueOf(defaultRecordingLayoutString);
+					builder = builder.defaultRecordingLayout(defaultRecordingLayout);
+				} else {
+					builder.defaultRecordingLayout(RecordingLayout.BEST_FIT);
 				}
 				if (mediaModeString != null) {
 					MediaMode mediaMode = MediaMode.valueOf(mediaModeString);
 					builder = builder.mediaMode(mediaMode);
+				} else {
+					builder = builder.mediaMode(MediaMode.ROUTED);
 				}
+				builder = builder.defaultCustomLayout((defaultCustomLayout != null) ? defaultCustomLayout : "");
+
 			} catch (IllegalArgumentException e) {
-				return this.generateErrorResponse("RecordingMode " + params.get("recordingMode") + " | " + "RecordingLayout "
-						+ params.get("recordingLayout") + " | " + "MediaMode " + params.get("mediaMode")
-						+ " are not defined", "/api/tokens", HttpStatus.BAD_REQUEST);
+				return this.generateErrorResponse("RecordingMode " + params.get("recordingMode") + " | "
+						+ "Default RecordingLayout " + params.get("defaultRecordingLayout") + " | " + "MediaMode "
+						+ params.get("mediaMode") + " are not defined", "/api/tokens", HttpStatus.BAD_REQUEST);
 			}
 		}
 
@@ -109,8 +126,17 @@ public class SessionRestController {
 		try {
 
 			String sessionId = (String) params.get("session");
-			ParticipantRole role = ParticipantRole.valueOf((String) params.get("role"));
+			String roleString = (String) params.get("role");
 			String metadata = (String) params.get("data");
+
+			ParticipantRole role;
+			if (roleString != null) {
+				role = ParticipantRole.valueOf(roleString);
+			} else {
+				role = ParticipantRole.PUBLISHER;
+			}
+
+			metadata = (metadata != null) ? metadata : "";
 
 			String token = sessionManager.newToken(sessionId, role, metadata);
 			JSONObject responseJson = new JSONObject();
@@ -136,10 +162,17 @@ public class SessionRestController {
 
 		String sessionId = (String) params.get("session");
 		String name = (String) params.get("name");
+		String recordingLayoutString = (String) params.get("recordingLayout");
+		String customLayout = (String) params.get("customLayout");
 
 		if (sessionId == null) {
 			// "session" parameter not found
 			return new ResponseEntity<JSONObject>(HttpStatus.BAD_REQUEST);
+		}
+		
+		if (!this.openviduConfig.isRecordingModuleEnabled()) {
+			// OpenVidu Server configuration property "openvidu.recording" is set to false
+			return new ResponseEntity<JSONObject>(HttpStatus.NOT_IMPLEMENTED);
 		}
 
 		Session session = sessionManager.getSession(sessionId);
@@ -158,7 +191,20 @@ public class SessionRestController {
 			return new ResponseEntity<JSONObject>(HttpStatus.CONFLICT);
 		}
 
-		Recording startedRecording = this.recordingService.startRecording(session, name);
+		RecordingLayout recordingLayout;
+		if (recordingLayoutString == null || recordingLayoutString.isEmpty()) {
+			// "recordingLayout" parameter not defined. Use global layout from
+			// SessionProperties
+			// (it is always configured as it has RecordingLayout.BEST_FIT as default value)
+			recordingLayout = session.getSessionProperties().defaultRecordingLayout();
+		} else {
+			recordingLayout = RecordingLayout.valueOf(recordingLayoutString);
+		}
+		
+		customLayout = (customLayout == null) ? session.getSessionProperties().defaultCustomLayout() : customLayout;
+
+		Recording startedRecording = this.recordingService.startRecording(session,
+				new RecordingProperties.Builder().name(name).recordingLayout(recordingLayout).customLayout(customLayout).build());
 		return new ResponseEntity<>(startedRecording.toJson(), HttpStatus.OK);
 	}
 
@@ -184,14 +230,14 @@ public class SessionRestController {
 			// Session is not being recorded
 			return new ResponseEntity<JSONObject>(HttpStatus.CONFLICT);
 		}
-		
+
 		Session session = sessionManager.getSession(recording.getSessionId());
-		
-		Recording stoppedRecording = this.recordingService
-				.stopRecording(session);
-		
-		sessionManager.evictParticipant(session.getParticipantByPublicId(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID).getParticipantPrivateId(), "EVICT_RECORDER");
-		
+
+		Recording stoppedRecording = this.recordingService.stopRecording(session);
+
+		sessionManager.evictParticipant(session.getParticipantByPublicId(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID)
+				.getParticipantPrivateId(), "EVICT_RECORDER");
+
 		return new ResponseEntity<>(stoppedRecording.toJson(), HttpStatus.OK);
 	}
 

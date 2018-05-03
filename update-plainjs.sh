@@ -20,3 +20,9 @@ cp openvidu-browser/static/js/openvidu-browser-"$1".js ../openvidu-tutorials/ope
 
 # openvidu-getaroom
 cp openvidu-browser/static/js/openvidu-browser-"$1".js ../openvidu-tutorials/openvidu-getaroom/web/openvidu-browser-"$1".js
+
+# openvidu-recording-java
+cp openvidu-browser/static/js/openvidu-browser-"$1".js ../openvidu-tutorials/openvidu-recording-java/src/main/resources/static/openvidu-browser-"$1".js
+
+# openvidu-recording-node
+cp openvidu-browser/static/js/openvidu-browser-"$1".js ../openvidu-tutorials/openvidu-recording-node/public/openvidu-browser-"$1".js

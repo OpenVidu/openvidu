@@ -15,51 +15,32 @@
  *
  */
 
-import { MediaMode } from "./MediaMode";
-import { RecordingMode } from "./RecordingMode";
-import { RecordingLayout } from "./RecordingLayout";
+import { MediaMode } from './MediaMode';
+import { RecordingLayout } from './RecordingLayout';
+import { RecordingMode } from './RecordingMode';
 
-export class SessionProperties {
+export interface SessionProperties {
 
-	constructor(private mediaModeProp: MediaMode, private recordingModeProp: RecordingMode, private recordingLayoutProp: RecordingLayout) { }
+    /**
+     * How the media streams will be sent and received by your clients: routed through OpenVidu Media Server
+     * (`MediaMode.ROUTED`) or attempting direct p2p connections (`MediaMode.RELAYED`, _not available yet_)
+     */
+    mediaMode?: MediaMode;
 
-	mediaMode(): string {
-		return this.mediaModeProp;
-	}
+    /**
+     * Whether the Session will be automatically recorded (`RecordingMode.ALWAYS`) or not (`RecordingMode.MANUAL`)
+     */
+    recordingMode?: RecordingMode;
 
-	recordingMode(): RecordingMode {
-		return this.recordingModeProp;
-	}
+    /**
+     * Default value used to initialize property [[RecordingProperties.recordingLayout]] of every recording of this session.
+     * You can easily override this value later by setting [[RecordingProperties.recordingLayout]] to any other value
+     */
+    defaultRecordingLayout?: RecordingLayout;
 
-	recordingLayout(): RecordingLayout {
-		return this.recordingLayoutProp;
-	}
-}
-
-export namespace SessionProperties {
-	export class Builder {
-
-		private mediaModeProp: MediaMode = MediaMode.ROUTED;
-		private recordingModeProp: RecordingMode = RecordingMode.MANUAL;
-		private recordingLayoutProp: RecordingLayout = RecordingLayout.BEST_FIT;
-
-		build(): SessionProperties {
-			return new SessionProperties(this.mediaModeProp, this.recordingModeProp, this.recordingLayoutProp);
-		}
-
-		mediaMode(mediaMode: MediaMode): Builder {
-			this.mediaModeProp = mediaMode;
-			return this;
-		}
-
-		recordingMode(recordingMode: RecordingMode): Builder {
-			this.recordingModeProp = recordingMode;
-			return this;
-		}
-
-		recordingLayout(recordingLayout: RecordingLayout): Builder {
-			this.recordingLayoutProp = recordingLayout;
-			return this;
-		}
-	};
+    /**
+     * Default value used to initialize property [[RecordingProperties.customLayout]] of every recording of this session.
+     * You can easily override this value later by setting [[RecordingProperties.customLayout]] to any other value
+     */
+    defaultCustomLayout?: string;
 }

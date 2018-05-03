@@ -1,3 +1,20 @@
+/*
+ * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package io.openvidu.server.kurento.core;
 
 import java.util.Collections;
@@ -20,6 +37,7 @@ import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.java.client.RecordingMode;
+import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.java.client.MediaMode;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.server.core.SessionManager;
@@ -55,7 +73,8 @@ public class KurentoSessionManager extends SessionManager {
 				SessionProperties properties = sessionProperties.get(sessionId);
 				if (properties == null && this.isInsecureParticipant(participant.getParticipantPrivateId())) {
 					properties = new SessionProperties.Builder().mediaMode(MediaMode.ROUTED)
-							.recordingMode(RecordingMode.ALWAYS).recordingLayout(RecordingLayout.BEST_FIT).build();
+							.recordingMode(RecordingMode.ALWAYS).defaultRecordingLayout(RecordingLayout.BEST_FIT)
+							.build();
 				}
 				createSession(kcSessionInfo, properties);
 			}
@@ -235,7 +254,10 @@ public class KurentoSessionManager extends SessionManager {
 				&& session.getActivePublishers() == 0) {
 			// Insecure session recording
 			new Thread(() -> {
-				recordingService.startRecording(session, null);
+				recordingService.startRecording(session,
+						new RecordingProperties.Builder().name("")
+								.recordingLayout(session.getSessionProperties().defaultRecordingLayout())
+								.customLayout(session.getSessionProperties().defaultCustomLayout()).build());
 			}).start();
 		}
 

@@ -1,7 +1,25 @@
+/*
+ * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package io.openvidu.server.cdr;
 
 import org.json.simple.JSONObject;
 
+import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.recording.Recording;
@@ -33,6 +51,7 @@ public class CDREvent implements Comparable<CDREvent> {
 	private String name;
 	private Boolean hasAudio;
 	private Boolean hasVideo;
+	private RecordingLayout recordingLayout;
 
 	public CDREvent(String eventName, CDREvent event) {
 		this(eventName, event.participant, event.sessionId, event.mediaOptions, event.receivingFrom, event.startTime, event.reason);
@@ -69,6 +88,7 @@ public class CDREvent implements Comparable<CDREvent> {
 		this.size = recording.getSize();
 		this.hasAudio = recording.hasAudio();
 		this.hasVideo = recording.hasVideo();
+		this.recordingLayout = recording.getRecordingLayout();
 	}
 
 	public CDREvent(String eventName, Participant participant, String sessionId) {
@@ -145,6 +165,9 @@ public class CDREvent implements Comparable<CDREvent> {
 		}
 		if (this.hasVideo != null) {
 			json.put("hasVideo", this.hasVideo);
+		}
+		if (this.recordingLayout != null) {
+			json.put("recordingLayout", this.recordingLayout.name());
 		}
 
 		JSONObject root = new JSONObject();

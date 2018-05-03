@@ -11,13 +11,25 @@
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "docs": "grunt --gruntfile config/typedoc/custom-theme/gruntfile.js && typedoc --options ./config/typedoc/typedoc.js --out ./docs ./src && rm -rf ../../openvidu.io/api/openvidu-node-client/* && cp -R ./docs/. ../../openvidu.io/api/openvidu-node-client"
   },
   "dependencies": {},
   "devDependencies": {
-    "@types/node": "9.4.0",
-    "ts-node": "4.1.0",
+    "@types/node": "9.6.6",
+    "ts-node": "6.0.0",
     "tslint": "5.9.1",
-    "typescript": "2.6.2"
+    "typedoc": "^0.11.1",
+    "typedoc-plugin-sourcefile-url": "^1.0.3",
+    "typescript": "2.7.2",
+    "grunt": "^1.0.1",
+    "grunt-autoprefixer": "^3.0.4",
+    "grunt-cli": "^1.2.0",
+    "grunt-contrib-copy": "^1.0.0",
+    "grunt-contrib-sass": "^1.0.0",
+    "grunt-contrib-uglify": "^2.3.0",
+    "grunt-contrib-watch": "~1.0.0",
+    "grunt-string-replace": "^1.0.0",
+    "grunt-ts": "^5.5.1"
   }
 }

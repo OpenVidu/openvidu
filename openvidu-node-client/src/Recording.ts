@@ -15,80 +15,112 @@
  *
  */
 
+import { RecordingLayout } from './RecordingLayout';
+
 export class Recording {
 
-    private id: string;
-    private name: string;
-    private sessionId: string;
-    private createdAt: number;
-    private size: number = 0;
-    private duration: number = 0;
-    private url: string;
-    private hasaudio: boolean = true;
-    private hasvideo: boolean = true;
-    private status: Recording.Status;
+    /**
+     * Recording unique identifier
+     */
+    id: string;
 
+    /**
+     * Session associated to the recording
+     */
+    sessionId: string;
+
+    /**
+     * Time when the recording started in UTC milliseconds
+     */
+    createdAt: number;
+
+    /**
+     * Size of the recording in bytes (0 until the recording is stopped)
+     */
+    size = 0;
+
+    /**
+     * Duration of the recording in seconds (0 until the recording is stopped)
+     */
+    duration = 0;
+
+    /**
+     * URL of the recording. You can access the file from there. It is `null` until recording is stopped or if OpenVidu Server configuration property `openvidu.recording.public-access` is false
+     */
+    url: string;
+
+    /**
+     * `true` if the recording has an audio track, `false` otherwise (currently fixed to true)
+     */
+    hasAudio = true;
+
+    /**
+     * `true` if the recording has a video track, `false` otherwise (currently fixed to true)
+     */
+    hasVideo = true;
+
+    /**
+     * Status of the recording
+     */
+    status: Recording.Status;
+
+    /**
+     * Name of the Recording. The video file will be named after this property.
+     * You can access this same value in your clients on recording events
+     * (`recordingStarted`, `recordingStopped`)
+     */
+    name: string;
+
+    /**
+     * The layout used in this Recording
+     */
+    recordingLayout: RecordingLayout;
+
+    /* tslint:disable:no-string-literal */
     constructor(json: JSON) {
         this.id = json['id'];
-        this.name = json['name'];
         this.sessionId = json['sessionId'];
         this.createdAt = json['createdAt'];
         this.size = json['size'];
         this.duration = json['duration'];
         this.url = json['url'];
-        this.hasaudio = json['hasAudio'];
-        this.hasvideo = json['hasVideo'];
+        this.hasAudio = json['hasAudio'];
+        this.hasVideo = json['hasVideo'];
         this.status = json['status'];
+        this.name = json['name'];
+        this.recordingLayout = json['recordingLayout'];
     }
-
-    public getStatus(): Recording.Status {
-        return this.status;
-    }
-
-    public getId(): string {
-        return this.id;
-    }
-
-    public getName(): string {
-        return this.name;
-    }
-
-    public getSessionId(): string {
-        return this.sessionId;
-    }
-
-    public getCreatedAt(): number {
-        return this.createdAt;
-    }
-
-    public getSize(): number {
-        return this.size;
-    }
-
-    public getDuration(): number {
-        return this.duration;
-    }
-
-    public getUrl(): string {
-        return this.url;
-    }
-
-    public hasAudio(): boolean {
-        return this.hasaudio;
-    }
-
-    public hasVideo(): boolean {
-        return this.hasvideo;
-    }
+    /* tslint:enable:no-string-literal */
 }
 
 export namespace Recording {
     export enum Status {
-        starting,   // The recording is starting (cannot be stopped)
-        started,    // The recording has started and is going on
-        stopped,    // The recording has finished OK
-        available,  // The recording is available for downloading. This status is reached for all
-        // stopped recordings if property 'openvidu.recording.free-access' is true
-        failed      // The recording has failed
+
+        /**
+         * The recording is starting (cannot be stopped)
+         */
+        starting,
+
+        /**
+         * The recording has started and is going on
+         */
+        started,
+
+        /**
+         * The recording has finished OK
+         */
+        stopped,
+
+        /**
+         * The recording is available for downloading. This status is reached for all
+         * stopped recordings if [OpenVidu Server configuration](http://openvidu.io/docs/reference-docs/openvidu-server-params/)
+         * property <code>openvidu.recording.free-access</code> is true
+         */
+        available,
+
+        /**
+         * The recording has failed
+         */
+        failed
     }
 }
