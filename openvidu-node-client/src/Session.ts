@@ -116,7 +116,8 @@ export class Session {
                 mediaMode: !!this.properties.mediaMode ? this.properties.mediaMode : MediaMode.ROUTED,
                 recordingMode: !!this.properties.recordingMode ? this.properties.recordingMode : RecordingMode.MANUAL,
                 defaultRecordingLayout: !!this.properties.defaultRecordingLayout ? this.properties.defaultRecordingLayout : RecordingLayout.BEST_FIT,
-                defaultCustomLayout: !!this.properties.defaultCustomLayout ? this.properties.defaultCustomLayout : ''
+                defaultCustomLayout: !!this.properties.defaultCustomLayout ? this.properties.defaultCustomLayout : '',
+                customSessionId: !!this.properties.customSessionId ? this.properties.customSessionId : ''
             });
 
             const options = {

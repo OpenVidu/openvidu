@@ -23,6 +23,7 @@ public class SessionProperties {
 	private RecordingMode recordingMode;
 	private RecordingLayout defaultRecordingLayout;
 	private String defaultCustomLayout;
+	private String customSessionId;
 
 	/**
 	 * Builder for {@link io.openvidu.java.client.SessionProperties}
@@ -33,6 +34,7 @@ public class SessionProperties {
 		private RecordingMode recordingMode = RecordingMode.MANUAL;
 		private RecordingLayout defaultRecordingLayout = RecordingLayout.BEST_FIT;
 		private String defaultCustomLayout = "";
+		private String customSessionId = "";
 
 		/**
 		 * Returns the {@link io.openvidu.java.client.SessionProperties} object properly
@@ -40,7 +42,7 @@ public class SessionProperties {
 		 */
 		public SessionProperties build() {
 			return new SessionProperties(this.mediaMode, this.recordingMode, this.defaultRecordingLayout,
-					this.defaultCustomLayout);
+					this.defaultCustomLayout, this.customSessionId);
 		}
 
 		/**
@@ -96,6 +98,18 @@ public class SessionProperties {
 			return this;
 		}
 
+		/**
+		 * Call this method to fix the sessionId that will be assigned to the session.
+		 * You can take advantage of this property to facilitate the mapping between
+		 * OpenVidu Server 'session' entities and your own 'session' entities. If this
+		 * parameter is undefined or an empty string, OpenVidu Server will generate a
+		 * random sessionId for you.
+		 */
+		public SessionProperties.Builder customSessionId(String customSessionId) {
+			this.customSessionId = customSessionId;
+			return this;
+		}
+
 	}
 
 	protected SessionProperties() {
@@ -103,14 +117,16 @@ public class SessionProperties {
 		this.recordingMode = RecordingMode.MANUAL;
 		this.defaultRecordingLayout = RecordingLayout.BEST_FIT;
 		this.defaultCustomLayout = "";
+		this.customSessionId = "";
 	}
 
 	private SessionProperties(MediaMode mediaMode, RecordingMode recordingMode, RecordingLayout layout,
-			String defaultCustomLayout) {
+			String defaultCustomLayout, String customSessionId) {
 		this.mediaMode = mediaMode;
 		this.recordingMode = recordingMode;
 		this.defaultRecordingLayout = layout;
 		this.defaultCustomLayout = defaultCustomLayout;
+		this.customSessionId = customSessionId;
 	}
 
 	/**
@@ -154,6 +170,17 @@ public class SessionProperties {
 	 */
 	public String defaultCustomLayout() {
 		return this.defaultCustomLayout;
+	}
+
+	/**
+	 * Fixes the value of the sessionId property of the Session. You can take
+	 * advantage of this property to facilitate the mapping between OpenVidu Server
+	 * 'session' entities and your own 'session' entities. If this parameter is
+	 * undefined or an empty string, OpenVidu Server will generate a random
+	 * sessionId for you.
+	 */
+	public String customSessionId() {
+		return this.customSessionId;
 	}
 
 }

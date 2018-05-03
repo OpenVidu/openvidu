@@ -142,7 +142,7 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 	@Override
 	public void registerJsonRpcHandlers(JsonRpcHandlerRegistry registry) {
-		registry.addHandler(rpcHandler().withPingWatchdog(true), "/room");
+		registry.addHandler(rpcHandler().withPingWatchdog(true), "/openvidu");
 	}
 
 	private static String getContainerIp() throws IOException, InterruptedException {
