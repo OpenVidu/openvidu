@@ -8,9 +8,6 @@
 
           <div class="secure-div">
             <mat-checkbox class="secure-session-checkbox" [disabled]="session" [(ngModel)]="secureSession" name="secureSession">SECURE</mat-checkbox>
-            <mat-form-field style="margin-right: 10px">
-              <input class="sessionIdInput" matInput placeholder="SESSIONID" name="sessionIdInput" [(ngModel)]="sessionIdInput" [disabled]="!secureSession">
-            </mat-form-field>
             <mat-form-field>
               <input class="tokenInput" matInput placeholder="TOKEN" name="tokenInput" [(ngModel)]="tokenInput" [disabled]="!secureSession">
             </mat-form-field>

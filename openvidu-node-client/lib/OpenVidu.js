@@ -35,7 +35,9 @@ var OpenVidu = /** @class */ (function () {
     /**
      * Creates an OpenVidu session. You can call [[Session.getSessionId]] in the resolved promise to retrieve the `sessionId`
      *
-     * @returns A Promise that is resolved to the [[Session]] if success and rejected with an Error object if not
+     * @returns A Promise that is resolved to the [[Session]] if success and rejected with an Error object if not.
+     * This Error object has as `message` property with the following values:
+     * - `409`: you are trying to assign an already-in-use custom sessionId to the session. See [[SessionProperties.customSessionId]]
      */
     OpenVidu.prototype.createSession = function (properties) {
         var _this = this;
@@ -317,11 +319,11 @@ var OpenVidu = /** @class */ (function () {
     };
     OpenVidu.prototype.setHostnameAndPort = function () {
         var urlSplitted = this.urlOpenViduServer.split(':');
-        if (urlSplitted.length === 3) {
+        if (urlSplitted.length === 3) { // URL has format: http:// + hostname + :port
             this.hostname = this.urlOpenViduServer.split(':')[1].replace(/\//g, '');
             this.port = parseInt(this.urlOpenViduServer.split(':')[2].replace(/\//g, ''));
         }
-        else if (urlSplitted.length === 2) {
+        else if (urlSplitted.length === 2) { // URL has format: hostname + :port
             this.hostname = this.urlOpenViduServer.split(':')[0].replace(/\//g, '');
             this.port = parseInt(this.urlOpenViduServer.split(':')[1].replace(/\//g, ''));
         }

@@ -491,20 +491,18 @@ var screenSharingAuto = __webpack_require__("../../../../openvidu-browser/lib/Op
 var screenSharing = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/ScreenSharing/Screen-Capturing.js");
 var platform = __webpack_require__("../../../../openvidu-browser/node_modules/platform/platform.js");
 /**
- * @hidden
- */
-var SECRET_PARAM = '?secret=';
-/**
- * @hidden
- */
-var RECORDER_PARAM = '&recorder=';
-/**
  * Entrypoint of OpenVidu Browser library.
  * Use it to initialize objects of type [[Session]], [[Publisher]] and [[LocalRecorder]]
  */
 var OpenVidu = /** @class */ (function () {
     function OpenVidu() {
+        /**
+         * @hidden
+         */
         this.secret = '';
+        /**
+         * @hidden
+         */
         this.recorder = false;
         /**
          * @hidden
@@ -517,7 +515,10 @@ var OpenVidu = /** @class */ (function () {
      * @param sessionId Session unique ID generated in openvidu-server
      */
     OpenVidu.prototype.initSession = function (sessionId) {
-        this.session = new __1.Session(sessionId, this);
+        if (!!sessionId) {
+            console.warn("DEPRECATION WANING: In future releases 'OpenVidu.initSession' method won't require a parameter. Remove it (see http://openvidu.io/api/openvidu-browser/interfaces/publisherproperties.html)");
+        }
+        this.session = new __1.Session(this);
         return this.session;
     };
     /**
@@ -751,18 +752,6 @@ var OpenVidu = /** @class */ (function () {
     /**
      * @hidden
      */
-    OpenVidu.prototype.getUrlWithoutSecret = function (url) {
-        if (!url) {
-            console.error('sessionId is not defined');
-        }
-        if (url.indexOf(SECRET_PARAM) !== -1) {
-            url = url.substring(0, url.lastIndexOf(SECRET_PARAM));
-        }
-        return url;
-    };
-    /**
-     * @hidden
-     */
     OpenVidu.prototype.generateMediaConstraints = function (publisherProperties) {
         var _this = this;
         return new Promise(function (resolve, reject) {
@@ -928,20 +917,6 @@ var OpenVidu = /** @class */ (function () {
     /**
      * @hidden
      */
-    OpenVidu.prototype.processOpenViduUrl = function (url) {
-        var secret = this.getSecretFromUrl(url);
-        var recorder = this.getRecorderFromUrl(url);
-        if (!!secret) {
-            this.secret = secret;
-        }
-        if (!!recorder) {
-            this.recorder = recorder;
-        }
-        this.wsUri = this.getFinalWsUrl(url);
-    };
-    /**
-     * @hidden
-     */
     OpenVidu.prototype.sendRequest = function (method, params, callback) {
         if (params && params instanceof Function) {
             callback = params;
@@ -1011,39 +986,6 @@ var OpenVidu = /** @class */ (function () {
             console.warn('Session instance not found');
             return false;
         }
-    };
-    OpenVidu.prototype.getSecretFromUrl = function (url) {
-        var secret = '';
-        if (url.indexOf(SECRET_PARAM) !== -1) {
-            var endOfSecret = url.lastIndexOf(RECORDER_PARAM);
-            if (endOfSecret !== -1) {
-                secret = url.substring(url.lastIndexOf(SECRET_PARAM) + SECRET_PARAM.length, endOfSecret);
-            }
-            else {
-                secret = url.substring(url.lastIndexOf(SECRET_PARAM) + SECRET_PARAM.length, url.length);
-            }
-        }
-        return secret;
-    };
-    OpenVidu.prototype.getRecorderFromUrl = function (url) {
-        var recorder = '';
-        if (url.indexOf(RECORDER_PARAM) !== -1) {
-            recorder = url.substring(url.lastIndexOf(RECORDER_PARAM) + RECORDER_PARAM.length, url.length);
-        }
-        return Boolean(recorder).valueOf();
-    };
-    OpenVidu.prototype.getFinalWsUrl = function (url) {
-        url = this.getUrlWithoutSecret(url).substring(0, url.lastIndexOf('/')) + '/room';
-        if (url.indexOf('.ngrok.io') !== -1) {
-            // OpenVidu server URL referes to a ngrok IP: secure wss protocol and delete port of URL
-            url = url.replace('ws://', 'wss://');
-            var regex = /\.ngrok\.io:\d+/;
-            url = url.replace(regex, '.ngrok.io');
-        }
-        else if ((url.indexOf('localhost') !== -1) || (url.indexOf('127.0.0.1') !== -1)) {
-            // OpenVidu server URL referes to localhost IP
-        }
-        return url;
     };
     return OpenVidu;
 }());
@@ -1349,7 +1291,7 @@ var Publisher = /** @class */ (function () {
                 // Ask independently for audio stream and video stream. If the user asks for both of them and one is blocked, the method still
                 // success only with the allowed input. This is not the desierd behaviour: if any of them is blocked, access should be denied
                 var constraintsAux = {};
-                var timeForDialogEvent = 1000;
+                var timeForDialogEvent = 1250;
                 if (_this.stream.isSendVideo()) {
                     constraintsAux.audio = false;
                     constraintsAux.video = constraints.video;
@@ -1578,7 +1520,7 @@ var Session = /** @class */ (function () {
     /**
      * @hidden
      */
-    function Session(sessionId, openvidu) {
+    function Session(openvidu) {
         // This map is only used to avoid race condition between 'joinRoom' response and 'onParticipantPublished' notification
         /**
          * @hidden
@@ -1594,8 +1536,6 @@ var Session = /** @class */ (function () {
         this.speakingEventsEnabled = false;
         this.ee = new EventEmitter();
         this.openvidu = openvidu;
-        this.sessionId = this.openvidu.getUrlWithoutSecret(sessionId);
-        this.openvidu.processOpenViduUrl(sessionId);
     }
     /**
      * Connects to the session using `token`. Parameter `metadata` allows you to pass extra data to share with other users when
@@ -1629,6 +1569,7 @@ var Session = /** @class */ (function () {
         // DEPRECATED WARNING
         return VersionAdapter_1.solveIfCallback('Session.connect', (!!param3 && (typeof param3 === 'function')) ? param3 : ((typeof metadata === 'function') ? metadata : ''), 
         /*return */ new Promise(function (resolve, reject) {
+            _this.processToken(token);
             if (_this.openvidu.checkSystemRequirements()) {
                 // Early configuration to deactivate automatic subscription to streams
                 _this.options = {
@@ -2147,7 +2088,7 @@ var Session = /** @class */ (function () {
     Session.prototype.onLostConnection = function () {
         if (!this.connection) {
             console.warn('Not connected to session: if you are not debugging, this is probably a certificate error');
-            var url = 'https://' + this.openvidu.getWsUri().split('wss://')[1].split('/room')[0];
+            var url = 'https://' + this.openvidu.getWsUri().split('wss://')[1].split('/openvidu')[0];
             if (window.confirm('If you are not debugging, this is probably a certificate error at \"' + url + '\"\n\nClick OK to navigate and accept it')) {
                 location.assign(url + '/accept-certificate');
             }
@@ -2198,27 +2139,32 @@ var Session = /** @class */ (function () {
         var _this = this;
         forced = !!forced;
         console.info('Leaving Session (forced=' + forced + ')');
-        if (!!this.connection && !this.connection.disposed && !forced) {
-            this.openvidu.sendRequest('leaveRoom', function (error, response) {
-                if (error) {
-                    console.error(error);
-                }
-                _this.openvidu.closeWs();
-            });
+        if (!!this.connection) {
+            if (!this.connection.disposed && !forced) {
+                this.openvidu.sendRequest('leaveRoom', function (error, response) {
+                    if (error) {
+                        console.error(error);
+                    }
+                    _this.openvidu.closeWs();
+                });
+            }
+            else {
+                this.openvidu.closeWs();
+            }
+            if (!!this.connection.stream) {
+                // Make Publisher object dispatch 'streamDestroyed' event (if there's a local stream)
+                this.connection.stream.disposeWebRtcPeer();
+                this.connection.stream.emitEvent('stream-destroyed-by-disconnect', [reason]);
+            }
+            if (!this.connection.disposed) {
+                // Make Session object dispatch 'sessionDisconnected' event (if it is not already disposed)
+                var sessionDisconnectEvent = new SessionDisconnectedEvent_1.SessionDisconnectedEvent(this, reason);
+                this.ee.emitEvent('sessionDisconnected', [sessionDisconnectEvent]);
+                sessionDisconnectEvent.callDefaultBehaviour();
+            }
         }
         else {
-            this.openvidu.closeWs();
-        }
-        if (!!this.connection.stream) {
-            // Make Publisher object dispatch 'streamDestroyed' event (if there's a local stream)
-            this.connection.stream.disposeWebRtcPeer();
-            this.connection.stream.emitEvent('stream-destroyed-by-disconnect', [reason]);
-        }
-        if (!this.connection.disposed) {
-            // Make Session object dispatch 'sessionDisconnected' event (if it is not already disposed)
-            var sessionDisconnectEvent = new SessionDisconnectedEvent_1.SessionDisconnectedEvent(this, reason);
-            this.ee.emitEvent('sessionDisconnected', [sessionDisconnectEvent]);
-            sessionDisconnectEvent.callDefaultBehaviour();
+            console.warn('You were not connected to the session ' + this.sessionId);
         }
     };
     /* Private methods */
@@ -2238,36 +2184,41 @@ var Session = /** @class */ (function () {
                         recorder: _this.openvidu.getRecorder()
                     };
                     _this.openvidu.sendRequest('joinRoom', joinParams, function (error, response) {
-                        // Initialize local Connection object with values returned by openvidu-server
-                        _this.connection = new __1.Connection(_this);
-                        _this.connection.connectionId = response.id;
-                        _this.connection.data = response.metadata;
-                        // Initialize remote Connections with value returned by openvidu-server
-                        var events = {
-                            connections: new Array(),
-                            streams: new Array()
-                        };
-                        var existingParticipants = response.value;
-                        existingParticipants.forEach(function (participant) {
-                            var connection = new __1.Connection(_this, participant);
-                            _this.remoteConnections[connection.connectionId] = connection;
-                            events.connections.push(connection);
-                            if (!!connection.stream) {
-                                _this.remoteStreamsCreated[connection.stream.streamId] = true;
-                                events.streams.push(connection.stream);
-                            }
-                        });
-                        // Own 'connectionCreated' event
-                        _this.ee.emitEvent('connectionCreated', [new ConnectionEvent_1.ConnectionEvent(false, _this, 'connectionCreated', _this.connection, '')]);
-                        // One 'connectionCreated' event for each existing connection in the session
-                        events.connections.forEach(function (connection) {
-                            _this.ee.emitEvent('connectionCreated', [new ConnectionEvent_1.ConnectionEvent(false, _this, 'connectionCreated', connection, '')]);
-                        });
-                        // One 'streamCreated' event for each active stream in the session
-                        events.streams.forEach(function (stream) {
-                            _this.ee.emitEvent('streamCreated', [new StreamEvent_1.StreamEvent(false, _this, 'streamCreated', stream, '')]);
-                        });
-                        resolve();
+                        if (!!error) {
+                            reject(error);
+                        }
+                        else {
+                            // Initialize local Connection object with values returned by openvidu-server
+                            _this.connection = new __1.Connection(_this);
+                            _this.connection.connectionId = response.id;
+                            _this.connection.data = response.metadata;
+                            // Initialize remote Connections with value returned by openvidu-server
+                            var events_1 = {
+                                connections: new Array(),
+                                streams: new Array()
+                            };
+                            var existingParticipants = response.value;
+                            existingParticipants.forEach(function (participant) {
+                                var connection = new __1.Connection(_this, participant);
+                                _this.remoteConnections[connection.connectionId] = connection;
+                                events_1.connections.push(connection);
+                                if (!!connection.stream) {
+                                    _this.remoteStreamsCreated[connection.stream.streamId] = true;
+                                    events_1.streams.push(connection.stream);
+                                }
+                            });
+                            // Own 'connectionCreated' event
+                            _this.ee.emitEvent('connectionCreated', [new ConnectionEvent_1.ConnectionEvent(false, _this, 'connectionCreated', _this.connection, '')]);
+                            // One 'connectionCreated' event for each existing connection in the session
+                            events_1.connections.forEach(function (connection) {
+                                _this.ee.emitEvent('connectionCreated', [new ConnectionEvent_1.ConnectionEvent(false, _this, 'connectionCreated', connection, '')]);
+                            });
+                            // One 'streamCreated' event for each active stream in the session
+                            events_1.streams.forEach(function (stream) {
+                                _this.ee.emitEvent('streamCreated', [new StreamEvent_1.StreamEvent(false, _this, 'streamCreated', stream, '')]);
+                            });
+                            resolve();
+                        }
                     });
                 }
             });
@@ -2314,6 +2265,19 @@ var Session = /** @class */ (function () {
                 reject(new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.GENERIC_ERROR, errorMessage));
             }
         });
+    };
+    Session.prototype.processToken = function (token) {
+        var url = new URL(token);
+        this.sessionId = url.searchParams.get('sessionId');
+        var secret = url.searchParams.get('secret');
+        var recorder = url.searchParams.get('recorder');
+        if (!!secret) {
+            this.openvidu.secret = secret;
+        }
+        if (!!recorder) {
+            this.openvidu.recorder = true;
+        }
+        this.openvidu.wsUri = 'wss://' + url.host + '/openvidu';
     };
     return Session;
 }());
@@ -11508,7 +11472,7 @@ var CredentialsDialogComponent = (function () {
     CredentialsDialogComponent = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
             selector: 'app-credentials-dialog',
-            template: "\n        <div>\n            <h1 mat-dialog-title>\n                Insert your secret\n            </h1>\n            <form #dialogForm (ngSubmit)=\"testVideo()\">\n                <mat-dialog-content>\n                    <mat-input-container>\n                        <input matInput name=\"secret\" type=\"password\" [(ngModel)]=\"secret\">\n                    </mat-input-container>\n                </mat-dialog-content>\n                <mat-dialog-actions>\n                    <button mat-button mat-dialog-close>CANCEL</button>\n                    <button mat-button id=\"join-btn\" type=\"submit\">TEST</button>\n                </mat-dialog-actions>\n            </form>\n        </div>\n    ",
+            template: "\n        <div>\n            <h1 mat-dialog-title>\n                Insert your secret\n            </h1>\n            <form #dialogForm (ngSubmit)=\"testVideo()\">\n                <mat-dialog-content>\n                    <mat-input-container>\n                        <input matInput name=\"secret\" type=\"password\" [(ngModel)]=\"secret\" required>\n                    </mat-input-container>\n                </mat-dialog-content>\n                <mat-dialog-actions>\n                    <button mat-button mat-dialog-close>CANCEL</button>\n                    <button mat-button id=\"join-btn\" type=\"submit\">TEST</button>\n                </mat-dialog-actions>\n            </form>\n        </div>\n    ",
             styles: ["\n        #quality-div {\n            margin-top: 20px;\n        }\n        #join-div {\n            margin-top: 25px;\n            margin-bottom: 20px;\n        }\n        #quality-tag {\n            display: block;\n        }\n        h5 {\n            margin-bottom: 10px;\n            text-align: left;\n        }\n        #joinWithVideo {\n            margin-right: 50px;\n        }\n        mat-dialog-actions {\n            display: block;\n        }\n        #join-btn {\n            float: right;\n        }\n    "],
         }),
         __metadata("design:paramtypes", [])
@@ -11640,26 +11604,27 @@ var DashboardComponent = (function () {
                     _this.restService.getOpenViduPublicUrl()
                         .then((function (url) {
                         _this.openviduPublicUrl = url.replace('https://', 'wss://').replace('http://', 'ws://');
-                        _this.connectToSession(_this.openviduPublicUrl + 'testSession?secret=' + secret);
+                        _this.connectToSession(_this.openviduPublicUrl + '?sessionId=testSession&secret=' + secret);
                     }))
                         .catch(function (error) {
                         console.error(error);
                     });
                 }
                 else {
-                    _this.connectToSession(_this.openviduPublicUrl + 'testSession?secret=' + secret);
+                    _this.connectToSession(_this.openviduPublicUrl + '?sessionId=testSession&secret=' + secret);
                 }
             }
         });
     };
-    DashboardComponent.prototype.connectToSession = function (mySessionId) {
+    DashboardComponent.prototype.connectToSession = function (token) {
         var _this = this;
         this.msgChain = [];
         var OV = new __WEBPACK_IMPORTED_MODULE_4_openvidu_browser__["OpenVidu"]();
-        this.session = OV.initSession(mySessionId);
+        this.session = OV.initSession();
         this.testStatus = 'CONNECTING';
         this.testButton = 'Testing...';
-        this.session.connect(null).then(function () {
+        this.session.connect(token)
+            .then(function () {
             _this.testStatus = 'CONNECTED';
             var publisherRemote = OV.initPublisher('mirrored-video', {
                 publishAudio: true,
@@ -11689,7 +11654,8 @@ var DashboardComponent = (function () {
             });
             publisherRemote.subscribeToRemote();
             _this.session.publish(publisherRemote);
-        }).catch(function (error) {
+        })
+            .catch(function (error) {
             if (error.code === 401) {
                 _this.endTestVideo();
                 var dialogRef = void 0;
@@ -11697,7 +11663,7 @@ var DashboardComponent = (function () {
                 dialogRef.componentInstance.myReference = dialogRef;
                 dialogRef.afterClosed().subscribe(function (secret) {
                     if (secret) {
-                        _this.connectToSession('wss://' + location.hostname + ':4443/testSession?secret=' + secret);
+                        _this.connectToSession(_this.openviduPublicUrl + '?sessionId=testSession&secret=' + secret);
                     }
                 });
             }
@@ -11814,8 +11780,7 @@ var LayoutBestFitComponent = (function () {
     LayoutBestFitComponent.prototype.ngOnInit = function () {
         var _this = this;
         var OV = new __WEBPACK_IMPORTED_MODULE_2_openvidu_browser__["OpenVidu"]();
-        var fullSessionId = 'wss://' + location.hostname + ':4443/' + this.sessionId + '?secret=' + this.secret + '&recorder=true';
-        this.session = OV.initSession(fullSessionId);
+        this.session = OV.initSession();
         this.session.on('streamCreated', function (event) {
             var subscriber = _this.session.subscribe(event.stream, '');
             _this.addRemoteStream(event.stream);
@@ -11825,7 +11790,8 @@ var LayoutBestFitComponent = (function () {
             _this.deleteRemoteStream(event.stream);
             _this.openviduLayout.updateLayout();
         });
-        this.session.connect(null)
+        var token = 'wss://' + location.hostname + ':4443?sessionId=' + this.sessionId + '&secret=' + this.secret + '&recorder=true';
+        this.session.connect(token)
             .catch(function (error) {
             console.error(error);
         });

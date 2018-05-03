@@ -136,7 +136,3 @@ mat-expansion-panel-header {
 .secure-div mat-checkbox {
   padding-right: 10px;
 }
-
-.secure-div mat-form-field {
-  max-width: 80px;
-}
