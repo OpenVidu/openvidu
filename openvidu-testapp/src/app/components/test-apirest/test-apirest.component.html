@@ -19,6 +19,7 @@
         <th>Default Recording Layout</th>
         <th *ngIf="this.selectedDefaultRecordingLayout === 'CUSTOM'">Default Custom Layout</th>
         <th>Media Mode</th>
+        <th>Custom sessionId</th>
       </tr>
       <tr id="tr-session-properties">
         <td>
@@ -46,6 +47,11 @@
               {{ mediaMode }}
             </mat-option>
           </mat-select>
+        </td>
+        <td>
+          <mat-form-field id="custom-session-id">
+            <input matInput placeholder="Custom sessionId" [(ngModel)]="customSessionId">
+          </mat-form-field>
         </td>
       </tr>
     </table>

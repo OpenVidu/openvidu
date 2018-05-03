@@ -49,7 +49,7 @@ export declare class Session implements EventDispatcher {
     /**
      * @hidden
      */
-    constructor(sessionId: string, openvidu: OpenVidu);
+    constructor(openvidu: OpenVidu);
     connect(token: string): Promise<any>;
     connect(token: string, metadata: any): Promise<any>;
     /**
@@ -214,4 +214,5 @@ export declare class Session implements EventDispatcher {
     private stringClientMetadata(metadata);
     private getConnection(connectionId, errorMessage);
     private getRemoteConnection(connectionId, errorMessage);
+    private processToken(token);
 }

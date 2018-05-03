@@ -8,18 +8,32 @@ import { PublisherProperties } from '../OpenViduInternal/Interfaces/Public/Publi
  */
 export declare class OpenVidu {
     private session;
-    private wsUri;
-    private secret;
-    private recorder;
     private jsonRpcClient;
+    /**
+     * @hidden
+     */
+    wsUri: string;
+    /**
+     * @hidden
+     */
+    secret: string;
+    /**
+     * @hidden
+     */
+    recorder: boolean;
     /**
      * @hidden
      */
     advancedConfiguration: OpenViduAdvancedConfiguration;
     constructor();
+    initSession(): Session;
     /**
-     * Returns a session with id `sessionId`
-     * @param sessionId Session unique ID generated in openvidu-server
+     * ---
+     * ## DEPRECATED
+     *
+     * _No `sessionId` is required. Now every necessary information is received in [[Session.connect]]_
+     *
+     * ---
      */
     initSession(sessionId: string): Session;
     initPublisher(targetElement: string | HTMLElement): Publisher;
@@ -109,10 +123,6 @@ export declare class OpenVidu {
     /**
      * @hidden
      */
-    getUrlWithoutSecret(url: string): string;
-    /**
-     * @hidden
-     */
     generateMediaConstraints(publisherProperties: PublisherProperties): Promise<MediaStreamConstraints>;
     /**
      * @hidden
@@ -122,10 +132,6 @@ export declare class OpenVidu {
      * @hidden
      */
     closeWs(): void;
-    /**
-     * @hidden
-     */
-    processOpenViduUrl(url: string): void;
     /**
      * @hidden
      */
@@ -150,7 +156,4 @@ export declare class OpenVidu {
     private reconnectingCallback();
     private reconnectedCallback();
     private isRoomAvailable();
-    private getSecretFromUrl(url);
-    private getRecorderFromUrl(url);
-    private getFinalWsUrl(url);
 }

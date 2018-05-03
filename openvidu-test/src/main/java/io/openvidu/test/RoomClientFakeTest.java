@@ -71,7 +71,7 @@ public abstract class RoomClientFakeTest<W extends WebPage> extends OpenViduClie
       TEST_PROTOCOL_DEFAULT).toUpperCase());
 
   // might get overwritten by custom room apps
-  public static String appWsPath = "/room";
+  public static String appWsPath = "/openvidu";
 
   public long JOIN_ROOM_TOTAL_TIMEOUT_IN_SECONDS = 30;
   public long ACTIVE_LIVE_TOTAL_TIMEOUT_IN_SECONDS = 180;
