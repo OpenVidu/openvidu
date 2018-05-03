@@ -62,6 +62,7 @@ var OpenVidu = /** @class */ (function () {
      * - `404`: no session exists for the passed `sessionId`
      * - `400`: the session has no connected participants
      * - `409`: the session is not configured for using [[MediaMode.ROUTED]] or it is already being recorded
+     * - `501`: OpenVidu Server recording module is disabled (`openvidu.recording` property set to `false`)
      */
     OpenVidu.prototype.startRecording = function (sessionId, param2) {
         var _this = this;
