@@ -32,7 +32,7 @@ COPY kms.sh /kms.sh
 
 EXPOSE 8888
 EXPOSE 9091
-EXPOSE 4443
+EXPOSE 8443
 
 # Exec supervisord
 CMD ["/usr/bin/supervisord"]

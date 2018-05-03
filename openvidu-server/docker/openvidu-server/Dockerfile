@@ -12,9 +12,9 @@ RUN mkdir -p /var/log/supervisor
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Copy OpenVidu Server
-COPY openvidu-server.jar /
 COPY openvidu-server-cbx.jar /
 
+EXPOSE 8443
 EXPOSE 8888
 
 # Exec supervisord
