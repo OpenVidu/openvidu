@@ -21,7 +21,7 @@
     "tslint": "5.9.1",
     "typedoc": "^0.11.1",
     "typedoc-plugin-sourcefile-url": "^1.0.3",
-    "typescript": "2.7.2",
+    "typescript": "2.8.3",
     "grunt": "^1.0.1",
     "grunt-autoprefixer": "^3.0.4",
     "grunt-cli": "^1.2.0",

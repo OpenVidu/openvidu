@@ -82,6 +82,7 @@
 						<section class="tsd-index-section ">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="sessionproperties.html#customsessionid" class="tsd-kind-icon">custom<wbr>Session<wbr>Id</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="sessionproperties.html#defaultcustomlayout" class="tsd-kind-icon">default<wbr>Custom<wbr>Layout</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="sessionproperties.html#defaultrecordinglayout" class="tsd-kind-icon">default<wbr>Recording<wbr>Layout</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="sessionproperties.html#mediamode" class="tsd-kind-icon">media<wbr>Mode</a></li>
@@ -93,6 +94,23 @@
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Properties</h2>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
+					<a name="customsessionid" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagOptional">Optional</span> custom<wbr>Session<wbr>Id</h3>
+					<div class="tsd-signature tsd-kind-icon">custom<wbr>Session<wbr>Id<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/SessionProperties.ts#L52">SessionProperties.ts:52</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Fix the sessionId that will be assigned to the session with this parameter. You can take advantage of this property
+								to facilitate the mapping between OpenVidu Server &#39;session&#39; entities and your own &#39;session&#39; entities.
+							If this parameter is undefined or an empty string, OpenVidu Server will generate a random sessionId for you.</p>
+						</div>
+					</div>
+				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
 					<a name="defaultcustomlayout" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagOptional">Optional</span> default<wbr>Custom<wbr>Layout</h3>
@@ -197,6 +215,9 @@
 					<li class="current tsd-kind-interface">
 						<a href="sessionproperties.html" class="tsd-kind-icon">Session<wbr>Properties</a>
 						<ul>
+							<li class=" tsd-kind-property tsd-parent-kind-interface">
+								<a href="sessionproperties.html#customsessionid" class="tsd-kind-icon">custom<wbr>Session<wbr>Id</a>
+							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-interface">
 								<a href="sessionproperties.html#defaultcustomlayout" class="tsd-kind-icon">default<wbr>Custom<wbr>Layout</a>
 							</li>

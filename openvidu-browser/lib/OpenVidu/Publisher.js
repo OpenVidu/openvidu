@@ -291,7 +291,7 @@ var Publisher = /** @class */ (function () {
                 // Ask independently for audio stream and video stream. If the user asks for both of them and one is blocked, the method still
                 // success only with the allowed input. This is not the desierd behaviour: if any of them is blocked, access should be denied
                 var constraintsAux = {};
-                var timeForDialogEvent = 1000;
+                var timeForDialogEvent = 1250;
                 if (_this.stream.isSendVideo()) {
                     constraintsAux.audio = false;
                     constraintsAux.video = constraints.video;

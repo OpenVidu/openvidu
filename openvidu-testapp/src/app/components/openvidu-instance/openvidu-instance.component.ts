@@ -50,7 +50,6 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   secureSession = false;
   clientData: string;
   sessionName: string;
-  sessionIdInput: string;
   tokenInput: string;
 
   // Session options
@@ -172,27 +171,24 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       this.leaveSession();
     }
 
-    let sessionId;
     let token;
 
     if (this.secureSession) {
-      sessionId = this.sessionIdInput;
       token = this.tokenInput;
     } else {
-      sessionId = 'wss://'
-        + this.removeHttps(this.openviduUrl)
-        + this.sessionName + '?secret='
-        + this.openviduSecret;
-      token = null;
+      token = 'wss://'
+      + this.removeHttps(this.openviduUrl)
+      + '?sessionId=' + this.sessionName
+      + '&secret=' + this.openviduSecret;
     }
-    this.joinSessionShared(sessionId, token);
+    this.joinSessionShared(token);
   }
 
-  private joinSessionShared(sId, token): void {
+  private joinSessionShared(token): void {
 
     this.OV = new OpenVidu();
 
-    this.session = this.OV.initSession(sId);
+    this.session = this.OV.initSession();
 
     this.addSessionEvents(this.session);
 

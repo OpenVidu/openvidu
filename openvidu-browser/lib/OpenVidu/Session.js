@@ -36,7 +36,7 @@ var Session = /** @class */ (function () {
     /**
      * @hidden
      */
-    function Session(sessionId, openvidu) {
+    function Session(openvidu) {
         // This map is only used to avoid race condition between 'joinRoom' response and 'onParticipantPublished' notification
         /**
          * @hidden
@@ -52,8 +52,6 @@ var Session = /** @class */ (function () {
         this.speakingEventsEnabled = false;
         this.ee = new EventEmitter();
         this.openvidu = openvidu;
-        this.sessionId = this.openvidu.getUrlWithoutSecret(sessionId);
-        this.openvidu.processOpenViduUrl(sessionId);
     }
     /**
      * Connects to the session using `token`. Parameter `metadata` allows you to pass extra data to share with other users when
@@ -87,6 +85,7 @@ var Session = /** @class */ (function () {
         // DEPRECATED WARNING
         return VersionAdapter_1.solveIfCallback('Session.connect', (!!param3 && (typeof param3 === 'function')) ? param3 : ((typeof metadata === 'function') ? metadata : ''), 
         /*return */ new Promise(function (resolve, reject) {
+            _this.processToken(token);
             if (_this.openvidu.checkSystemRequirements()) {
                 // Early configuration to deactivate automatic subscription to streams
                 _this.options = {
@@ -605,7 +604,7 @@ var Session = /** @class */ (function () {
     Session.prototype.onLostConnection = function () {
         if (!this.connection) {
             console.warn('Not connected to session: if you are not debugging, this is probably a certificate error');
-            var url = 'https://' + this.openvidu.getWsUri().split('wss://')[1].split('/room')[0];
+            var url = 'https://' + this.openvidu.getWsUri().split('wss://')[1].split('/openvidu')[0];
             if (window.confirm('If you are not debugging, this is probably a certificate error at \"' + url + '\"\n\nClick OK to navigate and accept it')) {
                 location.assign(url + '/accept-certificate');
             }
@@ -656,27 +655,32 @@ var Session = /** @class */ (function () {
         var _this = this;
         forced = !!forced;
         console.info('Leaving Session (forced=' + forced + ')');
-        if (!!this.connection && !this.connection.disposed && !forced) {
-            this.openvidu.sendRequest('leaveRoom', function (error, response) {
-                if (error) {
-                    console.error(error);
-                }
-                _this.openvidu.closeWs();
-            });
+        if (!!this.connection) {
+            if (!this.connection.disposed && !forced) {
+                this.openvidu.sendRequest('leaveRoom', function (error, response) {
+                    if (error) {
+                        console.error(error);
+                    }
+                    _this.openvidu.closeWs();
+                });
+            }
+            else {
+                this.openvidu.closeWs();
+            }
+            if (!!this.connection.stream) {
+                // Make Publisher object dispatch 'streamDestroyed' event (if there's a local stream)
+                this.connection.stream.disposeWebRtcPeer();
+                this.connection.stream.emitEvent('stream-destroyed-by-disconnect', [reason]);
+            }
+            if (!this.connection.disposed) {
+                // Make Session object dispatch 'sessionDisconnected' event (if it is not already disposed)
+                var sessionDisconnectEvent = new SessionDisconnectedEvent_1.SessionDisconnectedEvent(this, reason);
+                this.ee.emitEvent('sessionDisconnected', [sessionDisconnectEvent]);
+                sessionDisconnectEvent.callDefaultBehaviour();
+            }
         }
         else {
-            this.openvidu.closeWs();
-        }
-        if (!!this.connection.stream) {
-            // Make Publisher object dispatch 'streamDestroyed' event (if there's a local stream)
-            this.connection.stream.disposeWebRtcPeer();
-            this.connection.stream.emitEvent('stream-destroyed-by-disconnect', [reason]);
-        }
-        if (!this.connection.disposed) {
-            // Make Session object dispatch 'sessionDisconnected' event (if it is not already disposed)
-            var sessionDisconnectEvent = new SessionDisconnectedEvent_1.SessionDisconnectedEvent(this, reason);
-            this.ee.emitEvent('sessionDisconnected', [sessionDisconnectEvent]);
-            sessionDisconnectEvent.callDefaultBehaviour();
+            console.warn('You were not connected to the session ' + this.sessionId);
         }
     };
     /* Private methods */
@@ -696,36 +700,41 @@ var Session = /** @class */ (function () {
                         recorder: _this.openvidu.getRecorder()
                     };
                     _this.openvidu.sendRequest('joinRoom', joinParams, function (error, response) {
-                        // Initialize local Connection object with values returned by openvidu-server
-                        _this.connection = new __1.Connection(_this);
-                        _this.connection.connectionId = response.id;
-                        _this.connection.data = response.metadata;
-                        // Initialize remote Connections with value returned by openvidu-server
-                        var events = {
-                            connections: new Array(),
-                            streams: new Array()
-                        };
-                        var existingParticipants = response.value;
-                        existingParticipants.forEach(function (participant) {
-                            var connection = new __1.Connection(_this, participant);
-                            _this.remoteConnections[connection.connectionId] = connection;
-                            events.connections.push(connection);
-                            if (!!connection.stream) {
-                                _this.remoteStreamsCreated[connection.stream.streamId] = true;
-                                events.streams.push(connection.stream);
-                            }
-                        });
-                        // Own 'connectionCreated' event
-                        _this.ee.emitEvent('connectionCreated', [new ConnectionEvent_1.ConnectionEvent(false, _this, 'connectionCreated', _this.connection, '')]);
-                        // One 'connectionCreated' event for each existing connection in the session
-                        events.connections.forEach(function (connection) {
-                            _this.ee.emitEvent('connectionCreated', [new ConnectionEvent_1.ConnectionEvent(false, _this, 'connectionCreated', connection, '')]);
-                        });
-                        // One 'streamCreated' event for each active stream in the session
-                        events.streams.forEach(function (stream) {
-                            _this.ee.emitEvent('streamCreated', [new StreamEvent_1.StreamEvent(false, _this, 'streamCreated', stream, '')]);
-                        });
-                        resolve();
+                        if (!!error) {
+                            reject(error);
+                        }
+                        else {
+                            // Initialize local Connection object with values returned by openvidu-server
+                            _this.connection = new __1.Connection(_this);
+                            _this.connection.connectionId = response.id;
+                            _this.connection.data = response.metadata;
+                            // Initialize remote Connections with value returned by openvidu-server
+                            var events_1 = {
+                                connections: new Array(),
+                                streams: new Array()
+                            };
+                            var existingParticipants = response.value;
+                            existingParticipants.forEach(function (participant) {
+                                var connection = new __1.Connection(_this, participant);
+                                _this.remoteConnections[connection.connectionId] = connection;
+                                events_1.connections.push(connection);
+                                if (!!connection.stream) {
+                                    _this.remoteStreamsCreated[connection.stream.streamId] = true;
+                                    events_1.streams.push(connection.stream);
+                                }
+                            });
+                            // Own 'connectionCreated' event
+                            _this.ee.emitEvent('connectionCreated', [new ConnectionEvent_1.ConnectionEvent(false, _this, 'connectionCreated', _this.connection, '')]);
+                            // One 'connectionCreated' event for each existing connection in the session
+                            events_1.connections.forEach(function (connection) {
+                                _this.ee.emitEvent('connectionCreated', [new ConnectionEvent_1.ConnectionEvent(false, _this, 'connectionCreated', connection, '')]);
+                            });
+                            // One 'streamCreated' event for each active stream in the session
+                            events_1.streams.forEach(function (stream) {
+                                _this.ee.emitEvent('streamCreated', [new StreamEvent_1.StreamEvent(false, _this, 'streamCreated', stream, '')]);
+                            });
+                            resolve();
+                        }
                     });
                 }
             });
@@ -772,6 +781,19 @@ var Session = /** @class */ (function () {
                 reject(new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.GENERIC_ERROR, errorMessage));
             }
         });
+    };
+    Session.prototype.processToken = function (token) {
+        var url = new URL(token);
+        this.sessionId = url.searchParams.get('sessionId');
+        var secret = url.searchParams.get('secret');
+        var recorder = url.searchParams.get('recorder');
+        if (!!secret) {
+            this.openvidu.secret = secret;
+        }
+        if (!!recorder) {
+            this.openvidu.recorder = true;
+        }
+        this.openvidu.wsUri = 'wss://' + url.host + '/openvidu';
     };
     return Session;
 }());

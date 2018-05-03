@@ -25,20 +25,18 @@ var screenSharingAuto = require("../OpenViduInternal/ScreenSharing/Screen-Captur
 var screenSharing = require("../OpenViduInternal/ScreenSharing/Screen-Capturing");
 var platform = require("platform");
 /**
- * @hidden
- */
-var SECRET_PARAM = '?secret=';
-/**
- * @hidden
- */
-var RECORDER_PARAM = '&recorder=';
-/**
  * Entrypoint of OpenVidu Browser library.
  * Use it to initialize objects of type [[Session]], [[Publisher]] and [[LocalRecorder]]
  */
 var OpenVidu = /** @class */ (function () {
     function OpenVidu() {
+        /**
+         * @hidden
+         */
         this.secret = '';
+        /**
+         * @hidden
+         */
         this.recorder = false;
         /**
          * @hidden
@@ -51,7 +49,10 @@ var OpenVidu = /** @class */ (function () {
      * @param sessionId Session unique ID generated in openvidu-server
      */
     OpenVidu.prototype.initSession = function (sessionId) {
-        this.session = new __1.Session(sessionId, this);
+        if (!!sessionId) {
+            console.warn("DEPRECATION WANING: In future releases 'OpenVidu.initSession' method won't require a parameter. Remove it (see http://openvidu.io/api/openvidu-browser/interfaces/publisherproperties.html)");
+        }
+        this.session = new __1.Session(this);
         return this.session;
     };
     /**
@@ -285,18 +286,6 @@ var OpenVidu = /** @class */ (function () {
     /**
      * @hidden
      */
-    OpenVidu.prototype.getUrlWithoutSecret = function (url) {
-        if (!url) {
-            console.error('sessionId is not defined');
-        }
-        if (url.indexOf(SECRET_PARAM) !== -1) {
-            url = url.substring(0, url.lastIndexOf(SECRET_PARAM));
-        }
-        return url;
-    };
-    /**
-     * @hidden
-     */
     OpenVidu.prototype.generateMediaConstraints = function (publisherProperties) {
         var _this = this;
         return new Promise(function (resolve, reject) {
@@ -462,20 +451,6 @@ var OpenVidu = /** @class */ (function () {
     /**
      * @hidden
      */
-    OpenVidu.prototype.processOpenViduUrl = function (url) {
-        var secret = this.getSecretFromUrl(url);
-        var recorder = this.getRecorderFromUrl(url);
-        if (!!secret) {
-            this.secret = secret;
-        }
-        if (!!recorder) {
-            this.recorder = recorder;
-        }
-        this.wsUri = this.getFinalWsUrl(url);
-    };
-    /**
-     * @hidden
-     */
     OpenVidu.prototype.sendRequest = function (method, params, callback) {
         if (params && params instanceof Function) {
             callback = params;
@@ -545,39 +520,6 @@ var OpenVidu = /** @class */ (function () {
             console.warn('Session instance not found');
             return false;
         }
-    };
-    OpenVidu.prototype.getSecretFromUrl = function (url) {
-        var secret = '';
-        if (url.indexOf(SECRET_PARAM) !== -1) {
-            var endOfSecret = url.lastIndexOf(RECORDER_PARAM);
-            if (endOfSecret !== -1) {
-                secret = url.substring(url.lastIndexOf(SECRET_PARAM) + SECRET_PARAM.length, endOfSecret);
-            }
-            else {
-                secret = url.substring(url.lastIndexOf(SECRET_PARAM) + SECRET_PARAM.length, url.length);
-            }
-        }
-        return secret;
-    };
-    OpenVidu.prototype.getRecorderFromUrl = function (url) {
-        var recorder = '';
-        if (url.indexOf(RECORDER_PARAM) !== -1) {
-            recorder = url.substring(url.lastIndexOf(RECORDER_PARAM) + RECORDER_PARAM.length, url.length);
-        }
-        return Boolean(recorder).valueOf();
-    };
-    OpenVidu.prototype.getFinalWsUrl = function (url) {
-        url = this.getUrlWithoutSecret(url).substring(0, url.lastIndexOf('/')) + '/room';
-        if (url.indexOf('.ngrok.io') !== -1) {
-            // OpenVidu server URL referes to a ngrok IP: secure wss protocol and delete port of URL
-            url = url.replace('ws://', 'wss://');
-            var regex = /\.ngrok\.io:\d+/;
-            url = url.replace(regex, '.ngrok.io');
-        }
-        else if ((url.indexOf('localhost') !== -1) || (url.indexOf('127.0.0.1') !== -1)) {
-            // OpenVidu server URL referes to localhost IP
-        }
-        return url;
     };
     return OpenVidu;
 }());
