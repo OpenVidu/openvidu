@@ -342,7 +342,7 @@ public abstract class SessionManager {
 		log.info("Closing all sessions");
 		for (String sessionId : sessions.keySet()) {
 			try {
-				closeSession(sessionId, "openviduServerDestroyed");
+				closeSession(sessionId, "openviduServerStopped");
 			} catch (Exception e) {
 				log.warn("Error closing session '{}'", sessionId, e);
 			}
