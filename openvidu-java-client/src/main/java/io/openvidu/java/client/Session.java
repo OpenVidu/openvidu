@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -70,7 +70,7 @@ public class Session {
 	 * {@link io.openvidu.java.client.TokenOptions}. This always translates into a
 	 * new request to OpenVidu Server
 	 *
-	 * @returns The generated token
+	 * @return The generated token
 	 * 
 	 * @throws OpenViduJavaClientException
 	 * @throws OpenViduHttpException
@@ -84,7 +84,7 @@ public class Session {
 	 * <code>tokenOptions</code>. This always translates into a new request to
 	 * OpenVidu Server
 	 *
-	 * @returns The generated token
+	 * @return The generated token
 	 * 
 	 * @throws OpenViduJavaClientException
 	 * @throws OpenViduHttpException

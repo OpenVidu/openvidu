@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import { VideoInsertMode } from './Enums/VideoInsertMode';
 export function solveIfCallback(methodName: string, completionHandler: ((error: Error | undefined) => void) | undefined, promise: Promise<any>): Promise<any> {
 
     if (!!completionHandler) {
-        console.warn("DEPRECATION WANING: In future releases the 'completionHandler' parameter will be removed from method '" + methodName + "'. Refactor your callbacks to Promise API (see http://openvidu.io/api/openvidu-browser/index.html)");
+        console.warn("DEPRECATION WANING: In future releases the 'completionHandler' parameter will be removed from method '" + methodName + "'. Refactor your callbacks to Promise API (see https://openvidu.io/api/openvidu-browser/index.html)");
     }
 
     return new Promise((resolve, reject) => {
@@ -51,7 +51,7 @@ export function adaptPublisherProperties(properties: any): PublisherProperties {
         'quality' in properties ||
         'screen' in properties
     ) {
-        console.warn("DEPRECATION WANING: In future releases the properties passed to 'OpenVidu.initPublisher' method must match PublisherProperties interface (see http://openvidu.io/api/openvidu-browser/interfaces/publisherproperties.html)");
+        console.warn("DEPRECATION WANING: In future releases the properties passed to 'OpenVidu.initPublisher' method must match PublisherProperties interface (see https://openvidu.io/api/openvidu-browser/interfaces/publisherproperties.html)");
     }
 
     const scr: boolean = (typeof properties.screen !== 'undefined' && properties.screen === true);

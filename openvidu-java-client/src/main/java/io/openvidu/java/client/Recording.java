@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,9 +41,9 @@ public class Recording {
 		/**
 		 * The recording is available for downloading. This status is reached for all
 		 * stopped recordings if
-		 * <a href="http://openvidu.io/docs/reference-docs/openvidu-server-params/"
+		 * <a href="https://openvidu.io/docs/reference-docs/openvidu-server-params/"
 		 * target="_blank">OpenVidu Server configuration</a> property
-		 * <code>openvidu.recording.free-access</code> is true
+		 * <code>openvidu.recording.public-access</code> is true
 		 */
 		available,
 
@@ -140,7 +140,7 @@ public class Recording {
 	/**
 	 * URL of the recording. You can access the file from there. It is
 	 * <code>null</code> until recording is stopped or if
-	 * <a href="http://openvidu.io/docs/reference-docs/openvidu-server-params/"
+	 * <a href="https://openvidu.io/docs/reference-docs/openvidu-server-params/"
 	 * target="_blank">OpenVidu Server configuration</a> property
 	 * <code>openvidu.recording.public-access</code> is false
 	 */

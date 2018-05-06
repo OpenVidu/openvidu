@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -143,10 +143,6 @@ public class OpenVidu {
 	 *
 	 * @param sessionId
 	 *            The sessionId of the session you want to start recording
-	 * @param name
-	 *            The name you want to give to the video file. You can access this
-	 *            same value in your clients on recording events (recordingStarted,
-	 *            recordingStopped)
 	 * @param properties
 	 *            The configuration for this recording
 	 *

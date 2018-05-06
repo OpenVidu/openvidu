@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -60,7 +60,7 @@ public class RecordingProperties {
 		 * to {@link io.openvidu.java.client.RecordingLayout#CUSTOM} you can call this
 		 * method to set the relative path to the specific custom layout you want to
 		 * use. See <a href=
-		 * "http://openvidu.io/docs/advanced-features/recording#custom-recording-layouts"
+		 * "https://openvidu.io/docs/advanced-features/recording#custom-recording-layouts"
 		 * target="_blank">Custom recording layouts</a> to learn more
 		 */
 		public RecordingProperties.Builder customLayout(String path) {
@@ -97,7 +97,7 @@ public class RecordingProperties {
 	 * set to {@link io.openvidu.java.client.RecordingLayout#CUSTOM}, this property
 	 * defines the relative path to the specific custom layout you want to use. See
 	 * <a href=
-	 * "http://openvidu.io/docs/advanced-features/recording#custom-recording-layouts"
+	 * "https://openvidu.io/docs/advanced-features/recording#custom-recording-layouts"
 	 * target="_blank">Custom recording layouts</a> to learn more
 	 */
 	public String customLayout() {

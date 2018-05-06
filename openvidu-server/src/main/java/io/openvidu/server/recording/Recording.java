@@ -29,7 +29,7 @@ public class Recording {
 		started, // The recording has started and is going on
 		stopped, // The recording has finished OK
 		available, // The recording is available for downloading. This status is reached for all
-					// stopped recordings if property 'openvidu.recording.free-access' is true
+					// stopped recordings if property 'openvidu.recording.public-access' is true
 		failed; // The recording has failed
 	}
 

@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ export interface RecordingProperties {
 
     /**
      * If [[recordingLayout]] is `CUSTOM`, the relative path to the specific custom layout you want to use.
-     * See [Custom recording layouts](http://openvidu.io/docs/advanced-features/recording#custom-recording-layouts) to learn more
+     * See [Custom recording layouts](https://openvidu.io/docs/advanced-features/recording#custom-recording-layouts) to learn more
      */
     customLayout?: string;
 }
