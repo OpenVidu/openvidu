@@ -14,7 +14,7 @@
 
 	<name>OpenVidu Test e2e</name>
 	<description>End2End tests for OpenVidu TestApp</description>
-	<url>http://openvidu.io</url>
+	<url>https://openvidu.io</url>
 
 	<licenses>
 		<license>
@@ -26,7 +26,7 @@
 
 	<organization>
 		<name>OpenVidu</name>
-		<url>http://openvidu.io</url>
+		<url>https://openvidu.io</url>
 	</organization>
 
 	<scm>
@@ -41,7 +41,7 @@
 			<id>openvidu.io</id>
 			<name>-openvidu.io Community</name>
 			<organization>openvidu.io</organization>
-			<organizationUrl>http://openvidu.io</organizationUrl>
+			<organizationUrl>https://openvidu.io</organizationUrl>
 		</developer>
 	</developers>
 
