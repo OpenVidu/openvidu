@@ -15,6 +15,9 @@
  *
  */
 
+/**
+ * Defines property [[OpenViduError.name]]
+ */
 export enum OpenViduErrorName {
     BROWSER_NOT_SUPPORTED = 'BROWSER_NOT_SUPPORTED',
     CAMERA_ACCESS_DENIED = 'CAMERA_ACCESS_DENIED',

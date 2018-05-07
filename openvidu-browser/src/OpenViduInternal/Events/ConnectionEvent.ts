@@ -33,8 +33,8 @@ export class ConnectionEvent extends Event {
 
     /**
      * For 'connectionDestroyed' event:
-     * - "disconnect"
-     * - "networkDisconnect"
+     * - "disconnect": the remote user has called `Session.disconnect()`
+     * - "networkDisconnect": the remote user network connection has dropped
      *
      * For 'connectionCreated' empty string
      */

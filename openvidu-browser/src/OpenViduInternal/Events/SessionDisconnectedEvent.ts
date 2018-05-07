@@ -24,8 +24,8 @@ import { Session, Connection } from '../..';
 export class SessionDisconnectedEvent extends Event {
 
     /**
-     * - "disconnect"
-     * - "networkDisconnect"
+     * - "disconnect": you have called `Session.disconnect()`
+     * - "networkDisconnect": your network connection has dropped
      */
     reason: string;
 
