@@ -112,6 +112,7 @@ public class RpcNotificationService {
 		try {
 			s.close();
 			log.info("Closed session for participant with private id {}", participantPrivateId);
+			this.showRpcConnections();
 			return rpcSession;
 		} catch (IOException e) {
 			log.error("Error closing session for participant with private id {}", participantPrivateId, e);
