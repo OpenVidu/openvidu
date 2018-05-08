@@ -15,7 +15,7 @@
  *
  */
 
-import { Stream } from '..';
+import { Stream } from './Stream';
 import { LocalRecorderState } from '../OpenViduInternal/Enums/LocalRecorderState';
 
 /**

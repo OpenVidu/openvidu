@@ -16,7 +16,9 @@
  *
  */
 exports.__esModule = true;
-var __1 = require("..");
+var LocalRecorder_1 = require("./LocalRecorder");
+var Publisher_1 = require("./Publisher");
+var Session_1 = require("./Session");
 var OpenViduError_1 = require("../OpenViduInternal/Enums/OpenViduError");
 var VideoInsertMode_1 = require("../OpenViduInternal/Enums/VideoInsertMode");
 var RpcBuilder = require("../OpenViduInternal/KurentoUtils/kurento-jsonrpc");
@@ -47,7 +49,7 @@ var OpenVidu = /** @class */ (function () {
      * Returns new session
      */
     OpenVidu.prototype.initSession = function () {
-        this.session = new __1.Session(this);
+        this.session = new Session_1.Session(this);
         return this.session;
     };
     /**
@@ -95,7 +97,7 @@ var OpenVidu = /** @class */ (function () {
                 resolution: '640x480'
             };
         }
-        var publisher = new __1.Publisher(targetElement, properties, this);
+        var publisher = new Publisher_1.Publisher(targetElement, properties, this);
         var completionHandler;
         if (!!param2 && (typeof param2 === 'function')) {
             completionHandler = param2;
@@ -142,7 +144,7 @@ var OpenVidu = /** @class */ (function () {
      * @param stream  Stream to record
      */
     OpenVidu.prototype.initLocalRecorder = function (stream) {
-        return new __1.LocalRecorder(stream);
+        return new LocalRecorder_1.LocalRecorder(stream);
     };
     /**
      * Checks if the browser supports OpenVidu
@@ -506,7 +508,7 @@ var OpenVidu = /** @class */ (function () {
         console.warn('Websocket reconnected');
     };
     OpenVidu.prototype.isRoomAvailable = function () {
-        if (this.session !== undefined && this.session instanceof __1.Session) {
+        if (this.session !== undefined && this.session instanceof Session_1.Session) {
             return true;
         }
         else {

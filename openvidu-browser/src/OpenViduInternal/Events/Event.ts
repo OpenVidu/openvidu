@@ -15,7 +15,9 @@
  *
  */
 
-import { Session, Subscriber, Publisher } from '../..';
+import { Publisher } from '../../OpenVidu/Publisher';
+import { Session } from '../../OpenVidu/Session';
+import { Subscriber } from '../../OpenVidu/Subscriber';
 
 export abstract class Event {
 

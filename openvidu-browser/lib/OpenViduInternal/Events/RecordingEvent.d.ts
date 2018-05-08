@@ -1,5 +1,5 @@
 import { Event } from './Event';
-import { Session } from '../..';
+import { Session } from '../../OpenVidu/Session';
 /**
  * Defines the following events:
  * - `recordingStarted`: dispatched by [[Session]]

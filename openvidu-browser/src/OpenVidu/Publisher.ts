@@ -15,7 +15,9 @@
  *
  */
 
-import { OpenVidu, Session, Stream, VideoInsertMode } from '..';
+import { OpenVidu } from './OpenVidu';
+import { Session } from './Session';
+import { Stream } from './Stream';
 import { EventDispatcher } from '../OpenViduInternal/Interfaces/Public/EventDispatcher';
 import { PublisherProperties } from '../OpenViduInternal/Interfaces/Public/PublisherProperties';
 import { InboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/InboundStreamOptions';
@@ -23,6 +25,7 @@ import { OutboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/Ou
 import { StreamEvent } from '../OpenViduInternal/Events/StreamEvent';
 import { VideoElementEvent } from '../OpenViduInternal/Events/VideoElementEvent';
 import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/OpenViduError';
+import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
 
 import EventEmitter = require('wolfy87-eventemitter');
 

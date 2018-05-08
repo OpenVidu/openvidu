@@ -16,7 +16,8 @@
  *
  */
 exports.__esModule = true;
-var __1 = require("..");
+var Connection_1 = require("./Connection");
+var Subscriber_1 = require("./Subscriber");
 var ConnectionEvent_1 = require("../OpenViduInternal/Events/ConnectionEvent");
 var RecordingEvent_1 = require("../OpenViduInternal/Events/RecordingEvent");
 var SessionDisconnectedEvent_1 = require("../OpenViduInternal/Events/SessionDisconnectedEvent");
@@ -177,7 +178,7 @@ var Session = /** @class */ (function () {
                 completionHandler(error);
             }
         });
-        var subscriber = new __1.Subscriber(stream, targetElement, properties);
+        var subscriber = new Subscriber_1.Subscriber(stream, targetElement, properties);
         stream.insertVideo(subscriber.element, properties.insertMode);
         return subscriber;
     };
@@ -438,7 +439,7 @@ var Session = /** @class */ (function () {
             .then(function (connection) {
             console.warn('Connection ' + response.id + ' already exists in connections list');
         })["catch"](function (openViduError) {
-            var connection = new __1.Connection(_this, response);
+            var connection = new Connection_1.Connection(_this, response);
             _this.remoteConnections[response.id] = connection;
             _this.ee.emitEvent('connectionCreated', [new ConnectionEvent_1.ConnectionEvent(false, _this, 'connectionCreated', connection, '')]);
         });
@@ -493,7 +494,7 @@ var Session = /** @class */ (function () {
             afterConnectionFound(connection);
         })["catch"](function (openViduError) {
             // Create new Connection
-            connection = new __1.Connection(_this, response);
+            connection = new Connection_1.Connection(_this, response);
             afterConnectionFound(connection);
         });
     };
@@ -700,7 +701,7 @@ var Session = /** @class */ (function () {
                         }
                         else {
                             // Initialize local Connection object with values returned by openvidu-server
-                            _this.connection = new __1.Connection(_this);
+                            _this.connection = new Connection_1.Connection(_this);
                             _this.connection.connectionId = response.id;
                             _this.connection.data = response.metadata;
                             // Initialize remote Connections with value returned by openvidu-server
@@ -710,7 +711,7 @@ var Session = /** @class */ (function () {
                             };
                             var existingParticipants = response.value;
                             existingParticipants.forEach(function (participant) {
-                                var connection = new __1.Connection(_this, participant);
+                                var connection = new Connection_1.Connection(_this, participant);
                                 _this.remoteConnections[connection.connectionId] = connection;
                                 events_1.connections.push(connection);
                                 if (!!connection.stream) {

@@ -1,4 +1,4 @@
-import { Stream } from '../..';
+import { Stream } from '../../OpenVidu/Stream';
 export declare class WebRtcStats {
     private stream;
     private webRtcStatsEnabled;

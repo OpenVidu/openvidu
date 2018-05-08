@@ -17,7 +17,7 @@
 
 // tslint:disable:no-string-literal
 
-import { Stream } from '../..';
+import { Stream } from '../../OpenVidu/Stream';
 import * as adapter from 'webrtc-adapter';
 import platform = require('platform');
 

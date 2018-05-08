@@ -1,4 +1,5 @@
-import { Session, Stream } from '..';
+import { Session } from './Session';
+import { Stream } from './Stream';
 import { ConnectionOptions } from '../OpenViduInternal/Interfaces/Private/ConnectionOptions';
 import { StreamOptionsServer } from '../OpenViduInternal/Interfaces/Private/StreamOptionsServer';
 /**

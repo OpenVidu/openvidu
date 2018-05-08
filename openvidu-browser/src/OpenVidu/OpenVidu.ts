@@ -15,7 +15,10 @@
  *
  */
 
-import { LocalRecorder, Publisher, Session, Stream } from '..';
+import { LocalRecorder } from './LocalRecorder';
+import { Publisher } from './Publisher';
+import { Session } from './Session';
+import { Stream } from './Stream';
 import { Device } from '../OpenViduInternal/Interfaces/Public/Device';
 import { OpenViduAdvancedConfiguration } from '../OpenViduInternal/Interfaces/Public/OpenViduAdvancedConfiguration';
 import { PublisherProperties } from '../OpenViduInternal/Interfaces/Public/PublisherProperties';

@@ -1,4 +1,4 @@
-import { Stream } from '..';
+import { Stream } from './Stream';
 import { SubscriberProperties } from '../OpenViduInternal/Interfaces/Public/SubscriberProperties';
 import { EventDispatcher } from '../OpenViduInternal/Interfaces/Public/EventDispatcher';
 import { VideoElementEvent } from '../OpenViduInternal/Events/VideoElementEvent';

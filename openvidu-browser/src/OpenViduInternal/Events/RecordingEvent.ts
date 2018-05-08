@@ -16,7 +16,7 @@
  */
 
 import { Event } from './Event';
-import { Session, Stream, Publisher } from '../..';
+import { Session } from '../../OpenVidu/Session';
 
 
 /**

@@ -16,7 +16,7 @@
  *
  */
 exports.__esModule = true;
-var __1 = require("..");
+var Stream_1 = require("./Stream");
 var StreamEvent_1 = require("../OpenViduInternal/Events/StreamEvent");
 var VideoElementEvent_1 = require("../OpenViduInternal/Events/VideoElementEvent");
 var OpenViduError_1 = require("../OpenViduInternal/Enums/OpenViduError");
@@ -37,7 +37,7 @@ var Publisher = /** @class */ (function () {
         this.accessAllowed = false;
         this.ee = new EventEmitter();
         this.properties = properties;
-        this.stream = new __1.Stream(this.session, { publisherProperties: properties, mediaConstraints: {} });
+        this.stream = new Stream_1.Stream(this.session, { publisherProperties: properties, mediaConstraints: {} });
         this.stream.on('video-removed', function (element) {
             _this.ee.emitEvent('videoElementDestroyed', [new VideoElementEvent_1.VideoElementEvent(element, _this, 'videoElementDestroyed')]);
         });

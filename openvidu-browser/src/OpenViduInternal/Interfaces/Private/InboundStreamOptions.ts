@@ -15,7 +15,7 @@
  *
  */
 
-import { Connection } from '../../..';
+import { Connection } from '../../../OpenVidu/Connection';
 
 export interface InboundStreamOptions {
     id: string;

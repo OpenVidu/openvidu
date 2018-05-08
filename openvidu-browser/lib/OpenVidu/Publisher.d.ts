@@ -1,4 +1,6 @@
-import { OpenVidu, Session, Stream } from '..';
+import { OpenVidu } from './OpenVidu';
+import { Session } from './Session';
+import { Stream } from './Stream';
 import { EventDispatcher } from '../OpenViduInternal/Interfaces/Public/EventDispatcher';
 import { PublisherProperties } from '../OpenViduInternal/Interfaces/Public/PublisherProperties';
 import { StreamEvent } from '../OpenViduInternal/Events/StreamEvent';

@@ -15,7 +15,8 @@
  *
  */
 
-import { Session, Stream } from '..';
+import { Session } from './Session';
+import { Stream } from './Stream';
 import { ConnectionOptions } from '../OpenViduInternal/Interfaces/Private/ConnectionOptions';
 import { InboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/InboundStreamOptions';
 import { OutboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/OutboundStreamOptions';

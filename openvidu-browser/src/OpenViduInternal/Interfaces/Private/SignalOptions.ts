@@ -15,7 +15,7 @@
  *
  */
 
-import { Connection } from '../../..';
+import { Connection } from '../../../OpenVidu/Connection';
 
 export interface SignalOptions {
     type?: string;

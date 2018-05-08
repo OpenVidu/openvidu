@@ -16,7 +16,8 @@
  */
 
 import { Event } from './Event';
-import { Session, Connection } from '../..';
+import { Session } from '../../OpenVidu/Session';
+
 
 /**
  * Defines event `sessionDisconnected` dispatched by [[Session]]

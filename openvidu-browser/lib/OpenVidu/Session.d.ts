@@ -1,4 +1,8 @@
-import { Connection, OpenVidu, Publisher, Stream, Subscriber } from '..';
+import { Connection } from './Connection';
+import { OpenVidu } from './OpenVidu';
+import { Publisher } from './Publisher';
+import { Stream } from './Stream';
+import { Subscriber } from './Subscriber';
 import { EventDispatcher } from '../OpenViduInternal/Interfaces/Public/EventDispatcher';
 import { SignalOptions } from '../OpenViduInternal/Interfaces/Public/SignalOptions';
 import { SubscriberProperties } from '../OpenViduInternal/Interfaces/Public/SubscriberProperties';
