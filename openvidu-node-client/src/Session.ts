@@ -60,8 +60,8 @@ export class Session {
 
             const requestBody = JSON.stringify({
                 session: this.sessionId,
-                role: !!tokenOptions.role ? tokenOptions.role : OpenViduRole.PUBLISHER,
-                data: !!tokenOptions.data ? tokenOptions.data : ''
+                role: (!!tokenOptions && !!tokenOptions.role) ? tokenOptions.role : OpenViduRole.PUBLISHER,
+                data: (!!tokenOptions && !!tokenOptions.data) ? tokenOptions.data : ''
             });
 
             const options = {
@@ -144,6 +144,10 @@ export class Session {
                         const parsed = JSON.parse(body);
                         this.sessionId = parsed.id;
                         resolve(parsed.id);
+                    } else if (res.statusCode === 409) {
+                        // 'customSessionId' already existed
+                        this.sessionId = this.properties.customSessionId;
+                        resolve(this.sessionId);
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
                         reject(new Error(res.statusCode));

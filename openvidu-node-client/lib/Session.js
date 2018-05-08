@@ -52,8 +52,8 @@ var Session = /** @class */ (function () {
         return new Promise(function (resolve, reject) {
             var requestBody = JSON.stringify({
                 session: _this.sessionId,
-                role: !!tokenOptions.role ? tokenOptions.role : OpenViduRole_1.OpenViduRole.PUBLISHER,
-                data: !!tokenOptions.data ? tokenOptions.data : ''
+                role: (!!tokenOptions && !!tokenOptions.role) ? tokenOptions.role : OpenViduRole_1.OpenViduRole.PUBLISHER,
+                data: (!!tokenOptions && !!tokenOptions.data) ? tokenOptions.data : ''
             });
             var options = {
                 hostname: _this.hostname,
@@ -130,6 +130,11 @@ var Session = /** @class */ (function () {
                         var parsed = JSON.parse(body);
                         _this.sessionId = parsed.id;
                         resolve(parsed.id);
+                    }
+                    else if (res.statusCode === 409) {
+                        // 'customSessionId' already existed
+                        _this.sessionId = _this.properties.customSessionId;
+                        resolve(_this.sessionId);
                     }
                     else {
                         // ERROR response from openvidu-server. Resolve HTTP status

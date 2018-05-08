@@ -179,6 +179,9 @@ public class Session {
 			System.out.println("Returning a SESSIONID");
 			String id = (String) httpResponseToJson(response).get("id");
 			this.sessionId = id;
+		} else if (statusCode == org.apache.http.HttpStatus.SC_CONFLICT) {
+			// 'customSessionId' already existed
+			this.sessionId = properties.customSessionId();
 		} else {
 			throw new OpenViduHttpException(statusCode);
 		}
