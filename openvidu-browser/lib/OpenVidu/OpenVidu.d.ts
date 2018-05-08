@@ -26,16 +26,10 @@ export declare class OpenVidu {
      */
     advancedConfiguration: OpenViduAdvancedConfiguration;
     constructor();
-    initSession(): Session;
     /**
-     * ---
-     * ## DEPRECATED
-     *
-     * _No `sessionId` is required. Now every necessary information is received in [[Session.connect]]_
-     *
-     * ---
+     * Returns new session
      */
-    initSession(sessionId: string): Session;
+    initSession(): Session;
     initPublisher(targetElement: string | HTMLElement): Publisher;
     initPublisher(targetElement: string | HTMLElement, properties: PublisherProperties): Publisher;
     initPublisher(targetElement: string | HTMLElement, completionHandler: (error: Error | undefined) => void): Publisher;

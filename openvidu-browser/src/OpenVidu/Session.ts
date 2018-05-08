@@ -30,7 +30,6 @@ import { SignalEvent } from '../OpenViduInternal/Events/SignalEvent';
 import { StreamEvent } from '../OpenViduInternal/Events/StreamEvent';
 import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/OpenViduError';
 import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
-import { solveIfCallback } from '../OpenViduInternal/VersionAdapter';
 
 import platform = require('platform');
 import EventEmitter = require('wolfy87-eventemitter');
@@ -89,16 +88,6 @@ export class Session implements EventDispatcher {
     connect(token: string, metadata: any): Promise<any>;
 
     /**
-     * ---
-     * ## DEPRECATED
-     *
-     * _Use promisified version of the method_
-     *
-     * ---
-     */
-    connect(token: string, metadata?: any, callback?): void;
-
-    /**
      * Connects to the session using `token`. Parameter `metadata` allows you to pass extra data to share with other users when
      * they receive `streamCreated` event. The structure of `metadata` string is up to you (maybe some standarized format
      * as JSON or XML is a good idea), the only restriction is a maximum length of 10000 chars.
@@ -125,35 +114,27 @@ export class Session implements EventDispatcher {
      * @returns A Promise to which you must subscribe that is resolved if the recording successfully started and rejected with an Error object if not
      *
      */
-    connect(token: string, metadata?: any, param3?: (error: Error) => void): Promise<any> {
+    connect(token: string, metadata?: any): Promise<any> {
+        return new Promise((resolve, reject) => {
 
-        // DEPRECATED WARNING
-        return solveIfCallback('Session.connect', (!!param3 && (typeof param3 === 'function')) ? param3 : ((typeof metadata === 'function') ? metadata : ''),
+            this.processToken(token);
 
-
-        /*return */new Promise((resolve, reject) => {
-
-                this.processToken(token);
-
-                if (this.openvidu.checkSystemRequirements()) {
-                    // Early configuration to deactivate automatic subscription to streams
-                    this.options = {
-                        sessionId: this.sessionId,
-                        participantId: token,
-                        metadata: !!metadata ? this.stringClientMetadata(metadata) : ''
-                    };
-                    this.connectAux(token).then(() => {
-                        resolve();
-                    }).catch(error => {
-                        reject(error);
-                    });
-                } else {
-                    reject(new OpenViduError(OpenViduErrorName.BROWSER_NOT_SUPPORTED, 'Browser ' + platform.name + ' ' + platform.version + ' is not supported in OpenVidu'));
-                }
-            })
-
-
-        );
+            if (this.openvidu.checkSystemRequirements()) {
+                // Early configuration to deactivate automatic subscription to streams
+                this.options = {
+                    sessionId: this.sessionId,
+                    participantId: token,
+                    metadata: !!metadata ? this.stringClientMetadata(metadata) : ''
+                };
+                this.connectAux(token).then(() => {
+                    resolve();
+                }).catch(error => {
+                    reject(error);
+                });
+            } else {
+                reject(new OpenViduError(OpenViduErrorName.BROWSER_NOT_SUPPORTED, 'Browser ' + platform.name + ' ' + platform.version + ' is not supported in OpenVidu'));
+            }
+        });
     }
 
     /**
@@ -400,17 +381,6 @@ export class Session implements EventDispatcher {
     }
 
 
-    signal(signal: SignalOptions): Promise<any>;
-    /**
-     * ---
-     * ## DEPRECATED
-     *
-     * _Use promisified version of the method_
-     *
-     * ---
-     */
-    signal(signal: SignalOptions, callback?): void;
-
     /**
      * Sends one signal. `signal` object has the following optional properties:
      * ```json
@@ -423,40 +393,35 @@ export class Session implements EventDispatcher {
      * mean that openvidu-server could resend the message to all the listed receivers._
      */
     /* tslint:disable:no-string-literal */
-    signal(signal: SignalOptions, callback?): Promise<any> {
+    signal(signal: SignalOptions): Promise<any> {
+        return new Promise((resolve, reject) => {
 
-        // DEPRECATED WARNING
-        return solveIfCallback('Session.signal', callback,
+            const signalMessage = {};
 
-        /*return */new Promise((resolve, reject) => {
-                const signalMessage = {};
+            if (signal.to && signal.to.length > 0) {
+                const connectionIds: string[] = [];
 
-                if (signal.to && signal.to.length > 0) {
-                    const connectionIds: string[] = [];
-
-                    signal.to.forEach(connection => {
-                        connectionIds.push(connection.connectionId);
-                    });
-                    signalMessage['to'] = connectionIds;
-                } else {
-                    signalMessage['to'] = [];
-                }
-
-                signalMessage['data'] = signal.data ? signal.data : '';
-                signalMessage['type'] = signal.type ? signal.type : '';
-
-                this.openvidu.sendRequest('sendMessage', {
-                    message: JSON.stringify(signalMessage)
-                }, (error, response) => {
-                    if (!!error) {
-                        reject(error);
-                    } else {
-                        resolve();
-                    }
+                signal.to.forEach(connection => {
+                    connectionIds.push(connection.connectionId);
                 });
-            }));
+                signalMessage['to'] = connectionIds;
+            } else {
+                signalMessage['to'] = [];
+            }
 
+            signalMessage['data'] = signal.data ? signal.data : '';
+            signalMessage['type'] = signal.type ? signal.type : '';
 
+            this.openvidu.sendRequest('sendMessage', {
+                message: JSON.stringify(signalMessage)
+            }, (error, response) => {
+                if (!!error) {
+                    reject(error);
+                } else {
+                    resolve();
+                }
+            });
+        });
     }
     /* tslint:enable:no-string-literal */
 

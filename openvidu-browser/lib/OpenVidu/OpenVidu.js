@@ -19,7 +19,6 @@ exports.__esModule = true;
 var __1 = require("..");
 var OpenViduError_1 = require("../OpenViduInternal/Enums/OpenViduError");
 var VideoInsertMode_1 = require("../OpenViduInternal/Enums/VideoInsertMode");
-var VersionAdapter_1 = require("../OpenViduInternal/VersionAdapter");
 var RpcBuilder = require("../OpenViduInternal/KurentoUtils/kurento-jsonrpc");
 var screenSharingAuto = require("../OpenViduInternal/ScreenSharing/Screen-Capturing-Auto");
 var screenSharing = require("../OpenViduInternal/ScreenSharing/Screen-Capturing");
@@ -45,13 +44,9 @@ var OpenVidu = /** @class */ (function () {
         console.info("'OpenVidu' initialized");
     }
     /**
-     * Returns a session with id `sessionId`
-     * @param sessionId Session unique ID generated in openvidu-server
+     * Returns new session
      */
-    OpenVidu.prototype.initSession = function (sessionId) {
-        if (!!sessionId) {
-            console.warn("DEPRECATION WANING: In future releases 'OpenVidu.initSession' method won't require a parameter. Remove it (see https://openvidu.io/api/openvidu-browser/interfaces/publisherproperties.html)");
-        }
+    OpenVidu.prototype.initSession = function () {
         this.session = new __1.Session(this);
         return this.session;
     };
@@ -79,8 +74,6 @@ var OpenVidu = /** @class */ (function () {
         if (!!param2 && (typeof param2 !== 'function')) {
             // Matches 'initPublisher(targetElement, properties)' or 'initPublisher(targetElement, properties, completionHandler)'
             properties = param2;
-            // DEPRECATED WARNING
-            properties = VersionAdapter_1.adaptPublisherProperties(properties);
             properties = {
                 audioSource: (typeof properties.audioSource !== 'undefined') ? properties.audioSource : undefined,
                 frameRate: this.isMediaStreamTrack(properties.videoSource) ? undefined : ((typeof properties.frameRate !== 'undefined') ? properties.frameRate : undefined),

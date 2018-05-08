@@ -12,9 +12,9 @@ export declare class StreamEvent extends Event {
     stream: Stream;
     /**
      * For 'streamDestroyed' event:
-     * - "disconnect"
-     * - "networkDisconnect"
-     * - "unpublish"
+     * - "unpublish": method `Session.unpublish()` has been called
+     * - "disconnect": method `Session.disconnect()` has been called
+     * - "networkDisconnect": the user's network connection has dropped
      *
      * For 'streamCreated' empty string
      */

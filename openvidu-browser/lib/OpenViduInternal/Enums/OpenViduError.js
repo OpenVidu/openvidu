@@ -16,6 +16,9 @@
  *
  */
 exports.__esModule = true;
+/**
+ * Defines property [[OpenViduError.name]]
+ */
 var OpenViduErrorName;
 (function (OpenViduErrorName) {
     OpenViduErrorName["BROWSER_NOT_SUPPORTED"] = "BROWSER_NOT_SUPPORTED";

@@ -53,15 +53,6 @@ export declare class Session implements EventDispatcher {
     connect(token: string): Promise<any>;
     connect(token: string, metadata: any): Promise<any>;
     /**
-     * ---
-     * ## DEPRECATED
-     *
-     * _Use promisified version of the method_
-     *
-     * ---
-     */
-    connect(token: string, metadata?: any, callback?: any): void;
-    /**
      * Leaves the session, destroying all streams and deleting the user as a participant.
      *
      * #### Events dispatched
@@ -132,16 +123,18 @@ export declare class Session implements EventDispatcher {
      * See [[StreamEvent]] to learn more.
      */
     unpublish(publisher: Publisher): void;
-    signal(signal: SignalOptions): Promise<any>;
     /**
-     * ---
-     * ## DEPRECATED
+     * Sends one signal. `signal` object has the following optional properties:
+     * ```json
+     * {data:string, to:Connection[], type:string}
+     * ```
+     * All users subscribed to that signal (`session.on('signal:type', ...)` or `session.on('signal', ...)` for all signals) and whose Connection objects are in `to` array will receive it. Their local
+     * Session objects will dispatch a `signal` or `signal:type` event. See [[SignalEvent]] to learn more.
      *
-     * _Use promisified version of the method_
-     *
-     * ---
+     * @returns A Promise (to which you can optionally subscribe to) that is resolved if the message successfully reached openvidu-server and rejected with an Error object if not. _This doesn't
+     * mean that openvidu-server could resend the message to all the listed receivers._
      */
-    signal(signal: SignalOptions, callback?: any): void;
+    signal(signal: SignalOptions): Promise<any>;
     /**
      * See [[EventDispatcher.on]]
      */

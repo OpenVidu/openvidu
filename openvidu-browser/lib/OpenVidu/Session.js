@@ -24,7 +24,6 @@ var SignalEvent_1 = require("../OpenViduInternal/Events/SignalEvent");
 var StreamEvent_1 = require("../OpenViduInternal/Events/StreamEvent");
 var OpenViduError_1 = require("../OpenViduInternal/Enums/OpenViduError");
 var VideoInsertMode_1 = require("../OpenViduInternal/Enums/VideoInsertMode");
-var VersionAdapter_1 = require("../OpenViduInternal/VersionAdapter");
 var platform = require("platform");
 var EventEmitter = require("wolfy87-eventemitter");
 /**
@@ -80,11 +79,9 @@ var Session = /** @class */ (function () {
      * @returns A Promise to which you must subscribe that is resolved if the recording successfully started and rejected with an Error object if not
      *
      */
-    Session.prototype.connect = function (token, metadata, param3) {
+    Session.prototype.connect = function (token, metadata) {
         var _this = this;
-        // DEPRECATED WARNING
-        return VersionAdapter_1.solveIfCallback('Session.connect', (!!param3 && (typeof param3 === 'function')) ? param3 : ((typeof metadata === 'function') ? metadata : ''), 
-        /*return */ new Promise(function (resolve, reject) {
+        return new Promise(function (resolve, reject) {
             _this.processToken(token);
             if (_this.openvidu.checkSystemRequirements()) {
                 // Early configuration to deactivate automatic subscription to streams
@@ -102,7 +99,7 @@ var Session = /** @class */ (function () {
             else {
                 reject(new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.BROWSER_NOT_SUPPORTED, 'Browser ' + platform.name + ' ' + platform.version + ' is not supported in OpenVidu'));
             }
-        }));
+        });
     };
     /**
      * Leaves the session, destroying all streams and deleting the user as a participant.
@@ -329,11 +326,9 @@ var Session = /** @class */ (function () {
      * mean that openvidu-server could resend the message to all the listed receivers._
      */
     /* tslint:disable:no-string-literal */
-    Session.prototype.signal = function (signal, callback) {
+    Session.prototype.signal = function (signal) {
         var _this = this;
-        // DEPRECATED WARNING
-        return VersionAdapter_1.solveIfCallback('Session.signal', callback, 
-        /*return */ new Promise(function (resolve, reject) {
+        return new Promise(function (resolve, reject) {
             var signalMessage = {};
             if (signal.to && signal.to.length > 0) {
                 var connectionIds_1 = [];
@@ -357,7 +352,7 @@ var Session = /** @class */ (function () {
                     resolve();
                 }
             });
-        }));
+        });
     };
     /* tslint:enable:no-string-literal */
     /**
