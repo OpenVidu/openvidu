@@ -58,8 +58,8 @@ public class Recording {
 	private String id;
 	private String sessionId;
 	private long createdAt; // milliseconds (UNIX Epoch time)
-	private long size = 0; // bytes
-	private double duration = 0; // seconds
+	private long size; // bytes
+	private double duration; // seconds
 	private String url;
 	private boolean hasAudio = true;
 	private boolean hasVideo = true;
