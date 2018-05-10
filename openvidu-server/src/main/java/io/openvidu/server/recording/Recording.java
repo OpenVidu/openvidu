@@ -58,7 +58,11 @@ public class Recording {
 		this.sessionId = (String) json.get("sessionId");
 		this.createdAt = (long) json.get("createdAt");
 		this.size = (long) json.get("size");
-		this.duration = (double) json.get("duration");
+		try {
+			this.duration = (double) json.get("duration");
+		} catch (Exception e) {
+			this.duration = new Long((long) json.get("duration")).doubleValue();
+		}
 		this.url = (String) json.get("url");
 		this.hasAudio = (boolean) json.get("hasAudio");
 		this.hasVideo = (boolean) json.get("hasVideo");
