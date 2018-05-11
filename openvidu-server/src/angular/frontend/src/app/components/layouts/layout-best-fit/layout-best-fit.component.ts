@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, HostListener, ViewEncapsulation, ApplicationRef } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { OpenVidu, Session, Stream, Subscriber } from 'openvidu-browser';
+import { OpenVidu, Session, Stream, Subscriber, StreamEvent } from 'openvidu-browser';
 
 import { OpenViduLayout } from '../openvidu-layout';
 
@@ -17,7 +17,7 @@ export class LayoutBestFitComponent implements OnInit, OnDestroy {
   secret: string;
 
   session: Session;
-  streams = [];
+  streams: Stream[] = [];
 
   layout: any;
   resizeTimeout;
@@ -48,26 +48,24 @@ export class LayoutBestFitComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     const OV = new OpenVidu();
-    const fullSessionId = 'wss://' + location.hostname + ':8443/' + this.sessionId + '?secret=' + this.secret + '&recorder=true';
+    this.session = OV.initSession();
 
-    this.session = OV.initSession(fullSessionId);
-
-    this.session.on('streamCreated', (event) => {
+    this.session.on('streamCreated', (event: StreamEvent) => {
       const subscriber: Subscriber = this.session.subscribe(event.stream, '');
       this.addRemoteStream(event.stream);
     });
 
-    this.session.on('streamDestroyed', (event) => {
+    this.session.on('streamDestroyed', (event: StreamEvent) => {
       event.preventDefault();
       this.deleteRemoteStream(event.stream);
       this.openviduLayout.updateLayout();
     });
 
-    this.session.connect(null, (error) => {
-      if (error) {
+    const token = 'wss://' + location.hostname + ':4443?sessionId=' + this.sessionId + '&secret=' + this.secret + '&recorder=true';
+    this.session.connect(token)
+      .catch(error => {
         console.error(error);
-      }
-    });
+      })
 
     this.openviduLayout = new OpenViduLayout();
     this.openviduLayout.initLayoutContainer(document.getElementById('layout'), {
@@ -91,7 +89,14 @@ export class LayoutBestFitComponent implements OnInit, OnDestroy {
   }
 
   private deleteRemoteStream(stream: Stream): void {
-    const index = this.streams.indexOf(stream, 0);
+    let index = -1;
+    for (let i = 0; i < this.streams.length; i++) {
+      if (this.streams[i].streamId === stream.streamId) {
+        index = i;
+        break;
+      }
+    }
+
     if (index > -1) {
       this.streams.splice(index, 1);
     }

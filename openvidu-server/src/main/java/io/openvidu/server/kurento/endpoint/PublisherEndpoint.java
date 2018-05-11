@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2017 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,6 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
 package io.openvidu.server.kurento.endpoint;
@@ -55,9 +56,9 @@ public class PublisherEndpoint extends MediaEndpoint {
   private Map<String, ListenerSubscription> elementsErrorSubscriptions =
       new HashMap<String, ListenerSubscription>();
 
-  public PublisherEndpoint(boolean web, boolean dataChannels, KurentoParticipant owner,
+  public PublisherEndpoint(boolean web, KurentoParticipant owner,
       String endpointName, MediaPipeline pipeline) {
-    super(web, dataChannels, owner, endpointName, pipeline, log);
+    super(web, owner, endpointName, pipeline, log);
   }
 
   @Override

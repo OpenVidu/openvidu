@@ -22,7 +22,7 @@ COPY web /web/
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY openvidu-server.jar openvidu-server.jar
 
-EXPOSE 8443
+EXPOSE 4443
 
 # Exec supervisord
 CMD ["/usr/bin/supervisord"]

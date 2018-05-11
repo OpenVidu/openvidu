@@ -1,3 +1,20 @@
+/*
+ * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package io.openvidu.server.rpc;
 
 import java.io.IOException;
@@ -18,19 +35,22 @@ public class RpcNotificationService {
 
 	private static final Logger log = LoggerFactory.getLogger(RpcNotificationService.class);
 
-	private static ConcurrentMap<String, RpcConnection> rpcConnections = new ConcurrentHashMap<>();
+	private ConcurrentMap<String, RpcConnection> rpcConnections = new ConcurrentHashMap<>();
+
+	public RpcConnection newRpcConnection(Transaction t, Request<JsonObject> request) {
+		String participantPrivateId = t.getSession().getSessionId();
+		RpcConnection connection = new RpcConnection(t.getSession());
+		RpcConnection oldConnection = rpcConnections.putIfAbsent(participantPrivateId, connection);
+		if (oldConnection != null) {
+			log.warn("Concurrent initialization of rpcSession #{}", participantPrivateId);
+			connection = oldConnection;
+		}
+		return connection;
+	}
 
 	public RpcConnection addTransaction(Transaction t, Request<JsonObject> request) {
 		String participantPrivateId = t.getSession().getSessionId();
 		RpcConnection connection = rpcConnections.get(participantPrivateId);
-		if (connection == null) {
-			connection = new RpcConnection(t.getSession());
-			RpcConnection oldConnection = rpcConnections.putIfAbsent(participantPrivateId, connection);
-			if (oldConnection != null) {
-				log.warn("Concurrent initialization of rpcSession #{}", participantPrivateId);
-				connection = oldConnection;
-			}
-		}
 		connection.addTransaction(request.getId(), t);
 		return connection;
 	}
@@ -82,20 +102,21 @@ public class RpcNotificationService {
 		}
 	}
 
-	public void closeRpcSession(String participantPrivateId) {
-		RpcConnection rpcSession = rpcConnections.get(participantPrivateId);
+	public RpcConnection closeRpcSession(String participantPrivateId) {
+		RpcConnection rpcSession = rpcConnections.remove(participantPrivateId);
 		if (rpcSession == null || rpcSession.getSession() == null) {
 			log.error("No session found for private id {}, unable to cleanup", participantPrivateId);
-			return;
+			return null;
 		}
 		Session s = rpcSession.getSession();
 		try {
 			s.close();
 			log.info("Closed session for participant with private id {}", participantPrivateId);
+			return rpcSession;
 		} catch (IOException e) {
 			log.error("Error closing session for participant with private id {}", participantPrivateId, e);
 		}
-		rpcConnections.remove(participantPrivateId);
+		return null;
 	}
 
 	private Transaction getAndRemoveTransaction(String participantPrivateId, Integer transactionId) {
@@ -111,7 +132,11 @@ public class RpcNotificationService {
 	}
 
 	public void showRpcConnections() {
-		log.info("<PRIVATE_ID, RPC_CONNECTION>: {}", RpcNotificationService.rpcConnections.toString());
+		log.info("<PRIVATE_ID, RPC_CONNECTION>: {}", this.rpcConnections.toString());
+	}
+
+	public RpcConnection getRpcConnection(String participantPrivateId) {
+		return this.rpcConnections.get(participantPrivateId);
 	}
 
 }

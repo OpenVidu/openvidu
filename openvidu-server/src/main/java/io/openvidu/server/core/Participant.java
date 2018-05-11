@@ -1,3 +1,20 @@
+/*
+ * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package io.openvidu.server.core;
 
 public class Participant {
@@ -11,6 +28,7 @@ public class Participant {
 	protected boolean audioActive = true;
 	protected boolean videoActive = true;
 	protected String typeOfVideo; // CAMERA, SCREEN
+	protected int frameRate;
 
 	protected boolean streaming = false;
 	protected volatile boolean closed;
@@ -100,6 +118,14 @@ public class Participant {
 
 	public void setTypeOfVideo(String typeOfVideo) {
 		this.typeOfVideo = typeOfVideo;
+	}
+	
+	public int getFrameRate() {
+		return this.frameRate;
+	}
+
+	public void setFrameRate(int frameRate) {
+		this.frameRate = frameRate;
 	}
 
 	public String getFullMetadata() {

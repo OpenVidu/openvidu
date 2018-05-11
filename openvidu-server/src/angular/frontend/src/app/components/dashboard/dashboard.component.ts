@@ -3,6 +3,7 @@ import { MatDialog, MatDialogRef } from '@angular/material';
 import { Subscription } from 'rxjs/Subscription';
 
 import { InfoService } from '../../services/info.service';
+import { RestService } from '../../services/rest.service';
 
 import { OpenVidu, Session } from 'openvidu-browser';
 import { CredentialsDialogComponent } from './credentials-dialog.component';
@@ -32,7 +33,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   showSpinner = false;
   msgChain = [];
 
-  constructor(private infoService: InfoService, public dialog: MatDialog) {
+  openviduPublicUrl: string;
+
+  constructor(private infoService: InfoService, private restService: RestService, public dialog: MatDialog) {
     // Subscription to info updated event raised by InfoService
     this.infoSubscription = this.infoService.newInfo$.subscribe(
       info => {
@@ -61,8 +64,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
       console.log('Info websocket message');
       console.log(event.data);
       this.infoService.updateInfo(event.data);
-
     };
+
+    this.restService.getOpenViduPublicUrl()
+      .then(url => {
+        this.openviduPublicUrl = url.replace('https://', 'wss://').replace('http://', 'ws://');
+      })
+      .catch(error => {
+        console.error(error);
+      });
   }
 
   @HostListener('window:beforeunload')
@@ -97,39 +107,47 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     dialogRef.afterClosed().subscribe(secret => {
       if (secret) {
-        const port = (location.port) ? location.port : '8443';
-        this.connectToSession('wss://' + location.hostname + ':' + port + '/testSession?secret=' + secret);
+        if (!this.openviduPublicUrl) {
+          this.restService.getOpenViduPublicUrl()
+            .then((url => {
+              this.openviduPublicUrl = url.replace('https://', 'wss://').replace('http://', 'ws://');
+              this.connectToSession(this.openviduPublicUrl + '?sessionId=testSession&secret=' + secret);
+            }))
+            .catch(error => {
+              console.error(error);
+            });
+        } else {
+          this.connectToSession(this.openviduPublicUrl + '?sessionId=testSession&secret=' + secret);
+        }
       }
     });
   }
 
-  connectToSession(mySessionId: string) {
+  connectToSession(token: string) {
     this.msgChain = [];
 
     const OV = new OpenVidu();
-    this.session = OV.initSession(mySessionId);
+    this.session = OV.initSession();
 
     this.testStatus = 'CONNECTING';
     this.testButton = 'Testing...';
 
-    this.session.connect('token', (error) => {
-      if (!error) {
+    this.session.connect(token)
+      .then(() => {
 
         this.testStatus = 'CONNECTED';
 
         const publisherRemote = OV.initPublisher('mirrored-video', {
-          audio: true,
-          video: true,
-          audioActive: true,
-          videoActive: true,
-          quality: 'MEDIUM'
+          publishAudio: true,
+          publishVideo: true,
+          resolution: '640x480'
         },
-        e => {
-          if (!!e) {
-            console.error(e);
+          e => {
+            if (!!e) {
+              console.error(e);
+            }
           }
-        }
-      );
+        );
 
         publisherRemote.on('accessAllowed', () => {
           this.msgChain.push('Camera access allowed');
@@ -154,7 +172,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
         publisherRemote.subscribeToRemote();
         this.session.publish(publisherRemote);
-      } else {
+
+      })
+      .catch(error => {
         if (error.code === 401) { // User unauthorized error. OpenVidu security is active
           this.endTestVideo();
           let dialogRef: MatDialogRef<CredentialsDialogComponent>;
@@ -163,14 +183,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
           dialogRef.afterClosed().subscribe(secret => {
             if (secret) {
-              this.connectToSession('wss://' + location.hostname + ':8443/testSession?secret=' + secret);
+              this.connectToSession(this.openviduPublicUrl + '?sessionId=testSession&secret=' + secret);
             }
           });
         } else {
           console.error(error);
         }
-      }
-    });
+      });
   }
 
   endTestVideo() {

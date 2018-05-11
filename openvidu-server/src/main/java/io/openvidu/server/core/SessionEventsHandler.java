@@ -1,10 +1,32 @@
+/*
+ * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package io.openvidu.server.core;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.gson.JsonArray;
@@ -17,9 +39,12 @@ import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.server.cdr.CallDetailRecord;
 import io.openvidu.server.config.InfoHandler;
 import io.openvidu.server.config.OpenviduConfig;
+import io.openvidu.server.recording.Recording;
 import io.openvidu.server.rpc.RpcNotificationService;
 
 public class SessionEventsHandler {
+
+	private static final Logger log = LoggerFactory.getLogger(SessionEventsHandler.class);
 
 	@Autowired
 	protected RpcNotificationService rpcNotificationService;
@@ -29,24 +54,28 @@ public class SessionEventsHandler {
 
 	@Autowired
 	protected CallDetailRecord CDR;
-	
+
 	@Autowired
 	protected OpenviduConfig openviduConfig;
-	
+
+	Map<String, Recording> recordingsStarted = new ConcurrentHashMap<>();
+
+	ReentrantLock lock = new ReentrantLock();
+
 	public void onSessionCreated(String sessionId) {
 		if (openviduConfig.isCdrEnabled()) {
 			CDR.recordSessionCreated(sessionId);
 		}
 	}
 
-	public void onSessionClosed(String sessionId) {
+	public void onSessionClosed(String sessionId, String reason) {
 		if (openviduConfig.isCdrEnabled()) {
-			CDR.recordSessionDestroyed(sessionId);
+			CDR.recordSessionDestroyed(sessionId, reason);
 		}
 	}
 
-	public void onParticipantJoined(Participant participant, String sessionId,
-			Set<Participant> existingParticipants, Integer transactionId, OpenViduException error) {
+	public void onParticipantJoined(Participant participant, String sessionId, Set<Participant> existingParticipants,
+			Integer transactionId, OpenViduException error) {
 		if (error != null) {
 			rpcNotificationService.sendErrorResponse(participant.getParticipantPrivateId(), transactionId, null, error);
 			return;
@@ -54,80 +83,92 @@ public class SessionEventsHandler {
 
 		JsonObject result = new JsonObject();
 		JsonArray resultArray = new JsonArray();
-		for (Participant p : existingParticipants) {
+
+		for (Participant existingParticipant : existingParticipants) {
 			JsonObject participantJson = new JsonObject();
-			participantJson.addProperty(ProtocolElements.JOINROOM_PEERID_PARAM, p.getParticipantPublicId());
+			participantJson.addProperty(ProtocolElements.JOINROOM_PEERID_PARAM,
+					existingParticipant.getParticipantPublicId());
 
 			// Metadata associated to each existing participant
-			participantJson.addProperty(ProtocolElements.JOINROOM_METADATA_PARAM, p.getFullMetadata());
+			participantJson.addProperty(ProtocolElements.JOINROOM_METADATA_PARAM,
+					existingParticipant.getFullMetadata());
 
-			if (p.isStreaming()) {
+			if (existingParticipant.isStreaming()) {
 
 				String streamId = "";
-				if ("SCREEN".equals(p.getTypeOfVideo())) {
+				if ("SCREEN".equals(existingParticipant.getTypeOfVideo())) {
 					streamId = "SCREEN";
-				} else if (p.isVideoActive()) {
+				} else if (existingParticipant.isVideoActive()) {
 					streamId = "CAMERA";
-				} else if (p.isAudioActive()) {
+				} else if (existingParticipant.isAudioActive()) {
 					streamId = "MICRO";
 				}
 
 				JsonObject stream = new JsonObject();
 				stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMID_PARAM,
-						p.getParticipantPublicId() + "_" + streamId);
-				stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMAUDIOACTIVE_PARAM, p.isAudioActive());
-				stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMVIDEOACTIVE_PARAM, p.isVideoActive());
-				stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMTYPEOFVIDEO_PARAM, p.getTypeOfVideo());
+						existingParticipant.getParticipantPublicId() + "_" + streamId);
+				stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMAUDIOACTIVE_PARAM,
+						existingParticipant.isAudioActive());
+				stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMVIDEOACTIVE_PARAM,
+						existingParticipant.isVideoActive());
+				stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMTYPEOFVIDEO_PARAM,
+						existingParticipant.getTypeOfVideo());
+				stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMFRAMERATE_PARAM,
+						existingParticipant.getFrameRate());
 
 				JsonArray streamsArray = new JsonArray();
 				streamsArray.add(stream);
 				participantJson.add(ProtocolElements.JOINROOM_PEERSTREAMS_PARAM, streamsArray);
 			}
-			resultArray.add(participantJson);
 
-			JsonObject notifParams = new JsonObject();
+			// Avoid emitting 'connectionCreated' event of existing RECORDER participant in
+			// openvidu-browser in newly joined participants
+			if (!ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(existingParticipant.getParticipantPublicId())) {
+				resultArray.add(participantJson);
+			}
 
-			// Metadata associated to new participant
-			notifParams.addProperty(ProtocolElements.PARTICIPANTJOINED_USER_PARAM,
-					participant.getParticipantPublicId());
-			notifParams.addProperty(ProtocolElements.PARTICIPANTJOINED_METADATA_PARAM, participant.getFullMetadata());
+			// If RECORDER participant has joined do NOT send 'participantJoined'
+			// notification to existing participants. 'recordingStarted' will be sent to all
+			// existing participants when recorder first subscribe to a stream
+			if (!ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(participant.getParticipantPublicId())) {
+				JsonObject notifParams = new JsonObject();
 
-			rpcNotificationService.sendNotification(p.getParticipantPrivateId(),
-					ProtocolElements.PARTICIPANTJOINED_METHOD, notifParams);
+				// Metadata associated to new participant
+				notifParams.addProperty(ProtocolElements.PARTICIPANTJOINED_USER_PARAM,
+						participant.getParticipantPublicId());
+				notifParams.addProperty(ProtocolElements.PARTICIPANTJOINED_METADATA_PARAM,
+						participant.getFullMetadata());
+
+				rpcNotificationService.sendNotification(existingParticipant.getParticipantPrivateId(),
+						ProtocolElements.PARTICIPANTJOINED_METHOD, notifParams);
+			}
 		}
 		result.addProperty(ProtocolElements.PARTICIPANTJOINED_USER_PARAM, participant.getParticipantPublicId());
 		result.addProperty(ProtocolElements.PARTICIPANTJOINED_METADATA_PARAM, participant.getFullMetadata());
 		result.add("value", resultArray);
 
 		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, result);
-		
-		if (openviduConfig.isCdrEnabled()) {
-			CDR.recordParticipantJoined(participant, sessionId);
-		}
 	}
 
-	public void onParticipantLeft(Participant participant, String sessionId,
-			Set<Participant> remainingParticipants, Integer transactionId, OpenViduException error) {
+	public void onParticipantLeft(Participant participant, String sessionId, Set<Participant> remainingParticipants,
+			Integer transactionId, OpenViduException error, String reason) {
 		if (error != null) {
 			rpcNotificationService.sendErrorResponse(participant.getParticipantPrivateId(), transactionId, null, error);
 			return;
 		}
-		
-		boolean isPublishing = false;
-		if (openviduConfig.isCdrEnabled()) {
-			isPublishing = CDR.stopPublisher(participant.getParticipantPublicId());
-			CDR.stopAllSubscriptions(participant.getParticipantPublicId());
+
+		if (ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(participant.getParticipantPublicId())) {
+			// RECORDER participant
+			return;
 		}
 
 		JsonObject params = new JsonObject();
 		params.addProperty(ProtocolElements.PARTICIPANTLEFT_NAME_PARAM, participant.getParticipantPublicId());
+		params.addProperty(ProtocolElements.PARTICIPANTLEFT_REASON_PARAM, reason);
+
 		for (Participant p : remainingParticipants) {
 			rpcNotificationService.sendNotification(p.getParticipantPrivateId(),
 					ProtocolElements.PARTICIPANTLEFT_METHOD, params);
-			
-			if (isPublishing && openviduConfig.isCdrEnabled()) {
-				CDR.stopSubscriber(p.getParticipantPublicId(), participant.getParticipantPublicId());
-			}
 		}
 
 		if (transactionId != null) {
@@ -135,16 +176,10 @@ public class SessionEventsHandler {
 			// leaving the session
 			rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, new JsonObject());
 		}
-		rpcNotificationService.closeRpcSession(participant.getParticipantPrivateId());
-		
-		if (openviduConfig.isCdrEnabled()) {
-			CDR.recordParticipantLeft(participant, sessionId);
-		}
-
 	}
 
-	public void onPublishMedia(Participant participant, String sessionId, MediaOptions mediaOptions,
-			String sdpAnswer, Set<Participant> participants, Integer transactionId, OpenViduException error) {
+	public void onPublishMedia(Participant participant, String sessionId, MediaOptions mediaOptions, String sdpAnswer,
+			Set<Participant> participants, Integer transactionId, OpenViduException error) {
 		if (error != null) {
 			rpcNotificationService.sendErrorResponse(participant.getParticipantPrivateId(), transactionId, null, error);
 			return;
@@ -171,6 +206,7 @@ public class SessionEventsHandler {
 		stream.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_AUDIOACTIVE_PARAM, mediaOptions.audioActive);
 		stream.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_VIDEOACTIVE_PARAM, mediaOptions.videoActive);
 		stream.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_TYPEOFVIDEO_PARAM, mediaOptions.typeOfVideo);
+		stream.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_FRAMERATE_PARAM, mediaOptions.frameRate);
 
 		JsonArray streamsArray = new JsonArray();
 		streamsArray.add(stream);
@@ -184,26 +220,19 @@ public class SessionEventsHandler {
 						ProtocolElements.PARTICIPANTPUBLISHED_METHOD, params);
 			}
 		}
-
-		if (openviduConfig.isCdrEnabled()) {
-			CDR.recordNewPublisher(participant, sessionId, mediaOptions);
-		}
 	}
 
 	public void onUnpublishMedia(Participant participant, Set<Participant> participants, Integer transactionId,
-			OpenViduException error) {
+			OpenViduException error, String reason) {
 		if (error != null) {
 			rpcNotificationService.sendErrorResponse(participant.getParticipantPrivateId(), transactionId, null, error);
 			return;
 		}
 		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, new JsonObject());
-		
-		if (openviduConfig.isCdrEnabled()) {
-			CDR.stopPublisher(participant.getParticipantPublicId());
-		}
 
 		JsonObject params = new JsonObject();
 		params.addProperty(ProtocolElements.PARTICIPANTUNPUBLISHED_NAME_PARAM, participant.getParticipantPublicId());
+		params.addProperty(ProtocolElements.PARTICIPANTUNPUBLISHED_REASON_PARAM, reason);
 
 		for (Participant p : participants) {
 			if (p.getParticipantPrivateId().equals(participant.getParticipantPrivateId())) {
@@ -211,15 +240,12 @@ public class SessionEventsHandler {
 			} else {
 				rpcNotificationService.sendNotification(p.getParticipantPrivateId(),
 						ProtocolElements.PARTICIPANTUNPUBLISHED_METHOD, params);
-				if (openviduConfig.isCdrEnabled()) {
-					CDR.stopSubscriber(p.getParticipantPublicId(), participant.getParticipantPublicId());
-				}
 			}
 		}
 	}
 
-	public void onSubscribe(Participant participant, String sessionId, String senderName, String sdpAnswer, Integer transactionId,
-			OpenViduException error) {
+	public void onSubscribe(Participant participant, Session session, String senderName, String sdpAnswer,
+			Integer transactionId, OpenViduException error) {
 		if (error != null) {
 			rpcNotificationService.sendErrorResponse(participant.getParticipantPrivateId(), transactionId, null, error);
 			return;
@@ -228,21 +254,27 @@ public class SessionEventsHandler {
 		result.addProperty(ProtocolElements.RECEIVEVIDEO_SDPANSWER_PARAM, sdpAnswer);
 		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, result);
 
-		if (openviduConfig.isCdrEnabled()) {
-			CDR.recordNewSubscriber(participant, sessionId, senderName);
+		if (ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(participant.getParticipantPublicId())) {
+			lock.lock();
+			try {
+				Recording recording = this.recordingsStarted.remove(session.getSessionId());
+				if (recording != null) {
+					// RECORDER participant is now receiving video from the first publisher
+					this.sendRecordingStartedNotification(session, recording);
+				}
+			} finally {
+				lock.unlock();
+			}
 		}
 	}
 
-	public void onUnsubscribe(Participant participant, String senderName, Integer transactionId, OpenViduException error) {
+	public void onUnsubscribe(Participant participant, String senderName, Integer transactionId,
+			OpenViduException error) {
 		if (error != null) {
 			rpcNotificationService.sendErrorResponse(participant.getParticipantPrivateId(), transactionId, null, error);
 			return;
 		}
 		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, new JsonObject());
-
-		if (openviduConfig.isCdrEnabled()) {
-			CDR.stopSubscriber(participant.getParticipantPublicId(), senderName);
-		}
 	}
 
 	public void onSendMessage(Participant participant, JsonObject message, Set<Participant> participants,
@@ -308,7 +340,80 @@ public class SessionEventsHandler {
 				ProtocolElements.PARTICIPANTEVICTED_METHOD, new JsonObject());
 	}
 
+	public void sendRecordingStartedNotification(Session session, Recording recording) {
+
+		if (openviduConfig.isCdrEnabled()) {
+			CDR.recordRecordingStarted(session.getSessionId(), recording);
+		}
+
+		// Filter participants by roles according to "openvidu.recording.notification"
+		Set<Participant> filteredParticipants = this.filterParticipantsByRole(
+				this.openviduConfig.getRolesFromRecordingNotification(), session.getParticipants());
+
+		JsonObject params = new JsonObject();
+		params.addProperty(ProtocolElements.RECORDINGSTARTED_ID_PARAM, recording.getId());
+		params.addProperty(ProtocolElements.RECORDINGSTARTED_NAME_PARAM, recording.getName());
+
+		for (Participant p : filteredParticipants) {
+			rpcNotificationService.sendNotification(p.getParticipantPrivateId(),
+					ProtocolElements.RECORDINGSTARTED_METHOD, params);
+		}
+	}
+
+	public void sendRecordingStoppedNotification(Session session, Recording recording) {
+
+		if (openviduConfig.isCdrEnabled()) {
+			CDR.recordRecordingStopped(session.getSessionId(), recording);
+		}
+
+		// Be sure to clean this map (this should return null)
+		this.recordingsStarted.remove(session.getSessionId());
+
+		// Filter participants by roles according to "openvidu.recording.notification"
+		Set<Participant> existingParticipants;
+		try {
+			existingParticipants = session.getParticipants();
+		} catch (OpenViduException exception) {
+			// Session is already closed. This happens when RecordingMode.ALWAYS and last
+			// participant has left the session. No notification needs to be sent
+			log.warn("Session already closed when trying to send 'recordingStopped' notification");
+			return;
+		}
+		Set<Participant> filteredParticipants = this.filterParticipantsByRole(
+				this.openviduConfig.getRolesFromRecordingNotification(), existingParticipants);
+
+		JsonObject params = new JsonObject();
+		params.addProperty(ProtocolElements.RECORDINGSTOPPED_ID_PARAM, recording.getId());
+		params.addProperty(ProtocolElements.RECORDINGSTARTED_NAME_PARAM, recording.getName());
+
+		for (Participant p : filteredParticipants) {
+			rpcNotificationService.sendNotification(p.getParticipantPrivateId(),
+					ProtocolElements.RECORDINGSTOPPED_METHOD, params);
+		}
+	}
+
+	public void closeRpcSession(String participantPrivateId) {
+		this.rpcNotificationService.closeRpcSession(participantPrivateId);
+	}
+
+	public void setRecordingStarted(String sessionId, Recording recording) {
+		this.recordingsStarted.put(sessionId, recording);
+	}
+
 	public InfoHandler getInfoHandler() {
 		return this.infoHandler;
 	}
+
+	private Set<Participant> filterParticipantsByRole(ParticipantRole[] roles, Set<Participant> participants) {
+		return participants.stream().filter(part -> {
+			boolean isRole = false;
+			for (ParticipantRole role : roles) {
+				isRole = role.equals(part.getToken().getRole());
+				if (isRole)
+					break;
+			}
+			return isRole;
+		}).collect(Collectors.toSet());
+	}
+
 }

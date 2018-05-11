@@ -1,950 +1,3692 @@
 webpackJsonp(["main"],{
 
-/***/ "../../../../openvidu-browser/lib/KurentoUtils/DetectRTC.js":
+/***/ "../../../../openvidu-browser/lib/OpenVidu/Connection.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-/* WEBPACK VAR INJECTION */(function(process, global) {var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;
-// Last Updated On: 2017-12-09 2:29:22 PM UTC
-// ________________
-// DetectRTC v1.3.6
-// Open-Sourced: https://github.com/muaz-khan/DetectRTC
-// --------------------------------------------------
-// Muaz Khan     - www.MuazKhan.com
-// MIT License   - www.WebRTC-Experiment.com/licence
-// --------------------------------------------------
-(function () {
-    var browserFakeUserAgent = 'Fake/5.0 (FakeOS) AppleWebKit/123 (KHTML, like Gecko) Fake/12.3.4567.89 Fake/123.45';
-    var isNodejs = typeof process === 'object' && typeof process.versions === 'object' && process.versions.node && /*node-process*/ !process.browser;
-    if (isNodejs) {
-        var version = process.versions.node.toString().replace('v', '');
-        browserFakeUserAgent = 'Nodejs/' + version + ' (NodeOS) AppleWebKit/' + version + ' (KHTML, like Gecko) Nodejs/' + version + ' Nodejs/' + version;
-    }
-    (function (that) {
-        if (typeof window !== 'undefined') {
-            return;
-        }
-        if (typeof window === 'undefined' && typeof global !== 'undefined') {
-            global.navigator = {
-                userAgent: browserFakeUserAgent,
-                getUserMedia: function () { }
-            };
-            /*global window:true */
-            that.window = global;
-        }
-        else if (typeof window === 'undefined') {
-            // window = this;
-        }
-        if (typeof location === 'undefined') {
-            /*global location:true */
-            that.location = {
-                protocol: 'file:',
-                href: '',
-                hash: ''
-            };
-        }
-        if (typeof screen === 'undefined') {
-            /*global screen:true */
-            that.screen = {
-                width: 0,
-                height: 0
-            };
-        }
-    })(typeof global !== 'undefined' ? global : window);
-    /*global navigator:true */
-    var navigator = window.navigator;
-    if (typeof navigator !== 'undefined') {
-        if (typeof navigator.webkitGetUserMedia !== 'undefined') {
-            navigator.getUserMedia = navigator.webkitGetUserMedia;
-        }
-        if (typeof navigator.mozGetUserMedia !== 'undefined') {
-            navigator.getUserMedia = navigator.mozGetUserMedia;
-        }
-    }
-    else {
-        navigator = {
-            getUserMedia: function () { },
-            userAgent: browserFakeUserAgent
-        };
-    }
-    var isMobileDevice = !!(/Android|webOS|iPhone|iPad|iPod|BB10|BlackBerry|IEMobile|Opera Mini|Mobile|mobile/i.test(navigator.userAgent || ''));
-    var isEdge = navigator.userAgent.indexOf('Edge') !== -1 && (!!navigator.msSaveOrOpenBlob || !!navigator.msSaveBlob);
-    var isOpera = !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0;
-    var isFirefox = typeof window.InstallTrigger !== 'undefined';
-    var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-    var isChrome = !!window.chrome && !isOpera;
-    var isIE = typeof document !== 'undefined' && !!document.documentMode && !isEdge;
-    // this one can also be used:
-    // https://www.websocket.org/js/stuff.js (DetectBrowser.js)
-    function getBrowserInfo() {
-        var nVer = navigator.appVersion;
-        var nAgt = navigator.userAgent;
-        var browserName = navigator.appName;
-        var fullVersion = '' + parseFloat(navigator.appVersion);
-        var majorVersion = parseInt(navigator.appVersion, 10);
-        var nameOffset, verOffset, ix;
-        // In Opera, the true version is after 'Opera' or after 'Version'
-        if (isOpera) {
-            browserName = 'Opera';
-            try {
-                fullVersion = navigator.userAgent.split('OPR/')[1].split(' ')[0];
-                majorVersion = fullVersion.split('.')[0];
-            }
-            catch (e) {
-                fullVersion = '0.0.0.0';
-                majorVersion = 0;
-            }
-        }
-        else if (isIE) {
-            verOffset = nAgt.indexOf('rv:');
-            if (verOffset > 0) {
-                fullVersion = nAgt.substring(verOffset + 3);
-            }
-            else {
-                verOffset = nAgt.indexOf('MSIE');
-                fullVersion = nAgt.substring(verOffset + 5);
-            }
-            browserName = 'IE';
-        }
-        else if (isChrome) {
-            verOffset = nAgt.indexOf('Chrome');
-            browserName = 'Chrome';
-            fullVersion = nAgt.substring(verOffset + 7);
-        }
-        else if (isSafari) {
-            verOffset = nAgt.indexOf('Safari');
-            browserName = 'Safari';
-            fullVersion = nAgt.substring(verOffset + 7);
-            if ((verOffset = nAgt.indexOf('Version')) !== -1) {
-                fullVersion = nAgt.substring(verOffset + 8);
-            }
-            if (navigator.userAgent.indexOf('Version/') !== -1) {
-                fullVersion = navigator.userAgent.split('Version/')[1].split(' ')[0];
-            }
-        }
-        else if (isFirefox) {
-            verOffset = nAgt.indexOf('Firefox');
-            browserName = 'Firefox';
-            fullVersion = nAgt.substring(verOffset + 8);
-        }
-        else if ((nameOffset = nAgt.lastIndexOf(' ') + 1) < (verOffset = nAgt.lastIndexOf('/'))) {
-            browserName = nAgt.substring(nameOffset, verOffset);
-            fullVersion = nAgt.substring(verOffset + 1);
-            if (browserName.toLowerCase() === browserName.toUpperCase()) {
-                browserName = navigator.appName;
-            }
-        }
-        if (isEdge) {
-            browserName = 'Edge';
-            fullVersion = navigator.userAgent.split('Edge/')[1];
-            // fullVersion = parseInt(navigator.userAgent.match(/Edge\/(\d+).(\d+)$/)[2], 10).toString();
-        }
-        // trim the fullVersion string at semicolon/space/bracket if present
-        if ((ix = fullVersion.search(/[; \)]/)) !== -1) {
-            fullVersion = fullVersion.substring(0, ix);
-        }
-        majorVersion = parseInt('' + fullVersion, 10);
-        if (isNaN(majorVersion)) {
-            fullVersion = '' + parseFloat(navigator.appVersion);
-            majorVersion = parseInt(navigator.appVersion, 10);
-        }
-        return {
-            fullVersion: fullVersion,
-            version: majorVersion,
-            name: browserName,
-            isPrivateBrowsing: false
-        };
-    }
-    // via: https://gist.github.com/cou929/7973956
-    function retry(isDone, next) {
-        var currentTrial = 0, maxRetry = 50, interval = 10, isTimeout = false;
-        var id = window.setInterval(function () {
-            if (isDone()) {
-                window.clearInterval(id);
-                next(isTimeout);
-            }
-            if (currentTrial++ > maxRetry) {
-                window.clearInterval(id);
-                isTimeout = true;
-                next(isTimeout);
-            }
-        }, 10);
-    }
-    function isIE10OrLater(userAgent) {
-        var ua = userAgent.toLowerCase();
-        if (ua.indexOf('msie') === 0 && ua.indexOf('trident') === 0) {
-            return false;
-        }
-        var match = /(?:msie|rv:)\s?([\d\.]+)/.exec(ua);
-        if (match && parseInt(match[1], 10) >= 10) {
-            return true;
-        }
-        return false;
-    }
-    function detectPrivateMode(callback) {
-        var isPrivate;
-        try {
-            if (window.webkitRequestFileSystem) {
-                window.webkitRequestFileSystem(window.TEMPORARY, 1, function () {
-                    isPrivate = false;
-                }, function (e) {
-                    isPrivate = true;
-                });
-            }
-            else if (window.indexedDB && /Firefox/.test(window.navigator.userAgent)) {
-                var db;
-                try {
-                    db = window.indexedDB.open('test');
-                    db.onerror = function () {
-                        return true;
-                    };
-                }
-                catch (e) {
-                    isPrivate = true;
-                }
-                if (typeof isPrivate === 'undefined') {
-                    retry(function isDone() {
-                        return db.readyState === 'done' ? true : false;
-                    }, function next(isTimeout) {
-                        if (!isTimeout) {
-                            isPrivate = db.result ? false : true;
-                        }
-                    });
-                }
-            }
-            else if (isIE10OrLater(window.navigator.userAgent)) {
-                isPrivate = false;
-                try {
-                    if (!window.indexedDB) {
-                        isPrivate = true;
-                    }
-                }
-                catch (e) {
-                    isPrivate = true;
-                }
-            }
-            else if (window.localStorage && /Safari/.test(window.navigator.userAgent)) {
-                try {
-                    window.localStorage.setItem('test', 1);
-                }
-                catch (e) {
-                    isPrivate = true;
-                }
-                if (typeof isPrivate === 'undefined') {
-                    isPrivate = false;
-                    window.localStorage.removeItem('test');
-                }
-            }
-        }
-        catch (e) {
-            isPrivate = false;
-        }
-        retry(function isDone() {
-            return typeof isPrivate !== 'undefined' ? true : false;
-        }, function next(isTimeout) {
-            callback(isPrivate);
-        });
-    }
-    var isMobile = {
-        Android: function () {
-            return navigator.userAgent.match(/Android/i);
-        },
-        BlackBerry: function () {
-            return navigator.userAgent.match(/BlackBerry|BB10/i);
-        },
-        iOS: function () {
-            return navigator.userAgent.match(/iPhone|iPad|iPod/i);
-        },
-        Opera: function () {
-            return navigator.userAgent.match(/Opera Mini/i);
-        },
-        Windows: function () {
-            return navigator.userAgent.match(/IEMobile/i);
-        },
-        any: function () {
-            return (isMobile.Android() || isMobile.BlackBerry() || isMobile.iOS() || isMobile.Opera() || isMobile.Windows());
-        },
-        getOsName: function () {
-            var osName = 'Unknown OS';
-            if (isMobile.Android()) {
-                osName = 'Android';
-            }
-            if (isMobile.BlackBerry()) {
-                osName = 'BlackBerry';
-            }
-            if (isMobile.iOS()) {
-                osName = 'iOS';
-            }
-            if (isMobile.Opera()) {
-                osName = 'Opera Mini';
-            }
-            if (isMobile.Windows()) {
-                osName = 'Windows';
-            }
-            return osName;
-        }
-    };
-    // via: http://jsfiddle.net/ChristianL/AVyND/
-    function detectDesktopOS() {
-        var unknown = '-';
-        var nVer = navigator.appVersion;
-        var nAgt = navigator.userAgent;
-        var os = unknown;
-        var clientStrings = [{
-                s: 'Windows 10',
-                r: /(Windows 10.0|Windows NT 10.0)/
-            }, {
-                s: 'Windows 8.1',
-                r: /(Windows 8.1|Windows NT 6.3)/
-            }, {
-                s: 'Windows 8',
-                r: /(Windows 8|Windows NT 6.2)/
-            }, {
-                s: 'Windows 7',
-                r: /(Windows 7|Windows NT 6.1)/
-            }, {
-                s: 'Windows Vista',
-                r: /Windows NT 6.0/
-            }, {
-                s: 'Windows Server 2003',
-                r: /Windows NT 5.2/
-            }, {
-                s: 'Windows XP',
-                r: /(Windows NT 5.1|Windows XP)/
-            }, {
-                s: 'Windows 2000',
-                r: /(Windows NT 5.0|Windows 2000)/
-            }, {
-                s: 'Windows ME',
-                r: /(Win 9x 4.90|Windows ME)/
-            }, {
-                s: 'Windows 98',
-                r: /(Windows 98|Win98)/
-            }, {
-                s: 'Windows 95',
-                r: /(Windows 95|Win95|Windows_95)/
-            }, {
-                s: 'Windows NT 4.0',
-                r: /(Windows NT 4.0|WinNT4.0|WinNT|Windows NT)/
-            }, {
-                s: 'Windows CE',
-                r: /Windows CE/
-            }, {
-                s: 'Windows 3.11',
-                r: /Win16/
-            }, {
-                s: 'Android',
-                r: /Android/
-            }, {
-                s: 'Open BSD',
-                r: /OpenBSD/
-            }, {
-                s: 'Sun OS',
-                r: /SunOS/
-            }, {
-                s: 'Linux',
-                r: /(Linux|X11)/
-            }, {
-                s: 'iOS',
-                r: /(iPhone|iPad|iPod)/
-            }, {
-                s: 'Mac OS X',
-                r: /Mac OS X/
-            }, {
-                s: 'Mac OS',
-                r: /(MacPPC|MacIntel|Mac_PowerPC|Macintosh)/
-            }, {
-                s: 'QNX',
-                r: /QNX/
-            }, {
-                s: 'UNIX',
-                r: /UNIX/
-            }, {
-                s: 'BeOS',
-                r: /BeOS/
-            }, {
-                s: 'OS/2',
-                r: /OS\/2/
-            }, {
-                s: 'Search Bot',
-                r: /(nuhk|Googlebot|Yammybot|Openbot|Slurp|MSNBot|Ask Jeeves\/Teoma|ia_archiver)/
-            }];
-        for (var i = 0, cs; cs = clientStrings[i]; i++) {
-            if (cs.r.test(nAgt)) {
-                os = cs.s;
-                break;
-            }
-        }
-        var osVersion = unknown;
-        if (/Windows/.test(os)) {
-            if (/Windows (.*)/.test(os)) {
-                osVersion = /Windows (.*)/.exec(os)[1];
-            }
-            os = 'Windows';
-        }
-        switch (os) {
-            case 'Mac OS X':
-                if (/Mac OS X (10[\.\_\d]+)/.test(nAgt)) {
-                    osVersion = /Mac OS X (10[\.\_\d]+)/.exec(nAgt)[1];
-                }
-                break;
-            case 'Android':
-                if (/Android ([\.\_\d]+)/.test(nAgt)) {
-                    osVersion = /Android ([\.\_\d]+)/.exec(nAgt)[1];
-                }
-                break;
-            case 'iOS':
-                if (/OS (\d+)_(\d+)_?(\d+)?/.test(nAgt)) {
-                    osVersion = /OS (\d+)_(\d+)_?(\d+)?/.exec(nVer);
-                    osVersion = osVersion[1] + '.' + osVersion[2] + '.' + (osVersion[3] | 0);
-                }
-                break;
-        }
-        return {
-            osName: os,
-            osVersion: osVersion
-        };
-    }
-    var osName = 'Unknown OS';
-    var osVersion = 'Unknown OS Version';
-    function getAndroidVersion(ua) {
-        ua = (ua || navigator.userAgent).toLowerCase();
-        var match = ua.match(/android\s([0-9\.]*)/);
-        return match ? match[1] : false;
-    }
-    var osInfo = detectDesktopOS();
-    if (osInfo && osInfo.osName && osInfo.osName != '-') {
-        osName = osInfo.osName;
-        osVersion = osInfo.osVersion;
-    }
-    else if (isMobile.any()) {
-        osName = isMobile.getOsName();
-        if (osName == 'Android') {
-            osVersion = getAndroidVersion();
-        }
-    }
-    var isNodejs = typeof process === 'object' && typeof process.versions === 'object' && process.versions.node;
-    if (osName === 'Unknown OS' && isNodejs) {
-        osName = 'Nodejs';
-        osVersion = process.versions.node.toString().replace('v', '');
-    }
-    var isCanvasSupportsStreamCapturing = false;
-    var isVideoSupportsStreamCapturing = false;
-    ['captureStream', 'mozCaptureStream', 'webkitCaptureStream'].forEach(function (item) {
-        if (typeof document === 'undefined' || typeof document.createElement !== 'function') {
-            return;
-        }
-        if (!isCanvasSupportsStreamCapturing && item in document.createElement('canvas')) {
-            isCanvasSupportsStreamCapturing = true;
-        }
-        if (!isVideoSupportsStreamCapturing && item in document.createElement('video')) {
-            isVideoSupportsStreamCapturing = true;
-        }
-    });
-    // via: https://github.com/diafygi/webrtc-ips
-    function DetectLocalIPAddress(callback, stream) {
-        if (!DetectRTC.isWebRTCSupported) {
-            return;
-        }
-        getIPs(function (ip) {
-            if (ip.match(/^(192\.168\.|169\.254\.|10\.|172\.(1[6-9]|2\d|3[01]))/)) {
-                callback('Local: ' + ip);
-            }
-            else {
-                callback('Public: ' + ip);
-            }
-        }, stream);
-    }
-    function getIPs(callback, stream) {
-        if (typeof document === 'undefined' || typeof document.getElementById !== 'function') {
-            return;
-        }
-        var ipDuplicates = {};
-        var RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
-        if (!RTCPeerConnection) {
-            var iframe = document.getElementById('iframe');
-            if (!iframe) {
-                return;
-            }
-            var win = iframe.contentWindow;
-            RTCPeerConnection = win.RTCPeerConnection || win.mozRTCPeerConnection || win.webkitRTCPeerConnection;
-        }
-        if (!RTCPeerConnection) {
-            return;
-        }
-        var peerConfig = null;
-        if (DetectRTC.browser === 'Chrome' && DetectRTC.browser.version < 58) {
-            // todo: add support for older Opera
-            peerConfig = {
-                optional: [{
-                        RtpDataChannels: true
-                    }]
-            };
-        }
-        var servers = {
-            iceServers: [{
-                    urls: 'stun:stun.l.google.com:19302'
-                }]
-        };
-        var pc = new RTCPeerConnection(servers, peerConfig);
-        if (stream) {
-            if (pc.addStream) {
-                pc.addStream(stream);
-            }
-            else if (pc.addTrack && stream.getTracks()[0]) {
-                pc.addTrack(stream.getTracks()[0], stream);
-            }
-        }
-        function handleCandidate(candidate) {
-            var ipRegex = /([0-9]{1,3}(\.[0-9]{1,3}){3})/;
-            var match = ipRegex.exec(candidate);
-            if (!match) {
-                return;
-            }
-            var ipAddress = match[1];
-            if (ipDuplicates[ipAddress] === undefined) {
-                callback(ipAddress);
-            }
-            ipDuplicates[ipAddress] = true;
-        }
-        // listen for candidate events
-        pc.onicecandidate = function (ice) {
-            if (ice.candidate) {
-                handleCandidate(ice.candidate.candidate);
-            }
-        };
-        // create data channel
-        if (!stream) {
-            try {
-                pc.createDataChannel('sctp', {});
-            }
-            catch (e) { }
-        }
-        // create an offer sdp
-        if (DetectRTC.isPromisesSupported) {
-            pc.createOffer().then(function (result) {
-                pc.setLocalDescription(result).then(afterCreateOffer);
-            });
+
+/*
+ * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+exports.__esModule = true;
+var __1 = __webpack_require__("../../../../openvidu-browser/lib/index.js");
+/**
+ * Represents each one of the user's connection to the session (the local one and other user's connections).
+ * Therefore each [[Session]] and [[Stream]] object has an attribute of type Connection
+ */
+var Connection = /** @class */ (function () {
+    /**
+     * @hidden
+     */
+    function Connection(session, opts) {
+        this.session = session;
+        /**
+         * @hidden
+         */
+        this.disposed = false;
+        var msg = "'Connection' created ";
+        if (!!opts) {
+            msg += "(remote) with 'connectionId' [" + opts.id + ']';
         }
         else {
-            pc.createOffer(function (result) {
-                pc.setLocalDescription(result, afterCreateOffer, function () { });
-            }, function () { });
+            msg += '(local)';
         }
-        function afterCreateOffer() {
-            var lines = pc.localDescription.sdp.split('\n');
-            lines.forEach(function (line) {
-                if (line.indexOf('a=candidate:') === 0) {
-                    handleCandidate(line);
-                }
-            });
+        console.info(msg);
+        this.options = opts;
+        if (!!opts) {
+            // Connection is remote
+            this.connectionId = opts.id;
+            if (opts.metadata) {
+                this.data = opts.metadata;
+            }
+            if (opts.streams) {
+                this.initRemoteStreams(opts.streams);
+            }
         }
+        this.creationTime = new Date().getTime();
     }
-    var MediaDevices = [];
-    var audioInputDevices = [];
-    var audioOutputDevices = [];
-    var videoInputDevices = [];
-    if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
-        // Firefox 38+ seems having support of enumerateDevices
-        // Thanks @xdumaine/enumerateDevices
-        navigator.enumerateDevices = function (callback) {
-            var enumerateDevices = navigator.mediaDevices.enumerateDevices();
-            if (enumerateDevices && enumerateDevices.then) {
-                navigator.mediaDevices.enumerateDevices().then(callback).catch(function () {
-                    callback([]);
-                });
-            }
-            else {
-                callback([]);
-            }
-        };
-    }
-    // Media Devices detection
-    var canEnumerate = false;
-    /*global MediaStreamTrack:true */
-    if (typeof MediaStreamTrack !== 'undefined' && 'getSources' in MediaStreamTrack) {
-        canEnumerate = true;
-    }
-    else if (navigator.mediaDevices && !!navigator.mediaDevices.enumerateDevices) {
-        canEnumerate = true;
-    }
-    var hasMicrophone = false;
-    var hasSpeakers = false;
-    var hasWebcam = false;
-    var isWebsiteHasMicrophonePermissions = false;
-    var isWebsiteHasWebcamPermissions = false;
-    // http://dev.w3.org/2011/webrtc/editor/getusermedia.html#mediadevices
-    function checkDeviceSupport(callback) {
-        if (!canEnumerate) {
-            if (callback) {
-                callback();
-            }
-            return;
-        }
-        if (!navigator.enumerateDevices && window.MediaStreamTrack && window.MediaStreamTrack.getSources) {
-            navigator.enumerateDevices = window.MediaStreamTrack.getSources.bind(window.MediaStreamTrack);
-        }
-        if (!navigator.enumerateDevices && navigator.enumerateDevices) {
-            navigator.enumerateDevices = navigator.enumerateDevices.bind(navigator);
-        }
-        if (!navigator.enumerateDevices) {
-            if (callback) {
-                callback();
-            }
-            return;
-        }
-        MediaDevices = [];
-        audioInputDevices = [];
-        audioOutputDevices = [];
-        videoInputDevices = [];
-        hasMicrophone = false;
-        hasSpeakers = false;
-        hasWebcam = false;
-        isWebsiteHasMicrophonePermissions = false;
-        isWebsiteHasWebcamPermissions = false;
-        // to prevent duplication
-        var alreadyUsedDevices = {};
-        navigator.enumerateDevices(function (devices) {
-            devices.forEach(function (_device) {
-                var device = {};
-                for (var d in _device) {
-                    try {
-                        if (typeof _device[d] !== 'function') {
-                            device[d] = _device[d];
-                        }
-                    }
-                    catch (e) { }
-                }
-                if (alreadyUsedDevices[device.deviceId + device.label + device.kind]) {
-                    return;
-                }
-                // if it is MediaStreamTrack.getSources
-                if (device.kind === 'audio') {
-                    device.kind = 'audioinput';
-                }
-                if (device.kind === 'video') {
-                    device.kind = 'videoinput';
-                }
-                if (!device.deviceId) {
-                    device.deviceId = device.id;
-                }
-                if (!device.id) {
-                    device.id = device.deviceId;
-                }
-                if (!device.label) {
-                    device.isCustomLabel = true;
-                    if (device.kind === 'videoinput') {
-                        device.label = 'Camera ' + (videoInputDevices.length + 1);
-                    }
-                    else if (device.kind === 'audioinput') {
-                        device.label = 'Microphone ' + (audioInputDevices.length + 1);
-                    }
-                    else if (device.kind === 'audiooutput') {
-                        device.label = 'Speaker ' + (audioOutputDevices.length + 1);
-                    }
-                    else {
-                        device.label = 'Please invoke getUserMedia once.';
-                    }
-                    if (typeof DetectRTC !== 'undefined' && DetectRTC.browser.isChrome && DetectRTC.browser.version >= 46 && !/^(https:|chrome-extension:)$/g.test(location.protocol || '')) {
-                        if (typeof document !== 'undefined' && typeof document.domain === 'string' && document.domain.search && document.domain.search(/localhost|127.0./g) === -1) {
-                            device.label = 'HTTPs is required to get label of this ' + device.kind + ' device.';
-                        }
-                    }
-                }
-                else {
-                    // Firefox on Android still returns empty label
-                    if (device.kind === 'videoinput' && !isWebsiteHasWebcamPermissions) {
-                        isWebsiteHasWebcamPermissions = true;
-                    }
-                    if (device.kind === 'audioinput' && !isWebsiteHasMicrophonePermissions) {
-                        isWebsiteHasMicrophonePermissions = true;
-                    }
-                }
-                if (device.kind === 'audioinput') {
-                    hasMicrophone = true;
-                    if (audioInputDevices.indexOf(device) === -1) {
-                        audioInputDevices.push(device);
-                    }
-                }
-                if (device.kind === 'audiooutput') {
-                    hasSpeakers = true;
-                    if (audioOutputDevices.indexOf(device) === -1) {
-                        audioOutputDevices.push(device);
-                    }
-                }
-                if (device.kind === 'videoinput') {
-                    hasWebcam = true;
-                    if (videoInputDevices.indexOf(device) === -1) {
-                        videoInputDevices.push(device);
-                    }
-                }
-                // there is no 'videoouput' in the spec.
-                MediaDevices.push(device);
-                alreadyUsedDevices[device.deviceId + device.label + device.kind] = device;
-            });
-            if (typeof DetectRTC !== 'undefined') {
-                // to sync latest outputs
-                DetectRTC.MediaDevices = MediaDevices;
-                DetectRTC.hasMicrophone = hasMicrophone;
-                DetectRTC.hasSpeakers = hasSpeakers;
-                DetectRTC.hasWebcam = hasWebcam;
-                DetectRTC.isWebsiteHasWebcamPermissions = isWebsiteHasWebcamPermissions;
-                DetectRTC.isWebsiteHasMicrophonePermissions = isWebsiteHasMicrophonePermissions;
-                DetectRTC.audioInputDevices = audioInputDevices;
-                DetectRTC.audioOutputDevices = audioOutputDevices;
-                DetectRTC.videoInputDevices = videoInputDevices;
-            }
-            if (callback) {
-                callback();
+    /* Hidden methods */
+    /**
+     * @hidden
+     */
+    Connection.prototype.sendIceCandidate = function (candidate) {
+        console.debug((!!this.stream.outboundStreamOpts ? 'Local' : 'Remote'), 'candidate for', this.connectionId, JSON.stringify(candidate));
+        this.session.openvidu.sendRequest('onIceCandidate', {
+            endpointName: this.connectionId,
+            candidate: candidate.candidate,
+            sdpMid: candidate.sdpMid,
+            sdpMLineIndex: candidate.sdpMLineIndex
+        }, function (error, response) {
+            if (error) {
+                console.error('Error sending ICE candidate: '
+                    + JSON.stringify(error));
             }
         });
-    }
-    var DetectRTC = window.DetectRTC || {};
-    // ----------
-    // DetectRTC.browser.name || DetectRTC.browser.version || DetectRTC.browser.fullVersion
-    DetectRTC.browser = getBrowserInfo();
-    detectPrivateMode(function (isPrivateBrowsing) {
-        DetectRTC.browser.isPrivateBrowsing = !!isPrivateBrowsing;
-    });
-    // DetectRTC.isChrome || DetectRTC.isFirefox || DetectRTC.isEdge
-    DetectRTC.browser['is' + DetectRTC.browser.name] = true;
-    // -----------
-    DetectRTC.osName = osName;
-    DetectRTC.osVersion = osVersion;
-    var isNodeWebkit = typeof process === 'object' && typeof process.versions === 'object' && process.versions['node-webkit'];
-    // --------- Detect if system supports WebRTC 1.0 or WebRTC 1.1.
-    var isWebRTCSupported = false;
-    ['RTCPeerConnection', 'webkitRTCPeerConnection', 'mozRTCPeerConnection', 'RTCIceGatherer'].forEach(function (item) {
-        if (isWebRTCSupported) {
-            return;
-        }
-        if (item in window) {
-            isWebRTCSupported = true;
-        }
-    });
-    DetectRTC.isWebRTCSupported = isWebRTCSupported;
-    //-------
-    DetectRTC.isORTCSupported = typeof RTCIceGatherer !== 'undefined';
-    // --------- Detect if WebAudio API are supported
-    var webAudio = {
-        isSupported: false,
-        isCreateMediaStreamSourceSupported: false
     };
-    ['AudioContext', 'webkitAudioContext', 'mozAudioContext', 'msAudioContext'].forEach(function (item) {
-        if (webAudio.isSupported) {
-            return;
-        }
-        if (item in window) {
-            webAudio.isSupported = true;
-            if (window[item] && 'createMediaStreamSource' in window[item].prototype) {
-                webAudio.isCreateMediaStreamSourceSupported = true;
-            }
-        }
-    });
-    DetectRTC.isAudioContextSupported = webAudio.isSupported;
-    DetectRTC.isCreateMediaStreamSourceSupported = webAudio.isCreateMediaStreamSourceSupported;
-    // ---------- Detect if SCTP/RTP channels are supported.
-    var isRtpDataChannelsSupported = false;
-    if (DetectRTC.browser.isChrome && DetectRTC.browser.version > 31) {
-        isRtpDataChannelsSupported = true;
-    }
-    DetectRTC.isRtpDataChannelsSupported = isRtpDataChannelsSupported;
-    var isSCTPSupportd = false;
-    if (DetectRTC.browser.isFirefox && DetectRTC.browser.version > 28) {
-        isSCTPSupportd = true;
-    }
-    else if (DetectRTC.browser.isChrome && DetectRTC.browser.version > 25) {
-        isSCTPSupportd = true;
-    }
-    else if (DetectRTC.browser.isOpera && DetectRTC.browser.version >= 11) {
-        isSCTPSupportd = true;
-    }
-    DetectRTC.isSctpDataChannelsSupported = isSCTPSupportd;
-    // ---------
-    DetectRTC.isMobileDevice = isMobileDevice; // "isMobileDevice" boolean is defined in "getBrowserInfo.js"
-    // ------
-    var isGetUserMediaSupported = false;
-    if (navigator.getUserMedia) {
-        isGetUserMediaSupported = true;
-    }
-    else if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        isGetUserMediaSupported = true;
-    }
-    if (DetectRTC.browser.isChrome && DetectRTC.browser.version >= 46 && !/^(https:|chrome-extension:)$/g.test(location.protocol || '')) {
-        if (typeof document !== 'undefined' && typeof document.domain === 'string' && document.domain.search && document.domain.search(/localhost|127.0./g) === -1) {
-            isGetUserMediaSupported = 'Requires HTTPs';
-        }
-    }
-    if (DetectRTC.osName === 'Nodejs') {
-        isGetUserMediaSupported = false;
-    }
-    DetectRTC.isGetUserMediaSupported = isGetUserMediaSupported;
-    var displayResolution = '';
-    if (screen.width) {
-        var width = (screen.width) ? screen.width : '';
-        var height = (screen.height) ? screen.height : '';
-        displayResolution += '' + width + ' x ' + height;
-    }
-    DetectRTC.displayResolution = displayResolution;
-    function getAspectRatio(w, h) {
-        function gcd(a, b) {
-            return (b == 0) ? a : gcd(b, a % b);
-        }
-        var r = gcd(w, h);
-        return (w / r) / (h / r);
-    }
-    DetectRTC.displayAspectRatio = getAspectRatio(screen.width, screen.height).toFixed(2);
-    // ----------
-    DetectRTC.isCanvasSupportsStreamCapturing = isCanvasSupportsStreamCapturing;
-    DetectRTC.isVideoSupportsStreamCapturing = isVideoSupportsStreamCapturing;
-    if (DetectRTC.browser.name == 'Chrome' && DetectRTC.browser.version >= 53) {
-        if (!DetectRTC.isCanvasSupportsStreamCapturing) {
-            DetectRTC.isCanvasSupportsStreamCapturing = 'Requires chrome flag: enable-experimental-web-platform-features';
-        }
-        if (!DetectRTC.isVideoSupportsStreamCapturing) {
-            DetectRTC.isVideoSupportsStreamCapturing = 'Requires chrome flag: enable-experimental-web-platform-features';
-        }
-    }
-    // ------
-    DetectRTC.DetectLocalIPAddress = DetectLocalIPAddress;
-    DetectRTC.isWebSocketsSupported = 'WebSocket' in window && 2 === window.WebSocket.CLOSING;
-    DetectRTC.isWebSocketsBlocked = !DetectRTC.isWebSocketsSupported;
-    if (DetectRTC.osName === 'Nodejs') {
-        DetectRTC.isWebSocketsSupported = true;
-        DetectRTC.isWebSocketsBlocked = false;
-    }
-    DetectRTC.checkWebSocketsSupport = function (callback) {
-        callback = callback || function () { };
-        try {
-            var starttime;
-            var websocket = new WebSocket('wss://echo.websocket.org:443/');
-            websocket.onopen = function () {
-                DetectRTC.isWebSocketsBlocked = false;
-                starttime = (new Date).getTime();
-                websocket.send('ping');
+    /**
+     * @hidden
+     */
+    Connection.prototype.initRemoteStreams = function (options) {
+        var _this = this;
+        // This is ready for supporting multiple streams per Connection object. Right now the loop will always run just once
+        // this.stream should also be replaced by a collection of streams to support multiple streams per Connection
+        options.forEach(function (opts) {
+            var streamOptions = {
+                id: opts.id,
+                connection: _this,
+                frameRate: opts.frameRate,
+                recvAudio: opts.audioActive,
+                recvVideo: opts.videoActive,
+                typeOfVideo: opts.typeOfVideo
             };
-            websocket.onmessage = function () {
-                DetectRTC.WebsocketLatency = (new Date).getTime() - starttime + 'ms';
-                callback();
-                websocket.close();
-                websocket = null;
-            };
-            websocket.onerror = function () {
-                DetectRTC.isWebSocketsBlocked = true;
-                callback();
-            };
-        }
-        catch (e) {
-            DetectRTC.isWebSocketsBlocked = true;
-            callback();
-        }
+            var stream = new __1.Stream(_this.session, streamOptions);
+            _this.addStream(stream);
+        });
+        console.info("Remote 'Connection' with 'connectionId' [" + this.connectionId + '] is now configured for receiving Streams with options: ', this.stream.inboundStreamOpts);
     };
-    // -------
-    DetectRTC.load = function (callback) {
-        callback = callback || function () { };
-        checkDeviceSupport(callback);
+    /**
+     * @hidden
+     */
+    Connection.prototype.addStream = function (stream) {
+        stream.connection = this;
+        this.stream = stream;
     };
-    // check for microphone/camera support!
-    if (typeof checkDeviceSupport === 'function') {
-        // checkDeviceSupport();
-    }
-    if (typeof MediaDevices !== 'undefined') {
-        DetectRTC.MediaDevices = MediaDevices;
-    }
-    else {
-        DetectRTC.MediaDevices = [];
-    }
-    DetectRTC.hasMicrophone = hasMicrophone;
-    DetectRTC.hasSpeakers = hasSpeakers;
-    DetectRTC.hasWebcam = hasWebcam;
-    DetectRTC.isWebsiteHasWebcamPermissions = isWebsiteHasWebcamPermissions;
-    DetectRTC.isWebsiteHasMicrophonePermissions = isWebsiteHasMicrophonePermissions;
-    DetectRTC.audioInputDevices = audioInputDevices;
-    DetectRTC.audioOutputDevices = audioOutputDevices;
-    DetectRTC.videoInputDevices = videoInputDevices;
-    // ------
-    var isSetSinkIdSupported = false;
-    if (typeof document !== 'undefined' && typeof document.createElement === 'function' && 'setSinkId' in document.createElement('video')) {
-        isSetSinkIdSupported = true;
-    }
-    DetectRTC.isSetSinkIdSupported = isSetSinkIdSupported;
-    // -----
-    var isRTPSenderReplaceTracksSupported = false;
-    if (DetectRTC.browser.isFirefox && typeof mozRTCPeerConnection !== 'undefined' /*&& DetectRTC.browser.version > 39*/) {
-        /*global mozRTCPeerConnection:true */
-        if ('getSenders' in mozRTCPeerConnection.prototype) {
-            isRTPSenderReplaceTracksSupported = true;
+    /**
+     * @hidden
+     */
+    Connection.prototype.removeStream = function (streamId) {
+        delete this.stream;
+    };
+    /**
+     * @hidden
+     */
+    Connection.prototype.dispose = function () {
+        if (!!this.stream) {
+            delete this.stream;
         }
-    }
-    else if (DetectRTC.browser.isChrome && typeof webkitRTCPeerConnection !== 'undefined') {
-        /*global webkitRTCPeerConnection:true */
-        if ('getSenders' in webkitRTCPeerConnection.prototype) {
-            isRTPSenderReplaceTracksSupported = true;
-        }
-    }
-    DetectRTC.isRTPSenderReplaceTracksSupported = isRTPSenderReplaceTracksSupported;
-    //------
-    var isRemoteStreamProcessingSupported = false;
-    if (DetectRTC.browser.isFirefox && DetectRTC.browser.version > 38) {
-        isRemoteStreamProcessingSupported = true;
-    }
-    DetectRTC.isRemoteStreamProcessingSupported = isRemoteStreamProcessingSupported;
-    //-------
-    var isApplyConstraintsSupported = false;
-    /*global MediaStreamTrack:true */
-    if (typeof MediaStreamTrack !== 'undefined' && 'applyConstraints' in MediaStreamTrack.prototype) {
-        isApplyConstraintsSupported = true;
-    }
-    DetectRTC.isApplyConstraintsSupported = isApplyConstraintsSupported;
-    //-------
-    var isMultiMonitorScreenCapturingSupported = false;
-    if (DetectRTC.browser.isFirefox && DetectRTC.browser.version >= 43) {
-        // version 43 merely supports platforms for multi-monitors
-        // version 44 will support exact multi-monitor selection i.e. you can select any monitor for screen capturing.
-        isMultiMonitorScreenCapturingSupported = true;
-    }
-    DetectRTC.isMultiMonitorScreenCapturingSupported = isMultiMonitorScreenCapturingSupported;
-    DetectRTC.isPromisesSupported = !!('Promise' in window);
-    if (typeof DetectRTC === 'undefined') {
-        window.DetectRTC = {};
-    }
-    var MediaStream = window.MediaStream;
-    if (typeof MediaStream === 'undefined' && typeof webkitMediaStream !== 'undefined') {
-        MediaStream = webkitMediaStream;
-    }
-    if (typeof MediaStream !== 'undefined') {
-        DetectRTC.MediaStream = Object.keys(MediaStream.prototype);
-    }
-    else
-        DetectRTC.MediaStream = false;
-    if (typeof MediaStreamTrack !== 'undefined') {
-        DetectRTC.MediaStreamTrack = Object.keys(MediaStreamTrack.prototype);
-    }
-    else
-        DetectRTC.MediaStreamTrack = false;
-    var RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
-    if (typeof RTCPeerConnection !== 'undefined') {
-        DetectRTC.RTCPeerConnection = Object.keys(RTCPeerConnection.prototype);
-    }
-    else
-        DetectRTC.RTCPeerConnection = false;
-    window.DetectRTC = DetectRTC;
-    if (true /* && !!module.exports*/) {
-        module.exports = DetectRTC;
-    }
-    if (true) {
-        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_RESULT__ = (function () {
-            return DetectRTC;
-        }).apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__),
-				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-    }
-})();
-//# sourceMappingURL=DetectRTC.js.map
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__("./node_modules/process/browser.js"), __webpack_require__("./node_modules/webpack/buildin/global.js")))
+        this.disposed = true;
+    };
+    return Connection;
+}());
+exports.Connection = Connection;
+//# sourceMappingURL=Connection.js.map
 
 /***/ }),
 
-/***/ "../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/Mapper.js":
+/***/ "../../../../openvidu-browser/lib/OpenVidu/LocalRecorder.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/*
+ * (C) Copyright 2017-2018-2018 OpenVidu (http://openvidu.io/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+exports.__esModule = true;
+var LocalRecorderState_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Enums/LocalRecorderState.js");
+/**
+ * Easy recording of [[Stream]] objects straightaway from the browser.
+ *
+ * > WARNING: Performing browser local recording of **remote streams** may cause some troubles. A long waiting time may be required after calling _LocalRecorder.stop()_ in this case
+ */
+var LocalRecorder = /** @class */ (function () {
+    /**
+     * @hidden
+     */
+    function LocalRecorder(stream) {
+        this.stream = stream;
+        this.chunks = [];
+        this.count = 0;
+        this.connectionId = (!!this.stream.connection) ? this.stream.connection.connectionId : 'default-connection';
+        this.id = this.stream.streamId + '_' + this.connectionId + '_localrecord';
+        this.state = LocalRecorderState_1.LocalRecorderState.READY;
+    }
+    /**
+     * Starts the recording of the Stream. [[state]] property must be `READY`. After method succeeds is set to `RECORDING`
+     * @returns A Promise (to which you can optionally subscribe to) that is resolved if the recording successfully started and rejected with an Error object if not
+     */
+    LocalRecorder.prototype.record = function () {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            try {
+                if (typeof MediaRecorder === 'undefined') {
+                    console.error('MediaRecorder not supported on your browser. See compatibility in https://caniuse.com/#search=MediaRecorder');
+                    throw (Error('MediaRecorder not supported on your browser. See compatibility in https://caniuse.com/#search=MediaRecorder'));
+                }
+                if (_this.state !== LocalRecorderState_1.LocalRecorderState.READY) {
+                    throw (Error('\'LocalRecord.record()\' needs \'LocalRecord.state\' to be \'READY\' (current value: \'' + _this.state + '\'). Call \'LocalRecorder.clean()\' or init a new LocalRecorder before'));
+                }
+                console.log("Starting local recording of stream '" + _this.stream.streamId + "' of connection '" + _this.connectionId + "'");
+                if (typeof MediaRecorder.isTypeSupported === 'function') {
+                    var options = void 0;
+                    if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) {
+                        options = { mimeType: 'video/webm;codecs=vp9' };
+                    }
+                    else if (MediaRecorder.isTypeSupported('video/webm;codecs=h264')) {
+                        options = { mimeType: 'video/webm;codecs=h264' };
+                    }
+                    else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8')) {
+                        options = { mimeType: 'video/webm;codecs=vp8' };
+                    }
+                    console.log('Using mimeType ' + options.mimeType);
+                    _this.mediaRecorder = new MediaRecorder(_this.stream.getMediaStream(), options);
+                }
+                else {
+                    console.warn('isTypeSupported is not supported, using default codecs for browser');
+                    _this.mediaRecorder = new MediaRecorder(_this.stream.getMediaStream());
+                }
+                _this.mediaRecorder.start(10);
+            }
+            catch (err) {
+                reject(err);
+            }
+            _this.mediaRecorder.ondataavailable = function (e) {
+                _this.chunks.push(e.data);
+            };
+            _this.mediaRecorder.onerror = function (e) {
+                console.error('MediaRecorder error: ', e);
+            };
+            _this.mediaRecorder.onstart = function () {
+                console.log('MediaRecorder started (state=' + _this.mediaRecorder.state + ')');
+            };
+            _this.mediaRecorder.onstop = function () {
+                _this.onStopDefault();
+            };
+            _this.mediaRecorder.onpause = function () {
+                console.log('MediaRecorder paused (state=' + _this.mediaRecorder.state + ')');
+            };
+            _this.mediaRecorder.onresume = function () {
+                console.log('MediaRecorder resumed (state=' + _this.mediaRecorder.state + ')');
+            };
+            _this.mediaRecorder.onwarning = function (e) {
+                console.log('MediaRecorder warning: ' + e);
+            };
+            _this.state = LocalRecorderState_1.LocalRecorderState.RECORDING;
+            resolve();
+        });
+    };
+    /**
+     * Ends the recording of the Stream. [[state]] property must be `RECORDING` or `PAUSED`. After method succeeds is set to `FINISHED`
+     * @returns A Promise (to which you can optionally subscribe to) that is resolved if the recording successfully stopped and rejected with an Error object if not
+     */
+    LocalRecorder.prototype.stop = function () {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            try {
+                if (_this.state === LocalRecorderState_1.LocalRecorderState.READY || _this.state === LocalRecorderState_1.LocalRecorderState.FINISHED) {
+                    throw (Error('\'LocalRecord.stop()\' needs \'LocalRecord.state\' to be \'RECORDING\' or \'PAUSED\' (current value: \'' + _this.state + '\'). Call \'LocalRecorder.start()\' before'));
+                }
+                _this.mediaRecorder.onstop = function () {
+                    _this.onStopDefault();
+                    resolve();
+                };
+                _this.mediaRecorder.stop();
+            }
+            catch (e) {
+                reject(e);
+            }
+        });
+    };
+    /**
+     * Pauses the recording of the Stream. [[state]] property must be `RECORDING`. After method succeeds is set to `PAUSED`
+     * @returns A Promise (to which you can optionally subscribe to) that is resolved if the recording was successfully paused and rejected with an Error object if not
+     */
+    LocalRecorder.prototype.pause = function () {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            try {
+                if (_this.state !== LocalRecorderState_1.LocalRecorderState.RECORDING) {
+                    reject(Error('\'LocalRecord.pause()\' needs \'LocalRecord.state\' to be \'RECORDING\' (current value: \'' + _this.state + '\'). Call \'LocalRecorder.start()\' or \'LocalRecorder.resume()\' before'));
+                }
+                _this.mediaRecorder.pause();
+                _this.state = LocalRecorderState_1.LocalRecorderState.PAUSED;
+            }
+            catch (error) {
+                reject(error);
+            }
+        });
+    };
+    /**
+     * Resumes the recording of the Stream. [[state]] property must be `PAUSED`. After method succeeds is set to `RECORDING`
+     * @returns A Promise (to which you can optionally subscribe to) that is resolved if the recording was successfully resumed and rejected with an Error object if not
+     */
+    LocalRecorder.prototype.resume = function () {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            try {
+                if (_this.state !== LocalRecorderState_1.LocalRecorderState.PAUSED) {
+                    throw (Error('\'LocalRecord.resume()\' needs \'LocalRecord.state\' to be \'PAUSED\' (current value: \'' + _this.state + '\'). Call \'LocalRecorder.pause()\' before'));
+                }
+                _this.mediaRecorder.resume();
+                _this.state = LocalRecorderState_1.LocalRecorderState.RECORDING;
+            }
+            catch (error) {
+                reject(error);
+            }
+        });
+    };
+    /**
+     * Previews the recording, appending a new HTMLVideoElement to element with id `parentId`. [[state]] property must be `FINISHED`
+     */
+    LocalRecorder.prototype.preview = function (parentElement) {
+        if (this.state !== LocalRecorderState_1.LocalRecorderState.FINISHED) {
+            throw (Error('\'LocalRecord.preview()\' needs \'LocalRecord.state\' to be \'FINISHED\' (current value: \'' + this.state + '\'). Call \'LocalRecorder.stop()\' before'));
+        }
+        this.videoPreview = document.createElement('video');
+        this.videoPreview.id = this.id;
+        this.videoPreview.autoplay = true;
+        if (typeof parentElement === 'string') {
+            this.htmlParentElementId = parentElement;
+            var parentElementDom = document.getElementById(parentElement);
+            if (parentElementDom) {
+                this.videoPreview = parentElementDom.appendChild(this.videoPreview);
+            }
+        }
+        else {
+            this.htmlParentElementId = parentElement.id;
+            this.videoPreview = parentElement.appendChild(this.videoPreview);
+        }
+        this.videoPreview.src = this.videoPreviewSrc;
+        return this.videoPreview;
+    };
+    /**
+     * Gracefully stops and cleans the current recording (WARNING: it is completely dismissed). Sets [[state]] to `READY` so the recording can start again
+     */
+    LocalRecorder.prototype.clean = function () {
+        var _this = this;
+        var f = function () {
+            delete _this.blob;
+            _this.chunks = [];
+            _this.count = 0;
+            delete _this.mediaRecorder;
+            _this.state = LocalRecorderState_1.LocalRecorderState.READY;
+        };
+        if (this.state === LocalRecorderState_1.LocalRecorderState.RECORDING || this.state === LocalRecorderState_1.LocalRecorderState.PAUSED) {
+            this.stop().then(function () { return f(); })["catch"](function () { return f(); });
+        }
+        else {
+            f();
+        }
+    };
+    /**
+     * Downloads the recorded video through the browser. [[state]] property must be `FINISHED`
+     */
+    LocalRecorder.prototype.download = function () {
+        if (this.state !== LocalRecorderState_1.LocalRecorderState.FINISHED) {
+            throw (Error('\'LocalRecord.download()\' needs \'LocalRecord.state\' to be \'FINISHED\' (current value: \'' + this.state + '\'). Call \'LocalRecorder.stop()\' before'));
+        }
+        else {
+            var a = document.createElement('a');
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            var url = window.URL.createObjectURL(this.blob);
+            a.href = url;
+            a.download = this.id + '.webm';
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }
+    };
+    /**
+     * Gets the raw Blob file. Methods preview, download, uploadAsBinary and uploadAsMultipartfile use this same file to perform their specific actions. [[state]] property must be `FINISHED`
+     */
+    LocalRecorder.prototype.getBlob = function () {
+        if (this.state !== LocalRecorderState_1.LocalRecorderState.FINISHED) {
+            throw (Error('Call \'LocalRecord.stop()\' before getting Blob file'));
+        }
+        else {
+            return this.blob;
+        }
+    };
+    /**
+     * Uploads the recorded video as a binary file performing an HTTP/POST operation to URL `endpoint`. [[state]] property must be `FINISHED`. Optional HTTP headers can be passed as second parameter. For example:
+     * ```
+     * var headers = {
+     *  "Cookie": "$Version=1; Skin=new;",
+     *  "Authorization":"Basic QWxhZGpbjpuIHNlctZQ=="
+     * }
+     * ```
+     * @returns A Promise (to which you can optionally subscribe to) that is resolved with the `http.responseText` from server if the operation was successful and rejected with the failed `http.status` if not
+     */
+    LocalRecorder.prototype.uploadAsBinary = function (endpoint, headers) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            if (_this.state !== LocalRecorderState_1.LocalRecorderState.FINISHED) {
+                reject(Error('\'LocalRecord.uploadAsBinary()\' needs \'LocalRecord.state\' to be \'FINISHED\' (current value: \'' + _this.state + '\'). Call \'LocalRecorder.stop()\' before'));
+            }
+            else {
+                var http_1 = new XMLHttpRequest();
+                http_1.open('POST', endpoint, true);
+                if (typeof headers === 'object') {
+                    for (var _i = 0, _a = Object.keys(headers); _i < _a.length; _i++) {
+                        var key = _a[_i];
+                        http_1.setRequestHeader(key, headers[key]);
+                    }
+                }
+                http_1.onreadystatechange = function () {
+                    if (http_1.readyState === 4) {
+                        if (http_1.status.toString().charAt(0) === '2') {
+                            // Success response from server (HTTP status standard: 2XX is success)
+                            resolve(http_1.responseText);
+                        }
+                        else {
+                            reject(http_1.status);
+                        }
+                    }
+                };
+                http_1.send(_this.blob);
+            }
+        });
+    };
+    /**
+     * Uploads the recorded video as a multipart file performing an HTTP/POST operation to URL `endpoint`. [[state]] property must be `FINISHED`. Optional HTTP headers can be passed as second parameter. For example:
+     * ```
+     * var headers = {
+     *  "Cookie": "$Version=1; Skin=new;",
+     *  "Authorization":"Basic QWxhZGpbjpuIHNlctZQ=="
+     * }
+     * ```
+     * @returns A Promise (to which you can optionally subscribe to) that is resolved with the `http.responseText` from server if the operation was successful and rejected with the failed `http.status` if not:
+     */
+    LocalRecorder.prototype.uploadAsMultipartfile = function (endpoint, headers) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            if (_this.state !== LocalRecorderState_1.LocalRecorderState.FINISHED) {
+                reject(Error('\'LocalRecord.uploadAsMultipartfile()\' needs \'LocalRecord.state\' to be \'FINISHED\' (current value: \'' + _this.state + '\'). Call \'LocalRecorder.stop()\' before'));
+            }
+            else {
+                var http_2 = new XMLHttpRequest();
+                http_2.open('POST', endpoint, true);
+                if (typeof headers === 'object') {
+                    for (var _i = 0, _a = Object.keys(headers); _i < _a.length; _i++) {
+                        var key = _a[_i];
+                        http_2.setRequestHeader(key, headers[key]);
+                    }
+                }
+                var sendable = new FormData();
+                sendable.append('file', _this.blob, _this.id + '.webm');
+                http_2.onreadystatechange = function () {
+                    if (http_2.readyState === 4) {
+                        if (http_2.status.toString().charAt(0) === '2') {
+                            // Success response from server (HTTP status standard: 2XX is success)
+                            resolve(http_2.responseText);
+                        }
+                        else {
+                            reject(http_2.status);
+                        }
+                    }
+                };
+                http_2.send(sendable);
+            }
+        });
+    };
+    /* Private methods */
+    LocalRecorder.prototype.onStopDefault = function () {
+        console.log('MediaRecorder stopped  (state=' + this.mediaRecorder.state + ')');
+        this.blob = new Blob(this.chunks, { type: 'video/webm' });
+        this.chunks = [];
+        this.videoPreviewSrc = window.URL.createObjectURL(this.blob);
+        this.state = LocalRecorderState_1.LocalRecorderState.FINISHED;
+    };
+    return LocalRecorder;
+}());
+exports.LocalRecorder = LocalRecorder;
+//# sourceMappingURL=LocalRecorder.js.map
+
+/***/ }),
+
+/***/ "../../../../openvidu-browser/lib/OpenVidu/OpenVidu.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/*
+ * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+exports.__esModule = true;
+var __1 = __webpack_require__("../../../../openvidu-browser/lib/index.js");
+var OpenViduError_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Enums/OpenViduError.js");
+var VideoInsertMode_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Enums/VideoInsertMode.js");
+var VersionAdapter_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/VersionAdapter.js");
+var RpcBuilder = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/index.js");
+var screenSharingAuto = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/ScreenSharing/Screen-Capturing-Auto.js");
+var screenSharing = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/ScreenSharing/Screen-Capturing.js");
+var platform = __webpack_require__("../../../../openvidu-browser/node_modules/platform/platform.js");
+/**
+ * Entrypoint of OpenVidu Browser library.
+ * Use it to initialize objects of type [[Session]], [[Publisher]] and [[LocalRecorder]]
+ */
+var OpenVidu = /** @class */ (function () {
+    function OpenVidu() {
+        /**
+         * @hidden
+         */
+        this.secret = '';
+        /**
+         * @hidden
+         */
+        this.recorder = false;
+        /**
+         * @hidden
+         */
+        this.advancedConfiguration = {};
+        console.info("'OpenVidu' initialized");
+    }
+    /**
+     * Returns a session with id `sessionId`
+     * @param sessionId Session unique ID generated in openvidu-server
+     */
+    OpenVidu.prototype.initSession = function (sessionId) {
+        if (!!sessionId) {
+            console.warn("DEPRECATION WANING: In future releases 'OpenVidu.initSession' method won't require a parameter. Remove it (see http://openvidu.io/api/openvidu-browser/interfaces/publisherproperties.html)");
+        }
+        this.session = new __1.Session(this);
+        return this.session;
+    };
+    /**
+     * Returns a new publisher
+     *
+     * #### Events dispatched
+     *
+     * The [[Publisher]] object will dispatch an `accessDialogOpened` event, only if the pop-up shown by the browser to request permissions for the camera is opened. You can use this event to alert the user about granting permissions
+     * for your website. An `accessDialogClosed` event will also be dispatched after user clicks on "Allow" or "Block" in the pop-up.
+     *
+     * The [[Publisher]] object will dispatch an `accessAllowed` or `accessDenied` event once it has been granted access to the requested input devices or not.
+     *
+     * The [[Publisher]] object will dispatch a `videoElementCreated` event once the HTML video element has been added to DOM (if _targetElement_ not null or undefined)
+     *
+     * The [[Publisher]] object will dispatch a `videoPlaying` event once the local video starts playing (only if `videoElementCreated` event has been previously dispatched)
+     *
+     * @param targetElement  HTML DOM element (or its `id` attribute) in which the video element of the Publisher will be inserted (see [[PublisherProperties.insertMode]]). If null or undefined no default video will be created for this Publisher
+     * (you can always access the native MediaStream object by calling _Publisher.stream.getMediaStream()_ and use it as _srcObject_ of any HTML video element)
+     * @param completionHandler `error` parameter is null if `initPublisher` succeeds, and is defined if it fails.
+     *                          `completionHandler` function is called before the Publisher dispatches an `accessAllowed` or an `accessDenied` event
+     */
+    OpenVidu.prototype.initPublisher = function (targetElement, param2, param3) {
+        var properties;
+        if (!!param2 && (typeof param2 !== 'function')) {
+            // Matches 'initPublisher(targetElement, properties)' or 'initPublisher(targetElement, properties, completionHandler)'
+            properties = param2;
+            // DEPRECATED WARNING
+            properties = VersionAdapter_1.adaptPublisherProperties(properties);
+            properties = {
+                audioSource: (typeof properties.audioSource !== 'undefined') ? properties.audioSource : undefined,
+                frameRate: this.isMediaStreamTrack(properties.videoSource) ? undefined : ((typeof properties.frameRate !== 'undefined') ? properties.frameRate : undefined),
+                insertMode: (typeof properties.insertMode !== 'undefined') ? ((typeof properties.insertMode === 'string') ? VideoInsertMode_1.VideoInsertMode[properties.insertMode] : properties.insertMode) : VideoInsertMode_1.VideoInsertMode.APPEND,
+                mirror: (typeof properties.mirror !== 'undefined') ? properties.mirror : true,
+                publishAudio: (typeof properties.publishAudio !== 'undefined') ? properties.publishAudio : true,
+                publishVideo: (typeof properties.publishVideo !== 'undefined') ? properties.publishVideo : true,
+                resolution: this.isMediaStreamTrack(properties.videoSource) ? undefined : ((typeof properties.resolution !== 'undefined') ? properties.resolution : '640x480'),
+                videoSource: (typeof properties.videoSource !== 'undefined') ? properties.videoSource : undefined
+            };
+        }
+        else {
+            // Matches 'initPublisher(targetElement)' or 'initPublisher(targetElement, completionHandler)'
+            properties = {
+                insertMode: VideoInsertMode_1.VideoInsertMode.APPEND,
+                mirror: true,
+                publishAudio: true,
+                publishVideo: true,
+                resolution: '640x480'
+            };
+        }
+        var publisher = new __1.Publisher(targetElement, properties, this);
+        var completionHandler;
+        if (!!param2 && (typeof param2 === 'function')) {
+            completionHandler = param2;
+        }
+        else if (!!param3) {
+            completionHandler = param3;
+        }
+        publisher.initialize()
+            .then(function () {
+            if (completionHandler !== undefined) {
+                completionHandler(undefined);
+            }
+            publisher.emitEvent('accessAllowed', []);
+        })["catch"](function (error) {
+            if (!!completionHandler !== undefined) {
+                completionHandler(error);
+            }
+            publisher.emitEvent('accessDenied', []);
+        });
+        return publisher;
+    };
+    OpenVidu.prototype.initPublisherAsync = function (targetElement, properties) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            var publisher;
+            var callback = function (error) {
+                if (!!error) {
+                    reject(error);
+                }
+                else {
+                    resolve(publisher);
+                }
+            };
+            if (!!properties) {
+                publisher = _this.initPublisher(targetElement, properties, callback);
+            }
+            else {
+                publisher = _this.initPublisher(targetElement, callback);
+            }
+        });
+    };
+    /**
+     * Returns a new local recorder for recording streams straight away from the browser
+     * @param stream  Stream to record
+     */
+    OpenVidu.prototype.initLocalRecorder = function (stream) {
+        return new __1.LocalRecorder(stream);
+    };
+    /**
+     * Checks if the browser supports OpenVidu
+     * @returns 1 if the browser supports OpenVidu, 0 otherwise
+     */
+    OpenVidu.prototype.checkSystemRequirements = function () {
+        var browser = platform.name;
+        var version = platform.version;
+        if ((browser !== 'Chrome') && (browser !== 'Chrome Mobile') &&
+            (browser !== 'Firefox') && (browser !== 'Firefox Mobile') && (browser !== 'Firefox for iOS') &&
+            (browser !== 'Opera') && (browser !== 'Opera Mobile') &&
+            (browser !== 'Safari')) {
+            return 0;
+        }
+        else {
+            return 1;
+        }
+    };
+    /**
+     * Collects information about the media input devices available on the system. You can pass property `deviceId` of a [[Device]] object as value of `audioSource` or `videoSource` properties in [[initPublisher]] method
+     */
+    OpenVidu.prototype.getDevices = function () {
+        return new Promise(function (resolve, reject) {
+            navigator.mediaDevices.enumerateDevices().then(function (deviceInfos) {
+                var devices = [];
+                deviceInfos.forEach(function (deviceInfo) {
+                    if (deviceInfo.kind === 'audioinput' || deviceInfo.kind === 'videoinput') {
+                        devices.push({
+                            kind: deviceInfo.kind,
+                            deviceId: deviceInfo.deviceId,
+                            label: deviceInfo.label
+                        });
+                    }
+                });
+                resolve(devices);
+            })["catch"](function (error) {
+                console.error('Error getting devices', error);
+                reject(error);
+            });
+        });
+    };
+    /**
+     * Get a MediaStream object that you can customize before calling [[initPublisher]] (pass _MediaStreamTrack_ property of the _MediaStream_ value resolved by the Promise as `audioSource` or `videoSource` properties in [[initPublisher]])
+     *
+     * Parameter `options` is the same as in [[initPublisher]] second parameter (of type [[PublisherProperties]]), but only the following properties will be applied: `audioSource`, `videoSource`, `frameRate`, `resolution`
+     *
+     * To customize the Publisher's video, the API for HTMLCanvasElement is very useful. For example, to get a black-and-white video at 10 fps and HD resolution with no sound:
+     * ```
+     * var OV = new OpenVidu();
+     * var FRAME_RATE = 10;
+     *
+     * OV.getUserMedia({
+     *    audioSource: false;
+     *    videoSource: undefined,
+     *    resolution: '1280x720',
+     *    frameRate: FRAME_RATE
+     * })
+     * .then(mediaStream => {
+     *
+     *    var videoTrack = mediaStream.getVideoTracks()[0];
+     *    var video = document.createElement('video');
+     *    video.srcObject = new MediaStream([videoTrack]);
+     *
+     *    var canvas = document.createElement('canvas');
+     *    var ctx = canvas.getContext('2d');
+     *    ctx.filter = 'grayscale(100%)';
+     *
+     *    video.addEventListener('play', () => {
+     *      var loop = () => {
+     *        if (!video.paused && !video.ended) {
+     *          ctx.drawImage(video, 0, 0, 300, 170);
+     *          setTimeout(loop, 1000/ FRAME_RATE); // Drawing at 10 fps
+     *        }
+     *      };
+     *      loop();
+     *    });
+     *    video.play();
+     *
+     *    var grayVideoTrack = canvas.captureStream(FRAME_RATE).getVideoTracks()[0];
+     *    var publisher = this.OV.initPublisher(
+     *      myHtmlTarget,
+     *      {
+     *        audioSource: false,
+     *        videoSource: grayVideoTrack
+     *      });
+     * });
+     * ```
+     */
+    OpenVidu.prototype.getUserMedia = function (options) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            _this.generateMediaConstraints(options)
+                .then(function (constraints) {
+                navigator.mediaDevices.getUserMedia(constraints)
+                    .then(function (mediaStream) {
+                    resolve(mediaStream);
+                })["catch"](function (error) {
+                    var errorName;
+                    var errorMessage = error.toString();
+                    if (!(options.videoSource === 'screen')) {
+                        errorName = (options.videoSource === false || options.videoSource === null) ? OpenViduError_1.OpenViduErrorName.MICROPHONE_ACCESS_DENIED : OpenViduError_1.OpenViduErrorName.CAMERA_ACCESS_DENIED;
+                    }
+                    else {
+                        errorName = OpenViduError_1.OpenViduErrorName.SCREEN_CAPTURE_DENIED;
+                    }
+                    reject(new OpenViduError_1.OpenViduError(errorName, errorMessage));
+                });
+            })["catch"](function (error) {
+                reject(error);
+            });
+        });
+    };
+    /* tslint:disable:no-empty */
+    /**
+     * Disable all logging except error level
+     */
+    OpenVidu.prototype.enableProdMode = function () {
+        console.log = function () { };
+        console.debug = function () { };
+        console.info = function () { };
+        console.warn = function () { };
+    };
+    /* tslint:enable:no-empty */
+    /**
+     * Set OpenVidu advanced configuration options. Currently `configuration` is an object with the following optional properties (see [[OpenViduAdvancedConfiguration]] for more details):
+     * - `iceServers`: set custom STUN/TURN servers to be used by OpenVidu Browser
+     * - `screenShareChromeExtension`: url to a custom screen share extension for Chrome to be used instead of the default one, based on ours [https://github.com/OpenVidu/openvidu-screen-sharing-chrome-extension](https://github.com/OpenVidu/openvidu-screen-sharing-chrome-extension)
+     * - `publisherSpeakingEventsOptions`: custom configuration for the [[PublisherSpeakingEvent]] feature
+     */
+    OpenVidu.prototype.setAdvancedConfiguration = function (configuration) {
+        this.advancedConfiguration = configuration;
+    };
+    /* Hidden methods */
+    /**
+     * @hidden
+     */
+    OpenVidu.prototype.generateMediaConstraints = function (publisherProperties) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            var audio, video;
+            if (publisherProperties.audioSource === null || publisherProperties.audioSource === false) {
+                audio = false;
+            }
+            else if (publisherProperties.audioSource === undefined) {
+                audio = true;
+            }
+            else {
+                audio = publisherProperties.audioSource;
+            }
+            if (publisherProperties.videoSource === null || publisherProperties.videoSource === false) {
+                video = false;
+            }
+            else {
+                video = {
+                    height: {
+                        ideal: 480
+                    },
+                    width: {
+                        ideal: 640
+                    }
+                };
+            }
+            var mediaConstraints = {
+                audio: audio,
+                video: video
+            };
+            if (typeof mediaConstraints.audio === 'string') {
+                mediaConstraints.audio = { deviceId: { exact: mediaConstraints.audio } };
+            }
+            if (mediaConstraints.video) {
+                if (!!publisherProperties.resolution) {
+                    var widthAndHeight = publisherProperties.resolution.toLowerCase().split('x');
+                    var width = Number(widthAndHeight[0]);
+                    var height = Number(widthAndHeight[1]);
+                    mediaConstraints.video.width.ideal = width;
+                    mediaConstraints.video.height.ideal = height;
+                }
+                if (!!publisherProperties.frameRate) {
+                    mediaConstraints.video.frameRate = { ideal: publisherProperties.frameRate };
+                }
+                if (!!publisherProperties.videoSource && typeof publisherProperties.videoSource === 'string') {
+                    if (publisherProperties.videoSource === 'screen') {
+                        if (platform.name !== 'Chrome' && platform.name !== 'Firefox') {
+                            var error = new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.SCREEN_SHARING_NOT_SUPPORTED, 'You can only screen share in desktop Chrome and Firefox. Detected browser: ' + platform.name);
+                            console.error(error);
+                            reject(error);
+                        }
+                        else {
+                            if (!!_this.advancedConfiguration.screenShareChromeExtension) {
+                                // Custom screen sharing extension for Chrome
+                                var extensionId = _this.advancedConfiguration.screenShareChromeExtension.split('/').pop().trim();
+                                screenSharing.getChromeExtensionStatus(extensionId, function (status) {
+                                    if (status === 'installed-enabled') {
+                                        screenSharing.getScreenConstraints(function (error, screenConstraints) {
+                                            if (!!error && error === 'permission-denied') {
+                                                var error_1 = new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.SCREEN_CAPTURE_DENIED, 'You must allow access to one window of your desktop');
+                                                console.error(error_1);
+                                                reject(error_1);
+                                            }
+                                            else {
+                                                mediaConstraints.video = screenConstraints;
+                                                resolve(mediaConstraints);
+                                            }
+                                        });
+                                    }
+                                    if (status === 'installed-disabled') {
+                                        var error = new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.SCREEN_EXTENSION_DISABLED, 'You must enable the screen extension');
+                                        console.error(error);
+                                        reject(error);
+                                    }
+                                    if (status === 'not-installed') {
+                                        var error = new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.SCREEN_EXTENSION_NOT_INSTALLED, _this.advancedConfiguration.screenShareChromeExtension);
+                                        console.error(error);
+                                        reject(error);
+                                    }
+                                });
+                            }
+                            else {
+                                // Default screen sharing extension for Chrome
+                                screenSharingAuto.getScreenId(function (error, sourceId, screenConstraints) {
+                                    if (!!error) {
+                                        if (error === 'not-installed') {
+                                            var error_2 = new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.SCREEN_EXTENSION_NOT_INSTALLED, 'https://chrome.google.com/webstore/detail/screen-capturing/ajhifddimkapgcifgcodmmfdlknahffk');
+                                            console.error(error_2);
+                                            reject(error_2);
+                                        }
+                                        else if (error === 'installed-disabled') {
+                                            var error_3 = new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.SCREEN_EXTENSION_DISABLED, 'You must enable the screen extension');
+                                            console.error(error_3);
+                                            reject(error_3);
+                                        }
+                                        else if (error === 'permission-denied') {
+                                            var error_4 = new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.SCREEN_CAPTURE_DENIED, 'You must allow access to one window of your desktop');
+                                            console.error(error_4);
+                                            reject(error_4);
+                                        }
+                                    }
+                                    else {
+                                        mediaConstraints.video = screenConstraints.video;
+                                        resolve(mediaConstraints);
+                                    }
+                                });
+                            }
+                            publisherProperties.videoSource = 'screen';
+                        }
+                    }
+                    else {
+                        // tslint:disable-next-line:no-string-literal
+                        mediaConstraints.video['deviceId'] = { exact: publisherProperties.videoSource };
+                        resolve(mediaConstraints);
+                    }
+                }
+                else {
+                    resolve(mediaConstraints);
+                }
+            }
+            else {
+                resolve(mediaConstraints);
+            }
+        });
+    };
+    /**
+     * @hidden
+     */
+    OpenVidu.prototype.startWs = function (onConnectSucces) {
+        var config = {
+            heartbeat: 5000,
+            sendCloseMessage: false,
+            ws: {
+                uri: this.wsUri,
+                useSockJS: false,
+                onconnected: onConnectSucces,
+                ondisconnect: this.disconnectCallback.bind(this),
+                onreconnecting: this.reconnectingCallback.bind(this),
+                onreconnected: this.reconnectedCallback.bind(this)
+            },
+            rpc: {
+                requestTimeout: 15000,
+                participantJoined: this.session.onParticipantJoined.bind(this.session),
+                participantPublished: this.session.onParticipantPublished.bind(this.session),
+                participantUnpublished: this.session.onParticipantUnpublished.bind(this.session),
+                participantLeft: this.session.onParticipantLeft.bind(this.session),
+                participantEvicted: this.session.onParticipantEvicted.bind(this.session),
+                recordingStarted: this.session.onRecordingStarted.bind(this.session),
+                recordingStopped: this.session.onRecordingStopped.bind(this.session),
+                sendMessage: this.session.onNewMessage.bind(this.session),
+                iceCandidate: this.session.recvIceCandidate.bind(this.session),
+                mediaError: this.session.onMediaError.bind(this.session)
+            }
+        };
+        this.jsonRpcClient = new RpcBuilder.clients.JsonRpcClient(config);
+    };
+    /**
+     * @hidden
+     */
+    OpenVidu.prototype.closeWs = function () {
+        this.jsonRpcClient.close();
+    };
+    /**
+     * @hidden
+     */
+    OpenVidu.prototype.sendRequest = function (method, params, callback) {
+        if (params && params instanceof Function) {
+            callback = params;
+            params = {};
+        }
+        console.debug('Sending request: {method:"' + method + '", params: ' + JSON.stringify(params) + '}');
+        this.jsonRpcClient.send(method, params, callback);
+    };
+    /**
+     * @hidden
+     */
+    OpenVidu.prototype.isMediaStreamTrack = function (mediaSource) {
+        var is = (!!mediaSource &&
+            mediaSource.enabled !== undefined && typeof mediaSource.enabled === 'boolean' &&
+            mediaSource.id !== undefined && typeof mediaSource.id === 'string' &&
+            mediaSource.kind !== undefined && typeof mediaSource.kind === 'string' &&
+            mediaSource.label !== undefined && typeof mediaSource.label === 'string' &&
+            mediaSource.muted !== undefined && typeof mediaSource.muted === 'boolean' &&
+            mediaSource.readyState !== undefined && typeof mediaSource.readyState === 'string');
+        return is;
+    };
+    /**
+     * @hidden
+     */
+    OpenVidu.prototype.getWsUri = function () {
+        return this.wsUri;
+    };
+    /**
+     * @hidden
+     */
+    OpenVidu.prototype.getSecret = function () {
+        return this.secret;
+    };
+    /**
+     * @hidden
+     */
+    OpenVidu.prototype.getRecorder = function () {
+        return this.recorder;
+    };
+    /* Private methods */
+    OpenVidu.prototype.disconnectCallback = function () {
+        console.warn('Websocket connection lost');
+        if (this.isRoomAvailable()) {
+            this.session.onLostConnection();
+        }
+        else {
+            alert('Connection error. Please reload page.');
+        }
+    };
+    OpenVidu.prototype.reconnectingCallback = function () {
+        console.warn('Websocket connection lost (reconnecting)');
+        if (this.isRoomAvailable()) {
+            this.session.onLostConnection();
+        }
+        else {
+            alert('Connection error. Please reload page.');
+        }
+    };
+    OpenVidu.prototype.reconnectedCallback = function () {
+        console.warn('Websocket reconnected');
+    };
+    OpenVidu.prototype.isRoomAvailable = function () {
+        if (this.session !== undefined && this.session instanceof __1.Session) {
+            return true;
+        }
+        else {
+            console.warn('Session instance not found');
+            return false;
+        }
+    };
+    return OpenVidu;
+}());
+exports.OpenVidu = OpenVidu;
+//# sourceMappingURL=OpenVidu.js.map
+
+/***/ }),
+
+/***/ "../../../../openvidu-browser/lib/OpenVidu/Publisher.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/*
+ * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+exports.__esModule = true;
+var __1 = __webpack_require__("../../../../openvidu-browser/lib/index.js");
+var StreamEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/StreamEvent.js");
+var VideoElementEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/VideoElementEvent.js");
+var OpenViduError_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Enums/OpenViduError.js");
+var EventEmitter = __webpack_require__("../../../../openvidu-browser/node_modules/wolfy87-eventemitter/EventEmitter.js");
+/**
+ * Packs local media streams. Participants can publish it to a session. Initialized with [[OpenVidu.initPublisher]] method
+ */
+var Publisher = /** @class */ (function () {
+    /**
+     * @hidden
+     */
+    function Publisher(targetElement, properties, openvidu) {
+        var _this = this;
+        this.openvidu = openvidu;
+        /**
+         * Whether the Publisher has been granted access to the requested input devices or not
+         */
+        this.accessAllowed = false;
+        this.ee = new EventEmitter();
+        this.properties = properties;
+        this.stream = new __1.Stream(this.session, { publisherProperties: properties, mediaConstraints: {} });
+        this.stream.on('video-removed', function (element) {
+            _this.ee.emitEvent('videoElementDestroyed', [new VideoElementEvent_1.VideoElementEvent(element, _this, 'videoElementDestroyed')]);
+        });
+        this.stream.on('stream-destroyed-by-disconnect', function (reason) {
+            var streamEvent = new StreamEvent_1.StreamEvent(true, _this, 'streamDestroyed', _this.stream, reason);
+            _this.ee.emitEvent('streamDestroyed', [streamEvent]);
+            streamEvent.callDefaultBehaviour();
+        });
+        if (typeof targetElement === 'string') {
+            var e = document.getElementById(targetElement);
+            if (!!e) {
+                this.element = e;
+            }
+        }
+        else if (targetElement instanceof HTMLElement) {
+            this.element = targetElement;
+        }
+        if (!this.element) {
+            console.warn("The provided 'targetElement' for the Publisher couldn't be resolved to any HTML element: " + targetElement);
+        }
+    }
+    /**
+     * Publish or unpublish the audio stream (if available). Calling this method twice in a row passing same value will have no effect
+     * @param value `true` to publish the audio stream, `false` to unpublish it
+     */
+    Publisher.prototype.publishAudio = function (value) {
+        this.stream.getWebRtcPeer().audioEnabled = value;
+        console.info("'Publisher' has " + (value ? 'published' : 'unpublished') + ' its audio stream');
+    };
+    /**
+     * Publish or unpublish the video stream (if available). Calling this method twice in a row passing same value will have no effect
+     * @param value `true` to publish the video stream, `false` to unpublish it
+     */
+    Publisher.prototype.publishVideo = function (value) {
+        this.stream.getWebRtcPeer().videoEnabled = value;
+        console.info("'Publisher' has " + (value ? 'published' : 'unpublished') + ' its video stream');
+    };
+    /**
+     * Call this method before [[Session.publish]] to subscribe to your Publisher's stream as any other user would do. The local video will be automatically replaced by the remote video
+     */
+    Publisher.prototype.subscribeToRemote = function () {
+        this.stream.subscribeToMyRemote();
+    };
+    /**
+     * See [[EventDispatcher.on]]
+     */
+    Publisher.prototype.on = function (type, handler) {
+        var _this = this;
+        this.ee.on(type, function (event) {
+            if (event) {
+                console.info("Event '" + type + "' triggered by 'Publisher'", event);
+            }
+            else {
+                console.info("Event '" + type + "' triggered by 'Publisher'");
+            }
+            handler(event);
+        });
+        if (type === 'streamCreated') {
+            if (!!this.stream && this.stream.isPublisherPublished) {
+                this.ee.emitEvent('streamCreated', [new StreamEvent_1.StreamEvent(false, this, 'streamCreated', this.stream, '')]);
+            }
+            else {
+                this.stream.on('stream-created-by-publisher', function () {
+                    _this.ee.emitEvent('streamCreated', [new StreamEvent_1.StreamEvent(false, _this, 'streamCreated', _this.stream, '')]);
+                });
+            }
+        }
+        if (type === 'videoElementCreated') {
+            if (!!this.stream && this.stream.isVideoELementCreated) {
+                this.ee.emitEvent('videoElementCreated', [new VideoElementEvent_1.VideoElementEvent(this.stream.getVideoElement(), this, 'videoElementCreated')]);
+            }
+            else {
+                this.stream.on('video-element-created-by-stream', function (element) {
+                    _this.id = element.id;
+                    _this.ee.emitEvent('videoElementCreated', [new VideoElementEvent_1.VideoElementEvent(element.element, _this, 'videoElementCreated')]);
+                });
+            }
+        }
+        if (type === 'videoPlaying') {
+            var video = this.stream.getVideoElement();
+            if (!this.stream.displayMyRemote() && video &&
+                video.currentTime > 0 &&
+                video.paused === false &&
+                video.ended === false &&
+                video.readyState === 4) {
+                this.ee.emitEvent('videoPlaying', [new VideoElementEvent_1.VideoElementEvent(this.stream.getVideoElement(), this, 'videoPlaying')]);
+            }
+            else {
+                this.stream.on('video-is-playing', function (element) {
+                    _this.ee.emitEvent('videoPlaying', [new VideoElementEvent_1.VideoElementEvent(element.element, _this, 'videoPlaying')]);
+                });
+            }
+        }
+        if (type === 'remoteVideoPlaying') {
+            var video = this.stream.getVideoElement();
+            if (this.stream.displayMyRemote() && video &&
+                video.currentTime > 0 &&
+                video.paused === false &&
+                video.ended === false &&
+                video.readyState === 4) {
+                this.ee.emitEvent('remoteVideoPlaying', [new VideoElementEvent_1.VideoElementEvent(this.stream.getVideoElement(), this, 'remoteVideoPlaying')]);
+            }
+            else {
+                this.stream.on('remote-video-is-playing', function (element) {
+                    _this.ee.emitEvent('remoteVideoPlaying', [new VideoElementEvent_1.VideoElementEvent(element.element, _this, 'remoteVideoPlaying')]);
+                });
+            }
+        }
+        if (type === 'accessAllowed') {
+            if (this.stream.accessIsAllowed) {
+                this.ee.emitEvent('accessAllowed');
+            }
+        }
+        if (type === 'accessDenied') {
+            if (this.stream.accessIsDenied) {
+                this.ee.emitEvent('accessDenied');
+            }
+        }
+        return this;
+    };
+    /**
+     * See [[EventDispatcher.once]]
+     */
+    Publisher.prototype.once = function (type, handler) {
+        var _this = this;
+        this.ee.once(type, function (event) {
+            if (event) {
+                console.info("Event '" + type + "' triggered by 'Publisher'", event);
+            }
+            else {
+                console.info("Event '" + type + "' triggered by 'Publisher'");
+            }
+            handler(event);
+        });
+        if (type === 'streamCreated') {
+            if (!!this.stream && this.stream.isPublisherPublished) {
+                this.ee.emitEvent('streamCreated', [new StreamEvent_1.StreamEvent(false, this, 'streamCreated', this.stream, '')]);
+            }
+            else {
+                this.stream.once('stream-created-by-publisher', function () {
+                    _this.ee.emitEvent('streamCreated', [new StreamEvent_1.StreamEvent(false, _this, 'streamCreated', _this.stream, '')]);
+                });
+            }
+        }
+        if (type === 'videoElementCreated') {
+            if (!!this.stream && this.stream.isVideoELementCreated) {
+                this.ee.emitEvent('videoElementCreated', [new VideoElementEvent_1.VideoElementEvent(this.stream.getVideoElement(), this, 'videoElementCreated')]);
+            }
+            else {
+                this.stream.once('video-element-created-by-stream', function (element) {
+                    _this.id = element.id;
+                    _this.ee.emitEvent('videoElementCreated', [new VideoElementEvent_1.VideoElementEvent(element.element, _this, 'videoElementCreated')]);
+                });
+            }
+        }
+        if (type === 'videoPlaying') {
+            var video = this.stream.getVideoElement();
+            if (!this.stream.displayMyRemote() && video &&
+                video.currentTime > 0 &&
+                video.paused === false &&
+                video.ended === false &&
+                video.readyState === 4) {
+                this.ee.emitEvent('videoPlaying', [new VideoElementEvent_1.VideoElementEvent(this.stream.getVideoElement(), this, 'videoPlaying')]);
+            }
+            else {
+                this.stream.once('video-is-playing', function (element) {
+                    _this.ee.emitEvent('videoPlaying', [new VideoElementEvent_1.VideoElementEvent(element.element, _this, 'videoPlaying')]);
+                });
+            }
+        }
+        if (type === 'remoteVideoPlaying') {
+            var video = this.stream.getVideoElement();
+            if (this.stream.displayMyRemote() && video &&
+                video.currentTime > 0 &&
+                video.paused === false &&
+                video.ended === false &&
+                video.readyState === 4) {
+                this.ee.emitEvent('remoteVideoPlaying', [new VideoElementEvent_1.VideoElementEvent(this.stream.getVideoElement(), this, 'remoteVideoPlaying')]);
+            }
+            else {
+                this.stream.once('remote-video-is-playing', function (element) {
+                    _this.ee.emitEvent('remoteVideoPlaying', [new VideoElementEvent_1.VideoElementEvent(element.element, _this, 'remoteVideoPlaying')]);
+                });
+            }
+        }
+        if (type === 'accessAllowed') {
+            if (this.stream.accessIsAllowed) {
+                this.ee.emitEvent('accessAllowed');
+            }
+        }
+        if (type === 'accessDenied') {
+            if (this.stream.accessIsDenied) {
+                this.ee.emitEvent('accessDenied');
+            }
+        }
+        return this;
+    };
+    /**
+     * See [[EventDispatcher.off]]
+     */
+    Publisher.prototype.off = function (type, handler) {
+        if (!handler) {
+            this.ee.removeAllListeners(type);
+        }
+        else {
+            this.ee.off(type, handler);
+        }
+        return this;
+    };
+    /* Hidden methods */
+    /**
+     * @hidden
+     */
+    Publisher.prototype.initialize = function () {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            var errorCallback = function (openViduError) {
+                _this.stream.accessIsDenied = true;
+                _this.stream.accessIsAllowed = false;
+                reject(openViduError);
+            };
+            var successCallback = function (mediaStream) {
+                _this.stream.accessIsAllowed = true;
+                _this.stream.accessIsDenied = false;
+                if (_this.openvidu.isMediaStreamTrack(_this.properties.audioSource)) {
+                    mediaStream.removeTrack(mediaStream.getAudioTracks()[0]);
+                    mediaStream.addTrack(_this.properties.audioSource);
+                }
+                if (_this.openvidu.isMediaStreamTrack(_this.properties.videoSource)) {
+                    mediaStream.removeTrack(mediaStream.getVideoTracks()[0]);
+                    mediaStream.addTrack(_this.properties.videoSource);
+                }
+                // Apply PublisherProperties.publishAudio and PublisherProperties.publishVideo
+                if (!!mediaStream.getAudioTracks()[0]) {
+                    mediaStream.getAudioTracks()[0].enabled = !!_this.stream.outboundStreamOpts.publisherProperties.publishAudio;
+                }
+                if (!!mediaStream.getVideoTracks()[0]) {
+                    mediaStream.getVideoTracks()[0].enabled = !!_this.stream.outboundStreamOpts.publisherProperties.publishVideo;
+                }
+                _this.stream.setMediaStream(mediaStream);
+                _this.stream.insertVideo(_this.element, _this.properties.insertMode);
+                resolve();
+            };
+            _this.openvidu.generateMediaConstraints(_this.properties)
+                .then(function (constraints) {
+                var outboundStreamOptions = {
+                    mediaConstraints: constraints,
+                    publisherProperties: _this.properties
+                };
+                _this.stream.setOutboundStreamOptions(outboundStreamOptions);
+                // Ask independently for audio stream and video stream. If the user asks for both of them and one is blocked, the method still
+                // success only with the allowed input. This is not the desierd behaviour: if any of them is blocked, access should be denied
+                var constraintsAux = {};
+                var timeForDialogEvent = 1250;
+                if (_this.stream.isSendVideo()) {
+                    constraintsAux.audio = false;
+                    constraintsAux.video = constraints.video;
+                    var startTime_1 = Date.now();
+                    _this.setPermissionDialogTimer(timeForDialogEvent);
+                    navigator.mediaDevices.getUserMedia(constraintsAux)
+                        .then(function (videoOnlyStream) {
+                        _this.clearPermissionDialogTimer(startTime_1, timeForDialogEvent);
+                        if (_this.stream.isSendAudio()) {
+                            constraintsAux.audio = (constraints.audio === undefined) ? true : constraints.audio;
+                            constraintsAux.video = false;
+                            startTime_1 = Date.now();
+                            _this.setPermissionDialogTimer(timeForDialogEvent);
+                            navigator.mediaDevices.getUserMedia(constraintsAux)
+                                .then(function (audioOnlyStream) {
+                                _this.clearPermissionDialogTimer(startTime_1, timeForDialogEvent);
+                                videoOnlyStream.addTrack(audioOnlyStream.getAudioTracks()[0]);
+                                successCallback(videoOnlyStream);
+                            })["catch"](function (error) {
+                                _this.clearPermissionDialogTimer(startTime_1, timeForDialogEvent);
+                                videoOnlyStream.getVideoTracks().forEach(function (track) {
+                                    track.stop();
+                                });
+                                var errorName;
+                                var errorMessage;
+                                switch (error.name.toLowerCase()) {
+                                    case 'notfounderror':
+                                        errorName = OpenViduError_1.OpenViduErrorName.INPUT_AUDIO_DEVICE_NOT_FOUND;
+                                        errorMessage = error.toString();
+                                        break;
+                                    case 'notallowederror':
+                                        errorName = OpenViduError_1.OpenViduErrorName.MICROPHONE_ACCESS_DENIED;
+                                        errorMessage = error.toString();
+                                        break;
+                                    case 'overconstrainederror':
+                                        if (error.constraint.toLowerCase() === 'deviceid') {
+                                            errorName = OpenViduError_1.OpenViduErrorName.INPUT_AUDIO_DEVICE_NOT_FOUND;
+                                            errorMessage = "Audio input device with deviceId '" + constraints.audio.deviceId.exact + "' not found";
+                                        }
+                                        else {
+                                            errorName = OpenViduError_1.OpenViduErrorName.PUBLISHER_PROPERTIES_ERROR;
+                                            errorMessage = "Audio input device doesn't support the value passed for constraint '" + error.constraint + "'";
+                                        }
+                                }
+                                errorCallback(new OpenViduError_1.OpenViduError(errorName, errorMessage));
+                            });
+                        }
+                        else {
+                            successCallback(videoOnlyStream);
+                        }
+                    })["catch"](function (error) {
+                        _this.clearPermissionDialogTimer(startTime_1, timeForDialogEvent);
+                        var errorName;
+                        var errorMessage;
+                        switch (error.name.toLowerCase()) {
+                            case 'notfounderror':
+                                errorName = OpenViduError_1.OpenViduErrorName.INPUT_VIDEO_DEVICE_NOT_FOUND;
+                                errorMessage = error.toString();
+                                break;
+                            case 'notallowederror':
+                                errorName = _this.stream.isSendScreen() ? OpenViduError_1.OpenViduErrorName.SCREEN_CAPTURE_DENIED : OpenViduError_1.OpenViduErrorName.CAMERA_ACCESS_DENIED;
+                                errorMessage = error.toString();
+                                break;
+                            case 'overconstrainederror':
+                                if (error.constraint.toLowerCase() === 'deviceid') {
+                                    errorName = OpenViduError_1.OpenViduErrorName.INPUT_VIDEO_DEVICE_NOT_FOUND;
+                                    errorMessage = "Video input device with deviceId '" + constraints.video.deviceId.exact + "' not found";
+                                }
+                                else {
+                                    errorName = OpenViduError_1.OpenViduErrorName.PUBLISHER_PROPERTIES_ERROR;
+                                    errorMessage = "Video input device doesn't support the value passed for constraint '" + error.constraint + "'";
+                                }
+                        }
+                        errorCallback(new OpenViduError_1.OpenViduError(errorName, errorMessage));
+                    });
+                }
+                else if (_this.stream.isSendAudio()) {
+                    constraintsAux.audio = (constraints.audio === undefined) ? true : constraints.audio;
+                    constraintsAux.video = false;
+                    var startTime_2 = Date.now();
+                    _this.setPermissionDialogTimer(timeForDialogEvent);
+                    navigator.mediaDevices.getUserMedia(constraints)
+                        .then(function (audioOnlyStream) {
+                        _this.clearPermissionDialogTimer(startTime_2, timeForDialogEvent);
+                        successCallback(audioOnlyStream);
+                    })["catch"](function (error) {
+                        _this.clearPermissionDialogTimer(startTime_2, timeForDialogEvent);
+                        var errorName;
+                        var errorMessage;
+                        switch (error.name.toLowerCase()) {
+                            case 'notfounderror':
+                                errorName = OpenViduError_1.OpenViduErrorName.INPUT_AUDIO_DEVICE_NOT_FOUND;
+                                errorMessage = error.toString();
+                                break;
+                            case 'notallowederror':
+                                errorName = OpenViduError_1.OpenViduErrorName.MICROPHONE_ACCESS_DENIED;
+                                errorMessage = error.toString();
+                                break;
+                            case 'overconstrainederror':
+                                if (error.constraint.toLowerCase() === 'deviceid') {
+                                    errorName = OpenViduError_1.OpenViduErrorName.INPUT_AUDIO_DEVICE_NOT_FOUND;
+                                    errorMessage = "Audio input device with deviceId '" + constraints.audio.deviceId.exact + "' not found";
+                                }
+                                else {
+                                    errorName = OpenViduError_1.OpenViduErrorName.PUBLISHER_PROPERTIES_ERROR;
+                                    errorMessage = "Audio input device doesn't support the value passed for constraint '" + error.constraint + "'";
+                                }
+                        }
+                        errorCallback(new OpenViduError_1.OpenViduError(errorName, errorMessage));
+                    });
+                }
+                else {
+                    reject(new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.NO_INPUT_SOURCE_SET, "Properties 'audioSource' and 'videoSource' cannot be set to false or null at the same time when calling 'OpenVidu.initPublisher'"));
+                }
+            })["catch"](function (error) {
+                errorCallback(error);
+            });
+        });
+    };
+    /**
+     * @hidden
+     */
+    Publisher.prototype.updateSession = function (session) {
+        this.session = session;
+        this.stream.session = session;
+    };
+    /**
+     * @hidden
+     */
+    Publisher.prototype.emitEvent = function (type, eventArray) {
+        this.ee.emitEvent(type, eventArray);
+    };
+    /* Private methods */
+    Publisher.prototype.setPermissionDialogTimer = function (waitTime) {
+        var _this = this;
+        this.permissionDialogTimeout = setTimeout(function () {
+            _this.ee.emitEvent('accessDialogOpened', []);
+        }, waitTime);
+    };
+    Publisher.prototype.clearPermissionDialogTimer = function (startTime, waitTime) {
+        clearTimeout(this.permissionDialogTimeout);
+        if ((Date.now() - startTime) > waitTime) {
+            // Permission dialog was shown and now is closed
+            this.ee.emitEvent('accessDialogClosed', []);
+        }
+    };
+    /* Private methods */
+    Publisher.prototype.userMediaHasVideo = function (callback) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            // If the user is going to publish its screen there's a video source
+            if ((typeof _this.properties.videoSource === 'string') && _this.properties.videoSource === 'screen') {
+                resolve(true);
+            }
+            else {
+                _this.openvidu.getDevices()
+                    .then(function (devices) {
+                    resolve(!!(devices.filter(function (device) {
+                        return device.kind === 'videoinput';
+                    })[0]));
+                })["catch"](function (error) {
+                    reject(error);
+                });
+            }
+        });
+    };
+    Publisher.prototype.userMediaHasAudio = function (callback) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            _this.openvidu.getDevices()
+                .then(function (devices) {
+                resolve(!!(devices.filter(function (device) {
+                    return device.kind === 'audioinput';
+                })[0]));
+            })["catch"](function (error) {
+                reject(error);
+            });
+        });
+    };
+    return Publisher;
+}());
+exports.Publisher = Publisher;
+//# sourceMappingURL=Publisher.js.map
+
+/***/ }),
+
+/***/ "../../../../openvidu-browser/lib/OpenVidu/Session.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/*
+ * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+exports.__esModule = true;
+var __1 = __webpack_require__("../../../../openvidu-browser/lib/index.js");
+var ConnectionEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/ConnectionEvent.js");
+var RecordingEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/RecordingEvent.js");
+var SessionDisconnectedEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/SessionDisconnectedEvent.js");
+var SignalEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/SignalEvent.js");
+var StreamEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/StreamEvent.js");
+var OpenViduError_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Enums/OpenViduError.js");
+var VideoInsertMode_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Enums/VideoInsertMode.js");
+var VersionAdapter_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/VersionAdapter.js");
+var platform = __webpack_require__("../../../../openvidu-browser/node_modules/platform/platform.js");
+var EventEmitter = __webpack_require__("../../../../openvidu-browser/node_modules/wolfy87-eventemitter/EventEmitter.js");
+/**
+ * Represents a video call. It can also be seen as a videoconference room where multiple users can connect.
+ * Participants who publish their videos to a session will be seen by the rest of users connected to that specific session.
+ * Initialized with [[OpenVidu.initSession]] method
+ */
+var Session = /** @class */ (function () {
+    /**
+     * @hidden
+     */
+    function Session(openvidu) {
+        // This map is only used to avoid race condition between 'joinRoom' response and 'onParticipantPublished' notification
+        /**
+         * @hidden
+         */
+        this.remoteStreamsCreated = {};
+        /**
+         * @hidden
+         */
+        this.remoteConnections = {};
+        /**
+         * @hidden
+         */
+        this.speakingEventsEnabled = false;
+        this.ee = new EventEmitter();
+        this.openvidu = openvidu;
+    }
+    /**
+     * Connects to the session using `token`. Parameter `metadata` allows you to pass extra data to share with other users when
+     * they receive `streamCreated` event. The structure of `metadata` string is up to you (maybe some standarized format
+     * as JSON or XML is a good idea), the only restriction is a maximum length of 10000 chars.
+     *
+     * This metadata is not considered secure, as it is generated in the client side. To pass securized data, add it as a parameter in the
+     * token generation operation (through the API REST, openvidu-java-client or openvidu-node-client).
+     *
+     * Only after the returned Promise is successfully resolved [[Session.connection]] object will be available and properly defined.
+     *
+     * #### Events dispatched
+     *
+     * The [[Session]] object of the local participant will first dispatch one or more `connectionCreated` events upon successful termination of this method:
+     * - First one for your own local Connection object, so you can retrieve [[Session.connection]] property.
+     * - Then one for each remote Connection previously connected to the Session, if any. Any other remote user connecting to the Session after you have
+     * successfully connected will also dispatch a `connectionCreated` event when they do so.
+     *
+     * The [[Session]] object of the local participant will also dispatch a `streamCreated` event for each remote active [[Publisher]] after dispatching all remote
+     * `connectionCreated` events.
+     *
+     * The [[Session]] object of every other participant connected to the session will dispatch a `connectionCreated` event.
+     *
+     * See [[ConnectionEvent]] and [[StreamEvent]] to learn more.
+     *
+     * @returns A Promise to which you must subscribe that is resolved if the recording successfully started and rejected with an Error object if not
+     *
+     */
+    Session.prototype.connect = function (token, metadata, param3) {
+        var _this = this;
+        // DEPRECATED WARNING
+        return VersionAdapter_1.solveIfCallback('Session.connect', (!!param3 && (typeof param3 === 'function')) ? param3 : ((typeof metadata === 'function') ? metadata : ''), 
+        /*return */ new Promise(function (resolve, reject) {
+            _this.processToken(token);
+            if (_this.openvidu.checkSystemRequirements()) {
+                // Early configuration to deactivate automatic subscription to streams
+                _this.options = {
+                    sessionId: _this.sessionId,
+                    participantId: token,
+                    metadata: !!metadata ? _this.stringClientMetadata(metadata) : ''
+                };
+                _this.connectAux(token).then(function () {
+                    resolve();
+                })["catch"](function (error) {
+                    reject(error);
+                });
+            }
+            else {
+                reject(new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.BROWSER_NOT_SUPPORTED, 'Browser ' + platform.name + ' ' + platform.version + ' is not supported in OpenVidu'));
+            }
+        }));
+    };
+    /**
+     * Leaves the session, destroying all streams and deleting the user as a participant.
+     *
+     * #### Events dispatched
+     *
+     * The [[Session]] object of the local participant will dispatch a `sessionDisconnected` event.
+     * This event will automatically unsubscribe the leaving participant from every Subscriber object of the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks)
+     * and also delete the HTML video element associated to it.
+     * Call `event.preventDefault()` to avoid this beahviour and take care of disposing and cleaning all the Subscriber objects yourself. See [[SessionDisconnectedEvent]] to learn more.
+     *
+     * The [[Publisher]] object of the local participant will dispatch a `streamDestroyed` event if there is a [[Publisher]] object publishing to the session.
+     * This event will automatically stop all media tracks and delete the HTML video element associated to it.
+     * Call `event.preventDefault()` if you want clean the Publisher object yourself or re-publish it in a different Session (to do so it is a mandatory
+     * requirement to call `Session.unpublish()` or/and `Session.disconnect()` in the previous session). See [[StreamEvent]] to learn more.
+     *
+     * The [[Session]] object of every other participant connected to the session will dispatch a `streamDestroyed` event if the disconnected participant was publishing.
+     * This event will automatically unsubscribe the Subscriber object from the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks)
+     * and delete the HTML video element associated to it.
+     * Call `event.preventDefault()` to avoid this default behaviour and take care of disposing and cleaning the Subscriber object yourself. See [[StreamEvent]] to learn more.
+     *
+     * The [[Session]] object of every other participant connected to the session will dispatch a `connectionDestroyed` event in any case. See [[ConnectionEvent]] to learn more.
+     */
+    Session.prototype.disconnect = function () {
+        this.leave(false, 'disconnect');
+    };
+    /**
+     * Subscribes to a `stream`, adding a new HTML video element to DOM with `subscriberProperties` settings. This method is usually called in the callback of `streamCreated` event.
+     *
+     * #### Events dispatched
+     *
+     * The [[Subscriber]] object will dispatch a `videoElementCreated` event once the HTML video element has been added to DOM (if _targetElement_ not null or undefined)
+     *
+     * The [[Subscriber]] object will dispatch a `videoPlaying` event once the remote video starts playing (only if `videoElementCreated` event has been previously dispatched)
+     *
+     * See [[VideoElementEvent]] to learn more.
+     *
+     * @param stream Stream object to subscribe to
+     * @param targetElement HTML DOM element (or its `id` attribute) in which the video element of the Subscriber will be inserted (see [[SubscriberProperties.insertMode]]). If null or undefined no default video will be created for this Subscriber
+     * (you can always access the native MediaStream object by calling _Subscriber.stream.getMediaStream()_ and use it as _srcObject_ of any HTML video element)
+     * @param completionHandler `error` parameter is null if `subscribe` succeeds, and is defined if it fails.
+     */
+    Session.prototype.subscribe = function (stream, targetElement, param3, param4) {
+        var properties = {};
+        if (!!param3 && typeof param3 !== 'function') {
+            properties = {
+                insertMode: (typeof param3.insertMode !== 'undefined') ? ((typeof param3.insertMode === 'string') ? VideoInsertMode_1.VideoInsertMode[param3.insertMode] : properties.insertMode) : VideoInsertMode_1.VideoInsertMode.APPEND,
+                subscribeToAudio: (typeof param3.subscribeToAudio !== 'undefined') ? param3.subscribeToAudio : true,
+                subscribeToVideo: (typeof param3.subscribeToVideo !== 'undefined') ? param3.subscribeToVideo : true
+            };
+        }
+        else {
+            properties = {
+                insertMode: VideoInsertMode_1.VideoInsertMode.APPEND,
+                subscribeToAudio: true,
+                subscribeToVideo: true
+            };
+        }
+        var completionHandler;
+        if (!!param3 && (typeof param3 === 'function')) {
+            completionHandler = param3;
+        }
+        else if (!!param4) {
+            completionHandler = param4;
+        }
+        console.info('Subscribing to ' + stream.connection.connectionId);
+        stream.subscribe()
+            .then(function () {
+            console.info('Subscribed correctly to ' + stream.connection.connectionId);
+            if (completionHandler !== undefined) {
+                completionHandler(undefined);
+            }
+        })["catch"](function (error) {
+            if (completionHandler !== undefined) {
+                completionHandler(error);
+            }
+        });
+        var subscriber = new __1.Subscriber(stream, targetElement, properties);
+        stream.insertVideo(subscriber.element, properties.insertMode);
+        return subscriber;
+    };
+    Session.prototype.subscribeAsync = function (stream, targetElement, properties) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            var subscriber;
+            var callback = function (error) {
+                if (!!error) {
+                    reject(error);
+                }
+                else {
+                    resolve(subscriber);
+                }
+            };
+            if (!!properties) {
+                subscriber = _this.subscribe(stream, targetElement, properties, callback);
+            }
+            else {
+                subscriber = _this.subscribe(stream, targetElement, callback);
+            }
+        });
+    };
+    /**
+     * Unsubscribes from `subscriber`, automatically removing its HTML video element.
+     *
+     * #### Events dispatched
+     *
+     * The [[Subscriber]] object will dispatch a `videoElementDestroyed` event (only if it previously dispatched a `videoElementCreated` event). See [[VideoElementEvent]] to learn more
+     */
+    Session.prototype.unsubscribe = function (subscriber) {
+        var connectionId = subscriber.stream.connection.connectionId;
+        console.info('Unsubscribing from ' + connectionId);
+        this.openvidu.sendRequest('unsubscribeFromVideo', {
+            sender: subscriber.stream.connection.connectionId
+        }, function (error, response) {
+            if (error) {
+                console.error('Error unsubscribing from ' + connectionId, error);
+            }
+            else {
+                console.info('Unsubscribed correctly from ' + connectionId);
+            }
+            subscriber.stream.disposeWebRtcPeer();
+            subscriber.stream.disposeMediaStream();
+        });
+        subscriber.stream.removeVideo();
+    };
+    /**
+     * Publishes the participant's audio-video stream contained in `publisher` object to the session
+     *
+     * #### Events dispatched
+     *
+     * The local [[Publisher]] object will dispatch a `streamCreated` event upon successful termination of this method. See [[StreamEvent]] to learn more.
+     *
+     * The local [[Publisher]] object will dispatch a `remoteVideoPlaying` event only if [[Publisher.subscribeToRemote]] was called before this method, once the remote video starts playing.
+     * See [[VideoElementEvent]] to learn more.
+     *
+     * The [[Session]] object of every other participant connected to the session will dispatch a `streamCreated` event so they can subscribe to it. See [[StreamEvent]] to learn more.
+     *
+     * @returns A Promise (to which you can optionally subscribe to) that is resolved if the publisher was successfully published and rejected with an Error object if not
+     */
+    Session.prototype.publish = function (publisher) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            publisher.session = _this;
+            publisher.stream.session = _this;
+            if (!publisher.stream.isPublisherPublished) {
+                // 'Session.unpublish(Publisher)' has NOT been called
+                _this.connection.addStream(publisher.stream);
+                publisher.stream.publish()
+                    .then(function () {
+                    resolve();
+                })["catch"](function (error) {
+                    reject(error);
+                });
+            }
+            else {
+                // 'Session.unpublish(Publisher)' has been called. Must initialize again Publisher
+                publisher.initialize()
+                    .then(function () {
+                    _this.connection.addStream(publisher.stream);
+                    publisher.stream.publish()
+                        .then(function () {
+                        resolve();
+                    })["catch"](function (error) {
+                        reject(error);
+                    });
+                })["catch"](function (error) {
+                    reject(error);
+                });
+            }
+        });
+    };
+    /**
+     * Unpublishes the participant's audio-video stream contained in `publisher` object.
+     *
+     * #### Events dispatched
+     *
+     * The [[Publisher]] object of the local participant will dispatch a `streamDestroyed` event.
+     * This event will automatically stop all media tracks and delete the HTML video element associated to it.
+     * Call `event.preventDefault()` if you want clean the Publisher object yourself or re-publish it in a different Session.
+     *
+     * The [[Session]] object of every other participant connected to the session will dispatch a `streamDestroyed` event.
+     * This event will automatically unsubscribe the Subscriber object from the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks) and delete the HTML video element associated to it.
+     * Call `event.preventDefault()` to avoid this default behaviour and take care of disposing and cleaning the Subscriber object yourself.
+     *
+     * See [[StreamEvent]] to learn more.
+     */
+    Session.prototype.unpublish = function (publisher) {
+        var stream = publisher.stream;
+        if (!stream.connection) {
+            console.error('The associated Connection object of this Publisher is null', stream);
+            return;
+        }
+        else if (stream.connection !== this.connection) {
+            console.error('The associated Connection object of this Publisher is not your local Connection.' +
+                "Only moderators can force unpublish on remote Streams via 'forceUnpublish' method", stream);
+            return;
+        }
+        else {
+            console.info('Unpublishing local media (' + stream.connection.connectionId + ')');
+            this.openvidu.sendRequest('unpublishVideo', function (error, response) {
+                if (error) {
+                    console.error(error);
+                }
+                else {
+                    console.info('Media unpublished correctly');
+                }
+            });
+            stream.disposeWebRtcPeer();
+            delete stream.connection.stream;
+            var streamEvent = new StreamEvent_1.StreamEvent(true, publisher, 'streamDestroyed', publisher.stream, 'unpublish');
+            publisher.emitEvent('streamDestroyed', [streamEvent]);
+            streamEvent.callDefaultBehaviour();
+        }
+    };
+    /**
+     * Sends one signal. `signal` object has the following optional properties:
+     * ```json
+     * {data:string, to:Connection[], type:string}
+     * ```
+     * All users subscribed to that signal (`session.on('signal:type', ...)` or `session.on('signal', ...)` for all signals) and whose Connection objects are in `to` array will receive it. Their local
+     * Session objects will dispatch a `signal` or `signal:type` event. See [[SignalEvent]] to learn more.
+     *
+     * @returns A Promise (to which you can optionally subscribe to) that is resolved if the message successfully reached openvidu-server and rejected with an Error object if not. _This doesn't
+     * mean that openvidu-server could resend the message to all the listed receivers._
+     */
+    /* tslint:disable:no-string-literal */
+    Session.prototype.signal = function (signal, callback) {
+        var _this = this;
+        // DEPRECATED WARNING
+        return VersionAdapter_1.solveIfCallback('Session.signal', callback, 
+        /*return */ new Promise(function (resolve, reject) {
+            var signalMessage = {};
+            if (signal.to && signal.to.length > 0) {
+                var connectionIds_1 = [];
+                signal.to.forEach(function (connection) {
+                    connectionIds_1.push(connection.connectionId);
+                });
+                signalMessage['to'] = connectionIds_1;
+            }
+            else {
+                signalMessage['to'] = [];
+            }
+            signalMessage['data'] = signal.data ? signal.data : '';
+            signalMessage['type'] = signal.type ? signal.type : '';
+            _this.openvidu.sendRequest('sendMessage', {
+                message: JSON.stringify(signalMessage)
+            }, function (error, response) {
+                if (!!error) {
+                    reject(error);
+                }
+                else {
+                    resolve();
+                }
+            });
+        }));
+    };
+    /* tslint:enable:no-string-literal */
+    /**
+     * See [[EventDispatcher.on]]
+     */
+    Session.prototype.on = function (type, handler) {
+        this.ee.on(type, function (event) {
+            if (event) {
+                console.info("Event '" + type + "' triggered by 'Session'", event);
+            }
+            else {
+                console.info("Event '" + type + "' triggered by 'Session'");
+            }
+            handler(event);
+        });
+        if (type === 'publisherStartSpeaking' || type === 'publisherStopSpeaking') {
+            this.speakingEventsEnabled = true;
+            // If there are already available remote streams, enable hark 'speaking' event in all of them
+            for (var connectionId in this.remoteConnections) {
+                var str = this.remoteConnections[connectionId].stream;
+                if (!!str && !str.speechEvent && str.hasAudio) {
+                    str.enableSpeakingEvents();
+                }
+            }
+        }
+        return this;
+    };
+    /**
+     * See [[EventDispatcher.once]]
+     */
+    Session.prototype.once = function (type, handler) {
+        this.ee.once(type, function (event) {
+            if (event) {
+                console.info("Event '" + type + "' triggered by 'Session'", event);
+            }
+            else {
+                console.info("Event '" + type + "' triggered by 'Session'");
+            }
+            handler(event);
+        });
+        if (type === 'publisherStartSpeaking' || type === 'publisherStopSpeaking') {
+            this.speakingEventsEnabled = true;
+            // If there are already available remote streams, enable hark in all of them
+            for (var connectionId in this.remoteConnections) {
+                var str = this.remoteConnections[connectionId].stream;
+                if (!!str && !str.speechEvent && str.hasAudio) {
+                    str.enableOnceSpeakingEvents();
+                }
+            }
+        }
+        return this;
+    };
+    /**
+     * See [[EventDispatcher.off]]
+     */
+    Session.prototype.off = function (type, handler) {
+        if (!handler) {
+            this.ee.removeAllListeners(type);
+        }
+        else {
+            this.ee.off(type, handler);
+        }
+        if (type === 'publisherStartSpeaking' || type === 'publisherStopSpeaking') {
+            this.speakingEventsEnabled = false;
+            // If there are already available remote streams, disablae hark in all of them
+            for (var connectionId in this.remoteConnections) {
+                var str = this.remoteConnections[connectionId].stream;
+                if (!!str && !!str.speechEvent) {
+                    str.disableSpeakingEvents();
+                }
+            }
+        }
+        return this;
+    };
+    /* Hidden methods */
+    /**
+     * @hidden
+     */
+    Session.prototype.onParticipantJoined = function (response) {
+        var _this = this;
+        // Connection shouldn't exist
+        this.getConnection(response.id, '')
+            .then(function (connection) {
+            console.warn('Connection ' + response.id + ' already exists in connections list');
+        })["catch"](function (openViduError) {
+            var connection = new __1.Connection(_this, response);
+            _this.remoteConnections[response.id] = connection;
+            _this.ee.emitEvent('connectionCreated', [new ConnectionEvent_1.ConnectionEvent(false, _this, 'connectionCreated', connection, '')]);
+        });
+    };
+    /**
+     * @hidden
+     */
+    Session.prototype.onParticipantLeft = function (msg) {
+        var _this = this;
+        this.getRemoteConnection(msg.name, 'Remote connection ' + msg.name + " unknown when 'onParticipantLeft'. " +
+            'Existing remote connections: ' + JSON.stringify(Object.keys(this.remoteConnections)))
+            .then(function (connection) {
+            if (!!connection.stream) {
+                var stream = connection.stream;
+                var streamEvent = new StreamEvent_1.StreamEvent(true, _this, 'streamDestroyed', stream, msg.reason);
+                _this.ee.emitEvent('streamDestroyed', [streamEvent]);
+                streamEvent.callDefaultBehaviour();
+                delete _this.remoteStreamsCreated[stream.streamId];
+            }
+            delete _this.remoteConnections[connection.connectionId];
+            _this.ee.emitEvent('connectionDestroyed', [new ConnectionEvent_1.ConnectionEvent(false, _this, 'connectionDestroyed', connection, msg.reason)]);
+        })["catch"](function (openViduError) {
+            console.error(openViduError);
+        });
+    };
+    /**
+     * @hidden
+     */
+    Session.prototype.onParticipantPublished = function (response) {
+        var _this = this;
+        var afterConnectionFound = function (connection) {
+            _this.remoteConnections[connection.connectionId] = connection;
+            if (!_this.remoteStreamsCreated[connection.stream.streamId]) {
+                // Avoid race condition between stream.subscribe() in "onParticipantPublished" and in "joinRoom" rpc callback
+                // This condition is false if openvidu-server sends "participantPublished" event to a subscriber participant that has
+                // already subscribed to certain stream in the callback of "joinRoom" method
+                _this.ee.emitEvent('streamCreated', [new StreamEvent_1.StreamEvent(false, _this, 'streamCreated', connection.stream, '')]);
+            }
+            _this.remoteStreamsCreated[connection.stream.streamId] = true;
+        };
+        // Get the existing Connection created on 'onParticipantJoined' for
+        // existing participants or create a new one for new participants
+        var connection;
+        this.getRemoteConnection(response.id, "Remote connection '" + response.id + "' unknown when 'onParticipantPublished'. " +
+            'Existing remote connections: ' + JSON.stringify(Object.keys(this.remoteConnections)))
+            .then(function (con) {
+            // Update existing Connection
+            connection = con;
+            response.metadata = con.data;
+            connection.options = response;
+            connection.initRemoteStreams(response.streams);
+            afterConnectionFound(connection);
+        })["catch"](function (openViduError) {
+            // Create new Connection
+            connection = new __1.Connection(_this, response);
+            afterConnectionFound(connection);
+        });
+    };
+    /**
+     * @hidden
+     */
+    Session.prototype.onParticipantUnpublished = function (msg) {
+        var _this = this;
+        this.getRemoteConnection(msg.name, "Remote connection '" + msg.name + "' unknown when 'onParticipantUnpublished'. " +
+            'Existing remote connections: ' + JSON.stringify(Object.keys(this.remoteConnections)))
+            .then(function (connection) {
+            var streamEvent = new StreamEvent_1.StreamEvent(true, _this, 'streamDestroyed', connection.stream, msg.reason);
+            _this.ee.emitEvent('streamDestroyed', [streamEvent]);
+            streamEvent.callDefaultBehaviour();
+            // Deleting the remote stream
+            var streamId = connection.stream.streamId;
+            delete _this.remoteStreamsCreated[streamId];
+            connection.removeStream(streamId);
+        })["catch"](function (openViduError) {
+            console.error(openViduError);
+        });
+    };
+    /**
+     * @hidden
+     */
+    Session.prototype.onParticipantEvicted = function (msg) {
+        /*this.getRemoteConnection(msg.name, 'Remote connection ' + msg.name + " unknown when 'onParticipantLeft'. " +
+            'Existing remote connections: ' + JSON.stringify(Object.keys(this.remoteConnections)))
+
+            .then(connection => {
+                if (!!connection.stream) {
+                    const stream = connection.stream;
+
+                    const streamEvent = new StreamEvent(true, this, 'streamDestroyed', stream, 'forceDisconnect');
+                    this.ee.emitEvent('streamDestroyed', [streamEvent]);
+                    streamEvent.callDefaultBehaviour();
+
+                    delete this.remoteStreamsCreated[stream.streamId];
+                }
+                connection.dispose();
+                delete this.remoteConnections[connection.connectionId];
+                this.ee.emitEvent('connectionDestroyed', [new ConnectionEvent(false, this, 'connectionDestroyed', connection, 'forceDisconnect')]);
+            })
+            .catch(openViduError => {
+                console.error(openViduError);
+            });*/
+    };
+    /**
+     * @hidden
+     */
+    Session.prototype.onNewMessage = function (msg) {
+        var _this = this;
+        console.info('New signal: ' + JSON.stringify(msg));
+        this.getConnection(msg.from, "Connection '" + msg.from + "' unknow when 'onNewMessage'. Existing remote connections: "
+            + JSON.stringify(Object.keys(this.remoteConnections)) + '. Existing local connection: ' + this.connection.connectionId)
+            .then(function (connection) {
+            _this.ee.emitEvent('signal', [new SignalEvent_1.SignalEvent(_this, msg.type, msg.data, connection)]);
+            _this.ee.emitEvent('signal:' + msg.type, [new SignalEvent_1.SignalEvent(_this, msg.type, msg.data, connection)]);
+        })["catch"](function (openViduError) {
+            console.error(openViduError);
+        });
+    };
+    /**
+     * @hidden
+     */
+    Session.prototype.recvIceCandidate = function (msg) {
+        var candidate = {
+            candidate: msg.candidate,
+            sdpMid: msg.sdpMid,
+            sdpMLineIndex: msg.sdpMLineIndex
+        };
+        this.getConnection(msg.endpointName, 'Connection not found for endpoint ' + msg.endpointName + '. Ice candidate will be ignored: ' + candidate)
+            .then(function (connection) {
+            var stream = connection.stream;
+            stream.getWebRtcPeer().addIceCandidate(candidate, function (error) {
+                if (error) {
+                    console.error('Error adding candidate for ' + stream.streamId
+                        + ' stream of endpoint ' + msg.endpointName + ': ' + error);
+                }
+            });
+        })["catch"](function (openViduError) {
+            console.error(openViduError);
+        });
+    };
+    /**
+     * @hidden
+     */
+    Session.prototype.onSessionClosed = function (msg) {
+        console.info('Session closed: ' + JSON.stringify(msg));
+        var s = msg.room;
+        if (s !== undefined) {
+            this.ee.emitEvent('session-closed', [{
+                    session: s
+                }]);
+        }
+        else {
+            console.warn('Session undefined on session closed', msg);
+        }
+    };
+    /**
+     * @hidden
+     */
+    Session.prototype.onLostConnection = function () {
+        if (!this.connection) {
+            console.warn('Not connected to session: if you are not debugging, this is probably a certificate error');
+            var url = 'https://' + this.openvidu.getWsUri().split('wss://')[1].split('/openvidu')[0];
+            if (window.confirm('If you are not debugging, this is probably a certificate error at \"' + url + '\"\n\nClick OK to navigate and accept it')) {
+                location.assign(url + '/accept-certificate');
+            }
+            return;
+        }
+        console.warn('Lost connection in Session ' + this.sessionId);
+        if (!!this.sessionId && !this.connection.disposed) {
+            this.leave(true, 'networkDisconnect');
+        }
+    };
+    /**
+     * @hidden
+     */
+    Session.prototype.onMediaError = function (params) {
+        console.error('Media error: ' + JSON.stringify(params));
+        var err = params.error;
+        if (err) {
+            this.ee.emitEvent('error-media', [{
+                    error: err
+                }]);
+        }
+        else {
+            console.warn('Received undefined media error. Params:', params);
+        }
+    };
+    /**
+     * @hidden
+     */
+    Session.prototype.onRecordingStarted = function (response) {
+        this.ee.emitEvent('recordingStarted', [new RecordingEvent_1.RecordingEvent(this, 'recordingStarted', response.id, response.name)]);
+    };
+    /**
+     * @hidden
+     */
+    Session.prototype.onRecordingStopped = function (response) {
+        this.ee.emitEvent('recordingStopped', [new RecordingEvent_1.RecordingEvent(this, 'recordingStopped', response.id, response.name)]);
+    };
+    /**
+     * @hidden
+     */
+    Session.prototype.emitEvent = function (type, eventArray) {
+        this.ee.emitEvent(type, eventArray);
+    };
+    /**
+     * @hidden
+     */
+    Session.prototype.leave = function (forced, reason) {
+        var _this = this;
+        forced = !!forced;
+        console.info('Leaving Session (forced=' + forced + ')');
+        if (!!this.connection) {
+            if (!this.connection.disposed && !forced) {
+                this.openvidu.sendRequest('leaveRoom', function (error, response) {
+                    if (error) {
+                        console.error(error);
+                    }
+                    _this.openvidu.closeWs();
+                });
+            }
+            else {
+                this.openvidu.closeWs();
+            }
+            if (!!this.connection.stream) {
+                // Make Publisher object dispatch 'streamDestroyed' event (if there's a local stream)
+                this.connection.stream.disposeWebRtcPeer();
+                this.connection.stream.emitEvent('stream-destroyed-by-disconnect', [reason]);
+            }
+            if (!this.connection.disposed) {
+                // Make Session object dispatch 'sessionDisconnected' event (if it is not already disposed)
+                var sessionDisconnectEvent = new SessionDisconnectedEvent_1.SessionDisconnectedEvent(this, reason);
+                this.ee.emitEvent('sessionDisconnected', [sessionDisconnectEvent]);
+                sessionDisconnectEvent.callDefaultBehaviour();
+            }
+        }
+        else {
+            console.warn('You were not connected to the session ' + this.sessionId);
+        }
+    };
+    /* Private methods */
+    Session.prototype.connectAux = function (token) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            _this.openvidu.startWs(function (error) {
+                if (!!error) {
+                    reject(error);
+                }
+                else {
+                    var joinParams = {
+                        token: (!!token) ? token : '',
+                        session: _this.sessionId,
+                        metadata: !!_this.options.metadata ? _this.options.metadata : '',
+                        secret: _this.openvidu.getSecret(),
+                        recorder: _this.openvidu.getRecorder()
+                    };
+                    _this.openvidu.sendRequest('joinRoom', joinParams, function (error, response) {
+                        if (!!error) {
+                            reject(error);
+                        }
+                        else {
+                            // Initialize local Connection object with values returned by openvidu-server
+                            _this.connection = new __1.Connection(_this);
+                            _this.connection.connectionId = response.id;
+                            _this.connection.data = response.metadata;
+                            // Initialize remote Connections with value returned by openvidu-server
+                            var events_1 = {
+                                connections: new Array(),
+                                streams: new Array()
+                            };
+                            var existingParticipants = response.value;
+                            existingParticipants.forEach(function (participant) {
+                                var connection = new __1.Connection(_this, participant);
+                                _this.remoteConnections[connection.connectionId] = connection;
+                                events_1.connections.push(connection);
+                                if (!!connection.stream) {
+                                    _this.remoteStreamsCreated[connection.stream.streamId] = true;
+                                    events_1.streams.push(connection.stream);
+                                }
+                            });
+                            // Own 'connectionCreated' event
+                            _this.ee.emitEvent('connectionCreated', [new ConnectionEvent_1.ConnectionEvent(false, _this, 'connectionCreated', _this.connection, '')]);
+                            // One 'connectionCreated' event for each existing connection in the session
+                            events_1.connections.forEach(function (connection) {
+                                _this.ee.emitEvent('connectionCreated', [new ConnectionEvent_1.ConnectionEvent(false, _this, 'connectionCreated', connection, '')]);
+                            });
+                            // One 'streamCreated' event for each active stream in the session
+                            events_1.streams.forEach(function (stream) {
+                                _this.ee.emitEvent('streamCreated', [new StreamEvent_1.StreamEvent(false, _this, 'streamCreated', stream, '')]);
+                            });
+                            resolve();
+                        }
+                    });
+                }
+            });
+        });
+    };
+    Session.prototype.stringClientMetadata = function (metadata) {
+        if (typeof metadata !== 'string') {
+            return JSON.stringify(metadata);
+        }
+        else {
+            return metadata;
+        }
+    };
+    Session.prototype.getConnection = function (connectionId, errorMessage) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            var connection = _this.remoteConnections[connectionId];
+            if (!!connection) {
+                // Resolve remote connection
+                resolve(connection);
+            }
+            else {
+                if (_this.connection.connectionId === connectionId) {
+                    // Resolve local connection
+                    resolve(_this.connection);
+                }
+                else {
+                    // Connection not found. Reject with OpenViduError
+                    reject(new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.GENERIC_ERROR, errorMessage));
+                }
+            }
+        });
+    };
+    Session.prototype.getRemoteConnection = function (connectionId, errorMessage) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            var connection = _this.remoteConnections[connectionId];
+            if (!!connection) {
+                // Resolve remote connection
+                resolve(connection);
+            }
+            else {
+                // Remote connection not found. Reject with OpenViduError
+                reject(new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.GENERIC_ERROR, errorMessage));
+            }
+        });
+    };
+    Session.prototype.processToken = function (token) {
+        var url = new URL(token);
+        this.sessionId = url.searchParams.get('sessionId');
+        var secret = url.searchParams.get('secret');
+        var recorder = url.searchParams.get('recorder');
+        if (!!secret) {
+            this.openvidu.secret = secret;
+        }
+        if (!!recorder) {
+            this.openvidu.recorder = true;
+        }
+        this.openvidu.wsUri = 'wss://' + url.host + '/openvidu';
+    };
+    return Session;
+}());
+exports.Session = Session;
+//# sourceMappingURL=Session.js.map
+
+/***/ }),
+
+/***/ "../../../../openvidu-browser/lib/OpenVidu/Stream.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/*
+ * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+exports.__esModule = true;
+var WebRtcStats_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/WebRtcStats/WebRtcStats.js");
+var PublisherSpeakingEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/PublisherSpeakingEvent.js");
+var EventEmitter = __webpack_require__("../../../../openvidu-browser/node_modules/wolfy87-eventemitter/EventEmitter.js");
+var kurentoUtils = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-utils-js/index.js");
+var VideoInsertMode_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Enums/VideoInsertMode.js");
+/**
+ * Represents each one of the videos send and receive by a user in a session.
+ * Therefore each [[Publisher]] and [[Subscriber]] has an attribute of type Stream
+ */
+var Stream = /** @class */ (function () {
+    /**
+     * @hidden
+     */
+    function Stream(session, options) {
+        var _this = this;
+        this.ee = new EventEmitter();
+        this.isSubscribeToRemote = false;
+        /**
+         * @hidden
+         */
+        this.isReadyToPublish = false;
+        /**
+         * @hidden
+         */
+        this.isPublisherPublished = false;
+        /**
+         * @hidden
+         */
+        this.isVideoELementCreated = false;
+        /**
+         * @hidden
+         */
+        this.accessIsAllowed = false;
+        /**
+         * @hidden
+         */
+        this.accessIsDenied = false;
+        this.session = session;
+        if (options.hasOwnProperty('id')) {
+            // InboundStreamOptions: stream belongs to a Subscriber
+            this.inboundStreamOpts = options;
+            this.streamId = this.inboundStreamOpts.id;
+            this.hasAudio = this.inboundStreamOpts.recvAudio;
+            this.hasVideo = this.inboundStreamOpts.recvVideo;
+            this.typeOfVideo = (!this.inboundStreamOpts.typeOfVideo) ? undefined : this.inboundStreamOpts.typeOfVideo;
+            this.frameRate = (this.inboundStreamOpts.frameRate === -1) ? undefined : this.inboundStreamOpts.frameRate;
+        }
+        else {
+            // OutboundStreamOptions: stream belongs to a Publisher
+            this.outboundStreamOpts = options;
+            if (this.isSendVideo()) {
+                if (this.isSendScreen()) {
+                    this.streamId = 'SCREEN';
+                    this.typeOfVideo = 'SCREEN';
+                }
+                else {
+                    this.streamId = 'CAMERA';
+                    this.typeOfVideo = 'CAMERA';
+                }
+                this.frameRate = this.outboundStreamOpts.publisherProperties.frameRate;
+            }
+            else {
+                this.streamId = 'MICRO';
+                delete this.typeOfVideo;
+            }
+            this.hasAudio = this.isSendAudio();
+            this.hasVideo = this.isSendVideo();
+        }
+        this.on('mediastream-updated', function () {
+            if (_this.video)
+                _this.video.srcObject = _this.mediaStream;
+            console.debug('Video srcObject [' + _this.mediaStream + '] updated in stream [' + _this.streamId + ']');
+        });
+    }
+    /* Hidden methods */
+    /**
+     * @hidden
+     */
+    Stream.prototype.getMediaStream = function () {
+        return this.mediaStream;
+    };
+    /**
+     * @hidden
+     */
+    Stream.prototype.setMediaStream = function (mediaStream) {
+        this.mediaStream = mediaStream;
+        this.ee.emitEvent('mediastream-updated');
+    };
+    /**
+     * @hidden
+     */
+    Stream.prototype.getWebRtcPeer = function () {
+        return this.webRtcPeer;
+    };
+    /**
+     * @hidden
+     */
+    Stream.prototype.getRTCPeerConnection = function () {
+        return this.webRtcPeer.peerConnection;
+    };
+    /**
+     * @hidden
+     */
+    Stream.prototype.getVideoElement = function () {
+        return this.video;
+    };
+    /**
+     * @hidden
+     */
+    Stream.prototype.subscribeToMyRemote = function () {
+        this.isSubscribeToRemote = true;
+    };
+    /**
+     * @hidden
+     */
+    Stream.prototype.setOutboundStreamOptions = function (outboundStreamOpts) {
+        this.outboundStreamOpts = outboundStreamOpts;
+    };
+    /**
+     * @hidden
+     */
+    Stream.prototype.subscribe = function () {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            _this.initWebRtcPeerReceive()
+                .then(function () {
+                resolve();
+            })["catch"](function (error) {
+                reject(error);
+            });
+        });
+    };
+    /**
+     * @hidden
+     */
+    Stream.prototype.publish = function () {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            if (_this.isReadyToPublish) {
+                _this.initWebRtcPeerSend()
+                    .then(function () {
+                    resolve();
+                })["catch"](function (error) {
+                    reject(error);
+                });
+            }
+            else {
+                _this.ee.once('stream-ready-to-publish', function (streamEvent) {
+                    _this.publish()
+                        .then(function () {
+                        resolve();
+                    })["catch"](function (error) {
+                        reject(error);
+                    });
+                });
+            }
+        });
+    };
+    /**
+     * @hidden
+     */
+    Stream.prototype.disposeWebRtcPeer = function () {
+        if (this.webRtcPeer) {
+            this.webRtcPeer.dispose();
+        }
+        if (this.speechEvent) {
+            this.speechEvent.stop();
+        }
+        this.stopWebRtcStats();
+        console.info((!!this.outboundStreamOpts ? 'Outbound ' : 'Inbound ') + "WebRTCPeer from 'Stream' with id [" + this.streamId + '] is now closed');
+    };
+    /**
+     * @hidden
+     */
+    Stream.prototype.disposeMediaStream = function () {
+        if (this.mediaStream) {
+            this.mediaStream.getAudioTracks().forEach(function (track) {
+                track.stop();
+            });
+            this.mediaStream.getVideoTracks().forEach(function (track) {
+                track.stop();
+            });
+        }
+        console.info((!!this.outboundStreamOpts ? 'Local ' : 'Remote ') + "MediaStream from 'Stream' with id [" + this.streamId + '] is now disposed');
+    };
+    /**
+     * @hidden
+     */
+    Stream.prototype.displayMyRemote = function () {
+        return this.isSubscribeToRemote;
+    };
+    /**
+     * @hidden
+     */
+    Stream.prototype.on = function (eventName, listener) {
+        this.ee.on(eventName, listener);
+    };
+    /**
+     * @hidden
+     */
+    Stream.prototype.once = function (eventName, listener) {
+        this.ee.once(eventName, listener);
+    };
+    /**
+     * @hidden
+     */
+    Stream.prototype.insertVideo = function (targetElement, insertMode) {
+        var _this = this;
+        if (!!targetElement) {
+            this.video = document.createElement('video');
+            this.video.id = (this.isLocal() ? 'local-' : 'remote-') + 'video-' + this.streamId;
+            this.video.autoplay = true;
+            this.video.controls = false;
+            this.video.srcObject = this.mediaStream;
+            if (this.isLocal() && !this.displayMyRemote()) {
+                this.video.muted = true;
+                if (this.outboundStreamOpts.publisherProperties.mirror) {
+                    this.mirrorVideo(this.video);
+                }
+                this.video.oncanplay = function () {
+                    console.info("Local 'Stream' with id [" + _this.streamId + '] video is now playing');
+                    _this.ee.emitEvent('video-is-playing', [{
+                            element: _this.video
+                        }]);
+                };
+            }
+            else {
+                this.video.title = this.streamId;
+            }
+            this.targetElement = targetElement;
+            this.parentId = targetElement.id;
+            var insMode = !!insertMode ? insertMode : VideoInsertMode_1.VideoInsertMode.APPEND;
+            this.insertElementWithMode(this.video, insMode);
+            this.ee.emitEvent('video-element-created-by-stream', [{
+                    element: this.video
+                }]);
+            this.isVideoELementCreated = true;
+        }
+        this.isReadyToPublish = true;
+        this.ee.emitEvent('stream-ready-to-publish');
+        return this.video;
+    };
+    /**
+     * @hidden
+     */
+    Stream.prototype.removeVideo = function () {
+        if (this.video) {
+            if (document.getElementById(this.parentId)) {
+                document.getElementById(this.parentId).removeChild(this.video);
+                this.ee.emitEvent('video-removed', [this.video]);
+            }
+            delete this.video;
+        }
+    };
+    /**
+     * @hidden
+     */
+    Stream.prototype.isSendAudio = function () {
+        return (!!this.outboundStreamOpts &&
+            this.outboundStreamOpts.publisherProperties.audioSource !== null &&
+            this.outboundStreamOpts.publisherProperties.audioSource !== false);
+    };
+    /**
+     * @hidden
+     */
+    Stream.prototype.isSendVideo = function () {
+        return (!!this.outboundStreamOpts &&
+            this.outboundStreamOpts.publisherProperties.videoSource !== null &&
+            this.outboundStreamOpts.publisherProperties.videoSource !== false);
+    };
+    /**
+     * @hidden
+     */
+    Stream.prototype.isSendScreen = function () {
+        return (!!this.outboundStreamOpts &&
+            this.outboundStreamOpts.publisherProperties.videoSource === 'screen');
+    };
+    /**
+     * @hidden
+     */
+    Stream.prototype.emitEvent = function (type, eventArray) {
+        this.ee.emitEvent(type, eventArray);
+    };
+    /**
+     * @hidden
+     */
+    Stream.prototype.setSpeechEventIfNotExists = function () {
+        if (!this.speechEvent) {
+            var harkOptions = this.session.openvidu.advancedConfiguration.publisherSpeakingEventsOptions || {};
+            harkOptions.interval = (typeof harkOptions.interval === 'number') ? harkOptions.interval : 50;
+            harkOptions.threshold = (typeof harkOptions.threshold === 'number') ? harkOptions.threshold : -50;
+            this.speechEvent = kurentoUtils.WebRtcPeer.hark(this.mediaStream, harkOptions);
+        }
+    };
+    /**
+     * @hidden
+     */
+    Stream.prototype.enableSpeakingEvents = function () {
+        var _this = this;
+        this.setSpeechEventIfNotExists();
+        this.speechEvent.on('speaking', function () {
+            _this.session.emitEvent('publisherStartSpeaking', [new PublisherSpeakingEvent_1.PublisherSpeakingEvent(_this.session, 'publisherStartSpeaking', _this.connection, _this.streamId)]);
+        });
+        this.speechEvent.on('stopped_speaking', function () {
+            _this.session.emitEvent('publisherStopSpeaking', [new PublisherSpeakingEvent_1.PublisherSpeakingEvent(_this.session, 'publisherStopSpeaking', _this.connection, _this.streamId)]);
+        });
+    };
+    /**
+     * @hidden
+     */
+    Stream.prototype.enableOnceSpeakingEvents = function () {
+        var _this = this;
+        this.setSpeechEventIfNotExists();
+        this.speechEvent.on('speaking', function () {
+            _this.session.emitEvent('publisherStartSpeaking', [new PublisherSpeakingEvent_1.PublisherSpeakingEvent(_this.session, 'publisherStartSpeaking', _this.connection, _this.streamId)]);
+            _this.disableSpeakingEvents();
+        });
+        this.speechEvent.on('stopped_speaking', function () {
+            _this.session.emitEvent('publisherStopSpeaking', [new PublisherSpeakingEvent_1.PublisherSpeakingEvent(_this.session, 'publisherStopSpeaking', _this.connection, _this.streamId)]);
+            _this.disableSpeakingEvents();
+        });
+    };
+    /**
+     * @hidden
+     */
+    Stream.prototype.disableSpeakingEvents = function () {
+        this.speechEvent.stop();
+        this.speechEvent = undefined;
+    };
+    /* Private methods */
+    Stream.prototype.initWebRtcPeerSend = function () {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            var userMediaConstraints = {
+                audio: _this.isSendAudio(),
+                video: _this.isSendVideo()
+            };
+            var options = {
+                videoStream: _this.mediaStream,
+                mediaConstraints: userMediaConstraints,
+                onicecandidate: _this.connection.sendIceCandidate.bind(_this.connection),
+                iceServers: _this.session.openvidu.advancedConfiguration.iceServers
+            };
+            var successCallback = function (error, sdpOfferParam, wp) {
+                if (error) {
+                    reject(new Error('(publish) SDP offer error: ' + JSON.stringify(error)));
+                }
+                console.debug('Sending SDP offer to publish as '
+                    + _this.streamId, sdpOfferParam);
+                _this.session.openvidu.sendRequest('publishVideo', {
+                    sdpOffer: sdpOfferParam,
+                    doLoopback: _this.displayMyRemote() || false,
+                    audioActive: _this.isSendAudio(),
+                    videoActive: _this.isSendVideo(),
+                    typeOfVideo: ((_this.isSendVideo()) ? (_this.isSendScreen() ? 'SCREEN' : 'CAMERA') : ''),
+                    frameRate: !!_this.frameRate ? _this.frameRate : -1
+                }, function (error, response) {
+                    if (error) {
+                        reject('Error on publishVideo: ' + JSON.stringify(error));
+                    }
+                    else {
+                        _this.processSdpAnswer(response.sdpAnswer)
+                            .then(function () {
+                            _this.ee.emitEvent('stream-created-by-publisher');
+                            resolve();
+                        })["catch"](function (error) {
+                            reject(error);
+                        });
+                        console.info("'Publisher' successfully published to session");
+                    }
+                });
+            };
+            if (_this.displayMyRemote()) {
+                _this.webRtcPeer = kurentoUtils.WebRtcPeer.WebRtcPeerSendrecv(options, function (err) {
+                    if (err) {
+                        reject(err);
+                    }
+                    _this.webRtcPeer.generateOffer(successCallback);
+                });
+            }
+            else {
+                _this.webRtcPeer = kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(options, function (error) {
+                    if (error) {
+                        reject(error);
+                    }
+                    _this.webRtcPeer.generateOffer(successCallback);
+                });
+            }
+            _this.isPublisherPublished = true;
+        });
+    };
+    Stream.prototype.initWebRtcPeerReceive = function () {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            var offerConstraints = {
+                audio: _this.inboundStreamOpts.recvAudio,
+                video: _this.inboundStreamOpts.recvVideo
+            };
+            console.debug("'Session.subscribe(Stream)' called. Constraints of generate SDP offer", offerConstraints);
+            var options = {
+                onicecandidate: _this.connection.sendIceCandidate.bind(_this.connection),
+                mediaConstraints: offerConstraints
+            };
+            var successCallback = function (error, sdpOfferParam, wp) {
+                if (error) {
+                    reject(new Error('(subscribe) SDP offer error: ' + JSON.stringify(error)));
+                }
+                console.debug('Sending SDP offer to subscribe to '
+                    + _this.streamId, sdpOfferParam);
+                _this.session.openvidu.sendRequest('receiveVideoFrom', {
+                    sender: _this.streamId,
+                    sdpOffer: sdpOfferParam
+                }, function (error, response) {
+                    if (error) {
+                        reject(new Error('Error on recvVideoFrom: ' + JSON.stringify(error)));
+                    }
+                    else {
+                        _this.processSdpAnswer(response.sdpAnswer).then(function () {
+                            resolve();
+                        })["catch"](function (error) {
+                            reject(error);
+                        });
+                    }
+                });
+            };
+            _this.webRtcPeer = kurentoUtils.WebRtcPeer.WebRtcPeerRecvonly(options, function (error) {
+                if (error) {
+                    reject(error);
+                }
+                _this.webRtcPeer.generateOffer(successCallback);
+            });
+        });
+    };
+    Stream.prototype.processSdpAnswer = function (sdpAnswer) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            var answer = new RTCSessionDescription({
+                type: 'answer',
+                sdp: sdpAnswer
+            });
+            console.debug(_this.streamId + ': set peer connection with recvd SDP answer', sdpAnswer);
+            var streamId = _this.streamId;
+            var peerConnection = _this.webRtcPeer.peerConnection;
+            peerConnection.setRemoteDescription(answer, function () {
+                // Avoids to subscribe to your own stream remotely
+                // except when showMyRemote is true
+                if (!_this.isLocal() || _this.displayMyRemote()) {
+                    _this.mediaStream = peerConnection.getRemoteStreams()[0];
+                    console.debug('Peer remote stream', _this.mediaStream);
+                    if (!!_this.mediaStream) {
+                        _this.ee.emitEvent('mediastream-updated');
+                        if (!!_this.mediaStream.getAudioTracks()[0] && _this.session.speakingEventsEnabled) {
+                            _this.enableSpeakingEvents();
+                        }
+                    }
+                    if (!!_this.video) {
+                        // let thumbnailId = this.video.thumb;
+                        _this.video.oncanplay = function () {
+                            if (_this.isLocal() && _this.displayMyRemote()) {
+                                console.info("Your own remote 'Stream' with id [" + _this.streamId + '] video is now playing');
+                                _this.ee.emitEvent('remote-video-is-playing', [{
+                                        element: _this.video
+                                    }]);
+                            }
+                            else if (!_this.isLocal() && !_this.displayMyRemote()) {
+                                console.info("Remote 'Stream' with id [" + _this.streamId + '] video is now playing');
+                                _this.ee.emitEvent('video-is-playing', [{
+                                        element: _this.video
+                                    }]);
+                            }
+                            // show(thumbnailId);
+                            // this.hideSpinner(this.streamId);
+                        };
+                    }
+                    _this.session.emitEvent('stream-subscribed', [{
+                            stream: _this
+                        }]);
+                }
+                _this.initWebRtcStats();
+                resolve();
+            }, function (error) {
+                reject(new Error(_this.streamId + ': Error setting SDP to the peer connection: ' + JSON.stringify(error)));
+            });
+        });
+    };
+    Stream.prototype.initWebRtcStats = function () {
+        this.webRtcStats = new WebRtcStats_1.WebRtcStats(this);
+        this.webRtcStats.initWebRtcStats();
+    };
+    Stream.prototype.stopWebRtcStats = function () {
+        if (!!this.webRtcStats && this.webRtcStats.isEnabled()) {
+            this.webRtcStats.stopWebRtcStats();
+        }
+    };
+    Stream.prototype.isLocal = function () {
+        // inbound options undefined and outbound options defined
+        return (!this.inboundStreamOpts && !!this.outboundStreamOpts);
+    };
+    Stream.prototype.insertElementWithMode = function (element, insertMode) {
+        if (!!this.targetElement) {
+            switch (insertMode) {
+                case VideoInsertMode_1.VideoInsertMode.AFTER:
+                    this.targetElement.parentNode.insertBefore(element, this.targetElement.nextSibling);
+                    break;
+                case VideoInsertMode_1.VideoInsertMode.APPEND:
+                    this.targetElement.appendChild(element);
+                    break;
+                case VideoInsertMode_1.VideoInsertMode.BEFORE:
+                    this.targetElement.parentNode.insertBefore(element, this.targetElement);
+                    break;
+                case VideoInsertMode_1.VideoInsertMode.PREPEND:
+                    this.targetElement.insertBefore(element, this.targetElement.childNodes[0]);
+                    break;
+                case VideoInsertMode_1.VideoInsertMode.REPLACE:
+                    this.targetElement.parentNode.replaceChild(element, this.targetElement);
+                    break;
+                default:
+                    this.insertElementWithMode(element, VideoInsertMode_1.VideoInsertMode.APPEND);
+            }
+        }
+    };
+    Stream.prototype.mirrorVideo = function (video) {
+        video.style.transform = 'rotateY(180deg)';
+        video.style.webkitTransform = 'rotateY(180deg)';
+    };
+    return Stream;
+}());
+exports.Stream = Stream;
+//# sourceMappingURL=Stream.js.map
+
+/***/ }),
+
+/***/ "../../../../openvidu-browser/lib/OpenVidu/Subscriber.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/*
+ * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+exports.__esModule = true;
+var VideoElementEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/VideoElementEvent.js");
+var EventEmitter = __webpack_require__("../../../../openvidu-browser/node_modules/wolfy87-eventemitter/EventEmitter.js");
+/**
+ * Packs remote media streams. Participants automatically receive them when others publish their streams. Initialized with [[Session.subscribe]] method
+ */
+var Subscriber = /** @class */ (function () {
+    /**
+     * @hidden
+     */
+    function Subscriber(stream, targetElement, properties) {
+        var _this = this;
+        this.ee = new EventEmitter();
+        this.stream = stream;
+        this.properties = properties;
+        if (typeof targetElement === 'string') {
+            var e = document.getElementById(targetElement);
+            if (!!e) {
+                this.element = e;
+            }
+        }
+        else if (targetElement instanceof HTMLElement) {
+            this.element = targetElement;
+        }
+        this.stream.once('video-removed', function (element) {
+            _this.ee.emitEvent('videoElementDestroyed', [new VideoElementEvent_1.VideoElementEvent(element, _this, 'videoElementDestroyed')]);
+        });
+    }
+    /**
+     * Subscribe or unsubscribe from the audio stream (if available). Calling this method twice in a row passing same value will have no effect
+     * @param value `true` to subscribe to the audio stream, `false` to unsubscribe from it
+     */
+    Subscriber.prototype.subscribeToAudio = function (value) {
+        this.stream.getWebRtcPeer().audioEnabled = value;
+        console.info("'Subscriber' has " + (value ? 'subscribed' : 'unsubscribed') + ' to its audio stream');
+        return this;
+    };
+    /**
+     * Subscribe or unsubscribe from the video stream (if available). Calling this method twice in a row passing same value will have no effect
+     * @param value `true` to subscribe to the video stream, `false` to unsubscribe from it
+     */
+    Subscriber.prototype.subscribeToVideo = function (value) {
+        this.stream.getWebRtcPeer().videoEnabled = value;
+        console.info("'Subscriber' has " + (value ? 'subscribed' : 'unsubscribed') + ' to its video stream');
+        return this;
+    };
+    /**
+     * See [[EventDispatcher.on]]
+     */
+    Subscriber.prototype.on = function (type, handler) {
+        var _this = this;
+        this.ee.on(type, function (event) {
+            if (event) {
+                console.info("Event '" + type + "' triggered by 'Subscriber'", event);
+            }
+            else {
+                console.info("Event '" + type + "' triggered by 'Subscriber'");
+            }
+            handler(event);
+        });
+        if (type === 'videoElementCreated') {
+            if (this.stream.isVideoELementCreated) {
+                this.ee.emitEvent('videoElementCreated', [new VideoElementEvent_1.VideoElementEvent(this.stream.getVideoElement(), this, 'videoElementCreated')]);
+            }
+            else {
+                this.stream.once('video-element-created-by-stream', function (element) {
+                    _this.id = element.id;
+                    _this.ee.emitEvent('videoElementCreated', [new VideoElementEvent_1.VideoElementEvent(element, _this, 'videoElementCreated')]);
+                });
+            }
+        }
+        if (type === 'videoPlaying') {
+            var video = this.stream.getVideoElement();
+            if (!this.stream.displayMyRemote() && video &&
+                video.currentTime > 0 &&
+                video.paused === false &&
+                video.ended === false &&
+                video.readyState === 4) {
+                this.ee.emitEvent('videoPlaying', [new VideoElementEvent_1.VideoElementEvent(this.stream.getVideoElement(), this, 'videoPlaying')]);
+            }
+            else {
+                this.stream.once('video-is-playing', function (element) {
+                    _this.ee.emitEvent('videoPlaying', [new VideoElementEvent_1.VideoElementEvent(element.element, _this, 'videoPlaying')]);
+                });
+            }
+        }
+        return this;
+    };
+    /**
+     * See [[EventDispatcher.once]]
+     */
+    Subscriber.prototype.once = function (type, handler) {
+        var _this = this;
+        this.ee.once(type, function (event) {
+            if (event) {
+                console.info("Event '" + type + "' triggered once by 'Subscriber'", event);
+            }
+            else {
+                console.info("Event '" + type + "' triggered once by 'Subscriber'");
+            }
+            handler(event);
+        });
+        if (type === 'videoElementCreated') {
+            if (this.stream.isVideoELementCreated) {
+                this.ee.emitEvent('videoElementCreated', [new VideoElementEvent_1.VideoElementEvent(this.stream.getVideoElement(), this, 'videoElementCreated')]);
+            }
+            else {
+                this.stream.once('video-element-created-by-stream', function (element) {
+                    _this.id = element.id;
+                    _this.ee.emitEvent('videoElementCreated', [new VideoElementEvent_1.VideoElementEvent(element, _this, 'videoElementCreated')]);
+                });
+            }
+        }
+        if (type === 'videoPlaying') {
+            var video = this.stream.getVideoElement();
+            if (!this.stream.displayMyRemote() && video &&
+                video.currentTime > 0 &&
+                video.paused === false &&
+                video.ended === false &&
+                video.readyState === 4) {
+                this.ee.emitEvent('videoPlaying', [new VideoElementEvent_1.VideoElementEvent(this.stream.getVideoElement(), this, 'videoPlaying')]);
+            }
+            else {
+                this.stream.once('video-is-playing', function (element) {
+                    _this.ee.emitEvent('videoPlaying', [new VideoElementEvent_1.VideoElementEvent(element.element, _this, 'videoPlaying')]);
+                });
+            }
+        }
+        return this;
+    };
+    /**
+     * See [[EventDispatcher.off]]
+     */
+    Subscriber.prototype.off = function (type, handler) {
+        if (!handler) {
+            this.ee.removeAllListeners(type);
+        }
+        else {
+            this.ee.off(type, handler);
+        }
+        return this;
+    };
+    return Subscriber;
+}());
+exports.Subscriber = Subscriber;
+//# sourceMappingURL=Subscriber.js.map
+
+/***/ }),
+
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/Enums/LocalRecorderState.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/*
+ * (C) Copyright 2018 OpenVidu (http://openvidu.io/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+exports.__esModule = true;
+var LocalRecorderState;
+(function (LocalRecorderState) {
+    LocalRecorderState["READY"] = "READY";
+    LocalRecorderState["RECORDING"] = "RECORDING";
+    LocalRecorderState["PAUSED"] = "PAUSED";
+    LocalRecorderState["FINISHED"] = "FINISHED";
+})(LocalRecorderState = exports.LocalRecorderState || (exports.LocalRecorderState = {}));
+//# sourceMappingURL=LocalRecorderState.js.map
+
+/***/ }),
+
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/Enums/OpenViduError.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/*
+ * (C) Copyright 2018 OpenVidu (http://openvidu.io/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+exports.__esModule = true;
+var OpenViduErrorName;
+(function (OpenViduErrorName) {
+    OpenViduErrorName["BROWSER_NOT_SUPPORTED"] = "BROWSER_NOT_SUPPORTED";
+    OpenViduErrorName["CAMERA_ACCESS_DENIED"] = "CAMERA_ACCESS_DENIED";
+    OpenViduErrorName["MICROPHONE_ACCESS_DENIED"] = "MICROPHONE_ACCESS_DENIED";
+    OpenViduErrorName["SCREEN_CAPTURE_DENIED"] = "SCREEN_CAPTURE_DENIED";
+    OpenViduErrorName["SCREEN_SHARING_NOT_SUPPORTED"] = "SCREEN_SHARING_NOT_SUPPORTED";
+    OpenViduErrorName["SCREEN_EXTENSION_NOT_INSTALLED"] = "SCREEN_EXTENSION_NOT_INSTALLED";
+    OpenViduErrorName["SCREEN_EXTENSION_DISABLED"] = "SCREEN_EXTENSION_DISABLED";
+    OpenViduErrorName["INPUT_VIDEO_DEVICE_NOT_FOUND"] = "INPUT_VIDEO_DEVICE_NOT_FOUND";
+    OpenViduErrorName["INPUT_AUDIO_DEVICE_NOT_FOUND"] = "INPUT_AUDIO_DEVICE_NOT_FOUND";
+    OpenViduErrorName["NO_INPUT_SOURCE_SET"] = "NO_INPUT_SOURCE_SET";
+    OpenViduErrorName["PUBLISHER_PROPERTIES_ERROR"] = "PUBLISHER_PROPERTIES_ERROR";
+    OpenViduErrorName["OPENVIDU_PERMISSION_DENIED"] = "OPENVIDU_PERMISSION_DENIED";
+    OpenViduErrorName["OPENVIDU_NOT_CONNECTED"] = "OPENVIDU_NOT_CONNECTED";
+    OpenViduErrorName["GENERIC_ERROR"] = "GENERIC_ERROR";
+})(OpenViduErrorName = exports.OpenViduErrorName || (exports.OpenViduErrorName = {}));
+/**
+ * Simple object to identify runtime errors on the client side
+ */
+var OpenViduError = /** @class */ (function () {
+    /**
+     * @hidden
+     */
+    function OpenViduError(name, message) {
+        this.name = name;
+        this.message = message;
+    }
+    return OpenViduError;
+}());
+exports.OpenViduError = OpenViduError;
+//# sourceMappingURL=OpenViduError.js.map
+
+/***/ }),
+
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/Enums/VideoInsertMode.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/*
+ * (C) Copyright 2018 OpenVidu (http://openvidu.io/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+exports.__esModule = true;
+/**
+ * How the video will be inserted in the DOM for Publishers and Subscribers. See [[PublisherProperties.insertMode]] and [[SubscriberProperties.insertMode]]
+ */
+var VideoInsertMode;
+(function (VideoInsertMode) {
+    /**
+     * Video inserted after the target element (as next sibling)
+     */
+    VideoInsertMode["AFTER"] = "AFTER";
+    /**
+     * Video inserted as last child of the target element
+     */
+    VideoInsertMode["APPEND"] = "APPEND";
+    /**
+     * Video inserted before the target element (as previous sibling)
+     */
+    VideoInsertMode["BEFORE"] = "BEFORE";
+    /**
+     * Video inserted as first child of the target element
+     */
+    VideoInsertMode["PREPEND"] = "PREPEND";
+    /**
+     * Video replaces target element
+     */
+    VideoInsertMode["REPLACE"] = "REPLACE";
+})(VideoInsertMode = exports.VideoInsertMode || (exports.VideoInsertMode = {}));
+//# sourceMappingURL=VideoInsertMode.js.map
+
+/***/ }),
+
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/Events/ConnectionEvent.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/*
+ * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+exports.__esModule = true;
+var Event_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/Event.js");
+/**
+ * Defines the following events:
+ * - `connectionCreated`: dispatched by [[Session]]
+ * - `connectionDestroyed`: dispatched by [[Session]]
+ */
+var ConnectionEvent = /** @class */ (function (_super) {
+    __extends(ConnectionEvent, _super);
+    /**
+     * @hidden
+     */
+    function ConnectionEvent(cancelable, target, type, connection, reason) {
+        var _this = _super.call(this, cancelable, target, type) || this;
+        _this.connection = connection;
+        _this.reason = reason;
+        return _this;
+    }
+    /**
+     * @hidden
+     */
+    // tslint:disable-next-line:no-empty
+    ConnectionEvent.prototype.callDefaultBehaviour = function () { };
+    return ConnectionEvent;
+}(Event_1.Event));
+exports.ConnectionEvent = ConnectionEvent;
+//# sourceMappingURL=ConnectionEvent.js.map
+
+/***/ }),
+
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/Events/Event.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/*
+ * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+exports.__esModule = true;
+var Event = /** @class */ (function () {
+    /**
+     * @hidden
+     */
+    function Event(cancelable, target, type) {
+        this.hasBeenPrevented = false;
+        this.cancelable = cancelable;
+        this.target = target;
+        this.type = type;
+    }
+    /**
+     * Whether the default beahivour of the event has been prevented or not. Call [[Event.preventDefault]] to prevent it
+     */
+    Event.prototype.isDefaultPrevented = function () {
+        return this.hasBeenPrevented;
+    };
+    /**
+     * Prevents the default behaviour of the event. The following events have a default behaviour:
+     * - `sessionDisconnected`: automatically unsubscribes the leaving participant from every Subscriber object of the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks)
+     * and also deletes the HTML video element associated to it.
+     * - `streamDestroyed`: if dispatched by a [[Publisher]] (_you_ have unpublished), automatically stops all media tracks and deletes the HTML video element associated to the stream. If dispatched by [[Session]],
+     * (_other user_ has unpublished), automatically unsubscribes the proper Subscriber object from the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks) and deletes the HTML video element associated to it.
+     */
+    Event.prototype.preventDefault = function () {
+        // tslint:disable-next-line:no-empty
+        this.callDefaultBehaviour = function () { };
+        this.hasBeenPrevented = true;
+    };
+    return Event;
+}());
+exports.Event = Event;
+//# sourceMappingURL=Event.js.map
+
+/***/ }),
+
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/Events/PublisherSpeakingEvent.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/*
+ * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+exports.__esModule = true;
+var Event_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/Event.js");
+/**
+ * Defines the following events:
+ * - `publisherStartSpeaking`: dispatched by [[Session]]
+ * - `publisherStopSpeaking`: dispatched by [[Session]]
+ *
+ * More information:
+ * - This events will only be triggered for **remote streams that have audio tracks**
+ * - Both events share the same lifecycle. That means that you can subscribe to only one of them if you want, but if you call `Session.off('publisherStopSpeaking')`,
+ * keep in mind that this will also internally remove any 'publisherStartSpeaking' event
+ * - You can further configure how the events are dispatched by setting property `publisherSpeakingEventsOptions` in the call of [[OpenVidu.setAdvancedConfiguration]]
+ */
+var PublisherSpeakingEvent = /** @class */ (function (_super) {
+    __extends(PublisherSpeakingEvent, _super);
+    /**
+     * @hidden
+     */
+    function PublisherSpeakingEvent(target, type, connection, streamId) {
+        var _this = _super.call(this, false, target, type) || this;
+        _this.type = type;
+        _this.connection = connection;
+        _this.streamId = streamId;
+        return _this;
+    }
+    /**
+     * @hidden
+     */
+    // tslint:disable-next-line:no-empty
+    PublisherSpeakingEvent.prototype.callDefaultBehaviour = function () { };
+    return PublisherSpeakingEvent;
+}(Event_1.Event));
+exports.PublisherSpeakingEvent = PublisherSpeakingEvent;
+//# sourceMappingURL=PublisherSpeakingEvent.js.map
+
+/***/ }),
+
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/Events/RecordingEvent.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/*
+ * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+exports.__esModule = true;
+var Event_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/Event.js");
+/**
+ * Defines the following events:
+ * - `recordingStarted`: dispatched by [[Session]]
+ * - `recordingStopped`: dispatched by [[Session]]
+ */
+var RecordingEvent = /** @class */ (function (_super) {
+    __extends(RecordingEvent, _super);
+    /**
+     * @hidden
+     */
+    function RecordingEvent(target, type, id, name) {
+        var _this = _super.call(this, false, target, type) || this;
+        _this.id = id;
+        if (name !== id) {
+            _this.name = name;
+        }
+        return _this;
+    }
+    /**
+     * @hidden
+     */
+    // tslint:disable-next-line:no-empty
+    RecordingEvent.prototype.callDefaultBehaviour = function () { };
+    return RecordingEvent;
+}(Event_1.Event));
+exports.RecordingEvent = RecordingEvent;
+//# sourceMappingURL=RecordingEvent.js.map
+
+/***/ }),
+
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/Events/SessionDisconnectedEvent.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/*
+ * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+exports.__esModule = true;
+var Event_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/Event.js");
+/**
+ * Defines event `sessionDisconnected` dispatched by [[Session]]
+ */
+var SessionDisconnectedEvent = /** @class */ (function (_super) {
+    __extends(SessionDisconnectedEvent, _super);
+    /**
+     * @hidden
+     */
+    function SessionDisconnectedEvent(target, reason) {
+        var _this = _super.call(this, true, target, 'sessionDisconnected') || this;
+        _this.reason = reason;
+        return _this;
+    }
+    /**
+     * @hidden
+     */
+    SessionDisconnectedEvent.prototype.callDefaultBehaviour = function () {
+        console.info("Calling default behaviour upon '" + this.type + "' event dispatched by 'Session'");
+        var session = this.target;
+        // Dispose and delete all remote Connections
+        for (var connectionId in session.remoteConnections) {
+            if (!!session.remoteConnections[connectionId].stream) {
+                session.remoteConnections[connectionId].stream.disposeWebRtcPeer();
+                session.remoteConnections[connectionId].stream.disposeMediaStream();
+                session.remoteConnections[connectionId].stream.removeVideo();
+                delete session.remoteStreamsCreated[session.remoteConnections[connectionId].stream.streamId];
+                session.remoteConnections[connectionId].dispose();
+            }
+            delete session.remoteConnections[connectionId];
+        }
+    };
+    return SessionDisconnectedEvent;
+}(Event_1.Event));
+exports.SessionDisconnectedEvent = SessionDisconnectedEvent;
+//# sourceMappingURL=SessionDisconnectedEvent.js.map
+
+/***/ }),
+
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/Events/SignalEvent.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/*
+ * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+exports.__esModule = true;
+var Event_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/Event.js");
+/**
+ * Defines the following events:
+ * - `signal`: dispatched by [[Session]]
+ * - `signal:TYPE`: dispatched by [[Session]]
+ */
+var SignalEvent = /** @class */ (function (_super) {
+    __extends(SignalEvent, _super);
+    /**
+     * @hidden
+     */
+    function SignalEvent(target, type, data, from) {
+        var _this = _super.call(this, false, target, type) || this;
+        _this.type = type;
+        _this.data = data;
+        _this.from = from;
+        return _this;
+    }
+    /**
+     * @hidden
+     */
+    // tslint:disable-next-line:no-empty
+    SignalEvent.prototype.callDefaultBehaviour = function () { };
+    return SignalEvent;
+}(Event_1.Event));
+exports.SignalEvent = SignalEvent;
+//# sourceMappingURL=SignalEvent.js.map
+
+/***/ }),
+
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/Events/StreamEvent.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/*
+ * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+exports.__esModule = true;
+var Event_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/Event.js");
+var __1 = __webpack_require__("../../../../openvidu-browser/lib/index.js");
+/**
+ * Defines the following events:
+ * - `streamCreated`: dispatched by [[Session]] and [[Publisher]]
+ * - `streamDestroyed`: dispatched by [[Session]] and [[Publisher]]
+ */
+var StreamEvent = /** @class */ (function (_super) {
+    __extends(StreamEvent, _super);
+    /**
+     * @hidden
+     */
+    function StreamEvent(cancelable, target, type, stream, reason) {
+        var _this = _super.call(this, cancelable, target, type) || this;
+        _this.stream = stream;
+        _this.reason = reason;
+        return _this;
+    }
+    /**
+     * @hidden
+     */
+    StreamEvent.prototype.callDefaultBehaviour = function () {
+        if (this.type === 'streamDestroyed') {
+            if (this.target instanceof __1.Session) {
+                console.info("Calling default behaviour upon '" + this.type + "' event dispatched by 'Session'");
+                // Remote Stream
+                this.stream.disposeWebRtcPeer();
+                this.stream.disposeMediaStream();
+                this.stream.removeVideo();
+            }
+            else if (this.target instanceof __1.Publisher) {
+                console.info("Calling default behaviour upon '" + this.type + "' event dispatched by 'Publisher'");
+                // Local Stream
+                this.stream.disposeMediaStream();
+                this.stream.removeVideo();
+                this.stream.isReadyToPublish = false;
+            }
+            // Delete stream from Session.remoteStreamsCreated map
+            delete this.stream.session.remoteStreamsCreated[this.stream.streamId];
+            // Delete StreamOptionsServer from remote Connection
+            var remoteConnection = this.stream.session.remoteConnections[this.stream.connection.connectionId];
+            if (!!remoteConnection && !!remoteConnection.options) {
+                var streamOptionsServer = remoteConnection.options.streams;
+                for (var i = streamOptionsServer.length - 1; i >= 0; --i) {
+                    if (streamOptionsServer[i].id === this.stream.streamId) {
+                        streamOptionsServer.splice(i, 1);
+                    }
+                }
+            }
+        }
+    };
+    return StreamEvent;
+}(Event_1.Event));
+exports.StreamEvent = StreamEvent;
+//# sourceMappingURL=StreamEvent.js.map
+
+/***/ }),
+
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/Events/VideoElementEvent.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/*
+ * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+exports.__esModule = true;
+var Event_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/Event.js");
+/**
+ * Defines the following events:
+ * - `videoElementCreated`: dispatched by [[Publisher]] and [[Subscriber]]
+ * - `videoElementDestroyed`: dispatched by [[Publisher]] and [[Subscriber]]
+ * - `videoPlaying`: dispatched by [[Publisher]] and [[Subscriber]]
+ * - `remoteVideoPlaying`: dispatched by [[Publisher]] if `Publisher.subscribeToRemote()` was called before `Session.publish(Publisher)`
+ */
+var VideoElementEvent = /** @class */ (function (_super) {
+    __extends(VideoElementEvent, _super);
+    /**
+     * @hidden
+     */
+    function VideoElementEvent(element, target, type) {
+        var _this = _super.call(this, false, target, type) || this;
+        _this.element = element;
+        return _this;
+    }
+    /**
+     * @hidden
+     */
+    // tslint:disable-next-line:no-empty
+    VideoElementEvent.prototype.callDefaultBehaviour = function () { };
+    return VideoElementEvent;
+}(Event_1.Event));
+exports.VideoElementEvent = VideoElementEvent;
+//# sourceMappingURL=VideoElementEvent.js.map
+
+/***/ }),
+
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/Mapper.js":
 /***/ (function(module, exports) {
 
 function Mapper() {
@@ -968,7 +3710,6 @@ function Mapper() {
         if (ids == undefined)
             return;
         delete ids[id];
-        // Check it's empty
         for (var i in ids) {
             return false;
         }
@@ -996,52 +3737,20 @@ module.exports = Mapper;
 
 /***/ }),
 
-/***/ "../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/clients/index.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/clients/index.js":
 /***/ (function(module, exports, __webpack_require__) {
 
-/*
- * (C) Copyright 2014 Kurento (http://kurento.org/)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
-var JsonRpcClient = __webpack_require__("../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/clients/jsonrpcclient.js");
+var JsonRpcClient = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/clients/jsonrpcclient.js");
 exports.JsonRpcClient = JsonRpcClient;
 //# sourceMappingURL=index.js.map
 
 /***/ }),
 
-/***/ "../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/clients/jsonrpcclient.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/clients/jsonrpcclient.js":
 /***/ (function(module, exports, __webpack_require__) {
 
-/*
- * (C) Copyright 2014 Kurento (http://kurento.org/)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
-var RpcBuilder = __webpack_require__("../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/index.js");
-var WebSocketWithReconnection = __webpack_require__("../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/clients/transports/webSocketWithReconnection.js");
+var RpcBuilder = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/index.js");
+var WebSocketWithReconnection = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/clients/transports/webSocketWithReconnection.js");
 Date.now = Date.now || function () {
     return +new Date;
 };
@@ -1050,27 +3759,6 @@ var RECONNECTING = 'RECONNECTING';
 var CONNECTED = 'CONNECTED';
 var DISCONNECTED = 'DISCONNECTED';
 var Logger = console;
-/**
- *
- * heartbeat: interval in ms for each heartbeat message,
- * sendCloseMessage : true / false, before closing the connection, it sends a closeSession message
- * <pre>
- * ws : {
- * 	uri : URI to conntect to,
- *  useSockJS : true (use SockJS) / false (use WebSocket) by default,
- * 	onconnected : callback method to invoke when connection is successful,
- * 	ondisconnect : callback method to invoke when the connection is lost,
- * 	onreconnecting : callback method to invoke when the client is reconnecting,
- * 	onreconnected : callback method to invoke when the client succesfully reconnects,
- * 	onerror : callback method to invoke when there is an error
- * },
- * rpc : {
- * 	requestTimeout : timeout for a request,
- * 	sessionStatusChanged: callback method for changes in session status,
- * 	mediaRenegotiation: mediaRenegotiation
- * }
- * </pre>
- */
 function JsonRpcClient(configuration) {
     var self = this;
     var wsConfig = configuration.ws;
@@ -1214,10 +3902,6 @@ function JsonRpcClient(configuration) {
             Logger.debug("Trying to send ping, but ping is not enabled");
         }
     }
-    /*
-    * If configuration.hearbeat has any value, the ping-pong will work with the interval
-    * of configuration.hearbeat
-    */
     function usePing() {
         if (!pingPongStarted) {
             Logger.debug("Starting ping (if configured)");
@@ -1249,7 +3933,6 @@ function JsonRpcClient(configuration) {
             ws.close();
         }
     };
-    // This method is only for testing
     this.forceClose = function (millis) {
         ws.forceClose(millis);
     };
@@ -1262,81 +3945,28 @@ module.exports = JsonRpcClient;
 
 /***/ }),
 
-/***/ "../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/clients/transports/index.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/clients/transports/index.js":
 /***/ (function(module, exports, __webpack_require__) {
 
-/*
- * (C) Copyright 2014 Kurento (http://kurento.org/)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
-var WebSocketWithReconnection = __webpack_require__("../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/clients/transports/webSocketWithReconnection.js");
+var WebSocketWithReconnection = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/clients/transports/webSocketWithReconnection.js");
 exports.WebSocketWithReconnection = WebSocketWithReconnection;
 //# sourceMappingURL=index.js.map
 
 /***/ }),
 
-/***/ "../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/clients/transports/webSocketWithReconnection.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/clients/transports/webSocketWithReconnection.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-/* WEBPACK VAR INJECTION */(function(global) {/*
- * (C) Copyright 2013-2015 Kurento (http://kurento.org/)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+/* WEBPACK VAR INJECTION */(function(global) {
 var BrowserWebSocket = global.WebSocket || global.MozWebSocket;
 var Logger = console;
-/**
- * Get either the `WebSocket` or `MozWebSocket` globals
- * in the browser or try to resolve WebSocket-compatible
- * interface exposed by `ws` for Node-like environment.
- */
-/*var WebSocket = BrowserWebSocket;
-if (!WebSocket && typeof window === 'undefined') {
-    try {
-        WebSocket = require('ws');
-    } catch (e) { }
-}*/
-//var SockJS = require('sockjs-client');
-var MAX_RETRIES = 2000; // Forever...
-var RETRY_TIME_MS = 3000; // FIXME: Implement exponential wait times...
+var MAX_RETRIES = 2000;
+var RETRY_TIME_MS = 3000;
 var CONNECTING = 0;
 var OPEN = 1;
 var CLOSING = 2;
 var CLOSED = 3;
-/*
-config = {
-        uri : wsUri,
-        useSockJS : true (use SockJS) / false (use WebSocket) by default,
-        onconnected : callback method to invoke when connection is successful,
-        ondisconnect : callback method to invoke when the connection is lost,
-        onreconnecting : callback method to invoke when the client is reconnecting,
-        onreconnected : callback method to invoke when the client succesfully reconnects,
-    };
-*/
 function WebSocketWithReconnection(config) {
     var closing = false;
     var registerMessageHandler;
@@ -1422,7 +4052,6 @@ function WebSocketWithReconnection(config) {
             }
         }
     }
-    // TODO Test retries. How to force not connection?
     function reconnectToNewUri(maxRetries, numRetries, reconnectWsUri) {
         Logger.debug("Reconnection attempt #" + numRetries);
         ws.close();
@@ -1464,7 +4093,6 @@ function WebSocketWithReconnection(config) {
         closing = true;
         ws.close();
     };
-    // This method is only for testing
     this.forceClose = function (millis) {
         Logger.debug("Testing: Force WebSocket close");
         if (millis) {
@@ -1500,25 +4128,9 @@ module.exports = WebSocketWithReconnection;
 
 /***/ }),
 
-/***/ "../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/index.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/index.js":
 /***/ (function(module, exports, __webpack_require__) {
 
-/*
- * (C) Copyright 2014 Kurento (http://kurento.org/)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
 var defineProperty_IE8 = false;
 if (Object.defineProperty) {
     try {
@@ -1528,12 +4140,9 @@ if (Object.defineProperty) {
         defineProperty_IE8 = true;
     }
 }
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind
 if (!Function.prototype.bind) {
     Function.prototype.bind = function (oThis) {
         if (typeof this !== 'function') {
-            // closest thing possible to the ECMAScript 5
-            // internal IsCallable function
             throw new TypeError('Function.prototype.bind - what is trying to be bound is not callable');
         }
         var aArgs = Array.prototype.slice.call(arguments, 1), fToBind = this, fNOP = function () { }, fBound = function () {
@@ -1548,8 +4157,8 @@ if (!Function.prototype.bind) {
 }
 var EventEmitter = __webpack_require__("./node_modules/events/events.js").EventEmitter;
 var inherits = __webpack_require__("../../../../openvidu-browser/node_modules/inherits/inherits_browser.js");
-var packers = __webpack_require__("../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/packers/index.js");
-var Mapper = __webpack_require__("../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/Mapper.js");
+var packers = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/packers/index.js");
+var Mapper = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/Mapper.js");
 var BASE_TIMEOUT = 5000;
 function unifyResponseMethods(responseMethods) {
     if (!responseMethods)
@@ -1569,23 +4178,18 @@ function unifyResponseMethods(responseMethods) {
 function unifyTransport(transport) {
     if (!transport)
         return;
-    // Transport as a function
     if (transport instanceof Function)
         return { send: transport };
-    // WebSocket & DataChannel
     if (transport.send instanceof Function)
         return transport;
-    // Message API (Inter-window & WebWorker)
     if (transport.postMessage instanceof Function) {
         transport.send = transport.postMessage;
         return transport;
     }
-    // Stream API
     if (transport.write instanceof Function) {
         transport.send = transport.write;
         return transport;
     }
-    // Transports that only can receive messages, but not send
     if (transport.onmessage !== undefined)
         return;
     if (transport.pause instanceof Function)
@@ -1593,16 +4197,6 @@ function unifyTransport(transport) {
     throw new SyntaxError("Transport is not a function nor a valid object");
 }
 ;
-/**
- * Representation of a RPC notification
- *
- * @class
- *
- * @constructor
- *
- * @param {String} method -method of the notification
- * @param params - parameters of the notification
- */
 function RpcNotification(method, params) {
     if (defineProperty_IE8) {
         this.method = method;
@@ -1614,19 +4208,6 @@ function RpcNotification(method, params) {
     }
 }
 ;
-/**
- * @class
- *
- * @constructor
- *
- * @param {object} packer
- *
- * @param {object} [options]
- *
- * @param {object} [transport]
- *
- * @param {Function} [onRequest]
- */
 function RpcBuilder(packer, options, transport, onRequest) {
     var self = this;
     if (!packer)
@@ -1677,18 +4258,14 @@ function RpcBuilder(packer, options, transport, onRequest) {
         return transport;
     };
     this.setTransport = function (value) {
-        // Remove listener from old transport
         if (transport) {
-            // W3C transports
             if (transport.removeEventListener)
                 transport.removeEventListener('message', transportMessage);
             else if (transport.removeListener)
                 transport.removeListener('data', transportMessage);
         }
         ;
-        // Set listener on new transport
         if (value) {
-            // W3C transports
             if (value.addEventListener)
                 value.addEventListener('message', transportMessage);
             else if (value.addListener)
@@ -1712,13 +4289,9 @@ function RpcBuilder(packer, options, transport, onRequest) {
     var responses = new Mapper();
     var processedResponses = new Mapper();
     var message2Key = {};
-    /**
-     * Store the response to prevent to process duplicate request later
-     */
     function storeResponse(message, id, dest) {
         var response = {
             message: message,
-            /** Timeout to auto-clean old responses */
             timeout: setTimeout(function () {
                 responses.remove(id, dest);
             }, response_timeout)
@@ -1726,9 +4299,6 @@ function RpcBuilder(packer, options, transport, onRequest) {
         responses.set(response, id, dest);
     }
     ;
-    /**
-     * Store the response to ignore duplicated messages later
-     */
     function storeProcessedResponse(ack, from) {
         var timeout = setTimeout(function () {
             processedResponses.remove(ack, from);
@@ -1736,19 +4306,6 @@ function RpcBuilder(packer, options, transport, onRequest) {
         processedResponses.set(timeout, ack, from);
     }
     ;
-    /**
-     * Representation of a RPC request
-     *
-     * @class
-     * @extends RpcNotification
-     *
-     * @constructor
-     *
-     * @param {String} method -method of the notification
-     * @param params - parameters of the notification
-     * @param {Integer} id - identifier of the request
-     * @param [from] - source of the notification
-     */
     function RpcRequest(method, params, id, from, transport) {
         RpcNotification.call(this, method, params);
         this.getTransport = function () {
@@ -1763,9 +4320,6 @@ function RpcBuilder(packer, options, transport, onRequest) {
                 set: this.setTransport.bind(this)
             });
         var response = responses.get(id, from);
-        /**
-         * @constant {Boolean} duplicated
-         */
         if (!(transport || self.getTransport())) {
             if (defineProperty_IE8)
                 this.duplicated = Boolean(response);
@@ -1776,16 +4330,7 @@ function RpcBuilder(packer, options, transport, onRequest) {
         }
         var responseMethod = responseMethods[method];
         this.pack = packer.pack.bind(packer, this, id);
-        /**
-         * Generate a response to this request
-         *
-         * @param {Error} [error]
-         * @param {*} [result]
-         *
-         * @returns {string}
-         */
         this.reply = function (error, result, transport) {
-            // Fix optional parameters
             if (error instanceof Function || error && error.send instanceof Function) {
                 if (result != undefined)
                     throw new SyntaxError("There can't be parameters after callback");
@@ -1802,7 +4347,6 @@ function RpcBuilder(packer, options, transport, onRequest) {
             }
             ;
             transport = unifyTransport(transport);
-            // Duplicated request, remove old response timeout
             if (response)
                 clearTimeout(response.timeout);
             if (from != undefined) {
@@ -1813,7 +4357,6 @@ function RpcBuilder(packer, options, transport, onRequest) {
             }
             ;
             var message;
-            // New request or overriden one, create new response with provided data
             if (error || result != undefined) {
                 if (self.peerID != undefined) {
                     if (error)
@@ -1821,7 +4364,6 @@ function RpcBuilder(packer, options, transport, onRequest) {
                     else
                         result.from = self.peerID;
                 }
-                // Protocol indicates that responses has own request methods
                 if (responseMethod) {
                     if (responseMethod.error == undefined && error)
                         message =
@@ -1851,9 +4393,7 @@ function RpcBuilder(packer, options, transport, onRequest) {
                 message = response.message;
             else
                 message = packer.pack({ result: null }, id);
-            // Store the response to prevent to process a duplicated request later
             storeResponse(message, id, from);
-            // Return the stored response so it can be directly send back
             transport = transport || this.getTransport() || self.getTransport();
             if (transport)
                 return transport.send(message);
@@ -1871,15 +4411,9 @@ function RpcBuilder(packer, options, transport, onRequest) {
         if (!request)
             return;
         clearTimeout(request.timeout);
-        // Start duplicated responses timeout
         storeProcessedResponse(key.id, key.dest);
     }
     ;
-    /**
-     * Allow to cancel a request and don't wait for a response
-     *
-     * If `message` is not given, cancel all the request
-     */
     this.cancel = function (message) {
         if (message)
             return cancel(message);
@@ -1887,32 +4421,16 @@ function RpcBuilder(packer, options, transport, onRequest) {
             cancel(message);
     };
     this.close = function () {
-        // Prevent to receive new messages
         var transport = this.getTransport();
         if (transport && transport.close)
             transport.close();
-        // Request & processed responses
         this.cancel();
         processedResponses.forEach(clearTimeout);
-        // Responses
         responses.forEach(function (response) {
             clearTimeout(response.timeout);
         });
     };
-    /**
-     * Generates and encode a JsonRPC 2.0 message
-     *
-     * @param {String} method -method of the notification
-     * @param params - parameters of the notification
-     * @param [dest] - destination of the notification
-     * @param {object} [transport] - transport where to send the message
-     * @param [callback] - function called when a response to this request is
-     *   received. If not defined, a notification will be send instead
-     *
-     * @returns {string} A raw JsonRPC 2.0 request or notification string
-     */
     this.encode = function (method, params, dest, transport, callback) {
-        // Fix optional parameters
         if (params instanceof Function) {
             if (dest != undefined)
                 throw new SyntaxError("There can't be parameters after callback");
@@ -1945,7 +4463,6 @@ function RpcBuilder(packer, options, transport, onRequest) {
             params.dest = dest;
         }
         ;
-        // Encode message
         var message = {
             method: method,
             params: params
@@ -1996,24 +4513,12 @@ function RpcBuilder(packer, options, transport, onRequest) {
             return sendRequest(transport);
         }
         ;
-        // Return the packed message
         message = packer.pack(message);
         transport = transport || this.getTransport();
         if (transport)
             return transport.send(message);
         return message;
     };
-    /**
-     * Decode and process a JsonRPC 2.0 message
-     *
-     * @param {string} message - string with the content of the message
-     *
-     * @returns {RpcNotification|RpcRequest|undefined} - the representation of the
-     *   notification or the request. If a response was processed, it will return
-     *   `undefined` to notify that it was processed
-     *
-     * @throws {TypeError} - Message is not defined
-     */
     this.decode = function (message, transport) {
         if (!message)
             throw new TypeError("Message is not defined");
@@ -2021,7 +4526,6 @@ function RpcBuilder(packer, options, transport, onRequest) {
             message = packer.unpack(message);
         }
         catch (e) {
-            // Ignore invalid messages
             return console.debug(e, message);
         }
         ;
@@ -2031,10 +4535,8 @@ function RpcBuilder(packer, options, transport, onRequest) {
         var params = message.params || {};
         var from = params.from;
         var dest = params.dest;
-        // Ignore messages send by us
         if (self.peerID != undefined && from == self.peerID)
             return;
-        // Notification
         if (id == undefined && ack == undefined) {
             var notification = new RpcNotification(method, params);
             if (self.emit('request', notification))
@@ -2043,7 +4545,6 @@ function RpcBuilder(packer, options, transport, onRequest) {
         }
         ;
         function processRequest() {
-            // If we have a transport and it's a duplicated request, reply inmediatly
             transport = unifyTransport(transport) || self.getTransport();
             if (transport) {
                 var response = responses.get(id, from);
@@ -2064,14 +4565,11 @@ function RpcBuilder(packer, options, transport, onRequest) {
         ;
         function duplicatedResponse(timeout) {
             console.warn("Response already processed", message);
-            // Update duplicated responses timeout
             clearTimeout(timeout);
             storeProcessedResponse(ack, from);
         }
         ;
-        // Request, or response with own method
         if (method) {
-            // Check if it's a response with own method
             if (dest == undefined || dest == self.peerID) {
                 var request = requests.get(ack, from);
                 if (request) {
@@ -2086,18 +4584,15 @@ function RpcBuilder(packer, options, transport, onRequest) {
                 if (processed)
                     return duplicatedResponse(processed);
             }
-            // Request
             return processRequest();
         }
         ;
         var error = message.error;
         var result = message.result;
-        // Ignore responses not send to us
         if (error && error.dest && error.dest != self.peerID)
             return;
         if (result && result.dest && result.dest != self.peerID)
             return;
-        // Response
         var request = requests.get(ack, from);
         if (!request) {
             var processed = processedResponses.get(ack, from);
@@ -2106,7 +4601,6 @@ function RpcBuilder(packer, options, transport, onRequest) {
             return console.warn("No callback was defined for this message", message);
         }
         ;
-        // Process response
         processResponse(request, error, result);
     };
 }
@@ -2114,8 +4608,8 @@ function RpcBuilder(packer, options, transport, onRequest) {
 inherits(RpcBuilder, EventEmitter);
 RpcBuilder.RpcNotification = RpcNotification;
 module.exports = RpcBuilder;
-var clients = __webpack_require__("../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/clients/index.js");
-var transports = __webpack_require__("../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/clients/transports/index.js");
+var clients = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/clients/index.js");
+var transports = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/clients/transports/index.js");
 RpcBuilder.clients = clients;
 RpcBuilder.clients.transports = transports;
 RpcBuilder.packers = packers;
@@ -2123,30 +4617,17 @@ RpcBuilder.packers = packers;
 
 /***/ }),
 
-/***/ "../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/packers/JsonRPC.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/packers/JsonRPC.js":
 /***/ (function(module, exports) {
 
-/**
- * JsonRPC 2.0 packer
- */
-/**
- * Pack a JsonRPC 2.0 message
- *
- * @param {Object} message - object to be packaged. It requires to have all the
- *   fields needed by the JsonRPC 2.0 message that it's going to be generated
- *
- * @return {String} - the stringified JsonRPC 2.0 message
- */
 function pack(message, id) {
     var result = {
         jsonrpc: "2.0"
     };
-    // Request
     if (message.method) {
         result.method = message.method;
         if (message.params)
             result.params = message.params;
-        // Request is a notification
         if (id != undefined)
             result.id = id;
     }
@@ -2166,31 +4647,19 @@ function pack(message, id) {
     return JSON.stringify(result);
 }
 ;
-/**
- * Unpack a JsonRPC 2.0 message
- *
- * @param {String} message - string with the content of the JsonRPC 2.0 message
- *
- * @throws {TypeError} - Invalid JsonRPC version
- *
- * @return {Object} - object filled with the JsonRPC 2.0 message content
- */
 function unpack(message) {
     var result = message;
     if (typeof message === 'string' || message instanceof String) {
         result = JSON.parse(message);
     }
-    // Check if it's a valid message
     var version = result.jsonrpc;
     if (version !== '2.0')
         throw new TypeError("Invalid JsonRPC version '" + version + "': " + message);
-    // Response
     if (result.method == undefined) {
         if (result.id == undefined)
             throw new TypeError("Invalid message: " + message);
         var result_defined = result.result !== undefined;
         var error_defined = result.error !== undefined;
-        // Check only result or error is defined, not both or none
         if (result_defined && error_defined)
             throw new TypeError("Both result and error are defined: " + message);
         if (!result_defined && !error_defined)
@@ -2198,7 +4667,6 @@ function unpack(message) {
         result.ack = result.id;
         delete result.id;
     }
-    // Return unpacked message
     return result;
 }
 ;
@@ -2208,7 +4676,7 @@ exports.unpack = unpack;
 
 /***/ }),
 
-/***/ "../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/packers/XmlRPC.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/packers/XmlRPC.js":
 /***/ (function(module, exports) {
 
 function pack(message) {
@@ -2225,35 +4693,20 @@ exports.unpack = unpack;
 
 /***/ }),
 
-/***/ "../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/packers/index.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/packers/index.js":
 /***/ (function(module, exports, __webpack_require__) {
 
-var JsonRPC = __webpack_require__("../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/packers/JsonRPC.js");
-var XmlRPC = __webpack_require__("../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/packers/XmlRPC.js");
+var JsonRPC = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/packers/JsonRPC.js");
+var XmlRPC = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/packers/XmlRPC.js");
 exports.JsonRPC = JsonRPC;
 exports.XmlRPC = XmlRPC;
 //# sourceMappingURL=index.js.map
 
 /***/ }),
 
-/***/ "../../../../openvidu-browser/lib/KurentoUtils/kurento-utils-js/WebRtcPeer.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-utils-js/WebRtcPeer.js":
 /***/ (function(module, exports, __webpack_require__) {
 
-/*
- * (C) Copyright 2014-2015 Kurento (http://kurento.org/)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 var freeice = __webpack_require__("../../../../openvidu-browser/node_modules/freeice/index.js");
 var inherits = __webpack_require__("../../../../openvidu-browser/node_modules/inherits/inherits_browser.js");
 var UAParser = __webpack_require__("../../../../openvidu-browser/node_modules/ua-parser-js/src/ua-parser.js");
@@ -2263,23 +4716,6 @@ var EventEmitter = __webpack_require__("./node_modules/events/events.js").EventE
 var recursive = __webpack_require__("../../../../openvidu-browser/node_modules/merge/merge.js").recursive.bind(undefined, true);
 var sdpTranslator = __webpack_require__("../../../../openvidu-browser/node_modules/sdp-translator/lib/index.js");
 var logger = window.Logger || console;
-// var gUM = navigator.mediaDevices.getUserMedia || function (constraints) {
-//   return new Promise(navigator.getUserMedia(constraints, function (stream) {
-//     videoStream = stream
-//     start()
-//   }).eror(callback));
-// }
-/*try {
-  require('kurento-browser-extensions')
-} catch (error) {
-  if (typeof getScreenConstraints === 'undefined') {
-    logger.warn('screen sharing is not available')
-
-    getScreenConstraints = function getScreenConstraints(sendSource, callback) {
-      callback(new Error("This library is not enabled for screen sharing"))
-    }
-  }
-}*/
 var MEDIA_CONSTRAINTS = {
     audio: true,
     video: {
@@ -2287,8 +4723,6 @@ var MEDIA_CONSTRAINTS = {
         framerate: 15
     }
 };
-// Somehow, the UAParser constructor gets an empty window object.
-// We need to pass the user agent string in order to get information
 var ua = (window && window.navigator) ? window.navigator.userAgent : '';
 var parser = new UAParser(ua);
 var browser = parser.getBrowser();
@@ -2307,9 +4741,6 @@ function trackStop(track) {
 function streamStop(stream) {
     stream.getTracks().forEach(trackStop);
 }
-/**
- * Returns a string representation of a SessionDescription object.
- */
 var dumpSDP = function (description) {
     if (typeof description === 'undefined' || description === null) {
         return '';
@@ -2345,7 +4776,6 @@ function bufferizeCandidates(pc, onerror) {
         }
     };
 }
-/* Simulcast utilities */
 function removeFIDFromOffer(sdp) {
     var n = sdp.indexOf("a=ssrc-group:FID");
     if (n > 0) {
@@ -2380,23 +4810,6 @@ function getSimulcastInfo(videoStream) {
     lines.push('');
     return lines.join('\n');
 }
-/**
- * Wrapper object of an RTCPeerConnection. This object is aimed to simplify the
- * development of WebRTC-based applications.
- *
- * @constructor module:kurentoUtils.WebRtcPeer
- *
- * @param {String} mode Mode in which the PeerConnection will be configured.
- *  Valid values are: 'recv', 'send', and 'sendRecv'
- * @param localVideo Video tag for the local stream
- * @param remoteVideo Video tag for the remote stream
- * @param {MediaStream} videoStream Stream to be used as primary source
- *  (typically video and audio, or only video if combined with audioStream) for
- *  localVideo and to be added as stream to the RTCPeerConnection
- * @param {MediaStream} audioStream Stream to be used as second source
- *  (typically for audio) for localVideo and to be added as stream to the
- *  RTCPeerConnection
- */
 function WebRtcPeer(mode, options, callback) {
     if (!(this instanceof WebRtcPeer)) {
         return new WebRtcPeer(mode, options, callback);
@@ -2417,12 +4830,9 @@ function WebRtcPeer(mode, options, callback) {
     var connectionConstraints = options.connectionConstraints;
     var pc = options.peerConnection;
     var sendSource = options.sendSource || 'webcam';
-    var dataChannelConfig = options.dataChannelConfig;
-    var useDataChannels = options.dataChannels || false;
-    var dataChannel;
     var guid = uuid.v4();
     var configuration = recursive({
-        iceServers: freeice()
+        iceServers: (!!options.iceServers && options.iceServers.length > 0) ? options.iceServers : freeice()
     }, options.configuration);
     var onicecandidate = options.onicecandidate;
     if (onicecandidate)
@@ -2456,18 +4866,8 @@ function WebRtcPeer(mode, options, callback) {
                 return localVideo;
             }
         },
-        'dataChannel': {
-            get: function () {
-                return dataChannel;
-            }
-        },
-        /**
-         * @member {(external:ImageData|undefined)} currentFrame
-         */
         'currentFrame': {
             get: function () {
-                // [ToDo] Find solution when we have a remote stream but we didn't set
-                // a remoteVideo tag
                 if (!remoteVideo)
                     return;
                 if (remoteVideo.readyState < remoteVideo.HAVE_CURRENT_DATA)
@@ -2480,25 +4880,8 @@ function WebRtcPeer(mode, options, callback) {
             }
         }
     });
-    // Init PeerConnection
     if (!pc) {
         pc = new RTCPeerConnection(configuration);
-        if (useDataChannels && !dataChannel) {
-            var dcId = 'WebRtcPeer-' + self.id;
-            var dcOptions = undefined;
-            if (dataChannelConfig) {
-                dcId = dataChannelConfig.id || dcId;
-                dcOptions = dataChannelConfig.options;
-            }
-            dataChannel = pc.createDataChannel(dcId, dcOptions);
-            if (dataChannelConfig) {
-                dataChannel.onopen = dataChannelConfig.onopen;
-                dataChannel.onclose = dataChannelConfig.onclose;
-                dataChannel.onmessage = dataChannelConfig.onmessage;
-                dataChannel.onbufferedamountlow = dataChannelConfig.onbufferedamountlow;
-                dataChannel.onerror = dataChannelConfig.onerror || noop;
-            }
-        }
     }
     pc.addEventListener('icecandidate', function (event) {
         var candidate = event.candidate;
@@ -2521,8 +4904,6 @@ function WebRtcPeer(mode, options, callback) {
             }
         }
         else if (!candidategatheringdone) {
-            // Not listening to 'icecandidate' or 'candidategatheringdone' events, queue
-            // the candidate until one of them is listened
             candidatesQueueOut.push(candidate);
             if (!candidate)
                 candidategatheringdone = true;
@@ -2541,15 +4922,6 @@ function WebRtcPeer(mode, options, callback) {
         }
     });
     var addIceCandidate = bufferizeCandidates(pc);
-    /**
-     * Callback function invoked when an ICE candidate is received. Developers are
-     * expected to invoke this function in order to complete the SDP negotiation.
-     *
-     * @function module:kurentoUtils.WebRtcPeer.prototype.addIceCandidate
-     *
-     * @param iceCandidate - Literal object with the ICE candidate description
-     * @param callback - Called when the ICE candidate has been added.
-     */
     this.addIceCandidate = function (iceCandidate, callback) {
         var candidate;
         if (multistream && usePlanB) {
@@ -2566,7 +4938,6 @@ function WebRtcPeer(mode, options, callback) {
         callback = callback.bind(this);
         var offerAudio = true;
         var offerVideo = true;
-        // Constraints must have both blocks
         if (mediaConstraints) {
             offerAudio = (typeof mediaConstraints.audio === 'boolean') ?
                 mediaConstraints.audio : true;
@@ -2577,9 +4948,6 @@ function WebRtcPeer(mode, options, callback) {
             offerToReceiveAudio: (mode !== 'sendonly' && offerAudio),
             offerToReceiveVideo: (mode !== 'sendonly' && offerVideo)
         };
-        //FIXME: clarify possible constraints passed to createOffer()
-        /*var constraints = recursive(browserDependantConstraints,
-          connectionConstraints)*/
         var constraints = browserDependantConstraints;
         logger.debug('constraints: ' + JSON.stringify(constraints));
         pc.createOffer(constraints).then(function (offer) {
@@ -2615,24 +4983,6 @@ function WebRtcPeer(mode, options, callback) {
         localVideo.srcObject = videoStream;
         localVideo.muted = true;
     };
-    this.send = function (data) {
-        if (dataChannel && dataChannel.readyState === 'open') {
-            dataChannel.send(data);
-        }
-        else {
-            logger.warn('Trying to send data over a non-existing or closed data channel');
-        }
-    };
-    /**
-     * Callback function invoked when a SDP answer is received. Developers are
-     * expected to invoke this function in order to complete the SDP negotiation.
-     *
-     * @function module:kurentoUtils.WebRtcPeer.prototype.processAnswer
-     *
-     * @param sdpAnswer - Description of sdpAnswer
-     * @param callback -
-     *            Invoked after the SDP answer is processed, or there is an error.
-     */
     this.processAnswer = function (sdpAnswer, callback) {
         callback = (callback || noop).bind(this);
         var answer = new RTCSessionDescription({
@@ -2653,16 +5003,6 @@ function WebRtcPeer(mode, options, callback) {
             callback();
         }, callback);
     };
-    /**
-     * Callback function invoked when a SDP offer is received. Developers are
-     * expected to invoke this function in order to complete the SDP negotiation.
-     *
-     * @function module:kurentoUtils.WebRtcPeer.prototype.processOffer
-     *
-     * @param sdpOffer - Description of sdpOffer
-     * @param callback - Called when the remote description has been set
-     *  successfully.
-     */
     this.processOffer = function (sdpOffer, callback) {
         callback = callback.bind(this);
         var offer = new RTCSessionDescription({
@@ -2711,13 +5051,6 @@ function WebRtcPeer(mode, options, callback) {
         }
         return answer;
     }
-    /**
-     * This function creates the RTCPeerConnection object taking into account the
-     * properties received in the constructor. It starts the SDP negotiation
-     * process: generates the SDP offer and invokes the onsdpoffer callback. This
-     * callback is expected to send the SDP offer, in order to obtain an SDP
-     * answer from another peer.
-     */
     function start() {
         if (pc.signalingState === 'closed') {
             callback('The peer connection object is in "closed" state. This is most likely due to an invocation of the dispose method before accepting in the dialogue');
@@ -2731,7 +5064,6 @@ function WebRtcPeer(mode, options, callback) {
         if (audioStream) {
             pc.addStream(audioStream);
         }
-        // [Hack] https://code.google.com/p/chromium/issues/detail?id=443558
         var browser = parser.getBrowser();
         if (mode === 'sendonly' &&
             (browser.name === 'Chrome' || browser.name === 'Chromium') &&
@@ -2771,7 +5103,6 @@ function WebRtcPeer(mode, options, callback) {
             localVideo.pause();
             localVideo.srcObject = null;
             localVideo.load();
-            //Unmute local video in case the video tag is later used for remote video
             localVideo.muted = false;
         }
         if (remoteVideo) {
@@ -2791,7 +5122,6 @@ function createEnableDescriptor(type) {
     return {
         enumerable: true,
         get: function () {
-            // [ToDo] Should return undefined if not all tracks have the same value?
             if (!this.peerConnection)
                 return;
             var streams = this.peerConnection.getLocalStreams();
@@ -2838,28 +5168,14 @@ WebRtcPeer.prototype.getRemoteStream = function (index) {
         return this.peerConnection.getRemoteStreams()[index || 0];
     }
 };
-/**
- * @description This method frees the resources used by WebRtcPeer.
- *
- * @function module:kurentoUtils.WebRtcPeer.prototype.dispose
- */
 WebRtcPeer.prototype.dispose = function () {
     logger.debug('Disposing WebRtcPeer');
     var pc = this.peerConnection;
-    var dc = this.dataChannel;
     try {
-        if (dc) {
-            if (dc.signalingState === 'closed')
-                return;
-            dc.close();
-        }
         if (pc) {
             if (pc.signalingState === 'closed')
                 return;
             pc.getLocalStreams().forEach(streamStop);
-            // FIXME This is not yet implemented in firefox
-            // if(videoStream) pc.removeStream(videoStream);
-            // if(audioStream) pc.removeStream(audioStream);
             pc.close();
         }
     }
@@ -2868,9 +5184,6 @@ WebRtcPeer.prototype.dispose = function () {
     }
     this.emit('_dispose');
 };
-//
-// Specialized child classes
-//
 function WebRtcPeerRecvonly(options, callback) {
     if (!(this instanceof WebRtcPeerRecvonly)) {
         return new WebRtcPeerRecvonly(options, callback);
@@ -2904,2848 +5217,19 @@ exports.hark = harkUtils;
 
 /***/ }),
 
-/***/ "../../../../openvidu-browser/lib/KurentoUtils/kurento-utils-js/index.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-utils-js/index.js":
 /***/ (function(module, exports, __webpack_require__) {
 
-/*
- * (C) Copyright 2014 Kurento (http://kurento.org/)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
-/**
- * This module contains a set of reusable components that have been found useful
- * during the development of the WebRTC applications with Kurento.
- *
- * @module kurentoUtils
- *
- * @copyright 2014 Kurento (http://kurento.org/)
- * @license ALv2
- */
-var WebRtcPeer = __webpack_require__("../../../../openvidu-browser/lib/KurentoUtils/kurento-utils-js/WebRtcPeer.js");
+var WebRtcPeer = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-utils-js/WebRtcPeer.js");
 exports.WebRtcPeer = WebRtcPeer;
 //# sourceMappingURL=index.js.map
 
 /***/ }),
 
-/***/ "../../../../openvidu-browser/lib/OpenVidu/OpenVidu.js":
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-exports.__esModule = true;
-/*
- * (C) Copyright 2017 OpenVidu (http://openvidu.io/)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
-var OpenViduInternal_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/OpenViduInternal.js");
-var Session_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/Session.js");
-var Publisher_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/Publisher.js");
-var OpenViduError_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/OpenViduError.js");
-var LocalRecorder_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/LocalRecorder.js");
-var adapter = __webpack_require__("../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/adapter_core.js");
-var screenSharingAuto = __webpack_require__("../../../../openvidu-browser/lib/ScreenSharing/Screen-Capturing-Auto.js");
-var DetectRTC = __webpack_require__("../../../../openvidu-browser/lib/KurentoUtils/DetectRTC.js");
-if (window) {
-    window["adapter"] = adapter;
-}
-var OpenVidu = /** @class */ (function () {
-    function OpenVidu() {
-        this.openVidu = new OpenViduInternal_1.OpenViduInternal();
-        console.info("'OpenVidu' initialized");
-    }
-    ;
-    OpenVidu.prototype.initSession = function (param1, param2) {
-        if (typeof param2 == "string") {
-            return new Session_1.Session(this.openVidu.initSession(param2), this);
-        }
-        else {
-            return new Session_1.Session(this.openVidu.initSession(param1), this);
-        }
-    };
-    OpenVidu.prototype.initPublisher = function (parentId, cameraOptions, callback) {
-        var publisher;
-        if (cameraOptions != null) {
-            cameraOptions.audio = cameraOptions.audio != null ? cameraOptions.audio : true;
-            cameraOptions.video = cameraOptions.video != null ? cameraOptions.video : true;
-            if (!cameraOptions.screen) {
-                // Webcam and/or microphone is being requested
-                var cameraOptionsAux = {
-                    sendAudio: cameraOptions.audio != null ? cameraOptions.audio : true,
-                    sendVideo: cameraOptions.video != null ? cameraOptions.video : true,
-                    activeAudio: cameraOptions.audioActive != null ? cameraOptions.audioActive : true,
-                    activeVideo: cameraOptions.videoActive != null ? cameraOptions.videoActive : true,
-                    dataChannel: true,
-                    mediaConstraints: this.openVidu.generateMediaConstraints(cameraOptions)
-                };
-                cameraOptions = cameraOptionsAux;
-                publisher = new Publisher_1.Publisher(this.openVidu.initPublisherTagged(parentId, cameraOptions, true, callback), parentId, false);
-                console.info("'Publisher' initialized");
-                return publisher;
-            }
-            else {
-                // Screen share is being requested
-                publisher = new Publisher_1.Publisher(this.openVidu.initPublisherScreen(parentId, true, callback), parentId, true);
-                if (DetectRTC.browser.name === 'Firefox' && DetectRTC.browser.version >= 52) {
-                    screenSharingAuto.getScreenId(function (error, sourceId, screenConstraints) {
-                        cameraOptions = {
-                            sendAudio: cameraOptions.audio,
-                            sendVideo: cameraOptions.video,
-                            activeAudio: cameraOptions.audioActive != null ? cameraOptions.audioActive : true,
-                            activeVideo: cameraOptions.videoActive != null ? cameraOptions.videoActive : true,
-                            dataChannel: true,
-                            mediaConstraints: {
-                                video: screenConstraints.video,
-                                audio: false
-                            }
-                        };
-                        publisher.stream.configureScreenOptions(cameraOptions);
-                        console.info("'Publisher' initialized");
-                        publisher.stream.ee.emitEvent('can-request-screen');
-                    });
-                    return publisher;
-                }
-                else if (DetectRTC.browser.name === 'Chrome') {
-                    // Screen is being requested
-                    /*screenSharing.isChromeExtensionAvailable((availability) => {
-                        switch (availability) {
-                            case 'available':
-                                console.warn('EXTENSION AVAILABLE!!!');
-                                screenSharing.getScreenConstraints((error, screenConstraints) => {
-                                    if (!error) {
-                                        console.warn(screenConstraints);
-                                    }
-                                });
-                                break;
-                            case 'unavailable':
-                                console.warn('EXTENSION NOT AVAILABLE!!!');
-                                break;
-                            case 'isFirefox':
-                                console.warn('IT IS FIREFOX!!!');
-                                screenSharing.getScreenConstraints((error, screenConstraints) => {
-                                    if (!error) {
-                                        console.warn(screenConstraints);
-                                    }
-                                });
-                                break;
-                        }
-                    });*/
-                    screenSharingAuto.getScreenId(function (error, sourceId, screenConstraints) {
-                        if (error === 'not-installed') {
-                            var error_1 = new OpenViduError_1.OpenViduError("SCREEN_EXTENSION_NOT_INSTALLED" /* SCREEN_EXTENSION_NOT_INSTALLED */, 'https://chrome.google.com/webstore/detail/screen-capturing/ajhifddimkapgcifgcodmmfdlknahffk');
-                            console.error(error_1);
-                            if (callback)
-                                callback(error_1);
-                            return;
-                        }
-                        else if (error === 'permission-denied') {
-                            var error_2 = new OpenViduError_1.OpenViduError("SCREEN_CAPTURE_DENIED" /* SCREEN_CAPTURE_DENIED */, 'You must allow access to one window of your desktop');
-                            console.error(error_2);
-                            if (callback)
-                                callback(error_2);
-                            return;
-                        }
-                        cameraOptions = {
-                            sendAudio: cameraOptions.audio != null ? cameraOptions.audio : true,
-                            sendVideo: cameraOptions.video != null ? cameraOptions.video : true,
-                            activeAudio: cameraOptions.audioActive != null ? cameraOptions.audioActive : true,
-                            activeVideo: cameraOptions.videoActive != null ? cameraOptions.videoActive : true,
-                            dataChannel: true,
-                            mediaConstraints: {
-                                video: screenConstraints.video,
-                                audio: false
-                            }
-                        };
-                        publisher.stream.configureScreenOptions(cameraOptions);
-                        publisher.stream.ee.emitEvent('can-request-screen');
-                    }, function (error) {
-                        console.error('getScreenId error', error);
-                        return;
-                    });
-                    console.info("'Publisher' initialized");
-                    return publisher;
-                }
-                else {
-                    console.error('Screen sharing not supported on ' + DetectRTC.browser.name);
-                    if (!!callback)
-                        callback(new OpenViduError_1.OpenViduError("SCREEN_SHARING_NOT_SUPPORTED" /* SCREEN_SHARING_NOT_SUPPORTED */, 'Screen sharing not supported on ' + DetectRTC.browser.name + ' ' + DetectRTC.browser.version));
-                }
-            }
-        }
-        else {
-            cameraOptions = {
-                sendAudio: true,
-                sendVideo: true,
-                activeAudio: true,
-                activeVideo: true,
-                dataChannel: true,
-                mediaConstraints: {
-                    audio: true,
-                    video: { width: { ideal: 1280 } }
-                }
-            };
-            publisher = new Publisher_1.Publisher(this.openVidu.initPublisherTagged(parentId, cameraOptions, true, callback), parentId, false);
-            console.info("'Publisher' initialized");
-            return publisher;
-        }
-    };
-    OpenVidu.prototype.reinitPublisher = function (publisher) {
-        if (publisher.stream.typeOfVideo !== 'SCREEN') {
-            publisher = new Publisher_1.Publisher(this.openVidu.initPublisherTagged(publisher.stream.getParentId(), publisher.stream.outboundOptions, false), publisher.stream.getParentId(), false);
-            console.info("'Publisher' initialized");
-            return publisher;
-        }
-        else {
-            publisher = new Publisher_1.Publisher(this.openVidu.initPublisherScreen(publisher.stream.getParentId(), false), publisher.stream.getParentId(), true);
-            if (DetectRTC.browser.name === 'Firefox' && DetectRTC.browser.version >= 52) {
-                screenSharingAuto.getScreenId(function (error, sourceId, screenConstraints) {
-                    publisher.stream.outboundOptions.mediaConstraints.video = screenConstraints.video;
-                    publisher.stream.configureScreenOptions(publisher.stream.outboundOptions);
-                    console.info("'Publisher' initialized");
-                    publisher.stream.ee.emitEvent('can-request-screen');
-                });
-                return publisher;
-            }
-            else if (DetectRTC.browser.name === 'Chrome') {
-                screenSharingAuto.getScreenId(function (error, sourceId, screenConstraints) {
-                    if (error === 'not-installed') {
-                        var error_3 = new OpenViduError_1.OpenViduError("SCREEN_EXTENSION_NOT_INSTALLED" /* SCREEN_EXTENSION_NOT_INSTALLED */, 'https://chrome.google.com/webstore/detail/screen-capturing/ajhifddimkapgcifgcodmmfdlknahffk');
-                        console.error(error_3);
-                        return;
-                    }
-                    else if (error === 'permission-denied') {
-                        var error_4 = new OpenViduError_1.OpenViduError("SCREEN_CAPTURE_DENIED" /* SCREEN_CAPTURE_DENIED */, 'You must allow access to one window of your desktop');
-                        console.error(error_4);
-                        return;
-                    }
-                    publisher.stream.outboundOptions.mediaConstraints.video = screenConstraints.video;
-                    publisher.stream.configureScreenOptions(publisher.stream.outboundOptions);
-                    publisher.stream.ee.emitEvent('can-request-screen');
-                }, function (error) {
-                    console.error('getScreenId error', error);
-                    return;
-                });
-                console.info("'Publisher' initialized");
-                return publisher;
-            }
-            else {
-                console.error('Screen sharing not supported on ' + DetectRTC.browser.name);
-            }
-        }
-    };
-    OpenVidu.prototype.checkSystemRequirements = function () {
-        var defaultWebRTCSupport = DetectRTC.isWebRTCSupported;
-        var browser = DetectRTC.browser.name;
-        var version = DetectRTC.browser.version;
-        if ((browser !== 'Chrome') && (browser !== 'Firefox') && (browser !== 'Opera') && (browser !== 'Safari')) {
-            return 0;
-        }
-        else {
-            return defaultWebRTCSupport ? 1 : 0;
-        }
-    };
-    OpenVidu.prototype.getDevices = function (callback) {
-        navigator.mediaDevices.enumerateDevices().then(function (deviceInfos) {
-            callback(null, deviceInfos);
-        })["catch"](function (error) {
-            console.error("Error getting devices", error);
-            callback(error, null);
-        });
-    };
-    OpenVidu.prototype.enableProdMode = function () {
-        console.log = function () { };
-        console.debug = function () { };
-        console.info = function () { };
-        console.warn = function () { };
-    };
-    OpenVidu.prototype.initLocalRecorder = function (stream) {
-        return new LocalRecorder_1.LocalRecorder(stream);
-    };
-    return OpenVidu;
-}());
-exports.OpenVidu = OpenVidu;
-//# sourceMappingURL=OpenVidu.js.map
-
-/***/ }),
-
-/***/ "../../../../openvidu-browser/lib/OpenVidu/Publisher.js":
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-exports.__esModule = true;
-var EventEmitter = __webpack_require__("../../../../openvidu-browser/node_modules/wolfy87-eventemitter/EventEmitter.js");
-var Publisher = /** @class */ (function () {
-    function Publisher(stream, parentId, isScreenRequested) {
-        var _this = this;
-        this.ee = new EventEmitter();
-        this.accessAllowed = false;
-        this.isScreenRequested = false;
-        this.stream = stream;
-        this.isScreenRequested = isScreenRequested;
-        // Listens to the deactivation of the default behaviour upon the deletion of a Stream object
-        this.ee.addListener('stream-destroyed-default', function (event) {
-            var s = event.stream;
-            s.addOnceEventListener('video-removed', function () {
-                _this.ee.emitEvent('videoElementDestroyed');
-            });
-            s.removeVideo();
-        });
-        if (document.getElementById(parentId) != null) {
-            this.element = document.getElementById(parentId);
-        }
-    }
-    Publisher.prototype.publishAudio = function (value) {
-        this.stream.getWebRtcPeer().audioEnabled = value;
-    };
-    Publisher.prototype.publishVideo = function (value) {
-        this.stream.getWebRtcPeer().videoEnabled = value;
-    };
-    Publisher.prototype.destroy = function () {
-        if (!!this.session)
-            this.session.unpublish(this);
-        this.stream.dispose();
-        this.stream.removeVideo(this.element);
-        return this;
-    };
-    Publisher.prototype.subscribeToRemote = function () {
-        this.stream.subscribeToMyRemote();
-    };
-    Publisher.prototype.on = function (eventName, callback) {
-        var _this = this;
-        this.ee.addListener(eventName, function (event) {
-            if (event) {
-                console.info("Event '" + eventName + "' triggered by 'Publisher'", event);
-            }
-            else {
-                console.info("Event '" + eventName + "' triggered by 'Publisher'");
-            }
-            callback(event);
-        });
-        if (eventName == 'streamCreated') {
-            if (this.stream.isPublisherPublished) {
-                this.ee.emitEvent('streamCreated', [{ stream: this.stream }]);
-            }
-            else {
-                this.stream.addEventListener('stream-created-by-publisher', function () {
-                    _this.ee.emitEvent('streamCreated', [{ stream: _this.stream }]);
-                });
-            }
-        }
-        if (eventName == 'videoElementCreated') {
-            if (this.stream.isVideoELementCreated) {
-                this.ee.emitEvent('videoElementCreated', [{
-                        element: this.stream.getVideoElement()
-                    }]);
-            }
-            else {
-                this.stream.addEventListener('video-element-created-by-stream', function (element) {
-                    _this.id = element.id;
-                    _this.ee.emitEvent('videoElementCreated', [{
-                            element: element.element
-                        }]);
-                });
-            }
-        }
-        if (eventName == 'videoPlaying') {
-            var video = this.stream.getVideoElement();
-            if (!this.stream.displayMyRemote() && video &&
-                video.currentTime > 0 &&
-                video.paused == false &&
-                video.ended == false &&
-                video.readyState == 4) {
-                this.ee.emitEvent('videoPlaying', [{
-                        element: this.stream.getVideoElement()
-                    }]);
-            }
-            else {
-                this.stream.addEventListener('video-is-playing', function (element) {
-                    _this.ee.emitEvent('videoPlaying', [{
-                            element: element.element
-                        }]);
-                });
-            }
-        }
-        if (eventName == 'remoteVideoPlaying') {
-            var video = this.stream.getVideoElement();
-            if (this.stream.displayMyRemote() && video &&
-                video.currentTime > 0 &&
-                video.paused == false &&
-                video.ended == false &&
-                video.readyState == 4) {
-                this.ee.emitEvent('remoteVideoPlaying', [{
-                        element: this.stream.getVideoElement()
-                    }]);
-            }
-            else {
-                this.stream.addEventListener('remote-video-is-playing', function (element) {
-                    _this.ee.emitEvent('remoteVideoPlaying', [{
-                            element: element.element
-                        }]);
-                });
-            }
-        }
-        if (eventName == 'accessAllowed') {
-            if (this.stream.accessIsAllowed) {
-                this.ee.emitEvent('accessAllowed');
-            }
-            else {
-                this.stream.addEventListener('access-allowed-by-publisher', function () {
-                    _this.ee.emitEvent('accessAllowed');
-                });
-            }
-        }
-        if (eventName == 'accessDenied') {
-            if (this.stream.accessIsDenied) {
-                this.ee.emitEvent('accessDenied');
-            }
-            else {
-                this.stream.addEventListener('access-denied-by-publisher', function () {
-                    _this.ee.emitEvent('accessDenied');
-                });
-            }
-        }
-    };
-    return Publisher;
-}());
-exports.Publisher = Publisher;
-//# sourceMappingURL=Publisher.js.map
-
-/***/ }),
-
-/***/ "../../../../openvidu-browser/lib/OpenVidu/Session.js":
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-exports.__esModule = true;
-var OpenViduError_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/OpenViduError.js");
-var Subscriber_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/Subscriber.js");
-var EventEmitter = __webpack_require__("../../../../openvidu-browser/node_modules/wolfy87-eventemitter/EventEmitter.js");
-var DetectRTC = __webpack_require__("../../../../openvidu-browser/lib/KurentoUtils/DetectRTC.js");
-var Session = /** @class */ (function () {
-    function Session(session, openVidu) {
-        var _this = this;
-        this.session = session;
-        this.openVidu = openVidu;
-        this.ee = new EventEmitter();
-        this.sessionId = session.getSessionId();
-        // Listens to the deactivation of the default behaviour upon the deletion of a Stream object
-        this.session.addEventListener('stream-destroyed-default', function (event) {
-            event.stream.removeVideo();
-        });
-        // Listens to the deactivation of the default behaviour upon the disconnection of a Session
-        this.session.addEventListener('session-disconnected-default', function () {
-            var s;
-            for (var streamId in _this.session.getRemoteStreams()) {
-                _this.session.getRemoteStreams()[streamId].removeVideo();
-            }
-            if (_this.connection && (Object.keys(_this.connection.getStreams()).length > 0)) {
-                for (var streamId in _this.connection.getStreams()) {
-                    _this.connection.getStreams()[streamId].removeVideo();
-                }
-            }
-        });
-        // Sets or updates the value of 'connection' property. Triggered by SessionInternal when succesful connection
-        this.session.addEventListener('update-connection-object', function (event) {
-            _this.connection = event.connection;
-        });
-    }
-    Session.prototype.connect = function (param1, param2, param3) {
-        // Early configuration to deactivate automatic subscription to streams
-        if (param3) {
-            if (this.openVidu.checkSystemRequirements()) {
-                this.session.configure({
-                    sessionId: this.session.getSessionId(),
-                    participantId: param1,
-                    metadata: this.session.stringClientMetadata(param2),
-                    subscribeToStreams: false
-                });
-                this.session.connect(param1, param3);
-            }
-            else {
-                param3(new OpenViduError_1.OpenViduError("BROWSER_NOT_SUPPORTED" /* BROWSER_NOT_SUPPORTED */, 'Browser ' + DetectRTC.browser.name + ' ' + DetectRTC.browser.version + ' is not supported in OpenVidu'));
-            }
-        }
-        else {
-            if (this.openVidu.checkSystemRequirements()) {
-                this.session.configure({
-                    sessionId: this.session.getSessionId(),
-                    participantId: param1,
-                    metadata: '',
-                    subscribeToStreams: false
-                });
-                this.session.connect(param1, param2);
-            }
-            else {
-                param2(new OpenViduError_1.OpenViduError("BROWSER_NOT_SUPPORTED" /* BROWSER_NOT_SUPPORTED */, 'Browser ' + DetectRTC.browser.name + ' ' + DetectRTC.browser.version + ' is not supported in OpenVidu'));
-            }
-        }
-    };
-    Session.prototype.disconnect = function () {
-        var _this = this;
-        this.openVidu.openVidu.close(false);
-        this.session.emitEvent('sessionDisconnected', [{
-                preventDefault: function () { _this.session.removeEvent('session-disconnected-default'); }
-            }]);
-        this.session.emitEvent('session-disconnected-default', [{}]);
-    };
-    Session.prototype.publish = function (publisher) {
-        var _this = this;
-        if (!publisher.stream.isPublisherPublished) {
-            if (publisher.isScreenRequested) {
-                if (!publisher.stream.isScreenRequestedReady) {
-                    publisher.stream.addOnceEventListener('screen-ready', function () {
-                        _this.streamPublish(publisher);
-                    });
-                }
-                else {
-                    this.streamPublish(publisher);
-                }
-            }
-            else {
-                this.streamPublish(publisher);
-            }
-        }
-        else {
-            publisher = this.openVidu.reinitPublisher(publisher);
-            if (publisher.isScreenRequested && !publisher.stream.isScreenRequestedReady) {
-                publisher.stream.addOnceEventListener('screen-ready', function () {
-                    _this.streamPublish(publisher);
-                });
-            }
-            else {
-                this.streamPublish(publisher);
-            }
-        }
-    };
-    Session.prototype.streamPublish = function (publisher) {
-        publisher.session = this;
-        this.connection.addStream(publisher.stream);
-        publisher.stream.publish();
-    };
-    Session.prototype.unpublish = function (publisher) {
-        this.session.unpublish(publisher);
-    };
-    Session.prototype.on = function (eventName, callback) {
-        this.session.addEventListener(eventName, function (event) {
-            if (event) {
-                console.info("Event '" + eventName + "' triggered by 'Session'", event);
-            }
-            else {
-                console.info("Event '" + eventName + "' triggered by 'Session'");
-            }
-            callback(event);
-        });
-    };
-    Session.prototype.once = function (eventName, callback) {
-        this.session.addOnceEventListener(eventName, function (event) {
-            callback(event);
-        });
-    };
-    Session.prototype.off = function (eventName, eventHandler) {
-        this.session.removeListener(eventName, eventHandler);
-    };
-    Session.prototype.subscribe = function (param1, param2, param3) {
-        // Subscription
-        this.session.subscribe(param1);
-        var subscriber = new Subscriber_1.Subscriber(param1, param2);
-        param1.playOnlyVideo(param2, null);
-        return subscriber;
-    };
-    Session.prototype.unsubscribe = function (subscriber) {
-        this.session.unsubscribe(subscriber.stream);
-        subscriber.stream.removeVideo();
-    };
-    Session.prototype.signal = function (signal, completionHandler) {
-        var signalMessage = {};
-        if (signal.to && signal.to.length > 0) {
-            var connectionIds = [];
-            for (var i = 0; i < signal.to.length; i++) {
-                connectionIds.push(signal.to[i].connectionId);
-            }
-            signalMessage['to'] = connectionIds;
-        }
-        else {
-            signalMessage['to'] = [];
-        }
-        signalMessage['data'] = signal.data ? signal.data : '';
-        signalMessage['type'] = signal.type ? signal.type : '';
-        this.openVidu.openVidu.sendMessage(JSON.stringify(signalMessage));
-    };
-    return Session;
-}());
-exports.Session = Session;
-//# sourceMappingURL=Session.js.map
-
-/***/ }),
-
-/***/ "../../../../openvidu-browser/lib/OpenVidu/Subscriber.js":
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-exports.__esModule = true;
-var EventEmitter = __webpack_require__("../../../../openvidu-browser/node_modules/wolfy87-eventemitter/EventEmitter.js");
-var Subscriber = /** @class */ (function () {
-    function Subscriber(stream, parentId) {
-        var _this = this;
-        this.ee = new EventEmitter();
-        this.stream = stream;
-        if (document.getElementById(parentId) != null) {
-            this.element = document.getElementById(parentId);
-        }
-        // Listens to deletion of the HTML video element of the Subscriber
-        this.stream.addEventListener('video-removed', function () {
-            _this.ee.emitEvent('videoElementDestroyed');
-        });
-    }
-    Subscriber.prototype.on = function (eventName, callback) {
-        var _this = this;
-        this.ee.addListener(eventName, function (event) {
-            if (event) {
-                console.info("Event '" + eventName + "' triggered by 'Subscriber'", event);
-            }
-            else {
-                console.info("Event '" + eventName + "' triggered by 'Subscriber'");
-            }
-            callback(event);
-        });
-        if (eventName == 'videoElementCreated') {
-            if (this.stream.isVideoELementCreated) {
-                this.ee.emitEvent('videoElementCreated', [{
-                        element: this.stream.getVideoElement()
-                    }]);
-            }
-            else {
-                this.stream.addOnceEventListener('video-element-created-by-stream', function (element) {
-                    _this.id = element.id;
-                    _this.ee.emitEvent('videoElementCreated', [{
-                            element: element
-                        }]);
-                });
-            }
-        }
-        if (eventName == 'videoPlaying') {
-            var video = this.stream.getVideoElement();
-            if (!this.stream.displayMyRemote() && video &&
-                video.currentTime > 0 &&
-                video.paused == false &&
-                video.ended == false &&
-                video.readyState == 4) {
-                this.ee.emitEvent('videoPlaying', [{
-                        element: this.stream.getVideoElement()
-                    }]);
-            }
-            else {
-                this.stream.addOnceEventListener('video-is-playing', function (element) {
-                    _this.ee.emitEvent('videoPlaying', [{
-                            element: element.element
-                        }]);
-                });
-            }
-        }
-    };
-    return Subscriber;
-}());
-exports.Subscriber = Subscriber;
-//# sourceMappingURL=Subscriber.js.map
-
-/***/ }),
-
-/***/ "../../../../openvidu-browser/lib/OpenVidu/index.js":
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-function __export(m) {
-    for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
-}
-exports.__esModule = true;
-__export(__webpack_require__("../../../../openvidu-browser/lib/OpenVidu/OpenVidu.js"));
-__export(__webpack_require__("../../../../openvidu-browser/lib/OpenVidu/Session.js"));
-__export(__webpack_require__("../../../../openvidu-browser/lib/OpenVidu/Publisher.js"));
-__export(__webpack_require__("../../../../openvidu-browser/lib/OpenVidu/Subscriber.js"));
-__export(__webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Stream.js"));
-__export(__webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Connection.js"));
-__export(__webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/LocalRecorder.js"));
-//# sourceMappingURL=index.js.map
-
-/***/ }),
-
-/***/ "../../../../openvidu-browser/lib/OpenViduInternal/Connection.js":
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-exports.__esModule = true;
-var Stream_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Stream.js");
-var Connection = /** @class */ (function () {
-    function Connection(openVidu, local, room, options) {
-        this.openVidu = openVidu;
-        this.local = local;
-        this.room = room;
-        this.options = options;
-        this.streams = {};
-        console.info("'Connection' created (" + (local ? "local" : "remote") + ")" + (local ? "" : ", with 'connectionId' [" + (options ? options.id : '') + "] "));
-        if (options && !local) {
-            this.connectionId = options.id;
-            if (options.metadata) {
-                this.data = options.metadata;
-            }
-            if (options.streams) {
-                this.initRemoteStreams(options);
-            }
-        }
-    }
-    Connection.prototype.addStream = function (stream) {
-        stream.connection = this;
-        this.streams[stream.streamId] = stream;
-        //this.room.getStreams()[stream.streamId] = stream;
-    };
-    Connection.prototype.removeStream = function (key) {
-        delete this.streams[key];
-        //delete this.room.getStreams()[key];
-        delete this.inboundStreamsOpts;
-    };
-    Connection.prototype.setOptions = function (options) {
-        this.options = options;
-    };
-    Connection.prototype.getStreams = function () {
-        return this.streams;
-    };
-    Connection.prototype.dispose = function () {
-        for (var key in this.streams) {
-            this.streams[key].dispose();
-        }
-    };
-    Connection.prototype.sendIceCandidate = function (candidate) {
-        console.debug((this.local ? "Local" : "Remote"), "candidate for", this.connectionId, JSON.stringify(candidate));
-        this.openVidu.sendRequest("onIceCandidate", {
-            endpointName: this.connectionId,
-            candidate: candidate.candidate,
-            sdpMid: candidate.sdpMid,
-            sdpMLineIndex: candidate.sdpMLineIndex
-        }, function (error, response) {
-            if (error) {
-                console.error("Error sending ICE candidate: "
-                    + JSON.stringify(error));
-            }
-        });
-    };
-    Connection.prototype.initRemoteStreams = function (options) {
-        var opts;
-        for (var _i = 0, _a = options.streams; _i < _a.length; _i++) {
-            opts = _a[_i];
-            var streamOptions = {
-                id: opts.id,
-                connection: this,
-                recvAudio: (opts.audioActive == null ? true : opts.audioActive),
-                recvVideo: (opts.videoActive == null ? true : opts.videoActive),
-                typeOfVideo: opts.typeOfVideo
-            };
-            var stream = new Stream_1.Stream(this.openVidu, false, this.room, streamOptions);
-            this.addStream(stream);
-            this.inboundStreamsOpts = streamOptions;
-        }
-        console.info("Remote 'Connection' with 'connectionId' [" + this.connectionId + "] is now configured for receiving Streams with options: ", this.inboundStreamsOpts);
-    };
-    return Connection;
-}());
-exports.Connection = Connection;
-//# sourceMappingURL=Connection.js.map
-
-/***/ }),
-
-/***/ "../../../../openvidu-browser/lib/OpenViduInternal/LocalRecorder.js":
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-exports.__esModule = true;
-var LocalRecorder = /** @class */ (function () {
-    function LocalRecorder(stream) {
-        this.chunks = [];
-        this.count = 0;
-        this.stream = stream;
-        this.connectionId = (!!this.stream.connection) ? this.stream.connection.connectionId : 'default-connection';
-        this.id = this.stream.streamId + '_' + this.connectionId + '_localrecord';
-        this.state = "READY" /* READY */;
-    }
-    LocalRecorder.prototype.record = function () {
-        var _this = this;
-        if (typeof MediaRecorder === 'undefined') {
-            console.error('MediaRecorder not supported on your browser. See compatibility in https://caniuse.com/#search=MediaRecorder');
-            throw (Error('MediaRecorder not supported on your browser. See compatibility in https://caniuse.com/#search=MediaRecorder'));
-        }
-        if (this.state !== "READY" /* READY */) {
-            throw (Error('\'LocalRecord.record()\' needs \'LocalRecord.state\' to be \'READY\' (current value: \'' + this.state + '\'). Call \'LocalRecorder.clean()\' or init a new LocalRecorder before'));
-        }
-        console.log("Starting local recording of stream '" + this.stream.streamId + "' of connection '" + this.connectionId + "'");
-        if (typeof MediaRecorder.isTypeSupported == 'function') {
-            var options = void 0;
-            if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) {
-                options = { mimeType: 'video/webm;codecs=vp9' };
-            }
-            else if (MediaRecorder.isTypeSupported('video/webm;codecs=h264')) {
-                options = { mimeType: 'video/webm;codecs=h264' };
-            }
-            else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8')) {
-                options = { mimeType: 'video/webm;codecs=vp8' };
-            }
-            console.log('Using mimeType ' + options.mimeType);
-            this.mediaRecorder = new MediaRecorder(this.stream.getMediaStream(), options);
-        }
-        else {
-            console.warn('isTypeSupported is not supported, using default codecs for browser');
-            this.mediaRecorder = new MediaRecorder(this.stream.getMediaStream());
-        }
-        this.mediaRecorder.start(10);
-        this.mediaRecorder.ondataavailable = function (e) {
-            _this.chunks.push(e.data);
-        };
-        this.mediaRecorder.onerror = function (e) {
-            console.error('MediaRecorder error: ', e);
-        };
-        this.mediaRecorder.onstart = function () {
-            console.log('MediaRecorder started (state=' + _this.mediaRecorder.state + ")");
-        };
-        this.mediaRecorder.onstop = function () {
-            _this.onStopDefault();
-        };
-        this.mediaRecorder.onpause = function () {
-            console.log('MediaRecorder paused (state=' + _this.mediaRecorder.state + ")");
-        };
-        this.mediaRecorder.onresume = function () {
-            console.log('MediaRecorder resumed (state=' + _this.mediaRecorder.state + ")");
-        };
-        this.mediaRecorder.onwarning = function (e) {
-            console.log('MediaRecorder warning: ' + e);
-        };
-        this.state = "RECORDING" /* RECORDING */;
-    };
-    LocalRecorder.prototype.stop = function () {
-        var _this = this;
-        return new Promise(function (resolve, reject) {
-            try {
-                if (_this.state === "READY" /* READY */ || _this.state === "FINISHED" /* FINISHED */) {
-                    throw (Error('\'LocalRecord.stop()\' needs \'LocalRecord.state\' to be \'RECORDING\' or \'PAUSED\' (current value: \'' + _this.state + '\'). Call \'LocalRecorder.start()\' before'));
-                }
-                _this.mediaRecorder.onstop = function () {
-                    _this.onStopDefault();
-                    resolve();
-                };
-            }
-            catch (e) {
-                reject(e);
-            }
-            try {
-                _this.mediaRecorder.stop();
-            }
-            catch (e) {
-                reject(e);
-            }
-        });
-    };
-    LocalRecorder.prototype.pause = function () {
-        if (this.state !== "RECORDING" /* RECORDING */) {
-            throw (Error('\'LocalRecord.pause()\' needs \'LocalRecord.state\' to be \'RECORDING\' (current value: \'' + this.state + '\'). Call \'LocalRecorder.start()\' or \'LocalRecorder.resume()\' before'));
-        }
-        this.mediaRecorder.pause();
-        this.state = "PAUSED" /* PAUSED */;
-    };
-    LocalRecorder.prototype.resume = function () {
-        if (this.state !== "PAUSED" /* PAUSED */) {
-            throw (Error('\'LocalRecord.resume()\' needs \'LocalRecord.state\' to be \'PAUSED\' (current value: \'' + this.state + '\'). Call \'LocalRecorder.pause()\' before'));
-        }
-        this.mediaRecorder.resume();
-        this.state = "RECORDING" /* RECORDING */;
-    };
-    LocalRecorder.prototype.preview = function (parentElement) {
-        if (this.state !== "FINISHED" /* FINISHED */) {
-            throw (Error('\'LocalRecord.preview()\' needs \'LocalRecord.state\' to be \'FINISHED\' (current value: \'' + this.state + '\'). Call \'LocalRecorder.stop()\' before'));
-        }
-        this.videoPreview = document.createElement('video');
-        this.videoPreview.id = this.id;
-        this.videoPreview.autoplay = true;
-        if (typeof parentElement === "string") {
-            this.htmlParentElementId = parentElement;
-            var parentElementDom = document.getElementById(parentElement);
-            if (parentElementDom) {
-                this.videoPreview = parentElementDom.appendChild(this.videoPreview);
-            }
-        }
-        else {
-            this.htmlParentElementId = parentElement.id;
-            this.videoPreview = parentElement.appendChild(this.videoPreview);
-        }
-        this.videoPreview.src = this.videoPreviewSrc;
-        return this.videoPreview;
-    };
-    LocalRecorder.prototype.clean = function () {
-        var _this = this;
-        var f = function () {
-            delete _this.blob;
-            _this.chunks = [];
-            _this.count = 0;
-            delete _this.mediaRecorder;
-            _this.state = "READY" /* READY */;
-        };
-        if (this.state === "RECORDING" /* RECORDING */ || this.state === "PAUSED" /* PAUSED */) {
-            this.stop().then(function () { return f(); })["catch"](function () { return f(); });
-        }
-        else {
-            f();
-        }
-    };
-    LocalRecorder.prototype.download = function () {
-        if (this.state !== "FINISHED" /* FINISHED */) {
-            throw (Error('\'LocalRecord.download()\' needs \'LocalRecord.state\' to be \'FINISHED\' (current value: \'' + this.state + '\'). Call \'LocalRecorder.stop()\' before'));
-        }
-        else {
-            var a = document.createElement("a");
-            a.style.display = 'none';
-            document.body.appendChild(a);
-            var url = window.URL.createObjectURL(this.blob);
-            a.href = url;
-            a.download = this.id + '.webm';
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-        }
-    };
-    LocalRecorder.prototype.getBlob = function () {
-        if (this.state !== "FINISHED" /* FINISHED */) {
-            throw (Error('Call \'LocalRecord.stop()\' before getting Blob file'));
-        }
-        else {
-            return this.blob;
-        }
-    };
-    LocalRecorder.prototype.uploadAsBinary = function (endpoint, headers) {
-        var _this = this;
-        return new Promise(function (resolve, reject) {
-            if (_this.state !== "FINISHED" /* FINISHED */) {
-                reject(Error('\'LocalRecord.uploadAsBinary()\' needs \'LocalRecord.state\' to be \'FINISHED\' (current value: \'' + _this.state + '\'). Call \'LocalRecorder.stop()\' before'));
-            }
-            else {
-                var http_1 = new XMLHttpRequest();
-                http_1.open("POST", endpoint, true);
-                if (typeof headers === 'object') {
-                    for (var _i = 0, _a = Object.keys(headers); _i < _a.length; _i++) {
-                        var key = _a[_i];
-                        http_1.setRequestHeader(key, headers[key]);
-                    }
-                }
-                http_1.onreadystatechange = function () {
-                    if (http_1.readyState === 4) {
-                        if (http_1.status.toString().charAt(0) === '2') {
-                            // Success response from server (HTTP status standard: 2XX is success)
-                            resolve(http_1.responseText);
-                        }
-                        else {
-                            reject(Error("Upload error: " + http_1.status));
-                        }
-                    }
-                };
-                http_1.send(_this.blob);
-            }
-        });
-    };
-    LocalRecorder.prototype.uploadAsMultipartfile = function (endpoint, headers) {
-        var _this = this;
-        return new Promise(function (resolve, reject) {
-            if (_this.state !== "FINISHED" /* FINISHED */) {
-                reject(Error('\'LocalRecord.uploadAsMultipartfile()\' needs \'LocalRecord.state\' to be \'FINISHED\' (current value: \'' + _this.state + '\'). Call \'LocalRecorder.stop()\' before'));
-            }
-            else {
-                var http_2 = new XMLHttpRequest();
-                http_2.open("POST", endpoint, true);
-                if (typeof headers === 'object') {
-                    for (var _i = 0, _a = Object.keys(headers); _i < _a.length; _i++) {
-                        var key = _a[_i];
-                        http_2.setRequestHeader(key, headers[key]);
-                    }
-                }
-                var sendable = new FormData();
-                sendable.append("file", _this.blob, _this.id + ".webm");
-                http_2.onreadystatechange = function () {
-                    if (http_2.readyState === 4) {
-                        if (http_2.status.toString().charAt(0) === '2') {
-                            // Success response from server (HTTP status standard: 2XX is success)
-                            resolve(http_2.responseText);
-                        }
-                        else {
-                            reject(Error("Upload error: " + http_2.status));
-                        }
-                    }
-                };
-                http_2.send(sendable);
-            }
-        });
-    };
-    LocalRecorder.prototype.onStopDefault = function () {
-        console.log('MediaRecorder stopped  (state=' + this.mediaRecorder.state + ")");
-        this.blob = new Blob(this.chunks, { type: "video/webm" });
-        this.chunks = [];
-        this.videoPreviewSrc = window.URL.createObjectURL(this.blob);
-        this.state = "FINISHED" /* FINISHED */;
-    };
-    return LocalRecorder;
-}());
-exports.LocalRecorder = LocalRecorder;
-//# sourceMappingURL=LocalRecorder.js.map
-
-/***/ }),
-
-/***/ "../../../../openvidu-browser/lib/OpenViduInternal/OpenViduError.js":
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-exports.__esModule = true;
-var OpenViduError = /** @class */ (function () {
-    function OpenViduError(name, message) {
-        this.name = name;
-        this.message = message;
-    }
-    return OpenViduError;
-}());
-exports.OpenViduError = OpenViduError;
-//# sourceMappingURL=OpenViduError.js.map
-
-/***/ }),
-
-/***/ "../../../../openvidu-browser/lib/OpenViduInternal/OpenViduInternal.js":
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-exports.__esModule = true;
-/*
- * (C) Copyright 2017 OpenVidu (http://openvidu.io/)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
-var SessionInternal_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/SessionInternal.js");
-var OpenViduError_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/OpenViduError.js");
-var Stream_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Stream.js");
-var RpcBuilder = __webpack_require__("../../../../openvidu-browser/lib/KurentoUtils/kurento-jsonrpc/index.js");
-var OpenViduInternal = /** @class */ (function () {
-    function OpenViduInternal() {
-        this.recorder = false;
-    }
-    /* NEW METHODS */
-    OpenViduInternal.prototype.initSession = function (sessionId) {
-        console.info("'Session' initialized with 'sessionId' [" + sessionId + "]");
-        this.session = new SessionInternal_1.SessionInternal(this, sessionId);
-        return this.session;
-    };
-    OpenViduInternal.prototype.initPublisherTagged = function (parentId, cameraOptions, newStream, callback) {
-        var _this = this;
-        if (newStream) {
-            if (cameraOptions == null) {
-                cameraOptions = {
-                    sendAudio: true,
-                    sendVideo: true,
-                    activeAudio: true,
-                    activeVideo: true,
-                    dataChannel: true,
-                    mediaConstraints: {
-                        audio: true,
-                        video: { width: { ideal: 1280 } }
-                    }
-                };
-            }
-            this.localStream = new Stream_1.Stream(this, true, this.session, cameraOptions);
-        }
-        this.localStream.requestCameraAccess(function (error, localStream) {
-            if (error) {
-                // Neither localStream or microphone device is allowed/able to capture media
-                console.error(error);
-                if (callback) {
-                    callback(error);
-                }
-                _this.localStream.ee.emitEvent('access-denied-by-publisher');
-            }
-            else {
-                _this.localStream.setVideoElement(_this.cameraReady(localStream, parentId));
-                if (callback) {
-                    callback(undefined);
-                }
-            }
-        });
-        return this.localStream;
-    };
-    OpenViduInternal.prototype.initPublisherScreen = function (parentId, newStream, callback) {
-        var _this = this;
-        if (newStream) {
-            this.localStream = new Stream_1.Stream(this, true, this.session, 'screen-options');
-        }
-        this.localStream.addOnceEventListener('can-request-screen', function () {
-            _this.localStream.requestCameraAccess(function (error, localStream) {
-                if (error) {
-                    _this.localStream.ee.emitEvent('access-denied-by-publisher');
-                    var errorName = "SCREEN_CAPTURE_DENIED" /* SCREEN_CAPTURE_DENIED */;
-                    var errorMessage = 'You must allow access to one window of your desktop';
-                    var e = new OpenViduError_1.OpenViduError(errorName, errorMessage);
-                    console.error(e);
-                    if (callback) {
-                        callback(e);
-                    }
-                }
-                else {
-                    _this.localStream.setVideoElement(_this.cameraReady(localStream, parentId));
-                    if (_this.localStream.getSendAudio()) {
-                        // If the user wants to send audio with the screen capturing
-                        navigator.mediaDevices.getUserMedia({ audio: true, video: false })
-                            .then(function (userStream) {
-                            _this.localStream.getMediaStream().addTrack(userStream.getAudioTracks()[0]);
-                            // Mute audio if 'activeAudio' property is false
-                            if (userStream.getAudioTracks()[0] != null) {
-                                userStream.getAudioTracks()[0].enabled = _this.localStream.outboundOptions.activeAudio;
-                            }
-                            _this.localStream.isScreenRequestedReady = true;
-                            _this.localStream.ee.emitEvent('screen-ready');
-                            if (callback) {
-                                callback(undefined);
-                            }
-                        })["catch"](function (error) {
-                            _this.localStream.ee.emitEvent('access-denied-by-publisher');
-                            console.error("Error accessing the microphone", error);
-                            if (callback) {
-                                var errorName = "MICROPHONE_ACCESS_DENIED" /* MICROPHONE_ACCESS_DENIED */;
-                                var errorMessage = error.toString();
-                                callback(new OpenViduError_1.OpenViduError(errorName, errorMessage));
-                            }
-                        });
-                    }
-                    else {
-                        _this.localStream.isScreenRequestedReady = true;
-                        _this.localStream.ee.emitEvent('screen-ready');
-                        if (callback) {
-                            callback(undefined);
-                        }
-                    }
-                }
-            });
-        });
-        return this.localStream;
-    };
-    OpenViduInternal.prototype.cameraReady = function (localStream, parentId) {
-        this.localStream = localStream;
-        var videoElement = this.localStream.playOnlyVideo(parentId, null);
-        this.localStream.emitStreamReadyEvent();
-        return videoElement;
-    };
-    OpenViduInternal.prototype.getLocalStream = function () {
-        return this.localStream;
-    };
-    /* NEW METHODS */
-    OpenViduInternal.prototype.getWsUri = function () {
-        return this.wsUri;
-    };
-    OpenViduInternal.prototype.setWsUri = function (wsUri) {
-        this.wsUri = wsUri;
-    };
-    OpenViduInternal.prototype.getSecret = function () {
-        return this.secret;
-    };
-    OpenViduInternal.prototype.setSecret = function (secret) {
-        this.secret = secret;
-    };
-    OpenViduInternal.prototype.getRecorder = function () {
-        return this.recorder;
-    };
-    OpenViduInternal.prototype.setRecorder = function (recorder) {
-        this.recorder = recorder;
-    };
-    OpenViduInternal.prototype.getOpenViduServerURL = function () {
-        return 'https://' + this.wsUri.split("wss://")[1].split("/room")[0];
-    };
-    OpenViduInternal.prototype.getRoom = function () {
-        return this.session;
-    };
-    OpenViduInternal.prototype.connect = function (callback) {
-        this.callback = callback;
-        this.initJsonRpcClient(this.wsUri);
-    };
-    OpenViduInternal.prototype.initJsonRpcClient = function (wsUri) {
-        var config = {
-            heartbeat: 3000,
-            sendCloseMessage: false,
-            ws: {
-                uri: wsUri,
-                useSockJS: false,
-                onconnected: this.connectCallback.bind(this),
-                ondisconnect: this.disconnectCallback.bind(this),
-                onreconnecting: this.reconnectingCallback.bind(this),
-                onreconnected: this.reconnectedCallback.bind(this)
-            },
-            rpc: {
-                requestTimeout: 15000,
-                //notifications
-                participantJoined: this.onParticipantJoined.bind(this),
-                participantPublished: this.onParticipantPublished.bind(this),
-                participantUnpublished: this.onParticipantUnpublished.bind(this),
-                participantLeft: this.onParticipantLeft.bind(this),
-                participantEvicted: this.onParticipantEvicted.bind(this),
-                sendMessage: this.onNewMessage.bind(this),
-                iceCandidate: this.iceCandidateEvent.bind(this),
-                mediaError: this.onMediaError.bind(this)
-            }
-        };
-        this.jsonRpcClient = new RpcBuilder.clients.JsonRpcClient(config);
-    };
-    OpenViduInternal.prototype.connectCallback = function (error) {
-        if (error) {
-            this.callback(error);
-        }
-        else {
-            this.callback(null);
-        }
-    };
-    OpenViduInternal.prototype.isRoomAvailable = function () {
-        if (this.session !== undefined && this.session instanceof SessionInternal_1.SessionInternal) {
-            return true;
-        }
-        else {
-            console.warn('Session instance not found');
-            return false;
-        }
-    };
-    OpenViduInternal.prototype.disconnectCallback = function () {
-        console.warn('Websocket connection lost');
-        if (this.isRoomAvailable()) {
-            this.session.onLostConnection();
-        }
-        else {
-            alert('Connection error. Please reload page.');
-        }
-    };
-    OpenViduInternal.prototype.reconnectingCallback = function () {
-        console.warn('Websocket connection lost (reconnecting)');
-        if (this.isRoomAvailable()) {
-            this.session.onLostConnection();
-        }
-        else {
-            alert('Connection error. Please reload page.');
-        }
-    };
-    OpenViduInternal.prototype.reconnectedCallback = function () {
-        console.warn('Websocket reconnected');
-    };
-    OpenViduInternal.prototype.onParticipantJoined = function (params) {
-        if (this.isRoomAvailable()) {
-            this.session.onParticipantJoined(params);
-        }
-    };
-    OpenViduInternal.prototype.onParticipantPublished = function (params) {
-        if (this.isRoomAvailable()) {
-            this.session.onParticipantPublished(params);
-        }
-    };
-    OpenViduInternal.prototype.onParticipantUnpublished = function (params) {
-        if (this.isRoomAvailable()) {
-            this.session.onParticipantUnpublished(params);
-        }
-    };
-    OpenViduInternal.prototype.onParticipantLeft = function (params) {
-        if (this.isRoomAvailable()) {
-            this.session.onParticipantLeft(params);
-        }
-    };
-    OpenViduInternal.prototype.onParticipantEvicted = function (params) {
-        if (this.isRoomAvailable()) {
-            this.session.onParticipantEvicted(params);
-        }
-    };
-    OpenViduInternal.prototype.onNewMessage = function (params) {
-        if (this.isRoomAvailable()) {
-            this.session.onNewMessage(params);
-        }
-    };
-    OpenViduInternal.prototype.iceCandidateEvent = function (params) {
-        if (this.isRoomAvailable()) {
-            this.session.recvIceCandidate(params);
-        }
-    };
-    OpenViduInternal.prototype.onRoomClosed = function (params) {
-        if (this.isRoomAvailable()) {
-            this.session.onRoomClosed(params);
-        }
-    };
-    OpenViduInternal.prototype.onMediaError = function (params) {
-        if (this.isRoomAvailable()) {
-            this.session.onMediaError(params);
-        }
-    };
-    OpenViduInternal.prototype.setRpcParams = function (params) {
-        this.rpcParams = params;
-    };
-    OpenViduInternal.prototype.sendRequest = function (method, params, callback) {
-        if (params && params instanceof Function) {
-            callback = params;
-            params = undefined;
-        }
-        params = params || {};
-        if (this.rpcParams && this.rpcParams !== null && this.rpcParams !== undefined) {
-            for (var index in this.rpcParams) {
-                if (this.rpcParams.hasOwnProperty(index)) {
-                    params[index] = this.rpcParams[index];
-                    console.debug('RPC param added to request {' + index + ': ' + this.rpcParams[index] + '}');
-                }
-            }
-        }
-        console.debug('Sending request: {method:"' + method + '", params: ' + JSON.stringify(params) + '}');
-        this.jsonRpcClient.send(method, params, callback);
-    };
-    OpenViduInternal.prototype.close = function (forced) {
-        if (this.isRoomAvailable()) {
-            this.session.leave(forced, this.jsonRpcClient);
-        }
-    };
-    ;
-    OpenViduInternal.prototype.disconnectParticipant = function (stream) {
-        if (this.isRoomAvailable()) {
-            this.session.disconnect(stream);
-        }
-    };
-    //CHAT
-    OpenViduInternal.prototype.sendMessage = function (message) {
-        this.sendRequest('sendMessage', {
-            message: message
-        }, function (error, response) {
-            if (error) {
-                console.error(error);
-            }
-        });
-    };
-    ;
-    OpenViduInternal.prototype.generateMediaConstraints = function (cameraOptions) {
-        var mediaConstraints = {
-            audio: cameraOptions.audio,
-            video: {}
-        };
-        if (!cameraOptions.video) {
-            mediaConstraints.video = false;
-        }
-        else {
-            var w = void 0, h = void 0;
-            switch (cameraOptions.quality) {
-                case 'LOW':
-                    w = 320;
-                    h = 240;
-                    break;
-                case 'MEDIUM':
-                    w = 640;
-                    h = 480;
-                    break;
-                case 'HIGH':
-                    w = 1280;
-                    h = 720;
-                    break;
-                default:
-                    w = 640;
-                    h = 480;
-            }
-            mediaConstraints.video['width'] = { exact: w };
-            mediaConstraints.video['height'] = { exact: h };
-            //mediaConstraints.video['frameRate'] = { ideal: Number((<HTMLInputElement>document.getElementById('frameRate')).value) };
-        }
-        return mediaConstraints;
-    };
-    return OpenViduInternal;
-}());
-exports.OpenViduInternal = OpenViduInternal;
-//# sourceMappingURL=OpenViduInternal.js.map
-
-/***/ }),
-
-/***/ "../../../../openvidu-browser/lib/OpenViduInternal/SessionInternal.js":
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-exports.__esModule = true;
-var Connection_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Connection.js");
-var EventEmitter = __webpack_require__("../../../../openvidu-browser/node_modules/wolfy87-eventemitter/EventEmitter.js");
-var SECRET_PARAM = '?secret=';
-var RECORDER_PARAM = '&recorder=';
-var SessionInternal = /** @class */ (function () {
-    function SessionInternal(openVidu, sessionId) {
-        this.openVidu = openVidu;
-        this.ee = new EventEmitter();
-        this.remoteStreams = {};
-        this.participants = {};
-        this.publishersSpeaking = [];
-        this.connected = false;
-        this.sessionId = this.getUrlWithoutSecret(sessionId);
-        this.localParticipant = new Connection_1.Connection(this.openVidu, true, this);
-        if (!this.openVidu.getWsUri() && !!sessionId) {
-            this.processOpenViduUrl(sessionId);
-        }
-    }
-    SessionInternal.prototype.processOpenViduUrl = function (url) {
-        var secret = this.getSecretFromUrl(url);
-        var recorder = this.getRecorderFromUrl(url);
-        if (!(secret == null)) {
-            this.openVidu.setSecret(secret);
-        }
-        if (!(recorder == null)) {
-            this.openVidu.setRecorder(recorder);
-        }
-        this.openVidu.setWsUri(this.getFinalUrl(url));
-    };
-    SessionInternal.prototype.getSecretFromUrl = function (url) {
-        var secret = '';
-        if (url.indexOf(SECRET_PARAM) !== -1) {
-            var endOfSecret = url.lastIndexOf(RECORDER_PARAM);
-            if (endOfSecret !== -1) {
-                secret = url.substring(url.lastIndexOf(SECRET_PARAM) + SECRET_PARAM.length, endOfSecret);
-            }
-            else {
-                secret = url.substring(url.lastIndexOf(SECRET_PARAM) + SECRET_PARAM.length, url.length);
-            }
-        }
-        return secret;
-    };
-    SessionInternal.prototype.getRecorderFromUrl = function (url) {
-        var recorder = '';
-        if (url.indexOf(RECORDER_PARAM) !== -1) {
-            recorder = url.substring(url.lastIndexOf(RECORDER_PARAM) + RECORDER_PARAM.length, url.length);
-        }
-        return new Boolean(recorder).valueOf();
-        ;
-    };
-    SessionInternal.prototype.getUrlWithoutSecret = function (url) {
-        if (!url) {
-            console.error('sessionId is not defined');
-        }
-        if (url.indexOf(SECRET_PARAM) !== -1) {
-            url = url.substring(0, url.lastIndexOf(SECRET_PARAM));
-        }
-        return url;
-    };
-    SessionInternal.prototype.getFinalUrl = function (url) {
-        url = this.getUrlWithoutSecret(url).substring(0, url.lastIndexOf('/')) + '/room';
-        if (url.indexOf(".ngrok.io") !== -1) {
-            // OpenVidu server URL referes to a ngrok IP: secure wss protocol and delete port of URL
-            url = url.replace("ws://", "wss://");
-            var regex = /\.ngrok\.io:\d+/;
-            url = url.replace(regex, ".ngrok.io");
-        }
-        else if ((url.indexOf("localhost") !== -1) || (url.indexOf("127.0.0.1") != -1)) {
-            // OpenVidu server URL referes to localhost IP
-        }
-        return url;
-    };
-    /* NEW METHODS */
-    SessionInternal.prototype.connect = function (token, callback) {
-        var _this = this;
-        this.openVidu.connect(function (error) {
-            if (error) {
-                callback('ERROR CONNECTING TO OPENVIDU');
-            }
-            else {
-                if (!token) {
-                    token = _this.randomToken();
-                }
-                var joinParams = {
-                    token: token,
-                    session: _this.sessionId,
-                    metadata: _this.options.metadata,
-                    secret: _this.openVidu.getSecret(),
-                    recorder: _this.openVidu.getRecorder(),
-                    dataChannels: false
-                };
-                if (_this.localParticipant) {
-                    if (Object.keys(_this.localParticipant.getStreams()).some(function (streamId) {
-                        return _this.remoteStreams[streamId].isDataChannelEnabled();
-                    })) {
-                        joinParams.dataChannels = true;
-                    }
-                }
-                _this.openVidu.sendRequest('joinRoom', joinParams, function (error, response) {
-                    if (error) {
-                        callback(error);
-                    }
-                    else {
-                        _this.connected = true;
-                        var exParticipants = response.value;
-                        // IMPORTANT: Update connectionId with value send by server
-                        _this.localParticipant.connectionId = response.id;
-                        _this.participants[response.id] = _this.localParticipant;
-                        var roomEvent = {
-                            participants: new Array(),
-                            streams: new Array()
-                        };
-                        var length_1 = exParticipants.length;
-                        for (var i = 0; i < length_1; i++) {
-                            var connection = new Connection_1.Connection(_this.openVidu, false, _this, exParticipants[i]);
-                            connection.creationTime = new Date().getTime();
-                            _this.participants[connection.connectionId] = connection;
-                            roomEvent.participants.push(connection);
-                            var streams = connection.getStreams();
-                            for (var key in streams) {
-                                roomEvent.streams.push(streams[key]);
-                                if (_this.subscribeToStreams) {
-                                    streams[key].subscribe();
-                                }
-                            }
-                        }
-                        // Update local Connection object properties with values returned by server
-                        _this.localParticipant.data = response.metadata;
-                        _this.localParticipant.creationTime = new Date().getTime();
-                        // Updates the value of property 'connection' in Session object
-                        _this.ee.emitEvent('update-connection-object', [{ connection: _this.localParticipant }]);
-                        // Own connection created event
-                        _this.ee.emitEvent('connectionCreated', [{ connection: _this.localParticipant }]);
-                        // One connection created event for each existing connection in the session
-                        for (var _i = 0, _a = roomEvent.participants; _i < _a.length; _i++) {
-                            var part = _a[_i];
-                            _this.ee.emitEvent('connectionCreated', [{ connection: part }]);
-                        }
-                        //if (this.subscribeToStreams) {
-                        for (var _b = 0, _c = roomEvent.streams; _b < _c.length; _b++) {
-                            var stream = _c[_b];
-                            _this.ee.emitEvent('streamCreated', [{ stream: stream }]);
-                            // Store the remote stream
-                            _this.remoteStreams[stream.streamId] = stream;
-                        }
-                        callback(undefined);
-                    }
-                });
-            }
-        });
-    };
-    /* NEW METHODS */
-    SessionInternal.prototype.configure = function (options) {
-        this.options = options;
-        this.id = options.sessionId;
-        this.subscribeToStreams = options.subscribeToStreams == null ? true : options.subscribeToStreams;
-        this.updateSpeakerInterval = options.updateSpeakerInterval || 1500;
-        this.thresholdSpeaker = options.thresholdSpeaker || -50;
-        this.activateUpdateMainSpeaker();
-        if (!this.openVidu.getWsUri()) {
-            this.processOpenViduUrl(options.sessionId);
-        }
-    };
-    SessionInternal.prototype.getId = function () {
-        return this.id;
-    };
-    SessionInternal.prototype.getSessionId = function () {
-        return this.sessionId;
-    };
-    SessionInternal.prototype.activateUpdateMainSpeaker = function () {
-        /*setInterval(() => {
-            if (this.publishersSpeaking.length > 0) {
-                this.ee.emitEvent('publisherStartSpeaking', [{
-                    participantId: this.publishersSpeaking[this.publishersSpeaking.length - 1]
-                }]);
-            }
-        }, this.updateSpeakerInterval);*/
-    };
-    SessionInternal.prototype.getLocalParticipant = function () {
-        return this.localParticipant;
-    };
-    SessionInternal.prototype.addEventListener = function (eventName, listener) {
-        this.ee.on(eventName, listener);
-    };
-    SessionInternal.prototype.addOnceEventListener = function (eventName, listener) {
-        this.ee.once(eventName, listener);
-    };
-    SessionInternal.prototype.removeListener = function (eventName, listener) {
-        this.ee.off(eventName, listener);
-    };
-    SessionInternal.prototype.removeEvent = function (eventName) {
-        this.ee.removeEvent(eventName);
-    };
-    SessionInternal.prototype.emitEvent = function (eventName, eventsArray) {
-        this.ee.emitEvent(eventName, eventsArray);
-    };
-    SessionInternal.prototype.subscribe = function (stream) {
-        stream.subscribe();
-    };
-    SessionInternal.prototype.unsubscribe = function (stream) {
-        console.info("Unsubscribing from " + stream.connection.connectionId);
-        this.openVidu.sendRequest('unsubscribeFromVideo', {
-            sender: stream.connection.connectionId
-        }, function (error, response) {
-            if (error) {
-                console.error("Error unsubscribing from Subscriber", error);
-            }
-            else {
-                console.info("Unsubscribed correctly from " + stream.connection.connectionId);
-            }
-            stream.dispose();
-        });
-    };
-    SessionInternal.prototype.onParticipantPublished = function (response) {
-        // Get the existing Connection created on 'onParticipantJoined' for
-        // existing participants or create a new one for new participants
-        var connection = this.participants[response.id];
-        if (connection != null) {
-            // Update existing Connection
-            response.metadata = connection.data;
-            connection.setOptions(response);
-            connection.initRemoteStreams(response);
-        }
-        else {
-            // Create new Connection
-            connection = new Connection_1.Connection(this.openVidu, false, this, response);
-        }
-        var pid = connection.connectionId;
-        if (!(pid in this.participants)) {
-            console.debug("Remote Connection not found in connections list by its id [" + pid + "]");
-        }
-        else {
-            console.debug("Remote Connection found in connections list by its id [" + pid + "]");
-        }
-        this.participants[pid] = connection;
-        var streams = connection.getStreams();
-        for (var key in streams) {
-            var stream = streams[key];
-            if (!this.remoteStreams[stream.streamId]) {
-                // Avoid race condition between stream.subscribe() in "onParticipantPublished" and in "joinRoom" rpc callback
-                // This condition is false if openvidu-server sends "participantPublished" event to a subscriber participant that has
-                // already subscribed to certain stream in the callback of "joinRoom" method
-                if (this.subscribeToStreams) {
-                    stream.subscribe();
-                }
-                this.ee.emitEvent('streamCreated', [{ stream: stream }]);
-                // Store the remote stream
-                this.remoteStreams[stream.streamId] = stream;
-            }
-        }
-    };
-    SessionInternal.prototype.onParticipantUnpublished = function (msg) {
-        var _this = this;
-        var connection = this.participants[msg.name];
-        if (connection !== undefined) {
-            var streams = connection.getStreams();
-            for (var key in streams) {
-                this.ee.emitEvent('streamDestroyed', [{
-                        stream: streams[key],
-                        preventDefault: function () { _this.ee.removeEvent('stream-destroyed-default'); }
-                    }]);
-                this.ee.emitEvent('stream-destroyed-default', [{
-                        stream: streams[key]
-                    }]);
-                // Deleting the remote stream
-                var streamId = streams[key].streamId;
-                var stream = this.remoteStreams[streamId];
-                stream.dispose();
-                delete this.remoteStreams[stream.streamId];
-                connection.removeStream(stream.streamId);
-            }
-        }
-        else {
-            console.warn("Participant " + msg.name
-                + " unknown. Participants: "
-                + JSON.stringify(this.participants));
-        }
-    };
-    SessionInternal.prototype.onParticipantJoined = function (response) {
-        var connection = new Connection_1.Connection(this.openVidu, false, this, response);
-        connection.creationTime = new Date().getTime();
-        var pid = connection.connectionId;
-        if (!(pid in this.participants)) {
-            this.participants[pid] = connection;
-        }
-        else {
-            //use existing so that we don't lose streams info
-            console.warn("Connection already exists in connections list with " +
-                "the same connectionId, old:", this.participants[pid], ", joined now:", connection);
-            connection = this.participants[pid];
-        }
-        this.ee.emitEvent('participant-joined', [{
-                connection: connection
-            }]);
-        this.ee.emitEvent('connectionCreated', [{
-                connection: connection
-            }]);
-    };
-    SessionInternal.prototype.onParticipantLeft = function (msg) {
-        var _this = this;
-        var connection = this.participants[msg.name];
-        if (connection !== undefined) {
-            this.ee.emitEvent('participant-left', [{
-                    connection: connection
-                }]);
-            var streams = connection.getStreams();
-            for (var key in streams) {
-                this.ee.emitEvent('streamDestroyed', [{
-                        stream: streams[key],
-                        preventDefault: function () { _this.ee.removeEvent('stream-destroyed-default'); }
-                    }]);
-                this.ee.emitEvent('stream-destroyed-default', [{
-                        stream: streams[key]
-                    }]);
-                // Deleting the remote stream
-                var streamId = streams[key].streamId;
-                delete this.remoteStreams[streamId];
-            }
-            connection.dispose();
-            delete this.participants[msg.name];
-            this.ee.emitEvent('connectionDestroyed', [{
-                    connection: connection
-                }]);
-        }
-        else {
-            console.warn("Participant " + msg.name
-                + " unknown. Participants: "
-                + JSON.stringify(this.participants));
-        }
-    };
-    ;
-    SessionInternal.prototype.onParticipantEvicted = function (msg) {
-        this.ee.emitEvent('participant-evicted', [{
-                localParticipant: this.localParticipant
-            }]);
-    };
-    ;
-    SessionInternal.prototype.onNewMessage = function (msg) {
-        console.info("New signal: " + JSON.stringify(msg));
-        this.ee.emitEvent('signal', [{
-                data: msg.data,
-                from: this.participants[msg.from],
-                type: msg.type
-            }]);
-        this.ee.emitEvent('signal:' + msg.type, [{
-                data: msg.data,
-                from: this.participants[msg.from],
-                type: msg.type
-            }]);
-    };
-    SessionInternal.prototype.recvIceCandidate = function (msg) {
-        var candidate = {
-            candidate: msg.candidate,
-            sdpMid: msg.sdpMid,
-            sdpMLineIndex: msg.sdpMLineIndex
-        };
-        var connection = this.participants[msg.endpointName];
-        if (!connection) {
-            console.error("Participant not found for endpoint " +
-                msg.endpointName + ". Ice candidate will be ignored.", candidate);
-            return;
-        }
-        var streams = connection.getStreams();
-        var _loop_1 = function (key) {
-            var stream = streams[key];
-            stream.getWebRtcPeer().addIceCandidate(candidate, function (error) {
-                if (error) {
-                    console.error("Error adding candidate for " + key
-                        + " stream of endpoint " + msg.endpointName
-                        + ": " + error);
-                }
-            });
-        };
-        for (var key in streams) {
-            _loop_1(key);
-        }
-    };
-    SessionInternal.prototype.onRoomClosed = function (msg) {
-        console.info("Session closed: " + JSON.stringify(msg));
-        var room = msg.room;
-        if (room !== undefined) {
-            this.ee.emitEvent('room-closed', [{
-                    room: room
-                }]);
-        }
-        else {
-            console.warn("Session undefined on session closed", msg);
-        }
-    };
-    SessionInternal.prototype.onLostConnection = function () {
-        if (!this.connected) {
-            console.warn('Not connected to session: if you are not debugging, this is probably a certificate error');
-            if (window.confirm('If you are not debugging, this is probably a certificate error at \"' + this.openVidu.getOpenViduServerURL() + '\"\n\nClick OK to navigate and accept it')) {
-                location.assign(this.openVidu.getOpenViduServerURL() + '/accept-certificate');
-            }
-            ;
-            return;
-        }
-        console.warn('Lost connection in Session ' + this.id);
-        var room = this.id;
-        if (room !== undefined) {
-            this.ee.emitEvent('lost-connection', [{ room: room }]);
-        }
-        else {
-            console.warn('Session undefined when lost connection');
-        }
-    };
-    SessionInternal.prototype.onMediaError = function (params) {
-        console.error("Media error: " + JSON.stringify(params));
-        var error = params.error;
-        if (error) {
-            this.ee.emitEvent('error-media', [{
-                    error: error
-                }]);
-        }
-        else {
-            console.warn("Received undefined media error. Params:", params);
-        }
-    };
-    /*
-     * forced means the user was evicted, no need to send the 'leaveRoom' request
-     */
-    SessionInternal.prototype.leave = function (forced, jsonRpcClient) {
-        forced = !!forced;
-        console.info("Leaving Session (forced=" + forced + ")");
-        if (this.connected && !forced) {
-            this.openVidu.sendRequest('leaveRoom', function (error, response) {
-                if (error) {
-                    console.error(error);
-                }
-                jsonRpcClient.close();
-            });
-        }
-        else {
-            jsonRpcClient.close();
-        }
-        this.connected = false;
-        if (this.participants) {
-            for (var pid in this.participants) {
-                this.participants[pid].dispose();
-                delete this.participants[pid];
-            }
-        }
-    };
-    SessionInternal.prototype.disconnect = function (stream) {
-        var connection = stream.getParticipant();
-        if (!connection) {
-            console.error("Stream to disconnect has no participant", stream);
-            return;
-        }
-        delete this.participants[connection.connectionId];
-        connection.dispose();
-        if (connection === this.localParticipant) {
-            console.info("Unpublishing my media (I'm " + connection.connectionId + ")");
-            delete this.localParticipant;
-            this.openVidu.sendRequest('unpublishVideo', function (error, response) {
-                if (error) {
-                    console.error(error);
-                }
-                else {
-                    console.info("Media unpublished correctly");
-                }
-            });
-        }
-        else {
-            this.unsubscribe(stream);
-        }
-    };
-    SessionInternal.prototype.unpublish = function (publisher) {
-        var _this = this;
-        var stream = publisher.stream;
-        if (!stream.connection) {
-            console.error("The associated Connection object of this Publisher is null", stream);
-            return;
-        }
-        else if (stream.connection !== this.localParticipant) {
-            console.error("The associated Connection object of this Publisher is not your local Connection." +
-                "Only moderators can force unpublish on remote Streams via 'forceUnpublish' method", stream);
-            return;
-        }
-        else {
-            stream.dispose();
-            console.info("Unpublishing local media (" + stream.connection.connectionId + ")");
-            this.openVidu.sendRequest('unpublishVideo', function (error, response) {
-                if (error) {
-                    console.error(error);
-                }
-                else {
-                    console.info("Media unpublished correctly");
-                }
-            });
-            stream.isReadyToPublish = false;
-            stream.isScreenRequestedReady = false;
-            delete stream.connection.getStreams()[stream.streamId];
-            publisher.ee.emitEvent('streamDestroyed', [{
-                    stream: publisher.stream,
-                    preventDefault: function () { _this.ee.removeEvent('stream-destroyed-default'); }
-                }]);
-            publisher.ee.emitEvent('stream-destroyed-default', [{
-                    stream: publisher.stream
-                }]);
-        }
-    };
-    SessionInternal.prototype.getRemoteStreams = function () {
-        return this.remoteStreams;
-    };
-    SessionInternal.prototype.addParticipantSpeaking = function (participantId) {
-        this.publishersSpeaking.push(participantId);
-        this.ee.emitEvent('publisherStartSpeaking', [{
-                participantId: participantId
-            }]);
-    };
-    SessionInternal.prototype.removeParticipantSpeaking = function (participantId) {
-        var pos = -1;
-        for (var i = 0; i < this.publishersSpeaking.length; i++) {
-            if (this.publishersSpeaking[i] == participantId) {
-                pos = i;
-                break;
-            }
-        }
-        if (pos != -1) {
-            this.publishersSpeaking.splice(pos, 1);
-            this.ee.emitEvent('publisherStopSpeaking', [{
-                    participantId: participantId
-                }]);
-        }
-    };
-    SessionInternal.prototype.stringClientMetadata = function (metadata) {
-        if (!(typeof metadata === 'string')) {
-            return JSON.stringify(metadata);
-        }
-        else {
-            return metadata;
-        }
-    };
-    SessionInternal.prototype.randomToken = function () {
-        return Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
-    };
-    return SessionInternal;
-}());
-exports.SessionInternal = SessionInternal;
-//# sourceMappingURL=SessionInternal.js.map
-
-/***/ }),
-
-/***/ "../../../../openvidu-browser/lib/OpenViduInternal/Stream.js":
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-exports.__esModule = true;
-var OpenViduError_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/OpenViduError.js");
-var WebRtcStats_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/WebRtcStats.js");
-var EventEmitter = __webpack_require__("../../../../openvidu-browser/node_modules/wolfy87-eventemitter/EventEmitter.js");
-var kurentoUtils = __webpack_require__("../../../../openvidu-browser/lib/KurentoUtils/kurento-utils-js/index.js");
-var adapter = __webpack_require__("../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/adapter_core.js");
-if (window) {
-    window["adapter"] = adapter;
-}
-function jq(id) {
-    return id.replace(/(@|:|\.|\[|\]|,)/g, "\\$1");
-}
-function show(id) {
-    document.getElementById(jq(id)).style.display = 'block';
-}
-function hide(id) {
-    document.getElementById(jq(id)).style.display = 'none';
-}
-var Stream = /** @class */ (function () {
-    function Stream(openVidu, local, room, options) {
-        var _this = this;
-        this.openVidu = openVidu;
-        this.local = local;
-        this.room = room;
-        this.ee = new EventEmitter();
-        this.showMyRemote = false;
-        this.localMirrored = false;
-        this.chanId = 0;
-        this.dataChannelOpened = false;
-        this.isReadyToPublish = false;
-        this.isPublisherPublished = false;
-        this.isVideoELementCreated = false;
-        this.accessIsAllowed = false;
-        this.accessIsDenied = false;
-        this.isScreenRequestedReady = false;
-        this.isScreenRequested = false;
-        if (options !== 'screen-options') {
-            // Outbound stream (not screen share) or Inbound stream
-            if ('id' in options) {
-                this.inboundOptions = options;
-            }
-            else {
-                this.outboundOptions = options;
-            }
-            this.streamId = (options.id != null) ? options.id : ((options.sendVideo) ? "CAMERA" : "MICRO");
-            this.typeOfVideo = (options.typeOfVideo != null) ? options.typeOfVideo : '';
-            if ('recvAudio' in options) {
-                // Set Connection for an Inbound stream (for Outbound streams will be set on Session.Publish(Publisher))
-                this.connection = options.connection;
-            }
-        }
-        else {
-            // Outbound stream for screen share
-            this.isScreenRequested = true;
-            this.typeOfVideo = 'SCREEN';
-        }
-        this.addEventListener('mediastream-updated', function () {
-            if (_this.video)
-                _this.video.srcObject = _this.mediaStream;
-            console.debug("Video srcObject [" + _this.mediaStream + "] added to stream [" + _this.streamId + "]");
-        });
-    }
-    Stream.prototype.emitStreamReadyEvent = function () {
-        this.ee.emitEvent('stream-ready');
-    };
-    Stream.prototype.removeVideo = function (parentElement) {
-        if (this.video) {
-            if (typeof parentElement === "string") {
-                document.getElementById(parentElement).removeChild(this.video);
-                this.ee.emitEvent('video-removed');
-            }
-            else if (parentElement instanceof Element) {
-                parentElement.removeChild(this.video);
-                this.ee.emitEvent('video-removed');
-            }
-            else if (!parentElement) {
-                if (document.getElementById(this.parentId)) {
-                    document.getElementById(this.parentId).removeChild(this.video);
-                    this.ee.emitEvent('video-removed');
-                }
-            }
-            delete this.video;
-        }
-    };
-    Stream.prototype.getVideoElement = function () {
-        return this.video;
-    };
-    Stream.prototype.setVideoElement = function (video) {
-        if (!!video)
-            this.video = video;
-    };
-    Stream.prototype.getParentId = function () {
-        return this.parentId;
-    };
-    Stream.prototype.getRecvVideo = function () {
-        return this.inboundOptions.recvVideo;
-    };
-    Stream.prototype.getRecvAudio = function () {
-        return this.inboundOptions.recvAudio;
-    };
-    Stream.prototype.getSendVideo = function () {
-        return this.outboundOptions.sendVideo;
-    };
-    Stream.prototype.getSendAudio = function () {
-        return this.outboundOptions.sendAudio;
-    };
-    Stream.prototype.subscribeToMyRemote = function () {
-        this.showMyRemote = true;
-    };
-    Stream.prototype.displayMyRemote = function () {
-        return this.showMyRemote;
-    };
-    Stream.prototype.mirrorLocalStream = function (wr) {
-        this.showMyRemote = true;
-        this.localMirrored = true;
-        if (wr) {
-            this.mediaStream = wr;
-            this.ee.emitEvent('mediastream-updated');
-        }
-    };
-    Stream.prototype.isLocalMirrored = function () {
-        return this.localMirrored;
-    };
-    Stream.prototype.getChannelName = function () {
-        return this.streamId + '_' + this.chanId++;
-    };
-    Stream.prototype.isDataChannelEnabled = function () {
-        return this.outboundOptions.dataChannel;
-    };
-    Stream.prototype.isDataChannelOpened = function () {
-        return this.dataChannelOpened;
-    };
-    Stream.prototype.onDataChannelOpen = function (event) {
-        console.debug('Data channel is opened');
-        this.dataChannelOpened = true;
-    };
-    Stream.prototype.onDataChannelClosed = function (event) {
-        console.debug('Data channel is closed');
-        this.dataChannelOpened = false;
-    };
-    Stream.prototype.sendData = function (data) {
-        if (this.wp === undefined) {
-            throw new Error('WebRTC peer has not been created yet');
-        }
-        if (!this.dataChannelOpened) {
-            throw new Error('Data channel is not opened');
-        }
-        console.info("Sending through data channel: " + data);
-        this.wp.send(data);
-    };
-    Stream.prototype.getMediaStream = function () {
-        return this.mediaStream;
-    };
-    Stream.prototype.getWebRtcPeer = function () {
-        return this.wp;
-    };
-    Stream.prototype.getRTCPeerConnection = function () {
-        return this.wp.peerConnection;
-    };
-    Stream.prototype.addEventListener = function (eventName, listener) {
-        this.ee.addListener(eventName, listener);
-    };
-    Stream.prototype.addOnceEventListener = function (eventName, listener) {
-        this.ee.addOnceListener(eventName, listener);
-    };
-    Stream.prototype.removeListener = function (eventName) {
-        this.ee.removeAllListeners(eventName);
-    };
-    Stream.prototype.showSpinner = function (spinnerParentId) {
-        var progress = document.createElement('div');
-        progress.id = 'progress-' + this.streamId;
-        progress.style.background = "center transparent url('img/spinner.gif') no-repeat";
-        var spinnerParent = document.getElementById(spinnerParentId);
-        if (spinnerParent) {
-            spinnerParent.appendChild(progress);
-        }
-    };
-    Stream.prototype.hideSpinner = function (spinnerId) {
-        spinnerId = (spinnerId === undefined) ? this.streamId : spinnerId;
-        hide('progress-' + spinnerId);
-    };
-    Stream.prototype.playOnlyVideo = function (parentElement, thumbnailId) {
-        var _this = this;
-        if (!!parentElement) {
-            this.video = document.createElement('video');
-            this.video.id = (this.local ? 'local-' : 'remote-') + 'video-' + this.streamId;
-            this.video.autoplay = true;
-            this.video.controls = false;
-            this.ee.emitEvent('mediastream-updated');
-            if (this.local && !this.displayMyRemote()) {
-                this.video.muted = true;
-                this.video.oncanplay = function () {
-                    console.info("Local 'Stream' with id [" + _this.streamId + "] video is now playing");
-                    _this.ee.emitEvent('video-is-playing', [{
-                            element: _this.video
-                        }]);
-                };
-            }
-            else {
-                this.video.title = this.streamId;
-            }
-            if (typeof parentElement === "string") {
-                this.parentId = parentElement;
-                var parentElementDom = document.getElementById(parentElement);
-                if (parentElementDom) {
-                    this.video = parentElementDom.appendChild(this.video);
-                    this.ee.emitEvent('video-element-created-by-stream', [{
-                            element: this.video
-                        }]);
-                    this.isVideoELementCreated = true;
-                }
-            }
-            else {
-                this.parentId = parentElement.id;
-                this.video = parentElement.appendChild(this.video);
-            }
-            this.isReadyToPublish = true;
-            return this.video;
-        }
-        this.isReadyToPublish = true;
-        return null;
-    };
-    Stream.prototype.playThumbnail = function (thumbnailId) {
-        var container = document.createElement('div');
-        container.className = "participant";
-        container.id = this.streamId;
-        var thumbnail = document.getElementById(thumbnailId);
-        if (thumbnail) {
-            thumbnail.appendChild(container);
-        }
-        var name = document.createElement('div');
-        container.appendChild(name);
-        var userName = this.streamId.replace('_webcam', '');
-        if (userName.length >= 16) {
-            userName = userName.substring(0, 16) + "...";
-        }
-        name.appendChild(document.createTextNode(userName));
-        name.id = "name-" + this.streamId;
-        name.className = "name";
-        name.title = this.streamId;
-        this.showSpinner(thumbnailId);
-        return this.playOnlyVideo(container, thumbnailId);
-    };
-    Stream.prototype.getParticipant = function () {
-        return this.connection;
-    };
-    Stream.prototype.requestCameraAccess = function (callback) {
-        var _this = this;
-        var constraints = this.outboundOptions.mediaConstraints;
-        /*let constraints2 = {
-            audio: true,
-            video: {
-                width: {
-                    ideal: 1280
-                },
-                frameRate: {
-                    ideal: 15
-                }
-            }
-        };*/
-        this.userMediaHasVideo(function (hasVideo) {
-            if (!hasVideo) {
-                if (_this.outboundOptions.sendVideo) {
-                    callback(new OpenViduError_1.OpenViduError("NO_VIDEO_DEVICE" /* NO_VIDEO_DEVICE */, 'You have requested camera access but there is no video input device available. Trying to connect with an audio input device only'), _this);
-                }
-                if (!_this.outboundOptions.sendAudio) {
-                    callback(new OpenViduError_1.OpenViduError("NO_INPUT_DEVICE" /* NO_INPUT_DEVICE */, 'You must init Publisher object with audio or video streams enabled'), undefined);
-                }
-                else {
-                    constraints.video = false;
-                    _this.outboundOptions.sendVideo = false;
-                    _this.requestCameraAccesAux(constraints, callback);
-                }
-            }
-            else {
-                _this.requestCameraAccesAux(constraints, callback);
-            }
-        });
-    };
-    Stream.prototype.requestCameraAccesAux = function (constraints, callback) {
-        var _this = this;
-        console.log(constraints);
-        navigator.mediaDevices.getUserMedia(constraints)
-            .then(function (userStream) {
-            _this.cameraAccessSuccess(userStream, callback);
-        })["catch"](function (error) {
-            _this.accessIsDenied = true;
-            _this.accessIsAllowed = false;
-            var errorName;
-            var errorMessage = error.toString();
-            ;
-            if (!_this.isScreenRequested) {
-                errorName = _this.outboundOptions.sendVideo ? "CAMERA_ACCESS_DENIED" /* CAMERA_ACCESS_DENIED */ : "MICROPHONE_ACCESS_DENIED" /* MICROPHONE_ACCESS_DENIED */;
-            }
-            else {
-                errorName = "SCREEN_CAPTURE_DENIED" /* SCREEN_CAPTURE_DENIED */; // This code is only reachable for Firefox
-            }
-            callback(new OpenViduError_1.OpenViduError(errorName, errorMessage), undefined);
-        });
-    };
-    Stream.prototype.cameraAccessSuccess = function (userStream, callback) {
-        this.accessIsAllowed = true;
-        this.accessIsDenied = false;
-        this.ee.emitEvent('access-allowed-by-publisher');
-        if (userStream.getAudioTracks()[0] != null) {
-            userStream.getAudioTracks()[0].enabled = this.outboundOptions.activeAudio;
-        }
-        if (userStream.getVideoTracks()[0] != null) {
-            userStream.getVideoTracks()[0].enabled = this.outboundOptions.activeVideo;
-        }
-        this.mediaStream = userStream;
-        this.ee.emitEvent('mediastream-updated');
-        callback(undefined, this);
-    };
-    Stream.prototype.userMediaHasVideo = function (callback) {
-        // If the user is going to publish its screen there's a video source
-        if (this.isScreenRequested) {
-            callback(true);
-            return;
-        }
-        else {
-            // List all input devices and serach for a video kind
-            navigator.mediaDevices.enumerateDevices().then(function (mediaDevices) {
-                var videoInput = mediaDevices.filter(function (deviceInfo) {
-                    return deviceInfo.kind === 'videoinput';
-                })[0];
-                callback(videoInput != null);
-            });
-        }
-    };
-    Stream.prototype.publishVideoCallback = function (error, sdpOfferParam, wp) {
-        var _this = this;
-        if (error) {
-            return console.error("(publish) SDP offer error: "
-                + JSON.stringify(error));
-        }
-        console.debug("Sending SDP offer to publish as "
-            + this.streamId, sdpOfferParam);
-        this.openVidu.sendRequest("publishVideo", {
-            sdpOffer: sdpOfferParam,
-            doLoopback: this.displayMyRemote() || false,
-            audioActive: this.outboundOptions.sendAudio,
-            videoActive: this.outboundOptions.sendVideo,
-            typeOfVideo: ((this.outboundOptions.sendVideo) ? ((this.isScreenRequested) ? 'SCREEN' : 'CAMERA') : '')
-        }, function (error, response) {
-            if (error) {
-                console.error("Error on publishVideo: " + JSON.stringify(error));
-            }
-            else {
-                _this.processSdpAnswer(response.sdpAnswer);
-                console.info("'Publisher' succesfully published to session");
-            }
-        });
-    };
-    Stream.prototype.startVideoCallback = function (error, sdpOfferParam, wp) {
-        var _this = this;
-        if (error) {
-            return console.error("(subscribe) SDP offer error: "
-                + JSON.stringify(error));
-        }
-        console.debug("Sending SDP offer to subscribe to "
-            + this.streamId, sdpOfferParam);
-        this.openVidu.sendRequest("receiveVideoFrom", {
-            sender: this.streamId,
-            sdpOffer: sdpOfferParam
-        }, function (error, response) {
-            if (error) {
-                console.error("Error on recvVideoFrom: " + JSON.stringify(error));
-            }
-            else {
-                _this.processSdpAnswer(response.sdpAnswer);
-            }
-        });
-    };
-    Stream.prototype.initWebRtcPeer = function (sdpOfferCallback) {
-        var _this = this;
-        if (this.local) {
-            var userMediaConstraints = {
-                audio: this.outboundOptions.sendAudio,
-                video: this.outboundOptions.sendVideo
-            };
-            var options = {
-                videoStream: this.mediaStream,
-                mediaConstraints: userMediaConstraints,
-                onicecandidate: this.connection.sendIceCandidate.bind(this.connection)
-            };
-            if (this.outboundOptions.dataChannel) {
-                options.dataChannelConfig = {
-                    id: this.getChannelName(),
-                    onopen: this.onDataChannelOpen,
-                    onclose: this.onDataChannelClosed
-                };
-                options.dataChannels = true;
-            }
-            if (this.displayMyRemote()) {
-                this.wp = kurentoUtils.WebRtcPeer.WebRtcPeerSendrecv(options, function (error) {
-                    if (error) {
-                        return console.error(error);
-                    }
-                    _this.wp.generateOffer(sdpOfferCallback.bind(_this));
-                });
-            }
-            else {
-                this.wp = kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(options, function (error) {
-                    if (error) {
-                        return console.error(error);
-                    }
-                    _this.wp.generateOffer(sdpOfferCallback.bind(_this));
-                });
-            }
-            this.isPublisherPublished = true;
-            this.ee.emitEvent('stream-created-by-publisher');
-        }
-        else {
-            var offerConstraints = {
-                audio: this.inboundOptions.recvAudio,
-                video: this.inboundOptions.recvVideo
-            };
-            console.debug("'Session.subscribe(Stream)' called. Constraints of generate SDP offer", offerConstraints);
-            var options = {
-                onicecandidate: this.connection.sendIceCandidate.bind(this.connection),
-                mediaConstraints: offerConstraints
-            };
-            this.wp = kurentoUtils.WebRtcPeer.WebRtcPeerRecvonly(options, function (error) {
-                if (error) {
-                    return console.error(error);
-                }
-                _this.wp.generateOffer(sdpOfferCallback.bind(_this));
-            });
-        }
-        console.debug("Waiting for SDP offer to be generated ("
-            + (this.local ? "local" : "remote") + " 'Stream': " + this.streamId + ")");
-    };
-    Stream.prototype.publish = function () {
-        var _this = this;
-        // FIXME: Throw error when stream is not local
-        if (this.isReadyToPublish) {
-            this.initWebRtcPeer(this.publishVideoCallback);
-        }
-        else {
-            this.ee.once('stream-ready', function (streamEvent) {
-                _this.publish();
-            });
-        }
-        // FIXME: Now we have coupled connecting to a room and adding a
-        // stream to this room. But in the new API, there are two steps.
-        // This is the second step. For now, it do nothing.
-    };
-    Stream.prototype.subscribe = function () {
-        // FIXME: In the current implementation all participants are subscribed
-        // automatically to all other participants. We use this method only to
-        // negotiate SDP
-        this.initWebRtcPeer(this.startVideoCallback);
-    };
-    Stream.prototype.processSdpAnswer = function (sdpAnswer) {
-        var _this = this;
-        var answer = new RTCSessionDescription({
-            type: 'answer',
-            sdp: sdpAnswer
-        });
-        console.debug(this.streamId + ": set peer connection with recvd SDP answer", sdpAnswer);
-        var participantId = this.streamId;
-        var pc = this.wp.peerConnection;
-        pc.setRemoteDescription(answer, function () {
-            // Avoids to subscribe to your own stream remotely 
-            // except when showMyRemote is true
-            if (!_this.local || _this.displayMyRemote()) {
-                _this.mediaStream = pc.getRemoteStreams()[0];
-                console.debug("Peer remote stream", _this.mediaStream);
-                if (_this.mediaStream != undefined) {
-                    _this.ee.emitEvent('mediastream-updated');
-                    if (_this.mediaStream.getAudioTracks()[0] != null) {
-                        _this.speechEvent = kurentoUtils.WebRtcPeer.hark(_this.mediaStream, { threshold: _this.room.thresholdSpeaker });
-                        _this.speechEvent.on('speaking', function () {
-                            //this.room.addParticipantSpeaking(participantId);
-                            _this.room.emitEvent('publisherStartSpeaking', [{
-                                    connection: _this.connection,
-                                    streamId: _this.streamId
-                                }]);
-                        });
-                        _this.speechEvent.on('stopped_speaking', function () {
-                            //this.room.removeParticipantSpeaking(participantId);
-                            _this.room.emitEvent('publisherStopSpeaking', [{
-                                    connection: _this.connection,
-                                    streamId: _this.streamId
-                                }]);
-                        });
-                    }
-                }
-                if (!!_this.video) {
-                    // let thumbnailId = this.video.thumb;
-                    _this.video.oncanplay = function () {
-                        if (_this.local && _this.displayMyRemote()) {
-                            console.info("Your own remote 'Stream' with id [" + _this.streamId + "] video is now playing");
-                            _this.ee.emitEvent('remote-video-is-playing', [{
-                                    element: _this.video
-                                }]);
-                        }
-                        else if (!_this.local && !_this.displayMyRemote()) {
-                            console.info("Remote 'Stream' with id [" + _this.streamId + "] video is now playing");
-                            _this.ee.emitEvent('video-is-playing', [{
-                                    element: _this.video
-                                }]);
-                        }
-                        //show(thumbnailId);
-                        //this.hideSpinner(this.streamId);
-                    };
-                }
-                _this.room.emitEvent('stream-subscribed', [{
-                        stream: _this
-                    }]);
-            }
-            _this.initWebRtcStats();
-        }, function (error) {
-            console.error(_this.streamId + ": Error setting SDP to the peer connection: "
-                + JSON.stringify(error));
-        });
-    };
-    Stream.prototype.unpublish = function () {
-        if (this.wp) {
-            this.wp.dispose();
-        }
-        else {
-            if (this.mediaStream) {
-                this.mediaStream.getAudioTracks().forEach(function (track) {
-                    track.stop && track.stop();
-                });
-                this.mediaStream.getVideoTracks().forEach(function (track) {
-                    track.stop && track.stop();
-                });
-            }
-        }
-        if (this.speechEvent) {
-            this.speechEvent.stop();
-        }
-        console.info(this.streamId + ": Stream '" + this.streamId + "' unpublished");
-    };
-    Stream.prototype.dispose = function () {
-        function disposeElement(element) {
-            if (element && element.parentNode) {
-                element.parentNode.removeChild(element);
-            }
-        }
-        disposeElement("progress-" + this.streamId);
-        if (this.wp) {
-            this.wp.dispose();
-        }
-        else {
-            if (this.mediaStream) {
-                this.mediaStream.getAudioTracks().forEach(function (track) {
-                    track.stop && track.stop();
-                });
-                this.mediaStream.getVideoTracks().forEach(function (track) {
-                    track.stop && track.stop();
-                });
-            }
-        }
-        if (this.speechEvent) {
-            this.speechEvent.stop();
-        }
-        this.stopWebRtcStats();
-        console.info((this.local ? "Local " : "Remote ") + "'Stream' with id [" + this.streamId + "]' has been succesfully disposed");
-    };
-    Stream.prototype.configureScreenOptions = function (options) {
-        this.outboundOptions = options;
-        this.streamId = "SCREEN";
-    };
-    Stream.prototype.initWebRtcStats = function () {
-        this.webRtcStats = new WebRtcStats_1.WebRtcStats(this);
-        this.webRtcStats.initWebRtcStats();
-    };
-    Stream.prototype.stopWebRtcStats = function () {
-        if (this.webRtcStats != null && this.webRtcStats.isEnabled()) {
-            this.webRtcStats.stopWebRtcStats();
-        }
-    };
-    return Stream;
-}());
-exports.Stream = Stream;
-//# sourceMappingURL=Stream.js.map
-
-/***/ }),
-
-/***/ "../../../../openvidu-browser/lib/OpenViduInternal/WebRtcStats.js":
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-exports.__esModule = true;
-var DetectRTC = __webpack_require__("../../../../openvidu-browser/lib/KurentoUtils/DetectRTC.js");
-var WebRtcStats = /** @class */ (function () {
-    function WebRtcStats(stream) {
-        this.stream = stream;
-        this.webRtcStatsEnabled = false;
-        this.statsInterval = 1;
-        this.stats = {
-            "inbound": {
-                "audio": {
-                    "bytesReceived": 0,
-                    "packetsReceived": 0,
-                    "packetsLost": 0
-                },
-                "video": {
-                    "bytesReceived": 0,
-                    "packetsReceived": 0,
-                    "packetsLost": 0,
-                    "framesDecoded": 0,
-                    "nackCount": 0
-                }
-            },
-            "outbound": {
-                "audio": {
-                    "bytesSent": 0,
-                    "packetsSent": 0
-                },
-                "video": {
-                    "bytesSent": 0,
-                    "packetsSent": 0,
-                    "framesEncoded": 0,
-                    "nackCount": 0
-                }
-            }
-        };
-    }
-    WebRtcStats.prototype.isEnabled = function () {
-        return this.webRtcStatsEnabled;
-    };
-    WebRtcStats.prototype.initWebRtcStats = function () {
-        var _this = this;
-        var elastestInstrumentation = localStorage.getItem('elastest-instrumentation');
-        if (elastestInstrumentation) {
-            // ElasTest instrumentation object found in local storage
-            console.warn("WebRtc stats enabled for stream " + this.stream.streamId + " of connection " + this.stream.connection.connectionId);
-            this.webRtcStatsEnabled = true;
-            var instrumentation_1 = JSON.parse(elastestInstrumentation);
-            this.statsInterval = instrumentation_1.webrtc.interval; // Interval in seconds
-            console.warn("localStorage item: " + JSON.stringify(instrumentation_1));
-            this.webRtcStatsIntervalId = setInterval(function () {
-                _this.sendStatsToHttpEndpoint(instrumentation_1);
-            }, this.statsInterval * 1000);
-            return;
-        }
-        console.debug("WebRtc stats not enabled");
-    };
-    WebRtcStats.prototype.stopWebRtcStats = function () {
-        if (this.webRtcStatsEnabled) {
-            clearInterval(this.webRtcStatsIntervalId);
-            console.warn("WebRtc stats stopped for disposed stream " + this.stream.streamId + " of connection " + this.stream.connection.connectionId);
-        }
-    };
-    WebRtcStats.prototype.sendStatsToHttpEndpoint = function (instrumentation) {
-        var _this = this;
-        var sendPost = function (json) {
-            var http = new XMLHttpRequest();
-            var url = instrumentation.webrtc.httpEndpoint;
-            http.open("POST", url, true);
-            http.setRequestHeader("Content-type", "application/json");
-            http.onreadystatechange = function () {
-                if (http.readyState == 4 && http.status == 200) {
-                    console.log("WebRtc stats succesfully sent to " + url + " for stream " + _this.stream.streamId + " of connection " + _this.stream.connection.connectionId);
-                }
-            };
-            http.send(json);
-        };
-        var f = function (stats) {
-            if (DetectRTC.browser.name === 'Firefox') {
-                stats.forEach(function (stat) {
-                    var json = {};
-                    if ((stat.type === 'inbound-rtp') &&
-                        (
-                        // Avoid firefox empty outbound-rtp statistics
-                        stat.nackCount != null &&
-                            stat.isRemote === false &&
-                            stat.id.startsWith('inbound') &&
-                            stat.remoteId.startsWith('inbound'))) {
-                        var metricId = 'webrtc_inbound_' + stat.mediaType + '_' + stat.ssrc;
-                        var jitter = stat.jitter * 1000;
-                        var metrics = {
-                            "bytesReceived": (stat.bytesReceived - _this.stats.inbound[stat.mediaType].bytesReceived) / _this.statsInterval,
-                            "jitter": jitter,
-                            "packetsReceived": (stat.packetsReceived - _this.stats.inbound[stat.mediaType].packetsReceived) / _this.statsInterval,
-                            "packetsLost": (stat.packetsLost - _this.stats.inbound[stat.mediaType].packetsLost) / _this.statsInterval
-                        };
-                        var units = {
-                            "bytesReceived": "bytes",
-                            "jitter": "ms",
-                            "packetsReceived": "packets",
-                            "packetsLost": "packets"
-                        };
-                        if (stat.mediaType === 'video') {
-                            metrics['framesDecoded'] = (stat.framesDecoded - _this.stats.inbound.video.framesDecoded) / _this.statsInterval;
-                            metrics['nackCount'] = (stat.nackCount - _this.stats.inbound.video.nackCount) / _this.statsInterval;
-                            units['framesDecoded'] = "frames";
-                            units['nackCount'] = "packets";
-                            _this.stats.inbound.video.framesDecoded = stat.framesDecoded;
-                            _this.stats.inbound.video.nackCount = stat.nackCount;
-                        }
-                        _this.stats.inbound[stat.mediaType].bytesReceived = stat.bytesReceived;
-                        _this.stats.inbound[stat.mediaType].packetsReceived = stat.packetsReceived;
-                        _this.stats.inbound[stat.mediaType].packetsLost = stat.packetsLost;
-                        json = {
-                            "@timestamp": new Date(stat.timestamp).toISOString(),
-                            "exec": instrumentation.exec,
-                            "component": instrumentation.component,
-                            "stream": "webRtc",
-                            "type": metricId,
-                            "stream_type": "composed_metrics",
-                            "units": units
-                        };
-                        json[metricId] = metrics;
-                        sendPost(JSON.stringify(json));
-                    }
-                    else if ((stat.type === 'outbound-rtp') &&
-                        (
-                        // Avoid firefox empty inbound-rtp statistics
-                        stat.isRemote === false &&
-                            stat.id.toLowerCase().includes('outbound'))) {
-                        var metricId = 'webrtc_outbound_' + stat.mediaType + '_' + stat.ssrc;
-                        var metrics = {
-                            "bytesSent": (stat.bytesSent - _this.stats.outbound[stat.mediaType].bytesSent) / _this.statsInterval,
-                            "packetsSent": (stat.packetsSent - _this.stats.outbound[stat.mediaType].packetsSent) / _this.statsInterval
-                        };
-                        var units = {
-                            "bytesSent": "bytes",
-                            "packetsSent": "packets"
-                        };
-                        if (stat.mediaType === 'video') {
-                            metrics['framesEncoded'] = (stat.framesEncoded - _this.stats.outbound.video.framesEncoded) / _this.statsInterval;
-                            units['framesEncoded'] = "frames";
-                            _this.stats.outbound.video.framesEncoded = stat.framesEncoded;
-                        }
-                        _this.stats.outbound[stat.mediaType].bytesSent = stat.bytesSent;
-                        _this.stats.outbound[stat.mediaType].packetsSent = stat.packetsSent;
-                        json = {
-                            "@timestamp": new Date(stat.timestamp).toISOString(),
-                            "exec": instrumentation.exec,
-                            "component": instrumentation.component,
-                            "stream": "webRtc",
-                            "type": metricId,
-                            "stream_type": "composed_metrics",
-                            "units": units
-                        };
-                        json[metricId] = metrics;
-                        sendPost(JSON.stringify(json));
-                    }
-                });
-            }
-            else if (DetectRTC.browser.name === 'Chrome') {
-                for (var _i = 0, _a = Object.keys(stats); _i < _a.length; _i++) {
-                    var key = _a[_i];
-                    var stat = stats[key];
-                    if (stat.type === 'ssrc') {
-                        var json = {};
-                        if ('bytesReceived' in stat && ((stat.mediaType === 'audio' && 'audioOutputLevel' in stat) ||
-                            (stat.mediaType === 'video' && 'qpSum' in stat))) {
-                            // inbound-rtp
-                            var metricId = 'webrtc_inbound_' + stat.mediaType + '_' + stat.ssrc;
-                            var metrics = {
-                                "bytesReceived": (stat.bytesReceived - _this.stats.inbound[stat.mediaType].bytesReceived) / _this.statsInterval,
-                                "jitter": stat.googJitterBufferMs,
-                                "packetsReceived": (stat.packetsReceived - _this.stats.inbound[stat.mediaType].packetsReceived) / _this.statsInterval,
-                                "packetsLost": (stat.packetsLost - _this.stats.inbound[stat.mediaType].packetsLost) / _this.statsInterval
-                            };
-                            var units = {
-                                "bytesReceived": "bytes",
-                                "jitter": "ms",
-                                "packetsReceived": "packets",
-                                "packetsLost": "packets"
-                            };
-                            if (stat.mediaType === 'video') {
-                                metrics['framesDecoded'] = (stat.framesDecoded - _this.stats.inbound.video.framesDecoded) / _this.statsInterval;
-                                metrics['nackCount'] = (stat.googNacksSent - _this.stats.inbound.video.nackCount) / _this.statsInterval;
-                                units['framesDecoded'] = "frames";
-                                units['nackCount'] = "packets";
-                                _this.stats.inbound.video.framesDecoded = stat.framesDecoded;
-                                _this.stats.inbound.video.nackCount = stat.googNacksSent;
-                            }
-                            _this.stats.inbound[stat.mediaType].bytesReceived = stat.bytesReceived;
-                            _this.stats.inbound[stat.mediaType].packetsReceived = stat.packetsReceived;
-                            _this.stats.inbound[stat.mediaType].packetsLost = stat.packetsLost;
-                            json = {
-                                "@timestamp": new Date(stat.timestamp).toISOString(),
-                                "exec": instrumentation.exec,
-                                "component": instrumentation.component,
-                                "stream": "webRtc",
-                                "type": metricId,
-                                "stream_type": "composed_metrics",
-                                "units": units
-                            };
-                            json[metricId] = metrics;
-                            sendPost(JSON.stringify(json));
-                        }
-                        else if ('bytesSent' in stat) {
-                            // outbound-rtp
-                            var metricId = 'webrtc_outbound_' + stat.mediaType + '_' + stat.ssrc;
-                            var metrics = {
-                                "bytesSent": (stat.bytesSent - _this.stats.outbound[stat.mediaType].bytesSent) / _this.statsInterval,
-                                "packetsSent": (stat.packetsSent - _this.stats.outbound[stat.mediaType].packetsSent) / _this.statsInterval
-                            };
-                            var units = {
-                                "bytesSent": "bytes",
-                                "packetsSent": "packets"
-                            };
-                            if (stat.mediaType === 'video') {
-                                metrics['framesEncoded'] = (stat.framesEncoded - _this.stats.outbound.video.framesEncoded) / _this.statsInterval;
-                                units['framesEncoded'] = "frames";
-                                _this.stats.outbound.video.framesEncoded = stat.framesEncoded;
-                            }
-                            _this.stats.outbound[stat.mediaType].bytesSent = stat.bytesSent;
-                            _this.stats.outbound[stat.mediaType].packetsSent = stat.packetsSent;
-                            json = {
-                                "@timestamp": new Date(stat.timestamp).toISOString(),
-                                "exec": instrumentation.exec,
-                                "component": instrumentation.component,
-                                "stream": "webRtc",
-                                "type": metricId,
-                                "stream_type": "composed_metrics",
-                                "units": units
-                            };
-                            json[metricId] = metrics;
-                            sendPost(JSON.stringify(json));
-                        }
-                    }
-                }
-            }
-        };
-        this.getStatsAgnostic(this.stream.getRTCPeerConnection(), null, f, function (error) { console.log(error); });
-    };
-    WebRtcStats.prototype.standardizeReport = function (response) {
-        if (DetectRTC.browser.name === 'Firefox') {
-            return response;
-        }
-        var standardReport = {};
-        response.result().forEach(function (report) {
-            var standardStats = {
-                id: report.id,
-                timestamp: report.timestamp,
-                type: report.type
-            };
-            report.names().forEach(function (name) {
-                standardStats[name] = report.stat(name);
-            });
-            standardReport[standardStats.id] = standardStats;
-        });
-        return standardReport;
-    };
-    WebRtcStats.prototype.getStatsAgnostic = function (pc, selector, successCb, failureCb) {
-        var _this = this;
-        if (DetectRTC.browser.name === 'Firefox') {
-            // getStats takes args in different order in Chrome and Firefox
-            return pc.getStats(selector, function (response) {
-                var report = _this.standardizeReport(response);
-                successCb(report);
-            }, failureCb);
-        }
-        else if (DetectRTC.browser.name === 'Chrome') {
-            // In Chrome, the first two arguments are reversed
-            return pc.getStats(function (response) {
-                var report = _this.standardizeReport(response);
-                successCb(report);
-            }, selector, failureCb);
-        }
-    };
-    return WebRtcStats;
-}());
-exports.WebRtcStats = WebRtcStats;
-//# sourceMappingURL=WebRtcStats.js.map
-
-/***/ }),
-
-/***/ "../../../../openvidu-browser/lib/ScreenSharing/Screen-Capturing-Auto.js":
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/ScreenSharing/Screen-Capturing-Auto.js":
 /***/ (function(module, exports) {
 
-// Last time updated at Feb 16, 2017, 08:32:23
-// Latest file can be found here: https://cdn.webrtc-experiment.com/getScreenId.js
-// Muaz Khan         - www.MuazKhan.com
-// MIT License       - www.WebRTC-Experiment.com/licence
-// Documentation     - https://github.com/muaz-khan/getScreenId.
-// ______________
-// getScreenId.js
-/*
-getScreenId(function (error, sourceId, screen_constraints) {
-    // error    == null || 'permission-denied' || 'not-installed' || 'installed-disabled' || 'not-chrome'
-    // sourceId == null || 'string' || 'firefox'
-    
-    if(sourceId == 'firefox') {
-        navigator.mozGetUserMedia(screen_constraints, onSuccess, onFailure);
-    }
-    else navigator.webkitGetUserMedia(screen_constraints, onSuccess, onFailure);
-});
-*/
 window.getScreenId = function (callback) {
-    // for Firefox:
-    // sourceId == 'firefox'
-    // screen_constraints = {...}
     if (!!navigator.mozGetUserMedia) {
         callback(null, 'firefox', {
             video: {
@@ -5763,14 +5247,15 @@ window.getScreenId = function (callback) {
             if (event.data.chromeMediaSourceId === 'PermissionDeniedError') {
                 callback('permission-denied');
             }
-            else
+            else {
                 callback(null, event.data.chromeMediaSourceId, getScreenConstraints(null, event.data.chromeMediaSourceId));
+            }
+            window.removeEventListener('message', onIFrameCallback);
         }
         if (event.data.chromeExtensionStatus) {
             callback(event.data.chromeExtensionStatus, null, getScreenConstraints(event.data.chromeExtensionStatus));
+            window.removeEventListener('message', onIFrameCallback);
         }
-        // this event listener is no more needed
-        window.removeEventListener('message', onIFrameCallback);
     }
     setTimeout(postGetSourceIdMessage, 100);
 };
@@ -5791,6 +5276,7 @@ function getScreenConstraints(error, sourceId) {
     }
     return screen_constraints;
 }
+var iframe;
 function postGetSourceIdMessage() {
     if (!iframe) {
         loadIFrame(postGetSourceIdMessage);
@@ -5804,15 +5290,6 @@ function postGetSourceIdMessage() {
         captureSourceId: true
     }, '*');
 }
-var iframe;
-// this function is used in RTCMultiConnection v3
-window.getScreenConstraints = function (callback) {
-    loadIFrame(function () {
-        getScreenId(function (error, sourceId, screen_constraints) {
-            callback(error, screen_constraints.video);
-        });
-    });
-};
 function loadIFrame(loadCallback) {
     if (iframe) {
         loadCallback();
@@ -5823,12 +5300,11 @@ function loadIFrame(loadCallback) {
         iframe.isLoaded = true;
         loadCallback();
     };
-    iframe.src = 'https://www.webrtc-experiment.com/getSourceId/'; // https://wwww.yourdomain.com/getScreenId.html
+    iframe.src = 'https://www.webrtc-experiment.com/getSourceId/';
     iframe.style.display = 'none';
     (document.body || document.documentElement).appendChild(iframe);
 }
 window.getChromeExtensionStatus = function (callback) {
-    // for Firefox:
     if (!!navigator.mozGetUserMedia) {
         callback('installed-enabled');
         return;
@@ -5840,7 +5316,6 @@ window.getChromeExtensionStatus = function (callback) {
         if (event.data.chromeExtensionStatus) {
             callback(event.data.chromeExtensionStatus);
         }
-        // this event listener is no more needed
         window.removeEventListener('message', onIFrameCallback);
     }
     setTimeout(postGetChromeExtensionStatusMessage, 100);
@@ -5859,8 +5334,553 @@ function postGetChromeExtensionStatusMessage() {
     }, '*');
 }
 exports.getScreenId = getScreenId;
-exports.getChromeExtensionStatus = getChromeExtensionStatus;
 //# sourceMappingURL=Screen-Capturing-Auto.js.map
+
+/***/ }),
+
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/ScreenSharing/Screen-Capturing.js":
+/***/ (function(module, exports) {
+
+var chromeMediaSource = 'screen';
+var screenCallback;
+var isFirefox = typeof window.InstallTrigger !== 'undefined';
+var isOpera = !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0;
+var isChrome = !!window.chrome && !isOpera;
+window.addEventListener('message', function (event) {
+    if (event.origin != window.location.origin) {
+        return;
+    }
+    onMessageCallback(event.data);
+});
+function onMessageCallback(data) {
+    if (data == 'PermissionDeniedError') {
+        chromeMediaSource = 'PermissionDeniedError';
+        if (screenCallback)
+            return screenCallback('PermissionDeniedError');
+        else
+            throw new Error('PermissionDeniedError');
+    }
+    if (data == 'rtcmulticonnection-extension-loaded') {
+        chromeMediaSource = 'desktop';
+    }
+    if (data.sourceId && screenCallback) {
+        screenCallback(sourceId = data.sourceId);
+    }
+}
+function isChromeExtensionAvailable(callback) {
+    if (isFirefox)
+        return callback(false);
+    if (chromeMediaSource == 'desktop')
+        return callback('isFirefox');
+    window.postMessage('are-you-there', '*');
+    setTimeout(function () {
+        if (chromeMediaSource == 'screen') {
+            callback('unavailable');
+        }
+        else
+            callback('available');
+    }, 2000);
+}
+function getSourceId(callback) {
+    if (!callback)
+        throw '"callback" parameter is mandatory.';
+    if (sourceId)
+        return callback(sourceId);
+    screenCallback = callback;
+    window.postMessage('get-sourceId', '*');
+}
+function getChromeExtensionStatus(extensionid, callback) {
+    if (isFirefox)
+        return callback('not-chrome');
+    if (arguments.length != 2) {
+        callback = extensionid;
+        extensionid = 'ajhifddimkapgcifgcodmmfdlknahffk';
+    }
+    var image = document.createElement('img');
+    image.src = 'chrome-extension://' + extensionid + '/icon.png';
+    image.onload = function () {
+        chromeMediaSource = 'screen';
+        window.postMessage('are-you-there', '*');
+        setTimeout(function () {
+            if (chromeMediaSource == 'screen') {
+                callback(extensionid == extensionid ? 'installed-enabled' : 'installed-disabled');
+            }
+            else
+                callback('installed-enabled');
+        }, 2000);
+    };
+    image.onerror = function () {
+        callback('not-installed');
+    };
+}
+function getScreenConstraints(callback) {
+    sourceId = '';
+    var firefoxScreenConstraints = {
+        mozMediaSource: 'window',
+        mediaSource: 'window'
+    };
+    if (isFirefox)
+        return callback(null, firefoxScreenConstraints);
+    var screen_constraints = {
+        mandatory: {
+            chromeMediaSource: chromeMediaSource,
+            maxWidth: screen.width > 1920 ? screen.width : 1920,
+            maxHeight: screen.height > 1080 ? screen.height : 1080
+        },
+        optional: []
+    };
+    if (chromeMediaSource == 'desktop' && !sourceId) {
+        getSourceId(function () {
+            screen_constraints.mandatory.chromeMediaSourceId = sourceId;
+            callback(sourceId == 'PermissionDeniedError' ? sourceId : null, screen_constraints);
+        });
+        return;
+    }
+    if (chromeMediaSource == 'desktop') {
+        screen_constraints.mandatory.chromeMediaSourceId = sourceId;
+    }
+    callback(null, screen_constraints);
+}
+exports.getScreenConstraints = getScreenConstraints;
+exports.isChromeExtensionAvailable = isChromeExtensionAvailable;
+exports.getChromeExtensionStatus = getChromeExtensionStatus;
+exports.getSourceId = getSourceId;
+//# sourceMappingURL=Screen-Capturing.js.map
+
+/***/ }),
+
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/VersionAdapter.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/*
+ * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+exports.__esModule = true;
+var VideoInsertMode_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Enums/VideoInsertMode.js");
+function solveIfCallback(methodName, completionHandler, promise) {
+    if (!!completionHandler) {
+        console.warn("DEPRECATION WANING: In future releases the 'completionHandler' parameter will be removed from method '" + methodName + "'. Refactor your callbacks to Promise API (see http://openvidu.io/api/openvidu-browser/index.html)");
+    }
+    return new Promise(function (resolve, reject) {
+        if (!!completionHandler && typeof completionHandler === 'function') {
+            promise.then(function () {
+                completionHandler(undefined);
+            })["catch"](function (error) {
+                completionHandler(error);
+            });
+        }
+        else {
+            promise.then(function () {
+                return resolve();
+            })["catch"](function (error) {
+                return reject(error);
+            });
+        }
+    });
+}
+exports.solveIfCallback = solveIfCallback;
+function adaptPublisherProperties(properties) {
+    if ('audio' in properties ||
+        'video' in properties ||
+        'audioActive' in properties ||
+        'videoActive' in properties ||
+        'quality' in properties ||
+        'screen' in properties) {
+        console.warn("DEPRECATION WANING: In future releases the properties passed to 'OpenVidu.initPublisher' method must match PublisherProperties interface (see http://openvidu.io/api/openvidu-browser/interfaces/publisherproperties.html)");
+    }
+    var scr = (typeof properties.screen !== 'undefined' && properties.screen === true);
+    var res = '';
+    if (typeof properties.quality === 'string') {
+        switch (properties.quality) {
+            case 'LOW':
+                res = '320x240';
+                break;
+            case 'MEDIUM':
+                res = '640x480';
+                break;
+            case 'HIGH':
+                res = '1280x720';
+                break;
+        }
+    }
+    var publisherProperties = {
+        audioSource: (typeof properties.audio !== 'undefined' && properties.audio === false) ? false : ((typeof properties.audioSource !== 'undefined') ? properties.audioSource : undefined),
+        frameRate: (typeof properties.frameRate !== 'undefined') ? properties.frameRate : undefined,
+        insertMode: (typeof properties.insertMode !== 'undefined') ? properties.insertMode : VideoInsertMode_1.VideoInsertMode.APPEND,
+        mirror: (typeof properties.mirror !== 'undefined') ? properties.mirror : true,
+        publishAudio: (typeof properties.audioActive !== 'undefined' && properties.audioActive === false) ? false : (typeof properties.publishAudio !== 'undefined') ? properties.publishAudio : true,
+        publishVideo: (typeof properties.videoActive !== 'undefined' && properties.videoActive === false) ? false : (typeof properties.publishVideo !== 'undefined') ? properties.publishVideo : true,
+        resolution: !!res ? res : ((typeof properties.resolution !== 'undefined') ? properties.resolution : '640x480'),
+        videoSource: scr ? 'screen' : ((typeof properties.video !== 'undefined' && properties.video === false) ? false : ((typeof properties.videoSource !== 'undefined') ? properties.videoSource : undefined))
+    };
+    return publisherProperties;
+}
+exports.adaptPublisherProperties = adaptPublisherProperties;
+//# sourceMappingURL=VersionAdapter.js.map
+
+/***/ }),
+
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/WebRtcStats/WebRtcStats.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/*
+ * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+exports.__esModule = true;
+var platform = __webpack_require__("../../../../openvidu-browser/node_modules/platform/platform.js");
+var WebRtcStats = /** @class */ (function () {
+    function WebRtcStats(stream) {
+        this.stream = stream;
+        this.webRtcStatsEnabled = false;
+        this.statsInterval = 1;
+        this.stats = {
+            inbound: {
+                audio: {
+                    bytesReceived: 0,
+                    packetsReceived: 0,
+                    packetsLost: 0
+                },
+                video: {
+                    bytesReceived: 0,
+                    packetsReceived: 0,
+                    packetsLost: 0,
+                    framesDecoded: 0,
+                    nackCount: 0
+                }
+            },
+            outbound: {
+                audio: {
+                    bytesSent: 0,
+                    packetsSent: 0
+                },
+                video: {
+                    bytesSent: 0,
+                    packetsSent: 0,
+                    framesEncoded: 0,
+                    nackCount: 0
+                }
+            }
+        };
+    }
+    WebRtcStats.prototype.isEnabled = function () {
+        return this.webRtcStatsEnabled;
+    };
+    WebRtcStats.prototype.initWebRtcStats = function () {
+        var _this = this;
+        var elastestInstrumentation = localStorage.getItem('elastest-instrumentation');
+        if (elastestInstrumentation) {
+            // ElasTest instrumentation object found in local storage
+            console.warn('WebRtc stats enabled for stream ' + this.stream.streamId + ' of connection ' + this.stream.connection.connectionId);
+            this.webRtcStatsEnabled = true;
+            var instrumentation_1 = JSON.parse(elastestInstrumentation);
+            this.statsInterval = instrumentation_1.webrtc.interval; // Interval in seconds
+            console.warn('localStorage item: ' + JSON.stringify(instrumentation_1));
+            this.webRtcStatsIntervalId = setInterval(function () {
+                _this.sendStatsToHttpEndpoint(instrumentation_1);
+            }, this.statsInterval * 1000);
+            return;
+        }
+        console.debug('WebRtc stats not enabled');
+    };
+    WebRtcStats.prototype.stopWebRtcStats = function () {
+        if (this.webRtcStatsEnabled) {
+            clearInterval(this.webRtcStatsIntervalId);
+            console.warn('WebRtc stats stopped for disposed stream ' + this.stream.streamId + ' of connection ' + this.stream.connection.connectionId);
+        }
+    };
+    WebRtcStats.prototype.sendStatsToHttpEndpoint = function (instrumentation) {
+        var _this = this;
+        var sendPost = function (json) {
+            var http = new XMLHttpRequest();
+            var url = instrumentation.webrtc.httpEndpoint;
+            http.open('POST', url, true);
+            http.setRequestHeader('Content-type', 'application/json');
+            http.onreadystatechange = function () {
+                if (http.readyState === 4 && http.status === 200) {
+                    console.log('WebRtc stats successfully sent to ' + url + ' for stream ' + _this.stream.streamId + ' of connection ' + _this.stream.connection.connectionId);
+                }
+            };
+            http.send(json);
+        };
+        var f = function (stats) {
+            if (platform.name.indexOf('Firefox') !== -1) {
+                stats.forEach(function (stat) {
+                    var json = {};
+                    if ((stat.type === 'inbound-rtp') &&
+                        (
+                        // Avoid firefox empty outbound-rtp statistics
+                        stat.nackCount !== null &&
+                            stat.isRemote === false &&
+                            stat.id.startsWith('inbound') &&
+                            stat.remoteId.startsWith('inbound'))) {
+                        var metricId = 'webrtc_inbound_' + stat.mediaType + '_' + stat.ssrc;
+                        var jit = stat.jitter * 1000;
+                        var metrics = {
+                            bytesReceived: (stat.bytesReceived - _this.stats.inbound[stat.mediaType].bytesReceived) / _this.statsInterval,
+                            jitter: jit,
+                            packetsReceived: (stat.packetsReceived - _this.stats.inbound[stat.mediaType].packetsReceived) / _this.statsInterval,
+                            packetsLost: (stat.packetsLost - _this.stats.inbound[stat.mediaType].packetsLost) / _this.statsInterval
+                        };
+                        var units = {
+                            bytesReceived: 'bytes',
+                            jitter: 'ms',
+                            packetsReceived: 'packets',
+                            packetsLost: 'packets'
+                        };
+                        if (stat.mediaType === 'video') {
+                            metrics['framesDecoded'] = (stat.framesDecoded - _this.stats.inbound.video.framesDecoded) / _this.statsInterval;
+                            metrics['nackCount'] = (stat.nackCount - _this.stats.inbound.video.nackCount) / _this.statsInterval;
+                            units['framesDecoded'] = 'frames';
+                            units['nackCount'] = 'packets';
+                            _this.stats.inbound.video.framesDecoded = stat.framesDecoded;
+                            _this.stats.inbound.video.nackCount = stat.nackCount;
+                        }
+                        _this.stats.inbound[stat.mediaType].bytesReceived = stat.bytesReceived;
+                        _this.stats.inbound[stat.mediaType].packetsReceived = stat.packetsReceived;
+                        _this.stats.inbound[stat.mediaType].packetsLost = stat.packetsLost;
+                        json = {
+                            '@timestamp': new Date(stat.timestamp).toISOString(),
+                            'exec': instrumentation.exec,
+                            'component': instrumentation.component,
+                            'stream': 'webRtc',
+                            'type': metricId,
+                            'stream_type': 'composed_metrics',
+                            'units': units
+                        };
+                        json[metricId] = metrics;
+                        sendPost(JSON.stringify(json));
+                    }
+                    else if ((stat.type === 'outbound-rtp') &&
+                        (
+                        // Avoid firefox empty inbound-rtp statistics
+                        stat.isRemote === false &&
+                            stat.id.toLowerCase().includes('outbound'))) {
+                        var metricId = 'webrtc_outbound_' + stat.mediaType + '_' + stat.ssrc;
+                        var metrics = {
+                            bytesSent: (stat.bytesSent - _this.stats.outbound[stat.mediaType].bytesSent) / _this.statsInterval,
+                            packetsSent: (stat.packetsSent - _this.stats.outbound[stat.mediaType].packetsSent) / _this.statsInterval
+                        };
+                        var units = {
+                            bytesSent: 'bytes',
+                            packetsSent: 'packets'
+                        };
+                        if (stat.mediaType === 'video') {
+                            metrics['framesEncoded'] = (stat.framesEncoded - _this.stats.outbound.video.framesEncoded) / _this.statsInterval;
+                            units['framesEncoded'] = 'frames';
+                            _this.stats.outbound.video.framesEncoded = stat.framesEncoded;
+                        }
+                        _this.stats.outbound[stat.mediaType].bytesSent = stat.bytesSent;
+                        _this.stats.outbound[stat.mediaType].packetsSent = stat.packetsSent;
+                        json = {
+                            '@timestamp': new Date(stat.timestamp).toISOString(),
+                            'exec': instrumentation.exec,
+                            'component': instrumentation.component,
+                            'stream': 'webRtc',
+                            'type': metricId,
+                            'stream_type': 'composed_metrics',
+                            'units': units
+                        };
+                        json[metricId] = metrics;
+                        sendPost(JSON.stringify(json));
+                    }
+                });
+            }
+            else if (platform.name.indexOf('Chrome') !== -1) {
+                for (var _i = 0, _a = Object.keys(stats); _i < _a.length; _i++) {
+                    var key = _a[_i];
+                    var stat = stats[key];
+                    if (stat.type === 'ssrc') {
+                        var json = {};
+                        if ('bytesReceived' in stat && ((stat.mediaType === 'audio' && 'audioOutputLevel' in stat) ||
+                            (stat.mediaType === 'video' && 'qpSum' in stat))) {
+                            // inbound-rtp
+                            var metricId = 'webrtc_inbound_' + stat.mediaType + '_' + stat.ssrc;
+                            var metrics = {
+                                bytesReceived: (stat.bytesReceived - _this.stats.inbound[stat.mediaType].bytesReceived) / _this.statsInterval,
+                                jitter: stat.googJitterBufferMs,
+                                packetsReceived: (stat.packetsReceived - _this.stats.inbound[stat.mediaType].packetsReceived) / _this.statsInterval,
+                                packetsLost: (stat.packetsLost - _this.stats.inbound[stat.mediaType].packetsLost) / _this.statsInterval
+                            };
+                            var units = {
+                                bytesReceived: 'bytes',
+                                jitter: 'ms',
+                                packetsReceived: 'packets',
+                                packetsLost: 'packets'
+                            };
+                            if (stat.mediaType === 'video') {
+                                metrics['framesDecoded'] = (stat.framesDecoded - _this.stats.inbound.video.framesDecoded) / _this.statsInterval;
+                                metrics['nackCount'] = (stat.googNacksSent - _this.stats.inbound.video.nackCount) / _this.statsInterval;
+                                units['framesDecoded'] = 'frames';
+                                units['nackCount'] = 'packets';
+                                _this.stats.inbound.video.framesDecoded = stat.framesDecoded;
+                                _this.stats.inbound.video.nackCount = stat.googNacksSent;
+                            }
+                            _this.stats.inbound[stat.mediaType].bytesReceived = stat.bytesReceived;
+                            _this.stats.inbound[stat.mediaType].packetsReceived = stat.packetsReceived;
+                            _this.stats.inbound[stat.mediaType].packetsLost = stat.packetsLost;
+                            json = {
+                                '@timestamp': new Date(stat.timestamp).toISOString(),
+                                'exec': instrumentation.exec,
+                                'component': instrumentation.component,
+                                'stream': 'webRtc',
+                                'type': metricId,
+                                'stream_type': 'composed_metrics',
+                                'units': units
+                            };
+                            json[metricId] = metrics;
+                            sendPost(JSON.stringify(json));
+                        }
+                        else if ('bytesSent' in stat) {
+                            // outbound-rtp
+                            var metricId = 'webrtc_outbound_' + stat.mediaType + '_' + stat.ssrc;
+                            var metrics = {
+                                bytesSent: (stat.bytesSent - _this.stats.outbound[stat.mediaType].bytesSent) / _this.statsInterval,
+                                packetsSent: (stat.packetsSent - _this.stats.outbound[stat.mediaType].packetsSent) / _this.statsInterval
+                            };
+                            var units = {
+                                bytesSent: 'bytes',
+                                packetsSent: 'packets'
+                            };
+                            if (stat.mediaType === 'video') {
+                                metrics['framesEncoded'] = (stat.framesEncoded - _this.stats.outbound.video.framesEncoded) / _this.statsInterval;
+                                units['framesEncoded'] = 'frames';
+                                _this.stats.outbound.video.framesEncoded = stat.framesEncoded;
+                            }
+                            _this.stats.outbound[stat.mediaType].bytesSent = stat.bytesSent;
+                            _this.stats.outbound[stat.mediaType].packetsSent = stat.packetsSent;
+                            json = {
+                                '@timestamp': new Date(stat.timestamp).toISOString(),
+                                'exec': instrumentation.exec,
+                                'component': instrumentation.component,
+                                'stream': 'webRtc',
+                                'type': metricId,
+                                'stream_type': 'composed_metrics',
+                                'units': units
+                            };
+                            json[metricId] = metrics;
+                            sendPost(JSON.stringify(json));
+                        }
+                    }
+                }
+            }
+        };
+        this.getStatsAgnostic(this.stream.getRTCPeerConnection(), f, function (error) { console.log(error); });
+    };
+    WebRtcStats.prototype.standardizeReport = function (response) {
+        if (platform.name.indexOf('Firefox') !== -1) {
+            return response;
+        }
+        var standardReport = {};
+        response.result().forEach(function (report) {
+            var standardStats = {
+                id: report.id,
+                timestamp: report.timestamp,
+                type: report.type
+            };
+            report.names().forEach(function (name) {
+                standardStats[name] = report.stat(name);
+            });
+            standardReport[standardStats.id] = standardStats;
+        });
+        return standardReport;
+    };
+    WebRtcStats.prototype.getStatsAgnostic = function (pc, successCb, failureCb) {
+        var _this = this;
+        if (platform.name.indexOf('Firefox') !== -1) {
+            // getStats takes args in different order in Chrome and Firefox
+            return pc.getStats(null, function (response) {
+                var report = _this.standardizeReport(response);
+                successCb(report);
+            }, failureCb);
+        }
+        else if (platform.name.indexOf('Chrome') !== -1) {
+            // In Chrome, the first two arguments are reversed
+            return pc.getStats(function (response) {
+                var report = _this.standardizeReport(response);
+                successCb(report);
+            }, null, failureCb);
+        }
+    };
+    return WebRtcStats;
+}());
+exports.WebRtcStats = WebRtcStats;
+//# sourceMappingURL=WebRtcStats.js.map
+
+/***/ }),
+
+/***/ "../../../../openvidu-browser/lib/index.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+exports.__esModule = true;
+var OpenVidu_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/OpenVidu.js");
+exports.OpenVidu = OpenVidu_1.OpenVidu;
+var Session_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/Session.js");
+exports.Session = Session_1.Session;
+var Publisher_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/Publisher.js");
+exports.Publisher = Publisher_1.Publisher;
+var Subscriber_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/Subscriber.js");
+exports.Subscriber = Subscriber_1.Subscriber;
+var Stream_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/Stream.js");
+exports.Stream = Stream_1.Stream;
+var Connection_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/Connection.js");
+exports.Connection = Connection_1.Connection;
+var LocalRecorder_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/LocalRecorder.js");
+exports.LocalRecorder = LocalRecorder_1.LocalRecorder;
+var LocalRecorderState_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Enums/LocalRecorderState.js");
+exports.LocalRecorderState = LocalRecorderState_1.LocalRecorderState;
+var OpenViduError_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Enums/OpenViduError.js");
+exports.OpenViduError = OpenViduError_1.OpenViduError;
+var VideoInsertMode_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Enums/VideoInsertMode.js");
+exports.VideoInsertMode = VideoInsertMode_1.VideoInsertMode;
+var Event_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/Event.js");
+exports.Event = Event_1.Event;
+var ConnectionEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/ConnectionEvent.js");
+exports.ConnectionEvent = ConnectionEvent_1.ConnectionEvent;
+var PublisherSpeakingEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/PublisherSpeakingEvent.js");
+exports.PublisherSpeakingEvent = PublisherSpeakingEvent_1.PublisherSpeakingEvent;
+var RecordingEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/RecordingEvent.js");
+exports.RecordingEvent = RecordingEvent_1.RecordingEvent;
+var SessionDisconnectedEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/SessionDisconnectedEvent.js");
+exports.SessionDisconnectedEvent = SessionDisconnectedEvent_1.SessionDisconnectedEvent;
+var SignalEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/SignalEvent.js");
+exports.SignalEvent = SignalEvent_1.SignalEvent;
+var StreamEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/StreamEvent.js");
+exports.StreamEvent = StreamEvent_1.StreamEvent;
+var VideoElementEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/VideoElementEvent.js");
+exports.VideoElementEvent = VideoElementEvent_1.VideoElementEvent;
+//# sourceMappingURL=index.js.map
 
 /***/ }),
 
@@ -6059,6 +6079,19 @@ module.exports = function(stream, options) {
   if (play) analyser.connect(audioContext.destination);
 
   harker.speaking = false;
+
+  harker.suspend = function() {
+    audioContext.suspend();
+  }
+  harker.resume = function() {
+    audioContext.resume();
+  }
+  Object.defineProperty(harker, 'state', { get: function() {
+    return audioContext.state;
+  }});
+  audioContext.onstatechange = function() {
+    harker.emit('state_change', audioContext.state);
+  }
 
   harker.setThreshold = function(t) {
     threshold = t;
@@ -6410,1779 +6443,1229 @@ module.exports = function(input) {
 
 /***/ }),
 
-/***/ "../../../../openvidu-browser/node_modules/rtcpeerconnection-shim/rtcpeerconnection.js":
+/***/ "../../../../openvidu-browser/node_modules/platform/platform.js":
 /***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
-/*
- *  Copyright (c) 2017 The WebRTC project authors. All Rights Reserved.
- *
- *  Use of this source code is governed by a BSD-style license
- *  that can be found in the LICENSE file in the root of the source
- *  tree.
+/* WEBPACK VAR INJECTION */(function(module, global) {var __WEBPACK_AMD_DEFINE_RESULT__;/*!
+ * Platform.js <https://mths.be/platform>
+ * Copyright 2014-2018 Benjamin Tan <https://bnjmnt4n.now.sh/>
+ * Copyright 2011-2013 John-David Dalton <http://allyoucanleet.com/>
+ * Available under MIT license <https://mths.be/mit>
  */
- /* eslint-env node */
+;(function() {
+  'use strict';
 
+  /** Used to determine if values are of the language type `Object`. */
+  var objectTypes = {
+    'function': true,
+    'object': true
+  };
 
-var SDPUtils = __webpack_require__("../../../../openvidu-browser/node_modules/sdp/sdp.js");
+  /** Used as a reference to the global object. */
+  var root = (objectTypes[typeof window] && window) || this;
 
-function writeMediaSection(transceiver, caps, type, stream, dtlsRole) {
-  var sdp = SDPUtils.writeRtpDescription(transceiver.kind, caps);
+  /** Backup possible global object. */
+  var oldRoot = root;
 
-  // Map ICE parameters (ufrag, pwd) to SDP.
-  sdp += SDPUtils.writeIceParameters(
-      transceiver.iceGatherer.getLocalParameters());
+  /** Detect free variable `exports`. */
+  var freeExports = objectTypes[typeof exports] && exports;
 
-  // Map DTLS parameters to SDP.
-  sdp += SDPUtils.writeDtlsParameters(
-      transceiver.dtlsTransport.getLocalParameters(),
-      type === 'offer' ? 'actpass' : dtlsRole || 'active');
+  /** Detect free variable `module`. */
+  var freeModule = objectTypes[typeof module] && module && !module.nodeType && module;
 
-  sdp += 'a=mid:' + transceiver.mid + '\r\n';
-
-  if (transceiver.rtpSender && transceiver.rtpReceiver) {
-    sdp += 'a=sendrecv\r\n';
-  } else if (transceiver.rtpSender) {
-    sdp += 'a=sendonly\r\n';
-  } else if (transceiver.rtpReceiver) {
-    sdp += 'a=recvonly\r\n';
-  } else {
-    sdp += 'a=inactive\r\n';
+  /** Detect free variable `global` from Node.js or Browserified code and use it as `root`. */
+  var freeGlobal = freeExports && freeModule && typeof global == 'object' && global;
+  if (freeGlobal && (freeGlobal.global === freeGlobal || freeGlobal.window === freeGlobal || freeGlobal.self === freeGlobal)) {
+    root = freeGlobal;
   }
 
-  if (transceiver.rtpSender) {
-    var trackId = transceiver.rtpSender._initialTrackId ||
-        transceiver.rtpSender.track.id;
-    transceiver.rtpSender._initialTrackId = trackId;
-    // spec.
-    var msid = 'msid:' + (stream ? stream.id : '-') + ' ' +
-        trackId + '\r\n';
-    sdp += 'a=' + msid;
-    // for Chrome. Legacy should no longer be required.
-    sdp += 'a=ssrc:' + transceiver.sendEncodingParameters[0].ssrc +
-        ' ' + msid;
+  /**
+   * Used as the maximum length of an array-like object.
+   * See the [ES6 spec](http://people.mozilla.org/~jorendorff/es6-draft.html#sec-tolength)
+   * for more details.
+   */
+  var maxSafeInteger = Math.pow(2, 53) - 1;
 
-    // RTX
-    if (transceiver.sendEncodingParameters[0].rtx) {
-      sdp += 'a=ssrc:' + transceiver.sendEncodingParameters[0].rtx.ssrc +
-          ' ' + msid;
-      sdp += 'a=ssrc-group:FID ' +
-          transceiver.sendEncodingParameters[0].ssrc + ' ' +
-          transceiver.sendEncodingParameters[0].rtx.ssrc +
-          '\r\n';
-    }
-  }
-  // FIXME: this should be written by writeRtpDescription.
-  sdp += 'a=ssrc:' + transceiver.sendEncodingParameters[0].ssrc +
-      ' cname:' + SDPUtils.localCName + '\r\n';
-  if (transceiver.rtpSender && transceiver.sendEncodingParameters[0].rtx) {
-    sdp += 'a=ssrc:' + transceiver.sendEncodingParameters[0].rtx.ssrc +
-        ' cname:' + SDPUtils.localCName + '\r\n';
-  }
-  return sdp;
-}
+  /** Regular expression to detect Opera. */
+  var reOpera = /\bOpera/;
 
-// Edge does not like
-// 1) stun: filtered after 14393 unless ?transport=udp is present
-// 2) turn: that does not have all of turn:host:port?transport=udp
-// 3) turn: with ipv6 addresses
-// 4) turn: occurring muliple times
-function filterIceServers(iceServers, edgeVersion) {
-  var hasTurn = false;
-  iceServers = JSON.parse(JSON.stringify(iceServers));
-  return iceServers.filter(function(server) {
-    if (server && (server.urls || server.url)) {
-      var urls = server.urls || server.url;
-      if (server.url && !server.urls) {
-        console.warn('RTCIceServer.url is deprecated! Use urls instead.');
-      }
-      var isString = typeof urls === 'string';
-      if (isString) {
-        urls = [urls];
-      }
-      urls = urls.filter(function(url) {
-        var validTurn = url.indexOf('turn:') === 0 &&
-            url.indexOf('transport=udp') !== -1 &&
-            url.indexOf('turn:[') === -1 &&
-            !hasTurn;
+  /** Possible global object. */
+  var thisBinding = this;
 
-        if (validTurn) {
-          hasTurn = true;
-          return true;
-        }
-        return url.indexOf('stun:') === 0 && edgeVersion >= 14393 &&
-            url.indexOf('?transport=udp') === -1;
-      });
+  /** Used for native method references. */
+  var objectProto = Object.prototype;
 
-      delete server.url;
-      server.urls = isString ? urls[0] : urls;
-      return !!urls.length;
-    }
-  });
-}
+  /** Used to check for own properties of an object. */
+  var hasOwnProperty = objectProto.hasOwnProperty;
 
-// Determines the intersection of local and remote capabilities.
-function getCommonCapabilities(localCapabilities, remoteCapabilities) {
-  var commonCapabilities = {
-    codecs: [],
-    headerExtensions: [],
-    fecMechanisms: []
-  };
+  /** Used to resolve the internal `[[Class]]` of values. */
+  var toString = objectProto.toString;
 
-  var findCodecByPayloadType = function(pt, codecs) {
-    pt = parseInt(pt, 10);
-    for (var i = 0; i < codecs.length; i++) {
-      if (codecs[i].payloadType === pt ||
-          codecs[i].preferredPayloadType === pt) {
-        return codecs[i];
-      }
-    }
-  };
+  /*--------------------------------------------------------------------------*/
 
-  var rtxCapabilityMatches = function(lRtx, rRtx, lCodecs, rCodecs) {
-    var lCodec = findCodecByPayloadType(lRtx.parameters.apt, lCodecs);
-    var rCodec = findCodecByPayloadType(rRtx.parameters.apt, rCodecs);
-    return lCodec && rCodec &&
-        lCodec.name.toLowerCase() === rCodec.name.toLowerCase();
-  };
-
-  localCapabilities.codecs.forEach(function(lCodec) {
-    for (var i = 0; i < remoteCapabilities.codecs.length; i++) {
-      var rCodec = remoteCapabilities.codecs[i];
-      if (lCodec.name.toLowerCase() === rCodec.name.toLowerCase() &&
-          lCodec.clockRate === rCodec.clockRate) {
-        if (lCodec.name.toLowerCase() === 'rtx' &&
-            lCodec.parameters && rCodec.parameters.apt) {
-          // for RTX we need to find the local rtx that has a apt
-          // which points to the same local codec as the remote one.
-          if (!rtxCapabilityMatches(lCodec, rCodec,
-              localCapabilities.codecs, remoteCapabilities.codecs)) {
-            continue;
-          }
-        }
-        rCodec = JSON.parse(JSON.stringify(rCodec)); // deepcopy
-        // number of channels is the highest common number of channels
-        rCodec.numChannels = Math.min(lCodec.numChannels,
-            rCodec.numChannels);
-        // push rCodec so we reply with offerer payload type
-        commonCapabilities.codecs.push(rCodec);
-
-        // determine common feedback mechanisms
-        rCodec.rtcpFeedback = rCodec.rtcpFeedback.filter(function(fb) {
-          for (var j = 0; j < lCodec.rtcpFeedback.length; j++) {
-            if (lCodec.rtcpFeedback[j].type === fb.type &&
-                lCodec.rtcpFeedback[j].parameter === fb.parameter) {
-              return true;
-            }
-          }
-          return false;
-        });
-        // FIXME: also need to determine .parameters
-        //  see https://github.com/openpeer/ortc/issues/569
-        break;
-      }
-    }
-  });
-
-  localCapabilities.headerExtensions.forEach(function(lHeaderExtension) {
-    for (var i = 0; i < remoteCapabilities.headerExtensions.length;
-         i++) {
-      var rHeaderExtension = remoteCapabilities.headerExtensions[i];
-      if (lHeaderExtension.uri === rHeaderExtension.uri) {
-        commonCapabilities.headerExtensions.push(rHeaderExtension);
-        break;
-      }
-    }
-  });
-
-  // FIXME: fecMechanisms
-  return commonCapabilities;
-}
-
-// is action=setLocalDescription with type allowed in signalingState
-function isActionAllowedInSignalingState(action, type, signalingState) {
-  return {
-    offer: {
-      setLocalDescription: ['stable', 'have-local-offer'],
-      setRemoteDescription: ['stable', 'have-remote-offer']
-    },
-    answer: {
-      setLocalDescription: ['have-remote-offer', 'have-local-pranswer'],
-      setRemoteDescription: ['have-local-offer', 'have-remote-pranswer']
-    }
-  }[type][action].indexOf(signalingState) !== -1;
-}
-
-function maybeAddCandidate(iceTransport, candidate) {
-  // Edge's internal representation adds some fields therefore
-  // not all fieldѕ are taken into account.
-  var alreadyAdded = iceTransport.getRemoteCandidates()
-      .find(function(remoteCandidate) {
-        return candidate.foundation === remoteCandidate.foundation &&
-            candidate.ip === remoteCandidate.ip &&
-            candidate.port === remoteCandidate.port &&
-            candidate.priority === remoteCandidate.priority &&
-            candidate.protocol === remoteCandidate.protocol &&
-            candidate.type === remoteCandidate.type;
-      });
-  if (!alreadyAdded) {
-    iceTransport.addRemoteCandidate(candidate);
-  }
-  return !alreadyAdded;
-}
-
-
-function makeError(name, description) {
-  var e = new Error(description);
-  e.name = name;
-  // legacy error codes from https://heycam.github.io/webidl/#idl-DOMException-error-names
-  e.code = {
-    NotSupportedError: 9,
-    InvalidStateError: 11,
-    InvalidAccessError: 15,
-    TypeError: undefined,
-    OperationError: undefined
-  }[name];
-  return e;
-}
-
-module.exports = function(window, edgeVersion) {
-  // https://w3c.github.io/mediacapture-main/#mediastream
-  // Helper function to add the track to the stream and
-  // dispatch the event ourselves.
-  function addTrackToStreamAndFireEvent(track, stream) {
-    stream.addTrack(track);
-    stream.dispatchEvent(new window.MediaStreamTrackEvent('addtrack',
-        {track: track}));
+  /**
+   * Capitalizes a string value.
+   *
+   * @private
+   * @param {string} string The string to capitalize.
+   * @returns {string} The capitalized string.
+   */
+  function capitalize(string) {
+    string = String(string);
+    return string.charAt(0).toUpperCase() + string.slice(1);
   }
 
-  function removeTrackFromStreamAndFireEvent(track, stream) {
-    stream.removeTrack(track);
-    stream.dispatchEvent(new window.MediaStreamTrackEvent('removetrack',
-        {track: track}));
-  }
-
-  function fireAddTrack(pc, track, receiver, streams) {
-    var trackEvent = new Event('track');
-    trackEvent.track = track;
-    trackEvent.receiver = receiver;
-    trackEvent.transceiver = {receiver: receiver};
-    trackEvent.streams = streams;
-    window.setTimeout(function() {
-      pc._dispatchEvent('track', trackEvent);
-    });
-  }
-
-  var RTCPeerConnection = function(config) {
-    var pc = this;
-
-    var _eventTarget = document.createDocumentFragment();
-    ['addEventListener', 'removeEventListener', 'dispatchEvent']
-        .forEach(function(method) {
-          pc[method] = _eventTarget[method].bind(_eventTarget);
-        });
-
-    this.canTrickleIceCandidates = null;
-
-    this.needNegotiation = false;
-
-    this.localStreams = [];
-    this.remoteStreams = [];
-
-    this.localDescription = null;
-    this.remoteDescription = null;
-
-    this.signalingState = 'stable';
-    this.iceConnectionState = 'new';
-    this.connectionState = 'new';
-    this.iceGatheringState = 'new';
-
-    config = JSON.parse(JSON.stringify(config || {}));
-
-    this.usingBundle = config.bundlePolicy === 'max-bundle';
-    if (config.rtcpMuxPolicy === 'negotiate') {
-      throw(makeError('NotSupportedError',
-          'rtcpMuxPolicy \'negotiate\' is not supported'));
-    } else if (!config.rtcpMuxPolicy) {
-      config.rtcpMuxPolicy = 'require';
-    }
-
-    switch (config.iceTransportPolicy) {
-      case 'all':
-      case 'relay':
-        break;
-      default:
-        config.iceTransportPolicy = 'all';
-        break;
-    }
-
-    switch (config.bundlePolicy) {
-      case 'balanced':
-      case 'max-compat':
-      case 'max-bundle':
-        break;
-      default:
-        config.bundlePolicy = 'balanced';
-        break;
-    }
-
-    config.iceServers = filterIceServers(config.iceServers || [], edgeVersion);
-
-    this._iceGatherers = [];
-    if (config.iceCandidatePoolSize) {
-      for (var i = config.iceCandidatePoolSize; i > 0; i--) {
-        this._iceGatherers.push(new window.RTCIceGatherer({
-          iceServers: config.iceServers,
-          gatherPolicy: config.iceTransportPolicy
-        }));
-      }
-    } else {
-      config.iceCandidatePoolSize = 0;
-    }
-
-    this._config = config;
-
-    // per-track iceGathers, iceTransports, dtlsTransports, rtpSenders, ...
-    // everything that is needed to describe a SDP m-line.
-    this.transceivers = [];
-
-    this._sdpSessionId = SDPUtils.generateSessionId();
-    this._sdpSessionVersion = 0;
-
-    this._dtlsRole = undefined; // role for a=setup to use in answers.
-
-    this._isClosed = false;
-  };
-
-  // set up event handlers on prototype
-  RTCPeerConnection.prototype.onicecandidate = null;
-  RTCPeerConnection.prototype.onaddstream = null;
-  RTCPeerConnection.prototype.ontrack = null;
-  RTCPeerConnection.prototype.onremovestream = null;
-  RTCPeerConnection.prototype.onsignalingstatechange = null;
-  RTCPeerConnection.prototype.oniceconnectionstatechange = null;
-  RTCPeerConnection.prototype.onconnectionstatechange = null;
-  RTCPeerConnection.prototype.onicegatheringstatechange = null;
-  RTCPeerConnection.prototype.onnegotiationneeded = null;
-  RTCPeerConnection.prototype.ondatachannel = null;
-
-  RTCPeerConnection.prototype._dispatchEvent = function(name, event) {
-    if (this._isClosed) {
-      return;
-    }
-    this.dispatchEvent(event);
-    if (typeof this['on' + name] === 'function') {
-      this['on' + name](event);
-    }
-  };
-
-  RTCPeerConnection.prototype._emitGatheringStateChange = function() {
-    var event = new Event('icegatheringstatechange');
-    this._dispatchEvent('icegatheringstatechange', event);
-  };
-
-  RTCPeerConnection.prototype.getConfiguration = function() {
-    return this._config;
-  };
-
-  RTCPeerConnection.prototype.getLocalStreams = function() {
-    return this.localStreams;
-  };
-
-  RTCPeerConnection.prototype.getRemoteStreams = function() {
-    return this.remoteStreams;
-  };
-
-  // internal helper to create a transceiver object.
-  // (which is not yet the same as the WebRTC 1.0 transceiver)
-  RTCPeerConnection.prototype._createTransceiver = function(kind, doNotAdd) {
-    var hasBundleTransport = this.transceivers.length > 0;
-    var transceiver = {
-      track: null,
-      iceGatherer: null,
-      iceTransport: null,
-      dtlsTransport: null,
-      localCapabilities: null,
-      remoteCapabilities: null,
-      rtpSender: null,
-      rtpReceiver: null,
-      kind: kind,
-      mid: null,
-      sendEncodingParameters: null,
-      recvEncodingParameters: null,
-      stream: null,
-      associatedRemoteMediaStreams: [],
-      wantReceive: true
+  /**
+   * A utility function to clean up the OS name.
+   *
+   * @private
+   * @param {string} os The OS name to clean up.
+   * @param {string} [pattern] A `RegExp` pattern matching the OS name.
+   * @param {string} [label] A label for the OS.
+   */
+  function cleanupOS(os, pattern, label) {
+    // Platform tokens are defined at:
+    // http://msdn.microsoft.com/en-us/library/ms537503(VS.85).aspx
+    // http://web.archive.org/web/20081122053950/http://msdn.microsoft.com/en-us/library/ms537503(VS.85).aspx
+    var data = {
+      '10.0': '10',
+      '6.4':  '10 Technical Preview',
+      '6.3':  '8.1',
+      '6.2':  '8',
+      '6.1':  'Server 2008 R2 / 7',
+      '6.0':  'Server 2008 / Vista',
+      '5.2':  'Server 2003 / XP 64-bit',
+      '5.1':  'XP',
+      '5.01': '2000 SP1',
+      '5.0':  '2000',
+      '4.0':  'NT',
+      '4.90': 'ME'
     };
-    if (this.usingBundle && hasBundleTransport) {
-      transceiver.iceTransport = this.transceivers[0].iceTransport;
-      transceiver.dtlsTransport = this.transceivers[0].dtlsTransport;
-    } else {
-      var transports = this._createIceAndDtlsTransports();
-      transceiver.iceTransport = transports.iceTransport;
-      transceiver.dtlsTransport = transports.dtlsTransport;
+    // Detect Windows version from platform tokens.
+    if (pattern && label && /^Win/i.test(os) && !/^Windows Phone /i.test(os) &&
+        (data = data[/[\d.]+$/.exec(os)])) {
+      os = 'Windows ' + data;
     }
-    if (!doNotAdd) {
-      this.transceivers.push(transceiver);
-    }
-    return transceiver;
-  };
+    // Correct character case and cleanup string.
+    os = String(os);
 
-  RTCPeerConnection.prototype.addTrack = function(track, stream) {
-    if (this._isClosed) {
-      throw makeError('InvalidStateError',
-          'Attempted to call addTrack on a closed peerconnection.');
+    if (pattern && label) {
+      os = os.replace(RegExp(pattern, 'i'), label);
     }
 
-    var alreadyExists = this.transceivers.find(function(s) {
-      return s.track === track;
-    });
-
-    if (alreadyExists) {
-      throw makeError('InvalidAccessError', 'Track already exists.');
-    }
-
-    var transceiver;
-    for (var i = 0; i < this.transceivers.length; i++) {
-      if (!this.transceivers[i].track &&
-          this.transceivers[i].kind === track.kind) {
-        transceiver = this.transceivers[i];
-      }
-    }
-    if (!transceiver) {
-      transceiver = this._createTransceiver(track.kind);
-    }
-
-    this._maybeFireNegotiationNeeded();
-
-    if (this.localStreams.indexOf(stream) === -1) {
-      this.localStreams.push(stream);
-    }
-
-    transceiver.track = track;
-    transceiver.stream = stream;
-    transceiver.rtpSender = new window.RTCRtpSender(track,
-        transceiver.dtlsTransport);
-    return transceiver.rtpSender;
-  };
-
-  RTCPeerConnection.prototype.addStream = function(stream) {
-    var pc = this;
-    if (edgeVersion >= 15025) {
-      stream.getTracks().forEach(function(track) {
-        pc.addTrack(track, stream);
-      });
-    } else {
-      // Clone is necessary for local demos mostly, attaching directly
-      // to two different senders does not work (build 10547).
-      // Fixed in 15025 (or earlier)
-      var clonedStream = stream.clone();
-      stream.getTracks().forEach(function(track, idx) {
-        var clonedTrack = clonedStream.getTracks()[idx];
-        track.addEventListener('enabled', function(event) {
-          clonedTrack.enabled = event.enabled;
-        });
-      });
-      clonedStream.getTracks().forEach(function(track) {
-        pc.addTrack(track, clonedStream);
-      });
-    }
-  };
-
-  RTCPeerConnection.prototype.removeTrack = function(sender) {
-    if (this._isClosed) {
-      throw makeError('InvalidStateError',
-          'Attempted to call removeTrack on a closed peerconnection.');
-    }
-
-    if (!(sender instanceof window.RTCRtpSender)) {
-      throw new TypeError('Argument 1 of RTCPeerConnection.removeTrack ' +
-          'does not implement interface RTCRtpSender.');
-    }
-
-    var transceiver = this.transceivers.find(function(t) {
-      return t.rtpSender === sender;
-    });
-
-    if (!transceiver) {
-      throw makeError('InvalidAccessError',
-          'Sender was not created by this connection.');
-    }
-    var stream = transceiver.stream;
-
-    transceiver.rtpSender.stop();
-    transceiver.rtpSender = null;
-    transceiver.track = null;
-    transceiver.stream = null;
-
-    // remove the stream from the set of local streams
-    var localStreams = this.transceivers.map(function(t) {
-      return t.stream;
-    });
-    if (localStreams.indexOf(stream) === -1 &&
-        this.localStreams.indexOf(stream) > -1) {
-      this.localStreams.splice(this.localStreams.indexOf(stream), 1);
-    }
-
-    this._maybeFireNegotiationNeeded();
-  };
-
-  RTCPeerConnection.prototype.removeStream = function(stream) {
-    var pc = this;
-    stream.getTracks().forEach(function(track) {
-      var sender = pc.getSenders().find(function(s) {
-        return s.track === track;
-      });
-      if (sender) {
-        pc.removeTrack(sender);
-      }
-    });
-  };
-
-  RTCPeerConnection.prototype.getSenders = function() {
-    return this.transceivers.filter(function(transceiver) {
-      return !!transceiver.rtpSender;
-    })
-    .map(function(transceiver) {
-      return transceiver.rtpSender;
-    });
-  };
-
-  RTCPeerConnection.prototype.getReceivers = function() {
-    return this.transceivers.filter(function(transceiver) {
-      return !!transceiver.rtpReceiver;
-    })
-    .map(function(transceiver) {
-      return transceiver.rtpReceiver;
-    });
-  };
-
-
-  RTCPeerConnection.prototype._createIceGatherer = function(sdpMLineIndex,
-      usingBundle) {
-    var pc = this;
-    if (usingBundle && sdpMLineIndex > 0) {
-      return this.transceivers[0].iceGatherer;
-    } else if (this._iceGatherers.length) {
-      return this._iceGatherers.shift();
-    }
-    var iceGatherer = new window.RTCIceGatherer({
-      iceServers: this._config.iceServers,
-      gatherPolicy: this._config.iceTransportPolicy
-    });
-    Object.defineProperty(iceGatherer, 'state',
-        {value: 'new', writable: true}
+    os = format(
+      os.replace(/ ce$/i, ' CE')
+        .replace(/\bhpw/i, 'web')
+        .replace(/\bMacintosh\b/, 'Mac OS')
+        .replace(/_PowerPC\b/i, ' OS')
+        .replace(/\b(OS X) [^ \d]+/i, '$1')
+        .replace(/\bMac (OS X)\b/, '$1')
+        .replace(/\/(\d)/, ' $1')
+        .replace(/_/g, '.')
+        .replace(/(?: BePC|[ .]*fc[ \d.]+)$/i, '')
+        .replace(/\bx86\.64\b/gi, 'x86_64')
+        .replace(/\b(Windows Phone) OS\b/, '$1')
+        .replace(/\b(Chrome OS \w+) [\d.]+\b/, '$1')
+        .split(' on ')[0]
     );
 
-    this.transceivers[sdpMLineIndex].bufferedCandidateEvents = [];
-    this.transceivers[sdpMLineIndex].bufferCandidates = function(event) {
-      var end = !event.candidate || Object.keys(event.candidate).length === 0;
-      // polyfill since RTCIceGatherer.state is not implemented in
-      // Edge 10547 yet.
-      iceGatherer.state = end ? 'completed' : 'gathering';
-      if (pc.transceivers[sdpMLineIndex].bufferedCandidateEvents !== null) {
-        pc.transceivers[sdpMLineIndex].bufferedCandidateEvents.push(event);
-      }
-    };
-    iceGatherer.addEventListener('localcandidate',
-      this.transceivers[sdpMLineIndex].bufferCandidates);
-    return iceGatherer;
-  };
+    return os;
+  }
 
-  // start gathering from an RTCIceGatherer.
-  RTCPeerConnection.prototype._gather = function(mid, sdpMLineIndex) {
-    var pc = this;
-    var iceGatherer = this.transceivers[sdpMLineIndex].iceGatherer;
-    if (iceGatherer.onlocalcandidate) {
-      return;
+  /**
+   * An iteration utility for arrays and objects.
+   *
+   * @private
+   * @param {Array|Object} object The object to iterate over.
+   * @param {Function} callback The function called per iteration.
+   */
+  function each(object, callback) {
+    var index = -1,
+        length = object ? object.length : 0;
+
+    if (typeof length == 'number' && length > -1 && length <= maxSafeInteger) {
+      while (++index < length) {
+        callback(object[index], index, object);
+      }
+    } else {
+      forOwn(object, callback);
     }
-    var bufferedCandidateEvents =
-      this.transceivers[sdpMLineIndex].bufferedCandidateEvents;
-    this.transceivers[sdpMLineIndex].bufferedCandidateEvents = null;
-    iceGatherer.removeEventListener('localcandidate',
-      this.transceivers[sdpMLineIndex].bufferCandidates);
-    iceGatherer.onlocalcandidate = function(evt) {
-      if (pc.usingBundle && sdpMLineIndex > 0) {
-        // if we know that we use bundle we can drop candidates with
-        // ѕdpMLineIndex > 0. If we don't do this then our state gets
-        // confused since we dispose the extra ice gatherer.
-        return;
-      }
-      var event = new Event('icecandidate');
-      event.candidate = {sdpMid: mid, sdpMLineIndex: sdpMLineIndex};
+  }
 
-      var cand = evt.candidate;
-      // Edge emits an empty object for RTCIceCandidateComplete‥
-      var end = !cand || Object.keys(cand).length === 0;
-      if (end) {
-        // polyfill since RTCIceGatherer.state is not implemented in
-        // Edge 10547 yet.
-        if (iceGatherer.state === 'new' || iceGatherer.state === 'gathering') {
-          iceGatherer.state = 'completed';
-        }
-      } else {
-        if (iceGatherer.state === 'new') {
-          iceGatherer.state = 'gathering';
-        }
-        // RTCIceCandidate doesn't have a component, needs to be added
-        cand.component = 1;
-        var serializedCandidate = SDPUtils.writeCandidate(cand);
-        event.candidate = Object.assign(event.candidate,
-            SDPUtils.parseCandidate(serializedCandidate));
-        event.candidate.candidate = serializedCandidate;
-      }
+  /**
+   * Trim and conditionally capitalize string values.
+   *
+   * @private
+   * @param {string} string The string to format.
+   * @returns {string} The formatted string.
+   */
+  function format(string) {
+    string = trim(string);
+    return /^(?:webOS|i(?:OS|P))/.test(string)
+      ? string
+      : capitalize(string);
+  }
 
-      // update local description.
-      var sections = SDPUtils.getMediaSections(pc.localDescription.sdp);
-      if (!end) {
-        sections[event.candidate.sdpMLineIndex] +=
-            'a=' + event.candidate.candidate + '\r\n';
-      } else {
-        sections[event.candidate.sdpMLineIndex] +=
-            'a=end-of-candidates\r\n';
+  /**
+   * Iterates over an object's own properties, executing the `callback` for each.
+   *
+   * @private
+   * @param {Object} object The object to iterate over.
+   * @param {Function} callback The function executed per own property.
+   */
+  function forOwn(object, callback) {
+    for (var key in object) {
+      if (hasOwnProperty.call(object, key)) {
+        callback(object[key], key, object);
       }
-      pc.localDescription.sdp =
-          SDPUtils.getDescription(pc.localDescription.sdp) +
-          sections.join('');
-      var complete = pc.transceivers.every(function(transceiver) {
-        return transceiver.iceGatherer &&
-            transceiver.iceGatherer.state === 'completed';
+    }
+  }
+
+  /**
+   * Gets the internal `[[Class]]` of a value.
+   *
+   * @private
+   * @param {*} value The value.
+   * @returns {string} The `[[Class]]`.
+   */
+  function getClassOf(value) {
+    return value == null
+      ? capitalize(value)
+      : toString.call(value).slice(8, -1);
+  }
+
+  /**
+   * Host objects can return type values that are different from their actual
+   * data type. The objects we are concerned with usually return non-primitive
+   * types of "object", "function", or "unknown".
+   *
+   * @private
+   * @param {*} object The owner of the property.
+   * @param {string} property The property to check.
+   * @returns {boolean} Returns `true` if the property value is a non-primitive, else `false`.
+   */
+  function isHostType(object, property) {
+    var type = object != null ? typeof object[property] : 'number';
+    return !/^(?:boolean|number|string|undefined)$/.test(type) &&
+      (type == 'object' ? !!object[property] : true);
+  }
+
+  /**
+   * Prepares a string for use in a `RegExp` by making hyphens and spaces optional.
+   *
+   * @private
+   * @param {string} string The string to qualify.
+   * @returns {string} The qualified string.
+   */
+  function qualify(string) {
+    return String(string).replace(/([ -])(?!$)/g, '$1?');
+  }
+
+  /**
+   * A bare-bones `Array#reduce` like utility function.
+   *
+   * @private
+   * @param {Array} array The array to iterate over.
+   * @param {Function} callback The function called per iteration.
+   * @returns {*} The accumulated result.
+   */
+  function reduce(array, callback) {
+    var accumulator = null;
+    each(array, function(value, index) {
+      accumulator = callback(accumulator, value, index, array);
+    });
+    return accumulator;
+  }
+
+  /**
+   * Removes leading and trailing whitespace from a string.
+   *
+   * @private
+   * @param {string} string The string to trim.
+   * @returns {string} The trimmed string.
+   */
+  function trim(string) {
+    return String(string).replace(/^ +| +$/g, '');
+  }
+
+  /*--------------------------------------------------------------------------*/
+
+  /**
+   * Creates a new platform object.
+   *
+   * @memberOf platform
+   * @param {Object|string} [ua=navigator.userAgent] The user agent string or
+   *  context object.
+   * @returns {Object} A platform object.
+   */
+  function parse(ua) {
+
+    /** The environment context object. */
+    var context = root;
+
+    /** Used to flag when a custom context is provided. */
+    var isCustomContext = ua && typeof ua == 'object' && getClassOf(ua) != 'String';
+
+    // Juggle arguments.
+    if (isCustomContext) {
+      context = ua;
+      ua = null;
+    }
+
+    /** Browser navigator object. */
+    var nav = context.navigator || {};
+
+    /** Browser user agent string. */
+    var userAgent = nav.userAgent || '';
+
+    ua || (ua = userAgent);
+
+    /** Used to flag when `thisBinding` is the [ModuleScope]. */
+    var isModuleScope = isCustomContext || thisBinding == oldRoot;
+
+    /** Used to detect if browser is like Chrome. */
+    var likeChrome = isCustomContext
+      ? !!nav.likeChrome
+      : /\bChrome\b/.test(ua) && !/internal|\n/i.test(toString.toString());
+
+    /** Internal `[[Class]]` value shortcuts. */
+    var objectClass = 'Object',
+        airRuntimeClass = isCustomContext ? objectClass : 'ScriptBridgingProxyObject',
+        enviroClass = isCustomContext ? objectClass : 'Environment',
+        javaClass = (isCustomContext && context.java) ? 'JavaPackage' : getClassOf(context.java),
+        phantomClass = isCustomContext ? objectClass : 'RuntimeObject';
+
+    /** Detect Java environments. */
+    var java = /\bJava/.test(javaClass) && context.java;
+
+    /** Detect Rhino. */
+    var rhino = java && getClassOf(context.environment) == enviroClass;
+
+    /** A character to represent alpha. */
+    var alpha = java ? 'a' : '\u03b1';
+
+    /** A character to represent beta. */
+    var beta = java ? 'b' : '\u03b2';
+
+    /** Browser document object. */
+    var doc = context.document || {};
+
+    /**
+     * Detect Opera browser (Presto-based).
+     * http://www.howtocreate.co.uk/operaStuff/operaObject.html
+     * http://dev.opera.com/articles/view/opera-mini-web-content-authoring-guidelines/#operamini
+     */
+    var opera = context.operamini || context.opera;
+
+    /** Opera `[[Class]]`. */
+    var operaClass = reOpera.test(operaClass = (isCustomContext && opera) ? opera['[[Class]]'] : getClassOf(opera))
+      ? operaClass
+      : (opera = null);
+
+    /*------------------------------------------------------------------------*/
+
+    /** Temporary variable used over the script's lifetime. */
+    var data;
+
+    /** The CPU architecture. */
+    var arch = ua;
+
+    /** Platform description array. */
+    var description = [];
+
+    /** Platform alpha/beta indicator. */
+    var prerelease = null;
+
+    /** A flag to indicate that environment features should be used to resolve the platform. */
+    var useFeatures = ua == userAgent;
+
+    /** The browser/environment version. */
+    var version = useFeatures && opera && typeof opera.version == 'function' && opera.version();
+
+    /** A flag to indicate if the OS ends with "/ Version" */
+    var isSpecialCasedOS;
+
+    /* Detectable layout engines (order is important). */
+    var layout = getLayout([
+      { 'label': 'EdgeHTML', 'pattern': 'Edge' },
+      'Trident',
+      { 'label': 'WebKit', 'pattern': 'AppleWebKit' },
+      'iCab',
+      'Presto',
+      'NetFront',
+      'Tasman',
+      'KHTML',
+      'Gecko'
+    ]);
+
+    /* Detectable browser names (order is important). */
+    var name = getName([
+      'Adobe AIR',
+      'Arora',
+      'Avant Browser',
+      'Breach',
+      'Camino',
+      'Electron',
+      'Epiphany',
+      'Fennec',
+      'Flock',
+      'Galeon',
+      'GreenBrowser',
+      'iCab',
+      'Iceweasel',
+      'K-Meleon',
+      'Konqueror',
+      'Lunascape',
+      'Maxthon',
+      { 'label': 'Microsoft Edge', 'pattern': 'Edge' },
+      'Midori',
+      'Nook Browser',
+      'PaleMoon',
+      'PhantomJS',
+      'Raven',
+      'Rekonq',
+      'RockMelt',
+      { 'label': 'Samsung Internet', 'pattern': 'SamsungBrowser' },
+      'SeaMonkey',
+      { 'label': 'Silk', 'pattern': '(?:Cloud9|Silk-Accelerated)' },
+      'Sleipnir',
+      'SlimBrowser',
+      { 'label': 'SRWare Iron', 'pattern': 'Iron' },
+      'Sunrise',
+      'Swiftfox',
+      'Waterfox',
+      'WebPositive',
+      'Opera Mini',
+      { 'label': 'Opera Mini', 'pattern': 'OPiOS' },
+      'Opera',
+      { 'label': 'Opera', 'pattern': 'OPR' },
+      'Chrome',
+      { 'label': 'Chrome Mobile', 'pattern': '(?:CriOS|CrMo)' },
+      { 'label': 'Firefox', 'pattern': '(?:Firefox|Minefield)' },
+      { 'label': 'Firefox for iOS', 'pattern': 'FxiOS' },
+      { 'label': 'IE', 'pattern': 'IEMobile' },
+      { 'label': 'IE', 'pattern': 'MSIE' },
+      'Safari'
+    ]);
+
+    /* Detectable products (order is important). */
+    var product = getProduct([
+      { 'label': 'BlackBerry', 'pattern': 'BB10' },
+      'BlackBerry',
+      { 'label': 'Galaxy S', 'pattern': 'GT-I9000' },
+      { 'label': 'Galaxy S2', 'pattern': 'GT-I9100' },
+      { 'label': 'Galaxy S3', 'pattern': 'GT-I9300' },
+      { 'label': 'Galaxy S4', 'pattern': 'GT-I9500' },
+      { 'label': 'Galaxy S5', 'pattern': 'SM-G900' },
+      { 'label': 'Galaxy S6', 'pattern': 'SM-G920' },
+      { 'label': 'Galaxy S6 Edge', 'pattern': 'SM-G925' },
+      { 'label': 'Galaxy S7', 'pattern': 'SM-G930' },
+      { 'label': 'Galaxy S7 Edge', 'pattern': 'SM-G935' },
+      'Google TV',
+      'Lumia',
+      'iPad',
+      'iPod',
+      'iPhone',
+      'Kindle',
+      { 'label': 'Kindle Fire', 'pattern': '(?:Cloud9|Silk-Accelerated)' },
+      'Nexus',
+      'Nook',
+      'PlayBook',
+      'PlayStation Vita',
+      'PlayStation',
+      'TouchPad',
+      'Transformer',
+      { 'label': 'Wii U', 'pattern': 'WiiU' },
+      'Wii',
+      'Xbox One',
+      { 'label': 'Xbox 360', 'pattern': 'Xbox' },
+      'Xoom'
+    ]);
+
+    /* Detectable manufacturers. */
+    var manufacturer = getManufacturer({
+      'Apple': { 'iPad': 1, 'iPhone': 1, 'iPod': 1 },
+      'Archos': {},
+      'Amazon': { 'Kindle': 1, 'Kindle Fire': 1 },
+      'Asus': { 'Transformer': 1 },
+      'Barnes & Noble': { 'Nook': 1 },
+      'BlackBerry': { 'PlayBook': 1 },
+      'Google': { 'Google TV': 1, 'Nexus': 1 },
+      'HP': { 'TouchPad': 1 },
+      'HTC': {},
+      'LG': {},
+      'Microsoft': { 'Xbox': 1, 'Xbox One': 1 },
+      'Motorola': { 'Xoom': 1 },
+      'Nintendo': { 'Wii U': 1,  'Wii': 1 },
+      'Nokia': { 'Lumia': 1 },
+      'Samsung': { 'Galaxy S': 1, 'Galaxy S2': 1, 'Galaxy S3': 1, 'Galaxy S4': 1 },
+      'Sony': { 'PlayStation': 1, 'PlayStation Vita': 1 }
+    });
+
+    /* Detectable operating systems (order is important). */
+    var os = getOS([
+      'Windows Phone',
+      'Android',
+      'CentOS',
+      { 'label': 'Chrome OS', 'pattern': 'CrOS' },
+      'Debian',
+      'Fedora',
+      'FreeBSD',
+      'Gentoo',
+      'Haiku',
+      'Kubuntu',
+      'Linux Mint',
+      'OpenBSD',
+      'Red Hat',
+      'SuSE',
+      'Ubuntu',
+      'Xubuntu',
+      'Cygwin',
+      'Symbian OS',
+      'hpwOS',
+      'webOS ',
+      'webOS',
+      'Tablet OS',
+      'Tizen',
+      'Linux',
+      'Mac OS X',
+      'Macintosh',
+      'Mac',
+      'Windows 98;',
+      'Windows '
+    ]);
+
+    /*------------------------------------------------------------------------*/
+
+    /**
+     * Picks the layout engine from an array of guesses.
+     *
+     * @private
+     * @param {Array} guesses An array of guesses.
+     * @returns {null|string} The detected layout engine.
+     */
+    function getLayout(guesses) {
+      return reduce(guesses, function(result, guess) {
+        return result || RegExp('\\b' + (
+          guess.pattern || qualify(guess)
+        ) + '\\b', 'i').exec(ua) && (guess.label || guess);
       });
+    }
 
-      if (pc.iceGatheringState !== 'gathering') {
-        pc.iceGatheringState = 'gathering';
-        pc._emitGatheringStateChange();
-      }
-
-      // Emit candidate. Also emit null candidate when all gatherers are
-      // complete.
-      if (!end) {
-        pc._dispatchEvent('icecandidate', event);
-      }
-      if (complete) {
-        pc._dispatchEvent('icecandidate', new Event('icecandidate'));
-        pc.iceGatheringState = 'complete';
-        pc._emitGatheringStateChange();
-      }
-    };
-
-    // emit already gathered candidates.
-    window.setTimeout(function() {
-      bufferedCandidateEvents.forEach(function(e) {
-        iceGatherer.onlocalcandidate(e);
+    /**
+     * Picks the manufacturer from an array of guesses.
+     *
+     * @private
+     * @param {Array} guesses An object of guesses.
+     * @returns {null|string} The detected manufacturer.
+     */
+    function getManufacturer(guesses) {
+      return reduce(guesses, function(result, value, key) {
+        // Lookup the manufacturer by product or scan the UA for the manufacturer.
+        return result || (
+          value[product] ||
+          value[/^[a-z]+(?: +[a-z]+\b)*/i.exec(product)] ||
+          RegExp('\\b' + qualify(key) + '(?:\\b|\\w*\\d)', 'i').exec(ua)
+        ) && key;
       });
-    }, 0);
-  };
-
-  // Create ICE transport and DTLS transport.
-  RTCPeerConnection.prototype._createIceAndDtlsTransports = function() {
-    var pc = this;
-    var iceTransport = new window.RTCIceTransport(null);
-    iceTransport.onicestatechange = function() {
-      pc._updateIceConnectionState();
-      pc._updateConnectionState();
-    };
-
-    var dtlsTransport = new window.RTCDtlsTransport(iceTransport);
-    dtlsTransport.ondtlsstatechange = function() {
-      pc._updateConnectionState();
-    };
-    dtlsTransport.onerror = function() {
-      // onerror does not set state to failed by itself.
-      Object.defineProperty(dtlsTransport, 'state',
-          {value: 'failed', writable: true});
-      pc._updateConnectionState();
-    };
-
-    return {
-      iceTransport: iceTransport,
-      dtlsTransport: dtlsTransport
-    };
-  };
-
-  // Destroy ICE gatherer, ICE transport and DTLS transport.
-  // Without triggering the callbacks.
-  RTCPeerConnection.prototype._disposeIceAndDtlsTransports = function(
-      sdpMLineIndex) {
-    var iceGatherer = this.transceivers[sdpMLineIndex].iceGatherer;
-    if (iceGatherer) {
-      delete iceGatherer.onlocalcandidate;
-      delete this.transceivers[sdpMLineIndex].iceGatherer;
     }
-    var iceTransport = this.transceivers[sdpMLineIndex].iceTransport;
-    if (iceTransport) {
-      delete iceTransport.onicestatechange;
-      delete this.transceivers[sdpMLineIndex].iceTransport;
-    }
-    var dtlsTransport = this.transceivers[sdpMLineIndex].dtlsTransport;
-    if (dtlsTransport) {
-      delete dtlsTransport.ondtlsstatechange;
-      delete dtlsTransport.onerror;
-      delete this.transceivers[sdpMLineIndex].dtlsTransport;
-    }
-  };
 
-  // Start the RTP Sender and Receiver for a transceiver.
-  RTCPeerConnection.prototype._transceive = function(transceiver,
-      send, recv) {
-    var params = getCommonCapabilities(transceiver.localCapabilities,
-        transceiver.remoteCapabilities);
-    if (send && transceiver.rtpSender) {
-      params.encodings = transceiver.sendEncodingParameters;
-      params.rtcp = {
-        cname: SDPUtils.localCName,
-        compound: transceiver.rtcpParameters.compound
+    /**
+     * Picks the browser name from an array of guesses.
+     *
+     * @private
+     * @param {Array} guesses An array of guesses.
+     * @returns {null|string} The detected browser name.
+     */
+    function getName(guesses) {
+      return reduce(guesses, function(result, guess) {
+        return result || RegExp('\\b' + (
+          guess.pattern || qualify(guess)
+        ) + '\\b', 'i').exec(ua) && (guess.label || guess);
+      });
+    }
+
+    /**
+     * Picks the OS name from an array of guesses.
+     *
+     * @private
+     * @param {Array} guesses An array of guesses.
+     * @returns {null|string} The detected OS name.
+     */
+    function getOS(guesses) {
+      return reduce(guesses, function(result, guess) {
+        var pattern = guess.pattern || qualify(guess);
+        if (!result && (result =
+              RegExp('\\b' + pattern + '(?:/[\\d.]+|[ \\w.]*)', 'i').exec(ua)
+            )) {
+          result = cleanupOS(result, pattern, guess.label || guess);
+        }
+        return result;
+      });
+    }
+
+    /**
+     * Picks the product name from an array of guesses.
+     *
+     * @private
+     * @param {Array} guesses An array of guesses.
+     * @returns {null|string} The detected product name.
+     */
+    function getProduct(guesses) {
+      return reduce(guesses, function(result, guess) {
+        var pattern = guess.pattern || qualify(guess);
+        if (!result && (result =
+              RegExp('\\b' + pattern + ' *\\d+[.\\w_]*', 'i').exec(ua) ||
+              RegExp('\\b' + pattern + ' *\\w+-[\\w]*', 'i').exec(ua) ||
+              RegExp('\\b' + pattern + '(?:; *(?:[a-z]+[_-])?[a-z]+\\d+|[^ ();-]*)', 'i').exec(ua)
+            )) {
+          // Split by forward slash and append product version if needed.
+          if ((result = String((guess.label && !RegExp(pattern, 'i').test(guess.label)) ? guess.label : result).split('/'))[1] && !/[\d.]+/.test(result[0])) {
+            result[0] += ' ' + result[1];
+          }
+          // Correct character case and cleanup string.
+          guess = guess.label || guess;
+          result = format(result[0]
+            .replace(RegExp(pattern, 'i'), guess)
+            .replace(RegExp('; *(?:' + guess + '[_-])?', 'i'), ' ')
+            .replace(RegExp('(' + guess + ')[-_.]?(\\w)', 'i'), '$1 $2'));
+        }
+        return result;
+      });
+    }
+
+    /**
+     * Resolves the version using an array of UA patterns.
+     *
+     * @private
+     * @param {Array} patterns An array of UA patterns.
+     * @returns {null|string} The detected version.
+     */
+    function getVersion(patterns) {
+      return reduce(patterns, function(result, pattern) {
+        return result || (RegExp(pattern +
+          '(?:-[\\d.]+/|(?: for [\\w-]+)?[ /-])([\\d.]+[^ ();/_-]*)', 'i').exec(ua) || 0)[1] || null;
+      });
+    }
+
+    /**
+     * Returns `platform.description` when the platform object is coerced to a string.
+     *
+     * @name toString
+     * @memberOf platform
+     * @returns {string} Returns `platform.description` if available, else an empty string.
+     */
+    function toStringPlatform() {
+      return this.description || '';
+    }
+
+    /*------------------------------------------------------------------------*/
+
+    // Convert layout to an array so we can add extra details.
+    layout && (layout = [layout]);
+
+    // Detect product names that contain their manufacturer's name.
+    if (manufacturer && !product) {
+      product = getProduct([manufacturer]);
+    }
+    // Clean up Google TV.
+    if ((data = /\bGoogle TV\b/.exec(product))) {
+      product = data[0];
+    }
+    // Detect simulators.
+    if (/\bSimulator\b/i.test(ua)) {
+      product = (product ? product + ' ' : '') + 'Simulator';
+    }
+    // Detect Opera Mini 8+ running in Turbo/Uncompressed mode on iOS.
+    if (name == 'Opera Mini' && /\bOPiOS\b/.test(ua)) {
+      description.push('running in Turbo/Uncompressed mode');
+    }
+    // Detect IE Mobile 11.
+    if (name == 'IE' && /\blike iPhone OS\b/.test(ua)) {
+      data = parse(ua.replace(/like iPhone OS/, ''));
+      manufacturer = data.manufacturer;
+      product = data.product;
+    }
+    // Detect iOS.
+    else if (/^iP/.test(product)) {
+      name || (name = 'Safari');
+      os = 'iOS' + ((data = / OS ([\d_]+)/i.exec(ua))
+        ? ' ' + data[1].replace(/_/g, '.')
+        : '');
+    }
+    // Detect Kubuntu.
+    else if (name == 'Konqueror' && !/buntu/i.test(os)) {
+      os = 'Kubuntu';
+    }
+    // Detect Android browsers.
+    else if ((manufacturer && manufacturer != 'Google' &&
+        ((/Chrome/.test(name) && !/\bMobile Safari\b/i.test(ua)) || /\bVita\b/.test(product))) ||
+        (/\bAndroid\b/.test(os) && /^Chrome/.test(name) && /\bVersion\//i.test(ua))) {
+      name = 'Android Browser';
+      os = /\bAndroid\b/.test(os) ? os : 'Android';
+    }
+    // Detect Silk desktop/accelerated modes.
+    else if (name == 'Silk') {
+      if (!/\bMobi/i.test(ua)) {
+        os = 'Android';
+        description.unshift('desktop mode');
+      }
+      if (/Accelerated *= *true/i.test(ua)) {
+        description.unshift('accelerated');
+      }
+    }
+    // Detect PaleMoon identifying as Firefox.
+    else if (name == 'PaleMoon' && (data = /\bFirefox\/([\d.]+)\b/.exec(ua))) {
+      description.push('identifying as Firefox ' + data[1]);
+    }
+    // Detect Firefox OS and products running Firefox.
+    else if (name == 'Firefox' && (data = /\b(Mobile|Tablet|TV)\b/i.exec(ua))) {
+      os || (os = 'Firefox OS');
+      product || (product = data[1]);
+    }
+    // Detect false positives for Firefox/Safari.
+    else if (!name || (data = !/\bMinefield\b/i.test(ua) && /\b(?:Firefox|Safari)\b/.exec(name))) {
+      // Escape the `/` for Firefox 1.
+      if (name && !product && /[\/,]|^[^(]+?\)/.test(ua.slice(ua.indexOf(data + '/') + 8))) {
+        // Clear name of false positives.
+        name = null;
+      }
+      // Reassign a generic name.
+      if ((data = product || manufacturer || os) &&
+          (product || manufacturer || /\b(?:Android|Symbian OS|Tablet OS|webOS)\b/.test(os))) {
+        name = /[a-z]+(?: Hat)?/i.exec(/\bAndroid\b/.test(os) ? os : data) + ' Browser';
+      }
+    }
+    // Add Chrome version to description for Electron.
+    else if (name == 'Electron' && (data = (/\bChrome\/([\d.]+)\b/.exec(ua) || 0)[1])) {
+      description.push('Chromium ' + data);
+    }
+    // Detect non-Opera (Presto-based) versions (order is important).
+    if (!version) {
+      version = getVersion([
+        '(?:Cloud9|CriOS|CrMo|Edge|FxiOS|IEMobile|Iron|Opera ?Mini|OPiOS|OPR|Raven|SamsungBrowser|Silk(?!/[\\d.]+$))',
+        'Version',
+        qualify(name),
+        '(?:Firefox|Minefield|NetFront)'
+      ]);
+    }
+    // Detect stubborn layout engines.
+    if ((data =
+          layout == 'iCab' && parseFloat(version) > 3 && 'WebKit' ||
+          /\bOpera\b/.test(name) && (/\bOPR\b/.test(ua) ? 'Blink' : 'Presto') ||
+          /\b(?:Midori|Nook|Safari)\b/i.test(ua) && !/^(?:Trident|EdgeHTML)$/.test(layout) && 'WebKit' ||
+          !layout && /\bMSIE\b/i.test(ua) && (os == 'Mac OS' ? 'Tasman' : 'Trident') ||
+          layout == 'WebKit' && /\bPlayStation\b(?! Vita\b)/i.test(name) && 'NetFront'
+        )) {
+      layout = [data];
+    }
+    // Detect Windows Phone 7 desktop mode.
+    if (name == 'IE' && (data = (/; *(?:XBLWP|ZuneWP)(\d+)/i.exec(ua) || 0)[1])) {
+      name += ' Mobile';
+      os = 'Windows Phone ' + (/\+$/.test(data) ? data : data + '.x');
+      description.unshift('desktop mode');
+    }
+    // Detect Windows Phone 8.x desktop mode.
+    else if (/\bWPDesktop\b/i.test(ua)) {
+      name = 'IE Mobile';
+      os = 'Windows Phone 8.x';
+      description.unshift('desktop mode');
+      version || (version = (/\brv:([\d.]+)/.exec(ua) || 0)[1]);
+    }
+    // Detect IE 11 identifying as other browsers.
+    else if (name != 'IE' && layout == 'Trident' && (data = /\brv:([\d.]+)/.exec(ua))) {
+      if (name) {
+        description.push('identifying as ' + name + (version ? ' ' + version : ''));
+      }
+      name = 'IE';
+      version = data[1];
+    }
+    // Leverage environment features.
+    if (useFeatures) {
+      // Detect server-side environments.
+      // Rhino has a global function while others have a global object.
+      if (isHostType(context, 'global')) {
+        if (java) {
+          data = java.lang.System;
+          arch = data.getProperty('os.arch');
+          os = os || data.getProperty('os.name') + ' ' + data.getProperty('os.version');
+        }
+        if (rhino) {
+          try {
+            version = context.require('ringo/engine').version.join('.');
+            name = 'RingoJS';
+          } catch(e) {
+            if ((data = context.system) && data.global.system == context.system) {
+              name = 'Narwhal';
+              os || (os = data[0].os || null);
+            }
+          }
+          if (!name) {
+            name = 'Rhino';
+          }
+        }
+        else if (
+          typeof context.process == 'object' && !context.process.browser &&
+          (data = context.process)
+        ) {
+          if (typeof data.versions == 'object') {
+            if (typeof data.versions.electron == 'string') {
+              description.push('Node ' + data.versions.node);
+              name = 'Electron';
+              version = data.versions.electron;
+            } else if (typeof data.versions.nw == 'string') {
+              description.push('Chromium ' + version, 'Node ' + data.versions.node);
+              name = 'NW.js';
+              version = data.versions.nw;
+            }
+          }
+          if (!name) {
+            name = 'Node.js';
+            arch = data.arch;
+            os = data.platform;
+            version = /[\d.]+/.exec(data.version);
+            version = version ? version[0] : null;
+          }
+        }
+      }
+      // Detect Adobe AIR.
+      else if (getClassOf((data = context.runtime)) == airRuntimeClass) {
+        name = 'Adobe AIR';
+        os = data.flash.system.Capabilities.os;
+      }
+      // Detect PhantomJS.
+      else if (getClassOf((data = context.phantom)) == phantomClass) {
+        name = 'PhantomJS';
+        version = (data = data.version || null) && (data.major + '.' + data.minor + '.' + data.patch);
+      }
+      // Detect IE compatibility modes.
+      else if (typeof doc.documentMode == 'number' && (data = /\bTrident\/(\d+)/i.exec(ua))) {
+        // We're in compatibility mode when the Trident version + 4 doesn't
+        // equal the document mode.
+        version = [version, doc.documentMode];
+        if ((data = +data[1] + 4) != version[1]) {
+          description.push('IE ' + version[1] + ' mode');
+          layout && (layout[1] = '');
+          version[1] = data;
+        }
+        version = name == 'IE' ? String(version[1].toFixed(1)) : version[0];
+      }
+      // Detect IE 11 masking as other browsers.
+      else if (typeof doc.documentMode == 'number' && /^(?:Chrome|Firefox)\b/.test(name)) {
+        description.push('masking as ' + name + ' ' + version);
+        name = 'IE';
+        version = '11.0';
+        layout = ['Trident'];
+        os = 'Windows';
+      }
+      os = os && format(os);
+    }
+    // Detect prerelease phases.
+    if (version && (data =
+          /(?:[ab]|dp|pre|[ab]\d+pre)(?:\d+\+?)?$/i.exec(version) ||
+          /(?:alpha|beta)(?: ?\d)?/i.exec(ua + ';' + (useFeatures && nav.appMinorVersion)) ||
+          /\bMinefield\b/i.test(ua) && 'a'
+        )) {
+      prerelease = /b/i.test(data) ? 'beta' : 'alpha';
+      version = version.replace(RegExp(data + '\\+?$'), '') +
+        (prerelease == 'beta' ? beta : alpha) + (/\d+\+?/.exec(data) || '');
+    }
+    // Detect Firefox Mobile.
+    if (name == 'Fennec' || name == 'Firefox' && /\b(?:Android|Firefox OS)\b/.test(os)) {
+      name = 'Firefox Mobile';
+    }
+    // Obscure Maxthon's unreliable version.
+    else if (name == 'Maxthon' && version) {
+      version = version.replace(/\.[\d.]+/, '.x');
+    }
+    // Detect Xbox 360 and Xbox One.
+    else if (/\bXbox\b/i.test(product)) {
+      if (product == 'Xbox 360') {
+        os = null;
+      }
+      if (product == 'Xbox 360' && /\bIEMobile\b/.test(ua)) {
+        description.unshift('mobile mode');
+      }
+    }
+    // Add mobile postfix.
+    else if ((/^(?:Chrome|IE|Opera)$/.test(name) || name && !product && !/Browser|Mobi/.test(name)) &&
+        (os == 'Windows CE' || /Mobi/i.test(ua))) {
+      name += ' Mobile';
+    }
+    // Detect IE platform preview.
+    else if (name == 'IE' && useFeatures) {
+      try {
+        if (context.external === null) {
+          description.unshift('platform preview');
+        }
+      } catch(e) {
+        description.unshift('embedded');
+      }
+    }
+    // Detect BlackBerry OS version.
+    // http://docs.blackberry.com/en/developers/deliverables/18169/HTTP_headers_sent_by_BB_Browser_1234911_11.jsp
+    else if ((/\bBlackBerry\b/.test(product) || /\bBB10\b/.test(ua)) && (data =
+          (RegExp(product.replace(/ +/g, ' *') + '/([.\\d]+)', 'i').exec(ua) || 0)[1] ||
+          version
+        )) {
+      data = [data, /BB10/.test(ua)];
+      os = (data[1] ? (product = null, manufacturer = 'BlackBerry') : 'Device Software') + ' ' + data[0];
+      version = null;
+    }
+    // Detect Opera identifying/masking itself as another browser.
+    // http://www.opera.com/support/kb/view/843/
+    else if (this != forOwn && product != 'Wii' && (
+          (useFeatures && opera) ||
+          (/Opera/.test(name) && /\b(?:MSIE|Firefox)\b/i.test(ua)) ||
+          (name == 'Firefox' && /\bOS X (?:\d+\.){2,}/.test(os)) ||
+          (name == 'IE' && (
+            (os && !/^Win/.test(os) && version > 5.5) ||
+            /\bWindows XP\b/.test(os) && version > 8 ||
+            version == 8 && !/\bTrident\b/.test(ua)
+          ))
+        ) && !reOpera.test((data = parse.call(forOwn, ua.replace(reOpera, '') + ';'))) && data.name) {
+      // When "identifying", the UA contains both Opera and the other browser's name.
+      data = 'ing as ' + data.name + ((data = data.version) ? ' ' + data : '');
+      if (reOpera.test(name)) {
+        if (/\bIE\b/.test(data) && os == 'Mac OS') {
+          os = null;
+        }
+        data = 'identify' + data;
+      }
+      // When "masking", the UA contains only the other browser's name.
+      else {
+        data = 'mask' + data;
+        if (operaClass) {
+          name = format(operaClass.replace(/([a-z])([A-Z])/g, '$1 $2'));
+        } else {
+          name = 'Opera';
+        }
+        if (/\bIE\b/.test(data)) {
+          os = null;
+        }
+        if (!useFeatures) {
+          version = null;
+        }
+      }
+      layout = ['Presto'];
+      description.push(data);
+    }
+    // Detect WebKit Nightly and approximate Chrome/Safari versions.
+    if ((data = (/\bAppleWebKit\/([\d.]+\+?)/i.exec(ua) || 0)[1])) {
+      // Correct build number for numeric comparison.
+      // (e.g. "532.5" becomes "532.05")
+      data = [parseFloat(data.replace(/\.(\d)$/, '.0$1')), data];
+      // Nightly builds are postfixed with a "+".
+      if (name == 'Safari' && data[1].slice(-1) == '+') {
+        name = 'WebKit Nightly';
+        prerelease = 'alpha';
+        version = data[1].slice(0, -1);
+      }
+      // Clear incorrect browser versions.
+      else if (version == data[1] ||
+          version == (data[2] = (/\bSafari\/([\d.]+\+?)/i.exec(ua) || 0)[1])) {
+        version = null;
+      }
+      // Use the full Chrome version when available.
+      data[1] = (/\bChrome\/([\d.]+)/i.exec(ua) || 0)[1];
+      // Detect Blink layout engine.
+      if (data[0] == 537.36 && data[2] == 537.36 && parseFloat(data[1]) >= 28 && layout == 'WebKit') {
+        layout = ['Blink'];
+      }
+      // Detect JavaScriptCore.
+      // http://stackoverflow.com/questions/6768474/how-can-i-detect-which-javascript-engine-v8-or-jsc-is-used-at-runtime-in-androi
+      if (!useFeatures || (!likeChrome && !data[1])) {
+        layout && (layout[1] = 'like Safari');
+        data = (data = data[0], data < 400 ? 1 : data < 500 ? 2 : data < 526 ? 3 : data < 533 ? 4 : data < 534 ? '4+' : data < 535 ? 5 : data < 537 ? 6 : data < 538 ? 7 : data < 601 ? 8 : '8');
+      } else {
+        layout && (layout[1] = 'like Chrome');
+        data = data[1] || (data = data[0], data < 530 ? 1 : data < 532 ? 2 : data < 532.05 ? 3 : data < 533 ? 4 : data < 534.03 ? 5 : data < 534.07 ? 6 : data < 534.10 ? 7 : data < 534.13 ? 8 : data < 534.16 ? 9 : data < 534.24 ? 10 : data < 534.30 ? 11 : data < 535.01 ? 12 : data < 535.02 ? '13+' : data < 535.07 ? 15 : data < 535.11 ? 16 : data < 535.19 ? 17 : data < 536.05 ? 18 : data < 536.10 ? 19 : data < 537.01 ? 20 : data < 537.11 ? '21+' : data < 537.13 ? 23 : data < 537.18 ? 24 : data < 537.24 ? 25 : data < 537.36 ? 26 : layout != 'Blink' ? '27' : '28');
+      }
+      // Add the postfix of ".x" or "+" for approximate versions.
+      layout && (layout[1] += ' ' + (data += typeof data == 'number' ? '.x' : /[.+]/.test(data) ? '' : '+'));
+      // Obscure version for some Safari 1-2 releases.
+      if (name == 'Safari' && (!version || parseInt(version) > 45)) {
+        version = data;
+      }
+    }
+    // Detect Opera desktop modes.
+    if (name == 'Opera' &&  (data = /\bzbov|zvav$/.exec(os))) {
+      name += ' ';
+      description.unshift('desktop mode');
+      if (data == 'zvav') {
+        name += 'Mini';
+        version = null;
+      } else {
+        name += 'Mobile';
+      }
+      os = os.replace(RegExp(' *' + data + '$'), '');
+    }
+    // Detect Chrome desktop mode.
+    else if (name == 'Safari' && /\bChrome\b/.exec(layout && layout[1])) {
+      description.unshift('desktop mode');
+      name = 'Chrome Mobile';
+      version = null;
+
+      if (/\bOS X\b/.test(os)) {
+        manufacturer = 'Apple';
+        os = 'iOS 4.3+';
+      } else {
+        os = null;
+      }
+    }
+    // Strip incorrect OS versions.
+    if (version && version.indexOf((data = /[\d.]+$/.exec(os))) == 0 &&
+        ua.indexOf('/' + data + '-') > -1) {
+      os = trim(os.replace(data, ''));
+    }
+    // Add layout engine.
+    if (layout && !/\b(?:Avant|Nook)\b/.test(name) && (
+        /Browser|Lunascape|Maxthon/.test(name) ||
+        name != 'Safari' && /^iOS/.test(os) && /\bSafari\b/.test(layout[1]) ||
+        /^(?:Adobe|Arora|Breach|Midori|Opera|Phantom|Rekonq|Rock|Samsung Internet|Sleipnir|Web)/.test(name) && layout[1])) {
+      // Don't add layout details to description if they are falsey.
+      (data = layout[layout.length - 1]) && description.push(data);
+    }
+    // Combine contextual information.
+    if (description.length) {
+      description = ['(' + description.join('; ') + ')'];
+    }
+    // Append manufacturer to description.
+    if (manufacturer && product && product.indexOf(manufacturer) < 0) {
+      description.push('on ' + manufacturer);
+    }
+    // Append product to description.
+    if (product) {
+      description.push((/^on /.test(description[description.length - 1]) ? '' : 'on ') + product);
+    }
+    // Parse the OS into an object.
+    if (os) {
+      data = / ([\d.+]+)$/.exec(os);
+      isSpecialCasedOS = data && os.charAt(os.length - data[0].length - 1) == '/';
+      os = {
+        'architecture': 32,
+        'family': (data && !isSpecialCasedOS) ? os.replace(data[0], '') : os,
+        'version': data ? data[1] : null,
+        'toString': function() {
+          var version = this.version;
+          return this.family + ((version && !isSpecialCasedOS) ? ' ' + version : '') + (this.architecture == 64 ? ' 64-bit' : '');
+        }
       };
-      if (transceiver.recvEncodingParameters.length) {
-        params.rtcp.ssrc = transceiver.recvEncodingParameters[0].ssrc;
-      }
-      transceiver.rtpSender.send(params);
     }
-    if (recv && transceiver.rtpReceiver && params.codecs.length > 0) {
-      // remove RTX field in Edge 14942
-      if (transceiver.kind === 'video'
-          && transceiver.recvEncodingParameters
-          && edgeVersion < 15019) {
-        transceiver.recvEncodingParameters.forEach(function(p) {
-          delete p.rtx;
-        });
+    // Add browser/OS architecture.
+    if ((data = /\b(?:AMD|IA|Win|WOW|x86_|x)64\b/i.exec(arch)) && !/\bi686\b/i.test(arch)) {
+      if (os) {
+        os.architecture = 64;
+        os.family = os.family.replace(RegExp(' *' + data), '');
       }
-      if (transceiver.recvEncodingParameters.length) {
-        params.encodings = transceiver.recvEncodingParameters;
-      } else {
-        params.encodings = [{}];
+      if (
+          name && (/\bWOW64\b/i.test(ua) ||
+          (useFeatures && /\w(?:86|32)$/.test(nav.cpuClass || nav.platform) && !/\bWin64; x64\b/i.test(ua)))
+      ) {
+        description.unshift('32-bit');
       }
-      params.rtcp = {
-        compound: transceiver.rtcpParameters.compound
-      };
-      if (transceiver.rtcpParameters.cname) {
-        params.rtcp.cname = transceiver.rtcpParameters.cname;
-      }
-      if (transceiver.sendEncodingParameters.length) {
-        params.rtcp.ssrc = transceiver.sendEncodingParameters[0].ssrc;
-      }
-      transceiver.rtpReceiver.receive(params);
     }
-  };
-
-  RTCPeerConnection.prototype.setLocalDescription = function(description) {
-    var pc = this;
-
-    // Note: pranswer is not supported.
-    if (['offer', 'answer'].indexOf(description.type) === -1) {
-      return Promise.reject(makeError('TypeError',
-          'Unsupported type "' + description.type + '"'));
+    // Chrome 39 and above on OS X is always 64-bit.
+    else if (
+        os && /^OS X/.test(os.family) &&
+        name == 'Chrome' && parseFloat(version) >= 39
+    ) {
+      os.architecture = 64;
     }
 
-    if (!isActionAllowedInSignalingState('setLocalDescription',
-        description.type, pc.signalingState) || pc._isClosed) {
-      return Promise.reject(makeError('InvalidStateError',
-          'Can not set local ' + description.type +
-          ' in state ' + pc.signalingState));
-    }
+    ua || (ua = null);
 
-    var sections;
-    var sessionpart;
-    if (description.type === 'offer') {
-      // VERY limited support for SDP munging. Limited to:
-      // * changing the order of codecs
-      sections = SDPUtils.splitSections(description.sdp);
-      sessionpart = sections.shift();
-      sections.forEach(function(mediaSection, sdpMLineIndex) {
-        var caps = SDPUtils.parseRtpParameters(mediaSection);
-        pc.transceivers[sdpMLineIndex].localCapabilities = caps;
-      });
+    /*------------------------------------------------------------------------*/
 
-      pc.transceivers.forEach(function(transceiver, sdpMLineIndex) {
-        pc._gather(transceiver.mid, sdpMLineIndex);
-      });
-    } else if (description.type === 'answer') {
-      sections = SDPUtils.splitSections(pc.remoteDescription.sdp);
-      sessionpart = sections.shift();
-      var isIceLite = SDPUtils.matchPrefix(sessionpart,
-          'a=ice-lite').length > 0;
-      sections.forEach(function(mediaSection, sdpMLineIndex) {
-        var transceiver = pc.transceivers[sdpMLineIndex];
-        var iceGatherer = transceiver.iceGatherer;
-        var iceTransport = transceiver.iceTransport;
-        var dtlsTransport = transceiver.dtlsTransport;
-        var localCapabilities = transceiver.localCapabilities;
-        var remoteCapabilities = transceiver.remoteCapabilities;
+    /**
+     * The platform object.
+     *
+     * @name platform
+     * @type Object
+     */
+    var platform = {};
 
-        // treat bundle-only as not-rejected.
-        var rejected = SDPUtils.isRejected(mediaSection) &&
-            SDPUtils.matchPrefix(mediaSection, 'a=bundle-only').length === 0;
+    /**
+     * The platform description.
+     *
+     * @memberOf platform
+     * @type string|null
+     */
+    platform.description = ua;
 
-        if (!rejected && !transceiver.rejected) {
-          var remoteIceParameters = SDPUtils.getIceParameters(
-              mediaSection, sessionpart);
-          var remoteDtlsParameters = SDPUtils.getDtlsParameters(
-              mediaSection, sessionpart);
-          if (isIceLite) {
-            remoteDtlsParameters.role = 'server';
-          }
+    /**
+     * The name of the browser's layout engine.
+     *
+     * The list of common layout engines include:
+     * "Blink", "EdgeHTML", "Gecko", "Trident" and "WebKit"
+     *
+     * @memberOf platform
+     * @type string|null
+     */
+    platform.layout = layout && layout[0];
 
-          if (!pc.usingBundle || sdpMLineIndex === 0) {
-            pc._gather(transceiver.mid, sdpMLineIndex);
-            if (iceTransport.state === 'new') {
-              iceTransport.start(iceGatherer, remoteIceParameters,
-                  isIceLite ? 'controlling' : 'controlled');
-            }
-            if (dtlsTransport.state === 'new') {
-              dtlsTransport.start(remoteDtlsParameters);
-            }
-          }
+    /**
+     * The name of the product's manufacturer.
+     *
+     * The list of manufacturers include:
+     * "Apple", "Archos", "Amazon", "Asus", "Barnes & Noble", "BlackBerry",
+     * "Google", "HP", "HTC", "LG", "Microsoft", "Motorola", "Nintendo",
+     * "Nokia", "Samsung" and "Sony"
+     *
+     * @memberOf platform
+     * @type string|null
+     */
+    platform.manufacturer = manufacturer;
 
-          // Calculate intersection of capabilities.
-          var params = getCommonCapabilities(localCapabilities,
-              remoteCapabilities);
+    /**
+     * The name of the browser/environment.
+     *
+     * The list of common browser names include:
+     * "Chrome", "Electron", "Firefox", "Firefox for iOS", "IE",
+     * "Microsoft Edge", "PhantomJS", "Safari", "SeaMonkey", "Silk",
+     * "Opera Mini" and "Opera"
+     *
+     * Mobile versions of some browsers have "Mobile" appended to their name:
+     * eg. "Chrome Mobile", "Firefox Mobile", "IE Mobile" and "Opera Mobile"
+     *
+     * @memberOf platform
+     * @type string|null
+     */
+    platform.name = name;
 
-          // Start the RTCRtpSender. The RTCRtpReceiver for this
-          // transceiver has already been started in setRemoteDescription.
-          pc._transceive(transceiver,
-              params.codecs.length > 0,
-              false);
-        }
-      });
-    }
+    /**
+     * The alpha/beta release indicator.
+     *
+     * @memberOf platform
+     * @type string|null
+     */
+    platform.prerelease = prerelease;
 
-    pc.localDescription = {
-      type: description.type,
-      sdp: description.sdp
+    /**
+     * The name of the product hosting the browser.
+     *
+     * The list of common products include:
+     *
+     * "BlackBerry", "Galaxy S4", "Lumia", "iPad", "iPod", "iPhone", "Kindle",
+     * "Kindle Fire", "Nexus", "Nook", "PlayBook", "TouchPad" and "Transformer"
+     *
+     * @memberOf platform
+     * @type string|null
+     */
+    platform.product = product;
+
+    /**
+     * The browser's user agent string.
+     *
+     * @memberOf platform
+     * @type string|null
+     */
+    platform.ua = ua;
+
+    /**
+     * The browser/environment version.
+     *
+     * @memberOf platform
+     * @type string|null
+     */
+    platform.version = name && version;
+
+    /**
+     * The name of the operating system.
+     *
+     * @memberOf platform
+     * @type Object
+     */
+    platform.os = os || {
+
+      /**
+       * The CPU architecture the OS is built for.
+       *
+       * @memberOf platform.os
+       * @type number|null
+       */
+      'architecture': null,
+
+      /**
+       * The family of the OS.
+       *
+       * Common values include:
+       * "Windows", "Windows Server 2008 R2 / 7", "Windows Server 2008 / Vista",
+       * "Windows XP", "OS X", "Ubuntu", "Debian", "Fedora", "Red Hat", "SuSE",
+       * "Android", "iOS" and "Windows Phone"
+       *
+       * @memberOf platform.os
+       * @type string|null
+       */
+      'family': null,
+
+      /**
+       * The version of the OS.
+       *
+       * @memberOf platform.os
+       * @type string|null
+       */
+      'version': null,
+
+      /**
+       * Returns the OS string.
+       *
+       * @memberOf platform.os
+       * @returns {string} The OS string.
+       */
+      'toString': function() { return 'null'; }
     };
-    if (description.type === 'offer') {
-      pc._updateSignalingState('have-local-offer');
-    } else {
-      pc._updateSignalingState('stable');
+
+    platform.parse = parse;
+    platform.toString = toStringPlatform;
+
+    if (platform.version) {
+      description.unshift(version);
     }
-
-    return Promise.resolve();
-  };
-
-  RTCPeerConnection.prototype.setRemoteDescription = function(description) {
-    var pc = this;
-
-    // Note: pranswer is not supported.
-    if (['offer', 'answer'].indexOf(description.type) === -1) {
-      return Promise.reject(makeError('TypeError',
-          'Unsupported type "' + description.type + '"'));
+    if (platform.name) {
+      description.unshift(name);
     }
-
-    if (!isActionAllowedInSignalingState('setRemoteDescription',
-        description.type, pc.signalingState) || pc._isClosed) {
-      return Promise.reject(makeError('InvalidStateError',
-          'Can not set remote ' + description.type +
-          ' in state ' + pc.signalingState));
+    if (os && name && !(os == String(os).split(' ')[0] && (os == name.split(' ')[0] || product))) {
+      description.push(product ? '(' + os + ')' : 'on ' + os);
     }
+    if (description.length) {
+      platform.description = description.join(' ');
+    }
+    return platform;
+  }
 
-    var streams = {};
-    pc.remoteStreams.forEach(function(stream) {
-      streams[stream.id] = stream;
+  /*--------------------------------------------------------------------------*/
+
+  // Export platform.
+  var platform = parse();
+
+  // Some AMD build optimizers, like r.js, check for condition patterns like the following:
+  if (true) {
+    // Expose platform on the global object to prevent errors when platform is
+    // loaded by a script tag in the presence of an AMD loader.
+    // See http://requirejs.org/docs/errors.html#mismatch for more details.
+    root.platform = platform;
+
+    // Define as an anonymous module so platform can be aliased through path mapping.
+    !(__WEBPACK_AMD_DEFINE_RESULT__ = (function() {
+      return platform;
+    }).call(exports, __webpack_require__, exports, module),
+				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+  }
+  // Check for `exports` after `define` in case a build optimizer adds an `exports` object.
+  else if (freeExports && freeModule) {
+    // Export for CommonJS support.
+    forOwn(platform, function(value, key) {
+      freeExports[key] = value;
     });
-    var receiverList = [];
-    var sections = SDPUtils.splitSections(description.sdp);
-    var sessionpart = sections.shift();
-    var isIceLite = SDPUtils.matchPrefix(sessionpart,
-        'a=ice-lite').length > 0;
-    var usingBundle = SDPUtils.matchPrefix(sessionpart,
-        'a=group:BUNDLE ').length > 0;
-    pc.usingBundle = usingBundle;
-    var iceOptions = SDPUtils.matchPrefix(sessionpart,
-        'a=ice-options:')[0];
-    if (iceOptions) {
-      pc.canTrickleIceCandidates = iceOptions.substr(14).split(' ')
-          .indexOf('trickle') >= 0;
-    } else {
-      pc.canTrickleIceCandidates = false;
-    }
-
-    sections.forEach(function(mediaSection, sdpMLineIndex) {
-      var lines = SDPUtils.splitLines(mediaSection);
-      var kind = SDPUtils.getKind(mediaSection);
-      // treat bundle-only as not-rejected.
-      var rejected = SDPUtils.isRejected(mediaSection) &&
-          SDPUtils.matchPrefix(mediaSection, 'a=bundle-only').length === 0;
-      var protocol = lines[0].substr(2).split(' ')[2];
-
-      var direction = SDPUtils.getDirection(mediaSection, sessionpart);
-      var remoteMsid = SDPUtils.parseMsid(mediaSection);
-
-      var mid = SDPUtils.getMid(mediaSection) || SDPUtils.generateIdentifier();
-
-      // Reject datachannels which are not implemented yet.
-      if ((kind === 'application' && protocol === 'DTLS/SCTP') || rejected) {
-        // TODO: this is dangerous in the case where a non-rejected m-line
-        //     becomes rejected.
-        pc.transceivers[sdpMLineIndex] = {
-          mid: mid,
-          kind: kind,
-          rejected: true
-        };
-        return;
-      }
-
-      if (!rejected && pc.transceivers[sdpMLineIndex] &&
-          pc.transceivers[sdpMLineIndex].rejected) {
-        // recycle a rejected transceiver.
-        pc.transceivers[sdpMLineIndex] = pc._createTransceiver(kind, true);
-      }
-
-      var transceiver;
-      var iceGatherer;
-      var iceTransport;
-      var dtlsTransport;
-      var rtpReceiver;
-      var sendEncodingParameters;
-      var recvEncodingParameters;
-      var localCapabilities;
-
-      var track;
-      // FIXME: ensure the mediaSection has rtcp-mux set.
-      var remoteCapabilities = SDPUtils.parseRtpParameters(mediaSection);
-      var remoteIceParameters;
-      var remoteDtlsParameters;
-      if (!rejected) {
-        remoteIceParameters = SDPUtils.getIceParameters(mediaSection,
-            sessionpart);
-        remoteDtlsParameters = SDPUtils.getDtlsParameters(mediaSection,
-            sessionpart);
-        remoteDtlsParameters.role = 'client';
-      }
-      recvEncodingParameters =
-          SDPUtils.parseRtpEncodingParameters(mediaSection);
-
-      var rtcpParameters = SDPUtils.parseRtcpParameters(mediaSection);
-
-      var isComplete = SDPUtils.matchPrefix(mediaSection,
-          'a=end-of-candidates', sessionpart).length > 0;
-      var cands = SDPUtils.matchPrefix(mediaSection, 'a=candidate:')
-          .map(function(cand) {
-            return SDPUtils.parseCandidate(cand);
-          })
-          .filter(function(cand) {
-            return cand.component === 1;
-          });
-
-      // Check if we can use BUNDLE and dispose transports.
-      if ((description.type === 'offer' || description.type === 'answer') &&
-          !rejected && usingBundle && sdpMLineIndex > 0 &&
-          pc.transceivers[sdpMLineIndex]) {
-        pc._disposeIceAndDtlsTransports(sdpMLineIndex);
-        pc.transceivers[sdpMLineIndex].iceGatherer =
-            pc.transceivers[0].iceGatherer;
-        pc.transceivers[sdpMLineIndex].iceTransport =
-            pc.transceivers[0].iceTransport;
-        pc.transceivers[sdpMLineIndex].dtlsTransport =
-            pc.transceivers[0].dtlsTransport;
-        if (pc.transceivers[sdpMLineIndex].rtpSender) {
-          pc.transceivers[sdpMLineIndex].rtpSender.setTransport(
-              pc.transceivers[0].dtlsTransport);
-        }
-        if (pc.transceivers[sdpMLineIndex].rtpReceiver) {
-          pc.transceivers[sdpMLineIndex].rtpReceiver.setTransport(
-              pc.transceivers[0].dtlsTransport);
-        }
-      }
-      if (description.type === 'offer' && !rejected) {
-        transceiver = pc.transceivers[sdpMLineIndex] ||
-            pc._createTransceiver(kind);
-        transceiver.mid = mid;
-
-        if (!transceiver.iceGatherer) {
-          transceiver.iceGatherer = pc._createIceGatherer(sdpMLineIndex,
-              usingBundle);
-        }
-
-        if (cands.length && transceiver.iceTransport.state === 'new') {
-          if (isComplete && (!usingBundle || sdpMLineIndex === 0)) {
-            transceiver.iceTransport.setRemoteCandidates(cands);
-          } else {
-            cands.forEach(function(candidate) {
-              maybeAddCandidate(transceiver.iceTransport, candidate);
-            });
-          }
-        }
-
-        localCapabilities = window.RTCRtpReceiver.getCapabilities(kind);
-
-        // filter RTX until additional stuff needed for RTX is implemented
-        // in adapter.js
-        if (edgeVersion < 15019) {
-          localCapabilities.codecs = localCapabilities.codecs.filter(
-              function(codec) {
-                return codec.name !== 'rtx';
-              });
-        }
-
-        sendEncodingParameters = transceiver.sendEncodingParameters || [{
-          ssrc: (2 * sdpMLineIndex + 2) * 1001
-        }];
-
-        // TODO: rewrite to use http://w3c.github.io/webrtc-pc/#set-associated-remote-streams
-        var isNewTrack = false;
-        if (direction === 'sendrecv' || direction === 'sendonly') {
-          isNewTrack = !transceiver.rtpReceiver;
-          rtpReceiver = transceiver.rtpReceiver ||
-              new window.RTCRtpReceiver(transceiver.dtlsTransport, kind);
-
-          if (isNewTrack) {
-            var stream;
-            track = rtpReceiver.track;
-            // FIXME: does not work with Plan B.
-            if (remoteMsid && remoteMsid.stream === '-') {
-              // no-op. a stream id of '-' means: no associated stream.
-            } else if (remoteMsid) {
-              if (!streams[remoteMsid.stream]) {
-                streams[remoteMsid.stream] = new window.MediaStream();
-                Object.defineProperty(streams[remoteMsid.stream], 'id', {
-                  get: function() {
-                    return remoteMsid.stream;
-                  }
-                });
-              }
-              Object.defineProperty(track, 'id', {
-                get: function() {
-                  return remoteMsid.track;
-                }
-              });
-              stream = streams[remoteMsid.stream];
-            } else {
-              if (!streams.default) {
-                streams.default = new window.MediaStream();
-              }
-              stream = streams.default;
-            }
-            if (stream) {
-              addTrackToStreamAndFireEvent(track, stream);
-              transceiver.associatedRemoteMediaStreams.push(stream);
-            }
-            receiverList.push([track, rtpReceiver, stream]);
-          }
-        } else if (transceiver.rtpReceiver && transceiver.rtpReceiver.track) {
-          transceiver.associatedRemoteMediaStreams.forEach(function(s) {
-            var nativeTrack = s.getTracks().find(function(t) {
-              return t.id === transceiver.rtpReceiver.track.id;
-            });
-            if (nativeTrack) {
-              removeTrackFromStreamAndFireEvent(nativeTrack, s);
-            }
-          });
-          transceiver.associatedRemoteMediaStreams = [];
-        }
-
-        transceiver.localCapabilities = localCapabilities;
-        transceiver.remoteCapabilities = remoteCapabilities;
-        transceiver.rtpReceiver = rtpReceiver;
-        transceiver.rtcpParameters = rtcpParameters;
-        transceiver.sendEncodingParameters = sendEncodingParameters;
-        transceiver.recvEncodingParameters = recvEncodingParameters;
-
-        // Start the RTCRtpReceiver now. The RTPSender is started in
-        // setLocalDescription.
-        pc._transceive(pc.transceivers[sdpMLineIndex],
-            false,
-            isNewTrack);
-      } else if (description.type === 'answer' && !rejected) {
-        transceiver = pc.transceivers[sdpMLineIndex];
-        iceGatherer = transceiver.iceGatherer;
-        iceTransport = transceiver.iceTransport;
-        dtlsTransport = transceiver.dtlsTransport;
-        rtpReceiver = transceiver.rtpReceiver;
-        sendEncodingParameters = transceiver.sendEncodingParameters;
-        localCapabilities = transceiver.localCapabilities;
-
-        pc.transceivers[sdpMLineIndex].recvEncodingParameters =
-            recvEncodingParameters;
-        pc.transceivers[sdpMLineIndex].remoteCapabilities =
-            remoteCapabilities;
-        pc.transceivers[sdpMLineIndex].rtcpParameters = rtcpParameters;
-
-        if (cands.length && iceTransport.state === 'new') {
-          if ((isIceLite || isComplete) &&
-              (!usingBundle || sdpMLineIndex === 0)) {
-            iceTransport.setRemoteCandidates(cands);
-          } else {
-            cands.forEach(function(candidate) {
-              maybeAddCandidate(transceiver.iceTransport, candidate);
-            });
-          }
-        }
-
-        if (!usingBundle || sdpMLineIndex === 0) {
-          if (iceTransport.state === 'new') {
-            iceTransport.start(iceGatherer, remoteIceParameters,
-                'controlling');
-          }
-          if (dtlsTransport.state === 'new') {
-            dtlsTransport.start(remoteDtlsParameters);
-          }
-        }
-
-        pc._transceive(transceiver,
-            direction === 'sendrecv' || direction === 'recvonly',
-            direction === 'sendrecv' || direction === 'sendonly');
-
-        // TODO: rewrite to use http://w3c.github.io/webrtc-pc/#set-associated-remote-streams
-        if (rtpReceiver &&
-            (direction === 'sendrecv' || direction === 'sendonly')) {
-          track = rtpReceiver.track;
-          if (remoteMsid) {
-            if (!streams[remoteMsid.stream]) {
-              streams[remoteMsid.stream] = new window.MediaStream();
-            }
-            addTrackToStreamAndFireEvent(track, streams[remoteMsid.stream]);
-            receiverList.push([track, rtpReceiver, streams[remoteMsid.stream]]);
-          } else {
-            if (!streams.default) {
-              streams.default = new window.MediaStream();
-            }
-            addTrackToStreamAndFireEvent(track, streams.default);
-            receiverList.push([track, rtpReceiver, streams.default]);
-          }
-        } else {
-          // FIXME: actually the receiver should be created later.
-          delete transceiver.rtpReceiver;
-        }
-      }
-    });
-
-    if (pc._dtlsRole === undefined) {
-      pc._dtlsRole = description.type === 'offer' ? 'active' : 'passive';
-    }
-
-    pc.remoteDescription = {
-      type: description.type,
-      sdp: description.sdp
-    };
-    if (description.type === 'offer') {
-      pc._updateSignalingState('have-remote-offer');
-    } else {
-      pc._updateSignalingState('stable');
-    }
-    Object.keys(streams).forEach(function(sid) {
-      var stream = streams[sid];
-      if (stream.getTracks().length) {
-        if (pc.remoteStreams.indexOf(stream) === -1) {
-          pc.remoteStreams.push(stream);
-          var event = new Event('addstream');
-          event.stream = stream;
-          window.setTimeout(function() {
-            pc._dispatchEvent('addstream', event);
-          });
-        }
-
-        receiverList.forEach(function(item) {
-          var track = item[0];
-          var receiver = item[1];
-          if (stream.id !== item[2].id) {
-            return;
-          }
-          fireAddTrack(pc, track, receiver, [stream]);
-        });
-      }
-    });
-    receiverList.forEach(function(item) {
-      if (item[2]) {
-        return;
-      }
-      fireAddTrack(pc, item[0], item[1], []);
-    });
-
-    // check whether addIceCandidate({}) was called within four seconds after
-    // setRemoteDescription.
-    window.setTimeout(function() {
-      if (!(pc && pc.transceivers)) {
-        return;
-      }
-      pc.transceivers.forEach(function(transceiver) {
-        if (transceiver.iceTransport &&
-            transceiver.iceTransport.state === 'new' &&
-            transceiver.iceTransport.getRemoteCandidates().length > 0) {
-          console.warn('Timeout for addRemoteCandidate. Consider sending ' +
-              'an end-of-candidates notification');
-          transceiver.iceTransport.addRemoteCandidate({});
-        }
-      });
-    }, 4000);
-
-    return Promise.resolve();
-  };
-
-  RTCPeerConnection.prototype.close = function() {
-    this.transceivers.forEach(function(transceiver) {
-      /* not yet
-      if (transceiver.iceGatherer) {
-        transceiver.iceGatherer.close();
-      }
-      */
-      if (transceiver.iceTransport) {
-        transceiver.iceTransport.stop();
-      }
-      if (transceiver.dtlsTransport) {
-        transceiver.dtlsTransport.stop();
-      }
-      if (transceiver.rtpSender) {
-        transceiver.rtpSender.stop();
-      }
-      if (transceiver.rtpReceiver) {
-        transceiver.rtpReceiver.stop();
-      }
-    });
-    // FIXME: clean up tracks, local streams, remote streams, etc
-    this._isClosed = true;
-    this._updateSignalingState('closed');
-  };
-
-  // Update the signaling state.
-  RTCPeerConnection.prototype._updateSignalingState = function(newState) {
-    this.signalingState = newState;
-    var event = new Event('signalingstatechange');
-    this._dispatchEvent('signalingstatechange', event);
-  };
-
-  // Determine whether to fire the negotiationneeded event.
-  RTCPeerConnection.prototype._maybeFireNegotiationNeeded = function() {
-    var pc = this;
-    if (this.signalingState !== 'stable' || this.needNegotiation === true) {
-      return;
-    }
-    this.needNegotiation = true;
-    window.setTimeout(function() {
-      if (pc.needNegotiation) {
-        pc.needNegotiation = false;
-        var event = new Event('negotiationneeded');
-        pc._dispatchEvent('negotiationneeded', event);
-      }
-    }, 0);
-  };
-
-  // Update the ice connection state.
-  RTCPeerConnection.prototype._updateIceConnectionState = function() {
-    var newState;
-    var states = {
-      'new': 0,
-      closed: 0,
-      checking: 0,
-      connected: 0,
-      completed: 0,
-      disconnected: 0,
-      failed: 0
-    };
-    this.transceivers.forEach(function(transceiver) {
-      states[transceiver.iceTransport.state]++;
-    });
-
-    newState = 'new';
-    if (states.failed > 0) {
-      newState = 'failed';
-    } else if (states.checking > 0) {
-      newState = 'checking';
-    } else if (states.disconnected > 0) {
-      newState = 'disconnected';
-    } else if (states.new > 0) {
-      newState = 'new';
-    } else if (states.connected > 0) {
-      newState = 'connected';
-    } else if (states.completed > 0) {
-      newState = 'completed';
-    }
-
-    if (newState !== this.iceConnectionState) {
-      this.iceConnectionState = newState;
-      var event = new Event('iceconnectionstatechange');
-      this._dispatchEvent('iceconnectionstatechange', event);
-    }
-  };
-
-  // Update the connection state.
-  RTCPeerConnection.prototype._updateConnectionState = function() {
-    var newState;
-    var states = {
-      'new': 0,
-      closed: 0,
-      connecting: 0,
-      connected: 0,
-      completed: 0,
-      disconnected: 0,
-      failed: 0
-    };
-    this.transceivers.forEach(function(transceiver) {
-      states[transceiver.iceTransport.state]++;
-      states[transceiver.dtlsTransport.state]++;
-    });
-    // ICETransport.completed and connected are the same for this purpose.
-    states.connected += states.completed;
-
-    newState = 'new';
-    if (states.failed > 0) {
-      newState = 'failed';
-    } else if (states.connecting > 0) {
-      newState = 'connecting';
-    } else if (states.disconnected > 0) {
-      newState = 'disconnected';
-    } else if (states.new > 0) {
-      newState = 'new';
-    } else if (states.connected > 0) {
-      newState = 'connected';
-    }
-
-    if (newState !== this.connectionState) {
-      this.connectionState = newState;
-      var event = new Event('connectionstatechange');
-      this._dispatchEvent('connectionstatechange', event);
-    }
-  };
-
-  RTCPeerConnection.prototype.createOffer = function() {
-    var pc = this;
-
-    if (pc._isClosed) {
-      return Promise.reject(makeError('InvalidStateError',
-          'Can not call createOffer after close'));
-    }
-
-    var numAudioTracks = pc.transceivers.filter(function(t) {
-      return t.kind === 'audio';
-    }).length;
-    var numVideoTracks = pc.transceivers.filter(function(t) {
-      return t.kind === 'video';
-    }).length;
-
-    // Determine number of audio and video tracks we need to send/recv.
-    var offerOptions = arguments[0];
-    if (offerOptions) {
-      // Reject Chrome legacy constraints.
-      if (offerOptions.mandatory || offerOptions.optional) {
-        throw new TypeError(
-            'Legacy mandatory/optional constraints not supported.');
-      }
-      if (offerOptions.offerToReceiveAudio !== undefined) {
-        if (offerOptions.offerToReceiveAudio === true) {
-          numAudioTracks = 1;
-        } else if (offerOptions.offerToReceiveAudio === false) {
-          numAudioTracks = 0;
-        } else {
-          numAudioTracks = offerOptions.offerToReceiveAudio;
-        }
-      }
-      if (offerOptions.offerToReceiveVideo !== undefined) {
-        if (offerOptions.offerToReceiveVideo === true) {
-          numVideoTracks = 1;
-        } else if (offerOptions.offerToReceiveVideo === false) {
-          numVideoTracks = 0;
-        } else {
-          numVideoTracks = offerOptions.offerToReceiveVideo;
-        }
-      }
-    }
-
-    pc.transceivers.forEach(function(transceiver) {
-      if (transceiver.kind === 'audio') {
-        numAudioTracks--;
-        if (numAudioTracks < 0) {
-          transceiver.wantReceive = false;
-        }
-      } else if (transceiver.kind === 'video') {
-        numVideoTracks--;
-        if (numVideoTracks < 0) {
-          transceiver.wantReceive = false;
-        }
-      }
-    });
-
-    // Create M-lines for recvonly streams.
-    while (numAudioTracks > 0 || numVideoTracks > 0) {
-      if (numAudioTracks > 0) {
-        pc._createTransceiver('audio');
-        numAudioTracks--;
-      }
-      if (numVideoTracks > 0) {
-        pc._createTransceiver('video');
-        numVideoTracks--;
-      }
-    }
-
-    var sdp = SDPUtils.writeSessionBoilerplate(pc._sdpSessionId,
-        pc._sdpSessionVersion++);
-    pc.transceivers.forEach(function(transceiver, sdpMLineIndex) {
-      // For each track, create an ice gatherer, ice transport,
-      // dtls transport, potentially rtpsender and rtpreceiver.
-      var track = transceiver.track;
-      var kind = transceiver.kind;
-      var mid = transceiver.mid || SDPUtils.generateIdentifier();
-      transceiver.mid = mid;
-
-      if (!transceiver.iceGatherer) {
-        transceiver.iceGatherer = pc._createIceGatherer(sdpMLineIndex,
-            pc.usingBundle);
-      }
-
-      var localCapabilities = window.RTCRtpSender.getCapabilities(kind);
-      // filter RTX until additional stuff needed for RTX is implemented
-      // in adapter.js
-      if (edgeVersion < 15019) {
-        localCapabilities.codecs = localCapabilities.codecs.filter(
-            function(codec) {
-              return codec.name !== 'rtx';
-            });
-      }
-      localCapabilities.codecs.forEach(function(codec) {
-        // work around https://bugs.chromium.org/p/webrtc/issues/detail?id=6552
-        // by adding level-asymmetry-allowed=1
-        if (codec.name === 'H264' &&
-            codec.parameters['level-asymmetry-allowed'] === undefined) {
-          codec.parameters['level-asymmetry-allowed'] = '1';
-        }
-
-        // for subsequent offers, we might have to re-use the payload
-        // type of the last offer.
-        if (transceiver.remoteCapabilities &&
-            transceiver.remoteCapabilities.codecs) {
-          transceiver.remoteCapabilities.codecs.forEach(function(remoteCodec) {
-            if (codec.name.toLowerCase() === remoteCodec.name.toLowerCase() &&
-                codec.clockRate === remoteCodec.clockRate) {
-              codec.preferredPayloadType = remoteCodec.payloadType;
-            }
-          });
-        }
-      });
-      localCapabilities.headerExtensions.forEach(function(hdrExt) {
-        var remoteExtensions = transceiver.remoteCapabilities &&
-            transceiver.remoteCapabilities.headerExtensions || [];
-        remoteExtensions.forEach(function(rHdrExt) {
-          if (hdrExt.uri === rHdrExt.uri) {
-            hdrExt.id = rHdrExt.id;
-          }
-        });
-      });
-
-      // generate an ssrc now, to be used later in rtpSender.send
-      var sendEncodingParameters = transceiver.sendEncodingParameters || [{
-        ssrc: (2 * sdpMLineIndex + 1) * 1001
-      }];
-      if (track) {
-        // add RTX
-        if (edgeVersion >= 15019 && kind === 'video' &&
-            !sendEncodingParameters[0].rtx) {
-          sendEncodingParameters[0].rtx = {
-            ssrc: sendEncodingParameters[0].ssrc + 1
-          };
-        }
-      }
-
-      if (transceiver.wantReceive) {
-        transceiver.rtpReceiver = new window.RTCRtpReceiver(
-            transceiver.dtlsTransport, kind);
-      }
-
-      transceiver.localCapabilities = localCapabilities;
-      transceiver.sendEncodingParameters = sendEncodingParameters;
-    });
-
-    // always offer BUNDLE and dispose on return if not supported.
-    if (pc._config.bundlePolicy !== 'max-compat') {
-      sdp += 'a=group:BUNDLE ' + pc.transceivers.map(function(t) {
-        return t.mid;
-      }).join(' ') + '\r\n';
-    }
-    sdp += 'a=ice-options:trickle\r\n';
-
-    pc.transceivers.forEach(function(transceiver, sdpMLineIndex) {
-      sdp += writeMediaSection(transceiver, transceiver.localCapabilities,
-          'offer', transceiver.stream, pc._dtlsRole);
-      sdp += 'a=rtcp-rsize\r\n';
-
-      if (transceiver.iceGatherer && pc.iceGatheringState !== 'new' &&
-          (sdpMLineIndex === 0 || !pc.usingBundle)) {
-        transceiver.iceGatherer.getLocalCandidates().forEach(function(cand) {
-          cand.component = 1;
-          sdp += 'a=' + SDPUtils.writeCandidate(cand) + '\r\n';
-        });
-
-        if (transceiver.iceGatherer.state === 'completed') {
-          sdp += 'a=end-of-candidates\r\n';
-        }
-      }
-    });
-
-    var desc = new window.RTCSessionDescription({
-      type: 'offer',
-      sdp: sdp
-    });
-    return Promise.resolve(desc);
-  };
-
-  RTCPeerConnection.prototype.createAnswer = function() {
-    var pc = this;
-
-    if (pc._isClosed) {
-      return Promise.reject(makeError('InvalidStateError',
-          'Can not call createAnswer after close'));
-    }
-
-    if (!(pc.signalingState === 'have-remote-offer' ||
-        pc.signalingState === 'have-local-pranswer')) {
-      return Promise.reject(makeError('InvalidStateError',
-          'Can not call createAnswer in signalingState ' + pc.signalingState));
-    }
-
-    var sdp = SDPUtils.writeSessionBoilerplate(pc._sdpSessionId,
-        pc._sdpSessionVersion++);
-    if (pc.usingBundle) {
-      sdp += 'a=group:BUNDLE ' + pc.transceivers.map(function(t) {
-        return t.mid;
-      }).join(' ') + '\r\n';
-    }
-    var mediaSectionsInOffer = SDPUtils.getMediaSections(
-        pc.remoteDescription.sdp).length;
-    pc.transceivers.forEach(function(transceiver, sdpMLineIndex) {
-      if (sdpMLineIndex + 1 > mediaSectionsInOffer) {
-        return;
-      }
-      if (transceiver.rejected) {
-        if (transceiver.kind === 'application') {
-          sdp += 'm=application 0 DTLS/SCTP 5000\r\n';
-        } else if (transceiver.kind === 'audio') {
-          sdp += 'm=audio 0 UDP/TLS/RTP/SAVPF 0\r\n' +
-              'a=rtpmap:0 PCMU/8000\r\n';
-        } else if (transceiver.kind === 'video') {
-          sdp += 'm=video 0 UDP/TLS/RTP/SAVPF 120\r\n' +
-              'a=rtpmap:120 VP8/90000\r\n';
-        }
-        sdp += 'c=IN IP4 0.0.0.0\r\n' +
-            'a=inactive\r\n' +
-            'a=mid:' + transceiver.mid + '\r\n';
-        return;
-      }
-
-      // FIXME: look at direction.
-      if (transceiver.stream) {
-        var localTrack;
-        if (transceiver.kind === 'audio') {
-          localTrack = transceiver.stream.getAudioTracks()[0];
-        } else if (transceiver.kind === 'video') {
-          localTrack = transceiver.stream.getVideoTracks()[0];
-        }
-        if (localTrack) {
-          // add RTX
-          if (edgeVersion >= 15019 && transceiver.kind === 'video' &&
-              !transceiver.sendEncodingParameters[0].rtx) {
-            transceiver.sendEncodingParameters[0].rtx = {
-              ssrc: transceiver.sendEncodingParameters[0].ssrc + 1
-            };
-          }
-        }
-      }
-
-      // Calculate intersection of capabilities.
-      var commonCapabilities = getCommonCapabilities(
-          transceiver.localCapabilities,
-          transceiver.remoteCapabilities);
-
-      var hasRtx = commonCapabilities.codecs.filter(function(c) {
-        return c.name.toLowerCase() === 'rtx';
-      }).length;
-      if (!hasRtx && transceiver.sendEncodingParameters[0].rtx) {
-        delete transceiver.sendEncodingParameters[0].rtx;
-      }
-
-      sdp += writeMediaSection(transceiver, commonCapabilities,
-          'answer', transceiver.stream, pc._dtlsRole);
-      if (transceiver.rtcpParameters &&
-          transceiver.rtcpParameters.reducedSize) {
-        sdp += 'a=rtcp-rsize\r\n';
-      }
-    });
-
-    var desc = new window.RTCSessionDescription({
-      type: 'answer',
-      sdp: sdp
-    });
-    return Promise.resolve(desc);
-  };
-
-  RTCPeerConnection.prototype.addIceCandidate = function(candidate) {
-    var pc = this;
-    var sections;
-    if (candidate && !(candidate.sdpMLineIndex !== undefined ||
-        candidate.sdpMid)) {
-      return Promise.reject(new TypeError('sdpMLineIndex or sdpMid required'));
-    }
-
-    // TODO: needs to go into ops queue.
-    return new Promise(function(resolve, reject) {
-      if (!pc.remoteDescription) {
-        return reject(makeError('InvalidStateError',
-            'Can not add ICE candidate without a remote description'));
-      } else if (!candidate || candidate.candidate === '') {
-        for (var j = 0; j < pc.transceivers.length; j++) {
-          if (pc.transceivers[j].rejected) {
-            continue;
-          }
-          pc.transceivers[j].iceTransport.addRemoteCandidate({});
-          sections = SDPUtils.getMediaSections(pc.remoteDescription.sdp);
-          sections[j] += 'a=end-of-candidates\r\n';
-          pc.remoteDescription.sdp =
-              SDPUtils.getDescription(pc.remoteDescription.sdp) +
-              sections.join('');
-          if (pc.usingBundle) {
-            break;
-          }
-        }
-      } else {
-        var sdpMLineIndex = candidate.sdpMLineIndex;
-        if (candidate.sdpMid) {
-          for (var i = 0; i < pc.transceivers.length; i++) {
-            if (pc.transceivers[i].mid === candidate.sdpMid) {
-              sdpMLineIndex = i;
-              break;
-            }
-          }
-        }
-        var transceiver = pc.transceivers[sdpMLineIndex];
-        if (transceiver) {
-          if (transceiver.rejected) {
-            return resolve();
-          }
-          var cand = Object.keys(candidate.candidate).length > 0 ?
-              SDPUtils.parseCandidate(candidate.candidate) : {};
-          // Ignore Chrome's invalid candidates since Edge does not like them.
-          if (cand.protocol === 'tcp' && (cand.port === 0 || cand.port === 9)) {
-            return resolve();
-          }
-          // Ignore RTCP candidates, we assume RTCP-MUX.
-          if (cand.component && cand.component !== 1) {
-            return resolve();
-          }
-          // when using bundle, avoid adding candidates to the wrong
-          // ice transport. And avoid adding candidates added in the SDP.
-          if (sdpMLineIndex === 0 || (sdpMLineIndex > 0 &&
-              transceiver.iceTransport !== pc.transceivers[0].iceTransport)) {
-            if (!maybeAddCandidate(transceiver.iceTransport, cand)) {
-              return reject(makeError('OperationError',
-                  'Can not add ICE candidate'));
-            }
-          }
-
-          // update the remoteDescription.
-          var candidateString = candidate.candidate.trim();
-          if (candidateString.indexOf('a=') === 0) {
-            candidateString = candidateString.substr(2);
-          }
-          sections = SDPUtils.getMediaSections(pc.remoteDescription.sdp);
-          sections[sdpMLineIndex] += 'a=' +
-              (cand.type ? candidateString : 'end-of-candidates')
-              + '\r\n';
-          pc.remoteDescription.sdp = sections.join('');
-        } else {
-          return reject(makeError('OperationError',
-              'Can not add ICE candidate'));
-        }
-      }
-      resolve();
-    });
-  };
-
-  RTCPeerConnection.prototype.getStats = function() {
-    var promises = [];
-    this.transceivers.forEach(function(transceiver) {
-      ['rtpSender', 'rtpReceiver', 'iceGatherer', 'iceTransport',
-          'dtlsTransport'].forEach(function(method) {
-            if (transceiver[method]) {
-              promises.push(transceiver[method].getStats());
-            }
-          });
-    });
-    var fixStatsType = function(stat) {
-      return {
-        inboundrtp: 'inbound-rtp',
-        outboundrtp: 'outbound-rtp',
-        candidatepair: 'candidate-pair',
-        localcandidate: 'local-candidate',
-        remotecandidate: 'remote-candidate'
-      }[stat.type] || stat.type;
-    };
-    return new Promise(function(resolve) {
-      // shim getStats with maplike support
-      var results = new Map();
-      Promise.all(promises).then(function(res) {
-        res.forEach(function(result) {
-          Object.keys(result).forEach(function(id) {
-            result[id].type = fixStatsType(result[id]);
-            results.set(id, result[id]);
-          });
-        });
-        resolve(results);
-      });
-    });
-  };
-
-  // legacy callback shims. Should be moved to adapter.js some days.
-  var methods = ['createOffer', 'createAnswer'];
-  methods.forEach(function(method) {
-    var nativeMethod = RTCPeerConnection.prototype[method];
-    RTCPeerConnection.prototype[method] = function() {
-      var args = arguments;
-      if (typeof args[0] === 'function' ||
-          typeof args[1] === 'function') { // legacy
-        return nativeMethod.apply(this, [arguments[2]])
-        .then(function(description) {
-          if (typeof args[0] === 'function') {
-            args[0].apply(null, [description]);
-          }
-        }, function(error) {
-          if (typeof args[1] === 'function') {
-            args[1].apply(null, [error]);
-          }
-        });
-      }
-      return nativeMethod.apply(this, arguments);
-    };
-  });
-
-  methods = ['setLocalDescription', 'setRemoteDescription', 'addIceCandidate'];
-  methods.forEach(function(method) {
-    var nativeMethod = RTCPeerConnection.prototype[method];
-    RTCPeerConnection.prototype[method] = function() {
-      var args = arguments;
-      if (typeof args[1] === 'function' ||
-          typeof args[2] === 'function') { // legacy
-        return nativeMethod.apply(this, arguments)
-        .then(function() {
-          if (typeof args[1] === 'function') {
-            args[1].apply(null);
-          }
-        }, function(error) {
-          if (typeof args[2] === 'function') {
-            args[2].apply(null, [error]);
-          }
-        });
-      }
-      return nativeMethod.apply(this, arguments);
-    };
-  });
-
-  // getStats is special. It doesn't have a spec legacy method yet we support
-  // getStats(something, cb) without error callbacks.
-  ['getStats'].forEach(function(method) {
-    var nativeMethod = RTCPeerConnection.prototype[method];
-    RTCPeerConnection.prototype[method] = function() {
-      var args = arguments;
-      if (typeof args[1] === 'function') {
-        return nativeMethod.apply(this, arguments)
-        .then(function() {
-          if (typeof args[1] === 'function') {
-            args[1].apply(null);
-          }
-        });
-      }
-      return nativeMethod.apply(this, arguments);
-    };
-  });
-
-  return RTCPeerConnection;
-};
-
+  }
+  else {
+    // Export to the global object.
+    root.platform = platform;
+  }
+}.call(this));
+
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__("./node_modules/webpack/buildin/module.js")(module), __webpack_require__("./node_modules/webpack/buildin/global.js")))
 
 /***/ }),
 
@@ -9765,690 +9248,6 @@ exports.parse = function(sdp) {
 
 /***/ }),
 
-/***/ "../../../../openvidu-browser/node_modules/sdp/sdp.js":
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
- /* eslint-env node */
-
-
-// SDP helpers.
-var SDPUtils = {};
-
-// Generate an alphanumeric identifier for cname or mids.
-// TODO: use UUIDs instead? https://gist.github.com/jed/982883
-SDPUtils.generateIdentifier = function() {
-  return Math.random().toString(36).substr(2, 10);
-};
-
-// The RTCP CNAME used by all peerconnections from the same JS.
-SDPUtils.localCName = SDPUtils.generateIdentifier();
-
-// Splits SDP into lines, dealing with both CRLF and LF.
-SDPUtils.splitLines = function(blob) {
-  return blob.trim().split('\n').map(function(line) {
-    return line.trim();
-  });
-};
-// Splits SDP into sessionpart and mediasections. Ensures CRLF.
-SDPUtils.splitSections = function(blob) {
-  var parts = blob.split('\nm=');
-  return parts.map(function(part, index) {
-    return (index > 0 ? 'm=' + part : part).trim() + '\r\n';
-  });
-};
-
-// returns the session description.
-SDPUtils.getDescription = function(blob) {
-  var sections = SDPUtils.splitSections(blob);
-  return sections && sections[0];
-};
-
-// returns the individual media sections.
-SDPUtils.getMediaSections = function(blob) {
-  var sections = SDPUtils.splitSections(blob);
-  sections.shift();
-  return sections;
-};
-
-// Returns lines that start with a certain prefix.
-SDPUtils.matchPrefix = function(blob, prefix) {
-  return SDPUtils.splitLines(blob).filter(function(line) {
-    return line.indexOf(prefix) === 0;
-  });
-};
-
-// Parses an ICE candidate line. Sample input:
-// candidate:702786350 2 udp 41819902 8.8.8.8 60769 typ relay raddr 8.8.8.8
-// rport 55996"
-SDPUtils.parseCandidate = function(line) {
-  var parts;
-  // Parse both variants.
-  if (line.indexOf('a=candidate:') === 0) {
-    parts = line.substring(12).split(' ');
-  } else {
-    parts = line.substring(10).split(' ');
-  }
-
-  var candidate = {
-    foundation: parts[0],
-    component: parseInt(parts[1], 10),
-    protocol: parts[2].toLowerCase(),
-    priority: parseInt(parts[3], 10),
-    ip: parts[4],
-    port: parseInt(parts[5], 10),
-    // skip parts[6] == 'typ'
-    type: parts[7]
-  };
-
-  for (var i = 8; i < parts.length; i += 2) {
-    switch (parts[i]) {
-      case 'raddr':
-        candidate.relatedAddress = parts[i + 1];
-        break;
-      case 'rport':
-        candidate.relatedPort = parseInt(parts[i + 1], 10);
-        break;
-      case 'tcptype':
-        candidate.tcpType = parts[i + 1];
-        break;
-      case 'ufrag':
-        candidate.ufrag = parts[i + 1]; // for backward compability.
-        candidate.usernameFragment = parts[i + 1];
-        break;
-      default: // extension handling, in particular ufrag
-        candidate[parts[i]] = parts[i + 1];
-        break;
-    }
-  }
-  return candidate;
-};
-
-// Translates a candidate object into SDP candidate attribute.
-SDPUtils.writeCandidate = function(candidate) {
-  var sdp = [];
-  sdp.push(candidate.foundation);
-  sdp.push(candidate.component);
-  sdp.push(candidate.protocol.toUpperCase());
-  sdp.push(candidate.priority);
-  sdp.push(candidate.ip);
-  sdp.push(candidate.port);
-
-  var type = candidate.type;
-  sdp.push('typ');
-  sdp.push(type);
-  if (type !== 'host' && candidate.relatedAddress &&
-      candidate.relatedPort) {
-    sdp.push('raddr');
-    sdp.push(candidate.relatedAddress); // was: relAddr
-    sdp.push('rport');
-    sdp.push(candidate.relatedPort); // was: relPort
-  }
-  if (candidate.tcpType && candidate.protocol.toLowerCase() === 'tcp') {
-    sdp.push('tcptype');
-    sdp.push(candidate.tcpType);
-  }
-  if (candidate.usernameFragment || candidate.ufrag) {
-    sdp.push('ufrag');
-    sdp.push(candidate.usernameFragment || candidate.ufrag);
-  }
-  return 'candidate:' + sdp.join(' ');
-};
-
-// Parses an ice-options line, returns an array of option tags.
-// a=ice-options:foo bar
-SDPUtils.parseIceOptions = function(line) {
-  return line.substr(14).split(' ');
-}
-
-// Parses an rtpmap line, returns RTCRtpCoddecParameters. Sample input:
-// a=rtpmap:111 opus/48000/2
-SDPUtils.parseRtpMap = function(line) {
-  var parts = line.substr(9).split(' ');
-  var parsed = {
-    payloadType: parseInt(parts.shift(), 10) // was: id
-  };
-
-  parts = parts[0].split('/');
-
-  parsed.name = parts[0];
-  parsed.clockRate = parseInt(parts[1], 10); // was: clockrate
-  // was: channels
-  parsed.numChannels = parts.length === 3 ? parseInt(parts[2], 10) : 1;
-  return parsed;
-};
-
-// Generate an a=rtpmap line from RTCRtpCodecCapability or
-// RTCRtpCodecParameters.
-SDPUtils.writeRtpMap = function(codec) {
-  var pt = codec.payloadType;
-  if (codec.preferredPayloadType !== undefined) {
-    pt = codec.preferredPayloadType;
-  }
-  return 'a=rtpmap:' + pt + ' ' + codec.name + '/' + codec.clockRate +
-      (codec.numChannels !== 1 ? '/' + codec.numChannels : '') + '\r\n';
-};
-
-// Parses an a=extmap line (headerextension from RFC 5285). Sample input:
-// a=extmap:2 urn:ietf:params:rtp-hdrext:toffset
-// a=extmap:2/sendonly urn:ietf:params:rtp-hdrext:toffset
-SDPUtils.parseExtmap = function(line) {
-  var parts = line.substr(9).split(' ');
-  return {
-    id: parseInt(parts[0], 10),
-    direction: parts[0].indexOf('/') > 0 ? parts[0].split('/')[1] : 'sendrecv',
-    uri: parts[1]
-  };
-};
-
-// Generates a=extmap line from RTCRtpHeaderExtensionParameters or
-// RTCRtpHeaderExtension.
-SDPUtils.writeExtmap = function(headerExtension) {
-  return 'a=extmap:' + (headerExtension.id || headerExtension.preferredId) +
-      (headerExtension.direction && headerExtension.direction !== 'sendrecv'
-          ? '/' + headerExtension.direction
-          : '') +
-      ' ' + headerExtension.uri + '\r\n';
-};
-
-// Parses an ftmp line, returns dictionary. Sample input:
-// a=fmtp:96 vbr=on;cng=on
-// Also deals with vbr=on; cng=on
-SDPUtils.parseFmtp = function(line) {
-  var parsed = {};
-  var kv;
-  var parts = line.substr(line.indexOf(' ') + 1).split(';');
-  for (var j = 0; j < parts.length; j++) {
-    kv = parts[j].trim().split('=');
-    parsed[kv[0].trim()] = kv[1];
-  }
-  return parsed;
-};
-
-// Generates an a=ftmp line from RTCRtpCodecCapability or RTCRtpCodecParameters.
-SDPUtils.writeFmtp = function(codec) {
-  var line = '';
-  var pt = codec.payloadType;
-  if (codec.preferredPayloadType !== undefined) {
-    pt = codec.preferredPayloadType;
-  }
-  if (codec.parameters && Object.keys(codec.parameters).length) {
-    var params = [];
-    Object.keys(codec.parameters).forEach(function(param) {
-      params.push(param + '=' + codec.parameters[param]);
-    });
-    line += 'a=fmtp:' + pt + ' ' + params.join(';') + '\r\n';
-  }
-  return line;
-};
-
-// Parses an rtcp-fb line, returns RTCPRtcpFeedback object. Sample input:
-// a=rtcp-fb:98 nack rpsi
-SDPUtils.parseRtcpFb = function(line) {
-  var parts = line.substr(line.indexOf(' ') + 1).split(' ');
-  return {
-    type: parts.shift(),
-    parameter: parts.join(' ')
-  };
-};
-// Generate a=rtcp-fb lines from RTCRtpCodecCapability or RTCRtpCodecParameters.
-SDPUtils.writeRtcpFb = function(codec) {
-  var lines = '';
-  var pt = codec.payloadType;
-  if (codec.preferredPayloadType !== undefined) {
-    pt = codec.preferredPayloadType;
-  }
-  if (codec.rtcpFeedback && codec.rtcpFeedback.length) {
-    // FIXME: special handling for trr-int?
-    codec.rtcpFeedback.forEach(function(fb) {
-      lines += 'a=rtcp-fb:' + pt + ' ' + fb.type +
-      (fb.parameter && fb.parameter.length ? ' ' + fb.parameter : '') +
-          '\r\n';
-    });
-  }
-  return lines;
-};
-
-// Parses an RFC 5576 ssrc media attribute. Sample input:
-// a=ssrc:3735928559 cname:something
-SDPUtils.parseSsrcMedia = function(line) {
-  var sp = line.indexOf(' ');
-  var parts = {
-    ssrc: parseInt(line.substr(7, sp - 7), 10)
-  };
-  var colon = line.indexOf(':', sp);
-  if (colon > -1) {
-    parts.attribute = line.substr(sp + 1, colon - sp - 1);
-    parts.value = line.substr(colon + 1);
-  } else {
-    parts.attribute = line.substr(sp + 1);
-  }
-  return parts;
-};
-
-// Extracts the MID (RFC 5888) from a media section.
-// returns the MID or undefined if no mid line was found.
-SDPUtils.getMid = function(mediaSection) {
-  var mid = SDPUtils.matchPrefix(mediaSection, 'a=mid:')[0];
-  if (mid) {
-    return mid.substr(6);
-  }
-}
-
-SDPUtils.parseFingerprint = function(line) {
-  var parts = line.substr(14).split(' ');
-  return {
-    algorithm: parts[0].toLowerCase(), // algorithm is case-sensitive in Edge.
-    value: parts[1]
-  };
-};
-
-// Extracts DTLS parameters from SDP media section or sessionpart.
-// FIXME: for consistency with other functions this should only
-//   get the fingerprint line as input. See also getIceParameters.
-SDPUtils.getDtlsParameters = function(mediaSection, sessionpart) {
-  var lines = SDPUtils.matchPrefix(mediaSection + sessionpart,
-      'a=fingerprint:');
-  // Note: a=setup line is ignored since we use the 'auto' role.
-  // Note2: 'algorithm' is not case sensitive except in Edge.
-  return {
-    role: 'auto',
-    fingerprints: lines.map(SDPUtils.parseFingerprint)
-  };
-};
-
-// Serializes DTLS parameters to SDP.
-SDPUtils.writeDtlsParameters = function(params, setupType) {
-  var sdp = 'a=setup:' + setupType + '\r\n';
-  params.fingerprints.forEach(function(fp) {
-    sdp += 'a=fingerprint:' + fp.algorithm + ' ' + fp.value + '\r\n';
-  });
-  return sdp;
-};
-// Parses ICE information from SDP media section or sessionpart.
-// FIXME: for consistency with other functions this should only
-//   get the ice-ufrag and ice-pwd lines as input.
-SDPUtils.getIceParameters = function(mediaSection, sessionpart) {
-  var lines = SDPUtils.splitLines(mediaSection);
-  // Search in session part, too.
-  lines = lines.concat(SDPUtils.splitLines(sessionpart));
-  var iceParameters = {
-    usernameFragment: lines.filter(function(line) {
-      return line.indexOf('a=ice-ufrag:') === 0;
-    })[0].substr(12),
-    password: lines.filter(function(line) {
-      return line.indexOf('a=ice-pwd:') === 0;
-    })[0].substr(10)
-  };
-  return iceParameters;
-};
-
-// Serializes ICE parameters to SDP.
-SDPUtils.writeIceParameters = function(params) {
-  return 'a=ice-ufrag:' + params.usernameFragment + '\r\n' +
-      'a=ice-pwd:' + params.password + '\r\n';
-};
-
-// Parses the SDP media section and returns RTCRtpParameters.
-SDPUtils.parseRtpParameters = function(mediaSection) {
-  var description = {
-    codecs: [],
-    headerExtensions: [],
-    fecMechanisms: [],
-    rtcp: []
-  };
-  var lines = SDPUtils.splitLines(mediaSection);
-  var mline = lines[0].split(' ');
-  for (var i = 3; i < mline.length; i++) { // find all codecs from mline[3..]
-    var pt = mline[i];
-    var rtpmapline = SDPUtils.matchPrefix(
-        mediaSection, 'a=rtpmap:' + pt + ' ')[0];
-    if (rtpmapline) {
-      var codec = SDPUtils.parseRtpMap(rtpmapline);
-      var fmtps = SDPUtils.matchPrefix(
-          mediaSection, 'a=fmtp:' + pt + ' ');
-      // Only the first a=fmtp:<pt> is considered.
-      codec.parameters = fmtps.length ? SDPUtils.parseFmtp(fmtps[0]) : {};
-      codec.rtcpFeedback = SDPUtils.matchPrefix(
-          mediaSection, 'a=rtcp-fb:' + pt + ' ')
-        .map(SDPUtils.parseRtcpFb);
-      description.codecs.push(codec);
-      // parse FEC mechanisms from rtpmap lines.
-      switch (codec.name.toUpperCase()) {
-        case 'RED':
-        case 'ULPFEC':
-          description.fecMechanisms.push(codec.name.toUpperCase());
-          break;
-        default: // only RED and ULPFEC are recognized as FEC mechanisms.
-          break;
-      }
-    }
-  }
-  SDPUtils.matchPrefix(mediaSection, 'a=extmap:').forEach(function(line) {
-    description.headerExtensions.push(SDPUtils.parseExtmap(line));
-  });
-  // FIXME: parse rtcp.
-  return description;
-};
-
-// Generates parts of the SDP media section describing the capabilities /
-// parameters.
-SDPUtils.writeRtpDescription = function(kind, caps) {
-  var sdp = '';
-
-  // Build the mline.
-  sdp += 'm=' + kind + ' ';
-  sdp += caps.codecs.length > 0 ? '9' : '0'; // reject if no codecs.
-  sdp += ' UDP/TLS/RTP/SAVPF ';
-  sdp += caps.codecs.map(function(codec) {
-    if (codec.preferredPayloadType !== undefined) {
-      return codec.preferredPayloadType;
-    }
-    return codec.payloadType;
-  }).join(' ') + '\r\n';
-
-  sdp += 'c=IN IP4 0.0.0.0\r\n';
-  sdp += 'a=rtcp:9 IN IP4 0.0.0.0\r\n';
-
-  // Add a=rtpmap lines for each codec. Also fmtp and rtcp-fb.
-  caps.codecs.forEach(function(codec) {
-    sdp += SDPUtils.writeRtpMap(codec);
-    sdp += SDPUtils.writeFmtp(codec);
-    sdp += SDPUtils.writeRtcpFb(codec);
-  });
-  var maxptime = 0;
-  caps.codecs.forEach(function(codec) {
-    if (codec.maxptime > maxptime) {
-      maxptime = codec.maxptime;
-    }
-  });
-  if (maxptime > 0) {
-    sdp += 'a=maxptime:' + maxptime + '\r\n';
-  }
-  sdp += 'a=rtcp-mux\r\n';
-
-  caps.headerExtensions.forEach(function(extension) {
-    sdp += SDPUtils.writeExtmap(extension);
-  });
-  // FIXME: write fecMechanisms.
-  return sdp;
-};
-
-// Parses the SDP media section and returns an array of
-// RTCRtpEncodingParameters.
-SDPUtils.parseRtpEncodingParameters = function(mediaSection) {
-  var encodingParameters = [];
-  var description = SDPUtils.parseRtpParameters(mediaSection);
-  var hasRed = description.fecMechanisms.indexOf('RED') !== -1;
-  var hasUlpfec = description.fecMechanisms.indexOf('ULPFEC') !== -1;
-
-  // filter a=ssrc:... cname:, ignore PlanB-msid
-  var ssrcs = SDPUtils.matchPrefix(mediaSection, 'a=ssrc:')
-  .map(function(line) {
-    return SDPUtils.parseSsrcMedia(line);
-  })
-  .filter(function(parts) {
-    return parts.attribute === 'cname';
-  });
-  var primarySsrc = ssrcs.length > 0 && ssrcs[0].ssrc;
-  var secondarySsrc;
-
-  var flows = SDPUtils.matchPrefix(mediaSection, 'a=ssrc-group:FID')
-  .map(function(line) {
-    var parts = line.split(' ');
-    parts.shift();
-    return parts.map(function(part) {
-      return parseInt(part, 10);
-    });
-  });
-  if (flows.length > 0 && flows[0].length > 1 && flows[0][0] === primarySsrc) {
-    secondarySsrc = flows[0][1];
-  }
-
-  description.codecs.forEach(function(codec) {
-    if (codec.name.toUpperCase() === 'RTX' && codec.parameters.apt) {
-      var encParam = {
-        ssrc: primarySsrc,
-        codecPayloadType: parseInt(codec.parameters.apt, 10),
-        rtx: {
-          ssrc: secondarySsrc
-        }
-      };
-      encodingParameters.push(encParam);
-      if (hasRed) {
-        encParam = JSON.parse(JSON.stringify(encParam));
-        encParam.fec = {
-          ssrc: secondarySsrc,
-          mechanism: hasUlpfec ? 'red+ulpfec' : 'red'
-        };
-        encodingParameters.push(encParam);
-      }
-    }
-  });
-  if (encodingParameters.length === 0 && primarySsrc) {
-    encodingParameters.push({
-      ssrc: primarySsrc
-    });
-  }
-
-  // we support both b=AS and b=TIAS but interpret AS as TIAS.
-  var bandwidth = SDPUtils.matchPrefix(mediaSection, 'b=');
-  if (bandwidth.length) {
-    if (bandwidth[0].indexOf('b=TIAS:') === 0) {
-      bandwidth = parseInt(bandwidth[0].substr(7), 10);
-    } else if (bandwidth[0].indexOf('b=AS:') === 0) {
-      // use formula from JSEP to convert b=AS to TIAS value.
-      bandwidth = parseInt(bandwidth[0].substr(5), 10) * 1000 * 0.95
-          - (50 * 40 * 8);
-    } else {
-      bandwidth = undefined;
-    }
-    encodingParameters.forEach(function(params) {
-      params.maxBitrate = bandwidth;
-    });
-  }
-  return encodingParameters;
-};
-
-// parses http://draft.ortc.org/#rtcrtcpparameters*
-SDPUtils.parseRtcpParameters = function(mediaSection) {
-  var rtcpParameters = {};
-
-  var cname;
-  // Gets the first SSRC. Note that with RTX there might be multiple
-  // SSRCs.
-  var remoteSsrc = SDPUtils.matchPrefix(mediaSection, 'a=ssrc:')
-      .map(function(line) {
-        return SDPUtils.parseSsrcMedia(line);
-      })
-      .filter(function(obj) {
-        return obj.attribute === 'cname';
-      })[0];
-  if (remoteSsrc) {
-    rtcpParameters.cname = remoteSsrc.value;
-    rtcpParameters.ssrc = remoteSsrc.ssrc;
-  }
-
-  // Edge uses the compound attribute instead of reducedSize
-  // compound is !reducedSize
-  var rsize = SDPUtils.matchPrefix(mediaSection, 'a=rtcp-rsize');
-  rtcpParameters.reducedSize = rsize.length > 0;
-  rtcpParameters.compound = rsize.length === 0;
-
-  // parses the rtcp-mux attrіbute.
-  // Note that Edge does not support unmuxed RTCP.
-  var mux = SDPUtils.matchPrefix(mediaSection, 'a=rtcp-mux');
-  rtcpParameters.mux = mux.length > 0;
-
-  return rtcpParameters;
-};
-
-// parses either a=msid: or a=ssrc:... msid lines and returns
-// the id of the MediaStream and MediaStreamTrack.
-SDPUtils.parseMsid = function(mediaSection) {
-  var parts;
-  var spec = SDPUtils.matchPrefix(mediaSection, 'a=msid:');
-  if (spec.length === 1) {
-    parts = spec[0].substr(7).split(' ');
-    return {stream: parts[0], track: parts[1]};
-  }
-  var planB = SDPUtils.matchPrefix(mediaSection, 'a=ssrc:')
-  .map(function(line) {
-    return SDPUtils.parseSsrcMedia(line);
-  })
-  .filter(function(parts) {
-    return parts.attribute === 'msid';
-  });
-  if (planB.length > 0) {
-    parts = planB[0].value.split(' ');
-    return {stream: parts[0], track: parts[1]};
-  }
-};
-
-// Generate a session ID for SDP.
-// https://tools.ietf.org/html/draft-ietf-rtcweb-jsep-20#section-5.2.1
-// recommends using a cryptographically random +ve 64-bit value
-// but right now this should be acceptable and within the right range
-SDPUtils.generateSessionId = function() {
-  return Math.random().toString().substr(2, 21);
-};
-
-// Write boilder plate for start of SDP
-// sessId argument is optional - if not supplied it will
-// be generated randomly
-// sessVersion is optional and defaults to 2
-SDPUtils.writeSessionBoilerplate = function(sessId, sessVer) {
-  var sessionId;
-  var version = sessVer !== undefined ? sessVer : 2;
-  if (sessId) {
-    sessionId = sessId;
-  } else {
-    sessionId = SDPUtils.generateSessionId();
-  }
-  // FIXME: sess-id should be an NTP timestamp.
-  return 'v=0\r\n' +
-      'o=thisisadapterortc ' + sessionId + ' ' + version + ' IN IP4 127.0.0.1\r\n' +
-      's=-\r\n' +
-      't=0 0\r\n';
-};
-
-SDPUtils.writeMediaSection = function(transceiver, caps, type, stream) {
-  var sdp = SDPUtils.writeRtpDescription(transceiver.kind, caps);
-
-  // Map ICE parameters (ufrag, pwd) to SDP.
-  sdp += SDPUtils.writeIceParameters(
-      transceiver.iceGatherer.getLocalParameters());
-
-  // Map DTLS parameters to SDP.
-  sdp += SDPUtils.writeDtlsParameters(
-      transceiver.dtlsTransport.getLocalParameters(),
-      type === 'offer' ? 'actpass' : 'active');
-
-  sdp += 'a=mid:' + transceiver.mid + '\r\n';
-
-  if (transceiver.direction) {
-    sdp += 'a=' + transceiver.direction + '\r\n';
-  } else if (transceiver.rtpSender && transceiver.rtpReceiver) {
-    sdp += 'a=sendrecv\r\n';
-  } else if (transceiver.rtpSender) {
-    sdp += 'a=sendonly\r\n';
-  } else if (transceiver.rtpReceiver) {
-    sdp += 'a=recvonly\r\n';
-  } else {
-    sdp += 'a=inactive\r\n';
-  }
-
-  if (transceiver.rtpSender) {
-    // spec.
-    var msid = 'msid:' + stream.id + ' ' +
-        transceiver.rtpSender.track.id + '\r\n';
-    sdp += 'a=' + msid;
-
-    // for Chrome.
-    sdp += 'a=ssrc:' + transceiver.sendEncodingParameters[0].ssrc +
-        ' ' + msid;
-    if (transceiver.sendEncodingParameters[0].rtx) {
-      sdp += 'a=ssrc:' + transceiver.sendEncodingParameters[0].rtx.ssrc +
-          ' ' + msid;
-      sdp += 'a=ssrc-group:FID ' +
-          transceiver.sendEncodingParameters[0].ssrc + ' ' +
-          transceiver.sendEncodingParameters[0].rtx.ssrc +
-          '\r\n';
-    }
-  }
-  // FIXME: this should be written by writeRtpDescription.
-  sdp += 'a=ssrc:' + transceiver.sendEncodingParameters[0].ssrc +
-      ' cname:' + SDPUtils.localCName + '\r\n';
-  if (transceiver.rtpSender && transceiver.sendEncodingParameters[0].rtx) {
-    sdp += 'a=ssrc:' + transceiver.sendEncodingParameters[0].rtx.ssrc +
-        ' cname:' + SDPUtils.localCName + '\r\n';
-  }
-  return sdp;
-};
-
-// Gets the direction from the mediaSection or the sessionpart.
-SDPUtils.getDirection = function(mediaSection, sessionpart) {
-  // Look for sendrecv, sendonly, recvonly, inactive, default to sendrecv.
-  var lines = SDPUtils.splitLines(mediaSection);
-  for (var i = 0; i < lines.length; i++) {
-    switch (lines[i]) {
-      case 'a=sendrecv':
-      case 'a=sendonly':
-      case 'a=recvonly':
-      case 'a=inactive':
-        return lines[i].substr(2);
-      default:
-        // FIXME: What should happen here?
-    }
-  }
-  if (sessionpart) {
-    return SDPUtils.getDirection(sessionpart);
-  }
-  return 'sendrecv';
-};
-
-SDPUtils.getKind = function(mediaSection) {
-  var lines = SDPUtils.splitLines(mediaSection);
-  var mline = lines[0].split(' ');
-  return mline[0].substr(2);
-};
-
-SDPUtils.isRejected = function(mediaSection) {
-  return mediaSection.split(' ', 2)[1] === '0';
-};
-
-SDPUtils.parseMLine = function(mediaSection) {
-  var lines = SDPUtils.splitLines(mediaSection);
-  var parts = lines[0].substr(2).split(' ');
-  return {
-    kind: parts[0],
-    port: parseInt(parts[1], 10),
-    protocol: parts[2],
-    fmt: parts.slice(3).join(' ')
-  };
-};
-
-SDPUtils.parseOLine = function(mediaSection) {
-  var line = SDPUtils.matchPrefix(mediaSection, 'o=')[0];
-  var parts = line.substr(2).split(' ');
-  return {
-    username: parts[0],
-    sessionId: parts[1],
-    sessionVersion: parseInt(parts[2], 10),
-    netType: parts[3],
-    addressType: parts[4],
-    address: parts[5],
-  };
-}
-
-// Expose public methods.
-if (true) {
-  module.exports = SDPUtils;
-}
-
-
-/***/ }),
-
 /***/ "../../../../openvidu-browser/node_modules/ua-parser-js/src/ua-parser.js":
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -11575,31 +10374,32 @@ module.exports = bytesToUuid;
 /***/ }),
 
 /***/ "../../../../openvidu-browser/node_modules/uuid/lib/rng-browser.js":
-/***/ (function(module, exports, __webpack_require__) {
+/***/ (function(module, exports) {
 
-/* WEBPACK VAR INJECTION */(function(global) {// Unique ID creation requires a high quality random # generator.  In the
+// Unique ID creation requires a high quality random # generator.  In the
 // browser this is a little complicated due to unknown quality of Math.random()
 // and inconsistent support for the `crypto` API.  We do the best we can via
 // feature-detection
-var rng;
 
-var crypto = global.crypto || global.msCrypto; // for IE 11
-if (crypto && crypto.getRandomValues) {
+// getRandomValues needs to be invoked in a context where "this" is a Crypto implementation.
+var getRandomValues = (typeof(crypto) != 'undefined' && crypto.getRandomValues.bind(crypto)) ||
+                      (typeof(msCrypto) != 'undefined' && msCrypto.getRandomValues.bind(msCrypto));
+if (getRandomValues) {
   // WHATWG crypto RNG - http://wiki.whatwg.org/wiki/Crypto
   var rnds8 = new Uint8Array(16); // eslint-disable-line no-undef
-  rng = function whatwgRNG() {
-    crypto.getRandomValues(rnds8);
+
+  module.exports = function whatwgRNG() {
+    getRandomValues(rnds8);
     return rnds8;
   };
-}
-
-if (!rng) {
+} else {
   // Math.random()-based (RNG)
   //
   // If all else fails, use Math.random().  It's fast, but is of unspecified
   // quality.
   var rnds = new Array(16);
-  rng = function() {
+
+  module.exports = function mathRNG() {
     for (var i = 0, r; i < 16; i++) {
       if ((i & 0x03) === 0) r = Math.random() * 0x100000000;
       rnds[i] = r >>> ((i & 0x03) << 3) & 0xff;
@@ -11609,9 +10409,6 @@ if (!rng) {
   };
 }
 
-module.exports = rng;
-
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__("./node_modules/webpack/buildin/global.js")))
 
 /***/ }),
 
@@ -11626,20 +10423,12 @@ var bytesToUuid = __webpack_require__("../../../../openvidu-browser/node_modules
 // Inspired by https://github.com/LiosK/UUID.js
 // and http://docs.python.org/library/uuid.html
 
-// random #'s we need to init node and clockseq
-var _seedBytes = rng();
-
-// Per 4.5, create and 48-bit node id, (47 random bits + multicast bit = 1)
-var _nodeId = [
-  _seedBytes[0] | 0x01,
-  _seedBytes[1], _seedBytes[2], _seedBytes[3], _seedBytes[4], _seedBytes[5]
-];
-
-// Per 4.2.2, randomize (14 bit) clockseq
-var _clockseq = (_seedBytes[6] << 8 | _seedBytes[7]) & 0x3fff;
+var _nodeId;
+var _clockseq;
 
 // Previous uuid creation time
-var _lastMSecs = 0, _lastNSecs = 0;
+var _lastMSecs = 0;
+var _lastNSecs = 0;
 
 // See https://github.com/broofa/node-uuid for API details
 function v1(options, buf, offset) {
@@ -11647,8 +10436,26 @@ function v1(options, buf, offset) {
   var b = buf || [];
 
   options = options || {};
-
+  var node = options.node || _nodeId;
   var clockseq = options.clockseq !== undefined ? options.clockseq : _clockseq;
+
+  // node and clockseq need to be initialized to random values if they're not
+  // specified.  We do this lazily to minimize issues related to insufficient
+  // system entropy.  See #189
+  if (node == null || clockseq == null) {
+    var seedBytes = rng();
+    if (node == null) {
+      // Per 4.5, create and 48-bit node id, (47 random bits + multicast bit = 1)
+      node = _nodeId = [
+        seedBytes[0] | 0x01,
+        seedBytes[1], seedBytes[2], seedBytes[3], seedBytes[4], seedBytes[5]
+      ];
+    }
+    if (clockseq == null) {
+      // Per 4.2.2, randomize (14 bit) clockseq
+      clockseq = _clockseq = (seedBytes[6] << 8 | seedBytes[7]) & 0x3fff;
+    }
+  }
 
   // UUID timestamps are 100 nano-second units since the Gregorian epoch,
   // (1582-10-15 00:00).  JSNumbers aren't precise enough for this, so
@@ -11709,7 +10516,6 @@ function v1(options, buf, offset) {
   b[i++] = clockseq & 0xff;
 
   // `node`
-  var node = options.node || _nodeId;
   for (var n = 0; n < 6; ++n) {
     b[i + n] = node[n];
   }
@@ -11732,7 +10538,7 @@ function v4(options, buf, offset) {
   var i = buf && offset || 0;
 
   if (typeof(options) == 'string') {
-    buf = options == 'binary' ? new Array(16) : null;
+    buf = options === 'binary' ? new Array(16) : null;
     options = null;
   }
   options = options || {};
@@ -11754,2541 +10560,6 @@ function v4(options, buf, offset) {
 }
 
 module.exports = v4;
-
-
-/***/ }),
-
-/***/ "../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/adapter_core.js":
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(global) {/*
- *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
- *
- *  Use of this source code is governed by a BSD-style license
- *  that can be found in the LICENSE file in the root of the source
- *  tree.
- */
- /* eslint-env node */
-
-
-
-var adapterFactory = __webpack_require__("../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/adapter_factory.js");
-module.exports = adapterFactory({window: global.window});
-
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__("./node_modules/webpack/buildin/global.js")))
-
-/***/ }),
-
-/***/ "../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/adapter_factory.js":
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/*
- *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
- *
- *  Use of this source code is governed by a BSD-style license
- *  that can be found in the LICENSE file in the root of the source
- *  tree.
- */
- /* eslint-env node */
-
-
-
-var utils = __webpack_require__("../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/utils.js");
-// Shimming starts here.
-module.exports = function(dependencies, opts) {
-  var window = dependencies && dependencies.window;
-
-  var options = {
-    shimChrome: true,
-    shimFirefox: true,
-    shimEdge: true,
-    shimSafari: true,
-  };
-
-  for (var key in opts) {
-    if (hasOwnProperty.call(opts, key)) {
-      options[key] = opts[key];
-    }
-  }
-
-  // Utils.
-  var logging = utils.log;
-  var browserDetails = utils.detectBrowser(window);
-
-  // Uncomment the line below if you want logging to occur, including logging
-  // for the switch statement below. Can also be turned on in the browser via
-  // adapter.disableLog(false), but then logging from the switch statement below
-  // will not appear.
-  // require('./utils').disableLog(false);
-
-  // Browser shims.
-  var chromeShim = __webpack_require__("../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/chrome/chrome_shim.js") || null;
-  var edgeShim = __webpack_require__("../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/edge/edge_shim.js") || null;
-  var firefoxShim = __webpack_require__("../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/firefox/firefox_shim.js") || null;
-  var safariShim = __webpack_require__("../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/safari/safari_shim.js") || null;
-  var commonShim = __webpack_require__("../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/common_shim.js") || null;
-
-  // Export to the adapter global object visible in the browser.
-  var adapter = {
-    browserDetails: browserDetails,
-    commonShim: commonShim,
-    extractVersion: utils.extractVersion,
-    disableLog: utils.disableLog,
-    disableWarnings: utils.disableWarnings
-  };
-
-  // Shim browser if found.
-  switch (browserDetails.browser) {
-    case 'chrome':
-      if (!chromeShim || !chromeShim.shimPeerConnection ||
-          !options.shimChrome) {
-        logging('Chrome shim is not included in this adapter release.');
-        return adapter;
-      }
-      logging('adapter.js shimming chrome.');
-      // Export to the adapter global object visible in the browser.
-      adapter.browserShim = chromeShim;
-      commonShim.shimCreateObjectURL(window);
-
-      chromeShim.shimGetUserMedia(window);
-      chromeShim.shimMediaStream(window);
-      chromeShim.shimSourceObject(window);
-      chromeShim.shimPeerConnection(window);
-      chromeShim.shimOnTrack(window);
-      chromeShim.shimAddTrackRemoveTrack(window);
-      chromeShim.shimGetSendersWithDtmf(window);
-
-      commonShim.shimRTCIceCandidate(window);
-      commonShim.shimMaxMessageSize(window);
-      commonShim.shimSendThrowTypeError(window);
-      break;
-    case 'firefox':
-      if (!firefoxShim || !firefoxShim.shimPeerConnection ||
-          !options.shimFirefox) {
-        logging('Firefox shim is not included in this adapter release.');
-        return adapter;
-      }
-      logging('adapter.js shimming firefox.');
-      // Export to the adapter global object visible in the browser.
-      adapter.browserShim = firefoxShim;
-      commonShim.shimCreateObjectURL(window);
-
-      firefoxShim.shimGetUserMedia(window);
-      firefoxShim.shimSourceObject(window);
-      firefoxShim.shimPeerConnection(window);
-      firefoxShim.shimOnTrack(window);
-      firefoxShim.shimRemoveStream(window);
-
-      commonShim.shimRTCIceCandidate(window);
-      commonShim.shimMaxMessageSize(window);
-      commonShim.shimSendThrowTypeError(window);
-      break;
-    case 'edge':
-      if (!edgeShim || !edgeShim.shimPeerConnection || !options.shimEdge) {
-        logging('MS edge shim is not included in this adapter release.');
-        return adapter;
-      }
-      logging('adapter.js shimming edge.');
-      // Export to the adapter global object visible in the browser.
-      adapter.browserShim = edgeShim;
-      commonShim.shimCreateObjectURL(window);
-
-      edgeShim.shimGetUserMedia(window);
-      edgeShim.shimPeerConnection(window);
-      edgeShim.shimReplaceTrack(window);
-
-      // the edge shim implements the full RTCIceCandidate object.
-
-      commonShim.shimMaxMessageSize(window);
-      commonShim.shimSendThrowTypeError(window);
-      break;
-    case 'safari':
-      if (!safariShim || !options.shimSafari) {
-        logging('Safari shim is not included in this adapter release.');
-        return adapter;
-      }
-      logging('adapter.js shimming safari.');
-      // Export to the adapter global object visible in the browser.
-      adapter.browserShim = safariShim;
-      commonShim.shimCreateObjectURL(window);
-
-      safariShim.shimRTCIceServerUrls(window);
-      safariShim.shimCallbacksAPI(window);
-      safariShim.shimLocalStreamsAPI(window);
-      safariShim.shimRemoteStreamsAPI(window);
-      safariShim.shimTrackEventTransceiver(window);
-      safariShim.shimGetUserMedia(window);
-      safariShim.shimCreateOfferLegacy(window);
-
-      commonShim.shimRTCIceCandidate(window);
-      commonShim.shimMaxMessageSize(window);
-      commonShim.shimSendThrowTypeError(window);
-      break;
-    default:
-      logging('Unsupported browser!');
-      break;
-  }
-
-  return adapter;
-};
-
-
-/***/ }),
-
-/***/ "../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/chrome/chrome_shim.js":
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-/*
- *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
- *
- *  Use of this source code is governed by a BSD-style license
- *  that can be found in the LICENSE file in the root of the source
- *  tree.
- */
- /* eslint-env node */
-
-var utils = __webpack_require__("../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/utils.js");
-var logging = utils.log;
-
-module.exports = {
-  shimGetUserMedia: __webpack_require__("../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/chrome/getusermedia.js"),
-  shimMediaStream: function(window) {
-    window.MediaStream = window.MediaStream || window.webkitMediaStream;
-  },
-
-  shimOnTrack: function(window) {
-    if (typeof window === 'object' && window.RTCPeerConnection && !('ontrack' in
-        window.RTCPeerConnection.prototype)) {
-      Object.defineProperty(window.RTCPeerConnection.prototype, 'ontrack', {
-        get: function() {
-          return this._ontrack;
-        },
-        set: function(f) {
-          if (this._ontrack) {
-            this.removeEventListener('track', this._ontrack);
-          }
-          this.addEventListener('track', this._ontrack = f);
-        }
-      });
-      var origSetRemoteDescription =
-          window.RTCPeerConnection.prototype.setRemoteDescription;
-      window.RTCPeerConnection.prototype.setRemoteDescription = function() {
-        var pc = this;
-        if (!pc._ontrackpoly) {
-          pc._ontrackpoly = function(e) {
-            // onaddstream does not fire when a track is added to an existing
-            // stream. But stream.onaddtrack is implemented so we use that.
-            e.stream.addEventListener('addtrack', function(te) {
-              var receiver;
-              if (window.RTCPeerConnection.prototype.getReceivers) {
-                receiver = pc.getReceivers().find(function(r) {
-                  return r.track && r.track.id === te.track.id;
-                });
-              } else {
-                receiver = {track: te.track};
-              }
-
-              var event = new Event('track');
-              event.track = te.track;
-              event.receiver = receiver;
-              event.transceiver = {receiver: receiver};
-              event.streams = [e.stream];
-              pc.dispatchEvent(event);
-            });
-            e.stream.getTracks().forEach(function(track) {
-              var receiver;
-              if (window.RTCPeerConnection.prototype.getReceivers) {
-                receiver = pc.getReceivers().find(function(r) {
-                  return r.track && r.track.id === track.id;
-                });
-              } else {
-                receiver = {track: track};
-              }
-              var event = new Event('track');
-              event.track = track;
-              event.receiver = receiver;
-              event.transceiver = {receiver: receiver};
-              event.streams = [e.stream];
-              pc.dispatchEvent(event);
-            });
-          };
-          pc.addEventListener('addstream', pc._ontrackpoly);
-        }
-        return origSetRemoteDescription.apply(pc, arguments);
-      };
-    } else if (!('RTCRtpTransceiver' in window)) {
-      utils.wrapPeerConnectionEvent(window, 'track', function(e) {
-        if (!e.transceiver) {
-          e.transceiver = {receiver: e.receiver};
-        }
-        return e;
-      });
-    }
-  },
-
-  shimGetSendersWithDtmf: function(window) {
-    // Overrides addTrack/removeTrack, depends on shimAddTrackRemoveTrack.
-    if (typeof window === 'object' && window.RTCPeerConnection &&
-        !('getSenders' in window.RTCPeerConnection.prototype) &&
-        'createDTMFSender' in window.RTCPeerConnection.prototype) {
-      var shimSenderWithDtmf = function(pc, track) {
-        return {
-          track: track,
-          get dtmf() {
-            if (this._dtmf === undefined) {
-              if (track.kind === 'audio') {
-                this._dtmf = pc.createDTMFSender(track);
-              } else {
-                this._dtmf = null;
-              }
-            }
-            return this._dtmf;
-          },
-          _pc: pc
-        };
-      };
-
-      // augment addTrack when getSenders is not available.
-      if (!window.RTCPeerConnection.prototype.getSenders) {
-        window.RTCPeerConnection.prototype.getSenders = function() {
-          this._senders = this._senders || [];
-          return this._senders.slice(); // return a copy of the internal state.
-        };
-        var origAddTrack = window.RTCPeerConnection.prototype.addTrack;
-        window.RTCPeerConnection.prototype.addTrack = function(track, stream) {
-          var pc = this;
-          var sender = origAddTrack.apply(pc, arguments);
-          if (!sender) {
-            sender = shimSenderWithDtmf(pc, track);
-            pc._senders.push(sender);
-          }
-          return sender;
-        };
-
-        var origRemoveTrack = window.RTCPeerConnection.prototype.removeTrack;
-        window.RTCPeerConnection.prototype.removeTrack = function(sender) {
-          var pc = this;
-          origRemoveTrack.apply(pc, arguments);
-          var idx = pc._senders.indexOf(sender);
-          if (idx !== -1) {
-            pc._senders.splice(idx, 1);
-          }
-        };
-      }
-      var origAddStream = window.RTCPeerConnection.prototype.addStream;
-      window.RTCPeerConnection.prototype.addStream = function(stream) {
-        var pc = this;
-        pc._senders = pc._senders || [];
-        origAddStream.apply(pc, [stream]);
-        stream.getTracks().forEach(function(track) {
-          pc._senders.push(shimSenderWithDtmf(pc, track));
-        });
-      };
-
-      var origRemoveStream = window.RTCPeerConnection.prototype.removeStream;
-      window.RTCPeerConnection.prototype.removeStream = function(stream) {
-        var pc = this;
-        pc._senders = pc._senders || [];
-        origRemoveStream.apply(pc, [stream]);
-
-        stream.getTracks().forEach(function(track) {
-          var sender = pc._senders.find(function(s) {
-            return s.track === track;
-          });
-          if (sender) {
-            pc._senders.splice(pc._senders.indexOf(sender), 1); // remove sender
-          }
-        });
-      };
-    } else if (typeof window === 'object' && window.RTCPeerConnection &&
-               'getSenders' in window.RTCPeerConnection.prototype &&
-               'createDTMFSender' in window.RTCPeerConnection.prototype &&
-               window.RTCRtpSender &&
-               !('dtmf' in window.RTCRtpSender.prototype)) {
-      var origGetSenders = window.RTCPeerConnection.prototype.getSenders;
-      window.RTCPeerConnection.prototype.getSenders = function() {
-        var pc = this;
-        var senders = origGetSenders.apply(pc, []);
-        senders.forEach(function(sender) {
-          sender._pc = pc;
-        });
-        return senders;
-      };
-
-      Object.defineProperty(window.RTCRtpSender.prototype, 'dtmf', {
-        get: function() {
-          if (this._dtmf === undefined) {
-            if (this.track.kind === 'audio') {
-              this._dtmf = this._pc.createDTMFSender(this.track);
-            } else {
-              this._dtmf = null;
-            }
-          }
-          return this._dtmf;
-        }
-      });
-    }
-  },
-
-  shimSourceObject: function(window) {
-    var URL = window && window.URL;
-
-    if (typeof window === 'object') {
-      if (window.HTMLMediaElement &&
-        !('srcObject' in window.HTMLMediaElement.prototype)) {
-        // Shim the srcObject property, once, when HTMLMediaElement is found.
-        Object.defineProperty(window.HTMLMediaElement.prototype, 'srcObject', {
-          get: function() {
-            return this._srcObject;
-          },
-          set: function(stream) {
-            var self = this;
-            // Use _srcObject as a private property for this shim
-            this._srcObject = stream;
-            if (this.src) {
-              URL.revokeObjectURL(this.src);
-            }
-
-            if (!stream) {
-              this.src = '';
-              return undefined;
-            }
-            this.src = URL.createObjectURL(stream);
-            // We need to recreate the blob url when a track is added or
-            // removed. Doing it manually since we want to avoid a recursion.
-            stream.addEventListener('addtrack', function() {
-              if (self.src) {
-                URL.revokeObjectURL(self.src);
-              }
-              self.src = URL.createObjectURL(stream);
-            });
-            stream.addEventListener('removetrack', function() {
-              if (self.src) {
-                URL.revokeObjectURL(self.src);
-              }
-              self.src = URL.createObjectURL(stream);
-            });
-          }
-        });
-      }
-    }
-  },
-
-  shimAddTrackRemoveTrackWithNative: function(window) {
-    // shim addTrack/removeTrack with native variants in order to make
-    // the interactions with legacy getLocalStreams behave as in other browsers.
-    // Keeps a mapping stream.id => [stream, rtpsenders...]
-    window.RTCPeerConnection.prototype.getLocalStreams = function() {
-      var pc = this;
-      this._shimmedLocalStreams = this._shimmedLocalStreams || {};
-      return Object.keys(this._shimmedLocalStreams).map(function(streamId) {
-        return pc._shimmedLocalStreams[streamId][0];
-      });
-    };
-
-    var origAddTrack = window.RTCPeerConnection.prototype.addTrack;
-    window.RTCPeerConnection.prototype.addTrack = function(track, stream) {
-      if (!stream) {
-        return origAddTrack.apply(this, arguments);
-      }
-      this._shimmedLocalStreams = this._shimmedLocalStreams || {};
-
-      var sender = origAddTrack.apply(this, arguments);
-      if (!this._shimmedLocalStreams[stream.id]) {
-        this._shimmedLocalStreams[stream.id] = [stream, sender];
-      } else if (this._shimmedLocalStreams[stream.id].indexOf(sender) === -1) {
-        this._shimmedLocalStreams[stream.id].push(sender);
-      }
-      return sender;
-    };
-
-    var origAddStream = window.RTCPeerConnection.prototype.addStream;
-    window.RTCPeerConnection.prototype.addStream = function(stream) {
-      var pc = this;
-      this._shimmedLocalStreams = this._shimmedLocalStreams || {};
-
-      stream.getTracks().forEach(function(track) {
-        var alreadyExists = pc.getSenders().find(function(s) {
-          return s.track === track;
-        });
-        if (alreadyExists) {
-          throw new DOMException('Track already exists.',
-              'InvalidAccessError');
-        }
-      });
-      var existingSenders = pc.getSenders();
-      origAddStream.apply(this, arguments);
-      var newSenders = pc.getSenders().filter(function(newSender) {
-        return existingSenders.indexOf(newSender) === -1;
-      });
-      this._shimmedLocalStreams[stream.id] = [stream].concat(newSenders);
-    };
-
-    var origRemoveStream = window.RTCPeerConnection.prototype.removeStream;
-    window.RTCPeerConnection.prototype.removeStream = function(stream) {
-      this._shimmedLocalStreams = this._shimmedLocalStreams || {};
-      delete this._shimmedLocalStreams[stream.id];
-      return origRemoveStream.apply(this, arguments);
-    };
-
-    var origRemoveTrack = window.RTCPeerConnection.prototype.removeTrack;
-    window.RTCPeerConnection.prototype.removeTrack = function(sender) {
-      var pc = this;
-      this._shimmedLocalStreams = this._shimmedLocalStreams || {};
-      if (sender) {
-        Object.keys(this._shimmedLocalStreams).forEach(function(streamId) {
-          var idx = pc._shimmedLocalStreams[streamId].indexOf(sender);
-          if (idx !== -1) {
-            pc._shimmedLocalStreams[streamId].splice(idx, 1);
-          }
-          if (pc._shimmedLocalStreams[streamId].length === 1) {
-            delete pc._shimmedLocalStreams[streamId];
-          }
-        });
-      }
-      return origRemoveTrack.apply(this, arguments);
-    };
-  },
-
-  shimAddTrackRemoveTrack: function(window) {
-    var browserDetails = utils.detectBrowser(window);
-    // shim addTrack and removeTrack.
-    if (window.RTCPeerConnection.prototype.addTrack &&
-        browserDetails.version >= 65) {
-      return this.shimAddTrackRemoveTrackWithNative(window);
-    }
-
-    // also shim pc.getLocalStreams when addTrack is shimmed
-    // to return the original streams.
-    var origGetLocalStreams = window.RTCPeerConnection.prototype
-        .getLocalStreams;
-    window.RTCPeerConnection.prototype.getLocalStreams = function() {
-      var pc = this;
-      var nativeStreams = origGetLocalStreams.apply(this);
-      pc._reverseStreams = pc._reverseStreams || {};
-      return nativeStreams.map(function(stream) {
-        return pc._reverseStreams[stream.id];
-      });
-    };
-
-    var origAddStream = window.RTCPeerConnection.prototype.addStream;
-    window.RTCPeerConnection.prototype.addStream = function(stream) {
-      var pc = this;
-      pc._streams = pc._streams || {};
-      pc._reverseStreams = pc._reverseStreams || {};
-
-      stream.getTracks().forEach(function(track) {
-        var alreadyExists = pc.getSenders().find(function(s) {
-          return s.track === track;
-        });
-        if (alreadyExists) {
-          throw new DOMException('Track already exists.',
-              'InvalidAccessError');
-        }
-      });
-      // Add identity mapping for consistency with addTrack.
-      // Unless this is being used with a stream from addTrack.
-      if (!pc._reverseStreams[stream.id]) {
-        var newStream = new window.MediaStream(stream.getTracks());
-        pc._streams[stream.id] = newStream;
-        pc._reverseStreams[newStream.id] = stream;
-        stream = newStream;
-      }
-      origAddStream.apply(pc, [stream]);
-    };
-
-    var origRemoveStream = window.RTCPeerConnection.prototype.removeStream;
-    window.RTCPeerConnection.prototype.removeStream = function(stream) {
-      var pc = this;
-      pc._streams = pc._streams || {};
-      pc._reverseStreams = pc._reverseStreams || {};
-
-      origRemoveStream.apply(pc, [(pc._streams[stream.id] || stream)]);
-      delete pc._reverseStreams[(pc._streams[stream.id] ?
-          pc._streams[stream.id].id : stream.id)];
-      delete pc._streams[stream.id];
-    };
-
-    window.RTCPeerConnection.prototype.addTrack = function(track, stream) {
-      var pc = this;
-      if (pc.signalingState === 'closed') {
-        throw new DOMException(
-          'The RTCPeerConnection\'s signalingState is \'closed\'.',
-          'InvalidStateError');
-      }
-      var streams = [].slice.call(arguments, 1);
-      if (streams.length !== 1 ||
-          !streams[0].getTracks().find(function(t) {
-            return t === track;
-          })) {
-        // this is not fully correct but all we can manage without
-        // [[associated MediaStreams]] internal slot.
-        throw new DOMException(
-          'The adapter.js addTrack polyfill only supports a single ' +
-          ' stream which is associated with the specified track.',
-          'NotSupportedError');
-      }
-
-      var alreadyExists = pc.getSenders().find(function(s) {
-        return s.track === track;
-      });
-      if (alreadyExists) {
-        throw new DOMException('Track already exists.',
-            'InvalidAccessError');
-      }
-
-      pc._streams = pc._streams || {};
-      pc._reverseStreams = pc._reverseStreams || {};
-      var oldStream = pc._streams[stream.id];
-      if (oldStream) {
-        // this is using odd Chrome behaviour, use with caution:
-        // https://bugs.chromium.org/p/webrtc/issues/detail?id=7815
-        // Note: we rely on the high-level addTrack/dtmf shim to
-        // create the sender with a dtmf sender.
-        oldStream.addTrack(track);
-
-        // Trigger ONN async.
-        Promise.resolve().then(function() {
-          pc.dispatchEvent(new Event('negotiationneeded'));
-        });
-      } else {
-        var newStream = new window.MediaStream([track]);
-        pc._streams[stream.id] = newStream;
-        pc._reverseStreams[newStream.id] = stream;
-        pc.addStream(newStream);
-      }
-      return pc.getSenders().find(function(s) {
-        return s.track === track;
-      });
-    };
-
-    // replace the internal stream id with the external one and
-    // vice versa.
-    function replaceInternalStreamId(pc, description) {
-      var sdp = description.sdp;
-      Object.keys(pc._reverseStreams || []).forEach(function(internalId) {
-        var externalStream = pc._reverseStreams[internalId];
-        var internalStream = pc._streams[externalStream.id];
-        sdp = sdp.replace(new RegExp(internalStream.id, 'g'),
-            externalStream.id);
-      });
-      return new RTCSessionDescription({
-        type: description.type,
-        sdp: sdp
-      });
-    }
-    function replaceExternalStreamId(pc, description) {
-      var sdp = description.sdp;
-      Object.keys(pc._reverseStreams || []).forEach(function(internalId) {
-        var externalStream = pc._reverseStreams[internalId];
-        var internalStream = pc._streams[externalStream.id];
-        sdp = sdp.replace(new RegExp(externalStream.id, 'g'),
-            internalStream.id);
-      });
-      return new RTCSessionDescription({
-        type: description.type,
-        sdp: sdp
-      });
-    }
-    ['createOffer', 'createAnswer'].forEach(function(method) {
-      var nativeMethod = window.RTCPeerConnection.prototype[method];
-      window.RTCPeerConnection.prototype[method] = function() {
-        var pc = this;
-        var args = arguments;
-        var isLegacyCall = arguments.length &&
-            typeof arguments[0] === 'function';
-        if (isLegacyCall) {
-          return nativeMethod.apply(pc, [
-            function(description) {
-              var desc = replaceInternalStreamId(pc, description);
-              args[0].apply(null, [desc]);
-            },
-            function(err) {
-              if (args[1]) {
-                args[1].apply(null, err);
-              }
-            }, arguments[2]
-          ]);
-        }
-        return nativeMethod.apply(pc, arguments)
-        .then(function(description) {
-          return replaceInternalStreamId(pc, description);
-        });
-      };
-    });
-
-    var origSetLocalDescription =
-        window.RTCPeerConnection.prototype.setLocalDescription;
-    window.RTCPeerConnection.prototype.setLocalDescription = function() {
-      var pc = this;
-      if (!arguments.length || !arguments[0].type) {
-        return origSetLocalDescription.apply(pc, arguments);
-      }
-      arguments[0] = replaceExternalStreamId(pc, arguments[0]);
-      return origSetLocalDescription.apply(pc, arguments);
-    };
-
-    // TODO: mangle getStats: https://w3c.github.io/webrtc-stats/#dom-rtcmediastreamstats-streamidentifier
-
-    var origLocalDescription = Object.getOwnPropertyDescriptor(
-        window.RTCPeerConnection.prototype, 'localDescription');
-    Object.defineProperty(window.RTCPeerConnection.prototype,
-        'localDescription', {
-          get: function() {
-            var pc = this;
-            var description = origLocalDescription.get.apply(this);
-            if (description.type === '') {
-              return description;
-            }
-            return replaceInternalStreamId(pc, description);
-          }
-        });
-
-    window.RTCPeerConnection.prototype.removeTrack = function(sender) {
-      var pc = this;
-      if (pc.signalingState === 'closed') {
-        throw new DOMException(
-          'The RTCPeerConnection\'s signalingState is \'closed\'.',
-          'InvalidStateError');
-      }
-      // We can not yet check for sender instanceof RTCRtpSender
-      // since we shim RTPSender. So we check if sender._pc is set.
-      if (!sender._pc) {
-        throw new DOMException('Argument 1 of RTCPeerConnection.removeTrack ' +
-            'does not implement interface RTCRtpSender.', 'TypeError');
-      }
-      var isLocal = sender._pc === pc;
-      if (!isLocal) {
-        throw new DOMException('Sender was not created by this connection.',
-            'InvalidAccessError');
-      }
-
-      // Search for the native stream the senders track belongs to.
-      pc._streams = pc._streams || {};
-      var stream;
-      Object.keys(pc._streams).forEach(function(streamid) {
-        var hasTrack = pc._streams[streamid].getTracks().find(function(track) {
-          return sender.track === track;
-        });
-        if (hasTrack) {
-          stream = pc._streams[streamid];
-        }
-      });
-
-      if (stream) {
-        if (stream.getTracks().length === 1) {
-          // if this is the last track of the stream, remove the stream. This
-          // takes care of any shimmed _senders.
-          pc.removeStream(pc._reverseStreams[stream.id]);
-        } else {
-          // relying on the same odd chrome behaviour as above.
-          stream.removeTrack(sender.track);
-        }
-        pc.dispatchEvent(new Event('negotiationneeded'));
-      }
-    };
-  },
-
-  shimPeerConnection: function(window) {
-    var browserDetails = utils.detectBrowser(window);
-
-    // The RTCPeerConnection object.
-    if (!window.RTCPeerConnection && window.webkitRTCPeerConnection) {
-      window.RTCPeerConnection = function(pcConfig, pcConstraints) {
-        // Translate iceTransportPolicy to iceTransports,
-        // see https://code.google.com/p/webrtc/issues/detail?id=4869
-        // this was fixed in M56 along with unprefixing RTCPeerConnection.
-        logging('PeerConnection');
-        if (pcConfig && pcConfig.iceTransportPolicy) {
-          pcConfig.iceTransports = pcConfig.iceTransportPolicy;
-        }
-
-        return new window.webkitRTCPeerConnection(pcConfig, pcConstraints);
-      };
-      window.RTCPeerConnection.prototype =
-          window.webkitRTCPeerConnection.prototype;
-      // wrap static methods. Currently just generateCertificate.
-      if (window.webkitRTCPeerConnection.generateCertificate) {
-        Object.defineProperty(window.RTCPeerConnection, 'generateCertificate', {
-          get: function() {
-            return window.webkitRTCPeerConnection.generateCertificate;
-          }
-        });
-      }
-    } else {
-      // migrate from non-spec RTCIceServer.url to RTCIceServer.urls
-      var OrigPeerConnection = window.RTCPeerConnection;
-      window.RTCPeerConnection = function(pcConfig, pcConstraints) {
-        if (pcConfig && pcConfig.iceServers) {
-          var newIceServers = [];
-          for (var i = 0; i < pcConfig.iceServers.length; i++) {
-            var server = pcConfig.iceServers[i];
-            if (!server.hasOwnProperty('urls') &&
-                server.hasOwnProperty('url')) {
-              utils.deprecated('RTCIceServer.url', 'RTCIceServer.urls');
-              server = JSON.parse(JSON.stringify(server));
-              server.urls = server.url;
-              newIceServers.push(server);
-            } else {
-              newIceServers.push(pcConfig.iceServers[i]);
-            }
-          }
-          pcConfig.iceServers = newIceServers;
-        }
-        return new OrigPeerConnection(pcConfig, pcConstraints);
-      };
-      window.RTCPeerConnection.prototype = OrigPeerConnection.prototype;
-      // wrap static methods. Currently just generateCertificate.
-      Object.defineProperty(window.RTCPeerConnection, 'generateCertificate', {
-        get: function() {
-          return OrigPeerConnection.generateCertificate;
-        }
-      });
-    }
-
-    var origGetStats = window.RTCPeerConnection.prototype.getStats;
-    window.RTCPeerConnection.prototype.getStats = function(selector,
-        successCallback, errorCallback) {
-      var pc = this;
-      var args = arguments;
-
-      // If selector is a function then we are in the old style stats so just
-      // pass back the original getStats format to avoid breaking old users.
-      if (arguments.length > 0 && typeof selector === 'function') {
-        return origGetStats.apply(this, arguments);
-      }
-
-      // When spec-style getStats is supported, return those when called with
-      // either no arguments or the selector argument is null.
-      if (origGetStats.length === 0 && (arguments.length === 0 ||
-          typeof arguments[0] !== 'function')) {
-        return origGetStats.apply(this, []);
-      }
-
-      var fixChromeStats_ = function(response) {
-        var standardReport = {};
-        var reports = response.result();
-        reports.forEach(function(report) {
-          var standardStats = {
-            id: report.id,
-            timestamp: report.timestamp,
-            type: {
-              localcandidate: 'local-candidate',
-              remotecandidate: 'remote-candidate'
-            }[report.type] || report.type
-          };
-          report.names().forEach(function(name) {
-            standardStats[name] = report.stat(name);
-          });
-          standardReport[standardStats.id] = standardStats;
-        });
-
-        return standardReport;
-      };
-
-      // shim getStats with maplike support
-      var makeMapStats = function(stats) {
-        return new Map(Object.keys(stats).map(function(key) {
-          return [key, stats[key]];
-        }));
-      };
-
-      if (arguments.length >= 2) {
-        var successCallbackWrapper_ = function(response) {
-          args[1](makeMapStats(fixChromeStats_(response)));
-        };
-
-        return origGetStats.apply(this, [successCallbackWrapper_,
-          arguments[0]]);
-      }
-
-      // promise-support
-      return new Promise(function(resolve, reject) {
-        origGetStats.apply(pc, [
-          function(response) {
-            resolve(makeMapStats(fixChromeStats_(response)));
-          }, reject]);
-      }).then(successCallback, errorCallback);
-    };
-
-    // add promise support -- natively available in Chrome 51
-    if (browserDetails.version < 51) {
-      ['setLocalDescription', 'setRemoteDescription', 'addIceCandidate']
-          .forEach(function(method) {
-            var nativeMethod = window.RTCPeerConnection.prototype[method];
-            window.RTCPeerConnection.prototype[method] = function() {
-              var args = arguments;
-              var pc = this;
-              var promise = new Promise(function(resolve, reject) {
-                nativeMethod.apply(pc, [args[0], resolve, reject]);
-              });
-              if (args.length < 2) {
-                return promise;
-              }
-              return promise.then(function() {
-                args[1].apply(null, []);
-              },
-              function(err) {
-                if (args.length >= 3) {
-                  args[2].apply(null, [err]);
-                }
-              });
-            };
-          });
-    }
-
-    // promise support for createOffer and createAnswer. Available (without
-    // bugs) since M52: crbug/619289
-    if (browserDetails.version < 52) {
-      ['createOffer', 'createAnswer'].forEach(function(method) {
-        var nativeMethod = window.RTCPeerConnection.prototype[method];
-        window.RTCPeerConnection.prototype[method] = function() {
-          var pc = this;
-          if (arguments.length < 1 || (arguments.length === 1 &&
-              typeof arguments[0] === 'object')) {
-            var opts = arguments.length === 1 ? arguments[0] : undefined;
-            return new Promise(function(resolve, reject) {
-              nativeMethod.apply(pc, [resolve, reject, opts]);
-            });
-          }
-          return nativeMethod.apply(this, arguments);
-        };
-      });
-    }
-
-    // shim implicit creation of RTCSessionDescription/RTCIceCandidate
-    ['setLocalDescription', 'setRemoteDescription', 'addIceCandidate']
-        .forEach(function(method) {
-          var nativeMethod = window.RTCPeerConnection.prototype[method];
-          window.RTCPeerConnection.prototype[method] = function() {
-            arguments[0] = new ((method === 'addIceCandidate') ?
-                window.RTCIceCandidate :
-                window.RTCSessionDescription)(arguments[0]);
-            return nativeMethod.apply(this, arguments);
-          };
-        });
-
-    // support for addIceCandidate(null or undefined)
-    var nativeAddIceCandidate =
-        window.RTCPeerConnection.prototype.addIceCandidate;
-    window.RTCPeerConnection.prototype.addIceCandidate = function() {
-      if (!arguments[0]) {
-        if (arguments[1]) {
-          arguments[1].apply(null);
-        }
-        return Promise.resolve();
-      }
-      return nativeAddIceCandidate.apply(this, arguments);
-    };
-  }
-};
-
-
-/***/ }),
-
-/***/ "../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/chrome/getusermedia.js":
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/*
- *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
- *
- *  Use of this source code is governed by a BSD-style license
- *  that can be found in the LICENSE file in the root of the source
- *  tree.
- */
- /* eslint-env node */
-
-var utils = __webpack_require__("../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/utils.js");
-var logging = utils.log;
-
-// Expose public methods.
-module.exports = function(window) {
-  var browserDetails = utils.detectBrowser(window);
-  var navigator = window && window.navigator;
-
-  var constraintsToChrome_ = function(c) {
-    if (typeof c !== 'object' || c.mandatory || c.optional) {
-      return c;
-    }
-    var cc = {};
-    Object.keys(c).forEach(function(key) {
-      if (key === 'require' || key === 'advanced' || key === 'mediaSource') {
-        return;
-      }
-      var r = (typeof c[key] === 'object') ? c[key] : {ideal: c[key]};
-      if (r.exact !== undefined && typeof r.exact === 'number') {
-        r.min = r.max = r.exact;
-      }
-      var oldname_ = function(prefix, name) {
-        if (prefix) {
-          return prefix + name.charAt(0).toUpperCase() + name.slice(1);
-        }
-        return (name === 'deviceId') ? 'sourceId' : name;
-      };
-      if (r.ideal !== undefined) {
-        cc.optional = cc.optional || [];
-        var oc = {};
-        if (typeof r.ideal === 'number') {
-          oc[oldname_('min', key)] = r.ideal;
-          cc.optional.push(oc);
-          oc = {};
-          oc[oldname_('max', key)] = r.ideal;
-          cc.optional.push(oc);
-        } else {
-          oc[oldname_('', key)] = r.ideal;
-          cc.optional.push(oc);
-        }
-      }
-      if (r.exact !== undefined && typeof r.exact !== 'number') {
-        cc.mandatory = cc.mandatory || {};
-        cc.mandatory[oldname_('', key)] = r.exact;
-      } else {
-        ['min', 'max'].forEach(function(mix) {
-          if (r[mix] !== undefined) {
-            cc.mandatory = cc.mandatory || {};
-            cc.mandatory[oldname_(mix, key)] = r[mix];
-          }
-        });
-      }
-    });
-    if (c.advanced) {
-      cc.optional = (cc.optional || []).concat(c.advanced);
-    }
-    return cc;
-  };
-
-  var shimConstraints_ = function(constraints, func) {
-    if (browserDetails.version >= 61) {
-      return func(constraints);
-    }
-    constraints = JSON.parse(JSON.stringify(constraints));
-    if (constraints && typeof constraints.audio === 'object') {
-      var remap = function(obj, a, b) {
-        if (a in obj && !(b in obj)) {
-          obj[b] = obj[a];
-          delete obj[a];
-        }
-      };
-      constraints = JSON.parse(JSON.stringify(constraints));
-      remap(constraints.audio, 'autoGainControl', 'googAutoGainControl');
-      remap(constraints.audio, 'noiseSuppression', 'googNoiseSuppression');
-      constraints.audio = constraintsToChrome_(constraints.audio);
-    }
-    if (constraints && typeof constraints.video === 'object') {
-      // Shim facingMode for mobile & surface pro.
-      var face = constraints.video.facingMode;
-      face = face && ((typeof face === 'object') ? face : {ideal: face});
-      var getSupportedFacingModeLies = browserDetails.version < 66;
-
-      if ((face && (face.exact === 'user' || face.exact === 'environment' ||
-                    face.ideal === 'user' || face.ideal === 'environment')) &&
-          !(navigator.mediaDevices.getSupportedConstraints &&
-            navigator.mediaDevices.getSupportedConstraints().facingMode &&
-            !getSupportedFacingModeLies)) {
-        delete constraints.video.facingMode;
-        var matches;
-        if (face.exact === 'environment' || face.ideal === 'environment') {
-          matches = ['back', 'rear'];
-        } else if (face.exact === 'user' || face.ideal === 'user') {
-          matches = ['front'];
-        }
-        if (matches) {
-          // Look for matches in label, or use last cam for back (typical).
-          return navigator.mediaDevices.enumerateDevices()
-          .then(function(devices) {
-            devices = devices.filter(function(d) {
-              return d.kind === 'videoinput';
-            });
-            var dev = devices.find(function(d) {
-              return matches.some(function(match) {
-                return d.label.toLowerCase().indexOf(match) !== -1;
-              });
-            });
-            if (!dev && devices.length && matches.indexOf('back') !== -1) {
-              dev = devices[devices.length - 1]; // more likely the back cam
-            }
-            if (dev) {
-              constraints.video.deviceId = face.exact ? {exact: dev.deviceId} :
-                                                        {ideal: dev.deviceId};
-            }
-            constraints.video = constraintsToChrome_(constraints.video);
-            logging('chrome: ' + JSON.stringify(constraints));
-            return func(constraints);
-          });
-        }
-      }
-      constraints.video = constraintsToChrome_(constraints.video);
-    }
-    logging('chrome: ' + JSON.stringify(constraints));
-    return func(constraints);
-  };
-
-  var shimError_ = function(e) {
-    return {
-      name: {
-        PermissionDeniedError: 'NotAllowedError',
-        PermissionDismissedError: 'NotAllowedError',
-        InvalidStateError: 'NotAllowedError',
-        DevicesNotFoundError: 'NotFoundError',
-        ConstraintNotSatisfiedError: 'OverconstrainedError',
-        TrackStartError: 'NotReadableError',
-        MediaDeviceFailedDueToShutdown: 'NotAllowedError',
-        MediaDeviceKillSwitchOn: 'NotAllowedError',
-        TabCaptureError: 'AbortError',
-        ScreenCaptureError: 'AbortError',
-        DeviceCaptureError: 'AbortError'
-      }[e.name] || e.name,
-      message: e.message,
-      constraint: e.constraintName,
-      toString: function() {
-        return this.name + (this.message && ': ') + this.message;
-      }
-    };
-  };
-
-  var getUserMedia_ = function(constraints, onSuccess, onError) {
-    shimConstraints_(constraints, function(c) {
-      navigator.webkitGetUserMedia(c, onSuccess, function(e) {
-        if (onError) {
-          onError(shimError_(e));
-        }
-      });
-    });
-  };
-
-  navigator.getUserMedia = getUserMedia_;
-
-  // Returns the result of getUserMedia as a Promise.
-  var getUserMediaPromise_ = function(constraints) {
-    return new Promise(function(resolve, reject) {
-      navigator.getUserMedia(constraints, resolve, reject);
-    });
-  };
-
-  if (!navigator.mediaDevices) {
-    navigator.mediaDevices = {
-      getUserMedia: getUserMediaPromise_,
-      enumerateDevices: function() {
-        return new Promise(function(resolve) {
-          var kinds = {audio: 'audioinput', video: 'videoinput'};
-          return window.MediaStreamTrack.getSources(function(devices) {
-            resolve(devices.map(function(device) {
-              return {label: device.label,
-                kind: kinds[device.kind],
-                deviceId: device.id,
-                groupId: ''};
-            }));
-          });
-        });
-      },
-      getSupportedConstraints: function() {
-        return {
-          deviceId: true, echoCancellation: true, facingMode: true,
-          frameRate: true, height: true, width: true
-        };
-      }
-    };
-  }
-
-  // A shim for getUserMedia method on the mediaDevices object.
-  // TODO(KaptenJansson) remove once implemented in Chrome stable.
-  if (!navigator.mediaDevices.getUserMedia) {
-    navigator.mediaDevices.getUserMedia = function(constraints) {
-      return getUserMediaPromise_(constraints);
-    };
-  } else {
-    // Even though Chrome 45 has navigator.mediaDevices and a getUserMedia
-    // function which returns a Promise, it does not accept spec-style
-    // constraints.
-    var origGetUserMedia = navigator.mediaDevices.getUserMedia.
-        bind(navigator.mediaDevices);
-    navigator.mediaDevices.getUserMedia = function(cs) {
-      return shimConstraints_(cs, function(c) {
-        return origGetUserMedia(c).then(function(stream) {
-          if (c.audio && !stream.getAudioTracks().length ||
-              c.video && !stream.getVideoTracks().length) {
-            stream.getTracks().forEach(function(track) {
-              track.stop();
-            });
-            throw new DOMException('', 'NotFoundError');
-          }
-          return stream;
-        }, function(e) {
-          return Promise.reject(shimError_(e));
-        });
-      });
-    };
-  }
-
-  // Dummy devicechange event methods.
-  // TODO(KaptenJansson) remove once implemented in Chrome stable.
-  if (typeof navigator.mediaDevices.addEventListener === 'undefined') {
-    navigator.mediaDevices.addEventListener = function() {
-      logging('Dummy mediaDevices.addEventListener called.');
-    };
-  }
-  if (typeof navigator.mediaDevices.removeEventListener === 'undefined') {
-    navigator.mediaDevices.removeEventListener = function() {
-      logging('Dummy mediaDevices.removeEventListener called.');
-    };
-  }
-};
-
-
-/***/ }),
-
-/***/ "../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/common_shim.js":
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/*
- *  Copyright (c) 2017 The WebRTC project authors. All Rights Reserved.
- *
- *  Use of this source code is governed by a BSD-style license
- *  that can be found in the LICENSE file in the root of the source
- *  tree.
- */
- /* eslint-env node */
-
-
-var SDPUtils = __webpack_require__("../../../../openvidu-browser/node_modules/sdp/sdp.js");
-var utils = __webpack_require__("../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/utils.js");
-
-module.exports = {
-  shimRTCIceCandidate: function(window) {
-    // foundation is arbitrarily chosen as an indicator for full support for
-    // https://w3c.github.io/webrtc-pc/#rtcicecandidate-interface
-    if (!window.RTCIceCandidate || (window.RTCIceCandidate && 'foundation' in
-        window.RTCIceCandidate.prototype)) {
-      return;
-    }
-
-    var NativeRTCIceCandidate = window.RTCIceCandidate;
-    window.RTCIceCandidate = function(args) {
-      // Remove the a= which shouldn't be part of the candidate string.
-      if (typeof args === 'object' && args.candidate &&
-          args.candidate.indexOf('a=') === 0) {
-        args = JSON.parse(JSON.stringify(args));
-        args.candidate = args.candidate.substr(2);
-      }
-
-      if (args.candidate && args.candidate.length) {
-        // Augment the native candidate with the parsed fields.
-        var nativeCandidate = new NativeRTCIceCandidate(args);
-        var parsedCandidate = SDPUtils.parseCandidate(args.candidate);
-        var augmentedCandidate = Object.assign(nativeCandidate,
-            parsedCandidate);
-
-        // Add a serializer that does not serialize the extra attributes.
-        augmentedCandidate.toJSON = function() {
-          return {
-            candidate: augmentedCandidate.candidate,
-            sdpMid: augmentedCandidate.sdpMid,
-            sdpMLineIndex: augmentedCandidate.sdpMLineIndex,
-            usernameFragment: augmentedCandidate.usernameFragment,
-          };
-        };
-        return augmentedCandidate;
-      }
-      return new NativeRTCIceCandidate(args);
-    };
-    window.RTCIceCandidate.prototype = NativeRTCIceCandidate.prototype;
-
-    // Hook up the augmented candidate in onicecandidate and
-    // addEventListener('icecandidate', ...)
-    utils.wrapPeerConnectionEvent(window, 'icecandidate', function(e) {
-      if (e.candidate) {
-        Object.defineProperty(e, 'candidate', {
-          value: new window.RTCIceCandidate(e.candidate),
-          writable: 'false'
-        });
-      }
-      return e;
-    });
-  },
-
-  // shimCreateObjectURL must be called before shimSourceObject to avoid loop.
-
-  shimCreateObjectURL: function(window) {
-    var URL = window && window.URL;
-
-    if (!(typeof window === 'object' && window.HTMLMediaElement &&
-          'srcObject' in window.HTMLMediaElement.prototype &&
-        URL.createObjectURL && URL.revokeObjectURL)) {
-      // Only shim CreateObjectURL using srcObject if srcObject exists.
-      return undefined;
-    }
-
-    var nativeCreateObjectURL = URL.createObjectURL.bind(URL);
-    var nativeRevokeObjectURL = URL.revokeObjectURL.bind(URL);
-    var streams = new Map(), newId = 0;
-
-    URL.createObjectURL = function(stream) {
-      if ('getTracks' in stream) {
-        var url = 'polyblob:' + (++newId);
-        streams.set(url, stream);
-        utils.deprecated('URL.createObjectURL(stream)',
-            'elem.srcObject = stream');
-        return url;
-      }
-      return nativeCreateObjectURL(stream);
-    };
-    URL.revokeObjectURL = function(url) {
-      nativeRevokeObjectURL(url);
-      streams.delete(url);
-    };
-
-    var dsc = Object.getOwnPropertyDescriptor(window.HTMLMediaElement.prototype,
-                                              'src');
-    Object.defineProperty(window.HTMLMediaElement.prototype, 'src', {
-      get: function() {
-        return dsc.get.apply(this);
-      },
-      set: function(url) {
-        this.srcObject = streams.get(url) || null;
-        return dsc.set.apply(this, [url]);
-      }
-    });
-
-    var nativeSetAttribute = window.HTMLMediaElement.prototype.setAttribute;
-    window.HTMLMediaElement.prototype.setAttribute = function() {
-      if (arguments.length === 2 &&
-          ('' + arguments[0]).toLowerCase() === 'src') {
-        this.srcObject = streams.get(arguments[1]) || null;
-      }
-      return nativeSetAttribute.apply(this, arguments);
-    };
-  },
-
-  shimMaxMessageSize: function(window) {
-    if (window.RTCSctpTransport || !window.RTCPeerConnection) {
-      return;
-    }
-    var browserDetails = utils.detectBrowser(window);
-
-    if (!('sctp' in window.RTCPeerConnection.prototype)) {
-      Object.defineProperty(window.RTCPeerConnection.prototype, 'sctp', {
-        get: function() {
-          return typeof this._sctp === 'undefined' ? null : this._sctp;
-        }
-      });
-    }
-
-    var sctpInDescription = function(description) {
-      var sections = SDPUtils.splitSections(description.sdp);
-      sections.shift();
-      return sections.some(function(mediaSection) {
-        var mLine = SDPUtils.parseMLine(mediaSection);
-        return mLine && mLine.kind === 'application'
-            && mLine.protocol.indexOf('SCTP') !== -1;
-      });
-    };
-
-    var getRemoteFirefoxVersion = function(description) {
-      // TODO: Is there a better solution for detecting Firefox?
-      var match = description.sdp.match(/mozilla...THIS_IS_SDPARTA-(\d+)/);
-      if (match === null || match.length < 2) {
-        return -1;
-      }
-      var version = parseInt(match[1], 10);
-      // Test for NaN (yes, this is ugly)
-      return version !== version ? -1 : version;
-    };
-
-    var getCanSendMaxMessageSize = function(remoteIsFirefox) {
-      // Every implementation we know can send at least 64 KiB.
-      // Note: Although Chrome is technically able to send up to 256 KiB, the
-      //       data does not reach the other peer reliably.
-      //       See: https://bugs.chromium.org/p/webrtc/issues/detail?id=8419
-      var canSendMaxMessageSize = 65536;
-      if (browserDetails.browser === 'firefox') {
-        if (browserDetails.version < 57) {
-          if (remoteIsFirefox === -1) {
-            // FF < 57 will send in 16 KiB chunks using the deprecated PPID
-            // fragmentation.
-            canSendMaxMessageSize = 16384;
-          } else {
-            // However, other FF (and RAWRTC) can reassemble PPID-fragmented
-            // messages. Thus, supporting ~2 GiB when sending.
-            canSendMaxMessageSize = 2147483637;
-          }
-        } else {
-          // Currently, all FF >= 57 will reset the remote maximum message size
-          // to the default value when a data channel is created at a later
-          // stage. :(
-          // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1426831
-          canSendMaxMessageSize =
-            browserDetails.version === 57 ? 65535 : 65536;
-        }
-      }
-      return canSendMaxMessageSize;
-    };
-
-    var getMaxMessageSize = function(description, remoteIsFirefox) {
-      // Note: 65536 bytes is the default value from the SDP spec. Also,
-      //       every implementation we know supports receiving 65536 bytes.
-      var maxMessageSize = 65536;
-
-      // FF 57 has a slightly incorrect default remote max message size, so
-      // we need to adjust it here to avoid a failure when sending.
-      // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1425697
-      if (browserDetails.browser === 'firefox'
-           && browserDetails.version === 57) {
-        maxMessageSize = 65535;
-      }
-
-      var match = SDPUtils.matchPrefix(description.sdp, 'a=max-message-size:');
-      if (match.length > 0) {
-        maxMessageSize = parseInt(match[0].substr(19), 10);
-      } else if (browserDetails.browser === 'firefox' &&
-                  remoteIsFirefox !== -1) {
-        // If the maximum message size is not present in the remote SDP and
-        // both local and remote are Firefox, the remote peer can receive
-        // ~2 GiB.
-        maxMessageSize = 2147483637;
-      }
-      return maxMessageSize;
-    };
-
-    var origSetRemoteDescription =
-        window.RTCPeerConnection.prototype.setRemoteDescription;
-    window.RTCPeerConnection.prototype.setRemoteDescription = function() {
-      var pc = this;
-      pc._sctp = null;
-
-      if (sctpInDescription(arguments[0])) {
-        // Check if the remote is FF.
-        var isFirefox = getRemoteFirefoxVersion(arguments[0]);
-
-        // Get the maximum message size the local peer is capable of sending
-        var canSendMMS = getCanSendMaxMessageSize(isFirefox);
-
-        // Get the maximum message size of the remote peer.
-        var remoteMMS = getMaxMessageSize(arguments[0], isFirefox);
-
-        // Determine final maximum message size
-        var maxMessageSize;
-        if (canSendMMS === 0 && remoteMMS === 0) {
-          maxMessageSize = Number.POSITIVE_INFINITY;
-        } else if (canSendMMS === 0 || remoteMMS === 0) {
-          maxMessageSize = Math.max(canSendMMS, remoteMMS);
-        } else {
-          maxMessageSize = Math.min(canSendMMS, remoteMMS);
-        }
-
-        // Create a dummy RTCSctpTransport object and the 'maxMessageSize'
-        // attribute.
-        var sctp = {};
-        Object.defineProperty(sctp, 'maxMessageSize', {
-          get: function() {
-            return maxMessageSize;
-          }
-        });
-        pc._sctp = sctp;
-      }
-
-      return origSetRemoteDescription.apply(pc, arguments);
-    };
-  },
-
-  shimSendThrowTypeError: function(window) {
-    if (!window.RTCPeerConnection) {
-      return;
-    }
-
-    // Note: Although Firefox >= 57 has a native implementation, the maximum
-    //       message size can be reset for all data channels at a later stage.
-    //       See: https://bugzilla.mozilla.org/show_bug.cgi?id=1426831
-
-    var origCreateDataChannel =
-      window.RTCPeerConnection.prototype.createDataChannel;
-    window.RTCPeerConnection.prototype.createDataChannel = function() {
-      var pc = this;
-      var dataChannel = origCreateDataChannel.apply(pc, arguments);
-      var origDataChannelSend = dataChannel.send;
-
-      // Patch 'send' method
-      dataChannel.send = function() {
-        var dc = this;
-        var data = arguments[0];
-        var length = data.length || data.size || data.byteLength;
-        if (length > pc.sctp.maxMessageSize) {
-          throw new DOMException('Message too large (can send a maximum of ' +
-            pc.sctp.maxMessageSize + ' bytes)', 'TypeError');
-        }
-        return origDataChannelSend.apply(dc, arguments);
-      };
-
-      return dataChannel;
-    };
-  }
-};
-
-
-/***/ }),
-
-/***/ "../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/edge/edge_shim.js":
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/*
- *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
- *
- *  Use of this source code is governed by a BSD-style license
- *  that can be found in the LICENSE file in the root of the source
- *  tree.
- */
- /* eslint-env node */
-
-
-var utils = __webpack_require__("../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/utils.js");
-var shimRTCPeerConnection = __webpack_require__("../../../../openvidu-browser/node_modules/rtcpeerconnection-shim/rtcpeerconnection.js");
-
-module.exports = {
-  shimGetUserMedia: __webpack_require__("../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/edge/getusermedia.js"),
-  shimPeerConnection: function(window) {
-    var browserDetails = utils.detectBrowser(window);
-
-    if (window.RTCIceGatherer) {
-      if (!window.RTCIceCandidate) {
-        window.RTCIceCandidate = function(args) {
-          return args;
-        };
-      }
-      if (!window.RTCSessionDescription) {
-        window.RTCSessionDescription = function(args) {
-          return args;
-        };
-      }
-      // this adds an additional event listener to MediaStrackTrack that signals
-      // when a tracks enabled property was changed. Workaround for a bug in
-      // addStream, see below. No longer required in 15025+
-      if (browserDetails.version < 15025) {
-        var origMSTEnabled = Object.getOwnPropertyDescriptor(
-            window.MediaStreamTrack.prototype, 'enabled');
-        Object.defineProperty(window.MediaStreamTrack.prototype, 'enabled', {
-          set: function(value) {
-            origMSTEnabled.set.call(this, value);
-            var ev = new Event('enabled');
-            ev.enabled = value;
-            this.dispatchEvent(ev);
-          }
-        });
-      }
-    }
-
-    // ORTC defines the DTMF sender a bit different.
-    // https://github.com/w3c/ortc/issues/714
-    if (window.RTCRtpSender && !('dtmf' in window.RTCRtpSender.prototype)) {
-      Object.defineProperty(window.RTCRtpSender.prototype, 'dtmf', {
-        get: function() {
-          if (this._dtmf === undefined) {
-            if (this.track.kind === 'audio') {
-              this._dtmf = new window.RTCDtmfSender(this);
-            } else if (this.track.kind === 'video') {
-              this._dtmf = null;
-            }
-          }
-          return this._dtmf;
-        }
-      });
-    }
-    // Edge currently only implements the RTCDtmfSender, not the
-    // RTCDTMFSender alias. See http://draft.ortc.org/#rtcdtmfsender2*
-    if (window.RTCDtmfSender && !window.RTCDTMFSender) {
-      window.RTCDTMFSender = window.RTCDtmfSender;
-    }
-
-    window.RTCPeerConnection =
-        shimRTCPeerConnection(window, browserDetails.version);
-  },
-  shimReplaceTrack: function(window) {
-    // ORTC has replaceTrack -- https://github.com/w3c/ortc/issues/614
-    if (window.RTCRtpSender &&
-        !('replaceTrack' in window.RTCRtpSender.prototype)) {
-      window.RTCRtpSender.prototype.replaceTrack =
-          window.RTCRtpSender.prototype.setTrack;
-    }
-  }
-};
-
-
-/***/ }),
-
-/***/ "../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/edge/getusermedia.js":
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/*
- *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
- *
- *  Use of this source code is governed by a BSD-style license
- *  that can be found in the LICENSE file in the root of the source
- *  tree.
- */
- /* eslint-env node */
-
-
-// Expose public methods.
-module.exports = function(window) {
-  var navigator = window && window.navigator;
-
-  var shimError_ = function(e) {
-    return {
-      name: {PermissionDeniedError: 'NotAllowedError'}[e.name] || e.name,
-      message: e.message,
-      constraint: e.constraint,
-      toString: function() {
-        return this.name;
-      }
-    };
-  };
-
-  // getUserMedia error shim.
-  var origGetUserMedia = navigator.mediaDevices.getUserMedia.
-      bind(navigator.mediaDevices);
-  navigator.mediaDevices.getUserMedia = function(c) {
-    return origGetUserMedia(c).catch(function(e) {
-      return Promise.reject(shimError_(e));
-    });
-  };
-};
-
-
-/***/ }),
-
-/***/ "../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/firefox/firefox_shim.js":
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/*
- *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
- *
- *  Use of this source code is governed by a BSD-style license
- *  that can be found in the LICENSE file in the root of the source
- *  tree.
- */
- /* eslint-env node */
-
-
-var utils = __webpack_require__("../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/utils.js");
-
-module.exports = {
-  shimGetUserMedia: __webpack_require__("../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/firefox/getusermedia.js"),
-  shimOnTrack: function(window) {
-    if (typeof window === 'object' && window.RTCPeerConnection && !('ontrack' in
-        window.RTCPeerConnection.prototype)) {
-      Object.defineProperty(window.RTCPeerConnection.prototype, 'ontrack', {
-        get: function() {
-          return this._ontrack;
-        },
-        set: function(f) {
-          if (this._ontrack) {
-            this.removeEventListener('track', this._ontrack);
-            this.removeEventListener('addstream', this._ontrackpoly);
-          }
-          this.addEventListener('track', this._ontrack = f);
-          this.addEventListener('addstream', this._ontrackpoly = function(e) {
-            e.stream.getTracks().forEach(function(track) {
-              var event = new Event('track');
-              event.track = track;
-              event.receiver = {track: track};
-              event.transceiver = {receiver: event.receiver};
-              event.streams = [e.stream];
-              this.dispatchEvent(event);
-            }.bind(this));
-          }.bind(this));
-        }
-      });
-    }
-    if (typeof window === 'object' && window.RTCTrackEvent &&
-        ('receiver' in window.RTCTrackEvent.prototype) &&
-        !('transceiver' in window.RTCTrackEvent.prototype)) {
-      Object.defineProperty(window.RTCTrackEvent.prototype, 'transceiver', {
-        get: function() {
-          return {receiver: this.receiver};
-        }
-      });
-    }
-  },
-
-  shimSourceObject: function(window) {
-    // Firefox has supported mozSrcObject since FF22, unprefixed in 42.
-    if (typeof window === 'object') {
-      if (window.HTMLMediaElement &&
-        !('srcObject' in window.HTMLMediaElement.prototype)) {
-        // Shim the srcObject property, once, when HTMLMediaElement is found.
-        Object.defineProperty(window.HTMLMediaElement.prototype, 'srcObject', {
-          get: function() {
-            return this.mozSrcObject;
-          },
-          set: function(stream) {
-            this.mozSrcObject = stream;
-          }
-        });
-      }
-    }
-  },
-
-  shimPeerConnection: function(window) {
-    var browserDetails = utils.detectBrowser(window);
-
-    if (typeof window !== 'object' || !(window.RTCPeerConnection ||
-        window.mozRTCPeerConnection)) {
-      return; // probably media.peerconnection.enabled=false in about:config
-    }
-    // The RTCPeerConnection object.
-    if (!window.RTCPeerConnection) {
-      window.RTCPeerConnection = function(pcConfig, pcConstraints) {
-        if (browserDetails.version < 38) {
-          // .urls is not supported in FF < 38.
-          // create RTCIceServers with a single url.
-          if (pcConfig && pcConfig.iceServers) {
-            var newIceServers = [];
-            for (var i = 0; i < pcConfig.iceServers.length; i++) {
-              var server = pcConfig.iceServers[i];
-              if (server.hasOwnProperty('urls')) {
-                for (var j = 0; j < server.urls.length; j++) {
-                  var newServer = {
-                    url: server.urls[j]
-                  };
-                  if (server.urls[j].indexOf('turn') === 0) {
-                    newServer.username = server.username;
-                    newServer.credential = server.credential;
-                  }
-                  newIceServers.push(newServer);
-                }
-              } else {
-                newIceServers.push(pcConfig.iceServers[i]);
-              }
-            }
-            pcConfig.iceServers = newIceServers;
-          }
-        }
-        return new window.mozRTCPeerConnection(pcConfig, pcConstraints);
-      };
-      window.RTCPeerConnection.prototype =
-          window.mozRTCPeerConnection.prototype;
-
-      // wrap static methods. Currently just generateCertificate.
-      if (window.mozRTCPeerConnection.generateCertificate) {
-        Object.defineProperty(window.RTCPeerConnection, 'generateCertificate', {
-          get: function() {
-            return window.mozRTCPeerConnection.generateCertificate;
-          }
-        });
-      }
-
-      window.RTCSessionDescription = window.mozRTCSessionDescription;
-      window.RTCIceCandidate = window.mozRTCIceCandidate;
-    }
-
-    // shim away need for obsolete RTCIceCandidate/RTCSessionDescription.
-    ['setLocalDescription', 'setRemoteDescription', 'addIceCandidate']
-        .forEach(function(method) {
-          var nativeMethod = window.RTCPeerConnection.prototype[method];
-          window.RTCPeerConnection.prototype[method] = function() {
-            arguments[0] = new ((method === 'addIceCandidate') ?
-                window.RTCIceCandidate :
-                window.RTCSessionDescription)(arguments[0]);
-            return nativeMethod.apply(this, arguments);
-          };
-        });
-
-    // support for addIceCandidate(null or undefined)
-    var nativeAddIceCandidate =
-        window.RTCPeerConnection.prototype.addIceCandidate;
-    window.RTCPeerConnection.prototype.addIceCandidate = function() {
-      if (!arguments[0]) {
-        if (arguments[1]) {
-          arguments[1].apply(null);
-        }
-        return Promise.resolve();
-      }
-      return nativeAddIceCandidate.apply(this, arguments);
-    };
-
-    // shim getStats with maplike support
-    var makeMapStats = function(stats) {
-      var map = new Map();
-      Object.keys(stats).forEach(function(key) {
-        map.set(key, stats[key]);
-        map[key] = stats[key];
-      });
-      return map;
-    };
-
-    var modernStatsTypes = {
-      inboundrtp: 'inbound-rtp',
-      outboundrtp: 'outbound-rtp',
-      candidatepair: 'candidate-pair',
-      localcandidate: 'local-candidate',
-      remotecandidate: 'remote-candidate'
-    };
-
-    var nativeGetStats = window.RTCPeerConnection.prototype.getStats;
-    window.RTCPeerConnection.prototype.getStats = function(
-      selector,
-      onSucc,
-      onErr
-    ) {
-      return nativeGetStats.apply(this, [selector || null])
-        .then(function(stats) {
-          if (browserDetails.version < 48) {
-            stats = makeMapStats(stats);
-          }
-          if (browserDetails.version < 53 && !onSucc) {
-            // Shim only promise getStats with spec-hyphens in type names
-            // Leave callback version alone; misc old uses of forEach before Map
-            try {
-              stats.forEach(function(stat) {
-                stat.type = modernStatsTypes[stat.type] || stat.type;
-              });
-            } catch (e) {
-              if (e.name !== 'TypeError') {
-                throw e;
-              }
-              // Avoid TypeError: "type" is read-only, in old versions. 34-43ish
-              stats.forEach(function(stat, i) {
-                stats.set(i, Object.assign({}, stat, {
-                  type: modernStatsTypes[stat.type] || stat.type
-                }));
-              });
-            }
-          }
-          return stats;
-        })
-        .then(onSucc, onErr);
-    };
-  },
-
-  shimRemoveStream: function(window) {
-    if (!window.RTCPeerConnection ||
-        'removeStream' in window.RTCPeerConnection.prototype) {
-      return;
-    }
-    window.RTCPeerConnection.prototype.removeStream = function(stream) {
-      var pc = this;
-      utils.deprecated('removeStream', 'removeTrack');
-      this.getSenders().forEach(function(sender) {
-        if (sender.track && stream.getTracks().indexOf(sender.track) !== -1) {
-          pc.removeTrack(sender);
-        }
-      });
-    };
-  }
-};
-
-
-/***/ }),
-
-/***/ "../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/firefox/getusermedia.js":
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/*
- *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
- *
- *  Use of this source code is governed by a BSD-style license
- *  that can be found in the LICENSE file in the root of the source
- *  tree.
- */
- /* eslint-env node */
-
-
-var utils = __webpack_require__("../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/utils.js");
-var logging = utils.log;
-
-// Expose public methods.
-module.exports = function(window) {
-  var browserDetails = utils.detectBrowser(window);
-  var navigator = window && window.navigator;
-  var MediaStreamTrack = window && window.MediaStreamTrack;
-
-  var shimError_ = function(e) {
-    return {
-      name: {
-        InternalError: 'NotReadableError',
-        NotSupportedError: 'TypeError',
-        PermissionDeniedError: 'NotAllowedError',
-        SecurityError: 'NotAllowedError'
-      }[e.name] || e.name,
-      message: {
-        'The operation is insecure.': 'The request is not allowed by the ' +
-        'user agent or the platform in the current context.'
-      }[e.message] || e.message,
-      constraint: e.constraint,
-      toString: function() {
-        return this.name + (this.message && ': ') + this.message;
-      }
-    };
-  };
-
-  // getUserMedia constraints shim.
-  var getUserMedia_ = function(constraints, onSuccess, onError) {
-    var constraintsToFF37_ = function(c) {
-      if (typeof c !== 'object' || c.require) {
-        return c;
-      }
-      var require = [];
-      Object.keys(c).forEach(function(key) {
-        if (key === 'require' || key === 'advanced' || key === 'mediaSource') {
-          return;
-        }
-        var r = c[key] = (typeof c[key] === 'object') ?
-            c[key] : {ideal: c[key]};
-        if (r.min !== undefined ||
-            r.max !== undefined || r.exact !== undefined) {
-          require.push(key);
-        }
-        if (r.exact !== undefined) {
-          if (typeof r.exact === 'number') {
-            r. min = r.max = r.exact;
-          } else {
-            c[key] = r.exact;
-          }
-          delete r.exact;
-        }
-        if (r.ideal !== undefined) {
-          c.advanced = c.advanced || [];
-          var oc = {};
-          if (typeof r.ideal === 'number') {
-            oc[key] = {min: r.ideal, max: r.ideal};
-          } else {
-            oc[key] = r.ideal;
-          }
-          c.advanced.push(oc);
-          delete r.ideal;
-          if (!Object.keys(r).length) {
-            delete c[key];
-          }
-        }
-      });
-      if (require.length) {
-        c.require = require;
-      }
-      return c;
-    };
-    constraints = JSON.parse(JSON.stringify(constraints));
-    if (browserDetails.version < 38) {
-      logging('spec: ' + JSON.stringify(constraints));
-      if (constraints.audio) {
-        constraints.audio = constraintsToFF37_(constraints.audio);
-      }
-      if (constraints.video) {
-        constraints.video = constraintsToFF37_(constraints.video);
-      }
-      logging('ff37: ' + JSON.stringify(constraints));
-    }
-    return navigator.mozGetUserMedia(constraints, onSuccess, function(e) {
-      onError(shimError_(e));
-    });
-  };
-
-  // Returns the result of getUserMedia as a Promise.
-  var getUserMediaPromise_ = function(constraints) {
-    return new Promise(function(resolve, reject) {
-      getUserMedia_(constraints, resolve, reject);
-    });
-  };
-
-  // Shim for mediaDevices on older versions.
-  if (!navigator.mediaDevices) {
-    navigator.mediaDevices = {getUserMedia: getUserMediaPromise_,
-      addEventListener: function() { },
-      removeEventListener: function() { }
-    };
-  }
-  navigator.mediaDevices.enumerateDevices =
-      navigator.mediaDevices.enumerateDevices || function() {
-        return new Promise(function(resolve) {
-          var infos = [
-            {kind: 'audioinput', deviceId: 'default', label: '', groupId: ''},
-            {kind: 'videoinput', deviceId: 'default', label: '', groupId: ''}
-          ];
-          resolve(infos);
-        });
-      };
-
-  if (browserDetails.version < 41) {
-    // Work around http://bugzil.la/1169665
-    var orgEnumerateDevices =
-        navigator.mediaDevices.enumerateDevices.bind(navigator.mediaDevices);
-    navigator.mediaDevices.enumerateDevices = function() {
-      return orgEnumerateDevices().then(undefined, function(e) {
-        if (e.name === 'NotFoundError') {
-          return [];
-        }
-        throw e;
-      });
-    };
-  }
-  if (browserDetails.version < 49) {
-    var origGetUserMedia = navigator.mediaDevices.getUserMedia.
-        bind(navigator.mediaDevices);
-    navigator.mediaDevices.getUserMedia = function(c) {
-      return origGetUserMedia(c).then(function(stream) {
-        // Work around https://bugzil.la/802326
-        if (c.audio && !stream.getAudioTracks().length ||
-            c.video && !stream.getVideoTracks().length) {
-          stream.getTracks().forEach(function(track) {
-            track.stop();
-          });
-          throw new DOMException('The object can not be found here.',
-                                 'NotFoundError');
-        }
-        return stream;
-      }, function(e) {
-        return Promise.reject(shimError_(e));
-      });
-    };
-  }
-  if (!(browserDetails.version > 55 &&
-      'autoGainControl' in navigator.mediaDevices.getSupportedConstraints())) {
-    var remap = function(obj, a, b) {
-      if (a in obj && !(b in obj)) {
-        obj[b] = obj[a];
-        delete obj[a];
-      }
-    };
-
-    var nativeGetUserMedia = navigator.mediaDevices.getUserMedia.
-        bind(navigator.mediaDevices);
-    navigator.mediaDevices.getUserMedia = function(c) {
-      if (typeof c === 'object' && typeof c.audio === 'object') {
-        c = JSON.parse(JSON.stringify(c));
-        remap(c.audio, 'autoGainControl', 'mozAutoGainControl');
-        remap(c.audio, 'noiseSuppression', 'mozNoiseSuppression');
-      }
-      return nativeGetUserMedia(c);
-    };
-
-    if (MediaStreamTrack && MediaStreamTrack.prototype.getSettings) {
-      var nativeGetSettings = MediaStreamTrack.prototype.getSettings;
-      MediaStreamTrack.prototype.getSettings = function() {
-        var obj = nativeGetSettings.apply(this, arguments);
-        remap(obj, 'mozAutoGainControl', 'autoGainControl');
-        remap(obj, 'mozNoiseSuppression', 'noiseSuppression');
-        return obj;
-      };
-    }
-
-    if (MediaStreamTrack && MediaStreamTrack.prototype.applyConstraints) {
-      var nativeApplyConstraints = MediaStreamTrack.prototype.applyConstraints;
-      MediaStreamTrack.prototype.applyConstraints = function(c) {
-        if (this.kind === 'audio' && typeof c === 'object') {
-          c = JSON.parse(JSON.stringify(c));
-          remap(c, 'autoGainControl', 'mozAutoGainControl');
-          remap(c, 'noiseSuppression', 'mozNoiseSuppression');
-        }
-        return nativeApplyConstraints.apply(this, [c]);
-      };
-    }
-  }
-  navigator.getUserMedia = function(constraints, onSuccess, onError) {
-    if (browserDetails.version < 44) {
-      return getUserMedia_(constraints, onSuccess, onError);
-    }
-    // Replace Firefox 44+'s deprecation warning with unprefixed version.
-    utils.deprecated('navigator.getUserMedia',
-        'navigator.mediaDevices.getUserMedia');
-    navigator.mediaDevices.getUserMedia(constraints).then(onSuccess, onError);
-  };
-};
-
-
-/***/ }),
-
-/***/ "../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/safari/safari_shim.js":
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/*
- *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
- *
- *  Use of this source code is governed by a BSD-style license
- *  that can be found in the LICENSE file in the root of the source
- *  tree.
- */
-
-var utils = __webpack_require__("../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/utils.js");
-
-module.exports = {
-  shimLocalStreamsAPI: function(window) {
-    if (typeof window !== 'object' || !window.RTCPeerConnection) {
-      return;
-    }
-    if (!('getLocalStreams' in window.RTCPeerConnection.prototype)) {
-      window.RTCPeerConnection.prototype.getLocalStreams = function() {
-        if (!this._localStreams) {
-          this._localStreams = [];
-        }
-        return this._localStreams;
-      };
-    }
-    if (!('getStreamById' in window.RTCPeerConnection.prototype)) {
-      window.RTCPeerConnection.prototype.getStreamById = function(id) {
-        var result = null;
-        if (this._localStreams) {
-          this._localStreams.forEach(function(stream) {
-            if (stream.id === id) {
-              result = stream;
-            }
-          });
-        }
-        if (this._remoteStreams) {
-          this._remoteStreams.forEach(function(stream) {
-            if (stream.id === id) {
-              result = stream;
-            }
-          });
-        }
-        return result;
-      };
-    }
-    if (!('addStream' in window.RTCPeerConnection.prototype)) {
-      var _addTrack = window.RTCPeerConnection.prototype.addTrack;
-      window.RTCPeerConnection.prototype.addStream = function(stream) {
-        if (!this._localStreams) {
-          this._localStreams = [];
-        }
-        if (this._localStreams.indexOf(stream) === -1) {
-          this._localStreams.push(stream);
-        }
-        var pc = this;
-        stream.getTracks().forEach(function(track) {
-          _addTrack.call(pc, track, stream);
-        });
-      };
-
-      window.RTCPeerConnection.prototype.addTrack = function(track, stream) {
-        if (stream) {
-          if (!this._localStreams) {
-            this._localStreams = [stream];
-          } else if (this._localStreams.indexOf(stream) === -1) {
-            this._localStreams.push(stream);
-          }
-        }
-        return _addTrack.call(this, track, stream);
-      };
-    }
-    if (!('removeStream' in window.RTCPeerConnection.prototype)) {
-      window.RTCPeerConnection.prototype.removeStream = function(stream) {
-        if (!this._localStreams) {
-          this._localStreams = [];
-        }
-        var index = this._localStreams.indexOf(stream);
-        if (index === -1) {
-          return;
-        }
-        this._localStreams.splice(index, 1);
-        var pc = this;
-        var tracks = stream.getTracks();
-        this.getSenders().forEach(function(sender) {
-          if (tracks.indexOf(sender.track) !== -1) {
-            pc.removeTrack(sender);
-          }
-        });
-      };
-    }
-  },
-  shimRemoteStreamsAPI: function(window) {
-    if (typeof window !== 'object' || !window.RTCPeerConnection) {
-      return;
-    }
-    if (!('getRemoteStreams' in window.RTCPeerConnection.prototype)) {
-      window.RTCPeerConnection.prototype.getRemoteStreams = function() {
-        return this._remoteStreams ? this._remoteStreams : [];
-      };
-    }
-    if (!('onaddstream' in window.RTCPeerConnection.prototype)) {
-      Object.defineProperty(window.RTCPeerConnection.prototype, 'onaddstream', {
-        get: function() {
-          return this._onaddstream;
-        },
-        set: function(f) {
-          var pc = this;
-          if (this._onaddstream) {
-            this.removeEventListener('addstream', this._onaddstream);
-            this.removeEventListener('track', this._onaddstreampoly);
-          }
-          this.addEventListener('addstream', this._onaddstream = f);
-          this.addEventListener('track', this._onaddstreampoly = function(e) {
-            e.streams.forEach(function(stream) {
-              if (!pc._remoteStreams) {
-                pc._remoteStreams = [];
-              }
-              if (pc._remoteStreams.indexOf(stream) >= 0) {
-                return;
-              }
-              pc._remoteStreams.push(stream);
-              var event = new Event('addstream');
-              event.stream = stream;
-              pc.dispatchEvent(event);
-            });
-          });
-        }
-      });
-    }
-  },
-  shimCallbacksAPI: function(window) {
-    if (typeof window !== 'object' || !window.RTCPeerConnection) {
-      return;
-    }
-    var prototype = window.RTCPeerConnection.prototype;
-    var createOffer = prototype.createOffer;
-    var createAnswer = prototype.createAnswer;
-    var setLocalDescription = prototype.setLocalDescription;
-    var setRemoteDescription = prototype.setRemoteDescription;
-    var addIceCandidate = prototype.addIceCandidate;
-
-    prototype.createOffer = function(successCallback, failureCallback) {
-      var options = (arguments.length >= 2) ? arguments[2] : arguments[0];
-      var promise = createOffer.apply(this, [options]);
-      if (!failureCallback) {
-        return promise;
-      }
-      promise.then(successCallback, failureCallback);
-      return Promise.resolve();
-    };
-
-    prototype.createAnswer = function(successCallback, failureCallback) {
-      var options = (arguments.length >= 2) ? arguments[2] : arguments[0];
-      var promise = createAnswer.apply(this, [options]);
-      if (!failureCallback) {
-        return promise;
-      }
-      promise.then(successCallback, failureCallback);
-      return Promise.resolve();
-    };
-
-    var withCallback = function(description, successCallback, failureCallback) {
-      var promise = setLocalDescription.apply(this, [description]);
-      if (!failureCallback) {
-        return promise;
-      }
-      promise.then(successCallback, failureCallback);
-      return Promise.resolve();
-    };
-    prototype.setLocalDescription = withCallback;
-
-    withCallback = function(description, successCallback, failureCallback) {
-      var promise = setRemoteDescription.apply(this, [description]);
-      if (!failureCallback) {
-        return promise;
-      }
-      promise.then(successCallback, failureCallback);
-      return Promise.resolve();
-    };
-    prototype.setRemoteDescription = withCallback;
-
-    withCallback = function(candidate, successCallback, failureCallback) {
-      var promise = addIceCandidate.apply(this, [candidate]);
-      if (!failureCallback) {
-        return promise;
-      }
-      promise.then(successCallback, failureCallback);
-      return Promise.resolve();
-    };
-    prototype.addIceCandidate = withCallback;
-  },
-  shimGetUserMedia: function(window) {
-    var navigator = window && window.navigator;
-
-    if (!navigator.getUserMedia) {
-      if (navigator.webkitGetUserMedia) {
-        navigator.getUserMedia = navigator.webkitGetUserMedia.bind(navigator);
-      } else if (navigator.mediaDevices &&
-          navigator.mediaDevices.getUserMedia) {
-        navigator.getUserMedia = function(constraints, cb, errcb) {
-          navigator.mediaDevices.getUserMedia(constraints)
-          .then(cb, errcb);
-        }.bind(navigator);
-      }
-    }
-  },
-  shimRTCIceServerUrls: function(window) {
-    // migrate from non-spec RTCIceServer.url to RTCIceServer.urls
-    var OrigPeerConnection = window.RTCPeerConnection;
-    window.RTCPeerConnection = function(pcConfig, pcConstraints) {
-      if (pcConfig && pcConfig.iceServers) {
-        var newIceServers = [];
-        for (var i = 0; i < pcConfig.iceServers.length; i++) {
-          var server = pcConfig.iceServers[i];
-          if (!server.hasOwnProperty('urls') &&
-              server.hasOwnProperty('url')) {
-            utils.deprecated('RTCIceServer.url', 'RTCIceServer.urls');
-            server = JSON.parse(JSON.stringify(server));
-            server.urls = server.url;
-            delete server.url;
-            newIceServers.push(server);
-          } else {
-            newIceServers.push(pcConfig.iceServers[i]);
-          }
-        }
-        pcConfig.iceServers = newIceServers;
-      }
-      return new OrigPeerConnection(pcConfig, pcConstraints);
-    };
-    window.RTCPeerConnection.prototype = OrigPeerConnection.prototype;
-    // wrap static methods. Currently just generateCertificate.
-    if ('generateCertificate' in window.RTCPeerConnection) {
-      Object.defineProperty(window.RTCPeerConnection, 'generateCertificate', {
-        get: function() {
-          return OrigPeerConnection.generateCertificate;
-        }
-      });
-    }
-  },
-  shimTrackEventTransceiver: function(window) {
-    // Add event.transceiver member over deprecated event.receiver
-    if (typeof window === 'object' && window.RTCPeerConnection &&
-        ('receiver' in window.RTCTrackEvent.prototype) &&
-        // can't check 'transceiver' in window.RTCTrackEvent.prototype, as it is
-        // defined for some reason even when window.RTCTransceiver is not.
-        !window.RTCTransceiver) {
-      Object.defineProperty(window.RTCTrackEvent.prototype, 'transceiver', {
-        get: function() {
-          return {receiver: this.receiver};
-        }
-      });
-    }
-  },
-
-  shimCreateOfferLegacy: function(window) {
-    var origCreateOffer = window.RTCPeerConnection.prototype.createOffer;
-    window.RTCPeerConnection.prototype.createOffer = function(offerOptions) {
-      var pc = this;
-      if (offerOptions) {
-        var audioTransceiver = pc.getTransceivers().find(function(transceiver) {
-          return transceiver.sender.track &&
-              transceiver.sender.track.kind === 'audio';
-        });
-        if (offerOptions.offerToReceiveAudio === false && audioTransceiver) {
-          if (audioTransceiver.direction === 'sendrecv') {
-            if (audioTransceiver.setDirection) {
-              audioTransceiver.setDirection('sendonly');
-            } else {
-              audioTransceiver.direction = 'sendonly';
-            }
-          } else if (audioTransceiver.direction === 'recvonly') {
-            if (audioTransceiver.setDirection) {
-              audioTransceiver.setDirection('inactive');
-            } else {
-              audioTransceiver.direction = 'inactive';
-            }
-          }
-        } else if (offerOptions.offerToReceiveAudio === true &&
-            !audioTransceiver) {
-          pc.addTransceiver('audio');
-        }
-
-        var videoTransceiver = pc.getTransceivers().find(function(transceiver) {
-          return transceiver.sender.track &&
-              transceiver.sender.track.kind === 'video';
-        });
-        if (offerOptions.offerToReceiveVideo === false && videoTransceiver) {
-          if (videoTransceiver.direction === 'sendrecv') {
-            videoTransceiver.setDirection('sendonly');
-          } else if (videoTransceiver.direction === 'recvonly') {
-            videoTransceiver.setDirection('inactive');
-          }
-        } else if (offerOptions.offerToReceiveVideo === true &&
-            !videoTransceiver) {
-          pc.addTransceiver('video');
-        }
-      }
-      return origCreateOffer.apply(pc, arguments);
-    };
-  }
-};
-
-
-/***/ }),
-
-/***/ "../../../../openvidu-browser/node_modules/webrtc-adapter/src/js/utils.js":
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/*
- *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
- *
- *  Use of this source code is governed by a BSD-style license
- *  that can be found in the LICENSE file in the root of the source
- *  tree.
- */
- /* eslint-env node */
-
-
-var logDisabled_ = true;
-var deprecationWarnings_ = true;
-
-/**
- * Extract browser version out of the provided user agent string.
- *
- * @param {!string} uastring userAgent string.
- * @param {!string} expr Regular expression used as match criteria.
- * @param {!number} pos position in the version string to be returned.
- * @return {!number} browser version.
- */
-function extractVersion(uastring, expr, pos) {
-  var match = uastring.match(expr);
-  return match && match.length >= pos && parseInt(match[pos], 10);
-}
-
-// Wraps the peerconnection event eventNameToWrap in a function
-// which returns the modified event object.
-function wrapPeerConnectionEvent(window, eventNameToWrap, wrapper) {
-  if (!window.RTCPeerConnection) {
-    return;
-  }
-  var proto = window.RTCPeerConnection.prototype;
-  var nativeAddEventListener = proto.addEventListener;
-  proto.addEventListener = function(nativeEventName, cb) {
-    if (nativeEventName !== eventNameToWrap) {
-      return nativeAddEventListener.apply(this, arguments);
-    }
-    var wrappedCallback = function(e) {
-      cb(wrapper(e));
-    };
-    this._eventMap = this._eventMap || {};
-    this._eventMap[cb] = wrappedCallback;
-    return nativeAddEventListener.apply(this, [nativeEventName,
-      wrappedCallback]);
-  };
-
-  var nativeRemoveEventListener = proto.removeEventListener;
-  proto.removeEventListener = function(nativeEventName, cb) {
-    if (nativeEventName !== eventNameToWrap || !this._eventMap
-        || !this._eventMap[cb]) {
-      return nativeRemoveEventListener.apply(this, arguments);
-    }
-    var unwrappedCb = this._eventMap[cb];
-    delete this._eventMap[cb];
-    return nativeRemoveEventListener.apply(this, [nativeEventName,
-      unwrappedCb]);
-  };
-
-  Object.defineProperty(proto, 'on' + eventNameToWrap, {
-    get: function() {
-      return this['_on' + eventNameToWrap];
-    },
-    set: function(cb) {
-      if (this['_on' + eventNameToWrap]) {
-        this.removeEventListener(eventNameToWrap,
-            this['_on' + eventNameToWrap]);
-        delete this['_on' + eventNameToWrap];
-      }
-      if (cb) {
-        this.addEventListener(eventNameToWrap,
-            this['_on' + eventNameToWrap] = cb);
-      }
-    }
-  });
-}
-
-// Utility methods.
-module.exports = {
-  extractVersion: extractVersion,
-  wrapPeerConnectionEvent: wrapPeerConnectionEvent,
-  disableLog: function(bool) {
-    if (typeof bool !== 'boolean') {
-      return new Error('Argument type: ' + typeof bool +
-          '. Please use a boolean.');
-    }
-    logDisabled_ = bool;
-    return (bool) ? 'adapter.js logging disabled' :
-        'adapter.js logging enabled';
-  },
-
-  /**
-   * Disable or enable deprecation warnings
-   * @param {!boolean} bool set to true to disable warnings.
-   */
-  disableWarnings: function(bool) {
-    if (typeof bool !== 'boolean') {
-      return new Error('Argument type: ' + typeof bool +
-          '. Please use a boolean.');
-    }
-    deprecationWarnings_ = !bool;
-    return 'adapter.js deprecation warnings ' + (bool ? 'disabled' : 'enabled');
-  },
-
-  log: function() {
-    if (typeof window === 'object') {
-      if (logDisabled_) {
-        return;
-      }
-      if (typeof console !== 'undefined' && typeof console.log === 'function') {
-        console.log.apply(console, arguments);
-      }
-    }
-  },
-
-  /**
-   * Shows a deprecation warning suggesting the modern and spec-compatible API.
-   */
-  deprecated: function(oldMethod, newMethod) {
-    if (!deprecationWarnings_) {
-      return;
-    }
-    console.warn(oldMethod + ' is deprecated, please use ' + newMethod +
-        ' instead.');
-  },
-
-  /**
-   * Browser detector.
-   *
-   * @return {object} result containing browser and version
-   *     properties.
-   */
-  detectBrowser: function(window) {
-    var navigator = window && window.navigator;
-
-    // Returned result object.
-    var result = {};
-    result.browser = null;
-    result.version = null;
-
-    // Fail early if it's not a browser
-    if (typeof window === 'undefined' || !window.navigator) {
-      result.browser = 'Not a browser.';
-      return result;
-    }
-
-    if (navigator.mozGetUserMedia) { // Firefox.
-      result.browser = 'firefox';
-      result.version = extractVersion(navigator.userAgent,
-          /Firefox\/(\d+)\./, 1);
-    } else if (navigator.webkitGetUserMedia) {
-      // Chrome, Chromium, Webview, Opera.
-      // Version matches Chrome/WebRTC version.
-      result.browser = 'chrome';
-      result.version = extractVersion(navigator.userAgent,
-          /Chrom(e|ium)\/(\d+)\./, 2);
-    } else if (navigator.mediaDevices &&
-        navigator.userAgent.match(/Edge\/(\d+).(\d+)$/)) { // Edge.
-      result.browser = 'edge';
-      result.version = extractVersion(navigator.userAgent,
-          /Edge\/(\d+).(\d+)$/, 2);
-    } else if (window.RTCPeerConnection &&
-        navigator.userAgent.match(/AppleWebKit\/(\d+)\./)) { // Safari.
-      result.browser = 'safari';
-      result.version = extractVersion(navigator.userAgent,
-          /AppleWebKit\/(\d+)\./, 1);
-    } else { // Default fallthrough: not supported.
-      result.browser = 'Not a supported browser.';
-      return result;
-    }
-
-    return result;
-  }
-};
 
 
 /***/ }),
@@ -15080,11 +11351,12 @@ var AppMaterialModule = (function () {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__app_routing__ = __webpack_require__("./src/app/app.routing.ts");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_app_app_material_module__ = __webpack_require__("./src/app/app.material.module.ts");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__services_info_service__ = __webpack_require__("./src/app/services/info.service.ts");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__app_component__ = __webpack_require__("./src/app/app.component.ts");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__components_dashboard_dashboard_component__ = __webpack_require__("./src/app/components/dashboard/dashboard.component.ts");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__components_session_details_session_details_component__ = __webpack_require__("./src/app/components/session-details/session-details.component.ts");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__components_dashboard_credentials_dialog_component__ = __webpack_require__("./src/app/components/dashboard/credentials-dialog.component.ts");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_13__components_layouts_layout_best_fit_layout_best_fit_component__ = __webpack_require__("./src/app/components/layouts/layout-best-fit/layout-best-fit.component.ts");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__services_rest_service__ = __webpack_require__("./src/app/services/rest.service.ts");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__app_component__ = __webpack_require__("./src/app/app.component.ts");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__components_dashboard_dashboard_component__ = __webpack_require__("./src/app/components/dashboard/dashboard.component.ts");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__components_session_details_session_details_component__ = __webpack_require__("./src/app/components/session-details/session-details.component.ts");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_13__components_dashboard_credentials_dialog_component__ = __webpack_require__("./src/app/components/dashboard/credentials-dialog.component.ts");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_14__components_layouts_layout_best_fit_layout_best_fit_component__ = __webpack_require__("./src/app/components/layouts/layout-best-fit/layout-best-fit.component.ts");
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -15105,17 +11377,18 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 
 
 
+
 var AppModule = (function () {
     function AppModule() {
     }
     AppModule = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_2__angular_core__["K" /* NgModule */])({
             declarations: [
-                __WEBPACK_IMPORTED_MODULE_9__app_component__["a" /* AppComponent */],
-                __WEBPACK_IMPORTED_MODULE_10__components_dashboard_dashboard_component__["a" /* DashboardComponent */],
-                __WEBPACK_IMPORTED_MODULE_11__components_session_details_session_details_component__["a" /* SessionDetailsComponent */],
-                __WEBPACK_IMPORTED_MODULE_12__components_dashboard_credentials_dialog_component__["a" /* CredentialsDialogComponent */],
-                __WEBPACK_IMPORTED_MODULE_13__components_layouts_layout_best_fit_layout_best_fit_component__["a" /* LayoutBestFitComponent */],
+                __WEBPACK_IMPORTED_MODULE_10__app_component__["a" /* AppComponent */],
+                __WEBPACK_IMPORTED_MODULE_11__components_dashboard_dashboard_component__["a" /* DashboardComponent */],
+                __WEBPACK_IMPORTED_MODULE_12__components_session_details_session_details_component__["a" /* SessionDetailsComponent */],
+                __WEBPACK_IMPORTED_MODULE_13__components_dashboard_credentials_dialog_component__["a" /* CredentialsDialogComponent */],
+                __WEBPACK_IMPORTED_MODULE_14__components_layouts_layout_best_fit_layout_best_fit_component__["a" /* LayoutBestFitComponent */],
             ],
             imports: [
                 __WEBPACK_IMPORTED_MODULE_0__angular_platform_browser__["a" /* BrowserModule */],
@@ -15126,10 +11399,10 @@ var AppModule = (function () {
                 __WEBPACK_IMPORTED_MODULE_1__angular_flex_layout__["a" /* FlexLayoutModule */]
             ],
             entryComponents: [
-                __WEBPACK_IMPORTED_MODULE_12__components_dashboard_credentials_dialog_component__["a" /* CredentialsDialogComponent */],
+                __WEBPACK_IMPORTED_MODULE_13__components_dashboard_credentials_dialog_component__["a" /* CredentialsDialogComponent */],
             ],
-            providers: [__WEBPACK_IMPORTED_MODULE_8__services_info_service__["a" /* InfoService */]],
-            bootstrap: [__WEBPACK_IMPORTED_MODULE_9__app_component__["a" /* AppComponent */]]
+            providers: [__WEBPACK_IMPORTED_MODULE_8__services_info_service__["a" /* InfoService */], __WEBPACK_IMPORTED_MODULE_9__services_rest_service__["a" /* RestService */]],
+            bootstrap: [__WEBPACK_IMPORTED_MODULE_10__app_component__["a" /* AppComponent */]]
         })
     ], AppModule);
     return AppModule;
@@ -15199,7 +11472,7 @@ var CredentialsDialogComponent = (function () {
     CredentialsDialogComponent = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
             selector: 'app-credentials-dialog',
-            template: "\n        <div>\n            <h1 mat-dialog-title>\n                Insert your secret\n            </h1>\n            <form #dialogForm (ngSubmit)=\"testVideo()\">\n                <mat-dialog-content>\n                    <mat-input-container>\n                        <input matInput name=\"secret\" type=\"password\" [(ngModel)]=\"secret\">\n                    </mat-input-container>\n                </mat-dialog-content>\n                <mat-dialog-actions>\n                    <button mat-button mat-dialog-close>CANCEL</button>\n                    <button mat-button id=\"join-btn\" type=\"submit\">TEST</button>\n                </mat-dialog-actions>\n            </form>\n        </div>\n    ",
+            template: "\n        <div>\n            <h1 mat-dialog-title>\n                Insert your secret\n            </h1>\n            <form #dialogForm (ngSubmit)=\"testVideo()\">\n                <mat-dialog-content>\n                    <mat-input-container>\n                        <input matInput name=\"secret\" type=\"password\" [(ngModel)]=\"secret\" required>\n                    </mat-input-container>\n                </mat-dialog-content>\n                <mat-dialog-actions>\n                    <button mat-button mat-dialog-close>CANCEL</button>\n                    <button mat-button id=\"join-btn\" type=\"submit\">TEST</button>\n                </mat-dialog-actions>\n            </form>\n        </div>\n    ",
             styles: ["\n        #quality-div {\n            margin-top: 20px;\n        }\n        #join-div {\n            margin-top: 25px;\n            margin-bottom: 20px;\n        }\n        #quality-tag {\n            display: block;\n        }\n        h5 {\n            margin-bottom: 10px;\n            text-align: left;\n        }\n        #joinWithVideo {\n            margin-right: 50px;\n        }\n        mat-dialog-actions {\n            display: block;\n        }\n        #join-btn {\n            float: right;\n        }\n    "],
         }),
         __metadata("design:paramtypes", [])
@@ -15233,9 +11506,10 @@ module.exports = "<div id=\"dashboard-div\" fxLayout=\"row\" fxLayout.xs=\"colum
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__("./node_modules/@angular/core/esm5/core.js");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_material__ = __webpack_require__("./node_modules/@angular/material/esm5/material.es5.js");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__services_info_service__ = __webpack_require__("./src/app/services/info.service.ts");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_openvidu_browser__ = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/index.js");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_openvidu_browser___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_openvidu_browser__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__credentials_dialog_component__ = __webpack_require__("./src/app/components/dashboard/credentials-dialog.component.ts");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__services_rest_service__ = __webpack_require__("./src/app/services/rest.service.ts");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_openvidu_browser__ = __webpack_require__("../../../../openvidu-browser/lib/index.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_openvidu_browser___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_openvidu_browser__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__credentials_dialog_component__ = __webpack_require__("./src/app/components/dashboard/credentials-dialog.component.ts");
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -15250,10 +11524,12 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
+
 var DashboardComponent = (function () {
-    function DashboardComponent(infoService, dialog) {
+    function DashboardComponent(infoService, restService, dialog) {
         var _this = this;
         this.infoService = infoService;
+        this.restService = restService;
         this.dialog = dialog;
         this.lockScroll = false;
         this.info = [];
@@ -15287,6 +11563,13 @@ var DashboardComponent = (function () {
             console.log(event.data);
             _this.infoService.updateInfo(event.data);
         };
+        this.restService.getOpenViduPublicUrl()
+            .then(function (url) {
+            _this.openviduPublicUrl = url.replace('https://', 'wss://').replace('http://', 'ws://');
+        })
+            .catch(function (error) {
+            console.error(error);
+        });
     };
     DashboardComponent.prototype.beforeunloadHandler = function () {
         // On window closed leave test session and close info websocket
@@ -15313,71 +11596,79 @@ var DashboardComponent = (function () {
     DashboardComponent.prototype.testVideo = function () {
         var _this = this;
         var dialogRef;
-        dialogRef = this.dialog.open(__WEBPACK_IMPORTED_MODULE_4__credentials_dialog_component__["a" /* CredentialsDialogComponent */]);
+        dialogRef = this.dialog.open(__WEBPACK_IMPORTED_MODULE_5__credentials_dialog_component__["a" /* CredentialsDialogComponent */]);
         dialogRef.componentInstance.myReference = dialogRef;
         dialogRef.afterClosed().subscribe(function (secret) {
             if (secret) {
-                var port = (location.port) ? location.port : '8443';
-                _this.connectToSession('wss://' + location.hostname + ':' + port + '/testSession?secret=' + secret);
-            }
-        });
-    };
-    DashboardComponent.prototype.connectToSession = function (mySessionId) {
-        var _this = this;
-        this.msgChain = [];
-        var OV = new __WEBPACK_IMPORTED_MODULE_3_openvidu_browser__["OpenVidu"]();
-        this.session = OV.initSession(mySessionId);
-        this.testStatus = 'CONNECTING';
-        this.testButton = 'Testing...';
-        this.session.connect('token', function (error) {
-            if (!error) {
-                _this.testStatus = 'CONNECTED';
-                var publisherRemote = OV.initPublisher('mirrored-video', {
-                    audio: true,
-                    video: true,
-                    audioActive: true,
-                    videoActive: true,
-                    quality: 'MEDIUM'
-                }, function (e) {
-                    if (!!e) {
-                        console.error(e);
-                    }
-                });
-                publisherRemote.on('accessAllowed', function () {
-                    _this.msgChain.push('Camera access allowed');
-                });
-                publisherRemote.on('accessDenied', function () {
-                    _this.endTestVideo();
-                    _this.msgChain.push('Camera access denied');
-                });
-                publisherRemote.on('videoElementCreated', function (video) {
-                    _this.showSpinner = true;
-                    _this.msgChain.push('Video element created');
-                });
-                publisherRemote.on('remoteVideoPlaying', function (video) {
-                    _this.msgChain.push('Remote video playing');
-                    _this.testButton = 'End test';
-                    _this.testStatus = 'PLAYING';
-                    _this.showSpinner = false;
-                });
-                publisherRemote.subscribeToRemote();
-                _this.session.publish(publisherRemote);
-            }
-            else {
-                if (error.code === 401) {
-                    _this.endTestVideo();
-                    var dialogRef = void 0;
-                    dialogRef = _this.dialog.open(__WEBPACK_IMPORTED_MODULE_4__credentials_dialog_component__["a" /* CredentialsDialogComponent */]);
-                    dialogRef.componentInstance.myReference = dialogRef;
-                    dialogRef.afterClosed().subscribe(function (secret) {
-                        if (secret) {
-                            _this.connectToSession('wss://' + location.hostname + ':8443/testSession?secret=' + secret);
-                        }
+                if (!_this.openviduPublicUrl) {
+                    _this.restService.getOpenViduPublicUrl()
+                        .then((function (url) {
+                        _this.openviduPublicUrl = url.replace('https://', 'wss://').replace('http://', 'ws://');
+                        _this.connectToSession(_this.openviduPublicUrl + '?sessionId=testSession&secret=' + secret);
+                    }))
+                        .catch(function (error) {
+                        console.error(error);
                     });
                 }
                 else {
-                    console.error(error);
+                    _this.connectToSession(_this.openviduPublicUrl + '?sessionId=testSession&secret=' + secret);
                 }
+            }
+        });
+    };
+    DashboardComponent.prototype.connectToSession = function (token) {
+        var _this = this;
+        this.msgChain = [];
+        var OV = new __WEBPACK_IMPORTED_MODULE_4_openvidu_browser__["OpenVidu"]();
+        this.session = OV.initSession();
+        this.testStatus = 'CONNECTING';
+        this.testButton = 'Testing...';
+        this.session.connect(token)
+            .then(function () {
+            _this.testStatus = 'CONNECTED';
+            var publisherRemote = OV.initPublisher('mirrored-video', {
+                publishAudio: true,
+                publishVideo: true,
+                resolution: '640x480'
+            }, function (e) {
+                if (!!e) {
+                    console.error(e);
+                }
+            });
+            publisherRemote.on('accessAllowed', function () {
+                _this.msgChain.push('Camera access allowed');
+            });
+            publisherRemote.on('accessDenied', function () {
+                _this.endTestVideo();
+                _this.msgChain.push('Camera access denied');
+            });
+            publisherRemote.on('videoElementCreated', function (video) {
+                _this.showSpinner = true;
+                _this.msgChain.push('Video element created');
+            });
+            publisherRemote.on('remoteVideoPlaying', function (video) {
+                _this.msgChain.push('Remote video playing');
+                _this.testButton = 'End test';
+                _this.testStatus = 'PLAYING';
+                _this.showSpinner = false;
+            });
+            publisherRemote.subscribeToRemote();
+            _this.session.publish(publisherRemote);
+        })
+            .catch(function (error) {
+            if (error.code === 401) {
+                _this.endTestVideo();
+                var dialogRef = void 0;
+                dialogRef = _this.dialog.open(__WEBPACK_IMPORTED_MODULE_5__credentials_dialog_component__["a" /* CredentialsDialogComponent */]);
+                dialogRef.componentInstance.myReference = dialogRef;
+                dialogRef.afterClosed().subscribe(function (secret) {
+                    if (secret) {
+                        _this.connectToSession(_this.openviduPublicUrl + '?sessionId=testSession&secret=' + secret);
+                    }
+                });
+            }
+            else {
+                console.error(error);
             }
         });
     };
@@ -15416,7 +11707,7 @@ var DashboardComponent = (function () {
             template: __webpack_require__("./src/app/components/dashboard/dashboard.component.html"),
             styles: [__webpack_require__("./src/app/components/dashboard/dashboard.component.css")],
         }),
-        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_2__services_info_service__["a" /* InfoService */], __WEBPACK_IMPORTED_MODULE_1__angular_material__["d" /* MatDialog */]])
+        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_2__services_info_service__["a" /* InfoService */], __WEBPACK_IMPORTED_MODULE_3__services_rest_service__["a" /* RestService */], __WEBPACK_IMPORTED_MODULE_1__angular_material__["d" /* MatDialog */]])
     ], DashboardComponent);
     return DashboardComponent;
 }());
@@ -15446,7 +11737,7 @@ module.exports = "<div id=\"layout\" class=\"bounds\">\n  <div *ngFor=\"let s of
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return LayoutBestFitComponent; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__("./node_modules/@angular/core/esm5/core.js");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_router__ = __webpack_require__("./node_modules/@angular/router/esm5/router.js");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_openvidu_browser__ = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/index.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_openvidu_browser__ = __webpack_require__("../../../../openvidu-browser/lib/index.js");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_openvidu_browser___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_openvidu_browser__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__openvidu_layout__ = __webpack_require__("./src/app/components/layouts/openvidu-layout.ts");
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
@@ -15489,8 +11780,7 @@ var LayoutBestFitComponent = (function () {
     LayoutBestFitComponent.prototype.ngOnInit = function () {
         var _this = this;
         var OV = new __WEBPACK_IMPORTED_MODULE_2_openvidu_browser__["OpenVidu"]();
-        var fullSessionId = 'wss://' + location.hostname + ':8443/' + this.sessionId + '?secret=' + this.secret + '&recorder=true';
-        this.session = OV.initSession(fullSessionId);
+        this.session = OV.initSession();
         this.session.on('streamCreated', function (event) {
             var subscriber = _this.session.subscribe(event.stream, '');
             _this.addRemoteStream(event.stream);
@@ -15500,10 +11790,10 @@ var LayoutBestFitComponent = (function () {
             _this.deleteRemoteStream(event.stream);
             _this.openviduLayout.updateLayout();
         });
-        this.session.connect(null, function (error) {
-            if (error) {
-                console.error(error);
-            }
+        var token = 'wss://' + location.hostname + ':4443?sessionId=' + this.sessionId + '&secret=' + this.secret + '&recorder=true';
+        this.session.connect(token)
+            .catch(function (error) {
+            console.error(error);
         });
         this.openviduLayout = new __WEBPACK_IMPORTED_MODULE_3__openvidu_layout__["a" /* OpenViduLayout */]();
         this.openviduLayout.initLayoutContainer(document.getElementById('layout'), {
@@ -15524,7 +11814,13 @@ var LayoutBestFitComponent = (function () {
         this.appRef.tick();
     };
     LayoutBestFitComponent.prototype.deleteRemoteStream = function (stream) {
-        var index = this.streams.indexOf(stream, 0);
+        var index = -1;
+        for (var i = 0; i < this.streams.length; i++) {
+            if (this.streams[i].streamId === stream.streamId) {
+                index = i;
+                break;
+            }
+        }
         if (index > -1) {
             this.streams.splice(index, 1);
         }
@@ -15966,6 +12262,59 @@ var InfoService = (function () {
         __metadata("design:paramtypes", [])
     ], InfoService);
     return InfoService;
+}());
+
+
+
+/***/ }),
+
+/***/ "./src/app/services/rest.service.ts":
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return RestService; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__("./node_modules/@angular/core/esm5/core.js");
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+
+var RestService = (function () {
+    function RestService() {
+    }
+    RestService.prototype.getOpenViduPublicUrl = function () {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            if (!!_this.openviduPublicUrl) {
+                resolve(_this.openviduPublicUrl);
+            }
+            else {
+                var url = location.protocol + '//' + location.hostname + ((!!location.port) ? (':' + location.port) : '') +
+                    '/config/openvidu-publicurl';
+                var http_1 = new XMLHttpRequest();
+                http_1.onreadystatechange = function () {
+                    if (http_1.readyState === 4) {
+                        if (http_1.status === 200) {
+                            _this.openviduPublicUrl = http_1.responseText;
+                            resolve(http_1.responseText);
+                        }
+                        else {
+                            reject('Error getting OpenVidu publicurl');
+                        }
+                    }
+                    ;
+                };
+                http_1.open('GET', url, true);
+                http_1.send();
+            }
+        });
+    };
+    RestService = __decorate([
+        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["C" /* Injectable */])()
+    ], RestService);
+    return RestService;
 }());
 
 

@@ -12,13 +12,16 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 package io.openvidu.server;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 
+import javax.annotation.PostConstruct;
 import javax.ws.rs.ProcessingException;
 
 import org.kurento.jsonrpc.JsonUtils;
@@ -31,7 +34,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
@@ -125,15 +127,37 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	public CallDetailRecord cdr() {
 		return new CallDetailRecord();
 	}
+	
+	@Bean
+	@ConditionalOnMissingBean
+	public OpenviduConfig openviduConfig() {
+		return new OpenviduConfig();
+	}
+	
+	@Bean
+	@ConditionalOnMissingBean
+	public ComposedRecordingService composedRecordingService() {
+		return new ComposedRecordingService();
+	}
 
 	@Override
 	public void registerJsonRpcHandlers(JsonRpcHandlerRegistry registry) {
-		registry.addHandler(rpcHandler().withPingWatchdog(true), "/room");
+		registry.addHandler(rpcHandler().withPingWatchdog(true), "/openvidu");
 	}
 
+	private static String getContainerIp() throws IOException, InterruptedException {
+		return CommandExecutor.execCommand("/bin/sh", "-c", "hostname -i | awk '{print $1}'");
+	}
+	
 	public static void main(String[] args) throws Exception {
-		ConfigurableApplicationContext context = start(args);
-		OpenviduConfig openviduConf = context.getBean(OpenviduConfig.class);
+		log.info("Using /dev/urandom for secure random generation");
+		System.setProperty("java.security.egd", "file:/dev/./urandom");
+		SpringApplication.run(OpenViduServer.class, args);
+	}
+	
+	@PostConstruct
+    public void init() throws MalformedURLException, InterruptedException {
+		OpenviduConfig openviduConf = openviduConfig();
 
 		String publicUrl = openviduConf.getOpenViduPublicUrl();
 		String type = publicUrl;
@@ -142,20 +166,25 @@ public class OpenViduServer implements JsonRpcConfigurer {
 		case "ngrok":
 			try {
 				NgrokRestController ngrok = new NgrokRestController();
+				String ngrokAppUrl = ngrok.getNgrokAppUrl();
+				if (ngrokAppUrl.isEmpty()) {
+					ngrokAppUrl = "(No tunnel 'app' found in ngrok.yml)";
+				}
 				final String NEW_LINE = System.getProperty("line.separator");
-				String str = 	NEW_LINE + "        PUBLIC IP        " + 
+				String str = 	NEW_LINE +
+								NEW_LINE + "      APP PUBLIC IP      " + 
 								NEW_LINE + "-------------------------" + 
-								NEW_LINE + ngrok.getNgrokAppUrl() + 
+								NEW_LINE + ngrokAppUrl + 
 								NEW_LINE + "-------------------------" + 
 								NEW_LINE;
-				System.out.println(str);
+				log.info(str);
 				OpenViduServer.publicUrl = ngrok.getNgrokServerUrl().replaceFirst("https://", "wss://");
 				openviduConf.setFinalUrl(ngrok.getNgrokServerUrl());
 
 			} catch (Exception e) {
-				System.err.println("Ngrok URL was configured, but there was an error connecting to ngrok: "
+				log.error("Ngrok URL was configured, but there was an error connecting to ngrok: "
 						+ e.getClass().getName() + " " + e.getMessage());
-				System.err.println("Fallback to local URL");
+				log.error("Fallback to local URL");
 			}
 			break;
 
@@ -164,16 +193,13 @@ public class OpenViduServer implements JsonRpcConfigurer {
 				OpenViduServer.publicUrl = "wss://" + getContainerIp() + ":" + openviduConf.getServerPort();
 				openviduConf.setFinalUrl("https://" + getContainerIp() + ":" + openviduConf.getServerPort());
 			} catch (Exception e) {
-				System.err.println("Docker container IP was configured, but there was an error obtaining IP: "
+				log.error("Docker container IP was configured, but there was an error obtaining IP: "
 						+ e.getClass().getName() + " " + e.getMessage());
-				System.err.println("Fallback to local URL");
+				log.error("Fallback to local URL");
 			}
 			break;
 
 		case "local":
-			break;
-
-		case "docker-local":
 			break;
 
 		default:
@@ -213,9 +239,9 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 		boolean recordingModuleEnabled = openviduConf.isRecordingModuleEnabled();
 		if (recordingModuleEnabled) {
-			ComposedRecordingService recordingService = context.getBean(ComposedRecordingService.class);
+			ComposedRecordingService recordingService = composedRecordingService();
 			recordingService.setRecordingVersion(openviduConf.getOpenViduRecordingVersion());
-			System.out.println("Recording module required: Downloading openvidu/openvidu-recording:"
+			log.info("Recording module required: Downloading openvidu/openvidu-recording:"
 					+ openviduConf.getOpenViduRecordingVersion() + " Docker image (800 MB aprox)");
 
 			boolean imageExists = false;
@@ -223,28 +249,34 @@ public class OpenViduServer implements JsonRpcConfigurer {
 				imageExists = recordingService.recordingImageExistsLocally();
 			} catch (ProcessingException exception) {
 				String message = "Exception connecting to Docker daemon: ";
-				if ("docker-local".equals(openviduConf.getOpenViduPublicUrl())) {
-					message += "make sure you include flag \"-v /var/run/docker.sock:/var/run/docker.sock\" in \"docker run\" command";
+				if ("docker".equals(openviduConf.getSpringProfile())) {
+					final String NEW_LINE = System.getProperty("line.separator");
+					message +=	"make sure you include the following flags in your \"docker run\" command:" +
+								NEW_LINE + "    -e openvidu.recording.path=/YOUR/PATH/TO/VIDEO/FILES" +
+								NEW_LINE + "    -e MY_UID=$(id -u $USER)" +
+								NEW_LINE + "    -v /var/run/docker.sock:/var/run/docker.sock" +
+								NEW_LINE + "    -v /YOUR/PATH/TO/VIDEO/FILES:/YOUR/PATH/TO/VIDEO/FILES" +
+								NEW_LINE;
 				} else {
-					message += "you need Docker installed in this machine to enable OpenVidu recorder service";
+					message += "you need Docker installed in this machine to enable OpenVidu recording service";
 				}
 				log.error(message);
 				throw new RuntimeException(message);
 			}
 
 			if (imageExists) {
-				System.out.println("Docker image already exists locally");
+				log.info("Docker image already exists locally");
 			} else {
 				Thread t = new Thread(() -> {
 					boolean keep = true;
-					System.out.print("Downloading ");
+					log.info("Downloading ");
 					while (keep) {
 						System.out.print(".");
 						try {
 							Thread.sleep(1000);
 						} catch (InterruptedException e) {
 							keep = false;
-							System.out.println("\nDownload complete");
+							log.info("\nDownload complete");
 						}
 					}
 				});
@@ -252,21 +284,12 @@ public class OpenViduServer implements JsonRpcConfigurer {
 				recordingService.downloadRecordingImage();
 				t.interrupt();
 				t.join();
-				System.out.println("Docker image available");
+				log.info("Docker image available");
 			}
+
+			recordingService.initRecordingPath();
 		}
-
-		System.out.println("OpenVidu Server using " + type + " URL: [" + OpenViduServer.publicUrl + "]");
-	}
-
-	private static String getContainerIp() throws IOException, InterruptedException {
-		return CommandExecutor.execCommand("/bin/sh", "-c", "hostname -i | awk '{print $1}'");
-	}
-
-	public static ConfigurableApplicationContext start(String[] args) {
-		log.info("Using /dev/urandom for secure random generation");
-		System.setProperty("java.security.egd", "file:/dev/./urandom");
-		return SpringApplication.run(OpenViduServer.class, args);
+		log.info("OpenVidu Server using " + type + " URL: [" + OpenViduServer.publicUrl + "]");
 	}
 
 }

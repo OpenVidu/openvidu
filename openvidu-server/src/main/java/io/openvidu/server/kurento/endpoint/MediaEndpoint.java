@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2017 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,6 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
 package io.openvidu.server.kurento.endpoint;
@@ -53,7 +54,6 @@ public abstract class MediaEndpoint {
   private static Logger log;
 
   private boolean web = false;
-  private boolean dataChannels = false;
 
   private WebRtcEndpoint webEndpoint = null;
   private RtpEndpoint endpoint = null;
@@ -75,13 +75,12 @@ public abstract class MediaEndpoint {
    * Constructor to set the owner, the endpoint's name and the media pipeline.
    *
    * @param web
-   * @param dataChannels
    * @param owner
    * @param endpointName
    * @param pipeline
    * @param log
    */
-  public MediaEndpoint(boolean web, boolean dataChannels, KurentoParticipant owner, String endpointName,
+  public MediaEndpoint(boolean web, KurentoParticipant owner, String endpointName,
       MediaPipeline pipeline, Logger log) {
     if (log == null) {
       MediaEndpoint.log = LoggerFactory.getLogger(MediaEndpoint.class);
@@ -89,7 +88,6 @@ public abstract class MediaEndpoint {
       MediaEndpoint.log = log;
     }
     this.web = web;
-    this.dataChannels = dataChannels;
     this.owner = owner;
     this.setEndpointName(endpointName);
     this.setMediaPipeline(pipeline);
@@ -244,9 +242,9 @@ public abstract class MediaEndpoint {
   protected void internalEndpointInitialization(final CountDownLatch endpointLatch) {
     if (this.isWeb()) {
       WebRtcEndpoint.Builder builder = new WebRtcEndpoint.Builder(pipeline);
-      if (this.dataChannels) {
+      /*if (this.dataChannels) {
         builder.useDataChannels();
-      }
+      }*/
       builder.buildAsync(new Continuation<WebRtcEndpoint>() {
         @Override
         public void onSuccess(WebRtcEndpoint result) throws Exception {

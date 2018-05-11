@@ -12,7 +12,7 @@
   {
     "name": "openvidu.publicurl",
     "type": "java.lang.String",
-    "description": "URL to connect clients to OpenVidu Server. This must be the full IP of your OpenVidu Server, including protocol, host and port (for example: https://my.openvidu.server.ip:8443). If no port argument is provided, 'server.port' param will be appended to it"
+    "description": "URL to connect clients to OpenVidu Server. This must be the full IP of your OpenVidu Server, including protocol, host and port (for example: https://my.openvidu.server.ip:4443). If no port argument is provided, 'server.port' param will be appended to it"
   },
   {
     "name": "openvidu.cdr",
@@ -30,11 +30,21 @@
     "description": "Where to store the recorded video files"
   },
   {
-    "name": "openvidu.recording.free-access",
+    "name": "openvidu.recording.public-access",
     "type": "java.lang.Boolean",
-    "description": "'true' to allow free access to the video files specified in 'openviu.recording.path'. 'false' to only allow access to authenticated users"
+    "description": "'true' to allow public access to the video files specified in 'openviu.recording.path'. 'false' to only allow access to authenticated users"
   },
-    {
+  {
+    "name": "openvidu.recording.notification",
+    "type": "java.lang.String",
+    "description": "Which users will receive a notfication (client events 'recordingStarted' and 'recordingStopped') when recording starts and stops: 'none', 'publisher_moderator', 'all'"
+  },
+  {
+    "name": "openvidu.recording.custom-layout",
+    "type": "java.lang.String",
+    "description": "Where should OpenVidu Server look for custom recording layouts"
+  },
+  {
     "name": "openvidu.recording.version",
     "type": "java.lang.String",
     "description": "Tag for openvidu/openvidu-recording Docker image"

@@ -61,7 +61,7 @@ import io.openvidu.test.e2e.browser.FirefoxUser;
 public class OpenViduTestAppE2eTest {
 
 	static String OPENVIDU_SECRET = "MY_SECRET";
-	static String OPENVIDU_URL = "https://localhost:8443/";
+	static String OPENVIDU_URL = "https://localhost:4443/";
 	static String APP_URL = "http://localhost:4200/";
 	static Exception ex = null;
 	private final Object lock = new Object();
@@ -385,26 +385,20 @@ public class OpenViduTestAppE2eTest {
 
 		OpenVidu OV = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET);
 		Session session = OV.createSession();
-		String sessionId = session.getSessionId();
 
 		List<WebElement> l1 = user.getDriver().findElements(By.className("secure-session-checkbox"));
 		for (WebElement el : l1) {
 			el.click();
 		}
 
-		List<WebElement> l2 = user.getDriver().findElements(By.className("sessionIdInput"));
+		List<WebElement> l2 = user.getDriver().findElements(By.className("tokenInput"));
 		for (WebElement el : l2) {
-			el.sendKeys(sessionId);
-		}
-
-		List<WebElement> l3 = user.getDriver().findElements(By.className("tokenInput"));
-		for (WebElement el : l3) {
 			String token = session.generateToken();
 			el.sendKeys(token);
 		}
 
-		List<WebElement> l4 = user.getDriver().findElements(By.className("join-btn"));
-		for (WebElement el : l4) {
+		List<WebElement> l3 = user.getDriver().findElements(By.className("join-btn"));
+		for (WebElement el : l3) {
 			el.sendKeys(Keys.ENTER);
 		}
 

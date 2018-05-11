@@ -1,48 +1,53 @@
-import { MediaMode } from "./MediaMode";
-import { ArchiveMode } from "./ArchiveMode";
-import { ArchiveLayout } from "./ArchiveLayout";
+/*
+ * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 
-export class SessionProperties {
+import { MediaMode } from './MediaMode';
+import { RecordingLayout } from './RecordingLayout';
+import { RecordingMode } from './RecordingMode';
 
-	constructor(private mediaModeProp: MediaMode, private archiveModeProp: ArchiveMode, private archiveLayoutProp: ArchiveLayout) { }
+export interface SessionProperties {
 
-	mediaMode(): string {
-		return this.mediaModeProp;
-	}
+    /**
+     * How the media streams will be sent and received by your clients: routed through OpenVidu Media Server
+     * (`MediaMode.ROUTED`) or attempting direct p2p connections (`MediaMode.RELAYED`, _not available yet_)
+     */
+    mediaMode?: MediaMode;
 
-	archiveMode(): ArchiveMode {
-		return this.archiveModeProp;
-	}
+    /**
+     * Whether the Session will be automatically recorded (`RecordingMode.ALWAYS`) or not (`RecordingMode.MANUAL`)
+     */
+    recordingMode?: RecordingMode;
 
-	archiveLayout(): ArchiveLayout {
-		return this.archiveLayoutProp;
-	}
-}
+    /**
+     * Default value used to initialize property [[RecordingProperties.recordingLayout]] of every recording of this session.
+     * You can easily override this value later by setting [[RecordingProperties.recordingLayout]] to any other value
+     */
+    defaultRecordingLayout?: RecordingLayout;
 
-export namespace SessionProperties {
-	export class Builder {
+    /**
+     * Default value used to initialize property [[RecordingProperties.customLayout]] of every recording of this session.
+     * You can easily override this value later by setting [[RecordingProperties.customLayout]] to any other value
+     */
+    defaultCustomLayout?: string;
 
-		private mediaModeProp: MediaMode = MediaMode.ROUTED;
-		private archiveModeProp: ArchiveMode = ArchiveMode.MANUAL;
-		private archiveLayoutProp: ArchiveLayout = ArchiveLayout.BEST_FIT;
-
-		build(): SessionProperties {
-			return new SessionProperties(this.mediaModeProp, this.archiveModeProp, this.archiveLayoutProp);
-		}
-
-		mediaMode(mediaMode: MediaMode): Builder {
-			this.mediaModeProp = mediaMode;
-			return this;
-		}
-
-		archiveMode(archiveMode: ArchiveMode): Builder {
-			this.archiveModeProp = archiveMode;
-			return this;
-		}
-
-		archiveLayout(archiveLayout: ArchiveLayout): Builder {
-			this.archiveLayoutProp = archiveLayout;
-			return this;
-		}
-	};
+    /**
+     * Fix the sessionId that will be assigned to the session with this parameter. You can take advantage of this property
+     * to facilitate the mapping between OpenVidu Server 'session' entities and your own 'session' entities.
+     * If this parameter is undefined or an empty string, OpenVidu Server will generate a random sessionId for you.
+     */
+    customSessionId?: string;
 }

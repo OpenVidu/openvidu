@@ -3,7 +3,8 @@ import {
   OpenVidu as OpenViduAPI,
   Session as SessionAPI,
   TokenOptions as TokenOptionsAPI,
-  OpenViduRole as OpenViduRoleAPI
+  OpenViduRole as OpenViduRoleAPI,
+  SessionProperties as SessionPropertiesAPI
 } from 'openvidu-node-client';
 import { environment } from '../../environments/environment';
 
@@ -15,16 +16,18 @@ export class OpenviduRestService {
 
   constructor() { }
 
-  getSessionId(openviduURL: string, openviduSecret: string): Promise<string> {
-    const OV = new OpenViduAPI(openviduURL, openviduSecret);
-    const session = OV.createSession();
-
-    return new Promise(resolve => {
-      session.getSessionId((sessionId) => {
-        this.sessionIdSession.set(sessionId, session);
-        this.sessionIdTokenOpenViduRole.set(sessionId, new Map());
-        resolve(sessionId);
-      });
+  getSessionId(openviduURL: string, openviduSecret: string, sessionProperties: SessionPropertiesAPI): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const OV = new OpenViduAPI(openviduURL, openviduSecret);
+      OV.createSession(sessionProperties)
+        .then(session => {
+          this.sessionIdSession.set(session.getSessionId(), session);
+          this.sessionIdTokenOpenViduRole.set(session.getSessionId(), new Map());
+          resolve(session.getSessionId());
+        })
+        .catch(error => {
+          reject(error);
+        });
     });
   }
 
@@ -32,15 +35,17 @@ export class OpenviduRestService {
     const session: SessionAPI = this.sessionIdSession.get(sessionId);
     const OVRole: OpenViduRoleAPI = OpenViduRoleAPI[role];
 
-    return new Promise(resolve => {
-      const tokenOptions: TokenOptionsAPI = new TokenOptionsAPI.Builder()
-        .role(OVRole)
-        .data(serverData)
-        .build();
-      session.generateToken(tokenOptions, (token) => {
-        this.sessionIdTokenOpenViduRole.get(sessionId).set(token, OVRole);
-        resolve(token);
-      });
+    return new Promise((resolve, reject) => {
+      session.generateToken({
+        role: OVRole,
+        data: serverData
+      })
+        .then(token => {
+          this.sessionIdTokenOpenViduRole.get(sessionId).set(token, OVRole);
+          resolve(token);
+        }).catch(error => {
+          reject(error);
+        });
     });
   }
 
