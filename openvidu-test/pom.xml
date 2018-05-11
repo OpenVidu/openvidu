@@ -45,7 +45,7 @@
 			<id>openvidu.io</id>
 			<name>-openvidu.io Community</name>
 			<organization>OpenVidu</organization>
-			<organizationUrl>http://openvidu.io</organizationUrl>
+			<organizationUrl>https://openvidu.io</organizationUrl>
 		</developer>
 	</developers>
 

@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -112,6 +112,7 @@ public class RpcNotificationService {
 		try {
 			s.close();
 			log.info("Closed session for participant with private id {}", participantPrivateId);
+			this.showRpcConnections();
 			return rpcSession;
 		} catch (IOException e) {
 			log.error("Error closing session for participant with private id {}", participantPrivateId, e);

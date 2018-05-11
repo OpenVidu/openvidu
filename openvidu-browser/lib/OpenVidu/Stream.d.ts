@@ -1,4 +1,5 @@
-import { Connection, Session } from '..';
+import { Connection } from './Connection';
+import { Session } from './Session';
 import { InboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/InboundStreamOptions';
 import { OutboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/OutboundStreamOptions';
 import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';

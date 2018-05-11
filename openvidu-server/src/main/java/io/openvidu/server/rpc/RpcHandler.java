@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -294,23 +294,23 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 	@Override
 	public void afterConnectionEstablished(Session rpcSession) throws Exception {
-		log.info("Connection established for WebSocket session: {}", rpcSession.getSessionId());
+		log.info("After connection established for WebSocket session: {}", rpcSession.getSessionId());
 	}
 
 	@Override
 	public void afterConnectionClosed(Session rpcSession, String status) throws Exception {
-		log.info("Connection closed for WebSocket session: {} - Status: {}", rpcSession.getSessionId(), status);
-
-		RpcConnection rpc = this.notificationService.closeRpcSession(rpcSession.getSessionId());
-
-		if (rpc != null && rpc.getSessionId() != null) {
-			io.openvidu.server.core.Session session = this.sessionManager.getSession(rpc.getSessionId());
-			if (session != null && session.getParticipantByPrivateId(rpc.getParticipantPrivateId()) != null) {
-				leaveRoomAfterConnClosed(rpc.getParticipantPrivateId(), "networkDisconnect");
+		log.info("After connection closed for WebSocket session: {} - Status: {}", rpcSession.getSessionId(), status);
+		
+		if ("Close for not receive ping from client".equals(status)) {
+			RpcConnection rpc = this.notificationService.closeRpcSession(rpcSession.getSessionId());
+			if (rpc != null && rpc.getSessionId() != null) {
+				io.openvidu.server.core.Session session = this.sessionManager.getSession(rpc.getSessionId());
+				if (session != null && session.getParticipantByPrivateId(rpc.getParticipantPrivateId()) != null) {
+					leaveRoomAfterConnClosed(rpc.getParticipantPrivateId(), "networkDisconnect");
+				}
 			}
 		}
 
-		this.notificationService.showRpcConnections();
 		String rpcSessionId = rpcSession.getSessionId();
 		if (this.webSocketTransportError.get(rpcSessionId) != null) {
 			log.warn(

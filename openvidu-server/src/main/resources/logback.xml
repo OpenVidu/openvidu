@@ -11,14 +11,6 @@
 		<level value="INFO" />
 		<appender-ref ref="STDOUT" />
 	</root>
-	<if condition='property("spring.profiles.active").contains("ngrok")'>
-		<then>
-			<property scope="context" resource="application-ngrok.properties" />
-		</then>
-		<else>
-			<property scope="context" resource="application.properties" />
-		</else>
-	</if>
 	<if condition='property("openvidu.cdr").contains("true")'>
 		<then>
 			<appender name="CDR"

@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,8 @@
  */
 
 import { Event } from './Event';
-import { Session, Connection } from '../..';
+import { Session } from '../../OpenVidu/Session';
+
 
 /**
  * Defines event `sessionDisconnected` dispatched by [[Session]]
@@ -24,8 +25,8 @@ import { Session, Connection } from '../..';
 export class SessionDisconnectedEvent extends Event {
 
     /**
-     * - "disconnect"
-     * - "networkDisconnect"
+     * - "disconnect": you have called `Session.disconnect()`
+     * - "networkDisconnect": your network connection has dropped
      */
     reason: string;
 

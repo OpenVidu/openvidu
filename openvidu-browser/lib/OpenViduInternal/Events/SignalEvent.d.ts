@@ -1,5 +1,6 @@
 import { Event } from './Event';
-import { Session, Connection } from '../..';
+import { Connection } from '../../OpenVidu/Connection';
+import { Session } from '../../OpenVidu/Session';
 /**
  * Defines the following events:
  * - `signal`: dispatched by [[Session]]

@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ public enum RecordingLayout {
 
 	/**
 	 * Use your own custom recording layout. See <a href=
-	 * "http://openvidu.io/docs/advanced-features/recording#custom-recording-layouts"
+	 * "https://openvidu.io/docs/advanced-features/recording#custom-recording-layouts"
 	 * target="_blank">Custom recording layouts</a> to learn more
 	 */
 	CUSTOM

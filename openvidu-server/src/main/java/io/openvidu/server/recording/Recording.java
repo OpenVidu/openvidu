@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ public class Recording {
 		started, // The recording has started and is going on
 		stopped, // The recording has finished OK
 		available, // The recording is available for downloading. This status is reached for all
-					// stopped recordings if property 'openvidu.recording.free-access' is true
+					// stopped recordings if property 'openvidu.recording.public-access' is true
 		failed; // The recording has failed
 	}
 
@@ -58,7 +58,11 @@ public class Recording {
 		this.sessionId = (String) json.get("sessionId");
 		this.createdAt = (long) json.get("createdAt");
 		this.size = (long) json.get("size");
-		this.duration = (double) json.get("duration");
+		try {
+			this.duration = (double) json.get("duration");
+		} catch (Exception e) {
+			this.duration = new Long((long) json.get("duration")).doubleValue();
+		}
 		this.url = (String) json.get("url");
 		this.hasAudio = (boolean) json.get("hasAudio");
 		this.hasVideo = (boolean) json.get("hasVideo");

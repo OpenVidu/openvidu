@@ -1,4 +1,6 @@
-import { Session, Subscriber, Publisher } from '../..';
+import { Publisher } from '../../OpenVidu/Publisher';
+import { Session } from '../../OpenVidu/Session';
+import { Subscriber } from '../../OpenVidu/Subscriber';
 export declare abstract class Event {
     /**
      * Whether the event has a default behaviour that may be prevented by calling [[Event.preventDefault]]

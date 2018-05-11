@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,9 @@
  */
 
 import { Event } from './Event';
-import { Session, Stream, Publisher } from '../..';
+import { Publisher } from '../../OpenVidu/Publisher';
+import { Session } from '../../OpenVidu/Session';
+import { Stream } from '../../OpenVidu/Stream';
 
 
 /**
@@ -33,9 +35,9 @@ export class StreamEvent extends Event {
 
     /**
      * For 'streamDestroyed' event:
-     * - "disconnect"
-     * - "networkDisconnect"
-     * - "unpublish"
+     * - "unpublish": method `Session.unpublish()` has been called
+     * - "disconnect": method `Session.disconnect()` has been called
+     * - "networkDisconnect": the user's network connection has dropped
      *
      * For 'streamCreated' empty string
      */

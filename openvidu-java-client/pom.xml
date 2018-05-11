@@ -9,12 +9,12 @@
 	</parent>
 
 	<artifactId>openvidu-java-client</artifactId>
-	<version>1.8.0</version>
+	<version>2.0.0</version>
 	<packaging>jar</packaging>
 
 	<name>OpenVidu Java Client</name>
 	<description>OpenVidu client for your Java backend: get sessionId's and tokens easily from your OpenVidu server</description>
-	<url>http://openvidu.io</url>
+	<url>https://openvidu.io</url>
 
 	<licenses>
 		<license>
@@ -26,7 +26,7 @@
 
 	<organization>
 		<name>OpenVidu</name>
-		<url>http://openvidu.io</url>
+		<url>https://openvidu.io</url>
 	</organization>
 
 	<scm>
@@ -41,7 +41,7 @@
 			<id>openvidu.io</id>
 			<name>-openvidu.io Community</name>
 			<organization>openvidu.io</organization>
-			<organizationUrl>http://openvidu.io</organizationUrl>
+			<organizationUrl>https://openvidu.io</organizationUrl>
 		</developer>
 	</developers>
 

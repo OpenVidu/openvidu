@@ -1,5 +1,6 @@
 import { Event } from './Event';
-import { Session, Connection } from '../..';
+import { Connection } from '../../OpenVidu/Connection';
+import { Session } from '../../OpenVidu/Session';
 /**
  * Defines the following events:
  * - `connectionCreated`: dispatched by [[Session]]
@@ -12,8 +13,8 @@ export declare class ConnectionEvent extends Event {
     connection: Connection;
     /**
      * For 'connectionDestroyed' event:
-     * - "disconnect"
-     * - "networkDisconnect"
+     * - "disconnect": the remote user has called `Session.disconnect()`
+     * - "networkDisconnect": the remote user network connection has dropped
      *
      * For 'connectionCreated' empty string
      */

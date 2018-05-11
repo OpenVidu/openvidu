@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,8 +49,6 @@ export class OpenVidu {
    * Creates an OpenVidu session. You can call [[Session.getSessionId]] in the resolved promise to retrieve the `sessionId`
    *
    * @returns A Promise that is resolved to the [[Session]] if success and rejected with an Error object if not.
-   * This Error object has as `message` property with the following values:
-   * - `409`: you are trying to assign an already-in-use custom sessionId to the session. See [[SessionProperties.customSessionId]]
    */
   public createSession(properties?: SessionProperties): Promise<Session> {
     return new Promise<Session>((resolve, reject) => {
@@ -79,6 +77,7 @@ export class OpenVidu {
    * - `404`: no session exists for the passed `sessionId`
    * - `400`: the session has no connected participants
    * - `409`: the session is not configured for using [[MediaMode.ROUTED]] or it is already being recorded
+   * - `501`: OpenVidu Server recording module is disabled (`openvidu.recording` property set to `false`)
    */
   public startRecording(sessionId: string, param2?: string | RecordingProperties): Promise<Recording> {
     return new Promise<Recording>((resolve, reject) => {

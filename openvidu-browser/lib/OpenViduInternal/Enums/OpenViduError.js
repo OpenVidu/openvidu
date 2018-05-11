@@ -1,6 +1,6 @@
 "use strict";
 /*
- * (C) Copyright 2018 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,9 @@
  *
  */
 exports.__esModule = true;
+/**
+ * Defines property [[OpenViduError.name]]
+ */
 var OpenViduErrorName;
 (function (OpenViduErrorName) {
     OpenViduErrorName["BROWSER_NOT_SUPPORTED"] = "BROWSER_NOT_SUPPORTED";

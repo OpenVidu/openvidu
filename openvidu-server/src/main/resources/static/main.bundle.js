@@ -6,7 +6,7 @@ webpackJsonp(["main"],{
 "use strict";
 
 /*
- * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ webpackJsonp(["main"],{
  *
  */
 exports.__esModule = true;
-var __1 = __webpack_require__("../../../../openvidu-browser/lib/index.js");
+var Stream_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/Stream.js");
 /**
  * Represents each one of the user's connection to the session (the local one and other user's connections).
  * Therefore each [[Session]] and [[Stream]] object has an attribute of type Connection
@@ -92,7 +92,7 @@ var Connection = /** @class */ (function () {
                 recvVideo: opts.videoActive,
                 typeOfVideo: opts.typeOfVideo
             };
-            var stream = new __1.Stream(_this.session, streamOptions);
+            var stream = new Stream_1.Stream(_this.session, streamOptions);
             _this.addStream(stream);
         });
         console.info("Remote 'Connection' with 'connectionId' [" + this.connectionId + '] is now configured for receiving Streams with options: ', this.stream.inboundStreamOpts);
@@ -132,7 +132,7 @@ exports.Connection = Connection;
 "use strict";
 
 /*
- * (C) Copyright 2017-2018-2018 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -466,7 +466,7 @@ exports.LocalRecorder = LocalRecorder;
 "use strict";
 
 /*
- * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -482,10 +482,11 @@ exports.LocalRecorder = LocalRecorder;
  *
  */
 exports.__esModule = true;
-var __1 = __webpack_require__("../../../../openvidu-browser/lib/index.js");
+var LocalRecorder_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/LocalRecorder.js");
+var Publisher_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/Publisher.js");
+var Session_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/Session.js");
 var OpenViduError_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Enums/OpenViduError.js");
 var VideoInsertMode_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Enums/VideoInsertMode.js");
-var VersionAdapter_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/VersionAdapter.js");
 var RpcBuilder = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/index.js");
 var screenSharingAuto = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/ScreenSharing/Screen-Capturing-Auto.js");
 var screenSharing = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/ScreenSharing/Screen-Capturing.js");
@@ -511,14 +512,10 @@ var OpenVidu = /** @class */ (function () {
         console.info("'OpenVidu' initialized");
     }
     /**
-     * Returns a session with id `sessionId`
-     * @param sessionId Session unique ID generated in openvidu-server
+     * Returns new session
      */
-    OpenVidu.prototype.initSession = function (sessionId) {
-        if (!!sessionId) {
-            console.warn("DEPRECATION WANING: In future releases 'OpenVidu.initSession' method won't require a parameter. Remove it (see http://openvidu.io/api/openvidu-browser/interfaces/publisherproperties.html)");
-        }
-        this.session = new __1.Session(this);
+    OpenVidu.prototype.initSession = function () {
+        this.session = new Session_1.Session(this);
         return this.session;
     };
     /**
@@ -545,8 +542,6 @@ var OpenVidu = /** @class */ (function () {
         if (!!param2 && (typeof param2 !== 'function')) {
             // Matches 'initPublisher(targetElement, properties)' or 'initPublisher(targetElement, properties, completionHandler)'
             properties = param2;
-            // DEPRECATED WARNING
-            properties = VersionAdapter_1.adaptPublisherProperties(properties);
             properties = {
                 audioSource: (typeof properties.audioSource !== 'undefined') ? properties.audioSource : undefined,
                 frameRate: this.isMediaStreamTrack(properties.videoSource) ? undefined : ((typeof properties.frameRate !== 'undefined') ? properties.frameRate : undefined),
@@ -568,7 +563,7 @@ var OpenVidu = /** @class */ (function () {
                 resolution: '640x480'
             };
         }
-        var publisher = new __1.Publisher(targetElement, properties, this);
+        var publisher = new Publisher_1.Publisher(targetElement, properties, this);
         var completionHandler;
         if (!!param2 && (typeof param2 === 'function')) {
             completionHandler = param2;
@@ -615,7 +610,7 @@ var OpenVidu = /** @class */ (function () {
      * @param stream  Stream to record
      */
     OpenVidu.prototype.initLocalRecorder = function (stream) {
-        return new __1.LocalRecorder(stream);
+        return new LocalRecorder_1.LocalRecorder(stream);
     };
     /**
      * Checks if the browser supports OpenVidu
@@ -979,7 +974,7 @@ var OpenVidu = /** @class */ (function () {
         console.warn('Websocket reconnected');
     };
     OpenVidu.prototype.isRoomAvailable = function () {
-        if (this.session !== undefined && this.session instanceof __1.Session) {
+        if (this.session !== undefined && this.session instanceof Session_1.Session) {
             return true;
         }
         else {
@@ -1000,7 +995,7 @@ exports.OpenVidu = OpenVidu;
 "use strict";
 
 /*
- * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1016,7 +1011,7 @@ exports.OpenVidu = OpenVidu;
  *
  */
 exports.__esModule = true;
-var __1 = __webpack_require__("../../../../openvidu-browser/lib/index.js");
+var Stream_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/Stream.js");
 var StreamEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/StreamEvent.js");
 var VideoElementEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/VideoElementEvent.js");
 var OpenViduError_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Enums/OpenViduError.js");
@@ -1037,7 +1032,7 @@ var Publisher = /** @class */ (function () {
         this.accessAllowed = false;
         this.ee = new EventEmitter();
         this.properties = properties;
-        this.stream = new __1.Stream(this.session, { publisherProperties: properties, mediaConstraints: {} });
+        this.stream = new Stream_1.Stream(this.session, { publisherProperties: properties, mediaConstraints: {} });
         this.stream.on('video-removed', function (element) {
             _this.ee.emitEvent('videoElementDestroyed', [new VideoElementEvent_1.VideoElementEvent(element, _this, 'videoElementDestroyed')]);
         });
@@ -1484,7 +1479,7 @@ exports.Publisher = Publisher;
 "use strict";
 
 /*
- * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1500,7 +1495,8 @@ exports.Publisher = Publisher;
  *
  */
 exports.__esModule = true;
-var __1 = __webpack_require__("../../../../openvidu-browser/lib/index.js");
+var Connection_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/Connection.js");
+var Subscriber_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/Subscriber.js");
 var ConnectionEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/ConnectionEvent.js");
 var RecordingEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/RecordingEvent.js");
 var SessionDisconnectedEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/SessionDisconnectedEvent.js");
@@ -1508,7 +1504,6 @@ var SignalEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVi
 var StreamEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/StreamEvent.js");
 var OpenViduError_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Enums/OpenViduError.js");
 var VideoInsertMode_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Enums/VideoInsertMode.js");
-var VersionAdapter_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/VersionAdapter.js");
 var platform = __webpack_require__("../../../../openvidu-browser/node_modules/platform/platform.js");
 var EventEmitter = __webpack_require__("../../../../openvidu-browser/node_modules/wolfy87-eventemitter/EventEmitter.js");
 /**
@@ -1564,11 +1559,9 @@ var Session = /** @class */ (function () {
      * @returns A Promise to which you must subscribe that is resolved if the recording successfully started and rejected with an Error object if not
      *
      */
-    Session.prototype.connect = function (token, metadata, param3) {
+    Session.prototype.connect = function (token, metadata) {
         var _this = this;
-        // DEPRECATED WARNING
-        return VersionAdapter_1.solveIfCallback('Session.connect', (!!param3 && (typeof param3 === 'function')) ? param3 : ((typeof metadata === 'function') ? metadata : ''), 
-        /*return */ new Promise(function (resolve, reject) {
+        return new Promise(function (resolve, reject) {
             _this.processToken(token);
             if (_this.openvidu.checkSystemRequirements()) {
                 // Early configuration to deactivate automatic subscription to streams
@@ -1586,7 +1579,7 @@ var Session = /** @class */ (function () {
             else {
                 reject(new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.BROWSER_NOT_SUPPORTED, 'Browser ' + platform.name + ' ' + platform.version + ' is not supported in OpenVidu'));
             }
-        }));
+        });
     };
     /**
      * Leaves the session, destroying all streams and deleting the user as a participant.
@@ -1664,7 +1657,7 @@ var Session = /** @class */ (function () {
                 completionHandler(error);
             }
         });
-        var subscriber = new __1.Subscriber(stream, targetElement, properties);
+        var subscriber = new Subscriber_1.Subscriber(stream, targetElement, properties);
         stream.insertVideo(subscriber.element, properties.insertMode);
         return subscriber;
     };
@@ -1813,11 +1806,9 @@ var Session = /** @class */ (function () {
      * mean that openvidu-server could resend the message to all the listed receivers._
      */
     /* tslint:disable:no-string-literal */
-    Session.prototype.signal = function (signal, callback) {
+    Session.prototype.signal = function (signal) {
         var _this = this;
-        // DEPRECATED WARNING
-        return VersionAdapter_1.solveIfCallback('Session.signal', callback, 
-        /*return */ new Promise(function (resolve, reject) {
+        return new Promise(function (resolve, reject) {
             var signalMessage = {};
             if (signal.to && signal.to.length > 0) {
                 var connectionIds_1 = [];
@@ -1841,7 +1832,7 @@ var Session = /** @class */ (function () {
                     resolve();
                 }
             });
-        }));
+        });
     };
     /* tslint:enable:no-string-literal */
     /**
@@ -1927,7 +1918,7 @@ var Session = /** @class */ (function () {
             .then(function (connection) {
             console.warn('Connection ' + response.id + ' already exists in connections list');
         })["catch"](function (openViduError) {
-            var connection = new __1.Connection(_this, response);
+            var connection = new Connection_1.Connection(_this, response);
             _this.remoteConnections[response.id] = connection;
             _this.ee.emitEvent('connectionCreated', [new ConnectionEvent_1.ConnectionEvent(false, _this, 'connectionCreated', connection, '')]);
         });
@@ -1982,7 +1973,7 @@ var Session = /** @class */ (function () {
             afterConnectionFound(connection);
         })["catch"](function (openViduError) {
             // Create new Connection
-            connection = new __1.Connection(_this, response);
+            connection = new Connection_1.Connection(_this, response);
             afterConnectionFound(connection);
         });
     };
@@ -2189,7 +2180,7 @@ var Session = /** @class */ (function () {
                         }
                         else {
                             // Initialize local Connection object with values returned by openvidu-server
-                            _this.connection = new __1.Connection(_this);
+                            _this.connection = new Connection_1.Connection(_this);
                             _this.connection.connectionId = response.id;
                             _this.connection.data = response.metadata;
                             // Initialize remote Connections with value returned by openvidu-server
@@ -2199,7 +2190,7 @@ var Session = /** @class */ (function () {
                             };
                             var existingParticipants = response.value;
                             existingParticipants.forEach(function (participant) {
-                                var connection = new __1.Connection(_this, participant);
+                                var connection = new Connection_1.Connection(_this, participant);
                                 _this.remoteConnections[connection.connectionId] = connection;
                                 events_1.connections.push(connection);
                                 if (!!connection.stream) {
@@ -2292,7 +2283,7 @@ exports.Session = Session;
 "use strict";
 
 /*
- * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -2846,7 +2837,7 @@ exports.Stream = Stream;
 "use strict";
 
 /*
- * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -3016,7 +3007,7 @@ exports.Subscriber = Subscriber;
 "use strict";
 
 /*
- * (C) Copyright 2018 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -3049,7 +3040,7 @@ var LocalRecorderState;
 "use strict";
 
 /*
- * (C) Copyright 2018 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -3065,6 +3056,9 @@ var LocalRecorderState;
  *
  */
 exports.__esModule = true;
+/**
+ * Defines property [[OpenViduError.name]]
+ */
 var OpenViduErrorName;
 (function (OpenViduErrorName) {
     OpenViduErrorName["BROWSER_NOT_SUPPORTED"] = "BROWSER_NOT_SUPPORTED";
@@ -3106,7 +3100,7 @@ exports.OpenViduError = OpenViduError;
 "use strict";
 
 /*
- * (C) Copyright 2018 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -3158,7 +3152,7 @@ var VideoInsertMode;
 "use strict";
 
 /*
- * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -3219,7 +3213,7 @@ exports.ConnectionEvent = ConnectionEvent;
 "use strict";
 
 /*
- * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -3276,7 +3270,7 @@ exports.Event = Event;
 "use strict";
 
 /*
- * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -3344,7 +3338,7 @@ exports.PublisherSpeakingEvent = PublisherSpeakingEvent;
 "use strict";
 
 /*
- * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -3407,7 +3401,7 @@ exports.RecordingEvent = RecordingEvent;
 "use strict";
 
 /*
- * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -3478,7 +3472,7 @@ exports.SessionDisconnectedEvent = SessionDisconnectedEvent;
 "use strict";
 
 /*
- * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -3540,7 +3534,7 @@ exports.SignalEvent = SignalEvent;
 "use strict";
 
 /*
- * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -3567,7 +3561,8 @@ var __extends = (this && this.__extends) || (function () {
 })();
 exports.__esModule = true;
 var Event_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/Event.js");
-var __1 = __webpack_require__("../../../../openvidu-browser/lib/index.js");
+var Publisher_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/Publisher.js");
+var Session_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/Session.js");
 /**
  * Defines the following events:
  * - `streamCreated`: dispatched by [[Session]] and [[Publisher]]
@@ -3589,14 +3584,14 @@ var StreamEvent = /** @class */ (function (_super) {
      */
     StreamEvent.prototype.callDefaultBehaviour = function () {
         if (this.type === 'streamDestroyed') {
-            if (this.target instanceof __1.Session) {
+            if (this.target instanceof Session_1.Session) {
                 console.info("Calling default behaviour upon '" + this.type + "' event dispatched by 'Session'");
                 // Remote Stream
                 this.stream.disposeWebRtcPeer();
                 this.stream.disposeMediaStream();
                 this.stream.removeVideo();
             }
-            else if (this.target instanceof __1.Publisher) {
+            else if (this.target instanceof Publisher_1.Publisher) {
                 console.info("Calling default behaviour upon '" + this.type + "' event dispatched by 'Publisher'");
                 // Local Stream
                 this.stream.disposeMediaStream();
@@ -3630,7 +3625,7 @@ exports.StreamEvent = StreamEvent;
 "use strict";
 
 /*
- * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -5449,99 +5444,13 @@ exports.getSourceId = getSourceId;
 
 /***/ }),
 
-/***/ "../../../../openvidu-browser/lib/OpenViduInternal/VersionAdapter.js":
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-/*
- * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
-exports.__esModule = true;
-var VideoInsertMode_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Enums/VideoInsertMode.js");
-function solveIfCallback(methodName, completionHandler, promise) {
-    if (!!completionHandler) {
-        console.warn("DEPRECATION WANING: In future releases the 'completionHandler' parameter will be removed from method '" + methodName + "'. Refactor your callbacks to Promise API (see http://openvidu.io/api/openvidu-browser/index.html)");
-    }
-    return new Promise(function (resolve, reject) {
-        if (!!completionHandler && typeof completionHandler === 'function') {
-            promise.then(function () {
-                completionHandler(undefined);
-            })["catch"](function (error) {
-                completionHandler(error);
-            });
-        }
-        else {
-            promise.then(function () {
-                return resolve();
-            })["catch"](function (error) {
-                return reject(error);
-            });
-        }
-    });
-}
-exports.solveIfCallback = solveIfCallback;
-function adaptPublisherProperties(properties) {
-    if ('audio' in properties ||
-        'video' in properties ||
-        'audioActive' in properties ||
-        'videoActive' in properties ||
-        'quality' in properties ||
-        'screen' in properties) {
-        console.warn("DEPRECATION WANING: In future releases the properties passed to 'OpenVidu.initPublisher' method must match PublisherProperties interface (see http://openvidu.io/api/openvidu-browser/interfaces/publisherproperties.html)");
-    }
-    var scr = (typeof properties.screen !== 'undefined' && properties.screen === true);
-    var res = '';
-    if (typeof properties.quality === 'string') {
-        switch (properties.quality) {
-            case 'LOW':
-                res = '320x240';
-                break;
-            case 'MEDIUM':
-                res = '640x480';
-                break;
-            case 'HIGH':
-                res = '1280x720';
-                break;
-        }
-    }
-    var publisherProperties = {
-        audioSource: (typeof properties.audio !== 'undefined' && properties.audio === false) ? false : ((typeof properties.audioSource !== 'undefined') ? properties.audioSource : undefined),
-        frameRate: (typeof properties.frameRate !== 'undefined') ? properties.frameRate : undefined,
-        insertMode: (typeof properties.insertMode !== 'undefined') ? properties.insertMode : VideoInsertMode_1.VideoInsertMode.APPEND,
-        mirror: (typeof properties.mirror !== 'undefined') ? properties.mirror : true,
-        publishAudio: (typeof properties.audioActive !== 'undefined' && properties.audioActive === false) ? false : (typeof properties.publishAudio !== 'undefined') ? properties.publishAudio : true,
-        publishVideo: (typeof properties.videoActive !== 'undefined' && properties.videoActive === false) ? false : (typeof properties.publishVideo !== 'undefined') ? properties.publishVideo : true,
-        resolution: !!res ? res : ((typeof properties.resolution !== 'undefined') ? properties.resolution : '640x480'),
-        videoSource: scr ? 'screen' : ((typeof properties.video !== 'undefined' && properties.video === false) ? false : ((typeof properties.videoSource !== 'undefined') ? properties.videoSource : undefined))
-    };
-    return publisherProperties;
-}
-exports.adaptPublisherProperties = adaptPublisherProperties;
-//# sourceMappingURL=VersionAdapter.js.map
-
-/***/ }),
-
 /***/ "../../../../openvidu-browser/lib/OpenViduInternal/WebRtcStats/WebRtcStats.js":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 /*
- * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.

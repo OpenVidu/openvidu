@@ -7,9 +7,6 @@ ng build
 cp -a dist/. ./docker/web/
 cd docker
 
-# Modify WebSocket protocol in app.js for allowing both ngrok and localhost connections
-sed -i 's/OV\.initSession("wss:\/\/"/OV\.initSession("ws:\/\/"/g' ./web/app.js
-
 # Build docker image
 docker build -t openvidu/testapp .
 

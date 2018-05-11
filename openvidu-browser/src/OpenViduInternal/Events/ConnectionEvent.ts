@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,8 @@
  */
 
 import { Event } from './Event';
-import { Session, Connection } from '../..';
+import { Connection } from '../../OpenVidu/Connection';
+import { Session } from '../../OpenVidu/Session';
 
 
 /**
@@ -33,8 +34,8 @@ export class ConnectionEvent extends Event {
 
     /**
      * For 'connectionDestroyed' event:
-     * - "disconnect"
-     * - "networkDisconnect"
+     * - "disconnect": the remote user has called `Session.disconnect()`
+     * - "networkDisconnect": the remote user network connection has dropped
      *
      * For 'connectionCreated' empty string
      */

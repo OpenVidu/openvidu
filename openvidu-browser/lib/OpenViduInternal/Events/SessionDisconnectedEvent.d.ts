@@ -1,12 +1,12 @@
 import { Event } from './Event';
-import { Session } from '../..';
+import { Session } from '../../OpenVidu/Session';
 /**
  * Defines event `sessionDisconnected` dispatched by [[Session]]
  */
 export declare class SessionDisconnectedEvent extends Event {
     /**
-     * - "disconnect"
-     * - "networkDisconnect"
+     * - "disconnect": you have called `Session.disconnect()`
+     * - "networkDisconnect": your network connection has dropped
      */
     reason: string;
     /**

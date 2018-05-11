@@ -1,6 +1,6 @@
 "use strict";
 /*
- * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,8 @@
  *
  */
 exports.__esModule = true;
-var __1 = require("..");
+var Connection_1 = require("./Connection");
+var Subscriber_1 = require("./Subscriber");
 var ConnectionEvent_1 = require("../OpenViduInternal/Events/ConnectionEvent");
 var RecordingEvent_1 = require("../OpenViduInternal/Events/RecordingEvent");
 var SessionDisconnectedEvent_1 = require("../OpenViduInternal/Events/SessionDisconnectedEvent");
@@ -24,7 +25,6 @@ var SignalEvent_1 = require("../OpenViduInternal/Events/SignalEvent");
 var StreamEvent_1 = require("../OpenViduInternal/Events/StreamEvent");
 var OpenViduError_1 = require("../OpenViduInternal/Enums/OpenViduError");
 var VideoInsertMode_1 = require("../OpenViduInternal/Enums/VideoInsertMode");
-var VersionAdapter_1 = require("../OpenViduInternal/VersionAdapter");
 var platform = require("platform");
 var EventEmitter = require("wolfy87-eventemitter");
 /**
@@ -80,11 +80,9 @@ var Session = /** @class */ (function () {
      * @returns A Promise to which you must subscribe that is resolved if the recording successfully started and rejected with an Error object if not
      *
      */
-    Session.prototype.connect = function (token, metadata, param3) {
+    Session.prototype.connect = function (token, metadata) {
         var _this = this;
-        // DEPRECATED WARNING
-        return VersionAdapter_1.solveIfCallback('Session.connect', (!!param3 && (typeof param3 === 'function')) ? param3 : ((typeof metadata === 'function') ? metadata : ''), 
-        /*return */ new Promise(function (resolve, reject) {
+        return new Promise(function (resolve, reject) {
             _this.processToken(token);
             if (_this.openvidu.checkSystemRequirements()) {
                 // Early configuration to deactivate automatic subscription to streams
@@ -102,7 +100,7 @@ var Session = /** @class */ (function () {
             else {
                 reject(new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.BROWSER_NOT_SUPPORTED, 'Browser ' + platform.name + ' ' + platform.version + ' is not supported in OpenVidu'));
             }
-        }));
+        });
     };
     /**
      * Leaves the session, destroying all streams and deleting the user as a participant.
@@ -180,7 +178,7 @@ var Session = /** @class */ (function () {
                 completionHandler(error);
             }
         });
-        var subscriber = new __1.Subscriber(stream, targetElement, properties);
+        var subscriber = new Subscriber_1.Subscriber(stream, targetElement, properties);
         stream.insertVideo(subscriber.element, properties.insertMode);
         return subscriber;
     };
@@ -329,11 +327,9 @@ var Session = /** @class */ (function () {
      * mean that openvidu-server could resend the message to all the listed receivers._
      */
     /* tslint:disable:no-string-literal */
-    Session.prototype.signal = function (signal, callback) {
+    Session.prototype.signal = function (signal) {
         var _this = this;
-        // DEPRECATED WARNING
-        return VersionAdapter_1.solveIfCallback('Session.signal', callback, 
-        /*return */ new Promise(function (resolve, reject) {
+        return new Promise(function (resolve, reject) {
             var signalMessage = {};
             if (signal.to && signal.to.length > 0) {
                 var connectionIds_1 = [];
@@ -357,7 +353,7 @@ var Session = /** @class */ (function () {
                     resolve();
                 }
             });
-        }));
+        });
     };
     /* tslint:enable:no-string-literal */
     /**
@@ -443,7 +439,7 @@ var Session = /** @class */ (function () {
             .then(function (connection) {
             console.warn('Connection ' + response.id + ' already exists in connections list');
         })["catch"](function (openViduError) {
-            var connection = new __1.Connection(_this, response);
+            var connection = new Connection_1.Connection(_this, response);
             _this.remoteConnections[response.id] = connection;
             _this.ee.emitEvent('connectionCreated', [new ConnectionEvent_1.ConnectionEvent(false, _this, 'connectionCreated', connection, '')]);
         });
@@ -498,7 +494,7 @@ var Session = /** @class */ (function () {
             afterConnectionFound(connection);
         })["catch"](function (openViduError) {
             // Create new Connection
-            connection = new __1.Connection(_this, response);
+            connection = new Connection_1.Connection(_this, response);
             afterConnectionFound(connection);
         });
     };
@@ -705,7 +701,7 @@ var Session = /** @class */ (function () {
                         }
                         else {
                             // Initialize local Connection object with values returned by openvidu-server
-                            _this.connection = new __1.Connection(_this);
+                            _this.connection = new Connection_1.Connection(_this);
                             _this.connection.connectionId = response.id;
                             _this.connection.data = response.metadata;
                             // Initialize remote Connections with value returned by openvidu-server
@@ -715,7 +711,7 @@ var Session = /** @class */ (function () {
                             };
                             var existingParticipants = response.value;
                             existingParticipants.forEach(function (participant) {
-                                var connection = new __1.Connection(_this, participant);
+                                var connection = new Connection_1.Connection(_this, participant);
                                 _this.remoteConnections[connection.connectionId] = connection;
                                 events_1.connections.push(connection);
                                 if (!!connection.stream) {

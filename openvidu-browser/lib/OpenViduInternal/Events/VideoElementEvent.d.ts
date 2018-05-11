@@ -1,5 +1,6 @@
 import { Event } from './Event';
-import { Publisher, Subscriber } from '../..';
+import { Publisher } from '../../OpenVidu/Publisher';
+import { Subscriber } from '../../OpenVidu/Subscriber';
 /**
  * Defines the following events:
  * - `videoElementCreated`: dispatched by [[Publisher]] and [[Subscriber]]

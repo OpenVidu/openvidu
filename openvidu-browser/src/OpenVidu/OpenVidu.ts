@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,15 @@
  *
  */
 
-import { LocalRecorder, Publisher, Session, Stream } from '..';
+import { LocalRecorder } from './LocalRecorder';
+import { Publisher } from './Publisher';
+import { Session } from './Session';
+import { Stream } from './Stream';
 import { Device } from '../OpenViduInternal/Interfaces/Public/Device';
 import { OpenViduAdvancedConfiguration } from '../OpenViduInternal/Interfaces/Public/OpenViduAdvancedConfiguration';
 import { PublisherProperties } from '../OpenViduInternal/Interfaces/Public/PublisherProperties';
 import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/OpenViduError';
 import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
-import { adaptPublisherProperties } from '../OpenViduInternal/VersionAdapter';
 
 import * as RpcBuilder from '../OpenViduInternal/KurentoUtils/kurento-jsonrpc';
 import * as screenSharingAuto from '../OpenViduInternal/ScreenSharing/Screen-Capturing-Auto';
@@ -61,25 +63,10 @@ export class OpenVidu {
   }
 
 
-  initSession(): Session;
   /**
-   * ---
-   * ## DEPRECATED
-   *
-   * _No `sessionId` is required. Now every necessary information is received in [[Session.connect]]_
-   *
-   * ---
+   * Returns new session
    */
-  initSession(sessionId: string): Session;
-
-  /**
-   * Returns a session with id `sessionId`
-   * @param sessionId Session unique ID generated in openvidu-server
-   */
-  initSession(sessionId?: string): Session {
-    if (!!sessionId) {
-      console.warn("DEPRECATION WANING: In future releases 'OpenVidu.initSession' method won't require a parameter. Remove it (see http://openvidu.io/api/openvidu-browser/interfaces/publisherproperties.html)");
-    }
+  initSession(): Session {
     this.session = new Session(this);
     return this.session;
   }
@@ -118,9 +105,6 @@ export class OpenVidu {
       // Matches 'initPublisher(targetElement, properties)' or 'initPublisher(targetElement, properties, completionHandler)'
 
       properties = (<PublisherProperties>param2);
-
-      // DEPRECATED WARNING
-      properties = adaptPublisherProperties(properties);
 
       properties = {
         audioSource: (typeof properties.audioSource !== 'undefined') ? properties.audioSource : undefined,

@@ -1,6 +1,6 @@
 "use strict";
 /*
- * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,8 @@ var __extends = (this && this.__extends) || (function () {
 })();
 exports.__esModule = true;
 var Event_1 = require("./Event");
-var __1 = require("../..");
+var Publisher_1 = require("../../OpenVidu/Publisher");
+var Session_1 = require("../../OpenVidu/Session");
 /**
  * Defines the following events:
  * - `streamCreated`: dispatched by [[Session]] and [[Publisher]]
@@ -49,14 +50,14 @@ var StreamEvent = /** @class */ (function (_super) {
      */
     StreamEvent.prototype.callDefaultBehaviour = function () {
         if (this.type === 'streamDestroyed') {
-            if (this.target instanceof __1.Session) {
+            if (this.target instanceof Session_1.Session) {
                 console.info("Calling default behaviour upon '" + this.type + "' event dispatched by 'Session'");
                 // Remote Stream
                 this.stream.disposeWebRtcPeer();
                 this.stream.disposeMediaStream();
                 this.stream.removeVideo();
             }
-            else if (this.target instanceof __1.Publisher) {
+            else if (this.target instanceof Publisher_1.Publisher) {
                 console.info("Calling default behaviour upon '" + this.type + "' event dispatched by 'Publisher'");
                 // Local Stream
                 this.stream.disposeMediaStream();

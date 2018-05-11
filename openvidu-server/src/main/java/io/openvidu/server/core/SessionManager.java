@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -342,7 +342,7 @@ public abstract class SessionManager {
 		log.info("Closing all sessions");
 		for (String sessionId : sessions.keySet()) {
 			try {
-				closeSession(sessionId, "openviduServerDestroyed");
+				closeSession(sessionId, "openviduServerStopped");
 			} catch (Exception e) {
 				log.warn("Error closing session '{}'", sessionId, e);
 			}

@@ -1,6 +1,6 @@
 "use strict";
 /*
- * (C) Copyright 2017-2018 OpenVidu (http://openvidu.io/)
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,11 @@
  *
  */
 exports.__esModule = true;
-var __1 = require("..");
+var LocalRecorder_1 = require("./LocalRecorder");
+var Publisher_1 = require("./Publisher");
+var Session_1 = require("./Session");
 var OpenViduError_1 = require("../OpenViduInternal/Enums/OpenViduError");
 var VideoInsertMode_1 = require("../OpenViduInternal/Enums/VideoInsertMode");
-var VersionAdapter_1 = require("../OpenViduInternal/VersionAdapter");
 var RpcBuilder = require("../OpenViduInternal/KurentoUtils/kurento-jsonrpc");
 var screenSharingAuto = require("../OpenViduInternal/ScreenSharing/Screen-Capturing-Auto");
 var screenSharing = require("../OpenViduInternal/ScreenSharing/Screen-Capturing");
@@ -45,14 +46,10 @@ var OpenVidu = /** @class */ (function () {
         console.info("'OpenVidu' initialized");
     }
     /**
-     * Returns a session with id `sessionId`
-     * @param sessionId Session unique ID generated in openvidu-server
+     * Returns new session
      */
-    OpenVidu.prototype.initSession = function (sessionId) {
-        if (!!sessionId) {
-            console.warn("DEPRECATION WANING: In future releases 'OpenVidu.initSession' method won't require a parameter. Remove it (see http://openvidu.io/api/openvidu-browser/interfaces/publisherproperties.html)");
-        }
-        this.session = new __1.Session(this);
+    OpenVidu.prototype.initSession = function () {
+        this.session = new Session_1.Session(this);
         return this.session;
     };
     /**
@@ -79,8 +76,6 @@ var OpenVidu = /** @class */ (function () {
         if (!!param2 && (typeof param2 !== 'function')) {
             // Matches 'initPublisher(targetElement, properties)' or 'initPublisher(targetElement, properties, completionHandler)'
             properties = param2;
-            // DEPRECATED WARNING
-            properties = VersionAdapter_1.adaptPublisherProperties(properties);
             properties = {
                 audioSource: (typeof properties.audioSource !== 'undefined') ? properties.audioSource : undefined,
                 frameRate: this.isMediaStreamTrack(properties.videoSource) ? undefined : ((typeof properties.frameRate !== 'undefined') ? properties.frameRate : undefined),
@@ -102,7 +97,7 @@ var OpenVidu = /** @class */ (function () {
                 resolution: '640x480'
             };
         }
-        var publisher = new __1.Publisher(targetElement, properties, this);
+        var publisher = new Publisher_1.Publisher(targetElement, properties, this);
         var completionHandler;
         if (!!param2 && (typeof param2 === 'function')) {
             completionHandler = param2;
@@ -149,7 +144,7 @@ var OpenVidu = /** @class */ (function () {
      * @param stream  Stream to record
      */
     OpenVidu.prototype.initLocalRecorder = function (stream) {
-        return new __1.LocalRecorder(stream);
+        return new LocalRecorder_1.LocalRecorder(stream);
     };
     /**
      * Checks if the browser supports OpenVidu
@@ -513,7 +508,7 @@ var OpenVidu = /** @class */ (function () {
         console.warn('Websocket reconnected');
     };
     OpenVidu.prototype.isRoomAvailable = function () {
-        if (this.session !== undefined && this.session instanceof __1.Session) {
+        if (this.session !== undefined && this.session instanceof Session_1.Session) {
             return true;
         }
         else {

@@ -1,4 +1,4 @@
-import { Stream } from '..';
+import { Stream } from './Stream';
 import { LocalRecorderState } from '../OpenViduInternal/Enums/LocalRecorderState';
 /**
  * Easy recording of [[Stream]] objects straightaway from the browser.
