@@ -14,7 +14,7 @@ COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 # Copy OpenVidu Server
 COPY openvidu-server-cbx.jar /
 
-EXPOSE 4443
+EXPOSE 8443
 EXPOSE 8888
 
 # Exec supervisord

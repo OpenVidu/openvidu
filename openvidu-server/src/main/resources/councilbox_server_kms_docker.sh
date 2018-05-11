@@ -9,6 +9,6 @@ command=$(docker run -d -p 8443:8443 --name server-kms \
 -e openvidu.secret=YOUR_SECRET \
 -e openvidu.publicurl=https://217.182.136.130:8443/ \
 --net="host" \
-councilbox/server-kms:1.7.0)
+councilbox/server-kms:1.8.0)
 
 echo $command
