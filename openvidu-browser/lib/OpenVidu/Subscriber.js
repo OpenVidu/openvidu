@@ -48,8 +48,10 @@ var Subscriber = /** @class */ (function () {
      * @param value `true` to subscribe to the audio stream, `false` to unsubscribe from it
      */
     Subscriber.prototype.subscribeToAudio = function (value) {
-        this.stream.getWebRtcPeer().audioEnabled = value;
-        console.info("'Subscriber' has " + (value ? 'subscribed' : 'unsubscribed') + ' to its audio stream');
+        this.stream.getMediaStream().getAudioTracks().forEach(function (track) {
+            track.enabled = value;
+        });
+        console.info("'Subscriber' has " + (value ? 'subscribed to' : 'unsubscribed from') + ' its audio stream');
         return this;
     };
     /**
@@ -57,8 +59,10 @@ var Subscriber = /** @class */ (function () {
      * @param value `true` to subscribe to the video stream, `false` to unsubscribe from it
      */
     Subscriber.prototype.subscribeToVideo = function (value) {
-        this.stream.getWebRtcPeer().videoEnabled = value;
-        console.info("'Subscriber' has " + (value ? 'subscribed' : 'unsubscribed') + ' to its video stream');
+        this.stream.getMediaStream().getVideoTracks().forEach(function (track) {
+            track.enabled = value;
+        });
+        console.info("'Subscriber' has " + (value ? 'subscribed to' : 'unsubscribed from') + ' its video stream');
         return this;
     };
     /**

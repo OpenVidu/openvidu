@@ -72,8 +72,10 @@ export class Subscriber implements EventDispatcher {
      * @param value `true` to subscribe to the audio stream, `false` to unsubscribe from it
      */
     subscribeToAudio(value: boolean): Subscriber {
-        this.stream.getWebRtcPeer().audioEnabled = value;
-        console.info("'Subscriber' has " + (value ? 'subscribed' : 'unsubscribed') + ' to its audio stream');
+        this.stream.getMediaStream().getAudioTracks().forEach((track) => {
+            track.enabled = value;
+        });
+        console.info("'Subscriber' has " + (value ? 'subscribed to' : 'unsubscribed from') + ' its audio stream');
         return this;
     }
 
@@ -82,8 +84,10 @@ export class Subscriber implements EventDispatcher {
      * @param value `true` to subscribe to the video stream, `false` to unsubscribe from it
      */
     subscribeToVideo(value: boolean): Subscriber {
-        this.stream.getWebRtcPeer().videoEnabled = value;
-        console.info("'Subscriber' has " + (value ? 'subscribed' : 'unsubscribed') + ' to its video stream');
+        this.stream.getMediaStream().getVideoTracks().forEach((track) => {
+            track.enabled = value;
+        });
+        console.info("'Subscriber' has " + (value ? 'subscribed to' : 'unsubscribed from') + ' its video stream');
         return this;
     }
 
