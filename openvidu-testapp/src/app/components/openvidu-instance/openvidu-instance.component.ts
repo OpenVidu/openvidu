@@ -177,9 +177,9 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       token = this.tokenInput;
     } else {
       token = 'wss://'
-      + this.removeHttps(this.openviduUrl)
-      + '?sessionId=' + this.sessionName
-      + '&secret=' + this.openviduSecret;
+        + this.removeHttps(this.openviduUrl)
+        + '?sessionId=' + this.sessionName
+        + '&secret=' + this.openviduSecret;
     }
     this.joinSessionShared(token);
   }
@@ -264,9 +264,17 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     dataNode.id = 'data-' + this.session.connection.connectionId + '-' + connection.connectionId;
     dataNode.innerHTML = '<p class="name">' + connection.data + '</p>' +
       '<button id="sub-btn-' + this.session.connection.connectionId + '-' + connection.connectionId +
-      '" class="sub-btn" title="Subscribe/Unsubscribe"><mat-icon id="icon-' + this.session.connection.connectionId +
+      '" class="sub-btn" title="Subscribe/Unsubscribe"><mat-icon id="sub-icon-' + this.session.connection.connectionId +
       '-' + connection.connectionId + '" aria-label="Subscribe or unsubscribe" class="mat-icon material-icons" role="img"' +
       'aria-hidden="true">notifications</mat-icon></button>' +
+      '<button id="sub-video-btn-' + this.session.connection.connectionId + '-' + connection.connectionId +
+      '" class="sub-btn" title="Subscribe/Unsubscribe Video"><mat-icon id="sub-video-icon-' + this.session.connection.connectionId +
+      '-' + connection.connectionId + '" aria-label="Subscribe or unsubscribe" class="mat-icon material-icons" role="img"' +
+      'aria-hidden="true">videocam</mat-icon></button>' +
+      '<button id="sub-audio-btn-' + this.session.connection.connectionId + '-' + connection.connectionId +
+      '" class="sub-btn" title="Subscribe/Unsubscribe Audio"><mat-icon id="sub-audio-icon-' + this.session.connection.connectionId +
+      '-' + connection.connectionId + '" aria-label="Subscribe or unsubscribe" class="mat-icon material-icons" role="img"' +
+      'aria-hidden="true">mic</mat-icon></button>' +
       '<button id="record-btn-' + this.session.connection.connectionId + '-' + connection.connectionId +
       '" class="sub-btn rec-btn" title="Record"><mat-icon id="record-icon-' +
       this.session.connection.connectionId + '-' + connection.connectionId +
@@ -278,12 +286,16 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       '" aria-label="Pause/Resume recording" class="mat-icon material-icons" role="img"' +
       'aria-hidden="true">pause</mat-icon></button>';
     videoElement.parentNode.insertBefore(dataNode, videoElement.nextSibling);
-    document.getElementById('sub-btn-' + this.session.connection.connectionId + '-' + connection.connectionId).addEventListener('click',
-      this.subUnsubFromSubscriber.bind(this, connection.connectionId));
-    document.getElementById('record-btn-' + this.session.connection.connectionId + '-' + connection.connectionId).addEventListener('click',
-      this.recordSubscriber.bind(this, connection.connectionId));
-    document.getElementById('pause-btn-' + this.session.connection.connectionId + '-' + connection.connectionId).addEventListener('click',
-      this.pauseSubscriber.bind(this, connection.connectionId));
+    document.getElementById('sub-btn-' + this.session.connection.connectionId + '-' + connection.connectionId)
+      .addEventListener('click', this.subUnsubFromSubscriber.bind(this, connection.connectionId));
+    document.getElementById('sub-video-btn-' + this.session.connection.connectionId + '-' + connection.connectionId)
+      .addEventListener('click', this.subUnsubFromSubscriberVideo.bind(this, connection.connectionId));
+    document.getElementById('sub-audio-btn-' + this.session.connection.connectionId + '-' + connection.connectionId)
+      .addEventListener('click', this.subUnsubFromSubscriberAudio.bind(this, connection.connectionId));
+    document.getElementById('record-btn-' + this.session.connection.connectionId + '-' + connection.connectionId)
+      .addEventListener('click', this.recordSubscriber.bind(this, connection.connectionId));
+    document.getElementById('pause-btn-' + this.session.connection.connectionId + '-' + connection.connectionId)
+      .addEventListener('click', this.pauseSubscriber.bind(this, connection.connectionId));
   }
 
   private appendPublisherData(videoElement: HTMLVideoElement): void {
@@ -595,9 +607,13 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       this.session.unsubscribe(subscriber);
       this.restartSubscriberRecord(connectionId);
       document.getElementById('data-' + this.session.connection.connectionId + '-' + connectionId).style.marginLeft = '0';
-      document.getElementById('icon-' + this.session.connection.connectionId + '-' + connectionId).innerHTML = 'notifications_off';
+      document.getElementById('sub-icon-' + this.session.connection.connectionId + '-' + connectionId).innerHTML = 'notifications_off';
       document.getElementById('record-btn-' + this.session.connection.connectionId + '-' + connectionId).remove();
       document.getElementById('pause-btn-' + this.session.connection.connectionId + '-' + connectionId).remove();
+      document.getElementById('sub-video-btn-' + this.session.connection.connectionId + '-' + connectionId).remove();
+      document.getElementById('sub-audio-btn-' + this.session.connection.connectionId + '-' + connectionId).remove();
+      this.subscribers[connectionId].subbedVideo = false;
+      this.subscribers[connectionId].subbedAudio = false;
     } else {
 
 
@@ -643,6 +659,20 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
 
     }
     this.subscribers[connectionId].subbed = !this.subscribers[connectionId].subbed;
+  }
+
+  subUnsubFromSubscriberVideo(connectionId: string) {
+    this.subscribers[connectionId].subscriber.subscribeToVideo(!!this.subscribers[connectionId].subbedVideo);
+    this.subscribers[connectionId].subbedVideo = !this.subscribers[connectionId].subbedVideo;
+    document.getElementById('sub-video-icon-' + this.session.connection.connectionId + '-' + connectionId).innerHTML =
+      this.subscribers[connectionId].subbedVideo ? 'videocam_off' : 'videocam';
+  }
+
+  subUnsubFromSubscriberAudio(connectionId: string) {
+    this.subscribers[connectionId].subscriber.subscribeToAudio(!!this.subscribers[connectionId].subbedAudio);
+    this.subscribers[connectionId].subbedAudio = !this.subscribers[connectionId].subbedAudio;
+    document.getElementById('sub-audio-icon-' + this.session.connection.connectionId + '-' + connectionId).innerHTML =
+      this.subscribers[connectionId].subbedAudio ? 'mic_off' : 'mic';
   }
 
   addSessionEvents(session: Session) {
