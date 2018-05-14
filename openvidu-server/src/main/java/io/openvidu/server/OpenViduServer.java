@@ -34,8 +34,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.event.EventListener;
 import org.springframework.core.env.Environment;
 
 import com.google.gson.JsonArray;
@@ -72,6 +74,8 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	public static final String KMSS_URIS_PROPERTY = "kms.uris";
 
 	public static String publicUrl;
+	
+	private String ngrokAppUrl = "";
 
 	@Bean
 	@ConditionalOnMissingBean
@@ -166,20 +170,19 @@ public class OpenViduServer implements JsonRpcConfigurer {
 		case "ngrok":
 			try {
 				NgrokRestController ngrok = new NgrokRestController();
-				String ngrokAppUrl = ngrok.getNgrokAppUrl();
+				ngrokAppUrl = ngrok.getNgrokAppUrl();
 				if (ngrokAppUrl.isEmpty()) {
 					ngrokAppUrl = "(No tunnel 'app' found in ngrok.yml)";
 				}
-				final String NEW_LINE = System.getProperty("line.separator");
-				String str = 	NEW_LINE +
-								NEW_LINE + "      APP PUBLIC IP      " + 
-								NEW_LINE + "-------------------------" + 
-								NEW_LINE + ngrokAppUrl + 
-								NEW_LINE + "-------------------------" + 
-								NEW_LINE;
-				log.info(str);
-				OpenViduServer.publicUrl = ngrok.getNgrokServerUrl().replaceFirst("https://", "wss://");
-				openviduConf.setFinalUrl(ngrok.getNgrokServerUrl());
+				
+				// For frontend-only applications overriding openvidu-server dashboard...
+				String ngrokServerUrl = ngrok.getNgrokServerUrl();
+				if (ngrokServerUrl.isEmpty()) {
+					ngrokServerUrl = ngrok.getNgrokAppUrl();
+				}
+				
+				OpenViduServer.publicUrl = ngrokServerUrl.replaceFirst("https://", "wss://");
+				openviduConf.setFinalUrl(ngrokServerUrl);
 
 			} catch (Exception e) {
 				log.error("Ngrok URL was configured, but there was an error connecting to ngrok: "
@@ -290,6 +293,20 @@ public class OpenViduServer implements JsonRpcConfigurer {
 			recordingService.initRecordingPath();
 		}
 		log.info("OpenVidu Server using " + type + " URL: [" + OpenViduServer.publicUrl + "]");
+	}
+	
+	@EventListener(ApplicationReadyEvent.class)
+	public void printNgrokUrl() {
+	    if (!this.ngrokAppUrl.isEmpty()) {
+	    	final String NEW_LINE = System.getProperty("line.separator");
+			String str = 	NEW_LINE +
+							NEW_LINE + "      APP PUBLIC IP      " + 
+							NEW_LINE + "-------------------------" + 
+							NEW_LINE + ngrokAppUrl + 
+							NEW_LINE + "-------------------------" + 
+							NEW_LINE;
+			log.info(str);
+	    }
 	}
 
 }
