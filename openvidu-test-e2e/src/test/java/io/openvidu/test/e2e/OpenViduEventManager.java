@@ -205,15 +205,17 @@ public class OpenViduEventManager {
 	}
 
 	private boolean hasAudioTracks(WebElement videoElement) {
-		long numberAudioTracks = (long) ((JavascriptExecutor) driver).executeScript(
-				"return $('#" + videoElement.getAttribute("id") + "').prop('srcObject').getAudioTracks().length;");
-		return (numberAudioTracks > 0);
+		boolean audioTracks = (boolean) ((JavascriptExecutor) driver).executeScript(
+				"return ($('#" + videoElement.getAttribute("id") + "').prop('srcObject').getAudioTracks().length > 0)"
+						+ "&& ($('#" + videoElement.getAttribute("id") + "').prop('srcObject').getAudioTracks()[0].enabled)");
+		return audioTracks;
 	}
 
 	private boolean hasVideoTracks(WebElement videoElement) {
-		long numberAudioTracks = (long) ((JavascriptExecutor) driver).executeScript(
-				"return $('#" + videoElement.getAttribute("id") + "').prop('srcObject').getVideoTracks().length;");
-		return (numberAudioTracks > 0);
+		boolean videoTracks = (boolean) ((JavascriptExecutor) driver).executeScript(
+				"return ($('#" + videoElement.getAttribute("id") + "').prop('srcObject').getVideoTracks().length > 0)"
+						+ "&& ($('#" + videoElement.getAttribute("id") + "').prop('srcObject').getVideoTracks()[0].enabled)");
+		return videoTracks;
 	}
 
 }
