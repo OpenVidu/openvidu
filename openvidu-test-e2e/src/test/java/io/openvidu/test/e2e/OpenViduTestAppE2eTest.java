@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,7 +37,9 @@ import org.junit.Assert;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.TakesScreenshot;
+import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 
 import io.github.bonigarcia.SeleniumExtension;
@@ -646,7 +649,7 @@ public class OpenViduTestAppE2eTest {
 
 	@Test
 	@DisplayName("Change publisher dynamically")
-	void changePublisher() throws Exception {
+	void changePublisherTest() throws Exception {
 
 		List<Boolean> listOfThreadAssertions = new ArrayList<>();
 
@@ -707,6 +710,64 @@ public class OpenViduTestAppE2eTest {
 
 		gracefullyLeaveParticipants(2);
 
+	}
+
+	@Test
+	@DisplayName("Local record")
+	void localRecordTest() throws Exception {
+
+		setupBrowser("chrome");
+
+		log.info("Local record");
+
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.className("join-btn")).click();
+
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
+		user.getEventManager().waitUntilEventReaches("videoElementCreated", 1);
+		user.getEventManager().waitUntilEventReaches("videoPlaying", 1);
+
+		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
+				true, true));
+
+		WebElement recordBtn = user.getDriver().findElements(By.className("publisher-rec-btn")).get(0);
+		WebElement pauseRecordBtn = user.getDriver().findElements(By.className("publisher-rec-pause-btn")).get(0);
+
+		recordBtn.click();
+
+		Thread.sleep(2000);
+
+		pauseRecordBtn.click();
+
+		Thread.sleep(2000);
+
+		pauseRecordBtn.click();
+
+		Thread.sleep(2000);
+
+		recordBtn.click();
+
+		user.getWaiter().until(ExpectedConditions.elementToBeClickable(By.cssSelector("#recorder-preview video")));
+
+		user.getWaiter().until(waitForVideoDuration(
+				user.getDriver().findElements(By.cssSelector("#recorder-preview video")).get(0), 4));
+
+		user.getDriver().findElements(By.id("close-record-btn")).get(0).click();
+
+		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.cssSelector("#recorder-preview video"), 0));
+
+		gracefullyLeaveParticipants(1);
+
+	}
+
+	private ExpectedCondition<Boolean> waitForVideoDuration(WebElement element, int durationInSeconds) {
+		return new ExpectedCondition<Boolean>() {
+			@Override
+			public Boolean apply(WebDriver input) {
+				return element.getAttribute("duration").matches(durationInSeconds - 1 + "\\.9[0-9]{0,5}|" + durationInSeconds + "\\.[0-1][0-9]{0,5}");
+			}
+		};
 	}
 
 	private void gracefullyLeaveParticipants(int numberOfParticipants) throws Exception {

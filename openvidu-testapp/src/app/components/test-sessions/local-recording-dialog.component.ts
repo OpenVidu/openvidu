@@ -9,9 +9,9 @@ import { LocalRecorder } from 'openvidu-browser';
             <div id="recorder-preview"></div>
         </div>
         <div mat-dialog-actions>
-            <button mat-button mat-dialog-close>Close</button>
-            <button mat-button (click)="recorder.download()">Download</button>
-            <button mat-button [disabled]="endpoint == ''" (click)="uploadFile()">Upload to</button>
+            <button id="close-record-btn" mat-button mat-dialog-close>Close</button>
+            <button id="download-record-btn" mat-button (click)="recorder.download()">Download</button>
+            <button id="upload-record-btn" mat-button [disabled]="endpoint == ''" (click)="uploadFile()">Upload to</button>
             <mat-form-field [style.font-size]="'14px'" [style.width]="'170px'">
                 <input matInput name="endpoint" [(ngModel)]="endpoint">
             </mat-form-field>

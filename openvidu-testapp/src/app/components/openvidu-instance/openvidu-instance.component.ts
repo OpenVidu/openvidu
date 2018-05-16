@@ -283,7 +283,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       '" aria-label="Start/Stop recording" class="mat-icon material-icons" role="img"' +
       'aria-hidden="true">fiber_manual_record</mat-icon></button>' +
       '<button style="display:none" id="pause-btn-' + this.session.connection.connectionId + '-' + connection.connectionId +
-      '" class="sub-btn rec-btn" title="Pause/Resume"><mat-icon id="pause-icon-' +
+      '" class="sub-btn rec-btn rec-pause-btn" title="Pause/Resume"><mat-icon id="pause-icon-' +
       this.session.connection.connectionId + '-' + connection.connectionId +
       '" aria-label="Pause/Resume recording" class="mat-icon material-icons" role="img"' +
       'aria-hidden="true">pause</mat-icon></button>';
@@ -310,7 +310,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       '" aria-label="Start/Stop local recording" class="mat-icon material-icons" role="img" aria-hidden="true">' +
       'fiber_manual_record</mat-icon></button>' +
       '<button style="display:none" id="local-pause-btn-' + this.session.connection.connectionId +
-      '" class="sub-btn rec-btn publisher-rec-btn" title="Pause/Resume">' +
+      '" class="sub-btn rec-btn publisher-rec-btn publisher-rec-pause-btn" title="Pause/Resume">' +
       '<mat-icon id="local-pause-icon-' + this.session.connection.connectionId +
       '" aria-label="Pause/Resume local recording" class="mat-icon material-icons" role="img" aria-hidden="true">' +
       'pause</mat-icon></button>';
