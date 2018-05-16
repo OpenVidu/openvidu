@@ -268,11 +268,13 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       '-' + connection.connectionId + '" aria-label="Subscribe or unsubscribe" class="mat-icon material-icons" role="img"' +
       'aria-hidden="true">notifications</mat-icon></button>' +
       '<button id="sub-video-btn-' + this.session.connection.connectionId + '-' + connection.connectionId +
-      '" class="sub-btn" title="Subscribe/Unsubscribe Video"><mat-icon id="sub-video-icon-' + this.session.connection.connectionId +
+      '" class="sub-btn sub-video-btn" title="Subscribe/Unsubscribe Video"><mat-icon id="sub-video-icon-' +
+      this.session.connection.connectionId +
       '-' + connection.connectionId + '" aria-label="Subscribe or unsubscribe" class="mat-icon material-icons" role="img"' +
       'aria-hidden="true">videocam</mat-icon></button>' +
       '<button id="sub-audio-btn-' + this.session.connection.connectionId + '-' + connection.connectionId +
-      '" class="sub-btn" title="Subscribe/Unsubscribe Audio"><mat-icon id="sub-audio-icon-' + this.session.connection.connectionId +
+      '" class="sub-btn sub-audio-btn" title="Subscribe/Unsubscribe Audio"><mat-icon id="sub-audio-icon-' +
+      this.session.connection.connectionId +
       '-' + connection.connectionId + '" aria-label="Subscribe or unsubscribe" class="mat-icon material-icons" role="img"' +
       'aria-hidden="true">mic</mat-icon></button>' +
       '<button id="record-btn-' + this.session.connection.connectionId + '-' + connection.connectionId +
