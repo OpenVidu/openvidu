@@ -637,6 +637,7 @@ public class OpenViduTestAppE2eTest {
 
 		for (WebElement el : publishButtons) {
 			el.click();
+			Thread.sleep(1000);
 		}
 
 		user.getEventManager().waitUntilEventReaches("videoPlaying", 8);
@@ -765,7 +766,8 @@ public class OpenViduTestAppE2eTest {
 		return new ExpectedCondition<Boolean>() {
 			@Override
 			public Boolean apply(WebDriver input) {
-				return element.getAttribute("duration").matches(durationInSeconds - 1 + "\\.9[0-9]{0,5}|" + durationInSeconds + "\\.[0-1][0-9]{0,5}");
+				return element.getAttribute("duration")
+						.matches(durationInSeconds - 1 + "\\.9[0-9]{0,5}|" + durationInSeconds + "\\.[0-1][0-9]{0,5}");
 			}
 		};
 	}
