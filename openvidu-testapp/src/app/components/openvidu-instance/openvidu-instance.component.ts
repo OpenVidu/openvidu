@@ -9,11 +9,21 @@ import {
   LocalRecorder, VideoInsertMode, StreamEvent, ConnectionEvent,
   SessionDisconnectedEvent, SignalEvent, RecordingEvent, VideoElementEvent
 } from 'openvidu-browser';
+import {
+  OpenVidu as OpenViduAPI,
+  Session as SessionAPI,
+  SessionProperties as SessionPropertiesAPI,
+  MediaMode,
+  RecordingMode,
+  RecordingLayout
+} from 'openvidu-node-client';
 import { MatDialog, MatDialogRef } from '@angular/material';
-import { ExtensionDialogComponent } from './extension-dialog.component';
-import { LocalRecordingDialogComponent } from '../test-sessions/local-recording-dialog.component';
+import { ExtensionDialogComponent } from '../dialogs/extension-dialog.component';
+import { LocalRecordingDialogComponent } from '../dialogs/local-recording-dialog.component';
 import { TestFeedService } from '../../services/test-feed.service';
 import { MuteSubscribersService } from '../../services/mute-subscribers.service';
+import { SessionPropertiesDialogComponent } from '../dialogs/session-properties-dialog.component';
+import { SessionApiDialogComponent } from '../dialogs/session-api-dialog.component';
 
 declare var $: any;
 
@@ -47,10 +57,8 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   sessionConf: SessionConf;
 
   // Session join data
-  secureSession = false;
   clientData: string;
   sessionName: string;
-  tokenInput: string;
 
   // Session options
   subscribeTo;
@@ -79,11 +87,20 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   disableActiveVideo = false;
   disableRadioButtons = false;
 
-  // OpenVidu objects
+  // OpenVidu Browser objects
   OV: OpenVidu;
   session: Session;
   publisher: Publisher;
   subscribers = {};
+
+  // OpenVidu Node Client objects
+  sessionProperties: SessionPropertiesAPI = {
+    mediaMode: MediaMode.ROUTED,
+    recordingMode: RecordingMode.MANUAL,
+    defaultRecordingLayout: RecordingLayout.BEST_FIT,
+    defaultCustomLayout: '',
+    customSessionId: ''
+  };
 
   // Session audio and video status
   audioMuted = false;
@@ -108,7 +125,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
 
   constructor(
     private changeDetector: ChangeDetectorRef,
-    private extensionDialog: MatDialog,
+    private dialog: MatDialog,
     private recordDialog: MatDialog,
     private testFeedService: TestFeedService,
     private muteSubscribersService: MuteSubscribersService,
@@ -171,17 +188,9 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       this.leaveSession();
     }
 
-    let token;
-
-    if (this.secureSession) {
-      token = this.tokenInput;
-    } else {
-      token = 'wss://'
-        + this.removeHttps(this.openviduUrl)
-        + '?sessionId=' + this.sessionName
-        + '&secret=' + this.openviduSecret;
-    }
-    this.joinSessionShared(token);
+    this.getToken().then(token => {
+      this.joinSessionShared(token);
+    });
   }
 
   private joinSessionShared(token): void {
@@ -580,7 +589,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
           console.warn(err);
           this.openviduError = err;
           if (err.name === 'SCREEN_EXTENSION_NOT_INSTALLED') {
-            this.extensionDialog.open(ExtensionDialogComponent, {
+            this.dialog.open(ExtensionDialogComponent, {
               data: { url: err.message },
               disableClose: true,
               width: '250px'
@@ -856,7 +865,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
           console.warn(err);
           this.openviduError = err;
           if (err.name === 'SCREEN_EXTENSION_NOT_INSTALLED') {
-            this.extensionDialog.open(ExtensionDialogComponent, {
+            this.dialog.open(ExtensionDialogComponent, {
               data: { url: err.message },
               disableClose: true,
               width: '250px'
@@ -905,7 +914,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
           console.error(err);
           this.openviduError = err;
           if (err.name === 'SCREEN_EXTENSION_NOT_INSTALLED') {
-            this.extensionDialog.open(ExtensionDialogComponent, {
+            this.dialog.open(ExtensionDialogComponent, {
               data: { url: err.message },
               disableClose: true,
               width: '250px'
@@ -1024,6 +1033,49 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       })
       .catch(error => {
         console.error(error);
+      });
+  }
+
+  openSessionPropertiesDialog() {
+    this.sessionProperties.customSessionId = this.sessionName;
+    const dialogRef = this.dialog.open(SessionPropertiesDialogComponent, {
+      data: this.sessionProperties,
+      width: '235px'
+    });
+
+    dialogRef.afterClosed().subscribe((result: SessionPropertiesAPI) => {
+      if (!!result) {
+        this.sessionProperties = result;
+        if (!!this.sessionProperties.customSessionId) {
+          this.sessionName = this.sessionProperties.customSessionId;
+        }
+      }
+      document.getElementById('session-settings-btn').classList.remove('cdk-program-focused');
+    });
+  }
+
+  openSessionApiDialog() {
+    const dialogRef = this.dialog.open(SessionApiDialogComponent, {
+      data: {
+        openVidu: new OpenViduAPI(this.openviduUrl, this.openviduSecret),
+        sessionId: !!this.session ? this.session.sessionId : this.sessionName
+      },
+      width: '280px'
+    });
+
+    dialogRef.afterClosed().subscribe((result: string) => {
+      document.getElementById('session-api-btn').classList.remove('cdk-program-focused');
+    });
+  }
+
+  getToken(): Promise<string> {
+    const OV_NodeClient = new OpenViduAPI(this.openviduUrl, this.openviduSecret);
+    if (!this.sessionProperties.customSessionId) {
+      this.sessionProperties.customSessionId = this.sessionName;
+    }
+    return OV_NodeClient.createSession(this.sessionProperties)
+      .then(session_NodeClient => {
+        return session_NodeClient.generateToken();
       });
   }
 

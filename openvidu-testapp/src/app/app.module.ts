@@ -10,13 +10,15 @@ import { AppComponent } from './app.component';
 import { TestSessionsComponent } from './components/test-sessions/test-sessions.component';
 import { TestApirestComponent } from './components/test-apirest/test-apirest.component';
 import { OpenviduInstanceComponent } from './components/openvidu-instance/openvidu-instance.component';
-import { ExtensionDialogComponent } from './components/openvidu-instance/extension-dialog.component';
-import { LocalRecordingDialogComponent } from './components/test-sessions/local-recording-dialog.component';
+import { ExtensionDialogComponent } from './components/dialogs/extension-dialog.component';
+import { LocalRecordingDialogComponent } from './components/dialogs/local-recording-dialog.component';
 
 import { OpenviduRestService } from './services/openvidu-rest.service';
 import { OpenviduParamsService } from './services/openvidu-params.service';
 import { TestFeedService } from './services/test-feed.service';
 import { MuteSubscribersService } from './services/mute-subscribers.service';
+import { SessionPropertiesDialogComponent } from './components/dialogs/session-properties-dialog.component';
+import { SessionApiDialogComponent } from './components/dialogs/session-api-dialog.component';
 
 @NgModule({
   declarations: [
@@ -25,6 +27,8 @@ import { MuteSubscribersService } from './services/mute-subscribers.service';
     TestSessionsComponent,
     TestApirestComponent,
     ExtensionDialogComponent,
+    SessionPropertiesDialogComponent,
+    SessionApiDialogComponent,
     LocalRecordingDialogComponent
   ],
   imports: [
@@ -43,6 +47,8 @@ import { MuteSubscribersService } from './services/mute-subscribers.service';
   ],
   entryComponents: [
     ExtensionDialogComponent,
+    SessionPropertiesDialogComponent,
+    SessionApiDialogComponent,
     LocalRecordingDialogComponent
   ],
   bootstrap: [AppComponent]

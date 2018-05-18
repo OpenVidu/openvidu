@@ -6,14 +6,7 @@
       <mat-card-content>
         <form class="session-form">
 
-          <div class="secure-div">
-            <mat-checkbox class="secure-session-checkbox" [disabled]="session" [(ngModel)]="secureSession" name="secureSession">SECURE</mat-checkbox>
-            <mat-form-field>
-              <input class="tokenInput" matInput placeholder="TOKEN" name="tokenInput" [(ngModel)]="tokenInput" [disabled]="!secureSession">
-            </mat-form-field>
-          </div>
-
-          <div>
+          <div fxLayout="row">
             <mat-form-field style="margin-right: 10px">
               <input matInput placeholder="Session name" name="sessionName" [(ngModel)]="sessionName" [disabled]="session">
             </mat-form-field>
@@ -21,6 +14,16 @@
             <mat-form-field>
               <input matInput placeholder="Client data" name="clientData" [(ngModel)]="clientData" [disabled]="session">
             </mat-form-field>
+
+            <div fxLayout="column" class="session-btns-div">
+              <button mat-icon-button title="Session properties" id="session-settings-btn" class="mat-icon-custom" (click)="openSessionPropertiesDialog()" [disabled]="session">
+                <mat-icon class="mat-icon-custom-ic" aria-label="Session properties button">settings</mat-icon>
+              </button>
+              <button mat-icon-button title="Session API" id="session-api-btn" class="mat-icon-custom" (click)="openSessionApiDialog()">
+                <mat-icon class="mat-icon-custom-ic" aria-label="Session API button">cloud_circle</mat-icon>
+              </button>
+            </div>
+
           </div>
 
           <div>
