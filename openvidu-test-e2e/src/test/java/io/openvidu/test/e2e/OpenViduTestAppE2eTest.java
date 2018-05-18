@@ -771,11 +771,11 @@ public class OpenViduTestAppE2eTest {
 
 		user.getEventManager().waitUntilEventReaches("recordingStopped", 1);
 
+		String recordingsPath = System.getProperty("user.home") + "/openvidu/recordings/";
 		File file1 = new File(recordingsPath + sessionName + ".mp4");
 		File file2 = new File(recordingsPath + ".recording." + sessionName);
 		File file3 = new File(recordingsPath + sessionName + ".info");
 
-		System.out.println(file1.getAbsolutePath());
 		Assert.assertTrue(file1.exists() || file1.length() > 0);
 		Assert.assertTrue(file2.exists() || file2.length() > 0);
 		Assert.assertTrue(file3.exists() || file3.length() > 0);
