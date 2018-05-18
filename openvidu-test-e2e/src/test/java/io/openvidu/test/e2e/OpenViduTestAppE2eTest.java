@@ -622,6 +622,9 @@ public class OpenViduTestAppE2eTest {
 			threadAssertions.add(((String) event.get("eventContent")).contains("CAMERA"));
 		});
 		user.getDriver().findElement(By.id("one2many-btn")).click();
+		
+		Thread.sleep(2000);
+		
 		user.getEventManager().waitUntilEventReaches("videoPlaying", 2);
 		user.getEventManager().off("videoPlaying");
 		for (Iterator<Boolean> iter = threadAssertions.iterator(); iter.hasNext();) {
@@ -631,6 +634,8 @@ public class OpenViduTestAppE2eTest {
 
 		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
 				true, true));
+		
+		Thread.sleep(2000);
 
 		// Second publication (only video (SCREEN))
 		user.getEventManager().on("videoPlaying", (event) -> {
@@ -646,6 +651,8 @@ public class OpenViduTestAppE2eTest {
 
 		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
 				false, true));
+		
+		Thread.sleep(2000);
 
 		// Third publication (audio + video [CAMERA])
 		user.getEventManager().on("videoPlaying", (event) -> {
@@ -761,9 +768,9 @@ public class OpenViduTestAppE2eTest {
 		
 		user.getEventManager().waitUntilEventReaches("recordingStopped", 1);
 		
-		File file1 = new File("/opt/openvidu/recordings/" + sessionName + ".mp4");
-		File file2 = new File("/opt/openvidu/recordings/.recording." + sessionName);
-		File file3 = new File("/opt/openvidu/recordings/" + sessionName + ".info");
+		File file1 = new File(System.getProperty("user.dir") + "/recordings/" + sessionName + ".mp4");
+		File file2 = new File(System.getProperty("user.dir") + "/recordings/.recording." + sessionName);
+		File file3 = new File(System.getProperty("user.dir") + "/recordings/" + sessionName + ".info");
 		
 		Assert.assertFalse(!file1.exists() || file1.length() == 0);
 		Assert.assertFalse(!file2.exists() || file2.length() == 0);
