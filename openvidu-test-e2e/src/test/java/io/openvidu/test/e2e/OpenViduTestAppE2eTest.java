@@ -622,9 +622,9 @@ public class OpenViduTestAppE2eTest {
 			threadAssertions.add(((String) event.get("eventContent")).contains("CAMERA"));
 		});
 		user.getDriver().findElement(By.id("one2many-btn")).click();
-		
+
 		Thread.sleep(2000);
-		
+
 		user.getEventManager().waitUntilEventReaches("videoPlaying", 2);
 		user.getEventManager().off("videoPlaying");
 		for (Iterator<Boolean> iter = threadAssertions.iterator(); iter.hasNext();) {
@@ -634,7 +634,7 @@ public class OpenViduTestAppE2eTest {
 
 		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
 				true, true));
-		
+
 		Thread.sleep(2000);
 
 		// Second publication (only video (SCREEN))
@@ -651,7 +651,7 @@ public class OpenViduTestAppE2eTest {
 
 		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
 				false, true));
-		
+
 		Thread.sleep(2000);
 
 		// Third publication (audio + video [CAMERA])
@@ -721,78 +721,83 @@ public class OpenViduTestAppE2eTest {
 		gracefullyLeaveParticipants(1);
 
 	}
-	
+
 	@Test
 	@DisplayName("Remote record")
 	void remoteRecordTest() throws Exception {
 		setupBrowser("chrome");
 
 		log.info("Remote record");
-		
+
 		final String sessionName = "RECORDED_SESSION";
 
 		user.getDriver().findElement(By.id("add-user-btn")).click();
 		user.getDriver().findElement(By.id("session-name-input")).clear();
 		user.getDriver().findElement(By.id("session-name-input")).sendKeys(sessionName);
-		
+
 		// Try to record a non-existing session
 		user.getDriver().findElement(By.id("session-api-btn")).click();
 		Thread.sleep(1000);
 		user.getDriver().findElement(By.id("start-recording-btn")).click();
-		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Error [404]"));
+		user.getWaiter()
+				.until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Error [404]"));
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 		Thread.sleep(1000);
-		
+
 		// Join the user to the session
 		user.getDriver().findElement(By.className("join-btn")).click();
-		
+
 		user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
 		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
 		user.getEventManager().waitUntilEventReaches("videoElementCreated", 1);
 		user.getEventManager().waitUntilEventReaches("videoPlaying", 1);
-		
+
 		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
 				true, true));
-		
+
 		user.getDriver().findElement(By.id("session-api-btn")).click();
 		Thread.sleep(1000);
 		user.getDriver().findElement(By.id("start-recording-btn")).click();
-		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Recording started [" + sessionName + "]"));
-		
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
+				"Recording started [" + sessionName + "]"));
+
 		user.getEventManager().waitUntilEventReaches("recordingStarted", 1);
-		
+
 		user.getDriver().findElement(By.id("recording-id-field")).clear();
 		user.getDriver().findElement(By.id("recording-id-field")).sendKeys(sessionName);
 		user.getDriver().findElement(By.id("stop-recording-btn")).click();
-		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Recording stopped [" + sessionName + "]"));
-		
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
+				"Recording stopped [" + sessionName + "]"));
+
 		user.getEventManager().waitUntilEventReaches("recordingStopped", 1);
-		
-		File file1 = new File(System.getProperty("user.dir") + "/recordings/" + sessionName + ".mp4");
-		File file2 = new File(System.getProperty("user.dir") + "/recordings/.recording." + sessionName);
-		File file3 = new File(System.getProperty("user.dir") + "/recordings/" + sessionName + ".info");
-		
-		Assert.assertFalse(!file1.exists() || file1.length() == 0);
-		Assert.assertFalse(!file2.exists() || file2.length() == 0);
-		Assert.assertFalse(!file3.exists() || file3.length() == 0);
-		
+
+		File file1 = new File(recordingsPath + sessionName + ".mp4");
+		File file2 = new File(recordingsPath + ".recording." + sessionName);
+		File file3 = new File(recordingsPath + sessionName + ".info");
+
+		System.out.println(file1.getAbsolutePath());
+		Assert.assertTrue(file1.exists() || file1.length() > 0);
+		Assert.assertTrue(file2.exists() || file2.length() > 0);
+		Assert.assertTrue(file3.exists() || file3.length() > 0);
+
 		user.getDriver().findElement(By.id("delete-recording-btn")).click();
-		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Recording deleted"));
-		
+		user.getWaiter()
+				.until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Recording deleted"));
+
 		Assert.assertFalse(file1.exists());
 		Assert.assertFalse(file2.exists());
 		Assert.assertFalse(file3.exists());
-		
+
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
-		
+
 	}
 
 	private ExpectedCondition<Boolean> waitForVideoDuration(WebElement element, int durationInSeconds) {
 		return new ExpectedCondition<Boolean>() {
 			@Override
 			public Boolean apply(WebDriver input) {
-				return element.getAttribute("duration")
-						.matches(durationInSeconds - 1 + "\\.[8-9][0-9]{0,5}|" + durationInSeconds + "\\.[0-2][0-9]{0,5}");
+				return element.getAttribute("duration").matches(
+						durationInSeconds - 1 + "\\.[8-9][0-9]{0,5}|" + durationInSeconds + "\\.[0-2][0-9]{0,5}");
 			}
 		};
 	}
