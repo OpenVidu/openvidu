@@ -758,6 +758,15 @@ public class OpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.id("session-api-btn")).click();
 		Thread.sleep(1000);
 		user.getDriver().findElement(By.id("start-recording-btn")).click();
+		
+		Thread.sleep(4000);
+		
+		try {
+			System.out.println(getBase64Screenshot(user));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
 		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
 				"Recording started [" + sessionName + "]"));
 
