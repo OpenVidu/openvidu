@@ -8,11 +8,11 @@
 
           <div fxLayout="row">
             <mat-form-field style="margin-right: 10px">
-              <input matInput placeholder="Session name" name="sessionName" [(ngModel)]="sessionName" [disabled]="session">
+              <input matInput placeholder="Session name" id="session-name-input" name="sessionName" [(ngModel)]="sessionName" [disabled]="session">
             </mat-form-field>
 
             <mat-form-field>
-              <input matInput placeholder="Client data" name="clientData" [(ngModel)]="clientData" [disabled]="session">
+              <input matInput placeholder="Client data" id="client-data-input" name="clientData" [(ngModel)]="clientData" [disabled]="session">
             </mat-form-field>
 
             <div fxLayout="column" class="session-btns-div">

@@ -22,10 +22,13 @@ import static org.slf4j.LoggerFactory.getLogger;
 import static org.openqa.selenium.OutputType.BASE64;
 import org.slf4j.Logger;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.*;
@@ -170,7 +173,7 @@ public class OpenViduTestAppE2eTest {
 
 		List<WebElement> l2 = user.getDriver().findElements(By.className("join-btn"));
 		for (WebElement el : l2) {
-			el.click();
+			el.sendKeys(Keys.ENTER);
 		}
 
 		user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
@@ -208,7 +211,7 @@ public class OpenViduTestAppE2eTest {
 
 		List<WebElement> l2 = user.getDriver().findElements(By.className("join-btn"));
 		for (WebElement el : l2) {
-			el.click();
+			el.sendKeys(Keys.ENTER);
 		}
 
 		user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
@@ -353,56 +356,6 @@ public class OpenViduTestAppE2eTest {
 
 		List<WebElement> l = user.getDriver().findElements(By.className("join-btn"));
 		for (WebElement el : l) {
-			el.sendKeys(Keys.ENTER);
-		}
-
-		user.getEventManager().waitUntilEventReaches("connectionCreated", 16);
-		user.getEventManager().waitUntilEventReaches("accessAllowed", 4);
-		user.getEventManager().waitUntilEventReaches("videoElementCreated", 16);
-		user.getEventManager().waitUntilEventReaches("streamCreated", 6);
-		user.getEventManager().waitUntilEventReaches("videoPlaying", 16);
-
-		try {
-			System.out.println(getBase64Screenshot(user));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
-				true, true));
-
-		gracefullyLeaveParticipants(4);
-	}
-
-	@Test
-	@DisplayName("Secure Test")
-	void secureTest() throws Exception {
-
-		setupBrowser("chrome");
-
-		log.info("Secure Test");
-
-		WebElement addUser = user.getDriver().findElement(By.id("add-user-btn"));
-		for (int i = 0; i < 4; i++) {
-			addUser.click();
-		}
-
-		OpenVidu OV = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET);
-		Session session = OV.createSession();
-
-		List<WebElement> l1 = user.getDriver().findElements(By.className("secure-session-checkbox"));
-		for (WebElement el : l1) {
-			el.click();
-		}
-
-		List<WebElement> l2 = user.getDriver().findElements(By.className("tokenInput"));
-		for (WebElement el : l2) {
-			String token = session.generateToken();
-			el.sendKeys(token);
-		}
-
-		List<WebElement> l3 = user.getDriver().findElements(By.className("join-btn"));
-		for (WebElement el : l3) {
 			el.sendKeys(Keys.ENTER);
 		}
 
@@ -652,7 +605,7 @@ public class OpenViduTestAppE2eTest {
 	@DisplayName("Change publisher dynamically")
 	void changePublisherTest() throws Exception {
 
-		List<Boolean> listOfThreadAssertions = new ArrayList<>();
+		Queue<Boolean> threadAssertions = new ConcurrentLinkedQueue<Boolean>();
 
 		setupBrowser("chrome");
 
@@ -666,12 +619,12 @@ public class OpenViduTestAppE2eTest {
 
 		// First publication (audio + video [CAMERA])
 		user.getEventManager().on("videoPlaying", (event) -> {
-			listOfThreadAssertions.add(((String) event.get("eventContent")).contains("CAMERA"));
+			threadAssertions.add(((String) event.get("eventContent")).contains("CAMERA"));
 		});
 		user.getDriver().findElement(By.id("one2many-btn")).click();
 		user.getEventManager().waitUntilEventReaches("videoPlaying", 2);
 		user.getEventManager().off("videoPlaying");
-		for (Iterator<Boolean> iter = listOfThreadAssertions.iterator(); iter.hasNext();) {
+		for (Iterator<Boolean> iter = threadAssertions.iterator(); iter.hasNext();) {
 			Assert.assertTrue(iter.next());
 			iter.remove();
 		}
@@ -681,12 +634,12 @@ public class OpenViduTestAppE2eTest {
 
 		// Second publication (only video (SCREEN))
 		user.getEventManager().on("videoPlaying", (event) -> {
-			listOfThreadAssertions.add(((String) event.get("eventContent")).contains("SCREEN"));
+			threadAssertions.add(((String) event.get("eventContent")).contains("SCREEN"));
 		});
 		user.getDriver().findElements(By.className("change-publisher-btn")).get(0).click();
 		user.getEventManager().waitUntilEventReaches("videoPlaying", 4);
 		user.getEventManager().off("videoPlaying");
-		for (Iterator<Boolean> iter = listOfThreadAssertions.iterator(); iter.hasNext();) {
+		for (Iterator<Boolean> iter = threadAssertions.iterator(); iter.hasNext();) {
 			Assert.assertTrue(iter.next());
 			iter.remove();
 		}
@@ -696,12 +649,12 @@ public class OpenViduTestAppE2eTest {
 
 		// Third publication (audio + video [CAMERA])
 		user.getEventManager().on("videoPlaying", (event) -> {
-			listOfThreadAssertions.add(((String) event.get("eventContent")).contains("CAMERA"));
+			threadAssertions.add(((String) event.get("eventContent")).contains("CAMERA"));
 		});
 		user.getDriver().findElements(By.className("change-publisher-btn")).get(0).click();
 		user.getEventManager().waitUntilEventReaches("videoPlaying", 6);
 		user.getEventManager().off("videoPlaying");
-		for (Iterator<Boolean> iter = listOfThreadAssertions.iterator(); iter.hasNext();) {
+		for (Iterator<Boolean> iter = threadAssertions.iterator(); iter.hasNext();) {
 			Assert.assertTrue(iter.next());
 			iter.remove();
 		}
@@ -761,13 +714,78 @@ public class OpenViduTestAppE2eTest {
 		gracefullyLeaveParticipants(1);
 
 	}
+	
+	@Test
+	@DisplayName("Remote record")
+	void remoteRecordTest() throws Exception {
+		setupBrowser("chrome");
+
+		log.info("Remote record");
+		
+		final String sessionName = "RECORDED_SESSION";
+
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.id("session-name-input")).clear();
+		user.getDriver().findElement(By.id("session-name-input")).sendKeys(sessionName);
+		
+		// Try to record a non-existing session
+		user.getDriver().findElement(By.id("session-api-btn")).click();
+		Thread.sleep(1000);
+		user.getDriver().findElement(By.id("start-recording-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Error [404]"));
+		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		Thread.sleep(1000);
+		
+		// Join the user to the session
+		user.getDriver().findElement(By.className("join-btn")).click();
+		
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
+		user.getEventManager().waitUntilEventReaches("videoElementCreated", 1);
+		user.getEventManager().waitUntilEventReaches("videoPlaying", 1);
+		
+		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
+				true, true));
+		
+		user.getDriver().findElement(By.id("session-api-btn")).click();
+		Thread.sleep(1000);
+		user.getDriver().findElement(By.id("start-recording-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Recording started [" + sessionName + "]"));
+		
+		user.getEventManager().waitUntilEventReaches("recordingStarted", 1);
+		
+		user.getDriver().findElement(By.id("recording-id-field")).clear();
+		user.getDriver().findElement(By.id("recording-id-field")).sendKeys(sessionName);
+		user.getDriver().findElement(By.id("stop-recording-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Recording stopped [" + sessionName + "]"));
+		
+		user.getEventManager().waitUntilEventReaches("recordingStopped", 1);
+		
+		File file1 = new File("/opt/openvidu/recordings/" + sessionName + ".mp4");
+		File file2 = new File("/opt/openvidu/recordings/.recording." + sessionName);
+		File file3 = new File("/opt/openvidu/recordings/" + sessionName + ".info");
+		
+		Assert.assertFalse(!file1.exists() || file1.length() == 0);
+		Assert.assertFalse(!file2.exists() || file2.length() == 0);
+		Assert.assertFalse(!file3.exists() || file3.length() == 0);
+		
+		user.getDriver().findElement(By.id("delete-recording-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Recording deleted"));
+		
+		Assert.assertFalse(file1.exists());
+		Assert.assertFalse(file2.exists());
+		Assert.assertFalse(file3.exists());
+		
+		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		
+	}
 
 	private ExpectedCondition<Boolean> waitForVideoDuration(WebElement element, int durationInSeconds) {
 		return new ExpectedCondition<Boolean>() {
 			@Override
 			public Boolean apply(WebDriver input) {
 				return element.getAttribute("duration")
-						.matches(durationInSeconds - 1 + "\\.9[0-9]{0,5}|" + durationInSeconds + "\\.[0-1][0-9]{0,5}");
+						.matches(durationInSeconds - 1 + "\\.[8-9][0-9]{0,5}|" + durationInSeconds + "\\.[0-2][0-9]{0,5}");
 			}
 		};
 	}
