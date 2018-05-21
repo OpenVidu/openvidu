@@ -6,7 +6,7 @@ node('container') {
       mycontainer.inside("-p 4200:4200 -p 4443:4443 -u root -e MY_UID=0 -v /var/run/docker.sock:/var/run/docker.sock:rw -v /dev/shm:/dev/shm -v /opt/openvidu/recordings:/opt/openvidu/recordings") {
         stage('Preparation') {
           sh 'rm -rf openvidu || true'
-          sh 'rm -rf /opt/openvidu/recordings/* || true'
+          sh 'rm -rf /opt/openvidu/recordings/{,.[!.]}* || true'
           sh 'git clone https://github.com/OpenVidu/openvidu.git'
         }
         stage('OpenVidu parent build') {
