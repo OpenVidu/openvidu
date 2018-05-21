@@ -342,7 +342,9 @@ public class ComposedRecordingService {
 	}
 
 	private Recording getRecordingFromHost(String recordingId) {
+		log.info(this.openviduConfig.getOpenViduRecordingPath() + RECORDING_ENTITY_FILE + recordingId);
 		File file = new File(this.openviduConfig.getOpenViduRecordingPath() + RECORDING_ENTITY_FILE + recordingId);
+		log.info("File exists: " + file.exists());
 		return this.getRecordingFromEntityFile(file);
 	}
 
