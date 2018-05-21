@@ -20,7 +20,7 @@ node('container') {
             sh 'echo "cd openvidu && mvn -DskipTests=true install"'
           }
           stage('OpenVidu Browser build') {
-            sh 'npm config set prefix "~/.npm-global" && cd openvidu/openvidu-browser && npm install --unsafe-perm && npm run build && npm link'
+            sh 'cd openvidu/openvidu-browser && npm install --unsafe-perm && npm run build && npm config set prefix "~/.npm-global" && npm link'
           }
           stage('OpenVidu Node Client build') {
             sh 'cd openvidu/openvidu-node-client && npm install --unsafe-perm && npm run build && npm link'
