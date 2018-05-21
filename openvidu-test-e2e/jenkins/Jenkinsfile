@@ -26,7 +26,7 @@ node('container') {
             sh 'cd openvidu/openvidu-node-client && npm install --unsafe-perm && npm run build && npm config set prefix "~/.npm-global" && npm link'
           }
           stage('OpenVidu TestApp build') {
-            sh 'cd openvidu/openvidu-testapp && npm install --unsafe-perm && npm config set prefix "~/.npm-global" && npm link openvidu-browser && npm config set prefix "~/.npm-global" && npm link openvidu-node-client && ng build'
+            sh 'cd openvidu/openvidu-testapp && npm install --unsafe-perm && npm config set prefix "~/.npm-global" && npm link openvidu-browser && npm config set prefix "~/.npm-global" && npm link openvidu-node-client && npm config set prefix "~/.npm-global" && ng build'
           }
           stage ('Environment Launch') {
             sh 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/CN=www.mydom.com/O=My Company LTD./C=US" -keyout openvidu/openvidu-testapp/dist/key.pem -out openvidu/openvidu-testapp/dist/cert.pem'  
