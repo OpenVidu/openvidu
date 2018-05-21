@@ -15,9 +15,10 @@ node('container') {
             sh 'mkdir ~/.npm-global && npm config set prefix "~/.npm-global" && echo "export PATH=~/.npm-global/bin:\$PATH" >> ~/.profile && source ~/.profile'
           }
           stage('OpenVidu parent build') {
-            sh 'cd openvidu && mvn -DskipTests=true install'
+            sh 'echo "cd openvidu && mvn -DskipTests=true install"'
           }
           stage('OpenVidu Browser build') {
+            sh 'mkdir ~/.npm-global && npm config set prefix "~/.npm-global" && echo "export PATH=~/.npm-global/bin:\$PATH" >> ~/.profile && source ~/.profile'
             sh 'cd openvidu/openvidu-browser && npm install --unsafe-perm && npm run build && npm link'
           }
           stage('OpenVidu Node Client build') {
