@@ -11,6 +11,8 @@ node('container') {
           stage('Preparation') {
             sh 'rm -rf openvidu || true'
             sh 'rm -rf /opt/openvidu/recordings/* || true'
+            sh 'rm -rf ~/.npm-global || true'
+            sh 'rm -rf ~/.profile || true'
             sh 'git clone https://github.com/OpenVidu/openvidu.git'
             sh 'mkdir ~/.npm-global && npm config set prefix "~/.npm-global" && echo "export PATH=~/.npm-global/bin:\$PATH" >> ~/.profile && source ~/.profile || true'
           }
