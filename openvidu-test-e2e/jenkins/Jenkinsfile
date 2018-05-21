@@ -8,6 +8,7 @@ node('container') {
         stage('Preparation') {
           sh 'rm -rf openvidu || true'
           sh 'rm -rf /opt/openvidu/recordings/* || true'
+          sh 'chmod 777 /.npm || true'
           sh 'git clone https://github.com/OpenVidu/openvidu.git'
         }
         stage('OpenVidu parent build') {
