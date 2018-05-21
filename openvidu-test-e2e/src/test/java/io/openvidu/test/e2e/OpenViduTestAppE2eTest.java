@@ -789,10 +789,6 @@ public class OpenViduTestAppE2eTest {
 		Assert.assertTrue(file2.exists() || file2.length() > 0);
 		Assert.assertTrue(file3.exists() || file3.length() > 0);
 
-		user.getDriver().findElement(By.id("list-recording-btn")).click();
-		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
-				"Recording list [" + sessionName + "]"));
-
 		user.getDriver().findElement(By.id("delete-recording-btn")).click();
 		user.getWaiter()
 				.until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Recording deleted"));
