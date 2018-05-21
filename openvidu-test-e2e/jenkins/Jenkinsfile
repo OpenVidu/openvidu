@@ -12,9 +12,9 @@ node('container') {
             sh 'rm -rf openvidu || true'
             sh 'rm -rf /opt/openvidu/recordings/* || true'
             sh 'rm -rf ~/.npm-global || true'
+            sh 'mkdir ~/.npm-global'
             sh 'rm -rf ~/.profile || true'
             sh 'git clone https://github.com/OpenVidu/openvidu.git'
-            sh 'mkdir ~/.npm-global && npm config set prefix "~/.npm-global"'
           }
           stage('OpenVidu parent build') {
             sh 'echo "cd openvidu && mvn -DskipTests=true install"'
@@ -26,7 +26,7 @@ node('container') {
             sh 'cd openvidu/openvidu-node-client && npm install --unsafe-perm && npm run build && npm config set prefix "~/.npm-global" && npm link'
           }
           stage('OpenVidu TestApp build') {
-            sh 'cd openvidu/openvidu-testapp && npm install --unsafe-perm && npm link openvidu-browser && npm link openvidu-node-client && ng build'
+            sh 'cd openvidu/openvidu-testapp && npm install --unsafe-perm && npm config set prefix "~/.npm-global" && npm link openvidu-browser && npm config set prefix "~/.npm-global" && npm link openvidu-node-client && ng build'
           }
           stage ('Environment Launch') {
             sh 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/CN=www.mydom.com/O=My Company LTD./C=US" -keyout openvidu/openvidu-testapp/dist/key.pem -out openvidu/openvidu-testapp/dist/cert.pem'  
