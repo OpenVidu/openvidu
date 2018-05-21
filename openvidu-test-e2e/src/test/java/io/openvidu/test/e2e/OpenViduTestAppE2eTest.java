@@ -758,15 +758,15 @@ public class OpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.id("session-api-btn")).click();
 		Thread.sleep(1000);
 		user.getDriver().findElement(By.id("start-recording-btn")).click();
-		
+
 		Thread.sleep(4000);
-		
+
 		try {
 			System.out.println(getBase64Screenshot(user));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+
 		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
 				"Recording started [" + sessionName + "]"));
 
@@ -788,6 +788,10 @@ public class OpenViduTestAppE2eTest {
 		Assert.assertTrue(file1.exists() || file1.length() > 0);
 		Assert.assertTrue(file2.exists() || file2.length() > 0);
 		Assert.assertTrue(file3.exists() || file3.length() > 0);
+
+		user.getDriver().findElement(By.id("list-recording-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
+				"Recording list [" + sessionName + "]"));
 
 		user.getDriver().findElement(By.id("delete-recording-btn")).click();
 		user.getWaiter()
