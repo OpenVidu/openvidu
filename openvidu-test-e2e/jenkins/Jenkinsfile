@@ -4,7 +4,7 @@ node('container') {
       def mycontainer = docker.image('openvidu/openvidu-test-e2e:latest')
       mycontainer.pull()
       def USER_ID = sh script: 'id -u $USER', returnStdout: true
-      mycontainer.inside("-p 4200:4200 -p 4443:4443 -e MY_UID=" + USER_ID + " -v /var/run/docker.sock:/var/run/docker.sock:rw -v /dev/shm:/dev/shm -v /opt/openvidu/recordings:/opt/openvidu/recordings") {
+      mycontainer.inside("-p 4200:4200 -p 4443:4443 -u root -e MY_UID=" + USER_ID + " -v /var/run/docker.sock:/var/run/docker.sock:rw -v /dev/shm:/dev/shm -v /opt/openvidu/recordings:/opt/openvidu/recordings") {
         stage('Preparation') {
           sh 'rm -rf openvidu || true'
           sh 'rm -rf /opt/openvidu/recordings/* || true'
