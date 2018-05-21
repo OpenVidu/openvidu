@@ -780,7 +780,7 @@ public class OpenViduTestAppE2eTest {
 
 		user.getEventManager().waitUntilEventReaches("recordingStopped", 1);
 
-		String recordingsPath = System.getProperty("user.home") + "/openvidu/recordings/";
+		String recordingsPath = "/opt/openvidu/recordings/";
 		File file1 = new File(recordingsPath + sessionName + ".mp4");
 		File file2 = new File(recordingsPath + ".recording." + sessionName);
 		File file3 = new File(recordingsPath + sessionName + ".info");
