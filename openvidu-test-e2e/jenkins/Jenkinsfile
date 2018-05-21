@@ -3,7 +3,7 @@ node('container') {
     docker.image('elastest/eus-browser-firefox:3.7.1').withRun('-p 4445:4444 -p 5901:5900 --shm-size=1g') { d ->
       def mycontainer = docker.image('openvidu/openvidu-test-e2e:latest')
       mycontainer.pull()
-      mycontainer.inside("-p 4200:4200 -p 4443:4443 -u root -v /var/run/docker.sock:/var/run/docker.sock:rw -v /dev/shm:/dev/shm -v /opt/openvidu/recordings:/opt/openvidu/recordings") {
+      mycontainer.inside("-p 4200:4200 -p 4443:4443 -u root -e MY_UID=$(id -u $USER) -v /var/run/docker.sock:/var/run/docker.sock:rw -v /dev/shm:/dev/shm -v /opt/openvidu/recordings:/opt/openvidu/recordings") {
         stage('Preparation') {
           sh 'rm -rf openvidu || true'
           sh 'rm -rf /opt/openvidu/recordings/* || true'
