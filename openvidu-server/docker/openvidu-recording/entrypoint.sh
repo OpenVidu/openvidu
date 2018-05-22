@@ -8,25 +8,37 @@ if [[ $CURRENT_UID != $USER_ID ]]; then
   adduser --uid $USER_ID --disabled-password --gecos "" myuser
 fi
 
-URL="${URL:-https://www.youtube.com/watch?v=JMuzlEQz3uo}"
-RESOLUTION="${RESOLUTION:-1920x1080}"
-FRAMERATE="${FRAMERATE:-24}"
-VIDEO_SIZE="$RESOLUTION"
+URL=${URL:-https://www.youtube.com/watch?v=JMuzlEQz3uo}
+RESOLUTION=${RESOLUTION:-1920x1080}
+FRAMERATE=${FRAMERATE:-24}
+VIDEO_SIZE=$RESOLUTION
 ARRAY=(${VIDEO_SIZE//x/ })
-VIDEO_ID="${VIDEO_ID:-video}"
-VIDEO_NAME="${VIDEO_NAME:-video}"
-VIDEO_FORMAT="${VIDEO_FORMAT:-mp4}"
-RECORDING_JSON="'${RECORDING_JSON}'"
+VIDEO_ID=${VIDEO_ID:-video}
+VIDEO_NAME=${VIDEO_NAME:-video}
+VIDEO_FORMAT=${VIDEO_FORMAT:-mp4}
+RECORDING_JSON="${RECORDING_JSON}"
 
+export URL
+export RESOLUTION
+export FRAMERATE
+export VIDEO_SIZE
+export ARRAY
+export VIDEO_ID
+export VIDEO_NAME
+export VIDEO_FORMAT
+export RECORDING_JSON
 
 ### Store Recording json data ###
 
+function1() {
+	echo $RECORDING_JSON > /recordings/.recording.$VIDEO_ID
+}
+export -f function1
 if [[ $CURRENT_UID != $USER_ID ]]; then
-	su myuser -c "echo ${RECORDING_JSON} > /recordings/.recording.${VIDEO_ID}"
+	su myuser -c "bash -c function1"
 else
-	echo ${RECORDING_JSON} > /recordings/.recording.${VIDEO_ID}
+	function1
 fi
-
 
 ### Get a free display identificator ###
 
@@ -46,16 +58,22 @@ do
   fi
 done
 
+export DISPLAY_NUM
+
 echo "First available display -> :$DISPLAY_NUM"
 echo "----------------------------------------"
 
 
 ### Start pulseaudio ###
 
+function2() {
+	pulseaudio -D
+}
+export -f function2
 if [[ $CURRENT_UID != $USER_ID ]]; then
-    su myuser -c "pulseaudio -D"
+    su myuser -c "bash -c function2"
 else
-    pulseaudio -D
+    function2
 fi
 
 
@@ -64,10 +82,14 @@ fi
 touch xvfb.log
 chmod 777 xvfb.log
 
+function3() {
+	xvfb-run --server-num=${DISPLAY_NUM} --server-args="-ac -screen 0 ${RESOLUTION}x24 -noreset" google-chrome -no-sandbox -test-type -disable-infobars -window-size=${ARRAY[0]},${ARRAY[1]} -no-first-run -ignore-certificate-errors --kiosk $URL &> xvfb.log &
+}
+export -f function3
 if [[ $CURRENT_UID != $USER_ID ]]; then
-    su myuser -c "xvfb-run --server-num=${DISPLAY_NUM} --server-args='-ac -screen 0 ${RESOLUTION}x24 -noreset' google-chrome -no-sandbox -test-type -disable-infobars -window-size=${ARRAY[0]},${ARRAY[1]} -no-first-run -ignore-certificate-errors --kiosk $URL &> xvfb.log &"
+    su myuser -c "bash -c function3"
 else
-    xvfb-run --server-num=${DISPLAY_NUM} --server-args="-ac -screen 0 ${RESOLUTION}x24 -noreset" google-chrome -no-sandbox -test-type -disable-infobars -window-size=${ARRAY[0]},${ARRAY[1]} -no-first-run -ignore-certificate-errors --kiosk $URL &> xvfb.log &
+    function3
 fi
 
 touch stop
@@ -78,51 +100,47 @@ sleep 2
 
 ### Start recording with ffmpeg ###
 
+function4() {
+    <./stop ffmpeg -y -f alsa -i pulse -f x11grab -framerate 25 -video_size $RESOLUTION -i :$DISPLAY_NUM -c:a libfdk_aac -c:v libx264 -preset ultrafast -crf 28 -refs 4 -qmin 4 -pix_fmt yuv420p -filter:v fps=25 "/recordings/$VIDEO_NAME.$VIDEO_FORMAT"
+}
+export -f function4
 if [[ $CURRENT_UID != $USER_ID ]]; then
-	su myuser -c "<./stop ffmpeg -y -f alsa -i pulse -f x11grab -framerate 25 -video_size $RESOLUTION -i :${DISPLAY_NUM} -c:a libfdk_aac -c:v libx264 -preset ultrafast -crf 28 -refs 4 -qmin 4 -pix_fmt yuv420p -filter:v fps=25 '/recordings/${VIDEO_NAME}.${VIDEO_FORMAT}'"
+	su myuser -c "bash -c function4"
 else
-	<./stop ffmpeg -y -f alsa -i pulse -f x11grab -framerate 25 -video_size $RESOLUTION -i :${DISPLAY_NUM} -c:a libfdk_aac -c:v libx264 -preset ultrafast -crf 28 -refs 4 -qmin 4 -pix_fmt yuv420p -filter:v fps=25 "/recordings/${VIDEO_NAME}.${VIDEO_FORMAT}"
+    function4
 fi
 
 
 ### Generate video report file ###
 
+function5() {
+    ffprobe -v quiet -print_format json -show_format -show_streams /recordings/$VIDEO_NAME.$VIDEO_FORMAT > /recordings/$VIDEO_ID.info
+}
+export -f function5
 if [[ $CURRENT_UID != $USER_ID ]]; then
-	su myuser -c "ffprobe -v quiet -print_format json -show_format -show_streams /recordings/${VIDEO_NAME}.${VIDEO_FORMAT} > /recordings/${VIDEO_ID}.info"
+	su myuser -c "bash -c function5"
 else
-	ffprobe -v quiet -print_format json -show_format -show_streams /recordings/${VIDEO_NAME}.${VIDEO_FORMAT} > /recordings/${VIDEO_ID}.info
+	function5
 fi
 
 
 ### Update Recording json data ###
 
+function6() {
+    TMP=$(mktemp /recordings/.$VIDEO_ID.XXXXXXXXXXXXXXXXXXXXXXX.json)
+	INFO=$(cat /recordings/$VIDEO_ID.info | jq '.')
+	HAS_AUDIO_AUX=$(echo $INFO | jq '.streams[] | select(.codec_type == "audio")')
+	if [ -z "$HAS_AUDIO_AUX" ]; then HAS_AUDIO=false; else HAS_AUDIO=true; fi
+	HAS_VIDEO_AUX=$(echo $INFO | jq '.streams[] | select(.codec_type == "video")')
+	if [ -z "$HAS_VIDEO_AUX" ]; then HAS_VIDEO=false; else HAS_VIDEO=true; fi
+	SIZE=$(echo $INFO | jq '.format.size | tonumber')
+	DURATION=$(echo $INFO | jq '.format.duration | tonumber')
+	STATUS="stopped"
+	jq -c -r ".hasAudio=$HAS_AUDIO | .hasVideo=$HAS_VIDEO | .duration=$DURATION | .size=$SIZE | .status=\"$STATUS\"" "/recordings/.recording.$VIDEO_ID" > $TMP && mv $TMP /recordings/.recording.$VIDEO_ID
+}
+export -f function6
 if [[ $CURRENT_UID != $USER_ID ]]; then
-
-	TMP=$(su myuser -c "mktemp /recordings/.${VIDEO_ID}.XXXXXXXXXXXXXXXXXXXXXXX.if.json")
-	INFO=$(su myuser -c "cat /recordings/${VIDEO_ID}.info | jq '.'")
-	HAS_AUDIO_AUX=$(su myuser -c "echo '$INFO' | jq '.streams[] | select(.codec_type == \"audio\")'")
-	if [ -z "$HAS_AUDIO_AUX" ]; then HAS_AUDIO=false; else HAS_AUDIO=true; fi
-	HAS_VIDEO_AUX=$(su myuser -c "echo '$INFO' | jq '.streams[] | select(.codec_type == \"video\")'")
-	if [ -z "$HAS_VIDEO_AUX" ]; then HAS_VIDEO=false; else HAS_VIDEO=true; fi
-	SIZE=$(su myuser -c "echo '$INFO' | jq '.format.size | tonumber'")
-	DURATION=$(su myuser -c "echo '$INFO' | jq '.format.duration | tonumber'")
-	STATUS="stopped"
-
-	su myuser -c "jq -c -r \".hasAudio=${HAS_AUDIO} | .hasVideo=${HAS_VIDEO} | .duration=${DURATION} | .size=${SIZE} | .status=\\\"${STATUS}\\\"\" \"/recordings/.recording.${VIDEO_ID}\" > ${TMP} && mv ${TMP} \"/recordings/.recording.${VIDEO_ID}\""
-
+	su myuser -c "bash -c function6"
 else
-
-	TMP=$(mktemp /recordings/.${VIDEO_ID}.XXXXXXXXXXXXXXXXXXXXXXX.else.json)
-	INFO=$(cat /recordings/${VIDEO_ID}.info | jq '.')
-	HAS_AUDIO_AUX=$(echo "$INFO" | jq '.streams[] | select(.codec_type == "audio")')
-	if [ -z "$HAS_AUDIO_AUX" ]; then HAS_AUDIO=false; else HAS_AUDIO=true; fi
-	HAS_VIDEO_AUX=$(echo "$INFO" | jq '.streams[] | select(.codec_type == "video")')
-	if [ -z "$HAS_VIDEO_AUX" ]; then HAS_VIDEO=false; else HAS_VIDEO=true; fi
-	SIZE=$(echo "$INFO" | jq '.format.size | tonumber')
-	DURATION=$(echo "$INFO" | jq '.format.duration | tonumber')
-	STATUS="stopped"
-
-	jq -c -r ".hasAudio=${HAS_AUDIO} | .hasVideo=${HAS_VIDEO} | .duration=${DURATION} | .size=${SIZE} | .status=\"${STATUS}\"" "/recordings/.recording.${VIDEO_ID}" > ${TMP} && mv ${TMP} "/recordings/.recording.${VIDEO_ID}"
-
+	function6
 fi
-
