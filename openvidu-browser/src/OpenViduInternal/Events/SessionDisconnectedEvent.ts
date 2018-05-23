@@ -52,7 +52,7 @@ export class SessionDisconnectedEvent extends Event {
             if (!!session.remoteConnections[connectionId].stream) {
                 session.remoteConnections[connectionId].stream.disposeWebRtcPeer();
                 session.remoteConnections[connectionId].stream.disposeMediaStream();
-                session.remoteConnections[connectionId].stream.removeVideo();
+                session.remoteConnections[connectionId].stream.removeVideos();
                 delete session.remoteStreamsCreated[session.remoteConnections[connectionId].stream.streamId];
                 session.remoteConnections[connectionId].dispose();
             }

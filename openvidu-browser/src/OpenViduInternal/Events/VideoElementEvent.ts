@@ -16,6 +16,7 @@
  */
 
 import { Event } from './Event';
+import { MediaManager } from '../../OpenVidu/MediaManager';
 import { Publisher } from '../../OpenVidu/Publisher';
 import { Subscriber } from '../../OpenVidu/Subscriber';
 
@@ -37,7 +38,7 @@ export class VideoElementEvent extends Event {
     /**
      * @hidden
      */
-    constructor(element: HTMLVideoElement, target: Publisher | Subscriber, type: string) {
+    constructor(element: HTMLVideoElement, target: MediaManager, type: string) {
         super(false, target, type);
         this.element = element;
     }

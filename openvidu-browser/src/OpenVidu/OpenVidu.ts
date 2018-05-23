@@ -92,7 +92,7 @@ export class OpenVidu {
    * The [[Publisher]] object will dispatch a `videoPlaying` event once the local video starts playing (only if `videoElementCreated` event has been previously dispatched)
    *
    * @param targetElement  HTML DOM element (or its `id` attribute) in which the video element of the Publisher will be inserted (see [[PublisherProperties.insertMode]]). If null or undefined no default video will be created for this Publisher
-   * (you can always access the native MediaStream object by calling _Publisher.stream.getMediaStream()_ and use it as _srcObject_ of any HTML video element)
+   * (you can always call method [[Stream.addVideoElement]] for the object [[Publisher.stream]] to manage the video elements on your own)
    * @param completionHandler `error` parameter is null if `initPublisher` succeeds, and is defined if it fails.
    *                          `completionHandler` function is called before the Publisher dispatches an `accessAllowed` or an `accessDenied` event
    */
@@ -145,7 +145,7 @@ export class OpenVidu {
         }
         publisher.emitEvent('accessAllowed', []);
       }).catch((error) => {
-        if (!!completionHandler !== undefined) {
+        if (completionHandler !== undefined) {
           completionHandler(error);
         }
         publisher.emitEvent('accessDenied', []);

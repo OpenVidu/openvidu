@@ -65,7 +65,7 @@ export class StreamEvent extends Event {
                 // Remote Stream
                 this.stream.disposeWebRtcPeer();
                 this.stream.disposeMediaStream();
-                this.stream.removeVideo();
+                this.stream.removeVideos();
 
             } else if (this.target instanceof Publisher) {
 
@@ -73,8 +73,8 @@ export class StreamEvent extends Event {
 
                 // Local Stream
                 this.stream.disposeMediaStream();
-                this.stream.removeVideo();
-                this.stream.isReadyToPublish = false;
+                this.stream.removeVideos();
+                this.stream.isLocalStreamReadyToPublish = false;
             }
 
             // Delete stream from Session.remoteStreamsCreated map

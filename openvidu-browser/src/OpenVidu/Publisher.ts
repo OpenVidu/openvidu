@@ -15,6 +15,7 @@
  *
  */
 
+import { MediaManager } from './MediaManager';
 import { OpenVidu } from './OpenVidu';
 import { Session } from './Session';
 import { Stream } from './Stream';
@@ -22,18 +23,17 @@ import { EventDispatcher } from '../OpenViduInternal/Interfaces/Public/EventDisp
 import { PublisherProperties } from '../OpenViduInternal/Interfaces/Public/PublisherProperties';
 import { InboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/InboundStreamOptions';
 import { OutboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/OutboundStreamOptions';
+import { Event } from '../OpenViduInternal/Events/Event';
 import { StreamEvent } from '../OpenViduInternal/Events/StreamEvent';
 import { VideoElementEvent } from '../OpenViduInternal/Events/VideoElementEvent';
 import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/OpenViduError';
 import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
 
-import EventEmitter = require('wolfy87-eventemitter');
-
 
 /**
  * Packs local media streams. Participants can publish it to a session. Initialized with [[OpenVidu.initPublisher]] method
  */
-export class Publisher implements EventDispatcher {
+export class Publisher extends MediaManager {
 
     /**
      * Whether the Publisher has been granted access to the requested input devices or not
@@ -41,59 +41,31 @@ export class Publisher implements EventDispatcher {
     accessAllowed = false;
 
     /**
-     * HTML DOM element in which the Publisher's video has been inserted
-     */
-    element: HTMLElement;
-
-    /**
-     * DOM id of the Publisher's video element
-     */
-    id: string;
-
-    /**
      * The [[Session]] to which the Publisher belongs
      */
     session: Session; // Initialized by Session.publish(Publisher)
 
     /**
-     * The [[Stream]] that you are publishing
+     * @hidden
      */
-    stream: Stream;
+    accessDenied = false;
 
-    private ee = new EventEmitter();
-
+    private element?: HTMLElement;
     private properties: PublisherProperties;
     private permissionDialogTimeout: NodeJS.Timer;
 
     /**
      * @hidden
      */
-    constructor(targetElement: string | HTMLElement, properties: PublisherProperties, private openvidu: OpenVidu) {
+    constructor(targEl: string | HTMLElement, properties: PublisherProperties, private openvidu: OpenVidu) {
+        super(new Stream(new Session(openvidu), { publisherProperties: properties, mediaConstraints: {} }), targEl);
         this.properties = properties;
-        this.stream = new Stream(this.session, { publisherProperties: properties, mediaConstraints: {} });
 
-        this.stream.on('video-removed', (element: HTMLVideoElement) => {
-            this.ee.emitEvent('videoElementDestroyed', [new VideoElementEvent(element, this, 'videoElementDestroyed')]);
-        });
-
-        this.stream.on('stream-destroyed-by-disconnect', (reason: string) => {
+        this.stream.on('local-stream-destroyed-by-disconnect', (reason: string) => {
             const streamEvent = new StreamEvent(true, this, 'streamDestroyed', this.stream, reason);
             this.ee.emitEvent('streamDestroyed', [streamEvent]);
             streamEvent.callDefaultBehaviour();
         });
-
-        if (typeof targetElement === 'string') {
-            const e = document.getElementById(targetElement);
-            if (!!e) {
-                this.element = e;
-            }
-        } else if (targetElement instanceof HTMLElement) {
-            this.element = targetElement;
-        }
-
-        if (!this.element) {
-            console.warn("The provided 'targetElement' for the Publisher couldn't be resolved to any HTML element: " + targetElement);
-        }
     }
 
     /**
@@ -125,18 +97,10 @@ export class Publisher implements EventDispatcher {
     /**
      * See [[EventDispatcher.on]]
      */
-    on(type: string, handler: (event: StreamEvent | VideoElementEvent) => void): EventDispatcher {
-        this.ee.on(type, event => {
-            if (event) {
-                console.info("Event '" + type + "' triggered by 'Publisher'", event);
-            } else {
-                console.info("Event '" + type + "' triggered by 'Publisher'");
-            }
-            handler(event);
-        });
-
+    on(type: string, handler: (event: Event) => void): EventDispatcher {
+        super.on(type, handler);
         if (type === 'streamCreated') {
-            if (!!this.stream && this.stream.isPublisherPublished) {
+            if (!!this.stream && this.stream.isLocalStreamPublished) {
                 this.ee.emitEvent('streamCreated', [new StreamEvent(false, this, 'streamCreated', this.stream, '')]);
             } else {
                 this.stream.on('stream-created-by-publisher', () => {
@@ -144,38 +108,13 @@ export class Publisher implements EventDispatcher {
                 });
             }
         }
-        if (type === 'videoElementCreated') {
-            if (!!this.stream && this.stream.isVideoELementCreated) {
-                this.ee.emitEvent('videoElementCreated', [new VideoElementEvent(this.stream.getVideoElement(), this, 'videoElementCreated')]);
-            } else {
-                this.stream.on('video-element-created-by-stream', (element) => {
-                    this.id = element.id;
-                    this.ee.emitEvent('videoElementCreated', [new VideoElementEvent(element.element, this, 'videoElementCreated')]);
-                });
-            }
-        }
-        if (type === 'videoPlaying') {
-            const video = this.stream.getVideoElement();
-            if (!this.stream.displayMyRemote() && video &&
-                video.currentTime > 0 &&
-                video.paused === false &&
-                video.ended === false &&
-                video.readyState === 4) {
-                this.ee.emitEvent('videoPlaying', [new VideoElementEvent(this.stream.getVideoElement(), this, 'videoPlaying')]);
-            } else {
-                this.stream.on('video-is-playing', (element) => {
-                    this.ee.emitEvent('videoPlaying', [new VideoElementEvent(element.element, this, 'videoPlaying')]);
-                });
-            }
-        }
         if (type === 'remoteVideoPlaying') {
-            const video = this.stream.getVideoElement();
-            if (this.stream.displayMyRemote() && video &&
-                video.currentTime > 0 &&
-                video.paused === false &&
-                video.ended === false &&
-                video.readyState === 4) {
-                this.ee.emitEvent('remoteVideoPlaying', [new VideoElementEvent(this.stream.getVideoElement(), this, 'remoteVideoPlaying')]);
+            if (this.stream.displayMyRemote() && this.video &&
+                this.video.currentTime > 0 &&
+                this.video.paused === false &&
+                this.video.ended === false &&
+                this.video.readyState === 4) {
+                this.ee.emitEvent('remoteVideoPlaying', [new VideoElementEvent(this.video, this, 'remoteVideoPlaying')]);
             } else {
                 this.stream.on('remote-video-is-playing', (element) => {
                     this.ee.emitEvent('remoteVideoPlaying', [new VideoElementEvent(element.element, this, 'remoteVideoPlaying')]);
@@ -183,16 +122,15 @@ export class Publisher implements EventDispatcher {
             }
         }
         if (type === 'accessAllowed') {
-            if (this.stream.accessIsAllowed) {
+            if (this.accessAllowed) {
                 this.ee.emitEvent('accessAllowed');
             }
         }
         if (type === 'accessDenied') {
-            if (this.stream.accessIsDenied) {
+            if (this.accessDenied) {
                 this.ee.emitEvent('accessDenied');
             }
         }
-
         return this;
     }
 
@@ -200,18 +138,10 @@ export class Publisher implements EventDispatcher {
     /**
      * See [[EventDispatcher.once]]
      */
-    once(type: string, handler: (event: StreamEvent | VideoElementEvent) => void): Publisher {
-        this.ee.once(type, event => {
-            if (event) {
-                console.info("Event '" + type + "' triggered by 'Publisher'", event);
-            } else {
-                console.info("Event '" + type + "' triggered by 'Publisher'");
-            }
-            handler(event);
-        });
-
+    once(type: string, handler: (event: Event) => void): Publisher {
+        super.once(type, handler);
         if (type === 'streamCreated') {
-            if (!!this.stream && this.stream.isPublisherPublished) {
+            if (!!this.stream && this.stream.isLocalStreamPublished) {
                 this.ee.emitEvent('streamCreated', [new StreamEvent(false, this, 'streamCreated', this.stream, '')]);
             } else {
                 this.stream.once('stream-created-by-publisher', () => {
@@ -219,38 +149,13 @@ export class Publisher implements EventDispatcher {
                 });
             }
         }
-        if (type === 'videoElementCreated') {
-            if (!!this.stream && this.stream.isVideoELementCreated) {
-                this.ee.emitEvent('videoElementCreated', [new VideoElementEvent(this.stream.getVideoElement(), this, 'videoElementCreated')]);
-            } else {
-                this.stream.once('video-element-created-by-stream', (element) => {
-                    this.id = element.id;
-                    this.ee.emitEvent('videoElementCreated', [new VideoElementEvent(element.element, this, 'videoElementCreated')]);
-                });
-            }
-        }
-        if (type === 'videoPlaying') {
-            const video = this.stream.getVideoElement();
-            if (!this.stream.displayMyRemote() && video &&
-                video.currentTime > 0 &&
-                video.paused === false &&
-                video.ended === false &&
-                video.readyState === 4) {
-                this.ee.emitEvent('videoPlaying', [new VideoElementEvent(this.stream.getVideoElement(), this, 'videoPlaying')]);
-            } else {
-                this.stream.once('video-is-playing', (element) => {
-                    this.ee.emitEvent('videoPlaying', [new VideoElementEvent(element.element, this, 'videoPlaying')]);
-                });
-            }
-        }
         if (type === 'remoteVideoPlaying') {
-            const video = this.stream.getVideoElement();
-            if (this.stream.displayMyRemote() && video &&
-                video.currentTime > 0 &&
-                video.paused === false &&
-                video.ended === false &&
-                video.readyState === 4) {
-                this.ee.emitEvent('remoteVideoPlaying', [new VideoElementEvent(this.stream.getVideoElement(), this, 'remoteVideoPlaying')]);
+            if (this.stream.displayMyRemote() && this.video &&
+                this.video.currentTime > 0 &&
+                this.video.paused === false &&
+                this.video.ended === false &&
+                this.video.readyState === 4) {
+                this.ee.emitEvent('remoteVideoPlaying', [new VideoElementEvent(this.video, this, 'remoteVideoPlaying')]);
             } else {
                 this.stream.once('remote-video-is-playing', (element) => {
                     this.ee.emitEvent('remoteVideoPlaying', [new VideoElementEvent(element.element, this, 'remoteVideoPlaying')]);
@@ -258,28 +163,14 @@ export class Publisher implements EventDispatcher {
             }
         }
         if (type === 'accessAllowed') {
-            if (this.stream.accessIsAllowed) {
+            if (this.accessAllowed) {
                 this.ee.emitEvent('accessAllowed');
             }
         }
         if (type === 'accessDenied') {
-            if (this.stream.accessIsDenied) {
+            if (this.accessDenied) {
                 this.ee.emitEvent('accessDenied');
             }
-        }
-
-        return this;
-    }
-
-
-    /**
-     * See [[EventDispatcher.off]]
-     */
-    off(type: string, handler?: (event: StreamEvent | VideoElementEvent) => void): Publisher {
-        if (!handler) {
-            this.ee.removeAllListeners(type);
-        } else {
-            this.ee.off(type, handler);
         }
         return this;
     }
@@ -294,14 +185,14 @@ export class Publisher implements EventDispatcher {
         return new Promise((resolve, reject) => {
 
             const errorCallback = (openViduError: OpenViduError) => {
-                this.stream.accessIsDenied = true;
-                this.stream.accessIsAllowed = false;
+                this.accessDenied = true;
+                this.accessAllowed = false;
                 reject(openViduError);
             };
 
             const successCallback = (mediaStream: MediaStream) => {
-                this.stream.accessIsAllowed = true;
-                this.stream.accessIsDenied = false;
+                this.accessAllowed = true;
+                this.accessDenied = false;
 
                 if (this.openvidu.isMediaStreamTrack(this.properties.audioSource)) {
                     mediaStream.removeTrack(mediaStream.getAudioTracks()[0]);
@@ -322,7 +213,7 @@ export class Publisher implements EventDispatcher {
                 }
 
                 this.stream.setMediaStream(mediaStream);
-                this.stream.insertVideo(this.element, <VideoInsertMode>this.properties.insertMode);
+                this.insertVideo(this.targetElement, <VideoInsertMode>this.properties.insertMode);
 
                 resolve();
             };

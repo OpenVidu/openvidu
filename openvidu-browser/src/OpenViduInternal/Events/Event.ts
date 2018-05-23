@@ -15,9 +15,8 @@
  *
  */
 
-import { Publisher } from '../../OpenVidu/Publisher';
+import { MediaManager } from '../../OpenVidu/MediaManager';
 import { Session } from '../../OpenVidu/Session';
-import { Subscriber } from '../../OpenVidu/Subscriber';
 
 export abstract class Event {
 
@@ -29,7 +28,7 @@ export abstract class Event {
     /**
      * The object that dispatched the event
      */
-    target: Session | Subscriber | Publisher;
+    target: Session | MediaManager;
 
     /**
      * The type of event. This is the same string you pass as first parameter when calling method `on()` of any object implementing [[EventDispatcher]] interface
@@ -41,7 +40,7 @@ export abstract class Event {
     /**
      * @hidden
      */
-    constructor(cancelable, target, type) {
+    constructor(cancelable: boolean, target: Session | MediaManager, type: string) {
         this.cancelable = cancelable;
         this.target = target;
         this.type = type;

@@ -16,15 +16,17 @@
  */
 
 import { Connection } from './Connection';
+import { MediaManager } from './MediaManager';
 import { Session } from './Session';
 import { InboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/InboundStreamOptions';
 import { OutboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/OutboundStreamOptions';
 import { WebRtcStats } from '../OpenViduInternal/WebRtcStats/WebRtcStats';
 import { PublisherSpeakingEvent } from '../OpenViduInternal/Events/PublisherSpeakingEvent';
+import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
+
 import EventEmitter = require('wolfy87-eventemitter');
 
 import * as kurentoUtils from '../OpenViduInternal/KurentoUtils/kurento-utils-js';
-import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
 
 
 /**
@@ -63,13 +65,15 @@ export class Stream {
      */
     typeOfVideo?: string;
 
+    /**
+     * Array of [[MediaManager]] objects displaying this stream in the DOM
+     */
+    mediaManagers: MediaManager[] = [];
+
     private ee = new EventEmitter();
 
     private webRtcPeer: any;
     private mediaStream: MediaStream;
-    private video: HTMLVideoElement;
-    private targetElement: HTMLElement;
-    private parentId: string;
     private webRtcStats: WebRtcStats;
 
     private isSubscribeToRemote = false;
@@ -77,23 +81,11 @@ export class Stream {
     /**
      * @hidden
      */
-    isReadyToPublish = false;
+    isLocalStreamReadyToPublish = false;
     /**
      * @hidden
      */
-    isPublisherPublished = false;
-    /**
-     * @hidden
-     */
-    isVideoELementCreated = false;
-    /**
-     * @hidden
-     */
-    accessIsAllowed = false;
-    /**
-     * @hidden
-     */
-    accessIsDenied = false;
+    isLocalStreamPublished = false;
     /**
      * @hidden
      */
@@ -149,9 +141,28 @@ export class Stream {
         }
 
         this.on('mediastream-updated', () => {
-            if (this.video) this.video.srcObject = this.mediaStream;
+            this.mediaManagers.forEach(mediaManager => {
+                if (!!mediaManager.video) {
+                    mediaManager.video.srcObject = this.mediaStream;
+                }
+            });
             console.debug('Video srcObject [' + this.mediaStream + '] updated in stream [' + this.streamId + ']');
         });
+    }
+
+    /**
+     * Makes `video` element parameter display this Stream. This is useful when you are managing the video elements on your own
+     * (parameter `targetElement` of methods [[OpenVidu.initPublisher]] or [[Session.subscribe]] is set to *null* or *undefined*)
+     * or if you want to have multiple video elements display the same media stream
+     */
+    addVideoElement(video: HTMLVideoElement): MediaManager {
+        video.srcObject = this.mediaStream;
+        const mediaManager = new MediaManager(this);
+        mediaManager.video = video;
+        mediaManager.id = video.id;
+        mediaManager.isVideoElementCreated = true;
+        mediaManager.remote = !this.isLocal();
+        return mediaManager;
     }
 
 
@@ -189,13 +200,6 @@ export class Stream {
     /**
      * @hidden
      */
-    getVideoElement(): HTMLVideoElement {
-        return this.video;
-    }
-
-    /**
-     * @hidden
-     */
     subscribeToMyRemote(): void {
         this.isSubscribeToRemote = true;
     }
@@ -227,7 +231,7 @@ export class Stream {
      */
     publish(): Promise<any> {
         return new Promise((resolve, reject) => {
-            if (this.isReadyToPublish) {
+            if (this.isLocalStreamReadyToPublish) {
                 this.initWebRtcPeerSend()
                     .then(() => {
                         resolve();
@@ -299,68 +303,6 @@ export class Stream {
      */
     once(eventName: string, listener: any): void {
         this.ee.once(eventName, listener);
-    }
-
-    /**
-     * @hidden
-     */
-    insertVideo(targetElement?: HTMLElement, insertMode?: VideoInsertMode): HTMLVideoElement {
-        if (!!targetElement) {
-
-            this.video = document.createElement('video');
-
-            this.video.id = (this.isLocal() ? 'local-' : 'remote-') + 'video-' + this.streamId;
-            this.video.autoplay = true;
-            this.video.controls = false;
-            this.video.srcObject = this.mediaStream;
-
-            if (this.isLocal() && !this.displayMyRemote()) {
-                this.video.muted = true;
-
-                if (this.outboundStreamOpts.publisherProperties.mirror) {
-                    this.mirrorVideo(this.video);
-                }
-
-                this.video.oncanplay = () => {
-                    console.info("Local 'Stream' with id [" + this.streamId + '] video is now playing');
-                    this.ee.emitEvent('video-is-playing', [{
-                        element: this.video
-                    }]);
-                };
-            } else {
-                this.video.title = this.streamId;
-            }
-
-            this.targetElement = targetElement;
-            this.parentId = targetElement.id;
-
-            const insMode = !!insertMode ? insertMode : VideoInsertMode.APPEND;
-            this.insertElementWithMode(this.video, insMode);
-
-            this.ee.emitEvent('video-element-created-by-stream', [{
-                element: this.video
-            }]);
-
-            this.isVideoELementCreated = true;
-        }
-
-        this.isReadyToPublish = true;
-        this.ee.emitEvent('stream-ready-to-publish');
-
-        return this.video;
-    }
-
-    /**
-     * @hidden
-     */
-    removeVideo(): void {
-        if (this.video) {
-            if (document.getElementById(this.parentId)) {
-                document.getElementById(this.parentId)!.removeChild(this.video);
-                this.ee.emitEvent('video-removed', [this.video]);
-            }
-            delete this.video;
-        }
     }
 
     /**
@@ -445,6 +387,15 @@ export class Stream {
         this.speechEvent = undefined;
     }
 
+    /**
+     * @hidden
+     */
+    removeVideos(): void {
+        this.mediaManagers.forEach(mediaManager => {
+            mediaManager.removeVideo();
+        });
+    }
+
 
     /* Private methods */
 
@@ -510,7 +461,7 @@ export class Stream {
                     this.webRtcPeer.generateOffer(successCallback);
                 });
             }
-            this.isPublisherPublished = true;
+            this.isLocalStreamPublished = true;
         });
     }
 
@@ -588,24 +539,9 @@ export class Stream {
                         }
                     }
 
-                    if (!!this.video) {
-                        // let thumbnailId = this.video.thumb;
-                        this.video.oncanplay = () => {
-                            if (this.isLocal() && this.displayMyRemote()) {
-                                console.info("Your own remote 'Stream' with id [" + this.streamId + '] video is now playing');
-                                this.ee.emitEvent('remote-video-is-playing', [{
-                                    element: this.video
-                                }]);
-                            } else if (!this.isLocal() && !this.displayMyRemote()) {
-                                console.info("Remote 'Stream' with id [" + this.streamId + '] video is now playing');
-                                this.ee.emitEvent('video-is-playing', [{
-                                    element: this.video
-                                }]);
-                            }
-                            // show(thumbnailId);
-                            // this.hideSpinner(this.streamId);
-                        };
-                    }
+                    this.mediaManagers.forEach(mediaManager => {
+                        mediaManager.addOnCanPlayEvent();
+                    });
                     this.session.emitEvent('stream-subscribed', [{
                         stream: this
                     }]);
@@ -631,38 +567,12 @@ export class Stream {
         }
     }
 
-    private isLocal(): boolean {
+    /**
+     * @hidden
+     */
+    isLocal(): boolean {
         // inbound options undefined and outbound options defined
         return (!this.inboundStreamOpts && !!this.outboundStreamOpts);
-    }
-
-    private insertElementWithMode(element: HTMLElement, insertMode: VideoInsertMode): void {
-        if (!!this.targetElement) {
-            switch (insertMode) {
-                case VideoInsertMode.AFTER:
-                    this.targetElement.parentNode!!.insertBefore(element, this.targetElement.nextSibling);
-                    break;
-                case VideoInsertMode.APPEND:
-                    this.targetElement.appendChild(element);
-                    break;
-                case VideoInsertMode.BEFORE:
-                    this.targetElement.parentNode!!.insertBefore(element, this.targetElement);
-                    break;
-                case VideoInsertMode.PREPEND:
-                    this.targetElement.insertBefore(element, this.targetElement.childNodes[0]);
-                    break;
-                case VideoInsertMode.REPLACE:
-                    this.targetElement.parentNode!!.replaceChild(element, this.targetElement);
-                    break;
-                default:
-                    this.insertElementWithMode(element, VideoInsertMode.APPEND);
-            }
-        }
-    }
-
-    private mirrorVideo(video: HTMLVideoElement): void {
-        video.style.transform = 'rotateY(180deg)';
-        video.style.webkitTransform = 'rotateY(180deg)';
     }
 
 }

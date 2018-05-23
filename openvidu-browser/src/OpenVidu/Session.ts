@@ -185,7 +185,7 @@ export class Session implements EventDispatcher {
      *
      * @param stream Stream object to subscribe to
      * @param targetElement HTML DOM element (or its `id` attribute) in which the video element of the Subscriber will be inserted (see [[SubscriberProperties.insertMode]]). If null or undefined no default video will be created for this Subscriber
-     * (you can always access the native MediaStream object by calling _Subscriber.stream.getMediaStream()_ and use it as _srcObject_ of any HTML video element)
+     * (you can always call method [[Stream.addVideoElement]] for the object [[Subscriber.stream]] to manage the video elements on your own)
      * @param completionHandler `error` parameter is null if `subscribe` succeeds, and is defined if it fails.
      */
     subscribe(stream: Stream, targetElement: string | HTMLElement, param3?: ((error: Error | undefined) => void) | SubscriberProperties, param4?: ((error: Error | undefined) => void)): Subscriber {
@@ -226,7 +226,9 @@ export class Session implements EventDispatcher {
                 }
             });
         const subscriber = new Subscriber(stream, targetElement, properties);
-        stream.insertVideo(subscriber.element, <VideoInsertMode>properties.insertMode);
+        stream.mediaManagers.forEach(mediaManager => {
+            mediaManager.insertVideo(subscriber.targetElement, <VideoInsertMode>properties.insertMode);
+        });
         return subscriber;
     }
 
@@ -272,9 +274,9 @@ export class Session implements EventDispatcher {
 
         console.info('Unsubscribing from ' + connectionId);
 
-        this.openvidu.sendRequest('unsubscribeFromVideo', {
-            sender: subscriber.stream.connection.connectionId
-        },
+        this.openvidu.sendRequest(
+            'unsubscribeFromVideo',
+            { sender: subscriber.stream.connection.connectionId },
             (error, response) => {
                 if (error) {
                     console.error('Error unsubscribing from ' + connectionId, error);
@@ -283,8 +285,9 @@ export class Session implements EventDispatcher {
                 }
                 subscriber.stream.disposeWebRtcPeer();
                 subscriber.stream.disposeMediaStream();
-            });
-        subscriber.stream.removeVideo();
+            }
+        );
+        subscriber.stream.removeVideos();
     }
 
 
@@ -307,7 +310,7 @@ export class Session implements EventDispatcher {
             publisher.session = this;
             publisher.stream.session = this;
 
-            if (!publisher.stream.isPublisherPublished) {
+            if (!publisher.stream.isLocalStreamPublished) {
                 // 'Session.unpublish(Publisher)' has NOT been called
                 this.connection.addStream(publisher.stream);
                 publisher.stream.publish()
@@ -788,7 +791,7 @@ export class Session implements EventDispatcher {
             if (!!this.connection.stream) {
                 // Make Publisher object dispatch 'streamDestroyed' event (if there's a local stream)
                 this.connection.stream.disposeWebRtcPeer();
-                this.connection.stream.emitEvent('stream-destroyed-by-disconnect', [reason]);
+                this.connection.stream.emitEvent('local-stream-destroyed-by-disconnect', [reason]);
             }
 
             if (!this.connection.disposed) {
