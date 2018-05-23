@@ -632,7 +632,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         .then(sub => {
           subscriber = sub;
           this.subscribers[connectionId].subscriber = subscriber;
-          subscriber.on('videoElementCreated', (e) => {
+          subscriber.on('videoElementCreated', (e: VideoElementEvent) => {
             if (!subscriber.stream.hasVideo) {
               $(e.element).css({ 'background-color': '#4d4d4d' });
               $(e.element).attr('poster', 'assets/images/volume.png');
@@ -640,7 +640,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
             this.subscribers[connectionId].videoElement = e.element;
             this.updateEventList('videoElementCreated', e.element.id);
           });
-          subscriber.on('videoPlaying', (e) => {
+          subscriber.on('videoPlaying', (e: VideoElementEvent) => {
             this.removeUserData(connectionId);
             this.appendSubscriberData(e.element, subscriber.stream.connection);
             this.updateEventList('videoPlaying', e.element.id);
@@ -934,7 +934,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       'paused': false,
       'videoElement': undefined
     };
-    subscriber.on('videoElementCreated', (e) => {
+    subscriber.on('videoElementCreated', (e: VideoElementEvent) => {
       if (!event.stream.hasVideo) {
         $(e.element).css({ 'background-color': '#4d4d4d' });
         $(e.element).attr('poster', 'assets/images/volume.png');
@@ -942,7 +942,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       this.subscribers[subscriber.stream.connection.connectionId].videoElement = e.element;
       this.updateEventList('videoElementCreated', e.element.id);
     });
-    subscriber.on('videoPlaying', (e) => {
+    subscriber.on('videoPlaying', (e: VideoElementEvent) => {
       this.appendSubscriberData(e.element, subscriber.stream.connection);
       this.updateEventList('videoPlaying', e.element.id);
     });
@@ -962,7 +962,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
           'paused': false,
           'videoElement': undefined
         };
-        subscriber.on('videoElementCreated', (e) => {
+        subscriber.on('videoElementCreated', (e: VideoElementEvent) => {
           if (!event.stream.hasVideo) {
             $(e.element).css({ 'background-color': '#4d4d4d' });
             $(e.element).attr('poster', 'assets/images/volume.png');
@@ -970,7 +970,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
           this.subscribers[subscriber.stream.connection.connectionId].videoElement = e.element;
           this.updateEventList('videoElementCreated', e.element.id);
         });
-        subscriber.on('videoPlaying', (e) => {
+        subscriber.on('videoPlaying', (e: VideoElementEvent) => {
           this.appendSubscriberData(e.element, subscriber.stream.connection);
           this.updateEventList('videoPlaying', e.element.id);
         });
