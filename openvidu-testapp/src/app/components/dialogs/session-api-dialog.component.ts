@@ -5,7 +5,7 @@ import { Session } from 'openvidu-browser';
 import { OpenVidu as OpenViduAPI } from 'openvidu-node-client';
 
 @Component({
-    selector: 'app-session-properties-dialog',
+    selector: 'app-session-api-dialog',
     template: `
     <div>
         <h2 mat-dialog-title>API REST</h2>

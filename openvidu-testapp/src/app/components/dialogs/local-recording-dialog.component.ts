@@ -29,13 +29,13 @@ export class LocalRecordingDialogComponent {
 
     public myReference: MatDialogRef<LocalRecordingDialogComponent>;
 
-    private recorder: LocalRecorder;
+    recorder: LocalRecorder;
 
-    private uploading = false;
-    private endpoint = '';
-    private uploadIcon: string;
-    private iconColor: string;
-    private iconClass = '';
+    uploading = false;
+    endpoint = '';
+    uploadIcon: string;
+    iconColor: string;
+    iconClass = '';
 
     constructor(@Inject(MAT_DIALOG_DATA) public data: any) {
         this.recorder = data.recorder;

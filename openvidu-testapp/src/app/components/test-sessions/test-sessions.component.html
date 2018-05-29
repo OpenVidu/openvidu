@@ -16,7 +16,7 @@
   </div>
 
   <div class="instance-div">
-    <app-openvidu-instance *ngFor="let user of users" [openviduUrl]="openviduUrl" [openviduSecret]="openviduSecret" [sessionConf]="user">
+    <app-openvidu-instance *ngFor="let user of users; let i=index" [openviduUrl]="openviduUrl" [openviduSecret]="openviduSecret" [sessionConf]="user" [index]="i">
     </app-openvidu-instance>
   </div>
 

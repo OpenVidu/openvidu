@@ -7,7 +7,7 @@ import { Subscription } from 'rxjs/Subscription';
 import {
   OpenVidu, Session, Subscriber, Publisher, Stream, Connection,
   LocalRecorder, VideoInsertMode, StreamEvent, ConnectionEvent,
-  SessionDisconnectedEvent, SignalEvent, RecordingEvent, VideoElementEvent
+  SessionDisconnectedEvent, SignalEvent, RecordingEvent, VideoElementEvent, PublisherSpeakingEvent, StreamManagerEvent, StreamManager
 } from 'openvidu-browser';
 import {
   OpenVidu as OpenViduAPI,
@@ -22,10 +22,10 @@ import { ExtensionDialogComponent } from '../dialogs/extension-dialog.component'
 import { LocalRecordingDialogComponent } from '../dialogs/local-recording-dialog.component';
 import { TestFeedService } from '../../services/test-feed.service';
 import { MuteSubscribersService } from '../../services/mute-subscribers.service';
+import { EventsDialogComponent } from '../dialogs/events-dialog.component';
 import { SessionPropertiesDialogComponent } from '../dialogs/session-properties-dialog.component';
 import { SessionApiDialogComponent } from '../dialogs/session-api-dialog.component';
 
-declare var $: any;
 
 export interface SessionConf {
   subscribeTo: boolean;
@@ -55,6 +55,9 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
 
   @Input()
   sessionConf: SessionConf;
+
+  @Input()
+  index: number;
 
   // Session join data
   clientData: string;
@@ -91,7 +94,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   OV: OpenVidu;
   session: Session;
   publisher: Publisher;
-  subscribers = {};
+  subscribers: Subscriber[] = [];
 
   // OpenVidu Node Client objects
   sessionProperties: SessionPropertiesAPI = {
@@ -102,17 +105,18 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     customSessionId: ''
   };
 
-  // Session audio and video status
-  audioMuted = false;
-  videoMuted = false;
-  unpublished = false;
-  publisherChanged = false;
-  audioIcon = 'mic';
-  videoIcon = 'videocam';
-  publishIcon = 'stop';
-
-  sendAudioChange: boolean;
-  sendVideoChange: boolean;
+  sessionEvents = {
+    connectionCreated: true,
+    connectionDestroyed: true,
+    sessionDisconnected: true,
+    streamCreated: true,
+    streamDestroyed: true,
+    recordingStarted: true,
+    recordingStopped: true,
+    signal: true,
+    publisherStartSpeaking: false,
+    publisherStopSpeaking: false
+  };
 
   events: OpenViduEvent[] = [];
 
@@ -127,8 +131,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     private changeDetector: ChangeDetectorRef,
     private dialog: MatDialog,
     private recordDialog: MatDialog,
-    private testFeedService: TestFeedService,
-    private muteSubscribersService: MuteSubscribersService,
+    private testFeedService: TestFeedService
   ) {
     this.generateSessionInfo();
   }
@@ -147,13 +150,6 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     if (this.sessionConf.startSession) {
       this.joinSession();
     }
-
-    this.muteSubscribersSubscription = this.muteSubscribersService.mutedEvent$.subscribe(
-      muteOrUnmute => {
-        Object.keys(this.subscribers).forEach((key) => {
-          this.subscribers[key].videoElement.muted = muteOrUnmute;
-        });
-      });
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -166,7 +162,6 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   ngOnDestroy() {
-    if (!!this.muteSubscribersSubscription) { this.muteSubscribersSubscription.unsubscribe(); }
     this.leaveSession();
   }
 
@@ -199,24 +194,24 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
 
     this.session = this.OV.initSession();
 
-    this.addSessionEvents(this.session);
+    this.updateSessionEvents({
+      connectionCreated: false,
+      connectionDestroyed: false,
+      sessionDisconnected: false,
+      streamCreated: false,
+      streamDestroyed: false,
+      recordingStarted: false,
+      recordingStopped: false,
+      signal: false,
+      publisherStartSpeaking: true,
+      publisherStopSpeaking: true
+    }, true);
 
     this.session.connect(token, this.clientData)
       .then(() => {
         this.changeDetector.detectChanges();
 
         if (this.publishTo) {
-
-          this.audioMuted = !this.activeAudio;
-          this.videoMuted = !this.activeVideo;
-          this.unpublished = false;
-          this.updateAudioIcon();
-          this.updateVideoIcon();
-          this.updatePublishIcon();
-
-          this.sendAudioChange = this.sendAudio;
-          this.sendVideoChange = this.sendVideo;
-
           // this.asyncInitPublisher();
           this.syncInitPublisher();
         }
@@ -226,113 +221,14 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       });
   }
 
-
   private leaveSession(): void {
-    if (!!this.publisherRecorder) {
-      this.restartPublisherRecord();
-    }
-    Object.keys(this.subscribers).forEach((key) => {
-      if (!!this.subscribers[key].recorder) {
-        this.restartSubscriberRecord(key);
-      }
-    });
     if (this.session) {
       this.session.disconnect();
     }
-    this.session = null;
-    this.OV = null;
-  }
-
-  private toggleAudio() {
-    this.publisher.publishAudio(this.audioMuted);
-    this.audioMuted = !this.audioMuted;
-    this.updateAudioIcon();
-  }
-
-  private toggleVideo() {
-    this.publisher.publishVideo(this.videoMuted);
-    this.videoMuted = !this.videoMuted;
-    this.updateVideoIcon();
-  }
-
-  private updateAudioIcon() {
-    this.audioMuted ? this.audioIcon = 'mic_off' : this.audioIcon = 'mic';
-  }
-
-  private updateVideoIcon() {
-    this.videoMuted ? this.videoIcon = 'videocam_off' : this.videoIcon = 'videocam';
-  }
-
-  private updatePublishIcon() {
-    this.unpublished ? this.publishIcon = 'play_arrow' : this.publishIcon = 'stop';
-  }
-
-  private appendSubscriberData(videoElement: HTMLVideoElement, connection: Connection): void {
-    const dataNode = document.createElement('div');
-    dataNode.className = 'data-node';
-    dataNode.id = 'data-' + this.session.connection.connectionId + '-' + connection.connectionId;
-    dataNode.innerHTML = '<p class="name">' + connection.data + '</p>' +
-      '<button id="sub-btn-' + this.session.connection.connectionId + '-' + connection.connectionId +
-      '" class="sub-btn" title="Subscribe/Unsubscribe"><mat-icon id="sub-icon-' + this.session.connection.connectionId +
-      '-' + connection.connectionId + '" aria-label="Subscribe or unsubscribe" class="mat-icon material-icons" role="img"' +
-      'aria-hidden="true">notifications</mat-icon></button>' +
-      '<button id="sub-video-btn-' + this.session.connection.connectionId + '-' + connection.connectionId +
-      '" class="sub-btn sub-video-btn" title="Subscribe/Unsubscribe Video"><mat-icon id="sub-video-icon-' +
-      this.session.connection.connectionId +
-      '-' + connection.connectionId + '" aria-label="Subscribe or unsubscribe" class="mat-icon material-icons" role="img"' +
-      'aria-hidden="true">videocam</mat-icon></button>' +
-      '<button id="sub-audio-btn-' + this.session.connection.connectionId + '-' + connection.connectionId +
-      '" class="sub-btn sub-audio-btn" title="Subscribe/Unsubscribe Audio"><mat-icon id="sub-audio-icon-' +
-      this.session.connection.connectionId +
-      '-' + connection.connectionId + '" aria-label="Subscribe or unsubscribe" class="mat-icon material-icons" role="img"' +
-      'aria-hidden="true">mic</mat-icon></button>' +
-      '<button id="record-btn-' + this.session.connection.connectionId + '-' + connection.connectionId +
-      '" class="sub-btn rec-btn" title="Record"><mat-icon id="record-icon-' +
-      this.session.connection.connectionId + '-' + connection.connectionId +
-      '" aria-label="Start/Stop recording" class="mat-icon material-icons" role="img"' +
-      'aria-hidden="true">fiber_manual_record</mat-icon></button>' +
-      '<button style="display:none" id="pause-btn-' + this.session.connection.connectionId + '-' + connection.connectionId +
-      '" class="sub-btn rec-btn rec-pause-btn" title="Pause/Resume"><mat-icon id="pause-icon-' +
-      this.session.connection.connectionId + '-' + connection.connectionId +
-      '" aria-label="Pause/Resume recording" class="mat-icon material-icons" role="img"' +
-      'aria-hidden="true">pause</mat-icon></button>';
-    videoElement.parentNode.insertBefore(dataNode, videoElement.nextSibling);
-    document.getElementById('sub-btn-' + this.session.connection.connectionId + '-' + connection.connectionId)
-      .addEventListener('click', this.subUnsubFromSubscriber.bind(this, connection.connectionId));
-    document.getElementById('sub-video-btn-' + this.session.connection.connectionId + '-' + connection.connectionId)
-      .addEventListener('click', this.subUnsubFromSubscriberVideo.bind(this, connection.connectionId));
-    document.getElementById('sub-audio-btn-' + this.session.connection.connectionId + '-' + connection.connectionId)
-      .addEventListener('click', this.subUnsubFromSubscriberAudio.bind(this, connection.connectionId));
-    document.getElementById('record-btn-' + this.session.connection.connectionId + '-' + connection.connectionId)
-      .addEventListener('click', this.recordSubscriber.bind(this, connection.connectionId));
-    document.getElementById('pause-btn-' + this.session.connection.connectionId + '-' + connection.connectionId)
-      .addEventListener('click', this.pauseSubscriber.bind(this, connection.connectionId));
-  }
-
-  private appendPublisherData(videoElement: HTMLVideoElement): void {
-    const dataNode = document.createElement('div');
-    dataNode.className = 'data-node';
-    dataNode.id = 'data-' + this.session.connection.connectionId + '-' + this.session.connection.connectionId;
-    dataNode.innerHTML =
-      '<button id="local-record-btn-' + this.session.connection.connectionId +
-      '" class="sub-btn rec-btn publisher-rec-btn" title="Record"><mat-icon id="local-record-icon-' + this.session.connection.connectionId +
-      '" aria-label="Start/Stop local recording" class="mat-icon material-icons" role="img" aria-hidden="true">' +
-      'fiber_manual_record</mat-icon></button>' +
-      '<button style="display:none" id="local-pause-btn-' + this.session.connection.connectionId +
-      '" class="sub-btn rec-btn publisher-rec-btn publisher-rec-pause-btn" title="Pause/Resume">' +
-      '<mat-icon id="local-pause-icon-' + this.session.connection.connectionId +
-      '" aria-label="Pause/Resume local recording" class="mat-icon material-icons" role="img" aria-hidden="true">' +
-      'pause</mat-icon></button>';
-    videoElement.parentNode.insertBefore(dataNode, videoElement.nextSibling);
-    document.getElementById('local-record-btn-' + this.session.connection.connectionId).addEventListener('click',
-      this.recordPublisher.bind(this));
-    document.getElementById('local-pause-btn-' + this.session.connection.connectionId).addEventListener('click',
-      this.pausePublisher.bind(this));
-  }
-
-  private removeUserData(connectionId: string): void {
-    $('#remote-vid-' + this.session.connection.connectionId)
-      .find('#data-' + this.session.connection.connectionId + '-' + connectionId).remove();
+    delete this.session;
+    delete this.OV;
+    delete this.publisher;
+    this.subscribers = [];
   }
 
   private updateEventList(event: string, content: string) {
@@ -433,432 +329,122 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     // this.initGrayVideo();
   }
 
-  recordPublisher(): void {
-    if (!this.publisherRecording) {
-      this.publisherRecorder = this.OV.initLocalRecorder(this.publisher.stream);
-      this.publisherRecorder.record();
-      this.publisherRecording = true;
-      document.getElementById('local-record-icon-' + this.session.connection.connectionId).innerHTML = 'stop';
-      document.getElementById('local-pause-btn-' + this.session.connection.connectionId).style.display = 'block';
-    } else {
-      this.publisherRecorder.stop()
-        .then(() => {
-          let dialogRef: MatDialogRef<LocalRecordingDialogComponent>;
-          dialogRef = this.recordDialog.open(LocalRecordingDialogComponent, {
-            disableClose: true,
-            data: {
-              recorder: this.publisherRecorder
-            }
-          });
-          dialogRef.componentInstance.myReference = dialogRef;
+  updateSessionEvents(oldValues, firstTime) {
 
-          dialogRef.afterOpen().subscribe(() => {
-            this.afterOpenPreview(this.publisherRecorder);
-          });
-          dialogRef.afterClosed().subscribe(() => {
-            this.afterClosePreview();
-          });
-        })
-        .catch((error) => {
-          console.error('Error stopping LocalRecorder: ' + error);
-        });
-    }
-  }
-
-  pausePublisher(): void {
-    if (!this.publisherPaused) {
-      this.publisherRecorder.pause();
-      document.getElementById('local-pause-icon-' + this.session.connection.connectionId).innerHTML = 'play_arrow';
-    } else {
-      this.publisherRecorder.resume();
-      document.getElementById('local-pause-icon-' + this.session.connection.connectionId).innerHTML = 'pause';
-    }
-    this.publisherPaused = !this.publisherPaused;
-  }
-
-  recordSubscriber(connectionId: string): void {
-    const subscriber: Subscriber = this.subscribers[connectionId].subscriber;
-    const recording = this.subscribers[connectionId].recording;
-    if (!recording) {
-      this.subscribers[connectionId].recorder = this.OV.initLocalRecorder(subscriber.stream);
-      this.subscribers[connectionId].recorder.record();
-      this.subscribers[connectionId].recording = true;
-      document.getElementById('record-icon-' + this.session.connection.connectionId + '-' + connectionId).innerHTML = 'stop';
-      document.getElementById('pause-btn-' + this.session.connection.connectionId + '-' + connectionId).style.display = 'block';
-    } else {
-      this.subscribers[connectionId].recorder.stop()
-        .then(() => {
-          let dialogRef: MatDialogRef<LocalRecordingDialogComponent>;
-          dialogRef = this.recordDialog.open(LocalRecordingDialogComponent, {
-            disableClose: true,
-            data: {
-              recorder: this.subscribers[connectionId].recorder
-            }
-          });
-          dialogRef.componentInstance.myReference = dialogRef;
-
-          dialogRef.afterOpen().subscribe(() => {
-            this.afterOpenPreview(this.subscribers[connectionId].recorder);
-          });
-          dialogRef.afterClosed().subscribe(() => {
-            this.afterClosePreview(connectionId);
-          });
-        })
-        .catch((error) => {
-          console.error('Error stopping LocalRecorder: ' + error);
-        });
-    }
-  }
-
-  pauseSubscriber(connectionId: string): void {
-    const subscriber: Subscriber = this.subscribers[connectionId].subscriber;
-    const subscriberPaused = this.subscribers[connectionId].paused;
-    if (!subscriberPaused) {
-      this.subscribers[connectionId].recorder.pause();
-      document.getElementById('pause-icon-' + this.session.connection.connectionId + '-' + connectionId).innerHTML = 'play_arrow';
-    } else {
-      this.subscribers[connectionId].recorder.resume();
-      document.getElementById('pause-icon-' + this.session.connection.connectionId + '-' + connectionId).innerHTML = 'pause';
-    }
-    this.subscribers[connectionId].paused = !this.subscribers[connectionId].paused;
-  }
-
-  publishUnpublish(): void {
-    if (this.unpublished) {
-      this.session.publish(this.publisher)
-        .then(() => {
-          console.log(this.publisher);
-        })
-        .catch(e => {
-          console.error(e);
-        });
-    } else {
-      this.session.unpublish(this.publisher);
-      this.removeUserData(this.session.connection.connectionId);
-      this.restartPublisherRecord();
-    }
-    this.unpublished = !this.unpublished;
-    this.updatePublishIcon();
-  }
-
-  changePublisher() {
-    let screenChange;
-    if (!this.publisherChanged) {
-      if (this.sendAudio && !this.sendVideo) {
-        this.sendAudioChange = false;
-        this.sendVideoChange = true;
-        screenChange = false;
-      } else if (!this.sendAudio && this.sendVideo) {
-        this.sendAudioChange = true;
-        this.sendVideoChange = false;
-      } else if (this.sendAudio && this.sendVideo && this.optionsVideo === 'video') {
-        this.sendAudioChange = false;
-        this.sendVideoChange = true;
-        screenChange = true;
-      } else if (this.sendAudio && this.sendVideo && this.optionsVideo === 'screen') {
-        this.sendAudioChange = false;
-        this.sendVideoChange = true;
-        screenChange = false;
-      }
-    } else {
-      this.sendAudioChange = this.sendAudio;
-      this.sendVideoChange = this.sendVideo;
-      screenChange = this.optionsVideo === 'screen' ? true : false;
-    }
-
-    this.audioMuted = false;
-    this.videoMuted = false;
-    this.unpublished = false;
-    this.updateAudioIcon();
-    this.updateVideoIcon();
-    this.updatePublishIcon();
-
-    const otherPublisher = this.OV.initPublisher(
-      'local-vid-' + this.session.connection.connectionId,
-      {
-        audioSource: this.sendAudioChange ? undefined : false,
-        videoSource: this.sendVideoChange ? (screenChange ? 'screen' : undefined) : false,
-        publishAudio: (!this.publisherChanged) ? true : !this.audioMuted,
-        publishVideo: (!this.publisherChanged) ? true : !this.videoMuted,
-        resolution: '640x480',
-        frameRate: 30,
-        insertMode: VideoInsertMode.APPEND
-      },
-      (err) => {
-        if (err) {
-          console.warn(err);
-          this.openviduError = err;
-          if (err.name === 'SCREEN_EXTENSION_NOT_INSTALLED') {
-            this.dialog.open(ExtensionDialogComponent, {
-              data: { url: err.message },
-              disableClose: true,
-              width: '250px'
-            });
+    if (this.sessionEvents.streamCreated !== oldValues.streamCreated || firstTime) {
+      this.session.off('streamCreated');
+      if (this.sessionEvents.streamCreated) {
+        this.session.on('streamCreated', (event: StreamEvent) => {
+          this.changeDetector.detectChanges();
+          if (this.subscribeTo) {
+            this.syncSubscribe(this.session, event);
           }
-        }
-      });
-    this.addPublisherEvents(otherPublisher);
-
-    otherPublisher.once('accessAllowed', () => {
-      if (!this.unpublished) {
-        this.session.unpublish(this.publisher);
-        this.publisher = otherPublisher;
-        this.removeUserData(this.session.connection.connectionId);
-        this.restartPublisherRecord();
-      }
-      this.session.publish(otherPublisher);
-    });
-
-    this.publisherChanged = !this.publisherChanged;
-  }
-
-  subUnsubFromSubscriber(connectionId: string) {
-    let subscriber: Subscriber = this.subscribers[connectionId].subscriber;
-    if (this.subscribers[connectionId].subbed) {
-      this.session.unsubscribe(subscriber);
-      this.restartSubscriberRecord(connectionId);
-      document.getElementById('data-' + this.session.connection.connectionId + '-' + connectionId).style.marginLeft = '0';
-      document.getElementById('sub-icon-' + this.session.connection.connectionId + '-' + connectionId).innerHTML = 'notifications_off';
-      document.getElementById('record-btn-' + this.session.connection.connectionId + '-' + connectionId).remove();
-      document.getElementById('pause-btn-' + this.session.connection.connectionId + '-' + connectionId).remove();
-      document.getElementById('sub-video-btn-' + this.session.connection.connectionId + '-' + connectionId).remove();
-      document.getElementById('sub-audio-btn-' + this.session.connection.connectionId + '-' + connectionId).remove();
-      this.subscribers[connectionId].subbedVideo = false;
-      this.subscribers[connectionId].subbedAudio = false;
-    } else {
-
-
-      this.session.subscribeAsync(subscriber.stream, 'remote-vid-' + this.session.connection.connectionId)
-        .then(sub => {
-          subscriber = sub;
-          this.subscribers[connectionId].subscriber = subscriber;
-          subscriber.on('videoElementCreated', (e: VideoElementEvent) => {
-            if (!subscriber.stream.hasVideo) {
-              $(e.element).css({ 'background-color': '#4d4d4d' });
-              $(e.element).attr('poster', 'assets/images/volume.png');
-            }
-            this.subscribers[connectionId].videoElement = e.element;
-            this.updateEventList('videoElementCreated', e.element.id);
-          });
-          subscriber.on('videoPlaying', (e: VideoElementEvent) => {
-            this.removeUserData(connectionId);
-            this.appendSubscriberData(e.element, subscriber.stream.connection);
-            this.updateEventList('videoPlaying', e.element.id);
-          });
-        })
-        .catch(err => {
-          console.error(err);
+          this.updateEventList('streamCreated', event.stream.streamId);
         });
-
-
-      /*subscriber = this.session.subscribe(subscriber.stream, 'remote-vid-' + this.session.connection.connectionId);
-      this.subscribers[connectionId].subscriber = subscriber;
-      subscriber.on('videoElementCreated', (e) => {
-        if (!subscriber.stream.hasVideo) {
-          $(e.element).css({ 'background-color': '#4d4d4d' });
-          $(e.element).attr('poster', 'assets/images/volume.png');
-        }
-        this.subscribers[connectionId].videoElement = e.element;
-        this.updateEventList('videoElementCreated', e.element.id);
-      });
-      subscriber.on('videoPlaying', (e) => {
-        this.removeUserData(connectionId);
-        this.appendSubscriberData(e.element, subscriber.stream.connection);
-        this.updateEventList('videoPlaying', e.element.id);
-      });*/
-
-
-    }
-    this.subscribers[connectionId].subbed = !this.subscribers[connectionId].subbed;
-  }
-
-  subUnsubFromSubscriberVideo(connectionId: string) {
-    this.subscribers[connectionId].subscriber.subscribeToVideo(!!this.subscribers[connectionId].subbedVideo);
-    this.subscribers[connectionId].subbedVideo = !this.subscribers[connectionId].subbedVideo;
-    document.getElementById('sub-video-icon-' + this.session.connection.connectionId + '-' + connectionId).innerHTML =
-      this.subscribers[connectionId].subbedVideo ? 'videocam_off' : 'videocam';
-  }
-
-  subUnsubFromSubscriberAudio(connectionId: string) {
-    this.subscribers[connectionId].subscriber.subscribeToAudio(!!this.subscribers[connectionId].subbedAudio);
-    this.subscribers[connectionId].subbedAudio = !this.subscribers[connectionId].subbedAudio;
-    document.getElementById('sub-audio-icon-' + this.session.connection.connectionId + '-' + connectionId).innerHTML =
-      this.subscribers[connectionId].subbedAudio ? 'mic_off' : 'mic';
-  }
-
-  addSessionEvents(session: Session) {
-    session.on('streamCreated', (event: StreamEvent) => {
-
-      this.changeDetector.detectChanges();
-
-      if (this.subscribeTo) {
-        // this.syncSubscribe(session, event);
-        this.asyncSubscribe(session, event);
-      }
-      this.updateEventList('streamCreated', event.stream.connection.connectionId);
-    });
-
-    session.on('streamDestroyed', (event: StreamEvent) => {
-      this.removeUserData(event.stream.connection.connectionId);
-      this.updateEventList('streamDestroyed', event.stream.connection.connectionId);
-    });
-    session.on('connectionCreated', (event: ConnectionEvent) => {
-      this.updateEventList('connectionCreated', event.connection.connectionId);
-    });
-    session.on('connectionDestroyed', (event: ConnectionEvent) => {
-      this.updateEventList('connectionDestroyed', event.connection.connectionId);
-    });
-    session.on('sessionDisconnected', (event: SessionDisconnectedEvent) => {
-      this.updateEventList('sessionDisconnected', 'No data');
-      if (event.reason === 'networkDisconnect') {
-        this.session = null;
-        this.OV = null;
-      }
-    });
-    session.on('signal', (event: SignalEvent) => {
-      this.updateEventList('signal', event.from.connectionId + '-' + event.data);
-    });
-
-    session.on('recordingStarted', (event: RecordingEvent) => {
-      this.updateEventList('recordingStarted', event.id);
-    });
-
-    session.on('recordingStopped', (event: RecordingEvent) => {
-      this.updateEventList('recordingStopped', event.id);
-    });
-
-    /*session.on('publisherStartSpeaking', (event) => {
-      console.log('Publisher start speaking');
-    });
-
-    session.on('publisherStopSpeaking', (event) => {
-      console.log('Publisher stop speaking');
-    });*/
-  }
-
-  addPublisherEvents(publisher: Publisher) {
-    publisher.on('videoElementCreated', (event: VideoElementEvent) => {
-      if (this.publishTo &&
-        (!this.sendVideoChange ||
-          this.sendVideoChange &&
-          !(this.optionsVideo !== 'screen') &&
-          this.openviduError &&
-          this.openviduError.name === 'NO_VIDEO_DEVICE')) {
-        $(event.element).css({ 'background-color': '#4d4d4d' });
-        $(event.element).attr('poster', 'assets/images/volume.png');
-      }
-      this.updateEventList('videoElementCreated', event.element.id);
-    });
-
-    publisher.on('accessAllowed', (e) => {
-      this.updateEventList('accessAllowed', '');
-    });
-
-    publisher.on('accessDenied', (e) => {
-      this.updateEventList('accessDenied', '');
-    });
-
-    publisher.on('accessDialogOpened', (e) => {
-      this.updateEventList('accessDialogOpened', '');
-    });
-
-    publisher.on('accessDialogClosed', (e) => {
-      this.updateEventList('accessDialogClosed', '');
-    });
-
-    publisher.on('videoPlaying', (e: VideoElementEvent) => {
-      this.appendPublisherData(e.element);
-      this.updateEventList('videoPlaying', e.element.id);
-    });
-
-    publisher.on('remoteVideoPlaying', (e: VideoElementEvent) => {
-      this.appendPublisherData(e.element);
-      this.updateEventList('remoteVideoPlaying', e.element.id);
-    });
-
-    publisher.on('streamCreated', (e: StreamEvent) => {
-      this.updateEventList('streamCreated', e.stream.connection.connectionId);
-    });
-
-    publisher.on('streamDestroyed', (e: StreamEvent) => {
-      this.updateEventList('streamDestroyed', e.stream.connection.connectionId);
-    });
-
-    publisher.on('videoElementDestroyed', (e: VideoElementEvent) => {
-      this.updateEventList('videoElementDestroyed', '(Publisher)');
-    });
-  }
-
-  private afterOpenPreview(recorder: LocalRecorder): void {
-    this.muteSubscribersService.updateMuted(true);
-    recorder.preview('recorder-preview').controls = true;
-  }
-
-  private afterClosePreview(connectionId?: string): void {
-    this.muteSubscribersService.updateMuted(false);
-    if (!!connectionId) {
-      this.restartSubscriberRecord(connectionId);
-    } else {
-      this.restartPublisherRecord();
-    }
-  }
-
-  private restartPublisherRecord(): void {
-    if (!!this.session) {
-      let el: HTMLElement = document.getElementById('local-record-icon-' + this.session.connection.connectionId);
-      if (!!el) {
-        el.innerHTML = 'fiber_manual_record';
-      }
-      el = document.getElementById('local-pause-icon-' + this.session.connection.connectionId);
-      if (!!el) {
-        el.innerHTML = 'pause';
-      }
-      el = document.getElementById('local-pause-btn-' + this.session.connection.connectionId);
-      if (!!el) {
-        el.style.display = 'none';
       }
     }
-    this.publisherPaused = false;
-    this.publisherRecording = false;
-    if (!!this.publisherRecorder) {
-      this.publisherRecorder.clean();
-    }
-  }
 
-  private restartSubscriberRecord(connectionId: string): void {
-    if (!!this.session) {
-      let el: HTMLElement = document.getElementById('record-icon-' + this.session.connection.connectionId + '-' + connectionId);
-      if (!!el) {
-        el.innerHTML = 'fiber_manual_record';
-      }
-      el = document.getElementById('pause-icon-' + this.session.connection.connectionId + '-' + connectionId);
-      if (!!el) {
-        el.innerHTML = 'pause';
-      }
-      el = document.getElementById('pause-btn-' + this.session.connection.connectionId + '-' + connectionId);
-      if (!!el) {
-        el.style.display = 'none';
+    if (this.sessionEvents.streamDestroyed !== oldValues.streamDestroyed || firstTime) {
+      this.session.off('streamDestroyed');
+      if (this.sessionEvents.streamDestroyed) {
+        this.session.on('streamDestroyed', (event: StreamEvent) => {
+          const index = this.subscribers.indexOf(<Subscriber>event.stream.streamManager);
+          if (index > -1) {
+            this.subscribers.splice(index, 1);
+          }
+          this.updateEventList('streamDestroyed', event.stream.streamId);
+        });
       }
     }
-    this.subscribers[connectionId].recording = false;
-    this.subscribers[connectionId].paused = false;
 
-    if (!!this.subscribers[connectionId].recorder) {
-      this.subscribers[connectionId].recorder.clean();
+    if (this.sessionEvents.connectionCreated !== oldValues.connectionCreated || firstTime) {
+      this.session.off('connectionCreated');
+      if (this.sessionEvents.connectionCreated) {
+        this.session.on('connectionCreated', (event: ConnectionEvent) => {
+          this.updateEventList('connectionCreated', event.connection.connectionId);
+        });
+      }
+    }
+
+    if (this.sessionEvents.connectionDestroyed !== oldValues.connectionDestroyed || firstTime) {
+      this.session.off('connectionDestroyed');
+      if (this.sessionEvents.connectionDestroyed) {
+        this.session.on('connectionDestroyed', (event: ConnectionEvent) => {
+          delete this.subscribers[event.connection.connectionId];
+          this.updateEventList('connectionDestroyed', event.connection.connectionId);
+        });
+      }
+    }
+
+    if (this.sessionEvents.sessionDisconnected !== oldValues.sessionDisconnected || firstTime) {
+      this.session.off('sessionDisconnected');
+      if (this.sessionEvents.sessionDisconnected) {
+        this.session.on('sessionDisconnected', (event: SessionDisconnectedEvent) => {
+          this.updateEventList('sessionDisconnected', 'No data');
+          if (event.reason === 'networkDisconnect') {
+            this.session = null;
+            this.OV = null;
+          }
+        });
+      }
+    }
+
+    if (this.sessionEvents.signal !== oldValues.signal || firstTime) {
+      this.session.off('signal');
+      if (this.sessionEvents.signal) {
+        this.session.on('signal', (event: SignalEvent) => {
+          this.updateEventList('signal', event.from.connectionId + '-' + event.data);
+        });
+      }
+    }
+
+    if (this.sessionEvents.recordingStarted !== oldValues.recordingStarted || firstTime) {
+      this.session.off('recordingStarted');
+      if (this.sessionEvents.recordingStarted) {
+        this.session.on('recordingStarted', (event: RecordingEvent) => {
+          this.updateEventList('recordingStarted', event.id);
+        });
+      }
+    }
+
+    if (this.sessionEvents.recordingStopped !== oldValues.recordingStopped || firstTime) {
+      this.session.off('recordingStopped');
+      if (this.sessionEvents.recordingStopped) {
+        this.session.on('recordingStopped', (event: RecordingEvent) => {
+          this.updateEventList('recordingStopped', event.id);
+        });
+      }
+    }
+
+    if (this.sessionEvents.publisherStartSpeaking !== oldValues.publisherStartSpeaking || firstTime) {
+      this.session.off('publisherStartSpeaking');
+      if (this.sessionEvents.publisherStartSpeaking) {
+        this.session.on('publisherStartSpeaking', (event: PublisherSpeakingEvent) => {
+          this.updateEventList('publisherStartSpeaking', event.connection.connectionId);
+        });
+      }
+    }
+
+    if (this.sessionEvents.publisherStopSpeaking !== oldValues.publisherStopSpeaking || firstTime) {
+      this.session.off('publisherStopSpeaking');
+      if (this.sessionEvents.publisherStopSpeaking) {
+        this.session.on('publisherStopSpeaking', (event: PublisherSpeakingEvent) => {
+          this.updateEventList('publisherStopSpeaking', event.connection.connectionId);
+        });
+      }
     }
   }
 
   syncInitPublisher() {
     this.publisher = this.OV.initPublisher(
-      'local-vid-' + this.session.connection.connectionId,
+      undefined,
       {
         audioSource: this.sendAudio ? undefined : false,
         videoSource: this.sendVideo ? (this.optionsVideo === 'screen' ? 'screen' : undefined) : false,
         publishAudio: this.activeAudio,
         publishVideo: this.activeVideo,
         resolution: '640x480',
-        frameRate: 30,
-        insertMode: VideoInsertMode.APPEND
+        frameRate: 30
       },
       (err) => {
         if (err) {
@@ -873,8 +459,6 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
           }
         }
       });
-
-    this.addPublisherEvents(this.publisher);
 
     if (this.subscribeToRemote) {
       this.publisher.subscribeToRemote();
@@ -897,7 +481,6 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       })
       .then(publisher => {
         this.publisher = publisher;
-        this.addPublisherEvents(this.publisher);
         if (this.subscribeToRemote) {
           this.publisher.subscribeToRemote();
         }
@@ -925,75 +508,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   syncSubscribe(session: Session, event) {
-    const subscriber: Subscriber = session.subscribe(event.stream, 'remote-vid-' + session.connection.connectionId);
-    this.subscribers[subscriber.stream.connection.connectionId] = {
-      'subscriber': subscriber,
-      'subbed': true,
-      'recorder': undefined,
-      'recording': false,
-      'paused': false,
-      'videoElement': undefined
-    };
-    subscriber.on('videoElementCreated', (e: VideoElementEvent) => {
-      if (!event.stream.hasVideo) {
-        $(e.element).css({ 'background-color': '#4d4d4d' });
-        $(e.element).attr('poster', 'assets/images/volume.png');
-      }
-      this.subscribers[subscriber.stream.connection.connectionId].videoElement = e.element;
-      this.updateEventList('videoElementCreated', e.element.id);
-    });
-    subscriber.on('videoPlaying', (e: VideoElementEvent) => {
-      this.appendSubscriberData(e.element, subscriber.stream.connection);
-      this.updateEventList('videoPlaying', e.element.id);
-    });
-    subscriber.on('videoElementDestroyed', (e) => {
-      this.updateEventList('videoElementDestroyed', '(Subscriber)');
-    });
-  }
-
-  asyncSubscribe(session: Session, event) {
-    session.subscribeAsync(event.stream, 'remote-vid-' + session.connection.connectionId)
-      .then(subscriber => {
-        this.subscribers[subscriber.stream.connection.connectionId] = {
-          'subscriber': subscriber,
-          'subbed': true,
-          'recorder': undefined,
-          'recording': false,
-          'paused': false,
-          'videoElement': undefined
-        };
-        subscriber.on('videoElementCreated', (e: VideoElementEvent) => {
-          if (!event.stream.hasVideo) {
-            $(e.element).css({ 'background-color': '#4d4d4d' });
-            $(e.element).attr('poster', 'assets/images/volume.png');
-          }
-          this.subscribers[subscriber.stream.connection.connectionId].videoElement = e.element;
-          this.updateEventList('videoElementCreated', e.element.id);
-        });
-        subscriber.on('videoPlaying', (e: VideoElementEvent) => {
-          this.appendSubscriberData(e.element, subscriber.stream.connection);
-          this.updateEventList('videoPlaying', e.element.id);
-        });
-        subscriber.on('videoElementDestroyed', (e) => {
-          this.updateEventList('videoElementDestroyed', '(Subscriber)');
-        });
-      })
-      .catch(err => {
-        console.error(err);
-      });
-  }
-
-  enableSpeakingEvents() {
-    this.session.on('publisherStartSpeaking', (event) => {
-    });
-
-    this.session.on('publisherStopSpeaking', (event) => {
-    });
-  }
-
-  disableSpeakingEvents() {
-    this.session.off('publisherStartSpeaking');
-    this.session.off('publisherStopSpeaking');
+    this.subscribers.push(session.subscribe(event.stream, undefined));
   }
 
   initGrayVideo(): void {
@@ -1050,7 +565,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
           this.sessionName = this.sessionProperties.customSessionId;
         }
       }
-      document.getElementById('session-settings-btn').classList.remove('cdk-program-focused');
+      document.getElementById('session-settings-btn-' + this.index).classList.remove('cdk-program-focused');
     });
   }
 
@@ -1064,7 +579,54 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     });
 
     dialogRef.afterClosed().subscribe((result: string) => {
-      document.getElementById('session-api-btn').classList.remove('cdk-program-focused');
+      document.getElementById('session-api-btn-' + this.index).classList.remove('cdk-program-focused');
+    });
+  }
+
+  openSessionEventsDialog() {
+
+    const oldValues = {
+      connectionCreated: this.sessionEvents.connectionCreated,
+      connectionDestroyed: this.sessionEvents.connectionDestroyed,
+      sessionDisconnected: this.sessionEvents.sessionDisconnected,
+      streamCreated: this.sessionEvents.streamCreated,
+      streamDestroyed: this.sessionEvents.streamDestroyed,
+      recordingStarted: this.sessionEvents.recordingStarted,
+      recordingStopped: this.sessionEvents.recordingStopped,
+      signal: this.sessionEvents.signal,
+      publisherStartSpeaking: this.sessionEvents.publisherStartSpeaking,
+      publisherStopSpeaking: this.sessionEvents.publisherStopSpeaking
+    };
+
+    const dialogRef = this.dialog.open(EventsDialogComponent, {
+      data: {
+        eventCollection: this.sessionEvents,
+        target: 'Session'
+      },
+      width: '280px',
+      autoFocus: false,
+      disableClose: true
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+
+      if (!!this.session && JSON.stringify(this.sessionEvents) !== JSON.stringify(oldValues)) {
+        this.updateSessionEvents(oldValues, false);
+      }
+
+      this.sessionEvents = {
+        connectionCreated: result.connectionCreated,
+        connectionDestroyed: result.connectionDestroyed,
+        sessionDisconnected: result.sessionDisconnected,
+        streamCreated: result.streamCreated,
+        streamDestroyed: result.streamDestroyed,
+        recordingStarted: result.recordingStarted,
+        recordingStopped: result.recordingStopped,
+        signal: result.signal,
+        publisherStartSpeaking: result.publisherStartSpeaking,
+        publisherStopSpeaking: result.publisherStopSpeaking
+      };
+      document.getElementById('session-events-btn-' + this.index).classList.remove('cdk-program-focused');
     });
   }
 
@@ -1077,6 +639,17 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       .then(session_NodeClient => {
         return session_NodeClient.generateToken();
       });
+  }
+
+  udpateEventFromChild(event) {
+    this.updateEventList(event.event, event.content);
+  }
+
+  updateSubscriberFromChild(newSubscriber: Subscriber) {
+    const oldSubscriber = this.subscribers.filter(sub => {
+      return sub.stream.streamId === newSubscriber.stream.streamId;
+    })[0];
+    this.subscribers[this.subscribers.indexOf(oldSubscriber)] = newSubscriber;
   }
 
 }

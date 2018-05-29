@@ -34,7 +34,7 @@ mat-card.session-card {
 
 .inner-card {
   border: 1px solid #e1e1e1;
-  padding: 10px 15px 10px 15px;
+  padding: 10px 3px 10px 10px;
   background: #ffffff;
   margin-top: 5px;
 }
@@ -138,19 +138,25 @@ mat-expansion-panel-header {
 }
 
 .mat-icon-custom {
-  width: 29px;
-  height: 29px;
-  line-height: 18px;
+  width: 24px;
+  height: 24px;
+  line-height: 17px;
+  margin-bottom: -4px;
 }
 
 .mat-icon-custom-ic {
-  width: 20px;
-  height: 20px;
-  font-size: 20px;
-  line-height: 20px;
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+  line-height: 18px;
 }
 
 .session-btns-div {
   margin-top: -14px;
   margin-right: -14px;
+  margin-left: 5px;
+}
+
+.publisher-btns-div {
+  margin-top: -7px;
 }

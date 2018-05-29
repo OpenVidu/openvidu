@@ -1,0 +1,98 @@
+app-ov-video {
+  float: left;
+  height: 90px;
+}
+
+.data-node {
+  width: 120px;
+  height: 90px;
+  float: left;
+  position: relative;
+  margin-left: -120px;
+  margin-top: 0;
+}
+
+p {
+  display: inline-flex;
+  vertical-align: top;
+  margin: 0;
+  background: #ffffff;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #797979;
+  font-weight: 100;
+  font-size: 14px;
+}
+
+.material-icons {
+  font-size: 17px;
+  width: 17px;
+  height: 17px;
+  line-height: 20px;
+}
+
+.video-btn {
+  border: none;
+  background: rgba(255, 255, 255, 0.75);
+  cursor: pointer;
+  padding: 0;
+  height: 20px;
+  float: left;
+}
+
+.video-btn:hover {
+  color: #4d4d4d;
+}
+
+.video-btn.top-row {
+  margin-top: 0;
+  display: inline-flex;
+  float: right;
+}
+
+.rec-btn {
+  float: right;
+  color: #ac0000;
+}
+
+.rec-btn:hover {
+  color: #ac000082;
+}
+
+.events-btn {
+  float: right;
+}
+
+.top-left-rounded {
+  border-top-left-radius: 2px;
+}
+
+.top-right-rounded {
+  border-top-right-radius: 2px;
+}
+
+.bottom-left-rounded {
+  border-bottom-left-radius: 2px;
+}
+
+.bottom-right-rounded {
+  border-bottom-right-radius: 2px;
+}
+
+.grey-background {
+  background-color: #4d4d4d
+}
+
+.top-div {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100%;
+}
+
+.bottom-div {
+  position: absolute;
+  bottom: 0;
+  height: 20px;
+  width: 100%;
+}

@@ -10,6 +10,8 @@ import { AppComponent } from './app.component';
 import { TestSessionsComponent } from './components/test-sessions/test-sessions.component';
 import { TestApirestComponent } from './components/test-apirest/test-apirest.component';
 import { OpenviduInstanceComponent } from './components/openvidu-instance/openvidu-instance.component';
+import { VideoComponent } from './components/video/video.component';
+import { OpenViduVideoComponent } from './components/video/ov-video.component';
 import { ExtensionDialogComponent } from './components/dialogs/extension-dialog.component';
 import { LocalRecordingDialogComponent } from './components/dialogs/local-recording-dialog.component';
 
@@ -19,16 +21,20 @@ import { TestFeedService } from './services/test-feed.service';
 import { MuteSubscribersService } from './services/mute-subscribers.service';
 import { SessionPropertiesDialogComponent } from './components/dialogs/session-properties-dialog.component';
 import { SessionApiDialogComponent } from './components/dialogs/session-api-dialog.component';
+import { EventsDialogComponent } from './components/dialogs/events-dialog.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     OpenviduInstanceComponent,
+    VideoComponent,
+    OpenViduVideoComponent,
     TestSessionsComponent,
     TestApirestComponent,
     ExtensionDialogComponent,
     SessionPropertiesDialogComponent,
     SessionApiDialogComponent,
+    EventsDialogComponent,
     LocalRecordingDialogComponent
   ],
   imports: [
@@ -49,6 +55,7 @@ import { SessionApiDialogComponent } from './components/dialogs/session-api-dial
     ExtensionDialogComponent,
     SessionPropertiesDialogComponent,
     SessionApiDialogComponent,
+    EventsDialogComponent,
     LocalRecordingDialogComponent
   ],
   bootstrap: [AppComponent]

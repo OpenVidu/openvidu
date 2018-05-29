@@ -8,19 +8,24 @@
 
           <div fxLayout="row">
             <mat-form-field style="margin-right: 10px">
-              <input matInput placeholder="Session name" id="session-name-input" name="sessionName" [(ngModel)]="sessionName" [disabled]="session">
+              <input matInput placeholder="Session name" [id]="'session-name-input-' + index" name="sessionName" [(ngModel)]="sessionName"
+                [disabled]="session">
             </mat-form-field>
 
             <mat-form-field>
-              <input matInput placeholder="Client data" id="client-data-input" name="clientData" [(ngModel)]="clientData" [disabled]="session">
+              <input matInput placeholder="Client data" [id]="'client-data-input-'+ index" name="clientData" [(ngModel)]="clientData" [disabled]="session">
             </mat-form-field>
 
             <div fxLayout="column" class="session-btns-div">
-              <button mat-icon-button title="Session properties" id="session-settings-btn" class="mat-icon-custom" (click)="openSessionPropertiesDialog()" [disabled]="session">
+              <button mat-icon-button title="Session properties" [id]="'session-settings-btn-' + index" class="mat-icon-custom" (click)="openSessionPropertiesDialog()"
+                [disabled]="session">
                 <mat-icon class="mat-icon-custom-ic" aria-label="Session properties button">settings</mat-icon>
               </button>
-              <button mat-icon-button title="Session API" id="session-api-btn" class="mat-icon-custom" (click)="openSessionApiDialog()">
+              <button mat-icon-button title="Session API" [id]="'session-api-btn-' + index" class="mat-icon-custom" (click)="openSessionApiDialog()">
                 <mat-icon class="mat-icon-custom-ic" aria-label="Session API button">cloud_circle</mat-icon>
+              </button>
+              <button mat-icon-button title="Session events" [id]="'session-events-btn-' + index" class="mat-icon-custom" (click)="openSessionEventsDialog()">
+                <mat-icon class="mat-icon-custom-ic" aria-label="Session events button">notifications</mat-icon>
               </button>
             </div>
 
@@ -36,7 +41,7 @@
 
           <div class="inner-card" fxLayout="row" fxLayoutAlign="start start">
 
-            <div fxFlex="60">
+            <div fxFlex="55">
               <div>
                 <h4>Send</h4>
                 <div>
@@ -57,7 +62,7 @@
               </div>
             </div>
 
-            <div fxFlex="40">
+            <div fxFlex="35">
               <mat-radio-group [(ngModel)]="optionsVideo" [disabled]="session || disableRadioButtons" [ngModelOptions]="{standalone: true}">
                 <div>
                   <mat-radio-button class="video-radio" value="video" [checked]="checkRadioVideo && optionsVideo==='video'">Video</mat-radio-button>
@@ -69,6 +74,19 @@
               <mat-checkbox class="subscribe-remote-check" name="subscribeToRemote" (change)="subscribeToRemote = !subscribeToRemote" [disabled]="(!sendAudio && !sendVideo) || !publishTo || session"
                 [checked]="(sendAudio || sendVideo) && publishTo && subscribeToRemote">Subscribe
                 <br>to remote</mat-checkbox>
+            </div>
+
+            <div fxFlex="10">
+              <div fxLayout="column" class="publisher-btns-div">
+                <button mat-icon-button title="Publisher properties" [id]="'session-settings-btn-' + index" class="mat-icon-custom" (click)="advancedPublisherOptions()"
+                  [disabled]="(!sendAudio && !sendVideo) || !publishTo">
+                  <mat-icon class="mat-icon-custom-ic" aria-label="Session properties button">settings</mat-icon>
+                </button>
+                <button mat-icon-button title="Add new publisher to running session" [id]="'session-api-btn-' + index" class="mat-icon-custom" (click)="addNewPublisher()"
+                  [disabled]="!session || ((!sendAudio && !sendVideo) || !publishTo)">
+                  <mat-icon class="mat-icon-custom-ic" aria-label="Session API button">add_circle</mat-icon>
+                </button>
+              </div>
             </div>
 
           </div>
@@ -85,20 +103,8 @@
         <div class="session-card-inner">
           <div class="session-title">{{sessionName}}</div>
           <div class="session-actions">
-            <button class="change-publisher-btn" *ngIf="publishTo" (click)="changePublisher()" title="Change publisher">
-              <mat-icon aria-label="Change publisher button">switch_video</mat-icon>
-            </button>
-            <button class="publish-btn" *ngIf="publishTo" (click)="publishUnpublish()" title="Publish/Unpublish">
-              <mat-icon aria-label="Publish Unpublish button">{{publishIcon}}</mat-icon>
-            </button>
             <button class="message-btn" (click)="sendMessage()" title="Broadcast message">
               <mat-icon aria-label="Send message button" style="font-size: 20px">chat</mat-icon>
-            </button>
-            <button class="video-btn" *ngIf="publishTo && sendVideoChange" (click)="toggleVideo()" title="Mute/Unmute video">
-              <mat-icon aria-label="Mute video button">{{videoIcon}}</mat-icon>
-            </button>
-            <button class="audio-btn" *ngIf="publishTo && sendAudioChange" (click)="toggleAudio()" title="Mute/Unmute audio">
-              <mat-icon aria-label="Mute audio button">{{audioIcon}}</mat-icon>
             </button>
             <button class="leave-btn" (click)="leaveSession()" title="Leave session">
               <mat-icon aria-label="Leave button">clear</mat-icon>
@@ -123,6 +129,10 @@
         </div>
         <div [attr.id]="'remote-vid-' + session.connection.connectionId" fxFlex="240px" class="video-container">
           <div [attr.id]="'local-vid-' + session.connection.connectionId"></div>
+          <app-video *ngIf="this.publisher" [streamManager]="this.publisher" [OV]="OV" (updateEventListInParent)="udpateEventFromChild($event)">
+          </app-video>
+          <app-video *ngFor="let subscriber of this.subscribers" [streamManager]="subscriber" [OV]="OV" (updateEventListInParent)="udpateEventFromChild($event)" (reSubbed)="updateSubscriberFromChild($event)">
+          </app-video>
         </div>
       </div>
     </mat-card>
