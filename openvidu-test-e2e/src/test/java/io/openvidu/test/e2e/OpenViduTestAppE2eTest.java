@@ -787,12 +787,37 @@ public class OpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.id("session-name-input-0")).clear();
 		user.getDriver().findElement(By.id("session-name-input-0")).sendKeys(sessionName);
 
-		// Try to record a non-existing session
+		// API REST test
 		user.getDriver().findElement(By.id("session-api-btn-0")).click();
 		Thread.sleep(1000);
+
+		// Try to record a non-existing session
 		user.getDriver().findElement(By.id("start-recording-btn")).click();
 		user.getWaiter()
 				.until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Error [404]"));
+		
+		listEmptyRecordings();
+
+		// Try to stop a non-existing recording
+		user.getDriver().findElement(By.id("recording-id-field")).sendKeys("FAIL");
+		user.getDriver().findElement(By.id("stop-recording-btn")).click();
+		user.getWaiter()
+				.until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Error [404]"));
+
+		listEmptyRecordings();
+
+		// Try to get a non-existing recording
+		user.getDriver().findElement(By.id("get-recording-btn")).click();
+		user.getWaiter()
+				.until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Error [404]"));
+
+		listEmptyRecordings();
+
+		// Try to delete a non-existing recording
+		user.getDriver().findElement(By.id("get-recording-btn")).click();
+		user.getWaiter()
+				.until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Error [404]"));
+
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 		Thread.sleep(1000);
 
@@ -826,6 +851,28 @@ public class OpenViduTestAppE2eTest {
 
 		user.getDriver().findElement(By.id("recording-id-field")).clear();
 		user.getDriver().findElement(By.id("recording-id-field")).sendKeys(sessionName);
+
+		// Try to start an ongoing recording
+		user.getDriver().findElement(By.id("start-recording-btn")).click();
+		user.getWaiter()
+				.until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Error [409]"));
+
+		// Try to get a existing recording
+		user.getDriver().findElement(By.id("get-recording-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
+				"Recording got [" + sessionName + "]"));
+
+		// Try to delete a ongoing recording
+		user.getDriver().findElement(By.id("delete-recording-btn")).click();
+		user.getWaiter()
+				.until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Error [409]"));
+
+		// List existing recordings (one)
+		user.getDriver().findElement(By.id("list-recording-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
+				"Recording list [" + sessionName + "]"));
+
+		// Stop ongoing recording
 		user.getDriver().findElement(By.id("stop-recording-btn")).click();
 		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
 				"Recording stopped [" + sessionName + "]"));
@@ -841,6 +888,17 @@ public class OpenViduTestAppE2eTest {
 		Assert.assertTrue(file2.exists() || file2.length() > 0);
 		Assert.assertTrue(file3.exists() || file3.length() > 0);
 
+		// Try to get the stopped recording
+		user.getDriver().findElement(By.id("get-recording-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
+				"Recording got [" + sessionName + "]"));
+
+		// Try to list the stopped recording
+		user.getDriver().findElement(By.id("list-recording-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
+				"Recording list [" + sessionName + "]"));
+
+		// Delete the recording
 		user.getDriver().findElement(By.id("delete-recording-btn")).click();
 		user.getWaiter()
 				.until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Recording deleted"));
@@ -851,6 +909,13 @@ public class OpenViduTestAppE2eTest {
 
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 
+	}
+
+	private void listEmptyRecordings() {
+		// List existing recordings (empty)
+		user.getDriver().findElement(By.id("list-recording-btn")).click();
+		user.getWaiter()
+				.until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Recording list []"));
 	}
 
 	private ExpectedCondition<Boolean> waitForVideoDuration(WebElement element, int durationInSeconds) {

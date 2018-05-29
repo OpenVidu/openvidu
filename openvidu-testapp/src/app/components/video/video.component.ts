@@ -291,13 +291,6 @@ export class VideoComponent implements OnInit, OnDestroy {
         if (this.eventCollection.videoElementCreated) {
             if (!oldValues.videoElementCreated) {
                 sub.on('videoElementCreated', (event: VideoElementEvent) => {
-                    if (!sub.stream.hasVideo) {
-                        this.videoClasses = 'grey-background';
-                        this.videoPoster = 'assets/images/volume.png';
-                    } else {
-                        this.videoClasses = '';
-                        this.videoPoster = '';
-                    }
                     this.updateEventListInParent.emit({
                         event: 'videoElementCreated',
                         content: event.element.id
@@ -325,6 +318,13 @@ export class VideoComponent implements OnInit, OnDestroy {
         if (this.eventCollection.streamPlaying) {
             if (!oldValues.streamPlaying) {
                 sub.on('streamPlaying', (event: StreamManagerEvent) => {
+                    if (!sub.stream.hasVideo) {
+                        this.videoClasses = 'grey-background';
+                        this.videoPoster = 'assets/images/volume.png';
+                    } else {
+                        this.videoClasses = '';
+                        this.videoPoster = '';
+                    }
                     this.showButtons = true;
                     this.updateEventListInParent.emit({
                         event: 'streamPlaying',
@@ -341,13 +341,6 @@ export class VideoComponent implements OnInit, OnDestroy {
         if (this.eventCollection.videoElementCreated) {
             if (!oldValues.videoElementCreated) {
                 pub.on('videoElementCreated', (event: VideoElementEvent) => {
-                    if (!pub.stream.hasVideo) {
-                        this.videoClasses = 'grey-background';
-                        this.videoPoster = 'assets/images/volume.png';
-                    } else {
-                        this.videoClasses = '';
-                        this.videoPoster = '';
-                    }
                     this.updateEventListInParent.emit({
                         event: 'videoElementCreated',
                         content: event.element.id
@@ -452,6 +445,13 @@ export class VideoComponent implements OnInit, OnDestroy {
         if (this.eventCollection.streamPlaying) {
             if (!oldValues.streamPlaying) {
                 pub.on('streamPlaying', (event: StreamManagerEvent) => {
+                    if (!pub.stream.hasVideo) {
+                        this.videoClasses = 'grey-background';
+                        this.videoPoster = 'assets/images/volume.png';
+                    } else {
+                        this.videoClasses = '';
+                        this.videoPoster = '';
+                    }
                     this.showButtons = true;
                     this.updateEventListInParent.emit({
                         event: 'streamPlaying',

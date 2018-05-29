@@ -3,7 +3,7 @@ import { StreamManager } from 'openvidu-browser';
 
 @Component({
     selector: 'app-ov-video',
-    template: '<video #videoElement [poster]=""></video>'
+    template: '<video #videoElement [poster]="poster"></video>'
 })
 export class OpenViduVideoComponent implements AfterViewInit {
 
