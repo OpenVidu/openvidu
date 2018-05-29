@@ -36,7 +36,6 @@ import org.json.simple.parser.ParseException;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.WebDriverWait;
 
 /**
  * Manager event class for BrowserUser. Collects, cleans and stores events from
@@ -76,7 +75,7 @@ public class OpenViduEventManager {
 	private AtomicBoolean isInterrupted = new AtomicBoolean(false);
 	private int timeOfWaitInSeconds;
 
-	public OpenViduEventManager(WebDriver driver, WebDriverWait waiter, int timeOfWaitInSeconds) {
+	public OpenViduEventManager(WebDriver driver, int timeOfWaitInSeconds) {
 		this.driver = driver;
 		this.eventQueue = new ConcurrentLinkedQueue<JSONObject>();
 		this.eventCallbacks = new ConcurrentHashMap<>();
@@ -116,12 +115,13 @@ public class OpenViduEventManager {
 	public void on(String eventName, Consumer<JSONObject> callback) {
 		this.eventCallbacks.put(eventName, new RunnableCallback(callback));
 	}
-	
+
 	public void off(String eventName) {
 		this.eventCallbacks.remove(eventName);
 	}
-	
-	// 'eventNumber' is accumulative for event 'eventName' for one page while it is not refreshed
+
+	// 'eventNumber' is accumulative for event 'eventName' for one page while it is
+	// not refreshed
 	public void waitUntilEventReaches(String eventName, int eventNumber) throws Exception {
 		CountDownLatch eventSignal = new CountDownLatch(eventNumber);
 		this.setCountDown(eventName, eventSignal);
@@ -203,18 +203,26 @@ public class OpenViduEventManager {
 				.executeScript("var e = window.myEvents; window.myEvents = ''; return e;");
 		return events;
 	}
+	
+	public boolean hasMediaStream(WebElement videoElement) {
+		boolean hasMediaStream = (boolean) ((JavascriptExecutor) driver).executeScript(
+				"return (!!(document.getElementById('" + videoElement.getAttribute("id") + "').srcObject))");
+		return hasMediaStream;
+	}
 
 	private boolean hasAudioTracks(WebElement videoElement) {
-		boolean audioTracks = (boolean) ((JavascriptExecutor) driver).executeScript(
-				"return ($('#" + videoElement.getAttribute("id") + "').prop('srcObject').getAudioTracks().length > 0)"
-						+ "&& ($('#" + videoElement.getAttribute("id") + "').prop('srcObject').getAudioTracks()[0].enabled)");
+		boolean audioTracks = (boolean) ((JavascriptExecutor) driver)
+				.executeScript("return ((document.getElementById('" + videoElement.getAttribute("id")
+						+ "').srcObject.getAudioTracks().length > 0)" + "&& (document.getElementById('"
+						+ videoElement.getAttribute("id") + "').srcObject.getAudioTracks()[0].enabled))");
 		return audioTracks;
 	}
 
 	private boolean hasVideoTracks(WebElement videoElement) {
-		boolean videoTracks = (boolean) ((JavascriptExecutor) driver).executeScript(
-				"return ($('#" + videoElement.getAttribute("id") + "').prop('srcObject').getVideoTracks().length > 0)"
-						+ "&& ($('#" + videoElement.getAttribute("id") + "').prop('srcObject').getVideoTracks()[0].enabled)");
+		boolean videoTracks = (boolean) ((JavascriptExecutor) driver)
+				.executeScript("return ((document.getElementById('" + videoElement.getAttribute("id")
+						+ "').srcObject.getVideoTracks().length > 0)" + "&& (document.getElementById('"
+						+ videoElement.getAttribute("id") + "').srcObject.getVideoTracks()[0].enabled))");
 		return videoTracks;
 	}
 
