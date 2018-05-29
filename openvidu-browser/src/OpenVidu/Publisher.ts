@@ -15,10 +15,10 @@
  *
  */
 
-import { MediaManager } from './MediaManager';
 import { OpenVidu } from './OpenVidu';
 import { Session } from './Session';
 import { Stream } from './Stream';
+import { StreamManager } from './StreamManager';
 import { EventDispatcher } from '../OpenViduInternal/Interfaces/Public/EventDispatcher';
 import { PublisherProperties } from '../OpenViduInternal/Interfaces/Public/PublisherProperties';
 import { InboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/InboundStreamOptions';
@@ -33,7 +33,7 @@ import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
 /**
  * Packs local media streams. Participants can publish it to a session. Initialized with [[OpenVidu.initPublisher]] method
  */
-export class Publisher extends MediaManager {
+export class Publisher extends StreamManager {
 
     /**
      * Whether the Publisher has been granted access to the requested input devices or not
@@ -45,12 +45,7 @@ export class Publisher extends MediaManager {
      */
     session: Session; // Initialized by Session.publish(Publisher)
 
-    /**
-     * @hidden
-     */
-    accessDenied = false;
-
-    private element?: HTMLElement;
+    private accessDenied = false;
     private properties: PublisherProperties;
     private permissionDialogTimeout: NodeJS.Timer;
 
@@ -58,10 +53,10 @@ export class Publisher extends MediaManager {
      * @hidden
      */
     constructor(targEl: string | HTMLElement, properties: PublisherProperties, private openvidu: OpenVidu) {
-        super(new Stream(new Session(openvidu), { publisherProperties: properties, mediaConstraints: {} }), targEl);
+        super(new Stream((!!openvidu.session) ? openvidu.session : new Session(openvidu), { publisherProperties: properties, mediaConstraints: {} }), targEl);
         this.properties = properties;
 
-        this.stream.on('local-stream-destroyed-by-disconnect', (reason: string) => {
+        this.stream.ee.on('local-stream-destroyed-by-disconnect', (reason: string) => {
             const streamEvent = new StreamEvent(true, this, 'streamDestroyed', this.stream, reason);
             this.ee.emitEvent('streamDestroyed', [streamEvent]);
             streamEvent.callDefaultBehaviour();
@@ -103,22 +98,18 @@ export class Publisher extends MediaManager {
             if (!!this.stream && this.stream.isLocalStreamPublished) {
                 this.ee.emitEvent('streamCreated', [new StreamEvent(false, this, 'streamCreated', this.stream, '')]);
             } else {
-                this.stream.on('stream-created-by-publisher', () => {
+                this.stream.ee.on('stream-created-by-publisher', () => {
                     this.ee.emitEvent('streamCreated', [new StreamEvent(false, this, 'streamCreated', this.stream, '')]);
                 });
             }
         }
         if (type === 'remoteVideoPlaying') {
-            if (this.stream.displayMyRemote() && this.video &&
-                this.video.currentTime > 0 &&
-                this.video.paused === false &&
-                this.video.ended === false &&
-                this.video.readyState === 4) {
-                this.ee.emitEvent('remoteVideoPlaying', [new VideoElementEvent(this.video, this, 'remoteVideoPlaying')]);
-            } else {
-                this.stream.on('remote-video-is-playing', (element) => {
-                    this.ee.emitEvent('remoteVideoPlaying', [new VideoElementEvent(element.element, this, 'remoteVideoPlaying')]);
-                });
+            if (this.stream.displayMyRemote() && this.videos[0] && this.videos[0].video &&
+                this.videos[0].video.currentTime > 0 &&
+                this.videos[0].video.paused === false &&
+                this.videos[0].video.ended === false &&
+                this.videos[0].video.readyState === 4) {
+                this.ee.emitEvent('remoteVideoPlaying', [new VideoElementEvent(this.videos[0].video, this, 'remoteVideoPlaying')]);
             }
         }
         if (type === 'accessAllowed') {
@@ -144,22 +135,18 @@ export class Publisher extends MediaManager {
             if (!!this.stream && this.stream.isLocalStreamPublished) {
                 this.ee.emitEvent('streamCreated', [new StreamEvent(false, this, 'streamCreated', this.stream, '')]);
             } else {
-                this.stream.once('stream-created-by-publisher', () => {
+                this.stream.ee.once('stream-created-by-publisher', () => {
                     this.ee.emitEvent('streamCreated', [new StreamEvent(false, this, 'streamCreated', this.stream, '')]);
                 });
             }
         }
         if (type === 'remoteVideoPlaying') {
-            if (this.stream.displayMyRemote() && this.video &&
-                this.video.currentTime > 0 &&
-                this.video.paused === false &&
-                this.video.ended === false &&
-                this.video.readyState === 4) {
-                this.ee.emitEvent('remoteVideoPlaying', [new VideoElementEvent(this.video, this, 'remoteVideoPlaying')]);
-            } else {
-                this.stream.once('remote-video-is-playing', (element) => {
-                    this.ee.emitEvent('remoteVideoPlaying', [new VideoElementEvent(element.element, this, 'remoteVideoPlaying')]);
-                });
+            if (this.stream.displayMyRemote() && this.videos[0] && this.videos[0].video &&
+                this.videos[0].video.currentTime > 0 &&
+                this.videos[0].video.paused === false &&
+                this.videos[0].video.ended === false &&
+                this.videos[0].video.readyState === 4) {
+                this.ee.emitEvent('remoteVideoPlaying', [new VideoElementEvent(this.videos[0].video, this, 'remoteVideoPlaying')]);
             }
         }
         if (type === 'accessAllowed') {
@@ -213,7 +200,13 @@ export class Publisher extends MediaManager {
                 }
 
                 this.stream.setMediaStream(mediaStream);
-                this.insertVideo(this.targetElement, <VideoInsertMode>this.properties.insertMode);
+                this.stream.isLocalStreamReadyToPublish = true;
+                this.stream.ee.emitEvent('stream-ready-to-publish', []);
+
+                if (!!this.firstVideoElement) {
+                    this.createVideoElement(this.firstVideoElement.targetElement, <VideoInsertMode>this.properties.insertMode);
+                }
+                delete this.firstVideoElement;
 
                 resolve();
             };

@@ -38,9 +38,12 @@ import platform = require('platform');
  */
 export class OpenVidu {
 
-  private session: Session;
   private jsonRpcClient: any;
 
+  /**
+   * @hidden
+   */
+  session: Session;
   /**
    * @hidden
    */
@@ -87,9 +90,9 @@ export class OpenVidu {
    *
    * The [[Publisher]] object will dispatch an `accessAllowed` or `accessDenied` event once it has been granted access to the requested input devices or not.
    *
-   * The [[Publisher]] object will dispatch a `videoElementCreated` event once the HTML video element has been added to DOM (if _targetElement_ not null or undefined)
+   * The [[Publisher]] object will dispatch a `videoElementCreated` event once the HTML video element has been added to DOM (if _targetElement_ not null or undefined, or if you call [[Publisher.createVideoElement]])
    *
-   * The [[Publisher]] object will dispatch a `videoPlaying` event once the local video starts playing (only if `videoElementCreated` event has been previously dispatched)
+   * The [[Publisher]] object will dispatch a `streamPlaying` event once the local streams starts playing
    *
    * @param targetElement  HTML DOM element (or its `id` attribute) in which the video element of the Publisher will be inserted (see [[PublisherProperties.insertMode]]). If null or undefined no default video will be created for this Publisher
    * (you can always call method [[Stream.addVideoElement]] for the object [[Publisher.stream]] to manage the video elements on your own)

@@ -18,25 +18,17 @@
 import { Event } from './Event';
 import { StreamManager } from '../../OpenVidu/StreamManager';
 
-
 /**
  * Defines the following events:
- * - `videoElementCreated`: dispatched by [[Publisher]] and [[Subscriber]] whenever a new HTML video element has been inserted into DOM
- * - `videoElementDestroyed`: dispatched by [[Publisher]] and [[Subscriber]] whenever an HTML video element has been removed from DOM
+ * - `streamPlaying`: dispatched by [[StreamManager]] ([[Publisher]] and [[Subscriber]])
  */
-export class VideoElementEvent extends Event {
-
-    /**
-     * Video element that was created or destroyed
-     */
-    element: HTMLVideoElement;
+export class StreamManagerEvent extends Event {
 
     /**
      * @hidden
      */
-    constructor(element: HTMLVideoElement, target: StreamManager, type: string) {
-        super(false, target, type);
-        this.element = element;
+    constructor(target: StreamManager) {
+        super(false, target, 'streamPlaying');
     }
 
     /**

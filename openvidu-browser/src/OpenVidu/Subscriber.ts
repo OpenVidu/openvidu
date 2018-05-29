@@ -15,17 +15,16 @@
  *
  */
 
-import { MediaManager } from './MediaManager';
 import { Stream } from './Stream';
+import { StreamManager } from './StreamManager';
 import { SubscriberProperties } from '../OpenViduInternal/Interfaces/Public/SubscriberProperties';
 
 
 /**
  * Packs remote media streams. Participants automatically receive them when others publish their streams. Initialized with [[Session.subscribe]] method
  */
-export class Subscriber extends MediaManager {
+export class Subscriber extends StreamManager {
 
-    private element?: HTMLElement;
     private properties: SubscriberProperties;
 
     /**

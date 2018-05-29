@@ -16,8 +16,8 @@
  */
 
 import { Connection } from './Connection';
-import { MediaManager } from './MediaManager';
 import { Session } from './Session';
+import { StreamManager } from './StreamManager';
 import { InboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/InboundStreamOptions';
 import { OutboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/OutboundStreamOptions';
 import { WebRtcStats } from '../OpenViduInternal/WebRtcStats/WebRtcStats';
@@ -30,8 +30,9 @@ import * as kurentoUtils from '../OpenViduInternal/KurentoUtils/kurento-utils-js
 
 
 /**
- * Represents each one of the videos send and receive by a user in a session.
- * Therefore each [[Publisher]] and [[Subscriber]] has an attribute of type Stream
+ * Represents each one of the media streams available in OpenVidu Server for certain session.
+ * Each [[Publisher]] and [[Subscriber]] has an attribute of type Stream, as they give access
+ * to at least one of them (sending and receiving it, respectively)
  */
 export class Stream {
 
@@ -41,17 +42,20 @@ export class Stream {
     connection: Connection;
 
     /**
-     * Frame rate of the video in frames per second. This property is only defined if the [[Publisher]] of the stream was initialized passing a _frameRate_ property on [[OpenVidu.initPublisher]] method
+     * Frame rate of the video in frames per second. This property is only defined if the [[Publisher]] of
+     * the stream was initialized passing a _frameRate_ property on [[OpenVidu.initPublisher]] method
      */
     frameRate?: number;
 
     /**
-     * Whether the stream has a video track or not
+     * Whether the stream has a video track or not. This attribute may change if the Publisher publishing the Stream
+     * calls [[Publisher.publishVideo]]. You can listen to event [[StreamPropertyChangedEvent]] to know when this happens
      */
     hasVideo: boolean;
 
     /**
-     * Whether the stream has an audio track or not
+     * Whether the stream has an audio track or not. This attribute may change if the Publisher publishing the Stream
+     * calls [[Publisher.publishAudio]]. You can listen to event [[StreamPropertyChangedEvent]] to know when this happens
      */
     hasAudio: boolean;
 
@@ -61,16 +65,19 @@ export class Stream {
     streamId: string;
 
     /**
-     * `"CAMERA"` or `"SCREEN"`. undefined if stream is audio-only
+     * `"CAMERA"` or `"SCREEN"`. *undefined* if stream is audio-only
      */
     typeOfVideo?: string;
 
     /**
-     * Array of [[MediaManager]] objects displaying this stream in the DOM
+     * StreamManager object ([[Publisher]] or [[Subscriber]]) in charge of displaying this stream in the DOM
      */
-    mediaManagers: MediaManager[] = [];
+    streamManager: StreamManager;
 
-    private ee = new EventEmitter();
+    /**
+     * @hidden
+     */
+    ee = new EventEmitter();
 
     private webRtcPeer: any;
     private mediaStream: MediaStream;
@@ -140,29 +147,10 @@ export class Stream {
             this.hasVideo = this.isSendVideo();
         }
 
-        this.on('mediastream-updated', () => {
-            this.mediaManagers.forEach(mediaManager => {
-                if (!!mediaManager.video) {
-                    mediaManager.video.srcObject = this.mediaStream;
-                }
-            });
+        this.ee.on('mediastream-updated', () => {
+            this.streamManager.updateMediaStream(this.mediaStream);
             console.debug('Video srcObject [' + this.mediaStream + '] updated in stream [' + this.streamId + ']');
         });
-    }
-
-    /**
-     * Makes `video` element parameter display this Stream. This is useful when you are managing the video elements on your own
-     * (parameter `targetElement` of methods [[OpenVidu.initPublisher]] or [[Session.subscribe]] is set to *null* or *undefined*)
-     * or if you want to have multiple video elements display the same media stream
-     */
-    addVideoElement(video: HTMLVideoElement): MediaManager {
-        video.srcObject = this.mediaStream;
-        const mediaManager = new MediaManager(this);
-        mediaManager.video = video;
-        mediaManager.id = video.id;
-        mediaManager.isVideoElementCreated = true;
-        mediaManager.remote = !this.isLocal();
-        return mediaManager;
     }
 
 
@@ -240,7 +228,7 @@ export class Stream {
                         reject(error);
                     });
             } else {
-                this.ee.once('stream-ready-to-publish', streamEvent => {
+                this.ee.once('stream-ready-to-publish', () => {
                     this.publish()
                         .then(() => {
                             resolve();
@@ -280,6 +268,7 @@ export class Stream {
             this.mediaStream.getVideoTracks().forEach((track) => {
                 track.stop();
             });
+            delete this.mediaStream;
         }
         console.info((!!this.outboundStreamOpts ? 'Local ' : 'Remote ') + "MediaStream from 'Stream' with id [" + this.streamId + '] is now disposed');
     }
@@ -289,20 +278,6 @@ export class Stream {
      */
     displayMyRemote(): boolean {
         return this.isSubscribeToRemote;
-    }
-
-    /**
-     * @hidden
-     */
-    on(eventName: string, listener: any): void {
-        this.ee.on(eventName, listener);
-    }
-
-    /**
-     * @hidden
-     */
-    once(eventName: string, listener: any): void {
-        this.ee.once(eventName, listener);
     }
 
     /**
@@ -329,13 +304,6 @@ export class Stream {
     isSendScreen(): boolean {
         return (!!this.outboundStreamOpts &&
             this.outboundStreamOpts.publisherProperties.videoSource === 'screen');
-    }
-
-    /**
-     * @hidden
-     */
-    emitEvent(type: string, eventArray: any[]): void {
-        this.ee.emitEvent(type, eventArray);
     }
 
     /**
@@ -387,15 +355,6 @@ export class Stream {
         this.speechEvent = undefined;
     }
 
-    /**
-     * @hidden
-     */
-    removeVideos(): void {
-        this.mediaManagers.forEach(mediaManager => {
-            mediaManager.removeVideo();
-        });
-    }
-
 
     /* Private methods */
 
@@ -435,6 +394,7 @@ export class Stream {
                     } else {
                         this.processSdpAnswer(response.sdpAnswer)
                             .then(() => {
+                                this.isLocalStreamPublished = true;
                                 this.ee.emitEvent('stream-created-by-publisher');
                                 resolve();
                             })
@@ -461,7 +421,6 @@ export class Stream {
                     this.webRtcPeer.generateOffer(successCallback);
                 });
             }
-            this.isLocalStreamPublished = true;
         });
     }
 
@@ -524,27 +483,17 @@ export class Stream {
             const peerConnection = this.webRtcPeer.peerConnection;
             peerConnection.setRemoteDescription(answer, () => {
 
-                // Avoids to subscribe to your own stream remotely
-                // except when showMyRemote is true
+                // Update remote MediaStream object except when local stream
                 if (!this.isLocal() || this.displayMyRemote()) {
                     this.mediaStream = peerConnection.getRemoteStreams()[0];
                     console.debug('Peer remote stream', this.mediaStream);
 
                     if (!!this.mediaStream) {
-
                         this.ee.emitEvent('mediastream-updated');
-
                         if (!!this.mediaStream.getAudioTracks()[0] && this.session.speakingEventsEnabled) {
                             this.enableSpeakingEvents();
                         }
                     }
-
-                    this.mediaManagers.forEach(mediaManager => {
-                        mediaManager.addOnCanPlayEvent();
-                    });
-                    this.session.emitEvent('stream-subscribed', [{
-                        stream: this
-                    }]);
                 }
 
                 this.initWebRtcStats();

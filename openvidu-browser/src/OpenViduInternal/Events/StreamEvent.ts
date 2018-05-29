@@ -59,23 +59,21 @@ export class StreamEvent extends Event {
         if (this.type === 'streamDestroyed') {
 
             if (this.target instanceof Session) {
-
-                console.info("Calling default behaviour upon '" + this.type + "' event dispatched by 'Session'");
-
                 // Remote Stream
+                console.info("Calling default behaviour upon '" + this.type + "' event dispatched by 'Session'");
                 this.stream.disposeWebRtcPeer();
-                this.stream.disposeMediaStream();
-                this.stream.removeVideos();
-
             } else if (this.target instanceof Publisher) {
-
-                console.info("Calling default behaviour upon '" + this.type + "' event dispatched by 'Publisher'");
-
                 // Local Stream
-                this.stream.disposeMediaStream();
-                this.stream.removeVideos();
+                console.info("Calling default behaviour upon '" + this.type + "' event dispatched by 'Publisher'");
                 this.stream.isLocalStreamReadyToPublish = false;
             }
+
+            // Dispose the MediaStream local object
+            this.stream.disposeMediaStream();
+
+            // Remove from DOM all video elements associated to this Stream, if there's a StreamManager defined
+            // (method Session.subscribe must have been called)
+            if (this.stream.streamManager) this.stream.streamManager.removeAllVideos();
 
             // Delete stream from Session.remoteStreamsCreated map
             delete this.stream.session.remoteStreamsCreated[this.stream.streamId];

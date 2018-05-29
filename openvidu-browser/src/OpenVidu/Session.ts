@@ -19,6 +19,7 @@ import { Connection } from './Connection';
 import { OpenVidu } from './OpenVidu';
 import { Publisher } from './Publisher';
 import { Stream } from './Stream';
+import { StreamManager } from './StreamManager';
 import { Subscriber } from './Subscriber';
 import { EventDispatcher } from '../OpenViduInternal/Interfaces/Public/EventDispatcher';
 import { SignalOptions } from '../OpenViduInternal/Interfaces/Public/SignalOptions';
@@ -55,6 +56,11 @@ export class Session implements EventDispatcher {
      * Unique identifier of the Session. This is the same value you pass when calling [[OpenVidu.initSession]]
      */
     sessionId: string;
+
+    /**
+     * Collection of all StreamManagers of this Session ([[Publishers]] and [[Subscribers]])
+     */
+    streamManagers: StreamManager[] = [];
 
     // This map is only used to avoid race condition between 'joinRoom' response and 'onParticipantPublished' notification
     /**
@@ -177,9 +183,9 @@ export class Session implements EventDispatcher {
      *
      * #### Events dispatched
      *
-     * The [[Subscriber]] object will dispatch a `videoElementCreated` event once the HTML video element has been added to DOM (if _targetElement_ not null or undefined)
+     * The [[Subscriber]] object will dispatch a `videoElementCreated` event once the HTML video element has been added to DOM (if _targetElement_ not null or undefined, or if you call [[Subscriber.createVideoElement]])
      *
-     * The [[Subscriber]] object will dispatch a `videoPlaying` event once the remote video starts playing (only if `videoElementCreated` event has been previously dispatched)
+     * The [[Subscriber]] object will dispatch a `streamPlaying` event once the remote stream starts playing
      *
      * See [[VideoElementEvent]] to learn more.
      *
@@ -226,9 +232,9 @@ export class Session implements EventDispatcher {
                 }
             });
         const subscriber = new Subscriber(stream, targetElement, properties);
-        stream.mediaManagers.forEach(mediaManager => {
-            mediaManager.insertVideo(subscriber.targetElement, <VideoInsertMode>properties.insertMode);
-        });
+        if (!!subscriber.targetElement) {
+            stream.streamManager.createVideoElement(subscriber.targetElement, <VideoInsertMode>properties.insertMode);
+        }
         return subscriber;
     }
 
@@ -287,7 +293,7 @@ export class Session implements EventDispatcher {
                 subscriber.stream.disposeMediaStream();
             }
         );
-        subscriber.stream.removeVideos();
+        subscriber.stream.streamManager.removeAllVideos();
     }
 
 
@@ -298,8 +304,7 @@ export class Session implements EventDispatcher {
      *
      * The local [[Publisher]] object will dispatch a `streamCreated` event upon successful termination of this method. See [[StreamEvent]] to learn more.
      *
-     * The local [[Publisher]] object will dispatch a `remoteVideoPlaying` event only if [[Publisher.subscribeToRemote]] was called before this method, once the remote video starts playing.
-     * See [[VideoElementEvent]] to learn more.
+     * The local [[Publisher]] object will dispatch a `streamPlaying` once the media stream starts playing. See [[StreamManagerEvent]] to learn more.
      *
      * The [[Session]] object of every other participant connected to the session will dispatch a `streamCreated` event so they can subscribe to it. See [[StreamEvent]] to learn more.
      *
@@ -791,7 +796,7 @@ export class Session implements EventDispatcher {
             if (!!this.connection.stream) {
                 // Make Publisher object dispatch 'streamDestroyed' event (if there's a local stream)
                 this.connection.stream.disposeWebRtcPeer();
-                this.connection.stream.emitEvent('local-stream-destroyed-by-disconnect', [reason]);
+                this.connection.stream.ee.emitEvent('local-stream-destroyed-by-disconnect', [reason]);
             }
 
             if (!this.connection.disposed) {
