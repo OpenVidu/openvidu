@@ -330,6 +330,7 @@ export class Session implements EventDispatcher {
                 publisher.initialize()
                     .then(() => {
                         this.connection.addStream(publisher.stream);
+                        publisher.reestablishStreamPlayingEvent();
                         publisher.stream.publish()
                             .then(() => {
                                 resolve();

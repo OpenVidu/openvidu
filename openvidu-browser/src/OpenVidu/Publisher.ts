@@ -327,20 +327,20 @@ export class Publisher extends StreamManager {
                                                     track.stop();
                                                 });
                                                 if (error.constraint.toLowerCase() === 'deviceid') {
+                                                    errorName = OpenViduErrorName.INPUT_AUDIO_DEVICE_NOT_FOUND;
+                                                    errorMessage = "Audio input device with deviceId '" + (<ConstrainDOMStringParameters>(<MediaTrackConstraints>constraints.audio).deviceId!!).exact + "' not found";
+                                                } else {
+                                                    errorName = OpenViduErrorName.PUBLISHER_PROPERTIES_ERROR;
+                                                    errorMessage = "Audio input device doesn't support the value passed for constraint '" + error.constraint + "'";
+                                                }
+                                                errorCallback(new OpenViduError(errorName, errorMessage));
+                                            }).catch(e => {
+                                                if (error.constraint.toLowerCase() === 'deviceid') {
                                                     errorName = OpenViduErrorName.INPUT_VIDEO_DEVICE_NOT_FOUND;
                                                     errorMessage = "Video input device with deviceId '" + (<ConstrainDOMStringParameters>(<MediaTrackConstraints>constraints.video).deviceId!!).exact + "' not found";
                                                 } else {
                                                     errorName = OpenViduErrorName.PUBLISHER_PROPERTIES_ERROR;
                                                     errorMessage = "Video input device doesn't support the value passed for constraint '" + error.constraint + "'";
-                                                }
-                                                errorCallback(new OpenViduError(errorName, errorMessage));
-                                            }).catch(e => {
-                                                if (error.constraint.toLowerCase() === 'deviceid') {
-                                                    errorName = OpenViduErrorName.INPUT_AUDIO_DEVICE_NOT_FOUND;
-                                                    errorMessage = "Audio input device with deviceId '" + (<ConstrainDOMStringParameters>(<MediaTrackConstraints>constraints.video).deviceId!!).exact + "' not found";
-                                                } else {
-                                                    errorName = OpenViduErrorName.PUBLISHER_PROPERTIES_ERROR;
-                                                    errorMessage = "Audio input device doesn't support the value passed for constraint '" + error.constraint + "'";
                                                 }
                                                 errorCallback(new OpenViduError(errorName, errorMessage));
                                             });
@@ -373,6 +373,15 @@ export class Publisher extends StreamManager {
         this.ee.emitEvent(type, eventArray);
     }
 
+    /**
+     * @hidden
+     */
+    reestablishStreamPlayingEvent() {
+        if (this.ee.getListeners('streamPlaying').length > 0) {
+            this.addPlayEventToFirstVideo();
+        }
+    }
+
 
     /* Private methods */
 
@@ -388,44 +397,6 @@ export class Publisher extends StreamManager {
             // Permission dialog was shown and now is closed
             this.ee.emitEvent('accessDialogClosed', []);
         }
-    }
-
-
-    /* Private methods */
-
-    private userMediaHasVideo(callback): Promise<any> {
-        return new Promise<any>((resolve, reject) => {
-            // If the user is going to publish its screen there's a video source
-            if ((typeof this.properties.videoSource === 'string') && this.properties.videoSource === 'screen') {
-                resolve(true);
-            } else {
-                this.openvidu.getDevices()
-                    .then(devices => {
-                        resolve(
-                            !!(devices.filter((device) => {
-                                return device.kind === 'videoinput';
-                            })[0]));
-                    })
-                    .catch(error => {
-                        reject(error);
-                    });
-            }
-        });
-    }
-
-    private userMediaHasAudio(callback): Promise<any> {
-        return new Promise<any>((resolve, reject) => {
-            this.openvidu.getDevices()
-                .then(devices => {
-                    resolve(
-                        !!(devices.filter((device) => {
-                            return device.kind === 'audioinput';
-                        })[0]));
-                })
-                .catch(error => {
-                    reject(error);
-                });
-        });
     }
 
 }
