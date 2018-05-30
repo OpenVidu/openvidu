@@ -300,7 +300,7 @@ export class OpenVidu {
               let errorName: OpenViduErrorName;
               const errorMessage = error.toString();
               if (!(options.videoSource === 'screen')) {
-                errorName = (options.videoSource === false || options.videoSource === null) ? OpenViduErrorName.MICROPHONE_ACCESS_DENIED : OpenViduErrorName.CAMERA_ACCESS_DENIED;
+                errorName = OpenViduErrorName.DEVICE_ACCESS_DENIED;
               } else {
                 errorName = OpenViduErrorName.SCREEN_CAPTURE_DENIED;
               }

@@ -168,6 +168,12 @@ export class Stream {
      */
     setMediaStream(mediaStream: MediaStream): void {
         this.mediaStream = mediaStream;
+    }
+
+    /**
+     * @hidden
+     */
+    updateMediaStreamInVideos() {
         this.ee.emitEvent('mediastream-updated');
     }
 
@@ -188,8 +194,8 @@ export class Stream {
     /**
      * @hidden
      */
-    subscribeToMyRemote(): void {
-        this.isSubscribeToRemote = true;
+    subscribeToMyRemote(value: boolean): void {
+        this.isSubscribeToRemote = value;
     }
 
     /**
@@ -395,6 +401,11 @@ export class Stream {
                         this.processSdpAnswer(response.sdpAnswer)
                             .then(() => {
                                 this.isLocalStreamPublished = true;
+                                if (this.displayMyRemote()) {
+                                    // If remote now we can set the srcObject value of video elements
+                                    // 'streamPlaying' event will be triggered
+                                    this.updateMediaStreamInVideos();
+                                }
                                 this.ee.emitEvent('stream-created-by-publisher');
                                 resolve();
                             })
