@@ -29,6 +29,7 @@ import { OpenViduVideoComponent } from './ov-video.component';
 export class VideoComponent implements OnInit, OnDestroy {
 
     @Input() streamManager: StreamManager;
+    @Input() properties: any;
     @Input() OV: OpenVidu;
     @Input() eventCollection: any;
 
@@ -111,13 +112,19 @@ export class VideoComponent implements OnInit, OnDestroy {
                 });
             this.sendAudio = this.streamManager.stream.hasAudio;
             this.sendVideo = this.streamManager.stream.hasVideo;
+            this.audioMuted = !this.properties.publishAudio;
+            this.videoMuted = !this.properties.publishVideo;
+            this.pubSubAudioIcon = this.audioMuted ? 'mic_off' : 'mic';
+            this.pubSubVideoIcon = this.videoMuted ? 'videocam_off' : 'videocam';
             this.optionsVideo = this.streamManager.stream.typeOfVideo;
         }
 
         this.muteSubscribersSubscription = this.muteSubscribersService.mutedEvent$.subscribe(muteOrUnmute => {
-            this.streamManager.videos.forEach(v => {
-                v.video.muted = muteOrUnmute;
-            });
+            if (this.streamManager.remote) {
+                this.streamManager.videos.forEach(v => {
+                    v.video.muted = muteOrUnmute;
+                });
+            }
         });
     }
 
@@ -196,15 +203,15 @@ export class VideoComponent implements OnInit, OnDestroy {
 
     pubUnpubVideo() {
         const publisher: Publisher = <Publisher>this.streamManager;
-        publisher.publishVideo(this.videoMuted);
         this.videoMuted = !this.videoMuted;
+        publisher.publishVideo(!this.videoMuted);
         this.pubSubVideoIcon = this.videoMuted ? 'videocam_off' : 'videocam';
     }
 
     pubUnpubAudio() {
         const publisher: Publisher = <Publisher>this.streamManager;
-        publisher.publishAudio(this.audioMuted);
         this.audioMuted = !this.audioMuted;
+        publisher.publishAudio(!this.audioMuted);
         this.pubSubAudioIcon = this.audioMuted ? 'mic_off' : 'mic';
     }
 
@@ -233,8 +240,6 @@ export class VideoComponent implements OnInit, OnDestroy {
             screenChange = this.optionsVideo === 'SCREEN' ? true : false;
         }
 
-        this.audioMuted = false;
-        this.videoMuted = false;
         this.unpublished = false;
 
         const otherPublisher = this.OV.initPublisher(
@@ -242,8 +247,8 @@ export class VideoComponent implements OnInit, OnDestroy {
             {
                 audioSource: this.sendAudioChange ? undefined : false,
                 videoSource: this.sendVideoChange ? (screenChange ? 'screen' : undefined) : false,
-                publishAudio: (!this.publisherChanged) ? true : !this.audioMuted,
-                publishVideo: (!this.publisherChanged) ? true : !this.videoMuted,
+                publishAudio: !this.audioMuted,
+                publishVideo: !this.videoMuted,
                 resolution: '640x480',
                 frameRate: 30,
                 insertMode: VideoInsertMode.APPEND
@@ -272,13 +277,17 @@ export class VideoComponent implements OnInit, OnDestroy {
             streamDestroyed: !this.eventCollection.streamDestroyed
         });
 
+        const oldPublisher = <Publisher>this.streamManager;
+        if (oldPublisher.isSubscribedToRemote) {
+            otherPublisher.subscribeToRemote(true);
+        }
+
         otherPublisher.once('accessAllowed', () => {
             if (!this.unpublished) {
-                this.streamManager.stream.session.unpublish(<Publisher>this.streamManager);
-                this.streamManager = otherPublisher;
+                this.streamManager.stream.session.unpublish(oldPublisher);
             }
             this.streamManager.stream.session.publish(otherPublisher).then(() => {
-                console.log(this.streamManager);
+                this.streamManager = otherPublisher;
             });
         });
 
@@ -455,7 +464,7 @@ export class VideoComponent implements OnInit, OnDestroy {
                     this.showButtons = true;
                     this.updateEventListInParent.emit({
                         event: 'streamPlaying',
-                        content: this.streamManager.stream.streamId
+                        content: pub.stream.streamId
                     });
                 });
             }

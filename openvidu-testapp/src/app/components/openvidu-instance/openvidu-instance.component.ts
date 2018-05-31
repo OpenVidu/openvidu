@@ -7,7 +7,8 @@ import { Subscription } from 'rxjs/Subscription';
 import {
   OpenVidu, Session, Subscriber, Publisher, Stream, Connection,
   LocalRecorder, VideoInsertMode, StreamEvent, ConnectionEvent,
-  SessionDisconnectedEvent, SignalEvent, RecordingEvent, VideoElementEvent, PublisherSpeakingEvent, StreamManagerEvent, StreamManager
+  SessionDisconnectedEvent, SignalEvent, RecordingEvent, VideoElementEvent,
+  PublisherSpeakingEvent, StreamManagerEvent, StreamManager, PublisherProperties
 } from 'openvidu-browser';
 import {
   OpenVidu as OpenViduAPI,
@@ -17,21 +18,19 @@ import {
   RecordingMode,
   RecordingLayout
 } from 'openvidu-node-client';
-import { MatDialog, MatDialogRef } from '@angular/material';
+import { MatDialog, MatDialogRef, MAT_CHECKBOX_CLICK_ACTION } from '@angular/material';
 import { ExtensionDialogComponent } from '../dialogs/extension-dialog.component';
 import { LocalRecordingDialogComponent } from '../dialogs/local-recording-dialog.component';
 import { TestFeedService } from '../../services/test-feed.service';
-import { MuteSubscribersService } from '../../services/mute-subscribers.service';
 import { EventsDialogComponent } from '../dialogs/events-dialog.component';
 import { SessionPropertiesDialogComponent } from '../dialogs/session-properties-dialog.component';
 import { SessionApiDialogComponent } from '../dialogs/session-api-dialog.component';
+import { PublisherPropertiesDialogComponent } from '../dialogs/publisher-properties-dialog.component';
 
 
 export interface SessionConf {
   subscribeTo: boolean;
   publishTo: boolean;
-  sendAudio: boolean;
-  sendVideo: boolean;
   startSession: boolean;
 }
 
@@ -43,7 +42,10 @@ export interface OpenViduEvent {
 @Component({
   selector: 'app-openvidu-instance',
   templateUrl: './openvidu-instance.component.html',
-  styleUrls: ['./openvidu-instance.component.css']
+  styleUrls: ['./openvidu-instance.component.css'],
+  providers: [
+    { provide: MAT_CHECKBOX_CLICK_ACTION, useValue: 'noop' }
+  ]
 })
 export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
 
@@ -66,29 +68,9 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   // Session options
   subscribeTo;
   publishTo;
-  sendAudio;
-  sendVideo;
-  activeAudio = true;
-  activeVideo = true;
   sendVideoRadio = true;
   subscribeToRemote = false;
   optionsVideo = 'video';
-
-  // Form 'check' and 'disable' attributes
-  checkSubscribeTo = true;
-  checkPublishTo = true;
-  checkSendAudio = true;
-  checkSendVideo = true;
-  checkActiveAudio = true;
-  checkActiveVideo = true;
-  checkRadioVideo = true;
-  checkRadioScreen = false;
-  disablePublishTo = false;
-  disableSendAudio = false;
-  disableSendVideo = false;
-  disableActiveAudio = false;
-  disableActiveVideo = false;
-  disableRadioButtons = false;
 
   // OpenVidu Browser objects
   OV: OpenVidu;
@@ -104,6 +86,18 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     defaultCustomLayout: '',
     customSessionId: ''
   };
+
+  publisherProperties: PublisherProperties = {
+    audioSource: undefined,
+    videoSource: undefined,
+    frameRate: 30,
+    resolution: '640x480',
+    mirror: true,
+    publishAudio: true,
+    publishVideo: true
+  };
+
+  publisherPropertiesAux: PublisherProperties;
 
   sessionEvents = {
     connectionCreated: true,
@@ -139,14 +133,11 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   ngOnInit() {
     this.subscribeTo = this.sessionConf.subscribeTo;
     this.publishTo = this.sessionConf.publishTo;
-    this.sendAudio = this.sessionConf.sendAudio;
-    this.sendVideo = this.sessionConf.sendVideo;
-
+    this.publisherPropertiesAux = Object.assign({}, this.publisherProperties);
     if (!this.publishTo) {
       this.publishTo = !this.publishTo;
       this.togglePublishTo();
     }
-
     if (this.sessionConf.startSession) {
       this.joinSession();
     }
@@ -242,76 +233,49 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
 
   togglePublishTo(): void {
     this.publishTo = !this.publishTo;
-
-    this.sendAudio = this.publishTo;
-    this.sendVideo = this.publishTo;
-    this.activeAudio = this.publishTo;
-    this.activeVideo = this.publishTo;
-
-    this.checkPublishTo = this.publishTo;
-    this.checkSendAudio = this.publishTo;
-    this.checkSendVideo = this.publishTo;
-    this.checkActiveAudio = this.publishTo;
-    this.checkActiveVideo = this.publishTo;
-
     if (this.publishTo) {
-      this.checkRadioVideo = true;
-      this.optionsVideo = 'video';
+      this.publisherProperties = this.publisherPropertiesAux;
     } else {
-      this.checkRadioVideo = false;
-      this.optionsVideo = '';
+      this.publisherPropertiesAux = Object.assign({}, this.publisherProperties);
+      this.publisherProperties.publishAudio = false;
+      this.publisherProperties.publishVideo = false;
+      this.publisherProperties.audioSource = false;
+      this.publisherProperties.videoSource = false;
     }
 
-    this.disableSendAudio = !this.publishTo;
-    this.disableSendVideo = !this.publishTo;
-    this.disableActiveAudio = !this.publishTo;
-    this.disableActiveVideo = !this.publishTo;
-    this.disableRadioButtons = !this.publishTo;
+    if (this.publishTo) {
+      this.optionsVideo = 'video';
+    } else {
+      this.optionsVideo = '';
+    }
 
     this.subscribeToRemote = false;
   }
 
   toggleSendAudio(): void {
-    this.sendAudio = !this.sendAudio;
-
-    this.activeAudio = this.sendAudio;
-    this.checkActiveAudio = this.sendAudio;
-    this.disableActiveAudio = !this.sendAudio;
-
-    if (!this.sendAudio && !this.sendVideo && this.publishTo) {
-      this.togglePublishTo();
+    if (this.publisherProperties.audioSource === false) {
+      this.publisherProperties.audioSource = this.publisherPropertiesAux.audioSource;
+    } else {
+      this.publisherPropertiesAux.audioSource = this.publisherProperties.audioSource;
+      this.publisherProperties.audioSource = false;
     }
   }
 
   toggleSendVideo(): void {
-    this.sendVideo = !this.sendVideo;
-
-    this.activeVideo = this.sendVideo;
-
-    this.checkActiveVideo = this.sendVideo;
-    this.checkRadioScreen = false;
-    if (this.sendVideo) {
-      this.checkRadioVideo = true;
-      this.optionsVideo = 'video';
+    if (this.publisherProperties.videoSource === false) {
+      this.publisherProperties.videoSource = this.publisherPropertiesAux.videoSource;
     } else {
-      this.checkRadioVideo = false;
-      this.optionsVideo = '';
-    }
-
-    this.disableActiveVideo = !this.sendVideo;
-    this.disableRadioButtons = !this.sendVideo;
-
-    if (!this.sendAudio && !this.sendVideo && this.publishTo) {
-      this.togglePublishTo();
+      this.publisherPropertiesAux.videoSource = this.publisherProperties.videoSource;
+      this.publisherProperties.videoSource = false;
     }
   }
 
   toggleActiveAudio(): void {
-    this.activeAudio = !this.activeAudio;
+    this.publisherProperties.publishAudio = !this.publisherProperties.publishAudio;
   }
 
   toggleActiveVideo(): void {
-    this.activeVideo = !this.activeVideo;
+    this.publisherProperties.publishVideo = !this.publisherProperties.publishVideo;
   }
 
   sendMessage(): void {
@@ -438,14 +402,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   syncInitPublisher() {
     this.publisher = this.OV.initPublisher(
       undefined,
-      {
-        audioSource: this.sendAudio ? undefined : false,
-        videoSource: this.sendVideo ? (this.optionsVideo === 'screen' ? 'screen' : undefined) : false,
-        publishAudio: this.activeAudio,
-        publishVideo: this.activeVideo,
-        resolution: '640x480',
-        frameRate: 30
-      },
+      this.publisherProperties,
       (err) => {
         if (err) {
           console.warn(err);
@@ -465,46 +422,6 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     this.session.publish(this.publisher);
-  }
-
-  asyncInitPublisher() {
-    this.OV.initPublisherAsync(
-      'local-vid-' + this.session.connection.connectionId,
-      {
-        audioSource: this.sendAudio ? undefined : false,
-        videoSource: this.sendVideo ? (this.optionsVideo === 'screen' ? 'screen' : undefined) : false,
-        publishAudio: this.activeAudio,
-        publishVideo: this.activeVideo,
-        resolution: '640x480',
-        frameRate: 30,
-        insertMode: VideoInsertMode.APPEND
-      })
-      .then(publisher => {
-        this.publisher = publisher;
-        if (this.subscribeToRemote) {
-          this.publisher.subscribeToRemote();
-        }
-        this.session.publish(this.publisher)
-          .then(() => {
-            console.log(this.publisher);
-          })
-          .catch(e => {
-            console.error(e);
-          });
-      })
-      .catch(err => {
-        if (err) {
-          console.error(err);
-          this.openviduError = err;
-          if (err.name === 'SCREEN_EXTENSION_NOT_INSTALLED') {
-            this.dialog.open(ExtensionDialogComponent, {
-              data: { url: err.message },
-              disableClose: true,
-              width: '250px'
-            });
-          }
-        }
-      });
   }
 
   syncSubscribe(session: Session, event) {
@@ -575,7 +492,8 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         openVidu: new OpenViduAPI(this.openviduUrl, this.openviduSecret),
         sessionId: !!this.session ? this.session.sessionId : this.sessionName
       },
-      width: '280px'
+      width: '280px',
+      disableClose: true
     });
 
     dialogRef.afterClosed().subscribe((result: string) => {
@@ -630,6 +548,22 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     });
   }
 
+  openPublisherPropertiesDialog() {
+    const dialogRef = this.dialog.open(PublisherPropertiesDialogComponent, {
+      data: this.publisherProperties,
+      width: '300px',
+      disableClose: true
+    });
+
+    dialogRef.afterClosed().subscribe((result: PublisherProperties) => {
+      if (!!result) {
+        this.publisherProperties = result;
+        this.optionsVideo = this.publisherProperties.videoSource === 'screen' ? 'screen' : 'video';
+      }
+      document.getElementById('publisher-settings-btn-' + this.index).classList.remove('cdk-program-focused');
+    });
+  }
+
   getToken(): Promise<string> {
     const OV_NodeClient = new OpenViduAPI(this.openviduUrl, this.openviduSecret);
     if (!this.sessionProperties.customSessionId) {
@@ -650,6 +584,21 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       return sub.stream.streamId === newSubscriber.stream.streamId;
     })[0];
     this.subscribers[this.subscribers.indexOf(oldSubscriber)] = newSubscriber;
+  }
+
+  updateOptionsVideo(change) {
+    if (change.value === 'screen') {
+      this.publisherPropertiesAux.videoSource = this.publisherProperties.videoSource;
+      this.publisherProperties.videoSource = 'screen';
+    } else {
+      this.publisherProperties.videoSource = this.publisherPropertiesAux.videoSource;
+    }
+  }
+
+  isVideo(): boolean {
+    return (this.publisherProperties.videoSource === undefined ||
+      typeof this.publisherProperties.videoSource === 'string' &&
+      this.publisherProperties.videoSource !== 'screen');
   }
 
 }

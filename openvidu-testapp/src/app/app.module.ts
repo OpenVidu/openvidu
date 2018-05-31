@@ -14,14 +14,15 @@ import { VideoComponent } from './components/video/video.component';
 import { OpenViduVideoComponent } from './components/video/ov-video.component';
 import { ExtensionDialogComponent } from './components/dialogs/extension-dialog.component';
 import { LocalRecordingDialogComponent } from './components/dialogs/local-recording-dialog.component';
+import { SessionPropertiesDialogComponent } from './components/dialogs/session-properties-dialog.component';
+import { SessionApiDialogComponent } from './components/dialogs/session-api-dialog.component';
+import { EventsDialogComponent } from './components/dialogs/events-dialog.component';
+import { PublisherPropertiesDialogComponent } from './components/dialogs/publisher-properties-dialog.component';
 
 import { OpenviduRestService } from './services/openvidu-rest.service';
 import { OpenviduParamsService } from './services/openvidu-params.service';
 import { TestFeedService } from './services/test-feed.service';
 import { MuteSubscribersService } from './services/mute-subscribers.service';
-import { SessionPropertiesDialogComponent } from './components/dialogs/session-properties-dialog.component';
-import { SessionApiDialogComponent } from './components/dialogs/session-api-dialog.component';
-import { EventsDialogComponent } from './components/dialogs/events-dialog.component';
 
 @NgModule({
   declarations: [
@@ -35,7 +36,8 @@ import { EventsDialogComponent } from './components/dialogs/events-dialog.compon
     SessionPropertiesDialogComponent,
     SessionApiDialogComponent,
     EventsDialogComponent,
-    LocalRecordingDialogComponent
+    LocalRecordingDialogComponent,
+    PublisherPropertiesDialogComponent
   ],
   imports: [
     BrowserModule,
@@ -56,7 +58,8 @@ import { EventsDialogComponent } from './components/dialogs/events-dialog.compon
     SessionPropertiesDialogComponent,
     SessionApiDialogComponent,
     EventsDialogComponent,
-    LocalRecordingDialogComponent
+    LocalRecordingDialogComponent,
+    PublisherPropertiesDialogComponent
   ],
   bootstrap: [AppComponent]
 })

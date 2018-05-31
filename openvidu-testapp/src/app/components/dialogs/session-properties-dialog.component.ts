@@ -48,9 +48,9 @@ export class SessionPropertiesDialogComponent {
 
     sessionProperties: SessionProperties;
 
-    private mediaMode = MediaMode;
-    private recordingMode = RecordingMode;
-    private defaultRecordingLayout = RecordingLayout;
+    mediaMode = MediaMode;
+    recordingMode = RecordingMode;
+    defaultRecordingLayout = RecordingLayout;
 
     constructor(public dialogRef: MatDialogRef<SessionPropertiesDialogComponent>,
         @Inject(MAT_DIALOG_DATA) public data: SessionProperties) {

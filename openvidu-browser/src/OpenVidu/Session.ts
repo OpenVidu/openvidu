@@ -795,9 +795,12 @@ export class Session implements EventDispatcher {
             }
 
             if (!!this.connection.stream) {
-                // Make Publisher object dispatch 'streamDestroyed' event (if there's a local stream)
+                // Dispose Publisher's  local stream
                 this.connection.stream.disposeWebRtcPeer();
-                this.connection.stream.ee.emitEvent('local-stream-destroyed-by-disconnect', [reason]);
+                if (this.connection.stream.isLocalStreamPublished) {
+                    // Make Publisher object dispatch 'streamDestroyed' event if the Stream was published
+                    this.connection.stream.ee.emitEvent('local-stream-destroyed-by-disconnect', [reason]);
+                }
             }
 
             if (!this.connection.disposed) {

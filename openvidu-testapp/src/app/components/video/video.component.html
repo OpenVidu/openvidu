@@ -10,10 +10,10 @@
             <button class="video-btn pub-btn" title="Publish/Unpublish" (click)="pubUnpub()">
                 <mat-icon aria-label="Publish or unpublish" class="mat-icon material-icons" role="img" aria-hidden="true">{{pubSubIcon}}</mat-icon>
             </button>
-            <button class="video-btn pub-video-btn" title="Publish/Unpublish Video" (click)="pubUnpubVideo()">
+            <button *ngIf="streamManager.stream.hasVideo" class="video-btn pub-video-btn" title="Publish/Unpublish Video" (click)="pubUnpubVideo()">
                 <mat-icon aria-label="Publish or unpublish video" class="mat-icon material-icons" role="img" aria-hidden="true">{{pubSubVideoIcon}}</mat-icon>
             </button>
-            <button class="video-btn pub-audio-btn" title="Publish/Unpublish Audio" (click)="pubUnpubAudio()">
+            <button *ngIf="streamManager.stream.hasAudio" class="video-btn pub-audio-btn" title="Publish/Unpublish Audio" (click)="pubUnpubAudio()">
                 <mat-icon aria-label="Publish or unpublish audio" class="mat-icon material-icons" role="img" aria-hidden="true">{{pubSubAudioIcon}}</mat-icon>
             </button>
             <button class="video-btn change-publisher-btn" title="Change publisher" (click)="changePub()">
@@ -41,10 +41,10 @@
             <button class="video-btn sub-btn" title="Subscribe/Unsubscribe" (click)="subUnsub()">
                 <mat-icon aria-label="Subscribe or unsubscribe" class="mat-icon material-icons" role="img" aria-hidden="true">{{pubSubIcon}}</mat-icon>
             </button>
-            <button *ngIf="!!pubSubVideoIcon" class="video-btn sub-video-btn" title="Subscribe/Unsubscribe Video" (click)="subUnsubVideo()">
+            <button *ngIf="streamManager.stream.hasVideo && !!pubSubVideoIcon" class="video-btn sub-video-btn" title="Subscribe/Unsubscribe Video" (click)="subUnsubVideo()">
                 <mat-icon aria-label="Subscribe or unsubscribe video" class="mat-icon material-icons" role="img" aria-hidden="true">{{pubSubVideoIcon}}</mat-icon>
             </button>
-            <button *ngIf="!!pubSubAudioIcon" class="video-btn sub-audio-btn" title="Subscribe/Unsubscribe Audio" (click)="subUnsubAudio()">
+            <button *ngIf="streamManager.stream.hasAudio && !!pubSubAudioIcon" class="video-btn sub-audio-btn" title="Subscribe/Unsubscribe Audio" (click)="subUnsubAudio()">
                 <mat-icon aria-label="Subscribe or unsubscribe audio" class="mat-icon material-icons" role="img" aria-hidden="true">{{pubSubAudioIcon}}</mat-icon>
             </button>
             <button *ngIf="!!recordIcon" class="video-btn rec-btn" title="Record" (click)="record()">

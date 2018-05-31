@@ -50,8 +50,6 @@ export class TestSessionsComponent implements OnInit, OnDestroy {
     this.users.push({
       subscribeTo: true,
       publishTo: true,
-      sendAudio: true,
-      sendVideo: true,
       startSession: false
     });
   }
@@ -69,8 +67,6 @@ export class TestSessionsComponent implements OnInit, OnDestroy {
       this.users.push({
         subscribeTo: true,
         publishTo: true,
-        sendAudio: true,
-        sendVideo: true,
         startSession: this.autoJoin
       });
     }
@@ -81,8 +77,6 @@ export class TestSessionsComponent implements OnInit, OnDestroy {
       this.users.push({
         subscribeTo: true,
         publishTo: false,
-        sendAudio: false,
-        sendVideo: false,
         startSession: this.autoJoin
       });
     }
@@ -93,8 +87,6 @@ export class TestSessionsComponent implements OnInit, OnDestroy {
       this.users.push({
         subscribeTo: false,
         publishTo: true,
-        sendAudio: true,
-        sendVideo: true,
         startSession: this.autoJoin
       });
     }
