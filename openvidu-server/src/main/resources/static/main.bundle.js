@@ -528,12 +528,13 @@ var OpenVidu = /** @class */ (function () {
      *
      * The [[Publisher]] object will dispatch an `accessAllowed` or `accessDenied` event once it has been granted access to the requested input devices or not.
      *
-     * The [[Publisher]] object will dispatch a `videoElementCreated` event once a HTML video element has been added to DOM (if `targetElement` not *null* or *undefined*)
+     * The [[Publisher]] object will dispatch a `videoElementCreated` event once a HTML video element has been added to DOM (only if you
+     * [let OpenVidu take care of the video players](/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players)). See [[VideoElementEvent]] to learn more.
      *
-     * The [[Publisher]] object will dispatch a `streamPlaying` event once the local streams starts playing
+     * The [[Publisher]] object will dispatch a `streamPlaying` event once the local streams starts playing. See [[StreamManagerEvent]] to learn more.
      *
-     * @param targetElement  HTML DOM element (or its `id` attribute) in which the video element of the Publisher will be inserted (see [[PublisherProperties.insertMode]]). If *null* or *undefined* no default video will be created for this Publisher
-     * (you can always call method [[Publisher.addVideoElement]] or [[Publisher.createVideoElement]] to manage the video elements on your own)
+     * @param targetElement  HTML DOM element (or its `id` attribute) in which the video element of the Publisher will be inserted (see [[PublisherProperties.insertMode]]). If *null* or *undefined* no default video will be created for this Publisher.
+     * You can always call method [[Publisher.addVideoElement]] or [[Publisher.createVideoElement]] to manage the video elements on your own (see [Manage video players](/docs/how-do-i/manage-videos) section)
      * @param completionHandler `error` parameter is null if `initPublisher` succeeds, and is defined if it fails.
      *                          `completionHandler` function is called before the Publisher dispatches an `accessAllowed` or an `accessDenied` event
      */
@@ -1411,7 +1412,7 @@ var Session = /** @class */ (function () {
      */
     function Session(openvidu) {
         /**
-         * Collection of all StreamManagers of this Session ([[Publishers]] and [[Subscribers]])
+         * Collection of all StreamManagers of this Session ([[Publisher]] and [[Subscriber]])
          */
         this.streamManagers = [];
         // This map is only used to avoid race condition between 'joinRoom' response and 'onParticipantPublished' notification
@@ -1486,21 +1487,23 @@ var Session = /** @class */ (function () {
      *
      * The [[Session]] object of the local participant will dispatch a `sessionDisconnected` event.
      * This event will automatically unsubscribe the leaving participant from every Subscriber object of the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks)
-     * and also deletes any HTML video element associated to each Subscriber (only if it was created by OpenVidu Browser, either by passing a valid parameter as `targetElement` in method [[subscribe]] or
-     * by calling [[Subscriber.createVideoElement]]).
-     * Call `event.preventDefault()` to avoid this behaviour and take care of disposing and cleaning all the Subscriber objects yourself. See [[SessionDisconnectedEvent]] to learn more.
+     * and also deletes any HTML video element associated to each Subscriber (only those [created by OpenVidu Browser](/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players)).
+     * For every video removed, each Subscriber object will dispatch a `videoElementDestroyed` event.
+     * Call `event.preventDefault()` uppon event `sessionDisconnected` to avoid this behaviour and take care of disposing and cleaning all the Subscriber objects yourself.
+     * See [[SessionDisconnectedEvent]] and [[VideoElementEvent]] to learn more to learn more.
      *
      * The [[Publisher]] object of the local participant will dispatch a `streamDestroyed` event if there is a [[Publisher]] object publishing to the session.
-     * This event will automatically stop all media tracks and delete any HTML video element associated to it (only if it was created by OpenVidu Browser, either by passing a valid parameter as `targetElement`
-     * in method [[OpenVidu.initPublisher]] or by calling [[Publisher.createVideoElement]]).
-     * Call `event.preventDefault()` if you want to clean the Publisher object on your own or re-publish it in a different Session (to do so it is a mandatory requirement to call `Session.unpublish()`
-     * or/and `Session.disconnect()` in the previous session). See [[StreamEvent]] to learn more.
+     * This event will automatically stop all media tracks and delete any HTML video element associated to it (only those [created by OpenVidu Browser](/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players)).
+     * For every video removed, the Publisher object will dispatch a `videoElementDestroyed` event.
+     * Call `event.preventDefault()` uppon event `streamDestroyed` if you want to clean the Publisher object on your own or re-publish it in a different Session (to do so it is a mandatory requirement to call `Session.unpublish()`
+     * or/and `Session.disconnect()` in the previous session). See [[StreamEvent]] and [[VideoElementEvent]] to learn more.
      *
      * The [[Session]] object of every other participant connected to the session will dispatch a `streamDestroyed` event if the disconnected participant was publishing.
      * This event will automatically unsubscribe the Subscriber object from the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks)
-     * and and also deletes any HTML video element associated to that Subscriber (only if it was created by OpenVidu Browser, either by passing a valid parameter as `targetElement` in method [[subscribe]] or
-     * by calling [[Subscriber.createVideoElement]]).
-     * Call `event.preventDefault()` to avoid this default behaviour and take care of disposing and cleaning the Subscriber object yourself. See [[StreamEvent]] to learn more.
+     * and also deletes any HTML video element associated to that Subscriber (only those [created by OpenVidu Browser](/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players)).
+     * For every video removed, the Subscriber object will dispatch a `videoElementDestroyed` event.
+     * Call `event.preventDefault()` uppon event `streamDestroyed` to avoid this default behaviour and take care of disposing and cleaning the Subscriber object yourself.
+     * See [[StreamEvent]] and [[VideoElementEvent]] to learn more.
      *
      * The [[Session]] object of every other participant connected to the session will dispatch a `connectionDestroyed` event in any case. See [[ConnectionEvent]] to learn more.
      */
@@ -1512,15 +1515,14 @@ var Session = /** @class */ (function () {
      *
      * #### Events dispatched
      *
-     * The [[Subscriber]] object will dispatch a `videoElementCreated` event once the HTML video element has been added to DOM (if `targetElement` not *null* or *undefined*)
+     * The [[Subscriber]] object will dispatch a `videoElementCreated` event once the HTML video element has been added to DOM (only if you
+     * [let OpenVidu take care of the video players](/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players)). See [[VideoElementEvent]] to learn more.
      *
-     * The [[Subscriber]] object will dispatch a `streamPlaying` event once the remote stream starts playing
-     *
-     * See [[VideoElementEvent]] to learn more.
+     * The [[Subscriber]] object will dispatch a `streamPlaying` event once the remote stream starts playing. See [[StreamManagerEvent]] to learn more.
      *
      * @param stream Stream object to subscribe to
-     * @param targetElement HTML DOM element (or its `id` attribute) in which the video element of the Subscriber will be inserted (see [[SubscriberProperties.insertMode]]). If null or undefined no default video will be created for this Subscriber
-     * (you can always call method [[Stream.addVideoElement]] for the object [[Subscriber.stream]] to manage the video elements on your own)
+     * @param targetElement HTML DOM element (or its `id` attribute) in which the video element of the Subscriber will be inserted (see [[SubscriberProperties.insertMode]]). If *null* or *undefined* no default video will be created for this Subscriber.
+     * You can always call method [[Subscriber.addVideoElement]] or [[Subscriber.createVideoElement]] to manage the video elements on your own (see [Manage video players](/docs/how-do-i/manage-videos) section)
      * @param completionHandler `error` parameter is null if `subscribe` succeeds, and is defined if it fails.
      */
     Session.prototype.subscribe = function (stream, targetElement, param3, param4) {
@@ -1585,11 +1587,14 @@ var Session = /** @class */ (function () {
         });
     };
     /**
-     * Unsubscribes from `subscriber`, automatically removing its HTML video element.
+     * Unsubscribes from `subscriber`, automatically removing its associated HTML video elements.
      *
      * #### Events dispatched
      *
-     * The [[Subscriber]] object will dispatch a `videoElementDestroyed` event (only if it previously dispatched a `videoElementCreated` event). See [[VideoElementEvent]] to learn more
+     * The [[Subscriber]] object will dispatch a `videoElementDestroyed` event for each video associated to it that was removed from DOM.
+     * Only videos [created by OpenVidu Browser](/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players)) will be automatically removed
+     *
+     * See [[VideoElementEvent]] to learn more
      */
     Session.prototype.unsubscribe = function (subscriber) {
         var connectionId = subscriber.stream.connection.connectionId;
@@ -1607,7 +1612,7 @@ var Session = /** @class */ (function () {
         subscriber.stream.streamManager.removeAllVideos();
     };
     /**
-     * Publishes the participant's audio-video stream contained in `publisher` object to the session
+     * Publishes to the Session the Publisher object
      *
      * #### Events dispatched
      *
@@ -1617,7 +1622,7 @@ var Session = /** @class */ (function () {
      *
      * The [[Session]] object of every other participant connected to the session will dispatch a `streamCreated` event so they can subscribe to it. See [[StreamEvent]] to learn more.
      *
-     * @returns A Promise (to which you can optionally subscribe to) that is resolved if the publisher was successfully published and rejected with an Error object if not
+     * @returns A Promise (to which you can optionally subscribe to) that is resolved only after the publisher was successfully published and rejected with an Error object if not
      */
     Session.prototype.publish = function (publisher) {
         var _this = this;
@@ -1653,19 +1658,23 @@ var Session = /** @class */ (function () {
         });
     };
     /**
-     * Unpublishes the participant's audio-video stream contained in `publisher` object.
+     * Unpublishes from the Session the Publisher object.
      *
      * #### Events dispatched
      *
      * The [[Publisher]] object of the local participant will dispatch a `streamDestroyed` event.
-     * This event will automatically stop all media tracks and delete the HTML video element associated to it.
-     * Call `event.preventDefault()` if you want clean the Publisher object yourself or re-publish it in a different Session.
+     * This event will automatically stop all media tracks and delete any HTML video element associated to this Publisher
+     * (only those videos [created by OpenVidu Browser](/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players)).
+     * For every video removed, the Publisher object will dispatch a `videoElementDestroyed` event.
+     * Call `event.preventDefault()` uppon event `streamDestroyed` if you want to clean the Publisher object on your own or re-publish it in a different Session.
      *
      * The [[Session]] object of every other participant connected to the session will dispatch a `streamDestroyed` event.
-     * This event will automatically unsubscribe the Subscriber object from the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks) and delete the HTML video element associated to it.
-     * Call `event.preventDefault()` to avoid this default behaviour and take care of disposing and cleaning the Subscriber object yourself.
+     * This event will automatically unsubscribe the Subscriber object from the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks) and
+     * delete any HTML video element associated to it (only those [created by OpenVidu Browser](/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players)).
+     * For every video removed, the Subscriber object will dispatch a `videoElementDestroyed` event.
+     * Call `event.preventDefault()` uppon event `streamDestroyed` to avoid this default behaviour and take care of disposing and cleaning the Subscriber object on your own.
      *
-     * See [[StreamEvent]] to learn more.
+     * See [[StreamEvent]] and [[VideoElementEvent]] to learn more.
      */
     Session.prototype.unpublish = function (publisher) {
         var stream = publisher.stream;
@@ -2210,7 +2219,7 @@ var kurentoUtils = __webpack_require__("../../../../openvidu-browser/lib/OpenVid
 /**
  * Represents each one of the media streams available in OpenVidu Server for certain session.
  * Each [[Publisher]] and [[Subscriber]] has an attribute of type Stream, as they give access
- * to at least one of them (sending and receiving it, respectively)
+ * to one of them (sending and receiving it, respectively)
  */
 var Stream = /** @class */ (function () {
     /**
@@ -2780,9 +2789,8 @@ var StreamManager = /** @class */ (function () {
         return this;
     };
     /**
-     * Makes `video` element parameter display this Stream. This is useful when you are managing the video elements on your own
-     * (parameter `targetElement` of methods [[OpenVidu.initPublisher]] or [[Session.subscribe]] is set to *null* or *undefined*)
-     * or if you want to have multiple video elements displaying the same media stream.
+     * Makes `video` element parameter display this [[stream]]. This is useful when you are
+     * [managing the video elements on your own](/docs/how-do-i/manage-videos/#you-take-care-of-the-video-players)
      *
      * Calling this method with a video already added to other Publisher/Subscriber will cause the video element to be
      * disassociated from that previous Publisher/Subscriber and to be associated to this one.
@@ -2820,11 +2828,11 @@ var StreamManager = /** @class */ (function () {
         return returnNumber;
     };
     /**
-     * Creates a new video element displaying this Stream. This allows you to have multiple video elements displaying the same media stream.
+     * Creates a new video element displaying this [[stream]]. This allows you to have multiple video elements displaying the same media stream.
      *
      * #### Events dispatched
      *
-     * The Publisher/Subscriber object will dispatch a `videoElementCreated` event once the HTML video element has been added to DOM
+     * The Publisher/Subscriber object will dispatch a `videoElementCreated` event once the HTML video element has been added to DOM. See [[VideoElementEvent]]
      *
      * @param targetElement HTML DOM element (or its `id` attribute) in which the video element of the Publisher/Subscriber will be inserted
      * @param insertMode How the video element will be inserted accordingly to `targetElemet`
@@ -3111,18 +3119,68 @@ exports.__esModule = true;
  */
 var OpenViduErrorName;
 (function (OpenViduErrorName) {
+    /**
+     * Browser is not supported by OpenVidu.
+     * Returned uppon unsuccessful [[Session.connect]]
+     */
     OpenViduErrorName["BROWSER_NOT_SUPPORTED"] = "BROWSER_NOT_SUPPORTED";
+    /**
+     * The user hasn't granted permissions to the required input device when the browser asked for them.
+     * Returned uppon unsuccessful [[OpenVidu.initPublisher]] or [[OpenVidu.getUserMedia]]
+     */
     OpenViduErrorName["DEVICE_ACCESS_DENIED"] = "DEVICE_ACCESS_DENIED";
+    /**
+     * The user hasn't granted permissions to capture some desktop screen when the browser asked for them.
+     * Returned uppon unsuccessful [[OpenVidu.initPublisher]] or [[OpenVidu.getUserMedia]]
+     */
     OpenViduErrorName["SCREEN_CAPTURE_DENIED"] = "SCREEN_CAPTURE_DENIED";
+    /**
+     * Browser does not support screen sharing.
+     * Returned uppon unsuccessful [[OpenVidu.initPublisher]]
+     */
     OpenViduErrorName["SCREEN_SHARING_NOT_SUPPORTED"] = "SCREEN_SHARING_NOT_SUPPORTED";
+    /**
+     * Only for Chrome, there's no screen sharing extension installed
+     * Returned uppon unsuccessful [[OpenVidu.initPublisher]]
+     */
     OpenViduErrorName["SCREEN_EXTENSION_NOT_INSTALLED"] = "SCREEN_EXTENSION_NOT_INSTALLED";
+    /**
+     * Only for Chrome, the screen sharing extension is installed but is disabled
+     * Returned uppon unsuccessful [[OpenVidu.initPublisher]]
+     */
     OpenViduErrorName["SCREEN_EXTENSION_DISABLED"] = "SCREEN_EXTENSION_DISABLED";
+    /**
+     * No video input device found with the provided deviceId (property [[PublisherProperties.videoSource]])
+     * Returned uppon unsuccessful [[OpenVidu.initPublisher]]
+     */
     OpenViduErrorName["INPUT_VIDEO_DEVICE_NOT_FOUND"] = "INPUT_VIDEO_DEVICE_NOT_FOUND";
+    /**
+     * No audio input device found with the provided deviceId (property [[PublisherProperties.audioSource]])
+     * Returned uppon unsuccessful [[OpenVidu.initPublisher]]
+     */
     OpenViduErrorName["INPUT_AUDIO_DEVICE_NOT_FOUND"] = "INPUT_AUDIO_DEVICE_NOT_FOUND";
+    /**
+     * Method [[OpenVidu.initPublisher]] has been called with properties `videoSource` and `audioSource` of
+     * [[PublisherProperties]] parameter both set to *false* or *null*
+     */
     OpenViduErrorName["NO_INPUT_SOURCE_SET"] = "NO_INPUT_SOURCE_SET";
+    /**
+     * Some media property of [[PublisherProperties]] such as `frameRate` or `resolution` is not supported
+     * by the input devices (whenever it is possible they are automatically adjusted to the most similar value).
+     * Returned uppon unsuccessful [[OpenVidu.initPublisher]]
+     */
     OpenViduErrorName["PUBLISHER_PROPERTIES_ERROR"] = "PUBLISHER_PROPERTIES_ERROR";
+    /**
+     * _Not in use yet_
+     */
     OpenViduErrorName["OPENVIDU_PERMISSION_DENIED"] = "OPENVIDU_PERMISSION_DENIED";
+    /**
+     * _Not in use yet_
+     */
     OpenViduErrorName["OPENVIDU_NOT_CONNECTED"] = "OPENVIDU_NOT_CONNECTED";
+    /**
+     * _Not in use yet_
+     */
     OpenViduErrorName["GENERIC_ERROR"] = "GENERIC_ERROR";
 })(OpenViduErrorName = exports.OpenViduErrorName || (exports.OpenViduErrorName = {}));
 /**
@@ -3296,10 +3354,17 @@ var Event = /** @class */ (function () {
     };
     /**
      * Prevents the default behaviour of the event. The following events have a default behaviour:
-     * - `sessionDisconnected`: automatically unsubscribes the leaving participant from every Subscriber object of the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks)
-     * and also deletes the HTML video element associated to it.
-     * - `streamDestroyed`: if dispatched by a [[Publisher]] (_you_ have unpublished), automatically stops all media tracks and deletes the HTML video element associated to the stream. If dispatched by [[Session]],
-     * (_other user_ has unpublished), automatically unsubscribes the proper Subscriber object from the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks) and deletes the HTML video element associated to it.
+     *
+     * - `sessionDisconnected`: dispatched by [[Session]] object, automatically unsubscribes the leaving participant from every Subscriber object of the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks)
+     * and also deletes any HTML video element associated to each Subscriber (only those created by OpenVidu Browser, either by passing a valid parameter as `targetElement` in method [[Session.subscribe]] or
+     * by calling [[Subscriber.createVideoElement]]). For every video removed, each Subscriber object will also dispatch a `videoElementDestroyed` event.
+     *
+     * - `streamDestroyed`:
+     *   - If dispatched by a [[Publisher]] (*you* have unpublished): automatically stops all media tracks and deletes any HTML video element associated to it (only those created by OpenVidu Browser, either by passing a valid parameter as `targetElement`
+     * in method [[OpenVidu.initPublisher]] or by calling [[Publisher.createVideoElement]]). For every video removed, the Publisher object will also dispatch a `videoElementDestroyed` event.
+     *   - If dispatched by [[Session]] (*other user* has unpublished): automatically unsubscribes the proper Subscriber object from the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks)
+     * and also deletes any HTML video element associated to that Subscriber (only those created by OpenVidu Browser, either by passing a valid parameter as `targetElement` in method [[Session.subscribe]] or
+     * by calling [[Subscriber.createVideoElement]]). For every video removed, the Subscriber object will also dispatch a `videoElementDestroyed` event.
      */
     Event.prototype.preventDefault = function () {
         // tslint:disable-next-line:no-empty
@@ -3764,8 +3829,9 @@ exports.__esModule = true;
 var Event_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/Event.js");
 /**
  * Defines the following events:
- * - `videoElementCreated`: dispatched by [[Publisher]] and [[Subscriber]] whenever a new HTML video element has been inserted into DOM
- * - `videoElementDestroyed`: dispatched by [[Publisher]] and [[Subscriber]] whenever an HTML video element has been removed from DOM
+ * - `videoElementCreated`: dispatched by [[Publisher]] and [[Subscriber]] whenever a new HTML video element has been inserted into DOM by OpenVidu Browser library. See
+ * [Manage video players](/docs/how-do-i/manage-videos) section.
+ * - `videoElementDestroyed`: dispatched by [[Publisher]] and [[Subscriber]] whenever an HTML video element has been removed from DOM by OpenVidu Browser library.
  */
 var VideoElementEvent = /** @class */ (function (_super) {
     __extends(VideoElementEvent, _super);
