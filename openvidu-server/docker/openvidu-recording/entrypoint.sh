@@ -11,8 +11,8 @@ fi
 URL=${URL:-https://www.youtube.com/watch?v=JMuzlEQz3uo}
 RESOLUTION=${RESOLUTION:-1920x1080}
 FRAMERATE=${FRAMERATE:-24}
-VIDEO_SIZE=$RESOLUTION
-ARRAY=(${VIDEO_SIZE//x/ })
+WIDTH="$(cut -d'x' -f1 <<< $RESOLUTION)"
+HEIGHT="$(cut -d'x' -f2 <<< $RESOLUTION)"
 VIDEO_ID=${VIDEO_ID:-video}
 VIDEO_NAME=${VIDEO_NAME:-video}
 VIDEO_FORMAT=${VIDEO_FORMAT:-mp4}
@@ -21,8 +21,8 @@ RECORDING_JSON="${RECORDING_JSON}"
 export URL
 export RESOLUTION
 export FRAMERATE
-export VIDEO_SIZE
-export ARRAY
+export WIDTH
+export HEIGHT
 export VIDEO_ID
 export VIDEO_NAME
 export VIDEO_FORMAT
@@ -83,7 +83,7 @@ touch xvfb.log
 chmod 777 xvfb.log
 
 function3() {
-	xvfb-run --server-num=${DISPLAY_NUM} --server-args="-ac -screen 0 ${RESOLUTION}x24 -noreset" google-chrome -no-sandbox -test-type -disable-infobars -window-size=${ARRAY[0]},${ARRAY[1]} -no-first-run -ignore-certificate-errors --kiosk $URL &> xvfb.log &
+	xvfb-run --server-num=${DISPLAY_NUM} --server-args="-ac -screen 0 ${RESOLUTION}x24 -noreset" google-chrome -start-maximized -no-sandbox -test-type -disable-infobars -window-size=$WIDTH,$HEIGHT -no-first-run -ignore-certificate-errors --kiosk $URL &> xvfb.log &
 }
 export -f function3
 if [[ $CURRENT_UID != $USER_ID ]]; then

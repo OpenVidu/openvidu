@@ -1,7 +1,7 @@
 <div id="layout" class="bounds">
-  <div *ngFor="let s of streams" class="OT_root OT_publisher custom-class">
+  <div *ngFor="let s of subscribers" class="OT_root OT_publisher custom-class">
     <div class="OT_widget-container">
-      <video [id]="'native-video-' + s.streamId" autoplay="true" [srcObject]="s.getMediaStream()" (playing)="onVideoPlaying($event)"></video>
+      <app-ov-video [subscriber]="s"></app-ov-video>
     </div>
   </div>
 </div>
