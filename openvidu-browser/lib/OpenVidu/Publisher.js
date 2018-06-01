@@ -15,49 +15,50 @@
  * limitations under the License.
  *
  */
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 exports.__esModule = true;
+var Session_1 = require("./Session");
 var Stream_1 = require("./Stream");
+var StreamManager_1 = require("./StreamManager");
 var StreamEvent_1 = require("../OpenViduInternal/Events/StreamEvent");
 var VideoElementEvent_1 = require("../OpenViduInternal/Events/VideoElementEvent");
 var OpenViduError_1 = require("../OpenViduInternal/Enums/OpenViduError");
-var EventEmitter = require("wolfy87-eventemitter");
 /**
  * Packs local media streams. Participants can publish it to a session. Initialized with [[OpenVidu.initPublisher]] method
  */
-var Publisher = /** @class */ (function () {
+var Publisher = /** @class */ (function (_super) {
+    __extends(Publisher, _super);
     /**
      * @hidden
      */
-    function Publisher(targetElement, properties, openvidu) {
-        var _this = this;
-        this.openvidu = openvidu;
+    function Publisher(targEl, properties, openvidu) {
+        var _this = _super.call(this, new Stream_1.Stream((!!openvidu.session) ? openvidu.session : new Session_1.Session(openvidu), { publisherProperties: properties, mediaConstraints: {} }), targEl) || this;
+        _this.openvidu = openvidu;
         /**
          * Whether the Publisher has been granted access to the requested input devices or not
          */
-        this.accessAllowed = false;
-        this.ee = new EventEmitter();
-        this.properties = properties;
-        this.stream = new Stream_1.Stream(this.session, { publisherProperties: properties, mediaConstraints: {} });
-        this.stream.on('video-removed', function (element) {
-            _this.ee.emitEvent('videoElementDestroyed', [new VideoElementEvent_1.VideoElementEvent(element, _this, 'videoElementDestroyed')]);
-        });
-        this.stream.on('stream-destroyed-by-disconnect', function (reason) {
+        _this.accessAllowed = false;
+        /**
+         * Whether you have called [[Publisher.subscribeToRemote]] with value `true` or `false` (*false* by default)
+         */
+        _this.isSubscribedToRemote = false;
+        _this.accessDenied = false;
+        _this.properties = properties;
+        _this.stream.ee.on('local-stream-destroyed-by-disconnect', function (reason) {
             var streamEvent = new StreamEvent_1.StreamEvent(true, _this, 'streamDestroyed', _this.stream, reason);
             _this.ee.emitEvent('streamDestroyed', [streamEvent]);
             streamEvent.callDefaultBehaviour();
         });
-        if (typeof targetElement === 'string') {
-            var e = document.getElementById(targetElement);
-            if (!!e) {
-                this.element = e;
-            }
-        }
-        else if (targetElement instanceof HTMLElement) {
-            this.element = targetElement;
-        }
-        if (!this.element) {
-            console.warn("The provided 'targetElement' for the Publisher couldn't be resolved to any HTML element: " + targetElement);
-        }
+        return _this;
     }
     /**
      * Publish or unpublish the audio stream (if available). Calling this method twice in a row passing same value will have no effect
@@ -76,83 +77,45 @@ var Publisher = /** @class */ (function () {
         console.info("'Publisher' has " + (value ? 'published' : 'unpublished') + ' its video stream');
     };
     /**
-     * Call this method before [[Session.publish]] to subscribe to your Publisher's stream as any other user would do. The local video will be automatically replaced by the remote video
+     * Call this method before [[Session.publish]] to subscribe to your Publisher's remote stream instead of using the local stream, as any other user would do.
      */
-    Publisher.prototype.subscribeToRemote = function () {
-        this.stream.subscribeToMyRemote();
+    Publisher.prototype.subscribeToRemote = function (value) {
+        value = (value !== undefined) ? value : true;
+        this.isSubscribedToRemote = value;
+        this.stream.subscribeToMyRemote(value);
     };
     /**
      * See [[EventDispatcher.on]]
      */
     Publisher.prototype.on = function (type, handler) {
         var _this = this;
-        this.ee.on(type, function (event) {
-            if (event) {
-                console.info("Event '" + type + "' triggered by 'Publisher'", event);
-            }
-            else {
-                console.info("Event '" + type + "' triggered by 'Publisher'");
-            }
-            handler(event);
-        });
+        _super.prototype.on.call(this, type, handler);
         if (type === 'streamCreated') {
-            if (!!this.stream && this.stream.isPublisherPublished) {
+            if (!!this.stream && this.stream.isLocalStreamPublished) {
                 this.ee.emitEvent('streamCreated', [new StreamEvent_1.StreamEvent(false, this, 'streamCreated', this.stream, '')]);
             }
             else {
-                this.stream.on('stream-created-by-publisher', function () {
+                this.stream.ee.on('stream-created-by-publisher', function () {
                     _this.ee.emitEvent('streamCreated', [new StreamEvent_1.StreamEvent(false, _this, 'streamCreated', _this.stream, '')]);
                 });
             }
         }
-        if (type === 'videoElementCreated') {
-            if (!!this.stream && this.stream.isVideoELementCreated) {
-                this.ee.emitEvent('videoElementCreated', [new VideoElementEvent_1.VideoElementEvent(this.stream.getVideoElement(), this, 'videoElementCreated')]);
-            }
-            else {
-                this.stream.on('video-element-created-by-stream', function (element) {
-                    _this.id = element.id;
-                    _this.ee.emitEvent('videoElementCreated', [new VideoElementEvent_1.VideoElementEvent(element.element, _this, 'videoElementCreated')]);
-                });
-            }
-        }
-        if (type === 'videoPlaying') {
-            var video = this.stream.getVideoElement();
-            if (!this.stream.displayMyRemote() && video &&
-                video.currentTime > 0 &&
-                video.paused === false &&
-                video.ended === false &&
-                video.readyState === 4) {
-                this.ee.emitEvent('videoPlaying', [new VideoElementEvent_1.VideoElementEvent(this.stream.getVideoElement(), this, 'videoPlaying')]);
-            }
-            else {
-                this.stream.on('video-is-playing', function (element) {
-                    _this.ee.emitEvent('videoPlaying', [new VideoElementEvent_1.VideoElementEvent(element.element, _this, 'videoPlaying')]);
-                });
-            }
-        }
         if (type === 'remoteVideoPlaying') {
-            var video = this.stream.getVideoElement();
-            if (this.stream.displayMyRemote() && video &&
-                video.currentTime > 0 &&
-                video.paused === false &&
-                video.ended === false &&
-                video.readyState === 4) {
-                this.ee.emitEvent('remoteVideoPlaying', [new VideoElementEvent_1.VideoElementEvent(this.stream.getVideoElement(), this, 'remoteVideoPlaying')]);
-            }
-            else {
-                this.stream.on('remote-video-is-playing', function (element) {
-                    _this.ee.emitEvent('remoteVideoPlaying', [new VideoElementEvent_1.VideoElementEvent(element.element, _this, 'remoteVideoPlaying')]);
-                });
+            if (this.stream.displayMyRemote() && this.videos[0] && this.videos[0].video &&
+                this.videos[0].video.currentTime > 0 &&
+                this.videos[0].video.paused === false &&
+                this.videos[0].video.ended === false &&
+                this.videos[0].video.readyState === 4) {
+                this.ee.emitEvent('remoteVideoPlaying', [new VideoElementEvent_1.VideoElementEvent(this.videos[0].video, this, 'remoteVideoPlaying')]);
             }
         }
         if (type === 'accessAllowed') {
-            if (this.stream.accessIsAllowed) {
+            if (this.accessAllowed) {
                 this.ee.emitEvent('accessAllowed');
             }
         }
         if (type === 'accessDenied') {
-            if (this.stream.accessIsDenied) {
+            if (this.accessDenied) {
                 this.ee.emitEvent('accessDenied');
             }
         }
@@ -163,87 +126,35 @@ var Publisher = /** @class */ (function () {
      */
     Publisher.prototype.once = function (type, handler) {
         var _this = this;
-        this.ee.once(type, function (event) {
-            if (event) {
-                console.info("Event '" + type + "' triggered by 'Publisher'", event);
-            }
-            else {
-                console.info("Event '" + type + "' triggered by 'Publisher'");
-            }
-            handler(event);
-        });
+        _super.prototype.once.call(this, type, handler);
         if (type === 'streamCreated') {
-            if (!!this.stream && this.stream.isPublisherPublished) {
+            if (!!this.stream && this.stream.isLocalStreamPublished) {
                 this.ee.emitEvent('streamCreated', [new StreamEvent_1.StreamEvent(false, this, 'streamCreated', this.stream, '')]);
             }
             else {
-                this.stream.once('stream-created-by-publisher', function () {
+                this.stream.ee.once('stream-created-by-publisher', function () {
                     _this.ee.emitEvent('streamCreated', [new StreamEvent_1.StreamEvent(false, _this, 'streamCreated', _this.stream, '')]);
                 });
             }
         }
-        if (type === 'videoElementCreated') {
-            if (!!this.stream && this.stream.isVideoELementCreated) {
-                this.ee.emitEvent('videoElementCreated', [new VideoElementEvent_1.VideoElementEvent(this.stream.getVideoElement(), this, 'videoElementCreated')]);
-            }
-            else {
-                this.stream.once('video-element-created-by-stream', function (element) {
-                    _this.id = element.id;
-                    _this.ee.emitEvent('videoElementCreated', [new VideoElementEvent_1.VideoElementEvent(element.element, _this, 'videoElementCreated')]);
-                });
-            }
-        }
-        if (type === 'videoPlaying') {
-            var video = this.stream.getVideoElement();
-            if (!this.stream.displayMyRemote() && video &&
-                video.currentTime > 0 &&
-                video.paused === false &&
-                video.ended === false &&
-                video.readyState === 4) {
-                this.ee.emitEvent('videoPlaying', [new VideoElementEvent_1.VideoElementEvent(this.stream.getVideoElement(), this, 'videoPlaying')]);
-            }
-            else {
-                this.stream.once('video-is-playing', function (element) {
-                    _this.ee.emitEvent('videoPlaying', [new VideoElementEvent_1.VideoElementEvent(element.element, _this, 'videoPlaying')]);
-                });
-            }
-        }
         if (type === 'remoteVideoPlaying') {
-            var video = this.stream.getVideoElement();
-            if (this.stream.displayMyRemote() && video &&
-                video.currentTime > 0 &&
-                video.paused === false &&
-                video.ended === false &&
-                video.readyState === 4) {
-                this.ee.emitEvent('remoteVideoPlaying', [new VideoElementEvent_1.VideoElementEvent(this.stream.getVideoElement(), this, 'remoteVideoPlaying')]);
-            }
-            else {
-                this.stream.once('remote-video-is-playing', function (element) {
-                    _this.ee.emitEvent('remoteVideoPlaying', [new VideoElementEvent_1.VideoElementEvent(element.element, _this, 'remoteVideoPlaying')]);
-                });
+            if (this.stream.displayMyRemote() && this.videos[0] && this.videos[0].video &&
+                this.videos[0].video.currentTime > 0 &&
+                this.videos[0].video.paused === false &&
+                this.videos[0].video.ended === false &&
+                this.videos[0].video.readyState === 4) {
+                this.ee.emitEvent('remoteVideoPlaying', [new VideoElementEvent_1.VideoElementEvent(this.videos[0].video, this, 'remoteVideoPlaying')]);
             }
         }
         if (type === 'accessAllowed') {
-            if (this.stream.accessIsAllowed) {
+            if (this.accessAllowed) {
                 this.ee.emitEvent('accessAllowed');
             }
         }
         if (type === 'accessDenied') {
-            if (this.stream.accessIsDenied) {
+            if (this.accessDenied) {
                 this.ee.emitEvent('accessDenied');
             }
-        }
-        return this;
-    };
-    /**
-     * See [[EventDispatcher.off]]
-     */
-    Publisher.prototype.off = function (type, handler) {
-        if (!handler) {
-            this.ee.removeAllListeners(type);
-        }
-        else {
-            this.ee.off(type, handler);
         }
         return this;
     };
@@ -255,13 +166,13 @@ var Publisher = /** @class */ (function () {
         var _this = this;
         return new Promise(function (resolve, reject) {
             var errorCallback = function (openViduError) {
-                _this.stream.accessIsDenied = true;
-                _this.stream.accessIsAllowed = false;
+                _this.accessDenied = true;
+                _this.accessAllowed = false;
                 reject(openViduError);
             };
             var successCallback = function (mediaStream) {
-                _this.stream.accessIsAllowed = true;
-                _this.stream.accessIsDenied = false;
+                _this.accessAllowed = true;
+                _this.accessDenied = false;
                 if (_this.openvidu.isMediaStreamTrack(_this.properties.audioSource)) {
                     mediaStream.removeTrack(mediaStream.getAudioTracks()[0]);
                     mediaStream.addTrack(_this.properties.audioSource);
@@ -278,7 +189,17 @@ var Publisher = /** @class */ (function () {
                     mediaStream.getVideoTracks()[0].enabled = !!_this.stream.outboundStreamOpts.publisherProperties.publishVideo;
                 }
                 _this.stream.setMediaStream(mediaStream);
-                _this.stream.insertVideo(_this.element, _this.properties.insertMode);
+                if (!_this.stream.displayMyRemote()) {
+                    // When we are subscribed to our remote we don't still set the MediaStream object in the video elements to
+                    // avoid early 'streamPlaying' event
+                    _this.stream.updateMediaStreamInVideos();
+                }
+                _this.stream.isLocalStreamReadyToPublish = true;
+                _this.stream.ee.emitEvent('stream-ready-to-publish', []);
+                if (!!_this.firstVideoElement) {
+                    _this.createVideoElement(_this.firstVideoElement.targetElement, _this.properties.insertMode);
+                }
+                delete _this.firstVideoElement;
                 resolve();
             };
             _this.openvidu.generateMediaConstraints(_this.properties)
@@ -288,119 +209,117 @@ var Publisher = /** @class */ (function () {
                     publisherProperties: _this.properties
                 };
                 _this.stream.setOutboundStreamOptions(outboundStreamOptions);
-                // Ask independently for audio stream and video stream. If the user asks for both of them and one is blocked, the method still
-                // success only with the allowed input. This is not the desierd behaviour: if any of them is blocked, access should be denied
                 var constraintsAux = {};
                 var timeForDialogEvent = 1250;
-                if (_this.stream.isSendVideo()) {
-                    constraintsAux.audio = false;
+                if (_this.stream.isSendVideo() || _this.stream.isSendAudio()) {
+                    var definedAudioConstraint_1 = ((constraints.audio === undefined) ? true : constraints.audio);
+                    constraintsAux.audio = _this.stream.isSendScreen() ? false : definedAudioConstraint_1;
                     constraintsAux.video = constraints.video;
                     var startTime_1 = Date.now();
                     _this.setPermissionDialogTimer(timeForDialogEvent);
                     navigator.mediaDevices.getUserMedia(constraintsAux)
-                        .then(function (videoOnlyStream) {
+                        .then(function (mediaStream) {
                         _this.clearPermissionDialogTimer(startTime_1, timeForDialogEvent);
-                        if (_this.stream.isSendAudio()) {
-                            constraintsAux.audio = (constraints.audio === undefined) ? true : constraints.audio;
+                        if (_this.stream.isSendScreen() && _this.stream.isSendAudio()) {
+                            // When getting desktop as user media audio constraint must be false. Now we can ask for it if required
+                            constraintsAux.audio = definedAudioConstraint_1;
                             constraintsAux.video = false;
                             startTime_1 = Date.now();
                             _this.setPermissionDialogTimer(timeForDialogEvent);
                             navigator.mediaDevices.getUserMedia(constraintsAux)
                                 .then(function (audioOnlyStream) {
                                 _this.clearPermissionDialogTimer(startTime_1, timeForDialogEvent);
-                                videoOnlyStream.addTrack(audioOnlyStream.getAudioTracks()[0]);
-                                successCallback(videoOnlyStream);
+                                mediaStream.addTrack(audioOnlyStream.getAudioTracks()[0]);
+                                successCallback(mediaStream);
                             })["catch"](function (error) {
                                 _this.clearPermissionDialogTimer(startTime_1, timeForDialogEvent);
-                                videoOnlyStream.getVideoTracks().forEach(function (track) {
-                                    track.stop();
-                                });
-                                var errorName;
-                                var errorMessage;
+                                var errorName, errorMessage;
                                 switch (error.name.toLowerCase()) {
                                     case 'notfounderror':
                                         errorName = OpenViduError_1.OpenViduErrorName.INPUT_AUDIO_DEVICE_NOT_FOUND;
                                         errorMessage = error.toString();
+                                        errorCallback(new OpenViduError_1.OpenViduError(errorName, errorMessage));
                                         break;
                                     case 'notallowederror':
-                                        errorName = OpenViduError_1.OpenViduErrorName.MICROPHONE_ACCESS_DENIED;
+                                        errorName = OpenViduError_1.OpenViduErrorName.DEVICE_ACCESS_DENIED;
                                         errorMessage = error.toString();
+                                        errorCallback(new OpenViduError_1.OpenViduError(errorName, errorMessage));
                                         break;
                                     case 'overconstrainederror':
                                         if (error.constraint.toLowerCase() === 'deviceid') {
                                             errorName = OpenViduError_1.OpenViduErrorName.INPUT_AUDIO_DEVICE_NOT_FOUND;
-                                            errorMessage = "Audio input device with deviceId '" + constraints.audio.deviceId.exact + "' not found";
+                                            errorMessage = "Audio input device with deviceId '" + constraints.video.deviceId.exact + "' not found";
                                         }
                                         else {
                                             errorName = OpenViduError_1.OpenViduErrorName.PUBLISHER_PROPERTIES_ERROR;
                                             errorMessage = "Audio input device doesn't support the value passed for constraint '" + error.constraint + "'";
                                         }
+                                        errorCallback(new OpenViduError_1.OpenViduError(errorName, errorMessage));
+                                        break;
                                 }
-                                errorCallback(new OpenViduError_1.OpenViduError(errorName, errorMessage));
                             });
                         }
                         else {
-                            successCallback(videoOnlyStream);
+                            successCallback(mediaStream);
                         }
                     })["catch"](function (error) {
                         _this.clearPermissionDialogTimer(startTime_1, timeForDialogEvent);
-                        var errorName;
-                        var errorMessage;
+                        var errorName, errorMessage;
                         switch (error.name.toLowerCase()) {
                             case 'notfounderror':
-                                errorName = OpenViduError_1.OpenViduErrorName.INPUT_VIDEO_DEVICE_NOT_FOUND;
-                                errorMessage = error.toString();
-                                break;
-                            case 'notallowederror':
-                                errorName = _this.stream.isSendScreen() ? OpenViduError_1.OpenViduErrorName.SCREEN_CAPTURE_DENIED : OpenViduError_1.OpenViduErrorName.CAMERA_ACCESS_DENIED;
-                                errorMessage = error.toString();
-                                break;
-                            case 'overconstrainederror':
-                                if (error.constraint.toLowerCase() === 'deviceid') {
-                                    errorName = OpenViduError_1.OpenViduErrorName.INPUT_VIDEO_DEVICE_NOT_FOUND;
-                                    errorMessage = "Video input device with deviceId '" + constraints.video.deviceId.exact + "' not found";
-                                }
-                                else {
-                                    errorName = OpenViduError_1.OpenViduErrorName.PUBLISHER_PROPERTIES_ERROR;
-                                    errorMessage = "Video input device doesn't support the value passed for constraint '" + error.constraint + "'";
-                                }
-                        }
-                        errorCallback(new OpenViduError_1.OpenViduError(errorName, errorMessage));
-                    });
-                }
-                else if (_this.stream.isSendAudio()) {
-                    constraintsAux.audio = (constraints.audio === undefined) ? true : constraints.audio;
-                    constraintsAux.video = false;
-                    var startTime_2 = Date.now();
-                    _this.setPermissionDialogTimer(timeForDialogEvent);
-                    navigator.mediaDevices.getUserMedia(constraints)
-                        .then(function (audioOnlyStream) {
-                        _this.clearPermissionDialogTimer(startTime_2, timeForDialogEvent);
-                        successCallback(audioOnlyStream);
-                    })["catch"](function (error) {
-                        _this.clearPermissionDialogTimer(startTime_2, timeForDialogEvent);
-                        var errorName;
-                        var errorMessage;
-                        switch (error.name.toLowerCase()) {
-                            case 'notfounderror':
-                                errorName = OpenViduError_1.OpenViduErrorName.INPUT_AUDIO_DEVICE_NOT_FOUND;
-                                errorMessage = error.toString();
-                                break;
-                            case 'notallowederror':
-                                errorName = OpenViduError_1.OpenViduErrorName.MICROPHONE_ACCESS_DENIED;
-                                errorMessage = error.toString();
-                                break;
-                            case 'overconstrainederror':
-                                if (error.constraint.toLowerCase() === 'deviceid') {
+                                navigator.mediaDevices.getUserMedia({
+                                    audio: false,
+                                    video: constraints.video
+                                })
+                                    .then(function (mediaStream) {
+                                    mediaStream.getVideoTracks().forEach(function (track) {
+                                        track.stop();
+                                    });
                                     errorName = OpenViduError_1.OpenViduErrorName.INPUT_AUDIO_DEVICE_NOT_FOUND;
-                                    errorMessage = "Audio input device with deviceId '" + constraints.audio.deviceId.exact + "' not found";
-                                }
-                                else {
-                                    errorName = OpenViduError_1.OpenViduErrorName.PUBLISHER_PROPERTIES_ERROR;
-                                    errorMessage = "Audio input device doesn't support the value passed for constraint '" + error.constraint + "'";
-                                }
+                                    errorMessage = error.toString();
+                                    errorCallback(new OpenViduError_1.OpenViduError(errorName, errorMessage));
+                                })["catch"](function (e) {
+                                    errorName = OpenViduError_1.OpenViduErrorName.INPUT_VIDEO_DEVICE_NOT_FOUND;
+                                    errorMessage = error.toString();
+                                    errorCallback(new OpenViduError_1.OpenViduError(errorName, errorMessage));
+                                });
+                                break;
+                            case 'notallowederror':
+                                errorName = _this.stream.isSendScreen() ? OpenViduError_1.OpenViduErrorName.SCREEN_CAPTURE_DENIED : OpenViduError_1.OpenViduErrorName.DEVICE_ACCESS_DENIED;
+                                errorMessage = error.toString();
+                                errorCallback(new OpenViduError_1.OpenViduError(errorName, errorMessage));
+                                break;
+                            case 'overconstrainederror':
+                                navigator.mediaDevices.getUserMedia({
+                                    audio: false,
+                                    video: constraints.video
+                                })
+                                    .then(function (mediaStream) {
+                                    mediaStream.getVideoTracks().forEach(function (track) {
+                                        track.stop();
+                                    });
+                                    if (error.constraint.toLowerCase() === 'deviceid') {
+                                        errorName = OpenViduError_1.OpenViduErrorName.INPUT_AUDIO_DEVICE_NOT_FOUND;
+                                        errorMessage = "Audio input device with deviceId '" + constraints.audio.deviceId.exact + "' not found";
+                                    }
+                                    else {
+                                        errorName = OpenViduError_1.OpenViduErrorName.PUBLISHER_PROPERTIES_ERROR;
+                                        errorMessage = "Audio input device doesn't support the value passed for constraint '" + error.constraint + "'";
+                                    }
+                                    errorCallback(new OpenViduError_1.OpenViduError(errorName, errorMessage));
+                                })["catch"](function (e) {
+                                    if (error.constraint.toLowerCase() === 'deviceid') {
+                                        errorName = OpenViduError_1.OpenViduErrorName.INPUT_VIDEO_DEVICE_NOT_FOUND;
+                                        errorMessage = "Video input device with deviceId '" + constraints.video.deviceId.exact + "' not found";
+                                    }
+                                    else {
+                                        errorName = OpenViduError_1.OpenViduErrorName.PUBLISHER_PROPERTIES_ERROR;
+                                        errorMessage = "Video input device doesn't support the value passed for constraint '" + error.constraint + "'";
+                                    }
+                                    errorCallback(new OpenViduError_1.OpenViduError(errorName, errorMessage));
+                                });
+                                break;
                         }
-                        errorCallback(new OpenViduError_1.OpenViduError(errorName, errorMessage));
                     });
                 }
                 else {
@@ -424,6 +343,14 @@ var Publisher = /** @class */ (function () {
     Publisher.prototype.emitEvent = function (type, eventArray) {
         this.ee.emitEvent(type, eventArray);
     };
+    /**
+     * @hidden
+     */
+    Publisher.prototype.reestablishStreamPlayingEvent = function () {
+        if (this.ee.getListeners('streamPlaying').length > 0) {
+            this.addPlayEventToFirstVideo();
+        }
+    };
     /* Private methods */
     Publisher.prototype.setPermissionDialogTimer = function (waitTime) {
         var _this = this;
@@ -438,40 +365,7 @@ var Publisher = /** @class */ (function () {
             this.ee.emitEvent('accessDialogClosed', []);
         }
     };
-    /* Private methods */
-    Publisher.prototype.userMediaHasVideo = function (callback) {
-        var _this = this;
-        return new Promise(function (resolve, reject) {
-            // If the user is going to publish its screen there's a video source
-            if ((typeof _this.properties.videoSource === 'string') && _this.properties.videoSource === 'screen') {
-                resolve(true);
-            }
-            else {
-                _this.openvidu.getDevices()
-                    .then(function (devices) {
-                    resolve(!!(devices.filter(function (device) {
-                        return device.kind === 'videoinput';
-                    })[0]));
-                })["catch"](function (error) {
-                    reject(error);
-                });
-            }
-        });
-    };
-    Publisher.prototype.userMediaHasAudio = function (callback) {
-        var _this = this;
-        return new Promise(function (resolve, reject) {
-            _this.openvidu.getDevices()
-                .then(function (devices) {
-                resolve(!!(devices.filter(function (device) {
-                    return device.kind === 'audioinput';
-                })[0]));
-            })["catch"](function (error) {
-                reject(error);
-            });
-        });
-    };
     return Publisher;
-}());
+}(StreamManager_1.StreamManager));
 exports.Publisher = Publisher;
 //# sourceMappingURL=Publisher.js.map

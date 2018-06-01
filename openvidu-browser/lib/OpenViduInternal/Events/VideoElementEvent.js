@@ -29,10 +29,9 @@ exports.__esModule = true;
 var Event_1 = require("./Event");
 /**
  * Defines the following events:
- * - `videoElementCreated`: dispatched by [[Publisher]] and [[Subscriber]]
- * - `videoElementDestroyed`: dispatched by [[Publisher]] and [[Subscriber]]
- * - `videoPlaying`: dispatched by [[Publisher]] and [[Subscriber]]
- * - `remoteVideoPlaying`: dispatched by [[Publisher]] if `Publisher.subscribeToRemote()` was called before `Session.publish(Publisher)`
+ * - `videoElementCreated`: dispatched by [[Publisher]] and [[Subscriber]] whenever a new HTML video element has been inserted into DOM by OpenVidu Browser library. See
+ * [Manage video players](/docs/how-do-i/manage-videos) section.
+ * - `videoElementDestroyed`: dispatched by [[Publisher]] and [[Subscriber]] whenever an HTML video element has been removed from DOM by OpenVidu Browser library.
  */
 var VideoElementEvent = /** @class */ (function (_super) {
     __extends(VideoElementEvent, _super);

@@ -15,33 +15,32 @@
  * limitations under the License.
  *
  */
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 exports.__esModule = true;
-var VideoElementEvent_1 = require("../OpenViduInternal/Events/VideoElementEvent");
-var EventEmitter = require("wolfy87-eventemitter");
+var StreamManager_1 = require("./StreamManager");
 /**
  * Packs remote media streams. Participants automatically receive them when others publish their streams. Initialized with [[Session.subscribe]] method
  */
-var Subscriber = /** @class */ (function () {
+var Subscriber = /** @class */ (function (_super) {
+    __extends(Subscriber, _super);
     /**
      * @hidden
      */
-    function Subscriber(stream, targetElement, properties) {
-        var _this = this;
-        this.ee = new EventEmitter();
-        this.stream = stream;
-        this.properties = properties;
-        if (typeof targetElement === 'string') {
-            var e = document.getElementById(targetElement);
-            if (!!e) {
-                this.element = e;
-            }
-        }
-        else if (targetElement instanceof HTMLElement) {
-            this.element = targetElement;
-        }
-        this.stream.once('video-removed', function (element) {
-            _this.ee.emitEvent('videoElementDestroyed', [new VideoElementEvent_1.VideoElementEvent(element, _this, 'videoElementDestroyed')]);
-        });
+    function Subscriber(stream, targEl, properties) {
+        var _this = _super.call(this, stream, targEl) || this;
+        _this.element = _this.targetElement;
+        _this.stream = stream;
+        _this.properties = properties;
+        return _this;
     }
     /**
      * Subscribe or unsubscribe from the audio stream (if available). Calling this method twice in a row passing same value will have no effect
@@ -65,103 +64,7 @@ var Subscriber = /** @class */ (function () {
         console.info("'Subscriber' has " + (value ? 'subscribed to' : 'unsubscribed from') + ' its video stream');
         return this;
     };
-    /**
-     * See [[EventDispatcher.on]]
-     */
-    Subscriber.prototype.on = function (type, handler) {
-        var _this = this;
-        this.ee.on(type, function (event) {
-            if (event) {
-                console.info("Event '" + type + "' triggered by 'Subscriber'", event);
-            }
-            else {
-                console.info("Event '" + type + "' triggered by 'Subscriber'");
-            }
-            handler(event);
-        });
-        if (type === 'videoElementCreated') {
-            if (this.stream.isVideoELementCreated) {
-                this.ee.emitEvent('videoElementCreated', [new VideoElementEvent_1.VideoElementEvent(this.stream.getVideoElement(), this, 'videoElementCreated')]);
-            }
-            else {
-                this.stream.once('video-element-created-by-stream', function (element) {
-                    _this.id = element.id;
-                    _this.ee.emitEvent('videoElementCreated', [new VideoElementEvent_1.VideoElementEvent(element, _this, 'videoElementCreated')]);
-                });
-            }
-        }
-        if (type === 'videoPlaying') {
-            var video = this.stream.getVideoElement();
-            if (!this.stream.displayMyRemote() && video &&
-                video.currentTime > 0 &&
-                video.paused === false &&
-                video.ended === false &&
-                video.readyState === 4) {
-                this.ee.emitEvent('videoPlaying', [new VideoElementEvent_1.VideoElementEvent(this.stream.getVideoElement(), this, 'videoPlaying')]);
-            }
-            else {
-                this.stream.once('video-is-playing', function (element) {
-                    _this.ee.emitEvent('videoPlaying', [new VideoElementEvent_1.VideoElementEvent(element.element, _this, 'videoPlaying')]);
-                });
-            }
-        }
-        return this;
-    };
-    /**
-     * See [[EventDispatcher.once]]
-     */
-    Subscriber.prototype.once = function (type, handler) {
-        var _this = this;
-        this.ee.once(type, function (event) {
-            if (event) {
-                console.info("Event '" + type + "' triggered once by 'Subscriber'", event);
-            }
-            else {
-                console.info("Event '" + type + "' triggered once by 'Subscriber'");
-            }
-            handler(event);
-        });
-        if (type === 'videoElementCreated') {
-            if (this.stream.isVideoELementCreated) {
-                this.ee.emitEvent('videoElementCreated', [new VideoElementEvent_1.VideoElementEvent(this.stream.getVideoElement(), this, 'videoElementCreated')]);
-            }
-            else {
-                this.stream.once('video-element-created-by-stream', function (element) {
-                    _this.id = element.id;
-                    _this.ee.emitEvent('videoElementCreated', [new VideoElementEvent_1.VideoElementEvent(element, _this, 'videoElementCreated')]);
-                });
-            }
-        }
-        if (type === 'videoPlaying') {
-            var video = this.stream.getVideoElement();
-            if (!this.stream.displayMyRemote() && video &&
-                video.currentTime > 0 &&
-                video.paused === false &&
-                video.ended === false &&
-                video.readyState === 4) {
-                this.ee.emitEvent('videoPlaying', [new VideoElementEvent_1.VideoElementEvent(this.stream.getVideoElement(), this, 'videoPlaying')]);
-            }
-            else {
-                this.stream.once('video-is-playing', function (element) {
-                    _this.ee.emitEvent('videoPlaying', [new VideoElementEvent_1.VideoElementEvent(element.element, _this, 'videoPlaying')]);
-                });
-            }
-        }
-        return this;
-    };
-    /**
-     * See [[EventDispatcher.off]]
-     */
-    Subscriber.prototype.off = function (type, handler) {
-        if (!handler) {
-            this.ee.removeAllListeners(type);
-        }
-        else {
-            this.ee.off(type, handler);
-        }
-        return this;
-    };
     return Subscriber;
-}());
+}(StreamManager_1.StreamManager));
 exports.Subscriber = Subscriber;
 //# sourceMappingURL=Subscriber.js.map

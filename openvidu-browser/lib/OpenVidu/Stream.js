@@ -20,10 +20,10 @@ var WebRtcStats_1 = require("../OpenViduInternal/WebRtcStats/WebRtcStats");
 var PublisherSpeakingEvent_1 = require("../OpenViduInternal/Events/PublisherSpeakingEvent");
 var EventEmitter = require("wolfy87-eventemitter");
 var kurentoUtils = require("../OpenViduInternal/KurentoUtils/kurento-utils-js");
-var VideoInsertMode_1 = require("../OpenViduInternal/Enums/VideoInsertMode");
 /**
- * Represents each one of the videos send and receive by a user in a session.
- * Therefore each [[Publisher]] and [[Subscriber]] has an attribute of type Stream
+ * Represents each one of the media streams available in OpenVidu Server for certain session.
+ * Each [[Publisher]] and [[Subscriber]] has an attribute of type Stream, as they give access
+ * to one of them (sending and receiving it, respectively)
  */
 var Stream = /** @class */ (function () {
     /**
@@ -31,28 +31,19 @@ var Stream = /** @class */ (function () {
      */
     function Stream(session, options) {
         var _this = this;
+        /**
+         * @hidden
+         */
         this.ee = new EventEmitter();
         this.isSubscribeToRemote = false;
         /**
          * @hidden
          */
-        this.isReadyToPublish = false;
+        this.isLocalStreamReadyToPublish = false;
         /**
          * @hidden
          */
-        this.isPublisherPublished = false;
-        /**
-         * @hidden
-         */
-        this.isVideoELementCreated = false;
-        /**
-         * @hidden
-         */
-        this.accessIsAllowed = false;
-        /**
-         * @hidden
-         */
-        this.accessIsDenied = false;
+        this.isLocalStreamPublished = false;
         this.session = session;
         if (options.hasOwnProperty('id')) {
             // InboundStreamOptions: stream belongs to a Subscriber
@@ -84,9 +75,8 @@ var Stream = /** @class */ (function () {
             this.hasAudio = this.isSendAudio();
             this.hasVideo = this.isSendVideo();
         }
-        this.on('mediastream-updated', function () {
-            if (_this.video)
-                _this.video.srcObject = _this.mediaStream;
+        this.ee.on('mediastream-updated', function () {
+            _this.streamManager.updateMediaStream(_this.mediaStream);
             console.debug('Video srcObject [' + _this.mediaStream + '] updated in stream [' + _this.streamId + ']');
         });
     }
@@ -102,6 +92,11 @@ var Stream = /** @class */ (function () {
      */
     Stream.prototype.setMediaStream = function (mediaStream) {
         this.mediaStream = mediaStream;
+    };
+    /**
+     * @hidden
+     */
+    Stream.prototype.updateMediaStreamInVideos = function () {
         this.ee.emitEvent('mediastream-updated');
     };
     /**
@@ -119,14 +114,8 @@ var Stream = /** @class */ (function () {
     /**
      * @hidden
      */
-    Stream.prototype.getVideoElement = function () {
-        return this.video;
-    };
-    /**
-     * @hidden
-     */
-    Stream.prototype.subscribeToMyRemote = function () {
-        this.isSubscribeToRemote = true;
+    Stream.prototype.subscribeToMyRemote = function (value) {
+        this.isSubscribeToRemote = value;
     };
     /**
      * @hidden
@@ -154,7 +143,7 @@ var Stream = /** @class */ (function () {
     Stream.prototype.publish = function () {
         var _this = this;
         return new Promise(function (resolve, reject) {
-            if (_this.isReadyToPublish) {
+            if (_this.isLocalStreamReadyToPublish) {
                 _this.initWebRtcPeerSend()
                     .then(function () {
                     resolve();
@@ -163,7 +152,7 @@ var Stream = /** @class */ (function () {
                 });
             }
             else {
-                _this.ee.once('stream-ready-to-publish', function (streamEvent) {
+                _this.ee.once('stream-ready-to-publish', function () {
                     _this.publish()
                         .then(function () {
                         resolve();
@@ -198,6 +187,7 @@ var Stream = /** @class */ (function () {
             this.mediaStream.getVideoTracks().forEach(function (track) {
                 track.stop();
             });
+            delete this.mediaStream;
         }
         console.info((!!this.outboundStreamOpts ? 'Local ' : 'Remote ') + "MediaStream from 'Stream' with id [" + this.streamId + '] is now disposed');
     };
@@ -206,69 +196,6 @@ var Stream = /** @class */ (function () {
      */
     Stream.prototype.displayMyRemote = function () {
         return this.isSubscribeToRemote;
-    };
-    /**
-     * @hidden
-     */
-    Stream.prototype.on = function (eventName, listener) {
-        this.ee.on(eventName, listener);
-    };
-    /**
-     * @hidden
-     */
-    Stream.prototype.once = function (eventName, listener) {
-        this.ee.once(eventName, listener);
-    };
-    /**
-     * @hidden
-     */
-    Stream.prototype.insertVideo = function (targetElement, insertMode) {
-        var _this = this;
-        if (!!targetElement) {
-            this.video = document.createElement('video');
-            this.video.id = (this.isLocal() ? 'local-' : 'remote-') + 'video-' + this.streamId;
-            this.video.autoplay = true;
-            this.video.controls = false;
-            this.video.srcObject = this.mediaStream;
-            if (this.isLocal() && !this.displayMyRemote()) {
-                this.video.muted = true;
-                if (this.outboundStreamOpts.publisherProperties.mirror) {
-                    this.mirrorVideo(this.video);
-                }
-                this.video.oncanplay = function () {
-                    console.info("Local 'Stream' with id [" + _this.streamId + '] video is now playing');
-                    _this.ee.emitEvent('video-is-playing', [{
-                            element: _this.video
-                        }]);
-                };
-            }
-            else {
-                this.video.title = this.streamId;
-            }
-            this.targetElement = targetElement;
-            this.parentId = targetElement.id;
-            var insMode = !!insertMode ? insertMode : VideoInsertMode_1.VideoInsertMode.APPEND;
-            this.insertElementWithMode(this.video, insMode);
-            this.ee.emitEvent('video-element-created-by-stream', [{
-                    element: this.video
-                }]);
-            this.isVideoELementCreated = true;
-        }
-        this.isReadyToPublish = true;
-        this.ee.emitEvent('stream-ready-to-publish');
-        return this.video;
-    };
-    /**
-     * @hidden
-     */
-    Stream.prototype.removeVideo = function () {
-        if (this.video) {
-            if (document.getElementById(this.parentId)) {
-                document.getElementById(this.parentId).removeChild(this.video);
-                this.ee.emitEvent('video-removed', [this.video]);
-            }
-            delete this.video;
-        }
     };
     /**
      * @hidden
@@ -292,12 +219,6 @@ var Stream = /** @class */ (function () {
     Stream.prototype.isSendScreen = function () {
         return (!!this.outboundStreamOpts &&
             this.outboundStreamOpts.publisherProperties.videoSource === 'screen');
-    };
-    /**
-     * @hidden
-     */
-    Stream.prototype.emitEvent = function (type, eventArray) {
-        this.ee.emitEvent(type, eventArray);
     };
     /**
      * @hidden
@@ -379,6 +300,12 @@ var Stream = /** @class */ (function () {
                     else {
                         _this.processSdpAnswer(response.sdpAnswer)
                             .then(function () {
+                            _this.isLocalStreamPublished = true;
+                            if (_this.displayMyRemote()) {
+                                // If remote now we can set the srcObject value of video elements
+                                // 'streamPlaying' event will be triggered
+                                _this.updateMediaStreamInVideos();
+                            }
                             _this.ee.emitEvent('stream-created-by-publisher');
                             resolve();
                         })["catch"](function (error) {
@@ -404,7 +331,6 @@ var Stream = /** @class */ (function () {
                     _this.webRtcPeer.generateOffer(successCallback);
                 });
             }
-            _this.isPublisherPublished = true;
         });
     };
     Stream.prototype.initWebRtcPeerReceive = function () {
@@ -460,8 +386,7 @@ var Stream = /** @class */ (function () {
             var streamId = _this.streamId;
             var peerConnection = _this.webRtcPeer.peerConnection;
             peerConnection.setRemoteDescription(answer, function () {
-                // Avoids to subscribe to your own stream remotely
-                // except when showMyRemote is true
+                // Update remote MediaStream object except when local stream
                 if (!_this.isLocal() || _this.displayMyRemote()) {
                     _this.mediaStream = peerConnection.getRemoteStreams()[0];
                     console.debug('Peer remote stream', _this.mediaStream);
@@ -471,28 +396,6 @@ var Stream = /** @class */ (function () {
                             _this.enableSpeakingEvents();
                         }
                     }
-                    if (!!_this.video) {
-                        // let thumbnailId = this.video.thumb;
-                        _this.video.oncanplay = function () {
-                            if (_this.isLocal() && _this.displayMyRemote()) {
-                                console.info("Your own remote 'Stream' with id [" + _this.streamId + '] video is now playing');
-                                _this.ee.emitEvent('remote-video-is-playing', [{
-                                        element: _this.video
-                                    }]);
-                            }
-                            else if (!_this.isLocal() && !_this.displayMyRemote()) {
-                                console.info("Remote 'Stream' with id [" + _this.streamId + '] video is now playing');
-                                _this.ee.emitEvent('video-is-playing', [{
-                                        element: _this.video
-                                    }]);
-                            }
-                            // show(thumbnailId);
-                            // this.hideSpinner(this.streamId);
-                        };
-                    }
-                    _this.session.emitEvent('stream-subscribed', [{
-                            stream: _this
-                        }]);
                 }
                 _this.initWebRtcStats();
                 resolve();
@@ -510,36 +413,12 @@ var Stream = /** @class */ (function () {
             this.webRtcStats.stopWebRtcStats();
         }
     };
+    /**
+     * @hidden
+     */
     Stream.prototype.isLocal = function () {
         // inbound options undefined and outbound options defined
         return (!this.inboundStreamOpts && !!this.outboundStreamOpts);
-    };
-    Stream.prototype.insertElementWithMode = function (element, insertMode) {
-        if (!!this.targetElement) {
-            switch (insertMode) {
-                case VideoInsertMode_1.VideoInsertMode.AFTER:
-                    this.targetElement.parentNode.insertBefore(element, this.targetElement.nextSibling);
-                    break;
-                case VideoInsertMode_1.VideoInsertMode.APPEND:
-                    this.targetElement.appendChild(element);
-                    break;
-                case VideoInsertMode_1.VideoInsertMode.BEFORE:
-                    this.targetElement.parentNode.insertBefore(element, this.targetElement);
-                    break;
-                case VideoInsertMode_1.VideoInsertMode.PREPEND:
-                    this.targetElement.insertBefore(element, this.targetElement.childNodes[0]);
-                    break;
-                case VideoInsertMode_1.VideoInsertMode.REPLACE:
-                    this.targetElement.parentNode.replaceChild(element, this.targetElement);
-                    break;
-                default:
-                    this.insertElementWithMode(element, VideoInsertMode_1.VideoInsertMode.APPEND);
-            }
-        }
-    };
-    Stream.prototype.mirrorVideo = function (video) {
-        video.style.transform = 'rotateY(180deg)';
-        video.style.webkitTransform = 'rotateY(180deg)';
     };
     return Stream;
 }());

@@ -29,7 +29,7 @@ var platform = require("platform");
 var EventEmitter = require("wolfy87-eventemitter");
 /**
  * Represents a video call. It can also be seen as a videoconference room where multiple users can connect.
- * Participants who publish their videos to a session will be seen by the rest of users connected to that specific session.
+ * Participants who publish their videos to a session can be seen by the rest of users connected to that specific session.
  * Initialized with [[OpenVidu.initSession]] method
  */
 var Session = /** @class */ (function () {
@@ -37,6 +37,10 @@ var Session = /** @class */ (function () {
      * @hidden
      */
     function Session(openvidu) {
+        /**
+         * Collection of all StreamManagers of this Session ([[Publisher]] and [[Subscriber]])
+         */
+        this.streamManagers = [];
         // This map is only used to avoid race condition between 'joinRoom' response and 'onParticipantPublished' notification
         /**
          * @hidden
@@ -70,14 +74,14 @@ var Session = /** @class */ (function () {
      * - Then one for each remote Connection previously connected to the Session, if any. Any other remote user connecting to the Session after you have
      * successfully connected will also dispatch a `connectionCreated` event when they do so.
      *
-     * The [[Session]] object of the local participant will also dispatch a `streamCreated` event for each remote active [[Publisher]] after dispatching all remote
-     * `connectionCreated` events.
+     * The [[Session]] object of the local participant will also dispatch a `streamCreated` event for each remote active [[Publisher]] that was already streaming
+     * when connecting, just after dispatching all remote `connectionCreated` events.
      *
      * The [[Session]] object of every other participant connected to the session will dispatch a `connectionCreated` event.
      *
      * See [[ConnectionEvent]] and [[StreamEvent]] to learn more.
      *
-     * @returns A Promise to which you must subscribe that is resolved if the recording successfully started and rejected with an Error object if not
+     * @returns A Promise to which you must subscribe that is resolved if the the connection to the Session was successful and rejected with an Error object if not
      *
      */
     Session.prototype.connect = function (token, metadata) {
@@ -109,18 +113,23 @@ var Session = /** @class */ (function () {
      *
      * The [[Session]] object of the local participant will dispatch a `sessionDisconnected` event.
      * This event will automatically unsubscribe the leaving participant from every Subscriber object of the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks)
-     * and also delete the HTML video element associated to it.
-     * Call `event.preventDefault()` to avoid this beahviour and take care of disposing and cleaning all the Subscriber objects yourself. See [[SessionDisconnectedEvent]] to learn more.
+     * and also deletes any HTML video element associated to each Subscriber (only those [created by OpenVidu Browser](/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players)).
+     * For every video removed, each Subscriber object will dispatch a `videoElementDestroyed` event.
+     * Call `event.preventDefault()` uppon event `sessionDisconnected` to avoid this behaviour and take care of disposing and cleaning all the Subscriber objects yourself.
+     * See [[SessionDisconnectedEvent]] and [[VideoElementEvent]] to learn more to learn more.
      *
      * The [[Publisher]] object of the local participant will dispatch a `streamDestroyed` event if there is a [[Publisher]] object publishing to the session.
-     * This event will automatically stop all media tracks and delete the HTML video element associated to it.
-     * Call `event.preventDefault()` if you want clean the Publisher object yourself or re-publish it in a different Session (to do so it is a mandatory
-     * requirement to call `Session.unpublish()` or/and `Session.disconnect()` in the previous session). See [[StreamEvent]] to learn more.
+     * This event will automatically stop all media tracks and delete any HTML video element associated to it (only those [created by OpenVidu Browser](/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players)).
+     * For every video removed, the Publisher object will dispatch a `videoElementDestroyed` event.
+     * Call `event.preventDefault()` uppon event `streamDestroyed` if you want to clean the Publisher object on your own or re-publish it in a different Session (to do so it is a mandatory requirement to call `Session.unpublish()`
+     * or/and `Session.disconnect()` in the previous session). See [[StreamEvent]] and [[VideoElementEvent]] to learn more.
      *
      * The [[Session]] object of every other participant connected to the session will dispatch a `streamDestroyed` event if the disconnected participant was publishing.
      * This event will automatically unsubscribe the Subscriber object from the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks)
-     * and delete the HTML video element associated to it.
-     * Call `event.preventDefault()` to avoid this default behaviour and take care of disposing and cleaning the Subscriber object yourself. See [[StreamEvent]] to learn more.
+     * and also deletes any HTML video element associated to that Subscriber (only those [created by OpenVidu Browser](/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players)).
+     * For every video removed, the Subscriber object will dispatch a `videoElementDestroyed` event.
+     * Call `event.preventDefault()` uppon event `streamDestroyed` to avoid this default behaviour and take care of disposing and cleaning the Subscriber object yourself.
+     * See [[StreamEvent]] and [[VideoElementEvent]] to learn more.
      *
      * The [[Session]] object of every other participant connected to the session will dispatch a `connectionDestroyed` event in any case. See [[ConnectionEvent]] to learn more.
      */
@@ -132,15 +141,14 @@ var Session = /** @class */ (function () {
      *
      * #### Events dispatched
      *
-     * The [[Subscriber]] object will dispatch a `videoElementCreated` event once the HTML video element has been added to DOM (if _targetElement_ not null or undefined)
+     * The [[Subscriber]] object will dispatch a `videoElementCreated` event once the HTML video element has been added to DOM (only if you
+     * [let OpenVidu take care of the video players](/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players)). See [[VideoElementEvent]] to learn more.
      *
-     * The [[Subscriber]] object will dispatch a `videoPlaying` event once the remote video starts playing (only if `videoElementCreated` event has been previously dispatched)
-     *
-     * See [[VideoElementEvent]] to learn more.
+     * The [[Subscriber]] object will dispatch a `streamPlaying` event once the remote stream starts playing. See [[StreamManagerEvent]] to learn more.
      *
      * @param stream Stream object to subscribe to
-     * @param targetElement HTML DOM element (or its `id` attribute) in which the video element of the Subscriber will be inserted (see [[SubscriberProperties.insertMode]]). If null or undefined no default video will be created for this Subscriber
-     * (you can always access the native MediaStream object by calling _Subscriber.stream.getMediaStream()_ and use it as _srcObject_ of any HTML video element)
+     * @param targetElement HTML DOM element (or its `id` attribute) in which the video element of the Subscriber will be inserted (see [[SubscriberProperties.insertMode]]). If *null* or *undefined* no default video will be created for this Subscriber.
+     * You can always call method [[Subscriber.addVideoElement]] or [[Subscriber.createVideoElement]] to manage the video elements on your own (see [Manage video players](/docs/how-do-i/manage-videos) section)
      * @param completionHandler `error` parameter is null if `subscribe` succeeds, and is defined if it fails.
      */
     Session.prototype.subscribe = function (stream, targetElement, param3, param4) {
@@ -179,7 +187,9 @@ var Session = /** @class */ (function () {
             }
         });
         var subscriber = new Subscriber_1.Subscriber(stream, targetElement, properties);
-        stream.insertVideo(subscriber.element, properties.insertMode);
+        if (!!subscriber.targetElement) {
+            stream.streamManager.createVideoElement(subscriber.targetElement, properties.insertMode);
+        }
         return subscriber;
     };
     Session.prototype.subscribeAsync = function (stream, targetElement, properties) {
@@ -203,18 +213,19 @@ var Session = /** @class */ (function () {
         });
     };
     /**
-     * Unsubscribes from `subscriber`, automatically removing its HTML video element.
+     * Unsubscribes from `subscriber`, automatically removing its associated HTML video elements.
      *
      * #### Events dispatched
      *
-     * The [[Subscriber]] object will dispatch a `videoElementDestroyed` event (only if it previously dispatched a `videoElementCreated` event). See [[VideoElementEvent]] to learn more
+     * The [[Subscriber]] object will dispatch a `videoElementDestroyed` event for each video associated to it that was removed from DOM.
+     * Only videos [created by OpenVidu Browser](/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players)) will be automatically removed
+     *
+     * See [[VideoElementEvent]] to learn more
      */
     Session.prototype.unsubscribe = function (subscriber) {
         var connectionId = subscriber.stream.connection.connectionId;
         console.info('Unsubscribing from ' + connectionId);
-        this.openvidu.sendRequest('unsubscribeFromVideo', {
-            sender: subscriber.stream.connection.connectionId
-        }, function (error, response) {
+        this.openvidu.sendRequest('unsubscribeFromVideo', { sender: subscriber.stream.connection.connectionId }, function (error, response) {
             if (error) {
                 console.error('Error unsubscribing from ' + connectionId, error);
             }
@@ -224,28 +235,27 @@ var Session = /** @class */ (function () {
             subscriber.stream.disposeWebRtcPeer();
             subscriber.stream.disposeMediaStream();
         });
-        subscriber.stream.removeVideo();
+        subscriber.stream.streamManager.removeAllVideos();
     };
     /**
-     * Publishes the participant's audio-video stream contained in `publisher` object to the session
+     * Publishes to the Session the Publisher object
      *
      * #### Events dispatched
      *
      * The local [[Publisher]] object will dispatch a `streamCreated` event upon successful termination of this method. See [[StreamEvent]] to learn more.
      *
-     * The local [[Publisher]] object will dispatch a `remoteVideoPlaying` event only if [[Publisher.subscribeToRemote]] was called before this method, once the remote video starts playing.
-     * See [[VideoElementEvent]] to learn more.
+     * The local [[Publisher]] object will dispatch a `streamPlaying` once the media stream starts playing. See [[StreamManagerEvent]] to learn more.
      *
      * The [[Session]] object of every other participant connected to the session will dispatch a `streamCreated` event so they can subscribe to it. See [[StreamEvent]] to learn more.
      *
-     * @returns A Promise (to which you can optionally subscribe to) that is resolved if the publisher was successfully published and rejected with an Error object if not
+     * @returns A Promise (to which you can optionally subscribe to) that is resolved only after the publisher was successfully published and rejected with an Error object if not
      */
     Session.prototype.publish = function (publisher) {
         var _this = this;
         return new Promise(function (resolve, reject) {
             publisher.session = _this;
             publisher.stream.session = _this;
-            if (!publisher.stream.isPublisherPublished) {
+            if (!publisher.stream.isLocalStreamPublished) {
                 // 'Session.unpublish(Publisher)' has NOT been called
                 _this.connection.addStream(publisher.stream);
                 publisher.stream.publish()
@@ -260,6 +270,7 @@ var Session = /** @class */ (function () {
                 publisher.initialize()
                     .then(function () {
                     _this.connection.addStream(publisher.stream);
+                    publisher.reestablishStreamPlayingEvent();
                     publisher.stream.publish()
                         .then(function () {
                         resolve();
@@ -273,19 +284,23 @@ var Session = /** @class */ (function () {
         });
     };
     /**
-     * Unpublishes the participant's audio-video stream contained in `publisher` object.
+     * Unpublishes from the Session the Publisher object.
      *
      * #### Events dispatched
      *
      * The [[Publisher]] object of the local participant will dispatch a `streamDestroyed` event.
-     * This event will automatically stop all media tracks and delete the HTML video element associated to it.
-     * Call `event.preventDefault()` if you want clean the Publisher object yourself or re-publish it in a different Session.
+     * This event will automatically stop all media tracks and delete any HTML video element associated to this Publisher
+     * (only those videos [created by OpenVidu Browser](/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players)).
+     * For every video removed, the Publisher object will dispatch a `videoElementDestroyed` event.
+     * Call `event.preventDefault()` uppon event `streamDestroyed` if you want to clean the Publisher object on your own or re-publish it in a different Session.
      *
      * The [[Session]] object of every other participant connected to the session will dispatch a `streamDestroyed` event.
-     * This event will automatically unsubscribe the Subscriber object from the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks) and delete the HTML video element associated to it.
-     * Call `event.preventDefault()` to avoid this default behaviour and take care of disposing and cleaning the Subscriber object yourself.
+     * This event will automatically unsubscribe the Subscriber object from the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks) and
+     * delete any HTML video element associated to it (only those [created by OpenVidu Browser](/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players)).
+     * For every video removed, the Subscriber object will dispatch a `videoElementDestroyed` event.
+     * Call `event.preventDefault()` uppon event `streamDestroyed` to avoid this default behaviour and take care of disposing and cleaning the Subscriber object on your own.
      *
-     * See [[StreamEvent]] to learn more.
+     * See [[StreamEvent]] and [[VideoElementEvent]] to learn more.
      */
     Session.prototype.unpublish = function (publisher) {
         var stream = publisher.stream;
@@ -664,9 +679,12 @@ var Session = /** @class */ (function () {
                 this.openvidu.closeWs();
             }
             if (!!this.connection.stream) {
-                // Make Publisher object dispatch 'streamDestroyed' event (if there's a local stream)
+                // Dispose Publisher's  local stream
                 this.connection.stream.disposeWebRtcPeer();
-                this.connection.stream.emitEvent('stream-destroyed-by-disconnect', [reason]);
+                if (this.connection.stream.isLocalStreamPublished) {
+                    // Make Publisher object dispatch 'streamDestroyed' event if the Stream was published
+                    this.connection.stream.ee.emitEvent('local-stream-destroyed-by-disconnect', [reason]);
+                }
             }
             if (!this.connection.disposed) {
                 // Make Session object dispatch 'sessionDisconnected' event (if it is not already disposed)

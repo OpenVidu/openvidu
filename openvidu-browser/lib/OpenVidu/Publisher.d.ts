@@ -1,42 +1,33 @@
 import { OpenVidu } from './OpenVidu';
 import { Session } from './Session';
-import { Stream } from './Stream';
+import { StreamManager } from './StreamManager';
 import { EventDispatcher } from '../OpenViduInternal/Interfaces/Public/EventDispatcher';
 import { PublisherProperties } from '../OpenViduInternal/Interfaces/Public/PublisherProperties';
-import { StreamEvent } from '../OpenViduInternal/Events/StreamEvent';
-import { VideoElementEvent } from '../OpenViduInternal/Events/VideoElementEvent';
+import { Event } from '../OpenViduInternal/Events/Event';
 /**
  * Packs local media streams. Participants can publish it to a session. Initialized with [[OpenVidu.initPublisher]] method
  */
-export declare class Publisher implements EventDispatcher {
+export declare class Publisher extends StreamManager {
     private openvidu;
     /**
      * Whether the Publisher has been granted access to the requested input devices or not
      */
     accessAllowed: boolean;
     /**
-     * HTML DOM element in which the Publisher's video has been inserted
+     * Whether you have called [[Publisher.subscribeToRemote]] with value `true` or `false` (*false* by default)
      */
-    element: HTMLElement;
-    /**
-     * DOM id of the Publisher's video element
-     */
-    id: string;
+    isSubscribedToRemote: boolean;
     /**
      * The [[Session]] to which the Publisher belongs
      */
     session: Session;
-    /**
-     * The [[Stream]] that you are publishing
-     */
-    stream: Stream;
-    private ee;
+    private accessDenied;
     private properties;
     private permissionDialogTimeout;
     /**
      * @hidden
      */
-    constructor(targetElement: string | HTMLElement, properties: PublisherProperties, openvidu: OpenVidu);
+    constructor(targEl: string | HTMLElement, properties: PublisherProperties, openvidu: OpenVidu);
     /**
      * Publish or unpublish the audio stream (if available). Calling this method twice in a row passing same value will have no effect
      * @param value `true` to publish the audio stream, `false` to unpublish it
@@ -48,21 +39,17 @@ export declare class Publisher implements EventDispatcher {
      */
     publishVideo(value: boolean): void;
     /**
-     * Call this method before [[Session.publish]] to subscribe to your Publisher's stream as any other user would do. The local video will be automatically replaced by the remote video
+     * Call this method before [[Session.publish]] to subscribe to your Publisher's remote stream instead of using the local stream, as any other user would do.
      */
-    subscribeToRemote(): void;
+    subscribeToRemote(value?: boolean): void;
     /**
      * See [[EventDispatcher.on]]
      */
-    on(type: string, handler: (event: StreamEvent | VideoElementEvent) => void): EventDispatcher;
+    on(type: string, handler: (event: Event) => void): EventDispatcher;
     /**
      * See [[EventDispatcher.once]]
      */
-    once(type: string, handler: (event: StreamEvent | VideoElementEvent) => void): Publisher;
-    /**
-     * See [[EventDispatcher.off]]
-     */
-    off(type: string, handler?: (event: StreamEvent | VideoElementEvent) => void): Publisher;
+    once(type: string, handler: (event: Event) => void): Publisher;
     /**
      * @hidden
      */
@@ -75,8 +62,10 @@ export declare class Publisher implements EventDispatcher {
      * @hidden
      */
     emitEvent(type: string, eventArray: any[]): void;
+    /**
+     * @hidden
+     */
+    reestablishStreamPlayingEvent(): void;
     private setPermissionDialogTimer(waitTime);
     private clearPermissionDialogTimer(startTime, waitTime);
-    private userMediaHasVideo(callback);
-    private userMediaHasAudio(callback);
 }

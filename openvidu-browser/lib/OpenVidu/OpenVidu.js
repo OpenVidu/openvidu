@@ -62,12 +62,13 @@ var OpenVidu = /** @class */ (function () {
      *
      * The [[Publisher]] object will dispatch an `accessAllowed` or `accessDenied` event once it has been granted access to the requested input devices or not.
      *
-     * The [[Publisher]] object will dispatch a `videoElementCreated` event once the HTML video element has been added to DOM (if _targetElement_ not null or undefined)
+     * The [[Publisher]] object will dispatch a `videoElementCreated` event once a HTML video element has been added to DOM (only if you
+     * [let OpenVidu take care of the video players](/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players)). See [[VideoElementEvent]] to learn more.
      *
-     * The [[Publisher]] object will dispatch a `videoPlaying` event once the local video starts playing (only if `videoElementCreated` event has been previously dispatched)
+     * The [[Publisher]] object will dispatch a `streamPlaying` event once the local streams starts playing. See [[StreamManagerEvent]] to learn more.
      *
-     * @param targetElement  HTML DOM element (or its `id` attribute) in which the video element of the Publisher will be inserted (see [[PublisherProperties.insertMode]]). If null or undefined no default video will be created for this Publisher
-     * (you can always access the native MediaStream object by calling _Publisher.stream.getMediaStream()_ and use it as _srcObject_ of any HTML video element)
+     * @param targetElement  HTML DOM element (or its `id` attribute) in which the video element of the Publisher will be inserted (see [[PublisherProperties.insertMode]]). If *null* or *undefined* no default video will be created for this Publisher.
+     * You can always call method [[Publisher.addVideoElement]] or [[Publisher.createVideoElement]] to manage the video elements on your own (see [Manage video players](/docs/how-do-i/manage-videos) section)
      * @param completionHandler `error` parameter is null if `initPublisher` succeeds, and is defined if it fails.
      *                          `completionHandler` function is called before the Publisher dispatches an `accessAllowed` or an `accessDenied` event
      */
@@ -112,7 +113,7 @@ var OpenVidu = /** @class */ (function () {
             }
             publisher.emitEvent('accessAllowed', []);
         })["catch"](function (error) {
-            if (!!completionHandler !== undefined) {
+            if (completionHandler !== undefined) {
                 completionHandler(error);
             }
             publisher.emitEvent('accessDenied', []);
@@ -245,7 +246,7 @@ var OpenVidu = /** @class */ (function () {
                     var errorName;
                     var errorMessage = error.toString();
                     if (!(options.videoSource === 'screen')) {
-                        errorName = (options.videoSource === false || options.videoSource === null) ? OpenViduError_1.OpenViduErrorName.MICROPHONE_ACCESS_DENIED : OpenViduError_1.OpenViduErrorName.CAMERA_ACCESS_DENIED;
+                        errorName = OpenViduError_1.OpenViduErrorName.DEVICE_ACCESS_DENIED;
                     }
                     else {
                         errorName = OpenViduError_1.OpenViduErrorName.SCREEN_CAPTURE_DENIED;

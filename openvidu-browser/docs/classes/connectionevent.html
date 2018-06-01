@@ -124,7 +124,7 @@
 					<aside class="tsd-sources">
 						<p>Inherited from <a href="event.html">Event</a>.<a href="event.html#cancelable">cancelable</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Events/Event.ts#L27">OpenViduInternal/Events/Event.ts:27</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Events/Event.ts#L26">OpenViduInternal/Events/Event.ts:26</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -171,11 +171,11 @@
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited">
 					<a name="target" class="tsd-anchor"></a>
 					<h3>target</h3>
-					<div class="tsd-signature tsd-kind-icon">target<span class="tsd-signature-symbol">:</span> <a href="session.html" class="tsd-signature-type">Session</a><span class="tsd-signature-symbol"> | </span><a href="subscriber.html" class="tsd-signature-type">Subscriber</a><span class="tsd-signature-symbol"> | </span><a href="publisher.html" class="tsd-signature-type">Publisher</a></div>
+					<div class="tsd-signature tsd-kind-icon">target<span class="tsd-signature-symbol">:</span> <a href="session.html" class="tsd-signature-type">Session</a><span class="tsd-signature-symbol"> | </span><a href="streammanager.html" class="tsd-signature-type">StreamManager</a></div>
 					<aside class="tsd-sources">
 						<p>Inherited from <a href="event.html">Event</a>.<a href="event.html#target">target</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Events/Event.ts#L32">OpenViduInternal/Events/Event.ts:32</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Events/Event.ts#L31">OpenViduInternal/Events/Event.ts:31</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -191,7 +191,7 @@
 					<aside class="tsd-sources">
 						<p>Inherited from <a href="event.html">Event</a>.<a href="event.html#type">type</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Events/Event.ts#L37">OpenViduInternal/Events/Event.ts:37</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Events/Event.ts#L36">OpenViduInternal/Events/Event.ts:36</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -214,7 +214,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="event.html">Event</a>.<a href="event.html#isdefaultprevented">isDefaultPrevented</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Events/Event.ts#L53">OpenViduInternal/Events/Event.ts:53</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Events/Event.ts#L52">OpenViduInternal/Events/Event.ts:52</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -237,19 +237,28 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="event.html">Event</a>.<a href="event.html#preventdefault">preventDefault</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Events/Event.ts#L64">OpenViduInternal/Events/Event.ts:64</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Events/Event.ts#L70">OpenViduInternal/Events/Event.ts:70</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
 									<p>Prevents the default behaviour of the event. The following events have a default behaviour:</p>
-									<ul>
-										<li><code>sessionDisconnected</code>: automatically unsubscribes the leaving participant from every Subscriber object of the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks)
-										and also deletes the HTML video element associated to it.</li>
-										<li><code>streamDestroyed</code>: if dispatched by a <a href="publisher.html">Publisher</a> (<em>you</em> have unpublished), automatically stops all media tracks and deletes the HTML video element associated to the stream. If dispatched by <a href="session.html">Session</a>,
-										(<em>other user</em> has unpublished), automatically unsubscribes the proper Subscriber object from the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks) and deletes the HTML video element associated to it.</li>
-									</ul>
 								</div>
+								<ul>
+									<li><p><code>sessionDisconnected</code>: dispatched by <a href="session.html">Session</a> object, automatically unsubscribes the leaving participant from every Subscriber object of the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks)
+											and also deletes any HTML video element associated to each Subscriber (only those created by OpenVidu Browser, either by passing a valid parameter as <code>targetElement</code> in method <a href="session.html#subscribe">Session.subscribe</a> or
+										by calling <a href="subscriber.html#createvideoelement">Subscriber.createVideoElement</a>). For every video removed, each Subscriber object will also dispatch a <code>videoElementDestroyed</code> event.</p>
+									</li>
+									<li><p><code>streamDestroyed</code>:</p>
+										<ul>
+											<li>If dispatched by a <a href="publisher.html">Publisher</a> (<em>you</em> have unpublished): automatically stops all media tracks and deletes any HTML video element associated to it (only those created by OpenVidu Browser, either by passing a valid parameter as <code>targetElement</code>
+											in method <a href="openvidu.html#initpublisher">OpenVidu.initPublisher</a> or by calling <a href="publisher.html#createvideoelement">Publisher.createVideoElement</a>). For every video removed, the Publisher object will also dispatch a <code>videoElementDestroyed</code> event.</li>
+											<li>If dispatched by <a href="session.html">Session</a> (<em>other user</em> has unpublished): automatically unsubscribes the proper Subscriber object from the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks)
+												and also deletes any HTML video element associated to that Subscriber (only those created by OpenVidu Browser, either by passing a valid parameter as <code>targetElement</code> in method <a href="session.html#subscribe">Session.subscribe</a> or
+											by calling <a href="subscriber.html#createvideoelement">Subscriber.createVideoElement</a>). For every video removed, the Subscriber object will also dispatch a <code>videoElementDestroyed</code> event.</li>
+										</ul>
+									</li>
+								</ul>
 							</div>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
 						</li>
@@ -346,6 +355,15 @@
 						<a href="streamevent.html" class="tsd-kind-icon">Stream<wbr>Event</a>
 					</li>
 					<li class=" tsd-kind-class">
+						<a href="streammanager.html" class="tsd-kind-icon">Stream<wbr>Manager</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="streammanagerevent.html" class="tsd-kind-icon">Stream<wbr>Manager<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="streampropertychangedevent.html" class="tsd-kind-icon">Stream<wbr>Property<wbr>Changed<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-class">
 						<a href="subscriber.html" class="tsd-kind-icon">Subscriber</a>
 					</li>
 					<li class=" tsd-kind-class">
@@ -365,6 +383,9 @@
 					</li>
 					<li class=" tsd-kind-interface">
 						<a href="../interfaces/signaloptions.html" class="tsd-kind-icon">Signal<wbr>Options</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="../interfaces/streammanagervideo.html" class="tsd-kind-icon">Stream<wbr>Manager<wbr>Video</a>
 					</li>
 					<li class=" tsd-kind-interface">
 						<a href="../interfaces/subscriberproperties.html" class="tsd-kind-icon">Subscriber<wbr>Properties</a>

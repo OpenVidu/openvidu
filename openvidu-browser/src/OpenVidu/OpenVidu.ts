@@ -90,12 +90,13 @@ export class OpenVidu {
    *
    * The [[Publisher]] object will dispatch an `accessAllowed` or `accessDenied` event once it has been granted access to the requested input devices or not.
    *
-   * The [[Publisher]] object will dispatch a `videoElementCreated` event once the HTML video element has been added to DOM (if _targetElement_ not null or undefined, or if you call [[Publisher.createVideoElement]])
+   * The [[Publisher]] object will dispatch a `videoElementCreated` event once a HTML video element has been added to DOM (only if you
+   * [let OpenVidu take care of the video players](/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players)). See [[VideoElementEvent]] to learn more.
    *
-   * The [[Publisher]] object will dispatch a `streamPlaying` event once the local streams starts playing
+   * The [[Publisher]] object will dispatch a `streamPlaying` event once the local streams starts playing. See [[StreamManagerEvent]] to learn more.
    *
-   * @param targetElement  HTML DOM element (or its `id` attribute) in which the video element of the Publisher will be inserted (see [[PublisherProperties.insertMode]]). If null or undefined no default video will be created for this Publisher
-   * (you can always call method [[Stream.addVideoElement]] for the object [[Publisher.stream]] to manage the video elements on your own)
+   * @param targetElement  HTML DOM element (or its `id` attribute) in which the video element of the Publisher will be inserted (see [[PublisherProperties.insertMode]]). If *null* or *undefined* no default video will be created for this Publisher.
+   * You can always call method [[Publisher.addVideoElement]] or [[Publisher.createVideoElement]] to manage the video elements on your own (see [Manage video players](/docs/how-do-i/manage-videos) section)
    * @param completionHandler `error` parameter is null if `initPublisher` succeeds, and is defined if it fails.
    *                          `completionHandler` function is called before the Publisher dispatches an `accessAllowed` or an `accessDenied` event
    */

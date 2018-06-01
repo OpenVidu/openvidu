@@ -1,11 +1,13 @@
 import { Connection } from './Connection';
 import { Session } from './Session';
+import { StreamManager } from './StreamManager';
 import { InboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/InboundStreamOptions';
 import { OutboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/OutboundStreamOptions';
-import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
+import EventEmitter = require('wolfy87-eventemitter');
 /**
- * Represents each one of the videos send and receive by a user in a session.
- * Therefore each [[Publisher]] and [[Subscriber]] has an attribute of type Stream
+ * Represents each one of the media streams available in OpenVidu Server for certain session.
+ * Each [[Publisher]] and [[Subscriber]] has an attribute of type Stream, as they give access
+ * to one of them (sending and receiving it, respectively)
  */
 export declare class Stream {
     /**
@@ -13,7 +15,8 @@ export declare class Stream {
      */
     connection: Connection;
     /**
-     * Frame rate of the video in frames per second. This property is only defined if the [[Publisher]] of the stream was initialized passing a _frameRate_ property on [[OpenVidu.initPublisher]] method
+     * Frame rate of the video in frames per second. This property is only defined if the [[Publisher]] of
+     * the stream was initialized passing a _frameRate_ property on [[OpenVidu.initPublisher]] method
      */
     frameRate?: number;
     /**
@@ -29,37 +32,29 @@ export declare class Stream {
      */
     streamId: string;
     /**
-     * `"CAMERA"` or `"SCREEN"`. undefined if stream is audio-only
+     * `"CAMERA"` or `"SCREEN"`. *undefined* if stream is audio-only
      */
     typeOfVideo?: string;
-    private ee;
+    /**
+     * StreamManager object ([[Publisher]] or [[Subscriber]]) in charge of displaying this stream in the DOM
+     */
+    streamManager: StreamManager;
+    /**
+     * @hidden
+     */
+    ee: EventEmitter;
     private webRtcPeer;
     private mediaStream;
-    private video;
-    private targetElement;
-    private parentId;
     private webRtcStats;
     private isSubscribeToRemote;
     /**
      * @hidden
      */
-    isReadyToPublish: boolean;
+    isLocalStreamReadyToPublish: boolean;
     /**
      * @hidden
      */
-    isPublisherPublished: boolean;
-    /**
-     * @hidden
-     */
-    isVideoELementCreated: boolean;
-    /**
-     * @hidden
-     */
-    accessIsAllowed: boolean;
-    /**
-     * @hidden
-     */
-    accessIsDenied: boolean;
+    isLocalStreamPublished: boolean;
     /**
      * @hidden
      */
@@ -91,6 +86,10 @@ export declare class Stream {
     /**
      * @hidden
      */
+    updateMediaStreamInVideos(): void;
+    /**
+     * @hidden
+     */
     getWebRtcPeer(): any;
     /**
      * @hidden
@@ -99,11 +98,7 @@ export declare class Stream {
     /**
      * @hidden
      */
-    getVideoElement(): HTMLVideoElement;
-    /**
-     * @hidden
-     */
-    subscribeToMyRemote(): void;
+    subscribeToMyRemote(value: boolean): void;
     /**
      * @hidden
      */
@@ -131,22 +126,6 @@ export declare class Stream {
     /**
      * @hidden
      */
-    on(eventName: string, listener: any): void;
-    /**
-     * @hidden
-     */
-    once(eventName: string, listener: any): void;
-    /**
-     * @hidden
-     */
-    insertVideo(targetElement?: HTMLElement, insertMode?: VideoInsertMode): HTMLVideoElement;
-    /**
-     * @hidden
-     */
-    removeVideo(): void;
-    /**
-     * @hidden
-     */
     isSendAudio(): boolean;
     /**
      * @hidden
@@ -156,10 +135,6 @@ export declare class Stream {
      * @hidden
      */
     isSendScreen(): boolean;
-    /**
-     * @hidden
-     */
-    emitEvent(type: string, eventArray: any[]): void;
     /**
      * @hidden
      */
@@ -181,7 +156,8 @@ export declare class Stream {
     private processSdpAnswer(sdpAnswer);
     private initWebRtcStats();
     private stopWebRtcStats();
-    private isLocal();
-    private insertElementWithMode(element, insertMode);
-    private mirrorVideo(video);
+    /**
+     * @hidden
+     */
+    isLocal(): boolean;
 }

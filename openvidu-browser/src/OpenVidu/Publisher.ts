@@ -41,7 +41,7 @@ export class Publisher extends StreamManager {
     accessAllowed = false;
 
     /**
-     * Whether you have called [[Publisher.subscribeToRemote]] with value `true` or `false` (false by default)
+     * Whether you have called [[Publisher.subscribeToRemote]] with value `true` or `false` (*false* by default)
      */
     isSubscribedToRemote = false;
 
@@ -68,6 +68,7 @@ export class Publisher extends StreamManager {
         });
     }
 
+
     /**
      * Publish or unpublish the audio stream (if available). Calling this method twice in a row passing same value will have no effect
      * @param value `true` to publish the audio stream, `false` to unpublish it
@@ -76,6 +77,7 @@ export class Publisher extends StreamManager {
         this.stream.getWebRtcPeer().audioEnabled = value;
         console.info("'Publisher' has " + (value ? 'published' : 'unpublished') + ' its audio stream');
     }
+
 
     /**
      * Publish or unpublish the video stream (if available). Calling this method twice in a row passing same value will have no effect
@@ -86,8 +88,9 @@ export class Publisher extends StreamManager {
         console.info("'Publisher' has " + (value ? 'published' : 'unpublished') + ' its video stream');
     }
 
+
     /**
-     * Call this method before [[Session.publish]] to subscribe to your Publisher's stream as any other user would do. The local video will be automatically replaced by the remote video
+     * Call this method before [[Session.publish]] to subscribe to your Publisher's remote stream instead of using the local stream, as any other user would do.
      */
     subscribeToRemote(value?: boolean): void {
         value = (value !== undefined) ? value : true;

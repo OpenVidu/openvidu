@@ -32,7 +32,7 @@ import * as kurentoUtils from '../OpenViduInternal/KurentoUtils/kurento-utils-js
 /**
  * Represents each one of the media streams available in OpenVidu Server for certain session.
  * Each [[Publisher]] and [[Subscriber]] has an attribute of type Stream, as they give access
- * to at least one of them (sending and receiving it, respectively)
+ * to one of them (sending and receiving it, respectively)
  */
 export class Stream {
 
@@ -48,14 +48,12 @@ export class Stream {
     frameRate?: number;
 
     /**
-     * Whether the stream has a video track or not. This attribute may change if the Publisher publishing the Stream
-     * calls [[Publisher.publishVideo]]. You can listen to event [[StreamPropertyChangedEvent]] to know when this happens
+     * Whether the stream has a video track or not
      */
     hasVideo: boolean;
 
     /**
-     * Whether the stream has an audio track or not. This attribute may change if the Publisher publishing the Stream
-     * calls [[Publisher.publishAudio]]. You can listen to event [[StreamPropertyChangedEvent]] to know when this happens
+     * Whether the stream has an audio track or not
      */
     hasAudio: boolean;
 

@@ -70,8 +70,9 @@
 			<section class="tsd-panel tsd-comment">
 				<div class="tsd-comment tsd-typography">
 					<div class="lead">
-						<p>Represents each one of the videos send and receive by a user in a session.
-						Therefore each <a href="publisher.html">Publisher</a> and <a href="subscriber.html">Subscriber</a> has an attribute of type Stream</p>
+						<p>Represents each one of the media streams available in OpenVidu Server for certain session.
+							Each <a href="publisher.html">Publisher</a> and <a href="subscriber.html">Subscriber</a> has an attribute of type Stream, as they give access
+						to one of them (sending and receiving it, respectively)</p>
 					</div>
 				</div>
 			</section>
@@ -95,6 +96,7 @@
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="stream.html#hasaudio" class="tsd-kind-icon">has<wbr>Audio</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="stream.html#hasvideo" class="tsd-kind-icon">has<wbr>Video</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="stream.html#streamid" class="tsd-kind-icon">stream<wbr>Id</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="stream.html#streammanager" class="tsd-kind-icon">stream<wbr>Manager</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="stream.html#typeofvideo" class="tsd-kind-icon">type<wbr>OfVideo</a></li>
 							</ul>
 						</section>
@@ -109,7 +111,7 @@
 					<div class="tsd-signature tsd-kind-icon">connection<span class="tsd-signature-symbol">:</span> <a href="connection.html" class="tsd-signature-type">Connection</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Stream.ts#L39">OpenVidu/Stream.ts:39</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Stream.ts#L42">OpenVidu/Stream.ts:42</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -124,12 +126,13 @@
 					<div class="tsd-signature tsd-kind-icon">frame<wbr>Rate<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Stream.ts#L44">OpenVidu/Stream.ts:44</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Stream.ts#L48">OpenVidu/Stream.ts:48</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
-							<p>Frame rate of the video in frames per second. This property is only defined if the <a href="publisher.html">Publisher</a> of the stream was initialized passing a <em>frameRate</em> property on <a href="openvidu.html#initpublisher">OpenVidu.initPublisher</a> method</p>
+							<p>Frame rate of the video in frames per second. This property is only defined if the <a href="publisher.html">Publisher</a> of
+							the stream was initialized passing a <em>frameRate</em> property on <a href="openvidu.html#initpublisher">OpenVidu.initPublisher</a> method</p>
 						</div>
 					</div>
 				</section>
@@ -139,7 +142,7 @@
 					<div class="tsd-signature tsd-kind-icon">has<wbr>Audio<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Stream.ts#L54">OpenVidu/Stream.ts:54</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Stream.ts#L58">OpenVidu/Stream.ts:58</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -154,7 +157,7 @@
 					<div class="tsd-signature tsd-kind-icon">has<wbr>Video<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Stream.ts#L49">OpenVidu/Stream.ts:49</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Stream.ts#L53">OpenVidu/Stream.ts:53</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -169,7 +172,7 @@
 					<div class="tsd-signature tsd-kind-icon">stream<wbr>Id<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Stream.ts#L59">OpenVidu/Stream.ts:59</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Stream.ts#L63">OpenVidu/Stream.ts:63</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -179,17 +182,32 @@
 					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
+					<a name="streammanager" class="tsd-anchor"></a>
+					<h3>stream<wbr>Manager</h3>
+					<div class="tsd-signature tsd-kind-icon">stream<wbr>Manager<span class="tsd-signature-symbol">:</span> <a href="streammanager.html" class="tsd-signature-type">StreamManager</a></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Stream.ts#L73">OpenVidu/Stream.ts:73</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>StreamManager object (<a href="publisher.html">Publisher</a> or <a href="subscriber.html">Subscriber</a>) in charge of displaying this stream in the DOM</p>
+						</div>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
 					<a name="typeofvideo" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagOptional">Optional</span> type<wbr>OfVideo</h3>
 					<div class="tsd-signature tsd-kind-icon">type<wbr>OfVideo<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Stream.ts#L64">OpenVidu/Stream.ts:64</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Stream.ts#L68">OpenVidu/Stream.ts:68</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
-							<p><code>&quot;CAMERA&quot;</code> or <code>&quot;SCREEN&quot;</code>. undefined if stream is audio-only</p>
+							<p><code>&quot;CAMERA&quot;</code> or <code>&quot;SCREEN&quot;</code>. <em>undefined</em> if stream is audio-only</p>
 						</div>
 					</div>
 				</section>
@@ -271,6 +289,9 @@
 								<a href="stream.html#streamid" class="tsd-kind-icon">stream<wbr>Id</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class">
+								<a href="stream.html#streammanager" class="tsd-kind-icon">stream<wbr>Manager</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class">
 								<a href="stream.html#typeofvideo" class="tsd-kind-icon">type<wbr>OfVideo</a>
 							</li>
 						</ul>
@@ -279,6 +300,15 @@
 				<ul class="after-current">
 					<li class=" tsd-kind-class">
 						<a href="streamevent.html" class="tsd-kind-icon">Stream<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="streammanager.html" class="tsd-kind-icon">Stream<wbr>Manager</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="streammanagerevent.html" class="tsd-kind-icon">Stream<wbr>Manager<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="streampropertychangedevent.html" class="tsd-kind-icon">Stream<wbr>Property<wbr>Changed<wbr>Event</a>
 					</li>
 					<li class=" tsd-kind-class">
 						<a href="subscriber.html" class="tsd-kind-icon">Subscriber</a>
@@ -300,6 +330,9 @@
 					</li>
 					<li class=" tsd-kind-interface">
 						<a href="../interfaces/signaloptions.html" class="tsd-kind-icon">Signal<wbr>Options</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="../interfaces/streammanagervideo.html" class="tsd-kind-icon">Stream<wbr>Manager<wbr>Video</a>
 					</li>
 					<li class=" tsd-kind-interface">
 						<a href="../interfaces/subscriberproperties.html" class="tsd-kind-icon">Subscriber<wbr>Properties</a>

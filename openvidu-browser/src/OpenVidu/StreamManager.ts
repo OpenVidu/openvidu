@@ -37,8 +37,6 @@ import EventEmitter = require('wolfy87-eventemitter');
  */
 export class StreamManager implements EventDispatcher {
 
-    CURRENTVIDEO: HTMLVideoElement;
-
     /**
      * The Stream represented in the DOM by the Publisher/Subscriber
      */
@@ -57,7 +55,7 @@ export class StreamManager implements EventDispatcher {
     remote: boolean;
 
     /**
-     * The DOM HTMLElement assigned as target element when creating the first video for the Publisher/Subscriber. This property is only defined if:
+     * The DOM HTMLElement assigned as target element when creating the video for the Publisher/Subscriber. This property is only defined if:
      * - [[Publisher]] has been initialized by calling method [[OpenVidu.initPublisher]] with a valid `targetElement` parameter
      * - [[Subscriber]] has been initialized by calling method [[Session.subscribe]] with a valid `targetElement` parameter
      */
@@ -209,9 +207,8 @@ export class StreamManager implements EventDispatcher {
     }
 
     /**
-     * Makes `video` element parameter display this Stream. This is useful when you are managing the video elements on your own
-     * (parameter `targetElement` of methods [[OpenVidu.initPublisher]] or [[Session.subscribe]] is set to *null* or *undefined*)
-     * or if you want to have multiple video elements displaying the same media stream.
+     * Makes `video` element parameter display this [[stream]]. This is useful when you are
+     * [managing the video elements on your own](/docs/how-do-i/manage-videos/#you-take-care-of-the-video-players)
      *
      * Calling this method with a video already added to other Publisher/Subscriber will cause the video element to be
      * disassociated from that previous Publisher/Subscriber and to be associated to this one.
@@ -257,10 +254,14 @@ export class StreamManager implements EventDispatcher {
     }
 
     /**
-     * Creates a new video element displaying this Stream. This allows you to have multiple video elements displaying the same media stream.
+     * Creates a new video element displaying this [[stream]]. This allows you to have multiple video elements displaying the same media stream.
      *
-     * @param targetElement HTML DOM element (or its `id` attribute) in which the video element of the Publisher/Subscriber will be inserted.
-     * If *null* or *undefined* no default video will be created. You can always call later method [[StreamManager.addVideoElement]] or [[StreamManager.createVideoElement]]
+     * #### Events dispatched
+     *
+     * The Publisher/Subscriber object will dispatch a `videoElementCreated` event once the HTML video element has been added to DOM. See [[VideoElementEvent]]
+     *
+     * @param targetElement HTML DOM element (or its `id` attribute) in which the video element of the Publisher/Subscriber will be inserted
+     * @param insertMode How the video element will be inserted accordingly to `targetElemet`
      */
     createVideoElement(targetElement?: string | HTMLElement, insertMode?: VideoInsertMode): HTMLVideoElement {
         let targEl;
@@ -325,6 +326,10 @@ export class StreamManager implements EventDispatcher {
         video.controls = false;
         if (!video.id) {
             video.id = (this.remote ? 'remote-' : 'local-') + 'video-' + this.stream.streamId;
+            // DEPRECATED property: assign once the property id if the user provided a valid targetElement
+            if (!this.id && !!this.targetElement) {
+                this.id = video.id;
+            }
         }
         if (!this.remote && !this.stream.displayMyRemote()) {
             video.muted = true;
