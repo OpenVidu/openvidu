@@ -152,8 +152,8 @@ export declare class OpenVidu {
      * @hidden
      */
     getRecorder(): boolean;
-    private disconnectCallback();
-    private reconnectingCallback();
-    private reconnectedCallback();
-    private isRoomAvailable();
+    private disconnectCallback;
+    private reconnectingCallback;
+    private reconnectedCallback;
+    private isRoomAvailable;
 }

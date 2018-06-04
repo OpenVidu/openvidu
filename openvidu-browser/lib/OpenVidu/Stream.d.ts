@@ -151,11 +151,11 @@ export declare class Stream {
      * @hidden
      */
     disableSpeakingEvents(): void;
-    private initWebRtcPeerSend();
-    private initWebRtcPeerReceive();
-    private processSdpAnswer(sdpAnswer);
-    private initWebRtcStats();
-    private stopWebRtcStats();
+    private initWebRtcPeerSend;
+    private initWebRtcPeerReceive;
+    private processSdpAnswer;
+    private initWebRtcStats;
+    private stopWebRtcStats;
     /**
      * @hidden
      */

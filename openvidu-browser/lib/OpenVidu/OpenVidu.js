@@ -21,9 +21,9 @@ var Publisher_1 = require("./Publisher");
 var Session_1 = require("./Session");
 var OpenViduError_1 = require("../OpenViduInternal/Enums/OpenViduError");
 var VideoInsertMode_1 = require("../OpenViduInternal/Enums/VideoInsertMode");
-var RpcBuilder = require("../OpenViduInternal/KurentoUtils/kurento-jsonrpc");
 var screenSharingAuto = require("../OpenViduInternal/ScreenSharing/Screen-Capturing-Auto");
 var screenSharing = require("../OpenViduInternal/ScreenSharing/Screen-Capturing");
+var RpcBuilder = require("../OpenViduInternal/KurentoUtils/kurento-jsonrpc");
 var platform = require("platform");
 /**
  * Entrypoint of OpenVidu Browser library.

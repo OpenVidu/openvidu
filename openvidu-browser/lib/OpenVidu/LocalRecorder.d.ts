@@ -79,5 +79,5 @@ export declare class LocalRecorder {
      * @returns A Promise (to which you can optionally subscribe to) that is resolved with the `http.responseText` from server if the operation was successful and rejected with the failed `http.status` if not:
      */
     uploadAsMultipartfile(endpoint: string, headers?: any): Promise<any>;
-    private onStopDefault();
+    private onStopDefault;
 }

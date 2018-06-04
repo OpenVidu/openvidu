@@ -9,7 +9,7 @@ export declare class WebRtcStats {
     isEnabled(): boolean;
     initWebRtcStats(): void;
     stopWebRtcStats(): void;
-    private sendStatsToHttpEndpoint(instrumentation);
-    private standardizeReport(response);
-    private getStatsAgnostic(pc, successCb, failureCb);
+    private sendStatsToHttpEndpoint;
+    private standardizeReport;
+    private getStatsAgnostic;
 }

@@ -223,9 +223,9 @@ export declare class Session implements EventDispatcher {
      * @hidden
      */
     leave(forced: boolean, reason: string): void;
-    private connectAux(token);
-    private stringClientMetadata(metadata);
-    private getConnection(connectionId, errorMessage);
-    private getRemoteConnection(connectionId, errorMessage);
-    private processToken(token);
+    private connectAux;
+    private stringClientMetadata;
+    private getConnection;
+    private getRemoteConnection;
+    private processToken;
 }
