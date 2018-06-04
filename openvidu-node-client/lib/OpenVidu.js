@@ -18,10 +18,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 var Session_1 = require("./Session");
 var Recording_1 = require("./Recording");
-/**
- * @hidden
- */
-var https = require('https');
+var axios_1 = require("axios");
 var OpenVidu = /** @class */ (function () {
     /**
      * @param urlOpenViduServer Public accessible IP where your instance of OpenVidu Server is up an running
@@ -29,6 +26,7 @@ var OpenVidu = /** @class */ (function () {
      */
     function OpenVidu(urlOpenViduServer, secret) {
         this.urlOpenViduServer = urlOpenViduServer;
+        this.Buffer = require('buffer/').Buffer;
         this.setHostnameAndPort();
         this.basicAuth = this.getBasicAuth(secret);
     }
@@ -65,11 +63,11 @@ var OpenVidu = /** @class */ (function () {
     OpenVidu.prototype.startRecording = function (sessionId, param2) {
         var _this = this;
         return new Promise(function (resolve, reject) {
-            var requestBody;
+            var data;
             if (!!param2) {
                 if (!(typeof param2 === 'string')) {
                     var properties = param2;
-                    requestBody = JSON.stringify({
+                    data = JSON.stringify({
                         session: sessionId,
                         name: !!properties.name ? properties.name : '',
                         recordingLayout: !!properties.recordingLayout ? properties.recordingLayout : '',
@@ -77,7 +75,7 @@ var OpenVidu = /** @class */ (function () {
                     });
                 }
                 else {
-                    requestBody = JSON.stringify({
+                    data = JSON.stringify({
                         session: sessionId,
                         name: param2,
                         recordingLayout: '',
@@ -86,46 +84,44 @@ var OpenVidu = /** @class */ (function () {
                 }
             }
             else {
-                requestBody = JSON.stringify({
+                data = JSON.stringify({
                     session: sessionId,
                     name: '',
                     recordingLayout: '',
                     customLayout: ''
                 });
             }
-            var options = {
-                hostname: _this.hostname,
-                port: _this.port,
-                path: OpenVidu.API_RECORDINGS + OpenVidu.API_RECORDINGS_START,
-                method: 'POST',
+            axios_1.default.post('https://' + _this.hostname + ':' + _this.port + OpenVidu.API_RECORDINGS + OpenVidu.API_RECORDINGS_START, data, {
                 headers: {
                     'Authorization': _this.basicAuth,
-                    'Content-Type': 'application/json',
-                    'Content-Length': Buffer.byteLength(requestBody)
+                    'Content-Type': 'application/json'
                 }
-            };
-            var req = https.request(options, function (res) {
-                var body = '';
-                res.on('data', function (d) {
-                    // Continuously update stream with data
-                    body += d;
-                });
-                res.on('end', function () {
-                    if (res.statusCode === 200) {
-                        // SUCCESS response from openvidu-server (Recording in JSON format). Resolve new Recording
-                        resolve(new Recording_1.Recording(JSON.parse(body)));
-                    }
-                    else {
-                        // ERROR response from openvidu-server. Resolve HTTP status
-                        reject(new Error(res.statusCode));
-                    }
-                });
+            })
+                .then(function (res) {
+                if (res.status === 200) {
+                    // SUCCESS response from openvidu-server (Recording in JSON format). Resolve new Recording
+                    resolve(new Recording_1.Recording(res.data));
+                }
+                else {
+                    // ERROR response from openvidu-server. Resolve HTTP status
+                    reject(new Error(res.status.toString()));
+                }
+            }).catch(function (error) {
+                if (error.response) {
+                    // The request was made and the server responded with a status code (not 2xx)
+                    reject(new Error(error.response.status.toString()));
+                }
+                else if (error.request) {
+                    // The request was made but no response was received
+                    // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+                    // http.ClientRequest in node.js
+                    console.error(error.request);
+                }
+                else {
+                    // Something happened in setting up the request that triggered an Error
+                    console.error('Error', error.message);
+                }
             });
-            req.on('error', function (e) {
-                reject(new Error(e));
-            });
-            req.write(requestBody);
-            req.end();
         });
     };
     /**
@@ -140,38 +136,37 @@ var OpenVidu = /** @class */ (function () {
     OpenVidu.prototype.stopRecording = function (recordingId) {
         var _this = this;
         return new Promise(function (resolve, reject) {
-            var options = {
-                hostname: _this.hostname,
-                port: _this.port,
-                path: OpenVidu.API_RECORDINGS + OpenVidu.API_RECORDINGS_STOP + '/' + recordingId,
-                method: 'POST',
+            axios_1.default.post('https://' + _this.hostname + ':' + _this.port + OpenVidu.API_RECORDINGS + OpenVidu.API_RECORDINGS_STOP + '/' + recordingId, undefined, {
                 headers: {
                     'Authorization': _this.basicAuth,
                     'Content-Type': 'application/x-www-form-urlencoded'
                 }
-            };
-            var req = https.request(options, function (res) {
-                var body = '';
-                res.on('data', function (d) {
-                    // Continuously update stream with data
-                    body += d;
-                });
-                res.on('end', function () {
-                    if (res.statusCode === 200) {
-                        // SUCCESS response from openvidu-server (Recording in JSON format). Resolve new Recording
-                        resolve(new Recording_1.Recording(JSON.parse(body)));
-                    }
-                    else {
-                        // ERROR response from openvidu-server. Resolve HTTP status
-                        reject(new Error(res.statusCode));
-                    }
-                });
+            })
+                .then(function (res) {
+                if (res.status === 200) {
+                    // SUCCESS response from openvidu-server (Recording in JSON format). Resolve new Recording
+                    resolve(new Recording_1.Recording(res.data));
+                }
+                else {
+                    // ERROR response from openvidu-server. Resolve HTTP status
+                    reject(new Error(res.status.toString()));
+                }
+            }).catch(function (error) {
+                if (error.response) {
+                    // The request was made and the server responded with a status code (not 2xx)
+                    reject(new Error(error.response.status.toString()));
+                }
+                else if (error.request) {
+                    // The request was made but no response was received
+                    // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+                    // http.ClientRequest in node.js
+                    console.error(error.request);
+                }
+                else {
+                    // Something happened in setting up the request that triggered an Error
+                    console.error('Error', error.message);
+                }
             });
-            req.on('error', function (e) {
-                reject(new Error(e));
-            });
-            // req.write();
-            req.end();
         });
     };
     /**
@@ -185,38 +180,37 @@ var OpenVidu = /** @class */ (function () {
     OpenVidu.prototype.getRecording = function (recordingId) {
         var _this = this;
         return new Promise(function (resolve, reject) {
-            var options = {
-                hostname: _this.hostname,
-                port: _this.port,
-                path: OpenVidu.API_RECORDINGS + '/' + recordingId,
-                method: 'GET',
+            axios_1.default.get('https://' + _this.hostname + ':' + _this.port + OpenVidu.API_RECORDINGS + '/' + recordingId, {
                 headers: {
                     'Authorization': _this.basicAuth,
                     'Content-Type': 'application/x-www-form-urlencoded'
                 }
-            };
-            var req = https.request(options, function (res) {
-                var body = '';
-                res.on('data', function (d) {
-                    // Continuously update stream with data
-                    body += d;
-                });
-                res.on('end', function () {
-                    if (res.statusCode === 200) {
-                        // SUCCESS response from openvidu-server (Recording in JSON format). Resolve new Recording
-                        resolve(new Recording_1.Recording(JSON.parse(body)));
-                    }
-                    else {
-                        // ERROR response from openvidu-server. Resolve HTTP status
-                        reject(new Error(res.statusCode));
-                    }
-                });
+            })
+                .then(function (res) {
+                if (res.status === 200) {
+                    // SUCCESS response from openvidu-server (Recording in JSON format). Resolve new Recording
+                    resolve(new Recording_1.Recording(res.data));
+                }
+                else {
+                    // ERROR response from openvidu-server. Resolve HTTP status
+                    reject(new Error(res.status.toString()));
+                }
+            }).catch(function (error) {
+                if (error.response) {
+                    // The request was made and the server responded with a status code (not 2xx)
+                    reject(new Error(error.response.status.toString()));
+                }
+                else if (error.request) {
+                    // The request was made but no response was received
+                    // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+                    // http.ClientRequest in node.js
+                    console.error(error.request);
+                }
+                else {
+                    // Something happened in setting up the request that triggered an Error
+                    console.error('Error', error.message);
+                }
             });
-            req.on('error', function (e) {
-                reject(new Error(e));
-            });
-            // req.write();
-            req.end();
         });
     };
     /**
@@ -227,44 +221,43 @@ var OpenVidu = /** @class */ (function () {
     OpenVidu.prototype.listRecordings = function () {
         var _this = this;
         return new Promise(function (resolve, reject) {
-            var options = {
-                hostname: _this.hostname,
-                port: _this.port,
-                path: OpenVidu.API_RECORDINGS,
-                method: 'GET',
+            axios_1.default.get('https://' + _this.hostname + ':' + _this.port + OpenVidu.API_RECORDINGS, {
                 headers: {
                     'Authorization': _this.basicAuth,
                     'Content-Type': 'application/x-www-form-urlencoded'
                 }
-            };
-            var req = https.request(options, function (res) {
-                var body = '';
-                res.on('data', function (d) {
-                    // Continuously update stream with data
-                    body += d;
-                });
-                res.on('end', function () {
-                    if (res.statusCode === 200) {
-                        // SUCCESS response from openvidu-server (JSON arrays of recordings in JSON format). Resolve list of new recordings
-                        var recordingArray = [];
-                        var responseItems = JSON.parse(body).items;
-                        for (var _i = 0, responseItems_1 = responseItems; _i < responseItems_1.length; _i++) {
-                            var item = responseItems_1[_i];
-                            recordingArray.push(new Recording_1.Recording(item));
-                        }
-                        resolve(recordingArray);
+            })
+                .then(function (res) {
+                if (res.status === 200) {
+                    // SUCCESS response from openvidu-server (JSON arrays of recordings in JSON format). Resolve list of new recordings
+                    var recordingArray = [];
+                    var responseItems = res.data.items;
+                    for (var _i = 0, responseItems_1 = responseItems; _i < responseItems_1.length; _i++) {
+                        var item = responseItems_1[_i];
+                        recordingArray.push(new Recording_1.Recording(item));
                     }
-                    else {
-                        // ERROR response from openvidu-server. Resolve HTTP status
-                        reject(new Error(res.statusCode));
-                    }
-                });
+                    resolve(recordingArray);
+                }
+                else {
+                    // ERROR response from openvidu-server. Resolve HTTP status
+                    reject(new Error(res.status.toString()));
+                }
+            }).catch(function (error) {
+                if (error.response) {
+                    // The request was made and the server responded with a status code (not 2xx)
+                    reject(new Error(error.response.status.toString()));
+                }
+                else if (error.request) {
+                    // The request was made but no response was received
+                    // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+                    // http.ClientRequest in node.js
+                    console.error(error.request);
+                }
+                else {
+                    // Something happened in setting up the request that triggered an Error
+                    console.error('Error', error.message);
+                }
             });
-            req.on('error', function (e) {
-                reject(new Error(e));
-            });
-            // req.write();
-            req.end();
         });
     };
     /**
@@ -279,42 +272,41 @@ var OpenVidu = /** @class */ (function () {
     OpenVidu.prototype.deleteRecording = function (recordingId) {
         var _this = this;
         return new Promise(function (resolve, reject) {
-            var options = {
-                hostname: _this.hostname,
-                port: _this.port,
-                path: OpenVidu.API_RECORDINGS + '/' + recordingId,
-                method: 'DELETE',
+            axios_1.default.delete('https://' + _this.hostname + ':' + _this.port + OpenVidu.API_RECORDINGS + '/' + recordingId, {
                 headers: {
                     'Authorization': _this.basicAuth,
                     'Content-Type': 'application/x-www-form-urlencoded'
                 }
-            };
-            var req = https.request(options, function (res) {
-                var body = '';
-                res.on('data', function (d) {
-                    // Continuously update stream with data
-                    body += d;
-                });
-                res.on('end', function () {
-                    if (res.statusCode === 204) {
-                        // SUCCESS response from openvidu-server. Resolve undefined
-                        resolve(undefined);
-                    }
-                    else {
-                        // ERROR response from openvidu-server. Resolve HTTP status
-                        reject(new Error(res.statusCode));
-                    }
-                });
+            })
+                .then(function (res) {
+                if (res.status === 204) {
+                    // SUCCESS response from openvidu-server. Resolve undefined
+                    resolve(undefined);
+                }
+                else {
+                    // ERROR response from openvidu-server. Resolve HTTP status
+                    reject(new Error(res.status.toString()));
+                }
+            }).catch(function (error) {
+                if (error.response) {
+                    // The request was made and the server responded with a status code (not 2xx)
+                    reject(new Error(error.response.status.toString()));
+                }
+                else if (error.request) {
+                    // The request was made but no response was received
+                    // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+                    // http.ClientRequest in node.js
+                    console.error(error.request);
+                }
+                else {
+                    // Something happened in setting up the request that triggered an Error
+                    console.error('Error', error.message);
+                }
             });
-            req.on('error', function (e) {
-                reject(new Error(e));
-            });
-            // req.write();
-            req.end();
         });
     };
     OpenVidu.prototype.getBasicAuth = function (secret) {
-        return 'Basic ' + (new Buffer('OPENVIDUAPP:' + secret).toString('base64'));
+        return 'Basic ' + this.Buffer('OPENVIDUAPP:' + secret).toString('base64');
     };
     OpenVidu.prototype.setHostnameAndPort = function () {
         var urlSplitted = this.urlOpenViduServer.split(':');

@@ -20,15 +20,13 @@ var MediaMode_1 = require("./MediaMode");
 var OpenViduRole_1 = require("./OpenViduRole");
 var RecordingLayout_1 = require("./RecordingLayout");
 var RecordingMode_1 = require("./RecordingMode");
-/**
- * @hidden
- */
-var https = require('https');
+var axios_1 = require("axios");
 var Session = /** @class */ (function () {
     function Session(hostname, port, basicAuth, properties) {
         this.hostname = hostname;
         this.port = port;
         this.basicAuth = basicAuth;
+        this.Buffer = require('buffer/').Buffer;
         if (!properties) {
             this.properties = {};
         }
@@ -50,45 +48,42 @@ var Session = /** @class */ (function () {
     Session.prototype.generateToken = function (tokenOptions) {
         var _this = this;
         return new Promise(function (resolve, reject) {
-            var requestBody = JSON.stringify({
+            var data = JSON.stringify({
                 session: _this.sessionId,
                 role: (!!tokenOptions && !!tokenOptions.role) ? tokenOptions.role : OpenViduRole_1.OpenViduRole.PUBLISHER,
                 data: (!!tokenOptions && !!tokenOptions.data) ? tokenOptions.data : ''
             });
-            var options = {
-                hostname: _this.hostname,
-                port: _this.port,
-                path: Session.API_TOKENS,
-                method: 'POST',
+            axios_1.default.post('https://' + _this.hostname + ':' + _this.port + Session.API_TOKENS, data, {
                 headers: {
                     'Authorization': _this.basicAuth,
-                    'Content-Type': 'application/json',
-                    'Content-Length': Buffer.byteLength(requestBody)
+                    'Content-Type': 'application/json'
                 }
-            };
-            var req = https.request(options, function (res) {
-                var body = '';
-                res.on('data', function (d) {
-                    // Continuously update stream with data
-                    body += d;
-                });
-                res.on('end', function () {
-                    if (res.statusCode === 200) {
-                        // SUCCESS response from openvidu-server. Resolve token
-                        var parsed = JSON.parse(body);
-                        resolve(parsed.id);
-                    }
-                    else {
-                        // ERROR response from openvidu-server. Resolve HTTP status
-                        reject(new Error(res.statusCode));
-                    }
-                });
+            })
+                .then(function (res) {
+                if (res.status === 200) {
+                    // SUCCESS response from openvidu-server. Resolve token
+                    resolve(res.data.id);
+                }
+                else {
+                    // ERROR response from openvidu-server. Resolve HTTP status
+                    reject(new Error(res.status.toString()));
+                }
+            }).catch(function (error) {
+                if (error.response) {
+                    // The request was made and the server responded with a status code (not 2xx)
+                    reject(new Error(error.response.status.toString()));
+                }
+                else if (error.request) {
+                    // The request was made but no response was received
+                    // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+                    // http.ClientRequest in node.js
+                    console.error(error.request);
+                }
+                else {
+                    // Something happened in setting up the request that triggered an Error
+                    console.error('Error', error.message);
+                }
             });
-            req.on('error', function (e) {
-                reject(e);
-            });
-            req.write(requestBody);
-            req.end();
         });
     };
     /**
@@ -100,53 +95,52 @@ var Session = /** @class */ (function () {
             if (!!_this.sessionId) {
                 resolve(_this.sessionId);
             }
-            var requestBody = JSON.stringify({
+            var data = JSON.stringify({
                 mediaMode: !!_this.properties.mediaMode ? _this.properties.mediaMode : MediaMode_1.MediaMode.ROUTED,
                 recordingMode: !!_this.properties.recordingMode ? _this.properties.recordingMode : RecordingMode_1.RecordingMode.MANUAL,
                 defaultRecordingLayout: !!_this.properties.defaultRecordingLayout ? _this.properties.defaultRecordingLayout : RecordingLayout_1.RecordingLayout.BEST_FIT,
                 defaultCustomLayout: !!_this.properties.defaultCustomLayout ? _this.properties.defaultCustomLayout : '',
                 customSessionId: !!_this.properties.customSessionId ? _this.properties.customSessionId : ''
             });
-            var options = {
-                hostname: _this.hostname,
-                port: _this.port,
-                path: Session.API_SESSIONS,
-                method: 'POST',
+            axios_1.default.post('https://' + _this.hostname + ':' + _this.port + Session.API_SESSIONS, data, {
                 headers: {
                     'Authorization': _this.basicAuth,
-                    'Content-Type': 'application/json',
-                    'Content-Length': Buffer.byteLength(requestBody)
+                    'Content-Type': 'application/json'
                 }
-            };
-            var req = https.request(options, function (res) {
-                var body = '';
-                res.on('data', function (d) {
-                    // Continuously update stream with data
-                    body += d;
-                });
-                res.on('end', function () {
-                    if (res.statusCode === 200) {
-                        // SUCCESS response from openvidu-server. Resolve sessionId
-                        var parsed = JSON.parse(body);
-                        _this.sessionId = parsed.id;
-                        resolve(parsed.id);
-                    }
-                    else if (res.statusCode === 409) {
+            })
+                .then(function (res) {
+                if (res.status === 200) {
+                    // SUCCESS response from openvidu-server. Resolve token
+                    _this.sessionId = res.data.id;
+                    resolve(_this.sessionId);
+                }
+                else {
+                    // ERROR response from openvidu-server. Resolve HTTP status
+                    reject(new Error(res.status.toString()));
+                }
+            }).catch(function (error) {
+                if (error.response) {
+                    // The request was made and the server responded with a status code (not 2xx)
+                    if (error.response.status === 409) {
                         // 'customSessionId' already existed
                         _this.sessionId = _this.properties.customSessionId;
                         resolve(_this.sessionId);
                     }
                     else {
-                        // ERROR response from openvidu-server. Resolve HTTP status
-                        reject(new Error(res.statusCode));
+                        reject(new Error(error.response.status.toString()));
                     }
-                });
+                }
+                else if (error.request) {
+                    // The request was made but no response was received
+                    // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+                    // http.ClientRequest in node.js
+                    console.error(error.request);
+                }
+                else {
+                    // Something happened in setting up the request that triggered an Error
+                    console.error('Error', error.message);
+                }
             });
-            req.on('error', function (e) {
-                reject(e);
-            });
-            req.write(requestBody);
-            req.end();
         });
     };
     Session.API_SESSIONS = '/api/sessions';

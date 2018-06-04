@@ -10,6 +10,7 @@ export declare class OpenVidu {
     private hostname;
     private port;
     private basicAuth;
+    private Buffer;
     /**
      * @param urlOpenViduServer Public accessible IP where your instance of OpenVidu Server is up an running
      * @param secret Secret used on OpenVidu Server initialization
@@ -59,6 +60,6 @@ export declare class OpenVidu {
      * - `409`: the recording has `started` status. Stop it before deletion
      */
     deleteRecording(recordingId: string): Promise<Error>;
-    private getBasicAuth(secret);
-    private setHostnameAndPort();
+    private getBasicAuth;
+    private setHostnameAndPort;
 }
