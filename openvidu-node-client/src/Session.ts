@@ -22,10 +22,7 @@ import { RecordingMode } from './RecordingMode';
 import { SessionProperties } from './SessionProperties';
 import { TokenOptions } from './TokenOptions';
 
-/**
- * @hidden
- */
-const https = require('https');
+import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 
 export class Session {
 
@@ -34,6 +31,8 @@ export class Session {
 
     sessionId: string;
     properties: SessionProperties;
+
+    private Buffer = require('buffer/').Buffer;
 
     constructor(private hostname: string, private port: number, private basicAuth: string, properties?: SessionProperties) {
         if (!properties) {
@@ -58,47 +57,44 @@ export class Session {
     public generateToken(tokenOptions?: TokenOptions): Promise<string> {
         return new Promise<string>((resolve, reject) => {
 
-            const requestBody = JSON.stringify({
+            const data = JSON.stringify({
                 session: this.sessionId,
                 role: (!!tokenOptions && !!tokenOptions.role) ? tokenOptions.role : OpenViduRole.PUBLISHER,
                 data: (!!tokenOptions && !!tokenOptions.data) ? tokenOptions.data : ''
             });
 
-            const options = {
-                hostname: this.hostname,
-                port: this.port,
-                path: Session.API_TOKENS,
-                method: 'POST',
-                headers: {
-                    'Authorization': this.basicAuth,
-                    'Content-Type': 'application/json',
-                    'Content-Length': Buffer.byteLength(requestBody)
+            axios.post(
+                'https://' + this.hostname + ':' + this.port + Session.API_TOKENS,
+                data,
+                {
+                    headers: {
+                        'Authorization': this.basicAuth,
+                        'Content-Type': 'application/json'
+                    }
                 }
-            };
-
-            const req = https.request(options, (res) => {
-                let body = '';
-                res.on('data', (d) => {
-                    // Continuously update stream with data
-                    body += d;
-                });
-                res.on('end', () => {
-                    if (res.statusCode === 200) {
+            )
+                .then(res => {
+                    if (res.status === 200) {
                         // SUCCESS response from openvidu-server. Resolve token
-                        const parsed = JSON.parse(body);
-                        resolve(parsed.id);
+                        resolve(res.data.id);
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
-                        reject(new Error(res.statusCode));
+                        reject(new Error(res.status.toString()));
+                    }
+                }).catch(error => {
+                    if (error.response) {
+                        // The request was made and the server responded with a status code (not 2xx)
+                        reject(new Error(error.response.status.toString()));
+                    } else if (error.request) {
+                        // The request was made but no response was received
+                        // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+                        // http.ClientRequest in node.js
+                        console.error(error.request);
+                    } else {
+                        // Something happened in setting up the request that triggered an Error
+                        console.error('Error', error.message);
                     }
                 });
-            });
-
-            req.on('error', (e) => {
-                reject(e);
-            });
-            req.write(requestBody);
-            req.end();
         });
     }
 
@@ -112,7 +108,7 @@ export class Session {
                 resolve(this.sessionId);
             }
 
-            const requestBody = JSON.stringify({
+            const data = JSON.stringify({
                 mediaMode: !!this.properties.mediaMode ? this.properties.mediaMode : MediaMode.ROUTED,
                 recordingMode: !!this.properties.recordingMode ? this.properties.recordingMode : RecordingMode.MANUAL,
                 defaultRecordingLayout: !!this.properties.defaultRecordingLayout ? this.properties.defaultRecordingLayout : RecordingLayout.BEST_FIT,
@@ -120,46 +116,45 @@ export class Session {
                 customSessionId: !!this.properties.customSessionId ? this.properties.customSessionId : ''
             });
 
-            const options = {
-                hostname: this.hostname,
-                port: this.port,
-                path: Session.API_SESSIONS,
-                method: 'POST',
-                headers: {
-                    'Authorization': this.basicAuth,
-                    'Content-Type': 'application/json',
-                    'Content-Length': Buffer.byteLength(requestBody)
+            axios.post(
+                'https://' + this.hostname + ':' + this.port + Session.API_SESSIONS,
+                data,
+                {
+                    headers: {
+                        'Authorization': this.basicAuth,
+                        'Content-Type': 'application/json'
+                    }
                 }
-            };
-
-            const req = https.request(options, (res) => {
-                let body = '';
-                res.on('data', (d) => {
-                    // Continuously update stream with data
-                    body += d;
-                });
-                res.on('end', () => {
-                    if (res.statusCode === 200) {
-                        // SUCCESS response from openvidu-server. Resolve sessionId
-                        const parsed = JSON.parse(body);
-                        this.sessionId = parsed.id;
-                        resolve(parsed.id);
-                    } else if (res.statusCode === 409) {
-                        // 'customSessionId' already existed
-                        this.sessionId = this.properties.customSessionId;
+            )
+                .then(res => {
+                    if (res.status === 200) {
+                        // SUCCESS response from openvidu-server. Resolve token
+                        this.sessionId = res.data.id;
                         resolve(this.sessionId);
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
-                        reject(new Error(res.statusCode));
+                        reject(new Error(res.status.toString()));
+                    }
+                }).catch(error => {
+                    if (error.response) {
+                        // The request was made and the server responded with a status code (not 2xx)
+                        if (error.response.status === 409) {
+                            // 'customSessionId' already existed
+                            this.sessionId = this.properties.customSessionId;
+                            resolve(this.sessionId);
+                        } else {
+                            reject(new Error(error.response.status.toString()));
+                        }
+                    } else if (error.request) {
+                        // The request was made but no response was received
+                        // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+                        // http.ClientRequest in node.js
+                        console.error(error.request);
+                    } else {
+                        // Something happened in setting up the request that triggered an Error
+                        console.error('Error', error.message);
                     }
                 });
-            });
-
-            req.on('error', (e) => {
-                reject(e);
-            });
-            req.write(requestBody);
-            req.end();
         });
     }
 
