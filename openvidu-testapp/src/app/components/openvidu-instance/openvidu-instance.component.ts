@@ -2,7 +2,7 @@ import {
   Component, Input, HostListener, ChangeDetectorRef, SimpleChanges, ElementRef, ViewChild,
   OnInit, OnDestroy, OnChanges
 } from '@angular/core';
-import { Subscription } from 'rxjs/Subscription';
+import { Subscription } from 'rxjs';
 
 import {
   OpenVidu, Session, Subscriber, Publisher, Stream, Connection,
@@ -168,7 +168,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
 
   private removeHttps = input => input.replace(/^https?:\/\//, '');
 
-  private joinSession(): void {
+  joinSession(): void {
 
     if (this.session) {
       this.leaveSession();

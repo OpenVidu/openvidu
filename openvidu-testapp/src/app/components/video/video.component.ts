@@ -16,7 +16,7 @@ import {
 
 import { EventsDialogComponent } from '../dialogs/events-dialog.component';
 import { MuteSubscribersService } from '../../services/mute-subscribers.service';
-import { Subscription } from 'rxjs/Subscription';
+import { Subscription } from 'rxjs';
 import { LocalRecordingDialogComponent } from '../dialogs/local-recording-dialog.component';
 import { ExtensionDialogComponent } from '../dialogs/extension-dialog.component';
 import { OpenViduVideoComponent } from './ov-video.component';

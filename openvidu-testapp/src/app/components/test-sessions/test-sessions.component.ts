@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { Subscription } from 'rxjs/Subscription';
+import { Subscription } from 'rxjs';
 import { OpenviduParamsService } from '../../services/openvidu-params.service';
 import { TestFeedService } from '../../services/test-feed.service';
 import { SessionConf } from '../openvidu-instance/openvidu-instance.component';
@@ -46,7 +46,7 @@ export class TestSessionsComponent implements OnInit, OnDestroy {
     this.paramsSubscription.unsubscribe();
   }
 
-  private addUser(): void {
+  addUser(): void {
     this.users.push({
       subscribeTo: true,
       publishTo: true,
@@ -54,11 +54,11 @@ export class TestSessionsComponent implements OnInit, OnDestroy {
     });
   }
 
-  private removeUser(): void {
+  removeUser(): void {
     this.users.pop();
   }
 
-  private removeAllUsers(): void {
+  removeAllUsers(): void {
     this.users = [];
   }
 
@@ -92,7 +92,7 @@ export class TestSessionsComponent implements OnInit, OnDestroy {
     }
   }
 
-  private loadScenario(subsPubs: number, pubs: number, subs: number, ): void {
+  loadScenario(subsPubs: number, pubs: number, subs: number, ): void {
     this.users = [];
     this.loadSubsPubs(subsPubs);
     this.loadPubs(pubs);

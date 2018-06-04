@@ -3,7 +3,7 @@ cp ../../openvidu-server/target/openvidu-server-"$1".jar ./openvidu-server.jar
 
 # Build and copy openvidu-testapp static files
 cd ../
-ng build
+ng build --prod
 cp -a dist/. ./docker/web/
 cd docker
 

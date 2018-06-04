@@ -81,7 +81,7 @@
                   <mat-icon class="mat-icon-custom-ic" aria-label="Session properties button">settings</mat-icon>
                 </button>
                 <button mat-icon-button title="Add new publisher to running session" [id]="'session-api-btn-' + index" class="mat-icon-custom"
-                  (click)="addNewPublisher()" [disabled]="!session || ((!sendAudio && !sendVideo) || !publishTo)">
+                  [disabled]="!session || !publishTo">
                   <mat-icon class="mat-icon-custom-ic" aria-label="Session API button">add_circle</mat-icon>
                 </button>
               </div>

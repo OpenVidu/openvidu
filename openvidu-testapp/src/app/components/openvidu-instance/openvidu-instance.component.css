@@ -44,8 +44,8 @@ mat-card.session-card {
   margin-bottom: 0;
 }
 
-#join-btn {
-  margin: 0 0 4px 4px;
+.join-btn {
+  margin-right: 4px;
 }
 
 #leave-btn {
@@ -88,7 +88,13 @@ mat-radio-button {
   background: none;
   cursor: pointer;
   padding: 0;
+  margin-right: 4px;
 }
+
+.session-actions button:last-child {
+  margin-right: 0;
+}
+
 
 .session-actions button:hover {
   color: #4d4d4d;
@@ -159,4 +165,12 @@ mat-expansion-panel-header {
 
 .publisher-btns-div {
   margin-top: -7px;
+}
+
+mat-checkbox {
+  margin-left: 4px;
+}
+
+mat-checkbox:first-of-type {
+  margin-left: 0;
 }

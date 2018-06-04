@@ -12,6 +12,10 @@ app-openvidu-instance {
   float: left;
 }
 
+button {
+  margin-right: 5px;
+}
+
 .scenario-div {
   float: right;
 }
