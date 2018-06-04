@@ -21,6 +21,21 @@ export class LayoutBestFitComponent implements OnInit, OnDestroy {
 
   layout: any;
   resizeTimeout;
+  numberOfScreenStreams = 0;
+
+  layoutOptions = {
+    maxRatio: 3 / 2,      // The narrowest ratio that will be used (default 2x3)
+    minRatio: 9 / 16,     // The widest ratio that will be used (default 16x9)
+    fixedRatio: false,    /* If this is true then the aspect ratio of the video is maintained
+      and minRatio and maxRatio are ignored (default false) */
+    bigClass: 'OV_big',   // The class to add to elements that should be sized bigger
+    bigPercentage: 0.8,   // The maximum percentage of space the big ones should take up
+    bigFixedRatio: false, // fixedRatio for the big ones
+    bigMaxRatio: 3 / 2,   // The narrowest ratio to use for the big elements (default 2x3)
+    bigMinRatio: 9 / 16,  // The widest ratio to use for the big elements (default 16x9)
+    bigFirst: true,       // Whether to place the big one in the top left (true) or bottom right
+    animate: true         // Whether you want to animate the transitions
+  };
 
   constructor(private route: ActivatedRoute, private appRef: ApplicationRef) {
     this.route.params.subscribe(params => {
@@ -51,18 +66,28 @@ export class LayoutBestFitComponent implements OnInit, OnDestroy {
     this.session = OV.initSession();
 
     this.session.on('streamCreated', (event: StreamEvent) => {
+      let changeFixedRatio = false;
+      if (event.stream.typeOfVideo === 'SCREEN') {
+        this.numberOfScreenStreams++;
+        changeFixedRatio = true;
+      }
       const subscriber: Subscriber = this.session.subscribe(event.stream, undefined);
       subscriber.on('streamPlaying', (e: StreamManagerEvent) => {
         const video: HTMLVideoElement = subscriber.videos[0].video;
         video.parentElement.parentElement.classList.remove('custom-class');
-        this.openviduLayout.updateLayout();
+        this.updateLayout(changeFixedRatio);
       });
       this.addSubscriber(subscriber);
     });
 
     this.session.on('streamDestroyed', (event: StreamEvent) => {
+      let changeFixedRatio = false;
+      if (event.stream.typeOfVideo === 'SCREEN') {
+        this.numberOfScreenStreams--;
+        changeFixedRatio = true;
+      }
       this.deleteSubscriber(<Subscriber>event.stream.streamManager);
-      this.openviduLayout.updateLayout();
+      this.updateLayout(changeFixedRatio);
     });
 
     const token = 'wss://' + location.hostname + ':4443?sessionId=' + this.sessionId + '&secret=' + this.secret + '&recorder=true';
@@ -72,19 +97,7 @@ export class LayoutBestFitComponent implements OnInit, OnDestroy {
       })
 
     this.openviduLayout = new OpenViduLayout();
-    this.openviduLayout.initLayoutContainer(document.getElementById('layout'), {
-      maxRatio: 3 / 2,      // The narrowest ratio that will be used (default 2x3)
-      minRatio: 9 / 16,     // The widest ratio that will be used (default 16x9)
-      fixedRatio: false,    /* If this is true then the aspect ratio of the video is maintained
-      and minRatio and maxRatio are ignored (default false) */
-      bigClass: 'OV_big',   // The class to add to elements that should be sized bigger
-      bigPercentage: 0.8,   // The maximum percentage of space the big ones should take up
-      bigFixedRatio: false, // fixedRatio for the big ones
-      bigMaxRatio: 3 / 2,   // The narrowest ratio to use for the big elements (default 2x3)
-      bigMinRatio: 9 / 16,  // The widest ratio to use for the big elements (default 16x9)
-      bigFirst: true,       // Whether to place the big one in the top left (true) or bottom right
-      animate: true         // Whether you want to animate the transitions
-    });
+    this.openviduLayout.initLayoutContainer(document.getElementById('layout'), this.layoutOptions);
   }
 
   private addSubscriber(subscriber: Subscriber): void {
@@ -110,6 +123,14 @@ export class LayoutBestFitComponent implements OnInit, OnDestroy {
     if (this.session) { this.session.disconnect(); };
     this.subscribers = [];
     this.session = null;
+  }
+
+  updateLayout(changeFixedRatio: boolean) {
+    if (changeFixedRatio) {
+      this.layoutOptions.fixedRatio = this.numberOfScreenStreams > 0;
+      this.openviduLayout.setLayoutOptions(this.layoutOptions);
+    }
+    this.openviduLayout.updateLayout();
   }
 
 }

@@ -487,9 +487,9 @@ var Publisher_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu
 var Session_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/Session.js");
 var OpenViduError_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Enums/OpenViduError.js");
 var VideoInsertMode_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Enums/VideoInsertMode.js");
-var RpcBuilder = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/index.js");
 var screenSharingAuto = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/ScreenSharing/Screen-Capturing-Auto.js");
 var screenSharing = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/ScreenSharing/Screen-Capturing.js");
+var RpcBuilder = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-jsonrpc/index.js");
 var platform = __webpack_require__("../../../../openvidu-browser/node_modules/platform/platform.js");
 /**
  * Entrypoint of OpenVidu Browser library.
@@ -11866,6 +11866,19 @@ var LayoutBestFitComponent = (function () {
         this.route = route;
         this.appRef = appRef;
         this.subscribers = [];
+        this.numberOfScreenStreams = 0;
+        this.layoutOptions = {
+            maxRatio: 3 / 2,
+            minRatio: 9 / 16,
+            fixedRatio: false,
+            bigClass: 'OV_big',
+            bigPercentage: 0.8,
+            bigFixedRatio: false,
+            bigMaxRatio: 3 / 2,
+            bigMinRatio: 9 / 16,
+            bigFirst: true,
+            animate: true // Whether you want to animate the transitions
+        };
         this.route.params.subscribe(function (params) {
             _this.sessionId = params.sessionId;
             _this.secret = params.secret;
@@ -11889,17 +11902,27 @@ var LayoutBestFitComponent = (function () {
         var OV = new __WEBPACK_IMPORTED_MODULE_2_openvidu_browser__["OpenVidu"]();
         this.session = OV.initSession();
         this.session.on('streamCreated', function (event) {
+            var changeFixedRatio = false;
+            if (event.stream.typeOfVideo === 'SCREEN') {
+                _this.numberOfScreenStreams++;
+                changeFixedRatio = true;
+            }
             var subscriber = _this.session.subscribe(event.stream, undefined);
             subscriber.on('streamPlaying', function (e) {
                 var video = subscriber.videos[0].video;
                 video.parentElement.parentElement.classList.remove('custom-class');
-                _this.openviduLayout.updateLayout();
+                _this.updateLayout(changeFixedRatio);
             });
             _this.addSubscriber(subscriber);
         });
         this.session.on('streamDestroyed', function (event) {
+            var changeFixedRatio = false;
+            if (event.stream.typeOfVideo === 'SCREEN') {
+                _this.numberOfScreenStreams--;
+                changeFixedRatio = true;
+            }
             _this.deleteSubscriber(event.stream.streamManager);
-            _this.openviduLayout.updateLayout();
+            _this.updateLayout(changeFixedRatio);
         });
         var token = 'wss://' + location.hostname + ':4443?sessionId=' + this.sessionId + '&secret=' + this.secret + '&recorder=true';
         this.session.connect(token)
@@ -11907,18 +11930,7 @@ var LayoutBestFitComponent = (function () {
             console.error(error);
         });
         this.openviduLayout = new __WEBPACK_IMPORTED_MODULE_3__openvidu_layout__["a" /* OpenViduLayout */]();
-        this.openviduLayout.initLayoutContainer(document.getElementById('layout'), {
-            maxRatio: 3 / 2,
-            minRatio: 9 / 16,
-            fixedRatio: false,
-            bigClass: 'OV_big',
-            bigPercentage: 0.8,
-            bigFixedRatio: false,
-            bigMaxRatio: 3 / 2,
-            bigMinRatio: 9 / 16,
-            bigFirst: true,
-            animate: true // Whether you want to animate the transitions
-        });
+        this.openviduLayout.initLayoutContainer(document.getElementById('layout'), this.layoutOptions);
     };
     LayoutBestFitComponent.prototype.addSubscriber = function (subscriber) {
         this.subscribers.push(subscriber);
@@ -11944,6 +11956,13 @@ var LayoutBestFitComponent = (function () {
         ;
         this.subscribers = [];
         this.session = null;
+    };
+    LayoutBestFitComponent.prototype.updateLayout = function (changeFixedRatio) {
+        if (changeFixedRatio) {
+            this.layoutOptions.fixedRatio = this.numberOfScreenStreams > 0;
+            this.openviduLayout.setLayoutOptions(this.layoutOptions);
+        }
+        this.openviduLayout.updateLayout();
     };
     __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["A" /* HostListener */])('window:beforeunload'),
