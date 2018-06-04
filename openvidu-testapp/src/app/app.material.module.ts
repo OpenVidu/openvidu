@@ -17,7 +17,9 @@ import {
     MatSelectModule,
     MatChipsModule,
     MatExpansionModule,
-    MatSlideToggleModule
+    MatSlideToggleModule,
+    MatSidenavModule,
+    MatFormFieldModule
 } from '@angular/material';
 
 @NgModule({
@@ -39,7 +41,9 @@ import {
         MatSelectModule,
         MatChipsModule,
         MatExpansionModule,
-        MatSlideToggleModule
+        MatSlideToggleModule,
+        MatSidenavModule,
+        MatFormFieldModule
     ],
 })
 export class AppMaterialModule { }

@@ -71,7 +71,7 @@
 				<div class="tsd-comment tsd-typography">
 					<div class="lead">
 						<p>Represents a video call. It can also be seen as a videoconference room where multiple users can connect.
-							Participants who publish their videos to a session will be seen by the rest of users connected to that specific session.
+							Participants who publish their videos to a session can be seen by the rest of users connected to that specific session.
 						Initialized with <a href="openvidu.html#initsession">OpenVidu.initSession</a> method</p>
 					</div>
 				</div>
@@ -99,6 +99,7 @@
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="session.html#connection" class="tsd-kind-icon">connection</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="session.html#sessionid" class="tsd-kind-icon">session<wbr>Id</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="session.html#streammanagers" class="tsd-kind-icon">stream<wbr>Managers</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
@@ -128,7 +129,7 @@
 					<div class="tsd-signature tsd-kind-icon">connection<span class="tsd-signature-symbol">:</span> <a href="connection.html" class="tsd-signature-type">Connection</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L52">OpenVidu/Session.ts:52</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L53">OpenVidu/Session.ts:53</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -143,12 +144,27 @@
 					<div class="tsd-signature tsd-kind-icon">session<wbr>Id<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L57">OpenVidu/Session.ts:57</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L58">OpenVidu/Session.ts:58</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
-							<p>Unique identifier of the Session. This is the same value you pass when calling <a href="openvidu.html#initsession">OpenVidu.initSession</a></p>
+							<p>Unique identifier of the Session</p>
+						</div>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
+					<a name="streammanagers" class="tsd-anchor"></a>
+					<h3>stream<wbr>Managers</h3>
+					<div class="tsd-signature tsd-kind-icon">stream<wbr>Managers<span class="tsd-signature-symbol">:</span> <a href="streammanager.html" class="tsd-signature-type">StreamManager</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol"> =&nbsp;[]</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L63">OpenVidu/Session.ts:63</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Collection of all StreamManagers of this Session (<a href="publisher.html">Publisher</a> and <a href="subscriber.html">Subscriber</a>)</p>
 						</div>
 					</div>
 				</section>
@@ -166,7 +182,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L91">OpenVidu/Session.ts:91</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L97">OpenVidu/Session.ts:97</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -185,8 +201,8 @@
 									<li>Then one for each remote Connection previously connected to the Session, if any. Any other remote user connecting to the Session after you have
 									successfully connected will also dispatch a <code>connectionCreated</code> event when they do so.</li>
 								</ul>
-								<p>The <a href="session.html">Session</a> object of the local participant will also dispatch a <code>streamCreated</code> event for each remote active <a href="publisher.html">Publisher</a> after dispatching all remote
-								<code>connectionCreated</code> events.</p>
+								<p>The <a href="session.html">Session</a> object of the local participant will also dispatch a <code>streamCreated</code> event for each remote active <a href="publisher.html">Publisher</a> that was already streaming
+								when connecting, just after dispatching all remote <code>connectionCreated</code> events.</p>
 								<p>The <a href="session.html">Session</a> object of every other participant connected to the session will dispatch a <code>connectionCreated</code> event.</p>
 								<p>See <a href="connectionevent.html">ConnectionEvent</a> and <a href="streamevent.html">StreamEvent</a> to learn more.</p>
 							</div>
@@ -197,12 +213,12 @@
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
-							<p>A Promise to which you must subscribe that is resolved if the recording successfully started and rejected with an Error object if not</p>
+							<p>A Promise to which you must subscribe that is resolved if the the connection to the Session was successful and rejected with an Error object if not</p>
 						</li>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L92">OpenVidu/Session.ts:92</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L98">OpenVidu/Session.ts:98</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -221,8 +237,8 @@
 									<li>Then one for each remote Connection previously connected to the Session, if any. Any other remote user connecting to the Session after you have
 									successfully connected will also dispatch a <code>connectionCreated</code> event when they do so.</li>
 								</ul>
-								<p>The <a href="session.html">Session</a> object of the local participant will also dispatch a <code>streamCreated</code> event for each remote active <a href="publisher.html">Publisher</a> after dispatching all remote
-								<code>connectionCreated</code> events.</p>
+								<p>The <a href="session.html">Session</a> object of the local participant will also dispatch a <code>streamCreated</code> event for each remote active <a href="publisher.html">Publisher</a> that was already streaming
+								when connecting, just after dispatching all remote <code>connectionCreated</code> events.</p>
 								<p>The <a href="session.html">Session</a> object of every other participant connected to the session will dispatch a <code>connectionCreated</code> event.</p>
 								<p>See <a href="connectionevent.html">ConnectionEvent</a> and <a href="streamevent.html">StreamEvent</a> to learn more.</p>
 							</div>
@@ -236,7 +252,7 @@
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
-							<p>A Promise to which you must subscribe that is resolved if the recording successfully started and rejected with an Error object if not</p>
+							<p>A Promise to which you must subscribe that is resolved if the the connection to the Session was successful and rejected with an Error object if not</p>
 						</li>
 					</ul>
 				</section>
@@ -250,7 +266,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L166">OpenVidu/Session.ts:166</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L177">OpenVidu/Session.ts:177</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -260,16 +276,21 @@
 								<h4 id="events-dispatched">Events dispatched</h4>
 								<p>The <a href="session.html">Session</a> object of the local participant will dispatch a <code>sessionDisconnected</code> event.
 									This event will automatically unsubscribe the leaving participant from every Subscriber object of the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks)
-									and also delete the HTML video element associated to it.
-								Call <code>event.preventDefault()</code> to avoid this beahviour and take care of disposing and cleaning all the Subscriber objects yourself. See <a href="sessiondisconnectedevent.html">SessionDisconnectedEvent</a> to learn more.</p>
+									and also deletes any HTML video element associated to each Subscriber (only those <a href="/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players">created by OpenVidu Browser</a>).
+									For every video removed, each Subscriber object will dispatch a <code>videoElementDestroyed</code> event.
+									Call <code>event.preventDefault()</code> uppon event <code>sessionDisconnected</code> to avoid this behaviour and take care of disposing and cleaning all the Subscriber objects yourself.
+								See <a href="sessiondisconnectedevent.html">SessionDisconnectedEvent</a> and <a href="videoelementevent.html">VideoElementEvent</a> to learn more to learn more.</p>
 								<p>The <a href="publisher.html">Publisher</a> object of the local participant will dispatch a <code>streamDestroyed</code> event if there is a <a href="publisher.html">Publisher</a> object publishing to the session.
-									This event will automatically stop all media tracks and delete the HTML video element associated to it.
-									Call <code>event.preventDefault()</code> if you want clean the Publisher object yourself or re-publish it in a different Session (to do so it is a mandatory
-								requirement to call <code>Session.unpublish()</code> or/and <code>Session.disconnect()</code> in the previous session). See <a href="streamevent.html">StreamEvent</a> to learn more.</p>
+									This event will automatically stop all media tracks and delete any HTML video element associated to it (only those <a href="/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players">created by OpenVidu Browser</a>).
+									For every video removed, the Publisher object will dispatch a <code>videoElementDestroyed</code> event.
+									Call <code>event.preventDefault()</code> uppon event <code>streamDestroyed</code> if you want to clean the Publisher object on your own or re-publish it in a different Session (to do so it is a mandatory requirement to call <code>Session.unpublish()</code>
+								or/and <code>Session.disconnect()</code> in the previous session). See <a href="streamevent.html">StreamEvent</a> and <a href="videoelementevent.html">VideoElementEvent</a> to learn more.</p>
 								<p>The <a href="session.html">Session</a> object of every other participant connected to the session will dispatch a <code>streamDestroyed</code> event if the disconnected participant was publishing.
 									This event will automatically unsubscribe the Subscriber object from the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks)
-									and delete the HTML video element associated to it.
-								Call <code>event.preventDefault()</code> to avoid this default behaviour and take care of disposing and cleaning the Subscriber object yourself. See <a href="streamevent.html">StreamEvent</a> to learn more.</p>
+									and also deletes any HTML video element associated to that Subscriber (only those <a href="/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players">created by OpenVidu Browser</a>).
+									For every video removed, the Subscriber object will dispatch a <code>videoElementDestroyed</code> event.
+									Call <code>event.preventDefault()</code> uppon event <code>streamDestroyed</code> to avoid this default behaviour and take care of disposing and cleaning the Subscriber object yourself.
+								See <a href="streamevent.html">StreamEvent</a> and <a href="videoelementevent.html">VideoElementEvent</a> to learn more.</p>
 								<p>The <a href="session.html">Session</a> object of every other participant connected to the session will dispatch a <code>connectionDestroyed</code> event in any case. See <a href="connectionevent.html">ConnectionEvent</a> to learn more.</p>
 							</div>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
@@ -286,7 +307,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L494">OpenVidu/Session.ts:494</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L514">OpenVidu/Session.ts:514</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -335,7 +356,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L436">OpenVidu/Session.ts:436</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L456">OpenVidu/Session.ts:456</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -384,7 +405,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L465">OpenVidu/Session.ts:465</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L485">OpenVidu/Session.ts:485</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -433,17 +454,16 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L305">OpenVidu/Session.ts:305</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L320">OpenVidu/Session.ts:320</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Publishes the participant&#39;s audio-video stream contained in <code>publisher</code> object to the session</p>
+									<p>Publishes to the Session the Publisher object</p>
 								</div>
 								<h4 id="events-dispatched">Events dispatched</h4>
 								<p>The local <a href="publisher.html">Publisher</a> object will dispatch a <code>streamCreated</code> event upon successful termination of this method. See <a href="streamevent.html">StreamEvent</a> to learn more.</p>
-								<p>The local <a href="publisher.html">Publisher</a> object will dispatch a <code>remoteVideoPlaying</code> event only if <a href="publisher.html#subscribetoremote">Publisher.subscribeToRemote</a> was called before this method, once the remote video starts playing.
-								See <a href="videoelementevent.html">VideoElementEvent</a> to learn more.</p>
+								<p>The local <a href="publisher.html">Publisher</a> object will dispatch a <code>streamPlaying</code> once the media stream starts playing. See <a href="streammanagerevent.html">StreamManagerEvent</a> to learn more.</p>
 								<p>The <a href="session.html">Session</a> object of every other participant connected to the session will dispatch a <code>streamCreated</code> event so they can subscribe to it. See <a href="streamevent.html">StreamEvent</a> to learn more.</p>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -453,7 +473,7 @@
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
-							<p>A Promise (to which you can optionally subscribe to) that is resolved if the publisher was successfully published and rejected with an Error object if not</p>
+							<p>A Promise (to which you can optionally subscribe to) that is resolved only after the publisher was successfully published and rejected with an Error object if not</p>
 						</li>
 					</ul>
 				</section>
@@ -467,7 +487,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L400">OpenVidu/Session.ts:400</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L420">OpenVidu/Session.ts:420</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -504,7 +524,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L170">OpenVidu/Session.ts:170</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L181">OpenVidu/Session.ts:181</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -512,9 +532,9 @@
 									<p>Subscribes to a <code>stream</code>, adding a new HTML video element to DOM with <code>subscriberProperties</code> settings. This method is usually called in the callback of <code>streamCreated</code> event.</p>
 								</div>
 								<h4 id="events-dispatched">Events dispatched</h4>
-								<p>The <a href="subscriber.html">Subscriber</a> object will dispatch a <code>videoElementCreated</code> event once the HTML video element has been added to DOM (if <em>targetElement</em> not null or undefined)</p>
-								<p>The <a href="subscriber.html">Subscriber</a> object will dispatch a <code>videoPlaying</code> event once the remote video starts playing (only if <code>videoElementCreated</code> event has been previously dispatched)</p>
-								<p>See <a href="videoelementevent.html">VideoElementEvent</a> to learn more.</p>
+								<p>The <a href="subscriber.html">Subscriber</a> object will dispatch a <code>videoElementCreated</code> event once the HTML video element has been added to DOM (only if you
+								<a href="/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players">let OpenVidu take care of the video players</a>). See <a href="videoelementevent.html">VideoElementEvent</a> to learn more.</p>
+								<p>The <a href="subscriber.html">Subscriber</a> object will dispatch a <code>streamPlaying</code> event once the remote stream starts playing. See <a href="streammanagerevent.html">StreamManagerEvent</a> to learn more.</p>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
@@ -530,8 +550,8 @@
 									<h5>targetElement: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">HTMLElement</span></h5>
 									<div class="tsd-comment tsd-typography">
 										<div class="lead">
-											<p>HTML DOM element (or its <code>id</code> attribute) in which the video element of the Subscriber will be inserted (see <a href="../interfaces/subscriberproperties.html#insertmode">SubscriberProperties.insertMode</a>). If null or undefined no default video will be created for this Subscriber
-											(you can always access the native MediaStream object by calling <em>Subscriber.stream.getMediaStream()</em> and use it as <em>srcObject</em> of any HTML video element)</p>
+											<p>HTML DOM element (or its <code>id</code> attribute) in which the video element of the Subscriber will be inserted (see <a href="../interfaces/subscriberproperties.html#insertmode">SubscriberProperties.insertMode</a>). If <em>null</em> or <em>undefined</em> no default video will be created for this Subscriber.
+											You can always call method <a href="subscriber.html#addvideoelement">Subscriber.addVideoElement</a> or <a href="subscriber.html#createvideoelement">Subscriber.createVideoElement</a> to manage the video elements on your own (see <a href="/docs/how-do-i/manage-videos">Manage video players</a> section)</p>
 										</div>
 									</div>
 								</li>
@@ -541,7 +561,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L171">OpenVidu/Session.ts:171</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L182">OpenVidu/Session.ts:182</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -549,9 +569,9 @@
 									<p>Subscribes to a <code>stream</code>, adding a new HTML video element to DOM with <code>subscriberProperties</code> settings. This method is usually called in the callback of <code>streamCreated</code> event.</p>
 								</div>
 								<h4 id="events-dispatched">Events dispatched</h4>
-								<p>The <a href="subscriber.html">Subscriber</a> object will dispatch a <code>videoElementCreated</code> event once the HTML video element has been added to DOM (if <em>targetElement</em> not null or undefined)</p>
-								<p>The <a href="subscriber.html">Subscriber</a> object will dispatch a <code>videoPlaying</code> event once the remote video starts playing (only if <code>videoElementCreated</code> event has been previously dispatched)</p>
-								<p>See <a href="videoelementevent.html">VideoElementEvent</a> to learn more.</p>
+								<p>The <a href="subscriber.html">Subscriber</a> object will dispatch a <code>videoElementCreated</code> event once the HTML video element has been added to DOM (only if you
+								<a href="/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players">let OpenVidu take care of the video players</a>). See <a href="videoelementevent.html">VideoElementEvent</a> to learn more.</p>
+								<p>The <a href="subscriber.html">Subscriber</a> object will dispatch a <code>streamPlaying</code> event once the remote stream starts playing. See <a href="streammanagerevent.html">StreamManagerEvent</a> to learn more.</p>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
@@ -567,8 +587,8 @@
 									<h5>targetElement: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">HTMLElement</span></h5>
 									<div class="tsd-comment tsd-typography">
 										<div class="lead">
-											<p>HTML DOM element (or its <code>id</code> attribute) in which the video element of the Subscriber will be inserted (see <a href="../interfaces/subscriberproperties.html#insertmode">SubscriberProperties.insertMode</a>). If null or undefined no default video will be created for this Subscriber
-											(you can always access the native MediaStream object by calling <em>Subscriber.stream.getMediaStream()</em> and use it as <em>srcObject</em> of any HTML video element)</p>
+											<p>HTML DOM element (or its <code>id</code> attribute) in which the video element of the Subscriber will be inserted (see <a href="../interfaces/subscriberproperties.html#insertmode">SubscriberProperties.insertMode</a>). If <em>null</em> or <em>undefined</em> no default video will be created for this Subscriber.
+											You can always call method <a href="subscriber.html#addvideoelement">Subscriber.addVideoElement</a> or <a href="subscriber.html#createvideoelement">Subscriber.createVideoElement</a> to manage the video elements on your own (see <a href="/docs/how-do-i/manage-videos">Manage video players</a> section)</p>
 										</div>
 									</div>
 								</li>
@@ -581,7 +601,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L172">OpenVidu/Session.ts:172</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L183">OpenVidu/Session.ts:183</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -589,9 +609,9 @@
 									<p>Subscribes to a <code>stream</code>, adding a new HTML video element to DOM with <code>subscriberProperties</code> settings. This method is usually called in the callback of <code>streamCreated</code> event.</p>
 								</div>
 								<h4 id="events-dispatched">Events dispatched</h4>
-								<p>The <a href="subscriber.html">Subscriber</a> object will dispatch a <code>videoElementCreated</code> event once the HTML video element has been added to DOM (if <em>targetElement</em> not null or undefined)</p>
-								<p>The <a href="subscriber.html">Subscriber</a> object will dispatch a <code>videoPlaying</code> event once the remote video starts playing (only if <code>videoElementCreated</code> event has been previously dispatched)</p>
-								<p>See <a href="videoelementevent.html">VideoElementEvent</a> to learn more.</p>
+								<p>The <a href="subscriber.html">Subscriber</a> object will dispatch a <code>videoElementCreated</code> event once the HTML video element has been added to DOM (only if you
+								<a href="/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players">let OpenVidu take care of the video players</a>). See <a href="videoelementevent.html">VideoElementEvent</a> to learn more.</p>
+								<p>The <a href="subscriber.html">Subscriber</a> object will dispatch a <code>streamPlaying</code> event once the remote stream starts playing. See <a href="streammanagerevent.html">StreamManagerEvent</a> to learn more.</p>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
@@ -607,8 +627,8 @@
 									<h5>targetElement: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">HTMLElement</span></h5>
 									<div class="tsd-comment tsd-typography">
 										<div class="lead">
-											<p>HTML DOM element (or its <code>id</code> attribute) in which the video element of the Subscriber will be inserted (see <a href="../interfaces/subscriberproperties.html#insertmode">SubscriberProperties.insertMode</a>). If null or undefined no default video will be created for this Subscriber
-											(you can always access the native MediaStream object by calling <em>Subscriber.stream.getMediaStream()</em> and use it as <em>srcObject</em> of any HTML video element)</p>
+											<p>HTML DOM element (or its <code>id</code> attribute) in which the video element of the Subscriber will be inserted (see <a href="../interfaces/subscriberproperties.html#insertmode">SubscriberProperties.insertMode</a>). If <em>null</em> or <em>undefined</em> no default video will be created for this Subscriber.
+											You can always call method <a href="subscriber.html#addvideoelement">Subscriber.addVideoElement</a> or <a href="subscriber.html#createvideoelement">Subscriber.createVideoElement</a> to manage the video elements on your own (see <a href="/docs/how-do-i/manage-videos">Manage video players</a> section)</p>
 										</div>
 									</div>
 								</li>
@@ -644,7 +664,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L173">OpenVidu/Session.ts:173</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L184">OpenVidu/Session.ts:184</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -652,9 +672,9 @@
 									<p>Subscribes to a <code>stream</code>, adding a new HTML video element to DOM with <code>subscriberProperties</code> settings. This method is usually called in the callback of <code>streamCreated</code> event.</p>
 								</div>
 								<h4 id="events-dispatched">Events dispatched</h4>
-								<p>The <a href="subscriber.html">Subscriber</a> object will dispatch a <code>videoElementCreated</code> event once the HTML video element has been added to DOM (if <em>targetElement</em> not null or undefined)</p>
-								<p>The <a href="subscriber.html">Subscriber</a> object will dispatch a <code>videoPlaying</code> event once the remote video starts playing (only if <code>videoElementCreated</code> event has been previously dispatched)</p>
-								<p>See <a href="videoelementevent.html">VideoElementEvent</a> to learn more.</p>
+								<p>The <a href="subscriber.html">Subscriber</a> object will dispatch a <code>videoElementCreated</code> event once the HTML video element has been added to DOM (only if you
+								<a href="/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players">let OpenVidu take care of the video players</a>). See <a href="videoelementevent.html">VideoElementEvent</a> to learn more.</p>
+								<p>The <a href="subscriber.html">Subscriber</a> object will dispatch a <code>streamPlaying</code> event once the remote stream starts playing. See <a href="streammanagerevent.html">StreamManagerEvent</a> to learn more.</p>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
@@ -670,8 +690,8 @@
 									<h5>targetElement: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">HTMLElement</span></h5>
 									<div class="tsd-comment tsd-typography">
 										<div class="lead">
-											<p>HTML DOM element (or its <code>id</code> attribute) in which the video element of the Subscriber will be inserted (see <a href="../interfaces/subscriberproperties.html#insertmode">SubscriberProperties.insertMode</a>). If null or undefined no default video will be created for this Subscriber
-											(you can always access the native MediaStream object by calling <em>Subscriber.stream.getMediaStream()</em> and use it as <em>srcObject</em> of any HTML video element)</p>
+											<p>HTML DOM element (or its <code>id</code> attribute) in which the video element of the Subscriber will be inserted (see <a href="../interfaces/subscriberproperties.html#insertmode">SubscriberProperties.insertMode</a>). If <em>null</em> or <em>undefined</em> no default video will be created for this Subscriber.
+											You can always call method <a href="subscriber.html#addvideoelement">Subscriber.addVideoElement</a> or <a href="subscriber.html#createvideoelement">Subscriber.createVideoElement</a> to manage the video elements on your own (see <a href="/docs/how-do-i/manage-videos">Manage video players</a> section)</p>
 										</div>
 									</div>
 								</li>
@@ -720,7 +740,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L237">OpenVidu/Session.ts:237</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L249">OpenVidu/Session.ts:249</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -742,7 +762,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L238">OpenVidu/Session.ts:238</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L250">OpenVidu/Session.ts:250</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -771,21 +791,25 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L355">OpenVidu/Session.ts:355</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L375">OpenVidu/Session.ts:375</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Unpublishes the participant&#39;s audio-video stream contained in <code>publisher</code> object.</p>
+									<p>Unpublishes from the Session the Publisher object.</p>
 								</div>
 								<h4 id="events-dispatched">Events dispatched</h4>
 								<p>The <a href="publisher.html">Publisher</a> object of the local participant will dispatch a <code>streamDestroyed</code> event.
-									This event will automatically stop all media tracks and delete the HTML video element associated to it.
-								Call <code>event.preventDefault()</code> if you want clean the Publisher object yourself or re-publish it in a different Session.</p>
+									This event will automatically stop all media tracks and delete any HTML video element associated to this Publisher
+									(only those videos <a href="/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players">created by OpenVidu Browser</a>).
+									For every video removed, the Publisher object will dispatch a <code>videoElementDestroyed</code> event.
+								Call <code>event.preventDefault()</code> uppon event <code>streamDestroyed</code> if you want to clean the Publisher object on your own or re-publish it in a different Session.</p>
 								<p>The <a href="session.html">Session</a> object of every other participant connected to the session will dispatch a <code>streamDestroyed</code> event.
-									This event will automatically unsubscribe the Subscriber object from the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks) and delete the HTML video element associated to it.
-								Call <code>event.preventDefault()</code> to avoid this default behaviour and take care of disposing and cleaning the Subscriber object yourself.</p>
-								<p>See <a href="streamevent.html">StreamEvent</a> to learn more.</p>
+									This event will automatically unsubscribe the Subscriber object from the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks) and
+									delete any HTML video element associated to it (only those <a href="/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players">created by OpenVidu Browser</a>).
+									For every video removed, the Subscriber object will dispatch a <code>videoElementDestroyed</code> event.
+								Call <code>event.preventDefault()</code> uppon event <code>streamDestroyed</code> to avoid this default behaviour and take care of disposing and cleaning the Subscriber object on your own.</p>
+								<p>See <a href="streamevent.html">StreamEvent</a> and <a href="videoelementevent.html">VideoElementEvent</a> to learn more.</p>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
@@ -807,15 +831,17 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L270">OpenVidu/Session.ts:270</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L285">OpenVidu/Session.ts:285</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Unsubscribes from <code>subscriber</code>, automatically removing its HTML video element.</p>
+									<p>Unsubscribes from <code>subscriber</code>, automatically removing its associated HTML video elements.</p>
 								</div>
 								<h4 id="events-dispatched">Events dispatched</h4>
-								<p>The <a href="subscriber.html">Subscriber</a> object will dispatch a <code>videoElementDestroyed</code> event (only if it previously dispatched a <code>videoElementCreated</code> event). See <a href="videoelementevent.html">VideoElementEvent</a> to learn more</p>
+								<p>The <a href="subscriber.html">Subscriber</a> object will dispatch a <code>videoElementDestroyed</code> event for each video associated to it that was removed from DOM.
+								Only videos <a href="/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players">created by OpenVidu Browser</a>) will be automatically removed</p>
+								<p>See <a href="videoelementevent.html">VideoElementEvent</a> to learn more</p>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
@@ -886,6 +912,9 @@
 							<li class=" tsd-kind-property tsd-parent-kind-class">
 								<a href="session.html#sessionid" class="tsd-kind-icon">session<wbr>Id</a>
 							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class">
+								<a href="session.html#streammanagers" class="tsd-kind-icon">stream<wbr>Managers</a>
+							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="session.html#connect" class="tsd-kind-icon">connect</a>
 							</li>
@@ -936,6 +965,15 @@
 						<a href="streamevent.html" class="tsd-kind-icon">Stream<wbr>Event</a>
 					</li>
 					<li class=" tsd-kind-class">
+						<a href="streammanager.html" class="tsd-kind-icon">Stream<wbr>Manager</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="streammanagerevent.html" class="tsd-kind-icon">Stream<wbr>Manager<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="streampropertychangedevent.html" class="tsd-kind-icon">Stream<wbr>Property<wbr>Changed<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-class">
 						<a href="subscriber.html" class="tsd-kind-icon">Subscriber</a>
 					</li>
 					<li class=" tsd-kind-class">
@@ -955,6 +993,9 @@
 					</li>
 					<li class=" tsd-kind-interface">
 						<a href="../interfaces/signaloptions.html" class="tsd-kind-icon">Signal<wbr>Options</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="../interfaces/streammanagervideo.html" class="tsd-kind-icon">Stream<wbr>Manager<wbr>Video</a>
 					</li>
 					<li class=" tsd-kind-interface">
 						<a href="../interfaces/subscriberproperties.html" class="tsd-kind-icon">Subscriber<wbr>Properties</a>

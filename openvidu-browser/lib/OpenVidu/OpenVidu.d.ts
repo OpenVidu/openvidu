@@ -10,8 +10,11 @@ import { PublisherProperties } from '../OpenViduInternal/Interfaces/Public/Publi
  * Use it to initialize objects of type [[Session]], [[Publisher]] and [[LocalRecorder]]
  */
 export declare class OpenVidu {
-    private session;
     private jsonRpcClient;
+    /**
+     * @hidden
+     */
+    session: Session;
     /**
      * @hidden
      */

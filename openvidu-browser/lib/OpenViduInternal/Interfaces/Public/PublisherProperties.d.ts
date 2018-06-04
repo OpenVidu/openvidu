@@ -26,12 +26,12 @@ export interface PublisherProperties {
      */
     mirror?: boolean;
     /**
-     * Whether to initially publish to the session with the audio unmuted or muted. Only makes sense if property `audioSource` is NOT set to false. You can change the audio state later during the session with [[Publisher.publishAudio]]
+     * Whether to initially publish to the session with the audio unmuted or muted. Only makes sense if property `audioSource` is NOT set to *false* or *null*. You can change the audio state later during the session with [[Publisher.publishAudio]]
      * @default true
      */
     publishAudio?: boolean;
     /**
-     * Whether to initially publish to the session with the video enabled or disabled. Only makes sense if property `videoSource` is NOT set to false. You can change the video state later during the session with [[Publisher.publishVideo]]
+     * Whether to initially publish to the session with the video enabled or disabled. Only makes sense if property `videoSource` is NOT set to *false* or *null*. You can change the video state later during the session with [[Publisher.publishVideo]]
      * @default true
      */
     publishVideo?: boolean;

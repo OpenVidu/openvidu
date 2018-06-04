@@ -52,6 +52,7 @@ export class LocalRecorder {
         this.state = LocalRecorderState.READY;
     }
 
+
     /**
      * Starts the recording of the Stream. [[state]] property must be `READY`. After method succeeds is set to `RECORDING`
      * @returns A Promise (to which you can optionally subscribe to) that is resolved if the recording successfully started and rejected with an Error object if not

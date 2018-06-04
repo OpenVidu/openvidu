@@ -122,7 +122,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L59">OpenVidu/OpenVidu.ts:59</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L62">OpenVidu/OpenVidu.ts:62</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <a href="openvidu.html" class="tsd-signature-type">OpenVidu</a></h4>
@@ -142,7 +142,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L201">OpenVidu/OpenVidu.ts:201</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L205">OpenVidu/OpenVidu.ts:205</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -165,7 +165,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L318">OpenVidu/OpenVidu.ts:318</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L322">OpenVidu/OpenVidu.ts:322</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -187,7 +187,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L219">OpenVidu/OpenVidu.ts:219</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L223">OpenVidu/OpenVidu.ts:223</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -209,7 +209,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L288">OpenVidu/OpenVidu.ts:288</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L292">OpenVidu/OpenVidu.ts:292</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -278,7 +278,7 @@ OV.getUserMedia({
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L192">OpenVidu/OpenVidu.ts:192</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L196">OpenVidu/OpenVidu.ts:196</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -312,7 +312,7 @@ OV.getUserMedia({
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L75">OpenVidu/OpenVidu.ts:75</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L78">OpenVidu/OpenVidu.ts:78</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -323,8 +323,9 @@ OV.getUserMedia({
 								<p>The <a href="publisher.html">Publisher</a> object will dispatch an <code>accessDialogOpened</code> event, only if the pop-up shown by the browser to request permissions for the camera is opened. You can use this event to alert the user about granting permissions
 								for your website. An <code>accessDialogClosed</code> event will also be dispatched after user clicks on &quot;Allow&quot; or &quot;Block&quot; in the pop-up.</p>
 								<p>The <a href="publisher.html">Publisher</a> object will dispatch an <code>accessAllowed</code> or <code>accessDenied</code> event once it has been granted access to the requested input devices or not.</p>
-								<p>The <a href="publisher.html">Publisher</a> object will dispatch a <code>videoElementCreated</code> event once the HTML video element has been added to DOM (if <em>targetElement</em> not null or undefined)</p>
-								<p>The <a href="publisher.html">Publisher</a> object will dispatch a <code>videoPlaying</code> event once the local video starts playing (only if <code>videoElementCreated</code> event has been previously dispatched)</p>
+								<p>The <a href="publisher.html">Publisher</a> object will dispatch a <code>videoElementCreated</code> event once a HTML video element has been added to DOM (only if you
+								<a href="/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players">let OpenVidu take care of the video players</a>). See <a href="videoelementevent.html">VideoElementEvent</a> to learn more.</p>
+								<p>The <a href="publisher.html">Publisher</a> object will dispatch a <code>streamPlaying</code> event once the local streams starts playing. See <a href="streammanagerevent.html">StreamManagerEvent</a> to learn more.</p>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
@@ -332,8 +333,8 @@ OV.getUserMedia({
 									<h5>targetElement: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">HTMLElement</span></h5>
 									<div class="tsd-comment tsd-typography">
 										<div class="lead">
-											<p>HTML DOM element (or its <code>id</code> attribute) in which the video element of the Publisher will be inserted (see <a href="../interfaces/publisherproperties.html#insertmode">PublisherProperties.insertMode</a>). If null or undefined no default video will be created for this Publisher
-											(you can always access the native MediaStream object by calling <em>Publisher.stream.getMediaStream()</em> and use it as <em>srcObject</em> of any HTML video element)</p>
+											<p>HTML DOM element (or its <code>id</code> attribute) in which the video element of the Publisher will be inserted (see <a href="../interfaces/publisherproperties.html#insertmode">PublisherProperties.insertMode</a>). If <em>null</em> or <em>undefined</em> no default video will be created for this Publisher.
+											You can always call method <a href="publisher.html#addvideoelement">Publisher.addVideoElement</a> or <a href="publisher.html#createvideoelement">Publisher.createVideoElement</a> to manage the video elements on your own (see <a href="/docs/how-do-i/manage-videos">Manage video players</a> section)</p>
 										</div>
 									</div>
 								</li>
@@ -343,7 +344,7 @@ OV.getUserMedia({
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L76">OpenVidu/OpenVidu.ts:76</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L79">OpenVidu/OpenVidu.ts:79</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -354,8 +355,9 @@ OV.getUserMedia({
 								<p>The <a href="publisher.html">Publisher</a> object will dispatch an <code>accessDialogOpened</code> event, only if the pop-up shown by the browser to request permissions for the camera is opened. You can use this event to alert the user about granting permissions
 								for your website. An <code>accessDialogClosed</code> event will also be dispatched after user clicks on &quot;Allow&quot; or &quot;Block&quot; in the pop-up.</p>
 								<p>The <a href="publisher.html">Publisher</a> object will dispatch an <code>accessAllowed</code> or <code>accessDenied</code> event once it has been granted access to the requested input devices or not.</p>
-								<p>The <a href="publisher.html">Publisher</a> object will dispatch a <code>videoElementCreated</code> event once the HTML video element has been added to DOM (if <em>targetElement</em> not null or undefined)</p>
-								<p>The <a href="publisher.html">Publisher</a> object will dispatch a <code>videoPlaying</code> event once the local video starts playing (only if <code>videoElementCreated</code> event has been previously dispatched)</p>
+								<p>The <a href="publisher.html">Publisher</a> object will dispatch a <code>videoElementCreated</code> event once a HTML video element has been added to DOM (only if you
+								<a href="/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players">let OpenVidu take care of the video players</a>). See <a href="videoelementevent.html">VideoElementEvent</a> to learn more.</p>
+								<p>The <a href="publisher.html">Publisher</a> object will dispatch a <code>streamPlaying</code> event once the local streams starts playing. See <a href="streammanagerevent.html">StreamManagerEvent</a> to learn more.</p>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
@@ -363,8 +365,8 @@ OV.getUserMedia({
 									<h5>targetElement: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">HTMLElement</span></h5>
 									<div class="tsd-comment tsd-typography">
 										<div class="lead">
-											<p>HTML DOM element (or its <code>id</code> attribute) in which the video element of the Publisher will be inserted (see <a href="../interfaces/publisherproperties.html#insertmode">PublisherProperties.insertMode</a>). If null or undefined no default video will be created for this Publisher
-											(you can always access the native MediaStream object by calling <em>Publisher.stream.getMediaStream()</em> and use it as <em>srcObject</em> of any HTML video element)</p>
+											<p>HTML DOM element (or its <code>id</code> attribute) in which the video element of the Publisher will be inserted (see <a href="../interfaces/publisherproperties.html#insertmode">PublisherProperties.insertMode</a>). If <em>null</em> or <em>undefined</em> no default video will be created for this Publisher.
+											You can always call method <a href="publisher.html#addvideoelement">Publisher.addVideoElement</a> or <a href="publisher.html#createvideoelement">Publisher.createVideoElement</a> to manage the video elements on your own (see <a href="/docs/how-do-i/manage-videos">Manage video players</a> section)</p>
 										</div>
 									</div>
 								</li>
@@ -377,7 +379,7 @@ OV.getUserMedia({
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L77">OpenVidu/OpenVidu.ts:77</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L80">OpenVidu/OpenVidu.ts:80</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -388,8 +390,9 @@ OV.getUserMedia({
 								<p>The <a href="publisher.html">Publisher</a> object will dispatch an <code>accessDialogOpened</code> event, only if the pop-up shown by the browser to request permissions for the camera is opened. You can use this event to alert the user about granting permissions
 								for your website. An <code>accessDialogClosed</code> event will also be dispatched after user clicks on &quot;Allow&quot; or &quot;Block&quot; in the pop-up.</p>
 								<p>The <a href="publisher.html">Publisher</a> object will dispatch an <code>accessAllowed</code> or <code>accessDenied</code> event once it has been granted access to the requested input devices or not.</p>
-								<p>The <a href="publisher.html">Publisher</a> object will dispatch a <code>videoElementCreated</code> event once the HTML video element has been added to DOM (if <em>targetElement</em> not null or undefined)</p>
-								<p>The <a href="publisher.html">Publisher</a> object will dispatch a <code>videoPlaying</code> event once the local video starts playing (only if <code>videoElementCreated</code> event has been previously dispatched)</p>
+								<p>The <a href="publisher.html">Publisher</a> object will dispatch a <code>videoElementCreated</code> event once a HTML video element has been added to DOM (only if you
+								<a href="/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players">let OpenVidu take care of the video players</a>). See <a href="videoelementevent.html">VideoElementEvent</a> to learn more.</p>
+								<p>The <a href="publisher.html">Publisher</a> object will dispatch a <code>streamPlaying</code> event once the local streams starts playing. See <a href="streammanagerevent.html">StreamManagerEvent</a> to learn more.</p>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
@@ -397,8 +400,8 @@ OV.getUserMedia({
 									<h5>targetElement: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">HTMLElement</span></h5>
 									<div class="tsd-comment tsd-typography">
 										<div class="lead">
-											<p>HTML DOM element (or its <code>id</code> attribute) in which the video element of the Publisher will be inserted (see <a href="../interfaces/publisherproperties.html#insertmode">PublisherProperties.insertMode</a>). If null or undefined no default video will be created for this Publisher
-											(you can always access the native MediaStream object by calling <em>Publisher.stream.getMediaStream()</em> and use it as <em>srcObject</em> of any HTML video element)</p>
+											<p>HTML DOM element (or its <code>id</code> attribute) in which the video element of the Publisher will be inserted (see <a href="../interfaces/publisherproperties.html#insertmode">PublisherProperties.insertMode</a>). If <em>null</em> or <em>undefined</em> no default video will be created for this Publisher.
+											You can always call method <a href="publisher.html#addvideoelement">Publisher.addVideoElement</a> or <a href="publisher.html#createvideoelement">Publisher.createVideoElement</a> to manage the video elements on your own (see <a href="/docs/how-do-i/manage-videos">Manage video players</a> section)</p>
 										</div>
 									</div>
 								</li>
@@ -435,7 +438,7 @@ OV.getUserMedia({
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L78">OpenVidu/OpenVidu.ts:78</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L81">OpenVidu/OpenVidu.ts:81</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -446,8 +449,9 @@ OV.getUserMedia({
 								<p>The <a href="publisher.html">Publisher</a> object will dispatch an <code>accessDialogOpened</code> event, only if the pop-up shown by the browser to request permissions for the camera is opened. You can use this event to alert the user about granting permissions
 								for your website. An <code>accessDialogClosed</code> event will also be dispatched after user clicks on &quot;Allow&quot; or &quot;Block&quot; in the pop-up.</p>
 								<p>The <a href="publisher.html">Publisher</a> object will dispatch an <code>accessAllowed</code> or <code>accessDenied</code> event once it has been granted access to the requested input devices or not.</p>
-								<p>The <a href="publisher.html">Publisher</a> object will dispatch a <code>videoElementCreated</code> event once the HTML video element has been added to DOM (if <em>targetElement</em> not null or undefined)</p>
-								<p>The <a href="publisher.html">Publisher</a> object will dispatch a <code>videoPlaying</code> event once the local video starts playing (only if <code>videoElementCreated</code> event has been previously dispatched)</p>
+								<p>The <a href="publisher.html">Publisher</a> object will dispatch a <code>videoElementCreated</code> event once a HTML video element has been added to DOM (only if you
+								<a href="/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players">let OpenVidu take care of the video players</a>). See <a href="videoelementevent.html">VideoElementEvent</a> to learn more.</p>
+								<p>The <a href="publisher.html">Publisher</a> object will dispatch a <code>streamPlaying</code> event once the local streams starts playing. See <a href="streammanagerevent.html">StreamManagerEvent</a> to learn more.</p>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
@@ -455,8 +459,8 @@ OV.getUserMedia({
 									<h5>targetElement: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">HTMLElement</span></h5>
 									<div class="tsd-comment tsd-typography">
 										<div class="lead">
-											<p>HTML DOM element (or its <code>id</code> attribute) in which the video element of the Publisher will be inserted (see <a href="../interfaces/publisherproperties.html#insertmode">PublisherProperties.insertMode</a>). If null or undefined no default video will be created for this Publisher
-											(you can always access the native MediaStream object by calling <em>Publisher.stream.getMediaStream()</em> and use it as <em>srcObject</em> of any HTML video element)</p>
+											<p>HTML DOM element (or its <code>id</code> attribute) in which the video element of the Publisher will be inserted (see <a href="../interfaces/publisherproperties.html#insertmode">PublisherProperties.insertMode</a>). If <em>null</em> or <em>undefined</em> no default video will be created for this Publisher.
+											You can always call method <a href="publisher.html#addvideoelement">Publisher.addVideoElement</a> or <a href="publisher.html#createvideoelement">Publisher.createVideoElement</a> to manage the video elements on your own (see <a href="/docs/how-do-i/manage-videos">Manage video players</a> section)</p>
 										</div>
 									</div>
 								</li>
@@ -506,7 +510,7 @@ OV.getUserMedia({
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L163">OpenVidu/OpenVidu.ts:163</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L167">OpenVidu/OpenVidu.ts:167</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -528,7 +532,7 @@ OV.getUserMedia({
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L164">OpenVidu/OpenVidu.ts:164</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L168">OpenVidu/OpenVidu.ts:168</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -554,7 +558,7 @@ OV.getUserMedia({
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L69">OpenVidu/OpenVidu.ts:69</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L72">OpenVidu/OpenVidu.ts:72</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -576,7 +580,7 @@ OV.getUserMedia({
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L333">OpenVidu/OpenVidu.ts:333</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/OpenVidu.ts#L337">OpenVidu/OpenVidu.ts:337</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -699,6 +703,15 @@ OV.getUserMedia({
 						<a href="streamevent.html" class="tsd-kind-icon">Stream<wbr>Event</a>
 					</li>
 					<li class=" tsd-kind-class">
+						<a href="streammanager.html" class="tsd-kind-icon">Stream<wbr>Manager</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="streammanagerevent.html" class="tsd-kind-icon">Stream<wbr>Manager<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="streampropertychangedevent.html" class="tsd-kind-icon">Stream<wbr>Property<wbr>Changed<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-class">
 						<a href="subscriber.html" class="tsd-kind-icon">Subscriber</a>
 					</li>
 					<li class=" tsd-kind-class">
@@ -718,6 +731,9 @@ OV.getUserMedia({
 					</li>
 					<li class=" tsd-kind-interface">
 						<a href="../interfaces/signaloptions.html" class="tsd-kind-icon">Signal<wbr>Options</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="../interfaces/streammanagervideo.html" class="tsd-kind-icon">Stream<wbr>Manager<wbr>Video</a>
 					</li>
 					<li class=" tsd-kind-interface">
 						<a href="../interfaces/subscriberproperties.html" class="tsd-kind-icon">Subscriber<wbr>Properties</a>

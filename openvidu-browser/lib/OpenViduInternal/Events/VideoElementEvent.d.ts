@@ -1,22 +1,20 @@
 import { Event } from './Event';
-import { Publisher } from '../../OpenVidu/Publisher';
-import { Subscriber } from '../../OpenVidu/Subscriber';
+import { StreamManager } from '../../OpenVidu/StreamManager';
 /**
  * Defines the following events:
- * - `videoElementCreated`: dispatched by [[Publisher]] and [[Subscriber]]
- * - `videoElementDestroyed`: dispatched by [[Publisher]] and [[Subscriber]]
- * - `videoPlaying`: dispatched by [[Publisher]] and [[Subscriber]]
- * - `remoteVideoPlaying`: dispatched by [[Publisher]] if `Publisher.subscribeToRemote()` was called before `Session.publish(Publisher)`
+ * - `videoElementCreated`: dispatched by [[Publisher]] and [[Subscriber]] whenever a new HTML video element has been inserted into DOM by OpenVidu Browser library. See
+ * [Manage video players](/docs/how-do-i/manage-videos) section.
+ * - `videoElementDestroyed`: dispatched by [[Publisher]] and [[Subscriber]] whenever an HTML video element has been removed from DOM by OpenVidu Browser library.
  */
 export declare class VideoElementEvent extends Event {
     /**
-     * Video element that was created, destroyed or started playing
+     * Video element that was created or destroyed
      */
     element: HTMLVideoElement;
     /**
      * @hidden
      */
-    constructor(element: HTMLVideoElement, target: Publisher | Subscriber, type: string);
+    constructor(element: HTMLVideoElement, target: StreamManager, type: string);
     /**
      * @hidden
      */

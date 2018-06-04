@@ -528,12 +528,13 @@ var OpenVidu = /** @class */ (function () {
      *
      * The [[Publisher]] object will dispatch an `accessAllowed` or `accessDenied` event once it has been granted access to the requested input devices or not.
      *
-     * The [[Publisher]] object will dispatch a `videoElementCreated` event once the HTML video element has been added to DOM (if _targetElement_ not null or undefined)
+     * The [[Publisher]] object will dispatch a `videoElementCreated` event once a HTML video element has been added to DOM (only if you
+     * [let OpenVidu take care of the video players](/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players)). See [[VideoElementEvent]] to learn more.
      *
-     * The [[Publisher]] object will dispatch a `videoPlaying` event once the local video starts playing (only if `videoElementCreated` event has been previously dispatched)
+     * The [[Publisher]] object will dispatch a `streamPlaying` event once the local streams starts playing. See [[StreamManagerEvent]] to learn more.
      *
-     * @param targetElement  HTML DOM element (or its `id` attribute) in which the video element of the Publisher will be inserted (see [[PublisherProperties.insertMode]]). If null or undefined no default video will be created for this Publisher
-     * (you can always access the native MediaStream object by calling _Publisher.stream.getMediaStream()_ and use it as _srcObject_ of any HTML video element)
+     * @param targetElement  HTML DOM element (or its `id` attribute) in which the video element of the Publisher will be inserted (see [[PublisherProperties.insertMode]]). If *null* or *undefined* no default video will be created for this Publisher.
+     * You can always call method [[Publisher.addVideoElement]] or [[Publisher.createVideoElement]] to manage the video elements on your own (see [Manage video players](/docs/how-do-i/manage-videos) section)
      * @param completionHandler `error` parameter is null if `initPublisher` succeeds, and is defined if it fails.
      *                          `completionHandler` function is called before the Publisher dispatches an `accessAllowed` or an `accessDenied` event
      */
@@ -578,7 +579,7 @@ var OpenVidu = /** @class */ (function () {
             }
             publisher.emitEvent('accessAllowed', []);
         })["catch"](function (error) {
-            if (!!completionHandler !== undefined) {
+            if (completionHandler !== undefined) {
                 completionHandler(error);
             }
             publisher.emitEvent('accessDenied', []);
@@ -711,7 +712,7 @@ var OpenVidu = /** @class */ (function () {
                     var errorName;
                     var errorMessage = error.toString();
                     if (!(options.videoSource === 'screen')) {
-                        errorName = (options.videoSource === false || options.videoSource === null) ? OpenViduError_1.OpenViduErrorName.MICROPHONE_ACCESS_DENIED : OpenViduError_1.OpenViduErrorName.CAMERA_ACCESS_DENIED;
+                        errorName = OpenViduError_1.OpenViduErrorName.DEVICE_ACCESS_DENIED;
                     }
                     else {
                         errorName = OpenViduError_1.OpenViduErrorName.SCREEN_CAPTURE_DENIED;
@@ -1010,49 +1011,50 @@ exports.OpenVidu = OpenVidu;
  * limitations under the License.
  *
  */
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 exports.__esModule = true;
+var Session_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/Session.js");
 var Stream_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/Stream.js");
+var StreamManager_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/StreamManager.js");
 var StreamEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/StreamEvent.js");
 var VideoElementEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/VideoElementEvent.js");
 var OpenViduError_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Enums/OpenViduError.js");
-var EventEmitter = __webpack_require__("../../../../openvidu-browser/node_modules/wolfy87-eventemitter/EventEmitter.js");
 /**
  * Packs local media streams. Participants can publish it to a session. Initialized with [[OpenVidu.initPublisher]] method
  */
-var Publisher = /** @class */ (function () {
+var Publisher = /** @class */ (function (_super) {
+    __extends(Publisher, _super);
     /**
      * @hidden
      */
-    function Publisher(targetElement, properties, openvidu) {
-        var _this = this;
-        this.openvidu = openvidu;
+    function Publisher(targEl, properties, openvidu) {
+        var _this = _super.call(this, new Stream_1.Stream((!!openvidu.session) ? openvidu.session : new Session_1.Session(openvidu), { publisherProperties: properties, mediaConstraints: {} }), targEl) || this;
+        _this.openvidu = openvidu;
         /**
          * Whether the Publisher has been granted access to the requested input devices or not
          */
-        this.accessAllowed = false;
-        this.ee = new EventEmitter();
-        this.properties = properties;
-        this.stream = new Stream_1.Stream(this.session, { publisherProperties: properties, mediaConstraints: {} });
-        this.stream.on('video-removed', function (element) {
-            _this.ee.emitEvent('videoElementDestroyed', [new VideoElementEvent_1.VideoElementEvent(element, _this, 'videoElementDestroyed')]);
-        });
-        this.stream.on('stream-destroyed-by-disconnect', function (reason) {
+        _this.accessAllowed = false;
+        /**
+         * Whether you have called [[Publisher.subscribeToRemote]] with value `true` or `false` (*false* by default)
+         */
+        _this.isSubscribedToRemote = false;
+        _this.accessDenied = false;
+        _this.properties = properties;
+        _this.stream.ee.on('local-stream-destroyed-by-disconnect', function (reason) {
             var streamEvent = new StreamEvent_1.StreamEvent(true, _this, 'streamDestroyed', _this.stream, reason);
             _this.ee.emitEvent('streamDestroyed', [streamEvent]);
             streamEvent.callDefaultBehaviour();
         });
-        if (typeof targetElement === 'string') {
-            var e = document.getElementById(targetElement);
-            if (!!e) {
-                this.element = e;
-            }
-        }
-        else if (targetElement instanceof HTMLElement) {
-            this.element = targetElement;
-        }
-        if (!this.element) {
-            console.warn("The provided 'targetElement' for the Publisher couldn't be resolved to any HTML element: " + targetElement);
-        }
+        return _this;
     }
     /**
      * Publish or unpublish the audio stream (if available). Calling this method twice in a row passing same value will have no effect
@@ -1071,83 +1073,45 @@ var Publisher = /** @class */ (function () {
         console.info("'Publisher' has " + (value ? 'published' : 'unpublished') + ' its video stream');
     };
     /**
-     * Call this method before [[Session.publish]] to subscribe to your Publisher's stream as any other user would do. The local video will be automatically replaced by the remote video
+     * Call this method before [[Session.publish]] to subscribe to your Publisher's remote stream instead of using the local stream, as any other user would do.
      */
-    Publisher.prototype.subscribeToRemote = function () {
-        this.stream.subscribeToMyRemote();
+    Publisher.prototype.subscribeToRemote = function (value) {
+        value = (value !== undefined) ? value : true;
+        this.isSubscribedToRemote = value;
+        this.stream.subscribeToMyRemote(value);
     };
     /**
      * See [[EventDispatcher.on]]
      */
     Publisher.prototype.on = function (type, handler) {
         var _this = this;
-        this.ee.on(type, function (event) {
-            if (event) {
-                console.info("Event '" + type + "' triggered by 'Publisher'", event);
-            }
-            else {
-                console.info("Event '" + type + "' triggered by 'Publisher'");
-            }
-            handler(event);
-        });
+        _super.prototype.on.call(this, type, handler);
         if (type === 'streamCreated') {
-            if (!!this.stream && this.stream.isPublisherPublished) {
+            if (!!this.stream && this.stream.isLocalStreamPublished) {
                 this.ee.emitEvent('streamCreated', [new StreamEvent_1.StreamEvent(false, this, 'streamCreated', this.stream, '')]);
             }
             else {
-                this.stream.on('stream-created-by-publisher', function () {
+                this.stream.ee.on('stream-created-by-publisher', function () {
                     _this.ee.emitEvent('streamCreated', [new StreamEvent_1.StreamEvent(false, _this, 'streamCreated', _this.stream, '')]);
                 });
             }
         }
-        if (type === 'videoElementCreated') {
-            if (!!this.stream && this.stream.isVideoELementCreated) {
-                this.ee.emitEvent('videoElementCreated', [new VideoElementEvent_1.VideoElementEvent(this.stream.getVideoElement(), this, 'videoElementCreated')]);
-            }
-            else {
-                this.stream.on('video-element-created-by-stream', function (element) {
-                    _this.id = element.id;
-                    _this.ee.emitEvent('videoElementCreated', [new VideoElementEvent_1.VideoElementEvent(element.element, _this, 'videoElementCreated')]);
-                });
-            }
-        }
-        if (type === 'videoPlaying') {
-            var video = this.stream.getVideoElement();
-            if (!this.stream.displayMyRemote() && video &&
-                video.currentTime > 0 &&
-                video.paused === false &&
-                video.ended === false &&
-                video.readyState === 4) {
-                this.ee.emitEvent('videoPlaying', [new VideoElementEvent_1.VideoElementEvent(this.stream.getVideoElement(), this, 'videoPlaying')]);
-            }
-            else {
-                this.stream.on('video-is-playing', function (element) {
-                    _this.ee.emitEvent('videoPlaying', [new VideoElementEvent_1.VideoElementEvent(element.element, _this, 'videoPlaying')]);
-                });
-            }
-        }
         if (type === 'remoteVideoPlaying') {
-            var video = this.stream.getVideoElement();
-            if (this.stream.displayMyRemote() && video &&
-                video.currentTime > 0 &&
-                video.paused === false &&
-                video.ended === false &&
-                video.readyState === 4) {
-                this.ee.emitEvent('remoteVideoPlaying', [new VideoElementEvent_1.VideoElementEvent(this.stream.getVideoElement(), this, 'remoteVideoPlaying')]);
-            }
-            else {
-                this.stream.on('remote-video-is-playing', function (element) {
-                    _this.ee.emitEvent('remoteVideoPlaying', [new VideoElementEvent_1.VideoElementEvent(element.element, _this, 'remoteVideoPlaying')]);
-                });
+            if (this.stream.displayMyRemote() && this.videos[0] && this.videos[0].video &&
+                this.videos[0].video.currentTime > 0 &&
+                this.videos[0].video.paused === false &&
+                this.videos[0].video.ended === false &&
+                this.videos[0].video.readyState === 4) {
+                this.ee.emitEvent('remoteVideoPlaying', [new VideoElementEvent_1.VideoElementEvent(this.videos[0].video, this, 'remoteVideoPlaying')]);
             }
         }
         if (type === 'accessAllowed') {
-            if (this.stream.accessIsAllowed) {
+            if (this.accessAllowed) {
                 this.ee.emitEvent('accessAllowed');
             }
         }
         if (type === 'accessDenied') {
-            if (this.stream.accessIsDenied) {
+            if (this.accessDenied) {
                 this.ee.emitEvent('accessDenied');
             }
         }
@@ -1158,87 +1122,35 @@ var Publisher = /** @class */ (function () {
      */
     Publisher.prototype.once = function (type, handler) {
         var _this = this;
-        this.ee.once(type, function (event) {
-            if (event) {
-                console.info("Event '" + type + "' triggered by 'Publisher'", event);
-            }
-            else {
-                console.info("Event '" + type + "' triggered by 'Publisher'");
-            }
-            handler(event);
-        });
+        _super.prototype.once.call(this, type, handler);
         if (type === 'streamCreated') {
-            if (!!this.stream && this.stream.isPublisherPublished) {
+            if (!!this.stream && this.stream.isLocalStreamPublished) {
                 this.ee.emitEvent('streamCreated', [new StreamEvent_1.StreamEvent(false, this, 'streamCreated', this.stream, '')]);
             }
             else {
-                this.stream.once('stream-created-by-publisher', function () {
+                this.stream.ee.once('stream-created-by-publisher', function () {
                     _this.ee.emitEvent('streamCreated', [new StreamEvent_1.StreamEvent(false, _this, 'streamCreated', _this.stream, '')]);
                 });
             }
         }
-        if (type === 'videoElementCreated') {
-            if (!!this.stream && this.stream.isVideoELementCreated) {
-                this.ee.emitEvent('videoElementCreated', [new VideoElementEvent_1.VideoElementEvent(this.stream.getVideoElement(), this, 'videoElementCreated')]);
-            }
-            else {
-                this.stream.once('video-element-created-by-stream', function (element) {
-                    _this.id = element.id;
-                    _this.ee.emitEvent('videoElementCreated', [new VideoElementEvent_1.VideoElementEvent(element.element, _this, 'videoElementCreated')]);
-                });
-            }
-        }
-        if (type === 'videoPlaying') {
-            var video = this.stream.getVideoElement();
-            if (!this.stream.displayMyRemote() && video &&
-                video.currentTime > 0 &&
-                video.paused === false &&
-                video.ended === false &&
-                video.readyState === 4) {
-                this.ee.emitEvent('videoPlaying', [new VideoElementEvent_1.VideoElementEvent(this.stream.getVideoElement(), this, 'videoPlaying')]);
-            }
-            else {
-                this.stream.once('video-is-playing', function (element) {
-                    _this.ee.emitEvent('videoPlaying', [new VideoElementEvent_1.VideoElementEvent(element.element, _this, 'videoPlaying')]);
-                });
-            }
-        }
         if (type === 'remoteVideoPlaying') {
-            var video = this.stream.getVideoElement();
-            if (this.stream.displayMyRemote() && video &&
-                video.currentTime > 0 &&
-                video.paused === false &&
-                video.ended === false &&
-                video.readyState === 4) {
-                this.ee.emitEvent('remoteVideoPlaying', [new VideoElementEvent_1.VideoElementEvent(this.stream.getVideoElement(), this, 'remoteVideoPlaying')]);
-            }
-            else {
-                this.stream.once('remote-video-is-playing', function (element) {
-                    _this.ee.emitEvent('remoteVideoPlaying', [new VideoElementEvent_1.VideoElementEvent(element.element, _this, 'remoteVideoPlaying')]);
-                });
+            if (this.stream.displayMyRemote() && this.videos[0] && this.videos[0].video &&
+                this.videos[0].video.currentTime > 0 &&
+                this.videos[0].video.paused === false &&
+                this.videos[0].video.ended === false &&
+                this.videos[0].video.readyState === 4) {
+                this.ee.emitEvent('remoteVideoPlaying', [new VideoElementEvent_1.VideoElementEvent(this.videos[0].video, this, 'remoteVideoPlaying')]);
             }
         }
         if (type === 'accessAllowed') {
-            if (this.stream.accessIsAllowed) {
+            if (this.accessAllowed) {
                 this.ee.emitEvent('accessAllowed');
             }
         }
         if (type === 'accessDenied') {
-            if (this.stream.accessIsDenied) {
+            if (this.accessDenied) {
                 this.ee.emitEvent('accessDenied');
             }
-        }
-        return this;
-    };
-    /**
-     * See [[EventDispatcher.off]]
-     */
-    Publisher.prototype.off = function (type, handler) {
-        if (!handler) {
-            this.ee.removeAllListeners(type);
-        }
-        else {
-            this.ee.off(type, handler);
         }
         return this;
     };
@@ -1250,13 +1162,13 @@ var Publisher = /** @class */ (function () {
         var _this = this;
         return new Promise(function (resolve, reject) {
             var errorCallback = function (openViduError) {
-                _this.stream.accessIsDenied = true;
-                _this.stream.accessIsAllowed = false;
+                _this.accessDenied = true;
+                _this.accessAllowed = false;
                 reject(openViduError);
             };
             var successCallback = function (mediaStream) {
-                _this.stream.accessIsAllowed = true;
-                _this.stream.accessIsDenied = false;
+                _this.accessAllowed = true;
+                _this.accessDenied = false;
                 if (_this.openvidu.isMediaStreamTrack(_this.properties.audioSource)) {
                     mediaStream.removeTrack(mediaStream.getAudioTracks()[0]);
                     mediaStream.addTrack(_this.properties.audioSource);
@@ -1273,7 +1185,17 @@ var Publisher = /** @class */ (function () {
                     mediaStream.getVideoTracks()[0].enabled = !!_this.stream.outboundStreamOpts.publisherProperties.publishVideo;
                 }
                 _this.stream.setMediaStream(mediaStream);
-                _this.stream.insertVideo(_this.element, _this.properties.insertMode);
+                if (!_this.stream.displayMyRemote()) {
+                    // When we are subscribed to our remote we don't still set the MediaStream object in the video elements to
+                    // avoid early 'streamPlaying' event
+                    _this.stream.updateMediaStreamInVideos();
+                }
+                _this.stream.isLocalStreamReadyToPublish = true;
+                _this.stream.ee.emitEvent('stream-ready-to-publish', []);
+                if (!!_this.firstVideoElement) {
+                    _this.createVideoElement(_this.firstVideoElement.targetElement, _this.properties.insertMode);
+                }
+                delete _this.firstVideoElement;
                 resolve();
             };
             _this.openvidu.generateMediaConstraints(_this.properties)
@@ -1283,119 +1205,117 @@ var Publisher = /** @class */ (function () {
                     publisherProperties: _this.properties
                 };
                 _this.stream.setOutboundStreamOptions(outboundStreamOptions);
-                // Ask independently for audio stream and video stream. If the user asks for both of them and one is blocked, the method still
-                // success only with the allowed input. This is not the desierd behaviour: if any of them is blocked, access should be denied
                 var constraintsAux = {};
                 var timeForDialogEvent = 1250;
-                if (_this.stream.isSendVideo()) {
-                    constraintsAux.audio = false;
+                if (_this.stream.isSendVideo() || _this.stream.isSendAudio()) {
+                    var definedAudioConstraint_1 = ((constraints.audio === undefined) ? true : constraints.audio);
+                    constraintsAux.audio = _this.stream.isSendScreen() ? false : definedAudioConstraint_1;
                     constraintsAux.video = constraints.video;
                     var startTime_1 = Date.now();
                     _this.setPermissionDialogTimer(timeForDialogEvent);
                     navigator.mediaDevices.getUserMedia(constraintsAux)
-                        .then(function (videoOnlyStream) {
+                        .then(function (mediaStream) {
                         _this.clearPermissionDialogTimer(startTime_1, timeForDialogEvent);
-                        if (_this.stream.isSendAudio()) {
-                            constraintsAux.audio = (constraints.audio === undefined) ? true : constraints.audio;
+                        if (_this.stream.isSendScreen() && _this.stream.isSendAudio()) {
+                            // When getting desktop as user media audio constraint must be false. Now we can ask for it if required
+                            constraintsAux.audio = definedAudioConstraint_1;
                             constraintsAux.video = false;
                             startTime_1 = Date.now();
                             _this.setPermissionDialogTimer(timeForDialogEvent);
                             navigator.mediaDevices.getUserMedia(constraintsAux)
                                 .then(function (audioOnlyStream) {
                                 _this.clearPermissionDialogTimer(startTime_1, timeForDialogEvent);
-                                videoOnlyStream.addTrack(audioOnlyStream.getAudioTracks()[0]);
-                                successCallback(videoOnlyStream);
+                                mediaStream.addTrack(audioOnlyStream.getAudioTracks()[0]);
+                                successCallback(mediaStream);
                             })["catch"](function (error) {
                                 _this.clearPermissionDialogTimer(startTime_1, timeForDialogEvent);
-                                videoOnlyStream.getVideoTracks().forEach(function (track) {
-                                    track.stop();
-                                });
-                                var errorName;
-                                var errorMessage;
+                                var errorName, errorMessage;
                                 switch (error.name.toLowerCase()) {
                                     case 'notfounderror':
                                         errorName = OpenViduError_1.OpenViduErrorName.INPUT_AUDIO_DEVICE_NOT_FOUND;
                                         errorMessage = error.toString();
+                                        errorCallback(new OpenViduError_1.OpenViduError(errorName, errorMessage));
                                         break;
                                     case 'notallowederror':
-                                        errorName = OpenViduError_1.OpenViduErrorName.MICROPHONE_ACCESS_DENIED;
+                                        errorName = OpenViduError_1.OpenViduErrorName.DEVICE_ACCESS_DENIED;
                                         errorMessage = error.toString();
+                                        errorCallback(new OpenViduError_1.OpenViduError(errorName, errorMessage));
                                         break;
                                     case 'overconstrainederror':
                                         if (error.constraint.toLowerCase() === 'deviceid') {
                                             errorName = OpenViduError_1.OpenViduErrorName.INPUT_AUDIO_DEVICE_NOT_FOUND;
-                                            errorMessage = "Audio input device with deviceId '" + constraints.audio.deviceId.exact + "' not found";
+                                            errorMessage = "Audio input device with deviceId '" + constraints.video.deviceId.exact + "' not found";
                                         }
                                         else {
                                             errorName = OpenViduError_1.OpenViduErrorName.PUBLISHER_PROPERTIES_ERROR;
                                             errorMessage = "Audio input device doesn't support the value passed for constraint '" + error.constraint + "'";
                                         }
+                                        errorCallback(new OpenViduError_1.OpenViduError(errorName, errorMessage));
+                                        break;
                                 }
-                                errorCallback(new OpenViduError_1.OpenViduError(errorName, errorMessage));
                             });
                         }
                         else {
-                            successCallback(videoOnlyStream);
+                            successCallback(mediaStream);
                         }
                     })["catch"](function (error) {
                         _this.clearPermissionDialogTimer(startTime_1, timeForDialogEvent);
-                        var errorName;
-                        var errorMessage;
+                        var errorName, errorMessage;
                         switch (error.name.toLowerCase()) {
                             case 'notfounderror':
-                                errorName = OpenViduError_1.OpenViduErrorName.INPUT_VIDEO_DEVICE_NOT_FOUND;
-                                errorMessage = error.toString();
-                                break;
-                            case 'notallowederror':
-                                errorName = _this.stream.isSendScreen() ? OpenViduError_1.OpenViduErrorName.SCREEN_CAPTURE_DENIED : OpenViduError_1.OpenViduErrorName.CAMERA_ACCESS_DENIED;
-                                errorMessage = error.toString();
-                                break;
-                            case 'overconstrainederror':
-                                if (error.constraint.toLowerCase() === 'deviceid') {
-                                    errorName = OpenViduError_1.OpenViduErrorName.INPUT_VIDEO_DEVICE_NOT_FOUND;
-                                    errorMessage = "Video input device with deviceId '" + constraints.video.deviceId.exact + "' not found";
-                                }
-                                else {
-                                    errorName = OpenViduError_1.OpenViduErrorName.PUBLISHER_PROPERTIES_ERROR;
-                                    errorMessage = "Video input device doesn't support the value passed for constraint '" + error.constraint + "'";
-                                }
-                        }
-                        errorCallback(new OpenViduError_1.OpenViduError(errorName, errorMessage));
-                    });
-                }
-                else if (_this.stream.isSendAudio()) {
-                    constraintsAux.audio = (constraints.audio === undefined) ? true : constraints.audio;
-                    constraintsAux.video = false;
-                    var startTime_2 = Date.now();
-                    _this.setPermissionDialogTimer(timeForDialogEvent);
-                    navigator.mediaDevices.getUserMedia(constraints)
-                        .then(function (audioOnlyStream) {
-                        _this.clearPermissionDialogTimer(startTime_2, timeForDialogEvent);
-                        successCallback(audioOnlyStream);
-                    })["catch"](function (error) {
-                        _this.clearPermissionDialogTimer(startTime_2, timeForDialogEvent);
-                        var errorName;
-                        var errorMessage;
-                        switch (error.name.toLowerCase()) {
-                            case 'notfounderror':
-                                errorName = OpenViduError_1.OpenViduErrorName.INPUT_AUDIO_DEVICE_NOT_FOUND;
-                                errorMessage = error.toString();
-                                break;
-                            case 'notallowederror':
-                                errorName = OpenViduError_1.OpenViduErrorName.MICROPHONE_ACCESS_DENIED;
-                                errorMessage = error.toString();
-                                break;
-                            case 'overconstrainederror':
-                                if (error.constraint.toLowerCase() === 'deviceid') {
+                                navigator.mediaDevices.getUserMedia({
+                                    audio: false,
+                                    video: constraints.video
+                                })
+                                    .then(function (mediaStream) {
+                                    mediaStream.getVideoTracks().forEach(function (track) {
+                                        track.stop();
+                                    });
                                     errorName = OpenViduError_1.OpenViduErrorName.INPUT_AUDIO_DEVICE_NOT_FOUND;
-                                    errorMessage = "Audio input device with deviceId '" + constraints.audio.deviceId.exact + "' not found";
-                                }
-                                else {
-                                    errorName = OpenViduError_1.OpenViduErrorName.PUBLISHER_PROPERTIES_ERROR;
-                                    errorMessage = "Audio input device doesn't support the value passed for constraint '" + error.constraint + "'";
-                                }
+                                    errorMessage = error.toString();
+                                    errorCallback(new OpenViduError_1.OpenViduError(errorName, errorMessage));
+                                })["catch"](function (e) {
+                                    errorName = OpenViduError_1.OpenViduErrorName.INPUT_VIDEO_DEVICE_NOT_FOUND;
+                                    errorMessage = error.toString();
+                                    errorCallback(new OpenViduError_1.OpenViduError(errorName, errorMessage));
+                                });
+                                break;
+                            case 'notallowederror':
+                                errorName = _this.stream.isSendScreen() ? OpenViduError_1.OpenViduErrorName.SCREEN_CAPTURE_DENIED : OpenViduError_1.OpenViduErrorName.DEVICE_ACCESS_DENIED;
+                                errorMessage = error.toString();
+                                errorCallback(new OpenViduError_1.OpenViduError(errorName, errorMessage));
+                                break;
+                            case 'overconstrainederror':
+                                navigator.mediaDevices.getUserMedia({
+                                    audio: false,
+                                    video: constraints.video
+                                })
+                                    .then(function (mediaStream) {
+                                    mediaStream.getVideoTracks().forEach(function (track) {
+                                        track.stop();
+                                    });
+                                    if (error.constraint.toLowerCase() === 'deviceid') {
+                                        errorName = OpenViduError_1.OpenViduErrorName.INPUT_AUDIO_DEVICE_NOT_FOUND;
+                                        errorMessage = "Audio input device with deviceId '" + constraints.audio.deviceId.exact + "' not found";
+                                    }
+                                    else {
+                                        errorName = OpenViduError_1.OpenViduErrorName.PUBLISHER_PROPERTIES_ERROR;
+                                        errorMessage = "Audio input device doesn't support the value passed for constraint '" + error.constraint + "'";
+                                    }
+                                    errorCallback(new OpenViduError_1.OpenViduError(errorName, errorMessage));
+                                })["catch"](function (e) {
+                                    if (error.constraint.toLowerCase() === 'deviceid') {
+                                        errorName = OpenViduError_1.OpenViduErrorName.INPUT_VIDEO_DEVICE_NOT_FOUND;
+                                        errorMessage = "Video input device with deviceId '" + constraints.video.deviceId.exact + "' not found";
+                                    }
+                                    else {
+                                        errorName = OpenViduError_1.OpenViduErrorName.PUBLISHER_PROPERTIES_ERROR;
+                                        errorMessage = "Video input device doesn't support the value passed for constraint '" + error.constraint + "'";
+                                    }
+                                    errorCallback(new OpenViduError_1.OpenViduError(errorName, errorMessage));
+                                });
+                                break;
                         }
-                        errorCallback(new OpenViduError_1.OpenViduError(errorName, errorMessage));
                     });
                 }
                 else {
@@ -1419,6 +1339,14 @@ var Publisher = /** @class */ (function () {
     Publisher.prototype.emitEvent = function (type, eventArray) {
         this.ee.emitEvent(type, eventArray);
     };
+    /**
+     * @hidden
+     */
+    Publisher.prototype.reestablishStreamPlayingEvent = function () {
+        if (this.ee.getListeners('streamPlaying').length > 0) {
+            this.addPlayEventToFirstVideo();
+        }
+    };
     /* Private methods */
     Publisher.prototype.setPermissionDialogTimer = function (waitTime) {
         var _this = this;
@@ -1433,41 +1361,8 @@ var Publisher = /** @class */ (function () {
             this.ee.emitEvent('accessDialogClosed', []);
         }
     };
-    /* Private methods */
-    Publisher.prototype.userMediaHasVideo = function (callback) {
-        var _this = this;
-        return new Promise(function (resolve, reject) {
-            // If the user is going to publish its screen there's a video source
-            if ((typeof _this.properties.videoSource === 'string') && _this.properties.videoSource === 'screen') {
-                resolve(true);
-            }
-            else {
-                _this.openvidu.getDevices()
-                    .then(function (devices) {
-                    resolve(!!(devices.filter(function (device) {
-                        return device.kind === 'videoinput';
-                    })[0]));
-                })["catch"](function (error) {
-                    reject(error);
-                });
-            }
-        });
-    };
-    Publisher.prototype.userMediaHasAudio = function (callback) {
-        var _this = this;
-        return new Promise(function (resolve, reject) {
-            _this.openvidu.getDevices()
-                .then(function (devices) {
-                resolve(!!(devices.filter(function (device) {
-                    return device.kind === 'audioinput';
-                })[0]));
-            })["catch"](function (error) {
-                reject(error);
-            });
-        });
-    };
     return Publisher;
-}());
+}(StreamManager_1.StreamManager));
 exports.Publisher = Publisher;
 //# sourceMappingURL=Publisher.js.map
 
@@ -1508,7 +1403,7 @@ var platform = __webpack_require__("../../../../openvidu-browser/node_modules/pl
 var EventEmitter = __webpack_require__("../../../../openvidu-browser/node_modules/wolfy87-eventemitter/EventEmitter.js");
 /**
  * Represents a video call. It can also be seen as a videoconference room where multiple users can connect.
- * Participants who publish their videos to a session will be seen by the rest of users connected to that specific session.
+ * Participants who publish their videos to a session can be seen by the rest of users connected to that specific session.
  * Initialized with [[OpenVidu.initSession]] method
  */
 var Session = /** @class */ (function () {
@@ -1516,6 +1411,10 @@ var Session = /** @class */ (function () {
      * @hidden
      */
     function Session(openvidu) {
+        /**
+         * Collection of all StreamManagers of this Session ([[Publisher]] and [[Subscriber]])
+         */
+        this.streamManagers = [];
         // This map is only used to avoid race condition between 'joinRoom' response and 'onParticipantPublished' notification
         /**
          * @hidden
@@ -1549,14 +1448,14 @@ var Session = /** @class */ (function () {
      * - Then one for each remote Connection previously connected to the Session, if any. Any other remote user connecting to the Session after you have
      * successfully connected will also dispatch a `connectionCreated` event when they do so.
      *
-     * The [[Session]] object of the local participant will also dispatch a `streamCreated` event for each remote active [[Publisher]] after dispatching all remote
-     * `connectionCreated` events.
+     * The [[Session]] object of the local participant will also dispatch a `streamCreated` event for each remote active [[Publisher]] that was already streaming
+     * when connecting, just after dispatching all remote `connectionCreated` events.
      *
      * The [[Session]] object of every other participant connected to the session will dispatch a `connectionCreated` event.
      *
      * See [[ConnectionEvent]] and [[StreamEvent]] to learn more.
      *
-     * @returns A Promise to which you must subscribe that is resolved if the recording successfully started and rejected with an Error object if not
+     * @returns A Promise to which you must subscribe that is resolved if the the connection to the Session was successful and rejected with an Error object if not
      *
      */
     Session.prototype.connect = function (token, metadata) {
@@ -1588,18 +1487,23 @@ var Session = /** @class */ (function () {
      *
      * The [[Session]] object of the local participant will dispatch a `sessionDisconnected` event.
      * This event will automatically unsubscribe the leaving participant from every Subscriber object of the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks)
-     * and also delete the HTML video element associated to it.
-     * Call `event.preventDefault()` to avoid this beahviour and take care of disposing and cleaning all the Subscriber objects yourself. See [[SessionDisconnectedEvent]] to learn more.
+     * and also deletes any HTML video element associated to each Subscriber (only those [created by OpenVidu Browser](/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players)).
+     * For every video removed, each Subscriber object will dispatch a `videoElementDestroyed` event.
+     * Call `event.preventDefault()` uppon event `sessionDisconnected` to avoid this behaviour and take care of disposing and cleaning all the Subscriber objects yourself.
+     * See [[SessionDisconnectedEvent]] and [[VideoElementEvent]] to learn more to learn more.
      *
      * The [[Publisher]] object of the local participant will dispatch a `streamDestroyed` event if there is a [[Publisher]] object publishing to the session.
-     * This event will automatically stop all media tracks and delete the HTML video element associated to it.
-     * Call `event.preventDefault()` if you want clean the Publisher object yourself or re-publish it in a different Session (to do so it is a mandatory
-     * requirement to call `Session.unpublish()` or/and `Session.disconnect()` in the previous session). See [[StreamEvent]] to learn more.
+     * This event will automatically stop all media tracks and delete any HTML video element associated to it (only those [created by OpenVidu Browser](/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players)).
+     * For every video removed, the Publisher object will dispatch a `videoElementDestroyed` event.
+     * Call `event.preventDefault()` uppon event `streamDestroyed` if you want to clean the Publisher object on your own or re-publish it in a different Session (to do so it is a mandatory requirement to call `Session.unpublish()`
+     * or/and `Session.disconnect()` in the previous session). See [[StreamEvent]] and [[VideoElementEvent]] to learn more.
      *
      * The [[Session]] object of every other participant connected to the session will dispatch a `streamDestroyed` event if the disconnected participant was publishing.
      * This event will automatically unsubscribe the Subscriber object from the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks)
-     * and delete the HTML video element associated to it.
-     * Call `event.preventDefault()` to avoid this default behaviour and take care of disposing and cleaning the Subscriber object yourself. See [[StreamEvent]] to learn more.
+     * and also deletes any HTML video element associated to that Subscriber (only those [created by OpenVidu Browser](/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players)).
+     * For every video removed, the Subscriber object will dispatch a `videoElementDestroyed` event.
+     * Call `event.preventDefault()` uppon event `streamDestroyed` to avoid this default behaviour and take care of disposing and cleaning the Subscriber object yourself.
+     * See [[StreamEvent]] and [[VideoElementEvent]] to learn more.
      *
      * The [[Session]] object of every other participant connected to the session will dispatch a `connectionDestroyed` event in any case. See [[ConnectionEvent]] to learn more.
      */
@@ -1611,15 +1515,14 @@ var Session = /** @class */ (function () {
      *
      * #### Events dispatched
      *
-     * The [[Subscriber]] object will dispatch a `videoElementCreated` event once the HTML video element has been added to DOM (if _targetElement_ not null or undefined)
+     * The [[Subscriber]] object will dispatch a `videoElementCreated` event once the HTML video element has been added to DOM (only if you
+     * [let OpenVidu take care of the video players](/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players)). See [[VideoElementEvent]] to learn more.
      *
-     * The [[Subscriber]] object will dispatch a `videoPlaying` event once the remote video starts playing (only if `videoElementCreated` event has been previously dispatched)
-     *
-     * See [[VideoElementEvent]] to learn more.
+     * The [[Subscriber]] object will dispatch a `streamPlaying` event once the remote stream starts playing. See [[StreamManagerEvent]] to learn more.
      *
      * @param stream Stream object to subscribe to
-     * @param targetElement HTML DOM element (or its `id` attribute) in which the video element of the Subscriber will be inserted (see [[SubscriberProperties.insertMode]]). If null or undefined no default video will be created for this Subscriber
-     * (you can always access the native MediaStream object by calling _Subscriber.stream.getMediaStream()_ and use it as _srcObject_ of any HTML video element)
+     * @param targetElement HTML DOM element (or its `id` attribute) in which the video element of the Subscriber will be inserted (see [[SubscriberProperties.insertMode]]). If *null* or *undefined* no default video will be created for this Subscriber.
+     * You can always call method [[Subscriber.addVideoElement]] or [[Subscriber.createVideoElement]] to manage the video elements on your own (see [Manage video players](/docs/how-do-i/manage-videos) section)
      * @param completionHandler `error` parameter is null if `subscribe` succeeds, and is defined if it fails.
      */
     Session.prototype.subscribe = function (stream, targetElement, param3, param4) {
@@ -1658,7 +1561,9 @@ var Session = /** @class */ (function () {
             }
         });
         var subscriber = new Subscriber_1.Subscriber(stream, targetElement, properties);
-        stream.insertVideo(subscriber.element, properties.insertMode);
+        if (!!subscriber.targetElement) {
+            stream.streamManager.createVideoElement(subscriber.targetElement, properties.insertMode);
+        }
         return subscriber;
     };
     Session.prototype.subscribeAsync = function (stream, targetElement, properties) {
@@ -1682,18 +1587,19 @@ var Session = /** @class */ (function () {
         });
     };
     /**
-     * Unsubscribes from `subscriber`, automatically removing its HTML video element.
+     * Unsubscribes from `subscriber`, automatically removing its associated HTML video elements.
      *
      * #### Events dispatched
      *
-     * The [[Subscriber]] object will dispatch a `videoElementDestroyed` event (only if it previously dispatched a `videoElementCreated` event). See [[VideoElementEvent]] to learn more
+     * The [[Subscriber]] object will dispatch a `videoElementDestroyed` event for each video associated to it that was removed from DOM.
+     * Only videos [created by OpenVidu Browser](/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players)) will be automatically removed
+     *
+     * See [[VideoElementEvent]] to learn more
      */
     Session.prototype.unsubscribe = function (subscriber) {
         var connectionId = subscriber.stream.connection.connectionId;
         console.info('Unsubscribing from ' + connectionId);
-        this.openvidu.sendRequest('unsubscribeFromVideo', {
-            sender: subscriber.stream.connection.connectionId
-        }, function (error, response) {
+        this.openvidu.sendRequest('unsubscribeFromVideo', { sender: subscriber.stream.connection.connectionId }, function (error, response) {
             if (error) {
                 console.error('Error unsubscribing from ' + connectionId, error);
             }
@@ -1703,28 +1609,27 @@ var Session = /** @class */ (function () {
             subscriber.stream.disposeWebRtcPeer();
             subscriber.stream.disposeMediaStream();
         });
-        subscriber.stream.removeVideo();
+        subscriber.stream.streamManager.removeAllVideos();
     };
     /**
-     * Publishes the participant's audio-video stream contained in `publisher` object to the session
+     * Publishes to the Session the Publisher object
      *
      * #### Events dispatched
      *
      * The local [[Publisher]] object will dispatch a `streamCreated` event upon successful termination of this method. See [[StreamEvent]] to learn more.
      *
-     * The local [[Publisher]] object will dispatch a `remoteVideoPlaying` event only if [[Publisher.subscribeToRemote]] was called before this method, once the remote video starts playing.
-     * See [[VideoElementEvent]] to learn more.
+     * The local [[Publisher]] object will dispatch a `streamPlaying` once the media stream starts playing. See [[StreamManagerEvent]] to learn more.
      *
      * The [[Session]] object of every other participant connected to the session will dispatch a `streamCreated` event so they can subscribe to it. See [[StreamEvent]] to learn more.
      *
-     * @returns A Promise (to which you can optionally subscribe to) that is resolved if the publisher was successfully published and rejected with an Error object if not
+     * @returns A Promise (to which you can optionally subscribe to) that is resolved only after the publisher was successfully published and rejected with an Error object if not
      */
     Session.prototype.publish = function (publisher) {
         var _this = this;
         return new Promise(function (resolve, reject) {
             publisher.session = _this;
             publisher.stream.session = _this;
-            if (!publisher.stream.isPublisherPublished) {
+            if (!publisher.stream.isLocalStreamPublished) {
                 // 'Session.unpublish(Publisher)' has NOT been called
                 _this.connection.addStream(publisher.stream);
                 publisher.stream.publish()
@@ -1739,6 +1644,7 @@ var Session = /** @class */ (function () {
                 publisher.initialize()
                     .then(function () {
                     _this.connection.addStream(publisher.stream);
+                    publisher.reestablishStreamPlayingEvent();
                     publisher.stream.publish()
                         .then(function () {
                         resolve();
@@ -1752,19 +1658,23 @@ var Session = /** @class */ (function () {
         });
     };
     /**
-     * Unpublishes the participant's audio-video stream contained in `publisher` object.
+     * Unpublishes from the Session the Publisher object.
      *
      * #### Events dispatched
      *
      * The [[Publisher]] object of the local participant will dispatch a `streamDestroyed` event.
-     * This event will automatically stop all media tracks and delete the HTML video element associated to it.
-     * Call `event.preventDefault()` if you want clean the Publisher object yourself or re-publish it in a different Session.
+     * This event will automatically stop all media tracks and delete any HTML video element associated to this Publisher
+     * (only those videos [created by OpenVidu Browser](/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players)).
+     * For every video removed, the Publisher object will dispatch a `videoElementDestroyed` event.
+     * Call `event.preventDefault()` uppon event `streamDestroyed` if you want to clean the Publisher object on your own or re-publish it in a different Session.
      *
      * The [[Session]] object of every other participant connected to the session will dispatch a `streamDestroyed` event.
-     * This event will automatically unsubscribe the Subscriber object from the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks) and delete the HTML video element associated to it.
-     * Call `event.preventDefault()` to avoid this default behaviour and take care of disposing and cleaning the Subscriber object yourself.
+     * This event will automatically unsubscribe the Subscriber object from the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks) and
+     * delete any HTML video element associated to it (only those [created by OpenVidu Browser](/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players)).
+     * For every video removed, the Subscriber object will dispatch a `videoElementDestroyed` event.
+     * Call `event.preventDefault()` uppon event `streamDestroyed` to avoid this default behaviour and take care of disposing and cleaning the Subscriber object on your own.
      *
-     * See [[StreamEvent]] to learn more.
+     * See [[StreamEvent]] and [[VideoElementEvent]] to learn more.
      */
     Session.prototype.unpublish = function (publisher) {
         var stream = publisher.stream;
@@ -2143,9 +2053,12 @@ var Session = /** @class */ (function () {
                 this.openvidu.closeWs();
             }
             if (!!this.connection.stream) {
-                // Make Publisher object dispatch 'streamDestroyed' event (if there's a local stream)
+                // Dispose Publisher's  local stream
                 this.connection.stream.disposeWebRtcPeer();
-                this.connection.stream.emitEvent('stream-destroyed-by-disconnect', [reason]);
+                if (this.connection.stream.isLocalStreamPublished) {
+                    // Make Publisher object dispatch 'streamDestroyed' event if the Stream was published
+                    this.connection.stream.ee.emitEvent('local-stream-destroyed-by-disconnect', [reason]);
+                }
             }
             if (!this.connection.disposed) {
                 // Make Session object dispatch 'sessionDisconnected' event (if it is not already disposed)
@@ -2303,10 +2216,10 @@ var WebRtcStats_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVi
 var PublisherSpeakingEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/PublisherSpeakingEvent.js");
 var EventEmitter = __webpack_require__("../../../../openvidu-browser/node_modules/wolfy87-eventemitter/EventEmitter.js");
 var kurentoUtils = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/KurentoUtils/kurento-utils-js/index.js");
-var VideoInsertMode_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Enums/VideoInsertMode.js");
 /**
- * Represents each one of the videos send and receive by a user in a session.
- * Therefore each [[Publisher]] and [[Subscriber]] has an attribute of type Stream
+ * Represents each one of the media streams available in OpenVidu Server for certain session.
+ * Each [[Publisher]] and [[Subscriber]] has an attribute of type Stream, as they give access
+ * to one of them (sending and receiving it, respectively)
  */
 var Stream = /** @class */ (function () {
     /**
@@ -2314,28 +2227,19 @@ var Stream = /** @class */ (function () {
      */
     function Stream(session, options) {
         var _this = this;
+        /**
+         * @hidden
+         */
         this.ee = new EventEmitter();
         this.isSubscribeToRemote = false;
         /**
          * @hidden
          */
-        this.isReadyToPublish = false;
+        this.isLocalStreamReadyToPublish = false;
         /**
          * @hidden
          */
-        this.isPublisherPublished = false;
-        /**
-         * @hidden
-         */
-        this.isVideoELementCreated = false;
-        /**
-         * @hidden
-         */
-        this.accessIsAllowed = false;
-        /**
-         * @hidden
-         */
-        this.accessIsDenied = false;
+        this.isLocalStreamPublished = false;
         this.session = session;
         if (options.hasOwnProperty('id')) {
             // InboundStreamOptions: stream belongs to a Subscriber
@@ -2367,9 +2271,8 @@ var Stream = /** @class */ (function () {
             this.hasAudio = this.isSendAudio();
             this.hasVideo = this.isSendVideo();
         }
-        this.on('mediastream-updated', function () {
-            if (_this.video)
-                _this.video.srcObject = _this.mediaStream;
+        this.ee.on('mediastream-updated', function () {
+            _this.streamManager.updateMediaStream(_this.mediaStream);
             console.debug('Video srcObject [' + _this.mediaStream + '] updated in stream [' + _this.streamId + ']');
         });
     }
@@ -2385,6 +2288,11 @@ var Stream = /** @class */ (function () {
      */
     Stream.prototype.setMediaStream = function (mediaStream) {
         this.mediaStream = mediaStream;
+    };
+    /**
+     * @hidden
+     */
+    Stream.prototype.updateMediaStreamInVideos = function () {
         this.ee.emitEvent('mediastream-updated');
     };
     /**
@@ -2402,14 +2310,8 @@ var Stream = /** @class */ (function () {
     /**
      * @hidden
      */
-    Stream.prototype.getVideoElement = function () {
-        return this.video;
-    };
-    /**
-     * @hidden
-     */
-    Stream.prototype.subscribeToMyRemote = function () {
-        this.isSubscribeToRemote = true;
+    Stream.prototype.subscribeToMyRemote = function (value) {
+        this.isSubscribeToRemote = value;
     };
     /**
      * @hidden
@@ -2437,7 +2339,7 @@ var Stream = /** @class */ (function () {
     Stream.prototype.publish = function () {
         var _this = this;
         return new Promise(function (resolve, reject) {
-            if (_this.isReadyToPublish) {
+            if (_this.isLocalStreamReadyToPublish) {
                 _this.initWebRtcPeerSend()
                     .then(function () {
                     resolve();
@@ -2446,7 +2348,7 @@ var Stream = /** @class */ (function () {
                 });
             }
             else {
-                _this.ee.once('stream-ready-to-publish', function (streamEvent) {
+                _this.ee.once('stream-ready-to-publish', function () {
                     _this.publish()
                         .then(function () {
                         resolve();
@@ -2481,6 +2383,7 @@ var Stream = /** @class */ (function () {
             this.mediaStream.getVideoTracks().forEach(function (track) {
                 track.stop();
             });
+            delete this.mediaStream;
         }
         console.info((!!this.outboundStreamOpts ? 'Local ' : 'Remote ') + "MediaStream from 'Stream' with id [" + this.streamId + '] is now disposed');
     };
@@ -2489,69 +2392,6 @@ var Stream = /** @class */ (function () {
      */
     Stream.prototype.displayMyRemote = function () {
         return this.isSubscribeToRemote;
-    };
-    /**
-     * @hidden
-     */
-    Stream.prototype.on = function (eventName, listener) {
-        this.ee.on(eventName, listener);
-    };
-    /**
-     * @hidden
-     */
-    Stream.prototype.once = function (eventName, listener) {
-        this.ee.once(eventName, listener);
-    };
-    /**
-     * @hidden
-     */
-    Stream.prototype.insertVideo = function (targetElement, insertMode) {
-        var _this = this;
-        if (!!targetElement) {
-            this.video = document.createElement('video');
-            this.video.id = (this.isLocal() ? 'local-' : 'remote-') + 'video-' + this.streamId;
-            this.video.autoplay = true;
-            this.video.controls = false;
-            this.video.srcObject = this.mediaStream;
-            if (this.isLocal() && !this.displayMyRemote()) {
-                this.video.muted = true;
-                if (this.outboundStreamOpts.publisherProperties.mirror) {
-                    this.mirrorVideo(this.video);
-                }
-                this.video.oncanplay = function () {
-                    console.info("Local 'Stream' with id [" + _this.streamId + '] video is now playing');
-                    _this.ee.emitEvent('video-is-playing', [{
-                            element: _this.video
-                        }]);
-                };
-            }
-            else {
-                this.video.title = this.streamId;
-            }
-            this.targetElement = targetElement;
-            this.parentId = targetElement.id;
-            var insMode = !!insertMode ? insertMode : VideoInsertMode_1.VideoInsertMode.APPEND;
-            this.insertElementWithMode(this.video, insMode);
-            this.ee.emitEvent('video-element-created-by-stream', [{
-                    element: this.video
-                }]);
-            this.isVideoELementCreated = true;
-        }
-        this.isReadyToPublish = true;
-        this.ee.emitEvent('stream-ready-to-publish');
-        return this.video;
-    };
-    /**
-     * @hidden
-     */
-    Stream.prototype.removeVideo = function () {
-        if (this.video) {
-            if (document.getElementById(this.parentId)) {
-                document.getElementById(this.parentId).removeChild(this.video);
-                this.ee.emitEvent('video-removed', [this.video]);
-            }
-            delete this.video;
-        }
     };
     /**
      * @hidden
@@ -2575,12 +2415,6 @@ var Stream = /** @class */ (function () {
     Stream.prototype.isSendScreen = function () {
         return (!!this.outboundStreamOpts &&
             this.outboundStreamOpts.publisherProperties.videoSource === 'screen');
-    };
-    /**
-     * @hidden
-     */
-    Stream.prototype.emitEvent = function (type, eventArray) {
-        this.ee.emitEvent(type, eventArray);
     };
     /**
      * @hidden
@@ -2662,6 +2496,12 @@ var Stream = /** @class */ (function () {
                     else {
                         _this.processSdpAnswer(response.sdpAnswer)
                             .then(function () {
+                            _this.isLocalStreamPublished = true;
+                            if (_this.displayMyRemote()) {
+                                // If remote now we can set the srcObject value of video elements
+                                // 'streamPlaying' event will be triggered
+                                _this.updateMediaStreamInVideos();
+                            }
                             _this.ee.emitEvent('stream-created-by-publisher');
                             resolve();
                         })["catch"](function (error) {
@@ -2687,7 +2527,6 @@ var Stream = /** @class */ (function () {
                     _this.webRtcPeer.generateOffer(successCallback);
                 });
             }
-            _this.isPublisherPublished = true;
         });
     };
     Stream.prototype.initWebRtcPeerReceive = function () {
@@ -2743,8 +2582,7 @@ var Stream = /** @class */ (function () {
             var streamId = _this.streamId;
             var peerConnection = _this.webRtcPeer.peerConnection;
             peerConnection.setRemoteDescription(answer, function () {
-                // Avoids to subscribe to your own stream remotely
-                // except when showMyRemote is true
+                // Update remote MediaStream object except when local stream
                 if (!_this.isLocal() || _this.displayMyRemote()) {
                     _this.mediaStream = peerConnection.getRemoteStreams()[0];
                     console.debug('Peer remote stream', _this.mediaStream);
@@ -2754,28 +2592,6 @@ var Stream = /** @class */ (function () {
                             _this.enableSpeakingEvents();
                         }
                     }
-                    if (!!_this.video) {
-                        // let thumbnailId = this.video.thumb;
-                        _this.video.oncanplay = function () {
-                            if (_this.isLocal() && _this.displayMyRemote()) {
-                                console.info("Your own remote 'Stream' with id [" + _this.streamId + '] video is now playing');
-                                _this.ee.emitEvent('remote-video-is-playing', [{
-                                        element: _this.video
-                                    }]);
-                            }
-                            else if (!_this.isLocal() && !_this.displayMyRemote()) {
-                                console.info("Remote 'Stream' with id [" + _this.streamId + '] video is now playing');
-                                _this.ee.emitEvent('video-is-playing', [{
-                                        element: _this.video
-                                    }]);
-                            }
-                            // show(thumbnailId);
-                            // this.hideSpinner(this.streamId);
-                        };
-                    }
-                    _this.session.emitEvent('stream-subscribed', [{
-                            stream: _this
-                        }]);
                 }
                 _this.initWebRtcStats();
                 resolve();
@@ -2793,41 +2609,376 @@ var Stream = /** @class */ (function () {
             this.webRtcStats.stopWebRtcStats();
         }
     };
+    /**
+     * @hidden
+     */
     Stream.prototype.isLocal = function () {
         // inbound options undefined and outbound options defined
         return (!this.inboundStreamOpts && !!this.outboundStreamOpts);
-    };
-    Stream.prototype.insertElementWithMode = function (element, insertMode) {
-        if (!!this.targetElement) {
-            switch (insertMode) {
-                case VideoInsertMode_1.VideoInsertMode.AFTER:
-                    this.targetElement.parentNode.insertBefore(element, this.targetElement.nextSibling);
-                    break;
-                case VideoInsertMode_1.VideoInsertMode.APPEND:
-                    this.targetElement.appendChild(element);
-                    break;
-                case VideoInsertMode_1.VideoInsertMode.BEFORE:
-                    this.targetElement.parentNode.insertBefore(element, this.targetElement);
-                    break;
-                case VideoInsertMode_1.VideoInsertMode.PREPEND:
-                    this.targetElement.insertBefore(element, this.targetElement.childNodes[0]);
-                    break;
-                case VideoInsertMode_1.VideoInsertMode.REPLACE:
-                    this.targetElement.parentNode.replaceChild(element, this.targetElement);
-                    break;
-                default:
-                    this.insertElementWithMode(element, VideoInsertMode_1.VideoInsertMode.APPEND);
-            }
-        }
-    };
-    Stream.prototype.mirrorVideo = function (video) {
-        video.style.transform = 'rotateY(180deg)';
-        video.style.webkitTransform = 'rotateY(180deg)';
     };
     return Stream;
 }());
 exports.Stream = Stream;
 //# sourceMappingURL=Stream.js.map
+
+/***/ }),
+
+/***/ "../../../../openvidu-browser/lib/OpenVidu/StreamManager.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/*
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+exports.__esModule = true;
+var StreamManagerEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/StreamManagerEvent.js");
+var VideoElementEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/VideoElementEvent.js");
+var VideoInsertMode_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Enums/VideoInsertMode.js");
+var EventEmitter = __webpack_require__("../../../../openvidu-browser/node_modules/wolfy87-eventemitter/EventEmitter.js");
+/**
+ * Interface in charge of displaying the media streams in the HTML DOM. This wraps any [[Publisher]] and [[Subscriber]] object.
+ * You can insert as many video players fo the same Stream as you want by calling [[StreamManager.addVideoElement]] or
+ * [[StreamManager.createVideoElement]].
+ *
+ * The use of StreamManager wrapper is particularly useful when you don't need to differentiate between Publisher or Subscriber streams or just
+ * want to directly manage your own video elements (even more than one video element per Stream). This scenario is pretty common in
+ * declarative, MVC frontend frameworks such as Angular, React or Vue.js
+ */
+var StreamManager = /** @class */ (function () {
+    /**
+     * @hidden
+     */
+    function StreamManager(stream, targetElement) {
+        var _this = this;
+        /**
+         * All the videos displaying the Stream of this Publisher/Subscriber
+         */
+        this.videos = [];
+        /**
+         * @hidden
+         */
+        this.lazyLaunchVideoElementCreatedEvent = false;
+        /**
+         * @hidden
+         */
+        this.ee = new EventEmitter();
+        this.stream = stream;
+        this.stream.streamManager = this;
+        this.remote = !this.stream.isLocal();
+        if (!!targetElement) {
+            var targEl = void 0;
+            if (typeof targetElement === 'string') {
+                targEl = document.getElementById(targetElement);
+            }
+            else if (targetElement instanceof HTMLElement) {
+                targEl = targetElement;
+            }
+            if (!!targEl) {
+                this.firstVideoElement = {
+                    targetElement: targEl,
+                    video: document.createElement('video'),
+                    id: ''
+                };
+                this.targetElement = targEl;
+                this.element = targEl;
+            }
+        }
+        this.canPlayListener = function () {
+            if (_this.stream.isLocal()) {
+                if (!_this.stream.displayMyRemote()) {
+                    console.info("Your local 'Stream' with id [" + _this.stream.streamId + '] video is now playing');
+                    _this.ee.emitEvent('videoPlaying', [new VideoElementEvent_1.VideoElementEvent(_this.videos[0].video, _this, 'videoPlaying')]);
+                }
+                else {
+                    console.info("Your own remote 'Stream' with id [" + _this.stream.streamId + '] video is now playing');
+                    _this.ee.emitEvent('remoteVideoPlaying', [new VideoElementEvent_1.VideoElementEvent(_this.videos[0].video, _this, 'remoteVideoPlaying')]);
+                }
+            }
+            else {
+                console.info("Remote 'Stream' with id [" + _this.stream.streamId + '] video is now playing');
+                _this.ee.emitEvent('videoPlaying', [new VideoElementEvent_1.VideoElementEvent(_this.videos[0].video, _this, 'videoPlaying')]);
+            }
+            _this.ee.emitEvent('streamPlaying', [new StreamManagerEvent_1.StreamManagerEvent(_this)]);
+        };
+    }
+    /**
+     * See [[EventDispatcher.on]]
+     */
+    StreamManager.prototype.on = function (type, handler) {
+        this.ee.on(type, function (event) {
+            if (event) {
+                console.info("Event '" + type + "' triggered", event);
+            }
+            else {
+                console.info("Event '" + type + "' triggered");
+            }
+            handler(event);
+        });
+        if (type === 'videoElementCreated') {
+            if (!!this.stream && this.lazyLaunchVideoElementCreatedEvent) {
+                this.ee.emitEvent('videoElementCreated', [new VideoElementEvent_1.VideoElementEvent(this.videos[0].video, this, 'videoElementCreated')]);
+                this.lazyLaunchVideoElementCreatedEvent = false;
+            }
+        }
+        if (type === 'streamPlaying' || type === 'videoPlaying') {
+            if (this.videos[0] && this.videos[0].video &&
+                this.videos[0].video.currentTime > 0 &&
+                this.videos[0].video.paused === false &&
+                this.videos[0].video.ended === false &&
+                this.videos[0].video.readyState === 4) {
+                this.ee.emitEvent('streamPlaying', [new StreamManagerEvent_1.StreamManagerEvent(this)]);
+                this.ee.emitEvent('videoPlaying', [new VideoElementEvent_1.VideoElementEvent(this.videos[0].video, this, 'videoPlaying')]);
+            }
+        }
+        return this;
+    };
+    /**
+     * See [[EventDispatcher.once]]
+     */
+    StreamManager.prototype.once = function (type, handler) {
+        this.ee.once(type, function (event) {
+            if (event) {
+                console.info("Event '" + type + "' triggered once", event);
+            }
+            else {
+                console.info("Event '" + type + "' triggered once");
+            }
+            handler(event);
+        });
+        if (type === 'videoElementCreated') {
+            if (!!this.stream && this.lazyLaunchVideoElementCreatedEvent) {
+                this.ee.emitEvent('videoElementCreated', [new VideoElementEvent_1.VideoElementEvent(this.videos[0].video, this, 'videoElementCreated')]);
+            }
+        }
+        if (type === 'streamPlaying' || type === 'videoPlaying') {
+            if (this.videos[0] && this.videos[0].video &&
+                this.videos[0].video.currentTime > 0 &&
+                this.videos[0].video.paused === false &&
+                this.videos[0].video.ended === false &&
+                this.videos[0].video.readyState === 4) {
+                this.ee.emitEvent('streamPlaying', [new StreamManagerEvent_1.StreamManagerEvent(this)]);
+                this.ee.emitEvent('videoPlaying', [new VideoElementEvent_1.VideoElementEvent(this.videos[0].video, this, 'videoPlaying')]);
+            }
+        }
+        return this;
+    };
+    /**
+     * See [[EventDispatcher.off]]
+     */
+    StreamManager.prototype.off = function (type, handler) {
+        if (!handler) {
+            this.ee.removeAllListeners(type);
+        }
+        else {
+            this.ee.off(type, handler);
+        }
+        return this;
+    };
+    /**
+     * Makes `video` element parameter display this [[stream]]. This is useful when you are
+     * [managing the video elements on your own](/docs/how-do-i/manage-videos/#you-take-care-of-the-video-players)
+     *
+     * Calling this method with a video already added to other Publisher/Subscriber will cause the video element to be
+     * disassociated from that previous Publisher/Subscriber and to be associated to this one.
+     *
+     * @returns 1 if the video wasn't associated to any other Publisher/Subscriber and has been successfully added to this one.
+     * 0 if the video was already added to this Publisher/Subscriber. -1 if the video was previously associated to any other
+     * Publisher/Subscriber and has been successfully disassociated from that one and properly added to this one.
+     */
+    StreamManager.prototype.addVideoElement = function (video) {
+        this.initializeVideoProperties(video);
+        // If the video element is already part of this StreamManager do nothing
+        for (var _i = 0, _a = this.videos; _i < _a.length; _i++) {
+            var v = _a[_i];
+            if (v.video === video) {
+                return 0;
+            }
+        }
+        var returnNumber = 1;
+        this.initializeVideoProperties(video);
+        for (var _b = 0, _c = this.stream.session.streamManagers; _b < _c.length; _b++) {
+            var streamManager = _c[_b];
+            if (streamManager.disassociateVideo(video)) {
+                returnNumber = -1;
+                break;
+            }
+        }
+        this.stream.session.streamManagers.forEach(function (streamManager) {
+            streamManager.disassociateVideo(video);
+        });
+        this.pushNewStreamManagerVideo({
+            video: video,
+            id: video.id
+        });
+        console.info('New video element associated to ', this);
+        return returnNumber;
+    };
+    /**
+     * Creates a new video element displaying this [[stream]]. This allows you to have multiple video elements displaying the same media stream.
+     *
+     * #### Events dispatched
+     *
+     * The Publisher/Subscriber object will dispatch a `videoElementCreated` event once the HTML video element has been added to DOM. See [[VideoElementEvent]]
+     *
+     * @param targetElement HTML DOM element (or its `id` attribute) in which the video element of the Publisher/Subscriber will be inserted
+     * @param insertMode How the video element will be inserted accordingly to `targetElemet`
+     */
+    StreamManager.prototype.createVideoElement = function (targetElement, insertMode) {
+        var targEl;
+        if (typeof targetElement === 'string') {
+            targEl = document.getElementById(targEl);
+            if (!targEl) {
+                throw new Error("The provided 'targetElement' couldn't be resolved to any HTML element: " + targetElement);
+            }
+        }
+        else if (targetElement instanceof HTMLElement) {
+            targEl = targetElement;
+        }
+        else {
+            throw new Error("The provided 'targetElement' couldn't be resolved to any HTML element: " + targetElement);
+        }
+        var video = document.createElement('video');
+        this.initializeVideoProperties(video);
+        var insMode = !!insertMode ? insertMode : VideoInsertMode_1.VideoInsertMode.APPEND;
+        switch (insMode) {
+            case VideoInsertMode_1.VideoInsertMode.AFTER:
+                targEl.parentNode.insertBefore(video, targEl.nextSibling);
+                break;
+            case VideoInsertMode_1.VideoInsertMode.APPEND:
+                targEl.appendChild(video);
+                break;
+            case VideoInsertMode_1.VideoInsertMode.BEFORE:
+                targEl.parentNode.insertBefore(video, targEl);
+                break;
+            case VideoInsertMode_1.VideoInsertMode.PREPEND:
+                targEl.insertBefore(video, targEl.childNodes[0]);
+                break;
+            case VideoInsertMode_1.VideoInsertMode.REPLACE:
+                targEl.parentNode.replaceChild(video, targEl);
+                break;
+            default:
+                insMode = VideoInsertMode_1.VideoInsertMode.APPEND;
+                targEl.appendChild(video);
+                break;
+        }
+        var v = {
+            targetElement: targEl,
+            video: video,
+            insertMode: insMode,
+            id: video.id
+        };
+        this.pushNewStreamManagerVideo(v);
+        this.ee.emitEvent('videoElementCreated', [new VideoElementEvent_1.VideoElementEvent(v.video, this, 'videoElementCreated')]);
+        this.lazyLaunchVideoElementCreatedEvent = !!this.firstVideoElement;
+        return video;
+    };
+    /**
+     * @hidden
+     */
+    StreamManager.prototype.initializeVideoProperties = function (video) {
+        video.srcObject = this.stream.getMediaStream();
+        video.autoplay = true;
+        video.controls = false;
+        if (!video.id) {
+            video.id = (this.remote ? 'remote-' : 'local-') + 'video-' + this.stream.streamId;
+            // DEPRECATED property: assign once the property id if the user provided a valid targetElement
+            if (!this.id && !!this.targetElement) {
+                this.id = video.id;
+            }
+        }
+        if (!this.remote && !this.stream.displayMyRemote()) {
+            video.muted = true;
+            if (this.stream.outboundStreamOpts.publisherProperties.mirror) {
+                this.mirrorVideo(video);
+            }
+        }
+    };
+    /**
+     * @hidden
+     */
+    StreamManager.prototype.removeAllVideos = function () {
+        var _this = this;
+        for (var i = this.stream.session.streamManagers.length - 1; i >= 0; --i) {
+            if (this.stream.session.streamManagers[i] === this) {
+                this.stream.session.streamManagers.splice(i, 1);
+            }
+        }
+        this.videos.slice().reverse().forEach(function (streamManagerVideo, index, videos) {
+            // Remove oncanplay event listener (only OpenVidu browser one, not the user ones)
+            streamManagerVideo.video.removeEventListener('canplay', _this.canPlayListener);
+            if (!!streamManagerVideo.targetElement) {
+                // Only remove videos created by OpenVidu Browser (those generated by passing a valid targetElement in OpenVidu.initPublisher and Session.subscribe
+                // or those created by StreamManager.createVideoElement). These are also the videos that triggered a videoElementCreated event
+                streamManagerVideo.video.parentNode.removeChild(streamManagerVideo.video);
+                _this.ee.emitEvent('videoElementDestroyed', [new VideoElementEvent_1.VideoElementEvent(streamManagerVideo.video, _this, 'videoElementDestroyed')]);
+                _this.videos.splice(videos.length - 1 - index, 1);
+            }
+            else {
+                // Remove srcObject in all videos managed by the user
+                streamManagerVideo.video.srcObject = null;
+            }
+        });
+    };
+    /**
+     * @hidden
+     */
+    StreamManager.prototype.disassociateVideo = function (video) {
+        var disassociated = false;
+        for (var i = 0; i < this.videos.length; i++) {
+            if (this.videos[i].video === video) {
+                this.videos.splice(i, 1);
+                disassociated = true;
+                console.info('Video element disassociated from ', this);
+                break;
+            }
+        }
+        return disassociated;
+    };
+    /**
+     * @hidden
+     */
+    StreamManager.prototype.addPlayEventToFirstVideo = function () {
+        if ((!!this.videos[0]) && (!!this.videos[0].video) && (this.videos[0].video.oncanplay === null)) {
+            this.videos[0].video.addEventListener('canplay', this.canPlayListener);
+        }
+    };
+    /**
+     * @hidden
+     */
+    StreamManager.prototype.updateMediaStream = function (mediaStream) {
+        this.videos.forEach(function (streamManagerVideo) {
+            streamManagerVideo.video.srcObject = mediaStream;
+        });
+    };
+    StreamManager.prototype.pushNewStreamManagerVideo = function (streamManagerVideo) {
+        this.videos.push(streamManagerVideo);
+        this.addPlayEventToFirstVideo();
+        if (this.stream.session.streamManagers.indexOf(this) === -1) {
+            this.stream.session.streamManagers.push(this);
+        }
+    };
+    StreamManager.prototype.mirrorVideo = function (video) {
+        video.style.transform = 'rotateY(180deg)';
+        video.style.webkitTransform = 'rotateY(180deg)';
+    };
+    return StreamManager;
+}());
+exports.StreamManager = StreamManager;
+//# sourceMappingURL=StreamManager.js.map
 
 /***/ }),
 
@@ -2852,41 +3003,42 @@ exports.Stream = Stream;
  * limitations under the License.
  *
  */
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 exports.__esModule = true;
-var VideoElementEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/VideoElementEvent.js");
-var EventEmitter = __webpack_require__("../../../../openvidu-browser/node_modules/wolfy87-eventemitter/EventEmitter.js");
+var StreamManager_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/StreamManager.js");
 /**
  * Packs remote media streams. Participants automatically receive them when others publish their streams. Initialized with [[Session.subscribe]] method
  */
-var Subscriber = /** @class */ (function () {
+var Subscriber = /** @class */ (function (_super) {
+    __extends(Subscriber, _super);
     /**
      * @hidden
      */
-    function Subscriber(stream, targetElement, properties) {
-        var _this = this;
-        this.ee = new EventEmitter();
-        this.stream = stream;
-        this.properties = properties;
-        if (typeof targetElement === 'string') {
-            var e = document.getElementById(targetElement);
-            if (!!e) {
-                this.element = e;
-            }
-        }
-        else if (targetElement instanceof HTMLElement) {
-            this.element = targetElement;
-        }
-        this.stream.once('video-removed', function (element) {
-            _this.ee.emitEvent('videoElementDestroyed', [new VideoElementEvent_1.VideoElementEvent(element, _this, 'videoElementDestroyed')]);
-        });
+    function Subscriber(stream, targEl, properties) {
+        var _this = _super.call(this, stream, targEl) || this;
+        _this.element = _this.targetElement;
+        _this.stream = stream;
+        _this.properties = properties;
+        return _this;
     }
     /**
      * Subscribe or unsubscribe from the audio stream (if available). Calling this method twice in a row passing same value will have no effect
      * @param value `true` to subscribe to the audio stream, `false` to unsubscribe from it
      */
     Subscriber.prototype.subscribeToAudio = function (value) {
-        this.stream.getWebRtcPeer().audioEnabled = value;
-        console.info("'Subscriber' has " + (value ? 'subscribed' : 'unsubscribed') + ' to its audio stream');
+        this.stream.getMediaStream().getAudioTracks().forEach(function (track) {
+            track.enabled = value;
+        });
+        console.info("'Subscriber' has " + (value ? 'subscribed to' : 'unsubscribed from') + ' its audio stream');
         return this;
     };
     /**
@@ -2894,108 +3046,14 @@ var Subscriber = /** @class */ (function () {
      * @param value `true` to subscribe to the video stream, `false` to unsubscribe from it
      */
     Subscriber.prototype.subscribeToVideo = function (value) {
-        this.stream.getWebRtcPeer().videoEnabled = value;
-        console.info("'Subscriber' has " + (value ? 'subscribed' : 'unsubscribed') + ' to its video stream');
-        return this;
-    };
-    /**
-     * See [[EventDispatcher.on]]
-     */
-    Subscriber.prototype.on = function (type, handler) {
-        var _this = this;
-        this.ee.on(type, function (event) {
-            if (event) {
-                console.info("Event '" + type + "' triggered by 'Subscriber'", event);
-            }
-            else {
-                console.info("Event '" + type + "' triggered by 'Subscriber'");
-            }
-            handler(event);
+        this.stream.getMediaStream().getVideoTracks().forEach(function (track) {
+            track.enabled = value;
         });
-        if (type === 'videoElementCreated') {
-            if (this.stream.isVideoELementCreated) {
-                this.ee.emitEvent('videoElementCreated', [new VideoElementEvent_1.VideoElementEvent(this.stream.getVideoElement(), this, 'videoElementCreated')]);
-            }
-            else {
-                this.stream.once('video-element-created-by-stream', function (element) {
-                    _this.id = element.id;
-                    _this.ee.emitEvent('videoElementCreated', [new VideoElementEvent_1.VideoElementEvent(element, _this, 'videoElementCreated')]);
-                });
-            }
-        }
-        if (type === 'videoPlaying') {
-            var video = this.stream.getVideoElement();
-            if (!this.stream.displayMyRemote() && video &&
-                video.currentTime > 0 &&
-                video.paused === false &&
-                video.ended === false &&
-                video.readyState === 4) {
-                this.ee.emitEvent('videoPlaying', [new VideoElementEvent_1.VideoElementEvent(this.stream.getVideoElement(), this, 'videoPlaying')]);
-            }
-            else {
-                this.stream.once('video-is-playing', function (element) {
-                    _this.ee.emitEvent('videoPlaying', [new VideoElementEvent_1.VideoElementEvent(element.element, _this, 'videoPlaying')]);
-                });
-            }
-        }
-        return this;
-    };
-    /**
-     * See [[EventDispatcher.once]]
-     */
-    Subscriber.prototype.once = function (type, handler) {
-        var _this = this;
-        this.ee.once(type, function (event) {
-            if (event) {
-                console.info("Event '" + type + "' triggered once by 'Subscriber'", event);
-            }
-            else {
-                console.info("Event '" + type + "' triggered once by 'Subscriber'");
-            }
-            handler(event);
-        });
-        if (type === 'videoElementCreated') {
-            if (this.stream.isVideoELementCreated) {
-                this.ee.emitEvent('videoElementCreated', [new VideoElementEvent_1.VideoElementEvent(this.stream.getVideoElement(), this, 'videoElementCreated')]);
-            }
-            else {
-                this.stream.once('video-element-created-by-stream', function (element) {
-                    _this.id = element.id;
-                    _this.ee.emitEvent('videoElementCreated', [new VideoElementEvent_1.VideoElementEvent(element, _this, 'videoElementCreated')]);
-                });
-            }
-        }
-        if (type === 'videoPlaying') {
-            var video = this.stream.getVideoElement();
-            if (!this.stream.displayMyRemote() && video &&
-                video.currentTime > 0 &&
-                video.paused === false &&
-                video.ended === false &&
-                video.readyState === 4) {
-                this.ee.emitEvent('videoPlaying', [new VideoElementEvent_1.VideoElementEvent(this.stream.getVideoElement(), this, 'videoPlaying')]);
-            }
-            else {
-                this.stream.once('video-is-playing', function (element) {
-                    _this.ee.emitEvent('videoPlaying', [new VideoElementEvent_1.VideoElementEvent(element.element, _this, 'videoPlaying')]);
-                });
-            }
-        }
-        return this;
-    };
-    /**
-     * See [[EventDispatcher.off]]
-     */
-    Subscriber.prototype.off = function (type, handler) {
-        if (!handler) {
-            this.ee.removeAllListeners(type);
-        }
-        else {
-            this.ee.off(type, handler);
-        }
+        console.info("'Subscriber' has " + (value ? 'subscribed to' : 'unsubscribed from') + ' its video stream');
         return this;
     };
     return Subscriber;
-}());
+}(StreamManager_1.StreamManager));
 exports.Subscriber = Subscriber;
 //# sourceMappingURL=Subscriber.js.map
 
@@ -3061,19 +3119,68 @@ exports.__esModule = true;
  */
 var OpenViduErrorName;
 (function (OpenViduErrorName) {
+    /**
+     * Browser is not supported by OpenVidu.
+     * Returned uppon unsuccessful [[Session.connect]]
+     */
     OpenViduErrorName["BROWSER_NOT_SUPPORTED"] = "BROWSER_NOT_SUPPORTED";
-    OpenViduErrorName["CAMERA_ACCESS_DENIED"] = "CAMERA_ACCESS_DENIED";
-    OpenViduErrorName["MICROPHONE_ACCESS_DENIED"] = "MICROPHONE_ACCESS_DENIED";
+    /**
+     * The user hasn't granted permissions to the required input device when the browser asked for them.
+     * Returned uppon unsuccessful [[OpenVidu.initPublisher]] or [[OpenVidu.getUserMedia]]
+     */
+    OpenViduErrorName["DEVICE_ACCESS_DENIED"] = "DEVICE_ACCESS_DENIED";
+    /**
+     * The user hasn't granted permissions to capture some desktop screen when the browser asked for them.
+     * Returned uppon unsuccessful [[OpenVidu.initPublisher]] or [[OpenVidu.getUserMedia]]
+     */
     OpenViduErrorName["SCREEN_CAPTURE_DENIED"] = "SCREEN_CAPTURE_DENIED";
+    /**
+     * Browser does not support screen sharing.
+     * Returned uppon unsuccessful [[OpenVidu.initPublisher]]
+     */
     OpenViduErrorName["SCREEN_SHARING_NOT_SUPPORTED"] = "SCREEN_SHARING_NOT_SUPPORTED";
+    /**
+     * Only for Chrome, there's no screen sharing extension installed
+     * Returned uppon unsuccessful [[OpenVidu.initPublisher]]
+     */
     OpenViduErrorName["SCREEN_EXTENSION_NOT_INSTALLED"] = "SCREEN_EXTENSION_NOT_INSTALLED";
+    /**
+     * Only for Chrome, the screen sharing extension is installed but is disabled
+     * Returned uppon unsuccessful [[OpenVidu.initPublisher]]
+     */
     OpenViduErrorName["SCREEN_EXTENSION_DISABLED"] = "SCREEN_EXTENSION_DISABLED";
+    /**
+     * No video input device found with the provided deviceId (property [[PublisherProperties.videoSource]])
+     * Returned uppon unsuccessful [[OpenVidu.initPublisher]]
+     */
     OpenViduErrorName["INPUT_VIDEO_DEVICE_NOT_FOUND"] = "INPUT_VIDEO_DEVICE_NOT_FOUND";
+    /**
+     * No audio input device found with the provided deviceId (property [[PublisherProperties.audioSource]])
+     * Returned uppon unsuccessful [[OpenVidu.initPublisher]]
+     */
     OpenViduErrorName["INPUT_AUDIO_DEVICE_NOT_FOUND"] = "INPUT_AUDIO_DEVICE_NOT_FOUND";
+    /**
+     * Method [[OpenVidu.initPublisher]] has been called with properties `videoSource` and `audioSource` of
+     * [[PublisherProperties]] parameter both set to *false* or *null*
+     */
     OpenViduErrorName["NO_INPUT_SOURCE_SET"] = "NO_INPUT_SOURCE_SET";
+    /**
+     * Some media property of [[PublisherProperties]] such as `frameRate` or `resolution` is not supported
+     * by the input devices (whenever it is possible they are automatically adjusted to the most similar value).
+     * Returned uppon unsuccessful [[OpenVidu.initPublisher]]
+     */
     OpenViduErrorName["PUBLISHER_PROPERTIES_ERROR"] = "PUBLISHER_PROPERTIES_ERROR";
+    /**
+     * _Not in use yet_
+     */
     OpenViduErrorName["OPENVIDU_PERMISSION_DENIED"] = "OPENVIDU_PERMISSION_DENIED";
+    /**
+     * _Not in use yet_
+     */
     OpenViduErrorName["OPENVIDU_NOT_CONNECTED"] = "OPENVIDU_NOT_CONNECTED";
+    /**
+     * _Not in use yet_
+     */
     OpenViduErrorName["GENERIC_ERROR"] = "GENERIC_ERROR";
 })(OpenViduErrorName = exports.OpenViduErrorName || (exports.OpenViduErrorName = {}));
 /**
@@ -3247,10 +3354,17 @@ var Event = /** @class */ (function () {
     };
     /**
      * Prevents the default behaviour of the event. The following events have a default behaviour:
-     * - `sessionDisconnected`: automatically unsubscribes the leaving participant from every Subscriber object of the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks)
-     * and also deletes the HTML video element associated to it.
-     * - `streamDestroyed`: if dispatched by a [[Publisher]] (_you_ have unpublished), automatically stops all media tracks and deletes the HTML video element associated to the stream. If dispatched by [[Session]],
-     * (_other user_ has unpublished), automatically unsubscribes the proper Subscriber object from the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks) and deletes the HTML video element associated to it.
+     *
+     * - `sessionDisconnected`: dispatched by [[Session]] object, automatically unsubscribes the leaving participant from every Subscriber object of the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks)
+     * and also deletes any HTML video element associated to each Subscriber (only those created by OpenVidu Browser, either by passing a valid parameter as `targetElement` in method [[Session.subscribe]] or
+     * by calling [[Subscriber.createVideoElement]]). For every video removed, each Subscriber object will also dispatch a `videoElementDestroyed` event.
+     *
+     * - `streamDestroyed`:
+     *   - If dispatched by a [[Publisher]] (*you* have unpublished): automatically stops all media tracks and deletes any HTML video element associated to it (only those created by OpenVidu Browser, either by passing a valid parameter as `targetElement`
+     * in method [[OpenVidu.initPublisher]] or by calling [[Publisher.createVideoElement]]). For every video removed, the Publisher object will also dispatch a `videoElementDestroyed` event.
+     *   - If dispatched by [[Session]] (*other user* has unpublished): automatically unsubscribes the proper Subscriber object from the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks)
+     * and also deletes any HTML video element associated to that Subscriber (only those created by OpenVidu Browser, either by passing a valid parameter as `targetElement` in method [[Session.subscribe]] or
+     * by calling [[Subscriber.createVideoElement]]). For every video removed, the Subscriber object will also dispatch a `videoElementDestroyed` event.
      */
     Event.prototype.preventDefault = function () {
         // tslint:disable-next-line:no-empty
@@ -3452,7 +3566,9 @@ var SessionDisconnectedEvent = /** @class */ (function (_super) {
             if (!!session.remoteConnections[connectionId].stream) {
                 session.remoteConnections[connectionId].stream.disposeWebRtcPeer();
                 session.remoteConnections[connectionId].stream.disposeMediaStream();
-                session.remoteConnections[connectionId].stream.removeVideo();
+                if (session.remoteConnections[connectionId].stream.streamManager) {
+                    session.remoteConnections[connectionId].stream.streamManager.removeAllVideos();
+                }
                 delete session.remoteStreamsCreated[session.remoteConnections[connectionId].stream.streamId];
                 session.remoteConnections[connectionId].dispose();
             }
@@ -3585,19 +3701,21 @@ var StreamEvent = /** @class */ (function (_super) {
     StreamEvent.prototype.callDefaultBehaviour = function () {
         if (this.type === 'streamDestroyed') {
             if (this.target instanceof Session_1.Session) {
-                console.info("Calling default behaviour upon '" + this.type + "' event dispatched by 'Session'");
                 // Remote Stream
+                console.info("Calling default behaviour upon '" + this.type + "' event dispatched by 'Session'");
                 this.stream.disposeWebRtcPeer();
-                this.stream.disposeMediaStream();
-                this.stream.removeVideo();
             }
             else if (this.target instanceof Publisher_1.Publisher) {
-                console.info("Calling default behaviour upon '" + this.type + "' event dispatched by 'Publisher'");
                 // Local Stream
-                this.stream.disposeMediaStream();
-                this.stream.removeVideo();
-                this.stream.isReadyToPublish = false;
+                console.info("Calling default behaviour upon '" + this.type + "' event dispatched by 'Publisher'");
+                this.stream.isLocalStreamReadyToPublish = false;
             }
+            // Dispose the MediaStream local object
+            this.stream.disposeMediaStream();
+            // Remove from DOM all video elements associated to this Stream, if there's a StreamManager defined
+            // (method Session.subscribe must have been called)
+            if (this.stream.streamManager)
+                this.stream.streamManager.removeAllVideos();
             // Delete stream from Session.remoteStreamsCreated map
             delete this.stream.session.remoteStreamsCreated[this.stream.streamId];
             // Delete StreamOptionsServer from remote Connection
@@ -3616,6 +3734,63 @@ var StreamEvent = /** @class */ (function (_super) {
 }(Event_1.Event));
 exports.StreamEvent = StreamEvent;
 //# sourceMappingURL=StreamEvent.js.map
+
+/***/ }),
+
+/***/ "../../../../openvidu-browser/lib/OpenViduInternal/Events/StreamManagerEvent.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/*
+ * (C) Copyright 2017-2018 OpenVidu (https://openvidu.io/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+exports.__esModule = true;
+var Event_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/Event.js");
+/**
+ * Defines the following events:
+ * - `streamPlaying`: dispatched by [[StreamManager]] ([[Publisher]] and [[Subscriber]])
+ */
+var StreamManagerEvent = /** @class */ (function (_super) {
+    __extends(StreamManagerEvent, _super);
+    /**
+     * @hidden
+     */
+    function StreamManagerEvent(target) {
+        return _super.call(this, false, target, 'streamPlaying') || this;
+    }
+    /**
+     * @hidden
+     */
+    // tslint:disable-next-line:no-empty
+    StreamManagerEvent.prototype.callDefaultBehaviour = function () { };
+    return StreamManagerEvent;
+}(Event_1.Event));
+exports.StreamManagerEvent = StreamManagerEvent;
+//# sourceMappingURL=StreamManagerEvent.js.map
 
 /***/ }),
 
@@ -3654,10 +3829,9 @@ exports.__esModule = true;
 var Event_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/Event.js");
 /**
  * Defines the following events:
- * - `videoElementCreated`: dispatched by [[Publisher]] and [[Subscriber]]
- * - `videoElementDestroyed`: dispatched by [[Publisher]] and [[Subscriber]]
- * - `videoPlaying`: dispatched by [[Publisher]] and [[Subscriber]]
- * - `remoteVideoPlaying`: dispatched by [[Publisher]] if `Publisher.subscribeToRemote()` was called before `Session.publish(Publisher)`
+ * - `videoElementCreated`: dispatched by [[Publisher]] and [[Subscriber]] whenever a new HTML video element has been inserted into DOM by OpenVidu Browser library. See
+ * [Manage video players](/docs/how-do-i/manage-videos) section.
+ * - `videoElementDestroyed`: dispatched by [[Publisher]] and [[Subscriber]] whenever an HTML video element has been removed from DOM by OpenVidu Browser library.
  */
 var VideoElementEvent = /** @class */ (function (_super) {
     __extends(VideoElementEvent, _super);
@@ -5761,6 +5935,8 @@ var Publisher_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu
 exports.Publisher = Publisher_1.Publisher;
 var Subscriber_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/Subscriber.js");
 exports.Subscriber = Subscriber_1.Subscriber;
+var StreamManager_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/StreamManager.js");
+exports.StreamManager = StreamManager_1.StreamManager;
 var Stream_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/Stream.js");
 exports.Stream = Stream_1.Stream;
 var Connection_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVidu/Connection.js");
@@ -5787,6 +5963,8 @@ var SignalEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenVi
 exports.SignalEvent = SignalEvent_1.SignalEvent;
 var StreamEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/StreamEvent.js");
 exports.StreamEvent = StreamEvent_1.StreamEvent;
+var StreamManagerEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/StreamManagerEvent.js");
+exports.StreamManagerEvent = StreamManagerEvent_1.StreamManagerEvent;
 var VideoElementEvent_1 = __webpack_require__("../../../../openvidu-browser/lib/OpenViduInternal/Events/VideoElementEvent.js");
 exports.VideoElementEvent = VideoElementEvent_1.VideoElementEvent;
 //# sourceMappingURL=index.js.map
@@ -9160,13 +9338,13 @@ exports.parse = function(sdp) {
 /***/ "../../../../openvidu-browser/node_modules/ua-parser-js/src/ua-parser.js":
 /***/ (function(module, exports, __webpack_require__) {
 
-var __WEBPACK_AMD_DEFINE_RESULT__;/**
- * UAParser.js v0.7.17
+var __WEBPACK_AMD_DEFINE_RESULT__;/*!
+ * UAParser.js v0.7.18
  * Lightweight JavaScript-based User-Agent string parser
  * https://github.com/faisalman/ua-parser-js
  *
  * Copyright © 2012-2016 Faisal Salman <fyzlman@gmail.com>
- * Dual licensed under GPLv2 & MIT
+ * Dual licensed under GPLv2 or MIT
  */
 
 (function (window, undefined) {
@@ -9178,7 +9356,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/**
     /////////////
 
 
-    var LIBVERSION  = '0.7.17',
+    var LIBVERSION  = '0.7.18',
         EMPTY       = '',
         UNKNOWN     = '?',
         FUNC_TYPE   = 'function',
@@ -9406,7 +9584,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/**
 
             // Mixed
             /(kindle)\/([\w\.]+)/i,                                             // Kindle
-            /(lunascape|maxthon|netfront|jasmine|blazer)[\/\s]?([\w\.]+)*/i,
+            /(lunascape|maxthon|netfront|jasmine|blazer)[\/\s]?([\w\.]*)/i,
                                                                                 // Lunascape/Maxthon/Netfront/Jasmine/Blazer
 
             // Trident based
@@ -9415,16 +9593,16 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/**
             /(?:ms|\()(ie)\s([\w\.]+)/i,                                        // Internet Explorer
 
             // Webkit/KHTML based
-            /(rekonq)\/([\w\.]+)*/i,                                            // Rekonq
-            /(chromium|flock|rockmelt|midori|epiphany|silk|skyfire|ovibrowser|bolt|iron|vivaldi|iridium|phantomjs|bowser)\/([\w\.-]+)/i
+            /(rekonq)\/([\w\.]*)/i,                                             // Rekonq
+            /(chromium|flock|rockmelt|midori|epiphany|silk|skyfire|ovibrowser|bolt|iron|vivaldi|iridium|phantomjs|bowser|quark)\/([\w\.-]+)/i
                                                                                 // Chromium/Flock/RockMelt/Midori/Epiphany/Silk/Skyfire/Bolt/Iron/Iridium/PhantomJS/Bowser
             ], [NAME, VERSION], [
 
             /(trident).+rv[:\s]([\w\.]+).+like\sgecko/i                         // IE11
             ], [[NAME, 'IE'], VERSION], [
 
-            /(edge)\/((\d+)?[\w\.]+)/i                                          // Microsoft Edge
-            ], [NAME, VERSION], [
+            /(edge|edgios|edgea)\/((\d+)?[\w\.]+)/i                             // Microsoft Edge
+            ], [[NAME, 'Edge'], VERSION], [
 
             /(yabrowser)\/([\w\.]+)/i                                           // Yandex
             ], [[NAME, 'Yandex'], VERSION], [
@@ -9442,11 +9620,26 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/**
             /(micromessenger)\/([\w\.]+)/i                                      // WeChat
             ], [[NAME, 'WeChat'], VERSION], [
 
+            /(qqbrowserlite)\/([\w\.]+)/i                                       // QQBrowserLite
+            ], [NAME, VERSION], [
+
             /(QQ)\/([\d\.]+)/i                                                  // QQ, aka ShouQ
             ], [NAME, VERSION], [
 
             /m?(qqbrowser)[\/\s]?([\w\.]+)/i                                    // QQBrowser
             ], [NAME, VERSION], [
+
+            /(BIDUBrowser)[\/\s]?([\w\.]+)/i                                    // Baidu Browser
+            ], [NAME, VERSION], [
+
+            /(2345Explorer)[\/\s]?([\w\.]+)/i                                   // 2345 Browser
+            ], [NAME, VERSION], [
+
+            /(MetaSr)[\/\s]?([\w\.]+)/i                                         // SouGouBrowser
+            ], [NAME], [
+
+            /(LBBROWSER)/i                                      // LieBao Browser
+            ], [NAME], [
 
             /xiaomi\/miuibrowser\/([\w\.]+)/i                                   // MIUI Browser
             ], [VERSION, [NAME, 'MIUI Browser']], [
@@ -9504,7 +9697,8 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/**
             /(swiftfox)/i,                                                      // Swiftfox
             /(icedragon|iceweasel|camino|chimera|fennec|maemo\sbrowser|minimo|conkeror)[\/\s]?([\w\.\+]+)/i,
                                                                                 // IceDragon/Iceweasel/Camino/Chimera/Fennec/Maemo/Minimo/Conkeror
-            /(firefox|seamonkey|k-meleon|icecat|iceape|firebird|phoenix)\/([\w\.-]+)/i,
+            /(firefox|seamonkey|k-meleon|icecat|iceape|firebird|phoenix|palemoon|basilisk|waterfox)\/([\w\.-]+)$/i,
+
                                                                                 // Firefox/SeaMonkey/K-Meleon/IceCat/IceApe/Firebird/Phoenix
             /(mozilla)\/([\w\.]+).+rv\:.+gecko\/\d+/i,                          // Mozilla
 
@@ -9512,7 +9706,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/**
             /(polaris|lynx|dillo|icab|doris|amaya|w3m|netsurf|sleipnir)[\/\s]?([\w\.]+)/i,
                                                                                 // Polaris/Lynx/Dillo/iCab/Doris/Amaya/w3m/NetSurf/Sleipnir
             /(links)\s\(([\w\.]+)/i,                                            // Links
-            /(gobrowser)\/?([\w\.]+)*/i,                                        // GoBrowser
+            /(gobrowser)\/?([\w\.]*)/i,                                         // GoBrowser
             /(ice\s?browser)\/v?([\w\._]+)/i,                                   // ICE Browser
             /(mosaic)[\/\s]([\w\.]+)/i                                          // Mosaic
             ], [NAME, VERSION]
@@ -9674,9 +9868,9 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/**
             /(dell)\s(strea[kpr\s\d]*[\dko])/i                                  // Dell Streak
             ], [VENDOR, MODEL, [TYPE, TABLET]], [
 
-            /(kf[A-z]+)\sbuild\/[\w\.]+.*silk\//i                               // Kindle Fire HD
+            /(kf[A-z]+)\sbuild\/.+silk\//i                                      // Kindle Fire HD
             ], [MODEL, [VENDOR, 'Amazon'], [TYPE, TABLET]], [
-            /(sd|kf)[0349hijorstuw]+\sbuild\/[\w\.]+.*silk\//i                  // Fire Phone
+            /(sd|kf)[0349hijorstuw]+\sbuild\/.+silk\//i                         // Fire Phone
             ], [[MODEL, mapper.str, maps.device.amazon.model], [VENDOR, 'Amazon'], [TYPE, MOBILE]], [
 
             /\((ip[honed|\s\w*]+);.+(apple)/i                                   // iPod/iPhone
@@ -9685,7 +9879,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/**
             ], [MODEL, [VENDOR, 'Apple'], [TYPE, MOBILE]], [
 
             /(blackberry)[\s-]?(\w+)/i,                                         // BlackBerry
-            /(blackberry|benq|palm(?=\-)|sonyericsson|acer|asus|dell|meizu|motorola|polytron)[\s_-]?([\w-]+)*/i,
+            /(blackberry|benq|palm(?=\-)|sonyericsson|acer|asus|dell|meizu|motorola|polytron)[\s_-]?([\w-]*)/i,
                                                                                 // BenQ/Palm/Sony-Ericsson/Acer/Asus/Dell/Meizu/Motorola/Polytron
             /(hp)\s([\w\s]+\w)/i,                                               // HP iPAQ
             /(asus)-?(\w+)/i                                                    // Asus
@@ -9719,8 +9913,8 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/**
             ], [VENDOR, MODEL, [TYPE, TABLET]], [
 
             /(htc)[;_\s-]+([\w\s]+(?=\))|\w+)*/i,                               // HTC
-            /(zte)-(\w+)*/i,                                                    // ZTE
-            /(alcatel|geeksphone|lenovo|nexian|panasonic|(?=;\s)sony)[_\s-]?([\w-]+)*/i
+            /(zte)-(\w*)/i,                                                     // ZTE
+            /(alcatel|geeksphone|lenovo|nexian|panasonic|(?=;\s)sony)[_\s-]?([\w-]*)/i
                                                                                 // Alcatel/GeeksPhone/Lenovo/Nexian/Panasonic/Sony
             ], [VENDOR, [MODEL, /_/g, ' '], [TYPE, MOBILE]], [
 
@@ -9740,8 +9934,8 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/**
             ], [[MODEL, /\./g, ' '], [VENDOR, 'Microsoft'], [TYPE, MOBILE]], [
 
                                                                                 // Motorola
-            /\s(milestone|droid(?:[2-4x]|\s(?:bionic|x2|pro|razr))?(:?\s4g)?)[\w\s]+build\//i,
-            /mot[\s-]?(\w+)*/i,
+            /\s(milestone|droid(?:[2-4x]|\s(?:bionic|x2|pro|razr))?:?(\s4g)?)[\w\s]+build\//i,
+            /mot[\s-]?(\w*)/i,
             /(XT\d{3,4}) build\//i,
             /(nexus\s6)/i
             ], [MODEL, [VENDOR, 'Motorola'], [TYPE, MOBILE]], [
@@ -9763,15 +9957,15 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/**
             /smart-tv.+(samsung)/i
             ], [VENDOR, [TYPE, SMARTTV], MODEL], [
             /((s[cgp]h-\w+|gt-\w+|galaxy\snexus|sm-\w[\w\d]+))/i,
-            /(sam[sung]*)[\s-]*(\w+-?[\w-]*)*/i,
+            /(sam[sung]*)[\s-]*(\w+-?[\w-]*)/i,
             /sec-((sgh\w+))/i
             ], [[VENDOR, 'Samsung'], MODEL, [TYPE, MOBILE]], [
 
-            /sie-(\w+)*/i                                                       // Siemens
+            /sie-(\w*)/i                                                        // Siemens
             ], [MODEL, [VENDOR, 'Siemens'], [TYPE, MOBILE]], [
 
             /(maemo|nokia).*(n900|lumia\s\d+)/i,                                // Nokia
-            /(nokia)[\s_-]?([\w-]+)*/i
+            /(nokia)[\s_-]?([\w-]*)/i
             ], [[VENDOR, 'Nokia'], MODEL, [TYPE, MOBILE]], [
 
             /android\s3\.[\s\w;-]{10}(a\d{3})/i                                 // Acer
@@ -9784,7 +9978,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/**
             /(lg) netcast\.tv/i                                                 // LG SmartTV
             ], [VENDOR, MODEL, [TYPE, SMARTTV]], [
             /(nexus\s[45])/i,                                                   // LG
-            /lg[e;\s\/-]+(\w+)*/i,
+            /lg[e;\s\/-]+(\w*)/i,
             /android.+lg(\-?[\d\w]+)\s+build/i
             ], [MODEL, [VENDOR, 'LG'], [TYPE, MOBILE]], [
 
@@ -9812,23 +10006,24 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/**
             /android.+;\s(pixel xl|pixel)\s/i                                   // Google Pixel
             ], [MODEL, [VENDOR, 'Google'], [TYPE, MOBILE]], [
 
-            /android.+(\w+)\s+build\/hm\1/i,                                    // Xiaomi Hongmi 'numeric' models
+            /android.+;\s(\w+)\s+build\/hm\1/i,                                 // Xiaomi Hongmi 'numeric' models
             /android.+(hm[\s\-_]*note?[\s_]*(?:\d\w)?)\s+build/i,               // Xiaomi Hongmi
-            /android.+(mi[\s\-_]*(?:one|one[\s_]plus|note lte)?[\s_]*(?:\d\w)?)\s+build/i,    // Xiaomi Mi
-            /android.+(redmi[\s\-_]*(?:note)?(?:[\s_]*[\w\s]+)?)\s+build/i      // Redmi Phones
+            /android.+(mi[\s\-_]*(?:one|one[\s_]plus|note lte)?[\s_]*(?:\d?\w?)[\s_]*(?:plus)?)\s+build/i,    // Xiaomi Mi
+            /android.+(redmi[\s\-_]*(?:note)?(?:[\s_]*[\w\s]+))\s+build/i       // Redmi Phones
             ], [[MODEL, /_/g, ' '], [VENDOR, 'Xiaomi'], [TYPE, MOBILE]], [
-            /android.+(mi[\s\-_]*(?:pad)?(?:[\s_]*[\w\s]+)?)\s+build/i          // Mi Pad tablets
+            /android.+(mi[\s\-_]*(?:pad)(?:[\s_]*[\w\s]+))\s+build/i            // Mi Pad tablets
             ],[[MODEL, /_/g, ' '], [VENDOR, 'Xiaomi'], [TYPE, TABLET]], [
             /android.+;\s(m[1-5]\snote)\sbuild/i                                // Meizu Tablet
             ], [MODEL, [VENDOR, 'Meizu'], [TYPE, TABLET]], [
 
-            /android.+a000(1)\s+build/i                                         // OnePlus
+            /android.+a000(1)\s+build/i,                                        // OnePlus
+            /android.+oneplus\s(a\d{4})\s+build/i
             ], [MODEL, [VENDOR, 'OnePlus'], [TYPE, MOBILE]], [
 
             /android.+[;\/]\s*(RCT[\d\w]+)\s+build/i                            // RCA Tablets
             ], [MODEL, [VENDOR, 'RCA'], [TYPE, TABLET]], [
 
-            /android.+[;\/]\s*(Venue[\d\s]*)\s+build/i                          // Dell Venue Tablets
+            /android.+[;\/\s]+(Venue[\d\s]{2,7})\s+build/i                      // Dell Venue Tablets
             ], [MODEL, [VENDOR, 'Dell'], [TYPE, TABLET]], [
 
             /android.+[;\/]\s*(Q[T|M][\d\w]+)\s+build/i                         // Verizon Tablet
@@ -9840,8 +10035,8 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/**
             /android.+[;\/]\s+(TM\d{3}.*\b)\s+build/i                           // Barnes & Noble Tablet
             ], [MODEL, [VENDOR, 'NuVision'], [TYPE, TABLET]], [
 
-            /android.+[;\/]\s*(zte)?.+(k\d{2})\s+build/i                        // ZTE K Series Tablet
-            ], [[VENDOR, 'ZTE'], MODEL, [TYPE, TABLET]], [
+            /android.+;\s(k88)\sbuild/i                                         // ZTE K Series Tablet
+            ], [MODEL, [VENDOR, 'ZTE'], [TYPE, TABLET]], [
 
             /android.+[;\/]\s*(gen\d{3})\s+build.*49h/i                         // Swiss GEN Mobile
             ], [MODEL, [VENDOR, 'Swiss'], [TYPE, MOBILE]], [
@@ -9852,26 +10047,26 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/**
             /android.+[;\/]\s*((Zeki)?TB.*\b)\s+build/i                         // Zeki Tablets
             ], [MODEL, [VENDOR, 'Zeki'], [TYPE, TABLET]], [
 
-            /(android).+[;\/]\s+([YR]\d{2}x?.*)\s+build/i,
-            /android.+[;\/]\s+(Dragon[\-\s]+Touch\s+|DT)(.+)\s+build/i          // Dragon Touch Tablet
+            /(android).+[;\/]\s+([YR]\d{2})\s+build/i,
+            /android.+[;\/]\s+(Dragon[\-\s]+Touch\s+|DT)(\w{5})\sbuild/i        // Dragon Touch Tablet
             ], [[VENDOR, 'Dragon Touch'], MODEL, [TYPE, TABLET]], [
 
-            /android.+[;\/]\s*(NS-?.+)\s+build/i                                // Insignia Tablets
+            /android.+[;\/]\s*(NS-?\w{0,9})\sbuild/i                            // Insignia Tablets
             ], [MODEL, [VENDOR, 'Insignia'], [TYPE, TABLET]], [
 
-            /android.+[;\/]\s*((NX|Next)-?.+)\s+build/i                         // NextBook Tablets
+            /android.+[;\/]\s*((NX|Next)-?\w{0,9})\s+build/i                    // NextBook Tablets
             ], [MODEL, [VENDOR, 'NextBook'], [TYPE, TABLET]], [
 
-            /android.+[;\/]\s*(Xtreme\_?)?(V(1[045]|2[015]|30|40|60|7[05]|90))\s+build/i
+            /android.+[;\/]\s*(Xtreme\_)?(V(1[045]|2[015]|30|40|60|7[05]|90))\s+build/i
             ], [[VENDOR, 'Voice'], MODEL, [TYPE, MOBILE]], [                    // Voice Xtreme Phones
 
-            /android.+[;\/]\s*(LVTEL\-?)?(V1[12])\s+build/i                     // LvTel Phones
+            /android.+[;\/]\s*(LVTEL\-)?(V1[12])\s+build/i                     // LvTel Phones
             ], [[VENDOR, 'LvTel'], MODEL, [TYPE, MOBILE]], [
 
             /android.+[;\/]\s*(V(100MD|700NA|7011|917G).*\b)\s+build/i          // Envizen Tablets
             ], [MODEL, [VENDOR, 'Envizen'], [TYPE, TABLET]], [
 
-            /android.+[;\/]\s*(Le[\s\-]+Pan)[\s\-]+(.*\b)\s+build/i             // Le Pan Tablets
+            /android.+[;\/]\s*(Le[\s\-]+Pan)[\s\-]+(\w{1,9})\s+build/i          // Le Pan Tablets
             ], [VENDOR, MODEL, [TYPE, TABLET]], [
 
             /android.+[;\/]\s*(Trio[\s\-]*.*)\s+build/i                         // MachSpeed Tablets
@@ -9886,14 +10081,14 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/**
             /android.+(KS(.+))\s+build/i                                        // Amazon Kindle Tablets
             ], [MODEL, [VENDOR, 'Amazon'], [TYPE, TABLET]], [
 
-            /android.+(Gigaset)[\s\-]+(Q.+)\s+build/i                           // Gigaset Tablets
+            /android.+(Gigaset)[\s\-]+(Q\w{1,9})\s+build/i                      // Gigaset Tablets
             ], [VENDOR, MODEL, [TYPE, TABLET]], [
 
             /\s(tablet|tab)[;\/]/i,                                             // Unidentifiable Tablet
             /\s(mobile)(?:[;\/]|\ssafari)/i                                     // Unidentifiable Mobile
             ], [[TYPE, util.lowerize], VENDOR, MODEL], [
 
-            /(android.+)[;\/].+build/i                                          // Generic Android Device
+            /(android[\w\.\s\-]{0,9});.+build/i                                 // Generic Android Device
             ], [MODEL, [VENDOR, 'Generic']]
 
 
@@ -9960,7 +10155,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/**
             /(icab)[\/\s]([23]\.[\d\.]+)/i                                      // iCab
             ], [NAME, VERSION], [
 
-            /rv\:([\w\.]+).*(gecko)/i                                           // Gecko
+            /rv\:([\w\.]{1,9}).+(gecko)/i                                       // Gecko
             ], [VERSION, NAME]
         ],
 
@@ -9970,7 +10165,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/**
             /microsoft\s(windows)\s(vista|xp)/i                                 // Windows (iTunes)
             ], [NAME, VERSION], [
             /(windows)\snt\s6\.2;\s(arm)/i,                                     // Windows RT
-            /(windows\sphone(?:\sos)*)[\s\/]?([\d\.\s]+\w)*/i,                  // Windows Phone
+            /(windows\sphone(?:\sos)*)[\s\/]?([\d\.\s\w]*)/i,                   // Windows Phone
             /(windows\smobile|windows)[\s\/]?([ntce\d\.\s]+\w)/i
             ], [NAME, [VERSION, mapper.str, maps.os.windows.version]], [
             /(win(?=3|9|n)|win\s9x\s)([nt\d\.]+)/i
@@ -9979,13 +10174,13 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/**
             // Mobile/Embedded OS
             /\((bb)(10);/i                                                      // BlackBerry 10
             ], [[NAME, 'BlackBerry'], VERSION], [
-            /(blackberry)\w*\/?([\w\.]+)*/i,                                    // Blackberry
+            /(blackberry)\w*\/?([\w\.]*)/i,                                     // Blackberry
             /(tizen)[\/\s]([\w\.]+)/i,                                          // Tizen
-            /(android|webos|palm\sos|qnx|bada|rim\stablet\sos|meego|contiki)[\/\s-]?([\w\.]+)*/i,
+            /(android|webos|palm\sos|qnx|bada|rim\stablet\sos|meego|contiki)[\/\s-]?([\w\.]*)/i,
                                                                                 // Android/WebOS/Palm/QNX/Bada/RIM/MeeGo/Contiki
             /linux;.+(sailfish);/i                                              // Sailfish OS
             ], [NAME, VERSION], [
-            /(symbian\s?os|symbos|s60(?=;))[\/\s-]?([\w\.]+)*/i                 // Symbian
+            /(symbian\s?os|symbos|s60(?=;))[\/\s-]?([\w\.]*)/i                  // Symbian
             ], [[NAME, 'Symbian'], VERSION], [
             /\((series40);/i                                                    // Series 40
             ], [NAME], [
@@ -9996,43 +10191,43 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/**
             /(nintendo|playstation)\s([wids34portablevu]+)/i,                   // Nintendo/Playstation
 
             // GNU/Linux based
-            /(mint)[\/\s\(]?(\w+)*/i,                                           // Mint
+            /(mint)[\/\s\(]?(\w*)/i,                                            // Mint
             /(mageia|vectorlinux)[;\s]/i,                                       // Mageia/VectorLinux
-            /(joli|[kxln]?ubuntu|debian|[open]*suse|gentoo|(?=\s)arch|slackware|fedora|mandriva|centos|pclinuxos|redhat|zenwalk|linpus)[\/\s-]?(?!chrom)([\w\.-]+)*/i,
+            /(joli|[kxln]?ubuntu|debian|suse|opensuse|gentoo|(?=\s)arch|slackware|fedora|mandriva|centos|pclinuxos|redhat|zenwalk|linpus)[\/\s-]?(?!chrom)([\w\.-]*)/i,
                                                                                 // Joli/Ubuntu/Debian/SUSE/Gentoo/Arch/Slackware
                                                                                 // Fedora/Mandriva/CentOS/PCLinuxOS/RedHat/Zenwalk/Linpus
-            /(hurd|linux)\s?([\w\.]+)*/i,                                       // Hurd/Linux
-            /(gnu)\s?([\w\.]+)*/i                                               // GNU
+            /(hurd|linux)\s?([\w\.]*)/i,                                        // Hurd/Linux
+            /(gnu)\s?([\w\.]*)/i                                                // GNU
             ], [NAME, VERSION], [
 
             /(cros)\s[\w]+\s([\w\.]+\w)/i                                       // Chromium OS
             ], [[NAME, 'Chromium OS'], VERSION],[
 
             // Solaris
-            /(sunos)\s?([\w\.]+\d)*/i                                           // Solaris
+            /(sunos)\s?([\w\.\d]*)/i                                            // Solaris
             ], [[NAME, 'Solaris'], VERSION], [
 
             // BSD based
-            /\s([frentopc-]{0,4}bsd|dragonfly)\s?([\w\.]+)*/i                   // FreeBSD/NetBSD/OpenBSD/PC-BSD/DragonFly
+            /\s([frentopc-]{0,4}bsd|dragonfly)\s?([\w\.]*)/i                    // FreeBSD/NetBSD/OpenBSD/PC-BSD/DragonFly
             ], [NAME, VERSION],[
 
-            /(haiku)\s(\w+)/i                                                  // Haiku
+            /(haiku)\s(\w+)/i                                                   // Haiku
             ], [NAME, VERSION],[
 
             /cfnetwork\/.+darwin/i,
-            /ip[honead]+(?:.*os\s([\w]+)\slike\smac|;\sopera)/i                 // iOS
+            /ip[honead]{2,4}(?:.*os\s([\w]+)\slike\smac|;\sopera)/i             // iOS
             ], [[VERSION, /_/g, '.'], [NAME, 'iOS']], [
 
-            /(mac\sos\sx)\s?([\w\s\.]+\w)*/i,
+            /(mac\sos\sx)\s?([\w\s\.]*)/i,
             /(macintosh|mac(?=_powerpc)\s)/i                                    // Mac OS
             ], [[NAME, 'Mac OS'], [VERSION, /_/g, '.']], [
 
             // Other
-            /((?:open)?solaris)[\/\s-]?([\w\.]+)*/i,                            // Solaris
-            /(aix)\s((\d)(?=\.|\)|\s)[\w\.]*)*/i,                               // AIX
+            /((?:open)?solaris)[\/\s-]?([\w\.]*)/i,                             // Solaris
+            /(aix)\s((\d)(?=\.|\)|\s)[\w\.])*/i,                                // AIX
             /(plan\s9|minix|beos|os\/2|amigaos|morphos|risc\sos|openvms)/i,
                                                                                 // Plan9/Minix/BeOS/OS2/AmigaOS/MorphOS/RISCOS/OpenVMS
-            /(unix)\s?([\w\.]+)*/i                                              // UNIX
+            /(unix)\s?([\w\.]*)/i                                               // UNIX
             ], [NAME, VERSION]
         ]
     };
@@ -11266,12 +11461,14 @@ var AppMaterialModule = (function () {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__components_session_details_session_details_component__ = __webpack_require__("./src/app/components/session-details/session-details.component.ts");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_13__components_dashboard_credentials_dialog_component__ = __webpack_require__("./src/app/components/dashboard/credentials-dialog.component.ts");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_14__components_layouts_layout_best_fit_layout_best_fit_component__ = __webpack_require__("./src/app/components/layouts/layout-best-fit/layout-best-fit.component.ts");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_15__components_layouts_ov_video_component__ = __webpack_require__("./src/app/components/layouts/ov-video.component.ts");
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+
 
 
 
@@ -11298,6 +11495,7 @@ var AppModule = (function () {
                 __WEBPACK_IMPORTED_MODULE_12__components_session_details_session_details_component__["a" /* SessionDetailsComponent */],
                 __WEBPACK_IMPORTED_MODULE_13__components_dashboard_credentials_dialog_component__["a" /* CredentialsDialogComponent */],
                 __WEBPACK_IMPORTED_MODULE_14__components_layouts_layout_best_fit_layout_best_fit_component__["a" /* LayoutBestFitComponent */],
+                __WEBPACK_IMPORTED_MODULE_15__components_layouts_ov_video_component__["a" /* OpenViduVideoComponent */],
             ],
             imports: [
                 __WEBPACK_IMPORTED_MODULE_0__angular_platform_browser__["a" /* BrowserModule */],
@@ -11628,14 +11826,14 @@ var DashboardComponent = (function () {
 /***/ "./src/app/components/layouts/layout-best-fit/layout-best-fit.component.css":
 /***/ (function(module, exports) {
 
-module.exports = ".bounds {\n  background-color: black;\n  overflow: hidden;\n  cursor: none !important;\n  position: absolute;\n  left: 0;\n  right: 0;\n  top: 0;\n  bottom: 0;\n}\n\nvideo {\n  -o-object-fit: cover;\n  object-fit: cover;\n  display: block;\n  position: absolute;\n  width: 100%;\n  height: 100%;\n  color: #ffffff;\n  margin: 0;\n  padding: 0;\n  border: 0;\n  font-size: 100%;\n  font-family: Arial, Helvetica, sans-serif;\n}\n\n/*!\n * Copyright (c) 2017 TokBox, Inc.\n * Released under the MIT license\n * http://opensource.org/licenses/MIT\n */\n\n.custom-class {\n  min-height: 0px !important;\n}\n\n/**\n * OT Base styles\n */\n\n/* Root OT object, this is where our CSS reset happens */\n\n.OT_root,\n.OT_root * {\n  color: #ffffff;\n  margin: 0;\n  padding: 0;\n  border: 0;\n  font-size: 100%;\n  font-family: Arial, Helvetica, sans-serif;\n  vertical-align: baseline;\n}\n\n.OT_dialog-centering {\n  display: table;\n  width: 100%;\n  height: 100%;\n}\n\n.OT_dialog-centering-child {\n  display: table-cell;\n  vertical-align: middle;\n}\n\n.OT_dialog {\n  position: relative;\n\n  -webkit-box-sizing: border-box;\n\n          box-sizing: border-box;\n  max-width: 576px;\n  margin-right: auto;\n  margin-left: auto;\n  padding: 36px;\n  text-align: center; /* centers all the inline content */\n\n  background-color: #363636;\n  color: #fff;\n  -webkit-box-shadow: 2px 4px 6px #999;\n          box-shadow: 2px 4px 6px #999;\n  font-family: 'Didact Gothic', sans-serif;\n  font-size: 13px;\n  line-height: 1.4;\n}\n\n.OT_dialog * {\n  font-family: inherit;\n  -webkit-box-sizing: inherit;\n          box-sizing: inherit;\n}\n\n.OT_closeButton {\n  color: #999999;\n  cursor: pointer;\n  font-size: 32px;\n  line-height: 36px;\n  position: absolute;\n  right: 18px;\n  top: 0;\n}\n\n.OT_dialog-messages {\n  text-align: center;\n}\n\n.OT_dialog-messages-main {\n  margin-bottom: 36px;\n  line-height: 36px;\n\n  font-weight: 300;\n  font-size: 24px;\n}\n\n.OT_dialog-messages-minor {\n  margin-bottom: 18px;\n\n  font-size: 13px;\n  line-height: 18px;\n  color: #A4A4A4;\n}\n\n.OT_dialog-messages-minor strong {\n  color: #ffffff;\n}\n\n.OT_dialog-actions-card {\n  display: inline-block;\n}\n\n.OT_dialog-button-title {\n  margin-bottom: 18px;\n  line-height: 18px;\n\n  font-weight: 300;\n  text-align: center;\n  font-size: 14px;\n  color: #999999;\n}\n\n.OT_dialog-button-title label {\n  color: #999999;\n}\n\n.OT_dialog-button-title a,\n.OT_dialog-button-title a:link,\n.OT_dialog-button-title a:active {\n  color: #02A1DE;\n}\n\n.OT_dialog-button-title strong {\n  color: #ffffff;\n  font-weight: 100;\n  display: block;\n}\n\n.OT_dialog-button {\n  display: inline-block;\n\n  margin-bottom: 18px;\n  padding: 0 1em;\n\n  background-color: #1CA3DC;\n  text-align: center;\n  cursor: pointer;\n}\n\n.OT_dialog-button:disabled {\n  cursor: not-allowed;\n  opacity: 0.5;\n}\n\n.OT_dialog-button-large {\n  line-height: 36px;\n  padding-top: 9px;\n  padding-bottom: 9px;\n\n  font-weight: 100;\n  font-size: 24px;\n}\n\n.OT_dialog-button-small {\n  line-height: 18px;\n  padding-top: 9px;\n  padding-bottom: 9px;\n\n  background-color: #444444;\n  color: #999999;\n  font-size: 16px;\n}\n\n.OT_dialog-progress-bar {\n  display: inline-block; /* prevents margin collapse */\n  width: 100%;\n  margin-top: 5px;\n  margin-bottom: 41px;\n\n  border: 1px solid #4E4E4E;\n  height: 8px;\n}\n\n.OT_dialog-progress-bar-fill {\n  height: 100%;\n\n  background-color: #29A4DA;\n}\n\n.OT_dialog-plugin-upgrading .OT_dialog-plugin-upgrade-percentage {\n  line-height: 54px;\n\n  font-size: 48px;\n  font-weight: 100;\n}\n\n/* Helpers */\n\n.OT_centered {\n  position: fixed;\n  left: 50%;\n  top: 50%;\n  margin: 0;\n}\n\n.OT_dialog-hidden {\n  display: none;\n}\n\n.OT_dialog-button-block {\n  display: block;\n}\n\n.OT_dialog-no-natural-margin {\n  margin-bottom: 0;\n}\n\n/* Publisher and Subscriber styles */\n\n.OT_publisher, .OT_subscriber {\n  position: relative;\n  min-width: 48px;\n  min-height: 48px;\n}\n\n.OT_publisher .OT_video-element,\n.OT_subscriber .OT_video-element {\n  display: block;\n  position: absolute;\n  width: 100%;\n  height: 100%;\n\n  -webkit-transform-origin: 0 0;\n\n          transform-origin: 0 0;\n}\n\n/* Styles that are applied when the video element should be mirrored */\n\n.OT_publisher.OT_mirrored .OT_video-element {\n  -webkit-transform: scale(-1, 1);\n          transform: scale(-1, 1);\n  -webkit-transform-origin: 50% 50%;\n          transform-origin: 50% 50%;\n}\n\n.OT_subscriber_error {\n  background-color: #000;\n  color: #fff;\n  text-align: center;\n}\n\n.OT_subscriber_error > p {\n  padding: 20px;\n}\n\n/* The publisher/subscriber name/mute background */\n\n.OT_publisher .OT_bar,\n.OT_subscriber .OT_bar,\n.OT_publisher .OT_name,\n.OT_subscriber .OT_name,\n.OT_publisher .OT_archiving,\n.OT_subscriber .OT_archiving,\n.OT_publisher .OT_archiving-status,\n.OT_subscriber .OT_archiving-status,\n.OT_publisher .OT_archiving-light-box,\n.OT_subscriber .OT_archiving-light-box {\n  -webkit-box-sizing: border-box;\n  -ms-box-sizing: border-box;\n  box-sizing: border-box;\n  top: 0;\n  left: 0;\n  right: 0;\n  display: block;\n  height: 34px;\n  position: absolute;\n}\n\n.OT_publisher .OT_bar,\n.OT_subscriber .OT_bar {\n  background: rgba(0, 0, 0, 0.4);\n}\n\n.OT_publisher .OT_edge-bar-item,\n.OT_subscriber .OT_edge-bar-item {\n  z-index: 1; /* required to get audio level meter underneath */\n}\n\n/* The publisher/subscriber name panel/archiving status bar */\n\n.OT_publisher .OT_name,\n.OT_subscriber .OT_name {\n  background-color: transparent;\n  color: #ffffff;\n  font-size: 15px;\n  line-height: 34px;\n  font-weight: normal;\n  padding: 0 4px 0 36px;\n}\n\n.OT_publisher .OT_archiving-status,\n.OT_subscriber .OT_archiving-status {\n  background: rgba(0, 0, 0, 0.4);\n  top: auto;\n  bottom: 0;\n  left: 34px;\n  padding: 0 4px;\n  color: rgba(255, 255, 255, 0.8);\n  font-size: 15px;\n  line-height: 34px;\n  font-weight: normal;\n}\n\n.OT_micro .OT_archiving-status,\n.OT_micro:hover .OT_archiving-status,\n.OT_mini .OT_archiving-status,\n.OT_mini:hover .OT_archiving-status {\n  display: none;\n}\n\n.OT_publisher .OT_archiving-light-box,\n.OT_subscriber .OT_archiving-light-box {\n  background: rgba(0, 0, 0, 0.4);\n  top: auto;\n  bottom: 0;\n  right: auto;\n  width: 34px;\n  height: 34px;\n}\n\n.OT_archiving-light {\n  width: 7px;\n  height: 7px;\n  border-radius: 30px;\n  position: absolute;\n  top: 14px;\n  left: 14px;\n  background-color: #575757;\n  -webkit-box-shadow: 0 0 5px 1px #575757;\n  box-shadow: 0 0 5px 1px #575757;\n}\n\n.OT_archiving-light.OT_active {\n  background-color: #970d13;\n  animation: OT_pulse 1.3s ease-in;\n  -webkit-animation: OT_pulse 1.3s ease-in;\n  -moz-animation: OT_pulse 1.3s ease-in;\n  -webkit-animation: OT_pulse 1.3s ease-in;\n  animation-iteration-count: infinite;\n  -webkit-animation-iteration-count: infinite;\n  -moz-animation-iteration-count: infinite;\n  -webkit-animation-iteration-count: infinite;\n}\n\n@-webkit-keyframes OT_pulse {\n  0% {\n    -webkit-box-shadow: 0 0 0px 0px #c70019;\n    box-shadow: 0 0 0px 0px #c70019;\n  }\n\n  30% {\n    -webkit-box-shadow: 0 0 5px 1px #c70019;\n    box-shadow: 0 0 5px 1px #c70019;\n  }\n\n  50% {\n    -webkit-box-shadow: 0 0 5px 1px #c70019;\n    box-shadow: 0 0 5px 1px #c70019;\n  }\n\n  80% {\n    -webkit-box-shadow: 0 0 0px 0px #c70019;\n    box-shadow: 0 0 0px 0px #c70019;\n  }\n\n  100% {\n    -webkit-box-shadow: 0 0 0px 0px #c70019;\n    box-shadow: 0 0 0px 0px #c70019;\n  }\n}\n\n@-webkit-keyframes OT_pulse {\n  0% {\n    -webkit-box-shadow: 0 0 0px 0px #c70019;\n    box-shadow: 0 0 0px 0px #c70019;\n  }\n\n  30% {\n    -webkit-box-shadow: 0 0 5px 1px #c70019;\n    box-shadow: 0 0 5px 1px #c70019;\n  }\n\n  50% {\n    -webkit-box-shadow: 0 0 5px 1px #c70019;\n    box-shadow: 0 0 5px 1px #c70019;\n  }\n\n  80% {\n    -webkit-box-shadow: 0 0 0px 0px #c70019;\n    box-shadow: 0 0 0px 0px #c70019;\n  }\n\n  100% {\n    -webkit-box-shadow: 0 0 0px 0px #c70019;\n    box-shadow: 0 0 0px 0px #c70019;\n  }\n}\n\n.OT_mini .OT_bar,\n.OT_bar.OT_mode-mini,\n.OT_bar.OT_mode-mini-auto {\n  bottom: 0;\n  height: auto;\n}\n\n.OT_mini .OT_name.OT_mode-off,\n.OT_mini .OT_name.OT_mode-on,\n.OT_mini .OT_name.OT_mode-auto,\n.OT_mini:hover .OT_name.OT_mode-auto {\n  display: none;\n}\n\n.OT_publisher .OT_name,\n.OT_subscriber .OT_name {\n    left: 10px;\n    right: 37px;\n    height: 34px;\n    padding-left: 0;\n}\n\n.OT_publisher .OT_mute,\n.OT_subscriber .OT_mute {\n    border: none;\n    cursor: pointer;\n    display: block;\n    position: absolute;\n    text-align: center;\n    text-indent: -9999em;\n    background-color: transparent;\n    background-repeat: no-repeat;\n}\n\n.OT_publisher .OT_mute,\n.OT_subscriber .OT_mute {\n  right: 0;\n  top: 0;\n  border-left: 1px solid rgba(255, 255, 255, 0.2);\n  height: 36px;\n  width: 37px;\n}\n\n.OT_mini .OT_mute,\n.OT_publisher.OT_mini .OT_mute.OT_mode-auto.OT_mode-on-hold,\n.OT_subscriber.OT_mini .OT_mute.OT_mode-auto.OT_mode-on-hold {\n  top: 50%;\n  left: 50%;\n  right: auto;\n  margin-top: -18px;\n  margin-left: -18.5px;\n  border-left: none;\n}\n\n.OT_publisher .OT_mute {\n  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABMAAAAcCAMAAAC02HQrAAAA1VBMVEUAAAD3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pn3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pn3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj39/j3+Pj3+Pn4+Pk/JRMlAAAAQ3RSTlMABAUHCQoLDhAQERwdHiAjLjAxOD9ASFBRVl1mbnZ6fH2LjI+QkaWqrrC1uLzAwcXJycrL1NXj5Ofo6u3w9fr7/P3+d4M3+QAAAQBJREFUGBlVwYdCglAABdCLlr5Unijm3hMUtBzlBLSr//9JgUToOQgVJgceJgU8aHgMeA38K50ZOpcQmTPwcyXn+JM8M3JJIqQypiIkeXelTyIkGZPwKS1NMia1lgKTVkaE3oQQGYsmHNqSMWnTgUFbMiZtGlD2dpaxrL1XgM0i4ZK8MeAmFhsAs29MGZniawagS63oMOQUNXYB5D0D1RMDpyoMLw/fiE2og/V+PVDR5AiBl0/2Uwik+vx4xV3a5G5Ye68Nd1czjUjZckm6VhmPciRzeCZICjwTJAViQq+3e+St167rAoHK8sLYZVkBYPCZAZ/eGa+2R5LH7Wrc0YFf/O9J3yBDFaoAAAAASUVORK5CYII=);\n  background-position: 9px 5px;\n}\n\n.OT_publisher .OT_mute.OT_active {\n  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAdCAYAAABFRCf7AAADcElEQVRIiaWVXWhcRRTHf7NNd2aDtUKMIjTpg4ufFIuiUOmDEWm0Vi3VYhXRqIggQh4sWJFSig9+oOhTKSpIRUWMIBIr2kptoTbgU6ooxCiIjR+14kcJmf9sNceHnd3ebnc3Uv9wuXfOzPzmnDMz5zozGwdWAbc65w5RUJQ8cC2wDJgFJioh/MJCMrNxq2vOzK4HmIvRRemxKP0RJWt53o7S+d2Yzsx6gQ+AIUDAnUqpBLzXZd4RYFUlhB/bdZacc3PAOmAcCMC7wfvFwLNdoAPAyx09bXyYWRl4E7gDmAdGlNKFwLYu8GolhO9O87RJd64GbMrgEvB68P4osMWdXLtVV7czlooNpVRWSs8DO7NpR/B+3rBHsvetCgtCMTxwQCm9BbyQrc8F7/uBex3uRCeXO0PrUZ4NfKyUPgWeyj3bg/crDNsIRGwBaJQGorQ3Svdn2wHgc2BUKb0DPJHtjwfvbwRucc7tz+N+i9LFUdoXpfVN36I0CVwBTFI/q9e1LPxT8P4qYEdu70q12mYzWw1MYQzjeJF6zq+shHC4B7jklOBPP/TzSunh4P0DwKvAfb5c9krpe+CcwsEoZdbhEvBM9wxRAl5RShcA9wAngE3B+8tLpdLuwrhp4MNmK0pfRWkySr7NXS8+L5nZbWZWy/Vin1IaitJnUTqvwevJ71lgSSWEFKUfHG7Q2m/xqFJaGry/GXgfGPLl8mJgrXPur2JoUC8Qy3OpG+sAbGhEKT0ErAWOA6uBPWbW1wr9BOgFbgKezot0kAPYqJQA1gC/A9cA+82svzksSn1R+jNKX0SpnM/e1x3yqig92JhrZivM7FjO8bSZLSuCR/Ok16K0KMNHojQWpYko7Y7S1igN5PE3ROl4lNaZ2UVmNpPBU01orvZvZPCeKFXbBR+lEKVtUapFaSZKg9njqpl9aWYTrmXCImA7sCWb9lK/jj9TrwkrgA1AH3AQuKsSwkzbrLfxpgpsBtYDxf/R3xm2ExirhNCuHHZXTsmRwiat+S/zSt06eysVA/4pmGr/G3qm6ik28v29FKgCg8BS6pvS0KNRGgZ+Bb4FpsxsOkfUlMuwDcBWYOUZOHYM2AU8WQmhBifDv70O7PjX7KZ+4G7g3FM8zd6uBIaBy4AqxnIcZwFLCovPAhE4Sj38b4BDwEeVEFKD9S94Khjn486v3QAAAABJRU5ErkJggg==);\n  background-position: 9px 4px;\n}\n\n.OT_subscriber .OT_mute {\n  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABcAAAATCAYAAAB7u5a2AAABx0lEQVQ4jaWUv48NURiGn3ONmCs32ZBd28ht1gqyZAkF21ylQkEiSp2ehpDlD1BoFGqqVdJohYKI7MaPxMoVNghCWMF+7ybLUewnOXfcMWO9yeQ857zne8+XmZOBGjJpr0kvTIomvTZpS526UCO4DUwD64FjwCFgqZnnR+oc8LfgzKQ73vGsr42ZtGjSQFV9o8KfBCacZwCaef4YmAf2rzjcpN3A2WSpm/AssKcqPDNpDBjs410CViXzTwk/A7b1C4wxDgOngAsZcAXY2buDfp/6S4F3lDS8DjgBzDWAjX/Y/e/QgYS/AhsKHa+OMQ6GEJ4Cj4BOAxgq6aCowyZtdf4OtAr+FHDO+R4wWnVbihr3cQnICt4boO38GWj9a/icjwOACt4m4K3zEPA+AxaAtTWCnwN3lzHkEL8V/OPAGud9wK2GF9XR1Wae/1zG2AI+pGYI4VUIoRtjHAc2A9cz4LRPevYCZ+i9/4sJt4GXJU10gaPAzdI2TTro/5Tfz8XEe2LSZGmxq/SDNvP8BnA5WRrx4BwYBe6vONx1EnjovGvBLAAd4Adwuyq8UiaNmDTvr+a8SQ9MuvbfwckBHZPe+QEfTdpep+4XZmPBHiHgz74AAAAASUVORK5CYII=);\n  background-position: 8px 7px;\n}\n\n.OT_subscriber .OT_mute.OT_active {\n  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAUCAYAAACXtf2DAAACtklEQVQ4jZ2VSYiURxTHf+/T9Nc9iRrBuYySmIsXUU9iFMEFERRBvAjJLUQi5ioiHvSScfTmgqC4XAT1ZIgLuJHkICaaQAgKI2hAUBT30bjUq7bbv4eukXK029F3+eqtv/fqK6qQdEnSNUmT6CDB/bvgfjO4N9zj2RD8007xg1IABkwEzkma0qb4PGAPMBZYLtSD8eNwAEjqTlNI0gNJM4YU7w7ut4O7gvuhZFsR3C8NC5BBLiTIY0mzM8AvqbiC++pk+zLpE95XuwAws3vAQuBPYDRwWtL84P4tsDSLv5oaug4EYOawAMF9jMdoLxqNZcDvQA04UVYqL4G/svj7AF21mhJscrvCksYBFO7xc2AAGGg2mrdjvf4rcAyomNn+slLZmUEGBgsYdh945xZJmgvckDSrEJpK6ySBgV6q12O8ABwGPjGzfWWlsjdN9rpjoSfA+DYDXARGAksK4Is3XC1Ub4z1f4CDQGFmu6tleQSYk0U+p7WVeefLJc00s4fAeWB6Qeunvj0m2ugx9gO7kmlrtSxvBfcy6fXUZS6rgG/S+jLQUwCVNmMC9HqM14EtSe+rluWazN8YEv8IqKZ1E1qnaIDO0ucx3gX6kv6TpM3AM+D/IbGjgP60/gq4WQA33gMA2OQxPgHWJX1ttSwL4FAeZGYLgB2SasBs4A8L7qOBf9M0uXQB3a+TMYSmVctyDrA9mfcBK82smSdKWgCcAaa1bTm4fxbc/8uuCQX3RanAD5Ka6Wo5IGnE0HxJPZ03pQX5Org3MsD3AO5xXLPZXJ9BjkrqdFg6QjZkgG3Jtsw93pG0VFI9QU5K6voYQBHcTydAfwheBI9HgvvPAJIWS3qeIL9JGvUxkO7gfi1BrqTvwkG/pPmSnibIqTzXPgAyEVgBjAEu1qrVPbk/PVTHgb/NbPGg/RVIzOQqzSTBaQAAAABJRU5ErkJggg==);\n  background-position: 7px 7px;\n}\n\n/**\n * Styles for display modes\n *\n * Note: It's important that these completely control the display and opacity\n * attributes, no other selectors should atempt to change them.\n */\n\n/* Default display mode transitions for various chrome elements */\n\n.OT_publisher .OT_edge-bar-item,\n.OT_subscriber .OT_edge-bar-item {\n  -webkit-transition-property: top, bottom, opacity;\n  transition-property: top, bottom, opacity;\n  -webkit-transition-duration: 0.5s;\n          transition-duration: 0.5s;\n  -webkit-transition-timing-function: ease-in;\n          transition-timing-function: ease-in;\n}\n\n.OT_publisher .OT_edge-bar-item.OT_mode-off,\n.OT_subscriber .OT_edge-bar-item.OT_mode-off,\n.OT_publisher .OT_edge-bar-item.OT_mode-auto,\n.OT_subscriber .OT_edge-bar-item.OT_mode-auto,\n.OT_publisher .OT_edge-bar-item.OT_mode-mini-auto,\n.OT_subscriber .OT_edge-bar-item.OT_mode-mini-auto {\n  top: -25px;\n  opacity: 0;\n}\n\n.OT_publisher .OT_edge-bar-item.OT_mode-off,\n.OT_subscriber .OT_edge-bar-item.OT_mode-off {\n  display: none;\n}\n\n.OT_mini .OT_mute.OT_mode-auto,\n.OT_publisher .OT_mute.OT_mode-mini-auto,\n.OT_subscriber .OT_mute.OT_mode-mini-auto {\n  top: 50%;\n}\n\n.OT_publisher .OT_edge-bar-item.OT_edge-bottom.OT_mode-off,\n.OT_subscriber .OT_edge-bar-item.OT_edge-bottom.OT_mode-off,\n.OT_publisher .OT_edge-bar-item.OT_edge-bottom.OT_mode-auto,\n.OT_subscriber .OT_edge-bar-item.OT_edge-bottom.OT_mode-auto,\n.OT_publisher .OT_edge-bar-item.OT_edge-bottom.OT_mode-mini-auto,\n.OT_subscriber .OT_edge-bar-item.OT_edge-bottom.OT_mode-mini-auto {\n  top: auto;\n  bottom: -25px;\n}\n\n.OT_publisher .OT_edge-bar-item.OT_mode-on,\n.OT_subscriber .OT_edge-bar-item.OT_mode-on,\n.OT_publisher .OT_edge-bar-item.OT_mode-auto.OT_mode-on-hold,\n.OT_subscriber .OT_edge-bar-item.OT_mode-auto.OT_mode-on-hold,\n.OT_publisher:hover .OT_edge-bar-item.OT_mode-auto,\n.OT_subscriber:hover .OT_edge-bar-item.OT_mode-auto,\n.OT_publisher:hover .OT_edge-bar-item.OT_mode-mini-auto,\n.OT_subscriber:hover .OT_edge-bar-item.OT_mode-mini-auto {\n  top: 0;\n  opacity: 1;\n}\n\n.OT_mini .OT_mute.OT_mode-on,\n.OT_mini:hover .OT_mute.OT_mode-auto,\n.OT_mute.OT_mode-mini,\n.OT_root:hover .OT_mute.OT_mode-mini-auto {\n  top: 50%;\n}\n\n.OT_publisher .OT_edge-bar-item.OT_edge-bottom.OT_mode-on,\n.OT_subscriber .OT_edge-bar-item.OT_edge-bottom.OT_mode-on,\n.OT_publisher:hover .OT_edge-bar-item.OT_edge-bottom.OT_mode-auto,\n.OT_subscriber:hover .OT_edge-bar-item.OT_edge-bottom.OT_mode-auto {\n  top: auto;\n  bottom: 0;\n  opacity: 1;\n}\n\n/* Contains the video element, used to fix video letter-boxing */\n\n.OT_widget-container {\n  width: 100%;\n  height: 100%;\n  position: absolute;\n  background-color: #000000;\n  overflow: hidden;\n}\n\n/* Load animation */\n\n.OT_root .OT_video-loading {\n  position: absolute;\n  z-index: 1;\n  width: 100%;\n  height: 100%;\n  display: none;\n\n  background-color: rgba(0, 0, 0, .75);\n}\n\n.OT_root .OT_video-loading .OT_video-loading-spinner {\n  background: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9Ii0yMCAtMjAgMjQwIDI0MCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJhIiB4Mj0iMCIgeTI9IjEiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2ZmZiIgc3RvcC1vcGFjaXR5PSIwIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjZmZmIiBzdG9wLW9wYWNpdHk9IjAiLz48L2xpbmVhckdyYWRpZW50PjxsaW5lYXJHcmFkaWVudCBpZD0iYiIgeDE9IjEiIHgyPSIwIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmZmIiBzdG9wLW9wYWNpdHk9IjAiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNmZmYiIHN0b3Atb3BhY2l0eT0iLjA4Ii8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImMiIHgxPSIxIiB4Mj0iMCIgeTE9IjEiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2ZmZiIgc3RvcC1vcGFjaXR5PSIuMDgiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNmZmYiIHN0b3Atb3BhY2l0eT0iLjE2Ii8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImQiIHgyPSIwIiB5MT0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmZmIiBzdG9wLW9wYWNpdHk9Ii4xNiIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2ZmZiIgc3RvcC1vcGFjaXR5PSIuMzMiLz48L2xpbmVhckdyYWRpZW50PjxsaW5lYXJHcmFkaWVudCBpZD0iZSIgeDI9IjEiIHkxPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNmZmYiIHN0b3Atb3BhY2l0eT0iLjMzIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjZmZmIiBzdG9wLW9wYWNpdHk9Ii42NiIvPjwvbGluZWFyR3JhZGllbnQ+PGxpbmVhckdyYWRpZW50IGlkPSJmIiB4Mj0iMSIgeTI9IjEiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2ZmZiIgc3RvcC1vcGFjaXR5PSIuNjYiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNmZmYiLz48L2xpbmVhckdyYWRpZW50PjxtYXNrIGlkPSJnIj48ZyBmaWxsPSJub25lIiBzdHJva2Utd2lkdGg9IjQwIj48cGF0aCBzdHJva2U9InVybCgjYSkiIGQ9Ik04Ni42LTUwYTEwMCAxMDAgMCAwIDEgMCAxMDAiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDEwMCAxMDApIi8+PHBhdGggc3Ryb2tlPSJ1cmwoI2IpIiBkPSJNODYuNiA1MEExMDAgMTAwIDAgMCAxIDAgMTAwIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMDAgMTAwKSIvPjxwYXRoIHN0cm9rZT0idXJsKCNjKSIgZD0iTTAgMTAwYTEwMCAxMDAgMCAwIDEtODYuNi01MCIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTAwIDEwMCkiLz48cGF0aCBzdHJva2U9InVybCgjZCkiIGQ9Ik0tODYuNiA1MGExMDAgMTAwIDAgMCAxIDAtMTAwIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMDAgMTAwKSIvPjxwYXRoIHN0cm9rZT0idXJsKCNlKSIgZD0iTS04Ni42LTUwQTEwMCAxMDAgMCAwIDEgMC0xMDAiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDEwMCAxMDApIi8+PHBhdGggc3Ryb2tlPSJ1cmwoI2YpIiBkPSJNMC0xMDBhMTAwIDEwMCAwIDAgMSA4Ni42IDUwIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMDAgMTAwKSIvPjwvZz48L21hc2s+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIHg9Ii0yMCIgeT0iLTIwIiBtYXNrPSJ1cmwoI2cpIiBmaWxsPSIjZmZmIi8+PC9zdmc+) no-repeat;\n  position: absolute;\n  width: 32px;\n  height: 32px;\n  left: 50%;\n  top: 50%;\n  margin-left: -16px;\n  margin-top: -16px;\n  -webkit-animation: OT_spin 2s linear infinite;\n  animation: OT_spin 2s linear infinite;\n}\n\n@-webkit-keyframes OT_spin {\n  100% {\n    -webkit-transform: rotate(360deg);\n  }\n}\n\n@keyframes OT_spin {\n  100% {\n    -webkit-transform: rotate(360deg);\n            transform: rotate(360deg);\n  }\n}\n\n.OT_publisher.OT_loading .OT_video-loading,\n.OT_subscriber.OT_loading .OT_video-loading {\n  display: block;\n}\n\n.OT_video-centering {\n  display: table;\n  width: 100%;\n  height: 100%;\n}\n\n.OT_video-container {\n  display: table-cell;\n  vertical-align: middle;\n}\n\n.OT_video-poster {\n  position: absolute;\n  z-index: 1;\n  width: 100%;\n  height: 100%;\n  display: none;\n\n  opacity: .25;\n\n  background-repeat: no-repeat;\n  background-image: url(data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgNDcxIDQ2NCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48bGluZWFyR3JhZGllbnQgaWQ9ImEiIHgyPSIwIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSI2Ni42NiUiIHN0b3AtY29sb3I9IiNmZmYiLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNmZmYiIHN0b3Atb3BhY2l0eT0iMCIvPjwvbGluZWFyR3JhZGllbnQ+PHBhdGggZmlsbD0idXJsKCNhKSIgZD0iTTc5IDMwOGMxNC4yNS02LjUgNTQuMjUtMTkuNzUgNzEtMjkgOS0zLjI1IDI1LTIxIDI1LTIxczMuNzUtMTMgMy0yMmMtMS43NS02Ljc1LTE1LTQzLTE1LTQzLTIuNSAzLTQuNzQxIDMuMjU5LTcgMS0zLjI1LTcuNS0yMC41LTQ0LjUtMTYtNTcgMS4yNS03LjUgMTAtNiAxMC02LTExLjI1LTMzLjc1LTgtNjctOC02N3MuMDczLTcuMzQ2IDYtMTVjLTMuNDguNjM3LTkgNC05IDQgMi41NjMtMTEuNzI3IDE1LTIxIDE1LTIxIC4xNDgtLjMxMi0xLjMyMS0xLjQ1NC0xMCAxIDEuNS0yLjc4IDE2LjY3NS04LjY1NCAzMC0xMSAzLjc4Ny05LjM2MSAxMi43ODItMTcuMzk4IDIyLTIyLTIuMzY1IDMuMTMzLTMgNi0zIDZzMTUuNjQ3LTguMDg4IDQxLTZjLTE5Ljc1IDItMjQgNi0yNCA2czc0LjUtMTAuNzUgMTA0IDM3YzcuNSA5LjUgMjQuNzUgNTUuNzUgMTAgODkgMy43NS0xLjUgNC41LTQuNSA5IDEgLjI1IDE0Ljc1LTExLjUgNjMtMTkgNjItMi43NSAxLTQtMy00LTMtMTAuNzUgMjkuNS0xNCAzOC0xNCAzOC0yIDQuMjUtMy43NSAxOC41LTEgMjIgMS4yNSA0LjUgMjMgMjMgMjMgMjNsMTI3IDUzYzM3IDM1IDIzIDEzNSAyMyAxMzVMMCA0NjRzLTMtOTYuNzUgMTQtMTIwYzUuMjUtNi4yNSAyMS43NS0xOS43NSA2NS0zNnoiLz48L3N2Zz4=);\n  background-size: auto 76%;\n}\n\n.OT_fit-mode-cover .OT_video-element {\n  -o-object-fit: cover;\n     object-fit: cover;\n}\n\n/* Workaround for iOS freezing issue when cropping videos */\n\n/* https://bugs.webkit.org/show_bug.cgi?id=176439 */\n\n@media only screen\n  and (orientation: portrait) {\n  .OT_subscriber.OT_ForceContain.OT_fit-mode-cover .OT_video-element {\n    -o-object-fit: contain !important;\n       object-fit: contain !important;\n  }\n}\n\n.OT_fit-mode-contain .OT_video-element {\n  -o-object-fit: contain;\n     object-fit: contain;\n}\n\n.OT_fit-mode-cover .OT_video-poster {\n  background-position: center bottom;\n}\n\n.OT_fit-mode-contain .OT_video-poster {\n  background-position: center;\n}\n\n.OT_audio-level-meter {\n  position: absolute;\n  width: 25%;\n  max-width: 224px;\n  min-width: 21px;\n  top: 0;\n  right: 0;\n  overflow: hidden;\n}\n\n.OT_audio-level-meter:before {\n  /* makes the height of the container equals its width */\n  content: '';\n  display: block;\n  padding-top: 100%;\n}\n\n.OT_audio-level-meter__bar {\n  position: absolute;\n  width: 192%; /* meter value can overflow of 8% */\n  height: 192%;\n  top: -96% /* half of the size */;\n  right: -96%;\n  border-radius: 50%;\n\n  background-color: rgba(0, 0, 0, .8);\n}\n\n.OT_audio-level-meter__audio-only-img {\n  position: absolute;\n  top: 22%;\n  right: 15%;\n  width: 40%;\n\n  opacity: .7;\n\n  background: url(data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgNzkgODYiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgZmlsbD0iI2ZmZiI+PHBhdGggZD0iTTkuNzU3IDQwLjkyNGMzLjczOC01LjE5MSAxMi43MTEtNC4zMDggMTIuNzExLTQuMzA4IDIuMjIzIDMuMDE0IDUuMTI2IDI0LjU4NiAzLjYyNCAyOC43MTgtMS40MDEgMS4zMDEtMTEuNjExIDEuNjI5LTEzLjM4LTEuNDM2LTEuMjI2LTguODA0LTIuOTU1LTIyLjk3NS0yLjk1NS0yMi45NzV6bTU4Ljc4NSAwYy0zLjczNy01LjE5MS0xMi43MTEtNC4zMDgtMTIuNzExLTQuMzA4LTIuMjIzIDMuMDE0LTUuMTI2IDI0LjU4Ni0zLjYyNCAyOC43MTggMS40MDEgMS4zMDEgMTEuNjExIDEuNjI5IDEzLjM4LTEuNDM2IDEuMjI2LTguODA0IDIuOTU1LTIyLjk3NSAyLjk1NS0yMi45NzV6Ii8+PHBhdGggZD0iTTY4LjY0NyA1OC42Yy43MjktNC43NTMgMi4zOC05LjU2MSAyLjM4LTE0LjgwNCAwLTIxLjQxMi0xNC4xMTUtMzguNzctMzEuNTI4LTM4Ljc3LTE3LjQxMiAwLTMxLjUyNyAxNy4zNTgtMzEuNTI3IDM4Ljc3IDAgNC41NDEuNTE1IDguOTM2IDEuODAyIDEyLjk1IDEuNjk4IDUuMjk1LTUuNTQyIDYuOTkxLTYuNjE2IDIuMDczQzIuNDEgNTUuMzk0IDAgNTEuNzg3IDAgNDguMTAzIDAgMjEuNTM2IDE3LjY4NSAwIDM5LjUgMCA2MS4zMTYgMCA3OSAyMS41MzYgNzkgNDguMTAzYzAgLjcxOC0yLjg5OSA5LjY5My0zLjI5MiAxMS40MDgtLjc1NCAzLjI5My03Ljc1MSAzLjU4OS03LjA2MS0uOTEyeiIvPjxwYXRoIGQ9Ik01LjA4NCA1MS4zODVjLS44MDQtMy43ODIuNTY5LTcuMzM1IDMuMTM0LTcuOTIxIDIuNjM2LS42MDMgNS40ODUgMi4xNSA2LjI4OSA2LjEzMi43OTcgMy45NDgtLjc1MiA3LjQ1Ny0zLjM4OCA3Ljg1OS0yLjU2Ni4zOTEtNS4yMzctMi4zMTgtNi4wMzQtNi4wN3ptNjguODM0IDBjLjgwNC0zLjc4Mi0uNTY4LTcuMzM1LTMuMTMzLTcuOTIxLTIuNjM2LS42MDMtNS40ODUgMi4xNS02LjI4OSA2LjEzMi0uNzk3IDMuOTQ4Ljc1MiA3LjQ1NyAzLjM4OSA3Ljg1OSAyLjU2NS4zOTEgNS4yMzctMi4zMTggNi4wMzQtNi4wN3ptLTIuMDM4IDguMjg4Yy0uOTI2IDE5LjY1OS0xNS4xMTIgMjQuNzU5LTI1Ljg1OSAyMC40NzUtNS40MDUtLjYwNi0zLjAzNCAxLjI2Mi0zLjAzNCAxLjI2MiAxMy42NjEgMy41NjIgMjYuMTY4IDMuNDk3IDMxLjI3My0yMC41NDktLjU4NS00LjUxMS0yLjM3OS0xLjE4Ny0yLjM3OS0xLjE4N3oiLz48cGF0aCBkPSJNNDEuNjYyIDc4LjQyMmw3LjU1My41NWMxLjE5Mi4xMDcgMi4xMiAxLjE1MyAyLjA3MiAyLjMzNWwtLjEwOSAyLjczOGMtLjA0NyAxLjE4Mi0xLjA1MSAyLjA1NC0yLjI0MyAxLjk0NmwtNy41NTMtLjU1Yy0xLjE5MS0uMTA3LTIuMTE5LTEuMTUzLTIuMDcyLTIuMzM1bC4xMDktMi43MzdjLjA0Ny0xLjE4MiAxLjA1Mi0yLjA1NCAyLjI0My0xLjk0N3oiLz48L2c+PC9zdmc+) no-repeat center;\n}\n\n.OT_audio-level-meter__audio-only-img:before {\n  /* makes the height of the container equals its width */\n  content: '';\n  display: block;\n  padding-top: 100%;\n}\n\n.OT_audio-level-meter__value {\n  position: absolute;\n  border-radius: 50%;\n  background-image: radial-gradient(circle, rgba(151, 206, 0, 1) 0%, rgba(151, 206, 0, 0) 100%);\n}\n\n.OT_audio-level-meter.OT_mode-off {\n    display: none;\n}\n\n.OT_audio-level-meter.OT_mode-on,\n.OT_audio-only .OT_audio-level-meter.OT_mode-auto {\n  display: block;\n}\n\n.OT_audio-only.OT_publisher .OT_video-element,\n.OT_audio-only.OT_subscriber .OT_video-element {\n  display: none;\n}\n\n.OT_video-disabled-indicator {\n  opacity: 1;\n  border: none;\n  display: none;\n  position: absolute;\n  background-color: transparent;\n  background-repeat: no-repeat;\n  background-position: bottom right;\n  pointer-events: none;\n  top: 0;\n  left: 0;\n  bottom: 3px;\n  right: 3px;\n}\n\n.OT_video-disabled {\n  background-image: url(data:image/png;base64,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);\n  background-size: 33px auto;\n}\n\n.OT_video-disabled-warning {\n  background-image: url(data:image/png;base64,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);\n  background-size: 33px auto;\n}\n\n.OT_video-disabled-indicator.OT_active {\n  display: block;\n}\n\n.OT_audio-blocked-indicator {\n  opacity: 1;\n  border: none;\n  display: none;\n  position: absolute;\n  background-color: transparent;\n  background-repeat: no-repeat;\n  background-position: center;\n  pointer-events: none;\n  top: 0;\n  left: 0;\n  bottom: 0;\n  right: 0;\n}\n\n.OT_audio-blocked {\n  background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB3aWR0aD0iMTUwIiBoZWlnaHQ9IjkwIj48ZGVmcz48cGF0aCBkPSJNNjcgMTJMNi40NDggNzIuNTUyIDAgMzFWMThMMjYgMGw0MSAxMnptMyA3bDYgNDctMjkgMTgtMzUuNTAyLTYuNDk4TDcwIDE5eiIgaWQ9ImEiLz48L2RlZnM+PHJlY3Qgd2lkdGg9IjE1MCIgaGVpZ2h0PSI5MCIgcng9IjM1IiByeT0iNDUiIG9wYWNpdHk9Ii41Ii8+PGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzNikiPjxtYXNrIGlkPSJiIiBmaWxsPSIjZmZmIj48dXNlIHhsaW5rOmhyZWY9IiNhIi8+PC9tYXNrPjxwYXRoIGQ9Ik0zOS4yNDkgNTEuMzEyYy42OTcgMTAuMzcgMi43ODUgMTcuODk3IDUuMjUxIDE3Ljg5NyAzLjAzOCAwIDUuNS0xMS40MTcgNS41LTI1LjVzLTIuNDYyLTI1LjUtNS41LTI1LjVjLTIuNTEgMC00LjYyOCA3Ljc5Ny01LjI4NyAxOC40NTNBOC45ODkgOC45ODkgMCAwIDEgNDMgNDRhOC45ODggOC45ODggMCAwIDEtMy43NTEgNy4zMTJ6TTIwLjk4NSAzMi4yMjRsMTUuNzQ2LTE2Ljg3N2E3LjM4NSA3LjM4NSAwIDAgMSAxMC4zNzQtLjQyQzUxLjcwMiAxOS4xMTQgNTQgMjkuMjA4IDU0IDQ1LjIwOGMwIDE0LjUyNy0yLjM0MyAyMy44OC03LjAzIDI4LjA1OGE3LjI4IDcuMjggMCAwIDEtMTAuMTY4LS40NjhMMjAuNDA1IDU1LjIyNEgxMmE1IDUgMCAwIDEtNS01di0xM2E1IDUgMCAwIDEgNS01aDguOTg1eiIgZmlsbD0iI0ZGRiIgbWFzaz0idXJsKCNiKSIvPjwvZz48cGF0aCBkPSJNMTA2LjUgMTMuNUw0NC45OTggNzUuMDAyIiBzdHJva2U9IiNGRkYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9nPjwvc3ZnPg==);\n  background-size: 90px auto;\n}\n\n.OT_container-audio-blocked {\n  cursor: pointer;\n}\n\n.OT_container-audio-blocked.OT_mini .OT_edge-bar-item {\n  display: none;\n}\n\n.OT_container-audio-blocked .OT_mute {\n  display: none;\n}\n\n.OT_audio-blocked-indicator.OT_active {\n  display: block;\n}\n\n.OT_video-unsupported {\n  opacity: 1;\n  border: none;\n  display: none;\n  position: absolute;\n  background-color: transparent;\n  background-repeat: no-repeat;\n  background-position: center;\n  background-image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOTciIGhlaWdodD0iOTAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiPjxkZWZzPjxwYXRoIGQ9Ik03MCAxMkw5LjQ0OCA3Mi41NTIgMCA2MmwzLTQ0TDI5IDBsNDEgMTJ6bTggMmwxIDUyLTI5IDE4LTM1LjUwMi02LjQ5OEw3OCAxNHoiIGlkPSJhIi8+PC9kZWZzPjxnIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoOCAzKSI+PG1hc2sgaWQ9ImIiIGZpbGw9IiNmZmYiPjx1c2UgeGxpbms6aHJlZj0iI2EiLz48L21hc2s+PHBhdGggZD0iTTkuMTEgMjAuOTY4SDQ4LjFhNSA1IDAgMCAxIDUgNVY1OC4xOGE1IDUgMCAwIDEtNSA1SDkuMTFhNSA1IDAgMCAxLTUtNVYyNS45N2E1IDUgMCAwIDEgNS01em00Ny4wOCAxMy4zOTRjMC0uMzQ1IDUuNDcyLTMuMTU5IDE2LjQxNS04LjQ0M2EzIDMgMCAwIDEgNC4zMDQgMi43MDJ2MjYuODM1YTMgMyAwIDAgMS00LjMwNSAyLjcwMWMtMTAuOTQyLTUuMjg2LTE2LjQxMy04LjEtMTYuNDEzLTguNDQ2VjM0LjM2MnoiIGZpbGw9IiNGRkYiIG1hc2s9InVybCgjYikiLz48L2c+PHBhdGggZD0iTTgxLjUgMTYuNUwxOS45OTggNzguMDAyIiBzdHJva2U9IiNGRkYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9nPjwvc3ZnPg==);\n  background-size: 58px auto;\n  pointer-events: none;\n  top: 0;\n  left: 0;\n  bottom: 0;\n  right: 0;\n  margin-top: -30px;\n}\n\n.OT_video-unsupported-bar {\n  display: none;\n  position: absolute;\n  width: 192%; /* copy the size of the audio meter bar for symmetry */\n  height: 192%;\n  top: -96% /* half of the size */;\n  left: -96%;\n  border-radius: 50%;\n\n  background-color: rgba(0, 0, 0, .8);\n}\n\n.OT_video-unsupported-img {\n  display: none;\n  position: absolute;\n  top: 11%;\n  left: 15%;\n  width: 70%;\n  opacity: .7;\n  background-image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOTciIGhlaWdodD0iOTAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiPjxkZWZzPjxwYXRoIGQ9Ik03MCAxMkw5LjQ0OCA3Mi41NTIgMCA2MmwzLTQ0TDI5IDBsNDEgMTJ6bTggMmwxIDUyLTI5IDE4LTM1LjUwMi02LjQ5OEw3OCAxNHoiIGlkPSJhIi8+PC9kZWZzPjxnIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoOCAzKSI+PG1hc2sgaWQ9ImIiIGZpbGw9IiNmZmYiPjx1c2UgeGxpbms6aHJlZj0iI2EiLz48L21hc2s+PHBhdGggZD0iTTkuMTEgMjAuOTY4SDQ4LjFhNSA1IDAgMCAxIDUgNVY1OC4xOGE1IDUgMCAwIDEtNSA1SDkuMTFhNSA1IDAgMCAxLTUtNVYyNS45N2E1IDUgMCAwIDEgNS01em00Ny4wOCAxMy4zOTRjMC0uMzQ1IDUuNDcyLTMuMTU5IDE2LjQxNS04LjQ0M2EzIDMgMCAwIDEgNC4zMDQgMi43MDJ2MjYuODM1YTMgMyAwIDAgMS00LjMwNSAyLjcwMWMtMTAuOTQyLTUuMjg2LTE2LjQxMy04LjEtMTYuNDEzLTguNDQ2VjM0LjM2MnoiIGZpbGw9IiNGRkYiIG1hc2s9InVybCgjYikiLz48L2c+PHBhdGggZD0iTTgxLjUgMTYuNUwxOS45OTggNzguMDAyIiBzdHJva2U9IiNGRkYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9nPjwvc3ZnPg==);\n  background-repeat: no-repeat;\n  background-position: center;\n  background-size: 100% auto;\n}\n\n.OT_video-unsupported-img:before {\n  /* makes the height of the container 93% of its width (90/97 px) */\n  content: '';\n  display: block;\n  padding-top: 93%;\n}\n\n.OT_video-unsupported-text {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-pack: center;\n      -ms-flex-pack: center;\n          justify-content: center;\n  -webkit-box-align: center;\n      -ms-flex-align: center;\n          align-items: center;\n  text-align: center;\n  height: 100%;\n  margin-top: 40px;\n}\n"
+module.exports = ".bounds {\n  background-color: black;\n  overflow: hidden;\n  cursor: none !important;\n  position: absolute;\n  left: 0;\n  right: 0;\n  top: 0;\n  bottom: 0;\n}\n\napp-ov-video video {\n  -o-object-fit: cover;\n  object-fit: cover;\n  display: block;\n  position: absolute;\n  width: 100%;\n  height: 100%;\n  color: #ffffff;\n  margin: 0;\n  padding: 0;\n  border: 0;\n  font-size: 100%;\n  font-family: Arial, Helvetica, sans-serif;\n}\n\n/*!\n * Copyright (c) 2017 TokBox, Inc.\n * Released under the MIT license\n * http://opensource.org/licenses/MIT\n */\n\n.custom-class {\n  min-height: 0px !important;\n}\n\n/**\n * OT Base styles\n */\n\n/* Root OT object, this is where our CSS reset happens */\n\n.OT_root, .OT_root * {\n  color: #ffffff;\n  margin: 0;\n  padding: 0;\n  border: 0;\n  font-size: 100%;\n  font-family: Arial, Helvetica, sans-serif;\n  vertical-align: baseline;\n}\n\n.OT_dialog-centering {\n  display: table;\n  width: 100%;\n  height: 100%;\n}\n\n.OT_dialog-centering-child {\n  display: table-cell;\n  vertical-align: middle;\n}\n\n.OT_dialog {\n  position: relative;\n  -webkit-box-sizing: border-box;\n  box-sizing: border-box;\n  max-width: 576px;\n  margin-right: auto;\n  margin-left: auto;\n  padding: 36px;\n  text-align: center;\n  /* centers all the inline content */\n  background-color: #363636;\n  color: #fff;\n  -webkit-box-shadow: 2px 4px 6px #999;\n  box-shadow: 2px 4px 6px #999;\n  font-family: 'Didact Gothic', sans-serif;\n  font-size: 13px;\n  line-height: 1.4;\n}\n\n.OT_dialog * {\n  font-family: inherit;\n  -webkit-box-sizing: inherit;\n  box-sizing: inherit;\n}\n\n.OT_closeButton {\n  color: #999999;\n  cursor: pointer;\n  font-size: 32px;\n  line-height: 36px;\n  position: absolute;\n  right: 18px;\n  top: 0;\n}\n\n.OT_dialog-messages {\n  text-align: center;\n}\n\n.OT_dialog-messages-main {\n  margin-bottom: 36px;\n  line-height: 36px;\n  font-weight: 300;\n  font-size: 24px;\n}\n\n.OT_dialog-messages-minor {\n  margin-bottom: 18px;\n  font-size: 13px;\n  line-height: 18px;\n  color: #A4A4A4;\n}\n\n.OT_dialog-messages-minor strong {\n  color: #ffffff;\n}\n\n.OT_dialog-actions-card {\n  display: inline-block;\n}\n\n.OT_dialog-button-title {\n  margin-bottom: 18px;\n  line-height: 18px;\n  font-weight: 300;\n  text-align: center;\n  font-size: 14px;\n  color: #999999;\n}\n\n.OT_dialog-button-title label {\n  color: #999999;\n}\n\n.OT_dialog-button-title a, .OT_dialog-button-title a:link, .OT_dialog-button-title a:active {\n  color: #02A1DE;\n}\n\n.OT_dialog-button-title strong {\n  color: #ffffff;\n  font-weight: 100;\n  display: block;\n}\n\n.OT_dialog-button {\n  display: inline-block;\n  margin-bottom: 18px;\n  padding: 0 1em;\n  background-color: #1CA3DC;\n  text-align: center;\n  cursor: pointer;\n}\n\n.OT_dialog-button:disabled {\n  cursor: not-allowed;\n  opacity: 0.5;\n}\n\n.OT_dialog-button-large {\n  line-height: 36px;\n  padding-top: 9px;\n  padding-bottom: 9px;\n  font-weight: 100;\n  font-size: 24px;\n}\n\n.OT_dialog-button-small {\n  line-height: 18px;\n  padding-top: 9px;\n  padding-bottom: 9px;\n  background-color: #444444;\n  color: #999999;\n  font-size: 16px;\n}\n\n.OT_dialog-progress-bar {\n  display: inline-block;\n  /* prevents margin collapse */\n  width: 100%;\n  margin-top: 5px;\n  margin-bottom: 41px;\n  border: 1px solid #4E4E4E;\n  height: 8px;\n}\n\n.OT_dialog-progress-bar-fill {\n  height: 100%;\n  background-color: #29A4DA;\n}\n\n.OT_dialog-plugin-upgrading .OT_dialog-plugin-upgrade-percentage {\n  line-height: 54px;\n  font-size: 48px;\n  font-weight: 100;\n}\n\n/* Helpers */\n\n.OT_centered {\n  position: fixed;\n  left: 50%;\n  top: 50%;\n  margin: 0;\n}\n\n.OT_dialog-hidden {\n  display: none;\n}\n\n.OT_dialog-button-block {\n  display: block;\n}\n\n.OT_dialog-no-natural-margin {\n  margin-bottom: 0;\n}\n\n/* Publisher and Subscriber styles */\n\n.OT_publisher, .OT_subscriber {\n  position: relative;\n  min-width: 48px;\n  min-height: 48px;\n}\n\n.OT_publisher .OT_video-element, .OT_subscriber .OT_video-element {\n  display: block;\n  position: absolute;\n  width: 100%;\n  height: 100%;\n  -webkit-transform-origin: 0 0;\n  transform-origin: 0 0;\n}\n\n/* Styles that are applied when the video element should be mirrored */\n\n.OT_publisher.OT_mirrored .OT_video-element {\n  -webkit-transform: scale(-1, 1);\n  transform: scale(-1, 1);\n  -webkit-transform-origin: 50% 50%;\n  transform-origin: 50% 50%;\n}\n\n.OT_subscriber_error {\n  background-color: #000;\n  color: #fff;\n  text-align: center;\n}\n\n.OT_subscriber_error>p {\n  padding: 20px;\n}\n\n/* The publisher/subscriber name/mute background */\n\n.OT_publisher .OT_bar, .OT_subscriber .OT_bar, .OT_publisher .OT_name, .OT_subscriber .OT_name, .OT_publisher .OT_archiving, .OT_subscriber .OT_archiving, .OT_publisher .OT_archiving-status, .OT_subscriber .OT_archiving-status, .OT_publisher .OT_archiving-light-box, .OT_subscriber .OT_archiving-light-box {\n  -webkit-box-sizing: border-box;\n  -ms-box-sizing: border-box;\n  box-sizing: border-box;\n  top: 0;\n  left: 0;\n  right: 0;\n  display: block;\n  height: 34px;\n  position: absolute;\n}\n\n.OT_publisher .OT_bar, .OT_subscriber .OT_bar {\n  background: rgba(0, 0, 0, 0.4);\n}\n\n.OT_publisher .OT_edge-bar-item, .OT_subscriber .OT_edge-bar-item {\n  z-index: 1;\n  /* required to get audio level meter underneath */\n}\n\n/* The publisher/subscriber name panel/archiving status bar */\n\n.OT_publisher .OT_name, .OT_subscriber .OT_name {\n  background-color: transparent;\n  color: #ffffff;\n  font-size: 15px;\n  line-height: 34px;\n  font-weight: normal;\n  padding: 0 4px 0 36px;\n}\n\n.OT_publisher .OT_archiving-status, .OT_subscriber .OT_archiving-status {\n  background: rgba(0, 0, 0, 0.4);\n  top: auto;\n  bottom: 0;\n  left: 34px;\n  padding: 0 4px;\n  color: rgba(255, 255, 255, 0.8);\n  font-size: 15px;\n  line-height: 34px;\n  font-weight: normal;\n}\n\n.OT_micro .OT_archiving-status, .OT_micro:hover .OT_archiving-status, .OT_mini .OT_archiving-status, .OT_mini:hover .OT_archiving-status {\n  display: none;\n}\n\n.OT_publisher .OT_archiving-light-box, .OT_subscriber .OT_archiving-light-box {\n  background: rgba(0, 0, 0, 0.4);\n  top: auto;\n  bottom: 0;\n  right: auto;\n  width: 34px;\n  height: 34px;\n}\n\n.OT_archiving-light {\n  width: 7px;\n  height: 7px;\n  border-radius: 30px;\n  position: absolute;\n  top: 14px;\n  left: 14px;\n  background-color: #575757;\n  -webkit-box-shadow: 0 0 5px 1px #575757;\n  box-shadow: 0 0 5px 1px #575757;\n}\n\n.OT_archiving-light.OT_active {\n  background-color: #970d13;\n  animation: OT_pulse 1.3s ease-in;\n  -webkit-animation: OT_pulse 1.3s ease-in;\n  -moz-animation: OT_pulse 1.3s ease-in;\n  -webkit-animation: OT_pulse 1.3s ease-in;\n  animation-iteration-count: infinite;\n  -webkit-animation-iteration-count: infinite;\n  -moz-animation-iteration-count: infinite;\n  -webkit-animation-iteration-count: infinite;\n}\n\n@-webkit-keyframes OT_pulse {\n  0% {\n    -webkit-box-shadow: 0 0 0px 0px #c70019;\n    box-shadow: 0 0 0px 0px #c70019;\n  }\n  30% {\n    -webkit-box-shadow: 0 0 5px 1px #c70019;\n    box-shadow: 0 0 5px 1px #c70019;\n  }\n  50% {\n    -webkit-box-shadow: 0 0 5px 1px #c70019;\n    box-shadow: 0 0 5px 1px #c70019;\n  }\n  80% {\n    -webkit-box-shadow: 0 0 0px 0px #c70019;\n    box-shadow: 0 0 0px 0px #c70019;\n  }\n  100% {\n    -webkit-box-shadow: 0 0 0px 0px #c70019;\n    box-shadow: 0 0 0px 0px #c70019;\n  }\n}\n\n@-webkit-keyframes OT_pulse {\n  0% {\n    -webkit-box-shadow: 0 0 0px 0px #c70019;\n    box-shadow: 0 0 0px 0px #c70019;\n  }\n  30% {\n    -webkit-box-shadow: 0 0 5px 1px #c70019;\n    box-shadow: 0 0 5px 1px #c70019;\n  }\n  50% {\n    -webkit-box-shadow: 0 0 5px 1px #c70019;\n    box-shadow: 0 0 5px 1px #c70019;\n  }\n  80% {\n    -webkit-box-shadow: 0 0 0px 0px #c70019;\n    box-shadow: 0 0 0px 0px #c70019;\n  }\n  100% {\n    -webkit-box-shadow: 0 0 0px 0px #c70019;\n    box-shadow: 0 0 0px 0px #c70019;\n  }\n}\n\n.OT_mini .OT_bar, .OT_bar.OT_mode-mini, .OT_bar.OT_mode-mini-auto {\n  bottom: 0;\n  height: auto;\n}\n\n.OT_mini .OT_name.OT_mode-off, .OT_mini .OT_name.OT_mode-on, .OT_mini .OT_name.OT_mode-auto, .OT_mini:hover .OT_name.OT_mode-auto {\n  display: none;\n}\n\n.OT_publisher .OT_name, .OT_subscriber .OT_name {\n  left: 10px;\n  right: 37px;\n  height: 34px;\n  padding-left: 0;\n}\n\n.OT_publisher .OT_mute, .OT_subscriber .OT_mute {\n  border: none;\n  cursor: pointer;\n  display: block;\n  position: absolute;\n  text-align: center;\n  text-indent: -9999em;\n  background-color: transparent;\n  background-repeat: no-repeat;\n}\n\n.OT_publisher .OT_mute, .OT_subscriber .OT_mute {\n  right: 0;\n  top: 0;\n  border-left: 1px solid rgba(255, 255, 255, 0.2);\n  height: 36px;\n  width: 37px;\n}\n\n.OT_mini .OT_mute, .OT_publisher.OT_mini .OT_mute.OT_mode-auto.OT_mode-on-hold, .OT_subscriber.OT_mini .OT_mute.OT_mode-auto.OT_mode-on-hold {\n  top: 50%;\n  left: 50%;\n  right: auto;\n  margin-top: -18px;\n  margin-left: -18.5px;\n  border-left: none;\n}\n\n.OT_publisher .OT_mute {\n  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABMAAAAcCAMAAAC02HQrAAAA1VBMVEUAAAD3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pn3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pn3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj3+Pj39/j3+Pj3+Pn4+Pk/JRMlAAAAQ3RSTlMABAUHCQoLDhAQERwdHiAjLjAxOD9ASFBRVl1mbnZ6fH2LjI+QkaWqrrC1uLzAwcXJycrL1NXj5Ofo6u3w9fr7/P3+d4M3+QAAAQBJREFUGBlVwYdCglAABdCLlr5Unijm3hMUtBzlBLSr//9JgUToOQgVJgceJgU8aHgMeA38K50ZOpcQmTPwcyXn+JM8M3JJIqQypiIkeXelTyIkGZPwKS1NMia1lgKTVkaE3oQQGYsmHNqSMWnTgUFbMiZtGlD2dpaxrL1XgM0i4ZK8MeAmFhsAs29MGZniawagS63oMOQUNXYB5D0D1RMDpyoMLw/fiE2og/V+PVDR5AiBl0/2Uwik+vx4xV3a5G5Ye68Nd1czjUjZckm6VhmPciRzeCZICjwTJAViQq+3e+St167rAoHK8sLYZVkBYPCZAZ/eGa+2R5LH7Wrc0YFf/O9J3yBDFaoAAAAASUVORK5CYII=);\n  background-position: 9px 5px;\n}\n\n.OT_publisher .OT_mute.OT_active {\n  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAdCAYAAABFRCf7AAADcElEQVRIiaWVXWhcRRTHf7NNd2aDtUKMIjTpg4ufFIuiUOmDEWm0Vi3VYhXRqIggQh4sWJFSig9+oOhTKSpIRUWMIBIr2kptoTbgU6ooxCiIjR+14kcJmf9sNceHnd3ebnc3Uv9wuXfOzPzmnDMz5zozGwdWAbc65w5RUJQ8cC2wDJgFJioh/MJCMrNxq2vOzK4HmIvRRemxKP0RJWt53o7S+d2Yzsx6gQ+AIUDAnUqpBLzXZd4RYFUlhB/bdZacc3PAOmAcCMC7wfvFwLNdoAPAyx09bXyYWRl4E7gDmAdGlNKFwLYu8GolhO9O87RJd64GbMrgEvB68P4osMWdXLtVV7czlooNpVRWSs8DO7NpR/B+3rBHsvetCgtCMTxwQCm9BbyQrc8F7/uBex3uRCeXO0PrUZ4NfKyUPgWeyj3bg/crDNsIRGwBaJQGorQ3Svdn2wHgc2BUKb0DPJHtjwfvbwRucc7tz+N+i9LFUdoXpfVN36I0CVwBTFI/q9e1LPxT8P4qYEdu70q12mYzWw1MYQzjeJF6zq+shHC4B7jklOBPP/TzSunh4P0DwKvAfb5c9krpe+CcwsEoZdbhEvBM9wxRAl5RShcA9wAngE3B+8tLpdLuwrhp4MNmK0pfRWkySr7NXS8+L5nZbWZWy/Vin1IaitJnUTqvwevJ71lgSSWEFKUfHG7Q2m/xqFJaGry/GXgfGPLl8mJgrXPur2JoUC8Qy3OpG+sAbGhEKT0ErAWOA6uBPWbW1wr9BOgFbgKezot0kAPYqJQA1gC/A9cA+82svzksSn1R+jNKX0SpnM/e1x3yqig92JhrZivM7FjO8bSZLSuCR/Ok16K0KMNHojQWpYko7Y7S1igN5PE3ROl4lNaZ2UVmNpPBU01orvZvZPCeKFXbBR+lEKVtUapFaSZKg9njqpl9aWYTrmXCImA7sCWb9lK/jj9TrwkrgA1AH3AQuKsSwkzbrLfxpgpsBtYDxf/R3xm2ExirhNCuHHZXTsmRwiat+S/zSt06eysVA/4pmGr/G3qm6ik28v29FKgCg8BS6pvS0KNRGgZ+Bb4FpsxsOkfUlMuwDcBWYOUZOHYM2AU8WQmhBifDv70O7PjX7KZ+4G7g3FM8zd6uBIaBy4AqxnIcZwFLCovPAhE4Sj38b4BDwEeVEFKD9S94Khjn486v3QAAAABJRU5ErkJggg==);\n  background-position: 9px 4px;\n}\n\n.OT_subscriber .OT_mute {\n  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABcAAAATCAYAAAB7u5a2AAABx0lEQVQ4jaWUv48NURiGn3ONmCs32ZBd28ht1gqyZAkF21ylQkEiSp2ehpDlD1BoFGqqVdJohYKI7MaPxMoVNghCWMF+7ybLUewnOXfcMWO9yeQ857zne8+XmZOBGjJpr0kvTIomvTZpS526UCO4DUwD64FjwCFgqZnnR+oc8LfgzKQ73vGsr42ZtGjSQFV9o8KfBCacZwCaef4YmAf2rzjcpN3A2WSpm/AssKcqPDNpDBjs410CViXzTwk/A7b1C4wxDgOngAsZcAXY2buDfp/6S4F3lDS8DjgBzDWAjX/Y/e/QgYS/AhsKHa+OMQ6GEJ4Cj4BOAxgq6aCowyZtdf4OtAr+FHDO+R4wWnVbihr3cQnICt4boO38GWj9a/icjwOACt4m4K3zEPA+AxaAtTWCnwN3lzHkEL8V/OPAGud9wK2GF9XR1Wae/1zG2AI+pGYI4VUIoRtjHAc2A9cz4LRPevYCZ+i9/4sJt4GXJU10gaPAzdI2TTro/5Tfz8XEe2LSZGmxq/SDNvP8BnA5WRrx4BwYBe6vONx1EnjovGvBLAAd4Adwuyq8UiaNmDTvr+a8SQ9MuvbfwckBHZPe+QEfTdpep+4XZmPBHiHgz74AAAAASUVORK5CYII=);\n  background-position: 8px 7px;\n}\n\n.OT_subscriber .OT_mute.OT_active {\n  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAUCAYAAACXtf2DAAACtklEQVQ4jZ2VSYiURxTHf+/T9Nc9iRrBuYySmIsXUU9iFMEFERRBvAjJLUQi5ioiHvSScfTmgqC4XAT1ZIgLuJHkICaaQAgKI2hAUBT30bjUq7bbv4eukXK029F3+eqtv/fqK6qQdEnSNUmT6CDB/bvgfjO4N9zj2RD8007xg1IABkwEzkma0qb4PGAPMBZYLtSD8eNwAEjqTlNI0gNJM4YU7w7ut4O7gvuhZFsR3C8NC5BBLiTIY0mzM8AvqbiC++pk+zLpE95XuwAws3vAQuBPYDRwWtL84P4tsDSLv5oaug4EYOawAMF9jMdoLxqNZcDvQA04UVYqL4G/svj7AF21mhJscrvCksYBFO7xc2AAGGg2mrdjvf4rcAyomNn+slLZmUEGBgsYdh945xZJmgvckDSrEJpK6ySBgV6q12O8ABwGPjGzfWWlsjdN9rpjoSfA+DYDXARGAksK4Is3XC1Ub4z1f4CDQGFmu6tleQSYk0U+p7WVeefLJc00s4fAeWB6Qeunvj0m2ugx9gO7kmlrtSxvBfcy6fXUZS6rgG/S+jLQUwCVNmMC9HqM14EtSe+rluWazN8YEv8IqKZ1E1qnaIDO0ucx3gX6kv6TpM3AM+D/IbGjgP60/gq4WQA33gMA2OQxPgHWJX1ttSwL4FAeZGYLgB2SasBs4A8L7qOBf9M0uXQB3a+TMYSmVctyDrA9mfcBK82smSdKWgCcAaa1bTm4fxbc/8uuCQX3RanAD5Ka6Wo5IGnE0HxJPZ03pQX5Org3MsD3AO5xXLPZXJ9BjkrqdFg6QjZkgG3Jtsw93pG0VFI9QU5K6voYQBHcTydAfwheBI9HgvvPAJIWS3qeIL9JGvUxkO7gfi1BrqTvwkG/pPmSnibIqTzXPgAyEVgBjAEu1qrVPbk/PVTHgb/NbPGg/RVIzOQqzSTBaQAAAABJRU5ErkJggg==);\n  background-position: 7px 7px;\n}\n\n/**\n * Styles for display modes\n *\n * Note: It's important that these completely control the display and opacity\n * attributes, no other selectors should atempt to change them.\n */\n\n/* Default display mode transitions for various chrome elements */\n\n.OT_publisher .OT_edge-bar-item, .OT_subscriber .OT_edge-bar-item {\n  -webkit-transition-property: top, bottom, opacity;\n  transition-property: top, bottom, opacity;\n  -webkit-transition-duration: 0.5s;\n  transition-duration: 0.5s;\n  -webkit-transition-timing-function: ease-in;\n  transition-timing-function: ease-in;\n}\n\n.OT_publisher .OT_edge-bar-item.OT_mode-off, .OT_subscriber .OT_edge-bar-item.OT_mode-off, .OT_publisher .OT_edge-bar-item.OT_mode-auto, .OT_subscriber .OT_edge-bar-item.OT_mode-auto, .OT_publisher .OT_edge-bar-item.OT_mode-mini-auto, .OT_subscriber .OT_edge-bar-item.OT_mode-mini-auto {\n  top: -25px;\n  opacity: 0;\n}\n\n.OT_publisher .OT_edge-bar-item.OT_mode-off, .OT_subscriber .OT_edge-bar-item.OT_mode-off {\n  display: none;\n}\n\n.OT_mini .OT_mute.OT_mode-auto, .OT_publisher .OT_mute.OT_mode-mini-auto, .OT_subscriber .OT_mute.OT_mode-mini-auto {\n  top: 50%;\n}\n\n.OT_publisher .OT_edge-bar-item.OT_edge-bottom.OT_mode-off, .OT_subscriber .OT_edge-bar-item.OT_edge-bottom.OT_mode-off, .OT_publisher .OT_edge-bar-item.OT_edge-bottom.OT_mode-auto, .OT_subscriber .OT_edge-bar-item.OT_edge-bottom.OT_mode-auto, .OT_publisher .OT_edge-bar-item.OT_edge-bottom.OT_mode-mini-auto, .OT_subscriber .OT_edge-bar-item.OT_edge-bottom.OT_mode-mini-auto {\n  top: auto;\n  bottom: -25px;\n}\n\n.OT_publisher .OT_edge-bar-item.OT_mode-on, .OT_subscriber .OT_edge-bar-item.OT_mode-on, .OT_publisher .OT_edge-bar-item.OT_mode-auto.OT_mode-on-hold, .OT_subscriber .OT_edge-bar-item.OT_mode-auto.OT_mode-on-hold, .OT_publisher:hover .OT_edge-bar-item.OT_mode-auto, .OT_subscriber:hover .OT_edge-bar-item.OT_mode-auto, .OT_publisher:hover .OT_edge-bar-item.OT_mode-mini-auto, .OT_subscriber:hover .OT_edge-bar-item.OT_mode-mini-auto {\n  top: 0;\n  opacity: 1;\n}\n\n.OT_mini .OT_mute.OT_mode-on, .OT_mini:hover .OT_mute.OT_mode-auto, .OT_mute.OT_mode-mini, .OT_root:hover .OT_mute.OT_mode-mini-auto {\n  top: 50%;\n}\n\n.OT_publisher .OT_edge-bar-item.OT_edge-bottom.OT_mode-on, .OT_subscriber .OT_edge-bar-item.OT_edge-bottom.OT_mode-on, .OT_publisher:hover .OT_edge-bar-item.OT_edge-bottom.OT_mode-auto, .OT_subscriber:hover .OT_edge-bar-item.OT_edge-bottom.OT_mode-auto {\n  top: auto;\n  bottom: 0;\n  opacity: 1;\n}\n\n/* Contains the video element, used to fix video letter-boxing */\n\n.OT_widget-container {\n  width: 100%;\n  height: 100%;\n  position: absolute;\n  background-color: #000000;\n  overflow: hidden;\n}\n\n/* Load animation */\n\n.OT_root .OT_video-loading {\n  position: absolute;\n  z-index: 1;\n  width: 100%;\n  height: 100%;\n  display: none;\n  background-color: rgba(0, 0, 0, .75);\n}\n\n.OT_root .OT_video-loading .OT_video-loading-spinner {\n  background: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9Ii0yMCAtMjAgMjQwIDI0MCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJhIiB4Mj0iMCIgeTI9IjEiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2ZmZiIgc3RvcC1vcGFjaXR5PSIwIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjZmZmIiBzdG9wLW9wYWNpdHk9IjAiLz48L2xpbmVhckdyYWRpZW50PjxsaW5lYXJHcmFkaWVudCBpZD0iYiIgeDE9IjEiIHgyPSIwIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmZmIiBzdG9wLW9wYWNpdHk9IjAiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNmZmYiIHN0b3Atb3BhY2l0eT0iLjA4Ii8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImMiIHgxPSIxIiB4Mj0iMCIgeTE9IjEiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2ZmZiIgc3RvcC1vcGFjaXR5PSIuMDgiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNmZmYiIHN0b3Atb3BhY2l0eT0iLjE2Ii8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImQiIHgyPSIwIiB5MT0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmZmIiBzdG9wLW9wYWNpdHk9Ii4xNiIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2ZmZiIgc3RvcC1vcGFjaXR5PSIuMzMiLz48L2xpbmVhckdyYWRpZW50PjxsaW5lYXJHcmFkaWVudCBpZD0iZSIgeDI9IjEiIHkxPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNmZmYiIHN0b3Atb3BhY2l0eT0iLjMzIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjZmZmIiBzdG9wLW9wYWNpdHk9Ii42NiIvPjwvbGluZWFyR3JhZGllbnQ+PGxpbmVhckdyYWRpZW50IGlkPSJmIiB4Mj0iMSIgeTI9IjEiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2ZmZiIgc3RvcC1vcGFjaXR5PSIuNjYiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNmZmYiLz48L2xpbmVhckdyYWRpZW50PjxtYXNrIGlkPSJnIj48ZyBmaWxsPSJub25lIiBzdHJva2Utd2lkdGg9IjQwIj48cGF0aCBzdHJva2U9InVybCgjYSkiIGQ9Ik04Ni42LTUwYTEwMCAxMDAgMCAwIDEgMCAxMDAiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDEwMCAxMDApIi8+PHBhdGggc3Ryb2tlPSJ1cmwoI2IpIiBkPSJNODYuNiA1MEExMDAgMTAwIDAgMCAxIDAgMTAwIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMDAgMTAwKSIvPjxwYXRoIHN0cm9rZT0idXJsKCNjKSIgZD0iTTAgMTAwYTEwMCAxMDAgMCAwIDEtODYuNi01MCIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTAwIDEwMCkiLz48cGF0aCBzdHJva2U9InVybCgjZCkiIGQ9Ik0tODYuNiA1MGExMDAgMTAwIDAgMCAxIDAtMTAwIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMDAgMTAwKSIvPjxwYXRoIHN0cm9rZT0idXJsKCNlKSIgZD0iTS04Ni42LTUwQTEwMCAxMDAgMCAwIDEgMC0xMDAiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDEwMCAxMDApIi8+PHBhdGggc3Ryb2tlPSJ1cmwoI2YpIiBkPSJNMC0xMDBhMTAwIDEwMCAwIDAgMSA4Ni42IDUwIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMDAgMTAwKSIvPjwvZz48L21hc2s+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIHg9Ii0yMCIgeT0iLTIwIiBtYXNrPSJ1cmwoI2cpIiBmaWxsPSIjZmZmIi8+PC9zdmc+) no-repeat;\n  position: absolute;\n  width: 32px;\n  height: 32px;\n  left: 50%;\n  top: 50%;\n  margin-left: -16px;\n  margin-top: -16px;\n  -webkit-animation: OT_spin 2s linear infinite;\n  animation: OT_spin 2s linear infinite;\n}\n\n@-webkit-keyframes OT_spin {\n  100% {\n    -webkit-transform: rotate(360deg);\n  }\n}\n\n@keyframes OT_spin {\n  100% {\n    -webkit-transform: rotate(360deg);\n    transform: rotate(360deg);\n  }\n}\n\n.OT_publisher.OT_loading .OT_video-loading, .OT_subscriber.OT_loading .OT_video-loading {\n  display: block;\n}\n\n.OT_video-centering {\n  display: table;\n  width: 100%;\n  height: 100%;\n}\n\n.OT_video-container {\n  display: table-cell;\n  vertical-align: middle;\n}\n\n.OT_video-poster {\n  position: absolute;\n  z-index: 1;\n  width: 100%;\n  height: 100%;\n  display: none;\n  opacity: .25;\n  background-repeat: no-repeat;\n  background-image: url(data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgNDcxIDQ2NCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48bGluZWFyR3JhZGllbnQgaWQ9ImEiIHgyPSIwIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSI2Ni42NiUiIHN0b3AtY29sb3I9IiNmZmYiLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNmZmYiIHN0b3Atb3BhY2l0eT0iMCIvPjwvbGluZWFyR3JhZGllbnQ+PHBhdGggZmlsbD0idXJsKCNhKSIgZD0iTTc5IDMwOGMxNC4yNS02LjUgNTQuMjUtMTkuNzUgNzEtMjkgOS0zLjI1IDI1LTIxIDI1LTIxczMuNzUtMTMgMy0yMmMtMS43NS02Ljc1LTE1LTQzLTE1LTQzLTIuNSAzLTQuNzQxIDMuMjU5LTcgMS0zLjI1LTcuNS0yMC41LTQ0LjUtMTYtNTcgMS4yNS03LjUgMTAtNiAxMC02LTExLjI1LTMzLjc1LTgtNjctOC02N3MuMDczLTcuMzQ2IDYtMTVjLTMuNDguNjM3LTkgNC05IDQgMi41NjMtMTEuNzI3IDE1LTIxIDE1LTIxIC4xNDgtLjMxMi0xLjMyMS0xLjQ1NC0xMCAxIDEuNS0yLjc4IDE2LjY3NS04LjY1NCAzMC0xMSAzLjc4Ny05LjM2MSAxMi43ODItMTcuMzk4IDIyLTIyLTIuMzY1IDMuMTMzLTMgNi0zIDZzMTUuNjQ3LTguMDg4IDQxLTZjLTE5Ljc1IDItMjQgNi0yNCA2czc0LjUtMTAuNzUgMTA0IDM3YzcuNSA5LjUgMjQuNzUgNTUuNzUgMTAgODkgMy43NS0xLjUgNC41LTQuNSA5IDEgLjI1IDE0Ljc1LTExLjUgNjMtMTkgNjItMi43NSAxLTQtMy00LTMtMTAuNzUgMjkuNS0xNCAzOC0xNCAzOC0yIDQuMjUtMy43NSAxOC41LTEgMjIgMS4yNSA0LjUgMjMgMjMgMjMgMjNsMTI3IDUzYzM3IDM1IDIzIDEzNSAyMyAxMzVMMCA0NjRzLTMtOTYuNzUgMTQtMTIwYzUuMjUtNi4yNSAyMS43NS0xOS43NSA2NS0zNnoiLz48L3N2Zz4=);\n  background-size: auto 76%;\n}\n\n.OT_fit-mode-cover .OT_video-element {\n  -o-object-fit: cover;\n  object-fit: cover;\n}\n\n/* Workaround for iOS freezing issue when cropping videos */\n\n/* https://bugs.webkit.org/show_bug.cgi?id=176439 */\n\n@media only screen and (orientation: portrait) {\n  .OT_subscriber.OT_ForceContain.OT_fit-mode-cover .OT_video-element {\n    -o-object-fit: contain !important;\n    object-fit: contain !important;\n  }\n}\n\n.OT_fit-mode-contain .OT_video-element {\n  -o-object-fit: contain;\n  object-fit: contain;\n}\n\n.OT_fit-mode-cover .OT_video-poster {\n  background-position: center bottom;\n}\n\n.OT_fit-mode-contain .OT_video-poster {\n  background-position: center;\n}\n\n.OT_audio-level-meter {\n  position: absolute;\n  width: 25%;\n  max-width: 224px;\n  min-width: 21px;\n  top: 0;\n  right: 0;\n  overflow: hidden;\n}\n\n.OT_audio-level-meter:before {\n  /* makes the height of the container equals its width */\n  content: '';\n  display: block;\n  padding-top: 100%;\n}\n\n.OT_audio-level-meter__bar {\n  position: absolute;\n  width: 192%;\n  /* meter value can overflow of 8% */\n  height: 192%;\n  top: -96%/* half of the size */\n  ;\n  right: -96%;\n  border-radius: 50%;\n  background-color: rgba(0, 0, 0, .8);\n}\n\n.OT_audio-level-meter__audio-only-img {\n  position: absolute;\n  top: 22%;\n  right: 15%;\n  width: 40%;\n  opacity: .7;\n  background: url(data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgNzkgODYiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgZmlsbD0iI2ZmZiI+PHBhdGggZD0iTTkuNzU3IDQwLjkyNGMzLjczOC01LjE5MSAxMi43MTEtNC4zMDggMTIuNzExLTQuMzA4IDIuMjIzIDMuMDE0IDUuMTI2IDI0LjU4NiAzLjYyNCAyOC43MTgtMS40MDEgMS4zMDEtMTEuNjExIDEuNjI5LTEzLjM4LTEuNDM2LTEuMjI2LTguODA0LTIuOTU1LTIyLjk3NS0yLjk1NS0yMi45NzV6bTU4Ljc4NSAwYy0zLjczNy01LjE5MS0xMi43MTEtNC4zMDgtMTIuNzExLTQuMzA4LTIuMjIzIDMuMDE0LTUuMTI2IDI0LjU4Ni0zLjYyNCAyOC43MTggMS40MDEgMS4zMDEgMTEuNjExIDEuNjI5IDEzLjM4LTEuNDM2IDEuMjI2LTguODA0IDIuOTU1LTIyLjk3NSAyLjk1NS0yMi45NzV6Ii8+PHBhdGggZD0iTTY4LjY0NyA1OC42Yy43MjktNC43NTMgMi4zOC05LjU2MSAyLjM4LTE0LjgwNCAwLTIxLjQxMi0xNC4xMTUtMzguNzctMzEuNTI4LTM4Ljc3LTE3LjQxMiAwLTMxLjUyNyAxNy4zNTgtMzEuNTI3IDM4Ljc3IDAgNC41NDEuNTE1IDguOTM2IDEuODAyIDEyLjk1IDEuNjk4IDUuMjk1LTUuNTQyIDYuOTkxLTYuNjE2IDIuMDczQzIuNDEgNTUuMzk0IDAgNTEuNzg3IDAgNDguMTAzIDAgMjEuNTM2IDE3LjY4NSAwIDM5LjUgMCA2MS4zMTYgMCA3OSAyMS41MzYgNzkgNDguMTAzYzAgLjcxOC0yLjg5OSA5LjY5My0zLjI5MiAxMS40MDgtLjc1NCAzLjI5My03Ljc1MSAzLjU4OS03LjA2MS0uOTEyeiIvPjxwYXRoIGQ9Ik01LjA4NCA1MS4zODVjLS44MDQtMy43ODIuNTY5LTcuMzM1IDMuMTM0LTcuOTIxIDIuNjM2LS42MDMgNS40ODUgMi4xNSA2LjI4OSA2LjEzMi43OTcgMy45NDgtLjc1MiA3LjQ1Ny0zLjM4OCA3Ljg1OS0yLjU2Ni4zOTEtNS4yMzctMi4zMTgtNi4wMzQtNi4wN3ptNjguODM0IDBjLjgwNC0zLjc4Mi0uNTY4LTcuMzM1LTMuMTMzLTcuOTIxLTIuNjM2LS42MDMtNS40ODUgMi4xNS02LjI4OSA2LjEzMi0uNzk3IDMuOTQ4Ljc1MiA3LjQ1NyAzLjM4OSA3Ljg1OSAyLjU2NS4zOTEgNS4yMzctMi4zMTggNi4wMzQtNi4wN3ptLTIuMDM4IDguMjg4Yy0uOTI2IDE5LjY1OS0xNS4xMTIgMjQuNzU5LTI1Ljg1OSAyMC40NzUtNS40MDUtLjYwNi0zLjAzNCAxLjI2Mi0zLjAzNCAxLjI2MiAxMy42NjEgMy41NjIgMjYuMTY4IDMuNDk3IDMxLjI3My0yMC41NDktLjU4NS00LjUxMS0yLjM3OS0xLjE4Ny0yLjM3OS0xLjE4N3oiLz48cGF0aCBkPSJNNDEuNjYyIDc4LjQyMmw3LjU1My41NWMxLjE5Mi4xMDcgMi4xMiAxLjE1MyAyLjA3MiAyLjMzNWwtLjEwOSAyLjczOGMtLjA0NyAxLjE4Mi0xLjA1MSAyLjA1NC0yLjI0MyAxLjk0NmwtNy41NTMtLjU1Yy0xLjE5MS0uMTA3LTIuMTE5LTEuMTUzLTIuMDcyLTIuMzM1bC4xMDktMi43MzdjLjA0Ny0xLjE4MiAxLjA1Mi0yLjA1NCAyLjI0My0xLjk0N3oiLz48L2c+PC9zdmc+) no-repeat center;\n}\n\n.OT_audio-level-meter__audio-only-img:before {\n  /* makes the height of the container equals its width */\n  content: '';\n  display: block;\n  padding-top: 100%;\n}\n\n.OT_audio-level-meter__value {\n  position: absolute;\n  border-radius: 50%;\n  background-image: radial-gradient(circle, rgba(151, 206, 0, 1) 0%, rgba(151, 206, 0, 0) 100%);\n}\n\n.OT_audio-level-meter.OT_mode-off {\n  display: none;\n}\n\n.OT_audio-level-meter.OT_mode-on, .OT_audio-only .OT_audio-level-meter.OT_mode-auto {\n  display: block;\n}\n\n.OT_audio-only.OT_publisher .OT_video-element, .OT_audio-only.OT_subscriber .OT_video-element {\n  display: none;\n}\n\n.OT_video-disabled-indicator {\n  opacity: 1;\n  border: none;\n  display: none;\n  position: absolute;\n  background-color: transparent;\n  background-repeat: no-repeat;\n  background-position: bottom right;\n  pointer-events: none;\n  top: 0;\n  left: 0;\n  bottom: 3px;\n  right: 3px;\n}\n\n.OT_video-disabled {\n  background-image: url(data:image/png;base64,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);\n  background-size: 33px auto;\n}\n\n.OT_video-disabled-warning {\n  background-image: url(data:image/png;base64,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);\n  background-size: 33px auto;\n}\n\n.OT_video-disabled-indicator.OT_active {\n  display: block;\n}\n\n.OT_audio-blocked-indicator {\n  opacity: 1;\n  border: none;\n  display: none;\n  position: absolute;\n  background-color: transparent;\n  background-repeat: no-repeat;\n  background-position: center;\n  pointer-events: none;\n  top: 0;\n  left: 0;\n  bottom: 0;\n  right: 0;\n}\n\n.OT_audio-blocked {\n  background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB3aWR0aD0iMTUwIiBoZWlnaHQ9IjkwIj48ZGVmcz48cGF0aCBkPSJNNjcgMTJMNi40NDggNzIuNTUyIDAgMzFWMThMMjYgMGw0MSAxMnptMyA3bDYgNDctMjkgMTgtMzUuNTAyLTYuNDk4TDcwIDE5eiIgaWQ9ImEiLz48L2RlZnM+PHJlY3Qgd2lkdGg9IjE1MCIgaGVpZ2h0PSI5MCIgcng9IjM1IiByeT0iNDUiIG9wYWNpdHk9Ii41Ii8+PGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzNikiPjxtYXNrIGlkPSJiIiBmaWxsPSIjZmZmIj48dXNlIHhsaW5rOmhyZWY9IiNhIi8+PC9tYXNrPjxwYXRoIGQ9Ik0zOS4yNDkgNTEuMzEyYy42OTcgMTAuMzcgMi43ODUgMTcuODk3IDUuMjUxIDE3Ljg5NyAzLjAzOCAwIDUuNS0xMS40MTcgNS41LTI1LjVzLTIuNDYyLTI1LjUtNS41LTI1LjVjLTIuNTEgMC00LjYyOCA3Ljc5Ny01LjI4NyAxOC40NTNBOC45ODkgOC45ODkgMCAwIDEgNDMgNDRhOC45ODggOC45ODggMCAwIDEtMy43NTEgNy4zMTJ6TTIwLjk4NSAzMi4yMjRsMTUuNzQ2LTE2Ljg3N2E3LjM4NSA3LjM4NSAwIDAgMSAxMC4zNzQtLjQyQzUxLjcwMiAxOS4xMTQgNTQgMjkuMjA4IDU0IDQ1LjIwOGMwIDE0LjUyNy0yLjM0MyAyMy44OC03LjAzIDI4LjA1OGE3LjI4IDcuMjggMCAwIDEtMTAuMTY4LS40NjhMMjAuNDA1IDU1LjIyNEgxMmE1IDUgMCAwIDEtNS01di0xM2E1IDUgMCAwIDEgNS01aDguOTg1eiIgZmlsbD0iI0ZGRiIgbWFzaz0idXJsKCNiKSIvPjwvZz48cGF0aCBkPSJNMTA2LjUgMTMuNUw0NC45OTggNzUuMDAyIiBzdHJva2U9IiNGRkYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9nPjwvc3ZnPg==);\n  background-size: 90px auto;\n}\n\n.OT_container-audio-blocked {\n  cursor: pointer;\n}\n\n.OT_container-audio-blocked.OT_mini .OT_edge-bar-item {\n  display: none;\n}\n\n.OT_container-audio-blocked .OT_mute {\n  display: none;\n}\n\n.OT_audio-blocked-indicator.OT_active {\n  display: block;\n}\n\n.OT_video-unsupported {\n  opacity: 1;\n  border: none;\n  display: none;\n  position: absolute;\n  background-color: transparent;\n  background-repeat: no-repeat;\n  background-position: center;\n  background-image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOTciIGhlaWdodD0iOTAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiPjxkZWZzPjxwYXRoIGQ9Ik03MCAxMkw5LjQ0OCA3Mi41NTIgMCA2MmwzLTQ0TDI5IDBsNDEgMTJ6bTggMmwxIDUyLTI5IDE4LTM1LjUwMi02LjQ5OEw3OCAxNHoiIGlkPSJhIi8+PC9kZWZzPjxnIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoOCAzKSI+PG1hc2sgaWQ9ImIiIGZpbGw9IiNmZmYiPjx1c2UgeGxpbms6aHJlZj0iI2EiLz48L21hc2s+PHBhdGggZD0iTTkuMTEgMjAuOTY4SDQ4LjFhNSA1IDAgMCAxIDUgNVY1OC4xOGE1IDUgMCAwIDEtNSA1SDkuMTFhNSA1IDAgMCAxLTUtNVYyNS45N2E1IDUgMCAwIDEgNS01em00Ny4wOCAxMy4zOTRjMC0uMzQ1IDUuNDcyLTMuMTU5IDE2LjQxNS04LjQ0M2EzIDMgMCAwIDEgNC4zMDQgMi43MDJ2MjYuODM1YTMgMyAwIDAgMS00LjMwNSAyLjcwMWMtMTAuOTQyLTUuMjg2LTE2LjQxMy04LjEtMTYuNDEzLTguNDQ2VjM0LjM2MnoiIGZpbGw9IiNGRkYiIG1hc2s9InVybCgjYikiLz48L2c+PHBhdGggZD0iTTgxLjUgMTYuNUwxOS45OTggNzguMDAyIiBzdHJva2U9IiNGRkYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9nPjwvc3ZnPg==);\n  background-size: 58px auto;\n  pointer-events: none;\n  top: 0;\n  left: 0;\n  bottom: 0;\n  right: 0;\n  margin-top: -30px;\n}\n\n.OT_video-unsupported-bar {\n  display: none;\n  position: absolute;\n  width: 192%;\n  /* copy the size of the audio meter bar for symmetry */\n  height: 192%;\n  top: -96%/* half of the size */\n  ;\n  left: -96%;\n  border-radius: 50%;\n  background-color: rgba(0, 0, 0, .8);\n}\n\n.OT_video-unsupported-img {\n  display: none;\n  position: absolute;\n  top: 11%;\n  left: 15%;\n  width: 70%;\n  opacity: .7;\n  background-image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOTciIGhlaWdodD0iOTAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiPjxkZWZzPjxwYXRoIGQ9Ik03MCAxMkw5LjQ0OCA3Mi41NTIgMCA2MmwzLTQ0TDI5IDBsNDEgMTJ6bTggMmwxIDUyLTI5IDE4LTM1LjUwMi02LjQ5OEw3OCAxNHoiIGlkPSJhIi8+PC9kZWZzPjxnIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoOCAzKSI+PG1hc2sgaWQ9ImIiIGZpbGw9IiNmZmYiPjx1c2UgeGxpbms6aHJlZj0iI2EiLz48L21hc2s+PHBhdGggZD0iTTkuMTEgMjAuOTY4SDQ4LjFhNSA1IDAgMCAxIDUgNVY1OC4xOGE1IDUgMCAwIDEtNSA1SDkuMTFhNSA1IDAgMCAxLTUtNVYyNS45N2E1IDUgMCAwIDEgNS01em00Ny4wOCAxMy4zOTRjMC0uMzQ1IDUuNDcyLTMuMTU5IDE2LjQxNS04LjQ0M2EzIDMgMCAwIDEgNC4zMDQgMi43MDJ2MjYuODM1YTMgMyAwIDAgMS00LjMwNSAyLjcwMWMtMTAuOTQyLTUuMjg2LTE2LjQxMy04LjEtMTYuNDEzLTguNDQ2VjM0LjM2MnoiIGZpbGw9IiNGRkYiIG1hc2s9InVybCgjYikiLz48L2c+PHBhdGggZD0iTTgxLjUgMTYuNUwxOS45OTggNzguMDAyIiBzdHJva2U9IiNGRkYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9nPjwvc3ZnPg==);\n  background-repeat: no-repeat;\n  background-position: center;\n  background-size: 100% auto;\n}\n\n.OT_video-unsupported-img:before {\n  /* makes the height of the container 93% of its width (90/97 px) */\n  content: '';\n  display: block;\n  padding-top: 93%;\n}\n\n.OT_video-unsupported-text {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-pack: center;\n  -ms-flex-pack: center;\n  justify-content: center;\n  -webkit-box-align: center;\n  -ms-flex-align: center;\n  align-items: center;\n  text-align: center;\n  height: 100%;\n  margin-top: 40px;\n}"
 
 /***/ }),
 
 /***/ "./src/app/components/layouts/layout-best-fit/layout-best-fit.component.html":
 /***/ (function(module, exports) {
 
-module.exports = "<div id=\"layout\" class=\"bounds\">\n  <div *ngFor=\"let s of streams\" class=\"OT_root OT_publisher custom-class\">\n    <div class=\"OT_widget-container\">\n      <video [id]=\"'native-video-' + s.streamId\" autoplay=\"true\" [srcObject]=\"s.getMediaStream()\" (playing)=\"onVideoPlaying($event)\"></video>\n    </div>\n  </div>\n</div>\n"
+module.exports = "<div id=\"layout\" class=\"bounds\">\n  <div *ngFor=\"let s of subscribers\" class=\"OT_root OT_publisher custom-class\">\n    <div class=\"OT_widget-container\">\n      <app-ov-video [subscriber]=\"s\"></app-ov-video>\n    </div>\n  </div>\n</div>\n"
 
 /***/ }),
 
@@ -11667,7 +11865,7 @@ var LayoutBestFitComponent = (function () {
         var _this = this;
         this.route = route;
         this.appRef = appRef;
-        this.streams = [];
+        this.subscribers = [];
         this.route.params.subscribe(function (params) {
             _this.sessionId = params.sessionId;
             _this.secret = params.secret;
@@ -11691,12 +11889,16 @@ var LayoutBestFitComponent = (function () {
         var OV = new __WEBPACK_IMPORTED_MODULE_2_openvidu_browser__["OpenVidu"]();
         this.session = OV.initSession();
         this.session.on('streamCreated', function (event) {
-            var subscriber = _this.session.subscribe(event.stream, '');
-            _this.addRemoteStream(event.stream);
+            var subscriber = _this.session.subscribe(event.stream, undefined);
+            subscriber.on('streamPlaying', function (e) {
+                var video = subscriber.videos[0].video;
+                video.parentElement.parentElement.classList.remove('custom-class');
+                _this.openviduLayout.updateLayout();
+            });
+            _this.addSubscriber(subscriber);
         });
         this.session.on('streamDestroyed', function (event) {
-            event.preventDefault();
-            _this.deleteRemoteStream(event.stream);
+            _this.deleteSubscriber(event.stream.streamManager);
             _this.openviduLayout.updateLayout();
         });
         var token = 'wss://' + location.hostname + ':4443?sessionId=' + this.sessionId + '&secret=' + this.secret + '&recorder=true';
@@ -11718,20 +11920,20 @@ var LayoutBestFitComponent = (function () {
             animate: true // Whether you want to animate the transitions
         });
     };
-    LayoutBestFitComponent.prototype.addRemoteStream = function (stream) {
-        this.streams.push(stream);
+    LayoutBestFitComponent.prototype.addSubscriber = function (subscriber) {
+        this.subscribers.push(subscriber);
         this.appRef.tick();
     };
-    LayoutBestFitComponent.prototype.deleteRemoteStream = function (stream) {
+    LayoutBestFitComponent.prototype.deleteSubscriber = function (subscriber) {
         var index = -1;
-        for (var i = 0; i < this.streams.length; i++) {
-            if (this.streams[i].streamId === stream.streamId) {
+        for (var i = 0; i < this.subscribers.length; i++) {
+            if (this.subscribers[i] === subscriber) {
                 index = i;
                 break;
             }
         }
         if (index > -1) {
-            this.streams.splice(index, 1);
+            this.subscribers.splice(index, 1);
         }
         this.appRef.tick();
     };
@@ -11740,13 +11942,8 @@ var LayoutBestFitComponent = (function () {
             this.session.disconnect();
         }
         ;
-        this.streams = [];
+        this.subscribers = [];
         this.session = null;
-    };
-    LayoutBestFitComponent.prototype.onVideoPlaying = function (event) {
-        var video = event.target;
-        video.parentElement.parentElement.classList.remove('custom-class');
-        this.openviduLayout.updateLayout();
     };
     __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["A" /* HostListener */])('window:beforeunload'),
@@ -12081,6 +12278,63 @@ var OpenViduLayout = (function () {
         this.opts = options;
     };
     return OpenViduLayout;
+}());
+
+
+
+/***/ }),
+
+/***/ "./src/app/components/layouts/ov-video.component.ts":
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return OpenViduVideoComponent; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__("./node_modules/@angular/core/esm5/core.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_openvidu_browser__ = __webpack_require__("../../../../openvidu-browser/lib/index.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_openvidu_browser___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_openvidu_browser__);
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+
+
+var OpenViduVideoComponent = (function () {
+    function OpenViduVideoComponent() {
+    }
+    OpenViduVideoComponent.prototype.ngAfterViewInit = function () {
+        this._subscriber.addVideoElement(this.elementRef.nativeElement);
+    };
+    Object.defineProperty(OpenViduVideoComponent.prototype, "subscriber", {
+        set: function (subscriber) {
+            this._subscriber = subscriber;
+            if (!!this.elementRef) {
+                this._subscriber.addVideoElement(this.elementRef.nativeElement);
+            }
+        },
+        enumerable: true,
+        configurable: true
+    });
+    __decorate([
+        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_12" /* ViewChild */])('videoElement'),
+        __metadata("design:type", __WEBPACK_IMPORTED_MODULE_0__angular_core__["u" /* ElementRef */])
+    ], OpenViduVideoComponent.prototype, "elementRef", void 0);
+    __decorate([
+        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["F" /* Input */])(),
+        __metadata("design:type", __WEBPACK_IMPORTED_MODULE_1_openvidu_browser__["Subscriber"]),
+        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_openvidu_browser__["Subscriber"]])
+    ], OpenViduVideoComponent.prototype, "subscriber", null);
+    OpenViduVideoComponent = __decorate([
+        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
+            selector: 'app-ov-video',
+            template: '<video #videoElement></video>'
+        })
+    ], OpenViduVideoComponent);
+    return OpenViduVideoComponent;
 }());
 
 

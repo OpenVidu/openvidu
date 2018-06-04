@@ -2,7 +2,7 @@ FROM ubuntu:16.04
 MAINTAINER miguel.rodriguez@cocodin.com
 
 # Install Kurento Media Server (KMS) 
-RUN echo "deb http://ubuntu.openvidu.io/6.7.1 xenial kms6" | tee /etc/apt/sources.list.d/kurento.list \
+RUN echo "deb http://ubuntu.openvidu.io/6.7.2 xenial kms6" | tee /etc/apt/sources.list.d/kurento.list \
 	&& apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 5AFA7A83 \
 	&& apt-get update \
 	&& apt-get -y dist-upgrade \

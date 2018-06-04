@@ -2,6 +2,7 @@ export { OpenVidu } from './OpenVidu/OpenVidu';
 export { Session } from './OpenVidu/Session';
 export { Publisher } from './OpenVidu/Publisher';
 export { Subscriber } from './OpenVidu/Subscriber';
+export { StreamManager } from './OpenVidu/StreamManager';
 export { Stream } from './OpenVidu/Stream';
 export { Connection } from './OpenVidu/Connection';
 export { LocalRecorder } from './OpenVidu/LocalRecorder';
@@ -17,6 +18,7 @@ export { RecordingEvent } from './OpenViduInternal/Events/RecordingEvent';
 export { SessionDisconnectedEvent } from './OpenViduInternal/Events/SessionDisconnectedEvent';
 export { SignalEvent } from './OpenViduInternal/Events/SignalEvent';
 export { StreamEvent } from './OpenViduInternal/Events/StreamEvent';
+export { StreamManagerEvent } from './OpenViduInternal/Events/StreamManagerEvent';
 export { VideoElementEvent } from './OpenViduInternal/Events/VideoElementEvent';
 
 export { Device } from './OpenViduInternal/Interfaces/Public/Device';
@@ -24,4 +26,5 @@ export { EventDispatcher } from './OpenViduInternal/Interfaces/Public/EventDispa
 export { OpenViduAdvancedConfiguration } from './OpenViduInternal/Interfaces/Public/OpenViduAdvancedConfiguration';
 export { PublisherProperties } from './OpenViduInternal/Interfaces/Public/PublisherProperties';
 export { SignalOptions } from './OpenViduInternal/Interfaces/Public/SignalOptions';
+export { StreamManagerVideo } from './OpenViduInternal/Interfaces/Public/StreamManagerVideo';
 export { SubscriberProperties } from './OpenViduInternal/Interfaces/Public/SubscriberProperties';

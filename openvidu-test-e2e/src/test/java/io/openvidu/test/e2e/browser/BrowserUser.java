@@ -67,7 +67,7 @@ public class BrowserUser {
 
 	protected void configureDriver() {
 		this.waiter = new WebDriverWait(this.driver, this.timeOfWaitInSeconds);
-		this.eventManager = new OpenViduEventManager(this.driver, this.waiter, this.timeOfWaitInSeconds);
+		this.eventManager = new OpenViduEventManager(this.driver, this.timeOfWaitInSeconds);
 	}
 	
 	public void dispose() {

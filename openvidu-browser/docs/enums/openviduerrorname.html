@@ -82,11 +82,10 @@
 							<h3>Enumeration members</h3>
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="openviduerrorname.html#browser_not_supported" class="tsd-kind-icon">BROWSER_<wbr>NOT_<wbr>SUPPORTED</a></li>
-								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="openviduerrorname.html#camera_access_denied" class="tsd-kind-icon">CAMERA_<wbr>ACCESS_<wbr>DENIED</a></li>
+								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="openviduerrorname.html#device_access_denied" class="tsd-kind-icon">DEVICE_<wbr>ACCESS_<wbr>DENIED</a></li>
 								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="openviduerrorname.html#generic_error" class="tsd-kind-icon">GENERIC_<wbr>ERROR</a></li>
 								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="openviduerrorname.html#input_audio_device_not_found" class="tsd-kind-icon">INPUT_<wbr>AUDIO_<wbr>DEVICE_<wbr>NOT_<wbr>FOUND</a></li>
 								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="openviduerrorname.html#input_video_device_not_found" class="tsd-kind-icon">INPUT_<wbr>VIDEO_<wbr>DEVICE_<wbr>NOT_<wbr>FOUND</a></li>
-								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="openviduerrorname.html#microphone_access_denied" class="tsd-kind-icon">MICROPHONE_<wbr>ACCESS_<wbr>DENIED</a></li>
 								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="openviduerrorname.html#no_input_source_set" class="tsd-kind-icon">NO_<wbr>INPUT_<wbr>SOURCE_<wbr>SET</a></li>
 								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="openviduerrorname.html#openvidu_not_connected" class="tsd-kind-icon">OPENVIDU_<wbr>NOT_<wbr>CONNECTED</a></li>
 								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="openviduerrorname.html#openvidu_permission_denied" class="tsd-kind-icon">OPENVIDU_<wbr>PERMISSION_<wbr>DENIED</a></li>
@@ -108,19 +107,31 @@
 					<div class="tsd-signature tsd-kind-icon">BROWSER_<wbr>NOT_<wbr>SUPPORTED<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> =&nbsp;&quot;BROWSER_NOT_SUPPORTED&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Enums/OpenViduError.ts#L22">OpenViduInternal/Enums/OpenViduError.ts:22</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Enums/OpenViduError.ts#L27">OpenViduInternal/Enums/OpenViduError.ts:27</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Browser is not supported by OpenVidu.
+							Returned uppon unsuccessful <a href="../classes/session.html#connect">Session.connect</a></p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
-					<a name="camera_access_denied" class="tsd-anchor"></a>
-					<h3>CAMERA_<wbr>ACCESS_<wbr>DENIED</h3>
-					<div class="tsd-signature tsd-kind-icon">CAMERA_<wbr>ACCESS_<wbr>DENIED<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> =&nbsp;&quot;CAMERA_ACCESS_DENIED&quot;</span></div>
+					<a name="device_access_denied" class="tsd-anchor"></a>
+					<h3>DEVICE_<wbr>ACCESS_<wbr>DENIED</h3>
+					<div class="tsd-signature tsd-kind-icon">DEVICE_<wbr>ACCESS_<wbr>DENIED<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> =&nbsp;&quot;DEVICE_ACCESS_DENIED&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Enums/OpenViduError.ts#L23">OpenViduInternal/Enums/OpenViduError.ts:23</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Enums/OpenViduError.ts#L33">OpenViduInternal/Enums/OpenViduError.ts:33</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>The user hasn&#39;t granted permissions to the required input device when the browser asked for them.
+							Returned uppon unsuccessful <a href="../classes/openvidu.html#initpublisher">OpenVidu.initPublisher</a> or <a href="../classes/openvidu.html#getusermedia">OpenVidu.getUserMedia</a></p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
 					<a name="generic_error" class="tsd-anchor"></a>
@@ -128,9 +139,14 @@
 					<div class="tsd-signature tsd-kind-icon">GENERIC_<wbr>ERROR<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> =&nbsp;&quot;GENERIC_ERROR&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Enums/OpenViduError.ts#L35">OpenViduInternal/Enums/OpenViduError.ts:35</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Enums/OpenViduError.ts#L97">OpenViduInternal/Enums/OpenViduError.ts:97</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p><em>Not in use yet</em></p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
 					<a name="input_audio_device_not_found" class="tsd-anchor"></a>
@@ -138,9 +154,15 @@
 					<div class="tsd-signature tsd-kind-icon">INPUT_<wbr>AUDIO_<wbr>DEVICE_<wbr>NOT_<wbr>FOUND<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> =&nbsp;&quot;INPUT_AUDIO_DEVICE_NOT_FOUND&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Enums/OpenViduError.ts#L30">OpenViduInternal/Enums/OpenViduError.ts:30</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Enums/OpenViduError.ts#L69">OpenViduInternal/Enums/OpenViduError.ts:69</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>No audio input device found with the provided deviceId (property <a href="../interfaces/publisherproperties.html#audiosource">PublisherProperties.audioSource</a>)
+							Returned uppon unsuccessful <a href="../classes/openvidu.html#initpublisher">OpenVidu.initPublisher</a></p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
 					<a name="input_video_device_not_found" class="tsd-anchor"></a>
@@ -148,19 +170,15 @@
 					<div class="tsd-signature tsd-kind-icon">INPUT_<wbr>VIDEO_<wbr>DEVICE_<wbr>NOT_<wbr>FOUND<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> =&nbsp;&quot;INPUT_VIDEO_DEVICE_NOT_FOUND&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Enums/OpenViduError.ts#L29">OpenViduInternal/Enums/OpenViduError.ts:29</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Enums/OpenViduError.ts#L63">OpenViduInternal/Enums/OpenViduError.ts:63</a></li>
 						</ul>
 					</aside>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
-					<a name="microphone_access_denied" class="tsd-anchor"></a>
-					<h3>MICROPHONE_<wbr>ACCESS_<wbr>DENIED</h3>
-					<div class="tsd-signature tsd-kind-icon">MICROPHONE_<wbr>ACCESS_<wbr>DENIED<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> =&nbsp;&quot;MICROPHONE_ACCESS_DENIED&quot;</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Enums/OpenViduError.ts#L24">OpenViduInternal/Enums/OpenViduError.ts:24</a></li>
-						</ul>
-					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>No video input device found with the provided deviceId (property <a href="../interfaces/publisherproperties.html#videosource">PublisherProperties.videoSource</a>)
+							Returned uppon unsuccessful <a href="../classes/openvidu.html#initpublisher">OpenVidu.initPublisher</a></p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
 					<a name="no_input_source_set" class="tsd-anchor"></a>
@@ -168,9 +186,15 @@
 					<div class="tsd-signature tsd-kind-icon">NO_<wbr>INPUT_<wbr>SOURCE_<wbr>SET<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> =&nbsp;&quot;NO_INPUT_SOURCE_SET&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Enums/OpenViduError.ts#L31">OpenViduInternal/Enums/OpenViduError.ts:31</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Enums/OpenViduError.ts#L75">OpenViduInternal/Enums/OpenViduError.ts:75</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Method <a href="../classes/openvidu.html#initpublisher">OpenVidu.initPublisher</a> has been called with properties <code>videoSource</code> and <code>audioSource</code> of
+							<a href="../interfaces/publisherproperties.html">PublisherProperties</a> parameter both set to <em>false</em> or <em>null</em></p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
 					<a name="openvidu_not_connected" class="tsd-anchor"></a>
@@ -178,9 +202,14 @@
 					<div class="tsd-signature tsd-kind-icon">OPENVIDU_<wbr>NOT_<wbr>CONNECTED<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> =&nbsp;&quot;OPENVIDU_NOT_CONNECTED&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Enums/OpenViduError.ts#L34">OpenViduInternal/Enums/OpenViduError.ts:34</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Enums/OpenViduError.ts#L92">OpenViduInternal/Enums/OpenViduError.ts:92</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p><em>Not in use yet</em></p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
 					<a name="openvidu_permission_denied" class="tsd-anchor"></a>
@@ -188,9 +217,14 @@
 					<div class="tsd-signature tsd-kind-icon">OPENVIDU_<wbr>PERMISSION_<wbr>DENIED<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> =&nbsp;&quot;OPENVIDU_PERMISSION_DENIED&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Enums/OpenViduError.ts#L33">OpenViduInternal/Enums/OpenViduError.ts:33</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Enums/OpenViduError.ts#L87">OpenViduInternal/Enums/OpenViduError.ts:87</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p><em>Not in use yet</em></p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
 					<a name="publisher_properties_error" class="tsd-anchor"></a>
@@ -198,9 +232,16 @@
 					<div class="tsd-signature tsd-kind-icon">PUBLISHER_<wbr>PROPERTIES_<wbr>ERROR<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> =&nbsp;&quot;PUBLISHER_PROPERTIES_ERROR&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Enums/OpenViduError.ts#L32">OpenViduInternal/Enums/OpenViduError.ts:32</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Enums/OpenViduError.ts#L82">OpenViduInternal/Enums/OpenViduError.ts:82</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Some media property of <a href="../interfaces/publisherproperties.html">PublisherProperties</a> such as <code>frameRate</code> or <code>resolution</code> is not supported
+								by the input devices (whenever it is possible they are automatically adjusted to the most similar value).
+							Returned uppon unsuccessful <a href="../classes/openvidu.html#initpublisher">OpenVidu.initPublisher</a></p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
 					<a name="screen_capture_denied" class="tsd-anchor"></a>
@@ -208,9 +249,15 @@
 					<div class="tsd-signature tsd-kind-icon">SCREEN_<wbr>CAPTURE_<wbr>DENIED<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> =&nbsp;&quot;SCREEN_CAPTURE_DENIED&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Enums/OpenViduError.ts#L25">OpenViduInternal/Enums/OpenViduError.ts:25</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Enums/OpenViduError.ts#L39">OpenViduInternal/Enums/OpenViduError.ts:39</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>The user hasn&#39;t granted permissions to capture some desktop screen when the browser asked for them.
+							Returned uppon unsuccessful <a href="../classes/openvidu.html#initpublisher">OpenVidu.initPublisher</a> or <a href="../classes/openvidu.html#getusermedia">OpenVidu.getUserMedia</a></p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
 					<a name="screen_extension_disabled" class="tsd-anchor"></a>
@@ -218,9 +265,15 @@
 					<div class="tsd-signature tsd-kind-icon">SCREEN_<wbr>EXTENSION_<wbr>DISABLED<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> =&nbsp;&quot;SCREEN_EXTENSION_DISABLED&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Enums/OpenViduError.ts#L28">OpenViduInternal/Enums/OpenViduError.ts:28</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Enums/OpenViduError.ts#L57">OpenViduInternal/Enums/OpenViduError.ts:57</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Only for Chrome, the screen sharing extension is installed but is disabled
+							Returned uppon unsuccessful <a href="../classes/openvidu.html#initpublisher">OpenVidu.initPublisher</a></p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
 					<a name="screen_extension_not_installed" class="tsd-anchor"></a>
@@ -228,9 +281,15 @@
 					<div class="tsd-signature tsd-kind-icon">SCREEN_<wbr>EXTENSION_<wbr>NOT_<wbr>INSTALLED<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> =&nbsp;&quot;SCREEN_EXTENSION_NOT_INSTALLED&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Enums/OpenViduError.ts#L27">OpenViduInternal/Enums/OpenViduError.ts:27</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Enums/OpenViduError.ts#L51">OpenViduInternal/Enums/OpenViduError.ts:51</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Only for Chrome, there&#39;s no screen sharing extension installed
+							Returned uppon unsuccessful <a href="../classes/openvidu.html#initpublisher">OpenVidu.initPublisher</a></p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
 					<a name="screen_sharing_not_supported" class="tsd-anchor"></a>
@@ -238,9 +297,15 @@
 					<div class="tsd-signature tsd-kind-icon">SCREEN_<wbr>SHARING_<wbr>NOT_<wbr>SUPPORTED<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> =&nbsp;&quot;SCREEN_SHARING_NOT_SUPPORTED&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Enums/OpenViduError.ts#L26">OpenViduInternal/Enums/OpenViduError.ts:26</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Enums/OpenViduError.ts#L45">OpenViduInternal/Enums/OpenViduError.ts:45</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Browser does not support screen sharing.
+							Returned uppon unsuccessful <a href="../classes/openvidu.html#initpublisher">OpenVidu.initPublisher</a></p>
+						</div>
+					</div>
 				</section>
 			</section>
 		</div>
@@ -266,7 +331,7 @@
 								<a href="openviduerrorname.html#browser_not_supported" class="tsd-kind-icon">BROWSER_<wbr>NOT_<wbr>SUPPORTED</a>
 							</li>
 							<li class=" tsd-kind-enum-member tsd-parent-kind-enum">
-								<a href="openviduerrorname.html#camera_access_denied" class="tsd-kind-icon">CAMERA_<wbr>ACCESS_<wbr>DENIED</a>
+								<a href="openviduerrorname.html#device_access_denied" class="tsd-kind-icon">DEVICE_<wbr>ACCESS_<wbr>DENIED</a>
 							</li>
 							<li class=" tsd-kind-enum-member tsd-parent-kind-enum">
 								<a href="openviduerrorname.html#generic_error" class="tsd-kind-icon">GENERIC_<wbr>ERROR</a>
@@ -276,9 +341,6 @@
 							</li>
 							<li class=" tsd-kind-enum-member tsd-parent-kind-enum">
 								<a href="openviduerrorname.html#input_video_device_not_found" class="tsd-kind-icon">INPUT_<wbr>VIDEO_<wbr>DEVICE_<wbr>NOT_<wbr>FOUND</a>
-							</li>
-							<li class=" tsd-kind-enum-member tsd-parent-kind-enum">
-								<a href="openviduerrorname.html#microphone_access_denied" class="tsd-kind-icon">MICROPHONE_<wbr>ACCESS_<wbr>DENIED</a>
 							</li>
 							<li class=" tsd-kind-enum-member tsd-parent-kind-enum">
 								<a href="openviduerrorname.html#no_input_source_set" class="tsd-kind-icon">NO_<wbr>INPUT_<wbr>SOURCE_<wbr>SET</a>
@@ -354,6 +416,15 @@
 						<a href="../classes/streamevent.html" class="tsd-kind-icon">Stream<wbr>Event</a>
 					</li>
 					<li class=" tsd-kind-class">
+						<a href="../classes/streammanager.html" class="tsd-kind-icon">Stream<wbr>Manager</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="../classes/streammanagerevent.html" class="tsd-kind-icon">Stream<wbr>Manager<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="../classes/streampropertychangedevent.html" class="tsd-kind-icon">Stream<wbr>Property<wbr>Changed<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-class">
 						<a href="../classes/subscriber.html" class="tsd-kind-icon">Subscriber</a>
 					</li>
 					<li class=" tsd-kind-class">
@@ -373,6 +444,9 @@
 					</li>
 					<li class=" tsd-kind-interface">
 						<a href="../interfaces/signaloptions.html" class="tsd-kind-icon">Signal<wbr>Options</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="../interfaces/streammanagervideo.html" class="tsd-kind-icon">Stream<wbr>Manager<wbr>Video</a>
 					</li>
 					<li class=" tsd-kind-interface">
 						<a href="../interfaces/subscriberproperties.html" class="tsd-kind-icon">Subscriber<wbr>Properties</a>

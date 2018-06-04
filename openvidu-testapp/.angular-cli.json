@@ -20,7 +20,8 @@
       "prefix": "app",
       "styles": [
         "styles.css",
-        "openvidu-theme.scss"
+        "openvidu-theme.scss",
+        "material-icons.css"
       ],
       "scripts": [],
       "environmentSource": "environments/environment.ts",

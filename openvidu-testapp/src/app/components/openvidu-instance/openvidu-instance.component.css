@@ -18,11 +18,14 @@ mat-card.session-card {
 }
 
 .session-form mat-form-field {
-  width: 130px;
+  width: 110px;
 }
 
 .join-card {
   width: fit-content;
+  min-height: 215px;
+  padding-top: 20px;
+  padding-bottom: 10px;
 }
 
 .join-card mat-card-content {
@@ -31,8 +34,9 @@ mat-card.session-card {
 
 .inner-card {
   border: 1px solid #e1e1e1;
-  padding: 10px 15px 10px 15px;
+  padding: 10px 3px 10px 10px;
   background: #ffffff;
+  margin-top: 5px;
 }
 
 .inner-card h4 {
@@ -93,7 +97,7 @@ mat-radio-button {
 .event-list-div {
   display: inline-block;
   width: 130px;
-  height: 183.5px;
+  height: 180px;
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -133,6 +137,26 @@ mat-expansion-panel-header {
   padding: 0 7px 0 9px !important;
 }
 
-.secure-div mat-checkbox {
-  padding-right: 10px;
+.mat-icon-custom {
+  width: 24px;
+  height: 24px;
+  line-height: 17px;
+  margin-bottom: -4px;
+}
+
+.mat-icon-custom-ic {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+  line-height: 18px;
+}
+
+.session-btns-div {
+  margin-top: -14px;
+  margin-right: -14px;
+  margin-left: 5px;
+}
+
+.publisher-btns-div {
+  margin-top: -7px;
 }

@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, HostListener, ViewEncapsulation, ApplicationRef } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { OpenVidu, Session, Stream, Subscriber, StreamEvent } from 'openvidu-browser';
+import { OpenVidu, Session, Stream, Subscriber, StreamEvent, StreamManagerEvent } from 'openvidu-browser';
 
 import { OpenViduLayout } from '../openvidu-layout';
 
@@ -17,7 +17,7 @@ export class LayoutBestFitComponent implements OnInit, OnDestroy {
   secret: string;
 
   session: Session;
-  streams: Stream[] = [];
+  subscribers: Subscriber[] = [];
 
   layout: any;
   resizeTimeout;
@@ -51,13 +51,17 @@ export class LayoutBestFitComponent implements OnInit, OnDestroy {
     this.session = OV.initSession();
 
     this.session.on('streamCreated', (event: StreamEvent) => {
-      const subscriber: Subscriber = this.session.subscribe(event.stream, '');
-      this.addRemoteStream(event.stream);
+      const subscriber: Subscriber = this.session.subscribe(event.stream, undefined);
+      subscriber.on('streamPlaying', (e: StreamManagerEvent) => {
+        const video: HTMLVideoElement = subscriber.videos[0].video;
+        video.parentElement.parentElement.classList.remove('custom-class');
+        this.openviduLayout.updateLayout();
+      });
+      this.addSubscriber(subscriber);
     });
 
     this.session.on('streamDestroyed', (event: StreamEvent) => {
-      event.preventDefault();
-      this.deleteRemoteStream(event.stream);
+      this.deleteSubscriber(<Subscriber>event.stream.streamManager);
       this.openviduLayout.updateLayout();
     });
 
@@ -83,36 +87,29 @@ export class LayoutBestFitComponent implements OnInit, OnDestroy {
     });
   }
 
-  private addRemoteStream(stream: Stream): void {
-    this.streams.push(stream);
+  private addSubscriber(subscriber: Subscriber): void {
+    this.subscribers.push(subscriber);
     this.appRef.tick();
   }
 
-  private deleteRemoteStream(stream: Stream): void {
+  private deleteSubscriber(subscriber: Subscriber): void {
     let index = -1;
-    for (let i = 0; i < this.streams.length; i++) {
-      if (this.streams[i].streamId === stream.streamId) {
+    for (let i = 0; i < this.subscribers.length; i++) {
+      if (this.subscribers[i] === subscriber) {
         index = i;
         break;
       }
     }
-
     if (index > -1) {
-      this.streams.splice(index, 1);
+      this.subscribers.splice(index, 1);
     }
     this.appRef.tick();
   }
 
   leaveSession() {
     if (this.session) { this.session.disconnect(); };
-    this.streams = [];
+    this.subscribers = [];
     this.session = null;
-  }
-
-  onVideoPlaying(event) {
-    const video: HTMLVideoElement = event.target;
-    video.parentElement.parentElement.classList.remove('custom-class');
-    this.openviduLayout.updateLayout();
   }
 
 }

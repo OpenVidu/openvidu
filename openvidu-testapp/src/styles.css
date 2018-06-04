@@ -38,67 +38,6 @@ button {
   line-height: 15px !important;
 }
 
-.video-container video {
-  float: left;
-}
-
-.video-container div.data-node {
-  width: 120px;
-  height: 90px;
-  float: left;
-  position: relative;
-  margin-left: -120px;
-  margin-top: 0;
-}
-
-.video-container p {
-  margin-top: 0;
-  width: fit-content;
-  background: #ffffff;
-  padding-left: 5px;
-  padding-right: 5px;
-  color: #797979;
-  font-weight: 100;
-  font-size: 14px;
-  border-bottom-right-radius: 2px;
-}
-
-.video-container div.data-node .sub-btn {
-  outline: 0;
-  border: none;
-  background: rgba(255, 255, 255, 0.75);
-  cursor: pointer;
-  padding: 0;
-  margin-top: 40px;
-  border-top-right-radius: 2px;
-}
-
-.video-container div.data-node .sub-btn:hover {
-  color: #4d4d4d;
-}
-
-.video-container div.data-node .rec-btn {
-  float: right;
-  border-top-right-radius: 0;
-  border-top-left-radius: 2px;
-  color: #ac0000;
-}
-
-.video-container div.data-node .rec-btn:hover {
-  color: #ac000082;
-}
-
-.video-container div.data-node .rec-btn.publisher-rec-btn {
-  margin-top: 70px;
-}
-
-.video-container div.data-node .material-icons {
-  font-size: 17px;
-  width: 17px;
-  height: 17px;
-  line-height: 20px;
-}
-
 .mat-expansion-panel-body {
   font-size: 9.5px !important;
   padding: 0 9px 0px !important;
