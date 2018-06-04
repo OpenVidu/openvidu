@@ -12,6 +12,11 @@ RUN echo "deb http://ubuntu.openvidu.io/6.7.2 xenial kms6" | tee /etc/apt/source
 # Install Java
 RUN apt-get install -y openjdk-8-jdk
 
+# Install npm and http-server
+RUN apt-get -y install curl && apt-get update && curl -sL https://deb.nodesource.com/setup_8.x | bash -
+RUN apt-get install -y nodejs
+RUN npm install -g http-server
+
 # Configure Supervisor
 RUN mkdir -p /var/log/supervisor
 RUN apt-get install -y supervisor && rm -rf /var/lib/apt/lists/*
