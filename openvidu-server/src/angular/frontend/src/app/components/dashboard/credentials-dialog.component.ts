@@ -10,9 +10,9 @@ import { MatDialogRef } from '@angular/material';
             </h1>
             <form #dialogForm (ngSubmit)="testVideo()">
                 <mat-dialog-content>
-                    <mat-input-container>
+                    <mat-form-field>
                         <input matInput name="secret" type="password" [(ngModel)]="secret" required>
-                    </mat-input-container>
+                    </mat-form-field>
                 </mat-dialog-content>
                 <mat-dialog-actions>
                     <button mat-button mat-dialog-close>CANCEL</button>
