@@ -22,9 +22,15 @@ public class BashCoturnCredentialsService extends CoturnCredentialsService {
 			if (response.contains("turnadmin: not found")) {
 				// No coturn installed in the host machine
 				log.warn("No COTURN server is installed in the host machine");
+				log.warn("No COTURN server will be configured for clients");
 				this.coturnAvailable = false;
+			} else if (response.contains("Cannot open SQLite DB connection")) {
+				log.warn("COTURN SQLite database is not accesible at path " + this.coturnDatabaseLocation);
+				log.warn("No COTURN server will be configured for clients");
+				this.coturnAvailable = false;
+			} else {
+				log.info("COTURN sqlite database location: " + this.openviduConfig.getCoturnSqlite());
 			}
-			log.info("COTURN sqlite database location: " + this.openviduConfig.getCoturnSqlite());
 		} catch (IOException | InterruptedException e) {
 			e.printStackTrace();
 		}

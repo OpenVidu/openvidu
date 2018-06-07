@@ -207,8 +207,10 @@ public abstract class SessionManager {
 		if (this.coturnCredentialsService.isCoturnAvailable()) {
 			turnCredentials = coturnCredentialsService.createUser();
 			if (turnCredentials != null) {
-				token += "&turnUsername=" + turnCredentials.getUsername();
-				token += "&turnCredential=" + turnCredentials.getCredential();
+				if (turnCredentials != null) {
+					token += "&turnUsername=" + turnCredentials.getUsername();
+					token += "&turnCredential=" + turnCredentials.getCredential();
+				}
 			}
 		}
 		Token t = new Token(token, role, serverMetadata, turnCredentials);
@@ -282,8 +284,10 @@ public abstract class SessionManager {
 			TurnCredentials turnCredentials = null;
 			if (this.coturnCredentialsService.isCoturnAvailable()) {
 				turnCredentials = coturnCredentialsService.createUser();
-				token += "&turnUsername=" + turnCredentials.getUsername();
-				token += "&turnCredential=" + turnCredentials.getCredential();
+				if (turnCredentials != null) {
+					token += "&turnUsername=" + turnCredentials.getUsername();
+					token += "&turnCredential=" + turnCredentials.getCredential();
+				}
 			}
 			Token t = new Token(token, role, serverMetadata, turnCredentials);
 		
