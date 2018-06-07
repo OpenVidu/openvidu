@@ -40,29 +40,34 @@ import io.openvidu.java.client.SessionProperties;
 import io.openvidu.server.OpenViduServer;
 import io.openvidu.server.cdr.CallDetailRecord;
 import io.openvidu.server.config.OpenviduConfig;
+import io.openvidu.server.coturn.CoturnCredentialsService;
+import io.openvidu.server.coturn.TurnCredentials;
 import io.openvidu.server.recording.ComposedRecordingService;
 
 public abstract class SessionManager {
 
 	private static final Logger log = LoggerFactory.getLogger(SessionManager.class);
-	
+
 	@Autowired
 	protected SessionEventsHandler sessionEventsHandler;
-	
+
 	@Autowired
 	protected ComposedRecordingService recordingService;
-	
+
 	@Autowired
 	protected CallDetailRecord CDR;
-	
+
 	@Autowired
 	protected OpenviduConfig openviduConfig;
 
+	@Autowired
+	protected CoturnCredentialsService coturnCredentialsService;
+
 	protected ConcurrentMap<String, Session> sessions = new ConcurrentHashMap<>();
 	protected ConcurrentMap<String, SessionProperties> sessionProperties = new ConcurrentHashMap<>();
-	protected ConcurrentMap<String, ConcurrentHashMap<String, Token>> sessionidTokenTokenobj = new ConcurrentHashMap<>();
 	protected ConcurrentMap<String, ConcurrentHashMap<String, Participant>> sessionidParticipantpublicidParticipant = new ConcurrentHashMap<>();
 	protected ConcurrentMap<String, Boolean> insecureUsers = new ConcurrentHashMap<>();
+	public ConcurrentMap<String, ConcurrentHashMap<String, Token>> sessionidTokenTokenobj = new ConcurrentHashMap<>();
 
 	private volatile boolean closed = false;
 
@@ -92,16 +97,7 @@ public abstract class SessionManager {
 	 */
 	public void evictParticipant(String participantPrivateId, String reason) throws OpenViduException {
 	}
-	
-	/**
-	 * Returns whether a sessionId already exists or not
-	 *
-	 * @return boolean
-	 */
-	public boolean sessionIdExists(String sessionId) {
-		return sessionidTokenTokenobj.containsKey(sessionId);
-	}
-	
+
 	/**
 	 * Returns a Session given its id
 	 *
@@ -190,29 +186,117 @@ public abstract class SessionManager {
 	}
 
 	public void storeSessionId(String sessionId, SessionProperties sessionProperties) {
-		this.sessionidTokenTokenobj.put(sessionId, new ConcurrentHashMap<>());
-		this.sessionidParticipantpublicidParticipant.put(sessionId, new ConcurrentHashMap<>());
-		this.sessionProperties.put(sessionId, sessionProperties);
+		this.sessionidParticipantpublicidParticipant.putIfAbsent(sessionId, new ConcurrentHashMap<>());
+		this.sessionProperties.putIfAbsent(sessionId, sessionProperties);
 		showTokens();
 	}
 
 	public String newToken(String sessionId, ParticipantRole role, String serverMetadata) throws OpenViduException {
-		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null
-				&& this.sessionidTokenTokenobj.get(sessionId) != null) {
-			if (isMetadataFormatCorrect(serverMetadata)) {
-				String token = OpenViduServer.publicUrl + "?sessionId=" + sessionId + "&token=";
-				token += this.generateRandomChain();
-				this.sessionidTokenTokenobj.get(sessionId).put(token, new Token(token, role, serverMetadata));
-				showTokens();
-				return token;
-			} else {
+
+		/*if (!isMetadataFormatCorrect(serverMetadata)) {
+			log.error("Data invalid format. Max length allowed is 10000 chars");
+			throw new OpenViduException(Code.GENERIC_ERROR_CODE,
+					"Data invalid format. Max length allowed is 10000 chars");
+		}
+
+		String token = OpenViduServer.publicUrl;
+		token += "?sessionId=" + sessionId;
+		token += "&token=" + this.generateRandomChain();
+		token += "&role=" + role.name();
+		TurnCredentials turnCredentials = null;
+		if (this.coturnCredentialsService.isCoturnAvailable()) {
+			turnCredentials = coturnCredentialsService.createUser();
+			if (turnCredentials != null) {
+				token += "&turnUsername=" + turnCredentials.getUsername();
+				token += "&turnCredential=" + turnCredentials.getCredential();
+			}
+		}
+		Token t = new Token(token, role, serverMetadata, turnCredentials);
+
+		final String finalToken = token;
+
+		ConcurrentHashMap<String, Token> tok = this.sessionidTokenTokenobj.computeIfPresent(sessionId, (key, value) -> {
+			value.putIfAbsent(finalToken, t);
+			return value;
+		});
+	
+		if (tok == null) {
+			log.error("sessionId [" + sessionId + "] is not valid");
+			throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE, "sessionId [" + sessionId + "] not found");
+		} else {
+			return tok.get(token).getToken();
+		}*/
+
+		
+		/*if (!isMetadataFormatCorrect(serverMetadata)) {
+			log.error("Data invalid format. Max length allowed is 10000 chars");
+			throw new OpenViduException(Code.GENERIC_ERROR_CODE,
+					"Data invalid format. Max length allowed is 10000 chars");
+		}
+		
+		final String[] tokenArray = {""};
+		
+		try {
+			sessionidTokenTokenobj.computeIfPresent(sessionId, (key, value) -> {
+				String token = OpenViduServer.publicUrl;
+				token += "?sessionId=" + sessionId;
+				token += "&token=" + this.generateRandomChain();
+				token += "&role=" + role.name();
+				TurnCredentials turnCredentials = null;
+				if (this.coturnCredentialsService.isCoturnAvailable()) {
+					turnCredentials = coturnCredentialsService.createUser();
+					if (turnCredentials != null) {
+						token += "&turnUsername=" + turnCredentials.getUsername();
+						token += "&turnCredential=" + turnCredentials.getCredential();
+					}
+				}
+				Token t = new Token(token, role, serverMetadata, turnCredentials);
+				value.putIfAbsent(token, t);
+				tokenArray[0] = token;
+				throw new RuntimeException();
+			});
+		} catch(RuntimeException e) {
+			log.info("Token succesfully created");
+		}
+		
+		if (tokenArray[0].isEmpty()) {
+			log.error("sessionId [" + sessionId + "] is not valid");
+			throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE, "sessionId [" + sessionId + "] not found");
+		}
+		
+		return tokenArray[0];*/
+
+		ConcurrentHashMap<String, Token> map = this.sessionidTokenTokenobj.putIfAbsent(sessionId, new ConcurrentHashMap<>());
+		if (map != null) {
+		
+			if (!isMetadataFormatCorrect(serverMetadata)) {
+				log.error("Data invalid format. Max length allowed is 10000 chars");
 				throw new OpenViduException(Code.GENERIC_ERROR_CODE,
 						"Data invalid format. Max length allowed is 10000 chars");
 			}
+		
+			String token = OpenViduServer.publicUrl;
+			token += "?sessionId=" + sessionId;
+			token += "&token=" + this.generateRandomChain();
+			token += "&role=" + role.name();
+			TurnCredentials turnCredentials = null;
+			if (this.coturnCredentialsService.isCoturnAvailable()) {
+				turnCredentials = coturnCredentialsService.createUser();
+				token += "&turnUsername=" + turnCredentials.getUsername();
+				token += "&turnCredential=" + turnCredentials.getCredential();
+			}
+			Token t = new Token(token, role, serverMetadata, turnCredentials);
+		
+			map.putIfAbsent(token, t);
+			showTokens();
+			return token;
+		
 		} else {
-			System.out.println("Error: the sessionId [" + sessionId + "] is not valid");
-			throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE, "[" + sessionId + "] is not a valid sessionId");
+			this.sessionidTokenTokenobj.remove(sessionId);
+			log.error("sessionId [" + sessionId + "] is not valid");
+			throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE, "sessionId [" + sessionId + "] not found");
 		}
+
 	}
 
 	public boolean isTokenValidInSession(String token, String sessionId, String participanPrivatetId) {
@@ -225,7 +309,9 @@ public abstract class SessionManager {
 		} else {
 			this.sessionidParticipantpublicidParticipant.putIfAbsent(sessionId, new ConcurrentHashMap<>());
 			this.sessionidTokenTokenobj.putIfAbsent(sessionId, new ConcurrentHashMap<>());
-			this.sessionidTokenTokenobj.get(sessionId).putIfAbsent(token, new Token(token, ParticipantRole.PUBLISHER, ""));
+			this.sessionidTokenTokenobj.get(sessionId).putIfAbsent(token,
+					new Token(token, ParticipantRole.PUBLISHER, "", 
+							this.coturnCredentialsService.isCoturnAvailable() ? this.coturnCredentialsService.createUser() : null));
 			return true;
 		}
 	}
@@ -273,14 +359,12 @@ public abstract class SessionManager {
 			String clientMetadata) {
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
 			String participantPublicId = this.generateRandomChain();
-			ConcurrentHashMap<String, Participant> participantpublicidParticipant = this.sessionidParticipantpublicidParticipant
-					.get(sessionId);
-			while (participantpublicidParticipant.containsKey(participantPublicId)) {
-				// Avoid random 'participantpublicid' collisions
-				participantPublicId = this.generateRandomChain();
-			}
 			Participant p = new Participant(participantPrivatetId, participantPublicId, token, clientMetadata);
-			this.sessionidParticipantpublicidParticipant.get(sessionId).put(participantPublicId, p);
+			while (this.sessionidParticipantpublicidParticipant.get(sessionId).putIfAbsent(participantPublicId,
+					p) != null) {
+				participantPublicId = this.generateRandomChain();
+				p.setParticipantPublicId(participantPublicId);
+			}
 			return p;
 		} else {
 			throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE, sessionId);
@@ -322,7 +406,7 @@ public abstract class SessionManager {
 	public void showAllParticipants() {
 		log.info("<SESSIONID, PARTICIPANTS>: {}", this.sessionidParticipantpublicidParticipant.toString());
 	}
-	
+
 	public String generateRandomChain() {
 		return RandomStringUtils.randomAlphanumeric(16).toLowerCase();
 	}
@@ -393,11 +477,11 @@ public abstract class SessionManager {
 		sessionidTokenTokenobj.remove(sessionId);
 
 		log.warn("Session '{}' removed and closed", sessionId);
-		
+
 		if (recordingService.sessionIsBeingRecorded(session.getSessionId())) {
 			recordingService.stopRecording(session);
 		}
-		
+
 		return participants;
 	}
 

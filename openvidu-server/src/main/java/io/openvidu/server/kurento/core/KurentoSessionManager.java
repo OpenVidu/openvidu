@@ -104,7 +104,7 @@ public class KurentoSessionManager extends SessionManager {
 	}
 
 	@Override
-	public void leaveRoom(Participant participant, Integer transactionId, String reason) {
+	public synchronized void leaveRoom(Participant participant, Integer transactionId, String reason) {
 		log.debug("Request [LEAVE_ROOM] ({})", participant.getParticipantPublicId());
 
 		KurentoParticipant kParticipant = (KurentoParticipant) participant;
@@ -124,6 +124,11 @@ public class KurentoSessionManager extends SessionManager {
 		if (sessionidParticipantpublicidParticipant.get(sessionId) != null) {
 			Participant p = sessionidParticipantpublicidParticipant.get(sessionId)
 					.remove(participant.getParticipantPublicId());
+			
+			if (this.coturnCredentialsService.isCoturnAvailable()) {
+				this.coturnCredentialsService.deleteUser(p.getToken().getTurnCredentials().getUsername());
+			}
+
 			if (sessionidTokenTokenobj.get(sessionId) != null) {
 				sessionidTokenTokenobj.get(sessionId).remove(p.getToken().getToken());
 			}
@@ -147,7 +152,7 @@ public class KurentoSessionManager extends SessionManager {
 		try {
 			remainingParticipants = getParticipants(sessionId);
 		} catch (OpenViduException e) {
-			log.debug("Possible collision when closing the session '{}' (not found)");
+			log.info("Possible collision when closing the session '{}' (not found)", sessionId);
 			remainingParticipants = Collections.emptySet();
 		}
 

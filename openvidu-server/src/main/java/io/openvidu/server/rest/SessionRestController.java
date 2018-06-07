@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -107,6 +108,9 @@ public class SessionRestController {
 				} else {
 					builder = builder.mediaMode(MediaMode.ROUTED);
 				}
+				if (customSessionId != null && !customSessionId.isEmpty()) {
+					builder = builder.customSessionId(customSessionId);
+				}
 				builder = builder.defaultCustomLayout((defaultCustomLayout != null) ? defaultCustomLayout : "");
 
 			} catch (IllegalArgumentException e) {
@@ -120,17 +124,16 @@ public class SessionRestController {
 
 		String sessionId;
 		if (customSessionId != null && !customSessionId.isEmpty()) {
-			if (sessionManager.sessionIdExists(customSessionId)) {
+			if (sessionManager.sessionidTokenTokenobj.putIfAbsent(customSessionId, new ConcurrentHashMap<>()) != null) {
 				return new ResponseEntity<JSONObject>(HttpStatus.CONFLICT);
-			} else {
-				sessionId = customSessionId;
-				sessionManager.storeSessionId(sessionId, sessionProperties);
 			}
+			sessionId = customSessionId;
 		} else {
 			sessionId = sessionManager.generateRandomChain();
-			sessionManager.storeSessionId(sessionId, sessionProperties);
+			sessionManager.sessionidTokenTokenobj.putIfAbsent(sessionId, new ConcurrentHashMap<>());
 		}
 
+		sessionManager.storeSessionId(sessionId, sessionProperties);
 		JSONObject responseJson = new JSONObject();
 		responseJson.put("id", sessionId);
 		return new ResponseEntity<>(responseJson, HttpStatus.OK);
@@ -167,9 +170,7 @@ public class SessionRestController {
 			return this.generateErrorResponse("Role " + params.get("role") + " is not defined", "/api/tokens",
 					HttpStatus.BAD_REQUEST);
 		} catch (OpenViduException e) {
-			return this.generateErrorResponse(
-					"Metadata [" + params.get("data") + "] unexpected format. Max length allowed is 10000 chars",
-					"/api/tokens", HttpStatus.BAD_REQUEST);
+			return this.generateErrorResponse(e.getMessage(), "/api/tokens", HttpStatus.BAD_REQUEST);
 		}
 	}
 

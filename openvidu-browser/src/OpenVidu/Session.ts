@@ -934,12 +934,22 @@ export class Session implements EventDispatcher {
         this.sessionId = <string>url.searchParams.get('sessionId');
         const secret = url.searchParams.get('secret');
         const recorder = url.searchParams.get('recorder');
+        const turnUsername = url.searchParams.get('turnUsername');
+        const turnCredential = url.searchParams.get('turnCredential');
+        const role = url.searchParams.get('role');
 
         if (!!secret) {
             this.openvidu.secret = secret;
         }
         if (!!recorder) {
             this.openvidu.recorder = true;
+        }
+        if (!!turnUsername && !!turnCredential) {
+            const turnUrl = 'turn:' + url.hostname + ':3478';
+            this.openvidu.turnCredentials = { urls: [turnUrl], username: turnUsername, credential: turnCredential };
+        }
+        if (!!role) {
+            this.openvidu.role = role;
         }
 
         this.openvidu.wsUri = 'wss://' + url.host + '/openvidu';

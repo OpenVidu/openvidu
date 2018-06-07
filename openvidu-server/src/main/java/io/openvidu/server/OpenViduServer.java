@@ -47,6 +47,8 @@ import com.google.gson.JsonParser;
 import io.openvidu.server.cdr.CallDetailRecord;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.SessionManager;
+import io.openvidu.server.coturn.CoturnCredentialsService;
+import io.openvidu.server.coturn.CoturnCredentialsServiceFactory;
 import io.openvidu.server.kurento.AutodiscoveryKurentoClientProvider;
 import io.openvidu.server.kurento.KurentoClientProvider;
 import io.openvidu.server.kurento.core.KurentoSessionEventsHandler;
@@ -74,7 +76,7 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	public static final String KMSS_URIS_PROPERTY = "kms.uris";
 
 	public static String publicUrl;
-	
+
 	private String ngrokAppUrl = "";
 
 	@Bean
@@ -131,17 +133,22 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	public CallDetailRecord cdr() {
 		return new CallDetailRecord();
 	}
-	
+
 	@Bean
 	@ConditionalOnMissingBean
 	public OpenviduConfig openviduConfig() {
 		return new OpenviduConfig();
 	}
-	
+
 	@Bean
 	@ConditionalOnMissingBean
 	public ComposedRecordingService composedRecordingService() {
 		return new ComposedRecordingService();
+	}
+
+	@Bean
+	public CoturnCredentialsService coturnCredentialsService() {
+		return new CoturnCredentialsServiceFactory(openviduConfig()).getCoturnCredentialsService();
 	}
 
 	@Override
@@ -152,13 +159,13 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	private static String getContainerIp() throws IOException, InterruptedException {
 		return CommandExecutor.execCommand("/bin/sh", "-c", "hostname -i | awk '{print $1}'");
 	}
-	
+
 	public static void main(String[] args) throws Exception {
 		log.info("Using /dev/urandom for secure random generation");
 		System.setProperty("java.security.egd", "file:/dev/./urandom");
 		SpringApplication.run(OpenViduServer.class, args);
 	}
-	
+
 	@PostConstruct
     public void init() throws MalformedURLException, InterruptedException {
 		OpenviduConfig openviduConf = openviduConfig();
@@ -174,13 +181,13 @@ public class OpenViduServer implements JsonRpcConfigurer {
 				if (ngrokAppUrl.isEmpty()) {
 					ngrokAppUrl = "(No tunnel 'app' found in ngrok.yml)";
 				}
-				
+
 				// For frontend-only applications overriding openvidu-server dashboard...
 				String ngrokServerUrl = ngrok.getNgrokServerUrl();
 				if (ngrokServerUrl.isEmpty()) {
 					ngrokServerUrl = ngrok.getNgrokAppUrl();
 				}
-				
+
 				OpenViduServer.publicUrl = ngrokServerUrl.replaceFirst("https://", "wss://");
 				openviduConf.setFinalUrl(ngrokServerUrl);
 
@@ -288,7 +295,7 @@ public class OpenViduServer implements JsonRpcConfigurer {
 		}
 		log.info("OpenVidu Server using " + type + " URL: [" + OpenViduServer.publicUrl + "]");
 	}
-	
+
 	@EventListener(ApplicationReadyEvent.class)
 	public void printNgrokUrl() {
 	    if (!this.ngrokAppUrl.isEmpty()) {

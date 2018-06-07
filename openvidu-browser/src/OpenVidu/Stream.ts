@@ -359,6 +359,14 @@ export class Stream {
         this.speechEvent = undefined;
     }
 
+    /**
+     * @hidden
+     */
+    isLocal(): boolean {
+        // inbound options undefined and outbound options defined
+        return (!this.inboundStreamOpts && !!this.outboundStreamOpts);
+    }
+
 
     /* Private methods */
 
@@ -374,7 +382,7 @@ export class Stream {
                 videoStream: this.mediaStream,
                 mediaConstraints: userMediaConstraints,
                 onicecandidate: this.connection.sendIceCandidate.bind(this.connection),
-                iceServers: this.session.openvidu.advancedConfiguration.iceServers
+                iceServers: this.getIceServersConf()
             };
 
             const successCallback = (error, sdpOfferParam, wp) => {
@@ -444,7 +452,8 @@ export class Stream {
                 offerConstraints);
             const options = {
                 onicecandidate: this.connection.sendIceCandidate.bind(this.connection),
-                mediaConstraints: offerConstraints
+                mediaConstraints: offerConstraints,
+                iceServers: this.getIceServersConf()
             };
 
             const successCallback = (error, sdpOfferParam, wp) => {
@@ -525,12 +534,12 @@ export class Stream {
         }
     }
 
-    /**
-     * @hidden
-     */
-    isLocal(): boolean {
-        // inbound options undefined and outbound options defined
-        return (!this.inboundStreamOpts && !!this.outboundStreamOpts);
+    private getIceServersConf(): RTCIceServer[] | undefined {
+        return !!this.session.openvidu.advancedConfiguration.iceServers ?
+            this.session.openvidu.advancedConfiguration.iceServers :
+            !!this.session.openvidu.turnCredentials ?
+                [this.session.openvidu.turnCredentials] :
+                undefined;
     }
 
 }

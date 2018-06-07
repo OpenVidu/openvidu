@@ -59,6 +59,14 @@ export class OpenVidu {
   /**
    * @hidden
    */
+  turnCredentials: RTCIceServer;
+  /**
+   * @hidden
+   */
+  role: string;
+  /**
+   * @hidden
+   */
   advancedConfiguration: OpenViduAdvancedConfiguration = {};
 
   constructor() {
@@ -490,7 +498,7 @@ export class OpenVidu {
         onreconnected: this.reconnectedCallback.bind(this)
       },
       rpc: {
-        requestTimeout: 15000,
+        requestTimeout: 10000,
         participantJoined: this.session.onParticipantJoined.bind(this.session),
         participantPublished: this.session.onParticipantPublished.bind(this.session),
         participantUnpublished: this.session.onParticipantUnpublished.bind(this.session),

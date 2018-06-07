@@ -17,20 +17,24 @@
 
 package io.openvidu.server.core;
 
+import io.openvidu.server.coturn.TurnCredentials;
+
 public class Token {
 
 	String token;
 	ParticipantRole role;
 	String serverMetadata = "";
+	TurnCredentials turnCredentials;
 
 	public Token(String token) {
 		this.token = token;
 	}
 
-	public Token(String token, ParticipantRole role, String serverMetadata) {
+	public Token(String token, ParticipantRole role, String serverMetadata, TurnCredentials turnCredentials) {
 		this.token = token;
 		this.role = role;
 		this.serverMetadata = serverMetadata;
+		this.turnCredentials = turnCredentials;
 	}
 
 	public String getToken() {
@@ -40,9 +44,13 @@ public class Token {
 	public ParticipantRole getRole() {
 		return role;
 	}
-	
+
 	public String getServerMetadata() {
 		return serverMetadata;
+	}
+
+	public TurnCredentials getTurnCredentials() {
+		return turnCredentials;
 	}
 
 	@Override

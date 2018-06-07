@@ -1,52 +1,69 @@
-{"properties": [
-  {
-    "name": "kms.uris",
-    "type": "java.lang.String",
-    "description": "KMS URL's to which OpenVidu Server will try to connect. They are tested in order until a valid one is found"
-  },
-  {
-    "name": "openvidu.secret",
-    "type": "java.lang.String",
-    "description": "Secret used to connect to OpenVidu Server. This value is required when using the REST API or any server client, as well as when connecting to openvidu-server dashboard"
-  },
-  {
-    "name": "openvidu.publicurl",
-    "type": "java.lang.String",
-    "description": "URL to connect clients to OpenVidu Server. This must be the full IP of your OpenVidu Server, including protocol, host and port (for example: https://my.openvidu.server.ip:4443). If no port argument is provided, 'server.port' param will be appended to it"
-  },
-  {
-    "name": "openvidu.cdr",
-    "type": "java.lang.Boolean",
-    "description": "Whether to enable Call Detail Record or not"
-  },
-  {
-    "name": "openvidu.recording",
-    "type": "java.lang.Boolean",
-    "description": "Whether to start OpenVidu Server with recording module service available or not (a Docker image will be downloaded during the first execution). Apart from setting this param to true, it is also necessary to explicitly configure sessions to be recorded"
-  },
-  {
-    "name": "openvidu.recording.path",
-    "type": "java.lang.String",
-    "description": "Where to store the recorded video files"
-  },
-  {
-    "name": "openvidu.recording.public-access",
-    "type": "java.lang.Boolean",
-    "description": "'true' to allow public access to the video files specified in 'openviu.recording.path'. 'false' to only allow access to authenticated users"
-  },
-  {
-    "name": "openvidu.recording.notification",
-    "type": "java.lang.String",
-    "description": "Which users will receive a notfication (client events 'recordingStarted' and 'recordingStopped') when recording starts and stops: 'none', 'publisher_moderator', 'all'"
-  },
-  {
-    "name": "openvidu.recording.custom-layout",
-    "type": "java.lang.String",
-    "description": "Where should OpenVidu Server look for custom recording layouts"
-  },
-  {
-    "name": "openvidu.recording.version",
-    "type": "java.lang.String",
-    "description": "Tag for openvidu/openvidu-recording Docker image"
-  }
-]}
+{
+	"properties": [
+		{
+			"name": "kms.uris",
+			"type": "java.lang.String",
+			"description": "KMS URL's to which OpenVidu Server will try to connect. They are tested in order until a valid one is found",
+			"defaultValue": "[\"ws://localhost:8888/kurento\"]"
+		},
+		{
+			"name": "openvidu.secret",
+			"type": "java.lang.String",
+			"description": "Secret used to connect to OpenVidu Server. This value is required when using the REST API or any server client, as well as when connecting to openvidu-server dashboard",
+			"defaultValue": "MY_SECRET"
+		},
+		{
+			"name": "openvidu.publicurl",
+			"type": "java.lang.String",
+			"description": "URL to connect clients to OpenVidu Server. This must be the full IP of your OpenVidu Server, including protocol, host and port (for example: https://my.openvidu.server.ip:4443). If no port argument is provided, 'server.port' param will be appended to it",
+			"defaultValue": "local"
+		},
+		{
+			"name": "openvidu.cdr",
+			"type": "java.lang.Boolean",
+			"description": "Whether to enable Call Detail Record or not",
+			"defaultValue": false
+		},
+		{
+			"name": "openvidu.recording",
+			"type": "java.lang.Boolean",
+			"description": "Whether to start OpenVidu Server with recording module service available or not (a Docker image will be downloaded during the first execution). Apart from setting this param to true, it is also necessary to explicitly configure sessions to be recorded",
+			"defaultValue": false
+		},
+		{
+			"name": "openvidu.recording.path",
+			"type": "java.lang.String",
+			"description": "Where to store the recorded video files",
+			"defaultValue": "/opt/openvidu/recordings"
+		},
+		{
+			"name": "openvidu.recording.public-access",
+			"type": "java.lang.Boolean",
+			"description": "'true' to allow public access to the video files specified in 'openviu.recording.path'. 'false' to only allow access to authenticated users",
+			"defaultValue": false
+		},
+		{
+			"name": "openvidu.recording.notification",
+			"type": "java.lang.String",
+			"description": "Which users will receive a notfication (client events 'recordingStarted' and 'recordingStopped') when recording starts and stops: 'none', 'publisher_moderator', 'all'",
+			"defaultValue": "publisher_moderator"
+		},
+		{
+			"name": "openvidu.recording.custom-layout",
+			"type": "java.lang.String",
+			"description": "Where should OpenVidu Server look for custom recording layouts",
+			"defaultValue": "/opt/openvidu/custom-layout"
+		},
+		{
+			"name": "openvidu.recording.version",
+			"type": "java.lang.String",
+			"description": "Tag for openvidu/openvidu-recording Docker image"
+		},
+		{
+			"name": "coturn.sqlite",
+			"type": "java.lang.String",
+			"description": "Path to COTURN sqlite database to add and remove TURN user credentials",
+			"defaultValue": "/opt/openvidu/coturn/turndb"
+		}
+	]
+}

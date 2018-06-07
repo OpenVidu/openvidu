@@ -58,6 +58,9 @@ public class OpenviduConfig {
 	@Value("#{'${spring.profiles.active:}'.length() > 0 ? '${spring.profiles.active:}'.split(',') : \"default\"}")
 	private String springProfile;
 
+	@Value("${coturn.sqlite}")
+	private String coturnSqlite;
+
 	private String finalUrl;
 
 	public String getOpenViduPublicUrl() {
@@ -118,6 +121,10 @@ public class OpenviduConfig {
 
 	public String getSpringProfile() {
 		return springProfile;
+	}
+	
+	public String getCoturnSqlite() {
+		return coturnSqlite;
 	}
 
 	public ParticipantRole[] getRolesFromRecordingNotification() {
