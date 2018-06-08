@@ -1,0 +1,55 @@
+<div>
+    <h2 mat-dialog-title>Session properties</h2>
+    <mat-dialog-content>
+        <mat-form-field>
+            <mat-select placeholder="MediaMode" [(ngModel)]="sessionProperties.mediaMode">
+                <mat-option *ngFor="let enumerator of enumToArray(mediaMode)" [value]="enumerator">
+                    {{ enumerator }}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+        <mat-form-field>
+            <mat-select placeholder="RecordingMode" [(ngModel)]="sessionProperties.recordingMode">
+                <mat-option *ngFor="let enumerator of enumToArray(recordingMode)" [value]="enumerator">
+                    {{ enumerator }}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+        <mat-form-field>
+            <mat-select placeholder="DefaultRecordingLayout" [(ngModel)]="sessionProperties.defaultRecordingLayout">
+                <mat-option *ngFor="let enumerator of enumToArray(defaultRecordingLayout)" [value]="enumerator">
+                    {{ enumerator }}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+        <mat-form-field *ngIf="this.sessionProperties.defaultRecordingLayout === 'CUSTOM'">
+            <input matInput placeholder="DefaultCustomLayout" [(ngModel)]="sessionProperties.defaultCustomLayout">
+        </mat-form-field>
+        <mat-form-field>
+            <input matInput placeholder="CustomSessionId" [(ngModel)]="sessionProperties.customSessionId">
+        </mat-form-field>
+        <label id="turn-conf-label">Turn configuration</label>
+        <div [class.not-manual]="turnConf !== 'manual'">
+            <mat-radio-group name="Turn configuration" [(ngModel)]="turnConf">
+                <mat-radio-button value="auto">Auto</mat-radio-button>
+                <mat-radio-button value="freeice">Freeice</mat-radio-button>
+                <mat-radio-button value="manual">Manual</mat-radio-button>
+            </mat-radio-group>
+            <div *ngIf="turnConf === 'manual'" id="manual-turn-div">
+                <mat-form-field style="width: 100%">
+                    <input matInput placeholder="url" [(ngModel)]="manualTurnConf.urls[0]">
+                </mat-form-field>
+                <mat-form-field style="width: 49%; padding-right: 2px">
+                    <input matInput placeholder="user" [(ngModel)]="manualTurnConf.username">
+                </mat-form-field>
+                <mat-form-field style="width: 49%; padding-left: 2px">
+                    <input matInput placeholder="pass" [(ngModel)]="manualTurnConf.credential">
+                </mat-form-field>
+            </div>
+        </div>
+    </mat-dialog-content>
+    <mat-dialog-actions>
+        <button mat-button [mat-dialog-close]="undefined">CANCEL</button>
+        <button mat-button [mat-dialog-close]="{sessionProperties: sessionProperties, turnConf: turnConf, manualTurnConf: manualTurnConf}">SAVE</button>
+    </mat-dialog-actions>
+</div>

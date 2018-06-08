@@ -535,11 +535,36 @@ export class Stream {
     }
 
     private getIceServersConf(): RTCIceServer[] | undefined {
-        return !!this.session.openvidu.advancedConfiguration.iceServers ?
-            this.session.openvidu.advancedConfiguration.iceServers :
-            !!this.session.openvidu.turnCredentials ?
-                [this.session.openvidu.turnCredentials] :
-                undefined;
+        let returnValue;
+        if (!!this.session.openvidu.advancedConfiguration.iceServers) {
+            returnValue = this.session.openvidu.advancedConfiguration.iceServers === 'freeice' ?
+                undefined :
+                this.session.openvidu.advancedConfiguration.iceServers;
+        } else if (this.session.openvidu.turnCredentials) {
+            returnValue = [this.session.openvidu.turnCredentials];
+        } else {
+            returnValue = undefined;
+        }
+        return returnValue;
     }
+
+    // tslint:disable:no-string-literal
+    /*getSelectedIceCandidate() {
+        return new Promise((resolve, reject) => {
+            const connectionDetails = {};
+            this.getRTCPeerConnection().getStats(null).then(stats => {
+                stats.result().forEach((report) => {
+                    const selectedCandidatePair = report[Object.keys(report).filter(key => { return report[key].selected; })[0]]
+                        , localICE = stats[selectedCandidatePair.localCandidateId]
+                        , remoteICE = stats[selectedCandidatePair.remoteCandidateId];
+                    connectionDetails['LocalAddress'] = [localICE.ipAddress, localICE.portNumber].join(':');
+                    connectionDetails['RemoteAddress'] = [remoteICE.ipAddress, remoteICE.portNumber].join(':');
+                    connectionDetails['LocalCandidateType'] = localICE.candidateType;
+                    connectionDetails['RemoteCandidateType'] = remoteICE.candidateType;
+                    resolve(connectionDetails);
+                });
+            });
+        });
+    }*/
 
 }

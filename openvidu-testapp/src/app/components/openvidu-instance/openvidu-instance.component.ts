@@ -112,6 +112,9 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     publisherStopSpeaking: false
   };
 
+  turnConf = 'auto';
+  manualTurnConf: RTCIceServer = { urls: [] };
+
   events: OpenViduEvent[] = [];
 
   openviduError: any;
@@ -182,6 +185,12 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   private joinSessionShared(token): void {
 
     this.OV = new OpenVidu();
+
+    if (this.turnConf === 'freeice') {
+      this.OV.setAdvancedConfiguration({ iceServers: 'freeice' });
+    } else if (this.turnConf === 'manual') {
+      this.OV.setAdvancedConfiguration({ iceServers: [this.manualTurnConf] });
+    }
 
     this.session = this.OV.initSession();
 
@@ -471,16 +480,22 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   openSessionPropertiesDialog() {
     this.sessionProperties.customSessionId = this.sessionName;
     const dialogRef = this.dialog.open(SessionPropertiesDialogComponent, {
-      data: this.sessionProperties,
-      width: '235px'
+      data: {
+        sessionProperties: this.sessionProperties,
+        turnConf: this.turnConf,
+        manualTurnConf: this.manualTurnConf
+      },
+      width: '280px'
     });
 
-    dialogRef.afterClosed().subscribe((result: SessionPropertiesAPI) => {
+    dialogRef.afterClosed().subscribe((result) => {
       if (!!result) {
-        this.sessionProperties = result;
+        this.sessionProperties = result.sessionProperties;
         if (!!this.sessionProperties.customSessionId) {
           this.sessionName = this.sessionProperties.customSessionId;
         }
+        this.turnConf = result.turnConf;
+        this.manualTurnConf = result.manualTurnConf;
       }
       document.getElementById('session-settings-btn-' + this.index).classList.remove('cdk-program-focused');
     });

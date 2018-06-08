@@ -20,7 +20,7 @@ export interface OpenViduAdvancedConfiguration {
     /**
      * Array of [RTCIceServer](https://developer.mozilla.org/en-US/docs/Web/API/RTCIceServer) to be used by OpenVidu Browser instead of the default free ice server array (got from [freeice](https://github.com/DamonOehlman/freeice) library)
      */
-    iceServers?: RTCIceServer[];
+    iceServers?: RTCIceServer[] | string;
 
     /**
      * URL to a custom screen share extension for Chrome (always based on ours: [openvidu-screen-sharing-chrome-extension](https://github.com/OpenVidu/openvidu-screen-sharing-chrome-extension)) to be used instead of the default one.
