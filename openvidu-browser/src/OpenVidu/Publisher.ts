@@ -21,8 +21,6 @@ import { Stream } from './Stream';
 import { StreamManager } from './StreamManager';
 import { EventDispatcher } from '../OpenViduInternal/Interfaces/Public/EventDispatcher';
 import { PublisherProperties } from '../OpenViduInternal/Interfaces/Public/PublisherProperties';
-import { InboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/InboundStreamOptions';
-import { OutboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/OutboundStreamOptions';
 import { Event } from '../OpenViduInternal/Events/Event';
 import { StreamEvent } from '../OpenViduInternal/Events/StreamEvent';
 import { VideoElementEvent } from '../OpenViduInternal/Events/VideoElementEvent';
@@ -74,7 +72,9 @@ export class Publisher extends StreamManager {
      * @param value `true` to publish the audio stream, `false` to unpublish it
      */
     publishAudio(value: boolean): void {
-        this.stream.getWebRtcPeer().audioEnabled = value;
+        this.stream.getMediaStream().getAudioTracks().forEach((track) => {
+            track.enabled = value;
+        });
         console.info("'Publisher' has " + (value ? 'published' : 'unpublished') + ' its audio stream');
     }
 
@@ -84,7 +84,9 @@ export class Publisher extends StreamManager {
      * @param value `true` to publish the video stream, `false` to unpublish it
      */
     publishVideo(value: boolean): void {
-        this.stream.getWebRtcPeer().videoEnabled = value;
+        this.stream.getMediaStream().getVideoTracks().forEach((track) => {
+            track.enabled = value;
+        });
         console.info("'Publisher' has " + (value ? 'published' : 'unpublished') + ' its video stream');
     }
 

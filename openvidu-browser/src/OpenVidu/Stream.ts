@@ -20,13 +20,12 @@ import { Session } from './Session';
 import { StreamManager } from './StreamManager';
 import { InboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/InboundStreamOptions';
 import { OutboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/OutboundStreamOptions';
+import { WebRtcPeer, WebRtcPeerSendonly, WebRtcPeerRecvonly, WebRtcPeerSendrecv } from '../OpenViduInternal/WebRtcPeer';
 import { WebRtcStats } from '../OpenViduInternal/WebRtcStats/WebRtcStats';
 import { PublisherSpeakingEvent } from '../OpenViduInternal/Events/PublisherSpeakingEvent';
-import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
 
 import EventEmitter = require('wolfy87-eventemitter');
-
-import * as kurentoUtils from '../OpenViduInternal/KurentoUtils/kurento-utils-js';
+import hark = require('hark');
 
 
 /**
@@ -77,7 +76,7 @@ export class Stream {
      */
     ee = new EventEmitter();
 
-    private webRtcPeer: any;
+    private webRtcPeer: WebRtcPeer;
     private mediaStream: MediaStream;
     private webRtcStats: WebRtcStats;
 
@@ -178,7 +177,7 @@ export class Stream {
     /**
      * @hidden
      */
-    getWebRtcPeer(): any {
+    getWebRtcPeer(): WebRtcPeer {
         return this.webRtcPeer;
     }
 
@@ -186,7 +185,7 @@ export class Stream {
      * @hidden
      */
     getRTCPeerConnection(): RTCPeerConnection {
-        return this.webRtcPeer.peerConnection;
+        return this.webRtcPeer.pc;
     }
 
     /**
@@ -319,7 +318,7 @@ export class Stream {
             harkOptions.interval = (typeof harkOptions.interval === 'number') ? harkOptions.interval : 50;
             harkOptions.threshold = (typeof harkOptions.threshold === 'number') ? harkOptions.threshold : -50;
 
-            this.speechEvent = kurentoUtils.WebRtcPeer.hark(this.mediaStream, harkOptions);
+            this.speechEvent = hark(this.mediaStream, harkOptions);
         }
     }
 
@@ -367,6 +366,16 @@ export class Stream {
         return (!this.inboundStreamOpts && !!this.outboundStreamOpts);
     }
 
+    /**
+     * @hidden
+     */
+    getSelectedIceCandidate(): Promise<any> {
+        return new Promise((resolve, reject) => {
+            this.webRtcStats.getSelectedIceCandidateInfo()
+                .then(report => resolve(report))
+                .catch(error => reject(error));
+        });
+    }
 
     /* Private methods */
 
@@ -378,18 +387,15 @@ export class Stream {
                 video: this.isSendVideo()
             };
 
-            const options: any = {
-                videoStream: this.mediaStream,
+            const options = {
+                mediaStream: this.mediaStream,
                 mediaConstraints: userMediaConstraints,
                 onicecandidate: this.connection.sendIceCandidate.bind(this.connection),
-                iceServers: this.getIceServersConf()
+                iceServers: this.getIceServersConf(),
+                simulcast: false
             };
 
-            const successCallback = (error, sdpOfferParam, wp) => {
-                if (error) {
-                    reject(new Error('(publish) SDP offer error: ' + JSON.stringify(error)));
-                }
-
+            const successCallback = (sdpOfferParam) => {
                 console.debug('Sending SDP offer to publish as '
                     + this.streamId, sdpOfferParam);
 
@@ -424,20 +430,15 @@ export class Stream {
             };
 
             if (this.displayMyRemote()) {
-                this.webRtcPeer = kurentoUtils.WebRtcPeer.WebRtcPeerSendrecv(options, err => {
-                    if (err) {
-                        reject(err);
-                    }
-                    this.webRtcPeer.generateOffer(successCallback);
-                });
+                this.webRtcPeer = new WebRtcPeerSendrecv(options);
             } else {
-                this.webRtcPeer = kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(options, error => {
-                    if (error) {
-                        reject(error);
-                    }
-                    this.webRtcPeer.generateOffer(successCallback);
-                });
+                this.webRtcPeer = new WebRtcPeerSendonly(options);
             }
+            this.webRtcPeer.generateOffer().then(offer => {
+                successCallback(offer);
+            }).catch(error => {
+                reject(new Error('(publish) SDP offer error: ' + JSON.stringify(error)));
+            });
         });
     }
 
@@ -453,14 +454,11 @@ export class Stream {
             const options = {
                 onicecandidate: this.connection.sendIceCandidate.bind(this.connection),
                 mediaConstraints: offerConstraints,
-                iceServers: this.getIceServersConf()
+                iceServers: this.getIceServersConf(),
+                simulcast: false
             };
 
-            const successCallback = (error, sdpOfferParam, wp) => {
-
-                if (error) {
-                    reject(new Error('(subscribe) SDP offer error: ' + JSON.stringify(error)));
-                }
+            const successCallback = (sdpOfferParam) => {
                 console.debug('Sending SDP offer to subscribe to '
                     + this.streamId, sdpOfferParam);
                 this.session.openvidu.sendRequest('receiveVideoFrom', {
@@ -479,27 +477,28 @@ export class Stream {
                 });
             };
 
-            this.webRtcPeer = kurentoUtils.WebRtcPeer.WebRtcPeerRecvonly(options, error => {
-                if (error) {
-                    reject(error);
-                }
-                this.webRtcPeer.generateOffer(successCallback);
-            });
+            this.webRtcPeer = new WebRtcPeerRecvonly(options);
+            this.webRtcPeer.generateOffer()
+                .then(offer => {
+                    successCallback(offer);
+                })
+                .catch(error => {
+                    reject(new Error('(subscribe) SDP offer error: ' + JSON.stringify(error)));
+                });
         });
     }
 
     private processSdpAnswer(sdpAnswer): Promise<any> {
         return new Promise((resolve, reject) => {
-            const answer = new RTCSessionDescription({
+            const answer: RTCSessionDescriptionInit = {
                 type: 'answer',
                 sdp: sdpAnswer,
-            });
+            };
 
             console.debug(this.streamId + ': set peer connection with recvd SDP answer', sdpAnswer);
 
-            const streamId = this.streamId;
-            const peerConnection = this.webRtcPeer.peerConnection;
-            peerConnection.setRemoteDescription(answer, () => {
+            const peerConnection = this.webRtcPeer.pc;
+            peerConnection.setRemoteDescription(answer).then(() => {
 
                 // Update remote MediaStream object except when local stream
                 if (!this.isLocal() || this.displayMyRemote()) {
@@ -517,7 +516,7 @@ export class Stream {
                 this.initWebRtcStats();
                 resolve();
 
-            }, error => {
+            }).catch(error => {
                 reject(new Error(this.streamId + ': Error setting SDP to the peer connection: ' + JSON.stringify(error)));
             });
         });
@@ -547,24 +546,5 @@ export class Stream {
         }
         return returnValue;
     }
-
-    // tslint:disable:no-string-literal
-    /*getSelectedIceCandidate() {
-        return new Promise((resolve, reject) => {
-            const connectionDetails = {};
-            this.getRTCPeerConnection().getStats(null).then(stats => {
-                stats.result().forEach((report) => {
-                    const selectedCandidatePair = report[Object.keys(report).filter(key => { return report[key].selected; })[0]]
-                        , localICE = stats[selectedCandidatePair.localCandidateId]
-                        , remoteICE = stats[selectedCandidatePair.remoteCandidateId];
-                    connectionDetails['LocalAddress'] = [localICE.ipAddress, localICE.portNumber].join(':');
-                    connectionDetails['RemoteAddress'] = [remoteICE.ipAddress, remoteICE.portNumber].join(':');
-                    connectionDetails['LocalCandidateType'] = localICE.candidateType;
-                    connectionDetails['RemoteCandidateType'] = remoteICE.candidateType;
-                    resolve(connectionDetails);
-                });
-            });
-        });
-    }*/
 
 }

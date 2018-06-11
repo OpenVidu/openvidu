@@ -693,9 +693,13 @@ export class Session implements EventDispatcher {
         const candidate = {
             candidate: msg.candidate,
             sdpMid: msg.sdpMid,
-            sdpMLineIndex: msg.sdpMLineIndex
+            sdpMLineIndex: msg.sdpMLineIndex,
+            toJSON: () => {
+                return { candidate: msg.candidate };
+            }
         };
-        this.getConnection(msg.endpointName, 'Connection not found for endpoint ' + msg.endpointName + '. Ice candidate will be ignored: ' + candidate)
+
+        /*this.getConnection(msg.endpointName, 'Connection not found for endpoint ' + msg.endpointName + '. Ice candidate will be ignored: ' + candidate)
 
             .then(connection => {
                 const stream = connection.stream;
@@ -704,6 +708,18 @@ export class Session implements EventDispatcher {
                         console.error('Error adding candidate for ' + stream.streamId
                             + ' stream of endpoint ' + msg.endpointName + ': ' + error);
                     }
+                });
+            })
+            .catch(openViduError => {
+                console.error(openViduError);
+            });*/
+
+        this.getConnection(msg.endpointName, 'Connection not found for endpoint ' + msg.endpointName + '. Ice candidate will be ignored: ' + candidate)
+            .then(connection => {
+                const stream = connection.stream;
+                stream.getWebRtcPeer().addIceCandidate(candidate).catch(error => {
+                    console.error('Error adding candidate for ' + stream.streamId
+                        + ' stream of endpoint ' + msg.endpointName + ': ' + error);
                 });
             })
             .catch(openViduError => {
@@ -947,6 +963,9 @@ export class Session implements EventDispatcher {
         if (!!turnUsername && !!turnCredential) {
             const turnUrl = 'turn:' + url.hostname + ':3478';
             this.openvidu.turnCredentials = { urls: [turnUrl], username: turnUsername, credential: turnCredential };
+            console.warn(turnUrl);
+            console.warn(turnUsername);
+            console.warn(turnCredential);
         }
         if (!!role) {
             this.openvidu.role = role;
