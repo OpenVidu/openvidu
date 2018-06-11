@@ -20,7 +20,7 @@ import { Session } from './Session';
 import { StreamManager } from './StreamManager';
 import { InboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/InboundStreamOptions';
 import { OutboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/OutboundStreamOptions';
-import { WebRtcPeer, WebRtcPeerSendonly, WebRtcPeerRecvonly, WebRtcPeerSendrecv } from '../OpenViduInternal/WebRtcPeer';
+import { WebRtcPeer, WebRtcPeerSendonly, WebRtcPeerRecvonly, WebRtcPeerSendrecv } from '../OpenViduInternal/WebRtcPeer/WebRtcPeer';
 import { WebRtcStats } from '../OpenViduInternal/WebRtcStats/WebRtcStats';
 import { PublisherSpeakingEvent } from '../OpenViduInternal/Events/PublisherSpeakingEvent';
 
