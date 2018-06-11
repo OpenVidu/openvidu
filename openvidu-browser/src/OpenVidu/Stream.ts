@@ -410,15 +410,14 @@ export class Stream {
                     if (error) {
                         reject('Error on publishVideo: ' + JSON.stringify(error));
                     } else {
-                        this.processSdpAnswer(response.sdpAnswer)
+                        this.webRtcPeer.processAnswer(response.sdpAnswer)
                             .then(() => {
                                 this.isLocalStreamPublished = true;
                                 if (this.displayMyRemote()) {
-                                    // If remote now we can set the srcObject value of video elements
-                                    // 'streamPlaying' event will be triggered
-                                    this.updateMediaStreamInVideos();
+                                    this.remotePeerSuccesfullyEstablished();
                                 }
                                 this.ee.emitEvent('stream-created-by-publisher');
+                                this.initWebRtcStats();
                                 resolve();
                             })
                             .catch(error => {
@@ -468,7 +467,9 @@ export class Stream {
                     if (error) {
                         reject(new Error('Error on recvVideoFrom: ' + JSON.stringify(error)));
                     } else {
-                        this.processSdpAnswer(response.sdpAnswer).then(() => {
+                        this.webRtcPeer.processAnswer(response.sdpAnswer).then(() => {
+                            this.remotePeerSuccesfullyEstablished();
+                            this.initWebRtcStats();
                             resolve();
                         }).catch(error => {
                             reject(error);
@@ -488,38 +489,16 @@ export class Stream {
         });
     }
 
-    private processSdpAnswer(sdpAnswer): Promise<any> {
-        return new Promise((resolve, reject) => {
-            const answer: RTCSessionDescriptionInit = {
-                type: 'answer',
-                sdp: sdpAnswer,
-            };
+    private remotePeerSuccesfullyEstablished(): void {
+        this.mediaStream = this.webRtcPeer.pc.getRemoteStreams()[0];
+        console.debug('Peer remote stream', this.mediaStream);
 
-            console.debug(this.streamId + ': set peer connection with recvd SDP answer', sdpAnswer);
-
-            const peerConnection = this.webRtcPeer.pc;
-            peerConnection.setRemoteDescription(answer).then(() => {
-
-                // Update remote MediaStream object except when local stream
-                if (!this.isLocal() || this.displayMyRemote()) {
-                    this.mediaStream = peerConnection.getRemoteStreams()[0];
-                    console.debug('Peer remote stream', this.mediaStream);
-
-                    if (!!this.mediaStream) {
-                        this.ee.emitEvent('mediastream-updated');
-                        if (!!this.mediaStream.getAudioTracks()[0] && this.session.speakingEventsEnabled) {
-                            this.enableSpeakingEvents();
-                        }
-                    }
-                }
-
-                this.initWebRtcStats();
-                resolve();
-
-            }).catch(error => {
-                reject(new Error(this.streamId + ': Error setting SDP to the peer connection: ' + JSON.stringify(error)));
-            });
-        });
+        if (!!this.mediaStream) {
+            this.ee.emitEvent('mediastream-updated');
+            if (!this.displayMyRemote() && !!this.mediaStream.getAudioTracks()[0] && this.session.speakingEventsEnabled) {
+                this.enableSpeakingEvents();
+            }
+        }
     }
 
     private initWebRtcStats(): void {
