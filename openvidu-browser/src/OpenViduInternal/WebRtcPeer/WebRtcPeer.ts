@@ -136,7 +136,7 @@ export class WebRtcPeer {
                     this.configuration.mediaConstraints.video : true;
             }
 
-            const constraints = {
+            const constraints: RTCOfferOptions = {
                 offerToReceiveAudio: + (this.configuration.mode !== 'sendonly' && offerAudio),
                 offerToReceiveVideo: + (this.configuration.mode !== 'sendonly' && offerVideo)
             };
@@ -145,7 +145,6 @@ export class WebRtcPeer {
 
             this.pc.createOffer(constraints).then(offer => {
                 console.debug('Created SDP offer');
-                offer = this.mangleSdpToAddSimulcast(offer);
                 return this.pc.setLocalDescription(offer);
             }).then(() => {
                 const localDescription = this.pc.localDescription;
@@ -180,7 +179,6 @@ export class WebRtcPeer {
                 .then(() => {
                     return this.pc.createAnswer();
                 }).then(answer => {
-                    answer = this.mangleSdpToAddSimulcast(answer);
                     console.debug('Created SDP answer');
                     return this.pc.setLocalDescription(answer);
                 }).then(() => {
@@ -244,59 +242,6 @@ export class WebRtcPeer {
             track.stop();
             stream.removeTrack(track);
         });
-    }
-
-
-    /* Simulcast utilities */
-
-    private mangleSdpToAddSimulcast(answer) {
-        if (this.configuration.simulcast && !!this.configuration.mediaStream) {
-            if (platform.name === 'Chrome' || platform.name === 'Chrome Mobile') {
-                console.debug('Adding multicast info');
-                answer = new RTCSessionDescription({
-                    type: answer.type,
-                    sdp: this.removeFIDFromOffer(answer.sdp) + this.getSimulcastInfo(this.configuration.mediaStream)
-                });
-            } else {
-                console.warn('Simulcast is only available in Chrome browser');
-            }
-        }
-        return answer;
-    }
-
-    private removeFIDFromOffer(sdp) {
-        const n = sdp.indexOf('a=ssrc-group:FID');
-        if (n > 0) {
-            return sdp.slice(0, n);
-        } else {
-            return sdp;
-        }
-    }
-
-    private getSimulcastInfo(videoStream: MediaStream) {
-        const videoTracks = videoStream.getVideoTracks();
-        if (!videoTracks.length) {
-            console.warn('No video tracks available in the video stream');
-            return '';
-        }
-        const lines = [
-            'a=x-google-flag:conference',
-            'a=ssrc-group:SIM 1 2 3',
-            'a=ssrc:1 cname:localVideo',
-            'a=ssrc:1 msid:' + videoStream.id + ' ' + videoTracks[0].id,
-            'a=ssrc:1 mslabel:' + videoStream.id,
-            'a=ssrc:1 label:' + videoTracks[0].id,
-            'a=ssrc:2 cname:localVideo',
-            'a=ssrc:2 msid:' + videoStream.id + ' ' + videoTracks[0].id,
-            'a=ssrc:2 mslabel:' + videoStream.id,
-            'a=ssrc:2 label:' + videoTracks[0].id,
-            'a=ssrc:3 cname:localVideo',
-            'a=ssrc:3 msid:' + videoStream.id + ' ' + videoTracks[0].id,
-            'a=ssrc:3 mslabel:' + videoStream.id,
-            'a=ssrc:3 label:' + videoTracks[0].id
-        ];
-        lines.push('');
-        return lines.join('\n');
     }
 }
 
