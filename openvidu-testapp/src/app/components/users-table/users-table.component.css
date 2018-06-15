@@ -1,0 +1,28 @@
+table {
+    width: 100%;
+}
+
+tr {
+    min-height: 90px;
+}
+
+th {
+    position: relative;
+}
+
+td {
+    text-align: center;
+    position: relative;
+}
+
+.mat-cell {
+    border-bottom: 1px solid rgba(0, 0, 0, .12);
+}
+
+tr:last-child .mat-cell {
+    border-bottom: none;
+}
+
+#number-of-streams {
+    margin-bottom: 28px;
+}

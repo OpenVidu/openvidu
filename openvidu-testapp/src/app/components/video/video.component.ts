@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, ViewChild, ElementRef, Output, EventEmitter, OnDestroy } from '@angular/core';
+import { Component, Input, OnInit, Output, EventEmitter, OnDestroy } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material';
 
 import {
@@ -6,20 +6,17 @@ import {
     StreamManagerEvent,
     VideoElementEvent,
     Subscriber,
-    Session,
-    LocalRecorder,
     OpenVidu,
     Publisher,
     StreamEvent,
     VideoInsertMode
 } from 'openvidu-browser';
 
-import { EventsDialogComponent } from '../dialogs/events-dialog.component';
+import { EventsDialogComponent } from '../dialogs/events-dialog/events-dialog.component';
 import { MuteSubscribersService } from '../../services/mute-subscribers.service';
 import { Subscription } from 'rxjs';
-import { LocalRecordingDialogComponent } from '../dialogs/local-recording-dialog.component';
-import { ExtensionDialogComponent } from '../dialogs/extension-dialog.component';
-import { OpenViduVideoComponent } from './ov-video.component';
+import { LocalRecordingDialogComponent } from '../dialogs/local-recording-dialog/local-recording-dialog.component';
+import { ExtensionDialogComponent } from '../dialogs/extension-dialog/extension-dialog.component';
 
 @Component({
     selector: 'app-video',

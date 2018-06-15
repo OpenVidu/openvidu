@@ -1,7 +1,6 @@
 import { Component, Inject } from '@angular/core';
-import { MatDialog, MAT_DIALOG_DATA, MatDialogConfig, MatDialogRef } from '@angular/material';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
 
-import { Session } from 'openvidu-browser';
 import { OpenVidu as OpenViduAPI } from 'openvidu-node-client';
 
 @Component({

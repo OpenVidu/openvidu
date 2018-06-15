@@ -44,6 +44,7 @@ export class TestSessionsComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.paramsSubscription.unsubscribe();
+    this.eventsInfoSubscription.unsubscribe();
   }
 
   addUser(): void {
@@ -92,7 +93,7 @@ export class TestSessionsComponent implements OnInit, OnDestroy {
     }
   }
 
-  loadScenario(subsPubs: number, pubs: number, subs: number, ): void {
+  loadScenario(subsPubs: number, pubs: number, subs: number): void {
     this.users = [];
     this.loadSubsPubs(subsPubs);
     this.loadPubs(pubs);

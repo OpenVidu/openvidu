@@ -1,5 +1,5 @@
 <div>
-    <app-ov-video [streamManager]="streamManager" [poster]="videoPoster" class="{{videoClasses}}"></app-ov-video>
+    <app-ov-video [streamManager]="streamManager" [poster]="videoPoster" [attrstyle]="'width: 120px; height: 90px'" class="{{videoClasses}}"></app-ov-video>
     <div *ngIf="!streamManager.remote && showButtons" class="data-node">
         <div class="top-div">
             <button class="video-btn events-btn bottom-left-rounded" title="Publisher events" (click)="openPublisherEventsDialog()">

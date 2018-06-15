@@ -1,31 +1,27 @@
 import {
-  Component, Input, HostListener, ChangeDetectorRef, SimpleChanges, ElementRef, ViewChild,
+  Component, Input, HostListener, ChangeDetectorRef, SimpleChanges,
   OnInit, OnDestroy, OnChanges
 } from '@angular/core';
-import { Subscription } from 'rxjs';
 
 import {
-  OpenVidu, Session, Subscriber, Publisher, Stream, Connection,
-  LocalRecorder, VideoInsertMode, StreamEvent, ConnectionEvent,
-  SessionDisconnectedEvent, SignalEvent, RecordingEvent, VideoElementEvent,
-  PublisherSpeakingEvent, StreamManagerEvent, StreamManager, PublisherProperties
+  OpenVidu, Session, Subscriber, Publisher, VideoInsertMode, StreamEvent, ConnectionEvent,
+  SessionDisconnectedEvent, SignalEvent, RecordingEvent,
+  PublisherSpeakingEvent, PublisherProperties
 } from 'openvidu-browser';
 import {
   OpenVidu as OpenViduAPI,
-  Session as SessionAPI,
   SessionProperties as SessionPropertiesAPI,
   MediaMode,
   RecordingMode,
   RecordingLayout
 } from 'openvidu-node-client';
-import { MatDialog, MatDialogRef, MAT_CHECKBOX_CLICK_ACTION } from '@angular/material';
-import { ExtensionDialogComponent } from '../dialogs/extension-dialog.component';
-import { LocalRecordingDialogComponent } from '../dialogs/local-recording-dialog.component';
+import { MatDialog, MAT_CHECKBOX_CLICK_ACTION } from '@angular/material';
+import { ExtensionDialogComponent } from '../dialogs/extension-dialog/extension-dialog.component';
 import { TestFeedService } from '../../services/test-feed.service';
-import { EventsDialogComponent } from '../dialogs/events-dialog.component';
-import { SessionPropertiesDialogComponent } from '../dialogs/session-properties-dialog.component';
-import { SessionApiDialogComponent } from '../dialogs/session-api-dialog.component';
-import { PublisherPropertiesDialogComponent } from '../dialogs/publisher-properties-dialog.component';
+import { EventsDialogComponent } from '../dialogs/events-dialog/events-dialog.component';
+import { SessionPropertiesDialogComponent } from '../dialogs/session-properties-dialog/session-properties-dialog.component';
+import { SessionApiDialogComponent } from '../dialogs/session-api-dialog/session-api-dialog.component';
+import { PublisherPropertiesDialogComponent } from '../dialogs/publisher-properties-dialog/publisher-properties-dialog.component';
 
 
 export interface SessionConf {
@@ -119,15 +115,9 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
 
   openviduError: any;
 
-  private publisherRecorder: LocalRecorder;
-  private publisherRecording = false;
-  private publisherPaused = false;
-  private muteSubscribersSubscription: Subscription;
-
   constructor(
     private changeDetector: ChangeDetectorRef,
     private dialog: MatDialog,
-    private recordDialog: MatDialog,
     private testFeedService: TestFeedService
   ) {
     this.generateSessionInfo();

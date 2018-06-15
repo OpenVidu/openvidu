@@ -1,18 +1,17 @@
 import { Component, Inject } from '@angular/core';
-import { MatDialog, MAT_DIALOG_DATA, MatDialogConfig, MatDialogRef, MAT_CHECKBOX_CLICK_ACTION } from '@angular/material';
+import { MAT_DIALOG_DATA, MatDialogRef, MAT_CHECKBOX_CLICK_ACTION } from '@angular/material';
 
-import { SessionProperties, MediaMode, RecordingMode, RecordingLayout } from 'openvidu-node-client';
 import { PublisherProperties, OpenVidu } from 'openvidu-browser';
 
 @Component({
-    selector: 'app-publisher-properties-dialog',
-    templateUrl: './publisher-properties-dialog.component.html',
-    styleUrls: ['./publisher-properties-dialog.component.css'],
+    selector: 'app-scenario-properties-dialog',
+    templateUrl: './scenario-properties-dialog.component.html',
+    styleUrls: ['./scenario-properties-dialog.component.css'],
     providers: [
         { provide: MAT_CHECKBOX_CLICK_ACTION, useValue: 'noop' }
     ]
 })
-export class PublisherPropertiesDialogComponent {
+export class ScenarioPropertiesDialogComponent {
 
     OV: OpenVidu;
     publisherProperties: PublisherProperties;
@@ -27,17 +26,18 @@ export class PublisherPropertiesDialogComponent {
     audioDevices = [];
     videoDevices = [];
 
-    private mediaMode = MediaMode;
-    private recordingMode = RecordingMode;
-    private defaultRecordingLayout = RecordingLayout;
+    turnConf: string;
+    manualTurnConf: RTCIceServer = {};
 
-    constructor(public dialogRef: MatDialogRef<PublisherPropertiesDialogComponent>,
-        @Inject(MAT_DIALOG_DATA) public data: PublisherProperties) {
-        this.publisherProperties = data;
+    constructor(public dialogRef: MatDialogRef<ScenarioPropertiesDialogComponent>,
+        @Inject(MAT_DIALOG_DATA) public data) {
+        this.publisherProperties = data.publisherProperties;
         this.OV = new OpenVidu();
         this.initValue = Object.assign({}, this.publisherProperties);
         this.audioSource = typeof this.publisherProperties.audioSource === 'string' ? this.publisherProperties.audioSource : undefined;
         this.videoSource = typeof this.publisherProperties.videoSource === 'string' ? this.publisherProperties.videoSource : undefined;
+        this.turnConf = data.turnConf;
+        this.manualTurnConf = data.manualTurnConf;
     }
 
     toggleAudio(): void {
@@ -62,7 +62,7 @@ export class PublisherPropertiesDialogComponent {
         }
     }
 
-    setCloseValue(): PublisherProperties {
+    setCloseValue() {
         if (typeof this.audioSource === 'string') {
             if (!!this.audioSource) {
                 this.publisherProperties.audioSource = this.audioSource;
@@ -77,7 +77,11 @@ export class PublisherPropertiesDialogComponent {
                 this.publisherProperties.videoSource = undefined;
             }
         }
-        return this.publisherProperties;
+        return {
+            publisherProperties: this.publisherProperties,
+            turnConf: this.turnConf,
+            manualTurnConf: this.manualTurnConf
+        };
     }
 
     listAudioDevices() {
