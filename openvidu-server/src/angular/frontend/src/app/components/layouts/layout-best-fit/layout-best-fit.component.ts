@@ -90,7 +90,8 @@ export class LayoutBestFitComponent implements OnInit, OnDestroy {
       this.updateLayout(changeFixedRatio);
     });
 
-    const token = 'wss://' + location.hostname + ':4443?sessionId=' + this.sessionId + '&secret=' + this.secret + '&recorder=true';
+    const port = !!location.port ? (':' + location.port) : '';
+    const token = 'wss://' + location.hostname + location.port + '?sessionId=' + this.sessionId + '&secret=' + this.secret + '&recorder=true';
     this.session.connect(token)
       .catch(error => {
         console.error(error);
