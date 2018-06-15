@@ -94,19 +94,9 @@ public class SessionEventsHandler {
 					existingParticipant.getFullMetadata());
 
 			if (existingParticipant.isStreaming()) {
-
-				String streamId = "";
-				if ("SCREEN".equals(existingParticipant.getTypeOfVideo())) {
-					streamId = "SCREEN";
-				} else if (existingParticipant.isVideoActive()) {
-					streamId = "CAMERA";
-				} else if (existingParticipant.isAudioActive()) {
-					streamId = "MICRO";
-				}
-
 				JsonObject stream = new JsonObject();
 				stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMID_PARAM,
-						existingParticipant.getParticipantPublicId() + "_" + streamId);
+						existingParticipant.getPublisherStremId());
 				stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMAUDIOACTIVE_PARAM,
 						existingParticipant.isAudioActive());
 				stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMVIDEOACTIVE_PARAM,
@@ -178,7 +168,7 @@ public class SessionEventsHandler {
 		}
 	}
 
-	public void onPublishMedia(Participant participant, String sessionId, MediaOptions mediaOptions, String sdpAnswer,
+	public void onPublishMedia(Participant participant, String streamId, String sessionId, MediaOptions mediaOptions, String sdpAnswer,
 			Set<Participant> participants, Integer transactionId, OpenViduException error) {
 		if (error != null) {
 			rpcNotificationService.sendErrorResponse(participant.getParticipantPrivateId(), transactionId, null, error);
@@ -186,23 +176,14 @@ public class SessionEventsHandler {
 		}
 		JsonObject result = new JsonObject();
 		result.addProperty(ProtocolElements.PUBLISHVIDEO_SDPANSWER_PARAM, sdpAnswer);
+		result.addProperty(ProtocolElements.PUBLISHVIDEO_STREAMID_PARAM, streamId);
 		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, result);
 
 		JsonObject params = new JsonObject();
 		params.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_USER_PARAM, participant.getParticipantPublicId());
 		JsonObject stream = new JsonObject();
 
-		String streamId = "";
-		if ("SCREEN".equals(mediaOptions.typeOfVideo)) {
-			streamId = "SCREEN";
-		} else if (mediaOptions.videoActive) {
-			streamId = "CAMERA";
-		} else if (mediaOptions.audioActive) {
-			streamId = "MICRO";
-		}
-
-		stream.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_STREAMID_PARAM,
-				participant.getParticipantPublicId() + "_" + streamId);
+		stream.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_STREAMID_PARAM, streamId);
 		stream.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_AUDIOACTIVE_PARAM, mediaOptions.audioActive);
 		stream.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_VIDEOACTIVE_PARAM, mediaOptions.videoActive);
 		stream.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_TYPEOFVIDEO_PARAM, mediaOptions.typeOfVideo);

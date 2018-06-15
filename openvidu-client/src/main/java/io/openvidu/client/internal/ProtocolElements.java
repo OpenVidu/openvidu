@@ -50,6 +50,7 @@ public class ProtocolElements {
   public static final String PUBLISHVIDEO_SDPOFFER_PARAM = "sdpOffer";
   public static final String PUBLISHVIDEO_DOLOOPBACK_PARAM = "doLoopback";
   public static final String PUBLISHVIDEO_SDPANSWER_PARAM = "sdpAnswer";
+  public static final String PUBLISHVIDEO_STREAMID_PARAM = "id";
   public static final String PUBLISHVIDEO_AUDIOACTIVE_PARAM = "audioActive";
   public static final String PUBLISHVIDEO_VIDEOACTIVE_PARAM = "videoActive";
   public static final String PUBLISHVIDEO_TYPEOFVIDEO_PARAM = "typeOfVideo";

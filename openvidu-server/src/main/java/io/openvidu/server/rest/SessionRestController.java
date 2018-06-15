@@ -20,7 +20,6 @@ package io.openvidu.server.rest;
 import java.util.Collection;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.json.simple.JSONArray;
@@ -54,7 +53,7 @@ import io.openvidu.server.recording.ComposedRecordingService;
  * @author Pablo Fuente Pérez
  */
 @RestController
-@CrossOrigin(origins = "*")
+@CrossOrigin
 @RequestMapping("/api")
 public class SessionRestController {
 
@@ -66,11 +65,6 @@ public class SessionRestController {
 
 	@Autowired
 	private OpenviduConfig openviduConfig;
-
-	@RequestMapping(value = "/sessions", method = RequestMethod.GET)
-	public Set<String> getAllSessions() {
-		return sessionManager.getSessions();
-	}
 
 	@SuppressWarnings("unchecked")
 	@RequestMapping(value = "/sessions", method = RequestMethod.POST)
@@ -136,7 +130,32 @@ public class SessionRestController {
 		sessionManager.storeSessionId(sessionId, sessionProperties);
 		JSONObject responseJson = new JSONObject();
 		responseJson.put("id", sessionId);
+
 		return new ResponseEntity<>(responseJson, HttpStatus.OK);
+	}
+
+	@RequestMapping(value = "/sessions/{sessionId}", method = RequestMethod.GET)
+	public ResponseEntity<JSONObject> getSession(@PathVariable("sessionId") String sessionId) {
+		Session session = this.sessionManager.getSession(sessionId);
+		if (session != null) {
+			return new ResponseEntity<>(session.toJSON(), HttpStatus.OK);
+		} else {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	@RequestMapping(value = "/sessions", method = RequestMethod.GET)
+	public ResponseEntity<JSONObject> listSessions() {
+		Collection<Session> sessions = this.sessionManager.getSessionObjects();
+		JSONObject json = new JSONObject();
+		JSONArray jsonArray = new JSONArray();
+		sessions.forEach(s -> {
+			jsonArray.add(s.toJSON());
+		});
+		json.put("count", sessions.size());
+		json.put("items", jsonArray);
+		return new ResponseEntity<>(json, HttpStatus.OK);
 	}
 
 	@SuppressWarnings("unchecked")

@@ -36,15 +36,17 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	protected void configure(HttpSecurity http) throws Exception {
 
 		// Security for API REST
-		ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry conf = http.csrf().disable()
-				.authorizeRequests().antMatchers(HttpMethod.POST, "/api/sessions").authenticated()
+		ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry conf = http.cors().and()
+				.csrf().disable().authorizeRequests().antMatchers(HttpMethod.POST, "/api/sessions").authenticated()
+				.antMatchers(HttpMethod.POST, "/api/sessions/**").authenticated()
 				.antMatchers(HttpMethod.POST, "/api/tokens").authenticated()
 				.antMatchers(HttpMethod.POST, "/api/recordings/start").authenticated()
 				.antMatchers(HttpMethod.POST, "/api/recordings/stop").authenticated()
 				.antMatchers(HttpMethod.GET, "/api/recordings").authenticated()
 				.antMatchers(HttpMethod.GET, "/api/recordings/**").authenticated()
 				.antMatchers(HttpMethod.DELETE, "/api/recordings/**").authenticated()
-				.antMatchers(HttpMethod.GET, "/config/**").authenticated().antMatchers("/").authenticated();
+				.antMatchers(HttpMethod.GET, "/config/openvidu-publicurl").anonymous()
+				.antMatchers(HttpMethod.GET, "/config/**").authenticated();
 
 		// Security for layouts
 		conf.antMatchers("/layouts/*").authenticated();

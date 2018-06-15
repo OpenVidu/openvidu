@@ -19,6 +19,8 @@ package io.openvidu.server.core;
 
 import java.util.Set;
 
+import org.json.simple.JSONObject;
+
 import io.openvidu.java.client.SessionProperties;
 
 public interface Session {
@@ -42,5 +44,7 @@ public interface Session {
 	Participant getParticipantByPublicId(String participantPublicId);
 
 	int getActivePublishers();
+	
+	JSONObject toJSON();
 
 }

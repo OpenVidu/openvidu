@@ -248,7 +248,7 @@ public class KurentoSessionManager extends SessionManager {
 			OpenViduException e = new OpenViduException(Code.MEDIA_SDP_ERROR_CODE,
 					"Error generating SDP response for publishing user " + participant.getParticipantPublicId());
 			log.error("PARTICIPANT {}: Error publishing media", participant.getParticipantPublicId(), e);
-			sessionEventsHandler.onPublishMedia(participant, session.getSessionId(), mediaOptions, sdpAnswer,
+			sessionEventsHandler.onPublishMedia(participant, null, session.getSessionId(), mediaOptions, sdpAnswer,
 					participants, transactionId, e);
 		}
 
@@ -276,7 +276,7 @@ public class KurentoSessionManager extends SessionManager {
 		participants = kurentoParticipant.getSession().getParticipants();
 
 		if (sdpAnswer != null) {
-			sessionEventsHandler.onPublishMedia(participant, session.getSessionId(), mediaOptions, sdpAnswer,
+			sessionEventsHandler.onPublishMedia(participant, participant.getPublisherStremId(), session.getSessionId(), mediaOptions, sdpAnswer,
 					participants, transactionId, null);
 		}
 	}

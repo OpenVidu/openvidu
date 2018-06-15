@@ -54,7 +54,8 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 	@Autowired
 	RpcNotificationService notificationService;
 
-	private ConcurrentMap<String, Boolean> webSocketTransportError = new ConcurrentHashMap<>();
+	private ConcurrentMap<String, Boolean> webSocketEOFTransportError = new ConcurrentHashMap<>();
+	// private ConcurrentMap<String, Boolean> webSocketBrokenPipeTransportError = new ConcurrentHashMap<>();
 
 	@Override
 	public void handleRequest(Transaction transaction, Request<JsonObject> request) throws Exception {
@@ -300,24 +301,38 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 	@Override
 	public void afterConnectionClosed(Session rpcSession, String status) throws Exception {
 		log.info("After connection closed for WebSocket session: {} - Status: {}", rpcSession.getSessionId(), status);
-		
+
+		String rpcSessionId = rpcSession.getSessionId();
+		String message = "";
+
 		if ("Close for not receive ping from client".equals(status)) {
-			RpcConnection rpc = this.notificationService.closeRpcSession(rpcSession.getSessionId());
+			message = "Evicting participant with private id {} because of a network disconnection";
+		} else if (status == null) { // && this.webSocketBrokenPipeTransportError.remove(rpcSessionId) != null)) {
+			try {
+				Participant p = sessionManager.getParticipant(rpcSession.getSessionId());
+				if (p != null) {
+					message = "Evicting participant with private id {} because its websocket unexpectedly closed in the client side";
+				}
+			} catch (OpenViduException exception) {
+			}
+		}
+
+		if (!message.isEmpty()) {
+			RpcConnection rpc = this.notificationService.closeRpcSession(rpcSessionId);
 			if (rpc != null && rpc.getSessionId() != null) {
 				io.openvidu.server.core.Session session = this.sessionManager.getSession(rpc.getSessionId());
 				if (session != null && session.getParticipantByPrivateId(rpc.getParticipantPrivateId()) != null) {
+					log.info(message, rpc.getParticipantPrivateId());
 					leaveRoomAfterConnClosed(rpc.getParticipantPrivateId(), "networkDisconnect");
 				}
 			}
 		}
 
-		String rpcSessionId = rpcSession.getSessionId();
-		if (this.webSocketTransportError.get(rpcSessionId) != null) {
+		if (this.webSocketEOFTransportError.remove(rpcSessionId) != null) {
 			log.warn(
 					"Evicting participant with private id {} because a transport error took place and its web socket connection is now closed",
 					rpcSession.getSessionId());
 			this.leaveRoomAfterConnClosed(rpcSessionId, "networkDisconnect");
-			this.webSocketTransportError.remove(rpcSessionId);
 		}
 	}
 
@@ -325,10 +340,15 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 	public void handleTransportError(Session rpcSession, Throwable exception) throws Exception {
 		log.error("Transport exception for WebSocket session: {} - Exception: {}", rpcSession.getSessionId(),
 				exception);
+		if ("IOException".equals(exception.getClass().getSimpleName())
+				&& "Broken pipe".equals(exception.getCause().getMessage())) {
+			log.warn("Parcipant with private id {} unexpectedly closed the websocket", rpcSession.getSessionId());
+			// this.webSocketBrokenPipeTransportError.put(rpcSession.getSessionId(), true);
+		}
 		if ("EOFException".equals(exception.getClass().getSimpleName())) {
 			// Store WebSocket connection interrupted exception for this web socket to
 			// automatically evict the participant on "afterConnectionClosed" event
-			this.webSocketTransportError.put(rpcSession.getSessionId(), true);
+			this.webSocketEOFTransportError.put(rpcSession.getSessionId(), true);
 		}
 	}
 

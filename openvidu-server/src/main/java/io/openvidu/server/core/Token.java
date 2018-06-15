@@ -17,14 +17,16 @@
 
 package io.openvidu.server.core;
 
+import org.json.simple.JSONObject;
+
 import io.openvidu.server.coturn.TurnCredentials;
 
 public class Token {
 
-	String token;
-	ParticipantRole role;
-	String serverMetadata = "";
-	TurnCredentials turnCredentials;
+	private String token;
+	private ParticipantRole role;
+	private String serverMetadata = "";
+	private TurnCredentials turnCredentials;
 
 	public Token(String token) {
 		this.token = token;
@@ -59,6 +61,15 @@ public class Token {
 			return this.role.name();
 		else
 			return this.token;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public JSONObject toJSON() {
+		JSONObject json = new JSONObject();
+		json.put("token", this.token);
+		json.put("role", this.role.name());
+		json.put("data", this.serverMetadata);
+		return json;
 	}
 
 }

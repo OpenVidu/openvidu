@@ -24,6 +24,9 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang3.RandomStringUtils;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 import org.kurento.client.Continuation;
 import org.kurento.client.ErrorEvent;
 import org.kurento.client.Filter;
@@ -85,14 +88,17 @@ public class KurentoParticipant extends Participant {
 	}
 
 	public void createPublishingEndpoint(MediaOptions mediaOptions) {
+		
 		publisher.createEndpoint(endPointLatch);
 		if (getPublisher().getEndpoint() == null) {
 			throw new OpenViduException(Code.MEDIA_ENDPOINT_ERROR_CODE, "Unable to create publisher endpoint");
 		}
-		this.publisher.getEndpoint().addTag("name", "PUBLISHER " + this.getParticipantPublicId());
-
-		addEndpointListeners(this.publisher);
 		
+		String publisherStreamId = this.getParticipantPublicId() + "_" +
+				(mediaOptions.videoActive ? mediaOptions.typeOfVideo : "MICRO") + "_" +
+				RandomStringUtils.random(5, true, false).toUpperCase();
+		this.publisher.getEndpoint().addTag("name", publisherStreamId);
+		addEndpointListeners(this.publisher);
 		
 		CDR.recordNewPublisher(this, this.session.getSessionId(), mediaOptions);
 		
@@ -279,8 +285,9 @@ public class KurentoParticipant extends Participant {
 				throw new OpenViduException(Code.MEDIA_ENDPOINT_ERROR_CODE, "Unable to create subscriber endpoint");
 			}
 
-			subscriber.getEndpoint().addTag("name",
-					"SUBSCRIBER " + senderName + " for user " + this.getParticipantPublicId());
+			String subscriberStreamId = this.getParticipantPublicId() + "_" + kSender.getPublisherStremId();
+			
+			subscriber.getEndpoint().addTag("name", subscriberStreamId);
 
 			addEndpointListeners(subscriber);
 
@@ -515,7 +522,7 @@ public class KurentoParticipant extends Participant {
 		 * System.out.println(msg); this.infoHandler.sendInfo(msg); });
 		 */
 
-		endpoint.getWebEndpoint().addErrorListener((event) -> {
+		/*endpoint.getWebEndpoint().addErrorListener((event) -> {
 			String msg = "                  Error (PUBLISHER) -> " + "ERRORCODE: " + event.getErrorCode()
 					+ " | DESCRIPTION: " + event.getDescription() + " | TIMESTAMP: " + System.currentTimeMillis();
 			log.debug(msg);
@@ -620,8 +627,42 @@ public class KurentoParticipant extends Participant {
 					+ " | TIMESTAMP: " + System.currentTimeMillis();
 			log.debug(msg);
 			this.infoHandler.sendInfo(msg);
+		});*/
+		
+		endpoint.getWebEndpoint().addNewCandidatePairSelectedListener((event) -> {
+			endpoint.selectedLocalIceCandidate = event.getCandidatePair().getLocalCandidate();
+			endpoint.selectedRemoteIceCandidate = event.getCandidatePair().getRemoteCandidate();
+			String msg = "ICE CANDIDATE SELECTED (" + endpoint.getEndpoint().getTag("name")
+					+ "): LOCAL CANDIDATE: " + endpoint.selectedLocalIceCandidate +
+					" | REMOTE CANDIDATE: " + endpoint.selectedRemoteIceCandidate +
+					" | TIMESTAMP: " + System.currentTimeMillis();
+			log.warn(msg);
+			this.infoHandler.sendInfo(msg);
 		});
+	}
+	
+	@Override
+	@SuppressWarnings("unchecked")
+	public JSONObject toJSON() {
+		JSONObject json = super.toJSON();
+		JSONArray publisherEnpoints = new JSONArray();
+		if (this.streaming && this.publisher.getEndpoint() != null) {
+			publisherEnpoints.add(this.publisher.toJSON());
+		}
+		JSONArray subscriberEndpoints = new JSONArray();
+		for (MediaEndpoint sub : this.subscribers.values()) {
+			if (sub.getEndpoint() != null) {
+				subscriberEndpoints.add(sub.toJSON());
+			}
+		}
+		json.put("publishers", publisherEnpoints);
+		json.put("subscribers", subscriberEndpoints);
+		return json;
+	}
 
+	@Override
+	public String getPublisherStremId() {
+		return this.publisher.getEndpoint().getTag("name");
 	}
 
 }

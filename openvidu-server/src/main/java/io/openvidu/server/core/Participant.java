@@ -17,6 +17,8 @@
 
 package io.openvidu.server.core;
 
+import org.json.simple.JSONObject;
+
 public class Participant {
 
 	private String participantPrivatetId; // ID to identify the user on server (org.kurento.jsonrpc.Session.id)
@@ -119,13 +121,17 @@ public class Participant {
 	public void setTypeOfVideo(String typeOfVideo) {
 		this.typeOfVideo = typeOfVideo;
 	}
-	
+
 	public int getFrameRate() {
 		return this.frameRate;
 	}
 
 	public void setFrameRate(int frameRate) {
 		this.frameRate = frameRate;
+	}
+	
+	public String getPublisherStremId() {
+		return null;
 	}
 
 	public String getFullMetadata() {
@@ -192,6 +198,14 @@ public class Participant {
 		}
 		builder.append("streaming=").append(streaming).append("]");
 		return builder.toString();
+	}
+
+	@SuppressWarnings("unchecked")
+	public JSONObject toJSON() {
+		JSONObject json = new JSONObject();
+		json.put("connectionId", this.participantPublicId);
+		json.put("token", this.token.toJSON());
+		return json;
 	}
 
 }

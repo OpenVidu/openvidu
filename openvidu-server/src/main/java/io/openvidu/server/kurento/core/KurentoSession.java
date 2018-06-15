@@ -25,6 +25,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 import org.kurento.client.Continuation;
 import org.kurento.client.ErrorEvent;
 import org.kurento.client.EventListener;
@@ -345,6 +347,25 @@ public class KurentoSession implements Session {
 		for (Participant participant : participants.values()) {
 			kurentoSessionHandler.updateFilter(this.sessionId, participant, filterId, newState);
 		}
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public JSONObject toJSON() {
+		JSONObject json = new JSONObject();
+		json.put("sessionId", this.sessionId);
+		json.put("mediaMode", this.sessionProperties.mediaMode().name());
+		json.put("recordingMode", this.sessionProperties.recordingMode().name());
+		json.put("defaultRecordingLayout", this.sessionProperties.defaultRecordingLayout().name());
+		if (this.sessionProperties.defaultCustomLayout() != null && !this.sessionProperties.defaultCustomLayout().isEmpty()) {
+			json.put("defaultCustomLayout", this.sessionProperties.defaultCustomLayout());
+		}
+		JSONArray participants = new JSONArray();
+		this.participants.values().forEach(p -> {
+			participants.add(p.toJSON());
+		});
+		json.put("connections", participants);
+		return json;
 	}
 
 }
