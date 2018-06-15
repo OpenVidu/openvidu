@@ -129,15 +129,12 @@ export class Stream {
 
             if (this.isSendVideo()) {
                 if (this.isSendScreen()) {
-                    this.streamId = 'SCREEN';
                     this.typeOfVideo = 'SCREEN';
                 } else {
-                    this.streamId = 'CAMERA';
                     this.typeOfVideo = 'CAMERA';
                 }
                 this.frameRate = this.outboundStreamOpts.publisherProperties.frameRate;
             } else {
-                this.streamId = 'MICRO';
                 delete this.typeOfVideo;
             }
             this.hasAudio = this.isSendAudio();
@@ -412,6 +409,7 @@ export class Stream {
                     } else {
                         this.webRtcPeer.processAnswer(response.sdpAnswer)
                             .then(() => {
+                                this.streamId = response.id;
                                 this.isLocalStreamPublished = true;
                                 if (this.displayMyRemote()) {
                                     this.remotePeerSuccesfullyEstablished();
