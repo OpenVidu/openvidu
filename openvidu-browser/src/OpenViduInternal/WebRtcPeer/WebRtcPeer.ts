@@ -40,6 +40,8 @@ export class WebRtcPeer {
     remoteCandidatesQueue: RTCIceCandidate[] = [];
     localCandidatesQueue: RTCIceCandidate[] = [];
 
+    iceCandidateList: RTCIceCandidate[] = [];
+
     private candidategatheringdone = false;
 
     constructor(private configuration: WebRtcPeerConfiguration) {
@@ -61,12 +63,9 @@ export class WebRtcPeer {
 
         this.pc.onsignalingstatechange = () => {
             if (this.pc.signalingState === 'stable') {
-                for (const candidate of this.remoteCandidatesQueue) {
-                    this.pc.addIceCandidate(<RTCIceCandidate>candidate);
+                while (this.iceCandidateList.length > 0) {
+                    this.pc.addIceCandidate(<RTCIceCandidate>this.iceCandidateList.shift());
                 }
-                /*while (this.remoteCandidatesQueue.length > 0) {
-                    this.pc.addIceCandidate(<RTCIceCandidate>this.remoteCandidatesQueue.shift());
-                }*/
             }
         };
 
@@ -228,6 +227,7 @@ export class WebRtcPeer {
     addIceCandidate(iceCandidate: RTCIceCandidate): Promise<void> {
         return new Promise((resolve, reject) => {
             console.debug('Remote ICE candidate received', iceCandidate);
+            this.remoteCandidatesQueue.push(iceCandidate);
             switch (this.pc.signalingState) {
                 case 'closed':
                     reject(new Error('PeerConnection object is closed'));
@@ -238,7 +238,7 @@ export class WebRtcPeer {
                     }
                     break;
                 default:
-                    this.remoteCandidatesQueue.push(iceCandidate);
+                    this.iceCandidateList.push(iceCandidate);
                     resolve();
             }
         });
