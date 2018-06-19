@@ -113,10 +113,24 @@ export class WebRtcStats {
                                 remoteCandidateId = stat.remoteCandidateId;
                             }
                         }
+                        const finalLocalCandidate = localCandidates[localCandidateId];
+                        finalLocalCandidate.raw = this.stream.getLocalIceCandidateList().filter((c: RTCIceCandidate) => {
+                            return (!!c.candidate &&
+                                c.candidate.indexOf(finalLocalCandidate.ipAddress) > 0 &&
+                                c.candidate.indexOf(finalLocalCandidate.portNumber) > 0) &&
+                                c.candidate.indexOf(finalLocalCandidate.priority) > 0;
+                        })[0].candidate;
+                        const finalRemoteCandidate = remoteCandidates[remoteCandidateId];
+                        finalRemoteCandidate.raw = this.stream.getRemoteIceCandidateList().filter((c: RTCIceCandidate) => {
+                            return (!!c.candidate &&
+                                c.candidate.indexOf(finalRemoteCandidate.ipAddress) > 0 &&
+                                c.candidate.indexOf(finalRemoteCandidate.portNumber) > 0) &&
+                                c.candidate.indexOf(finalRemoteCandidate.priority) > 0;
+                        })[0].candidate;
                         resolve({
                             googCandidatePair,
-                            localCandidate: localCandidates[localCandidateId],
-                            remoteCandidate: remoteCandidates[remoteCandidateId]
+                            localCandidate: finalLocalCandidate,
+                            remoteCandidate: finalRemoteCandidate
                         });
                     } else {
                         reject('Selected ICE candidate info only available for Chrome');
