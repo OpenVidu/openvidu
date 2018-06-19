@@ -19,9 +19,12 @@ package io.openvidu.server.kurento.endpoint;
 
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.kurento.client.Continuation;
 import org.kurento.client.ErrorEvent;
@@ -29,8 +32,8 @@ import org.kurento.client.EventListener;
 import org.kurento.client.IceCandidate;
 import org.kurento.client.ListenerSubscription;
 import org.kurento.client.MediaElement;
-import org.kurento.client.MediaObject;
 import org.kurento.client.MediaPipeline;
+import org.kurento.client.MediaType;
 import org.kurento.client.OnIceCandidateEvent;
 import org.kurento.client.RtpEndpoint;
 import org.kurento.client.SdpEndpoint;
@@ -40,6 +43,7 @@ import org.slf4j.LoggerFactory;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
+import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.kurento.MutedMediaType;
 import io.openvidu.server.kurento.core.KurentoParticipant;
@@ -70,11 +74,13 @@ public abstract class MediaEndpoint {
 
 	private MutedMediaType muteType;
 
-	public Map<String, MediaObject> flowInMedia = new ConcurrentHashMap<>();
-	public Map<String, MediaObject> flowOutMedia = new ConcurrentHashMap<>();
+	private MediaOptions mediaOptions;
+	public Map<String, MediaType> flowInMedia = new ConcurrentHashMap<>();
+	public Map<String, MediaType> flowOutMedia = new ConcurrentHashMap<>();
 
 	public String selectedLocalIceCandidate;
 	public String selectedRemoteIceCandidate;
+	public Queue<KmsEvent> kmsEvents = new ConcurrentLinkedQueue<>();
 
 	/**
 	 * Constructor to set the owner, the endpoint's name and the media pipeline.
@@ -96,6 +102,14 @@ public abstract class MediaEndpoint {
 		this.owner = owner;
 		this.setEndpointName(endpointName);
 		this.setMediaPipeline(pipeline);
+	}
+
+	public MediaOptions getMediaOptions() {
+		return mediaOptions;
+	}
+
+	public void setMediaOptions(MediaOptions mediaOptions) {
+		this.mediaOptions = mediaOptions;
 	}
 
 	public boolean isWeb() {
@@ -495,6 +509,16 @@ public abstract class MediaEndpoint {
 		json.put("webrtcTagName", this.getEndpoint().getTag("name"));
 		json.put("localCandidate", this.selectedLocalIceCandidate);
 		json.put("remoteCandidate", this.selectedRemoteIceCandidate);
+		
+		JSONArray jsonArray = new JSONArray();
+		
+		for (KmsEvent event : this.kmsEvents) {
+			JSONObject jsonKmsEvent = new JSONObject();
+			jsonKmsEvent.put(event.event.getType(), event.timestamp);
+			jsonArray.add(jsonKmsEvent);
+		}
+		
+		json.put("events", jsonArray);
 		return json;
 	}
 }

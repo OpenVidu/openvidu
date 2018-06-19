@@ -268,11 +268,6 @@ public class KurentoSessionManager extends SessionManager {
 
 		session.newPublisher(participant);
 
-		kurentoParticipant.setAudioActive(kurentoOptions.audioActive);
-		kurentoParticipant.setVideoActive(kurentoOptions.videoActive);
-		kurentoParticipant.setTypeOfVideo(kurentoOptions.typeOfVideo);
-		kurentoParticipant.setFrameRate(kurentoOptions.frameRate);
-
 		participants = kurentoParticipant.getSession().getParticipants();
 
 		if (sdpAnswer != null) {

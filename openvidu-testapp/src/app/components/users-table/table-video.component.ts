@@ -31,8 +31,9 @@ export class TableVideoComponent implements AfterViewInit, DoCheck {
     ngAfterViewInit() {
         this.playingTimeout = setTimeout(() => {
             if (!this.state['playing']) {
-                this.state['timeoutPlaying'] = Date.now();
+                this.state['timeoutPlaying'] = Date.now() - this.streamManager.startTime;
                 this.readyForReport.emit({
+                    startTime: this.streamManager.startTime,
                     connectionId: this.streamManager.connectionId,
                     state: this.state,
                     streamManager: this.streamManager.streamManager
@@ -48,6 +49,7 @@ export class TableVideoComponent implements AfterViewInit, DoCheck {
             if (this.success() || this.fail()) {
                 clearTimeout(this.playingTimeout);
                 this.readyForReport.emit({
+                    startTime: this.streamManager.startTime,
                     connectionId: this.streamManager.connectionId,
                     state: this.state,
                     streamManager: this.streamManager.streamManager
@@ -78,6 +80,7 @@ export class TableVideoComponent implements AfterViewInit, DoCheck {
 }
 
 export interface StreamManagerWrapper {
+    startTime: number;
     connectionId: string;
     streamManager: StreamManager;
     state: any;

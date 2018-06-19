@@ -179,8 +179,10 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
 
   private startSession() {
     for (const user of this.users) {
-
       this.getToken().then(token => {
+
+        const startTimeForUser = Date.now();
+
         const OV = new OpenVidu();
 
         if (this.turnConf === 'freeice') {
@@ -206,9 +208,9 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
                 .find(s => s.connectionId === session.connection.connectionId).subs
                 .find(s => s.streamManager.stream.connection.connectionId === subscriber.stream.connection.connectionId);
               if (!!error) {
-                subAux.state['errorConnecting'] = Date.now();
+                subAux.state['errorConnecting'] = (Date.now() - startTimeForUser);
               } else {
-                subAux.state['connected'] = Date.now();
+                subAux.state['connected'] = (Date.now() - startTimeForUser);
               }
             });
 
@@ -217,16 +219,18 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
               this.subscribers.push({
                 connectionId: session.connection.connectionId,
                 subs: [{
+                  startTime: startTimeForUser,
                   connectionId: session.connection.connectionId,
                   streamManager: subscriber,
-                  state: { 'connecting': Date.now() }
+                  state: { 'connecting': (Date.now() - startTimeForUser) }
                 }]
               });
             } else {
               sub.subs.push({
+                startTime: startTimeForUser,
                 connectionId: session.connection.connectionId,
                 streamManager: subscriber,
-                state: { 'connecting': Date.now() }
+                state: { 'connecting': (Date.now() - startTimeForUser) }
               });
             }
 
@@ -234,7 +238,7 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
               this.subscribers
                 .find(s => s.connectionId === session.connection.connectionId).subs
                 .find(s => s.streamManager.stream.connection.connectionId === subscriber.stream.connection.connectionId)
-                .state['playing'] = Date.now();
+                .state['playing'] = (Date.now() - startTimeForUser);
             });
           });
         }
@@ -245,19 +249,20 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
 
               const publisher = OV.initPublisher(undefined, this.publisherProperties);
               const publisherWrapper = {
+                startTime: startTimeForUser,
                 connectionId: session.connection.connectionId,
                 streamManager: publisher,
-                state: { 'connecting': Date.now() }
+                state: { 'connecting': (Date.now() - startTimeForUser) }
               };
 
               publisher.on('streamCreated', () => {
-                publisherWrapper.state['connected'] = Date.now();
+                publisherWrapper.state['connected'] = (Date.now() - startTimeForUser);
               });
               publisher.on('streamPlaying', () => {
-                publisherWrapper.state['playing'] = Date.now();
+                publisherWrapper.state['playing'] = (Date.now() - startTimeForUser);
               });
               session.publish(publisher).catch(() => {
-                publisherWrapper.state['errorConnecting'] = Date.now();
+                publisherWrapper.state['errorConnecting'] = (Date.now() - startTimeForUser);
               });
               this.publishers.push(publisherWrapper);
 
@@ -308,6 +313,7 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
         if (event.streamManager.remote) {
           newReport = {
             connectionId: event.connectionId,
+            startTime: event.startTime,
             streamId: event.streamManager.stream.streamId,
             state: event.state,
             candidatePairSelectedByBrowser: {
@@ -318,8 +324,10 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
               localCandidate: {},
               remoteCandidate: {}
             },
-            iceCandidatesSentByBrowser: event.streamManager.stream.getLocalIceCandidateList(),
-            iceCandidatesReceivedByBrowser: event.streamManager.stream.getRemoteIceCandidateList()
+            iceCandidatesSentByBrowser:
+              event.streamManager.stream.getLocalIceCandidateList().map((c: RTCIceCandidate) => c.candidate),
+            iceCandidatesReceivedByBrowser:
+              event.streamManager.stream.getRemoteIceCandidateList().map((c: RTCIceCandidate) => c.candidate),
           };
 
           this.report.streamsIn.count++;
@@ -327,6 +335,7 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
         } else {
           newReport = {
             connectionId: event.connectionId,
+            startTime: event.startTime,
             streamId: event.streamManager.stream.streamId,
             state: event.state,
             candidatePairSelectedByBrowser: {
@@ -337,8 +346,10 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
               localCandidate: {},
               remoteCandidate: {}
             },
-            iceCandidatesSentByBrowser: event.streamManager.stream.getLocalIceCandidateList(),
-            iceCandidatesReceivedByBrowser: event.streamManager.stream.getRemoteIceCandidateList()
+            iceCandidatesSentByBrowser:
+              event.streamManager.stream.getLocalIceCandidateList().map((c: RTCIceCandidate) => c.candidate),
+            iceCandidatesReceivedByBrowser:
+              event.streamManager.stream.getRemoteIceCandidateList().map((c: RTCIceCandidate) => c.candidate)
           };
 
           this.report.streamsOut.count++;
@@ -370,6 +381,12 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
             localCandidate: this.parseRemoteCandidatePair(streamOutRemoteInfo.localCandidate),
             remoteCandidate: this.parseRemoteCandidatePair(streamOutRemoteInfo.remoteCandidate)
           };
+          report.serverEvents = streamOutRemoteInfo.events;
+          for (const ev of report.serverEvents) {
+            for (const key of Object.keys(ev)) {
+              ev[key] = Number(ev[key]) - report.startTime;
+            }
+          }
         });
 
         this.report.streamsIn.items.forEach(report => {
@@ -383,6 +400,12 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
             localCandidate: this.parseRemoteCandidatePair(streamInRemoteInfo.localCandidate),
             remoteCandidate: this.parseRemoteCandidatePair(streamInRemoteInfo.remoteCandidate)
           };
+          report.serverEvents = streamInRemoteInfo.events;
+          for (const ev of report.serverEvents) {
+            for (const key of Object.keys(ev)) {
+              ev[key] = Number(ev[key]) - report.startTime;
+            }
+          }
         });
 
         this.stringifyAllReports = JSON.stringify(this.report, null, '\t');

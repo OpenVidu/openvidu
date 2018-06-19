@@ -39,6 +39,7 @@ import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.server.cdr.CallDetailRecord;
 import io.openvidu.server.config.InfoHandler;
 import io.openvidu.server.config.OpenviduConfig;
+import io.openvidu.server.kurento.core.KurentoParticipant;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.rpc.RpcNotificationService;
 
@@ -94,17 +95,20 @@ public class SessionEventsHandler {
 					existingParticipant.getFullMetadata());
 
 			if (existingParticipant.isStreaming()) {
+				
+				KurentoParticipant kParticipant = (KurentoParticipant) existingParticipant;
+				
 				JsonObject stream = new JsonObject();
 				stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMID_PARAM,
 						existingParticipant.getPublisherStremId());
 				stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMAUDIOACTIVE_PARAM,
-						existingParticipant.isAudioActive());
+						kParticipant.getPublisherMediaOptions().audioActive);
 				stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMVIDEOACTIVE_PARAM,
-						existingParticipant.isVideoActive());
+						kParticipant.getPublisherMediaOptions().videoActive);
 				stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMTYPEOFVIDEO_PARAM,
-						existingParticipant.getTypeOfVideo());
+						kParticipant.getPublisherMediaOptions().typeOfVideo);
 				stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMFRAMERATE_PARAM,
-						existingParticipant.getFrameRate());
+						kParticipant.getPublisherMediaOptions().frameRate);
 
 				JsonArray streamsArray = new JsonArray();
 				streamsArray.add(stream);
