@@ -27,6 +27,6 @@ app-openvidu-instance {
     width: 100%;
 }
 
-#back-report-btn {
+.report-btn{
     float: right;
 }

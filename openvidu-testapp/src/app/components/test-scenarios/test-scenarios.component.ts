@@ -182,6 +182,12 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
 
       this.getToken().then(token => {
         const OV = new OpenVidu();
+
+        if (this.turnConf === 'freeice') {
+          OV.setAdvancedConfiguration({ iceServers: 'freeice' });
+        } else if (this.turnConf === 'manual') {
+          OV.setAdvancedConfiguration({ iceServers: [this.manualTurnConf] });
+        }
         const session = OV.initSession();
 
         this.OVs.push(OV);
@@ -294,48 +300,6 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
   }
 
   addReportForStream(event: StreamManagerWrapper) {
-
-    const getSessionInfo = () => {
-      let headers = new HttpHeaders();
-      headers = headers.append('Authorization', 'Basic ' + btoa('OPENVIDUAPP:' + this.openviduSecret));
-      this.http.get(this.openviduUrl + 'api/sessions/' + this.fixedSessionId, { headers }).subscribe(
-        sessionInfo => {
-
-          this.report.streamsOut.items.forEach(report => {
-            const streamOutRemoteInfo = sessionInfo['connections']
-              .find(c => c.connectionId === report.connectionId).publishers
-              .find(p => {
-                report.webrtcTagName = p.webrtcTagName;
-                return p.webrtcTagName === report.streamId;
-              });
-            report.remoteCandidatePair = {
-              localCandidate: this.parseRemoteCandidatePair(streamOutRemoteInfo.localCandidate),
-              remoteCandidate: this.parseRemoteCandidatePair(streamOutRemoteInfo.remoteCandidate)
-            };
-          });
-
-          this.report.streamsIn.items.forEach(report => {
-            const streamInRemoteInfo = sessionInfo['connections']
-              .find(c => c.connectionId === report.connectionId).subscribers
-              .find(p => {
-                report.webrtcTagName = p.webrtcTagName;
-                return p.webrtcTagName === report.connectionId + '_' + report.streamId;
-              });
-            report.remoteCandidatePair = {
-              localCandidate: this.parseRemoteCandidatePair(streamInRemoteInfo.localCandidate),
-              remoteCandidate: this.parseRemoteCandidatePair(streamInRemoteInfo.remoteCandidate)
-            };
-          });
-
-          this.stringifyAllReports = JSON.stringify(this.report, null, '\t');
-          if (!this.textAreaValue) {
-            this.textAreaValue = this.stringifyAllReports;
-          }
-        },
-        error => { }
-      );
-    };
-
     event.streamManager.stream.getSelectedIceCandidate()
       .then(localCandidatePair => {
 
@@ -346,14 +310,16 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
             connectionId: event.connectionId,
             streamId: event.streamManager.stream.streamId,
             state: event.state,
-            localCandidatePair: {
+            candidatePairSelectedByBrowser: {
               localCandidate: localCandidatePair.localCandidate,
               remoteCandidate: localCandidatePair.remoteCandidate
             },
-            remoteCandidatePair: {
+            candidatePairSelectedByKms: {
               localCandidate: {},
               remoteCandidate: {}
-            }
+            },
+            iceCandidatesSentByBrowser: event.streamManager.stream.getLocalIceCandidateList(),
+            iceCandidatesReceivedByBrowser: event.streamManager.stream.getRemoteIceCandidateList()
           };
 
           this.report.streamsIn.count++;
@@ -363,14 +329,16 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
             connectionId: event.connectionId,
             streamId: event.streamManager.stream.streamId,
             state: event.state,
-            localCandidatePair: {
+            candidatePairSelectedByBrowser: {
               localCandidate: localCandidatePair.localCandidate,
               remoteCandidate: localCandidatePair.remoteCandidate
             },
-            remoteCandidatePair: {
+            candidatePairSelectedByKms: {
               localCandidate: {},
               remoteCandidate: {}
-            }
+            },
+            iceCandidatesSentByBrowser: event.streamManager.stream.getLocalIceCandidateList(),
+            iceCandidatesReceivedByBrowser: event.streamManager.stream.getRemoteIceCandidateList()
           };
 
           this.report.streamsOut.count++;
@@ -378,11 +346,51 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
         }
 
         if (++this.numberOfReports === this.totalNumberOfStreams) {
-          getSessionInfo();
+          this.updateRemoteStreamsInfo();
         }
 
       })
       .catch();
+  }
+
+  private updateRemoteStreamsInfo() {
+    let headers = new HttpHeaders();
+    headers = headers.append('Authorization', 'Basic ' + btoa('OPENVIDUAPP:' + this.openviduSecret));
+    this.http.get(this.openviduUrl + 'api/sessions/' + this.fixedSessionId, { headers }).subscribe(
+      sessionInfo => {
+
+        this.report.streamsOut.items.forEach(report => {
+          const streamOutRemoteInfo = sessionInfo['connections']
+            .find(c => c.connectionId === report.connectionId).publishers
+            .find(p => {
+              report.webrtcTagName = p.webrtcTagName;
+              return p.webrtcTagName === report.streamId;
+            });
+          report.candidatePairSelectedByKms = {
+            localCandidate: this.parseRemoteCandidatePair(streamOutRemoteInfo.localCandidate),
+            remoteCandidate: this.parseRemoteCandidatePair(streamOutRemoteInfo.remoteCandidate)
+          };
+        });
+
+        this.report.streamsIn.items.forEach(report => {
+          const streamInRemoteInfo = sessionInfo['connections']
+            .find(c => c.connectionId === report.connectionId).subscribers
+            .find(p => {
+              report.webrtcTagName = p.webrtcTagName;
+              return p.webrtcTagName === report.connectionId + '_' + report.streamId;
+            });
+          report.candidatePairSelectedByKms = {
+            localCandidate: this.parseRemoteCandidatePair(streamInRemoteInfo.localCandidate),
+            remoteCandidate: this.parseRemoteCandidatePair(streamInRemoteInfo.remoteCandidate)
+          };
+        });
+
+        this.stringifyAllReports = JSON.stringify(this.report, null, '\t');
+        console.log('Info has changed: ' + !(this.stringifyAllReports === this.textAreaValue));
+        this.textAreaValue = this.stringifyAllReports;
+      },
+      error => { }
+    );
   }
 
   private parseRemoteCandidatePair(candidateStr: string) {
@@ -392,7 +400,8 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
       ipAddress: array[4],
       transport: array[2].toLowerCase(),
       candidateType: array[7],
-      priority: array[3]
+      priority: array[3],
+      raw: candidateStr
     };
   }
 

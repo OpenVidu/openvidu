@@ -22,8 +22,12 @@
 <div class="report-div">
   <mat-form-field class="report-field" appearance="fill">
     <mat-label>Report</mat-label>
-    <button *ngIf="isFocusedOnReport" id="back-report-btn" mat-mini-fab color="primary" (click)="$event.stopPropagation(); textAreaValue = stringifyAllReports; isFocusedOnReport = false;">
+    <button *ngIf="isFocusedOnReport" id="back-report-btn" class="report-btn" mat-mini-fab color="primary"
+      (click)="$event.stopPropagation(); textAreaValue = stringifyAllReports; isFocusedOnReport = false;">
       <mat-icon aria-label="Go back to all streams">undo</mat-icon>
+    </button>
+    <button *ngIf="!!textAreaValue && !isFocusedOnReport" id="update-report-btn" class="report-btn" mat-mini-fab color="primary" (click)="$event.stopPropagation(); updateRemoteStreamsInfo()">
+      <mat-icon aria-label="Update stream info">replay</mat-icon>
     </button>
     <textarea matInput readonly [value]="textAreaValue" [mat-autosize]="true" [disabled]="!textAreaValue"></textarea>
   </mat-form-field>
