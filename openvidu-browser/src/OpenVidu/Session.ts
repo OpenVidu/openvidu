@@ -698,22 +698,6 @@ export class Session implements EventDispatcher {
                 return { candidate: msg.candidate };
             }
         };
-
-        /*this.getConnection(msg.endpointName, 'Connection not found for endpoint ' + msg.endpointName + '. Ice candidate will be ignored: ' + candidate)
-
-            .then(connection => {
-                const stream = connection.stream;
-                stream.getWebRtcPeer().addIceCandidate(candidate, (error) => {
-                    if (error) {
-                        console.error('Error adding candidate for ' + stream.streamId
-                            + ' stream of endpoint ' + msg.endpointName + ': ' + error);
-                    }
-                });
-            })
-            .catch(openViduError => {
-                console.error(openViduError);
-            });*/
-
         this.getConnection(msg.endpointName, 'Connection not found for endpoint ' + msg.endpointName + '. Ice candidate will be ignored: ' + candidate)
             .then(connection => {
                 const stream = connection.stream;

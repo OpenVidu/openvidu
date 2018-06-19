@@ -374,6 +374,20 @@ export class Stream {
         });
     }
 
+    /**
+     * @hidden
+     */
+    getRemoteIceCandidateList(): RTCIceCandidate[] {
+        return this.webRtcPeer.remoteCandidatesQueue;
+    }
+
+    /**
+     * @hidden
+     */
+    getLocalIceCandidateList(): RTCIceCandidate[] {
+        return this.webRtcPeer.localCandidatesQueue;
+    }
+
     /* Private methods */
 
     private initWebRtcPeerSend(): Promise<any> {

@@ -37,9 +37,10 @@ export class WebRtcPeer {
 
     pc: RTCPeerConnection;
     id: string;
+    remoteCandidatesQueue: RTCIceCandidate[] = [];
+    localCandidatesQueue: RTCIceCandidate[] = [];
 
     private candidategatheringdone = false;
-    private candidatesQueue: RTCIceCandidate[] = [];
 
     constructor(private configuration: WebRtcPeerConfiguration) {
         this.configuration.iceServers = (!!this.configuration.iceServers && this.configuration.iceServers.length > 0) ? this.configuration.iceServers : freeice();
@@ -48,8 +49,9 @@ export class WebRtcPeer {
         this.id = !!configuration.id ? configuration.id : uuid.v4();
 
         this.pc.onicecandidate = event => {
-            const candidate = event.candidate;
+            const candidate: RTCIceCandidate = event.candidate;
             if (candidate) {
+                this.localCandidatesQueue.push(<RTCIceCandidate>{ candidate: candidate.candidate });
                 this.candidategatheringdone = false;
                 this.configuration.onicecandidate(event.candidate);
             } else if (!this.candidategatheringdone) {
@@ -59,9 +61,12 @@ export class WebRtcPeer {
 
         this.pc.onsignalingstatechange = () => {
             if (this.pc.signalingState === 'stable') {
-                while (this.candidatesQueue.length > 0) {
-                    this.pc.addIceCandidate(<RTCIceCandidate>this.candidatesQueue.shift());
+                for (const candidate of this.remoteCandidatesQueue) {
+                    this.pc.addIceCandidate(<RTCIceCandidate>candidate);
                 }
+                /*while (this.remoteCandidatesQueue.length > 0) {
+                    this.pc.addIceCandidate(<RTCIceCandidate>this.remoteCandidatesQueue.shift());
+                }*/
             }
         };
 
@@ -104,6 +109,8 @@ export class WebRtcPeer {
                 if (this.pc.signalingState === 'closed') {
                     return;
                 }
+                this.remoteCandidatesQueue = [];
+                this.localCandidatesQueue = [];
 
                 this.pc.getLocalStreams().forEach(str => {
                     this.streamStop(str);
@@ -231,7 +238,7 @@ export class WebRtcPeer {
                     }
                     break;
                 default:
-                    this.candidatesQueue.push(iceCandidate);
+                    this.remoteCandidatesQueue.push(iceCandidate);
                     resolve();
             }
         });
