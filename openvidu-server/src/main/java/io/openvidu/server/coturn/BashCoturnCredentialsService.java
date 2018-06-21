@@ -41,9 +41,9 @@ public class BashCoturnCredentialsService extends CoturnCredentialsService {
 	public TurnCredentials createUser() {
 		TurnCredentials credentials = null;
 		log.info("Creating COTURN user");
-		String user = RandomStringUtils.randomAlphanumeric(8).toUpperCase();
-		String pass = RandomStringUtils.randomAlphanumeric(8).toLowerCase();
-		String command = "turnadmin -a -b " + this.coturnDatabaseLocation + " -u " + user + " -r openvidu -p " + pass;
+		String user = RandomStringUtils.randomAlphanumeric(6).toUpperCase();
+		String pass = RandomStringUtils.randomAlphanumeric(6).toLowerCase();
+		String command = "turnadmin -a -u " + user + " -r openvidu -p " + pass + " -b " + this.coturnDatabaseLocation;
 		String users = "";
 		lock.lock();
 		try {
@@ -68,7 +68,7 @@ public class BashCoturnCredentialsService extends CoturnCredentialsService {
 		boolean userRemoved = false;
 
 		log.info("Deleting COTURN user");
-		String command = "turnadmin -d -b " + this.coturnDatabaseLocation + " -u " + user + " -r openvidu";
+		String command = "turnadmin -d -u " + user + " -r openvidu -b" + this.coturnDatabaseLocation;
 		String users = "";
 		lock.lock();
 		try {
