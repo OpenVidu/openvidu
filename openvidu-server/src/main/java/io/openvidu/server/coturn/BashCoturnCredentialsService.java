@@ -1,6 +1,5 @@
 package io.openvidu.server.coturn;
 
-import java.io.File;
 import java.io.IOException;
 
 import org.apache.commons.lang3.RandomStringUtils;
@@ -12,24 +11,20 @@ public class BashCoturnCredentialsService extends CoturnCredentialsService {
 
 	public BashCoturnCredentialsService(OpenviduConfig openviduConfig) {
 		super(openviduConfig);
-		File f = new File(this.openviduConfig.getCoturnSqlite());
-		if (f.exists()) {
-			f.delete();
-		}
-		this.coturnDatabaseLocation = this.openviduConfig.getCoturnSqlite();
 		try {
-			String response = CommandExecutor.execCommand("/bin/sh", "-c", "turnadmin -l -b " + this.coturnDatabaseLocation);
+			String response = CommandExecutor.execCommand("/bin/sh", "-c",
+					"turnadmin -l -N " + this.coturnDatabaseString);
 			if (response.contains("turnadmin: not found")) {
 				// No coturn installed in the host machine
-				log.warn("No COTURN server is installed in the host machine");
-				log.warn("No COTURN server will be configured for clients");
+				log.warn("No COTURN server is installed in the host machine. Response: " + response);
+				log.warn("No COTURN server will be automatically configured for clients");
 				this.coturnAvailable = false;
-			} else if (response.contains("Cannot open SQLite DB connection")) {
-				log.warn("COTURN SQLite database is not accesible at path " + this.coturnDatabaseLocation);
-				log.warn("No COTURN server will be configured for clients");
+			} else if (response.contains("Cannot initialize Redis DB connection")) {
+				log.warn("Redis DB is not accesible with connection string " + this.coturnDatabaseString);
+				log.warn("No COTURN server will be automatically configured for clients");
 				this.coturnAvailable = false;
 			} else {
-				log.info("COTURN sqlite database location: " + this.openviduConfig.getCoturnSqlite());
+				log.info("COTURN Redis DB accessible with string " + this.coturnDatabaseString);
 			}
 		} catch (IOException | InterruptedException e) {
 			e.printStackTrace();
@@ -43,22 +38,17 @@ public class BashCoturnCredentialsService extends CoturnCredentialsService {
 		log.info("Creating COTURN user");
 		String user = RandomStringUtils.randomAlphanumeric(6).toUpperCase();
 		String pass = RandomStringUtils.randomAlphanumeric(6).toLowerCase();
-		String command = "turnadmin -a -u " + user + " -r openvidu -p " + pass + " -b " + this.coturnDatabaseLocation;
-		String users = "";
-		lock.lock();
+		String command = "turnadmin -a -u " + user + " -r openvidu -p " + pass + " -N " + this.coturnDatabaseString;
 		try {
-			CommandExecutor.execCommand("/bin/sh", "-c", command);
-			users = CommandExecutor.execCommand("/bin/sh", "-c", "turnadmin -l -b " + this.coturnDatabaseLocation);
-		} catch (IOException | InterruptedException e) {
-			e.printStackTrace();
-		} finally {
-			lock.unlock();
-			if (users.contains(user + "[openvidu]")) {
+			String response = CommandExecutor.execCommand("/bin/sh", "-c", command);
+			if (response.contains("connection success: " + this.trimmedCoturnDatabaseString)) {
 				credentials = new TurnCredentials(user, pass);
 				log.info("COTURN user created: true");
 			} else {
 				log.info("COTURN user created: false");
 			}
+		} catch (IOException | InterruptedException e) {
+			e.printStackTrace();
 		}
 		return credentials;
 	}
@@ -68,18 +58,14 @@ public class BashCoturnCredentialsService extends CoturnCredentialsService {
 		boolean userRemoved = false;
 
 		log.info("Deleting COTURN user");
-		String command = "turnadmin -d -u " + user + " -r openvidu -b" + this.coturnDatabaseLocation;
-		String users = "";
-		lock.lock();
+		String command = "turnadmin -d -u " + user + " -r openvidu -N " + this.coturnDatabaseString;
+		String response = "";
 		try {
-			CommandExecutor.execCommand("/bin/sh", "-c", command);
-			users = CommandExecutor.execCommand("/bin/sh", "-c", "turnadmin -l -b " + this.coturnDatabaseLocation);
+			response = CommandExecutor.execCommand("/bin/sh", "-c", command);
 		} catch (IOException | InterruptedException e) {
 			e.printStackTrace();
-		} finally {
-			lock.unlock();
 		}
-		userRemoved = !users.contains(user + "[openvidu]");
+		userRemoved = response.contains("connection success: " + this.trimmedCoturnDatabaseString);
 		log.info("COTURN user deleted: " + userRemoved);
 		return userRemoved;
 	}

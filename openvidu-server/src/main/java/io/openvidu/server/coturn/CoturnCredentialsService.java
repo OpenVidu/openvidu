@@ -1,7 +1,5 @@
 package io.openvidu.server.coturn;
 
-import java.util.concurrent.locks.ReentrantLock;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -15,14 +13,15 @@ public abstract class CoturnCredentialsService {
 
 	protected OpenviduConfig openviduConfig;
 
-	protected String coturnDatabaseLocation;
+	protected String coturnDatabaseString;
+	protected String trimmedCoturnDatabaseString;
 	
 	protected boolean coturnAvailable = true;
 	
-	protected ReentrantLock lock = new ReentrantLock();
-
 	public CoturnCredentialsService(OpenviduConfig openviduConfig) {
 		this.openviduConfig = openviduConfig;
+		this.coturnDatabaseString = this.openviduConfig.getCoturnDatabaseString();
+		this.trimmedCoturnDatabaseString = this.coturnDatabaseString.replaceAll("^\"|\"$", "");
 	}
 
 	public abstract TurnCredentials createUser();
