@@ -945,11 +945,10 @@ export class Session implements EventDispatcher {
             this.openvidu.recorder = true;
         }
         if (!!turnUsername && !!turnCredential) {
-            const turnUrl = 'turn:' + url.hostname + ':3478';
-            this.openvidu.turnCredentials = { urls: [turnUrl], username: turnUsername, credential: turnCredential };
-            console.warn(turnUrl);
-            console.warn(turnUsername);
-            console.warn(turnCredential);
+            const turnUrl1 = 'turn:' + url.hostname + ':3478';
+            const turnUrl2 = turnUrl1 + '?transport=tcp';
+            this.openvidu.turnCredentials = { urls: [turnUrl1, turnUrl2], username: turnUsername, credential: turnCredential };
+            console.log('TURN temp credentials [' + turnUsername + ':' + turnCredential + ']')
         }
         if (!!role) {
             this.openvidu.role = role;

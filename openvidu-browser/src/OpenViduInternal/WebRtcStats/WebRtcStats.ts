@@ -113,20 +113,34 @@ export class WebRtcStats {
                                 remoteCandidateId = stat.remoteCandidateId;
                             }
                         }
-                        const finalLocalCandidate = localCandidates[localCandidateId];
-                        finalLocalCandidate.raw = this.stream.getLocalIceCandidateList().filter((c: RTCIceCandidate) => {
-                            return (!!c.candidate &&
-                                c.candidate.indexOf(finalLocalCandidate.ipAddress) > 0 &&
-                                c.candidate.indexOf(finalLocalCandidate.portNumber) > 0) &&
-                                c.candidate.indexOf(finalLocalCandidate.priority) > 0;
-                        })[0].candidate;
-                        const finalRemoteCandidate = remoteCandidates[remoteCandidateId];
-                        finalRemoteCandidate.raw = this.stream.getRemoteIceCandidateList().filter((c: RTCIceCandidate) => {
-                            return (!!c.candidate &&
-                                c.candidate.indexOf(finalRemoteCandidate.ipAddress) > 0 &&
-                                c.candidate.indexOf(finalRemoteCandidate.portNumber) > 0) &&
-                                c.candidate.indexOf(finalRemoteCandidate.priority) > 0;
-                        })[0].candidate;
+                        let finalLocalCandidate = localCandidates[localCandidateId];
+                        if (!!finalLocalCandidate) {
+                            const candList = this.stream.getLocalIceCandidateList();
+                            const cand = candList.filter((c: RTCIceCandidate) => {
+                                return (!!c.candidate &&
+                                    c.candidate.indexOf(finalLocalCandidate.ipAddress) >= 0 &&
+                                    c.candidate.indexOf(finalLocalCandidate.portNumber) >= 0 &&
+                                    c.candidate.indexOf(finalLocalCandidate.priority) >= 0);
+                            });
+                            finalLocalCandidate.raw = !!cand[0] ? cand[0].candidate : 'ERROR: Cannot find local candidate in list of sent ICE candidates';
+                        } else {
+                            finalLocalCandidate = 'ERROR: No active local ICE candidate. Probably ICE-TCP is being used'
+                        }
+
+                        let finalRemoteCandidate = remoteCandidates[remoteCandidateId];
+                        if (!!finalRemoteCandidate) {
+                            const candList = this.stream.getRemoteIceCandidateList();
+                            const cand = candList.filter((c: RTCIceCandidate) => {
+                                return (!!c.candidate &&
+                                    c.candidate.indexOf(finalRemoteCandidate.ipAddress) >= 0 &&
+                                    c.candidate.indexOf(finalRemoteCandidate.portNumber) >= 0 &&
+                                    c.candidate.indexOf(finalRemoteCandidate.priority) >= 0);
+                            });
+                            finalRemoteCandidate.raw = !!cand[0] ? cand[0].candidate : 'ERROR: Cannot find remote candidate in list of received ICE candidates';
+                        } else {
+                            finalRemoteCandidate = 'ERROR: No active remote ICE candidate. Probably ICE-TCP is being used'
+                        }
+
                         resolve({
                             googCandidatePair,
                             localCandidate: finalLocalCandidate,

@@ -25,6 +25,16 @@ public class BashCoturnCredentialsService extends CoturnCredentialsService {
 				this.coturnAvailable = false;
 			} else {
 				log.info("COTURN Redis DB accessible with string " + this.coturnDatabaseString);
+				log.info("Cleaning COTURN DB...");
+				response = CommandExecutor.execCommand("/bin/sh", "-c",
+						"redis-cli -n " + this.openviduConfig.getCoturnDatabaseDbname() + " flushdb");
+				String response2 = CommandExecutor.execCommand("/bin/sh", "-c",
+						"redis-cli -n " + this.openviduConfig.getCoturnDatabaseDbname() + " --scan --pattern '*'");
+				if ("OK".equals(response) && response2.isEmpty()) {
+					log.info("COTURN DB is now empty");
+				} else {
+					log.error("COTURN DB is not empty");
+				}
 			}
 		} catch (IOException | InterruptedException e) {
 			e.printStackTrace();
