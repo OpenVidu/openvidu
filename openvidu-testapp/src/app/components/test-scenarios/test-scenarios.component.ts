@@ -417,6 +417,9 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
   }
 
   private parseRemoteCandidatePair(candidateStr: string) {
+    if (!candidateStr) {
+      return 'ERROR: No remote candidate available';
+    }
     const array = candidateStr.split(/\s+/);
     return {
       portNumber: array[5],
