@@ -136,6 +136,10 @@ public class OpenviduConfig {
 		return "\"ip=" + this.coturnRedisIp + " dbname=" + this.coturnRedisDbname + " password="
 				+ this.coturnRedisPassword + " connect_timeout=" + this.coturnRedisConnectTimeout + "\"";
 	}
+	
+	public String getCoturnDatabaseDbname() {
+		return this.coturnRedisDbname;
+	}
 
 	public ParticipantRole[] getRolesFromRecordingNotification() {
 		ParticipantRole[] roles;
