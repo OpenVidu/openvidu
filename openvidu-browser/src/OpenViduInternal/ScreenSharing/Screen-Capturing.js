@@ -1,5 +1,6 @@
 // global variables
 var chromeMediaSource = 'screen';
+var sourceId;
 var screenCallback;
 var isFirefox = typeof window.InstallTrigger !== 'undefined';
 var isOpera = !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0;
@@ -28,24 +29,21 @@ function onMessageCallback(data) {
     }
     // extension shared temp sourceId
     if (data.sourceId && screenCallback) {
-        screenCallback(sourceId = data.sourceId);
+        screenCallback(sourceId = data.sourceId, data.canRequestAudioTrack === true);
     }
 }
 
 // this method can be used to check if chrome extension is installed & enabled.
 function isChromeExtensionAvailable(callback) {
-    if (isFirefox)
-        return callback(false);
-    if (chromeMediaSource == 'desktop')
-        return callback('isFirefox');
+    if (!callback) return;
+    if (chromeMediaSource == 'desktop') return callback(true);
+
     // ask extension if it is available
     window.postMessage('are-you-there', '*');
     setTimeout(function () {
         if (chromeMediaSource == 'screen') {
-            callback('unavailable');
-        }
-        else
-            callback('available');
+            callback(false);
+        } else callback(true);
     }, 2000);
 }
 
@@ -57,6 +55,28 @@ function getSourceId(callback) {
         return callback(sourceId);
     screenCallback = callback;
     window.postMessage('get-sourceId', '*');
+}
+
+// this function can be used to get "source-id" from the extension
+function getCustomSourceId(arr, callback) {
+    if (!arr || !arr.forEach) throw '"arr" parameter is mandatory and it must be an array.';
+    if (!callback) throw '"callback" parameter is mandatory.';
+
+    if (sourceId) return callback(sourceId);
+
+    screenCallback = callback;
+    window.postMessage({
+        'get-custom-sourceId': arr
+    }, '*');
+}
+
+// this function can be used to get "source-id" from the extension
+function getSourceIdWithAudio(callback) {
+    if (!callback) throw '"callback" parameter is mandatory.';
+    if (sourceId) return callback(sourceId);
+
+    screenCallback = callback;
+    window.postMessage('audio-plus-tab', '*');
 }
 
 function getChromeExtensionStatus(extensionid, callback) {
@@ -73,9 +93,8 @@ function getChromeExtensionStatus(extensionid, callback) {
         window.postMessage('are-you-there', '*');
         setTimeout(function () {
             if (chromeMediaSource == 'screen') {
-                callback(extensionid == extensionid ? 'installed-enabled' : 'installed-disabled');
-            }
-            else
+                callback('installed-disabled');
+            } else
                 callback('installed-enabled');
         }, 2000);
     };
@@ -84,9 +103,12 @@ function getChromeExtensionStatus(extensionid, callback) {
     };
 }
 
+function getScreenConstraintsWithAudio(callback) {
+    getScreenConstraints(callback, true);
+}
+
 // this function explains how to use above methods/objects
-function getScreenConstraints(callback) {
-    sourceId = '';
+function getScreenConstraints(callback, captureSourceIdWithAudio) {
     var firefoxScreenConstraints = {
         mozMediaSource: 'window',
         mediaSource: 'window'
@@ -107,21 +129,36 @@ function getScreenConstraints(callback) {
     // if installed and available then it will invoke extension API
     // otherwise it will fallback to command-line based screen capturing API
     if (chromeMediaSource == 'desktop' && !sourceId) {
-        getSourceId(function () {
-            screen_constraints.mandatory.chromeMediaSourceId = sourceId;
-            callback(sourceId == 'PermissionDeniedError' ? sourceId : null, screen_constraints);
-        });
+        if (captureSourceIdWithAudio) {
+            getSourceIdWithAudio(function (sourceId, canRequestAudioTrack) {
+                screen_constraints.mandatory.chromeMediaSourceId = sourceId;
+
+                if (canRequestAudioTrack) {
+                    screen_constraints.canRequestAudioTrack = true;
+                }
+                callback(sourceId == 'PermissionDeniedError' ? sourceId : null, screen_constraints);
+            });
+        }
+        else {
+            getSourceId(function (sourceId) {
+                screen_constraints.mandatory.chromeMediaSourceId = sourceId;
+                callback(sourceId == 'PermissionDeniedError' ? sourceId : null, screen_constraints);
+            });
+        }
         return;
     }
+
     // this statement sets gets 'sourceId" and sets "chromeMediaSourceId" 
     if (chromeMediaSource == 'desktop') {
         screen_constraints.mandatory.chromeMediaSourceId = sourceId;
     }
+
     // now invoking native getUserMedia API
     callback(null, screen_constraints);
 }
 
 exports.getScreenConstraints = getScreenConstraints;
+exports.getScreenConstraintsWithAudio = getScreenConstraintsWithAudio;
 exports.isChromeExtensionAvailable = isChromeExtensionAvailable;
 exports.getChromeExtensionStatus = getChromeExtensionStatus;
 exports.getSourceId = getSourceId;

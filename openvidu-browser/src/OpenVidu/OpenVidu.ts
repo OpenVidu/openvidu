@@ -404,7 +404,7 @@ export class OpenVidu {
 
           if (publisherProperties.videoSource === 'screen') {
 
-            if (platform.name !== 'Chrome' && platform.name !== 'Firefox') {
+            if (platform.name !== 'Chrome' && platform.name!.indexOf('Firefox') === -1)  {
               const error = new OpenViduError(OpenViduErrorName.SCREEN_SHARING_NOT_SUPPORTED, 'You can only screen share in desktop Chrome and Firefox. Detected browser: ' + platform.name);
               console.error(error);
               reject(error);
@@ -416,7 +416,7 @@ export class OpenVidu {
 
                 const extensionId = this.advancedConfiguration.screenShareChromeExtension.split('/').pop()!!.trim();
                 screenSharing.getChromeExtensionStatus(extensionId, (status) => {
-                  if (status === 'installed-enabled') {
+                  if (status === 'installed-enabled' || (status === 'not-chrome' && platform.name!.indexOf('Firefox') !== -1)) {
                     screenSharing.getScreenConstraints((error, screenConstraints) => {
                       if (!!error && error === 'permission-denied') {
                         const error = new OpenViduError(OpenViduErrorName.SCREEN_CAPTURE_DENIED, 'You must allow access to one window of your desktop');
