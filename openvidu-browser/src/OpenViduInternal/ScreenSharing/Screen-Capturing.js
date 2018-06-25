@@ -17,7 +17,6 @@ window.addEventListener('message', function (event) {
 function onMessageCallback(data) {
     // "cancel" button is clicked
     if (data == 'PermissionDeniedError') {
-        chromeMediaSource = 'PermissionDeniedError';
         if (screenCallback)
             return screenCallback('PermissionDeniedError');
         else
@@ -109,6 +108,7 @@ function getScreenConstraintsWithAudio(callback) {
 
 // this function explains how to use above methods/objects
 function getScreenConstraints(callback, captureSourceIdWithAudio) {
+    sourceId = '';
     var firefoxScreenConstraints = {
         mozMediaSource: 'window',
         mediaSource: 'window'

@@ -404,39 +404,40 @@ export class OpenVidu {
 
           if (publisherProperties.videoSource === 'screen') {
 
-            if (platform.name !== 'Chrome' && platform.name!.indexOf('Firefox') === -1)  {
+            if (platform.name !== 'Chrome' && platform.name!.indexOf('Firefox') === -1) {
               const error = new OpenViduError(OpenViduErrorName.SCREEN_SHARING_NOT_SUPPORTED, 'You can only screen share in desktop Chrome and Firefox. Detected browser: ' + platform.name);
               console.error(error);
               reject(error);
             } else {
 
-              if (!!this.advancedConfiguration.screenShareChromeExtension) {
+              if (!!this.advancedConfiguration.screenShareChromeExtension && !(platform.name!.indexOf('Firefox') !== -1)) {
 
                 // Custom screen sharing extension for Chrome
 
-                const extensionId = this.advancedConfiguration.screenShareChromeExtension.split('/').pop()!!.trim();
-                screenSharing.getChromeExtensionStatus(extensionId, (status) => {
-                  if (status === 'installed-enabled' || (status === 'not-chrome' && platform.name!.indexOf('Firefox') !== -1)) {
-                    screenSharing.getScreenConstraints((error, screenConstraints) => {
-                      if (!!error && error === 'permission-denied') {
-                        const error = new OpenViduError(OpenViduErrorName.SCREEN_CAPTURE_DENIED, 'You must allow access to one window of your desktop');
-                        console.error(error);
-                        reject(error);
-                      } else {
-                        mediaConstraints.video = screenConstraints;
-                        resolve(mediaConstraints);
-                      }
-                    });
-                  }
-                  if (status === 'installed-disabled') {
-                    const error = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_DISABLED, 'You must enable the screen extension');
-                    console.error(error);
-                    reject(error);
-                  }
-                  if (status === 'not-installed') {
-                    const error = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_NOT_INSTALLED, (<string>this.advancedConfiguration.screenShareChromeExtension));
-                    console.error(error);
-                    reject(error);
+                screenSharing.getScreenConstraints((error, screenConstraints) => {
+                  if (!!error || !!screenConstraints.mandatory && screenConstraints.mandatory.chromeMediaSource === 'screen') {
+                    if (error === 'permission-denied' || error === 'PermissionDeniedError') {
+                      const error = new OpenViduError(OpenViduErrorName.SCREEN_CAPTURE_DENIED, 'You must allow access to one window of your desktop');
+                      console.error(error);
+                      reject(error);
+                    } else {
+                      const extensionId = this.advancedConfiguration.screenShareChromeExtension!.split('/').pop()!!.trim();
+                      screenSharing.getChromeExtensionStatus(extensionId, (status) => {
+                        if (status === 'installed-disabled') {
+                          const error = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_DISABLED, 'You must enable the screen extension');
+                          console.error(error);
+                          reject(error);
+                        }
+                        if (status === 'not-installed') {
+                          const error = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_NOT_INSTALLED, (<string>this.advancedConfiguration.screenShareChromeExtension));
+                          console.error(error);
+                          reject(error);
+                        }
+                      });
+                    }
+                  } else {
+                    mediaConstraints.video = screenConstraints;
+                    resolve(mediaConstraints);
                   }
                 });
               } else {
