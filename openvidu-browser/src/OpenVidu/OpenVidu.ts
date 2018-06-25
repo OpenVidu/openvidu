@@ -59,7 +59,7 @@ export class OpenVidu {
   /**
    * @hidden
    */
-  turnCredentials: RTCIceServer;
+  iceServers: RTCIceServer[];
   /**
    * @hidden
    */

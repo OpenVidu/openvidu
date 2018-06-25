@@ -530,8 +530,8 @@ export class Stream {
             returnValue = this.session.openvidu.advancedConfiguration.iceServers === 'freeice' ?
                 undefined :
                 this.session.openvidu.advancedConfiguration.iceServers;
-        } else if (this.session.openvidu.turnCredentials) {
-            returnValue = [this.session.openvidu.turnCredentials];
+        } else if (this.session.openvidu.iceServers) {
+            returnValue = this.session.openvidu.iceServers;
         } else {
             returnValue = undefined;
         }

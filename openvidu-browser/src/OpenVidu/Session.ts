@@ -945,9 +945,13 @@ export class Session implements EventDispatcher {
             this.openvidu.recorder = true;
         }
         if (!!turnUsername && !!turnCredential) {
+            const stunUrl = 'stun:' + url.hostname + ':3478';
             const turnUrl1 = 'turn:' + url.hostname + ':3478';
             const turnUrl2 = turnUrl1 + '?transport=tcp';
-            this.openvidu.turnCredentials = { urls: [turnUrl1, turnUrl2], username: turnUsername, credential: turnCredential };
+            this.openvidu.iceServers = [
+                { urls: [stunUrl] },
+                { urls: [turnUrl1, turnUrl2], username: turnUsername, credential: turnCredential }
+            ];
             console.log('TURN temp credentials [' + turnUsername + ':' + turnCredential + ']')
         }
         if (!!role) {
