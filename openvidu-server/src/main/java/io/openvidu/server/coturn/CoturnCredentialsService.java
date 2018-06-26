@@ -1,5 +1,7 @@
 package io.openvidu.server.coturn;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -16,7 +18,7 @@ public abstract class CoturnCredentialsService {
 	protected String coturnDatabaseString;
 	protected String trimmedCoturnDatabaseString;
 	
-	protected boolean coturnAvailable = true;
+	protected AtomicBoolean coturnAvailable = new AtomicBoolean(false);
 	
 	public CoturnCredentialsService(OpenviduConfig openviduConfig) {
 		this.openviduConfig = openviduConfig;
@@ -29,7 +31,7 @@ public abstract class CoturnCredentialsService {
 	public abstract boolean deleteUser(String user);
 	
 	public boolean isCoturnAvailable() {
-		return this.coturnAvailable;
+		return this.coturnAvailable.get();
 	}
 
 }

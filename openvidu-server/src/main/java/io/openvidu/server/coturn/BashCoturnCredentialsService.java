@@ -23,11 +23,9 @@ public class BashCoturnCredentialsService extends CoturnCredentialsService {
 				// No coturn installed in the host machine
 				log.warn("No COTURN server is installed in the host machine. Response: " + response);
 				log.warn("No COTURN server will be automatically configured for clients");
-				this.coturnAvailable = false;
 			} else if (response.contains("Cannot initialize Redis DB connection")) {
 				log.warn("Redis DB is not accesible with connection string " + this.coturnDatabaseString);
 				log.warn("No COTURN server will be automatically configured for clients");
-				this.coturnAvailable = false;
 			} else {
 				log.info("COTURN Redis DB accessible with string " + this.coturnDatabaseString);
 				log.info("Cleaning COTURN DB...");
@@ -46,11 +44,12 @@ public class BashCoturnCredentialsService extends CoturnCredentialsService {
 				} else {
 					log.error("COTURN DB is not empty");
 				}
+				this.coturnAvailable.compareAndSet(false, true);
+				log.info("Using COTURN credentials service for BASH environment");
 			}
 		} catch (IOException | InterruptedException e) {
 			e.printStackTrace();
 		}
-		log.info("Using COTURN credentials service for BASH environment");
 	}
 
 	@Override
