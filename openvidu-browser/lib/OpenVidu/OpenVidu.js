@@ -328,38 +328,40 @@ var OpenVidu = /** @class */ (function () {
                 }
                 if (!!publisherProperties.videoSource && typeof publisherProperties.videoSource === 'string') {
                     if (publisherProperties.videoSource === 'screen') {
-                        if (platform.name !== 'Chrome' && platform.name !== 'Firefox') {
+                        if (platform.name !== 'Chrome' && platform.name.indexOf('Firefox') === -1) {
                             var error = new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.SCREEN_SHARING_NOT_SUPPORTED, 'You can only screen share in desktop Chrome and Firefox. Detected browser: ' + platform.name);
                             console.error(error);
                             reject(error);
                         }
                         else {
-                            if (!!_this.advancedConfiguration.screenShareChromeExtension) {
+                            if (!!_this.advancedConfiguration.screenShareChromeExtension && !(platform.name.indexOf('Firefox') !== -1)) {
                                 // Custom screen sharing extension for Chrome
-                                var extensionId = _this.advancedConfiguration.screenShareChromeExtension.split('/').pop().trim();
-                                screenSharing.getChromeExtensionStatus(extensionId, function (status) {
-                                    if (status === 'installed-enabled') {
-                                        screenSharing.getScreenConstraints(function (error, screenConstraints) {
-                                            if (!!error && error === 'permission-denied') {
-                                                var error_1 = new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.SCREEN_CAPTURE_DENIED, 'You must allow access to one window of your desktop');
-                                                console.error(error_1);
-                                                reject(error_1);
-                                            }
-                                            else {
-                                                mediaConstraints.video = screenConstraints;
-                                                resolve(mediaConstraints);
-                                            }
-                                        });
+                                screenSharing.getScreenConstraints(function (error, screenConstraints) {
+                                    if (!!error || !!screenConstraints.mandatory && screenConstraints.mandatory.chromeMediaSource === 'screen') {
+                                        if (error === 'permission-denied' || error === 'PermissionDeniedError') {
+                                            var error_1 = new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.SCREEN_CAPTURE_DENIED, 'You must allow access to one window of your desktop');
+                                            console.error(error_1);
+                                            reject(error_1);
+                                        }
+                                        else {
+                                            var extensionId = _this.advancedConfiguration.screenShareChromeExtension.split('/').pop().trim();
+                                            screenSharing.getChromeExtensionStatus(extensionId, function (status) {
+                                                if (status === 'installed-disabled') {
+                                                    var error_2 = new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.SCREEN_EXTENSION_DISABLED, 'You must enable the screen extension');
+                                                    console.error(error_2);
+                                                    reject(error_2);
+                                                }
+                                                if (status === 'not-installed') {
+                                                    var error_3 = new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.SCREEN_EXTENSION_NOT_INSTALLED, _this.advancedConfiguration.screenShareChromeExtension);
+                                                    console.error(error_3);
+                                                    reject(error_3);
+                                                }
+                                            });
+                                        }
                                     }
-                                    if (status === 'installed-disabled') {
-                                        var error = new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.SCREEN_EXTENSION_DISABLED, 'You must enable the screen extension');
-                                        console.error(error);
-                                        reject(error);
-                                    }
-                                    if (status === 'not-installed') {
-                                        var error = new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.SCREEN_EXTENSION_NOT_INSTALLED, _this.advancedConfiguration.screenShareChromeExtension);
-                                        console.error(error);
-                                        reject(error);
+                                    else {
+                                        mediaConstraints.video = screenConstraints;
+                                        resolve(mediaConstraints);
                                     }
                                 });
                             }
@@ -368,19 +370,21 @@ var OpenVidu = /** @class */ (function () {
                                 screenSharingAuto.getScreenId(function (error, sourceId, screenConstraints) {
                                     if (!!error) {
                                         if (error === 'not-installed') {
-                                            var error_2 = new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.SCREEN_EXTENSION_NOT_INSTALLED, 'https://chrome.google.com/webstore/detail/screen-capturing/ajhifddimkapgcifgcodmmfdlknahffk');
-                                            console.error(error_2);
-                                            reject(error_2);
-                                        }
-                                        else if (error === 'installed-disabled') {
-                                            var error_3 = new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.SCREEN_EXTENSION_DISABLED, 'You must enable the screen extension');
-                                            console.error(error_3);
-                                            reject(error_3);
-                                        }
-                                        else if (error === 'permission-denied') {
-                                            var error_4 = new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.SCREEN_CAPTURE_DENIED, 'You must allow access to one window of your desktop');
+                                            var extensionUrl = !!_this.advancedConfiguration.screenShareChromeExtension ? _this.advancedConfiguration.screenShareChromeExtension :
+                                                'https://chrome.google.com/webstore/detail/openvidu-screensharing/lfcgfepafnobdloecchnfaclibenjold';
+                                            var error_4 = new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.SCREEN_EXTENSION_NOT_INSTALLED, extensionUrl);
                                             console.error(error_4);
                                             reject(error_4);
+                                        }
+                                        else if (error === 'installed-disabled') {
+                                            var error_5 = new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.SCREEN_EXTENSION_DISABLED, 'You must enable the screen extension');
+                                            console.error(error_5);
+                                            reject(error_5);
+                                        }
+                                        else if (error === 'permission-denied') {
+                                            var error_6 = new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.SCREEN_CAPTURE_DENIED, 'You must allow access to one window of your desktop');
+                                            console.error(error_6);
+                                            reject(error_6);
                                         }
                                     }
                                     else {
@@ -423,7 +427,7 @@ var OpenVidu = /** @class */ (function () {
                 onreconnected: this.reconnectedCallback.bind(this)
             },
             rpc: {
-                requestTimeout: 15000,
+                requestTimeout: 10000,
                 participantJoined: this.session.onParticipantJoined.bind(this.session),
                 participantPublished: this.session.onParticipantPublished.bind(this.session),
                 participantUnpublished: this.session.onParticipantUnpublished.bind(this.session),

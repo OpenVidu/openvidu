@@ -65,7 +65,9 @@ var Publisher = /** @class */ (function (_super) {
      * @param value `true` to publish the audio stream, `false` to unpublish it
      */
     Publisher.prototype.publishAudio = function (value) {
-        this.stream.getWebRtcPeer().audioEnabled = value;
+        this.stream.getMediaStream().getAudioTracks().forEach(function (track) {
+            track.enabled = value;
+        });
         console.info("'Publisher' has " + (value ? 'published' : 'unpublished') + ' its audio stream');
     };
     /**
@@ -73,7 +75,9 @@ var Publisher = /** @class */ (function (_super) {
      * @param value `true` to publish the video stream, `false` to unpublish it
      */
     Publisher.prototype.publishVideo = function (value) {
-        this.stream.getWebRtcPeer().videoEnabled = value;
+        this.stream.getMediaStream().getVideoTracks().forEach(function (track) {
+            track.enabled = value;
+        });
         console.info("'Publisher' has " + (value ? 'published' : 'unpublished') + ' its video stream');
     };
     /**

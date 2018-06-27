@@ -77,6 +77,70 @@ var WebRtcStats = /** @class */ (function () {
             console.warn('WebRtc stats stopped for disposed stream ' + this.stream.streamId + ' of connection ' + this.stream.connection.connectionId);
         }
     };
+    WebRtcStats.prototype.getSelectedIceCandidateInfo = function () {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            _this.getStatsAgnostic(_this.stream.getRTCPeerConnection(), function (stats) {
+                if ((platform.name.indexOf('Chrome') !== -1) || (platform.name.indexOf('Opera') !== -1)) {
+                    var localCandidateId = void 0, remoteCandidateId = void 0, googCandidatePair = void 0;
+                    var localCandidates = {};
+                    var remoteCandidates = {};
+                    for (var key in stats) {
+                        var stat = stats[key];
+                        if (stat.type === 'localcandidate') {
+                            localCandidates[stat.id] = stat;
+                        }
+                        else if (stat.type === 'remotecandidate') {
+                            remoteCandidates[stat.id] = stat;
+                        }
+                        else if (stat.type === 'googCandidatePair' && (stat.googActiveConnection === 'true')) {
+                            googCandidatePair = stat;
+                            localCandidateId = stat.localCandidateId;
+                            remoteCandidateId = stat.remoteCandidateId;
+                        }
+                    }
+                    var finalLocalCandidate_1 = localCandidates[localCandidateId];
+                    if (!!finalLocalCandidate_1) {
+                        var candList = _this.stream.getLocalIceCandidateList();
+                        var cand = candList.filter(function (c) {
+                            return (!!c.candidate &&
+                                c.candidate.indexOf(finalLocalCandidate_1.ipAddress) >= 0 &&
+                                c.candidate.indexOf(finalLocalCandidate_1.portNumber) >= 0 &&
+                                c.candidate.indexOf(finalLocalCandidate_1.priority) >= 0);
+                        });
+                        finalLocalCandidate_1.raw = !!cand[0] ? cand[0].candidate : 'ERROR: Cannot find local candidate in list of sent ICE candidates';
+                    }
+                    else {
+                        finalLocalCandidate_1 = 'ERROR: No active local ICE candidate. Probably ICE-TCP is being used';
+                    }
+                    var finalRemoteCandidate_1 = remoteCandidates[remoteCandidateId];
+                    if (!!finalRemoteCandidate_1) {
+                        var candList = _this.stream.getRemoteIceCandidateList();
+                        var cand = candList.filter(function (c) {
+                            return (!!c.candidate &&
+                                c.candidate.indexOf(finalRemoteCandidate_1.ipAddress) >= 0 &&
+                                c.candidate.indexOf(finalRemoteCandidate_1.portNumber) >= 0 &&
+                                c.candidate.indexOf(finalRemoteCandidate_1.priority) >= 0);
+                        });
+                        finalRemoteCandidate_1.raw = !!cand[0] ? cand[0].candidate : 'ERROR: Cannot find remote candidate in list of received ICE candidates';
+                    }
+                    else {
+                        finalRemoteCandidate_1 = 'ERROR: No active remote ICE candidate. Probably ICE-TCP is being used';
+                    }
+                    resolve({
+                        googCandidatePair: googCandidatePair,
+                        localCandidate: finalLocalCandidate_1,
+                        remoteCandidate: finalRemoteCandidate_1
+                    });
+                }
+                else {
+                    reject('Selected ICE candidate info only available for Chrome');
+                }
+            }, function (error) {
+                reject(error);
+            });
+        });
+    };
     WebRtcStats.prototype.sendStatsToHttpEndpoint = function (instrumentation) {
         var _this = this;
         var sendPost = function (json) {
@@ -174,7 +238,7 @@ var WebRtcStats = /** @class */ (function () {
                     }
                 });
             }
-            else if (platform.name.indexOf('Chrome') !== -1) {
+            else if ((platform.name.indexOf('Chrome') !== -1) || (platform.name.indexOf('Opera') !== -1)) {
                 for (var _i = 0, _a = Object.keys(stats); _i < _a.length; _i++) {
                     var key = _a[_i];
                     var stat = stats[key];
@@ -256,10 +320,14 @@ var WebRtcStats = /** @class */ (function () {
         this.getStatsAgnostic(this.stream.getRTCPeerConnection(), f, function (error) { console.log(error); });
     };
     WebRtcStats.prototype.standardizeReport = function (response) {
+        console.log(response);
+        var standardReport = {};
         if (platform.name.indexOf('Firefox') !== -1) {
+            Object.keys(response).forEach(function (key) {
+                console.log(response[key]);
+            });
             return response;
         }
-        var standardReport = {};
         response.result().forEach(function (report) {
             var standardStats = {
                 id: report.id,
@@ -277,12 +345,12 @@ var WebRtcStats = /** @class */ (function () {
         var _this = this;
         if (platform.name.indexOf('Firefox') !== -1) {
             // getStats takes args in different order in Chrome and Firefox
-            return pc.getStats(null, function (response) {
+            return pc.getStats(null).then(function (response) {
                 var report = _this.standardizeReport(response);
                 successCb(report);
-            }, failureCb);
+            })["catch"](failureCb);
         }
-        else if (platform.name.indexOf('Chrome') !== -1) {
+        else if ((platform.name.indexOf('Chrome') !== -1) || (platform.name.indexOf('Opera') !== -1)) {
             // In Chrome, the first two arguments are reversed
             return pc.getStats(function (response) {
                 var report = _this.standardizeReport(response);

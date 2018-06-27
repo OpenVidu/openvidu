@@ -30,6 +30,14 @@ export declare class OpenVidu {
     /**
      * @hidden
      */
+    iceServers: RTCIceServer[];
+    /**
+     * @hidden
+     */
+    role: string;
+    /**
+     * @hidden
+     */
     advancedConfiguration: OpenViduAdvancedConfiguration;
     constructor();
     /**

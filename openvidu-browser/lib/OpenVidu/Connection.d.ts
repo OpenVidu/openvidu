@@ -40,7 +40,7 @@ export declare class Connection {
     /**
      * @hidden
      */
-    sendIceCandidate(candidate: any): void;
+    sendIceCandidate(candidate: RTCIceCandidate): void;
     /**
      * @hidden
      */

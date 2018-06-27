@@ -16,10 +16,11 @@
  *
  */
 exports.__esModule = true;
+var WebRtcPeer_1 = require("../OpenViduInternal/WebRtcPeer/WebRtcPeer");
 var WebRtcStats_1 = require("../OpenViduInternal/WebRtcStats/WebRtcStats");
 var PublisherSpeakingEvent_1 = require("../OpenViduInternal/Events/PublisherSpeakingEvent");
 var EventEmitter = require("wolfy87-eventemitter");
-var kurentoUtils = require("../OpenViduInternal/KurentoUtils/kurento-utils-js");
+var hark = require("hark");
 /**
  * Represents each one of the media streams available in OpenVidu Server for certain session.
  * Each [[Publisher]] and [[Subscriber]] has an attribute of type Stream, as they give access
@@ -59,17 +60,14 @@ var Stream = /** @class */ (function () {
             this.outboundStreamOpts = options;
             if (this.isSendVideo()) {
                 if (this.isSendScreen()) {
-                    this.streamId = 'SCREEN';
                     this.typeOfVideo = 'SCREEN';
                 }
                 else {
-                    this.streamId = 'CAMERA';
                     this.typeOfVideo = 'CAMERA';
                 }
                 this.frameRate = this.outboundStreamOpts.publisherProperties.frameRate;
             }
             else {
-                this.streamId = 'MICRO';
                 delete this.typeOfVideo;
             }
             this.hasAudio = this.isSendAudio();
@@ -109,7 +107,7 @@ var Stream = /** @class */ (function () {
      * @hidden
      */
     Stream.prototype.getRTCPeerConnection = function () {
-        return this.webRtcPeer.peerConnection;
+        return this.webRtcPeer.pc;
     };
     /**
      * @hidden
@@ -228,7 +226,7 @@ var Stream = /** @class */ (function () {
             var harkOptions = this.session.openvidu.advancedConfiguration.publisherSpeakingEventsOptions || {};
             harkOptions.interval = (typeof harkOptions.interval === 'number') ? harkOptions.interval : 50;
             harkOptions.threshold = (typeof harkOptions.threshold === 'number') ? harkOptions.threshold : -50;
-            this.speechEvent = kurentoUtils.WebRtcPeer.hark(this.mediaStream, harkOptions);
+            this.speechEvent = hark(this.mediaStream, harkOptions);
         }
     };
     /**
@@ -266,6 +264,35 @@ var Stream = /** @class */ (function () {
         this.speechEvent.stop();
         this.speechEvent = undefined;
     };
+    /**
+     * @hidden
+     */
+    Stream.prototype.isLocal = function () {
+        // inbound options undefined and outbound options defined
+        return (!this.inboundStreamOpts && !!this.outboundStreamOpts);
+    };
+    /**
+     * @hidden
+     */
+    Stream.prototype.getSelectedIceCandidate = function () {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            _this.webRtcStats.getSelectedIceCandidateInfo()
+                .then(function (report) { return resolve(report); })["catch"](function (error) { return reject(error); });
+        });
+    };
+    /**
+     * @hidden
+     */
+    Stream.prototype.getRemoteIceCandidateList = function () {
+        return this.webRtcPeer.remoteCandidatesQueue;
+    };
+    /**
+     * @hidden
+     */
+    Stream.prototype.getLocalIceCandidateList = function () {
+        return this.webRtcPeer.localCandidatesQueue;
+    };
     /* Private methods */
     Stream.prototype.initWebRtcPeerSend = function () {
         var _this = this;
@@ -275,15 +302,13 @@ var Stream = /** @class */ (function () {
                 video: _this.isSendVideo()
             };
             var options = {
-                videoStream: _this.mediaStream,
+                mediaStream: _this.mediaStream,
                 mediaConstraints: userMediaConstraints,
                 onicecandidate: _this.connection.sendIceCandidate.bind(_this.connection),
-                iceServers: _this.session.openvidu.advancedConfiguration.iceServers
+                iceServers: _this.getIceServersConf(),
+                simulcast: false
             };
-            var successCallback = function (error, sdpOfferParam, wp) {
-                if (error) {
-                    reject(new Error('(publish) SDP offer error: ' + JSON.stringify(error)));
-                }
+            var successCallback = function (sdpOfferParam) {
                 console.debug('Sending SDP offer to publish as '
                     + _this.streamId, sdpOfferParam);
                 _this.session.openvidu.sendRequest('publishVideo', {
@@ -298,15 +323,15 @@ var Stream = /** @class */ (function () {
                         reject('Error on publishVideo: ' + JSON.stringify(error));
                     }
                     else {
-                        _this.processSdpAnswer(response.sdpAnswer)
+                        _this.webRtcPeer.processAnswer(response.sdpAnswer)
                             .then(function () {
+                            _this.streamId = response.id;
                             _this.isLocalStreamPublished = true;
                             if (_this.displayMyRemote()) {
-                                // If remote now we can set the srcObject value of video elements
-                                // 'streamPlaying' event will be triggered
-                                _this.updateMediaStreamInVideos();
+                                _this.remotePeerSuccesfullyEstablished();
                             }
                             _this.ee.emitEvent('stream-created-by-publisher');
+                            _this.initWebRtcStats();
                             resolve();
                         })["catch"](function (error) {
                             reject(error);
@@ -316,21 +341,16 @@ var Stream = /** @class */ (function () {
                 });
             };
             if (_this.displayMyRemote()) {
-                _this.webRtcPeer = kurentoUtils.WebRtcPeer.WebRtcPeerSendrecv(options, function (err) {
-                    if (err) {
-                        reject(err);
-                    }
-                    _this.webRtcPeer.generateOffer(successCallback);
-                });
+                _this.webRtcPeer = new WebRtcPeer_1.WebRtcPeerSendrecv(options);
             }
             else {
-                _this.webRtcPeer = kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(options, function (error) {
-                    if (error) {
-                        reject(error);
-                    }
-                    _this.webRtcPeer.generateOffer(successCallback);
-                });
+                _this.webRtcPeer = new WebRtcPeer_1.WebRtcPeerSendonly(options);
             }
+            _this.webRtcPeer.generateOffer().then(function (offer) {
+                successCallback(offer);
+            })["catch"](function (error) {
+                reject(new Error('(publish) SDP offer error: ' + JSON.stringify(error)));
+            });
         });
     };
     Stream.prototype.initWebRtcPeerReceive = function () {
@@ -343,12 +363,11 @@ var Stream = /** @class */ (function () {
             console.debug("'Session.subscribe(Stream)' called. Constraints of generate SDP offer", offerConstraints);
             var options = {
                 onicecandidate: _this.connection.sendIceCandidate.bind(_this.connection),
-                mediaConstraints: offerConstraints
+                mediaConstraints: offerConstraints,
+                iceServers: _this.getIceServersConf(),
+                simulcast: false
             };
-            var successCallback = function (error, sdpOfferParam, wp) {
-                if (error) {
-                    reject(new Error('(subscribe) SDP offer error: ' + JSON.stringify(error)));
-                }
+            var successCallback = function (sdpOfferParam) {
                 console.debug('Sending SDP offer to subscribe to '
                     + _this.streamId, sdpOfferParam);
                 _this.session.openvidu.sendRequest('receiveVideoFrom', {
@@ -359,7 +378,9 @@ var Stream = /** @class */ (function () {
                         reject(new Error('Error on recvVideoFrom: ' + JSON.stringify(error)));
                     }
                     else {
-                        _this.processSdpAnswer(response.sdpAnswer).then(function () {
+                        _this.webRtcPeer.processAnswer(response.sdpAnswer).then(function () {
+                            _this.remotePeerSuccesfullyEstablished();
+                            _this.initWebRtcStats();
                             resolve();
                         })["catch"](function (error) {
                             reject(error);
@@ -367,42 +388,24 @@ var Stream = /** @class */ (function () {
                     }
                 });
             };
-            _this.webRtcPeer = kurentoUtils.WebRtcPeer.WebRtcPeerRecvonly(options, function (error) {
-                if (error) {
-                    reject(error);
-                }
-                _this.webRtcPeer.generateOffer(successCallback);
+            _this.webRtcPeer = new WebRtcPeer_1.WebRtcPeerRecvonly(options);
+            _this.webRtcPeer.generateOffer()
+                .then(function (offer) {
+                successCallback(offer);
+            })["catch"](function (error) {
+                reject(new Error('(subscribe) SDP offer error: ' + JSON.stringify(error)));
             });
         });
     };
-    Stream.prototype.processSdpAnswer = function (sdpAnswer) {
-        var _this = this;
-        return new Promise(function (resolve, reject) {
-            var answer = new RTCSessionDescription({
-                type: 'answer',
-                sdp: sdpAnswer
-            });
-            console.debug(_this.streamId + ': set peer connection with recvd SDP answer', sdpAnswer);
-            var streamId = _this.streamId;
-            var peerConnection = _this.webRtcPeer.peerConnection;
-            peerConnection.setRemoteDescription(answer, function () {
-                // Update remote MediaStream object except when local stream
-                if (!_this.isLocal() || _this.displayMyRemote()) {
-                    _this.mediaStream = peerConnection.getRemoteStreams()[0];
-                    console.debug('Peer remote stream', _this.mediaStream);
-                    if (!!_this.mediaStream) {
-                        _this.ee.emitEvent('mediastream-updated');
-                        if (!!_this.mediaStream.getAudioTracks()[0] && _this.session.speakingEventsEnabled) {
-                            _this.enableSpeakingEvents();
-                        }
-                    }
-                }
-                _this.initWebRtcStats();
-                resolve();
-            }, function (error) {
-                reject(new Error(_this.streamId + ': Error setting SDP to the peer connection: ' + JSON.stringify(error)));
-            });
-        });
+    Stream.prototype.remotePeerSuccesfullyEstablished = function () {
+        this.mediaStream = this.webRtcPeer.pc.getRemoteStreams()[0];
+        console.debug('Peer remote stream', this.mediaStream);
+        if (!!this.mediaStream) {
+            this.ee.emitEvent('mediastream-updated');
+            if (!this.displayMyRemote() && !!this.mediaStream.getAudioTracks()[0] && this.session.speakingEventsEnabled) {
+                this.enableSpeakingEvents();
+            }
+        }
     };
     Stream.prototype.initWebRtcStats = function () {
         this.webRtcStats = new WebRtcStats_1.WebRtcStats(this);
@@ -413,12 +416,20 @@ var Stream = /** @class */ (function () {
             this.webRtcStats.stopWebRtcStats();
         }
     };
-    /**
-     * @hidden
-     */
-    Stream.prototype.isLocal = function () {
-        // inbound options undefined and outbound options defined
-        return (!this.inboundStreamOpts && !!this.outboundStreamOpts);
+    Stream.prototype.getIceServersConf = function () {
+        var returnValue;
+        if (!!this.session.openvidu.advancedConfiguration.iceServers) {
+            returnValue = this.session.openvidu.advancedConfiguration.iceServers === 'freeice' ?
+                undefined :
+                this.session.openvidu.advancedConfiguration.iceServers;
+        }
+        else if (this.session.openvidu.iceServers) {
+            returnValue = this.session.openvidu.iceServers;
+        }
+        else {
+            returnValue = undefined;
+        }
+        return returnValue;
     };
     return Stream;
 }());

@@ -9,6 +9,7 @@ export declare class WebRtcStats {
     isEnabled(): boolean;
     initWebRtcStats(): void;
     stopWebRtcStats(): void;
+    getSelectedIceCandidateInfo(): Promise<any>;
     private sendStatsToHttpEndpoint;
     private standardizeReport;
     private getStatsAgnostic;
