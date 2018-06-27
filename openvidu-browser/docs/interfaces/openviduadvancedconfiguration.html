@@ -67,6 +67,13 @@
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<div class="lead">
+						<p>See <a href="../classes/openvidu.html#setadvancedconfiguration">OpenVidu.setAdvancedConfiguration</a></p>
+					</div>
+				</div>
+			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
@@ -95,15 +102,16 @@
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
 					<a name="iceservers" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagOptional">Optional</span> ice<wbr>Servers</h3>
-					<div class="tsd-signature tsd-kind-icon">ice<wbr>Servers<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">RTCIceServer</span><span class="tsd-signature-symbol">[]</span></div>
+					<div class="tsd-signature tsd-kind-icon">ice<wbr>Servers<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">RTCIceServer</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Interfaces/Public/OpenViduAdvancedConfiguration.ts#L23">OpenViduInternal/Interfaces/Public/OpenViduAdvancedConfiguration.ts:23</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Interfaces/Public/OpenViduAdvancedConfiguration.ts#L27">OpenViduInternal/Interfaces/Public/OpenViduAdvancedConfiguration.ts:27</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
-							<p>Array of <a href="https://developer.mozilla.org/en-US/docs/Web/API/RTCIceServer">RTCIceServer</a> to be used by OpenVidu Browser instead of the default free ice server array (got from <a href="https://github.com/DamonOehlman/freeice">freeice</a> library)</p>
+							<p>Array of <a href="https://developer.mozilla.org/en-US/docs/Web/API/RTCIceServer">RTCIceServer</a> to be used by OpenVidu Browser. By default OpenVidu will generate the required credentials to use the COTURN server hosted along OpenVidu Server
+							You can also set this property to string &#39;freeice&#39; to force the use of free STUN servers instead (got thanks to <a href="https://github.com/DamonOehlman/freeice">freeice</a> library).</p>
 						</div>
 					</div>
 				</section>
@@ -113,7 +121,7 @@
 					<div class="tsd-signature tsd-kind-icon">publisher<wbr>Speaking<wbr>Events<wbr>Options<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Interfaces/Public/OpenViduAdvancedConfiguration.ts#L36">OpenViduInternal/Interfaces/Public/OpenViduAdvancedConfiguration.ts:36</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Interfaces/Public/OpenViduAdvancedConfiguration.ts#L40">OpenViduInternal/Interfaces/Public/OpenViduAdvancedConfiguration.ts:40</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -132,7 +140,7 @@
 					<div class="tsd-signature tsd-kind-icon">screen<wbr>Share<wbr>Chrome<wbr>Extension<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Interfaces/Public/OpenViduAdvancedConfiguration.ts#L29">OpenViduInternal/Interfaces/Public/OpenViduAdvancedConfiguration.ts:29</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Interfaces/Public/OpenViduAdvancedConfiguration.ts#L33">OpenViduInternal/Interfaces/Public/OpenViduAdvancedConfiguration.ts:33</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -210,9 +218,6 @@
 					</li>
 					<li class=" tsd-kind-class">
 						<a href="../classes/streammanagerevent.html" class="tsd-kind-icon">Stream<wbr>Manager<wbr>Event</a>
-					</li>
-					<li class=" tsd-kind-class">
-						<a href="../classes/streampropertychangedevent.html" class="tsd-kind-icon">Stream<wbr>Property<wbr>Changed<wbr>Event</a>
 					</li>
 					<li class=" tsd-kind-class">
 						<a href="../classes/subscriber.html" class="tsd-kind-icon">Subscriber</a>
