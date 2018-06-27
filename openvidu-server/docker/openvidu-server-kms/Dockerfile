@@ -10,11 +10,11 @@ RUN echo "deb http://ubuntu.openvidu.io/6.7.2 xenial kms6" | tee /etc/apt/source
 	&& apt-get -y install openh264-gst-plugins-bad-1.5 \
 	&& rm -rf /var/lib/apt/lists/*
 
-# Install Java
-RUN apt-get update && apt-get install -y openjdk-8-jdk && rm -rf /var/lib/apt/lists/*
-
-# Install supervisor
-RUN apt-get update && apt-get install -y supervisor && rm -rf /var/lib/apt/lists/*
+# Install Java, supervisor and netstat
+RUN apt-get update && apt-get install -y \
+  openjdk-8-jre \
+  supervisor \
+&& rm -rf /var/lib/apt/lists/*
 
 # Configure supervisor
 RUN mkdir -p /var/log/supervisor
