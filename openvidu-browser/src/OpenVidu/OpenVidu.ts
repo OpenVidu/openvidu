@@ -447,7 +447,9 @@ export class OpenVidu {
                 screenSharingAuto.getScreenId((error, sourceId, screenConstraints) => {
                   if (!!error) {
                     if (error === 'not-installed') {
-                      const error = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_NOT_INSTALLED, 'https://chrome.google.com/webstore/detail/screen-capturing/ajhifddimkapgcifgcodmmfdlknahffk');
+                      const extensionUrl = !!this.advancedConfiguration.screenShareChromeExtension ? this.advancedConfiguration.screenShareChromeExtension :
+                        'https://chrome.google.com/webstore/detail/openvidu-screensharing/lfcgfepafnobdloecchnfaclibenjold';
+                      const error = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_NOT_INSTALLED, extensionUrl);
                       console.error(error);
                       reject(error);
                     } else if (error === 'installed-disabled') {

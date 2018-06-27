@@ -97,7 +97,7 @@ export class WebRtcStats {
         return new Promise((resolve, reject) => {
             this.getStatsAgnostic(this.stream.getRTCPeerConnection(),
                 (stats) => {
-                    if (platform.name!.indexOf('Chrome') !== -1) {
+                    if ((platform.name!.indexOf('Chrome') !== -1) || (platform.name!.indexOf('Opera') !== -1)) {
                         let localCandidateId, remoteCandidateId, googCandidatePair;
                         const localCandidates = {};
                         const remoteCandidates = {};
@@ -124,7 +124,7 @@ export class WebRtcStats {
                             });
                             finalLocalCandidate.raw = !!cand[0] ? cand[0].candidate : 'ERROR: Cannot find local candidate in list of sent ICE candidates';
                         } else {
-                            finalLocalCandidate = 'ERROR: No active local ICE candidate. Probably ICE-TCP is being used'
+                            finalLocalCandidate = 'ERROR: No active local ICE candidate. Probably ICE-TCP is being used';
                         }
 
                         let finalRemoteCandidate = remoteCandidates[remoteCandidateId];
@@ -138,7 +138,7 @@ export class WebRtcStats {
                             });
                             finalRemoteCandidate.raw = !!cand[0] ? cand[0].candidate : 'ERROR: Cannot find remote candidate in list of received ICE candidates';
                         } else {
-                            finalRemoteCandidate = 'ERROR: No active remote ICE candidate. Probably ICE-TCP is being used'
+                            finalRemoteCandidate = 'ERROR: No active remote ICE candidate. Probably ICE-TCP is being used';
                         }
 
                         resolve({
@@ -272,7 +272,7 @@ export class WebRtcStats {
                         sendPost(JSON.stringify(json));
                     }
                 });
-            } else if (platform.name!.indexOf('Chrome') !== -1) {
+            } else if ((platform.name!.indexOf('Chrome') !== -1) || (platform.name!.indexOf('Opera') !== -1)) {
                 for (const key of Object.keys(stats)) {
                     const stat = stats[key];
                     if (stat.type === 'ssrc') {
@@ -400,7 +400,7 @@ export class WebRtcStats {
                 const report = this.standardizeReport(response);
                 successCb(report);
             }).catch(failureCb);
-        } else if (platform.name!.indexOf('Chrome') !== -1) {
+        } else if ((platform.name!.indexOf('Chrome') !== -1) || (platform.name!.indexOf('Opera') !== -1)) {
             // In Chrome, the first two arguments are reversed
             return pc.getStats((response) => {
                 const report = this.standardizeReport(response);

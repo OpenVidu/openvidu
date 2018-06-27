@@ -173,7 +173,7 @@ function loadIFrame(loadCallback) {
         iframe.isLoaded = true;
         loadCallback();
     };
-    iframe.src = 'https://www.webrtc-experiment.com/getSourceId/'; // https://wwww.yourdomain.com/getScreenId.html
+    iframe.src = 'https://openvidu.github.io/openvidu-screen-sharing-chrome-extension/';
     iframe.style.display = 'none';
     (document.body || document.documentElement).appendChild(iframe);
 }

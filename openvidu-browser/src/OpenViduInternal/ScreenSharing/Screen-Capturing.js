@@ -83,7 +83,7 @@ function getChromeExtensionStatus(extensionid, callback) {
         return callback('not-chrome');
     if (arguments.length != 2) {
         callback = extensionid;
-        extensionid = 'ajhifddimkapgcifgcodmmfdlknahffk'; // default extension-id
+        extensionid = 'lfcgfepafnobdloecchnfaclibenjold'; // default extension-id
     }
     var image = document.createElement('img');
     image.src = 'chrome-extension://' + extensionid + '/icon.png';
