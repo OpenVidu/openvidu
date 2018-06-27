@@ -39,6 +39,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry conf = http.cors().and()
 				.csrf().disable().authorizeRequests().antMatchers(HttpMethod.POST, "/api/sessions").authenticated()
 				.antMatchers(HttpMethod.POST, "/api/sessions/**").authenticated()
+				.antMatchers(HttpMethod.GET, "/api/sessions").authenticated()
+				.antMatchers(HttpMethod.GET, "/api/sessions/**").authenticated()
 				.antMatchers(HttpMethod.POST, "/api/tokens").authenticated()
 				.antMatchers(HttpMethod.POST, "/api/recordings/start").authenticated()
 				.antMatchers(HttpMethod.POST, "/api/recordings/stop").authenticated()
