@@ -14,6 +14,7 @@
  * limitations under the License.
  *
  */
+
 package io.openvidu.server;
 
 import java.io.IOException;
@@ -167,7 +168,7 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	}
 
 	@PostConstruct
-    public void init() throws MalformedURLException, InterruptedException {
+	public void init() throws MalformedURLException, InterruptedException {
 		OpenviduConfig openviduConf = openviduConfig();
 
 		String publicUrl = openviduConf.getOpenViduPublicUrl();
@@ -200,8 +201,9 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 		case "docker":
 			try {
-				OpenViduServer.publicUrl = "wss://" + getContainerIp() + ":" + openviduConf.getServerPort();
-				openviduConf.setFinalUrl("https://" + getContainerIp() + ":" + openviduConf.getServerPort());
+				String containerIp = getContainerIp();
+				OpenViduServer.publicUrl = "wss://" + containerIp + ":" + openviduConf.getServerPort();
+				openviduConf.setFinalUrl("https://" + containerIp + ":" + openviduConf.getServerPort());
 			} catch (Exception e) {
 				log.error("Docker container IP was configured, but there was an error obtaining IP: "
 						+ e.getClass().getName() + " " + e.getMessage());
@@ -298,8 +300,8 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 	@EventListener(ApplicationReadyEvent.class)
 	public void printNgrokUrl() {
-	    if (!this.ngrokAppUrl.isEmpty()) {
-	    	final String NEW_LINE = System.getProperty("line.separator");
+		if (!this.ngrokAppUrl.isEmpty()) {
+			final String NEW_LINE = System.lineSeparator();
 			String str = 	NEW_LINE +
 							NEW_LINE + "      APP PUBLIC IP      " + 
 							NEW_LINE + "-------------------------" + 
@@ -307,7 +309,7 @@ public class OpenViduServer implements JsonRpcConfigurer {
 							NEW_LINE + "-------------------------" + 
 							NEW_LINE;
 			log.info(str);
-	    }
+		}
 	}
 
 }
