@@ -15,10 +15,14 @@
  *
  */
 
+/**
+ * See [[OpenVidu.setAdvancedConfiguration]]
+ */
 export interface OpenViduAdvancedConfiguration {
 
     /**
-     * Array of [RTCIceServer](https://developer.mozilla.org/en-US/docs/Web/API/RTCIceServer) to be used by OpenVidu Browser instead of the default free ice server array (got from [freeice](https://github.com/DamonOehlman/freeice) library)
+     * Array of [RTCIceServer](https://developer.mozilla.org/en-US/docs/Web/API/RTCIceServer) to be used by OpenVidu Browser. By default OpenVidu will generate the required credentials to use the COTURN server hosted along OpenVidu Server
+     * You can also set this property to string 'freeice' to force the use of free STUN servers instead (got thanks to [freeice](https://github.com/DamonOehlman/freeice) library).
      */
     iceServers?: RTCIceServer[] | string;
 

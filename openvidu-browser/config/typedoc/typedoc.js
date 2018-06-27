@@ -13,7 +13,8 @@ module.exports = {
     exclude: [
         "**/OpenViduInternal/Interfaces/Private/**",
         "**/OpenViduInternal/WebRtcStats/WebRtcStats.ts",
-        "**/OpenViduInternal/VersionAdapter.ts"
+        "**/OpenViduInternal/WebRtcPeer/WebRtcPeer.ts",
+        "**/OpenViduInternal/Events/StreamPropertyChangedEvent.ts"
     ],
     excludeExternals: true,
     excludePrivate: true,

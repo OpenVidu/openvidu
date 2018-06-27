@@ -731,7 +731,7 @@ export class Session implements EventDispatcher {
      */
     onLostConnection(): void {
 
-        if (!this.connection) {
+        /*if (!this.connection) {
 
             console.warn('Not connected to session: if you are not debugging, this is probably a certificate error');
 
@@ -740,7 +740,7 @@ export class Session implements EventDispatcher {
                 location.assign(url + '/accept-certificate');
             }
             return;
-        }
+        }*/
 
         console.warn('Lost connection in Session ' + this.sessionId);
         if (!!this.sessionId && !this.connection.disposed) {
