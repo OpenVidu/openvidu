@@ -64,15 +64,11 @@ public class SessionEventsHandler {
 	ReentrantLock lock = new ReentrantLock();
 
 	public void onSessionCreated(String sessionId) {
-		if (openviduConfig.isCdrEnabled()) {
-			CDR.recordSessionCreated(sessionId);
-		}
+		CDR.recordSessionCreated(sessionId);
 	}
 
 	public void onSessionClosed(String sessionId, String reason) {
-		if (openviduConfig.isCdrEnabled()) {
-			CDR.recordSessionDestroyed(sessionId, reason);
-		}
+		CDR.recordSessionDestroyed(sessionId, reason);
 	}
 
 	public void onParticipantJoined(Participant participant, String sessionId, Set<Participant> existingParticipants,
@@ -327,9 +323,7 @@ public class SessionEventsHandler {
 
 	public void sendRecordingStartedNotification(Session session, Recording recording) {
 
-		if (openviduConfig.isCdrEnabled()) {
-			CDR.recordRecordingStarted(session.getSessionId(), recording);
-		}
+		CDR.recordRecordingStarted(session.getSessionId(), recording);
 
 		// Filter participants by roles according to "openvidu.recording.notification"
 		Set<Participant> filteredParticipants = this.filterParticipantsByRole(
@@ -347,9 +341,7 @@ public class SessionEventsHandler {
 
 	public void sendRecordingStoppedNotification(Session session, Recording recording) {
 
-		if (openviduConfig.isCdrEnabled()) {
-			CDR.recordRecordingStopped(session.getSessionId(), recording);
-		}
+		CDR.recordRecordingStopped(session.getSessionId(), recording);
 
 		// Be sure to clean this map (this should return null)
 		this.recordingsStarted.remove(session.getSessionId());

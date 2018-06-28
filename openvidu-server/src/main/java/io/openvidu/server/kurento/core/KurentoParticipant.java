@@ -107,9 +107,7 @@ public class KurentoParticipant extends Participant {
 		this.publisher.getEndpoint().addTag("name", publisherStreamId);
 		addEndpointListeners(this.publisher);
 
-		if (openviduConfig.isCdrEnabled()) {
-			CDR.recordNewPublisher(this, this.session.getSessionId(), mediaOptions);
-		}
+		CDR.recordNewPublisher(this, this.session.getSessionId(), mediaOptions);
 
 	}
 
@@ -314,7 +312,7 @@ public class KurentoParticipant extends Participant {
 			log.info("PARTICIPANT {}: Is now receiving video from {} in room {}", this.getParticipantPublicId(),
 					senderName, this.session.getSessionId());
 
-			if (openviduConfig.isCdrEnabled() && !ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(this.getParticipantPublicId())) {
+			if (!ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(this.getParticipantPublicId())) {
 				CDR.recordNewSubscriber(this, this.session.getSessionId(), sender.getParticipantPublicId());
 			}
 
@@ -475,9 +473,7 @@ public class KurentoParticipant extends Participant {
 			this.streaming = false;
 			publisher = null;
 
-			if (openviduConfig.isCdrEnabled()) {
-				CDR.stopPublisher(this.getParticipantPublicId(), reason);
-			}
+			CDR.stopPublisher(this.getParticipantPublicId(), reason);
 
 		} else {
 			log.warn("PARTICIPANT {}: Trying to release publisher endpoint but is null", getParticipantPublicId());
@@ -489,7 +485,7 @@ public class KurentoParticipant extends Participant {
 			subscriber.unregisterErrorListeners();
 			releaseElement(senderName, subscriber.getEndpoint());
 
-			if (openviduConfig.isCdrEnabled() && !ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(this.getParticipantPublicId())) {
+			if (!ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(this.getParticipantPublicId())) {
 				CDR.stopSubscriber(this.getParticipantPublicId(), senderName, reason);
 			}
 
