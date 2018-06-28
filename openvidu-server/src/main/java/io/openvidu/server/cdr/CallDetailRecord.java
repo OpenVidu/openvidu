@@ -23,9 +23,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.recording.Recording;
@@ -76,47 +73,51 @@ import io.openvidu.server.recording.Recording;
  */
 public class CallDetailRecord {
 
-	private Logger log = LoggerFactory.getLogger(CallDetailRecord.class);
+	private CDRLogger logger;
 
 	private Map<String, CDREvent> sessions = new ConcurrentHashMap<>();
 	private Map<String, CDREvent> participants = new ConcurrentHashMap<>();
 	private Map<String, CDREvent> publications = new ConcurrentHashMap<>();
 	private Map<String, Set<CDREvent>> subscriptions = new ConcurrentHashMap<>();
 
+	public CallDetailRecord(CDRLogger logger) {
+		this.logger = logger;
+	}
+
 	public void recordSessionCreated(String sessionId) {
-		CDREvent e = new CDREvent(CDREvent.SESSION_CREATED, sessionId);
+		CDREvent e = new CDREvent(CDREventName.sessionCreated, sessionId);
 		this.sessions.put(sessionId, e);
-		log.info("{}", e);
+		this.logger.log(e);
 	}
 
 	public void recordSessionDestroyed(String sessionId, String reason) {
 		CDREvent e = this.sessions.remove(sessionId);
-		log.info("{}", new CDREvent(CDREvent.SESSION_DESTROYED, e, reason));
+		this.logger.log(new CDREvent(CDREventName.sessionDestroyed, e, reason));
 	}
 
 	public void recordParticipantJoined(Participant participant, String sessionId) {
-		CDREvent e = new CDREvent(CDREvent.PARTICIPANT_JOINED, participant, sessionId);
+		CDREvent e = new CDREvent(CDREventName.participantJoined, participant, sessionId);
 		this.participants.put(participant.getParticipantPublicId(), e);
-		log.info("{}", e);
+		this.logger.log(e);
 	}
 
 	public void recordParticipantLeft(Participant participant, String sessionId, String reason) {
 		CDREvent e = this.participants.remove(participant.getParticipantPublicId());
-		log.info("{}", new CDREvent(CDREvent.PARTICIPANT_LEFT, e, reason));
+		this.logger.log(new CDREvent(CDREventName.participantLeft, e, reason));
 	}
 
 	public void recordNewPublisher(Participant participant, String sessionId, MediaOptions mediaOptions) {
-		CDREvent publisher = new CDREvent(CDREvent.CONNECTION_CREATED, participant, sessionId, mediaOptions, null,
-				System.currentTimeMillis(), null);
+		CDREvent publisher = new CDREvent(CDREventName.webrtcConnectionCreated, participant, sessionId, mediaOptions,
+				null, System.currentTimeMillis(), null);
 		this.publications.put(participant.getParticipantPublicId(), publisher);
-		log.info("{}", publisher);
+		this.logger.log(publisher);
 	}
 
 	public boolean stopPublisher(String participantPublicId, String reason) {
 		CDREvent publisher = this.publications.remove(participantPublicId);
 		if (publisher != null) {
-			publisher = new CDREvent(CDREvent.CONNECTION_DESTROYED, publisher, reason);
-			log.info("{}", publisher);
+			publisher = new CDREvent(CDREventName.webrtcConnectionDestroyed, publisher, reason);
+			this.logger.log(publisher);
 			return true;
 		}
 		return false;
@@ -124,11 +125,11 @@ public class CallDetailRecord {
 
 	public void recordNewSubscriber(Participant participant, String sessionId, String senderPublicId) {
 		CDREvent publisher = this.publications.get(senderPublicId);
-		CDREvent subscriber = new CDREvent(CDREvent.CONNECTION_CREATED, participant, sessionId,
+		CDREvent subscriber = new CDREvent(CDREventName.webrtcConnectionCreated, participant, sessionId,
 				publisher.getMediaOptions(), publisher.getParticipantPublicId(), System.currentTimeMillis(), null);
 		this.subscriptions.putIfAbsent(participant.getParticipantPublicId(), new ConcurrentSkipListSet<>());
 		this.subscriptions.get(participant.getParticipantPublicId()).add(subscriber);
-		log.info("{}", subscriber);
+		this.logger.log(subscriber);
 	}
 
 	public boolean stopSubscriber(String participantPublicId, String senderPublicId, String reason) {
@@ -139,8 +140,8 @@ public class CallDetailRecord {
 				subscription = it.next();
 				if (subscription.getReceivingFrom().equals(senderPublicId)) {
 					it.remove();
-					subscription = new CDREvent(CDREvent.CONNECTION_DESTROYED, subscription, reason);
-					log.info("{}", subscription);
+					subscription = new CDREvent(CDREventName.webrtcConnectionDestroyed, subscription, reason);
+					this.logger.log(subscription);
 					return true;
 				}
 			}
@@ -149,11 +150,11 @@ public class CallDetailRecord {
 	}
 
 	public void recordRecordingStarted(String sessionId, Recording recording) {
-		log.info("{}", new CDREvent(CDREvent.RECORDING_STARTED, sessionId, recording));
+		this.logger.log(new CDREvent(CDREventName.recordingStarted, sessionId, recording));
 	}
 
 	public void recordRecordingStopped(String sessionId, Recording recording) {
-		log.info("{}", new CDREvent(CDREvent.RECORDING_STOPPED, sessionId, recording));
+		this.logger.log(new CDREvent(CDREventName.recordingStopped, sessionId, recording));
 	}
 
 }

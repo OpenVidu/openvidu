@@ -26,16 +26,7 @@ import io.openvidu.server.recording.Recording;
 
 public class CDREvent implements Comparable<CDREvent> {
 
-	static final String SESSION_CREATED = "sessionCreated";
-	static final String SESSION_DESTROYED = "sessionDestroyed";
-	static final String PARTICIPANT_JOINED = "participantJoined";
-	static final String PARTICIPANT_LEFT = "participantLeft";
-	static final String CONNECTION_CREATED = "webrtcConnectionCreated";
-	static final String CONNECTION_DESTROYED = "webrtcConnectionDestroyed";
-	static final String RECORDING_STARTED = "recordingStarted";
-	static final String RECORDING_STOPPED = "recordingStopped";
-
-	protected String eventName;
+	protected CDREventName eventName;
 	protected String sessionId;
 	protected Long timeStamp;
 	private Long startTime;
@@ -53,17 +44,17 @@ public class CDREvent implements Comparable<CDREvent> {
 	private Boolean hasVideo;
 	private RecordingLayout recordingLayout;
 
-	public CDREvent(String eventName, CDREvent event) {
+	public CDREvent(CDREventName eventName, CDREvent event) {
 		this(eventName, event.participant, event.sessionId, event.mediaOptions, event.receivingFrom, event.startTime, event.reason);
 		this.duration = (int) (this.timeStamp - this.startTime / 1000);
 	}
 	
-	public CDREvent(String eventName, CDREvent event, String reason) {
+	public CDREvent(CDREventName eventName, CDREvent event, String reason) {
 		this(eventName, event.participant, event.sessionId, event.mediaOptions, event.receivingFrom, event.startTime, reason);
 		this.duration = (int) (this.timeStamp - this.startTime / 1000);
 	}
 
-	public CDREvent(String eventName, String sessionId) {
+	public CDREvent(CDREventName eventName, String sessionId) {
 		this.eventName = eventName;
 		if ((sessionId.indexOf('/')) != -1) {
 			this.sessionId = sessionId.substring(sessionId.lastIndexOf('/') + 1, sessionId.length());
@@ -74,7 +65,7 @@ public class CDREvent implements Comparable<CDREvent> {
 		this.startTime = this.timeStamp;
 	}
 	
-	public CDREvent(String eventName, String sessionId, Recording recording) {
+	public CDREvent(CDREventName eventName, String sessionId, Recording recording) {
 		this.eventName = eventName;
 		if ((sessionId.indexOf('/')) != -1) {
 			this.sessionId = sessionId.substring(sessionId.lastIndexOf('/') + 1, sessionId.length());
@@ -91,13 +82,13 @@ public class CDREvent implements Comparable<CDREvent> {
 		this.recordingLayout = recording.getRecordingLayout();
 	}
 
-	public CDREvent(String eventName, Participant participant, String sessionId) {
+	public CDREvent(CDREventName eventName, Participant participant, String sessionId) {
 		this(eventName, sessionId);
 		this.participant = participant;
 		this.startTime = this.timeStamp;
 	}
 
-	public CDREvent(String eventName, Participant participant, String sessionId, MediaOptions mediaOptions,
+	public CDREvent(CDREventName eventName, Participant participant, String sessionId, MediaOptions mediaOptions,
 			String receivingFrom, Long startTime, String reason) {
 		this(eventName, sessionId);
 		this.participant = participant;
@@ -171,7 +162,7 @@ public class CDREvent implements Comparable<CDREvent> {
 		}
 
 		JSONObject root = new JSONObject();
-		root.put(this.eventName, json);
+		root.put(this.eventName.name(), json);
 
 		return root.toJSONString();
 	}

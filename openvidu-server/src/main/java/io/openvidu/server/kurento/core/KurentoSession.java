@@ -35,12 +35,14 @@ import org.kurento.client.KurentoClient;
 import org.kurento.client.MediaPipeline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.server.cdr.CallDetailRecord;
+import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
 
@@ -51,6 +53,9 @@ public class KurentoSession implements Session {
 
 	private final static Logger log = LoggerFactory.getLogger(Session.class);
 	public static final int ASYNC_LATCH_TIMEOUT = 30;
+	
+	@Autowired
+	protected OpenviduConfig openviduConfig;
 
 	private final ConcurrentMap<String, KurentoParticipant> participants = new ConcurrentHashMap<>();
 	private String sessionId;
@@ -89,7 +94,7 @@ public class KurentoSession implements Session {
 	public String getSessionId() {
 		return this.sessionId;
 	}
-	
+
 	@Override
 	public SessionProperties getSessionProperties() {
 		return this.sessionProperties;
@@ -109,8 +114,8 @@ public class KurentoSession implements Session {
 		});
 
 		log.info("SESSION {}: Added participant {}", sessionId, participant);
-		
-		if (!ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(participant.getParticipantPublicId())) {
+
+		if (openviduConfig.isCdrEnabled() && !ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(participant.getParticipantPublicId())) {
 			CDR.recordParticipantJoined(participant, sessionId);
 		}
 	}
@@ -165,8 +170,8 @@ public class KurentoSession implements Session {
 		}
 		this.removeParticipant(participant, reason);
 		participant.close(reason);
-		
-		if (!ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(participant.getParticipantPublicId())) {
+
+		if (openviduConfig.isCdrEnabled() && !ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(participant.getParticipantPublicId())) {
 			CDR.recordParticipantLeft(participant, participant.getSession().getSessionId(), reason);
 		}
 	}

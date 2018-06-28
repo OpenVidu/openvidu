@@ -45,6 +45,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
+import io.openvidu.server.cdr.CDRLoggerFile;
 import io.openvidu.server.cdr.CallDetailRecord;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.SessionManager;
@@ -132,7 +133,7 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	@Bean
 	@ConditionalOnMissingBean
 	public CallDetailRecord cdr() {
-		return new CallDetailRecord();
+		return new CallDetailRecord(new CDRLoggerFile());
 	}
 
 	@Bean
