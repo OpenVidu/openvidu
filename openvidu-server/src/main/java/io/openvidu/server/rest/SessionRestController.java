@@ -32,6 +32,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.openvidu.client.OpenViduException;
@@ -135,10 +136,12 @@ public class SessionRestController {
 	}
 
 	@RequestMapping(value = "/sessions/{sessionId}", method = RequestMethod.GET)
-	public ResponseEntity<JSONObject> getSession(@PathVariable("sessionId") String sessionId) {
+	public ResponseEntity<JSONObject> getSession(@PathVariable("sessionId") String sessionId,
+			@RequestParam("webRtcStats") boolean webRtcStats) {
 		Session session = this.sessionManager.getSession(sessionId);
 		if (session != null) {
-			return new ResponseEntity<>(session.toJSON(), HttpStatus.OK);
+			JSONObject response = (webRtcStats == true) ? session.withStatsToJSON() : session.toJSON();
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		} else {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
@@ -146,12 +149,13 @@ public class SessionRestController {
 
 	@SuppressWarnings("unchecked")
 	@RequestMapping(value = "/sessions", method = RequestMethod.GET)
-	public ResponseEntity<JSONObject> listSessions() {
+	public ResponseEntity<JSONObject> listSessions(@RequestParam("webRtcStats") boolean webRtcStats) {
 		Collection<Session> sessions = this.sessionManager.getSessionObjects();
 		JSONObject json = new JSONObject();
 		JSONArray jsonArray = new JSONArray();
 		sessions.forEach(s -> {
-			jsonArray.add(s.toJSON());
+			JSONObject sessionJson = (webRtcStats == true) ? s.withStatsToJSON() : s.toJSON();
+			jsonArray.add(sessionJson);
 		});
 		json.put("count", sessions.size());
 		json.put("items", jsonArray);

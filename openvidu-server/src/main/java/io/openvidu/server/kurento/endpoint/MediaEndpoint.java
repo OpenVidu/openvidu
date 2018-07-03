@@ -502,10 +502,18 @@ public abstract class MediaEndpoint {
 			}
 		});
 	}
-
+	
 	@SuppressWarnings("unchecked")
 	public JSONObject toJSON() {
 		JSONObject json = new JSONObject();
+		json.put("mediaOptions", this.mediaOptions);
+		return json;
+	}
+
+	@SuppressWarnings("unchecked")
+	public JSONObject withStatsToJSON() {
+		JSONObject json = new JSONObject();
+		json.put("mediaOptions", this.mediaOptions);
 		json.put("webrtcTagName", this.getEndpoint().getTag("name"));
 		json.put("localCandidate", this.selectedLocalIceCandidate);
 		json.put("remoteCandidate", this.selectedRemoteIceCandidate);

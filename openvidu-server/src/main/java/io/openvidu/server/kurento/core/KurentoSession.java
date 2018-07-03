@@ -348,7 +348,7 @@ public class KurentoSession implements Session {
 			kurentoSessionHandler.updateFilter(this.sessionId, participant, filterId, newState);
 		}
 	}
-
+	
 	@Override
 	@SuppressWarnings("unchecked")
 	public JSONObject toJSON() {
@@ -363,6 +363,25 @@ public class KurentoSession implements Session {
 		JSONArray participants = new JSONArray();
 		this.participants.values().forEach(p -> {
 			participants.add(p.toJSON());
+		});
+		json.put("connections", participants);
+		return json;
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public JSONObject withStatsToJSON() {
+		JSONObject json = new JSONObject();
+		json.put("sessionId", this.sessionId);
+		json.put("mediaMode", this.sessionProperties.mediaMode().name());
+		json.put("recordingMode", this.sessionProperties.recordingMode().name());
+		json.put("defaultRecordingLayout", this.sessionProperties.defaultRecordingLayout().name());
+		if (this.sessionProperties.defaultCustomLayout() != null && !this.sessionProperties.defaultCustomLayout().isEmpty()) {
+			json.put("defaultCustomLayout", this.sessionProperties.defaultCustomLayout());
+		}
+		JSONArray participants = new JSONArray();
+		this.participants.values().forEach(p -> {
+			participants.add(p.withStatsToJSON());
 		});
 		json.put("connections", participants);
 		return json;

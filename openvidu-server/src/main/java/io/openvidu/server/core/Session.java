@@ -46,5 +46,7 @@ public interface Session {
 	int getActivePublishers();
 	
 	JSONObject toJSON();
+	
+	JSONObject withStatsToJSON();
 
 }
