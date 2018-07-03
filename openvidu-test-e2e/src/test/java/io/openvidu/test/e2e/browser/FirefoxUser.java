@@ -29,7 +29,7 @@ public class FirefoxUser extends BrowserUser {
 
 	public FirefoxUser(String userName, int timeOfWaitInSeconds) {
 		super(userName, timeOfWaitInSeconds);
-		
+
 		DesiredCapabilities capabilities = DesiredCapabilities.firefox();
 		capabilities.setAcceptInsecureCerts(true);
 		FirefoxProfile profile = new FirefoxProfile();
@@ -40,7 +40,7 @@ public class FirefoxUser extends BrowserUser {
 		profile.setPreference("media.navigator.streams.fake", true);
 
 		capabilities.setCapability(FirefoxDriver.PROFILE, profile);
-		
+
 		String REMOTE_URL = System.getProperty("REMOTE_URL_FIREFOX");
 		if (REMOTE_URL != null) {
 			log.info("Using URL {} to connect to remote web driver", REMOTE_URL);
@@ -53,7 +53,7 @@ public class FirefoxUser extends BrowserUser {
 			log.info("Using local web driver");
 			this.driver = new FirefoxDriver(capabilities);
 		}
-		
+
 		this.configureDriver();
 	}
 

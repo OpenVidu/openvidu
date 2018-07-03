@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CountDownLatch;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -661,9 +662,14 @@ public class OpenViduTestAppE2eTest {
 
 		user.getDriver().findElement(By.id("auto-join-checkbox")).click();
 
+		final CountDownLatch latch1 = new CountDownLatch(2);
+
 		// First publication (audio + video [CAMERA])
 		user.getEventManager().on("streamPlaying", (event) -> {
-			threadAssertions.add(((String) event.get("eventContent")).contains("CAMERA"));
+			if (event.get("eventContent") != null) {
+				threadAssertions.add(((String) event.get("eventContent")).contains("CAMERA"));
+			}
+			latch1.countDown();
 		});
 		user.getDriver().findElement(By.id("one2many-btn")).click();
 
@@ -673,6 +679,9 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
 		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
+
+		latch1.await();
+
 		user.getEventManager().off("streamPlaying");
 		for (Iterator<Boolean> iter = threadAssertions.iterator(); iter.hasNext();) {
 			Assert.assertTrue(iter.next());
@@ -685,15 +694,23 @@ public class OpenViduTestAppE2eTest {
 
 		Thread.sleep(2000);
 
+		final CountDownLatch latch2 = new CountDownLatch(2);
+
 		// Second publication (only video (SCREEN))
 		user.getEventManager().on("streamPlaying", (event) -> {
-			threadAssertions.add(((String) event.get("eventContent")).contains("SCREEN"));
+			if (event.get("eventContent") != null) {
+				threadAssertions.add(((String) event.get("eventContent")).contains("SCREEN"));
+			}
+			latch2.countDown();
 		});
 		user.getDriver().findElements(By.className("change-publisher-btn")).get(0).click();
 		user.getEventManager().waitUntilEventReaches("streamDestroyed", 2);
 		user.getEventManager().waitUntilEventReaches("accessAllowed", 2);
 		user.getEventManager().waitUntilEventReaches("streamCreated", 4);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
+
+		latch2.await();
+
 		user.getEventManager().off("streamPlaying");
 		for (Iterator<Boolean> iter = threadAssertions.iterator(); iter.hasNext();) {
 			Assert.assertTrue(iter.next());
@@ -705,15 +722,23 @@ public class OpenViduTestAppE2eTest {
 
 		Thread.sleep(2000);
 
+		final CountDownLatch latch3 = new CountDownLatch(2);
+
 		// Third publication (audio + video [CAMERA])
 		user.getEventManager().on("streamPlaying", (event) -> {
-			threadAssertions.add(((String) event.get("eventContent")).contains("CAMERA"));
+			if (event.get("eventContent") != null) {
+				threadAssertions.add(((String) event.get("eventContent")).contains("CAMERA"));
+			}
+			latch3.countDown();
 		});
 		user.getDriver().findElements(By.className("change-publisher-btn")).get(0).click();
 		user.getEventManager().waitUntilEventReaches("streamDestroyed", 4);
 		user.getEventManager().waitUntilEventReaches("accessAllowed", 3);
 		user.getEventManager().waitUntilEventReaches("streamCreated", 6);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 6);
+
+		latch3.await();
+
 		user.getEventManager().off("streamPlaying");
 		for (Iterator<Boolean> iter = threadAssertions.iterator(); iter.hasNext();) {
 			Assert.assertTrue(iter.next());
@@ -755,11 +780,16 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
 
 		// Unpublish video
+		final CountDownLatch latch1 = new CountDownLatch(2);
 		user.getEventManager().on("streamPropertyChanged", (event) -> {
 			threadAssertions.add(((String) event.get("eventContent")).contains("videoActive [false]"));
+			latch1.countDown();
 		});
 		user.getDriver().findElements(By.className("pub-video-btn")).get(0).click();
 		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 2);
+
+		latch1.await();
+
 		user.getEventManager().off("streamPropertyChanged");
 		for (Iterator<Boolean> iter = threadAssertions.iterator(); iter.hasNext();) {
 			Assert.assertTrue(iter.next());
@@ -767,11 +797,16 @@ public class OpenViduTestAppE2eTest {
 		}
 
 		// Unpublish audio
+		final CountDownLatch latch2 = new CountDownLatch(2);
 		user.getEventManager().on("streamPropertyChanged", (event) -> {
 			threadAssertions.add(((String) event.get("eventContent")).contains("audioActive [false]"));
+			latch2.countDown();
 		});
 		user.getDriver().findElements(By.className("pub-audio-btn")).get(0).click();
 		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 4);
+
+		latch2.await();
+
 		user.getEventManager().off("streamPropertyChanged");
 		for (Iterator<Boolean> iter = threadAssertions.iterator(); iter.hasNext();) {
 			Assert.assertTrue(iter.next());
@@ -779,14 +814,19 @@ public class OpenViduTestAppE2eTest {
 		}
 
 		// Resize captured window
-		int newWidth = 1280;
-		int newHeight = 720;
+		final CountDownLatch latch3 = new CountDownLatch(2);
+		int newWidth = 1500;
+		int newHeight = 500;
 		user.getEventManager().on("streamPropertyChanged", (event) -> {
 			threadAssertions.add(((String) event.get("eventContent"))
-					.contains("videoDimensions videoDimensions [{\\\"width\\\":" + newWidth + ",\\\"height\\\":" + newHeight + "}]"));
+					.contains("videoDimensions [{\"width\":" + (newWidth - 10) + ",\"height\":" + (newHeight - 132)  + "}]"));
+			latch3.countDown();
 		});
 		user.getDriver().manage().window().setSize(new Dimension(newWidth, newHeight));
 		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 6);
+
+		latch3.await();
+
 		user.getEventManager().off("streamPropertyChanged");
 		for (Iterator<Boolean> iter = threadAssertions.iterator(); iter.hasNext();) {
 			Assert.assertTrue(iter.next());
@@ -979,7 +1019,7 @@ public class OpenViduTestAppE2eTest {
 		Assert.assertFalse(file3.exists());
 
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
-		
+
 		gracefullyLeaveParticipants(1);
 
 	}
