@@ -6,7 +6,7 @@ import {
 import {
   OpenVidu, Session, Subscriber, Publisher, VideoInsertMode, StreamEvent, ConnectionEvent,
   SessionDisconnectedEvent, SignalEvent, RecordingEvent,
-  PublisherSpeakingEvent, PublisherProperties
+  PublisherSpeakingEvent, PublisherProperties, StreamPropertyChangedEvent
 } from 'openvidu-browser';
 import {
   OpenVidu as OpenViduAPI,
@@ -101,6 +101,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     sessionDisconnected: true,
     streamCreated: true,
     streamDestroyed: true,
+    streamPropertyChanged: true,
     recordingStarted: true,
     recordingStopped: true,
     signal: true,
@@ -190,6 +191,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       sessionDisconnected: false,
       streamCreated: false,
       streamDestroyed: false,
+      streamPropertyChanged: false,
       recordingStarted: false,
       recordingStopped: false,
       signal: false,
@@ -284,7 +286,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       type: 'chat'
     })
       .then(() => {
-        console.log('Message succesfully sent');
+        console.log('Message successfully sent');
       })
       .catch(error => {
         console.error(error);
@@ -316,6 +318,16 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
             this.subscribers.splice(index, 1);
           }
           this.updateEventList('streamDestroyed', event.stream.streamId);
+        });
+      }
+    }
+
+    if (this.sessionEvents.streamPropertyChanged !== oldValues.streamPropertyChanged || firstTime) {
+      this.session.off('streamPropertyChanged');
+      if (this.sessionEvents.streamPropertyChanged) {
+        this.session.on('streamPropertyChanged', (event: StreamPropertyChangedEvent) => {
+          const newValue = event.changedProperty === 'videoDimensions' ? JSON.stringify(event.newValue) : event.newValue.toString();
+          this.updateEventList('streamPropertyChanged', event.changedProperty + ' [' + newValue + ']');
         });
       }
     }
@@ -514,6 +526,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       sessionDisconnected: this.sessionEvents.sessionDisconnected,
       streamCreated: this.sessionEvents.streamCreated,
       streamDestroyed: this.sessionEvents.streamDestroyed,
+      streamPropertyChanged: this.sessionEvents.streamPropertyChanged,
       recordingStarted: this.sessionEvents.recordingStarted,
       recordingStopped: this.sessionEvents.recordingStopped,
       signal: this.sessionEvents.signal,
@@ -543,6 +556,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         sessionDisconnected: result.sessionDisconnected,
         streamCreated: result.streamCreated,
         streamDestroyed: result.streamDestroyed,
+        streamPropertyChanged: result.streamPropertyChanged,
         recordingStarted: result.recordingStarted,
         recordingStopped: result.recordingStopped,
         signal: result.signal,

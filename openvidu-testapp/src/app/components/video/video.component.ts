@@ -4,6 +4,7 @@ import { MatDialog, MatDialogRef } from '@angular/material';
 import {
     StreamManager,
     StreamManagerEvent,
+    StreamPropertyChangedEvent,
     VideoElementEvent,
     Subscriber,
     OpenVidu,
@@ -73,12 +74,14 @@ export class VideoComponent implements OnInit, OnDestroy {
             this.eventCollection = {
                 videoElementCreated: true,
                 videoElementDestroyed: true,
-                streamPlaying: true
+                streamPlaying: true,
+                streamPropertyChanged: false
             };
             this.updateSubscriberEvents({
                 videoElementCreated: false,
                 videoElementDestroyed: false,
-                streamPlaying: false
+                streamPlaying: false,
+                streamPropertyChanged: true
             });
 
         } else {
@@ -92,7 +95,8 @@ export class VideoComponent implements OnInit, OnDestroy {
                 accessDialogOpened: true,
                 accessDialogClosed: true,
                 streamCreated: true,
-                streamDestroyed: true
+                streamDestroyed: true,
+                streamPropertyChanged: false
             };
             this.updatePublisherEvents(
                 <Publisher>this.streamManager,
@@ -105,7 +109,8 @@ export class VideoComponent implements OnInit, OnDestroy {
                     accessDialogOpened: false,
                     accessDialogClosed: false,
                     streamCreated: false,
-                    streamDestroyed: false
+                    streamDestroyed: false,
+                    streamPropertyChanged: true
                 });
             this.sendAudio = this.streamManager.stream.hasAudio;
             this.sendVideo = this.streamManager.stream.hasVideo;
@@ -149,7 +154,8 @@ export class VideoComponent implements OnInit, OnDestroy {
             const oldValues = {
                 videoElementCreated: this.eventCollection.videoElementCreated,
                 videoElementDestroyed: this.eventCollection.videoElementDestroyed,
-                streamPlaying: this.eventCollection.streamPlaying
+                streamPlaying: this.eventCollection.streamPlaying,
+                streamPropertyChanged: this.eventCollection.streamPropertyChanged
             };
             this.streamManager = this.streamManager.stream.session.subscribe(subscriber.stream, undefined);
             this.reSubbed.emit(this.streamManager);
@@ -271,7 +277,8 @@ export class VideoComponent implements OnInit, OnDestroy {
             accessDialogOpened: !this.eventCollection.accessDialogOpened,
             accessDialogClosed: !this.eventCollection.accessDialogClosed,
             streamCreated: !this.eventCollection.streamCreated,
-            streamDestroyed: !this.eventCollection.streamDestroyed
+            streamDestroyed: !this.eventCollection.streamDestroyed,
+            streamPropertyChanged: !this.eventCollection.streamPropertyChanged,
         });
 
         const oldPublisher = <Publisher>this.streamManager;
@@ -340,6 +347,20 @@ export class VideoComponent implements OnInit, OnDestroy {
             }
         } else {
             sub.off('streamPlaying');
+        }
+
+        if (this.eventCollection.streamPropertyChanged) {
+            if (!oldValues.streamPropertyChanged) {
+                sub.on('streamPropertyChanged', (e: StreamPropertyChangedEvent) => {
+                    const newValue = e.changedProperty === 'videoDimensions' ? JSON.stringify(e.newValue) : e.newValue.toString();
+                    this.updateEventListInParent.emit({
+                        event: 'streamPropertyChanged',
+                        content: e.changedProperty + ' [' + newValue + ']'
+                    });
+                });
+            }
+        } else {
+            sub.off('streamPropertyChanged');
         }
     }
 
@@ -435,6 +456,20 @@ export class VideoComponent implements OnInit, OnDestroy {
             pub.off('streamDestroyed');
         }
 
+        if (this.eventCollection.streamPropertyChanged) {
+            if (!oldValues.streamPropertyChanged) {
+                pub.on('streamPropertyChanged', (e: StreamPropertyChangedEvent) => {
+                    const newValue = e.changedProperty === 'videoDimensions' ? JSON.stringify(e.newValue) : e.newValue.toString();
+                    this.updateEventListInParent.emit({
+                        event: 'streamPropertyChanged',
+                        content: e.changedProperty + ' [' + newValue + ']'
+                    });
+                });
+            }
+        } else {
+            pub.off('streamPropertyChanged');
+        }
+
         if (this.eventCollection.videoElementDestroyed) {
             if (!oldValues.videoElementDestroyed) {
                 pub.on('videoElementDestroyed', (e: VideoElementEvent) => {
@@ -474,7 +509,8 @@ export class VideoComponent implements OnInit, OnDestroy {
         const oldValues = {
             videoElementCreated: this.eventCollection.videoElementCreated,
             videoElementDestroyed: this.eventCollection.videoElementDestroyed,
-            streamPlaying: this.eventCollection.streamPlaying
+            streamPlaying: this.eventCollection.streamPlaying,
+            streamPropertyChanged: this.eventCollection.streamPropertyChanged
         };
         const dialogRef = this.dialog.open(EventsDialogComponent, {
             data: {
@@ -501,7 +537,8 @@ export class VideoComponent implements OnInit, OnDestroy {
             accessDialogOpened: this.eventCollection.accessDialogOpened,
             accessDialogClosed: this.eventCollection.accessDialogClosed,
             streamCreated: this.eventCollection.streamCreated,
-            streamDestroyed: this.eventCollection.streamDestroyed
+            streamDestroyed: this.eventCollection.streamDestroyed,
+            streamPropertyChanged: this.eventCollection.streamPropertyChanged
         };
         const dialogRef = this.dialog.open(EventsDialogComponent, {
             data: {
