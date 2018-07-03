@@ -55,17 +55,27 @@ export class StreamEvent extends Event {
     /**
      * @hidden
      */
-    callDefaultBehaviour() {
+    callDefaultBehavior() {
         if (this.type === 'streamDestroyed') {
 
             if (this.target instanceof Session) {
                 // Remote Stream
-                console.info("Calling default behaviour upon '" + this.type + "' event dispatched by 'Session'");
+                console.info("Calling default behavior upon '" + this.type + "' event dispatched by 'Session'");
                 this.stream.disposeWebRtcPeer();
             } else if (this.target instanceof Publisher) {
                 // Local Stream
-                console.info("Calling default behaviour upon '" + this.type + "' event dispatched by 'Publisher'");
+                console.info("Calling default behavior upon '" + this.type + "' event dispatched by 'Publisher'");
+                clearInterval((<Publisher>this.target).screenShareResizeInterval);
                 this.stream.isLocalStreamReadyToPublish = false;
+
+                // Delete Publisher object from OpenVidu publishers array
+                const openviduPublishers = (<Publisher>this.target).openvidu.publishers;
+                for (let i = 0; i < openviduPublishers.length; i++) {
+                    if (openviduPublishers[i] === (<Publisher>this.target)) {
+                        openviduPublishers.splice(i, 1);
+                        break;
+                    }
+                }
             }
 
             // Dispose the MediaStream local object

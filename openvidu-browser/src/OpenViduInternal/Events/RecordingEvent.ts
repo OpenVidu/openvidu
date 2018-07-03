@@ -56,6 +56,6 @@ export class RecordingEvent extends Event {
      * @hidden
      */
     // tslint:disable-next-line:no-empty
-    callDefaultBehaviour() { }
+    callDefaultBehavior() { }
 
 }

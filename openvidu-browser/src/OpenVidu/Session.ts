@@ -33,6 +33,7 @@ import { RecordingEvent } from '../OpenViduInternal/Events/RecordingEvent';
 import { SessionDisconnectedEvent } from '../OpenViduInternal/Events/SessionDisconnectedEvent';
 import { SignalEvent } from '../OpenViduInternal/Events/SignalEvent';
 import { StreamEvent } from '../OpenViduInternal/Events/StreamEvent';
+import { StreamPropertyChangedEvent } from '../OpenViduInternal/Events/StreamPropertyChangedEvent';
 import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/OpenViduError';
 import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
 
@@ -156,20 +157,20 @@ export class Session implements EventDispatcher {
      * This event will automatically unsubscribe the leaving participant from every Subscriber object of the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks)
      * and also deletes any HTML video element associated to each Subscriber (only those [created by OpenVidu Browser](/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players)).
      * For every video removed, each Subscriber object will dispatch a `videoElementDestroyed` event.
-     * Call `event.preventDefault()` uppon event `sessionDisconnected` to avoid this behaviour and take care of disposing and cleaning all the Subscriber objects yourself.
+     * Call `event.preventDefault()` upon event `sessionDisconnected` to avoid this behavior and take care of disposing and cleaning all the Subscriber objects yourself.
      * See [[SessionDisconnectedEvent]] and [[VideoElementEvent]] to learn more to learn more.
      *
      * The [[Publisher]] object of the local participant will dispatch a `streamDestroyed` event if there is a [[Publisher]] object publishing to the session.
      * This event will automatically stop all media tracks and delete any HTML video element associated to it (only those [created by OpenVidu Browser](/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players)).
      * For every video removed, the Publisher object will dispatch a `videoElementDestroyed` event.
-     * Call `event.preventDefault()` uppon event `streamDestroyed` if you want to clean the Publisher object on your own or re-publish it in a different Session (to do so it is a mandatory requirement to call `Session.unpublish()`
+     * Call `event.preventDefault()` upon event `streamDestroyed` if you want to clean the Publisher object on your own or re-publish it in a different Session (to do so it is a mandatory requirement to call `Session.unpublish()`
      * or/and `Session.disconnect()` in the previous session). See [[StreamEvent]] and [[VideoElementEvent]] to learn more.
      *
      * The [[Session]] object of every other participant connected to the session will dispatch a `streamDestroyed` event if the disconnected participant was publishing.
      * This event will automatically unsubscribe the Subscriber object from the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks)
      * and also deletes any HTML video element associated to that Subscriber (only those [created by OpenVidu Browser](/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players)).
      * For every video removed, the Subscriber object will dispatch a `videoElementDestroyed` event.
-     * Call `event.preventDefault()` uppon event `streamDestroyed` to avoid this default behaviour and take care of disposing and cleaning the Subscriber object yourself.
+     * Call `event.preventDefault()` upon event `streamDestroyed` to avoid this default behavior and take care of disposing and cleaning the Subscriber object yourself.
      * See [[StreamEvent]] and [[VideoElementEvent]] to learn more.
      *
      * The [[Session]] object of every other participant connected to the session will dispatch a `connectionDestroyed` event in any case. See [[ConnectionEvent]] to learn more.
@@ -362,13 +363,13 @@ export class Session implements EventDispatcher {
      * This event will automatically stop all media tracks and delete any HTML video element associated to this Publisher
      * (only those videos [created by OpenVidu Browser](/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players)).
      * For every video removed, the Publisher object will dispatch a `videoElementDestroyed` event.
-     * Call `event.preventDefault()` uppon event `streamDestroyed` if you want to clean the Publisher object on your own or re-publish it in a different Session.
+     * Call `event.preventDefault()` upon event `streamDestroyed` if you want to clean the Publisher object on your own or re-publish it in a different Session.
      *
      * The [[Session]] object of every other participant connected to the session will dispatch a `streamDestroyed` event.
      * This event will automatically unsubscribe the Subscriber object from the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks) and
      * delete any HTML video element associated to it (only those [created by OpenVidu Browser](/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players)).
      * For every video removed, the Subscriber object will dispatch a `videoElementDestroyed` event.
-     * Call `event.preventDefault()` uppon event `streamDestroyed` to avoid this default behaviour and take care of disposing and cleaning the Subscriber object on your own.
+     * Call `event.preventDefault()` upon event `streamDestroyed` to avoid this default behavior and take care of disposing and cleaning the Subscriber object on your own.
      *
      * See [[StreamEvent]] and [[VideoElementEvent]] to learn more.
      */
@@ -400,7 +401,7 @@ export class Session implements EventDispatcher {
 
             const streamEvent = new StreamEvent(true, publisher, 'streamDestroyed', publisher.stream, 'unpublish');
             publisher.emitEvent('streamDestroyed', [streamEvent]);
-            streamEvent.callDefaultBehaviour();
+            streamEvent.callDefaultBehavior();
         }
     }
 
@@ -566,7 +567,7 @@ export class Session implements EventDispatcher {
 
                     const streamEvent = new StreamEvent(true, this, 'streamDestroyed', stream, msg.reason);
                     this.ee.emitEvent('streamDestroyed', [streamEvent]);
-                    streamEvent.callDefaultBehaviour();
+                    streamEvent.callDefaultBehavior();
 
                     delete this.remoteStreamsCreated[stream.streamId];
                 }
@@ -629,7 +630,7 @@ export class Session implements EventDispatcher {
 
                 const streamEvent = new StreamEvent(true, this, 'streamDestroyed', connection.stream, msg.reason);
                 this.ee.emitEvent('streamDestroyed', [streamEvent]);
-                streamEvent.callDefaultBehaviour();
+                streamEvent.callDefaultBehavior();
 
                 // Deleting the remote stream
                 const streamId: string = connection.stream.streamId;
@@ -654,7 +655,7 @@ export class Session implements EventDispatcher {
 
                     const streamEvent = new StreamEvent(true, this, 'streamDestroyed', stream, 'forceDisconnect');
                     this.ee.emitEvent('streamDestroyed', [streamEvent]);
-                    streamEvent.callDefaultBehaviour();
+                    streamEvent.callDefaultBehavior();
 
                     delete this.remoteStreamsCreated[stream.streamId];
                 }
@@ -680,6 +681,46 @@ export class Session implements EventDispatcher {
             .then(connection => {
                 this.ee.emitEvent('signal', [new SignalEvent(this, msg.type, msg.data, connection)]);
                 this.ee.emitEvent('signal:' + msg.type, [new SignalEvent(this, msg.type, msg.data, connection)]);
+            })
+            .catch(openViduError => {
+                console.error(openViduError);
+            });
+    }
+
+    /**
+     * @hidden
+     */
+    onStreamPropertyChanged(msg): void {
+        this.getRemoteConnection(msg.connectionId, 'Remote connection ' + msg.connectionId + " unknown when 'onStreamPropertyChanged'. " +
+            'Existing remote connections: ' + JSON.stringify(Object.keys(this.remoteConnections)))
+
+            .then(connection => {
+                if (!!connection.stream && connection.stream.streamId === msg.streamId) {
+                    const stream = connection.stream;
+                    let oldValue;
+                    switch (msg.property) {
+                        case 'audioActive':
+                            oldValue = stream.audioActive;
+                            msg.newValue = msg.newValue === 'true';
+                            stream.audioActive = msg.newValue;
+                            break;
+                        case 'videoActive':
+                            oldValue = stream.videoActive;
+                            msg.newValue = msg.newValue === 'true';
+                            stream.videoActive = msg.newValue;
+                            break;
+                        case 'videoDimensions':
+                            oldValue = stream.videoDimensions;
+                            msg.newValue = JSON.parse(JSON.parse(msg.newValue));
+                            stream.videoDimensions = msg.newValue;
+                            break;
+                    }
+
+                    this.ee.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this, stream, msg.property, msg.newValue, oldValue, msg.reason)]);
+                    stream.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(stream.streamManager, stream, msg.property, msg.newValue, oldValue, msg.reason)]);
+                } else {
+                    console.error("No stream with streamId '" + msg.streamId + "' found for connection '" + msg.connectionId + "' on 'streamPropertyChanged' event");
+                }
             })
             .catch(openViduError => {
                 console.error(openViduError);
@@ -818,7 +859,7 @@ export class Session implements EventDispatcher {
                 // Make Session object dispatch 'sessionDisconnected' event (if it is not already disposed)
                 const sessionDisconnectEvent = new SessionDisconnectedEvent(this, reason);
                 this.ee.emitEvent('sessionDisconnected', [sessionDisconnectEvent]);
-                sessionDisconnectEvent.callDefaultBehaviour();
+                sessionDisconnectEvent.callDefaultBehavior();
             }
         } else {
             console.warn('You were not connected to the session ' + this.sessionId);
@@ -952,7 +993,7 @@ export class Session implements EventDispatcher {
                 { urls: [stunUrl] },
                 { urls: [turnUrl1, turnUrl2], username: turnUsername, credential: turnCredential }
             ];
-            console.log('TURN temp credentials [' + turnUsername + ':' + turnCredential + ']')
+            console.log('TURN temp credentials [' + turnUsername + ':' + turnCredential + ']');
         }
         if (!!role) {
             this.openvidu.role = role;

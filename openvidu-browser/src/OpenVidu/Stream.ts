@@ -57,12 +57,29 @@ export class Stream {
     hasAudio: boolean;
 
     /**
+     * Whether the stream has the video track muted or unmuted. If [[hasVideo]] is false, this property is undefined.
+     *
+     * This property may change if the Publisher publishing the stream calls [[Publisher.publishVideo]]. Whenever this happens a [[StreamPropertyChangedEvent]] will be dispatched
+     * by the Session object as well as by the affected Subscriber/Publisher object
+     */
+    videoActive: boolean;
+
+    /**
+     * Whether the stream has the audio track muted or unmuted. If [[hasAudio]] is false, this property is undefined
+     *
+     * This property may change if the Publisher publishing the stream calls [[Publisher.publishAudio]]. Whenever this happens a [[StreamPropertyChangedEvent]] will be dispatched
+     * by the Session object as well as by the affected Subscriber/Publisher object
+     */
+    audioActive: boolean;
+
+    /**
      * Unique identifier of the stream
      */
     streamId: string;
 
     /**
-     * `"CAMERA"` or `"SCREEN"`. *undefined* if stream is audio-only
+     * `"CAMERA"`, `"SCREEN"` or `"CUSTOM"` (the latter when [[PublisherProperties.videoSource]] is a MediaStreamTrack when calling [[OpenVidu.initPublisher]]).
+     * If [[hasVideo]] is false, this property is undefined
      */
     typeOfVideo?: string;
 
@@ -70,6 +87,17 @@ export class Stream {
      * StreamManager object ([[Publisher]] or [[Subscriber]]) in charge of displaying this stream in the DOM
      */
     streamManager: StreamManager;
+
+    /**
+     * Width and height in pixels of the encoded video stream. If [[hasVideo]] is false, this property is undefined
+     *
+     * This property may change if the Publisher that is publishing:
+     * - If it is a mobile device, whenever the user rotates the device.
+     * - If it is screen-sharing, whenever the user changes the size of the captured window.
+     *
+     * Whenever this happens a [[StreamPropertyChangedEvent]] will be dispatched by the Session object as well as by the affected Subscriber/Publisher object
+     */
+    videoDimensions: { width: number, height: number };
 
     /**
      * @hidden
@@ -119,26 +147,36 @@ export class Stream {
             // InboundStreamOptions: stream belongs to a Subscriber
             this.inboundStreamOpts = <InboundStreamOptions>options;
             this.streamId = this.inboundStreamOpts.id;
-            this.hasAudio = this.inboundStreamOpts.recvAudio;
-            this.hasVideo = this.inboundStreamOpts.recvVideo;
-            this.typeOfVideo = (!this.inboundStreamOpts.typeOfVideo) ? undefined : this.inboundStreamOpts.typeOfVideo;
-            this.frameRate = (this.inboundStreamOpts.frameRate === -1) ? undefined : this.inboundStreamOpts.frameRate;
+            this.hasAudio = this.inboundStreamOpts.hasAudio;
+            this.hasVideo = this.inboundStreamOpts.hasVideo;
+            if (this.hasAudio) {
+                this.audioActive = this.inboundStreamOpts.audioActive;
+            }
+            if (this.hasVideo) {
+                this.videoActive = this.inboundStreamOpts.videoActive;
+                this.typeOfVideo = (!this.inboundStreamOpts.typeOfVideo) ? undefined : this.inboundStreamOpts.typeOfVideo;
+                this.frameRate = (this.inboundStreamOpts.frameRate === -1) ? undefined : this.inboundStreamOpts.frameRate;
+                this.videoDimensions = this.inboundStreamOpts.videoDimensions;
+            }
         } else {
             // OutboundStreamOptions: stream belongs to a Publisher
             this.outboundStreamOpts = <OutboundStreamOptions>options;
 
-            if (this.isSendVideo()) {
-                if (this.isSendScreen()) {
-                    this.typeOfVideo = 'SCREEN';
-                } else {
-                    this.typeOfVideo = 'CAMERA';
-                }
-                this.frameRate = this.outboundStreamOpts.publisherProperties.frameRate;
-            } else {
-                delete this.typeOfVideo;
-            }
             this.hasAudio = this.isSendAudio();
             this.hasVideo = this.isSendVideo();
+
+            if (this.hasAudio) {
+                this.audioActive = !!this.outboundStreamOpts.publisherProperties.publishAudio;
+            }
+            if (this.hasVideo) {
+                this.videoActive = !!this.outboundStreamOpts.publisherProperties.publishVideo;
+                this.frameRate = this.outboundStreamOpts.publisherProperties.frameRate;
+                if (this.outboundStreamOpts.publisherProperties.videoSource instanceof MediaStreamTrack) {
+                    this.typeOfVideo = 'CUSTOM';
+                } else {
+                    this.typeOfVideo = this.isSendScreen() ? 'SCREEN' : 'CAMERA';
+                }
+            }
         }
 
         this.ee.on('mediastream-updated', () => {
@@ -410,13 +448,21 @@ export class Stream {
                 console.debug('Sending SDP offer to publish as '
                     + this.streamId, sdpOfferParam);
 
+                let typeOfVideo = '';
+                if (this.isSendVideo()) {
+                    typeOfVideo = this.outboundStreamOpts.publisherProperties.videoSource instanceof MediaStreamTrack ? 'CUSTOM' : (this.isSendScreen() ? 'SCREEN' : 'CAMERA');
+                }
+
                 this.session.openvidu.sendRequest('publishVideo', {
                     sdpOffer: sdpOfferParam,
                     doLoopback: this.displayMyRemote() || false,
-                    audioActive: this.isSendAudio(),
-                    videoActive: this.isSendVideo(),
-                    typeOfVideo: ((this.isSendVideo()) ? (this.isSendScreen() ? 'SCREEN' : 'CAMERA') : ''),
-                    frameRate: !!this.frameRate ? this.frameRate : -1
+                    hasAudio: this.isSendAudio(),
+                    hasVideo: this.isSendVideo(),
+                    audioActive: this.audioActive,
+                    videoActive: this.videoActive,
+                    typeOfVideo,
+                    frameRate: !!this.frameRate ? this.frameRate : -1,
+                    videoDimensions: JSON.stringify(this.videoDimensions)
                 }, (error, response) => {
                     if (error) {
                         reject('Error on publishVideo: ' + JSON.stringify(error));
@@ -426,7 +472,7 @@ export class Stream {
                                 this.streamId = response.id;
                                 this.isLocalStreamPublished = true;
                                 if (this.displayMyRemote()) {
-                                    this.remotePeerSuccesfullyEstablished();
+                                    this.remotePeerSuccessfullyEstablished();
                                 }
                                 this.ee.emitEvent('stream-created-by-publisher');
                                 this.initWebRtcStats();
@@ -457,8 +503,8 @@ export class Stream {
         return new Promise((resolve, reject) => {
 
             const offerConstraints = {
-                audio: this.inboundStreamOpts.recvAudio,
-                video: this.inboundStreamOpts.recvVideo
+                audio: this.inboundStreamOpts.hasAudio,
+                video: this.inboundStreamOpts.hasVideo
             };
             console.debug("'Session.subscribe(Stream)' called. Constraints of generate SDP offer",
                 offerConstraints);
@@ -480,7 +526,7 @@ export class Stream {
                         reject(new Error('Error on recvVideoFrom: ' + JSON.stringify(error)));
                     } else {
                         this.webRtcPeer.processAnswer(response.sdpAnswer).then(() => {
-                            this.remotePeerSuccesfullyEstablished();
+                            this.remotePeerSuccessfullyEstablished();
                             this.initWebRtcStats();
                             resolve();
                         }).catch(error => {
@@ -501,7 +547,7 @@ export class Stream {
         });
     }
 
-    private remotePeerSuccesfullyEstablished(): void {
+    private remotePeerSuccessfullyEstablished(): void {
         this.mediaStream = this.webRtcPeer.pc.getRemoteStreams()[0];
         console.debug('Peer remote stream', this.mediaStream);
 

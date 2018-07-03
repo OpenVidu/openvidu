@@ -20,6 +20,7 @@ export { SignalEvent } from './OpenViduInternal/Events/SignalEvent';
 export { StreamEvent } from './OpenViduInternal/Events/StreamEvent';
 export { StreamManagerEvent } from './OpenViduInternal/Events/StreamManagerEvent';
 export { VideoElementEvent } from './OpenViduInternal/Events/VideoElementEvent';
+export { StreamPropertyChangedEvent } from './OpenViduInternal/Events/StreamPropertyChangedEvent';
 
 export { Device } from './OpenViduInternal/Interfaces/Public/Device';
 export { EventDispatcher } from './OpenViduInternal/Interfaces/Public/EventDispatcher';

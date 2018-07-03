@@ -19,6 +19,7 @@ import { LocalRecorder } from './LocalRecorder';
 import { Publisher } from './Publisher';
 import { Session } from './Session';
 import { Stream } from './Stream';
+import { StreamPropertyChangedEvent } from '../OpenViduInternal/Events/StreamPropertyChangedEvent';
 import { Device } from '../OpenViduInternal/Interfaces/Public/Device';
 import { OpenViduAdvancedConfiguration } from '../OpenViduInternal/Interfaces/Public/OpenViduAdvancedConfiguration';
 import { PublisherProperties } from '../OpenViduInternal/Interfaces/Public/PublisherProperties';
@@ -47,6 +48,10 @@ export class OpenVidu {
   /**
    * @hidden
    */
+  publishers: Publisher[] = [];
+  /**
+   * @hidden
+   */
   wsUri: string;
   /**
    * @hidden
@@ -71,6 +76,64 @@ export class OpenVidu {
 
   constructor() {
     console.info("'OpenVidu' initialized");
+
+    if (platform.name!!.toLowerCase().indexOf('mobile') !== -1) {
+      // Listen to orientationchange only on mobile browsers
+      (<any>window).onorientationchange = () => {
+        this.publishers.forEach(publisher => {
+          if (!!publisher.stream && !!publisher.stream.hasVideo && !!publisher.stream.streamManager.videos[0]) {
+
+            let attempts = 0;
+
+            const oldWidth = publisher.stream.videoDimensions.width;
+            const oldHeight = publisher.stream.videoDimensions.height;
+            // New resolution got from different places for Chrome and Firefox. Chrome needs a videoWidth and videoHeight of a videoElement.
+            // Firefox needs getSettings from the videoTrack
+            let firefoxSettings = publisher.stream.getMediaStream().getVideoTracks()[0].getSettings();
+            let newWidth = (platform.name!!.toLowerCase().indexOf('firefox') !== -1) ? firefoxSettings.width : publisher.videoReference.videoWidth;
+            let newHeight = (platform.name!!.toLowerCase().indexOf('firefox') !== -1) ? firefoxSettings.height : publisher.videoReference.videoHeight;
+
+            const repeatUntilChange = setInterval(() => {
+              firefoxSettings = publisher.stream.getMediaStream().getVideoTracks()[0].getSettings();
+              newWidth = (platform.name!!.toLowerCase().indexOf('firefox') !== -1) ? firefoxSettings.width : publisher.videoReference.videoWidth;
+              newHeight = (platform.name!!.toLowerCase().indexOf('firefox') !== -1) ? firefoxSettings.height : publisher.videoReference.videoHeight;
+              sendStreamPropertyChangedEvent(oldWidth, oldHeight, newWidth, newHeight);
+            }, 100);
+
+            const sendStreamPropertyChangedEvent = (oldWidth, oldHeight, newWidth, newHeight) => {
+              attempts++;
+              if (attempts > 4) {
+                clearTimeout(repeatUntilChange);
+              }
+              if (newWidth !== oldWidth || newHeight !== oldHeight) {
+                publisher.stream.videoDimensions = {
+                  width: newWidth || 0,
+                  height: newHeight || 0
+                };
+                const newValue = JSON.stringify(publisher.stream.videoDimensions);
+                this.sendRequest(
+                  'streamPropertyChanged',
+                  {
+                    streamId: publisher.stream.streamId,
+                    property: 'videoDimensions',
+                    newValue,
+                    reason: 'deviceRotated'
+                  },
+                  (error, response) => {
+                    if (error) {
+                      console.error("Error sending 'streamPropertyChanged' event", error);
+                    } else {
+                      this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, publisher.stream, 'videoDimensions', newValue, { width: oldWidth, height: oldHeight }, 'deviceRotated')]);
+                      publisher.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(publisher, publisher.stream, 'videoDimensions', newValue, { width: oldWidth, height: oldHeight }, 'deviceRotated')]);
+                    }
+                  });
+                clearTimeout(repeatUntilChange);
+              }
+            };
+          }
+        });
+      };
+    }
   }
 
 
@@ -163,6 +226,7 @@ export class OpenVidu {
         publisher.emitEvent('accessDenied', []);
       });
 
+    this.publishers.push(publisher);
     return publisher;
   }
 
@@ -510,6 +574,7 @@ export class OpenVidu {
         recordingStarted: this.session.onRecordingStarted.bind(this.session),
         recordingStopped: this.session.onRecordingStopped.bind(this.session),
         sendMessage: this.session.onNewMessage.bind(this.session),
+        streamPropertyChanged: this.session.onStreamPropertyChanged.bind(this.session),
         iceCandidate: this.session.recvIceCandidate.bind(this.session),
         mediaError: this.session.onMediaError.bind(this.session)
       }

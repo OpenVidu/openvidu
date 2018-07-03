@@ -21,7 +21,7 @@ import { Session } from '../../OpenVidu/Session';
 export abstract class Event {
 
     /**
-     * Whether the event has a default behaviour that may be prevented by calling [[Event.preventDefault]]
+     * Whether the event has a default behavior that may be prevented by calling [[Event.preventDefault]]
      */
     cancelable: boolean;
 
@@ -54,7 +54,7 @@ export abstract class Event {
     }
 
     /**
-     * Prevents the default behaviour of the event. The following events have a default behaviour:
+     * Prevents the default behavior of the event. The following events have a default behavior:
      *
      * - `sessionDisconnected`: dispatched by [[Session]] object, automatically unsubscribes the leaving participant from every Subscriber object of the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks)
      * and also deletes any HTML video element associated to each Subscriber (only those created by OpenVidu Browser, either by passing a valid parameter as `targetElement` in method [[Session.subscribe]] or
@@ -69,10 +69,10 @@ export abstract class Event {
      */
     preventDefault() {
         // tslint:disable-next-line:no-empty
-        this.callDefaultBehaviour = () => { };
+        this.callDefaultBehavior = () => { };
         this.hasBeenPrevented = true;
     }
 
-    protected abstract callDefaultBehaviour();
+    protected abstract callDefaultBehavior();
 
 }

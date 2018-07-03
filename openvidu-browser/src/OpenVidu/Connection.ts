@@ -123,10 +123,13 @@ export class Connection {
             const streamOptions: InboundStreamOptions = {
                 id: opts.id,
                 connection: this,
+                hasAudio: opts.hasAudio,
+                hasVideo: opts.hasVideo,
+                audioActive: opts.audioActive,
+                videoActive: opts.videoActive,
+                typeOfVideo: opts.typeOfVideo,
                 frameRate: opts.frameRate,
-                recvAudio: opts.audioActive,
-                recvVideo: opts.videoActive,
-                typeOfVideo: opts.typeOfVideo
+                videoDimensions: !!opts.videoDimensions ? JSON.parse(opts.videoDimensions) : undefined
             };
             const stream = new Stream(this.session, streamOptions);
 

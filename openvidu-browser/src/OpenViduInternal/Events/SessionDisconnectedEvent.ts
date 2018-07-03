@@ -41,9 +41,9 @@ export class SessionDisconnectedEvent extends Event {
     /**
      * @hidden
      */
-    callDefaultBehaviour() {
+    callDefaultBehavior() {
 
-        console.info("Calling default behaviour upon '" + this.type + "' event dispatched by 'Session'");
+        console.info("Calling default behavior upon '" + this.type + "' event dispatched by 'Session'");
 
         const session = <Session>this.target;
 

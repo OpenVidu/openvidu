@@ -44,6 +44,6 @@ export class VideoElementEvent extends Event {
      * @hidden
      */
     // tslint:disable-next-line:no-empty
-    callDefaultBehaviour() { }
+    callDefaultBehavior() { }
 
 }
