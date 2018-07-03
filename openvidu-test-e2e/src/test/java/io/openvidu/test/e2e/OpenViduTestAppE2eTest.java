@@ -36,6 +36,7 @@ import org.junit.platform.runner.JUnitPlatform;
 import org.junit.Assert;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
@@ -48,6 +49,7 @@ import io.github.bonigarcia.wdm.ChromeDriverManager;
 import io.github.bonigarcia.wdm.FirefoxDriverManager;
 
 import io.openvidu.test.e2e.browser.BrowserUser;
+import io.openvidu.test.e2e.browser.ChromeAndroidUser;
 import io.openvidu.test.e2e.browser.ChromeUser;
 import io.openvidu.test.e2e.browser.FirefoxUser;
 
@@ -105,6 +107,9 @@ public class OpenViduTestAppE2eTest {
 			break;
 		case "firefox":
 			this.user = new FirefoxUser("TestUser", 50);
+			break;
+		case "chromeAndroid":
+			this.user = new ChromeAndroidUser("TestUser", 50);
 			break;
 		default:
 			this.user = new ChromeUser("TestUser", 50);
@@ -304,7 +309,7 @@ public class OpenViduTestAppE2eTest {
 
 		user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
 		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
-		
+
 		Thread.sleep(3000);
 
 		try {
@@ -723,6 +728,76 @@ public class OpenViduTestAppE2eTest {
 	}
 
 	@Test
+	@DisplayName("Stream property changed event")
+	void streamPropertyChangedEvent() throws Exception {
+
+		Queue<Boolean> threadAssertions = new ConcurrentLinkedQueue<Boolean>();
+
+		setupBrowser("chrome");
+
+		log.info("Stream property changed event");
+
+		WebElement oneToManyInput = user.getDriver().findElement(By.id("one2many-input"));
+		oneToManyInput.clear();
+		oneToManyInput.sendKeys("1");
+
+		user.getDriver().findElement(By.id("one2many-btn")).click();
+		user.getDriver().findElement(By.className("screen-radio")).click();
+
+		List<WebElement> joinButtons = user.getDriver().findElements(By.className("join-btn"));
+		for (WebElement el : joinButtons) {
+			el.sendKeys(Keys.ENTER);
+		}
+
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
+
+		// Unpublish video
+		user.getEventManager().on("streamPropertyChanged", (event) -> {
+			threadAssertions.add(((String) event.get("eventContent")).contains("videoActive [false]"));
+		});
+		user.getDriver().findElements(By.className("pub-video-btn")).get(0).click();
+		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 2);
+		user.getEventManager().off("streamPropertyChanged");
+		for (Iterator<Boolean> iter = threadAssertions.iterator(); iter.hasNext();) {
+			Assert.assertTrue(iter.next());
+			iter.remove();
+		}
+
+		// Unpublish audio
+		user.getEventManager().on("streamPropertyChanged", (event) -> {
+			threadAssertions.add(((String) event.get("eventContent")).contains("audioActive [false]"));
+		});
+		user.getDriver().findElements(By.className("pub-audio-btn")).get(0).click();
+		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 4);
+		user.getEventManager().off("streamPropertyChanged");
+		for (Iterator<Boolean> iter = threadAssertions.iterator(); iter.hasNext();) {
+			Assert.assertTrue(iter.next());
+			iter.remove();
+		}
+
+		// Resize captured window
+		int newWidth = 1280;
+		int newHeight = 720;
+		user.getEventManager().on("streamPropertyChanged", (event) -> {
+			threadAssertions.add(((String) event.get("eventContent"))
+					.contains("videoDimensions videoDimensions [{\\\"width\\\":" + newWidth + ",\\\"height\\\":" + newHeight + "}]"));
+		});
+		user.getDriver().manage().window().setSize(new Dimension(newWidth, newHeight));
+		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 6);
+		user.getEventManager().off("streamPropertyChanged");
+		for (Iterator<Boolean> iter = threadAssertions.iterator(); iter.hasNext();) {
+			Assert.assertTrue(iter.next());
+			iter.remove();
+		}
+
+		gracefullyLeaveParticipants(2);
+
+	}
+
+	@Test
 	@DisplayName("Local record")
 	void localRecordTest() throws Exception {
 
@@ -791,7 +866,7 @@ public class OpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.id("start-recording-btn")).click();
 		user.getWaiter()
 				.until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Error [404]"));
-		
+
 		listEmptyRecordings();
 
 		// Try to stop a non-existing recording
@@ -904,6 +979,8 @@ public class OpenViduTestAppE2eTest {
 		Assert.assertFalse(file3.exists());
 
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		
+		gracefullyLeaveParticipants(1);
 
 	}
 

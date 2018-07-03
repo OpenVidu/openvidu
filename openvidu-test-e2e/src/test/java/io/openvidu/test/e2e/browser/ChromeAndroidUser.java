@@ -17,41 +17,37 @@
 
 package io.openvidu.test.e2e.browser;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
-import org.springframework.core.io.ClassPathResource;
 
-public class ChromeUser extends BrowserUser {
+public class ChromeAndroidUser extends BrowserUser {
 
-	public ChromeUser(String userName, int timeOfWaitInSeconds) {
+	public ChromeAndroidUser(String userName, int timeOfWaitInSeconds) {
 		super(userName, timeOfWaitInSeconds);
-		
+
+		Map<String, String> mobileEmulation = new HashMap<>();
+		mobileEmulation.put("deviceName", "Nexus 5");
+
+		ChromeOptions options = new ChromeOptions();
+		options.setExperimentalOption("mobileEmulation", mobileEmulation);
+
 		DesiredCapabilities capabilities = DesiredCapabilities.chrome();
 		capabilities.setAcceptInsecureCerts(true);
 
-		ChromeOptions options = new ChromeOptions();
 		// This flag avoids to grant the user media
 		options.addArguments("--use-fake-ui-for-media-stream");
 		// This flag fakes user media with synthetic video
 		options.addArguments("--use-fake-device-for-media-stream");
-		// This flag selects the entire screen as video source when screen sharing
-		options.addArguments("--auto-select-desktop-capture-source=OpenVidu TestApp - Google Chrome");
-		
-		try {
-			// Add Screen Sharing extension
-			options.addExtensions(new ClassPathResource("ScreenCapturing.crx").getFile());
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
 		capabilities.setCapability(ChromeOptions.CAPABILITY, options);
-		
+
 		String REMOTE_URL = System.getProperty("REMOTE_URL_CHROME");
 		if (REMOTE_URL != null) {
 			log.info("Using URL {} to connect to remote web driver", REMOTE_URL);
@@ -64,7 +60,7 @@ public class ChromeUser extends BrowserUser {
 			log.info("Using local web driver");
 			this.driver = new ChromeDriver(capabilities);
 		}
-		
+
 		this.driver.manage().timeouts().setScriptTimeout(this.timeOfWaitInSeconds, TimeUnit.SECONDS);
 		this.configureDriver();
 	}
