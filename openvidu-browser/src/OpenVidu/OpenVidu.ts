@@ -110,21 +110,20 @@ export class OpenVidu {
                   width: newWidth || 0,
                   height: newHeight || 0
                 };
-                const newValue = JSON.stringify(publisher.stream.videoDimensions);
                 this.sendRequest(
                   'streamPropertyChanged',
                   {
                     streamId: publisher.stream.streamId,
                     property: 'videoDimensions',
-                    newValue,
+                    newValue: JSON.stringify(publisher.stream.videoDimensions),
                     reason: 'deviceRotated'
                   },
                   (error, response) => {
                     if (error) {
                       console.error("Error sending 'streamPropertyChanged' event", error);
                     } else {
-                      this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, publisher.stream, 'videoDimensions', newValue, { width: oldWidth, height: oldHeight }, 'deviceRotated')]);
-                      publisher.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(publisher, publisher.stream, 'videoDimensions', newValue, { width: oldWidth, height: oldHeight }, 'deviceRotated')]);
+                      this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, publisher.stream, 'videoDimensions', publisher.stream.videoDimensions, { width: oldWidth, height: oldHeight }, 'deviceRotated')]);
+                      publisher.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(publisher, publisher.stream, 'videoDimensions', publisher.stream.videoDimensions, { width: oldWidth, height: oldHeight }, 'deviceRotated')]);
                     }
                   });
                 clearTimeout(repeatUntilChange);

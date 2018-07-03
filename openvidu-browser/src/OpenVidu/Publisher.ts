@@ -341,21 +341,20 @@ export class Publisher extends StreamManager {
                                     width: newWidth || 0,
                                     height: newHeight || 0
                                 };
-                                const newValue = JSON.stringify(this.stream.videoDimensions);
                                 this.session.openvidu.sendRequest(
                                     'streamPropertyChanged',
                                     {
                                         streamId: this.stream.streamId,
                                         property: 'videoDimensions',
-                                        newValue,
+                                        newValue: JSON.stringify(this.stream.videoDimensions),
                                         reason: 'screenResized'
                                     },
                                     (error, response) => {
                                         if (error) {
                                             console.error("Error sending 'streamPropertyChanged' event", error);
                                         } else {
-                                            this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this.stream, 'videoDimensions', newValue, oldValue, 'screenResized')]);
-                                            this.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this, this.stream, 'videoDimensions', newValue, oldValue, 'screenResized')]);
+                                            this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this.stream, 'videoDimensions', this.stream.videoDimensions, oldValue, 'screenResized')]);
+                                            this.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this, this.stream, 'videoDimensions', this.stream.videoDimensions, oldValue, 'screenResized')]);
                                         }
                                     });
                             }
