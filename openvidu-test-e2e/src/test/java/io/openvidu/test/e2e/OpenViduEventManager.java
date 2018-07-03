@@ -214,6 +214,12 @@ public class OpenViduEventManager {
 		return hasMediaStream;
 	}
 
+	public String getDimensionOfViewport() {
+		String dimension = (String) ((JavascriptExecutor) driver)
+				.executeScript("return (JSON.stringify({width: window.innerWidth, height: window.innerHeight}))");
+		return dimension;
+	}
+
 	private boolean hasAudioTracks(WebElement videoElement) {
 		boolean audioTracks = (boolean) ((JavascriptExecutor) driver)
 				.executeScript("return ((document.getElementById('" + videoElement.getAttribute("id")

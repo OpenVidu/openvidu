@@ -34,6 +34,8 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.runner.RunWith;
 import org.junit.platform.runner.JUnitPlatform;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import org.junit.Assert;
 
 import org.openqa.selenium.By;
@@ -817,12 +819,20 @@ public class OpenViduTestAppE2eTest {
 		final CountDownLatch latch3 = new CountDownLatch(2);
 		int newWidth = 1500;
 		int newHeight = 500;
+
+		user.getDriver().manage().window().setSize(new Dimension(newWidth, newHeight));
+
+		String widthAndHeight = user.getEventManager().getDimensionOfViewport();
+		JSONObject obj = (JSONObject) new JSONParser().parse(widthAndHeight);
+
+		System.out.println("New viewport dimension: " + obj.toJSONString());
+
 		user.getEventManager().on("streamPropertyChanged", (event) -> {
-			threadAssertions.add(((String) event.get("eventContent"))
-					.contains("videoDimensions [{\"width\":" + (newWidth - 10) + ",\"height\":" + (newHeight - 130)  + "}]"));
+			threadAssertions.add(((String) event.get("eventContent")).contains(
+					"videoDimensions [{\"width\":" + obj.get("width") + ",\"height\":" + obj.get("height") + "}]"));
 			latch3.countDown();
 		});
-		user.getDriver().manage().window().setSize(new Dimension(newWidth, newHeight));
+
 		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 6);
 
 		latch3.await();
