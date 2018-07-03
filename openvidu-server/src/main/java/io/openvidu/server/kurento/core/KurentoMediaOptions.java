@@ -32,9 +32,10 @@ public class KurentoMediaOptions extends MediaOptions {
 	public MediaElement[] mediaElements;
 
 	public KurentoMediaOptions(boolean isOffer, String sdpOffer, MediaElement loopbackAlternativeSrc,
-			MediaType loopbackConnectionType, boolean audioActive, boolean videoActive, String typeOfVideo,
-			int frameRate, boolean doLoopback, MediaElement... mediaElements) {
-		super(audioActive, videoActive, typeOfVideo, frameRate);
+			MediaType loopbackConnectionType, Boolean hasAudio, Boolean hasVideo, Boolean audioActive,
+			Boolean videoActive, String typeOfVideo, Integer frameRate, String videoDimensions, boolean doLoopback,
+			MediaElement... mediaElements) {
+		super(hasAudio, hasVideo, audioActive, videoActive, typeOfVideo, frameRate, videoDimensions);
 		this.isOffer = isOffer;
 		this.sdpOffer = sdpOffer;
 		this.loopbackAlternativeSrc = loopbackAlternativeSrc;

@@ -17,18 +17,72 @@
 
 package io.openvidu.server.core;
 
+import org.json.simple.JSONObject;
+
 public class MediaOptions {
-	
-	public boolean audioActive;
-	public boolean videoActive;
-	public String typeOfVideo;
-	public int frameRate;
-	
-	public MediaOptions(boolean audioActive, boolean videoActive, String typeOfVideo, int frameRate) {
+
+	protected Boolean hasAudio;
+	protected Boolean hasVideo;
+	protected Boolean audioActive;
+	protected Boolean videoActive;
+	protected String typeOfVideo;
+	protected Integer frameRate;
+	protected String videoDimensions;
+
+	public MediaOptions(Boolean hasAudio, Boolean hasVideo, Boolean audioActive, Boolean videoActive,
+			String typeOfVideo, Integer frameRate, String videoDimensions) {
+		this.hasAudio = hasAudio;
+		this.hasVideo = hasVideo;
 		this.audioActive = audioActive;
 		this.videoActive = videoActive;
 		this.typeOfVideo = typeOfVideo;
 		this.frameRate = frameRate;
+		this.videoDimensions = videoDimensions;
+	}
+
+	@SuppressWarnings("unchecked")
+	public JSONObject toJson() {
+		JSONObject json = new JSONObject();
+		json.put("hasAudio", this.hasAudio);
+		if (hasAudio)
+			json.put("audioActive", this.audioActive);
+		json.put("hasVideo", this.hasVideo);
+		if (hasVideo)
+			json.put("videoActive", this.videoActive);
+		if (this.hasVideo && this.videoActive) {
+			json.put("typeOfVideo", this.typeOfVideo);
+			json.put("frameRate", this.frameRate);
+			json.put("videoDimensions", this.videoDimensions);
+		}
+		return json;
+	}
+
+	public boolean hasAudio() {
+		return this.hasAudio;
+	}
+
+	public boolean hasVideo() {
+		return this.hasVideo;
+	}
+
+	public boolean isAudioActive() {
+		return this.hasAudio && this.audioActive;
+	}
+
+	public boolean isVideoActive() {
+		return this.hasVideo && this.videoActive;
+	}
+
+	public String getTypeOfVideo() {
+		return this.typeOfVideo;
+	}
+
+	public Integer getFrameRate() {
+		return this.frameRate;
+	}
+
+	public String getVideoDimensions() {
+		return this.videoDimensions;
 	}
 
 }

@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import io.openvidu.client.OpenViduException;
@@ -85,6 +86,9 @@ public abstract class SessionManager {
 	public abstract void unsubscribe(Participant participant, String senderName, Integer transactionId);
 
 	public abstract void sendMessage(Participant participant, String message, Integer transactionId);
+
+	public abstract void streamPropertyChanged(Participant participant, Integer transactionId, String streamId,
+			String property, JsonElement newValue, String reason);
 
 	public abstract void onIceCandidate(Participant participant, String endpointName, String candidate,
 			int sdpMLineIndex, String sdpMid, Integer transactionId);
@@ -203,15 +207,16 @@ public abstract class SessionManager {
 
 	public String newToken(String sessionId, ParticipantRole role, String serverMetadata) throws OpenViduException {
 
-		ConcurrentHashMap<String, Token> map = this.sessionidTokenTokenobj.putIfAbsent(sessionId, new ConcurrentHashMap<>());
+		ConcurrentHashMap<String, Token> map = this.sessionidTokenTokenobj.putIfAbsent(sessionId,
+				new ConcurrentHashMap<>());
 		if (map != null) {
-		
+
 			if (!isMetadataFormatCorrect(serverMetadata)) {
 				log.error("Data invalid format. Max length allowed is 10000 chars");
 				throw new OpenViduException(Code.GENERIC_ERROR_CODE,
 						"Data invalid format. Max length allowed is 10000 chars");
 			}
-		
+
 			String token = OpenViduServer.publicUrl;
 			token += "?sessionId=" + sessionId;
 			token += "&token=" + this.generateRandomChain();
@@ -225,11 +230,11 @@ public abstract class SessionManager {
 				}
 			}
 			Token t = new Token(token, role, serverMetadata, turnCredentials);
-		
+
 			map.putIfAbsent(token, t);
 			showTokens();
 			return token;
-		
+
 		} else {
 			this.sessionidTokenTokenobj.remove(sessionId);
 			log.error("sessionId [" + sessionId + "] is not valid");
@@ -249,8 +254,10 @@ public abstract class SessionManager {
 			this.sessionidParticipantpublicidParticipant.putIfAbsent(sessionId, new ConcurrentHashMap<>());
 			this.sessionidTokenTokenobj.putIfAbsent(sessionId, new ConcurrentHashMap<>());
 			this.sessionidTokenTokenobj.get(sessionId).putIfAbsent(token,
-					new Token(token, ParticipantRole.PUBLISHER, "", 
-							this.coturnCredentialsService.isCoturnAvailable() ? this.coturnCredentialsService.createUser() : null));
+					new Token(token, ParticipantRole.PUBLISHER, "",
+							this.coturnCredentialsService.isCoturnAvailable()
+									? this.coturnCredentialsService.createUser()
+									: null));
 			return true;
 		}
 	}
@@ -313,8 +320,10 @@ public abstract class SessionManager {
 	public Participant newRecorderParticipant(String sessionId, String participantPrivatetId, Token token,
 			String clientMetadata) {
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
-			Participant p = new Participant(participantPrivatetId, ProtocolElements.RECORDER_PARTICIPANT_PUBLICID, token, clientMetadata);
-			this.sessionidParticipantpublicidParticipant.get(sessionId).put(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID, p);
+			Participant p = new Participant(participantPrivatetId, ProtocolElements.RECORDER_PARTICIPANT_PUBLICID,
+					token, clientMetadata);
+			this.sessionidParticipantpublicidParticipant.get(sessionId)
+					.put(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID, p);
 			return p;
 		} else {
 			throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE, sessionId);

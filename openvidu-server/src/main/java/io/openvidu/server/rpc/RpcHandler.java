@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import io.openvidu.client.OpenViduException;
@@ -121,6 +122,9 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 			break;
 		case ProtocolElements.UNPUBLISHVIDEO_METHOD:
 			unpublishVideo(rpcConnection, request);
+			break;
+		case ProtocolElements.STREAMPROPERTYCHANGED_METHOD:
+			streamPropertyChanged(rpcConnection, request);
 			break;
 		default:
 			log.error("Unrecognized request {}", request);
@@ -282,6 +286,19 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 		sessionManager.unpublishVideo(participant, request.getId(), "unpublish");
 	}
+	
+	public void streamPropertyChanged(RpcConnection rpcConnection, Request<JsonObject> request) {
+		String participantPrivateId = rpcConnection.getParticipantPrivateId();
+		String sessionId = rpcConnection.getSessionId();
+		Participant participant = sessionManager.getParticipant(sessionId, participantPrivateId);
+		
+		String streamId = getStringParam(request, ProtocolElements.STREAMPROPERTYCHANGED_STREAMID_PARAM);
+		String property = getStringParam(request, ProtocolElements.STREAMPROPERTYCHANGED_PROPERTY_PARAM);
+		JsonElement newValue = getParam(request, ProtocolElements.STREAMPROPERTYCHANGED_NEWVALUE_PARAM);
+		String reason = getStringParam(request, ProtocolElements.STREAMPROPERTYCHANGED_REASON_PARAM);
+		
+		sessionManager.streamPropertyChanged(participant, request.getId(), streamId, property, newValue, reason);
+	}
 
 	public void leaveRoomAfterConnClosed(String participantPrivateId, String reason) {
 		try {
@@ -384,6 +401,14 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 					+ "'. CHECK THAT 'openvidu-server' AND 'openvidu-browser' SHARE THE SAME VERSION NUMBER");
 		}
 		return request.getParams().get(key).getAsBoolean();
+	}
+	
+	public static JsonElement getParam(Request<JsonObject> request, String key) {
+		if (request.getParams() == null || request.getParams().get(key) == null) {
+			throw new RuntimeException("Request element '" + key + "' is missing in method '" + request.getMethod()
+					+ "'. CHECK THAT 'openvidu-server' AND 'openvidu-browser' SHARE THE SAME VERSION NUMBER");
+		}
+		return request.getParams().get(key);
 	}
 
 }

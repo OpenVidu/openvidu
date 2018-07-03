@@ -122,11 +122,11 @@ public class CDREvent implements Comparable<CDREvent> {
 		}
 		if (this.mediaOptions != null) {
 			json.put("connection", this.receivingFrom != null ? "INBOUND" : "OUTBOUND");
-			json.put("audioEnabled", this.mediaOptions.audioActive);
-			json.put("videoEnabled", this.mediaOptions.videoActive);
-			if (this.mediaOptions.videoActive) {
-				json.put("videoSource", this.mediaOptions.typeOfVideo);
-				json.put("videoFramerate", this.mediaOptions.frameRate);
+			json.put("audioEnabled", this.mediaOptions.hasAudio());
+			json.put("videoEnabled", this.mediaOptions.hasVideo());
+			if (this.mediaOptions.hasVideo()) {
+				json.put("videoSource", this.mediaOptions.getTypeOfVideo());
+				json.put("videoFramerate", this.mediaOptions.getFrameRate());
 			}
 			if (this.receivingFrom != null) {
 				json.put("receivingFrom", this.receivingFrom);

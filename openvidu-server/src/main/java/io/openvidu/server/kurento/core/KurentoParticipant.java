@@ -58,7 +58,7 @@ import io.openvidu.server.kurento.endpoint.SubscriberEndpoint;
 public class KurentoParticipant extends Participant {
 
 	private static final Logger log = LoggerFactory.getLogger(KurentoParticipant.class);
-	
+
 	@Autowired
 	protected OpenviduConfig openviduConfig;
 
@@ -102,7 +102,7 @@ public class KurentoParticipant extends Participant {
 		publisher.setMediaOptions(mediaOptions);
 
 		String publisherStreamId = this.getParticipantPublicId() + "_"
-				+ (mediaOptions.videoActive ? mediaOptions.typeOfVideo : "MICRO") + "_"
+				+ (mediaOptions.hasVideo() ? mediaOptions.getTypeOfVideo() : "MICRO") + "_"
 				+ RandomStringUtils.random(5, true, false).toUpperCase();
 		this.publisher.getEndpoint().addTag("name", publisherStreamId);
 		addEndpointListeners(this.publisher);
@@ -180,9 +180,13 @@ public class KurentoParticipant extends Participant {
 		}
 		return this.publisher;
 	}
-	
+
 	public MediaOptions getPublisherMediaOptions() {
 		return this.publisher.getMediaOptions();
+	}
+
+	public void setPublisherMediaOptions(MediaOptions mediaOptions) {
+		this.publisher.setMediaOptions(mediaOptions);
 	}
 
 	public KurentoSession getSession() {
@@ -641,7 +645,7 @@ public class KurentoParticipant extends Participant {
 					+ " | MEDIATYPE: " + event.getMediaType() + " | TIMESTAMP: " + System.currentTimeMillis();
 
 			endpoint.flowInMedia.put(event.getSource().getName(), event.getMediaType());
-			if (endpoint.getMediaOptions().audioActive && endpoint.getMediaOptions().videoActive
+			if (endpoint.getMediaOptions().hasAudio() && endpoint.getMediaOptions().hasVideo()
 					&& endpoint.flowInMedia.values().size() == 2) {
 				endpoint.kmsEvents.add(new KmsEvent(event));
 			} else if (endpoint.flowInMedia.values().size() == 1) {
@@ -658,7 +662,7 @@ public class KurentoParticipant extends Participant {
 					+ " | MEDIATYPE: " + event.getMediaType() + " | TIMESTAMP: " + System.currentTimeMillis();
 
 			endpoint.flowOutMedia.put(event.getSource().getName(), event.getMediaType());
-			if (endpoint.getMediaOptions().audioActive && endpoint.getMediaOptions().videoActive
+			if (endpoint.getMediaOptions().hasAudio() && endpoint.getMediaOptions().hasVideo()
 					&& endpoint.flowOutMedia.values().size() == 2) {
 				endpoint.kmsEvents.add(new KmsEvent(event));
 			} else if (endpoint.flowOutMedia.values().size() == 1) {
@@ -701,6 +705,24 @@ public class KurentoParticipant extends Participant {
 		for (MediaEndpoint sub : this.subscribers.values()) {
 			if (sub.getEndpoint() != null) {
 				subscriberEndpoints.add(sub.toJSON());
+			}
+		}
+		json.put("publishers", publisherEnpoints);
+		json.put("subscribers", subscriberEndpoints);
+		return json;
+	}
+
+	@SuppressWarnings("unchecked")
+	public JSONObject withStatsToJSON() {
+		JSONObject json = super.toJSON();
+		JSONArray publisherEnpoints = new JSONArray();
+		if (this.streaming && this.publisher.getEndpoint() != null) {
+			publisherEnpoints.add(this.publisher.withStatsToJSON());
+		}
+		JSONArray subscriberEndpoints = new JSONArray();
+		for (MediaEndpoint sub : this.subscribers.values()) {
+			if (sub.getEndpoint() != null) {
+				subscriberEndpoints.add(sub.withStatsToJSON());
 			}
 		}
 		json.put("publishers", publisherEnpoints);

@@ -91,12 +91,18 @@ public class SessionEventsHandler {
 					existingParticipant.getFullMetadata());
 
 			if (existingParticipant.isStreaming()) {
-				
+
 				KurentoParticipant kParticipant = (KurentoParticipant) existingParticipant;
-				
+
 				JsonObject stream = new JsonObject();
 				stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMID_PARAM,
 						existingParticipant.getPublisherStremId());
+				stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMHASAUDIO_PARAM,
+						kParticipant.getPublisherMediaOptions().hasAudio);
+				stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMHASVIDEO_PARAM,
+						kParticipant.getPublisherMediaOptions().hasVideo);
+				stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMVIDEOACTIVE_PARAM,
+						kParticipant.getPublisherMediaOptions().videoActive);
 				stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMAUDIOACTIVE_PARAM,
 						kParticipant.getPublisherMediaOptions().audioActive);
 				stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMVIDEOACTIVE_PARAM,
@@ -105,6 +111,8 @@ public class SessionEventsHandler {
 						kParticipant.getPublisherMediaOptions().typeOfVideo);
 				stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMFRAMERATE_PARAM,
 						kParticipant.getPublisherMediaOptions().frameRate);
+				stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMVIDEODIMENSIONS_PARAM,
+						kParticipant.getPublisherMediaOptions().videoDimensions);
 
 				JsonArray streamsArray = new JsonArray();
 				streamsArray.add(stream);
@@ -168,8 +176,8 @@ public class SessionEventsHandler {
 		}
 	}
 
-	public void onPublishMedia(Participant participant, String streamId, String sessionId, MediaOptions mediaOptions, String sdpAnswer,
-			Set<Participant> participants, Integer transactionId, OpenViduException error) {
+	public void onPublishMedia(Participant participant, String streamId, String sessionId, MediaOptions mediaOptions,
+			String sdpAnswer, Set<Participant> participants, Integer transactionId, OpenViduException error) {
 		if (error != null) {
 			rpcNotificationService.sendErrorResponse(participant.getParticipantPrivateId(), transactionId, null, error);
 			return;
@@ -184,10 +192,13 @@ public class SessionEventsHandler {
 		JsonObject stream = new JsonObject();
 
 		stream.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_STREAMID_PARAM, streamId);
+		stream.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_HASAUDIO_PARAM, mediaOptions.hasAudio);
+		stream.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_HASVIDEO_PARAM, mediaOptions.hasVideo);
 		stream.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_AUDIOACTIVE_PARAM, mediaOptions.audioActive);
 		stream.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_VIDEOACTIVE_PARAM, mediaOptions.videoActive);
 		stream.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_TYPEOFVIDEO_PARAM, mediaOptions.typeOfVideo);
 		stream.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_FRAMERATE_PARAM, mediaOptions.frameRate);
+		stream.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_VIDEODIMENSIONS_PARAM, mediaOptions.videoDimensions);
 
 		JsonArray streamsArray = new JsonArray();
 		streamsArray.add(stream);
@@ -306,6 +317,28 @@ public class SessionEventsHandler {
 		}
 
 		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, new JsonObject());
+	}
+
+	public void onStreamPropertyChanged(Participant participant, Integer transactionId, Set<Participant> participants,
+			String streamId, String property, JsonElement newValue, String reason) {
+
+		JsonObject params = new JsonObject();
+		params.addProperty(ProtocolElements.STREAMPROPERTYCHANGED_CONNECTIONID_PARAM,
+				participant.getParticipantPublicId());
+		params.addProperty(ProtocolElements.STREAMPROPERTYCHANGED_STREAMID_PARAM, streamId);
+		params.addProperty(ProtocolElements.STREAMPROPERTYCHANGED_PROPERTY_PARAM, property);
+		params.addProperty(ProtocolElements.STREAMPROPERTYCHANGED_NEWVALUE_PARAM, newValue.toString());
+		params.addProperty(ProtocolElements.STREAMPROPERTYCHANGED_REASON_PARAM, reason);
+
+		for (Participant p : participants) {
+			if (p.getParticipantPrivateId().equals(participant.getParticipantPrivateId())) {
+				rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId,
+						new JsonObject());
+			} else {
+				rpcNotificationService.sendNotification(p.getParticipantPrivateId(),
+						ProtocolElements.STREAMPROPERTYCHANGED_METHOD, params);
+			}
+		}
 	}
 
 	public void onRecvIceCandidate(Participant participant, Integer transactionId, OpenViduException error) {

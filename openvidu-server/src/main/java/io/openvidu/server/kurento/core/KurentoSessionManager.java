@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
@@ -124,7 +125,7 @@ public class KurentoSessionManager extends SessionManager {
 		if (sessionidParticipantpublicidParticipant.get(sessionId) != null) {
 			Participant p = sessionidParticipantpublicidParticipant.get(sessionId)
 					.remove(participant.getParticipantPublicId());
-			
+
 			if (this.coturnCredentialsService.isCoturnAvailable()) {
 				this.coturnCredentialsService.deleteUser(p.getToken().getTurnCredentials().getUsername());
 			}
@@ -271,8 +272,8 @@ public class KurentoSessionManager extends SessionManager {
 		participants = kurentoParticipant.getSession().getParticipants();
 
 		if (sdpAnswer != null) {
-			sessionEventsHandler.onPublishMedia(participant, participant.getPublisherStremId(), session.getSessionId(), mediaOptions, sdpAnswer,
-					participants, transactionId, null);
+			sessionEventsHandler.onPublishMedia(participant, participant.getPublisherStremId(), session.getSessionId(),
+					mediaOptions, sdpAnswer, participants, transactionId, null);
 		}
 	}
 
@@ -380,6 +381,40 @@ public class KurentoSessionManager extends SessionManager {
 	}
 
 	@Override
+	public void streamPropertyChanged(Participant participant, Integer transactionId, String streamId, String property,
+			JsonElement newValue, String reason) {
+		KurentoParticipant kParticipant = (KurentoParticipant) participant;
+		streamId = kParticipant.getPublisherStremId();
+		MediaOptions streamProperties = kParticipant.getPublisherMediaOptions();
+
+		Boolean hasAudio = streamProperties.hasAudio();
+		Boolean hasVideo = streamProperties.hasVideo();
+		Boolean audioActive = streamProperties.isAudioActive();
+		Boolean videoActive = streamProperties.isVideoActive();
+		String typeOfVideo = streamProperties.getTypeOfVideo();
+		Integer frameRate = streamProperties.getFrameRate();
+		String videoDimensions = streamProperties.getVideoDimensions();
+
+		switch (property) {
+		case "audioActive":
+			audioActive = newValue.getAsBoolean();
+			break;
+		case "videoActive":
+			videoActive = newValue.getAsBoolean();
+			break;
+		case "videoDimensions":
+			videoDimensions = newValue.getAsString();
+			break;
+		}
+
+		kParticipant.setPublisherMediaOptions(new MediaOptions(hasAudio, hasVideo, audioActive, videoActive,
+				typeOfVideo, frameRate, videoDimensions));
+
+		sessionEventsHandler.onStreamPropertyChanged(participant, transactionId,
+				kParticipant.getSession().getParticipants(), streamId, property, newValue, reason);
+	}
+
+	@Override
 	public void onIceCandidate(Participant participant, String endpointName, String candidate, int sdpMLineIndex,
 			String sdpMid, Integer transactionId) {
 		try {
@@ -450,14 +485,38 @@ public class KurentoSessionManager extends SessionManager {
 	public MediaOptions generateMediaOptions(Request<JsonObject> request) {
 
 		String sdpOffer = RpcHandler.getStringParam(request, ProtocolElements.PUBLISHVIDEO_SDPOFFER_PARAM);
-		boolean audioActive = RpcHandler.getBooleanParam(request, ProtocolElements.PUBLISHVIDEO_AUDIOACTIVE_PARAM);
-		boolean videoActive = RpcHandler.getBooleanParam(request, ProtocolElements.PUBLISHVIDEO_VIDEOACTIVE_PARAM);
-		String typeOfVideo = RpcHandler.getStringParam(request, ProtocolElements.PUBLISHVIDEO_TYPEOFVIDEO_PARAM);
-		int frameRate = RpcHandler.getIntParam(request, ProtocolElements.PUBLISHVIDEO_FRAMERATE_PARAM);
+		boolean hasAudio = RpcHandler.getBooleanParam(request, ProtocolElements.PUBLISHVIDEO_HASAUDIO_PARAM);
+		boolean hasVideo = RpcHandler.getBooleanParam(request, ProtocolElements.PUBLISHVIDEO_HASVIDEO_PARAM);
+
+		Boolean audioActive = null, videoActive = null;
+		String typeOfVideo = null, videoDimensions = null;
+		Integer frameRate = null;
+
+		try {
+			audioActive = RpcHandler.getBooleanParam(request, ProtocolElements.PUBLISHVIDEO_AUDIOACTIVE_PARAM);
+		} catch (RuntimeException noParameterFound) {
+		}
+		try {
+			videoActive = RpcHandler.getBooleanParam(request, ProtocolElements.PUBLISHVIDEO_VIDEOACTIVE_PARAM);
+		} catch (RuntimeException noParameterFound) {
+		}
+		try {
+			typeOfVideo = RpcHandler.getStringParam(request, ProtocolElements.PUBLISHVIDEO_TYPEOFVIDEO_PARAM);
+		} catch (RuntimeException noParameterFound) {
+		}
+		try {
+			videoDimensions = RpcHandler.getStringParam(request, ProtocolElements.PUBLISHVIDEO_VIDEODIMENSIONS_PARAM);
+		} catch (RuntimeException noParameterFound) {
+		}
+		try {
+			frameRate = RpcHandler.getIntParam(request, ProtocolElements.PUBLISHVIDEO_FRAMERATE_PARAM);
+		} catch (RuntimeException noParameterFound) {
+		}
+
 		boolean doLoopback = RpcHandler.getBooleanParam(request, ProtocolElements.PUBLISHVIDEO_DOLOOPBACK_PARAM);
 
-		return new KurentoMediaOptions(true, sdpOffer, null, null, audioActive, videoActive, typeOfVideo, frameRate,
-				doLoopback);
+		return new KurentoMediaOptions(true, sdpOffer, null, null, hasAudio, hasVideo, audioActive, videoActive,
+				typeOfVideo, frameRate, videoDimensions, doLoopback);
 	}
 
 }
