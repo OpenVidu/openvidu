@@ -819,7 +819,7 @@ public class OpenViduTestAppE2eTest {
 		int newHeight = 500;
 		user.getEventManager().on("streamPropertyChanged", (event) -> {
 			threadAssertions.add(((String) event.get("eventContent"))
-					.contains("videoDimensions [{\"width\":" + (newWidth - 10) + ",\"height\":" + (newHeight - 132)  + "}]"));
+					.contains("videoDimensions [{\"width\":" + (newWidth - 10) + ",\"height\":" + (newHeight - 130)  + "}]"));
 			latch3.countDown();
 		});
 		user.getDriver().manage().window().setSize(new Dimension(newWidth, newHeight));
