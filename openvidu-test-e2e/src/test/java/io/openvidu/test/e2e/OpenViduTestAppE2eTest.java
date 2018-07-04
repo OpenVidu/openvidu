@@ -19,6 +19,7 @@ package io.openvidu.test.e2e;
 
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
+import static org.junit.Assert.fail;
 import static org.openqa.selenium.OutputType.BASE64;
 import org.slf4j.Logger;
 
@@ -29,6 +30,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -682,7 +684,11 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
 
-		latch1.await();
+		if (!latch1.await(8000, TimeUnit.MILLISECONDS)) {
+			gracefullyLeaveParticipants(2);
+			fail();
+			return;
+		}
 
 		user.getEventManager().off("streamPlaying");
 		for (Iterator<Boolean> iter = threadAssertions.iterator(); iter.hasNext();) {
@@ -711,7 +717,11 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 4);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
 
-		latch2.await();
+		if (!latch2.await(8000, TimeUnit.MILLISECONDS)) {
+			gracefullyLeaveParticipants(2);
+			fail();
+			return;
+		}
 
 		user.getEventManager().off("streamPlaying");
 		for (Iterator<Boolean> iter = threadAssertions.iterator(); iter.hasNext();) {
@@ -739,7 +749,11 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 6);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 6);
 
-		latch3.await();
+		if (!latch3.await(8000, TimeUnit.MILLISECONDS)) {
+			gracefullyLeaveParticipants(2);
+			fail();
+			return;
+		}
 
 		user.getEventManager().off("streamPlaying");
 		for (Iterator<Boolean> iter = threadAssertions.iterator(); iter.hasNext();) {
@@ -790,7 +804,11 @@ public class OpenViduTestAppE2eTest {
 		user.getDriver().findElements(By.className("pub-video-btn")).get(0).click();
 		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 2);
 
-		latch1.await();
+		if (!latch1.await(3000, TimeUnit.MILLISECONDS)) {
+			gracefullyLeaveParticipants(2);
+			fail();
+			return;
+		}
 
 		user.getEventManager().off("streamPropertyChanged");
 		for (Iterator<Boolean> iter = threadAssertions.iterator(); iter.hasNext();) {
@@ -807,7 +825,11 @@ public class OpenViduTestAppE2eTest {
 		user.getDriver().findElements(By.className("pub-audio-btn")).get(0).click();
 		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 4);
 
-		latch2.await();
+		if (!latch2.await(3000, TimeUnit.MILLISECONDS)) {
+			gracefullyLeaveParticipants(2);
+			fail();
+			return;
+		}
 
 		user.getEventManager().off("streamPropertyChanged");
 		for (Iterator<Boolean> iter = threadAssertions.iterator(); iter.hasNext();) {
@@ -835,7 +857,11 @@ public class OpenViduTestAppE2eTest {
 
 		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 6);
 
-		latch3.await();
+		if (!latch3.await(3000, TimeUnit.MILLISECONDS)) {
+			gracefullyLeaveParticipants(2);
+			fail();
+			return;
+		}
 
 		user.getEventManager().off("streamPropertyChanged");
 		for (Iterator<Boolean> iter = threadAssertions.iterator(); iter.hasNext();) {
