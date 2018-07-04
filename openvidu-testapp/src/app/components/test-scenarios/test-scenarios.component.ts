@@ -124,7 +124,7 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
     }
 
     this.users = [];
-    this.report = { 'streamsOut': { 'count': 0, 'items': [] }, 'streamsIn': { 'count': 0, 'items': [] } };
+    this.report = { 'streamsOut': { 'numberOfElements': 0, 'content': [] }, 'streamsIn': { 'numberOfElements': 0, 'content': [] } };
     this.loadSubsPubs(subsPubs);
     this.loadPubs(pubs);
     this.loadSubs(subs);
@@ -331,8 +331,8 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
               event.streamManager.stream.getRemoteIceCandidateList().map((c: RTCIceCandidate) => c.candidate),
           };
 
-          this.report.streamsIn.count++;
-          this.report.streamsIn.items.push(newReport);
+          this.report.streamsIn.numberOfElements++;
+          this.report.streamsIn.content.push(newReport);
         } else {
           newReport = {
             connectionId: event.connectionId,
@@ -353,8 +353,8 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
               event.streamManager.stream.getRemoteIceCandidateList().map((c: RTCIceCandidate) => c.candidate)
           };
 
-          this.report.streamsOut.count++;
-          this.report.streamsOut.items.push(newReport);
+          this.report.streamsOut.numberOfElements++;
+          this.report.streamsOut.content.push(newReport);
         }
 
         if (++this.numberOfReports === this.totalNumberOfStreams) {
@@ -371,8 +371,8 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
     this.http.get(this.openviduUrl + 'api/sessions/' + this.fixedSessionId + '?webRtcStats=true', { headers }).subscribe(
       sessionInfo => {
 
-        this.report.streamsOut.items.forEach(report => {
-          const streamOutRemoteInfo = sessionInfo['connections']
+        this.report.streamsOut.content.forEach(report => {
+          const streamOutRemoteInfo = sessionInfo['connections'].content
             .find(c => c.connectionId === report.connectionId).publishers
             .find(p => {
               report.webrtcTagName = p.webrtcTagName;
@@ -390,8 +390,8 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
           }
         });
 
-        this.report.streamsIn.items.forEach(report => {
-          const streamInRemoteInfo = sessionInfo['connections']
+        this.report.streamsIn.content.forEach(report => {
+          const streamInRemoteInfo = sessionInfo['connections'].content
             .find(c => c.connectionId === report.connectionId).subscribers
             .find(p => {
               report.webrtcTagName = p.webrtcTagName;
@@ -435,7 +435,7 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
   focusOnReportForStream(event) {
     this.isFocusedOnReport = true;
     let jsonObject = !!event.in ? this.report.streamsIn : this.report.streamsOut;
-    jsonObject = jsonObject.items.find(stream => {
+    jsonObject = jsonObject.content.find(stream => {
       const webrtcTagName = !!event.in ? event.connectionId + '_' + event.streamId : event.streamId;
       return (stream.connectionId === event.connectionId && stream.webrtcTagName === webrtcTagName);
     });
@@ -452,7 +452,7 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
           .then(localCandidatePair => {
             let newReport;
             if (event.streamManager.remote) {
-              const streamInRemoteInfo = sessionInfo['connections']
+              const streamInRemoteInfo = sessionInfo['connections'].content
                 .find(c => c.connectionId === event.connectionId).subscribers
                 .find(p => p.webrtcTagName === event.connectionId + '_' + event.streamManager.stream.streamId);
 
@@ -470,11 +470,11 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
                 }
               };
 
-              this.report.streamsIn.count++;
-              this.report.streamsIn.items.push(newReport);
+              this.report.streamsIn.numberOfElements++;
+              this.report.streamsIn.content.push(newReport);
               this.stringifyReport = JSON.stringify(this.report, null, '\t');
             } else {
-              const streamOutRemoteInfo = sessionInfo['connections']
+              const streamOutRemoteInfo = sessionInfo['connections'].content
                 .find(c => c.connectionId === event.connectionId).publishers
                 .find(p => p.webrtcTagName === event.streamManager.stream.streamId);
 
@@ -492,8 +492,8 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
                 }
               };
 
-              this.report.streamsOut.count++;
-              this.report.streamsOut.items.push(newReport);
+              this.report.streamsOut.numberOfElements++;
+              this.report.streamsOut.content.push(newReport);
               this.stringifyReport = JSON.stringify(this.report, null, '\t');
             }
           })
