@@ -32,6 +32,11 @@ public class ChromeUser extends BrowserUser {
 
 	public ChromeUser(String userName, int timeOfWaitInSeconds) {
 		super(userName, timeOfWaitInSeconds);
+		new ChromeUser(userName, timeOfWaitInSeconds, "Entire screen");
+	}
+
+	public ChromeUser(String userName, int timeOfWaitInSeconds, String screenToCapture) {
+		super(userName, timeOfWaitInSeconds);
 
 		DesiredCapabilities capabilities = DesiredCapabilities.chrome();
 		capabilities.setAcceptInsecureCerts(true);
@@ -42,7 +47,7 @@ public class ChromeUser extends BrowserUser {
 		// This flag fakes user media with synthetic video
 		options.addArguments("--use-fake-device-for-media-stream");
 		// This flag selects the entire screen as video source when screen sharing
-		options.addArguments("--auto-select-desktop-capture-source=OpenVidu TestApp");
+		options.addArguments("--auto-select-desktop-capture-source=" + screenToCapture);
 
 		try {
 			// Add Screen Sharing extension

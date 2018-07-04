@@ -116,6 +116,8 @@ public class OpenViduTestAppE2eTest {
 		case "chromeAndroid":
 			this.user = new ChromeAndroidUser("TestUser", 50);
 			break;
+		case "chromeAlternateScreenShare":
+			this.user = new ChromeUser("TestUser", 50, "OpenVidu TestApp");
 		default:
 			this.user = new ChromeUser("TestUser", 50);
 		}
@@ -774,7 +776,7 @@ public class OpenViduTestAppE2eTest {
 
 		Queue<Boolean> threadAssertions = new ConcurrentLinkedQueue<Boolean>();
 
-		setupBrowser("chrome");
+		setupBrowser("chromeAlternateScreenShare");
 
 		log.info("Stream property changed event");
 
