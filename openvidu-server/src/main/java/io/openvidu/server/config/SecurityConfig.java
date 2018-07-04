@@ -37,18 +37,25 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 		// Security for API REST
 		ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry conf = http.cors().and()
-				.csrf().disable().authorizeRequests().antMatchers(HttpMethod.POST, "/api/sessions").authenticated()
-				.antMatchers(HttpMethod.POST, "/api/sessions/**").authenticated()
+				.csrf().disable().authorizeRequests()
+				// /api/sessions
 				.antMatchers(HttpMethod.GET, "/api/sessions").authenticated()
 				.antMatchers(HttpMethod.GET, "/api/sessions/**").authenticated()
+				.antMatchers(HttpMethod.POST, "/api/sessions").authenticated()
+				.antMatchers(HttpMethod.POST, "/api/sessions/**").authenticated()
+				// /api/tokens
 				.antMatchers(HttpMethod.POST, "/api/tokens").authenticated()
-				.antMatchers(HttpMethod.POST, "/api/recordings/start").authenticated()
-				.antMatchers(HttpMethod.POST, "/api/recordings/stop").authenticated()
+				// /api/recordings
 				.antMatchers(HttpMethod.GET, "/api/recordings").authenticated()
 				.antMatchers(HttpMethod.GET, "/api/recordings/**").authenticated()
+				.antMatchers(HttpMethod.POST, "/api/recordings/start").authenticated()
+				.antMatchers(HttpMethod.POST, "/api/recordings/stop").authenticated()
 				.antMatchers(HttpMethod.DELETE, "/api/recordings/**").authenticated()
-				.antMatchers(HttpMethod.GET, "/config/openvidu-publicurl").anonymous()
-				.antMatchers(HttpMethod.GET, "/config/**").authenticated();
+				// /api/config
+				.antMatchers(HttpMethod.GET, "/config/openvidu-publicurl").permitAll()
+				.antMatchers(HttpMethod.GET, "/config/**").authenticated()
+				// Dashboard
+				.antMatchers("/").authenticated();
 
 		// Security for layouts
 		conf.antMatchers("/layouts/*").authenticated();
