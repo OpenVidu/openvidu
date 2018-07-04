@@ -135,12 +135,14 @@ public class SessionRestController {
 		return new ResponseEntity<>(responseJson, HttpStatus.OK);
 	}
 
+	@SuppressWarnings("unchecked")
 	@RequestMapping(value = "/sessions/{sessionId}", method = RequestMethod.GET)
 	public ResponseEntity<JSONObject> getSession(@PathVariable("sessionId") String sessionId,
 			@RequestParam(value = "webRtcStats", defaultValue = "false", required = false) boolean webRtcStats) {
 		Session session = this.sessionManager.getSession(sessionId);
 		if (session != null) {
 			JSONObject response = (webRtcStats == true) ? session.withStatsToJSON() : session.toJSON();
+			response.put("recording", this.recordingService.sessionIsBeingRecorded(sessionId));
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		} else {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -156,10 +158,11 @@ public class SessionRestController {
 		JSONArray jsonArray = new JSONArray();
 		sessions.forEach(s -> {
 			JSONObject sessionJson = (webRtcStats == true) ? s.withStatsToJSON() : s.toJSON();
+			sessionJson.put("recording", this.recordingService.sessionIsBeingRecorded(s.getSessionId()));
 			jsonArray.add(sessionJson);
 		});
-		json.put("count", sessions.size());
-		json.put("items", jsonArray);
+		json.put("numberOfElements", sessions.size());
+		json.put("content", jsonArray);
 		return new ResponseEntity<>(json, HttpStatus.OK);
 	}
 

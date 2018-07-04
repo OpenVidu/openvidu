@@ -62,14 +62,5 @@ public class Token {
 		else
 			return this.token;
 	}
-	
-	@SuppressWarnings("unchecked")
-	public JSONObject toJSON() {
-		JSONObject json = new JSONObject();
-		json.put("token", this.token);
-		json.put("role", this.role.name());
-		json.put("data", this.serverMetadata);
-		return json;
-	}
 
 }

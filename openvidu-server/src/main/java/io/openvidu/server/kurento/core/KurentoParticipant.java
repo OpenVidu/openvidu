@@ -23,6 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.json.simple.JSONArray;
@@ -694,45 +695,35 @@ public class KurentoParticipant extends Participant {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public JSONObject toJSON() {
-		JSONObject json = super.toJSON();
-		JSONArray publisherEnpoints = new JSONArray();
-		if (this.streaming && this.publisher.getEndpoint() != null) {
-			publisherEnpoints.add(this.publisher.toJSON());
-		}
-		JSONArray subscriberEndpoints = new JSONArray();
-		for (MediaEndpoint sub : this.subscribers.values()) {
-			if (sub.getEndpoint() != null) {
-				subscriberEndpoints.add(sub.toJSON());
-			}
-		}
-		json.put("publishers", publisherEnpoints);
-		json.put("subscribers", subscriberEndpoints);
-		return json;
-	}
-
-	@SuppressWarnings("unchecked")
-	public JSONObject withStatsToJSON() {
-		JSONObject json = super.toJSON();
-		JSONArray publisherEnpoints = new JSONArray();
-		if (this.streaming && this.publisher.getEndpoint() != null) {
-			publisherEnpoints.add(this.publisher.withStatsToJSON());
-		}
-		JSONArray subscriberEndpoints = new JSONArray();
-		for (MediaEndpoint sub : this.subscribers.values()) {
-			if (sub.getEndpoint() != null) {
-				subscriberEndpoints.add(sub.withStatsToJSON());
-			}
-		}
-		json.put("publishers", publisherEnpoints);
-		json.put("subscribers", subscriberEndpoints);
-		return json;
+	public String getPublisherStremId() {
+		return this.publisher.getEndpoint().getTag("name");
 	}
 
 	@Override
-	public String getPublisherStremId() {
-		return this.publisher.getEndpoint().getTag("name");
+	public JSONObject toJSON() {
+		return this.sharedJSON(MediaEndpoint::toJSON);
+	}
+
+	public JSONObject withStatsToJSON() {
+		return this.sharedJSON(MediaEndpoint::withStatsToJSON);
+	}
+
+	@SuppressWarnings("unchecked")
+	private JSONObject sharedJSON(Function<MediaEndpoint, JSONObject> toJsonFunction) {
+		JSONObject json = super.toJSON();
+		JSONArray publisherEnpoints = new JSONArray();
+		if (this.streaming && this.publisher.getEndpoint() != null) {
+			publisherEnpoints.add(toJsonFunction.apply(this.publisher));
+		}
+		JSONArray subscriberEndpoints = new JSONArray();
+		for (MediaEndpoint sub : this.subscribers.values()) {
+			if (sub.getEndpoint() != null) {
+				subscriberEndpoints.add(toJsonFunction.apply(sub));
+			}
+		}
+		json.put("publishers", publisherEnpoints);
+		json.put("subscribers", subscriberEndpoints);
+		return json;
 	}
 
 }

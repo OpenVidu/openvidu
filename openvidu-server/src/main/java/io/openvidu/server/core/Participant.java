@@ -167,7 +167,10 @@ public class Participant {
 	public JSONObject toJSON() {
 		JSONObject json = new JSONObject();
 		json.put("connectionId", this.participantPublicId);
-		json.put("token", this.token.toJSON());
+		json.put("token", this.token.getToken());
+		json.put("role", this.token.getRole().name());
+		json.put("serverData", this.serverMetadata);
+		json.put("clientData", this.clientMetadata);
 		return json;
 	}
 

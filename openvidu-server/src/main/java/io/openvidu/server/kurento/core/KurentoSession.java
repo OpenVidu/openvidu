@@ -24,6 +24,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.json.simple.JSONArray;
@@ -360,52 +361,34 @@ public class KurentoSession implements Session {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public JSONObject toJSON() {
-		JSONObject json = new JSONObject();
-		json.put("sessionId", this.sessionId);
-		json.put("mediaMode", this.sessionProperties.mediaMode().name());
-		json.put("recordingMode", this.sessionProperties.recordingMode().name());
-		json.put("defaultRecordingLayout", this.sessionProperties.defaultRecordingLayout().name());
-		if (this.sessionProperties.defaultCustomLayout() != null
-				&& !this.sessionProperties.defaultCustomLayout().isEmpty()) {
-			json.put("defaultCustomLayout", this.sessionProperties.defaultCustomLayout());
-		}
-		JSONArray participants = new JSONArray();
-		this.participants.values().forEach(p -> {
-			participants.add(p.toJSON());
-		});
-
-		JSONObject connections = new JSONObject();
-		connections.put("count", participants.size());
-		connections.put("items", participants);
-		json.put("connections", connections);
-
-		return json;
+		return this.sharedJSON(KurentoParticipant::toJSON);
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public JSONObject withStatsToJSON() {
+		return this.sharedJSON(KurentoParticipant::withStatsToJSON);
+	}
+
+	@SuppressWarnings("unchecked")
+	private JSONObject sharedJSON(Function<KurentoParticipant, JSONObject> toJsonFunction) {
 		JSONObject json = new JSONObject();
 		json.put("sessionId", this.sessionId);
 		json.put("mediaMode", this.sessionProperties.mediaMode().name());
 		json.put("recordingMode", this.sessionProperties.recordingMode().name());
-		json.put("defaultRecordingLayout", this.sessionProperties.defaultRecordingLayout().name());
 		if (this.sessionProperties.defaultCustomLayout() != null
 				&& !this.sessionProperties.defaultCustomLayout().isEmpty()) {
 			json.put("defaultCustomLayout", this.sessionProperties.defaultCustomLayout());
 		}
+		json.put("defaultRecordingLayout", this.sessionProperties.defaultRecordingLayout().name());
+		JSONObject connections = new JSONObject();
 		JSONArray participants = new JSONArray();
 		this.participants.values().forEach(p -> {
-			participants.add(p.withStatsToJSON());
+			participants.add(toJsonFunction.apply(p));
 		});
-
-		JSONObject connections = new JSONObject();
-		connections.put("count", participants.size());
-		connections.put("items", participants);
+		connections.put("numberOfElements", participants.size());
+		connections.put("content", participants);
 		json.put("connections", connections);
-
 		return json;
 	}
 
