@@ -22,6 +22,7 @@ export { StreamManagerEvent } from './OpenViduInternal/Events/StreamManagerEvent
 export { VideoElementEvent } from './OpenViduInternal/Events/VideoElementEvent';
 export { StreamPropertyChangedEvent } from './OpenViduInternal/Events/StreamPropertyChangedEvent';
 
+export { Capabilities } from './OpenViduInternal/Interfaces/Public/Capabilities';
 export { Device } from './OpenViduInternal/Interfaces/Public/Device';
 export { EventDispatcher } from './OpenViduInternal/Interfaces/Public/EventDispatcher';
 export { OpenViduAdvancedConfiguration } from './OpenViduInternal/Interfaces/Public/OpenViduAdvancedConfiguration';

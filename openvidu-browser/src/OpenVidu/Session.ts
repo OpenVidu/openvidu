@@ -21,6 +21,7 @@ import { Publisher } from './Publisher';
 import { Stream } from './Stream';
 import { StreamManager } from './StreamManager';
 import { Subscriber } from './Subscriber';
+import { Capabilities } from '../OpenViduInternal/Interfaces/Public/Capabilities';
 import { EventDispatcher } from '../OpenViduInternal/Interfaces/Public/EventDispatcher';
 import { SignalOptions } from '../OpenViduInternal/Interfaces/Public/SignalOptions';
 import { SubscriberProperties } from '../OpenViduInternal/Interfaces/Public/SubscriberProperties';
@@ -62,6 +63,12 @@ export class Session implements EventDispatcher {
      * Collection of all StreamManagers of this Session ([[Publisher]] and [[Subscriber]])
      */
     streamManagers: StreamManager[] = [];
+
+    /**
+     * Object defining the methods that the client is able to call. These are defined by the role of the token used to connect to the Session.
+     * This object is only defined after [[Session.connect]] has been successfully resolved
+     */
+    capabilities: Capabilities;
 
     // This map is only used to avoid race condition between 'joinRoom' response and 'onParticipantPublished' notification
     /**
@@ -888,6 +895,12 @@ export class Session implements EventDispatcher {
                         if (!!error) {
                             reject(error);
                         } else {
+
+                            // Initialize capabilities object with the role
+                            this.capabilities = {
+                                subscribe: 1,
+                                publish: this.openvidu.role !== 'SUBSCRIBER' ? 1 : 0
+                            };
 
                             // Initialize local Connection object with values returned by openvidu-server
                             this.connection = new Connection(this);
