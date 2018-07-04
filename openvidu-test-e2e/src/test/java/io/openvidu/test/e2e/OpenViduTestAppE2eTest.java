@@ -804,7 +804,7 @@ public class OpenViduTestAppE2eTest {
 		user.getDriver().findElements(By.className("pub-video-btn")).get(0).click();
 		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 2);
 
-		if (!latch1.await(3000, TimeUnit.MILLISECONDS)) {
+		if (!latch1.await(5000, TimeUnit.MILLISECONDS)) {
 			gracefullyLeaveParticipants(2);
 			fail();
 			return;
@@ -825,7 +825,7 @@ public class OpenViduTestAppE2eTest {
 		user.getDriver().findElements(By.className("pub-audio-btn")).get(0).click();
 		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 4);
 
-		if (!latch2.await(3000, TimeUnit.MILLISECONDS)) {
+		if (!latch2.await(5000, TimeUnit.MILLISECONDS)) {
 			gracefullyLeaveParticipants(2);
 			fail();
 			return;
@@ -857,7 +857,7 @@ public class OpenViduTestAppE2eTest {
 
 		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 6);
 
-		if (!latch3.await(3000, TimeUnit.MILLISECONDS)) {
+		if (!latch3.await(5000, TimeUnit.MILLISECONDS)) {
 			gracefullyLeaveParticipants(2);
 			fail();
 			return;
