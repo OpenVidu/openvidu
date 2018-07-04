@@ -300,68 +300,72 @@ export class Publisher extends StreamManager {
                 }
                 delete this.firstVideoElement;
 
-                if (!this.stream.isSendScreen() && !!mediaStream.getVideoTracks()[0]) {
-                    // With no screen share, video dimension can be set directly from MediaStream (getSettings)
-                    // Orientation must be checked for mobile devices (width and height are reversed)
-                    const { width, height } = mediaStream.getVideoTracks()[0].getSettings();
+                if (this.stream.isSendVideo()) {
+                    if (!this.stream.isSendScreen()) {
+                        // With no screen share, video dimension can be set directly from MediaStream (getSettings)
+                        // Orientation must be checked for mobile devices (width and height are reversed)
+                        const { width, height } = mediaStream.getVideoTracks()[0].getSettings();
 
-                    if (platform.name!!.toLowerCase().indexOf('mobile') !== -1 && (window.innerHeight > window.innerWidth)) {
-                        // Mobile portrait mode
-                        this.stream.videoDimensions = {
-                            width: height || 0,
-                            height: width || 0
-                        };
-                    } else {
-                        this.stream.videoDimensions = {
-                            width: width || 0,
-                            height: height || 0
-                        };
-                    }
-
-                    this.stream.isLocalStreamReadyToPublish = true;
-                    this.stream.ee.emitEvent('stream-ready-to-publish', []);
-                } else {
-                    // With screen share, video dimension must be got from a video element (onloadedmetadata event)
-                    this.videoReference = document.createElement('video');
-                    this.videoReference.srcObject = mediaStream;
-                    this.videoReference.onloadedmetadata = () => {
-                        this.stream.videoDimensions = {
-                            width: this.videoReference.videoWidth,
-                            height: this.videoReference.videoHeight
-                        };
-                        this.screenShareResizeInterval = setInterval(() => {
-                            const firefoxSettings = mediaStream.getVideoTracks()[0].getSettings();
-                            const newWidth = (platform.name === 'Chrome') ? this.videoReference.videoWidth : firefoxSettings.width;
-                            const newHeight = (platform.name === 'Chrome') ? this.videoReference.videoHeight : firefoxSettings.height;
-                            if (this.stream.isLocalStreamPublished &&
-                                (newWidth !== this.stream.videoDimensions.width ||
-                                    newHeight !== this.stream.videoDimensions.height)) {
-                                const oldValue = { width: this.stream.videoDimensions.width, height: this.stream.videoDimensions.height };
-                                this.stream.videoDimensions = {
-                                    width: newWidth || 0,
-                                    height: newHeight || 0
-                                };
-                                this.session.openvidu.sendRequest(
-                                    'streamPropertyChanged',
-                                    {
-                                        streamId: this.stream.streamId,
-                                        property: 'videoDimensions',
-                                        newValue: JSON.stringify(this.stream.videoDimensions),
-                                        reason: 'screenResized'
-                                    },
-                                    (error, response) => {
-                                        if (error) {
-                                            console.error("Error sending 'streamPropertyChanged' event", error);
-                                        } else {
-                                            this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this.stream, 'videoDimensions', this.stream.videoDimensions, oldValue, 'screenResized')]);
-                                            this.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this, this.stream, 'videoDimensions', this.stream.videoDimensions, oldValue, 'screenResized')]);
-                                        }
-                                    });
-                            }
-                        }, 500);
+                        if (platform.name!!.toLowerCase().indexOf('mobile') !== -1 && (window.innerHeight > window.innerWidth)) {
+                            // Mobile portrait mode
+                            this.stream.videoDimensions = {
+                                width: height || 0,
+                                height: width || 0
+                            };
+                        } else {
+                            this.stream.videoDimensions = {
+                                width: width || 0,
+                                height: height || 0
+                            };
+                        }
                         this.stream.isLocalStreamReadyToPublish = true;
                         this.stream.ee.emitEvent('stream-ready-to-publish', []);
-                    };
+                    } else {
+                        // With screen share, video dimension must be got from a video element (onloadedmetadata event)
+                        this.videoReference = document.createElement('video');
+                        this.videoReference.srcObject = mediaStream;
+                        this.videoReference.onloadedmetadata = () => {
+                            this.stream.videoDimensions = {
+                                width: this.videoReference.videoWidth,
+                                height: this.videoReference.videoHeight
+                            };
+                            this.screenShareResizeInterval = setInterval(() => {
+                                const firefoxSettings = mediaStream.getVideoTracks()[0].getSettings();
+                                const newWidth = (platform.name === 'Chrome') ? this.videoReference.videoWidth : firefoxSettings.width;
+                                const newHeight = (platform.name === 'Chrome') ? this.videoReference.videoHeight : firefoxSettings.height;
+                                if (this.stream.isLocalStreamPublished &&
+                                    (newWidth !== this.stream.videoDimensions.width ||
+                                        newHeight !== this.stream.videoDimensions.height)) {
+                                    const oldValue = { width: this.stream.videoDimensions.width, height: this.stream.videoDimensions.height };
+                                    this.stream.videoDimensions = {
+                                        width: newWidth || 0,
+                                        height: newHeight || 0
+                                    };
+                                    this.session.openvidu.sendRequest(
+                                        'streamPropertyChanged',
+                                        {
+                                            streamId: this.stream.streamId,
+                                            property: 'videoDimensions',
+                                            newValue: JSON.stringify(this.stream.videoDimensions),
+                                            reason: 'screenResized'
+                                        },
+                                        (error, response) => {
+                                            if (error) {
+                                                console.error("Error sending 'streamPropertyChanged' event", error);
+                                            } else {
+                                                this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this.stream, 'videoDimensions', this.stream.videoDimensions, oldValue, 'screenResized')]);
+                                                this.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this, this.stream, 'videoDimensions', this.stream.videoDimensions, oldValue, 'screenResized')]);
+                                            }
+                                        });
+                                }
+                            }, 500);
+                            this.stream.isLocalStreamReadyToPublish = true;
+                            this.stream.ee.emitEvent('stream-ready-to-publish', []);
+                        };
+                    }
+                } else {
+                    this.stream.isLocalStreamReadyToPublish = true;
+                    this.stream.ee.emitEvent('stream-ready-to-publish', []);
                 }
                 resolve();
             };
