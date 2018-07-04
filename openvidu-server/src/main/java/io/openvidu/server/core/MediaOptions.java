@@ -40,23 +40,6 @@ public class MediaOptions {
 		this.videoDimensions = videoDimensions;
 	}
 
-	@SuppressWarnings("unchecked")
-	public JSONObject toJson() {
-		JSONObject json = new JSONObject();
-		json.put("hasAudio", this.hasAudio);
-		if (hasAudio)
-			json.put("audioActive", this.audioActive);
-		json.put("hasVideo", this.hasVideo);
-		if (hasVideo)
-			json.put("videoActive", this.videoActive);
-		if (this.hasVideo && this.videoActive) {
-			json.put("typeOfVideo", this.typeOfVideo);
-			json.put("frameRate", this.frameRate);
-			json.put("videoDimensions", this.videoDimensions);
-		}
-		return json;
-	}
-
 	public boolean hasAudio() {
 		return this.hasAudio;
 	}
@@ -83,6 +66,22 @@ public class MediaOptions {
 
 	public String getVideoDimensions() {
 		return this.videoDimensions;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public JSONObject toJSON() {
+		JSONObject json = new JSONObject();
+		json.put("hasAudio", this.hasAudio);
+		if (hasAudio)
+			json.put("audioActive", this.audioActive);
+		json.put("hasVideo", this.hasVideo);
+		if (hasVideo) {
+			json.put("videoActive", this.videoActive);
+			json.put("typeOfVideo", this.typeOfVideo);
+			json.put("frameRate", this.frameRate);
+			json.put("videoDimensions", this.videoDimensions);
+		}
+		return json;
 	}
 
 }

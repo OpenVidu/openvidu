@@ -18,6 +18,7 @@
 package io.openvidu.server.kurento.endpoint;
 
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -43,7 +44,6 @@ import org.slf4j.LoggerFactory;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
-import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.kurento.MutedMediaType;
 import io.openvidu.server.kurento.core.KurentoParticipant;
@@ -70,11 +70,11 @@ public abstract class MediaEndpoint {
 	private MediaPipeline pipeline = null;
 	private ListenerSubscription endpointSubscription = null;
 
+	private final List<IceCandidate> receivedCandidateList = new LinkedList<IceCandidate>();
 	private LinkedList<IceCandidate> candidates = new LinkedList<IceCandidate>();
 
 	private MutedMediaType muteType;
 
-	private MediaOptions mediaOptions;
 	public Map<String, MediaType> flowInMedia = new ConcurrentHashMap<>();
 	public Map<String, MediaType> flowOutMedia = new ConcurrentHashMap<>();
 
@@ -102,14 +102,6 @@ public abstract class MediaEndpoint {
 		this.owner = owner;
 		this.setEndpointName(endpointName);
 		this.setMediaPipeline(pipeline);
-	}
-
-	public MediaOptions getMediaOptions() {
-		return mediaOptions;
-	}
-
-	public void setMediaOptions(MediaOptions mediaOptions) {
-		this.mediaOptions = mediaOptions;
 	}
 
 	public boolean isWeb() {
@@ -490,6 +482,7 @@ public abstract class MediaEndpoint {
 			throw new OpenViduException(Code.MEDIA_WEBRTC_ENDPOINT_ERROR_CODE,
 					"Can't add existing ICE candidates to null WebRtcEndpoint (ep: " + endpointName + ")");
 		}
+		this.receivedCandidateList.add(candidate);
 		this.webEndpoint.addIceCandidate(candidate, new Continuation<Void>() {
 			@Override
 			public void onSuccess(Void result) throws Exception {
@@ -502,30 +495,30 @@ public abstract class MediaEndpoint {
 			}
 		});
 	}
-	
-	@SuppressWarnings("unchecked")
+
+	public abstract PublisherEndpoint getPublisher();
+
 	public JSONObject toJSON() {
 		JSONObject json = new JSONObject();
-		json.put("mediaOptions", this.mediaOptions);
 		return json;
 	}
 
 	@SuppressWarnings("unchecked")
 	public JSONObject withStatsToJSON() {
 		JSONObject json = new JSONObject();
-		json.put("mediaOptions", this.mediaOptions);
 		json.put("webrtcTagName", this.getEndpoint().getTag("name"));
+		json.put("receivedCandidates", this.receivedCandidateList);
 		json.put("localCandidate", this.selectedLocalIceCandidate);
 		json.put("remoteCandidate", this.selectedRemoteIceCandidate);
-		
+
 		JSONArray jsonArray = new JSONArray();
-		
+
 		for (KmsEvent event : this.kmsEvents) {
 			JSONObject jsonKmsEvent = new JSONObject();
 			jsonKmsEvent.put(event.event.getType(), event.timestamp);
 			jsonArray.add(jsonKmsEvent);
 		}
-		
+
 		json.put("events", jsonArray);
 		return json;
 	}

@@ -193,20 +193,21 @@ public class KurentoParticipant extends Participant {
 		return session;
 	}
 
-	public boolean isSubscribed() {
+	public Set<SubscriberEndpoint> getAllConnectedSubscribedEndpoints() {
+		Set<SubscriberEndpoint> subscribedToSet = new HashSet<>();
 		for (SubscriberEndpoint se : subscribers.values()) {
 			if (se.isConnectedToPublisher()) {
-				return true;
+				subscribedToSet.add(se);
 			}
 		}
-		return false;
+		return subscribedToSet;
 	}
 
-	public Set<String> getConnectedSubscribedEndpoints() {
-		Set<String> subscribedToSet = new HashSet<String>();
+	public Set<SubscriberEndpoint> getConnectedSubscribedEndpoints(PublisherEndpoint publisher) {
+		Set<SubscriberEndpoint> subscribedToSet = new HashSet<>();
 		for (SubscriberEndpoint se : subscribers.values()) {
-			if (se.isConnectedToPublisher()) {
-				subscribedToSet.add(se.getEndpointName());
+			if (se.isConnectedToPublisher() && se.getPublisher().equals(publisher)) {
+				subscribedToSet.add(se);
 			}
 		}
 		return subscribedToSet;
@@ -431,7 +432,6 @@ public class KurentoParticipant extends Participant {
 	 */
 	public SubscriberEndpoint getNewOrExistingSubscriber(String senderPublicId) {
 
-		KurentoParticipant kSender = (KurentoParticipant) this.session.getParticipantByPublicId(senderPublicId);
 		SubscriberEndpoint sendingEndpoint = new SubscriberEndpoint(webParticipant, this, senderPublicId, pipeline);
 
 		SubscriberEndpoint existingSendingEndpoint = this.subscribers.putIfAbsent(senderPublicId, sendingEndpoint);
@@ -443,8 +443,6 @@ public class KurentoParticipant extends Participant {
 			log.debug("PARTICIPANT {}: New subscriber endpoint to user {}", this.getParticipantPublicId(),
 					senderPublicId);
 		}
-
-		sendingEndpoint.setMediaOptions(kSender.getPublisherMediaOptions());
 
 		return sendingEndpoint;
 	}
@@ -645,7 +643,8 @@ public class KurentoParticipant extends Participant {
 					+ " | MEDIATYPE: " + event.getMediaType() + " | TIMESTAMP: " + System.currentTimeMillis();
 
 			endpoint.flowInMedia.put(event.getSource().getName(), event.getMediaType());
-			if (endpoint.getMediaOptions().hasAudio() && endpoint.getMediaOptions().hasVideo()
+			if (endpoint.getPublisher().getMediaOptions().hasAudio()
+					&& endpoint.getPublisher().getMediaOptions().hasVideo()
 					&& endpoint.flowInMedia.values().size() == 2) {
 				endpoint.kmsEvents.add(new KmsEvent(event));
 			} else if (endpoint.flowInMedia.values().size() == 1) {
@@ -662,7 +661,8 @@ public class KurentoParticipant extends Participant {
 					+ " | MEDIATYPE: " + event.getMediaType() + " | TIMESTAMP: " + System.currentTimeMillis();
 
 			endpoint.flowOutMedia.put(event.getSource().getName(), event.getMediaType());
-			if (endpoint.getMediaOptions().hasAudio() && endpoint.getMediaOptions().hasVideo()
+			if (endpoint.getPublisher().getMediaOptions().hasAudio()
+					&& endpoint.getPublisher().getMediaOptions().hasVideo()
 					&& endpoint.flowOutMedia.values().size() == 2) {
 				endpoint.kmsEvents.add(new KmsEvent(event));
 			} else if (endpoint.flowOutMedia.values().size() == 1) {

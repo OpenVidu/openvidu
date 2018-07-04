@@ -23,6 +23,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
+import org.json.simple.JSONObject;
 import org.kurento.client.Continuation;
 import org.kurento.client.ListenerSubscription;
 import org.kurento.client.MediaElement;
@@ -35,6 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
+import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.kurento.MutedMediaType;
 import io.openvidu.server.kurento.core.KurentoParticipant;
 
@@ -45,6 +47,8 @@ import io.openvidu.server.kurento.core.KurentoParticipant;
  */
 public class PublisherEndpoint extends MediaEndpoint {
 	private final static Logger log = LoggerFactory.getLogger(PublisherEndpoint.class);
+
+	protected MediaOptions mediaOptions;
 
 	private PassThrough passThru = null;
 	private ListenerSubscription passThruSubscription = null;
@@ -461,5 +465,38 @@ public class PublisherEndpoint extends MediaEndpoint {
 				}
 			});
 		}
+	}
+	
+	@Override
+	public PublisherEndpoint getPublisher() {
+		return this;
+	}
+
+	public MediaOptions getMediaOptions() {
+		return mediaOptions;
+	}
+
+	public void setMediaOptions(MediaOptions mediaOptions) {
+		this.mediaOptions = mediaOptions;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public JSONObject toJSON() {
+		JSONObject json = super.toJSON();
+		json.put("streamId", this.getEndpoint().getTag("name"));
+		json.put("mediaOptions", this.mediaOptions.toJSON());
+		return json;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public JSONObject withStatsToJSON() {
+		JSONObject json = super.withStatsToJSON();
+		JSONObject toJSON = this.toJSON();
+		for (Object key : toJSON.keySet()) {
+			json.put(key, toJSON.get(key));
+		}
+		return json;
 	}
 }

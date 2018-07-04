@@ -24,6 +24,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -43,6 +44,8 @@ import io.openvidu.java.client.SessionProperties;
 import io.openvidu.server.cdr.CallDetailRecord;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
+import io.openvidu.server.kurento.endpoint.PublisherEndpoint;
+import io.openvidu.server.kurento.endpoint.SubscriberEndpoint;
 
 /**
  * @author Pablo Fuente (pablofuenteperez@gmail.com)
@@ -71,11 +74,11 @@ public class KurentoSession implements Session {
 	private Object pipelineReleaseLock = new Object();
 	private volatile boolean pipelineReleased = false;
 	private boolean destroyKurentoClient;
-	
+
 	private CallDetailRecord CDR;
 
-	public KurentoSession(String sessionId, SessionProperties sessionProperties, KurentoClient kurentoClient, KurentoSessionEventsHandler kurentoSessionHandler,
-			boolean destroyKurentoClient, CallDetailRecord CDR) {
+	public KurentoSession(String sessionId, SessionProperties sessionProperties, KurentoClient kurentoClient,
+			KurentoSessionEventsHandler kurentoSessionHandler, boolean destroyKurentoClient, CallDetailRecord CDR) {
 		this.sessionId = sessionId;
 		this.sessionProperties = sessionProperties;
 		this.kurentoClient = kurentoClient;
@@ -100,7 +103,8 @@ public class KurentoSession implements Session {
 		checkClosed();
 		createPipeline();
 
-		KurentoParticipant kurentoParticipant = new KurentoParticipant(participant, this, getPipeline(), kurentoSessionHandler.getInfoHandler(), this.CDR);
+		KurentoParticipant kurentoParticipant = new KurentoParticipant(participant, this, getPipeline(),
+				kurentoSessionHandler.getInfoHandler(), this.CDR);
 		participants.put(participant.getParticipantPrivateId(), kurentoParticipant);
 
 		filterStates.forEach((filterId, state) -> {
@@ -139,14 +143,14 @@ public class KurentoSession implements Session {
 				continue;
 			}
 			subscriber.cancelReceivingMedia(participant.getParticipantPublicId(), reason);
-			
+
 		}
 
-		log.debug("SESSION {}: Unsubscribed other participants {} from the publisher {}", sessionId, participants.values(),
-				participant.getParticipantPublicId());
+		log.debug("SESSION {}: Unsubscribed other participants {} from the publisher {}", sessionId,
+				participants.values(), participant.getParticipantPublicId());
 
 	}
-	
+
 	@Override
 	public void leave(String participantPrivateId, String reason) throws OpenViduException {
 
@@ -154,8 +158,8 @@ public class KurentoSession implements Session {
 
 		KurentoParticipant participant = participants.get(participantPrivateId);
 		if (participant == null) {
-			throw new OpenViduException(Code.USER_NOT_FOUND_ERROR_CODE,
-					"Participant with private id " + participantPrivateId + " not found in session '" + sessionId + "'");
+			throw new OpenViduException(Code.USER_NOT_FOUND_ERROR_CODE, "Participant with private id "
+					+ participantPrivateId + " not found in session '" + sessionId + "'");
 		}
 		participant.releaseAllFilters();
 
@@ -170,19 +174,19 @@ public class KurentoSession implements Session {
 			CDR.recordParticipantLeft(participant, participant.getSession().getSessionId(), reason);
 		}
 	}
-	
+
 	@Override
 	public Set<Participant> getParticipants() {
 		checkClosed();
 		return new HashSet<Participant>(this.participants.values());
 	}
-	
+
 	@Override
 	public Participant getParticipantByPrivateId(String participantPrivateId) {
 		checkClosed();
 		return participants.get(participantPrivateId);
 	}
-	
+
 	@Override
 	public Participant getParticipantByPublicId(String participantPublicId) {
 		checkClosed();
@@ -193,7 +197,12 @@ public class KurentoSession implements Session {
 		}
 		return null;
 	}
-	
+
+	public Set<SubscriberEndpoint> getAllSubscribersForPublisher(PublisherEndpoint publisher) {
+		return this.participants.values().stream().flatMap(kp -> kp.getConnectedSubscribedEndpoints(publisher).stream())
+				.collect(Collectors.toSet());
+	}
+
 	@Override
 	public boolean close(String reason) {
 		if (!closed) {
@@ -246,12 +255,13 @@ public class KurentoSession implements Session {
 
 		participants.remove(participant.getParticipantPrivateId());
 
-		log.debug("SESSION {}: Cancel receiving media from participant '{}' for other participant", this.sessionId, participant.getParticipantPublicId());
+		log.debug("SESSION {}: Cancel receiving media from participant '{}' for other participant", this.sessionId,
+				participant.getParticipantPublicId());
 		for (KurentoParticipant other : participants.values()) {
 			other.cancelReceivingMedia(participant.getParticipantPublicId(), reason);
 		}
 	}
-	
+
 	@Override
 	public int getActivePublishers() {
 		return activePublishers.get();
@@ -348,7 +358,7 @@ public class KurentoSession implements Session {
 			kurentoSessionHandler.updateFilter(this.sessionId, participant, filterId, newState);
 		}
 	}
-	
+
 	@Override
 	@SuppressWarnings("unchecked")
 	public JSONObject toJSON() {
@@ -357,14 +367,20 @@ public class KurentoSession implements Session {
 		json.put("mediaMode", this.sessionProperties.mediaMode().name());
 		json.put("recordingMode", this.sessionProperties.recordingMode().name());
 		json.put("defaultRecordingLayout", this.sessionProperties.defaultRecordingLayout().name());
-		if (this.sessionProperties.defaultCustomLayout() != null && !this.sessionProperties.defaultCustomLayout().isEmpty()) {
+		if (this.sessionProperties.defaultCustomLayout() != null
+				&& !this.sessionProperties.defaultCustomLayout().isEmpty()) {
 			json.put("defaultCustomLayout", this.sessionProperties.defaultCustomLayout());
 		}
 		JSONArray participants = new JSONArray();
 		this.participants.values().forEach(p -> {
 			participants.add(p.toJSON());
 		});
-		json.put("connections", participants);
+
+		JSONObject connections = new JSONObject();
+		connections.put("count", participants.size());
+		connections.put("items", participants);
+		json.put("connections", connections);
+
 		return json;
 	}
 
@@ -376,14 +392,20 @@ public class KurentoSession implements Session {
 		json.put("mediaMode", this.sessionProperties.mediaMode().name());
 		json.put("recordingMode", this.sessionProperties.recordingMode().name());
 		json.put("defaultRecordingLayout", this.sessionProperties.defaultRecordingLayout().name());
-		if (this.sessionProperties.defaultCustomLayout() != null && !this.sessionProperties.defaultCustomLayout().isEmpty()) {
+		if (this.sessionProperties.defaultCustomLayout() != null
+				&& !this.sessionProperties.defaultCustomLayout().isEmpty()) {
 			json.put("defaultCustomLayout", this.sessionProperties.defaultCustomLayout());
 		}
 		JSONArray participants = new JSONArray();
 		this.participants.values().forEach(p -> {
 			participants.add(p.withStatsToJSON());
 		});
-		json.put("connections", participants);
+
+		JSONObject connections = new JSONObject();
+		connections.put("count", participants.size());
+		connections.put("items", participants);
+		json.put("connections", connections);
+
 		return json;
 	}
 
