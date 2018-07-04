@@ -230,8 +230,6 @@ export class StreamManager implements EventDispatcher {
 
         let returnNumber = 1;
 
-        this.initializeVideoProperties(video);
-
         for (const streamManager of this.stream.session.streamManagers) {
             if (streamManager.disassociateVideo(video)) {
                 returnNumber = -1;
@@ -321,7 +319,10 @@ export class StreamManager implements EventDispatcher {
      * @hidden
      */
     initializeVideoProperties(video: HTMLVideoElement): void {
-        video.srcObject = this.stream.getMediaStream();
+        if (!(this.stream.isLocal() && this.stream.displayMyRemote())) {
+            // Avoid setting the MediaStream into the srcObject if remote subscription before publishing
+            video.srcObject = this.stream.getMediaStream();
+        }
         video.autoplay = true;
         video.controls = false;
         if (!video.id) {
