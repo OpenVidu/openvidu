@@ -21,13 +21,13 @@
 export interface Capabilities {
 
     /**
-     * 1 if the client can call [[Session.publish]], 0 if not
+     * `true` if the client can call [[Session.publish]], `false` if not
      */
-    publish: number;
+    publish: boolean;
 
     /**
-     * 1 if the client can call [[Session.subscribe]], 0 if not (1 for every user for now)
+     * `true` if the client can call [[Session.subscribe]], `false` if not (true for every user for now)
      */
-    subscribe: number;
+    subscribe: boolean;
 
 }

@@ -898,8 +898,8 @@ export class Session implements EventDispatcher {
 
                             // Initialize capabilities object with the role
                             this.capabilities = {
-                                subscribe: 1,
-                                publish: this.openvidu.role !== 'SUBSCRIBER' ? 1 : 0
+                                subscribe: true,
+                                publish: this.openvidu.role !== 'SUBSCRIBER'
                             };
 
                             // Initialize local Connection object with values returned by openvidu-server
