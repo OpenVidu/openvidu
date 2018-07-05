@@ -43,6 +43,7 @@ import io.openvidu.java.client.RecordingMode;
 import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.server.config.OpenviduConfig;
+import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.ParticipantRole;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.core.SessionManager;
@@ -174,6 +175,38 @@ public class SessionRestController {
 			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 		} else {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
+	}
+
+	@RequestMapping(value = "/sessions/{sessionId}/connection/{connectionId}", method = RequestMethod.DELETE)
+	public ResponseEntity<JSONObject> disconnectParticipant(@PathVariable("sessionId") String sessionId,
+			@PathVariable("connectionId") String participantPublicId) {
+		Session session = this.sessionManager.getSession(sessionId);
+		if (session != null) {
+			Participant participant = session.getParticipantByPublicId(participantPublicId);
+			if (participant != null) {
+				this.sessionManager.evictParticipant(participant.getParticipantPrivateId(), "forceDisconnectByServer");
+				return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+			} else {
+				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+			}
+		} else {
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		}
+	}
+
+	@RequestMapping(value = "/sessions/{sessionId}/stream/{streamId}", method = RequestMethod.DELETE)
+	public ResponseEntity<JSONObject> unpublishStream(@PathVariable("sessionId") String sessionId,
+			@PathVariable("streamId") String streamId) {
+		Session session = this.sessionManager.getSession(sessionId);
+		if (session != null) {
+			if (this.sessionManager.unpublishStream(session, streamId, "forceUnpublishByServer")) {
+				return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+			} else {
+				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+			}
+		} else {
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 	}
 

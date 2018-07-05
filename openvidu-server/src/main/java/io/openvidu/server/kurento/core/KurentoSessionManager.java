@@ -261,7 +261,7 @@ public class KurentoSessionManager extends SessionManager {
 		participants = kurentoParticipant.getSession().getParticipants();
 
 		if (sdpAnswer != null) {
-			sessionEventsHandler.onPublishMedia(participant, participant.getPublisherStremId(), session.getSessionId(),
+			sessionEventsHandler.onPublishMedia(participant, participant.getPublisherStreamId(), session.getSessionId(),
 					mediaOptions, sdpAnswer, participants, transactionId, null);
 		}
 	}
@@ -373,7 +373,7 @@ public class KurentoSessionManager extends SessionManager {
 	public void streamPropertyChanged(Participant participant, Integer transactionId, String streamId, String property,
 			JsonElement newValue, String reason) {
 		KurentoParticipant kParticipant = (KurentoParticipant) participant;
-		streamId = kParticipant.getPublisherStremId();
+		streamId = kParticipant.getPublisherStreamId();
 		MediaOptions streamProperties = kParticipant.getPublisherMediaOptions();
 
 		Boolean hasAudio = streamProperties.hasAudio();
@@ -507,6 +507,22 @@ public class KurentoSessionManager extends SessionManager {
 
 		return new KurentoMediaOptions(true, sdpOffer, null, null, hasAudio, hasVideo, audioActive, videoActive,
 				typeOfVideo, frameRate, videoDimensions, doLoopback);
+	}
+
+	@Override
+	public boolean unpublishStream(Session session, String streamId, String reason) {
+		String participantPrivateId = ((KurentoSession) session).getParticipantPrivateIdFromStreamId(streamId);
+		if (participantPrivateId != null) {
+			Participant participant = this.getParticipant(participantPrivateId);
+			if (participant != null) {
+				this.unpublishVideo(participant, null, reason);
+				return true;
+			} else {
+				return false;
+			}
+		} else {
+			return false;
+		}
 	}
 
 }

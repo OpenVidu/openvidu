@@ -94,6 +94,8 @@ public abstract class SessionManager {
 	public abstract void onIceCandidate(Participant participant, String endpointName, String candidate,
 			int sdpMLineIndex, String sdpMid, Integer transactionId);
 
+	public abstract boolean unpublishStream(Session session, String streamId, String reason);
+
 	/**
 	 * Application-originated request to remove a participant from a session. <br/>
 	 * <strong>Side effects:</strong> The session event handler should notify the

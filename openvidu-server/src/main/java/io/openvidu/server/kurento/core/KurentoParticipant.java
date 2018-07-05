@@ -107,6 +107,9 @@ public class KurentoParticipant extends Participant {
 				+ RandomStringUtils.random(5, true, false).toUpperCase();
 		this.publisher.getEndpoint().addTag("name", publisherStreamId);
 		addEndpointListeners(this.publisher);
+		
+		// Remove streamId from publisher's map
+		this.session.publishedStreamIds.putIfAbsent(this.getPublisherStreamId(), this.getParticipantPrivateId());
 
 		CDR.recordNewPublisher(this, this.session.getSessionId(), mediaOptions);
 
@@ -300,7 +303,7 @@ public class KurentoParticipant extends Participant {
 				throw new OpenViduException(Code.MEDIA_ENDPOINT_ERROR_CODE, "Unable to create subscriber endpoint");
 			}
 
-			String subscriberStreamId = this.getParticipantPublicId() + "_" + kSender.getPublisherStremId();
+			String subscriberStreamId = this.getParticipantPublicId() + "_" + kSender.getPublisherStreamId();
 
 			subscriber.getEndpoint().addTag("name", subscriberStreamId);
 
@@ -468,6 +471,10 @@ public class KurentoParticipant extends Participant {
 
 	private void releasePublisherEndpoint(String reason) {
 		if (publisher != null && publisher.getEndpoint() != null) {
+			
+			// Store streamId from publisher's map
+			this.session.publishedStreamIds.remove(this.getPublisherStreamId());
+
 			publisher.unregisterErrorListeners();
 			for (MediaElement el : publisher.getMediaElements()) {
 				releaseElement(getParticipantPublicId(), el);
@@ -695,7 +702,7 @@ public class KurentoParticipant extends Participant {
 	}
 
 	@Override
-	public String getPublisherStremId() {
+	public String getPublisherStreamId() {
 		return this.publisher.getEndpoint().getTag("name");
 	}
 

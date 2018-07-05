@@ -96,7 +96,7 @@ public class SessionEventsHandler {
 
 				JsonObject stream = new JsonObject();
 				stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMID_PARAM,
-						existingParticipant.getPublisherStremId());
+						existingParticipant.getPublisherStreamId());
 				stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMHASAUDIO_PARAM,
 						kParticipant.getPublisherMediaOptions().hasAudio);
 				stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMHASVIDEO_PARAM,
@@ -216,11 +216,15 @@ public class SessionEventsHandler {
 
 	public void onUnpublishMedia(Participant participant, Set<Participant> participants, Integer transactionId,
 			OpenViduException error, String reason) {
-		if (error != null) {
-			rpcNotificationService.sendErrorResponse(participant.getParticipantPrivateId(), transactionId, null, error);
-			return;
+		boolean force = reason.contains("force") || transactionId == null;
+		if (!force) {
+			if (error != null) {
+				rpcNotificationService.sendErrorResponse(participant.getParticipantPrivateId(), transactionId, null,
+						error);
+				return;
+			}
+			rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, new JsonObject());
 		}
-		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, new JsonObject());
 
 		JsonObject params = new JsonObject();
 		params.addProperty(ProtocolElements.PARTICIPANTUNPUBLISHED_NAME_PARAM, participant.getParticipantPublicId());
@@ -228,7 +232,12 @@ public class SessionEventsHandler {
 
 		for (Participant p : participants) {
 			if (p.getParticipantPrivateId().equals(participant.getParticipantPrivateId())) {
-				continue;
+				if (force) {
+					rpcNotificationService.sendNotification(p.getParticipantPrivateId(),
+							ProtocolElements.PARTICIPANTUNPUBLISHED_METHOD, params);
+				} else {
+					continue;
+				}
 			} else {
 				rpcNotificationService.sendNotification(p.getParticipantPrivateId(),
 						ProtocolElements.PARTICIPANTUNPUBLISHED_METHOD, params);
@@ -351,7 +360,8 @@ public class SessionEventsHandler {
 
 	public void onParticipantEvicted(Participant participant, String reason) {
 		JsonObject params = new JsonObject();
-		params.addProperty(ProtocolElements.PARTICIPANTEVICTED_CONNECTIONID_PARAM, participant.getParticipantPublicId());
+		params.addProperty(ProtocolElements.PARTICIPANTEVICTED_CONNECTIONID_PARAM,
+				participant.getParticipantPublicId());
 		params.addProperty(ProtocolElements.PARTICIPANTEVICTED_REASON_PARAM, reason);
 		rpcNotificationService.sendNotification(participant.getParticipantPrivateId(),
 				ProtocolElements.PARTICIPANTEVICTED_METHOD, params);
