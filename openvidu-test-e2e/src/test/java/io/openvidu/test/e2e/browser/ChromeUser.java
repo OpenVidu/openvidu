@@ -31,8 +31,7 @@ import org.springframework.core.io.ClassPathResource;
 public class ChromeUser extends BrowserUser {
 
 	public ChromeUser(String userName, int timeOfWaitInSeconds) {
-		super(userName, timeOfWaitInSeconds);
-		new ChromeUser(userName, timeOfWaitInSeconds, "Entire screen");
+		this(userName, timeOfWaitInSeconds, "Entire screen");
 	}
 
 	public ChromeUser(String userName, int timeOfWaitInSeconds, String screenToCapture) {
