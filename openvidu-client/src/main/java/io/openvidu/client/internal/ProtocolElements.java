@@ -95,10 +95,12 @@ public class ProtocolElements {
 	public static final String PARTICIPANTJOINED_METADATA_PARAM = "metadata";
 
 	public static final String PARTICIPANTLEFT_METHOD = "participantLeft";
-	public static final String PARTICIPANTLEFT_NAME_PARAM = "name";
+	public static final String PARTICIPANTLEFT_NAME_PARAM = "connectionId";
 	public static final String PARTICIPANTLEFT_REASON_PARAM = "reason";
 
 	public static final String PARTICIPANTEVICTED_METHOD = "participantEvicted";
+	public static final String PARTICIPANTEVICTED_CONNECTIONID_PARAM = "connectionId";
+	public static final String PARTICIPANTEVICTED_REASON_PARAM = "reason";
 
 	public static final String PARTICIPANTPUBLISHED_METHOD = "participantPublished";
 	public static final String PARTICIPANTPUBLISHED_USER_PARAM = "id";
@@ -113,7 +115,7 @@ public class ProtocolElements {
 	public static final String PARTICIPANTPUBLISHED_VIDEODIMENSIONS_PARAM = "videoDimensions";
 
 	public static final String PARTICIPANTUNPUBLISHED_METHOD = "participantUnpublished";
-	public static final String PARTICIPANTUNPUBLISHED_NAME_PARAM = "name";
+	public static final String PARTICIPANTUNPUBLISHED_NAME_PARAM = "connectionId";
 	public static final String PARTICIPANTUNPUBLISHED_REASON_PARAM = "reason";
 
 	public static final String PARTICIPANTSENDMESSAGE_METHOD = "sendMessage";
@@ -122,7 +124,7 @@ public class ProtocolElements {
 	public static final String PARTICIPANTSENDMESSAGE_TYPE_PARAM = "type";
 
 	public static final String ROOMCLOSED_METHOD = "roomClosed";
-	public static final String ROOMCLOSED_ROOM_PARAM = "room";
+	public static final String ROOMCLOSED_ROOM_PARAM = "sessionId";
 
 	public static final String MEDIAERROR_METHOD = "mediaError";
 	public static final String MEDIAERROR_ERROR_PARAM = "error";

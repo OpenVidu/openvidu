@@ -349,9 +349,12 @@ public class SessionEventsHandler {
 		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, new JsonObject());
 	}
 
-	public void onParticipantEvicted(Participant participant) {
+	public void onParticipantEvicted(Participant participant, String reason) {
+		JsonObject params = new JsonObject();
+		params.addProperty(ProtocolElements.PARTICIPANTEVICTED_CONNECTIONID_PARAM, participant.getParticipantPublicId());
+		params.addProperty(ProtocolElements.PARTICIPANTEVICTED_REASON_PARAM, reason);
 		rpcNotificationService.sendNotification(participant.getParticipantPrivateId(),
-				ProtocolElements.PARTICIPANTEVICTED_METHOD, new JsonObject());
+				ProtocolElements.PARTICIPANTEVICTED_METHOD, params);
 	}
 
 	public void sendRecordingStartedNotification(Session session, Recording recording) {

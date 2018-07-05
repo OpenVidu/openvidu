@@ -565,7 +565,7 @@ export class Session implements EventDispatcher {
      * @hidden
      */
     onParticipantLeft(msg): void {
-        this.getRemoteConnection(msg.name, 'Remote connection ' + msg.name + " unknown when 'onParticipantLeft'. " +
+        this.getRemoteConnection(msg.connectionId, 'Remote connection ' + msg.connectionId + " unknown when 'onParticipantLeft'. " +
             'Existing remote connections: ' + JSON.stringify(Object.keys(this.remoteConnections)))
 
             .then(connection => {
@@ -630,7 +630,7 @@ export class Session implements EventDispatcher {
      * @hidden
      */
     onParticipantUnpublished(msg): void {
-        this.getRemoteConnection(msg.name, "Remote connection '" + msg.name + "' unknown when 'onParticipantUnpublished'. " +
+        this.getRemoteConnection(msg.connectionId, "Remote connection '" + msg.connectionId + "' unknown when 'onParticipantUnpublished'. " +
             'Existing remote connections: ' + JSON.stringify(Object.keys(this.remoteConnections)))
 
             .then(connection => {
@@ -653,26 +653,33 @@ export class Session implements EventDispatcher {
      * @hidden
      */
     onParticipantEvicted(msg): void {
-        /*this.getRemoteConnection(msg.name, 'Remote connection ' + msg.name + " unknown when 'onParticipantLeft'. " +
-            'Existing remote connections: ' + JSON.stringify(Object.keys(this.remoteConnections)))
+        if (msg.connectionId === this.connection.connectionId) {
+            // You have been evicted from the session
+            if (!!this.sessionId && !this.connection.disposed) {
+                this.leave(true, msg.reason);
+            }
+        } else {
+            // Other user has been evicted from the session
+            this.getRemoteConnection(msg.connectionId, 'Remote connection ' + msg.connectionId + " unknown when 'onParticipantEvicted'. " +
+                'Existing remote connections: ' + JSON.stringify(Object.keys(this.remoteConnections)))
 
-            .then(connection => {
-                if (!!connection.stream) {
-                    const stream = connection.stream;
+                .then(connection => {
+                    if (!!connection.stream) {
+                        const stream = connection.stream;
 
-                    const streamEvent = new StreamEvent(true, this, 'streamDestroyed', stream, 'forceDisconnect');
-                    this.ee.emitEvent('streamDestroyed', [streamEvent]);
-                    streamEvent.callDefaultBehavior();
+                        const streamEvent = new StreamEvent(true, this, 'streamDestroyed', stream, msg.reason);
+                        this.ee.emitEvent('streamDestroyed', [streamEvent]);
+                        streamEvent.callDefaultBehavior();
 
-                    delete this.remoteStreamsCreated[stream.streamId];
-                }
-                connection.dispose();
-                delete this.remoteConnections[connection.connectionId];
-                this.ee.emitEvent('connectionDestroyed', [new ConnectionEvent(false, this, 'connectionDestroyed', connection, 'forceDisconnect')]);
-            })
-            .catch(openViduError => {
-                console.error(openViduError);
-            });*/
+                        delete this.remoteStreamsCreated[stream.streamId];
+                    }
+                    delete this.remoteConnections[connection.connectionId];
+                    this.ee.emitEvent('connectionDestroyed', [new ConnectionEvent(false, this, 'connectionDestroyed', connection, msg.reason)]);
+                })
+                .catch(openViduError => {
+                    console.error(openViduError);
+                });
+        }
     }
 
     /**
@@ -764,7 +771,7 @@ export class Session implements EventDispatcher {
      */
     onSessionClosed(msg): void {
         console.info('Session closed: ' + JSON.stringify(msg));
-        const s = msg.room;
+        const s = msg.sessionId;
         if (s !== undefined) {
             this.ee.emitEvent('session-closed', [{
                 session: s

@@ -105,7 +105,7 @@ public class KurentoSessionManager extends SessionManager {
 	}
 
 	@Override
-	public synchronized void leaveRoom(Participant participant, Integer transactionId, String reason) {
+	public synchronized void leaveRoom(Participant participant, Integer transactionId, String reason, boolean closeWebSocket) {
 		log.debug("Request [LEAVE_ROOM] ({})", participant.getParticipantPublicId());
 
 		KurentoParticipant kParticipant = (KurentoParticipant) participant;
@@ -156,26 +156,13 @@ public class KurentoSessionManager extends SessionManager {
 			log.info("Possible collision when closing the session '{}' (not found)", sessionId);
 			remainingParticipants = Collections.emptySet();
 		}
-
 		sessionEventsHandler.onParticipantLeft(participant, sessionId, remainingParticipants, transactionId, null,
 				reason);
 
 		if (remainingParticipants.isEmpty()) {
-
 			log.info("No more participants in session '{}', removing it and closing it", sessionId);
-			if (session.close(reason)) {
-				sessionEventsHandler.onSessionClosed(sessionId, "lastParticipantLeft");
-			}
-			sessions.remove(sessionId);
-
-			sessionProperties.remove(sessionId);
-			sessionidParticipantpublicidParticipant.remove(sessionId);
-			sessionidTokenTokenobj.remove(sessionId);
-
+			this.closeSessionAndEmptyCollections(session, reason);
 			showTokens();
-
-			log.warn("Session '{}' removed and closed", sessionId);
-
 		} else if (remainingParticipants.size() == 1 && openviduConfig.isRecordingModuleEnabled()
 				&& MediaMode.ROUTED.equals(session.getSessionProperties().mediaMode())
 				&& RecordingMode.ALWAYS.equals(session.getSessionProperties().recordingMode())
@@ -188,8 +175,10 @@ public class KurentoSessionManager extends SessionManager {
 					.getParticipantPrivateId(), "EVICT_RECORDER");
 		}
 
-		// Finally close websocket session
-		sessionEventsHandler.closeRpcSession(participant.getParticipantPrivateId());
+		// Finally close websocket session if required
+		if (closeWebSocket) {
+			sessionEventsHandler.closeRpcSession(participant.getParticipantPrivateId());
+		}
 	}
 
 	/**
@@ -477,8 +466,9 @@ public class KurentoSessionManager extends SessionManager {
 	@Override
 	public void evictParticipant(String participantPrivateId, String reason) throws OpenViduException {
 		Participant participant = this.getParticipant(participantPrivateId);
-		this.leaveRoom(participant, null, reason);
-		sessionEventsHandler.onParticipantEvicted(participant);
+		this.leaveRoom(participant, null, reason, false);
+		sessionEventsHandler.onParticipantEvicted(participant, reason);
+		sessionEventsHandler.closeRpcSession(participantPrivateId);
 	}
 
 	@Override

@@ -75,7 +75,8 @@ public abstract class SessionManager {
 
 	public abstract void joinRoom(Participant participant, String sessionId, Integer transactionId);
 
-	public abstract void leaveRoom(Participant participant, Integer transactionId, String reason);
+	public abstract void leaveRoom(Participant participant, Integer transactionId, String reason,
+			boolean closeWebSocket);
 
 	public abstract void publishVideo(Participant participant, MediaOptions mediaOptions, Integer transactionId);
 
@@ -397,7 +398,7 @@ public abstract class SessionManager {
 	 * @throws OpenViduException
 	 *             in case the session doesn't exist or has been already closed
 	 */
-	private Set<Participant> closeSession(String sessionId, String reason) {
+	public Set<Participant> closeSession(String sessionId, String reason) {
 		Session session = sessions.get(sessionId);
 		if (session == null) {
 			throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE, "Session '" + sessionId + "' not found");
@@ -410,27 +411,32 @@ public abstract class SessionManager {
 		Set<String> pids = participants.stream().map(Participant::getParticipantPrivateId).collect(Collectors.toSet());
 		for (String pid : pids) {
 			try {
-				session.leave(pid, reason);
+				this.evictParticipant(pid, reason);
 			} catch (OpenViduException e) {
 				log.warn("Error evicting participant with id '{}' from session '{}'", pid, sessionId, e);
 			}
 		}
-		if (session.close(reason)) {
-			sessionEventsHandler.onSessionClosed(sessionId, reason);
-		}
-		sessions.remove(sessionId);
 
-		sessionProperties.remove(sessionId);
-		sessionidParticipantpublicidParticipant.remove(sessionId);
-		sessionidTokenTokenobj.remove(sessionId);
-
-		log.warn("Session '{}' removed and closed", sessionId);
+		this.closeSessionAndEmptyCollections(session, reason);
 
 		if (recordingService.sessionIsBeingRecorded(session.getSessionId())) {
 			recordingService.stopRecording(session);
 		}
 
 		return participants;
+	}
+
+	public void closeSessionAndEmptyCollections(Session session, String reason) {
+		if (session.close(reason)) {
+			sessionEventsHandler.onSessionClosed(session.getSessionId(), reason);
+		}
+		sessions.remove(session.getSessionId());
+
+		sessionProperties.remove(session.getSessionId());
+		sessionidParticipantpublicidParticipant.remove(session.getSessionId());
+		sessionidTokenTokenobj.remove(session.getSessionId());
+
+		log.warn("Session '{}' removed and closed", session.getSessionId());
 	}
 
 }

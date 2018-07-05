@@ -166,6 +166,17 @@ public class SessionRestController {
 		return new ResponseEntity<>(json, HttpStatus.OK);
 	}
 
+	@RequestMapping(value = "/sessions/{sessionId}", method = RequestMethod.DELETE)
+	public ResponseEntity<JSONObject> closeSession(@PathVariable("sessionId") String sessionId) {
+		Session session = this.sessionManager.getSession(sessionId);
+		if (session != null) {
+			this.sessionManager.closeSession(sessionId, "sessionClosedByServer");
+			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+		} else {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
+	}
+
 	@SuppressWarnings("unchecked")
 	@RequestMapping(value = "/tokens", method = RequestMethod.POST)
 	public ResponseEntity<JSONObject> newToken(@RequestBody Map<?, ?> params) {

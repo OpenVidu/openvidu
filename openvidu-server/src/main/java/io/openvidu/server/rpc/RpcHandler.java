@@ -203,7 +203,7 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 			Participant participant = sessionManager.getParticipant(sessionId, participantPrivateId);
 			if (participant != null) {
 				log.info("Participant {} is leaving session {}", participant.getParticipantPublicId(), sessionId);
-				sessionManager.leaveRoom(participant, request.getId(), "disconnect");
+				sessionManager.leaveRoom(participant, request.getId(), "disconnect", true);
 				log.info("Participant {} has left session {}", participant.getParticipantPublicId(), sessionId);
 			} else {
 				log.warn("Participant with private id {} not found in session {}. "

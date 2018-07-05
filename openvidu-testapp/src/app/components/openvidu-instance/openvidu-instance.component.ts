@@ -356,10 +356,8 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       if (this.sessionEvents.sessionDisconnected) {
         this.session.on('sessionDisconnected', (event: SessionDisconnectedEvent) => {
           this.updateEventList('sessionDisconnected', 'No data');
-          if (event.reason === 'networkDisconnect') {
-            this.session = null;
-            this.OV = null;
-          }
+          this.session = null;
+          this.OV = null;
         });
       }
     }

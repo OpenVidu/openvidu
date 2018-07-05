@@ -10,12 +10,8 @@ sudo apt-get -y update && sudo apt-get -y install iptables && sudo apt-get -y in
 
 # UDP rules (DROP all)
 
-sudo iptables -A OUTPUT -p udp --dport 0:65535 -j DROP
-sudo iptables -A INPUT -p udp --dport 0:65535 -j DROP
-
 sudo iptables -A OUTPUT -o eth0 -p tcp --dport 80 -j ACCEPT
 sudo iptables -A OUTPUT -o eth0 -p tcp --dport 443 -j ACCEPT
-sudo iptables -A OUTPUT -o eth0 -p tcp --dport 53 -j ACCEPT
 sudo iptables -A OUTPUT -o eth0 -p tcp --dport 4444 -j ACCEPT
 sudo iptables -A OUTPUT -o eth0 -p tcp --dport 6080 -j ACCEPT
 sudo iptables -A OUTPUT -o eth0 -p tcp --dport 5900 -j ACCEPT
@@ -25,7 +21,6 @@ sudo iptables -A OUTPUT -o eth0 -p tcp --dport 3478 -j ACCEPT
 
 sudo iptables -A OUTPUT -o eth0 -p tcp --sport 80 -j ACCEPT
 sudo iptables -A OUTPUT -o eth0 -p tcp --sport 443 -j ACCEPT
-sudo iptables -A OUTPUT -o eth0 -p tcp --sport 53 -j ACCEPT
 sudo iptables -A OUTPUT -o eth0 -p tcp --sport 4444 -j ACCEPT
 sudo iptables -A OUTPUT -o eth0 -p tcp --sport 6080 -j ACCEPT
 sudo iptables -A OUTPUT -o eth0 -p tcp --sport 5900 -j ACCEPT
@@ -33,7 +28,19 @@ sudo iptables -A OUTPUT -o eth0 -p tcp --sport 4200 -j ACCEPT
 sudo iptables -A OUTPUT -o eth0 -p tcp --sport 4443 -j ACCEPT
 sudo iptables -A OUTPUT -o eth0 -p tcp --sport 3478 -j ACCEPT
 
+sudo iptables -A OUTPUT -p tcp --sport 53 -j ACCEPT
+sudo iptables -A OUTPUT -p tcp --dport 53 -j ACCEPT
+sudo iptables -A OUTPUT -p udp --sport 53 -j ACCEPT
+sudo iptables -A OUTPUT -p udp --dport 53 -j ACCEPT
+sudo iptables -A INPUT -p tcp --sport 53 -j ACCEPT
+sudo iptables -A INPUT -p tcp --dport 53 -j ACCEPT
+sudo iptables -A INPUT -p udp --sport 53 -j ACCEPT
+sudo iptables -A INPUT -p udp --dport 53 -j ACCEPT
+
 sudo iptables -A OUTPUT -o eth0 -p tcp -j DROP
+
+sudo iptables -A OUTPUT -p udp --dport 0:65535 -j DROP
+sudo iptables -A INPUT -p udp --dport 0:65535 -j DROP
 
 exit
 EOF
