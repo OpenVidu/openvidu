@@ -630,23 +630,28 @@ export class Session implements EventDispatcher {
      * @hidden
      */
     onParticipantUnpublished(msg): void {
-        this.getRemoteConnection(msg.connectionId, "Remote connection '" + msg.connectionId + "' unknown when 'onParticipantUnpublished'. " +
-            'Existing remote connections: ' + JSON.stringify(Object.keys(this.remoteConnections)))
+        if (msg.connectionId === this.connection.connectionId) {
+            // Your stream has been forcedly unpublished from the session
+            this.stopPublisherStream(msg.reason);
+        } else {
+            this.getRemoteConnection(msg.connectionId, "Remote connection '" + msg.connectionId + "' unknown when 'onParticipantUnpublished'. " +
+                'Existing remote connections: ' + JSON.stringify(Object.keys(this.remoteConnections)))
 
-            .then(connection => {
+                .then(connection => {
 
-                const streamEvent = new StreamEvent(true, this, 'streamDestroyed', connection.stream, msg.reason);
-                this.ee.emitEvent('streamDestroyed', [streamEvent]);
-                streamEvent.callDefaultBehavior();
+                    const streamEvent = new StreamEvent(true, this, 'streamDestroyed', connection.stream, msg.reason);
+                    this.ee.emitEvent('streamDestroyed', [streamEvent]);
+                    streamEvent.callDefaultBehavior();
 
-                // Deleting the remote stream
-                const streamId: string = connection.stream.streamId;
-                delete this.remoteStreamsCreated[streamId];
-                connection.removeStream(streamId);
-            })
-            .catch(openViduError => {
-                console.error(openViduError);
-            });
+                    // Deleting the remote stream
+                    const streamId: string = connection.stream.streamId;
+                    delete this.remoteStreamsCreated[streamId];
+                    connection.removeStream(streamId);
+                })
+                .catch(openViduError => {
+                    console.error(openViduError);
+                });
+        }
     }
 
     /**
@@ -860,14 +865,7 @@ export class Session implements EventDispatcher {
                 this.openvidu.closeWs();
             }
 
-            if (!!this.connection.stream) {
-                // Dispose Publisher's  local stream
-                this.connection.stream.disposeWebRtcPeer();
-                if (this.connection.stream.isLocalStreamPublished) {
-                    // Make Publisher object dispatch 'streamDestroyed' event if the Stream was published
-                    this.connection.stream.ee.emitEvent('local-stream-destroyed-by-disconnect', [reason]);
-                }
-            }
+            this.stopPublisherStream(reason);
 
             if (!this.connection.disposed) {
                 // Make Session object dispatch 'sessionDisconnected' event (if it is not already disposed)
@@ -949,6 +947,17 @@ export class Session implements EventDispatcher {
                 }
             });
         });
+    }
+
+    private stopPublisherStream(reason: string) {
+        if (!!this.connection.stream) {
+            // Dispose Publisher's  local stream
+            this.connection.stream.disposeWebRtcPeer();
+            if (this.connection.stream.isLocalStreamPublished) {
+                // Make Publisher object dispatch 'streamDestroyed' event if the Stream was published
+                this.connection.stream.ee.emitEvent('local-stream-destroyed', [reason]);
+            }
+        }
     }
 
     private stringClientMetadata(metadata: any): string {
