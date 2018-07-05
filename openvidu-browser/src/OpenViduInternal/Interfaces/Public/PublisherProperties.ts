@@ -32,7 +32,9 @@ export interface PublisherProperties {
     audioSource?: string | MediaStreamTrack | boolean;
 
     /**
-     * Desired framerate of the video in frames per second
+     * Desired framerate of the video in frames per second.
+     * Limiting the framerate has always effect on browsers Chrome and Opera. Firefox requires that the input device explicitly supports the desired framerate.
+     * @default undefined
      */
     frameRate?: number;
 

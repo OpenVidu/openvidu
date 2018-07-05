@@ -30,6 +30,14 @@ export declare class OpenVidu {
     /**
      * @hidden
      */
+    iceServers: RTCIceServer[];
+    /**
+     * @hidden
+     */
+    role: string;
+    /**
+     * @hidden
+     */
     advancedConfiguration: OpenViduAdvancedConfiguration;
     constructor();
     /**
@@ -152,8 +160,8 @@ export declare class OpenVidu {
      * @hidden
      */
     getRecorder(): boolean;
-    private disconnectCallback();
-    private reconnectingCallback();
-    private reconnectedCallback();
-    private isRoomAvailable();
+    private disconnectCallback;
+    private reconnectingCallback;
+    private reconnectedCallback;
+    private isRoomAvailable;
 }

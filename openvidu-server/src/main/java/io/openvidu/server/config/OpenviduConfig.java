@@ -58,6 +58,18 @@ public class OpenviduConfig {
 	@Value("#{'${spring.profiles.active:}'.length() > 0 ? '${spring.profiles.active:}'.split(',') : \"default\"}")
 	private String springProfile;
 
+	@Value("${coturn.redis.ip}")
+	private String coturnRedisIp;
+
+	@Value("${coturn.redis.dbname}")
+	private String coturnRedisDbname;
+
+	@Value("${coturn.redis.password}")
+	private String coturnRedisPassword;
+
+	@Value("${coturn.redis.connect-timeout}")
+	private String coturnRedisConnectTimeout;
+
 	private String finalUrl;
 
 	public String getOpenViduPublicUrl() {
@@ -95,7 +107,7 @@ public class OpenviduConfig {
 	public boolean getOpenViduRecordingPublicAccess() {
 		return this.openviduRecordingPublicAccess;
 	}
-	
+
 	public String getOpenviduRecordingCustomLayout() {
 		return this.openviduRecordingCustomLayout;
 	}
@@ -118,6 +130,15 @@ public class OpenviduConfig {
 
 	public String getSpringProfile() {
 		return springProfile;
+	}
+
+	public String getCoturnDatabaseString() {
+		return "\"ip=" + this.coturnRedisIp + " dbname=" + this.coturnRedisDbname + " password="
+				+ this.coturnRedisPassword + " connect_timeout=" + this.coturnRedisConnectTimeout + "\"";
+	}
+	
+	public String getCoturnDatabaseDbname() {
+		return this.coturnRedisDbname;
 	}
 
 	public ParticipantRole[] getRolesFromRecordingNotification() {

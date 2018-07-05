@@ -140,7 +140,7 @@ public class ComposedRecordingService {
 		envs.add("RECORDING_JSON=" + recording.toJson().toJSONString());
 
 		log.info(recording.toJson().toJSONString());
-		log.debug("Recorder connecting to url {}", layoutUrl);
+		log.info("Recorder connecting to url {}", layoutUrl);
 
 		String containerId = this.runRecordingContainer(envs, "recording_" + recordingId);
 

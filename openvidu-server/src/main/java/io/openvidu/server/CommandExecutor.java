@@ -26,7 +26,6 @@ public class CommandExecutor {
 	public static String execCommand(String... command) throws IOException, InterruptedException {
 
 		ProcessBuilder processBuilder = new ProcessBuilder(command);
-
 		processBuilder.redirectErrorStream(true);
 
 		Process process = processBuilder.start();
@@ -34,20 +33,15 @@ public class CommandExecutor {
 
 		try (BufferedReader processOutputReader = new BufferedReader(
 				new InputStreamReader(process.getInputStream()));) {
-			String readLine;
 
+			String readLine;
 			while ((readLine = processOutputReader.readLine()) != null) {
 				processOutput.append(readLine + System.lineSeparator());
 			}
-
 			process.waitFor();
 		}
 
 		return processOutput.toString().trim();
-	}
-	
-	public static void main(String[] args) throws IOException, InterruptedException {
-		System.out.println(execCommand("/bin/sh","-c","hostname -i | awk '{print $1}'"));
 	}
 
 }

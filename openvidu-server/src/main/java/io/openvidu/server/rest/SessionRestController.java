@@ -20,7 +20,7 @@ package io.openvidu.server.rest;
 import java.util.Collection;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -32,28 +32,29 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.internal.ProtocolElements;
+import io.openvidu.java.client.MediaMode;
 import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.java.client.RecordingMode;
 import io.openvidu.java.client.RecordingProperties;
-import io.openvidu.java.client.MediaMode;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.ParticipantRole;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.core.SessionManager;
-import io.openvidu.server.recording.Recording;
 import io.openvidu.server.recording.ComposedRecordingService;
+import io.openvidu.server.recording.Recording;
 
 /**
  *
  * @author Pablo Fuente Pérez
  */
 @RestController
-@CrossOrigin(origins = "*")
+@CrossOrigin
 @RequestMapping("/api")
 public class SessionRestController {
 
@@ -65,11 +66,6 @@ public class SessionRestController {
 
 	@Autowired
 	private OpenviduConfig openviduConfig;
-
-	@RequestMapping(value = "/sessions", method = RequestMethod.GET)
-	public Set<String> getAllSessions() {
-		return sessionManager.getSessions();
-	}
 
 	@SuppressWarnings("unchecked")
 	@RequestMapping(value = "/sessions", method = RequestMethod.POST)
@@ -107,6 +103,9 @@ public class SessionRestController {
 				} else {
 					builder = builder.mediaMode(MediaMode.ROUTED);
 				}
+				if (customSessionId != null && !customSessionId.isEmpty()) {
+					builder = builder.customSessionId(customSessionId);
+				}
 				builder = builder.defaultCustomLayout((defaultCustomLayout != null) ? defaultCustomLayout : "");
 
 			} catch (IllegalArgumentException e) {
@@ -120,20 +119,62 @@ public class SessionRestController {
 
 		String sessionId;
 		if (customSessionId != null && !customSessionId.isEmpty()) {
-			if (sessionManager.sessionIdExists(customSessionId)) {
-				return new ResponseEntity<JSONObject>(HttpStatus.CONFLICT);
-			} else {
-				sessionId = customSessionId;
-				sessionManager.storeSessionId(sessionId, sessionProperties);
+			if (sessionManager.sessionidTokenTokenobj.putIfAbsent(customSessionId, new ConcurrentHashMap<>()) != null) {
+				return new ResponseEntity<>(HttpStatus.CONFLICT);
 			}
+			sessionId = customSessionId;
 		} else {
 			sessionId = sessionManager.generateRandomChain();
-			sessionManager.storeSessionId(sessionId, sessionProperties);
+			sessionManager.sessionidTokenTokenobj.putIfAbsent(sessionId, new ConcurrentHashMap<>());
 		}
 
+		sessionManager.storeSessionId(sessionId, sessionProperties);
 		JSONObject responseJson = new JSONObject();
 		responseJson.put("id", sessionId);
+
 		return new ResponseEntity<>(responseJson, HttpStatus.OK);
+	}
+
+	@SuppressWarnings("unchecked")
+	@RequestMapping(value = "/sessions/{sessionId}", method = RequestMethod.GET)
+	public ResponseEntity<JSONObject> getSession(@PathVariable("sessionId") String sessionId,
+			@RequestParam(value = "webRtcStats", defaultValue = "false", required = false) boolean webRtcStats) {
+		Session session = this.sessionManager.getSession(sessionId);
+		if (session != null) {
+			JSONObject response = (webRtcStats == true) ? session.withStatsToJSON() : session.toJSON();
+			response.put("recording", this.recordingService.sessionIsBeingRecorded(sessionId));
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		} else {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	@RequestMapping(value = "/sessions", method = RequestMethod.GET)
+	public ResponseEntity<JSONObject> listSessions(
+			@RequestParam(value = "webRtcStats", defaultValue = "false", required = false) boolean webRtcStats) {
+		Collection<Session> sessions = this.sessionManager.getSessionObjects();
+		JSONObject json = new JSONObject();
+		JSONArray jsonArray = new JSONArray();
+		sessions.forEach(s -> {
+			JSONObject sessionJson = (webRtcStats == true) ? s.withStatsToJSON() : s.toJSON();
+			sessionJson.put("recording", this.recordingService.sessionIsBeingRecorded(s.getSessionId()));
+			jsonArray.add(sessionJson);
+		});
+		json.put("numberOfElements", sessions.size());
+		json.put("content", jsonArray);
+		return new ResponseEntity<>(json, HttpStatus.OK);
+	}
+
+	@RequestMapping(value = "/sessions/{sessionId}", method = RequestMethod.DELETE)
+	public ResponseEntity<JSONObject> closeSession(@PathVariable("sessionId") String sessionId) {
+		Session session = this.sessionManager.getSession(sessionId);
+		if (session != null) {
+			this.sessionManager.closeSession(sessionId, "sessionClosedByServer");
+			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+		} else {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
 	}
 
 	@SuppressWarnings("unchecked")
@@ -167,9 +208,7 @@ public class SessionRestController {
 			return this.generateErrorResponse("Role " + params.get("role") + " is not defined", "/api/tokens",
 					HttpStatus.BAD_REQUEST);
 		} catch (OpenViduException e) {
-			return this.generateErrorResponse(
-					"Metadata [" + params.get("data") + "] unexpected format. Max length allowed is 10000 chars",
-					"/api/tokens", HttpStatus.BAD_REQUEST);
+			return this.generateErrorResponse(e.getMessage(), "/api/tokens", HttpStatus.BAD_REQUEST);
 		}
 	}
 
@@ -183,28 +222,28 @@ public class SessionRestController {
 
 		if (sessionId == null) {
 			// "session" parameter not found
-			return new ResponseEntity<JSONObject>(HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 
 		if (!this.openviduConfig.isRecordingModuleEnabled()) {
 			// OpenVidu Server configuration property "openvidu.recording" is set to false
-			return new ResponseEntity<JSONObject>(HttpStatus.NOT_IMPLEMENTED);
+			return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
 		}
 
 		Session session = sessionManager.getSession(sessionId);
 
 		if (session == null) {
 			// Session does not exist
-			return new ResponseEntity<JSONObject>(HttpStatus.NOT_FOUND);
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
 		if (session.getParticipants().isEmpty()) {
 			// Session has no participants
-			return new ResponseEntity<JSONObject>(HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 		if (!(session.getSessionProperties().mediaMode().equals(MediaMode.ROUTED))
 				|| this.recordingService.sessionIsBeingRecorded(session.getSessionId())) {
 			// Session is not in ROUTED MediMode or it is already being recorded
-			return new ResponseEntity<JSONObject>(HttpStatus.CONFLICT);
+			return new ResponseEntity<>(HttpStatus.CONFLICT);
 		}
 
 		RecordingLayout recordingLayout;
@@ -229,7 +268,7 @@ public class SessionRestController {
 
 		if (recordingId == null) {
 			// "recordingId" parameter not found
-			return new ResponseEntity<JSONObject>(HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 
 		Recording recording = recordingService.getStartedRecording(recordingId);
@@ -237,14 +276,14 @@ public class SessionRestController {
 		if (recording == null) {
 			if (recordingService.getStartingRecording(recordingId) != null) {
 				// Recording is still starting
-				return new ResponseEntity<JSONObject>(HttpStatus.NOT_ACCEPTABLE);
+				return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
 			}
 			// Recording does not exist
-			return new ResponseEntity<JSONObject>(HttpStatus.NOT_FOUND);
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
 		if (!this.recordingService.sessionIsBeingRecorded(recording.getSessionId())) {
 			// Session is not being recorded
-			return new ResponseEntity<JSONObject>(HttpStatus.CONFLICT);
+			return new ResponseEntity<>(HttpStatus.CONFLICT);
 		}
 
 		Session session = sessionManager.getSession(recording.getSessionId());
@@ -303,6 +342,6 @@ public class SessionRestController {
 		responseJson.put("error", status.getReasonPhrase());
 		responseJson.put("message", errorMessage);
 		responseJson.put("path", path);
-		return new ResponseEntity<JSONObject>(responseJson, status);
+		return new ResponseEntity<>(responseJson, status);
 	}
 }

@@ -8,6 +8,7 @@ export declare class Session {
     private static readonly API_TOKENS;
     sessionId: string;
     properties: SessionProperties;
+    private Buffer;
     constructor(hostname: string, port: number, basicAuth: string, properties?: SessionProperties);
     /**
      * Gets the unique identifier of the Session

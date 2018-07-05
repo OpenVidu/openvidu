@@ -1,0 +1,32 @@
+#finish-btn {
+    float: right;
+}
+
+app-openvidu-instance {
+    display: inline-flex;
+    margin: 25px 5px 0px 0px;
+}
+
+.scenario-input {
+    width: 40px;
+}
+
+.scenario-input {
+    margin-left: 10px;
+}
+
+.scenario-input:first-of-type {
+    margin-right: 25px;
+}
+
+.report-div {
+    margin-top: 50px;
+}
+
+.report-field {
+    width: 100%;
+}
+
+.report-btn{
+    float: right;
+}

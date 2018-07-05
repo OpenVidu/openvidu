@@ -17,6 +17,8 @@
 
 package io.openvidu.server.core;
 
+import org.json.simple.JSONObject;
+
 public class Participant {
 
 	private String participantPrivatetId; // ID to identify the user on server (org.kurento.jsonrpc.Session.id)
@@ -24,11 +26,6 @@ public class Participant {
 	private String clientMetadata = ""; // Metadata provided on client side
 	private String serverMetadata = ""; // Metadata provided on server side
 	private Token token; // Token associated to this participant
-
-	protected boolean audioActive = true;
-	protected boolean videoActive = true;
-	protected String typeOfVideo; // CAMERA, SCREEN
-	protected int frameRate;
 
 	protected boolean streaming = false;
 	protected volatile boolean closed;
@@ -96,36 +93,8 @@ public class Participant {
 		this.streaming = streaming;
 	}
 
-	public boolean isAudioActive() {
-		return audioActive;
-	}
-
-	public void setAudioActive(boolean active) {
-		this.audioActive = active;
-	}
-
-	public boolean isVideoActive() {
-		return videoActive;
-	}
-
-	public void setVideoActive(boolean active) {
-		this.videoActive = active;
-	}
-
-	public String getTypeOfVideo() {
-		return this.typeOfVideo;
-	}
-
-	public void setTypeOfVideo(String typeOfVideo) {
-		this.typeOfVideo = typeOfVideo;
-	}
-	
-	public int getFrameRate() {
-		return this.frameRate;
-	}
-
-	public void setFrameRate(int frameRate) {
-		this.frameRate = frameRate;
+	public String getPublisherStremId() {
+		return null;
 	}
 
 	public String getFullMetadata() {
@@ -192,6 +161,17 @@ public class Participant {
 		}
 		builder.append("streaming=").append(streaming).append("]");
 		return builder.toString();
+	}
+
+	@SuppressWarnings("unchecked")
+	public JSONObject toJSON() {
+		JSONObject json = new JSONObject();
+		json.put("connectionId", this.participantPublicId);
+		json.put("token", this.token.getToken());
+		json.put("role", this.token.getRole().name());
+		json.put("serverData", this.serverMetadata);
+		json.put("clientData", this.clientMetadata);
+		return json;
 	}
 
 }

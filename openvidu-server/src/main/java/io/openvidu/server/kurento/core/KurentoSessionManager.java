@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
@@ -104,7 +105,7 @@ public class KurentoSessionManager extends SessionManager {
 	}
 
 	@Override
-	public void leaveRoom(Participant participant, Integer transactionId, String reason) {
+	public synchronized void leaveRoom(Participant participant, Integer transactionId, String reason, boolean closeWebSocket) {
 		log.debug("Request [LEAVE_ROOM] ({})", participant.getParticipantPublicId());
 
 		KurentoParticipant kParticipant = (KurentoParticipant) participant;
@@ -124,6 +125,11 @@ public class KurentoSessionManager extends SessionManager {
 		if (sessionidParticipantpublicidParticipant.get(sessionId) != null) {
 			Participant p = sessionidParticipantpublicidParticipant.get(sessionId)
 					.remove(participant.getParticipantPublicId());
+
+			if (this.coturnCredentialsService.isCoturnAvailable()) {
+				this.coturnCredentialsService.deleteUser(p.getToken().getTurnCredentials().getUsername());
+			}
+
 			if (sessionidTokenTokenobj.get(sessionId) != null) {
 				sessionidTokenTokenobj.get(sessionId).remove(p.getToken().getToken());
 			}
@@ -147,29 +153,16 @@ public class KurentoSessionManager extends SessionManager {
 		try {
 			remainingParticipants = getParticipants(sessionId);
 		} catch (OpenViduException e) {
-			log.debug("Possible collision when closing the session '{}' (not found)");
+			log.info("Possible collision when closing the session '{}' (not found)", sessionId);
 			remainingParticipants = Collections.emptySet();
 		}
-
 		sessionEventsHandler.onParticipantLeft(participant, sessionId, remainingParticipants, transactionId, null,
 				reason);
 
 		if (remainingParticipants.isEmpty()) {
-
 			log.info("No more participants in session '{}', removing it and closing it", sessionId);
-			if (session.close(reason)) {
-				sessionEventsHandler.onSessionClosed(sessionId, "lastParticipantLeft");
-			}
-			sessions.remove(sessionId);
-
-			sessionProperties.remove(sessionId);
-			sessionidParticipantpublicidParticipant.remove(sessionId);
-			sessionidTokenTokenobj.remove(sessionId);
-
+			this.closeSessionAndEmptyCollections(session, reason);
 			showTokens();
-
-			log.warn("Session '{}' removed and closed", sessionId);
-
 		} else if (remainingParticipants.size() == 1 && openviduConfig.isRecordingModuleEnabled()
 				&& MediaMode.ROUTED.equals(session.getSessionProperties().mediaMode())
 				&& RecordingMode.ALWAYS.equals(session.getSessionProperties().recordingMode())
@@ -182,8 +175,10 @@ public class KurentoSessionManager extends SessionManager {
 					.getParticipantPrivateId(), "EVICT_RECORDER");
 		}
 
-		// Finally close websocket session
-		sessionEventsHandler.closeRpcSession(participant.getParticipantPrivateId());
+		// Finally close websocket session if required
+		if (closeWebSocket) {
+			sessionEventsHandler.closeRpcSession(participant.getParticipantPrivateId());
+		}
 	}
 
 	/**
@@ -243,7 +238,7 @@ public class KurentoSessionManager extends SessionManager {
 			OpenViduException e = new OpenViduException(Code.MEDIA_SDP_ERROR_CODE,
 					"Error generating SDP response for publishing user " + participant.getParticipantPublicId());
 			log.error("PARTICIPANT {}: Error publishing media", participant.getParticipantPublicId(), e);
-			sessionEventsHandler.onPublishMedia(participant, session.getSessionId(), mediaOptions, sdpAnswer,
+			sessionEventsHandler.onPublishMedia(participant, null, session.getSessionId(), mediaOptions, sdpAnswer,
 					participants, transactionId, e);
 		}
 
@@ -263,16 +258,11 @@ public class KurentoSessionManager extends SessionManager {
 
 		session.newPublisher(participant);
 
-		kurentoParticipant.setAudioActive(kurentoOptions.audioActive);
-		kurentoParticipant.setVideoActive(kurentoOptions.videoActive);
-		kurentoParticipant.setTypeOfVideo(kurentoOptions.typeOfVideo);
-		kurentoParticipant.setFrameRate(kurentoOptions.frameRate);
-
 		participants = kurentoParticipant.getSession().getParticipants();
 
 		if (sdpAnswer != null) {
-			sessionEventsHandler.onPublishMedia(participant, session.getSessionId(), mediaOptions, sdpAnswer,
-					participants, transactionId, null);
+			sessionEventsHandler.onPublishMedia(participant, participant.getPublisherStremId(), session.getSessionId(),
+					mediaOptions, sdpAnswer, participants, transactionId, null);
 		}
 	}
 
@@ -380,6 +370,40 @@ public class KurentoSessionManager extends SessionManager {
 	}
 
 	@Override
+	public void streamPropertyChanged(Participant participant, Integer transactionId, String streamId, String property,
+			JsonElement newValue, String reason) {
+		KurentoParticipant kParticipant = (KurentoParticipant) participant;
+		streamId = kParticipant.getPublisherStremId();
+		MediaOptions streamProperties = kParticipant.getPublisherMediaOptions();
+
+		Boolean hasAudio = streamProperties.hasAudio();
+		Boolean hasVideo = streamProperties.hasVideo();
+		Boolean audioActive = streamProperties.isAudioActive();
+		Boolean videoActive = streamProperties.isVideoActive();
+		String typeOfVideo = streamProperties.getTypeOfVideo();
+		Integer frameRate = streamProperties.getFrameRate();
+		String videoDimensions = streamProperties.getVideoDimensions();
+
+		switch (property) {
+		case "audioActive":
+			audioActive = newValue.getAsBoolean();
+			break;
+		case "videoActive":
+			videoActive = newValue.getAsBoolean();
+			break;
+		case "videoDimensions":
+			videoDimensions = newValue.getAsString();
+			break;
+		}
+
+		kParticipant.setPublisherMediaOptions(new MediaOptions(hasAudio, hasVideo, audioActive, videoActive,
+				typeOfVideo, frameRate, videoDimensions));
+
+		sessionEventsHandler.onStreamPropertyChanged(participant, transactionId,
+				kParticipant.getSession().getParticipants(), streamId, property, newValue, reason);
+	}
+
+	@Override
 	public void onIceCandidate(Participant participant, String endpointName, String candidate, int sdpMLineIndex,
 			String sdpMid, Integer transactionId) {
 		try {
@@ -442,22 +466,47 @@ public class KurentoSessionManager extends SessionManager {
 	@Override
 	public void evictParticipant(String participantPrivateId, String reason) throws OpenViduException {
 		Participant participant = this.getParticipant(participantPrivateId);
-		this.leaveRoom(participant, null, reason);
-		sessionEventsHandler.onParticipantEvicted(participant);
+		this.leaveRoom(participant, null, reason, false);
+		sessionEventsHandler.onParticipantEvicted(participant, reason);
+		sessionEventsHandler.closeRpcSession(participantPrivateId);
 	}
 
 	@Override
 	public MediaOptions generateMediaOptions(Request<JsonObject> request) {
 
 		String sdpOffer = RpcHandler.getStringParam(request, ProtocolElements.PUBLISHVIDEO_SDPOFFER_PARAM);
-		boolean audioActive = RpcHandler.getBooleanParam(request, ProtocolElements.PUBLISHVIDEO_AUDIOACTIVE_PARAM);
-		boolean videoActive = RpcHandler.getBooleanParam(request, ProtocolElements.PUBLISHVIDEO_VIDEOACTIVE_PARAM);
-		String typeOfVideo = RpcHandler.getStringParam(request, ProtocolElements.PUBLISHVIDEO_TYPEOFVIDEO_PARAM);
-		int frameRate = RpcHandler.getIntParam(request, ProtocolElements.PUBLISHVIDEO_FRAMERATE_PARAM);
+		boolean hasAudio = RpcHandler.getBooleanParam(request, ProtocolElements.PUBLISHVIDEO_HASAUDIO_PARAM);
+		boolean hasVideo = RpcHandler.getBooleanParam(request, ProtocolElements.PUBLISHVIDEO_HASVIDEO_PARAM);
+
+		Boolean audioActive = null, videoActive = null;
+		String typeOfVideo = null, videoDimensions = null;
+		Integer frameRate = null;
+
+		try {
+			audioActive = RpcHandler.getBooleanParam(request, ProtocolElements.PUBLISHVIDEO_AUDIOACTIVE_PARAM);
+		} catch (RuntimeException noParameterFound) {
+		}
+		try {
+			videoActive = RpcHandler.getBooleanParam(request, ProtocolElements.PUBLISHVIDEO_VIDEOACTIVE_PARAM);
+		} catch (RuntimeException noParameterFound) {
+		}
+		try {
+			typeOfVideo = RpcHandler.getStringParam(request, ProtocolElements.PUBLISHVIDEO_TYPEOFVIDEO_PARAM);
+		} catch (RuntimeException noParameterFound) {
+		}
+		try {
+			videoDimensions = RpcHandler.getStringParam(request, ProtocolElements.PUBLISHVIDEO_VIDEODIMENSIONS_PARAM);
+		} catch (RuntimeException noParameterFound) {
+		}
+		try {
+			frameRate = RpcHandler.getIntParam(request, ProtocolElements.PUBLISHVIDEO_FRAMERATE_PARAM);
+		} catch (RuntimeException noParameterFound) {
+		}
+
 		boolean doLoopback = RpcHandler.getBooleanParam(request, ProtocolElements.PUBLISHVIDEO_DOLOOPBACK_PARAM);
 
-		return new KurentoMediaOptions(true, sdpOffer, null, null, audioActive, videoActive, typeOfVideo, frameRate,
-				doLoopback);
+		return new KurentoMediaOptions(true, sdpOffer, null, null, hasAudio, hasVideo, audioActive, videoActive,
+				typeOfVideo, frameRate, videoDimensions, doLoopback);
 	}
 
 }

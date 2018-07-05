@@ -12,7 +12,7 @@
 	<packaging>jar</packaging>
 
 	<name>OpenVidu Server</name>
-	<version>2.1.0</version>
+	<version>2.2.0</version>
 	<description>OpenVidu Server</description>
 	<url>https://github.com/OpenVidu/openvidu</url>
 
@@ -50,55 +50,119 @@
 		<start-class>io.openvidu.server.OpenViduServer</start-class>
 	</properties>
 
-	<build>
-		<resources>
-			<resource>
-				<directory>src/main/resources</directory>
-				<filtering>false</filtering>
-			</resource>
-			<resource>
-				<directory>src/main/resources</directory>
-				<filtering>true</filtering>
-				<includes>
-					<include>banner.txt</include>
-				</includes>
-			</resource>
-		</resources>
+	<profiles>
 
-		<plugins>
-			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-				<version>${version.spring-boot}</version>
-				<configuration>
-					<mainClass>${start-class}</mainClass>
-					<layout>ZIP</layout>
-				</configuration>
-				<executions>
-					<execution>
-						<goals>
-							<goal>repackage</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
+		<profile>
+			<id>exec</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<build>
+				<resources>
+					<resource>
+						<directory>src/main/resources</directory>
+						<filtering>false</filtering>
+					</resource>
+					<resource>
+						<directory>src/main/resources</directory>
+						<filtering>true</filtering>
+						<includes>
+							<include>banner.txt</include>
+						</includes>
+					</resource>
+				</resources>
 
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>exec-maven-plugin</artifactId>
-				<version>1.6.0</version>
-				<configuration>
-					<mainClass>${start-class}</mainClass>
-				</configuration>
-			</plugin>
+				<plugins>
+					<plugin>
+						<groupId>org.springframework.boot</groupId>
+						<artifactId>spring-boot-maven-plugin</artifactId>
+						<version>${version.spring-boot}</version>
+						<configuration>
+							<mainClass>${start-class}</mainClass>
+							<layout>ZIP</layout>
+						</configuration>
+						<executions>
+							<execution>
+								<goals>
+									<goal>repackage</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
 
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-enforcer-plugin</artifactId>
-				<version>${version.enforcer.plugin}</version>
-			</plugin>
-		</plugins>
-	</build>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>exec-maven-plugin</artifactId>
+						<version>1.6.0</version>
+						<configuration>
+							<mainClass>${start-class}</mainClass>
+						</configuration>
+					</plugin>
+
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-enforcer-plugin</artifactId>
+						<version>${version.enforcer.plugin}</version>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+
+		<profile>
+			<id>dependency</id>
+			<build>
+				<resources>
+					<resource>
+						<directory>src/main/resources</directory>
+						<filtering>false</filtering>
+					</resource>
+					<resource>
+						<directory>src/main/resources</directory>
+						<filtering>true</filtering>
+						<includes>
+							<include>banner.txt</include>
+						</includes>
+					</resource>
+				</resources>
+
+				<plugins>
+					<plugin>
+						<groupId>org.springframework.boot</groupId>
+						<artifactId>spring-boot-maven-plugin</artifactId>
+						<version>${version.spring-boot}</version>
+						<configuration>
+							<mainClass>${start-class}</mainClass>
+							<layout>ZIP</layout>
+							<classifier>exec</classifier>
+						</configuration>
+						<executions>
+							<execution>
+								<goals>
+									<goal>repackage</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>exec-maven-plugin</artifactId>
+						<version>1.6.0</version>
+						<configuration>
+							<mainClass>${start-class}</mainClass>
+						</configuration>
+					</plugin>
+
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-enforcer-plugin</artifactId>
+						<version>${version.enforcer.plugin}</version>
+					</plugin>
+				</plugins>
+			</build>
+
+		</profile>
+	</profiles>
 
 	<dependencies>
 		<dependency>
@@ -209,7 +273,7 @@
 		<dependency>
 			<groupId>io.openvidu</groupId>
 			<artifactId>openvidu-java-client</artifactId>
-			<version>2.0.0</version>
+			<version>2.2.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.codehaus.janino</groupId>

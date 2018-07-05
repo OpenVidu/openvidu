@@ -3,6 +3,7 @@ import { Session } from './Session';
 import { StreamManager } from './StreamManager';
 import { InboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/InboundStreamOptions';
 import { OutboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/OutboundStreamOptions';
+import { WebRtcPeer } from '../OpenViduInternal/WebRtcPeer/WebRtcPeer';
 import EventEmitter = require('wolfy87-eventemitter');
 /**
  * Represents each one of the media streams available in OpenVidu Server for certain session.
@@ -90,7 +91,7 @@ export declare class Stream {
     /**
      * @hidden
      */
-    getWebRtcPeer(): any;
+    getWebRtcPeer(): WebRtcPeer;
     /**
      * @hidden
      */
@@ -151,13 +152,26 @@ export declare class Stream {
      * @hidden
      */
     disableSpeakingEvents(): void;
-    private initWebRtcPeerSend();
-    private initWebRtcPeerReceive();
-    private processSdpAnswer(sdpAnswer);
-    private initWebRtcStats();
-    private stopWebRtcStats();
     /**
      * @hidden
      */
     isLocal(): boolean;
+    /**
+     * @hidden
+     */
+    getSelectedIceCandidate(): Promise<any>;
+    /**
+     * @hidden
+     */
+    getRemoteIceCandidateList(): RTCIceCandidate[];
+    /**
+     * @hidden
+     */
+    getLocalIceCandidateList(): RTCIceCandidate[];
+    private initWebRtcPeerSend;
+    private initWebRtcPeerReceive;
+    private remotePeerSuccesfullyEstablished;
+    private initWebRtcStats;
+    private stopWebRtcStats;
+    private getIceServersConf;
 }

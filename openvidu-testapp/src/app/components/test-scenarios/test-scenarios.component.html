@@ -1,0 +1,34 @@
+<div>
+  <button id="one2many-btn" mat-raised-button color="primary" (click)="loadScenario(manyToMany,0,0)" [disabled]="scenarioPlaying">Many To Many</button>
+  <mat-form-field class="scenario-input">
+    <input id="one2many-input" matInput [(ngModel)]="manyToMany" type="number" [disabled]="scenarioPlaying">
+  </mat-form-field>
+  <button id="many2many-btn" mat-raised-button color="primary" (click)="loadScenario(0,1,oneToMany)" [disabled]="scenarioPlaying">One to {{oneToMany}}</button>
+  <mat-form-field class="scenario-input">
+    <input id="one2many-input" matInput [(ngModel)]="oneToMany" type="number" [disabled]="scenarioPlaying">
+  </mat-form-field>
+  <button mat-icon-button title="Scenario properties" class="mat-icon-custom" (click)="openScenarioPropertiesDialog()" [disabled]="scenarioPlaying">
+    <mat-icon class="mat-icon-custom-ic" aria-label="Scenario properties button">settings</mat-icon>
+  </button>
+  <button id="finish-btn" mat-raised-button color="primary" (click)="endScenario()" [disabled]="!scenarioPlaying">FINISH</button>
+</div>
+
+<div class="instance-div">
+  <app-users-table *ngIf="!!publishers.length" [connections]="connections" [publishers]="publishers" [subscribers]="subscribers"
+    [numberOfStreams]="{out: publishers.length, in: totalNumberOfStreams - publishers.length}" (reportForStream)="addReportForStream($event)"
+    (focusReport)="focusOnReportForStream($event)"></app-users-table>
+</div>
+
+<div class="report-div">
+  <mat-form-field class="report-field" appearance="fill">
+    <mat-label>Report</mat-label>
+    <button *ngIf="isFocusedOnReport" id="back-report-btn" class="report-btn" mat-mini-fab color="primary"
+      (click)="$event.stopPropagation(); textAreaValue = stringifyAllReports; isFocusedOnReport = false;">
+      <mat-icon aria-label="Go back to all streams">undo</mat-icon>
+    </button>
+    <button *ngIf="!!textAreaValue && !isFocusedOnReport" id="update-report-btn" class="report-btn" mat-mini-fab color="primary" (click)="$event.stopPropagation(); updateRemoteStreamsInfo()">
+      <mat-icon aria-label="Update stream info">replay</mat-icon>
+    </button>
+    <textarea matInput readonly [value]="textAreaValue" [mat-autosize]="true" [disabled]="!textAreaValue"></textarea>
+  </mat-form-field>
+</div>

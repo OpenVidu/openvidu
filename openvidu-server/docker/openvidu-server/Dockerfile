@@ -1,11 +1,11 @@
 FROM ubuntu:16.04
 MAINTAINER miguel.rodriguez@cocodin.com
 
-# Install Java
-RUN apt-get update && apt-get install -y openjdk-8-jdk && rm -rf /var/lib/apt/lists/*
-
-# Install supervisor
-RUN apt-get update && apt-get install -y supervisor && rm -rf /var/lib/apt/lists/*
+# Install Java, supervisor and netstat
+RUN apt-get update && apt-get install -y \
+  openjdk-8-jre \
+  supervisor \
+&& rm -rf /var/lib/apt/lists/*
 
 # Configure supervisor
 RUN mkdir -p /var/log/supervisor

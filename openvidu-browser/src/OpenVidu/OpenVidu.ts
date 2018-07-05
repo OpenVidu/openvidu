@@ -19,16 +19,17 @@ import { LocalRecorder } from './LocalRecorder';
 import { Publisher } from './Publisher';
 import { Session } from './Session';
 import { Stream } from './Stream';
+import { StreamPropertyChangedEvent } from '../OpenViduInternal/Events/StreamPropertyChangedEvent';
 import { Device } from '../OpenViduInternal/Interfaces/Public/Device';
 import { OpenViduAdvancedConfiguration } from '../OpenViduInternal/Interfaces/Public/OpenViduAdvancedConfiguration';
 import { PublisherProperties } from '../OpenViduInternal/Interfaces/Public/PublisherProperties';
 import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/OpenViduError';
 import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
 
-import * as RpcBuilder from '../OpenViduInternal/KurentoUtils/kurento-jsonrpc';
 import * as screenSharingAuto from '../OpenViduInternal/ScreenSharing/Screen-Capturing-Auto';
 import * as screenSharing from '../OpenViduInternal/ScreenSharing/Screen-Capturing';
 
+import RpcBuilder = require('../OpenViduInternal/KurentoUtils/kurento-jsonrpc');
 import platform = require('platform');
 
 
@@ -47,6 +48,10 @@ export class OpenVidu {
   /**
    * @hidden
    */
+  publishers: Publisher[] = [];
+  /**
+   * @hidden
+   */
   wsUri: string;
   /**
    * @hidden
@@ -59,10 +64,75 @@ export class OpenVidu {
   /**
    * @hidden
    */
+  iceServers: RTCIceServer[];
+  /**
+   * @hidden
+   */
+  role: string;
+  /**
+   * @hidden
+   */
   advancedConfiguration: OpenViduAdvancedConfiguration = {};
 
   constructor() {
     console.info("'OpenVidu' initialized");
+
+    if (platform.name!!.toLowerCase().indexOf('mobile') !== -1) {
+      // Listen to orientationchange only on mobile browsers
+      (<any>window).onorientationchange = () => {
+        this.publishers.forEach(publisher => {
+          if (!!publisher.stream && !!publisher.stream.hasVideo && !!publisher.stream.streamManager.videos[0]) {
+
+            let attempts = 0;
+
+            const oldWidth = publisher.stream.videoDimensions.width;
+            const oldHeight = publisher.stream.videoDimensions.height;
+            // New resolution got from different places for Chrome and Firefox. Chrome needs a videoWidth and videoHeight of a videoElement.
+            // Firefox needs getSettings from the videoTrack
+            let firefoxSettings = publisher.stream.getMediaStream().getVideoTracks()[0].getSettings();
+            let newWidth = (platform.name!!.toLowerCase().indexOf('firefox') !== -1) ? firefoxSettings.width : publisher.videoReference.videoWidth;
+            let newHeight = (platform.name!!.toLowerCase().indexOf('firefox') !== -1) ? firefoxSettings.height : publisher.videoReference.videoHeight;
+
+            const repeatUntilChange = setInterval(() => {
+              firefoxSettings = publisher.stream.getMediaStream().getVideoTracks()[0].getSettings();
+              newWidth = (platform.name!!.toLowerCase().indexOf('firefox') !== -1) ? firefoxSettings.width : publisher.videoReference.videoWidth;
+              newHeight = (platform.name!!.toLowerCase().indexOf('firefox') !== -1) ? firefoxSettings.height : publisher.videoReference.videoHeight;
+              sendStreamPropertyChangedEvent(oldWidth, oldHeight, newWidth, newHeight);
+            }, 100);
+
+            const sendStreamPropertyChangedEvent = (oldWidth, oldHeight, newWidth, newHeight) => {
+              attempts++;
+              if (attempts > 4) {
+                clearTimeout(repeatUntilChange);
+              }
+              if (newWidth !== oldWidth || newHeight !== oldHeight) {
+                publisher.stream.videoDimensions = {
+                  width: newWidth || 0,
+                  height: newHeight || 0
+                };
+                this.sendRequest(
+                  'streamPropertyChanged',
+                  {
+                    streamId: publisher.stream.streamId,
+                    property: 'videoDimensions',
+                    newValue: JSON.stringify(publisher.stream.videoDimensions),
+                    reason: 'deviceRotated'
+                  },
+                  (error, response) => {
+                    if (error) {
+                      console.error("Error sending 'streamPropertyChanged' event", error);
+                    } else {
+                      this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, publisher.stream, 'videoDimensions', publisher.stream.videoDimensions, { width: oldWidth, height: oldHeight }, 'deviceRotated')]);
+                      publisher.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(publisher, publisher.stream, 'videoDimensions', publisher.stream.videoDimensions, { width: oldWidth, height: oldHeight }, 'deviceRotated')]);
+                    }
+                  });
+                clearTimeout(repeatUntilChange);
+              }
+            };
+          }
+        });
+      };
+    }
   }
 
 
@@ -155,6 +225,7 @@ export class OpenVidu {
         publisher.emitEvent('accessDenied', []);
       });
 
+    this.publishers.push(publisher);
     return publisher;
   }
 
@@ -396,39 +467,40 @@ export class OpenVidu {
 
           if (publisherProperties.videoSource === 'screen') {
 
-            if (platform.name !== 'Chrome' && platform.name !== 'Firefox') {
+            if (platform.name !== 'Chrome' && platform.name!.indexOf('Firefox') === -1) {
               const error = new OpenViduError(OpenViduErrorName.SCREEN_SHARING_NOT_SUPPORTED, 'You can only screen share in desktop Chrome and Firefox. Detected browser: ' + platform.name);
               console.error(error);
               reject(error);
             } else {
 
-              if (!!this.advancedConfiguration.screenShareChromeExtension) {
+              if (!!this.advancedConfiguration.screenShareChromeExtension && !(platform.name!.indexOf('Firefox') !== -1)) {
 
                 // Custom screen sharing extension for Chrome
 
-                const extensionId = this.advancedConfiguration.screenShareChromeExtension.split('/').pop()!!.trim();
-                screenSharing.getChromeExtensionStatus(extensionId, (status) => {
-                  if (status === 'installed-enabled') {
-                    screenSharing.getScreenConstraints((error, screenConstraints) => {
-                      if (!!error && error === 'permission-denied') {
-                        const error = new OpenViduError(OpenViduErrorName.SCREEN_CAPTURE_DENIED, 'You must allow access to one window of your desktop');
-                        console.error(error);
-                        reject(error);
-                      } else {
-                        mediaConstraints.video = screenConstraints;
-                        resolve(mediaConstraints);
-                      }
-                    });
-                  }
-                  if (status === 'installed-disabled') {
-                    const error = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_DISABLED, 'You must enable the screen extension');
-                    console.error(error);
-                    reject(error);
-                  }
-                  if (status === 'not-installed') {
-                    const error = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_NOT_INSTALLED, (<string>this.advancedConfiguration.screenShareChromeExtension));
-                    console.error(error);
-                    reject(error);
+                screenSharing.getScreenConstraints((error, screenConstraints) => {
+                  if (!!error || !!screenConstraints.mandatory && screenConstraints.mandatory.chromeMediaSource === 'screen') {
+                    if (error === 'permission-denied' || error === 'PermissionDeniedError') {
+                      const error = new OpenViduError(OpenViduErrorName.SCREEN_CAPTURE_DENIED, 'You must allow access to one window of your desktop');
+                      console.error(error);
+                      reject(error);
+                    } else {
+                      const extensionId = this.advancedConfiguration.screenShareChromeExtension!.split('/').pop()!!.trim();
+                      screenSharing.getChromeExtensionStatus(extensionId, (status) => {
+                        if (status === 'installed-disabled') {
+                          const error = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_DISABLED, 'You must enable the screen extension');
+                          console.error(error);
+                          reject(error);
+                        }
+                        if (status === 'not-installed') {
+                          const error = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_NOT_INSTALLED, (<string>this.advancedConfiguration.screenShareChromeExtension));
+                          console.error(error);
+                          reject(error);
+                        }
+                      });
+                    }
+                  } else {
+                    mediaConstraints.video = screenConstraints;
+                    resolve(mediaConstraints);
                   }
                 });
               } else {
@@ -438,7 +510,9 @@ export class OpenVidu {
                 screenSharingAuto.getScreenId((error, sourceId, screenConstraints) => {
                   if (!!error) {
                     if (error === 'not-installed') {
-                      const error = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_NOT_INSTALLED, 'https://chrome.google.com/webstore/detail/screen-capturing/ajhifddimkapgcifgcodmmfdlknahffk');
+                      const extensionUrl = !!this.advancedConfiguration.screenShareChromeExtension ? this.advancedConfiguration.screenShareChromeExtension :
+                        'https://chrome.google.com/webstore/detail/openvidu-screensharing/lfcgfepafnobdloecchnfaclibenjold';
+                      const error = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_NOT_INSTALLED, extensionUrl);
                       console.error(error);
                       reject(error);
                     } else if (error === 'installed-disabled') {
@@ -490,7 +564,7 @@ export class OpenVidu {
         onreconnected: this.reconnectedCallback.bind(this)
       },
       rpc: {
-        requestTimeout: 15000,
+        requestTimeout: 10000,
         participantJoined: this.session.onParticipantJoined.bind(this.session),
         participantPublished: this.session.onParticipantPublished.bind(this.session),
         participantUnpublished: this.session.onParticipantUnpublished.bind(this.session),
@@ -499,6 +573,7 @@ export class OpenVidu {
         recordingStarted: this.session.onRecordingStarted.bind(this.session),
         recordingStopped: this.session.onRecordingStopped.bind(this.session),
         sendMessage: this.session.onNewMessage.bind(this.session),
+        streamPropertyChanged: this.session.onStreamPropertyChanged.bind(this.session),
         iceCandidate: this.session.recvIceCandidate.bind(this.session),
         mediaError: this.session.onMediaError.bind(this.session)
       }

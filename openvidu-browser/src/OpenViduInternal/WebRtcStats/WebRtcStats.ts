@@ -18,7 +18,6 @@
 // tslint:disable:no-string-literal
 
 import { Stream } from '../../OpenVidu/Stream';
-import * as adapter from 'webrtc-adapter';
 import platform = require('platform');
 
 export class WebRtcStats {
@@ -92,6 +91,69 @@ export class WebRtcStats {
             clearInterval(this.webRtcStatsIntervalId);
             console.warn('WebRtc stats stopped for disposed stream ' + this.stream.streamId + ' of connection ' + this.stream.connection.connectionId);
         }
+    }
+
+    public getSelectedIceCandidateInfo(): Promise<any> {
+        return new Promise((resolve, reject) => {
+            this.getStatsAgnostic(this.stream.getRTCPeerConnection(),
+                (stats) => {
+                    if ((platform.name!.indexOf('Chrome') !== -1) || (platform.name!.indexOf('Opera') !== -1)) {
+                        let localCandidateId, remoteCandidateId, googCandidatePair;
+                        const localCandidates = {};
+                        const remoteCandidates = {};
+                        for (const key in stats) {
+                            const stat = stats[key];
+                            if (stat.type === 'localcandidate') {
+                                localCandidates[stat.id] = stat;
+                            } else if (stat.type === 'remotecandidate') {
+                                remoteCandidates[stat.id] = stat;
+                            } else if (stat.type === 'googCandidatePair' && (stat.googActiveConnection === 'true')) {
+                                googCandidatePair = stat;
+                                localCandidateId = stat.localCandidateId;
+                                remoteCandidateId = stat.remoteCandidateId;
+                            }
+                        }
+                        let finalLocalCandidate = localCandidates[localCandidateId];
+                        if (!!finalLocalCandidate) {
+                            const candList = this.stream.getLocalIceCandidateList();
+                            const cand = candList.filter((c: RTCIceCandidate) => {
+                                return (!!c.candidate &&
+                                    c.candidate.indexOf(finalLocalCandidate.ipAddress) >= 0 &&
+                                    c.candidate.indexOf(finalLocalCandidate.portNumber) >= 0 &&
+                                    c.candidate.indexOf(finalLocalCandidate.priority) >= 0);
+                            });
+                            finalLocalCandidate.raw = !!cand[0] ? cand[0].candidate : 'ERROR: Cannot find local candidate in list of sent ICE candidates';
+                        } else {
+                            finalLocalCandidate = 'ERROR: No active local ICE candidate. Probably ICE-TCP is being used';
+                        }
+
+                        let finalRemoteCandidate = remoteCandidates[remoteCandidateId];
+                        if (!!finalRemoteCandidate) {
+                            const candList = this.stream.getRemoteIceCandidateList();
+                            const cand = candList.filter((c: RTCIceCandidate) => {
+                                return (!!c.candidate &&
+                                    c.candidate.indexOf(finalRemoteCandidate.ipAddress) >= 0 &&
+                                    c.candidate.indexOf(finalRemoteCandidate.portNumber) >= 0 &&
+                                    c.candidate.indexOf(finalRemoteCandidate.priority) >= 0);
+                            });
+                            finalRemoteCandidate.raw = !!cand[0] ? cand[0].candidate : 'ERROR: Cannot find remote candidate in list of received ICE candidates';
+                        } else {
+                            finalRemoteCandidate = 'ERROR: No active remote ICE candidate. Probably ICE-TCP is being used';
+                        }
+
+                        resolve({
+                            googCandidatePair,
+                            localCandidate: finalLocalCandidate,
+                            remoteCandidate: finalRemoteCandidate
+                        });
+                    } else {
+                        reject('Selected ICE candidate info only available for Chrome');
+                    }
+                },
+                (error) => {
+                    reject(error);
+                });
+        });
     }
 
     private sendStatsToHttpEndpoint(instrumentation): void {
@@ -210,7 +272,7 @@ export class WebRtcStats {
                         sendPost(JSON.stringify(json));
                     }
                 });
-            } else if (platform.name!.indexOf('Chrome') !== -1) {
+            } else if ((platform.name!.indexOf('Chrome') !== -1) || (platform.name!.indexOf('Opera') !== -1)) {
                 for (const key of Object.keys(stats)) {
                     const stat = stats[key];
                     if (stat.type === 'ssrc') {
@@ -306,12 +368,17 @@ export class WebRtcStats {
     }
 
     private standardizeReport(response) {
+        console.log(response);
+        const standardReport = {};
+
         if (platform.name!.indexOf('Firefox') !== -1) {
+            Object.keys(response).forEach(key => {
+                console.log(response[key]);
+            });
             return response;
         }
 
-        const standardReport = {};
-        response.result().forEach((report) => {
+        response.result().forEach(report => {
             const standardStats = {
                 id: report.id,
                 timestamp: report.timestamp,
@@ -329,11 +396,11 @@ export class WebRtcStats {
     private getStatsAgnostic(pc, successCb, failureCb) {
         if (platform.name!.indexOf('Firefox') !== -1) {
             // getStats takes args in different order in Chrome and Firefox
-            return pc.getStats(null, (response) => {
+            return pc.getStats(null).then(response => {
                 const report = this.standardizeReport(response);
                 successCb(report);
-            }, failureCb);
-        } else if (platform.name!.indexOf('Chrome') !== -1) {
+            }).catch(failureCb);
+        } else if ((platform.name!.indexOf('Chrome') !== -1) || (platform.name!.indexOf('Opera') !== -1)) {
             // In Chrome, the first two arguments are reversed
             return pc.getStats((response) => {
                 const report = this.standardizeReport(response);

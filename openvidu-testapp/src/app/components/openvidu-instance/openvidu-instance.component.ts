@@ -1,31 +1,27 @@
 import {
-  Component, Input, HostListener, ChangeDetectorRef, SimpleChanges, ElementRef, ViewChild,
+  Component, Input, HostListener, ChangeDetectorRef, SimpleChanges,
   OnInit, OnDestroy, OnChanges
 } from '@angular/core';
-import { Subscription } from 'rxjs/Subscription';
 
 import {
-  OpenVidu, Session, Subscriber, Publisher, Stream, Connection,
-  LocalRecorder, VideoInsertMode, StreamEvent, ConnectionEvent,
-  SessionDisconnectedEvent, SignalEvent, RecordingEvent, VideoElementEvent,
-  PublisherSpeakingEvent, StreamManagerEvent, StreamManager, PublisherProperties
+  OpenVidu, Session, Subscriber, Publisher, VideoInsertMode, StreamEvent, ConnectionEvent,
+  SessionDisconnectedEvent, SignalEvent, RecordingEvent,
+  PublisherSpeakingEvent, PublisherProperties, StreamPropertyChangedEvent
 } from 'openvidu-browser';
 import {
   OpenVidu as OpenViduAPI,
-  Session as SessionAPI,
   SessionProperties as SessionPropertiesAPI,
   MediaMode,
   RecordingMode,
   RecordingLayout
 } from 'openvidu-node-client';
-import { MatDialog, MatDialogRef, MAT_CHECKBOX_CLICK_ACTION } from '@angular/material';
-import { ExtensionDialogComponent } from '../dialogs/extension-dialog.component';
-import { LocalRecordingDialogComponent } from '../dialogs/local-recording-dialog.component';
+import { MatDialog, MAT_CHECKBOX_CLICK_ACTION } from '@angular/material';
+import { ExtensionDialogComponent } from '../dialogs/extension-dialog/extension-dialog.component';
 import { TestFeedService } from '../../services/test-feed.service';
-import { EventsDialogComponent } from '../dialogs/events-dialog.component';
-import { SessionPropertiesDialogComponent } from '../dialogs/session-properties-dialog.component';
-import { SessionApiDialogComponent } from '../dialogs/session-api-dialog.component';
-import { PublisherPropertiesDialogComponent } from '../dialogs/publisher-properties-dialog.component';
+import { EventsDialogComponent } from '../dialogs/events-dialog/events-dialog.component';
+import { SessionPropertiesDialogComponent } from '../dialogs/session-properties-dialog/session-properties-dialog.component';
+import { SessionApiDialogComponent } from '../dialogs/session-api-dialog/session-api-dialog.component';
+import { PublisherPropertiesDialogComponent } from '../dialogs/publisher-properties-dialog/publisher-properties-dialog.component';
 
 
 export interface SessionConf {
@@ -105,6 +101,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     sessionDisconnected: true,
     streamCreated: true,
     streamDestroyed: true,
+    streamPropertyChanged: true,
     recordingStarted: true,
     recordingStopped: true,
     signal: true,
@@ -112,19 +109,16 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     publisherStopSpeaking: false
   };
 
+  turnConf = 'auto';
+  manualTurnConf: RTCIceServer = { urls: [] };
+
   events: OpenViduEvent[] = [];
 
   openviduError: any;
 
-  private publisherRecorder: LocalRecorder;
-  private publisherRecording = false;
-  private publisherPaused = false;
-  private muteSubscribersSubscription: Subscription;
-
   constructor(
     private changeDetector: ChangeDetectorRef,
     private dialog: MatDialog,
-    private recordDialog: MatDialog,
     private testFeedService: TestFeedService
   ) {
     this.generateSessionInfo();
@@ -168,7 +162,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
 
   private removeHttps = input => input.replace(/^https?:\/\//, '');
 
-  private joinSession(): void {
+  joinSession(): void {
 
     if (this.session) {
       this.leaveSession();
@@ -183,6 +177,12 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
 
     this.OV = new OpenVidu();
 
+    if (this.turnConf === 'freeice') {
+      this.OV.setAdvancedConfiguration({ iceServers: 'freeice' });
+    } else if (this.turnConf === 'manual') {
+      this.OV.setAdvancedConfiguration({ iceServers: [this.manualTurnConf] });
+    }
+
     this.session = this.OV.initSession();
 
     this.updateSessionEvents({
@@ -191,6 +191,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       sessionDisconnected: false,
       streamCreated: false,
       streamDestroyed: false,
+      streamPropertyChanged: false,
       recordingStarted: false,
       recordingStopped: false,
       signal: false,
@@ -285,7 +286,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       type: 'chat'
     })
       .then(() => {
-        console.log('Message succesfully sent');
+        console.log('Message successfully sent');
       })
       .catch(error => {
         console.error(error);
@@ -321,6 +322,16 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       }
     }
 
+    if (this.sessionEvents.streamPropertyChanged !== oldValues.streamPropertyChanged || firstTime) {
+      this.session.off('streamPropertyChanged');
+      if (this.sessionEvents.streamPropertyChanged) {
+        this.session.on('streamPropertyChanged', (event: StreamPropertyChangedEvent) => {
+          const newValue = event.changedProperty === 'videoDimensions' ? JSON.stringify(event.newValue) : event.newValue.toString();
+          this.updateEventList('streamPropertyChanged', event.changedProperty + ' [' + newValue + ']');
+        });
+      }
+    }
+
     if (this.sessionEvents.connectionCreated !== oldValues.connectionCreated || firstTime) {
       this.session.off('connectionCreated');
       if (this.sessionEvents.connectionCreated) {
@@ -345,10 +356,8 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       if (this.sessionEvents.sessionDisconnected) {
         this.session.on('sessionDisconnected', (event: SessionDisconnectedEvent) => {
           this.updateEventList('sessionDisconnected', 'No data');
-          if (event.reason === 'networkDisconnect') {
-            this.session = null;
-            this.OV = null;
-          }
+          this.session = null;
+          this.OV = null;
         });
       }
     }
@@ -471,16 +480,22 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   openSessionPropertiesDialog() {
     this.sessionProperties.customSessionId = this.sessionName;
     const dialogRef = this.dialog.open(SessionPropertiesDialogComponent, {
-      data: this.sessionProperties,
-      width: '235px'
+      data: {
+        sessionProperties: this.sessionProperties,
+        turnConf: this.turnConf,
+        manualTurnConf: this.manualTurnConf
+      },
+      width: '280px'
     });
 
-    dialogRef.afterClosed().subscribe((result: SessionPropertiesAPI) => {
+    dialogRef.afterClosed().subscribe((result) => {
       if (!!result) {
-        this.sessionProperties = result;
+        this.sessionProperties = result.sessionProperties;
         if (!!this.sessionProperties.customSessionId) {
           this.sessionName = this.sessionProperties.customSessionId;
         }
+        this.turnConf = result.turnConf;
+        this.manualTurnConf = result.manualTurnConf;
       }
       document.getElementById('session-settings-btn-' + this.index).classList.remove('cdk-program-focused');
     });
@@ -509,6 +524,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       sessionDisconnected: this.sessionEvents.sessionDisconnected,
       streamCreated: this.sessionEvents.streamCreated,
       streamDestroyed: this.sessionEvents.streamDestroyed,
+      streamPropertyChanged: this.sessionEvents.streamPropertyChanged,
       recordingStarted: this.sessionEvents.recordingStarted,
       recordingStopped: this.sessionEvents.recordingStopped,
       signal: this.sessionEvents.signal,
@@ -538,6 +554,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         sessionDisconnected: result.sessionDisconnected,
         streamCreated: result.streamCreated,
         streamDestroyed: result.streamDestroyed,
+        streamPropertyChanged: result.streamPropertyChanged,
         recordingStarted: result.recordingStarted,
         recordingStopped: result.recordingStopped,
         signal: result.signal,

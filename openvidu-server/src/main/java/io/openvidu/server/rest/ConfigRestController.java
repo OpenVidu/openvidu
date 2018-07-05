@@ -30,7 +30,7 @@ import io.openvidu.server.config.OpenviduConfig;
  * @author Pablo Fuente Pérez
  */
 @RestController
-@CrossOrigin(origins = "*")
+@CrossOrigin
 @RequestMapping("/config")
 public class ConfigRestController {
 

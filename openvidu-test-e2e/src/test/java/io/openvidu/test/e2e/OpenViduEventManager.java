@@ -17,6 +17,8 @@
 
 package io.openvidu.test.e2e;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -69,7 +71,7 @@ public class OpenViduEventManager {
 	private ExecutorService execService = Executors.newCachedThreadPool();
 	private WebDriver driver;
 	private Queue<JSONObject> eventQueue;
-	private Map<String, RunnableCallback> eventCallbacks;
+	private Map<String, Collection<RunnableCallback>> eventCallbacks;
 	private Map<String, AtomicInteger> eventNumbers;
 	private Map<String, CountDownLatch> eventCountdowns;
 	private AtomicBoolean isInterrupted = new AtomicBoolean(false);
@@ -113,7 +115,8 @@ public class OpenViduEventManager {
 	}
 
 	public void on(String eventName, Consumer<JSONObject> callback) {
-		this.eventCallbacks.put(eventName, new RunnableCallback(callback));
+		this.eventCallbacks.putIfAbsent(eventName, new HashSet<>());
+		this.eventCallbacks.get(eventName).add(new RunnableCallback(callback));
 	}
 
 	public void off(String eventName) {
@@ -164,10 +167,11 @@ public class OpenViduEventManager {
 
 			System.out.println(event.get("event") + ": " + event);
 
-			RunnableCallback callback = this.eventCallbacks.get(event.get("event"));
-			if (callback != null) {
-				callback.setEventResult(event);
-				execService.submit(callback);
+			if (this.eventCallbacks.containsKey(event.get("event"))) {
+				for (RunnableCallback callback : this.eventCallbacks.get(event.get("event"))) {
+					callback.setEventResult(event);
+					execService.submit(callback);
+				}
 			}
 		}
 	}
@@ -203,11 +207,17 @@ public class OpenViduEventManager {
 				.executeScript("var e = window.myEvents; window.myEvents = ''; return e;");
 		return events;
 	}
-	
+
 	public boolean hasMediaStream(WebElement videoElement) {
 		boolean hasMediaStream = (boolean) ((JavascriptExecutor) driver).executeScript(
 				"return (!!(document.getElementById('" + videoElement.getAttribute("id") + "').srcObject))");
 		return hasMediaStream;
+	}
+
+	public String getDimensionOfViewport() {
+		String dimension = (String) ((JavascriptExecutor) driver)
+				.executeScript("return (JSON.stringify({width: window.innerWidth, height: window.innerHeight}))");
+		return dimension;
 	}
 
 	private boolean hasAudioTracks(WebElement videoElement) {

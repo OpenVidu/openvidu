@@ -139,9 +139,9 @@ export class StreamManager implements EventDispatcher {
     on(type: string, handler: (event: Event) => void): EventDispatcher {
         this.ee.on(type, event => {
             if (event) {
-                console.info("Event '" + type + "' triggered", event);
+                console.info("Event '" + type + "' triggered by '" + (this.remote ? 'Subscriber' : 'Publisher') + "'", event);
             } else {
-                console.info("Event '" + type + "' triggered");
+                console.info("Event '" + type + "' triggered by '" + (this.remote ? 'Subscriber' : 'Publisher') + "'");
             }
             handler(event);
         });
@@ -229,8 +229,6 @@ export class StreamManager implements EventDispatcher {
         }
 
         let returnNumber = 1;
-
-        this.initializeVideoProperties(video);
 
         for (const streamManager of this.stream.session.streamManagers) {
             if (streamManager.disassociateVideo(video)) {
@@ -321,7 +319,10 @@ export class StreamManager implements EventDispatcher {
      * @hidden
      */
     initializeVideoProperties(video: HTMLVideoElement): void {
-        video.srcObject = this.stream.getMediaStream();
+        if (!(this.stream.isLocal() && this.stream.displayMyRemote())) {
+            // Avoid setting the MediaStream into the srcObject if remote subscription before publishing
+            video.srcObject = this.stream.getMediaStream();
+        }
         video.autoplay = true;
         video.controls = false;
         if (!video.id) {
@@ -397,6 +398,13 @@ export class StreamManager implements EventDispatcher {
         this.videos.forEach(streamManagerVideo => {
             streamManagerVideo.video.srcObject = mediaStream;
         });
+    }
+
+    /**
+     * @hidden
+     */
+    emitEvent(type: string, eventArray: any[]): void {
+        this.ee.emitEvent(type, eventArray);
     }
 
     private pushNewStreamManagerVideo(streamManagerVideo: StreamManagerVideo) {

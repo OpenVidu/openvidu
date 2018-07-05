@@ -20,6 +20,7 @@ package io.openvidu.test.e2e.browser;
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
 
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
@@ -27,7 +28,7 @@ import org.slf4j.Logger;
 import io.openvidu.test.e2e.OpenViduEventManager;
 
 public class BrowserUser {
-	
+
 	final static Logger log = getLogger(lookup().lookupClass());
 
 	protected WebDriver driver;
@@ -56,7 +57,7 @@ public class BrowserUser {
 	public String getClientData() {
 		return this.clientData;
 	}
-	
+
 	public int getTimeOfWait() {
 		return this.timeOfWaitInSeconds;
 	}
@@ -68,8 +69,9 @@ public class BrowserUser {
 	protected void configureDriver() {
 		this.waiter = new WebDriverWait(this.driver, this.timeOfWaitInSeconds);
 		this.eventManager = new OpenViduEventManager(this.driver, this.timeOfWaitInSeconds);
+		this.driver.manage().window().setSize(new Dimension(1920,1080));
 	}
-	
+
 	public void dispose() {
 		this.eventManager.stopPolling();
 		this.driver.quit();

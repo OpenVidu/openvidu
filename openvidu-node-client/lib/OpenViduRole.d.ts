@@ -10,5 +10,5 @@ export declare enum OpenViduRole {
     /**
      * _(not available yet)_ SUBSCRIBER + PUBLIHSER permissions + can force `unpublish()` and `disconnect()` over a third-party stream or user
      */
-    MODERATOR = "MODERATOR",
+    MODERATOR = "MODERATOR"
 }

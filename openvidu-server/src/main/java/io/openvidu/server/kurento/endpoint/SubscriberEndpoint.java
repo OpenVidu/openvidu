@@ -17,6 +17,7 @@
 
 package io.openvidu.server.kurento.endpoint;
 
+import org.json.simple.JSONObject;
 import org.kurento.client.MediaPipeline;
 import org.kurento.client.MediaType;
 import org.slf4j.Logger;
@@ -32,65 +33,85 @@ import io.openvidu.server.kurento.core.KurentoParticipant;
  * @author <a href="mailto:rvlad@naevatec.com">Radu Tom Vlad</a>
  */
 public class SubscriberEndpoint extends MediaEndpoint {
-  private final static Logger log = LoggerFactory.getLogger(SubscriberEndpoint.class);
+	private final static Logger log = LoggerFactory.getLogger(SubscriberEndpoint.class);
 
-  private boolean connectedToPublisher = false;
+	private boolean connectedToPublisher = false;
 
-  private PublisherEndpoint publisher = null;
+	private PublisherEndpoint publisher = null;
 
-  public SubscriberEndpoint(boolean web, KurentoParticipant owner, String endpointName,
-      MediaPipeline pipeline) {
-    super(web, owner, endpointName, pipeline, log);
-  }
+	public SubscriberEndpoint(boolean web, KurentoParticipant owner, String endpointName, MediaPipeline pipeline) {
+		super(web, owner, endpointName, pipeline, log);
+	}
 
-  public synchronized String subscribe(String sdpOffer, PublisherEndpoint publisher) {
-    registerOnIceCandidateEventListener();
-    String sdpAnswer = processOffer(sdpOffer);
-    gatherCandidates();
-    publisher.connect(this.getEndpoint());
-    setConnectedToPublisher(true);
-    setPublisher(publisher);
-    return sdpAnswer;
-  }
+	public synchronized String subscribe(String sdpOffer, PublisherEndpoint publisher) {
+		registerOnIceCandidateEventListener();
+		String sdpAnswer = processOffer(sdpOffer);
+		gatherCandidates();
+		publisher.connect(this.getEndpoint());
+		setConnectedToPublisher(true);
+		setPublisher(publisher);
+		return sdpAnswer;
+	}
 
-  public boolean isConnectedToPublisher() {
-    return connectedToPublisher;
-  }
+	public boolean isConnectedToPublisher() {
+		return connectedToPublisher;
+	}
 
-  public void setConnectedToPublisher(boolean connectedToPublisher) {
-    this.connectedToPublisher = connectedToPublisher;
-  }
+	public void setConnectedToPublisher(boolean connectedToPublisher) {
+		this.connectedToPublisher = connectedToPublisher;
+	}
 
-  public PublisherEndpoint getPublisher() {
-    return publisher;
-  }
+	@Override
+	public PublisherEndpoint getPublisher() {
+		return this.publisher;
+	}
 
-  public void setPublisher(PublisherEndpoint publisher) {
-    this.publisher = publisher;
-  }
+	public void setPublisher(PublisherEndpoint publisher) {
+		this.publisher = publisher;
+	}
 
-  @Override
-  public synchronized void mute(io.openvidu.server.kurento.MutedMediaType muteType) {
-    if (this.publisher == null) {
-      throw new OpenViduException(Code.MEDIA_MUTE_ERROR_CODE, "Publisher endpoint not found");
-    }
-    switch (muteType) {
-      case ALL :
-        this.publisher.disconnectFrom(this.getEndpoint());
-        break;
-      case AUDIO :
-        this.publisher.disconnectFrom(this.getEndpoint(), MediaType.AUDIO);
-        break;
-      case VIDEO :
-        this.publisher.disconnectFrom(this.getEndpoint(), MediaType.VIDEO);
-        break;
-    }
-    resolveCurrentMuteType(muteType);
-  }
+	@Override
+	public synchronized void mute(io.openvidu.server.kurento.MutedMediaType muteType) {
+		if (this.publisher == null) {
+			throw new OpenViduException(Code.MEDIA_MUTE_ERROR_CODE, "Publisher endpoint not found");
+		}
+		switch (muteType) {
+		case ALL:
+			this.publisher.disconnectFrom(this.getEndpoint());
+			break;
+		case AUDIO:
+			this.publisher.disconnectFrom(this.getEndpoint(), MediaType.AUDIO);
+			break;
+		case VIDEO:
+			this.publisher.disconnectFrom(this.getEndpoint(), MediaType.VIDEO);
+			break;
+		}
+		resolveCurrentMuteType(muteType);
+	}
 
-  @Override
-  public synchronized void unmute() {
-    this.publisher.connect(this.getEndpoint());
-    setMuteType(null);
-  }
+	@Override
+	public synchronized void unmute() {
+		this.publisher.connect(this.getEndpoint());
+		setMuteType(null);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public JSONObject toJSON() {
+		JSONObject json = super.toJSON();
+		json.put("streamId", this.publisher.getEndpoint().getTag("name"));
+		json.put("publisher", this.publisher.getEndpointName());
+		return json;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public JSONObject withStatsToJSON() {
+		JSONObject json = super.withStatsToJSON();
+		JSONObject toJSON = this.toJSON();
+		for (Object key : toJSON.keySet()) {
+			json.put(key, toJSON.get(key));
+		}
+		return json;
+	}
 }

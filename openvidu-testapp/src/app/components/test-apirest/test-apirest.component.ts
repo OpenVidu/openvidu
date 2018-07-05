@@ -1,5 +1,5 @@
 import { Component, Input, OnInit, OnDestroy } from '@angular/core';
-import { Subscription } from 'rxjs/Subscription';
+import { Subscription } from 'rxjs';
 import { OpenviduRestService } from '../../services/openvidu-rest.service';
 import { OpenviduParamsService } from '../../services/openvidu-params.service';
 import { SessionProperties, RecordingMode, RecordingLayout, MediaMode } from 'openvidu-node-client';
@@ -71,7 +71,7 @@ export class TestApirestComponent implements OnInit, OnDestroy {
     if (!!this.paramsSubscription) { this.paramsSubscription.unsubscribe(); }
   }
 
-  private getSessionId() {
+  getSessionId() {
     this.openviduRestService.getSessionId(this.openviduUrl, this.openviduSecret,
       {
         recordingMode: RecordingMode[this.selectedRecordingMode],
@@ -88,7 +88,7 @@ export class TestApirestComponent implements OnInit, OnDestroy {
       });
   }
 
-  private getToken() {
+  getToken() {
     const sessionId = this.data[this.selectedRadioIndex][0];
 
     this.openviduRestService.getToken(this.openviduUrl, this.openviduSecret, sessionId, this.selectedRole, this.serverData)
@@ -100,19 +100,19 @@ export class TestApirestComponent implements OnInit, OnDestroy {
       });
   }
 
-  private updateData() {
+  updateData() {
     this.data = Array.from(this.openviduRestService.getAvailableParams());
   }
 
-  private getTokenDisabled(): boolean {
+  getTokenDisabled(): boolean {
     return ((this.data.length === 0) || this.selectedRadioIndex === undefined);
   }
 
-  private getBackgroundColor(index: number) {
+  getBackgroundColor(index: number) {
     return this.cg[((index + 1) * 15) % numColors];
   }
 
-  private cleanAllSessions() {
+  cleanAllSessions() {
     this.data = [];
     this.openviduRestService.sessionIdSession.clear();
     this.openviduRestService.sessionIdTokenOpenViduRole.clear();

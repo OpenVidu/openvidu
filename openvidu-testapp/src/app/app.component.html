@@ -3,14 +3,15 @@
     <div layout-align='center center' layout='column'>
       <a id="nav-logo" routerLink="/"><img id="nav-img" src="assets/images/openvidu_vert_white_bg_trans_cropped.png"/> TestApp</a>
       <a mat-button routerLink="/test-sessions"><span>SESSIONS</span></a>
+      <a mat-button routerLink="/test-scenarios"><span>SCENARIOS</span></a>
       <a mat-button routerLink="/test-apirest"><span>API REST</span></a>
     </div>
   </mat-toolbar>
   <main>
-    <mat-form-field>
+    <mat-form-field appearance="outline">
       <input id="openvidu-url" matInput placeholder="OpenVidu Server URL" [ngModel]="openviduURL" (ngModelChange)="updateUrl($event)">
     </mat-form-field>
-    <mat-form-field>
+    <mat-form-field appearance="outline">
       <input id="openvidu-secret" matInput placeholder="OpenVidu Server Secret" [ngModel]="openviduSecret" (ngModelChange)="updateSecret($event)">
     </mat-form-field>
     <router-outlet></router-outlet>

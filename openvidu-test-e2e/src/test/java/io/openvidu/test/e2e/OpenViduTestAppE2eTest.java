@@ -18,9 +18,9 @@
 package io.openvidu.test.e2e;
 
 import static java.lang.invoke.MethodHandles.lookup;
-import static org.slf4j.LoggerFactory.getLogger;
+import static org.junit.Assert.fail;
 import static org.openqa.selenium.OutputType.BASE64;
-import org.slf4j.Logger;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
 import java.util.Arrays;
@@ -28,28 +28,38 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.runner.RunWith;
-import org.junit.platform.runner.JUnitPlatform;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import org.junit.Assert;
-
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.platform.runner.JUnitPlatform;
+import org.junit.runner.RunWith;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.slf4j.Logger;
 
 import io.github.bonigarcia.SeleniumExtension;
-import io.github.bonigarcia.wdm.ChromeDriverManager;
-import io.github.bonigarcia.wdm.FirefoxDriverManager;
-
+import io.github.bonigarcia.wdm.WebDriverManager;
 import io.openvidu.test.e2e.browser.BrowserUser;
+import io.openvidu.test.e2e.browser.ChromeAndroidUser;
 import io.openvidu.test.e2e.browser.ChromeUser;
 import io.openvidu.test.e2e.browser.FirefoxUser;
+import io.openvidu.test.e2e.browser.OperaUser;
 
 /**
  * E2E tests for openvidu-testapp.
@@ -75,8 +85,8 @@ public class OpenViduTestAppE2eTest {
 
 	@BeforeAll()
 	static void setupAll() {
-		ChromeDriverManager.getInstance().setup();
-		FirefoxDriverManager.getInstance().setup();
+		WebDriverManager.chromedriver().setup();
+		WebDriverManager.firefoxdriver().setup();
 
 		String appUrl = System.getProperty("APP_URL");
 		if (appUrl != null) {
@@ -105,6 +115,15 @@ public class OpenViduTestAppE2eTest {
 			break;
 		case "firefox":
 			this.user = new FirefoxUser("TestUser", 50);
+			break;
+		case "opera":
+			this.user = new OperaUser("TestUser", 50);
+			break;
+		case "chromeAndroid":
+			this.user = new ChromeAndroidUser("TestUser", 50);
+			break;
+		case "chromeAlternateScreenShare":
+			this.user = new ChromeUser("TestUser", 50, "OpenVidu TestApp");
 			break;
 		default:
 			this.user = new ChromeUser("TestUser", 50);
@@ -304,7 +323,7 @@ public class OpenViduTestAppE2eTest {
 
 		user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
 		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
-		
+
 		Thread.sleep(3000);
 
 		try {
@@ -656,9 +675,14 @@ public class OpenViduTestAppE2eTest {
 
 		user.getDriver().findElement(By.id("auto-join-checkbox")).click();
 
+		final CountDownLatch latch1 = new CountDownLatch(2);
+
 		// First publication (audio + video [CAMERA])
 		user.getEventManager().on("streamPlaying", (event) -> {
-			threadAssertions.add(((String) event.get("eventContent")).contains("CAMERA"));
+			if (event.get("eventContent") != null) {
+				threadAssertions.add(((String) event.get("eventContent")).contains("CAMERA"));
+			}
+			latch1.countDown();
 		});
 		user.getDriver().findElement(By.id("one2many-btn")).click();
 
@@ -668,6 +692,13 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
 		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
+
+		if (!latch1.await(8000, TimeUnit.MILLISECONDS)) {
+			gracefullyLeaveParticipants(2);
+			fail();
+			return;
+		}
+
 		user.getEventManager().off("streamPlaying");
 		for (Iterator<Boolean> iter = threadAssertions.iterator(); iter.hasNext();) {
 			Assert.assertTrue(iter.next());
@@ -680,15 +711,27 @@ public class OpenViduTestAppE2eTest {
 
 		Thread.sleep(2000);
 
+		final CountDownLatch latch2 = new CountDownLatch(2);
+
 		// Second publication (only video (SCREEN))
 		user.getEventManager().on("streamPlaying", (event) -> {
-			threadAssertions.add(((String) event.get("eventContent")).contains("SCREEN"));
+			if (event.get("eventContent") != null) {
+				threadAssertions.add(((String) event.get("eventContent")).contains("SCREEN"));
+			}
+			latch2.countDown();
 		});
 		user.getDriver().findElements(By.className("change-publisher-btn")).get(0).click();
 		user.getEventManager().waitUntilEventReaches("streamDestroyed", 2);
 		user.getEventManager().waitUntilEventReaches("accessAllowed", 2);
 		user.getEventManager().waitUntilEventReaches("streamCreated", 4);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
+
+		if (!latch2.await(8000, TimeUnit.MILLISECONDS)) {
+			gracefullyLeaveParticipants(2);
+			fail();
+			return;
+		}
+
 		user.getEventManager().off("streamPlaying");
 		for (Iterator<Boolean> iter = threadAssertions.iterator(); iter.hasNext();) {
 			Assert.assertTrue(iter.next());
@@ -700,15 +743,27 @@ public class OpenViduTestAppE2eTest {
 
 		Thread.sleep(2000);
 
+		final CountDownLatch latch3 = new CountDownLatch(2);
+
 		// Third publication (audio + video [CAMERA])
 		user.getEventManager().on("streamPlaying", (event) -> {
-			threadAssertions.add(((String) event.get("eventContent")).contains("CAMERA"));
+			if (event.get("eventContent") != null) {
+				threadAssertions.add(((String) event.get("eventContent")).contains("CAMERA"));
+			}
+			latch3.countDown();
 		});
 		user.getDriver().findElements(By.className("change-publisher-btn")).get(0).click();
 		user.getEventManager().waitUntilEventReaches("streamDestroyed", 4);
 		user.getEventManager().waitUntilEventReaches("accessAllowed", 3);
 		user.getEventManager().waitUntilEventReaches("streamCreated", 6);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 6);
+
+		if (!latch3.await(8000, TimeUnit.MILLISECONDS)) {
+			gracefullyLeaveParticipants(2);
+			fail();
+			return;
+		}
+
 		user.getEventManager().off("streamPlaying");
 		for (Iterator<Boolean> iter = threadAssertions.iterator(); iter.hasNext();) {
 			Assert.assertTrue(iter.next());
@@ -717,6 +772,111 @@ public class OpenViduTestAppE2eTest {
 
 		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
 				true, true));
+
+		gracefullyLeaveParticipants(2);
+
+	}
+
+	@Test
+	@DisplayName("Stream property changed event")
+	void streamPropertyChangedEvent() throws Exception {
+
+		Queue<Boolean> threadAssertions = new ConcurrentLinkedQueue<Boolean>();
+
+		setupBrowser("chromeAlternateScreenShare");
+
+		log.info("Stream property changed event");
+
+		WebElement oneToManyInput = user.getDriver().findElement(By.id("one2many-input"));
+		oneToManyInput.clear();
+		oneToManyInput.sendKeys("1");
+
+		user.getDriver().findElement(By.id("one2many-btn")).click();
+		user.getDriver().findElement(By.className("screen-radio")).click();
+
+		List<WebElement> joinButtons = user.getDriver().findElements(By.className("join-btn"));
+		for (WebElement el : joinButtons) {
+			el.sendKeys(Keys.ENTER);
+		}
+
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
+
+		// Unpublish video
+		final CountDownLatch latch1 = new CountDownLatch(2);
+		user.getEventManager().on("streamPropertyChanged", (event) -> {
+			threadAssertions.add(((String) event.get("eventContent")).contains("videoActive [false]"));
+			latch1.countDown();
+		});
+		user.getDriver().findElements(By.className("pub-video-btn")).get(0).click();
+		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 2);
+
+		if (!latch1.await(5000, TimeUnit.MILLISECONDS)) {
+			gracefullyLeaveParticipants(2);
+			fail();
+			return;
+		}
+
+		user.getEventManager().off("streamPropertyChanged");
+		for (Iterator<Boolean> iter = threadAssertions.iterator(); iter.hasNext();) {
+			Assert.assertTrue(iter.next());
+			iter.remove();
+		}
+
+		// Unpublish audio
+		final CountDownLatch latch2 = new CountDownLatch(2);
+		user.getEventManager().on("streamPropertyChanged", (event) -> {
+			threadAssertions.add(((String) event.get("eventContent")).contains("audioActive [false]"));
+			latch2.countDown();
+		});
+		user.getDriver().findElements(By.className("pub-audio-btn")).get(0).click();
+		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 4);
+
+		if (!latch2.await(5000, TimeUnit.MILLISECONDS)) {
+			gracefullyLeaveParticipants(2);
+			fail();
+			return;
+		}
+
+		user.getEventManager().off("streamPropertyChanged");
+		for (Iterator<Boolean> iter = threadAssertions.iterator(); iter.hasNext();) {
+			Assert.assertTrue(iter.next());
+			iter.remove();
+		}
+
+		// Resize captured window
+		final CountDownLatch latch3 = new CountDownLatch(2);
+		int newWidth = 1500;
+		int newHeight = 500;
+
+		user.getDriver().manage().window().setSize(new Dimension(newWidth, newHeight));
+
+		String widthAndHeight = user.getEventManager().getDimensionOfViewport();
+		JSONObject obj = (JSONObject) new JSONParser().parse(widthAndHeight);
+
+		System.out.println("New viewport dimension: " + obj.toJSONString());
+
+		user.getEventManager().on("streamPropertyChanged", (event) -> {
+			threadAssertions.add(((String) event.get("eventContent")).contains(
+					"videoDimensions [{\"width\":" + obj.get("width") + ",\"height\":" + obj.get("height") + "}]"));
+			latch3.countDown();
+		});
+
+		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 6);
+
+		if (!latch3.await(5000, TimeUnit.MILLISECONDS)) {
+			gracefullyLeaveParticipants(2);
+			fail();
+			return;
+		}
+
+		user.getEventManager().off("streamPropertyChanged");
+		for (Iterator<Boolean> iter = threadAssertions.iterator(); iter.hasNext();) {
+			Assert.assertTrue(iter.next());
+			iter.remove();
+		}
 
 		gracefullyLeaveParticipants(2);
 
@@ -791,7 +951,7 @@ public class OpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.id("start-recording-btn")).click();
 		user.getWaiter()
 				.until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Error [404]"));
-		
+
 		listEmptyRecordings();
 
 		// Try to stop a non-existing recording
@@ -905,6 +1065,39 @@ public class OpenViduTestAppE2eTest {
 
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 
+		gracefullyLeaveParticipants(1);
+
+	}
+
+	@Test
+	@Disabled
+	@DisplayName("One2One Opera [Video + Audio]")
+	void oneToOneVideoAudioSessionOpera() throws Exception {
+
+		WebDriverManager.operadriver().setup();
+		setupBrowser("opera");
+
+		log.info("One2One Opera [Video + Audio]");
+
+		user.getDriver().findElement(By.id("auto-join-checkbox")).click();
+		user.getDriver().findElement(By.id("one2one-btn")).click();
+
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 2);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 4);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
+
+		try {
+			System.out.println(getBase64Screenshot(user));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		Assert.assertEquals(user.getDriver().findElements(By.tagName("video")).size(), 4);
+		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
+				true, true));
+
+		gracefullyLeaveParticipants(2);
 	}
 
 	private void listEmptyRecordings() {

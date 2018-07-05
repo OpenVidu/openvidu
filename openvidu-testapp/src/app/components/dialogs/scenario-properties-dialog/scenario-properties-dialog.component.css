@@ -1,0 +1,73 @@
+mat-chip {
+    margin: 0 0 5px 0 !important;
+    height: 25px;
+    max-width: 180px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    cursor: pointer !important;
+}
+
+mat-divider {
+    margin-top: 10px !important;
+    margin-bottom: 5px !important;
+}
+
+button.device-btn {
+    height: 30px;
+    width: 30px;
+    line-height: 30px;
+}
+
+button.device-btn mat-icon {
+    width: 20px;
+    height: 20px;
+    font-size: 20px;
+    line-height: 20px;
+}
+
+div.mat-form-field-subscript-wrapper {
+    margin-top: 0 !important;
+}
+
+mat-checkbox {
+    margin-right: 4px;
+}
+
+mat-radio-button {
+    margin-left: 5px;
+    font-size: 14px;
+}
+
+mat-radio-button:first-child {
+    margin-left: 0;
+}
+
+.not-manual {
+    padding-top: 6px;
+    padding-bottom: 25px;
+}
+
+.conf-label {
+    display: block;
+    font-size: 12px;
+    color: rgba(0, 0, 0, 0.54);
+    font-weight: 400;
+    margin-bottom: 5px;
+}
+
+.conf-label {
+    display: block;
+    font-size: 12px;
+    color: rgba(0, 0, 0, 0.54);
+    font-weight: 400;
+    margin-bottom: 5px;
+}
+
+#manual-turn-div {
+    margin-top: 10px;
+    margin-bottom: 25px;
+    padding: 5px;
+    border: 1px solid #00000026;
+    border-radius: 3px;
+}

@@ -75,8 +75,8 @@
             <mat-card [style.background]="getBackgroundColor(ind)">{{sid[0]}}</mat-card>
           </td>
           <td>
-            <mat-card *ngIf="sid[1].length > 0" [style.background]="getBackgroundColor(ind)">
-              <p *ngFor="let token of sid[1]">{{token}}</p>
+            <mat-card *ngIf="sid[1].length > 0" [style.background]="getBackgroundColor(ind)" style="max-width: 700px">
+              <p *ngFor="let token of sid[1]" style="word-wrap: break-word">{{token}}</p>
             </mat-card>
           </td>
         </tr>

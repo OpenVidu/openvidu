@@ -19,7 +19,6 @@ import { Session } from './Session';
 import { Stream } from './Stream';
 import { ConnectionOptions } from '../OpenViduInternal/Interfaces/Private/ConnectionOptions';
 import { InboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/InboundStreamOptions';
-import { OutboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/OutboundStreamOptions';
 import { StreamOptionsServer } from '../OpenViduInternal/Interfaces/Private/StreamOptionsServer';
 
 
@@ -95,7 +94,7 @@ export class Connection {
     /**
      * @hidden
      */
-    sendIceCandidate(candidate): void {
+    sendIceCandidate(candidate: RTCIceCandidate): void {
 
         console.debug((!!this.stream.outboundStreamOpts ? 'Local' : 'Remote'), 'candidate for',
             this.connectionId, JSON.stringify(candidate));
@@ -124,10 +123,13 @@ export class Connection {
             const streamOptions: InboundStreamOptions = {
                 id: opts.id,
                 connection: this,
+                hasAudio: opts.hasAudio,
+                hasVideo: opts.hasVideo,
+                audioActive: opts.audioActive,
+                videoActive: opts.videoActive,
+                typeOfVideo: opts.typeOfVideo,
                 frameRate: opts.frameRate,
-                recvAudio: opts.audioActive,
-                recvVideo: opts.videoActive,
-                typeOfVideo: opts.typeOfVideo
+                videoDimensions: !!opts.videoDimensions ? JSON.parse(opts.videoDimensions) : undefined
             };
             const stream = new Stream(this.session, streamOptions);
 

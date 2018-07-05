@@ -14,5 +14,14 @@ main {
 
 mat-toolbar a {
   padding: 0 10px 0 10px;
+  margin: 0 3px 0 3px;
   font-weight: bold;
+}
+
+mat-toolbar a:first-of-type {
+  margin-left: 0;
+}
+
+main > mat-form-field:first-of-type {
+  margin-right: 5px;
 }

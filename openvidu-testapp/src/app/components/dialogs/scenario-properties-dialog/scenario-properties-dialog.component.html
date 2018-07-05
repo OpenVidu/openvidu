@@ -1,0 +1,61 @@
+<div>
+    <h2 mat-dialog-title>Scenario properties</h2>
+    <mat-dialog-content>
+        <label class="conf-label">Turn configuration</label>
+        <div [class.not-manual]="turnConf !== 'manual'">
+            <mat-radio-group name="Turn configuration" [(ngModel)]="turnConf">
+                <mat-radio-button value="auto">Auto</mat-radio-button>
+                <mat-radio-button value="freeice">Freeice</mat-radio-button>
+                <mat-radio-button value="manual">Manual</mat-radio-button>
+            </mat-radio-group>
+            <div *ngIf="turnConf === 'manual'" id="manual-turn-div">
+                <mat-form-field style="width: 100%">
+                    <input matInput placeholder="url" [(ngModel)]="manualTurnConf.urls[0]">
+                </mat-form-field>
+                <mat-form-field style="width: 49%; padding-right: 2px">
+                    <input matInput placeholder="user" [(ngModel)]="manualTurnConf.username">
+                </mat-form-field>
+                <mat-form-field style="width: 49%; padding-left: 2px">
+                    <input matInput placeholder="pass" [(ngModel)]="manualTurnConf.credential">
+                </mat-form-field>
+            </div>
+        </div>
+        <label class="conf-label">Publisher configuration</label>
+        <mat-checkbox (click)="toggleAudio()" [checked]="publisherProperties.audioSource !== false">Audio</mat-checkbox>
+        <mat-checkbox (click)="toggleVideo()" [checked]="publisherProperties.videoSource !== false">Video</mat-checkbox>
+        <mat-divider></mat-divider>
+        <mat-form-field>
+            <input matInput placeholder="Audio source" [(ngModel)]="audioSource" [disabled]="(publisherProperties.audioSource === false)">
+        </mat-form-field>
+        <button mat-icon-button class="device-btn" title="List audio devices" (click)="listAudioDevices()">
+            <mat-icon aria-label="List audio devices">add_circle</mat-icon>
+        </button>
+        <button *ngIf="audioDevices.length > 0" mat-icon-button class="device-btn" title="Clear audio devices" (click)="audioDevices = []">
+            <mat-icon aria-label="Clear audio devices">clear</mat-icon>
+        </button>
+        <mat-chip-list *ngIf="audioDevices.length > 0">
+            <mat-chip *ngFor="let audioDevice of audioDevices" (click)="audioSource=audioDevice.deviceId">{{audioDevice.label}}</mat-chip>
+        </mat-chip-list>
+        <mat-form-field>
+            <input matInput placeholder="Video source" [(ngModel)]="videoSource" [disabled]="(publisherProperties.videoSource === false)">
+        </mat-form-field>
+        <button mat-icon-button class="device-btn" title="List video devices" (click)="listVideoDevices()">
+            <mat-icon aria-label="List video devices">add_circle</mat-icon>
+        </button>
+        <button *ngIf="videoDevices.length > 0" mat-icon-button class="device-btn" title="Clear video devices" (click)="videoDevices = []">
+            <mat-icon aria-label="Clear video devices">clear</mat-icon>
+        </button>
+        <mat-chip-list *ngIf="videoDevices.length > 0">
+            <mat-chip *ngFor="let videoDevice of videoDevices" (click)="videoSource=videoDevice.deviceId">{{videoDevice.label}}</mat-chip>
+        </mat-chip-list>
+        <mat-divider></mat-divider>
+        <mat-form-field>
+            <input matInput placeholder="Resolution" [(ngModel)]="publisherProperties.resolution">
+        </mat-form-field>
+        <mat-form-field>
+            <input matInput placeholder="Framerate" [(ngModel)]="publisherProperties.frameRate" type="number">
+        </mat-form-field>
+    </mat-dialog-content>
+    <button mat-button [mat-dialog-close]="undefined">CANCEL</button>
+    <button mat-button [mat-dialog-close]="setCloseValue()">SAVE</button>
+</div>

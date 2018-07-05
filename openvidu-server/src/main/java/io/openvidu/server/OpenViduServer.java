@@ -14,6 +14,7 @@
  * limitations under the License.
  *
  */
+
 package io.openvidu.server;
 
 import java.io.IOException;
@@ -44,9 +45,12 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
+import io.openvidu.server.cdr.CDRLoggerFile;
 import io.openvidu.server.cdr.CallDetailRecord;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.SessionManager;
+import io.openvidu.server.coturn.CoturnCredentialsService;
+import io.openvidu.server.coturn.CoturnCredentialsServiceFactory;
 import io.openvidu.server.kurento.AutodiscoveryKurentoClientProvider;
 import io.openvidu.server.kurento.KurentoClientProvider;
 import io.openvidu.server.kurento.core.KurentoSessionEventsHandler;
@@ -74,7 +78,7 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	public static final String KMSS_URIS_PROPERTY = "kms.uris";
 
 	public static String publicUrl;
-	
+
 	private String ngrokAppUrl = "";
 
 	@Bean
@@ -129,19 +133,24 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	@Bean
 	@ConditionalOnMissingBean
 	public CallDetailRecord cdr() {
-		return new CallDetailRecord();
+		return new CallDetailRecord(new CDRLoggerFile());
 	}
-	
+
 	@Bean
 	@ConditionalOnMissingBean
 	public OpenviduConfig openviduConfig() {
 		return new OpenviduConfig();
 	}
-	
+
 	@Bean
 	@ConditionalOnMissingBean
 	public ComposedRecordingService composedRecordingService() {
 		return new ComposedRecordingService();
+	}
+
+	@Bean
+	public CoturnCredentialsService coturnCredentialsService() {
+		return new CoturnCredentialsServiceFactory(openviduConfig()).getCoturnCredentialsService();
 	}
 
 	@Override
@@ -152,15 +161,15 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	private static String getContainerIp() throws IOException, InterruptedException {
 		return CommandExecutor.execCommand("/bin/sh", "-c", "hostname -i | awk '{print $1}'");
 	}
-	
+
 	public static void main(String[] args) throws Exception {
 		log.info("Using /dev/urandom for secure random generation");
 		System.setProperty("java.security.egd", "file:/dev/./urandom");
 		SpringApplication.run(OpenViduServer.class, args);
 	}
-	
+
 	@PostConstruct
-    public void init() throws MalformedURLException, InterruptedException {
+	public void init() throws MalformedURLException, InterruptedException {
 		OpenviduConfig openviduConf = openviduConfig();
 
 		String publicUrl = openviduConf.getOpenViduPublicUrl();
@@ -174,13 +183,13 @@ public class OpenViduServer implements JsonRpcConfigurer {
 				if (ngrokAppUrl.isEmpty()) {
 					ngrokAppUrl = "(No tunnel 'app' found in ngrok.yml)";
 				}
-				
+
 				// For frontend-only applications overriding openvidu-server dashboard...
 				String ngrokServerUrl = ngrok.getNgrokServerUrl();
 				if (ngrokServerUrl.isEmpty()) {
 					ngrokServerUrl = ngrok.getNgrokAppUrl();
 				}
-				
+
 				OpenViduServer.publicUrl = ngrokServerUrl.replaceFirst("https://", "wss://");
 				openviduConf.setFinalUrl(ngrokServerUrl);
 
@@ -193,8 +202,9 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 		case "docker":
 			try {
-				OpenViduServer.publicUrl = "wss://" + getContainerIp() + ":" + openviduConf.getServerPort();
-				openviduConf.setFinalUrl("https://" + getContainerIp() + ":" + openviduConf.getServerPort());
+				String containerIp = getContainerIp();
+				OpenViduServer.publicUrl = "wss://" + containerIp + ":" + openviduConf.getServerPort();
+				openviduConf.setFinalUrl("https://" + containerIp + ":" + openviduConf.getServerPort());
 			} catch (Exception e) {
 				log.error("Docker container IP was configured, but there was an error obtaining IP: "
 						+ e.getClass().getName() + " " + e.getMessage());
@@ -288,11 +298,11 @@ public class OpenViduServer implements JsonRpcConfigurer {
 		}
 		log.info("OpenVidu Server using " + type + " URL: [" + OpenViduServer.publicUrl + "]");
 	}
-	
+
 	@EventListener(ApplicationReadyEvent.class)
 	public void printNgrokUrl() {
-	    if (!this.ngrokAppUrl.isEmpty()) {
-	    	final String NEW_LINE = System.getProperty("line.separator");
+		if (!this.ngrokAppUrl.isEmpty()) {
+			final String NEW_LINE = System.lineSeparator();
 			String str = 	NEW_LINE +
 							NEW_LINE + "      APP PUBLIC IP      " + 
 							NEW_LINE + "-------------------------" + 
@@ -300,7 +310,7 @@ public class OpenViduServer implements JsonRpcConfigurer {
 							NEW_LINE + "-------------------------" + 
 							NEW_LINE;
 			log.info(str);
-	    }
+		}
 	}
 
 }

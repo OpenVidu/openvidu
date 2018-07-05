@@ -21,5 +21,5 @@ export declare enum VideoInsertMode {
     /**
      * Video replaces target element
      */
-    REPLACE = "REPLACE",
+    REPLACE = "REPLACE"
 }

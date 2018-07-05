@@ -1,0 +1,35 @@
+mat-chip {
+    margin: 0 0 5px 0 !important;
+    height: 25px;
+    max-width: 180px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    cursor: pointer !important;
+}
+
+mat-divider {
+    margin-top: 10px !important;
+    margin-bottom: 5px !important;
+}
+
+button.device-btn {
+    height: 30px;
+    width: 30px;
+    line-height: 30px;
+}
+
+button.device-btn mat-icon {
+    width: 20px;
+    height: 20px;
+    font-size: 20px;
+    line-height: 20px;
+}
+
+div.mat-form-field-subscript-wrapper {
+    margin-top: 0 !important;
+}
+
+mat-checkbox {
+    margin-right: 4px;
+}

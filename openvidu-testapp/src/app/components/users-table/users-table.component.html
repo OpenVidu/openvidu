@@ -1,0 +1,24 @@
+<table class="mat-elevation-z8">
+    <tr class="mat-row">
+        <th class="mat-cell">
+            <p id="number-of-streams">STREAMS</p>
+            <p>
+                <span [matBadge]="numberOfStreams.out" matBadgeOverlap="false">OUT</span>
+            </p>
+            <p>
+                <span [matBadge]="numberOfStreams.in" matBadgeOverlap="false">IN</span>
+            </p>
+        </th>
+        <th *ngFor="let publisher of publishers" class="mat-cell">
+            <p>{{publisher.streamManager.stream.connection.connectionId}} | {{publisher.streamManager.stream.streamId}}</p>
+            <app-table-video [streamManager]="publisher" (readyForReport)="emitReadyForReport($event)" (clickIcon)="emitFocusOnReport($event)"></app-table-video>
+        </th>
+    </tr>
+    <tr *ngFor="let connectionId of connections" class="mat-row">
+        <td class="mat-cell">{{connectionId}}</td>
+        <td *ngFor="let publisher of publishers" class="mat-cell">
+            <app-table-video *ngIf="connectionId !== publisher.streamManager.stream.connection.connectionId && getSubscriber(connectionId, publisher.streamManager) as sub"
+                [streamManager]="sub" (readyForReport)="emitReadyForReport($event)" (clickIcon)="emitFocusOnReport($event)"></app-table-video>
+        </td>
+    </tr>
+</table>

@@ -64,7 +64,7 @@ export declare enum OpenViduErrorName {
     /**
      * _Not in use yet_
      */
-    GENERIC_ERROR = "GENERIC_ERROR",
+    GENERIC_ERROR = "GENERIC_ERROR"
 }
 /**
  * Simple object to identify runtime errors on the client side

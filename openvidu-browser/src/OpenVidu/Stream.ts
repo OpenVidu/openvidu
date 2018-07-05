@@ -20,13 +20,12 @@ import { Session } from './Session';
 import { StreamManager } from './StreamManager';
 import { InboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/InboundStreamOptions';
 import { OutboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/OutboundStreamOptions';
+import { WebRtcPeer, WebRtcPeerSendonly, WebRtcPeerRecvonly, WebRtcPeerSendrecv } from '../OpenViduInternal/WebRtcPeer/WebRtcPeer';
 import { WebRtcStats } from '../OpenViduInternal/WebRtcStats/WebRtcStats';
 import { PublisherSpeakingEvent } from '../OpenViduInternal/Events/PublisherSpeakingEvent';
-import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
 
 import EventEmitter = require('wolfy87-eventemitter');
-
-import * as kurentoUtils from '../OpenViduInternal/KurentoUtils/kurento-utils-js';
+import hark = require('hark');
 
 
 /**
@@ -58,12 +57,29 @@ export class Stream {
     hasAudio: boolean;
 
     /**
+     * Whether the stream has the video track muted or unmuted. If [[hasVideo]] is false, this property is undefined.
+     *
+     * This property may change if the Publisher publishing the stream calls [[Publisher.publishVideo]]. Whenever this happens a [[StreamPropertyChangedEvent]] will be dispatched
+     * by the Session object as well as by the affected Subscriber/Publisher object
+     */
+    videoActive: boolean;
+
+    /**
+     * Whether the stream has the audio track muted or unmuted. If [[hasAudio]] is false, this property is undefined
+     *
+     * This property may change if the Publisher publishing the stream calls [[Publisher.publishAudio]]. Whenever this happens a [[StreamPropertyChangedEvent]] will be dispatched
+     * by the Session object as well as by the affected Subscriber/Publisher object
+     */
+    audioActive: boolean;
+
+    /**
      * Unique identifier of the stream
      */
     streamId: string;
 
     /**
-     * `"CAMERA"` or `"SCREEN"`. *undefined* if stream is audio-only
+     * `"CAMERA"`, `"SCREEN"` or `"CUSTOM"` (the latter when [[PublisherProperties.videoSource]] is a MediaStreamTrack when calling [[OpenVidu.initPublisher]]).
+     * If [[hasVideo]] is false, this property is undefined
      */
     typeOfVideo?: string;
 
@@ -73,11 +89,22 @@ export class Stream {
     streamManager: StreamManager;
 
     /**
+     * Width and height in pixels of the encoded video stream. If [[hasVideo]] is false, this property is undefined
+     *
+     * This property may change if the Publisher that is publishing:
+     * - If it is a mobile device, whenever the user rotates the device.
+     * - If it is screen-sharing, whenever the user changes the size of the captured window.
+     *
+     * Whenever this happens a [[StreamPropertyChangedEvent]] will be dispatched by the Session object as well as by the affected Subscriber/Publisher object
+     */
+    videoDimensions: { width: number, height: number };
+
+    /**
      * @hidden
      */
     ee = new EventEmitter();
 
-    private webRtcPeer: any;
+    private webRtcPeer: WebRtcPeer;
     private mediaStream: MediaStream;
     private webRtcStats: WebRtcStats;
 
@@ -120,29 +147,36 @@ export class Stream {
             // InboundStreamOptions: stream belongs to a Subscriber
             this.inboundStreamOpts = <InboundStreamOptions>options;
             this.streamId = this.inboundStreamOpts.id;
-            this.hasAudio = this.inboundStreamOpts.recvAudio;
-            this.hasVideo = this.inboundStreamOpts.recvVideo;
-            this.typeOfVideo = (!this.inboundStreamOpts.typeOfVideo) ? undefined : this.inboundStreamOpts.typeOfVideo;
-            this.frameRate = (this.inboundStreamOpts.frameRate === -1) ? undefined : this.inboundStreamOpts.frameRate;
+            this.hasAudio = this.inboundStreamOpts.hasAudio;
+            this.hasVideo = this.inboundStreamOpts.hasVideo;
+            if (this.hasAudio) {
+                this.audioActive = this.inboundStreamOpts.audioActive;
+            }
+            if (this.hasVideo) {
+                this.videoActive = this.inboundStreamOpts.videoActive;
+                this.typeOfVideo = (!this.inboundStreamOpts.typeOfVideo) ? undefined : this.inboundStreamOpts.typeOfVideo;
+                this.frameRate = (this.inboundStreamOpts.frameRate === -1) ? undefined : this.inboundStreamOpts.frameRate;
+                this.videoDimensions = this.inboundStreamOpts.videoDimensions;
+            }
         } else {
             // OutboundStreamOptions: stream belongs to a Publisher
             this.outboundStreamOpts = <OutboundStreamOptions>options;
 
-            if (this.isSendVideo()) {
-                if (this.isSendScreen()) {
-                    this.streamId = 'SCREEN';
-                    this.typeOfVideo = 'SCREEN';
-                } else {
-                    this.streamId = 'CAMERA';
-                    this.typeOfVideo = 'CAMERA';
-                }
-                this.frameRate = this.outboundStreamOpts.publisherProperties.frameRate;
-            } else {
-                this.streamId = 'MICRO';
-                delete this.typeOfVideo;
-            }
             this.hasAudio = this.isSendAudio();
             this.hasVideo = this.isSendVideo();
+
+            if (this.hasAudio) {
+                this.audioActive = !!this.outboundStreamOpts.publisherProperties.publishAudio;
+            }
+            if (this.hasVideo) {
+                this.videoActive = !!this.outboundStreamOpts.publisherProperties.publishVideo;
+                this.frameRate = this.outboundStreamOpts.publisherProperties.frameRate;
+                if (this.outboundStreamOpts.publisherProperties.videoSource instanceof MediaStreamTrack) {
+                    this.typeOfVideo = 'CUSTOM';
+                } else {
+                    this.typeOfVideo = this.isSendScreen() ? 'SCREEN' : 'CAMERA';
+                }
+            }
         }
 
         this.ee.on('mediastream-updated', () => {
@@ -178,7 +212,7 @@ export class Stream {
     /**
      * @hidden
      */
-    getWebRtcPeer(): any {
+    getWebRtcPeer(): WebRtcPeer {
         return this.webRtcPeer;
     }
 
@@ -186,7 +220,7 @@ export class Stream {
      * @hidden
      */
     getRTCPeerConnection(): RTCPeerConnection {
-        return this.webRtcPeer.peerConnection;
+        return this.webRtcPeer.pc;
     }
 
     /**
@@ -319,7 +353,7 @@ export class Stream {
             harkOptions.interval = (typeof harkOptions.interval === 'number') ? harkOptions.interval : 50;
             harkOptions.threshold = (typeof harkOptions.threshold === 'number') ? harkOptions.threshold : -50;
 
-            this.speechEvent = kurentoUtils.WebRtcPeer.hark(this.mediaStream, harkOptions);
+            this.speechEvent = hark(this.mediaStream, harkOptions);
         }
     }
 
@@ -359,6 +393,38 @@ export class Stream {
         this.speechEvent = undefined;
     }
 
+    /**
+     * @hidden
+     */
+    isLocal(): boolean {
+        // inbound options undefined and outbound options defined
+        return (!this.inboundStreamOpts && !!this.outboundStreamOpts);
+    }
+
+    /**
+     * @hidden
+     */
+    getSelectedIceCandidate(): Promise<any> {
+        return new Promise((resolve, reject) => {
+            this.webRtcStats.getSelectedIceCandidateInfo()
+                .then(report => resolve(report))
+                .catch(error => reject(error));
+        });
+    }
+
+    /**
+     * @hidden
+     */
+    getRemoteIceCandidateList(): RTCIceCandidate[] {
+        return this.webRtcPeer.remoteCandidatesQueue;
+    }
+
+    /**
+     * @hidden
+     */
+    getLocalIceCandidateList(): RTCIceCandidate[] {
+        return this.webRtcPeer.localCandidatesQueue;
+    }
 
     /* Private methods */
 
@@ -370,41 +436,46 @@ export class Stream {
                 video: this.isSendVideo()
             };
 
-            const options: any = {
-                videoStream: this.mediaStream,
+            const options = {
+                mediaStream: this.mediaStream,
                 mediaConstraints: userMediaConstraints,
                 onicecandidate: this.connection.sendIceCandidate.bind(this.connection),
-                iceServers: this.session.openvidu.advancedConfiguration.iceServers
+                iceServers: this.getIceServersConf(),
+                simulcast: false
             };
 
-            const successCallback = (error, sdpOfferParam, wp) => {
-                if (error) {
-                    reject(new Error('(publish) SDP offer error: ' + JSON.stringify(error)));
-                }
-
+            const successCallback = (sdpOfferParam) => {
                 console.debug('Sending SDP offer to publish as '
                     + this.streamId, sdpOfferParam);
+
+                let typeOfVideo = '';
+                if (this.isSendVideo()) {
+                    typeOfVideo = this.outboundStreamOpts.publisherProperties.videoSource instanceof MediaStreamTrack ? 'CUSTOM' : (this.isSendScreen() ? 'SCREEN' : 'CAMERA');
+                }
 
                 this.session.openvidu.sendRequest('publishVideo', {
                     sdpOffer: sdpOfferParam,
                     doLoopback: this.displayMyRemote() || false,
-                    audioActive: this.isSendAudio(),
-                    videoActive: this.isSendVideo(),
-                    typeOfVideo: ((this.isSendVideo()) ? (this.isSendScreen() ? 'SCREEN' : 'CAMERA') : ''),
-                    frameRate: !!this.frameRate ? this.frameRate : -1
+                    hasAudio: this.isSendAudio(),
+                    hasVideo: this.isSendVideo(),
+                    audioActive: this.audioActive,
+                    videoActive: this.videoActive,
+                    typeOfVideo,
+                    frameRate: !!this.frameRate ? this.frameRate : -1,
+                    videoDimensions: JSON.stringify(this.videoDimensions)
                 }, (error, response) => {
                     if (error) {
                         reject('Error on publishVideo: ' + JSON.stringify(error));
                     } else {
-                        this.processSdpAnswer(response.sdpAnswer)
+                        this.webRtcPeer.processAnswer(response.sdpAnswer)
                             .then(() => {
+                                this.streamId = response.id;
                                 this.isLocalStreamPublished = true;
                                 if (this.displayMyRemote()) {
-                                    // If remote now we can set the srcObject value of video elements
-                                    // 'streamPlaying' event will be triggered
-                                    this.updateMediaStreamInVideos();
+                                    this.remotePeerSuccessfullyEstablished();
                                 }
                                 this.ee.emitEvent('stream-created-by-publisher');
+                                this.initWebRtcStats();
                                 resolve();
                             })
                             .catch(error => {
@@ -416,20 +487,15 @@ export class Stream {
             };
 
             if (this.displayMyRemote()) {
-                this.webRtcPeer = kurentoUtils.WebRtcPeer.WebRtcPeerSendrecv(options, err => {
-                    if (err) {
-                        reject(err);
-                    }
-                    this.webRtcPeer.generateOffer(successCallback);
-                });
+                this.webRtcPeer = new WebRtcPeerSendrecv(options);
             } else {
-                this.webRtcPeer = kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(options, error => {
-                    if (error) {
-                        reject(error);
-                    }
-                    this.webRtcPeer.generateOffer(successCallback);
-                });
+                this.webRtcPeer = new WebRtcPeerSendonly(options);
             }
+            this.webRtcPeer.generateOffer().then(offer => {
+                successCallback(offer);
+            }).catch(error => {
+                reject(new Error('(publish) SDP offer error: ' + JSON.stringify(error)));
+            });
         });
     }
 
@@ -437,21 +503,19 @@ export class Stream {
         return new Promise((resolve, reject) => {
 
             const offerConstraints = {
-                audio: this.inboundStreamOpts.recvAudio,
-                video: this.inboundStreamOpts.recvVideo
+                audio: this.inboundStreamOpts.hasAudio,
+                video: this.inboundStreamOpts.hasVideo
             };
             console.debug("'Session.subscribe(Stream)' called. Constraints of generate SDP offer",
                 offerConstraints);
             const options = {
                 onicecandidate: this.connection.sendIceCandidate.bind(this.connection),
-                mediaConstraints: offerConstraints
+                mediaConstraints: offerConstraints,
+                iceServers: this.getIceServersConf(),
+                simulcast: false
             };
 
-            const successCallback = (error, sdpOfferParam, wp) => {
-
-                if (error) {
-                    reject(new Error('(subscribe) SDP offer error: ' + JSON.stringify(error)));
-                }
+            const successCallback = (sdpOfferParam) => {
                 console.debug('Sending SDP offer to subscribe to '
                     + this.streamId, sdpOfferParam);
                 this.session.openvidu.sendRequest('receiveVideoFrom', {
@@ -461,7 +525,9 @@ export class Stream {
                     if (error) {
                         reject(new Error('Error on recvVideoFrom: ' + JSON.stringify(error)));
                     } else {
-                        this.processSdpAnswer(response.sdpAnswer).then(() => {
+                        this.webRtcPeer.processAnswer(response.sdpAnswer).then(() => {
+                            this.remotePeerSuccessfullyEstablished();
+                            this.initWebRtcStats();
                             resolve();
                         }).catch(error => {
                             reject(error);
@@ -470,48 +536,27 @@ export class Stream {
                 });
             };
 
-            this.webRtcPeer = kurentoUtils.WebRtcPeer.WebRtcPeerRecvonly(options, error => {
-                if (error) {
-                    reject(error);
-                }
-                this.webRtcPeer.generateOffer(successCallback);
-            });
+            this.webRtcPeer = new WebRtcPeerRecvonly(options);
+            this.webRtcPeer.generateOffer()
+                .then(offer => {
+                    successCallback(offer);
+                })
+                .catch(error => {
+                    reject(new Error('(subscribe) SDP offer error: ' + JSON.stringify(error)));
+                });
         });
     }
 
-    private processSdpAnswer(sdpAnswer): Promise<any> {
-        return new Promise((resolve, reject) => {
-            const answer = new RTCSessionDescription({
-                type: 'answer',
-                sdp: sdpAnswer,
-            });
+    private remotePeerSuccessfullyEstablished(): void {
+        this.mediaStream = this.webRtcPeer.pc.getRemoteStreams()[0];
+        console.debug('Peer remote stream', this.mediaStream);
 
-            console.debug(this.streamId + ': set peer connection with recvd SDP answer', sdpAnswer);
-
-            const streamId = this.streamId;
-            const peerConnection = this.webRtcPeer.peerConnection;
-            peerConnection.setRemoteDescription(answer, () => {
-
-                // Update remote MediaStream object except when local stream
-                if (!this.isLocal() || this.displayMyRemote()) {
-                    this.mediaStream = peerConnection.getRemoteStreams()[0];
-                    console.debug('Peer remote stream', this.mediaStream);
-
-                    if (!!this.mediaStream) {
-                        this.ee.emitEvent('mediastream-updated');
-                        if (!!this.mediaStream.getAudioTracks()[0] && this.session.speakingEventsEnabled) {
-                            this.enableSpeakingEvents();
-                        }
-                    }
-                }
-
-                this.initWebRtcStats();
-                resolve();
-
-            }, error => {
-                reject(new Error(this.streamId + ': Error setting SDP to the peer connection: ' + JSON.stringify(error)));
-            });
-        });
+        if (!!this.mediaStream) {
+            this.ee.emitEvent('mediastream-updated');
+            if (!this.displayMyRemote() && !!this.mediaStream.getAudioTracks()[0] && this.session.speakingEventsEnabled) {
+                this.enableSpeakingEvents();
+            }
+        }
     }
 
     private initWebRtcStats(): void {
@@ -525,12 +570,18 @@ export class Stream {
         }
     }
 
-    /**
-     * @hidden
-     */
-    isLocal(): boolean {
-        // inbound options undefined and outbound options defined
-        return (!this.inboundStreamOpts && !!this.outboundStreamOpts);
+    private getIceServersConf(): RTCIceServer[] | undefined {
+        let returnValue;
+        if (!!this.session.openvidu.advancedConfiguration.iceServers) {
+            returnValue = this.session.openvidu.advancedConfiguration.iceServers === 'freeice' ?
+                undefined :
+                this.session.openvidu.advancedConfiguration.iceServers;
+        } else if (this.session.openvidu.iceServers) {
+            returnValue = this.session.openvidu.iceServers;
+        } else {
+            returnValue = undefined;
+        }
+        return returnValue;
     }
 
 }

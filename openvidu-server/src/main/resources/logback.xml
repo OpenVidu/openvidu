@@ -25,7 +25,7 @@
 					<pattern>%m\n</pattern>
 				</layout>
 			</appender>
-			<logger name="io.openvidu.server.cdr.CallDetailRecord">
+			<logger name="io.openvidu.server.cdr.CDRLoggerFile">
 				<level value="INFO" />
 				<appender-ref ref="CDR" />
 			</logger>

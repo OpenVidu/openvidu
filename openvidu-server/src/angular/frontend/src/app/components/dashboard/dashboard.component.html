@@ -1,6 +1,6 @@
-<div id="dashboard-div" fxLayout="row" fxLayout.xs="column" fxLayoutGap="20px" fxFlexFill>
+<div id="dashboard-div" fxLayout="row" fxLayout.xs="column" fxLayoutGap="20px" fxLayoutGap.xs="20px">
 
-  <div fxLayout="column" fxFlex="66%" fxFlexOrder="1" fxFlexOrder.xs="2">
+  <div fxFlex="66%" fxFlexOrder="1" fxFlexOrder.xs="2">
     <mat-card id="log">
       <mat-card-title>Server events
         <mat-slide-toggle title="Lock Scroll" [(ngModel)]="lockScroll" style="float: right; margin-left: auto;">
@@ -18,11 +18,12 @@
     </mat-card>
   </div>
 
-  <div fxLayout="column" fxFlex="33%" fxFlexOrder="2" fxFlexOrder.xs="1">
+  <div fxFlex="33%" fxFlex.xs="auto" fxFlexOrder="2" fxFlexOrder.xs="1">
     <mat-card id="video-loop">
       <mat-card-title>Test the connection
         <button id="test-btn" mat-raised-button [ngClass]="testStatus == 'DISCONNECTED' ? 'blue' : (testStatus == 'PLAYING' ? 'yellow' : 'disabled')" (click)="toggleTestVideo()" [disabled]="testStatus==='CONNECTING' || testStatus==='CONNECTED'">{{testButton}}</button>
       </mat-card-title>
+      <mat-divider></mat-divider>
       <mat-card-content>
         <div id="mirrored-video">
           <div *ngIf="showSpinner" id="loader">

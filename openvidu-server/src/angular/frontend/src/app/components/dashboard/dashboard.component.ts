@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewChild, ElementRef, HostListener, OnDestroy } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material';
-import { Subscription } from 'rxjs/Subscription';
+import { Subscription } from 'rxjs';
 
 import { InfoService } from '../../services/info.service';
 import { RestService } from '../../services/rest.service';
@@ -135,6 +135,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.session.connect(token)
       .then(() => {
 
+        this.msgChain.push('Connected to session');
+
         this.testStatus = 'CONNECTED';
 
         const publisherRemote = OV.initPublisher('mirrored-video', {
@@ -163,8 +165,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.msgChain.push('Video element created');
         });
 
-        publisherRemote.on('remoteVideoPlaying', (video) => {
-          this.msgChain.push('Remote video playing');
+        publisherRemote.on('streamCreated', (video) => {
+          this.msgChain.push('Stream created');
+        });
+
+        publisherRemote.on('streamPlaying', (video) => {
+          this.msgChain.push('Stream playing');
           this.testButton = 'End test';
           this.testStatus = 'PLAYING';
           this.showSpinner = false;
@@ -188,6 +194,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           });
         } else {
           console.error(error);
+          this.msgChain.push('Error connecting to session');
         }
       });
   }

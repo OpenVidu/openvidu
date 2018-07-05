@@ -23,7 +23,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
+import org.apache.commons.lang3.RandomStringUtils;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 import org.kurento.client.Continuation;
 import org.kurento.client.ErrorEvent;
 import org.kurento.client.Filter;
@@ -35,15 +39,18 @@ import org.kurento.client.SdpEndpoint;
 import org.kurento.client.internal.server.KurentoServerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.server.cdr.CallDetailRecord;
 import io.openvidu.server.config.InfoHandler;
+import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.kurento.MutedMediaType;
+import io.openvidu.server.kurento.endpoint.KmsEvent;
 import io.openvidu.server.kurento.endpoint.MediaEndpoint;
 import io.openvidu.server.kurento.endpoint.PublisherEndpoint;
 import io.openvidu.server.kurento.endpoint.SdpType;
@@ -52,6 +59,9 @@ import io.openvidu.server.kurento.endpoint.SubscriberEndpoint;
 public class KurentoParticipant extends Participant {
 
 	private static final Logger log = LoggerFactory.getLogger(KurentoParticipant.class);
+
+	@Autowired
+	protected OpenviduConfig openviduConfig;
 
 	private InfoHandler infoHandler;
 	private CallDetailRecord CDR;
@@ -67,13 +77,13 @@ public class KurentoParticipant extends Participant {
 	private final ConcurrentMap<String, Filter> filters = new ConcurrentHashMap<>();
 	private final ConcurrentMap<String, SubscriberEndpoint> subscribers = new ConcurrentHashMap<String, SubscriberEndpoint>();
 
-	public KurentoParticipant(Participant participant, KurentoSession kurentoSession, MediaPipeline pipeline, InfoHandler infoHandler, CallDetailRecord CDR) {
+	public KurentoParticipant(Participant participant, KurentoSession kurentoSession, MediaPipeline pipeline,
+			InfoHandler infoHandler, CallDetailRecord CDR) {
 		super(participant.getParticipantPrivateId(), participant.getParticipantPublicId(), participant.getToken(),
 				participant.getClientMetadata());
 		this.session = kurentoSession;
 		this.pipeline = pipeline;
-		this.publisher = new PublisherEndpoint(webParticipant, this, participant.getParticipantPublicId(),
-				pipeline);
+		this.publisher = new PublisherEndpoint(webParticipant, this, participant.getParticipantPublicId(), pipeline);
 
 		for (Participant other : session.getParticipants()) {
 			if (!other.getParticipantPublicId().equals(this.getParticipantPublicId())) {
@@ -85,17 +95,21 @@ public class KurentoParticipant extends Participant {
 	}
 
 	public void createPublishingEndpoint(MediaOptions mediaOptions) {
+
 		publisher.createEndpoint(endPointLatch);
 		if (getPublisher().getEndpoint() == null) {
 			throw new OpenViduException(Code.MEDIA_ENDPOINT_ERROR_CODE, "Unable to create publisher endpoint");
 		}
-		this.publisher.getEndpoint().addTag("name", "PUBLISHER " + this.getParticipantPublicId());
+		publisher.setMediaOptions(mediaOptions);
 
+		String publisherStreamId = this.getParticipantPublicId() + "_"
+				+ (mediaOptions.hasVideo() ? mediaOptions.getTypeOfVideo() : "MICRO") + "_"
+				+ RandomStringUtils.random(5, true, false).toUpperCase();
+		this.publisher.getEndpoint().addTag("name", publisherStreamId);
 		addEndpointListeners(this.publisher);
-		
-		
+
 		CDR.recordNewPublisher(this, this.session.getSessionId(), mediaOptions);
-		
+
 	}
 
 	public void shapePublisherMedia(MediaElement element, MediaType type) {
@@ -168,24 +182,33 @@ public class KurentoParticipant extends Participant {
 		return this.publisher;
 	}
 
+	public MediaOptions getPublisherMediaOptions() {
+		return this.publisher.getMediaOptions();
+	}
+
+	public void setPublisherMediaOptions(MediaOptions mediaOptions) {
+		this.publisher.setMediaOptions(mediaOptions);
+	}
+
 	public KurentoSession getSession() {
 		return session;
 	}
 
-	public boolean isSubscribed() {
+	public Set<SubscriberEndpoint> getAllConnectedSubscribedEndpoints() {
+		Set<SubscriberEndpoint> subscribedToSet = new HashSet<>();
 		for (SubscriberEndpoint se : subscribers.values()) {
 			if (se.isConnectedToPublisher()) {
-				return true;
+				subscribedToSet.add(se);
 			}
 		}
-		return false;
+		return subscribedToSet;
 	}
 
-	public Set<String> getConnectedSubscribedEndpoints() {
-		Set<String> subscribedToSet = new HashSet<String>();
+	public Set<SubscriberEndpoint> getConnectedSubscribedEndpoints(PublisherEndpoint publisher) {
+		Set<SubscriberEndpoint> subscribedToSet = new HashSet<>();
 		for (SubscriberEndpoint se : subscribers.values()) {
-			if (se.isConnectedToPublisher()) {
-				subscribedToSet.add(se.getEndpointName());
+			if (se.isConnectedToPublisher() && se.getPublisher().equals(publisher)) {
+				subscribedToSet.add(se);
 			}
 		}
 		return subscribedToSet;
@@ -224,18 +247,16 @@ public class KurentoParticipant extends Participant {
 		log.info("PARTICIPANT {}: unpublishing media stream from room {}", this.getParticipantPublicId(),
 				this.session.getSessionId());
 		releasePublisherEndpoint(reason);
-		this.publisher = new PublisherEndpoint(webParticipant, this, this.getParticipantPublicId(),
-				pipeline);
-		log.info(
-				"PARTICIPANT {}: released publisher endpoint and left it initialized (ready for future streaming)",
+		this.publisher = new PublisherEndpoint(webParticipant, this, this.getParticipantPublicId(), pipeline);
+		log.info("PARTICIPANT {}: released publisher endpoint and left it initialized (ready for future streaming)",
 				this.getParticipantPublicId());
 	}
 
 	public String receiveMediaFrom(Participant sender, String sdpOffer) {
 		final String senderName = sender.getParticipantPublicId();
 
-		log.info("PARTICIPANT {}: Request to receive media from {} in room {}", this.getParticipantPublicId(), senderName,
-				this.session.getSessionId());
+		log.info("PARTICIPANT {}: Request to receive media from {} in room {}", this.getParticipantPublicId(),
+				senderName, this.session.getSessionId());
 		log.trace("PARTICIPANT {}: SdpOffer for {} is {}", this.getParticipantPublicId(), senderName, sdpOffer);
 
 		if (senderName.equals(this.getParticipantPublicId())) {
@@ -279,8 +300,9 @@ public class KurentoParticipant extends Participant {
 				throw new OpenViduException(Code.MEDIA_ENDPOINT_ERROR_CODE, "Unable to create subscriber endpoint");
 			}
 
-			subscriber.getEndpoint().addTag("name",
-					"SUBSCRIBER " + senderName + " for user " + this.getParticipantPublicId());
+			String subscriberStreamId = this.getParticipantPublicId() + "_" + kSender.getPublisherStremId();
+
+			subscriber.getEndpoint().addTag("name", subscriberStreamId);
 
 			addEndpointListeners(subscriber);
 
@@ -293,13 +315,13 @@ public class KurentoParticipant extends Participant {
 		try {
 			String sdpAnswer = subscriber.subscribe(sdpOffer, kSender.getPublisher());
 			log.trace("PARTICIPANT {}: Subscribing SdpAnswer is {}", this.getParticipantPublicId(), sdpAnswer);
-			log.info("PARTICIPANT {}: Is now receiving video from {} in room {}", this.getParticipantPublicId(), senderName,
-					this.session.getSessionId());
-			
+			log.info("PARTICIPANT {}: Is now receiving video from {} in room {}", this.getParticipantPublicId(),
+					senderName, this.session.getSessionId());
+
 			if (!ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(this.getParticipantPublicId())) {
 				CDR.recordNewSubscriber(this, this.session.getSessionId(), sender.getParticipantPublicId());
 			}
-			
+
 			return sdpAnswer;
 		} catch (KurentoServerException e) {
 			// TODO Check object status when KurentoClient sets this info in the object
@@ -323,8 +345,8 @@ public class KurentoParticipant extends Participant {
 					+ "But there is no such subscriber endpoint.", this.getParticipantPublicId(), senderName);
 		} else {
 			releaseSubscriberEndpoint(senderName, subscriberEndpoint, reason);
-			log.info("PARTICIPANT {}: stopped receiving media from {} in room {}", this.getParticipantPublicId(), senderName,
-					this.session.getSessionId());
+			log.info("PARTICIPANT {}: stopped receiving media from {} in room {}", this.getParticipantPublicId(),
+					senderName, this.session.getSessionId());
 		}
 	}
 
@@ -409,17 +431,20 @@ public class KurentoParticipant extends Participant {
 	 *            id of another user
 	 * @return the endpoint instance
 	 */
-	public SubscriberEndpoint getNewOrExistingSubscriber(String remotePublicId) {
-		SubscriberEndpoint sendingEndpoint = new SubscriberEndpoint(webParticipant, this, remotePublicId, pipeline);
-		SubscriberEndpoint existingSendingEndpoint = this.subscribers.putIfAbsent(remotePublicId, sendingEndpoint);
+	public SubscriberEndpoint getNewOrExistingSubscriber(String senderPublicId) {
+
+		SubscriberEndpoint sendingEndpoint = new SubscriberEndpoint(webParticipant, this, senderPublicId, pipeline);
+
+		SubscriberEndpoint existingSendingEndpoint = this.subscribers.putIfAbsent(senderPublicId, sendingEndpoint);
 		if (existingSendingEndpoint != null) {
 			sendingEndpoint = existingSendingEndpoint;
 			log.trace("PARTICIPANT {}: Already exists a subscriber endpoint to user {}", this.getParticipantPublicId(),
-					remotePublicId);
+					senderPublicId);
 		} else {
 			log.debug("PARTICIPANT {}: New subscriber endpoint to user {}", this.getParticipantPublicId(),
-					remotePublicId);
+					senderPublicId);
 		}
+
 		return sendingEndpoint;
 	}
 
@@ -450,9 +475,9 @@ public class KurentoParticipant extends Participant {
 			releaseElement(getParticipantPublicId(), publisher.getEndpoint());
 			this.streaming = false;
 			publisher = null;
-			
+
 			CDR.stopPublisher(this.getParticipantPublicId(), reason);
-			
+
 		} else {
 			log.warn("PARTICIPANT {}: Trying to release publisher endpoint but is null", getParticipantPublicId());
 		}
@@ -462,11 +487,11 @@ public class KurentoParticipant extends Participant {
 		if (subscriber != null) {
 			subscriber.unregisterErrorListeners();
 			releaseElement(senderName, subscriber.getEndpoint());
-			
+
 			if (!ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(this.getParticipantPublicId())) {
 				CDR.stopSubscriber(this.getParticipantPublicId(), senderName, reason);
 			}
-			
+
 		} else {
 			log.warn("PARTICIPANT {}: Trying to release subscriber endpoint for '{}' but is null",
 					this.getParticipantPublicId(), senderName);
@@ -515,113 +540,190 @@ public class KurentoParticipant extends Participant {
 		 * System.out.println(msg); this.infoHandler.sendInfo(msg); });
 		 */
 
-		endpoint.getWebEndpoint().addErrorListener((event) -> {
-			String msg = "                  Error (PUBLISHER) -> " + "ERRORCODE: " + event.getErrorCode()
-					+ " | DESCRIPTION: " + event.getDescription() + " | TIMESTAMP: " + System.currentTimeMillis();
-			log.debug(msg);
-			this.infoHandler.sendInfo(msg);
-		});
+		/*
+		 * endpoint.getWebEndpoint().addErrorListener((event) -> { String msg =
+		 * "                  Error (PUBLISHER) -> " + "ERRORCODE: " +
+		 * event.getErrorCode() + " | DESCRIPTION: " + event.getDescription() +
+		 * " | TIMESTAMP: " + System.currentTimeMillis(); log.debug(msg);
+		 * this.infoHandler.sendInfo(msg); });
+		 * 
+		 * endpoint.getWebEndpoint().addMediaFlowInStateChangeListener((event) -> {
+		 * String msg1 = "                  Media flow in state change (" +
+		 * endpoint.getEndpoint().getTag("name") + ") -> " + "STATE: " +
+		 * event.getState() + " | SOURCE: " + event.getSource().getName() + " | PAD: " +
+		 * event.getPadName() + " | MEDIATYPE: " + event.getMediaType() +
+		 * " | TIMESTAMP: " + System.currentTimeMillis();
+		 * 
+		 * endpoint.flowInMedia.put(event.getSource().getName() + "/" +
+		 * event.getMediaType(), event.getSource());
+		 * 
+		 * String msg2;
+		 * 
+		 * if (endpoint.flowInMedia.values().size() != 2) { msg2 =
+		 * "                        THERE ARE LESS FLOW IN MEDIA'S THAN EXPECTED IN " +
+		 * endpoint.getEndpoint().getTag("name") + " (" +
+		 * endpoint.flowInMedia.values().size() + ")"; } else { msg2 =
+		 * "                        NUMBER OF FLOW IN MEDIA'S IS NOW CORRECT IN " +
+		 * endpoint.getEndpoint().getTag("name") + " (" +
+		 * endpoint.flowInMedia.values().size() + ")"; }
+		 * 
+		 * log.debug(msg1); log.debug(msg2); this.infoHandler.sendInfo(msg1);
+		 * this.infoHandler.sendInfo(msg2); });
+		 * 
+		 * endpoint.getWebEndpoint().addMediaFlowOutStateChangeListener((event) -> {
+		 * String msg1 = "                  Media flow out state change (" +
+		 * endpoint.getEndpoint().getTag("name") + ") -> " + "STATE: " +
+		 * event.getState() + " | SOURCE: " + event.getSource().getName() + " | PAD: " +
+		 * event.getPadName() + " | MEDIATYPE: " + event.getMediaType() +
+		 * " | TIMESTAMP: " + System.currentTimeMillis();
+		 * 
+		 * endpoint.flowOutMedia.put(event.getSource().getName() + "/" +
+		 * event.getMediaType(), event.getSource());
+		 * 
+		 * String msg2;
+		 * 
+		 * if (endpoint.flowOutMedia.values().size() != 2) { msg2 =
+		 * "                        THERE ARE LESS FLOW OUT MEDIA'S THAN EXPECTED IN " +
+		 * endpoint.getEndpoint().getTag("name") + " (" +
+		 * endpoint.flowOutMedia.values().size() + ")"; } else { msg2 =
+		 * "                        NUMBER OF FLOW OUT MEDIA'S IS NOW CORRECT IN " +
+		 * endpoint.getEndpoint().getTag("name") + " (" +
+		 * endpoint.flowOutMedia.values().size() + ")"; }
+		 * 
+		 * log.debug(msg1); log.debug(msg2); this.infoHandler.sendInfo(msg1);
+		 * this.infoHandler.sendInfo(msg2); });
+		 * 
+		 * endpoint.getWebEndpoint().addMediaSessionStartedListener((event) -> { String
+		 * msg = "                  Media session started (" +
+		 * endpoint.getEndpoint().getTag("name") + ") | TIMESTAMP: " +
+		 * System.currentTimeMillis(); log.debug(msg); this.infoHandler.sendInfo(msg);
+		 * });
+		 * 
+		 * endpoint.getWebEndpoint().addMediaSessionTerminatedListener((event) -> {
+		 * String msg = "                  Media session terminated (" +
+		 * endpoint.getEndpoint().getTag("name") + ") | TIMESTAMP: " +
+		 * System.currentTimeMillis(); log.debug(msg); this.infoHandler.sendInfo(msg);
+		 * });
+		 * 
+		 * endpoint.getWebEndpoint().addMediaStateChangedListener((event) -> { String
+		 * msg = "                  Media state changed (" +
+		 * endpoint.getEndpoint().getTag("name") + ") from " + event.getOldState() +
+		 * " to " + event.getNewState(); log.debug(msg); this.infoHandler.sendInfo(msg);
+		 * });
+		 * 
+		 * endpoint.getWebEndpoint().addConnectionStateChangedListener((event) -> {
+		 * String msg = "                  Connection state changed (" +
+		 * endpoint.getEndpoint().getTag("name") + ") from " + event.getOldState() +
+		 * " to " + event.getNewState() + " | TIMESTAMP: " + System.currentTimeMillis();
+		 * log.debug(msg); this.infoHandler.sendInfo(msg); });
+		 * 
+		 * endpoint.getWebEndpoint().addIceCandidateFoundListener((event) -> { String
+		 * msg = "                  ICE CANDIDATE FOUND (" +
+		 * endpoint.getEndpoint().getTag("name") + "): CANDIDATE: " +
+		 * event.getCandidate().getCandidate() + " | TIMESTAMP: " +
+		 * System.currentTimeMillis(); log.debug(msg); this.infoHandler.sendInfo(msg);
+		 * });
+		 * 
+		 * endpoint.getWebEndpoint().addIceComponentStateChangeListener((event) -> {
+		 * String msg = "                  ICE COMPONENT STATE CHANGE (" +
+		 * endpoint.getEndpoint().getTag("name") + "): for component " +
+		 * event.getComponentId() + " - STATE: " + event.getState() + " | TIMESTAMP: " +
+		 * System.currentTimeMillis(); log.debug(msg); this.infoHandler.sendInfo(msg);
+		 * });
+		 * 
+		 * endpoint.getWebEndpoint().addIceGatheringDoneListener((event) -> { String msg
+		 * = "                  ICE GATHERING DONE! (" +
+		 * endpoint.getEndpoint().getTag("name") + ")" + " | TIMESTAMP: " +
+		 * System.currentTimeMillis(); log.debug(msg); this.infoHandler.sendInfo(msg);
+		 * });
+		 */
 
-		endpoint.getWebEndpoint().addMediaFlowInStateChangeListener((event) -> {
-			String msg1 = "                  Media flow in state change (" + endpoint.getEndpoint().getTag("name")
-					+ ") -> " + "STATE: " + event.getState() + " | SOURCE: " + event.getSource().getName() + " | PAD: "
-					+ event.getPadName() + " | MEDIATYPE: " + event.getMediaType() + " | TIMESTAMP: "
-					+ System.currentTimeMillis();
+		endpoint.getWebEndpoint().addMediaFlowInStateChangeListener(event -> {
+			String msg1 = "Media flow in state change (" + endpoint.getEndpoint().getTag("name") + ") -> " + "STATE: "
+					+ event.getState() + " | SOURCE: " + event.getSource().getName() + " | PAD: " + event.getPadName()
+					+ " | MEDIATYPE: " + event.getMediaType() + " | TIMESTAMP: " + System.currentTimeMillis();
 
-			endpoint.flowInMedia.put(event.getSource().getName() + "/" + event.getMediaType(), event.getSource());
-
-			String msg2;
-
-			if (endpoint.flowInMedia.values().size() != 2) {
-				msg2 = "                        THERE ARE LESS FLOW IN MEDIA'S THAN EXPECTED IN "
-						+ endpoint.getEndpoint().getTag("name") + " (" + endpoint.flowInMedia.values().size() + ")";
-			} else {
-				msg2 = "                        NUMBER OF FLOW IN MEDIA'S IS NOW CORRECT IN "
-						+ endpoint.getEndpoint().getTag("name") + " (" + endpoint.flowInMedia.values().size() + ")";
+			endpoint.flowInMedia.put(event.getSource().getName(), event.getMediaType());
+			if (endpoint.getPublisher().getMediaOptions().hasAudio()
+					&& endpoint.getPublisher().getMediaOptions().hasVideo()
+					&& endpoint.flowInMedia.values().size() == 2) {
+				endpoint.kmsEvents.add(new KmsEvent(event));
+			} else if (endpoint.flowInMedia.values().size() == 1) {
+				endpoint.kmsEvents.add(new KmsEvent(event));
 			}
 
-			log.debug(msg1);
-			log.debug(msg2);
+			log.info(msg1);
 			this.infoHandler.sendInfo(msg1);
-			this.infoHandler.sendInfo(msg2);
 		});
 
-		endpoint.getWebEndpoint().addMediaFlowOutStateChangeListener((event) -> {
-			String msg1 = "                  Media flow out state change (" + endpoint.getEndpoint().getTag("name")
-					+ ") -> " + "STATE: " + event.getState() + " | SOURCE: " + event.getSource().getName() + " | PAD: "
-					+ event.getPadName() + " | MEDIATYPE: " + event.getMediaType() + " | TIMESTAMP: "
-					+ System.currentTimeMillis();
+		endpoint.getWebEndpoint().addMediaFlowOutStateChangeListener(event -> {
+			String msg1 = "Media flow out state change (" + endpoint.getEndpoint().getTag("name") + ") -> " + "STATE: "
+					+ event.getState() + " | SOURCE: " + event.getSource().getName() + " | PAD: " + event.getPadName()
+					+ " | MEDIATYPE: " + event.getMediaType() + " | TIMESTAMP: " + System.currentTimeMillis();
 
-			endpoint.flowOutMedia.put(event.getSource().getName() + "/" + event.getMediaType(), event.getSource());
-
-			String msg2;
-
-			if (endpoint.flowOutMedia.values().size() != 2) {
-				msg2 = "                        THERE ARE LESS FLOW OUT MEDIA'S THAN EXPECTED IN "
-						+ endpoint.getEndpoint().getTag("name") + " (" + endpoint.flowOutMedia.values().size() + ")";
-			} else {
-				msg2 = "                        NUMBER OF FLOW OUT MEDIA'S IS NOW CORRECT IN "
-						+ endpoint.getEndpoint().getTag("name") + " (" + endpoint.flowOutMedia.values().size() + ")";
+			endpoint.flowOutMedia.put(event.getSource().getName(), event.getMediaType());
+			if (endpoint.getPublisher().getMediaOptions().hasAudio()
+					&& endpoint.getPublisher().getMediaOptions().hasVideo()
+					&& endpoint.flowOutMedia.values().size() == 2) {
+				endpoint.kmsEvents.add(new KmsEvent(event));
+			} else if (endpoint.flowOutMedia.values().size() == 1) {
+				endpoint.kmsEvents.add(new KmsEvent(event));
 			}
 
-			log.debug(msg1);
-			log.debug(msg2);
+			log.info(msg1);
 			this.infoHandler.sendInfo(msg1);
-			this.infoHandler.sendInfo(msg2);
 		});
 
-		endpoint.getWebEndpoint().addMediaSessionStartedListener((event) -> {
-			String msg = "                  Media session started (" + endpoint.getEndpoint().getTag("name")
-					+ ") | TIMESTAMP: " + System.currentTimeMillis();
-			log.debug(msg);
-			this.infoHandler.sendInfo(msg);
+		endpoint.getWebEndpoint().addIceGatheringDoneListener(event -> {
+			endpoint.kmsEvents.add(new KmsEvent(event));
 		});
 
-		endpoint.getWebEndpoint().addMediaSessionTerminatedListener((event) -> {
-			String msg = "                  Media session terminated (" + endpoint.getEndpoint().getTag("name")
-					+ ") | TIMESTAMP: " + System.currentTimeMillis();
-			log.debug(msg);
-			this.infoHandler.sendInfo(msg);
+		endpoint.getWebEndpoint().addConnectionStateChangedListener(event -> {
+			endpoint.kmsEvents.add(new KmsEvent(event));
 		});
 
-		endpoint.getWebEndpoint().addMediaStateChangedListener((event) -> {
-			String msg = "                  Media state changed (" + endpoint.getEndpoint().getTag("name") + ") from "
-					+ event.getOldState() + " to " + event.getNewState();
-			log.debug(msg);
-			this.infoHandler.sendInfo(msg);
-		});
-
-		endpoint.getWebEndpoint().addConnectionStateChangedListener((event) -> {
-			String msg = "                  Connection state changed (" + endpoint.getEndpoint().getTag("name")
-					+ ") from " + event.getOldState() + " to " + event.getNewState() + " | TIMESTAMP: "
-					+ System.currentTimeMillis();
-			log.debug(msg);
-			this.infoHandler.sendInfo(msg);
-		});
-
-		endpoint.getWebEndpoint().addIceCandidateFoundListener((event) -> {
-			String msg = "                  ICE CANDIDATE FOUND (" + endpoint.getEndpoint().getTag("name")
-					+ "): CANDIDATE: " + event.getCandidate().getCandidate() + " | TIMESTAMP: "
-					+ System.currentTimeMillis();
-			log.debug(msg);
-			this.infoHandler.sendInfo(msg);
-		});
-
-		endpoint.getWebEndpoint().addIceComponentStateChangeListener((event) -> {
-			String msg = "                  ICE COMPONENT STATE CHANGE (" + endpoint.getEndpoint().getTag("name")
-					+ "): for component " + event.getComponentId() + " - STATE: " + event.getState() + " | TIMESTAMP: "
-					+ System.currentTimeMillis();
-			log.debug(msg);
-			this.infoHandler.sendInfo(msg);
-		});
-
-		endpoint.getWebEndpoint().addIceGatheringDoneListener((event) -> {
-			String msg = "                  ICE GATHERING DONE! (" + endpoint.getEndpoint().getTag("name") + ")"
+		endpoint.getWebEndpoint().addNewCandidatePairSelectedListener(event -> {
+			endpoint.selectedLocalIceCandidate = event.getCandidatePair().getLocalCandidate();
+			endpoint.selectedRemoteIceCandidate = event.getCandidatePair().getRemoteCandidate();
+			endpoint.kmsEvents.add(new KmsEvent(event));
+			String msg = "ICE CANDIDATE SELECTED (" + endpoint.getEndpoint().getTag("name") + "): LOCAL CANDIDATE: "
+					+ endpoint.selectedLocalIceCandidate + " | REMOTE CANDIDATE: " + endpoint.selectedRemoteIceCandidate
 					+ " | TIMESTAMP: " + System.currentTimeMillis();
-			log.debug(msg);
+			log.warn(msg);
 			this.infoHandler.sendInfo(msg);
 		});
+	}
 
+	@Override
+	public String getPublisherStremId() {
+		return this.publisher.getEndpoint().getTag("name");
+	}
+
+	@Override
+	public JSONObject toJSON() {
+		return this.sharedJSON(MediaEndpoint::toJSON);
+	}
+
+	public JSONObject withStatsToJSON() {
+		return this.sharedJSON(MediaEndpoint::withStatsToJSON);
+	}
+
+	@SuppressWarnings("unchecked")
+	private JSONObject sharedJSON(Function<MediaEndpoint, JSONObject> toJsonFunction) {
+		JSONObject json = super.toJSON();
+		JSONArray publisherEnpoints = new JSONArray();
+		if (this.streaming && this.publisher.getEndpoint() != null) {
+			publisherEnpoints.add(toJsonFunction.apply(this.publisher));
+		}
+		JSONArray subscriberEndpoints = new JSONArray();
+		for (MediaEndpoint sub : this.subscribers.values()) {
+			if (sub.getEndpoint() != null) {
+				subscriberEndpoints.add(toJsonFunction.apply(sub));
+			}
+		}
+		json.put("publishers", publisherEnpoints);
+		json.put("subscribers", subscriberEndpoints);
+		return json;
 	}
 
 }

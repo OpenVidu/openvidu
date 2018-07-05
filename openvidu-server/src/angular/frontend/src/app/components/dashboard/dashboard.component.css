@@ -1,4 +1,5 @@
 #dashboard-div {
+  height: 100%;
   padding: 20px;
 }
 
@@ -19,7 +20,6 @@ ul {
 
 #test-btn {
   text-transform: uppercase;
-  float: right;
 }
 
 mat-card-title button.blue {
@@ -84,6 +84,12 @@ mat-spinner {
 
 #mirrored-video {
   position: relative;
+}
+
+@media screen and (max-width: 599px) {
+  mat-card-title {
+     font-size: 20px;
+  }
 }
 
 

@@ -579,16 +579,17 @@ var Session = /** @class */ (function () {
         var candidate = {
             candidate: msg.candidate,
             sdpMid: msg.sdpMid,
-            sdpMLineIndex: msg.sdpMLineIndex
+            sdpMLineIndex: msg.sdpMLineIndex,
+            toJSON: function () {
+                return { candidate: msg.candidate };
+            }
         };
         this.getConnection(msg.endpointName, 'Connection not found for endpoint ' + msg.endpointName + '. Ice candidate will be ignored: ' + candidate)
             .then(function (connection) {
             var stream = connection.stream;
-            stream.getWebRtcPeer().addIceCandidate(candidate, function (error) {
-                if (error) {
-                    console.error('Error adding candidate for ' + stream.streamId
-                        + ' stream of endpoint ' + msg.endpointName + ': ' + error);
-                }
+            stream.getWebRtcPeer().addIceCandidate(candidate)["catch"](function (error) {
+                console.error('Error adding candidate for ' + stream.streamId
+                    + ' stream of endpoint ' + msg.endpointName + ': ' + error);
             });
         })["catch"](function (openViduError) {
             console.error(openViduError);
@@ -613,14 +614,16 @@ var Session = /** @class */ (function () {
      * @hidden
      */
     Session.prototype.onLostConnection = function () {
-        if (!this.connection) {
+        /*if (!this.connection) {
+
             console.warn('Not connected to session: if you are not debugging, this is probably a certificate error');
-            var url = 'https://' + this.openvidu.getWsUri().split('wss://')[1].split('/openvidu')[0];
+
+            const url = 'https://' + this.openvidu.getWsUri().split('wss://')[1].split('/openvidu')[0];
             if (window.confirm('If you are not debugging, this is probably a certificate error at \"' + url + '\"\n\nClick OK to navigate and accept it')) {
                 location.assign(url + '/accept-certificate');
             }
             return;
-        }
+        }*/
         console.warn('Lost connection in Session ' + this.sessionId);
         if (!!this.sessionId && !this.connection.disposed) {
             this.leave(true, 'networkDisconnect');
@@ -801,11 +804,27 @@ var Session = /** @class */ (function () {
         this.sessionId = url.searchParams.get('sessionId');
         var secret = url.searchParams.get('secret');
         var recorder = url.searchParams.get('recorder');
+        var turnUsername = url.searchParams.get('turnUsername');
+        var turnCredential = url.searchParams.get('turnCredential');
+        var role = url.searchParams.get('role');
         if (!!secret) {
             this.openvidu.secret = secret;
         }
         if (!!recorder) {
             this.openvidu.recorder = true;
+        }
+        if (!!turnUsername && !!turnCredential) {
+            var stunUrl = 'stun:' + url.hostname + ':3478';
+            var turnUrl1 = 'turn:' + url.hostname + ':3478';
+            var turnUrl2 = turnUrl1 + '?transport=tcp';
+            this.openvidu.iceServers = [
+                { urls: [stunUrl] },
+                { urls: [turnUrl1, turnUrl2], username: turnUsername, credential: turnCredential }
+            ];
+            console.log('TURN temp credentials [' + turnUsername + ':' + turnCredential + ']');
+        }
+        if (!!role) {
+            this.openvidu.role = role;
         }
         this.openvidu.wsUri = 'wss://' + url.host + '/openvidu';
     };
