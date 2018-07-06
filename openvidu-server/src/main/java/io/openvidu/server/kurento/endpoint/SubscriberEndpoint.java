@@ -22,6 +22,7 @@ import org.kurento.client.MediaPipeline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.kurento.core.KurentoParticipant;
 
 /**
@@ -36,8 +37,8 @@ public class SubscriberEndpoint extends MediaEndpoint {
 
 	private PublisherEndpoint publisher = null;
 
-	public SubscriberEndpoint(boolean web, KurentoParticipant owner, String endpointName, MediaPipeline pipeline) {
-		super(web, owner, endpointName, pipeline, log);
+	public SubscriberEndpoint(boolean web, KurentoParticipant owner, String endpointName, MediaPipeline pipeline, OpenviduConfig openviduConfig) {
+		super(web, owner, endpointName, pipeline, openviduConfig, log);
 	}
 
 	public synchronized String subscribe(String sdpOffer, PublisherEndpoint publisher) {

@@ -44,19 +44,28 @@ public class OpenviduConfig {
 	private String openviduRecordingPath;
 
 	@Value("${openvidu.recording.public-access}")
-	boolean openviduRecordingPublicAccess;
+	private boolean openviduRecordingPublicAccess;
 
 	@Value("${openvidu.recording.notification}")
-	String openviduRecordingNotification;
+	private String openviduRecordingNotification;
 
 	@Value("${openvidu.recording.custom-layout}")
-	String openviduRecordingCustomLayout;
+	private String openviduRecordingCustomLayout;
 
 	@Value("${openvidu.recording.version}")
-	String openviduRecordingVersion;
+	private String openviduRecordingVersion;
 
-	@Value("#{'${spring.profiles.active:}'.length() > 0 ? '${spring.profiles.active:}'.split(',') : \"default\"}")
-	private String springProfile;
+	@Value("${openvidu.streams.video.max-recv-bandwidth}")
+	private int openviduStreamsVideoMaxRecvBandwidth;
+
+	@Value("${openvidu.streams.video.min-recv-bandwidth}")
+	private int openviduStreamsVideoMinRecvBandwidth;
+
+	@Value("${openvidu.streams.video.max-send-bandwidth}")
+	private int openviduStreamsVideoMaxSendBandwidth;
+
+	@Value("${openvidu.streams.video.min-send-bandwidth}")
+	private int openviduStreamsVideoMinSendBandwidth;
 
 	@Value("${coturn.redis.ip}")
 	private String coturnRedisIp;
@@ -69,6 +78,9 @@ public class OpenviduConfig {
 
 	@Value("${coturn.redis.connect-timeout}")
 	private String coturnRedisConnectTimeout;
+
+	@Value("#{'${spring.profiles.active:}'.length() > 0 ? '${spring.profiles.active:}'.split(',') : \"default\"}")
+	private String springProfile;
 
 	private String finalUrl;
 
@@ -132,11 +144,27 @@ public class OpenviduConfig {
 		return springProfile;
 	}
 
+	public int getVideoMaxRecvBandwidth() {
+		return this.openviduStreamsVideoMaxRecvBandwidth;
+	}
+
+	public int getVideoMinRecvBandwidth() {
+		return this.openviduStreamsVideoMinRecvBandwidth;
+	}
+
+	public int getVideoMaxSendBandwidth() {
+		return this.openviduStreamsVideoMaxSendBandwidth;
+	}
+
+	public int getVideoMinSendBandwidth() {
+		return this.openviduStreamsVideoMinSendBandwidth;
+	}
+
 	public String getCoturnDatabaseString() {
 		return "\"ip=" + this.coturnRedisIp + " dbname=" + this.coturnRedisDbname + " password="
 				+ this.coturnRedisPassword + " connect_timeout=" + this.coturnRedisConnectTimeout + "\"";
 	}
-	
+
 	public String getCoturnDatabaseDbname() {
 		return this.coturnRedisDbname;
 	}

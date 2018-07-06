@@ -39,7 +39,6 @@ import org.kurento.client.SdpEndpoint;
 import org.kurento.client.internal.server.KurentoServerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
@@ -60,8 +59,7 @@ public class KurentoParticipant extends Participant {
 
 	private static final Logger log = LoggerFactory.getLogger(KurentoParticipant.class);
 
-	@Autowired
-	protected OpenviduConfig openviduConfig;
+	private OpenviduConfig openviduConfig;
 
 	private InfoHandler infoHandler;
 	private CallDetailRecord CDR;
@@ -78,12 +76,14 @@ public class KurentoParticipant extends Participant {
 	private final ConcurrentMap<String, SubscriberEndpoint> subscribers = new ConcurrentHashMap<String, SubscriberEndpoint>();
 
 	public KurentoParticipant(Participant participant, KurentoSession kurentoSession, MediaPipeline pipeline,
-			InfoHandler infoHandler, CallDetailRecord CDR) {
+			InfoHandler infoHandler, CallDetailRecord CDR, OpenviduConfig openviduConfig) {
 		super(participant.getParticipantPrivateId(), participant.getParticipantPublicId(), participant.getToken(),
 				participant.getClientMetadata());
+		this.openviduConfig = openviduConfig;
 		this.session = kurentoSession;
 		this.pipeline = pipeline;
-		this.publisher = new PublisherEndpoint(webParticipant, this, participant.getParticipantPublicId(), pipeline);
+		this.publisher = new PublisherEndpoint(webParticipant, this, participant.getParticipantPublicId(), pipeline,
+				this.openviduConfig);
 
 		for (Participant other : session.getParticipants()) {
 			if (!other.getParticipantPublicId().equals(this.getParticipantPublicId())) {
@@ -250,7 +250,8 @@ public class KurentoParticipant extends Participant {
 		log.info("PARTICIPANT {}: unpublishing media stream from room {}", this.getParticipantPublicId(),
 				this.session.getSessionId());
 		releasePublisherEndpoint(reason);
-		this.publisher = new PublisherEndpoint(webParticipant, this, this.getParticipantPublicId(), pipeline);
+		this.publisher = new PublisherEndpoint(webParticipant, this, this.getParticipantPublicId(), pipeline,
+				this.openviduConfig);
 		log.info("PARTICIPANT {}: released publisher endpoint and left it initialized (ready for future streaming)",
 				this.getParticipantPublicId());
 	}
@@ -394,7 +395,8 @@ public class KurentoParticipant extends Participant {
 	 */
 	public SubscriberEndpoint getNewOrExistingSubscriber(String senderPublicId) {
 
-		SubscriberEndpoint sendingEndpoint = new SubscriberEndpoint(webParticipant, this, senderPublicId, pipeline);
+		SubscriberEndpoint sendingEndpoint = new SubscriberEndpoint(webParticipant, this, senderPublicId, pipeline,
+				this.openviduConfig);
 
 		SubscriberEndpoint existingSendingEndpoint = this.subscribers.putIfAbsent(senderPublicId, sendingEndpoint);
 		if (existingSendingEndpoint != null) {

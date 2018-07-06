@@ -441,7 +441,7 @@ public class KurentoSessionManager extends SessionManager {
 		}
 		KurentoClient kurentoClient = kcProvider.getKurentoClient(kcSessionInfo);
 		session = new KurentoSession(sessionId, sessionProperties, kurentoClient, kurentoSessionEventsHandler,
-				kcProvider.destroyWhenUnused(), this.CDR);
+				kcProvider.destroyWhenUnused(), this.CDR, this.openviduConfig);
 
 		KurentoSession oldSession = (KurentoSession) sessions.putIfAbsent(sessionId, session);
 		if (oldSession != null) {

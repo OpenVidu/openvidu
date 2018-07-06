@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
+import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.kurento.TrackType;
 import io.openvidu.server.kurento.core.KurentoParticipant;
@@ -60,8 +61,8 @@ public class PublisherEndpoint extends MediaEndpoint {
 
 	private Map<String, ListenerSubscription> elementsErrorSubscriptions = new HashMap<String, ListenerSubscription>();
 
-	public PublisherEndpoint(boolean web, KurentoParticipant owner, String endpointName, MediaPipeline pipeline) {
-		super(web, owner, endpointName, pipeline, log);
+	public PublisherEndpoint(boolean web, KurentoParticipant owner, String endpointName, MediaPipeline pipeline, OpenviduConfig openviduConfig) {
+		super(web, owner, endpointName, pipeline, openviduConfig, log);
 	}
 
 	@Override

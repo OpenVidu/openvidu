@@ -42,6 +42,7 @@ import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.server.cdr.CallDetailRecord;
+import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
 
@@ -52,6 +53,8 @@ public class KurentoSession implements Session {
 
 	private final static Logger log = LoggerFactory.getLogger(Session.class);
 	public static final int ASYNC_LATCH_TIMEOUT = 30;
+
+	private OpenviduConfig openviduConfig;
 
 	private final ConcurrentMap<String, KurentoParticipant> participants = new ConcurrentHashMap<>();
 	private String sessionId;
@@ -74,17 +77,19 @@ public class KurentoSession implements Session {
 	private boolean destroyKurentoClient;
 
 	private CallDetailRecord CDR;
-	
+
 	public final ConcurrentHashMap<String, String> publishedStreamIds = new ConcurrentHashMap<>();
 
 	public KurentoSession(String sessionId, SessionProperties sessionProperties, KurentoClient kurentoClient,
-			KurentoSessionEventsHandler kurentoSessionHandler, boolean destroyKurentoClient, CallDetailRecord CDR) {
+			KurentoSessionEventsHandler kurentoSessionHandler, boolean destroyKurentoClient, CallDetailRecord CDR,
+			OpenviduConfig openviduConfig) {
 		this.sessionId = sessionId;
 		this.sessionProperties = sessionProperties;
 		this.kurentoClient = kurentoClient;
 		this.destroyKurentoClient = destroyKurentoClient;
 		this.kurentoSessionHandler = kurentoSessionHandler;
 		this.CDR = CDR;
+		this.openviduConfig = openviduConfig;
 		log.debug("New SESSION instance with id '{}'", sessionId);
 	}
 
@@ -104,7 +109,7 @@ public class KurentoSession implements Session {
 		createPipeline();
 
 		KurentoParticipant kurentoParticipant = new KurentoParticipant(participant, this, getPipeline(),
-				kurentoSessionHandler.getInfoHandler(), this.CDR);
+				kurentoSessionHandler.getInfoHandler(), this.CDR, this.openviduConfig);
 		participants.put(participant.getParticipantPrivateId(), kurentoParticipant);
 
 		filterStates.forEach((filterId, state) -> {

@@ -44,6 +44,7 @@ import org.slf4j.LoggerFactory;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
+import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.kurento.core.KurentoParticipant;
 
@@ -57,11 +58,17 @@ import io.openvidu.server.kurento.core.KurentoParticipant;
  */
 public abstract class MediaEndpoint {
 	private static Logger log;
+	private OpenviduConfig openviduConfig;
 
 	private boolean web = false;
 
 	private WebRtcEndpoint webEndpoint = null;
 	private RtpEndpoint endpoint = null;
+
+	private final int maxRecvKbps;
+	private final int minRecvKbps;
+	private final int maxSendKbps;
+	private final int minSendKbps;
 
 	private KurentoParticipant owner;
 	private String endpointName;
@@ -89,7 +96,7 @@ public abstract class MediaEndpoint {
 	 * @param log
 	 */
 	public MediaEndpoint(boolean web, KurentoParticipant owner, String endpointName, MediaPipeline pipeline,
-			Logger log) {
+			OpenviduConfig openviduConfig, Logger log) {
 		if (log == null) {
 			MediaEndpoint.log = LoggerFactory.getLogger(MediaEndpoint.class);
 		} else {
@@ -99,6 +106,12 @@ public abstract class MediaEndpoint {
 		this.owner = owner;
 		this.setEndpointName(endpointName);
 		this.setMediaPipeline(pipeline);
+
+		this.openviduConfig = openviduConfig;
+		this.maxRecvKbps = this.openviduConfig.getVideoMaxRecvBandwidth();
+		this.minRecvKbps = this.openviduConfig.getVideoMinRecvBandwidth();
+		this.maxSendKbps = this.openviduConfig.getVideoMaxSendBandwidth();
+		this.minSendKbps = this.openviduConfig.getVideoMinSendBandwidth();
 	}
 
 	public boolean isWeb() {
@@ -218,10 +231,10 @@ public abstract class MediaEndpoint {
 				public void onSuccess(WebRtcEndpoint result) throws Exception {
 					webEndpoint = result;
 
-					webEndpoint.setMaxVideoRecvBandwidth(600);
-					webEndpoint.setMinVideoRecvBandwidth(300);
-					webEndpoint.setMaxVideoSendBandwidth(600);
-					webEndpoint.setMinVideoSendBandwidth(300);
+					webEndpoint.setMaxVideoRecvBandwidth(maxRecvKbps);
+					webEndpoint.setMinVideoRecvBandwidth(minRecvKbps);
+					webEndpoint.setMaxVideoSendBandwidth(maxSendKbps);
+					webEndpoint.setMinVideoSendBandwidth(minSendKbps);
 
 					endpointLatch.countDown();
 					log.trace("EP {}: Created a new WebRtcEndpoint", endpointName);
