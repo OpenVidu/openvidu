@@ -17,6 +17,6 @@
 
 package io.openvidu.server.kurento;
 
-public enum MutedMediaType {
+public enum TrackType {
   ALL, VIDEO, AUDIO;
 }

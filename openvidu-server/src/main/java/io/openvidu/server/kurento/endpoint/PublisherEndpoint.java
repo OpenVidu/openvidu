@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.server.core.MediaOptions;
-import io.openvidu.server.kurento.MutedMediaType;
+import io.openvidu.server.kurento.TrackType;
 import io.openvidu.server.kurento.core.KurentoParticipant;
 
 /**
@@ -46,6 +46,7 @@ import io.openvidu.server.kurento.core.KurentoParticipant;
  * @author <a href="mailto:rvlad@naevatec.com">Radu Tom Vlad</a>
  */
 public class PublisherEndpoint extends MediaEndpoint {
+
 	private final static Logger log = LoggerFactory.getLogger(PublisherEndpoint.class);
 
 	protected MediaOptions mediaOptions;
@@ -283,8 +284,7 @@ public class PublisherEndpoint extends MediaEndpoint {
 		}
 	}
 
-	@Override
-	public synchronized void mute(MutedMediaType muteType) {
+	public synchronized void mute(TrackType muteType) {
 		MediaElement sink = passThru;
 		if (!elements.isEmpty()) {
 			String sinkId = elementIds.peekLast();
@@ -308,11 +308,9 @@ public class PublisherEndpoint extends MediaEndpoint {
 			internalSinkDisconnect(this.getEndpoint(), sink, MediaType.VIDEO);
 			break;
 		}
-		resolveCurrentMuteType(muteType);
 	}
 
-	@Override
-	public synchronized void unmute() {
+	public synchronized void unmute(TrackType muteType) {
 		MediaElement sink = passThru;
 		if (!elements.isEmpty()) {
 			String sinkId = elementIds.peekLast();
@@ -325,8 +323,17 @@ public class PublisherEndpoint extends MediaEndpoint {
 		} else {
 			log.debug("Will unmute connection of WebRTC and PassThrough (no other elems)");
 		}
-		internalSinkConnect(this.getEndpoint(), sink);
-		setMuteType(null);
+		switch (muteType) {
+		case ALL:
+			internalSinkConnect(this.getEndpoint(), sink);
+			break;
+		case AUDIO:
+			internalSinkConnect(this.getEndpoint(), sink, MediaType.AUDIO);
+			break;
+		case VIDEO:
+			internalSinkConnect(this.getEndpoint(), sink, MediaType.VIDEO);
+			break;
+		}
 	}
 
 	private String getNext(String uid) {
@@ -466,7 +473,7 @@ public class PublisherEndpoint extends MediaEndpoint {
 			});
 		}
 	}
-	
+
 	@Override
 	public PublisherEndpoint getPublisher() {
 		return this;

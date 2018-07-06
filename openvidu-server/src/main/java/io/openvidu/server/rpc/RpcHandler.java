@@ -56,7 +56,6 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 	RpcNotificationService notificationService;
 
 	private ConcurrentMap<String, Boolean> webSocketEOFTransportError = new ConcurrentHashMap<>();
-	// private ConcurrentMap<String, Boolean> webSocketBrokenPipeTransportError = new ConcurrentHashMap<>();
 
 	@Override
 	public void handleRequest(Transaction transaction, Request<JsonObject> request) throws Exception {
@@ -286,17 +285,17 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 		sessionManager.unpublishVideo(participant, request.getId(), "unpublish");
 	}
-	
+
 	public void streamPropertyChanged(RpcConnection rpcConnection, Request<JsonObject> request) {
 		String participantPrivateId = rpcConnection.getParticipantPrivateId();
 		String sessionId = rpcConnection.getSessionId();
 		Participant participant = sessionManager.getParticipant(sessionId, participantPrivateId);
-		
+
 		String streamId = getStringParam(request, ProtocolElements.STREAMPROPERTYCHANGED_STREAMID_PARAM);
 		String property = getStringParam(request, ProtocolElements.STREAMPROPERTYCHANGED_PROPERTY_PARAM);
 		JsonElement newValue = getParam(request, ProtocolElements.STREAMPROPERTYCHANGED_NEWVALUE_PARAM);
 		String reason = getStringParam(request, ProtocolElements.STREAMPROPERTYCHANGED_REASON_PARAM);
-		
+
 		sessionManager.streamPropertyChanged(participant, request.getId(), streamId, property, newValue, reason);
 	}
 
@@ -360,7 +359,6 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		if ("IOException".equals(exception.getClass().getSimpleName())
 				&& "Broken pipe".equals(exception.getCause().getMessage())) {
 			log.warn("Parcipant with private id {} unexpectedly closed the websocket", rpcSession.getSessionId());
-			// this.webSocketBrokenPipeTransportError.put(rpcSession.getSessionId(), true);
 		}
 		if ("EOFException".equals(exception.getClass().getSimpleName())) {
 			// Store WebSocket connection interrupted exception for this web socket to
@@ -402,7 +400,7 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		}
 		return request.getParams().get(key).getAsBoolean();
 	}
-	
+
 	public static JsonElement getParam(Request<JsonObject> request, String key) {
 		if (request.getParams() == null || request.getParams().get(key) == null) {
 			throw new RuntimeException("Request element '" + key + "' is missing in method '" + request.getMethod()

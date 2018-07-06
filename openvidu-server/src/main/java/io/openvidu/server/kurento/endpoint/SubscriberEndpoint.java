@@ -19,12 +19,9 @@ package io.openvidu.server.kurento.endpoint;
 
 import org.json.simple.JSONObject;
 import org.kurento.client.MediaPipeline;
-import org.kurento.client.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.openvidu.client.OpenViduException;
-import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.server.kurento.core.KurentoParticipant;
 
 /**
@@ -68,31 +65,6 @@ public class SubscriberEndpoint extends MediaEndpoint {
 
 	public void setPublisher(PublisherEndpoint publisher) {
 		this.publisher = publisher;
-	}
-
-	@Override
-	public synchronized void mute(io.openvidu.server.kurento.MutedMediaType muteType) {
-		if (this.publisher == null) {
-			throw new OpenViduException(Code.MEDIA_MUTE_ERROR_CODE, "Publisher endpoint not found");
-		}
-		switch (muteType) {
-		case ALL:
-			this.publisher.disconnectFrom(this.getEndpoint());
-			break;
-		case AUDIO:
-			this.publisher.disconnectFrom(this.getEndpoint(), MediaType.AUDIO);
-			break;
-		case VIDEO:
-			this.publisher.disconnectFrom(this.getEndpoint(), MediaType.VIDEO);
-			break;
-		}
-		resolveCurrentMuteType(muteType);
-	}
-
-	@Override
-	public synchronized void unmute() {
-		this.publisher.connect(this.getEndpoint());
-		setMuteType(null);
 	}
 
 	@SuppressWarnings("unchecked")

@@ -210,6 +210,14 @@ public class SessionRestController {
 		}
 	}
 
+	/*
+	 * @RequestMapping(value = "/sessions/{sessionId}/stream/{streamId}", method =
+	 * RequestMethod.PUT) public ResponseEntity<JSONObject>
+	 * muteMedia(@PathVariable("sessionId") String sessionId,
+	 * 
+	 * @PathVariable("streamId") String streamId, @RequestBody Map<?, ?> params) { }
+	 */
+
 	@SuppressWarnings("unchecked")
 	@RequestMapping(value = "/tokens", method = RequestMethod.POST)
 	public ResponseEntity<JSONObject> newToken(@RequestBody Map<?, ?> params) {

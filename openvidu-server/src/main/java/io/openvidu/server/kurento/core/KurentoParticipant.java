@@ -49,7 +49,7 @@ import io.openvidu.server.config.InfoHandler;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
-import io.openvidu.server.kurento.MutedMediaType;
+import io.openvidu.server.kurento.TrackType;
 import io.openvidu.server.kurento.endpoint.KmsEvent;
 import io.openvidu.server.kurento.endpoint.MediaEndpoint;
 import io.openvidu.server.kurento.endpoint.PublisherEndpoint;
@@ -107,7 +107,7 @@ public class KurentoParticipant extends Participant {
 				+ RandomStringUtils.random(5, true, false).toUpperCase();
 		this.publisher.getEndpoint().addTag("name", publisherStreamId);
 		addEndpointListeners(this.publisher);
-		
+
 		// Remove streamId from publisher's map
 		this.session.publishedStreamIds.putIfAbsent(this.getPublisherStreamId(), this.getParticipantPrivateId());
 
@@ -353,54 +353,12 @@ public class KurentoParticipant extends Participant {
 		}
 	}
 
-	public void mutePublishedMedia(MutedMediaType muteType) {
-		if (muteType == null) {
-			throw new OpenViduException(Code.MEDIA_MUTE_ERROR_CODE, "Mute type cannot be null");
-		}
-		this.getPublisher().mute(muteType);
+	public void mutePublishedMedia(TrackType trackType) {
+		this.getPublisher().mute(trackType);
 	}
 
-	public void unmutePublishedMedia() {
-		if (this.getPublisher().getMuteType() == null) {
-			log.warn("PARTICIPANT {}: Trying to unmute published media. " + "But media is not muted.",
-					this.getParticipantPublicId());
-		} else {
-			this.getPublisher().unmute();
-		}
-	}
-
-	public void muteSubscribedMedia(Participant sender, MutedMediaType muteType) {
-		if (muteType == null) {
-			throw new OpenViduException(Code.MEDIA_MUTE_ERROR_CODE, "Mute type cannot be null");
-		}
-		String senderName = sender.getParticipantPublicId();
-		SubscriberEndpoint subscriberEndpoint = subscribers.get(senderName);
-		if (subscriberEndpoint == null || subscriberEndpoint.getEndpoint() == null) {
-			log.warn("PARTICIPANT {}: Trying to mute incoming media from user {}. "
-					+ "But there is no such subscriber endpoint.", this.getParticipantPublicId(), senderName);
-		} else {
-			log.debug("PARTICIPANT {}: Mute subscriber endpoint linked to user {}", this.getParticipantPublicId(),
-					senderName);
-			subscriberEndpoint.mute(muteType);
-		}
-	}
-
-	public void unmuteSubscribedMedia(Participant sender) {
-		String senderName = sender.getParticipantPublicId();
-		SubscriberEndpoint subscriberEndpoint = subscribers.get(senderName);
-		if (subscriberEndpoint == null || subscriberEndpoint.getEndpoint() == null) {
-			log.warn("PARTICIPANT {}: Trying to unmute incoming media from user {}. "
-					+ "But there is no such subscriber endpoint.", this.getParticipantPublicId(), senderName);
-		} else {
-			if (subscriberEndpoint.getMuteType() == null) {
-				log.warn("PARTICIPANT {}: Trying to unmute incoming media from user {}. " + "But media is not muted.",
-						this.getParticipantPublicId(), senderName);
-			} else {
-				log.debug("PARTICIPANT {}: Unmute subscriber endpoint linked to user {}", this.getParticipantPublicId(),
-						senderName);
-				subscriberEndpoint.unmute();
-			}
-		}
+	public void unmutePublishedMedia(TrackType trackType) {
+		this.getPublisher().unmute(trackType);
 	}
 
 	public void close(String reason) {
@@ -471,7 +429,7 @@ public class KurentoParticipant extends Participant {
 
 	private void releasePublisherEndpoint(String reason) {
 		if (publisher != null && publisher.getEndpoint() != null) {
-			
+
 			// Store streamId from publisher's map
 			this.session.publishedStreamIds.remove(this.getPublisherStreamId());
 

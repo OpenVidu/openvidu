@@ -45,7 +45,6 @@ import org.slf4j.LoggerFactory;
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.server.core.Participant;
-import io.openvidu.server.kurento.MutedMediaType;
 import io.openvidu.server.kurento.core.KurentoParticipant;
 
 /**
@@ -72,8 +71,6 @@ public abstract class MediaEndpoint {
 
 	private final List<IceCandidate> receivedCandidateList = new LinkedList<IceCandidate>();
 	private LinkedList<IceCandidate> candidates = new LinkedList<IceCandidate>();
-
-	private MutedMediaType muteType;
 
 	public Map<String, MediaType> flowInMedia = new ConcurrentHashMap<>();
 	public Map<String, MediaType> flowOutMedia = new ConcurrentHashMap<>();
@@ -202,50 +199,6 @@ public abstract class MediaEndpoint {
 	 */
 	public synchronized void unregisterErrorListeners() {
 		unregisterElementErrListener(endpoint, endpointSubscription);
-	}
-
-	/**
-	 * Mute the media stream.
-	 *
-	 * @param muteType
-	 *            which type of leg to disconnect (audio, video or both)
-	 */
-	public abstract void mute(MutedMediaType muteType);
-
-	/**
-	 * Reconnect the muted media leg(s).
-	 */
-	public abstract void unmute();
-
-	public void setMuteType(MutedMediaType muteType) {
-		this.muteType = muteType;
-	}
-
-	public MutedMediaType getMuteType() {
-		return this.muteType;
-	}
-
-	protected void resolveCurrentMuteType(MutedMediaType newMuteType) {
-		MutedMediaType prev = this.getMuteType();
-		if (prev != null) {
-			switch (prev) {
-			case AUDIO:
-				if (muteType.equals(MutedMediaType.VIDEO)) {
-					this.setMuteType(MutedMediaType.ALL);
-					return;
-				}
-				break;
-			case VIDEO:
-				if (muteType.equals(MutedMediaType.AUDIO)) {
-					this.setMuteType(MutedMediaType.ALL);
-					return;
-				}
-				break;
-			case ALL:
-				return;
-			}
-		}
-		this.setMuteType(newMuteType);
 	}
 
 	/**

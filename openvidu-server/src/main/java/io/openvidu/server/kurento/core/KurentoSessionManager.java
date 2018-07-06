@@ -36,20 +36,20 @@ import com.google.gson.JsonSyntaxException;
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
+import io.openvidu.java.client.MediaMode;
 import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.java.client.RecordingMode;
 import io.openvidu.java.client.RecordingProperties;
-import io.openvidu.java.client.MediaMode;
 import io.openvidu.java.client.SessionProperties;
+import io.openvidu.server.core.MediaOptions;
+import io.openvidu.server.core.Participant;
+import io.openvidu.server.core.Session;
 import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.kurento.KurentoClientProvider;
 import io.openvidu.server.kurento.KurentoClientSessionInfo;
 import io.openvidu.server.kurento.OpenViduKurentoClientSessionInfo;
 import io.openvidu.server.kurento.endpoint.SdpType;
 import io.openvidu.server.rpc.RpcHandler;
-import io.openvidu.server.core.MediaOptions;
-import io.openvidu.server.core.Participant;
-import io.openvidu.server.core.Session;
 
 public class KurentoSessionManager extends SessionManager {
 
@@ -105,7 +105,8 @@ public class KurentoSessionManager extends SessionManager {
 	}
 
 	@Override
-	public synchronized void leaveRoom(Participant participant, Integer transactionId, String reason, boolean closeWebSocket) {
+	public synchronized void leaveRoom(Participant participant, Integer transactionId, String reason,
+			boolean closeWebSocket) {
 		log.debug("Request [LEAVE_ROOM] ({})", participant.getParticipantPublicId());
 
 		KurentoParticipant kParticipant = (KurentoParticipant) participant;
