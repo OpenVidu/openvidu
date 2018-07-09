@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
 
+import io.openvidu.server.core.*;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,10 +44,6 @@ import io.openvidu.java.client.RecordingMode;
 import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.server.config.OpenviduConfig;
-import io.openvidu.server.core.Participant;
-import io.openvidu.server.core.ParticipantRole;
-import io.openvidu.server.core.Session;
-import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.recording.ComposedRecordingService;
 import io.openvidu.server.recording.Recording;
 
@@ -61,6 +58,9 @@ public class SessionRestController {
 
 	@Autowired
 	private SessionManager sessionManager;
+
+	@Autowired
+	private SessionStorage sessionStorage;
 
 	@Autowired
 	private ComposedRecordingService recordingService;
@@ -120,13 +120,13 @@ public class SessionRestController {
 
 		String sessionId;
 		if (customSessionId != null && !customSessionId.isEmpty()) {
-			if (sessionManager.sessionidTokenTokenobj.putIfAbsent(customSessionId, new ConcurrentHashMap<>()) != null) {
+			if (this.sessionStorage.putTokenObject(customSessionId, new ConcurrentHashMap<>()) != null) {
 				return new ResponseEntity<>(HttpStatus.CONFLICT);
 			}
 			sessionId = customSessionId;
 		} else {
 			sessionId = sessionManager.generateRandomChain();
-			sessionManager.sessionidTokenTokenobj.putIfAbsent(sessionId, new ConcurrentHashMap<>());
+			this.sessionStorage.putTokenObject(sessionId, new ConcurrentHashMap<>());
 		}
 
 		sessionManager.storeSessionId(sessionId, sessionProperties);
