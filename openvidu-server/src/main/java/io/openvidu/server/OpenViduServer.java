@@ -25,6 +25,7 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.ws.rs.ProcessingException;
 
+import io.openvidu.server.core.SessionManagerProvider;
 import io.openvidu.server.core.SessionStorage;
 import io.openvidu.server.core.Utils;
 import org.kurento.jsonrpc.JsonUtils;
@@ -162,6 +163,10 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	@Bean
 	@ConditionalOnMissingBean
 	public Utils utils() { return new Utils(); }
+
+	@Bean
+	@ConditionalOnMissingBean
+	public SessionManagerProvider sessionManagerProvider() { return new SessionManagerProvider(); }
 
 	@Override
 	public void registerJsonRpcHandlers(JsonRpcHandlerRegistry registry) {
