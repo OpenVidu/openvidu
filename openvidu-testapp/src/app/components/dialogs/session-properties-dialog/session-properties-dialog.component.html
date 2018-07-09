@@ -28,8 +28,8 @@
         <mat-form-field>
             <input matInput placeholder="CustomSessionId" [(ngModel)]="sessionProperties.customSessionId">
         </mat-form-field>
-        <label id="turn-conf-label">Turn configuration</label>
-        <div [class.not-manual]="turnConf !== 'manual'">
+        <label class="label">Turn configuration</label>
+        <div id="turn-div">
             <mat-radio-group name="Turn configuration" [(ngModel)]="turnConf">
                 <mat-radio-button value="auto">Auto</mat-radio-button>
                 <mat-radio-button value="freeice">Freeice</mat-radio-button>
@@ -47,9 +47,20 @@
                 </mat-form-field>
             </div>
         </div>
+
+        <label class="label">Role</label>
+        <div id="role-div">
+            <mat-radio-group name="Role" [(ngModel)]="participantRole">
+                <mat-radio-button value="SUBSCRIBER">SUB</mat-radio-button>
+                <mat-radio-button value="PUBLISHER">PUB</mat-radio-button>
+                <mat-radio-button value="MODERATOR">MOD</mat-radio-button>
+            </mat-radio-group>
+        </div>
+
+
     </mat-dialog-content>
     <mat-dialog-actions>
         <button mat-button [mat-dialog-close]="undefined">CANCEL</button>
-        <button mat-button [mat-dialog-close]="{sessionProperties: sessionProperties, turnConf: turnConf, manualTurnConf: manualTurnConf}">SAVE</button>
+        <button mat-button [mat-dialog-close]="{sessionProperties: sessionProperties, turnConf: turnConf, manualTurnConf: manualTurnConf, participantRole: participantRole}">SAVE</button>
     </mat-dialog-actions>
 </div>

@@ -613,4 +613,12 @@ export class VideoComponent implements OnInit, OnDestroy {
         }
     }
 
+    forceUnpublish() {
+        this.OV.session.forceUnpublish(this.streamManager.stream);
+    }
+
+    forceDisconnect() {
+        this.OV.session.forceDisconnect(this.streamManager.stream.connection);
+    }
+
 }

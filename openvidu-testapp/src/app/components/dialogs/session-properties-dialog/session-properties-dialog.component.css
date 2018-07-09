@@ -7,7 +7,7 @@ mat-radio-button:first-child {
     margin-left: 0;
 }
 
-#turn-conf-label {
+.label {
     display: block;
     font-size: 12px;
     color: rgba(0, 0, 0, 0.54);
@@ -15,9 +15,8 @@ mat-radio-button:first-child {
     margin-bottom: 5px;
 }
 
-.not-manual {
-    padding-top: 6px;
-    padding-bottom: 15px;
+#turn-div {
+    padding-bottom: 1.25em;
 }
 
 #manual-turn-div {
@@ -25,4 +24,9 @@ mat-radio-button:first-child {
     padding: 5px;
     border: 1px solid #00000026;
     border-radius: 3px;
+}
+
+#role-div {
+    padding-top: 6px;
+    padding-bottom: 15px;
 }

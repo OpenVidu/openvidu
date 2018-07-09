@@ -6,14 +6,15 @@ import {
 import {
   OpenVidu, Session, Subscriber, Publisher, VideoInsertMode, StreamEvent, ConnectionEvent,
   SessionDisconnectedEvent, SignalEvent, RecordingEvent,
-  PublisherSpeakingEvent, PublisherProperties, StreamPropertyChangedEvent
+  PublisherSpeakingEvent, PublisherProperties, StreamPropertyChangedEvent, OpenViduError
 } from 'openvidu-browser';
 import {
   OpenVidu as OpenViduAPI,
   SessionProperties as SessionPropertiesAPI,
   MediaMode,
   RecordingMode,
-  RecordingLayout
+  RecordingLayout,
+  OpenViduRole
 } from 'openvidu-node-client';
 import { MatDialog, MAT_CHECKBOX_CLICK_ACTION } from '@angular/material';
 import { ExtensionDialogComponent } from '../dialogs/extension-dialog/extension-dialog.component';
@@ -111,6 +112,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
 
   turnConf = 'auto';
   manualTurnConf: RTCIceServer = { urls: [] };
+  participantRole: OpenViduRole = OpenViduRole.PUBLISHER;
 
   events: OpenViduEvent[] = [];
 
@@ -430,7 +432,10 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       this.publisher.subscribeToRemote();
     }
 
-    this.session.publish(this.publisher);
+    this.session.publish(this.publisher).catch((error: OpenViduError) => {
+      console.error(error);
+      this.session.unpublish(this.publisher);
+    });
   }
 
   syncSubscribe(session: Session, event) {
@@ -483,7 +488,8 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       data: {
         sessionProperties: this.sessionProperties,
         turnConf: this.turnConf,
-        manualTurnConf: this.manualTurnConf
+        manualTurnConf: this.manualTurnConf,
+        participantRole: this.participantRole
       },
       width: '280px'
     });
@@ -496,6 +502,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         }
         this.turnConf = result.turnConf;
         this.manualTurnConf = result.manualTurnConf;
+        this.participantRole = result.participantRole;
       }
       document.getElementById('session-settings-btn-' + this.index).classList.remove('cdk-program-focused');
     });
@@ -588,7 +595,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     }
     return OV_NodeClient.createSession(this.sessionProperties)
       .then(session_NodeClient => {
-        return session_NodeClient.generateToken();
+        return session_NodeClient.generateToken({ role: this.participantRole });
       });
   }
 

@@ -47,6 +47,14 @@
             <button *ngIf="streamManager.stream.hasAudio && !!pubSubAudioIcon" class="video-btn sub-audio-btn" title="Subscribe/Unsubscribe Audio" (click)="subUnsubAudio()">
                 <mat-icon aria-label="Subscribe or unsubscribe audio" class="mat-icon material-icons" role="img" aria-hidden="true">{{pubSubAudioIcon}}</mat-icon>
             </button>
+
+            <button *ngIf="OV.session.capabilities.forceUnpublish" class="video-btn force-unpub-btn" title="Force Unpublish" (click)="forceUnpublish()">
+                <mat-icon aria-label="Force unpublish" class="mat-icon material-icons" role="img" aria-hidden="true">voice_over_off</mat-icon>
+            </button>
+            <button *ngIf="OV.session.capabilities.forceDisconnect" class="video-btn force-disconnect-btn" title="Force Disconnect" (click)="forceDisconnect()">
+                <mat-icon aria-label="Force disconnect" class="mat-icon material-icons" role="img" aria-hidden="true">clear</mat-icon>
+            </button>
+
             <button *ngIf="!!recordIcon" class="video-btn rec-btn" title="Record" (click)="record()">
                 <mat-icon aria-label="Start/Stop recording" class="mat-icon material-icons" role="img" aria-hidden="true">{{recordIcon}}</mat-icon>
             </button>
