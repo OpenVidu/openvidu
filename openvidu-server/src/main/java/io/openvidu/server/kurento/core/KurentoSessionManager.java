@@ -447,6 +447,7 @@ public class KurentoSessionManager extends SessionManager {
 				kcProvider.destroyWhenUnused(), this.CDR, this.openviduConfig);
 
 		KurentoSession oldSession = (KurentoSession) this.sessionStorage.putSessionIfAbsent(sessionId, session);
+		this.sessionStorage.putSessionPropertiesIfAbsent(sessionId, sessionProperties);
 		if (oldSession != null) {
 			log.warn("Session '{}' has just been created by another thread", sessionId);
 			return;
