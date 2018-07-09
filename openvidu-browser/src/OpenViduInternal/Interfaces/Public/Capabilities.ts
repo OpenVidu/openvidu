@@ -21,6 +21,16 @@
 export interface Capabilities {
 
     /**
+     * `true` if the client can call [[Session.forceDisconnect]], `false` if not
+     */
+    forceDisconnect: boolean;
+
+    /**
+     * `true` if the client can call [[Session.forceUnpublish]], `false` if not
+     */
+    forceUnpublish: boolean;
+
+    /**
      * `true` if the client can call [[Session.publish]], `false` if not
      */
     publish: boolean;
