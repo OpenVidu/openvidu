@@ -17,7 +17,9 @@
 
 package io.openvidu.server.kurento.core;
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 import org.kurento.client.IceCandidate;
@@ -287,7 +289,8 @@ public class KurentoSessionManager extends SessionManager {
 
 		} catch (OpenViduException e) {
 			log.warn("PARTICIPANT {}: Error unpublishing media", participant.getParticipantPublicId(), e);
-			sessionEventsHandler.onUnpublishMedia(participant, null, moderator, transactionId, e, "");
+			sessionEventsHandler.onUnpublishMedia(participant, new HashSet<>(Arrays.asList(participant)), moderator,
+					transactionId, e, "");
 		}
 	}
 
@@ -469,7 +472,8 @@ public class KurentoSessionManager extends SessionManager {
 			sessionEventsHandler.closeRpcSession(evictedParticipant.getParticipantPrivateId());
 		} else {
 			if (moderator != null && transactionId != null) {
-				this.sessionEventsHandler.onForceDisconnect(moderator, evictedParticipant, null, transactionId,
+				this.sessionEventsHandler.onForceDisconnect(moderator, evictedParticipant,
+						new HashSet<>(Arrays.asList(moderator)), transactionId,
 						new OpenViduException(Code.USER_NOT_FOUND_ERROR_CODE,
 								"Connection not found when calling 'forceDisconnect'"),
 						"");
@@ -516,7 +520,8 @@ public class KurentoSessionManager extends SessionManager {
 	}
 
 	@Override
-	public boolean unpublishStream(Session session, String streamId, Participant moderator, Integer transactionId, String reason) {
+	public boolean unpublishStream(Session session, String streamId, Participant moderator, Integer transactionId,
+			String reason) {
 		String participantPrivateId = ((KurentoSession) session).getParticipantPrivateIdFromStreamId(streamId);
 		if (participantPrivateId != null) {
 			Participant participant = this.getParticipant(participantPrivateId);
