@@ -87,7 +87,13 @@ public class ProtocolElements {
 	public static final String STREAMPROPERTYCHANGED_PROPERTY_PARAM = "property";
 	public static final String STREAMPROPERTYCHANGED_NEWVALUE_PARAM = "newValue";
 	public static final String STREAMPROPERTYCHANGED_REASON_PARAM = "reason";
-
+	
+	public static final String FORCEDISCONNECT_METHOD = "forceDisconnect";
+	public static final String FORCEDISCONNECT_CONNECTIONID_PARAM = "connectionId";
+	
+	public static final String FORCEUNPUBLISH_METHOD = "forceUnpublish";
+	public static final String FORCEUNPUBLISH_STREAMID_PARAM = "streamId";
+	
 	// ---------------------------- SERVER RESPONSES & EVENTS -----------------
 
 	public static final String PARTICIPANTJOINED_METHOD = "participantJoined";
