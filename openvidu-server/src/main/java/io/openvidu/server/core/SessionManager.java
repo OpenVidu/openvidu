@@ -22,7 +22,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.stream.Collectors;
 
 import javax.annotation.PreDestroy;
 
@@ -80,7 +79,7 @@ public abstract class SessionManager {
 
 	public abstract void publishVideo(Participant participant, MediaOptions mediaOptions, Integer transactionId);
 
-	public abstract void unpublishVideo(Participant participant, Integer transactionId, String reason);
+	public abstract void unpublishVideo(Participant participant, Participant moderator, Integer transactionId, String reason);
 
 	public abstract void subscribe(Participant participant, String senderName, String sdpOffer, Integer transactionId);
 
@@ -94,17 +93,10 @@ public abstract class SessionManager {
 	public abstract void onIceCandidate(Participant participant, String endpointName, String candidate,
 			int sdpMLineIndex, String sdpMid, Integer transactionId);
 
-	public abstract boolean unpublishStream(Session session, String streamId, String reason);
+	public abstract boolean unpublishStream(Session session, String streamId, Participant moderator, Integer transactionId, String reason);
 
-	/**
-	 * Application-originated request to remove a participant from a session. <br/>
-	 * <strong>Side effects:</strong> The session event handler should notify the
-	 * participant that she has been evicted. Should also send notifications to all
-	 * other participants about the one that's just been evicted.
-	 *
-	 */
-	public void evictParticipant(String participantPrivateId, String reason) throws OpenViduException {
-	}
+	public abstract void evictParticipant(Participant evictedParticipant, Participant moderator, Integer transactionId,
+			String reason);
 
 	/**
 	 * Returns a Session given its id
@@ -287,6 +279,18 @@ public abstract class SessionManager {
 		}
 	}
 
+	public boolean isModeratorInSession(String sessionId, Participant participant) {
+		if (!this.isInsecureParticipant(participant.getParticipantPrivateId())) {
+			if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
+				return ParticipantRole.MODERATOR.equals(participant.getToken().getRole());
+			} else {
+				return false;
+			}
+		} else {
+			return true;
+		}
+	}
+
 	public boolean isInsecureParticipant(String participantPrivateId) {
 		if (this.insecureUsers.containsKey(participantPrivateId)) {
 			log.info("The user with private id {} is an INSECURE user", participantPrivateId);
@@ -409,13 +413,11 @@ public abstract class SessionManager {
 			throw new OpenViduException(Code.ROOM_CLOSED_ERROR_CODE, "Session '" + sessionId + "' already closed");
 		}
 		Set<Participant> participants = getParticipants(sessionId);
-		// copy the ids as they will be removed from the map
-		Set<String> pids = participants.stream().map(Participant::getParticipantPrivateId).collect(Collectors.toSet());
-		for (String pid : pids) {
+		for (Participant p : participants) {
 			try {
-				this.evictParticipant(pid, reason);
+				this.evictParticipant(p, null, null, reason);
 			} catch (OpenViduException e) {
-				log.warn("Error evicting participant with id '{}' from session '{}'", pid, sessionId, e);
+				log.warn("Error evicting participant '{}' from session '{}'", p.getParticipantPublicId(), sessionId, e);
 			}
 		}
 

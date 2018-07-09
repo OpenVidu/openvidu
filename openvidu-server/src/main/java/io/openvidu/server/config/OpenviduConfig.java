@@ -175,6 +175,9 @@ public class OpenviduConfig {
 		case "none":
 			roles = new ParticipantRole[0];
 			break;
+		case "moderator":
+			roles = new ParticipantRole[] { ParticipantRole.MODERATOR };
+			break;
 		case "publisher_moderator":
 			roles = new ParticipantRole[] { ParticipantRole.PUBLISHER, ParticipantRole.MODERATOR };
 			break;

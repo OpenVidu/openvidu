@@ -185,7 +185,7 @@ public class SessionRestController {
 		if (session != null) {
 			Participant participant = session.getParticipantByPublicId(participantPublicId);
 			if (participant != null) {
-				this.sessionManager.evictParticipant(participant.getParticipantPrivateId(), "forceDisconnectByServer");
+				this.sessionManager.evictParticipant(participant, null, null, "forceDisconnectByServer");
 				return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 			} else {
 				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -200,7 +200,7 @@ public class SessionRestController {
 			@PathVariable("streamId") String streamId) {
 		Session session = this.sessionManager.getSession(sessionId);
 		if (session != null) {
-			if (this.sessionManager.unpublishStream(session, streamId, "forceUnpublishByServer")) {
+			if (this.sessionManager.unpublishStream(session, streamId, null, null, "forceUnpublishByServer")) {
 				return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 			} else {
 				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -331,8 +331,9 @@ public class SessionRestController {
 
 		Recording stoppedRecording = this.recordingService.stopRecording(session);
 
-		sessionManager.evictParticipant(session.getParticipantByPublicId(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID)
-				.getParticipantPrivateId(), "EVICT_RECORDER");
+		sessionManager.evictParticipant(
+				session.getParticipantByPublicId(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID), null, null,
+				"EVICT_RECORDER");
 
 		return new ResponseEntity<>(stoppedRecording.toJson(), HttpStatus.OK);
 	}

@@ -172,8 +172,8 @@ public class KurentoSessionManager extends SessionManager {
 
 			log.info("Last participant left. Stopping recording for session {}", sessionId);
 			recordingService.stopRecording(session);
-			evictParticipant(session.getParticipantByPublicId(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID)
-					.getParticipantPrivateId(), "EVICT_RECORDER");
+			evictParticipant(session.getParticipantByPublicId(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID), null,
+					null, "EVICT_RECORDER");
 		}
 
 		// Finally close websocket session if required
@@ -268,7 +268,7 @@ public class KurentoSessionManager extends SessionManager {
 	}
 
 	@Override
-	public void unpublishVideo(Participant participant, Integer transactionId, String reason) {
+	public void unpublishVideo(Participant participant, Participant moderator, Integer transactionId, String reason) {
 		try {
 			KurentoParticipant kParticipant = (KurentoParticipant) participant;
 			KurentoSession session = kParticipant.getSession();
@@ -283,11 +283,11 @@ public class KurentoSessionManager extends SessionManager {
 
 			Set<Participant> participants = session.getParticipants();
 
-			sessionEventsHandler.onUnpublishMedia(participant, participants, transactionId, null, reason);
+			sessionEventsHandler.onUnpublishMedia(participant, participants, moderator, transactionId, null, reason);
 
 		} catch (OpenViduException e) {
 			log.warn("PARTICIPANT {}: Error unpublishing media", participant.getParticipantPublicId(), e);
-			sessionEventsHandler.onUnpublishMedia(participant, null, transactionId, e, "");
+			sessionEventsHandler.onUnpublishMedia(participant, null, moderator, transactionId, e, "");
 		}
 	}
 
@@ -328,10 +328,10 @@ public class KurentoSessionManager extends SessionManager {
 			}
 		} catch (OpenViduException e) {
 			log.error("PARTICIPANT {}: Error subscribing to {}", participant.getParticipantPublicId(), senderName, e);
-			sessionEventsHandler.onSubscribe(participant, session, senderName, null, transactionId, e);
+			sessionEventsHandler.onSubscribe(participant, session, null, transactionId, e);
 		}
 		if (sdpAnswer != null) {
-			sessionEventsHandler.onSubscribe(participant, session, senderName, sdpAnswer, transactionId, null);
+			sessionEventsHandler.onSubscribe(participant, session, sdpAnswer, transactionId, null);
 		}
 	}
 
@@ -354,7 +354,7 @@ public class KurentoSessionManager extends SessionManager {
 
 		kParticipant.cancelReceivingMedia(senderName, "unsubscribe");
 
-		sessionEventsHandler.onUnsubscribe(participant, senderName, transactionId, null);
+		sessionEventsHandler.onUnsubscribe(participant, transactionId, null);
 	}
 
 	@Override
@@ -457,19 +457,24 @@ public class KurentoSessionManager extends SessionManager {
 		sessionEventsHandler.onSessionCreated(sessionId);
 	}
 
-	/**
-	 * Application-originated request to remove a participant from a session. <br/>
-	 * <strong>Side effects:</strong> The session event handler should notify the
-	 * participant that she has been evicted. Should also send notifications to all
-	 * other participants about the one that's just been evicted.
-	 *
-	 */
 	@Override
-	public void evictParticipant(String participantPrivateId, String reason) throws OpenViduException {
-		Participant participant = this.getParticipant(participantPrivateId);
-		this.leaveRoom(participant, null, reason, false);
-		sessionEventsHandler.onParticipantEvicted(participant, reason);
-		sessionEventsHandler.closeRpcSession(participantPrivateId);
+	public void evictParticipant(Participant evictedParticipant, Participant moderator, Integer transactionId,
+			String reason) throws OpenViduException {
+		if (evictedParticipant != null) {
+			KurentoParticipant kParticipant = (KurentoParticipant) evictedParticipant;
+			Set<Participant> participants = kParticipant.getSession().getParticipants();
+			this.leaveRoom(kParticipant, null, reason, false);
+			this.sessionEventsHandler.onForceDisconnect(moderator, evictedParticipant, participants, transactionId,
+					null, reason);
+			sessionEventsHandler.closeRpcSession(evictedParticipant.getParticipantPrivateId());
+		} else {
+			if (moderator != null && transactionId != null) {
+				this.sessionEventsHandler.onForceDisconnect(moderator, evictedParticipant, null, transactionId,
+						new OpenViduException(Code.USER_NOT_FOUND_ERROR_CODE,
+								"Connection not found when calling 'forceDisconnect'"),
+						"");
+			}
+		}
 	}
 
 	@Override
@@ -511,12 +516,12 @@ public class KurentoSessionManager extends SessionManager {
 	}
 
 	@Override
-	public boolean unpublishStream(Session session, String streamId, String reason) {
+	public boolean unpublishStream(Session session, String streamId, Participant moderator, Integer transactionId, String reason) {
 		String participantPrivateId = ((KurentoSession) session).getParticipantPrivateIdFromStreamId(streamId);
 		if (participantPrivateId != null) {
 			Participant participant = this.getParticipant(participantPrivateId);
 			if (participant != null) {
-				this.unpublishVideo(participant, null, reason);
+				this.unpublishVideo(participant, moderator, transactionId, reason);
 				return true;
 			} else {
 				return false;

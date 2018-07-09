@@ -125,6 +125,12 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		case ProtocolElements.STREAMPROPERTYCHANGED_METHOD:
 			streamPropertyChanged(rpcConnection, request);
 			break;
+		case ProtocolElements.FORCEDISCONNECT_METHOD:
+			forceDisconnect(rpcConnection, request);
+			break;
+		case ProtocolElements.FORCEUNPUBLISH_METHOD:
+			forceUnpublish(rpcConnection, request);
+			break;
 		default:
 			log.error("Unrecognized request {}", request);
 			break;
@@ -189,36 +195,27 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 	}
 
 	private void leaveRoom(RpcConnection rpcConnection, Request<JsonObject> request) {
-
-		String participantPrivateId = rpcConnection.getParticipantPrivateId();
-		String sessionId = rpcConnection.getSessionId();
-
-		if (sessionId == null) { // null when afterConnectionClosed
-			log.warn("No session information found for participant with privateId {}. "
-					+ "Using the admin method to evict the user.", participantPrivateId);
-			leaveRoomAfterConnClosed(participantPrivateId, "");
-		} else {
-			// Sanity check: don't call leaveRoom unless the id checks out
-			Participant participant = sessionManager.getParticipant(sessionId, participantPrivateId);
-			if (participant != null) {
-				log.info("Participant {} is leaving session {}", participant.getParticipantPublicId(), sessionId);
-				sessionManager.leaveRoom(participant, request.getId(), "disconnect", true);
-				log.info("Participant {} has left session {}", participant.getParticipantPublicId(), sessionId);
-			} else {
-				log.warn("Participant with private id {} not found in session {}. "
-						+ "Using the admin method to evict the user.", participantPrivateId, sessionId);
-				leaveRoomAfterConnClosed(participantPrivateId, "");
-			}
+		Participant participant;
+		try {
+			participant = sanityCheckOfSession(rpcConnection, "disconnect");
+		} catch (OpenViduException e) {
+			return;
 		}
+
+		sessionManager.leaveRoom(participant, request.getId(), "disconnect", true);
+		log.info("Participant {} has left session {}", participant.getParticipantPublicId(),
+				rpcConnection.getSessionId());
 	}
 
 	private void publishVideo(RpcConnection rpcConnection, Request<JsonObject> request) {
+		Participant participant;
+		try {
+			participant = sanityCheckOfSession(rpcConnection, "publish");
+		} catch (OpenViduException e) {
+			return;
+		}
 
-		String participantPrivateId = rpcConnection.getParticipantPrivateId();
-		String sessionId = rpcConnection.getSessionId();
-		Participant participant = sessionManager.getParticipant(sessionId, participantPrivateId);
-
-		if (sessionManager.isPublisherInSession(sessionId, participant)) {
+		if (sessionManager.isPublisherInSession(rpcConnection.getSessionId(), participant)) {
 			MediaOptions options = sessionManager.generateMediaOptions(request);
 			sessionManager.publishVideo(participant, options, request.getId());
 		} else {
@@ -229,10 +226,12 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 	}
 
 	private void receiveVideoFrom(RpcConnection rpcConnection, Request<JsonObject> request) {
-
-		String participantPrivateId = rpcConnection.getParticipantPrivateId();
-		String sessionId = rpcConnection.getSessionId();
-		Participant participant = sessionManager.getParticipant(sessionId, participantPrivateId);
+		Participant participant;
+		try {
+			participant = sanityCheckOfSession(rpcConnection, "subscribe");
+		} catch (OpenViduException e) {
+			return;
+		}
 
 		String senderName = getStringParam(request, ProtocolElements.RECEIVEVIDEO_SENDER_PARAM);
 		senderName = senderName.substring(0, senderName.indexOf("_"));
@@ -242,21 +241,24 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 	}
 
 	private void unsubscribeFromVideo(RpcConnection rpcConnection, Request<JsonObject> request) {
-
-		String participantPrivateId = rpcConnection.getParticipantPrivateId();
-		String sessionId = rpcConnection.getSessionId();
-		Participant participant = sessionManager.getParticipant(sessionId, participantPrivateId);
+		Participant participant;
+		try {
+			participant = sanityCheckOfSession(rpcConnection, "unsubscribe");
+		} catch (OpenViduException e) {
+			return;
+		}
 
 		String senderName = getStringParam(request, ProtocolElements.UNSUBSCRIBEFROMVIDEO_SENDER_PARAM);
-
 		sessionManager.unsubscribe(participant, senderName, request.getId());
 	}
 
 	private void onIceCandidate(RpcConnection rpcConnection, Request<JsonObject> request) {
-
-		String participantPrivateId = rpcConnection.getParticipantPrivateId();
-		String sessionId = rpcConnection.getSessionId();
-		Participant participant = sessionManager.getParticipant(sessionId, participantPrivateId);
+		Participant participant;
+		try {
+			participant = sanityCheckOfSession(rpcConnection, "onIceCandidate");
+		} catch (OpenViduException e) {
+			return;
+		}
 
 		String endpointName = getStringParam(request, ProtocolElements.ONICECANDIDATE_EPNAME_PARAM);
 		String candidate = getStringParam(request, ProtocolElements.ONICECANDIDATE_CANDIDATE_PARAM);
@@ -267,29 +269,75 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 	}
 
 	private void sendMessage(RpcConnection rpcConnection, Request<JsonObject> request) {
-
-		String participantPrivateId = rpcConnection.getParticipantPrivateId();
-		String sessionId = rpcConnection.getSessionId();
-		Participant participant = sessionManager.getParticipant(sessionId, participantPrivateId);
+		Participant participant;
+		try {
+			participant = sanityCheckOfSession(rpcConnection, "signal");
+		} catch (OpenViduException e) {
+			return;
+		}
 
 		String message = getStringParam(request, ProtocolElements.SENDMESSAGE_MESSAGE_PARAM);
-
 		sessionManager.sendMessage(participant, message, request.getId());
 	}
 
 	private void unpublishVideo(RpcConnection rpcConnection, Request<JsonObject> request) {
+		Participant participant;
+		try {
+			participant = sanityCheckOfSession(rpcConnection, "unpublish");
+		} catch (OpenViduException e) {
+			return;
+		}
 
-		String participantPrivateId = rpcConnection.getParticipantPrivateId();
-		String sessionId = rpcConnection.getSessionId();
-		Participant participant = sessionManager.getParticipant(sessionId, participantPrivateId);
-
-		sessionManager.unpublishVideo(participant, request.getId(), "unpublish");
+		sessionManager.unpublishVideo(participant, null, request.getId(), "unpublish");
 	}
 
-	public void streamPropertyChanged(RpcConnection rpcConnection, Request<JsonObject> request) {
-		String participantPrivateId = rpcConnection.getParticipantPrivateId();
-		String sessionId = rpcConnection.getSessionId();
-		Participant participant = sessionManager.getParticipant(sessionId, participantPrivateId);
+	private void forceDisconnect(RpcConnection rpcConnection, Request<JsonObject> request) {
+		Participant participant;
+		try {
+			participant = sanityCheckOfSession(rpcConnection, "forceDisconnect");
+		} catch (OpenViduException e) {
+			return;
+		}
+
+		if (sessionManager.isModeratorInSession(rpcConnection.getSessionId(), participant)) {
+			String connectionId = getStringParam(request, ProtocolElements.FORCEDISCONNECT_CONNECTIONID_PARAM);
+			sessionManager.evictParticipant(
+					sessionManager.getSession(rpcConnection.getSessionId()).getParticipantByPublicId(connectionId),
+					participant, request.getId(), "forceDisconnectByUser");
+		} else {
+			log.error("Error: participant {} is not a moderator", participant.getParticipantPublicId());
+			throw new OpenViduException(Code.USER_UNAUTHORIZED_ERROR_CODE,
+					"Unable to force disconnect. The user does not have a valid token");
+		}
+	}
+
+	private void forceUnpublish(RpcConnection rpcConnection, Request<JsonObject> request) {
+		Participant participant;
+		try {
+			participant = sanityCheckOfSession(rpcConnection, "forceUnpublish");
+		} catch (OpenViduException e) {
+			return;
+		}
+
+		if (sessionManager.isModeratorInSession(rpcConnection.getSessionId(), participant)) {
+			String streamId = getStringParam(request, ProtocolElements.FORCEUNPUBLISH_STREAMID_PARAM);
+			sessionManager.unpublishStream(sessionManager.getSession(rpcConnection.getSessionId()), streamId,
+					participant, request.getId(), "forceUnpublishByUser");
+		} else {
+			log.error("Error: participant {} is not a moderator", participant.getParticipantPublicId());
+			throw new OpenViduException(Code.USER_UNAUTHORIZED_ERROR_CODE,
+					"Unable to force unpublish. The user does not have a valid token");
+		}
+
+	}
+
+	private void streamPropertyChanged(RpcConnection rpcConnection, Request<JsonObject> request) {
+		Participant participant;
+		try {
+			participant = sanityCheckOfSession(rpcConnection, "onStreamPropertyChanged");
+		} catch (OpenViduException e) {
+			return;
+		}
 
 		String streamId = getStringParam(request, ProtocolElements.STREAMPROPERTYCHANGED_STREAMID_PARAM);
 		String property = getStringParam(request, ProtocolElements.STREAMPROPERTYCHANGED_PROPERTY_PARAM);
@@ -301,7 +349,8 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 	public void leaveRoomAfterConnClosed(String participantPrivateId, String reason) {
 		try {
-			sessionManager.evictParticipant(participantPrivateId, reason);
+			sessionManager.evictParticipant(this.sessionManager.getParticipant(participantPrivateId), null, null,
+					reason);
 			log.info("Evicted participant with privateId {}", participantPrivateId);
 		} catch (OpenViduException e) {
 			log.warn("Unable to evict: {}", e.getMessage());
@@ -407,6 +456,35 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 					+ "'. CHECK THAT 'openvidu-server' AND 'openvidu-browser' SHARE THE SAME VERSION NUMBER");
 		}
 		return request.getParams().get(key);
+	}
+
+	private Participant sanityCheckOfSession(RpcConnection rpcConnection, String methodName) throws OpenViduException {
+		String participantPrivateId = rpcConnection.getParticipantPrivateId();
+		String sessionId = rpcConnection.getSessionId();
+		String errorMsg;
+
+		if (sessionId == null) { // null when afterConnectionClosed
+			errorMsg = "No session information found for participant with privateId " + participantPrivateId
+					+ ". Using the admin method to evict the user.";
+			log.warn(errorMsg);
+			leaveRoomAfterConnClosed(participantPrivateId, "");
+			throw new OpenViduException(Code.GENERIC_ERROR_CODE, errorMsg);
+		} else {
+			// Sanity check: don't call RPC method unless the id checks out
+			Participant participant = sessionManager.getParticipant(sessionId, participantPrivateId);
+			if (participant != null) {
+				errorMsg = "Participant " + participant.getParticipantPublicId() + " is calling method '" + methodName
+						+ "' in session " + sessionId;
+				log.info(errorMsg);
+				return participant;
+			} else {
+				errorMsg = "Participant with private id " + participantPrivateId + " not found in session " + sessionId
+						+ ". Using the admin method to evict the user.";
+				log.warn(errorMsg);
+				leaveRoomAfterConnClosed(participantPrivateId, "");
+				throw new OpenViduException(Code.GENERIC_ERROR_CODE, errorMsg);
+			}
+		}
 	}
 
 }
