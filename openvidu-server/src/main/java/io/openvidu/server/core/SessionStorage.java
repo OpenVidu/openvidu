@@ -63,6 +63,10 @@ public class SessionStorage {
 
     public SessionProperties getSessionProperties(String sessionId) { return this.sessionProperties.get(sessionId); }
 
+    public SessionProperties putSessionPropertiesIfAbsent(String sessionId, SessionProperties sessionProperties) {
+        return this.sessionProperties.putIfAbsent(sessionId, sessionProperties);
+    }
+
     /**
      * Returns all the participants inside a session.
      *
