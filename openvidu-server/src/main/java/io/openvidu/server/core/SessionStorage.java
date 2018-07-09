@@ -308,4 +308,16 @@ public class SessionStorage {
     public void showAllParticipants() {
         log.info("<SESSIONID, PARTICIPANTS>: {}", this.sessionidParticipantpublicidParticipant.toString());
     }
+
+    public boolean isModeratorInSession(String sessionId, Participant participant) {
+        if (!this.isInsecureParticipant(participant.getParticipantPrivateId())) {
+            if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
+                return ParticipantRole.MODERATOR.equals(participant.getToken().getRole());
+            } else {
+                return false;
+            }
+        } else {
+            return true;
+        }
+    }
 }

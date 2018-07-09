@@ -189,15 +189,7 @@ public abstract class SessionManager {
 	}
 
 	public boolean isModeratorInSession(String sessionId, Participant participant) {
-		if (!this.isInsecureParticipant(participant.getParticipantPrivateId())) {
-			if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
-				return ParticipantRole.MODERATOR.equals(participant.getToken().getRole());
-			} else {
-				return false;
-			}
-		} else {
-			return true;
-		}
+		return this.sessionStorage.isModeratorInSession(sessionId, participant);
 	}
 
 	public boolean isInsecureParticipant(String participantPrivateId) {
