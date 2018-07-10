@@ -26,6 +26,7 @@ import { PublisherSpeakingEvent } from '../OpenViduInternal/Events/PublisherSpea
 
 import EventEmitter = require('wolfy87-eventemitter');
 import hark = require('hark');
+import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/OpenViduError';
 
 
 /**
@@ -118,6 +119,10 @@ export class Stream {
      * @hidden
      */
     isLocalStreamPublished = false;
+    /**
+     * @hidden
+     */
+    publishedOnce = false;
     /**
      * @hidden
      */
@@ -465,12 +470,17 @@ export class Stream {
                     videoDimensions: JSON.stringify(this.videoDimensions)
                 }, (error, response) => {
                     if (error) {
-                        reject('Error on publishVideo: ' + JSON.stringify(error));
+                        if (error.code === 401) {
+                            reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to publish"));
+                        } else {
+                            reject('Error on publishVideo: ' + JSON.stringify(error));
+                        }
                     } else {
                         this.webRtcPeer.processAnswer(response.sdpAnswer)
                             .then(() => {
                                 this.streamId = response.id;
                                 this.isLocalStreamPublished = true;
+                                this.publishedOnce = true;
                                 if (this.displayMyRemote()) {
                                     this.remotePeerSuccessfullyEstablished();
                                 }

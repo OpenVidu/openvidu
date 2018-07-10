@@ -44,8 +44,8 @@ import org.slf4j.LoggerFactory;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
+import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.Participant;
-import io.openvidu.server.kurento.MutedMediaType;
 import io.openvidu.server.kurento.core.KurentoParticipant;
 
 /**
@@ -58,11 +58,17 @@ import io.openvidu.server.kurento.core.KurentoParticipant;
  */
 public abstract class MediaEndpoint {
 	private static Logger log;
+	private OpenviduConfig openviduConfig;
 
 	private boolean web = false;
 
 	private WebRtcEndpoint webEndpoint = null;
 	private RtpEndpoint endpoint = null;
+
+	private final int maxRecvKbps;
+	private final int minRecvKbps;
+	private final int maxSendKbps;
+	private final int minSendKbps;
 
 	private KurentoParticipant owner;
 	private String endpointName;
@@ -72,8 +78,6 @@ public abstract class MediaEndpoint {
 
 	private final List<IceCandidate> receivedCandidateList = new LinkedList<IceCandidate>();
 	private LinkedList<IceCandidate> candidates = new LinkedList<IceCandidate>();
-
-	private MutedMediaType muteType;
 
 	public Map<String, MediaType> flowInMedia = new ConcurrentHashMap<>();
 	public Map<String, MediaType> flowOutMedia = new ConcurrentHashMap<>();
@@ -92,7 +96,7 @@ public abstract class MediaEndpoint {
 	 * @param log
 	 */
 	public MediaEndpoint(boolean web, KurentoParticipant owner, String endpointName, MediaPipeline pipeline,
-			Logger log) {
+			OpenviduConfig openviduConfig, Logger log) {
 		if (log == null) {
 			MediaEndpoint.log = LoggerFactory.getLogger(MediaEndpoint.class);
 		} else {
@@ -102,6 +106,12 @@ public abstract class MediaEndpoint {
 		this.owner = owner;
 		this.setEndpointName(endpointName);
 		this.setMediaPipeline(pipeline);
+
+		this.openviduConfig = openviduConfig;
+		this.maxRecvKbps = this.openviduConfig.getVideoMaxRecvBandwidth();
+		this.minRecvKbps = this.openviduConfig.getVideoMinRecvBandwidth();
+		this.maxSendKbps = this.openviduConfig.getVideoMaxSendBandwidth();
+		this.minSendKbps = this.openviduConfig.getVideoMinSendBandwidth();
 	}
 
 	public boolean isWeb() {
@@ -205,50 +215,6 @@ public abstract class MediaEndpoint {
 	}
 
 	/**
-	 * Mute the media stream.
-	 *
-	 * @param muteType
-	 *            which type of leg to disconnect (audio, video or both)
-	 */
-	public abstract void mute(MutedMediaType muteType);
-
-	/**
-	 * Reconnect the muted media leg(s).
-	 */
-	public abstract void unmute();
-
-	public void setMuteType(MutedMediaType muteType) {
-		this.muteType = muteType;
-	}
-
-	public MutedMediaType getMuteType() {
-		return this.muteType;
-	}
-
-	protected void resolveCurrentMuteType(MutedMediaType newMuteType) {
-		MutedMediaType prev = this.getMuteType();
-		if (prev != null) {
-			switch (prev) {
-			case AUDIO:
-				if (muteType.equals(MutedMediaType.VIDEO)) {
-					this.setMuteType(MutedMediaType.ALL);
-					return;
-				}
-				break;
-			case VIDEO:
-				if (muteType.equals(MutedMediaType.AUDIO)) {
-					this.setMuteType(MutedMediaType.ALL);
-					return;
-				}
-				break;
-			case ALL:
-				return;
-			}
-		}
-		this.setMuteType(newMuteType);
-	}
-
-	/**
 	 * Creates the endpoint (RTP or WebRTC) and any other additional elements (if
 	 * needed).
 	 *
@@ -265,10 +231,10 @@ public abstract class MediaEndpoint {
 				public void onSuccess(WebRtcEndpoint result) throws Exception {
 					webEndpoint = result;
 
-					webEndpoint.setMaxVideoRecvBandwidth(600);
-					webEndpoint.setMinVideoRecvBandwidth(300);
-					webEndpoint.setMaxVideoSendBandwidth(600);
-					webEndpoint.setMinVideoSendBandwidth(300);
+					webEndpoint.setMaxVideoRecvBandwidth(maxRecvKbps);
+					webEndpoint.setMinVideoRecvBandwidth(minRecvKbps);
+					webEndpoint.setMaxVideoSendBandwidth(maxSendKbps);
+					webEndpoint.setMinVideoSendBandwidth(minSendKbps);
 
 					endpointLatch.countDown();
 					log.trace("EP {}: Created a new WebRtcEndpoint", endpointName);

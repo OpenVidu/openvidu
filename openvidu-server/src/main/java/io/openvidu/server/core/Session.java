@@ -26,13 +26,13 @@ import io.openvidu.java.client.SessionProperties;
 public interface Session {
 
 	String getSessionId();
-	
+
 	SessionProperties getSessionProperties();
 
 	void join(Participant participant);
-	
+
 	void leave(String participantPrivateId, String reason);
-	
+
 	boolean close(String reason);
 
 	boolean isClosed();
@@ -44,9 +44,9 @@ public interface Session {
 	Participant getParticipantByPublicId(String participantPublicId);
 
 	int getActivePublishers();
-	
+
 	JSONObject toJSON();
-	
+
 	JSONObject withStatsToJSON();
 
 }

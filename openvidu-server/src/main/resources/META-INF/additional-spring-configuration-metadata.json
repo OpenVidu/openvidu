@@ -64,6 +64,54 @@
 			"type": "java.lang.String",
 			"description": "Path to COTURN sqlite database to add and remove TURN user credentials",
 			"defaultValue": "/opt/openvidu/coturn/turndb"
+		},
+		{
+			"name": "openvidu.streams.video.max-recv-bandwidth",
+			"type": "java.lang.Integer",
+			"description": "Maximum video bandwith sent from clients to OpenVidu Server, in kbps. 0 means unconstrained",
+			"defaultValue": 600
+		},
+		{
+			"name": "openvidu.streams.video.min-recv-bandwidth",
+			"type": "java.lang.Integer",
+			"description": "Minimum video bandwith sent from clients to OpenVidu Server, in kbps. 0 means unconstrained",
+			"defaultValue": 300
+		},
+		{
+			"name": "openvidu.streams.video.max-send-bandwidth",
+			"type": "java.lang.Integer",
+			"description": "Maximum video bandwith sent from OpenVidu Server to clients, in kbps. 0 means unconstrained",
+			"defaultValue": 600
+		},
+		{
+			"name": "openvidu.streams.video.min-send-bandwidth",
+			"type": "java.lang.Integer",
+			"description": "Minimum video bandwith sent from OpenVidu Server to clients, in kbps. 0 means unconstrained",
+			"defaultValue": 300
+		},
+		{
+			"name": "coturn.redis.ip",
+			"type": "java.lang.String",
+			"description": "Redis IP where OpenVidu Server should connect to store TURN credentials",
+			"defaultValue": "127.0.0.1"
+		},
+		{
+			"name": "coturn.redis.dbname",
+			"type": "java.lang.String",
+			"description": "Redis database where to store TURN credentials",
+			"defaultValue": "0"
+		},
+		{
+			"name": "coturn.redis.password",
+			"type": "java.lang.String",
+			"description": "Password to connect OpenVidu Server to Redis database to store TURN credentials",
+			"defaultValue": "turn"
+		},
+		{
+			"name": "coturn.redis.connect-timeout",
+			"type": "java.lang.Integer",
+			"description": "Timeout in seconds when OpenVidu Server is connecting to Redis database to store TURN credentials",
+			"defaultValue": 30
 		}
 	]
 }

@@ -96,7 +96,7 @@ public class SessionEventsHandler {
 
 				JsonObject stream = new JsonObject();
 				stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMID_PARAM,
-						existingParticipant.getPublisherStremId());
+						existingParticipant.getPublisherStreamId());
 				stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMHASAUDIO_PARAM,
 						kParticipant.getPublisherMediaOptions().hasAudio);
 				stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMHASVIDEO_PARAM,
@@ -214,13 +214,19 @@ public class SessionEventsHandler {
 		}
 	}
 
-	public void onUnpublishMedia(Participant participant, Set<Participant> participants, Integer transactionId,
-			OpenViduException error, String reason) {
-		if (error != null) {
-			rpcNotificationService.sendErrorResponse(participant.getParticipantPrivateId(), transactionId, null, error);
-			return;
+	public void onUnpublishMedia(Participant participant, Set<Participant> participants, Participant moderator,
+			Integer transactionId, OpenViduException error, String reason) {
+		boolean isRpcFromModerator = transactionId != null && moderator != null;
+		boolean isRpcFromOwner = transactionId != null && moderator == null;
+
+		if (isRpcFromModerator) {
+			if (error != null) {
+				rpcNotificationService.sendErrorResponse(moderator.getParticipantPrivateId(), transactionId, null,
+						error);
+				return;
+			}
+			rpcNotificationService.sendResponse(moderator.getParticipantPrivateId(), transactionId, new JsonObject());
 		}
-		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, new JsonObject());
 
 		JsonObject params = new JsonObject();
 		params.addProperty(ProtocolElements.PARTICIPANTUNPUBLISHED_NAME_PARAM, participant.getParticipantPublicId());
@@ -228,16 +234,28 @@ public class SessionEventsHandler {
 
 		for (Participant p : participants) {
 			if (p.getParticipantPrivateId().equals(participant.getParticipantPrivateId())) {
-				continue;
+				if (!isRpcFromOwner) {
+					rpcNotificationService.sendNotification(p.getParticipantPrivateId(),
+							ProtocolElements.PARTICIPANTUNPUBLISHED_METHOD, params);
+				} else {
+					if (error != null) {
+						rpcNotificationService.sendErrorResponse(p.getParticipantPrivateId(), transactionId, null,
+								error);
+						return;
+					}
+					rpcNotificationService.sendResponse(p.getParticipantPrivateId(), transactionId, new JsonObject());
+				}
 			} else {
-				rpcNotificationService.sendNotification(p.getParticipantPrivateId(),
-						ProtocolElements.PARTICIPANTUNPUBLISHED_METHOD, params);
+				if (error == null) {
+					rpcNotificationService.sendNotification(p.getParticipantPrivateId(),
+							ProtocolElements.PARTICIPANTUNPUBLISHED_METHOD, params);
+				}
 			}
 		}
 	}
 
-	public void onSubscribe(Participant participant, Session session, String senderName, String sdpAnswer,
-			Integer transactionId, OpenViduException error) {
+	public void onSubscribe(Participant participant, Session session, String sdpAnswer, Integer transactionId,
+			OpenViduException error) {
 		if (error != null) {
 			rpcNotificationService.sendErrorResponse(participant.getParticipantPrivateId(), transactionId, null, error);
 			return;
@@ -260,8 +278,7 @@ public class SessionEventsHandler {
 		}
 	}
 
-	public void onUnsubscribe(Participant participant, String senderName, Integer transactionId,
-			OpenViduException error) {
+	public void onUnsubscribe(Participant participant, Integer transactionId, OpenViduException error) {
 		if (error != null) {
 			rpcNotificationService.sendErrorResponse(participant.getParticipantPrivateId(), transactionId, null, error);
 			return;
@@ -349,12 +366,30 @@ public class SessionEventsHandler {
 		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, new JsonObject());
 	}
 
-	public void onParticipantEvicted(Participant participant, String reason) {
+	public void onForceDisconnect(Participant moderator, Participant evictedParticipant, Set<Participant> participants,
+			Integer transactionId, OpenViduException error, String reason) {
+
+		boolean isRpcCall = transactionId != null;
+		if (isRpcCall) {
+			if (error != null) {
+				rpcNotificationService.sendErrorResponse(moderator.getParticipantPrivateId(), transactionId, null,
+						error);
+				return;
+			}
+			rpcNotificationService.sendResponse(moderator.getParticipantPrivateId(), transactionId, new JsonObject());
+		}
+
 		JsonObject params = new JsonObject();
-		params.addProperty(ProtocolElements.PARTICIPANTEVICTED_CONNECTIONID_PARAM, participant.getParticipantPublicId());
+		params.addProperty(ProtocolElements.PARTICIPANTEVICTED_CONNECTIONID_PARAM,
+				evictedParticipant.getParticipantPublicId());
 		params.addProperty(ProtocolElements.PARTICIPANTEVICTED_REASON_PARAM, reason);
-		rpcNotificationService.sendNotification(participant.getParticipantPrivateId(),
+
+		rpcNotificationService.sendNotification(evictedParticipant.getParticipantPrivateId(),
 				ProtocolElements.PARTICIPANTEVICTED_METHOD, params);
+		for (Participant p : participants) {
+			rpcNotificationService.sendNotification(p.getParticipantPrivateId(),
+					ProtocolElements.PARTICIPANTEVICTED_METHOD, params);
+		}
 	}
 
 	public void sendRecordingStartedNotification(Session session, Recording recording) {

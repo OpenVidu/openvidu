@@ -93,7 +93,7 @@ public class Participant {
 		this.streaming = streaming;
 	}
 
-	public String getPublisherStremId() {
+	public String getPublisherStreamId() {
 		return null;
 	}
 

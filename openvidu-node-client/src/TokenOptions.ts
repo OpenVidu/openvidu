@@ -25,10 +25,10 @@ export interface TokenOptions {
      * - If you have provided some data when calling `Session.connect(TOKEN, DATA)` (`DATA` defined), then `Connection.data` will have the following structure: `"CLIENT_DATA%/%SERVER_DATA"`, being `CLIENT_DATA` the second
      * parameter passed in OpenVidu Browser in method `Session.connect` and `SERVER_DATA` this [[TokenOptions.data]] property.
      */
-    data: string;
+    data?: string;
 
     /**
      * The role assigned to this token
      */
-    role: OpenViduRole;
+    role?: OpenViduRole;
 }

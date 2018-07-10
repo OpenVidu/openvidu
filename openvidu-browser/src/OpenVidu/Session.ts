@@ -330,7 +330,7 @@ export class Session implements EventDispatcher {
             publisher.session = this;
             publisher.stream.session = this;
 
-            if (!publisher.stream.isLocalStreamPublished) {
+            if (!publisher.stream.publishedOnce) {
                 // 'Session.unpublish(Publisher)' has NOT been called
                 this.connection.addStream(publisher.stream);
                 publisher.stream.publish()
@@ -410,6 +410,88 @@ export class Session implements EventDispatcher {
             publisher.emitEvent('streamDestroyed', [streamEvent]);
             streamEvent.callDefaultBehavior();
         }
+    }
+
+
+    /**
+     * Forces some user to leave the session
+     *
+     * #### Events dispatched
+     *
+     * The behavior is the same as when some user calls [[Session.disconnect]], but `reason` property in all events will be `"forceDisconnectByUser"`.
+     *
+     * The local [[Session]] object will dispatch:
+     * - A `streamDestroyed` event if the evicted user was publishing a stream, with property `reason` set to `"forceDisconnectByUser"`
+     * - A `connectionDestroyed` event for the evicted user, with property `reason` set to `"forceDisconnectByUser"`
+     *
+     * The remote [[Session]] object of every other participant will dispatch:
+     * - A `streamDestroyed` event if the evicted user was publishing a stream, with property `reason` set to `"forceDisconnectByUser"`
+     * - A `connectionDestroyed` event for the evicted user, with property `reason` set to `"forceDisconnectByUser"`
+     *
+     * If any, the [[Publisher]] object of the evicted participant will also dispatch a `streamDestroyed` event with property `reason` set to `"forceDisconnectByUser"`
+     *
+     * @returns A Promise (to which you can optionally subscribe to) that is resolved only after the participant has been successfully evicted from the session and rejected with an Error object if not
+     */
+    forceDisconnect(connection: Connection): Promise<any> {
+        return new Promise((resolve, reject) => {
+            console.info('Forcing disconnect for connection ' + connection.connectionId);
+            this.openvidu.sendRequest(
+                'forceDisconnect',
+                { connectionId: connection.connectionId },
+                (error, response) => {
+                    if (error) {
+                        console.error('Error forcing disconnect for Connection ' + connection.connectionId, error);
+                        if (error.code === 401) {
+                            reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to force a disconnection"));
+                        } else {
+                            reject(error);
+                        }
+                    } else {
+                        console.info('Forcing disconnect correctly for Connection ' + connection.connectionId);
+                        resolve();
+                    }
+                }
+            );
+        });
+    }
+
+
+    /**
+     * Forces some user to unpublish a Stream
+     *
+     * #### Events dispatched
+     *
+     * The behavior is the same as when some user calls [[Session.unpublish]], but `reason` property in all events will be `"forceUnpublishByUser"`.
+     *
+     * The local [[Session]] object will dispatch a `streamDestroyed` event with property `reason` set to `"forceUnpublishByUser"`
+     *
+     * The remote [[Session]] object of every other participant will dispatch a `streamDestroyed` event with property `reason` set to `"forceDisconnectByUser"`
+     *
+     * The [[Publisher]] object of the affected participant will also dispatch a `streamDestroyed` event with property `reason` set to `"forceDisconnectByUser"`
+     *
+     * @returns A Promise (to which you can optionally subscribe to) that is resolved only after the remote Stream has been successfully unpublished from the session and rejected with an Error object if not
+     */
+    forceUnpublish(stream: Stream): Promise<any> {
+        return new Promise((resolve, reject) => {
+            console.info('Forcing unpublish for stream ' + stream.streamId);
+            this.openvidu.sendRequest(
+                'forceUnpublish',
+                { streamId: stream.streamId },
+                (error, response) => {
+                    if (error) {
+                        console.error('Error forcing unpublish for Stream ' + stream.streamId, error);
+                        if (error.code === 401) {
+                            reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to force an unpublishing"));
+                        } else {
+                            reject(error);
+                        }
+                    } else {
+                        console.info('Forcing unpublish correctly for Stream ' + stream.streamId);
+                        resolve();
+                    }
+                }
+            );
+        });
     }
 
 
@@ -630,23 +712,28 @@ export class Session implements EventDispatcher {
      * @hidden
      */
     onParticipantUnpublished(msg): void {
-        this.getRemoteConnection(msg.connectionId, "Remote connection '" + msg.connectionId + "' unknown when 'onParticipantUnpublished'. " +
-            'Existing remote connections: ' + JSON.stringify(Object.keys(this.remoteConnections)))
+        if (msg.connectionId === this.connection.connectionId) {
+            // Your stream has been forcedly unpublished from the session
+            this.stopPublisherStream(msg.reason);
+        } else {
+            this.getRemoteConnection(msg.connectionId, "Remote connection '" + msg.connectionId + "' unknown when 'onParticipantUnpublished'. " +
+                'Existing remote connections: ' + JSON.stringify(Object.keys(this.remoteConnections)))
 
-            .then(connection => {
+                .then(connection => {
 
-                const streamEvent = new StreamEvent(true, this, 'streamDestroyed', connection.stream, msg.reason);
-                this.ee.emitEvent('streamDestroyed', [streamEvent]);
-                streamEvent.callDefaultBehavior();
+                    const streamEvent = new StreamEvent(true, this, 'streamDestroyed', connection.stream, msg.reason);
+                    this.ee.emitEvent('streamDestroyed', [streamEvent]);
+                    streamEvent.callDefaultBehavior();
 
-                // Deleting the remote stream
-                const streamId: string = connection.stream.streamId;
-                delete this.remoteStreamsCreated[streamId];
-                connection.removeStream(streamId);
-            })
-            .catch(openViduError => {
-                console.error(openViduError);
-            });
+                    // Deleting the remote stream
+                    const streamId: string = connection.stream.streamId;
+                    delete this.remoteStreamsCreated[streamId];
+                    connection.removeStream(streamId);
+                })
+                .catch(openViduError => {
+                    console.error(openViduError);
+                });
+        }
     }
 
     /**
@@ -658,27 +745,6 @@ export class Session implements EventDispatcher {
             if (!!this.sessionId && !this.connection.disposed) {
                 this.leave(true, msg.reason);
             }
-        } else {
-            // Other user has been evicted from the session
-            this.getRemoteConnection(msg.connectionId, 'Remote connection ' + msg.connectionId + " unknown when 'onParticipantEvicted'. " +
-                'Existing remote connections: ' + JSON.stringify(Object.keys(this.remoteConnections)))
-
-                .then(connection => {
-                    if (!!connection.stream) {
-                        const stream = connection.stream;
-
-                        const streamEvent = new StreamEvent(true, this, 'streamDestroyed', stream, msg.reason);
-                        this.ee.emitEvent('streamDestroyed', [streamEvent]);
-                        streamEvent.callDefaultBehavior();
-
-                        delete this.remoteStreamsCreated[stream.streamId];
-                    }
-                    delete this.remoteConnections[connection.connectionId];
-                    this.ee.emitEvent('connectionDestroyed', [new ConnectionEvent(false, this, 'connectionDestroyed', connection, msg.reason)]);
-                })
-                .catch(openViduError => {
-                    console.error(openViduError);
-                });
         }
     }
 
@@ -860,14 +926,7 @@ export class Session implements EventDispatcher {
                 this.openvidu.closeWs();
             }
 
-            if (!!this.connection.stream) {
-                // Dispose Publisher's  local stream
-                this.connection.stream.disposeWebRtcPeer();
-                if (this.connection.stream.isLocalStreamPublished) {
-                    // Make Publisher object dispatch 'streamDestroyed' event if the Stream was published
-                    this.connection.stream.ee.emitEvent('local-stream-destroyed-by-disconnect', [reason]);
-                }
-            }
+            this.stopPublisherStream(reason);
 
             if (!this.connection.disposed) {
                 // Make Session object dispatch 'sessionDisconnected' event (if it is not already disposed)
@@ -906,7 +965,9 @@ export class Session implements EventDispatcher {
                             // Initialize capabilities object with the role
                             this.capabilities = {
                                 subscribe: true,
-                                publish: this.openvidu.role !== 'SUBSCRIBER'
+                                publish: this.openvidu.role !== 'SUBSCRIBER',
+                                forceUnpublish: this.openvidu.role === 'MODERATOR',
+                                forceDisconnect: this.openvidu.role === 'MODERATOR'
                             };
 
                             // Initialize local Connection object with values returned by openvidu-server
@@ -949,6 +1010,17 @@ export class Session implements EventDispatcher {
                 }
             });
         });
+    }
+
+    private stopPublisherStream(reason: string) {
+        if (!!this.connection.stream) {
+            // Dispose Publisher's  local stream
+            this.connection.stream.disposeWebRtcPeer();
+            if (this.connection.stream.isLocalStreamPublished) {
+                // Make Publisher object dispatch 'streamDestroyed' event if the Stream was published
+                this.connection.stream.ee.emitEvent('local-stream-destroyed', [reason]);
+            }
+        }
     }
 
     private stringClientMetadata(metadata: any): string {

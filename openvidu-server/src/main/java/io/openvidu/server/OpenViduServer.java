@@ -48,6 +48,7 @@ import com.google.gson.JsonParser;
 import io.openvidu.server.cdr.CDRLoggerFile;
 import io.openvidu.server.cdr.CallDetailRecord;
 import io.openvidu.server.config.OpenviduConfig;
+import io.openvidu.server.core.SessionEventsHandler;
 import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.coturn.CoturnCredentialsService;
 import io.openvidu.server.coturn.CoturnCredentialsServiceFactory;
@@ -126,7 +127,7 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public KurentoSessionEventsHandler kurentoSessionEventsHandler() {
+	public SessionEventsHandler sessionEventsHandler() {
 		return new KurentoSessionEventsHandler();
 	}
 

@@ -450,6 +450,10 @@ export class VideoComponent implements OnInit, OnDestroy {
                         event: 'streamDestroyed',
                         content: e.stream.streamId
                     });
+                    if (e.reason.indexOf('forceUnpublish') !== -1) {
+                        this.unpublished = !this.unpublished;
+                        this.unpublished ? this.pubSubIcon = 'play_arrow' : this.pubSubIcon = 'stop';
+                    }
                 });
             }
         } else {
@@ -607,6 +611,14 @@ export class VideoComponent implements OnInit, OnDestroy {
         if (!!this.recorder) {
             this.recorder.clean();
         }
+    }
+
+    forceUnpublish() {
+        this.OV.session.forceUnpublish(this.streamManager.stream);
+    }
+
+    forceDisconnect() {
+        this.OV.session.forceDisconnect(this.streamManager.stream.connection);
     }
 
 }

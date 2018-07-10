@@ -76,7 +76,8 @@ export class Publisher extends StreamManager {
         this.properties = properties;
         this.openvidu = openvidu;
 
-        this.stream.ee.on('local-stream-destroyed-by-disconnect', (reason: string) => {
+        this.stream.ee.on('local-stream-destroyed', (reason: string) => {
+            this.stream.isLocalStreamPublished = false;
             const streamEvent = new StreamEvent(true, this, 'streamDestroyed', this.stream, reason);
             this.emitEvent('streamDestroyed', [streamEvent]);
             streamEvent.callDefaultBehavior();
