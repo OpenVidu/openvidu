@@ -420,15 +420,13 @@ export class Session implements EventDispatcher {
      *
      * The behavior is the same as when some user calls [[Session.disconnect]], but `reason` property in all events will be `"forceDisconnectByUser"`.
      *
-     * The local [[Session]] object will dispatch:
-     * - A `streamDestroyed` event if the evicted user was publishing a stream, with property `reason` set to `"forceDisconnectByUser"`
-     * - A `connectionDestroyed` event for the evicted user, with property `reason` set to `"forceDisconnectByUser"`
+     * The [[Session]] object of every participant will dispatch a `streamDestroyed` event if the evicted user was publishing a stream, with property `reason` set to `"forceDisconnectByUser"`.
+     * The [[Session]] object of every participant except the evicted one will dispatch a `connectionDestroyed` event for the evicted user, with property `reason` set to `"forceDisconnectByUser"`.
      *
-     * The remote [[Session]] object of every other participant will dispatch:
-     * - A `streamDestroyed` event if the evicted user was publishing a stream, with property `reason` set to `"forceDisconnectByUser"`
-     * - A `connectionDestroyed` event for the evicted user, with property `reason` set to `"forceDisconnectByUser"`
+     * If any, the [[Publisher]] object of the evicted participant will also dispatch a `streamDestroyed` event with property `reason` set to `"forceDisconnectByUser"`.
+     * The [[Session]] object of the evicted participant will dispatch a `sessionDisconnected` event with property `reason` set to `"forceDisconnectByUser"`.
      *
-     * If any, the [[Publisher]] object of the evicted participant will also dispatch a `streamDestroyed` event with property `reason` set to `"forceDisconnectByUser"`
+     * See [[StreamEvent]], [[ConnectionEvent]] and [[SessionDisconnectedEvent]] to learn more.
      *
      * @returns A Promise (to which you can optionally subscribe to) that is resolved only after the participant has been successfully evicted from the session and rejected with an Error object if not
      */
@@ -461,13 +459,13 @@ export class Session implements EventDispatcher {
      *
      * #### Events dispatched
      *
-     * The behavior is the same as when some user calls [[Session.unpublish]], but `reason` property in all events will be `"forceUnpublishByUser"`.
+     * The behavior is the same as when some user calls [[Session.unpublish]], but `reason` property in all events will be `"forceUnpublishByUser"`
      *
-     * The local [[Session]] object will dispatch a `streamDestroyed` event with property `reason` set to `"forceUnpublishByUser"`
-     *
-     * The remote [[Session]] object of every other participant will dispatch a `streamDestroyed` event with property `reason` set to `"forceDisconnectByUser"`
+     * The [[Session]] object of every participant will dispatch a `streamDestroyed` event with property `reason` set to `"forceDisconnectByUser"`
      *
      * The [[Publisher]] object of the affected participant will also dispatch a `streamDestroyed` event with property `reason` set to `"forceDisconnectByUser"`
+     *
+     * See [[StreamEvent]] to learn more.
      *
      * @returns A Promise (to which you can optionally subscribe to) that is resolved only after the remote Stream has been successfully unpublished from the session and rejected with an Error object if not
      */
