@@ -658,6 +658,11 @@ export class OpenVidu {
 
   private reconnectedCallback(): void {
     console.warn('Websocket reconnected');
+    if (this.isRoomAvailable()) {
+      this.session.onRecoveredConnection();
+    } else {
+      alert('Connection error. Please reload page.');
+    }
   }
 
   private isRoomAvailable(): boolean {
