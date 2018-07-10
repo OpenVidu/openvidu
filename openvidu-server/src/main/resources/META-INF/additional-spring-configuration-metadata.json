@@ -68,25 +68,25 @@
 		{
 			"name": "openvidu.streams.video.max-recv-bandwidth",
 			"type": "java.lang.Integer",
-			"description": "Maximum video bandwith sent from clients to OpenVidu Server, in kbps. 0 means unconstrained",
+			"description": "Maximum video bandwidth sent from clients to OpenVidu Server, in kbps. 0 means unconstrained",
 			"defaultValue": 600
 		},
 		{
 			"name": "openvidu.streams.video.min-recv-bandwidth",
 			"type": "java.lang.Integer",
-			"description": "Minimum video bandwith sent from clients to OpenVidu Server, in kbps. 0 means unconstrained",
+			"description": "Minimum video bandwidth sent from clients to OpenVidu Server, in kbps. 0 means unconstrained",
 			"defaultValue": 300
 		},
 		{
 			"name": "openvidu.streams.video.max-send-bandwidth",
 			"type": "java.lang.Integer",
-			"description": "Maximum video bandwith sent from OpenVidu Server to clients, in kbps. 0 means unconstrained",
+			"description": "Maximum video bandwidth sent from OpenVidu Server to clients, in kbps. 0 means unconstrained",
 			"defaultValue": 600
 		},
 		{
 			"name": "openvidu.streams.video.min-send-bandwidth",
 			"type": "java.lang.Integer",
-			"description": "Minimum video bandwith sent from OpenVidu Server to clients, in kbps. 0 means unconstrained",
+			"description": "Minimum video bandwidth sent from OpenVidu Server to clients, in kbps. 0 means unconstrained",
 			"defaultValue": 300
 		},
 		{
