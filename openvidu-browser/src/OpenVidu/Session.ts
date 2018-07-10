@@ -869,6 +869,26 @@ export class Session implements EventDispatcher {
         }
     }
 
+     /**
+     * @hidden
+     */
+    onRecoveredConnection(): void {
+
+        /*if (!this.connection) {
+
+            console.warn('Not connected to session: if you are not debugging, this is probably a certificate error');
+
+            const url = 'https://' + this.openvidu.getWsUri().split('wss://')[1].split('/openvidu')[0];
+            if (window.confirm('If you are not debugging, this is probably a certificate error at \"' + url + '\"\n\nClick OK to navigate and accept it')) {
+                location.assign(url + '/accept-certificate');
+            }
+            return;
+        }*/
+
+        console.warn('Recovered connection in Session ' + this.sessionId);
+        this.ee.emitEvent('connectionRecovered', []);
+    }
+
     /**
      * @hidden
      */
