@@ -289,6 +289,9 @@ export class Publisher extends StreamManager {
                     mediaStream.getVideoTracks()[0].enabled = !!this.stream.outboundStreamOpts.publisherProperties.publishVideo;
                 }
 
+                this.videoReference = document.createElement('video');
+                this.videoReference.srcObject = mediaStream;
+
                 this.stream.setMediaStream(mediaStream);
                 if (!this.stream.displayMyRemote()) {
                     // When we are subscribed to our remote we don't still set the MediaStream object in the video elements to
@@ -323,8 +326,6 @@ export class Publisher extends StreamManager {
                         this.stream.ee.emitEvent('stream-ready-to-publish', []);
                     } else {
                         // With screen share, video dimension must be got from a video element (onloadedmetadata event)
-                        this.videoReference = document.createElement('video');
-                        this.videoReference.srcObject = mediaStream;
                         this.videoReference.onloadedmetadata = () => {
                             this.stream.videoDimensions = {
                                 width: this.videoReference.videoWidth,
