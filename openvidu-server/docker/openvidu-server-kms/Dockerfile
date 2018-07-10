@@ -1,5 +1,5 @@
 FROM ubuntu:16.04
-MAINTAINER openvidu@gmail.com
+MAINTAINER miguel.rodriguez@cocodin.com
 
 # Install Kurento Media Server (KMS) 
 RUN echo "deb http://ubuntu.openvidu.io/6.7.2 xenial kms6" | tee /etc/apt/sources.list.d/kurento.list \
@@ -20,15 +20,16 @@ RUN apt-get update && apt-get install -y \
 RUN mkdir -p /var/log/supervisor
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
+
 # Copy OpenVidu Server
-COPY openvidu-server.jar openvidu-server.jar
+COPY openvidu-server-cbx.jar openvidu-server-cbx.jar
 
 # Copy KMS entrypoint
 COPY kms.sh /kms.sh
 
 EXPOSE 8888
 EXPOSE 9091
-EXPOSE 4443
+EXPOSE 8443
 
 # Exec supervisord
 CMD ["/usr/bin/supervisord"]
