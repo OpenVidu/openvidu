@@ -21,6 +21,7 @@ var WebRtcStats_1 = require("../OpenViduInternal/WebRtcStats/WebRtcStats");
 var PublisherSpeakingEvent_1 = require("../OpenViduInternal/Events/PublisherSpeakingEvent");
 var EventEmitter = require("wolfy87-eventemitter");
 var hark = require("hark");
+var OpenViduError_1 = require("../OpenViduInternal/Enums/OpenViduError");
 /**
  * Represents each one of the media streams available in OpenVidu Server for certain session.
  * Each [[Publisher]] and [[Subscriber]] has an attribute of type Stream, as they give access
@@ -45,33 +46,45 @@ var Stream = /** @class */ (function () {
          * @hidden
          */
         this.isLocalStreamPublished = false;
+        /**
+         * @hidden
+         */
+        this.publishedOnce = false;
         this.session = session;
         if (options.hasOwnProperty('id')) {
             // InboundStreamOptions: stream belongs to a Subscriber
             this.inboundStreamOpts = options;
             this.streamId = this.inboundStreamOpts.id;
-            this.hasAudio = this.inboundStreamOpts.recvAudio;
-            this.hasVideo = this.inboundStreamOpts.recvVideo;
-            this.typeOfVideo = (!this.inboundStreamOpts.typeOfVideo) ? undefined : this.inboundStreamOpts.typeOfVideo;
-            this.frameRate = (this.inboundStreamOpts.frameRate === -1) ? undefined : this.inboundStreamOpts.frameRate;
+            this.hasAudio = this.inboundStreamOpts.hasAudio;
+            this.hasVideo = this.inboundStreamOpts.hasVideo;
+            if (this.hasAudio) {
+                this.audioActive = this.inboundStreamOpts.audioActive;
+            }
+            if (this.hasVideo) {
+                this.videoActive = this.inboundStreamOpts.videoActive;
+                this.typeOfVideo = (!this.inboundStreamOpts.typeOfVideo) ? undefined : this.inboundStreamOpts.typeOfVideo;
+                this.frameRate = (this.inboundStreamOpts.frameRate === -1) ? undefined : this.inboundStreamOpts.frameRate;
+                this.videoDimensions = this.inboundStreamOpts.videoDimensions;
+            }
         }
         else {
             // OutboundStreamOptions: stream belongs to a Publisher
             this.outboundStreamOpts = options;
-            if (this.isSendVideo()) {
-                if (this.isSendScreen()) {
-                    this.typeOfVideo = 'SCREEN';
-                }
-                else {
-                    this.typeOfVideo = 'CAMERA';
-                }
-                this.frameRate = this.outboundStreamOpts.publisherProperties.frameRate;
-            }
-            else {
-                delete this.typeOfVideo;
-            }
             this.hasAudio = this.isSendAudio();
             this.hasVideo = this.isSendVideo();
+            if (this.hasAudio) {
+                this.audioActive = !!this.outboundStreamOpts.publisherProperties.publishAudio;
+            }
+            if (this.hasVideo) {
+                this.videoActive = !!this.outboundStreamOpts.publisherProperties.publishVideo;
+                this.frameRate = this.outboundStreamOpts.publisherProperties.frameRate;
+                if (this.outboundStreamOpts.publisherProperties.videoSource instanceof MediaStreamTrack) {
+                    this.typeOfVideo = 'CUSTOM';
+                }
+                else {
+                    this.typeOfVideo = this.isSendScreen() ? 'SCREEN' : 'CAMERA';
+                }
+            }
         }
         this.ee.on('mediastream-updated', function () {
             _this.streamManager.updateMediaStream(_this.mediaStream);
@@ -311,24 +324,37 @@ var Stream = /** @class */ (function () {
             var successCallback = function (sdpOfferParam) {
                 console.debug('Sending SDP offer to publish as '
                     + _this.streamId, sdpOfferParam);
+                var typeOfVideo = '';
+                if (_this.isSendVideo()) {
+                    typeOfVideo = _this.outboundStreamOpts.publisherProperties.videoSource instanceof MediaStreamTrack ? 'CUSTOM' : (_this.isSendScreen() ? 'SCREEN' : 'CAMERA');
+                }
                 _this.session.openvidu.sendRequest('publishVideo', {
                     sdpOffer: sdpOfferParam,
                     doLoopback: _this.displayMyRemote() || false,
-                    audioActive: _this.isSendAudio(),
-                    videoActive: _this.isSendVideo(),
-                    typeOfVideo: ((_this.isSendVideo()) ? (_this.isSendScreen() ? 'SCREEN' : 'CAMERA') : ''),
-                    frameRate: !!_this.frameRate ? _this.frameRate : -1
+                    hasAudio: _this.isSendAudio(),
+                    hasVideo: _this.isSendVideo(),
+                    audioActive: _this.audioActive,
+                    videoActive: _this.videoActive,
+                    typeOfVideo: typeOfVideo,
+                    frameRate: !!_this.frameRate ? _this.frameRate : -1,
+                    videoDimensions: JSON.stringify(_this.videoDimensions)
                 }, function (error, response) {
                     if (error) {
-                        reject('Error on publishVideo: ' + JSON.stringify(error));
+                        if (error.code === 401) {
+                            reject(new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to publish"));
+                        }
+                        else {
+                            reject('Error on publishVideo: ' + JSON.stringify(error));
+                        }
                     }
                     else {
                         _this.webRtcPeer.processAnswer(response.sdpAnswer)
                             .then(function () {
                             _this.streamId = response.id;
                             _this.isLocalStreamPublished = true;
+                            _this.publishedOnce = true;
                             if (_this.displayMyRemote()) {
-                                _this.remotePeerSuccesfullyEstablished();
+                                _this.remotePeerSuccessfullyEstablished();
                             }
                             _this.ee.emitEvent('stream-created-by-publisher');
                             _this.initWebRtcStats();
@@ -357,8 +383,8 @@ var Stream = /** @class */ (function () {
         var _this = this;
         return new Promise(function (resolve, reject) {
             var offerConstraints = {
-                audio: _this.inboundStreamOpts.recvAudio,
-                video: _this.inboundStreamOpts.recvVideo
+                audio: _this.inboundStreamOpts.hasAudio,
+                video: _this.inboundStreamOpts.hasVideo
             };
             console.debug("'Session.subscribe(Stream)' called. Constraints of generate SDP offer", offerConstraints);
             var options = {
@@ -379,7 +405,7 @@ var Stream = /** @class */ (function () {
                     }
                     else {
                         _this.webRtcPeer.processAnswer(response.sdpAnswer).then(function () {
-                            _this.remotePeerSuccesfullyEstablished();
+                            _this.remotePeerSuccessfullyEstablished();
                             _this.initWebRtcStats();
                             resolve();
                         })["catch"](function (error) {
@@ -397,7 +423,7 @@ var Stream = /** @class */ (function () {
             });
         });
     };
-    Stream.prototype.remotePeerSuccesfullyEstablished = function () {
+    Stream.prototype.remotePeerSuccessfullyEstablished = function () {
         this.mediaStream = this.webRtcPeer.pc.getRemoteStreams()[0];
         console.debug('Peer remote stream', this.mediaStream);
         if (!!this.mediaStream) {

@@ -90,12 +90,13 @@ var StreamManager = /** @class */ (function () {
      * See [[EventDispatcher.on]]
      */
     StreamManager.prototype.on = function (type, handler) {
+        var _this = this;
         this.ee.on(type, function (event) {
             if (event) {
-                console.info("Event '" + type + "' triggered", event);
+                console.info("Event '" + type + "' triggered by '" + (_this.remote ? 'Subscriber' : 'Publisher') + "'", event);
             }
             else {
-                console.info("Event '" + type + "' triggered");
+                console.info("Event '" + type + "' triggered by '" + (_this.remote ? 'Subscriber' : 'Publisher') + "'");
             }
             handler(event);
         });
@@ -180,7 +181,6 @@ var StreamManager = /** @class */ (function () {
             }
         }
         var returnNumber = 1;
-        this.initializeVideoProperties(video);
         for (var _b = 0, _c = this.stream.session.streamManagers; _b < _c.length; _b++) {
             var streamManager = _c[_b];
             if (streamManager.disassociateVideo(video)) {
@@ -261,7 +261,10 @@ var StreamManager = /** @class */ (function () {
      * @hidden
      */
     StreamManager.prototype.initializeVideoProperties = function (video) {
-        video.srcObject = this.stream.getMediaStream();
+        if (!(this.stream.isLocal() && this.stream.displayMyRemote())) {
+            // Avoid setting the MediaStream into the srcObject if remote subscription before publishing
+            video.srcObject = this.stream.getMediaStream();
+        }
         video.autoplay = true;
         video.controls = false;
         if (!video.id) {
@@ -334,6 +337,12 @@ var StreamManager = /** @class */ (function () {
         this.videos.forEach(function (streamManagerVideo) {
             streamManagerVideo.video.srcObject = mediaStream;
         });
+    };
+    /**
+     * @hidden
+     */
+    StreamManager.prototype.emitEvent = function (type, eventArray) {
+        this.ee.emitEvent(type, eventArray);
     };
     StreamManager.prototype.pushNewStreamManagerVideo = function (streamManagerVideo) {
         this.videos.push(streamManagerVideo);

@@ -4,6 +4,7 @@ import { Publisher } from './Publisher';
 import { Stream } from './Stream';
 import { StreamManager } from './StreamManager';
 import { Subscriber } from './Subscriber';
+import { Capabilities } from '../OpenViduInternal/Interfaces/Public/Capabilities';
 import { EventDispatcher } from '../OpenViduInternal/Interfaces/Public/EventDispatcher';
 import { SignalOptions } from '../OpenViduInternal/Interfaces/Public/SignalOptions';
 import { SubscriberProperties } from '../OpenViduInternal/Interfaces/Public/SubscriberProperties';
@@ -34,6 +35,11 @@ export declare class Session implements EventDispatcher {
      * Collection of all StreamManagers of this Session ([[Publisher]] and [[Subscriber]])
      */
     streamManagers: StreamManager[];
+    /**
+     * Object defining the methods that the client is able to call. These are defined by the role of the token used to connect to the Session.
+     * This object is only defined after [[Session.connect]] has been successfully resolved
+     */
+    capabilities: Capabilities;
     /**
      * @hidden
      */
@@ -70,20 +76,20 @@ export declare class Session implements EventDispatcher {
      * This event will automatically unsubscribe the leaving participant from every Subscriber object of the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks)
      * and also deletes any HTML video element associated to each Subscriber (only those [created by OpenVidu Browser](/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players)).
      * For every video removed, each Subscriber object will dispatch a `videoElementDestroyed` event.
-     * Call `event.preventDefault()` uppon event `sessionDisconnected` to avoid this behaviour and take care of disposing and cleaning all the Subscriber objects yourself.
+     * Call `event.preventDefault()` upon event `sessionDisconnected` to avoid this behavior and take care of disposing and cleaning all the Subscriber objects yourself.
      * See [[SessionDisconnectedEvent]] and [[VideoElementEvent]] to learn more to learn more.
      *
      * The [[Publisher]] object of the local participant will dispatch a `streamDestroyed` event if there is a [[Publisher]] object publishing to the session.
      * This event will automatically stop all media tracks and delete any HTML video element associated to it (only those [created by OpenVidu Browser](/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players)).
      * For every video removed, the Publisher object will dispatch a `videoElementDestroyed` event.
-     * Call `event.preventDefault()` uppon event `streamDestroyed` if you want to clean the Publisher object on your own or re-publish it in a different Session (to do so it is a mandatory requirement to call `Session.unpublish()`
+     * Call `event.preventDefault()` upon event `streamDestroyed` if you want to clean the Publisher object on your own or re-publish it in a different Session (to do so it is a mandatory requirement to call `Session.unpublish()`
      * or/and `Session.disconnect()` in the previous session). See [[StreamEvent]] and [[VideoElementEvent]] to learn more.
      *
      * The [[Session]] object of every other participant connected to the session will dispatch a `streamDestroyed` event if the disconnected participant was publishing.
      * This event will automatically unsubscribe the Subscriber object from the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks)
      * and also deletes any HTML video element associated to that Subscriber (only those [created by OpenVidu Browser](/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players)).
      * For every video removed, the Subscriber object will dispatch a `videoElementDestroyed` event.
-     * Call `event.preventDefault()` uppon event `streamDestroyed` to avoid this default behaviour and take care of disposing and cleaning the Subscriber object yourself.
+     * Call `event.preventDefault()` upon event `streamDestroyed` to avoid this default behavior and take care of disposing and cleaning the Subscriber object yourself.
      * See [[StreamEvent]] and [[VideoElementEvent]] to learn more.
      *
      * The [[Session]] object of every other participant connected to the session will dispatch a `connectionDestroyed` event in any case. See [[ConnectionEvent]] to learn more.
@@ -132,17 +138,51 @@ export declare class Session implements EventDispatcher {
      * This event will automatically stop all media tracks and delete any HTML video element associated to this Publisher
      * (only those videos [created by OpenVidu Browser](/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players)).
      * For every video removed, the Publisher object will dispatch a `videoElementDestroyed` event.
-     * Call `event.preventDefault()` uppon event `streamDestroyed` if you want to clean the Publisher object on your own or re-publish it in a different Session.
+     * Call `event.preventDefault()` upon event `streamDestroyed` if you want to clean the Publisher object on your own or re-publish it in a different Session.
      *
      * The [[Session]] object of every other participant connected to the session will dispatch a `streamDestroyed` event.
      * This event will automatically unsubscribe the Subscriber object from the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks) and
      * delete any HTML video element associated to it (only those [created by OpenVidu Browser](/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players)).
      * For every video removed, the Subscriber object will dispatch a `videoElementDestroyed` event.
-     * Call `event.preventDefault()` uppon event `streamDestroyed` to avoid this default behaviour and take care of disposing and cleaning the Subscriber object on your own.
+     * Call `event.preventDefault()` upon event `streamDestroyed` to avoid this default behavior and take care of disposing and cleaning the Subscriber object on your own.
      *
      * See [[StreamEvent]] and [[VideoElementEvent]] to learn more.
      */
     unpublish(publisher: Publisher): void;
+    /**
+     * Forces some user to leave the session
+     *
+     * #### Events dispatched
+     *
+     * The behavior is the same as when some user calls [[Session.disconnect]], but `reason` property in all events will be `"forceDisconnectByUser"`.
+     *
+     * The [[Session]] object of every participant will dispatch a `streamDestroyed` event if the evicted user was publishing a stream, with property `reason` set to `"forceDisconnectByUser"`.
+     * The [[Session]] object of every participant except the evicted one will dispatch a `connectionDestroyed` event for the evicted user, with property `reason` set to `"forceDisconnectByUser"`.
+     *
+     * If any, the [[Publisher]] object of the evicted participant will also dispatch a `streamDestroyed` event with property `reason` set to `"forceDisconnectByUser"`.
+     * The [[Session]] object of the evicted participant will dispatch a `sessionDisconnected` event with property `reason` set to `"forceDisconnectByUser"`.
+     *
+     * See [[StreamEvent]], [[ConnectionEvent]] and [[SessionDisconnectedEvent]] to learn more.
+     *
+     * @returns A Promise (to which you can optionally subscribe to) that is resolved only after the participant has been successfully evicted from the session and rejected with an Error object if not
+     */
+    forceDisconnect(connection: Connection): Promise<any>;
+    /**
+     * Forces some user to unpublish a Stream
+     *
+     * #### Events dispatched
+     *
+     * The behavior is the same as when some user calls [[Session.unpublish]], but `reason` property in all events will be `"forceUnpublishByUser"`
+     *
+     * The [[Session]] object of every participant will dispatch a `streamDestroyed` event with property `reason` set to `"forceDisconnectByUser"`
+     *
+     * The [[Publisher]] object of the affected participant will also dispatch a `streamDestroyed` event with property `reason` set to `"forceDisconnectByUser"`
+     *
+     * See [[StreamEvent]] to learn more.
+     *
+     * @returns A Promise (to which you can optionally subscribe to) that is resolved only after the remote Stream has been successfully unpublished from the session and rejected with an Error object if not
+     */
+    forceUnpublish(stream: Stream): Promise<any>;
     /**
      * Sends one signal. `signal` object has the following optional properties:
      * ```json
@@ -194,6 +234,10 @@ export declare class Session implements EventDispatcher {
     /**
      * @hidden
      */
+    onStreamPropertyChanged(msg: any): void;
+    /**
+     * @hidden
+     */
     recvIceCandidate(msg: any): void;
     /**
      * @hidden
@@ -203,6 +247,10 @@ export declare class Session implements EventDispatcher {
      * @hidden
      */
     onLostConnection(): void;
+    /**
+     * @hidden
+     */
+    onRecoveredConnection(): void;
     /**
      * @hidden
      */
@@ -224,6 +272,7 @@ export declare class Session implements EventDispatcher {
      */
     leave(forced: boolean, reason: string): void;
     private connectAux;
+    private stopPublisherStream;
     private stringClientMetadata;
     private getConnection;
     private getRemoteConnection;

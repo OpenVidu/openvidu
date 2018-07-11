@@ -1,7 +1,10 @@
 export interface StreamOptionsServer {
     id: string;
+    hasAudio: boolean;
+    hasVideo: boolean;
     audioActive: boolean;
-    frameRate: number;
     videoActive: boolean;
     typeOfVideo: string;
+    frameRate: number;
+    videoDimensions: string;
 }

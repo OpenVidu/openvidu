@@ -14,6 +14,9 @@ export declare class ConnectionEvent extends Event {
     /**
      * For 'connectionDestroyed' event:
      * - "disconnect": the remote user has called `Session.disconnect()`
+     * - "forceDisconnectByUser": the remote user has been evicted from the Session by other user calling `Session.forceDisconnect()`
+     * - "forceDisconnectByServer": the remote user has been evicted from the Session by the application
+     * - "sessionClosedByServer": the Session has been closed by the application
      * - "networkDisconnect": the remote user network connection has dropped
      *
      * For 'connectionCreated' empty string
@@ -26,5 +29,5 @@ export declare class ConnectionEvent extends Event {
     /**
      * @hidden
      */
-    callDefaultBehaviour(): void;
+    callDefaultBehavior(): void;
 }

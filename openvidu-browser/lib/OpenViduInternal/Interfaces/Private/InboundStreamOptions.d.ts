@@ -2,8 +2,14 @@ import { Connection } from '../../../OpenVidu/Connection';
 export interface InboundStreamOptions {
     id: string;
     connection: Connection;
-    frameRate: number;
-    recvAudio: boolean;
-    recvVideo: boolean;
+    hasAudio: boolean;
+    hasVideo: boolean;
+    audioActive: boolean;
+    videoActive: boolean;
     typeOfVideo: string;
+    frameRate: number;
+    videoDimensions: {
+        width: number;
+        height: number;
+    };
 }

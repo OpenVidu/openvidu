@@ -19,6 +19,7 @@ exports.__esModule = true;
 var LocalRecorder_1 = require("./LocalRecorder");
 var Publisher_1 = require("./Publisher");
 var Session_1 = require("./Session");
+var StreamPropertyChangedEvent_1 = require("../OpenViduInternal/Events/StreamPropertyChangedEvent");
 var OpenViduError_1 = require("../OpenViduInternal/Enums/OpenViduError");
 var VideoInsertMode_1 = require("../OpenViduInternal/Enums/VideoInsertMode");
 var screenSharingAuto = require("../OpenViduInternal/ScreenSharing/Screen-Capturing-Auto");
@@ -31,6 +32,11 @@ var platform = require("platform");
  */
 var OpenVidu = /** @class */ (function () {
     function OpenVidu() {
+        var _this = this;
+        /**
+         * @hidden
+         */
+        this.publishers = [];
         /**
          * @hidden
          */
@@ -44,6 +50,56 @@ var OpenVidu = /** @class */ (function () {
          */
         this.advancedConfiguration = {};
         console.info("'OpenVidu' initialized");
+        if (platform.name.toLowerCase().indexOf('mobile') !== -1) {
+            // Listen to orientationchange only on mobile browsers
+            window.onorientationchange = function () {
+                _this.publishers.forEach(function (publisher) {
+                    if (!!publisher.stream && !!publisher.stream.hasVideo && !!publisher.stream.streamManager.videos[0]) {
+                        var attempts_1 = 0;
+                        var oldWidth_1 = publisher.stream.videoDimensions.width;
+                        var oldHeight_1 = publisher.stream.videoDimensions.height;
+                        // New resolution got from different places for Chrome and Firefox. Chrome needs a videoWidth and videoHeight of a videoElement.
+                        // Firefox needs getSettings from the videoTrack
+                        var firefoxSettings_1 = publisher.stream.getMediaStream().getVideoTracks()[0].getSettings();
+                        var newWidth_1 = (platform.name.toLowerCase().indexOf('firefox') !== -1) ? firefoxSettings_1.width : publisher.videoReference.videoWidth;
+                        var newHeight_1 = (platform.name.toLowerCase().indexOf('firefox') !== -1) ? firefoxSettings_1.height : publisher.videoReference.videoHeight;
+                        var repeatUntilChange_1 = setInterval(function () {
+                            firefoxSettings_1 = publisher.stream.getMediaStream().getVideoTracks()[0].getSettings();
+                            newWidth_1 = (platform.name.toLowerCase().indexOf('firefox') !== -1) ? firefoxSettings_1.width : publisher.videoReference.videoWidth;
+                            newHeight_1 = (platform.name.toLowerCase().indexOf('firefox') !== -1) ? firefoxSettings_1.height : publisher.videoReference.videoHeight;
+                            sendStreamPropertyChangedEvent_1(oldWidth_1, oldHeight_1, newWidth_1, newHeight_1);
+                        }, 100);
+                        var sendStreamPropertyChangedEvent_1 = function (oldWidth, oldHeight, newWidth, newHeight) {
+                            attempts_1++;
+                            if (attempts_1 > 4) {
+                                clearTimeout(repeatUntilChange_1);
+                            }
+                            if (newWidth !== oldWidth || newHeight !== oldHeight) {
+                                publisher.stream.videoDimensions = {
+                                    width: newWidth || 0,
+                                    height: newHeight || 0
+                                };
+                                _this.sendRequest('streamPropertyChanged', {
+                                    streamId: publisher.stream.streamId,
+                                    property: 'videoDimensions',
+                                    newValue: JSON.stringify(publisher.stream.videoDimensions),
+                                    reason: 'deviceRotated'
+                                }, function (error, response) {
+                                    if (error) {
+                                        console.error("Error sending 'streamPropertyChanged' event", error);
+                                    }
+                                    else {
+                                        _this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent_1.StreamPropertyChangedEvent(_this.session, publisher.stream, 'videoDimensions', publisher.stream.videoDimensions, { width: oldWidth, height: oldHeight }, 'deviceRotated')]);
+                                        publisher.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent_1.StreamPropertyChangedEvent(publisher, publisher.stream, 'videoDimensions', publisher.stream.videoDimensions, { width: oldWidth, height: oldHeight }, 'deviceRotated')]);
+                                    }
+                                });
+                                clearTimeout(repeatUntilChange_1);
+                            }
+                        };
+                    }
+                });
+            };
+        }
     }
     /**
      * Returns new session
@@ -118,6 +174,7 @@ var OpenVidu = /** @class */ (function () {
             }
             publisher.emitEvent('accessDenied', []);
         });
+        this.publishers.push(publisher);
         return publisher;
     };
     OpenVidu.prototype.initPublisherAsync = function (targetElement, properties) {
@@ -436,6 +493,7 @@ var OpenVidu = /** @class */ (function () {
                 recordingStarted: this.session.onRecordingStarted.bind(this.session),
                 recordingStopped: this.session.onRecordingStopped.bind(this.session),
                 sendMessage: this.session.onNewMessage.bind(this.session),
+                streamPropertyChanged: this.session.onStreamPropertyChanged.bind(this.session),
                 iceCandidate: this.session.recvIceCandidate.bind(this.session),
                 mediaError: this.session.onMediaError.bind(this.session)
             }
@@ -511,6 +569,12 @@ var OpenVidu = /** @class */ (function () {
     };
     OpenVidu.prototype.reconnectedCallback = function () {
         console.warn('Websocket reconnected');
+        if (this.isRoomAvailable()) {
+            this.session.onRecoveredConnection();
+        }
+        else {
+            alert('Connection error. Please reload page.');
+        }
     };
     OpenVidu.prototype.isRoomAvailable = function () {
         if (this.session !== undefined && this.session instanceof Session_1.Session) {

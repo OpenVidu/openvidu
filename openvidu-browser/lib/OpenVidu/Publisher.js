@@ -30,8 +30,10 @@ var Session_1 = require("./Session");
 var Stream_1 = require("./Stream");
 var StreamManager_1 = require("./StreamManager");
 var StreamEvent_1 = require("../OpenViduInternal/Events/StreamEvent");
+var StreamPropertyChangedEvent_1 = require("../OpenViduInternal/Events/StreamPropertyChangedEvent");
 var VideoElementEvent_1 = require("../OpenViduInternal/Events/VideoElementEvent");
 var OpenViduError_1 = require("../OpenViduInternal/Enums/OpenViduError");
+var platform = require("platform");
 /**
  * Packs local media streams. Participants can publish it to a session. Initialized with [[OpenVidu.initPublisher]] method
  */
@@ -42,7 +44,6 @@ var Publisher = /** @class */ (function (_super) {
      */
     function Publisher(targEl, properties, openvidu) {
         var _this = _super.call(this, new Stream_1.Stream((!!openvidu.session) ? openvidu.session : new Session_1.Session(openvidu), { publisherProperties: properties, mediaConstraints: {} }), targEl) || this;
-        _this.openvidu = openvidu;
         /**
          * Whether the Publisher has been granted access to the requested input devices or not
          */
@@ -53,35 +54,95 @@ var Publisher = /** @class */ (function (_super) {
         _this.isSubscribedToRemote = false;
         _this.accessDenied = false;
         _this.properties = properties;
-        _this.stream.ee.on('local-stream-destroyed-by-disconnect', function (reason) {
+        _this.openvidu = openvidu;
+        _this.stream.ee.on('local-stream-destroyed', function (reason) {
+            _this.stream.isLocalStreamPublished = false;
             var streamEvent = new StreamEvent_1.StreamEvent(true, _this, 'streamDestroyed', _this.stream, reason);
-            _this.ee.emitEvent('streamDestroyed', [streamEvent]);
-            streamEvent.callDefaultBehaviour();
+            _this.emitEvent('streamDestroyed', [streamEvent]);
+            streamEvent.callDefaultBehavior();
         });
         return _this;
     }
     /**
      * Publish or unpublish the audio stream (if available). Calling this method twice in a row passing same value will have no effect
+     *
+     * #### Events dispatched
+     *
+     * The [[Session]] object of the local participant will dispatch a `streamPropertyChanged` event with `changedProperty` set to `"audioActive"` and `reason` set to `"publishAudio"`
+     * The [[Publisher]] object of the local participant will also dispatch the exact same event
+     *
+     * The [[Session]] object of every other participant connected to the session will dispatch a `streamPropertyChanged` event with `changedProperty` set to `"audioActive"` and `reason` set to `"publishAudio"`
+     * The respective [[Subscriber]] object of every other participant receiving this Publisher's stream will also dispatch the exact same event
+     *
+     * See [[StreamPropertyChangedEvent]] to learn more.
+     *
      * @param value `true` to publish the audio stream, `false` to unpublish it
      */
     Publisher.prototype.publishAudio = function (value) {
-        this.stream.getMediaStream().getAudioTracks().forEach(function (track) {
-            track.enabled = value;
-        });
-        console.info("'Publisher' has " + (value ? 'published' : 'unpublished') + ' its audio stream');
+        var _this = this;
+        if (this.stream.audioActive !== value) {
+            this.stream.getMediaStream().getAudioTracks().forEach(function (track) {
+                track.enabled = value;
+            });
+            this.session.openvidu.sendRequest('streamPropertyChanged', {
+                streamId: this.stream.streamId,
+                property: 'audioActive',
+                newValue: value,
+                reason: 'publishAudio'
+            }, function (error, response) {
+                if (error) {
+                    console.error("Error sending 'streamPropertyChanged' event", error);
+                }
+                else {
+                    _this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent_1.StreamPropertyChangedEvent(_this.session, _this.stream, 'audioActive', value, !value, 'publishAudio')]);
+                    _this.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent_1.StreamPropertyChangedEvent(_this, _this.stream, 'audioActive', value, !value, 'publishAudio')]);
+                }
+            });
+            this.stream.audioActive = value;
+            console.info("'Publisher' has " + (value ? 'published' : 'unpublished') + ' its audio stream');
+        }
     };
     /**
      * Publish or unpublish the video stream (if available). Calling this method twice in a row passing same value will have no effect
+     *
+     * #### Events dispatched
+     *
+     * The [[Session]] object of the local participant will dispatch a `streamPropertyChanged` event with `changedProperty` set to `"videoActive"` and `reason` set to `"publishVideo"`
+     * The [[Publisher]] object of the local participant will also dispatch the exact same event
+     *
+     * The [[Session]] object of every other participant connected to the session will dispatch a `streamPropertyChanged` event with `changedProperty` set to `"videoActive"` and `reason` set to `"publishVideo"`
+     * The respective [[Subscriber]] object of every other participant receiving this Publisher's stream will also dispatch the exact same event
+     *
+     * See [[StreamPropertyChangedEvent]] to learn more.
+     *
      * @param value `true` to publish the video stream, `false` to unpublish it
      */
     Publisher.prototype.publishVideo = function (value) {
-        this.stream.getMediaStream().getVideoTracks().forEach(function (track) {
-            track.enabled = value;
-        });
-        console.info("'Publisher' has " + (value ? 'published' : 'unpublished') + ' its video stream');
+        var _this = this;
+        if (this.stream.videoActive !== value) {
+            this.stream.getMediaStream().getVideoTracks().forEach(function (track) {
+                track.enabled = value;
+            });
+            this.session.openvidu.sendRequest('streamPropertyChanged', {
+                streamId: this.stream.streamId,
+                property: 'videoActive',
+                newValue: value,
+                reason: 'publishVideo'
+            }, function (error, response) {
+                if (error) {
+                    console.error("Error sending 'streamPropertyChanged' event", error);
+                }
+                else {
+                    _this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent_1.StreamPropertyChangedEvent(_this.session, _this.stream, 'videoActive', value, !value, 'publishVideo')]);
+                    _this.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent_1.StreamPropertyChangedEvent(_this, _this.stream, 'videoActive', value, !value, 'publishVideo')]);
+                }
+            });
+            this.stream.videoActive = value;
+            console.info("'Publisher' has " + (value ? 'published' : 'unpublished') + ' its video stream');
+        }
     };
     /**
-     * Call this method before [[Session.publish]] to subscribe to your Publisher's remote stream instead of using the local stream, as any other user would do.
+     * Call this method before [[Session.publish]] if you prefer to subscribe to your Publisher's remote stream instead of using the local stream, as any other user would do.
      */
     Publisher.prototype.subscribeToRemote = function (value) {
         value = (value !== undefined) ? value : true;
@@ -96,11 +157,11 @@ var Publisher = /** @class */ (function (_super) {
         _super.prototype.on.call(this, type, handler);
         if (type === 'streamCreated') {
             if (!!this.stream && this.stream.isLocalStreamPublished) {
-                this.ee.emitEvent('streamCreated', [new StreamEvent_1.StreamEvent(false, this, 'streamCreated', this.stream, '')]);
+                this.emitEvent('streamCreated', [new StreamEvent_1.StreamEvent(false, this, 'streamCreated', this.stream, '')]);
             }
             else {
                 this.stream.ee.on('stream-created-by-publisher', function () {
-                    _this.ee.emitEvent('streamCreated', [new StreamEvent_1.StreamEvent(false, _this, 'streamCreated', _this.stream, '')]);
+                    _this.emitEvent('streamCreated', [new StreamEvent_1.StreamEvent(false, _this, 'streamCreated', _this.stream, '')]);
                 });
             }
         }
@@ -110,17 +171,17 @@ var Publisher = /** @class */ (function (_super) {
                 this.videos[0].video.paused === false &&
                 this.videos[0].video.ended === false &&
                 this.videos[0].video.readyState === 4) {
-                this.ee.emitEvent('remoteVideoPlaying', [new VideoElementEvent_1.VideoElementEvent(this.videos[0].video, this, 'remoteVideoPlaying')]);
+                this.emitEvent('remoteVideoPlaying', [new VideoElementEvent_1.VideoElementEvent(this.videos[0].video, this, 'remoteVideoPlaying')]);
             }
         }
         if (type === 'accessAllowed') {
             if (this.accessAllowed) {
-                this.ee.emitEvent('accessAllowed');
+                this.emitEvent('accessAllowed', []);
             }
         }
         if (type === 'accessDenied') {
             if (this.accessDenied) {
-                this.ee.emitEvent('accessDenied');
+                this.emitEvent('accessDenied', []);
             }
         }
         return this;
@@ -133,11 +194,11 @@ var Publisher = /** @class */ (function (_super) {
         _super.prototype.once.call(this, type, handler);
         if (type === 'streamCreated') {
             if (!!this.stream && this.stream.isLocalStreamPublished) {
-                this.ee.emitEvent('streamCreated', [new StreamEvent_1.StreamEvent(false, this, 'streamCreated', this.stream, '')]);
+                this.emitEvent('streamCreated', [new StreamEvent_1.StreamEvent(false, this, 'streamCreated', this.stream, '')]);
             }
             else {
                 this.stream.ee.once('stream-created-by-publisher', function () {
-                    _this.ee.emitEvent('streamCreated', [new StreamEvent_1.StreamEvent(false, _this, 'streamCreated', _this.stream, '')]);
+                    _this.emitEvent('streamCreated', [new StreamEvent_1.StreamEvent(false, _this, 'streamCreated', _this.stream, '')]);
                 });
             }
         }
@@ -147,17 +208,17 @@ var Publisher = /** @class */ (function (_super) {
                 this.videos[0].video.paused === false &&
                 this.videos[0].video.ended === false &&
                 this.videos[0].video.readyState === 4) {
-                this.ee.emitEvent('remoteVideoPlaying', [new VideoElementEvent_1.VideoElementEvent(this.videos[0].video, this, 'remoteVideoPlaying')]);
+                this.emitEvent('remoteVideoPlaying', [new VideoElementEvent_1.VideoElementEvent(this.videos[0].video, this, 'remoteVideoPlaying')]);
             }
         }
         if (type === 'accessAllowed') {
             if (this.accessAllowed) {
-                this.ee.emitEvent('accessAllowed');
+                this.emitEvent('accessAllowed', []);
             }
         }
         if (type === 'accessDenied') {
             if (this.accessDenied) {
-                this.ee.emitEvent('accessDenied');
+                this.emitEvent('accessDenied', []);
             }
         }
         return this;
@@ -192,18 +253,83 @@ var Publisher = /** @class */ (function (_super) {
                 if (!!mediaStream.getVideoTracks()[0]) {
                     mediaStream.getVideoTracks()[0].enabled = !!_this.stream.outboundStreamOpts.publisherProperties.publishVideo;
                 }
+                _this.videoReference = document.createElement('video');
+                _this.videoReference.srcObject = mediaStream;
                 _this.stream.setMediaStream(mediaStream);
                 if (!_this.stream.displayMyRemote()) {
                     // When we are subscribed to our remote we don't still set the MediaStream object in the video elements to
                     // avoid early 'streamPlaying' event
                     _this.stream.updateMediaStreamInVideos();
                 }
-                _this.stream.isLocalStreamReadyToPublish = true;
-                _this.stream.ee.emitEvent('stream-ready-to-publish', []);
                 if (!!_this.firstVideoElement) {
                     _this.createVideoElement(_this.firstVideoElement.targetElement, _this.properties.insertMode);
                 }
                 delete _this.firstVideoElement;
+                if (_this.stream.isSendVideo()) {
+                    if (!_this.stream.isSendScreen()) {
+                        // With no screen share, video dimension can be set directly from MediaStream (getSettings)
+                        // Orientation must be checked for mobile devices (width and height are reversed)
+                        var _a = mediaStream.getVideoTracks()[0].getSettings(), width = _a.width, height = _a.height;
+                        if (platform.name.toLowerCase().indexOf('mobile') !== -1 && (window.innerHeight > window.innerWidth)) {
+                            // Mobile portrait mode
+                            _this.stream.videoDimensions = {
+                                width: height || 0,
+                                height: width || 0
+                            };
+                        }
+                        else {
+                            _this.stream.videoDimensions = {
+                                width: width || 0,
+                                height: height || 0
+                            };
+                        }
+                        _this.stream.isLocalStreamReadyToPublish = true;
+                        _this.stream.ee.emitEvent('stream-ready-to-publish', []);
+                    }
+                    else {
+                        // With screen share, video dimension must be got from a video element (onloadedmetadata event)
+                        _this.videoReference.onloadedmetadata = function () {
+                            _this.stream.videoDimensions = {
+                                width: _this.videoReference.videoWidth,
+                                height: _this.videoReference.videoHeight
+                            };
+                            _this.screenShareResizeInterval = setInterval(function () {
+                                var firefoxSettings = mediaStream.getVideoTracks()[0].getSettings();
+                                var newWidth = (platform.name === 'Chrome') ? _this.videoReference.videoWidth : firefoxSettings.width;
+                                var newHeight = (platform.name === 'Chrome') ? _this.videoReference.videoHeight : firefoxSettings.height;
+                                if (_this.stream.isLocalStreamPublished &&
+                                    (newWidth !== _this.stream.videoDimensions.width ||
+                                        newHeight !== _this.stream.videoDimensions.height)) {
+                                    var oldValue_1 = { width: _this.stream.videoDimensions.width, height: _this.stream.videoDimensions.height };
+                                    _this.stream.videoDimensions = {
+                                        width: newWidth || 0,
+                                        height: newHeight || 0
+                                    };
+                                    _this.session.openvidu.sendRequest('streamPropertyChanged', {
+                                        streamId: _this.stream.streamId,
+                                        property: 'videoDimensions',
+                                        newValue: JSON.stringify(_this.stream.videoDimensions),
+                                        reason: 'screenResized'
+                                    }, function (error, response) {
+                                        if (error) {
+                                            console.error("Error sending 'streamPropertyChanged' event", error);
+                                        }
+                                        else {
+                                            _this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent_1.StreamPropertyChangedEvent(_this.session, _this.stream, 'videoDimensions', _this.stream.videoDimensions, oldValue_1, 'screenResized')]);
+                                            _this.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent_1.StreamPropertyChangedEvent(_this, _this.stream, 'videoDimensions', _this.stream.videoDimensions, oldValue_1, 'screenResized')]);
+                                        }
+                                    });
+                                }
+                            }, 500);
+                            _this.stream.isLocalStreamReadyToPublish = true;
+                            _this.stream.ee.emitEvent('stream-ready-to-publish', []);
+                        };
+                    }
+                }
+                else {
+                    _this.stream.isLocalStreamReadyToPublish = true;
+                    _this.stream.ee.emitEvent('stream-ready-to-publish', []);
+                }
                 resolve();
             };
             _this.openvidu.generateMediaConstraints(_this.properties)
@@ -344,12 +470,6 @@ var Publisher = /** @class */ (function (_super) {
     /**
      * @hidden
      */
-    Publisher.prototype.emitEvent = function (type, eventArray) {
-        this.ee.emitEvent(type, eventArray);
-    };
-    /**
-     * @hidden
-     */
     Publisher.prototype.reestablishStreamPlayingEvent = function () {
         if (this.ee.getListeners('streamPlaying').length > 0) {
             this.addPlayEventToFirstVideo();
@@ -359,14 +479,14 @@ var Publisher = /** @class */ (function (_super) {
     Publisher.prototype.setPermissionDialogTimer = function (waitTime) {
         var _this = this;
         this.permissionDialogTimeout = setTimeout(function () {
-            _this.ee.emitEvent('accessDialogOpened', []);
+            _this.emitEvent('accessDialogOpened', []);
         }, waitTime);
     };
     Publisher.prototype.clearPermissionDialogTimer = function (startTime, waitTime) {
         clearTimeout(this.permissionDialogTimeout);
         if ((Date.now() - startTime) > waitTime) {
             // Permission dialog was shown and now is closed
-            this.ee.emitEvent('accessDialogClosed', []);
+            this.emitEvent('accessDialogClosed', []);
         }
     };
     return Publisher;

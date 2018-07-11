@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { OpenVidu } from './OpenVidu';
 import { Session } from './Session';
 import { StreamManager } from './StreamManager';
@@ -8,7 +9,6 @@ import { Event } from '../OpenViduInternal/Events/Event';
  * Packs local media streams. Participants can publish it to a session. Initialized with [[OpenVidu.initPublisher]] method
  */
 export declare class Publisher extends StreamManager {
-    private openvidu;
     /**
      * Whether the Publisher has been granted access to the requested input devices or not
      */
@@ -25,21 +25,55 @@ export declare class Publisher extends StreamManager {
     private properties;
     private permissionDialogTimeout;
     /**
+     * hidden
+     */
+    openvidu: OpenVidu;
+    /**
+     * @hidden
+     */
+    videoReference: HTMLVideoElement;
+    /**
+     * @hidden
+     */
+    screenShareResizeInterval: NodeJS.Timer;
+    /**
      * @hidden
      */
     constructor(targEl: string | HTMLElement, properties: PublisherProperties, openvidu: OpenVidu);
     /**
      * Publish or unpublish the audio stream (if available). Calling this method twice in a row passing same value will have no effect
+     *
+     * #### Events dispatched
+     *
+     * The [[Session]] object of the local participant will dispatch a `streamPropertyChanged` event with `changedProperty` set to `"audioActive"` and `reason` set to `"publishAudio"`
+     * The [[Publisher]] object of the local participant will also dispatch the exact same event
+     *
+     * The [[Session]] object of every other participant connected to the session will dispatch a `streamPropertyChanged` event with `changedProperty` set to `"audioActive"` and `reason` set to `"publishAudio"`
+     * The respective [[Subscriber]] object of every other participant receiving this Publisher's stream will also dispatch the exact same event
+     *
+     * See [[StreamPropertyChangedEvent]] to learn more.
+     *
      * @param value `true` to publish the audio stream, `false` to unpublish it
      */
     publishAudio(value: boolean): void;
     /**
      * Publish or unpublish the video stream (if available). Calling this method twice in a row passing same value will have no effect
+     *
+     * #### Events dispatched
+     *
+     * The [[Session]] object of the local participant will dispatch a `streamPropertyChanged` event with `changedProperty` set to `"videoActive"` and `reason` set to `"publishVideo"`
+     * The [[Publisher]] object of the local participant will also dispatch the exact same event
+     *
+     * The [[Session]] object of every other participant connected to the session will dispatch a `streamPropertyChanged` event with `changedProperty` set to `"videoActive"` and `reason` set to `"publishVideo"`
+     * The respective [[Subscriber]] object of every other participant receiving this Publisher's stream will also dispatch the exact same event
+     *
+     * See [[StreamPropertyChangedEvent]] to learn more.
+     *
      * @param value `true` to publish the video stream, `false` to unpublish it
      */
     publishVideo(value: boolean): void;
     /**
-     * Call this method before [[Session.publish]] to subscribe to your Publisher's remote stream instead of using the local stream, as any other user would do.
+     * Call this method before [[Session.publish]] if you prefer to subscribe to your Publisher's remote stream instead of using the local stream, as any other user would do.
      */
     subscribeToRemote(value?: boolean): void;
     /**
@@ -58,10 +92,6 @@ export declare class Publisher extends StreamManager {
      * @hidden
      */
     updateSession(session: Session): void;
-    /**
-     * @hidden
-     */
-    emitEvent(type: string, eventArray: any[]): void;
     /**
      * @hidden
      */

@@ -47,7 +47,7 @@ var ConnectionEvent = /** @class */ (function (_super) {
      * @hidden
      */
     // tslint:disable-next-line:no-empty
-    ConnectionEvent.prototype.callDefaultBehaviour = function () { };
+    ConnectionEvent.prototype.callDefaultBehavior = function () { };
     return ConnectionEvent;
 }(Event_1.Event));
 exports.ConnectionEvent = ConnectionEvent;

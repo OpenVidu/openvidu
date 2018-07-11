@@ -4,42 +4,42 @@
 export declare enum OpenViduErrorName {
     /**
      * Browser is not supported by OpenVidu.
-     * Returned uppon unsuccessful [[Session.connect]]
+     * Returned upon unsuccessful [[Session.connect]]
      */
     BROWSER_NOT_SUPPORTED = "BROWSER_NOT_SUPPORTED",
     /**
      * The user hasn't granted permissions to the required input device when the browser asked for them.
-     * Returned uppon unsuccessful [[OpenVidu.initPublisher]] or [[OpenVidu.getUserMedia]]
+     * Returned upon unsuccessful [[OpenVidu.initPublisher]] or [[OpenVidu.getUserMedia]]
      */
     DEVICE_ACCESS_DENIED = "DEVICE_ACCESS_DENIED",
     /**
      * The user hasn't granted permissions to capture some desktop screen when the browser asked for them.
-     * Returned uppon unsuccessful [[OpenVidu.initPublisher]] or [[OpenVidu.getUserMedia]]
+     * Returned upon unsuccessful [[OpenVidu.initPublisher]] or [[OpenVidu.getUserMedia]]
      */
     SCREEN_CAPTURE_DENIED = "SCREEN_CAPTURE_DENIED",
     /**
      * Browser does not support screen sharing.
-     * Returned uppon unsuccessful [[OpenVidu.initPublisher]]
+     * Returned upon unsuccessful [[OpenVidu.initPublisher]]
      */
     SCREEN_SHARING_NOT_SUPPORTED = "SCREEN_SHARING_NOT_SUPPORTED",
     /**
      * Only for Chrome, there's no screen sharing extension installed
-     * Returned uppon unsuccessful [[OpenVidu.initPublisher]]
+     * Returned upon unsuccessful [[OpenVidu.initPublisher]]
      */
     SCREEN_EXTENSION_NOT_INSTALLED = "SCREEN_EXTENSION_NOT_INSTALLED",
     /**
      * Only for Chrome, the screen sharing extension is installed but is disabled
-     * Returned uppon unsuccessful [[OpenVidu.initPublisher]]
+     * Returned upon unsuccessful [[OpenVidu.initPublisher]]
      */
     SCREEN_EXTENSION_DISABLED = "SCREEN_EXTENSION_DISABLED",
     /**
      * No video input device found with the provided deviceId (property [[PublisherProperties.videoSource]])
-     * Returned uppon unsuccessful [[OpenVidu.initPublisher]]
+     * Returned upon unsuccessful [[OpenVidu.initPublisher]]
      */
     INPUT_VIDEO_DEVICE_NOT_FOUND = "INPUT_VIDEO_DEVICE_NOT_FOUND",
     /**
      * No audio input device found with the provided deviceId (property [[PublisherProperties.audioSource]])
-     * Returned uppon unsuccessful [[OpenVidu.initPublisher]]
+     * Returned upon unsuccessful [[OpenVidu.initPublisher]]
      */
     INPUT_AUDIO_DEVICE_NOT_FOUND = "INPUT_AUDIO_DEVICE_NOT_FOUND",
     /**
@@ -50,11 +50,12 @@ export declare enum OpenViduErrorName {
     /**
      * Some media property of [[PublisherProperties]] such as `frameRate` or `resolution` is not supported
      * by the input devices (whenever it is possible they are automatically adjusted to the most similar value).
-     * Returned uppon unsuccessful [[OpenVidu.initPublisher]]
+     * Returned upon unsuccessful [[OpenVidu.initPublisher]]
      */
     PUBLISHER_PROPERTIES_ERROR = "PUBLISHER_PROPERTIES_ERROR",
     /**
-     * _Not in use yet_
+     * The client tried to call a method without the required permissions. This can occur for methods [[Session.publish]],
+     * [[Session.forceUnpublish]] and [[Session.forceDisconnect]]
      */
     OPENVIDU_PERMISSION_DENIED = "OPENVIDU_PERMISSION_DENIED",
     /**

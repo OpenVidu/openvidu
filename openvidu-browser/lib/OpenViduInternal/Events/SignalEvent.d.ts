@@ -30,5 +30,5 @@ export declare class SignalEvent extends Event {
     /**
      * @hidden
      */
-    callDefaultBehaviour(): void;
+    callDefaultBehavior(): void;
 }

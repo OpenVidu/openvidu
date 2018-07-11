@@ -18,6 +18,10 @@ export declare class OpenVidu {
     /**
      * @hidden
      */
+    publishers: Publisher[];
+    /**
+     * @hidden
+     */
     wsUri: string;
     /**
      * @hidden

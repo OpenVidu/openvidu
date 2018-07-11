@@ -23,6 +23,7 @@ var RecordingEvent_1 = require("../OpenViduInternal/Events/RecordingEvent");
 var SessionDisconnectedEvent_1 = require("../OpenViduInternal/Events/SessionDisconnectedEvent");
 var SignalEvent_1 = require("../OpenViduInternal/Events/SignalEvent");
 var StreamEvent_1 = require("../OpenViduInternal/Events/StreamEvent");
+var StreamPropertyChangedEvent_1 = require("../OpenViduInternal/Events/StreamPropertyChangedEvent");
 var OpenViduError_1 = require("../OpenViduInternal/Enums/OpenViduError");
 var VideoInsertMode_1 = require("../OpenViduInternal/Enums/VideoInsertMode");
 var platform = require("platform");
@@ -115,20 +116,20 @@ var Session = /** @class */ (function () {
      * This event will automatically unsubscribe the leaving participant from every Subscriber object of the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks)
      * and also deletes any HTML video element associated to each Subscriber (only those [created by OpenVidu Browser](/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players)).
      * For every video removed, each Subscriber object will dispatch a `videoElementDestroyed` event.
-     * Call `event.preventDefault()` uppon event `sessionDisconnected` to avoid this behaviour and take care of disposing and cleaning all the Subscriber objects yourself.
+     * Call `event.preventDefault()` upon event `sessionDisconnected` to avoid this behavior and take care of disposing and cleaning all the Subscriber objects yourself.
      * See [[SessionDisconnectedEvent]] and [[VideoElementEvent]] to learn more to learn more.
      *
      * The [[Publisher]] object of the local participant will dispatch a `streamDestroyed` event if there is a [[Publisher]] object publishing to the session.
      * This event will automatically stop all media tracks and delete any HTML video element associated to it (only those [created by OpenVidu Browser](/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players)).
      * For every video removed, the Publisher object will dispatch a `videoElementDestroyed` event.
-     * Call `event.preventDefault()` uppon event `streamDestroyed` if you want to clean the Publisher object on your own or re-publish it in a different Session (to do so it is a mandatory requirement to call `Session.unpublish()`
+     * Call `event.preventDefault()` upon event `streamDestroyed` if you want to clean the Publisher object on your own or re-publish it in a different Session (to do so it is a mandatory requirement to call `Session.unpublish()`
      * or/and `Session.disconnect()` in the previous session). See [[StreamEvent]] and [[VideoElementEvent]] to learn more.
      *
      * The [[Session]] object of every other participant connected to the session will dispatch a `streamDestroyed` event if the disconnected participant was publishing.
      * This event will automatically unsubscribe the Subscriber object from the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks)
      * and also deletes any HTML video element associated to that Subscriber (only those [created by OpenVidu Browser](/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players)).
      * For every video removed, the Subscriber object will dispatch a `videoElementDestroyed` event.
-     * Call `event.preventDefault()` uppon event `streamDestroyed` to avoid this default behaviour and take care of disposing and cleaning the Subscriber object yourself.
+     * Call `event.preventDefault()` upon event `streamDestroyed` to avoid this default behavior and take care of disposing and cleaning the Subscriber object yourself.
      * See [[StreamEvent]] and [[VideoElementEvent]] to learn more.
      *
      * The [[Session]] object of every other participant connected to the session will dispatch a `connectionDestroyed` event in any case. See [[ConnectionEvent]] to learn more.
@@ -255,7 +256,7 @@ var Session = /** @class */ (function () {
         return new Promise(function (resolve, reject) {
             publisher.session = _this;
             publisher.stream.session = _this;
-            if (!publisher.stream.isLocalStreamPublished) {
+            if (!publisher.stream.publishedOnce) {
                 // 'Session.unpublish(Publisher)' has NOT been called
                 _this.connection.addStream(publisher.stream);
                 publisher.stream.publish()
@@ -292,13 +293,13 @@ var Session = /** @class */ (function () {
      * This event will automatically stop all media tracks and delete any HTML video element associated to this Publisher
      * (only those videos [created by OpenVidu Browser](/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players)).
      * For every video removed, the Publisher object will dispatch a `videoElementDestroyed` event.
-     * Call `event.preventDefault()` uppon event `streamDestroyed` if you want to clean the Publisher object on your own or re-publish it in a different Session.
+     * Call `event.preventDefault()` upon event `streamDestroyed` if you want to clean the Publisher object on your own or re-publish it in a different Session.
      *
      * The [[Session]] object of every other participant connected to the session will dispatch a `streamDestroyed` event.
      * This event will automatically unsubscribe the Subscriber object from the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks) and
      * delete any HTML video element associated to it (only those [created by OpenVidu Browser](/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players)).
      * For every video removed, the Subscriber object will dispatch a `videoElementDestroyed` event.
-     * Call `event.preventDefault()` uppon event `streamDestroyed` to avoid this default behaviour and take care of disposing and cleaning the Subscriber object on your own.
+     * Call `event.preventDefault()` upon event `streamDestroyed` to avoid this default behavior and take care of disposing and cleaning the Subscriber object on your own.
      *
      * See [[StreamEvent]] and [[VideoElementEvent]] to learn more.
      */
@@ -327,8 +328,82 @@ var Session = /** @class */ (function () {
             delete stream.connection.stream;
             var streamEvent = new StreamEvent_1.StreamEvent(true, publisher, 'streamDestroyed', publisher.stream, 'unpublish');
             publisher.emitEvent('streamDestroyed', [streamEvent]);
-            streamEvent.callDefaultBehaviour();
+            streamEvent.callDefaultBehavior();
         }
+    };
+    /**
+     * Forces some user to leave the session
+     *
+     * #### Events dispatched
+     *
+     * The behavior is the same as when some user calls [[Session.disconnect]], but `reason` property in all events will be `"forceDisconnectByUser"`.
+     *
+     * The [[Session]] object of every participant will dispatch a `streamDestroyed` event if the evicted user was publishing a stream, with property `reason` set to `"forceDisconnectByUser"`.
+     * The [[Session]] object of every participant except the evicted one will dispatch a `connectionDestroyed` event for the evicted user, with property `reason` set to `"forceDisconnectByUser"`.
+     *
+     * If any, the [[Publisher]] object of the evicted participant will also dispatch a `streamDestroyed` event with property `reason` set to `"forceDisconnectByUser"`.
+     * The [[Session]] object of the evicted participant will dispatch a `sessionDisconnected` event with property `reason` set to `"forceDisconnectByUser"`.
+     *
+     * See [[StreamEvent]], [[ConnectionEvent]] and [[SessionDisconnectedEvent]] to learn more.
+     *
+     * @returns A Promise (to which you can optionally subscribe to) that is resolved only after the participant has been successfully evicted from the session and rejected with an Error object if not
+     */
+    Session.prototype.forceDisconnect = function (connection) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            console.info('Forcing disconnect for connection ' + connection.connectionId);
+            _this.openvidu.sendRequest('forceDisconnect', { connectionId: connection.connectionId }, function (error, response) {
+                if (error) {
+                    console.error('Error forcing disconnect for Connection ' + connection.connectionId, error);
+                    if (error.code === 401) {
+                        reject(new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to force a disconnection"));
+                    }
+                    else {
+                        reject(error);
+                    }
+                }
+                else {
+                    console.info('Forcing disconnect correctly for Connection ' + connection.connectionId);
+                    resolve();
+                }
+            });
+        });
+    };
+    /**
+     * Forces some user to unpublish a Stream
+     *
+     * #### Events dispatched
+     *
+     * The behavior is the same as when some user calls [[Session.unpublish]], but `reason` property in all events will be `"forceUnpublishByUser"`
+     *
+     * The [[Session]] object of every participant will dispatch a `streamDestroyed` event with property `reason` set to `"forceDisconnectByUser"`
+     *
+     * The [[Publisher]] object of the affected participant will also dispatch a `streamDestroyed` event with property `reason` set to `"forceDisconnectByUser"`
+     *
+     * See [[StreamEvent]] to learn more.
+     *
+     * @returns A Promise (to which you can optionally subscribe to) that is resolved only after the remote Stream has been successfully unpublished from the session and rejected with an Error object if not
+     */
+    Session.prototype.forceUnpublish = function (stream) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            console.info('Forcing unpublish for stream ' + stream.streamId);
+            _this.openvidu.sendRequest('forceUnpublish', { streamId: stream.streamId }, function (error, response) {
+                if (error) {
+                    console.error('Error forcing unpublish for Stream ' + stream.streamId, error);
+                    if (error.code === 401) {
+                        reject(new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to force an unpublishing"));
+                    }
+                    else {
+                        reject(error);
+                    }
+                }
+                else {
+                    console.info('Forcing unpublish correctly for Stream ' + stream.streamId);
+                    resolve();
+                }
+            });
+        });
     };
     /**
      * Sends one signal. `signal` object has the following optional properties:
@@ -464,14 +539,14 @@ var Session = /** @class */ (function () {
      */
     Session.prototype.onParticipantLeft = function (msg) {
         var _this = this;
-        this.getRemoteConnection(msg.name, 'Remote connection ' + msg.name + " unknown when 'onParticipantLeft'. " +
+        this.getRemoteConnection(msg.connectionId, 'Remote connection ' + msg.connectionId + " unknown when 'onParticipantLeft'. " +
             'Existing remote connections: ' + JSON.stringify(Object.keys(this.remoteConnections)))
             .then(function (connection) {
             if (!!connection.stream) {
                 var stream = connection.stream;
                 var streamEvent = new StreamEvent_1.StreamEvent(true, _this, 'streamDestroyed', stream, msg.reason);
                 _this.ee.emitEvent('streamDestroyed', [streamEvent]);
-                streamEvent.callDefaultBehaviour();
+                streamEvent.callDefaultBehavior();
                 delete _this.remoteStreamsCreated[stream.streamId];
             }
             delete _this.remoteConnections[connection.connectionId];
@@ -518,44 +593,36 @@ var Session = /** @class */ (function () {
      */
     Session.prototype.onParticipantUnpublished = function (msg) {
         var _this = this;
-        this.getRemoteConnection(msg.name, "Remote connection '" + msg.name + "' unknown when 'onParticipantUnpublished'. " +
-            'Existing remote connections: ' + JSON.stringify(Object.keys(this.remoteConnections)))
-            .then(function (connection) {
-            var streamEvent = new StreamEvent_1.StreamEvent(true, _this, 'streamDestroyed', connection.stream, msg.reason);
-            _this.ee.emitEvent('streamDestroyed', [streamEvent]);
-            streamEvent.callDefaultBehaviour();
-            // Deleting the remote stream
-            var streamId = connection.stream.streamId;
-            delete _this.remoteStreamsCreated[streamId];
-            connection.removeStream(streamId);
-        })["catch"](function (openViduError) {
-            console.error(openViduError);
-        });
+        if (msg.connectionId === this.connection.connectionId) {
+            // Your stream has been forcedly unpublished from the session
+            this.stopPublisherStream(msg.reason);
+        }
+        else {
+            this.getRemoteConnection(msg.connectionId, "Remote connection '" + msg.connectionId + "' unknown when 'onParticipantUnpublished'. " +
+                'Existing remote connections: ' + JSON.stringify(Object.keys(this.remoteConnections)))
+                .then(function (connection) {
+                var streamEvent = new StreamEvent_1.StreamEvent(true, _this, 'streamDestroyed', connection.stream, msg.reason);
+                _this.ee.emitEvent('streamDestroyed', [streamEvent]);
+                streamEvent.callDefaultBehavior();
+                // Deleting the remote stream
+                var streamId = connection.stream.streamId;
+                delete _this.remoteStreamsCreated[streamId];
+                connection.removeStream(streamId);
+            })["catch"](function (openViduError) {
+                console.error(openViduError);
+            });
+        }
     };
     /**
      * @hidden
      */
     Session.prototype.onParticipantEvicted = function (msg) {
-        /*this.getRemoteConnection(msg.name, 'Remote connection ' + msg.name + " unknown when 'onParticipantLeft'. " +
-            'Existing remote connections: ' + JSON.stringify(Object.keys(this.remoteConnections)))
-
-            .then(connection => {
-                if (!!connection.stream) {
-                    const stream = connection.stream;
-
-                    const streamEvent = new StreamEvent(true, this, 'streamDestroyed', stream, 'forceDisconnect');
-                    this.ee.emitEvent('streamDestroyed', [streamEvent]);
-                    streamEvent.callDefaultBehaviour();
-
-                    delete this.remoteStreamsCreated[stream.streamId];
-                }
-                connection.dispose();
-                delete this.remoteConnections[connection.connectionId];
-                this.ee.emitEvent('connectionDestroyed', [new ConnectionEvent(false, this, 'connectionDestroyed', connection, 'forceDisconnect')]);
-            })
-            .catch(openViduError => {
-                console.error(openViduError);
-            });*/
+        if (msg.connectionId === this.connection.connectionId) {
+            // You have been evicted from the session
+            if (!!this.sessionId && !this.connection.disposed) {
+                this.leave(true, msg.reason);
+            }
+        }
     };
     /**
      * @hidden
@@ -568,6 +635,44 @@ var Session = /** @class */ (function () {
             .then(function (connection) {
             _this.ee.emitEvent('signal', [new SignalEvent_1.SignalEvent(_this, msg.type, msg.data, connection)]);
             _this.ee.emitEvent('signal:' + msg.type, [new SignalEvent_1.SignalEvent(_this, msg.type, msg.data, connection)]);
+        })["catch"](function (openViduError) {
+            console.error(openViduError);
+        });
+    };
+    /**
+     * @hidden
+     */
+    Session.prototype.onStreamPropertyChanged = function (msg) {
+        var _this = this;
+        this.getRemoteConnection(msg.connectionId, 'Remote connection ' + msg.connectionId + " unknown when 'onStreamPropertyChanged'. " +
+            'Existing remote connections: ' + JSON.stringify(Object.keys(this.remoteConnections)))
+            .then(function (connection) {
+            if (!!connection.stream && connection.stream.streamId === msg.streamId) {
+                var stream = connection.stream;
+                var oldValue = void 0;
+                switch (msg.property) {
+                    case 'audioActive':
+                        oldValue = stream.audioActive;
+                        msg.newValue = msg.newValue === 'true';
+                        stream.audioActive = msg.newValue;
+                        break;
+                    case 'videoActive':
+                        oldValue = stream.videoActive;
+                        msg.newValue = msg.newValue === 'true';
+                        stream.videoActive = msg.newValue;
+                        break;
+                    case 'videoDimensions':
+                        oldValue = stream.videoDimensions;
+                        msg.newValue = JSON.parse(JSON.parse(msg.newValue));
+                        stream.videoDimensions = msg.newValue;
+                        break;
+                }
+                _this.ee.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent_1.StreamPropertyChangedEvent(_this, stream, msg.property, msg.newValue, oldValue, msg.reason)]);
+                stream.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent_1.StreamPropertyChangedEvent(stream.streamManager, stream, msg.property, msg.newValue, oldValue, msg.reason)]);
+            }
+            else {
+                console.error("No stream with streamId '" + msg.streamId + "' found for connection '" + msg.connectionId + "' on 'streamPropertyChanged' event");
+            }
         })["catch"](function (openViduError) {
             console.error(openViduError);
         });
@@ -600,7 +705,7 @@ var Session = /** @class */ (function () {
      */
     Session.prototype.onSessionClosed = function (msg) {
         console.info('Session closed: ' + JSON.stringify(msg));
-        var s = msg.room;
+        var s = msg.sessionId;
         if (s !== undefined) {
             this.ee.emitEvent('session-closed', [{
                     session: s
@@ -628,6 +733,13 @@ var Session = /** @class */ (function () {
         if (!!this.sessionId && !this.connection.disposed) {
             this.leave(true, 'networkDisconnect');
         }
+    };
+    /**
+     * @hidden
+     */
+    Session.prototype.onRecoveredConnection = function () {
+        console.warn('Recovered connection in Session ' + this.sessionId);
+        this.ee.emitEvent('connectionRecovered', []);
     };
     /**
      * @hidden
@@ -681,19 +793,12 @@ var Session = /** @class */ (function () {
             else {
                 this.openvidu.closeWs();
             }
-            if (!!this.connection.stream) {
-                // Dispose Publisher's  local stream
-                this.connection.stream.disposeWebRtcPeer();
-                if (this.connection.stream.isLocalStreamPublished) {
-                    // Make Publisher object dispatch 'streamDestroyed' event if the Stream was published
-                    this.connection.stream.ee.emitEvent('local-stream-destroyed-by-disconnect', [reason]);
-                }
-            }
+            this.stopPublisherStream(reason);
             if (!this.connection.disposed) {
                 // Make Session object dispatch 'sessionDisconnected' event (if it is not already disposed)
                 var sessionDisconnectEvent = new SessionDisconnectedEvent_1.SessionDisconnectedEvent(this, reason);
                 this.ee.emitEvent('sessionDisconnected', [sessionDisconnectEvent]);
-                sessionDisconnectEvent.callDefaultBehaviour();
+                sessionDisconnectEvent.callDefaultBehavior();
             }
         }
         else {
@@ -721,6 +826,13 @@ var Session = /** @class */ (function () {
                             reject(error);
                         }
                         else {
+                            // Initialize capabilities object with the role
+                            _this.capabilities = {
+                                subscribe: true,
+                                publish: _this.openvidu.role !== 'SUBSCRIBER',
+                                forceUnpublish: _this.openvidu.role === 'MODERATOR',
+                                forceDisconnect: _this.openvidu.role === 'MODERATOR'
+                            };
                             // Initialize local Connection object with values returned by openvidu-server
                             _this.connection = new Connection_1.Connection(_this);
                             _this.connection.connectionId = response.id;
@@ -756,6 +868,16 @@ var Session = /** @class */ (function () {
                 }
             });
         });
+    };
+    Session.prototype.stopPublisherStream = function (reason) {
+        if (!!this.connection.stream) {
+            // Dispose Publisher's  local stream
+            this.connection.stream.disposeWebRtcPeer();
+            if (this.connection.stream.isLocalStreamPublished) {
+                // Make Publisher object dispatch 'streamDestroyed' event if the Stream was published
+                this.connection.stream.ee.emitEvent('local-stream-destroyed', [reason]);
+            }
+        }
     };
     Session.prototype.stringClientMetadata = function (metadata) {
         if (typeof metadata !== 'string') {

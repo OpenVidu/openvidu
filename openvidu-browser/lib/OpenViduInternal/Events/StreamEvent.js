@@ -48,17 +48,26 @@ var StreamEvent = /** @class */ (function (_super) {
     /**
      * @hidden
      */
-    StreamEvent.prototype.callDefaultBehaviour = function () {
+    StreamEvent.prototype.callDefaultBehavior = function () {
         if (this.type === 'streamDestroyed') {
             if (this.target instanceof Session_1.Session) {
                 // Remote Stream
-                console.info("Calling default behaviour upon '" + this.type + "' event dispatched by 'Session'");
+                console.info("Calling default behavior upon '" + this.type + "' event dispatched by 'Session'");
                 this.stream.disposeWebRtcPeer();
             }
             else if (this.target instanceof Publisher_1.Publisher) {
                 // Local Stream
-                console.info("Calling default behaviour upon '" + this.type + "' event dispatched by 'Publisher'");
+                console.info("Calling default behavior upon '" + this.type + "' event dispatched by 'Publisher'");
+                clearInterval(this.target.screenShareResizeInterval);
                 this.stream.isLocalStreamReadyToPublish = false;
+                // Delete Publisher object from OpenVidu publishers array
+                var openviduPublishers = this.target.openvidu.publishers;
+                for (var i = 0; i < openviduPublishers.length; i++) {
+                    if (openviduPublishers[i] === this.target) {
+                        openviduPublishers.splice(i, 1);
+                        break;
+                    }
+                }
             }
             // Dispose the MediaStream local object
             this.stream.disposeMediaStream();

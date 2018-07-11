@@ -43,7 +43,7 @@ var StreamManagerEvent = /** @class */ (function (_super) {
      * @hidden
      */
     // tslint:disable-next-line:no-empty
-    StreamManagerEvent.prototype.callDefaultBehaviour = function () { };
+    StreamManagerEvent.prototype.callDefaultBehavior = function () { };
     return StreamManagerEvent;
 }(Event_1.Event));
 exports.StreamManagerEvent = StreamManagerEvent;

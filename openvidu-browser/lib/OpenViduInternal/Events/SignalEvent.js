@@ -48,7 +48,7 @@ var SignalEvent = /** @class */ (function (_super) {
      * @hidden
      */
     // tslint:disable-next-line:no-empty
-    SignalEvent.prototype.callDefaultBehaviour = function () { };
+    SignalEvent.prototype.callDefaultBehavior = function () { };
     return SignalEvent;
 }(Event_1.Event));
 exports.SignalEvent = SignalEvent;

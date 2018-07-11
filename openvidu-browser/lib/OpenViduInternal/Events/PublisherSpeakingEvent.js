@@ -54,7 +54,7 @@ var PublisherSpeakingEvent = /** @class */ (function (_super) {
      * @hidden
      */
     // tslint:disable-next-line:no-empty
-    PublisherSpeakingEvent.prototype.callDefaultBehaviour = function () { };
+    PublisherSpeakingEvent.prototype.callDefaultBehavior = function () { };
     return PublisherSpeakingEvent;
 }(Event_1.Event));
 exports.PublisherSpeakingEvent = PublisherSpeakingEvent;

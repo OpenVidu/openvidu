@@ -47,7 +47,7 @@ var VideoElementEvent = /** @class */ (function (_super) {
      * @hidden
      */
     // tslint:disable-next-line:no-empty
-    VideoElementEvent.prototype.callDefaultBehaviour = function () { };
+    VideoElementEvent.prototype.callDefaultBehavior = function () { };
     return VideoElementEvent;
 }(Event_1.Event));
 exports.VideoElementEvent = VideoElementEvent;

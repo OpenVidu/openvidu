@@ -28,5 +28,5 @@ export declare class PublisherSpeakingEvent extends Event {
     /**
      * @hidden
      */
-    callDefaultBehaviour(): void;
+    callDefaultBehavior(): void;
 }

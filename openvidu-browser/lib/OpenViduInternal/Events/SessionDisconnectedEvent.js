@@ -43,8 +43,8 @@ var SessionDisconnectedEvent = /** @class */ (function (_super) {
     /**
      * @hidden
      */
-    SessionDisconnectedEvent.prototype.callDefaultBehaviour = function () {
-        console.info("Calling default behaviour upon '" + this.type + "' event dispatched by 'Session'");
+    SessionDisconnectedEvent.prototype.callDefaultBehavior = function () {
+        console.info("Calling default behavior upon '" + this.type + "' event dispatched by 'Session'");
         var session = this.target;
         // Dispose and delete all remote Connections
         for (var connectionId in session.remoteConnections) {

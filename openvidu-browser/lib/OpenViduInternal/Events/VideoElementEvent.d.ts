@@ -18,5 +18,5 @@ export declare class VideoElementEvent extends Event {
     /**
      * @hidden
      */
-    callDefaultBehaviour(): void;
+    callDefaultBehavior(): void;
 }

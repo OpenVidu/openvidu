@@ -6,6 +6,9 @@ import { Session } from '../../OpenVidu/Session';
 export declare class SessionDisconnectedEvent extends Event {
     /**
      * - "disconnect": you have called `Session.disconnect()`
+     * - "forceDisconnectByUser": you have been evicted from the Session by other user calling `Session.forceDisconnect()`
+     * - "forceDisconnectByServer": you have been evicted from the Session by the application
+     * - "sessionClosedByServer": the Session has been closed by the application
      * - "networkDisconnect": your network connection has dropped
      */
     reason: string;
@@ -16,5 +19,5 @@ export declare class SessionDisconnectedEvent extends Event {
     /**
      * @hidden
      */
-    callDefaultBehaviour(): void;
+    callDefaultBehavior(): void;
 }

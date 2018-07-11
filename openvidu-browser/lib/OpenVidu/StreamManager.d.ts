@@ -119,6 +119,10 @@ export declare class StreamManager implements EventDispatcher {
      * @hidden
      */
     updateMediaStream(mediaStream: MediaStream): void;
+    /**
+     * @hidden
+     */
+    emitEvent(type: string, eventArray: any[]): void;
     private pushNewStreamManagerVideo;
     private mirrorVideo;
 }

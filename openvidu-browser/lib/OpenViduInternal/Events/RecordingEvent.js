@@ -49,7 +49,7 @@ var RecordingEvent = /** @class */ (function (_super) {
      * @hidden
      */
     // tslint:disable-next-line:no-empty
-    RecordingEvent.prototype.callDefaultBehaviour = function () { };
+    RecordingEvent.prototype.callDefaultBehavior = function () { };
     return RecordingEvent;
 }(Event_1.Event));
 exports.RecordingEvent = RecordingEvent;

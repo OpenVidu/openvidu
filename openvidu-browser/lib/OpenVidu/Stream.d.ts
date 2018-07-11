@@ -29,17 +29,45 @@ export declare class Stream {
      */
     hasAudio: boolean;
     /**
+     * Whether the stream has the video track muted or unmuted. If [[hasVideo]] is false, this property is undefined.
+     *
+     * This property may change if the Publisher publishing the stream calls [[Publisher.publishVideo]]. Whenever this happens a [[StreamPropertyChangedEvent]] will be dispatched
+     * by the Session object as well as by the affected Subscriber/Publisher object
+     */
+    videoActive: boolean;
+    /**
+     * Whether the stream has the audio track muted or unmuted. If [[hasAudio]] is false, this property is undefined
+     *
+     * This property may change if the Publisher publishing the stream calls [[Publisher.publishAudio]]. Whenever this happens a [[StreamPropertyChangedEvent]] will be dispatched
+     * by the Session object as well as by the affected Subscriber/Publisher object
+     */
+    audioActive: boolean;
+    /**
      * Unique identifier of the stream
      */
     streamId: string;
     /**
-     * `"CAMERA"` or `"SCREEN"`. *undefined* if stream is audio-only
+     * `"CAMERA"`, `"SCREEN"` or `"CUSTOM"` (the latter when [[PublisherProperties.videoSource]] is a MediaStreamTrack when calling [[OpenVidu.initPublisher]]).
+     * If [[hasVideo]] is false, this property is undefined
      */
     typeOfVideo?: string;
     /**
      * StreamManager object ([[Publisher]] or [[Subscriber]]) in charge of displaying this stream in the DOM
      */
     streamManager: StreamManager;
+    /**
+     * Width and height in pixels of the encoded video stream. If [[hasVideo]] is false, this property is undefined
+     *
+     * This property may change if the Publisher that is publishing:
+     * - If it is a mobile device, whenever the user rotates the device.
+     * - If it is screen-sharing, whenever the user changes the size of the captured window.
+     *
+     * Whenever this happens a [[StreamPropertyChangedEvent]] will be dispatched by the Session object as well as by the affected Subscriber/Publisher object
+     */
+    videoDimensions: {
+        width: number;
+        height: number;
+    };
     /**
      * @hidden
      */
@@ -56,6 +84,10 @@ export declare class Stream {
      * @hidden
      */
     isLocalStreamPublished: boolean;
+    /**
+     * @hidden
+     */
+    publishedOnce: boolean;
     /**
      * @hidden
      */
@@ -170,7 +202,7 @@ export declare class Stream {
     getLocalIceCandidateList(): RTCIceCandidate[];
     private initWebRtcPeerSend;
     private initWebRtcPeerReceive;
-    private remotePeerSuccesfullyEstablished;
+    private remotePeerSuccessfullyEstablished;
     private initWebRtcStats;
     private stopWebRtcStats;
     private getIceServersConf;

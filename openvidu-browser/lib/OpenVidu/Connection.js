@@ -81,10 +81,13 @@ var Connection = /** @class */ (function () {
             var streamOptions = {
                 id: opts.id,
                 connection: _this,
+                hasAudio: opts.hasAudio,
+                hasVideo: opts.hasVideo,
+                audioActive: opts.audioActive,
+                videoActive: opts.videoActive,
+                typeOfVideo: opts.typeOfVideo,
                 frameRate: opts.frameRate,
-                recvAudio: opts.audioActive,
-                recvVideo: opts.videoActive,
-                typeOfVideo: opts.typeOfVideo
+                videoDimensions: !!opts.videoDimensions ? JSON.parse(opts.videoDimensions) : undefined
             };
             var stream = new Stream_1.Stream(_this.session, streamOptions);
             _this.addStream(stream);

@@ -12,5 +12,5 @@ export declare class StreamManagerEvent extends Event {
     /**
      * @hidden
      */
-    callDefaultBehaviour(): void;
+    callDefaultBehavior(): void;
 }

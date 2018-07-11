@@ -40,4 +40,6 @@ var StreamManagerEvent_1 = require("./OpenViduInternal/Events/StreamManagerEvent
 exports.StreamManagerEvent = StreamManagerEvent_1.StreamManagerEvent;
 var VideoElementEvent_1 = require("./OpenViduInternal/Events/VideoElementEvent");
 exports.VideoElementEvent = VideoElementEvent_1.VideoElementEvent;
+var StreamPropertyChangedEvent_1 = require("./OpenViduInternal/Events/StreamPropertyChangedEvent");
+exports.StreamPropertyChangedEvent = StreamPropertyChangedEvent_1.StreamPropertyChangedEvent;
 //# sourceMappingURL=index.js.map
