@@ -129,7 +129,7 @@
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
-							<p>Whether the event has a default behaviour that may be prevented by calling <a href="event.html#preventdefault">Event.preventDefault</a></p>
+							<p>Whether the event has a default behavior that may be prevented by calling <a href="event.html#preventdefault">Event.preventDefault</a></p>
 						</div>
 					</div>
 				</section>
@@ -139,7 +139,7 @@
 					<div class="tsd-signature tsd-kind-icon">reason<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Events/StreamEvent.ts#L44">OpenViduInternal/Events/StreamEvent.ts:44</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Events/StreamEvent.ts#L49">OpenViduInternal/Events/StreamEvent.ts:49</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -148,6 +148,11 @@
 							<ul>
 								<li>&quot;unpublish&quot;: method <code>Session.unpublish()</code> has been called</li>
 								<li>&quot;disconnect&quot;: method <code>Session.disconnect()</code> has been called</li>
+								<li>&quot;forceUnpublishByUser&quot;: some user has called <code>Session.forceUnpublish()</code> over the Stream</li>
+								<li>&quot;forceDisconnectByUser&quot;: some user has called <code>Session.forceDisconnect()</code> over the Stream</li>
+								<li>&quot;forceUnpublishByServer&quot;: the user&#39;s stream has been unpublished from the Session by the application</li>
+								<li>&quot;forceDisconnectByServer&quot;: the user has been evicted from the Session by the application</li>
+								<li>&quot;sessionClosedByServer&quot;: the Session has been closed by the application</li>
 								<li>&quot;networkDisconnect&quot;: the user&#39;s network connection has dropped</li>
 							</ul>
 						</div>
@@ -243,7 +248,7 @@
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Prevents the default behaviour of the event. The following events have a default behaviour:</p>
+									<p>Prevents the default behavior of the event. The following events have a default behavior:</p>
 								</div>
 								<ul>
 									<li><p><code>sessionDisconnected</code>: dispatched by <a href="session.html">Session</a> object, automatically unsubscribes the leaving participant from every Subscriber object of the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks)
@@ -362,10 +367,16 @@
 						<a href="streammanagerevent.html" class="tsd-kind-icon">Stream<wbr>Manager<wbr>Event</a>
 					</li>
 					<li class=" tsd-kind-class">
+						<a href="streampropertychangedevent.html" class="tsd-kind-icon">Stream<wbr>Property<wbr>Changed<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-class">
 						<a href="subscriber.html" class="tsd-kind-icon">Subscriber</a>
 					</li>
 					<li class=" tsd-kind-class">
 						<a href="videoelementevent.html" class="tsd-kind-icon">Video<wbr>Element<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="../interfaces/capabilities.html" class="tsd-kind-icon">Capabilities</a>
 					</li>
 					<li class=" tsd-kind-interface">
 						<a href="../interfaces/device.html" class="tsd-kind-icon">Device</a>

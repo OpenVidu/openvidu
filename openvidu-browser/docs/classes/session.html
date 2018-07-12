@@ -97,6 +97,7 @@
 						<section class="tsd-index-section ">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="session.html#capabilities" class="tsd-kind-icon">capabilities</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="session.html#connection" class="tsd-kind-icon">connection</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="session.html#sessionid" class="tsd-kind-icon">session<wbr>Id</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="session.html#streammanagers" class="tsd-kind-icon">stream<wbr>Managers</a></li>
@@ -107,6 +108,8 @@
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="session.html#connect" class="tsd-kind-icon">connect</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="session.html#disconnect" class="tsd-kind-icon">disconnect</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="session.html#forcedisconnect" class="tsd-kind-icon">force<wbr>Disconnect</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="session.html#forceunpublish" class="tsd-kind-icon">force<wbr>Unpublish</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="session.html#off" class="tsd-kind-icon">off</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="session.html#on" class="tsd-kind-icon">on</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="session.html#once" class="tsd-kind-icon">once</a></li>
@@ -124,12 +127,28 @@
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Properties</h2>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
+					<a name="capabilities" class="tsd-anchor"></a>
+					<h3>capabilities</h3>
+					<div class="tsd-signature tsd-kind-icon">capabilities<span class="tsd-signature-symbol">:</span> <a href="../interfaces/capabilities.html" class="tsd-signature-type">Capabilities</a></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L71">OpenVidu/Session.ts:71</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Object defining the methods that the client is able to call. These are defined by the role of the token used to connect to the Session.
+							This object is only defined after <a href="session.html#connect">Session.connect</a> has been successfully resolved</p>
+						</div>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
 					<a name="connection" class="tsd-anchor"></a>
 					<h3>connection</h3>
 					<div class="tsd-signature tsd-kind-icon">connection<span class="tsd-signature-symbol">:</span> <a href="connection.html" class="tsd-signature-type">Connection</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L53">OpenVidu/Session.ts:53</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L55">OpenVidu/Session.ts:55</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -144,7 +163,7 @@
 					<div class="tsd-signature tsd-kind-icon">session<wbr>Id<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L58">OpenVidu/Session.ts:58</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L60">OpenVidu/Session.ts:60</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -159,7 +178,7 @@
 					<div class="tsd-signature tsd-kind-icon">stream<wbr>Managers<span class="tsd-signature-symbol">:</span> <a href="streammanager.html" class="tsd-signature-type">StreamManager</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol"> =&nbsp;[]</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L63">OpenVidu/Session.ts:63</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L65">OpenVidu/Session.ts:65</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -182,7 +201,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L97">OpenVidu/Session.ts:97</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L105">OpenVidu/Session.ts:105</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -218,7 +237,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L98">OpenVidu/Session.ts:98</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L106">OpenVidu/Session.ts:106</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -266,7 +285,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L177">OpenVidu/Session.ts:177</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L185">OpenVidu/Session.ts:185</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -278,22 +297,92 @@
 									This event will automatically unsubscribe the leaving participant from every Subscriber object of the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks)
 									and also deletes any HTML video element associated to each Subscriber (only those <a href="/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players">created by OpenVidu Browser</a>).
 									For every video removed, each Subscriber object will dispatch a <code>videoElementDestroyed</code> event.
-									Call <code>event.preventDefault()</code> uppon event <code>sessionDisconnected</code> to avoid this behaviour and take care of disposing and cleaning all the Subscriber objects yourself.
+									Call <code>event.preventDefault()</code> upon event <code>sessionDisconnected</code> to avoid this behavior and take care of disposing and cleaning all the Subscriber objects yourself.
 								See <a href="sessiondisconnectedevent.html">SessionDisconnectedEvent</a> and <a href="videoelementevent.html">VideoElementEvent</a> to learn more to learn more.</p>
 								<p>The <a href="publisher.html">Publisher</a> object of the local participant will dispatch a <code>streamDestroyed</code> event if there is a <a href="publisher.html">Publisher</a> object publishing to the session.
 									This event will automatically stop all media tracks and delete any HTML video element associated to it (only those <a href="/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players">created by OpenVidu Browser</a>).
 									For every video removed, the Publisher object will dispatch a <code>videoElementDestroyed</code> event.
-									Call <code>event.preventDefault()</code> uppon event <code>streamDestroyed</code> if you want to clean the Publisher object on your own or re-publish it in a different Session (to do so it is a mandatory requirement to call <code>Session.unpublish()</code>
+									Call <code>event.preventDefault()</code> upon event <code>streamDestroyed</code> if you want to clean the Publisher object on your own or re-publish it in a different Session (to do so it is a mandatory requirement to call <code>Session.unpublish()</code>
 								or/and <code>Session.disconnect()</code> in the previous session). See <a href="streamevent.html">StreamEvent</a> and <a href="videoelementevent.html">VideoElementEvent</a> to learn more.</p>
 								<p>The <a href="session.html">Session</a> object of every other participant connected to the session will dispatch a <code>streamDestroyed</code> event if the disconnected participant was publishing.
 									This event will automatically unsubscribe the Subscriber object from the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks)
 									and also deletes any HTML video element associated to that Subscriber (only those <a href="/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players">created by OpenVidu Browser</a>).
 									For every video removed, the Subscriber object will dispatch a <code>videoElementDestroyed</code> event.
-									Call <code>event.preventDefault()</code> uppon event <code>streamDestroyed</code> to avoid this default behaviour and take care of disposing and cleaning the Subscriber object yourself.
+									Call <code>event.preventDefault()</code> upon event <code>streamDestroyed</code> to avoid this default behavior and take care of disposing and cleaning the Subscriber object yourself.
 								See <a href="streamevent.html">StreamEvent</a> and <a href="videoelementevent.html">VideoElementEvent</a> to learn more.</p>
 								<p>The <a href="session.html">Session</a> object of every other participant connected to the session will dispatch a <code>connectionDestroyed</code> event in any case. See <a href="connectionevent.html">ConnectionEvent</a> to learn more.</p>
 							</div>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="forcedisconnect" class="tsd-anchor"></a>
+					<h3>force<wbr>Disconnect</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">force<wbr>Disconnect<span class="tsd-signature-symbol">(</span>connection<span class="tsd-signature-symbol">: </span><a href="connection.html" class="tsd-signature-type">Connection</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L433">OpenVidu/Session.ts:433</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Forces some user to leave the session</p>
+								</div>
+								<h4 id="events-dispatched">Events dispatched</h4>
+								<p>The behavior is the same as when some user calls <a href="session.html#disconnect">Session.disconnect</a>, but <code>reason</code> property in all events will be <code>&quot;forceDisconnectByUser&quot;</code>.</p>
+								<p>The <a href="session.html">Session</a> object of every participant will dispatch a <code>streamDestroyed</code> event if the evicted user was publishing a stream, with property <code>reason</code> set to <code>&quot;forceDisconnectByUser&quot;</code>.
+								The <a href="session.html">Session</a> object of every participant except the evicted one will dispatch a <code>connectionDestroyed</code> event for the evicted user, with property <code>reason</code> set to <code>&quot;forceDisconnectByUser&quot;</code>.</p>
+								<p>If any, the <a href="publisher.html">Publisher</a> object of the evicted participant will also dispatch a <code>streamDestroyed</code> event with property <code>reason</code> set to <code>&quot;forceDisconnectByUser&quot;</code>.
+								The <a href="session.html">Session</a> object of the evicted participant will dispatch a <code>sessionDisconnected</code> event with property <code>reason</code> set to <code>&quot;forceDisconnectByUser&quot;</code>.</p>
+								<p>See <a href="streamevent.html">StreamEvent</a>, <a href="connectionevent.html">ConnectionEvent</a> and <a href="sessiondisconnectedevent.html">SessionDisconnectedEvent</a> to learn more.</p>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>connection: <a href="connection.html" class="tsd-signature-type">Connection</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<p>A Promise (to which you can optionally subscribe to) that is resolved only after the participant has been successfully evicted from the session and rejected with an Error object if not</p>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="forceunpublish" class="tsd-anchor"></a>
+					<h3>force<wbr>Unpublish</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">force<wbr>Unpublish<span class="tsd-signature-symbol">(</span>stream<span class="tsd-signature-symbol">: </span><a href="stream.html" class="tsd-signature-type">Stream</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L472">OpenVidu/Session.ts:472</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Forces some user to unpublish a Stream</p>
+								</div>
+								<h4 id="events-dispatched">Events dispatched</h4>
+								<p>The behavior is the same as when some user calls <a href="session.html#unpublish">Session.unpublish</a>, but <code>reason</code> property in all events will be <code>&quot;forceUnpublishByUser&quot;</code></p>
+								<p>The <a href="session.html">Session</a> object of every participant will dispatch a <code>streamDestroyed</code> event with property <code>reason</code> set to <code>&quot;forceDisconnectByUser&quot;</code></p>
+								<p>The <a href="publisher.html">Publisher</a> object of the affected participant will also dispatch a <code>streamDestroyed</code> event with property <code>reason</code> set to <code>&quot;forceDisconnectByUser&quot;</code></p>
+								<p>See <a href="streamevent.html">StreamEvent</a> to learn more.</p>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>stream: <a href="stream.html" class="tsd-signature-type">Stream</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<p>A Promise (to which you can optionally subscribe to) that is resolved only after the remote Stream has been successfully unpublished from the session and rejected with an Error object if not</p>
 						</li>
 					</ul>
 				</section>
@@ -307,7 +396,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L514">OpenVidu/Session.ts:514</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L602">OpenVidu/Session.ts:602</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -356,7 +445,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L456">OpenVidu/Session.ts:456</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L544">OpenVidu/Session.ts:544</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -405,7 +494,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L485">OpenVidu/Session.ts:485</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L573">OpenVidu/Session.ts:573</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -454,7 +543,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L320">OpenVidu/Session.ts:320</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L328">OpenVidu/Session.ts:328</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -487,7 +576,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L420">OpenVidu/Session.ts:420</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L508">OpenVidu/Session.ts:508</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -524,7 +613,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L181">OpenVidu/Session.ts:181</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L189">OpenVidu/Session.ts:189</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -561,7 +650,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L182">OpenVidu/Session.ts:182</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L190">OpenVidu/Session.ts:190</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -601,7 +690,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L183">OpenVidu/Session.ts:183</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L191">OpenVidu/Session.ts:191</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -664,7 +753,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L184">OpenVidu/Session.ts:184</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L192">OpenVidu/Session.ts:192</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -740,7 +829,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L249">OpenVidu/Session.ts:249</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L257">OpenVidu/Session.ts:257</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -762,7 +851,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L250">OpenVidu/Session.ts:250</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L258">OpenVidu/Session.ts:258</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -791,7 +880,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L375">OpenVidu/Session.ts:375</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L383">OpenVidu/Session.ts:383</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -803,12 +892,12 @@
 									This event will automatically stop all media tracks and delete any HTML video element associated to this Publisher
 									(only those videos <a href="/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players">created by OpenVidu Browser</a>).
 									For every video removed, the Publisher object will dispatch a <code>videoElementDestroyed</code> event.
-								Call <code>event.preventDefault()</code> uppon event <code>streamDestroyed</code> if you want to clean the Publisher object on your own or re-publish it in a different Session.</p>
+								Call <code>event.preventDefault()</code> upon event <code>streamDestroyed</code> if you want to clean the Publisher object on your own or re-publish it in a different Session.</p>
 								<p>The <a href="session.html">Session</a> object of every other participant connected to the session will dispatch a <code>streamDestroyed</code> event.
 									This event will automatically unsubscribe the Subscriber object from the session (this includes closing the WebRTCPeer connection and disposing all MediaStreamTracks) and
 									delete any HTML video element associated to it (only those <a href="/docs/how-do-i/manage-videos/#let-openvidu-take-care-of-the-video-players">created by OpenVidu Browser</a>).
 									For every video removed, the Subscriber object will dispatch a <code>videoElementDestroyed</code> event.
-								Call <code>event.preventDefault()</code> uppon event <code>streamDestroyed</code> to avoid this default behaviour and take care of disposing and cleaning the Subscriber object on your own.</p>
+								Call <code>event.preventDefault()</code> upon event <code>streamDestroyed</code> to avoid this default behavior and take care of disposing and cleaning the Subscriber object on your own.</p>
 								<p>See <a href="streamevent.html">StreamEvent</a> and <a href="videoelementevent.html">VideoElementEvent</a> to learn more.</p>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -831,7 +920,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L285">OpenVidu/Session.ts:285</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Session.ts#L293">OpenVidu/Session.ts:293</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -907,6 +996,9 @@
 						<a href="session.html" class="tsd-kind-icon">Session</a>
 						<ul>
 							<li class=" tsd-kind-property tsd-parent-kind-class">
+								<a href="session.html#capabilities" class="tsd-kind-icon">capabilities</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class">
 								<a href="session.html#connection" class="tsd-kind-icon">connection</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class">
@@ -920,6 +1012,12 @@
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="session.html#disconnect" class="tsd-kind-icon">disconnect</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="session.html#forcedisconnect" class="tsd-kind-icon">force<wbr>Disconnect</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="session.html#forceunpublish" class="tsd-kind-icon">force<wbr>Unpublish</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="session.html#off" class="tsd-kind-icon">off</a>
@@ -971,10 +1069,16 @@
 						<a href="streammanagerevent.html" class="tsd-kind-icon">Stream<wbr>Manager<wbr>Event</a>
 					</li>
 					<li class=" tsd-kind-class">
+						<a href="streampropertychangedevent.html" class="tsd-kind-icon">Stream<wbr>Property<wbr>Changed<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-class">
 						<a href="subscriber.html" class="tsd-kind-icon">Subscriber</a>
 					</li>
 					<li class=" tsd-kind-class">
 						<a href="videoelementevent.html" class="tsd-kind-icon">Video<wbr>Element<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="../interfaces/capabilities.html" class="tsd-kind-icon">Capabilities</a>
 					</li>
 					<li class=" tsd-kind-interface">
 						<a href="../interfaces/device.html" class="tsd-kind-icon">Device</a>

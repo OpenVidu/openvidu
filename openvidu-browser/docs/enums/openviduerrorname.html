@@ -113,7 +113,7 @@
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
 							<p>Browser is not supported by OpenVidu.
-							Returned uppon unsuccessful <a href="../classes/session.html#connect">Session.connect</a></p>
+							Returned upon unsuccessful <a href="../classes/session.html#connect">Session.connect</a></p>
 						</div>
 					</div>
 				</section>
@@ -129,7 +129,7 @@
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
 							<p>The user hasn&#39;t granted permissions to the required input device when the browser asked for them.
-							Returned uppon unsuccessful <a href="../classes/openvidu.html#initpublisher">OpenVidu.initPublisher</a> or <a href="../classes/openvidu.html#getusermedia">OpenVidu.getUserMedia</a></p>
+							Returned upon unsuccessful <a href="../classes/openvidu.html#initpublisher">OpenVidu.initPublisher</a> or <a href="../classes/openvidu.html#getusermedia">OpenVidu.getUserMedia</a></p>
 						</div>
 					</div>
 				</section>
@@ -139,7 +139,7 @@
 					<div class="tsd-signature tsd-kind-icon">GENERIC_<wbr>ERROR<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> =&nbsp;&quot;GENERIC_ERROR&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Enums/OpenViduError.ts#L97">OpenViduInternal/Enums/OpenViduError.ts:97</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Enums/OpenViduError.ts#L98">OpenViduInternal/Enums/OpenViduError.ts:98</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -160,7 +160,7 @@
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
 							<p>No audio input device found with the provided deviceId (property <a href="../interfaces/publisherproperties.html#audiosource">PublisherProperties.audioSource</a>)
-							Returned uppon unsuccessful <a href="../classes/openvidu.html#initpublisher">OpenVidu.initPublisher</a></p>
+							Returned upon unsuccessful <a href="../classes/openvidu.html#initpublisher">OpenVidu.initPublisher</a></p>
 						</div>
 					</div>
 				</section>
@@ -176,7 +176,7 @@
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
 							<p>No video input device found with the provided deviceId (property <a href="../interfaces/publisherproperties.html#videosource">PublisherProperties.videoSource</a>)
-							Returned uppon unsuccessful <a href="../classes/openvidu.html#initpublisher">OpenVidu.initPublisher</a></p>
+							Returned upon unsuccessful <a href="../classes/openvidu.html#initpublisher">OpenVidu.initPublisher</a></p>
 						</div>
 					</div>
 				</section>
@@ -202,7 +202,7 @@
 					<div class="tsd-signature tsd-kind-icon">OPENVIDU_<wbr>NOT_<wbr>CONNECTED<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> =&nbsp;&quot;OPENVIDU_NOT_CONNECTED&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Enums/OpenViduError.ts#L92">OpenViduInternal/Enums/OpenViduError.ts:92</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Enums/OpenViduError.ts#L93">OpenViduInternal/Enums/OpenViduError.ts:93</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -217,12 +217,13 @@
 					<div class="tsd-signature tsd-kind-icon">OPENVIDU_<wbr>PERMISSION_<wbr>DENIED<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> =&nbsp;&quot;OPENVIDU_PERMISSION_DENIED&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Enums/OpenViduError.ts#L87">OpenViduInternal/Enums/OpenViduError.ts:87</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenViduInternal/Enums/OpenViduError.ts#L88">OpenViduInternal/Enums/OpenViduError.ts:88</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
-							<p><em>Not in use yet</em></p>
+							<p>The client tried to call a method without the required permissions. This can occur for methods <a href="../classes/session.html#publish">Session.publish</a>,
+							<a href="../classes/session.html#forceunpublish">Session.forceUnpublish</a> and <a href="../classes/session.html#forcedisconnect">Session.forceDisconnect</a></p>
 						</div>
 					</div>
 				</section>
@@ -239,7 +240,7 @@
 						<div class="lead">
 							<p>Some media property of <a href="../interfaces/publisherproperties.html">PublisherProperties</a> such as <code>frameRate</code> or <code>resolution</code> is not supported
 								by the input devices (whenever it is possible they are automatically adjusted to the most similar value).
-							Returned uppon unsuccessful <a href="../classes/openvidu.html#initpublisher">OpenVidu.initPublisher</a></p>
+							Returned upon unsuccessful <a href="../classes/openvidu.html#initpublisher">OpenVidu.initPublisher</a></p>
 						</div>
 					</div>
 				</section>
@@ -255,7 +256,7 @@
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
 							<p>The user hasn&#39;t granted permissions to capture some desktop screen when the browser asked for them.
-							Returned uppon unsuccessful <a href="../classes/openvidu.html#initpublisher">OpenVidu.initPublisher</a> or <a href="../classes/openvidu.html#getusermedia">OpenVidu.getUserMedia</a></p>
+							Returned upon unsuccessful <a href="../classes/openvidu.html#initpublisher">OpenVidu.initPublisher</a> or <a href="../classes/openvidu.html#getusermedia">OpenVidu.getUserMedia</a></p>
 						</div>
 					</div>
 				</section>
@@ -271,7 +272,7 @@
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
 							<p>Only for Chrome, the screen sharing extension is installed but is disabled
-							Returned uppon unsuccessful <a href="../classes/openvidu.html#initpublisher">OpenVidu.initPublisher</a></p>
+							Returned upon unsuccessful <a href="../classes/openvidu.html#initpublisher">OpenVidu.initPublisher</a></p>
 						</div>
 					</div>
 				</section>
@@ -287,7 +288,7 @@
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
 							<p>Only for Chrome, there&#39;s no screen sharing extension installed
-							Returned uppon unsuccessful <a href="../classes/openvidu.html#initpublisher">OpenVidu.initPublisher</a></p>
+							Returned upon unsuccessful <a href="../classes/openvidu.html#initpublisher">OpenVidu.initPublisher</a></p>
 						</div>
 					</div>
 				</section>
@@ -303,7 +304,7 @@
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
 							<p>Browser does not support screen sharing.
-							Returned uppon unsuccessful <a href="../classes/openvidu.html#initpublisher">OpenVidu.initPublisher</a></p>
+							Returned upon unsuccessful <a href="../classes/openvidu.html#initpublisher">OpenVidu.initPublisher</a></p>
 						</div>
 					</div>
 				</section>
@@ -422,10 +423,16 @@
 						<a href="../classes/streammanagerevent.html" class="tsd-kind-icon">Stream<wbr>Manager<wbr>Event</a>
 					</li>
 					<li class=" tsd-kind-class">
+						<a href="../classes/streampropertychangedevent.html" class="tsd-kind-icon">Stream<wbr>Property<wbr>Changed<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-class">
 						<a href="../classes/subscriber.html" class="tsd-kind-icon">Subscriber</a>
 					</li>
 					<li class=" tsd-kind-class">
 						<a href="../classes/videoelementevent.html" class="tsd-kind-icon">Video<wbr>Element<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="../interfaces/capabilities.html" class="tsd-kind-icon">Capabilities</a>
 					</li>
 					<li class=" tsd-kind-interface">
 						<a href="../interfaces/device.html" class="tsd-kind-icon">Device</a>

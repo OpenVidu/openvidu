@@ -91,6 +91,7 @@
 						<section class="tsd-index-section ">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="stream.html#audioactive" class="tsd-kind-icon">audio<wbr>Active</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="stream.html#connection" class="tsd-kind-icon">connection</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="stream.html#framerate" class="tsd-kind-icon">frame<wbr>Rate</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="stream.html#hasaudio" class="tsd-kind-icon">has<wbr>Audio</a></li>
@@ -98,6 +99,8 @@
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="stream.html#streamid" class="tsd-kind-icon">stream<wbr>Id</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="stream.html#streammanager" class="tsd-kind-icon">stream<wbr>Manager</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="stream.html#typeofvideo" class="tsd-kind-icon">type<wbr>OfVideo</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="stream.html#videoactive" class="tsd-kind-icon">video<wbr>Active</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="stream.html#videodimensions" class="tsd-kind-icon">video<wbr>Dimensions</a></li>
 							</ul>
 						</section>
 					</div>
@@ -106,12 +109,29 @@
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Properties</h2>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
+					<a name="audioactive" class="tsd-anchor"></a>
+					<h3>audio<wbr>Active</h3>
+					<div class="tsd-signature tsd-kind-icon">audio<wbr>Active<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Stream.ts#L74">OpenVidu/Stream.ts:74</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Whether the stream has the audio track muted or unmuted. If <a href="stream.html#hasaudio">hasAudio</a> is false, this property is undefined</p>
+						</div>
+						<p>This property may change if the Publisher publishing the stream calls <a href="publisher.html#publishaudio">Publisher.publishAudio</a>. Whenever this happens a <a href="streampropertychangedevent.html">StreamPropertyChangedEvent</a> will be dispatched
+						by the Session object as well as by the affected Subscriber/Publisher object</p>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
 					<a name="connection" class="tsd-anchor"></a>
 					<h3>connection</h3>
 					<div class="tsd-signature tsd-kind-icon">connection<span class="tsd-signature-symbol">:</span> <a href="connection.html" class="tsd-signature-type">Connection</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Stream.ts#L41">OpenVidu/Stream.ts:41</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Stream.ts#L42">OpenVidu/Stream.ts:42</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -126,7 +146,7 @@
 					<div class="tsd-signature tsd-kind-icon">frame<wbr>Rate<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Stream.ts#L47">OpenVidu/Stream.ts:47</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Stream.ts#L48">OpenVidu/Stream.ts:48</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -142,7 +162,7 @@
 					<div class="tsd-signature tsd-kind-icon">has<wbr>Audio<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Stream.ts#L57">OpenVidu/Stream.ts:57</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Stream.ts#L58">OpenVidu/Stream.ts:58</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -157,7 +177,7 @@
 					<div class="tsd-signature tsd-kind-icon">has<wbr>Video<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Stream.ts#L52">OpenVidu/Stream.ts:52</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Stream.ts#L53">OpenVidu/Stream.ts:53</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -172,7 +192,7 @@
 					<div class="tsd-signature tsd-kind-icon">stream<wbr>Id<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Stream.ts#L62">OpenVidu/Stream.ts:62</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Stream.ts#L79">OpenVidu/Stream.ts:79</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -187,7 +207,7 @@
 					<div class="tsd-signature tsd-kind-icon">stream<wbr>Manager<span class="tsd-signature-symbol">:</span> <a href="streammanager.html" class="tsd-signature-type">StreamManager</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Stream.ts#L72">OpenVidu/Stream.ts:72</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Stream.ts#L90">OpenVidu/Stream.ts:90</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -202,13 +222,63 @@
 					<div class="tsd-signature tsd-kind-icon">type<wbr>OfVideo<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Stream.ts#L67">OpenVidu/Stream.ts:67</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Stream.ts#L85">OpenVidu/Stream.ts:85</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
-							<p><code>&quot;CAMERA&quot;</code> or <code>&quot;SCREEN&quot;</code>. <em>undefined</em> if stream is audio-only</p>
+							<p><code>&quot;CAMERA&quot;</code>, <code>&quot;SCREEN&quot;</code> or <code>&quot;CUSTOM&quot;</code> (the latter when <a href="../interfaces/publisherproperties.html#videosource">PublisherProperties.videoSource</a> is a MediaStreamTrack when calling <a href="openvidu.html#initpublisher">OpenVidu.initPublisher</a>).
+							If <a href="stream.html#hasvideo">hasVideo</a> is false, this property is undefined</p>
 						</div>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
+					<a name="videoactive" class="tsd-anchor"></a>
+					<h3>video<wbr>Active</h3>
+					<div class="tsd-signature tsd-kind-icon">video<wbr>Active<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Stream.ts#L66">OpenVidu/Stream.ts:66</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Whether the stream has the video track muted or unmuted. If <a href="stream.html#hasvideo">hasVideo</a> is false, this property is undefined.</p>
+						</div>
+						<p>This property may change if the Publisher publishing the stream calls <a href="publisher.html#publishvideo">Publisher.publishVideo</a>. Whenever this happens a <a href="streampropertychangedevent.html">StreamPropertyChangedEvent</a> will be dispatched
+						by the Session object as well as by the affected Subscriber/Publisher object</p>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
+					<a name="videodimensions" class="tsd-anchor"></a>
+					<h3>video<wbr>Dimensions</h3>
+					<div class="tsd-signature tsd-kind-icon">video<wbr>Dimensions<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/OpenVidu/Stream.ts#L101">OpenVidu/Stream.ts:101</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Width and height in pixels of the encoded video stream. If <a href="stream.html#hasvideo">hasVideo</a> is false, this property is undefined</p>
+						</div>
+						<p>This property may change if the Publisher that is publishing:</p>
+						<ul>
+							<li>If it is a mobile device, whenever the user rotates the device.</li>
+							<li>If it is screen-sharing, whenever the user changes the size of the captured window.</li>
+						</ul>
+						<p>Whenever this happens a <a href="streampropertychangedevent.html">StreamPropertyChangedEvent</a> will be dispatched by the Session object as well as by the affected Subscriber/Publisher object</p>
+					</div>
+					<div class="tsd-type-declaration">
+						<h4>Type declaration</h4>
+						<ul class="tsd-parameters">
+							<li class="tsd-parameter">
+								<h5>height<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+							</li>
+							<li class="tsd-parameter">
+								<h5>width<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+							</li>
+						</ul>
 					</div>
 				</section>
 			</section>
@@ -274,6 +344,9 @@
 						<a href="stream.html" class="tsd-kind-icon">Stream</a>
 						<ul>
 							<li class=" tsd-kind-property tsd-parent-kind-class">
+								<a href="stream.html#audioactive" class="tsd-kind-icon">audio<wbr>Active</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class">
 								<a href="stream.html#connection" class="tsd-kind-icon">connection</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class">
@@ -294,6 +367,12 @@
 							<li class=" tsd-kind-property tsd-parent-kind-class">
 								<a href="stream.html#typeofvideo" class="tsd-kind-icon">type<wbr>OfVideo</a>
 							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class">
+								<a href="stream.html#videoactive" class="tsd-kind-icon">video<wbr>Active</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class">
+								<a href="stream.html#videodimensions" class="tsd-kind-icon">video<wbr>Dimensions</a>
+							</li>
 						</ul>
 					</li>
 				</ul>
@@ -308,10 +387,16 @@
 						<a href="streammanagerevent.html" class="tsd-kind-icon">Stream<wbr>Manager<wbr>Event</a>
 					</li>
 					<li class=" tsd-kind-class">
+						<a href="streampropertychangedevent.html" class="tsd-kind-icon">Stream<wbr>Property<wbr>Changed<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-class">
 						<a href="subscriber.html" class="tsd-kind-icon">Subscriber</a>
 					</li>
 					<li class=" tsd-kind-class">
 						<a href="videoelementevent.html" class="tsd-kind-icon">Video<wbr>Element<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="../interfaces/capabilities.html" class="tsd-kind-icon">Capabilities</a>
 					</li>
 					<li class=" tsd-kind-interface">
 						<a href="../interfaces/device.html" class="tsd-kind-icon">Device</a>
