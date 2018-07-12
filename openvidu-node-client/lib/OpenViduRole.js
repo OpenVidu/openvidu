@@ -19,15 +19,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var OpenViduRole;
 (function (OpenViduRole) {
     /**
-     * Can subscribe to published streams of other users
+     * Can subscribe to published Streams of other users
      */
     OpenViduRole["SUBSCRIBER"] = "SUBSCRIBER";
     /**
-     * SUBSCRIBER permissions + can publish their own streams
+     * SUBSCRIBER permissions + can publish their own Streams (call `Session.publish()`)
      */
     OpenViduRole["PUBLISHER"] = "PUBLISHER";
     /**
-     * _(not available yet)_ SUBSCRIBER + PUBLIHSER permissions + can force `unpublish()` and `disconnect()` over a third-party stream or user
+     * SUBSCRIBER + PUBLISHER permissions + can force the unpublishing or disconnection over a third-party Stream or Connection
+     * (call `Session.forceUnpublish()` and `Session.forceDisconnect()`)
      */
     OpenViduRole["MODERATOR"] = "MODERATOR";
 })(OpenViduRole = exports.OpenViduRole || (exports.OpenViduRole = {}));

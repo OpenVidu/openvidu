@@ -90,12 +90,13 @@
 					<div class="tsd-signature tsd-kind-icon">MODERATOR<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> =&nbsp;&quot;MODERATOR&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/OpenViduRole.ts#L33">OpenViduRole.ts:33</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/OpenViduRole.ts#L34">OpenViduRole.ts:34</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
-							<p><em>(not available yet)</em> SUBSCRIBER + PUBLIHSER permissions + can force <code>unpublish()</code> and <code>disconnect()</code> over a third-party stream or user</p>
+							<p>SUBSCRIBER + PUBLISHER permissions + can force the unpublishing or disconnection over a third-party Stream or Connection
+							(call <code>Session.forceUnpublish()</code> and <code>Session.forceDisconnect()</code>)</p>
 						</div>
 					</div>
 				</section>
@@ -110,7 +111,7 @@
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
-							<p>SUBSCRIBER permissions + can publish their own streams</p>
+							<p>SUBSCRIBER permissions + can publish their own Streams (call <code>Session.publish()</code>)</p>
 						</div>
 					</div>
 				</section>
@@ -125,7 +126,7 @@
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
-							<p>Can subscribe to published streams of other users</p>
+							<p>Can subscribe to published Streams of other users</p>
 						</div>
 					</div>
 				</section>
