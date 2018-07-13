@@ -1,7 +1,7 @@
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
 
-import { OpenVidu as OpenViduAPI } from 'openvidu-node-client';
+import { OpenVidu as OpenViduAPI, Session as SessionAPI } from 'openvidu-node-client';
 
 @Component({
     selector: 'app-session-api-dialog',
@@ -9,6 +9,8 @@ import { OpenVidu as OpenViduAPI } from 'openvidu-node-client';
     <div>
         <h2 mat-dialog-title>API REST</h2>
         <mat-dialog-content>
+            <button mat-button id="close-session-btn" (click)="closeSession()">Close session</button>
+            <mat-divider></mat-divider>
             <button mat-button id="start-recording-btn" (click)="startRecording()">Start recording</button>
             <button mat-button id="list-recording-btn" (click)="listRecordings()">List recordings</button>
             <mat-divider></mat-divider>
@@ -23,7 +25,7 @@ import { OpenVidu as OpenViduAPI } from 'openvidu-node-client';
             </mat-form-field>
         </mat-dialog-content>
         <mat-dialog-actions>
-            <button mat-button id="close-dialog-btn"  [mat-dialog-close]="undefined">CLOSE</button>
+            <button mat-button id="close-dialog-btn"  [mat-dialog-close]="{session: session}">CLOSE</button>
         </mat-dialog-actions>
     </div>
     `,
@@ -36,6 +38,7 @@ import { OpenVidu as OpenViduAPI } from 'openvidu-node-client';
 export class SessionApiDialogComponent {
 
     OV: OpenViduAPI;
+    session: SessionAPI;
     sessionId: string;
     recordingId: string;
     response: string;
@@ -43,7 +46,24 @@ export class SessionApiDialogComponent {
     constructor(public dialogRef: MatDialogRef<SessionApiDialogComponent>,
         @Inject(MAT_DIALOG_DATA) public data) {
         this.OV = data.openVidu;
+        this.session = data.session;
         this.sessionId = data.sessionId;
+    }
+
+    closeSession() {
+        console.log('Closing session');
+        if (!this.session) {
+            this.response = 'Error [Session undefined]';
+            return;
+        }
+        this.session.close()
+            .then(() => {
+                this.response = 'Session closed';
+                delete this.session;
+            })
+            .catch(error => {
+                this.response = 'Error [' + error.message + ']';
+            });
     }
 
     startRecording() {

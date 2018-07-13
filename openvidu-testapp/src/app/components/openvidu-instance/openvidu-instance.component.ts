@@ -10,6 +10,7 @@ import {
 } from 'openvidu-browser';
 import {
   OpenVidu as OpenViduAPI,
+  Session as SessionAPI,
   SessionProperties as SessionPropertiesAPI,
   MediaMode,
   RecordingMode,
@@ -76,6 +77,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   subscribers: Subscriber[] = [];
 
   // OpenVidu Node Client objects
+  sessionAPI: SessionAPI;
   sessionProperties: SessionPropertiesAPI = {
     mediaMode: MediaMode.ROUTED,
     recordingMode: RecordingMode.MANUAL,
@@ -161,8 +163,6 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     this.sessionName = 'TestSession';
     this.clientData = 'TestClient';
   }
-
-  private removeHttps = input => input.replace(/^https?:\/\//, '');
 
   joinSession(): void {
 
@@ -512,13 +512,17 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     const dialogRef = this.dialog.open(SessionApiDialogComponent, {
       data: {
         openVidu: new OpenViduAPI(this.openviduUrl, this.openviduSecret),
+        session: this.sessionAPI,
         sessionId: !!this.session ? this.session.sessionId : this.sessionName
       },
       width: '280px',
       disableClose: true
     });
 
-    dialogRef.afterClosed().subscribe((result: string) => {
+    dialogRef.afterClosed().subscribe(result => {
+      if (!result.session) {
+        delete this.sessionAPI;
+      }
       document.getElementById('session-api-btn-' + this.index).classList.remove('cdk-program-focused');
     });
   }
@@ -595,6 +599,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     }
     return OV_NodeClient.createSession(this.sessionProperties)
       .then(session_NodeClient => {
+        this.sessionAPI = session_NodeClient;
         return session_NodeClient.generateToken({ role: this.participantRole });
       });
   }

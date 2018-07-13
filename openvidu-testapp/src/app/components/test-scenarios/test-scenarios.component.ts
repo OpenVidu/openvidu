@@ -15,8 +15,7 @@ import {
   StreamEvent,
   StreamManagerEvent,
   PublisherProperties,
-  ConnectionEvent,
-  StreamPropertyChangedEvent
+  ConnectionEvent
 } from 'openvidu-browser';
 import {
   OpenVidu as OpenViduAPI,

@@ -2,11 +2,9 @@ import { Injectable } from '@angular/core';
 import {
   OpenVidu as OpenViduAPI,
   Session as SessionAPI,
-  TokenOptions as TokenOptionsAPI,
   OpenViduRole as OpenViduRoleAPI,
   SessionProperties as SessionPropertiesAPI
 } from 'openvidu-node-client';
-import { environment } from '../../environments/environment';
 
 @Injectable()
 export class OpenviduRestService {
