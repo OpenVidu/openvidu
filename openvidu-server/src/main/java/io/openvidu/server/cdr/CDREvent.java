@@ -65,7 +65,7 @@ public class CDREvent implements Comparable<CDREvent> {
 		this.startTime = this.timeStamp;
 	}
 	
-	public CDREvent(CDREventName eventName, String sessionId, Recording recording) {
+	public CDREvent(CDREventName eventName, String sessionId, Recording recording, String reason) {
 		this.eventName = eventName;
 		if ((sessionId.indexOf('/')) != -1) {
 			this.sessionId = sessionId.substring(sessionId.lastIndexOf('/') + 1, sessionId.length());
@@ -80,6 +80,7 @@ public class CDREvent implements Comparable<CDREvent> {
 		this.hasAudio = recording.hasAudio();
 		this.hasVideo = recording.hasVideo();
 		this.recordingLayout = recording.getRecordingLayout();
+		this.reason = reason;
 	}
 
 	public CDREvent(CDREventName eventName, Participant participant, String sessionId) {

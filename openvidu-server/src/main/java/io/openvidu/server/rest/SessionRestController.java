@@ -329,7 +329,7 @@ public class SessionRestController {
 
 		Session session = sessionManager.getSession(recording.getSessionId());
 
-		Recording stoppedRecording = this.recordingService.stopRecording(session);
+		Recording stoppedRecording = this.recordingService.stopRecording(session, "recordingStoppedByServer");
 
 		sessionManager.evictParticipant(
 				session.getParticipantByPublicId(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID), null, null,

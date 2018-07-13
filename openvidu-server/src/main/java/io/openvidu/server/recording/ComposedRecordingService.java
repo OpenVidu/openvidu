@@ -156,7 +156,7 @@ public class ComposedRecordingService {
 		return recording;
 	}
 
-	public Recording stopRecording(Session session) {
+	public Recording stopRecording(Session session, String reason) {
 		Recording recording = this.sessionsRecordings.remove(session.getSessionId());
 		String containerId = this.sessionsContainers.remove(session.getSessionId());
 		this.startedRecordings.remove(recording.getId());
@@ -217,7 +217,7 @@ public class ComposedRecordingService {
 					"There was an error generating the metadata report file for the recording");
 		}
 
-		this.sessionHandler.sendRecordingStoppedNotification(session, recording);
+		this.sessionHandler.sendRecordingStoppedNotification(session, recording, reason);
 
 		return recording;
 	}

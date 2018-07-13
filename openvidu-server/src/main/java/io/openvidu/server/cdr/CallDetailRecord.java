@@ -17,7 +17,9 @@
 
 package io.openvidu.server.cdr;
 
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -85,6 +87,8 @@ public class CallDetailRecord {
 	private Map<String, CDREvent> participants = new ConcurrentHashMap<>();
 	private Map<String, CDREvent> publications = new ConcurrentHashMap<>();
 	private Map<String, Set<CDREvent>> subscriptions = new ConcurrentHashMap<>();
+	
+	private final List<String> lastParticipantLeftReasons = Arrays.asList(new String[] {"disconnect", "forceDisconnectByUser", "forceDisconnectByServer", "networkDisconnect"});
 
 	public CallDetailRecord(CDRLogger logger) {
 		this.logger = logger;
@@ -98,7 +102,7 @@ public class CallDetailRecord {
 
 	public void recordSessionDestroyed(String sessionId, String reason) {
 		CDREvent e = this.sessions.remove(sessionId);
-		if (openviduConfig.isCdrEnabled()) this.logger.log(new CDREvent(CDREventName.sessionDestroyed, e, reason));
+		if (openviduConfig.isCdrEnabled()) this.logger.log(new CDREvent(CDREventName.sessionDestroyed, e, this.finalReason(reason)));
 	}
 
 	public void recordParticipantJoined(Participant participant, String sessionId) {
@@ -156,11 +160,19 @@ public class CallDetailRecord {
 	}
 
 	public void recordRecordingStarted(String sessionId, Recording recording) {
-		if (openviduConfig.isCdrEnabled()) this.logger.log(new CDREvent(CDREventName.recordingStarted, sessionId, recording));
+		if (openviduConfig.isCdrEnabled()) this.logger.log(new CDREvent(CDREventName.recordingStarted, sessionId, recording, null));
 	}
 
-	public void recordRecordingStopped(String sessionId, Recording recording) {
-		if (openviduConfig.isCdrEnabled()) this.logger.log(new CDREvent(CDREventName.recordingStopped, sessionId, recording));
+	public void recordRecordingStopped(String sessionId, Recording recording, String reason) {
+		if (openviduConfig.isCdrEnabled()) this.logger.log(new CDREvent(CDREventName.recordingStopped, sessionId, recording, this.finalReason(reason)));
+	}
+	
+	private String finalReason(String reason) {
+		if (lastParticipantLeftReasons.contains(reason)) {
+			return "lastParticipantLeft";
+		} else {
+			return reason;
+		}
 	}
 
 }

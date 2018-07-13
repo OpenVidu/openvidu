@@ -410,9 +410,9 @@ public class SessionEventsHandler {
 		}
 	}
 
-	public void sendRecordingStoppedNotification(Session session, Recording recording) {
+	public void sendRecordingStoppedNotification(Session session, Recording recording, String reason) {
 
-		CDR.recordRecordingStopped(session.getSessionId(), recording);
+		CDR.recordRecordingStopped(session.getSessionId(), recording, reason);
 
 		// Be sure to clean this map (this should return null)
 		this.recordingsStarted.remove(session.getSessionId());

@@ -424,7 +424,7 @@ public abstract class SessionManager {
 		this.closeSessionAndEmptyCollections(session, reason);
 
 		if (recordingService.sessionIsBeingRecorded(session.getSessionId())) {
-			recordingService.stopRecording(session);
+			recordingService.stopRecording(session, reason);
 		}
 
 		return participants;
