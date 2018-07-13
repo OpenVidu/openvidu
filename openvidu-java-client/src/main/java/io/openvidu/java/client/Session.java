@@ -23,6 +23,7 @@ import java.io.UnsupportedEncodingException;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
@@ -123,6 +124,32 @@ public class Session {
 		if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
 			System.out.println("Returning a TOKEN");
 			return (String) httpResponseToJson(response).get("id");
+		} else {
+			throw new OpenViduHttpException(statusCode);
+		}
+	}
+
+	/**
+	 * Gracefully closes the Session: unpublishes all streams and evicts every
+	 * participant
+	 * 
+	 * @throws OpenViduJavaClientException
+	 * @throws OpenViduHttpException
+	 */
+	public void close() throws OpenViduJavaClientException, OpenViduHttpException {
+		HttpDelete request = new HttpDelete(this.urlOpenViduServer + API_SESSIONS + "/" + this.sessionId);
+		request.setHeader(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded");
+
+		HttpResponse response;
+		try {
+			response = httpClient.execute(request);
+		} catch (IOException e) {
+			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
+		}
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if ((statusCode == org.apache.http.HttpStatus.SC_NO_CONTENT)) {
+			System.out.println("Session closed");
 		} else {
 			throw new OpenViduHttpException(statusCode);
 		}

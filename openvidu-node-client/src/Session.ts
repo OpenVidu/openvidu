@@ -22,7 +22,7 @@ import { RecordingMode } from './RecordingMode';
 import { SessionProperties } from './SessionProperties';
 import { TokenOptions } from './TokenOptions';
 
-import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios from 'axios';
 
 export class Session {
 
@@ -77,6 +77,47 @@ export class Session {
                     if (res.status === 200) {
                         // SUCCESS response from openvidu-server. Resolve token
                         resolve(res.data.id);
+                    } else {
+                        // ERROR response from openvidu-server. Resolve HTTP status
+                        reject(new Error(res.status.toString()));
+                    }
+                }).catch(error => {
+                    if (error.response) {
+                        // The request was made and the server responded with a status code (not 2xx)
+                        reject(new Error(error.response.status.toString()));
+                    } else if (error.request) {
+                        // The request was made but no response was received
+                        // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+                        // http.ClientRequest in node.js
+                        console.error(error.request);
+                    } else {
+                        // Something happened in setting up the request that triggered an Error
+                        console.error('Error', error.message);
+                    }
+                });
+        });
+    }
+
+    /**
+     * Gracefully closes the Session: unpublishes all streams and evicts every participant
+     *
+     * @returns A Promise that is resolved to the if the session has been closed successfully and rejected with an Error object if not
+     */
+    public close() {
+        return new Promise<string>((resolve, reject) => {
+            axios.delete(
+                'https://' + this.hostname + ':' + this.port + Session.API_SESSIONS + '/' + this.sessionId,
+                {
+                    headers: {
+                        'Authorization': this.basicAuth,
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    }
+                }
+            )
+                .then(res => {
+                    if (res.status === 204) {
+                        // SUCCESS response from openvidu-server
+                        resolve();
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
                         reject(new Error(res.status.toString()));

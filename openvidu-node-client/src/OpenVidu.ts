@@ -18,10 +18,9 @@
 import { Session } from './Session';
 import { SessionProperties } from './SessionProperties';
 import { Recording } from './Recording';
-import { RecordingLayout } from './RecordingLayout';
 import { RecordingProperties } from './RecordingProperties';
 
-import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios from 'axios';
 
 export class OpenVidu {
 
