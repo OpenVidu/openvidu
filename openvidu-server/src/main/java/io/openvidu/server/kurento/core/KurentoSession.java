@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
+import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.server.cdr.CallDetailRecord;
 import io.openvidu.server.config.OpenviduConfig;
@@ -375,11 +376,10 @@ public class KurentoSession implements Session {
 		json.put("sessionId", this.sessionId);
 		json.put("mediaMode", this.sessionProperties.mediaMode().name());
 		json.put("recordingMode", this.sessionProperties.recordingMode().name());
-		if (this.sessionProperties.defaultCustomLayout() != null
-				&& !this.sessionProperties.defaultCustomLayout().isEmpty()) {
+		json.put("defaultRecordingLayout", this.sessionProperties.defaultRecordingLayout().name());
+		if (RecordingLayout.CUSTOM.equals(this.sessionProperties.defaultRecordingLayout())) {
 			json.put("defaultCustomLayout", this.sessionProperties.defaultCustomLayout());
 		}
-		json.put("defaultRecordingLayout", this.sessionProperties.defaultRecordingLayout().name());
 		JSONObject connections = new JSONObject();
 		JSONArray participants = new JSONArray();
 		this.participants.values().forEach(p -> {

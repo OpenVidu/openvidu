@@ -161,6 +161,9 @@ public class Recording {
 		json.put("id", this.id);
 		json.put("name", this.recordingProperties.name());
 		json.put("recordingLayout", this.recordingProperties.recordingLayout().name());
+		if (RecordingLayout.CUSTOM.equals(this.recordingProperties.recordingLayout())) {
+			json.put("customLayout", this.recordingProperties.customLayout());
+		}
 		json.put("sessionId", this.sessionId);
 		json.put("createdAt", this.createdAt);
 		json.put("size", this.size);
