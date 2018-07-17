@@ -107,18 +107,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     dialogRef.afterClosed().subscribe(secret => {
       if (secret) {
-        if (!this.openviduPublicUrl) {
-          this.restService.getOpenViduPublicUrl()
-            .then((url => {
-              this.openviduPublicUrl = url.replace('https://', 'wss://').replace('http://', 'ws://');
-              this.connectToSession(this.openviduPublicUrl + '?sessionId=testSession&secret=' + secret);
-            }))
-            .catch(error => {
+        this.restService.getOpenViduToken(secret)
+          .then((token => {
+            this.connectToSession(token);
+          }))
+          .catch(error => {
+            if (error === 401) { // User unauthorized error. OpenVidu security is active
+              this.testVideo();
+            } else {
               console.error(error);
-            });
-        } else {
-          this.connectToSession(this.openviduPublicUrl + '?sessionId=testSession&secret=' + secret);
-        }
+              this.msgChain.push('Error connecting to session: ' + error);
+            }
+          });
       }
     });
   }
@@ -181,21 +181,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
       })
       .catch(error => {
-        if (error.code === 401) { // User unauthorized error. OpenVidu security is active
-          this.endTestVideo();
-          let dialogRef: MatDialogRef<CredentialsDialogComponent>;
-          dialogRef = this.dialog.open(CredentialsDialogComponent);
-          dialogRef.componentInstance.myReference = dialogRef;
-
-          dialogRef.afterClosed().subscribe(secret => {
-            if (secret) {
-              this.connectToSession(this.openviduPublicUrl + '?sessionId=testSession&secret=' + secret);
-            }
-          });
-        } else {
-          console.error(error);
-          this.msgChain.push('Error connecting to session');
-        }
+        this.msgChain.push('Error connecting to session: ' + error);
       });
   }
 
