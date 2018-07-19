@@ -571,6 +571,7 @@ export class Session implements EventDispatcher {
      * See [[EventDispatcher.once]]
      */
     once(type: string, handler: (event: SessionDisconnectedEvent | SignalEvent | StreamEvent | ConnectionEvent | PublisherSpeakingEvent | RecordingEvent) => void): Session {
+
         this.ee.once(type, event => {
             if (event) {
                 console.info("Event '" + type + "' triggered by 'Session'", event);
@@ -582,7 +583,6 @@ export class Session implements EventDispatcher {
 
         if (type === 'publisherStartSpeaking' || type === 'publisherStopSpeaking') {
             this.speakingEventsEnabled = true;
-
             // If there are already available remote streams, enable hark in all of them
             for (const connectionId in this.remoteConnections) {
                 const str = this.remoteConnections[connectionId].stream;

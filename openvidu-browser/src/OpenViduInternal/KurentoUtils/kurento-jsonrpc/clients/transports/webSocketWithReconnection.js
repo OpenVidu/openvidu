@@ -223,7 +223,7 @@ function WebSocketWithReconnection(config) {
 
     this.reconnectWs = function() {
         Logger.debug("reconnectWs");
-        reconnectToSameUri(MAX_RETRIES, 1, wsUri);
+        reconnectToSameUri(MAX_RETRIES, 1);
     };
 
     this.send = function(message) {

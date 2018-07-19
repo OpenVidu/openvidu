@@ -283,10 +283,12 @@ export class Publisher extends StreamManager {
 
                 // Apply PublisherProperties.publishAudio and PublisherProperties.publishVideo
                 if (!!mediaStream.getAudioTracks()[0]) {
-                    mediaStream.getAudioTracks()[0].enabled = !!this.stream.outboundStreamOpts.publisherProperties.publishAudio;
+                    const enabled = (this.stream.audioActive !== undefined && this.stream.audioActive !== null) ? this.stream.audioActive : !!this.stream.outboundStreamOpts.publisherProperties.publishAudio;
+                    mediaStream.getAudioTracks()[0].enabled = enabled;
                 }
                 if (!!mediaStream.getVideoTracks()[0]) {
-                    mediaStream.getVideoTracks()[0].enabled = !!this.stream.outboundStreamOpts.publisherProperties.publishVideo;
+                    const enabled = (this.stream.videoActive !== undefined && this.stream.videoActive !== null) ? this.stream.videoActive : !!this.stream.outboundStreamOpts.publisherProperties.publishVideo;
+                    mediaStream.getVideoTracks()[0].enabled = enabled;
                 }
 
                 this.videoReference = document.createElement('video');
@@ -505,14 +507,6 @@ export class Publisher extends StreamManager {
                     errorCallback(error);
                 });
         });
-    }
-
-    /**
-     * @hidden
-     */
-    updateSession(session: Session): void {
-        this.session = session;
-        this.stream.session = session;
     }
 
     /**
