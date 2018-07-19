@@ -17,6 +17,10 @@
 
 package io.openvidu.java.client;
 
+/**
+ * See
+ * {@link io.openvidu.java.client.SessionProperties.Builder#mediaMode(MediaMode)}
+ */
 public enum MediaMode {
 	/**
 	 * <i>(not available yet)</i> The session will attempt to transmit streams

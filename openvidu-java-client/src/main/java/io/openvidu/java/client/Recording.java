@@ -19,8 +19,14 @@ package io.openvidu.java.client;
 
 import org.json.simple.JSONObject;
 
+/**
+ * See {@link io.openvidu.java.client.OpenVidu#startRecording(String)}
+ */
 public class Recording {
 
+	/**
+	 * See {@link io.openvidu.java.client.Recording#getStatus()}
+	 */
 	public enum Status {
 
 		/**

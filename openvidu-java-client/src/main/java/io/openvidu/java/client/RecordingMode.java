@@ -17,6 +17,10 @@
 
 package io.openvidu.java.client;
 
+/**
+ * See
+ * {@link io.openvidu.java.client.SessionProperties.Builder#recordingMode(RecordingMode)}
+ */
 public enum RecordingMode {
 
 	/**

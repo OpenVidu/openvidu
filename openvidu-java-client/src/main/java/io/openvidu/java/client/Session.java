@@ -19,33 +19,43 @@ package io.openvidu.java.client;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Session {
+
+	private static final Logger log = LoggerFactory.getLogger(Session.class);
 
 	private HttpClient httpClient;
 	private String urlOpenViduServer;
 	private String sessionId;
 	private SessionProperties properties;
-
-	final static String API_SESSIONS = "api/sessions";
-	final static String API_TOKENS = "api/tokens";
+	private Map<String, Connection> activeConnections = new ConcurrentHashMap<>();
+	private boolean recording = false;
 
 	protected Session(HttpClient httpClient, String urlOpenViduServer)
 			throws OpenViduJavaClientException, OpenViduHttpException {
 		this.httpClient = httpClient;
 		this.urlOpenViduServer = urlOpenViduServer;
-		this.properties = new SessionProperties();
+		this.properties = new SessionProperties.Builder().build();
 		this.getSessionIdHttp();
 	}
 
@@ -55,6 +65,10 @@ public class Session {
 		this.urlOpenViduServer = urlOpenViduServer;
 		this.properties = properties;
 		this.getSessionIdHttp();
+	}
+
+	protected Session(JSONObject json) {
+		this.resetSessionWithJson(json);
 	}
 
 	/**
@@ -97,7 +111,7 @@ public class Session {
 			this.getSessionId();
 		}
 
-		HttpPost request = new HttpPost(this.urlOpenViduServer + API_TOKENS);
+		HttpPost request = new HttpPost(this.urlOpenViduServer + OpenVidu.API_TOKENS);
 
 		JSONObject json = new JSONObject();
 		json.put("session", this.sessionId);
@@ -120,12 +134,17 @@ public class Session {
 			throw new OpenViduJavaClientException(e2.getMessage(), e2.getCause());
 		}
 
-		int statusCode = response.getStatusLine().getStatusCode();
-		if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
-			System.out.println("Returning a TOKEN");
-			return (String) httpResponseToJson(response).get("id");
-		} else {
-			throw new OpenViduHttpException(statusCode);
+		try {
+			int statusCode = response.getStatusLine().getStatusCode();
+			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
+				String token = (String) httpResponseToJson(response).get("id");
+				log.info("Returning a TOKEN: {}", token);
+				return token;
+			} else {
+				throw new OpenViduHttpException(statusCode);
+			}
+		} finally {
+			EntityUtils.consumeQuietly(response.getEntity());
 		}
 	}
 
@@ -137,7 +156,7 @@ public class Session {
 	 * @throws OpenViduHttpException
 	 */
 	public void close() throws OpenViduJavaClientException, OpenViduHttpException {
-		HttpDelete request = new HttpDelete(this.urlOpenViduServer + API_SESSIONS + "/" + this.sessionId);
+		HttpDelete request = new HttpDelete(this.urlOpenViduServer + OpenVidu.API_SESSIONS + "/" + this.sessionId);
 		request.setHeader(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded");
 
 		HttpResponse response;
@@ -147,12 +166,234 @@ public class Session {
 			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
 		}
 
-		int statusCode = response.getStatusLine().getStatusCode();
-		if ((statusCode == org.apache.http.HttpStatus.SC_NO_CONTENT)) {
-			System.out.println("Session closed");
-		} else {
-			throw new OpenViduHttpException(statusCode);
+		try {
+			int statusCode = response.getStatusLine().getStatusCode();
+			if ((statusCode == org.apache.http.HttpStatus.SC_NO_CONTENT)) {
+				OpenVidu.activeSessions.remove(this.sessionId);
+				log.info("Session {} closed", this.sessionId);
+			} else {
+				throw new OpenViduHttpException(statusCode);
+			}
+		} finally {
+			EntityUtils.consumeQuietly(response.getEntity());
 		}
+	}
+
+	/**
+	 * Updates every property of the Session with the current status it has in
+	 * OpenVidu Server. This is especially useful for getting the list of active
+	 * connections to the Session
+	 * ({@link io.openvidu.java.client.Session#getActiveConnections()}) and use
+	 * those values to call
+	 * {@link io.openvidu.java.client.Session#forceDisconnect(String)} or
+	 * {@link io.openvidu.java.client.Session#forceUnpublish(String)}
+	 * 
+	 * @return true if the Session status has changed with respect to the server,
+	 *         false if not. This applies to any property or sub-property of the
+	 *         object
+	 * 
+	 * @throws OpenViduHttpException
+	 * @throws OpenViduJavaClientException
+	 */
+	public boolean fetch() throws OpenViduJavaClientException, OpenViduHttpException {
+		String beforeJSON = this.toJson();
+		HttpGet request = new HttpGet(this.urlOpenViduServer + OpenVidu.API_SESSIONS + "/" + this.sessionId);
+		request.setHeader(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded");
+
+		HttpResponse response;
+		try {
+			response = httpClient.execute(request);
+		} catch (IOException e) {
+			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
+		}
+
+		try {
+			int statusCode = response.getStatusLine().getStatusCode();
+			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
+				this.resetSessionWithJson(httpResponseToJson(response));
+				String afterJSON = this.toJson();
+				boolean hasChanged = !beforeJSON.equals(afterJSON);
+				log.info("Session info fetched for session '{}'. Any change: {}", this.sessionId, hasChanged);
+				return hasChanged;
+			} else {
+				throw new OpenViduHttpException(statusCode);
+			}
+		} finally {
+			EntityUtils.consumeQuietly(response.getEntity());
+		}
+	}
+
+	/**
+	 * Forces the user represented by <code>connection</code> to leave the session.
+	 * OpenVidu Browser will trigger the proper events on the client-side
+	 * (<code>streamDestroyed</code>, <code>connectionDestroyed</code>,
+	 * <code>sessionDisconnected</code>) with reason set to
+	 * "forceDisconnectByServer" <br>
+	 * 
+	 * You can get <code>connection</code> parameter with
+	 * {@link io.openvidu.java.client.Session#fetch()} and then
+	 * {@link io.openvidu.java.client.Session#getActiveConnections()}
+	 * 
+	 * @throws OpenViduJavaClientException
+	 * @throws OpenViduHttpException
+	 */
+	public void forceDisconnect(Connection connection) throws OpenViduJavaClientException, OpenViduHttpException {
+		this.forceDisconnect(connection.getConnectionId());
+	}
+
+	/**
+	 * Forces the user with Connection <code>connectionId</code> to leave the
+	 * session. OpenVidu Browser will trigger the proper events on the client-side
+	 * (<code>streamDestroyed</code>, <code>connectionDestroyed</code>,
+	 * <code>sessionDisconnected</code>) with reason set to
+	 * "forceDisconnectByServer" <br>
+	 * 
+	 * You can get <code>connectionId</code> parameter with
+	 * {@link io.openvidu.java.client.Session#fetch()} (use
+	 * {@link io.openvidu.java.client.Connection#getConnectionId()} to get the
+	 * `connectionId` you want)
+	 * 
+	 * @throws OpenViduJavaClientException
+	 * @throws OpenViduHttpException
+	 */
+	public void forceDisconnect(String connectionId) throws OpenViduJavaClientException, OpenViduHttpException {
+		HttpDelete request = new HttpDelete(
+				this.urlOpenViduServer + OpenVidu.API_SESSIONS + "/" + this.sessionId + "/connection/" + connectionId);
+		request.setHeader(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded");
+
+		HttpResponse response = null;
+		try {
+			response = httpClient.execute(request);
+		} catch (IOException e) {
+			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
+		}
+
+		try {
+			int statusCode = response.getStatusLine().getStatusCode();
+			if ((statusCode == org.apache.http.HttpStatus.SC_NO_CONTENT)) {
+				// Remove connection from activeConnections map
+				Connection connectionClosed = this.activeConnections.remove(connectionId);
+				// Remove every Publisher of the closed connection from every subscriber list of
+				// other connections
+				if (connectionClosed != null) {
+					for (Publisher publisher : connectionClosed.getPublishers()) {
+						this.removeSubscribersForPublisher(publisher);
+					}
+				} else {
+					log.warn(
+							"The closed connection wasn't fetched in OpenVidu Java Client. No changes in the collection of active connections of the Session");
+				}
+				log.info("Connection {} closed", connectionId);
+			} else {
+				throw new OpenViduHttpException(statusCode);
+			}
+		} finally
+
+		{
+			EntityUtils.consumeQuietly(response.getEntity());
+		}
+	}
+
+	/**
+	 * Forces some user to unpublish a Stream. OpenVidu Browser will trigger the
+	 * proper events on the client-side (<code>streamDestroyed</code>) with reason
+	 * set to "forceUnpublishByServer".<br>
+	 * 
+	 * You can get <code>publisher</code> parameter with
+	 * {@link io.openvidu.java.client.Session#getActiveConnections()} and then for
+	 * each Connection you can call
+	 * {@link io.openvidu.java.client.Connection#getPublishers()}. Remember to call
+	 * {@link io.openvidu.java.client.Session#fetch()} before to fetch the current
+	 * actual properties of the Session from OpenVidu Server
+	 * 
+	 * @throws OpenViduJavaClientException
+	 * @throws OpenViduHttpException
+	 */
+	public void forceUnpublish(Publisher publisher) throws OpenViduJavaClientException, OpenViduHttpException {
+		this.forceUnpublish(publisher.getStreamId());
+	}
+
+	/**
+	 * Forces some user to unpublish a Stream. OpenVidu Browser will trigger the
+	 * proper events on the client-side (<code>streamDestroyed</code>) with reason
+	 * set to "forceUnpublishByServer". <br>
+	 * 
+	 * You can get <code>streamId</code> parameter with
+	 * {@link io.openvidu.java.client.Session#getActiveConnections()} and then for
+	 * each Connection you can call
+	 * {@link io.openvidu.java.client.Connection#getPublishers()}. Finally
+	 * {@link io.openvidu.java.client.Publisher#getStreamId()}) will give you the
+	 * <code>streamId</code>. Remember to call
+	 * {@link io.openvidu.java.client.Session#fetch()} before to fetch the current
+	 * actual properties of the Session from OpenVidu Server
+	 * 
+	 * @throws OpenViduJavaClientException
+	 * @throws OpenViduHttpException
+	 */
+	public void forceUnpublish(String streamId) throws OpenViduJavaClientException, OpenViduHttpException {
+		HttpDelete request = new HttpDelete(
+				this.urlOpenViduServer + OpenVidu.API_SESSIONS + "/" + this.sessionId + "/stream/" + streamId);
+		request.setHeader(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded");
+
+		HttpResponse response;
+		try {
+			response = httpClient.execute(request);
+		} catch (IOException e) {
+			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
+		}
+
+		try {
+			int statusCode = response.getStatusLine().getStatusCode();
+			if ((statusCode == org.apache.http.HttpStatus.SC_NO_CONTENT)) {
+				for (Connection connection : this.activeConnections.values()) {
+					// Try to remove the Publisher from the Connection publishers collection
+					if (connection.publishers.remove(streamId) != null) {
+						continue;
+					}
+					// Try to remove the Publisher from the Connection subscribers collection
+					connection.subscribers.remove(streamId);
+				}
+				log.info("Stream {} unpublished", streamId);
+			} else {
+				throw new OpenViduHttpException(statusCode);
+			}
+		} finally {
+			EntityUtils.consumeQuietly(response.getEntity());
+		}
+	}
+
+	/**
+	 * Returns the list of active connections to the session. <strong>This value
+	 * will remain unchanged since the last time method
+	 * {@link io.openvidu.java.client.Session#fetch()} was called</strong>.
+	 * Exceptions to this rule are:
+	 * <ul>
+	 * <li>Calling {@link io.openvidu.java.client.Session#forceUnpublish(String)}
+	 * updates each affected Connection status</li>
+	 * <li>Calling {@link io.openvidu.java.client.Session#forceDisconnect(String)}
+	 * updates each affected Connection status</li>
+	 * </ul>
+	 * <br>
+	 * To get the list of active connections with their current actual value, you
+	 * must call first {@link io.openvidu.java.client.Session#fetch()} and then
+	 * {@link io.openvidu.java.client.Session#getActiveConnections()}
+	 */
+	public List<Connection> getActiveConnections() {
+		return new ArrayList<>(this.activeConnections.values());
+	}
+
+	/**
+	 * Returns whether the session is being recorded or not. <strong>This value will
+	 * be the same as the one that returned method
+	 * {@link io.openvidu.java.client.Session#fetch()} the last time it was
+	 * called.</strong>
+	 * 
+	 * To get the current actual value, you must call first
+	 * {@link io.openvidu.java.client.Session#fetch()} and then
+	 * {@link io.openvidu.java.client.Session#isBeingRecorded()}
+	 */
+	public boolean isBeingRecorded() {
+		return this.recording;
 	}
 
 	/**
@@ -177,7 +418,7 @@ public class Session {
 			return;
 		}
 
-		HttpPost request = new HttpPost(this.urlOpenViduServer + API_SESSIONS);
+		HttpPost request = new HttpPost(this.urlOpenViduServer + OpenVidu.API_SESSIONS);
 
 		JSONObject json = new JSONObject();
 		json.put("mediaMode", properties.mediaMode().name());
@@ -201,16 +442,20 @@ public class Session {
 		} catch (IOException e2) {
 			throw new OpenViduJavaClientException(e2.getMessage(), e2.getCause());
 		}
-		int statusCode = response.getStatusLine().getStatusCode();
-		if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
-			System.out.println("Returning a SESSIONID");
-			String id = (String) httpResponseToJson(response).get("id");
-			this.sessionId = id;
-		} else if (statusCode == org.apache.http.HttpStatus.SC_CONFLICT) {
-			// 'customSessionId' already existed
-			this.sessionId = properties.customSessionId();
-		} else {
-			throw new OpenViduHttpException(statusCode);
+		try {
+			int statusCode = response.getStatusLine().getStatusCode();
+			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
+				String id = (String) httpResponseToJson(response).get("id");
+				log.info("Returning a SESSIONID: {}", id);
+				this.sessionId = id;
+			} else if (statusCode == org.apache.http.HttpStatus.SC_CONFLICT) {
+				// 'customSessionId' already existed
+				this.sessionId = properties.customSessionId();
+			} else {
+				throw new OpenViduHttpException(statusCode);
+			}
+		} finally {
+			EntityUtils.consumeQuietly(response.getEntity());
 		}
 	}
 
@@ -223,6 +468,97 @@ public class Session {
 			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
 		}
 		return json;
+	}
+
+	private void removeSubscribersForPublisher(Publisher publisher) {
+		String streamId = publisher.getStreamId();
+		for (Connection connection : this.activeConnections.values()) {
+			connection.setSubscribers(connection.getSubscribers().stream()
+					.filter(subscriber -> !streamId.equals(subscriber)).collect(Collectors.toList()));
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	protected Session resetSessionWithJson(JSONObject json) {
+		this.sessionId = (String) json.get("sessionId");
+		this.recording = (boolean) json.get("recording");
+		SessionProperties.Builder builder = new SessionProperties.Builder()
+				.mediaMode(MediaMode.valueOf((String) json.get("mediaMode")))
+				.recordingMode(RecordingMode.valueOf((String) json.get("recordingMode")))
+				.defaultRecordingLayout(RecordingLayout.valueOf((String) json.get("defaultRecordingLayout")));
+		if (json.containsKey("defaultCustomLayout")) {
+			builder.defaultCustomLayout((String) json.get("defaultCustomLayout"));
+		}
+		if (this.properties != null && this.properties.customSessionId() != null) {
+			builder.customSessionId(this.properties.customSessionId());
+		}
+		this.properties = builder.build();
+		JSONArray jsonArrayConnections = (JSONArray) ((JSONObject) json.get("connections")).get("content");
+		this.activeConnections.clear();
+		jsonArrayConnections.forEach(connection -> {
+			JSONObject con = (JSONObject) connection;
+
+			Map<String, Publisher> publishers = new ConcurrentHashMap<>();
+			JSONArray jsonArrayPublishers = (JSONArray) con.get("publishers");
+			jsonArrayPublishers.forEach(publisher -> {
+				JSONObject pubJson = (JSONObject) publisher;
+				JSONObject mediaOptions = (JSONObject) pubJson.get("mediaOptions");
+				Publisher pub = new Publisher((String) pubJson.get("streamId"), (boolean) mediaOptions.get("hasAudio"),
+						(boolean) mediaOptions.get("hasVideo"), mediaOptions.get("audioActive"),
+						mediaOptions.get("videoActive"), mediaOptions.get("frameRate"), mediaOptions.get("typeOfVideo"),
+						mediaOptions.get("videoDimensions"));
+				publishers.put(pub.getStreamId(), pub);
+			});
+
+			List<String> subscribers = new ArrayList<>();
+			JSONArray jsonArraySubscribers = (JSONArray) con.get("subscribers");
+			jsonArraySubscribers.forEach(subscriber -> {
+				subscribers.add((String) ((JSONObject) subscriber).get("streamId"));
+			});
+
+			this.activeConnections.put((String) con.get("connectionId"),
+					new Connection((String) con.get("connectionId"), OpenViduRole.valueOf((String) con.get("role")),
+							(String) con.get("token"), (String) con.get("serverData"), (String) con.get("clientData"),
+							publishers, subscribers));
+		});
+		return this;
+	}
+
+	@SuppressWarnings("unchecked")
+	protected String toJson() {
+		JSONObject json = new JSONObject();
+		json.put("sessionId", this.sessionId);
+		json.put("customSessionId", this.properties.customSessionId());
+		json.put("recording", this.recording);
+		json.put("mediaMode", this.properties.mediaMode());
+		json.put("recordingMode", this.properties.recordingMode());
+		json.put("defaultRecordingLayout", this.properties.defaultRecordingLayout());
+		json.put("defaultCustomLayout", this.properties.defaultCustomLayout());
+		JSONObject connections = new JSONObject();
+		connections.put("numberOfElements", this.getActiveConnections().size());
+		JSONArray jsonArrayConnections = new JSONArray();
+		this.getActiveConnections().forEach(con -> {
+			JSONObject c = new JSONObject();
+			c.put("connectionId", con.getConnectionId());
+			c.put("role", con.getRole());
+			c.put("token", con.getToken());
+			c.put("clientData", con.getClientData());
+			c.put("serverData", con.getServerData());
+			JSONArray pubs = new JSONArray();
+			con.getPublishers().forEach(p -> {
+				pubs.add(p.toJson());
+			});
+			JSONArray subs = new JSONArray();
+			con.getSubscribers().forEach(s -> {
+				subs.add(s);
+			});
+			c.put("publishers", pubs);
+			c.put("subscribers", subs);
+			jsonArrayConnections.add(c);
+		});
+		connections.put("content", jsonArrayConnections);
+		json.put("connections", connections);
+		return json.toJSONString();
 	}
 
 }

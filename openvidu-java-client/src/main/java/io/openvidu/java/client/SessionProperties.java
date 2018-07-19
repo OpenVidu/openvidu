@@ -17,6 +17,9 @@
 
 package io.openvidu.java.client;
 
+/**
+ * See {@link io.openvidu.java.client.OpenVidu#createSession(SessionProperties)}
+ */
 public class SessionProperties {
 
 	private MediaMode mediaMode;

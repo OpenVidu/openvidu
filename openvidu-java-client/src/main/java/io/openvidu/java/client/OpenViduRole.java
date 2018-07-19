@@ -17,6 +17,9 @@
 
 package io.openvidu.java.client;
 
+/**
+ * See {@link io.openvidu.java.client.TokenOptions.Builder#role(OpenViduRole)}
+ */
 public enum OpenViduRole {
 
 	/**
@@ -25,13 +28,16 @@ public enum OpenViduRole {
 	SUBSCRIBER,
 
 	/**
-	 * SUBSCRIBER permissions + can publish their own Streams (call <code>Session.publish()</code>)
+	 * SUBSCRIBER permissions + can publish their own Streams (call
+	 * <code>Session.publish()</code>)
 	 */
 	PUBLISHER,
 
 	/**
-	 * SUBSCRIBER + PUBLISHER permissions + can force the unpublishing or disconnection over a third-party Stream or Connection
-     * (call <code>Session.forceUnpublish()</code> and <code>Session.forceDisconnect()</code>)
+	 * SUBSCRIBER + PUBLISHER permissions + can force the unpublishing or
+	 * disconnection over a third-party Stream or Connection (call
+	 * <code>Session.forceUnpublish()</code> and
+	 * <code>Session.forceDisconnect()</code>)
 	 */
 	MODERATOR;
 }

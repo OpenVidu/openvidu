@@ -17,6 +17,12 @@
 
 package io.openvidu.java.client;
 
+/**
+ * See
+ * {@link io.openvidu.java.client.SessionProperties.Builder#defaultRecordingLayout(RecordingLayout)}
+ * and
+ * {@link io.openvidu.java.client.RecordingProperties.Builder#recordingLayout(RecordingLayout)}
+ */
 public enum RecordingLayout {
 
 	/**

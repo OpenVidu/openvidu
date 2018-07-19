@@ -25,7 +25,13 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import javax.net.ssl.SSLContext;
 
@@ -35,13 +41,14 @@ import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.ssl.TrustStrategy;
 import org.apache.http.util.EntityUtils;
@@ -49,16 +56,23 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class OpenVidu {
+
+	private static final Logger log = LoggerFactory.getLogger(OpenVidu.class);
 
 	private String urlOpenViduServer;
 	private String secret;
 	private HttpClient myHttpClient;
+	protected static Map<String, Session> activeSessions = new ConcurrentHashMap<>();
 
-	final static String API_RECORDINGS = "api/recordings";
-	final static String API_RECORDINGS_START = "/start";
-	final static String API_RECORDINGS_STOP = "/stop";
+	protected final static String API_SESSIONS = "api/sessions";
+	protected final static String API_TOKENS = "api/tokens";
+	protected final static String API_RECORDINGS = "api/recordings";
+	protected final static String API_RECORDINGS_START = "/start";
+	protected final static String API_RECORDINGS_STOP = "/stop";
 
 	/**
 	 * @param urlOpenViduServer
@@ -96,9 +110,13 @@ public class OpenVidu {
 			throw new RuntimeException(e);
 		}
 
-		this.myHttpClient = HttpClients.custom().setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE)
-				.setSSLContext(sslContext).setDefaultCredentialsProvider(provider).build();
+		RequestConfig.Builder requestBuilder = RequestConfig.custom();
+		requestBuilder = requestBuilder.setConnectTimeout(30000);
+		requestBuilder = requestBuilder.setConnectionRequestTimeout(30000);
 
+		this.myHttpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestBuilder.build())
+				.setConnectionTimeToLive(30, TimeUnit.SECONDS).setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE)
+				.setSSLContext(sslContext).setDefaultCredentialsProvider(provider).build();
 	}
 
 	/**
@@ -111,6 +129,7 @@ public class OpenVidu {
 	 */
 	public Session createSession() throws OpenViduJavaClientException, OpenViduHttpException {
 		Session s = new Session(myHttpClient, urlOpenViduServer);
+		OpenVidu.activeSessions.put(s.getSessionId(), s);
 		return s;
 	}
 
@@ -135,6 +154,7 @@ public class OpenVidu {
 	public Session createSession(SessionProperties properties)
 			throws OpenViduJavaClientException, OpenViduHttpException {
 		Session s = new Session(myHttpClient, urlOpenViduServer, properties);
+		OpenVidu.activeSessions.put(s.getSessionId(), s);
 		return s;
 	}
 
@@ -193,11 +213,15 @@ public class OpenVidu {
 			throw new OpenViduJavaClientException(e2.getMessage(), e2.getCause());
 		}
 
-		int statusCode = response.getStatusLine().getStatusCode();
-		if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
-			return new Recording(httpResponseToJson(response));
-		} else {
-			throw new OpenViduHttpException(statusCode);
+		try {
+			int statusCode = response.getStatusLine().getStatusCode();
+			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
+				return new Recording(httpResponseToJson(response));
+			} else {
+				throw new OpenViduHttpException(statusCode);
+			}
+		} finally {
+			EntityUtils.consumeQuietly(response.getEntity());
 		}
 	}
 
@@ -300,11 +324,15 @@ public class OpenVidu {
 			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
 		}
 
-		int statusCode = response.getStatusLine().getStatusCode();
-		if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
-			return new Recording(httpResponseToJson(response));
-		} else {
-			throw new OpenViduHttpException(statusCode);
+		try {
+			int statusCode = response.getStatusLine().getStatusCode();
+			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
+				return new Recording(httpResponseToJson(response));
+			} else {
+				throw new OpenViduHttpException(statusCode);
+			}
+		} finally {
+			EntityUtils.consumeQuietly(response.getEntity());
 		}
 	}
 
@@ -332,11 +360,15 @@ public class OpenVidu {
 			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
 		}
 
-		int statusCode = response.getStatusLine().getStatusCode();
-		if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
-			return new Recording(httpResponseToJson(response));
-		} else {
-			throw new OpenViduHttpException(statusCode);
+		try {
+			int statusCode = response.getStatusLine().getStatusCode();
+			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
+				return new Recording(httpResponseToJson(response));
+			} else {
+				throw new OpenViduHttpException(statusCode);
+			}
+		} finally {
+			EntityUtils.consumeQuietly(response.getEntity());
 		}
 	}
 
@@ -358,17 +390,21 @@ public class OpenVidu {
 			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
 		}
 
-		int statusCode = response.getStatusLine().getStatusCode();
-		if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
-			List<Recording> recordings = new ArrayList<>();
-			JSONObject json = httpResponseToJson(response);
-			JSONArray array = (JSONArray) json.get("items");
-			array.forEach(item -> {
-				recordings.add(new Recording((JSONObject) item));
-			});
-			return recordings;
-		} else {
-			throw new OpenViduHttpException(statusCode);
+		try {
+			int statusCode = response.getStatusLine().getStatusCode();
+			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
+				List<Recording> recordings = new ArrayList<>();
+				JSONObject json = httpResponseToJson(response);
+				JSONArray array = (JSONArray) json.get("items");
+				array.forEach(item -> {
+					recordings.add(new Recording((JSONObject) item));
+				});
+				return recordings;
+			} else {
+				throw new OpenViduHttpException(statusCode);
+			}
+		} finally {
+			EntityUtils.consumeQuietly(response.getEntity());
 		}
 	}
 
@@ -399,9 +435,105 @@ public class OpenVidu {
 			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
 		}
 
-		int statusCode = response.getStatusLine().getStatusCode();
-		if (!(statusCode == org.apache.http.HttpStatus.SC_NO_CONTENT)) {
-			throw new OpenViduHttpException(statusCode);
+		try {
+			int statusCode = response.getStatusLine().getStatusCode();
+			if (!(statusCode == org.apache.http.HttpStatus.SC_NO_CONTENT)) {
+				throw new OpenViduHttpException(statusCode);
+			}
+		} finally {
+			EntityUtils.consumeQuietly(response.getEntity());
+		}
+	}
+
+	/**
+	 * Returns the list of active sessions. <strong>This value will remain unchanged
+	 * since the last time method {@link io.openvidu.java.client.OpenVidu#fetch()}
+	 * was called</strong>. Exceptions to this rule are:
+	 * <ul>
+	 * <li>Calling {@link io.openvidu.java.client.Session#fetch()} updates that
+	 * specific Session status</li>
+	 * <li>Calling {@link io.openvidu.java.client.Session#close()} automatically
+	 * removes the Session from the list of active Sessions</li>
+	 * <li>Calling
+	 * {@link io.openvidu.java.client.Session#forceDisconnect(Connection)}
+	 * automatically updates the inner affected connections for that specific
+	 * Session</li>
+	 * <li>Calling {@link io.openvidu.java.client.Session#forceUnpublish(Publisher)}
+	 * also automatically updates the inner affected connections for that specific
+	 * Session</li>
+	 * </ul>
+	 * <br>
+	 * To get the list of active sessions with their current actual value, you must
+	 * call first {@link io.openvidu.java.client.OpenVidu#fetch()} and then
+	 * {@link io.openvidu.java.client.OpenVidu#getActiveSessions()}
+	 */
+	public List<Session> getActiveSessions() {
+		return new ArrayList<>(OpenVidu.activeSessions.values());
+	}
+
+	/**
+	 * Updates every property of every active Session with the current status they
+	 * have in OpenVidu Server. After calling this method you can acces the updated
+	 * list of active sessions by calling
+	 * {@link io.openvidu.java.client.OpenVidu#getActiveSessions()}
+	 * 
+	 * @throws OpenViduHttpException
+	 * @throws OpenViduJavaClientException
+	 */
+	@SuppressWarnings("unchecked")
+	public boolean fetch() throws OpenViduJavaClientException, OpenViduHttpException {
+		HttpGet request = new HttpGet(this.urlOpenViduServer + API_SESSIONS);
+
+		HttpResponse response;
+		try {
+			response = myHttpClient.execute(request);
+		} catch (IOException e) {
+			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
+		}
+
+		try {
+			int statusCode = response.getStatusLine().getStatusCode();
+			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
+				JSONObject jsonSessions = httpResponseToJson(response);
+				JSONArray jsonArraySessions = (JSONArray) jsonSessions.get("content");
+
+				// Set to store fetched sessionIds and later remove closed sessions
+				Set<String> fetchedSessionIds = new HashSet<>();
+				// Boolean to store if any Session has changed
+				boolean hasChanged = false;
+				jsonArraySessions.forEach(session -> {
+					String sessionId = (String) ((JSONObject) session).get("sessionId");
+					fetchedSessionIds.add(sessionId);
+					OpenVidu.activeSessions.computeIfPresent(sessionId, (sId, s) -> {
+						String beforeJSON = s.toJson();
+						s = s.resetSessionWithJson((JSONObject) session);
+						String afterJSON = s.toJson();
+						log.info("Available session '{}' info fetched. Any change: {}", sessionId,
+								!beforeJSON.equals(afterJSON));
+						return s;
+					});
+					OpenVidu.activeSessions.computeIfAbsent(sessionId, sId -> {
+						log.info("New session '{}' fetched", sessionId);
+						return new Session((JSONObject) session);
+					});
+				});
+
+				// Remove closed sessions from activeSessions map
+				OpenVidu.activeSessions = OpenVidu.activeSessions.entrySet().stream().filter(entry -> {
+					if (fetchedSessionIds.contains(entry.getKey())) {
+						return true;
+					} else {
+						log.info("Removing closed session {}" + entry.getKey());
+						return false;
+					}
+				}).collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
+				log.info("Active sessions info fetched: {}", OpenVidu.activeSessions.keySet());
+				return hasChanged;
+			} else {
+				throw new OpenViduHttpException(statusCode);
+			}
+		} finally {
+			EntityUtils.consumeQuietly(response.getEntity());
 		}
 	}
 

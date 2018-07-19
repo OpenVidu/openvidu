@@ -17,6 +17,9 @@
 
 package io.openvidu.java.client;
 
+/**
+ * See {@link io.openvidu.java.client.Session#generateToken(TokenOptions)}
+ */
 public class TokenOptions {
 
 	private String data;

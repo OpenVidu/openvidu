@@ -17,17 +17,24 @@
 
 package io.openvidu.java.client;
 
+/**
+ * See
+ * {@link io.openvidu.java.client.OpenVidu#startRecording(String, RecordingProperties)}
+ */
 public class RecordingProperties {
 
 	private String name;
 	private RecordingLayout recordingLayout;
 	private String customLayout;
 
+	/**
+	 * Builder for {@link io.openvidu.java.client.RecordingProperties}
+	 */
 	public static class Builder {
 
 		private String name = "";
 		private RecordingLayout recordingLayout;
-		private String customLayout;
+		private String customLayout = "";
 
 		/**
 		 * Builder for {@link io.openvidu.java.client.RecordingProperties}
