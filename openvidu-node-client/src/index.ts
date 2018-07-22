@@ -8,3 +8,5 @@ export * from './RecordingLayout';
 export * from './RecordingMode';
 export * from './Recording';
 export * from './RecordingProperties';
+export * from './Connection';
+export * from './Publisher';

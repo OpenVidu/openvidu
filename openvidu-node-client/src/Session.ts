@@ -15,8 +15,11 @@
  *
  */
 
+import { Connection } from './Connection';
 import { MediaMode } from './MediaMode';
+import { OpenVidu } from './OpenVidu';
 import { OpenViduRole } from './OpenViduRole';
+import { Publisher } from './Publisher';
 import { RecordingLayout } from './RecordingLayout';
 import { RecordingMode } from './RecordingMode';
 import { SessionProperties } from './SessionProperties';
@@ -26,20 +29,53 @@ import axios from 'axios';
 
 export class Session {
 
-    private static readonly API_SESSIONS = '/api/sessions';
-    private static readonly API_TOKENS = '/api/tokens';
-
+    /**
+     * Unique identifier of the Session
+     */
     sessionId: string;
+
+    /**
+     * Properties defining the session
+     */
     properties: SessionProperties;
 
-    private Buffer = require('buffer/').Buffer;
+    /**
+     * Array of active connections to the session. This property always initialize as an empty array and
+     * **will remain unchanged since the last time method [[Session.fetch]] was called**. Exceptions to this rule are:
+     *
+     * - Calling [[Session.forceUnpublish]] also automatically updates each affected Connection status
+     * - Calling [[Session.forceDisconnect]] automatically updates each affected Connection status
+     *
+     * To get the array of active connections with their current actual value, you must call [[Session.fetch]] before consulting
+     * property [[activeConnections]]
+     */
+    activeConnections: Connection[] = [];
 
-    constructor(private hostname: string, private port: number, private basicAuth: string, properties?: SessionProperties) {
-        if (!properties) {
-            this.properties = {};
+    /**
+     * Whether the session is being recorded or not
+     */
+    recording = false;
+
+    /**
+     * @hidden
+     */
+    constructor(propertiesOrJson?) {
+        if (!!propertiesOrJson) {
+            // Defined parameter
+            if (!!propertiesOrJson.sessionId) {
+                // Parameter is a JSON representation of Session ('sessionId' property always defined)
+                this.resetSessionWithJson(propertiesOrJson);
+            } else {
+                // Parameter is a SessionProperties object
+                this.properties = propertiesOrJson;
+            }
         } else {
-            this.properties = properties;
+            // Empty parameter
+            this.properties = {};
         }
+        this.properties.mediaMode = !!this.properties.mediaMode ? this.properties.mediaMode : MediaMode.ROUTED;
+        this.properties.recordingMode = !!this.properties.recordingMode ? this.properties.recordingMode : RecordingMode.MANUAL;
+        this.properties.defaultRecordingLayout = !!this.properties.defaultRecordingLayout ? this.properties.defaultRecordingLayout : RecordingLayout.BEST_FIT;
     }
 
     /**
@@ -64,11 +100,11 @@ export class Session {
             });
 
             axios.post(
-                'https://' + this.hostname + ':' + this.port + Session.API_TOKENS,
+                'https://' + OpenVidu.hostname + ':' + OpenVidu.port + OpenVidu.API_TOKENS,
                 data,
                 {
                     headers: {
-                        'Authorization': this.basicAuth,
+                        'Authorization': OpenVidu.basicAuth,
                         'Content-Type': 'application/json'
                     }
                 }
@@ -101,15 +137,15 @@ export class Session {
     /**
      * Gracefully closes the Session: unpublishes all streams and evicts every participant
      *
-     * @returns A Promise that is resolved to the if the session has been closed successfully and rejected with an Error object if not
+     * @returns A Promise that is resolved if the session has been closed successfully and rejected with an Error object if not
      */
-    public close() {
-        return new Promise<string>((resolve, reject) => {
+    public close(): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
             axios.delete(
-                'https://' + this.hostname + ':' + this.port + Session.API_SESSIONS + '/' + this.sessionId,
+                'https://' + OpenVidu.hostname + ':' + OpenVidu.port + OpenVidu.API_SESSIONS + '/' + this.sessionId,
                 {
                     headers: {
-                        'Authorization': this.basicAuth,
+                        'Authorization': OpenVidu.basicAuth,
                         'Content-Type': 'application/x-www-form-urlencoded'
                     }
                 }
@@ -117,6 +153,176 @@ export class Session {
                 .then(res => {
                     if (res.status === 204) {
                         // SUCCESS response from openvidu-server
+                        const indexToRemove: number = OpenVidu.getActiveSessions().findIndex(s => s.sessionId === this.sessionId);
+                        OpenVidu.getActiveSessions().splice(indexToRemove, 1);
+                        resolve();
+                    } else {
+                        // ERROR response from openvidu-server. Resolve HTTP status
+                        reject(new Error(res.status.toString()));
+                    }
+                }).catch(error => {
+                    if (error.response) {
+                        // The request was made and the server responded with a status code (not 2xx)
+                        reject(new Error(error.response.status.toString()));
+                    } else if (error.request) {
+                        // The request was made but no response was received
+                        // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+                        // http.ClientRequest in node.js
+                        console.error(error.request);
+                    } else {
+                        // Something happened in setting up the request that triggered an Error
+                        console.error('Error', error.message);
+                    }
+                });
+        });
+    }
+
+    /**
+     * Updates every property of the Session with the current status it has in OpenVidu Server. This is especially useful for accessing the list of active
+     * connections to the Session ([[Session.activeConnections]]) and use those values to call [[Session.forceDisconnect]] or [[Session.forceUnpublish]]
+     *
+     * @returns A promise resolved to true if the Session status has changed with respect to the server, or to false if not.
+     *          This applies to any property or sub-property of the Session object
+     */
+    public fetch(): Promise<boolean> {
+        return new Promise<boolean>((resolve, reject) => {
+            const beforeJSON: string = JSON.stringify(this);
+            axios.get(
+                'https://' + OpenVidu.hostname + ':' + OpenVidu.port + OpenVidu.API_SESSIONS + '/' + this.sessionId,
+                {
+                    headers: {
+                        'Authorization': OpenVidu.basicAuth,
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    }
+                }
+            )
+                .then(res => {
+                    if (res.status === 200) {
+                        // SUCCESS response from openvidu-server
+                        this.resetSessionWithJson(res.data);
+                        const afterJSON: string = JSON.stringify(this);
+                        const hasChanged: boolean = !(beforeJSON === afterJSON);
+                        console.log("Session info fetched for session '" + this.sessionId + "'. Any change: " + hasChanged);
+                        resolve(hasChanged);
+                    } else {
+                        // ERROR response from openvidu-server. Resolve HTTP status
+                        reject(new Error(res.status.toString()));
+                    }
+                }).catch(error => {
+                    if (error.response) {
+                        // The request was made and the server responded with a status code (not 2xx)
+                        reject(new Error(error.response.status.toString()));
+                    } else if (error.request) {
+                        // The request was made but no response was received
+                        // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+                        // http.ClientRequest in node.js
+                        console.error(error.request);
+                    } else {
+                        // Something happened in setting up the request that triggered an Error
+                        console.error('Error', error.message);
+                    }
+                });
+        });
+    }
+
+    /**
+     * Forces the user with Connection `connectionId` to leave the session. OpenVidu Browser will trigger the proper events on the client-side
+     * (`streamDestroyed`, `connectionDestroyed`, `sessionDisconnected`) with reason set to `"forceDisconnectByServer"`
+     *
+     * You can get `connection` parameter from [[Session.activeConnections]] array ([[Connection.connectionId]] for getting each `connectionId` property).
+     * Remember to call [[Session.fetch]] before to fetch the current actual properties of the Session from OpenVidu Server
+     *
+     * @returns A Promise that is resolved if the user was successfully disconnected and rejected with an Error object if not
+     */
+    public forceDisconnect(connection: string | Connection): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
+            const connectionId: string = typeof connection === 'string' ? connection : (<Connection>connection).connectionId;
+            axios.delete(
+                'https://' + OpenVidu.hostname + ':' + OpenVidu.port + OpenVidu.API_SESSIONS + '/' + this.sessionId + '/connection/' + connectionId,
+                {
+                    headers: {
+                        'Authorization': OpenVidu.basicAuth,
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    }
+                })
+                .then(res => {
+                    if (res.status === 204) {
+                        // SUCCESS response from openvidu-server
+                        // Remove connection from activeConnections array
+                        let connectionClosed;
+                        this.activeConnections = this.activeConnections.filter(con => {
+                            if (con.connectionId !== connectionId) {
+                                return true;
+                            } else {
+                                connectionClosed = con;
+                                return false;
+                            }
+                        });
+                        // Remove every Publisher of the closed connection from every subscriber list of other connections
+                        if (!!connectionClosed) {
+                            connectionClosed.publishers.forEach(publisher => {
+                                this.activeConnections.forEach(con => {
+                                    con.subscribers = con.subscribers.filter(subscriber => subscriber !== publisher.streamId);
+                                });
+                            });
+                        } else {
+                            console.warn("The closed connection wasn't fetched in OpenVidu Java Client. No changes in the collection of active connections of the Session");
+                        }
+                        console.log("Connection '" + connectionId + "' closed");
+                        resolve();
+                    } else {
+                        // ERROR response from openvidu-server. Resolve HTTP status
+                        reject(new Error(res.status.toString()));
+                    }
+                })
+                .catch(error => {
+                    if (error.response) {
+                        // The request was made and the server responded with a status code (not 2xx)
+                        reject(new Error(error.response.status.toString()));
+                    } else if (error.request) {
+                        // The request was made but no response was received
+                        // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+                        // http.ClientRequest in node.js
+                        console.error(error.request);
+                    } else {
+                        // Something happened in setting up the request that triggered an Error
+                        console.error('Error', error.message);
+                    }
+                });
+        });
+    }
+
+    /**
+     * Forces some user to unpublish a Stream (identified by its `streamId` or the corresponding [[Publisher]] object owning it).
+     * OpenVidu Browser will trigger the proper events on the client-side (`streamDestroyed`) with reason set to `"forceUnpublishByServer"`.
+     *
+     * You can get `publisher` parameter from [[Connection.publishers]] array ([[Publisher.streamId]] for getting each `streamId` property).
+     * Remember to call [[Session.fetch]] before to fetch the current actual properties of the Session from OpenVidu Server
+     *
+     * @returns A Promise that is resolved if the stream was successfully unpublished and rejected with an Error object if not
+     */
+    public forceUnpublish(publisher: string | Publisher): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
+            const streamId: string = typeof publisher === 'string' ? publisher : (<Publisher>publisher).streamId;
+            axios.delete(
+                'https://' + OpenVidu.hostname + ':' + OpenVidu.port + OpenVidu.API_SESSIONS + '/' + this.sessionId + '/stream/' + streamId,
+                {
+                    headers: {
+                        'Authorization': OpenVidu.basicAuth,
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    }
+                }
+            )
+                .then(res => {
+                    if (res.status === 204) {
+                        // SUCCESS response from openvidu-server
+                        this.activeConnections.forEach(connection => {
+                            // Try to remove the Publisher from the Connection publishers collection
+                            connection.publishers = connection.publishers.filter(pub => pub.streamId !== streamId);
+                            // Try to remove the Publisher from the Connection subscribers collection
+                            connection.subscribers = connection.subscribers.filter(sub => sub !== streamId);
+                        });
+                        console.log("Stream '" + streamId + "' unpublished");
                         resolve();
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
@@ -158,11 +364,11 @@ export class Session {
             });
 
             axios.post(
-                'https://' + this.hostname + ':' + this.port + Session.API_SESSIONS,
+                'https://' + OpenVidu.hostname + ':' + OpenVidu.port + OpenVidu.API_SESSIONS,
                 data,
                 {
                     headers: {
-                        'Authorization': this.basicAuth,
+                        'Authorization': OpenVidu.basicAuth,
                         'Content-Type': 'application/json'
                     }
                 }
@@ -197,6 +403,45 @@ export class Session {
                     }
                 });
         });
+    }
+
+    /**
+     * @hidden
+     */
+    public resetSessionWithJson(json): Session {
+        this.sessionId = json.sessionId;
+        this.recording = json.recording;
+        let customSessionId: string;
+        let defaultCustomLayout: string;
+        if (!!this.properties) {
+            customSessionId = this.properties.customSessionId;
+            defaultCustomLayout = !!json.defaultCustomLayout ? json.defaultCustomLayout : this.properties.defaultCustomLayout;
+        }
+        this.properties = {
+            mediaMode: json.mediaMode,
+            recordingMode: json.recordingMode,
+            defaultRecordingLayout: json.defaultRecordingLayout
+        };
+        if (!!customSessionId) {
+            this.properties.customSessionId = customSessionId;
+        }
+        if (!!defaultCustomLayout) {
+            this.properties.defaultCustomLayout = defaultCustomLayout;
+        }
+
+        this.activeConnections = [];
+        json.connections.content.forEach(connection => {
+            const publishers: Publisher[] = [];
+            connection.publishers.forEach(publisher => {
+                publishers.push(new Publisher(publisher));
+            });
+            const subscribers: string[] = [];
+            connection.subscribers.forEach(subscriber => {
+                subscribers.push(subscriber.streamId);
+            });
+            this.activeConnections.push(new Connection(connection.connectionId, connection.role, connection.token, connection.serverData, connection.clientData, publishers, subscribers));
+        });
+        return this;
     }
 
 }

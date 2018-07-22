@@ -15,6 +15,9 @@
  *
  */
 
+/**
+ * See [[SessionProperties.mediaMode]]
+ */
 export enum MediaMode {
 
     /**

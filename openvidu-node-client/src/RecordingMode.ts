@@ -15,6 +15,9 @@
  *
  */
 
+/**
+ * See [[SessionProperties.recordingMode]]
+ */
 export enum RecordingMode {
 
     /**

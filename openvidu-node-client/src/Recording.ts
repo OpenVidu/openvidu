@@ -17,6 +17,9 @@
 
 import { RecordingLayout } from './RecordingLayout';
 
+/**
+ * See [[OpenVidu.startRecording]]
+ */
 export class Recording {
 
     /**
@@ -77,6 +80,9 @@ export class Recording {
     recordingLayout: RecordingLayout;
 
     /* tslint:disable:no-string-literal */
+    /**
+     * @hidden
+     */
     constructor(json: JSON) {
         this.id = json['id'];
         this.sessionId = json['sessionId'];
@@ -94,6 +100,10 @@ export class Recording {
 }
 
 export namespace Recording {
+
+    /**
+     * See [[Recording.status]]
+     */
     export enum Status {
 
         /**
@@ -114,7 +124,7 @@ export namespace Recording {
         /**
          * The recording is available for downloading. This status is reached for all
          * stopped recordings if [OpenVidu Server configuration](https://openvidu.io/docs/reference-docs/openvidu-server-params/)
-         * property <code>openvidu.recording.public-access</code> is true
+         * property `openvidu.recording.public-access` is true
          */
         available,
 

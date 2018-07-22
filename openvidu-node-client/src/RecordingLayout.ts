@@ -15,6 +15,9 @@
  *
  */
 
+/**
+ * See [[SessionProperties.defaultRecordingLayout]] and [[RecordingProperties.recordingLayout]]
+ */
 export enum RecordingLayout {
 
     /**

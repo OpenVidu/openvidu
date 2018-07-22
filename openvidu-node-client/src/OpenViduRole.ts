@@ -15,6 +15,9 @@
  *
  */
 
+/**
+ * See [[TokenOptions.role]]
+ */
 export enum OpenViduRole {
 
     /**
