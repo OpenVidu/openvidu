@@ -418,14 +418,10 @@ export class OpenVidu {
                 console.log("New session '" + session.sessionId + "' info fetched");
                 hasChanged = true;
               }
-
-              // Remove closed sessions from activeSessions array
-              this.activeSessions = this.activeSessions.filter(session => (!!fetchedSessionIds.find(sId => sId === session.sessionId)));
-              console.log('Active sessions info fetched: ', fetchedSessionIds);
             });
-            if (res.data.content.length === 0) {
-              console.warn('No active sessions');
-            }
+            // Remove closed sessions from activeSessions array
+            this.activeSessions = this.activeSessions.filter(session => (!!fetchedSessionIds.find(sId => sId === session.sessionId)));
+            console.log('Active sessions info fetched: ', fetchedSessionIds);
             resolve(hasChanged);
           } else {
             // ERROR response from openvidu-server. Resolve HTTP status
