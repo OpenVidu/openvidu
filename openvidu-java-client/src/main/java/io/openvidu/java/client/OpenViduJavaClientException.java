@@ -24,11 +24,11 @@ public class OpenViduJavaClientException extends Exception {
 
 	private static final long serialVersionUID = 1L;
 
-	public OpenViduJavaClientException(String message) {
+	protected OpenViduJavaClientException(String message) {
 		super(message);
 	}
 
-	public OpenViduJavaClientException(String message, Throwable cause) {
+	protected OpenViduJavaClientException(String message, Throwable cause) {
 		super(message, cause);
 	}
 

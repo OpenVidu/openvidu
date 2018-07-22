@@ -71,7 +71,7 @@ public class Recording {
 	private boolean hasVideo = true;
 	private RecordingProperties recordingProperties;
 
-	public Recording(JSONObject json) {
+	protected Recording(JSONObject json) {
 		this.id = (String) json.get("id");
 		this.sessionId = (String) json.get("sessionId");
 		this.createdAt = (long) json.get("createdAt");

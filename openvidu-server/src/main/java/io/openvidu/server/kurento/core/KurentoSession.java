@@ -383,7 +383,9 @@ public class KurentoSession implements Session {
 		JSONObject connections = new JSONObject();
 		JSONArray participants = new JSONArray();
 		this.participants.values().forEach(p -> {
-			participants.add(toJsonFunction.apply(p));
+			if (!ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(p.getParticipantPublicId())) {
+				participants.add(toJsonFunction.apply(p));
+			}
 		});
 		connections.put("numberOfElements", participants.size());
 		connections.put("content", participants);

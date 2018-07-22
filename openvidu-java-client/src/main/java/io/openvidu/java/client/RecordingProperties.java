@@ -46,7 +46,9 @@ public class RecordingProperties {
 		/**
 		 * Call this method to set the name of the video file. You can access this same
 		 * value in your clients on recording events (<code>recordingStarted</code>,
-		 * <code>recordingStopped</code>)
+		 * <code>recordingStopped</code>). <strong>WARNING: this parameter follows an
+		 * overwriting policy.</strong> If you name two recordings the same, the newest
+		 * MP4 file will overwrite the oldest one
 		 */
 		public RecordingProperties.Builder name(String name) {
 			this.name = name;
@@ -86,7 +88,9 @@ public class RecordingProperties {
 	/**
 	 * Defines the name you want to give to the video file. You can access this same
 	 * value in your clients on recording events (<code>recordingStarted</code>,
-	 * <code>recordingStopped</code>)
+	 * <code>recordingStopped</code>). <strong>WARNING: this parameter follows an
+	 * overwriting policy.</strong> If you name two recordings the same, the newest
+	 * MP4 file will overwrite the oldest one
 	 */
 	public String name() {
 		return this.name;

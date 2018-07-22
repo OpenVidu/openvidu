@@ -20,89 +20,104 @@ package io.openvidu.java.client;
 import org.json.simple.JSONObject;
 
 /**
- * See {@link io.openvidu.java.client.Connection#getPublishers()}
+ * See {@link io.openvidu.java.client.Connection#getPublishers()}.
+ * 
+ * <br>
+ * This is a backend representation of a published media stream (see
+ * <a href="/api/openvidu-browser/classes/stream.html" target="_blank"> OpenVidu
+ * Browser Stream class</a>).
  */
 public class Publisher {
 
-	class MediaOptions {
-
-		protected MediaOptions(boolean hasAudio, boolean hasVideo, Boolean audioActive, Boolean videoActive,
-				Integer frameRate, String typeOfVideo, String videoDimensions) {
-			this.hasAudio = hasAudio;
-			this.hasVideo = hasVideo;
-			this.audioActive = audioActive;
-			this.videoActive = videoActive;
-			this.frameRate = frameRate;
-			this.typeOfVideo = typeOfVideo;
-			this.videoDimensions = videoDimensions;
-		}
-
-		boolean hasVideo;
-		boolean hasAudio;
-		Boolean audioActive;
-		Boolean videoActive;
-		Integer frameRate;
-		String typeOfVideo;
-		String videoDimensions;
-
-	}
-
 	private String streamId;
-	private MediaOptions mediaOptions;
+	private boolean hasVideo;
+	private boolean hasAudio;
+	private Boolean audioActive;
+	private Boolean videoActive;
+	private Integer frameRate;
+	private String typeOfVideo;
+	private String videoDimensions;
 
-	public Publisher(String streamId, boolean hasAudio, boolean hasVideo, Object audioActive, Object videoActive,
+	protected Publisher(String streamId, boolean hasAudio, boolean hasVideo, Object audioActive, Object videoActive,
 			Object frameRate, Object typeOfVideo, Object videoDimensions) {
 		this.streamId = streamId;
-		Boolean audioActiveAux = null;
-		Boolean videoActiveAux = null;
-		Integer frameRateAux = null;
-		String typeOfVideoAux = null;
-		String videoDimensionsAux = null;
-		if (hasAudio) {
-			audioActiveAux = (boolean) audioActive;
+		this.hasAudio = hasAudio;
+		this.hasVideo = hasVideo;
+		this.audioActive = (Boolean) audioActive;
+		this.videoActive = (Boolean) videoActive;
+		if (frameRate != null) {
+			this.frameRate = ((Long) frameRate).intValue();
 		}
-		if (hasVideo) {
-			videoActiveAux = (boolean) videoActive;
-			if (frameRate != null) {
-				frameRateAux = ((Long) frameRate).intValue();
-			}
-			typeOfVideoAux = (String) typeOfVideo;
-			videoDimensionsAux = (String) videoDimensions;
-		}
-		this.mediaOptions = new MediaOptions(hasAudio, hasVideo, audioActiveAux, videoActiveAux, frameRateAux,
-				typeOfVideoAux, videoDimensionsAux);
+		this.typeOfVideo = (String) typeOfVideo;
+		this.videoDimensions = (String) videoDimensions;
 	}
 
+	/**
+	 * Returns the unique identifier of the
+	 * <a href="/api/openvidu-browser/classes/stream.html" target=
+	 * "_blank">Stream</a> associated to this Publisher. Each Publisher is paired
+	 * with only one Stream, so you can identify each Publisher by its
+	 * <a href="/api/openvidu-browser/classes/stream.html#streamid" target=
+	 * "_blank"><code>Stream.streamId</code></a>
+	 */
 	public String getStreamId() {
 		return streamId;
 	}
 
+	/**
+	 * See properties of <a href="/api/openvidu-browser/classes/stream.html" target=
+	 * "_blank">Stream</a> object in OpenVidu Browser library to find out more
+	 */
 	public boolean hasVideo() {
-		return this.mediaOptions.hasVideo;
+		return this.hasVideo;
 	}
 
+	/**
+	 * See properties of <a href="/api/openvidu-browser/classes/stream.html" target=
+	 * "_blank">Stream</a> object in OpenVidu Browser library to find out more
+	 */
 	public boolean hasAudio() {
-		return this.mediaOptions.hasAudio;
+		return this.hasAudio;
 	}
 
+	/**
+	 * See properties of <a href="/api/openvidu-browser/classes/stream.html" target=
+	 * "_blank">Stream</a> object in OpenVidu Browser library to find out more
+	 */
 	public Boolean isAudioActive() {
-		return this.mediaOptions.audioActive;
+		return this.audioActive;
 	}
 
+	/**
+	 * See properties of <a href="/api/openvidu-browser/classes/stream.html" target=
+	 * "_blank">Stream</a> object in OpenVidu Browser library to find out more
+	 */
 	public Boolean isVideoActive() {
-		return this.mediaOptions.videoActive;
+		return this.videoActive;
 	}
 
+	/**
+	 * See properties of <a href="/api/openvidu-browser/classes/stream.html" target=
+	 * "_blank">Stream</a> object in OpenVidu Browser library to find out more
+	 */
 	public Integer getFrameRate() {
-		return this.mediaOptions.frameRate;
+		return this.frameRate;
 	}
 
+	/**
+	 * See properties of <a href="/api/openvidu-browser/classes/stream.html" target=
+	 * "_blank">Stream</a> object in OpenVidu Browser library to find out more
+	 */
 	public String getTypeOfVideo() {
-		return this.mediaOptions.typeOfVideo;
+		return this.typeOfVideo;
 	}
 
+	/**
+	 * See properties of <a href="/api/openvidu-browser/classes/stream.html" target=
+	 * "_blank">Stream</a> object in OpenVidu Browser library to find out more
+	 */
 	public String getVideoDimensions() {
-		return this.mediaOptions.videoDimensions;
+		return this.videoDimensions;
 	}
 
 	@SuppressWarnings("unchecked")

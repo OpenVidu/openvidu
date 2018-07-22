@@ -25,10 +25,13 @@ public class OpenViduHttpException extends Exception {
 	private static final long serialVersionUID = 1L;
 	private int status;
 
-	public OpenViduHttpException(int status) {
+	protected OpenViduHttpException(int status) {
 		super(Integer.toString(status));
 	}
-
+	
+	/**
+	 * @return The unexpected status of the HTTP request
+	 */
 	public int getStatus() {
 		return this.status;
 	}

@@ -27,7 +27,6 @@ import java.util.stream.Collectors;
 
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -44,25 +43,17 @@ public class Session {
 
 	private static final Logger log = LoggerFactory.getLogger(Session.class);
 
-	private HttpClient httpClient;
-	private String urlOpenViduServer;
 	private String sessionId;
 	private SessionProperties properties;
 	private Map<String, Connection> activeConnections = new ConcurrentHashMap<>();
 	private boolean recording = false;
 
-	protected Session(HttpClient httpClient, String urlOpenViduServer)
-			throws OpenViduJavaClientException, OpenViduHttpException {
-		this.httpClient = httpClient;
-		this.urlOpenViduServer = urlOpenViduServer;
+	protected Session() throws OpenViduJavaClientException, OpenViduHttpException {
 		this.properties = new SessionProperties.Builder().build();
 		this.getSessionIdHttp();
 	}
 
-	protected Session(HttpClient httpClient, String urlOpenViduServer, SessionProperties properties)
-			throws OpenViduJavaClientException, OpenViduHttpException {
-		this.httpClient = httpClient;
-		this.urlOpenViduServer = urlOpenViduServer;
+	protected Session(SessionProperties properties) throws OpenViduJavaClientException, OpenViduHttpException {
 		this.properties = properties;
 		this.getSessionIdHttp();
 	}
@@ -111,7 +102,7 @@ public class Session {
 			this.getSessionId();
 		}
 
-		HttpPost request = new HttpPost(this.urlOpenViduServer + OpenVidu.API_TOKENS);
+		HttpPost request = new HttpPost(OpenVidu.urlOpenViduServer + OpenVidu.API_TOKENS);
 
 		JSONObject json = new JSONObject();
 		json.put("session", this.sessionId);
@@ -129,7 +120,7 @@ public class Session {
 
 		HttpResponse response;
 		try {
-			response = httpClient.execute(request);
+			response = OpenVidu.httpClient.execute(request);
 		} catch (IOException e2) {
 			throw new OpenViduJavaClientException(e2.getMessage(), e2.getCause());
 		}
@@ -156,12 +147,12 @@ public class Session {
 	 * @throws OpenViduHttpException
 	 */
 	public void close() throws OpenViduJavaClientException, OpenViduHttpException {
-		HttpDelete request = new HttpDelete(this.urlOpenViduServer + OpenVidu.API_SESSIONS + "/" + this.sessionId);
+		HttpDelete request = new HttpDelete(OpenVidu.urlOpenViduServer + OpenVidu.API_SESSIONS + "/" + this.sessionId);
 		request.setHeader(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded");
 
 		HttpResponse response;
 		try {
-			response = httpClient.execute(request);
+			response = OpenVidu.httpClient.execute(request);
 		} catch (IOException e) {
 			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
 		}
@@ -185,8 +176,8 @@ public class Session {
 	 * connections to the Session
 	 * ({@link io.openvidu.java.client.Session#getActiveConnections()}) and use
 	 * those values to call
-	 * {@link io.openvidu.java.client.Session#forceDisconnect(String)} or
-	 * {@link io.openvidu.java.client.Session#forceUnpublish(String)}
+	 * {@link io.openvidu.java.client.Session#forceDisconnect(Connection)} or
+	 * {@link io.openvidu.java.client.Session#forceUnpublish(Publisher)}
 	 * 
 	 * @return true if the Session status has changed with respect to the server,
 	 *         false if not. This applies to any property or sub-property of the
@@ -197,12 +188,12 @@ public class Session {
 	 */
 	public boolean fetch() throws OpenViduJavaClientException, OpenViduHttpException {
 		String beforeJSON = this.toJson();
-		HttpGet request = new HttpGet(this.urlOpenViduServer + OpenVidu.API_SESSIONS + "/" + this.sessionId);
+		HttpGet request = new HttpGet(OpenVidu.urlOpenViduServer + OpenVidu.API_SESSIONS + "/" + this.sessionId);
 		request.setHeader(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded");
 
 		HttpResponse response;
 		try {
-			response = httpClient.execute(request);
+			response = OpenVidu.httpClient.execute(request);
 		} catch (IOException e) {
 			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
 		}
@@ -257,13 +248,13 @@ public class Session {
 	 * @throws OpenViduHttpException
 	 */
 	public void forceDisconnect(String connectionId) throws OpenViduJavaClientException, OpenViduHttpException {
-		HttpDelete request = new HttpDelete(
-				this.urlOpenViduServer + OpenVidu.API_SESSIONS + "/" + this.sessionId + "/connection/" + connectionId);
+		HttpDelete request = new HttpDelete(OpenVidu.urlOpenViduServer + OpenVidu.API_SESSIONS + "/" + this.sessionId
+				+ "/connection/" + connectionId);
 		request.setHeader(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded");
 
 		HttpResponse response = null;
 		try {
-			response = httpClient.execute(request);
+			response = OpenVidu.httpClient.execute(request);
 		} catch (IOException e) {
 			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
 		}
@@ -277,7 +268,11 @@ public class Session {
 				// other connections
 				if (connectionClosed != null) {
 					for (Publisher publisher : connectionClosed.getPublishers()) {
-						this.removeSubscribersForPublisher(publisher);
+						String streamId = publisher.getStreamId();
+						for (Connection connection : this.activeConnections.values()) {
+							connection.setSubscribers(connection.getSubscribers().stream()
+									.filter(subscriber -> !streamId.equals(subscriber)).collect(Collectors.toList()));
+						}
 					}
 				} else {
 					log.warn(
@@ -332,12 +327,12 @@ public class Session {
 	 */
 	public void forceUnpublish(String streamId) throws OpenViduJavaClientException, OpenViduHttpException {
 		HttpDelete request = new HttpDelete(
-				this.urlOpenViduServer + OpenVidu.API_SESSIONS + "/" + this.sessionId + "/stream/" + streamId);
+				OpenVidu.urlOpenViduServer + OpenVidu.API_SESSIONS + "/" + this.sessionId + "/stream/" + streamId);
 		request.setHeader(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded");
 
 		HttpResponse response;
 		try {
-			response = httpClient.execute(request);
+			response = OpenVidu.httpClient.execute(request);
 		} catch (IOException e) {
 			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
 		}
@@ -383,14 +378,7 @@ public class Session {
 	}
 
 	/**
-	 * Returns whether the session is being recorded or not. <strong>This value will
-	 * be the same as the one that returned method
-	 * {@link io.openvidu.java.client.Session#fetch()} the last time it was
-	 * called.</strong>
-	 * 
-	 * To get the current actual value, you must call first
-	 * {@link io.openvidu.java.client.Session#fetch()} and then
-	 * {@link io.openvidu.java.client.Session#isBeingRecorded()}
+	 * Returns whether the session is being recorded or not
 	 */
 	public boolean isBeingRecorded() {
 		return this.recording;
@@ -418,7 +406,7 @@ public class Session {
 			return;
 		}
 
-		HttpPost request = new HttpPost(this.urlOpenViduServer + OpenVidu.API_SESSIONS);
+		HttpPost request = new HttpPost(OpenVidu.urlOpenViduServer + OpenVidu.API_SESSIONS);
 
 		JSONObject json = new JSONObject();
 		json.put("mediaMode", properties.mediaMode().name());
@@ -438,7 +426,7 @@ public class Session {
 
 		HttpResponse response;
 		try {
-			response = httpClient.execute(request);
+			response = OpenVidu.httpClient.execute(request);
 		} catch (IOException e2) {
 			throw new OpenViduJavaClientException(e2.getMessage(), e2.getCause());
 		}
@@ -470,12 +458,8 @@ public class Session {
 		return json;
 	}
 
-	private void removeSubscribersForPublisher(Publisher publisher) {
-		String streamId = publisher.getStreamId();
-		for (Connection connection : this.activeConnections.values()) {
-			connection.setSubscribers(connection.getSubscribers().stream()
-					.filter(subscriber -> !streamId.equals(subscriber)).collect(Collectors.toList()));
-		}
+	protected void setIsBeingRecorded(boolean recording) {
+		this.recording = recording;
 	}
 
 	@SuppressWarnings("unchecked")
