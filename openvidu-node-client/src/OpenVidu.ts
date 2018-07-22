@@ -170,7 +170,12 @@ export class OpenVidu {
           if (res.status === 200) {
             // SUCCESS response from openvidu-server (Recording in JSON format). Resolve new Recording
             const r: Recording = new Recording(res.data);
-            this.activeSessions.find(s => s.sessionId === r.sessionId).recording = true;
+            const activeSession = this.activeSessions.find(s => s.sessionId === r.sessionId);
+            if (!!activeSession) {
+              activeSession.recording = true;
+            } else {
+              console.warn("No active session found for sessionId '" + r.sessionId + "'. This instance of OpenVidu Node Client didn't create this session");
+            }
             resolve(r);
           } else {
             // ERROR response from openvidu-server. Resolve HTTP status
@@ -219,7 +224,12 @@ export class OpenVidu {
           if (res.status === 200) {
             // SUCCESS response from openvidu-server (Recording in JSON format). Resolve new Recording
             const r: Recording = new Recording(res.data);
-            this.activeSessions.find(s => s.sessionId === r.sessionId).recording = false;
+            const activeSession = this.activeSessions.find(s => s.sessionId === r.sessionId);
+            if (!!activeSession) {
+              activeSession.recording = false;
+            } else {
+              console.warn("No active session found for sessionId '" + r.sessionId + "'. This instance of OpenVidu Node Client didn't create this session");
+            }
             resolve(r);
           } else {
             // ERROR response from openvidu-server. Resolve HTTP status

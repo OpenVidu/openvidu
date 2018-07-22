@@ -217,7 +217,13 @@ public class OpenVidu {
 			int statusCode = response.getStatusLine().getStatusCode();
 			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
 				Recording r = new Recording(httpResponseToJson(response));
-				OpenVidu.activeSessions.get(r.getSessionId()).setIsBeingRecorded(true);
+				Session activeSession = OpenVidu.activeSessions.get(r.getSessionId());
+				if (activeSession != null) {
+					activeSession.setIsBeingRecorded(true);
+				} else {
+					log.warn("No active session found for sessionId '" + r.getSessionId()
+							+ "'. This instance of OpenVidu Java Client didn't create this session");
+				}
 				return r;
 			} else {
 				throw new OpenViduHttpException(statusCode);
@@ -332,7 +338,13 @@ public class OpenVidu {
 			int statusCode = response.getStatusLine().getStatusCode();
 			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
 				Recording r = new Recording(httpResponseToJson(response));
-				OpenVidu.activeSessions.get(r.getSessionId()).setIsBeingRecorded(false);
+				Session activeSession = OpenVidu.activeSessions.get(r.getSessionId());
+				if (activeSession != null) {
+					activeSession.setIsBeingRecorded(false);
+				} else {
+					log.warn("No active session found for sessionId '" + r.getSessionId()
+							+ "'. This instance of OpenVidu Java Client didn't create this session");
+				}
 				return r;
 			} else {
 				throw new OpenViduHttpException(statusCode);

@@ -56,6 +56,7 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
   sessions: Session[] = [];
 
   // OpenVidu Node Client objects
+  OV_NodeClient: OpenViduAPI;
   sessionProperties: SessionPropertiesAPI = {
     mediaMode: MediaMode.ROUTED,
     recordingMode: RecordingMode.MANUAL,
@@ -274,11 +275,11 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
   }
 
   private getToken(): Promise<string> {
-    const OV_NodeClient = new OpenViduAPI(this.openviduUrl, this.openviduSecret);
+    this.OV_NodeClient = new OpenViduAPI(this.openviduUrl, this.openviduSecret);
     if (!this.sessionProperties.customSessionId) {
       this.sessionProperties.customSessionId = this.fixedSessionId;
     }
-    return OV_NodeClient.createSession(this.sessionProperties)
+    return this.OV_NodeClient.createSession(this.sessionProperties)
       .then(session_NodeClient => {
         return session_NodeClient.generateToken();
       });

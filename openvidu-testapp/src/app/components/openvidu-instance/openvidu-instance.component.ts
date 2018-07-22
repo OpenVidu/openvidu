@@ -77,6 +77,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   subscribers: Subscriber[] = [];
 
   // OpenVidu Node Client objects
+  OV_NodeClient: OpenViduAPI;
   sessionAPI: SessionAPI;
   sessionProperties: SessionPropertiesAPI = {
     mediaMode: MediaMode.ROUTED,
@@ -515,7 +516,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   openSessionApiDialog() {
     const dialogRef = this.dialog.open(SessionApiDialogComponent, {
       data: {
-        openVidu: new OpenViduAPI(this.openviduUrl, this.openviduSecret),
+        openVidu: this.OV_NodeClient,
         session: this.sessionAPI,
         sessionId: !!this.session ? this.session.sessionId : this.sessionName
       },
@@ -597,11 +598,11 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   getToken(): Promise<string> {
-    const OV_NodeClient = new OpenViduAPI(this.openviduUrl, this.openviduSecret);
+    this.OV_NodeClient = new OpenViduAPI(this.openviduUrl, this.openviduSecret);
     if (!this.sessionProperties.customSessionId) {
       this.sessionProperties.customSessionId = this.sessionName;
     }
-    return OV_NodeClient.createSession(this.sessionProperties)
+    return this.OV_NodeClient.createSession(this.sessionProperties)
       .then(session_NodeClient => {
         this.sessionAPI = session_NodeClient;
         return session_NodeClient.generateToken({ role: this.participantRole });
