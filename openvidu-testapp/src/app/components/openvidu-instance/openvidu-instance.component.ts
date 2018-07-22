@@ -403,7 +403,9 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     if (this.sessionEvents.publisherStopSpeaking !== oldValues.publisherStopSpeaking || firstTime) {
-      this.session.off('publisherStopSpeaking');
+      if (!this.sessionEvents.publisherStartSpeaking) {
+        this.session.off('publisherStopSpeaking');
+      }
       if (this.sessionEvents.publisherStopSpeaking) {
         this.session.on('publisherStopSpeaking', (event: PublisherSpeakingEvent) => {
           this.updateEventList('publisherStopSpeaking', event.connection.connectionId);
