@@ -1,38 +1,38 @@
 {
-  "name": "openvidu-node-client",
-  "version": "2.2.0",
-  "description": "OpenVidu Node Client",
-  "author": "OpenVidu",
-  "license": "Apache-2.0",
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/OpenVidu/openvidu"
-  },
-  "main": "lib/index.js",
-  "typings": "lib/index.d.ts",
-  "scripts": {
-    "build": "tsc",
-    "docs": "grunt --gruntfile config/typedoc/custom-theme/gruntfile.js && typedoc --options ./config/typedoc/typedoc.js --out ./docs ./src && rm -rf ../../openvidu.io/api/openvidu-node-client/* && cp -R ./docs/. ../../openvidu.io/api/openvidu-node-client"
-  },
-  "dependencies": {
-    "axios": "^0.18.0",
-    "buffer": "^5.1.0"
-  },
-  "devDependencies": {
-    "@types/node": "10.3.2",
-    "ts-node": "6.1.0",
-    "tslint": "5.10.0",
-    "typedoc": "^0.11.1",
-    "typedoc-plugin-sourcefile-url": "^1.0.3",
-    "typescript": "2.9.1",
-    "grunt": "1.0.3",
-    "grunt-autoprefixer": "3.0.4",
-    "grunt-cli": "1.2.0",
-    "grunt-contrib-copy": "1.0.0",
-    "grunt-contrib-sass": "1.0.0",
-    "grunt-contrib-uglify": "3.3.0",
-    "grunt-contrib-watch": "1.1.0",
-    "grunt-string-replace": "1.3.1",
-    "grunt-ts": "6.0.0-beta.19"
-  }
+    "author": "OpenVidu",
+    "dependencies": {
+        "axios": "^0.18.0",
+        "buffer": "^5.1.0"
+    },
+    "description": "OpenVidu Node Client",
+    "devDependencies": {
+        "@types/node": "10.3.2",
+        "grunt": "1.0.3",
+        "grunt-autoprefixer": "3.0.4",
+        "grunt-cli": "1.2.0",
+        "grunt-contrib-copy": "1.0.0",
+        "grunt-contrib-sass": "1.0.0",
+        "grunt-contrib-uglify": "3.3.0",
+        "grunt-contrib-watch": "1.1.0",
+        "grunt-string-replace": "1.3.1",
+        "grunt-ts": "6.0.0-beta.19",
+        "ts-node": "6.1.0",
+        "tslint": "5.10.0",
+        "typedoc": "^0.11.1",
+        "typedoc-plugin-sourcefile-url": "^1.0.3",
+        "typescript": "2.9.1"
+    },
+    "license": "Apache-2.0",
+    "main": "lib/index.js",
+    "name": "openvidu-node-client",
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/OpenVidu/openvidu"
+    },
+    "scripts": {
+        "build": "tsc",
+        "docs": "grunt --gruntfile config/typedoc/custom-theme/gruntfile.js && typedoc --options ./config/typedoc/typedoc.js --out ./docs ./src && rm -rf ../../openvidu.io/api/openvidu-node-client/* && cp -R ./docs/. ../../openvidu.io/api/openvidu-node-client"
+    },
+    "typings": "lib/index.d.ts",
+    "version": "2.4.0"
 }
