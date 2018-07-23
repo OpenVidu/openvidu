@@ -10,13 +10,13 @@ import { OpenVidu as OpenViduAPI, Session as SessionAPI } from 'openvidu-node-cl
         <h2 mat-dialog-title>API REST</h2>
         <mat-dialog-content>
             <label class="label">Sessions</label>
-            <button mat-button id="list-sessions-btn" (click)="fetchActiveConnections()">Fetch</button>
+            <button mat-button id="get-session-btn" (click)="fetchActiveConnections()">Fetch</button>
             <button mat-button id="list-sessions-btn" (click)="fetchActiveSessions()">Fetch all</button>
             <button mat-button id="close-session-btn" (click)="closeSession()">Close this session</button>
             <mat-form-field class="inner-text-input">
-                <input matInput id="session-id-field" placeholder="resourceId" [(ngModel)]="resourceId">
+                <input matInput id="resource-id-field" placeholder="resourceId" [(ngModel)]="resourceId">
             </mat-form-field>
-            <button mat-button id="force-disconnet-api-btn" (click)="forceDisconnect()" [disabled]="!resourceId">Force disconnect</button>
+            <button mat-button id="force-disconnect-api-btn" (click)="forceDisconnect()" [disabled]="!resourceId">Force disconnect</button>
             <button mat-button id="force-unpublish-api-btn" (click)="forceUnpublish()" [disabled]="!resourceId">Force unpublish</button>
             <mat-divider></mat-divider>
             <label class="label">Recordings</label>
@@ -155,7 +155,7 @@ export class SessionApiDialogComponent {
                         resp[con.connectionId].push(pub);
                     });
                 });
-                this.response = 'Session info fetched [' + JSON.stringify(resp) + ']. Changes: ' + anyChange;
+                this.response = 'Session info fetched %[' + JSON.stringify(resp) + ']%. Changes: ' + anyChange;
             })
             .catch(error => {
                 this.response = 'Error [' + error.message + ']';
@@ -166,7 +166,7 @@ export class SessionApiDialogComponent {
         console.log('Fetching all sessions info');
         this.OV.fetch()
             .then(anyChange => {
-                this.response = 'All sessions info fetched. Changes: ' + anyChange;
+                this.response = 'All sessions info fetched. Number: ' + this.OV.activeSessions.length + '. Changes: ' + anyChange;
             })
             .catch(error => {
                 this.response = 'Error [' + error.message + ']';

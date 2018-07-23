@@ -31,6 +31,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.junit.Assert;
@@ -1062,6 +1063,110 @@ public class OpenViduTestAppE2eTest {
 		Assert.assertFalse(file1.exists());
 		Assert.assertFalse(file2.exists());
 		Assert.assertFalse(file3.exists());
+
+		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+
+		gracefullyLeaveParticipants(1);
+
+	}
+
+	@Test
+	@DisplayName("REST API: Fetch all, fetch one, force disconnect, force unpublish, close session")
+	void restApiFetchForce() throws Exception {
+		setupBrowser("chrome");
+
+		log.info("REST API: Fetch all, fetch one, force disconnect, force unpublish, close session");
+
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+
+		// API REST test
+		user.getDriver().findElement(By.id("session-api-btn-0")).click();
+		Thread.sleep(1000);
+
+		// Close session (undefined)
+		user.getDriver().findElement(By.id("close-session-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
+				"Error [Session undefined]"));
+
+		// Fetch one (undefined)
+		user.getDriver().findElement(By.id("get-session-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
+				"Error [Session undefined]"));
+
+		// Fetch all (no active sessions)
+		user.getDriver().findElement(By.id("list-sessions-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("api-response-text-area"), "value",
+				"Number: 0. Changes: false"));
+
+		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		Thread.sleep(1000);
+
+		user.getDriver().findElement(By.id("auto-join-checkbox")).click();
+		user.getDriver().findElement(By.id("one2one-btn")).click();
+
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 2);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 4);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
+
+		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
+				true, true));
+
+		// Fetch existing session (change)
+		user.getDriver().findElement(By.id("session-api-btn-0")).click();
+		Thread.sleep(1000);
+		user.getDriver().findElement(By.id("get-session-btn")).click();
+		user.getWaiter()
+				.until(ExpectedConditions.attributeContains(By.id("api-response-text-area"), "value", "Changes: true"));
+
+		// Store connectionId and streamId
+		String response = user.getDriver().findElement(By.id("api-response-text-area")).getAttribute("value");
+		JSONObject json = (JSONObject) ((JSONArray) new JSONParser().parse(response.split("%")[1])).get(0);
+		String connectionId = (String) json.keySet().iterator().next();
+		String streamId = (String) ((JSONObject) ((JSONArray) json.get(connectionId)).get(0)).get("streamId");
+
+		// Fetch all sessions (no change)
+		user.getDriver().findElement(By.id("list-sessions-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("api-response-text-area"), "value",
+				"Number: 1. Changes: false"));
+
+		// Force unpublish wrong
+		user.getDriver().findElement(By.id("resource-id-field")).clear();
+		user.getDriver().findElement(By.id("resource-id-field")).sendKeys("FAIL");
+		user.getDriver().findElement(By.id("force-unpublish-api-btn")).click();
+		user.getWaiter()
+				.until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Error [404]"));
+
+		// Force unpublish right
+		user.getDriver().findElement(By.id("resource-id-field")).clear();
+		user.getDriver().findElement(By.id("resource-id-field")).sendKeys(streamId);
+		user.getDriver().findElement(By.id("force-unpublish-api-btn")).click();
+		user.getWaiter().until(
+				ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Stream unpublished"));
+		user.getEventManager().waitUntilEventReaches("streamDestroyed", 2);
+
+		// Force disconnect wrong
+		user.getDriver().findElement(By.id("resource-id-field")).clear();
+		user.getDriver().findElement(By.id("resource-id-field")).sendKeys("FAIL");
+		user.getDriver().findElement(By.id("force-disconnect-api-btn")).click();
+		user.getWaiter()
+				.until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Error [404]"));
+
+		// Force disconnect right
+		user.getDriver().findElement(By.id("resource-id-field")).clear();
+		user.getDriver().findElement(By.id("resource-id-field")).sendKeys(connectionId);
+		user.getDriver().findElement(By.id("force-disconnect-api-btn")).click();
+		user.getWaiter()
+				.until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "User disconnected"));
+		user.getEventManager().waitUntilEventReaches("connectionDestroyed", 1);
+
+		// Close session
+		user.getDriver().findElement(By.id("close-session-btn")).click();
+		user.getWaiter()
+				.until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Session closed"));
+
+		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 0));
 
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 
