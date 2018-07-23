@@ -67,6 +67,13 @@
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<div class="lead">
+						<p>See <a href="../classes/openvidu.html#createsession">OpenVidu.createSession</a></p>
+					</div>
+				</div>
+			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
@@ -100,7 +107,7 @@
 					<div class="tsd-signature tsd-kind-icon">custom<wbr>Session<wbr>Id<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/SessionProperties.ts#L52">SessionProperties.ts:52</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/SessionProperties.ts#L58">SessionProperties.ts:58</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -117,14 +124,15 @@
 					<div class="tsd-signature tsd-kind-icon">default<wbr>Custom<wbr>Layout<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/SessionProperties.ts#L45">SessionProperties.ts:45</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/SessionProperties.ts#L51">SessionProperties.ts:51</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
 							<p>Default value used to initialize property <a href="recordingproperties.html#customlayout">RecordingProperties.customLayout</a> of every recording of this session.
-							You can easily override this value later by setting <a href="recordingproperties.html#customlayout">RecordingProperties.customLayout</a> to any other value</p>
+							This property can only be defined if <a href="sessionproperties.html#defaultrecordinglayout">SessionProperties.defaultRecordingLayout</a> is set to <a href="../enums/recordinglayout.html#custom">RecordingLayout.CUSTOM</a>.</p>
 						</div>
+						<p>You can easily override this value later by setting <a href="recordingproperties.html#customlayout">RecordingProperties.customLayout</a> to any other value</p>
 					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
@@ -133,14 +141,14 @@
 					<div class="tsd-signature tsd-kind-icon">default<wbr>Recording<wbr>Layout<span class="tsd-signature-symbol">:</span> <a href="../enums/recordinglayout.html" class="tsd-signature-type">RecordingLayout</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/SessionProperties.ts#L39">SessionProperties.ts:39</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/SessionProperties.ts#L43">SessionProperties.ts:43</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
-							<p>Default value used to initialize property <a href="recordingproperties.html#recordinglayout">RecordingProperties.recordingLayout</a> of every recording of this session.
-							You can easily override this value later by setting <a href="recordingproperties.html#recordinglayout">RecordingProperties.recordingLayout</a> to any other value</p>
+							<p>Default value used to initialize property <a href="recordingproperties.html#recordinglayout">RecordingProperties.recordingLayout</a> of every recording of this session.</p>
 						</div>
+						<p>You can easily override this value later by setting <a href="recordingproperties.html#recordinglayout">RecordingProperties.recordingLayout</a> to any other value</p>
 					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
@@ -149,7 +157,7 @@
 					<div class="tsd-signature tsd-kind-icon">media<wbr>Mode<span class="tsd-signature-symbol">:</span> <a href="../enums/mediamode.html" class="tsd-signature-type">MediaMode</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/SessionProperties.ts#L28">SessionProperties.ts:28</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/SessionProperties.ts#L31">SessionProperties.ts:31</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -165,7 +173,7 @@
 					<div class="tsd-signature tsd-kind-icon">recording<wbr>Mode<span class="tsd-signature-symbol">:</span> <a href="../enums/recordingmode.html" class="tsd-signature-type">RecordingMode</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/SessionProperties.ts#L33">SessionProperties.ts:33</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/SessionProperties.ts#L36">SessionProperties.ts:36</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -199,7 +207,13 @@
 						<a href="../enums/recordingmode.html" class="tsd-kind-icon">Recording<wbr>Mode</a>
 					</li>
 					<li class=" tsd-kind-class">
+						<a href="../classes/connection.html" class="tsd-kind-icon">Connection</a>
+					</li>
+					<li class=" tsd-kind-class">
 						<a href="../classes/openvidu.html" class="tsd-kind-icon">Open<wbr>Vidu</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="../classes/publisher.html" class="tsd-kind-icon">Publisher</a>
 					</li>
 					<li class=" tsd-kind-class">
 						<a href="../classes/recording.html" class="tsd-kind-icon">Recording</a>

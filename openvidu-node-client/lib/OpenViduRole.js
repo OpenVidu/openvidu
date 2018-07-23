@@ -16,6 +16,9 @@
  *
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+/**
+ * See [[TokenOptions.role]]
+ */
 var OpenViduRole;
 (function (OpenViduRole) {
     /**

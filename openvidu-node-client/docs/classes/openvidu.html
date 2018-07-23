@@ -86,10 +86,17 @@
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
+							<h3>Properties</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="openvidu.html#activesessions" class="tsd-kind-icon">active<wbr>Sessions</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section ">
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="openvidu.html#createsession" class="tsd-kind-icon">create<wbr>Session</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="openvidu.html#deleterecording" class="tsd-kind-icon">delete<wbr>Recording</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="openvidu.html#fetch" class="tsd-kind-icon">fetch</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="openvidu.html#getrecording" class="tsd-kind-icon">get<wbr>Recording</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="openvidu.html#listrecordings" class="tsd-kind-icon">list<wbr>Recordings</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="openvidu.html#startrecording" class="tsd-kind-icon">start<wbr>Recording</a></li>
@@ -111,7 +118,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/OpenVidu.ts#L35">OpenVidu.ts:35</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/OpenVidu.ts#L80">OpenVidu.ts:80</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -141,6 +148,35 @@
 				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Properties</h2>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
+					<a name="activesessions" class="tsd-anchor"></a>
+					<h3>active<wbr>Sessions</h3>
+					<div class="tsd-signature tsd-kind-icon">active<wbr>Sessions<span class="tsd-signature-symbol">:</span> <a href="session.html" class="tsd-signature-type">Session</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol"> =&nbsp;[]</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/OpenVidu.ts#L80">OpenVidu.ts:80</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Array of active sessions. <strong>This value will remain unchanged since the last time method <a href="openvidu.html#fetch">OpenVidu.fetch</a>
+							was called</strong>. Exceptions to this rule are:</p>
+						</div>
+						<ul>
+							<li>Calling <a href="session.html#fetch">Session.fetch</a> updates that specific Session status</li>
+							<li>Calling <a href="session.html#close">Session.close</a> automatically removes the Session from the list of active Sessions</li>
+							<li>Calling <a href="session.html#forcedisconnect">Session.forceDisconnect</a> automatically updates the inner affected connections for that specific Session</li>
+							<li>Calling <a href="session.html#forceunpublish">Session.forceUnpublish</a> also automatically updates the inner affected connections for that specific Session</li>
+							<li>Calling <a href="openvidu.html#startrecording">OpenVidu.startRecording</a> and <a href="openvidu.html#stoprecording">OpenVidu.stopRecording</a> automatically updates the recording status of the
+							Session (<a href="session.html#recording">Session.recording</a>)</li>
+						</ul>
+						<p>To get the array of active sessions with their current actual value, you must call <a href="openvidu.html#fetch">OpenVidu.fetch</a> before consulting
+						property <a href="openvidu.html#activesessions">activeSessions</a></p>
+					</div>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Methods</h2>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
 					<a name="createsession" class="tsd-anchor"></a>
@@ -152,12 +188,12 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/OpenVidu.ts#L51">OpenVidu.ts:51</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/OpenVidu.ts#L97">OpenVidu.ts:97</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Creates an OpenVidu session. You can call <a href="session.html#getsessionid">Session.getSessionId</a> in the resolved promise to retrieve the <code>sessionId</code></p>
+									<p>Creates an OpenVidu session. You can call <a href="session.html#getsessionid">Session.getSessionId</a> inside the resolved promise to retrieve the <code>sessionId</code></p>
 								</div>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -181,7 +217,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/OpenVidu.ts#L294">OpenVidu.ts:294</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/OpenVidu.ts#L354">OpenVidu.ts:354</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -207,6 +243,31 @@
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="fetch" class="tsd-anchor"></a>
+					<h3>fetch</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">fetch<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/OpenVidu.ts#L398">OpenVidu.ts:398</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Updates every property of every active Session with the current status they have in OpenVidu Server.
+									After calling this method you can access the updated array of active sessions in <a href="openvidu.html#activesessions">activeSessions</a></p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<p>A promise resolved to true if any Session status has changed with respect to the server, or to false if not.
+							This applies to any property or sub-property of any of the sessions locally stored in OpenVidu Node Client</p>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
 					<a name="getrecording" class="tsd-anchor"></a>
 					<h3>get<wbr>Recording</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -216,7 +277,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/OpenVidu.ts#L201">OpenVidu.ts:201</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/OpenVidu.ts#L262">OpenVidu.ts:262</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -251,7 +312,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/OpenVidu.ts#L243">OpenVidu.ts:243</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/OpenVidu.ts#L304">OpenVidu.ts:304</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -276,7 +337,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/OpenVidu.ts#L64">OpenVidu.ts:64</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/OpenVidu.ts#L111">OpenVidu.ts:111</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -307,7 +368,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/OpenVidu.ts#L65">OpenVidu.ts:65</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/OpenVidu.ts#L112">OpenVidu.ts:112</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -329,7 +390,8 @@
 									<h5>name: <span class="tsd-signature-type">string</span></h5>
 									<div class="tsd-comment tsd-typography">
 										<div class="lead">
-											<p>The name you want to give to the video file. You can access this same value in your clients on recording events (<code>recordingStarted</code>, <code>recordingStopped</code>)</p>
+											<p>The name you want to give to the video file. You can access this same value in your clients on recording events (<code>recordingStarted</code>, <code>recordingStopped</code>)
+											<strong>WARNING: this parameter follows an overwriting policy.</strong> If you name two recordings the same, the newest MP4 file will overwrite the oldest one</p>
 										</div>
 									</div>
 								</li>
@@ -346,7 +408,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/OpenVidu.ts#L66">OpenVidu.ts:66</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/OpenVidu.ts#L113">OpenVidu.ts:113</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -389,7 +451,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/OpenVidu.ts#L155">OpenVidu.ts:155</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/OpenVidu.ts#L210">OpenVidu.ts:210</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -439,6 +501,9 @@
 					<li class=" tsd-kind-enum">
 						<a href="../enums/recordingmode.html" class="tsd-kind-icon">Recording<wbr>Mode</a>
 					</li>
+					<li class=" tsd-kind-class">
+						<a href="connection.html" class="tsd-kind-icon">Connection</a>
+					</li>
 				</ul>
 				<ul class="current">
 					<li class="current tsd-kind-class">
@@ -447,11 +512,17 @@
 							<li class=" tsd-kind-constructor tsd-parent-kind-class">
 								<a href="openvidu.html#constructor" class="tsd-kind-icon">constructor</a>
 							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class">
+								<a href="openvidu.html#activesessions" class="tsd-kind-icon">active<wbr>Sessions</a>
+							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="openvidu.html#createsession" class="tsd-kind-icon">create<wbr>Session</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="openvidu.html#deleterecording" class="tsd-kind-icon">delete<wbr>Recording</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="openvidu.html#fetch" class="tsd-kind-icon">fetch</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="openvidu.html#getrecording" class="tsd-kind-icon">get<wbr>Recording</a>
@@ -469,6 +540,9 @@
 					</li>
 				</ul>
 				<ul class="after-current">
+					<li class=" tsd-kind-class">
+						<a href="publisher.html" class="tsd-kind-icon">Publisher</a>
+					</li>
 					<li class=" tsd-kind-class">
 						<a href="recording.html" class="tsd-kind-icon">Recording</a>
 					</li>

@@ -67,6 +67,13 @@
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<div class="lead">
+						<p>See <a href="../classes/openvidu.html#startrecording">OpenVidu.startRecording</a></p>
+					</div>
+				</div>
+			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
@@ -98,7 +105,7 @@
 					<div class="tsd-signature tsd-kind-icon">custom<wbr>Layout<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/RecordingProperties.ts#L36">RecordingProperties.ts:36</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/RecordingProperties.ts#L40">RecordingProperties.ts:40</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -114,12 +121,13 @@
 					<div class="tsd-signature tsd-kind-icon">name<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/RecordingProperties.ts#L25">RecordingProperties.ts:25</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/RecordingProperties.ts#L29">RecordingProperties.ts:29</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
-							<p>The name you want to give to the video file. You can access this same value in your clients on recording events (<code>recordingStarted</code>, <code>recordingStopped</code>)</p>
+							<p>The name you want to give to the video file. You can access this same value in your clients on recording events (<code>recordingStarted</code>, <code>recordingStopped</code>).
+							<strong>WARNING: this parameter follows an overwriting policy.</strong> If you name two recordings the same, the newest MP4 file will overwrite the oldest one</p>
 						</div>
 					</div>
 				</section>
@@ -129,7 +137,7 @@
 					<div class="tsd-signature tsd-kind-icon">recording<wbr>Layout<span class="tsd-signature-symbol">:</span> <a href="../enums/recordinglayout.html" class="tsd-signature-type">RecordingLayout</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/RecordingProperties.ts#L30">RecordingProperties.ts:30</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/RecordingProperties.ts#L34">RecordingProperties.ts:34</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -163,7 +171,13 @@
 						<a href="../enums/recordingmode.html" class="tsd-kind-icon">Recording<wbr>Mode</a>
 					</li>
 					<li class=" tsd-kind-class">
+						<a href="../classes/connection.html" class="tsd-kind-icon">Connection</a>
+					</li>
+					<li class=" tsd-kind-class">
 						<a href="../classes/openvidu.html" class="tsd-kind-icon">Open<wbr>Vidu</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="../classes/publisher.html" class="tsd-kind-icon">Publisher</a>
 					</li>
 					<li class=" tsd-kind-class">
 						<a href="../classes/recording.html" class="tsd-kind-icon">Recording</a>

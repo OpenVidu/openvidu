@@ -1,3 +1,6 @@
+/**
+ * See [[TokenOptions.role]]
+ */
 export declare enum OpenViduRole {
     /**
      * Can subscribe to published Streams of other users

@@ -1,4 +1,7 @@
 import { OpenViduRole } from './OpenViduRole';
+/**
+ * See [[Session.generateToken]]
+ */
 export interface TokenOptions {
     /**
      * Secure (server-side) data associated to this token. Every client will receive this data in property `Connection.data`. Object `Connection` can be retrieved by subscribing to event `connectionCreated` of Session object.

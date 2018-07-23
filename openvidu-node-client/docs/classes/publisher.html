@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>Recording | OpenVidu Node Client</title>
+	<title>Publisher | OpenVidu Node Client</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -57,10 +57,10 @@
 					<a href="../index.html">Globals</a>
 				</li>
 				<li>
-					<a href="recording.html">Recording</a>
+					<a href="publisher.html">Publisher</a>
 				</li>
 			</ul>
-			<h1>Class Recording</h1>
+			<h1>Class Publisher</h1>
 		</div>
 	</div>
 </header>
@@ -70,15 +70,16 @@
 			<section class="tsd-panel tsd-comment">
 				<div class="tsd-comment tsd-typography">
 					<div class="lead">
-						<p>See <a href="openvidu.html#startrecording">OpenVidu.startRecording</a></p>
+						<p>See <a href="connection.html#publishers">Connection.publishers</a></p>
 					</div>
+					<p>This is a backend representation of a published media stream (see <a href="/api/openvidu-browser/classes/stream.html">OpenVidu Browser Stream class</a>)</p>
 				</div>
 			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">Recording</span>
+						<span class="target">Publisher</span>
 					</li>
 				</ul>
 			</section>
@@ -87,196 +88,174 @@
 				<section class="tsd-panel tsd-index-panel">
 					<div class="tsd-index-content">
 						<section class="tsd-index-section ">
-							<h3>Enumerations</h3>
+							<h3>Constructors</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-enum tsd-parent-kind-class tsd-is-static"><a href="../enums/recording.status.html" class="tsd-kind-icon">Status</a></li>
+								<li class="tsd-kind-constructor tsd-parent-kind-class"><a href="publisher.html#constructor" class="tsd-kind-icon">constructor</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-class"><a href="recording.html#createdat" class="tsd-kind-icon">created<wbr>At</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class"><a href="recording.html#duration" class="tsd-kind-icon">duration</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class"><a href="recording.html#hasaudio" class="tsd-kind-icon">has<wbr>Audio</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class"><a href="recording.html#hasvideo" class="tsd-kind-icon">has<wbr>Video</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class"><a href="recording.html#id" class="tsd-kind-icon">id</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class"><a href="recording.html#name" class="tsd-kind-icon">name</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class"><a href="recording.html#recordinglayout" class="tsd-kind-icon">recording<wbr>Layout</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class"><a href="recording.html#sessionid" class="tsd-kind-icon">session<wbr>Id</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class"><a href="recording.html#size" class="tsd-kind-icon">size</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class"><a href="recording.html#status-1" class="tsd-kind-icon">status</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class"><a href="recording.html#url" class="tsd-kind-icon">url</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="publisher.html#audioactive" class="tsd-kind-icon">audio<wbr>Active</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="publisher.html#framerate" class="tsd-kind-icon">frame<wbr>Rate</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="publisher.html#hasaudio" class="tsd-kind-icon">has<wbr>Audio</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="publisher.html#hasvideo" class="tsd-kind-icon">has<wbr>Video</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="publisher.html#streamid" class="tsd-kind-icon">stream<wbr>Id</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="publisher.html#typeofvideo" class="tsd-kind-icon">type<wbr>OfVideo</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="publisher.html#videoactive" class="tsd-kind-icon">video<wbr>Active</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="publisher.html#videodimensions" class="tsd-kind-icon">video<wbr>Dimensions</a></li>
 							</ul>
 						</section>
 					</div>
 				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Constructors</h2>
+				<section class="tsd-panel tsd-member tsd-kind-constructor tsd-parent-kind-class">
+					<a name="constructor" class="tsd-anchor"></a>
+					<h3>constructor</h3>
+					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Publisher<span class="tsd-signature-symbol">(</span>json<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="publisher.html" class="tsd-signature-type">Publisher</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/Publisher.ts#L67">Publisher.ts:67</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>json: <span class="tsd-signature-type">any</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="publisher.html" class="tsd-signature-type">Publisher</a></h4>
+						</li>
+					</ul>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Properties</h2>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
-					<a name="createdat" class="tsd-anchor"></a>
-					<h3>created<wbr>At</h3>
-					<div class="tsd-signature tsd-kind-icon">created<wbr>At<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+					<a name="audioactive" class="tsd-anchor"></a>
+					<h3>audio<wbr>Active</h3>
+					<div class="tsd-signature tsd-kind-icon">audio<wbr>Active<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/Recording.ts#L38">Recording.ts:38</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/Publisher.ts#L47">Publisher.ts:47</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
-							<p>Time when the recording started in UTC milliseconds</p>
+							<p>See properties of <a href="/api/openvidu-browser/classes/stream.html">Stream</a> object in OpenVidu Browser library to find out more</p>
 						</div>
 					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
-					<a name="duration" class="tsd-anchor"></a>
-					<h3>duration</h3>
-					<div class="tsd-signature tsd-kind-icon">duration<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;0</span></div>
+					<a name="framerate" class="tsd-anchor"></a>
+					<h3>frame<wbr>Rate</h3>
+					<div class="tsd-signature tsd-kind-icon">frame<wbr>Rate<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/Recording.ts#L48">Recording.ts:48</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/Publisher.ts#L57">Publisher.ts:57</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
-							<p>Duration of the recording in seconds (0 until the recording is stopped)</p>
+							<p>See properties of <a href="/api/openvidu-browser/classes/stream.html">Stream</a> object in OpenVidu Browser library to find out more</p>
 						</div>
 					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
 					<a name="hasaudio" class="tsd-anchor"></a>
 					<h3>has<wbr>Audio</h3>
-					<div class="tsd-signature tsd-kind-icon">has<wbr>Audio<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> =&nbsp;true</span></div>
+					<div class="tsd-signature tsd-kind-icon">has<wbr>Audio<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/Recording.ts#L58">Recording.ts:58</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/Publisher.ts#L37">Publisher.ts:37</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
-							<p><code>true</code> if the recording has an audio track, <code>false</code> otherwise (currently fixed to true)</p>
+							<p>See properties of <a href="/api/openvidu-browser/classes/stream.html">Stream</a> object in OpenVidu Browser library to find out more</p>
 						</div>
 					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
 					<a name="hasvideo" class="tsd-anchor"></a>
 					<h3>has<wbr>Video</h3>
-					<div class="tsd-signature tsd-kind-icon">has<wbr>Video<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> =&nbsp;true</span></div>
+					<div class="tsd-signature tsd-kind-icon">has<wbr>Video<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/Recording.ts#L63">Recording.ts:63</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/Publisher.ts#L42">Publisher.ts:42</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
-							<p><code>true</code> if the recording has a video track, <code>false</code> otherwise (currently fixed to true)</p>
+							<p>See properties of <a href="/api/openvidu-browser/classes/stream.html">Stream</a> object in OpenVidu Browser library to find out more</p>
 						</div>
 					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
-					<a name="id" class="tsd-anchor"></a>
-					<h3>id</h3>
-					<div class="tsd-signature tsd-kind-icon">id<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+					<a name="streamid" class="tsd-anchor"></a>
+					<h3>stream<wbr>Id</h3>
+					<div class="tsd-signature tsd-kind-icon">stream<wbr>Id<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/Recording.ts#L28">Recording.ts:28</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/Publisher.ts#L32">Publisher.ts:32</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
-							<p>Recording unique identifier</p>
+							<p>Unique identifier of the <a href="/api/openvidu-browser/classes/stream.html">Stream</a> associated to this Publisher.
+								Each Publisher is paired with only one Stream, so you can identify each Publisher by its
+							<a href="/api/openvidu-browser/classes/stream.html#streamid"><code>Stream.streamId</code></a></p>
 						</div>
 					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
-					<a name="name" class="tsd-anchor"></a>
-					<h3>name</h3>
-					<div class="tsd-signature tsd-kind-icon">name<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+					<a name="typeofvideo" class="tsd-anchor"></a>
+					<h3>type<wbr>OfVideo</h3>
+					<div class="tsd-signature tsd-kind-icon">type<wbr>OfVideo<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/Recording.ts#L75">Recording.ts:75</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/Publisher.ts#L62">Publisher.ts:62</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
-							<p>Name of the Recording. The video file will be named after this property.
-								You can access this same value in your clients on recording events
-							(<code>recordingStarted</code>, <code>recordingStopped</code>)</p>
+							<p>See properties of <a href="/api/openvidu-browser/classes/stream.html">Stream</a> object in OpenVidu Browser library to find out more</p>
 						</div>
 					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
-					<a name="recordinglayout" class="tsd-anchor"></a>
-					<h3>recording<wbr>Layout</h3>
-					<div class="tsd-signature tsd-kind-icon">recording<wbr>Layout<span class="tsd-signature-symbol">:</span> <a href="../enums/recordinglayout.html" class="tsd-signature-type">RecordingLayout</a></div>
+					<a name="videoactive" class="tsd-anchor"></a>
+					<h3>video<wbr>Active</h3>
+					<div class="tsd-signature tsd-kind-icon">video<wbr>Active<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/Recording.ts#L80">Recording.ts:80</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/Publisher.ts#L52">Publisher.ts:52</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
-							<p>The layout used in this Recording</p>
+							<p>See properties of <a href="/api/openvidu-browser/classes/stream.html">Stream</a> object in OpenVidu Browser library to find out more</p>
 						</div>
 					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
-					<a name="sessionid" class="tsd-anchor"></a>
-					<h3>session<wbr>Id</h3>
-					<div class="tsd-signature tsd-kind-icon">session<wbr>Id<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+					<a name="videodimensions" class="tsd-anchor"></a>
+					<h3>video<wbr>Dimensions</h3>
+					<div class="tsd-signature tsd-kind-icon">video<wbr>Dimensions<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/Recording.ts#L33">Recording.ts:33</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/Publisher.ts#L67">Publisher.ts:67</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
-							<p>Session associated to the recording</p>
-						</div>
-					</div>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
-					<a name="size" class="tsd-anchor"></a>
-					<h3>size</h3>
-					<div class="tsd-signature tsd-kind-icon">size<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;0</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/Recording.ts#L43">Recording.ts:43</a></li>
-						</ul>
-					</aside>
-					<div class="tsd-comment tsd-typography">
-						<div class="lead">
-							<p>Size of the recording in bytes (0 until the recording is stopped)</p>
-						</div>
-					</div>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
-					<a name="status-1" class="tsd-anchor"></a>
-					<h3>status</h3>
-					<div class="tsd-signature tsd-kind-icon">status<span class="tsd-signature-symbol">:</span> <a href="../enums/recording.status.html" class="tsd-signature-type">Status</a></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/Recording.ts#L68">Recording.ts:68</a></li>
-						</ul>
-					</aside>
-					<div class="tsd-comment tsd-typography">
-						<div class="lead">
-							<p>Status of the recording</p>
-						</div>
-					</div>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
-					<a name="url" class="tsd-anchor"></a>
-					<h3>url</h3>
-					<div class="tsd-signature tsd-kind-icon">url<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/Recording.ts#L53">Recording.ts:53</a></li>
-						</ul>
-					</aside>
-					<div class="tsd-comment tsd-typography">
-						<div class="lead">
-							<p>URL of the recording. You can access the file from there. It is <code>null</code> until recording is stopped or if OpenVidu Server configuration property <code>openvidu.recording.public-access</code> is false</p>
+							<p>See properties of <a href="/api/openvidu-browser/classes/stream.html">Stream</a> object in OpenVidu Browser library to find out more</p>
 						</div>
 					</div>
 				</section>
@@ -310,54 +289,45 @@
 					<li class=" tsd-kind-class">
 						<a href="openvidu.html" class="tsd-kind-icon">Open<wbr>Vidu</a>
 					</li>
-					<li class=" tsd-kind-class">
-						<a href="publisher.html" class="tsd-kind-icon">Publisher</a>
-					</li>
 				</ul>
 				<ul class="current">
 					<li class="current tsd-kind-class">
-						<a href="recording.html" class="tsd-kind-icon">Recording</a>
+						<a href="publisher.html" class="tsd-kind-icon">Publisher</a>
 						<ul>
-							<li class=" tsd-kind-enum tsd-parent-kind-class tsd-is-static">
-								<a href="../enums/recording.status.html" class="tsd-kind-icon">Status</a>
+							<li class=" tsd-kind-constructor tsd-parent-kind-class">
+								<a href="publisher.html#constructor" class="tsd-kind-icon">constructor</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class">
-								<a href="recording.html#createdat" class="tsd-kind-icon">created<wbr>At</a>
+								<a href="publisher.html#audioactive" class="tsd-kind-icon">audio<wbr>Active</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class">
-								<a href="recording.html#duration" class="tsd-kind-icon">duration</a>
+								<a href="publisher.html#framerate" class="tsd-kind-icon">frame<wbr>Rate</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class">
-								<a href="recording.html#hasaudio" class="tsd-kind-icon">has<wbr>Audio</a>
+								<a href="publisher.html#hasaudio" class="tsd-kind-icon">has<wbr>Audio</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class">
-								<a href="recording.html#hasvideo" class="tsd-kind-icon">has<wbr>Video</a>
+								<a href="publisher.html#hasvideo" class="tsd-kind-icon">has<wbr>Video</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class">
-								<a href="recording.html#id" class="tsd-kind-icon">id</a>
+								<a href="publisher.html#streamid" class="tsd-kind-icon">stream<wbr>Id</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class">
-								<a href="recording.html#name" class="tsd-kind-icon">name</a>
+								<a href="publisher.html#typeofvideo" class="tsd-kind-icon">type<wbr>OfVideo</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class">
-								<a href="recording.html#recordinglayout" class="tsd-kind-icon">recording<wbr>Layout</a>
+								<a href="publisher.html#videoactive" class="tsd-kind-icon">video<wbr>Active</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class">
-								<a href="recording.html#sessionid" class="tsd-kind-icon">session<wbr>Id</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class">
-								<a href="recording.html#size" class="tsd-kind-icon">size</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class">
-								<a href="recording.html#status-1" class="tsd-kind-icon">status</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class">
-								<a href="recording.html#url" class="tsd-kind-icon">url</a>
+								<a href="publisher.html#videodimensions" class="tsd-kind-icon">video<wbr>Dimensions</a>
 							</li>
 						</ul>
 					</li>
 				</ul>
 				<ul class="after-current">
+					<li class=" tsd-kind-class">
+						<a href="recording.html" class="tsd-kind-icon">Recording</a>
+					</li>
 					<li class=" tsd-kind-class">
 						<a href="session.html" class="tsd-kind-icon">Session</a>
 					</li>

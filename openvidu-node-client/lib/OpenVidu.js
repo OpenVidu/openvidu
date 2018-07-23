@@ -27,20 +27,37 @@ var OpenVidu = /** @class */ (function () {
     function OpenVidu(urlOpenViduServer, secret) {
         this.urlOpenViduServer = urlOpenViduServer;
         this.Buffer = require('buffer/').Buffer;
+        /**
+         * Array of active sessions. **This value will remain unchanged since the last time method [[OpenVidu.fetch]]
+         * was called**. Exceptions to this rule are:
+         *
+         * - Calling [[Session.fetch]] updates that specific Session status
+         * - Calling [[Session.close]] automatically removes the Session from the list of active Sessions
+         * - Calling [[Session.forceDisconnect]] automatically updates the inner affected connections for that specific Session
+         * - Calling [[Session.forceUnpublish]] also automatically updates the inner affected connections for that specific Session
+         * - Calling [[OpenVidu.startRecording]] and [[OpenVidu.stopRecording]] automatically updates the recording status of the
+         * Session ([[Session.recording]])
+         *
+         * To get the array of active sessions with their current actual value, you must call [[OpenVidu.fetch]] before consulting
+         * property [[activeSessions]]
+         */
+        this.activeSessions = [];
         this.setHostnameAndPort();
-        this.basicAuth = this.getBasicAuth(secret);
+        OpenVidu.basicAuth = this.getBasicAuth(secret);
+        OpenVidu.o = this;
     }
     /**
-     * Creates an OpenVidu session. You can call [[Session.getSessionId]] in the resolved promise to retrieve the `sessionId`
+     * Creates an OpenVidu session. You can call [[Session.getSessionId]] inside the resolved promise to retrieve the `sessionId`
      *
      * @returns A Promise that is resolved to the [[Session]] if success and rejected with an Error object if not.
      */
     OpenVidu.prototype.createSession = function (properties) {
         var _this = this;
         return new Promise(function (resolve, reject) {
-            var session = new Session_1.Session(_this.hostname, _this.port, _this.basicAuth, properties);
+            var session = new Session_1.Session(properties);
             session.getSessionIdHttp()
                 .then(function (sessionId) {
+                _this.activeSessions.push(session);
                 resolve(session);
             })
                 .catch(function (error) {
@@ -53,6 +70,7 @@ var OpenVidu = /** @class */ (function () {
      *
      * @param sessionId The `sessionId` of the [[Session]] you want to start recording
      * @param name The name you want to give to the video file. You can access this same value in your clients on recording events (`recordingStarted`, `recordingStopped`)
+     * **WARNING: this parameter follows an overwriting policy.** If you name two recordings the same, the newest MP4 file will overwrite the oldest one
      *
      * @returns A Promise that is resolved to the [[Recording]] if it successfully started (the recording can be stopped with guarantees) and rejected with an Error object if not. This Error object has as `message` property with the following values:
      * - `404`: no session exists for the passed `sessionId`
@@ -91,16 +109,24 @@ var OpenVidu = /** @class */ (function () {
                     customLayout: ''
                 });
             }
-            axios_1.default.post('https://' + _this.hostname + ':' + _this.port + OpenVidu.API_RECORDINGS + OpenVidu.API_RECORDINGS_START, data, {
+            axios_1.default.post('https://' + OpenVidu.hostname + ':' + OpenVidu.port + OpenVidu.API_RECORDINGS + OpenVidu.API_RECORDINGS_START, data, {
                 headers: {
-                    'Authorization': _this.basicAuth,
+                    'Authorization': OpenVidu.basicAuth,
                     'Content-Type': 'application/json'
                 }
             })
                 .then(function (res) {
                 if (res.status === 200) {
                     // SUCCESS response from openvidu-server (Recording in JSON format). Resolve new Recording
-                    resolve(new Recording_1.Recording(res.data));
+                    var r_1 = new Recording_1.Recording(res.data);
+                    var activeSession = _this.activeSessions.find(function (s) { return s.sessionId === r_1.sessionId; });
+                    if (!!activeSession) {
+                        activeSession.recording = true;
+                    }
+                    else {
+                        console.warn("No active session found for sessionId '" + r_1.sessionId + "'. This instance of OpenVidu Node Client didn't create this session");
+                    }
+                    resolve(r_1);
                 }
                 else {
                     // ERROR response from openvidu-server. Resolve HTTP status
@@ -136,16 +162,24 @@ var OpenVidu = /** @class */ (function () {
     OpenVidu.prototype.stopRecording = function (recordingId) {
         var _this = this;
         return new Promise(function (resolve, reject) {
-            axios_1.default.post('https://' + _this.hostname + ':' + _this.port + OpenVidu.API_RECORDINGS + OpenVidu.API_RECORDINGS_STOP + '/' + recordingId, undefined, {
+            axios_1.default.post('https://' + OpenVidu.hostname + ':' + OpenVidu.port + OpenVidu.API_RECORDINGS + OpenVidu.API_RECORDINGS_STOP + '/' + recordingId, undefined, {
                 headers: {
-                    'Authorization': _this.basicAuth,
+                    'Authorization': OpenVidu.basicAuth,
                     'Content-Type': 'application/x-www-form-urlencoded'
                 }
             })
                 .then(function (res) {
                 if (res.status === 200) {
                     // SUCCESS response from openvidu-server (Recording in JSON format). Resolve new Recording
-                    resolve(new Recording_1.Recording(res.data));
+                    var r_2 = new Recording_1.Recording(res.data);
+                    var activeSession = _this.activeSessions.find(function (s) { return s.sessionId === r_2.sessionId; });
+                    if (!!activeSession) {
+                        activeSession.recording = false;
+                    }
+                    else {
+                        console.warn("No active session found for sessionId '" + r_2.sessionId + "'. This instance of OpenVidu Node Client didn't create this session");
+                    }
+                    resolve(r_2);
                 }
                 else {
                     // ERROR response from openvidu-server. Resolve HTTP status
@@ -157,9 +191,8 @@ var OpenVidu = /** @class */ (function () {
                     reject(new Error(error.response.status.toString()));
                 }
                 else if (error.request) {
-                    // The request was made but no response was received
-                    // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-                    // http.ClientRequest in node.js
+                    // The request was made but no response was received `error.request` is an instance of XMLHttpRequest
+                    // in the browser and an instance of http.ClientRequest in node.js
                     console.error(error.request);
                 }
                 else {
@@ -178,11 +211,10 @@ var OpenVidu = /** @class */ (function () {
      * - `404`: no recording exists for the passed `recordingId`
      */
     OpenVidu.prototype.getRecording = function (recordingId) {
-        var _this = this;
         return new Promise(function (resolve, reject) {
-            axios_1.default.get('https://' + _this.hostname + ':' + _this.port + OpenVidu.API_RECORDINGS + '/' + recordingId, {
+            axios_1.default.get('https://' + OpenVidu.hostname + ':' + OpenVidu.port + OpenVidu.API_RECORDINGS + '/' + recordingId, {
                 headers: {
-                    'Authorization': _this.basicAuth,
+                    'Authorization': OpenVidu.basicAuth,
                     'Content-Type': 'application/x-www-form-urlencoded'
                 }
             })
@@ -219,12 +251,10 @@ var OpenVidu = /** @class */ (function () {
      * @returns A Promise that is resolved to an array with all existing recordings
      */
     OpenVidu.prototype.listRecordings = function () {
-        var _this = this;
         return new Promise(function (resolve, reject) {
-            axios_1.default.get('https://' + _this.hostname + ':' + _this.port + OpenVidu.API_RECORDINGS, {
+            axios_1.default.get('https://' + OpenVidu.hostname + ':' + OpenVidu.port + OpenVidu.API_RECORDINGS, {
                 headers: {
-                    'Authorization': _this.basicAuth,
-                    'Content-Type': 'application/x-www-form-urlencoded'
+                    Authorization: OpenVidu.basicAuth
                 }
             })
                 .then(function (res) {
@@ -270,11 +300,10 @@ var OpenVidu = /** @class */ (function () {
      * - `409`: the recording has `started` status. Stop it before deletion
      */
     OpenVidu.prototype.deleteRecording = function (recordingId) {
-        var _this = this;
         return new Promise(function (resolve, reject) {
-            axios_1.default.delete('https://' + _this.hostname + ':' + _this.port + OpenVidu.API_RECORDINGS + '/' + recordingId, {
+            axios_1.default.delete('https://' + OpenVidu.hostname + ':' + OpenVidu.port + OpenVidu.API_RECORDINGS + '/' + recordingId, {
                 headers: {
-                    'Authorization': _this.basicAuth,
+                    'Authorization': OpenVidu.basicAuth,
                     'Content-Type': 'application/x-www-form-urlencoded'
                 }
             })
@@ -305,26 +334,123 @@ var OpenVidu = /** @class */ (function () {
             });
         });
     };
+    /**
+     * Updates every property of every active Session with the current status they have in OpenVidu Server.
+     * After calling this method you can access the updated array of active sessions in [[activeSessions]]
+     *
+     * @returns A promise resolved to true if any Session status has changed with respect to the server, or to false if not.
+     * This applies to any property or sub-property of any of the sessions locally stored in OpenVidu Node Client
+     */
+    OpenVidu.prototype.fetch = function () {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            axios_1.default.get('https://' + OpenVidu.hostname + ':' + OpenVidu.port + OpenVidu.API_SESSIONS, {
+                headers: {
+                    Authorization: OpenVidu.basicAuth
+                }
+            })
+                .then(function (res) {
+                if (res.status === 200) {
+                    // Array to store fetched sessionIds and later remove closed sessions
+                    var fetchedSessionIds_1 = [];
+                    // Boolean to store if any Session has changed
+                    var hasChanged_1 = false;
+                    res.data.content.forEach(function (session) {
+                        fetchedSessionIds_1.push(session.sessionId);
+                        var storedSession = _this.activeSessions.find(function (s) { return s.sessionId === session.sessionId; });
+                        if (!!storedSession) {
+                            var beforeJSON = JSON.stringify(storedSession);
+                            storedSession = storedSession.resetSessionWithJson(session);
+                            var afterJSON = JSON.stringify(storedSession);
+                            var changed = !(beforeJSON === afterJSON);
+                            console.log("Available session '" + storedSession.sessionId + "' info fetched. Any change: " + changed);
+                            hasChanged_1 = hasChanged_1 || changed;
+                        }
+                        else {
+                            _this.activeSessions.push(new Session_1.Session(session));
+                            console.log("New session '" + session.sessionId + "' info fetched");
+                            hasChanged_1 = true;
+                        }
+                    });
+                    // Remove closed sessions from activeSessions array
+                    _this.activeSessions = _this.activeSessions.filter(function (session) {
+                        if (fetchedSessionIds_1.includes(session.sessionId)) {
+                            return true;
+                        }
+                        else {
+                            console.log("Removing closed session '" + session.sessionId + "'");
+                            hasChanged_1 = true;
+                            return false;
+                        }
+                    });
+                    console.log('Active sessions info fetched: ', fetchedSessionIds_1);
+                    resolve(hasChanged_1);
+                }
+                else {
+                    // ERROR response from openvidu-server. Resolve HTTP status
+                    reject(new Error(res.status.toString()));
+                }
+            }).catch(function (error) {
+                if (error.response) {
+                    // The request was made and the server responded with a status code (not 2xx)
+                    reject(new Error(error.response.status.toString()));
+                }
+                else if (error.request) {
+                    // The request was made but no response was received
+                    // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+                    // http.ClientRequest in node.js
+                    console.error(error.request);
+                }
+                else {
+                    // Something happened in setting up the request that triggered an Error
+                    console.error('Error', error.message);
+                }
+            });
+        });
+    };
     OpenVidu.prototype.getBasicAuth = function (secret) {
         return 'Basic ' + this.Buffer('OPENVIDUAPP:' + secret).toString('base64');
     };
     OpenVidu.prototype.setHostnameAndPort = function () {
         var urlSplitted = this.urlOpenViduServer.split(':');
         if (urlSplitted.length === 3) { // URL has format: http:// + hostname + :port
-            this.hostname = this.urlOpenViduServer.split(':')[1].replace(/\//g, '');
-            this.port = parseInt(this.urlOpenViduServer.split(':')[2].replace(/\//g, ''));
+            OpenVidu.hostname = this.urlOpenViduServer.split(':')[1].replace(/\//g, '');
+            OpenVidu.port = parseInt(this.urlOpenViduServer.split(':')[2].replace(/\//g, ''));
         }
         else if (urlSplitted.length === 2) { // URL has format: hostname + :port
-            this.hostname = this.urlOpenViduServer.split(':')[0].replace(/\//g, '');
-            this.port = parseInt(this.urlOpenViduServer.split(':')[1].replace(/\//g, ''));
+            OpenVidu.hostname = this.urlOpenViduServer.split(':')[0].replace(/\//g, '');
+            OpenVidu.port = parseInt(this.urlOpenViduServer.split(':')[1].replace(/\//g, ''));
         }
         else {
             console.error("URL format incorrect: it must contain hostname and port (current value: '" + this.urlOpenViduServer + "')");
         }
     };
+    /**
+     * @hidden
+     */
+    OpenVidu.getActiveSessions = function () {
+        return this.o.activeSessions;
+    };
+    /**
+     * @hidden
+     */
     OpenVidu.API_RECORDINGS = '/api/recordings';
+    /**
+     * @hidden
+     */
     OpenVidu.API_RECORDINGS_START = '/start';
+    /**
+     * @hidden
+     */
     OpenVidu.API_RECORDINGS_STOP = '/stop';
+    /**
+     * @hidden
+     */
+    OpenVidu.API_SESSIONS = '/api/sessions';
+    /**
+     * @hidden
+     */
+    OpenVidu.API_TOKENS = '/api/tokens';
     return OpenVidu;
 }());
 exports.OpenVidu = OpenVidu;

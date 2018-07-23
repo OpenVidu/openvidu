@@ -80,21 +80,21 @@
 				<section class="tsd-panel tsd-index-panel">
 					<div class="tsd-index-content">
 						<section class="tsd-index-section ">
-							<h3>Constructors</h3>
-							<ul class="tsd-index-list">
-								<li class="tsd-kind-constructor tsd-parent-kind-class"><a href="session.html#constructor" class="tsd-kind-icon">constructor</a></li>
-							</ul>
-						</section>
-						<section class="tsd-index-section ">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="session.html#activeconnections" class="tsd-kind-icon">active<wbr>Connections</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="session.html#properties" class="tsd-kind-icon">properties</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="session.html#recording" class="tsd-kind-icon">recording</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="session.html#sessionid" class="tsd-kind-icon">session<wbr>Id</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="session.html#close" class="tsd-kind-icon">close</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="session.html#fetch" class="tsd-kind-icon">fetch</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="session.html#forcedisconnect" class="tsd-kind-icon">force<wbr>Disconnect</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="session.html#forceunpublish" class="tsd-kind-icon">force<wbr>Unpublish</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="session.html#generatetoken" class="tsd-kind-icon">generate<wbr>Token</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="session.html#getsessionid" class="tsd-kind-icon">get<wbr>Session<wbr>Id</a></li>
 							</ul>
@@ -103,51 +103,58 @@
 				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
-				<h2>Constructors</h2>
-				<section class="tsd-panel tsd-member tsd-kind-constructor tsd-parent-kind-class">
-					<a name="constructor" class="tsd-anchor"></a>
-					<h3>constructor</h3>
-					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">new <wbr>Session<span class="tsd-signature-symbol">(</span>hostname<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, port<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, basicAuth<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, properties<span class="tsd-signature-symbol">?: </span><a href="../interfaces/sessionproperties.html" class="tsd-signature-type">SessionProperties</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="session.html" class="tsd-signature-type">Session</a></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/Session.ts#L35">Session.ts:35</a></li>
-								</ul>
-							</aside>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>hostname: <span class="tsd-signature-type">string</span></h5>
-								</li>
-								<li>
-									<h5>port: <span class="tsd-signature-type">number</span></h5>
-								</li>
-								<li>
-									<h5>basicAuth: <span class="tsd-signature-type">string</span></h5>
-								</li>
-								<li>
-									<h5><span class="tsd-flag ts-flagOptional">Optional</span> properties: <a href="../interfaces/sessionproperties.html" class="tsd-signature-type">SessionProperties</a></h5>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="session.html" class="tsd-signature-type">Session</a></h4>
-						</li>
-					</ul>
-				</section>
-			</section>
-			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Properties</h2>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
+					<a name="activeconnections" class="tsd-anchor"></a>
+					<h3>active<wbr>Connections</h3>
+					<div class="tsd-signature tsd-kind-icon">active<wbr>Connections<span class="tsd-signature-symbol">:</span> <a href="connection.html" class="tsd-signature-type">Connection</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol"> =&nbsp;[]</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/Session.ts#L52">Session.ts:52</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Array of active connections to the session. This property always initialize as an empty array and
+							<strong>will remain unchanged since the last time method <a href="session.html#fetch">Session.fetch</a> was called</strong>. Exceptions to this rule are:</p>
+						</div>
+						<ul>
+							<li>Calling <a href="session.html#forceunpublish">Session.forceUnpublish</a> also automatically updates each affected Connection status</li>
+							<li>Calling <a href="session.html#forcedisconnect">Session.forceDisconnect</a> automatically updates each affected Connection status</li>
+						</ul>
+						<p>To get the array of active connections with their current actual value, you must call <a href="session.html#fetch">Session.fetch</a> before consulting
+						property <a href="session.html#activeconnections">activeConnections</a></p>
+					</div>
+				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
 					<a name="properties" class="tsd-anchor"></a>
 					<h3>properties</h3>
 					<div class="tsd-signature tsd-kind-icon">properties<span class="tsd-signature-symbol">:</span> <a href="../interfaces/sessionproperties.html" class="tsd-signature-type">SessionProperties</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/Session.ts#L33">Session.ts:33</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/Session.ts#L40">Session.ts:40</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Properties defining the session</p>
+						</div>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
+					<a name="recording" class="tsd-anchor"></a>
+					<h3>recording</h3>
+					<div class="tsd-signature tsd-kind-icon">recording<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> =&nbsp;false</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/Session.ts#L57">Session.ts:57</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Whether the session is being recorded or not</p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
 					<a name="sessionid" class="tsd-anchor"></a>
@@ -155,13 +162,130 @@
 					<div class="tsd-signature tsd-kind-icon">session<wbr>Id<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/Session.ts#L32">Session.ts:32</a></li>
+							<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/Session.ts#L35">Session.ts:35</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Unique identifier of the Session</p>
+						</div>
+					</div>
 				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Methods</h2>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="close" class="tsd-anchor"></a>
+					<h3>close</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">close<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/Session.ts#L142">Session.ts:142</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Gracefully closes the Session: unpublishes all streams and evicts every participant</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<p>A Promise that is resolved if the session has been closed successfully and rejected with an Error object if not</p>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="fetch" class="tsd-anchor"></a>
+					<h3>fetch</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">fetch<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/Session.ts#L187">Session.ts:187</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Updates every property of the Session with the current status it has in OpenVidu Server. This is especially useful for accessing the list of active
+									connections to the Session (<a href="session.html#activeconnections">Session.activeConnections</a>) and use those values to call <a href="session.html#forcedisconnect">Session.forceDisconnect</a> or <a href="session.html#forceunpublish">Session.forceUnpublish</a></p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<p>A promise resolved to true if the Session status has changed with respect to the server, or to false if not.
+							This applies to any property or sub-property of the Session object</p>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="forcedisconnect" class="tsd-anchor"></a>
+					<h3>force<wbr>Disconnect</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">force<wbr>Disconnect<span class="tsd-signature-symbol">(</span>connection<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><a href="connection.html" class="tsd-signature-type">Connection</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/Session.ts#L237">Session.ts:237</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Forces the user with Connection <code>connectionId</code> to leave the session. OpenVidu Browser will trigger the proper events on the client-side
+									(<code>streamDestroyed</code>, <code>connectionDestroyed</code>, <code>sessionDisconnected</code>) with reason set to <code>&quot;forceDisconnectByServer&quot;</code></p>
+								</div>
+								<p>You can get <code>connection</code> parameter from <a href="session.html#activeconnections">Session.activeConnections</a> array (<a href="connection.html#connectionid">Connection.connectionId</a> for getting each <code>connectionId</code> property).
+								Remember to call <a href="session.html#fetch">Session.fetch</a> before to fetch the current actual properties of the Session from OpenVidu Server</p>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>connection: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><a href="connection.html" class="tsd-signature-type">Connection</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<p>A Promise that is resolved if the user was successfully disconnected and rejected with an Error object if not</p>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="forceunpublish" class="tsd-anchor"></a>
+					<h3>force<wbr>Unpublish</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">force<wbr>Unpublish<span class="tsd-signature-symbol">(</span>publisher<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><a href="publisher.html" class="tsd-signature-type">Publisher</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/Session.ts#L304">Session.ts:304</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Forces some user to unpublish a Stream (identified by its <code>streamId</code> or the corresponding <a href="publisher.html">Publisher</a> object owning it).
+									OpenVidu Browser will trigger the proper events on the client-side (<code>streamDestroyed</code>) with reason set to <code>&quot;forceUnpublishByServer&quot;</code>.</p>
+								</div>
+								<p>You can get <code>publisher</code> parameter from <a href="connection.html#publishers">Connection.publishers</a> array (<a href="publisher.html#streamid">Publisher.streamId</a> for getting each <code>streamId</code> property).
+								Remember to call <a href="session.html#fetch">Session.fetch</a> before to fetch the current actual properties of the Session from OpenVidu Server</p>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>publisher: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><a href="publisher.html" class="tsd-signature-type">Publisher</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<p>A Promise that is resolved if the stream was successfully unpublished and rejected with an Error object if not</p>
+						</li>
+					</ul>
+				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
 					<a name="generatetoken" class="tsd-anchor"></a>
 					<h3>generate<wbr>Token</h3>
@@ -172,7 +296,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/Session.ts#L57">Session.ts:57</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/Session.ts#L93">Session.ts:93</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -201,7 +325,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/Session.ts#L48">Session.ts:48</a></li>
+									<li>Defined in <a href="https://github.com/OpenVidu/openvidu/tree/master/openvidu-node-client/src/Session.ts#L84">Session.ts:84</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -238,7 +362,13 @@
 						<a href="../enums/recordingmode.html" class="tsd-kind-icon">Recording<wbr>Mode</a>
 					</li>
 					<li class=" tsd-kind-class">
+						<a href="connection.html" class="tsd-kind-icon">Connection</a>
+					</li>
+					<li class=" tsd-kind-class">
 						<a href="openvidu.html" class="tsd-kind-icon">Open<wbr>Vidu</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="publisher.html" class="tsd-kind-icon">Publisher</a>
 					</li>
 					<li class=" tsd-kind-class">
 						<a href="recording.html" class="tsd-kind-icon">Recording</a>
@@ -248,14 +378,29 @@
 					<li class="current tsd-kind-class">
 						<a href="session.html" class="tsd-kind-icon">Session</a>
 						<ul>
-							<li class=" tsd-kind-constructor tsd-parent-kind-class">
-								<a href="session.html#constructor" class="tsd-kind-icon">constructor</a>
+							<li class=" tsd-kind-property tsd-parent-kind-class">
+								<a href="session.html#activeconnections" class="tsd-kind-icon">active<wbr>Connections</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class">
 								<a href="session.html#properties" class="tsd-kind-icon">properties</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class">
+								<a href="session.html#recording" class="tsd-kind-icon">recording</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class">
 								<a href="session.html#sessionid" class="tsd-kind-icon">session<wbr>Id</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="session.html#close" class="tsd-kind-icon">close</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="session.html#fetch" class="tsd-kind-icon">fetch</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="session.html#forcedisconnect" class="tsd-kind-icon">force<wbr>Disconnect</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="session.html#forceunpublish" class="tsd-kind-icon">force<wbr>Unpublish</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="session.html#generatetoken" class="tsd-kind-icon">generate<wbr>Token</a>
