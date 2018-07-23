@@ -14,6 +14,7 @@ export class SessionPropertiesDialogComponent {
     turnConf: string;
     manualTurnConf: RTCIceServer = {};
     participantRole: string;
+    customToken: string;
 
     mediaMode = MediaMode;
     recordingMode = RecordingMode;
@@ -25,6 +26,7 @@ export class SessionPropertiesDialogComponent {
         this.turnConf = data.turnConf;
         this.manualTurnConf = data.manualTurnConf;
         this.participantRole = data.participantRole;
+        this.customToken = data.customToken;
     }
 
     enumToArray(enumerator: any) {

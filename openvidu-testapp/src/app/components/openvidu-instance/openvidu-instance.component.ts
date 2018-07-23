@@ -116,6 +116,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   turnConf = 'auto';
   manualTurnConf: RTCIceServer = { urls: [] };
   participantRole: OpenViduRole = OpenViduRole.PUBLISHER;
+  customToken: string;
 
   events: OpenViduEvent[] = [];
 
@@ -171,9 +172,13 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       this.leaveSession();
     }
 
-    this.getToken().then(token => {
-      this.joinSessionShared(token);
-    });
+    if (!!this.customToken) {
+      this.joinSessionShared(this.customToken);
+    } else {
+      this.getToken().then(token => {
+        this.joinSessionShared(token);
+      });
+    }
   }
 
   private joinSessionShared(token): void {
@@ -494,7 +499,8 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         sessionProperties: this.sessionProperties,
         turnConf: this.turnConf,
         manualTurnConf: this.manualTurnConf,
-        participantRole: this.participantRole
+        participantRole: this.participantRole,
+        customToken: this.customToken
       },
       width: '280px'
     });
@@ -508,6 +514,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         this.turnConf = result.turnConf;
         this.manualTurnConf = result.manualTurnConf;
         this.participantRole = result.participantRole;
+        this.customToken = result.customToken;
       }
       document.getElementById('session-settings-btn-' + this.index).classList.remove('cdk-program-focused');
     });
