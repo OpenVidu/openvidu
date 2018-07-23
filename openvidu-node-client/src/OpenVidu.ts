@@ -430,7 +430,15 @@ export class OpenVidu {
               }
             });
             // Remove closed sessions from activeSessions array
-            this.activeSessions = this.activeSessions.filter(session => (!!fetchedSessionIds.find(sId => sId === session.sessionId)));
+            this.activeSessions = this.activeSessions.filter(session => {
+              if (fetchedSessionIds.includes(session.sessionId)) {
+                return true;
+              } else {
+                console.log("Removing closed session '" + session.sessionId + "'");
+                hasChanged = true;
+                return false;
+              }
+            });
             console.log('Active sessions info fetched: ', fetchedSessionIds);
             resolve(hasChanged);
           } else {
