@@ -248,10 +248,12 @@ var Publisher = /** @class */ (function (_super) {
                 }
                 // Apply PublisherProperties.publishAudio and PublisherProperties.publishVideo
                 if (!!mediaStream.getAudioTracks()[0]) {
-                    mediaStream.getAudioTracks()[0].enabled = !!_this.stream.outboundStreamOpts.publisherProperties.publishAudio;
+                    var enabled = (_this.stream.audioActive !== undefined && _this.stream.audioActive !== null) ? _this.stream.audioActive : !!_this.stream.outboundStreamOpts.publisherProperties.publishAudio;
+                    mediaStream.getAudioTracks()[0].enabled = enabled;
                 }
                 if (!!mediaStream.getVideoTracks()[0]) {
-                    mediaStream.getVideoTracks()[0].enabled = !!_this.stream.outboundStreamOpts.publisherProperties.publishVideo;
+                    var enabled = (_this.stream.videoActive !== undefined && _this.stream.videoActive !== null) ? _this.stream.videoActive : !!_this.stream.outboundStreamOpts.publisherProperties.publishVideo;
+                    mediaStream.getVideoTracks()[0].enabled = enabled;
                 }
                 _this.videoReference = document.createElement('video');
                 _this.videoReference.srcObject = mediaStream;
@@ -459,13 +461,6 @@ var Publisher = /** @class */ (function (_super) {
                 errorCallback(error);
             });
         });
-    };
-    /**
-     * @hidden
-     */
-    Publisher.prototype.updateSession = function (session) {
-        this.session = session;
-        this.stream.session = session;
     };
     /**
      * @hidden

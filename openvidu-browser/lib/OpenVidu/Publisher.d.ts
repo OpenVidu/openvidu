@@ -91,10 +91,6 @@ export declare class Publisher extends StreamManager {
     /**
      * @hidden
      */
-    updateSession(session: Session): void;
-    /**
-     * @hidden
-     */
     reestablishStreamPlayingEvent(): void;
     private setPermissionDialogTimer;
     private clearPermissionDialogTimer;
