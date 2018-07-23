@@ -516,7 +516,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   openSessionApiDialog() {
     const dialogRef = this.dialog.open(SessionApiDialogComponent, {
       data: {
-        openVidu: this.OV_NodeClient,
+        openVidu: this.OV_NodeClient ? this.OV_NodeClient : new OpenViduAPI(this.openviduUrl, this.openviduSecret),
         session: this.sessionAPI,
         sessionId: !!this.session ? this.session.sessionId : this.sessionName
       },
