@@ -15,6 +15,7 @@
  *
  */
 
+import { Filter } from './Filter';
 import { VideoInsertMode } from '../../Enums/VideoInsertMode';
 
 /**
@@ -79,5 +80,12 @@ export interface PublisherProperties {
      * @default _Default camera_
      */
     videoSource?: string | MediaStreamTrack | boolean;
+
+    /**
+     * **WARNING**: experimental option. This property may change in the near future
+     *
+     * Define a filter to apply in the Publisher's stream
+     */
+    filter?: Filter;
 
 }

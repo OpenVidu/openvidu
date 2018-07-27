@@ -101,6 +101,21 @@ export class Stream {
     videoDimensions: { width: number, height: number };
 
     /**
+     * **WARNING**: experimental option. This interface may change in the near future
+     *
+     * Filter applied to the Stream. You can apply filters by calling [[Session.applyFilter]], execute methods of the applied filter with
+     * [[Session.execFilterMethod]] and remove it with [[Session.removeFilter]]. Be aware that the client calling this methods must have the
+     * necessary permissions: the token owned by the client must have been initialized with the appropriated `allowedFilters` array.
+     */
+    filter: {
+        type?: string,
+        options?: Object,
+        lastExecMethod?: {
+            method: string, params: Object
+        }
+    } = {};
+
+    /**
      * @hidden
      */
     ee = new EventEmitter();
@@ -163,6 +178,12 @@ export class Stream {
                 this.frameRate = (this.inboundStreamOpts.frameRate === -1) ? undefined : this.inboundStreamOpts.frameRate;
                 this.videoDimensions = this.inboundStreamOpts.videoDimensions;
             }
+            if (!!this.inboundStreamOpts.filter) {
+                if (!!this.inboundStreamOpts.filter.lastExecMethod && Object.keys(this.inboundStreamOpts.filter.lastExecMethod).length === 0) {
+                    delete this.inboundStreamOpts.filter.lastExecMethod;
+                }
+                this.filter = this.inboundStreamOpts.filter;
+            }
         } else {
             // OutboundStreamOptions: stream belongs to a Publisher
             this.outboundStreamOpts = <OutboundStreamOptions>options;
@@ -181,6 +202,9 @@ export class Stream {
                 } else {
                     this.typeOfVideo = this.isSendScreen() ? 'SCREEN' : 'CAMERA';
                 }
+            }
+            if (!!this.outboundStreamOpts.publisherProperties.filter) {
+                this.filter = this.outboundStreamOpts.publisherProperties.filter;
             }
         }
 
@@ -467,7 +491,8 @@ export class Stream {
                     videoActive: this.videoActive,
                     typeOfVideo,
                     frameRate: !!this.frameRate ? this.frameRate : -1,
-                    videoDimensions: JSON.stringify(this.videoDimensions)
+                    videoDimensions: JSON.stringify(this.videoDimensions),
+                    filter: this.outboundStreamOpts.publisherProperties.filter
                 }, (error, response) => {
                     if (error) {
                         if (error.code === 401) {

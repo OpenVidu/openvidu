@@ -492,6 +492,99 @@ export class Session implements EventDispatcher {
         });
     }
 
+    applyFilter(stream: Stream, type: string, options: string): Promise<any> {
+        return new Promise((resolve, reject) => {
+            console.info('Applying filter to stream ' + stream.streamId);
+            this.openvidu.sendRequest(
+                'applyFilter',
+                { streamId: stream.streamId, type, options },
+                (error, response) => {
+                    if (error) {
+                        console.error('Error applying filter for Stream ' + stream.streamId, error);
+                        if (error.code === 401) {
+                            reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to apply a filter"));
+                        } else {
+                            reject(error);
+                        }
+                    } else {
+                        console.info('Filter successfully applied on Stream ' + stream.streamId);
+                        const oldValue = JSON.parse(JSON.stringify(stream.filter));
+                        stream.filter = { type, options };
+                        this.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this, stream, 'filter', stream.filter, oldValue, 'applyFilter')]);
+                        stream.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(stream.streamManager, stream, 'filter', stream.filter, oldValue, 'applyFilter')]);
+                        resolve();
+                    }
+                }
+            );
+        });
+    }
+
+    execFilterMethod(stream: Stream, method: string, params: Object): Promise<any> {
+        return new Promise((resolve, reject) => {
+            console.info('Executing filter method to stream ' + stream.streamId);
+            let stringParams;
+            if (typeof params !== 'string') {
+                try {
+                    stringParams = JSON.stringify(params);
+                } catch (error) {
+                    const errorMsg = "'params' property must be a JSON formatted object";
+                    console.error(errorMsg);
+                    reject(errorMsg);
+                }
+            } else {
+                stringParams = <string>params;
+            }
+            this.openvidu.sendRequest(
+                'execFilterMethod',
+                { streamId: stream.streamId, method, params: stringParams },
+                (error, response) => {
+                    if (error) {
+                        console.error('Error executing filter method for Stream ' + stream.streamId, error);
+                        if (error.code === 401) {
+                            reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to execute a filter method"));
+                        } else {
+                            reject(error);
+                        }
+                    } else {
+                        console.info('Filter method successfully executed on Stream ' + stream.streamId);
+                        const oldValue = JSON.parse(JSON.stringify(stream.filter));
+                        stream.filter.lastExecMethod = { method, params: JSON.parse(stringParams) };
+                        this.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this, stream, 'filter', stream.filter, oldValue, 'execFilterMethod')]);
+                        stream.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(stream.streamManager, stream, 'filter', stream.filter, oldValue, 'execFilterMethod')]);
+                        resolve();
+                    }
+                }
+            );
+        });
+    }
+
+    removeFilter(stream: Stream): Promise<any> {
+        return new Promise((resolve, reject) => {
+            console.info('Removing filter of stream ' + stream.streamId);
+            this.openvidu.sendRequest(
+                'removeFilter',
+                { streamId: stream.streamId },
+                (error, response) => {
+                    if (error) {
+                        console.error('Error removing filter for Stream ' + stream.streamId, error);
+                        if (error.code === 401) {
+                            reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to remove a filter"));
+                        } else {
+                            reject(error);
+                        }
+                    } else {
+                        console.info('Filter successfully removed from Stream ' + stream.streamId);
+                        const oldValue = JSON.parse(JSON.stringify(stream.filter));
+                        stream.filter = new Object();
+                        this.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this, stream, 'filter', stream.filter, oldValue, 'applyFilter')]);
+                        stream.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(stream.streamManager, stream, 'filter', stream.filter, oldValue, 'applyFilter')]);
+                        resolve();
+                    }
+                }
+            );
+        });
+    }
+
 
     /**
      * Sends one signal. `signal` object has the following optional properties:
@@ -791,6 +884,10 @@ export class Session implements EventDispatcher {
                             oldValue = stream.videoDimensions;
                             msg.newValue = JSON.parse(JSON.parse(msg.newValue));
                             stream.videoDimensions = msg.newValue;
+                            break;
+                        case 'filter':
+                            oldValue = stream.filter;
+                            stream.filter = msg.newValue;
                             break;
                     }
 
