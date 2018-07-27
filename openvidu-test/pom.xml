@@ -69,7 +69,7 @@
 		<dependency>
 			<groupId>org.kurento</groupId>
 			<artifactId>kurento-test</artifactId>
-			<version>${version.kurento}</version>
+			<version>6.7.1</version>
 			<exclusions>
 				<exclusion>
 					<groupId>org.springframework.boot</groupId>
