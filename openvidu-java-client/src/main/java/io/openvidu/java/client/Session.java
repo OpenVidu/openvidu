@@ -108,6 +108,33 @@ public class Session {
 		json.put("session", this.sessionId);
 		json.put("role", tokenOptions.getRole().name());
 		json.put("data", tokenOptions.getData());
+		if (tokenOptions.getKurentoOptions() != null) {
+			JSONObject kurentoOptions = new JSONObject();
+			if (tokenOptions.getKurentoOptions().getVideoMaxRecvBandwidth() != null) {
+				kurentoOptions.put("videoMaxRecvBandwidth",
+						tokenOptions.getKurentoOptions().getVideoMaxRecvBandwidth());
+			}
+			if (tokenOptions.getKurentoOptions().getVideoMinRecvBandwidth() != null) {
+				kurentoOptions.put("videoMinRecvBandwidth",
+						tokenOptions.getKurentoOptions().getVideoMinRecvBandwidth());
+			}
+			if (tokenOptions.getKurentoOptions().getVideoMaxSendBandwidth() != null) {
+				kurentoOptions.put("videoMaxSendBandwidth",
+						tokenOptions.getKurentoOptions().getVideoMaxSendBandwidth());
+			}
+			if (tokenOptions.getKurentoOptions().getVideoMinSendBandwidth() != null) {
+				kurentoOptions.put("videoMinSendBandwidth",
+						tokenOptions.getKurentoOptions().getVideoMinSendBandwidth());
+			}
+			if (tokenOptions.getKurentoOptions().getAllowedFilters().length > 0) {
+				JSONArray allowedFilters = new JSONArray();
+				for (String filter : tokenOptions.getKurentoOptions().getAllowedFilters()) {
+					allowedFilters.add(filter);
+				}
+				kurentoOptions.put("allowedFilters", allowedFilters);
+			}
+			json.put("kurentoConfiguration", kurentoOptions);
+		}
 		StringEntity params;
 		try {
 			params = new StringEntity(json.toString());

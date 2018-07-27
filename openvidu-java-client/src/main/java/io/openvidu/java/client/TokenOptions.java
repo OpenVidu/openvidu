@@ -24,6 +24,7 @@ public class TokenOptions {
 
 	private String data;
 	private OpenViduRole role;
+	private KurentoOptions kurentoOptions;
 
 	/**
 	 * 
@@ -34,12 +35,13 @@ public class TokenOptions {
 
 		private String data = "";
 		private OpenViduRole role = OpenViduRole.PUBLISHER;
+		private KurentoOptions kurentoOptions;
 
 		/**
 		 * Builder for {@link io.openvidu.java.client.TokenOptions}
 		 */
 		public TokenOptions build() {
-			return new TokenOptions(this.data, this.role);
+			return new TokenOptions(this.data, this.role, this.kurentoOptions);
 		}
 
 		/**
@@ -77,11 +79,21 @@ public class TokenOptions {
 			return this;
 		}
 
+		/**
+		 * Call this method to set a {@link io.openvidu.java.client.KurentoOptions}
+		 * object for this token
+		 */
+		public Builder kurentoOptions(KurentoOptions kurentoOptions) {
+			this.kurentoOptions = kurentoOptions;
+			return this;
+		}
+
 	}
 
-	private TokenOptions(String data, OpenViduRole role) {
+	private TokenOptions(String data, OpenViduRole role, KurentoOptions kurentoOptions) {
 		this.data = data;
 		this.role = role;
+		this.kurentoOptions = kurentoOptions;
 	}
 
 	/**
@@ -96,6 +108,13 @@ public class TokenOptions {
 	 */
 	public OpenViduRole getRole() {
 		return this.role;
+	}
+
+	/**
+	 * Returns the Kurento options assigned to this token
+	 */
+	public KurentoOptions getKurentoOptions() {
+		return this.kurentoOptions;
 	}
 
 }
