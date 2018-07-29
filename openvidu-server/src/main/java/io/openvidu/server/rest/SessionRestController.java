@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
 
+import io.openvidu.server.core.*;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,10 +44,6 @@ import io.openvidu.java.client.RecordingMode;
 import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.server.config.OpenviduConfig;
-import io.openvidu.server.core.Participant;
-import io.openvidu.server.core.ParticipantRole;
-import io.openvidu.server.core.Session;
-import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.recording.ComposedRecordingService;
 import io.openvidu.server.recording.Recording;
 
@@ -60,7 +57,13 @@ import io.openvidu.server.recording.Recording;
 public class SessionRestController {
 
 	@Autowired
-	private SessionManager sessionManager;
+	private SessionManagerProvider sessionManagerProvider;
+
+	@Autowired
+	private SessionStorage sessionStorage;
+
+	@Autowired
+	private Utils utils;
 
 	@Autowired
 	private ComposedRecordingService recordingService;
@@ -120,16 +123,16 @@ public class SessionRestController {
 
 		String sessionId;
 		if (customSessionId != null && !customSessionId.isEmpty()) {
-			if (sessionManager.sessionidTokenTokenobj.putIfAbsent(customSessionId, new ConcurrentHashMap<>()) != null) {
+			if (this.sessionStorage.putTokenObject(customSessionId, new ConcurrentHashMap<>()) != null) {
 				return new ResponseEntity<>(HttpStatus.CONFLICT);
 			}
 			sessionId = customSessionId;
 		} else {
-			sessionId = sessionManager.generateRandomChain();
-			sessionManager.sessionidTokenTokenobj.putIfAbsent(sessionId, new ConcurrentHashMap<>());
+			sessionId = utils.generateRandomChain();
+			this.sessionStorage.putTokenObject(sessionId, new ConcurrentHashMap<>());
 		}
 
-		sessionManager.storeSessionId(sessionId, sessionProperties);
+		sessionStorage.storeSessionId(sessionId, sessionProperties);
 		JSONObject responseJson = new JSONObject();
 		responseJson.put("id", sessionId);
 
@@ -140,7 +143,7 @@ public class SessionRestController {
 	@RequestMapping(value = "/sessions/{sessionId}", method = RequestMethod.GET)
 	public ResponseEntity<JSONObject> getSession(@PathVariable("sessionId") String sessionId,
 			@RequestParam(value = "webRtcStats", defaultValue = "false", required = false) boolean webRtcStats) {
-		Session session = this.sessionManager.getSession(sessionId);
+		Session session = this.sessionStorage.getSession(sessionId);
 		if (session != null) {
 			JSONObject response = (webRtcStats == true) ? session.withStatsToJSON() : session.toJSON();
 			response.put("recording", this.recordingService.sessionIsBeingRecorded(sessionId));
@@ -154,7 +157,7 @@ public class SessionRestController {
 	@RequestMapping(value = "/sessions", method = RequestMethod.GET)
 	public ResponseEntity<JSONObject> listSessions(
 			@RequestParam(value = "webRtcStats", defaultValue = "false", required = false) boolean webRtcStats) {
-		Collection<Session> sessions = this.sessionManager.getSessionObjects();
+		Collection<Session> sessions = this.sessionStorage.getSessionObjects();
 		JSONObject json = new JSONObject();
 		JSONArray jsonArray = new JSONArray();
 		sessions.forEach(s -> {
@@ -169,9 +172,9 @@ public class SessionRestController {
 
 	@RequestMapping(value = "/sessions/{sessionId}", method = RequestMethod.DELETE)
 	public ResponseEntity<JSONObject> closeSession(@PathVariable("sessionId") String sessionId) {
-		Session session = this.sessionManager.getSession(sessionId);
+		Session session = this.sessionStorage.getSession(sessionId);
 		if (session != null) {
-			this.sessionManager.closeSession(sessionId, "sessionClosedByServer");
+			this.sessionManagerProvider.get(sessionId).closeSession(sessionId, "sessionClosedByServer");
 			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 		} else {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -181,11 +184,11 @@ public class SessionRestController {
 	@RequestMapping(value = "/sessions/{sessionId}/connection/{connectionId}", method = RequestMethod.DELETE)
 	public ResponseEntity<JSONObject> disconnectParticipant(@PathVariable("sessionId") String sessionId,
 			@PathVariable("connectionId") String participantPublicId) {
-		Session session = this.sessionManager.getSession(sessionId);
+		Session session = this.sessionStorage.getSession(sessionId);
 		if (session != null) {
 			Participant participant = session.getParticipantByPublicId(participantPublicId);
 			if (participant != null) {
-				this.sessionManager.evictParticipant(participant, null, null, "forceDisconnectByServer");
+				this.sessionManagerProvider.get(sessionId).evictParticipant(participant, null, null, "forceDisconnectByServer");
 				return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 			} else {
 				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -198,9 +201,9 @@ public class SessionRestController {
 	@RequestMapping(value = "/sessions/{sessionId}/stream/{streamId}", method = RequestMethod.DELETE)
 	public ResponseEntity<JSONObject> unpublishStream(@PathVariable("sessionId") String sessionId,
 			@PathVariable("streamId") String streamId) {
-		Session session = this.sessionManager.getSession(sessionId);
+		Session session = this.sessionStorage.getSession(sessionId);
 		if (session != null) {
-			if (this.sessionManager.unpublishStream(session, streamId, null, null, "forceUnpublishByServer")) {
+			if (this.sessionManagerProvider.get(sessionId).unpublishStream(session, streamId, null, null, "forceUnpublishByServer")) {
 				return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 			} else {
 				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -236,7 +239,7 @@ public class SessionRestController {
 
 			metadata = (metadata != null) ? metadata : "";
 
-			String token = sessionManager.newToken(sessionId, role, metadata);
+			String token = sessionStorage.newToken(sessionId, role, metadata);
 			JSONObject responseJson = new JSONObject();
 			responseJson.put("id", token);
 			responseJson.put("session", sessionId);
@@ -271,7 +274,7 @@ public class SessionRestController {
 			return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
 		}
 
-		Session session = sessionManager.getSession(sessionId);
+		Session session = sessionStorage.getSession(sessionId);
 
 		if (session == null) {
 			// Session does not exist
@@ -327,11 +330,11 @@ public class SessionRestController {
 			return new ResponseEntity<>(HttpStatus.CONFLICT);
 		}
 
-		Session session = sessionManager.getSession(recording.getSessionId());
+		Session session = sessionStorage.getSession(recording.getSessionId());
 
 		Recording stoppedRecording = this.recordingService.stopRecording(session, "recordingStoppedByServer");
 
-		sessionManager.evictParticipant(
+		sessionManagerProvider.get(session.getSessionId()).evictParticipant(
 				session.getParticipantByPublicId(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID), null, null,
 				"EVICT_RECORDER");
 

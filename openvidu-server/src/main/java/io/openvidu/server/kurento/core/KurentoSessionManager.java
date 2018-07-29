@@ -70,10 +70,10 @@ public class KurentoSessionManager extends SessionManager {
 
 			KurentoClientSessionInfo kcSessionInfo = new OpenViduKurentoClientSessionInfo(
 					participant.getParticipantPrivateId(), sessionId);
-			KurentoSession session = (KurentoSession) sessions.get(sessionId);
+			KurentoSession session = (KurentoSession) this.sessionStorage.getSession(sessionId);
 
 			if (session == null && kcSessionInfo != null) {
-				SessionProperties properties = sessionProperties.get(sessionId);
+				SessionProperties properties = this.sessionStorage.getSessionProperties(sessionId);
 				if (properties == null && this.isInsecureParticipant(participant.getParticipantPrivateId())) {
 					properties = new SessionProperties.Builder().mediaMode(MediaMode.ROUTED)
 							.recordingMode(RecordingMode.ALWAYS).defaultRecordingLayout(RecordingLayout.BEST_FIT)
@@ -81,7 +81,7 @@ public class KurentoSessionManager extends SessionManager {
 				}
 				createSession(kcSessionInfo, properties);
 			}
-			session = (KurentoSession) sessions.get(sessionId);
+			session = (KurentoSession) this.sessionStorage.getSession(sessionId);
 			if (session == null) {
 				log.warn("Session '{}' not found");
 				throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE, "Session '" + sessionId
@@ -125,26 +125,26 @@ public class KurentoSessionManager extends SessionManager {
 
 		// Update control data structures
 
-		if (sessionidParticipantpublicidParticipant.get(sessionId) != null) {
-			Participant p = sessionidParticipantpublicidParticipant.get(sessionId)
+		if (this.sessionStorage.getPublicIdParticipantMap(sessionId) != null) {
+			Participant p = this.sessionStorage.getPublicIdParticipantMap(sessionId)
 					.remove(participant.getParticipantPublicId());
 
 			if (this.coturnCredentialsService.isCoturnAvailable()) {
 				this.coturnCredentialsService.deleteUser(p.getToken().getTurnCredentials().getUsername());
 			}
 
-			if (sessionidTokenTokenobj.get(sessionId) != null) {
-				sessionidTokenTokenobj.get(sessionId).remove(p.getToken().getToken());
+			if (this.sessionStorage.getTokenObject(sessionId) != null) {
+				this.sessionStorage.getTokenObject(sessionId).remove(p.getToken().getToken());
 			}
 			boolean stillParticipant = false;
-			for (Session s : sessions.values()) {
+			for (Session s : this.sessionStorage.getSessionObjects()) {
 				if (s.getParticipantByPrivateId(p.getParticipantPrivateId()) != null) {
 					stillParticipant = true;
 					break;
 				}
 			}
 			if (!stillParticipant) {
-				insecureUsers.remove(p.getParticipantPrivateId());
+				this.sessionStorage.removeInsecureParticipant(p.getParticipantPrivateId());
 			}
 		}
 
@@ -437,7 +437,7 @@ public class KurentoSessionManager extends SessionManager {
 	public void createSession(KurentoClientSessionInfo kcSessionInfo, SessionProperties sessionProperties)
 			throws OpenViduException {
 		String sessionId = kcSessionInfo.getRoomName();
-		KurentoSession session = (KurentoSession) sessions.get(sessionId);
+		KurentoSession session = (KurentoSession) this.sessionStorage.getSession(sessionId);
 		if (session != null) {
 			throw new OpenViduException(Code.ROOM_CANNOT_BE_CREATED_ERROR_CODE,
 					"Session '" + sessionId + "' already exists");
@@ -446,7 +446,8 @@ public class KurentoSessionManager extends SessionManager {
 		session = new KurentoSession(sessionId, sessionProperties, kurentoClient, kurentoSessionEventsHandler,
 				kcProvider.destroyWhenUnused(), this.CDR, this.openviduConfig);
 
-		KurentoSession oldSession = (KurentoSession) sessions.putIfAbsent(sessionId, session);
+		KurentoSession oldSession = (KurentoSession) this.sessionStorage.putSessionIfAbsent(sessionId, session);
+		this.sessionStorage.putSessionPropertiesIfAbsent(sessionId, sessionProperties);
 		if (oldSession != null) {
 			log.warn("Session '{}' has just been created by another thread", sessionId);
 			return;

@@ -25,6 +25,9 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.ws.rs.ProcessingException;
 
+import io.openvidu.server.core.SessionManagerProvider;
+import io.openvidu.server.core.SessionStorage;
+import io.openvidu.server.core.Utils;
 import org.kurento.jsonrpc.JsonUtils;
 import org.kurento.jsonrpc.internal.server.config.JsonRpcConfiguration;
 import org.kurento.jsonrpc.server.JsonRpcConfigurer;
@@ -153,6 +156,18 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	public CoturnCredentialsService coturnCredentialsService() {
 		return new CoturnCredentialsServiceFactory(openviduConfig()).getCoturnCredentialsService();
 	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public SessionStorage sessionStorage() { return new SessionStorage(); }
+
+	@Bean
+	@ConditionalOnMissingBean
+	public Utils utils() { return new Utils(); }
+
+	@Bean
+	@ConditionalOnMissingBean
+	public SessionManagerProvider sessionManagerProvider() { return new SessionManagerProvider(); }
 
 	@Override
 	public void registerJsonRpcHandlers(JsonRpcHandlerRegistry registry) {
