@@ -26,8 +26,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 import org.kurento.client.Continuation;
 import org.kurento.client.ErrorEvent;
 import org.kurento.client.EventListener;
@@ -36,6 +34,9 @@ import org.kurento.client.KurentoClient;
 import org.kurento.client.MediaPipeline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
@@ -361,35 +362,34 @@ public class KurentoSession implements Session {
 	}
 
 	@Override
-	public JSONObject toJSON() {
-		return this.sharedJSON(KurentoParticipant::toJSON);
+	public JsonObject toJson() {
+		return this.sharedJson(KurentoParticipant::toJson);
 	}
 
 	@Override
-	public JSONObject withStatsToJSON() {
-		return this.sharedJSON(KurentoParticipant::withStatsToJSON);
+	public JsonObject withStatsToJson() {
+		return this.sharedJson(KurentoParticipant::withStatsToJson);
 	}
 
-	@SuppressWarnings("unchecked")
-	private JSONObject sharedJSON(Function<KurentoParticipant, JSONObject> toJsonFunction) {
-		JSONObject json = new JSONObject();
-		json.put("sessionId", this.sessionId);
-		json.put("mediaMode", this.sessionProperties.mediaMode().name());
-		json.put("recordingMode", this.sessionProperties.recordingMode().name());
-		json.put("defaultRecordingLayout", this.sessionProperties.defaultRecordingLayout().name());
+	private JsonObject sharedJson(Function<KurentoParticipant, JsonObject> toJsonFunction) {
+		JsonObject json = new JsonObject();
+		json.addProperty("sessionId", this.sessionId);
+		json.addProperty("mediaMode", this.sessionProperties.mediaMode().name());
+		json.addProperty("recordingMode", this.sessionProperties.recordingMode().name());
+		json.addProperty("defaultRecordingLayout", this.sessionProperties.defaultRecordingLayout().name());
 		if (RecordingLayout.CUSTOM.equals(this.sessionProperties.defaultRecordingLayout())) {
-			json.put("defaultCustomLayout", this.sessionProperties.defaultCustomLayout());
+			json.addProperty("defaultCustomLayout", this.sessionProperties.defaultCustomLayout());
 		}
-		JSONObject connections = new JSONObject();
-		JSONArray participants = new JSONArray();
+		JsonObject connections = new JsonObject();
+		JsonArray participants = new JsonArray();
 		this.participants.values().forEach(p -> {
 			if (!ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(p.getParticipantPublicId())) {
 				participants.add(toJsonFunction.apply(p));
 			}
 		});
-		connections.put("numberOfElements", participants.size());
-		connections.put("content", participants);
-		json.put("connections", connections);
+		connections.addProperty("numberOfElements", participants.size());
+		connections.add("content", participants);
+		json.add("connections", connections);
 		return json;
 	}
 

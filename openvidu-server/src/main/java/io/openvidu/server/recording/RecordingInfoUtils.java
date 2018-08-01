@@ -21,39 +21,45 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonIOException;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 
 public class RecordingInfoUtils {
 
-	private JSONParser parser;
-	private JSONObject json;
-	private JSONObject jsonFormat;
-	private JSONObject videoStream;
-	private JSONObject audioStream;
+	private JsonParser parser;
+	private JsonObject json;
+	private JsonObject jsonFormat;
+	private JsonObject videoStream;
+	private JsonObject audioStream;
 
-	public RecordingInfoUtils(String fullVideoPath)
-			throws FileNotFoundException, IOException, ParseException, OpenViduException {
+	public RecordingInfoUtils(String fullVideoPath) throws FileNotFoundException, IOException, OpenViduException {
 
-		this.parser = new JSONParser();
-		this.json = (JSONObject) parser.parse(new FileReader(fullVideoPath));
+		this.parser = new JsonParser();
 
-		if (json.isEmpty()) {
-			// Recording metadata from ffprobe is empty: video file is corrupted or empty
-			throw new OpenViduException(Code.RECORDING_FILE_EMPTY_ERROR, "The recording file is empty or corrupted");
+		try {
+			this.json = parser.parse(new FileReader(fullVideoPath)).getAsJsonObject();
+		} catch (JsonIOException | JsonSyntaxException e) {
+			// Recording metadata from ffprobe is not a JSON: video file is corrupted
+			throw new OpenViduException(Code.RECORDING_FILE_EMPTY_ERROR, "The recording file is corrupted");
 		}
 
-		this.jsonFormat = (JSONObject) json.get("format");
+		if (this.json.size() == 0) {
+			// Recording metadata from ffprobe is an emtpy JSON
+			throw new OpenViduException(Code.RECORDING_FILE_EMPTY_ERROR, "The recording file is empty");
+		}
 
-		JSONArray streams = (JSONArray) json.get("streams");
+		this.jsonFormat = json.get("format").getAsJsonObject();
+
+		JsonArray streams = json.get("streams").getAsJsonArray();
 
 		for (int i = 0; i < streams.size(); i++) {
-			JSONObject stream = (JSONObject) streams.get(i);
+			JsonObject stream = streams.get(i).getAsJsonObject();
 			if ("video".equals(stream.get("codec_type").toString())) {
 				this.videoStream = stream;
 			} else if ("audio".equals(stream.get("codec_type").toString())) {
@@ -64,19 +70,19 @@ public class RecordingInfoUtils {
 	}
 
 	public double getDurationInSeconds() {
-		return Double.parseDouble(jsonFormat.get("duration").toString());
+		return jsonFormat.get("duration").getAsDouble();
 	}
 
 	public int getSizeInBytes() {
-		return Integer.parseInt(jsonFormat.get("size").toString());
+		return jsonFormat.get("size").getAsInt();
 	}
 
 	public int getNumberOfStreams() {
-		return Integer.parseInt(jsonFormat.get("nb_streams").toString());
+		return jsonFormat.get("nb_streams").getAsInt();
 	}
 
 	public int getBitRate() {
-		return (Integer.parseInt(jsonFormat.get("bit_rate").toString()) / 1000);
+		return ((jsonFormat.get("bit_rate").getAsInt()) / 1000);
 	}
 
 	public boolean hasVideo() {
@@ -88,11 +94,11 @@ public class RecordingInfoUtils {
 	}
 
 	public int videoWidth() {
-		return Integer.parseInt(videoStream.get("width").toString());
+		return videoStream.get("width").getAsInt();
 	}
 
 	public int videoHeight() {
-		return Integer.parseInt(videoStream.get("height").toString());
+		return videoStream.get("height").getAsInt();
 	}
 
 	public int getVideoFramerate() {

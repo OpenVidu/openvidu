@@ -37,9 +37,6 @@ import java.util.stream.Collectors;
 import javax.ws.rs.ProcessingException;
 
 import org.apache.commons.io.FilenameUtils;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,6 +58,8 @@ import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.core.DockerClientConfig;
 import com.github.dockerjava.core.command.ExecStartResultCallback;
 import com.github.dockerjava.core.command.PullImageResultCallback;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
@@ -137,9 +136,9 @@ public class ComposedRecordingService {
 		envs.add("VIDEO_NAME=" + properties.name());
 		envs.add("VIDEO_FORMAT=mp4");
 		envs.add("USER_ID=" + uid);
-		envs.add("RECORDING_JSON=" + recording.toJson().toJSONString());
+		envs.add("RECORDING_JSON=" + recording.toJson().toString());
 
-		log.info(recording.toJson().toJSONString());
+		log.info(recording.toJson().toString());
 		log.info("Recorder connecting to url {}", layoutUrl);
 
 		String containerId = this.runRecordingContainer(envs, "recording_" + recordingId);
@@ -212,7 +211,7 @@ public class ComposedRecordingService {
 				recording.setUrl(this.openviduConfig.getFinalUrl() + "recordings/" + recording.getName() + ".mp4");
 			}
 
-		} catch (IOException | ParseException e) {
+		} catch (IOException e) {
 			throw new OpenViduException(Code.RECORDING_REPORT_ERROR_CODE,
 					"There was an error generating the metadata report file for the recording");
 		}
@@ -396,7 +395,7 @@ public class ComposedRecordingService {
 			// Cannot delete an active recording
 			return HttpStatus.CONFLICT;
 		}
-		
+
 		Recording recording = getRecordingFromHost(recordingId);
 		if (recording == null) {
 			return HttpStatus.NOT_FOUND;
@@ -417,11 +416,10 @@ public class ComposedRecordingService {
 
 	private Recording getRecordingFromEntityFile(File file) {
 		if (file.isFile() && file.getName().startsWith(RECORDING_ENTITY_FILE)) {
-			JSONParser parser = new JSONParser();
-			JSONObject json = null;
+			JsonObject json = null;
 			try {
-				json = (JSONObject) parser.parse(new FileReader(file));
-			} catch (IOException | ParseException e) {
+				json = new JsonParser().parse(new FileReader(file)).getAsJsonObject();
+			} catch (IOException e) {
 				return null;
 			}
 			return new Recording(json);

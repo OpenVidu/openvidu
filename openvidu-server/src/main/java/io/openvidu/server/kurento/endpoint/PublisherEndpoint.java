@@ -21,18 +21,23 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.CountDownLatch;
 
-import org.json.simple.JSONObject;
 import org.kurento.client.Continuation;
+import org.kurento.client.GenericMediaElement;
 import org.kurento.client.ListenerSubscription;
 import org.kurento.client.MediaElement;
 import org.kurento.client.MediaPipeline;
 import org.kurento.client.MediaType;
 import org.kurento.client.PassThrough;
 import org.kurento.client.WebRtcEndpoint;
+import org.kurento.jsonrpc.Props;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
@@ -40,6 +45,7 @@ import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.kurento.TrackType;
 import io.openvidu.server.kurento.core.KurentoParticipant;
+import io.openvidu.server.utils.JsonUtils;
 
 /**
  * Publisher aspect of the {@link MediaEndpoint}.
@@ -55,13 +61,15 @@ public class PublisherEndpoint extends MediaEndpoint {
 	private PassThrough passThru = null;
 	private ListenerSubscription passThruSubscription = null;
 
+	private GenericMediaElement filter;
 	private Map<String, MediaElement> elements = new HashMap<String, MediaElement>();
 	private LinkedList<String> elementIds = new LinkedList<String>();
 	private boolean connected = false;
 
 	private Map<String, ListenerSubscription> elementsErrorSubscriptions = new HashMap<String, ListenerSubscription>();
 
-	public PublisherEndpoint(boolean web, KurentoParticipant owner, String endpointName, MediaPipeline pipeline, OpenviduConfig openviduConfig) {
+	public PublisherEndpoint(boolean web, KurentoParticipant owner, String endpointName, MediaPipeline pipeline,
+			OpenviduConfig openviduConfig) {
 		super(web, owner, endpointName, pipeline, openviduConfig, log);
 	}
 
@@ -90,6 +98,10 @@ public class PublisherEndpoint extends MediaEndpoint {
 			elements.put(passThru.getId(), passThru);
 		}
 		return elements.values();
+	}
+
+	public GenericMediaElement getFilter() {
+		return this.filter;
 	}
 
 	/**
@@ -180,7 +192,7 @@ public class PublisherEndpoint extends MediaEndpoint {
 	 * @throws OpenViduException
 	 *             if thrown, the media element was not added
 	 */
-	public String apply(MediaElement shaper) throws OpenViduException {
+	public String apply(GenericMediaElement shaper) throws OpenViduException {
 		return apply(shaper, null);
 	}
 
@@ -198,7 +210,7 @@ public class PublisherEndpoint extends MediaEndpoint {
 	 * @throws OpenViduException
 	 *             if thrown, the media element was not added
 	 */
-	public synchronized String apply(MediaElement shaper, MediaType type) throws OpenViduException {
+	public synchronized String apply(GenericMediaElement shaper, MediaType type) throws OpenViduException {
 		String id = shaper.getId();
 		if (id == null) {
 			throw new OpenViduException(Code.MEDIA_WEBRTC_ENDPOINT_ERROR_CODE,
@@ -222,6 +234,9 @@ public class PublisherEndpoint extends MediaEndpoint {
 		}
 		elementIds.addFirst(id);
 		elements.put(id, shaper);
+
+		this.filter = shaper;
+
 		elementsErrorSubscriptions.put(id, registerElemErrListener(shaper));
 		return id;
 	}
@@ -283,6 +298,12 @@ public class PublisherEndpoint extends MediaEndpoint {
 				}
 			});
 		}
+		this.filter = null;
+	}
+
+	public JsonElement execMethod(String method, JsonObject params) throws OpenViduException {
+		Props props = new JsonUtils().fromJsonObjectToProps(params);
+		return (JsonElement) ((GenericMediaElement) this.filter).invoke(method, props);
 	}
 
 	public synchronized void mute(TrackType muteType) {
@@ -488,22 +509,20 @@ public class PublisherEndpoint extends MediaEndpoint {
 		this.mediaOptions = mediaOptions;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public JSONObject toJSON() {
-		JSONObject json = super.toJSON();
-		json.put("streamId", this.getEndpoint().getTag("name"));
-		json.put("mediaOptions", this.mediaOptions.toJSON());
+	public JsonObject toJson() {
+		JsonObject json = super.toJson();
+		json.addProperty("streamId", this.getEndpoint().getTag("name"));
+		json.add("mediaOptions", this.mediaOptions.toJson());
 		return json;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public JSONObject withStatsToJSON() {
-		JSONObject json = super.withStatsToJSON();
-		JSONObject toJSON = this.toJSON();
-		for (Object key : toJSON.keySet()) {
-			json.put(key, toJSON.get(key));
+	public JsonObject withStatsToJson() {
+		JsonObject json = super.withStatsToJson();
+		JsonObject toJson = this.toJson();
+		for (Entry<String, JsonElement> entry : toJson.entrySet()) {
+			json.add(entry.getKey(), entry.getValue());
 		}
 		return json;
 	}

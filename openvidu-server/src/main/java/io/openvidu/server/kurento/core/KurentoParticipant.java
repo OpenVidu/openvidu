@@ -26,11 +26,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 import org.kurento.client.Continuation;
 import org.kurento.client.ErrorEvent;
 import org.kurento.client.Filter;
+import org.kurento.client.GenericMediaElement;
 import org.kurento.client.IceCandidate;
 import org.kurento.client.MediaElement;
 import org.kurento.client.MediaPipeline;
@@ -39,6 +38,9 @@ import org.kurento.client.SdpEndpoint;
 import org.kurento.client.internal.server.KurentoServerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
@@ -115,7 +117,7 @@ public class KurentoParticipant extends Participant {
 
 	}
 
-	public void shapePublisherMedia(MediaElement element, MediaType type) {
+	public void shapePublisherMedia(GenericMediaElement element, MediaType type) {
 		if (type == null) {
 			this.publisher.apply(element);
 		} else {
@@ -127,38 +129,25 @@ public class KurentoParticipant extends Participant {
 		return filters.get(id);
 	}
 
-	public synchronized void addFilterElement(String id, Filter filter) {
-		filters.put(id, filter);
-		shapePublisherMedia(filter, null);
-	}
-
-	public synchronized void disableFilterelement(String filterID, boolean releaseElement) {
-		Filter filter = getFilterElement(filterID);
-
-		if (filter != null) {
-			try {
-				publisher.revert(filter, releaseElement);
-			} catch (OpenViduException e) {
-				// Ignore error
-			}
-		}
-	}
-
-	public synchronized void enableFilterelement(String filterID) {
-		Filter filter = getFilterElement(filterID);
-
-		if (filter != null) {
-			try {
-				publisher.apply(filter);
-			} catch (OpenViduException e) {
-				// Ignore exception if element is already used
-			}
-		}
-	}
+	/*
+	 * public synchronized void addFilterElement(String id, Filter filter) {
+	 * filters.put(id, filter); shapePublisherMedia(filter, null); }
+	 * 
+	 * public synchronized void disableFilterelement(String filterID, boolean
+	 * releaseElement) { Filter filter = getFilterElement(filterID);
+	 * 
+	 * if (filter != null) { try { publisher.revert(filter, releaseElement); } catch
+	 * (OpenViduException e) { // Ignore error } } }
+	 * 
+	 * public synchronized void enableFilterelement(String filterID) { Filter filter
+	 * = getFilterElement(filterID);
+	 * 
+	 * if (filter != null) { try { publisher.apply(filter); } catch
+	 * (OpenViduException e) { // Ignore exception if element is already used } } }
+	 */
 
 	public synchronized void removeFilterElement(String id) {
 		Filter filter = getFilterElement(id);
-
 		filters.remove(id);
 		if (filter != null) {
 			publisher.revert(filter);
@@ -166,10 +155,11 @@ public class KurentoParticipant extends Participant {
 	}
 
 	public synchronized void releaseAllFilters() {
-
 		// Check this, mutable array?
-
 		filters.forEach((s, filter) -> removeFilterElement(s));
+		if(this.publisher.getFilter() != null) {
+			this.publisher.revert(this.publisher.getFilter());
+		}
 	}
 
 	public PublisherEndpoint getPublisher() {
@@ -544,8 +534,9 @@ public class KurentoParticipant extends Participant {
 		 * event.getPadName() + " | MEDIATYPE: " + event.getMediaType() +
 		 * " | TIMESTAMP: " + System.currentTimeMillis();
 		 * 
-		 * endpoint.flowOutMedia.put(event.getSource().getName() + "/" +
-		 * event.getMediaType(), event.getSource());
+		 * endpoint.flowOutMedia. @SuppressWarnings("unchecked")
+		 * put(event.getSource().getName() + "/" + event.getMediaType(),
+		 * event.getSource());
 		 * 
 		 * String msg2;
 		 * 
@@ -661,35 +652,38 @@ public class KurentoParticipant extends Participant {
 		});
 	}
 
+	public MediaPipeline getPipeline() {
+		return this.pipeline;
+	}
+
 	@Override
 	public String getPublisherStreamId() {
 		return this.publisher.getEndpoint().getTag("name");
 	}
 
 	@Override
-	public JSONObject toJSON() {
-		return this.sharedJSON(MediaEndpoint::toJSON);
+	public JsonObject toJson() {
+		return this.sharedJson(MediaEndpoint::toJson);
 	}
 
-	public JSONObject withStatsToJSON() {
-		return this.sharedJSON(MediaEndpoint::withStatsToJSON);
+	public JsonObject withStatsToJson() {
+		return this.sharedJson(MediaEndpoint::withStatsToJson);
 	}
 
-	@SuppressWarnings("unchecked")
-	private JSONObject sharedJSON(Function<MediaEndpoint, JSONObject> toJsonFunction) {
-		JSONObject json = super.toJSON();
-		JSONArray publisherEnpoints = new JSONArray();
+	private JsonObject sharedJson(Function<MediaEndpoint, JsonObject> toJsonFunction) {
+		JsonObject json = super.toJson();
+		JsonArray publisherEnpoints = new JsonArray();
 		if (this.streaming && this.publisher.getEndpoint() != null) {
 			publisherEnpoints.add(toJsonFunction.apply(this.publisher));
 		}
-		JSONArray subscriberEndpoints = new JSONArray();
+		JsonArray subscriberEndpoints = new JsonArray();
 		for (MediaEndpoint sub : this.subscribers.values()) {
 			if (sub.getEndpoint() != null) {
 				subscriberEndpoints.add(toJsonFunction.apply(sub));
 			}
 		}
-		json.put("publishers", publisherEnpoints);
-		json.put("subscribers", subscriberEndpoints);
+		json.add("publishers", publisherEnpoints);
+		json.add("subscribers", subscriberEndpoints);
 		return json;
 	}
 

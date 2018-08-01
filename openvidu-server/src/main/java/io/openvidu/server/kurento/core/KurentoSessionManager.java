@@ -22,9 +22,10 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.kurento.client.GenericMediaElement;
 import org.kurento.client.IceCandidate;
 import org.kurento.client.KurentoClient;
-import org.kurento.client.MediaElement;
+import org.kurento.jsonrpc.Props;
 import org.kurento.jsonrpc.message.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,9 +50,11 @@ import io.openvidu.server.core.Session;
 import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.kurento.KurentoClientProvider;
 import io.openvidu.server.kurento.KurentoClientSessionInfo;
+import io.openvidu.server.kurento.KurentoFilter;
 import io.openvidu.server.kurento.OpenViduKurentoClientSessionInfo;
 import io.openvidu.server.kurento.endpoint.SdpType;
 import io.openvidu.server.rpc.RpcHandler;
+import io.openvidu.server.utils.JsonUtils;
 
 public class KurentoSessionManager extends SessionManager {
 
@@ -62,6 +65,8 @@ public class KurentoSessionManager extends SessionManager {
 
 	@Autowired
 	private KurentoSessionEventsHandler kurentoSessionEventsHandler;
+
+	private KurentoClient kurentoClient;
 
 	@Override
 	public synchronized void joinRoom(Participant participant, String sessionId, Integer transactionId) {
@@ -91,7 +96,7 @@ public class KurentoSessionManager extends SessionManager {
 				log.warn("'{}' is trying to join session '{}' but it is closing", participant.getParticipantPublicId(),
 						sessionId);
 				throw new OpenViduException(Code.ROOM_CLOSED_ERROR_CODE, "'" + participant.getParticipantPublicId()
-						+ "' is trying to join room '" + sessionId + "' but it is closing");
+						+ "' is trying to join session '" + sessionId + "' but it is closing");
 			}
 			existingParticipants = getParticipants(sessionId);
 			session.join(participant);
@@ -216,7 +221,7 @@ public class KurentoSessionManager extends SessionManager {
 		String sdpAnswer = null;
 
 		KurentoMediaOptions kurentoOptions = (KurentoMediaOptions) mediaOptions;
-		KurentoParticipant kurentoParticipant = (KurentoParticipant) participant;
+		KurentoParticipant kParticipant = (KurentoParticipant) participant;
 
 		log.debug(
 				"Request [PUBLISH_MEDIA] isOffer={} sdp={} "
@@ -226,15 +231,22 @@ public class KurentoSessionManager extends SessionManager {
 				participant.getParticipantPublicId());
 
 		SdpType sdpType = kurentoOptions.isOffer ? SdpType.OFFER : SdpType.ANSWER;
-		KurentoSession session = kurentoParticipant.getSession();
+		KurentoSession session = kParticipant.getSession();
 
-		kurentoParticipant.createPublishingEndpoint(mediaOptions);
+		kParticipant.createPublishingEndpoint(mediaOptions);
 
-		for (MediaElement elem : kurentoOptions.mediaElements) {
-			kurentoParticipant.getPublisher().apply(elem);
+		/*
+		 * for (MediaElement elem : kurentoOptions.mediaElements) {
+		 * kurentoParticipant.getPublisher().apply(elem); }
+		 */
+
+		KurentoTokenOptions kurentoTokenOptions = participant.getToken().getKurentoTokenOptions();
+		if (kurentoOptions.getFilter() != null && kurentoTokenOptions != null
+				&& kurentoTokenOptions.isFilterAllowed(kurentoOptions.getFilter().getType())) {
+			this.applyFilterInPublisher(kParticipant, kurentoOptions.getFilter());
 		}
 
-		sdpAnswer = kurentoParticipant.publishToRoom(sdpType, kurentoOptions.sdpOffer, kurentoOptions.doLoopback,
+		sdpAnswer = kParticipant.publishToRoom(sdpType, kurentoOptions.sdpOffer, kurentoOptions.doLoopback,
 				kurentoOptions.loopbackAlternativeSrc, kurentoOptions.loopbackConnectionType);
 
 		if (sdpAnswer == null) {
@@ -261,7 +273,7 @@ public class KurentoSessionManager extends SessionManager {
 
 		session.newPublisher(participant);
 
-		participants = kurentoParticipant.getSession().getParticipants();
+		participants = kParticipant.getSession().getParticipants();
 
 		if (sdpAnswer != null) {
 			sessionEventsHandler.onPublishMedia(participant, participant.getPublisherStreamId(), session.getSessionId(),
@@ -277,6 +289,11 @@ public class KurentoSessionManager extends SessionManager {
 
 			log.debug("Request [UNPUBLISH_MEDIA] ({})", participant.getParticipantPublicId());
 			if (!participant.isStreaming()) {
+				log.warn(
+						"PARTICIPANT {}: Requesting to unpublish video of user {} "
+								+ "in session {} but user is not streaming media",
+						moderator != null ? moderator.getParticipantPublicId() : participant.getParticipantPublicId(),
+						participant.getParticipantPublicId(), session.getSessionId());
 				throw new OpenViduException(Code.USER_NOT_STREAMING_ERROR_CODE,
 						"Participant '" + participant.getParticipantPublicId() + "' is not streaming media");
 			}
@@ -309,18 +326,18 @@ public class KurentoSessionManager extends SessionManager {
 			if (senderParticipant == null) {
 				log.warn(
 						"PARTICIPANT {}: Requesting to recv media from user {} "
-								+ "in room {} but user could not be found",
+								+ "in session {} but user could not be found",
 						participant.getParticipantPublicId(), senderName, session.getSessionId());
 				throw new OpenViduException(Code.USER_NOT_FOUND_ERROR_CODE,
-						"User '" + senderName + " not found in room '" + session.getSessionId() + "'");
+						"User '" + senderName + " not found in session '" + session.getSessionId() + "'");
 			}
 			if (!senderParticipant.isStreaming()) {
 				log.warn(
 						"PARTICIPANT {}: Requesting to recv media from user {} "
-								+ "in room {} but user is not streaming media",
+								+ "in session {} but user is not streaming media",
 						participant.getParticipantPublicId(), senderName, session.getSessionId());
 				throw new OpenViduException(Code.USER_NOT_STREAMING_ERROR_CODE,
-						"User '" + senderName + " not streaming media in room '" + session.getSessionId() + "'");
+						"User '" + senderName + " not streaming media in session '" + session.getSessionId() + "'");
 			}
 
 			sdpAnswer = kParticipant.receiveMediaFrom(senderParticipant, sdpOffer);
@@ -349,10 +366,10 @@ public class KurentoSessionManager extends SessionManager {
 		if (sender == null) {
 			log.warn(
 					"PARTICIPANT {}: Requesting to unsubscribe from user {} "
-							+ "in room {} but user could not be found",
+							+ "in session {} but user could not be found",
 					participant.getParticipantPublicId(), senderName, session.getSessionId());
 			throw new OpenViduException(Code.USER_NOT_FOUND_ERROR_CODE,
-					"User " + senderName + " not found in room " + session.getSessionId());
+					"User " + senderName + " not found in session " + session.getSessionId());
 		}
 
 		kParticipant.cancelReceivingMedia(senderName, "unsubscribe");
@@ -363,9 +380,9 @@ public class KurentoSessionManager extends SessionManager {
 	@Override
 	public void sendMessage(Participant participant, String message, Integer transactionId) {
 		try {
-			JsonObject messageJSON = new JsonParser().parse(message).getAsJsonObject();
+			JsonObject messageJson = new JsonParser().parse(message).getAsJsonObject();
 			KurentoParticipant kParticipant = (KurentoParticipant) participant;
-			sessionEventsHandler.onSendMessage(participant, messageJSON,
+			sessionEventsHandler.onSendMessage(participant, messageJson,
 					getParticipants(kParticipant.getSession().getSessionId()), transactionId, null);
 		} catch (JsonSyntaxException | IllegalStateException e) {
 			throw new OpenViduException(Code.SIGNAL_FORMAT_INVALID_ERROR_CODE,
@@ -387,6 +404,7 @@ public class KurentoSessionManager extends SessionManager {
 		String typeOfVideo = streamProperties.getTypeOfVideo();
 		Integer frameRate = streamProperties.getFrameRate();
 		String videoDimensions = streamProperties.getVideoDimensions();
+		KurentoFilter filter = streamProperties.getFilter();
 
 		switch (property) {
 		case "audioActive":
@@ -401,7 +419,7 @@ public class KurentoSessionManager extends SessionManager {
 		}
 
 		kParticipant.setPublisherMediaOptions(new MediaOptions(hasAudio, hasVideo, audioActive, videoActive,
-				typeOfVideo, frameRate, videoDimensions));
+				typeOfVideo, frameRate, videoDimensions, filter));
 
 		sessionEventsHandler.onStreamPropertyChanged(participant, transactionId,
 				kParticipant.getSession().getParticipants(), streamId, property, newValue, reason);
@@ -442,7 +460,7 @@ public class KurentoSessionManager extends SessionManager {
 			throw new OpenViduException(Code.ROOM_CANNOT_BE_CREATED_ERROR_CODE,
 					"Session '" + sessionId + "' already exists");
 		}
-		KurentoClient kurentoClient = kcProvider.getKurentoClient(kcSessionInfo);
+		this.kurentoClient = kcProvider.getKurentoClient(kcSessionInfo);
 		session = new KurentoSession(sessionId, sessionProperties, kurentoClient, kurentoSessionEventsHandler,
 				kcProvider.destroyWhenUnused(), this.CDR, this.openviduConfig);
 
@@ -482,7 +500,7 @@ public class KurentoSessionManager extends SessionManager {
 	}
 
 	@Override
-	public MediaOptions generateMediaOptions(Request<JsonObject> request) {
+	public KurentoMediaOptions generateMediaOptions(Request<JsonObject> request) {
 
 		String sdpOffer = RpcHandler.getStringParam(request, ProtocolElements.PUBLISHVIDEO_SDPOFFER_PARAM);
 		boolean hasAudio = RpcHandler.getBooleanParam(request, ProtocolElements.PUBLISHVIDEO_HASAUDIO_PARAM);
@@ -491,6 +509,7 @@ public class KurentoSessionManager extends SessionManager {
 		Boolean audioActive = null, videoActive = null;
 		String typeOfVideo = null, videoDimensions = null;
 		Integer frameRate = null;
+		KurentoFilter kurentoFilter = null;
 
 		try {
 			audioActive = RpcHandler.getBooleanParam(request, ProtocolElements.PUBLISHVIDEO_AUDIOACTIVE_PARAM);
@@ -512,11 +531,18 @@ public class KurentoSessionManager extends SessionManager {
 			frameRate = RpcHandler.getIntParam(request, ProtocolElements.PUBLISHVIDEO_FRAMERATE_PARAM);
 		} catch (RuntimeException noParameterFound) {
 		}
+		try {
+			JsonObject kurentoFilterJson = (JsonObject) RpcHandler.getParam(request,
+					ProtocolElements.PUBLISHVIDEO_KURENTOFILTER_PARAM);
+			kurentoFilter = new KurentoFilter(kurentoFilterJson.get("type").getAsString(),
+					kurentoFilterJson.get("options").getAsJsonObject());
+		} catch (RuntimeException noParameterFound) {
+		}
 
 		boolean doLoopback = RpcHandler.getBooleanParam(request, ProtocolElements.PUBLISHVIDEO_DOLOOPBACK_PARAM);
 
 		return new KurentoMediaOptions(true, sdpOffer, null, null, hasAudio, hasVideo, audioActive, videoActive,
-				typeOfVideo, frameRate, videoDimensions, doLoopback);
+				typeOfVideo, frameRate, videoDimensions, kurentoFilter, doLoopback);
 	}
 
 	@Override
@@ -535,5 +561,168 @@ public class KurentoSessionManager extends SessionManager {
 			return false;
 		}
 	}
+
+	@Override
+	public void applyFilter(Session session, String streamId, String filterType, JsonObject filterOptions,
+			Participant moderator, Integer transactionId, String reason) {
+		String participantPrivateId = ((KurentoSession) session).getParticipantPrivateIdFromStreamId(streamId);
+		if (participantPrivateId != null) {
+			Participant participant = this.getParticipant(participantPrivateId);
+			log.debug("Request [APPLY_FILTER] over stream [{}] for reason [{}]", streamId, reason);
+			KurentoParticipant kParticipant = (KurentoParticipant) participant;
+			if (!participant.isStreaming()) {
+				log.warn(
+						"PARTICIPANT {}: Requesting to applyFilter to user {} "
+								+ "in session {} but user is not streaming media",
+						moderator != null ? moderator.getParticipantPublicId() : participant.getParticipantPublicId(),
+						participant.getParticipantPublicId(), session.getSessionId());
+				throw new OpenViduException(Code.USER_NOT_STREAMING_ERROR_CODE,
+						"User '" + participant.getParticipantPublicId() + " not streaming media in session '"
+								+ session.getSessionId() + "'");
+			} else if (kParticipant.getPublisher().getFilter() != null) {
+				log.warn(
+						"PARTICIPANT {}: Requesting to applyFilter to user {} "
+								+ "in session {} but user already has a filter",
+						moderator != null ? moderator.getParticipantPublicId() : participant.getParticipantPublicId(),
+						participant.getParticipantPublicId(), session.getSessionId());
+				throw new OpenViduException(Code.EXISTING_FILTER_ALREADY_APPLIED_ERROR_CODE,
+						"User '" + participant.getParticipantPublicId() + " already has a filter applied in session '"
+								+ session.getSessionId() + "'");
+			} else {
+				try {
+					KurentoFilter filter = new KurentoFilter(filterType, filterOptions);
+					this.applyFilterInPublisher(kParticipant, filter);
+					Set<Participant> participants = kParticipant.getSession().getParticipants();
+					sessionEventsHandler.onFilterChanged(participant, moderator, transactionId, participants, streamId,
+							filter, null, reason);
+				} catch (OpenViduException e) {
+					log.warn("PARTICIPANT {}: Error applying filter", participant.getParticipantPublicId(), e);
+					sessionEventsHandler.onFilterChanged(participant, moderator, transactionId, new HashSet<>(),
+							streamId, null, e, "");
+				}
+			}
+		} else {
+			log.warn("PARTICIPANT {}: Requesting to applyFilter to stream {} "
+					+ "in session {} but the owner cannot be found", streamId, session.getSessionId());
+			throw new OpenViduException(Code.USER_NOT_FOUND_ERROR_CODE,
+					"Owner of stream '" + streamId + "' not found in session '" + session.getSessionId() + "'");
+		}
+	}
+
+	@Override
+	public void execFilterMethod(Session session, String streamId, String filterMethod, JsonObject filterParams,
+			Participant moderator, Integer transactionId, String reason) {
+		String participantPrivateId = ((KurentoSession) session).getParticipantPrivateIdFromStreamId(streamId);
+		if (participantPrivateId != null) {
+			Participant participant = this.getParticipant(participantPrivateId);
+			log.debug("Request [EXEC_FILTER_MTEHOD] over stream [{}] for reason [{}]", streamId, reason);
+			KurentoParticipant kParticipant = (KurentoParticipant) participant;
+			if (!participant.isStreaming()) {
+				log.warn(
+						"PARTICIPANT {}: Requesting to execFilterMethod to user {} "
+								+ "in session {} but user is not streaming media",
+						moderator != null ? moderator.getParticipantPublicId() : participant.getParticipantPublicId(),
+						participant.getParticipantPublicId(), session.getSessionId());
+				throw new OpenViduException(Code.USER_NOT_STREAMING_ERROR_CODE,
+						"User '" + participant.getParticipantPublicId() + " not streaming media in session '"
+								+ session.getSessionId() + "'");
+			} else if (kParticipant.getPublisher().getFilter() == null) {
+				log.warn(
+						"PARTICIPANT {}: Requesting to execFilterMethod to user {} "
+								+ "in session {} but user does NOT have a filter",
+						moderator != null ? moderator.getParticipantPublicId() : participant.getParticipantPublicId(),
+						participant.getParticipantPublicId(), session.getSessionId());
+				throw new OpenViduException(Code.FILTER_NOT_APPLIED_ERROR_CODE,
+						"User '" + participant.getParticipantPublicId() + " has no filter applied in session '"
+								+ session.getSessionId() + "'");
+			} else {
+				KurentoFilter updatedFilter = this.execFilterMethodInPublisher(kParticipant, filterMethod,
+						filterParams);
+				Set<Participant> participants = kParticipant.getSession().getParticipants();
+				sessionEventsHandler.onFilterChanged(participant, moderator, transactionId, participants, streamId,
+						updatedFilter, null, reason);
+			}
+		} else {
+			log.warn("PARTICIPANT {}: Requesting to removeFilter to stream {} "
+					+ "in session {} but the owner cannot be found", streamId, session.getSessionId());
+			throw new OpenViduException(Code.USER_NOT_FOUND_ERROR_CODE,
+					"Owner of stream '" + streamId + "' not found in session '" + session.getSessionId() + "'");
+		}
+	}
+
+	@Override
+	public void removeFilter(Session session, String streamId, Participant moderator, Integer transactionId,
+			String reason) {
+		String participantPrivateId = ((KurentoSession) session).getParticipantPrivateIdFromStreamId(streamId);
+		if (participantPrivateId != null) {
+			Participant participant = this.getParticipant(participantPrivateId);
+			log.debug("Request [REMOVE_FILTER] over stream [{}] for reason [{}]", streamId, reason);
+			KurentoParticipant kParticipant = (KurentoParticipant) participant;
+			if (!participant.isStreaming()) {
+				log.warn(
+						"PARTICIPANT {}: Requesting to removeFilter to user {} "
+								+ "in session {} but user is not streaming media",
+						moderator != null ? moderator.getParticipantPublicId() : participant.getParticipantPublicId(),
+						participant.getParticipantPublicId(), session.getSessionId());
+				throw new OpenViduException(Code.USER_NOT_STREAMING_ERROR_CODE,
+						"User '" + participant.getParticipantPublicId() + " not streaming media in session '"
+								+ session.getSessionId() + "'");
+			} else if (kParticipant.getPublisher().getFilter() == null) {
+				log.warn(
+						"PARTICIPANT {}: Requesting to removeFilter to user {} "
+								+ "in session {} but user does NOT have a filter",
+						moderator != null ? moderator.getParticipantPublicId() : participant.getParticipantPublicId(),
+						participant.getParticipantPublicId(), session.getSessionId());
+				throw new OpenViduException(Code.FILTER_NOT_APPLIED_ERROR_CODE,
+						"User '" + participant.getParticipantPublicId() + " has no filter applied in session '"
+								+ session.getSessionId() + "'");
+			} else {
+				this.removeFilterInPublisher(kParticipant);
+				Set<Participant> participants = kParticipant.getSession().getParticipants();
+				sessionEventsHandler.onFilterChanged(participant, moderator, transactionId, participants, streamId,
+						null, null, reason);
+			}
+		} else {
+			log.warn("PARTICIPANT {}: Requesting to removeFilter to stream {} "
+					+ "in session {} but the owner cannot be found", streamId, session.getSessionId());
+			throw new OpenViduException(Code.USER_NOT_FOUND_ERROR_CODE,
+					"Owner of stream '" + streamId + "' not found in session '" + session.getSessionId() + "'");
+		}
+	}
+
+	private void applyFilterInPublisher(KurentoParticipant kParticipant, KurentoFilter filter)
+			throws OpenViduException {
+		GenericMediaElement.Builder builder = new GenericMediaElement.Builder(kParticipant.getPipeline(),
+				filter.getType());
+		Props props = new JsonUtils().fromJsonObjectToProps(filter.getOptions());
+		props.forEach(prop -> {
+			builder.withConstructorParam(prop.getName(), prop.getValue());
+		});
+		kParticipant.getPublisher().apply(builder.build());
+		kParticipant.getPublisher().getMediaOptions().setFilter(filter);
+	}
+
+	private KurentoFilter execFilterMethodInPublisher(KurentoParticipant kParticipant, String method,
+			JsonObject params) {
+		kParticipant.getPublisher().execMethod(method, params);
+		KurentoFilter filter = kParticipant.getPublisher().getMediaOptions().getFilter();
+		KurentoFilter updatedFilter = new KurentoFilter(filter.getType(), filter.getOptions(), method, params);
+		kParticipant.getPublisher().getMediaOptions().setFilter(updatedFilter);
+		return filter;
+	}
+
+	private void removeFilterInPublisher(KurentoParticipant kParticipant) {
+		kParticipant.getPublisher().revert(kParticipant.getPublisher().getFilter());
+		kParticipant.getPublisher().getMediaOptions().setFilter(null);
+	}
+
+	/*
+	 * private void addFilterEventListenerInPublisher(KurentoParticipant
+	 * kParticipant) { this.listener =
+	 * kParticipant.getPublisher().getFilter().addEventListener("CodeFound", event
+	 * -> { System.out.println(event.getData()); }); } private void
+	 * removeFilterEventListenerInPublisher(KurentoParticipant kParticipant) {
+	 * kParticipant.getPublisher().getFilter().removeEventListener(this.listener); }
+	 */
 
 }

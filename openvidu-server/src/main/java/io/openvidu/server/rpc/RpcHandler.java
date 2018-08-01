@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
@@ -131,6 +132,23 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		case ProtocolElements.FORCEUNPUBLISH_METHOD:
 			forceUnpublish(rpcConnection, request);
 			break;
+		case ProtocolElements.APPLYFILTER_METHOD:
+			applyFilter(rpcConnection, request);
+			break;
+		case ProtocolElements.EXECFILTERMETHOD_METHOD:
+			execFilterMethod(rpcConnection, request);
+			break;
+		case ProtocolElements.REMOVEFILTER_METHOD:
+			removeFilter(rpcConnection, request);
+			break;
+		/*
+		 * case ProtocolElements.FORCEAPPLYFILTER_METHOD:
+		 * forceApplyFilter(rpcConnection, request); break; case
+		 * ProtocolElements.FORCEEXECFILTERMETHOD_METHOD:
+		 * forceExecFilterMethod(rpcConnection, request); break; case
+		 * ProtocolElements.FORCEREMOVEFILTER_METHOD: forceRemoveFilter(rpcConnection,
+		 * request); break;
+		 */
 		default:
 			log.error("Unrecognized request {}", request);
 			break;
@@ -291,6 +309,22 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		sessionManager.unpublishVideo(participant, null, request.getId(), "unpublish");
 	}
 
+	private void streamPropertyChanged(RpcConnection rpcConnection, Request<JsonObject> request) {
+		Participant participant;
+		try {
+			participant = sanityCheckOfSession(rpcConnection, "onStreamPropertyChanged");
+		} catch (OpenViduException e) {
+			return;
+		}
+
+		String streamId = getStringParam(request, ProtocolElements.STREAMPROPERTYCHANGED_STREAMID_PARAM);
+		String property = getStringParam(request, ProtocolElements.STREAMPROPERTYCHANGED_PROPERTY_PARAM);
+		JsonElement newValue = getParam(request, ProtocolElements.STREAMPROPERTYCHANGED_NEWVALUE_PARAM);
+		String reason = getStringParam(request, ProtocolElements.STREAMPROPERTYCHANGED_REASON_PARAM);
+
+		sessionManager.streamPropertyChanged(participant, request.getId(), streamId, property, newValue, reason);
+	}
+
 	private void forceDisconnect(RpcConnection rpcConnection, Request<JsonObject> request) {
 		Participant participant;
 		try {
@@ -331,20 +365,51 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 	}
 
-	private void streamPropertyChanged(RpcConnection rpcConnection, Request<JsonObject> request) {
+	private void applyFilter(RpcConnection rpcConnection, Request<JsonObject> request) {
 		Participant participant;
 		try {
-			participant = sanityCheckOfSession(rpcConnection, "onStreamPropertyChanged");
+			participant = sanityCheckOfSession(rpcConnection, "applyFilter");
 		} catch (OpenViduException e) {
 			return;
 		}
 
-		String streamId = getStringParam(request, ProtocolElements.STREAMPROPERTYCHANGED_STREAMID_PARAM);
-		String property = getStringParam(request, ProtocolElements.STREAMPROPERTYCHANGED_PROPERTY_PARAM);
-		JsonElement newValue = getParam(request, ProtocolElements.STREAMPROPERTYCHANGED_NEWVALUE_PARAM);
-		String reason = getStringParam(request, ProtocolElements.STREAMPROPERTYCHANGED_REASON_PARAM);
+		String filterType = getStringParam(request, ProtocolElements.FILTER_TYPE_PARAM);
+		if (participant.getToken().getKurentoTokenOptions().isFilterAllowed(filterType)) {
+			JsonObject filterOptions = new JsonParser().parse(getStringParam(request, ProtocolElements.FILTER_OPTIONS_PARAM))
+					.getAsJsonObject();
+			String streamId = getStringParam(request, ProtocolElements.FILTER_STREAMID_PARAM);
+			sessionManager.applyFilter(sessionManager.getSession(rpcConnection.getSessionId()), streamId, filterType,
+					filterOptions, null, request.getId(), "applyFilter");
+		} else {
+			log.error("Error: participant {} is not a moderator", participant.getParticipantPublicId());
+			throw new OpenViduException(Code.USER_UNAUTHORIZED_ERROR_CODE,
+					"Unable to apply filter. The user does not have a valid token");
+		}
+	}
 
-		sessionManager.streamPropertyChanged(participant, request.getId(), streamId, property, newValue, reason);
+	private void execFilterMethod(RpcConnection rpcConnection, Request<JsonObject> request) {
+		try {
+			sanityCheckOfSession(rpcConnection, "applyFilter");
+		} catch (OpenViduException e) {
+			return;
+		}
+		String filterMethod = getStringParam(request, ProtocolElements.FILTER_METHOD_PARAM);
+		JsonObject filterParams = new JsonParser().parse(getStringParam(request, ProtocolElements.FILTER_PARAMS_PARAM))
+				.getAsJsonObject();
+		String streamId = getStringParam(request, ProtocolElements.FILTER_STREAMID_PARAM);
+		sessionManager.execFilterMethod(sessionManager.getSession(rpcConnection.getSessionId()), streamId, filterMethod,
+				filterParams, null, request.getId(), "execFilterMethod");
+	}
+
+	private void removeFilter(RpcConnection rpcConnection, Request<JsonObject> request) {
+		try {
+			sanityCheckOfSession(rpcConnection, "removeFilter");
+		} catch (OpenViduException e) {
+			return;
+		}
+		String streamId = getStringParam(request, ProtocolElements.FILTER_STREAMID_PARAM);
+		sessionManager.removeFilter(sessionManager.getSession(rpcConnection.getSessionId()), streamId, null,
+				request.getId(), "removeFilter");
 	}
 
 	public void leaveRoomAfterConnClosed(String participantPrivateId, String reason) {

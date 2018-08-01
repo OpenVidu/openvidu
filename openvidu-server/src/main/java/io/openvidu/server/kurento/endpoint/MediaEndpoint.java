@@ -25,8 +25,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 import org.kurento.client.Continuation;
 import org.kurento.client.ErrorEvent;
 import org.kurento.client.EventListener;
@@ -42,11 +40,16 @@ import org.kurento.client.WebRtcEndpoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.kurento.core.KurentoParticipant;
+import io.openvidu.server.kurento.core.KurentoTokenOptions;
 
 /**
  * {@link WebRtcEndpoint} wrapper that supports buffering of
@@ -108,10 +111,27 @@ public abstract class MediaEndpoint {
 		this.setMediaPipeline(pipeline);
 
 		this.openviduConfig = openviduConfig;
-		this.maxRecvKbps = this.openviduConfig.getVideoMaxRecvBandwidth();
-		this.minRecvKbps = this.openviduConfig.getVideoMinRecvBandwidth();
-		this.maxSendKbps = this.openviduConfig.getVideoMaxSendBandwidth();
-		this.minSendKbps = this.openviduConfig.getVideoMinSendBandwidth();
+
+		KurentoTokenOptions kurentoTokenOptions = this.owner.getToken().getKurentoTokenOptions();
+		if (kurentoTokenOptions != null) {
+			this.maxRecvKbps = kurentoTokenOptions.getVideoMaxRecvBandwidth() != null
+					? kurentoTokenOptions.getVideoMaxRecvBandwidth()
+					: this.openviduConfig.getVideoMaxRecvBandwidth();
+			this.minRecvKbps = kurentoTokenOptions.getVideoMinRecvBandwidth() != null
+					? kurentoTokenOptions.getVideoMinRecvBandwidth()
+					: this.openviduConfig.getVideoMinRecvBandwidth();
+			this.maxSendKbps = kurentoTokenOptions.getVideoMaxSendBandwidth() != null
+					? kurentoTokenOptions.getVideoMaxSendBandwidth()
+					: this.openviduConfig.getVideoMaxSendBandwidth();
+			this.minSendKbps = kurentoTokenOptions.getVideoMinSendBandwidth() != null
+					? kurentoTokenOptions.getVideoMinSendBandwidth()
+					: this.openviduConfig.getVideoMinSendBandwidth();
+		} else {
+			this.maxRecvKbps = this.openviduConfig.getVideoMaxRecvBandwidth();
+			this.minRecvKbps = this.openviduConfig.getVideoMinRecvBandwidth();
+			this.maxSendKbps = this.openviduConfig.getVideoMaxSendBandwidth();
+			this.minSendKbps = this.openviduConfig.getVideoMinSendBandwidth();
+		}
 	}
 
 	public boolean isWeb() {
@@ -464,28 +484,26 @@ public abstract class MediaEndpoint {
 
 	public abstract PublisherEndpoint getPublisher();
 
-	public JSONObject toJSON() {
-		JSONObject json = new JSONObject();
+	public JsonObject toJson() {
+		JsonObject json = new JsonObject();
 		return json;
 	}
 
-	@SuppressWarnings("unchecked")
-	public JSONObject withStatsToJSON() {
-		JSONObject json = new JSONObject();
-		json.put("webrtcTagName", this.getEndpoint().getTag("name"));
-		json.put("receivedCandidates", this.receivedCandidateList);
-		json.put("localCandidate", this.selectedLocalIceCandidate);
-		json.put("remoteCandidate", this.selectedRemoteIceCandidate);
+	public JsonObject withStatsToJson() {
+		JsonObject json = new JsonObject();
+		json.addProperty("webrtcTagName", this.getEndpoint().getTag("name"));
+		json.add("receivedCandidates", new GsonBuilder().create().toJsonTree(this.receivedCandidateList));
+		json.addProperty("localCandidate", this.selectedLocalIceCandidate);
+		json.addProperty("remoteCandidate", this.selectedRemoteIceCandidate);
 
-		JSONArray jsonArray = new JSONArray();
-
+		JsonArray jsonArray = new JsonArray();
 		for (KmsEvent event : this.kmsEvents) {
-			JSONObject jsonKmsEvent = new JSONObject();
-			jsonKmsEvent.put(event.event.getType(), event.timestamp);
+			JsonObject jsonKmsEvent = new JsonObject();
+			jsonKmsEvent.addProperty(event.event.getType(), event.timestamp);
 			jsonArray.add(jsonKmsEvent);
 		}
+		json.add("events", jsonArray);
 
-		json.put("events", jsonArray);
 		return json;
 	}
 }

@@ -17,7 +17,7 @@
 
 package io.openvidu.server.cdr;
 
-import org.json.simple.JSONObject;
+import com.google.gson.JsonObject;
 
 import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.server.core.MediaOptions;
@@ -35,7 +35,7 @@ public class CDREvent implements Comparable<CDREvent> {
 	private MediaOptions mediaOptions;
 	private String receivingFrom;
 	private String reason;
-	
+
 	// Recording events
 	private Long size;
 	private String id;
@@ -45,12 +45,14 @@ public class CDREvent implements Comparable<CDREvent> {
 	private RecordingLayout recordingLayout;
 
 	public CDREvent(CDREventName eventName, CDREvent event) {
-		this(eventName, event.participant, event.sessionId, event.mediaOptions, event.receivingFrom, event.startTime, event.reason);
+		this(eventName, event.participant, event.sessionId, event.mediaOptions, event.receivingFrom, event.startTime,
+				event.reason);
 		this.duration = (int) (this.timeStamp - this.startTime / 1000);
 	}
-	
+
 	public CDREvent(CDREventName eventName, CDREvent event, String reason) {
-		this(eventName, event.participant, event.sessionId, event.mediaOptions, event.receivingFrom, event.startTime, reason);
+		this(eventName, event.participant, event.sessionId, event.mediaOptions, event.receivingFrom, event.startTime,
+				reason);
 		this.duration = (int) (this.timeStamp - this.startTime / 1000);
 	}
 
@@ -64,7 +66,7 @@ public class CDREvent implements Comparable<CDREvent> {
 		this.timeStamp = System.currentTimeMillis();
 		this.startTime = this.timeStamp;
 	}
-	
+
 	public CDREvent(CDREventName eventName, String sessionId, Recording recording, String reason) {
 		this.eventName = eventName;
 		if ((sessionId.indexOf('/')) != -1) {
@@ -112,60 +114,59 @@ public class CDREvent implements Comparable<CDREvent> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public String toString() {
-		JSONObject json = new JSONObject();
-		json.put("sessionId", this.sessionId);
-		json.put("timestamp", this.timeStamp);
+		JsonObject json = new JsonObject();
+		json.addProperty("sessionId", this.sessionId);
+		json.addProperty("timestamp", this.timeStamp);
 
 		if (this.participant != null) {
-			json.put("participantId", this.participant.getParticipantPublicId());
+			json.addProperty("participantId", this.participant.getParticipantPublicId());
 		}
 		if (this.mediaOptions != null) {
-			json.put("connection", this.receivingFrom != null ? "INBOUND" : "OUTBOUND");
-			json.put("audioEnabled", this.mediaOptions.hasAudio());
-			json.put("videoEnabled", this.mediaOptions.hasVideo());
+			json.addProperty("connection", this.receivingFrom != null ? "INBOUND" : "OUTBOUND");
+			json.addProperty("audioEnabled", this.mediaOptions.hasAudio());
+			json.addProperty("videoEnabled", this.mediaOptions.hasVideo());
 			if (this.mediaOptions.hasVideo()) {
-				json.put("videoSource", this.mediaOptions.getTypeOfVideo());
-				json.put("videoFramerate", this.mediaOptions.getFrameRate());
+				json.addProperty("videoSource", this.mediaOptions.getTypeOfVideo());
+				json.addProperty("videoFramerate", this.mediaOptions.getFrameRate());
 			}
 			if (this.receivingFrom != null) {
-				json.put("receivingFrom", this.receivingFrom);
+				json.addProperty("receivingFrom", this.receivingFrom);
 			}
 		}
 		if (this.startTime != null && this.duration != null) {
-			json.put("startTime", this.startTime);
-			json.put("endTime", this.timeStamp);
-			json.put("duration", (this.timeStamp - this.startTime) / 1000);
+			json.addProperty("startTime", this.startTime);
+			json.addProperty("endTime", this.timeStamp);
+			json.addProperty("duration", (this.timeStamp - this.startTime) / 1000);
 		} else if (this.duration != null) {
-			json.put("duration", duration);
+			json.addProperty("duration", duration);
 		}
 		if (this.reason != null) {
-			json.put("reason", this.reason);
+			json.addProperty("reason", this.reason);
 		}
 		if (this.id != null) {
-			json.put("id", this.id);
+			json.addProperty("id", this.id);
 		}
 		if (this.name != null) {
-			json.put("name", this.name);
+			json.addProperty("name", this.name);
 		}
 		if (this.size != null) {
-			json.put("size", this.size);
+			json.addProperty("size", this.size);
 		}
 		if (this.hasAudio != null) {
-			json.put("hasAudio", this.hasAudio);
+			json.addProperty("hasAudio", this.hasAudio);
 		}
 		if (this.hasVideo != null) {
-			json.put("hasVideo", this.hasVideo);
+			json.addProperty("hasVideo", this.hasVideo);
 		}
 		if (this.recordingLayout != null) {
-			json.put("recordingLayout", this.recordingLayout.name());
+			json.addProperty("recordingLayout", this.recordingLayout.name());
 		}
 
-		JSONObject root = new JSONObject();
-		root.put(this.eventName.name(), json);
+		JsonObject root = new JsonObject();
+		root.add(this.eventName.name(), json);
 
-		return root.toJSONString();
+		return root.toString();
 	}
 
 	@Override

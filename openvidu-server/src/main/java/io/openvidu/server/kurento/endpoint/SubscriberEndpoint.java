@@ -17,10 +17,14 @@
 
 package io.openvidu.server.kurento.endpoint;
 
-import org.json.simple.JSONObject;
+import java.util.Map.Entry;
+
 import org.kurento.client.MediaPipeline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.kurento.core.KurentoParticipant;
@@ -37,7 +41,8 @@ public class SubscriberEndpoint extends MediaEndpoint {
 
 	private PublisherEndpoint publisher = null;
 
-	public SubscriberEndpoint(boolean web, KurentoParticipant owner, String endpointName, MediaPipeline pipeline, OpenviduConfig openviduConfig) {
+	public SubscriberEndpoint(boolean web, KurentoParticipant owner, String endpointName, MediaPipeline pipeline,
+			OpenviduConfig openviduConfig) {
 		super(web, owner, endpointName, pipeline, openviduConfig, log);
 	}
 
@@ -68,22 +73,20 @@ public class SubscriberEndpoint extends MediaEndpoint {
 		this.publisher = publisher;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public JSONObject toJSON() {
-		JSONObject json = super.toJSON();
-		json.put("streamId", this.publisher.getEndpoint().getTag("name"));
-		json.put("publisher", this.publisher.getEndpointName());
+	public JsonObject toJson() {
+		JsonObject json = super.toJson();
+		json.addProperty("streamId", this.publisher.getEndpoint().getTag("name"));
+		json.addProperty("publisher", this.publisher.getEndpointName());
 		return json;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public JSONObject withStatsToJSON() {
-		JSONObject json = super.withStatsToJSON();
-		JSONObject toJSON = this.toJSON();
-		for (Object key : toJSON.keySet()) {
-			json.put(key, toJSON.get(key));
+	public JsonObject withStatsToJson() {
+		JsonObject json = super.withStatsToJson();
+		JsonObject toJson = this.toJson();
+		for (Entry<String, JsonElement> entry : toJson.entrySet()) {
+			json.add(entry.getKey(), entry.getValue());
 		}
 		return json;
 	}

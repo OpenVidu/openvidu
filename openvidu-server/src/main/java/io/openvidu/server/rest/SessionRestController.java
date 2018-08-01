@@ -22,10 +22,10 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,6 +34,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.internal.ProtocolElements;
@@ -47,6 +51,7 @@ import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.ParticipantRole;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.core.SessionManager;
+import io.openvidu.server.kurento.core.KurentoTokenOptions;
 import io.openvidu.server.recording.ComposedRecordingService;
 import io.openvidu.server.recording.Recording;
 
@@ -68,9 +73,8 @@ public class SessionRestController {
 	@Autowired
 	private OpenviduConfig openviduConfig;
 
-	@SuppressWarnings("unchecked")
 	@RequestMapping(value = "/sessions", method = RequestMethod.POST)
-	public ResponseEntity<JSONObject> getSessionId(@RequestBody(required = false) Map<?, ?> params) {
+	public ResponseEntity<?> getSessionId(@RequestBody(required = false) Map<?, ?> params) {
 
 		SessionProperties.Builder builder = new SessionProperties.Builder();
 		String customSessionId = null;
@@ -130,45 +134,43 @@ public class SessionRestController {
 		}
 
 		sessionManager.storeSessionId(sessionId, sessionProperties);
-		JSONObject responseJson = new JSONObject();
-		responseJson.put("id", sessionId);
+		JsonObject responseJson = new JsonObject();
+		responseJson.addProperty("id", sessionId);
 
-		return new ResponseEntity<>(responseJson, HttpStatus.OK);
+		return new ResponseEntity<>(responseJson.toString(), getResponseHeaders(), HttpStatus.OK);
 	}
 
-	@SuppressWarnings("unchecked")
 	@RequestMapping(value = "/sessions/{sessionId}", method = RequestMethod.GET)
-	public ResponseEntity<JSONObject> getSession(@PathVariable("sessionId") String sessionId,
+	public ResponseEntity<?> getSession(@PathVariable("sessionId") String sessionId,
 			@RequestParam(value = "webRtcStats", defaultValue = "false", required = false) boolean webRtcStats) {
 		Session session = this.sessionManager.getSession(sessionId);
 		if (session != null) {
-			JSONObject response = (webRtcStats == true) ? session.withStatsToJSON() : session.toJSON();
-			response.put("recording", this.recordingService.sessionIsBeingRecorded(sessionId));
-			return new ResponseEntity<>(response, HttpStatus.OK);
+			JsonObject response = (webRtcStats == true) ? session.withStatsToJson() : session.toJson();
+			response.addProperty("recording", this.recordingService.sessionIsBeingRecorded(sessionId));
+			return new ResponseEntity<>(response.toString(), getResponseHeaders(), HttpStatus.OK);
 		} else {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	@RequestMapping(value = "/sessions", method = RequestMethod.GET)
-	public ResponseEntity<JSONObject> listSessions(
+	public ResponseEntity<?> listSessions(
 			@RequestParam(value = "webRtcStats", defaultValue = "false", required = false) boolean webRtcStats) {
 		Collection<Session> sessions = this.sessionManager.getSessionObjects();
-		JSONObject json = new JSONObject();
-		JSONArray jsonArray = new JSONArray();
+		JsonObject json = new JsonObject();
+		JsonArray jsonArray = new JsonArray();
 		sessions.forEach(s -> {
-			JSONObject sessionJson = (webRtcStats == true) ? s.withStatsToJSON() : s.toJSON();
-			sessionJson.put("recording", this.recordingService.sessionIsBeingRecorded(s.getSessionId()));
+			JsonObject sessionJson = (webRtcStats == true) ? s.withStatsToJson() : s.toJson();
+			sessionJson.addProperty("recording", this.recordingService.sessionIsBeingRecorded(s.getSessionId()));
 			jsonArray.add(sessionJson);
 		});
-		json.put("numberOfElements", sessions.size());
-		json.put("content", jsonArray);
-		return new ResponseEntity<>(json, HttpStatus.OK);
+		json.addProperty("numberOfElements", sessions.size());
+		json.add("content", jsonArray);
+		return new ResponseEntity<>(json.toString(), getResponseHeaders(), HttpStatus.OK);
 	}
 
 	@RequestMapping(value = "/sessions/{sessionId}", method = RequestMethod.DELETE)
-	public ResponseEntity<JSONObject> closeSession(@PathVariable("sessionId") String sessionId) {
+	public ResponseEntity<?> closeSession(@PathVariable("sessionId") String sessionId) {
 		Session session = this.sessionManager.getSession(sessionId);
 		if (session != null) {
 			this.sessionManager.closeSession(sessionId, "sessionClosedByServer");
@@ -179,7 +181,7 @@ public class SessionRestController {
 	}
 
 	@RequestMapping(value = "/sessions/{sessionId}/connection/{connectionId}", method = RequestMethod.DELETE)
-	public ResponseEntity<JSONObject> disconnectParticipant(@PathVariable("sessionId") String sessionId,
+	public ResponseEntity<?> disconnectParticipant(@PathVariable("sessionId") String sessionId,
 			@PathVariable("connectionId") String participantPublicId) {
 		Session session = this.sessionManager.getSession(sessionId);
 		if (session != null) {
@@ -196,7 +198,7 @@ public class SessionRestController {
 	}
 
 	@RequestMapping(value = "/sessions/{sessionId}/stream/{streamId}", method = RequestMethod.DELETE)
-	public ResponseEntity<JSONObject> unpublishStream(@PathVariable("sessionId") String sessionId,
+	public ResponseEntity<?> unpublishStream(@PathVariable("sessionId") String sessionId,
 			@PathVariable("streamId") String streamId) {
 		Session session = this.sessionManager.getSession(sessionId);
 		if (session != null) {
@@ -210,51 +212,81 @@ public class SessionRestController {
 		}
 	}
 
-	/*
-	 * @RequestMapping(value = "/sessions/{sessionId}/stream/{streamId}", method =
-	 * RequestMethod.PUT) public ResponseEntity<JSONObject>
-	 * muteMedia(@PathVariable("sessionId") String sessionId,
-	 * 
-	 * @PathVariable("streamId") String streamId, @RequestBody Map<?, ?> params) { }
-	 */
-
-	@SuppressWarnings("unchecked")
 	@RequestMapping(value = "/tokens", method = RequestMethod.POST)
-	public ResponseEntity<JSONObject> newToken(@RequestBody Map<?, ?> params) {
+	public ResponseEntity<String> newToken(@RequestBody Map<?, ?> params) {
 		try {
-
 			String sessionId = (String) params.get("session");
 			String roleString = (String) params.get("role");
 			String metadata = (String) params.get("data");
+			JsonObject kurentoOptions = new JsonParser().parse(params.get("kurentoOptions").toString()).getAsJsonObject();
 
 			ParticipantRole role;
-			if (roleString != null) {
-				role = ParticipantRole.valueOf(roleString);
-			} else {
-				role = ParticipantRole.PUBLISHER;
+			try {
+				if (roleString != null) {
+					role = ParticipantRole.valueOf(roleString);
+				} else {
+					role = ParticipantRole.PUBLISHER;
+				}
+			} catch (IllegalArgumentException e) {
+				return this.generateErrorResponse("Role " + params.get("role") + " is not defined", "/api/tokens",
+						HttpStatus.BAD_REQUEST);
+			}
+
+			KurentoTokenOptions kurentoTokenOptions = null;
+			if (kurentoOptions != null) {
+				try {
+					kurentoTokenOptions = new KurentoTokenOptions(kurentoOptions);
+				} catch (Exception e) {
+					return this.generateErrorResponse("Error in some parameter of 'kurentoOptions'", "/api/tokens",
+							HttpStatus.BAD_REQUEST);
+				}
 			}
 
 			metadata = (metadata != null) ? metadata : "";
 
-			String token = sessionManager.newToken(sessionId, role, metadata);
-			JSONObject responseJson = new JSONObject();
-			responseJson.put("id", token);
-			responseJson.put("session", sessionId);
-			responseJson.put("role", role.toString());
-			responseJson.put("data", metadata);
-			responseJson.put("token", token);
-			return new ResponseEntity<>(responseJson, HttpStatus.OK);
+			String token = sessionManager.newToken(sessionId, role, metadata, kurentoTokenOptions);
+			JsonObject responseJson = new JsonObject();
+			responseJson.addProperty("id", token);
+			responseJson.addProperty("session", sessionId);
+			responseJson.addProperty("role", role.toString());
+			responseJson.addProperty("data", metadata);
+			responseJson.addProperty("token", token);
 
-		} catch (IllegalArgumentException e) {
-			return this.generateErrorResponse("Role " + params.get("role") + " is not defined", "/api/tokens",
-					HttpStatus.BAD_REQUEST);
+			if (kurentoOptions != null) {
+				JsonObject kurentoOptsResponse = new JsonObject();
+				if (kurentoTokenOptions.getVideoMaxRecvBandwidth() != null) {
+					kurentoOptsResponse.addProperty("videoMaxRecvBandwidth",
+							kurentoTokenOptions.getVideoMaxRecvBandwidth());
+				}
+				if (kurentoTokenOptions.getVideoMinRecvBandwidth() != null) {
+					kurentoOptsResponse.addProperty("videoMinRecvBandwidth",
+							kurentoTokenOptions.getVideoMinRecvBandwidth());
+				}
+				if (kurentoTokenOptions.getVideoMaxSendBandwidth() != null) {
+					kurentoOptsResponse.addProperty("videoMaxSendBandwidth",
+							kurentoTokenOptions.getVideoMaxSendBandwidth());
+				}
+				if (kurentoTokenOptions.getVideoMinSendBandwidth() != null) {
+					kurentoOptsResponse.addProperty("videoMinSendBandwidth",
+							kurentoTokenOptions.getVideoMinSendBandwidth());
+				}
+				if (kurentoTokenOptions.getAllowedFilters().length > 0) {
+					JsonArray filters = new JsonArray();
+					for (String filter : kurentoTokenOptions.getAllowedFilters()) {
+						filters.add(filter);
+					}
+					kurentoOptsResponse.add("allowedFilters", filters);
+				}
+				responseJson.add("kurentoOptions", kurentoOptsResponse);
+			}
+			return new ResponseEntity<>(responseJson.toString(), getResponseHeaders(), HttpStatus.OK);
 		} catch (OpenViduException e) {
 			return this.generateErrorResponse(e.getMessage(), "/api/tokens", HttpStatus.BAD_REQUEST);
 		}
 	}
 
 	@RequestMapping(value = "/recordings/start", method = RequestMethod.POST)
-	public ResponseEntity<JSONObject> startRecordingSession(@RequestBody Map<?, ?> params) {
+	public ResponseEntity<?> startRecordingSession(@RequestBody Map<?, ?> params) {
 
 		String sessionId = (String) params.get("session");
 		String name = (String) params.get("name");
@@ -290,8 +322,8 @@ public class SessionRestController {
 		RecordingLayout recordingLayout;
 		if (recordingLayoutString == null || recordingLayoutString.isEmpty()) {
 			// "recordingLayout" parameter not defined. Use global layout from
-			// SessionProperties
-			// (it is always configured as it has RecordingLayout.BEST_FIT as default value)
+			// SessionProperties (it is always configured as it has RecordingLayout.BEST_FIT
+			// as default value)
 			recordingLayout = session.getSessionProperties().defaultRecordingLayout();
 		} else {
 			recordingLayout = RecordingLayout.valueOf(recordingLayoutString);
@@ -301,11 +333,11 @@ public class SessionRestController {
 
 		Recording startedRecording = this.recordingService.startRecording(session, new RecordingProperties.Builder()
 				.name(name).recordingLayout(recordingLayout).customLayout(customLayout).build());
-		return new ResponseEntity<>(startedRecording.toJson(), HttpStatus.OK);
+		return new ResponseEntity<>(startedRecording.toJson().toString(), getResponseHeaders(), HttpStatus.OK);
 	}
 
 	@RequestMapping(value = "/recordings/stop/{recordingId}", method = RequestMethod.POST)
-	public ResponseEntity<JSONObject> stopRecordingSession(@PathVariable("recordingId") String recordingId) {
+	public ResponseEntity<?> stopRecordingSession(@PathVariable("recordingId") String recordingId) {
 
 		if (recordingId == null) {
 			// "recordingId" parameter not found
@@ -335,11 +367,11 @@ public class SessionRestController {
 				session.getParticipantByPublicId(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID), null, null,
 				"EVICT_RECORDER");
 
-		return new ResponseEntity<>(stoppedRecording.toJson(), HttpStatus.OK);
+		return new ResponseEntity<>(stoppedRecording.toJson().toString(), getResponseHeaders(), HttpStatus.OK);
 	}
 
 	@RequestMapping(value = "/recordings/{recordingId}", method = RequestMethod.GET)
-	public ResponseEntity<JSONObject> getRecording(@PathVariable("recordingId") String recordingId) {
+	public ResponseEntity<?> getRecording(@PathVariable("recordingId") String recordingId) {
 		try {
 			Recording recording = this.recordingService.getAllRecordings().stream()
 					.filter(rec -> rec.getId().equals(recordingId)).findFirst().get();
@@ -347,18 +379,17 @@ public class SessionRestController {
 					&& recordingService.getStartingRecording(recording.getId()) != null) {
 				recording.setStatus(Recording.Status.starting);
 			}
-			return new ResponseEntity<>(recording.toJson(), HttpStatus.OK);
+			return new ResponseEntity<>(recording.toJson().toString(), getResponseHeaders(), HttpStatus.OK);
 		} catch (NoSuchElementException e) {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	@RequestMapping(value = "/recordings", method = RequestMethod.GET)
-	public ResponseEntity<JSONObject> getAllRecordings() {
+	public ResponseEntity<?> getAllRecordings() {
 		Collection<Recording> recordings = this.recordingService.getAllRecordings();
-		JSONObject json = new JSONObject();
-		JSONArray jsonArray = new JSONArray();
+		JsonObject json = new JsonObject();
+		JsonArray jsonArray = new JsonArray();
 		recordings.forEach(rec -> {
 			if (Recording.Status.started.equals(rec.getStatus())
 					&& recordingService.getStartingRecording(rec.getId()) != null) {
@@ -366,24 +397,29 @@ public class SessionRestController {
 			}
 			jsonArray.add(rec.toJson());
 		});
-		json.put("count", recordings.size());
-		json.put("items", jsonArray);
-		return new ResponseEntity<>(json, HttpStatus.OK);
+		json.addProperty("count", recordings.size());
+		json.add("items", jsonArray);
+		return new ResponseEntity<>(json.toString(), getResponseHeaders(), HttpStatus.OK);
 	}
 
 	@RequestMapping(value = "/recordings/{recordingId}", method = RequestMethod.DELETE)
-	public ResponseEntity<JSONObject> deleteRecording(@PathVariable("recordingId") String recordingId) {
+	public ResponseEntity<?> deleteRecording(@PathVariable("recordingId") String recordingId) {
 		return new ResponseEntity<>(this.recordingService.deleteRecordingFromHost(recordingId));
 	}
 
-	@SuppressWarnings("unchecked")
-	private ResponseEntity<JSONObject> generateErrorResponse(String errorMessage, String path, HttpStatus status) {
-		JSONObject responseJson = new JSONObject();
-		responseJson.put("timestamp", System.currentTimeMillis());
-		responseJson.put("status", status.value());
-		responseJson.put("error", status.getReasonPhrase());
-		responseJson.put("message", errorMessage);
-		responseJson.put("path", path);
-		return new ResponseEntity<>(responseJson, status);
+	private ResponseEntity<String> generateErrorResponse(String errorMessage, String path, HttpStatus status) {
+		JsonObject responseJson = new JsonObject();
+		responseJson.addProperty("timestamp", System.currentTimeMillis());
+		responseJson.addProperty("status", status.value());
+		responseJson.addProperty("error", status.getReasonPhrase());
+		responseJson.addProperty("message", errorMessage);
+		responseJson.addProperty("path", path);
+		return new ResponseEntity<>(responseJson.toString(), getResponseHeaders(), status);
+	}
+
+	private HttpHeaders getResponseHeaders() {
+		HttpHeaders responseHeaders = new HttpHeaders();
+		responseHeaders.setContentType(MediaType.APPLICATION_JSON);
+		return responseHeaders;
 	}
 }

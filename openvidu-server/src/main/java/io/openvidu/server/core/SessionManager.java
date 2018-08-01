@@ -43,6 +43,7 @@ import io.openvidu.server.cdr.CallDetailRecord;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.coturn.CoturnCredentialsService;
 import io.openvidu.server.coturn.TurnCredentials;
+import io.openvidu.server.kurento.core.KurentoTokenOptions;
 import io.openvidu.server.recording.ComposedRecordingService;
 
 public abstract class SessionManager {
@@ -79,7 +80,8 @@ public abstract class SessionManager {
 
 	public abstract void publishVideo(Participant participant, MediaOptions mediaOptions, Integer transactionId);
 
-	public abstract void unpublishVideo(Participant participant, Participant moderator, Integer transactionId, String reason);
+	public abstract void unpublishVideo(Participant participant, Participant moderator, Integer transactionId,
+			String reason);
 
 	public abstract void subscribe(Participant participant, String senderName, String sdpOffer, Integer transactionId);
 
@@ -93,9 +95,19 @@ public abstract class SessionManager {
 	public abstract void onIceCandidate(Participant participant, String endpointName, String candidate,
 			int sdpMLineIndex, String sdpMid, Integer transactionId);
 
-	public abstract boolean unpublishStream(Session session, String streamId, Participant moderator, Integer transactionId, String reason);
+	public abstract boolean unpublishStream(Session session, String streamId, Participant moderator,
+			Integer transactionId, String reason);
 
 	public abstract void evictParticipant(Participant evictedParticipant, Participant moderator, Integer transactionId,
+			String reason);
+
+	public abstract void applyFilter(Session session, String streamId, String filterType, JsonObject filterOptions,
+			Participant moderator, Integer transactionId, String reason);
+
+	public abstract void execFilterMethod(Session session, String streamId, String filterMethod, JsonObject filterParams,
+			Participant moderator, Integer transactionId, String reason);
+
+	public abstract void removeFilter(Session session, String streamId, Participant moderator, Integer transactionId,
 			String reason);
 
 	/**
@@ -200,7 +212,8 @@ public abstract class SessionManager {
 		showTokens();
 	}
 
-	public String newToken(String sessionId, ParticipantRole role, String serverMetadata) throws OpenViduException {
+	public String newToken(String sessionId, ParticipantRole role, String serverMetadata,
+			KurentoTokenOptions kurentoTokenOptions) throws OpenViduException {
 
 		ConcurrentHashMap<String, Token> map = this.sessionidTokenTokenobj.putIfAbsent(sessionId,
 				new ConcurrentHashMap<>());
@@ -224,7 +237,7 @@ public abstract class SessionManager {
 					token += "&turnCredential=" + turnCredentials.getCredential();
 				}
 			}
-			Token t = new Token(token, role, serverMetadata, turnCredentials);
+			Token t = new Token(token, role, serverMetadata, turnCredentials, kurentoTokenOptions);
 
 			map.putIfAbsent(token, t);
 			showTokens();
@@ -252,7 +265,8 @@ public abstract class SessionManager {
 					new Token(token, ParticipantRole.PUBLISHER, "",
 							this.coturnCredentialsService.isCoturnAvailable()
 									? this.coturnCredentialsService.createUser()
-									: null));
+									: null,
+							null));
 			return true;
 		}
 	}

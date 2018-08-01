@@ -17,9 +17,8 @@
 
 package io.openvidu.server.core;
 
-import org.json.simple.JSONObject;
-
 import io.openvidu.server.coturn.TurnCredentials;
+import io.openvidu.server.kurento.core.KurentoTokenOptions;
 
 public class Token {
 
@@ -28,15 +27,19 @@ public class Token {
 	private String serverMetadata = "";
 	private TurnCredentials turnCredentials;
 
+	private KurentoTokenOptions kurentoTokenOptions;
+
 	public Token(String token) {
 		this.token = token;
 	}
 
-	public Token(String token, ParticipantRole role, String serverMetadata, TurnCredentials turnCredentials) {
+	public Token(String token, ParticipantRole role, String serverMetadata, TurnCredentials turnCredentials,
+			KurentoTokenOptions kurentoTokenOptions) {
 		this.token = token;
 		this.role = role;
 		this.serverMetadata = serverMetadata;
 		this.turnCredentials = turnCredentials;
+		this.kurentoTokenOptions = kurentoTokenOptions;
 	}
 
 	public String getToken() {
@@ -53,6 +56,10 @@ public class Token {
 
 	public TurnCredentials getTurnCredentials() {
 		return turnCredentials;
+	}
+
+	public KurentoTokenOptions getKurentoTokenOptions() {
+		return kurentoTokenOptions;
 	}
 
 	@Override

@@ -19,7 +19,7 @@ package io.openvidu.server.core;
 
 import java.util.Set;
 
-import org.json.simple.JSONObject;
+import com.google.gson.JsonObject;
 
 import io.openvidu.java.client.SessionProperties;
 
@@ -45,8 +45,8 @@ public interface Session {
 
 	int getActivePublishers();
 
-	JSONObject toJSON();
+	JsonObject toJson();
 
-	JSONObject withStatsToJSON();
+	JsonObject withStatsToJson();
 
 }

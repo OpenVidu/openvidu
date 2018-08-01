@@ -17,7 +17,9 @@
 
 package io.openvidu.server.core;
 
-import org.json.simple.JSONObject;
+import com.google.gson.JsonObject;
+
+import io.openvidu.server.kurento.KurentoFilter;
 
 public class MediaOptions {
 
@@ -28,9 +30,10 @@ public class MediaOptions {
 	protected String typeOfVideo;
 	protected Integer frameRate;
 	protected String videoDimensions;
+	protected KurentoFilter filter;
 
 	public MediaOptions(Boolean hasAudio, Boolean hasVideo, Boolean audioActive, Boolean videoActive,
-			String typeOfVideo, Integer frameRate, String videoDimensions) {
+			String typeOfVideo, Integer frameRate, String videoDimensions, KurentoFilter filter) {
 		this.hasAudio = hasAudio;
 		this.hasVideo = hasVideo;
 		this.audioActive = audioActive;
@@ -38,6 +41,7 @@ public class MediaOptions {
 		this.typeOfVideo = typeOfVideo;
 		this.frameRate = frameRate;
 		this.videoDimensions = videoDimensions;
+		this.filter = filter;
 	}
 
 	public boolean hasAudio() {
@@ -67,19 +71,32 @@ public class MediaOptions {
 	public String getVideoDimensions() {
 		return this.videoDimensions;
 	}
-	
-	@SuppressWarnings("unchecked")
-	public JSONObject toJSON() {
-		JSONObject json = new JSONObject();
-		json.put("hasAudio", this.hasAudio);
+
+	public KurentoFilter getFilter() {
+		return this.filter;
+	}
+
+	public void setFilter(KurentoFilter filter) {
+		this.filter = filter;
+	}
+
+	public JsonObject toJson() {
+		JsonObject json = new JsonObject();
+		json.addProperty("hasAudio", this.hasAudio);
 		if (hasAudio)
-			json.put("audioActive", this.audioActive);
-		json.put("hasVideo", this.hasVideo);
+			json.addProperty("audioActive", this.audioActive);
+		json.addProperty("hasVideo", this.hasVideo);
 		if (hasVideo) {
-			json.put("videoActive", this.videoActive);
-			json.put("typeOfVideo", this.typeOfVideo);
-			json.put("frameRate", this.frameRate);
-			json.put("videoDimensions", this.videoDimensions);
+			json.addProperty("videoActive", this.videoActive);
+			json.addProperty("typeOfVideo", this.typeOfVideo);
+			json.addProperty("frameRate", this.frameRate);
+			json.addProperty("videoDimensions", this.videoDimensions);
+		}
+		json.add("filter", this.filter != null ? this.filter.toJson() : new JsonObject());
+		if (this.filter != null) {
+			((JsonObject) json.get("filter")).add("lastExecMethod",
+					this.filter.getLastExecMethod() != null ? this.filter.getLastExecMethod().toJson()
+							: new JsonObject());
 		}
 		return json;
 	}

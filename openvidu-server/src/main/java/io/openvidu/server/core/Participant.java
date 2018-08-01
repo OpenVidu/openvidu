@@ -17,7 +17,7 @@
 
 package io.openvidu.server.core;
 
-import org.json.simple.JSONObject;
+import com.google.gson.JsonObject;
 
 public class Participant {
 
@@ -163,14 +163,13 @@ public class Participant {
 		return builder.toString();
 	}
 
-	@SuppressWarnings("unchecked")
-	public JSONObject toJSON() {
-		JSONObject json = new JSONObject();
-		json.put("connectionId", this.participantPublicId);
-		json.put("token", this.token.getToken());
-		json.put("role", this.token.getRole().name());
-		json.put("serverData", this.serverMetadata);
-		json.put("clientData", this.clientMetadata);
+	public JsonObject toJson() {
+		JsonObject json = new JsonObject();
+		json.addProperty("connectionId", this.participantPublicId);
+		json.addProperty("token", this.token.getToken());
+		json.addProperty("role", this.token.getRole().name());
+		json.addProperty("serverData", this.serverMetadata);
+		json.addProperty("clientData", this.clientMetadata);
 		return json;
 	}
 

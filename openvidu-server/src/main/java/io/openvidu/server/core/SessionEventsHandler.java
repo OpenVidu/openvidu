@@ -39,6 +39,7 @@ import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.server.cdr.CallDetailRecord;
 import io.openvidu.server.config.InfoHandler;
 import io.openvidu.server.config.OpenviduConfig;
+import io.openvidu.server.kurento.KurentoFilter;
 import io.openvidu.server.kurento.core.KurentoParticipant;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.rpc.RpcNotificationService;
@@ -113,6 +114,10 @@ public class SessionEventsHandler {
 						kParticipant.getPublisherMediaOptions().frameRate);
 				stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMVIDEODIMENSIONS_PARAM,
 						kParticipant.getPublisherMediaOptions().videoDimensions);
+				JsonElement filter = kParticipant.getPublisherMediaOptions().getFilter() != null
+						? kParticipant.getPublisherMediaOptions().getFilter().toJson()
+						: new JsonObject();
+				stream.add(ProtocolElements.JOINROOM_PEERSTREAMFILTER_PARAM, filter);
 
 				JsonArray streamsArray = new JsonArray();
 				streamsArray.add(stream);
@@ -199,6 +204,8 @@ public class SessionEventsHandler {
 		stream.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_TYPEOFVIDEO_PARAM, mediaOptions.typeOfVideo);
 		stream.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_FRAMERATE_PARAM, mediaOptions.frameRate);
 		stream.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_VIDEODIMENSIONS_PARAM, mediaOptions.videoDimensions);
+		JsonElement filter = mediaOptions.getFilter() != null ? mediaOptions.getFilter().toJson() : new JsonObject();
+		stream.add(ProtocolElements.JOINROOM_PEERSTREAMFILTER_PARAM, filter);
 
 		JsonArray streamsArray = new JsonArray();
 		streamsArray.add(stream);
@@ -234,6 +241,7 @@ public class SessionEventsHandler {
 
 		for (Participant p : participants) {
 			if (p.getParticipantPrivateId().equals(participant.getParticipantPrivateId())) {
+				// Send response to the affected participant
 				if (!isRpcFromOwner) {
 					rpcNotificationService.sendNotification(p.getParticipantPrivateId(),
 							ProtocolElements.PARTICIPANTUNPUBLISHED_METHOD, params);
@@ -247,6 +255,8 @@ public class SessionEventsHandler {
 				}
 			} else {
 				if (error == null) {
+					// Send response to every other user in the session different than the affected
+					// participant
 					rpcNotificationService.sendNotification(p.getParticipantPrivateId(),
 							ProtocolElements.PARTICIPANTUNPUBLISHED_METHOD, params);
 				}
@@ -437,6 +447,63 @@ public class SessionEventsHandler {
 		for (Participant p : filteredParticipants) {
 			rpcNotificationService.sendNotification(p.getParticipantPrivateId(),
 					ProtocolElements.RECORDINGSTOPPED_METHOD, params);
+		}
+	}
+
+	public void onFilterChanged(Participant participant, Participant moderator, Integer transactionId,
+			Set<Participant> participants, String streamId, KurentoFilter filter, OpenViduException error,
+			String reason) {
+		boolean isRpcFromModerator = transactionId != null && moderator != null;
+		boolean isRpcFromOwner = transactionId != null && moderator == null;
+
+		if (isRpcFromModerator) {
+			if (error != null) {
+				rpcNotificationService.sendErrorResponse(moderator.getParticipantPrivateId(), transactionId, null,
+						error);
+				return;
+			}
+			rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, new JsonObject());
+		}
+
+		JsonObject params = new JsonObject();
+		params.addProperty(ProtocolElements.STREAMPROPERTYCHANGED_CONNECTIONID_PARAM,
+				participant.getParticipantPublicId());
+		params.addProperty(ProtocolElements.STREAMPROPERTYCHANGED_STREAMID_PARAM, streamId);
+		params.addProperty(ProtocolElements.STREAMPROPERTYCHANGED_PROPERTY_PARAM, "filter");
+		JsonObject filterJson = new JsonObject();
+		if (filter != null) {
+			filterJson.addProperty(ProtocolElements.FILTER_TYPE_PARAM, filter.getType());
+			filterJson.add(ProtocolElements.FILTER_OPTIONS_PARAM, filter.getOptions());
+			if (filter.getLastExecMethod() != null) {
+				filterJson.add(ProtocolElements.EXECFILTERMETHOD_LASTEXECMETHOD_PARAM,
+						filter.getLastExecMethod().toJson());
+			}
+		}
+		params.add(ProtocolElements.STREAMPROPERTYCHANGED_NEWVALUE_PARAM, filterJson);
+		params.addProperty(ProtocolElements.STREAMPROPERTYCHANGED_REASON_PARAM, reason);
+
+		for (Participant p : participants) {
+			if (p.getParticipantPrivateId().equals(participant.getParticipantPrivateId())) {
+				// Send response to the affected participant
+				if (!isRpcFromOwner) {
+					rpcNotificationService.sendNotification(p.getParticipantPrivateId(),
+							ProtocolElements.STREAMPROPERTYCHANGED_METHOD, params);
+				} else {
+					if (error != null) {
+						rpcNotificationService.sendErrorResponse(p.getParticipantPrivateId(), transactionId, null,
+								error);
+						return;
+					}
+					rpcNotificationService.sendResponse(p.getParticipantPrivateId(), transactionId, new JsonObject());
+				}
+			} else {
+				// Send response to every other user in the session different than the affected
+				// participant
+				if (error == null) {
+					rpcNotificationService.sendNotification(p.getParticipantPrivateId(),
+							ProtocolElements.STREAMPROPERTYCHANGED_METHOD, params);
+				}
+			}
 		}
 	}
 

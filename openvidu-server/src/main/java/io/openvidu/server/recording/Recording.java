@@ -17,7 +17,7 @@
 
 package io.openvidu.server.recording;
 
-import org.json.simple.JSONObject;
+import com.google.gson.JsonObject;
 
 import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.java.client.RecordingProperties;
@@ -53,22 +53,26 @@ public class Recording {
 		this.recordingProperties = recordingProperties;
 	}
 
-	public Recording(JSONObject json) {
-		this.id = (String) json.get("id");
-		this.sessionId = (String) json.get("sessionId");
-		this.createdAt = (long) json.get("createdAt");
-		this.size = (long) json.get("size");
+	public Recording(JsonObject json) {
+		this.id = json.get("id").getAsString();
+		this.sessionId = json.get("sessionId").getAsString();
+		this.createdAt = json.get("createdAt").getAsLong();
+		this.size = json.get("size").getAsLong();
 		try {
-			this.duration = (double) json.get("duration");
+			this.duration = json.get("duration").getAsDouble();
 		} catch (Exception e) {
-			this.duration = new Long((long) json.get("duration")).doubleValue();
+			this.duration = new Long((long) json.get("duration").getAsLong()).doubleValue();
 		}
-		this.url = (String) json.get("url");
-		this.hasAudio = (boolean) json.get("hasAudio");
-		this.hasVideo = (boolean) json.get("hasVideo");
-		this.status = Status.valueOf((String) json.get("status"));
-		this.recordingProperties = new RecordingProperties.Builder().name((String) json.get("name"))
-				.recordingLayout(RecordingLayout.valueOf((String) json.get("recordingLayout"))).build();
+		if (json.get("url").isJsonNull()) {
+			this.url = null;
+		} else {
+			this.url = json.get("url").getAsString();
+		}
+		this.hasAudio = json.get("hasAudio").getAsBoolean();
+		this.hasVideo = json.get("hasVideo").getAsBoolean();
+		this.status = Status.valueOf(json.get("status").getAsString());
+		this.recordingProperties = new RecordingProperties.Builder().name(json.get("name").getAsString())
+				.recordingLayout(RecordingLayout.valueOf(json.get("recordingLayout").getAsString())).build();
 	}
 
 	public Status getStatus() {
@@ -155,23 +159,22 @@ public class Recording {
 		this.hasVideo = hasVideo;
 	}
 
-	@SuppressWarnings("unchecked")
-	public JSONObject toJson() {
-		JSONObject json = new JSONObject();
-		json.put("id", this.id);
-		json.put("name", this.recordingProperties.name());
-		json.put("recordingLayout", this.recordingProperties.recordingLayout().name());
+	public JsonObject toJson() {
+		JsonObject json = new JsonObject();
+		json.addProperty("id", this.id);
+		json.addProperty("name", this.recordingProperties.name());
+		json.addProperty("recordingLayout", this.recordingProperties.recordingLayout().name());
 		if (RecordingLayout.CUSTOM.equals(this.recordingProperties.recordingLayout())) {
-			json.put("customLayout", this.recordingProperties.customLayout());
+			json.addProperty("customLayout", this.recordingProperties.customLayout());
 		}
-		json.put("sessionId", this.sessionId);
-		json.put("createdAt", this.createdAt);
-		json.put("size", this.size);
-		json.put("duration", this.duration);
-		json.put("url", this.url);
-		json.put("hasAudio", this.hasAudio);
-		json.put("hasVideo", this.hasVideo);
-		json.put("status", this.status.toString());
+		json.addProperty("sessionId", this.sessionId);
+		json.addProperty("createdAt", this.createdAt);
+		json.addProperty("size", this.size);
+		json.addProperty("duration", this.duration);
+		json.addProperty("url", this.url);
+		json.addProperty("hasAudio", this.hasAudio);
+		json.addProperty("hasVideo", this.hasVideo);
+		json.addProperty("status", this.status.toString());
 		return json;
 	}
 

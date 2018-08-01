@@ -21,6 +21,7 @@ import org.kurento.client.MediaElement;
 import org.kurento.client.MediaType;
 
 import io.openvidu.server.core.MediaOptions;
+import io.openvidu.server.kurento.KurentoFilter;
 
 public class KurentoMediaOptions extends MediaOptions {
 
@@ -33,9 +34,9 @@ public class KurentoMediaOptions extends MediaOptions {
 
 	public KurentoMediaOptions(boolean isOffer, String sdpOffer, MediaElement loopbackAlternativeSrc,
 			MediaType loopbackConnectionType, Boolean hasAudio, Boolean hasVideo, Boolean audioActive,
-			Boolean videoActive, String typeOfVideo, Integer frameRate, String videoDimensions, boolean doLoopback,
-			MediaElement... mediaElements) {
-		super(hasAudio, hasVideo, audioActive, videoActive, typeOfVideo, frameRate, videoDimensions);
+			Boolean videoActive, String typeOfVideo, Integer frameRate, String videoDimensions, KurentoFilter filter,
+			boolean doLoopback, MediaElement... mediaElements) {
+		super(hasAudio, hasVideo, audioActive, videoActive, typeOfVideo, frameRate, videoDimensions, filter);
 		this.isOffer = isOffer;
 		this.sdpOffer = sdpOffer;
 		this.loopbackAlternativeSrc = loopbackAlternativeSrc;
