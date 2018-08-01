@@ -19,6 +19,12 @@ mat-radio-button:first-child {
     padding-bottom: 1.25em;
 }
 
+#turn-div mat-radio-button {
+    display: block;
+    margin-left: 0;
+    margin-bottom: 3px;
+}
+
 #manual-turn-div {
     margin-top: 10px;
     padding: 5px;

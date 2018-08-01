@@ -24,6 +24,7 @@ import { SessionApiDialogComponent } from './components/dialogs/session-api-dial
 import { EventsDialogComponent } from './components/dialogs/events-dialog/events-dialog.component';
 import { PublisherPropertiesDialogComponent } from './components/dialogs/publisher-properties-dialog/publisher-properties-dialog.component';
 import { ScenarioPropertiesDialogComponent } from './components/dialogs/scenario-properties-dialog/scenario-properties-dialog.component';
+import { FilterDialogComponent } from './components/dialogs/filter-dialog/filter-dialog.component';
 
 import { OpenviduRestService } from './services/openvidu-rest.service';
 import { OpenviduParamsService } from './services/openvidu-params.service';
@@ -46,6 +47,7 @@ import { MuteSubscribersService } from './services/mute-subscribers.service';
     LocalRecordingDialogComponent,
     PublisherPropertiesDialogComponent,
     ScenarioPropertiesDialogComponent,
+    FilterDialogComponent,
     UsersTableComponent,
     TableVideoComponent
   ],
@@ -71,7 +73,8 @@ import { MuteSubscribersService } from './services/mute-subscribers.service';
     EventsDialogComponent,
     LocalRecordingDialogComponent,
     PublisherPropertiesDialogComponent,
-    ScenarioPropertiesDialogComponent
+    ScenarioPropertiesDialogComponent,
+    FilterDialogComponent
   ],
   bootstrap: [AppComponent]
 })

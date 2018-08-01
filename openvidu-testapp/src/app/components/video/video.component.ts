@@ -18,6 +18,7 @@ import { MuteSubscribersService } from '../../services/mute-subscribers.service'
 import { Subscription } from 'rxjs';
 import { LocalRecordingDialogComponent } from '../dialogs/local-recording-dialog/local-recording-dialog.component';
 import { ExtensionDialogComponent } from '../dialogs/extension-dialog/extension-dialog.component';
+import { FilterDialogComponent } from '../dialogs/filter-dialog/filter-dialog.component';
 
 @Component({
     selector: 'app-video',
@@ -619,6 +620,14 @@ export class VideoComponent implements OnInit, OnDestroy {
 
     forceDisconnect() {
         this.OV.session.forceDisconnect(this.streamManager.stream.connection);
+    }
+
+    filterConfig() {
+        this.dialog.open(FilterDialogComponent, {
+            data: { session: this.streamManager.stream.session, stream: this.streamManager.stream },
+            disableClose: true,
+            width: '250px'
+        });
     }
 
 }

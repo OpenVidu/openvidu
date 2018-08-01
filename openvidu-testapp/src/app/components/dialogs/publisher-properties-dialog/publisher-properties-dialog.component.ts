@@ -1,7 +1,7 @@
 import { Component, Inject } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef, MAT_CHECKBOX_CLICK_ACTION } from '@angular/material';
+import { MatDialogRef, MAT_CHECKBOX_CLICK_ACTION, MAT_DIALOG_DATA } from '@angular/material';
 
-import { PublisherProperties, OpenVidu } from 'openvidu-browser';
+import { PublisherProperties, OpenVidu, Filter } from 'openvidu-browser';
 
 @Component({
     selector: 'app-publisher-properties-dialog',
@@ -25,6 +25,9 @@ export class PublisherPropertiesDialogComponent {
 
     audioDevices = [];
     videoDevices = [];
+
+    filter: Filter = { type: 'GStreamerFilter', options: { 'command': 'pitch pitch=0.8 tempo=1.0' } };
+    stringOptions = "{\"command\":\"pitch pitch=0.8 tempo=1.0\"}";
 
     constructor(public dialogRef: MatDialogRef<PublisherPropertiesDialogComponent>,
         @Inject(MAT_DIALOG_DATA) public data: PublisherProperties) {
@@ -72,6 +75,12 @@ export class PublisherPropertiesDialogComponent {
                 this.publisherProperties.videoSource = undefined;
             }
         }
+        try {
+         this.filter.options = JSON.parse(this.stringOptions);
+        } catch (e) {
+            console.error('Invalid JSON object in "Filter options" field');
+        }
+        this.publisherProperties.filter = this.filter;
         return this.publisherProperties;
     }
 

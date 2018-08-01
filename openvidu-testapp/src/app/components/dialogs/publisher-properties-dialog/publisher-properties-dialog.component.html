@@ -40,6 +40,13 @@
         <mat-form-field>
             <input matInput placeholder="Framerate" [(ngModel)]="publisherProperties.frameRate" type="number">
         </mat-form-field>
+        <mat-divider></mat-divider>
+        <mat-form-field>
+            <input matInput placeholder="Filter type" [(ngModel)]="filter.type" type="text">
+        </mat-form-field>
+        <mat-form-field>
+            <input matInput placeholder="Filter options" [(ngModel)]="stringOptions" type="text">
+        </mat-form-field>
     </mat-dialog-content>
     <mat-dialog-actions>
         <button mat-button [mat-dialog-close]="initValue">CANCEL</button>

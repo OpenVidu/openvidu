@@ -15,6 +15,7 @@ import {
   MediaMode,
   RecordingMode,
   RecordingLayout,
+  TokenOptions,
   OpenViduRole
 } from 'openvidu-node-client';
 import { MatDialog, MAT_CHECKBOX_CLICK_ACTION } from '@angular/material';
@@ -113,10 +114,20 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     publisherStopSpeaking: false
   };
 
+  // Session properties dialog
   turnConf = 'auto';
   manualTurnConf: RTCIceServer = { urls: [] };
-  participantRole: OpenViduRole = OpenViduRole.PUBLISHER;
   customToken: string;
+  tokenOptions: TokenOptions = {
+    role: OpenViduRole.PUBLISHER,
+    kurentoOptions: {
+      videoMaxRecvBandwidth: 600,
+      videoMinRecvBandwidth: 300,
+      videoMaxSendBandwidth: 600,
+      videoMinSendBandwidth: 300,
+      allowedFilters: ['GStreamerFilter']
+    }
+  };
 
   events: OpenViduEvent[] = [];
 
@@ -334,7 +345,12 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       this.session.off('streamPropertyChanged');
       if (this.sessionEvents.streamPropertyChanged) {
         this.session.on('streamPropertyChanged', (event: StreamPropertyChangedEvent) => {
-          const newValue = event.changedProperty === 'videoDimensions' ? JSON.stringify(event.newValue) : event.newValue.toString();
+          let newValue: string;
+          if (event.changedProperty === 'filter') {
+            newValue = !event.newValue ? undefined : event.newValue.toString();
+          } else {
+            newValue = event.changedProperty === 'videoDimensions' ? JSON.stringify(event.newValue) : event.newValue.toString();
+          }
           this.updateEventList('streamPropertyChanged', event.changedProperty + ' [' + newValue + ']');
         });
       }
@@ -499,10 +515,10 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         sessionProperties: this.sessionProperties,
         turnConf: this.turnConf,
         manualTurnConf: this.manualTurnConf,
-        participantRole: this.participantRole,
-        customToken: this.customToken
+        customToken: this.customToken,
+        tokenOptions: this.tokenOptions
       },
-      width: '280px'
+      width: '450px'
     });
 
     dialogRef.afterClosed().subscribe((result) => {
@@ -513,8 +529,8 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         }
         this.turnConf = result.turnConf;
         this.manualTurnConf = result.manualTurnConf;
-        this.participantRole = result.participantRole;
         this.customToken = result.customToken;
+        this.tokenOptions = result.tokenOptions;
       }
       document.getElementById('session-settings-btn-' + this.index).classList.remove('cdk-program-focused');
     });
@@ -612,7 +628,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     return this.OV_NodeClient.createSession(this.sessionProperties)
       .then(session_NodeClient => {
         this.sessionAPI = session_NodeClient;
-        return session_NodeClient.generateToken({ role: this.participantRole });
+        return session_NodeClient.generateToken({ role: this.tokenOptions.role, kurentoOptions: this.tokenOptions.kurentoOptions });
       });
   }
 

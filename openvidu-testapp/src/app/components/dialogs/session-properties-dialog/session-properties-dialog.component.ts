@@ -1,7 +1,7 @@
 import { Component, Inject } from '@angular/core';
-import { MatDialog, MAT_DIALOG_DATA, MatDialogConfig, MatDialogRef } from '@angular/material';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
 
-import { SessionProperties, MediaMode, RecordingMode, RecordingLayout } from 'openvidu-node-client';
+import { SessionProperties, MediaMode, RecordingMode, RecordingLayout, TokenOptions } from 'openvidu-node-client';
 
 @Component({
     selector: 'app-session-properties-dialog',
@@ -13,8 +13,11 @@ export class SessionPropertiesDialogComponent {
     sessionProperties: SessionProperties;
     turnConf: string;
     manualTurnConf: RTCIceServer = {};
-    participantRole: string;
     customToken: string;
+    tokenOptions: TokenOptions;
+
+    filterName = 'GStreamerFilter';
+    filters: string[] = [];
 
     mediaMode = MediaMode;
     recordingMode = RecordingMode;
@@ -25,12 +28,17 @@ export class SessionPropertiesDialogComponent {
         this.sessionProperties = data.sessionProperties;
         this.turnConf = data.turnConf;
         this.manualTurnConf = data.manualTurnConf;
-        this.participantRole = data.participantRole;
+        this.tokenOptions = data.tokenOptions;
         this.customToken = data.customToken;
     }
 
     enumToArray(enumerator: any) {
         return Object.keys(enumerator);
+    }
+
+    generateTokenOptions(): TokenOptions {
+        this.tokenOptions.kurentoOptions.allowedFilters = this.filters;
+        return this.tokenOptions;
     }
 
 }
