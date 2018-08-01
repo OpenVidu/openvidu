@@ -133,7 +133,7 @@ public class Session {
 				}
 				kurentoOptions.put("allowedFilters", allowedFilters);
 			}
-			json.put("kurentoConfiguration", kurentoOptions);
+			json.put("kurentoOptions", kurentoOptions);
 		}
 		StringEntity params;
 		try {

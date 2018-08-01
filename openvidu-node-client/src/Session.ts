@@ -97,7 +97,7 @@ export class Session {
                 session: this.sessionId,
                 role: (!!tokenOptions && !!tokenOptions.role) ? tokenOptions.role : OpenViduRole.PUBLISHER,
                 data: (!!tokenOptions && !!tokenOptions.data) ? tokenOptions.data : '',
-                kurentoConfiguration: (!!tokenOptions && !!tokenOptions.kurentoOptions) ? tokenOptions.kurentoOptions : {},
+                kurentoOptions: (!!tokenOptions && !!tokenOptions.kurentoOptions) ? tokenOptions.kurentoOptions : {},
             });
 
             axios.post(

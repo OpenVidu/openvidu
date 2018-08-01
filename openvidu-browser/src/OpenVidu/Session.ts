@@ -492,9 +492,13 @@ export class Session implements EventDispatcher {
         });
     }
 
-    applyFilter(stream: Stream, type: string, options: string): Promise<any> {
+    applyFilter(stream: Stream, type: string, options: Object): Promise<any> {
         return new Promise((resolve, reject) => {
             console.info('Applying filter to stream ' + stream.streamId);
+            options = !!options ? options : {};
+            if (typeof options !== 'string') {
+                options = JSON.stringify(options);
+            }
             this.openvidu.sendRequest(
                 'applyFilter',
                 { streamId: stream.streamId, type, options },

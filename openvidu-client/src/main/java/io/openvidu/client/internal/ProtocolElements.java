@@ -49,6 +49,7 @@ public class ProtocolElements {
 	public static final String JOINROOM_PEERSTREAMTYPEOFVIDEO_PARAM = "typeOfVideo";
 	public static final String JOINROOM_PEERSTREAMFRAMERATE_PARAM = "frameRate";
 	public static final String JOINROOM_PEERSTREAMVIDEODIMENSIONS_PARAM = "videoDimensions";
+	public static final String JOINROOM_PEERSTREAMFILTER_PARAM = "filter";
 
 	public static final String PUBLISHVIDEO_METHOD = "publishVideo";
 	public static final String PUBLISHVIDEO_SDPOFFER_PARAM = "sdpOffer";
@@ -62,6 +63,7 @@ public class ProtocolElements {
 	public static final String PUBLISHVIDEO_TYPEOFVIDEO_PARAM = "typeOfVideo";
 	public static final String PUBLISHVIDEO_FRAMERATE_PARAM = "frameRate";
 	public static final String PUBLISHVIDEO_VIDEODIMENSIONS_PARAM = "videoDimensions";
+	public static final String PUBLISHVIDEO_KURENTOFILTER_PARAM = "filter";
 
 	public static final String UNPUBLISHVIDEO_METHOD = "unpublishVideo";
 
@@ -87,13 +89,31 @@ public class ProtocolElements {
 	public static final String STREAMPROPERTYCHANGED_PROPERTY_PARAM = "property";
 	public static final String STREAMPROPERTYCHANGED_NEWVALUE_PARAM = "newValue";
 	public static final String STREAMPROPERTYCHANGED_REASON_PARAM = "reason";
-	
+
 	public static final String FORCEDISCONNECT_METHOD = "forceDisconnect";
 	public static final String FORCEDISCONNECT_CONNECTIONID_PARAM = "connectionId";
-	
+
 	public static final String FORCEUNPUBLISH_METHOD = "forceUnpublish";
 	public static final String FORCEUNPUBLISH_STREAMID_PARAM = "streamId";
-	
+
+	public static final String APPLYFILTER_METHOD = "applyFilter";
+	public static final String FILTER_STREAMID_PARAM = "streamId";
+	public static final String FILTER_TYPE_PARAM = "type";
+	public static final String FILTER_OPTIONS_PARAM = "options";
+	public static final String FILTER_METHOD_PARAM = "method";
+	public static final String FILTER_PARAMS_PARAM = "params";
+
+	public static final String EXECFILTERMETHOD_METHOD = "execFilterMethod";
+	public static final String EXECFILTERMETHOD_LASTEXECMETHOD_PARAM = "lastExecMethod";
+
+	public static final String REMOVEFILTER_METHOD = "removeFilter";
+
+	public static final String FORCEAPPLYFILTER_METHOD = "forceApplyFilter";
+
+	public static final String FORCEEXECFILTERMETHOD_METHOD = "forceExecFilterMethod";
+
+	public static final String FORCEREMOVEFILTER_METHOD = "forceRemoveFilter";
+
 	// ---------------------------- SERVER RESPONSES & EVENTS -----------------
 
 	public static final String PARTICIPANTJOINED_METHOD = "participantJoined";
@@ -119,6 +139,7 @@ public class ProtocolElements {
 	public static final String PARTICIPANTPUBLISHED_TYPEOFVIDEO_PARAM = "typeOfVideo";
 	public static final String PARTICIPANTPUBLISHED_FRAMERATE_PARAM = "frameRate";
 	public static final String PARTICIPANTPUBLISHED_VIDEODIMENSIONS_PARAM = "videoDimensions";
+	public static final String PARTICIPANTPUBLISHED_FILTER_PARAM = "filter";
 
 	public static final String PARTICIPANTUNPUBLISHED_METHOD = "participantUnpublished";
 	public static final String PARTICIPANTUNPUBLISHED_NAME_PARAM = "connectionId";

@@ -36,6 +36,8 @@ export interface TokenOptions {
     role?: OpenViduRole;
 
     /**
+     * **WARNING**: experimental option. This interface may change in the near future
+     *
      * Some advanced properties setting the configuration that the WebRTC streams of the user owning the token will have in Kurento Media Server.
      * You can adjust:
      * - `videoMaxRecvBandwidth`: maximum number of Kbps that the client owning the token will be able to receive from Kurento Media Server. 0 means unconstrained. Giving a value to this property will override

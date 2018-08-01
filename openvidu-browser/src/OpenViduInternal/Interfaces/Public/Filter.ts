@@ -29,7 +29,7 @@ export interface Filter {
     /**
      * Parameters used to initialized the filter.
      * These correspond to the constructor parameters used in the filter in Kurento Media Server.
-     * For example: for `filter.type = "GStreamerFilter"` could be `filter.options = "pitch pitch=0.8 tempo=1.0"`
+     * For example: for `filter.type = "GStreamerFilter"` could be `filter.options = {"command": "pitch pitch=0.8 tempo=1.0"}`
      */
     options?: Object;
 
