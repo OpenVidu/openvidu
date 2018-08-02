@@ -241,9 +241,20 @@ public class KurentoSessionManager extends SessionManager {
 		 */
 
 		KurentoTokenOptions kurentoTokenOptions = participant.getToken().getKurentoTokenOptions();
-		if (kurentoOptions.getFilter() != null && kurentoTokenOptions != null
-				&& kurentoTokenOptions.isFilterAllowed(kurentoOptions.getFilter().getType())) {
-			this.applyFilterInPublisher(kParticipant, kurentoOptions.getFilter());
+		if (kurentoOptions.getFilter() != null && kurentoTokenOptions != null) {
+			if (kurentoTokenOptions.isFilterAllowed(kurentoOptions.getFilter().getType())) {
+				this.applyFilterInPublisher(kParticipant, kurentoOptions.getFilter());
+			} else {
+				OpenViduException e = new OpenViduException(Code.FILTER_NOT_APPLIED_ERROR_CODE,
+						"Error applying filter for publishing user " + participant.getParticipantPublicId()
+								+ ". The token has no permissions to apply filter "
+								+ kurentoOptions.getFilter().getType());
+				log.error("PARTICIPANT {}: Error applying filter. The token has no permissions to apply filter {}",
+						participant.getParticipantPublicId(), kurentoOptions.getFilter().getType(), e);
+				sessionEventsHandler.onPublishMedia(participant, null, session.getSessionId(), mediaOptions, sdpAnswer,
+						participants, transactionId, e);
+				throw e;
+			}
 		}
 
 		sdpAnswer = kParticipant.publishToRoom(sdpType, kurentoOptions.sdpOffer, kurentoOptions.doLoopback,
