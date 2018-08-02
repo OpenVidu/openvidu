@@ -125,7 +125,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       videoMinRecvBandwidth: 300,
       videoMaxSendBandwidth: 600,
       videoMinSendBandwidth: 300,
-      allowedFilters: ['GStreamerFilter']
+      allowedFilters: []
     }
   };
 

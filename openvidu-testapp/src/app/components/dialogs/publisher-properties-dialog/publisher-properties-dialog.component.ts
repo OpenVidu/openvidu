@@ -26,8 +26,8 @@ export class PublisherPropertiesDialogComponent {
     audioDevices = [];
     videoDevices = [];
 
-    filter: Filter = { type: 'GStreamerFilter', options: { 'command': 'pitch pitch=0.8 tempo=1.0' } };
-    stringOptions = "{\"command\":\"pitch pitch=0.8 tempo=1.0\"}";
+    filter: Filter = { type: 'GStreamerFilter', options: { 'command': 'videobalance saturation=0.0' } };
+    stringOptions = '{"command":"videobalance saturation=0.0"}';
 
     constructor(public dialogRef: MatDialogRef<PublisherPropertiesDialogComponent>,
         @Inject(MAT_DIALOG_DATA) public data: PublisherProperties) {
@@ -76,7 +76,7 @@ export class PublisherPropertiesDialogComponent {
             }
         }
         try {
-         this.filter.options = JSON.parse(this.stringOptions);
+            this.filter.options = JSON.parse(this.stringOptions);
         } catch (e) {
             console.error('Invalid JSON object in "Filter options" field');
         }

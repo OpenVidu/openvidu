@@ -52,10 +52,10 @@ export class FilterDialogComponent {
     stream: Stream;
 
     filterType = 'GStreamerFilter';
-    filterOptions = '{"command": "pitch pitch=1.2 tempo=1.0"}';
+    filterOptions = '{"command": "videobalance saturation=0.0"}';
 
     filterMethod = 'setElementProperty';
-    filterParams = '{"propertyName":"pitch","propertyValue":"0.8"}';
+    filterParams = '{"propertyName":"saturation","propertyValue":"1.0"}';
 
     response: string;
 
