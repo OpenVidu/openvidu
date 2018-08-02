@@ -1,7 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
-import { Router } from '@angular/router';
-
-import { InfoService } from 'app/services/info.service';
+import { Component } from '@angular/core';
 
 @Component({
   selector: 'app-root',

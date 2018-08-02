@@ -3,11 +3,10 @@ import { FlexLayoutModule } from '@angular/flex-layout';
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpModule } from '@angular/http';
-import { RouterModule } from '@angular/router';
 import 'hammerjs';
 
 import { routing } from './app.routing';
-import { AppMaterialModule } from 'app/app.material.module';
+import { AppMaterialModule } from './app.material.module';
 
 import { InfoService } from './services/info.service';
 import { RestService } from './services/rest.service';
@@ -18,7 +17,6 @@ import { SessionDetailsComponent } from './components/session-details/session-de
 import { CredentialsDialogComponent } from './components/dashboard/credentials-dialog.component';
 import { LayoutBestFitComponent } from './components/layouts/layout-best-fit/layout-best-fit.component';
 import { OpenViduVideoComponent } from './components/layouts/ov-video.component';
-
 
 @NgModule({
   declarations: [
