@@ -728,7 +728,7 @@ public class KurentoSessionManager extends SessionManager {
 		KurentoFilter filter = kParticipant.getPublisher().getMediaOptions().getFilter();
 		KurentoFilter updatedFilter = new KurentoFilter(filter.getType(), filter.getOptions(), method, params);
 		kParticipant.getPublisher().getMediaOptions().setFilter(updatedFilter);
-		return filter;
+		return updatedFilter;
 	}
 
 	private void removeFilterInPublisher(KurentoParticipant kParticipant) {
