@@ -218,7 +218,12 @@ public class SessionRestController {
 			String sessionId = (String) params.get("session");
 			String roleString = (String) params.get("role");
 			String metadata = (String) params.get("data");
-			JsonObject kurentoOptions = new JsonParser().parse(params.get("kurentoOptions").toString()).getAsJsonObject();
+
+			JsonObject kurentoOptions = null;
+
+			if (params.get("kurentoOptions") != null) {
+				kurentoOptions = new JsonParser().parse(params.get("kurentoOptions").toString()).getAsJsonObject();
+			}
 
 			ParticipantRole role;
 			try {

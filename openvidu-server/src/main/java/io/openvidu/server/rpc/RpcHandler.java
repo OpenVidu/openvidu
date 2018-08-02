@@ -33,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
@@ -375,8 +376,14 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 		String filterType = getStringParam(request, ProtocolElements.FILTER_TYPE_PARAM);
 		if (participant.getToken().getKurentoTokenOptions().isFilterAllowed(filterType)) {
-			JsonObject filterOptions = new JsonParser().parse(getStringParam(request, ProtocolElements.FILTER_OPTIONS_PARAM))
-					.getAsJsonObject();
+			JsonObject filterOptions;
+			try {
+				filterOptions = new JsonParser().parse(getStringParam(request, ProtocolElements.FILTER_OPTIONS_PARAM))
+						.getAsJsonObject();
+			} catch (JsonSyntaxException e) {
+				throw new OpenViduException(Code.FILTER_NOT_APPLIED_ERROR_CODE,
+						"'options' parameter is not a JSON object: " + e.getMessage());
+			}
 			String streamId = getStringParam(request, ProtocolElements.FILTER_STREAMID_PARAM);
 			sessionManager.applyFilter(sessionManager.getSession(rpcConnection.getSessionId()), streamId, filterType,
 					filterOptions, null, request.getId(), "applyFilter");

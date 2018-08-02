@@ -500,7 +500,7 @@ public class KurentoSessionManager extends SessionManager {
 	}
 
 	@Override
-	public KurentoMediaOptions generateMediaOptions(Request<JsonObject> request) {
+	public KurentoMediaOptions generateMediaOptions(Request<JsonObject> request) throws OpenViduException {
 
 		String sdpOffer = RpcHandler.getStringParam(request, ProtocolElements.PUBLISHVIDEO_SDPOFFER_PARAM);
 		boolean hasAudio = RpcHandler.getBooleanParam(request, ProtocolElements.PUBLISHVIDEO_HASAUDIO_PARAM);
@@ -534,8 +534,17 @@ public class KurentoSessionManager extends SessionManager {
 		try {
 			JsonObject kurentoFilterJson = (JsonObject) RpcHandler.getParam(request,
 					ProtocolElements.PUBLISHVIDEO_KURENTOFILTER_PARAM);
-			kurentoFilter = new KurentoFilter(kurentoFilterJson.get("type").getAsString(),
-					kurentoFilterJson.get("options").getAsJsonObject());
+			if (kurentoFilterJson != null) {
+				try {
+					kurentoFilter = new KurentoFilter(kurentoFilterJson.get("type").getAsString(),
+							kurentoFilterJson.get("options").getAsJsonObject());
+				} catch (Exception e) {
+					throw new OpenViduException(Code.FILTER_NOT_APPLIED_ERROR_CODE,
+							"'filter' parameter wrong:" + e.getMessage());
+				}
+			}
+		} catch (OpenViduException e) {
+			throw e;
 		} catch (RuntimeException noParameterFound) {
 		}
 
