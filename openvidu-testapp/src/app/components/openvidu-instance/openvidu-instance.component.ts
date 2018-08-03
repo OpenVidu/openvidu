@@ -6,7 +6,7 @@ import {
 import {
   OpenVidu, Session, Subscriber, Publisher, VideoInsertMode, StreamEvent, ConnectionEvent,
   SessionDisconnectedEvent, SignalEvent, RecordingEvent,
-  PublisherSpeakingEvent, PublisherProperties, StreamPropertyChangedEvent, OpenViduError
+  PublisherSpeakingEvent, PublisherProperties, StreamPropertyChangedEvent, OpenViduError, FilterEvent
 } from 'openvidu-browser';
 import {
   OpenVidu as OpenViduAPI,
@@ -111,7 +111,8 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     recordingStopped: true,
     signal: true,
     publisherStartSpeaking: false,
-    publisherStopSpeaking: false
+    publisherStopSpeaking: false,
+    filterEventDispatched: true
   };
 
   // Session properties dialog
@@ -434,6 +435,16 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         });
       }
     }
+
+    if (this.sessionEvents.filterEventDispatched !== oldValues.filterEventDispatched || firstTime) {
+      this.session.off('filterEventDispatched');
+      if (this.sessionEvents.filterEventDispatched) {
+        this.session.on('filterEventDispatched', (event: FilterEvent) => {
+          this.updateEventList('filterEventDispatched',
+            event.filter.type + ' {type: ' + event.eventType + ', data: ' + event.data.toString() + '}');
+        });
+      }
+    }
   }
 
   syncInitPublisher() {
@@ -598,7 +609,8 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         recordingStopped: result.recordingStopped,
         signal: result.signal,
         publisherStartSpeaking: result.publisherStartSpeaking,
-        publisherStopSpeaking: result.publisherStopSpeaking
+        publisherStopSpeaking: result.publisherStopSpeaking,
+        filterEventDispatched: result.filterEventDispatched
       };
       document.getElementById('session-events-btn-' + this.index).classList.remove('cdk-program-focused');
     });

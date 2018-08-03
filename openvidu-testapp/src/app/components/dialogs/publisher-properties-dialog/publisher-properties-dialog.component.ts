@@ -80,7 +80,11 @@ export class PublisherPropertiesDialogComponent {
         } catch (e) {
             console.error('Invalid JSON object in "Filter options" field');
         }
-        this.publisherProperties.filter = this.filter;
+        if (!this.filter.type) {
+            delete this.publisherProperties.filter;
+        } else {
+            this.publisherProperties.filter = this.filter;
+        }
         return this.publisherProperties;
     }
 
