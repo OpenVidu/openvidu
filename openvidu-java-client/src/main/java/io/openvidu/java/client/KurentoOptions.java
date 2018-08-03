@@ -165,7 +165,7 @@ public class KurentoOptions {
 
 	/**
 	 * Defines the names of the filters the user owning the token will be able to
-	 * apply
+	 * apply. See <a href="https://openvidu.io/docs/advanced-features/filters/" target="_blank">Voice and video filters</a>
 	 */
 	public String[] getAllowedFilters() {
 		return allowedFilters;

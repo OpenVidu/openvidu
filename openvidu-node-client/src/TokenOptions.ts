@@ -54,7 +54,7 @@ export interface TokenOptions {
      * - `videoMinSendBandwidth`: minimum number of Kbps that the client owning the token will try to send to Kurento Media Server. 0 means unconstrained. Giving a value to this property will override
      * the global configuration set in [OpenVidu Server configuration](https://openvidu.io/docs/reference-docs/openvidu-server-params/#list-of-configuration-parameters-when-launching-openvidu-server)
      * (parameter `openvidu.streams.video.min-send-bandwidth`) for every outgoing stream of the user owning the token
-     * - `allowedFilters`: names of the filters the user owning the token will be able to apply
+     * - `allowedFilters`: names of the filters the user owning the token will be able to apply. See [Voice and video filters](https://openvidu.io/docs/advanced-features/filters/)
      */
     kurentoOptions?: {
         videoMaxRecvBandwidth?: number,
