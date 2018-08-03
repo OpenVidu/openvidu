@@ -102,17 +102,21 @@ public class ProtocolElements {
 	public static final String FILTER_OPTIONS_PARAM = "options";
 	public static final String FILTER_METHOD_PARAM = "method";
 	public static final String FILTER_PARAMS_PARAM = "params";
-
 	public static final String EXECFILTERMETHOD_METHOD = "execFilterMethod";
 	public static final String EXECFILTERMETHOD_LASTEXECMETHOD_PARAM = "lastExecMethod";
-
 	public static final String REMOVEFILTER_METHOD = "removeFilter";
-
 	public static final String FORCEAPPLYFILTER_METHOD = "forceApplyFilter";
-
 	public static final String FORCEEXECFILTERMETHOD_METHOD = "forceExecFilterMethod";
-
 	public static final String FORCEREMOVEFILTER_METHOD = "forceRemoveFilter";
+	public static final String ADDFILTEREVENTLISTENER_METHOD = "addFilterEventListener";
+	public static final String REMOVEFILTEREVENTLISTENER_METHOD = "removeFilterEventListener";
+	
+	public static final String FILTEREVENTDISPATCHED_METHOD = "filterEventDispatched";
+	public static final String ADDFILTEREVENTLISTENER_CONNECTIONID_PARAM = "connectionId";
+	public static final String ADDFILTEREVENTLISTENER_STREAMID_PARAM = "streamId";
+	public static final String ADDFILTEREVENTLISTENER_FILTERTYPE_PARAM = "filterType";
+	public static final String ADDFILTEREVENTLISTENER_EVENTTYPE_PARAM = "eventType";
+	public static final String ADDFILTEREVENTLISTENER_DATA_PARAM = "data";
 
 	// ---------------------------- SERVER RESPONSES & EVENTS -----------------
 
