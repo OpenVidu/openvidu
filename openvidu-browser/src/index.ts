@@ -21,6 +21,7 @@ export { StreamEvent } from './OpenViduInternal/Events/StreamEvent';
 export { StreamManagerEvent } from './OpenViduInternal/Events/StreamManagerEvent';
 export { VideoElementEvent } from './OpenViduInternal/Events/VideoElementEvent';
 export { StreamPropertyChangedEvent } from './OpenViduInternal/Events/StreamPropertyChangedEvent';
+export { FilterEvent } from './OpenViduInternal/Events/FilterEvent';
 
 export { Capabilities } from './OpenViduInternal/Interfaces/Public/Capabilities';
 export { Device } from './OpenViduInternal/Interfaces/Public/Device';

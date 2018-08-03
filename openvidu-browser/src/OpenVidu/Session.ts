@@ -29,6 +29,7 @@ import { ConnectionOptions } from '../OpenViduInternal/Interfaces/Private/Connec
 import { ObjMap } from '../OpenViduInternal/Interfaces/Private/ObjMap';
 import { SessionOptions } from '../OpenViduInternal/Interfaces/Private/SessionOptions';
 import { ConnectionEvent } from '../OpenViduInternal/Events/ConnectionEvent';
+import { FilterEvent } from '../OpenViduInternal/Events/FilterEvent';
 import { PublisherSpeakingEvent } from '../OpenViduInternal/Events/PublisherSpeakingEvent';
 import { RecordingEvent } from '../OpenViduInternal/Events/RecordingEvent';
 import { SessionDisconnectedEvent } from '../OpenViduInternal/Events/SessionDisconnectedEvent';
@@ -589,6 +590,51 @@ export class Session implements EventDispatcher {
         });
     }
 
+    addFilterEventListener(stream: Stream, eventType: string): Promise<any> {
+        return new Promise((resolve, reject) => {
+            console.info('Adding filter event listener to event ' + eventType + ' to stream ' + stream.streamId);
+            this.openvidu.sendRequest(
+                'addFilterEventListener',
+                { streamId: stream.streamId, type: eventType },
+                (error, response) => {
+                    if (error) {
+                        console.error('Error adding filter event listener to event ' + eventType + 'for Stream ' + stream.streamId, error);
+                        if (error.code === 401) {
+                            reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to add a filter event listener"));
+                        } else {
+                            reject(error);
+                        }
+                    } else {
+                        console.info('Filter event listener to event ' + eventType + ' successfully applied on Stream ' + stream.streamId);
+                        resolve();
+                    }
+                }
+            );
+        });
+    }
+
+    removeFilterEventListener(stream: Stream, eventType: string): Promise<any> {
+        return new Promise((resolve, reject) => {
+            console.info('Removing filter event listener to event ' + eventType + ' to stream ' + stream.streamId);
+            this.openvidu.sendRequest(
+                'removeFilterEventListener',
+                { streamId: stream.streamId, type: eventType },
+                (error, response) => {
+                    if (error) {
+                        console.error('Error removing filter event listener to event ' + eventType + 'for Stream ' + stream.streamId, error);
+                        if (error.code === 401) {
+                            reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to add a filter event listener"));
+                        } else {
+                            reject(error);
+                        }
+                    } else {
+                        console.info('Filter event listener to event ' + eventType + ' successfully removed on Stream ' + stream.streamId);
+                        resolve();
+                    }
+                }
+            );
+        });
+    }
 
     /**
      * Sends one signal. `signal` object has the following optional properties:
@@ -638,7 +684,7 @@ export class Session implements EventDispatcher {
     /**
      * See [[EventDispatcher.on]]
      */
-    on(type: string, handler: (event: SessionDisconnectedEvent | SignalEvent | StreamEvent | ConnectionEvent | PublisherSpeakingEvent | RecordingEvent) => void): EventDispatcher {
+    on(type: string, handler: (event: SessionDisconnectedEvent | SignalEvent | StreamEvent | ConnectionEvent | PublisherSpeakingEvent | RecordingEvent | FilterEvent) => void): EventDispatcher {
 
         this.ee.on(type, event => {
             if (event) {
@@ -1004,6 +1050,21 @@ export class Session implements EventDispatcher {
      */
     onRecordingStopped(response): void {
         this.ee.emitEvent('recordingStopped', [new RecordingEvent(this, 'recordingStopped', response.id, response.name)]);
+    }
+
+    /**
+     * @hidden
+     * response = {connectionId: string, streamId: string, type: string, data: Object}
+     */
+    onFilterEventDispatched(response): void {
+        const connectionId: string = response.connectionId;
+        const streamId: string = response.streamId;
+        this.getConnection(connectionId, 'No connection found for connectionId ' + connectionId)
+            .then(connection => {
+                const stream: Stream = connection.stream;
+                stream.ee.emitEvent('filterEventDispatched', [new FilterEvent(stream, stream.filter, response.eventType, response.data)]);
+                this.ee.emitEvent('filterEventDispatched', [new FilterEvent(stream, stream.filter, response.eventType, response.data)]);
+            });
     }
 
     /**

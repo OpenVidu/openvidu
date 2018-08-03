@@ -22,14 +22,21 @@ export interface Filter {
 
     /**
      * Type of filter applied. This is the name of the remote class identifying the filter to apply in Kurento Media Server.
-     * For example: `"FaceOverlayFilter"`, `"GStreamerFilter"`. If `undefined` no filter is applied to the Stream
+     * For example: `"FaceOverlayFilter"`, `"GStreamerFilter"`.
+     *
+     * You can get this property in `*.kmd.json` files defining the Kurento filters: for GStreamerFilter that's
+     * [here](https://github.com/Kurento/kms-filters/blob/53a452fac71d61795952e3d2202156c6b00f6d65/src/server/interface/filters.GStreamerFilter.kmd.json#L4)
      */
     type?: string;
 
     /**
      * Parameters used to initialized the filter.
-     * These correspond to the constructor parameters used in the filter in Kurento Media Server.
-     * For example: for `filter.type = "GStreamerFilter"` could be `filter.options = {"command": "pitch pitch=0.8 tempo=1.0"}`
+     * These correspond to the constructor parameters used in the filter in Kurento Media Server (except for `mediaPipeline` parameter, which is never needed).
+     *
+     * For example: for `filter.type = "GStreamerFilter"` could be `filter.options = {"command": "videobalance saturation=0.0"}`
+     *
+     * You can get this property in `*.kmd.json` files defining the Kurento filters: for GStreamerFilter that's
+     * [here](https://github.com/Kurento/kms-filters/blob/53a452fac71d61795952e3d2202156c6b00f6d65/src/server/interface/filters.GStreamerFilter.kmd.json#L13-L31)
      */
     options?: Object;
 

@@ -16,8 +16,10 @@
  */
 
 import { Connection } from './Connection';
+import { Event } from '../OpenViduInternal/Events/Event';
 import { Session } from './Session';
 import { StreamManager } from './StreamManager';
+import { EventDispatcher } from '../OpenViduInternal/Interfaces/Public/EventDispatcher';
 import { InboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/InboundStreamOptions';
 import { OutboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/OutboundStreamOptions';
 import { WebRtcPeer, WebRtcPeerSendonly, WebRtcPeerRecvonly, WebRtcPeerSendrecv } from '../OpenViduInternal/WebRtcPeer/WebRtcPeer';
@@ -34,7 +36,7 @@ import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/Open
  * Each [[Publisher]] and [[Subscriber]] has an attribute of type Stream, as they give access
  * to one of them (sending and receiving it, respectively)
  */
-export class Stream {
+export class Stream implements EventDispatcher {
 
     /**
      * The Connection object that is publishing the stream
@@ -212,6 +214,51 @@ export class Stream {
             this.streamManager.updateMediaStream(this.mediaStream);
             console.debug('Video srcObject [' + this.mediaStream + '] updated in stream [' + this.streamId + ']');
         });
+    }
+
+
+    /**
+     * See [[EventDispatcher.on]]
+     */
+    on(type: string, handler: (event: Event) => void): EventDispatcher {
+        this.ee.on(type, event => {
+            if (event) {
+                console.info("Event '" + type + "' triggered by stream '" + this.streamId + "'", event);
+            } else {
+                console.info("Event '" + type + "' triggered by stream '" + this.streamId + "'");
+            }
+            handler(event);
+        });
+        return this;
+    }
+
+
+    /**
+     * See [[EventDispatcher.once]]
+     */
+    once(type: string, handler: (event: Event) => void): EventDispatcher {
+        this.ee.once(type, event => {
+            if (event) {
+                console.info("Event '" + type + "' triggered once by stream '" + this.streamId + "'", event);
+            } else {
+                console.info("Event '" + type + "' triggered once by stream '" + this.streamId + "'");
+            }
+            handler(event);
+        });
+        return this;
+    }
+
+
+    /**
+     * See [[EventDispatcher.off]]
+     */
+    off(type: string, handler?: (event: Event) => void): EventDispatcher {
+        if (!handler) {
+            this.ee.removeAllListeners(type);
+        } else {
+            this.ee.off(type, handler);
+        }
+        return this;
     }
 
 
