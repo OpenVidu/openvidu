@@ -142,6 +142,12 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		case ProtocolElements.REMOVEFILTER_METHOD:
 			removeFilter(rpcConnection, request);
 			break;
+		case ProtocolElements.ADDFILTEREVENTLISTENER_METHOD:
+			addFilterEventListener(rpcConnection, request);
+			break;
+		case ProtocolElements.REMOVEFILTEREVENTLISTENER_METHOD:
+			removeFilterEventListener(rpcConnection, request);
+			break;
 		/*
 		 * case ProtocolElements.FORCEAPPLYFILTER_METHOD:
 		 * forceApplyFilter(rpcConnection, request); break; case
@@ -417,6 +423,46 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		String streamId = getStringParam(request, ProtocolElements.FILTER_STREAMID_PARAM);
 		sessionManager.removeFilter(sessionManager.getSession(rpcConnection.getSessionId()), streamId, null,
 				request.getId(), "removeFilter");
+	}
+
+	private void addFilterEventListener(RpcConnection rpcConnection, Request<JsonObject> request) {
+		Participant participant;
+		try {
+			participant = sanityCheckOfSession(rpcConnection, "addFilterEventListener");
+		} catch (OpenViduException e) {
+			return;
+		}
+		String streamId = getStringParam(request, ProtocolElements.FILTER_STREAMID_PARAM);
+		String eventType = getStringParam(request, ProtocolElements.FILTER_TYPE_PARAM);
+		try {
+			sessionManager.addFilterEventListener(sessionManager.getSession(rpcConnection.getSessionId()), participant,
+					streamId, eventType);
+			this.notificationService.sendResponse(participant.getParticipantPrivateId(), request.getId(),
+					new JsonObject());
+		} catch (OpenViduException e) {
+			this.notificationService.sendErrorResponse(participant.getParticipantPrivateId(), request.getId(),
+					new JsonObject(), e);
+		}
+	}
+
+	private void removeFilterEventListener(RpcConnection rpcConnection, Request<JsonObject> request) {
+		Participant participant;
+		try {
+			participant = sanityCheckOfSession(rpcConnection, "removeFilterEventListener");
+		} catch (OpenViduException e) {
+			return;
+		}
+		String streamId = getStringParam(request, ProtocolElements.FILTER_STREAMID_PARAM);
+		String eventType = getStringParam(request, ProtocolElements.FILTER_TYPE_PARAM);
+		try {
+			sessionManager.removeFilterEventListener(sessionManager.getSession(rpcConnection.getSessionId()),
+					participant, streamId, eventType);
+			this.notificationService.sendResponse(participant.getParticipantPrivateId(), request.getId(),
+					new JsonObject());
+		} catch (OpenViduException e) {
+			this.notificationService.sendErrorResponse(participant.getParticipantPrivateId(), request.getId(),
+					new JsonObject(), e);
+		}
 	}
 
 	public void leaveRoomAfterConnClosed(String participantPrivateId, String reason) {

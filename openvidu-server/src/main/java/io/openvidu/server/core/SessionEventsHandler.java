@@ -507,6 +507,22 @@ public class SessionEventsHandler {
 		}
 	}
 
+	public void onFilterEventDispatched(String connectionId, String streamId, String filterType, String eventType, Object data,
+			Set<Participant> participants, Set<String> subscribedParticipants) {
+		JsonObject params = new JsonObject();
+		params.addProperty(ProtocolElements.ADDFILTEREVENTLISTENER_CONNECTIONID_PARAM, connectionId);
+		params.addProperty(ProtocolElements.ADDFILTEREVENTLISTENER_STREAMID_PARAM, streamId);
+		params.addProperty(ProtocolElements.ADDFILTEREVENTLISTENER_FILTERTYPE_PARAM, filterType);
+		params.addProperty(ProtocolElements.ADDFILTEREVENTLISTENER_EVENTTYPE_PARAM, eventType);
+		params.addProperty(ProtocolElements.ADDFILTEREVENTLISTENER_DATA_PARAM, data.toString());
+		for (Participant p : participants) {
+			if (subscribedParticipants.contains(p.getParticipantPublicId())) {
+				rpcNotificationService.sendNotification(p.getParticipantPrivateId(),
+						ProtocolElements.FILTEREVENTDISPATCHED_METHOD, params);
+			}
+		}
+	}
+
 	public void closeRpcSession(String participantPrivateId) {
 		this.rpcNotificationService.closeRpcSession(participantPrivateId);
 	}

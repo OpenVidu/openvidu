@@ -104,11 +104,17 @@ public abstract class SessionManager {
 	public abstract void applyFilter(Session session, String streamId, String filterType, JsonObject filterOptions,
 			Participant moderator, Integer transactionId, String reason);
 
-	public abstract void execFilterMethod(Session session, String streamId, String filterMethod, JsonObject filterParams,
-			Participant moderator, Integer transactionId, String reason);
+	public abstract void execFilterMethod(Session session, String streamId, String filterMethod,
+			JsonObject filterParams, Participant moderator, Integer transactionId, String reason);
 
 	public abstract void removeFilter(Session session, String streamId, Participant moderator, Integer transactionId,
 			String reason);
+
+	public abstract void addFilterEventListener(Session session, Participant subscriber, String streamId,
+			String eventType);
+
+	public abstract void removeFilterEventListener(Session session, Participant subscriber, String streamId,
+			String eventType);
 
 	/**
 	 * Returns a Session given its id

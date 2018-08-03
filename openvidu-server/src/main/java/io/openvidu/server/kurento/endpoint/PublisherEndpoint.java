@@ -19,9 +19,12 @@ package io.openvidu.server.kurento.endpoint;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 
 import org.kurento.client.Continuation;
@@ -62,6 +65,9 @@ public class PublisherEndpoint extends MediaEndpoint {
 	private ListenerSubscription passThruSubscription = null;
 
 	private GenericMediaElement filter;
+	private Map<String, Set<String>> subscribersToFilterEvents = new ConcurrentHashMap<>();
+	private Map<String, ListenerSubscription> filterListeners = new ConcurrentHashMap<>();
+
 	private Map<String, MediaElement> elements = new HashMap<String, MediaElement>();
 	private LinkedList<String> elementIds = new LinkedList<String>();
 	private boolean connected = false;
@@ -102,6 +108,46 @@ public class PublisherEndpoint extends MediaEndpoint {
 
 	public GenericMediaElement getFilter() {
 		return this.filter;
+	}
+
+	public boolean isListenerAddedToFilterEvent(String eventType) {
+		return (this.subscribersToFilterEvents.containsKey(eventType) && this.filterListeners.containsKey(eventType));
+	}
+
+	public Set<String> getPartipantsListentingToFilterEvent(String eventType) {
+		return this.subscribersToFilterEvents.get(eventType);
+	}
+
+	public boolean storeListener(String eventType, ListenerSubscription listener) {
+		return (this.filterListeners.putIfAbsent(eventType, listener) == null);
+	}
+
+	public ListenerSubscription removeListener(String eventType) {
+		// Clean all participant subscriptions to this event
+		this.subscribersToFilterEvents.remove(eventType);
+		// Clean ListenerSubscription object for this event
+		return this.filterListeners.remove(eventType);
+	}
+
+	public void addParticipantAsListenerOfFilterEvent(String eventType, String participantPublicId) {
+		this.subscribersToFilterEvents.putIfAbsent(eventType, new HashSet<>());
+		this.subscribersToFilterEvents.get(eventType).add(participantPublicId);
+	}
+
+	public boolean removeParticipantAsListenerOfFilterEvent(String eventType, String participantPublicId) {
+		if (!this.subscribersToFilterEvents.containsKey(eventType)) {
+			String streamId = this.getEndpoint().getTag("name");
+			log.error("Request to removeFilterEventListener to stream {} gone wrong: Filter {} has no listener added", streamId,
+					eventType);
+			throw new OpenViduException(Code.FILTER_EVENT_LISTENER_NOT_FOUND,
+					"Request to removeFilterEventListener to stream " + streamId + " gone wrong: Filter " + eventType
+							+ " has no listener added");
+		}
+		this.subscribersToFilterEvents.computeIfPresent(eventType, (type, subs) -> {
+			subs.remove(participantPublicId);
+			return subs;
+		});
+		return this.subscribersToFilterEvents.get(eventType).isEmpty();
 	}
 
 	/**
