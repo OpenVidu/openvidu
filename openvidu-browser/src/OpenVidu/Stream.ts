@@ -118,6 +118,16 @@ export class Stream implements EventDispatcher {
     } = {};
 
     /**
+     * Keeps tracks unstopped on disposal. Allows to keep tracks running if session is diposed
+     * 
+     * This property may be useful if a publisher is started with a previously existing
+     * track which should keep running after disposal, e.g. if you start your webcam
+     * in a <video> element and want to keep it running after OpenVidu session closed
+     * 
+     */
+    keepTracksOnDispose = false;
+
+    /**
      * @hidden
      */
     ee = new EventEmitter();
@@ -205,6 +215,9 @@ export class Stream implements EventDispatcher {
                     this.typeOfVideo = this.isSendScreen() ? 'SCREEN' : 'CAMERA';
                 }
             }
+
+            this.keepTracksOnDispose = !!this.outboundStreamOpts.publisherProperties.keepTracksOnDispose;
+
             if (!!this.outboundStreamOpts.publisherProperties.filter) {
                 this.filter = this.outboundStreamOpts.publisherProperties.filter;
             }
@@ -360,7 +373,7 @@ export class Stream implements EventDispatcher {
      */
     disposeWebRtcPeer(): void {
         if (this.webRtcPeer) {
-            this.webRtcPeer.dispose();
+            this.webRtcPeer.dispose(this.keepTracksOnDispose);
         }
         if (this.speechEvent) {
             this.speechEvent.stop();
@@ -376,12 +389,14 @@ export class Stream implements EventDispatcher {
      */
     disposeMediaStream(): void {
         if (this.mediaStream) {
-            this.mediaStream.getAudioTracks().forEach((track) => {
-                track.stop();
-            });
-            this.mediaStream.getVideoTracks().forEach((track) => {
-                track.stop();
-            });
+            if (!this.keepTracksOnDispose) {
+                this.mediaStream.getAudioTracks().forEach((track) => {
+                    track.stop();
+                });
+                this.mediaStream.getVideoTracks().forEach((track) => {
+                    track.stop();
+                });
+            }
             delete this.mediaStream;
         }
         console.info((!!this.outboundStreamOpts ? 'Local ' : 'Remote ') + "MediaStream from 'Stream' with id [" + this.streamId + '] is now disposed');

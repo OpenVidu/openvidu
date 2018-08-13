@@ -88,4 +88,10 @@ export interface PublisherProperties {
      */
     filter?: Filter;
 
+    /**
+     * Whether to stop the published video tracks after disposal or to keep them (useful if you set your own track as videoSource and you need to keep it aftger disposal)
+     * @default false
+     */
+    keepTracksOnDispose? : boolean;
+
 }
