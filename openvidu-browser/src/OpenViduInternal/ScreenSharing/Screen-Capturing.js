@@ -110,8 +110,8 @@ function getScreenConstraintsWithAudio(callback) {
 function getScreenConstraints(callback, captureSourceIdWithAudio) {
     sourceId = '';
     var firefoxScreenConstraints = {
-        mozMediaSource: 'window',
-        mediaSource: 'window'
+        mozMediaSource: 'screen',
+        mediaSource: 'screen'
     };
     if (isFirefox)
         return callback(null, firefoxScreenConstraints);
