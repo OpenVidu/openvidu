@@ -392,8 +392,10 @@ export class Publisher extends StreamManager {
                 
                 // MediaStreamTracks are handled within callback - just call callback with new MediaStream() and let it 
                 // handle the sources
-
                 successCallback(mediaStream);
+
+                // Return as we do not need to process further
+                return;
             }
 
 
