@@ -74,7 +74,7 @@ export class Publisher extends StreamManager {
     constructor(targEl: string | HTMLElement, properties: PublisherProperties, openvidu: OpenVidu) {
         super(new Stream((!!openvidu.session) ? openvidu.session : new Session(openvidu), { publisherProperties: properties, mediaConstraints: {} }), targEl);
         this.properties = properties;
-        this.openvidu = openvidu;        
+        this.openvidu = openvidu;
 
         this.stream.ee.on('local-stream-destroyed', (reason: string) => {
             this.stream.isLocalStreamPublished = false;
