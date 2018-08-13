@@ -374,6 +374,29 @@ export class Publisher extends StreamManager {
                 resolve();
             };
 
+            // Check if new constraints need to be generated
+            // No constraints needed if...
+            // - video track is given and no audio
+            // - audio track is given and no video
+            // - both video and audio tracks are given
+            if ((this.openvidu.isMediaStreamTrack(this.properties.videoSource) && !this.properties.audioSource)
+                || (!this.properties.videoSource && this.openvidu.isMediaStreamTrack(this.properties.audioSource))
+                || (this.openvidu.isMediaStreamTrack(this.properties.videoSource) && this.openvidu.isMediaStreamTrack(this.properties.audioSource))) {
+                var mediaStream = new MediaStream;
+                
+                if (this.openvidu.isMediaStreamTrack(this.properties.videoSource)) 
+                    mediaStream.addTrack((<MediaStreamTrack>this.properties.videoSource));
+
+                    if (this.openvidu.isMediaStreamTrack(this.properties.audioSource)) 
+                    mediaStream.addTrack((<MediaStreamTrack>this.properties.audioSource));
+                
+                // MediaStreamTracks are handled within callback - just call callback with new MediaStream() and let it 
+                // handle the sources
+
+                successCallback(mediaStream);
+            }
+
+
             this.openvidu.generateMediaConstraints(this.properties)
                 .then(constraints => {
 
