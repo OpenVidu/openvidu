@@ -21,7 +21,7 @@ node('container') {
                      \'^libboost-?(filesystem|log|program-options|regex|system|test|thread)?-dev\' \
                      \'^lib(glib2.0|glibmm-2.4|opencv|sigc++-2.0|soup2.4|ssl|tesseract|vpx)-dev\' \
                      uuid-dev
-                   do apt-get -y purge --auto-remove $pkg ; done
+                   do apt-get -y purge --auto-remove $pkg || true; done
           '''
           sh 'sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 5AFA7A83'
           sh '''         sudo tee "/etc/apt/sources.list.d/kurento.list" >/dev/null <<EOF
