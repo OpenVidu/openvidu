@@ -24,10 +24,7 @@ node('container') {
                    do apt-get -y purge --auto-remove $pkg || true; done
           '''
           sh 'sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 5AFA7A83'
-          sh '''         sudo tee "/etc/apt/sources.list.d/kurento.list" >/dev/null <<EOF
-                   deb [arch=amd64] http://ubuntu.openvidu.io/dev xenial kms6
-                   EOF
-          '''
+          sh 'sudo tee "/etc/apt/sources.list.d/kurento.list" >/dev/null <<EOF\ndeb [arch=amd64] http://ubuntu.openvidu.io/dev xenial kms6\nEOF'
           sh 'sudo apt-get -y update && sudo apt-get -y install kurento-media-server'
           sh 'git clone https://github.com/Kurento/kurento-java'
           sh 'cd kurento-java && mvn install'
