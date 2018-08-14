@@ -8,8 +8,33 @@ node('container') {
           sh 'rm -rf openvidu || true'
           sh 'rm -rf /opt/openvidu/recordings/{,.[!.]}* || true'
 
+
+          sh '''
+            for pkg in \
+                '^(kms|kurento).*' \
+                ffmpeg \
+                '^gir1.2-gst.*1.5' \
+                '^(lib)?gstreamer.*1.5.*' \
+                '^lib(nice|s3-2|srtp|usrsctp).*' \
+                '^srtp-.*' \
+                '^openh264(-gst-plugins-bad-1.5)?' \
+                '^openwebrtc-gst-plugins.*' \
+                '^libboost-?(filesystem|log|program-options|regex|system|test|thread)?-dev' \
+                '^lib(glib2.0|glibmm-2.4|opencv|sigc++-2.0|soup2.4|ssl|tesseract|vpx)-dev' \
+                uuid-dev
+            do apt-get -y purge --auto-remove $pkg ; done'
+          '''
+          sh 'sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 5AFA7A83'
+          sh '''
+            sudo tee "/etc/apt/sources.list.d/kurento.list" >/dev/null <<EOF
+            # Kurento Media Server - Nightly packages
+            deb [arch=amd64] http://ubuntu.openvidu.io/dev xenial kms6
+            EOF
+          '''
+          sh 'sudo apt-get -y update && sudo apt-get -y install kurento-media-server'
           sh 'git clone https://github.com/Kurento/kurento-java'
           sh 'cd kurento-java && mvn install'
+
 
           sh 'git clone https://github.com/OpenVidu/openvidu.git'
         }
