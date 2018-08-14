@@ -39,6 +39,9 @@ import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 /**
  * Manager event class for BrowserUser. Collects, cleans and stores events from
  * openvidu-testapp
@@ -212,6 +215,58 @@ public class OpenViduEventManager {
 		boolean hasMediaStream = (boolean) ((JavascriptExecutor) driver).executeScript(
 				"return (!!(document.getElementById('" + videoElement.getAttribute("id") + "').srcObject))");
 		return hasMediaStream;
+	}
+
+	public Map<String, Long> getAverageRgbFromVideo(WebElement videoElement) {
+		String script = "var callback = arguments[arguments.length - 1];" +
+		        "var video = document.getElementById('" + videoElement.getAttribute("id") + "');" + 
+				"var canvas = document.createElement('canvas');" + 
+		        "canvas.height = video.videoHeight;" +
+		        "canvas.width = video.videoWidth;" +
+		        "var context = canvas.getContext('2d');" +
+		        "context.drawImage(video, 0, 0, canvas.width, canvas.height);" +
+		        "var imgEl = document.createElement('img');" +
+		        "imgEl.src = canvas.toDataURL();" +
+		        "var blockSize = 5;" +
+		        "var defaultRGB = { r: 0, g: 0, b: 0 };" +
+		        "context.drawImage(video, 0, 0, 220, 150);" +
+		        "var dataURL = canvas.toDataURL();" +
+		        "imgEl.onload = function () {" +
+		          "let i = -4;" +
+		          "var rgb = { r: 0, g: 0, b: 0 };" +
+		          "let count = 0;" +
+		          "if (!context) {" +
+		          "  return defaultRGB;" +
+		          "}" +
+
+		          "var height = canvas.height = imgEl.naturalHeight || imgEl.offsetHeight || imgEl.height;" +
+		          "var width = canvas.width = imgEl.naturalWidth || imgEl.offsetWidth || imgEl.width;" +
+		          "let data;" +
+		          "context.drawImage(imgEl, 0, 0);" +
+
+		          "try {" +
+		            "data = context.getImageData(0, 0, width, height);" +
+		          "} catch (e) {" +
+		            "return defaultRGB;" +
+		          "}" +
+
+		          "length = data.data.length;" +
+		          "while ((i += blockSize * 4) < length) {" +
+		            "++count;" +
+		            "rgb.r += data.data[i];" +
+		            "rgb.g += data.data[i + 1];" +
+		            "rgb.b += data.data[i + 2];" +
+		          "}" +
+
+		          "rgb.r = ~~(rgb.r / count);" +
+		          "rgb.g = ~~(rgb.g / count);" +
+		          "rgb.b = ~~(rgb.b / count);" +
+
+		          "console.warn(rgb);" +
+		          "callback(rgb);" +
+		        "};";
+		Object averageRgb = ((JavascriptExecutor) driver).executeAsyncScript(script);
+        return (Map<String, Long>)averageRgb;
 	}
 
 	public String getDimensionOfViewport() {
