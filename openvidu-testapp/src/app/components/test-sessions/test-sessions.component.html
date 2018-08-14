@@ -2,8 +2,10 @@
   <div class="top-div">
     <div class="controls-div">
       <button id="add-user-btn" mat-raised-button color="primary" (click)="addUser()">ADD USER</button>
-      <button id="remove-user-btn" mat-raised-button color="primary" (click)="removeUser()" [disabled]="!users.length">REMOVE USER</button>
-      <button id="remove-all-users-btn" mat-raised-button color="primary" (click)="removeAllUsers()" [disabled]="!users.length">REMOVE ALL</button>
+      <button id="remove-user-btn" mat-raised-button color="primary" (click)="removeUser()" [disabled]="!users.length">REMOVE
+        USER</button>
+      <button id="remove-all-users-btn" mat-raised-button color="primary" (click)="removeAllUsers()" [disabled]="!users.length">REMOVE
+        ALL</button>
     </div>
     <div class="scenario-div">
       <mat-checkbox id="auto-join-checkbox" class="auto-join-check" [(ngModel)]="autoJoin" name="autoJoin">Auto join</mat-checkbox>
@@ -16,7 +18,8 @@
   </div>
 
   <div class="instance-div">
-    <app-openvidu-instance *ngFor="let user of users; let i=index" [openviduUrl]="openviduUrl" [openviduSecret]="openviduSecret" [sessionConf]="user" [index]="i">
+    <app-openvidu-instance *ngFor="let user of users; let i=index" [attr.id]="'openvidu-instance-' + i" [openviduUrl]="openviduUrl"
+      [openviduSecret]="openviduSecret" [sessionConf]="user" [index]="i">
     </app-openvidu-instance>
   </div>
 

@@ -24,7 +24,7 @@
                 <label class="label">Remove filter</label>
                 <button mat-button id="remove-filter-btn" (click)="remove()">Remove</button>
                 <mat-form-field *ngIf="!!response" id="response-text-area" appearance="fill">
-                    <textarea id="api-response-text-area" [(ngModel)]="response" matInput readonly></textarea>
+                    <textarea id="filter-response-text-area" [(ngModel)]="response" matInput readonly></textarea>
                 </mat-form-field>
             </mat-dialog-content>
             <mat-dialog-actions>

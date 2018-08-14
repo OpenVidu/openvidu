@@ -83,7 +83,7 @@
                     <mat-form-field style="width: 70%">
                         <input matInput placeholder="Allowed filter" type="text" [(ngModel)]="filterName">
                     </mat-form-field>
-                    <button mat-icon-button style="width: 24px; height: 24px; line-height: 24px;" title="Add allowed filter" (click)="filters.push(filterName); filterName = '';">
+                    <button id="add-allowed-filter-btn" mat-icon-button style="width: 24px; height: 24px; line-height: 24px;" title="Add allowed filter" (click)="filters.push(filterName); filterName = '';">
                         <mat-icon style="font-size: 18px; line-height: 18px; width: 18px; height: 18px" aria-label="Add allowed filter">add_circle</mat-icon>
                     </button>
                 </div>
@@ -99,7 +99,7 @@
     </div>
 
     <mat-dialog-actions>
-        <button mat-button [mat-dialog-close]="undefined">CANCEL</button>
-        <button mat-button [mat-dialog-close]="{sessionProperties: sessionProperties, turnConf: turnConf, manualTurnConf: manualTurnConf, tokenOptions: generateTokenOptions(), customToken: customToken}">SAVE</button>
+        <button id="cancel-btn" mat-button [mat-dialog-close]="undefined">CANCEL</button>
+        <button id="save-btn" mat-button [mat-dialog-close]="{sessionProperties: sessionProperties, turnConf: turnConf, manualTurnConf: manualTurnConf, tokenOptions: generateTokenOptions(), customToken: customToken}">SAVE</button>
     </mat-dialog-actions>
 </div>
