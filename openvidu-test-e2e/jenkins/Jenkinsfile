@@ -9,6 +9,7 @@ node('container') {
           sh 'rm -rf /opt/openvidu/recordings/{,.[!.]}* || true'
 
 
+          sh 'rm -rf kurento-java || true'
           sh '''         for pkg in \
                      \'^(kms|kurento).*\' \
                      ffmpeg \
