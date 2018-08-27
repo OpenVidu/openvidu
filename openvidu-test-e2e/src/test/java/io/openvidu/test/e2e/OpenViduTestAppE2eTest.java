@@ -1342,6 +1342,12 @@ public class OpenViduTestAppE2eTest {
 		user.getWaiter().until(
 				ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value", "Filter removed"));
 		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 6);
+		Thread.sleep(1000);
+
+		// Analyze Chrome fake video stream with gray filter (GREEN color)
+		rgb = user.getEventManager().getAverageRgbFromVideo(subscriberVideo);
+		System.out.println(rgb.toString());
+		Assert.assertTrue(checkVideoAverageRgbGreen(rgb));
 
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 		gracefullyLeaveParticipants(2);
