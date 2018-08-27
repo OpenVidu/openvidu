@@ -15,7 +15,7 @@
  *
  */
 
-import { Filter } from '../Public/Filter';
+import { Filter } from '../../../OpenVidu/Filter';
 
 export interface StreamOptionsServer {
     id: string;

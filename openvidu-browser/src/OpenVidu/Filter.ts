@@ -16,39 +16,48 @@
  */
 
 /**
- * **WARNING**: experimental option. This interface may change in the near future. See [[Stream.filter]]
+ * **WARNING**: experimental option. This interface may change in the near future
+ * 
+ * Video/audio filter applied to a Stream. See [[Stream.applyFilter]]
  */
-export interface Filter {
+export class Filter {
 
     /**
      * Type of filter applied. This is the name of the remote class identifying the filter to apply in Kurento Media Server.
      * For example: `"FaceOverlayFilter"`, `"GStreamerFilter"`.
      *
-     * You can get this property in `*.kmd.json` files defining the Kurento filters: for GStreamerFilter that's
+     * You can get this property in `*.kmd.json` files defining the Kurento filters. For example, for GStreamerFilter that's
      * [here](https://github.com/Kurento/kms-filters/blob/53a452fac71d61795952e3d2202156c6b00f6d65/src/server/interface/filters.GStreamerFilter.kmd.json#L4)
      */
-    type?: string;
+    type: string;
 
     /**
-     * Parameters used to initialized the filter.
+     * Parameters used to initialize the filter.
      * These correspond to the constructor parameters used in the filter in Kurento Media Server (except for `mediaPipeline` parameter, which is never needed).
      *
      * For example: for `filter.type = "GStreamerFilter"` could be `filter.options = {"command": "videobalance saturation=0.0"}`
      *
-     * You can get this property in `*.kmd.json` files defining the Kurento filters: for GStreamerFilter that's
+     * You can get this property in `*.kmd.json` files defining the Kurento filters. For example, for GStreamerFilter that's
      * [here](https://github.com/Kurento/kms-filters/blob/53a452fac71d61795952e3d2202156c6b00f6d65/src/server/interface/filters.GStreamerFilter.kmd.json#L13-L31)
      */
-    options?: Object;
+    options: Object;
 
     /**
-     * Value passed the last time [[Session.execFilterMethod]] or [[Session.forceExecFilterMethod]] were called
-     * for the Stream owning this filter. If `undefined` those methods have not been called yet.
+     * Value passed the last time [[Filter.execMethod]] was called. If `undefined` this method has not been called yet.
      *
      * You can use this value to know the current status of any applied filter
      */
     lastExecMethod?: {
-        method: string,
-        params: Object
+        method: string, params: Object
     };
+
+
+    /**
+     * @hidden
+     */
+    constructor(type: string, options: Object) {
+        this.type = type;
+        this.options = options;
+    }
 
 }

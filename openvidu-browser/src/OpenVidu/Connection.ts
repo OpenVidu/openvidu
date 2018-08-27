@@ -130,7 +130,7 @@ export class Connection {
                 typeOfVideo: opts.typeOfVideo,
                 frameRate: opts.frameRate,
                 videoDimensions: !!opts.videoDimensions ? JSON.parse(opts.videoDimensions) : undefined,
-                filter: !!opts.filter ? opts.filter : {}
+                filter: !!opts.filter ? opts.filter : undefined
             };
             const stream = new Stream(this.session, streamOptions);
 

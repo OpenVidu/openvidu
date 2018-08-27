@@ -16,6 +16,7 @@
  */
 
 import { Connection } from './Connection';
+import { Filter } from './Filter';
 import { OpenVidu } from './OpenVidu';
 import { Publisher } from './Publisher';
 import { Stream } from './Stream';
@@ -513,8 +514,8 @@ export class Session implements EventDispatcher {
                         }
                     } else {
                         console.info('Filter successfully applied on Stream ' + stream.streamId);
-                        const oldValue = JSON.parse(JSON.stringify(stream.filter));
-                        stream.filter = { type, options };
+                        const oldValue: Filter = stream.filter;
+                        stream.filter = new Filter(type, options);
                         this.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this, stream, 'filter', stream.filter, oldValue, 'applyFilter')]);
                         stream.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(stream.streamManager, stream, 'filter', stream.filter, oldValue, 'applyFilter')]);
                         resolve();
@@ -580,7 +581,7 @@ export class Session implements EventDispatcher {
                     } else {
                         console.info('Filter successfully removed from Stream ' + stream.streamId);
                         const oldValue = JSON.parse(JSON.stringify(stream.filter));
-                        stream.filter = new Object();
+                        delete stream.filter;
                         this.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this, stream, 'filter', stream.filter, oldValue, 'applyFilter')]);
                         stream.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(stream.streamManager, stream, 'filter', stream.filter, oldValue, 'applyFilter')]);
                         resolve();
@@ -937,6 +938,7 @@ export class Session implements EventDispatcher {
                             break;
                         case 'filter':
                             oldValue = stream.filter;
+                            msg.newValue = (Object.keys(msg.newValue).length > 0) ? msg.newValue : undefined;
                             stream.filter = msg.newValue;
                             break;
                     }

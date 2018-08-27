@@ -15,7 +15,7 @@
  *
  */
 
-import { Filter } from './Filter';
+import { Filter } from '../../../OpenVidu/Filter';
 import { VideoInsertMode } from '../../Enums/VideoInsertMode';
 
 /**

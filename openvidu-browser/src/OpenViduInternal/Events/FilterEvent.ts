@@ -17,7 +17,7 @@
 
 import { Event } from './Event';
 import { Stream } from '../../OpenVidu/Stream';
-import { Filter } from '../Interfaces/Public/Filter';
+import { Filter } from '../../OpenVidu/Filter';
 
 
 /**

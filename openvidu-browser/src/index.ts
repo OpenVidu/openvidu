@@ -6,6 +6,7 @@ export { StreamManager } from './OpenVidu/StreamManager';
 export { Stream } from './OpenVidu/Stream';
 export { Connection } from './OpenVidu/Connection';
 export { LocalRecorder } from './OpenVidu/LocalRecorder';
+export { Filter } from './OpenVidu/Filter';
 
 export { LocalRecorderState } from './OpenViduInternal/Enums/LocalRecorderState';
 export { OpenViduError } from './OpenViduInternal/Enums/OpenViduError';
@@ -26,7 +27,6 @@ export { FilterEvent } from './OpenViduInternal/Events/FilterEvent';
 export { Capabilities } from './OpenViduInternal/Interfaces/Public/Capabilities';
 export { Device } from './OpenViduInternal/Interfaces/Public/Device';
 export { EventDispatcher } from './OpenViduInternal/Interfaces/Public/EventDispatcher';
-export { Filter } from './OpenViduInternal/Interfaces/Public/Filter';
 export { OpenViduAdvancedConfiguration } from './OpenViduInternal/Interfaces/Public/OpenViduAdvancedConfiguration';
 export { PublisherProperties } from './OpenViduInternal/Interfaces/Public/PublisherProperties';
 export { SignalOptions } from './OpenViduInternal/Interfaces/Public/SignalOptions';

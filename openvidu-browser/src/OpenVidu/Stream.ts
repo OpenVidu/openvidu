@@ -17,6 +17,7 @@
 
 import { Connection } from './Connection';
 import { Event } from '../OpenViduInternal/Events/Event';
+import { Filter } from './Filter';
 import { Session } from './Session';
 import { StreamManager } from './StreamManager';
 import { EventDispatcher } from '../OpenViduInternal/Interfaces/Public/EventDispatcher';
@@ -109,13 +110,7 @@ export class Stream implements EventDispatcher {
      * [[Session.execFilterMethod]] and remove it with [[Session.removeFilter]]. Be aware that the client calling this methods must have the
      * necessary permissions: the token owned by the client must have been initialized with the appropriated `allowedFilters` array.
      */
-    filter: {
-        type?: string,
-        options?: Object,
-        lastExecMethod?: {
-            method: string, params: Object
-        }
-    } = {};
+    filter: Filter;
 
     /**
      * @hidden
@@ -180,7 +175,7 @@ export class Stream implements EventDispatcher {
                 this.frameRate = (this.inboundStreamOpts.frameRate === -1) ? undefined : this.inboundStreamOpts.frameRate;
                 this.videoDimensions = this.inboundStreamOpts.videoDimensions;
             }
-            if (!!this.inboundStreamOpts.filter) {
+            if (!!this.inboundStreamOpts.filter && (Object.keys(this.inboundStreamOpts.filter).length > 0)) {
                 if (!!this.inboundStreamOpts.filter.lastExecMethod && Object.keys(this.inboundStreamOpts.filter.lastExecMethod).length === 0) {
                     delete this.inboundStreamOpts.filter.lastExecMethod;
                 }
