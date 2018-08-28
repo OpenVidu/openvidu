@@ -26,6 +26,7 @@ import { OutboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/Ou
 import { WebRtcPeer, WebRtcPeerSendonly, WebRtcPeerRecvonly, WebRtcPeerSendrecv } from '../OpenViduInternal/WebRtcPeer/WebRtcPeer';
 import { WebRtcStats } from '../OpenViduInternal/WebRtcStats/WebRtcStats';
 import { PublisherSpeakingEvent } from '../OpenViduInternal/Events/PublisherSpeakingEvent';
+import { StreamPropertyChangedEvent } from '../OpenViduInternal/Events/StreamPropertyChangedEvent';
 
 import EventEmitter = require('wolfy87-eventemitter');
 import hark = require('hark');
@@ -106,8 +107,8 @@ export class Stream implements EventDispatcher {
     /**
      * **WARNING**: experimental option. This interface may change in the near future
      *
-     * Filter applied to the Stream. You can apply filters by calling [[Session.applyFilter]], execute methods of the applied filter with
-     * [[Session.execFilterMethod]] and remove it with [[Session.removeFilter]]. Be aware that the client calling this methods must have the
+     * Filter applied to the Stream. You can apply filters by calling [[Stream.applyFilter]], execute methods of the applied filter with
+     * [[Filter.execMethod]] and remove it with [[Stream.removeFilter]]. Be aware that the client calling this methods must have the
      * necessary permissions: the token owned by the client must have been initialized with the appropriated `allowedFilters` array.
      */
     filter: Filter;
@@ -254,6 +255,80 @@ export class Stream implements EventDispatcher {
             this.ee.off(type, handler);
         }
         return this;
+    }
+
+
+    /**
+     *
+     * Applies an audio/video filter to the stream.
+     *
+     * @param type Type of filter applied. See [[Filter.type]]
+     * @param options Parameters used to initialize the filter. See [[Filter.options]]
+     *
+     * @returns A Promise (to which you can optionally subscribe to) that is resolved to the applied filter if success and rejected with an Error object if not
+     */
+    applyFilter(type: string, options: Object): Promise<Filter> {
+        return new Promise((resolve, reject) => {
+            console.info('Applying filter to stream ' + this.streamId);
+            options = !!options ? options : {};
+            if (typeof options !== 'string') {
+                options = JSON.stringify(options);
+            }
+            this.session.openvidu.sendRequest(
+                'applyFilter',
+                { streamId: this.streamId, type, options },
+                (error, response) => {
+                    if (error) {
+                        console.error('Error applying filter for Stream ' + this.streamId, error);
+                        if (error.code === 401) {
+                            reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to apply a filter"));
+                        } else {
+                            reject(error);
+                        }
+                    } else {
+                        console.info('Filter successfully applied on Stream ' + this.streamId);
+                        const oldValue: Filter = this.filter;
+                        this.filter = new Filter(type, options);
+                        this.filter.stream = this;
+                        this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this, 'filter', this.filter, oldValue, 'applyFilter')]);
+                        this.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.streamManager, this, 'filter', this.filter, oldValue, 'applyFilter')]);
+                        resolve(this.filter);
+                    }
+                }
+            );
+        });
+    }
+
+    /**
+     * Removes an audio/video filter previously applied.
+     *
+     * @returns A Promise (to which you can optionally subscribe to) that is resolved if the previously applied filter has been successfully removed and rejected with an Error object in other case
+     */
+    removeFilter(): Promise<any> {
+        return new Promise((resolve, reject) => {
+            console.info('Removing filter of stream ' + this.streamId);
+            this.session.openvidu.sendRequest(
+                'removeFilter',
+                { streamId: this.streamId },
+                (error, response) => {
+                    if (error) {
+                        console.error('Error removing filter for Stream ' + this.streamId, error);
+                        if (error.code === 401) {
+                            reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to remove a filter"));
+                        } else {
+                            reject(error);
+                        }
+                    } else {
+                        console.info('Filter successfully removed from Stream ' + this.streamId);
+                        const oldValue = this.filter;
+                        delete this.filter;
+                        this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this, 'filter', this.filter, oldValue, 'applyFilter')]);
+                        this.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.streamManager, this, 'filter', this.filter, oldValue, 'applyFilter')]);
+                        resolve();
+                    }
+                }
+            );
+        });
     }
 
 

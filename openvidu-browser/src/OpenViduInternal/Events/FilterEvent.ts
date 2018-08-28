@@ -21,20 +21,9 @@ import { Filter } from '../../OpenVidu/Filter';
 
 
 /**
- * Defines the following events:
- * - `filterEventDispatched`: dispatched by [[Stream]]. Only triggered if `Stream.on('filterEventDispatched', event => {})` was called
+ * Defines every event dispatched by audio/video stream filters. You can subscribe to filter events by calling [[Filter.addEventListener]]
  */
 export class FilterEvent extends Event {
-
-    /**
-     * Filter affected
-     */
-    filter: Filter;
-
-    /**
-     * Type of the event
-     */
-    eventType: string;
 
     /**
      * Data of the event
@@ -44,10 +33,8 @@ export class FilterEvent extends Event {
     /**
      * @hidden
      */
-    constructor(target: Stream, filter: Filter, eventType: string, data: Object) {
-        super(false, target, 'filterEventDispatched');
-        this.filter = filter;
-        this.eventType = eventType;
+    constructor(target: Filter, eventType: string, data: Object) {
+        super(false, target, eventType);
         this.data = data;
     }
 

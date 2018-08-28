@@ -33,7 +33,7 @@ export class StreamPropertyChangedEvent extends Event {
     stream: Stream;
 
     /**
-     * The property of the stream that changed. This value is either `"videoActive"`, `"audioActive"` or `"videoDimensions"`
+     * The property of the stream that changed. This value is either `"videoActive"`, `"audioActive"`, `"videoDimensions"` or `"filter"`
      */
     changedProperty: string;
 
