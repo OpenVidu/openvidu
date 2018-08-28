@@ -109,10 +109,10 @@ export class Session implements EventDispatcher {
 
     /**
      * Connects to the session using `token`. Parameter `metadata` allows you to pass extra data to share with other users when
-     * they receive `streamCreated` event. The structure of `metadata` string is up to you (maybe some standarized format
+     * they receive `streamCreated` event. The structure of `metadata` string is up to you (maybe some standardized format
      * as JSON or XML is a good idea), the only restriction is a maximum length of 10000 chars.
      *
-     * This metadata is not considered secure, as it is generated in the client side. To pass securized data, add it as a parameter in the
+     * This metadata is not considered secure, as it is generated in the client side. To pass secure data, add it as a parameter in the
      * token generation operation (through the API REST, openvidu-java-client or openvidu-node-client).
      *
      * Only after the returned Promise is successfully resolved [[Session.connection]] object will be available and properly defined.
@@ -612,7 +612,7 @@ export class Session implements EventDispatcher {
         if (type === 'publisherStartSpeaking' || type === 'publisherStopSpeaking') {
             this.speakingEventsEnabled = false;
 
-            // If there are already available remote streams, disablae hark in all of them
+            // If there are already available remote streams, disable hark in all of them
             for (const connectionId in this.remoteConnections) {
                 const str = this.remoteConnections[connectionId].stream;
                 if (!!str && !!str.speechEvent) {

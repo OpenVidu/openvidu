@@ -259,7 +259,6 @@ export class Stream implements EventDispatcher {
 
 
     /**
-     *
      * Applies an audio/video filter to the stream.
      *
      * @param type Type of filter applied. See [[Filter.type]]

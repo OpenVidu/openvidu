@@ -54,6 +54,7 @@ export class FilterDialogComponent {
                 });
         } else {
             console.warn('No filter applied to stream ' + this.stream.streamId);
+            this.response = 'Error [Stream ' + this.stream.streamId + ' has no filter applied in session]';
         }
     }
 
@@ -70,26 +71,34 @@ export class FilterDialogComponent {
 
     subFilterEvent() {
         console.log('Adding filter event');
-        this.stream.filter.addEventListener(this.eventType, (event: FilterEvent) => {
-            this.filterEventHandler(event);
-        })
-            .then(() => {
-                this.response = 'Filter event listener added';
+        if (!!this.stream.filter) {
+            this.stream.filter.addEventListener(this.eventType, (event: FilterEvent) => {
+                this.filterEventHandler(event);
             })
-            .catch(error => {
-                this.response = 'Error [' + error.message + ']';
-            });
+                .then(() => {
+                    this.response = 'Filter event listener added';
+                })
+                .catch(error => {
+                    this.response = 'Error [' + error.message + ']';
+                });
+        } else {
+            this.response = 'Error [Stream ' + this.stream.streamId + ' has no filter applied in session]';
+        }
     }
 
     unsubFilterEvent() {
         console.log('Removing filter event');
-        this.stream.filter.removeEventListener(this.eventType)
-            .then(() => {
-                this.response = 'Filter event listener removed';
-            })
-            .catch(error => {
-                this.response = 'Error [' + error.message + ']';
-            });
+        if (!!this.stream.filter) {
+            this.stream.filter.removeEventListener(this.eventType)
+                .then(() => {
+                    this.response = 'Filter event listener removed';
+                })
+                .catch(error => {
+                    this.response = 'Error [' + error.message + ']';
+                });
+        } else {
+            this.response = 'Error [Stream ' + this.stream.streamId + ' has no filter applied in session]';
+        }
     }
 
 }

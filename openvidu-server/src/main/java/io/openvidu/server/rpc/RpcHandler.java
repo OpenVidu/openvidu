@@ -369,7 +369,6 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 			throw new OpenViduException(Code.USER_UNAUTHORIZED_ERROR_CODE,
 					"Unable to force unpublish. The user does not have a valid token");
 		}
-
 	}
 
 	private void applyFilter(RpcConnection rpcConnection, Request<JsonObject> request) {
