@@ -454,15 +454,15 @@ public class SessionEventsHandler {
 			Set<Participant> participants, String streamId, KurentoFilter filter, OpenViduException error,
 			String reason) {
 		boolean isRpcFromModerator = transactionId != null && moderator != null;
-		boolean isRpcFromOwner = transactionId != null && moderator == null;
 
 		if (isRpcFromModerator) {
+			// A moderator forced the application of the filter
 			if (error != null) {
 				rpcNotificationService.sendErrorResponse(moderator.getParticipantPrivateId(), transactionId, null,
 						error);
 				return;
 			}
-			rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, new JsonObject());
+			rpcNotificationService.sendResponse(moderator.getParticipantPrivateId(), transactionId, new JsonObject());
 		}
 
 		JsonObject params = new JsonObject();
@@ -484,11 +484,13 @@ public class SessionEventsHandler {
 
 		for (Participant p : participants) {
 			if (p.getParticipantPrivateId().equals(participant.getParticipantPrivateId())) {
-				// Send response to the affected participant
-				if (!isRpcFromOwner) {
+				// Affected participant
+				if (isRpcFromModerator) {
+					// Force by moderator. Send notification to affected participant
 					rpcNotificationService.sendNotification(p.getParticipantPrivateId(),
 							ProtocolElements.STREAMPROPERTYCHANGED_METHOD, params);
 				} else {
+					// Send response to participant
 					if (error != null) {
 						rpcNotificationService.sendErrorResponse(p.getParticipantPrivateId(), transactionId, null,
 								error);
@@ -498,8 +500,8 @@ public class SessionEventsHandler {
 				}
 			} else {
 				// Send response to every other user in the session different than the affected
-				// participant
-				if (error == null) {
+				// participant or the moderator
+				if (error == null && (moderator == null || !p.getParticipantPrivateId().equals(moderator.getParticipantPrivateId()))) {
 					rpcNotificationService.sendNotification(p.getParticipantPrivateId(),
 							ProtocolElements.STREAMPROPERTYCHANGED_METHOD, params);
 				}
@@ -510,11 +512,11 @@ public class SessionEventsHandler {
 	public void onFilterEventDispatched(String connectionId, String streamId, String filterType, String eventType, Object data,
 			Set<Participant> participants, Set<String> subscribedParticipants) {
 		JsonObject params = new JsonObject();
-		params.addProperty(ProtocolElements.ADDFILTEREVENTLISTENER_CONNECTIONID_PARAM, connectionId);
-		params.addProperty(ProtocolElements.ADDFILTEREVENTLISTENER_STREAMID_PARAM, streamId);
-		params.addProperty(ProtocolElements.ADDFILTEREVENTLISTENER_FILTERTYPE_PARAM, filterType);
-		params.addProperty(ProtocolElements.ADDFILTEREVENTLISTENER_EVENTTYPE_PARAM, eventType);
-		params.addProperty(ProtocolElements.ADDFILTEREVENTLISTENER_DATA_PARAM, data.toString());
+		params.addProperty(ProtocolElements.FILTEREVENTLISTENER_CONNECTIONID_PARAM, connectionId);
+		params.addProperty(ProtocolElements.FILTEREVENTLISTENER_STREAMID_PARAM, streamId);
+		params.addProperty(ProtocolElements.FILTEREVENTLISTENER_FILTERTYPE_PARAM, filterType);
+		params.addProperty(ProtocolElements.FILTEREVENTLISTENER_EVENTTYPE_PARAM, eventType);
+		params.addProperty(ProtocolElements.FILTEREVENTLISTENER_DATA_PARAM, data.toString());
 		for (Participant p : participants) {
 			if (subscribedParticipants.contains(p.getParticipantPublicId())) {
 				rpcNotificationService.sendNotification(p.getParticipantPrivateId(),

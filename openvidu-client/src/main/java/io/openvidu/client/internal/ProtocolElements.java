@@ -112,11 +112,11 @@ public class ProtocolElements {
 	public static final String REMOVEFILTEREVENTLISTENER_METHOD = "removeFilterEventListener";
 	
 	public static final String FILTEREVENTDISPATCHED_METHOD = "filterEventDispatched";
-	public static final String ADDFILTEREVENTLISTENER_CONNECTIONID_PARAM = "connectionId";
-	public static final String ADDFILTEREVENTLISTENER_STREAMID_PARAM = "streamId";
-	public static final String ADDFILTEREVENTLISTENER_FILTERTYPE_PARAM = "filterType";
-	public static final String ADDFILTEREVENTLISTENER_EVENTTYPE_PARAM = "eventType";
-	public static final String ADDFILTEREVENTLISTENER_DATA_PARAM = "data";
+	public static final String FILTEREVENTLISTENER_CONNECTIONID_PARAM = "connectionId";
+	public static final String FILTEREVENTLISTENER_STREAMID_PARAM = "streamId";
+	public static final String FILTEREVENTLISTENER_FILTERTYPE_PARAM = "filterType";
+	public static final String FILTEREVENTLISTENER_EVENTTYPE_PARAM = "eventType";
+	public static final String FILTEREVENTLISTENER_DATA_PARAM = "data";
 
 	// ---------------------------- SERVER RESPONSES & EVENTS -----------------
 

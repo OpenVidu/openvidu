@@ -137,8 +137,8 @@ public class PublisherEndpoint extends MediaEndpoint {
 	public boolean removeParticipantAsListenerOfFilterEvent(String eventType, String participantPublicId) {
 		if (!this.subscribersToFilterEvents.containsKey(eventType)) {
 			String streamId = this.getEndpoint().getTag("name");
-			log.error("Request to removeFilterEventListener to stream {} gone wrong: Filter {} has no listener added", streamId,
-					eventType);
+			log.error("Request to removeFilterEventListener to stream {} gone wrong: Filter {} has no listener added",
+					streamId, eventType);
 			throw new OpenViduException(Code.FILTER_EVENT_LISTENER_NOT_FOUND,
 					"Request to removeFilterEventListener to stream " + streamId + " gone wrong: Filter " + eventType
 							+ " has no listener added");
@@ -148,6 +148,12 @@ public class PublisherEndpoint extends MediaEndpoint {
 			return subs;
 		});
 		return this.subscribersToFilterEvents.get(eventType).isEmpty();
+	}
+
+	public void cleanAllFilterListeners() {
+		for (String eventType : this.subscribersToFilterEvents.keySet()) {
+			this.removeListener(eventType);
+		}
 	}
 
 	/**
@@ -571,5 +577,10 @@ public class PublisherEndpoint extends MediaEndpoint {
 			json.add(entry.getKey(), entry.getValue());
 		}
 		return json;
+	}
+
+	public String filterCollectionsToString() {
+		return "{filter: " + ((this.filter != null) ? this.filter.getName() : "null") + ", listener: " + this.filterListeners.toString()
+				+ ", subscribers: " + this.subscribersToFilterEvents.toString() + "}";
 	}
 }

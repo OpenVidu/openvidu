@@ -115,6 +115,8 @@ public abstract class SessionManager {
 
 	public abstract void removeFilterEventListener(Session session, Participant subscriber, String streamId,
 			String eventType);
+	
+	public abstract String getParticipantPrivateIdFromStreamId(String sessionId, String streamId) throws OpenViduException;
 
 	/**
 	 * Returns a Session given its id

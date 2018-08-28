@@ -148,14 +148,6 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		case ProtocolElements.REMOVEFILTEREVENTLISTENER_METHOD:
 			removeFilterEventListener(rpcConnection, request);
 			break;
-		/*
-		 * case ProtocolElements.FORCEAPPLYFILTER_METHOD:
-		 * forceApplyFilter(rpcConnection, request); break; case
-		 * ProtocolElements.FORCEEXECFILTERMETHOD_METHOD:
-		 * forceExecFilterMethod(rpcConnection, request); break; case
-		 * ProtocolElements.FORCEREMOVEFILTER_METHOD: forceRemoveFilter(rpcConnection,
-		 * request); break;
-		 */
 		default:
 			log.error("Unrecognized request {}", request);
 			break;
@@ -380,7 +372,14 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		}
 
 		String filterType = getStringParam(request, ProtocolElements.FILTER_TYPE_PARAM);
-		if (participant.getToken().getKurentoTokenOptions().isFilterAllowed(filterType)) {
+		String streamId = getStringParam(request, ProtocolElements.FILTER_STREAMID_PARAM);
+		boolean isModerator = this.sessionManager.isModeratorInSession(rpcConnection.getSessionId(), participant);
+
+		// Allow applying filter if the user is a MODERATOR (owning the stream or other
+		// user's stream) or if the user is the owner of the stream and has a token
+		// configured with this specific filter
+		if (isModerator || (this.userIsStreamOwner(rpcConnection.getSessionId(), participant, streamId)
+				&& participant.getToken().getKurentoTokenOptions().isFilterAllowed(filterType))) {
 			JsonObject filterOptions;
 			try {
 				filterOptions = new JsonParser().parse(getStringParam(request, ProtocolElements.FILTER_OPTIONS_PARAM))
@@ -389,9 +388,9 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 				throw new OpenViduException(Code.FILTER_NOT_APPLIED_ERROR_CODE,
 						"'options' parameter is not a JSON object: " + e.getMessage());
 			}
-			String streamId = getStringParam(request, ProtocolElements.FILTER_STREAMID_PARAM);
+			Participant moderator = isModerator ? participant : null;
 			sessionManager.applyFilter(sessionManager.getSession(rpcConnection.getSessionId()), streamId, filterType,
-					filterOptions, null, request.getId(), "applyFilter");
+					filterOptions, moderator, request.getId(), "applyFilter");
 		} else {
 			log.error("Error: participant {} is not a moderator", participant.getParticipantPublicId());
 			throw new OpenViduException(Code.USER_UNAUTHORIZED_ERROR_CODE,
@@ -399,29 +398,53 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		}
 	}
 
-	private void execFilterMethod(RpcConnection rpcConnection, Request<JsonObject> request) {
+	private void removeFilter(RpcConnection rpcConnection, Request<JsonObject> request) {
+		Participant participant;
 		try {
-			sanityCheckOfSession(rpcConnection, "applyFilter");
+			participant = sanityCheckOfSession(rpcConnection, "removeFilter");
 		} catch (OpenViduException e) {
 			return;
 		}
+		String streamId = getStringParam(request, ProtocolElements.FILTER_STREAMID_PARAM);
+		boolean isModerator = this.sessionManager.isModeratorInSession(rpcConnection.getSessionId(), participant);
+
+		// Allow removing filter if the user is a MODERATOR (owning the stream or other
+		// user's stream) or if the user is the owner of the stream
+		if (isModerator || this.userIsStreamOwner(rpcConnection.getSessionId(), participant, streamId)) {
+			Participant moderator = isModerator ? participant : null;
+			sessionManager.removeFilter(sessionManager.getSession(rpcConnection.getSessionId()), streamId, moderator,
+					request.getId(), "removeFilter");
+		} else {
+			log.error("Error: participant {} is not a moderator", participant.getParticipantPublicId());
+			throw new OpenViduException(Code.USER_UNAUTHORIZED_ERROR_CODE,
+					"Unable to remove filter. The user does not have a valid token");
+		}
+	}
+
+	private void execFilterMethod(RpcConnection rpcConnection, Request<JsonObject> request) {
+		Participant participant;
+		try {
+			participant = sanityCheckOfSession(rpcConnection, "execFilterMethod");
+		} catch (OpenViduException e) {
+			return;
+		}
+		String streamId = getStringParam(request, ProtocolElements.FILTER_STREAMID_PARAM);
 		String filterMethod = getStringParam(request, ProtocolElements.FILTER_METHOD_PARAM);
 		JsonObject filterParams = new JsonParser().parse(getStringParam(request, ProtocolElements.FILTER_PARAMS_PARAM))
 				.getAsJsonObject();
-		String streamId = getStringParam(request, ProtocolElements.FILTER_STREAMID_PARAM);
-		sessionManager.execFilterMethod(sessionManager.getSession(rpcConnection.getSessionId()), streamId, filterMethod,
-				filterParams, null, request.getId(), "execFilterMethod");
-	}
+		boolean isModerator = this.sessionManager.isModeratorInSession(rpcConnection.getSessionId(), participant);
 
-	private void removeFilter(RpcConnection rpcConnection, Request<JsonObject> request) {
-		try {
-			sanityCheckOfSession(rpcConnection, "removeFilter");
-		} catch (OpenViduException e) {
-			return;
+		// Allow executing filter method if the user is a MODERATOR (owning the stream
+		// or other user's stream) or if the user is the owner of the stream
+		if (isModerator || this.userIsStreamOwner(rpcConnection.getSessionId(), participant, streamId)) {
+			Participant moderator = isModerator ? participant : null;
+			sessionManager.execFilterMethod(sessionManager.getSession(rpcConnection.getSessionId()), streamId,
+					filterMethod, filterParams, moderator, request.getId(), "execFilterMethod");
+		} else {
+			log.error("Error: participant {} is not a moderator", participant.getParticipantPublicId());
+			throw new OpenViduException(Code.USER_UNAUTHORIZED_ERROR_CODE,
+					"Unable to execute filter method. The user does not have a valid token");
 		}
-		String streamId = getStringParam(request, ProtocolElements.FILTER_STREAMID_PARAM);
-		sessionManager.removeFilter(sessionManager.getSession(rpcConnection.getSessionId()), streamId, null,
-				request.getId(), "removeFilter");
 	}
 
 	private void addFilterEventListener(RpcConnection rpcConnection, Request<JsonObject> request) {
@@ -432,15 +455,25 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 			return;
 		}
 		String streamId = getStringParam(request, ProtocolElements.FILTER_STREAMID_PARAM);
-		String eventType = getStringParam(request, ProtocolElements.FILTER_TYPE_PARAM);
-		try {
-			sessionManager.addFilterEventListener(sessionManager.getSession(rpcConnection.getSessionId()), participant,
-					streamId, eventType);
-			this.notificationService.sendResponse(participant.getParticipantPrivateId(), request.getId(),
-					new JsonObject());
-		} catch (OpenViduException e) {
-			this.notificationService.sendErrorResponse(participant.getParticipantPrivateId(), request.getId(),
-					new JsonObject(), e);
+		String eventType = getStringParam(request, ProtocolElements.FILTEREVENTLISTENER_EVENTTYPE_PARAM);
+		boolean isModerator = this.sessionManager.isModeratorInSession(rpcConnection.getSessionId(), participant);
+
+		// Allow adding a filter event listener if the user is a MODERATOR (owning the
+		// stream or other user's stream) or if the user is the owner of the stream
+		if (isModerator || this.userIsStreamOwner(rpcConnection.getSessionId(), participant, streamId)) {
+			try {
+				sessionManager.addFilterEventListener(sessionManager.getSession(rpcConnection.getSessionId()),
+						participant, streamId, eventType);
+				this.notificationService.sendResponse(participant.getParticipantPrivateId(), request.getId(),
+						new JsonObject());
+			} catch (OpenViduException e) {
+				this.notificationService.sendErrorResponse(participant.getParticipantPrivateId(), request.getId(),
+						new JsonObject(), e);
+			}
+		} else {
+			log.error("Error: participant {} is not a moderator", participant.getParticipantPublicId());
+			throw new OpenViduException(Code.USER_UNAUTHORIZED_ERROR_CODE,
+					"Unable to add filter event listener. The user does not have a valid token");
 		}
 	}
 
@@ -452,15 +485,25 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 			return;
 		}
 		String streamId = getStringParam(request, ProtocolElements.FILTER_STREAMID_PARAM);
-		String eventType = getStringParam(request, ProtocolElements.FILTER_TYPE_PARAM);
-		try {
-			sessionManager.removeFilterEventListener(sessionManager.getSession(rpcConnection.getSessionId()),
-					participant, streamId, eventType);
-			this.notificationService.sendResponse(participant.getParticipantPrivateId(), request.getId(),
-					new JsonObject());
-		} catch (OpenViduException e) {
-			this.notificationService.sendErrorResponse(participant.getParticipantPrivateId(), request.getId(),
-					new JsonObject(), e);
+		String eventType = getStringParam(request, ProtocolElements.FILTEREVENTLISTENER_EVENTTYPE_PARAM);
+		boolean isModerator = this.sessionManager.isModeratorInSession(rpcConnection.getSessionId(), participant);
+
+		// Allow removing a filter event listener if the user is a MODERATOR (owning the
+		// stream or other user's stream) or if the user is the owner of the stream
+		if (isModerator || this.userIsStreamOwner(rpcConnection.getSessionId(), participant, streamId)) {
+			try {
+				sessionManager.removeFilterEventListener(sessionManager.getSession(rpcConnection.getSessionId()),
+						participant, streamId, eventType);
+				this.notificationService.sendResponse(participant.getParticipantPrivateId(), request.getId(),
+						new JsonObject());
+			} catch (OpenViduException e) {
+				this.notificationService.sendErrorResponse(participant.getParticipantPrivateId(), request.getId(),
+						new JsonObject(), e);
+			}
+		} else {
+			log.error("Error: participant {} is not a moderator", participant.getParticipantPublicId());
+			throw new OpenViduException(Code.USER_UNAUTHORIZED_ERROR_CODE,
+					"Unable to remove filter event listener. The user does not have a valid token");
 		}
 	}
 
@@ -602,6 +645,11 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 				throw new OpenViduException(Code.GENERIC_ERROR_CODE, errorMsg);
 			}
 		}
+	}
+
+	private boolean userIsStreamOwner(String sessionId, Participant participant, String streamId) {
+		return participant.getParticipantPrivateId()
+				.equals(this.sessionManager.getParticipantPrivateIdFromStreamId(sessionId, streamId));
 	}
 
 }
