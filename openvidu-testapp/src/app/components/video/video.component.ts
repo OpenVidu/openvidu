@@ -624,9 +624,20 @@ export class VideoComponent implements OnInit, OnDestroy {
 
     filterConfig() {
         this.dialog.open(FilterDialogComponent, {
-            data: { session: this.streamManager.stream.session, stream: this.streamManager.stream },
+            data: {
+                session: this.streamManager.stream.session,
+                stream: this.streamManager.stream,
+                filterEventHandler: this.emitFilterEventToParent.bind(this)
+            },
             disableClose: true,
             width: '450px'
+        });
+    }
+
+    emitFilterEventToParent(event) {
+        this.updateEventListInParent.emit({
+            event: 'filterEvent',
+            content: event.data
         });
     }
 

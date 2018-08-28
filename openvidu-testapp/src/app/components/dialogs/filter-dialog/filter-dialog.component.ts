@@ -1,7 +1,7 @@
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
 
-import { Session, Stream } from 'openvidu-browser';
+import { Session, Stream, FilterEvent } from 'openvidu-browser';
 
 @Component({
     selector: 'app-session-api-dialog',
@@ -12,6 +12,7 @@ export class FilterDialogComponent {
 
     session: Session;
     stream: Stream;
+    filterEventHandler: (FilterEvent) => void;
 
     filterType = 'GStreamerFilter';
     filterOptions = '{"command": "videobalance saturation=0.0"}';
@@ -27,11 +28,12 @@ export class FilterDialogComponent {
         @Inject(MAT_DIALOG_DATA) public data) {
         this.session = data.session;
         this.stream = data.stream;
+        this.filterEventHandler = data.filterEventHandler;
     }
 
     apply() {
         console.log('Applying filter');
-        this.session.applyFilter(this.stream, this.filterType, JSON.parse(this.filterOptions))
+        this.stream.applyFilter(this.filterType, JSON.parse(this.filterOptions))
             .then(() => {
                 this.response = 'Filter applied';
             })
@@ -41,19 +43,23 @@ export class FilterDialogComponent {
     }
 
     execMethod() {
-        console.log('Executing filter method');
-        this.session.execFilterMethod(this.stream, this.filterMethod, this.filterParams)
-            .then(recording => {
-                this.response = 'Filter method executed';
-            })
-            .catch(error => {
-                this.response = 'Error [' + error.message + ']';
-            });
+        if (!!this.stream.filter) {
+            console.log('Executing filter method');
+            this.stream.filter.execMethod(this.filterMethod, this.filterParams)
+                .then(() => {
+                    this.response = 'Filter method executed';
+                })
+                .catch(error => {
+                    this.response = 'Error [' + error.message + ']';
+                });
+        } else {
+            console.warn('No filter applied to stream ' + this.stream.streamId);
+        }
     }
 
     remove() {
         console.log('Removing filter');
-        this.session.removeFilter(this.stream)
+        this.stream.removeFilter()
             .then(() => {
                 this.response = 'Filter removed';
             })
@@ -64,7 +70,9 @@ export class FilterDialogComponent {
 
     subFilterEvent() {
         console.log('Adding filter event');
-        this.session.addFilterEventListener(this.stream, this.eventType)
+        this.stream.filter.addEventListener(this.eventType, (event: FilterEvent) => {
+            this.filterEventHandler(event);
+        })
             .then(() => {
                 this.response = 'Filter event listener added';
             })
@@ -75,7 +83,7 @@ export class FilterDialogComponent {
 
     unsubFilterEvent() {
         console.log('Removing filter event');
-        this.session.removeFilterEventListener(this.stream, this.eventType)
+        this.stream.filter.removeEventListener(this.eventType)
             .then(() => {
                 this.response = 'Filter event listener removed';
             })

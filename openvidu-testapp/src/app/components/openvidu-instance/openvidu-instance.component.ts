@@ -111,8 +111,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     recordingStopped: true,
     signal: true,
     publisherStartSpeaking: false,
-    publisherStopSpeaking: false,
-    filterEventDispatched: true
+    publisherStopSpeaking: false
   };
 
   // Session properties dialog
@@ -243,7 +242,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     this.subscribers = [];
   }
 
-  private updateEventList(event: string, content: string) {
+  updateEventList(event: string, content: string) {
     this.events.push({ name: event, content: content });
     this.testFeedService.pushNewEvent(this.sessionName, this.session.connection.connectionId, event, content);
   }
@@ -435,16 +434,6 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         });
       }
     }
-
-    if (this.sessionEvents.filterEventDispatched !== oldValues.filterEventDispatched || firstTime) {
-      this.session.off('filterEventDispatched');
-      if (this.sessionEvents.filterEventDispatched) {
-        this.session.on('filterEventDispatched', (event: FilterEvent) => {
-          this.updateEventList('filterEventDispatched',
-            event.filter.type + ' {type: ' + event.eventType + ', data: ' + event.data.toString() + '}');
-        });
-      }
-    }
   }
 
   syncInitPublisher() {
@@ -609,8 +598,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         recordingStopped: result.recordingStopped,
         signal: result.signal,
         publisherStartSpeaking: result.publisherStartSpeaking,
-        publisherStopSpeaking: result.publisherStopSpeaking,
-        filterEventDispatched: result.filterEventDispatched
+        publisherStopSpeaking: result.publisherStopSpeaking
       };
       document.getElementById('session-events-btn-' + this.index).classList.remove('cdk-program-focused');
     });
@@ -644,7 +632,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       });
   }
 
-  udpateEventFromChild(event) {
+  updateEventFromChild(event) {
     this.updateEventList(event.event, event.content);
   }
 

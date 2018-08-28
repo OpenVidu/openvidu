@@ -26,7 +26,7 @@ export class PublisherPropertiesDialogComponent {
     audioDevices = [];
     videoDevices = [];
 
-    filter: Filter = { type: 'GStreamerFilter', options: { 'command': 'videobalance saturation=0.0' } };
+    filter = { type: 'GStreamerFilter', options: { 'command': 'videobalance saturation=0.0' } };
     stringOptions = '{"command":"videobalance saturation=0.0"}';
 
     constructor(public dialogRef: MatDialogRef<PublisherPropertiesDialogComponent>,
@@ -83,7 +83,7 @@ export class PublisherPropertiesDialogComponent {
         if (!this.filter.type) {
             delete this.publisherProperties.filter;
         } else {
-            this.publisherProperties.filter = this.filter;
+            this.publisherProperties.filter = new Filter(this.filter.type, this.filter.options);
         }
         return this.publisherProperties;
     }

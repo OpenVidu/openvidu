@@ -127,9 +127,9 @@
         </div>
         <div [attr.id]="'remote-vid-' + session.connection.connectionId" fxFlex="240px" class="video-container">
           <div [attr.id]="'local-vid-' + session.connection.connectionId"></div>
-          <app-video *ngIf="this.publisher" [streamManager]="this.publisher" [OV]="OV" [properties]="publisherProperties" (updateEventListInParent)="udpateEventFromChild($event)">
+          <app-video *ngIf="this.publisher" [streamManager]="this.publisher" [OV]="OV" [properties]="publisherProperties" (updateEventListInParent)="updateEventFromChild($event)">
           </app-video>
-          <app-video *ngFor="let subscriber of this.subscribers" [streamManager]="subscriber" [OV]="OV" (updateEventListInParent)="udpateEventFromChild($event)"
+          <app-video *ngFor="let subscriber of this.subscribers" [streamManager]="subscriber" [OV]="OV" (updateEventListInParent)="updateEventFromChild($event)"
             (reSubbed)="updateSubscriberFromChild($event)">
           </app-video>
         </div>
