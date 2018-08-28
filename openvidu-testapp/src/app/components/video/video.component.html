@@ -61,6 +61,9 @@
             <button *ngIf="OV.session.capabilities.forceDisconnect" class="video-btn force-disconnect-btn" title="Force Disconnect" (click)="forceDisconnect()">
                 <mat-icon aria-label="Force disconnect" class="mat-icon material-icons" role="img" aria-hidden="true">clear</mat-icon>
             </button>
+            <button *ngIf="OV.session.capabilities.forceDisconnect" class="video-btn filter-btn" title="Filter configuration" (click)="filterConfig()">
+                <mat-icon aria-label="Filter configuration" class="mat-icon material-icons" role="img" aria-hidden="true">filter_vintage</mat-icon>
+            </button>
 
             <button *ngIf="!!recordIcon" class="video-btn rec-btn" title="Record" (click)="record()">
                 <mat-icon aria-label="Start/Stop recording" class="mat-icon material-icons" role="img" aria-hidden="true">{{recordIcon}}</mat-icon>
