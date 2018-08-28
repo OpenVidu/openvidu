@@ -137,7 +137,7 @@ export class Filter {
             console.info('Adding filter event listener to event ' + eventType + ' to stream ' + this.stream.streamId);
             this.stream.session.openvidu.sendRequest(
                 'addFilterEventListener',
-                { streamId: this.stream.streamId, type: eventType },
+                { streamId: this.stream.streamId, eventType },
                 (error, response) => {
                     if (error) {
                         console.error('Error adding filter event listener to event ' + eventType + 'for Stream ' + this.stream.streamId, error);
@@ -169,7 +169,7 @@ export class Filter {
             console.info('Removing filter event listener to event ' + eventType + ' to stream ' + this.stream.streamId);
             this.stream.session.openvidu.sendRequest(
                 'removeFilterEventListener',
-                { streamId: this.stream.streamId, type: eventType },
+                { streamId: this.stream.streamId, eventType },
                 (error, response) => {
                     if (error) {
                         console.error('Error removing filter event listener to event ' + eventType + 'for Stream ' + this.stream.streamId, error);

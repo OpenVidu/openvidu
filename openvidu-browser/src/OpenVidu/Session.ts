@@ -771,54 +771,62 @@ export class Session implements EventDispatcher {
      * @hidden
      */
     onStreamPropertyChanged(msg): void {
-        this.getRemoteConnection(msg.connectionId, 'Remote connection ' + msg.connectionId + " unknown when 'onStreamPropertyChanged'. " +
-            'Existing remote connections: ' + JSON.stringify(Object.keys(this.remoteConnections)))
 
-            .then(connection => {
-                if (!!connection.stream && connection.stream.streamId === msg.streamId) {
-                    const stream = connection.stream;
-                    let oldValue;
-                    switch (msg.property) {
-                        case 'audioActive':
-                            oldValue = stream.audioActive;
-                            msg.newValue = msg.newValue === 'true';
-                            stream.audioActive = msg.newValue;
-                            break;
-                        case 'videoActive':
-                            oldValue = stream.videoActive;
-                            msg.newValue = msg.newValue === 'true';
-                            stream.videoActive = msg.newValue;
-                            break;
-                        case 'videoDimensions':
-                            oldValue = stream.videoDimensions;
-                            msg.newValue = JSON.parse(JSON.parse(msg.newValue));
-                            stream.videoDimensions = msg.newValue;
-                            break;
-                        case 'filter':
-                            oldValue = stream.filter;
-                            msg.newValue = (Object.keys(msg.newValue).length > 0) ? msg.newValue : undefined;
-                            if (msg.newValue !== undefined) {
-                                stream.filter = new Filter(msg.newValue.type, msg.newValue.options);
-                                stream.filter.stream = stream;
-                                if (msg.newValue.lastExecMethod) {
-                                    stream.filter.lastExecMethod = msg.newValue.lastExecMethod;
-                                }
-                            } else {
-                                delete stream.filter;
+        const callback = (connection: Connection) => {
+            if (!!connection.stream && connection.stream.streamId === msg.streamId) {
+                const stream = connection.stream;
+                let oldValue;
+                switch (msg.property) {
+                    case 'audioActive':
+                        oldValue = stream.audioActive;
+                        msg.newValue = msg.newValue === 'true';
+                        stream.audioActive = msg.newValue;
+                        break;
+                    case 'videoActive':
+                        oldValue = stream.videoActive;
+                        msg.newValue = msg.newValue === 'true';
+                        stream.videoActive = msg.newValue;
+                        break;
+                    case 'videoDimensions':
+                        oldValue = stream.videoDimensions;
+                        msg.newValue = JSON.parse(JSON.parse(msg.newValue));
+                        stream.videoDimensions = msg.newValue;
+                        break;
+                    case 'filter':
+                        oldValue = stream.filter;
+                        msg.newValue = (Object.keys(msg.newValue).length > 0) ? msg.newValue : undefined;
+                        if (msg.newValue !== undefined) {
+                            stream.filter = new Filter(msg.newValue.type, msg.newValue.options);
+                            stream.filter.stream = stream;
+                            if (msg.newValue.lastExecMethod) {
+                                stream.filter.lastExecMethod = msg.newValue.lastExecMethod;
                             }
-                            msg.newValue = stream.filter;
-                            break;
-                    }
-
-                    this.ee.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this, stream, msg.property, msg.newValue, oldValue, msg.reason)]);
-                    stream.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(stream.streamManager, stream, msg.property, msg.newValue, oldValue, msg.reason)]);
-                } else {
-                    console.error("No stream with streamId '" + msg.streamId + "' found for connection '" + msg.connectionId + "' on 'streamPropertyChanged' event");
+                        } else {
+                            delete stream.filter;
+                        }
+                        msg.newValue = stream.filter;
+                        break;
                 }
-            })
-            .catch(openViduError => {
-                console.error(openViduError);
-            });
+                this.ee.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this, stream, msg.property, msg.newValue, oldValue, msg.reason)]);
+                stream.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(stream.streamManager, stream, msg.property, msg.newValue, oldValue, msg.reason)]);
+            } else {
+                console.error("No stream with streamId '" + msg.streamId + "' found for connection '" + msg.connectionId + "' on 'streamPropertyChanged' event");
+            }
+        };
+
+        if (msg.connectionId === this.connection.connectionId) {
+            // Your stream has been forcedly changed (filter feature)
+            callback(this.connection);
+        } else {
+            this.getRemoteConnection(msg.connectionId, 'Remote connection ' + msg.connectionId + " unknown when 'onStreamPropertyChanged'. " +
+                'Existing remote connections: ' + JSON.stringify(Object.keys(this.remoteConnections)))
+                .then(connection => {
+                    callback(connection);
+                })
+                .catch(openViduError => {
+                    console.error(openViduError);
+                });
+        }
     }
 
     /**
