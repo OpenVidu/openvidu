@@ -57,9 +57,9 @@
                 <label class="label">Role</label>
                 <div id="role-div">
                     <mat-radio-group name="Role" [(ngModel)]="tokenOptions.role">
-                        <mat-radio-button value="SUBSCRIBER">SUB</mat-radio-button>
-                        <mat-radio-button value="PUBLISHER">PUB</mat-radio-button>
-                        <mat-radio-button value="MODERATOR">MOD</mat-radio-button>
+                        <mat-radio-button id="radio-btn-sub" value="SUBSCRIBER">SUB</mat-radio-button>
+                        <mat-radio-button id="radio-btn-pub" value="PUBLISHER">PUB</mat-radio-button>
+                        <mat-radio-button id="radio-btn-mod" value="MODERATOR">MOD</mat-radio-button>
                     </mat-radio-group>
                 </div>
 
@@ -81,7 +81,7 @@
                         <mat-chip style="height: 20px" *ngFor="let filterName of filters" (click)="filters.splice(filters.indexOf(filterName, 1))">{{filterName}}</mat-chip>
                     </mat-chip-list>
                     <mat-form-field style="width: 70%">
-                        <input matInput placeholder="Allowed filter" type="text" [(ngModel)]="filterName">
+                        <input matInput placeholder="Allowed filter" id="allowed-filter-input" type="text" [(ngModel)]="filterName">
                     </mat-form-field>
                     <button id="add-allowed-filter-btn" mat-icon-button style="width: 24px; height: 24px; line-height: 24px;" title="Add allowed filter" (click)="filters.push(filterName); filterName = '';">
                         <mat-icon style="font-size: 18px; line-height: 18px; width: 18px; height: 18px" aria-label="Add allowed filter">add_circle</mat-icon>

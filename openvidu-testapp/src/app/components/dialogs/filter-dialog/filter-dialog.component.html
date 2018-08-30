@@ -35,13 +35,13 @@
             <h2 mat-dialog-title>Filter events</h2>
             <mat-dialog-content>
                 <mat-form-field class="inner-text-input">
-                    <input matInput id="filter-type-field" placeholder="Event type" [(ngModel)]="eventType">
+                    <input matInput id="filter-event-type-field" placeholder="Event type" [(ngModel)]="eventType">
                 </mat-form-field>
                 <label class="label">Add listener to filter event</label>
                 <button mat-button id="sub-filter-event-btn" (click)="subFilterEvent()">Add listener</button>
                 <mat-divider></mat-divider>
                 <label class="label">Remove listener of filter event</label>
-                <button mat-button id="sub-filter-event-btn" (click)="unsubFilterEvent()">Remove listener</button>
+                <button mat-button id="unsub-filter-event-btn" (click)="unsubFilterEvent()">Remove listener</button>
             </mat-dialog-content>
         </div>
     </div>
