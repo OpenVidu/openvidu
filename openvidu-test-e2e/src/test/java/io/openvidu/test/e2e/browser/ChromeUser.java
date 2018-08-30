@@ -20,6 +20,7 @@ package io.openvidu.test.e2e.browser;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -35,26 +36,17 @@ public class ChromeUser extends BrowserUser {
 	}
 
 	public ChromeUser(String userName, int timeOfWaitInSeconds, String screenToCapture) {
-		super(userName, timeOfWaitInSeconds);
+		this(userName, timeOfWaitInSeconds, generateScreenChromeOptions(screenToCapture));
+	}
 
+	public ChromeUser(String userName, int timeOfWaitInSeconds, Path fakeVideoLocation) {
+		this(userName, timeOfWaitInSeconds, generateFakeVideoChromeOptions(fakeVideoLocation));
+	}
+
+	private ChromeUser(String userName, int timeOfWaitInSeconds, ChromeOptions options) {
+		super(userName, timeOfWaitInSeconds);
 		DesiredCapabilities capabilities = DesiredCapabilities.chrome();
 		capabilities.setAcceptInsecureCerts(true);
-
-		ChromeOptions options = new ChromeOptions();
-		// This flag avoids to grant the user media
-		options.addArguments("--use-fake-ui-for-media-stream");
-		// This flag fakes user media with synthetic video
-		options.addArguments("--use-fake-device-for-media-stream");
-		// This flag selects the entire screen as video source when screen sharing
-		options.addArguments("--auto-select-desktop-capture-source=" + screenToCapture);
-
-		try {
-			// Add Screen Sharing extension
-			options.addExtensions(new ClassPathResource("ScreenCapturing.crx").getFile());
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
 		capabilities.setCapability(ChromeOptions.CAPABILITY, options);
 
 		String REMOTE_URL = System.getProperty("REMOTE_URL_CHROME");
@@ -72,6 +64,34 @@ public class ChromeUser extends BrowserUser {
 
 		this.driver.manage().timeouts().setScriptTimeout(this.timeOfWaitInSeconds, TimeUnit.SECONDS);
 		this.configureDriver();
+	}
+
+	private static ChromeOptions generateScreenChromeOptions(String screenToCapture) {
+		ChromeOptions options = new ChromeOptions();
+		// This flag avoids to grant the user media
+		options.addArguments("--use-fake-ui-for-media-stream");
+		// This flag fakes user media with synthetic video
+		options.addArguments("--use-fake-device-for-media-stream");
+		// This flag selects the entire screen as video source when screen sharing
+		options.addArguments("--auto-select-desktop-capture-source=" + screenToCapture);
+		try {
+			// Add Screen Sharing extension
+			options.addExtensions(new ClassPathResource("ScreenCapturing.crx").getFile());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return options;
+	}
+
+	private static ChromeOptions generateFakeVideoChromeOptions(Path videoFileLocation) {
+		ChromeOptions options = new ChromeOptions();
+		// This flag avoids to grant the user media
+		options.addArguments("--use-fake-ui-for-media-stream");
+		// This flag fakes user media with synthetic video
+		options.addArguments("--use-fake-device-for-media-stream");
+		// This flag sets the video input as
+		options.addArguments("--use-file-for-fake-video-capture=" + videoFileLocation.toString());
+		return options;
 	}
 
 }

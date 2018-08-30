@@ -23,6 +23,8 @@ import static org.openqa.selenium.OutputType.BASE64;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -140,6 +142,18 @@ public class OpenViduTestAppE2eTest {
 		secretInput.clear();
 		secretInput.sendKeys(OPENVIDU_SECRET);
 
+		user.getEventManager().startPolling();
+	}
+
+	void setupChromeWithFakeVideo(Path videoFileLocation) {
+		this.user = new ChromeUser("TestUser", 50, videoFileLocation);
+		user.getDriver().get(APP_URL);
+		WebElement urlInput = user.getDriver().findElement(By.id("openvidu-url"));
+		urlInput.clear();
+		urlInput.sendKeys(OPENVIDU_URL);
+		WebElement secretInput = user.getDriver().findElement(By.id("openvidu-secret"));
+		secretInput.clear();
+		secretInput.sendKeys(OPENVIDU_SECRET);
 		user.getEventManager().startPolling();
 	}
 
@@ -1351,6 +1365,127 @@ public class OpenViduTestAppE2eTest {
 
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 		gracefullyLeaveParticipants(2);
+	}
+
+	@Test
+	@DisplayName("Video filter events test")
+	void videoFilterEventsTest() throws Exception {
+
+		setupChromeWithFakeVideo(Paths.get("/home/pablo/Desktop/barcode.y4m"));
+
+		log.info("Video filter events test");
+
+		// Configure publisher
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElements(By.cssSelector("#openvidu-instance-0 .subscribe-checkbox")).get(0).click();
+		user.getDriver().findElements(By.cssSelector("#openvidu-instance-0 .send-audio-checkbox")).get(0).click();
+		user.getDriver().findElement(By.id("session-settings-btn-0")).click();
+		Thread.sleep(1000);
+
+		WebElement allowedFilterInput = user.getDriver().findElement(By.id("allowed-filter-input"));
+		allowedFilterInput.clear();
+		allowedFilterInput.sendKeys("ZBarFilter");
+
+		user.getDriver().findElement(By.id("add-allowed-filter-btn")).click();
+		user.getDriver().findElement(By.id("save-btn")).click();
+		Thread.sleep(1000);
+
+		// Configure moderator (only subscribe)
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .publish-checkbox")).click();
+		user.getDriver().findElement(By.id("session-settings-btn-1")).click();
+		Thread.sleep(1000);
+		
+		user.getDriver().findElement(By.id("radio-btn-mod")).click();
+		user.getDriver().findElement(By.id("save-btn")).click();
+		Thread.sleep(1000);
+
+		List<WebElement> joinButtons = user.getDriver().findElements(By.className("join-btn"));
+		for (WebElement el : joinButtons) {
+			el.sendKeys(Keys.ENTER);
+		}
+
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
+		
+		try {
+			System.out.println(getBase64Screenshot(user));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		Assert.assertEquals(user.getDriver().findElements(By.tagName("video")).size(), 2);
+		// Assert no audio track only for the moderator incoming video
+		Assert.assertTrue(user.getEventManager().assertMediaTracks(
+				user.getDriver().findElements(By.cssSelector("#openvidu-instance-1 video")), false, true));
+
+		// Publisher applies ZBarCode filter to itself
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .filter-btn")).click();
+		Thread.sleep(500);
+		WebElement input = user.getDriver().findElement(By.id("filter-type-field"));
+		input.clear();
+		input.sendKeys("ZBarFilter");
+		input = user.getDriver().findElement(By.id("filter-options-field"));
+		input.clear();
+		input.sendKeys("{}");
+		user.getDriver().findElement(By.id("apply-filter-btn")).click();
+		user.getWaiter().until(
+				ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value", "Filter applied"));
+
+		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 2);
+
+		// Publisher subscribes to CodeFound event for his own stream
+		input = user.getDriver().findElement(By.id("filter-event-type-field"));
+		input.clear();
+		input.sendKeys("CodeFound");
+		user.getDriver().findElement(By.id("sub-filter-event-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value",
+				"Filter event listener added"));
+
+		user.getEventManager().waitUntilEventReaches("filterEvent", 2);
+
+		// Publisher unsubscribes from "CodeFound" filter event
+		user.getDriver().findElement(By.id("unsub-filter-event-btn")).click();
+
+		try {
+			// If this active wait finishes successfully, then the removal of the event
+			// listener has not worked fine
+			user.getEventManager().waitUntilEventReaches("filterEvent", 3, 3, false);
+			Assert.fail("'filterEvent' was received. Filter.removeEventListener() failed");
+		} catch (Exception e) {
+			System.out.println("Filter event removal worked fine");
+		}
+		
+		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		Thread.sleep(500);
+		
+		// Moderator subscribes to CodeFound event for the Publisher's stream
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .filter-btn")).click();
+		Thread.sleep(500);
+		input = user.getDriver().findElement(By.id("filter-event-type-field"));
+		input.clear();
+		input.sendKeys("CodeFound");
+		user.getDriver().findElement(By.id("sub-filter-event-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value",
+				"Filter event listener added"));
+
+		user.getEventManager().waitUntilEventReaches("filterEvent", 4);
+		
+		// Moderator removes the Publisher's filter
+		user.getDriver().findElement(By.id("remove-filter-btn")).click();
+		user.getWaiter().until(
+				ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value", "Filter removed"));
+		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 4);
+		
+		try {
+			// If this active wait finishes successfully, then the removal of the filter has not worked fine
+			user.getEventManager().waitUntilEventReaches("filterEvent", 5, 3, false);
+			Assert.fail("'filterEvent' was received. Stream.removeFilter() failed");
+		} catch (Exception e) {
+			System.out.println("Filter removal worked fine");
+		}
 	}
 
 	private void listEmptyRecordings() {
