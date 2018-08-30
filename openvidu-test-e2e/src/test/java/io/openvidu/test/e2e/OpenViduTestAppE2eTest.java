@@ -1486,6 +1486,8 @@ public class OpenViduTestAppE2eTest {
 		} catch (Exception e) {
 			System.out.println("Filter removal worked fine");
 		}
+		
+		gracefullyLeaveParticipants(2);
 	}
 
 	private void listEmptyRecordings() {
