@@ -105,9 +105,6 @@ public class ProtocolElements {
 	public static final String EXECFILTERMETHOD_METHOD = "execFilterMethod";
 	public static final String EXECFILTERMETHOD_LASTEXECMETHOD_PARAM = "lastExecMethod";
 	public static final String REMOVEFILTER_METHOD = "removeFilter";
-	public static final String FORCEAPPLYFILTER_METHOD = "forceApplyFilter";
-	public static final String FORCEEXECFILTERMETHOD_METHOD = "forceExecFilterMethod";
-	public static final String FORCEREMOVEFILTER_METHOD = "forceRemoveFilter";
 	public static final String ADDFILTEREVENTLISTENER_METHOD = "addFilterEventListener";
 	public static final String REMOVEFILTEREVENTLISTENER_METHOD = "removeFilterEventListener";
 	
