@@ -1,6 +1,6 @@
 node('container') {
   docker.image('selenium/standalone-chrome-debug:latest').withRun('-p 4444:4444 -p 5900:5900 --shm-size=1g -v /opt/openvidu:/opt/openvidu') { c ->
-    sh 'wget https://github.com/OpenVidu/openvidu/raw/master/openvidu-test-e2e/docker/barcode.y4m -P /opt/openvidu'
+    sh 'wget https://github.com/OpenVidu/openvidu/raw/master/openvidu-test-e2e/docker/barcode.y4m -P /opt/openvidu  -nc'
     docker.image('elastest/eus-browser-firefox:3.7.1').withRun('-p 4445:4444 -p 5901:5900 --shm-size=1g') { d ->
       def mycontainer = docker.image('openvidu/openvidu-test-e2e:latest')
       mycontainer.pull()
