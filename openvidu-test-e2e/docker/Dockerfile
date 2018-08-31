@@ -45,6 +45,7 @@ RUN apt-get -y install sudo
 RUN rm -rf /var/lib/apt/lists/*
 RUN apt-get autoremove --purge -y
 
+COPY barcode.y4m /opt/openvidu/barcode.y4m
 COPY entrypoint.sh /entrypoint.sh
 RUN ["chmod", "+x", "/entrypoint.sh"]
 

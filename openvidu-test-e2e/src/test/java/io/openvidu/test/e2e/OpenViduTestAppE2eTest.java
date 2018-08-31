@@ -1371,7 +1371,7 @@ public class OpenViduTestAppE2eTest {
 	@DisplayName("Video filter events test")
 	void videoFilterEventsTest() throws Exception {
 
-		setupChromeWithFakeVideo(Paths.get("/home/pablo/Desktop/barcode.y4m"));
+		setupChromeWithFakeVideo(Paths.get("/opt/openvidu/barcode.y4m"));
 
 		log.info("Video filter events test");
 
