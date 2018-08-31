@@ -18,9 +18,5 @@ module.exports = {
     excludeExternals: true,
     excludePrivate: true,
     theme: "./config/typedoc/custom-theme/bin",
-    plugin: [
-        "typedoc-plugin-sourcefile-url",
-    ],
-    'sourcefile-url-prefix': "https://github.com/OpenVidu/openvidu/tree/master/openvidu-browser/src/",
     readme: "none"
 }
