@@ -473,7 +473,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       {
         videoSource: undefined,
         resolution: '1280x720',
-        frameRate: 10,
+        frameRate: 30,
       }
     )
       .then((mediaStream: MediaStream) => {
@@ -489,18 +489,22 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
           const loop = () => {
             if (!video.paused && !video.ended) {
               ctx.drawImage(video, 0, 0, 300, 170);
-              setTimeout(loop, 100); // Drawing at 10fps
+              setTimeout(loop, 33); // Drawing at 30fps
             }
           };
           loop();
         });
         const grayVideoTrack = canvas.captureStream(30).getVideoTracks()[0];
-        this.OV.initPublisher(
+        this.publisher = this.OV.initPublisher(
           document.body,
           {
             audioSource: false,
             videoSource: grayVideoTrack,
             insertMode: VideoInsertMode.APPEND
+          });
+          this.session.publish(this.publisher).catch((error: OpenViduError) => {
+            console.error(error);
+            this.session.unpublish(this.publisher);
           });
       })
       .catch(error => {
