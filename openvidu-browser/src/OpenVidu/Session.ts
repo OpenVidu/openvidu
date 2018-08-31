@@ -833,10 +833,21 @@ export class Session implements EventDispatcher {
      * @hidden
      */
     recvIceCandidate(msg): void {
-        const candidate = {
+        const candidate: RTCIceCandidate = {
             candidate: msg.candidate,
+            component: msg.component,
+            foundation: msg.foundation,
+            ip: msg.ip,
+            port: msg.port,
+            priority: msg.priority,
+            protocol: msg.protocol,
+            relatedAddress: msg.relatedAddress,
+            relatedPort: msg.relatedPort,
             sdpMid: msg.sdpMid,
             sdpMLineIndex: msg.sdpMLineIndex,
+            tcpType: msg.tcpType,
+            usernameFragment: msg.usernameFragment,
+            type: msg.type,
             toJSON: () => {
                 return { candidate: msg.candidate };
             }

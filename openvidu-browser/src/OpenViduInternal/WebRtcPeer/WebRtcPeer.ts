@@ -51,13 +51,15 @@ export class WebRtcPeer {
         this.id = !!configuration.id ? configuration.id : uuid.v4();
 
         this.pc.onicecandidate = event => {
-            const candidate: RTCIceCandidate = event.candidate;
-            if (candidate) {
-                this.localCandidatesQueue.push(<RTCIceCandidate>{ candidate: candidate.candidate });
-                this.candidategatheringdone = false;
-                this.configuration.onicecandidate(event.candidate);
-            } else if (!this.candidategatheringdone) {
-                this.candidategatheringdone = true;
+            if (!!event.candidate) {
+                const candidate: RTCIceCandidate = event.candidate;
+                if (candidate) {
+                    this.localCandidatesQueue.push(<RTCIceCandidate>{ candidate: candidate.candidate });
+                    this.candidategatheringdone = false;
+                    this.configuration.onicecandidate(event.candidate);
+                } else if (!this.candidategatheringdone) {
+                    this.candidategatheringdone = true;
+                }
             }
         };
 
@@ -85,23 +87,18 @@ export class WebRtcPeer {
                 reject('The peer connection object is in "closed" state. This is most likely due to an invocation of the dispose method before accepting in the dialogue');
             }
             if (!!this.configuration.mediaStream) {
-                this.pc.addStream(this.configuration.mediaStream);
+                for (const track of this.configuration.mediaStream.getTracks()) {
+                    this.pc.addTrack(track, this.configuration.mediaStream);
+                }
+                resolve();
             }
-
-            // [Hack] https://code.google.com/p/chromium/issues/detail?id=443558
-            if (this.configuration.mode === 'sendonly' &&
-                (platform.name === 'Chrome' && platform.version!.toString().substring(0, 2) === '39')) {
-                this.configuration.mode = 'sendrecv';
-            }
-
-            resolve();
         });
     }
 
     /**
      * This method frees the resources used by WebRtcPeer
      */
-    dispose() {
+    dispose(videoSourceIsMediaStreamTrack: boolean) {
         console.debug('Disposing WebRtcPeer');
         try {
             if (this.pc) {
@@ -111,13 +108,21 @@ export class WebRtcPeer {
                 this.remoteCandidatesQueue = [];
                 this.localCandidatesQueue = [];
 
-                this.pc.getLocalStreams().forEach(str => {
-                    this.streamStop(str);
-                });
-
-                // FIXME This is not yet implemented in firefox
-                // if(videoStream) pc.removeStream(videoStream);
-                // if(audioStream) pc.removeStream(audioStream);
+                // Stop senders
+                for (const sender of this.pc.getSenders()) {
+                    if (!videoSourceIsMediaStreamTrack) {
+                        if (!!sender.track) {
+                            sender.track.stop();
+                        }
+                    }
+                    this.pc.removeTrack(sender);
+                }
+                // Stop receivers
+                for (const receiver of this.pc.getReceivers()) {
+                    if (!!receiver.track) {
+                        receiver.track.stop();
+                    }
+                }
 
                 this.pc.close();
             }
@@ -143,8 +148,8 @@ export class WebRtcPeer {
             }
 
             const constraints: RTCOfferOptions = {
-                offerToReceiveAudio: + (this.configuration.mode !== 'sendonly' && offerAudio),
-                offerToReceiveVideo: + (this.configuration.mode !== 'sendonly' && offerVideo)
+                offerToReceiveAudio: (this.configuration.mode !== 'sendonly' && offerAudio),
+                offerToReceiveVideo: (this.configuration.mode !== 'sendonly' && offerVideo)
             };
 
             console.debug('RTCPeerConnection constraints: ' + JSON.stringify(constraints));
@@ -244,12 +249,6 @@ export class WebRtcPeer {
         });
     }
 
-    private streamStop(stream: MediaStream): void {
-        stream.getTracks().forEach(track => {
-            track.stop();
-            stream.removeTrack(track);
-        });
-    }
 }
 
 

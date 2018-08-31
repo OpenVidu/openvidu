@@ -429,7 +429,9 @@ export class Stream implements EventDispatcher {
      */
     disposeWebRtcPeer(): void {
         if (this.webRtcPeer) {
-            this.webRtcPeer.dispose();
+            const isSenderAndCustomTrack: boolean = !!this.outboundStreamOpts &&
+                this.outboundStreamOpts.publisherProperties.videoSource instanceof MediaStreamTrack;
+            this.webRtcPeer.dispose(isSenderAndCustomTrack);
         }
         if (this.speechEvent) {
             this.speechEvent.stop();
@@ -699,7 +701,15 @@ export class Stream implements EventDispatcher {
     }
 
     private remotePeerSuccessfullyEstablished(): void {
-        this.mediaStream = this.webRtcPeer.pc.getRemoteStreams()[0];
+        this.mediaStream = new MediaStream();
+
+        let receiver: RTCRtpReceiver;
+        for (receiver of this.webRtcPeer.pc.getReceivers()) {
+            if (!!receiver.track) {
+                this.mediaStream.addTrack(receiver.track);
+            }
+        }
+
         console.debug('Peer remote stream', this.mediaStream);
 
         if (!!this.mediaStream) {
