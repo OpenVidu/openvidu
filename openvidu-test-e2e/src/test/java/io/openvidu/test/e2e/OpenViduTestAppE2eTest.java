@@ -794,6 +794,76 @@ public class OpenViduTestAppE2eTest {
 	}
 
 	@Test
+	@DisplayName("Moderator capabilities")
+	void moderatorCapabilitiesTest() throws Exception {
+
+		setupBrowser("chrome");
+
+		log.info("Moderator capabilities");
+
+		// Add publisher
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+
+		// Add subscriber
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .publish-checkbox")).click();
+
+		// Add and configure moderator (only subscribe)
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-2 .publish-checkbox")).click();
+		user.getDriver().findElement(By.id("session-settings-btn-2")).click();
+		Thread.sleep(1000);
+
+		user.getDriver().findElement(By.id("radio-btn-mod")).click();
+		user.getDriver().findElement(By.id("save-btn")).click();
+		Thread.sleep(1000);
+
+		List<WebElement> joinButtons = user.getDriver().findElements(By.className("join-btn"));
+		for (WebElement el : joinButtons) {
+			el.sendKeys(Keys.ENTER);
+		}
+
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 9);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 3);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 3);
+
+		try {
+			System.out.println(getBase64Screenshot(user));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 3));
+		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
+				true, true));
+
+		// Moderator forces unpublish
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-2 .force-unpub-btn")).click();
+		user.getEventManager().waitUntilEventReaches("streamDestroyed", 3);
+		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 1));
+
+		// Publisher publishes again
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .pub-btn")).click();
+		user.getEventManager().waitUntilEventReaches("streamCreated", 6);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 6);
+
+		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 3));
+		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
+				true, true));
+
+		// Moderator forces disconnect of publisher
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-2 .force-disconnect-btn")).click();
+		user.getEventManager().waitUntilEventReaches("streamDestroyed", 6);
+		user.getEventManager().waitUntilEventReaches("connectionDestroyed", 2);
+		user.getEventManager().waitUntilEventReaches("sessionDisconnected", 1);
+		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 0));
+
+		gracefullyLeaveParticipants(3);
+
+	}
+
+	@Test
 	@DisplayName("Stream property changed event")
 	void streamPropertyChangedEventTest() throws Exception {
 
@@ -1395,7 +1465,7 @@ public class OpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .publish-checkbox")).click();
 		user.getDriver().findElement(By.id("session-settings-btn-1")).click();
 		Thread.sleep(1000);
-		
+
 		user.getDriver().findElement(By.id("radio-btn-mod")).click();
 		user.getDriver().findElement(By.id("save-btn")).click();
 		Thread.sleep(1000);
@@ -1409,7 +1479,7 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
 		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
-		
+
 		try {
 			System.out.println(getBase64Screenshot(user));
 		} catch (Exception e) {
@@ -1457,10 +1527,10 @@ public class OpenViduTestAppE2eTest {
 		} catch (Exception e) {
 			System.out.println("Filter event removal worked fine");
 		}
-		
+
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 		Thread.sleep(500);
-		
+
 		// Moderator subscribes to CodeFound event for the Publisher's stream
 		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .filter-btn")).click();
 		Thread.sleep(500);
@@ -1472,21 +1542,22 @@ public class OpenViduTestAppE2eTest {
 				"Filter event listener added"));
 
 		user.getEventManager().waitUntilEventReaches("filterEvent", 4);
-		
+
 		// Moderator removes the Publisher's filter
 		user.getDriver().findElement(By.id("remove-filter-btn")).click();
 		user.getWaiter().until(
 				ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value", "Filter removed"));
 		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 4);
-		
+
 		try {
-			// If this active wait finishes successfully, then the removal of the filter has not worked fine
+			// If this active wait finishes successfully, then the removal of the filter has
+			// not worked fine
 			user.getEventManager().waitUntilEventReaches("filterEvent", 5, 3, false);
 			Assert.fail("'filterEvent' was received. Stream.removeFilter() failed");
 		} catch (Exception e) {
 			System.out.println("Filter removal worked fine");
 		}
-		
+
 		gracefullyLeaveParticipants(2);
 	}
 
