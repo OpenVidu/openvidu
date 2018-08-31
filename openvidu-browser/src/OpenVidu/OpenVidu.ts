@@ -189,6 +189,7 @@ export class OpenVidu {
         publishVideo: (typeof properties.publishVideo !== 'undefined') ? properties.publishVideo : true,
         resolution: this.isMediaStreamTrack(properties.videoSource) ? undefined : ((typeof properties.resolution !== 'undefined') ? properties.resolution : '640x480'),
         videoSource: (typeof properties.videoSource !== 'undefined') ? properties.videoSource : undefined,
+        keepTracksOnDispose: (typeof properties.keepTracksOnDispose !== 'undefined') ? properties.keepTracksOnDispose : false,
         filter: properties.filter
       };
     } else {

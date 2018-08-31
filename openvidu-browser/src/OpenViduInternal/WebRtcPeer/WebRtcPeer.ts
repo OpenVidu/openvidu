@@ -101,7 +101,7 @@ export class WebRtcPeer {
     /**
      * This method frees the resources used by WebRtcPeer
      */
-    dispose() {
+    dispose(keepTracksOnDispose = false) {
         console.debug('Disposing WebRtcPeer');
         try {
             if (this.pc) {
@@ -112,7 +112,7 @@ export class WebRtcPeer {
                 this.localCandidatesQueue = [];
 
                 this.pc.getLocalStreams().forEach(str => {
-                    this.streamStop(str);
+                    this.streamStop(str, keepTracksOnDispose);
                 });
 
                 // FIXME This is not yet implemented in firefox
@@ -244,9 +244,11 @@ export class WebRtcPeer {
         });
     }
 
-    private streamStop(stream: MediaStream): void {
+    private streamStop(stream: MediaStream, keepTracksOnDispose = false): void {
         stream.getTracks().forEach(track => {
-            track.stop();
+            if (!keepTracksOnDispose) {
+                track.stop();
+            }
             stream.removeTrack(track);
         });
     }
