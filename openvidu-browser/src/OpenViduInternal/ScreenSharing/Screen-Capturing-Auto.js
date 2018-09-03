@@ -38,8 +38,8 @@ window.getScreenId = function (callback, custom_parameter) {
     if (!!navigator.mozGetUserMedia) {
         callback(null, 'firefox', {
             video: {
-                mozMediaSource: 'window',
-                mediaSource: 'window'
+                mozMediaSource: 'screen',
+                mediaSource: 'screen'
             }
         });
         return;
