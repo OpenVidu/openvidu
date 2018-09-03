@@ -23,7 +23,7 @@ getScreenId(function (error, sourceId, screen_constraints) {
 }, 'pass second parameter only if you want system audio');
 */
 
-window.getScreenId = function (callback, custom_parameter) {
+window.getScreenId = function (firefoxString, callback, custom_parameter) {
     if (navigator.userAgent.indexOf('Edge') !== -1 && (!!navigator.msSaveOrOpenBlob || !!navigator.msSaveBlob)) {
         // microsoft edge => navigator.getDisplayMedia(screen_constraints).then(onSuccess, onFailure);
         callback({
@@ -38,8 +38,8 @@ window.getScreenId = function (callback, custom_parameter) {
     if (!!navigator.mozGetUserMedia) {
         callback(null, 'firefox', {
             video: {
-                mozMediaSource: 'window',
-                mediaSource: 'window'
+                mozMediaSource: firefoxString,
+                mediaSource: firefoxString
             }
         });
         return;
