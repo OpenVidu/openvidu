@@ -271,12 +271,12 @@ export class Publisher extends StreamManager {
                 this.accessAllowed = true;
                 this.accessDenied = false;
 
-                if (this.openvidu.isMediaStreamTrack(this.properties.audioSource)) {
+                if (this.properties.audioSource instanceof MediaStreamTrack) {
                     mediaStream.removeTrack(mediaStream.getAudioTracks()[0]);
                     mediaStream.addTrack((<MediaStreamTrack>this.properties.audioSource));
                 }
 
-                if (this.openvidu.isMediaStreamTrack(this.properties.videoSource)) {
+                if (this.properties.videoSource instanceof MediaStreamTrack) {
                     mediaStream.removeTrack(mediaStream.getVideoTracks()[0]);
                     mediaStream.addTrack((<MediaStreamTrack>this.properties.videoSource));
                 }
@@ -373,6 +373,26 @@ export class Publisher extends StreamManager {
                 }
                 resolve();
             };
+
+            // Check if new constraints need to be generated. No constraints needed if
+            // - video track is given and no audio
+            // - audio track is given and no video
+            // - both video and audio tracks are given
+            if ((this.properties.videoSource instanceof MediaStreamTrack && !this.properties.audioSource)
+                || (this.properties.audioSource instanceof MediaStreamTrack && !this.properties.videoSource)
+                || (this.properties.videoSource instanceof MediaStreamTrack && this.properties.audioSource instanceof MediaStreamTrack)) {
+                const mediaStream = new MediaStream();
+                if (this.properties.videoSource instanceof MediaStreamTrack) {
+                    mediaStream.addTrack((<MediaStreamTrack>this.properties.videoSource));
+                }
+                if (this.properties.audioSource instanceof MediaStreamTrack) {
+                    mediaStream.addTrack((<MediaStreamTrack>this.properties.audioSource));
+                }
+                // MediaStreamTracks are handled within callback - just call callback with new MediaStream() and let it handle the sources
+                successCallback(mediaStream);
+                // Return as we do not need to process further
+                return;
+            }
 
             this.openvidu.generateMediaConstraints(this.properties)
                 .then(constraints => {

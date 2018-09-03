@@ -182,12 +182,12 @@ export class OpenVidu {
 
       properties = {
         audioSource: (typeof properties.audioSource !== 'undefined') ? properties.audioSource : undefined,
-        frameRate: this.isMediaStreamTrack(properties.videoSource) ? undefined : ((typeof properties.frameRate !== 'undefined') ? properties.frameRate : undefined),
+        frameRate: (properties.videoSource instanceof MediaStreamTrack) ? undefined : ((typeof properties.frameRate !== 'undefined') ? properties.frameRate : undefined),
         insertMode: (typeof properties.insertMode !== 'undefined') ? ((typeof properties.insertMode === 'string') ? VideoInsertMode[properties.insertMode] : properties.insertMode) : VideoInsertMode.APPEND,
         mirror: (typeof properties.mirror !== 'undefined') ? properties.mirror : true,
         publishAudio: (typeof properties.publishAudio !== 'undefined') ? properties.publishAudio : true,
         publishVideo: (typeof properties.publishVideo !== 'undefined') ? properties.publishVideo : true,
-        resolution: this.isMediaStreamTrack(properties.videoSource) ? undefined : ((typeof properties.resolution !== 'undefined') ? properties.resolution : '640x480'),
+        resolution: (properties.videoSource instanceof MediaStreamTrack) ? undefined : ((typeof properties.resolution !== 'undefined') ? properties.resolution : '640x480'),
         videoSource: (typeof properties.videoSource !== 'undefined') ? properties.videoSource : undefined,
         filter: properties.filter
       };
@@ -603,20 +603,6 @@ export class OpenVidu {
     }
     console.debug('Sending request: {method:"' + method + '", params: ' + JSON.stringify(params) + '}');
     this.jsonRpcClient.send(method, params, callback);
-  }
-
-  /**
-   * @hidden
-   */
-  isMediaStreamTrack(mediaSource: any): boolean {
-    const is = (!!mediaSource &&
-      mediaSource.enabled !== undefined && typeof mediaSource.enabled === 'boolean' &&
-      mediaSource.id !== undefined && typeof mediaSource.id === 'string' &&
-      mediaSource.kind !== undefined && typeof mediaSource.kind === 'string' &&
-      mediaSource.label !== undefined && typeof mediaSource.label === 'string' &&
-      mediaSource.muted !== undefined && typeof mediaSource.muted === 'boolean' &&
-      mediaSource.readyState !== undefined && typeof mediaSource.readyState === 'string');
-    return is;
   }
 
   /**
