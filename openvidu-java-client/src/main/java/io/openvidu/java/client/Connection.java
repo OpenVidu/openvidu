@@ -29,17 +29,21 @@ public class Connection {
 	private String connectionId;
 	private OpenViduRole role;
 	private String token;
+	private String location;
+	private String platform;
 	private String serverData;
 	private String clientData;
 
 	protected Map<String, Publisher> publishers;
 	protected List<String> subscribers;
 
-	protected Connection(String connectionId, OpenViduRole role, String token, String serverData, String clientData,
+	protected Connection(String connectionId, OpenViduRole role, String token, String location, String platform, String serverData, String clientData,
 			Map<String, Publisher> publishers, List<String> subscribers) {
 		this.connectionId = connectionId;
 		this.role = role;
 		this.token = token;
+		this.location = location;
+		this.platform = platform;
 		this.serverData = serverData;
 		this.clientData = clientData;
 		this.publishers = publishers;
@@ -67,6 +71,23 @@ public class Connection {
 	 */
 	public String getToken() {
 		return token;
+	}
+
+	/**
+	 * Returns the geo location of the connection, with the following format:
+	 * <code>"CITY, COUNTRY"</code> (<code>"unknown"</code> if it wasn't possible to
+	 * locate it)
+	 */
+	public String getLocation() {
+		return location;
+	}
+
+	/**
+	 * Returns a complete description of the platform used by the participant to
+	 * connect to the session
+	 */
+	public String getPlatform() {
+		return platform;
 	}
 
 	/**

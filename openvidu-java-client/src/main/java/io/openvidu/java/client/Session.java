@@ -529,8 +529,8 @@ public class Session {
 
 			this.activeConnections.put((String) con.get("connectionId"),
 					new Connection((String) con.get("connectionId"), OpenViduRole.valueOf((String) con.get("role")),
-							(String) con.get("token"), (String) con.get("serverData"), (String) con.get("clientData"),
-							publishers, subscribers));
+							(String) con.get("token"), (String) con.get("location"), (String) con.get("platform"),
+							(String) con.get("serverData"), (String) con.get("clientData"), publishers, subscribers));
 		});
 		return this;
 	}
