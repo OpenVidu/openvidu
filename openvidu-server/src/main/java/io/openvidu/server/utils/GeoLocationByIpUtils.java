@@ -40,12 +40,12 @@ public class GeoLocationByIpUtils {
 	@PostConstruct
 	public void init() {
 		try {
-			log.info("GeoLocationByIpUtils: Trying to load GeoLite2-City database...");
+			log.info("Trying to load GeoLite2-City database...");
 			Resource resource = resourceLoader.getResource("classpath:GeoLite2-City.mmdb");
 			InputStream dbAsStream = resource.getInputStream();
 			// Initialize the reader
 			reader = new DatabaseReader.Builder(dbAsStream).fileMode(Reader.FileMode.MEMORY).build();
-			log.info("GeoLocationServiceImpl: Database was loaded successfully");
+			log.info("Database was loaded successfully");
 		} catch (IOException | NullPointerException e) {
 			log.error("Database reader cound not be initialized", e);
 		}
