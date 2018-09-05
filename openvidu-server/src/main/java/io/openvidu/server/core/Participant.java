@@ -26,19 +26,24 @@ public class Participant {
 	private String clientMetadata = ""; // Metadata provided on client side
 	private String serverMetadata = ""; // Metadata provided on server side
 	private Token token; // Token associated to this participant
+	private String location; // Remote IP of the participant
+	private String platform; // Platform used by the participant to connect to the session
 
 	protected boolean streaming = false;
 	protected volatile boolean closed;
 
 	private final String METADATA_SEPARATOR = "%/%";
 
-	public Participant(String participantPrivatetId, String participantPublicId, Token token, String clientMetadata) {
+	public Participant(String participantPrivatetId, String participantPublicId, Token token, String clientMetadata,
+			String location, String platform) {
 		this.participantPrivatetId = participantPrivatetId;
 		this.participantPublicId = participantPublicId;
 		this.token = token;
 		this.clientMetadata = clientMetadata;
 		if (!token.getServerMetadata().isEmpty())
 			this.serverMetadata = token.getServerMetadata();
+		this.location = location;
+		this.platform = platform;
 	}
 
 	public String getParticipantPrivateId() {
@@ -79,6 +84,22 @@ public class Participant {
 
 	public void setToken(Token token) {
 		this.token = token;
+	}
+
+	public String getLocation() {
+		return this.location;
+	}
+
+	public void setLocation(String location) {
+		this.location = location;
+	}
+
+	public String getPlatform() {
+		return this.platform;
+	}
+
+	public void setPlatform(String platform) {
+		this.platform = platform;
 	}
 
 	public boolean isStreaming() {
@@ -166,6 +187,8 @@ public class Participant {
 	public JsonObject toJson() {
 		JsonObject json = new JsonObject();
 		json.addProperty("connectionId", this.participantPublicId);
+		json.addProperty("location", this.location);
+		json.addProperty("platform", this.platform);
 		json.addProperty("token", this.token.getToken());
 		json.addProperty("role", this.token.getRole().name());
 		json.addProperty("serverData", this.serverMetadata);

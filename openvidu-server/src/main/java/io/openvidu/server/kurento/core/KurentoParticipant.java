@@ -80,7 +80,7 @@ public class KurentoParticipant extends Participant {
 	public KurentoParticipant(Participant participant, KurentoSession kurentoSession, MediaPipeline pipeline,
 			InfoHandler infoHandler, CallDetailRecord CDR, OpenviduConfig openviduConfig) {
 		super(participant.getParticipantPrivateId(), participant.getParticipantPublicId(), participant.getToken(),
-				participant.getClientMetadata());
+				participant.getClientMetadata(), participant.getLocation(), participant.getPlatform());
 		this.openviduConfig = openviduConfig;
 		this.session = kurentoSession;
 		this.pipeline = pipeline;
@@ -157,7 +157,7 @@ public class KurentoParticipant extends Participant {
 	public synchronized void releaseAllFilters() {
 		// Check this, mutable array?
 		filters.forEach((s, filter) -> removeFilterElement(s));
-		if(this.publisher.getFilter() != null) {
+		if (this.publisher.getFilter() != null) {
 			this.publisher.revert(this.publisher.getFilter());
 		}
 	}

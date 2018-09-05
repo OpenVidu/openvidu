@@ -17,6 +17,8 @@
 
 package io.openvidu.server.rpc;
 
+import java.io.IOException;
+import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,6 +27,7 @@ import java.util.concurrent.ConcurrentMap;
 import org.kurento.jsonrpc.DefaultJsonRpcHandler;
 import org.kurento.jsonrpc.Session;
 import org.kurento.jsonrpc.Transaction;
+import org.kurento.jsonrpc.internal.ws.WebSocketServerSession;
 import org.kurento.jsonrpc.message.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +37,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
+import com.maxmind.geoip2.exception.GeoIp2Exception;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
@@ -43,6 +47,7 @@ import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.core.Token;
+import io.openvidu.server.utils.GeoLocationByIpUtils;
 
 public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
@@ -50,6 +55,9 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 	@Autowired
 	OpenviduConfig openviduConfig;
+
+	@Autowired
+	GeoLocationByIpUtils geoLocationByIp;
 
 	@Autowired
 	SessionManager sessionManager;
@@ -159,7 +167,25 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		String sessionId = getStringParam(request, ProtocolElements.JOINROOM_ROOM_PARAM);
 		String token = getStringParam(request, ProtocolElements.JOINROOM_TOKEN_PARAM);
 		String secret = getStringParam(request, ProtocolElements.JOINROOM_SECRET_PARAM);
+		String platform = getStringParam(request, ProtocolElements.JOINROOM_PLATFORM_PARAM);
 		String participantPrivatetId = rpcConnection.getParticipantPrivateId();
+
+		InetAddress remoteAddress = null;
+		String location = "";
+		Object obj = rpcConnection.getSession().getAttributes().get("remoteAddress");
+		if (obj != null && obj instanceof InetAddress) {
+			remoteAddress = (InetAddress) obj;
+			try {
+				location = this.geoLocationByIp.getLocationByIp(remoteAddress);
+			} catch (IOException e) {
+				e.printStackTrace();
+				location = "error";
+			} catch (GeoIp2Exception e) {
+				log.warn("Error getting address location: {}", e.getMessage());
+				location = "unknown";
+			}
+
+		}
 
 		boolean recorder = false;
 
@@ -193,7 +219,7 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 							clientMetadata);
 				} else {
 					participant = sessionManager.newParticipant(sessionId, participantPrivatetId, tokenObj,
-							clientMetadata);
+							clientMetadata, location, platform);
 				}
 
 				rpcConnection.setSessionId(sessionId);
@@ -521,6 +547,10 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 	@Override
 	public void afterConnectionEstablished(Session rpcSession) throws Exception {
 		log.info("After connection established for WebSocket session: {}", rpcSession.getSessionId());
+		if (rpcSession instanceof WebSocketServerSession) {
+			rpcSession.getAttributes().put("remoteAddress",
+					((WebSocketServerSession) rpcSession).getWebSocketSession().getRemoteAddress().getAddress());
+		}
 	}
 
 	@Override

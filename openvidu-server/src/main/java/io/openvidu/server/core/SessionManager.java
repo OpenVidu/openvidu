@@ -115,8 +115,9 @@ public abstract class SessionManager {
 
 	public abstract void removeFilterEventListener(Session session, Participant subscriber, String streamId,
 			String eventType);
-	
-	public abstract String getParticipantPrivateIdFromStreamId(String sessionId, String streamId) throws OpenViduException;
+
+	public abstract String getParticipantPrivateIdFromStreamId(String sessionId, String streamId)
+			throws OpenViduException;
 
 	/**
 	 * Returns a Session given its id
@@ -331,10 +332,11 @@ public abstract class SessionManager {
 	}
 
 	public Participant newParticipant(String sessionId, String participantPrivatetId, Token token,
-			String clientMetadata) {
+			String clientMetadata, String location, String platform) {
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
 			String participantPublicId = this.generateRandomChain();
-			Participant p = new Participant(participantPrivatetId, participantPublicId, token, clientMetadata);
+			Participant p = new Participant(participantPrivatetId, participantPublicId, token, clientMetadata, location,
+					platform);
 			while (this.sessionidParticipantpublicidParticipant.get(sessionId).putIfAbsent(participantPublicId,
 					p) != null) {
 				participantPublicId = this.generateRandomChain();
@@ -350,7 +352,7 @@ public abstract class SessionManager {
 			String clientMetadata) {
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
 			Participant p = new Participant(participantPrivatetId, ProtocolElements.RECORDER_PARTICIPANT_PUBLICID,
-					token, clientMetadata);
+					token, clientMetadata, null, null);
 			this.sessionidParticipantpublicidParticipant.get(sessionId)
 					.put(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID, p);
 			return p;

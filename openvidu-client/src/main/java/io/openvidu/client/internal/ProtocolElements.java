@@ -37,6 +37,7 @@ public class ProtocolElements {
 	public static final String JOINROOM_ROOM_PARAM = "session";
 	public static final String JOINROOM_METADATA_PARAM = "metadata";
 	public static final String JOINROOM_SECRET_PARAM = "secret";
+	public static final String JOINROOM_PLATFORM_PARAM = "platform";
 	public static final String JOINROOM_RECORDER_PARAM = "recorder";
 
 	public static final String JOINROOM_PEERID_PARAM = "id";

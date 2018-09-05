@@ -38,7 +38,7 @@ import io.openvidu.server.recording.Recording;
  * 
  * - 'sessionCreated':				{sessionId, timestamp}
  * - 'sessionDestroyed':			{sessionId, timestamp, startTime, endTime, duration, reason}
- * - 'participantJoined':			{sessionId, timestamp, participantId}
+ * - 'participantJoined':			{sessionId, timestamp, participantId, location, platform}
  * - 'participantLeft':				{sessionId, timestamp, participantId, startTime, endTime, duration, reason}
  * - 'webrtcConnectionCreated'		{sessionId, timestamp, participantId, connection, [receivingFrom], audioEnabled, videoEnabled, [videoSource], [videoFramerate]}
  * - 'webrtcConnectionDestroyed'	{sessionId, timestamp, participantId, startTime, endTime, duration, connection, [receivingFrom], audioEnabled, videoEnabled, [videoSource], [videoFramerate], reason}

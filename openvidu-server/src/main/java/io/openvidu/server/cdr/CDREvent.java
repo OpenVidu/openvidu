@@ -32,6 +32,8 @@ public class CDREvent implements Comparable<CDREvent> {
 	private Long startTime;
 	private Integer duration;
 	private Participant participant;
+	private String location;
+	private String platform;
 	private MediaOptions mediaOptions;
 	private String receivingFrom;
 	private String reason;
@@ -88,6 +90,8 @@ public class CDREvent implements Comparable<CDREvent> {
 	public CDREvent(CDREventName eventName, Participant participant, String sessionId) {
 		this(eventName, sessionId);
 		this.participant = participant;
+		this.location = participant.getLocation();
+		this.platform = participant.getPlatform();
 		this.startTime = this.timeStamp;
 	}
 
@@ -121,6 +125,12 @@ public class CDREvent implements Comparable<CDREvent> {
 
 		if (this.participant != null) {
 			json.addProperty("participantId", this.participant.getParticipantPublicId());
+		}
+		if (this.location != null) {
+			json.addProperty("location", this.location);
+		}
+		if (this.platform != null) {
+			json.addProperty("platform", this.platform);
 		}
 		if (this.mediaOptions != null) {
 			json.addProperty("connection", this.receivingFrom != null ? "INBOUND" : "OUTBOUND");
