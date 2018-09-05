@@ -1008,6 +1008,7 @@ export class Session implements EventDispatcher {
                     const joinParams = {
                         token: (!!token) ? token : '',
                         session: this.sessionId,
+                        platform: platform.description,
                         metadata: !!this.options.metadata ? this.options.metadata : '',
                         secret: this.openvidu.getSecret(),
                         recorder: this.openvidu.getRecorder(),
