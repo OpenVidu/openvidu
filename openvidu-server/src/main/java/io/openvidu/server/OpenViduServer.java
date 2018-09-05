@@ -102,7 +102,7 @@ public class OpenViduServer implements JsonRpcConfigurer {
 			log.info("Using autodiscovery rules to locate KMS on every pipeline");
 			return new AutodiscoveryKurentoClientProvider();
 		} else {
-			log.info("Configuring Kurento Room Server to use first of the following kmss: " + kmsWsUris);
+			log.info("Configuring OpenVidu Server to use first of the following kmss: " + kmsWsUris);
 			return new FixedOneKmsManager(firstKmsWsUri);
 		}
 	}
