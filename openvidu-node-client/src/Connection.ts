@@ -39,6 +39,16 @@ export class Connection {
     token: string;
 
     /**
+     * Geo location of the connection, with the following format: `"CITY, COUNTRY"` (`"unknown"` if it wasn't possible to locate it)
+     */
+    location: string;
+
+    /**
+     * A complete description of the platform used by the participant to connect to the session
+     */
+    platform: string;
+
+    /**
      * Data associated to the connection on the server-side. This value is set with property [[TokenOptions.data]] when calling [[Session.generateToken]]
      */
     serverData: string;
@@ -64,11 +74,13 @@ export class Connection {
     /**
      * @hidden
      */
-    constructor(connectionId: string, role: OpenViduRole, token: string, serverData: string, clientData: string,
+    constructor(connectionId: string, role: OpenViduRole, token: string, location: string, platform: string, serverData: string, clientData: string,
         publishers: Publisher[], subscribers: string[]) {
         this.connectionId = connectionId;
         this.role = role;
         this.token = token;
+        this.location = location;
+        this.platform = platform;
         this.serverData = serverData;
         this.clientData = clientData;
         this.publishers = publishers;

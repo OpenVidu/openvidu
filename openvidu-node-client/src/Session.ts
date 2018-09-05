@@ -452,7 +452,7 @@ export class Session {
             connection.subscribers.forEach(subscriber => {
                 subscribers.push(subscriber.streamId);
             });
-            this.activeConnections.push(new Connection(connection.connectionId, connection.role, connection.token, connection.serverData, connection.clientData, publishers, subscribers));
+            this.activeConnections.push(new Connection(connection.connectionId, connection.role, connection.token, connection.location, connection.platform, connection.serverData, connection.clientData, publishers, subscribers));
         });
         return this;
     }
