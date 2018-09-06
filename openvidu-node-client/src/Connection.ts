@@ -29,6 +29,11 @@ export class Connection {
     connectionId: string;
 
     /**
+     * Timestamp when this connection was established, in UTC milliseconds (ms since Jan 1, 1970, 00:00:00 UTC)
+     */
+    createdAt: number;
+
+    /**
      * Role of the connection
      */
     role: OpenViduRole;
@@ -74,9 +79,10 @@ export class Connection {
     /**
      * @hidden
      */
-    constructor(connectionId: string, role: OpenViduRole, token: string, location: string, platform: string, serverData: string, clientData: string,
+    constructor(connectionId: string, createdAt: number, role: OpenViduRole, token: string, location: string, platform: string, serverData: string, clientData: string,
         publishers: Publisher[], subscribers: string[]) {
         this.connectionId = connectionId;
+        this.createdAt = createdAt;
         this.role = role;
         this.token = token;
         this.location = location;

@@ -35,6 +35,11 @@ export class Session {
     sessionId: string;
 
     /**
+     * Timestamp when this session was created, in UTC milliseconds (ms since Jan 1, 1970, 00:00:00 UTC)
+     */
+    createdAt: number;
+
+    /**
      * Properties defining the session
      */
     properties: SessionProperties;
@@ -388,6 +393,7 @@ export class Session {
                     if (res.status === 200) {
                         // SUCCESS response from openvidu-server. Resolve token
                         this.sessionId = res.data.id;
+                        this.createdAt = res.data.createdAt;
                         resolve(this.sessionId);
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
@@ -452,7 +458,18 @@ export class Session {
             connection.subscribers.forEach(subscriber => {
                 subscribers.push(subscriber.streamId);
             });
-            this.activeConnections.push(new Connection(connection.connectionId, connection.role, connection.token, connection.location, connection.platform, connection.serverData, connection.clientData, publishers, subscribers));
+            this.activeConnections.push(
+                new Connection(
+                    connection.connectionId,
+                    connection.createdAt,
+                    connection.role,
+                    connection.token,
+                    connection.location,
+                    connection.platform,
+                    connection.serverData,
+                    connection.clientData,
+                    publishers,
+                    subscribers));
         });
         return this;
     }
