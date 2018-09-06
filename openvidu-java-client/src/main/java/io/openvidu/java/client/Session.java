@@ -44,6 +44,7 @@ public class Session {
 	private static final Logger log = LoggerFactory.getLogger(Session.class);
 
 	private String sessionId;
+	private long createdAt;
 	private SessionProperties properties;
 	private Map<String, Connection> activeConnections = new ConcurrentHashMap<>();
 	private boolean recording = false;
@@ -69,6 +70,14 @@ public class Session {
 	 */
 	public String getSessionId() {
 		return this.sessionId;
+	}
+
+	/**
+	 * Timestamp when this session was created, in UTC milliseconds (ms since Jan 1,
+	 * 1970, 00:00:00 UTC)
+	 */
+	public long createdAt() {
+		return this.createdAt;
 	}
 
 	/**
@@ -460,9 +469,10 @@ public class Session {
 		try {
 			int statusCode = response.getStatusLine().getStatusCode();
 			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
-				String id = (String) httpResponseToJson(response).get("id");
-				log.info("Returning a SESSIONID: {}", id);
-				this.sessionId = id;
+				JSONObject responseJson = httpResponseToJson(response);
+				this.sessionId = (String) responseJson.get("id");
+				this.createdAt = (long) responseJson.get("createdAt");
+				log.info("Session '{}' created", this.sessionId);
 			} else if (statusCode == org.apache.http.HttpStatus.SC_CONFLICT) {
 				// 'customSessionId' already existed
 				this.sessionId = properties.customSessionId();
@@ -492,6 +502,7 @@ public class Session {
 	@SuppressWarnings("unchecked")
 	protected Session resetSessionWithJson(JSONObject json) {
 		this.sessionId = (String) json.get("sessionId");
+		this.createdAt = (long) json.get("createdAt");
 		this.recording = (boolean) json.get("recording");
 		SessionProperties.Builder builder = new SessionProperties.Builder()
 				.mediaMode(MediaMode.valueOf((String) json.get("mediaMode")))
@@ -528,9 +539,10 @@ public class Session {
 			});
 
 			this.activeConnections.put((String) con.get("connectionId"),
-					new Connection((String) con.get("connectionId"), OpenViduRole.valueOf((String) con.get("role")),
-							(String) con.get("token"), (String) con.get("location"), (String) con.get("platform"),
-							(String) con.get("serverData"), (String) con.get("clientData"), publishers, subscribers));
+					new Connection((String) con.get("connectionId"), (long) con.get("createdAt"),
+							OpenViduRole.valueOf((String) con.get("role")), (String) con.get("token"),
+							(String) con.get("location"), (String) con.get("platform"), (String) con.get("serverData"),
+							(String) con.get("clientData"), publishers, subscribers));
 		});
 		return this;
 	}
@@ -539,6 +551,7 @@ public class Session {
 	protected String toJson() {
 		JSONObject json = new JSONObject();
 		json.put("sessionId", this.sessionId);
+		json.put("createdAt", this.createdAt);
 		json.put("customSessionId", this.properties.customSessionId());
 		json.put("recording", this.recording);
 		json.put("mediaMode", this.properties.mediaMode());

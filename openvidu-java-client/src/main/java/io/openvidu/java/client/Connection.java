@@ -27,6 +27,7 @@ import java.util.Map;
 public class Connection {
 
 	private String connectionId;
+	private long createdAt;
 	private OpenViduRole role;
 	private String token;
 	private String location;
@@ -37,9 +38,10 @@ public class Connection {
 	protected Map<String, Publisher> publishers;
 	protected List<String> subscribers;
 
-	protected Connection(String connectionId, OpenViduRole role, String token, String location, String platform, String serverData, String clientData,
-			Map<String, Publisher> publishers, List<String> subscribers) {
+	protected Connection(String connectionId, long createdAt, OpenViduRole role, String token, String location, String platform,
+			String serverData, String clientData, Map<String, Publisher> publishers, List<String> subscribers) {
 		this.connectionId = connectionId;
+		this.createdAt = createdAt;
 		this.role = role;
 		this.token = token;
 		this.location = location;
@@ -57,6 +59,14 @@ public class Connection {
 	 */
 	public String getConnectionId() {
 		return connectionId;
+	}
+
+	/**
+	 * Timestamp when this connection was established, in UTC milliseconds (ms since
+	 * Jan 1, 1970, 00:00:00 UTC)
+	 */
+	public long createdAt() {
+		return this.createdAt;
 	}
 
 	/**
