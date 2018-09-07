@@ -290,6 +290,20 @@ export class OpenVidu {
 
 
   /**
+   * Checks if the browser supports screen-sharing. Chrome, Firefox and Opera support screen-sharing
+   * @returns 1 if the browser supports screen-sharing, 0 otherwise
+   */
+  checkScreenSharingCapabilities(): number {
+    const browser = platform.name;
+    if ((browser !== 'Chrome') && (browser !== 'Firefox') && (browser !== 'Opera')) {
+      return 0;
+    } else {
+      return 1;
+    }
+  }
+
+
+  /**
    * Collects information about the media input devices available on the system. You can pass property `deviceId` of a [[Device]] object as value of `audioSource` or `videoSource` properties in [[initPublisher]] method
    */
   getDevices(): Promise<Device[]> {
@@ -469,7 +483,7 @@ export class OpenVidu {
           if (publisherProperties.videoSource === 'screen' ||
             (platform.name!.indexOf('Firefox') !== -1 && publisherProperties.videoSource === 'window')) {
 
-            if (platform.name !== 'Chrome' && platform.name!.indexOf('Firefox') === -1) {
+            if (platform.name !== 'Chrome' && platform.name!.indexOf('Firefox') === -1 && platform.name !== 'Opera') {
               const error = new OpenViduError(OpenViduErrorName.SCREEN_SHARING_NOT_SUPPORTED, 'You can only screen share in desktop Chrome and Firefox. Detected browser: ' + platform.name);
               console.error(error);
               reject(error);
@@ -477,7 +491,7 @@ export class OpenVidu {
 
               if (!!this.advancedConfiguration.screenShareChromeExtension && !(platform.name!.indexOf('Firefox') !== -1)) {
 
-                // Custom screen sharing extension for Chrome
+                // Custom screen sharing extension for Chrome (and Opera)
 
                 screenSharing.getScreenConstraints((error, screenConstraints) => {
                   if (!!error || !!screenConstraints.mandatory && screenConstraints.mandatory.chromeMediaSource === 'screen') {
