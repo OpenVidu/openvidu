@@ -49,4 +49,6 @@ public interface Session {
 
 	JsonObject withStatsToJson();
 
+	Long getStartTime();
+
 }

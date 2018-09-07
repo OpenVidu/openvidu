@@ -78,6 +78,9 @@ public class OpenviduConfig {
 
 	@Value("${coturn.redis.connect-timeout}")
 	private String coturnRedisConnectTimeout;
+	
+	@Value("${kms.stats-enabled}")
+	private boolean kmsStatsEnabled;
 
 	@Value("#{'${spring.profiles.active:}'.length() > 0 ? '${spring.profiles.active:}'.split(',') : \"default\"}")
 	private String springProfile;
@@ -167,6 +170,10 @@ public class OpenviduConfig {
 
 	public String getCoturnDatabaseDbname() {
 		return this.coturnRedisDbname;
+	}
+	
+	public boolean isKmsStatsEnabled() {
+		return this.kmsStatsEnabled;
 	}
 
 	public ParticipantRole[] getRolesFromRecordingNotification() {

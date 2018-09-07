@@ -30,6 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
+import io.openvidu.server.core.Session;
 import io.openvidu.server.recording.Recording;
 
 /**
@@ -37,11 +38,11 @@ import io.openvidu.server.recording.Recording;
  * Enabled by property 'openvidu.cdr=true'
  * 
  * - 'sessionCreated':				{sessionId, timestamp}
- * - 'sessionDestroyed':			{sessionId, timestamp, startTime, endTime, duration, reason}
+ * - 'sessionDestroyed':			{sessionId, timestamp, startTime, duration, reason}
  * - 'participantJoined':			{sessionId, timestamp, participantId, location, platform}
- * - 'participantLeft':				{sessionId, timestamp, participantId, startTime, endTime, duration, reason}
+ * - 'participantLeft':				{sessionId, timestamp, participantId, startTime, duration, reason}
  * - 'webrtcConnectionCreated'		{sessionId, timestamp, participantId, connection, [receivingFrom], audioEnabled, videoEnabled, [videoSource], [videoFramerate]}
- * - 'webrtcConnectionDestroyed'	{sessionId, timestamp, participantId, startTime, endTime, duration, connection, [receivingFrom], audioEnabled, videoEnabled, [videoSource], [videoFramerate], reason}
+ * - 'webrtcConnectionDestroyed'	{sessionId, timestamp, participantId, startTime, duration, connection, [receivingFrom], audioEnabled, videoEnabled, [videoSource], [videoFramerate], reason}
  * - 'recordingStarted'				{sessionId, timestamp, id, name, hasAudio, hasVideo, recordingLayout, size}
  * - 'recordingStopped'				{sessionId, timestamp, id, name, hasAudio, hasVideo, recordingLayout, size}
  * 
@@ -50,7 +51,6 @@ import io.openvidu.server.recording.Recording;
  * - sessionId:			string
  * - timestamp:			number
  * - startTime:			number
- * - endTime:			number
  * - duration:			number
  * - participantId:		string
  * - connection: 		"INBOUND", "OUTBOUND"
@@ -59,6 +59,7 @@ import io.openvidu.server.recording.Recording;
  * - videoEnabled: 		boolean
  * - videoSource: 		"CAMERA", "SCREEN"
  * - videoFramerate:	number
+ * - videoDimensions:	string
  * - id:				string
  * - name:				string
  * - hasAudio:			boolean
@@ -73,6 +74,7 @@ import io.openvidu.server.recording.Recording;
  * - receivingFrom:		only if connection = "INBOUND"
  * - videoSource:		only if videoEnabled = true
  * - videoFramerate: 	only if videoEnabled = true
+ * - videoDimensions: 	only if videoEnabled = true
  * 
  * @author Pablo Fuente (pablofuenteperez@gmail.com)
  */
@@ -83,75 +85,85 @@ public class CallDetailRecord {
 
 	private CDRLogger logger;
 
-	private Map<String, CDREvent> sessions = new ConcurrentHashMap<>();
-	private Map<String, CDREvent> participants = new ConcurrentHashMap<>();
-	private Map<String, CDREvent> publications = new ConcurrentHashMap<>();
-	private Map<String, Set<CDREvent>> subscriptions = new ConcurrentHashMap<>();
-	
-	private final List<String> lastParticipantLeftReasons = Arrays.asList(new String[] {"disconnect", "forceDisconnectByUser", "forceDisconnectByServer", "networkDisconnect"});
+	private Map<String, CDREventSession> sessions = new ConcurrentHashMap<>();
+	private Map<String, CDREventParticipant> participants = new ConcurrentHashMap<>();
+	private Map<String, CDREventWebrtcConnection> publications = new ConcurrentHashMap<>();
+	private Map<String, Set<CDREventWebrtcConnection>> subscriptions = new ConcurrentHashMap<>();
+	private Map<String, CDREventRecording> recordings = new ConcurrentHashMap<>();
+
+	private final List<String> lastParticipantLeftReasons = Arrays.asList(
+			new String[] { "disconnect", "forceDisconnectByUser", "forceDisconnectByServer", "networkDisconnect" });
 
 	public CallDetailRecord(CDRLogger logger) {
 		this.logger = logger;
 	}
 
-	public void recordSessionCreated(String sessionId) {
-		CDREvent e = new CDREvent(CDREventName.sessionCreated, sessionId);
-		this.sessions.put(sessionId, e);
-		if (openviduConfig.isCdrEnabled()) this.logger.log(e);
+	public void recordSessionCreated(Session session) {
+		CDREventSession e = new CDREventSession(session);
+		this.sessions.put(session.getSessionId(), e);
+		if (openviduConfig.isCdrEnabled())
+			this.logger.log(e);
 	}
 
 	public void recordSessionDestroyed(String sessionId, String reason) {
 		CDREvent e = this.sessions.remove(sessionId);
-		if (openviduConfig.isCdrEnabled()) this.logger.log(new CDREvent(CDREventName.sessionDestroyed, e, this.finalReason(reason)));
+		if (openviduConfig.isCdrEnabled())
+			this.logger.log(new CDREventSession(e, this.finalReason(reason)));
 	}
 
 	public void recordParticipantJoined(Participant participant, String sessionId) {
-		CDREvent e = new CDREvent(CDREventName.participantJoined, participant, sessionId);
+		CDREventParticipant e = new CDREventParticipant(sessionId, participant);
 		this.participants.put(participant.getParticipantPublicId(), e);
-		if (openviduConfig.isCdrEnabled()) this.logger.log(e);
+		if (openviduConfig.isCdrEnabled())
+			this.logger.log(e);
 	}
 
 	public void recordParticipantLeft(Participant participant, String sessionId, String reason) {
 		CDREvent e = this.participants.remove(participant.getParticipantPublicId());
-		if (openviduConfig.isCdrEnabled()) this.logger.log(new CDREvent(CDREventName.participantLeft, e, reason));
+		if (openviduConfig.isCdrEnabled())
+			this.logger.log(new CDREventParticipant(e, reason));
 	}
 
 	public void recordNewPublisher(Participant participant, String sessionId, MediaOptions mediaOptions) {
-		CDREvent publisher = new CDREvent(CDREventName.webrtcConnectionCreated, participant, sessionId, mediaOptions,
-				null, System.currentTimeMillis(), null);
+		CDREventWebrtcConnection publisher = new CDREventWebrtcConnection(sessionId,
+				participant.getParticipantPublicId(), mediaOptions, null);
 		this.publications.put(participant.getParticipantPublicId(), publisher);
-		if (openviduConfig.isCdrEnabled()) this.logger.log(publisher);
+		if (openviduConfig.isCdrEnabled())
+			this.logger.log(publisher);
 	}
 
 	public boolean stopPublisher(String participantPublicId, String reason) {
-		CDREvent publisher = this.publications.remove(participantPublicId);
+		CDREventWebrtcConnection publisher = this.publications.remove(participantPublicId);
 		if (publisher != null) {
-			publisher = new CDREvent(CDREventName.webrtcConnectionDestroyed, publisher, reason);
-			if (openviduConfig.isCdrEnabled()) this.logger.log(publisher);
+			publisher = new CDREventWebrtcConnection(publisher, reason);
+			if (openviduConfig.isCdrEnabled())
+				this.logger.log(publisher);
 			return true;
 		}
 		return false;
 	}
 
 	public void recordNewSubscriber(Participant participant, String sessionId, String senderPublicId) {
-		CDREvent publisher = this.publications.get(senderPublicId);
-		CDREvent subscriber = new CDREvent(CDREventName.webrtcConnectionCreated, participant, sessionId,
-				publisher.getMediaOptions(), publisher.getParticipantPublicId(), System.currentTimeMillis(), null);
+		CDREventWebrtcConnection publisher = this.publications.get(senderPublicId);
+		CDREventWebrtcConnection subscriber = new CDREventWebrtcConnection(sessionId,
+				participant.getParticipantPublicId(), publisher.mediaOptions, senderPublicId);
 		this.subscriptions.putIfAbsent(participant.getParticipantPublicId(), new ConcurrentSkipListSet<>());
 		this.subscriptions.get(participant.getParticipantPublicId()).add(subscriber);
-		if (openviduConfig.isCdrEnabled()) this.logger.log(subscriber);
+		if (openviduConfig.isCdrEnabled())
+			this.logger.log(subscriber);
 	}
 
 	public boolean stopSubscriber(String participantPublicId, String senderPublicId, String reason) {
-		Set<CDREvent> participantSubscriptions = this.subscriptions.get(participantPublicId);
+		Set<CDREventWebrtcConnection> participantSubscriptions = this.subscriptions.get(participantPublicId);
 		if (participantSubscriptions != null) {
-			CDREvent subscription;
-			for (Iterator<CDREvent> it = participantSubscriptions.iterator(); it.hasNext();) {
+			CDREventWebrtcConnection subscription;
+			for (Iterator<CDREventWebrtcConnection> it = participantSubscriptions.iterator(); it.hasNext();) {
 				subscription = it.next();
-				if (subscription.getReceivingFrom().equals(senderPublicId)) {
+				if (senderPublicId.equals(subscription.receivingFrom)) {
 					it.remove();
-					subscription = new CDREvent(CDREventName.webrtcConnectionDestroyed, subscription, reason);
-					if (openviduConfig.isCdrEnabled()) this.logger.log(subscription);
+					subscription = new CDREventWebrtcConnection(subscription, reason);
+					if (openviduConfig.isCdrEnabled())
+						this.logger.log(subscription);
 					return true;
 				}
 			}
@@ -160,13 +172,18 @@ public class CallDetailRecord {
 	}
 
 	public void recordRecordingStarted(String sessionId, Recording recording) {
-		if (openviduConfig.isCdrEnabled()) this.logger.log(new CDREvent(CDREventName.recordingStarted, sessionId, recording, null));
+		CDREventRecording recordingStartedEvent = new CDREventRecording(sessionId, recording);
+		this.recordings.putIfAbsent(recording.getId(), recordingStartedEvent);
+		if (openviduConfig.isCdrEnabled())
+			this.logger.log(new CDREventRecording(sessionId, recording));
 	}
 
 	public void recordRecordingStopped(String sessionId, Recording recording, String reason) {
-		if (openviduConfig.isCdrEnabled()) this.logger.log(new CDREvent(CDREventName.recordingStopped, sessionId, recording, this.finalReason(reason)));
+		CDREventRecording recordingStartedEvent = this.recordings.remove(recording.getId());
+		if (openviduConfig.isCdrEnabled())
+			this.logger.log(new CDREventRecording(recordingStartedEvent, this.finalReason(reason)));
 	}
-	
+
 	private String finalReason(String reason) {
 		if (lastParticipantLeftReasons.contains(reason)) {
 			return "lastParticipantLeft";

@@ -40,6 +40,7 @@ import org.kurento.client.WebRtcEndpoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -495,6 +496,9 @@ public abstract class MediaEndpoint {
 		json.add("receivedCandidates", new GsonBuilder().create().toJsonTree(this.receivedCandidateList));
 		json.addProperty("localCandidate", this.selectedLocalIceCandidate);
 		json.addProperty("remoteCandidate", this.selectedRemoteIceCandidate);
+		if (openviduConfig.isKmsStatsEnabled()) {
+			json.addProperty("serverStats", new Gson().toJson(this.webEndpoint.getStats()));
+		}
 
 		JsonArray jsonArray = new JsonArray();
 		for (KmsEvent event : this.kmsEvents) {

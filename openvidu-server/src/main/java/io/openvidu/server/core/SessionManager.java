@@ -67,6 +67,7 @@ public abstract class SessionManager {
 
 	protected ConcurrentMap<String, Session> sessions = new ConcurrentHashMap<>();
 	protected ConcurrentMap<String, SessionProperties> sessionProperties = new ConcurrentHashMap<>();
+	protected ConcurrentMap<String, Long> sessionCreationTime = new ConcurrentHashMap<>();
 	protected ConcurrentMap<String, ConcurrentHashMap<String, Participant>> sessionidParticipantpublicidParticipant = new ConcurrentHashMap<>();
 	protected ConcurrentMap<String, Boolean> insecureUsers = new ConcurrentHashMap<>();
 	public ConcurrentMap<String, ConcurrentHashMap<String, Token>> sessionidTokenTokenobj = new ConcurrentHashMap<>();
@@ -215,9 +216,10 @@ public abstract class SessionManager {
 		return null;
 	}
 
-	public void storeSessionId(String sessionId, SessionProperties sessionProperties) {
+	public void storeSessionId(String sessionId, Long creationTime, SessionProperties sessionProperties) {
 		this.sessionidParticipantpublicidParticipant.putIfAbsent(sessionId, new ConcurrentHashMap<>());
 		this.sessionProperties.putIfAbsent(sessionId, sessionProperties);
+		this.sessionCreationTime.putIfAbsent(sessionId, creationTime);
 		showTokens();
 	}
 
@@ -269,6 +271,7 @@ public abstract class SessionManager {
 			}
 		} else {
 			this.sessionidParticipantpublicidParticipant.putIfAbsent(sessionId, new ConcurrentHashMap<>());
+			this.sessionCreationTime.putIfAbsent(sessionId, System.currentTimeMillis());
 			this.sessionidTokenTokenobj.putIfAbsent(sessionId, new ConcurrentHashMap<>());
 			this.sessionidTokenTokenobj.get(sessionId).putIfAbsent(token,
 					new Token(token, ParticipantRole.PUBLISHER, "",
@@ -461,6 +464,7 @@ public abstract class SessionManager {
 		sessions.remove(session.getSessionId());
 
 		sessionProperties.remove(session.getSessionId());
+		sessionCreationTime.remove(session.getSessionId());
 		sessionidParticipantpublicidParticipant.remove(session.getSessionId());
 		sessionidTokenTokenobj.remove(session.getSessionId());
 

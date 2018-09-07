@@ -133,9 +133,11 @@ public class SessionRestController {
 			sessionManager.sessionidTokenTokenobj.putIfAbsent(sessionId, new ConcurrentHashMap<>());
 		}
 
-		sessionManager.storeSessionId(sessionId, sessionProperties);
+		Long creationTime = System.currentTimeMillis();
+		sessionManager.storeSessionId(sessionId, creationTime, sessionProperties);
 		JsonObject responseJson = new JsonObject();
 		responseJson.addProperty("id", sessionId);
+		responseJson.addProperty("createdAt", creationTime);
 
 		return new ResponseEntity<>(responseJson.toString(), getResponseHeaders(), HttpStatus.OK);
 	}

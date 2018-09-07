@@ -23,6 +23,7 @@ public class Participant {
 
 	private String participantPrivatetId; // ID to identify the user on server (org.kurento.jsonrpc.Session.id)
 	private String participantPublicId; // ID to identify the user on clients
+	private Long createdAt; // Timestamp when this connection was established
 	private String clientMetadata = ""; // Metadata provided on client side
 	private String serverMetadata = ""; // Metadata provided on server side
 	private Token token; // Token associated to this participant
@@ -38,6 +39,7 @@ public class Participant {
 			String location, String platform) {
 		this.participantPrivatetId = participantPrivatetId;
 		this.participantPublicId = participantPublicId;
+		this.createdAt = System.currentTimeMillis();
 		this.token = token;
 		this.clientMetadata = clientMetadata;
 		if (!token.getServerMetadata().isEmpty())
@@ -60,6 +62,10 @@ public class Participant {
 
 	public void setParticipantPublicId(String participantPublicId) {
 		this.participantPublicId = participantPublicId;
+	}
+
+	public Long getCreatedAt() {
+		return this.createdAt;
 	}
 
 	public String getClientMetadata() {
@@ -187,6 +193,7 @@ public class Participant {
 	public JsonObject toJson() {
 		JsonObject json = new JsonObject();
 		json.addProperty("connectionId", this.participantPublicId);
+		json.addProperty("createdAt", this.createdAt);
 		json.addProperty("location", this.location);
 		json.addProperty("platform", this.platform);
 		json.addProperty("token", this.token.getToken());

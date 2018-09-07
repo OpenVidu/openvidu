@@ -474,8 +474,9 @@ public class KurentoSessionManager extends SessionManager {
 					"Session '" + sessionId + "' already exists");
 		}
 		this.kurentoClient = kcProvider.getKurentoClient(kcSessionInfo);
-		session = new KurentoSession(sessionId, sessionProperties, kurentoClient, kurentoSessionEventsHandler,
-				kcProvider.destroyWhenUnused(), this.CDR, this.openviduConfig);
+		session = new KurentoSession(sessionId, this.sessionCreationTime.get(sessionId), sessionProperties,
+				kurentoClient, kurentoSessionEventsHandler, kcProvider.destroyWhenUnused(), this.CDR,
+				this.openviduConfig);
 
 		KurentoSession oldSession = (KurentoSession) sessions.putIfAbsent(sessionId, session);
 		if (oldSession != null) {
@@ -488,7 +489,7 @@ public class KurentoSessionManager extends SessionManager {
 		}
 		log.warn("No session '{}' exists yet. Created one using KurentoClient '{}'.", sessionId, kcName);
 
-		sessionEventsHandler.onSessionCreated(sessionId);
+		sessionEventsHandler.onSessionCreated(session);
 	}
 
 	@Override

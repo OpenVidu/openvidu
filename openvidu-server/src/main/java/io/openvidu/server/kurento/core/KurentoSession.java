@@ -61,6 +61,7 @@ public class KurentoSession implements Session {
 	private final ConcurrentMap<String, KurentoParticipant> participants = new ConcurrentHashMap<>();
 	private String sessionId;
 	private SessionProperties sessionProperties;
+	private Long startTime;
 
 	private MediaPipeline pipeline;
 	private CountDownLatch pipelineLatch = new CountDownLatch(1);
@@ -82,7 +83,7 @@ public class KurentoSession implements Session {
 
 	public final ConcurrentHashMap<String, String> publishedStreamIds = new ConcurrentHashMap<>();
 
-	public KurentoSession(String sessionId, SessionProperties sessionProperties, KurentoClient kurentoClient,
+	public KurentoSession(String sessionId, Long startTime, SessionProperties sessionProperties, KurentoClient kurentoClient,
 			KurentoSessionEventsHandler kurentoSessionHandler, boolean destroyKurentoClient, CallDetailRecord CDR,
 			OpenviduConfig openviduConfig) {
 		this.sessionId = sessionId;
@@ -92,6 +93,7 @@ public class KurentoSession implements Session {
 		this.kurentoSessionHandler = kurentoSessionHandler;
 		this.CDR = CDR;
 		this.openviduConfig = openviduConfig;
+		this.startTime = startTime;
 		log.debug("New SESSION instance with id '{}'", sessionId);
 	}
 
@@ -297,6 +299,10 @@ public class KurentoSession implements Session {
 					@Override
 					public void onSuccess(MediaPipeline result) throws Exception {
 						pipeline = result;
+						if (openviduConfig.isKmsStatsEnabled()) {
+							pipeline.setLatencyStats(true);
+							log.debug("SESSION {}: WebRTC server stats enabled", sessionId);
+						}
 						pipelineLatch.countDown();
 						log.debug("SESSION {}: Created MediaPipeline", sessionId);
 					}
@@ -374,6 +380,7 @@ public class KurentoSession implements Session {
 	private JsonObject sharedJson(Function<KurentoParticipant, JsonObject> toJsonFunction) {
 		JsonObject json = new JsonObject();
 		json.addProperty("sessionId", this.sessionId);
+		json.addProperty("createdAt", this.startTime);
 		json.addProperty("mediaMode", this.sessionProperties.mediaMode().name());
 		json.addProperty("recordingMode", this.sessionProperties.recordingMode().name());
 		json.addProperty("defaultRecordingLayout", this.sessionProperties.defaultRecordingLayout().name());
@@ -395,6 +402,11 @@ public class KurentoSession implements Session {
 
 	public String getParticipantPrivateIdFromStreamId(String streamId) {
 		return this.publishedStreamIds.get(streamId);
+	}
+
+	@Override
+	public Long getStartTime() {
+		return this.startTime;
 	}
 
 }

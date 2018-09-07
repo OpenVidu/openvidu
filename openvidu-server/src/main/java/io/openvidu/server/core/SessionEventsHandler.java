@@ -64,8 +64,8 @@ public class SessionEventsHandler {
 
 	ReentrantLock lock = new ReentrantLock();
 
-	public void onSessionCreated(String sessionId) {
-		CDR.recordSessionCreated(sessionId);
+	public void onSessionCreated(Session session) {
+		CDR.recordSessionCreated(session);
 	}
 
 	public void onSessionClosed(String sessionId, String reason) {
@@ -501,7 +501,8 @@ public class SessionEventsHandler {
 			} else {
 				// Send response to every other user in the session different than the affected
 				// participant or the moderator
-				if (error == null && (moderator == null || !p.getParticipantPrivateId().equals(moderator.getParticipantPrivateId()))) {
+				if (error == null && (moderator == null
+						|| !p.getParticipantPrivateId().equals(moderator.getParticipantPrivateId()))) {
 					rpcNotificationService.sendNotification(p.getParticipantPrivateId(),
 							ProtocolElements.STREAMPROPERTYCHANGED_METHOD, params);
 				}
@@ -509,8 +510,8 @@ public class SessionEventsHandler {
 		}
 	}
 
-	public void onFilterEventDispatched(String connectionId, String streamId, String filterType, String eventType, Object data,
-			Set<Participant> participants, Set<String> subscribedParticipants) {
+	public void onFilterEventDispatched(String connectionId, String streamId, String filterType, String eventType,
+			Object data, Set<Participant> participants, Set<String> subscribedParticipants) {
 		JsonObject params = new JsonObject();
 		params.addProperty(ProtocolElements.FILTEREVENTLISTENER_CONNECTIONID_PARAM, connectionId);
 		params.addProperty(ProtocolElements.FILTEREVENTLISTENER_STREAMID_PARAM, streamId);
