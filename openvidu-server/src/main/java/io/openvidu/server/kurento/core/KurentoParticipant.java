@@ -80,7 +80,8 @@ public class KurentoParticipant extends Participant {
 	public KurentoParticipant(Participant participant, KurentoSession kurentoSession, MediaPipeline pipeline,
 			InfoHandler infoHandler, CallDetailRecord CDR, OpenviduConfig openviduConfig) {
 		super(participant.getParticipantPrivateId(), participant.getParticipantPublicId(), participant.getToken(),
-				participant.getClientMetadata(), participant.getLocation(), participant.getPlatform());
+				participant.getClientMetadata(), participant.getLocation(), participant.getPlatform(),
+				participant.getCreatedAt());
 		this.openviduConfig = openviduConfig;
 		this.session = kurentoSession;
 		this.pipeline = pipeline;
@@ -112,8 +113,6 @@ public class KurentoParticipant extends Participant {
 
 		// Remove streamId from publisher's map
 		this.session.publishedStreamIds.putIfAbsent(this.getPublisherStreamId(), this.getParticipantPrivateId());
-
-		CDR.recordNewPublisher(this, this.session.getSessionId(), mediaOptions);
 
 	}
 
@@ -233,6 +232,9 @@ public class KurentoParticipant extends Participant {
 		log.info("PARTICIPANT {}: Is now publishing video in room {}", this.getParticipantPublicId(),
 				this.session.getSessionId());
 
+		CDR.recordNewPublisher(this, this.session.getSessionId(), this.publisher.getMediaOptions(),
+				this.publisher.createdAt());
+
 		return sdpResponse;
 	}
 
@@ -313,7 +315,8 @@ public class KurentoParticipant extends Participant {
 					senderName, this.session.getSessionId());
 
 			if (!ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(this.getParticipantPublicId())) {
-				CDR.recordNewSubscriber(this, this.session.getSessionId(), sender.getParticipantPublicId());
+				CDR.recordNewSubscriber(this, this.session.getSessionId(), sender.getParticipantPublicId(),
+						subscriber.createdAt());
 			}
 
 			return sdpAnswer;
@@ -601,14 +604,17 @@ public class KurentoParticipant extends Participant {
 					+ event.getState() + " | SOURCE: " + event.getSource().getName() + " | PAD: " + event.getPadName()
 					+ " | MEDIATYPE: " + event.getMediaType() + " | TIMESTAMP: " + System.currentTimeMillis();
 
-			endpoint.flowInMedia.put(event.getSource().getName(), event.getMediaType());
-			if (endpoint.getPublisher().getMediaOptions().hasAudio()
-					&& endpoint.getPublisher().getMediaOptions().hasVideo()
-					&& endpoint.flowInMedia.values().size() == 2) {
-				endpoint.kmsEvents.add(new KmsEvent(event));
-			} else if (endpoint.flowInMedia.values().size() == 1) {
-				endpoint.kmsEvents.add(new KmsEvent(event));
-			}
+			/*
+			 * endpoint.flowInMedia.put(event.getSource().getName(), event.getMediaType());
+			 * if (endpoint.getPublisher().getMediaOptions().hasAudio() &&
+			 * endpoint.getPublisher().getMediaOptions().hasVideo() &&
+			 * endpoint.flowInMedia.values().size() == 2) {
+			 */
+			endpoint.kmsEvents.add(new KmsEvent(event, endpoint.createdAt()));
+			/*
+			 * } else if (endpoint.flowInMedia.values().size() == 1) {
+			 * endpoint.kmsEvents.add(new KmsEvent(event, endpoint.createdAt())); }
+			 */
 
 			log.info(msg1);
 			this.infoHandler.sendInfo(msg1);
@@ -619,36 +625,47 @@ public class KurentoParticipant extends Participant {
 					+ event.getState() + " | SOURCE: " + event.getSource().getName() + " | PAD: " + event.getPadName()
 					+ " | MEDIATYPE: " + event.getMediaType() + " | TIMESTAMP: " + System.currentTimeMillis();
 
-			endpoint.flowOutMedia.put(event.getSource().getName(), event.getMediaType());
-			if (endpoint.getPublisher().getMediaOptions().hasAudio()
-					&& endpoint.getPublisher().getMediaOptions().hasVideo()
-					&& endpoint.flowOutMedia.values().size() == 2) {
-				endpoint.kmsEvents.add(new KmsEvent(event));
-			} else if (endpoint.flowOutMedia.values().size() == 1) {
-				endpoint.kmsEvents.add(new KmsEvent(event));
-			}
+			/*
+			 * endpoint.flowOutMedia.put(event.getSource().getName(), event.getMediaType());
+			 * if (endpoint.getPublisher().getMediaOptions().hasAudio() &&
+			 * endpoint.getPublisher().getMediaOptions().hasVideo() &&
+			 * endpoint.flowOutMedia.values().size() == 2) {
+			 */
+			endpoint.kmsEvents.add(new KmsEvent(event, endpoint.createdAt()));
+			/*
+			 * } else if (endpoint.flowOutMedia.values().size() == 1) {
+			 * endpoint.kmsEvents.add(new KmsEvent(event)); }
+			 */
 
 			log.info(msg1);
 			this.infoHandler.sendInfo(msg1);
 		});
 
 		endpoint.getWebEndpoint().addIceGatheringDoneListener(event -> {
-			endpoint.kmsEvents.add(new KmsEvent(event));
+			endpoint.kmsEvents.add(new KmsEvent(event, endpoint.createdAt()));
 		});
 
 		endpoint.getWebEndpoint().addConnectionStateChangedListener(event -> {
-			endpoint.kmsEvents.add(new KmsEvent(event));
+			endpoint.kmsEvents.add(new KmsEvent(event, endpoint.createdAt()));
 		});
 
 		endpoint.getWebEndpoint().addNewCandidatePairSelectedListener(event -> {
 			endpoint.selectedLocalIceCandidate = event.getCandidatePair().getLocalCandidate();
 			endpoint.selectedRemoteIceCandidate = event.getCandidatePair().getRemoteCandidate();
-			endpoint.kmsEvents.add(new KmsEvent(event));
+			endpoint.kmsEvents.add(new KmsEvent(event, endpoint.createdAt()));
 			String msg = "ICE CANDIDATE SELECTED (" + endpoint.getEndpoint().getTag("name") + "): LOCAL CANDIDATE: "
 					+ endpoint.selectedLocalIceCandidate + " | REMOTE CANDIDATE: " + endpoint.selectedRemoteIceCandidate
 					+ " | TIMESTAMP: " + System.currentTimeMillis();
 			log.warn(msg);
 			this.infoHandler.sendInfo(msg);
+		});
+
+		endpoint.getEndpoint().addMediaTranscodingStateChangeListener(event -> {
+			endpoint.kmsEvents.add(new KmsEvent(event, endpoint.createdAt()));
+		});
+
+		endpoint.getWebEndpoint().addIceComponentStateChangeListener(event -> {
+			endpoint.kmsEvents.add(new KmsEvent(event, endpoint.createdAt()));
 		});
 	}
 

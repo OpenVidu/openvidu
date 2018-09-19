@@ -175,6 +175,10 @@ public class OpenviduConfig {
 	public boolean isKmsStatsEnabled() {
 		return this.kmsStatsEnabled;
 	}
+	
+	public String getOpenViduRecordingNotification() {
+		return this.openviduRecordingNotification;
+	}
 
 	public ParticipantRole[] getRolesFromRecordingNotification() {
 		ParticipantRole[] roles;

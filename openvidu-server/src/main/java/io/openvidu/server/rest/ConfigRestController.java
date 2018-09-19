@@ -35,7 +35,7 @@ import io.openvidu.server.config.OpenviduConfig;
 public class ConfigRestController {
 
 	@Autowired
-	OpenviduConfig openviduConfig;
+	protected OpenviduConfig openviduConfig;
 
 	@RequestMapping(value = "/openvidu-publicurl", method = RequestMethod.GET)
 	public String getOpenViduPublicUrl() {

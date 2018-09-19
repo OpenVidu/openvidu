@@ -53,6 +53,7 @@ public class SubscriberEndpoint extends MediaEndpoint {
 		publisher.connect(this.getEndpoint());
 		setConnectedToPublisher(true);
 		setPublisher(publisher);
+		this.createdAt = System.currentTimeMillis();
 		return sdpAnswer;
 	}
 

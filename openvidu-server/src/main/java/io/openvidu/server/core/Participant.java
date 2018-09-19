@@ -36,10 +36,14 @@ public class Participant {
 	private final String METADATA_SEPARATOR = "%/%";
 
 	public Participant(String participantPrivatetId, String participantPublicId, Token token, String clientMetadata,
-			String location, String platform) {
+			String location, String platform, Long createdAt) {
 		this.participantPrivatetId = participantPrivatetId;
 		this.participantPublicId = participantPublicId;
-		this.createdAt = System.currentTimeMillis();
+		if (createdAt != null) {
+			this.createdAt = createdAt;
+		} else {
+			this.createdAt = System.currentTimeMillis();
+		}
 		this.token = token;
 		this.clientMetadata = clientMetadata;
 		if (!token.getServerMetadata().isEmpty())

@@ -31,12 +31,14 @@ import org.kurento.client.EventListener;
 import org.kurento.client.IceCandidate;
 import org.kurento.client.ListenerSubscription;
 import org.kurento.client.MediaElement;
+import org.kurento.client.MediaEvent;
 import org.kurento.client.MediaPipeline;
 import org.kurento.client.MediaType;
 import org.kurento.client.OnIceCandidateEvent;
 import org.kurento.client.RtpEndpoint;
 import org.kurento.client.SdpEndpoint;
 import org.kurento.client.WebRtcEndpoint;
+import org.kurento.jsonrpc.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,6 +78,7 @@ public abstract class MediaEndpoint {
 
 	private KurentoParticipant owner;
 	private String endpointName;
+	protected Long createdAt; // Timestamp when this [publisher / subscriber] started [publishing / receiving]
 
 	private MediaPipeline pipeline = null;
 	private ListenerSubscription endpointSubscription = null;
@@ -155,6 +158,10 @@ public abstract class MediaEndpoint {
 		} else {
 			return this.endpoint;
 		}
+	}
+
+	public long createdAt() {
+		return this.createdAt;
 	}
 
 	public WebRtcEndpoint getWebEndpoint() {
@@ -492,6 +499,7 @@ public abstract class MediaEndpoint {
 
 	public JsonObject withStatsToJson() {
 		JsonObject json = new JsonObject();
+		json.addProperty("createdAt", this.createdAt);
 		json.addProperty("webrtcTagName", this.getEndpoint().getTag("name"));
 		json.add("receivedCandidates", new GsonBuilder().create().toJsonTree(this.receivedCandidateList));
 		json.addProperty("localCandidate", this.selectedLocalIceCandidate);
@@ -502,8 +510,13 @@ public abstract class MediaEndpoint {
 
 		JsonArray jsonArray = new JsonArray();
 		for (KmsEvent event : this.kmsEvents) {
-			JsonObject jsonKmsEvent = new JsonObject();
-			jsonKmsEvent.addProperty(event.event.getType(), event.timestamp);
+			JsonObject jsonKmsEvent = JsonUtils.toJsonObject(event.event);
+			// Set source name
+			jsonKmsEvent.addProperty("source", event.endpoint);
+			// Set custom more precise timestamp
+			jsonKmsEvent.addProperty("timestamp", event.timestamp);
+			// Set milliseconds since the Publisher or Subscriber started transmitting media
+			jsonKmsEvent.addProperty("msSinceCreation", event.msSinceCreation);
 			jsonArray.add(jsonKmsEvent);
 		}
 		json.add("events", jsonArray);

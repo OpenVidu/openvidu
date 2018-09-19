@@ -339,7 +339,7 @@ public abstract class SessionManager {
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
 			String participantPublicId = this.generateRandomChain();
 			Participant p = new Participant(participantPrivatetId, participantPublicId, token, clientMetadata, location,
-					platform);
+					platform, null);
 			while (this.sessionidParticipantpublicidParticipant.get(sessionId).putIfAbsent(participantPublicId,
 					p) != null) {
 				participantPublicId = this.generateRandomChain();
@@ -355,7 +355,7 @@ public abstract class SessionManager {
 			String clientMetadata) {
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
 			Participant p = new Participant(participantPrivatetId, ProtocolElements.RECORDER_PARTICIPANT_PUBLICID,
-					token, clientMetadata, null, null);
+					token, clientMetadata, null, null, null);
 			this.sessionidParticipantpublicidParticipant.get(sessionId)
 					.put(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID, p);
 			return p;

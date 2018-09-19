@@ -12,8 +12,8 @@ public class CDREventWebrtcConnection extends CDREventEnd implements Comparable<
 
 	// webrtcConnectionCreated
 	public CDREventWebrtcConnection(String sessionId, String participantId, MediaOptions mediaOptions,
-			String receivingFrom) {
-		super(CDREventName.webrtcConnectionCreated, sessionId, System.currentTimeMillis());
+			String receivingFrom, Long timestamp) {
+		super(CDREventName.webrtcConnectionCreated, sessionId, timestamp);
 		this.participantId = participantId;
 		this.mediaOptions = mediaOptions;
 		this.receivingFrom = receivingFrom;

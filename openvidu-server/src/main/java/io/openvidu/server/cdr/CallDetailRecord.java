@@ -124,9 +124,9 @@ public class CallDetailRecord {
 			this.logger.log(new CDREventParticipant(e, reason));
 	}
 
-	public void recordNewPublisher(Participant participant, String sessionId, MediaOptions mediaOptions) {
+	public void recordNewPublisher(Participant participant, String sessionId, MediaOptions mediaOptions, Long timestamp) {
 		CDREventWebrtcConnection publisher = new CDREventWebrtcConnection(sessionId,
-				participant.getParticipantPublicId(), mediaOptions, null);
+				participant.getParticipantPublicId(), mediaOptions, null, timestamp);
 		this.publications.put(participant.getParticipantPublicId(), publisher);
 		if (openviduConfig.isCdrEnabled())
 			this.logger.log(publisher);
@@ -143,10 +143,10 @@ public class CallDetailRecord {
 		return false;
 	}
 
-	public void recordNewSubscriber(Participant participant, String sessionId, String senderPublicId) {
+	public void recordNewSubscriber(Participant participant, String sessionId, String senderPublicId, Long timestamp) {
 		CDREventWebrtcConnection publisher = this.publications.get(senderPublicId);
 		CDREventWebrtcConnection subscriber = new CDREventWebrtcConnection(sessionId,
-				participant.getParticipantPublicId(), publisher.mediaOptions, senderPublicId);
+				participant.getParticipantPublicId(), publisher.mediaOptions, senderPublicId, timestamp);
 		this.subscriptions.putIfAbsent(participant.getParticipantPublicId(), new ConcurrentSkipListSet<>());
 		this.subscriptions.get(participant.getParticipantPublicId()).add(subscriber);
 		if (openviduConfig.isCdrEnabled())

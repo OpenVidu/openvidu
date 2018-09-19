@@ -201,6 +201,7 @@ public class PublisherEndpoint extends MediaEndpoint {
 			throw new OpenViduException(Code.MEDIA_SDP_ERROR_CODE, "Sdp type not supported: " + sdpType);
 		}
 		gatherCandidates();
+		this.createdAt = System.currentTimeMillis();
 		return sdpResponse;
 	}
 
@@ -580,7 +581,7 @@ public class PublisherEndpoint extends MediaEndpoint {
 	}
 
 	public String filterCollectionsToString() {
-		return "{filter: " + ((this.filter != null) ? this.filter.getName() : "null") + ", listener: " + this.filterListeners.toString()
-				+ ", subscribers: " + this.subscribersToFilterEvents.toString() + "}";
+		return "{filter: " + ((this.filter != null) ? this.filter.getName() : "null") + ", listener: "
+				+ this.filterListeners.toString() + ", subscribers: " + this.subscribersToFilterEvents.toString() + "}";
 	}
 }
