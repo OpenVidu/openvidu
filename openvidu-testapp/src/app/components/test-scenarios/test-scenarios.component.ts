@@ -384,9 +384,7 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
           };
           report.serverEvents = streamOutRemoteInfo.events;
           for (const ev of report.serverEvents) {
-            for (const key of Object.keys(ev)) {
-              ev[key] = Number(ev[key]) - report.startTime;
-            }
+            ev.timestamp = Number(ev.timestamp) - report.startTime;
           }
         });
 
@@ -403,9 +401,7 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
           };
           report.serverEvents = streamInRemoteInfo.events;
           for (const ev of report.serverEvents) {
-            for (const key of Object.keys(ev)) {
-              ev[key] = Number(ev[key]) - report.startTime;
-            }
+           ev.timestamp = Number(ev.timestamp) - report.startTime;
           }
         });
 
