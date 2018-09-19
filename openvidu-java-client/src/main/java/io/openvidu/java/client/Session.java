@@ -525,10 +525,10 @@ public class Session {
 			jsonArrayPublishers.forEach(publisher -> {
 				JSONObject pubJson = (JSONObject) publisher;
 				JSONObject mediaOptions = (JSONObject) pubJson.get("mediaOptions");
-				Publisher pub = new Publisher((String) pubJson.get("streamId"), (boolean) mediaOptions.get("hasAudio"),
-						(boolean) mediaOptions.get("hasVideo"), mediaOptions.get("audioActive"),
-						mediaOptions.get("videoActive"), mediaOptions.get("frameRate"), mediaOptions.get("typeOfVideo"),
-						mediaOptions.get("videoDimensions"));
+				Publisher pub = new Publisher((String) pubJson.get("streamId"), (long) pubJson.get("createdAt"),
+						(boolean) mediaOptions.get("hasAudio"), (boolean) mediaOptions.get("hasVideo"),
+						mediaOptions.get("audioActive"), mediaOptions.get("videoActive"), mediaOptions.get("frameRate"),
+						mediaOptions.get("typeOfVideo"), mediaOptions.get("videoDimensions"));
 				publishers.put(pub.getStreamId(), pub);
 			});
 

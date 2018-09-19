@@ -30,6 +30,7 @@ import org.json.simple.JSONObject;
 public class Publisher {
 
 	private String streamId;
+	private long createdAt;
 	private boolean hasVideo;
 	private boolean hasAudio;
 	private Boolean audioActive;
@@ -38,9 +39,10 @@ public class Publisher {
 	private String typeOfVideo;
 	private String videoDimensions;
 
-	protected Publisher(String streamId, boolean hasAudio, boolean hasVideo, Object audioActive, Object videoActive,
-			Object frameRate, Object typeOfVideo, Object videoDimensions) {
+	protected Publisher(String streamId, long createdAt, boolean hasAudio, boolean hasVideo, Object audioActive,
+			Object videoActive, Object frameRate, Object typeOfVideo, Object videoDimensions) {
 		this.streamId = streamId;
+		this.createdAt = createdAt;
 		this.hasAudio = hasAudio;
 		this.hasVideo = hasVideo;
 		this.audioActive = (Boolean) audioActive;
@@ -62,6 +64,14 @@ public class Publisher {
 	 */
 	public String getStreamId() {
 		return streamId;
+	}
+
+	/**
+	 * Timestamp when this Publisher started publishing, in UTC milliseconds (ms
+	 * since Jan 1, 1970, 00:00:00 UTC)
+	 */
+	public long createdAt() {
+		return this.createdAt;
 	}
 
 	/**
