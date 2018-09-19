@@ -92,4 +92,36 @@ export class Connection {
         this.publishers = publishers;
         this.subscribers = subscribers;
     }
+
+    /**
+     * @hidden
+     */
+    equalTo(other: Connection): boolean {
+        let equals: boolean = (
+            this.connectionId === other.connectionId &&
+            this.createdAt === other.createdAt &&
+            this.role === other.role &&
+            this.token === other.token &&
+            this.location === other.location &&
+            this.platform === other.platform &&
+            this.serverData === other.serverData &&
+            this.clientData === other.clientData &&
+            this.subscribers.length === other.subscribers.length &&
+            this.publishers.length === other.publishers.length);
+        if (equals) {
+            equals = JSON.stringify(this.subscribers) === JSON.stringify(other.subscribers);
+            if (equals) {
+                let i = 0;
+                while (equals && i < this.publishers.length) {
+                    equals = this.publishers[i].equalTo(other.publishers[i]);
+                    i++;
+                }
+                return equals;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
 }

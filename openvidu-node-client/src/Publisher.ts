@@ -15,7 +15,6 @@
  *
  */
 
-import { OpenViduRole } from './OpenViduRole';
 
 /**
  * See [[Connection.publishers]]
@@ -30,6 +29,11 @@ export class Publisher {
      * [`Stream.streamId`](/api/openvidu-browser/classes/stream.html#streamid)
      */
     streamId: string;
+
+    /**
+     * Timestamp when this Publisher started publishing, in UTC milliseconds (ms since Jan 1, 1970, 00:00:00 UTC)
+     */
+    createdAt: number;
 
     /**
      * See properties of [Stream](/api/openvidu-browser/classes/stream.html) object in OpenVidu Browser library to find out more
@@ -66,8 +70,12 @@ export class Publisher {
      */
     videoDimensions: string;
 
+    /**
+     * @hidden
+     */
     constructor(json) {
         this.streamId = json.streamId;
+        this.createdAt = json.createdAt;
         this.hasAudio = json.mediaOptions.hasAudio;
         this.hasVideo = json.mediaOptions.hasVideo;
         this.audioActive = json.mediaOptions.audioActive;
@@ -75,6 +83,23 @@ export class Publisher {
         this.frameRate = json.mediaOptions.frameRate;
         this.typeOfVideo = json.mediaOptions.typeOfVideo;
         this.videoDimensions = json.mediaOptions.videoDimensions;
+    }
+
+    /**
+     * @hidden
+     */
+    equalTo(other: Publisher): boolean {
+        return (
+            this.streamId === other.streamId &&
+            this.createdAt === other.createdAt &&
+            this.hasAudio === other.hasAudio &&
+            this.hasVideo === other.hasVideo &&
+            this.audioActive === other.audioActive &&
+            this.videoActive === other.videoActive &&
+            this.frameRate === other.frameRate &&
+            this.typeOfVideo === other.typeOfVideo &&
+            this.videoDimensions === other.videoDimensions
+        );
     }
 
 }

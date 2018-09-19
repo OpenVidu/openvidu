@@ -15,12 +15,13 @@
  *
  */
 
-import { Session } from './Session';
-import { SessionProperties } from './SessionProperties';
+import axios from 'axios';
+import { Connection } from './Connection';
 import { Recording } from './Recording';
 import { RecordingProperties } from './RecordingProperties';
+import { Session } from './Session';
+import { SessionProperties } from './SessionProperties';
 
-import axios from 'axios';
 
 export class OpenVidu {
 
@@ -415,12 +416,22 @@ export class OpenVidu {
 
             res.data.content.forEach(session => {
               fetchedSessionIds.push(session.sessionId);
-              let storedSession = this.activeSessions.find(s => s.sessionId === session.sessionId);
+              let sessionIndex = -1;
+              let storedSession = this.activeSessions.find((s, index) => {
+                if (s.sessionId === session.sessionId) {
+                  sessionIndex = index;
+                  return true;
+                } else {
+                  return false;
+                }
+              });
               if (!!storedSession) {
-                const beforeJSON: string = JSON.stringify(storedSession);
-                storedSession = storedSession.resetSessionWithJson(session);
-                const afterJSON: string = JSON.stringify(storedSession);
-                const changed: boolean = !(beforeJSON === afterJSON);
+                const fetchedSession: Session = new Session().resetSessionWithJson(session);
+                const changed: boolean = !storedSession.equalTo(fetchedSession);
+                if (changed) {
+                  storedSession = fetchedSession;
+                  this.activeSessions[sessionIndex] = storedSession;
+                }
                 console.log("Available session '" + storedSession.sessionId + "' info fetched. Any change: " + changed);
                 hasChanged = hasChanged || changed;
               } else {
@@ -461,6 +472,164 @@ export class OpenVidu {
         });
     });
   }
+
+  /**
+   * @hidden
+   */
+  fetchWebRtc(): Promise<boolean> {
+
+    // tslint:disable:no-string-literal
+    const addWebRtcStatsToConnections = (connection: Connection, connectionsExtendedInfo: any) => {
+      const connectionExtended = connectionsExtendedInfo.find(c => c.connectionId === connection.connectionId);
+      if (!!connectionExtended) {
+        connection['publishersWebRtc'] = [];
+        connection.publishers.forEach(pub => {
+          const publisherExtended = connectionExtended.publishers.find(p => p.streamId === pub.streamId);
+          const pubAux = {};
+          // Standard properties
+          pubAux['streamId'] = pub.streamId;
+          pubAux['createdAt'] = pub.createdAt;
+          pubAux['audioActive'] = pub.audioActive;
+          pubAux['videoActive'] = pub.videoActive;
+          pubAux['hasAudio'] = pub.hasAudio;
+          pubAux['hasVideo'] = pub.hasVideo;
+          pubAux['typeOfVideo'] = pub.typeOfVideo;
+          pubAux['frameRate'] = pub.frameRate;
+          pubAux['videoDimensions'] = pub.videoDimensions;
+          // WebRtc properties
+          pubAux['webRtc'] = {
+            kms: {
+              events: publisherExtended.events,
+              localCandidate: publisherExtended.localCandidate,
+              remoteCandidate: publisherExtended.remoteCandidate,
+              receivedCandidates: publisherExtended.receivedCandidates,
+              webrtcTagName: publisherExtended.webrtcTagName
+            }
+          };
+          if (!!publisherExtended.serverStats) {
+            pubAux['webRtc'].kms.serverStats = publisherExtended.serverStats;
+          }
+          connection['publishersWebRtc'].push(pubAux);
+        });
+        connection['subscribersWebRtc'] = [];
+        connection.subscribers.forEach(sub => {
+          const subscriberExtended = connectionExtended.subscribers.find(s => s.streamId === sub);
+          const subAux = {};
+          // Standard properties
+          subAux['streamId'] = sub;
+          subAux['publisher'] = subscriberExtended.publisher;
+          // WebRtc properties
+          subAux['createdAt'] = subscriberExtended.createdAt;
+          subAux['webRtc'] = {
+            kms: {
+              events: subscriberExtended.events,
+              localCandidate: subscriberExtended.localCandidate,
+              remoteCandidate: subscriberExtended.remoteCandidate,
+              receivedCandidates: subscriberExtended.receivedCandidates,
+              webrtcTagName: subscriberExtended.webrtcTagName
+            }
+          };
+          if (!!subscriberExtended.serverStats) {
+            subAux['webRtc'].kms.serverStats = subscriberExtended.serverStats;
+          }
+          connection['subscribersWebRtc'].push(subAux);
+        });
+      }
+    };
+
+    return new Promise<boolean>((resolve, reject) => {
+      axios.get(
+        'https://' + OpenVidu.hostname + ':' + OpenVidu.port + OpenVidu.API_SESSIONS + '?webRtcStats=true',
+        {
+          headers: {
+            Authorization: OpenVidu.basicAuth
+          }
+        }
+      )
+        .then(res => {
+          if (res.status === 200) {
+
+            // Array to store fetched sessionIds and later remove closed sessions
+            const fetchedSessionIds: string[] = [];
+            // Boolean to store if any Session has changed
+            let hasChanged = false;
+
+            res.data.content.forEach(session => {
+              fetchedSessionIds.push(session.sessionId);
+              let sessionIndex = -1;
+              let storedSession = this.activeSessions.find((s, index) => {
+                if (s.sessionId === session.sessionId) {
+                  sessionIndex = index;
+                  return true;
+                } else {
+                  return false;
+                }
+              });
+              if (!!storedSession) {
+                const fetchedSession: Session = new Session().resetSessionWithJson(session);
+                let changed = !storedSession.equalTo(fetchedSession);
+                fetchedSession.activeConnections.forEach((connection, index1) => {
+                  addWebRtcStatsToConnections(connection, session.connections.content);
+                  if (!changed) { // Check if server information has changed in any Publisher/Subscriber
+                    for (let index2 = 0; (index2 < connection['publishersWebRtc'].length && !changed); index2++) {
+                      changed = changed || JSON.stringify(connection['publishersWebRtc'][index2]['webRtc']) !== JSON.stringify(storedSession.activeConnections[index1]['publishersWebRtc'][index2]['webRtc']);
+                    }
+                    if (!changed) {
+                      for (let index2 = 0; (index2 < connection['subscribersWebRtc'].length && !changed); index2++) {
+                        changed = changed || JSON.stringify(connection['subscribersWebRtc'][index2]['webRtc']) !== JSON.stringify(storedSession.activeConnections[index1]['subscribersWebRtc'][index2]['webRtc']);
+                      }
+                    }
+                  }
+                });
+                if (changed) {
+                  storedSession = fetchedSession;
+                  this.activeSessions[sessionIndex] = storedSession;
+                }
+                console.log("Available session '" + storedSession.sessionId + "' info fetched. Any change: " + changed);
+                hasChanged = hasChanged || changed;
+              } else {
+                const newSession = new Session(session);
+                newSession.activeConnections.forEach(connection => {
+                  addWebRtcStatsToConnections(connection, session.connections.content);
+                });
+                this.activeSessions.push(newSession);
+                console.log("New session '" + session.sessionId + "' info fetched");
+                hasChanged = true;
+              }
+            });
+            // Remove closed sessions from activeSessions array
+            this.activeSessions = this.activeSessions.filter(session => {
+              if (fetchedSessionIds.includes(session.sessionId)) {
+                return true;
+              } else {
+                console.log("Removing closed session '" + session.sessionId + "'");
+                hasChanged = true;
+                return false;
+              }
+            });
+            console.log('Active sessions info fetched: ', fetchedSessionIds);
+            resolve(hasChanged);
+          } else {
+            // ERROR response from openvidu-server. Resolve HTTP status
+            reject(new Error(res.status.toString()));
+          }
+        }).catch(error => {
+          if (error.response) {
+            // The request was made and the server responded with a status code (not 2xx)
+            reject(new Error(error.response.status.toString()));
+          } else if (error.request) {
+            // The request was made but no response was received
+            // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+            // http.ClientRequest in node.js
+            console.error(error.request);
+          } else {
+            // Something happened in setting up the request that triggered an Error
+            console.error('Error', error.message);
+          }
+        });
+    });
+  }
+  // tslint:enable:no-string-literal
 
   private getBasicAuth(secret: string): string {
     return 'Basic ' + this.Buffer('OPENVIDUAPP:' + secret).toString('base64');

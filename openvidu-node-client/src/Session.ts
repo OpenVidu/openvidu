@@ -15,6 +15,7 @@
  *
  */
 
+import axios from 'axios';
 import { Connection } from './Connection';
 import { MediaMode } from './MediaMode';
 import { OpenVidu } from './OpenVidu';
@@ -25,7 +26,6 @@ import { RecordingMode } from './RecordingMode';
 import { SessionProperties } from './SessionProperties';
 import { TokenOptions } from './TokenOptions';
 
-import axios from 'axios';
 
 export class Session {
 
@@ -429,6 +429,7 @@ export class Session {
      */
     public resetSessionWithJson(json): Session {
         this.sessionId = json.sessionId;
+        this.createdAt = json.createdAt;
         this.recording = json.recording;
         let customSessionId: string;
         let defaultCustomLayout: string;
@@ -472,6 +473,29 @@ export class Session {
                     subscribers));
         });
         return this;
+    }
+
+    /**
+     * @hidden
+     */
+    equalTo(other: Session): boolean {
+        let equals: boolean = (
+            this.sessionId === other.sessionId &&
+            this.createdAt === other.createdAt &&
+            this.recording === other.recording &&
+            this.activeConnections.length === other.activeConnections.length &&
+            JSON.stringify(this.properties) === JSON.stringify(other.properties)
+        );
+        if (equals) {
+            let i = 0;
+            while (equals && i < this.activeConnections.length) {
+                equals = this.activeConnections[i].equalTo(other.activeConnections[i]);
+                i++;
+            }
+            return equals;
+        } else {
+            return false;
+        }
     }
 
 }
