@@ -39,9 +39,6 @@ import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-
 /**
  * Manager event class for BrowserUser. Collects, cleans and stores events from
  * openvidu-testapp
