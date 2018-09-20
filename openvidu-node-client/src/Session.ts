@@ -472,6 +472,8 @@ export class Session {
                     publishers,
                     subscribers));
         });
+        // Order connections by time of creation
+        this.activeConnections.sort((c1, c2) => (c1.createdAt > c2.createdAt) ? 1 : ((c2.createdAt > c1.createdAt) ? -1 : 0));
         return this;
     }
 
