@@ -513,6 +513,8 @@ public class Session {
 		}
 		if (this.properties != null && this.properties.customSessionId() != null) {
 			builder.customSessionId(this.properties.customSessionId());
+		} else if (json.containsKey("customSessionId")) {
+			builder.customSessionId((String) json.get("customSessionId"));
 		}
 		this.properties = builder.build();
 		JSONArray jsonArrayConnections = (JSONArray) ((JSONObject) json.get("connections")).get("content");
