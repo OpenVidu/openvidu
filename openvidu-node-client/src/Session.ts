@@ -444,6 +444,8 @@ export class Session {
         };
         if (!!customSessionId) {
             this.properties.customSessionId = customSessionId;
+        } else if (!!json.customSessionId) {
+            this.properties.customSessionId = json.customSessionId;
         }
         if (!!defaultCustomLayout) {
             this.properties.defaultCustomLayout = defaultCustomLayout;

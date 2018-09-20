@@ -83,9 +83,9 @@ public class KurentoSession implements Session {
 
 	public final ConcurrentHashMap<String, String> publishedStreamIds = new ConcurrentHashMap<>();
 
-	public KurentoSession(String sessionId, Long startTime, SessionProperties sessionProperties, KurentoClient kurentoClient,
-			KurentoSessionEventsHandler kurentoSessionHandler, boolean destroyKurentoClient, CallDetailRecord CDR,
-			OpenviduConfig openviduConfig) {
+	public KurentoSession(String sessionId, Long startTime, SessionProperties sessionProperties,
+			KurentoClient kurentoClient, KurentoSessionEventsHandler kurentoSessionHandler,
+			boolean destroyKurentoClient, CallDetailRecord CDR, OpenviduConfig openviduConfig) {
 		this.sessionId = sessionId;
 		this.sessionProperties = sessionProperties;
 		this.kurentoClient = kurentoClient;
@@ -386,6 +386,9 @@ public class KurentoSession implements Session {
 		json.addProperty("defaultRecordingLayout", this.sessionProperties.defaultRecordingLayout().name());
 		if (RecordingLayout.CUSTOM.equals(this.sessionProperties.defaultRecordingLayout())) {
 			json.addProperty("defaultCustomLayout", this.sessionProperties.defaultCustomLayout());
+		}
+		if (this.sessionProperties.customSessionId() != null) {
+			json.addProperty("customSessionId", this.sessionProperties.customSessionId());
 		}
 		JsonObject connections = new JsonObject();
 		JsonArray participants = new JsonArray();

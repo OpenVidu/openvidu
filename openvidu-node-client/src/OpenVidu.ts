@@ -570,7 +570,7 @@ export class OpenVidu {
                 let changed = !storedSession.equalTo(fetchedSession);
                 fetchedSession.activeConnections.forEach((connection, index1) => {
                   addWebRtcStatsToConnections(connection, session.connections.content);
-                  if (!changed) { // Check if server information has changed in any Publisher/Subscriber
+                  if (!changed) { // Check if server webrtc information has changed in any Publisher/Subscriber
                     for (let index2 = 0; (index2 < connection['publishersWebRtc'].length && !changed); index2++) {
                       changed = changed || JSON.stringify(connection['publishersWebRtc'][index2]['webRtc']) !== JSON.stringify(storedSession.activeConnections[index1]['publishersWebRtc'][index2]['webRtc']);
                     }
