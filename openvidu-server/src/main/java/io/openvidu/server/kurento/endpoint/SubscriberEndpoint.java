@@ -77,8 +77,16 @@ public class SubscriberEndpoint extends MediaEndpoint {
 	@Override
 	public JsonObject toJson() {
 		JsonObject json = super.toJson();
-		json.addProperty("streamId", this.publisher.getEndpoint().getTag("name"));
-		json.addProperty("publisher", this.publisher.getEndpointName());
+		try {
+			json.addProperty("streamId", this.publisher.getEndpoint().getTag("name"));
+		} catch (NullPointerException ex) {
+			json.addProperty("streamId", "NOT_FOUND");
+		}
+		try {
+			json.addProperty("publisher", this.publisher.getEndpointName());
+		} catch (NullPointerException ex) {
+			json.addProperty("publisher", "NOT_FOUND");
+		}
 		return json;
 	}
 

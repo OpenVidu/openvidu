@@ -38,6 +38,7 @@ import org.kurento.client.OnIceCandidateEvent;
 import org.kurento.client.RtpEndpoint;
 import org.kurento.client.SdpEndpoint;
 import org.kurento.client.WebRtcEndpoint;
+import org.kurento.client.internal.server.KurentoServerException;
 import org.kurento.jsonrpc.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -500,7 +501,11 @@ public abstract class MediaEndpoint {
 	public JsonObject withStatsToJson() {
 		JsonObject json = new JsonObject();
 		json.addProperty("createdAt", this.createdAt);
-		json.addProperty("webrtcTagName", this.getEndpoint().getTag("name"));
+		try {
+			json.addProperty("webrtcTagName", this.getEndpoint().getTag("name"));
+		} catch (KurentoServerException ex) {
+			json.addProperty("webrtcTagName", "NOT_FOUND");
+		}
 		json.add("receivedCandidates", new GsonBuilder().create().toJsonTree(this.receivedCandidateList));
 		json.addProperty("localCandidate", this.selectedLocalIceCandidate);
 		json.addProperty("remoteCandidate", this.selectedRemoteIceCandidate);

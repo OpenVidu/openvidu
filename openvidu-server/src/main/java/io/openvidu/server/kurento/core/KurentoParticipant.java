@@ -31,6 +31,7 @@ import org.kurento.client.ErrorEvent;
 import org.kurento.client.Filter;
 import org.kurento.client.GenericMediaElement;
 import org.kurento.client.IceCandidate;
+import org.kurento.client.IceComponentState;
 import org.kurento.client.MediaElement;
 import org.kurento.client.MediaPipeline;
 import org.kurento.client.MediaType;
@@ -665,7 +666,9 @@ public class KurentoParticipant extends Participant {
 		});
 
 		endpoint.getWebEndpoint().addIceComponentStateChangeListener(event -> {
-			endpoint.kmsEvents.add(new KmsEvent(event, endpoint.createdAt()));
+			if (!event.getState().equals(IceComponentState.READY)) {
+				endpoint.kmsEvents.add(new KmsEvent(event, endpoint.createdAt()));
+			}
 		});
 	}
 
