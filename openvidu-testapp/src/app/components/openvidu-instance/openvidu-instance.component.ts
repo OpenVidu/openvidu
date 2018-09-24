@@ -121,9 +121,9 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   tokenOptions: TokenOptions = {
     role: OpenViduRole.PUBLISHER,
     kurentoOptions: {
-      videoMaxRecvBandwidth: 600,
+      videoMaxRecvBandwidth: 1000,
       videoMinRecvBandwidth: 300,
-      videoMaxSendBandwidth: 600,
+      videoMaxSendBandwidth: 1000,
       videoMinSendBandwidth: 300,
       allowedFilters: []
     }
