@@ -17,6 +17,7 @@
 
 import axios from 'axios';
 import { Connection } from './Connection';
+import { Publisher } from './Publisher';
 import { Recording } from './Recording';
 import { RecordingProperties } from './RecordingProperties';
 import { Session } from './Session';
@@ -482,22 +483,26 @@ export class OpenVidu {
     const addWebRtcStatsToConnections = (connection: Connection, connectionsExtendedInfo: any) => {
       const connectionExtended = connectionsExtendedInfo.find(c => c.connectionId === connection.connectionId);
       if (!!connectionExtended) {
-        connection['publishersWebRtc'] = [];
+        const publisherArray = [];
         connection.publishers.forEach(pub => {
           const publisherExtended = connectionExtended.publishers.find(p => p.streamId === pub.streamId);
           const pubAux = {};
           // Standard properties
           pubAux['streamId'] = pub.streamId;
           pubAux['createdAt'] = pub.createdAt;
-          pubAux['audioActive'] = pub.audioActive;
-          pubAux['videoActive'] = pub.videoActive;
-          pubAux['hasAudio'] = pub.hasAudio;
-          pubAux['hasVideo'] = pub.hasVideo;
-          pubAux['typeOfVideo'] = pub.typeOfVideo;
-          pubAux['frameRate'] = pub.frameRate;
-          pubAux['videoDimensions'] = pub.videoDimensions;
+          const mediaOptions = {
+            audioActive: pub.audioActive,
+            videoActive: pub.videoActive,
+            hasAudio: pub.hasAudio,
+            hasVideo: pub.hasVideo,
+            typeOfVideo: pub.typeOfVideo,
+            frameRate: pub.frameRate,
+            videoDimensions: pub.videoDimensions
+          };
+          pubAux['mediaOptions'] = mediaOptions;
+          const newPublisher = new Publisher(pubAux);
           // WebRtc properties
-          pubAux['webRtc'] = {
+          newPublisher['webRtc'] = {
             kms: {
               events: publisherExtended.events,
               localCandidate: publisherExtended.localCandidate,
@@ -506,12 +511,13 @@ export class OpenVidu {
               webrtcTagName: publisherExtended.webrtcTagName
             }
           };
+          newPublisher['localCandidatePair'] = parseRemoteCandidatePair(newPublisher['webRtc'].kms.remoteCandidate);
           if (!!publisherExtended.serverStats) {
-            pubAux['webRtc'].kms.serverStats = publisherExtended.serverStats;
+            newPublisher['webRtc'].kms.serverStats = publisherExtended.serverStats;
           }
-          connection['publishersWebRtc'].push(pubAux);
+          publisherArray.push(newPublisher);
         });
-        connection['subscribersWebRtc'] = [];
+        const subscriberArray = [];
         connection.subscribers.forEach(sub => {
           const subscriberExtended = connectionExtended.subscribers.find(s => s.streamId === sub);
           const subAux = {};
@@ -529,12 +535,30 @@ export class OpenVidu {
               webrtcTagName: subscriberExtended.webrtcTagName
             }
           };
+          subAux['localCandidatePair'] = parseRemoteCandidatePair(subAux['webRtc'].kms.remoteCandidate);
           if (!!subscriberExtended.serverStats) {
             subAux['webRtc'].kms.serverStats = subscriberExtended.serverStats;
           }
-          connection['subscribersWebRtc'].push(subAux);
+          subscriberArray.push(subAux);
         });
+        connection.publishers = publisherArray;
+        connection.subscribers = subscriberArray;
       }
+    };
+
+    const parseRemoteCandidatePair = (candidateStr: string) => {
+      if (!candidateStr) {
+        return 'ERROR: No remote candidate available';
+      }
+      const array = candidateStr.split(/\s+/);
+      return {
+        portNumber: array[5],
+        ipAddress: array[4],
+        transport: array[2].toLowerCase(),
+        candidateType: array[7],
+        priority: array[3],
+        raw: candidateStr
+      };
     };
 
     return new Promise<boolean>((resolve, reject) => {
@@ -567,20 +591,19 @@ export class OpenVidu {
               });
               if (!!storedSession) {
                 const fetchedSession: Session = new Session().resetSessionWithJson(session);
-                let changed = !storedSession.equalTo(fetchedSession);
-                fetchedSession.activeConnections.forEach((connection, index1) => {
+                fetchedSession.activeConnections.forEach(connection => {
                   addWebRtcStatsToConnections(connection, session.connections.content);
-                  if (!changed) { // Check if server webrtc information has changed in any Publisher/Subscriber
-                    for (let index2 = 0; (index2 < connection['publishersWebRtc'].length && !changed); index2++) {
-                      changed = changed || JSON.stringify(connection['publishersWebRtc'][index2]['webRtc']) !== JSON.stringify(storedSession.activeConnections[index1]['publishersWebRtc'][index2]['webRtc']);
-                    }
-                    if (!changed) {
-                      for (let index2 = 0; (index2 < connection['subscribersWebRtc'].length && !changed); index2++) {
-                        changed = changed || JSON.stringify(connection['subscribersWebRtc'][index2]['webRtc']) !== JSON.stringify(storedSession.activeConnections[index1]['subscribersWebRtc'][index2]['webRtc']);
-                      }
-                    }
-                  }
                 });
+
+                let changed = !storedSession.equalTo(fetchedSession);
+                if (!changed) { // Check if server webrtc information has changed in any Publisher object (Session.equalTo does not check Publisher.webRtc auxiliary object)
+                  fetchedSession.activeConnections.forEach((connection, index1) => {
+                    for (let index2 = 0; (index2 < connection['publishers'].length && !changed); index2++) {
+                      changed = changed || JSON.stringify(connection['publishers'][index2]['webRtc']) !== JSON.stringify(storedSession.activeConnections[index1]['publishers'][index2]['webRtc']);
+                    }
+                  });
+                }
+
                 if (changed) {
                   storedSession = fetchedSession;
                   this.activeSessions[sessionIndex] = storedSession;

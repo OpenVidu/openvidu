@@ -274,7 +274,17 @@ export class Session {
                         if (!!connectionClosed) {
                             connectionClosed.publishers.forEach(publisher => {
                                 this.activeConnections.forEach(con => {
-                                    con.subscribers = con.subscribers.filter(subscriber => subscriber !== publisher.streamId);
+                                    con.subscribers = con.subscribers.filter(subscriber => {
+                                        // tslint:disable:no-string-literal
+                                        if (!!subscriber['streamId']) {
+                                            // Subscriber with advanced webRtc configuration properties
+                                            return (subscriber['streamId'] !== publisher.streamId);
+                                            // tslint:enable:no-string-literal
+                                        } else {
+                                            // Regular string subscribers
+                                            return subscriber !== publisher.streamId;
+                                        }
+                                    });
                                 });
                             });
                         } else {
@@ -334,7 +344,17 @@ export class Session {
                             // Try to remove the Publisher from the Connection publishers collection
                             connection.publishers = connection.publishers.filter(pub => pub.streamId !== streamId);
                             // Try to remove the Publisher from the Connection subscribers collection
-                            connection.subscribers = connection.subscribers.filter(sub => sub !== streamId);
+                            if (!!connection.subscribers && connection.subscribers.length > 0) {
+                                // tslint:disable:no-string-literal
+                                if (!!connection.subscribers[0]['streamId']) {
+                                    // Subscriber with advanced webRtc configuration properties
+                                    connection.subscribers = connection.subscribers.filter(sub => sub['streamId'] !== streamId);
+                                    // tslint:enable:no-string-literal
+                                } else {
+                                    // Regular string subscribers
+                                    connection.subscribers = connection.subscribers.filter(sub => sub !== streamId);
+                                }
+                            }
                         });
                         console.log("Stream '" + streamId + "' unpublished");
                         resolve();
