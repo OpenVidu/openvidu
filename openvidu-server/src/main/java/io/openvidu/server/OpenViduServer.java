@@ -61,6 +61,8 @@ import io.openvidu.server.recording.ComposedRecordingService;
 import io.openvidu.server.rest.NgrokRestController;
 import io.openvidu.server.rpc.RpcHandler;
 import io.openvidu.server.rpc.RpcNotificationService;
+import io.openvidu.server.utils.GeoLocationByIp;
+import io.openvidu.server.utils.GeoLocationByIpDummy;
 
 /**
  * OpenVidu Server application
@@ -152,6 +154,12 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	@Bean
 	public CoturnCredentialsService coturnCredentialsService() {
 		return new CoturnCredentialsServiceFactory(openviduConfig()).getCoturnCredentialsService();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public GeoLocationByIp geoLocationByIp() {
+		return new GeoLocationByIpDummy();
 	}
 
 	@Override

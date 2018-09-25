@@ -281,11 +281,6 @@
 			<artifactId>commons-lang3</artifactId>
 			<version>3.7</version>
 		</dependency>
-		<dependency>
-			<groupId>com.maxmind.geoip2</groupId>
-			<artifactId>geoip2</artifactId>
-			<version>2.12.0</version>
-		</dependency>
 
 		<!-- Test dependencies -->
 

@@ -37,7 +37,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
-import com.maxmind.geoip2.exception.GeoIp2Exception;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
@@ -47,7 +46,7 @@ import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.core.Token;
-import io.openvidu.server.utils.GeoLocationByIpUtils;
+import io.openvidu.server.utils.GeoLocationByIp;
 
 public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
@@ -57,7 +56,7 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 	OpenviduConfig openviduConfig;
 
 	@Autowired
-	GeoLocationByIpUtils geoLocationByIp;
+	GeoLocationByIp geoLocationByIp;
 
 	@Autowired
 	SessionManager sessionManager;
@@ -180,11 +179,10 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 			} catch (IOException e) {
 				e.printStackTrace();
 				location = "error";
-			} catch (GeoIp2Exception e) {
+			} catch (Exception e) {
 				log.warn("Error getting address location: {}", e.getMessage());
 				location = "unknown";
 			}
-
 		}
 
 		boolean recorder = false;
