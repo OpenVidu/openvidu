@@ -221,6 +221,10 @@ export class StreamManager implements EventDispatcher {
 
         this.initializeVideoProperties(video);
 
+        if (this.stream.isLocal() && this.stream.displayMyRemote()) {
+            video.srcObject = this.stream.getMediaStream();
+        }
+
         // If the video element is already part of this StreamManager do nothing
         for (const v of this.videos) {
             if (v.video === video) {
