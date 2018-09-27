@@ -477,8 +477,9 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       }
     )
       .then((mediaStream: MediaStream) => {
-        const videoStreamTrack = mediaStream.getVideoTracks()[0];
-        const video = document.createElement('video');
+
+        const videoStreamTrack: MediaStreamTrack = mediaStream.getVideoTracks()[0];
+        const video: HTMLVideoElement = document.createElement('video');
         video.srcObject = new MediaStream([videoStreamTrack]);
         video.play();
         const canvas = document.createElement('canvas') as any;
@@ -494,7 +495,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
           };
           loop();
         });
-        const grayVideoTrack = canvas.captureStream(30).getVideoTracks()[0];
+        const grayVideoTrack: MediaStreamTrack = (<MediaStream>canvas.captureStream(30)).getVideoTracks()[0];
         this.publisher = this.OV.initPublisher(
           document.body,
           {
@@ -502,10 +503,11 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
             videoSource: grayVideoTrack,
             insertMode: VideoInsertMode.APPEND
           });
-          this.session.publish(this.publisher).catch((error: OpenViduError) => {
-            console.error(error);
-            this.session.unpublish(this.publisher);
-          });
+        this.session.publish(this.publisher).catch((error: OpenViduError) => {
+          console.error(error);
+          this.session.unpublish(this.publisher);
+        });
+
       })
       .catch(error => {
         console.error(error);
