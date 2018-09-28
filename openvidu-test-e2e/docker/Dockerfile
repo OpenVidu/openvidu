@@ -9,12 +9,10 @@ RUN apt-get update && apt-get -y upgrade
 RUN apt-get install -y software-properties-common && apt-get install -y --no-install-recommends apt-utils
 
 # Install Kurento Media Server (KMS)
-RUN echo "deb http://ubuntu.openvidu.io/6.7.2 xenial kms6" | tee /etc/apt/sources.list.d/kurento.list \
+RUN echo "deb http://ubuntu.openvidu.io/6.8.0 xenial kms6" | tee /etc/apt/sources.list.d/kurento.list \
 	&& apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 5AFA7A83 \
 	&& apt-get update \
-	&& apt-get -y dist-upgrade \
-	&& apt-get -y install kurento-media-server \
-	&& apt-get -y install openh264-gst-plugins-bad-1.5
+	&& apt-get -y install kurento-media-server
 
 # Install Node
 RUN apt-get update && apt-get install -y curl
