@@ -27,7 +27,7 @@ export class ScenarioPropertiesDialogComponent {
     videoDevices = [];
 
     turnConf: string;
-    manualTurnConf: RTCIceServer = {};
+    manualTurnConf: RTCIceServer = { urls: [] };
 
     constructor(public dialogRef: MatDialogRef<ScenarioPropertiesDialogComponent>,
         @Inject(MAT_DIALOG_DATA) public data) {

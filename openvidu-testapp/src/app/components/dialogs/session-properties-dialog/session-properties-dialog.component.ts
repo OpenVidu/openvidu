@@ -12,7 +12,7 @@ export class SessionPropertiesDialogComponent {
 
     sessionProperties: SessionProperties;
     turnConf: string;
-    manualTurnConf: RTCIceServer = {};
+    manualTurnConf: RTCIceServer = { urls: [] };
     customToken: string;
     tokenOptions: TokenOptions;
 
