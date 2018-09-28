@@ -937,18 +937,23 @@ public class OpenViduTestAppE2eTest {
 		int newWidth = 1500;
 		int newHeight = 500;
 
+		final long[] expectedWidthHeight = new long[2];
+
+		user.getEventManager().on("streamPropertyChanged", (event) -> {
+			threadAssertions.add(((String) event.get("eventContent")).contains(
+					"videoDimensions [{\"width\":" + expectedWidthHeight[0] + ",\"height\":" + expectedWidthHeight[1] + "}]"));
+			latch3.countDown();
+		});
+
 		user.getDriver().manage().window().setSize(new Dimension(newWidth, newHeight));
 
 		String widthAndHeight = user.getEventManager().getDimensionOfViewport();
 		JSONObject obj = (JSONObject) new JSONParser().parse(widthAndHeight);
 
-		System.out.println("New viewport dimension: " + obj.toJSONString());
+		expectedWidthHeight[0] = (long) obj.get("width");
+		expectedWidthHeight[1] = (long) obj.get("height") - 1;
 
-		user.getEventManager().on("streamPropertyChanged", (event) -> {
-			threadAssertions.add(((String) event.get("eventContent")).contains(
-					"videoDimensions [{\"width\":" + obj.get("width") + ",\"height\":" + obj.get("height") + "}]"));
-			latch3.countDown();
-		});
+		System.out.println("New viewport dimension: " + obj.toJSONString());
 
 		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 6);
 
