@@ -8,13 +8,6 @@ node('container') {
         stage('Preparation') {
           sh 'rm -rf openvidu || true'
           sh 'rm -rf /opt/openvidu/recordings/{,.[!.]}* || true'
-
-
-          sh 'rm -rf kurento-java || true'
-          sh 'git clone https://github.com/Kurento/kurento-java'
-          sh 'cd kurento-java && mvn install'
-
-
           sh 'git clone https://github.com/OpenVidu/openvidu.git'
         }
         stage('OpenVidu parent build') {
