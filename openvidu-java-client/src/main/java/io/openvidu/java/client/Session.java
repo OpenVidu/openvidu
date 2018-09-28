@@ -213,7 +213,9 @@ public class Session {
 	 * ({@link io.openvidu.java.client.Session#getActiveConnections()}) and use
 	 * those values to call
 	 * {@link io.openvidu.java.client.Session#forceDisconnect(Connection)} or
-	 * {@link io.openvidu.java.client.Session#forceUnpublish(Publisher)}
+	 * {@link io.openvidu.java.client.Session#forceUnpublish(Publisher)}. <br>
+	 * 
+	 * To update every Session object owned by OpenVidu object, call {@link io.openvidu.java.client.OpenVidu#fetch()}
 	 * 
 	 * @return true if the Session status has changed with respect to the server,
 	 *         false if not. This applies to any property or sub-property of the

@@ -6,6 +6,9 @@ cp openvidu-browser/static/js/openvidu-browser-"$1".js ../openvidu-tutorials/ope
 # openvidu-insecure-js
 cp openvidu-browser/static/js/openvidu-browser-"$1".js ../openvidu-tutorials/openvidu-insecure-js/web/openvidu-browser-"$1".js
 
+# openvidu-filters
+cp openvidu-browser/static/js/openvidu-browser-"$1".js ../openvidu-tutorials/openvidu-filters/web/openvidu-browser-"$1".js
+
 # openvidu-js-java
 cp openvidu-browser/static/js/openvidu-browser-"$1".js ../openvidu-tutorials/openvidu-js-java/src/main/resources/static/openvidu-browser-"$1".js
 

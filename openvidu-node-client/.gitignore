@@ -43,3 +43,5 @@ Thumbs.db
 *.editorconfig
 
 /lib/
+
+docs/
