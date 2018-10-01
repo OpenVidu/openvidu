@@ -16,9 +16,10 @@
  *
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-var Session_1 = require("./Session");
-var Recording_1 = require("./Recording");
 var axios_1 = require("axios");
+var Publisher_1 = require("./Publisher");
+var Recording_1 = require("./Recording");
+var Session_1 = require("./Session");
 var OpenVidu = /** @class */ (function () {
     /**
      * @param urlOpenViduServer Public accessible IP where your instance of OpenVidu Server is up an running
@@ -357,12 +358,23 @@ var OpenVidu = /** @class */ (function () {
                     var hasChanged_1 = false;
                     res.data.content.forEach(function (session) {
                         fetchedSessionIds_1.push(session.sessionId);
-                        var storedSession = _this.activeSessions.find(function (s) { return s.sessionId === session.sessionId; });
+                        var sessionIndex = -1;
+                        var storedSession = _this.activeSessions.find(function (s, index) {
+                            if (s.sessionId === session.sessionId) {
+                                sessionIndex = index;
+                                return true;
+                            }
+                            else {
+                                return false;
+                            }
+                        });
                         if (!!storedSession) {
-                            var beforeJSON = JSON.stringify(storedSession);
-                            storedSession = storedSession.resetSessionWithJson(session);
-                            var afterJSON = JSON.stringify(storedSession);
-                            var changed = !(beforeJSON === afterJSON);
+                            var fetchedSession = new Session_1.Session().resetSessionWithJson(session);
+                            var changed = !storedSession.equalTo(fetchedSession);
+                            if (changed) {
+                                storedSession = fetchedSession;
+                                _this.activeSessions[sessionIndex] = storedSession;
+                            }
                             console.log("Available session '" + storedSession.sessionId + "' info fetched. Any change: " + changed);
                             hasChanged_1 = hasChanged_1 || changed;
                         }
@@ -408,6 +420,182 @@ var OpenVidu = /** @class */ (function () {
             });
         });
     };
+    /**
+     * @hidden
+     */
+    OpenVidu.prototype.fetchWebRtc = function () {
+        var _this = this;
+        // tslint:disable:no-string-literal
+        var addWebRtcStatsToConnections = function (connection, connectionsExtendedInfo) {
+            var connectionExtended = connectionsExtendedInfo.find(function (c) { return c.connectionId === connection.connectionId; });
+            if (!!connectionExtended) {
+                var publisherArray_1 = [];
+                connection.publishers.forEach(function (pub) {
+                    var publisherExtended = connectionExtended.publishers.find(function (p) { return p.streamId === pub.streamId; });
+                    var pubAux = {};
+                    // Standard properties
+                    pubAux['streamId'] = pub.streamId;
+                    pubAux['createdAt'] = pub.createdAt;
+                    var mediaOptions = {
+                        audioActive: pub.audioActive,
+                        videoActive: pub.videoActive,
+                        hasAudio: pub.hasAudio,
+                        hasVideo: pub.hasVideo,
+                        typeOfVideo: pub.typeOfVideo,
+                        frameRate: pub.frameRate,
+                        videoDimensions: pub.videoDimensions
+                    };
+                    pubAux['mediaOptions'] = mediaOptions;
+                    var newPublisher = new Publisher_1.Publisher(pubAux);
+                    // WebRtc properties
+                    newPublisher['webRtc'] = {
+                        kms: {
+                            events: publisherExtended.events,
+                            localCandidate: publisherExtended.localCandidate,
+                            remoteCandidate: publisherExtended.remoteCandidate,
+                            receivedCandidates: publisherExtended.receivedCandidates,
+                            webrtcTagName: publisherExtended.webrtcTagName
+                        }
+                    };
+                    newPublisher['localCandidatePair'] = parseRemoteCandidatePair(newPublisher['webRtc'].kms.remoteCandidate);
+                    if (!!publisherExtended.serverStats) {
+                        newPublisher['webRtc'].kms.serverStats = publisherExtended.serverStats;
+                    }
+                    publisherArray_1.push(newPublisher);
+                });
+                var subscriberArray_1 = [];
+                connection.subscribers.forEach(function (sub) {
+                    var subscriberExtended = connectionExtended.subscribers.find(function (s) { return s.streamId === sub; });
+                    var subAux = {};
+                    // Standard properties
+                    subAux['streamId'] = sub;
+                    subAux['publisher'] = subscriberExtended.publisher;
+                    // WebRtc properties
+                    subAux['createdAt'] = subscriberExtended.createdAt;
+                    subAux['webRtc'] = {
+                        kms: {
+                            events: subscriberExtended.events,
+                            localCandidate: subscriberExtended.localCandidate,
+                            remoteCandidate: subscriberExtended.remoteCandidate,
+                            receivedCandidates: subscriberExtended.receivedCandidates,
+                            webrtcTagName: subscriberExtended.webrtcTagName
+                        }
+                    };
+                    subAux['localCandidatePair'] = parseRemoteCandidatePair(subAux['webRtc'].kms.remoteCandidate);
+                    if (!!subscriberExtended.serverStats) {
+                        subAux['webRtc'].kms.serverStats = subscriberExtended.serverStats;
+                    }
+                    subscriberArray_1.push(subAux);
+                });
+                connection.publishers = publisherArray_1;
+                connection.subscribers = subscriberArray_1;
+            }
+        };
+        var parseRemoteCandidatePair = function (candidateStr) {
+            if (!candidateStr) {
+                return 'ERROR: No remote candidate available';
+            }
+            var array = candidateStr.split(/\s+/);
+            return {
+                portNumber: array[5],
+                ipAddress: array[4],
+                transport: array[2].toLowerCase(),
+                candidateType: array[7],
+                priority: array[3],
+                raw: candidateStr
+            };
+        };
+        return new Promise(function (resolve, reject) {
+            axios_1.default.get('https://' + OpenVidu.hostname + ':' + OpenVidu.port + OpenVidu.API_SESSIONS + '?webRtcStats=true', {
+                headers: {
+                    Authorization: OpenVidu.basicAuth
+                }
+            })
+                .then(function (res) {
+                if (res.status === 200) {
+                    // Array to store fetched sessionIds and later remove closed sessions
+                    var fetchedSessionIds_2 = [];
+                    // Boolean to store if any Session has changed
+                    var hasChanged_2 = false;
+                    res.data.content.forEach(function (session) {
+                        fetchedSessionIds_2.push(session.sessionId);
+                        var sessionIndex = -1;
+                        var storedSession = _this.activeSessions.find(function (s, index) {
+                            if (s.sessionId === session.sessionId) {
+                                sessionIndex = index;
+                                return true;
+                            }
+                            else {
+                                return false;
+                            }
+                        });
+                        if (!!storedSession) {
+                            var fetchedSession = new Session_1.Session().resetSessionWithJson(session);
+                            fetchedSession.activeConnections.forEach(function (connection) {
+                                addWebRtcStatsToConnections(connection, session.connections.content);
+                            });
+                            var changed_1 = !storedSession.equalTo(fetchedSession);
+                            if (!changed_1) { // Check if server webrtc information has changed in any Publisher object (Session.equalTo does not check Publisher.webRtc auxiliary object)
+                                fetchedSession.activeConnections.forEach(function (connection, index1) {
+                                    for (var index2 = 0; (index2 < connection['publishers'].length && !changed_1); index2++) {
+                                        changed_1 = changed_1 || JSON.stringify(connection['publishers'][index2]['webRtc']) !== JSON.stringify(storedSession.activeConnections[index1]['publishers'][index2]['webRtc']);
+                                    }
+                                });
+                            }
+                            if (changed_1) {
+                                storedSession = fetchedSession;
+                                _this.activeSessions[sessionIndex] = storedSession;
+                            }
+                            console.log("Available session '" + storedSession.sessionId + "' info fetched. Any change: " + changed_1);
+                            hasChanged_2 = hasChanged_2 || changed_1;
+                        }
+                        else {
+                            var newSession = new Session_1.Session(session);
+                            newSession.activeConnections.forEach(function (connection) {
+                                addWebRtcStatsToConnections(connection, session.connections.content);
+                            });
+                            _this.activeSessions.push(newSession);
+                            console.log("New session '" + session.sessionId + "' info fetched");
+                            hasChanged_2 = true;
+                        }
+                    });
+                    // Remove closed sessions from activeSessions array
+                    _this.activeSessions = _this.activeSessions.filter(function (session) {
+                        if (fetchedSessionIds_2.includes(session.sessionId)) {
+                            return true;
+                        }
+                        else {
+                            console.log("Removing closed session '" + session.sessionId + "'");
+                            hasChanged_2 = true;
+                            return false;
+                        }
+                    });
+                    console.log('Active sessions info fetched: ', fetchedSessionIds_2);
+                    resolve(hasChanged_2);
+                }
+                else {
+                    // ERROR response from openvidu-server. Resolve HTTP status
+                    reject(new Error(res.status.toString()));
+                }
+            }).catch(function (error) {
+                if (error.response) {
+                    // The request was made and the server responded with a status code (not 2xx)
+                    reject(new Error(error.response.status.toString()));
+                }
+                else if (error.request) {
+                    // The request was made but no response was received
+                    // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+                    // http.ClientRequest in node.js
+                    console.error(error.request);
+                }
+                else {
+                    // Something happened in setting up the request that triggered an Error
+                    console.error('Error', error.message);
+                }
+            });
+        });
+    };
+    // tslint:enable:no-string-literal
     OpenVidu.prototype.getBasicAuth = function (secret) {
         return 'Basic ' + this.Buffer('OPENVIDUAPP:' + secret).toString('base64');
     };

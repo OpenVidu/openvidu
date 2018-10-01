@@ -16,9 +16,11 @@
  *
  */
 exports.__esModule = true;
+var Filter_1 = require("./Filter");
 var WebRtcPeer_1 = require("../OpenViduInternal/WebRtcPeer/WebRtcPeer");
 var WebRtcStats_1 = require("../OpenViduInternal/WebRtcStats/WebRtcStats");
 var PublisherSpeakingEvent_1 = require("../OpenViduInternal/Events/PublisherSpeakingEvent");
+var StreamPropertyChangedEvent_1 = require("../OpenViduInternal/Events/StreamPropertyChangedEvent");
 var EventEmitter = require("wolfy87-eventemitter");
 var hark = require("hark");
 var OpenViduError_1 = require("../OpenViduInternal/Enums/OpenViduError");
@@ -66,6 +68,12 @@ var Stream = /** @class */ (function () {
                 this.frameRate = (this.inboundStreamOpts.frameRate === -1) ? undefined : this.inboundStreamOpts.frameRate;
                 this.videoDimensions = this.inboundStreamOpts.videoDimensions;
             }
+            if (!!this.inboundStreamOpts.filter && (Object.keys(this.inboundStreamOpts.filter).length > 0)) {
+                if (!!this.inboundStreamOpts.filter.lastExecMethod && Object.keys(this.inboundStreamOpts.filter.lastExecMethod).length === 0) {
+                    delete this.inboundStreamOpts.filter.lastExecMethod;
+                }
+                this.filter = this.inboundStreamOpts.filter;
+            }
         }
         else {
             // OutboundStreamOptions: stream belongs to a Publisher
@@ -85,12 +93,127 @@ var Stream = /** @class */ (function () {
                     this.typeOfVideo = this.isSendScreen() ? 'SCREEN' : 'CAMERA';
                 }
             }
+            if (!!this.outboundStreamOpts.publisherProperties.filter) {
+                this.filter = this.outboundStreamOpts.publisherProperties.filter;
+            }
         }
         this.ee.on('mediastream-updated', function () {
             _this.streamManager.updateMediaStream(_this.mediaStream);
             console.debug('Video srcObject [' + _this.mediaStream + '] updated in stream [' + _this.streamId + ']');
         });
     }
+    /**
+     * See [[EventDispatcher.on]]
+     */
+    Stream.prototype.on = function (type, handler) {
+        var _this = this;
+        this.ee.on(type, function (event) {
+            if (event) {
+                console.info("Event '" + type + "' triggered by stream '" + _this.streamId + "'", event);
+            }
+            else {
+                console.info("Event '" + type + "' triggered by stream '" + _this.streamId + "'");
+            }
+            handler(event);
+        });
+        return this;
+    };
+    /**
+     * See [[EventDispatcher.once]]
+     */
+    Stream.prototype.once = function (type, handler) {
+        var _this = this;
+        this.ee.once(type, function (event) {
+            if (event) {
+                console.info("Event '" + type + "' triggered once by stream '" + _this.streamId + "'", event);
+            }
+            else {
+                console.info("Event '" + type + "' triggered once by stream '" + _this.streamId + "'");
+            }
+            handler(event);
+        });
+        return this;
+    };
+    /**
+     * See [[EventDispatcher.off]]
+     */
+    Stream.prototype.off = function (type, handler) {
+        if (!handler) {
+            this.ee.removeAllListeners(type);
+        }
+        else {
+            this.ee.off(type, handler);
+        }
+        return this;
+    };
+    /**
+     * Applies an audio/video filter to the stream.
+     *
+     * @param type Type of filter applied. See [[Filter.type]]
+     * @param options Parameters used to initialize the filter. See [[Filter.options]]
+     *
+     * @returns A Promise (to which you can optionally subscribe to) that is resolved to the applied filter if success and rejected with an Error object if not
+     */
+    Stream.prototype.applyFilter = function (type, options) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            console.info('Applying filter to stream ' + _this.streamId);
+            options = !!options ? options : {};
+            if (typeof options !== 'string') {
+                options = JSON.stringify(options);
+            }
+            _this.session.openvidu.sendRequest('applyFilter', { streamId: _this.streamId, type: type, options: options }, function (error, response) {
+                if (error) {
+                    console.error('Error applying filter for Stream ' + _this.streamId, error);
+                    if (error.code === 401) {
+                        reject(new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to apply a filter"));
+                    }
+                    else {
+                        reject(error);
+                    }
+                }
+                else {
+                    console.info('Filter successfully applied on Stream ' + _this.streamId);
+                    var oldValue = _this.filter;
+                    _this.filter = new Filter_1.Filter(type, options);
+                    _this.filter.stream = _this;
+                    _this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent_1.StreamPropertyChangedEvent(_this.session, _this, 'filter', _this.filter, oldValue, 'applyFilter')]);
+                    _this.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent_1.StreamPropertyChangedEvent(_this.streamManager, _this, 'filter', _this.filter, oldValue, 'applyFilter')]);
+                    resolve(_this.filter);
+                }
+            });
+        });
+    };
+    /**
+     * Removes an audio/video filter previously applied.
+     *
+     * @returns A Promise (to which you can optionally subscribe to) that is resolved if the previously applied filter has been successfully removed and rejected with an Error object in other case
+     */
+    Stream.prototype.removeFilter = function () {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            console.info('Removing filter of stream ' + _this.streamId);
+            _this.session.openvidu.sendRequest('removeFilter', { streamId: _this.streamId }, function (error, response) {
+                if (error) {
+                    console.error('Error removing filter for Stream ' + _this.streamId, error);
+                    if (error.code === 401) {
+                        reject(new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to remove a filter"));
+                    }
+                    else {
+                        reject(error);
+                    }
+                }
+                else {
+                    console.info('Filter successfully removed from Stream ' + _this.streamId);
+                    var oldValue = _this.filter;
+                    delete _this.filter;
+                    _this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent_1.StreamPropertyChangedEvent(_this.session, _this, 'filter', _this.filter, oldValue, 'applyFilter')]);
+                    _this.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent_1.StreamPropertyChangedEvent(_this.streamManager, _this, 'filter', _this.filter, oldValue, 'applyFilter')]);
+                    resolve();
+                }
+            });
+        });
+    };
     /* Hidden methods */
     /**
      * @hidden
@@ -179,7 +302,9 @@ var Stream = /** @class */ (function () {
      */
     Stream.prototype.disposeWebRtcPeer = function () {
         if (this.webRtcPeer) {
-            this.webRtcPeer.dispose();
+            var isSenderAndCustomTrack = !!this.outboundStreamOpts &&
+                this.outboundStreamOpts.publisherProperties.videoSource instanceof MediaStreamTrack;
+            this.webRtcPeer.dispose(isSenderAndCustomTrack);
         }
         if (this.speechEvent) {
             this.speechEvent.stop();
@@ -337,7 +462,8 @@ var Stream = /** @class */ (function () {
                     videoActive: _this.videoActive,
                     typeOfVideo: typeOfVideo,
                     frameRate: !!_this.frameRate ? _this.frameRate : -1,
-                    videoDimensions: JSON.stringify(_this.videoDimensions)
+                    videoDimensions: JSON.stringify(_this.videoDimensions),
+                    filter: _this.outboundStreamOpts.publisherProperties.filter
                 }, function (error, response) {
                     if (error) {
                         if (error.code === 401) {
@@ -424,7 +550,14 @@ var Stream = /** @class */ (function () {
         });
     };
     Stream.prototype.remotePeerSuccessfullyEstablished = function () {
-        this.mediaStream = this.webRtcPeer.pc.getRemoteStreams()[0];
+        this.mediaStream = new MediaStream();
+        var receiver;
+        for (var _i = 0, _a = this.webRtcPeer.pc.getReceivers(); _i < _a.length; _i++) {
+            receiver = _a[_i];
+            if (!!receiver.track) {
+                this.mediaStream.addTrack(receiver.track);
+            }
+        }
         console.debug('Peer remote stream', this.mediaStream);
         if (!!this.mediaStream) {
             this.ee.emitEvent('mediastream-updated');

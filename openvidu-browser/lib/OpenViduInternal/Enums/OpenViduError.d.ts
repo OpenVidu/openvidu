@@ -55,7 +55,7 @@ export declare enum OpenViduErrorName {
     PUBLISHER_PROPERTIES_ERROR = "PUBLISHER_PROPERTIES_ERROR",
     /**
      * The client tried to call a method without the required permissions. This can occur for methods [[Session.publish]],
-     * [[Session.forceUnpublish]] and [[Session.forceDisconnect]]
+     * [[Session.forceUnpublish]], [[Session.forceDisconnect]], [[Stream.applyFilter]], [[Stream.removeFilter]]
      */
     OPENVIDU_PERMISSION_DENIED = "OPENVIDU_PERMISSION_DENIED",
     /**

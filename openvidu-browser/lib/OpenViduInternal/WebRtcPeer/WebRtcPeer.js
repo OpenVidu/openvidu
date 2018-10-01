@@ -16,9 +16,12 @@
  *
  */
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    }
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -28,7 +31,6 @@ var __extends = (this && this.__extends) || (function () {
 exports.__esModule = true;
 var freeice = require("freeice");
 var uuid = require("uuid");
-var platform = require("platform");
 var WebRtcPeer = /** @class */ (function () {
     function WebRtcPeer(configuration) {
         var _this = this;
@@ -41,14 +43,16 @@ var WebRtcPeer = /** @class */ (function () {
         this.pc = new RTCPeerConnection({ iceServers: this.configuration.iceServers });
         this.id = !!configuration.id ? configuration.id : uuid.v4();
         this.pc.onicecandidate = function (event) {
-            var candidate = event.candidate;
-            if (candidate) {
-                _this.localCandidatesQueue.push({ candidate: candidate.candidate });
-                _this.candidategatheringdone = false;
-                _this.configuration.onicecandidate(event.candidate);
-            }
-            else if (!_this.candidategatheringdone) {
-                _this.candidategatheringdone = true;
+            if (!!event.candidate) {
+                var candidate = event.candidate;
+                if (candidate) {
+                    _this.localCandidatesQueue.push({ candidate: candidate.candidate });
+                    _this.candidategatheringdone = false;
+                    _this.configuration.onicecandidate(event.candidate);
+                }
+                else if (!_this.candidategatheringdone) {
+                    _this.candidategatheringdone = true;
+                }
             }
         };
         this.pc.onsignalingstatechange = function () {
@@ -74,21 +78,18 @@ var WebRtcPeer = /** @class */ (function () {
                 reject('The peer connection object is in "closed" state. This is most likely due to an invocation of the dispose method before accepting in the dialogue');
             }
             if (!!_this.configuration.mediaStream) {
-                _this.pc.addStream(_this.configuration.mediaStream);
+                for (var _i = 0, _a = _this.configuration.mediaStream.getTracks(); _i < _a.length; _i++) {
+                    var track = _a[_i];
+                    _this.pc.addTrack(track, _this.configuration.mediaStream);
+                }
+                resolve();
             }
-            // [Hack] https://code.google.com/p/chromium/issues/detail?id=443558
-            if (_this.configuration.mode === 'sendonly' &&
-                (platform.name === 'Chrome' && platform.version.toString().substring(0, 2) === '39')) {
-                _this.configuration.mode = 'sendrecv';
-            }
-            resolve();
         });
     };
     /**
      * This method frees the resources used by WebRtcPeer
      */
-    WebRtcPeer.prototype.dispose = function () {
-        var _this = this;
+    WebRtcPeer.prototype.dispose = function (videoSourceIsMediaStreamTrack) {
         console.debug('Disposing WebRtcPeer');
         try {
             if (this.pc) {
@@ -97,12 +98,23 @@ var WebRtcPeer = /** @class */ (function () {
                 }
                 this.remoteCandidatesQueue = [];
                 this.localCandidatesQueue = [];
-                this.pc.getLocalStreams().forEach(function (str) {
-                    _this.streamStop(str);
-                });
-                // FIXME This is not yet implemented in firefox
-                // if(videoStream) pc.removeStream(videoStream);
-                // if(audioStream) pc.removeStream(audioStream);
+                // Stop senders
+                for (var _i = 0, _a = this.pc.getSenders(); _i < _a.length; _i++) {
+                    var sender = _a[_i];
+                    if (!videoSourceIsMediaStreamTrack) {
+                        if (!!sender.track) {
+                            sender.track.stop();
+                        }
+                    }
+                    this.pc.removeTrack(sender);
+                }
+                // Stop receivers
+                for (var _b = 0, _c = this.pc.getReceivers(); _b < _c.length; _b++) {
+                    var receiver = _c[_b];
+                    if (!!receiver.track) {
+                        receiver.track.stop();
+                    }
+                }
                 this.pc.close();
             }
         }
@@ -126,8 +138,8 @@ var WebRtcPeer = /** @class */ (function () {
                     _this.configuration.mediaConstraints.video : true;
             }
             var constraints = {
-                offerToReceiveAudio: +(_this.configuration.mode !== 'sendonly' && offerAudio),
-                offerToReceiveVideo: +(_this.configuration.mode !== 'sendonly' && offerVideo)
+                offerToReceiveAudio: (_this.configuration.mode !== 'sendonly' && offerAudio),
+                offerToReceiveVideo: (_this.configuration.mode !== 'sendonly' && offerVideo)
             };
             console.debug('RTCPeerConnection constraints: ' + JSON.stringify(constraints));
             _this.pc.createOffer(constraints).then(function (offer) {
@@ -217,12 +229,6 @@ var WebRtcPeer = /** @class */ (function () {
                     _this.iceCandidateList.push(iceCandidate);
                     resolve();
             }
-        });
-    };
-    WebRtcPeer.prototype.streamStop = function (stream) {
-        stream.getTracks().forEach(function (track) {
-            track.stop();
-            stream.removeTrack(track);
         });
     };
     return WebRtcPeer;

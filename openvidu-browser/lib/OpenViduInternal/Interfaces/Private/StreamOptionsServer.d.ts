@@ -1,3 +1,4 @@
+import { Filter } from '../../../OpenVidu/Filter';
 export interface StreamOptionsServer {
     id: string;
     hasAudio: boolean;
@@ -7,4 +8,5 @@ export interface StreamOptionsServer {
     typeOfVideo: string;
     frameRate: number;
     videoDimensions: string;
+    filter: Filter;
 }

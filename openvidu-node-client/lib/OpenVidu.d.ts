@@ -1,7 +1,7 @@
-import { Session } from './Session';
-import { SessionProperties } from './SessionProperties';
 import { Recording } from './Recording';
 import { RecordingProperties } from './RecordingProperties';
+import { Session } from './Session';
+import { SessionProperties } from './SessionProperties';
 export declare class OpenVidu {
     private urlOpenViduServer;
     private Buffer;
@@ -110,6 +110,10 @@ export declare class OpenVidu {
      * This applies to any property or sub-property of any of the sessions locally stored in OpenVidu Node Client
      */
     fetch(): Promise<boolean>;
+    /**
+     * @hidden
+     */
+    fetchWebRtc(): Promise<boolean>;
     private getBasicAuth;
     private setHostnameAndPort;
     /**

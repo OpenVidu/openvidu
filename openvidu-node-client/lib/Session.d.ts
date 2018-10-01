@@ -8,6 +8,10 @@ export declare class Session {
      */
     sessionId: string;
     /**
+     * Timestamp when this session was created, in UTC milliseconds (ms since Jan 1, 1970, 00:00:00 UTC)
+     */
+    createdAt: number;
+    /**
      * Properties defining the session
      */
     properties: SessionProperties;
@@ -48,7 +52,9 @@ export declare class Session {
     close(): Promise<any>;
     /**
      * Updates every property of the Session with the current status it has in OpenVidu Server. This is especially useful for accessing the list of active
-     * connections to the Session ([[Session.activeConnections]]) and use those values to call [[Session.forceDisconnect]] or [[Session.forceUnpublish]]
+     * connections of the Session ([[Session.activeConnections]]) and use those values to call [[Session.forceDisconnect]] or [[Session.forceUnpublish]].
+     *
+     * To update every Session object owned by OpenVidu object, call [[OpenVidu.fetch]]
      *
      * @returns A promise resolved to true if the Session status has changed with respect to the server, or to false if not.
      *          This applies to any property or sub-property of the Session object
@@ -82,4 +88,8 @@ export declare class Session {
      * @hidden
      */
     resetSessionWithJson(json: any): Session;
+    /**
+     * @hidden
+     */
+    equalTo(other: Session): boolean;
 }

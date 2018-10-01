@@ -1,4 +1,5 @@
 import { Connection } from '../../../OpenVidu/Connection';
+import { Filter } from '../../../OpenVidu/Filter';
 export interface InboundStreamOptions {
     id: string;
     connection: Connection;
@@ -12,4 +13,5 @@ export interface InboundStreamOptions {
         width: number;
         height: number;
     };
+    filter?: Filter;
 }

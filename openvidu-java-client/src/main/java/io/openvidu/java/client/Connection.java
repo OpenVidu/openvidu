@@ -87,6 +87,7 @@ public class Connection {
 	 * Returns the geo location of the connection, with the following format:
 	 * <code>"CITY, COUNTRY"</code> (<code>"unknown"</code> if it wasn't possible to
 	 * locate it)
+	 * <i>(ONLY IN OPENVIDU PRO)</i>
 	 */
 	public String getLocation() {
 		return location;

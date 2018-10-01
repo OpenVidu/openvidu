@@ -16,6 +16,7 @@
  *
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+var axios_1 = require("axios");
 var Connection_1 = require("./Connection");
 var MediaMode_1 = require("./MediaMode");
 var OpenVidu_1 = require("./OpenVidu");
@@ -23,7 +24,6 @@ var OpenViduRole_1 = require("./OpenViduRole");
 var Publisher_1 = require("./Publisher");
 var RecordingLayout_1 = require("./RecordingLayout");
 var RecordingMode_1 = require("./RecordingMode");
-var axios_1 = require("axios");
 var Session = /** @class */ (function () {
     /**
      * @hidden
@@ -80,7 +80,8 @@ var Session = /** @class */ (function () {
             var data = JSON.stringify({
                 session: _this.sessionId,
                 role: (!!tokenOptions && !!tokenOptions.role) ? tokenOptions.role : OpenViduRole_1.OpenViduRole.PUBLISHER,
-                data: (!!tokenOptions && !!tokenOptions.data) ? tokenOptions.data : ''
+                data: (!!tokenOptions && !!tokenOptions.data) ? tokenOptions.data : '',
+                kurentoOptions: (!!tokenOptions && !!tokenOptions.kurentoOptions) ? tokenOptions.kurentoOptions : {},
             });
             axios_1.default.post('https://' + OpenVidu_1.OpenVidu.hostname + ':' + OpenVidu_1.OpenVidu.port + OpenVidu_1.OpenVidu.API_TOKENS, data, {
                 headers: {
@@ -107,10 +108,12 @@ var Session = /** @class */ (function () {
                     // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
                     // http.ClientRequest in node.js
                     console.error(error.request);
+                    reject(new Error(error.request));
                 }
                 else {
                     // Something happened in setting up the request that triggered an Error
                     console.error('Error', error.message);
+                    reject(new Error(error.message));
                 }
             });
         });
@@ -150,17 +153,21 @@ var Session = /** @class */ (function () {
                     // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
                     // http.ClientRequest in node.js
                     console.error(error.request);
+                    reject(new Error(error.request));
                 }
                 else {
                     // Something happened in setting up the request that triggered an Error
                     console.error('Error', error.message);
+                    reject(new Error(error.message));
                 }
             });
         });
     };
     /**
      * Updates every property of the Session with the current status it has in OpenVidu Server. This is especially useful for accessing the list of active
-     * connections to the Session ([[Session.activeConnections]]) and use those values to call [[Session.forceDisconnect]] or [[Session.forceUnpublish]]
+     * connections of the Session ([[Session.activeConnections]]) and use those values to call [[Session.forceDisconnect]] or [[Session.forceUnpublish]].
+     *
+     * To update every Session object owned by OpenVidu object, call [[OpenVidu.fetch]]
      *
      * @returns A promise resolved to true if the Session status has changed with respect to the server, or to false if not.
      *          This applies to any property or sub-property of the Session object
@@ -198,10 +205,12 @@ var Session = /** @class */ (function () {
                     // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
                     // http.ClientRequest in node.js
                     console.error(error.request);
+                    reject(new Error(error.request));
                 }
                 else {
                     // Something happened in setting up the request that triggered an Error
                     console.error('Error', error.message);
+                    reject(new Error(error.message));
                 }
             });
         });
@@ -243,7 +252,18 @@ var Session = /** @class */ (function () {
                     if (!!connectionClosed_1) {
                         connectionClosed_1.publishers.forEach(function (publisher) {
                             _this.activeConnections.forEach(function (con) {
-                                con.subscribers = con.subscribers.filter(function (subscriber) { return subscriber !== publisher.streamId; });
+                                con.subscribers = con.subscribers.filter(function (subscriber) {
+                                    // tslint:disable:no-string-literal
+                                    if (!!subscriber['streamId']) {
+                                        // Subscriber with advanced webRtc configuration properties
+                                        return (subscriber['streamId'] !== publisher.streamId);
+                                        // tslint:enable:no-string-literal
+                                    }
+                                    else {
+                                        // Regular string subscribers
+                                        return subscriber !== publisher.streamId;
+                                    }
+                                });
                             });
                         });
                     }
@@ -268,10 +288,12 @@ var Session = /** @class */ (function () {
                     // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
                     // http.ClientRequest in node.js
                     console.error(error.request);
+                    reject(new Error(error.request));
                 }
                 else {
                     // Something happened in setting up the request that triggered an Error
                     console.error('Error', error.message);
+                    reject(new Error(error.message));
                 }
             });
         });
@@ -302,7 +324,18 @@ var Session = /** @class */ (function () {
                         // Try to remove the Publisher from the Connection publishers collection
                         connection.publishers = connection.publishers.filter(function (pub) { return pub.streamId !== streamId; });
                         // Try to remove the Publisher from the Connection subscribers collection
-                        connection.subscribers = connection.subscribers.filter(function (sub) { return sub !== streamId; });
+                        if (!!connection.subscribers && connection.subscribers.length > 0) {
+                            // tslint:disable:no-string-literal
+                            if (!!connection.subscribers[0]['streamId']) {
+                                // Subscriber with advanced webRtc configuration properties
+                                connection.subscribers = connection.subscribers.filter(function (sub) { return sub['streamId'] !== streamId; });
+                                // tslint:enable:no-string-literal
+                            }
+                            else {
+                                // Regular string subscribers
+                                connection.subscribers = connection.subscribers.filter(function (sub) { return sub !== streamId; });
+                            }
+                        }
                     });
                     console.log("Stream '" + streamId + "' unpublished");
                     resolve();
@@ -321,10 +354,12 @@ var Session = /** @class */ (function () {
                     // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
                     // http.ClientRequest in node.js
                     console.error(error.request);
+                    reject(new Error(error.request));
                 }
                 else {
                     // Something happened in setting up the request that triggered an Error
                     console.error('Error', error.message);
+                    reject(new Error(error.message));
                 }
             });
         });
@@ -355,6 +390,7 @@ var Session = /** @class */ (function () {
                 if (res.status === 200) {
                     // SUCCESS response from openvidu-server. Resolve token
                     _this.sessionId = res.data.id;
+                    _this.createdAt = res.data.createdAt;
                     resolve(_this.sessionId);
                 }
                 else {
@@ -378,10 +414,12 @@ var Session = /** @class */ (function () {
                     // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
                     // http.ClientRequest in node.js
                     console.error(error.request);
+                    reject(new Error(error.request));
                 }
                 else {
                     // Something happened in setting up the request that triggered an Error
                     console.error('Error', error.message);
+                    reject(new Error(error.message));
                 }
             });
         });
@@ -392,6 +430,7 @@ var Session = /** @class */ (function () {
     Session.prototype.resetSessionWithJson = function (json) {
         var _this = this;
         this.sessionId = json.sessionId;
+        this.createdAt = json.createdAt;
         this.recording = json.recording;
         var customSessionId;
         var defaultCustomLayout;
@@ -407,6 +446,9 @@ var Session = /** @class */ (function () {
         if (!!customSessionId) {
             this.properties.customSessionId = customSessionId;
         }
+        else if (!!json.customSessionId) {
+            this.properties.customSessionId = json.customSessionId;
+        }
         if (!!defaultCustomLayout) {
             this.properties.defaultCustomLayout = defaultCustomLayout;
         }
@@ -420,9 +462,32 @@ var Session = /** @class */ (function () {
             connection.subscribers.forEach(function (subscriber) {
                 subscribers.push(subscriber.streamId);
             });
-            _this.activeConnections.push(new Connection_1.Connection(connection.connectionId, connection.role, connection.token, connection.serverData, connection.clientData, publishers, subscribers));
+            _this.activeConnections.push(new Connection_1.Connection(connection.connectionId, connection.createdAt, connection.role, connection.token, connection.location, connection.platform, connection.serverData, connection.clientData, publishers, subscribers));
         });
+        // Order connections by time of creation
+        this.activeConnections.sort(function (c1, c2) { return (c1.createdAt > c2.createdAt) ? 1 : ((c2.createdAt > c1.createdAt) ? -1 : 0); });
         return this;
+    };
+    /**
+     * @hidden
+     */
+    Session.prototype.equalTo = function (other) {
+        var equals = (this.sessionId === other.sessionId &&
+            this.createdAt === other.createdAt &&
+            this.recording === other.recording &&
+            this.activeConnections.length === other.activeConnections.length &&
+            JSON.stringify(this.properties) === JSON.stringify(other.properties));
+        if (equals) {
+            var i = 0;
+            while (equals && i < this.activeConnections.length) {
+                equals = this.activeConnections[i].equalTo(other.activeConnections[i]);
+                i++;
+            }
+            return equals;
+        }
+        else {
+            return false;
+        }
     };
     return Session;
 }());

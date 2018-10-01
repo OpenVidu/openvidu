@@ -16,9 +16,12 @@
  *
  */
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    }
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -238,11 +241,11 @@ var Publisher = /** @class */ (function (_super) {
             var successCallback = function (mediaStream) {
                 _this.accessAllowed = true;
                 _this.accessDenied = false;
-                if (_this.openvidu.isMediaStreamTrack(_this.properties.audioSource)) {
+                if (_this.properties.audioSource instanceof MediaStreamTrack) {
                     mediaStream.removeTrack(mediaStream.getAudioTracks()[0]);
                     mediaStream.addTrack(_this.properties.audioSource);
                 }
-                if (_this.openvidu.isMediaStreamTrack(_this.properties.videoSource)) {
+                if (_this.properties.videoSource instanceof MediaStreamTrack) {
                     mediaStream.removeTrack(mediaStream.getVideoTracks()[0]);
                     mediaStream.addTrack(_this.properties.videoSource);
                 }
@@ -334,6 +337,25 @@ var Publisher = /** @class */ (function (_super) {
                 }
                 resolve();
             };
+            // Check if new constraints need to be generated. No constraints needed if
+            // - video track is given and no audio
+            // - audio track is given and no video
+            // - both video and audio tracks are given
+            if ((_this.properties.videoSource instanceof MediaStreamTrack && !_this.properties.audioSource)
+                || (_this.properties.audioSource instanceof MediaStreamTrack && !_this.properties.videoSource)
+                || (_this.properties.videoSource instanceof MediaStreamTrack && _this.properties.audioSource instanceof MediaStreamTrack)) {
+                var mediaStream = new MediaStream();
+                if (_this.properties.videoSource instanceof MediaStreamTrack) {
+                    mediaStream.addTrack(_this.properties.videoSource);
+                }
+                if (_this.properties.audioSource instanceof MediaStreamTrack) {
+                    mediaStream.addTrack(_this.properties.audioSource);
+                }
+                // MediaStreamTracks are handled within callback - just call callback with new MediaStream() and let it handle the sources
+                successCallback(mediaStream);
+                // Return as we do not need to process further
+                return;
+            }
             _this.openvidu.generateMediaConstraints(_this.properties)
                 .then(function (constraints) {
                 var outboundStreamOptions = {

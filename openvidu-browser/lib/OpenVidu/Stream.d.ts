@@ -1,6 +1,9 @@
 import { Connection } from './Connection';
+import { Event } from '../OpenViduInternal/Events/Event';
+import { Filter } from './Filter';
 import { Session } from './Session';
 import { StreamManager } from './StreamManager';
+import { EventDispatcher } from '../OpenViduInternal/Interfaces/Public/EventDispatcher';
 import { InboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/InboundStreamOptions';
 import { OutboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/OutboundStreamOptions';
 import { WebRtcPeer } from '../OpenViduInternal/WebRtcPeer/WebRtcPeer';
@@ -10,7 +13,7 @@ import EventEmitter = require('wolfy87-eventemitter');
  * Each [[Publisher]] and [[Subscriber]] has an attribute of type Stream, as they give access
  * to one of them (sending and receiving it, respectively)
  */
-export declare class Stream {
+export declare class Stream implements EventDispatcher {
     /**
      * The Connection object that is publishing the stream
      */
@@ -69,6 +72,14 @@ export declare class Stream {
         height: number;
     };
     /**
+     * **WARNING**: experimental option. This interface may change in the near future
+     *
+     * Filter applied to the Stream. You can apply filters by calling [[Stream.applyFilter]], execute methods of the applied filter with
+     * [[Filter.execMethod]] and remove it with [[Stream.removeFilter]]. Be aware that the client calling this methods must have the
+     * necessary permissions: the token owned by the client must have been initialized with the appropriated `allowedFilters` array.
+     */
+    filter: Filter;
+    /**
      * @hidden
      */
     ee: EventEmitter;
@@ -108,6 +119,33 @@ export declare class Stream {
      * @hidden
      */
     constructor(session: Session, options: InboundStreamOptions | OutboundStreamOptions | {});
+    /**
+     * See [[EventDispatcher.on]]
+     */
+    on(type: string, handler: (event: Event) => void): EventDispatcher;
+    /**
+     * See [[EventDispatcher.once]]
+     */
+    once(type: string, handler: (event: Event) => void): EventDispatcher;
+    /**
+     * See [[EventDispatcher.off]]
+     */
+    off(type: string, handler?: (event: Event) => void): EventDispatcher;
+    /**
+     * Applies an audio/video filter to the stream.
+     *
+     * @param type Type of filter applied. See [[Filter.type]]
+     * @param options Parameters used to initialize the filter. See [[Filter.options]]
+     *
+     * @returns A Promise (to which you can optionally subscribe to) that is resolved to the applied filter if success and rejected with an Error object if not
+     */
+    applyFilter(type: string, options: Object): Promise<Filter>;
+    /**
+     * Removes an audio/video filter previously applied.
+     *
+     * @returns A Promise (to which you can optionally subscribe to) that is resolved if the previously applied filter has been successfully removed and rejected with an Error object in other case
+     */
+    removeFilter(): Promise<any>;
     /**
      * @hidden
      */

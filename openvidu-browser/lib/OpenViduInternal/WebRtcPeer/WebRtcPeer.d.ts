@@ -30,7 +30,7 @@ export declare class WebRtcPeer {
     /**
      * This method frees the resources used by WebRtcPeer
      */
-    dispose(): void;
+    dispose(videoSourceIsMediaStreamTrack: boolean): void;
     /**
      * 1) Function that creates an offer, sets it as local description and returns the offer param
      * to send to OpenVidu Server (will be the remote description of other peer)
@@ -50,7 +50,6 @@ export declare class WebRtcPeer {
      * Callback function invoked when an ICE candidate is received
      */
     addIceCandidate(iceCandidate: RTCIceCandidate): Promise<void>;
-    private streamStop;
 }
 export declare class WebRtcPeerRecvonly extends WebRtcPeer {
     constructor(configuration: WebRtcPeerConfiguration);

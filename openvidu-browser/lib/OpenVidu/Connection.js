@@ -87,7 +87,8 @@ var Connection = /** @class */ (function () {
                 videoActive: opts.videoActive,
                 typeOfVideo: opts.typeOfVideo,
                 frameRate: opts.frameRate,
-                videoDimensions: !!opts.videoDimensions ? JSON.parse(opts.videoDimensions) : undefined
+                videoDimensions: !!opts.videoDimensions ? JSON.parse(opts.videoDimensions) : undefined,
+                filter: !!opts.filter ? opts.filter : undefined
             };
             var stream = new Stream_1.Stream(_this.session, streamOptions);
             _this.addStream(stream);

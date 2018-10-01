@@ -173,6 +173,9 @@ var StreamManager = /** @class */ (function () {
      */
     StreamManager.prototype.addVideoElement = function (video) {
         this.initializeVideoProperties(video);
+        if (this.stream.isLocal() && this.stream.displayMyRemote()) {
+            video.srcObject = this.stream.getMediaStream();
+        }
         // If the video element is already part of this StreamManager do nothing
         for (var _i = 0, _a = this.videos; _i < _a.length; _i++) {
             var v = _a[_i];

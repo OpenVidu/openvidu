@@ -45,6 +45,7 @@ export class Connection {
 
     /**
      * Geo location of the connection, with the following format: `"CITY, COUNTRY"` (`"unknown"` if it wasn't possible to locate it)
+     * _(ONLY IN OPENVIDU PRO)_
      */
     location: string;
 

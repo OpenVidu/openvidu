@@ -265,6 +265,11 @@ export declare class Session implements EventDispatcher {
     onRecordingStopped(response: any): void;
     /**
      * @hidden
+     * response = {connectionId: string, streamId: string, type: string, data: Object}
+     */
+    onFilterEventDispatched(response: any): void;
+    /**
+     * @hidden
      */
     emitEvent(type: string, eventArray: any[]): void;
     /**

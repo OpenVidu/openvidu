@@ -31,23 +31,24 @@ var __extends = (this && this.__extends) || (function () {
 exports.__esModule = true;
 var Event_1 = require("./Event");
 /**
- * Defines the following events:
- * - `streamPlaying`: dispatched by [[StreamManager]] ([[Publisher]] and [[Subscriber]])
+ * Defines every event dispatched by audio/video stream filters. You can subscribe to filter events by calling [[Filter.addEventListener]]
  */
-var StreamManagerEvent = /** @class */ (function (_super) {
-    __extends(StreamManagerEvent, _super);
+var FilterEvent = /** @class */ (function (_super) {
+    __extends(FilterEvent, _super);
     /**
      * @hidden
      */
-    function StreamManagerEvent(target) {
-        return _super.call(this, false, target, 'streamPlaying') || this;
+    function FilterEvent(target, eventType, data) {
+        var _this = _super.call(this, false, target, eventType) || this;
+        _this.data = data;
+        return _this;
     }
     /**
      * @hidden
      */
     // tslint:disable-next-line:no-empty
-    StreamManagerEvent.prototype.callDefaultBehavior = function () { };
-    return StreamManagerEvent;
+    FilterEvent.prototype.callDefaultBehavior = function () { };
+    return FilterEvent;
 }(Event_1.Event));
-exports.StreamManagerEvent = StreamManagerEvent;
-//# sourceMappingURL=StreamManagerEvent.js.map
+exports.FilterEvent = FilterEvent;
+//# sourceMappingURL=FilterEvent.js.map

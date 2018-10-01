@@ -17,8 +17,10 @@
  */
 exports.__esModule = true;
 var Connection_1 = require("./Connection");
+var Filter_1 = require("./Filter");
 var Subscriber_1 = require("./Subscriber");
 var ConnectionEvent_1 = require("../OpenViduInternal/Events/ConnectionEvent");
+var FilterEvent_1 = require("../OpenViduInternal/Events/FilterEvent");
 var RecordingEvent_1 = require("../OpenViduInternal/Events/RecordingEvent");
 var SessionDisconnectedEvent_1 = require("../OpenViduInternal/Events/SessionDisconnectedEvent");
 var SignalEvent_1 = require("../OpenViduInternal/Events/SignalEvent");
@@ -60,10 +62,10 @@ var Session = /** @class */ (function () {
     }
     /**
      * Connects to the session using `token`. Parameter `metadata` allows you to pass extra data to share with other users when
-     * they receive `streamCreated` event. The structure of `metadata` string is up to you (maybe some standarized format
+     * they receive `streamCreated` event. The structure of `metadata` string is up to you (maybe some standardized format
      * as JSON or XML is a good idea), the only restriction is a maximum length of 10000 chars.
      *
-     * This metadata is not considered secure, as it is generated in the client side. To pass securized data, add it as a parameter in the
+     * This metadata is not considered secure, as it is generated in the client side. To pass secure data, add it as a parameter in the
      * token generation operation (through the API REST, openvidu-java-client or openvidu-node-client).
      *
      * Only after the returned Promise is successfully resolved [[Session.connection]] object will be available and properly defined.
@@ -508,7 +510,7 @@ var Session = /** @class */ (function () {
         }
         if (type === 'publisherStartSpeaking' || type === 'publisherStopSpeaking') {
             this.speakingEventsEnabled = false;
-            // If there are already available remote streams, disablae hark in all of them
+            // If there are already available remote streams, disable hark in all of them
             for (var connectionId in this.remoteConnections) {
                 var str = this.remoteConnections[connectionId].stream;
                 if (!!str && !!str.speechEvent) {
@@ -644,9 +646,7 @@ var Session = /** @class */ (function () {
      */
     Session.prototype.onStreamPropertyChanged = function (msg) {
         var _this = this;
-        this.getRemoteConnection(msg.connectionId, 'Remote connection ' + msg.connectionId + " unknown when 'onStreamPropertyChanged'. " +
-            'Existing remote connections: ' + JSON.stringify(Object.keys(this.remoteConnections)))
-            .then(function (connection) {
+        var callback = function (connection) {
             if (!!connection.stream && connection.stream.streamId === msg.streamId) {
                 var stream = connection.stream;
                 var oldValue = void 0;
@@ -666,6 +666,21 @@ var Session = /** @class */ (function () {
                         msg.newValue = JSON.parse(JSON.parse(msg.newValue));
                         stream.videoDimensions = msg.newValue;
                         break;
+                    case 'filter':
+                        oldValue = stream.filter;
+                        msg.newValue = (Object.keys(msg.newValue).length > 0) ? msg.newValue : undefined;
+                        if (msg.newValue !== undefined) {
+                            stream.filter = new Filter_1.Filter(msg.newValue.type, msg.newValue.options);
+                            stream.filter.stream = stream;
+                            if (msg.newValue.lastExecMethod) {
+                                stream.filter.lastExecMethod = msg.newValue.lastExecMethod;
+                            }
+                        }
+                        else {
+                            delete stream.filter;
+                        }
+                        msg.newValue = stream.filter;
+                        break;
                 }
                 _this.ee.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent_1.StreamPropertyChangedEvent(_this, stream, msg.property, msg.newValue, oldValue, msg.reason)]);
                 stream.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent_1.StreamPropertyChangedEvent(stream.streamManager, stream, msg.property, msg.newValue, oldValue, msg.reason)]);
@@ -673,9 +688,20 @@ var Session = /** @class */ (function () {
             else {
                 console.error("No stream with streamId '" + msg.streamId + "' found for connection '" + msg.connectionId + "' on 'streamPropertyChanged' event");
             }
-        })["catch"](function (openViduError) {
-            console.error(openViduError);
-        });
+        };
+        if (msg.connectionId === this.connection.connectionId) {
+            // Your stream has been forcedly changed (filter feature)
+            callback(this.connection);
+        }
+        else {
+            this.getRemoteConnection(msg.connectionId, 'Remote connection ' + msg.connectionId + " unknown when 'onStreamPropertyChanged'. " +
+                'Existing remote connections: ' + JSON.stringify(Object.keys(this.remoteConnections)))
+                .then(function (connection) {
+                callback(connection);
+            })["catch"](function (openViduError) {
+                console.error(openViduError);
+            });
+        }
     };
     /**
      * @hidden
@@ -683,8 +709,19 @@ var Session = /** @class */ (function () {
     Session.prototype.recvIceCandidate = function (msg) {
         var candidate = {
             candidate: msg.candidate,
+            component: msg.component,
+            foundation: msg.foundation,
+            ip: msg.ip,
+            port: msg.port,
+            priority: msg.priority,
+            protocol: msg.protocol,
+            relatedAddress: msg.relatedAddress,
+            relatedPort: msg.relatedPort,
             sdpMid: msg.sdpMid,
             sdpMLineIndex: msg.sdpMLineIndex,
+            tcpType: msg.tcpType,
+            usernameFragment: msg.usernameFragment,
+            type: msg.type,
             toJSON: function () {
                 return { candidate: msg.candidate };
             }
@@ -770,6 +807,20 @@ var Session = /** @class */ (function () {
     };
     /**
      * @hidden
+     * response = {connectionId: string, streamId: string, type: string, data: Object}
+     */
+    Session.prototype.onFilterEventDispatched = function (response) {
+        var connectionId = response.connectionId;
+        var streamId = response.streamId;
+        this.getConnection(connectionId, 'No connection found for connectionId ' + connectionId)
+            .then(function (connection) {
+            console.info('Filter event dispatched');
+            var stream = connection.stream;
+            stream.filter.handlers[response.eventType](new FilterEvent_1.FilterEvent(stream.filter, response.eventType, response.data));
+        });
+    };
+    /**
+     * @hidden
      */
     Session.prototype.emitEvent = function (type, eventArray) {
         this.ee.emitEvent(type, eventArray);
@@ -817,6 +868,7 @@ var Session = /** @class */ (function () {
                     var joinParams = {
                         token: (!!token) ? token : '',
                         session: _this.sessionId,
+                        platform: platform.description,
                         metadata: !!_this.options.metadata ? _this.options.metadata : '',
                         secret: _this.openvidu.getSecret(),
                         recorder: _this.openvidu.getRecorder()

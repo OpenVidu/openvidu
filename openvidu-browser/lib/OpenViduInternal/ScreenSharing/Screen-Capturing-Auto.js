@@ -1,4 +1,4 @@
-window.getScreenId = function (callback, custom_parameter) {
+window.getScreenId = function (firefoxString, callback, custom_parameter) {
     if (navigator.userAgent.indexOf('Edge') !== -1 && (!!navigator.msSaveOrOpenBlob || !!navigator.msSaveBlob)) {
         callback({
             video: true
@@ -8,8 +8,8 @@ window.getScreenId = function (callback, custom_parameter) {
     if (!!navigator.mozGetUserMedia) {
         callback(null, 'firefox', {
             video: {
-                mozMediaSource: 'window',
-                mediaSource: 'window'
+                mozMediaSource: firefoxString,
+                mediaSource: firefoxString
             }
         });
         return;

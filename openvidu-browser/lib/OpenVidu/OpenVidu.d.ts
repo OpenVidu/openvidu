@@ -70,6 +70,11 @@ export declare class OpenVidu {
      */
     checkSystemRequirements(): number;
     /**
+     * Checks if the browser supports screen-sharing. Chrome, Firefox and Opera support screen-sharing
+     * @returns 1 if the browser supports screen-sharing, 0 otherwise
+     */
+    checkScreenSharingCapabilities(): number;
+    /**
      * Collects information about the media input devices available on the system. You can pass property `deviceId` of a [[Device]] object as value of `audioSource` or `videoSource` properties in [[initPublisher]] method
      */
     getDevices(): Promise<Device[]>;
@@ -148,10 +153,6 @@ export declare class OpenVidu {
      * @hidden
      */
     sendRequest(method: string, params: any, callback?: any): void;
-    /**
-     * @hidden
-     */
-    isMediaStreamTrack(mediaSource: any): boolean;
     /**
      * @hidden
      */

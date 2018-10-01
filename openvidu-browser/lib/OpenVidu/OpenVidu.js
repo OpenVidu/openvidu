@@ -135,13 +135,14 @@ var OpenVidu = /** @class */ (function () {
             properties = param2;
             properties = {
                 audioSource: (typeof properties.audioSource !== 'undefined') ? properties.audioSource : undefined,
-                frameRate: this.isMediaStreamTrack(properties.videoSource) ? undefined : ((typeof properties.frameRate !== 'undefined') ? properties.frameRate : undefined),
+                frameRate: (properties.videoSource instanceof MediaStreamTrack) ? undefined : ((typeof properties.frameRate !== 'undefined') ? properties.frameRate : undefined),
                 insertMode: (typeof properties.insertMode !== 'undefined') ? ((typeof properties.insertMode === 'string') ? VideoInsertMode_1.VideoInsertMode[properties.insertMode] : properties.insertMode) : VideoInsertMode_1.VideoInsertMode.APPEND,
                 mirror: (typeof properties.mirror !== 'undefined') ? properties.mirror : true,
                 publishAudio: (typeof properties.publishAudio !== 'undefined') ? properties.publishAudio : true,
                 publishVideo: (typeof properties.publishVideo !== 'undefined') ? properties.publishVideo : true,
-                resolution: this.isMediaStreamTrack(properties.videoSource) ? undefined : ((typeof properties.resolution !== 'undefined') ? properties.resolution : '640x480'),
-                videoSource: (typeof properties.videoSource !== 'undefined') ? properties.videoSource : undefined
+                resolution: (properties.videoSource instanceof MediaStreamTrack) ? undefined : ((typeof properties.resolution !== 'undefined') ? properties.resolution : '640x480'),
+                videoSource: (typeof properties.videoSource !== 'undefined') ? properties.videoSource : undefined,
+                filter: properties.filter
             };
         }
         else {
@@ -215,6 +216,19 @@ var OpenVidu = /** @class */ (function () {
             (browser !== 'Firefox') && (browser !== 'Firefox Mobile') && (browser !== 'Firefox for iOS') &&
             (browser !== 'Opera') && (browser !== 'Opera Mobile') &&
             (browser !== 'Safari')) {
+            return 0;
+        }
+        else {
+            return 1;
+        }
+    };
+    /**
+     * Checks if the browser supports screen-sharing. Chrome, Firefox and Opera support screen-sharing
+     * @returns 1 if the browser supports screen-sharing, 0 otherwise
+     */
+    OpenVidu.prototype.checkScreenSharingCapabilities = function () {
+        var browser = platform.name;
+        if ((browser !== 'Chrome') && (browser !== 'Firefox') && (browser !== 'Opera')) {
             return 0;
         }
         else {
@@ -384,15 +398,16 @@ var OpenVidu = /** @class */ (function () {
                     mediaConstraints.video.frameRate = { ideal: publisherProperties.frameRate };
                 }
                 if (!!publisherProperties.videoSource && typeof publisherProperties.videoSource === 'string') {
-                    if (publisherProperties.videoSource === 'screen') {
-                        if (platform.name !== 'Chrome' && platform.name.indexOf('Firefox') === -1) {
+                    if (publisherProperties.videoSource === 'screen' ||
+                        (platform.name.indexOf('Firefox') !== -1 && publisherProperties.videoSource === 'window')) {
+                        if (platform.name !== 'Chrome' && platform.name.indexOf('Firefox') === -1 && platform.name !== 'Opera') {
                             var error = new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.SCREEN_SHARING_NOT_SUPPORTED, 'You can only screen share in desktop Chrome and Firefox. Detected browser: ' + platform.name);
                             console.error(error);
                             reject(error);
                         }
                         else {
                             if (!!_this.advancedConfiguration.screenShareChromeExtension && !(platform.name.indexOf('Firefox') !== -1)) {
-                                // Custom screen sharing extension for Chrome
+                                // Custom screen sharing extension for Chrome (and Opera)
                                 screenSharing.getScreenConstraints(function (error, screenConstraints) {
                                     if (!!error || !!screenConstraints.mandatory && screenConstraints.mandatory.chromeMediaSource === 'screen') {
                                         if (error === 'permission-denied' || error === 'PermissionDeniedError') {
@@ -423,8 +438,9 @@ var OpenVidu = /** @class */ (function () {
                                 });
                             }
                             else {
-                                // Default screen sharing extension for Chrome
-                                screenSharingAuto.getScreenId(function (error, sourceId, screenConstraints) {
+                                // Default screen sharing extension for Chrome (or is Firefox)
+                                var firefoxString = platform.name.indexOf('Firefox') !== -1 ? publisherProperties.videoSource : undefined;
+                                screenSharingAuto.getScreenId(firefoxString, function (error, sourceId, screenConstraints) {
                                     if (!!error) {
                                         if (error === 'not-installed') {
                                             var extensionUrl = !!_this.advancedConfiguration.screenShareChromeExtension ? _this.advancedConfiguration.screenShareChromeExtension :
@@ -494,6 +510,7 @@ var OpenVidu = /** @class */ (function () {
                 recordingStopped: this.session.onRecordingStopped.bind(this.session),
                 sendMessage: this.session.onNewMessage.bind(this.session),
                 streamPropertyChanged: this.session.onStreamPropertyChanged.bind(this.session),
+                filterEventDispatched: this.session.onFilterEventDispatched.bind(this.session),
                 iceCandidate: this.session.recvIceCandidate.bind(this.session),
                 mediaError: this.session.onMediaError.bind(this.session)
             }
@@ -516,19 +533,6 @@ var OpenVidu = /** @class */ (function () {
         }
         console.debug('Sending request: {method:"' + method + '", params: ' + JSON.stringify(params) + '}');
         this.jsonRpcClient.send(method, params, callback);
-    };
-    /**
-     * @hidden
-     */
-    OpenVidu.prototype.isMediaStreamTrack = function (mediaSource) {
-        var is = (!!mediaSource &&
-            mediaSource.enabled !== undefined && typeof mediaSource.enabled === 'boolean' &&
-            mediaSource.id !== undefined && typeof mediaSource.id === 'string' &&
-            mediaSource.kind !== undefined && typeof mediaSource.kind === 'string' &&
-            mediaSource.label !== undefined && typeof mediaSource.label === 'string' &&
-            mediaSource.muted !== undefined && typeof mediaSource.muted === 'boolean' &&
-            mediaSource.readyState !== undefined && typeof mediaSource.readyState === 'string');
-        return is;
     };
     /**
      * @hidden
