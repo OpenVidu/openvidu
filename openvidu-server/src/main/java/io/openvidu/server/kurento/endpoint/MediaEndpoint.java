@@ -495,6 +495,7 @@ public abstract class MediaEndpoint {
 
 	public JsonObject toJson() {
 		JsonObject json = new JsonObject();
+		json.addProperty("createdAt", this.createdAt);
 		return json;
 	}
 
