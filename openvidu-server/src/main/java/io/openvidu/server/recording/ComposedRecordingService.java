@@ -161,9 +161,10 @@ public class ComposedRecordingService {
 		this.startedRecordings.remove(recording.getId());
 
 		if (containerId == null) {
+
 			// Session was closed while recording container was initializing
 			// Wait until containerId is available and force its stop and removal
-			Thread t = new Thread(() -> {
+			new Thread(() -> {
 				log.warn("Session closed while starting recording container");
 				boolean containerClosed = false;
 				String containerIdAux;
@@ -190,8 +191,8 @@ public class ComposedRecordingService {
 						}
 					}
 				}
-			});
-			t.start();
+			}).start();
+
 		} else {
 
 			// Gracefully stop ffmpeg process
