@@ -160,64 +160,97 @@ public class ComposedRecordingService {
 		String containerId = this.sessionsContainers.remove(session.getSessionId());
 		this.startedRecordings.remove(recording.getId());
 
-		// Gracefully stop ffmpeg process
-		ExecCreateCmdResponse execCreateCmdResponse = dockerClient.execCreateCmd(containerId).withAttachStdout(true)
-				.withAttachStderr(true).withCmd("bash", "-c", "echo 'q' > stop").exec();
-		try {
-			dockerClient.execStartCmd(execCreateCmdResponse.getId()).exec(new ExecStartResultCallback())
-					.awaitCompletion();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
+		if (containerId == null) {
+			// Session was closed while recording container was initializing
+			// Wait until containerId is available and force its stop and removal
+			Thread t = new Thread(() -> {
+				log.warn("Session closed while starting recording container");
+				boolean containerClosed = false;
+				String containerIdAux;
+				while (!containerClosed) {
+					containerIdAux = this.sessionsContainers.remove(session.getSessionId());
+					if (containerIdAux == null) {
+						try {
+							log.warn("Waiting for container to be launched...");
+							Thread.sleep(500);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+					} else {
+						log.warn("Removing container {} for closed session {}...", containerIdAux,
+								session.getSessionId());
+						dockerClient.stopContainerCmd(containerIdAux).exec();
+						this.removeDockerContainer(containerIdAux);
+						containerClosed = true;
+						log.warn("Container {} for closed session {} succesfully stopped and removed", containerIdAux,
+								session.getSessionId());
+						log.warn("Deleting unusable files for recording {}", recording.getId());
+						if (HttpStatus.NO_CONTENT.equals(this.deleteRecordingFromHost(recording.getId(), true))) {
+							log.warn("Files properly deleted");
+						}
+					}
+				}
+			});
+			t.start();
+		} else {
 
-		// Wait for the container to be gracefully self-stopped
-		CountDownLatch latch = new CountDownLatch(1);
-		WaitForContainerStoppedCallback callback = new WaitForContainerStoppedCallback(latch);
-		dockerClient.waitContainerCmd(containerId).exec(callback);
-
-		boolean stopped = false;
-		try {
-			stopped = latch.await(60, TimeUnit.SECONDS);
-		} catch (InterruptedException e) {
-			recording.setStatus(Recording.Status.failed);
-			failRecordingCompletion(containerId, new OpenViduException(Code.RECORDING_COMPLETION_ERROR_CODE,
-					"The recording completion process has been unexpectedly interrupted"));
-		}
-		if (!stopped) {
-			recording.setStatus(Recording.Status.failed);
-			failRecordingCompletion(containerId, new OpenViduException(Code.RECORDING_COMPLETION_ERROR_CODE,
-					"The recording completion process couldn't finish in 60 seconds"));
-		}
-
-		// Remove container
-		this.removeDockerContainer(containerId);
-
-		// Update recording attributes reading from video report file
-		try {
-			RecordingInfoUtils infoUtils = new RecordingInfoUtils(
-					this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + ".info");
-
-			if (openviduConfig.getOpenViduRecordingPublicAccess()) {
-				recording.setStatus(Recording.Status.available);
-			} else {
-				recording.setStatus(Recording.Status.stopped);
-			}
-			recording.setDuration(infoUtils.getDurationInSeconds());
-			recording.setSize(infoUtils.getSizeInBytes());
-			recording.setHasAudio(infoUtils.hasAudio());
-			recording.setHasVideo(infoUtils.hasVideo());
-
-			if (openviduConfig.getOpenViduRecordingPublicAccess()) {
-				recording.setUrl(this.openviduConfig.getFinalUrl() + "recordings/" + recording.getName() + ".mp4");
+			// Gracefully stop ffmpeg process
+			ExecCreateCmdResponse execCreateCmdResponse = dockerClient.execCreateCmd(containerId).withAttachStdout(true)
+					.withAttachStderr(true).withCmd("bash", "-c", "echo 'q' > stop").exec();
+			try {
+				dockerClient.execStartCmd(execCreateCmdResponse.getId()).exec(new ExecStartResultCallback())
+						.awaitCompletion();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
 
-		} catch (IOException e) {
-			throw new OpenViduException(Code.RECORDING_REPORT_ERROR_CODE,
-					"There was an error generating the metadata report file for the recording");
+			// Wait for the container to be gracefully self-stopped
+			CountDownLatch latch = new CountDownLatch(1);
+			WaitForContainerStoppedCallback callback = new WaitForContainerStoppedCallback(latch);
+			dockerClient.waitContainerCmd(containerId).exec(callback);
+
+			boolean stopped = false;
+			try {
+				stopped = latch.await(60, TimeUnit.SECONDS);
+			} catch (InterruptedException e) {
+				recording.setStatus(Recording.Status.failed);
+				failRecordingCompletion(containerId, new OpenViduException(Code.RECORDING_COMPLETION_ERROR_CODE,
+						"The recording completion process has been unexpectedly interrupted"));
+			}
+			if (!stopped) {
+				recording.setStatus(Recording.Status.failed);
+				failRecordingCompletion(containerId, new OpenViduException(Code.RECORDING_COMPLETION_ERROR_CODE,
+						"The recording completion process couldn't finish in 60 seconds"));
+			}
+
+			// Remove container
+			this.removeDockerContainer(containerId);
+
+			// Update recording attributes reading from video report file
+			try {
+				RecordingInfoUtils infoUtils = new RecordingInfoUtils(
+						this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + ".info");
+
+				if (openviduConfig.getOpenViduRecordingPublicAccess()) {
+					recording.setStatus(Recording.Status.available);
+				} else {
+					recording.setStatus(Recording.Status.stopped);
+				}
+				recording.setDuration(infoUtils.getDurationInSeconds());
+				recording.setSize(infoUtils.getSizeInBytes());
+				recording.setHasAudio(infoUtils.hasAudio());
+				recording.setHasVideo(infoUtils.hasVideo());
+
+				if (openviduConfig.getOpenViduRecordingPublicAccess()) {
+					recording.setUrl(this.openviduConfig.getFinalUrl() + "recordings/" + recording.getName() + ".mp4");
+				}
+
+			} catch (IOException e) {
+				throw new OpenViduException(Code.RECORDING_REPORT_ERROR_CODE,
+						"There was an error generating the metadata report file for the recording");
+			}
+			this.sessionHandler.sendRecordingStoppedNotification(session, recording, reason);
 		}
-
-		this.sessionHandler.sendRecordingStoppedNotification(session, recording, reason);
-
 		return recording;
 	}
 
@@ -389,9 +422,10 @@ public class ComposedRecordingService {
 		return fileNamesNoExtension;
 	}
 
-	public HttpStatus deleteRecordingFromHost(String recordingId) {
+	public HttpStatus deleteRecordingFromHost(String recordingId, boolean force) {
 
-		if (this.startedRecordings.containsKey(recordingId) || this.startingRecordings.containsKey(recordingId)) {
+		if (!force && (this.startedRecordings.containsKey(recordingId)
+				|| this.startingRecordings.containsKey(recordingId))) {
 			// Cannot delete an active recording
 			return HttpStatus.CONFLICT;
 		}

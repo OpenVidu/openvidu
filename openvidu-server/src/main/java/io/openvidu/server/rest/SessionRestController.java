@@ -411,7 +411,7 @@ public class SessionRestController {
 
 	@RequestMapping(value = "/recordings/{recordingId}", method = RequestMethod.DELETE)
 	public ResponseEntity<?> deleteRecording(@PathVariable("recordingId") String recordingId) {
-		return new ResponseEntity<>(this.recordingService.deleteRecordingFromHost(recordingId));
+		return new ResponseEntity<>(this.recordingService.deleteRecordingFromHost(recordingId, false));
 	}
 
 	private ResponseEntity<String> generateErrorResponse(String errorMessage, String path, HttpStatus status) {
