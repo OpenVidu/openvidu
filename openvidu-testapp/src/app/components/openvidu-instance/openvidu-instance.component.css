@@ -32,6 +32,16 @@ mat-card.session-card {
   margin-bottom: 0;
 }
 
+.join-publish-div {
+  justify-content: space-around;
+  width: 100%;
+  display: inline-flex;
+}
+
+.join-publish-div > * {
+  align-self: center;
+}
+
 .inner-card {
   border: 1px solid #e1e1e1;
   padding: 10px 3px 10px 10px;
@@ -94,7 +104,6 @@ mat-radio-button {
 .session-actions button:last-child {
   margin-right: 0;
 }
-
 
 .session-actions button:hover {
   color: #4d4d4d;
