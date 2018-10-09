@@ -23,6 +23,11 @@ import { RecordingProperties } from './RecordingProperties';
 import { Session } from './Session';
 import { SessionProperties } from './SessionProperties';
 
+/**
+ * @hidden
+ */
+interface ObjMap<T> { [s: string]: T; }
+
 
 export class OpenVidu {
 
@@ -476,8 +481,9 @@ export class OpenVidu {
 
   /**
    * @hidden
+   * @returns A map paring every existing sessionId with true or false depending on whether it has changed or not
    */
-  fetchWebRtc(): Promise<boolean> {
+  fetchWebRtc(): Promise<any> {
 
     // tslint:disable:no-string-literal
     const addWebRtcStatsToConnections = (connection: Connection, connectionsExtendedInfo: any) => {
@@ -561,7 +567,7 @@ export class OpenVidu {
       };
     };
 
-    return new Promise<boolean>((resolve, reject) => {
+    return new Promise<{ changes: boolean, sessionChanges: ObjMap<boolean> }>((resolve, reject) => {
       axios.get(
         'https://' + OpenVidu.hostname + ':' + OpenVidu.port + OpenVidu.API_SESSIONS + '?webRtcStats=true',
         {
@@ -575,8 +581,10 @@ export class OpenVidu {
 
             // Array to store fetched sessionIds and later remove closed sessions
             const fetchedSessionIds: string[] = [];
-            // Boolean to store if any Session has changed
-            let hasChanged = false;
+            // Global changes
+            let globalChanges = false;
+            // Collection of sessionIds telling whether each one of them has changed or not
+            const sessionChanges: ObjMap<boolean> = {};
 
             res.data.content.forEach(session => {
               fetchedSessionIds.push(session.sessionId);
@@ -609,7 +617,8 @@ export class OpenVidu {
                   this.activeSessions[sessionIndex] = storedSession;
                 }
                 console.log("Available session '" + storedSession.sessionId + "' info fetched. Any change: " + changed);
-                hasChanged = hasChanged || changed;
+                sessionChanges[storedSession.sessionId] = changed;
+                globalChanges = globalChanges || changed;
               } else {
                 const newSession = new Session(session);
                 newSession.activeConnections.forEach(connection => {
@@ -617,7 +626,8 @@ export class OpenVidu {
                 });
                 this.activeSessions.push(newSession);
                 console.log("New session '" + session.sessionId + "' info fetched");
-                hasChanged = true;
+                sessionChanges[session.sessionId] = true;
+                globalChanges = true;
               }
             });
             // Remove closed sessions from activeSessions array
@@ -626,12 +636,13 @@ export class OpenVidu {
                 return true;
               } else {
                 console.log("Removing closed session '" + session.sessionId + "'");
-                hasChanged = true;
+                sessionChanges[session.sessionId] = true;
+                globalChanges = true;
                 return false;
               }
             });
             console.log('Active sessions info fetched: ', fetchedSessionIds);
-            resolve(hasChanged);
+            resolve({ changes: globalChanges, sessionChanges });
           } else {
             // ERROR response from openvidu-server. Resolve HTTP status
             reject(new Error(res.status.toString()));
