@@ -25,7 +25,7 @@ export declare class Publisher extends StreamManager {
     private properties;
     private permissionDialogTimeout;
     /**
-     * hidden
+     * @hidden
      */
     openvidu: OpenVidu;
     /**

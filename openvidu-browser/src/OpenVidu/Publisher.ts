@@ -56,7 +56,7 @@ export class Publisher extends StreamManager {
     private permissionDialogTimeout: NodeJS.Timer;
 
     /**
-     * hidden
+     * @hidden
      */
     openvidu: OpenVidu;
     /**
