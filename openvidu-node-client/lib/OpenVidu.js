@@ -422,6 +422,7 @@ var OpenVidu = /** @class */ (function () {
     };
     /**
      * @hidden
+     * @returns A map paring every existing sessionId with true or false depending on whether it has changed or not
      */
     OpenVidu.prototype.fetchWebRtc = function () {
         var _this = this;
@@ -515,8 +516,10 @@ var OpenVidu = /** @class */ (function () {
                 if (res.status === 200) {
                     // Array to store fetched sessionIds and later remove closed sessions
                     var fetchedSessionIds_2 = [];
-                    // Boolean to store if any Session has changed
-                    var hasChanged_2 = false;
+                    // Global changes
+                    var globalChanges_1 = false;
+                    // Collection of sessionIds telling whether each one of them has changed or not
+                    var sessionChanges_1 = {};
                     res.data.content.forEach(function (session) {
                         fetchedSessionIds_2.push(session.sessionId);
                         var sessionIndex = -1;
@@ -547,7 +550,8 @@ var OpenVidu = /** @class */ (function () {
                                 _this.activeSessions[sessionIndex] = storedSession;
                             }
                             console.log("Available session '" + storedSession.sessionId + "' info fetched. Any change: " + changed_1);
-                            hasChanged_2 = hasChanged_2 || changed_1;
+                            sessionChanges_1[storedSession.sessionId] = changed_1;
+                            globalChanges_1 = globalChanges_1 || changed_1;
                         }
                         else {
                             var newSession = new Session_1.Session(session);
@@ -556,7 +560,8 @@ var OpenVidu = /** @class */ (function () {
                             });
                             _this.activeSessions.push(newSession);
                             console.log("New session '" + session.sessionId + "' info fetched");
-                            hasChanged_2 = true;
+                            sessionChanges_1[session.sessionId] = true;
+                            globalChanges_1 = true;
                         }
                     });
                     // Remove closed sessions from activeSessions array
@@ -566,12 +571,13 @@ var OpenVidu = /** @class */ (function () {
                         }
                         else {
                             console.log("Removing closed session '" + session.sessionId + "'");
-                            hasChanged_2 = true;
+                            sessionChanges_1[session.sessionId] = true;
+                            globalChanges_1 = true;
                             return false;
                         }
                     });
                     console.log('Active sessions info fetched: ', fetchedSessionIds_2);
-                    resolve(hasChanged_2);
+                    resolve({ changes: globalChanges_1, sessionChanges: sessionChanges_1 });
                 }
                 else {
                     // ERROR response from openvidu-server. Resolve HTTP status

@@ -112,8 +112,9 @@ export declare class OpenVidu {
     fetch(): Promise<boolean>;
     /**
      * @hidden
+     * @returns A map paring every existing sessionId with true or false depending on whether it has changed or not
      */
-    fetchWebRtc(): Promise<boolean>;
+    fetchWebRtc(): Promise<any>;
     private getBasicAuth;
     private setHostnameAndPort;
     /**
