@@ -67,7 +67,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 			conf = conf.antMatchers("/recordings/*").authenticated();
 		}
 
-		conf.and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and().httpBasic();
+		conf.and().httpBasic();
 	}
 
 	@Autowired
