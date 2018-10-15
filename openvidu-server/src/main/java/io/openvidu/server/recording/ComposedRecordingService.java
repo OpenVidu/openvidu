@@ -465,7 +465,8 @@ public class ComposedRecordingService {
 	private boolean isFileFromRecording(File file, String recordingId, String recordingName) {
 		return (((recordingId + ".info").equals(file.getName()))
 				|| ((RECORDING_ENTITY_FILE + recordingId).equals(file.getName()))
-				|| (file.getName().equals(recordingName + ".mp4")));
+				|| (recordingName + ".mp4").equals(file.getName())
+				|| (recordingId + ".jpg").equals(file.getName()));
 	}
 
 	private String getFreeRecordingId(String sessionId, String shortSessionId) {
