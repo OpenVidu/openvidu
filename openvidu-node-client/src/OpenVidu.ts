@@ -327,6 +327,8 @@ export class OpenVidu {
             for (const item of responseItems) {
               recordingArray.push(new Recording(item));
             }
+            // Order recordings by time of creation (newest first)
+            recordingArray.sort((r1, r2) => (r1.createdAt < r2.createdAt) ? 1 : ((r2.createdAt < r1.createdAt) ? -1 : 0));
             resolve(recordingArray);
           } else {
             // ERROR response from openvidu-server. Resolve HTTP status
