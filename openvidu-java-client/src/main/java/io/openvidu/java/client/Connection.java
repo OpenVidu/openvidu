@@ -38,8 +38,9 @@ public class Connection {
 	protected Map<String, Publisher> publishers;
 	protected List<String> subscribers;
 
-	protected Connection(String connectionId, long createdAt, OpenViduRole role, String token, String location, String platform,
-			String serverData, String clientData, Map<String, Publisher> publishers, List<String> subscribers) {
+	protected Connection(String connectionId, long createdAt, OpenViduRole role, String token, String location,
+			String platform, String serverData, String clientData, Map<String, Publisher> publishers,
+			List<String> subscribers) {
 		this.connectionId = connectionId;
 		this.createdAt = createdAt;
 		this.role = role;
@@ -84,10 +85,14 @@ public class Connection {
 	}
 
 	/**
+	 * <a href="/docs/openvidu-pro/" target="_blank" style="display: inline-block;
+	 * background-color: rgb(0, 136, 170); color: white; font-weight: bold; padding:
+	 * 0px 5px; margin-right: 5px; border-radius: 3px; font-size: 13px;
+	 * line-height:21px; font-family: Montserrat, sans-serif">PRO</a>
+	 * 
 	 * Returns the geo location of the connection, with the following format:
 	 * <code>"CITY, COUNTRY"</code> (<code>"unknown"</code> if it wasn't possible to
 	 * locate it)
-	 * <i>(ONLY IN OPENVIDU PRO)</i>
 	 */
 	public String getLocation() {
 		return location;
