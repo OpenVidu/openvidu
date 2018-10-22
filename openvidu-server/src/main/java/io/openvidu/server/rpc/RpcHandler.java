@@ -32,6 +32,7 @@ import org.kurento.jsonrpc.message.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -546,8 +547,14 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 	public void afterConnectionEstablished(Session rpcSession) throws Exception {
 		log.info("After connection established for WebSocket session: {}", rpcSession.getSessionId());
 		if (rpcSession instanceof WebSocketServerSession) {
-			rpcSession.getAttributes().put("remoteAddress",
-					((WebSocketServerSession) rpcSession).getWebSocketSession().getRemoteAddress().getAddress());
+			InetAddress address;
+			HttpHeaders headers = ((WebSocketServerSession) rpcSession).getWebSocketSession().getHandshakeHeaders();
+			if (headers.containsKey("x-real-ip")) {
+				address = InetAddress.getByName(headers.get("x-real-ip").get(0));
+			} else {
+				address = ((WebSocketServerSession) rpcSession).getWebSocketSession().getRemoteAddress().getAddress();
+			}
+			rpcSession.getAttributes().put("remoteAddress", address);
 		}
 	}
 
