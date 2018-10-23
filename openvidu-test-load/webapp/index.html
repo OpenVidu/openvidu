@@ -1,0 +1,23 @@
+<html>
+
+<head>
+	<title>openvidu-hello-world</title>
+	<link rel="shortcut icon" href="resources/images/favicon.ico" type="image/x-icon">
+	<script src="openvidu-browser-2.5.0.js"></script>
+	<script src="app.js"></script>
+</head>
+
+<body>
+	<div id="join-form" style="display: none">
+		<form onsubmit="return joinWithForm()">
+			<input id="form-publicurl" type="text" name="publicurl" placeholder="OpenVidu ip" required>
+			<input id="form-secret" type="text" name="secret" placeholder="OpenVidu secret" required>
+			<input id="form-sessionId" type="text" name="sessionId" placeholder="sessionId" required>
+			<input id="form-userId" type="text" name="userId" placeholder="userId" required>
+			<input type="submit" value="Join session">
+		</form>
+	</div>
+	<div id="local" style="display: inline-block"></div>
+</body>
+
+</html>
