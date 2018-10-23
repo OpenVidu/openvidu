@@ -1,6 +1,7 @@
 var OPENVIDU_SERVER_URL;
 var OPENVIDU_SERVER_SECRET;
 var SESSION_ID;
+var USER_ID;
 
 var OV;
 var session;
