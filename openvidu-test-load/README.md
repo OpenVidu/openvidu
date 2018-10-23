@@ -14,3 +14,13 @@ Number of total sessions and participants must be customizable. Test will have t
 - Every RTCPeerConnection object will be exposed to gather statistics thanks to method getStats()
 - The following statistics will be the ones gathered for each RTCPeerConnection object: Sender Round-Trip-Time (googRtt), Receviers Round-Trip-Time (googRtt), Received Bit-Rate, Sent Bit-Rate, Packet loss
 - Every browser will be monitored to ensure each one of the 7 videos is playing media
+
+The testing process for every client node will be:
+
+1. Launch Chrome with the required flags (selenium code in the test orchestrator will launch every client node)
+2. Wait fot the testing web application to load. This static web app will be hosted in the same EC22 machine as OpenVidu Server. RECORD TIME
+3. Wait for the browser to connect to the session in OpenVidu Server (`connectionCreated` event). RECORD TIME
+4. Wait for the local video to be playing (`videoPlaying` event). RECORD TIME
+5. Wait for each one of the 6 remote videos to be playing (`videoPlaying` event). RECORD TIME
+6. Gather statistics. Each call to getStats over each RTCPeerConnection object (7 calls to getStats in total) will take place every second, n times (n=8 by default)
+7. Close browser
