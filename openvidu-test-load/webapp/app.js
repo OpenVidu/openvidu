@@ -68,24 +68,41 @@ window.onbeforeunload = () => {
 };
 
 function insertVideoContainer(event) {
-	var commonTagStyle = "background-color: #0088aa; color: white; font-weight: bold; padding: 2px 5px; border-radius: 3px; font-family: 'Arial'";
+	var commonTagStyle = "background-color: #0088aa; color: white; font-size: 13px; font-weight: bold; padding: 1px 3px; border-radius: 3px; font-family: 'Arial'";
 	var videoContainer = document.createElement('div');
 	videoContainer.id = 'video-' + event.stream.connection.data;
 	videoContainer.setAttribute("style", "display: inline-block; margin: 5px 5px 0 0");
 	var infoContainer = document.createElement('div');
-	infoContainer.setAttribute("style", "text-align: center; margin-bottom: 3px");
+	infoContainer.setAttribute("style", "display: flex; justify-content: space-between; margin-bottom: 3px");
 	var userId = document.createElement('div');
-	userId.setAttribute("style", "float: left; " + commonTagStyle);
+	userId.setAttribute("style", commonTagStyle);
 	userId.innerText = event.stream.connection.data;
 	var resolution = document.createElement('div');
 	resolution.id = 'resolution-' + event.stream.connection.data;
 	resolution.setAttribute("style", "display: inline-block; " + commonTagStyle);
 	resolution.innerText = event.stream.videoDimensions.width + 'x' + event.stream.videoDimensions.height;
+	var rtt = document.createElement('div');
+	rtt.id = 'rtt-' + event.stream.connection.data;
+	rtt.setAttribute("style", "display: inline-block; " + commonTagStyle);
+	var delayMs = document.createElement('div');
+	delayMs.id = 'delay-' + event.stream.connection.data;
+	delayMs.setAttribute("style", "display: inline-block; " + commonTagStyle);
+	var jitter = document.createElement('div');
+	jitter.id = 'jitter-' + event.stream.connection.data;
+	jitter.setAttribute("style", "display: inline-block; " + commonTagStyle);
+	var receiveBandwidth = document.createElement('div');
+	receiveBandwidth.id = 'receive-bandwidth-' + event.stream.connection.data;
+	receiveBandwidth.setAttribute("style", "display: inline-block; " + commonTagStyle);
 	var bitrate = document.createElement('div');
 	bitrate.id = 'bitrate-' + event.stream.connection.data;
-	bitrate.setAttribute("style", "float: right; " + commonTagStyle);
+	bitrate.setAttribute("style", commonTagStyle);
 	infoContainer.appendChild(userId);
 	infoContainer.appendChild(resolution);
+	infoContainer.appendChild(rtt);
+	infoContainer.appendChild(delayMs);
+	infoContainer.appendChild(jitter);
+	infoContainer.appendChild(receiveBandwidth);
+	infoContainer.appendChild(jitter);
 	infoContainer.appendChild(bitrate);
 	videoContainer.appendChild(infoContainer);
 	document.body.appendChild(videoContainer);
@@ -169,26 +186,33 @@ function gatherStats(rtcPeerConnection, userId, errorCallback) {
 			});
 			fullReport.push(stat);
 		});
-		if (!rtcPeerConnectionStats[userId].rtt) {
-			var activeCandidateStats = fullReport.find(report => report.type === 'googCandidatePair' && report.googActiveConnection === 'true');
-			if (!!activeCandidateStats) {
-				rtcPeerConnectionStats[userId] = {
-					rtt: activeCandidateStats.googRtt,
-					transport: activeCandidateStats.googTransportType,
-					candidateType: activeCandidateStats.googRemoteCandidateType,
-					localAddress: activeCandidateStats.googLocalAddress,
-					remoteAddress: activeCandidateStats.googRemoteAddress,
-					interval: rtcPeerConnectionStats[userId].interval
-				}
-			}
+
+		var activeCandidateStats = fullReport.find(report => report.type === 'googCandidatePair' && report.googActiveConnection === 'true');
+		if (!!activeCandidateStats) {
+			rtcPeerConnectionStats[userId].rtt = activeCandidateStats.googRtt;
+			rtcPeerConnectionStats[userId].transport = activeCandidateStats.googTransportType;
+			rtcPeerConnectionStats[userId].candidateType = activeCandidateStats.googRemoteCandidateType;
+			rtcPeerConnectionStats[userId].localAddress = activeCandidateStats.googLocalAddress;
+			rtcPeerConnectionStats[userId].remoteAddress = activeCandidateStats.googRemoteAddress;
+			document.querySelector('#rtt-' + userId).innerText = 'RTT: ' + rtcPeerConnectionStats[userId].rtt + ' ms';
 		}
+
+		var videoBwe = fullReport.find(report => report.type === 'VideoBwe');
+		if (!!videoBwe) {
+			rtcPeerConnectionStats[userId].availableSendBandwidth = Math.floor(videoBwe.googAvailableSendBandwidth / 1024);
+			rtcPeerConnectionStats[userId].availableReceiveBandwidth = Math.floor(videoBwe.googAvailableReceiveBandwidth / 1024);
+		}
+
 		var videoStats = fullReport.find(report => report.type === 'ssrc' && report.mediaType === 'video');
 		if (!!videoStats) {
-			rtcPeerConnectionStats[userId].bitRate = (videoStats.bytesReceived - rtcPeerConnectionStats[userId].bytesReceived) * 8 / 1000;
+			rtcPeerConnectionStats[userId].bitRate = (videoStats.bytesReceived - rtcPeerConnectionStats[userId].bytesReceived) * 8 / 1024;
 			rtcPeerConnectionStats[userId].jitter = videoStats.googJitterBufferMs;
 			rtcPeerConnectionStats[userId].bytesReceived = videoStats.bytesReceived;
 			rtcPeerConnectionStats[userId].delay = videoStats.googCurrentDelayMs;
 			rtcPeerConnectionStats[userId].packetsLost = videoStats.packetsLost;
+			document.querySelector('#delay-' + userId).innerText = 'Delay: ' + rtcPeerConnectionStats[userId].delay + ' ms';
+			document.querySelector('#jitter-' + userId).innerText = 'jitter: ' + rtcPeerConnectionStats[userId].jitter;
+			document.querySelector('#receive-bandwidth-' + userId).innerText = 'Bandwidth: ' + rtcPeerConnectionStats[userId].availableReceiveBandwidth + ' kbps';
 			document.querySelector('#bitrate-' + userId).innerText = Math.floor(rtcPeerConnectionStats[userId].bitRate) + ' kbps';
 		}
 		console.log(rtcPeerConnectionStats);
