@@ -215,7 +215,7 @@ var OpenVidu = /** @class */ (function () {
         if ((browser !== 'Chrome') && (browser !== 'Chrome Mobile') &&
             (browser !== 'Firefox') && (browser !== 'Firefox Mobile') && (browser !== 'Firefox for iOS') &&
             (browser !== 'Opera') && (browser !== 'Opera Mobile') &&
-            (browser !== 'Safari')) {
+            (browser !== 'Safari') && (browser !== 'Android Browser')) {
             return 0;
         }
         else {
