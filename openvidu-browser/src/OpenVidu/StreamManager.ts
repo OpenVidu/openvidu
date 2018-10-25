@@ -338,7 +338,10 @@ export class StreamManager implements EventDispatcher {
         }
         if (!this.remote && !this.stream.displayMyRemote()) {
             video.muted = true;
-            if (this.stream.outboundStreamOpts.publisherProperties.mirror) {
+            if (video.style.transform === 'rotateY(180deg)' && this.stream.outboundStreamOpts.publisherProperties.mirror) {
+                // If the video was already rotated and now is set to not mirror
+                this.removeMirrorVideo(video);
+            } else if (this.stream.outboundStreamOpts.publisherProperties.mirror) {
                 this.mirrorVideo(video);
             }
         }
@@ -422,6 +425,11 @@ export class StreamManager implements EventDispatcher {
     private mirrorVideo(video): void {
         video.style.transform = 'rotateY(180deg)';
         video.style.webkitTransform = 'rotateY(180deg)';
+    }
+
+    private removeMirrorVideo(video): void {
+        video.style.transform = 'unset';
+        video.style.webkitTransform = 'unset';
     }
 
 }
