@@ -338,7 +338,7 @@ export class StreamManager implements EventDispatcher {
         }
         if (!this.remote && !this.stream.displayMyRemote()) {
             video.muted = true;
-            if (video.style.transform === 'rotateY(180deg)' && this.stream.outboundStreamOpts.publisherProperties.mirror) {
+            if (video.style.transform === 'rotateY(180deg)' && !this.stream.outboundStreamOpts.publisherProperties.mirror) {
                 // If the video was already rotated and now is set to not mirror
                 this.removeMirrorVideo(video);
             } else if (this.stream.outboundStreamOpts.publisherProperties.mirror) {
