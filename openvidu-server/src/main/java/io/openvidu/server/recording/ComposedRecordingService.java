@@ -65,11 +65,11 @@ import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.java.client.RecordingProperties;
-import io.openvidu.server.CommandExecutor;
 import io.openvidu.server.OpenViduServer;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.core.SessionEventsHandler;
+import io.openvidu.server.utils.CommandExecutor;
 
 @Service
 public class ComposedRecordingService {

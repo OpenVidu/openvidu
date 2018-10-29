@@ -15,7 +15,7 @@
  *
  */
 
-package io.openvidu.server;
+package io.openvidu.server.utils;
 
 import java.io.BufferedReader;
 import java.io.IOException;

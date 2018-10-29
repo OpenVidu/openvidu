@@ -22,8 +22,8 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.lang3.RandomStringUtils;
 
-import io.openvidu.server.CommandExecutor;
 import io.openvidu.server.config.OpenviduConfig;
+import io.openvidu.server.utils.CommandExecutor;
 
 public class BashCoturnCredentialsService extends CoturnCredentialsService {
 

@@ -61,6 +61,7 @@ import io.openvidu.server.recording.ComposedRecordingService;
 import io.openvidu.server.rest.NgrokRestController;
 import io.openvidu.server.rpc.RpcHandler;
 import io.openvidu.server.rpc.RpcNotificationService;
+import io.openvidu.server.utils.CommandExecutor;
 import io.openvidu.server.utils.GeoLocationByIp;
 import io.openvidu.server.utils.GeoLocationByIpDummy;
 
