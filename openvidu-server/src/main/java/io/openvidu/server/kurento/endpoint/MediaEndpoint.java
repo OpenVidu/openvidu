@@ -31,14 +31,12 @@ import org.kurento.client.EventListener;
 import org.kurento.client.IceCandidate;
 import org.kurento.client.ListenerSubscription;
 import org.kurento.client.MediaElement;
-import org.kurento.client.MediaEvent;
 import org.kurento.client.MediaPipeline;
 import org.kurento.client.MediaType;
 import org.kurento.client.OnIceCandidateEvent;
 import org.kurento.client.RtpEndpoint;
 import org.kurento.client.SdpEndpoint;
 import org.kurento.client.WebRtcEndpoint;
-import org.kurento.client.internal.server.KurentoServerException;
 import org.kurento.jsonrpc.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -179,9 +177,8 @@ public abstract class MediaEndpoint {
 	 * actions are taken. It also registers an error listener for the endpoint and
 	 * for any additional media elements.
 	 *
-	 * @param endpointLatch
-	 *            latch whose countdown is performed when the asynchronous call to
-	 *            build the {@link WebRtcEndpoint} returns
+	 * @param endpointLatch latch whose countdown is performed when the asynchronous
+	 *                      call to build the {@link WebRtcEndpoint} returns
 	 *
 	 * @return the existing endpoint, if any
 	 */
@@ -211,8 +208,7 @@ public abstract class MediaEndpoint {
 	 * Sets the {@link MediaPipeline} used to create the internal
 	 * {@link WebRtcEndpoint}.
 	 *
-	 * @param pipeline
-	 *            the {@link MediaPipeline}
+	 * @param pipeline the {@link MediaPipeline}
 	 */
 	public void setMediaPipeline(MediaPipeline pipeline) {
 		this.pipeline = pipeline;
@@ -228,8 +224,7 @@ public abstract class MediaEndpoint {
 	/**
 	 * Sets the endpoint's name (as indicated by the browser).
 	 *
-	 * @param endpointName
-	 *            the name
+	 * @param endpointName the name
 	 */
 	public void setEndpointName(String endpointName) {
 		this.endpointName = endpointName;
@@ -299,8 +294,7 @@ public abstract class MediaEndpoint {
 	 * Add a new {@link IceCandidate} received gathered by the remote peer of this
 	 * {@link WebRtcEndpoint}.
 	 *
-	 * @param candidate
-	 *            the remote candidate
+	 * @param candidate the remote candidate
 	 */
 	public synchronized void addIceCandidate(IceCandidate candidate) throws OpenViduException {
 		if (!this.isWeb()) {
@@ -317,8 +311,7 @@ public abstract class MediaEndpoint {
 	 * Registers a listener for when the {@link MediaElement} triggers an
 	 * {@link ErrorEvent}. Notifies the owner with the error.
 	 *
-	 * @param element
-	 *            the {@link MediaElement}
+	 * @param element the {@link MediaElement}
 	 * @return {@link ListenerSubscription} that can be used to deregister the
 	 *         listener
 	 */
@@ -335,10 +328,8 @@ public abstract class MediaEndpoint {
 	 * Unregisters the error listener from the media element using the provided
 	 * subscription.
 	 *
-	 * @param element
-	 *            the {@link MediaElement}
-	 * @param subscription
-	 *            the associated {@link ListenerSubscription}
+	 * @param element      the {@link MediaElement}
+	 * @param subscription the associated {@link ListenerSubscription}
 	 */
 	protected void unregisterElementErrListener(MediaElement element, final ListenerSubscription subscription) {
 		if (element == null || subscription == null) {
@@ -352,8 +343,7 @@ public abstract class MediaEndpoint {
 	 * to process the offer String.
 	 *
 	 * @see SdpEndpoint#processOffer(String)
-	 * @param offer
-	 *            String with the Sdp offer
+	 * @param offer String with the Sdp offer
 	 * @return the Sdp answer
 	 */
 	protected String processOffer(String offer) throws OpenViduException {
@@ -400,8 +390,7 @@ public abstract class MediaEndpoint {
 	 * to process the answer String.
 	 *
 	 * @see SdpEndpoint#processAnswer(String)
-	 * @param answer
-	 *            String with the Sdp answer from remote
+	 * @param answer String with the Sdp answer from remote
 	 * @return the updated Sdp offer, based on the received answer
 	 */
 	protected String processAnswer(String answer) throws OpenViduException {
@@ -428,8 +417,7 @@ public abstract class MediaEndpoint {
 	 *
 	 * @see WebRtcEndpoint#addOnIceCandidateListener(org.kurento.client.EventListener)
 	 * @see Participant#sendIceCandidate(String, IceCandidate)
-	 * @throws OpenViduException
-	 *             if thrown, unable to register the listener
+	 * @throws OpenViduException if thrown, unable to register the listener
 	 */
 	protected void registerOnIceCandidateEventListener() throws OpenViduException {
 		if (!this.isWeb()) {
@@ -502,11 +490,9 @@ public abstract class MediaEndpoint {
 	public JsonObject withStatsToJson() {
 		JsonObject json = new JsonObject();
 		json.addProperty("createdAt", this.createdAt);
-		try {
-			json.addProperty("webrtcTagName", this.getEndpoint().getTag("name"));
-		} catch (KurentoServerException ex) {
-			json.addProperty("webrtcTagName", "NOT_FOUND");
-		}
+		json.addProperty("webrtcEndpointName", this.getEndpoint().getName());
+		json.addProperty("remoteSdp", this.getEndpoint().getRemoteSessionDescriptor());
+		json.addProperty("localSdp", this.getEndpoint().getLocalSessionDescriptor());
 		json.add("receivedCandidates", new GsonBuilder().create().toJsonTree(this.receivedCandidateList));
 		json.addProperty("localCandidate", this.selectedLocalIceCandidate);
 		json.addProperty("remoteCandidate", this.selectedRemoteIceCandidate);

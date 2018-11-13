@@ -109,7 +109,7 @@ public class KurentoParticipant extends Participant {
 		String publisherStreamId = this.getParticipantPublicId() + "_"
 				+ (mediaOptions.hasVideo() ? mediaOptions.getTypeOfVideo() : "MICRO") + "_"
 				+ RandomStringUtils.random(5, true, false).toUpperCase();
-		this.publisher.getEndpoint().addTag("name", publisherStreamId);
+		this.publisher.getEndpoint().setName(publisherStreamId);
 		addEndpointListeners(this.publisher);
 
 		// Remove streamId from publisher's map
@@ -299,7 +299,7 @@ public class KurentoParticipant extends Participant {
 
 			String subscriberStreamId = this.getParticipantPublicId() + "_" + kSender.getPublisherStreamId();
 
-			subscriber.getEndpoint().addTag("name", subscriberStreamId);
+			subscriber.getEndpoint().setName(subscriberStreamId);
 
 			addEndpointListeners(subscriber);
 
@@ -383,8 +383,7 @@ public class KurentoParticipant extends Participant {
 	 * Returns a {@link SubscriberEndpoint} for the given participant public id. The
 	 * endpoint is created if not found.
 	 *
-	 * @param remotePublicId
-	 *            id of another user
+	 * @param remotePublicId id of another user
 	 * @return the endpoint instance
 	 */
 	public SubscriberEndpoint getNewOrExistingSubscriber(String senderPublicId) {
@@ -486,7 +485,7 @@ public class KurentoParticipant extends Participant {
 		/*
 		 * endpoint.getWebEndpoint().addElementConnectedListener((element) -> { String
 		 * msg = "                  Element connected (" +
-		 * endpoint.getEndpoint().getTag("name") + ") -> " + "SINK: " +
+		 * endpoint.getEndpoint().getName() + ") -> " + "SINK: " +
 		 * element.getSink().getName() + " | SOURCE: " + element.getSource().getName() +
 		 * " | MEDIATYPE: " + element.getMediaType(); System.out.println(msg);
 		 * this.infoHandler.sendInfo(msg); });
@@ -495,7 +494,7 @@ public class KurentoParticipant extends Participant {
 		/*
 		 * endpoint.getWebEndpoint().addElementDisconnectedListener((event) -> { String
 		 * msg = "                  Element disconnected (" +
-		 * endpoint.getEndpoint().getTag("name") + ") -> " + "SINK: " +
+		 * endpoint.getEndpoint().getName() + ") -> " + "SINK: " +
 		 * event.getSinkMediaDescription() + " | SOURCE: " +
 		 * event.getSourceMediaDescription() + " | MEDIATYPE: " + event.getMediaType();
 		 * System.out.println(msg); this.infoHandler.sendInfo(msg); });
@@ -510,7 +509,7 @@ public class KurentoParticipant extends Participant {
 		 * 
 		 * endpoint.getWebEndpoint().addMediaFlowInStateChangeListener((event) -> {
 		 * String msg1 = "                  Media flow in state change (" +
-		 * endpoint.getEndpoint().getTag("name") + ") -> " + "STATE: " +
+		 * endpoint.getEndpoint().getName() + ") -> " + "STATE: " +
 		 * event.getState() + " | SOURCE: " + event.getSource().getName() + " | PAD: " +
 		 * event.getPadName() + " | MEDIATYPE: " + event.getMediaType() +
 		 * " | TIMESTAMP: " + System.currentTimeMillis();
@@ -522,10 +521,10 @@ public class KurentoParticipant extends Participant {
 		 * 
 		 * if (endpoint.flowInMedia.values().size() != 2) { msg2 =
 		 * "                        THERE ARE LESS FLOW IN MEDIA'S THAN EXPECTED IN " +
-		 * endpoint.getEndpoint().getTag("name") + " (" +
+		 * endpoint.getEndpoint().getName() + " (" +
 		 * endpoint.flowInMedia.values().size() + ")"; } else { msg2 =
 		 * "                        NUMBER OF FLOW IN MEDIA'S IS NOW CORRECT IN " +
-		 * endpoint.getEndpoint().getTag("name") + " (" +
+		 * endpoint.getEndpoint().getName() + " (" +
 		 * endpoint.flowInMedia.values().size() + ")"; }
 		 * 
 		 * log.debug(msg1); log.debug(msg2); this.infoHandler.sendInfo(msg1);
@@ -533,7 +532,7 @@ public class KurentoParticipant extends Participant {
 		 * 
 		 * endpoint.getWebEndpoint().addMediaFlowOutStateChangeListener((event) -> {
 		 * String msg1 = "                  Media flow out state change (" +
-		 * endpoint.getEndpoint().getTag("name") + ") -> " + "STATE: " +
+		 * endpoint.getEndpoint().getName() + ") -> " + "STATE: " +
 		 * event.getState() + " | SOURCE: " + event.getSource().getName() + " | PAD: " +
 		 * event.getPadName() + " | MEDIATYPE: " + event.getMediaType() +
 		 * " | TIMESTAMP: " + System.currentTimeMillis();
@@ -546,10 +545,10 @@ public class KurentoParticipant extends Participant {
 		 * 
 		 * if (endpoint.flowOutMedia.values().size() != 2) { msg2 =
 		 * "                        THERE ARE LESS FLOW OUT MEDIA'S THAN EXPECTED IN " +
-		 * endpoint.getEndpoint().getTag("name") + " (" +
+		 * endpoint.getEndpoint().getName() + " (" +
 		 * endpoint.flowOutMedia.values().size() + ")"; } else { msg2 =
 		 * "                        NUMBER OF FLOW OUT MEDIA'S IS NOW CORRECT IN " +
-		 * endpoint.getEndpoint().getTag("name") + " (" +
+		 * endpoint.getEndpoint().getName() + " (" +
 		 * endpoint.flowOutMedia.values().size() + ")"; }
 		 * 
 		 * log.debug(msg1); log.debug(msg2); this.infoHandler.sendInfo(msg1);
@@ -557,51 +556,51 @@ public class KurentoParticipant extends Participant {
 		 * 
 		 * endpoint.getWebEndpoint().addMediaSessionStartedListener((event) -> { String
 		 * msg = "                  Media session started (" +
-		 * endpoint.getEndpoint().getTag("name") + ") | TIMESTAMP: " +
+		 * endpoint.getEndpoint().getName() + ") | TIMESTAMP: " +
 		 * System.currentTimeMillis(); log.debug(msg); this.infoHandler.sendInfo(msg);
 		 * });
 		 * 
 		 * endpoint.getWebEndpoint().addMediaSessionTerminatedListener((event) -> {
 		 * String msg = "                  Media session terminated (" +
-		 * endpoint.getEndpoint().getTag("name") + ") | TIMESTAMP: " +
+		 * endpoint.getEndpoint().getName() + ") | TIMESTAMP: " +
 		 * System.currentTimeMillis(); log.debug(msg); this.infoHandler.sendInfo(msg);
 		 * });
 		 * 
 		 * endpoint.getWebEndpoint().addMediaStateChangedListener((event) -> { String
 		 * msg = "                  Media state changed (" +
-		 * endpoint.getEndpoint().getTag("name") + ") from " + event.getOldState() +
+		 * endpoint.getEndpoint().getName() + ") from " + event.getOldState() +
 		 * " to " + event.getNewState(); log.debug(msg); this.infoHandler.sendInfo(msg);
 		 * });
 		 * 
 		 * endpoint.getWebEndpoint().addConnectionStateChangedListener((event) -> {
 		 * String msg = "                  Connection state changed (" +
-		 * endpoint.getEndpoint().getTag("name") + ") from " + event.getOldState() +
+		 * endpoint.getEndpoint().getName() + ") from " + event.getOldState() +
 		 * " to " + event.getNewState() + " | TIMESTAMP: " + System.currentTimeMillis();
 		 * log.debug(msg); this.infoHandler.sendInfo(msg); });
 		 * 
 		 * endpoint.getWebEndpoint().addIceCandidateFoundListener((event) -> { String
 		 * msg = "                  ICE CANDIDATE FOUND (" +
-		 * endpoint.getEndpoint().getTag("name") + "): CANDIDATE: " +
+		 * endpoint.getEndpoint().getName() + "): CANDIDATE: " +
 		 * event.getCandidate().getCandidate() + " | TIMESTAMP: " +
 		 * System.currentTimeMillis(); log.debug(msg); this.infoHandler.sendInfo(msg);
 		 * });
 		 * 
 		 * endpoint.getWebEndpoint().addIceComponentStateChangeListener((event) -> {
 		 * String msg = "                  ICE COMPONENT STATE CHANGE (" +
-		 * endpoint.getEndpoint().getTag("name") + "): for component " +
+		 * endpoint.getEndpoint().getName() + "): for component " +
 		 * event.getComponentId() + " - STATE: " + event.getState() + " | TIMESTAMP: " +
 		 * System.currentTimeMillis(); log.debug(msg); this.infoHandler.sendInfo(msg);
 		 * });
 		 * 
 		 * endpoint.getWebEndpoint().addIceGatheringDoneListener((event) -> { String msg
 		 * = "                  ICE GATHERING DONE! (" +
-		 * endpoint.getEndpoint().getTag("name") + ")" + " | TIMESTAMP: " +
+		 * endpoint.getEndpoint().getName() + ")" + " | TIMESTAMP: " +
 		 * System.currentTimeMillis(); log.debug(msg); this.infoHandler.sendInfo(msg);
 		 * });
 		 */
 
 		endpoint.getWebEndpoint().addMediaFlowInStateChangeListener(event -> {
-			String msg1 = "Media flow in state change (" + endpoint.getEndpoint().getTag("name") + ") -> " + "STATE: "
+			String msg1 = "Media flow in state change (" + endpoint.getEndpoint().getName() + ") -> " + "STATE: "
 					+ event.getState() + " | SOURCE: " + event.getSource().getName() + " | PAD: " + event.getPadName()
 					+ " | MEDIATYPE: " + event.getMediaType() + " | TIMESTAMP: " + System.currentTimeMillis();
 
@@ -622,7 +621,7 @@ public class KurentoParticipant extends Participant {
 		});
 
 		endpoint.getWebEndpoint().addMediaFlowOutStateChangeListener(event -> {
-			String msg1 = "Media flow out state change (" + endpoint.getEndpoint().getTag("name") + ") -> " + "STATE: "
+			String msg1 = "Media flow out state change (" + endpoint.getEndpoint().getName() + ") -> " + "STATE: "
 					+ event.getState() + " | SOURCE: " + event.getSource().getName() + " | PAD: " + event.getPadName()
 					+ " | MEDIATYPE: " + event.getMediaType() + " | TIMESTAMP: " + System.currentTimeMillis();
 
@@ -654,7 +653,7 @@ public class KurentoParticipant extends Participant {
 			endpoint.selectedLocalIceCandidate = event.getCandidatePair().getLocalCandidate();
 			endpoint.selectedRemoteIceCandidate = event.getCandidatePair().getRemoteCandidate();
 			endpoint.kmsEvents.add(new KmsEvent(event, endpoint.createdAt()));
-			String msg = "ICE CANDIDATE SELECTED (" + endpoint.getEndpoint().getTag("name") + "): LOCAL CANDIDATE: "
+			String msg = "ICE CANDIDATE SELECTED (" + endpoint.getEndpoint().getName() + "): LOCAL CANDIDATE: "
 					+ endpoint.selectedLocalIceCandidate + " | REMOTE CANDIDATE: " + endpoint.selectedRemoteIceCandidate
 					+ " | TIMESTAMP: " + System.currentTimeMillis();
 			log.warn(msg);
@@ -678,7 +677,7 @@ public class KurentoParticipant extends Participant {
 
 	@Override
 	public String getPublisherStreamId() {
-		return this.publisher.getEndpoint().getTag("name");
+		return this.publisher.getEndpoint().getName();
 	}
 
 	@Override

@@ -11,7 +11,7 @@ public class KmsEvent {
 
 	public KmsEvent(MediaEvent event, long createdAt) {
 		this.event = event;
-		this.endpoint = event.getSource().getTag("name");
+		this.endpoint = event.getSource().getName();
 		this.event.setSource(null);
 		this.timestamp = System.currentTimeMillis();
 		this.msSinceCreation = this.timestamp - createdAt;

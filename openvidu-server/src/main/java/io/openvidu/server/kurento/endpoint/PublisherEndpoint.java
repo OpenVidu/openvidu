@@ -136,7 +136,7 @@ public class PublisherEndpoint extends MediaEndpoint {
 
 	public boolean removeParticipantAsListenerOfFilterEvent(String eventType, String participantPublicId) {
 		if (!this.subscribersToFilterEvents.containsKey(eventType)) {
-			String streamId = this.getEndpoint().getTag("name");
+			String streamId = this.getEndpoint().getName();
 			log.error("Request to removeFilterEventListener to stream {} gone wrong: Filter {} has no listener added",
 					streamId, eventType);
 			throw new OpenViduException(Code.FILTER_EVENT_LISTENER_NOT_FOUND,
@@ -565,7 +565,7 @@ public class PublisherEndpoint extends MediaEndpoint {
 	@Override
 	public JsonObject toJson() {
 		JsonObject json = super.toJson();
-		json.addProperty("streamId", this.getEndpoint().getTag("name"));
+		json.addProperty("streamId", this.getEndpoint().getName());
 		json.add("mediaOptions", this.mediaOptions.toJson());
 		return json;
 	}
