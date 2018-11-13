@@ -101,7 +101,7 @@ sleep 2
 ### Start recording with ffmpeg ###
 
 function4() {
-    <./stop ffmpeg -y -f alsa -i pulse -f x11grab -framerate 25 -video_size $RESOLUTION -i :$DISPLAY_NUM -c:a aac -c:v libx264 -preset ultrafast -crf 28 -refs 4 -qmin 4 -pix_fmt yuv420p -filter:v fps=25 "/recordings/$VIDEO_NAME.$VIDEO_FORMAT"
+    <./stop ffmpeg -y -f alsa -i pulse -f x11grab -draw_mouse 0 -framerate 25 -video_size $RESOLUTION -i :$DISPLAY_NUM -c:a aac -c:v libx264 -preset ultrafast -crf 28 -refs 4 -qmin 4 -pix_fmt yuv420p -filter:v fps=25 "/recordings/$VIDEO_NAME.$VIDEO_FORMAT"
 }
 export -f function4
 if [[ $CURRENT_UID != $USER_ID ]]; then
