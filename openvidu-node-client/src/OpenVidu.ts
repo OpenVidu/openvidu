@@ -516,7 +516,9 @@ export class OpenVidu {
               localCandidate: publisherExtended.localCandidate,
               remoteCandidate: publisherExtended.remoteCandidate,
               receivedCandidates: publisherExtended.receivedCandidates,
-              webrtcTagName: publisherExtended.webrtcTagName
+              webrtcEndpointName: publisherExtended.webrtcEndpointName,
+              localSdp: publisherExtended.localSdp,
+              remoteSdp: publisherExtended.remoteSdp
             }
           };
           newPublisher['localCandidatePair'] = parseRemoteCandidatePair(newPublisher['webRtc'].kms.remoteCandidate);
@@ -540,7 +542,9 @@ export class OpenVidu {
               localCandidate: subscriberExtended.localCandidate,
               remoteCandidate: subscriberExtended.remoteCandidate,
               receivedCandidates: subscriberExtended.receivedCandidates,
-              webrtcTagName: subscriberExtended.webrtcTagName
+              webrtcEndpointName: subscriberExtended.webrtcEndpointName,
+              localSdp: subscriberExtended.localSdp,
+              remoteSdp: subscriberExtended.remoteSdp
             }
           };
           subAux['localCandidatePair'] = parseRemoteCandidatePair(subAux['webRtc'].kms.remoteCandidate);
