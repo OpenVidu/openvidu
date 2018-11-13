@@ -375,8 +375,10 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
           const streamOutRemoteInfo = sessionInfo['connections'].content
             .find(c => c.connectionId === report.connectionId).publishers
             .find(p => {
-              report.webrtcTagName = p.webrtcTagName;
-              return p.webrtcTagName === report.streamId;
+              report.webrtcEndpointName = p.webrtcEndpointName;
+              report.localSdp = p.localSdp;
+              report.remoteSdp = p.remoteSdp;
+              return p.webrtcEndpointName === report.streamId;
             });
           report.candidatePairSelectedByKms = {
             localCandidate: this.parseRemoteCandidatePair(streamOutRemoteInfo.localCandidate),
@@ -392,8 +394,10 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
           const streamInRemoteInfo = sessionInfo['connections'].content
             .find(c => c.connectionId === report.connectionId).subscribers
             .find(p => {
-              report.webrtcTagName = p.webrtcTagName;
-              return p.webrtcTagName === report.connectionId + '_' + report.streamId;
+              report.webrtcEndpointName = p.webrtcEndpointName;
+              report.localSdp = p.localSdp;
+              report.remoteSdp = p.remoteSdp;
+              return p.webrtcEndpointName === report.connectionId + '_' + report.streamId;
             });
           report.candidatePairSelectedByKms = {
             localCandidate: this.parseRemoteCandidatePair(streamInRemoteInfo.localCandidate),
@@ -432,8 +436,8 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
     this.isFocusedOnReport = true;
     let jsonObject = !!event.in ? this.report.streamsIn : this.report.streamsOut;
     jsonObject = jsonObject.content.find(stream => {
-      const webrtcTagName = !!event.in ? event.connectionId + '_' + event.streamId : event.streamId;
-      return (stream.connectionId === event.connectionId && stream.webrtcTagName === webrtcTagName);
+      const webrtcEndpointName = !!event.in ? event.connectionId + '_' + event.streamId : event.streamId;
+      return (stream.connectionId === event.connectionId && stream.webrtcEndpointName === webrtcEndpointName);
     });
     this.textAreaValue = JSON.stringify(jsonObject, null, '\t');
   }
@@ -450,7 +454,7 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
             if (event.streamManager.remote) {
               const streamInRemoteInfo = sessionInfo['connections'].content
                 .find(c => c.connectionId === event.connectionId).subscribers
-                .find(p => p.webrtcTagName === event.connectionId + '_' + event.streamManager.stream.streamId);
+                .find(p => p.webrtcEndpointName === event.connectionId + '_' + event.streamManager.stream.streamId);
 
               newReport = {
                 connectionId: event.connectionId,
@@ -472,7 +476,7 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
             } else {
               const streamOutRemoteInfo = sessionInfo['connections'].content
                 .find(c => c.connectionId === event.connectionId).publishers
-                .find(p => p.webrtcTagName === event.streamManager.stream.streamId);
+                .find(p => p.webrtcEndpointName === event.streamManager.stream.streamId);
 
               newReport = {
                 connectionId: event.connectionId,
