@@ -180,7 +180,7 @@ public class KurentoSessionManager extends SessionManager {
 						.equals(remainingParticipants.iterator().next().getParticipantPublicId())) {
 
 			log.info("Last participant left. Stopping recording for session {}", sessionId);
-			recordingService.stopRecording(session, reason);
+			recordingService.stopRecording(session, null, reason);
 			evictParticipant(session.getParticipantByPublicId(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID), null,
 					null, "EVICT_RECORDER");
 		}
