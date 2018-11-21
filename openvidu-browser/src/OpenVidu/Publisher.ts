@@ -292,6 +292,11 @@ export class Publisher extends StreamManager {
                 }
 
                 this.videoReference = document.createElement('video');
+
+                if (platform.name === 'Safari' && platform.product === 'iPhone') {
+                    this.videoReference.setAttribute('playsinline', 'true');
+                }
+
                 this.videoReference.srcObject = mediaStream;
 
                 this.stream.setMediaStream(mediaStream);

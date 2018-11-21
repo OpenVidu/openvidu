@@ -112,6 +112,9 @@ export class StreamManager implements EventDispatcher {
                     video: document.createElement('video'),
                     id: ''
                 };
+                if (platform.name === 'Safari' && platform.product === 'iPhone') {
+                    this.firstVideoElement.video.setAttribute('playsinline', 'true');
+                }
                 this.targetElement = targEl;
                 this.element = targEl;
             }
@@ -329,6 +332,11 @@ export class StreamManager implements EventDispatcher {
         }
         video.autoplay = true;
         video.controls = false;
+
+        if (platform.name === 'Safari' && platform.product === 'iPhone') {
+            video.setAttribute('playsinline', 'true');
+        }
+
         if (!video.id) {
             video.id = (this.remote ? 'remote-' : 'local-') + 'video-' + this.stream.streamId;
             // DEPRECATED property: assign once the property id if the user provided a valid targetElement
