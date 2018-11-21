@@ -276,12 +276,20 @@ export class OpenVidu {
    */
   checkSystemRequirements(): number {
     const browser = platform.name;
-    const version = platform.version;
+    const family = platform.os!!.family;
 
-    if ((browser !== 'Chrome') && (browser !== 'Chrome Mobile') &&
-      (browser !== 'Firefox') && (browser !== 'Firefox Mobile') && (browser !== 'Firefox for iOS') &&
+    // Reject iPhones and iPads if not Safari ('Safari' also covers Ionic for iOS)
+    if (family === 'iOS' && browser !== 'Safari') {
+      return 0;
+    }
+
+    if (
+      (browser !== 'Safari') &&
+      (browser !== 'Chrome') && (browser !== 'Chrome Mobile') &&
+      (browser !== 'Firefox') && (browser !== 'Firefox Mobile') &&
       (browser !== 'Opera') && (browser !== 'Opera Mobile') &&
-      (browser !== 'Safari') && (browser !== 'Android Browser')) {
+      (browser !== 'Android Browser')
+    ) {
       return 0;
     } else {
       return 1;
@@ -290,11 +298,18 @@ export class OpenVidu {
 
 
   /**
-   * Checks if the browser supports screen-sharing. Chrome, Firefox and Opera support screen-sharing
+   * Checks if the browser supports screen-sharing. Desktop Chrome, Firefox and Opera support screen-sharing
    * @returns 1 if the browser supports screen-sharing, 0 otherwise
    */
   checkScreenSharingCapabilities(): number {
     const browser = platform.name;
+    const family = platform.os!!.family;
+
+    // Reject mobile devices
+    if (family === 'iOS' || family === 'Android' || family === 'Windows Phone') {
+      return 0;
+    }
+
     if ((browser !== 'Chrome') && (browser !== 'Firefox') && (browser !== 'Opera')) {
       return 0;
     } else {
