@@ -340,8 +340,8 @@ export class Publisher extends StreamManager {
                             };
                             this.screenShareResizeInterval = setInterval(() => {
                                 const firefoxSettings = mediaStream.getVideoTracks()[0].getSettings();
-                                const newWidth = (platform.name === 'Chrome') ? this.videoReference.videoWidth : firefoxSettings.width;
-                                const newHeight = (platform.name === 'Chrome') ? this.videoReference.videoHeight : firefoxSettings.height;
+                                const newWidth = (platform.name === 'Chrome' || platform.name === 'Opera') ? this.videoReference.videoWidth : firefoxSettings.width;
+                                const newHeight = (platform.name === 'Chrome' || platform.name === 'Opera') ? this.videoReference.videoHeight : firefoxSettings.height;
                                 if (this.stream.isLocalStreamPublished &&
                                     (newWidth !== this.stream.videoDimensions.width ||
                                         newHeight !== this.stream.videoDimensions.height)) {
