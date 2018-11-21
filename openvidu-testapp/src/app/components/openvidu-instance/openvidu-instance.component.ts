@@ -229,6 +229,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       })
       .catch(error => {
         console.log('There was an error connecting to the session:', error.code, error.message);
+        alert('Error connecting to the session: ' + error.message);
       });
   }
 

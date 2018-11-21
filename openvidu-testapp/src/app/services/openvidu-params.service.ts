@@ -10,10 +10,10 @@ export interface OpenviduParams {
 export class OpenviduParamsService {
 
   params: OpenviduParams =
-  {
-    openviduUrl: 'https://localhost:4443/',
-    openviduSecret: 'MY_SECRET'
-  };
+    {
+      openviduUrl: 'https://' + window.location.hostname + ':4443/',
+      openviduSecret: 'MY_SECRET'
+    };
 
   newParams$ = new Subject<OpenviduParams>();
 
