@@ -277,12 +277,15 @@ export class OpenVidu {
   checkSystemRequirements(): number {
     const browser = platform.name;
     const family = platform.os!!.family;
+    const userAgent = !!platform.ua ? platform.ua : navigator.userAgent;
 
     // Reject iPhones and iPads if not Safari ('Safari' also covers Ionic for iOS)
-    if (family === 'iOS' && browser !== 'Safari') {
+    if (family === 'iOS' && (browser !== 'Safari' || userAgent.indexOf('CriOS') !== -1 || userAgent.indexOf('FxiOS') !== -1)) {
       return 0;
     }
 
+    // Accept: Chrome (desktop and Android), Firefox (desktop and Android), Opera (desktop and Android),
+    // Safari (OSX and iOS), Ionic (Android and iOS)
     if (
       (browser !== 'Safari') &&
       (browser !== 'Chrome') && (browser !== 'Chrome Mobile') &&

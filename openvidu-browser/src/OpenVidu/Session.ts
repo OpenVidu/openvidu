@@ -152,7 +152,7 @@ export class Session implements EventDispatcher {
                     reject(error);
                 });
             } else {
-                reject(new OpenViduError(OpenViduErrorName.BROWSER_NOT_SUPPORTED, 'Browser ' + platform.name + ' ' + platform.version + ' is not supported in OpenVidu'));
+                reject(new OpenViduError(OpenViduErrorName.BROWSER_NOT_SUPPORTED, 'Browser ' + platform.name + ' for ' + platform.os!!.family + ' is not supported in OpenVidu'));
             }
         });
     }
