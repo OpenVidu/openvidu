@@ -550,14 +550,17 @@ var Stream = /** @class */ (function () {
         });
     };
     Stream.prototype.remotePeerSuccessfullyEstablished = function () {
-        this.mediaStream = new MediaStream();
-        var receiver;
-        for (var _i = 0, _a = this.webRtcPeer.pc.getReceivers(); _i < _a.length; _i++) {
-            receiver = _a[_i];
+        /*this.mediaStream = new MediaStream();
+
+        let receiver: RTCRtpReceiver;
+        for (receiver of this.webRtcPeer.pc.getReceivers()) {
             if (!!receiver.track) {
                 this.mediaStream.addTrack(receiver.track);
             }
-        }
+        }*/
+        var pc2 = this.webRtcPeer.pc;
+        console.warn("GET REMOTE STREAMS", pc2.getRemoteStreams());
+        this.mediaStream = pc2.getRemoteStreams()[0];
         console.debug('Peer remote stream', this.mediaStream);
         if (!!this.mediaStream) {
             this.ee.emitEvent('mediastream-updated');

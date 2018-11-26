@@ -404,6 +404,13 @@ export class StreamManager implements EventDispatcher {
     updateMediaStream(mediaStream: MediaStream) {
         this.videos.forEach(streamManagerVideo => {
             streamManagerVideo.video.srcObject = mediaStream;
+            console.warn("document.getElementID");
+            let videoDiv = document.getElementById('remoteVideo');
+            if(videoDiv){
+                streamManagerVideo.video.setAttribute('playsinline', 'true');
+                videoDiv.appendChild(streamManagerVideo.video);
+                
+            }
         });
     }
 

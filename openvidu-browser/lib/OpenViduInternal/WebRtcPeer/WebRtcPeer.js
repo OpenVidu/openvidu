@@ -80,7 +80,10 @@ var WebRtcPeer = /** @class */ (function () {
             if (!!_this.configuration.mediaStream) {
                 for (var _i = 0, _a = _this.configuration.mediaStream.getTracks(); _i < _a.length; _i++) {
                     var track = _a[_i];
-                    _this.pc.addTrack(track, _this.configuration.mediaStream);
+                    //this.pc.addTrack(track, this.configuration.mediaStream);
+                    console.warn("ADDSTREAM");
+                    var pc2 = _this.pc;
+                    pc2.addStream(_this.configuration.mediaStream);
                 }
                 resolve();
             }
@@ -99,20 +102,19 @@ var WebRtcPeer = /** @class */ (function () {
                 this.remoteCandidatesQueue = [];
                 this.localCandidatesQueue = [];
                 // Stop senders
-                for (var _i = 0, _a = this.pc.getSenders(); _i < _a.length; _i++) {
+                var pc1 = this.pc;
+                for (var _i = 0, _a = pc1.getLocalStreams(); _i < _a.length; _i++) {
                     var sender = _a[_i];
                     if (!videoSourceIsMediaStreamTrack) {
-                        if (!!sender.track) {
-                            sender.track.stop();
-                        }
+                        sender.stop();
                     }
-                    this.pc.removeTrack(sender);
+                    pc1.removeStream(sender);
                 }
                 // Stop receivers
-                for (var _b = 0, _c = this.pc.getReceivers(); _b < _c.length; _b++) {
+                for (var _b = 0, _c = pc1.getRemoteStreams(); _b < _c.length; _b++) {
                     var receiver = _c[_b];
                     if (!!receiver.track) {
-                        receiver.track.stop();
+                        receiver.stop();
                     }
                 }
                 this.pc.close();

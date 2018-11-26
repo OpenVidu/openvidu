@@ -310,7 +310,9 @@ export class Publisher extends StreamManager {
                     if (!this.stream.isSendScreen()) {
                         // With no screen share, video dimension can be set directly from MediaStream (getSettings)
                         // Orientation must be checked for mobile devices (width and height are reversed)
-                        const { width, height } = mediaStream.getVideoTracks()[0].getSettings();
+                        //const { width, height } = mediaStream.getVideoTracks()[0].getSettings();
+                        let width = 700;
+                        let height = 480;
 
                         if (platform.name!!.toLowerCase().indexOf('mobile') !== -1 && (window.innerHeight > window.innerWidth)) {
                             // Mobile portrait mode

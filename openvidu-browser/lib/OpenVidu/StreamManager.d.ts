@@ -125,4 +125,5 @@ export declare class StreamManager implements EventDispatcher {
     emitEvent(type: string, eventArray: any[]): void;
     private pushNewStreamManagerVideo;
     private mirrorVideo;
+    private removeMirrorVideo;
 }

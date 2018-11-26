@@ -274,7 +274,9 @@ var Publisher = /** @class */ (function (_super) {
                     if (!_this.stream.isSendScreen()) {
                         // With no screen share, video dimension can be set directly from MediaStream (getSettings)
                         // Orientation must be checked for mobile devices (width and height are reversed)
-                        var _a = mediaStream.getVideoTracks()[0].getSettings(), width = _a.width, height = _a.height;
+                        //const { width, height } = mediaStream.getVideoTracks()[0].getSettings();
+                        var width = 700;
+                        var height = 480;
                         if (platform.name.toLowerCase().indexOf('mobile') !== -1 && (window.innerHeight > window.innerWidth)) {
                             // Mobile portrait mode
                             _this.stream.videoDimensions = {

@@ -88,7 +88,10 @@ export class WebRtcPeer {
             }
             if (!!this.configuration.mediaStream) {
                 for (const track of this.configuration.mediaStream.getTracks()) {
-                    this.pc.addTrack(track, this.configuration.mediaStream);
+                    //this.pc.addTrack(track, this.configuration.mediaStream);
+                    console.warn("ADDSTREAM");
+                    const pc2: any = this.pc;
+                    pc2.addStream(this.configuration.mediaStream);
                 }
                 resolve();
             }
@@ -109,18 +112,17 @@ export class WebRtcPeer {
                 this.localCandidatesQueue = [];
 
                 // Stop senders
-                for (const sender of this.pc.getSenders()) {
+                const pc1: any = this.pc;
+                for (const sender of pc1.getLocalStreams()) {
                     if (!videoSourceIsMediaStreamTrack) {
-                        if (!!sender.track) {
-                            sender.track.stop();
-                        }
+                        (<MediaStream>sender).stop();
                     }
-                    this.pc.removeTrack(sender);
+                    pc1.removeStream(sender);
                 }
                 // Stop receivers
-                for (const receiver of this.pc.getReceivers()) {
+                for (const receiver of pc1.getRemoteStreams()) {
                     if (!!receiver.track) {
-                        receiver.track.stop();
+                        (<MediaStream>receiver).stop();
                     }
                 }
 
