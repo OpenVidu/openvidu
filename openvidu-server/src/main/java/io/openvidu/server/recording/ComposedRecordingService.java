@@ -31,6 +31,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -87,6 +89,10 @@ public class ComposedRecordingService {
 	private Map<String, Recording> startingRecordings = new ConcurrentHashMap<>();
 	private Map<String, Recording> startedRecordings = new ConcurrentHashMap<>();
 	private Map<String, Recording> sessionsRecordings = new ConcurrentHashMap<>();
+	private final Map<String, ScheduledFuture<?>> automaticRecordingStopThreads = new ConcurrentHashMap<>();
+
+	private ScheduledThreadPoolExecutor automaticRecordingStopExecutor = new ScheduledThreadPoolExecutor(
+			Runtime.getRuntime().availableProcessors());
 
 	private final String IMAGE_NAME = "openvidu/openvidu-recording";
 	private String IMAGE_TAG;
@@ -155,10 +161,24 @@ public class ComposedRecordingService {
 		return recording;
 	}
 
-	public Recording stopRecording(Session session, String reason) {
-		Recording recording = this.sessionsRecordings.remove(session.getSessionId());
-		String containerId = this.sessionsContainers.remove(session.getSessionId());
-		this.startedRecordings.remove(recording.getId());
+	public Recording stopRecording(Session session, String recordingId, String reason) {
+		Recording recording;
+		String containerId;
+
+		if (session == null) {
+			log.warn(
+					"Existing recording {} does not have an active session associated. This usually means the recording"
+							+ " layout did not join a recorded participant or the recording has been automatically"
+							+ " stopped after last user left and timeout passed",
+					recordingId);
+			recording = this.startedRecordings.remove(recordingId);
+			containerId = this.sessionsContainers.remove(recording.getSessionId());
+			this.sessionsRecordings.remove(recording.getSessionId());
+		} else {
+			recording = this.sessionsRecordings.remove(session.getSessionId());
+			containerId = this.sessionsContainers.remove(session.getSessionId());
+			this.startedRecordings.remove(recording.getId());
+		}
 
 		if (containerId == null) {
 
@@ -250,7 +270,9 @@ public class ComposedRecordingService {
 				throw new OpenViduException(Code.RECORDING_REPORT_ERROR_CODE,
 						"There was an error generating the metadata report file for the recording");
 			}
-			this.sessionHandler.sendRecordingStoppedNotification(session, recording, reason);
+			if (session != null) {
+				this.sessionHandler.sendRecordingStoppedNotification(session, recording, reason);
+			}
 		}
 		return recording;
 	}
@@ -465,8 +487,7 @@ public class ComposedRecordingService {
 	private boolean isFileFromRecording(File file, String recordingId, String recordingName) {
 		return (((recordingId + ".info").equals(file.getName()))
 				|| ((RECORDING_ENTITY_FILE + recordingId).equals(file.getName()))
-				|| (recordingName + ".mp4").equals(file.getName())
-				|| (recordingId + ".jpg").equals(file.getName()));
+				|| (recordingName + ".mp4").equals(file.getName()) || (recordingId + ".jpg").equals(file.getName()));
 	}
 
 	private String getFreeRecordingId(String sessionId, String shortSessionId) {
@@ -526,6 +547,21 @@ public class ComposedRecordingService {
 
 	public void setRecordingVersion(String version) {
 		this.IMAGE_TAG = version;
+	}
+
+	public void initAutomaticRecordingStopThread(String sessionId) {
+		final String recordingId = this.sessionsRecordings.get(sessionId).getId();
+		ScheduledFuture<?> future = this.automaticRecordingStopExecutor.schedule(() -> {
+			log.info("Stopping recording {} after 2 minutes wait (no publisher published before timeout)", recordingId);
+			this.stopRecording(null, recordingId, "lastParticipantLeft");
+			this.automaticRecordingStopThreads.remove(sessionId);
+		}, 2, TimeUnit.MINUTES);
+		this.automaticRecordingStopThreads.putIfAbsent(sessionId, future);
+	}
+
+	public boolean abortAutomaticRecordingStopThread(String sessionId) {
+		ScheduledFuture<?> future = this.automaticRecordingStopThreads.remove(sessionId);
+		return future.cancel(false);
 	}
 
 }

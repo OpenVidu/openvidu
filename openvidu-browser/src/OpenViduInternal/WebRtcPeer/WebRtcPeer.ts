@@ -29,7 +29,7 @@ export interface WebRtcPeerConfiguration {
     onicecandidate: (event) => void;
     iceServers: RTCIceServer[] | undefined;
     mediaStream?: MediaStream;
-    mode?: string; // sendonly, reconly, sendrecv
+    mode?: 'sendonly' | 'recvonly' | 'sendrecv';
     id?: string;
 }
 
@@ -156,18 +156,52 @@ export class WebRtcPeer {
 
             console.debug('RTCPeerConnection constraints: ' + JSON.stringify(constraints));
 
-            this.pc.createOffer(constraints).then(offer => {
-                console.debug('Created SDP offer');
-                return this.pc.setLocalDescription(offer);
-            }).then(() => {
-                const localDescription = this.pc.localDescription;
-                if (!!localDescription) {
-                    console.debug('Local description set', localDescription.sdp);
-                    resolve(<string>localDescription.sdp);
-                } else {
-                    reject('Local description is not defined');
+            if (platform.name === 'Safari') {
+                // Safari, at least on iOS just seems to support unified plan, whereas in other browsers is not yet ready and considered experimental
+                if (offerAudio) {
+                    this.pc.addTransceiver('audio', {
+                        direction: this.configuration.mode,
+                    });
                 }
-            }).catch(error => reject(error));
+
+                if (offerVideo) {
+                    this.pc.addTransceiver('video', {
+                        direction: this.configuration.mode,
+                    });
+                }
+
+                this.pc
+                    .createOffer()
+                    .then(offer => {
+                        console.debug('Created SDP offer');
+                        return this.pc.setLocalDescription(offer);
+                    })
+                    .then(() => {
+                        const localDescription = this.pc.localDescription;
+
+                        if (!!localDescription) {
+                            console.debug('Local description set', localDescription.sdp);
+                            resolve(localDescription.sdp);
+                        } else {
+                            reject('Local description is not defined');
+                        }
+                    })
+                    .catch(error => reject(error));
+            } else {
+                this.pc.createOffer(constraints).then(offer => {
+                    console.debug('Created SDP offer');
+                    return this.pc.setLocalDescription(offer);
+                }).then(() => {
+                    const localDescription = this.pc.localDescription;
+                    if (!!localDescription) {
+                        console.debug('Local description set', localDescription.sdp);
+                        resolve(localDescription.sdp);
+                    } else {
+                        reject('Local description is not defined');
+                    }
+                })
+                    .catch(error => reject(error));
+            }
         });
     }
 

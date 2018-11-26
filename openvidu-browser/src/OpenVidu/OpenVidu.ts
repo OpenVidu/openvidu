@@ -77,7 +77,7 @@ export class OpenVidu {
   constructor() {
     console.info("'OpenVidu' initialized");
 
-    if (platform.name!!.toLowerCase().indexOf('mobile') !== -1) {
+    if (platform.os!!.family === 'iOS' || platform.os!!.family === 'Android') {
       // Listen to orientationchange only on mobile browsers
       (<any>window).onorientationchange = () => {
         this.publishers.forEach(publisher => {
@@ -276,12 +276,23 @@ export class OpenVidu {
    */
   checkSystemRequirements(): number {
     const browser = platform.name;
-    const version = platform.version;
+    const family = platform.os!!.family;
+    const userAgent = !!platform.ua ? platform.ua : navigator.userAgent;
 
-    if ((browser !== 'Chrome') && (browser !== 'Chrome Mobile') &&
-      (browser !== 'Firefox') && (browser !== 'Firefox Mobile') && (browser !== 'Firefox for iOS') &&
+    // Reject iPhones and iPads if not Safari ('Safari' also covers Ionic for iOS)
+    if (family === 'iOS' && (browser !== 'Safari' || userAgent.indexOf('CriOS') !== -1 || userAgent.indexOf('FxiOS') !== -1)) {
+      return 0;
+    }
+
+    // Accept: Chrome (desktop and Android), Firefox (desktop and Android), Opera (desktop and Android),
+    // Safari (OSX and iOS), Ionic (Android and iOS)
+    if (
+      (browser !== 'Safari') &&
+      (browser !== 'Chrome') && (browser !== 'Chrome Mobile') &&
+      (browser !== 'Firefox') && (browser !== 'Firefox Mobile') &&
       (browser !== 'Opera') && (browser !== 'Opera Mobile') &&
-      (browser !== 'Safari') && (browser !== 'Android Browser')) {
+      (browser !== 'Android Browser')
+    ) {
       return 0;
     } else {
       return 1;
@@ -290,11 +301,18 @@ export class OpenVidu {
 
 
   /**
-   * Checks if the browser supports screen-sharing. Chrome, Firefox and Opera support screen-sharing
+   * Checks if the browser supports screen-sharing. Desktop Chrome, Firefox and Opera support screen-sharing
    * @returns 1 if the browser supports screen-sharing, 0 otherwise
    */
   checkScreenSharingCapabilities(): number {
     const browser = platform.name;
+    const family = platform.os!!.family;
+
+    // Reject mobile devices
+    if (family === 'iOS' || family === 'Android' || family === 'Windows Phone') {
+      return 0;
+    }
+
     if ((browser !== 'Chrome') && (browser !== 'Firefox') && (browser !== 'Opera')) {
       return 0;
     } else {
@@ -484,7 +502,7 @@ export class OpenVidu {
             (platform.name!.indexOf('Firefox') !== -1 && publisherProperties.videoSource === 'window')) {
 
             if (platform.name !== 'Chrome' && platform.name!.indexOf('Firefox') === -1 && platform.name !== 'Opera') {
-              const error = new OpenViduError(OpenViduErrorName.SCREEN_SHARING_NOT_SUPPORTED, 'You can only screen share in desktop Chrome and Firefox. Detected browser: ' + platform.name);
+              const error = new OpenViduError(OpenViduErrorName.SCREEN_SHARING_NOT_SUPPORTED, 'You can only screen share in desktop Chrome, Firefox or Opera. Detected browser: ' + platform.name);
               console.error(error);
               reject(error);
             } else {

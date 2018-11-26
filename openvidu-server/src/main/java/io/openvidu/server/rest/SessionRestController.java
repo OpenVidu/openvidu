@@ -336,7 +336,9 @@ public class SessionRestController {
 			recordingLayout = RecordingLayout.valueOf(recordingLayoutString);
 		}
 
-		customLayout = (customLayout == null) ? session.getSessionProperties().defaultCustomLayout() : customLayout;
+		customLayout = (customLayout == null || customLayout.isEmpty())
+				? session.getSessionProperties().defaultCustomLayout()
+				: customLayout;
 
 		Recording startedRecording = this.recordingService.startRecording(session, new RecordingProperties.Builder()
 				.name(name).recordingLayout(recordingLayout).customLayout(customLayout).build());
@@ -368,11 +370,14 @@ public class SessionRestController {
 
 		Session session = sessionManager.getSession(recording.getSessionId());
 
-		Recording stoppedRecording = this.recordingService.stopRecording(session, "recordingStoppedByServer");
+		Recording stoppedRecording = this.recordingService.stopRecording(session, recording.getId(),
+				"recordingStoppedByServer");
 
-		sessionManager.evictParticipant(
-				session.getParticipantByPublicId(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID), null, null,
-				"EVICT_RECORDER");
+		if (session != null) {
+			sessionManager.evictParticipant(
+					session.getParticipantByPublicId(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID), null, null,
+					"EVICT_RECORDER");
+		}
 
 		return new ResponseEntity<>(stoppedRecording.toJson().toString(), getResponseHeaders(), HttpStatus.OK);
 	}
