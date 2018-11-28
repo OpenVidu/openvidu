@@ -28,9 +28,6 @@ import { VideoElementEvent } from '../OpenViduInternal/Events/VideoElementEvent'
 import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/OpenViduError';
 import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
 
-import platform = require('platform');
-
-
 /**
  * Packs local media streams. Participants can publish it to a session. Initialized with [[OpenVidu.initPublisher]] method
  */
@@ -313,26 +310,38 @@ export class Publisher extends StreamManager {
 
                 if (this.stream.isSendVideo()) {
                     if (!this.stream.isSendScreen()) {
-                        // With no screen share, video dimension can be set directly from MediaStream (getSettings)
-                        // Orientation must be checked for mobile devices (width and height are reversed)
-                        //const { width, height } = mediaStream.getVideoTracks()[0].getSettings();
-                        let width = 700;
-                        let height = 480;
 
-                        if (platform.name!!.toLowerCase().indexOf('mobile') !== -1 && (window.innerHeight > window.innerWidth)) {
-                            // Mobile portrait mode
-                            this.stream.videoDimensions = {
-                                width: height || 0,
-                                height: width || 0
-                            };
+                        if (platform['isIonicIos']) {
+                            // iOS Ionic. Limitation: cannot set videoDimensions, as the videoReference is not loaded if not added to DOM
+                            /*this.videoReference.onloadedmetadata = () => {
+                                this.stream.videoDimensions = {
+                                    width: this.videoReference.videoWidth,
+                                    height: this.videoReference.videoHeight
+                                };
+                            };*/
+                            this.stream.isLocalStreamReadyToPublish = true;
+                            this.stream.ee.emitEvent('stream-ready-to-publish', []);
                         } else {
-                            this.stream.videoDimensions = {
-                                width: width || 0,
-                                height: height || 0
-                            };
+                            // Rest of platforms
+                            // With no screen share, video dimension can be set directly from MediaStream (getSettings)
+                            // Orientation must be checked for mobile devices (width and height are reversed)
+                            const { width, height } = mediaStream.getVideoTracks()[0].getSettings();
+
+                            if (platform.name!!.toLowerCase().indexOf('mobile') !== -1 && (window.innerHeight > window.innerWidth)) {
+                                // Mobile portrait mode
+                                this.stream.videoDimensions = {
+                                    width: height || 0,
+                                    height: width || 0
+                                };
+                            } else {
+                                this.stream.videoDimensions = {
+                                    width: width || 0,
+                                    height: height || 0
+                                };
+                            }
+                            this.stream.isLocalStreamReadyToPublish = true;
+                            this.stream.ee.emitEvent('stream-ready-to-publish', []);
                         }
-                        this.stream.isLocalStreamReadyToPublish = true;
-                        this.stream.ee.emitEvent('stream-ready-to-publish', []);
                     } else {
                         // With screen share, video dimension must be got from a video element (onloadedmetadata event)
                         this.videoReference.onloadedmetadata = () => {

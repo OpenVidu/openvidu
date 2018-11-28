@@ -412,12 +412,13 @@ export class StreamManager implements EventDispatcher {
     updateMediaStream(mediaStream: MediaStream) {
         this.videos.forEach(streamManagerVideo => {
             streamManagerVideo.video.srcObject = mediaStream;
-            console.warn("document.getElementID");
-            let videoDiv = document.getElementById('remoteVideo');
-            if(videoDiv){
-                streamManagerVideo.video.setAttribute('playsinline', 'true');
-                videoDiv.appendChild(streamManagerVideo.video);
-                
+            if (platform['isIonicIos']) {
+                // iOS Ionic. LIMITATION: must reinsert the video in the DOM for
+                // the media stream to be updated
+                const vParent = streamManagerVideo.video.parentElement;
+                const newVideo = streamManagerVideo.video;
+                vParent!!.replaceChild(newVideo, streamManagerVideo.video);
+                streamManagerVideo.video = newVideo;
             }
         });
     }

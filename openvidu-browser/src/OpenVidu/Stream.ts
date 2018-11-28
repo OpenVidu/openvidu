@@ -703,18 +703,19 @@ export class Stream implements EventDispatcher {
     }
 
     private remotePeerSuccessfullyEstablished(): void {
-        /*this.mediaStream = new MediaStream();
-
-        let receiver: RTCRtpReceiver;
-        for (receiver of this.webRtcPeer.pc.getReceivers()) {
-            if (!!receiver.track) {
-                this.mediaStream.addTrack(receiver.track);
+        if (platform['isIonicIos']) {
+            // iOS Ionic. LIMITATION: must use deprecated WebRTC API
+            const pc1: any = this.webRtcPeer.pc;
+            this.mediaStream = pc1.getRemoteStreams()[0];
+        } else {
+            this.mediaStream = new MediaStream();
+            let receiver: RTCRtpReceiver;
+            for (receiver of this.webRtcPeer.pc.getReceivers()) {
+                if (!!receiver.track) {
+                    this.mediaStream.addTrack(receiver.track);
+                }
             }
-        }*/
-        const pc1: any = this.webRtcPeer.pc;
-        console.warn("GET REMOTE STREAMS", pc1.getRemoteStreams());
-        this.mediaStream = pc1.getRemoteStreams()[0];
-
+        }
         console.debug('Peer remote stream', this.mediaStream);
 
         if (!!this.mediaStream) {
