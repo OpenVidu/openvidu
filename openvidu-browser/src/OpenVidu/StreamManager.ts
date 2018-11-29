@@ -439,8 +439,10 @@ export class StreamManager implements EventDispatcher {
     }
 
     private mirrorVideo(video): void {
-        video.style.transform = 'rotateY(180deg)';
-        video.style.webkitTransform = 'rotateY(180deg)';
+        if (!platform['isIonicIos']) {
+            video.style.transform = 'rotateY(180deg)';
+            video.style.webkitTransform = 'rotateY(180deg)';
+        }
     }
 
     private removeMirrorVideo(video): void {

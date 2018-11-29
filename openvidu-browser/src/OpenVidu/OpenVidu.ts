@@ -79,7 +79,7 @@ export class OpenVidu {
     console.info("'OpenVidu' initialized");
 
     if (platform.os!!.family === 'iOS' || platform.os!!.family === 'Android') {
-      // Listen to orientationchange only on mobile browsers
+      // Listen to orientationchange only on mobile devices
       (<any>window).onorientationchange = () => {
         this.publishers.forEach(publisher => {
           if (!!publisher.stream && !!publisher.stream.hasVideo && !!publisher.stream.streamManager.videos[0]) {

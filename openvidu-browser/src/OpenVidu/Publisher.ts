@@ -312,22 +312,42 @@ export class Publisher extends StreamManager {
                     if (!this.stream.isSendScreen()) {
 
                         if (platform['isIonicIos']) {
-                            // iOS Ionic. Limitation: cannot set videoDimensions, as the videoReference is not loaded if not added to DOM
-                            /*this.videoReference.onloadedmetadata = () => {
+                            // iOS Ionic. Limitation: cannot set videoDimensions directly, as the videoReference is not loaded
+                            // if not added to DOM. Must add it to DOM and wait for videoWidth and videoHeight properties to be defined
+
+                            this.videoReference.style.display = 'none';
+                            document.body.appendChild(this.videoReference);
+
+                            const videoDimensionsSet = () => {
                                 this.stream.videoDimensions = {
                                     width: this.videoReference.videoWidth,
                                     height: this.videoReference.videoHeight
                                 };
-                            };*/
-                            this.stream.isLocalStreamReadyToPublish = true;
-                            this.stream.ee.emitEvent('stream-ready-to-publish', []);
+                                this.stream.isLocalStreamReadyToPublish = true;
+                                this.stream.ee.emitEvent('stream-ready-to-publish', []);
+                                document.body.removeChild(this.videoReference);
+                            }
+
+                            let interval;
+                            this.videoReference.onloadedmetadata = () => {
+                                if (this.videoReference.videoWidth === 0) {
+                                    interval = setInterval(() => {
+                                        if (this.videoReference.videoWidth !== 0) {
+                                            videoDimensionsSet();
+                                            clearInterval(interval);
+                                        }
+                                    }, 10);
+                                } else {
+                                    videoDimensionsSet();
+                                }
+                            };
                         } else {
                             // Rest of platforms
                             // With no screen share, video dimension can be set directly from MediaStream (getSettings)
                             // Orientation must be checked for mobile devices (width and height are reversed)
                             const { width, height } = mediaStream.getVideoTracks()[0].getSettings();
 
-                            if (platform.name!!.toLowerCase().indexOf('mobile') !== -1 && (window.innerHeight > window.innerWidth)) {
+                            if ((platform.os!!.family === 'iOS' || platform.os!!.family === 'Android') && (window.innerHeight > window.innerWidth)) {
                                 // Mobile portrait mode
                                 this.stream.videoDimensions = {
                                     width: height || 0,
