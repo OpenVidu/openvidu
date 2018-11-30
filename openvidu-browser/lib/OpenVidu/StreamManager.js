@@ -279,7 +279,11 @@ var StreamManager = /** @class */ (function () {
         }
         if (!this.remote && !this.stream.displayMyRemote()) {
             video.muted = true;
-            if (this.stream.outboundStreamOpts.publisherProperties.mirror) {
+            if (video.style.transform === 'rotateY(180deg)' && !this.stream.outboundStreamOpts.publisherProperties.mirror) {
+                // If the video was already rotated and now is set to not mirror
+                this.removeMirrorVideo(video);
+            }
+            else if (this.stream.outboundStreamOpts.publisherProperties.mirror) {
                 this.mirrorVideo(video);
             }
         }
@@ -338,6 +342,12 @@ var StreamManager = /** @class */ (function () {
     StreamManager.prototype.updateMediaStream = function (mediaStream) {
         this.videos.forEach(function (streamManagerVideo) {
             streamManagerVideo.video.srcObject = mediaStream;
+            console.warn("document.getElementID");
+            var videoDiv = document.getElementById('remoteVideo');
+            if (videoDiv) {
+                streamManagerVideo.video.setAttribute('playsinline', 'true');
+                videoDiv.appendChild(streamManagerVideo.video);
+            }
         });
     };
     /**
@@ -356,6 +366,10 @@ var StreamManager = /** @class */ (function () {
     StreamManager.prototype.mirrorVideo = function (video) {
         video.style.transform = 'rotateY(180deg)';
         video.style.webkitTransform = 'rotateY(180deg)';
+    };
+    StreamManager.prototype.removeMirrorVideo = function (video) {
+        video.style.transform = 'unset';
+        video.style.webkitTransform = 'unset';
     };
     return StreamManager;
 }());

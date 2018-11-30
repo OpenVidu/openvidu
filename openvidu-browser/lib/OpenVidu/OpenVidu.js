@@ -105,6 +105,7 @@ var OpenVidu = /** @class */ (function () {
      * Returns new session
      */
     OpenVidu.prototype.initSession = function () {
+        console.warn("OEeeeeee");
         this.session = new Session_1.Session(this);
         return this.session;
     };

@@ -17,8 +17,6 @@
 
 import freeice = require('freeice');
 import uuid = require('uuid');
-import platform = require('platform');
-
 
 export interface WebRtcPeerConfiguration {
     mediaConstraints: {
@@ -87,8 +85,14 @@ export class WebRtcPeer {
                 reject('The peer connection object is in "closed" state. This is most likely due to an invocation of the dispose method before accepting in the dialogue');
             }
             if (!!this.configuration.mediaStream) {
-                for (const track of this.configuration.mediaStream.getTracks()) {
-                    this.pc.addTrack(track, this.configuration.mediaStream);
+                if (platform['isIonicIos']) {
+                    // iOS Ionic. LIMITATION: must use deprecated WebRTC API
+                    const pc2: any = this.pc;
+                    pc2.addStream(this.configuration.mediaStream);
+                } else {
+                    for (const track of this.configuration.mediaStream.getTracks()) {
+                        this.pc.addTrack(track, this.configuration.mediaStream);
+                    }
                 }
                 resolve();
             }
@@ -108,19 +112,37 @@ export class WebRtcPeer {
                 this.remoteCandidatesQueue = [];
                 this.localCandidatesQueue = [];
 
-                // Stop senders
-                for (const sender of this.pc.getSenders()) {
-                    if (!videoSourceIsMediaStreamTrack) {
-                        if (!!sender.track) {
-                            sender.track.stop();
+                if (platform['isIonicIos']) {
+                    // iOS Ionic. LIMITATION: must use deprecated WebRTC API
+                    // Stop senders deprecated
+                    const pc1: any = this.pc;
+                    for (const sender of pc1.getLocalStreams()) {
+                        if (!videoSourceIsMediaStreamTrack) {
+                            (<MediaStream>sender).stop();
+                        }
+                        pc1.removeStream(sender);
+                    }
+                    // Stop receivers deprecated
+                    for (const receiver of pc1.getRemoteStreams()) {
+                        if (!!receiver.track) {
+                            (<MediaStream>receiver).stop();
                         }
                     }
-                    this.pc.removeTrack(sender);
-                }
-                // Stop receivers
-                for (const receiver of this.pc.getReceivers()) {
-                    if (!!receiver.track) {
-                        receiver.track.stop();
+                } else {
+                    // Stop senders
+                    for (const sender of this.pc.getSenders()) {
+                        if (!videoSourceIsMediaStreamTrack) {
+                            if (!!sender.track) {
+                                sender.track.stop();
+                            }
+                        }
+                        this.pc.removeTrack(sender);
+                    }
+                    // Stop receivers
+                    for (const receiver of this.pc.getReceivers()) {
+                        if (!!receiver.track) {
+                            receiver.track.stop();
+                        }
                     }
                 }
 
@@ -154,8 +176,8 @@ export class WebRtcPeer {
 
             console.debug('RTCPeerConnection constraints: ' + JSON.stringify(constraints));
 
-            if (platform.name === 'Safari') {
-                // Safari, at least on iOS just seems to support unified plan, whereas in other browsers is not yet ready and considered experimental
+            if (platform.name === 'Safari' && platform.ua!!.indexOf('Safari') !== -1) {
+                // Safari (excluding Ionic), at least on iOS just seems to support unified plan, whereas in other browsers is not yet ready and considered experimental
                 if (offerAudio) {
                     this.pc.addTransceiver('audio', {
                         direction: this.configuration.mode,

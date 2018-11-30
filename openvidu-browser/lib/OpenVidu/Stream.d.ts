@@ -46,7 +46,9 @@ export declare class Stream implements EventDispatcher {
      */
     audioActive: boolean;
     /**
-     * Unique identifier of the stream
+     * Unique identifier of the stream. If the stream belongs to a...
+     * - Subscriber object: property `streamId` is always defined
+     * - Publisher object: property `streamId` is only defined after successful execution of [[Session.publish]]
      */
     streamId: string;
     /**

@@ -28,9 +28,6 @@ import { VideoElementEvent } from '../OpenViduInternal/Events/VideoElementEvent'
 import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/OpenViduError';
 import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
 
-import platform = require('platform');
-
-
 /**
  * Packs local media streams. Participants can publish it to a session. Initialized with [[OpenVidu.initPublisher]] method
  */
@@ -313,24 +310,58 @@ export class Publisher extends StreamManager {
 
                 if (this.stream.isSendVideo()) {
                     if (!this.stream.isSendScreen()) {
-                        // With no screen share, video dimension can be set directly from MediaStream (getSettings)
-                        // Orientation must be checked for mobile devices (width and height are reversed)
-                        const { width, height } = mediaStream.getVideoTracks()[0].getSettings();
 
-                        if (platform.name!!.toLowerCase().indexOf('mobile') !== -1 && (window.innerHeight > window.innerWidth)) {
-                            // Mobile portrait mode
-                            this.stream.videoDimensions = {
-                                width: height || 0,
-                                height: width || 0
+                        if (platform['isIonicIos']) {
+                            // iOS Ionic. Limitation: cannot set videoDimensions directly, as the videoReference is not loaded
+                            // if not added to DOM. Must add it to DOM and wait for videoWidth and videoHeight properties to be defined
+
+                            this.videoReference.style.display = 'none';
+                            document.body.appendChild(this.videoReference);
+
+                            const videoDimensionsSet = () => {
+                                this.stream.videoDimensions = {
+                                    width: this.videoReference.videoWidth,
+                                    height: this.videoReference.videoHeight
+                                };
+                                this.stream.isLocalStreamReadyToPublish = true;
+                                this.stream.ee.emitEvent('stream-ready-to-publish', []);
+                                document.body.removeChild(this.videoReference);
+                            }
+
+                            let interval;
+                            this.videoReference.onloadedmetadata = () => {
+                                if (this.videoReference.videoWidth === 0) {
+                                    interval = setInterval(() => {
+                                        if (this.videoReference.videoWidth !== 0) {
+                                            videoDimensionsSet();
+                                            clearInterval(interval);
+                                        }
+                                    }, 10);
+                                } else {
+                                    videoDimensionsSet();
+                                }
                             };
                         } else {
-                            this.stream.videoDimensions = {
-                                width: width || 0,
-                                height: height || 0
-                            };
+                            // Rest of platforms
+                            // With no screen share, video dimension can be set directly from MediaStream (getSettings)
+                            // Orientation must be checked for mobile devices (width and height are reversed)
+                            const { width, height } = mediaStream.getVideoTracks()[0].getSettings();
+
+                            if ((platform.os!!.family === 'iOS' || platform.os!!.family === 'Android') && (window.innerHeight > window.innerWidth)) {
+                                // Mobile portrait mode
+                                this.stream.videoDimensions = {
+                                    width: height || 0,
+                                    height: width || 0
+                                };
+                            } else {
+                                this.stream.videoDimensions = {
+                                    width: width || 0,
+                                    height: height || 0
+                                };
+                            }
+                            this.stream.isLocalStreamReadyToPublish = true;
+                            this.stream.ee.emitEvent('stream-ready-to-publish', []);
                         }
-                        this.stream.isLocalStreamReadyToPublish = true;
-                        this.stream.ee.emitEvent('stream-ready-to-publish', []);
                     } else {
                         // With screen share, video dimension must be got from a video element (onloadedmetadata event)
                         this.videoReference.onloadedmetadata = () => {

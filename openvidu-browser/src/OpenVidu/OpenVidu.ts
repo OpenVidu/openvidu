@@ -32,6 +32,7 @@ import * as screenSharing from '../OpenViduInternal/ScreenSharing/Screen-Capturi
 import RpcBuilder = require('../OpenViduInternal/KurentoUtils/kurento-jsonrpc');
 import platform = require('platform');
 
+platform['isIonicIos'] = (platform.product === 'iPhone' || platform.product === 'iPad') && platform.ua!!.indexOf('Safari') === -1;
 
 /**
  * Entrypoint of OpenVidu Browser library.
@@ -78,8 +79,8 @@ export class OpenVidu {
     console.info("'OpenVidu' initialized");
 
     if (platform.os!!.family === 'iOS' || platform.os!!.family === 'Android') {
-      // Listen to orientationchange only on mobile browsers
-      (<any>window).onorientationchange = () => {
+      // Listen to orientationchange only on mobile devices
+      (<any>window).addEventListener('orientationchange', () => {
         this.publishers.forEach(publisher => {
           if (!!publisher.stream && !!publisher.stream.hasVideo && !!publisher.stream.streamManager.videos[0]) {
 
@@ -87,22 +88,37 @@ export class OpenVidu {
 
             const oldWidth = publisher.stream.videoDimensions.width;
             const oldHeight = publisher.stream.videoDimensions.height;
-            // New resolution got from different places for Chrome and Firefox. Chrome needs a videoWidth and videoHeight of a videoElement.
-            // Firefox needs getSettings from the videoTrack
-            let firefoxSettings = publisher.stream.getMediaStream().getVideoTracks()[0].getSettings();
-            let newWidth = (platform.name!!.toLowerCase().indexOf('firefox') !== -1) ? firefoxSettings.width : publisher.videoReference.videoWidth;
-            let newHeight = (platform.name!!.toLowerCase().indexOf('firefox') !== -1) ? firefoxSettings.height : publisher.videoReference.videoHeight;
+
+            const getNewVideoDimensions = (): Promise<{newWidth: number, newHeight: number}> => {
+              return new Promise((resolve, reject) => {
+                let newVideoDimensions: { newWidth: number, newHeight: number };
+                if (platform['isIonicIos']) {
+                  // iOS Ionic. Limitation: must get new dimensions from an existing video element already inserted into DOM 
+                  resolve({
+                    newWidth: publisher.stream.streamManager.videos[0].video.videoWidth,
+                    newHeight: publisher.stream.streamManager.videos[0].video.videoHeight
+                  });
+                } else {
+                  // Rest of platforms
+                  // New resolution got from different places for Chrome and Firefox. Chrome needs a videoWidth and videoHeight of a videoElement.
+                  // Firefox needs getSettings from the videoTrack
+                  let firefoxSettings = publisher.stream.getMediaStream().getVideoTracks()[0].getSettings();
+                  const newWidth = <number>((platform.name!!.toLowerCase().indexOf('firefox') !== -1) ? firefoxSettings.width : publisher.videoReference.videoWidth);
+                  const newHeight = <number>((platform.name!!.toLowerCase().indexOf('firefox') !== -1) ? firefoxSettings.height : publisher.videoReference.videoHeight);
+                  resolve({newWidth, newHeight});
+                }
+              });
+            };
 
             const repeatUntilChange = setInterval(() => {
-              firefoxSettings = publisher.stream.getMediaStream().getVideoTracks()[0].getSettings();
-              newWidth = (platform.name!!.toLowerCase().indexOf('firefox') !== -1) ? firefoxSettings.width : publisher.videoReference.videoWidth;
-              newHeight = (platform.name!!.toLowerCase().indexOf('firefox') !== -1) ? firefoxSettings.height : publisher.videoReference.videoHeight;
-              sendStreamPropertyChangedEvent(oldWidth, oldHeight, newWidth, newHeight);
-            }, 100);
+              getNewVideoDimensions().then(newDimensions => {
+                sendStreamPropertyChangedEvent(oldWidth, oldHeight, newDimensions.newWidth, newDimensions.newHeight);
+              });
+            }, 75);
 
             const sendStreamPropertyChangedEvent = (oldWidth, oldHeight, newWidth, newHeight) => {
               attempts++;
-              if (attempts > 4) {
+              if (attempts > 10) {
                 clearTimeout(repeatUntilChange);
               }
               if (newWidth !== oldWidth || newHeight !== oldHeight) {
@@ -131,7 +147,7 @@ export class OpenVidu {
             };
           }
         });
-      };
+      });
     }
   }
 
@@ -309,7 +325,7 @@ export class OpenVidu {
     const family = platform.os!!.family;
 
     // Reject mobile devices
-    if (family === 'iOS' || family === 'Android' || family === 'Windows Phone') {
+    if (family === 'iOS' || family === 'Android') {
       return 0;
     }
 

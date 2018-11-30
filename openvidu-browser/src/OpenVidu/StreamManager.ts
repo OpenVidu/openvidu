@@ -412,6 +412,14 @@ export class StreamManager implements EventDispatcher {
     updateMediaStream(mediaStream: MediaStream) {
         this.videos.forEach(streamManagerVideo => {
             streamManagerVideo.video.srcObject = mediaStream;
+            if (platform['isIonicIos']) {
+                // iOS Ionic. LIMITATION: must reinsert the video in the DOM for
+                // the media stream to be updated
+                const vParent = streamManagerVideo.video.parentElement;
+                const newVideo = streamManagerVideo.video;
+                vParent!!.replaceChild(newVideo, streamManagerVideo.video);
+                streamManagerVideo.video = newVideo;
+            }
         });
     }
 
@@ -431,8 +439,10 @@ export class StreamManager implements EventDispatcher {
     }
 
     private mirrorVideo(video): void {
-        video.style.transform = 'rotateY(180deg)';
-        video.style.webkitTransform = 'rotateY(180deg)';
+        if (!platform['isIonicIos']) {
+            video.style.transform = 'rotateY(180deg)';
+            video.style.webkitTransform = 'rotateY(180deg)';
+        }
     }
 
     private removeMirrorVideo(video): void {
