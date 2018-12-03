@@ -89,9 +89,8 @@ export class OpenVidu {
             const oldWidth = publisher.stream.videoDimensions.width;
             const oldHeight = publisher.stream.videoDimensions.height;
 
-            const getNewVideoDimensions = (): Promise<{newWidth: number, newHeight: number}> => {
+            const getNewVideoDimensions = (): Promise<{ newWidth: number, newHeight: number }> => {
               return new Promise((resolve, reject) => {
-                let newVideoDimensions: { newWidth: number, newHeight: number };
                 if (platform['isIonicIos']) {
                   // iOS Ionic. Limitation: must get new dimensions from an existing video element already inserted into DOM 
                   resolve({
@@ -102,10 +101,10 @@ export class OpenVidu {
                   // Rest of platforms
                   // New resolution got from different places for Chrome and Firefox. Chrome needs a videoWidth and videoHeight of a videoElement.
                   // Firefox needs getSettings from the videoTrack
-                  let firefoxSettings = publisher.stream.getMediaStream().getVideoTracks()[0].getSettings();
+                  const firefoxSettings = publisher.stream.getMediaStream().getVideoTracks()[0].getSettings();
                   const newWidth = <number>((platform.name!!.toLowerCase().indexOf('firefox') !== -1) ? firefoxSettings.width : publisher.videoReference.videoWidth);
                   const newHeight = <number>((platform.name!!.toLowerCase().indexOf('firefox') !== -1) ? firefoxSettings.height : publisher.videoReference.videoHeight);
-                  resolve({newWidth, newHeight});
+                  resolve({ newWidth, newHeight });
                 }
               });
             };

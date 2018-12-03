@@ -326,7 +326,7 @@ export class Publisher extends StreamManager {
                                 this.stream.isLocalStreamReadyToPublish = true;
                                 this.stream.ee.emitEvent('stream-ready-to-publish', []);
                                 document.body.removeChild(this.videoReference);
-                            }
+                            };
 
                             let interval;
                             this.videoReference.onloadedmetadata = () => {
