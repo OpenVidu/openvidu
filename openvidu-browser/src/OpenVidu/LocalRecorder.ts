@@ -17,6 +17,8 @@
 
 import { Stream } from './Stream';
 import { LocalRecorderState } from '../OpenViduInternal/Enums/LocalRecorderState';
+import platform = require('platform');
+
 
 /**
  * @hidden
@@ -37,10 +39,8 @@ export class LocalRecorder {
     private mediaRecorder: any;
     private chunks: any[] = [];
     private blob: Blob;
-    private count = 0;
     private id: string;
     private videoPreviewSrc: string;
-    private htmlParentElementId: string;
     private videoPreview: HTMLVideoElement;
 
     /**
@@ -207,14 +207,11 @@ export class LocalRecorder {
         }
 
         if (typeof parentElement === 'string') {
-            this.htmlParentElementId = parentElement;
-
             const parentElementDom = document.getElementById(parentElement);
             if (parentElementDom) {
                 this.videoPreview = parentElementDom.appendChild(this.videoPreview);
             }
         } else {
-            this.htmlParentElementId = parentElement.id;
             this.videoPreview = parentElement.appendChild(this.videoPreview);
         }
 
@@ -231,7 +228,6 @@ export class LocalRecorder {
         const f = () => {
             delete this.blob;
             this.chunks = [];
-            this.count = 0;
             delete this.mediaRecorder;
             this.state = LocalRecorderState.READY;
         };

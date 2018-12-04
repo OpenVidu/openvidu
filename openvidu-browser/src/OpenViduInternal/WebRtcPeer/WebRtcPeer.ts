@@ -17,6 +17,8 @@
 
 import freeice = require('freeice');
 import uuid = require('uuid');
+import platform = require('platform');
+platform['isIonicIos'] = (platform.product === 'iPhone' || platform.product === 'iPad') && platform.ua!!.indexOf('Safari') === -1;
 
 export interface WebRtcPeerConfiguration {
     mediaConstraints: {

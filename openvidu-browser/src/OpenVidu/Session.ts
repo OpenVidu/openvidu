@@ -41,7 +41,7 @@ import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/Open
 import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
 
 import EventEmitter = require('wolfy87-eventemitter');
-
+import platform = require('platform');
 
 /**
  * Represents a video call. It can also be seen as a videoconference room where multiple users can connect.

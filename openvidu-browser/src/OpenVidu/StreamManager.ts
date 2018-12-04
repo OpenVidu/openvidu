@@ -24,7 +24,8 @@ import { VideoElementEvent } from '../OpenViduInternal/Events/VideoElementEvent'
 import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
 
 import EventEmitter = require('wolfy87-eventemitter');
-
+import platform = require('platform');
+platform['isIonicIos'] = (platform.product === 'iPhone' || platform.product === 'iPad') && platform.ua!!.indexOf('Safari') === -1;
 
 /**
  * Interface in charge of displaying the media streams in the HTML DOM. This wraps any [[Publisher]] and [[Subscriber]] object.

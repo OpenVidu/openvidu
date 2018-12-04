@@ -27,10 +27,12 @@ import { WebRtcPeer, WebRtcPeerSendonly, WebRtcPeerRecvonly, WebRtcPeerSendrecv 
 import { WebRtcStats } from '../OpenViduInternal/WebRtcStats/WebRtcStats';
 import { PublisherSpeakingEvent } from '../OpenViduInternal/Events/PublisherSpeakingEvent';
 import { StreamPropertyChangedEvent } from '../OpenViduInternal/Events/StreamPropertyChangedEvent';
+import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/OpenViduError';
 
 import EventEmitter = require('wolfy87-eventemitter');
 import hark = require('hark');
-import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/OpenViduError';
+import platform = require('platform');
+platform['isIonicIos'] = (platform.product === 'iPhone' || platform.product === 'iPad') && platform.ua!!.indexOf('Safari') === -1;
 
 
 /**

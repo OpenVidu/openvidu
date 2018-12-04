@@ -28,6 +28,9 @@ import { VideoElementEvent } from '../OpenViduInternal/Events/VideoElementEvent'
 import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/OpenViduError';
 import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
 
+import platform = require('platform');
+platform['isIonicIos'] = (platform.product === 'iPhone' || platform.product === 'iPad') && platform.ua!!.indexOf('Safari') === -1;
+
 /**
  * Packs local media streams. Participants can publish it to a session. Initialized with [[OpenVidu.initPublisher]] method
  */

@@ -18,6 +18,7 @@
 // tslint:disable:no-string-literal
 
 import { Stream } from '../../OpenVidu/Stream';
+import platform = require('platform');
 
 export class WebRtcStats {
 
