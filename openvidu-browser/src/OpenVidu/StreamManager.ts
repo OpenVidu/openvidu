@@ -113,7 +113,7 @@ export class StreamManager implements EventDispatcher {
                     video: document.createElement('video'),
                     id: ''
                 };
-                if (platform.name === 'Safari' && platform.product === 'iPhone') {
+                if (platform.name === 'Safari') {
                     this.firstVideoElement.video.setAttribute('playsinline', 'true');
                 }
                 this.targetElement = targEl;
@@ -334,7 +334,7 @@ export class StreamManager implements EventDispatcher {
         video.autoplay = true;
         video.controls = false;
 
-        if (platform.name === 'Safari' && platform.product === 'iPhone') {
+        if (platform.name === 'Safari') {
             video.setAttribute('playsinline', 'true');
         }
 

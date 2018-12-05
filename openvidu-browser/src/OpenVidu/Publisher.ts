@@ -293,7 +293,7 @@ export class Publisher extends StreamManager {
 
                 this.videoReference = document.createElement('video');
 
-                if (platform.name === 'Safari' && platform.product === 'iPhone') {
+                if (platform.name === 'Safari') {
                     this.videoReference.setAttribute('playsinline', 'true');
                 }
 
@@ -314,8 +314,8 @@ export class Publisher extends StreamManager {
                 if (this.stream.isSendVideo()) {
                     if (!this.stream.isSendScreen()) {
 
-                        if (platform['isIonicIos']) {
-                            // iOS Ionic. Limitation: cannot set videoDimensions directly, as the videoReference is not loaded
+                        if (platform['isIonicIos'] || platform.name === 'Safari') {
+                            // iOS Ionic or Safari. Limitation: cannot set videoDimensions directly, as the videoReference is not loaded
                             // if not added to DOM. Must add it to DOM and wait for videoWidth and videoHeight properties to be defined
 
                             this.videoReference.style.display = 'none';

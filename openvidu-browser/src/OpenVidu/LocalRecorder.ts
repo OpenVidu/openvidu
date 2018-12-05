@@ -202,7 +202,7 @@ export class LocalRecorder {
         this.videoPreview.id = this.id;
         this.videoPreview.autoplay = true;
 
-        if (platform.name === 'Safari' && platform.product === 'iPhone') {
+        if (platform.name === 'Safari') {
             this.videoPreview.setAttribute('playsinline', 'true');
         }
 
