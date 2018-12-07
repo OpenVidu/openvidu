@@ -6,7 +6,7 @@ import {
 import {
   OpenVidu, Session, Subscriber, Publisher, VideoInsertMode, StreamEvent, ConnectionEvent,
   SessionDisconnectedEvent, SignalEvent, RecordingEvent,
-  PublisherSpeakingEvent, PublisherProperties, StreamPropertyChangedEvent, OpenViduError, FilterEvent
+  PublisherSpeakingEvent, PublisherProperties, StreamPropertyChangedEvent, OpenViduError
 } from 'openvidu-browser';
 import {
   OpenVidu as OpenViduAPI,

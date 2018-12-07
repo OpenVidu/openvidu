@@ -76,12 +76,14 @@ export class VideoComponent implements OnInit, OnDestroy {
                 videoElementCreated: true,
                 videoElementDestroyed: true,
                 streamPlaying: true,
+                streamAudioVolumeChange: false,
                 streamPropertyChanged: false
             };
             this.updateSubscriberEvents({
                 videoElementCreated: false,
                 videoElementDestroyed: false,
                 streamPlaying: false,
+                streamAudioVolumeChange: true,
                 streamPropertyChanged: true
             });
 
@@ -91,6 +93,7 @@ export class VideoComponent implements OnInit, OnDestroy {
                 videoElementCreated: true,
                 videoElementDestroyed: true,
                 streamPlaying: true,
+                streamAudioVolumeChange: false,
                 accessAllowed: true,
                 accessDenied: true,
                 accessDialogOpened: true,
@@ -105,6 +108,7 @@ export class VideoComponent implements OnInit, OnDestroy {
                     videoElementCreated: false,
                     videoElementDestroyed: false,
                     streamPlaying: false,
+                    streamAudioVolumeChange: true,
                     accessAllowed: false,
                     accessDenied: false,
                     accessDialogOpened: false,
@@ -156,6 +160,7 @@ export class VideoComponent implements OnInit, OnDestroy {
                 videoElementCreated: this.eventCollection.videoElementCreated,
                 videoElementDestroyed: this.eventCollection.videoElementDestroyed,
                 streamPlaying: this.eventCollection.streamPlaying,
+                streamAudioVolumeChange: this.eventCollection.streamAudioVolumeChange,
                 streamPropertyChanged: this.eventCollection.streamPropertyChanged
             };
             this.streamManager = this.streamManager.stream.session.subscribe(subscriber.stream, undefined);
@@ -273,6 +278,7 @@ export class VideoComponent implements OnInit, OnDestroy {
             videoElementCreated: !this.eventCollection.videoElementCreated,
             videoElementDestroyed: !this.eventCollection.videoElementDestroyed,
             streamPlaying: !this.eventCollection.streamPlaying,
+            streamAudioVolumeChange: !this.eventCollection.streamAudioVolumeChange,
             accessAllowed: !this.eventCollection.accessAllowed,
             accessDenied: !this.eventCollection.accessDenied,
             accessDialogOpened: !this.eventCollection.accessDialogOpened,
@@ -348,6 +354,19 @@ export class VideoComponent implements OnInit, OnDestroy {
             }
         } else {
             sub.off('streamPlaying');
+        }
+
+        if (this.eventCollection.streamAudioVolumeChange) {
+            if (!oldValues.streamAudioVolumeChange) {
+                sub.on('streamAudioVolumeChange', (event: StreamManagerEvent) => {
+                    this.updateEventListInParent.emit({
+                        event: 'streamAudioVolumeChange',
+                        content: event.value['newValue']
+                    });
+                });
+            }
+        } else {
+            sub.off('streamAudioVolumeChange');
         }
 
         if (this.eventCollection.streamPropertyChanged) {
@@ -508,6 +527,19 @@ export class VideoComponent implements OnInit, OnDestroy {
         } else {
             pub.off('streamPlaying');
         }
+
+        if (this.eventCollection.streamAudioVolumeChange) {
+            if (!oldValues.streamAudioVolumeChange) {
+                pub.on('streamAudioVolumeChange', (event: StreamManagerEvent) => {
+                    this.updateEventListInParent.emit({
+                        event: 'streamAudioVolumeChange',
+                        content: event.value['newValue']
+                    });
+                });
+            }
+        } else {
+            pub.off('streamAudioVolumeChange');
+        }
     }
 
     openSubscriberEventsDialog() {
@@ -515,6 +547,7 @@ export class VideoComponent implements OnInit, OnDestroy {
             videoElementCreated: this.eventCollection.videoElementCreated,
             videoElementDestroyed: this.eventCollection.videoElementDestroyed,
             streamPlaying: this.eventCollection.streamPlaying,
+            streamAudioVolumeChange: this.eventCollection.streamAudioVolumeChange,
             streamPropertyChanged: this.eventCollection.streamPropertyChanged
         };
         const dialogRef = this.dialog.open(EventsDialogComponent, {
@@ -522,7 +555,7 @@ export class VideoComponent implements OnInit, OnDestroy {
                 eventCollection: this.eventCollection,
                 target: 'Subscriber'
             },
-            width: '280px',
+            width: '295px',
             autoFocus: false,
             disableClose: true
         });
@@ -531,12 +564,12 @@ export class VideoComponent implements OnInit, OnDestroy {
         });
     }
 
-
     openPublisherEventsDialog() {
         const oldValues = {
             videoElementCreated: this.eventCollection.videoElementCreated,
             videoElementDestroyed: this.eventCollection.videoElementDestroyed,
             streamPlaying: this.eventCollection.streamPlaying,
+            streamAudioVolumeChange: this.eventCollection.streamAudioVolumeChange,
             accessAllowed: this.eventCollection.accessAllowed,
             accessDenied: this.eventCollection.accessDenied,
             accessDialogOpened: this.eventCollection.accessDialogOpened,
@@ -550,7 +583,7 @@ export class VideoComponent implements OnInit, OnDestroy {
                 eventCollection: this.eventCollection,
                 target: 'Publisher'
             },
-            width: '280px',
+            width: '295px',
             autoFocus: false,
             disableClose: true
         });
