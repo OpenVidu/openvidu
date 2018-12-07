@@ -80,11 +80,11 @@ export class Session implements EventDispatcher {
     /**
      * @hidden
      */
-    isFirstIonicIosSubscriber: boolean = true;
+    isFirstIonicIosSubscriber = true;
     /**
      * @hidden
      */
-    countDownForIonicIosSubscribers: boolean = true;
+    countDownForIonicIosSubscribers = true;
 
     /**
      * @hidden
@@ -567,7 +567,7 @@ export class Session implements EventDispatcher {
             // If there are already available remote streams, enable hark 'speaking' event in all of them
             for (const connectionId in this.remoteConnections) {
                 const str = this.remoteConnections[connectionId].stream;
-                if (!!str && !str.speechEvent && str.hasAudio) {
+                if (!!str && str.hasAudio) {
                     str.enableSpeakingEvents();
                 }
             }
@@ -596,7 +596,7 @@ export class Session implements EventDispatcher {
             // If there are already available remote streams, enable hark in all of them
             for (const connectionId in this.remoteConnections) {
                 const str = this.remoteConnections[connectionId].stream;
-                if (!!str && !str.speechEvent && str.hasAudio) {
+                if (!!str && str.hasAudio) {
                     str.enableOnceSpeakingEvents();
                 }
             }
@@ -623,7 +623,7 @@ export class Session implements EventDispatcher {
             // If there are already available remote streams, disable hark in all of them
             for (const connectionId in this.remoteConnections) {
                 const str = this.remoteConnections[connectionId].stream;
-                if (!!str && !!str.speechEvent) {
+                if (!!str) {
                     str.disableSpeakingEvents();
                 }
             }

@@ -26,6 +26,7 @@ import { OutboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/Ou
 import { WebRtcPeer, WebRtcPeerSendonly, WebRtcPeerRecvonly, WebRtcPeerSendrecv } from '../OpenViduInternal/WebRtcPeer/WebRtcPeer';
 import { WebRtcStats } from '../OpenViduInternal/WebRtcStats/WebRtcStats';
 import { PublisherSpeakingEvent } from '../OpenViduInternal/Events/PublisherSpeakingEvent';
+import { StreamManagerEvent } from '../OpenViduInternal/Events/StreamManagerEvent';
 import { StreamPropertyChangedEvent } from '../OpenViduInternal/Events/StreamPropertyChangedEvent';
 import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/OpenViduError';
 
@@ -156,6 +157,18 @@ export class Stream implements EventDispatcher {
      * @hidden
      */
     speechEvent: any;
+    /**
+     * @hidden
+     */
+    publisherStartSpeakingEventEnabled = false;
+    /**
+     * @hidden
+     */
+    publisherStopSpeakingEventEnabled = false;
+    /**
+     * @hidden
+     */
+    volumeChangeEventEnabled = false;
 
 
     /**
@@ -334,7 +347,6 @@ export class Stream implements EventDispatcher {
         });
     }
 
-
     /* Hidden methods */
 
     /**
@@ -439,6 +451,7 @@ export class Stream implements EventDispatcher {
         }
         if (this.speechEvent) {
             this.speechEvent.stop();
+            delete this.speechEvent;
         }
 
         this.stopWebRtcStats();
@@ -503,7 +516,6 @@ export class Stream implements EventDispatcher {
             const harkOptions = this.session.openvidu.advancedConfiguration.publisherSpeakingEventsOptions || {};
             harkOptions.interval = (typeof harkOptions.interval === 'number') ? harkOptions.interval : 50;
             harkOptions.threshold = (typeof harkOptions.threshold === 'number') ? harkOptions.threshold : -50;
-
             this.speechEvent = hark(this.mediaStream, harkOptions);
         }
     }
@@ -513,12 +525,18 @@ export class Stream implements EventDispatcher {
      */
     enableSpeakingEvents(): void {
         this.setSpeechEventIfNotExists();
-        this.speechEvent.on('speaking', () => {
-            this.session.emitEvent('publisherStartSpeaking', [new PublisherSpeakingEvent(this.session, 'publisherStartSpeaking', this.connection, this.streamId)]);
-        });
-        this.speechEvent.on('stopped_speaking', () => {
-            this.session.emitEvent('publisherStopSpeaking', [new PublisherSpeakingEvent(this.session, 'publisherStopSpeaking', this.connection, this.streamId)]);
-        });
+        if (!this.publisherStartSpeakingEventEnabled) {
+            this.publisherStartSpeakingEventEnabled = true;
+            this.speechEvent.on('speaking', () => {
+                this.session.emitEvent('publisherStartSpeaking', [new PublisherSpeakingEvent(this.session, 'publisherStartSpeaking', this.connection, this.streamId)]);
+            });
+        }
+        if (!this.publisherStopSpeakingEventEnabled) {
+            this.publisherStopSpeakingEventEnabled = true;
+            this.speechEvent.on('stopped_speaking', () => {
+                this.session.emitEvent('publisherStopSpeaking', [new PublisherSpeakingEvent(this.session, 'publisherStopSpeaking', this.connection, this.streamId)]);
+            });
+        }
     }
 
     /**
@@ -526,22 +544,87 @@ export class Stream implements EventDispatcher {
      */
     enableOnceSpeakingEvents(): void {
         this.setSpeechEventIfNotExists();
-        this.speechEvent.on('speaking', () => {
-            this.session.emitEvent('publisherStartSpeaking', [new PublisherSpeakingEvent(this.session, 'publisherStartSpeaking', this.connection, this.streamId)]);
-            this.disableSpeakingEvents();
-        });
-        this.speechEvent.on('stopped_speaking', () => {
-            this.session.emitEvent('publisherStopSpeaking', [new PublisherSpeakingEvent(this.session, 'publisherStopSpeaking', this.connection, this.streamId)]);
-            this.disableSpeakingEvents();
-        });
+        if (!this.publisherStartSpeakingEventEnabled) {
+            this.publisherStartSpeakingEventEnabled = true;
+            this.speechEvent.once('speaking', () => {
+                this.session.emitEvent('publisherStartSpeaking', [new PublisherSpeakingEvent(this.session, 'publisherStartSpeaking', this.connection, this.streamId)]);
+                this.disableSpeakingEvents();
+            });
+        }
+        if (!this.publisherStopSpeakingEventEnabled) {
+            this.publisherStopSpeakingEventEnabled = true;
+            this.speechEvent.once('stopped_speaking', () => {
+                this.session.emitEvent('publisherStopSpeaking', [new PublisherSpeakingEvent(this.session, 'publisherStopSpeaking', this.connection, this.streamId)]);
+                this.disableSpeakingEvents();
+            });
+        }
     }
 
     /**
      * @hidden
      */
     disableSpeakingEvents(): void {
-        this.speechEvent.stop();
-        this.speechEvent = undefined;
+        if (!!this.speechEvent) {
+            if (this.volumeChangeEventEnabled) {
+                // 'streamAudioVolumeChange' event is enabled. Cannot stop the hark process
+                this.speechEvent.off('speaking');
+                this.speechEvent.off('stopped_speaking');
+            } else {
+                this.speechEvent.stop();
+                delete this.speechEvent;
+            }
+        }
+        this.publisherStartSpeakingEventEnabled = false;
+        this.publisherStopSpeakingEventEnabled = false;
+    }
+
+    /**
+     * @hidden
+     */
+    enableVolumeChangeEvent(): void {
+        this.setSpeechEventIfNotExists();
+        if (!this.volumeChangeEventEnabled) {
+            this.volumeChangeEventEnabled = true;
+            this.speechEvent.on('volume_change', harkEvent => {
+                const oldValue = this.speechEvent.oldVolumeValue;
+                const value = { newValue: harkEvent, oldValue };
+                this.speechEvent.oldVolumeValue = harkEvent;
+                this.streamManager.emitEvent('streamAudioVolumeChange', [new StreamManagerEvent(this.streamManager, 'streamAudioVolumeChange', value)]);
+            });
+        }
+    }
+
+    /**
+     * @hidden
+     */
+    enableOnceVolumeChangeEvent(): void {
+        this.setSpeechEventIfNotExists();
+        if (!this.volumeChangeEventEnabled) {
+            this.volumeChangeEventEnabled = true;
+            this.speechEvent.once('volume_change', harkEvent => {
+                const oldValue = this.speechEvent.oldVolumeValue;
+                const value = { newValue: harkEvent, oldValue };
+                this.speechEvent.oldVolumeValue = harkEvent;
+                this.disableVolumeChangeEvent();
+                this.streamManager.emitEvent('streamAudioVolumeChange', [new StreamManagerEvent(this.streamManager, 'streamAudioVolumeChange', value)]);
+            });
+        }
+    }
+
+    /**
+     * @hidden
+     */
+    disableVolumeChangeEvent(): void {
+        if (!!this.speechEvent) {
+            if (this.session.speakingEventsEnabled) {
+                // 'publisherStartSpeaking' and/or publisherStopSpeaking` events are enabled. Cannot stop the hark process
+                this.speechEvent.off('volume_change');
+            } else {
+                this.speechEvent.stop();
+                delete this.speechEvent;
+            }
+        }
+        this.volumeChangeEventEnabled = false;
     }
 
     /**
@@ -686,8 +769,8 @@ export class Stream implements EventDispatcher {
                         // it necessary to add a timeout before processAnswer method
                         if (this.session.isFirstIonicIosSubscriber) {
                             this.session.isFirstIonicIosSubscriber = false;
-                                this.session['iosInterval'] = setTimeout(() => {
-                                    this.session.countDownForIonicIosSubscribers = false;
+                            this.session['iosInterval'] = setTimeout(() => {
+                                this.session.countDownForIonicIosSubscribers = false;
                             }, 400);
                         }
                         const needsTimeoutOnProcessAswer = this.session.countDownForIonicIosSubscribers;

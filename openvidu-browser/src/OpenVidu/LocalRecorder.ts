@@ -29,7 +29,9 @@ declare var MediaRecorder: any;
 /**
  * Easy recording of [[Stream]] objects straightaway from the browser. Initialized with [[OpenVidu.initLocalRecorder]] method
  *
- * > WARNING: Performing browser local recording of **remote streams** may cause some troubles. A long waiting time may be required after calling _LocalRecorder.stop()_ in this case
+ * > WARNINGS:
+ * - Performing browser local recording of **remote streams** may cause some troubles. A long waiting time may be required after calling _LocalRecorder.stop()_ in this case
+ * - Only Chrome and Firefox support local stream recording
  */
 export class LocalRecorder {
 

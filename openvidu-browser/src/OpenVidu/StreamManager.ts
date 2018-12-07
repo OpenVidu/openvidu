@@ -133,7 +133,7 @@ export class StreamManager implements EventDispatcher {
                 console.info("Remote 'Stream' with id [" + this.stream.streamId + '] video is now playing');
                 this.ee.emitEvent('videoPlaying', [new VideoElementEvent(this.videos[0].video, this, 'videoPlaying')]);
             }
-            this.ee.emitEvent('streamPlaying', [new StreamManagerEvent(this)]);
+            this.ee.emitEvent('streamPlaying', [new StreamManagerEvent(this, 'streamPlaying', undefined)]);
         };
     }
 
@@ -161,9 +161,12 @@ export class StreamManager implements EventDispatcher {
                 this.videos[0].video.paused === false &&
                 this.videos[0].video.ended === false &&
                 this.videos[0].video.readyState === 4) {
-                this.ee.emitEvent('streamPlaying', [new StreamManagerEvent(this)]);
+                this.ee.emitEvent('streamPlaying', [new StreamManagerEvent(this, 'streamPlaying', undefined)]);
                 this.ee.emitEvent('videoPlaying', [new VideoElementEvent(this.videos[0].video, this, 'videoPlaying')]);
             }
+        }
+        if (type === 'streamAudioVolumeChange' && this.stream.hasAudio) {
+            this.stream.enableVolumeChangeEvent();
         }
         return this;
     }
@@ -191,9 +194,12 @@ export class StreamManager implements EventDispatcher {
                 this.videos[0].video.paused === false &&
                 this.videos[0].video.ended === false &&
                 this.videos[0].video.readyState === 4) {
-                this.ee.emitEvent('streamPlaying', [new StreamManagerEvent(this)]);
+                this.ee.emitEvent('streamPlaying', [new StreamManagerEvent(this, 'streamPlaying', undefined)]);
                 this.ee.emitEvent('videoPlaying', [new VideoElementEvent(this.videos[0].video, this, 'videoPlaying')]);
             }
+        }
+        if (type === 'streamAudioVolumeChange' && this.stream.hasAudio) {
+            this.stream.enableOnceVolumeChangeEvent();
         }
         return this;
     }
@@ -207,6 +213,11 @@ export class StreamManager implements EventDispatcher {
         } else {
             this.ee.off(type, handler);
         }
+
+        if (type === 'streamAudioVolumeChange') {
+            this.stream.disableVolumeChangeEvent();
+        }
+
         return this;
     }
 
