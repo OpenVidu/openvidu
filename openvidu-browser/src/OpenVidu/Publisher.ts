@@ -90,6 +90,8 @@ export class Publisher extends StreamManager {
      *
      * #### Events dispatched
      *
+     * > _Only if `Session.publish(Publisher)` has been called for this Publisher_
+     *
      * The [[Session]] object of the local participant will dispatch a `streamPropertyChanged` event with `changedProperty` set to `"audioActive"` and `reason` set to `"publishAudio"`
      * The [[Publisher]] object of the local participant will also dispatch the exact same event
      *
@@ -105,22 +107,24 @@ export class Publisher extends StreamManager {
             this.stream.getMediaStream().getAudioTracks().forEach((track) => {
                 track.enabled = value;
             });
-            this.session.openvidu.sendRequest(
-                'streamPropertyChanged',
-                {
-                    streamId: this.stream.streamId,
-                    property: 'audioActive',
-                    newValue: value,
-                    reason: 'publishAudio'
-                },
-                (error, response) => {
-                    if (error) {
-                        console.error("Error sending 'streamPropertyChanged' event", error);
-                    } else {
-                        this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this.stream, 'audioActive', value, !value, 'publishAudio')]);
-                        this.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this, this.stream, 'audioActive', value, !value, 'publishAudio')]);
-                    }
-                });
+            if (!!this.session && !!this.stream.streamId) {
+                this.session.openvidu.sendRequest(
+                    'streamPropertyChanged',
+                    {
+                        streamId: this.stream.streamId,
+                        property: 'audioActive',
+                        newValue: value,
+                        reason: 'publishAudio'
+                    },
+                    (error, response) => {
+                        if (error) {
+                            console.error("Error sending 'streamPropertyChanged' event", error);
+                        } else {
+                            this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this.stream, 'audioActive', value, !value, 'publishAudio')]);
+                            this.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this, this.stream, 'audioActive', value, !value, 'publishAudio')]);
+                        }
+                    });
+            }
             this.stream.audioActive = value;
             console.info("'Publisher' has " + (value ? 'published' : 'unpublished') + ' its audio stream');
         }
@@ -131,6 +135,8 @@ export class Publisher extends StreamManager {
      * Publish or unpublish the video stream (if available). Calling this method twice in a row passing same value will have no effect
      *
      * #### Events dispatched
+     *
+     * > _Only if `Session.publish(Publisher)` has been called for this Publisher_
      *
      * The [[Session]] object of the local participant will dispatch a `streamPropertyChanged` event with `changedProperty` set to `"videoActive"` and `reason` set to `"publishVideo"`
      * The [[Publisher]] object of the local participant will also dispatch the exact same event
@@ -147,22 +153,24 @@ export class Publisher extends StreamManager {
             this.stream.getMediaStream().getVideoTracks().forEach((track) => {
                 track.enabled = value;
             });
-            this.session.openvidu.sendRequest(
-                'streamPropertyChanged',
-                {
-                    streamId: this.stream.streamId,
-                    property: 'videoActive',
-                    newValue: value,
-                    reason: 'publishVideo'
-                },
-                (error, response) => {
-                    if (error) {
-                        console.error("Error sending 'streamPropertyChanged' event", error);
-                    } else {
-                        this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this.stream, 'videoActive', value, !value, 'publishVideo')]);
-                        this.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this, this.stream, 'videoActive', value, !value, 'publishVideo')]);
-                    }
-                });
+            if (!!this.session && !!this.stream.streamId) {
+                this.session.openvidu.sendRequest(
+                    'streamPropertyChanged',
+                    {
+                        streamId: this.stream.streamId,
+                        property: 'videoActive',
+                        newValue: value,
+                        reason: 'publishVideo'
+                    },
+                    (error, response) => {
+                        if (error) {
+                            console.error("Error sending 'streamPropertyChanged' event", error);
+                        } else {
+                            this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this.stream, 'videoActive', value, !value, 'publishVideo')]);
+                            this.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this, this.stream, 'videoActive', value, !value, 'publishVideo')]);
+                        }
+                    });
+            }
             this.stream.videoActive = value;
             console.info("'Publisher' has " + (value ? 'published' : 'unpublished') + ' its video stream');
         }
