@@ -480,6 +480,10 @@ export class Publisher extends StreamManager {
                                         })
                                         .catch(error => {
                                             this.clearPermissionDialogTimer(startTime, timeForDialogEvent);
+                                            if (error.name === 'Error') {
+                                                // Safari OverConstrainedError has as name property 'Error' instead of 'OverConstrainedError'
+                                                error.name = error.constructor.name;
+                                            }
                                             let errorName, errorMessage;
                                             switch (error.name.toLowerCase()) {
                                                 case 'notfounderror':
@@ -510,6 +514,10 @@ export class Publisher extends StreamManager {
                             })
                             .catch(error => {
                                 this.clearPermissionDialogTimer(startTime, timeForDialogEvent);
+                                if (error.name === 'Error') {
+                                    // Safari OverConstrainedError has as name property 'Error' instead of 'OverConstrainedError'
+                                    error.name = error.constructor.name;
+                                }
                                 let errorName, errorMessage;
                                 switch (error.name.toLowerCase()) {
                                     case 'notfounderror':
