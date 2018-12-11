@@ -231,9 +231,9 @@ public abstract class SessionManager {
 		if (map != null) {
 
 			if (!isMetadataFormatCorrect(serverMetadata)) {
-				log.error("Data invalid format. Max length allowed is 10000 chars");
+				log.error("Data invalid format");
 				throw new OpenViduException(Code.GENERIC_ERROR_CODE,
-						"Data invalid format. Max length allowed is 10000 chars");
+						"Data invalid format");
 			}
 
 			String token = OpenViduServer.publicUrl;
@@ -326,8 +326,7 @@ public abstract class SessionManager {
 	}
 
 	public boolean isMetadataFormatCorrect(String metadata) {
-		// Max 10000 chars
-		return (metadata.length() <= 10000);
+		return true;
 	}
 
 	public void newInsecureParticipant(String participantPrivateId) {

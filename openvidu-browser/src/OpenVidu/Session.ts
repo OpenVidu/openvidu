@@ -118,7 +118,7 @@ export class Session implements EventDispatcher {
     /**
      * Connects to the session using `token`. Parameter `metadata` allows you to pass extra data to share with other users when
      * they receive `streamCreated` event. The structure of `metadata` string is up to you (maybe some standardized format
-     * as JSON or XML is a good idea), the only restriction is a maximum length of 10000 chars.
+     * as JSON or XML is a good idea).
      *
      * This metadata is not considered secure, as it is generated in the client side. To pass secure data, add it as a parameter in the
      * token generation operation (through the API REST, openvidu-java-client or openvidu-node-client).
