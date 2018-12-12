@@ -531,8 +531,10 @@ public class ComposedRecordingService {
 
 		if (RecordingLayout.CUSTOM.equals(recording.getRecordingLayout())) {
 			layout = recording.getCustomLayout();
-			layout = layout.startsWith("/") ? layout.substring(1) : layout;
-			layout = layout.endsWith("/") ? layout.substring(0, layout.length() - 1) : layout;
+			if (!layout.isEmpty()) {
+				layout = layout.startsWith("/") ? layout : ("/" + layout);
+				layout = layout.endsWith("/") ? layout.substring(0, layout.length() - 1) : layout;
+			}
 			layout += "/index.html";
 			finalUrl = "https://OPENVIDUAPP:" + secret + "@" + location + "/layouts/custom" + layout + "?sessionId="
 					+ shortSessionId + "&secret=" + secret;
