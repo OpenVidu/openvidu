@@ -64,7 +64,7 @@ export class WebRtcStats {
 
         const elastestInstrumentation = localStorage.getItem('elastest-instrumentation');
 
-        if (elastestInstrumentation) {
+        if (!!elastestInstrumentation) {
             // ElasTest instrumentation object found in local storage
 
             console.warn('WebRtc stats enabled for stream ' + this.stream.streamId + ' of connection ' + this.stream.connection.connectionId);
