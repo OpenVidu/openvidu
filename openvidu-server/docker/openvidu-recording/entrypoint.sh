@@ -83,7 +83,7 @@ touch xvfb.log
 chmod 777 xvfb.log
 
 function3() {
-	xvfb-run --server-num=${DISPLAY_NUM} --server-args="-ac -screen 0 ${RESOLUTION}x24 -noreset" google-chrome -start-maximized -no-sandbox -test-type -disable-infobars -window-size=$WIDTH,$HEIGHT -no-first-run -ignore-certificate-errors --kiosk $URL &> xvfb.log &
+	xvfb-run --server-num=${DISPLAY_NUM} --server-args="-ac -screen 0 ${RESOLUTION}x24 -noreset" google-chrome -start-maximized -no-sandbox -test-type -disable-infobars -window-size=$WIDTH,$HEIGHT -no-first-run -ignore-certificate-errors --autoplay-policy=no-user-gesture-required --kiosk $URL &> xvfb.log &
 }
 export -f function3
 if [[ $CURRENT_UID != $USER_ID ]]; then

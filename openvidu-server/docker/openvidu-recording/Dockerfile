@@ -9,7 +9,7 @@ RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key
 
 # Install media packages
 RUN apt-get install -y software-properties-common
-RUN add-apt-repository ppa:jonathonf/ffmpeg-3
+RUN add-apt-repository ppa:jonathonf/ffmpeg-4
 RUN apt-get update
 RUN apt-get install -y ffmpeg pulseaudio xvfb
 
