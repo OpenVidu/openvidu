@@ -534,7 +534,7 @@ public class ComposedRecordingService {
 			layout = layout.startsWith("/") ? layout.substring(1) : layout;
 			layout = layout.endsWith("/") ? layout.substring(0, layout.length() - 1) : layout;
 			layout += "/index.html";
-			finalUrl = "https://OPENVIDUAPP:" + secret + "@" + location + "/layouts/custom/" + layout + "?sessionId="
+			finalUrl = "https://OPENVIDUAPP:" + secret + "@" + location + "/layouts/custom" + layout + "?sessionId="
 					+ shortSessionId + "&secret=" + secret;
 		} else {
 			layout = recording.getRecordingLayout().name().toLowerCase().replaceAll("_", "-");
