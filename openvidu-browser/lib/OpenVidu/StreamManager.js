@@ -20,6 +20,8 @@ var StreamManagerEvent_1 = require("../OpenViduInternal/Events/StreamManagerEven
 var VideoElementEvent_1 = require("../OpenViduInternal/Events/VideoElementEvent");
 var VideoInsertMode_1 = require("../OpenViduInternal/Enums/VideoInsertMode");
 var EventEmitter = require("wolfy87-eventemitter");
+var platform = require("platform");
+platform['isIonicIos'] = (platform.product === 'iPhone' || platform.product === 'iPad') && platform.ua.indexOf('Safari') === -1;
 /**
  * Interface in charge of displaying the media streams in the HTML DOM. This wraps any [[Publisher]] and [[Subscriber]] object.
  * You can insert as many video players fo the same Stream as you want by calling [[StreamManager.addVideoElement]] or
@@ -64,6 +66,9 @@ var StreamManager = /** @class */ (function () {
                     video: document.createElement('video'),
                     id: ''
                 };
+                if (platform.name === 'Safari') {
+                    this.firstVideoElement.video.setAttribute('playsinline', 'true');
+                }
                 this.targetElement = targEl;
                 this.element = targEl;
             }
@@ -83,7 +88,7 @@ var StreamManager = /** @class */ (function () {
                 console.info("Remote 'Stream' with id [" + _this.stream.streamId + '] video is now playing');
                 _this.ee.emitEvent('videoPlaying', [new VideoElementEvent_1.VideoElementEvent(_this.videos[0].video, _this, 'videoPlaying')]);
             }
-            _this.ee.emitEvent('streamPlaying', [new StreamManagerEvent_1.StreamManagerEvent(_this)]);
+            _this.ee.emitEvent('streamPlaying', [new StreamManagerEvent_1.StreamManagerEvent(_this, 'streamPlaying', undefined)]);
         };
     }
     /**
@@ -112,9 +117,12 @@ var StreamManager = /** @class */ (function () {
                 this.videos[0].video.paused === false &&
                 this.videos[0].video.ended === false &&
                 this.videos[0].video.readyState === 4) {
-                this.ee.emitEvent('streamPlaying', [new StreamManagerEvent_1.StreamManagerEvent(this)]);
+                this.ee.emitEvent('streamPlaying', [new StreamManagerEvent_1.StreamManagerEvent(this, 'streamPlaying', undefined)]);
                 this.ee.emitEvent('videoPlaying', [new VideoElementEvent_1.VideoElementEvent(this.videos[0].video, this, 'videoPlaying')]);
             }
+        }
+        if (type === 'streamAudioVolumeChange' && this.stream.hasAudio) {
+            this.stream.enableVolumeChangeEvent();
         }
         return this;
     };
@@ -142,9 +150,12 @@ var StreamManager = /** @class */ (function () {
                 this.videos[0].video.paused === false &&
                 this.videos[0].video.ended === false &&
                 this.videos[0].video.readyState === 4) {
-                this.ee.emitEvent('streamPlaying', [new StreamManagerEvent_1.StreamManagerEvent(this)]);
+                this.ee.emitEvent('streamPlaying', [new StreamManagerEvent_1.StreamManagerEvent(this, 'streamPlaying', undefined)]);
                 this.ee.emitEvent('videoPlaying', [new VideoElementEvent_1.VideoElementEvent(this.videos[0].video, this, 'videoPlaying')]);
             }
+        }
+        if (type === 'streamAudioVolumeChange' && this.stream.hasAudio) {
+            this.stream.enableOnceVolumeChangeEvent();
         }
         return this;
     };
@@ -157,6 +168,9 @@ var StreamManager = /** @class */ (function () {
         }
         else {
             this.ee.off(type, handler);
+        }
+        if (type === 'streamAudioVolumeChange') {
+            this.stream.disableVolumeChangeEvent();
         }
         return this;
     };
@@ -270,6 +284,9 @@ var StreamManager = /** @class */ (function () {
         }
         video.autoplay = true;
         video.controls = false;
+        if (platform.name === 'Safari') {
+            video.setAttribute('playsinline', 'true');
+        }
         if (!video.id) {
             video.id = (this.remote ? 'remote-' : 'local-') + 'video-' + this.stream.streamId;
             // DEPRECATED property: assign once the property id if the user provided a valid targetElement
@@ -342,11 +359,13 @@ var StreamManager = /** @class */ (function () {
     StreamManager.prototype.updateMediaStream = function (mediaStream) {
         this.videos.forEach(function (streamManagerVideo) {
             streamManagerVideo.video.srcObject = mediaStream;
-            console.warn("document.getElementID");
-            var videoDiv = document.getElementById('remoteVideo');
-            if (videoDiv) {
-                streamManagerVideo.video.setAttribute('playsinline', 'true');
-                videoDiv.appendChild(streamManagerVideo.video);
+            if (platform['isIonicIos']) {
+                // iOS Ionic. LIMITATION: must reinsert the video in the DOM for
+                // the media stream to be updated
+                var vParent = streamManagerVideo.video.parentElement;
+                var newVideo = streamManagerVideo.video;
+                vParent.replaceChild(newVideo, streamManagerVideo.video);
+                streamManagerVideo.video = newVideo;
             }
         });
     };
@@ -364,8 +383,10 @@ var StreamManager = /** @class */ (function () {
         }
     };
     StreamManager.prototype.mirrorVideo = function (video) {
-        video.style.transform = 'rotateY(180deg)';
-        video.style.webkitTransform = 'rotateY(180deg)';
+        if (!platform['isIonicIos']) {
+            video.style.transform = 'rotateY(180deg)';
+            video.style.webkitTransform = 'rotateY(180deg)';
+        }
     };
     StreamManager.prototype.removeMirrorVideo = function (video) {
         video.style.transform = 'unset';

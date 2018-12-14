@@ -43,5 +43,5 @@
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "types": "lib/index.d.ts",
-    "version": "2.6.0"
+    "version": "2.7.0"
 }

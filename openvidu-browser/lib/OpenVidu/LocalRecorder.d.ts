@@ -3,7 +3,9 @@ import { LocalRecorderState } from '../OpenViduInternal/Enums/LocalRecorderState
 /**
  * Easy recording of [[Stream]] objects straightaway from the browser. Initialized with [[OpenVidu.initLocalRecorder]] method
  *
- * > WARNING: Performing browser local recording of **remote streams** may cause some troubles. A long waiting time may be required after calling _LocalRecorder.stop()_ in this case
+ * > WARNINGS:
+ * - Performing browser local recording of **remote streams** may cause some troubles. A long waiting time may be required after calling _LocalRecorder.stop()_ in this case
+ * - Only Chrome and Firefox support local stream recording
  */
 export declare class LocalRecorder {
     private stream;
@@ -12,10 +14,8 @@ export declare class LocalRecorder {
     private mediaRecorder;
     private chunks;
     private blob;
-    private count;
     private id;
     private videoPreviewSrc;
-    private htmlParentElementId;
     private videoPreview;
     /**
      * @hidden

@@ -70,7 +70,7 @@ export declare class OpenVidu {
      */
     checkSystemRequirements(): number;
     /**
-     * Checks if the browser supports screen-sharing. Chrome, Firefox and Opera support screen-sharing
+     * Checks if the browser supports screen-sharing. Desktop Chrome, Firefox and Opera support screen-sharing
      * @returns 1 if the browser supports screen-sharing, 0 otherwise
      */
     checkScreenSharingCapabilities(): number;

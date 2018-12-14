@@ -21,7 +21,7 @@ var __extends = (this && this.__extends) || (function () {
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
             function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
         return extendStatics(d, b);
-    }
+    };
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -32,15 +32,21 @@ exports.__esModule = true;
 var Event_1 = require("./Event");
 /**
  * Defines the following events:
- * - `streamPlaying`: dispatched by [[StreamManager]] ([[Publisher]] and [[Subscriber]])
+ * - `streamPlaying`: dispatched by [[StreamManager]] ([[Publisher]] and [[Subscriber]]) whenever its media stream starts playing (one of its videos has media
+ * and has begun to play)
+ * - `streamAudioVolumeChange`: dispatched by [[StreamManager]] ([[Publisher]] and [[Subscriber]]) when the volume of its Stream's audio track
+ * changes. Only applies if [[Stream.hasAudio]] is `true`. The frequency this event is fired with is defined by property `interval` of
+ * [[OpenViduAdvancedConfiguration.publisherSpeakingEventsOptions]] (default 50ms)
  */
 var StreamManagerEvent = /** @class */ (function (_super) {
     __extends(StreamManagerEvent, _super);
     /**
      * @hidden
      */
-    function StreamManagerEvent(target) {
-        return _super.call(this, false, target, 'streamPlaying') || this;
+    function StreamManagerEvent(target, type, value) {
+        var _this = _super.call(this, false, target, type) || this;
+        _this.value = value;
+        return _this;
     }
     /**
      * @hidden

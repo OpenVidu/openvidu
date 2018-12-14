@@ -45,6 +45,8 @@ export declare class Publisher extends StreamManager {
      *
      * #### Events dispatched
      *
+     * > _Only if `Session.publish(Publisher)` has been called for this Publisher_
+     *
      * The [[Session]] object of the local participant will dispatch a `streamPropertyChanged` event with `changedProperty` set to `"audioActive"` and `reason` set to `"publishAudio"`
      * The [[Publisher]] object of the local participant will also dispatch the exact same event
      *
@@ -60,6 +62,8 @@ export declare class Publisher extends StreamManager {
      * Publish or unpublish the video stream (if available). Calling this method twice in a row passing same value will have no effect
      *
      * #### Events dispatched
+     *
+     * > _Only if `Session.publish(Publisher)` has been called for this Publisher_
      *
      * The [[Session]] object of the local participant will dispatch a `streamPropertyChanged` event with `changedProperty` set to `"videoActive"` and `reason` set to `"publishVideo"`
      * The [[Publisher]] object of the local participant will also dispatch the exact same event

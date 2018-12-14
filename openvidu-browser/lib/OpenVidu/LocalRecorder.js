@@ -17,10 +17,13 @@
  */
 exports.__esModule = true;
 var LocalRecorderState_1 = require("../OpenViduInternal/Enums/LocalRecorderState");
+var platform = require("platform");
 /**
  * Easy recording of [[Stream]] objects straightaway from the browser. Initialized with [[OpenVidu.initLocalRecorder]] method
  *
- * > WARNING: Performing browser local recording of **remote streams** may cause some troubles. A long waiting time may be required after calling _LocalRecorder.stop()_ in this case
+ * > WARNINGS:
+ * - Performing browser local recording of **remote streams** may cause some troubles. A long waiting time may be required after calling _LocalRecorder.stop()_ in this case
+ * - Only Chrome and Firefox support local stream recording
  */
 var LocalRecorder = /** @class */ (function () {
     /**
@@ -29,7 +32,6 @@ var LocalRecorder = /** @class */ (function () {
     function LocalRecorder(stream) {
         this.stream = stream;
         this.chunks = [];
-        this.count = 0;
         this.connectionId = (!!this.stream.connection) ? this.stream.connection.connectionId : 'default-connection';
         this.id = this.stream.streamId + '_' + this.connectionId + '_localrecord';
         this.state = LocalRecorderState_1.LocalRecorderState.READY;
@@ -168,15 +170,16 @@ var LocalRecorder = /** @class */ (function () {
         this.videoPreview = document.createElement('video');
         this.videoPreview.id = this.id;
         this.videoPreview.autoplay = true;
+        if (platform.name === 'Safari') {
+            this.videoPreview.setAttribute('playsinline', 'true');
+        }
         if (typeof parentElement === 'string') {
-            this.htmlParentElementId = parentElement;
             var parentElementDom = document.getElementById(parentElement);
             if (parentElementDom) {
                 this.videoPreview = parentElementDom.appendChild(this.videoPreview);
             }
         }
         else {
-            this.htmlParentElementId = parentElement.id;
             this.videoPreview = parentElement.appendChild(this.videoPreview);
         }
         this.videoPreview.src = this.videoPreviewSrc;
@@ -190,7 +193,6 @@ var LocalRecorder = /** @class */ (function () {
         var f = function () {
             delete _this.blob;
             _this.chunks = [];
-            _this.count = 0;
             delete _this.mediaRecorder;
             _this.state = LocalRecorderState_1.LocalRecorderState.READY;
         };

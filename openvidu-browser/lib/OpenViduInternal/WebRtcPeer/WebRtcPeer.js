@@ -21,7 +21,7 @@ var __extends = (this && this.__extends) || (function () {
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
             function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
         return extendStatics(d, b);
-    }
+    };
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -31,6 +31,8 @@ var __extends = (this && this.__extends) || (function () {
 exports.__esModule = true;
 var freeice = require("freeice");
 var uuid = require("uuid");
+var platform = require("platform");
+platform['isIonicIos'] = (platform.product === 'iPhone' || platform.product === 'iPad') && platform.ua.indexOf('Safari') === -1;
 var WebRtcPeer = /** @class */ (function () {
     function WebRtcPeer(configuration) {
         var _this = this;
@@ -78,12 +80,16 @@ var WebRtcPeer = /** @class */ (function () {
                 reject('The peer connection object is in "closed" state. This is most likely due to an invocation of the dispose method before accepting in the dialogue');
             }
             if (!!_this.configuration.mediaStream) {
-                for (var _i = 0, _a = _this.configuration.mediaStream.getTracks(); _i < _a.length; _i++) {
-                    var track = _a[_i];
-                    //this.pc.addTrack(track, this.configuration.mediaStream);
-                    console.warn("ADDSTREAM");
+                if (platform['isIonicIos']) {
+                    // iOS Ionic. LIMITATION: must use deprecated WebRTC API
                     var pc2 = _this.pc;
                     pc2.addStream(_this.configuration.mediaStream);
+                }
+                else {
+                    for (var _i = 0, _a = _this.configuration.mediaStream.getTracks(); _i < _a.length; _i++) {
+                        var track = _a[_i];
+                        _this.pc.addTrack(track, _this.configuration.mediaStream);
+                    }
                 }
                 resolve();
             }
@@ -101,20 +107,42 @@ var WebRtcPeer = /** @class */ (function () {
                 }
                 this.remoteCandidatesQueue = [];
                 this.localCandidatesQueue = [];
-                // Stop senders
-                var pc1 = this.pc;
-                for (var _i = 0, _a = pc1.getLocalStreams(); _i < _a.length; _i++) {
-                    var sender = _a[_i];
-                    if (!videoSourceIsMediaStreamTrack) {
-                        sender.stop();
+                if (platform['isIonicIos']) {
+                    // iOS Ionic. LIMITATION: must use deprecated WebRTC API
+                    // Stop senders deprecated
+                    var pc1 = this.pc;
+                    for (var _i = 0, _a = pc1.getLocalStreams(); _i < _a.length; _i++) {
+                        var sender = _a[_i];
+                        if (!videoSourceIsMediaStreamTrack) {
+                            sender.stop();
+                        }
+                        pc1.removeStream(sender);
                     }
-                    pc1.removeStream(sender);
+                    // Stop receivers deprecated
+                    for (var _b = 0, _c = pc1.getRemoteStreams(); _b < _c.length; _b++) {
+                        var receiver = _c[_b];
+                        if (!!receiver.track) {
+                            receiver.stop();
+                        }
+                    }
                 }
-                // Stop receivers
-                for (var _b = 0, _c = pc1.getRemoteStreams(); _b < _c.length; _b++) {
-                    var receiver = _c[_b];
-                    if (!!receiver.track) {
-                        receiver.stop();
+                else {
+                    // Stop senders
+                    for (var _d = 0, _e = this.pc.getSenders(); _d < _e.length; _d++) {
+                        var sender = _e[_d];
+                        if (!videoSourceIsMediaStreamTrack) {
+                            if (!!sender.track) {
+                                sender.track.stop();
+                            }
+                        }
+                        this.pc.removeTrack(sender);
+                    }
+                    // Stop receivers
+                    for (var _f = 0, _g = this.pc.getReceivers(); _f < _g.length; _f++) {
+                        var receiver = _g[_f];
+                        if (!!receiver.track) {
+                            receiver.track.stop();
+                        }
                     }
                 }
                 this.pc.close();
@@ -144,19 +172,50 @@ var WebRtcPeer = /** @class */ (function () {
                 offerToReceiveVideo: (_this.configuration.mode !== 'sendonly' && offerVideo)
             };
             console.debug('RTCPeerConnection constraints: ' + JSON.stringify(constraints));
-            _this.pc.createOffer(constraints).then(function (offer) {
-                console.debug('Created SDP offer');
-                return _this.pc.setLocalDescription(offer);
-            }).then(function () {
-                var localDescription = _this.pc.localDescription;
-                if (!!localDescription) {
-                    console.debug('Local description set', localDescription.sdp);
-                    resolve(localDescription.sdp);
+            if (platform.name === 'Safari' && platform.ua.indexOf('Safari') !== -1) {
+                // Safari (excluding Ionic), at least on iOS just seems to support unified plan, whereas in other browsers is not yet ready and considered experimental
+                if (offerAudio) {
+                    _this.pc.addTransceiver('audio', {
+                        direction: _this.configuration.mode
+                    });
                 }
-                else {
-                    reject('Local description is not defined');
+                if (offerVideo) {
+                    _this.pc.addTransceiver('video', {
+                        direction: _this.configuration.mode
+                    });
                 }
-            })["catch"](function (error) { return reject(error); });
+                _this.pc
+                    .createOffer()
+                    .then(function (offer) {
+                    console.debug('Created SDP offer');
+                    return _this.pc.setLocalDescription(offer);
+                })
+                    .then(function () {
+                    var localDescription = _this.pc.localDescription;
+                    if (!!localDescription) {
+                        console.debug('Local description set', localDescription.sdp);
+                        resolve(localDescription.sdp);
+                    }
+                    else {
+                        reject('Local description is not defined');
+                    }
+                })["catch"](function (error) { return reject(error); });
+            }
+            else {
+                _this.pc.createOffer(constraints).then(function (offer) {
+                    console.debug('Created SDP offer');
+                    return _this.pc.setLocalDescription(offer);
+                }).then(function () {
+                    var localDescription = _this.pc.localDescription;
+                    if (!!localDescription) {
+                        console.debug('Local description set', localDescription.sdp);
+                        resolve(localDescription.sdp);
+                    }
+                    else {
+                        reject('Local description is not defined');
+                    }
+                })["catch"](function (error) { return reject(error); });
+            }
         });
     };
     /**
@@ -196,7 +255,7 @@ var WebRtcPeer = /** @class */ (function () {
      * 3) Function invoked when a SDP answer is received. Final step in SDP negotiation, the peer
      * just needs to set the answer as its remote description
      */
-    WebRtcPeer.prototype.processAnswer = function (sdpAnswer) {
+    WebRtcPeer.prototype.processAnswer = function (sdpAnswer, needsTimeoutOnProcessAswer) {
         var _this = this;
         return new Promise(function (resolve, reject) {
             var answer = {
@@ -207,7 +266,15 @@ var WebRtcPeer = /** @class */ (function () {
             if (_this.pc.signalingState === 'closed') {
                 reject('RTCPeerConnection is closed');
             }
-            _this.pc.setRemoteDescription(answer).then(function () { return resolve(); })["catch"](function (error) { return reject(error); });
+            if (needsTimeoutOnProcessAswer && platform['isIonicIos']) {
+                setTimeout(function () {
+                    console.info('setRemoteDescription run after timout for iOS device');
+                    _this.pc.setRemoteDescription(answer).then(function () { return resolve(); })["catch"](function (error) { return reject(error); });
+                }, 250);
+            }
+            else {
+                _this.pc.setRemoteDescription(answer).then(function () { return resolve(); })["catch"](function (error) { return reject(error); });
+            }
         });
     };
     /**

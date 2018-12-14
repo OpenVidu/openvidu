@@ -7,7 +7,7 @@ export interface WebRtcPeerConfiguration {
     onicecandidate: (event: any) => void;
     iceServers: RTCIceServer[] | undefined;
     mediaStream?: MediaStream;
-    mode?: string;
+    mode?: 'sendonly' | 'recvonly' | 'sendrecv';
     id?: string;
 }
 export declare class WebRtcPeer {
@@ -45,7 +45,7 @@ export declare class WebRtcPeer {
      * 3) Function invoked when a SDP answer is received. Final step in SDP negotiation, the peer
      * just needs to set the answer as its remote description
      */
-    processAnswer(sdpAnswer: string): Promise<string>;
+    processAnswer(sdpAnswer: string, needsTimeoutOnProcessAswer: boolean): Promise<string>;
     /**
      * Callback function invoked when an ICE candidate is received
      */

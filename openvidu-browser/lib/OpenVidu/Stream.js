@@ -20,10 +20,13 @@ var Filter_1 = require("./Filter");
 var WebRtcPeer_1 = require("../OpenViduInternal/WebRtcPeer/WebRtcPeer");
 var WebRtcStats_1 = require("../OpenViduInternal/WebRtcStats/WebRtcStats");
 var PublisherSpeakingEvent_1 = require("../OpenViduInternal/Events/PublisherSpeakingEvent");
+var StreamManagerEvent_1 = require("../OpenViduInternal/Events/StreamManagerEvent");
 var StreamPropertyChangedEvent_1 = require("../OpenViduInternal/Events/StreamPropertyChangedEvent");
+var OpenViduError_1 = require("../OpenViduInternal/Enums/OpenViduError");
 var EventEmitter = require("wolfy87-eventemitter");
 var hark = require("hark");
-var OpenViduError_1 = require("../OpenViduInternal/Enums/OpenViduError");
+var platform = require("platform");
+platform['isIonicIos'] = (platform.product === 'iPhone' || platform.product === 'iPad') && platform.ua.indexOf('Safari') === -1;
 /**
  * Represents each one of the media streams available in OpenVidu Server for certain session.
  * Each [[Publisher]] and [[Subscriber]] has an attribute of type Stream, as they give access
@@ -52,6 +55,18 @@ var Stream = /** @class */ (function () {
          * @hidden
          */
         this.publishedOnce = false;
+        /**
+         * @hidden
+         */
+        this.publisherStartSpeakingEventEnabled = false;
+        /**
+         * @hidden
+         */
+        this.publisherStopSpeakingEventEnabled = false;
+        /**
+         * @hidden
+         */
+        this.volumeChangeEventEnabled = false;
         this.session = session;
         if (options.hasOwnProperty('id')) {
             // InboundStreamOptions: stream belongs to a Subscriber
@@ -308,6 +323,7 @@ var Stream = /** @class */ (function () {
         }
         if (this.speechEvent) {
             this.speechEvent.stop();
+            delete this.speechEvent;
         }
         this.stopWebRtcStats();
         console.info((!!this.outboundStreamOpts ? 'Outbound ' : 'Inbound ') + "WebRTCPeer from 'Stream' with id [" + this.streamId + '] is now closed');
@@ -373,12 +389,18 @@ var Stream = /** @class */ (function () {
     Stream.prototype.enableSpeakingEvents = function () {
         var _this = this;
         this.setSpeechEventIfNotExists();
-        this.speechEvent.on('speaking', function () {
-            _this.session.emitEvent('publisherStartSpeaking', [new PublisherSpeakingEvent_1.PublisherSpeakingEvent(_this.session, 'publisherStartSpeaking', _this.connection, _this.streamId)]);
-        });
-        this.speechEvent.on('stopped_speaking', function () {
-            _this.session.emitEvent('publisherStopSpeaking', [new PublisherSpeakingEvent_1.PublisherSpeakingEvent(_this.session, 'publisherStopSpeaking', _this.connection, _this.streamId)]);
-        });
+        if (!this.publisherStartSpeakingEventEnabled) {
+            this.publisherStartSpeakingEventEnabled = true;
+            this.speechEvent.on('speaking', function () {
+                _this.session.emitEvent('publisherStartSpeaking', [new PublisherSpeakingEvent_1.PublisherSpeakingEvent(_this.session, 'publisherStartSpeaking', _this.connection, _this.streamId)]);
+            });
+        }
+        if (!this.publisherStopSpeakingEventEnabled) {
+            this.publisherStopSpeakingEventEnabled = true;
+            this.speechEvent.on('stopped_speaking', function () {
+                _this.session.emitEvent('publisherStopSpeaking', [new PublisherSpeakingEvent_1.PublisherSpeakingEvent(_this.session, 'publisherStopSpeaking', _this.connection, _this.streamId)]);
+            });
+        }
     };
     /**
      * @hidden
@@ -386,21 +408,87 @@ var Stream = /** @class */ (function () {
     Stream.prototype.enableOnceSpeakingEvents = function () {
         var _this = this;
         this.setSpeechEventIfNotExists();
-        this.speechEvent.on('speaking', function () {
-            _this.session.emitEvent('publisherStartSpeaking', [new PublisherSpeakingEvent_1.PublisherSpeakingEvent(_this.session, 'publisherStartSpeaking', _this.connection, _this.streamId)]);
-            _this.disableSpeakingEvents();
-        });
-        this.speechEvent.on('stopped_speaking', function () {
-            _this.session.emitEvent('publisherStopSpeaking', [new PublisherSpeakingEvent_1.PublisherSpeakingEvent(_this.session, 'publisherStopSpeaking', _this.connection, _this.streamId)]);
-            _this.disableSpeakingEvents();
-        });
+        if (!this.publisherStartSpeakingEventEnabled) {
+            this.publisherStartSpeakingEventEnabled = true;
+            this.speechEvent.once('speaking', function () {
+                _this.session.emitEvent('publisherStartSpeaking', [new PublisherSpeakingEvent_1.PublisherSpeakingEvent(_this.session, 'publisherStartSpeaking', _this.connection, _this.streamId)]);
+                _this.disableSpeakingEvents();
+            });
+        }
+        if (!this.publisherStopSpeakingEventEnabled) {
+            this.publisherStopSpeakingEventEnabled = true;
+            this.speechEvent.once('stopped_speaking', function () {
+                _this.session.emitEvent('publisherStopSpeaking', [new PublisherSpeakingEvent_1.PublisherSpeakingEvent(_this.session, 'publisherStopSpeaking', _this.connection, _this.streamId)]);
+                _this.disableSpeakingEvents();
+            });
+        }
     };
     /**
      * @hidden
      */
     Stream.prototype.disableSpeakingEvents = function () {
-        this.speechEvent.stop();
-        this.speechEvent = undefined;
+        if (!!this.speechEvent) {
+            if (this.volumeChangeEventEnabled) {
+                // 'streamAudioVolumeChange' event is enabled. Cannot stop the hark process
+                this.speechEvent.off('speaking');
+                this.speechEvent.off('stopped_speaking');
+            }
+            else {
+                this.speechEvent.stop();
+                delete this.speechEvent;
+            }
+        }
+        this.publisherStartSpeakingEventEnabled = false;
+        this.publisherStopSpeakingEventEnabled = false;
+    };
+    /**
+     * @hidden
+     */
+    Stream.prototype.enableVolumeChangeEvent = function () {
+        var _this = this;
+        this.setSpeechEventIfNotExists();
+        if (!this.volumeChangeEventEnabled) {
+            this.volumeChangeEventEnabled = true;
+            this.speechEvent.on('volume_change', function (harkEvent) {
+                var oldValue = _this.speechEvent.oldVolumeValue;
+                var value = { newValue: harkEvent, oldValue: oldValue };
+                _this.speechEvent.oldVolumeValue = harkEvent;
+                _this.streamManager.emitEvent('streamAudioVolumeChange', [new StreamManagerEvent_1.StreamManagerEvent(_this.streamManager, 'streamAudioVolumeChange', value)]);
+            });
+        }
+    };
+    /**
+     * @hidden
+     */
+    Stream.prototype.enableOnceVolumeChangeEvent = function () {
+        var _this = this;
+        this.setSpeechEventIfNotExists();
+        if (!this.volumeChangeEventEnabled) {
+            this.volumeChangeEventEnabled = true;
+            this.speechEvent.once('volume_change', function (harkEvent) {
+                var oldValue = _this.speechEvent.oldVolumeValue;
+                var value = { newValue: harkEvent, oldValue: oldValue };
+                _this.speechEvent.oldVolumeValue = harkEvent;
+                _this.disableVolumeChangeEvent();
+                _this.streamManager.emitEvent('streamAudioVolumeChange', [new StreamManagerEvent_1.StreamManagerEvent(_this.streamManager, 'streamAudioVolumeChange', value)]);
+            });
+        }
+    };
+    /**
+     * @hidden
+     */
+    Stream.prototype.disableVolumeChangeEvent = function () {
+        if (!!this.speechEvent) {
+            if (this.session.speakingEventsEnabled) {
+                // 'publisherStartSpeaking' and/or publisherStopSpeaking` events are enabled. Cannot stop the hark process
+                this.speechEvent.off('volume_change');
+            }
+            else {
+                this.speechEvent.stop();
+                delete this.speechEvent;
+            }
+        }
+        this.volumeChangeEventEnabled = false;
     };
     /**
      * @hidden
@@ -474,7 +562,7 @@ var Stream = /** @class */ (function () {
                         }
                     }
                     else {
-                        _this.webRtcPeer.processAnswer(response.sdpAnswer)
+                        _this.webRtcPeer.processAnswer(response.sdpAnswer, false)
                             .then(function () {
                             _this.streamId = response.id;
                             _this.isLocalStreamPublished = true;
@@ -530,7 +618,16 @@ var Stream = /** @class */ (function () {
                         reject(new Error('Error on recvVideoFrom: ' + JSON.stringify(error)));
                     }
                     else {
-                        _this.webRtcPeer.processAnswer(response.sdpAnswer).then(function () {
+                        // Ios Ionic. Limitation: some bug in iosrtc cordova plugin makes
+                        // it necessary to add a timeout before processAnswer method
+                        if (_this.session.isFirstIonicIosSubscriber) {
+                            _this.session.isFirstIonicIosSubscriber = false;
+                            _this.session['iosInterval'] = setTimeout(function () {
+                                _this.session.countDownForIonicIosSubscribers = false;
+                            }, 400);
+                        }
+                        var needsTimeoutOnProcessAswer = _this.session.countDownForIonicIosSubscribers;
+                        _this.webRtcPeer.processAnswer(response.sdpAnswer, needsTimeoutOnProcessAswer).then(function () {
                             _this.remotePeerSuccessfullyEstablished();
                             _this.initWebRtcStats();
                             resolve();
@@ -550,17 +647,21 @@ var Stream = /** @class */ (function () {
         });
     };
     Stream.prototype.remotePeerSuccessfullyEstablished = function () {
-        /*this.mediaStream = new MediaStream();
-
-        let receiver: RTCRtpReceiver;
-        for (receiver of this.webRtcPeer.pc.getReceivers()) {
-            if (!!receiver.track) {
-                this.mediaStream.addTrack(receiver.track);
+        if (platform['isIonicIos']) {
+            // iOS Ionic. LIMITATION: must use deprecated WebRTC API
+            var pc1 = this.webRtcPeer.pc;
+            this.mediaStream = pc1.getRemoteStreams()[0];
+        }
+        else {
+            this.mediaStream = new MediaStream();
+            var receiver = void 0;
+            for (var _i = 0, _a = this.webRtcPeer.pc.getReceivers(); _i < _a.length; _i++) {
+                receiver = _a[_i];
+                if (!!receiver.track) {
+                    this.mediaStream.addTrack(receiver.track);
+                }
             }
-        }*/
-        var pc2 = this.webRtcPeer.pc;
-        console.warn("GET REMOTE STREAMS", pc2.getRemoteStreams());
-        this.mediaStream = pc2.getRemoteStreams()[0];
+        }
         console.debug('Peer remote stream', this.mediaStream);
         if (!!this.mediaStream) {
             this.ee.emitEvent('mediastream-updated');

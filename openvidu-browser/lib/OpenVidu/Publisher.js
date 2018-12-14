@@ -21,7 +21,7 @@ var __extends = (this && this.__extends) || (function () {
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
             function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
         return extendStatics(d, b);
-    }
+    };
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -37,6 +37,7 @@ var StreamPropertyChangedEvent_1 = require("../OpenViduInternal/Events/StreamPro
 var VideoElementEvent_1 = require("../OpenViduInternal/Events/VideoElementEvent");
 var OpenViduError_1 = require("../OpenViduInternal/Enums/OpenViduError");
 var platform = require("platform");
+platform['isIonicIos'] = (platform.product === 'iPhone' || platform.product === 'iPad') && platform.ua.indexOf('Safari') === -1;
 /**
  * Packs local media streams. Participants can publish it to a session. Initialized with [[OpenVidu.initPublisher]] method
  */
@@ -71,6 +72,8 @@ var Publisher = /** @class */ (function (_super) {
      *
      * #### Events dispatched
      *
+     * > _Only if `Session.publish(Publisher)` has been called for this Publisher_
+     *
      * The [[Session]] object of the local participant will dispatch a `streamPropertyChanged` event with `changedProperty` set to `"audioActive"` and `reason` set to `"publishAudio"`
      * The [[Publisher]] object of the local participant will also dispatch the exact same event
      *
@@ -87,20 +90,22 @@ var Publisher = /** @class */ (function (_super) {
             this.stream.getMediaStream().getAudioTracks().forEach(function (track) {
                 track.enabled = value;
             });
-            this.session.openvidu.sendRequest('streamPropertyChanged', {
-                streamId: this.stream.streamId,
-                property: 'audioActive',
-                newValue: value,
-                reason: 'publishAudio'
-            }, function (error, response) {
-                if (error) {
-                    console.error("Error sending 'streamPropertyChanged' event", error);
-                }
-                else {
-                    _this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent_1.StreamPropertyChangedEvent(_this.session, _this.stream, 'audioActive', value, !value, 'publishAudio')]);
-                    _this.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent_1.StreamPropertyChangedEvent(_this, _this.stream, 'audioActive', value, !value, 'publishAudio')]);
-                }
-            });
+            if (!!this.session && !!this.stream.streamId) {
+                this.session.openvidu.sendRequest('streamPropertyChanged', {
+                    streamId: this.stream.streamId,
+                    property: 'audioActive',
+                    newValue: value,
+                    reason: 'publishAudio'
+                }, function (error, response) {
+                    if (error) {
+                        console.error("Error sending 'streamPropertyChanged' event", error);
+                    }
+                    else {
+                        _this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent_1.StreamPropertyChangedEvent(_this.session, _this.stream, 'audioActive', value, !value, 'publishAudio')]);
+                        _this.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent_1.StreamPropertyChangedEvent(_this, _this.stream, 'audioActive', value, !value, 'publishAudio')]);
+                    }
+                });
+            }
             this.stream.audioActive = value;
             console.info("'Publisher' has " + (value ? 'published' : 'unpublished') + ' its audio stream');
         }
@@ -109,6 +114,8 @@ var Publisher = /** @class */ (function (_super) {
      * Publish or unpublish the video stream (if available). Calling this method twice in a row passing same value will have no effect
      *
      * #### Events dispatched
+     *
+     * > _Only if `Session.publish(Publisher)` has been called for this Publisher_
      *
      * The [[Session]] object of the local participant will dispatch a `streamPropertyChanged` event with `changedProperty` set to `"videoActive"` and `reason` set to `"publishVideo"`
      * The [[Publisher]] object of the local participant will also dispatch the exact same event
@@ -126,20 +133,22 @@ var Publisher = /** @class */ (function (_super) {
             this.stream.getMediaStream().getVideoTracks().forEach(function (track) {
                 track.enabled = value;
             });
-            this.session.openvidu.sendRequest('streamPropertyChanged', {
-                streamId: this.stream.streamId,
-                property: 'videoActive',
-                newValue: value,
-                reason: 'publishVideo'
-            }, function (error, response) {
-                if (error) {
-                    console.error("Error sending 'streamPropertyChanged' event", error);
-                }
-                else {
-                    _this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent_1.StreamPropertyChangedEvent(_this.session, _this.stream, 'videoActive', value, !value, 'publishVideo')]);
-                    _this.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent_1.StreamPropertyChangedEvent(_this, _this.stream, 'videoActive', value, !value, 'publishVideo')]);
-                }
-            });
+            if (!!this.session && !!this.stream.streamId) {
+                this.session.openvidu.sendRequest('streamPropertyChanged', {
+                    streamId: this.stream.streamId,
+                    property: 'videoActive',
+                    newValue: value,
+                    reason: 'publishVideo'
+                }, function (error, response) {
+                    if (error) {
+                        console.error("Error sending 'streamPropertyChanged' event", error);
+                    }
+                    else {
+                        _this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent_1.StreamPropertyChangedEvent(_this.session, _this.stream, 'videoActive', value, !value, 'publishVideo')]);
+                        _this.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent_1.StreamPropertyChangedEvent(_this, _this.stream, 'videoActive', value, !value, 'publishVideo')]);
+                    }
+                });
+            }
             this.stream.videoActive = value;
             console.info("'Publisher' has " + (value ? 'published' : 'unpublished') + ' its video stream');
         }
@@ -259,6 +268,9 @@ var Publisher = /** @class */ (function (_super) {
                     mediaStream.getVideoTracks()[0].enabled = enabled;
                 }
                 _this.videoReference = document.createElement('video');
+                if (platform.name === 'Safari') {
+                    _this.videoReference.setAttribute('playsinline', 'true');
+                }
                 _this.videoReference.srcObject = mediaStream;
                 _this.stream.setMediaStream(mediaStream);
                 if (!_this.stream.displayMyRemote()) {
@@ -272,26 +284,56 @@ var Publisher = /** @class */ (function (_super) {
                 delete _this.firstVideoElement;
                 if (_this.stream.isSendVideo()) {
                     if (!_this.stream.isSendScreen()) {
-                        // With no screen share, video dimension can be set directly from MediaStream (getSettings)
-                        // Orientation must be checked for mobile devices (width and height are reversed)
-                        //const { width, height } = mediaStream.getVideoTracks()[0].getSettings();
-                        var width = 700;
-                        var height = 480;
-                        if (platform.name.toLowerCase().indexOf('mobile') !== -1 && (window.innerHeight > window.innerWidth)) {
-                            // Mobile portrait mode
-                            _this.stream.videoDimensions = {
-                                width: height || 0,
-                                height: width || 0
+                        if (platform['isIonicIos'] || platform.name === 'Safari') {
+                            // iOS Ionic or Safari. Limitation: cannot set videoDimensions directly, as the videoReference is not loaded
+                            // if not added to DOM. Must add it to DOM and wait for videoWidth and videoHeight properties to be defined
+                            _this.videoReference.style.display = 'none';
+                            document.body.appendChild(_this.videoReference);
+                            var videoDimensionsSet_1 = function () {
+                                _this.stream.videoDimensions = {
+                                    width: _this.videoReference.videoWidth,
+                                    height: _this.videoReference.videoHeight
+                                };
+                                _this.stream.isLocalStreamReadyToPublish = true;
+                                _this.stream.ee.emitEvent('stream-ready-to-publish', []);
+                                document.body.removeChild(_this.videoReference);
+                            };
+                            var interval_1;
+                            _this.videoReference.onloadedmetadata = function () {
+                                if (_this.videoReference.videoWidth === 0) {
+                                    interval_1 = setInterval(function () {
+                                        if (_this.videoReference.videoWidth !== 0) {
+                                            videoDimensionsSet_1();
+                                            clearInterval(interval_1);
+                                        }
+                                    }, 10);
+                                }
+                                else {
+                                    videoDimensionsSet_1();
+                                }
                             };
                         }
                         else {
-                            _this.stream.videoDimensions = {
-                                width: width || 0,
-                                height: height || 0
-                            };
+                            // Rest of platforms
+                            // With no screen share, video dimension can be set directly from MediaStream (getSettings)
+                            // Orientation must be checked for mobile devices (width and height are reversed)
+                            var _a = mediaStream.getVideoTracks()[0].getSettings(), width = _a.width, height = _a.height;
+                            if ((platform.os.family === 'iOS' || platform.os.family === 'Android') && (window.innerHeight > window.innerWidth)) {
+                                // Mobile portrait mode
+                                _this.stream.videoDimensions = {
+                                    width: height || 0,
+                                    height: width || 0
+                                };
+                            }
+                            else {
+                                _this.stream.videoDimensions = {
+                                    width: width || 0,
+                                    height: height || 0
+                                };
+                            }
+                            _this.stream.isLocalStreamReadyToPublish = true;
+                            _this.stream.ee.emitEvent('stream-ready-to-publish', []);
                         }
-                        _this.stream.isLocalStreamReadyToPublish = true;
-                        _this.stream.ee.emitEvent('stream-ready-to-publish', []);
                     }
                     else {
                         // With screen share, video dimension must be got from a video element (onloadedmetadata event)
@@ -302,8 +344,8 @@ var Publisher = /** @class */ (function (_super) {
                             };
                             _this.screenShareResizeInterval = setInterval(function () {
                                 var firefoxSettings = mediaStream.getVideoTracks()[0].getSettings();
-                                var newWidth = (platform.name === 'Chrome') ? _this.videoReference.videoWidth : firefoxSettings.width;
-                                var newHeight = (platform.name === 'Chrome') ? _this.videoReference.videoHeight : firefoxSettings.height;
+                                var newWidth = (platform.name === 'Chrome' || platform.name === 'Opera') ? _this.videoReference.videoWidth : firefoxSettings.width;
+                                var newHeight = (platform.name === 'Chrome' || platform.name === 'Opera') ? _this.videoReference.videoHeight : firefoxSettings.height;
                                 if (_this.stream.isLocalStreamPublished &&
                                     (newWidth !== _this.stream.videoDimensions.width ||
                                         newHeight !== _this.stream.videoDimensions.height)) {
@@ -389,6 +431,10 @@ var Publisher = /** @class */ (function (_super) {
                                 successCallback(mediaStream);
                             })["catch"](function (error) {
                                 _this.clearPermissionDialogTimer(startTime_1, timeForDialogEvent);
+                                if (error.name === 'Error') {
+                                    // Safari OverConstrainedError has as name property 'Error' instead of 'OverConstrainedError'
+                                    error.name = error.constructor.name;
+                                }
                                 var errorName, errorMessage;
                                 switch (error.name.toLowerCase()) {
                                     case 'notfounderror':
@@ -420,6 +466,10 @@ var Publisher = /** @class */ (function (_super) {
                         }
                     })["catch"](function (error) {
                         _this.clearPermissionDialogTimer(startTime_1, timeForDialogEvent);
+                        if (error.name === 'Error') {
+                            // Safari OverConstrainedError has as name property 'Error' instead of 'OverConstrainedError'
+                            error.name = error.constructor.name;
+                        }
                         var errorName, errorMessage;
                         switch (error.name.toLowerCase()) {
                             case 'notfounderror':

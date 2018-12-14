@@ -120,6 +120,18 @@ export declare class Stream implements EventDispatcher {
     /**
      * @hidden
      */
+    publisherStartSpeakingEventEnabled: boolean;
+    /**
+     * @hidden
+     */
+    publisherStopSpeakingEventEnabled: boolean;
+    /**
+     * @hidden
+     */
+    volumeChangeEventEnabled: boolean;
+    /**
+     * @hidden
+     */
     constructor(session: Session, options: InboundStreamOptions | OutboundStreamOptions | {});
     /**
      * See [[EventDispatcher.on]]
@@ -224,6 +236,18 @@ export declare class Stream implements EventDispatcher {
      * @hidden
      */
     disableSpeakingEvents(): void;
+    /**
+     * @hidden
+     */
+    enableVolumeChangeEvent(): void;
+    /**
+     * @hidden
+     */
+    enableOnceVolumeChangeEvent(): void;
+    /**
+     * @hidden
+     */
+    disableVolumeChangeEvent(): void;
     /**
      * @hidden
      */

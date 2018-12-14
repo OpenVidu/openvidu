@@ -28,8 +28,8 @@ var StreamEvent_1 = require("../OpenViduInternal/Events/StreamEvent");
 var StreamPropertyChangedEvent_1 = require("../OpenViduInternal/Events/StreamPropertyChangedEvent");
 var OpenViduError_1 = require("../OpenViduInternal/Enums/OpenViduError");
 var VideoInsertMode_1 = require("../OpenViduInternal/Enums/VideoInsertMode");
-var platform = require("platform");
 var EventEmitter = require("wolfy87-eventemitter");
+var platform = require("platform");
 /**
  * Represents a video call. It can also be seen as a videoconference room where multiple users can connect.
  * Participants who publish their videos to a session can be seen by the rest of users connected to that specific session.
@@ -52,6 +52,14 @@ var Session = /** @class */ (function () {
         /**
          * @hidden
          */
+        this.isFirstIonicIosSubscriber = true;
+        /**
+         * @hidden
+         */
+        this.countDownForIonicIosSubscribers = true;
+        /**
+         * @hidden
+         */
         this.remoteConnections = {};
         /**
          * @hidden
@@ -63,7 +71,7 @@ var Session = /** @class */ (function () {
     /**
      * Connects to the session using `token`. Parameter `metadata` allows you to pass extra data to share with other users when
      * they receive `streamCreated` event. The structure of `metadata` string is up to you (maybe some standardized format
-     * as JSON or XML is a good idea), the only restriction is a maximum length of 10000 chars.
+     * as JSON or XML is a good idea).
      *
      * This metadata is not considered secure, as it is generated in the client side. To pass secure data, add it as a parameter in the
      * token generation operation (through the API REST, openvidu-java-client or openvidu-node-client).
@@ -105,7 +113,7 @@ var Session = /** @class */ (function () {
                 });
             }
             else {
-                reject(new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.BROWSER_NOT_SUPPORTED, 'Browser ' + platform.name + ' ' + platform.version + ' is not supported in OpenVidu'));
+                reject(new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.BROWSER_NOT_SUPPORTED, 'Browser ' + platform.name + ' for ' + platform.os.family + ' is not supported in OpenVidu'));
             }
         });
     };
@@ -466,7 +474,7 @@ var Session = /** @class */ (function () {
             // If there are already available remote streams, enable hark 'speaking' event in all of them
             for (var connectionId in this.remoteConnections) {
                 var str = this.remoteConnections[connectionId].stream;
-                if (!!str && !str.speechEvent && str.hasAudio) {
+                if (!!str && str.hasAudio) {
                     str.enableSpeakingEvents();
                 }
             }
@@ -491,7 +499,7 @@ var Session = /** @class */ (function () {
             // If there are already available remote streams, enable hark in all of them
             for (var connectionId in this.remoteConnections) {
                 var str = this.remoteConnections[connectionId].stream;
-                if (!!str && !str.speechEvent && str.hasAudio) {
+                if (!!str && str.hasAudio) {
                     str.enableOnceSpeakingEvents();
                 }
             }
@@ -513,7 +521,7 @@ var Session = /** @class */ (function () {
             // If there are already available remote streams, disable hark in all of them
             for (var connectionId in this.remoteConnections) {
                 var str = this.remoteConnections[connectionId].stream;
-                if (!!str && !!str.speechEvent) {
+                if (!!str) {
                     str.disableSpeakingEvents();
                 }
             }
@@ -550,6 +558,10 @@ var Session = /** @class */ (function () {
                 _this.ee.emitEvent('streamDestroyed', [streamEvent]);
                 streamEvent.callDefaultBehavior();
                 delete _this.remoteStreamsCreated[stream.streamId];
+                if (Object.keys(_this.remoteStreamsCreated).length === 0) {
+                    _this.isFirstIonicIosSubscriber = true;
+                    _this.countDownForIonicIosSubscribers = true;
+                }
             }
             delete _this.remoteConnections[connection.connectionId];
             _this.ee.emitEvent('connectionDestroyed', [new ConnectionEvent_1.ConnectionEvent(false, _this, 'connectionDestroyed', connection, msg.reason)]);
@@ -609,6 +621,10 @@ var Session = /** @class */ (function () {
                 // Deleting the remote stream
                 var streamId = connection.stream.streamId;
                 delete _this.remoteStreamsCreated[streamId];
+                if (Object.keys(_this.remoteStreamsCreated).length === 0) {
+                    _this.isFirstIonicIosSubscriber = true;
+                    _this.countDownForIonicIosSubscribers = true;
+                }
                 connection.removeStream(streamId);
             })["catch"](function (openViduError) {
                 console.error(openViduError);

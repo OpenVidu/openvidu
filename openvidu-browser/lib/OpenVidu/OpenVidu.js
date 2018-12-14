@@ -26,6 +26,7 @@ var screenSharingAuto = require("../OpenViduInternal/ScreenSharing/Screen-Captur
 var screenSharing = require("../OpenViduInternal/ScreenSharing/Screen-Capturing");
 var RpcBuilder = require("../OpenViduInternal/KurentoUtils/kurento-jsonrpc");
 var platform = require("platform");
+platform['isIonicIos'] = (platform.product === 'iPhone' || platform.product === 'iPad') && platform.ua.indexOf('Safari') === -1;
 /**
  * Entrypoint of OpenVidu Browser library.
  * Use it to initialize objects of type [[Session]], [[Publisher]] and [[LocalRecorder]]
@@ -50,28 +51,42 @@ var OpenVidu = /** @class */ (function () {
          */
         this.advancedConfiguration = {};
         console.info("'OpenVidu' initialized");
-        if (platform.name.toLowerCase().indexOf('mobile') !== -1) {
-            // Listen to orientationchange only on mobile browsers
-            window.onorientationchange = function () {
+        if (platform.os.family === 'iOS' || platform.os.family === 'Android') {
+            // Listen to orientationchange only on mobile devices
+            window.addEventListener('orientationchange', function () {
                 _this.publishers.forEach(function (publisher) {
                     if (!!publisher.stream && !!publisher.stream.hasVideo && !!publisher.stream.streamManager.videos[0]) {
                         var attempts_1 = 0;
                         var oldWidth_1 = publisher.stream.videoDimensions.width;
                         var oldHeight_1 = publisher.stream.videoDimensions.height;
-                        // New resolution got from different places for Chrome and Firefox. Chrome needs a videoWidth and videoHeight of a videoElement.
-                        // Firefox needs getSettings from the videoTrack
-                        var firefoxSettings_1 = publisher.stream.getMediaStream().getVideoTracks()[0].getSettings();
-                        var newWidth_1 = (platform.name.toLowerCase().indexOf('firefox') !== -1) ? firefoxSettings_1.width : publisher.videoReference.videoWidth;
-                        var newHeight_1 = (platform.name.toLowerCase().indexOf('firefox') !== -1) ? firefoxSettings_1.height : publisher.videoReference.videoHeight;
+                        var getNewVideoDimensions_1 = function () {
+                            return new Promise(function (resolve, reject) {
+                                if (platform['isIonicIos']) {
+                                    // iOS Ionic. Limitation: must get new dimensions from an existing video element already inserted into DOM 
+                                    resolve({
+                                        newWidth: publisher.stream.streamManager.videos[0].video.videoWidth,
+                                        newHeight: publisher.stream.streamManager.videos[0].video.videoHeight
+                                    });
+                                }
+                                else {
+                                    // Rest of platforms
+                                    // New resolution got from different places for Chrome and Firefox. Chrome needs a videoWidth and videoHeight of a videoElement.
+                                    // Firefox needs getSettings from the videoTrack
+                                    var firefoxSettings = publisher.stream.getMediaStream().getVideoTracks()[0].getSettings();
+                                    var newWidth = ((platform.name.toLowerCase().indexOf('firefox') !== -1) ? firefoxSettings.width : publisher.videoReference.videoWidth);
+                                    var newHeight = ((platform.name.toLowerCase().indexOf('firefox') !== -1) ? firefoxSettings.height : publisher.videoReference.videoHeight);
+                                    resolve({ newWidth: newWidth, newHeight: newHeight });
+                                }
+                            });
+                        };
                         var repeatUntilChange_1 = setInterval(function () {
-                            firefoxSettings_1 = publisher.stream.getMediaStream().getVideoTracks()[0].getSettings();
-                            newWidth_1 = (platform.name.toLowerCase().indexOf('firefox') !== -1) ? firefoxSettings_1.width : publisher.videoReference.videoWidth;
-                            newHeight_1 = (platform.name.toLowerCase().indexOf('firefox') !== -1) ? firefoxSettings_1.height : publisher.videoReference.videoHeight;
-                            sendStreamPropertyChangedEvent_1(oldWidth_1, oldHeight_1, newWidth_1, newHeight_1);
-                        }, 100);
+                            getNewVideoDimensions_1().then(function (newDimensions) {
+                                sendStreamPropertyChangedEvent_1(oldWidth_1, oldHeight_1, newDimensions.newWidth, newDimensions.newHeight);
+                            });
+                        }, 75);
                         var sendStreamPropertyChangedEvent_1 = function (oldWidth, oldHeight, newWidth, newHeight) {
                             attempts_1++;
-                            if (attempts_1 > 4) {
+                            if (attempts_1 > 10) {
                                 clearTimeout(repeatUntilChange_1);
                             }
                             if (newWidth !== oldWidth || newHeight !== oldHeight) {
@@ -98,14 +113,13 @@ var OpenVidu = /** @class */ (function () {
                         };
                     }
                 });
-            };
+            });
         }
     }
     /**
      * Returns new session
      */
     OpenVidu.prototype.initSession = function () {
-        console.warn("OEeeeeee");
         this.session = new Session_1.Session(this);
         return this.session;
     };
@@ -212,11 +226,19 @@ var OpenVidu = /** @class */ (function () {
      */
     OpenVidu.prototype.checkSystemRequirements = function () {
         var browser = platform.name;
-        var version = platform.version;
-        if ((browser !== 'Chrome') && (browser !== 'Chrome Mobile') &&
-            (browser !== 'Firefox') && (browser !== 'Firefox Mobile') && (browser !== 'Firefox for iOS') &&
+        var family = platform.os.family;
+        var userAgent = !!platform.ua ? platform.ua : navigator.userAgent;
+        // Reject iPhones and iPads if not Safari ('Safari' also covers Ionic for iOS)
+        if (family === 'iOS' && (browser !== 'Safari' || userAgent.indexOf('CriOS') !== -1 || userAgent.indexOf('FxiOS') !== -1)) {
+            return 0;
+        }
+        // Accept: Chrome (desktop and Android), Firefox (desktop and Android), Opera (desktop and Android),
+        // Safari (OSX and iOS), Ionic (Android and iOS)
+        if ((browser !== 'Safari') &&
+            (browser !== 'Chrome') && (browser !== 'Chrome Mobile') &&
+            (browser !== 'Firefox') && (browser !== 'Firefox Mobile') &&
             (browser !== 'Opera') && (browser !== 'Opera Mobile') &&
-            (browser !== 'Safari') && (browser !== 'Android Browser')) {
+            (browser !== 'Android Browser')) {
             return 0;
         }
         else {
@@ -224,11 +246,16 @@ var OpenVidu = /** @class */ (function () {
         }
     };
     /**
-     * Checks if the browser supports screen-sharing. Chrome, Firefox and Opera support screen-sharing
+     * Checks if the browser supports screen-sharing. Desktop Chrome, Firefox and Opera support screen-sharing
      * @returns 1 if the browser supports screen-sharing, 0 otherwise
      */
     OpenVidu.prototype.checkScreenSharingCapabilities = function () {
         var browser = platform.name;
+        var family = platform.os.family;
+        // Reject mobile devices
+        if (family === 'iOS' || family === 'Android') {
+            return 0;
+        }
         if ((browser !== 'Chrome') && (browser !== 'Firefox') && (browser !== 'Opera')) {
             return 0;
         }
@@ -402,7 +429,7 @@ var OpenVidu = /** @class */ (function () {
                     if (publisherProperties.videoSource === 'screen' ||
                         (platform.name.indexOf('Firefox') !== -1 && publisherProperties.videoSource === 'window')) {
                         if (platform.name !== 'Chrome' && platform.name.indexOf('Firefox') === -1 && platform.name !== 'Opera') {
-                            var error = new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.SCREEN_SHARING_NOT_SUPPORTED, 'You can only screen share in desktop Chrome and Firefox. Detected browser: ' + platform.name);
+                            var error = new OpenViduError_1.OpenViduError(OpenViduError_1.OpenViduErrorName.SCREEN_SHARING_NOT_SUPPORTED, 'You can only screen share in desktop Chrome, Firefox or Opera. Detected browser: ' + platform.name);
                             console.error(error);
                             reject(error);
                         }

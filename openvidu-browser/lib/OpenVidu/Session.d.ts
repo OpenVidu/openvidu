@@ -47,6 +47,14 @@ export declare class Session implements EventDispatcher {
     /**
      * @hidden
      */
+    isFirstIonicIosSubscriber: boolean;
+    /**
+     * @hidden
+     */
+    countDownForIonicIosSubscribers: boolean;
+    /**
+     * @hidden
+     */
     remoteConnections: ObjMap<Connection>;
     /**
      * @hidden
