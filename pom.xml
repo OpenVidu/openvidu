@@ -41,7 +41,7 @@
 	</developers>
 
 	<properties>
-		<version.kurento>6.8.0</version.kurento>
+		<version.kurento>6.9.0</version.kurento>
 		<version.spring-boot>1.4.2.RELEASE</version.spring-boot>
 		<version.junit>4.12</version.junit>
 		<version.slf4j>1.7.13</version.slf4j>
