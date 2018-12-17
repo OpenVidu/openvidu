@@ -223,7 +223,7 @@ export class WebRtcStats {
                             'exec': instrumentation.exec,
                             'component': instrumentation.component,
                             'stream': 'webRtc',
-                            'type': metricId,
+                            'et_type': metricId,
                             'stream_type': 'composed_metrics',
                             'units': units
                         };
