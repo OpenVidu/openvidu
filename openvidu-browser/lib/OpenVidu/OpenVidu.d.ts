@@ -137,6 +137,7 @@ export declare class OpenVidu {
      * - `publisherSpeakingEventsOptions`: custom configuration for the [[PublisherSpeakingEvent]] feature
      */
     setAdvancedConfiguration(configuration: OpenViduAdvancedConfiguration): void;
+    reconnect(): void;
     /**
      * @hidden
      */

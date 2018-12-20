@@ -62,7 +62,7 @@ var OpenVidu = /** @class */ (function () {
                         var getNewVideoDimensions_1 = function () {
                             return new Promise(function (resolve, reject) {
                                 if (platform['isIonicIos']) {
-                                    // iOS Ionic. Limitation: must get new dimensions from an existing video element already inserted into DOM 
+                                    // iOS Ionic. Limitation: must get new dimensions from an existing video element already inserted into DOM
                                     resolve({
                                         newWidth: publisher.stream.streamManager.videos[0].video.videoWidth,
                                         newHeight: publisher.stream.streamManager.videos[0].video.videoHeight
@@ -377,6 +377,11 @@ var OpenVidu = /** @class */ (function () {
     OpenVidu.prototype.setAdvancedConfiguration = function (configuration) {
         this.advancedConfiguration = configuration;
     };
+    // Only for testing.
+    OpenVidu.prototype.reconnect = function () {
+        console.log("Attempt to test reconnect");
+        this.jsonRpcClient.forceClose();
+    };
     /* Hidden methods */
     /**
      * @hidden
@@ -549,7 +554,7 @@ var OpenVidu = /** @class */ (function () {
      * @hidden
      */
     OpenVidu.prototype.closeWs = function () {
-        this.jsonRpcClient.close();
+        this.jsonRpcClient.close(4102, "Connection closed by client");
     };
     /**
      * @hidden
@@ -584,7 +589,7 @@ var OpenVidu = /** @class */ (function () {
     OpenVidu.prototype.disconnectCallback = function () {
         console.warn('Websocket connection lost');
         if (this.isRoomAvailable()) {
-            this.session.onLostConnection();
+            this.session.onLostConnection('Websocket connection lost');
         }
         else {
             alert('Connection error. Please reload page.');
@@ -592,17 +597,24 @@ var OpenVidu = /** @class */ (function () {
     };
     OpenVidu.prototype.reconnectingCallback = function () {
         console.warn('Websocket connection lost (reconnecting)');
-        if (this.isRoomAvailable()) {
-            this.session.onLostConnection();
-        }
-        else {
+        if (!this.isRoomAvailable()) {
             alert('Connection error. Please reload page.');
         }
     };
     OpenVidu.prototype.reconnectedCallback = function () {
+        var _this = this;
         console.warn('Websocket reconnected');
         if (this.isRoomAvailable()) {
-            this.session.onRecoveredConnection();
+            this.sendRequest("connect", { sessionId: this.session.connection.rpcSessionId }, function (error, response) {
+                if (error != null) {
+                    console.error(error);
+                    _this.session.onLostConnection("Reconnection fault");
+                    _this.jsonRpcClient.close(4101, "Reconnection fault");
+                    return;
+                }
+                _this.jsonRpcClient.resetPing();
+                _this.session.onRecoveredConnection();
+            });
         }
         else {
             alert('Connection error. Please reload page.');

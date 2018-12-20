@@ -15,36 +15,53 @@
  */
 
 "use strict";
-
-var BrowserWebSocket = global.WebSocket || global.MozWebSocket;
-
+/**
+ * GLOBAL VARIABLES:
+ *
+ * Logger function.
+ */
 var Logger = console;
 
 /**
- * Get either the `WebSocket` or `MozWebSocket` globals
- * in the browser or try to resolve WebSocket-compatible
- * interface exposed by `ws` for Node-like environment.
+ * Max reconnect timeout.
+ *
+ * @type {number} max reconnect timeout.
  */
+var MAX_RETRY_TIME_MS = 10000;
 
-/*var WebSocket = BrowserWebSocket;
-if (!WebSocket && typeof window === 'undefined') {
-    try {
-        WebSocket = require('ws');
-    } catch (e) { }
-}*/
-
-//var SockJS = require('sockjs-client');
-
-var MAX_RETRIES = 2000; // Forever...
-var RETRY_TIME_MS = 3000; // FIXME: Implement exponential wait times...
-
+/**
+ * Web socket ready state connecting.
+ *
+ * @type {number} connecting state.
+ */
 var CONNECTING = 0;
+
+/**
+ * Web socket ready state open.
+ *
+ * @type {number} open state.
+ */
 var OPEN = 1;
+
+/**
+ * Web socket ready state closing.
+ *
+ * @type {number} closing state.
+ */
 var CLOSING = 2;
+
+/**
+ * Web socket ready state closed.
+ *
+ * @type {number} closed state.
+ */
 var CLOSED = 3;
 
-/*
-config = {
+/**
+ *
+ * Web socket decorator with reconnection.
+ *
+ config = {
 		uri : wsUri,
 		useSockJS : true (use SockJS) / false (use WebSocket) by default,
 		onconnected : callback method to invoke when connection is successful,
@@ -52,191 +69,201 @@ config = {
 		onreconnecting : callback method to invoke when the client is reconnecting,
 		onreconnected : callback method to invoke when the client successfully reconnects,
 	};
-*/
+ */
 function WebSocketWithReconnection(config) {
 
-    var closing = false;
-    var registerMessageHandler;
-    var wsUri = config.uri;
-    var useSockJS = config.useSockJS;
-    var reconnecting = false;
+  /**
+   *  Num of total retries.
+   *
+   * @type {number}
+   */
+  var totalNumRetries = 1;
 
-    var forcingDisconnection = false;
+  /**
+   * Register web socket message handler for registring message handler from RPC.
+   */
+  var registerMessageHandler;
 
-    var ws;
+  /**
+   *  Web socket in reconnection process.
+   *
+   * @type {boolean} reconnection in progress if value is true.
+   */
+  var reconnecting = false;
 
-    if (useSockJS) {
-        ws = new SockJS(wsUri);
+  /**
+   * Web socket instance.
+   */
+  var ws;
+
+  /**
+   * Handles web socket open event.
+   */
+  function onOpen() {
+    ws.addEventListener("close", onClose);
+    if (reconnecting === true) {
+      registerMessageHandler();
+      if (config.onreconnected) {
+        config.onreconnected();
+      }
+      reconnecting = false;
     } else {
-        ws = new WebSocket(wsUri);
+      if (config.onconnected) {
+        config.onconnected();
+      }
+    }
+    totalNumRetries = 1;
+  }
+
+  /**
+   * Handles wWeb socket close event.
+   *
+   * @param event CloseEvent instance.
+   */
+  function onClose(event) {
+    removeAllListeners();
+    Logger.log(
+      "Close Web Socket code: " + event.code + " reason: " + event.reason);
+    if (event.code > 4000) {
+      if (config.onerror) {
+        config.onerror(event.reason);
+      }
+      return;
     }
 
-    ws.onopen = function() {
-        logConnected(ws, wsUri);
-        if (config.onconnected) {
-            config.onconnected();
-        }
-    };
+    if (reconnecting === false) {
+      reconnecting = true;
+      reconnect(500 * totalNumRetries)
+    }
+  }
 
-    ws.onerror = function(error) {
-        Logger.error("Could not connect to " + wsUri + " (invoking onerror if defined)", error);
-        if (config.onerror) {
-            config.onerror(error);
-        }
-    };
+  /**
+   * Handles web socket error event.
+   *
+   * @param event ErrorEvent instance.
+   */
+  function onError(event) {
+    removeAllListeners();
+    if (config.onerror) {
+      config.onerror("Web socket establishing error");
+    }
+    reconnect(500 * totalNumRetries);
+  }
 
-    function logConnected(ws, wsUri) {
-        try {
-            Logger.debug("WebSocket connected to " + wsUri);
-        } catch (e) {
-            Logger.error(e);
-        }
+  /**
+   * Init new instance of Web socket.
+   *
+   * @param config Web socket configuration.
+   *
+   * @returns {WebSocket | SockJS} new web socket instance.
+   */
+  function resetWebSocket(config) {
+    var newWS;
+    if (config.useSockJS) {
+      newWS = new SockJS(config.uri);
+    } else {
+      newWS = new WebSocket(config.uri);
     }
 
-    var reconnectionOnClose = function() {
-        if (ws.readyState === CLOSED) {
-            if (closing) {
-                Logger.debug("Connection closed by user");
-            } else {
-                Logger.debug("Connection closed unexpectecly. Reconnecting...");
-                reconnectToSameUri(MAX_RETRIES, 1);
-            }
-        } else {
-            Logger.debug("Close callback from previous websocket. Ignoring it");
-        }
-    };
+    newWS.addEventListener("open", onOpen);
+    newWS.addEventListener("error", onError);
+    return newWS;
+  }
 
-    ws.onclose = reconnectionOnClose;
+  /**
+   *  Removes all Web socket event listeners.
+   */
+  function removeAllListeners() {
+    ws.removeEventListener("open", onOpen);
+    ws.removeEventListener("error", onError);
+    ws.removeEventListener("close", onClose);
+  }
 
-    function reconnectToSameUri(maxRetries, numRetries) {
-        Logger.debug("reconnectToSameUri (attempt #" + numRetries + ", max=" + maxRetries + ")");
+  /**
+   *  Reconnects web socket with timeout.
+   *
+   * @param reconnectInterval reconnection timeout.
+   */
+  function reconnect(reconnectInterval) {
+    if (reconnectInterval > MAX_RETRY_TIME_MS) {
+      if (config.onerror) {
+        config.onerror("Server is not responding")
+      }
+      return;
+    }
+    if (config.onreconnecting) {
+      config.onreconnecting();
+    }
+    setTimeout(function () {
+      totalNumRetries++;
+      ws = resetWebSocket(config);
 
-        if (numRetries === 1) {
-            if (reconnecting) {
-                Logger.warn("Trying to reconnectToNewUri when reconnecting... Ignoring this reconnection.")
-                return;
-            } else {
-                reconnecting = true;
-            }
+    }, reconnectInterval)
+  }
 
-            if (config.onreconnecting) {
-                config.onreconnecting();
-            }
-        }
+  // init new web-socket instance.
+  ws = resetWebSocket(config);
 
-        if (forcingDisconnection) {
-            reconnectToNewUri(maxRetries, numRetries, wsUri);
+  /**
+   * Closes web-socket connection.
+   */
+  this.close = function (code, reason) {
+    if (ws.readyState < CLOSING) {
+      ws.close(code, reason);
+    }
+  };
 
-        } else {
-            if (config.newWsUriOnReconnection) {
-                config.newWsUriOnReconnection(function(error, newWsUri) {
+  /**
+   * This method is only for testing. Simulate closing of web-socket connection.
+   *
+   * @param millis timeout in millis
+   */
+  this.forceClose = function (millis) {
+    Logger.debug("Testing: Force WebSocket close");
 
-                    if (error) {
-                        Logger.debug(error);
-                        setTimeout(function() {
-                            reconnectToSameUri(maxRetries, numRetries + 1);
-                        }, RETRY_TIME_MS);
-                    } else {
-                        reconnectToNewUri(maxRetries, numRetries, newWsUri);
-                    }
-                })
-            } else {
-                reconnectToNewUri(maxRetries, numRetries, wsUri);
-            }
-        }
+    if (millis) {
+      Logger.log("Testing: Change wsUri for " + millis
+        + " millis to simulate net failure");
+      setTimeout(function () {
+        ws.close(1000, "Test close for reconnect with timeout");
+
+      }, millis);
+    } else {
+      ws.close(1000, "Test close for reconnect");
     }
 
-    // TODO Test retries. How to force not connection?
-    function reconnectToNewUri(maxRetries, numRetries, reconnectWsUri) {
-        Logger.debug("Reconnection attempt #" + numRetries);
+  };
 
-        ws.close();
+  /**
+   * Closes web-socket for reconnection.
+   */
+  this.reconnectWs = function () {
+    Logger.log("reconnectWs");
+    ws.close(1000, "Close Web socket for reconnection")
+  };
 
-        wsUri = reconnectWsUri || wsUri;
+  /**
+   * Sends message within websocket.
+   *
+   * @param message some text message.
+   */
+  this.send = function (message) {
+    ws.send(message);
+  };
 
-        var newWs;
-        if (useSockJS) {
-            newWs = new SockJS(wsUri);
-        } else {
-            newWs = new WebSocket(wsUri);
-        }
-
-        newWs.onopen = function() {
-            Logger.debug("Reconnected after " + numRetries + " attempts...");
-            logConnected(newWs, wsUri);
-            reconnecting = false;
-            registerMessageHandler();
-            if (config.onreconnected()) {
-                config.onreconnected();
-            }
-
-            newWs.onclose = reconnectionOnClose;
-        };
-
-        var onErrorOrClose = function(error) {
-            Logger.warn("Reconnection error: ", error);
-
-            if (numRetries === maxRetries) {
-                if (config.ondisconnect) {
-                    config.ondisconnect();
-                }
-            } else {
-                setTimeout(function() {
-                    reconnectToSameUri(maxRetries, numRetries + 1);
-                }, RETRY_TIME_MS);
-            }
-        };
-
-        newWs.onerror = onErrorOrClose;
-
-        ws = newWs;
-    }
-
-    this.close = function() {
-        closing = true;
-        ws.close();
+  /**
+   * Adds some event listener.
+   *
+   * @param type      event type
+   * @param callback  event callback.
+   */
+  this.addEventListener = function (type, callback) {
+    registerMessageHandler = function () {
+      ws.addEventListener(type, callback);
     };
 
-
-    // This method is only for testing
-    this.forceClose = function(millis) {
-        Logger.debug("Testing: Force WebSocket close");
-
-        if (millis) {
-            Logger.debug("Testing: Change wsUri for " + millis + " millis to simulate net failure");
-            var goodWsUri = wsUri;
-            wsUri = "wss://21.234.12.34.4:443/";
-
-            forcingDisconnection = true;
-
-            setTimeout(function() {
-                Logger.debug("Testing: Recover good wsUri " + goodWsUri);
-                wsUri = goodWsUri;
-
-                forcingDisconnection = false;
-
-            }, millis);
-        }
-
-        ws.close();
-    };
-
-    this.reconnectWs = function() {
-        Logger.debug("reconnectWs");
-        reconnectToSameUri(MAX_RETRIES, 1);
-    };
-
-    this.send = function(message) {
-        ws.send(message);
-    };
-
-    this.addEventListener = function(type, callback) {
-        registerMessageHandler = function() {
-            ws.addEventListener(type, callback);
-        };
-
-        registerMessageHandler();
-    };
+    registerMessageHandler();
+  };
 }
 
 module.exports = WebSocketWithReconnection;

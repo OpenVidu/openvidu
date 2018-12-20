@@ -290,7 +290,7 @@ function RpcBuilder(packer, options, transport, onRequest) {
     this.close = function () {
         var transport = this.getTransport();
         if (transport && transport.close)
-            transport.close();
+            transport.close(4003, "Cancel request");
         this.cancel();
         processedResponses.forEach(clearTimeout);
         responses.forEach(function (response) {

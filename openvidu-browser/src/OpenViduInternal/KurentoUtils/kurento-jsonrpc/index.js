@@ -519,7 +519,7 @@ function RpcBuilder(packer, options, transport, onRequest)
     // Prevent to receive new messages
     var transport = this.getTransport();
     if(transport && transport.close)
-       transport.close();
+       transport.close(4003, "Cancel request");
 
     // Request & processed responses
     this.cancel();

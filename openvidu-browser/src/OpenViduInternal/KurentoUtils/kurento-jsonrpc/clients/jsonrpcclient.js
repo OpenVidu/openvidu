@@ -82,6 +82,12 @@ function JsonRpcClient(configuration) {
             return;
         }
 
+      clearInterval(pingInterval);
+      pingPongStarted = false;
+      enabledPings = false;
+      pingNextNum = -1;
+      rpc.cancel();
+
         status = RECONNECTING;
         if (onreconnecting) {
             onreconnecting();
@@ -96,14 +102,12 @@ function JsonRpcClient(configuration) {
         }
         status = CONNECTED;
 
-        enabledPings = true;
-        updateNotReconnectIfLessThan();
-        usePing();
+    updateNotReconnectIfLessThan();
 
-        if (onreconnected) {
-            onreconnected();
-        }
+    if (onreconnected) {
+      onreconnected();
     }
+  };
 
     wsConfig.onconnected = function() {
         Logger.debug("--------- ONCONNECTED -----------");
@@ -125,6 +129,12 @@ function JsonRpcClient(configuration) {
         Logger.debug("--------- ONERROR -----------");
 
         status = DISCONNECTED;
+
+      clearInterval(pingInterval);
+      pingPongStarted = false;
+      enabledPings = false;
+      pingNextNum = -1;
+      rpc.cancel();
 
         if (onerror) {
             onerror(error);
@@ -239,8 +249,8 @@ function JsonRpcClient(configuration) {
         }
     }
 
-    this.close = function() {
-        Logger.debug("Closing jsonRpcClient explicitly by client");
+    this.close = function(code, reason) {
+        Logger.debug("Closing  with code: "+code+ " because: "+reason);
 
         if (pingInterval != undefined) {
             Logger.debug("Clearing ping interval");
@@ -255,10 +265,10 @@ function JsonRpcClient(configuration) {
                 if (error) {
                     Logger.error("Error sending close message: " + JSON.stringify(error));
                 }
-                ws.close();
+                ws.close(code, reason);
             });
         } else {
-			ws.close();
+			ws.close(code, reason);
         }
     }
 
@@ -270,6 +280,12 @@ function JsonRpcClient(configuration) {
     this.reconnect = function() {
         ws.reconnectWs();
     }
+
+    this.resetPing = function(){
+      enabledPings = true;
+      pingNextNum = 0;
+      usePing();
+  }
 }
 
 

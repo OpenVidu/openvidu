@@ -33,6 +33,11 @@ export class Connection {
      */
     connectionId: string;
 
+  /**
+   * RPC session ID.
+   */
+    rpcSessionId: string;
+
     /**
      * Time when this connection was created (UTC milliseconds)
      */
@@ -164,5 +169,4 @@ export class Connection {
         }
         this.disposed = true;
     }
-
 }

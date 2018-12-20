@@ -254,7 +254,7 @@ export declare class Session implements EventDispatcher {
     /**
      * @hidden
      */
-    onLostConnection(): void;
+    onLostConnection(reason: any): void;
     /**
      * @hidden
      */

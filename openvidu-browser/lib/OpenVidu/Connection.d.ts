@@ -13,6 +13,10 @@ export declare class Connection {
      */
     connectionId: string;
     /**
+     * RPC session ID.
+     */
+    rpcSessionId: string;
+    /**
      * Time when this connection was created (UTC milliseconds)
      */
     creationTime: number;

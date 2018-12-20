@@ -899,22 +899,10 @@ export class Session implements EventDispatcher {
     /**
      * @hidden
      */
-    onLostConnection(): void {
-
-        /*if (!this.connection) {
-
-            console.warn('Not connected to session: if you are not debugging, this is probably a certificate error');
-
-            const url = 'https://' + this.openvidu.getWsUri().split('wss://')[1].split('/openvidu')[0];
-            if (window.confirm('If you are not debugging, this is probably a certificate error at \"' + url + '\"\n\nClick OK to navigate and accept it')) {
-                location.assign(url + '/accept-certificate');
-            }
-            return;
-        }*/
-
-        console.warn('Lost connection in Session ' + this.sessionId);
+    onLostConnection(reason): void {
+      console.warn('Lost connection in Session # waiting for reconnect', this.sessionId);
         if (!!this.sessionId && !this.connection.disposed) {
-            this.leave(true, 'networkDisconnect');
+            this.leave(true, reason);
         }
     }
 
@@ -1047,6 +1035,7 @@ export class Session implements EventDispatcher {
                             this.connection = new Connection(this);
                             this.connection.connectionId = response.id;
                             this.connection.data = response.metadata;
+                            this.connection.rpcSessionId = response.sessionId;
 
                             // Initialize remote Connections with value returned by openvidu-server
                             const events = {

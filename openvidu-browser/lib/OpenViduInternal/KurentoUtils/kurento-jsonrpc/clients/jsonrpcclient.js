@@ -30,6 +30,11 @@ function JsonRpcClient(configuration) {
             Logger.error("Websocket already in RECONNECTING state when receiving a new ONRECONNECTING message. Ignoring it");
             return;
         }
+        clearInterval(pingInterval);
+        pingPongStarted = false;
+        enabledPings = false;
+        pingNextNum = -1;
+        rpc.cancel();
         status = RECONNECTING;
         if (onreconnecting) {
             onreconnecting();
@@ -42,9 +47,7 @@ function JsonRpcClient(configuration) {
             return;
         }
         status = CONNECTED;
-        enabledPings = true;
         updateNotReconnectIfLessThan();
-        usePing();
         if (onreconnected) {
             onreconnected();
         }
@@ -65,6 +68,11 @@ function JsonRpcClient(configuration) {
     wsConfig.onerror = function (error) {
         Logger.debug("--------- ONERROR -----------");
         status = DISCONNECTED;
+        clearInterval(pingInterval);
+        pingPongStarted = false;
+        enabledPings = false;
+        pingNextNum = -1;
+        rpc.cancel();
         if (onerror) {
             onerror(error);
         }
@@ -161,8 +169,8 @@ function JsonRpcClient(configuration) {
             }
         }
     }
-    this.close = function () {
-        Logger.debug("Closing jsonRpcClient explicitly by client");
+    this.close = function (code, reason) {
+        Logger.debug("Closing  with code: " + code + " because: " + reason);
         if (pingInterval != undefined) {
             Logger.debug("Clearing ping interval");
             clearInterval(pingInterval);
@@ -175,11 +183,11 @@ function JsonRpcClient(configuration) {
                 if (error) {
                     Logger.error("Error sending close message: " + JSON.stringify(error));
                 }
-                ws.close();
+                ws.close(code, reason);
             });
         }
         else {
-            ws.close();
+            ws.close(code, reason);
         }
     };
     this.forceClose = function (millis) {
@@ -187,6 +195,11 @@ function JsonRpcClient(configuration) {
     };
     this.reconnect = function () {
         ws.reconnectWs();
+    };
+    this.resetPing = function () {
+        enabledPings = true;
+        pingNextNum = 0;
+        usePing();
     };
 }
 module.exports = JsonRpcClient;
