@@ -17,15 +17,17 @@
 
 package io.openvidu.test.e2e;
 
-import static java.lang.invoke.MethodHandles.lookup;
 import static org.junit.Assert.fail;
 import static org.openqa.selenium.OutputType.BASE64;
-import static org.slf4j.LoggerFactory.getLogger;
 
+import java.awt.Color;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +36,10 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import org.jcodec.api.FrameGrab;
+import org.jcodec.api.JCodecException;
+import org.jcodec.common.model.Picture;
+import org.jcodec.scale.AWTUtil;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -56,9 +62,12 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.github.bonigarcia.SeleniumExtension;
 import io.github.bonigarcia.wdm.WebDriverManager;
+import io.openvidu.java.client.OpenVidu;
+import io.openvidu.java.client.Recording;
 import io.openvidu.test.e2e.browser.BrowserUser;
 import io.openvidu.test.e2e.browser.ChromeAndroidUser;
 import io.openvidu.test.e2e.browser.ChromeUser;
@@ -83,7 +92,7 @@ public class OpenViduTestAppE2eTest {
 	static Exception ex = null;
 	private final Object lock = new Object();
 
-	final static Logger log = getLogger(lookup().lookupClass());
+	private static final Logger log = LoggerFactory.getLogger(OpenViduTestAppE2eTest.class);
 
 	BrowserUser user;
 
@@ -940,8 +949,8 @@ public class OpenViduTestAppE2eTest {
 		final long[] expectedWidthHeight = new long[2];
 
 		user.getEventManager().on("streamPropertyChanged", (event) -> {
-			threadAssertions.add(((String) event.get("eventContent")).contains(
-					"videoDimensions [{\"width\":" + expectedWidthHeight[0] + ",\"height\":" + expectedWidthHeight[1] + "}]"));
+			threadAssertions.add(((String) event.get("eventContent")).contains("videoDimensions [{\"width\":"
+					+ expectedWidthHeight[0] + ",\"height\":" + expectedWidthHeight[1] + "}]"));
 			latch3.countDown();
 		});
 
@@ -1084,18 +1093,12 @@ public class OpenViduTestAppE2eTest {
 		Thread.sleep(1000);
 		user.getDriver().findElement(By.id("start-recording-btn")).click();
 
-		Thread.sleep(4000);
-
-		try {
-			System.out.println(getBase64Screenshot(user));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
 		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
 				"Recording started [" + sessionName + "]"));
 
 		user.getEventManager().waitUntilEventReaches("recordingStarted", 1);
+
+		Thread.sleep(8000);
 
 		user.getDriver().findElement(By.id("recording-id-field")).clear();
 		user.getDriver().findElement(By.id("recording-id-field")).sendKeys(sessionName);
@@ -1105,12 +1108,12 @@ public class OpenViduTestAppE2eTest {
 		user.getWaiter()
 				.until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Error [409]"));
 
-		// Try to get a existing recording
+		// Try to get an existing recording
 		user.getDriver().findElement(By.id("get-recording-btn")).click();
 		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
 				"Recording got [" + sessionName + "]"));
 
-		// Try to delete a ongoing recording
+		// Try to delete an ongoing recording
 		user.getDriver().findElement(By.id("delete-recording-btn")).click();
 		user.getWaiter()
 				.until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Error [409]"));
@@ -1135,6 +1138,9 @@ public class OpenViduTestAppE2eTest {
 		Assert.assertTrue(file1.exists() || file1.length() > 0);
 		Assert.assertTrue(file2.exists() || file2.length() > 0);
 		Assert.assertTrue(file3.exists() || file3.length() > 0);
+
+		Assert.assertTrue(
+				this.recordedFileFine(file1, new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(sessionName)));
 
 		// Try to get the stopped recording
 		user.getDriver().findElement(By.id("get-recording-btn")).click();
@@ -1611,6 +1617,46 @@ public class OpenViduTestAppE2eTest {
 	private String getBase64Screenshot(BrowserUser user) throws Exception {
 		String screenshotBase64 = ((TakesScreenshot) user.getDriver()).getScreenshotAs(BASE64);
 		return "data:image/png;base64," + screenshotBase64;
+	}
+
+	private boolean recordedFileFine(File file, Recording recording) {
+		boolean isFine = false;
+		Picture frame;
+		try {
+			// Get a frame at 75% duration
+			frame = FrameGrab.getFrameAtSec(file, (double) (recording.getDuration() * 0.75));
+			Map<String, Long> colorMap = this.averageColor(AWTUtil.toBufferedImage(frame));
+			log.info("Recording map color: {}", colorMap.toString());
+			isFine = this.checkVideoAverageRgbGreen(colorMap);
+		} catch (IOException | JCodecException e) {
+			log.warn("Error getting frame from video recording: {}", e.getMessage());
+			isFine = false;
+		}
+		return isFine;
+	}
+
+	private Map<String, Long> averageColor(BufferedImage bi) {
+		int x0 = 0;
+		int y0 = 0;
+		int w = bi.getWidth();
+		int h = bi.getHeight();
+		int x1 = x0 + w;
+		int y1 = y0 + h;
+		long sumr = 0, sumg = 0, sumb = 0;
+		for (int x = x0; x < x1; x++) {
+			for (int y = y0; y < y1; y++) {
+				Color pixel = new Color(bi.getRGB(x, y));
+				sumr += pixel.getRed();
+				sumg += pixel.getGreen();
+				sumb += pixel.getBlue();
+			}
+		}
+		int num = w * h;
+		Map<String, Long> colorMap = new HashMap<>();
+		colorMap.put("r", (long) (sumr / num));
+		colorMap.put("g", (long) (sumg / num));
+		colorMap.put("b", (long) (sumb / num));
+		return colorMap;
 	}
 
 }

@@ -38,6 +38,8 @@ import org.json.simple.parser.ParseException;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Manager event class for BrowserUser. Collects, cleans and stores events from
@@ -47,6 +49,8 @@ import org.openqa.selenium.WebElement;
  * @since 1.1.1
  */
 public class OpenViduEventManager {
+	
+	private static final Logger log = LoggerFactory.getLogger(OpenViduEventManager.class);
 
 	private static class RunnableCallback implements Runnable {
 
@@ -172,7 +176,7 @@ public class OpenViduEventManager {
 		while (!this.eventQueue.isEmpty()) {
 			JSONObject event = this.eventQueue.poll();
 
-			System.out.println(event.get("event") + ": " + event);
+			log.info(event.get("event") + ": " + event);
 
 			if (this.eventCallbacks.containsKey(event.get("event"))) {
 				for (RunnableCallback callback : this.eventCallbacks.get(event.get("event"))) {
