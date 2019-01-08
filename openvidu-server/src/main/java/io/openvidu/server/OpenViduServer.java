@@ -175,6 +175,7 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	public static void main(String[] args) throws Exception {
 		log.info("Using /dev/urandom for secure random generation");
 		System.setProperty("java.security.egd", "file:/dev/./urandom");
+		System.setProperty("server.session.timeout", "2137483647");
 		SpringApplication.run(OpenViduServer.class, args);
 	}
 

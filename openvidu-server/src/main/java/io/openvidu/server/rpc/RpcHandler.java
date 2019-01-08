@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import javax.servlet.http.HttpSession;
+
 import org.kurento.jsonrpc.DefaultJsonRpcHandler;
 import org.kurento.jsonrpc.Session;
 import org.kurento.jsonrpc.Transaction;
@@ -33,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
+import org.springframework.web.socket.WebSocketSession;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -561,6 +564,12 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 	@Override
 	public void afterConnectionClosed(Session rpcSession, String status) throws Exception {
 		log.info("After connection closed for WebSocket session: {} - Status: {}", rpcSession.getSessionId(), status);
+
+		if (rpcSession instanceof WebSocketServerSession) {
+			WebSocketSession wsSession = ((WebSocketServerSession) rpcSession).getWebSocketSession();
+			HttpSession httpSession = (HttpSession) wsSession.getAttributes().get("httpSession");
+			httpSession.invalidate();
+		}
 
 		String rpcSessionId = rpcSession.getSessionId();
 		String message = "";
