@@ -83,7 +83,7 @@ touch xvfb.log
 chmod 777 xvfb.log
 
 function3() {
-	xvfb-run --server-num=${DISPLAY_NUM} --server-args="-ac -screen 0 ${RESOLUTION}x24 -noreset" google-chrome -start-maximized -no-sandbox -test-type -disable-infobars -window-size=$WIDTH,$HEIGHT -no-first-run -ignore-certificate-errors --autoplay-policy=no-user-gesture-required --kiosk $URL &> xvfb.log &
+	xvfb-run --server-num=${DISPLAY_NUM} --server-args="-screen 0 ${RESOLUTION}x24 -ac" google-chrome -start-maximized -no-sandbox -test-type -disable-infobars -window-size=$WIDTH,$HEIGHT --window-position=0,0 -no-first-run -ignore-certificate-errors --autoplay-policy=no-user-gesture-required --kiosk $URL &> xvfb.log &
 }
 export -f function3
 if [[ $CURRENT_UID != $USER_ID ]]; then
@@ -150,7 +150,8 @@ fi
 
 function7() {
 	MIDDLE_TIME=$(ffmpeg -i /recordings/$VIDEO_NAME.$VIDEO_FORMAT 2>&1 | grep Duration | awk '{print $2}' | tr -d , | awk -F ':' '{print ($3+$2*60+$1*3600)/2}')
-	ffmpeg -ss $MIDDLE_TIME -i /recordings/$VIDEO_NAME.$VIDEO_FORMAT -vframes 1 -s 480x300 /recordings/$VIDEO_ID.jpg
+	THUMBNAIL_HEIGHT=$((480*$HEIGHT/$WIDTH))
+	ffmpeg -ss $MIDDLE_TIME -i /recordings/$VIDEO_NAME.$VIDEO_FORMAT -vframes 1 -s 480x$THUMBNAIL_HEIGHT /recordings/$VIDEO_ID.jpg
 }
 export -f function7
 if [[ $CURRENT_UID != $USER_ID ]]; then
