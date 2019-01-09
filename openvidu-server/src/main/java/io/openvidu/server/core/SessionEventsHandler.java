@@ -86,6 +86,8 @@ public class SessionEventsHandler {
 			JsonObject participantJson = new JsonObject();
 			participantJson.addProperty(ProtocolElements.JOINROOM_PEERID_PARAM,
 					existingParticipant.getParticipantPublicId());
+			participantJson.addProperty(ProtocolElements.JOINROOM_PEERCREATEDAT_PARAM,
+					existingParticipant.getCreatedAt());
 
 			// Metadata associated to each existing participant
 			participantJson.addProperty(ProtocolElements.JOINROOM_METADATA_PARAM,
@@ -98,6 +100,8 @@ public class SessionEventsHandler {
 				JsonObject stream = new JsonObject();
 				stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMID_PARAM,
 						existingParticipant.getPublisherStreamId());
+				stream.addProperty(ProtocolElements.JOINROOM_PEERCREATEDAT_PARAM,
+						kParticipant.getPublisher().createdAt());
 				stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMHASAUDIO_PARAM,
 						kParticipant.getPublisherMediaOptions().hasAudio);
 				stream.addProperty(ProtocolElements.JOINROOM_PEERSTREAMHASVIDEO_PARAM,
@@ -139,6 +143,8 @@ public class SessionEventsHandler {
 				// Metadata associated to new participant
 				notifParams.addProperty(ProtocolElements.PARTICIPANTJOINED_USER_PARAM,
 						participant.getParticipantPublicId());
+				notifParams.addProperty(ProtocolElements.PARTICIPANTJOINED_CREATEDAT_PARAM,
+						participant.getCreatedAt());
 				notifParams.addProperty(ProtocolElements.PARTICIPANTJOINED_METADATA_PARAM,
 						participant.getFullMetadata());
 
@@ -147,6 +153,7 @@ public class SessionEventsHandler {
 			}
 		}
 		result.addProperty(ProtocolElements.PARTICIPANTJOINED_USER_PARAM, participant.getParticipantPublicId());
+		result.addProperty(ProtocolElements.PARTICIPANTJOINED_CREATEDAT_PARAM, participant.getCreatedAt());
 		result.addProperty(ProtocolElements.PARTICIPANTJOINED_METADATA_PARAM, participant.getFullMetadata());
 		result.add("value", resultArray);
 
@@ -181,8 +188,9 @@ public class SessionEventsHandler {
 		}
 	}
 
-	public void onPublishMedia(Participant participant, String streamId, String sessionId, MediaOptions mediaOptions,
-			String sdpAnswer, Set<Participant> participants, Integer transactionId, OpenViduException error) {
+	public void onPublishMedia(Participant participant, String streamId, Long createdAt, String sessionId,
+			MediaOptions mediaOptions, String sdpAnswer, Set<Participant> participants, Integer transactionId,
+			OpenViduException error) {
 		if (error != null) {
 			rpcNotificationService.sendErrorResponse(participant.getParticipantPrivateId(), transactionId, null, error);
 			return;
@@ -190,6 +198,7 @@ public class SessionEventsHandler {
 		JsonObject result = new JsonObject();
 		result.addProperty(ProtocolElements.PUBLISHVIDEO_SDPANSWER_PARAM, sdpAnswer);
 		result.addProperty(ProtocolElements.PUBLISHVIDEO_STREAMID_PARAM, streamId);
+		result.addProperty(ProtocolElements.PUBLISHVIDEO_CREATEDAT_PARAM, createdAt);
 		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, result);
 
 		JsonObject params = new JsonObject();
@@ -197,6 +206,7 @@ public class SessionEventsHandler {
 		JsonObject stream = new JsonObject();
 
 		stream.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_STREAMID_PARAM, streamId);
+		stream.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_CREATEDAT_PARAM, createdAt);
 		stream.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_HASAUDIO_PARAM, mediaOptions.hasAudio);
 		stream.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_HASVIDEO_PARAM, mediaOptions.hasVideo);
 		stream.addProperty(ProtocolElements.PARTICIPANTPUBLISHED_AUDIOACTIVE_PARAM, mediaOptions.audioActive);

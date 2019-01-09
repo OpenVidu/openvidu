@@ -34,7 +34,7 @@ export class Connection {
     connectionId: string;
 
     /**
-     * Time when this connection was created (UTC milliseconds)
+     * Time when this connection was created in OpenVidu Server (UTC milliseconds)
      */
     creationTime: number;
 
@@ -77,6 +77,7 @@ export class Connection {
         if (!!opts) {
             // Connection is remote
             this.connectionId = opts.id;
+            this.creationTime = opts.createdAt;
             if (opts.metadata) {
                 this.data = opts.metadata;
             }
@@ -84,8 +85,6 @@ export class Connection {
                 this.initRemoteStreams(opts.streams);
             }
         }
-
-        this.creationTime = new Date().getTime();
     }
 
 
@@ -122,6 +121,7 @@ export class Connection {
         options.forEach(opts => {
             const streamOptions: InboundStreamOptions = {
                 id: opts.id,
+                createdAt: opts.createdAt,
                 connection: this,
                 hasAudio: opts.hasAudio,
                 hasVideo: opts.hasVideo,

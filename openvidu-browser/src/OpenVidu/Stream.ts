@@ -88,6 +88,13 @@ export class Stream implements EventDispatcher {
     streamId: string;
 
     /**
+     * Time when this stream was created in OpenVidu Server (UTC milliseconds). Depending on the owner of this stream:
+     * - Subscriber object: property `creationTime` is always defined
+     * - Publisher object: property `creationTime` is only defined after successful execution of [[Session.publish]]
+     */
+    creationTime: number;
+
+    /**
      * `"CAMERA"`, `"SCREEN"` or `"CUSTOM"` (the latter when [[PublisherProperties.videoSource]] is a MediaStreamTrack when calling [[OpenVidu.initPublisher]]).
      * If [[hasVideo]] is false, this property is undefined
      */
@@ -182,6 +189,7 @@ export class Stream implements EventDispatcher {
             // InboundStreamOptions: stream belongs to a Subscriber
             this.inboundStreamOpts = <InboundStreamOptions>options;
             this.streamId = this.inboundStreamOpts.id;
+            this.creationTime = this.inboundStreamOpts.createdAt;
             this.hasAudio = this.inboundStreamOpts.hasAudio;
             this.hasVideo = this.inboundStreamOpts.hasVideo;
             if (this.hasAudio) {
@@ -709,6 +717,7 @@ export class Stream implements EventDispatcher {
                         this.webRtcPeer.processAnswer(response.sdpAnswer, false)
                             .then(() => {
                                 this.streamId = response.id;
+                                this.creationTime = response.createdAt;
                                 this.isLocalStreamPublished = true;
                                 this.publishedOnce = true;
                                 if (this.displayMyRemote()) {

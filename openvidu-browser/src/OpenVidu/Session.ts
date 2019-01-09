@@ -1046,6 +1046,7 @@ export class Session implements EventDispatcher {
                             // Initialize local Connection object with values returned by openvidu-server
                             this.connection = new Connection(this);
                             this.connection.connectionId = response.id;
+                            this.connection.creationTime = response.createdAt;
                             this.connection.data = response.metadata;
 
                             // Initialize remote Connections with value returned by openvidu-server

@@ -19,6 +19,7 @@ import { Filter } from '../../../OpenVidu/Filter';
 
 export interface StreamOptionsServer {
     id: string;
+    createdAt: number;
     hasAudio: boolean;
     hasVideo: boolean;
     audioActive: boolean;

@@ -256,8 +256,8 @@ public class KurentoSessionManager extends SessionManager {
 								+ kurentoOptions.getFilter().getType());
 				log.error("PARTICIPANT {}: Error applying filter. The token has no permissions to apply filter {}",
 						participant.getParticipantPublicId(), kurentoOptions.getFilter().getType(), e);
-				sessionEventsHandler.onPublishMedia(participant, null, session.getSessionId(), mediaOptions, sdpAnswer,
-						participants, transactionId, e);
+				sessionEventsHandler.onPublishMedia(participant, null, kParticipant.getPublisher().createdAt(),
+						session.getSessionId(), mediaOptions, sdpAnswer, participants, transactionId, e);
 				throw e;
 			}
 		}
@@ -269,8 +269,8 @@ public class KurentoSessionManager extends SessionManager {
 			OpenViduException e = new OpenViduException(Code.MEDIA_SDP_ERROR_CODE,
 					"Error generating SDP response for publishing user " + participant.getParticipantPublicId());
 			log.error("PARTICIPANT {}: Error publishing media", participant.getParticipantPublicId(), e);
-			sessionEventsHandler.onPublishMedia(participant, null, session.getSessionId(), mediaOptions, sdpAnswer,
-					participants, transactionId, e);
+			sessionEventsHandler.onPublishMedia(participant, null, kParticipant.getPublisher().createdAt(),
+					session.getSessionId(), mediaOptions, sdpAnswer, participants, transactionId, e);
 		}
 
 		if (this.openviduConfig.isRecordingModuleEnabled()
@@ -305,8 +305,9 @@ public class KurentoSessionManager extends SessionManager {
 		participants = kParticipant.getSession().getParticipants();
 
 		if (sdpAnswer != null) {
-			sessionEventsHandler.onPublishMedia(participant, participant.getPublisherStreamId(), session.getSessionId(),
-					mediaOptions, sdpAnswer, participants, transactionId, null);
+			sessionEventsHandler.onPublishMedia(participant, participant.getPublisherStreamId(),
+					kParticipant.getPublisher().createdAt(), session.getSessionId(), mediaOptions, sdpAnswer,
+					participants, transactionId, null);
 		}
 	}
 

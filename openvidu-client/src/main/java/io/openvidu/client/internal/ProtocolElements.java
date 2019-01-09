@@ -41,6 +41,7 @@ public class ProtocolElements {
 	public static final String JOINROOM_RECORDER_PARAM = "recorder";
 
 	public static final String JOINROOM_PEERID_PARAM = "id";
+	public static final String JOINROOM_PEERCREATEDAT_PARAM = "createdAt";
 	public static final String JOINROOM_PEERSTREAMS_PARAM = "streams";
 	public static final String JOINROOM_PEERSTREAMID_PARAM = "id";
 	public static final String JOINROOM_PEERSTREAMHASAUDIO_PARAM = "hasAudio";
@@ -57,6 +58,7 @@ public class ProtocolElements {
 	public static final String PUBLISHVIDEO_DOLOOPBACK_PARAM = "doLoopback";
 	public static final String PUBLISHVIDEO_SDPANSWER_PARAM = "sdpAnswer";
 	public static final String PUBLISHVIDEO_STREAMID_PARAM = "id";
+	public static final String PUBLISHVIDEO_CREATEDAT_PARAM = "createdAt";
 	public static final String PUBLISHVIDEO_HASAUDIO_PARAM = "hasAudio";
 	public static final String PUBLISHVIDEO_HASVIDEO_PARAM = "hasVideo";
 	public static final String PUBLISHVIDEO_AUDIOACTIVE_PARAM = "audioActive";
@@ -108,7 +110,7 @@ public class ProtocolElements {
 	public static final String REMOVEFILTER_METHOD = "removeFilter";
 	public static final String ADDFILTEREVENTLISTENER_METHOD = "addFilterEventListener";
 	public static final String REMOVEFILTEREVENTLISTENER_METHOD = "removeFilterEventListener";
-	
+
 	public static final String FILTEREVENTDISPATCHED_METHOD = "filterEventDispatched";
 	public static final String FILTEREVENTLISTENER_CONNECTIONID_PARAM = "connectionId";
 	public static final String FILTEREVENTLISTENER_STREAMID_PARAM = "streamId";
@@ -120,6 +122,7 @@ public class ProtocolElements {
 
 	public static final String PARTICIPANTJOINED_METHOD = "participantJoined";
 	public static final String PARTICIPANTJOINED_USER_PARAM = "id";
+	public static final String PARTICIPANTJOINED_CREATEDAT_PARAM = "createdAt";
 	public static final String PARTICIPANTJOINED_METADATA_PARAM = "metadata";
 
 	public static final String PARTICIPANTLEFT_METHOD = "participantLeft";
@@ -134,6 +137,7 @@ public class ProtocolElements {
 	public static final String PARTICIPANTPUBLISHED_USER_PARAM = "id";
 	public static final String PARTICIPANTPUBLISHED_STREAMS_PARAM = "streams";
 	public static final String PARTICIPANTPUBLISHED_STREAMID_PARAM = "id";
+	public static final String PARTICIPANTPUBLISHED_CREATEDAT_PARAM = "createdAt";
 	public static final String PARTICIPANTPUBLISHED_HASAUDIO_PARAM = "hasAudio";
 	public static final String PARTICIPANTPUBLISHED_HASVIDEO_PARAM = "hasVideo";
 	public static final String PARTICIPANTPUBLISHED_AUDIOACTIVE_PARAM = "audioActive";

@@ -20,6 +20,7 @@ import { Filter } from '../../../OpenVidu/Filter';
 
 export interface InboundStreamOptions {
     id: string;
+    createdAt: number;
     connection: Connection;
     hasAudio: boolean;
     hasVideo: boolean;
