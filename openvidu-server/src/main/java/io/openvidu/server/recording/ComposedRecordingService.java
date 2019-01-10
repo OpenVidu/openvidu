@@ -526,7 +526,7 @@ public class ComposedRecordingService {
 
 	private String getLayoutUrl(Recording recording, String shortSessionId) {
 		String secret = openviduConfig.getOpenViduSecret();
-		String location = OpenViduServer.publicUrl.replaceFirst("wss://", "");
+		String location = OpenViduServer.wsUrl.replaceFirst("wss://", "");
 		String layout, finalUrl;
 
 		if (RecordingLayout.CUSTOM.equals(recording.getRecordingLayout())) {

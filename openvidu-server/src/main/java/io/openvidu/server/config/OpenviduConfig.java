@@ -26,7 +26,7 @@ import io.openvidu.server.core.ParticipantRole;
 public class OpenviduConfig {
 
 	@Value("${openvidu.publicurl}")
-	private String openviduPublicUrl; // local, ngrok, docker, [FINAL_URL]
+	private String openviduPublicUrl; // local, docker, [FINAL_URL]
 
 	@Value("${server.port}")
 	private String serverPort;

@@ -150,11 +150,9 @@ public abstract class SessionManager {
 	/**
 	 * Returns all the participants inside a session.
 	 *
-	 * @param sessionId
-	 *            identifier of the session
+	 * @param sessionId identifier of the session
 	 * @return set of {@link Participant}
-	 * @throws OpenViduException
-	 *             in case the session doesn't exist
+	 * @throws OpenViduException in case the session doesn't exist
 	 */
 	public Set<Participant> getParticipants(String sessionId) throws OpenViduException {
 		Session session = sessions.get(sessionId);
@@ -169,14 +167,11 @@ public abstract class SessionManager {
 	/**
 	 * Returns a participant in a session
 	 *
-	 * @param sessionId
-	 *            identifier of the session
-	 * @param participantPrivateId
-	 *            private identifier of the participant
+	 * @param sessionId            identifier of the session
+	 * @param participantPrivateId private identifier of the participant
 	 * @return {@link Participant}
-	 * @throws OpenViduException
-	 *             in case the session doesn't exist or the participant doesn't
-	 *             belong to it
+	 * @throws OpenViduException in case the session doesn't exist or the
+	 *                           participant doesn't belong to it
 	 */
 	public Participant getParticipant(String sessionId, String participantPrivateId) throws OpenViduException {
 		Session session = sessions.get(sessionId);
@@ -194,11 +189,9 @@ public abstract class SessionManager {
 	/**
 	 * Returns a participant
 	 *
-	 * @param participantPrivateId
-	 *            private identifier of the participant
+	 * @param participantPrivateId private identifier of the participant
 	 * @return {@link Participant}
-	 * @throws OpenViduException
-	 *             in case the participant doesn't exist
+	 * @throws OpenViduException in case the participant doesn't exist
 	 */
 	public Participant getParticipant(String participantPrivateId) throws OpenViduException {
 		for (Session session : sessions.values()) {
@@ -232,11 +225,10 @@ public abstract class SessionManager {
 
 			if (!isMetadataFormatCorrect(serverMetadata)) {
 				log.error("Data invalid format");
-				throw new OpenViduException(Code.GENERIC_ERROR_CODE,
-						"Data invalid format");
+				throw new OpenViduException(Code.GENERIC_ERROR_CODE, "Data invalid format");
 			}
 
-			String token = OpenViduServer.publicUrl;
+			String token = OpenViduServer.wsUrl;
 			token += "?sessionId=" + sessionId;
 			token += "&token=" + this.generateRandomChain();
 			token += "&role=" + role.name();
@@ -422,13 +414,12 @@ public abstract class SessionManager {
 	 * notifications to the existing participants in the session to inform that it
 	 * was forcibly closed.
 	 *
-	 * @param sessionId
-	 *            identifier of the session
+	 * @param sessionId identifier of the session
 	 * @return
 	 * @return set of {@link Participant} POJOS representing the session's
 	 *         participants
-	 * @throws OpenViduException
-	 *             in case the session doesn't exist or has been already closed
+	 * @throws OpenViduException in case the session doesn't exist or has been
+	 *                           already closed
 	 */
 	public Set<Participant> closeSession(String sessionId, String reason) {
 		Session session = sessions.get(sessionId);

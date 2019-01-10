@@ -58,7 +58,6 @@ import io.openvidu.server.kurento.core.KurentoSessionEventsHandler;
 import io.openvidu.server.kurento.core.KurentoSessionManager;
 import io.openvidu.server.kurento.kms.FixedOneKmsManager;
 import io.openvidu.server.recording.ComposedRecordingService;
-import io.openvidu.server.rest.NgrokRestController;
 import io.openvidu.server.rpc.RpcHandler;
 import io.openvidu.server.rpc.RpcNotificationService;
 import io.openvidu.server.utils.CommandExecutor;
@@ -81,9 +80,9 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 	public static final String KMSS_URIS_PROPERTY = "kms.uris";
 
-	public static String publicUrl;
-
-	private String ngrokAppUrl = "";
+	public static String wsUrl;
+	
+	public static String httpUrl;
 
 	@Bean
 	@ConditionalOnMissingBean
@@ -187,43 +186,23 @@ public class OpenViduServer implements JsonRpcConfigurer {
 		String type = publicUrl;
 
 		switch (publicUrl) {
-		case "ngrok":
-			try {
-				NgrokRestController ngrok = new NgrokRestController();
-				ngrokAppUrl = ngrok.getNgrokAppUrl();
-				if (ngrokAppUrl.isEmpty()) {
-					ngrokAppUrl = "(No tunnel 'app' found in ngrok.yml)";
-				}
-
-				// For frontend-only applications overriding openvidu-server dashboard...
-				String ngrokServerUrl = ngrok.getNgrokServerUrl();
-				if (ngrokServerUrl.isEmpty()) {
-					ngrokServerUrl = ngrok.getNgrokAppUrl();
-				}
-
-				OpenViduServer.publicUrl = ngrokServerUrl.replaceFirst("https://", "wss://");
-				openviduConf.setFinalUrl(ngrokServerUrl);
-
-			} catch (Exception e) {
-				log.error("Ngrok URL was configured, but there was an error connecting to ngrok: "
-						+ e.getClass().getName() + " " + e.getMessage());
-				log.error("Fallback to local URL");
-			}
-			break;
-
 		case "docker":
 			try {
 				String containerIp = getContainerIp();
-				OpenViduServer.publicUrl = "wss://" + containerIp + ":" + openviduConf.getServerPort();
+				OpenViduServer.wsUrl = "wss://" + containerIp + ":" + openviduConf.getServerPort();
 				openviduConf.setFinalUrl("https://" + containerIp + ":" + openviduConf.getServerPort());
 			} catch (Exception e) {
 				log.error("Docker container IP was configured, but there was an error obtaining IP: "
 						+ e.getClass().getName() + " " + e.getMessage());
 				log.error("Fallback to local URL");
+				OpenViduServer.wsUrl = null;
 			}
 			break;
 
 		case "local":
+			break;
+			
+		case "":
 			break;
 
 		default:
@@ -233,26 +212,26 @@ public class OpenViduServer implements JsonRpcConfigurer {
 			type = "custom";
 
 			if (publicUrl.startsWith("https://")) {
-				OpenViduServer.publicUrl = publicUrl.replace("https://", "wss://");
+				OpenViduServer.wsUrl = publicUrl.replace("https://", "wss://");
 			} else if (publicUrl.startsWith("http://")) {
-				OpenViduServer.publicUrl = publicUrl.replace("http://", "wss://");
+				OpenViduServer.wsUrl = publicUrl.replace("http://", "wss://");
 			}
 
 			openviduConf.setFinalUrl(url.toString());
 
-			if (!OpenViduServer.publicUrl.startsWith("wss://")) {
-				OpenViduServer.publicUrl = "wss://" + OpenViduServer.publicUrl;
+			if (!OpenViduServer.wsUrl.startsWith("wss://")) {
+				OpenViduServer.wsUrl = "wss://" + OpenViduServer.wsUrl;
 			}
 		}
 
-		if (OpenViduServer.publicUrl == null) {
+		if (OpenViduServer.wsUrl == null) {
 			type = "local";
-			OpenViduServer.publicUrl = "wss://localhost:" + openviduConf.getServerPort();
+			OpenViduServer.wsUrl = "wss://localhost:" + openviduConf.getServerPort();
 			openviduConf.setFinalUrl("https://localhost:" + openviduConf.getServerPort());
 		}
 
-		if (OpenViduServer.publicUrl.endsWith("/")) {
-			OpenViduServer.publicUrl = OpenViduServer.publicUrl.substring(0, OpenViduServer.publicUrl.length() - 1);
+		if (OpenViduServer.wsUrl.endsWith("/")) {
+			OpenViduServer.wsUrl = OpenViduServer.wsUrl.substring(0, OpenViduServer.wsUrl.length() - 1);
 		}
 
 		boolean recordingModuleEnabled = openviduConf.isRecordingModuleEnabled();
@@ -307,21 +286,21 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 			recordingService.initRecordingPath();
 		}
-		log.info("OpenVidu Server using " + type + " URL: [" + OpenViduServer.publicUrl + "]");
+		
+		httpUrl = openviduConf.getFinalUrl();
+		log.info("OpenVidu Server using " + type + " URL: [" + OpenViduServer.wsUrl + "]");
 	}
 
 	@EventListener(ApplicationReadyEvent.class)
-	public void printNgrokUrl() {
-		if (!this.ngrokAppUrl.isEmpty()) {
-			final String NEW_LINE = System.lineSeparator();
-			String str = 	NEW_LINE +
-							NEW_LINE + "      APP PUBLIC IP      " + 
-							NEW_LINE + "-------------------------" + 
-							NEW_LINE + ngrokAppUrl + 
-							NEW_LINE + "-------------------------" + 
-							NEW_LINE;
-			log.info(str);
-		}
+	public void printUrl() {
+		final String NEW_LINE = System.lineSeparator();
+		String str = 	NEW_LINE +
+						NEW_LINE + "    ACCESS IP            " + 
+						NEW_LINE + "-------------------------" + 
+						NEW_LINE + httpUrl                     + 
+						NEW_LINE + "-------------------------" + 
+						NEW_LINE;
+		log.info(str);
 	}
 
 }
