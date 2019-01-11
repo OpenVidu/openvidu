@@ -525,6 +525,11 @@ var Publisher = /** @class */ (function (_super) {
                                     errorCallback(new OpenViduError_1.OpenViduError(errorName, errorMessage));
                                 });
                                 break;
+                            default:
+                                errorName = OpenViduError_1.OpenViduErrorName.HARDWARE_ERROR;
+                                errorMessage = "Hardware error occurred at the operating system, browser, or web page level which prevented access to the device";
+                                errorCallback(new OpenViduError_1.OpenViduError(errorName, errorMessage));
+                                break;
                         }
                     });
                 }

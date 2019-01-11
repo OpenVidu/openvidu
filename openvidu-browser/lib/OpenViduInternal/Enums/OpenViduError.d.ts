@@ -65,7 +65,12 @@ export declare enum OpenViduErrorName {
     /**
      * _Not in use yet_
      */
-    GENERIC_ERROR = "GENERIC_ERROR"
+    GENERIC_ERROR = "GENERIC_ERROR",
+    /**
+     * Hardware error occurred at the operating system, browser, or Web page level which prevented access to the device.
+     * Returned upon unsuccessful [[OpenVidu.initPublisher]]
+     */
+    HARDWARE_ERROR = "HARDWARE_ERROR"
 }
 /**
  * Simple object to identify runtime errors on the client side

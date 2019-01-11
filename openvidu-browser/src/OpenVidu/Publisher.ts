@@ -571,6 +571,11 @@ export class Publisher extends StreamManager {
                                                 errorCallback(new OpenViduError(errorName, errorMessage));
                                             });
                                         break;
+                                    default:
+                                        errorName = OpenViduErrorName.HARDWARE_ERROR
+                                        errorMessage = "Hardware error occurred at the operating system, browser, or web page level which prevented access to the device";
+                                        errorCallback(new OpenViduError(errorName, errorMessage));
+                                        break;
                                 }
                             });
                     } else {
