@@ -609,7 +609,7 @@ export class OpenVidu {
    */
   startWs(onConnectSucces: (error: Error) => void): void {
     const config = {
-      heartbeat: 5000,
+      heartbeat: process.env.OPENVIDU_BROWSER_PING_PERIOD || 5000,
       sendCloseMessage: false,
       ws: {
         uri: this.wsUri,
@@ -620,7 +620,7 @@ export class OpenVidu {
         onreconnected: this.reconnectedCallback.bind(this)
       },
       rpc: {
-        requestTimeout: 10000,
+        requestTimeout: process.env.OPENVIDU_BROWSER_PING_TIMEOUT || 10000,
         participantJoined: this.session.onParticipantJoined.bind(this.session),
         participantPublished: this.session.onParticipantPublished.bind(this.session),
         participantUnpublished: this.session.onParticipantUnpublished.bind(this.session),
