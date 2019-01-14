@@ -248,7 +248,7 @@ public abstract class SessionManager {
 
 		} else {
 			this.sessionidTokenTokenobj.remove(sessionId);
-			log.error("sessionId [" + sessionId + "] is not valid");
+			log.error("sessionId [" + sessionId + "] was not found");
 			throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE, "sessionId [" + sessionId + "] not found");
 		}
 

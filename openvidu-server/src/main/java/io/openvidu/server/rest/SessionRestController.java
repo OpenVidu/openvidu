@@ -288,7 +288,8 @@ public class SessionRestController {
 			}
 			return new ResponseEntity<>(responseJson.toString(), getResponseHeaders(), HttpStatus.OK);
 		} catch (OpenViduException e) {
-			return this.generateErrorResponse(e.getMessage(), "/api/tokens", HttpStatus.BAD_REQUEST);
+			// sessionId was not found
+			return this.generateErrorResponse(e.getMessage(), "/api/tokens", HttpStatus.NOT_FOUND);
 		}
 	}
 
