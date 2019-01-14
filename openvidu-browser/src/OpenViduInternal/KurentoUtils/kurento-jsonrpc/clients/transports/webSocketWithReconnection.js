@@ -48,7 +48,7 @@ config = {
 		uri : wsUri,
 		useSockJS : true (use SockJS) / false (use WebSocket) by default,
 		onconnected : callback method to invoke when connection is successful,
-		ondisconnect : callback method to invoke when the connection is lost,
+		ondisconnect : callback method to invoke when the connection is lost (max retries for reconnecting reached),
 		onreconnecting : callback method to invoke when the client is reconnecting,
 		onreconnected : callback method to invoke when the client successfully reconnects,
 	};
@@ -71,14 +71,14 @@ function WebSocketWithReconnection(config) {
         ws = new WebSocket(wsUri);
     }
 
-    ws.onopen = function() {
+    ws.onopen = function () {
         logConnected(ws, wsUri);
         if (config.onconnected) {
             config.onconnected();
         }
     };
 
-    ws.onerror = function(error) {
+    ws.onerror = function (error) {
         Logger.error("Could not connect to " + wsUri + " (invoking onerror if defined)", error);
         if (config.onerror) {
             config.onerror(error);
@@ -93,7 +93,7 @@ function WebSocketWithReconnection(config) {
         }
     }
 
-    var reconnectionOnClose = function() {
+    var reconnectionOnClose = function () {
         if (ws.readyState === CLOSED) {
             if (closing) {
                 Logger.debug("Connection closed by user");
@@ -129,11 +129,11 @@ function WebSocketWithReconnection(config) {
 
         } else {
             if (config.newWsUriOnReconnection) {
-                config.newWsUriOnReconnection(function(error, newWsUri) {
+                config.newWsUriOnReconnection(function (error, newWsUri) {
 
                     if (error) {
                         Logger.debug(error);
-                        setTimeout(function() {
+                        setTimeout(function () {
                             reconnectToSameUri(maxRetries, numRetries + 1);
                         }, RETRY_TIME_MS);
                     } else {
@@ -161,7 +161,7 @@ function WebSocketWithReconnection(config) {
             newWs = new WebSocket(wsUri);
         }
 
-        newWs.onopen = function() {
+        newWs.onopen = function () {
             Logger.debug("Reconnected after " + numRetries + " attempts...");
             logConnected(newWs, wsUri);
             reconnecting = false;
@@ -173,7 +173,7 @@ function WebSocketWithReconnection(config) {
             newWs.onclose = reconnectionOnClose;
         };
 
-        var onErrorOrClose = function(error) {
+        var onErrorOrClose = function (error) {
             Logger.warn("Reconnection error: ", error);
 
             if (numRetries === maxRetries) {
@@ -181,7 +181,7 @@ function WebSocketWithReconnection(config) {
                     config.ondisconnect();
                 }
             } else {
-                setTimeout(function() {
+                setTimeout(function () {
                     reconnectToSameUri(maxRetries, numRetries + 1);
                 }, RETRY_TIME_MS);
             }
@@ -192,14 +192,14 @@ function WebSocketWithReconnection(config) {
         ws = newWs;
     }
 
-    this.close = function() {
+    this.close = function () {
         closing = true;
         ws.close();
     };
 
 
     // This method is only for testing
-    this.forceClose = function(millis) {
+    this.forceClose = function (millis) {
         Logger.debug("Testing: Force WebSocket close");
 
         if (millis) {
@@ -209,7 +209,7 @@ function WebSocketWithReconnection(config) {
 
             forcingDisconnection = true;
 
-            setTimeout(function() {
+            setTimeout(function () {
                 Logger.debug("Testing: Recover good wsUri " + goodWsUri);
                 wsUri = goodWsUri;
 
@@ -221,17 +221,17 @@ function WebSocketWithReconnection(config) {
         ws.close();
     };
 
-    this.reconnectWs = function() {
+    this.reconnectWs = function () {
         Logger.debug("reconnectWs");
         reconnectToSameUri(MAX_RETRIES, 1);
     };
 
-    this.send = function(message) {
+    this.send = function (message) {
         ws.send(message);
     };
 
-    this.addEventListener = function(type, callback) {
-        registerMessageHandler = function() {
+    this.addEventListener = function (type, callback) {
+        registerMessageHandler = function () {
             ws.addEventListener(type, callback);
         };
 

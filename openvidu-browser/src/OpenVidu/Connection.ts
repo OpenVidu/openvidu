@@ -62,6 +62,11 @@ export class Connection {
     /**
      * @hidden
      */
+    rpcSessionId: string;
+
+    /**
+     * @hidden
+     */
     constructor(private session: Session, opts?: ConnectionOptions) {
 
         let msg = "'Connection' created ";

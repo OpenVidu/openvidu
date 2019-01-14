@@ -91,7 +91,7 @@ export class OpenVidu {
             const getNewVideoDimensions = (): Promise<{ newWidth: number, newHeight: number }> => {
               return new Promise((resolve, reject) => {
                 if (platform['isIonicIos']) {
-                  // iOS Ionic. Limitation: must get new dimensions from an existing video element already inserted into DOM 
+                  // iOS Ionic. Limitation: must get new dimensions from an existing video element already inserted into DOM
                   resolve({
                     newWidth: publisher.stream.streamManager.videos[0].video.videoWidth,
                     newHeight: publisher.stream.streamManager.videos[0].video.videoHeight
@@ -636,7 +636,7 @@ export class OpenVidu {
    * @hidden
    */
   closeWs(): void {
-    this.jsonRpcClient.close();
+    this.jsonRpcClient.close(4102, "Connection closed by client");
   }
 
   /**
@@ -678,7 +678,7 @@ export class OpenVidu {
   private disconnectCallback(): void {
     console.warn('Websocket connection lost');
     if (this.isRoomAvailable()) {
-      this.session.onLostConnection();
+      this.session.onLostConnection('networkDisconnect');
     } else {
       alert('Connection error. Please reload page.');
     }
@@ -686,9 +686,7 @@ export class OpenVidu {
 
   private reconnectingCallback(): void {
     console.warn('Websocket connection lost (reconnecting)');
-    if (this.isRoomAvailable()) {
-      this.session.onLostConnection();
-    } else {
+    if (!this.isRoomAvailable()) {
       alert('Connection error. Please reload page.');
     }
   }
@@ -696,7 +694,16 @@ export class OpenVidu {
   private reconnectedCallback(): void {
     console.warn('Websocket reconnected');
     if (this.isRoomAvailable()) {
-      this.session.onRecoveredConnection();
+      this.sendRequest('connect', { sessionId: this.session.connection.rpcSessionId }, (error, response) => {
+        if (!!error) {
+          console.error(error);
+          this.session.onLostConnection("networkDisconnect");
+          this.jsonRpcClient.close(4101, "Reconnection fault");
+        } else {
+          this.jsonRpcClient.resetPing();
+          this.session.onRecoveredConnection();
+        }
+      });
     } else {
       alert('Connection error. Please reload page.');
     }

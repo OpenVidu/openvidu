@@ -18,7 +18,7 @@
 var RpcBuilder = require('../');
 var WebSocketWithReconnection = require('./transports/webSocketWithReconnection');
 
-Date.now = Date.now || function() {
+Date.now = Date.now || function () {
     return +new Date;
 };
 
@@ -39,7 +39,7 @@ var Logger = console;
  * 	uri : URI to conntect to,
  *  useSockJS : true (use SockJS) / false (use WebSocket) by default,
  * 	onconnected : callback method to invoke when connection is successful,
- * 	ondisconnect : callback method to invoke when the connection is lost,
+ * 	ondisconnect : callback method to invoke when the connection is lost (max retries for reconnecting reached),
  * 	onreconnecting : callback method to invoke when the client is reconnecting,
  * 	onreconnected : callback method to invoke when the client successfully reconnects,
  * 	onerror : callback method to invoke when there is an error
@@ -71,16 +71,18 @@ function JsonRpcClient(configuration) {
     var onconnected = wsConfig.onconnected;
     var onerror = wsConfig.onerror;
 
-    configuration.rpc.pull = function(params, request) {
+    configuration.rpc.pull = function (params, request) {
         request.reply(null, "push");
     }
 
-    wsConfig.onreconnecting = function() {
+    wsConfig.onreconnecting = function () {
         Logger.debug("--------- ONRECONNECTING -----------");
         if (status === RECONNECTING) {
             Logger.error("Websocket already in RECONNECTING state when receiving a new ONRECONNECTING message. Ignoring it");
             return;
         }
+
+        stopPing();
 
         status = RECONNECTING;
         if (onreconnecting) {
@@ -88,7 +90,7 @@ function JsonRpcClient(configuration) {
         }
     }
 
-    wsConfig.onreconnected = function() {
+    wsConfig.onreconnected = function () {
         Logger.debug("--------- ONRECONNECTED -----------");
         if (status === CONNECTED) {
             Logger.error("Websocket already in CONNECTED state when receiving a new ONRECONNECTED message. Ignoring it");
@@ -96,16 +98,14 @@ function JsonRpcClient(configuration) {
         }
         status = CONNECTED;
 
-        enabledPings = true;
         updateNotReconnectIfLessThan();
-        usePing();
 
         if (onreconnected) {
             onreconnected();
         }
     }
 
-    wsConfig.onconnected = function() {
+    wsConfig.onconnected = function () {
         Logger.debug("--------- ONCONNECTED -----------");
         if (status === CONNECTED) {
             Logger.error("Websocket already in CONNECTED state when receiving a new ONCONNECTED message. Ignoring it");
@@ -121,10 +121,12 @@ function JsonRpcClient(configuration) {
         }
     }
 
-    wsConfig.onerror = function(error) {
+    wsConfig.onerror = function (error) {
         Logger.debug("--------- ONERROR -----------");
 
         status = DISCONNECTED;
+
+        stopPing();
 
         if (onerror) {
             onerror(error);
@@ -141,7 +143,7 @@ function JsonRpcClient(configuration) {
     };
 
     var rpc = new RpcBuilder(RpcBuilder.packers.JsonRPC, rpcBuilderOptions, ws,
-        function(request) {
+        function (request) {
 
             Logger.debug('Received request: ' + JSON.stringify(request));
 
@@ -159,14 +161,14 @@ function JsonRpcClient(configuration) {
             }
         });
 
-    this.send = function(method, params, callback) {
+    this.send = function (method, params, callback) {
         if (method !== 'ping') {
             Logger.debug('Request: method:' + method + " params:" + JSON.stringify(params));
         }
 
         var requestTime = Date.now();
 
-        rpc.encode(method, params, function(error, result) {
+        rpc.encode(method, params, function (error, result) {
             if (error) {
                 try {
                     Logger.error("ERROR:" + error.message + " in Request: method:" +
@@ -203,8 +205,8 @@ function JsonRpcClient(configuration) {
             }
             pingNextNum++;
 
-            self.send('ping', params, (function(pingNum) {
-                return function(error, result) {
+            self.send('ping', params, (function (pingNum) {
+                return function (error, result) {
                     if (error) {
                         Logger.debug("Error in ping request #" + pingNum + " (" +
                             error.message + ")");
@@ -224,9 +226,9 @@ function JsonRpcClient(configuration) {
     }
 
     /*
-    * If configuration.hearbeat has any value, the ping-pong will work with the interval
-    * of configuration.hearbeat
-    */
+     * If configuration.hearbeat has any value, the ping-pong will work with the interval
+     * of configuration.hearbeat
+     */
     function usePing() {
         if (!pingPongStarted) {
             Logger.debug("Starting ping (if configured)")
@@ -239,8 +241,16 @@ function JsonRpcClient(configuration) {
         }
     }
 
-    this.close = function() {
-        Logger.debug("Closing jsonRpcClient explicitly by client");
+    function stopPing() {
+        clearInterval(pingInterval);
+        pingPongStarted = false;
+        enabledPings = false;
+        pingNextNum = -1;
+        rpc.cancel();
+    }
+
+    this.close = function (code, reason) {
+        Logger.debug("Closing  with code: " + code + " because: " + reason);
 
         if (pingInterval != undefined) {
             Logger.debug("Clearing ping interval");
@@ -251,24 +261,30 @@ function JsonRpcClient(configuration) {
 
         if (configuration.sendCloseMessage) {
             Logger.debug("Sending close message")
-            this.send('closeSession', null, function(error, result) {
+            this.send('closeSession', null, function (error, result) {
                 if (error) {
                     Logger.error("Error sending close message: " + JSON.stringify(error));
                 }
-                ws.close();
+                ws.close(code, reason);
             });
         } else {
-			ws.close();
+            ws.close(code, reason);
         }
     }
 
     // This method is only for testing
-    this.forceClose = function(millis) {
+    this.forceClose = function (millis) {
         ws.forceClose(millis);
     }
 
-    this.reconnect = function() {
+    this.reconnect = function () {
         ws.reconnectWs();
+    }
+
+    this.resetPing = function () {
+        enabledPings = true;
+        pingNextNum = 0;
+        usePing();
     }
 }
 
