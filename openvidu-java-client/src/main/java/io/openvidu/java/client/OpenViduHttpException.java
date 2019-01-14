@@ -27,8 +27,9 @@ public class OpenViduHttpException extends Exception {
 
 	protected OpenViduHttpException(int status) {
 		super(Integer.toString(status));
+		this.status = status;
 	}
-	
+
 	/**
 	 * @return The unexpected status of the HTTP request
 	 */
