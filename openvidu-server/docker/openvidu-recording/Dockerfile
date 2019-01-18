@@ -23,5 +23,6 @@ COPY entrypoint.sh /entrypoint.sh
 RUN ["chmod", "+x", "/entrypoint.sh"]
 
 RUN mkdir /recordings
+RUN chmod 777 /recordings
 
 ENTRYPOINT /entrypoint.sh
