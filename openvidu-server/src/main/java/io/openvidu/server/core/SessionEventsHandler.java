@@ -143,8 +143,7 @@ public class SessionEventsHandler {
 				// Metadata associated to new participant
 				notifParams.addProperty(ProtocolElements.PARTICIPANTJOINED_USER_PARAM,
 						participant.getParticipantPublicId());
-				notifParams.addProperty(ProtocolElements.PARTICIPANTJOINED_CREATEDAT_PARAM,
-						participant.getCreatedAt());
+				notifParams.addProperty(ProtocolElements.PARTICIPANTJOINED_CREATEDAT_PARAM, participant.getCreatedAt());
 				notifParams.addProperty(ProtocolElements.PARTICIPANTJOINED_METADATA_PARAM,
 						participant.getFullMetadata());
 
@@ -404,11 +403,16 @@ public class SessionEventsHandler {
 				evictedParticipant.getParticipantPublicId());
 		params.addProperty(ProtocolElements.PARTICIPANTEVICTED_REASON_PARAM, reason);
 
-		rpcNotificationService.sendNotification(evictedParticipant.getParticipantPrivateId(),
-				ProtocolElements.PARTICIPANTEVICTED_METHOD, params);
-		for (Participant p : participants) {
-			rpcNotificationService.sendNotification(p.getParticipantPrivateId(),
+		if (!ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(evictedParticipant.getParticipantPublicId())) {
+			// Do not send a message when evicting RECORDER participant
+			rpcNotificationService.sendNotification(evictedParticipant.getParticipantPrivateId(),
 					ProtocolElements.PARTICIPANTEVICTED_METHOD, params);
+		}
+		for (Participant p : participants) {
+			if (!ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(evictedParticipant.getParticipantPublicId())) {
+				rpcNotificationService.sendNotification(p.getParticipantPrivateId(),
+						ProtocolElements.PARTICIPANTEVICTED_METHOD, params);
+			}
 		}
 	}
 
@@ -550,6 +554,9 @@ public class SessionEventsHandler {
 
 	private Set<Participant> filterParticipantsByRole(ParticipantRole[] roles, Set<Participant> participants) {
 		return participants.stream().filter(part -> {
+			if (ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(part.getParticipantPublicId())) {
+				return false;
+			}
 			boolean isRole = false;
 			for (ParticipantRole role : roles) {
 				isRole = role.equals(part.getToken().getRole());

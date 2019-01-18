@@ -53,19 +53,21 @@ import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.kurento.TrackType;
 import io.openvidu.server.kurento.endpoint.KmsEvent;
+import io.openvidu.server.kurento.endpoint.KmsMediaEvent;
 import io.openvidu.server.kurento.endpoint.MediaEndpoint;
 import io.openvidu.server.kurento.endpoint.PublisherEndpoint;
 import io.openvidu.server.kurento.endpoint.SdpType;
 import io.openvidu.server.kurento.endpoint.SubscriberEndpoint;
+import io.openvidu.server.recording.service.RecordingManager;
 
 public class KurentoParticipant extends Participant {
 
 	private static final Logger log = LoggerFactory.getLogger(KurentoParticipant.class);
 
-	private OpenviduConfig openviduConfig;
-
 	private InfoHandler infoHandler;
 	private CallDetailRecord CDR;
+	private OpenviduConfig openviduConfig;
+	private RecordingManager recordingManager;
 
 	private boolean webParticipant = true;
 
@@ -79,11 +81,15 @@ public class KurentoParticipant extends Participant {
 	private final ConcurrentMap<String, SubscriberEndpoint> subscribers = new ConcurrentHashMap<String, SubscriberEndpoint>();
 
 	public KurentoParticipant(Participant participant, KurentoSession kurentoSession, MediaPipeline pipeline,
-			InfoHandler infoHandler, CallDetailRecord CDR, OpenviduConfig openviduConfig) {
+			InfoHandler infoHandler, CallDetailRecord CDR, OpenviduConfig openviduConfig,
+			RecordingManager recordingManager) {
 		super(participant.getParticipantPrivateId(), participant.getParticipantPublicId(), participant.getToken(),
 				participant.getClientMetadata(), participant.getLocation(), participant.getPlatform(),
 				participant.getCreatedAt());
+		this.infoHandler = infoHandler;
+		this.CDR = CDR;
 		this.openviduConfig = openviduConfig;
+		this.recordingManager = recordingManager;
 		this.session = kurentoSession;
 		this.pipeline = pipeline;
 		this.publisher = new PublisherEndpoint(webParticipant, this, participant.getParticipantPublicId(), pipeline,
@@ -94,8 +100,6 @@ public class KurentoParticipant extends Participant {
 				getNewOrExistingSubscriber(other.getParticipantPublicId());
 			}
 		}
-		this.infoHandler = infoHandler;
-		this.CDR = CDR;
 	}
 
 	public void createPublishingEndpoint(MediaOptions mediaOptions) {
@@ -232,6 +236,11 @@ public class KurentoParticipant extends Participant {
 		log.trace("PARTICIPANT {}: Publishing Sdp ({}) is {}", this.getParticipantPublicId(), sdpType, sdpResponse);
 		log.info("PARTICIPANT {}: Is now publishing video in room {}", this.getParticipantPublicId(),
 				this.session.getSessionId());
+
+		if (this.openviduConfig.isRecordingModuleEnabled()
+				&& this.recordingManager.sessionIsBeingRecordedIndividual(session.getSessionId())) {
+			this.recordingManager.startOneIndividualStreamRecording(session, null, null, this);
+		}
 
 		CDR.recordNewPublisher(this, this.session.getSessionId(), this.publisher.getMediaOptions(),
 				this.publisher.createdAt());
@@ -425,8 +434,14 @@ public class KurentoParticipant extends Participant {
 	private void releasePublisherEndpoint(String reason) {
 		if (publisher != null && publisher.getEndpoint() != null) {
 
-			// Store streamId from publisher's map
+			// Remove streamId from publisher's map
 			this.session.publishedStreamIds.remove(this.getPublisherStreamId());
+
+			if (this.openviduConfig.isRecordingModuleEnabled()
+					&& this.recordingManager.sessionIsBeingRecordedIndividual(session.getSessionId())) {
+				this.recordingManager.stopOneIndividualStreamRecording(session.getSessionId(),
+						this.getPublisherStreamId());
+			}
 
 			publisher.unregisterErrorListeners();
 			for (MediaElement el : publisher.getMediaElements()) {
@@ -507,53 +522,6 @@ public class KurentoParticipant extends Participant {
 		 * " | TIMESTAMP: " + System.currentTimeMillis(); log.debug(msg);
 		 * this.infoHandler.sendInfo(msg); });
 		 * 
-		 * endpoint.getWebEndpoint().addMediaFlowInStateChangeListener((event) -> {
-		 * String msg1 = "                  Media flow in state change (" +
-		 * endpoint.getEndpoint().getName() + ") -> " + "STATE: " +
-		 * event.getState() + " | SOURCE: " + event.getSource().getName() + " | PAD: " +
-		 * event.getPadName() + " | MEDIATYPE: " + event.getMediaType() +
-		 * " | TIMESTAMP: " + System.currentTimeMillis();
-		 * 
-		 * endpoint.flowInMedia.put(event.getSource().getName() + "/" +
-		 * event.getMediaType(), event.getSource());
-		 * 
-		 * String msg2;
-		 * 
-		 * if (endpoint.flowInMedia.values().size() != 2) { msg2 =
-		 * "                        THERE ARE LESS FLOW IN MEDIA'S THAN EXPECTED IN " +
-		 * endpoint.getEndpoint().getName() + " (" +
-		 * endpoint.flowInMedia.values().size() + ")"; } else { msg2 =
-		 * "                        NUMBER OF FLOW IN MEDIA'S IS NOW CORRECT IN " +
-		 * endpoint.getEndpoint().getName() + " (" +
-		 * endpoint.flowInMedia.values().size() + ")"; }
-		 * 
-		 * log.debug(msg1); log.debug(msg2); this.infoHandler.sendInfo(msg1);
-		 * this.infoHandler.sendInfo(msg2); });
-		 * 
-		 * endpoint.getWebEndpoint().addMediaFlowOutStateChangeListener((event) -> {
-		 * String msg1 = "                  Media flow out state change (" +
-		 * endpoint.getEndpoint().getName() + ") -> " + "STATE: " +
-		 * event.getState() + " | SOURCE: " + event.getSource().getName() + " | PAD: " +
-		 * event.getPadName() + " | MEDIATYPE: " + event.getMediaType() +
-		 * " | TIMESTAMP: " + System.currentTimeMillis();
-		 * 
-		 * endpoint.flowOutMedia. @SuppressWarnings("unchecked")
-		 * put(event.getSource().getName() + "/" + event.getMediaType(),
-		 * event.getSource());
-		 * 
-		 * String msg2;
-		 * 
-		 * if (endpoint.flowOutMedia.values().size() != 2) { msg2 =
-		 * "                        THERE ARE LESS FLOW OUT MEDIA'S THAN EXPECTED IN " +
-		 * endpoint.getEndpoint().getName() + " (" +
-		 * endpoint.flowOutMedia.values().size() + ")"; } else { msg2 =
-		 * "                        NUMBER OF FLOW OUT MEDIA'S IS NOW CORRECT IN " +
-		 * endpoint.getEndpoint().getName() + " (" +
-		 * endpoint.flowOutMedia.values().size() + ")"; }
-		 * 
-		 * log.debug(msg1); log.debug(msg2); this.infoHandler.sendInfo(msg1);
-		 * this.infoHandler.sendInfo(msg2); });
-		 * 
 		 * endpoint.getWebEndpoint().addMediaSessionStartedListener((event) -> { String
 		 * msg = "                  Media session started (" +
 		 * endpoint.getEndpoint().getName() + ") | TIMESTAMP: " +
@@ -568,33 +536,13 @@ public class KurentoParticipant extends Participant {
 		 * 
 		 * endpoint.getWebEndpoint().addMediaStateChangedListener((event) -> { String
 		 * msg = "                  Media state changed (" +
-		 * endpoint.getEndpoint().getName() + ") from " + event.getOldState() +
-		 * " to " + event.getNewState(); log.debug(msg); this.infoHandler.sendInfo(msg);
-		 * });
-		 * 
-		 * endpoint.getWebEndpoint().addConnectionStateChangedListener((event) -> {
-		 * String msg = "                  Connection state changed (" +
-		 * endpoint.getEndpoint().getName() + ") from " + event.getOldState() +
-		 * " to " + event.getNewState() + " | TIMESTAMP: " + System.currentTimeMillis();
-		 * log.debug(msg); this.infoHandler.sendInfo(msg); });
+		 * endpoint.getEndpoint().getName() + ") from " + event.getOldState() + " to " +
+		 * event.getNewState(); log.debug(msg); this.infoHandler.sendInfo(msg); });
 		 * 
 		 * endpoint.getWebEndpoint().addIceCandidateFoundListener((event) -> { String
 		 * msg = "                  ICE CANDIDATE FOUND (" +
 		 * endpoint.getEndpoint().getName() + "): CANDIDATE: " +
 		 * event.getCandidate().getCandidate() + " | TIMESTAMP: " +
-		 * System.currentTimeMillis(); log.debug(msg); this.infoHandler.sendInfo(msg);
-		 * });
-		 * 
-		 * endpoint.getWebEndpoint().addIceComponentStateChangeListener((event) -> {
-		 * String msg = "                  ICE COMPONENT STATE CHANGE (" +
-		 * endpoint.getEndpoint().getName() + "): for component " +
-		 * event.getComponentId() + " - STATE: " + event.getState() + " | TIMESTAMP: " +
-		 * System.currentTimeMillis(); log.debug(msg); this.infoHandler.sendInfo(msg);
-		 * });
-		 * 
-		 * endpoint.getWebEndpoint().addIceGatheringDoneListener((event) -> { String msg
-		 * = "                  ICE GATHERING DONE! (" +
-		 * endpoint.getEndpoint().getName() + ")" + " | TIMESTAMP: " +
 		 * System.currentTimeMillis(); log.debug(msg); this.infoHandler.sendInfo(msg);
 		 * });
 		 */
@@ -603,19 +551,7 @@ public class KurentoParticipant extends Participant {
 			String msg1 = "Media flow in state change (" + endpoint.getEndpoint().getName() + ") -> " + "STATE: "
 					+ event.getState() + " | SOURCE: " + event.getSource().getName() + " | PAD: " + event.getPadName()
 					+ " | MEDIATYPE: " + event.getMediaType() + " | TIMESTAMP: " + System.currentTimeMillis();
-
-			/*
-			 * endpoint.flowInMedia.put(event.getSource().getName(), event.getMediaType());
-			 * if (endpoint.getPublisher().getMediaOptions().hasAudio() &&
-			 * endpoint.getPublisher().getMediaOptions().hasVideo() &&
-			 * endpoint.flowInMedia.values().size() == 2) {
-			 */
-			endpoint.kmsEvents.add(new KmsEvent(event, endpoint.createdAt()));
-			/*
-			 * } else if (endpoint.flowInMedia.values().size() == 1) {
-			 * endpoint.kmsEvents.add(new KmsEvent(event, endpoint.createdAt())); }
-			 */
-
+			endpoint.kmsEvents.add(new KmsMediaEvent(event, event.getMediaType(), endpoint.createdAt()));
 			log.info(msg1);
 			this.infoHandler.sendInfo(msg1);
 		});
@@ -624,19 +560,7 @@ public class KurentoParticipant extends Participant {
 			String msg1 = "Media flow out state change (" + endpoint.getEndpoint().getName() + ") -> " + "STATE: "
 					+ event.getState() + " | SOURCE: " + event.getSource().getName() + " | PAD: " + event.getPadName()
 					+ " | MEDIATYPE: " + event.getMediaType() + " | TIMESTAMP: " + System.currentTimeMillis();
-
-			/*
-			 * endpoint.flowOutMedia.put(event.getSource().getName(), event.getMediaType());
-			 * if (endpoint.getPublisher().getMediaOptions().hasAudio() &&
-			 * endpoint.getPublisher().getMediaOptions().hasVideo() &&
-			 * endpoint.flowOutMedia.values().size() == 2) {
-			 */
-			endpoint.kmsEvents.add(new KmsEvent(event, endpoint.createdAt()));
-			/*
-			 * } else if (endpoint.flowOutMedia.values().size() == 1) {
-			 * endpoint.kmsEvents.add(new KmsEvent(event)); }
-			 */
-
+			endpoint.kmsEvents.add(new KmsMediaEvent(event, event.getMediaType(), endpoint.createdAt()));
 			log.info(msg1);
 			this.infoHandler.sendInfo(msg1);
 		});
@@ -661,7 +585,7 @@ public class KurentoParticipant extends Participant {
 		});
 
 		endpoint.getEndpoint().addMediaTranscodingStateChangeListener(event -> {
-			endpoint.kmsEvents.add(new KmsEvent(event, endpoint.createdAt()));
+			endpoint.kmsEvents.add(new KmsMediaEvent(event, event.getMediaType(), endpoint.createdAt()));
 		});
 
 		endpoint.getWebEndpoint().addIceComponentStateChangeListener(event -> {

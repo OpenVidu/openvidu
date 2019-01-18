@@ -19,7 +19,6 @@ package io.openvidu.server.rest;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,8 +51,8 @@ import io.openvidu.server.core.ParticipantRole;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.kurento.core.KurentoTokenOptions;
-import io.openvidu.server.recording.ComposedRecordingService;
 import io.openvidu.server.recording.Recording;
+import io.openvidu.server.recording.service.RecordingManager;
 
 /**
  *
@@ -68,7 +67,7 @@ public class SessionRestController {
 	private SessionManager sessionManager;
 
 	@Autowired
-	private ComposedRecordingService recordingService;
+	private RecordingManager recordingManager;
 
 	@Autowired
 	private OpenviduConfig openviduConfig;
@@ -148,7 +147,7 @@ public class SessionRestController {
 		Session session = this.sessionManager.getSession(sessionId);
 		if (session != null) {
 			JsonObject response = (webRtcStats == true) ? session.withStatsToJson() : session.toJson();
-			response.addProperty("recording", this.recordingService.sessionIsBeingRecorded(sessionId));
+			response.addProperty("recording", this.recordingManager.sessionIsBeingRecorded(sessionId));
 			return new ResponseEntity<>(response.toString(), getResponseHeaders(), HttpStatus.OK);
 		} else {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -163,7 +162,7 @@ public class SessionRestController {
 		JsonArray jsonArray = new JsonArray();
 		sessions.forEach(s -> {
 			JsonObject sessionJson = (webRtcStats == true) ? s.withStatsToJson() : s.toJson();
-			sessionJson.addProperty("recording", this.recordingService.sessionIsBeingRecorded(s.getSessionId()));
+			sessionJson.addProperty("recording", this.recordingManager.sessionIsBeingRecorded(s.getSessionId()));
 			jsonArray.add(sessionJson);
 		});
 		json.addProperty("numberOfElements", sessions.size());
@@ -298,6 +297,7 @@ public class SessionRestController {
 
 		String sessionId = (String) params.get("session");
 		String name = (String) params.get("name");
+		String outputModeString = (String) params.get("outputMode");
 		String recordingLayoutString = (String) params.get("recordingLayout");
 		String customLayout = (String) params.get("customLayout");
 
@@ -322,28 +322,49 @@ public class SessionRestController {
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 		if (!(session.getSessionProperties().mediaMode().equals(MediaMode.ROUTED))
-				|| this.recordingService.sessionIsBeingRecorded(session.getSessionId())) {
+				|| this.recordingManager.sessionIsBeingRecorded(session.getSessionId())) {
 			// Session is not in ROUTED MediMode or it is already being recorded
 			return new ResponseEntity<>(HttpStatus.CONFLICT);
 		}
 
-		RecordingLayout recordingLayout;
-		if (recordingLayoutString == null || recordingLayoutString.isEmpty()) {
-			// "recordingLayout" parameter not defined. Use global layout from
-			// SessionProperties (it is always configured as it has RecordingLayout.BEST_FIT
-			// as default value)
-			recordingLayout = session.getSessionProperties().defaultRecordingLayout();
-		} else {
-			recordingLayout = RecordingLayout.valueOf(recordingLayoutString);
+		io.openvidu.java.client.Recording.OutputMode outputMode;
+		try {
+			outputMode = io.openvidu.java.client.Recording.OutputMode.valueOf(outputModeString);
+		} catch (Exception e) {
+			outputMode = io.openvidu.java.client.Recording.OutputMode.COMPOSED;
+		}
+		RecordingProperties.Builder builder = new RecordingProperties.Builder().name(name).outputMode(outputMode);
+
+		if (outputMode.equals(io.openvidu.java.client.Recording.OutputMode.COMPOSED)) {
+			RecordingLayout recordingLayout;
+			if (recordingLayoutString == null || recordingLayoutString.isEmpty()) {
+				// "recordingLayout" parameter not defined. Use global layout from
+				// SessionProperties (it is always configured as it has RecordingLayout.BEST_FIT
+				// as default value)
+				recordingLayout = session.getSessionProperties().defaultRecordingLayout();
+			} else {
+				recordingLayout = RecordingLayout.valueOf(recordingLayoutString);
+			}
+
+			builder.recordingLayout(recordingLayout);
+
+			if (RecordingLayout.CUSTOM.equals(recordingLayout)) {
+				customLayout = (customLayout == null || customLayout.isEmpty())
+						? session.getSessionProperties().defaultCustomLayout()
+						: customLayout;
+				builder.customLayout(customLayout);
+			}
+
+			builder.build();
 		}
 
-		customLayout = (customLayout == null || customLayout.isEmpty())
-				? session.getSessionProperties().defaultCustomLayout()
-				: customLayout;
-
-		Recording startedRecording = this.recordingService.startRecording(session, new RecordingProperties.Builder()
-				.name(name).recordingLayout(recordingLayout).customLayout(customLayout).build());
-		return new ResponseEntity<>(startedRecording.toJson().toString(), getResponseHeaders(), HttpStatus.OK);
+		try {
+			Recording startedRecording = this.recordingManager.startRecording(session, builder.build());
+			return new ResponseEntity<>(startedRecording.toJson().toString(), getResponseHeaders(), HttpStatus.OK);
+		} catch (OpenViduException e) {
+			return new ResponseEntity<>("Error starting recording: " + e.getMessage(), getResponseHeaders(),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
 	}
 
 	@RequestMapping(value = "/recordings/stop/{recordingId}", method = RequestMethod.POST)
@@ -354,24 +375,24 @@ public class SessionRestController {
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 
-		Recording recording = recordingService.getStartedRecording(recordingId);
+		Recording recording = recordingManager.getStartedRecording(recordingId);
 
 		if (recording == null) {
-			if (recordingService.getStartingRecording(recordingId) != null) {
+			if (recordingManager.getStartingRecording(recordingId) != null) {
 				// Recording is still starting
 				return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
 			}
 			// Recording does not exist
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
-		if (!this.recordingService.sessionIsBeingRecorded(recording.getSessionId())) {
+		if (!this.recordingManager.sessionIsBeingRecorded(recording.getSessionId())) {
 			// Session is not being recorded
 			return new ResponseEntity<>(HttpStatus.CONFLICT);
 		}
 
 		Session session = sessionManager.getSession(recording.getSessionId());
 
-		Recording stoppedRecording = this.recordingService.stopRecording(session, recording.getId(),
+		Recording stoppedRecording = this.recordingManager.stopRecording(session, recording.getId(),
 				"recordingStoppedByServer");
 
 		if (session != null) {
@@ -386,27 +407,26 @@ public class SessionRestController {
 	@RequestMapping(value = "/recordings/{recordingId}", method = RequestMethod.GET)
 	public ResponseEntity<?> getRecording(@PathVariable("recordingId") String recordingId) {
 		try {
-			Recording recording = this.recordingService.getAllRecordings().stream()
-					.filter(rec -> rec.getId().equals(recordingId)).findFirst().get();
-			if (Recording.Status.started.equals(recording.getStatus())
-					&& recordingService.getStartingRecording(recording.getId()) != null) {
-				recording.setStatus(Recording.Status.starting);
+			Recording recording = this.recordingManager.getRecording(recordingId);
+			if (io.openvidu.java.client.Recording.Status.started.equals(recording.getStatus())
+					&& recordingManager.getStartingRecording(recording.getId()) != null) {
+				recording.setStatus(io.openvidu.java.client.Recording.Status.starting);
 			}
 			return new ResponseEntity<>(recording.toJson().toString(), getResponseHeaders(), HttpStatus.OK);
-		} catch (NoSuchElementException e) {
+		} catch (Exception e) {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
 	}
 
 	@RequestMapping(value = "/recordings", method = RequestMethod.GET)
 	public ResponseEntity<?> getAllRecordings() {
-		Collection<Recording> recordings = this.recordingService.getAllRecordings();
+		Collection<Recording> recordings = this.recordingManager.getAllRecordings();
 		JsonObject json = new JsonObject();
 		JsonArray jsonArray = new JsonArray();
 		recordings.forEach(rec -> {
-			if (Recording.Status.started.equals(rec.getStatus())
-					&& recordingService.getStartingRecording(rec.getId()) != null) {
-				rec.setStatus(Recording.Status.starting);
+			if (io.openvidu.java.client.Recording.Status.started.equals(rec.getStatus())
+					&& recordingManager.getStartingRecording(rec.getId()) != null) {
+				rec.setStatus(io.openvidu.java.client.Recording.Status.starting);
 			}
 			jsonArray.add(rec.toJson());
 		});
@@ -417,7 +437,7 @@ public class SessionRestController {
 
 	@RequestMapping(value = "/recordings/{recordingId}", method = RequestMethod.DELETE)
 	public ResponseEntity<?> deleteRecording(@PathVariable("recordingId") String recordingId) {
-		return new ResponseEntity<>(this.recordingService.deleteRecordingFromHost(recordingId, false));
+		return new ResponseEntity<>(this.recordingManager.deleteRecordingFromHost(recordingId, false));
 	}
 
 	private ResponseEntity<String> generateErrorResponse(String errorMessage, String path, HttpStatus status) {

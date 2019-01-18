@@ -19,9 +19,7 @@ package io.openvidu.server.kurento.endpoint;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Queue;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 
@@ -32,7 +30,6 @@ import org.kurento.client.IceCandidate;
 import org.kurento.client.ListenerSubscription;
 import org.kurento.client.MediaElement;
 import org.kurento.client.MediaPipeline;
-import org.kurento.client.MediaType;
 import org.kurento.client.OnIceCandidateEvent;
 import org.kurento.client.RtpEndpoint;
 import org.kurento.client.SdpEndpoint;
@@ -84,9 +81,6 @@ public abstract class MediaEndpoint {
 
 	private final List<IceCandidate> receivedCandidateList = new LinkedList<IceCandidate>();
 	private LinkedList<IceCandidate> candidates = new LinkedList<IceCandidate>();
-
-	public Map<String, MediaType> flowInMedia = new ConcurrentHashMap<>();
-	public Map<String, MediaType> flowOutMedia = new ConcurrentHashMap<>();
 
 	public String selectedLocalIceCandidate;
 	public String selectedRemoteIceCandidate;

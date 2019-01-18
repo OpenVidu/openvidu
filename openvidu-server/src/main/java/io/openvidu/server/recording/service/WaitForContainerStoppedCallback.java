@@ -15,7 +15,7 @@
  *
  */
 
-package io.openvidu.server.recording;
+package io.openvidu.server.recording.service;
 
 import java.io.Closeable;
 import java.io.IOException;

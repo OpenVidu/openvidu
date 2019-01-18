@@ -17,8 +17,6 @@
 
 package io.openvidu.server.kurento;
 
-import io.openvidu.server.kurento.KurentoClientSessionInfo;
-
 /**
  * Implementation of the session info interface, contains a participant's
  * private id and the session's id.

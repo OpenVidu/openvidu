@@ -15,35 +15,22 @@
  *
  */
 
-package io.openvidu.server.recording;
+package io.openvidu.server.recording.service;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import javax.ws.rs.ProcessingException;
 
-import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.CreateContainerCmd;
@@ -60,8 +47,6 @@ import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.core.DockerClientConfig;
 import com.github.dockerjava.core.command.ExecStartResultCallback;
 import com.github.dockerjava.core.command.PullImageResultCallback;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
@@ -70,58 +55,42 @@ import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.server.OpenViduServer;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.Session;
-import io.openvidu.server.core.SessionEventsHandler;
+import io.openvidu.server.recording.Recording;
+import io.openvidu.server.recording.RecordingInfoUtils;
 import io.openvidu.server.utils.CommandExecutor;
 
-@Service
-public class ComposedRecordingService {
+public class ComposedRecordingService extends RecordingService {
 
 	private static final Logger log = LoggerFactory.getLogger(ComposedRecordingService.class);
 
-	@Autowired
-	private OpenviduConfig openviduConfig;
-
-	@Autowired
-	private SessionEventsHandler sessionHandler;
-
 	private Map<String, String> containers = new ConcurrentHashMap<>();
 	private Map<String, String> sessionsContainers = new ConcurrentHashMap<>();
-	private Map<String, Recording> startingRecordings = new ConcurrentHashMap<>();
-	private Map<String, Recording> startedRecordings = new ConcurrentHashMap<>();
-	private Map<String, Recording> sessionsRecordings = new ConcurrentHashMap<>();
-	private final Map<String, ScheduledFuture<?>> automaticRecordingStopThreads = new ConcurrentHashMap<>();
-
-	private ScheduledThreadPoolExecutor automaticRecordingStopExecutor = new ScheduledThreadPoolExecutor(
-			Runtime.getRuntime().availableProcessors());
 
 	private final String IMAGE_NAME = "openvidu/openvidu-recording";
 	private String IMAGE_TAG;
-	private final String RECORDING_ENTITY_FILE = ".recording.";
 
 	private DockerClient dockerClient;
 
-	public ComposedRecordingService() {
+	public ComposedRecordingService(RecordingManager recordingManager, OpenviduConfig openviduConfig) {
+		super(recordingManager, openviduConfig);
 		DockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder().build();
 		this.dockerClient = DockerClientBuilder.getInstance(config).build();
 	}
 
-	public Recording startRecording(Session session, RecordingProperties properties) {
+	@Override
+	public Recording startRecording(Session session, RecordingProperties properties) throws OpenViduException {
 		List<String> envs = new ArrayList<>();
-		String shortSessionId = session.getSessionId().substring(session.getSessionId().lastIndexOf('/') + 1,
-				session.getSessionId().length());
-		String recordingId = this.getFreeRecordingId(session.getSessionId(), shortSessionId);
 
-		if (properties.name() == null || properties.name().isEmpty()) {
-			// No name provided for the recording file
-			properties = new RecordingProperties.Builder().name(recordingId)
-					.recordingLayout(properties.recordingLayout()).customLayout(properties.customLayout()).build();
-		}
+		PropertiesRecordingId updatePropertiesAndRecordingId = this.setFinalRecordingNameAndGetFreeRecordingId(session,
+				properties);
+		properties = updatePropertiesAndRecordingId.properties;
+		String recordingId = updatePropertiesAndRecordingId.recordingId;
 
 		Recording recording = new Recording(session.getSessionId(), recordingId, properties);
 
-		this.sessionsRecordings.put(session.getSessionId(), recording);
-		this.sessionHandler.setRecordingStarted(session.getSessionId(), recording);
-		this.startingRecordings.put(recording.getId(), recording);
+		this.recordingManager.sessionsRecordings.put(session.getSessionId(), recording);
+		this.recordingManager.sessionHandler.setRecordingStarted(session.getSessionId(), recording);
+		this.recordingManager.startingRecordings.put(recording.getId(), recording);
 
 		String uid = null;
 		try {
@@ -133,7 +102,7 @@ public class ComposedRecordingService {
 			e.printStackTrace();
 		}
 
-		String layoutUrl = this.getLayoutUrl(recording, shortSessionId);
+		String layoutUrl = this.getLayoutUrl(recording, this.getShortSessionId(session));
 
 		envs.add("URL=" + layoutUrl);
 		envs.add("RESOLUTION=1920x1080");
@@ -147,37 +116,38 @@ public class ComposedRecordingService {
 		log.info(recording.toJson().toString());
 		log.info("Recorder connecting to url {}", layoutUrl);
 
-		String containerId = this.runRecordingContainer(envs, "recording_" + recordingId);
+		String containerId;
+		try {
+			containerId = this.runRecordingContainer(envs, "recording_" + recordingId);
+		} catch (Exception e) {
+			this.cleanRecordingMapsAndReturnContainerId(recording);
+			throw new OpenViduException(Code.RECORDING_START_ERROR_CODE,
+					"Couldn't initialize recording container. Error: " + e.getMessage());
+		}
 
-		this.waitForVideoFileNotEmpty(properties.name());
+		this.waitForVideoFileNotEmpty(recording);
 
 		this.sessionsContainers.put(session.getSessionId(), containerId);
 
-		recording.setStatus(Recording.Status.started);
+		recording.setStatus(io.openvidu.java.client.Recording.Status.started);
 
-		this.startedRecordings.put(recording.getId(), recording);
-		this.startingRecordings.remove(recording.getId());
+		this.recordingManager.startedRecordings.put(recording.getId(), recording);
+		this.recordingManager.startingRecordings.remove(recording.getId());
 
 		return recording;
 	}
 
-	public Recording stopRecording(Session session, String recordingId, String reason) {
-		Recording recording;
-		String containerId;
+	@Override
+	public Recording stopRecording(Session session, Recording recording, String reason) {
+		String containerId = cleanRecordingMapsAndReturnContainerId(recording);
+		final String recordingId = recording.getId();
 
 		if (session == null) {
 			log.warn(
 					"Existing recording {} does not have an active session associated. This usually means the recording"
 							+ " layout did not join a recorded participant or the recording has been automatically"
 							+ " stopped after last user left and timeout passed",
-					recordingId);
-			recording = this.startedRecordings.remove(recordingId);
-			containerId = this.sessionsContainers.remove(recording.getSessionId());
-			this.sessionsRecordings.remove(recording.getSessionId());
-		} else {
-			recording = this.sessionsRecordings.remove(session.getSessionId());
-			containerId = this.sessionsContainers.remove(session.getSessionId());
-			this.startedRecordings.remove(recording.getId());
+					recording.getId());
 		}
 
 		if (containerId == null) {
@@ -205,8 +175,9 @@ public class ComposedRecordingService {
 						containerClosed = true;
 						log.warn("Container {} for closed session {} succesfully stopped and removed", containerIdAux,
 								session.getSessionId());
-						log.warn("Deleting unusable files for recording {}", recording.getId());
-						if (HttpStatus.NO_CONTENT.equals(this.deleteRecordingFromHost(recording.getId(), true))) {
+						log.warn("Deleting unusable files for recording {}", recordingId);
+						if (HttpStatus.NO_CONTENT
+								.equals(this.recordingManager.deleteRecordingFromHost(recordingId, true))) {
 							log.warn("Files properly deleted");
 						}
 					}
@@ -234,12 +205,12 @@ public class ComposedRecordingService {
 			try {
 				stopped = latch.await(60, TimeUnit.SECONDS);
 			} catch (InterruptedException e) {
-				recording.setStatus(Recording.Status.failed);
+				recording.setStatus(io.openvidu.java.client.Recording.Status.failed);
 				failRecordingCompletion(containerId, new OpenViduException(Code.RECORDING_COMPLETION_ERROR_CODE,
 						"The recording completion process has been unexpectedly interrupted"));
 			}
 			if (!stopped) {
-				recording.setStatus(Recording.Status.failed);
+				recording.setStatus(io.openvidu.java.client.Recording.Status.failed);
 				failRecordingCompletion(containerId, new OpenViduException(Code.RECORDING_COMPLETION_ERROR_CODE,
 						"The recording completion process couldn't finish in 60 seconds"));
 			}
@@ -250,28 +221,25 @@ public class ComposedRecordingService {
 			// Update recording attributes reading from video report file
 			try {
 				RecordingInfoUtils infoUtils = new RecordingInfoUtils(
-						this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + ".info");
+						this.openviduConfig.getOpenViduRecordingPath() + recordingId + "/" + recordingId + ".info");
 
-				if (openviduConfig.getOpenViduRecordingPublicAccess()) {
-					recording.setStatus(Recording.Status.available);
-				} else {
-					recording.setStatus(Recording.Status.stopped);
-				}
+				recording.setStatus(io.openvidu.java.client.Recording.Status.stopped);
 				recording.setDuration(infoUtils.getDurationInSeconds());
 				recording.setSize(infoUtils.getSizeInBytes());
 				recording.setHasAudio(infoUtils.hasAudio());
 				recording.setHasVideo(infoUtils.hasVideo());
 
-				if (openviduConfig.getOpenViduRecordingPublicAccess()) {
-					recording.setUrl(this.openviduConfig.getFinalUrl() + "recordings/" + recording.getName() + ".mp4");
-				}
+				infoUtils.deleteFilePath();
+
+				recording = this.recordingManager.updateRecordingUrl(recording);
 
 			} catch (IOException e) {
+				recording.setStatus(io.openvidu.java.client.Recording.Status.failed);
 				throw new OpenViduException(Code.RECORDING_REPORT_ERROR_CODE,
 						"There was an error generating the metadata report file for the recording");
 			}
 			if (session != null) {
-				this.sessionHandler.sendRecordingStoppedNotification(session, recording, reason);
+				this.recordingManager.sessionHandler.sendRecordingStoppedNotification(session, recording, reason);
 			}
 		}
 		return recording;
@@ -306,19 +274,7 @@ public class ComposedRecordingService {
 		}
 	}
 
-	public boolean sessionIsBeingRecorded(String sessionId) {
-		return (this.sessionsRecordings.get(sessionId) != null);
-	}
-
-	public Recording getStartedRecording(String recordingId) {
-		return this.startedRecordings.get(recordingId);
-	}
-
-	public Recording getStartingRecording(String recordingId) {
-		return this.startingRecordings.get(recordingId);
-	}
-
-	private String runRecordingContainer(List<String> envs, String containerName) {
+	private String runRecordingContainer(List<String> envs, String containerName) throws Exception {
 		Volume volume1 = new Volume("/recordings");
 		CreateContainerCmd cmd = dockerClient.createContainerCmd(IMAGE_NAME + ":" + IMAGE_TAG).withName(containerName)
 				.withEnv(envs).withNetworkMode("host").withVolumes(volume1)
@@ -334,7 +290,10 @@ public class ComposedRecordingService {
 			log.error(
 					"The container name {} is already in use. Probably caused by a session with unique publisher re-publishing a stream",
 					containerName);
-			return null;
+			throw e;
+		} catch (NotFoundException e) {
+			log.error("Docker image {} couldn't be found in docker host", IMAGE_NAME + ":" + IMAGE_TAG);
+			throw e;
 		}
 	}
 
@@ -358,159 +317,13 @@ public class ComposedRecordingService {
 		return imageExists;
 	}
 
-	public Collection<Recording> getAllRecordings() {
-		return this.getAllRecordingsFromHost();
-	}
-
-	public Collection<Recording> getStartingRecordings() {
-		return this.startingRecordings.values();
-	}
-
-	public Collection<Recording> getStartedRecordings() {
-		return this.startedRecordings.values();
-	}
-
-	public Collection<Recording> getFinishedRecordings() {
-		return this.getAllRecordingsFromHost().stream()
-				.filter(recording -> (recording.getStatus().equals(Recording.Status.stopped)
-						|| recording.getStatus().equals(Recording.Status.available)))
-				.collect(Collectors.toSet());
-	}
-
-	public File initRecordingPath() throws OpenViduException {
-		try {
-			Path path = Files.createDirectories(Paths.get(this.openviduConfig.getOpenViduRecordingPath()));
-
-			if (!Files.isWritable(path)) {
-				throw new OpenViduException(Code.RECORDING_PATH_NOT_VALID,
-						"The recording path '" + this.openviduConfig.getOpenViduRecordingPath()
-								+ "' is not valid. Reason: OpenVidu Server process needs write permissions");
-			}
-
-			log.info("Recording path: {}", this.openviduConfig.getOpenViduRecordingPath());
-			return path.toFile();
-		} catch (IOException e) {
-			throw new OpenViduException(Code.RECORDING_PATH_NOT_VALID,
-					"The recording path '" + this.openviduConfig.getOpenViduRecordingPath() + "' is not valid. Reason: "
-							+ e.getClass().getName());
-		}
-	}
-
-	private Recording getRecordingFromHost(String recordingId) {
-		log.info(this.openviduConfig.getOpenViduRecordingPath() + RECORDING_ENTITY_FILE + recordingId);
-		File file = new File(this.openviduConfig.getOpenViduRecordingPath() + RECORDING_ENTITY_FILE + recordingId);
-		log.info("File exists: " + file.exists());
-		return this.getRecordingFromEntityFile(file);
-	}
-
-	private Set<Recording> getAllRecordingsFromHost() {
-		File folder = new File(this.openviduConfig.getOpenViduRecordingPath());
-		File[] files = folder.listFiles();
-
-		if (files == null) {
-			files = initRecordingPath().listFiles();
-		}
-
-		Set<Recording> recordingEntities = new HashSet<>();
-		for (int i = 0; i < files.length; i++) {
-			Recording recording = this.getRecordingFromEntityFile(files[i]);
-			if (recording != null) {
-				if (openviduConfig.getOpenViduRecordingPublicAccess()) {
-					if (Recording.Status.stopped.equals(recording.getStatus())) {
-						recording.setStatus(Recording.Status.available);
-						recording.setUrl(
-								this.openviduConfig.getFinalUrl() + "recordings/" + recording.getName() + ".mp4");
-					}
-				}
-				recordingEntities.add(recording);
-			}
-		}
-		return recordingEntities;
-	}
-
-	private Set<String> getRecordingIdsFromHost() {
-		File folder = new File(this.openviduConfig.getOpenViduRecordingPath());
-		File[] files = folder.listFiles();
-
-		if (files == null) {
-			files = initRecordingPath().listFiles();
-		}
-
-		Set<String> fileNamesNoExtension = new HashSet<>();
-		for (int i = 0; i < files.length; i++) {
-			if (files[i].isFile() && !files[i].getName().startsWith(RECORDING_ENTITY_FILE)) {
-				fileNamesNoExtension.add(FilenameUtils.removeExtension(files[i].getName()));
-			}
-		}
-		return fileNamesNoExtension;
-	}
-
-	public HttpStatus deleteRecordingFromHost(String recordingId, boolean force) {
-
-		if (!force && (this.startedRecordings.containsKey(recordingId)
-				|| this.startingRecordings.containsKey(recordingId))) {
-			// Cannot delete an active recording
-			return HttpStatus.CONFLICT;
-		}
-
-		Recording recording = getRecordingFromHost(recordingId);
-		if (recording == null) {
-			return HttpStatus.NOT_FOUND;
-		}
-
-		String name = getRecordingFromHost(recordingId).getName();
-
-		File folder = new File(this.openviduConfig.getOpenViduRecordingPath());
-		File[] files = folder.listFiles();
-		for (int i = 0; i < files.length; i++) {
-			if (files[i].isFile() && isFileFromRecording(files[i], recordingId, name)) {
-				files[i].delete();
-			}
-		}
-
-		return HttpStatus.NO_CONTENT;
-	}
-
-	private Recording getRecordingFromEntityFile(File file) {
-		if (file.isFile() && file.getName().startsWith(RECORDING_ENTITY_FILE)) {
-			JsonObject json = null;
-			try {
-				json = new JsonParser().parse(new FileReader(file)).getAsJsonObject();
-			} catch (IOException e) {
-				return null;
-			}
-			return new Recording(json);
-		}
-		return null;
-	}
-
-	private boolean isFileFromRecording(File file, String recordingId, String recordingName) {
-		return (((recordingId + ".info").equals(file.getName()))
-				|| ((RECORDING_ENTITY_FILE + recordingId).equals(file.getName()))
-				|| (recordingName + ".mp4").equals(file.getName()) || (recordingId + ".jpg").equals(file.getName()));
-	}
-
-	private String getFreeRecordingId(String sessionId, String shortSessionId) {
-		Set<String> recordingIds = this.getRecordingIdsFromHost();
-		String recordingId = shortSessionId;
-		boolean isPresent = recordingIds.contains(recordingId);
-		int i = 1;
-
-		while (isPresent) {
-			recordingId = shortSessionId + "-" + i;
-			i++;
-			isPresent = recordingIds.contains(recordingId);
-		}
-
-		return recordingId;
-	}
-
-	private void waitForVideoFileNotEmpty(String videoName) {
+	private void waitForVideoFileNotEmpty(Recording recording) {
 		boolean isPresent = false;
 		while (!isPresent) {
 			try {
 				Thread.sleep(150);
-				File f = new File(this.openviduConfig.getOpenViduRecordingPath() + videoName + ".mp4");
+				File f = new File(this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/"
+						+ recording.getName() + ".mp4");
 				isPresent = ((f.isFile()) && (f.length() > 0));
 			} catch (InterruptedException e) {
 				e.printStackTrace();
@@ -547,23 +360,14 @@ public class ComposedRecordingService {
 		return finalUrl;
 	}
 
-	public void setRecordingVersion(String version) {
+	private String cleanRecordingMapsAndReturnContainerId(Recording recording) {
+		this.recordingManager.sessionsRecordings.remove(recording.getSessionId());
+		this.recordingManager.startedRecordings.remove(recording.getId());
+		return this.sessionsContainers.remove(recording.getSessionId());
+	}
+
+	public void setRecordingContainerVersion(String version) {
 		this.IMAGE_TAG = version;
-	}
-
-	public void initAutomaticRecordingStopThread(String sessionId) {
-		final String recordingId = this.sessionsRecordings.get(sessionId).getId();
-		ScheduledFuture<?> future = this.automaticRecordingStopExecutor.schedule(() -> {
-			log.info("Stopping recording {} after 2 minutes wait (no publisher published before timeout)", recordingId);
-			this.stopRecording(null, recordingId, "lastParticipantLeft");
-			this.automaticRecordingStopThreads.remove(sessionId);
-		}, 2, TimeUnit.MINUTES);
-		this.automaticRecordingStopThreads.putIfAbsent(sessionId, future);
-	}
-
-	public boolean abortAutomaticRecordingStopThread(String sessionId) {
-		ScheduledFuture<?> future = this.automaticRecordingStopThreads.remove(sessionId);
-		return future.cancel(false);
 	}
 
 }

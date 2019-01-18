@@ -17,9 +17,7 @@
 
 package io.openvidu.server.cdr;
 
-import java.util.Arrays;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,6 +30,7 @@ import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.recording.Recording;
+import io.openvidu.server.recording.service.RecordingManager;
 
 /**
  * CDR logger to register all information of a Session.
@@ -69,6 +68,7 @@ import io.openvidu.server.recording.Recording;
  * - webrtcConnectionDestroyed.reason: 	"unsubscribe", "unpublish", "disconnect", "networkDisconnect", "openviduServerStopped"
  * - participantLeft.reason: 			"unsubscribe", "unpublish", "disconnect", "networkDisconnect", "openviduServerStopped"
  * - sessionDestroyed.reason: 			"lastParticipantLeft", "openviduServerStopped"
+ * - recordingStopped.reason:			"recordingStoppedByServer", "lastParticipantLeft", "sessionClosedByServer", "openviduServerStopped"
  * 
  * [OPTIONAL_PROPERTIES]:
  * - receivingFrom:		only if connection = "INBOUND"
@@ -91,9 +91,6 @@ public class CallDetailRecord {
 	private Map<String, Set<CDREventWebrtcConnection>> subscriptions = new ConcurrentHashMap<>();
 	private Map<String, CDREventRecording> recordings = new ConcurrentHashMap<>();
 
-	private final List<String> lastParticipantLeftReasons = Arrays.asList(
-			new String[] { "disconnect", "forceDisconnectByUser", "forceDisconnectByServer", "networkDisconnect" });
-
 	public CallDetailRecord(CDRLogger logger) {
 		this.logger = logger;
 	}
@@ -108,7 +105,7 @@ public class CallDetailRecord {
 	public void recordSessionDestroyed(String sessionId, String reason) {
 		CDREvent e = this.sessions.remove(sessionId);
 		if (openviduConfig.isCdrEnabled())
-			this.logger.log(new CDREventSession(e, this.finalReason(reason)));
+			this.logger.log(new CDREventSession(e, RecordingManager.finalReason(reason)));
 	}
 
 	public void recordParticipantJoined(Participant participant, String sessionId) {
@@ -124,7 +121,8 @@ public class CallDetailRecord {
 			this.logger.log(new CDREventParticipant(e, reason));
 	}
 
-	public void recordNewPublisher(Participant participant, String sessionId, MediaOptions mediaOptions, Long timestamp) {
+	public void recordNewPublisher(Participant participant, String sessionId, MediaOptions mediaOptions,
+			Long timestamp) {
 		CDREventWebrtcConnection publisher = new CDREventWebrtcConnection(sessionId,
 				participant.getParticipantPublicId(), mediaOptions, null, timestamp);
 		this.publications.put(participant.getParticipantPublicId(), publisher);
@@ -181,15 +179,7 @@ public class CallDetailRecord {
 	public void recordRecordingStopped(String sessionId, Recording recording, String reason) {
 		CDREventRecording recordingStartedEvent = this.recordings.remove(recording.getId());
 		if (openviduConfig.isCdrEnabled())
-			this.logger.log(new CDREventRecording(recordingStartedEvent, this.finalReason(reason)));
-	}
-
-	private String finalReason(String reason) {
-		if (lastParticipantLeftReasons.contains(reason)) {
-			return "lastParticipantLeft";
-		} else {
-			return reason;
-		}
+			this.logger.log(new CDREventRecording(recordingStartedEvent, RecordingManager.finalReason(reason)));
 	}
 
 }

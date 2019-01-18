@@ -17,6 +17,7 @@
 
 package io.openvidu.server.recording;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -38,35 +39,35 @@ public class RecordingInfoUtils {
 	private JsonObject videoStream;
 	private JsonObject audioStream;
 
-	public RecordingInfoUtils(String fullVideoPath) throws FileNotFoundException, IOException, OpenViduException {
+	private String infoFilePath;
 
+	public RecordingInfoUtils(String infoFilePath) throws FileNotFoundException, IOException, OpenViduException {
+
+		this.infoFilePath = infoFilePath;
 		this.parser = new JsonParser();
 
 		try {
-			this.json = parser.parse(new FileReader(fullVideoPath)).getAsJsonObject();
+			this.json = parser.parse(new FileReader(infoFilePath)).getAsJsonObject();
 		} catch (JsonIOException | JsonSyntaxException e) {
 			// Recording metadata from ffprobe is not a JSON: video file is corrupted
 			throw new OpenViduException(Code.RECORDING_FILE_EMPTY_ERROR, "The recording file is corrupted");
 		}
-
 		if (this.json.size() == 0) {
 			// Recording metadata from ffprobe is an emtpy JSON
 			throw new OpenViduException(Code.RECORDING_FILE_EMPTY_ERROR, "The recording file is empty");
 		}
 
 		this.jsonFormat = json.get("format").getAsJsonObject();
-
 		JsonArray streams = json.get("streams").getAsJsonArray();
 
 		for (int i = 0; i < streams.size(); i++) {
 			JsonObject stream = streams.get(i).getAsJsonObject();
-			if ("video".equals(stream.get("codec_type").toString())) {
+			if ("video".equals(stream.get("codec_type").getAsString())) {
 				this.videoStream = stream;
-			} else if ("audio".equals(stream.get("codec_type").toString())) {
+			} else if ("audio".equals(stream.get("codec_type").getAsString())) {
 				this.audioStream = stream;
 			}
 		}
-
 	}
 
 	public double getDurationInSeconds() {
@@ -122,6 +123,10 @@ public class RecordingInfoUtils {
 
 	public String getLongAudioCodec() {
 		return audioStream.get("codec_long_name").toString();
+	}
+
+	public boolean deleteFilePath() {
+		return new File(this.infoFilePath).delete();
 	}
 
 }

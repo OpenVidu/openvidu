@@ -18,19 +18,42 @@
 package io.openvidu.server.kurento.kms;
 
 import org.kurento.client.KurentoClient;
-
-import io.openvidu.server.kurento.kms.Kms;
-import io.openvidu.server.kurento.kms.KmsManager;
+import org.kurento.client.KurentoConnectionListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class FixedOneKmsManager extends KmsManager {
 
-  public FixedOneKmsManager(String kmsWsUri) {
-    this(kmsWsUri, 1);
-  }
+	private static final Logger log = LoggerFactory.getLogger(FixedOneKmsManager.class);
 
-  public FixedOneKmsManager(String kmsWsUri, int numKmss) {
-    for (int i = 0; i < numKmss; i++) {
-      this.addKms(new Kms(KurentoClient.create(kmsWsUri), kmsWsUri));
-    }
-  }
+	public FixedOneKmsManager(String kmsWsUri) {
+		this(kmsWsUri, 1);
+	}
+
+	public FixedOneKmsManager(String kmsWsUri, int numKmss) {
+		for (int i = 0; i < numKmss; i++) {
+			this.addKms(new Kms(KurentoClient.create(kmsWsUri, new KurentoConnectionListener() {
+
+				@Override
+				public void reconnected(boolean isReconnected) {
+					log.warn("Kurento Client reconnected ({}) to KMS with uri {}", isReconnected, kmsWsUri);
+				}
+
+				@Override
+				public void disconnected() {
+					log.warn("Kurento Client disconnected from KMS with uri {}", kmsWsUri);
+				}
+
+				@Override
+				public void connectionFailed() {
+					log.warn("Kurento Client failed connecting to KMS with uri {}", kmsWsUri);
+				}
+
+				@Override
+				public void connected() {
+					log.warn("Kurento Client is now connected to KMS with uri {}", kmsWsUri);
+				}
+			}), kmsWsUri));
+		}
+	}
 }

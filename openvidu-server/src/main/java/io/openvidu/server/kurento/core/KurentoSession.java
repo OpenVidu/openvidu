@@ -47,6 +47,7 @@ import io.openvidu.server.cdr.CallDetailRecord;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
+import io.openvidu.server.recording.service.RecordingManager;
 
 /**
  * @author Pablo Fuente (pablofuenteperez@gmail.com)
@@ -57,6 +58,7 @@ public class KurentoSession implements Session {
 	public static final int ASYNC_LATCH_TIMEOUT = 30;
 
 	private OpenviduConfig openviduConfig;
+	private RecordingManager recordingManager;
 
 	private final ConcurrentMap<String, KurentoParticipant> participants = new ConcurrentHashMap<>();
 	private String sessionId;
@@ -85,7 +87,8 @@ public class KurentoSession implements Session {
 
 	public KurentoSession(String sessionId, Long startTime, SessionProperties sessionProperties,
 			KurentoClient kurentoClient, KurentoSessionEventsHandler kurentoSessionHandler,
-			boolean destroyKurentoClient, CallDetailRecord CDR, OpenviduConfig openviduConfig) {
+			boolean destroyKurentoClient, CallDetailRecord CDR, OpenviduConfig openviduConfig,
+			RecordingManager recordingManager) {
 		this.sessionId = sessionId;
 		this.sessionProperties = sessionProperties;
 		this.kurentoClient = kurentoClient;
@@ -93,6 +96,7 @@ public class KurentoSession implements Session {
 		this.kurentoSessionHandler = kurentoSessionHandler;
 		this.CDR = CDR;
 		this.openviduConfig = openviduConfig;
+		this.recordingManager = recordingManager;
 		this.startTime = startTime;
 		log.debug("New SESSION instance with id '{}'", sessionId);
 	}
@@ -113,7 +117,7 @@ public class KurentoSession implements Session {
 		createPipeline();
 
 		KurentoParticipant kurentoParticipant = new KurentoParticipant(participant, this, getPipeline(),
-				kurentoSessionHandler.getInfoHandler(), this.CDR, this.openviduConfig);
+				kurentoSessionHandler.getInfoHandler(), this.CDR, this.openviduConfig, this.recordingManager);
 		participants.put(participant.getParticipantPrivateId(), kurentoParticipant);
 
 		filterStates.forEach((filterId, state) -> {

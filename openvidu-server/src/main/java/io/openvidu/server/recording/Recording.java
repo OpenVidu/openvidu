@@ -24,16 +24,7 @@ import io.openvidu.java.client.RecordingProperties;
 
 public class Recording {
 
-	public enum Status {
-		starting, // The recording is starting (cannot be stopped)
-		started, // The recording has started and is going on
-		stopped, // The recording has finished OK
-		available, // The recording is available for downloading. This status is reached for all
-					// stopped recordings if property 'openvidu.recording.public-access' is true
-		failed; // The recording has failed
-	}
-
-	private Recording.Status status;
+	private io.openvidu.java.client.Recording.Status status;
 
 	private String id;
 	private String sessionId;
@@ -49,7 +40,7 @@ public class Recording {
 		this.sessionId = sessionId;
 		this.createdAt = System.currentTimeMillis();
 		this.id = id;
-		this.status = Status.started;
+		this.status = io.openvidu.java.client.Recording.Status.started;
 		this.recordingProperties = recordingProperties;
 	}
 
@@ -70,16 +61,27 @@ public class Recording {
 		}
 		this.hasAudio = json.get("hasAudio").getAsBoolean();
 		this.hasVideo = json.get("hasVideo").getAsBoolean();
-		this.status = Status.valueOf(json.get("status").getAsString());
-		this.recordingProperties = new RecordingProperties.Builder().name(json.get("name").getAsString())
-				.recordingLayout(RecordingLayout.valueOf(json.get("recordingLayout").getAsString())).build();
+		this.status = io.openvidu.java.client.Recording.Status.valueOf(json.get("status").getAsString());
+
+		io.openvidu.java.client.Recording.OutputMode outputMode = io.openvidu.java.client.Recording.OutputMode
+				.valueOf(json.get("outputMode").getAsString());
+		RecordingProperties.Builder builder = new RecordingProperties.Builder().name(json.get("name").getAsString())
+				.outputMode(outputMode);
+		if (io.openvidu.java.client.Recording.OutputMode.COMPOSED.equals(outputMode)) {
+			RecordingLayout recordingLayout = RecordingLayout.valueOf(json.get("recordingLayout").getAsString());
+			builder.recordingLayout(recordingLayout);
+			if (RecordingLayout.CUSTOM.equals(recordingLayout)) {
+				builder.customLayout(json.get("customLayout").getAsString());
+			}
+		}
+		this.recordingProperties = builder.build();
 	}
 
-	public Status getStatus() {
+	public io.openvidu.java.client.Recording.Status getStatus() {
 		return status;
 	}
 
-	public void setStatus(Status status) {
+	public void setStatus(io.openvidu.java.client.Recording.Status status) {
 		this.status = status;
 	}
 
@@ -95,12 +97,20 @@ public class Recording {
 		return this.recordingProperties.name();
 	}
 
+	public io.openvidu.java.client.Recording.OutputMode getOutputMode() {
+		return this.recordingProperties.outputMode();
+	}
+
 	public RecordingLayout getRecordingLayout() {
 		return this.recordingProperties.recordingLayout();
 	}
 
 	public String getCustomLayout() {
 		return this.recordingProperties.customLayout();
+	}
+
+	public RecordingProperties getRecordingProperties() {
+		return this.recordingProperties;
 	}
 
 	public String getSessionId() {
@@ -163,9 +173,12 @@ public class Recording {
 		JsonObject json = new JsonObject();
 		json.addProperty("id", this.id);
 		json.addProperty("name", this.recordingProperties.name());
-		json.addProperty("recordingLayout", this.recordingProperties.recordingLayout().name());
-		if (RecordingLayout.CUSTOM.equals(this.recordingProperties.recordingLayout())) {
-			json.addProperty("customLayout", this.recordingProperties.customLayout());
+		json.addProperty("outputMode", this.getOutputMode().name());
+		if (io.openvidu.java.client.Recording.OutputMode.COMPOSED.equals(this.recordingProperties.outputMode())) {
+			json.addProperty("recordingLayout", this.recordingProperties.recordingLayout().name());
+			if (RecordingLayout.CUSTOM.equals(this.recordingProperties.recordingLayout())) {
+				json.addProperty("customLayout", this.recordingProperties.customLayout());
+			}
 		}
 		json.addProperty("sessionId", this.sessionId);
 		json.addProperty("createdAt", this.createdAt);

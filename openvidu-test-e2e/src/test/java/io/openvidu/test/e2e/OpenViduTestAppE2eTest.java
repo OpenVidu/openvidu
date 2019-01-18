@@ -1033,7 +1033,7 @@ public class OpenViduTestAppE2eTest {
 
 	@Test
 	@DisplayName("Remote record")
-	void remoteRecordTest() throws Exception {
+	void remoteComposedRecordTest() throws Exception {
 		setupBrowser("chrome");
 
 		log.info("Remote record");
@@ -1131,13 +1131,11 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("recordingStopped", 1);
 
 		String recordingsPath = "/opt/openvidu/recordings/";
-		File file1 = new File(recordingsPath + sessionName + ".mp4");
-		File file2 = new File(recordingsPath + ".recording." + sessionName);
-		File file3 = new File(recordingsPath + sessionName + ".info");
+		File file1 = new File(recordingsPath + sessionName + "/" + sessionName + ".mp4");
+		File file2 = new File(recordingsPath + sessionName + "/" + ".recording." + sessionName);
 
 		Assert.assertTrue(file1.exists() || file1.length() > 0);
 		Assert.assertTrue(file2.exists() || file2.length() > 0);
-		Assert.assertTrue(file3.exists() || file3.length() > 0);
 
 		Assert.assertTrue(
 				this.recordedFileFine(file1, new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(sessionName)));
@@ -1159,11 +1157,16 @@ public class OpenViduTestAppE2eTest {
 
 		Assert.assertFalse(file1.exists());
 		Assert.assertFalse(file2.exists());
-		Assert.assertFalse(file3.exists());
 
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 
 		gracefullyLeaveParticipants(1);
+
+	}
+
+	@Test
+	@DisplayName("Remote record")
+	void remoteIndividualRecordTest() throws Exception {
 
 	}
 

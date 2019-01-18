@@ -18,19 +18,15 @@
 package io.openvidu.server.kurento.endpoint;
 
 import org.kurento.client.MediaEvent;
+import org.kurento.client.MediaType;
 
-public class KmsEvent {
+public class KmsMediaEvent extends KmsEvent {
 
-	long timestamp;
-	long msSinceCreation;
-	String endpoint;
-	MediaEvent event;
+	MediaType mediaType;
 
-	public KmsEvent(MediaEvent event, long createdAt) {
-		this.event = event;
-		this.endpoint = event.getSource().getName();
-		this.event.setSource(null);
-		this.timestamp = System.currentTimeMillis();
-		this.msSinceCreation = this.timestamp - createdAt;
+	public KmsMediaEvent(MediaEvent event, MediaType mediaType, long createdAt) {
+		super(event, createdAt);
+		this.mediaType = mediaType;
 	}
+
 }

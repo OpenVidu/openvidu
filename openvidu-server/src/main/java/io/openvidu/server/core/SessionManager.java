@@ -44,7 +44,7 @@ import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.coturn.CoturnCredentialsService;
 import io.openvidu.server.coturn.TurnCredentials;
 import io.openvidu.server.kurento.core.KurentoTokenOptions;
-import io.openvidu.server.recording.ComposedRecordingService;
+import io.openvidu.server.recording.service.RecordingManager;
 
 public abstract class SessionManager {
 
@@ -54,7 +54,7 @@ public abstract class SessionManager {
 	protected SessionEventsHandler sessionEventsHandler;
 
 	@Autowired
-	protected ComposedRecordingService recordingService;
+	protected RecordingManager recordingManager;
 
 	@Autowired
 	protected CallDetailRecord CDR;
@@ -440,19 +440,21 @@ public abstract class SessionManager {
 
 		this.closeSessionAndEmptyCollections(session, reason);
 
-		if (recordingService.sessionIsBeingRecorded(session.getSessionId())) {
-			recordingService.stopRecording(session, null, reason);
-		}
-
 		return participants;
 	}
 
-	public void closeSessionAndEmptyCollections(Session session, String reason) {
+	protected void closeSessionAndEmptyCollections(Session session, String reason) {
+
+		if (openviduConfig.isRecordingModuleEnabled()
+				&& this.recordingManager.sessionIsBeingRecorded(session.getSessionId())) {
+			recordingManager.stopRecording(session, null, RecordingManager.finalReason(reason));
+		}
+
 		if (session.close(reason)) {
 			sessionEventsHandler.onSessionClosed(session.getSessionId(), reason);
 		}
-		sessions.remove(session.getSessionId());
 
+		sessions.remove(session.getSessionId());
 		sessionProperties.remove(session.getSessionId());
 		sessionCreationTime.remove(session.getSessionId());
 		sessionidParticipantpublicidParticipant.remove(session.getSessionId());
