@@ -59,6 +59,22 @@ public class Recording {
 		failed;
 	}
 
+	/**
+	 * See {@link io.openvidu.java.client.Recording#getOutputMode()}
+	 */
+	public enum OutputMode {
+
+		/**
+		 * Recording all streams in a grid layout in a single archive
+		 */
+		COMPOSED,
+
+		/**
+		 * Record each stream individually
+		 */
+		INDIVIDUAL;
+	}
+
 	private Recording.Status status;
 
 	private String id;
@@ -67,8 +83,6 @@ public class Recording {
 	private long size; // bytes
 	private double duration; // seconds
 	private String url;
-	private boolean hasAudio = true;
-	private boolean hasVideo = true;
 	private RecordingProperties recordingProperties;
 
 	protected Recording(JSONObject json) {
@@ -78,11 +92,20 @@ public class Recording {
 		this.size = (long) json.get("size");
 		this.duration = (double) json.get("duration");
 		this.url = (String) json.get("url");
-		this.hasAudio = (boolean) json.get("hasAudio");
-		this.hasVideo = (boolean) json.get("hasVideo");
 		this.status = Recording.Status.valueOf((String) json.get("status"));
-		this.recordingProperties = new RecordingProperties.Builder().name((String) json.get("name"))
-				.recordingLayout(RecordingLayout.valueOf((String) json.get("recordingLayout"))).build();
+
+		OutputMode outputMode = OutputMode.valueOf((String) json.get("outputMode"));
+		RecordingProperties.Builder builder = new RecordingProperties.Builder().name((String) json.get("name"))
+				.outputMode(outputMode).hasAudio((boolean) json.get("hasAudio"))
+				.hasVideo((boolean) json.get("hasVideo"));
+		if (OutputMode.COMPOSED.equals(outputMode)) {
+			builder.recordingLayout(RecordingLayout.valueOf((String) json.get("recordingLayout")));
+			String customLayout = (String) json.get("customLayout");
+			if (customLayout != null) {
+				builder.customLayout(customLayout);
+			}
+		}
+		this.recordingProperties = builder.build();
 	}
 
 	/**
@@ -109,9 +132,27 @@ public class Recording {
 	}
 
 	/**
-	 * The layout used in this recording
+	 * Mode of recording: COMPOSED for a single archive in a grid layout or
+	 * INDIVIDUAL for one archive for each stream
+	 */
+	public OutputMode getOutputMode() {
+		return this.recordingProperties.outputMode();
+	}
+
+	/**
+	 * The layout used in this recording. Only defined if OutputMode is COMPOSED
 	 */
 	public RecordingLayout getRecordingLayout() {
+		return this.recordingProperties.recordingLayout();
+	}
+
+	/**
+	 * The custom layout used in this recording. Only defined if if OutputMode is
+	 * COMPOSED and
+	 * {@link io.openvidu.java.client.RecordingProperties.Builder#customLayout(String)}
+	 * has been called
+	 */
+	public RecordingLayout getCustomLayout() {
 		return this.recordingProperties.recordingLayout();
 	}
 
@@ -159,7 +200,7 @@ public class Recording {
 	 * otherwise (currently fixed to true)
 	 */
 	public boolean hasAudio() {
-		return hasAudio;
+		return this.recordingProperties.hasAudio();
 	}
 
 	/**
@@ -167,7 +208,7 @@ public class Recording {
 	 * otherwise (currently fixed to true)
 	 */
 	public boolean hasVideo() {
-		return hasVideo;
+		return this.recordingProperties.hasVideo();
 	}
 
 }

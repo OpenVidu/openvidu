@@ -194,8 +194,16 @@ public class OpenVidu {
 		JSONObject json = new JSONObject();
 		json.put("session", sessionId);
 		json.put("name", properties.name());
-		json.put("recordingLayout", (properties.recordingLayout() != null) ? properties.recordingLayout().name() : "");
-		json.put("customLayout", (properties.customLayout() != null) ? properties.customLayout() : "");
+		json.put("outputMode", properties.outputMode());
+
+		if (Recording.OutputMode.COMPOSED.equals(properties.outputMode())) {
+			json.put("recordingLayout",
+					(properties.recordingLayout() != null) ? properties.recordingLayout().name() : "");
+			if (RecordingLayout.CUSTOM.equals(properties.recordingLayout())) {
+				json.put("customLayout", (properties.customLayout() != null) ? properties.customLayout() : "");
+			}
+		}
+
 		StringEntity params = null;
 		try {
 			params = new StringEntity(json.toString());

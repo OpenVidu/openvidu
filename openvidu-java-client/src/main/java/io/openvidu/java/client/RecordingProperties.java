@@ -24,8 +24,11 @@ package io.openvidu.java.client;
 public class RecordingProperties {
 
 	private String name;
+	private Recording.OutputMode outputMode;
 	private RecordingLayout recordingLayout;
 	private String customLayout;
+	private boolean hasAudio;
+	private boolean hasVideo;
 
 	/**
 	 * Builder for {@link io.openvidu.java.client.RecordingProperties}
@@ -33,22 +36,24 @@ public class RecordingProperties {
 	public static class Builder {
 
 		private String name = "";
+		private Recording.OutputMode outputMode = Recording.OutputMode.COMPOSED;
 		private RecordingLayout recordingLayout;
 		private String customLayout = "";
+		private boolean hasAudio = true;
+		private boolean hasVideo = true;
 
 		/**
 		 * Builder for {@link io.openvidu.java.client.RecordingProperties}
 		 */
 		public RecordingProperties build() {
-			return new RecordingProperties(this.name, this.recordingLayout, this.customLayout);
+			return new RecordingProperties(this.name, this.outputMode, this.recordingLayout, this.customLayout,
+					this.hasAudio, this.hasVideo);
 		}
 
 		/**
 		 * Call this method to set the name of the video file. You can access this same
 		 * value in your clients on recording events (<code>recordingStarted</code>,
-		 * <code>recordingStopped</code>). <strong>WARNING: this parameter follows an
-		 * overwriting policy.</strong> If you name two recordings the same, the newest
-		 * MP4 file will overwrite the oldest one
+		 * <code>recordingStopped</code>)
 		 */
 		public RecordingProperties.Builder name(String name) {
 			this.name = name;
@@ -56,7 +61,20 @@ public class RecordingProperties {
 		}
 
 		/**
-		 * Call this method to set the layout to be used in the recording
+		 * Call this method to set the mode of recording: COMPOSED for a single archive
+		 * in a grid layout or INDIVIDUAL for one archive for each stream
+		 */
+		public RecordingProperties.Builder outputMode(Recording.OutputMode outputMode) {
+			this.outputMode = outputMode;
+			return this;
+		}
+
+		/**
+		 * Call this method to set the layout to be used in the recording. Will only
+		 * have effect if
+		 * {@link io.openvidu.java.client.RecordingProperties.Builder#outputMode(Recording.OutputMode)}
+		 * has been called with value
+		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED}
 		 */
 		public RecordingProperties.Builder recordingLayout(RecordingLayout layout) {
 			this.recordingLayout = layout;
@@ -68,7 +86,12 @@ public class RecordingProperties {
 		 * {@link io.openvidu.java.client.RecordingProperties.Builder#recordingLayout(RecordingLayout)}
 		 * to {@link io.openvidu.java.client.RecordingLayout#CUSTOM} you can call this
 		 * method to set the relative path to the specific custom layout you want to
-		 * use. See <a href=
+		 * use.<br>
+		 * Will only have effect if
+		 * {@link io.openvidu.java.client.RecordingProperties.Builder#outputMode(Recording.OutputMode)}
+		 * has been called with value
+		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED}.<br>
+		 * See <a href=
 		 * "https://openvidu.io/docs/advanced-features/recording#custom-recording-layouts"
 		 * target="_blank">Custom recording layouts</a> to learn more
 		 */
@@ -77,23 +100,49 @@ public class RecordingProperties {
 			return this;
 		}
 
+		/**
+		 * Call this method to specify whether or not to record the audio track
+		 */
+		public RecordingProperties.Builder hasAudio(boolean hasAudio) {
+			this.hasAudio = true;
+			return this;
+		}
+
+		/**
+		 * Call this method to specify whether or not to record the video track
+		 */
+		public RecordingProperties.Builder hasVideo(boolean hasVideo) {
+			this.hasVideo = true;
+			return this;
+		}
+
 	}
 
-	protected RecordingProperties(String name, RecordingLayout layout, String customLayout) {
+	protected RecordingProperties(String name, Recording.OutputMode outputMode, RecordingLayout layout,
+			String customLayout, boolean hasAudio, boolean hasVideo) {
 		this.name = name;
+		this.outputMode = outputMode;
 		this.recordingLayout = layout;
 		this.customLayout = customLayout;
+		this.hasAudio = hasAudio;
+		this.hasVideo = hasVideo;
 	}
 
 	/**
 	 * Defines the name you want to give to the video file. You can access this same
 	 * value in your clients on recording events (<code>recordingStarted</code>,
-	 * <code>recordingStopped</code>). <strong>WARNING: this parameter follows an
-	 * overwriting policy.</strong> If you name two recordings the same, the newest
-	 * MP4 file will overwrite the oldest one
+	 * <code>recordingStopped</code>)
 	 */
 	public String name() {
 		return this.name;
+	}
+
+	/**
+	 * Defines the mode of recording: COMPOSED for a single archive in a grid layout
+	 * or INDIVIDUAL for one archive for each stream
+	 */
+	public Recording.OutputMode outputMode() {
+		return this.outputMode;
 	}
 
 	/**
@@ -113,6 +162,20 @@ public class RecordingProperties {
 	 */
 	public String customLayout() {
 		return this.customLayout;
+	}
+
+	/**
+	 * Defines if the recording has an audio track or not
+	 */
+	public boolean hasAudio() {
+		return this.hasAudio;
+	}
+
+	/**
+	 * Defines if the recording has a video track or not
+	 */
+	public boolean hasVideo() {
+		return this.hasVideo;
 	}
 
 }
