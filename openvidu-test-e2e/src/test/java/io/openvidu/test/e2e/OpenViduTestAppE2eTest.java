@@ -187,12 +187,6 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 4);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
 
-		try {
-			System.out.println(getBase64Screenshot(user));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
 		Assert.assertEquals(user.getDriver().findElements(By.tagName("video")).size(), 4);
 		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
 				true, true));
@@ -224,12 +218,6 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("accessAllowed", 2);
 		user.getEventManager().waitUntilEventReaches("streamCreated", 4);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
-
-		try {
-			System.out.println(getBase64Screenshot(user));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 
 		Assert.assertEquals(user.getDriver().findElements(By.tagName("video")).size(), 4);
 		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
@@ -263,12 +251,6 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 4);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
 
-		try {
-			System.out.println(getBase64Screenshot(user));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
 		Assert.assertEquals(user.getDriver().findElements(By.tagName("video")).size(), 4);
 		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
 				false, true));
@@ -292,12 +274,6 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 4);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
 
-		try {
-			System.out.println(getBase64Screenshot(user));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
 		Assert.assertEquals(user.getDriver().findElements(By.tagName("video")).size(), 4);
 		user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true);
 
@@ -320,12 +296,6 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
 		user.getEventManager().waitUntilEventReaches("streamCreated", 1);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
-
-		try {
-			System.out.println(getBase64Screenshot(user));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 
 		Assert.assertEquals(user.getDriver().findElements(By.tagName("video")).size(), 1);
 		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
@@ -351,12 +321,6 @@ public class OpenViduTestAppE2eTest {
 
 		Thread.sleep(3000);
 
-		try {
-			System.out.println(getBase64Screenshot(user));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
 		gracefullyLeaveParticipants(1);
 	}
 
@@ -377,12 +341,6 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
 		user.getEventManager().waitUntilEventReaches("streamCreated", 1);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
-
-		try {
-			System.out.println(getBase64Screenshot(user));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 
 		Assert.assertEquals(user.getDriver().findElements(By.tagName("video")).size(), 1);
 		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
@@ -414,12 +372,6 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 16);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 16);
 
-		try {
-			System.out.println(getBase64Screenshot(user));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
 		Assert.assertEquals(user.getDriver().findElements(By.tagName("video")).size(), 16);
 		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
 				true, true));
@@ -442,12 +394,6 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("accessAllowed", 2);
 		user.getEventManager().waitUntilEventReaches("streamCreated", 4);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
-
-		try {
-			System.out.println(getBase64Screenshot(user));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 
 		Assert.assertEquals(user.getDriver().findElements(By.tagName("video")).size(), 4);
 		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
@@ -516,12 +462,6 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
 		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
-
-		try {
-			System.out.println(getBase64Screenshot(user));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 
 		Assert.assertEquals(user.getDriver().findElements(By.tagName("video")).size(), 2);
 		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
@@ -836,12 +776,6 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
 		user.getEventManager().waitUntilEventReaches("streamCreated", 3);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 3);
-
-		try {
-			System.out.println(getBase64Screenshot(user));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 
 		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 3));
 		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
@@ -1292,12 +1226,6 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 4);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
 
-		try {
-			System.out.println(getBase64Screenshot(user));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
 		Assert.assertEquals(user.getDriver().findElements(By.tagName("video")).size(), 4);
 		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
 				true, true));
@@ -1336,12 +1264,6 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
 		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
-
-		try {
-			System.out.println(getBase64Screenshot(user));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 
 		Assert.assertEquals(user.getDriver().findElements(By.tagName("video")).size(), 2);
 		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
@@ -1493,12 +1415,6 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
 		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
-
-		try {
-			System.out.println(getBase64Screenshot(user));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 
 		Assert.assertEquals(user.getDriver().findElements(By.tagName("video")).size(), 2);
 		// Assert no audio track only for the moderator incoming video
