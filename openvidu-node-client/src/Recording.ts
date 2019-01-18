@@ -15,6 +15,7 @@
  *
  */
 
+import { RecordingProperties } from './RecordingProperties';
 import { RecordingLayout } from './RecordingLayout';
 
 /**
@@ -53,31 +54,15 @@ export class Recording {
     url: string;
 
     /**
-     * `true` if the recording has an audio track, `false` otherwise (currently fixed to true)
-     */
-    hasAudio = true;
-
-    /**
-     * `true` if the recording has a video track, `false` otherwise (currently fixed to true)
-     */
-    hasVideo = true;
-
-    /**
      * Status of the recording
      */
     status: Recording.Status;
 
     /**
-     * Name of the Recording. The video file will be named after this property.
-     * You can access this same value in your clients on recording events
-     * (`recordingStarted`, `recordingStopped`)
+     * Technical properties of the recorded file
      */
-    name: string;
+    properties: RecordingProperties;
 
-    /**
-     * The layout used in this Recording
-     */
-    recordingLayout: RecordingLayout;
 
     /* tslint:disable:no-string-literal */
     /**
@@ -90,11 +75,19 @@ export class Recording {
         this.size = json['size'];
         this.duration = json['duration'];
         this.url = json['url'];
-        this.hasAudio = json['hasAudio'];
-        this.hasVideo = json['hasVideo'];
         this.status = json['status'];
-        this.name = json['name'];
-        this.recordingLayout = json['recordingLayout'];
+        this.properties = {
+            name: !!(json['name']) ? json['name'] : this.id,
+            outputMode: !!(json['outputMode']) ? json['outputMode'] : Recording.OutputMode.COMPOSED,
+            hasAudio: !!(json['hasAudio']),
+            hasVideo: !!json['hasVideo']
+        };
+        if (this.properties.outputMode.toString() === Recording.OutputMode[Recording.OutputMode.COMPOSED]) {
+            this.properties.recordingLayout = !!(json['recordingLayout']) ? json['recordingLayout'] : RecordingLayout.BEST_FIT;
+            if (this.properties.recordingLayout.toString() === RecordingLayout[RecordingLayout.CUSTOM]) {
+                this.properties.customLayout = json['customLayout'];
+            }
+        }
     }
     /* tslint:enable:no-string-literal */
 }
@@ -132,5 +125,21 @@ export namespace Recording {
          * The recording has failed
          */
         failed
+    }
+
+    /**
+     * See [[RecordingProperties.outputMode]]
+     */
+    export enum OutputMode {
+
+        /**
+         * Record all streams in a grid layout in a single archive
+         */
+        COMPOSED,
+
+        /**
+         * Record each stream individually
+         */
+        INDIVIDUAL
     }
 }

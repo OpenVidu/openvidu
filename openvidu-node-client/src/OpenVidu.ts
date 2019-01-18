@@ -124,7 +124,6 @@ export class OpenVidu {
    *
    * @param sessionId The `sessionId` of the [[Session]] you want to start recording
    * @param name The name you want to give to the video file. You can access this same value in your clients on recording events (`recordingStarted`, `recordingStopped`)
-   * **WARNING: this parameter follows an overwriting policy.** If you name two recordings the same, the newest MP4 file will overwrite the oldest one
    *
    * @returns A Promise that is resolved to the [[Recording]] if it successfully started (the recording can be stopped with guarantees) and rejected with an Error object if not. This Error object has as `message` property with the following values:
    * - `404`: no session exists for the passed `sessionId`
@@ -143,6 +142,7 @@ export class OpenVidu {
           data = JSON.stringify({
             session: sessionId,
             name: !!properties.name ? properties.name : '',
+            outputMode: !!properties.outputMode ? properties.outputMode : '',
             recordingLayout: !!properties.recordingLayout ? properties.recordingLayout : '',
             customLayout: !!properties.customLayout ? properties.customLayout : ''
           });
@@ -150,6 +150,7 @@ export class OpenVidu {
           data = JSON.stringify({
             session: sessionId,
             name: param2,
+            outputMode: '',
             recordingLayout: '',
             customLayout: ''
           });
@@ -158,6 +159,7 @@ export class OpenVidu {
         data = JSON.stringify({
           session: sessionId,
           name: '',
+          outputMode: '',
           recordingLayout: '',
           customLayout: ''
         });

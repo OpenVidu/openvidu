@@ -15,6 +15,7 @@
  *
  */
 
+import { Recording } from './Recording';
 import { RecordingLayout } from './RecordingLayout';
 
 /**
@@ -23,19 +24,37 @@ import { RecordingLayout } from './RecordingLayout';
 export interface RecordingProperties {
 
     /**
-     * The name you want to give to the video file. You can access this same value in your clients on recording events (`recordingStarted`, `recordingStopped`).
-     * **WARNING: this parameter follows an overwriting policy.** If you name two recordings the same, the newest MP4 file will overwrite the oldest one
+     * Name of the Recording. The video file will be named after this property.
+     * You can access this same value in your clients on recording events
+     * (`recordingStarted`, `recordingStopped`)
      */
     name?: string;
 
     /**
-     * The layout to be used in the recording
+     * The mode of recording: COMPOSED for a single archive in a grid layout or INDIVIDUAL for one archive for each stream
+     */
+    outputMode?: Recording.OutputMode;
+
+    /**
+     * The layout to be used in the recording.<br>
+     * Will only have effect if [[RecordingProperties.outputMode]] is `COMPOSED`
      */
     recordingLayout?: RecordingLayout;
 
     /**
-     * If [[recordingLayout]] is `CUSTOM`, the relative path to the specific custom layout you want to use.
+     * The relative path to the specific custom layout you want to use.<br>
+     * Will only have effect if [[RecordingProperties.outputMode]] is `COMPOSED` and [[RecordingProperties.recordingLayout]] is `CUSTOM`<br>
      * See [Custom recording layouts](https://openvidu.io/docs/advanced-features/recording#custom-recording-layouts) to learn more
      */
     customLayout?: string;
+
+    /**
+     * Whether or not to record the audio track (currently fixed to true)
+     */
+    hasAudio: boolean;
+
+    /**
+     * Whether or not to record the video track (currently fixed to true)
+     */
+    hasVideo: boolean;
 }
