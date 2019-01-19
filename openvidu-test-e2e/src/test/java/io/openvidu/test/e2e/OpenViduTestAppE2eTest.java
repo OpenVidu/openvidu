@@ -168,7 +168,9 @@ public class OpenViduTestAppE2eTest {
 
 	@AfterEach
 	void dispose() {
-		user.dispose();
+		if (user != null) {
+			user.dispose();
+		}
 	}
 
 	@Test
