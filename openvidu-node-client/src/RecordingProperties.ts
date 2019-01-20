@@ -51,10 +51,10 @@ export interface RecordingProperties {
     /**
      * Whether or not to record the audio track (currently fixed to true)
      */
-    hasAudio: boolean;
+    hasAudio?: boolean;
 
     /**
      * Whether or not to record the video track (currently fixed to true)
      */
-    hasVideo: boolean;
+    hasVideo?: boolean;
 }

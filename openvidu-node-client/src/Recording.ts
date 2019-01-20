@@ -102,29 +102,29 @@ export namespace Recording {
         /**
          * The recording is starting (cannot be stopped)
          */
-        starting,
+        starting = 'starting',
 
         /**
          * The recording has started and is going on
          */
-        started,
+        started = 'started',
 
         /**
          * The recording has finished OK
          */
-        stopped,
+        stopped = 'stopped',
 
         /**
          * The recording is available for downloading. This status is reached for all
          * stopped recordings if [OpenVidu Server configuration](https://openvidu.io/docs/reference-docs/openvidu-server-params/)
          * property `openvidu.recording.public-access` is true
          */
-        available,
+        available = 'available',
 
         /**
          * The recording has failed
          */
-        failed
+        failed = 'failed'
     }
 
     /**
@@ -135,11 +135,11 @@ export namespace Recording {
         /**
          * Record all streams in a grid layout in a single archive
          */
-        COMPOSED,
+        COMPOSED = 'COMPOSED',
 
         /**
          * Record each stream individually
          */
-        INDIVIDUAL
+        INDIVIDUAL = 'INDIVIDUAL'
     }
 }
