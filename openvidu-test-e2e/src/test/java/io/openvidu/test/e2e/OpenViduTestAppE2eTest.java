@@ -21,6 +21,8 @@ import static org.junit.Assert.fail;
 import static org.openqa.selenium.OutputType.BASE64;
 
 import java.awt.Color;
+import java.awt.Image;
+import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -968,7 +970,7 @@ public class OpenViduTestAppE2eTest {
 	}
 
 	@Test
-	@DisplayName("Remote record")
+	@DisplayName("Remote composed record")
 	void remoteComposedRecordTest() throws Exception {
 		setupBrowser("chrome");
 
@@ -1069,12 +1071,15 @@ public class OpenViduTestAppE2eTest {
 		String recordingsPath = "/opt/openvidu/recordings/";
 		File file1 = new File(recordingsPath + sessionName + "/" + sessionName + ".mp4");
 		File file2 = new File(recordingsPath + sessionName + "/" + ".recording." + sessionName);
+		File file3 = new File(recordingsPath + sessionName + "/" + sessionName + ".jpg");
 
 		Assert.assertTrue(file1.exists() || file1.length() > 0);
 		Assert.assertTrue(file2.exists() || file2.length() > 0);
+		Assert.assertTrue(file3.exists() || file3.length() > 0);
 
 		Assert.assertTrue(
 				this.recordedFileFine(file1, new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(sessionName)));
+		Assert.assertTrue(this.thumbnailIsFine(file3));
 
 		// Try to get the stopped recording
 		user.getDriver().findElement(By.id("get-recording-btn")).click();
@@ -1093,6 +1098,7 @@ public class OpenViduTestAppE2eTest {
 
 		Assert.assertFalse(file1.exists());
 		Assert.assertFalse(file2.exists());
+		Assert.assertFalse(file3.exists());
 
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 
@@ -1101,7 +1107,7 @@ public class OpenViduTestAppE2eTest {
 	}
 
 	@Test
-	@DisplayName("Remote record")
+	@DisplayName("Remote individual record")
 	void remoteIndividualRecordTest() throws Exception {
 
 	}
@@ -1553,6 +1559,17 @@ public class OpenViduTestAppE2eTest {
 			log.warn("Error getting frame from video recording: {}", e.getMessage());
 			isFine = false;
 		}
+		return isFine;
+	}
+
+	private boolean thumbnailIsFine(File file) {
+		boolean isFine = false;
+		// Get a frame at 75% duration
+		Image in = Toolkit.getDefaultToolkit().createImage(file.getAbsolutePath());
+		Map<String, Long> colorMap = this
+				.averageColor(new BufferedImage(in.getWidth(null), in.getHeight(null), BufferedImage.TYPE_INT_RGB));
+		log.info("Thumbnail map color: {}", colorMap.toString());
+		isFine = this.checkVideoAverageRgbGreen(colorMap);
 		return isFine;
 	}
 
