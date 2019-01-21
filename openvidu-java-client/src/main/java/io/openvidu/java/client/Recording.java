@@ -65,7 +65,7 @@ public class Recording {
 	public enum OutputMode {
 
 		/**
-		 * Recording all streams in a grid layout in a single archive
+		 * Record all streams in a grid layout in a single archive
 		 */
 		COMPOSED,
 
