@@ -57,7 +57,6 @@ import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.recording.RecordingInfoUtils;
-import io.openvidu.server.utils.CommandExecutor;
 
 public class ComposedRecordingService extends RecordingService {
 
@@ -92,16 +91,6 @@ public class ComposedRecordingService extends RecordingService {
 		this.recordingManager.sessionHandler.setRecordingStarted(session.getSessionId(), recording);
 		this.recordingManager.startingRecordings.put(recording.getId(), recording);
 
-		String uid = null;
-		try {
-			uid = System.getenv("MY_UID");
-			if (uid == null) {
-				uid = CommandExecutor.execCommand("/bin/sh", "-c", "id -u " + System.getProperty("user.name"));
-			}
-		} catch (IOException | InterruptedException e) {
-			e.printStackTrace();
-		}
-
 		String layoutUrl = this.getLayoutUrl(recording, this.getShortSessionId(session));
 
 		envs.add("URL=" + layoutUrl);
@@ -110,7 +99,6 @@ public class ComposedRecordingService extends RecordingService {
 		envs.add("VIDEO_ID=" + recordingId);
 		envs.add("VIDEO_NAME=" + properties.name());
 		envs.add("VIDEO_FORMAT=mp4");
-		envs.add("USER_ID=" + uid);
 		envs.add("RECORDING_JSON=" + recording.toJson().toString());
 
 		log.info(recording.toJson().toString());
@@ -158,11 +146,13 @@ public class ComposedRecordingService extends RecordingService {
 				log.warn("Session closed while starting recording container");
 				boolean containerClosed = false;
 				String containerIdAux;
-				while (!containerClosed) {
+				int timeOut = 0;
+				while (!containerClosed && (timeOut < 30)) {
 					containerIdAux = this.sessionsContainers.remove(session.getSessionId());
 					if (containerIdAux == null) {
 						try {
 							log.warn("Waiting for container to be launched...");
+							timeOut++;
 							Thread.sleep(500);
 						} catch (InterruptedException e) {
 							e.printStackTrace();
