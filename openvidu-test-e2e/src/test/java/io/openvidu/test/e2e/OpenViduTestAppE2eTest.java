@@ -21,8 +21,6 @@ import static org.junit.Assert.fail;
 import static org.openqa.selenium.OutputType.BASE64;
 
 import java.awt.Color;
-import java.awt.Image;
-import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -37,6 +35,8 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+
+import javax.imageio.ImageIO;
 
 import org.jcodec.api.FrameGrab;
 import org.jcodec.api.JCodecException;
@@ -1564,10 +1564,15 @@ public class OpenViduTestAppE2eTest {
 
 	private boolean thumbnailIsFine(File file) {
 		boolean isFine = false;
-		// Get a frame at 75% duration
-		Image in = Toolkit.getDefaultToolkit().createImage(file.getAbsolutePath());
-		Map<String, Long> colorMap = this
-				.averageColor(new BufferedImage(in.getWidth(null), in.getHeight(null), BufferedImage.TYPE_INT_RGB));
+		BufferedImage image = null;
+		try {
+			image = ImageIO.read(file);
+		} catch (IOException e) {
+			log.error(e.getMessage());
+			return false;
+		}
+		log.info("Recording thumbnail dimensions: {}x{}", image.getWidth(), image.getHeight());
+		Map<String, Long> colorMap = this.averageColor(image);
 		log.info("Thumbnail map color: {}", colorMap.toString());
 		isFine = this.checkVideoAverageRgbGreen(colorMap);
 		return isFine;
