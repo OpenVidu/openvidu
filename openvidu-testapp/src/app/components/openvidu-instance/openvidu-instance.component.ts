@@ -16,7 +16,9 @@ import {
   RecordingMode,
   RecordingLayout,
   TokenOptions,
-  OpenViduRole
+  OpenViduRole,
+  RecordingProperties,
+  Recording
 } from 'openvidu-node-client';
 import { MatDialog, MAT_CHECKBOX_CLICK_ACTION } from '@angular/material';
 import { ExtensionDialogComponent } from '../dialogs/extension-dialog/extension-dialog.component';
@@ -70,6 +72,9 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   sendVideoRadio = true;
   subscribeToRemote = false;
   optionsVideo = 'video';
+
+  // Recording options
+  recordingProperties: RecordingProperties;
 
   // OpenVidu Browser objects
   OV: OpenVidu;
@@ -441,7 +446,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     this.publisher = this.OV.initPublisher(
       undefined,
       this.publisherProperties,
-      (err) => {
+      err => {
         if (err) {
           console.warn(err);
           this.openviduError = err;
@@ -528,7 +533,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       width: '450px'
     });
 
-    dialogRef.afterClosed().subscribe((result) => {
+    dialogRef.afterClosed().subscribe(result => {
       if (!!result) {
         this.sessionProperties = result.sessionProperties;
         if (!!this.sessionProperties.customSessionId) {
@@ -546,11 +551,20 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   openSessionApiDialog() {
     const dialogRef = this.dialog.open(SessionApiDialogComponent, {
       data: {
-        openVidu: this.OV_NodeClient ? this.OV_NodeClient : new OpenViduAPI(this.openviduUrl, this.openviduSecret),
+        openVidu: !!this.OV_NodeClient ? this.OV_NodeClient : new OpenViduAPI(this.openviduUrl, this.openviduSecret),
         session: this.sessionAPI,
-        sessionId: !!this.session ? this.session.sessionId : this.sessionName
+        sessionId: !!this.session ? this.session.sessionId : this.sessionName,
+        recordingProperties: !!this.recordingProperties ? this.recordingProperties :
+          {
+            name: '',
+            outputMode: Recording.OutputMode.COMPOSED,
+            recordingLayout: this.sessionProperties.defaultRecordingLayout,
+            customLayout: this.sessionProperties.defaultCustomLayout,
+            hasAudio: true,
+            hasVideo: true
+          }
       },
-      width: '280px',
+      width: '425px',
       disableClose: true
     });
 
@@ -558,6 +572,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       if (!result.session) {
         delete this.sessionAPI;
       }
+      this.recordingProperties = result.recordingProperties;
       document.getElementById('session-api-btn-' + this.index).classList.remove('cdk-program-focused');
     });
   }
@@ -588,7 +603,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       disableClose: true
     });
 
-    dialogRef.afterClosed().subscribe((result) => {
+    dialogRef.afterClosed().subscribe(result => {
 
       if (!!this.session && JSON.stringify(this.sessionEvents) !== JSON.stringify(oldValues)) {
         this.updateSessionEvents(oldValues, false);

@@ -22,10 +22,15 @@ import static org.openqa.selenium.OutputType.BASE64;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -35,6 +40,8 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import javax.imageio.ImageIO;
 
@@ -170,9 +177,7 @@ public class OpenViduTestAppE2eTest {
 
 	@AfterEach
 	void dispose() {
-		if (user != null) {
-			user.dispose();
-		}
+		user.dispose();
 	}
 
 	@Test
@@ -974,9 +979,9 @@ public class OpenViduTestAppE2eTest {
 	void remoteComposedRecordTest() throws Exception {
 		setupBrowser("chrome");
 
-		log.info("Remote record");
+		log.info("Remote composed record");
 
-		final String sessionName = "RECORDED_SESSION";
+		final String sessionName = "COMPOSED_RECORDED_SESSION";
 
 		user.getDriver().findElement(By.id("add-user-btn")).click();
 		user.getDriver().findElement(By.id("session-name-input-0")).clear();
@@ -1073,9 +1078,9 @@ public class OpenViduTestAppE2eTest {
 		File file2 = new File(recordingsPath + sessionName + "/" + ".recording." + sessionName);
 		File file3 = new File(recordingsPath + sessionName + "/" + sessionName + ".jpg");
 
-		Assert.assertTrue(file1.exists() || file1.length() > 0);
-		Assert.assertTrue(file2.exists() || file2.length() > 0);
-		Assert.assertTrue(file3.exists() || file3.length() > 0);
+		Assert.assertTrue(file1.exists() && file1.length() > 0);
+		Assert.assertTrue(file2.exists() && file2.length() > 0);
+		Assert.assertTrue(file3.exists() && file3.length() > 0);
 
 		Assert.assertTrue(
 				this.recordedFileFine(file1, new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(sessionName)));
@@ -1109,7 +1114,117 @@ public class OpenViduTestAppE2eTest {
 	@Test
 	@DisplayName("Remote individual record")
 	void remoteIndividualRecordTest() throws Exception {
+		setupBrowser("chrome");
 
+		log.info("Remote individual record");
+
+		final String sessionName = "TestSession";
+		final String recordingName = "CUSTOM_NAME";
+
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.id("session-name-input-0")).clear();
+		user.getDriver().findElement(By.id("session-name-input-0")).sendKeys(sessionName);
+
+		user.getDriver().findElement(By.id("auto-join-checkbox")).click();
+		user.getDriver().findElement(By.id("one2one-btn")).click();
+
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 2);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 4);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
+
+		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
+				true, true));
+
+		user.getDriver().findElement(By.id("session-api-btn-0")).click();
+		Thread.sleep(1000);
+		user.getDriver().findElement(By.id("rec-properties-btn")).click();
+		Thread.sleep(500);
+
+		// Set recording name
+		user.getDriver().findElement(By.id("recording-name-field")).sendKeys(recordingName);
+		// Set OutputMode to INDIVIDUAL
+		user.getDriver().findElement(By.id("rec-outputmode-select")).click();
+		Thread.sleep(500);
+		user.getDriver().findElement(By.id("option-INDIVIDUAL")).click();
+		Thread.sleep(500);
+
+		user.getDriver().findElement(By.id("start-recording-btn")).click();
+
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
+				"Recording started [" + sessionName + "]"));
+
+		user.getEventManager().waitUntilEventReaches("recordingStarted", 2);
+
+		Thread.sleep(8000);
+
+		user.getDriver().findElement(By.id("recording-id-field")).clear();
+		user.getDriver().findElement(By.id("recording-id-field")).sendKeys(sessionName);
+
+		// Try to start an ongoing recording
+		user.getDriver().findElement(By.id("start-recording-btn")).click();
+		user.getWaiter()
+				.until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Error [409]"));
+
+		// Try to get an existing recording
+		user.getDriver().findElement(By.id("get-recording-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
+				"Recording got [" + sessionName + "]"));
+
+		// Try to delete an ongoing recording
+		user.getDriver().findElement(By.id("delete-recording-btn")).click();
+		user.getWaiter()
+				.until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Error [409]"));
+
+		// List existing recordings (one)
+		user.getDriver().findElement(By.id("list-recording-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
+				"Recording list [" + sessionName + "]"));
+
+		// Stop ongoing recording
+		user.getDriver().findElement(By.id("stop-recording-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
+				"Recording stopped [" + sessionName + "]"));
+
+		user.getEventManager().waitUntilEventReaches("recordingStopped", 2);
+
+		String recordingsPath = "/opt/openvidu/recordings/";
+
+		// Should be only 2 files: zip and metadata
+		File folder = new File(recordingsPath + sessionName);
+		Assert.assertEquals(folder.listFiles().length, 2);
+
+		File file1 = new File(recordingsPath + sessionName + "/" + recordingName + ".zip");
+		File file2 = new File(recordingsPath + sessionName + "/" + ".recording." + sessionName);
+
+		Assert.assertTrue(file1.exists() && file1.length() > 0);
+		Assert.assertTrue(file2.exists() && file2.length() > 0);
+
+		unzipAndCheckFile(recordingsPath + sessionName + "/", recordingName + ".zip",
+				new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(sessionName));
+
+		// Try to get the stopped recording
+		user.getDriver().findElement(By.id("get-recording-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
+				"Recording got [" + sessionName + "]"));
+
+		// Try to list the stopped recording
+		user.getDriver().findElement(By.id("list-recording-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
+				"Recording list [" + sessionName + "]"));
+
+		// Delete the recording
+		user.getDriver().findElement(By.id("delete-recording-btn")).click();
+		user.getWaiter()
+				.until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Recording deleted"));
+
+		Assert.assertFalse(file1.exists());
+		Assert.assertFalse(file2.exists());
+
+		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		Thread.sleep(1000);
+
+		gracefullyLeaveParticipants(2);
 	}
 
 	@Test
@@ -1553,6 +1668,7 @@ public class OpenViduTestAppE2eTest {
 			// Get a frame at 75% duration
 			frame = FrameGrab.getFrameAtSec(file, (double) (recording.getDuration() * 0.75));
 			Map<String, Long> colorMap = this.averageColor(AWTUtil.toBufferedImage(frame));
+
 			log.info("Recording map color: {}", colorMap.toString());
 			isFine = this.checkVideoAverageRgbGreen(colorMap);
 		} catch (IOException | JCodecException e) {
@@ -1600,6 +1716,47 @@ public class OpenViduTestAppE2eTest {
 		colorMap.put("g", (long) (sumg / num));
 		colorMap.put("b", (long) (sumb / num));
 		return colorMap;
+	}
+
+	private void unzipAndCheckFile(String path, String fileName, Recording recording) {
+		final int BUFFER = 2048;
+		final List<String> recordingFiles = new ArrayList<>();
+		try {
+			BufferedOutputStream dest = null;
+			FileInputStream fis = new FileInputStream(path + fileName);
+			ZipInputStream zis = new ZipInputStream(new BufferedInputStream(fis));
+			ZipEntry entry;
+			while ((entry = zis.getNextEntry()) != null) {
+				log.info("Extracting: " + entry);
+				if (entry.getName().endsWith(".webm")) {
+					recordingFiles.add(entry.getName());
+				}
+				int count;
+				byte data[] = new byte[BUFFER];
+				FileOutputStream fos = new FileOutputStream(path + entry.getName());
+				dest = new BufferedOutputStream(fos, BUFFER);
+				while ((count = zis.read(data, 0, BUFFER)) != -1) {
+					dest.write(data, 0, count);
+				}
+				dest.flush();
+				dest.close();
+			}
+			zis.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		long totalFileSize = 0;
+		for (String videoFileName : recordingFiles) {
+			File videoFile = new File(path + videoFileName);
+			totalFileSize += videoFile.length();
+			Assert.assertTrue(videoFile.exists() && videoFile.length() > 0);
+			videoFile.delete();
+		}
+		Assert.assertEquals(recording.getSize() / 1000, totalFileSize / 1000);
+
+		File jsonSyncFile = new File(path + recording.getSessionId() + ".json");
+		Assert.assertTrue(jsonSyncFile.exists() && jsonSyncFile.length() > 0);
+		jsonSyncFile.delete();
 	}
 
 }
