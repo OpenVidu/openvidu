@@ -237,7 +237,7 @@ export class OpenVidu {
         if (completionHandler !== undefined) {
           completionHandler(error);
         }
-        publisher.emitEvent('accessDenied', []);
+        publisher.emitEvent('accessDenied', [error]);
       });
 
     this.publishers.push(publisher);
