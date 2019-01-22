@@ -58,6 +58,7 @@ import io.openvidu.server.kurento.core.KurentoParticipant;
 import io.openvidu.server.kurento.endpoint.PublisherEndpoint;
 import io.openvidu.server.recording.RecorderEndpointWrapper;
 import io.openvidu.server.recording.Recording;
+import io.openvidu.server.utils.CommandExecutor;
 import io.openvidu.server.utils.CustomFileWriter;
 
 public class SingleStreamRecordingService extends RecordingService {
@@ -445,11 +446,25 @@ public class SingleStreamRecordingService extends RecordingService {
 			try {
 				zipOut.close();
 				fos.close();
+				this.updateFilePermissions(folder);
 			} catch (IOException e) {
 				log.error("Error closing FileOutputStream or ZipOutputStream. Error: {}", e.getMessage());
 				e.printStackTrace();
 			}
+		}
+	}
 
+	private void updateFilePermissions(String folder) {
+		String command = "chmod -R 777 " + folder;
+		try {
+			String response = CommandExecutor.execCommand("/bin/sh", "-c", command);
+			if ("".equals(response)) {
+				log.info("Individual recording file permissions successfully updated");
+			} else {
+				log.error("Individual recording file permissions failed to update: {}", response);
+			}
+		} catch (IOException | InterruptedException e) {
+			log.error("Individual recording file permissions failed to update. Error: {}", e.getMessage());
 		}
 	}
 
