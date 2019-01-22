@@ -26,6 +26,7 @@ mat-radio-button:first-child {
 }
 
 #manual-turn-div {
+    background-color: #f7f7f7;
     margin-top: 10px;
     padding: 5px;
     border: 1px solid #00000026;

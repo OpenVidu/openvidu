@@ -52,6 +52,10 @@
       <div>
         <mat-checkbox [(ngModel)]="recordingProperties.hasAudio">Has audio</mat-checkbox>
         <mat-checkbox [(ngModel)]="recordingProperties.hasVideo">Has video</mat-checkbox>
+        <mat-form-field *ngIf="recordingProperties.outputMode.toString() === recMode[recMode.COMPOSED]" id="recording-resolution-form"
+          class="inner-text-input">
+          <input matInput id="recording-resolution-field" placeholder="Resolution" type="text" [(ngModel)]="recordingProperties.resolution">
+        </mat-form-field>
       </div>
     </div>
     <mat-form-field class="inner-text-input">
