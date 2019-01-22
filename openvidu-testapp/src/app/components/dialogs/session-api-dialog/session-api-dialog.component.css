@@ -15,8 +15,8 @@ mat-divider {
 mat-dialog-content button {
   height: 30px;
   line-height: 30px;
-  padding-left: 12px;
-  padding-right: 12px;
+  padding-left: 10px;
+  padding-right: 10px;
   display: inline-flex;
 }
 
@@ -30,7 +30,7 @@ mat-dialog-content button {
 }
 
 .inner-text-input {
-  margin-left: 16px;
+  margin-left: 9px;
 }
 
 #rec-properties-btn {
