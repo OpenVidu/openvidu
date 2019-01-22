@@ -195,8 +195,11 @@ public class OpenVidu {
 		json.put("session", sessionId);
 		json.put("name", properties.name());
 		json.put("outputMode", properties.outputMode());
+		json.put("hasAudio", properties.hasAudio());
+		json.put("hasVideo", properties.hasVideo());
 
 		if (Recording.OutputMode.COMPOSED.equals(properties.outputMode())) {
+			json.put("resolution", properties.resolution());
 			json.put("recordingLayout",
 					(properties.recordingLayout() != null) ? properties.recordingLayout().name() : "");
 			if (RecordingLayout.CUSTOM.equals(properties.recordingLayout())) {

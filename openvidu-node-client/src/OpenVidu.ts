@@ -22,6 +22,7 @@ import { Recording } from './Recording';
 import { RecordingProperties } from './RecordingProperties';
 import { Session } from './Session';
 import { SessionProperties } from './SessionProperties';
+import { RecordingLayout } from './RecordingLayout';
 
 /**
  * @hidden
@@ -142,26 +143,29 @@ export class OpenVidu {
           data = JSON.stringify({
             session: sessionId,
             name: !!properties.name ? properties.name : '',
-            outputMode: !!properties.outputMode ? properties.outputMode : '',
-            recordingLayout: !!properties.recordingLayout ? properties.recordingLayout : '',
-            customLayout: !!properties.customLayout ? properties.customLayout : ''
+            outputMode: !!properties.outputMode ? properties.outputMode : Recording.OutputMode.COMPOSED,
+            hasAudio: !!(properties.hasAudio),
+            hasVideo: !!(properties.hasVideo)
           });
+          if (data.outputMode.toString() === Recording.OutputMode[Recording.OutputMode.COMPOSED]) {
+            data.resolution = !!properties.resolution ? properties.resolution : '1920x1080';
+            data.recordingLayout = !!properties.recordingLayout ? properties.recordingLayout : RecordingLayout.BEST_FIT;
+            if (data.recordingLayout.toString() === RecordingLayout[RecordingLayout.CUSTOM]) {
+              data.customLayout = !!properties.customLayout ? properties.customLayout : '';
+            }
+          }
         } else {
           data = JSON.stringify({
             session: sessionId,
             name: param2,
-            outputMode: '',
-            recordingLayout: '',
-            customLayout: ''
+            outputMode: Recording.OutputMode.COMPOSED
           });
         }
       } else {
         data = JSON.stringify({
           session: sessionId,
           name: '',
-          outputMode: '',
-          recordingLayout: '',
-          customLayout: ''
+          outputMode: Recording.OutputMode.COMPOSED
         });
       }
 

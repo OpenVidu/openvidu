@@ -50,8 +50,10 @@ public abstract class RecordingService {
 		if (properties.name() == null || properties.name().isEmpty()) {
 			// No name provided for the recording file. Use recordingId
 			RecordingProperties.Builder builder = new RecordingProperties.Builder().name(recordingId)
-					.outputMode(properties.outputMode());
+					.outputMode(properties.outputMode()).hasAudio(properties.hasAudio())
+					.hasVideo(properties.hasVideo());
 			if (io.openvidu.java.client.Recording.OutputMode.COMPOSED.equals(properties.outputMode())) {
+				builder.resolution(properties.resolution());
 				builder.recordingLayout(properties.recordingLayout());
 				if (RecordingLayout.CUSTOM.equals(properties.recordingLayout())) {
 					builder.customLayout(properties.customLayout());

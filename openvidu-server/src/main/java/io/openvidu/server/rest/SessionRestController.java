@@ -53,6 +53,7 @@ import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.kurento.core.KurentoTokenOptions;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.recording.service.RecordingManager;
+import io.openvidu.server.utils.FormatChecker;
 
 /**
  *
@@ -298,6 +299,7 @@ public class SessionRestController {
 		String sessionId = (String) params.get("session");
 		String name = (String) params.get("name");
 		String outputModeString = (String) params.get("outputMode");
+		String resolution = (String) params.get("resolution");
 		String recordingLayoutString = (String) params.get("recordingLayout");
 		String customLayout = (String) params.get("customLayout");
 
@@ -336,6 +338,15 @@ public class SessionRestController {
 		RecordingProperties.Builder builder = new RecordingProperties.Builder().name(name).outputMode(outputMode);
 
 		if (outputMode.equals(io.openvidu.java.client.Recording.OutputMode.COMPOSED)) {
+
+			if (resolution != null) {
+				if (new FormatChecker().isAcceptableResolution(resolution)) {
+					builder.resolution(resolution);
+				} else {
+					return new ResponseEntity<>(HttpStatus.UNPROCESSABLE_ENTITY);
+				}
+			}
+
 			RecordingLayout recordingLayout;
 			if (recordingLayoutString == null || recordingLayoutString.isEmpty()) {
 				// "recordingLayout" parameter not defined. Use global layout from
@@ -354,8 +365,6 @@ public class SessionRestController {
 						: customLayout;
 				builder.customLayout(customLayout);
 			}
-
-			builder.build();
 		}
 
 		try {

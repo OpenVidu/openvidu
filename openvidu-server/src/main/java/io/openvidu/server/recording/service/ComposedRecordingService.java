@@ -94,7 +94,7 @@ public class ComposedRecordingService extends RecordingService {
 		String layoutUrl = this.getLayoutUrl(recording, this.getShortSessionId(session));
 
 		envs.add("URL=" + layoutUrl);
-		envs.add("RESOLUTION=1920x1080");
+		envs.add("RESOLUTION=" + properties.resolution());
 		envs.add("FRAMERATE=30");
 		envs.add("VIDEO_ID=" + recordingId);
 		envs.add("VIDEO_NAME=" + properties.name());
@@ -216,6 +216,7 @@ public class ComposedRecordingService extends RecordingService {
 				recording.setStatus(io.openvidu.java.client.Recording.Status.stopped);
 				recording.setDuration(infoUtils.getDurationInSeconds());
 				recording.setSize(infoUtils.getSizeInBytes());
+				recording.setResolution(infoUtils.videoWidth() + "x" + infoUtils.videoHeight());
 				recording.setHasAudio(infoUtils.hasAudio());
 				recording.setHasVideo(infoUtils.hasVideo());
 

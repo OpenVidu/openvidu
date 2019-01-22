@@ -49,6 +49,14 @@ export interface RecordingProperties {
     customLayout?: string;
 
     /**
+     * Recording video file resolution.<br>
+     * Will only have effect if [[RecordingProperties.outputMode]]
+     * is set to [[Recording.OutputMode.COMPOSED]]. For [[Recording.OutputMode.INDIVIDUAL]] all
+     * individual video files will have the native resolution of the published stream
+     */
+    resolution?: string;
+
+    /**
      * Whether or not to record the audio track (currently fixed to true)
      */
     hasAudio?: boolean;

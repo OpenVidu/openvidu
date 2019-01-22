@@ -27,6 +27,7 @@ public class RecordingProperties {
 	private Recording.OutputMode outputMode;
 	private RecordingLayout recordingLayout;
 	private String customLayout;
+	private String resolution;
 	private boolean hasAudio;
 	private boolean hasVideo;
 
@@ -37,8 +38,9 @@ public class RecordingProperties {
 
 		private String name = "";
 		private Recording.OutputMode outputMode = Recording.OutputMode.COMPOSED;
-		private RecordingLayout recordingLayout;
+		private RecordingLayout recordingLayout = RecordingLayout.BEST_FIT;
 		private String customLayout = "";
+		private String resolution = "1920x1080";
 		private boolean hasAudio = true;
 		private boolean hasVideo = true;
 
@@ -47,7 +49,7 @@ public class RecordingProperties {
 		 */
 		public RecordingProperties build() {
 			return new RecordingProperties(this.name, this.outputMode, this.recordingLayout, this.customLayout,
-					this.hasAudio, this.hasVideo);
+					this.resolution, this.hasAudio, this.hasVideo);
 		}
 
 		/**
@@ -101,6 +103,21 @@ public class RecordingProperties {
 		}
 
 		/**
+		 * Call this method to specify the recording resolution. Will only have effect
+		 * if
+		 * {@link io.openvidu.java.client.RecordingProperties.Builder#outputMode(Recording.OutputMode)}
+		 * has been called with value
+		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED}. For
+		 * {@link io.openvidu.java.client.Recording.OutputMode#INDIVIDUAL} all
+		 * individual video files will have the native resolution of the published
+		 * stream
+		 */
+		public RecordingProperties.Builder resolution(String resolution) {
+			this.resolution = resolution;
+			return this;
+		}
+
+		/**
 		 * Call this method to specify whether or not to record the audio track
 		 */
 		public RecordingProperties.Builder hasAudio(boolean hasAudio) {
@@ -119,11 +136,12 @@ public class RecordingProperties {
 	}
 
 	protected RecordingProperties(String name, Recording.OutputMode outputMode, RecordingLayout layout,
-			String customLayout, boolean hasAudio, boolean hasVideo) {
+			String customLayout, String resolution, boolean hasAudio, boolean hasVideo) {
 		this.name = name;
 		this.outputMode = outputMode;
 		this.recordingLayout = layout;
 		this.customLayout = customLayout;
+		this.resolution = resolution;
 		this.hasAudio = hasAudio;
 		this.hasVideo = hasVideo;
 	}
@@ -162,6 +180,13 @@ public class RecordingProperties {
 	 */
 	public String customLayout() {
 		return this.customLayout;
+	}
+
+	/**
+	 * Defines the resolution of the recorded video
+	 */
+	public String resolution() {
+		return this.resolution;
 	}
 
 	/**

@@ -99,6 +99,7 @@ public class Recording {
 				.outputMode(outputMode).hasAudio((boolean) json.get("hasAudio"))
 				.hasVideo((boolean) json.get("hasVideo"));
 		if (OutputMode.COMPOSED.equals(outputMode)) {
+			builder.resolution((String) json.get("resolution"));
 			builder.recordingLayout(RecordingLayout.valueOf((String) json.get("recordingLayout")));
 			String customLayout = (String) json.get("customLayout");
 			if (customLayout != null) {
@@ -152,8 +153,8 @@ public class Recording {
 	 * {@link io.openvidu.java.client.RecordingProperties.Builder#customLayout(String)}
 	 * has been called
 	 */
-	public RecordingLayout getCustomLayout() {
-		return this.recordingProperties.recordingLayout();
+	public String getCustomLayout() {
+		return this.recordingProperties.customLayout();
 	}
 
 	/**
@@ -193,6 +194,14 @@ public class Recording {
 	 */
 	public String getUrl() {
 		return url;
+	}
+
+	/**
+	 * Resolution of the video file. Only defined if OutputMode of the Recording is
+	 * set to {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED}
+	 */
+	public String getResolution() {
+		return this.recordingProperties.resolution();
 	}
 
 	/**

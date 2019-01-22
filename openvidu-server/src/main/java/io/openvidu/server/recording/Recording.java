@@ -32,6 +32,7 @@ public class Recording {
 	private long size = 0; // bytes
 	private double duration = 0; // seconds
 	private String url;
+	private String resolution;
 	private boolean hasAudio = true;
 	private boolean hasVideo = true;
 	private RecordingProperties recordingProperties;
@@ -42,6 +43,9 @@ public class Recording {
 		this.id = id;
 		this.status = io.openvidu.java.client.Recording.Status.started;
 		this.recordingProperties = recordingProperties;
+		this.resolution = this.recordingProperties.resolution();
+		this.hasAudio = this.recordingProperties.hasAudio();
+		this.hasVideo = this.recordingProperties.hasVideo();
 	}
 
 	public Recording(JsonObject json) {
@@ -66,8 +70,11 @@ public class Recording {
 		io.openvidu.java.client.Recording.OutputMode outputMode = io.openvidu.java.client.Recording.OutputMode
 				.valueOf(json.get("outputMode").getAsString());
 		RecordingProperties.Builder builder = new RecordingProperties.Builder().name(json.get("name").getAsString())
-				.outputMode(outputMode);
+				.outputMode(outputMode).hasAudio(json.get("hasAudio").getAsBoolean())
+				.hasVideo(json.get("hasVideo").getAsBoolean());
 		if (io.openvidu.java.client.Recording.OutputMode.COMPOSED.equals(outputMode)) {
+			this.resolution = json.get("resolution").getAsString();
+			builder.resolution(this.resolution);
 			RecordingLayout recordingLayout = RecordingLayout.valueOf(json.get("recordingLayout").getAsString());
 			builder.recordingLayout(recordingLayout);
 			if (RecordingLayout.CUSTOM.equals(recordingLayout)) {
@@ -153,6 +160,14 @@ public class Recording {
 		this.url = url;
 	}
 
+	public String getResolution() {
+		return resolution;
+	}
+
+	public void setResolution(String resolution) {
+		this.resolution = resolution;
+	}
+
 	public boolean hasAudio() {
 		return hasAudio;
 	}
@@ -175,6 +190,7 @@ public class Recording {
 		json.addProperty("name", this.recordingProperties.name());
 		json.addProperty("outputMode", this.getOutputMode().name());
 		if (io.openvidu.java.client.Recording.OutputMode.COMPOSED.equals(this.recordingProperties.outputMode())) {
+			json.addProperty("resolution", this.resolution);
 			json.addProperty("recordingLayout", this.recordingProperties.recordingLayout().name());
 			if (RecordingLayout.CUSTOM.equals(this.recordingProperties.recordingLayout())) {
 				json.addProperty("customLayout", this.recordingProperties.customLayout());
