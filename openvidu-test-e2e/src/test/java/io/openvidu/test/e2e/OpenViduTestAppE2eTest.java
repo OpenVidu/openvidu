@@ -55,7 +55,6 @@ import org.json.simple.parser.JSONParser;
 import org.junit.Assert;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -982,6 +981,7 @@ public class OpenViduTestAppE2eTest {
 		log.info("Remote composed record");
 
 		final String sessionName = "COMPOSED_RECORDED_SESSION";
+		final String resolution = "1280x720";
 
 		user.getDriver().findElement(By.id("add-user-btn")).click();
 		user.getDriver().findElement(By.id("session-name-input-0")).clear();
@@ -1034,6 +1034,12 @@ public class OpenViduTestAppE2eTest {
 
 		user.getDriver().findElement(By.id("session-api-btn-0")).click();
 		Thread.sleep(1000);
+		user.getDriver().findElement(By.id("rec-properties-btn")).click();
+		Thread.sleep(500);
+		WebElement resolutionField = user.getDriver().findElement(By.id("recording-resolution-field"));
+		resolutionField.clear();
+		resolutionField.sendKeys(resolution);
+
 		user.getDriver().findElement(By.id("start-recording-btn")).click();
 
 		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
@@ -1329,31 +1335,6 @@ public class OpenViduTestAppE2eTest {
 
 		gracefullyLeaveParticipants(1);
 
-	}
-
-	@Test
-	@Disabled
-	@DisplayName("One2One Opera [Video + Audio]")
-	void oneToOneVideoAudioSessionOpera() throws Exception {
-
-		WebDriverManager.operadriver().setup();
-		setupBrowser("opera");
-
-		log.info("One2One Opera [Video + Audio]");
-
-		user.getDriver().findElement(By.id("auto-join-checkbox")).click();
-		user.getDriver().findElement(By.id("one2one-btn")).click();
-
-		user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
-		user.getEventManager().waitUntilEventReaches("accessAllowed", 2);
-		user.getEventManager().waitUntilEventReaches("streamCreated", 4);
-		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
-
-		Assert.assertEquals(user.getDriver().findElements(By.tagName("video")).size(), 4);
-		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
-				true, true));
-
-		gracefullyLeaveParticipants(2);
 	}
 
 	@Test
@@ -1667,7 +1648,10 @@ public class OpenViduTestAppE2eTest {
 		try {
 			// Get a frame at 75% duration
 			frame = FrameGrab.getFrameAtSec(file, (double) (recording.getDuration() * 0.75));
-			Map<String, Long> colorMap = this.averageColor(AWTUtil.toBufferedImage(frame));
+			BufferedImage image = AWTUtil.toBufferedImage(frame);
+			Map<String, Long> colorMap = this.averageColor(image);
+
+			Assert.assertEquals(image.getWidth() + "x" + image.getHeight(), recording.getResolution());
 
 			log.info("Recording map color: {}", colorMap.toString());
 			isFine = this.checkVideoAverageRgbGreen(colorMap);
