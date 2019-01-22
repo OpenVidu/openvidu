@@ -140,13 +140,13 @@ export class OpenVidu {
       if (!!param2) {
         if (!(typeof param2 === 'string')) {
           const properties = <RecordingProperties>param2;
-          data = JSON.stringify({
+          data = {
             session: sessionId,
             name: !!properties.name ? properties.name : '',
             outputMode: !!properties.outputMode ? properties.outputMode : Recording.OutputMode.COMPOSED,
             hasAudio: !!(properties.hasAudio),
             hasVideo: !!(properties.hasVideo)
-          });
+          };
           if (data.outputMode.toString() === Recording.OutputMode[Recording.OutputMode.COMPOSED]) {
             data.resolution = !!properties.resolution ? properties.resolution : '1920x1080';
             data.recordingLayout = !!properties.recordingLayout ? properties.recordingLayout : RecordingLayout.BEST_FIT;
@@ -154,6 +154,7 @@ export class OpenVidu {
               data.customLayout = !!properties.customLayout ? properties.customLayout : '';
             }
           }
+          data = JSON.stringify(data);
         } else {
           data = JSON.stringify({
             session: sessionId,
