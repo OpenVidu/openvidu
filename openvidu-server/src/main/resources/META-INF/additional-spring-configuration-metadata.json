@@ -66,6 +66,12 @@
 			"description": "Tag for openvidu/openvidu-recording Docker image"
 		},
 		{
+			"name": "openvidu.recording.autostop-timeout",
+			"type": "java.lang.Integer",
+			"description": "Timeout in seconds for automatically stopping the recording of a session when last user disconnects or when it starts and no user is publishing (only if RecordingMode.MANUAL)",
+			"defaultValue": 120
+		},
+		{
 			"name": "coturn.sqlite",
 			"type": "java.lang.String",
 			"description": "Path to COTURN sqlite database to add and remove TURN user credentials",

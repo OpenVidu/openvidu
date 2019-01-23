@@ -55,6 +55,9 @@ public class OpenviduConfig {
 	@Value("${openvidu.recording.version}")
 	private String openviduRecordingVersion;
 
+	@Value("${openvidu.recording.autostop-timeout}")
+	private int openviduRecordingAutostopTimeout;
+
 	@Value("${openvidu.streams.video.max-recv-bandwidth}")
 	private int openviduStreamsVideoMaxRecvBandwidth;
 
@@ -78,7 +81,7 @@ public class OpenviduConfig {
 
 	@Value("${coturn.redis.connect-timeout}")
 	private String coturnRedisConnectTimeout;
-	
+
 	@Value("${kms.stats-enabled}")
 	private boolean kmsStatsEnabled;
 
@@ -143,6 +146,10 @@ public class OpenviduConfig {
 		return this.openviduRecordingVersion;
 	}
 
+	public int getOpenviduRecordingAutostopTimeout() {
+		return this.openviduRecordingAutostopTimeout;
+	}
+
 	public String getSpringProfile() {
 		return springProfile;
 	}
@@ -171,11 +178,11 @@ public class OpenviduConfig {
 	public String getCoturnDatabaseDbname() {
 		return this.coturnRedisDbname;
 	}
-	
+
 	public boolean isKmsStatsEnabled() {
 		return this.kmsStatsEnabled;
 	}
-	
+
 	public String getOpenViduRecordingNotification() {
 		return this.openviduRecordingNotification;
 	}
