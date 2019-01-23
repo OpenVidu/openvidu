@@ -3,6 +3,7 @@
 ### Variables ###
 
 URL=${URL:-https://www.youtube.com/watch?v=JMuzlEQz3uo}
+ONLY_VIDEO=${ONLY_VIDEO:-false}
 RESOLUTION=${RESOLUTION:-1920x1080}
 FRAMERATE=${FRAMERATE:-25}
 WIDTH="$(cut -d'x' -f1 <<< $RESOLUTION)"
@@ -13,6 +14,7 @@ VIDEO_FORMAT=${VIDEO_FORMAT:-mp4}
 RECORDING_JSON="${RECORDING_JSON}"
 
 export URL
+export ONLY_VIDEO
 export RESOLUTION
 export FRAMERATE
 export WIDTH
@@ -64,7 +66,14 @@ sleep 2
 
 ### Start recording with ffmpeg ###
 
-<./stop ffmpeg -y -f alsa -i pulse -f x11grab -draw_mouse 0 -framerate $FRAMERATE -video_size $RESOLUTION -i :$DISPLAY_NUM -c:a aac -c:v libx264 -preset ultrafast -crf 28 -refs 4 -qmin 4 -pix_fmt yuv420p -filter:v fps=$FRAMERATE "/recordings/$VIDEO_ID/$VIDEO_NAME.$VIDEO_FORMAT"
+if [[ "$ONLY_VIDEO" == true ]]
+  then
+     # Do not record audio
+     <./stop ffmpeg -y -f x11grab -draw_mouse 0 -framerate $FRAMERATE -video_size $RESOLUTION -i :$DISPLAY_NUM -c:v libx264 -preset ultrafast -crf 28 -refs 4 -qmin 4 -pix_fmt yuv420p -filter:v fps=$FRAMERATE "/recordings/$VIDEO_ID/$VIDEO_NAME.$VIDEO_FORMAT"
+  else
+     # Record audio  ("-f alsa -i pulse [...] -c:a aac")
+     <./stop ffmpeg -y -f alsa -i pulse -f x11grab -draw_mouse 0 -framerate $FRAMERATE -video_size $RESOLUTION -i :$DISPLAY_NUM -c:a aac -c:v libx264 -preset ultrafast -crf 28 -refs 4 -qmin 4 -pix_fmt yuv420p -filter:v fps=$FRAMERATE "/recordings/$VIDEO_ID/$VIDEO_NAME.$VIDEO_FORMAT"
+fi
 
 ### Generate video report file ###
 ffprobe -v quiet -print_format json -show_format -show_streams /recordings/$VIDEO_ID/$VIDEO_NAME.$VIDEO_FORMAT > /recordings/$VIDEO_ID/$VIDEO_ID.info
