@@ -17,17 +17,25 @@
 
 package io.openvidu.server.recording.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.openvidu.client.OpenViduException;
+import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.recording.Recording;
+import io.openvidu.server.utils.CustomFileWriter;
 
 public abstract class RecordingService {
 
+	private static final Logger log = LoggerFactory.getLogger(RecordingService.class);
+
 	protected OpenviduConfig openviduConfig;
 	protected RecordingManager recordingManager;
+	protected CustomFileWriter fileWriter = new CustomFileWriter();
 
 	RecordingService(RecordingManager recordingManager, OpenviduConfig openviduConfig) {
 		this.recordingManager = recordingManager;
@@ -38,11 +46,56 @@ public abstract class RecordingService {
 
 	public abstract Recording stopRecording(Session session, Recording recording, String reason);
 
-	protected RecordingProperties setFinalRecordingName(Session session, RecordingProperties properties) {
-		// TODO Auto-generated method stub
-		return null;
+	/**
+	 * Generates metadata recording file (".recording.RECORDING_ID" JSON file to
+	 * store Recording entity)
+	 */
+	protected void generateRecordingMetadataFile(Recording recording) {
+		String filePath = this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/"
+				+ RecordingManager.RECORDING_ENTITY_FILE + recording.getId();
+		String text = recording.toJson().toString();
+		this.fileWriter.createAndWriteFile(filePath, text);
+		log.info("Generated recording metadata file at {}", filePath);
 	}
 
+	/**
+	 * Update and overwrites metadata recording file with final values on recording
+	 * stop (".recording.RECORDING_ID" JSON file to store Recording entity).
+	 * 
+	 * @return updated Recording object
+	 */
+	protected Recording sealRecordingMetadataFile(Recording recording, long size, long duration,
+			String metadataFilePath) {
+		recording.setSize(size); // Size in bytes
+		recording.setDuration(duration > 0 ? duration : 0); // Duration in seconds
+		if (!io.openvidu.java.client.Recording.Status.failed.equals(recording.getStatus())) {
+			recording.setStatus(io.openvidu.java.client.Recording.Status.stopped);
+		}
+		this.fileWriter.overwriteFile(metadataFilePath, recording.toJson().toString());
+		recording = this.recordingManager.updateRecordingUrl(recording);
+
+		log.info("Sealed recording metadata file at {}", metadataFilePath);
+
+		return recording;
+	}
+
+	/**
+	 * Changes recording from starting to started, updates global recording
+	 * collections and sends RPC response to clients
+	 */
+	protected void updateCollectionsAndSendNotifCauseRecordingStarted(Session session, Recording recording) {
+		this.recordingManager.sessionHandler.setRecordingStarted(session.getSessionId(), recording);
+		this.recordingManager.sessionsRecordings.put(session.getSessionId(), recording);
+		this.recordingManager.startingRecordings.remove(recording.getId());
+		this.recordingManager.startedRecordings.put(recording.getId(), recording);
+		this.recordingManager.getSessionEventsHandler().sendRecordingStartedNotification(session, recording);
+	}
+
+	/**
+	 * Returns a new available recording identifier (adding a number tag at the end
+	 * of the sessionId if it already exists) and rebuilds RecordinProperties object
+	 * to set the final value of "name" property
+	 */
 	protected PropertiesRecordingId setFinalRecordingNameAndGetFreeRecordingId(Session session,
 			RecordingProperties properties) {
 		String recordingId = this.recordingManager.getFreeRecordingId(session.getSessionId(),
@@ -52,7 +105,8 @@ public abstract class RecordingService {
 			RecordingProperties.Builder builder = new RecordingProperties.Builder().name(recordingId)
 					.outputMode(properties.outputMode()).hasAudio(properties.hasAudio())
 					.hasVideo(properties.hasVideo());
-			if (io.openvidu.java.client.Recording.OutputMode.COMPOSED.equals(properties.outputMode())) {
+			if (io.openvidu.java.client.Recording.OutputMode.COMPOSED.equals(properties.outputMode())
+					&& properties.hasVideo()) {
 				builder.resolution(properties.resolution());
 				builder.recordingLayout(properties.recordingLayout());
 				if (RecordingLayout.CUSTOM.equals(properties.recordingLayout())) {
@@ -61,12 +115,26 @@ public abstract class RecordingService {
 			}
 			properties = builder.build();
 		}
+
+		log.info("New recording id ({}) and final name ({})", recordingId, properties.name());
 		return new PropertiesRecordingId(properties, recordingId);
 	}
 
 	protected String getShortSessionId(Session session) {
 		return session.getSessionId().substring(session.getSessionId().lastIndexOf('/') + 1,
 				session.getSessionId().length());
+	}
+
+	protected OpenViduException failStartRecording(Session session, Recording recording, String errorMessage) {
+		recording.setStatus(io.openvidu.java.client.Recording.Status.failed);
+		this.recordingManager.startingRecordings.remove(recording.getId());
+		this.stopRecording(session, recording, null);
+		return new OpenViduException(Code.RECORDING_START_ERROR_CODE, errorMessage);
+	}
+
+	protected void cleanRecordingMaps(Recording recording) {
+		this.recordingManager.sessionsRecordings.remove(recording.getSessionId());
+		this.recordingManager.startedRecordings.remove(recording.getId());
 	}
 
 	/**

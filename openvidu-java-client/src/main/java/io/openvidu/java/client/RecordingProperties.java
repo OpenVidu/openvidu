@@ -121,7 +121,7 @@ public class RecordingProperties {
 		 * Call this method to specify whether or not to record the audio track
 		 */
 		public RecordingProperties.Builder hasAudio(boolean hasAudio) {
-			this.hasAudio = true;
+			this.hasAudio = hasAudio;
 			return this;
 		}
 
@@ -129,7 +129,7 @@ public class RecordingProperties {
 		 * Call this method to specify whether or not to record the video track
 		 */
 		public RecordingProperties.Builder hasVideo(boolean hasVideo) {
-			this.hasVideo = true;
+			this.hasVideo = hasVideo;
 			return this;
 		}
 

@@ -238,7 +238,7 @@ public class KurentoParticipant extends Participant {
 				this.session.getSessionId());
 
 		if (this.openviduConfig.isRecordingModuleEnabled()
-				&& this.recordingManager.sessionIsBeingRecordedIndividual(session.getSessionId())) {
+				&& this.recordingManager.sessionIsBeingRecorded(session.getSessionId())) {
 			this.recordingManager.startOneIndividualStreamRecording(session, null, null, this);
 		}
 
@@ -438,7 +438,7 @@ public class KurentoParticipant extends Participant {
 			this.session.publishedStreamIds.remove(this.getPublisherStreamId());
 
 			if (this.openviduConfig.isRecordingModuleEnabled()
-					&& this.recordingManager.sessionIsBeingRecordedIndividual(session.getSessionId())) {
+					&& this.recordingManager.sessionIsBeingRecorded(session.getSessionId())) {
 				this.recordingManager.stopOneIndividualStreamRecording(session.getSessionId(),
 						this.getPublisherStreamId());
 			}

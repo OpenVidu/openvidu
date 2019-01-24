@@ -23,19 +23,19 @@ import com.google.gson.JsonObject;
 
 public class RecorderEndpointWrapper {
 
-	RecorderEndpoint recorder;
-	String connectionId;
-	String recordingId;
-	String streamId;
-	String clientData;
-	String serverData;
-	boolean hasAudio;
-	boolean hasVideo;
-	String typeOfVideo;
+	private RecorderEndpoint recorder;
+	private String connectionId;
+	private String recordingId;
+	private String streamId;
+	private String clientData;
+	private String serverData;
+	private boolean hasAudio;
+	private boolean hasVideo;
+	private String typeOfVideo;
 
-	long startTime;
-	long endTime;
-	long size;
+	private long startTime;
+	private long endTime;
+	private long size;
 
 	public RecorderEndpointWrapper(RecorderEndpoint recorder, String connectionId, String recordingId, String streamId,
 			String clientData, String serverData, boolean hasAudio, boolean hasVideo, String typeOfVideo) {

@@ -45,6 +45,7 @@ import io.openvidu.server.coturn.CoturnCredentialsService;
 import io.openvidu.server.coturn.TurnCredentials;
 import io.openvidu.server.kurento.core.KurentoTokenOptions;
 import io.openvidu.server.recording.service.RecordingManager;
+import io.openvidu.server.utils.FormatChecker;
 
 public abstract class SessionManager {
 
@@ -64,6 +65,8 @@ public abstract class SessionManager {
 
 	@Autowired
 	protected CoturnCredentialsService coturnCredentialsService;
+
+	public FormatChecker formatChecker = new FormatChecker();
 
 	protected ConcurrentMap<String, Session> sessions = new ConcurrentHashMap<>();
 	protected ConcurrentMap<String, SessionProperties> sessionProperties = new ConcurrentHashMap<>();
@@ -223,7 +226,7 @@ public abstract class SessionManager {
 				new ConcurrentHashMap<>());
 		if (map != null) {
 
-			if (!isMetadataFormatCorrect(serverMetadata)) {
+			if (!formatChecker.isServerMetadataFormatCorrect(serverMetadata)) {
 				log.error("Data invalid format");
 				throw new OpenViduException(Code.GENERIC_ERROR_CODE, "Data invalid format");
 			}
@@ -315,10 +318,6 @@ public abstract class SessionManager {
 			return true;
 		}
 		return false;
-	}
-
-	public boolean isMetadataFormatCorrect(String metadata) {
-		return true;
 	}
 
 	public void newInsecureParticipant(String participantPrivateId) {
@@ -443,7 +442,7 @@ public abstract class SessionManager {
 		return participants;
 	}
 
-	protected void closeSessionAndEmptyCollections(Session session, String reason) {
+	public void closeSessionAndEmptyCollections(Session session, String reason) {
 
 		if (openviduConfig.isRecordingModuleEnabled()
 				&& this.recordingManager.sessionIsBeingRecorded(session.getSessionId())) {

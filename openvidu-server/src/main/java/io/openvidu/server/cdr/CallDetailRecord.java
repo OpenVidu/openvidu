@@ -69,7 +69,7 @@ import io.openvidu.server.recording.service.RecordingManager;
  * - webrtcConnectionDestroyed.reason: 	"unsubscribe", "unpublish", "disconnect", "networkDisconnect", "openviduServerStopped"
  * - participantLeft.reason: 			"unsubscribe", "unpublish", "disconnect", "networkDisconnect", "openviduServerStopped"
  * - sessionDestroyed.reason: 			"lastParticipantLeft", "openviduServerStopped"
- * - recordingStopped.reason:			"recordingStoppedByServer", "lastParticipantLeft", "sessionClosedByServer", "openviduServerStopped"
+ * - recordingStopped.reason:			"recordingStoppedByServer", "lastParticipantLeft", "sessionClosedByServer", "automaticStop", "openviduServerStopped"
  * 
  * [OPTIONAL_PROPERTIES]:
  * - receivingFrom:		only if connection = "INBOUND"

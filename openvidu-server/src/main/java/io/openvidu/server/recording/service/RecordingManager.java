@@ -44,16 +44,22 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 
+import com.github.dockerjava.api.exception.DockerClientException;
+import com.github.dockerjava.api.exception.InternalServerErrorException;
+import com.github.dockerjava.api.exception.NotFoundException;
+import com.github.dockerjava.core.command.PullImageResultCallback;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
+import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.core.SessionEventsHandler;
+import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.recording.Recording;
 
 public class RecordingManager {
@@ -68,6 +74,9 @@ public class RecordingManager {
 	protected SessionEventsHandler sessionHandler;
 
 	@Autowired
+	private SessionManager sessionManager;
+
+	@Autowired
 	protected OpenviduConfig openviduConfig;
 
 	protected Map<String, Recording> startingRecordings = new ConcurrentHashMap<>();
@@ -79,6 +88,8 @@ public class RecordingManager {
 			Runtime.getRuntime().availableProcessors());
 
 	static final String RECORDING_ENTITY_FILE = ".recording.";
+	static final String IMAGE_NAME = "openvidu/openvidu-recording";
+	static String IMAGE_TAG;
 
 	private static final List<String> LAST_PARTICIPANT_LEFT_REASONS = Arrays.asList(
 			new String[] { "disconnect", "forceDisconnectByUser", "forceDisconnectByServer", "networkDisconnect" });
@@ -89,18 +100,17 @@ public class RecordingManager {
 
 	public void initializeRecordingManager() {
 
+		RecordingManager.IMAGE_TAG = openviduConfig.getOpenViduRecordingVersion();
+
 		this.composedRecordingService = new ComposedRecordingService(this, openviduConfig);
 		this.singleStreamRecordingService = new SingleStreamRecordingService(this, openviduConfig);
-
-		ComposedRecordingService recServiceAux = this.composedRecordingService;
-		recServiceAux.setRecordingContainerVersion(openviduConfig.getOpenViduRecordingVersion());
 
 		log.info("Recording module required: Downloading openvidu/openvidu-recording:"
 				+ openviduConfig.getOpenViduRecordingVersion() + " Docker image (800 MB aprox)");
 
 		boolean imageExists = false;
 		try {
-			imageExists = recServiceAux.recordingImageExistsLocally();
+			imageExists = this.recordingImageExistsLocally();
 		} catch (ProcessingException exception) {
 			String message = "Exception connecting to Docker daemon: ";
 			if ("docker".equals(openviduConfig.getSpringProfile())) {
@@ -133,7 +143,7 @@ public class RecordingManager {
 				}
 			});
 			t.start();
-			recServiceAux.downloadRecordingImage();
+			this.downloadRecordingImage();
 			t.interrupt();
 			try {
 				t.join();
@@ -142,9 +152,8 @@ public class RecordingManager {
 			}
 			log.info("Docker image available");
 		}
-		this.initRecordingPath();
 
-		this.recordingService = recServiceAux;
+		this.initRecordingPath();
 	}
 
 	public Recording startRecording(Session session, RecordingProperties properties) throws OpenViduException {
@@ -164,7 +173,9 @@ public class RecordingManager {
 		if (session.getActivePublishers() == 0) {
 			// Init automatic recording stop if there are now publishers when starting
 			// recording
-			this.initAutomaticRecordingStopThread(session.getSessionId());
+			log.info("No publisher in session {}. Starting {} seconds countdown for stopping recording",
+					session.getSessionId(), this.openviduConfig.getOpenviduRecordingAutostopTimeout());
+			this.initAutomaticRecordingStopThread(session);
 		}
 		return recording;
 	}
@@ -172,9 +183,9 @@ public class RecordingManager {
 	public Recording stopRecording(Session session, String recordingId, String reason) {
 		Recording recording;
 		if (session == null) {
-			recording = this.startedRecordings.remove(recordingId);
+			recording = this.startedRecordings.get(recordingId);
 		} else {
-			recording = this.sessionsRecordings.remove(session.getSessionId());
+			recording = this.sessionsRecordings.get(session.getSessionId());
 		}
 		switch (recording.getOutputMode()) {
 		case COMPOSED:
@@ -195,17 +206,33 @@ public class RecordingManager {
 					participant.getPublisherStreamId(), session.getSessionId());
 		}
 		if (io.openvidu.java.client.Recording.OutputMode.INDIVIDUAL.equals(recording.getOutputMode())) {
+			// Start new RecorderEndpoint for this stream
+			log.info("Starting new RecorderEndpoint in session {} for new stream of participant {}",
+					session.getSessionId(), participant.getParticipantPublicId());
 			final CountDownLatch startedCountDown = new CountDownLatch(1);
-			this.singleStreamRecordingService.startOneIndividualStreamRecording(session, recordingId, profile,
+			this.singleStreamRecordingService.startRecorderEndpointForPublisherEndpoint(session, recordingId, profile,
 					participant, startedCountDown);
+		} else if (io.openvidu.java.client.Recording.OutputMode.COMPOSED.equals(recording.getOutputMode())
+				&& !recording.hasVideo()) {
+			// Connect this stream to existing Composite recorder
+			log.info("Joining PublisherEndpoint to existing Composite in session {} for new stream of participant {}",
+					session.getSessionId(), participant.getParticipantPublicId());
+			this.composedRecordingService.joinPublisherEndpointToComposite(session, recordingId, participant);
 		}
 	}
 
 	public void stopOneIndividualStreamRecording(String sessionId, String streamId) {
 		Recording recording = this.sessionsRecordings.get(sessionId);
+		if (recording == null) {
+			log.error("Cannot stop recording of existing stream {}. Session {} is not being recorded", streamId,
+					sessionId);
+		}
 		if (io.openvidu.java.client.Recording.OutputMode.INDIVIDUAL.equals(recording.getOutputMode())) {
+			// Stop specific RecorderEndpoint for this stream
+			log.info("Stopping RecorderEndpoint in session {} for stream of participant {}", sessionId, streamId);
 			final CountDownLatch stoppedCountDown = new CountDownLatch(1);
-			this.singleStreamRecordingService.stopOneIndividualStreamRecording(sessionId, streamId, stoppedCountDown);
+			this.singleStreamRecordingService.stopRecorderEndpointOfPublisherEndpoint(sessionId, streamId,
+					stoppedCountDown);
 			try {
 				if (!stoppedCountDown.await(5, TimeUnit.SECONDS)) {
 					log.error("Error waiting for recorder endpoint of stream {} to stop in session {}", streamId,
@@ -214,6 +241,12 @@ public class RecordingManager {
 			} catch (InterruptedException e) {
 				log.error("Exception while waiting for state change", e);
 			}
+		} else if (io.openvidu.java.client.Recording.OutputMode.COMPOSED.equals(recording.getOutputMode())
+				&& !recording.hasVideo()) {
+			// Disconnect this stream from existing Composite recorder
+			log.info("Removing PublisherEndpoint from Composite in session {} for stream of participant {}", sessionId,
+					streamId);
+			this.composedRecordingService.removePublisherEndpointFromComposite(sessionId, streamId);
 		}
 	}
 
@@ -229,6 +262,11 @@ public class RecordingManager {
 	public boolean sessionIsBeingRecordedComposed(String sessionId) {
 		Recording rec = this.sessionsRecordings.get(sessionId);
 		return (rec != null && io.openvidu.java.client.Recording.OutputMode.COMPOSED.equals(rec.getOutputMode()));
+	}
+
+	public boolean sessionIsBeingRecordedOnlyAudio(String sessionId) {
+		Recording rec = this.sessionsRecordings.get(sessionId);
+		return (rec != null && !rec.hasVideo());
 	}
 
 	public Recording getStartedRecording(String recordingId) {
@@ -314,14 +352,27 @@ public class RecordingManager {
 		return null;
 	}
 
-	public void initAutomaticRecordingStopThread(String sessionId) {
-		final String recordingId = this.sessionsRecordings.get(sessionId).getId();
+	public void initAutomaticRecordingStopThread(final Session session) {
+		final String recordingId = this.sessionsRecordings.get(session.getSessionId()).getId();
 		ScheduledFuture<?> future = this.automaticRecordingStopExecutor.schedule(() -> {
-			log.info("Stopping recording {} after 2 minutes wait (no publisher published before timeout)", recordingId);
-			this.stopRecording(null, recordingId, "lastParticipantLeft");
-			this.automaticRecordingStopThreads.remove(sessionId);
-		}, 2, TimeUnit.MINUTES);
-		this.automaticRecordingStopThreads.putIfAbsent(sessionId, future);
+
+			log.info("Stopping recording {} after {} seconds wait (no publisher published before timeout)", recordingId,
+					this.openviduConfig.getOpenviduRecordingAutostopTimeout());
+
+			this.stopRecording(null, recordingId, "automaticStop");
+			this.automaticRecordingStopThreads.remove(session.getSessionId());
+
+			if (session.getParticipants().size() == 0 || (session.getParticipants().size() == 1
+					&& session.getParticipantByPublicId(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID) != null)) {
+				// Close session if there are no participants connected (except for RECORDER).
+				// This code won't be executed only when some user reconnects to the session
+				// but never publishing (publishers automatically abort this thread)
+				sessionManager.closeSessionAndEmptyCollections(session, "automaticStop");
+				sessionManager.showTokens();
+			}
+
+		}, this.openviduConfig.getOpenviduRecordingAutostopTimeout(), TimeUnit.SECONDS);
+		this.automaticRecordingStopThreads.putIfAbsent(session.getSessionId(), future);
 	}
 
 	public boolean abortAutomaticRecordingStopThread(String sessionId) {
@@ -340,7 +391,7 @@ public class RecordingManager {
 				String extension;
 				switch (recording.getOutputMode()) {
 				case COMPOSED:
-					extension = "mp4";
+					extension = recording.hasVideo() ? "mp4" : "webm";
 					break;
 				case INDIVIDUAL:
 					extension = "zip";
@@ -355,6 +406,36 @@ public class RecordingManager {
 			}
 		}
 		return recording;
+	}
+
+	private boolean recordingImageExistsLocally() {
+		boolean imageExists = false;
+		try {
+			this.composedRecordingService.dockerClient.inspectImageCmd(IMAGE_NAME + ":" + IMAGE_TAG).exec();
+			imageExists = true;
+		} catch (NotFoundException nfe) {
+			imageExists = false;
+		} catch (ProcessingException e) {
+			throw e;
+		}
+		return imageExists;
+	}
+
+	private void downloadRecordingImage() {
+		try {
+			this.composedRecordingService.dockerClient.pullImageCmd(IMAGE_NAME + ":" + IMAGE_TAG)
+					.exec(new PullImageResultCallback()).awaitSuccess();
+		} catch (NotFoundException | InternalServerErrorException e) {
+			if (recordingImageExistsLocally()) {
+				log.info("Docker image '{}' exists locally", IMAGE_NAME + ":" + IMAGE_TAG);
+			} else {
+				throw e;
+			}
+		} catch (DockerClientException e) {
+			log.info("Error on Pulling '{}' image. Probably because the user has stopped the execution",
+					IMAGE_NAME + ":" + IMAGE_TAG);
+			throw e;
+		}
 	}
 
 	private Recording getRecordingFromHost(String recordingId) {

@@ -53,7 +53,6 @@ import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.kurento.core.KurentoTokenOptions;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.recording.service.RecordingManager;
-import io.openvidu.server.utils.FormatChecker;
 
 /**
  *
@@ -300,6 +299,8 @@ public class SessionRestController {
 		String name = (String) params.get("name");
 		String outputModeString = (String) params.get("outputMode");
 		String resolution = (String) params.get("resolution");
+		Boolean hasAudio = (Boolean) params.get("hasAudio");
+		Boolean hasVideo = (Boolean) params.get("hasVideo");
 		String recordingLayoutString = (String) params.get("recordingLayout");
 		String customLayout = (String) params.get("customLayout");
 
@@ -335,15 +336,18 @@ public class SessionRestController {
 		} catch (Exception e) {
 			outputMode = io.openvidu.java.client.Recording.OutputMode.COMPOSED;
 		}
-		RecordingProperties.Builder builder = new RecordingProperties.Builder().name(name).outputMode(outputMode);
+		RecordingProperties.Builder builder = new RecordingProperties.Builder().name(name).outputMode(outputMode)
+				.hasAudio(hasAudio != null ? hasAudio : true).hasVideo(hasVideo != null ? hasVideo : true);
 
 		if (outputMode.equals(io.openvidu.java.client.Recording.OutputMode.COMPOSED)) {
 
 			if (resolution != null) {
-				if (new FormatChecker().isAcceptableResolution(resolution)) {
+				if (sessionManager.formatChecker.isAcceptableRecordingResolution(resolution)) {
 					builder.resolution(resolution);
 				} else {
-					return new ResponseEntity<>(HttpStatus.UNPROCESSABLE_ENTITY);
+					return new ResponseEntity<>(
+							"Wrong \"resolution\" parameter. Acceptable values from 100 to 1999 for both width and height",
+							HttpStatus.UNPROCESSABLE_ENTITY);
 				}
 			}
 
@@ -367,8 +371,15 @@ public class SessionRestController {
 			}
 		}
 
+		RecordingProperties properties = builder.build();
+		if (!properties.hasAudio() && !properties.hasVideo()) {
+			// Cannot start a recording with both "hasAudio" and "hasVideo" to false
+			return new ResponseEntity<>("Cannot start a recording with both \"hasAudio\" and \"hasVideo\" set to false",
+					HttpStatus.UNPROCESSABLE_ENTITY);
+		}
+
 		try {
-			Recording startedRecording = this.recordingManager.startRecording(session, builder.build());
+			Recording startedRecording = this.recordingManager.startRecording(session, properties);
 			return new ResponseEntity<>(startedRecording.toJson().toString(), getResponseHeaders(), HttpStatus.OK);
 		} catch (OpenViduException e) {
 			return new ResponseEntity<>("Error starting recording: " + e.getMessage(), getResponseHeaders(),

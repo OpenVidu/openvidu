@@ -59,14 +59,12 @@ import io.openvidu.server.kurento.endpoint.PublisherEndpoint;
 import io.openvidu.server.recording.RecorderEndpointWrapper;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.utils.CommandExecutor;
-import io.openvidu.server.utils.CustomFileWriter;
 
 public class SingleStreamRecordingService extends RecordingService {
 
 	private static final Logger log = LoggerFactory.getLogger(SingleStreamRecordingService.class);
 
 	private Map<String, Map<String, RecorderEndpointWrapper>> recorders = new ConcurrentHashMap<>();
-	private CustomFileWriter fileWriter = new CustomFileWriter();
 	private final String INDIVIDUAL_STREAM_METADATA_FILE = ".stream.";
 
 	public SingleStreamRecordingService(RecordingManager recordingManager, OpenviduConfig openviduConfig) {
@@ -80,6 +78,9 @@ public class SingleStreamRecordingService extends RecordingService {
 				properties);
 		properties = updatePropertiesAndRecordingId.properties;
 		String recordingId = updatePropertiesAndRecordingId.recordingId;
+		
+		Recording recording = new Recording(session.getSessionId(), recordingId, properties);
+		this.recordingManager.startingRecordings.put(recording.getId(), recording);
 
 		recorders.put(session.getSessionId(), new ConcurrentHashMap<String, RecorderEndpointWrapper>());
 
@@ -97,23 +98,15 @@ public class SingleStreamRecordingService extends RecordingService {
 							p.getPublisherStreamId(), session.getSessionId(), e.getMessage());
 					continue;
 				}
-				this.startOneIndividualStreamRecording(session, recordingId, profile, p, recordingStartedCountdown);
+				this.startRecorderEndpointForPublisherEndpoint(session, recordingId, profile, p,
+						recordingStartedCountdown);
 			}
 		}
-
-		Recording recording = new Recording(session.getSessionId(), recordingId, properties);
-		recording.setStatus(io.openvidu.java.client.Recording.Status.started);
-
-		this.recordingManager.startingRecordings.put(recording.getId(), recording);
 
 		try {
 			if (!recordingStartedCountdown.await(5, TimeUnit.SECONDS)) {
 				log.error("Error waiting for some recorder endpoint to start in session {}", session.getSessionId());
-				recording.setStatus(io.openvidu.java.client.Recording.Status.failed);
-				this.recordingManager.startingRecordings.remove(recording.getId());
-				this.stopRecording(session, recording, null);
-				throw new OpenViduException(Code.RECORDING_START_ERROR_CODE,
-						"Couldn't initialize some RecorderEndpoint");
+				throw this.failStartRecording(session, recording, "Couldn't initialize some RecorderEndpoint");
 			}
 		} catch (InterruptedException e) {
 			recording.setStatus(io.openvidu.java.client.Recording.Status.failed);
@@ -127,11 +120,7 @@ public class SingleStreamRecordingService extends RecordingService {
 		}
 
 		this.generateRecordingMetadataFile(recording);
-		this.recordingManager.sessionHandler.setRecordingStarted(session.getSessionId(), recording);
-		this.recordingManager.sessionsRecordings.put(session.getSessionId(), recording);
-		this.recordingManager.startingRecordings.remove(recording.getId());
-		this.recordingManager.startedRecordings.put(recording.getId(), recording);
-		this.recordingManager.getSessionEventsHandler().sendRecordingStartedNotification(session, recording);
+		this.updateCollectionsAndSendNotifCauseRecordingStarted(session, recording);
 
 		return recording;
 	}
@@ -143,22 +132,23 @@ public class SingleStreamRecordingService extends RecordingService {
 		final CountDownLatch stoppedCountDown = new CountDownLatch(numberOfActiveRecorders);
 
 		for (RecorderEndpointWrapper wrapper : recorders.get(recording.getSessionId()).values()) {
-			this.stopOneIndividualStreamRecording(recording.getSessionId(), wrapper.getStreamId(), stoppedCountDown);
+			this.stopRecorderEndpointOfPublisherEndpoint(recording.getSessionId(), wrapper.getStreamId(),
+					stoppedCountDown);
 		}
 		try {
 			if (!stoppedCountDown.await(5, TimeUnit.SECONDS)) {
+				recording.setStatus(io.openvidu.java.client.Recording.Status.failed);
 				log.error("Error waiting for some recorder endpoint to stop in session {}", recording.getSessionId());
 			}
 		} catch (InterruptedException e) {
+			recording.setStatus(io.openvidu.java.client.Recording.Status.failed);
 			log.error("Exception while waiting for state change", e);
 		}
 
-		this.recordingManager.sessionsRecordings.remove(recording.getSessionId());
-		this.recordingManager.startedRecordings.remove(recording.getId());
+		this.cleanRecordingMaps(recording);
 		this.recorders.remove(recording.getSessionId());
 
 		recording = this.sealMetadataFiles(recording);
-		recording = this.recordingManager.updateRecordingUrl(recording);
 
 		if (reason != null && session != null) {
 			this.recordingManager.sessionHandler.sendRecordingStoppedNotification(session, recording, reason);
@@ -167,8 +157,8 @@ public class SingleStreamRecordingService extends RecordingService {
 		return recording;
 	}
 
-	public void startOneIndividualStreamRecording(Session session, String recordingId, MediaProfileSpecType profile,
-			Participant participant, CountDownLatch globalStartLatch) {
+	public void startRecorderEndpointForPublisherEndpoint(Session session, String recordingId,
+			MediaProfileSpecType profile, Participant participant, CountDownLatch globalStartLatch) {
 		log.info("Starting single stream recorder for stream {} in session {}", participant.getPublisherStreamId(),
 				session.getSessionId());
 
@@ -224,20 +214,22 @@ public class SingleStreamRecordingService extends RecordingService {
 		wrapper.getRecorder().record();
 	}
 
-	public void stopOneIndividualStreamRecording(String sessionId, String streamId, CountDownLatch globalStopLatch) {
+	public void stopRecorderEndpointOfPublisherEndpoint(String sessionId, String streamId,
+			CountDownLatch globalStopLatch) {
 		log.info("Stopping single stream recorder for stream {} in session {}", streamId, sessionId);
-		RecorderEndpointWrapper wrapper = this.recorders.get(sessionId).remove(streamId);
-		if (wrapper != null) {
-			wrapper.getRecorder().addStoppedListener(new EventListener<StoppedEvent>() {
+		final RecorderEndpointWrapper finalWrapper = this.recorders.get(sessionId).remove(streamId);
+		if (finalWrapper != null) {
+			finalWrapper.getRecorder().addStoppedListener(new EventListener<StoppedEvent>() {
 				@Override
 				public void onEvent(StoppedEvent event) {
-					wrapper.setEndTime(System.currentTimeMillis());
-					generateIndividualMetadataFile(wrapper);
+					finalWrapper.setEndTime(System.currentTimeMillis());
+					generateIndividualMetadataFile(finalWrapper);
 					log.info("Recording stopped event for stream {}", streamId);
+					finalWrapper.getRecorder().release();
 					globalStopLatch.countDown();
 				}
 			});
-			wrapper.getRecorder().stop();
+			finalWrapper.getRecorder().stop();
 		} else {
 			log.error("Stream {} wasn't being recorded in session {}", streamId, sessionId);
 		}
@@ -264,12 +256,8 @@ public class SingleStreamRecordingService extends RecordingService {
 					} else {
 						profile = MediaProfileSpecType.WEBM_AUDIO_ONLY;
 					}
-				} else if (propertiesHasVideo) {
-					profile = MediaProfileSpecType.WEBM_VIDEO_ONLY;
 				} else {
-					// ERROR: RecordingProperties set to not record audio nor video
-					throw new OpenViduException(Code.MEDIA_TYPE_RECORDING_PROPERTIES_ERROR_CODE,
-							"RecordingProperties set to \"hasVideo(false)\" and \"hasAudio(false)\"");
+					profile = MediaProfileSpecType.WEBM_VIDEO_ONLY;
 				}
 			} else {
 				// Stream has audio track only
@@ -278,7 +266,8 @@ public class SingleStreamRecordingService extends RecordingService {
 					profile = MediaProfileSpecType.WEBM_AUDIO_ONLY;
 				} else {
 					// ERROR: RecordingProperties set to video only but there's no video track
-					throw new OpenViduException(Code.MEDIA_TYPE_RECORDING_PROPERTIES_ERROR_CODE,
+					throw new OpenViduException(
+							Code.MEDIA_TYPE_STREAM_INCOMPATIBLE_WITH_RECORDING_PROPERTIES_ERROR_CODE,
 							"RecordingProperties set to \"hasAudio(false)\" but stream is audio-only");
 				}
 			}
@@ -289,12 +278,12 @@ public class SingleStreamRecordingService extends RecordingService {
 				profile = MediaProfileSpecType.WEBM_VIDEO_ONLY;
 			} else {
 				// ERROR: RecordingProperties set to audio only but there's no audio track
-				throw new OpenViduException(Code.MEDIA_TYPE_RECORDING_PROPERTIES_ERROR_CODE,
+				throw new OpenViduException(Code.MEDIA_TYPE_STREAM_INCOMPATIBLE_WITH_RECORDING_PROPERTIES_ERROR_CODE,
 						"RecordingProperties set to \"hasVideo(false)\" but stream is video-only");
 			}
 		} else {
-			// ERROR: Stream has no track at all
-			throw new OpenViduException(Code.MEDIA_TYPE_RECORDING_PROPERTIES_ERROR_CODE,
+			// ERROR: Stream has no track at all. This branch should never be reachable
+			throw new OpenViduException(Code.MEDIA_TYPE_STREAM_INCOMPATIBLE_WITH_RECORDING_PROPERTIES_ERROR_CODE,
 					"Stream has no track at all. Cannot be recorded");
 		}
 		return profile;
@@ -316,13 +305,6 @@ public class SingleStreamRecordingService extends RecordingService {
 		default:
 			throw new UnsupportedOperationException("Unsupported profile when single stream recording: " + profile);
 		}
-	}
-
-	private void generateRecordingMetadataFile(Recording recording) {
-		String filePath = this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/"
-				+ RecordingManager.RECORDING_ENTITY_FILE + recording.getId();
-		String text = recording.toJson().toString();
-		this.fileWriter.createAndWriteFile(filePath, text);
 	}
 
 	private void generateIndividualMetadataFile(RecorderEndpointWrapper wrapper) {
@@ -381,8 +363,8 @@ public class SingleStreamRecordingService extends RecordingService {
 				jsonFile.addProperty("size", wr.getSize());
 				jsonFile.addProperty("clientData", wr.getClientData());
 				jsonFile.addProperty("serverData", wr.getServerData());
-				jsonFile.addProperty("hasAudio", wr.hasAudio());
-				jsonFile.addProperty("hasVideo", wr.hasVideo());
+				jsonFile.addProperty("hasAudio", wr.hasAudio() && recording.hasAudio());
+				jsonFile.addProperty("hasVideo", wr.hasVideo() && recording.hasVideo());
 				if (wr.hasVideo()) {
 					jsonFile.addProperty("typeOfVideo", wr.getTypeOfVideo());
 				}
@@ -394,16 +376,13 @@ public class SingleStreamRecordingService extends RecordingService {
 		}
 
 		json.add("files", jsonArrayFiles);
-
-		long duration = (maxEndTime - minStartTime) / 1000;
-
-		recording.setSize(accumulatedSize); // Size in bytes
-		recording.setDuration(duration > 0 ? duration : 0); // Duration in seconds
-		recording.setStatus(io.openvidu.java.client.Recording.Status.stopped);
-
-		this.fileWriter.overwriteFile(metadataFilePath, recording.toJson().toString());
 		this.fileWriter.createAndWriteFile(syncFilePath, new GsonBuilder().setPrettyPrinting().create().toJson(json));
 		this.generateZipFileAndCleanFolder(folderPath, recording.getName() + ".zip");
+
+		long duration = (maxEndTime - minStartTime) / 1000;
+		duration = duration > 0 ? duration : 0;
+
+		recording = this.sealRecordingMetadataFile(recording, accumulatedSize, duration, metadataFilePath);
 
 		return recording;
 	}

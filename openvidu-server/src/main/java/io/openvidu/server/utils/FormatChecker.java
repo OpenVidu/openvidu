@@ -19,10 +19,14 @@ package io.openvidu.server.utils;
 
 public class FormatChecker {
 
-	public boolean isAcceptableResolution(String stringResolution) {
+	public boolean isAcceptableRecordingResolution(String stringResolution) {
 		// Matches every string with format "AxB", being A and B any number not starting
 		// with 0 and 3 digits long or 4 digits long if they start with 1
 		return stringResolution.matches("^(?!(0))(([0-9]{3})|1([0-9]{3}))x(?!0)(([0-9]{3})|1([0-9]{3}))$");
+	}
+	
+	public boolean isServerMetadataFormatCorrect(String metadata) {
+		return true;
 	}
 
 }
