@@ -169,41 +169,48 @@ public class KurentoSessionManager extends SessionManager {
 		sessionEventsHandler.onParticipantLeft(participant, sessionId, remainingParticipants, transactionId, null,
 				reason);
 
-		if (remainingParticipants.isEmpty()) {
-			if (openviduConfig.isRecordingModuleEnabled()
+		if (!"sessionClosedByServer".equals(reason)) {
+			// If session is closed by a call to "DELETE /api/sessions" do NOT stop the
+			// recording. Will be stopped after in method
+			// "SessionManager.closeSessionAndEmptyCollections"
+			if (remainingParticipants.isEmpty()) {
+				if (openviduConfig.isRecordingModuleEnabled()
+						&& MediaMode.ROUTED.equals(session.getSessionProperties().mediaMode())
+						&& (this.recordingManager.sessionIsBeingRecordedIndividual(sessionId)
+								|| (this.recordingManager.sessionIsBeingRecordedComposed(sessionId)
+										&& this.recordingManager.sessionIsBeingRecordedOnlyAudio(sessionId)))) {
+					// Start countdown to stop recording if INDIVIDUAL mode or COMPOSED audio-only
+					// (will be aborted if a Publisher starts before timeout)
+					log.info(
+							"Last participant left. Starting {} seconds countdown for stopping recording of session {}",
+							this.openviduConfig.getOpenviduRecordingAutostopTimeout(), sessionId);
+					recordingManager.initAutomaticRecordingStopThread(session);
+				} else {
+					log.info("No more participants in session '{}', removing it and closing it", sessionId);
+					this.closeSessionAndEmptyCollections(session, reason);
+					showTokens();
+				}
+			} else if (remainingParticipants.size() == 1 && openviduConfig.isRecordingModuleEnabled()
 					&& MediaMode.ROUTED.equals(session.getSessionProperties().mediaMode())
-					&& (this.recordingManager.sessionIsBeingRecordedIndividual(sessionId)
-							|| (this.recordingManager.sessionIsBeingRecordedComposed(sessionId)
-									&& this.recordingManager.sessionIsBeingRecordedOnlyAudio(sessionId)))) {
-				// Start countdown to stop recording if INDIVIDUAL mode or COMPOSED audio-only
-				// (will be aborted if a Publisher starts before timeout)
-				log.info("Last participant left. Starting {} seconds countdown for stopping recording of session {}",
-						this.openviduConfig.getOpenviduRecordingAutostopTimeout(), sessionId);
-				recordingManager.initAutomaticRecordingStopThread(session);
-			} else {
-				log.info("No more participants in session '{}', removing it and closing it", sessionId);
-				this.closeSessionAndEmptyCollections(session, reason);
-				showTokens();
-			}
-		} else if (remainingParticipants.size() == 1 && openviduConfig.isRecordingModuleEnabled()
-				&& MediaMode.ROUTED.equals(session.getSessionProperties().mediaMode())
-				&& this.recordingManager.sessionIsBeingRecordedComposed(sessionId)
-				&& !this.recordingManager.sessionIsBeingRecordedOnlyAudio(sessionId)
-				&& ProtocolElements.RECORDER_PARTICIPANT_PUBLICID
-						.equals(remainingParticipants.iterator().next().getParticipantPublicId())) {
-			if (RecordingMode.ALWAYS.equals(session.getSessionProperties().recordingMode())) {
-				// Immediately stop recording when last real participant left if
-				// RecordingMode.ALWAYS
-				log.info("Last participant left. Stopping recording for session {}", sessionId);
-				recordingManager.stopRecording(session, null, reason);
-				evictParticipant(session.getParticipantByPublicId(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID), null,
-						null, "EVICT_RECORDER");
-			} else if (RecordingMode.MANUAL.equals(session.getSessionProperties().recordingMode())) {
-				// Start countdown to stop recording if RecordingMode.MANUAL (will be aborted if
-				// a Publisher starts before timeout)
-				log.info("Last participant left. Starting {} seconds countdown for stopping recording of session {}",
-						this.openviduConfig.getOpenviduRecordingAutostopTimeout(), sessionId);
-				recordingManager.initAutomaticRecordingStopThread(session);
+					&& this.recordingManager.sessionIsBeingRecordedComposed(sessionId)
+					&& !this.recordingManager.sessionIsBeingRecordedOnlyAudio(sessionId)
+					&& ProtocolElements.RECORDER_PARTICIPANT_PUBLICID
+							.equals(remainingParticipants.iterator().next().getParticipantPublicId())) {
+				if (RecordingMode.ALWAYS.equals(session.getSessionProperties().recordingMode())) {
+					// Immediately stop recording when last real participant left if
+					// RecordingMode.ALWAYS
+					log.info("Last participant left. Stopping recording for session {}", sessionId);
+					recordingManager.stopRecording(session, null, reason);
+					evictParticipant(session.getParticipantByPublicId(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID),
+							null, null, "EVICT_RECORDER");
+				} else if (RecordingMode.MANUAL.equals(session.getSessionProperties().recordingMode())) {
+					// Start countdown to stop recording if RecordingMode.MANUAL (will be aborted if
+					// a Publisher starts before timeout)
+					log.info(
+							"Last participant left. Starting {} seconds countdown for stopping recording of session {}",
+							this.openviduConfig.getOpenviduRecordingAutostopTimeout(), sessionId);
+					recordingManager.initAutomaticRecordingStopThread(session);
+				}
 			}
 		}
 

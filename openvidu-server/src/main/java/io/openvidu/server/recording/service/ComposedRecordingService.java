@@ -93,8 +93,8 @@ public class ComposedRecordingService extends RecordingService {
 			recording = this.startRecordingAudioOnly(session, recording, properties);
 		}
 
-		// Update collections and return recording
-		this.updateCollectionsAndSendNotifCauseRecordingStarted(session, recording);
+		this.updateRecordingManagerCollections(session, recording);
+
 		return recording;
 	}
 
@@ -111,7 +111,7 @@ public class ComposedRecordingService extends RecordingService {
 			throws OpenViduException {
 		log.info("Joining single stream {} to Composite in session {}", participant.getPublisherStreamId(),
 				session.getSessionId());
-		
+
 		KurentoParticipant kurentoParticipant = (KurentoParticipant) participant;
 		CompositeWrapper compositeWrapper = this.composites.get(session.getSessionId());
 
@@ -132,6 +132,10 @@ public class ComposedRecordingService extends RecordingService {
 
 	private Recording startRecordingWithVideo(Session session, Recording recording, RecordingProperties properties)
 			throws OpenViduException {
+
+		log.info("Starting composed ({}) recording {} of session {}",
+				properties.hasAudio() ? "video + audio" : "audio-only", recording.getId(), recording.getSessionId());
+
 		List<String> envs = new ArrayList<>();
 
 		String layoutUrl = this.getLayoutUrl(recording, this.getShortSessionId(session));
@@ -173,6 +177,9 @@ public class ComposedRecordingService extends RecordingService {
 	private Recording startRecordingAudioOnly(Session session, Recording recording, RecordingProperties properties)
 			throws OpenViduException {
 
+		log.info("Starting composed (audio-only) recording {} of session {}", recording.getId(),
+				recording.getSessionId());
+
 		CompositeWrapper compositeWrapper = new CompositeWrapper((KurentoSession) session,
 				"file://" + this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/" + properties.name()
 						+ ".webm");
@@ -191,11 +198,16 @@ public class ComposedRecordingService extends RecordingService {
 		}
 
 		this.generateRecordingMetadataFile(recording);
+		this.sendRecordingStartedNotification(session, recording);
 
 		return recording;
 	}
 
 	private Recording stopRecordingWithVideo(Session session, Recording recording, String reason) {
+
+		log.info("Stopping composed ({}) recording {} of session {}. Reason: {}",
+				recording.hasAudio() ? "video + audio" : "audio-only", recording.getId(), recording.getSessionId(),
+				RecordingManager.finalReason(reason));
 
 		String containerId = this.sessionsContainers.remove(recording.getSessionId());
 		this.cleanRecordingMaps(recording);
@@ -218,13 +230,14 @@ public class ComposedRecordingService extends RecordingService {
 				log.warn("Session closed while starting recording container");
 				boolean containerClosed = false;
 				String containerIdAux;
-				int timeOut = 0;
-				while (!containerClosed && (timeOut < 30)) {
+				int i = 0;
+				final int timeout = 30;
+				while (!containerClosed && (i < timeout)) {
 					containerIdAux = this.sessionsContainers.remove(session.getSessionId());
 					if (containerIdAux == null) {
 						try {
 							log.warn("Waiting for container to be launched...");
-							timeOut++;
+							i++;
 							Thread.sleep(500);
 						} catch (InterruptedException e) {
 							e.printStackTrace();
@@ -243,6 +256,10 @@ public class ComposedRecordingService extends RecordingService {
 							log.warn("Files properly deleted");
 						}
 					}
+				}
+				if (i == timeout) {
+					log.error("Container did not launched in {} seconds", timeout / 2);
+					return;
 				}
 			}).start();
 
@@ -309,6 +326,10 @@ public class ComposedRecordingService extends RecordingService {
 	}
 
 	private Recording stopRecordingAudioOnly(Session session, Recording recording, String reason) {
+
+		log.info("Stopping composed (audio-only) recording {} of session {}. Reason: {}", recording.getId(),
+				recording.getSessionId(), reason);
+
 		String sessionId;
 		if (session == null) {
 			log.warn(

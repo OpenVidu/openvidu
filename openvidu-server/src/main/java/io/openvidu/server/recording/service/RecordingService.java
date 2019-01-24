@@ -83,11 +83,17 @@ public abstract class RecordingService {
 	 * Changes recording from starting to started, updates global recording
 	 * collections and sends RPC response to clients
 	 */
-	protected void updateCollectionsAndSendNotifCauseRecordingStarted(Session session, Recording recording) {
+	protected void updateRecordingManagerCollections(Session session, Recording recording) {
 		this.recordingManager.sessionHandler.setRecordingStarted(session.getSessionId(), recording);
 		this.recordingManager.sessionsRecordings.put(session.getSessionId(), recording);
 		this.recordingManager.startingRecordings.remove(recording.getId());
 		this.recordingManager.startedRecordings.put(recording.getId(), recording);
+	}
+
+	/**
+	 * Sends RPC response for recording started event
+	 */
+	protected void sendRecordingStartedNotification(Session session, Recording recording) {
 		this.recordingManager.getSessionEventsHandler().sendRecordingStartedNotification(session, recording);
 	}
 
@@ -126,6 +132,7 @@ public abstract class RecordingService {
 	}
 
 	protected OpenViduException failStartRecording(Session session, Recording recording, String errorMessage) {
+		log.error("Recording start failed for session {}: {}", session.getSessionId(), errorMessage);
 		recording.setStatus(io.openvidu.java.client.Recording.Status.failed);
 		this.recordingManager.startingRecordings.remove(recording.getId());
 		this.stopRecording(session, recording, null);

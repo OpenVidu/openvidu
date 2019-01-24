@@ -78,7 +78,11 @@ public class SingleStreamRecordingService extends RecordingService {
 				properties);
 		properties = updatePropertiesAndRecordingId.properties;
 		String recordingId = updatePropertiesAndRecordingId.recordingId;
-		
+
+		log.info("Starting individual ({}) recording {} of session {}",
+				properties.hasVideo() ? (properties.hasAudio() ? "video+audio" : "video-only") : "audioOnly",
+				recordingId, session.getSessionId());
+
 		Recording recording = new Recording(session.getSessionId(), recordingId, properties);
 		this.recordingManager.startingRecordings.put(recording.getId(), recording);
 
@@ -120,13 +124,18 @@ public class SingleStreamRecordingService extends RecordingService {
 		}
 
 		this.generateRecordingMetadataFile(recording);
-		this.updateCollectionsAndSendNotifCauseRecordingStarted(session, recording);
+		this.updateRecordingManagerCollections(session, recording);
+		this.sendRecordingStartedNotification(session, recording);
 
 		return recording;
 	}
 
 	@Override
 	public Recording stopRecording(Session session, Recording recording, String reason) {
+
+		log.info("Stopping individual ({}) recording {} of session {}. Reason: {}",
+				recording.hasVideo() ? (recording.hasAudio() ? "video+audio" : "video-only") : "audioOnly",
+				recording.getId(), recording.getSessionId(), reason);
 
 		final int numberOfActiveRecorders = recorders.get(recording.getSessionId()).size();
 		final CountDownLatch stoppedCountDown = new CountDownLatch(numberOfActiveRecorders);
