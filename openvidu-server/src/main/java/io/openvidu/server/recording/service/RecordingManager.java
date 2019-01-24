@@ -47,6 +47,7 @@ import org.springframework.http.HttpStatus;
 import com.github.dockerjava.api.exception.DockerClientException;
 import com.github.dockerjava.api.exception.InternalServerErrorException;
 import com.github.dockerjava.api.exception.NotFoundException;
+import com.github.dockerjava.api.model.Container;
 import com.github.dockerjava.core.command.PullImageResultCallback;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -152,6 +153,9 @@ public class RecordingManager {
 			}
 			log.info("Docker image available");
 		}
+
+		// Clean any stranded openvidu/openvidu-recording container on startup
+		this.removeExistingRecordingContainers();
 
 		this.initRecordingPath();
 	}
@@ -406,6 +410,18 @@ public class RecordingManager {
 			}
 		}
 		return recording;
+	}
+
+	private void removeExistingRecordingContainers() {
+		List<Container> existingContainers = this.composedRecordingService.dockerClient.listContainersCmd()
+				.withShowAll(true).exec();
+		for (Container container : existingContainers) {
+			if (container.getImage().startsWith(RecordingManager.IMAGE_NAME)) {
+				log.info("Stranded openvidu/openvidu-recording Docker container ({}) removed on startup",
+						container.getId());
+				this.composedRecordingService.dockerClient.removeContainerCmd(container.getId()).withForce(true).exec();
+			}
+		}
 	}
 
 	private boolean recordingImageExistsLocally() {
