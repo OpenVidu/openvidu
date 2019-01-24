@@ -319,7 +319,7 @@ public class SessionRestController {
 	@RequestMapping(value = "/recordings/start", method = RequestMethod.POST)
 	public ResponseEntity<?> startRecordingSession(@RequestBody Map<?, ?> params) {
 
-		log.info("REST API: POST /api/recordings/start", params.toString());
+		log.info("REST API: POST /api/recordings/start {}", params.toString());
 
 		String sessionId = (String) params.get("session");
 		String name = (String) params.get("name");

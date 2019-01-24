@@ -109,6 +109,10 @@ public class CompositeWrapper {
 
 		if (isRecording.compareAndSet(false, true)) {
 			// First user publishing. Starting RecorderEndpoint
+
+			log.info("First stream ({}) joined to Composite in session {}. Starting RecorderEndpoint for Composite",
+					streamId, session.getSessionId());
+
 			final CountDownLatch startLatch = new CountDownLatch(1);
 			this.startCompositeRecording(startLatch);
 			try {

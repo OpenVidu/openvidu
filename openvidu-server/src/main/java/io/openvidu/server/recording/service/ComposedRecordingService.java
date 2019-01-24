@@ -109,6 +109,9 @@ public class ComposedRecordingService extends RecordingService {
 
 	public void joinPublisherEndpointToComposite(Session session, String recordingId, Participant participant)
 			throws OpenViduException {
+		log.info("Joining single stream {} to Composite in session {}", participant.getPublisherStreamId(),
+				session.getSessionId());
+		
 		KurentoParticipant kurentoParticipant = (KurentoParticipant) participant;
 		CompositeWrapper compositeWrapper = this.composites.get(session.getSessionId());
 
