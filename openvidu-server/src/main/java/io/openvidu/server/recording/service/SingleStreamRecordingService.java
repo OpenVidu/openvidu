@@ -88,7 +88,9 @@ public class SingleStreamRecordingService extends RecordingService {
 
 		recorders.put(session.getSessionId(), new ConcurrentHashMap<String, RecorderEndpointWrapper>());
 
-		final CountDownLatch recordingStartedCountdown = new CountDownLatch(session.getActivePublishers());
+		final int activePublishers = session.getActivePublishers();
+		final CountDownLatch recordingStartedCountdown = new CountDownLatch(activePublishers);
+		int incompatibleMediaTypePublishers = 0;
 
 		for (Participant p : session.getParticipants()) {
 			if (p.isStreaming()) {
@@ -100,6 +102,8 @@ public class SingleStreamRecordingService extends RecordingService {
 					log.error(
 							"Cannot start single stream recorder for stream {} in session {}: {}. Skipping to next stream being published",
 							p.getPublisherStreamId(), session.getSessionId(), e.getMessage());
+					incompatibleMediaTypePublishers++;
+					recordingStartedCountdown.countDown();
 					continue;
 				}
 				this.startRecorderEndpointForPublisherEndpoint(session, recordingId, profile, p,
@@ -117,9 +121,10 @@ public class SingleStreamRecordingService extends RecordingService {
 			log.error("Exception while waiting for state change", e);
 		}
 
-		if (session.getActivePublishers() == 0) {
+		if (activePublishers == 0 || incompatibleMediaTypePublishers == activePublishers) {
 			// Recording started for a session with some user connected but no publishers
-			// Must create recording root folder for storing metadata archive
+			// or with no publisher having a compatible media type stream with the recording
+			// configuration. Must create recording root folder for storing metadata archive
 			this.fileWriter.createFolder(this.openviduConfig.getOpenViduRecordingPath() + recording.getId());
 		}
 
@@ -241,6 +246,7 @@ public class SingleStreamRecordingService extends RecordingService {
 			finalWrapper.getRecorder().stop();
 		} else {
 			log.error("Stream {} wasn't being recorded in session {}", streamId, sessionId);
+			globalStopLatch.countDown();
 		}
 	}
 
