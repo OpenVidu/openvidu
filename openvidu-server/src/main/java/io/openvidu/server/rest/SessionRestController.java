@@ -21,6 +21,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -63,6 +65,8 @@ import io.openvidu.server.recording.service.RecordingManager;
 @RequestMapping("/api")
 public class SessionRestController {
 
+	private static final Logger log = LoggerFactory.getLogger(SessionRestController.class);
+
 	@Autowired
 	private SessionManager sessionManager;
 
@@ -74,6 +78,8 @@ public class SessionRestController {
 
 	@RequestMapping(value = "/sessions", method = RequestMethod.POST)
 	public ResponseEntity<?> getSessionId(@RequestBody(required = false) Map<?, ?> params) {
+
+		log.info("REST API: POST /api/sessions {}", params.toString());
 
 		SessionProperties.Builder builder = new SessionProperties.Builder();
 		String customSessionId = null;
@@ -144,6 +150,9 @@ public class SessionRestController {
 	@RequestMapping(value = "/sessions/{sessionId}", method = RequestMethod.GET)
 	public ResponseEntity<?> getSession(@PathVariable("sessionId") String sessionId,
 			@RequestParam(value = "webRtcStats", defaultValue = "false", required = false) boolean webRtcStats) {
+
+		log.info("REST API: GET /api/sessions/{}", sessionId);
+
 		Session session = this.sessionManager.getSession(sessionId);
 		if (session != null) {
 			JsonObject response = (webRtcStats == true) ? session.withStatsToJson() : session.toJson();
@@ -157,6 +166,9 @@ public class SessionRestController {
 	@RequestMapping(value = "/sessions", method = RequestMethod.GET)
 	public ResponseEntity<?> listSessions(
 			@RequestParam(value = "webRtcStats", defaultValue = "false", required = false) boolean webRtcStats) {
+
+		log.info("REST API: GET /api/sessions");
+
 		Collection<Session> sessions = this.sessionManager.getSessionObjects();
 		JsonObject json = new JsonObject();
 		JsonArray jsonArray = new JsonArray();
@@ -172,6 +184,9 @@ public class SessionRestController {
 
 	@RequestMapping(value = "/sessions/{sessionId}", method = RequestMethod.DELETE)
 	public ResponseEntity<?> closeSession(@PathVariable("sessionId") String sessionId) {
+
+		log.info("REST API: DELETE /api/sessions/{}", sessionId);
+
 		Session session = this.sessionManager.getSession(sessionId);
 		if (session != null) {
 			this.sessionManager.closeSession(sessionId, "sessionClosedByServer");
@@ -184,6 +199,9 @@ public class SessionRestController {
 	@RequestMapping(value = "/sessions/{sessionId}/connection/{connectionId}", method = RequestMethod.DELETE)
 	public ResponseEntity<?> disconnectParticipant(@PathVariable("sessionId") String sessionId,
 			@PathVariable("connectionId") String participantPublicId) {
+
+		log.info("REST API: DELETE /api/sessions/{}/connection/{}", sessionId, participantPublicId);
+
 		Session session = this.sessionManager.getSession(sessionId);
 		if (session != null) {
 			Participant participant = session.getParticipantByPublicId(participantPublicId);
@@ -201,6 +219,9 @@ public class SessionRestController {
 	@RequestMapping(value = "/sessions/{sessionId}/stream/{streamId}", method = RequestMethod.DELETE)
 	public ResponseEntity<?> unpublishStream(@PathVariable("sessionId") String sessionId,
 			@PathVariable("streamId") String streamId) {
+
+		log.info("REST API: DELETE /api/sessions/{}/stream/{}", sessionId, streamId);
+
 		Session session = this.sessionManager.getSession(sessionId);
 		if (session != null) {
 			if (this.sessionManager.unpublishStream(session, streamId, null, null, "forceUnpublishByServer")) {
@@ -215,6 +236,9 @@ public class SessionRestController {
 
 	@RequestMapping(value = "/tokens", method = RequestMethod.POST)
 	public ResponseEntity<String> newToken(@RequestBody Map<?, ?> params) {
+
+		log.info("REST API: POST /api/tokens {}", params.toString());
+
 		try {
 			String sessionId = (String) params.get("session");
 			String roleString = (String) params.get("role");
@@ -294,6 +318,8 @@ public class SessionRestController {
 
 	@RequestMapping(value = "/recordings/start", method = RequestMethod.POST)
 	public ResponseEntity<?> startRecordingSession(@RequestBody Map<?, ?> params) {
+
+		log.info("REST API: POST /api/recordings/start", params.toString());
 
 		String sessionId = (String) params.get("session");
 		String name = (String) params.get("name");
@@ -390,6 +416,8 @@ public class SessionRestController {
 	@RequestMapping(value = "/recordings/stop/{recordingId}", method = RequestMethod.POST)
 	public ResponseEntity<?> stopRecordingSession(@PathVariable("recordingId") String recordingId) {
 
+		log.info("REST API: POST /api/recordings/stop/{}", recordingId);
+
 		if (recordingId == null) {
 			// "recordingId" parameter not found
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -426,6 +454,9 @@ public class SessionRestController {
 
 	@RequestMapping(value = "/recordings/{recordingId}", method = RequestMethod.GET)
 	public ResponseEntity<?> getRecording(@PathVariable("recordingId") String recordingId) {
+
+		log.info("REST API: GET /api/recordings/{}", recordingId);
+
 		try {
 			Recording recording = this.recordingManager.getRecording(recordingId);
 			if (io.openvidu.java.client.Recording.Status.started.equals(recording.getStatus())
@@ -440,6 +471,9 @@ public class SessionRestController {
 
 	@RequestMapping(value = "/recordings", method = RequestMethod.GET)
 	public ResponseEntity<?> getAllRecordings() {
+
+		log.info("REST API: GET /api/recordings");
+
 		Collection<Recording> recordings = this.recordingManager.getAllRecordings();
 		JsonObject json = new JsonObject();
 		JsonArray jsonArray = new JsonArray();
@@ -457,6 +491,9 @@ public class SessionRestController {
 
 	@RequestMapping(value = "/recordings/{recordingId}", method = RequestMethod.DELETE)
 	public ResponseEntity<?> deleteRecording(@PathVariable("recordingId") String recordingId) {
+
+		log.info("REST API: DELETE /api/recordings/{}", recordingId);
+
 		return new ResponseEntity<>(this.recordingManager.deleteRecordingFromHost(recordingId, false));
 	}
 
