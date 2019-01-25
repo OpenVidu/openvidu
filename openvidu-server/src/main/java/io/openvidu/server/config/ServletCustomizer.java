@@ -29,6 +29,7 @@ public class ServletCustomizer implements EmbeddedServletContainerCustomizer {
 	public void customize(ConfigurableEmbeddedServletContainer container) {
 		MimeMappings mappings = new MimeMappings(MimeMappings.DEFAULT);
 		mappings.add("mp4", "video/mp4");
+		mappings.add("webm", "video/webm");
 		container.setMimeMappings(mappings);
 	}
 
