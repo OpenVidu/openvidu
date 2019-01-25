@@ -33,6 +33,12 @@ export enum OpenViduErrorName {
     DEVICE_ACCESS_DENIED = 'DEVICE_ACCESS_DENIED',
 
     /**
+     * The required input device is used by other software or browser when the browser asked for them.
+     * Returned upon unsuccessful [[OpenVidu.initPublisher]] or [[OpenVidu.getUserMedia]]
+     */
+    DEVICE_ALREADY_IN_USE = "DEVICE_ALREADY_IN_USE",
+
+    /**
      * The user hasn't granted permissions to capture some desktop screen when the browser asked for them.
      * Returned upon unsuccessful [[OpenVidu.initPublisher]] or [[OpenVidu.getUserMedia]]
      */
