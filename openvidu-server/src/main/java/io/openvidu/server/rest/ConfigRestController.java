@@ -69,16 +69,25 @@ public class ConfigRestController {
 	}
 
 	@RequestMapping(method = RequestMethod.GET)
-	public ResponseEntity<?> getOpenViduConfiguration() {
+	public ResponseEntity<String> getOpenViduConfiguration() {
 
 		JsonObject json = new JsonObject();
 		json.addProperty("openviduServerVersion", openviduConfig.getOpenViduServerVersion());
+		json.addProperty("artifactVersion", openviduConfig.getVersion());
 		json.addProperty("openviduPublicurl", openviduConfig.getOpenViduPublicUrl());
 		json.addProperty("openviduCdr", openviduConfig.isCdrEnabled());
+		json.addProperty("maxRecvBandwidth", openviduConfig.getVideoMaxRecvBandwidth());
+		json.addProperty("minRecvBandwidth", openviduConfig.getVideoMinRecvBandwidth());
+		json.addProperty("maxSendBandwidth", openviduConfig.getVideoMaxSendBandwidth());
+		json.addProperty("minSendBandwidth", openviduConfig.getVideoMinSendBandwidth());
 		json.addProperty("openviduRecording", openviduConfig.isRecordingModuleEnabled());
-		json.addProperty("openviduRecordingPublicAccess", openviduConfig.getOpenViduRecordingPublicAccess());
-		json.addProperty("openviduRecordingPath", openviduConfig.getOpenViduRecordingPath());
-		json.addProperty("openviduRecordingVersion", openviduConfig.getOpenViduRecordingVersion());
+		if (openviduConfig.isRecordingModuleEnabled()) {
+			json.addProperty("openviduRecordingVersion", openviduConfig.getOpenViduRecordingVersion());
+			json.addProperty("openviduRecordingPath", openviduConfig.getOpenViduRecordingPath());
+			json.addProperty("openviduRecordingPublicAccess", openviduConfig.getOpenViduRecordingPublicAccess());
+			json.addProperty("openviduRecordingNotification", openviduConfig.getOpenViduRecordingNotification());
+			json.addProperty("openviduRecordingCustomLayout", openviduConfig.getOpenviduRecordingCustomLayout());
+		}
 
 		HttpHeaders responseHeaders = new HttpHeaders();
 		responseHeaders.setContentType(MediaType.APPLICATION_JSON);

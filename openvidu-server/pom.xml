@@ -12,7 +12,7 @@
 	<packaging>jar</packaging>
 
 	<name>OpenVidu Server</name>
-	<version>2.7.0</version>
+	<version>${version.openvidu.server}</version>
 	<description>OpenVidu Server</description>
 	<url>https://github.com/OpenVidu/openvidu</url>
 
@@ -48,6 +48,7 @@
 	<properties>
 		<!-- Main class -->
 		<start-class>io.openvidu.server.OpenViduServer</start-class>
+		<version.openvidu.server>2.7.0</version.openvidu.server>
 	</properties>
 
 	<profiles>
@@ -83,15 +84,15 @@
 						</configuration>
 						<executions>
 							<execution>
-								<id>build-info</id>
 								<goals>
 									<goal>build-info</goal>
-								</goals>
-							</execution>
-							<execution>
-								<goals>
 									<goal>repackage</goal>
 								</goals>
+								<configuration>
+									<additionalProperties>
+										<version.openvidu.server>${version.openvidu.server}</version.openvidu.server>
+									</additionalProperties>
+								</configuration>
 							</execution>
 						</executions>
 					</plugin>
@@ -143,15 +144,15 @@
 						</configuration>
 						<executions>
 							<execution>
-								<id>build-info</id>
 								<goals>
 									<goal>build-info</goal>
-								</goals>
-							</execution>
-							<execution>
-								<goals>
 									<goal>repackage</goal>
 								</goals>
+								<configuration>
+									<additionalProperties>
+										<version.openvidu.server>${version.openvidu.server}</version.openvidu.server>
+									</additionalProperties>
+								</configuration>
 							</execution>
 						</executions>
 					</plugin>

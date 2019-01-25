@@ -95,10 +95,6 @@ public class OpenviduConfig {
 
 	private String finalUrl;
 
-	public String getOpenViduServerVersion() {
-		return this.buildProperties.getVersion();
-	}
-
 	public String getOpenViduPublicUrl() {
 		return this.openviduPublicUrl;
 	}
@@ -216,6 +212,14 @@ public class OpenviduConfig {
 			roles = new ParticipantRole[] { ParticipantRole.PUBLISHER, ParticipantRole.MODERATOR };
 		}
 		return roles;
+	}
+
+	public String getOpenViduServerVersion() {
+		return this.buildProperties.get("version.openvidu.server");
+	}
+
+	public String getVersion() {
+		return this.buildProperties.getVersion();
 	}
 
 }
