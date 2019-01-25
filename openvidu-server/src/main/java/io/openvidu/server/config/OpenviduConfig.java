@@ -17,13 +17,18 @@
 
 package io.openvidu.server.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.info.BuildProperties;
 import org.springframework.stereotype.Component;
 
 import io.openvidu.server.core.ParticipantRole;
 
 @Component
 public class OpenviduConfig {
+
+	@Autowired
+	BuildProperties buildProperties;
 
 	@Value("${openvidu.publicurl}")
 	private String openviduPublicUrl; // local, docker, [FINAL_URL]
@@ -89,6 +94,10 @@ public class OpenviduConfig {
 	private String springProfile;
 
 	private String finalUrl;
+
+	public String getOpenViduServerVersion() {
+		return this.buildProperties.getVersion();
+	}
 
 	public String getOpenViduPublicUrl() {
 		return this.openviduPublicUrl;
