@@ -63,12 +63,18 @@ public class ConfigRestController {
 		return openviduConfig.getOpenViduRecordingPath();
 	}
 
+	@RequestMapping(value = "/openvidu-cdr", method = RequestMethod.GET)
+	public Boolean getOpenViduCdrEnabled() {
+		return openviduConfig.isCdrEnabled();
+	}
+
 	@RequestMapping(method = RequestMethod.GET)
 	public ResponseEntity<?> getOpenViduConfiguration() {
 
 		JsonObject json = new JsonObject();
 		json.addProperty("openviduServerVersion", openviduConfig.getOpenViduServerVersion());
 		json.addProperty("openviduPublicurl", openviduConfig.getOpenViduPublicUrl());
+		json.addProperty("openviduCdr", openviduConfig.isCdrEnabled());
 		json.addProperty("openviduRecording", openviduConfig.isRecordingModuleEnabled());
 		json.addProperty("openviduRecordingPublicAccess", openviduConfig.getOpenViduRecordingPublicAccess());
 		json.addProperty("openviduRecordingPath", openviduConfig.getOpenViduRecordingPath());
@@ -77,11 +83,6 @@ public class ConfigRestController {
 		HttpHeaders responseHeaders = new HttpHeaders();
 		responseHeaders.setContentType(MediaType.APPLICATION_JSON);
 		return new ResponseEntity<>(json.toString(), responseHeaders, HttpStatus.OK);
-	}
-
-	@RequestMapping(value = "/restart", method = RequestMethod.POST)
-	public void restart() {
-		// OpenViduServer.restart();
 	}
 
 }
