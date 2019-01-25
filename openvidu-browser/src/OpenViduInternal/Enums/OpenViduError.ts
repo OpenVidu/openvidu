@@ -33,7 +33,8 @@ export enum OpenViduErrorName {
     DEVICE_ACCESS_DENIED = 'DEVICE_ACCESS_DENIED',
 
     /**
-     * The required input device is used by other software or browser when the browser asked for them.
+     * The required input device is probably being used by other process when the browser asked for it.
+     * Accuracy of this property is only granted for Chrome and Firefox clients. 
      * Returned upon unsuccessful [[OpenVidu.initPublisher]] or [[OpenVidu.getUserMedia]]
      */
     DEVICE_ALREADY_IN_USE = "DEVICE_ALREADY_IN_USE",

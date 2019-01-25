@@ -572,10 +572,6 @@ export class Publisher extends StreamManager {
                                             });
                                         break;
                                     case 'aborterror':
-                                        errorName = OpenViduErrorName.DEVICE_ALREADY_IN_USE;
-                                        errorMessage = error.toString();
-                                        errorCallback(new OpenViduError(errorName, errorMessage));
-                                        break;
                                     case 'notreadableerror':
                                         errorName = OpenViduErrorName.DEVICE_ALREADY_IN_USE;
                                         errorMessage = error.toString();
