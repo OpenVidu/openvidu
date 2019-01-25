@@ -199,6 +199,7 @@ public class RecordingManager {
 			recording = this.singleStreamRecordingService.stopRecording(session, recording, reason);
 			break;
 		}
+		this.abortAutomaticRecordingStopThread(session.getSessionId());
 		return recording;
 	}
 
