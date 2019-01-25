@@ -17,6 +17,8 @@
 
 package io.openvidu.server.recording.service;
 
+import java.io.IOException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +29,7 @@ import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.recording.Recording;
+import io.openvidu.server.utils.CommandExecutor;
 import io.openvidu.server.utils.CustomFileWriter;
 
 public abstract class RecordingService {
@@ -124,6 +127,20 @@ public abstract class RecordingService {
 
 		log.info("New recording id ({}) and final name ({})", recordingId, properties.name());
 		return new PropertiesRecordingId(properties, recordingId);
+	}
+
+	protected void updateFilePermissions(String folder) {
+		String command = "chmod -R 777 " + folder;
+		try {
+			String response = CommandExecutor.execCommand("/bin/sh", "-c", command);
+			if ("".equals(response)) {
+				log.info("Individual recording file permissions successfully updated");
+			} else {
+				log.error("Individual recording file permissions failed to update: {}", response);
+			}
+		} catch (IOException | InterruptedException e) {
+			log.error("Individual recording file permissions failed to update. Error: {}", e.getMessage());
+		}
 	}
 
 	protected String getShortSessionId(Session session) {

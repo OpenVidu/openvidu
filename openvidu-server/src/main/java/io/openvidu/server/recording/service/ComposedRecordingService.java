@@ -365,6 +365,8 @@ public class ComposedRecordingService extends RecordingService {
 		long finalSize = videoFile.length();
 		long finalDuration = compositeWrapper.getDuration();
 
+		this.updateFilePermissions(filesPath);
+
 		this.sealRecordingMetadataFile(recording, finalSize, finalDuration,
 				filesPath + RecordingManager.RECORDING_ENTITY_FILE + recording.getId());
 
