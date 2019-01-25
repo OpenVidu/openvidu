@@ -72,8 +72,7 @@ public class ConfigRestController {
 	public ResponseEntity<String> getOpenViduConfiguration() {
 
 		JsonObject json = new JsonObject();
-		json.addProperty("openviduServerVersion", openviduConfig.getOpenViduServerVersion());
-		json.addProperty("artifactVersion", openviduConfig.getVersion());
+		json.addProperty("openviduServerVersion", openviduConfig.getVersion());
 		json.addProperty("openviduPublicurl", openviduConfig.getOpenViduPublicUrl());
 		json.addProperty("openviduCdr", openviduConfig.isCdrEnabled());
 		json.addProperty("maxRecvBandwidth", openviduConfig.getVideoMaxRecvBandwidth());
