@@ -81,6 +81,7 @@ import io.openvidu.test.e2e.browser.ChromeAndroidUser;
 import io.openvidu.test.e2e.browser.ChromeUser;
 import io.openvidu.test.e2e.browser.FirefoxUser;
 import io.openvidu.test.e2e.browser.OperaUser;
+import io.openvidu.test.e2e.utils.MultimediaFileMetadata;
 
 /**
  * E2E tests for openvidu-testapp.
@@ -1233,6 +1234,82 @@ public class OpenViduTestAppE2eTest {
 		gracefullyLeaveParticipants(2);
 	}
 
+	/*@Test
+	@DisplayName("Remote record cross-browser audio-only and video-only")
+	void remoteRecordAudioOnlyVideoOnlyTest() throws Exception {
+
+		setupBrowser("chrome");
+
+		log.info("Remote record cross-browser audio-only and video-only");
+
+		Thread.UncaughtExceptionHandler h = new Thread.UncaughtExceptionHandler() {
+			public void uncaughtException(Thread th, Throwable ex) {
+				System.out.println("Uncaught exception: " + ex);
+				synchronized (lock) {
+					OpenViduTestAppE2eTest.ex = new Exception(ex);
+				}
+			}
+		};
+
+		Thread t = new Thread(() -> {
+			BrowserUser user2 = new FirefoxUser("FirefoxUser", 30);
+			user2.getDriver().get(APP_URL);
+			WebElement urlInput = user2.getDriver().findElement(By.id("openvidu-url"));
+			urlInput.clear();
+			urlInput.sendKeys(OPENVIDU_URL);
+			WebElement secretInput = user2.getDriver().findElement(By.id("openvidu-secret"));
+			secretInput.clear();
+			secretInput.sendKeys(OPENVIDU_SECRET);
+
+			user2.getEventManager().startPolling();
+
+			user2.getDriver().findElement(By.id("add-user-btn")).click();
+			user2.getDriver().findElement(By.className("join-btn")).click();
+			try {
+				user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
+				user.getEventManager().waitUntilEventReaches("accessAllowed", 2);
+				user.getEventManager().waitUntilEventReaches("streamCreated", 8);
+				user.getEventManager().waitUntilEventReaches("streamPlaying", 8);
+
+				Assert.assertTrue(user2.getEventManager()
+						.assertMediaTracks(user2.getDriver().findElements(By.tagName("video")), true, true));
+
+				user2.getEventManager().waitUntilEventReaches("streamDestroyed", 1);
+				user2.getEventManager().waitUntilEventReaches("connectionDestroyed", 1);
+				user2.getDriver().findElement(By.id("remove-user-btn")).click();
+				user2.getEventManager().waitUntilEventReaches("sessionDisconnected", 1);
+			} catch (Exception e) {
+				e.printStackTrace();
+				Thread.currentThread().interrupt();
+			}
+			user2.dispose();
+		});
+		t.setUncaughtExceptionHandler(h);
+		t.start();
+
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.className("join-btn")).click();
+
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 2);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 8);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 8);
+
+		Assert.assertEquals(user.getDriver().findElements(By.tagName("video")).size(), 2);
+		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
+				true, true));
+
+		gracefullyLeaveParticipants(1);
+
+		t.join();
+
+		synchronized (lock) {
+			if (OpenViduTestAppE2eTest.ex != null) {
+				throw OpenViduTestAppE2eTest.ex;
+			}
+		}
+	}*/
+
 	@Test
 	@DisplayName("REST API: Fetch all, fetch one, force disconnect, force unpublish, close session")
 	void restApiFetchForce() throws Exception {
@@ -1643,10 +1720,13 @@ public class OpenViduTestAppE2eTest {
 	}
 
 	private boolean recordedFileFine(File file, Recording recording) {
+		this.checkMultimediaFile(file, true, true, recording.getDuration(), recording.getResolution(), 30, "h264",
+				"aac");
+
 		boolean isFine = false;
 		Picture frame;
 		try {
-			// Get a frame at 75% duration
+			// Get a frame at 75% duration and check that it has the expected color
 			frame = FrameGrab.getFrameAtSec(file, (double) (recording.getDuration() * 0.75));
 			BufferedImage image = AWTUtil.toBufferedImage(frame);
 			Map<String, Long> colorMap = this.averageColor(image);
@@ -1660,6 +1740,30 @@ public class OpenViduTestAppE2eTest {
 			isFine = false;
 		}
 		return isFine;
+	}
+
+	private void checkMultimediaFile(File file, boolean hasAudio, boolean hasVideo, double duration, String resolution,
+			int framerate, String videoDecoder, String audioDecoder) {
+		// Check tracks, duration, resolution, framerate and decoders
+		MultimediaFileMetadata metadata = new MultimediaFileMetadata(file);
+
+		if (hasVideo) {
+			if (hasAudio) {
+				Assert.assertTrue(metadata.hasAudioAndVideo());
+				Assert.assertTrue(metadata.getAudioDecoder().toLowerCase().contains(audioDecoder));
+			} else {
+				Assert.assertTrue(metadata.hasVideo());
+			}
+			Assert.assertEquals(resolution, metadata.getVideoWidth() + "x" + metadata.getVideoHeight());
+			Assert.assertEquals(metadata.getFrameRate(), new Integer(30));
+			Assert.assertTrue(metadata.getVideoDecoder().toLowerCase().contains(videoDecoder));
+		} else if (hasAudio) {
+			Assert.assertTrue(metadata.hasAudio());
+			Assert.assertTrue(metadata.getAudioDecoder().toLowerCase().contains(audioDecoder));
+		} else {
+			Assert.fail("Cannot check a file witho no audio and no video");
+		}
+		Assert.assertTrue((double) metadata.getDuration() / 1000 == duration);
 	}
 
 	private boolean thumbnailIsFine(File file) {
