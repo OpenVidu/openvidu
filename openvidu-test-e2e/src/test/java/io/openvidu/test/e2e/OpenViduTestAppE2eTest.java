@@ -30,6 +30,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -45,6 +46,7 @@ import java.util.zip.ZipInputStream;
 
 import javax.imageio.ImageIO;
 
+import org.apache.commons.io.FileUtils;
 import org.jcodec.api.FrameGrab;
 import org.jcodec.api.JCodecException;
 import org.jcodec.common.model.Picture;
@@ -104,6 +106,7 @@ public class OpenViduTestAppE2eTest {
 	private static final Logger log = LoggerFactory.getLogger(OpenViduTestAppE2eTest.class);
 
 	BrowserUser user;
+	volatile static boolean isRecordingTest;
 
 	@BeforeAll()
 	static void setupAll() {
@@ -178,6 +181,14 @@ public class OpenViduTestAppE2eTest {
 	@AfterEach
 	void dispose() {
 		user.dispose();
+		if (isRecordingTest) {
+			try {
+				FileUtils.deleteDirectory(new File("/opt/openvidu/recordings"));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			isRecordingTest = false;
+		}
 	}
 
 	@Test
@@ -977,6 +988,8 @@ public class OpenViduTestAppE2eTest {
 	@Test
 	@DisplayName("Remote composed record")
 	void remoteComposedRecordTest() throws Exception {
+		isRecordingTest = true;
+
 		setupBrowser("chrome");
 
 		log.info("Remote composed record");
@@ -1048,7 +1061,7 @@ public class OpenViduTestAppE2eTest {
 
 		user.getEventManager().waitUntilEventReaches("recordingStarted", 1);
 
-		Thread.sleep(8000);
+		Thread.sleep(6000);
 
 		user.getDriver().findElement(By.id("recording-id-field")).clear();
 		user.getDriver().findElement(By.id("recording-id-field")).sendKeys(sessionName);
@@ -1121,6 +1134,8 @@ public class OpenViduTestAppE2eTest {
 	@Test
 	@DisplayName("Remote individual record")
 	void remoteIndividualRecordTest() throws Exception {
+		isRecordingTest = true;
+
 		setupBrowser("chrome");
 
 		log.info("Remote individual record");
@@ -1229,14 +1244,14 @@ public class OpenViduTestAppE2eTest {
 		Assert.assertFalse(file2.exists());
 
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
-		Thread.sleep(1000);
 
 		gracefullyLeaveParticipants(2);
 	}
 
-	/*@Test
+	@Test
 	@DisplayName("Remote record cross-browser audio-only and video-only")
 	void remoteRecordAudioOnlyVideoOnlyTest() throws Exception {
+		isRecordingTest = true;
 
 		setupBrowser("chrome");
 
@@ -1308,7 +1323,7 @@ public class OpenViduTestAppE2eTest {
 				throw OpenViduTestAppE2eTest.ex;
 			}
 		}
-	}*/
+	}
 
 	@Test
 	@DisplayName("REST API: Fetch all, fetch one, force disconnect, force unpublish, close session")
@@ -1763,7 +1778,9 @@ public class OpenViduTestAppE2eTest {
 		} else {
 			Assert.fail("Cannot check a file witho no audio and no video");
 		}
-		Assert.assertTrue((double) metadata.getDuration() / 1000 == duration);
+		// Check duration with 2 decimal precision
+		DecimalFormat df = new DecimalFormat("#.00");
+		Assert.assertEquals(df.format(((double) metadata.getDuration() / 1000)), df.format(duration));
 	}
 
 	private boolean thumbnailIsFine(File file) {
