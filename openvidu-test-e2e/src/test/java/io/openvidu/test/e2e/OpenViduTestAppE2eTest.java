@@ -1061,7 +1061,7 @@ public class OpenViduTestAppE2eTest {
 
 		user.getEventManager().waitUntilEventReaches("recordingStarted", 1);
 
-		Thread.sleep(6000);
+		Thread.sleep(5000);
 
 		user.getDriver().findElement(By.id("recording-id-field")).clear();
 		user.getDriver().findElement(By.id("recording-id-field")).sendKeys(sessionName);
@@ -1126,6 +1126,7 @@ public class OpenViduTestAppE2eTest {
 		Assert.assertFalse(file3.exists());
 
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		Thread.sleep(500);
 
 		gracefullyLeaveParticipants(1);
 
@@ -1178,7 +1179,7 @@ public class OpenViduTestAppE2eTest {
 
 		user.getEventManager().waitUntilEventReaches("recordingStarted", 2);
 
-		Thread.sleep(8000);
+		Thread.sleep(5000);
 
 		user.getDriver().findElement(By.id("recording-id-field")).clear();
 		user.getDriver().findElement(By.id("recording-id-field")).sendKeys(sessionName);
@@ -1244,6 +1245,7 @@ public class OpenViduTestAppE2eTest {
 		Assert.assertFalse(file2.exists());
 
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		Thread.sleep(500);
 
 		gracefullyLeaveParticipants(2);
 	}
@@ -1424,6 +1426,7 @@ public class OpenViduTestAppE2eTest {
 		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 0));
 
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		Thread.sleep(500);
 
 		gracefullyLeaveParticipants(1);
 
@@ -1566,6 +1569,8 @@ public class OpenViduTestAppE2eTest {
 		Assert.assertTrue(checkVideoAverageRgbGreen(rgb));
 
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		Thread.sleep(500);
+
 		gracefullyLeaveParticipants(2);
 	}
 
