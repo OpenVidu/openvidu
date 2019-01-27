@@ -8,20 +8,20 @@ import { LayoutBestFitComponent } from 'app/components/layouts/layout-best-fit/l
 const appRoutes: Routes = [
   {
     path: '',
-    component: DashboardComponent,
-    pathMatch: 'full'
+    component: DashboardComponent
   },
   {
     path: 'session/:sessionId',
-    component: SessionDetailsComponent,
-    pathMatch: 'full'
+    component: SessionDetailsComponent
   },
   {
     path: 'layout-best-fit/:sessionId/:secret',
-    component: LayoutBestFitComponent,
-    pathMatch: 'full'
+    component: LayoutBestFitComponent
+  },
+  {
+    path: 'layout-best-fit/:sessionId/:secret/:onlyVideo',
+    component: LayoutBestFitComponent
   }
 ];
 
 export const routing: ModuleWithProviders = RouterModule.forRoot(appRoutes, { useHash: true });
-

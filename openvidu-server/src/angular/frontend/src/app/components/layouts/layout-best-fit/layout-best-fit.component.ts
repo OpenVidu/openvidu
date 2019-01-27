@@ -15,6 +15,7 @@ export class LayoutBestFitComponent implements OnInit, OnDestroy {
   openviduLayout: OpenViduLayout;
   sessionId: string;
   secret: string;
+  onlyVideo = false;
 
   session: Session;
   subscribers: Subscriber[] = [];
@@ -41,6 +42,9 @@ export class LayoutBestFitComponent implements OnInit, OnDestroy {
     this.route.params.subscribe(params => {
       this.sessionId = params.sessionId;
       this.secret = params.secret;
+      if (params.onlyVideo !== null) {
+        this.onlyVideo = JSON.parse(params.onlyVideo);
+      }
     });
   }
 
@@ -66,18 +70,24 @@ export class LayoutBestFitComponent implements OnInit, OnDestroy {
     this.session = OV.initSession();
 
     this.session.on('streamCreated', (event: StreamEvent) => {
-      let changeFixedRatio = false;
-      if (event.stream.typeOfVideo === 'SCREEN') {
-        this.numberOfScreenStreams++;
-        changeFixedRatio = true;
+      if (!(this.onlyVideo && !event.stream.hasVideo)) {
+        let changeFixedRatio = false;
+        if (event.stream.typeOfVideo === 'SCREEN') {
+          this.numberOfScreenStreams++;
+          changeFixedRatio = true;
+        }
+        const subscriber: Subscriber = this.session.subscribe(
+          event.stream,
+          undefined,
+          { subscribeToAudio: event.stream.hasAudio && !this.onlyVideo }
+        );
+        subscriber.on('streamPlaying', (e: StreamManagerEvent) => {
+          const video: HTMLVideoElement = subscriber.videos[0].video;
+          video.parentElement.parentElement.classList.remove('custom-class');
+          this.updateLayout(changeFixedRatio);
+        });
+        this.addSubscriber(subscriber);
       }
-      const subscriber: Subscriber = this.session.subscribe(event.stream, undefined);
-      subscriber.on('streamPlaying', (e: StreamManagerEvent) => {
-        const video: HTMLVideoElement = subscriber.videos[0].video;
-        video.parentElement.parentElement.classList.remove('custom-class');
-        this.updateLayout(changeFixedRatio);
-      });
-      this.addSubscriber(subscriber);
     });
 
     this.session.on('streamDestroyed', (event: StreamEvent) => {

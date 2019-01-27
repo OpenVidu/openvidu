@@ -457,7 +457,7 @@ public class ComposedRecordingService extends RecordingService {
 		} else {
 			layout = recording.getRecordingLayout().name().toLowerCase().replaceAll("_", "-");
 			finalUrl = "https://OPENVIDUAPP:" + secret + "@" + location + "/#/layout-" + layout + "/" + shortSessionId
-					+ "/" + secret;
+					+ "/" + secret + "/" + !recording.hasAudio();
 		}
 
 		return finalUrl;
