@@ -133,7 +133,7 @@ public class OpenViduTestAppE2eTest {
 
 		try {
 			log.info("Deleting folder /opt/openvidu/recordings");
-			FileUtils.deleteDirectory(new File("/opt/openvidu/recordings"));
+			FileUtils.cleanDirectory(new File("/opt/openvidu/recordings"));
 		} catch (IOException e) {
 			log.error(e.getMessage());
 		}
@@ -190,9 +190,9 @@ public class OpenViduTestAppE2eTest {
 		user.dispose();
 		if (isRecordingTest) {
 			try {
-				FileUtils.deleteDirectory(new File("/opt/openvidu/recordings"));
+				FileUtils.cleanDirectory(new File("/opt/openvidu/recordings"));
 			} catch (IOException e) {
-				e.printStackTrace();
+				log.error(e.getMessage());
 			}
 			isRecordingTest = false;
 		}
