@@ -1,6 +1,6 @@
 node('container') {
-  docker.image('selenium/standalone-chrome-debug:latest').pull();
-  docker.image('selenium/standalone-firefox-debug:latest').pull();
+  docker.image('selenium/standalone-chrome-debug:latest').pull()
+  docker.image('selenium/standalone-firefox-debug:latest').pull()
   docker.image('selenium/standalone-chrome-debug:latest').withRun('-p 4444:4444 -p 5900:5900 --shm-size=1g -v /opt/openvidu:/opt/openvidu') { c ->
     sh 'rm -rf /opt/openvidu/barcode.* && wget https://github.com/OpenVidu/openvidu/raw/master/openvidu-test-e2e/docker/barcode.y4m -P /opt/openvidu'
     docker.image('selenium/standalone-firefox-debug:latest').withRun('-p 4445:4444 -p 5901:5900 --shm-size=1g') { d ->
