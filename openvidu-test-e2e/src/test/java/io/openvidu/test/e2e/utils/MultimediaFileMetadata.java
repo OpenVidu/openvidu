@@ -47,7 +47,7 @@ public class MultimediaFileMetadata {
 				this.videoSize = videoInfo.getSize();
 			}
 		} catch (EncoderException e) {
-			log.error("Error getting multimedia information from file {}. Error: ", f.getAbsolutePath(),
+			log.error("Error getting multimedia information from file {}. Error: {}", f.getAbsolutePath(),
 					e.getMessage());
 		}
 	}
