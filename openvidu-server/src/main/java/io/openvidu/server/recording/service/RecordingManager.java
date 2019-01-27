@@ -38,6 +38,7 @@ import java.util.stream.Collectors;
 
 import javax.ws.rs.ProcessingException;
 
+import org.apache.commons.io.FileUtils;
 import org.kurento.client.MediaProfileSpecType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -329,14 +330,12 @@ public class RecordingManager {
 		File[] files = folder.listFiles();
 		for (int i = 0; i < files.length; i++) {
 			if (files[i].isDirectory() && files[i].getName().equals(recordingId)) {
-				// Correct folder. Delete all content and the folder itself
-				File[] allContents = files[i].listFiles();
-				if (allContents != null) {
-					for (File file : allContents) {
-						file.delete();
-					}
+				// Correct folder. Delete it
+				try {
+					FileUtils.deleteDirectory(files[i]);
+				} catch (IOException e) {
+					log.error("Couldn't delete folder {}", files[i].getAbsolutePath());
 				}
-				files[i].delete();
 				break;
 			}
 		}
