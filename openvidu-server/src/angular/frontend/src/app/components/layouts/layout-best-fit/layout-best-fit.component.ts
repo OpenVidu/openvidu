@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, HostListener, ViewEncapsulation, ApplicationRef } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { OpenVidu, Session, Stream, Subscriber, StreamEvent, StreamManagerEvent } from 'openvidu-browser';
+import { OpenVidu, Session, Subscriber, StreamEvent, StreamManagerEvent } from 'openvidu-browser';
 
 import { OpenViduLayout } from '../openvidu-layout';
 

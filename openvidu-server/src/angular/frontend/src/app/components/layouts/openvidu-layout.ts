@@ -1,4 +1,4 @@
-declare var $: any;
+import * as $ from 'jquery';
 
 export interface OpenViduLayoutOptions {
     maxRatio: number;
@@ -202,7 +202,7 @@ export class OpenViduLayout {
             let remainingHeightDiff = HEIGHT - totalRowHeight;
             totalRowHeight = 0;
             for (let i = 0; i < rows.length; i++) {
-                 row = rows[i];
+                row = rows[i];
                 if (row.width < WIDTH) {
                     // Evenly distribute the extra height between the short rows
                     let extraHeight = remainingHeightDiff / remainingShortRows;

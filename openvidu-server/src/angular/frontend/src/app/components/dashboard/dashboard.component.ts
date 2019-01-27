@@ -8,8 +8,6 @@ import { RestService } from '../../services/rest.service';
 import { OpenVidu, Session } from 'openvidu-browser';
 import { CredentialsDialogComponent } from './credentials-dialog.component';
 
-declare const $;
-
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
