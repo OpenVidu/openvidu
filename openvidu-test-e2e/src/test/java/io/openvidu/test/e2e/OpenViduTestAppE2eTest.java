@@ -1248,7 +1248,7 @@ public class OpenViduTestAppE2eTest {
 		gracefullyLeaveParticipants(2);
 	}
 
-	@Test
+	/*@Test
 	@DisplayName("Remote record cross-browser audio-only and video-only")
 	void remoteRecordAudioOnlyVideoOnlyTest() throws Exception {
 		isRecordingTest = true;
@@ -1323,7 +1323,7 @@ public class OpenViduTestAppE2eTest {
 				throw OpenViduTestAppE2eTest.ex;
 			}
 		}
-	}
+	}*/
 
 	@Test
 	@DisplayName("REST API: Fetch all, fetch one, force disconnect, force unpublish, close session")
