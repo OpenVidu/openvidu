@@ -130,6 +130,13 @@ public class OpenViduTestAppE2eTest {
 			OPENVIDU_SECRET = openvidusecret;
 		}
 		log.info("Using secret {} to connect to openvidu-server", OPENVIDU_SECRET);
+
+		try {
+			log.info("Deleting folder /opt/openvidu/recordings");
+			FileUtils.deleteDirectory(new File("/opt/openvidu/recordings"));
+		} catch (IOException e) {
+			log.error(e.getMessage());
+		}
 	}
 
 	void setupBrowser(String browser) {
