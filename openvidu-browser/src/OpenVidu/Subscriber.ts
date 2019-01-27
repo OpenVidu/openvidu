@@ -25,7 +25,10 @@ import { SubscriberProperties } from '../OpenViduInternal/Interfaces/Public/Subs
  */
 export class Subscriber extends StreamManager {
 
-    private properties: SubscriberProperties;
+    /**
+     * @hidden
+     */
+    properties: SubscriberProperties;
 
     /**
      * @hidden

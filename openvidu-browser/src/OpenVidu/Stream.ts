@@ -20,6 +20,7 @@ import { Event } from '../OpenViduInternal/Events/Event';
 import { Filter } from './Filter';
 import { Session } from './Session';
 import { StreamManager } from './StreamManager';
+import { Subscriber } from './Subscriber';
 import { EventDispatcher } from '../OpenViduInternal/Interfaces/Public/EventDispatcher';
 import { InboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/InboundStreamOptions';
 import { OutboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/OutboundStreamOptions';
@@ -822,6 +823,19 @@ export class Stream implements EventDispatcher {
         console.debug('Peer remote stream', this.mediaStream);
 
         if (!!this.mediaStream) {
+
+            if (this.streamManager instanceof Subscriber) {
+                // Apply SubscriberProperties.subscribeToAudio and SubscriberProperties.subscribeToVideo
+                if (!!this.mediaStream.getAudioTracks()[0]) {
+                    const enabled = !!((<Subscriber>this.streamManager).properties.subscribeToAudio);
+                    this.mediaStream.getAudioTracks()[0].enabled = enabled;
+                }
+                if (!!this.mediaStream.getVideoTracks()[0]) {
+                    const enabled = !!((<Subscriber>this.streamManager).properties.subscribeToVideo);
+                    this.mediaStream.getVideoTracks()[0].enabled = enabled;
+                }
+            }
+
             this.ee.emitEvent('mediastream-updated');
             if (!this.displayMyRemote() && !!this.mediaStream.getAudioTracks()[0] && this.session.speakingEventsEnabled) {
                 this.enableSpeakingEvents();
