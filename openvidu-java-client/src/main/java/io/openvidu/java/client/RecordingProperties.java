@@ -17,6 +17,8 @@
 
 package io.openvidu.java.client;
 
+import io.openvidu.java.client.Recording.OutputMode;
+
 /**
  * See
  * {@link io.openvidu.java.client.OpenVidu#startRecording(String, RecordingProperties)}
@@ -40,7 +42,7 @@ public class RecordingProperties {
 		private Recording.OutputMode outputMode = Recording.OutputMode.COMPOSED;
 		private RecordingLayout recordingLayout = RecordingLayout.BEST_FIT;
 		private String customLayout = "";
-		private String resolution = "1920x1080";
+		private String resolution;
 		private boolean hasAudio = true;
 		private boolean hasVideo = true;
 
@@ -48,6 +50,7 @@ public class RecordingProperties {
 		 * Builder for {@link io.openvidu.java.client.RecordingProperties}
 		 */
 		public RecordingProperties build() {
+			this.resolution = (this.resolution == null) ? (OutputMode.COMPOSED.equals(this.outputMode) ? "1920x1080" : null) : this.resolution;
 			return new RecordingProperties(this.name, this.outputMode, this.recordingLayout, this.customLayout,
 					this.resolution, this.hasAudio, this.hasVideo);
 		}
