@@ -460,6 +460,7 @@ public class OpenViduTestAppE2eTest {
 				user2.getEventManager().waitUntilEventReaches("sessionDisconnected", 1);
 			} catch (Exception e) {
 				e.printStackTrace();
+				user2.dispose();
 				Thread.currentThread().interrupt();
 			}
 			user2.dispose();
@@ -1290,6 +1291,7 @@ public class OpenViduTestAppE2eTest {
 				user2.getEventManager().waitUntilEventReaches("sessionDisconnected", 2);
 			} catch (Exception e) {
 				e.printStackTrace();
+				user2.dispose();
 				Thread.currentThread().interrupt();
 			}
 			user2.dispose();
