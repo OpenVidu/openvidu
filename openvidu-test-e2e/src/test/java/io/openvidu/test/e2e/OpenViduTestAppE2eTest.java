@@ -22,16 +22,13 @@ import static org.openqa.selenium.OutputType.BASE64;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
+import java.math.RoundingMode;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -41,8 +38,6 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 import javax.imageio.ImageIO;
 
@@ -74,6 +69,11 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.stream.JsonReader;
+
 import io.github.bonigarcia.SeleniumExtension;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import io.openvidu.java.client.OpenVidu;
@@ -84,6 +84,7 @@ import io.openvidu.test.e2e.browser.ChromeUser;
 import io.openvidu.test.e2e.browser.FirefoxUser;
 import io.openvidu.test.e2e.browser.OperaUser;
 import io.openvidu.test.e2e.utils.MultimediaFileMetadata;
+import io.openvidu.test.e2e.utils.Unzipper;
 
 /**
  * E2E tests for openvidu-testapp.
@@ -230,7 +231,7 @@ public class OpenViduTestAppE2eTest {
 		log.info("One2One [Audio]");
 
 		user.getDriver().findElement(By.id("one2one-btn")).click();
-		
+
 		user.getDriver().findElements(By.className("send-video-checkbox")).forEach(el -> el.click());
 		user.getDriver().findElements(By.className("join-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
 
@@ -255,7 +256,7 @@ public class OpenViduTestAppE2eTest {
 		log.info("One2One [Video]");
 
 		user.getDriver().findElement(By.id("one2one-btn")).click();
-		
+
 		user.getDriver().findElements(By.className("send-audio-checkbox")).forEach(el -> el.click());
 		user.getDriver().findElements(By.className("join-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
 
@@ -374,7 +375,7 @@ public class OpenViduTestAppE2eTest {
 		for (int i = 0; i < 4; i++) {
 			addUser.click();
 		}
-		
+
 		user.getDriver().findElements(By.className("join-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
 
 		user.getEventManager().waitUntilEventReaches("connectionCreated", 16);
@@ -449,6 +450,7 @@ public class OpenViduTestAppE2eTest {
 				user2.getEventManager().waitUntilEventReaches("streamCreated", 2);
 				user2.getEventManager().waitUntilEventReaches("streamPlaying", 2);
 
+				Assert.assertEquals(user2.getDriver().findElements(By.tagName("video")).size(), 2);
 				Assert.assertTrue(user2.getEventManager()
 						.assertMediaTracks(user2.getDriver().findElements(By.tagName("video")), true, true));
 
@@ -500,7 +502,7 @@ public class OpenViduTestAppE2eTest {
 		for (int i = 0; i < 4; i++) {
 			addUser.click();
 		}
-		
+
 		user.getDriver().findElements(By.className("publish-checkbox")).forEach(el -> el.click());
 		user.getDriver().findElements(By.className("join-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
 
@@ -1186,19 +1188,10 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("recordingStopped", 2);
 
 		String recordingsPath = "/opt/openvidu/recordings/";
+		String recPath = recordingsPath + sessionName + "/";
 
-		// Should be only 2 files: zip and metadata
-		File folder = new File(recordingsPath + sessionName);
-		Assert.assertEquals(folder.listFiles().length, 2);
-
-		File file1 = new File(recordingsPath + sessionName + "/" + recordingName + ".zip");
-		File file2 = new File(recordingsPath + sessionName + "/" + ".recording." + sessionName);
-
-		Assert.assertTrue(file1.exists() && file1.length() > 0);
-		Assert.assertTrue(file2.exists() && file2.length() > 0);
-
-		unzipAndCheckFile(recordingsPath + sessionName + "/", recordingName + ".zip",
-				new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(sessionName));
+		Recording recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(sessionName);
+		this.checkIndividualRecording(recPath, recording, "opus", "vp8");
 
 		// Try to get the stopped recording
 		user.getDriver().findElement(By.id("get-recording-btn")).click();
@@ -1215,8 +1208,7 @@ public class OpenViduTestAppE2eTest {
 		user.getWaiter()
 				.until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Recording deleted"));
 
-		Assert.assertFalse(file1.exists());
-		Assert.assertFalse(file2.exists());
+		Assert.assertFalse(new File(recPath).exists());
 
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 		Thread.sleep(500);
@@ -1224,7 +1216,7 @@ public class OpenViduTestAppE2eTest {
 		gracefullyLeaveParticipants(2);
 	}
 
-	/*@Test
+	@Test
 	@DisplayName("Remote record cross-browser audio-only and video-only")
 	void remoteRecordAudioOnlyVideoOnlyTest() throws Exception {
 		isRecordingTest = true;
@@ -1232,6 +1224,13 @@ public class OpenViduTestAppE2eTest {
 		setupBrowser("chromeAlternateScreenShare");
 
 		log.info("Remote record cross-browser audio-only and video-only");
+
+		final String SESSION_NAME = "TestSession";
+		final String RECORDING_COMPOSED_VIDEO = "COMPOSED_VIDEO_ONLY";
+		final String RECORDING_COMPOSED_AUDIO = "COMPOSED_AUDIO_ONLY";
+		final String RECORDING_INDIVIDUAL_VIDEO = "INDIVIDUAL_VIDEO_ONLY";
+		final String RECORDING_INDIVIDUAL_AUDIO = "INDIVIDUAL_AUDIO_ONLY";
+		final int RECORDING_DURATION = 5000;
 
 		Thread.UncaughtExceptionHandler h = new Thread.UncaughtExceptionHandler() {
 			public void uncaughtException(Thread th, Throwable ex) {
@@ -1243,7 +1242,7 @@ public class OpenViduTestAppE2eTest {
 		};
 
 		Thread t = new Thread(() -> {
-			BrowserUser user2 = new FirefoxUser("FirefoxUser", 30);
+			BrowserUser user2 = new FirefoxUser("FirefoxUser", 40);
 			user2.getDriver().get(APP_URL);
 			WebElement urlInput = user2.getDriver().findElement(By.id("openvidu-url"));
 			urlInput.clear();
@@ -1254,21 +1253,31 @@ public class OpenViduTestAppE2eTest {
 
 			user2.getEventManager().startPolling();
 
+			// Firefox user audio + video
 			user2.getDriver().findElement(By.id("add-user-btn")).click();
-			user2.getDriver().findElement(By.className("join-btn")).click();
+
+			// Firefox user video-only
+			user2.getDriver().findElement(By.id("add-user-btn")).click();
+			user2.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .send-audio-checkbox")).click();
+
+			// Join Firefox users
+			user2.getDriver().findElements(By.className("join-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+
 			try {
-				user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
-				user.getEventManager().waitUntilEventReaches("accessAllowed", 2);
-				user.getEventManager().waitUntilEventReaches("streamCreated", 8);
-				user.getEventManager().waitUntilEventReaches("streamPlaying", 8);
+				user2.getEventManager().waitUntilEventReaches("connectionCreated", 4);
+				user2.getEventManager().waitUntilEventReaches("accessAllowed", 2);
+				user2.getEventManager().waitUntilEventReaches("streamCreated", 8);
+				user2.getEventManager().waitUntilEventReaches("streamPlaying", 8);
 
-				Assert.assertTrue(user2.getEventManager()
-						.assertMediaTracks(user2.getDriver().findElements(By.tagName("video")), true, true));
+				Assert.assertEquals(user2.getDriver().findElements(By.tagName("video")).size(), 8);
 
-				user2.getEventManager().waitUntilEventReaches("streamDestroyed", 1);
-				user2.getEventManager().waitUntilEventReaches("connectionDestroyed", 1);
+				Thread.sleep(RECORDING_DURATION * 6);
+
+				user2.getEventManager().waitUntilEventReaches("streamDestroyed", 4);
+				user2.getEventManager().waitUntilEventReaches("connectionDestroyed", 4);
 				user2.getDriver().findElement(By.id("remove-user-btn")).click();
-				user2.getEventManager().waitUntilEventReaches("sessionDisconnected", 1);
+				user2.getDriver().findElement(By.id("remove-user-btn")).click();
+				user2.getEventManager().waitUntilEventReaches("sessionDisconnected", 2);
 			} catch (Exception e) {
 				e.printStackTrace();
 				Thread.currentThread().interrupt();
@@ -1277,15 +1286,16 @@ public class OpenViduTestAppE2eTest {
 		});
 		t.setUncaughtExceptionHandler(h);
 		t.start();
-		
+
 		// Chrome user screen share only-video
 		user.getDriver().findElement(By.id("add-user-btn")).click();
 		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .screen-radio")).click();
-		
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .send-audio-checkbox")).click();
+
 		// Chrome user audio-only
 		user.getDriver().findElement(By.id("add-user-btn")).click();
 		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .send-video-checkbox")).click();
-		
+
 		// Join Chrome users
 		user.getDriver().findElements(By.className("join-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
 
@@ -1294,20 +1304,131 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 8);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 8);
 
-		Assert.assertEquals(user.getDriver().findElements(By.tagName("video")).size(), 2);
-		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
-				true, true));
+		Assert.assertEquals(user.getDriver().findElements(By.tagName("video")).size(), 8);
 
-		gracefullyLeaveParticipants(1);
+		user.getDriver().findElement(By.id("session-api-btn-0")).click();
+		Thread.sleep(1000);
+		user.getDriver().findElement(By.id("rec-properties-btn")).click();
+		Thread.sleep(500);
 
-		// t.join();
+		WebElement recordingNameField = user.getDriver().findElement(By.id("recording-name-field"));
+
+		// Video-only COMPOSED recording
+		recordingNameField.clear();
+		recordingNameField.sendKeys(RECORDING_COMPOSED_VIDEO);
+		user.getDriver().findElement(By.id("rec-hasaudio-checkbox")).click();
+		user.getDriver().findElement(By.id("start-recording-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
+				"Recording started [" + SESSION_NAME + "]"));
+		user.getEventManager().waitUntilEventReaches("recordingStarted", 1);
+
+		Thread.sleep(RECORDING_DURATION);
+
+		user.getDriver().findElement(By.id("recording-id-field")).clear();
+		user.getDriver().findElement(By.id("recording-id-field")).sendKeys(SESSION_NAME);
+		user.getDriver().findElement(By.id("stop-recording-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
+				"Recording stopped [" + SESSION_NAME + "]"));
+		user.getEventManager().waitUntilEventReaches("recordingStopped", 1);
+
+		// Audio-only COMPOSED recording
+		recordingNameField.clear();
+		recordingNameField.sendKeys(RECORDING_COMPOSED_AUDIO);
+		user.getDriver().findElement(By.id("rec-hasaudio-checkbox")).click();
+		user.getDriver().findElement(By.id("rec-hasvideo-checkbox")).click();
+		user.getDriver().findElement(By.id("start-recording-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
+				"Recording started [" + SESSION_NAME + "-1]"));
+		user.getEventManager().waitUntilEventReaches("recordingStarted", 2);
+
+		Thread.sleep(RECORDING_DURATION);
+
+		user.getDriver().findElement(By.id("recording-id-field")).clear();
+		user.getDriver().findElement(By.id("recording-id-field")).sendKeys(SESSION_NAME + "-1");
+		user.getDriver().findElement(By.id("stop-recording-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
+				"Recording stopped [" + SESSION_NAME + "-1]"));
+		user.getEventManager().waitUntilEventReaches("recordingStopped", 2);
+
+		// Video-only INDIVIDUAL recording
+		recordingNameField.clear();
+		recordingNameField.sendKeys(RECORDING_INDIVIDUAL_VIDEO);
+		user.getDriver().findElement(By.id("rec-hasaudio-checkbox")).click();
+		user.getDriver().findElement(By.id("rec-hasvideo-checkbox")).click();
+		user.getDriver().findElement(By.id("rec-outputmode-select")).click();
+		Thread.sleep(500);
+		user.getDriver().findElement(By.id("option-INDIVIDUAL")).click();
+		Thread.sleep(500);
+		user.getDriver().findElement(By.id("start-recording-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
+				"Recording started [" + SESSION_NAME + "-2]"));
+		user.getEventManager().waitUntilEventReaches("recordingStarted", 3);
+
+		Thread.sleep(RECORDING_DURATION);
+
+		user.getDriver().findElement(By.id("recording-id-field")).clear();
+		user.getDriver().findElement(By.id("recording-id-field")).sendKeys(SESSION_NAME + "-2");
+		user.getDriver().findElement(By.id("stop-recording-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
+				"Recording stopped [" + SESSION_NAME + "-2]"));
+		user.getEventManager().waitUntilEventReaches("recordingStopped", 3);
+
+		// Audio-only INDIVIDUAL recording
+		recordingNameField.clear();
+		recordingNameField.sendKeys(RECORDING_INDIVIDUAL_AUDIO);
+		user.getDriver().findElement(By.id("rec-hasaudio-checkbox")).click();
+		user.getDriver().findElement(By.id("rec-hasvideo-checkbox")).click();
+		user.getDriver().findElement(By.id("start-recording-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
+				"Recording started [" + SESSION_NAME + "-3]"));
+		user.getEventManager().waitUntilEventReaches("recordingStarted", 4);
+
+		Thread.sleep(RECORDING_DURATION);
+
+		user.getDriver().findElement(By.id("recording-id-field")).clear();
+		user.getDriver().findElement(By.id("recording-id-field")).sendKeys(SESSION_NAME + "-3");
+		user.getDriver().findElement(By.id("stop-recording-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
+				"Recording stopped [" + SESSION_NAME + "-3]"));
+		user.getEventManager().waitUntilEventReaches("recordingStopped", 4);
+
+		String recordingsPath = "/opt/openvidu/recordings/";
+
+		// Check video-only COMPOSED recording
+		String recPath = recordingsPath + SESSION_NAME + "/";
+		Recording recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME);
+		this.checkMultimediaFile(new File(recPath + recording.getName() + ".mp4"), false, true,
+				recording.getDuration() * 1000, recording.getResolution(), null, "h264");
+
+		// Check audio-only COMPOSED recording
+		recPath = recordingsPath + SESSION_NAME + "-1/";
+		recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME + "-1");
+		this.checkMultimediaFile(new File(recPath + recording.getName() + ".webm"), true, false,
+				recording.getDuration() * 1000, null, "opus", null);
+
+		// Check video-only INDIVIDUAL recording
+		recPath = recordingsPath + SESSION_NAME + "-2/";
+		recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME + "-2");
+		this.checkIndividualRecording(recPath, recording, "opus", "vp8");
+
+		// Check audio-only INDIVIDUAL recording
+		recPath = recordingsPath + SESSION_NAME + "-3/";
+		recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME + "-3");
+		this.checkIndividualRecording(recPath, recording, "opus", "vp8");
+
+		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		Thread.sleep(500);
+
+		gracefullyLeaveParticipants(2);
+
+		t.join();
 
 		synchronized (lock) {
 			if (OpenViduTestAppE2eTest.ex != null) {
 				throw OpenViduTestAppE2eTest.ex;
 			}
 		}
-	}*/
+	}
 
 	@Test
 	@DisplayName("REST API: Fetch all, fetch one, force disconnect, force unpublish, close session")
@@ -1716,8 +1837,8 @@ public class OpenViduTestAppE2eTest {
 	}
 
 	private boolean recordedFileFine(File file, Recording recording) {
-		this.checkMultimediaFile(file, true, true, recording.getDuration(), recording.getResolution(), 30, "h264",
-				"aac");
+		this.checkMultimediaFile(file, true, true, recording.getDuration() * 1000, recording.getResolution(), "aac",
+				"h264");
 
 		boolean isFine = false;
 		Picture frame;
@@ -1738,8 +1859,63 @@ public class OpenViduTestAppE2eTest {
 		return isFine;
 	}
 
+	private void checkIndividualRecording(String recPath, Recording recording, String audioDecoder,
+			String videoDecoder) {
+
+		// Should be only 2 files: zip and metadata
+		File folder = new File(recPath);
+		Assert.assertEquals(folder.listFiles().length, 2);
+
+		File file1 = new File(recPath + recording.getName() + ".zip");
+		File file2 = new File(recPath + ".recording." + recording.getId());
+
+		Assert.assertTrue(file1.exists() && file1.length() > 0);
+		Assert.assertTrue(file2.exists() && file2.length() > 0);
+
+		List<File> unzippedWebmFiles = new Unzipper().unzipFile(recPath, recording.getName() + ".zip");
+
+		File jsonSyncFile = new File(recPath + recording.getId() + ".json");
+		Assert.assertTrue(jsonSyncFile.exists() && jsonSyncFile.length() > 0);
+		JsonObject jsonSyncMetadata;
+		try {
+			Gson gson = new Gson();
+			JsonReader reader = new JsonReader(new FileReader(jsonSyncFile));
+			jsonSyncMetadata = gson.fromJson(reader, JsonObject.class);
+		} catch (Exception e) {
+			log.error("Cannot read JSON sync metadata file from {}. Error: {}", jsonSyncFile.getAbsolutePath(),
+					e.getMessage());
+			Assert.fail();
+			return;
+		}
+
+		long totalFileSize = 0;
+		JsonArray syncArray = jsonSyncMetadata.get("files").getAsJsonArray();
+		for (File webmFile : unzippedWebmFiles) {
+			totalFileSize += webmFile.length();
+			Assert.assertTrue(webmFile.exists() && webmFile.length() > 0);
+			double duration = 0;
+			boolean found = false;
+			for (int i = 0; i < syncArray.size(); i++) {
+				JsonObject j = syncArray.get(i).getAsJsonObject();
+				if (webmFile.getName().contains(j.get("streamId").getAsString())) {
+					duration = (j.get("endTimeOffset").getAsDouble() - j.get("startTimeOffset").getAsDouble());
+					found = true;
+					break;
+				}
+			}
+			Assert.assertTrue(found);
+			log.info("Duration of {} according to sync metadata json file: {} ms", webmFile.getName(), duration);
+			this.checkMultimediaFile(webmFile, recording.hasAudio(), recording.hasVideo(), duration,
+					recording.getResolution(), audioDecoder, videoDecoder);
+			webmFile.delete();
+		}
+		Assert.assertEquals(recording.getSize(), totalFileSize);
+
+		jsonSyncFile.delete();
+	}
+
 	private void checkMultimediaFile(File file, boolean hasAudio, boolean hasVideo, double duration, String resolution,
-			int framerate, String videoDecoder, String audioDecoder) {
+			String audioDecoder, String videoDecoder) {
 		// Check tracks, duration, resolution, framerate and decoders
 		MultimediaFileMetadata metadata = new MultimediaFileMetadata(file);
 		metadata.processMultimediaFile(0);
@@ -1750,19 +1926,25 @@ public class OpenViduTestAppE2eTest {
 				Assert.assertTrue(metadata.getAudioDecoder().toLowerCase().contains(audioDecoder));
 			} else {
 				Assert.assertTrue(metadata.hasVideo());
+				Assert.assertFalse(metadata.hasAudio());
 			}
-			Assert.assertEquals(resolution, metadata.getVideoWidth() + "x" + metadata.getVideoHeight());
-			Assert.assertEquals(metadata.getFrameRate(), new Integer(30));
+			if (resolution != null) {
+				Assert.assertEquals(resolution, metadata.getVideoWidth() + "x" + metadata.getVideoHeight());
+			}
 			Assert.assertTrue(metadata.getVideoDecoder().toLowerCase().contains(videoDecoder));
 		} else if (hasAudio) {
 			Assert.assertTrue(metadata.hasAudio());
+			Assert.assertFalse(metadata.hasVideo());
 			Assert.assertTrue(metadata.getAudioDecoder().toLowerCase().contains(audioDecoder));
 		} else {
 			Assert.fail("Cannot check a file witho no audio and no video");
 		}
-		// Check duration with 2 decimal precision
-		DecimalFormat df = new DecimalFormat("#.00");
-		Assert.assertEquals(df.format(((double) metadata.getDuration() / 1000)), df.format(duration));
+		// Check duration with 1 decimal precision
+		DecimalFormat df = new DecimalFormat("#0.0");
+		df.setRoundingMode(RoundingMode.UP);
+		log.info("Duration of {} according to ffmpeg: {} ms", file.getName(), metadata.getDuration());
+		log.info("Difference in ms duration: {}", Math.abs(metadata.getDuration() - duration));
+		Assert.assertTrue((metadata.getDuration() - duration) < 150);
 	}
 
 	private boolean thumbnailIsFine(File file) {
@@ -1803,47 +1985,6 @@ public class OpenViduTestAppE2eTest {
 		colorMap.put("g", (long) (sumg / num));
 		colorMap.put("b", (long) (sumb / num));
 		return colorMap;
-	}
-
-	private void unzipAndCheckFile(String path, String fileName, Recording recording) {
-		final int BUFFER = 2048;
-		final List<String> recordingFiles = new ArrayList<>();
-		try {
-			BufferedOutputStream dest = null;
-			FileInputStream fis = new FileInputStream(path + fileName);
-			ZipInputStream zis = new ZipInputStream(new BufferedInputStream(fis));
-			ZipEntry entry;
-			while ((entry = zis.getNextEntry()) != null) {
-				log.info("Extracting: " + entry);
-				if (entry.getName().endsWith(".webm")) {
-					recordingFiles.add(entry.getName());
-				}
-				int count;
-				byte data[] = new byte[BUFFER];
-				FileOutputStream fos = new FileOutputStream(path + entry.getName());
-				dest = new BufferedOutputStream(fos, BUFFER);
-				while ((count = zis.read(data, 0, BUFFER)) != -1) {
-					dest.write(data, 0, count);
-				}
-				dest.flush();
-				dest.close();
-			}
-			zis.close();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		long totalFileSize = 0;
-		for (String videoFileName : recordingFiles) {
-			File videoFile = new File(path + videoFileName);
-			totalFileSize += videoFile.length();
-			Assert.assertTrue(videoFile.exists() && videoFile.length() > 0);
-			videoFile.delete();
-		}
-		Assert.assertEquals(recording.getSize() / 1000, totalFileSize / 1000);
-
-		File jsonSyncFile = new File(path + recording.getSessionId() + ".json");
-		Assert.assertTrue(jsonSyncFile.exists() && jsonSyncFile.length() > 0);
-		jsonSyncFile.delete();
 	}
 
 }
