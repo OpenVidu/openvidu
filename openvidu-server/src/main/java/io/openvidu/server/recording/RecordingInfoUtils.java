@@ -103,7 +103,7 @@ public class RecordingInfoUtils {
 	}
 
 	public int getVideoFramerate() {
-		String frameRate = videoStream.get("r_frame_rate").toString();
+		String frameRate = videoStream.get("r_frame_rate").getAsString();
 		String[] frameRateParts = frameRate.split("/");
 
 		return Integer.parseInt(frameRateParts[0]) / Integer.parseInt(frameRateParts[1]);

@@ -1933,12 +1933,11 @@ public class OpenViduTestAppE2eTest {
 	private void checkMultimediaFile(File file, boolean hasAudio, boolean hasVideo, double duration, String resolution,
 			String audioDecoder, String videoDecoder) {
 		// Check tracks, duration, resolution, framerate and decoders
-		MultimediaFileMetadata metadata = new MultimediaFileMetadata(file);
-		metadata.processMultimediaFile(0);
+		MultimediaFileMetadata metadata = new MultimediaFileMetadata(file.getAbsolutePath());
 
 		if (hasVideo) {
 			if (hasAudio) {
-				Assert.assertTrue(metadata.hasAudioAndVideo());
+				Assert.assertTrue(metadata.hasAudio() && metadata.hasVideo());
 				Assert.assertTrue(metadata.getAudioDecoder().toLowerCase().contains(audioDecoder));
 			} else {
 				Assert.assertTrue(metadata.hasVideo());

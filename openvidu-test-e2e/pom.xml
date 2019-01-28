@@ -156,16 +156,6 @@
 			<artifactId>jcodec-javase</artifactId>
 			<version>0.2.3</version>
 		</dependency>
-		<dependency>
-			<groupId>ws.schild</groupId>
-			<artifactId>jave-core</artifactId>
-			<version>2.4.5</version>
-		</dependency>
-		<dependency>
-			<groupId>ws.schild</groupId>
-			<artifactId>jave-native-linux64</artifactId>
-			<version>2.4.5</version>
-		</dependency>
 
 		<dependency>
 			<groupId>io.openvidu</groupId>

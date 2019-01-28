@@ -39,6 +39,11 @@ RUN npm install -g typescript@latest
 # sudo
 RUN apt-get -y install sudo
 
+# ffmpeg (for ffprobe)
+RUN add-apt-repository ppa:jonathonf/ffmpeg-4
+RUN apt-get update
+RUN apt-get install -y ffmpeg
+
 # Cleanup
 RUN rm -rf /var/lib/apt/lists/*
 RUN apt-get autoremove --purge -y
