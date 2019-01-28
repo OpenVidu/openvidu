@@ -1329,6 +1329,7 @@ public class OpenViduTestAppE2eTest {
 		recordingNameField.clear();
 		recordingNameField.sendKeys(RECORDING_COMPOSED_VIDEO);
 		user.getDriver().findElement(By.id("rec-hasaudio-checkbox")).click();
+		Thread.sleep(500);
 		user.getDriver().findElement(By.id("start-recording-btn")).click();
 		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
 				"Recording started [" + SESSION_NAME + "]"));
@@ -1348,6 +1349,7 @@ public class OpenViduTestAppE2eTest {
 		recordingNameField.sendKeys(RECORDING_COMPOSED_AUDIO);
 		user.getDriver().findElement(By.id("rec-hasaudio-checkbox")).click();
 		user.getDriver().findElement(By.id("rec-hasvideo-checkbox")).click();
+		Thread.sleep(500);
 		user.getDriver().findElement(By.id("start-recording-btn")).click();
 		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
 				"Recording started [" + SESSION_NAME + "-1]"));
@@ -1367,6 +1369,7 @@ public class OpenViduTestAppE2eTest {
 		recordingNameField.sendKeys(RECORDING_INDIVIDUAL_VIDEO);
 		user.getDriver().findElement(By.id("rec-hasaudio-checkbox")).click();
 		user.getDriver().findElement(By.id("rec-hasvideo-checkbox")).click();
+		Thread.sleep(500);
 		user.getDriver().findElement(By.id("rec-outputmode-select")).click();
 		Thread.sleep(500);
 		user.getDriver().findElement(By.id("option-INDIVIDUAL")).click();
@@ -1390,6 +1393,7 @@ public class OpenViduTestAppE2eTest {
 		recordingNameField.sendKeys(RECORDING_INDIVIDUAL_AUDIO);
 		user.getDriver().findElement(By.id("rec-hasaudio-checkbox")).click();
 		user.getDriver().findElement(By.id("rec-hasvideo-checkbox")).click();
+		Thread.sleep(500);
 		user.getDriver().findElement(By.id("start-recording-btn")).click();
 		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
 				"Recording started [" + SESSION_NAME + "-3]"));
