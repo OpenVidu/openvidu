@@ -94,11 +94,13 @@ public class Recording {
 		this.url = (String) json.get("url");
 		this.status = Recording.Status.valueOf((String) json.get("status"));
 
+		boolean hasAudio = (boolean) json.get("hasAudio");
+		boolean hasVideo = (boolean) json.get("hasVideo");
+
 		OutputMode outputMode = OutputMode.valueOf((String) json.get("outputMode"));
 		RecordingProperties.Builder builder = new RecordingProperties.Builder().name((String) json.get("name"))
-				.outputMode(outputMode).hasAudio((boolean) json.get("hasAudio"))
-				.hasVideo((boolean) json.get("hasVideo"));
-		if (OutputMode.COMPOSED.equals(outputMode)) {
+				.outputMode(outputMode).hasAudio(hasAudio).hasVideo(hasVideo);
+		if (OutputMode.COMPOSED.equals(outputMode) && hasVideo) {
 			builder.resolution((String) json.get("resolution"));
 			builder.recordingLayout(RecordingLayout.valueOf((String) json.get("recordingLayout")));
 			String customLayout = (String) json.get("customLayout");

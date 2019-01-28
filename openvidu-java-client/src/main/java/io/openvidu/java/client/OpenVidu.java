@@ -75,11 +75,9 @@ public class OpenVidu {
 	protected final static String API_RECORDINGS_STOP = "/stop";
 
 	/**
-	 * @param urlOpenViduServer
-	 *            Public accessible IP where your instance of OpenVidu Server is up
-	 *            an running
-	 * @param secret
-	 *            Secret used on OpenVidu Server initialization
+	 * @param urlOpenViduServer Public accessible IP where your instance of OpenVidu
+	 *                          Server is up an running
+	 * @param secret            Secret used on OpenVidu Server initialization
 	 */
 	public OpenVidu(String urlOpenViduServer, String secret) {
 
@@ -136,20 +134,19 @@ public class OpenVidu {
 	/**
 	 * Creates an OpenVidu session
 	 * 
-	 * @param properties
-	 *            The specific configuration for this session
+	 * @param properties The specific configuration for this session
 	 * 
 	 * @return The created session
 	 * 
 	 * @throws OpenViduJavaClientException
-	 * @throws OpenViduHttpException
-	 *             Value returned from
-	 *             {@link io.openvidu.java.client.OpenViduHttpException#getStatus()}
-	 *             <ul>
-	 *             <li><code>409</code>: you are trying to assign an already-in-use
-	 *             custom sessionId to the session. See
-	 *             {@link io.openvidu.java.client.SessionProperties#customSessionId()}</li>
-	 *             </ul>
+	 * @throws OpenViduHttpException       Value returned from
+	 *                                     {@link io.openvidu.java.client.OpenViduHttpException#getStatus()}
+	 *                                     <ul>
+	 *                                     <li><code>409</code>: you are trying to
+	 *                                     assign an already-in-use custom sessionId
+	 *                                     to the session. See
+	 *                                     {@link io.openvidu.java.client.SessionProperties#customSessionId()}</li>
+	 *                                     </ul>
 	 */
 	public Session createSession(SessionProperties properties)
 			throws OpenViduJavaClientException, OpenViduHttpException {
@@ -161,29 +158,28 @@ public class OpenVidu {
 	/**
 	 * Starts the recording of a {@link io.openvidu.java.client.Session}
 	 *
-	 * @param sessionId
-	 *            The sessionId of the session you want to start recording
-	 * @param properties
-	 *            The configuration for this recording
+	 * @param sessionId  The sessionId of the session you want to start recording
+	 * @param properties The configuration for this recording
 	 *
 	 * @return The new created session
 	 * 
 	 * @throws OpenViduJavaClientException
-	 * @throws OpenViduHttpException
-	 *             Value returned from
-	 *             {@link io.openvidu.java.client.OpenViduHttpException#getStatus()}
-	 *             <ul>
-	 *             <li><code>404</code>: no session exists for the passed
-	 *             <i>sessionId</i></li>
-	 *             <li><code>400</code>: the session has no connected
-	 *             participants</li>
-	 *             <li><code>409</code>: the session is not configured for using
-	 *             {@link io.openvidu.java.client.MediaMode#ROUTED} or it is already
-	 *             being recorded</li>
-	 *             <li><code>501</code>: OpenVidu Server recording module is
-	 *             disabled (<i>openvidu.recording</i> property set to
-	 *             <i>false</i>)</li>
-	 *             </ul>
+	 * @throws OpenViduHttpException       Value returned from
+	 *                                     {@link io.openvidu.java.client.OpenViduHttpException#getStatus()}
+	 *                                     <ul>
+	 *                                     <li><code>404</code>: no session exists
+	 *                                     for the passed <i>sessionId</i></li>
+	 *                                     <li><code>400</code>: the session has no
+	 *                                     connected participants</li>
+	 *                                     <li><code>409</code>: the session is not
+	 *                                     configured for using
+	 *                                     {@link io.openvidu.java.client.MediaMode#ROUTED}
+	 *                                     or it is already being recorded</li>
+	 *                                     <li><code>501</code>: OpenVidu Server
+	 *                                     recording module is disabled
+	 *                                     (<i>openvidu.recording</i> property set
+	 *                                     to <i>false</i>)</li>
+	 *                                     </ul>
 	 */
 	@SuppressWarnings("unchecked")
 	public Recording startRecording(String sessionId, RecordingProperties properties)
@@ -198,7 +194,7 @@ public class OpenVidu {
 		json.put("hasAudio", properties.hasAudio());
 		json.put("hasVideo", properties.hasVideo());
 
-		if (Recording.OutputMode.COMPOSED.equals(properties.outputMode())) {
+		if (Recording.OutputMode.COMPOSED.equals(properties.outputMode()) && properties.hasVideo()) {
 			json.put("resolution", properties.resolution());
 			json.put("recordingLayout",
 					(properties.recordingLayout() != null) ? properties.recordingLayout().name() : "");
@@ -247,35 +243,35 @@ public class OpenVidu {
 	/**
 	 * Starts the recording of a {@link io.openvidu.java.client.Session}
 	 *
-	 * @param sessionId
-	 *            The sessionId of the session you want to start recording
-	 * @param name
-	 *            The name you want to give to the video file. You can access this
-	 *            same value in your clients on recording events (recordingStarted,
-	 *            recordingStopped). <strong>WARNING: this parameter follows an
-	 *            overwriting policy.</strong> If you name two recordings the same,
-	 *            the newest MP4 file will overwrite the oldest one
+	 * @param sessionId The sessionId of the session you want to start recording
+	 * @param name      The name you want to give to the video file. You can access
+	 *                  this same value in your clients on recording events
+	 *                  (recordingStarted, recordingStopped). <strong>WARNING: this
+	 *                  parameter follows an overwriting policy.</strong> If you
+	 *                  name two recordings the same, the newest MP4 file will
+	 *                  overwrite the oldest one
 	 *
 	 * @return The started recording. If this method successfully returns the
 	 *         Recording object it means that the recording can be stopped with
 	 *         guarantees
 	 * 
 	 * @throws OpenViduJavaClientException
-	 * @throws OpenViduHttpException
-	 *             Value returned from
-	 *             {@link io.openvidu.java.client.OpenViduHttpException#getStatus()}
-	 *             <ul>
-	 *             <li><code>404</code>: no session exists for the passed
-	 *             <i>sessionId</i></li>
-	 *             <li><code>400</code>: the session has no connected
-	 *             participants</li>
-	 *             <li><code>409</code>: the session is not configured for using
-	 *             {@link io.openvidu.java.client.MediaMode#ROUTED} or it is already
-	 *             being recorded</li>
-	 *             <li><code>501</code>: OpenVidu Server recording module is
-	 *             disabled (<i>openvidu.recording</i> property set to
-	 *             <i>false</i>)</li>
-	 *             </ul>
+	 * @throws OpenViduHttpException       Value returned from
+	 *                                     {@link io.openvidu.java.client.OpenViduHttpException#getStatus()}
+	 *                                     <ul>
+	 *                                     <li><code>404</code>: no session exists
+	 *                                     for the passed <i>sessionId</i></li>
+	 *                                     <li><code>400</code>: the session has no
+	 *                                     connected participants</li>
+	 *                                     <li><code>409</code>: the session is not
+	 *                                     configured for using
+	 *                                     {@link io.openvidu.java.client.MediaMode#ROUTED}
+	 *                                     or it is already being recorded</li>
+	 *                                     <li><code>501</code>: OpenVidu Server
+	 *                                     recording module is disabled
+	 *                                     (<i>openvidu.recording</i> property set
+	 *                                     to <i>false</i>)</li>
+	 *                                     </ul>
 	 */
 	public Recording startRecording(String sessionId, String name)
 			throws OpenViduJavaClientException, OpenViduHttpException {
@@ -288,29 +284,29 @@ public class OpenVidu {
 	/**
 	 * Starts the recording of a {@link io.openvidu.java.client.Session}
 	 *
-	 * @param sessionId
-	 *            The sessionId of the session you want to start recording
+	 * @param sessionId The sessionId of the session you want to start recording
 	 *
 	 * @return The started recording. If this method successfully returns the
 	 *         Recording object it means that the recording can be stopped with
 	 *         guarantees
 	 * 
 	 * @throws OpenViduJavaClientException
-	 * @throws OpenViduHttpException
-	 *             Value returned from
-	 *             {@link io.openvidu.java.client.OpenViduHttpException#getStatus()}
-	 *             <ul>
-	 *             <li><code>404</code>: no session exists for the passed
-	 *             <i>sessionId</i></li>
-	 *             <li><code>400</code>: the session has no connected
-	 *             participants</li>
-	 *             <li><code>409</code>: the session is not configured for using
-	 *             {@link io.openvidu.java.client.MediaMode#ROUTED} or it is already
-	 *             being recorded</li>
-	 *             <li><code>501</code>: OpenVidu Server recording module is
-	 *             disabled (<i>openvidu.recording</i> property set to
-	 *             <i>false</i>)</li>
-	 *             </ul>
+	 * @throws OpenViduHttpException       Value returned from
+	 *                                     {@link io.openvidu.java.client.OpenViduHttpException#getStatus()}
+	 *                                     <ul>
+	 *                                     <li><code>404</code>: no session exists
+	 *                                     for the passed <i>sessionId</i></li>
+	 *                                     <li><code>400</code>: the session has no
+	 *                                     connected participants</li>
+	 *                                     <li><code>409</code>: the session is not
+	 *                                     configured for using
+	 *                                     {@link io.openvidu.java.client.MediaMode#ROUTED}
+	 *                                     or it is already being recorded</li>
+	 *                                     <li><code>501</code>: OpenVidu Server
+	 *                                     recording module is disabled
+	 *                                     (<i>openvidu.recording</i> property set
+	 *                                     to <i>false</i>)</li>
+	 *                                     </ul>
 	 */
 	public Recording startRecording(String sessionId) throws OpenViduJavaClientException, OpenViduHttpException {
 		return this.startRecording(sessionId, "");
@@ -319,21 +315,21 @@ public class OpenVidu {
 	/**
 	 * Stops the recording of a {@link io.openvidu.java.client.Session}
 	 *
-	 * @param recordingId
-	 *            The id property of the recording you want to stop
+	 * @param recordingId The id property of the recording you want to stop
 	 *
 	 * @return The stopped recording
 	 * 
 	 * @throws OpenViduJavaClientException
-	 * @throws OpenViduHttpException
-	 *             Value returned from
-	 *             {@link io.openvidu.java.client.OpenViduHttpException#getStatus()}
-	 *             <ul>
-	 *             <li><code>404</code>: no recording exists for the passed
-	 *             <i>recordingId</i></li>
-	 *             <li><code>406</code>: recording has <i>starting</i> status. Wait
-	 *             until <i>started</i> status before stopping the recording</li>
-	 *             </ul>
+	 * @throws OpenViduHttpException       Value returned from
+	 *                                     {@link io.openvidu.java.client.OpenViduHttpException#getStatus()}
+	 *                                     <ul>
+	 *                                     <li><code>404</code>: no recording exists
+	 *                                     for the passed <i>recordingId</i></li>
+	 *                                     <li><code>406</code>: recording has
+	 *                                     <i>starting</i> status. Wait until
+	 *                                     <i>started</i> status before stopping the
+	 *                                     recording</li>
+	 *                                     </ul>
 	 */
 	public Recording stopRecording(String recordingId) throws OpenViduJavaClientException, OpenViduHttpException {
 		HttpPost request = new HttpPost(
@@ -368,17 +364,15 @@ public class OpenVidu {
 	/**
 	 * Gets an existing recording
 	 *
-	 * @param recordingId
-	 *            The id property of the recording you want to retrieve
+	 * @param recordingId The id property of the recording you want to retrieve
 	 * 
 	 * @throws OpenViduJavaClientException
-	 * @throws OpenViduHttpException
-	 *             Value returned from
-	 *             {@link io.openvidu.java.client.OpenViduHttpException#getStatus()}
-	 *             <ul>
-	 *             <li><code>404</code>: no recording exists for the passed
-	 *             <i>recordingId</i></li>
-	 *             </ul>
+	 * @throws OpenViduHttpException       Value returned from
+	 *                                     {@link io.openvidu.java.client.OpenViduHttpException#getStatus()}
+	 *                                     <ul>
+	 *                                     <li><code>404</code>: no recording exists
+	 *                                     for the passed <i>recordingId</i></li>
+	 *                                     </ul>
 	 */
 	public Recording getRecording(String recordingId) throws OpenViduJavaClientException, OpenViduHttpException {
 		HttpGet request = new HttpGet(OpenVidu.urlOpenViduServer + API_RECORDINGS + "/" + recordingId);
@@ -442,19 +436,18 @@ public class OpenVidu {
 	 * {@link io.openvidu.java.client.Recording.Status#stopped} or
 	 * {@link io.openvidu.java.client.Recording.Status#available}
 	 *
-	 * @param recordingId
-	 *            The id property of the recording you want to delete
+	 * @param recordingId The id property of the recording you want to delete
 	 * 
 	 * @throws OpenViduJavaClientException
-	 * @throws OpenViduHttpException
-	 *             Value returned from
-	 *             {@link io.openvidu.java.client.OpenViduHttpException#getStatus()}
-	 *             <ul>
-	 *             <li><code>404</code>: no recording exists for the passed
-	 *             <i>recordingId</i></li>
-	 *             <li><code>409</code>: the recording has <i>started</i> status.
-	 *             Stop it before deletion</li>
-	 *             </ul>
+	 * @throws OpenViduHttpException       Value returned from
+	 *                                     {@link io.openvidu.java.client.OpenViduHttpException#getStatus()}
+	 *                                     <ul>
+	 *                                     <li><code>404</code>: no recording exists
+	 *                                     for the passed <i>recordingId</i></li>
+	 *                                     <li><code>409</code>: the recording has
+	 *                                     <i>started</i> status. Stop it before
+	 *                                     deletion</li>
+	 *                                     </ul>
 	 */
 	public void deleteRecording(String recordingId) throws OpenViduJavaClientException, OpenViduHttpException {
 		HttpDelete request = new HttpDelete(OpenVidu.urlOpenViduServer + API_RECORDINGS + "/" + recordingId);
