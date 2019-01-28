@@ -54,6 +54,8 @@ public class MultimediaFileMetadata {
 			if (videoInfo != null) {
 				this.videoSize = videoInfo.getSize();
 			}
+			log.info("File {} {} an audio track", f.getName(), this.audioInfo != null ? "has" : "doesn't have");
+			log.info("File {} {} a video track", f.getName(), this.videoInfo != null ? "has" : "doesn't have");
 		} catch (EncoderException e) {
 			log.error("Error getting multimedia information from file {}. Error: {}", f.getAbsolutePath(),
 					e.getMessage());
