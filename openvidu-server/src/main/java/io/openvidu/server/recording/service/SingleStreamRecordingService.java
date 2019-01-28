@@ -394,7 +394,7 @@ public class SingleStreamRecordingService extends RecordingService {
 		this.fileWriter.createAndWriteFile(syncFilePath, new GsonBuilder().setPrettyPrinting().create().toJson(json));
 		this.generateZipFileAndCleanFolder(folderPath, recording.getName() + ".zip");
 
-		long duration = (maxEndTime - minStartTime) / 1000;
+		double duration = (double) (maxEndTime - minStartTime) / 1000;
 		duration = duration > 0 ? duration : 0;
 
 		recording = this.sealRecordingMetadataFile(recording, accumulatedSize, duration, metadataFilePath);

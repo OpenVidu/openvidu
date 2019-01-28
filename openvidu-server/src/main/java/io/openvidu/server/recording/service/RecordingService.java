@@ -67,7 +67,7 @@ public abstract class RecordingService {
 	 * 
 	 * @return updated Recording object
 	 */
-	protected Recording sealRecordingMetadataFile(Recording recording, long size, long duration,
+	protected Recording sealRecordingMetadataFile(Recording recording, long size, double duration,
 			String metadataFilePath) {
 		recording.setSize(size); // Size in bytes
 		recording.setDuration(duration > 0 ? duration : 0); // Duration in seconds
