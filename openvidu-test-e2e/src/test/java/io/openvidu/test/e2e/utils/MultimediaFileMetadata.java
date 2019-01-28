@@ -64,7 +64,9 @@ public class MultimediaFileMetadata {
 			}
 			log.info(System.getProperty("user.name"));
 			this.executeCommand("ls -la /tmp/jave/");
-			if (iteration < 5) {
+			if (iteration == 0) {
+				this.executeCommand("chmod 777 /tmp/jave/ffmpeg*");
+			} else if (iteration < 5) {
 				this.processMultimediaFile(iteration++);
 			} else {
 				log.error("Couldn't run jave 5 iterations");
