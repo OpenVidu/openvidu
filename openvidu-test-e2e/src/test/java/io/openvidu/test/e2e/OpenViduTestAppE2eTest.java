@@ -83,6 +83,7 @@ import io.openvidu.test.e2e.browser.ChromeAndroidUser;
 import io.openvidu.test.e2e.browser.ChromeUser;
 import io.openvidu.test.e2e.browser.FirefoxUser;
 import io.openvidu.test.e2e.browser.OperaUser;
+import io.openvidu.test.e2e.utils.CommandLineExecuter;
 import io.openvidu.test.e2e.utils.MultimediaFileMetadata;
 import io.openvidu.test.e2e.utils.Unzipper;
 
@@ -111,6 +112,16 @@ public class OpenViduTestAppE2eTest {
 
 	@BeforeAll()
 	static void setupAll() {
+
+		String ffmpegOutput = new CommandLineExecuter().executeCommand("which ffmpeg");
+		if (ffmpegOutput == null || ffmpegOutput.isEmpty()) {
+			log.error("ffmpeg package is not installed in the host machine");
+			Assert.fail();
+			return;
+		} else {
+			log.info("ffmpeg is installed and accesible");
+		}
+
 		WebDriverManager.chromedriver().setup();
 		WebDriverManager.firefoxdriver().setup();
 

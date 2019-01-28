@@ -17,10 +17,6 @@
 
 package io.openvidu.test.e2e.utils;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +27,9 @@ import com.google.gson.JsonParser;
 public class MultimediaFileMetadata {
 
 	private static final Logger log = LoggerFactory.getLogger(MultimediaFileMetadata.class);
+
+	private CommandLineExecuter executer = new CommandLineExecuter();
+	private JsonParser parser = new JsonParser();
 
 	private JsonObject json;
 	private JsonObject formatJson;
@@ -139,22 +138,8 @@ public class MultimediaFileMetadata {
 
 	private JsonObject executeFfprobeCommand(String filePath) {
 		log.info("Running ffprobe command on '{}'", filePath);
-		String jsonLines = "";
-		try {
-			String s;
-			Process p;
-			p = Runtime.getRuntime().exec("ffprobe -v quiet -print_format json -show_format -show_streams " + filePath);
-			BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-			while ((s = br.readLine()) != null) {
-				jsonLines += s;
-			}
-			p.waitFor();
-			p.destroy();
-		} catch (IOException | InterruptedException e1) {
-			log.info("Error updateing permissions of jave executable. Error: {}" + e1.getMessage());
-		}
-		JsonParser parser = new JsonParser();
-		return parser.parse(jsonLines).getAsJsonObject();
+		String cmd = "ffprobe -v quiet -print_format json -show_format -show_streams " + filePath;
+		return this.parser.parse(this.executer.executeCommand(cmd)).getAsJsonObject();
 	}
 
 	@Override
