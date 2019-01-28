@@ -1242,7 +1242,7 @@ public class OpenViduTestAppE2eTest {
 		};
 
 		Thread t = new Thread(() -> {
-			BrowserUser user2 = new FirefoxUser("FirefoxUser", 40);
+			BrowserUser user2 = new FirefoxUser("FirefoxUser", 30);
 			user2.getDriver().get(APP_URL);
 			WebElement urlInput = user2.getDriver().findElement(By.id("openvidu-url"));
 			urlInput.clear();
@@ -1271,7 +1271,17 @@ public class OpenViduTestAppE2eTest {
 
 				Assert.assertEquals(user2.getDriver().findElements(By.tagName("video")).size(), 8);
 
-				Thread.sleep(RECORDING_DURATION * 6);
+				user2.getEventManager().waitUntilEventReaches("recordingStarted", 2);
+				user2.getEventManager().waitUntilEventReaches("recordingStopped", 2);
+
+				user2.getEventManager().waitUntilEventReaches("recordingStarted", 4);
+				user2.getEventManager().waitUntilEventReaches("recordingStopped", 4);
+
+				user2.getEventManager().waitUntilEventReaches("recordingStarted", 6);
+				user2.getEventManager().waitUntilEventReaches("recordingStopped", 6);
+
+				user2.getEventManager().waitUntilEventReaches("recordingStarted", 8);
+				user2.getEventManager().waitUntilEventReaches("recordingStopped", 8);
 
 				user2.getEventManager().waitUntilEventReaches("streamDestroyed", 4);
 				user2.getEventManager().waitUntilEventReaches("connectionDestroyed", 4);
@@ -1320,7 +1330,7 @@ public class OpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.id("start-recording-btn")).click();
 		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
 				"Recording started [" + SESSION_NAME + "]"));
-		user.getEventManager().waitUntilEventReaches("recordingStarted", 1);
+		user.getEventManager().waitUntilEventReaches("recordingStarted", 2);
 
 		Thread.sleep(RECORDING_DURATION);
 
@@ -1329,7 +1339,7 @@ public class OpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.id("stop-recording-btn")).click();
 		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
 				"Recording stopped [" + SESSION_NAME + "]"));
-		user.getEventManager().waitUntilEventReaches("recordingStopped", 1);
+		user.getEventManager().waitUntilEventReaches("recordingStopped", 2);
 
 		// Audio-only COMPOSED recording
 		recordingNameField.clear();
@@ -1339,7 +1349,7 @@ public class OpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.id("start-recording-btn")).click();
 		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
 				"Recording started [" + SESSION_NAME + "-1]"));
-		user.getEventManager().waitUntilEventReaches("recordingStarted", 2);
+		user.getEventManager().waitUntilEventReaches("recordingStarted", 4);
 
 		Thread.sleep(RECORDING_DURATION);
 
@@ -1348,7 +1358,7 @@ public class OpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.id("stop-recording-btn")).click();
 		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
 				"Recording stopped [" + SESSION_NAME + "-1]"));
-		user.getEventManager().waitUntilEventReaches("recordingStopped", 2);
+		user.getEventManager().waitUntilEventReaches("recordingStopped", 4);
 
 		// Video-only INDIVIDUAL recording
 		recordingNameField.clear();
@@ -1362,7 +1372,7 @@ public class OpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.id("start-recording-btn")).click();
 		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
 				"Recording started [" + SESSION_NAME + "-2]"));
-		user.getEventManager().waitUntilEventReaches("recordingStarted", 3);
+		user.getEventManager().waitUntilEventReaches("recordingStarted", 6);
 
 		Thread.sleep(RECORDING_DURATION);
 
@@ -1371,7 +1381,7 @@ public class OpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.id("stop-recording-btn")).click();
 		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
 				"Recording stopped [" + SESSION_NAME + "-2]"));
-		user.getEventManager().waitUntilEventReaches("recordingStopped", 3);
+		user.getEventManager().waitUntilEventReaches("recordingStopped", 6);
 
 		// Audio-only INDIVIDUAL recording
 		recordingNameField.clear();
@@ -1381,7 +1391,7 @@ public class OpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.id("start-recording-btn")).click();
 		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
 				"Recording started [" + SESSION_NAME + "-3]"));
-		user.getEventManager().waitUntilEventReaches("recordingStarted", 4);
+		user.getEventManager().waitUntilEventReaches("recordingStarted", 8);
 
 		Thread.sleep(RECORDING_DURATION);
 
@@ -1390,7 +1400,7 @@ public class OpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.id("stop-recording-btn")).click();
 		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
 				"Recording stopped [" + SESSION_NAME + "-3]"));
-		user.getEventManager().waitUntilEventReaches("recordingStopped", 4);
+		user.getEventManager().waitUntilEventReaches("recordingStopped", 8);
 
 		String recordingsPath = "/opt/openvidu/recordings/";
 
@@ -1944,7 +1954,7 @@ public class OpenViduTestAppE2eTest {
 		df.setRoundingMode(RoundingMode.UP);
 		log.info("Duration of {} according to ffmpeg: {} ms", file.getName(), metadata.getDuration());
 		log.info("Difference in ms duration: {}", Math.abs(metadata.getDuration() - duration));
-		Assert.assertTrue((metadata.getDuration() - duration) < 150);
+		Assert.assertTrue((metadata.getDuration() - duration) < 250);
 	}
 
 	private boolean thumbnailIsFine(File file) {
