@@ -17,7 +17,10 @@
 
 package io.openvidu.test.e2e.utils;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,12 +36,17 @@ public class MultimediaFileMetadata {
 
 	private static final Logger log = LoggerFactory.getLogger(MultimediaFileMetadata.class);
 
+	private File f;
 	private MultimediaInfo mediaInfo;
 	private AudioInfo audioInfo;
 	private VideoInfo videoInfo;
 	private VideoSize videoSize;
 
 	public MultimediaFileMetadata(File f) {
+		this.f = f;
+	}
+
+	public void processMultimediaFile() {
 		try {
 			this.mediaInfo = new MultimediaObject(f).getInfo();
 			this.audioInfo = mediaInfo.getAudio();
@@ -49,6 +57,8 @@ public class MultimediaFileMetadata {
 		} catch (EncoderException e) {
 			log.error("Error getting multimedia information from file {}. Error: {}", f.getAbsolutePath(),
 					e.getMessage());
+			log.info(System.getProperty("user.name"));
+			this.executeCommand("ls -la /tmp/jave/");
 		}
 	}
 
@@ -117,6 +127,23 @@ public class MultimediaFileMetadata {
 			return Math.round(videoInfo.getFrameRate());
 		} else {
 			return null;
+		}
+	}
+
+	private void executeCommand(String command) {
+		try {
+			Thread.sleep(500);
+			String s;
+			Process p;
+			p = Runtime.getRuntime().exec(command);
+			BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+			while ((s = br.readLine()) != null)
+				log.info("LINE: " + s);
+			p.waitFor();
+			System.out.println("EXIT VALUE: " + p.exitValue());
+			p.destroy();
+		} catch (IOException | InterruptedException e1) {
+			log.info("Error updateing permissions of jave executable. Error: {}" + e1.getMessage());
 		}
 	}
 

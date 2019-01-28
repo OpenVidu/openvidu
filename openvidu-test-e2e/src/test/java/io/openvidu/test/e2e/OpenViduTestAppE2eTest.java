@@ -132,7 +132,7 @@ public class OpenViduTestAppE2eTest {
 		log.info("Using secret {} to connect to openvidu-server", OPENVIDU_SECRET);
 
 		try {
-			log.info("Deleting folder /opt/openvidu/recordings");
+			log.info("Cleaning folder /opt/openvidu/recordings");
 			FileUtils.cleanDirectory(new File("/opt/openvidu/recordings"));
 		} catch (IOException e) {
 			log.error(e.getMessage());
@@ -940,7 +940,6 @@ public class OpenViduTestAppE2eTest {
 		}
 
 		gracefullyLeaveParticipants(2);
-
 	}
 
 	@Test
@@ -989,7 +988,6 @@ public class OpenViduTestAppE2eTest {
 		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.cssSelector("#recorder-preview video"), 0));
 
 		gracefullyLeaveParticipants(1);
-
 	}
 
 	@Test
@@ -1136,7 +1134,6 @@ public class OpenViduTestAppE2eTest {
 		Thread.sleep(500);
 
 		gracefullyLeaveParticipants(1);
-
 	}
 
 	@Test
@@ -1773,6 +1770,7 @@ public class OpenViduTestAppE2eTest {
 			int framerate, String videoDecoder, String audioDecoder) {
 		// Check tracks, duration, resolution, framerate and decoders
 		MultimediaFileMetadata metadata = new MultimediaFileMetadata(file);
+		metadata.processMultimediaFile();
 
 		if (hasVideo) {
 			if (hasAudio) {
