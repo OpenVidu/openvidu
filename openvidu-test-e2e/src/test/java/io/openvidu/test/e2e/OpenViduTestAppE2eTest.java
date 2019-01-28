@@ -230,16 +230,9 @@ public class OpenViduTestAppE2eTest {
 		log.info("One2One [Audio]");
 
 		user.getDriver().findElement(By.id("one2one-btn")).click();
-
-		List<WebElement> l1 = user.getDriver().findElements(By.className("send-video-checkbox"));
-		for (WebElement el : l1) {
-			el.click();
-		}
-
-		List<WebElement> l2 = user.getDriver().findElements(By.className("join-btn"));
-		for (WebElement el : l2) {
-			el.sendKeys(Keys.ENTER);
-		}
+		
+		user.getDriver().findElements(By.className("send-video-checkbox")).forEach(el -> el.click());
+		user.getDriver().findElements(By.className("join-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
 
 		user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
 		user.getEventManager().waitUntilEventReaches("accessAllowed", 2);
@@ -262,16 +255,9 @@ public class OpenViduTestAppE2eTest {
 		log.info("One2One [Video]");
 
 		user.getDriver().findElement(By.id("one2one-btn")).click();
-
-		List<WebElement> l1 = user.getDriver().findElements(By.className("send-audio-checkbox"));
-		for (WebElement el : l1) {
-			el.click();
-		}
-
-		List<WebElement> l2 = user.getDriver().findElements(By.className("join-btn"));
-		for (WebElement el : l2) {
-			el.sendKeys(Keys.ENTER);
-		}
+		
+		user.getDriver().findElements(By.className("send-audio-checkbox")).forEach(el -> el.click());
+		user.getDriver().findElements(By.className("join-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
 
 		user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
 		user.getEventManager().waitUntilEventReaches("accessAllowed", 2);
@@ -388,11 +374,8 @@ public class OpenViduTestAppE2eTest {
 		for (int i = 0; i < 4; i++) {
 			addUser.click();
 		}
-
-		List<WebElement> l = user.getDriver().findElements(By.className("join-btn"));
-		for (WebElement el : l) {
-			el.sendKeys(Keys.ENTER);
-		}
+		
+		user.getDriver().findElements(By.className("join-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
 
 		user.getEventManager().waitUntilEventReaches("connectionCreated", 16);
 		user.getEventManager().waitUntilEventReaches("accessAllowed", 4);
@@ -517,16 +500,9 @@ public class OpenViduTestAppE2eTest {
 		for (int i = 0; i < 4; i++) {
 			addUser.click();
 		}
-
-		List<WebElement> publishCheckboxes = user.getDriver().findElements(By.className("publish-checkbox"));
-		for (WebElement el : publishCheckboxes) {
-			el.click();
-		}
-
-		List<WebElement> joinButtons = user.getDriver().findElements(By.className("join-btn"));
-		for (WebElement el : joinButtons) {
-			el.sendKeys(Keys.ENTER);
-		}
+		
+		user.getDriver().findElements(By.className("publish-checkbox")).forEach(el -> el.click());
+		user.getDriver().findElements(By.className("join-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
 
 		user.getEventManager().waitUntilEventReaches("connectionCreated", 16);
 		user.getDriver().findElements(By.className(("message-btn"))).get(0).click();
@@ -547,10 +523,7 @@ public class OpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.id("one2one-btn")).click();
 		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .publish-checkbox")).click();
 
-		List<WebElement> joinButtons = user.getDriver().findElements(By.className("join-btn"));
-		for (WebElement el : joinButtons) {
-			el.sendKeys(Keys.ENTER);
-		}
+		user.getDriver().findElements(By.className("join-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
 
 		user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
 		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
@@ -794,10 +767,7 @@ public class OpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.id("save-btn")).click();
 		Thread.sleep(1000);
 
-		List<WebElement> joinButtons = user.getDriver().findElements(By.className("join-btn"));
-		for (WebElement el : joinButtons) {
-			el.sendKeys(Keys.ENTER);
-		}
+		user.getDriver().findElements(By.className("join-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
 
 		user.getEventManager().waitUntilEventReaches("connectionCreated", 9);
 		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
@@ -1259,7 +1229,7 @@ public class OpenViduTestAppE2eTest {
 	void remoteRecordAudioOnlyVideoOnlyTest() throws Exception {
 		isRecordingTest = true;
 
-		setupBrowser("chrome");
+		setupBrowser("chromeAlternateScreenShare");
 
 		log.info("Remote record cross-browser audio-only and video-only");
 
@@ -1307,9 +1277,17 @@ public class OpenViduTestAppE2eTest {
 		});
 		t.setUncaughtExceptionHandler(h);
 		t.start();
-
+		
+		// Chrome user screen share only-video
 		user.getDriver().findElement(By.id("add-user-btn")).click();
-		user.getDriver().findElement(By.className("join-btn")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .screen-radio")).click();
+		
+		// Chrome user audio-only
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .send-video-checkbox")).click();
+		
+		// Join Chrome users
+		user.getDriver().findElements(By.className("join-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
 
 		user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
 		user.getEventManager().waitUntilEventReaches("accessAllowed", 2);
@@ -1322,7 +1300,7 @@ public class OpenViduTestAppE2eTest {
 
 		gracefullyLeaveParticipants(1);
 
-		t.join();
+		// t.join();
 
 		synchronized (lock) {
 			if (OpenViduTestAppE2eTest.ex != null) {
@@ -1458,10 +1436,7 @@ public class OpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.id("add-user-btn")).click();
 		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .publish-checkbox")).click();
 
-		List<WebElement> joinButtons = user.getDriver().findElements(By.className("join-btn"));
-		for (WebElement el : joinButtons) {
-			el.sendKeys(Keys.ENTER);
-		}
+		user.getDriver().findElements(By.className("join-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
 
 		user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
 		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
@@ -1611,10 +1586,7 @@ public class OpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.id("save-btn")).click();
 		Thread.sleep(1000);
 
-		List<WebElement> joinButtons = user.getDriver().findElements(By.className("join-btn"));
-		for (WebElement el : joinButtons) {
-			el.sendKeys(Keys.ENTER);
-		}
+		user.getDriver().findElements(By.className("join-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
 
 		user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
 		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);

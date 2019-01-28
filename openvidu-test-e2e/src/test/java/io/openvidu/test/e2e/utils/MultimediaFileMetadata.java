@@ -67,9 +67,9 @@ public class MultimediaFileMetadata {
 			if (iteration == 0) {
 				this.executeCommand("chmod 777 /tmp/jave/ffmpeg*");
 			} else if (iteration < 5) {
-				this.processMultimediaFile(iteration++);
+				this.processMultimediaFile(++iteration);
 			} else {
-				log.error("Couldn't run jave 5 iterations");
+				log.error("Couldn't run jave in 5 iterations");
 				return;
 			}
 		}
@@ -144,6 +144,7 @@ public class MultimediaFileMetadata {
 	}
 
 	private void executeCommand(String command) {
+		log.info("Running bash command '{}'", command);
 		try {
 			String s;
 			Process p;
