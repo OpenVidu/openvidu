@@ -46,7 +46,7 @@ public class MultimediaFileMetadata {
 		this.f = f;
 	}
 
-	public void processMultimediaFile() {
+	public void processMultimediaFile(int iteration) {
 		try {
 			this.mediaInfo = new MultimediaObject(f).getInfo();
 			this.audioInfo = mediaInfo.getAudio();
@@ -57,8 +57,19 @@ public class MultimediaFileMetadata {
 		} catch (EncoderException e) {
 			log.error("Error getting multimedia information from file {}. Error: {}", f.getAbsolutePath(),
 					e.getMessage());
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			}
 			log.info(System.getProperty("user.name"));
 			this.executeCommand("ls -la /tmp/jave/");
+			if (iteration < 5) {
+				this.processMultimediaFile(iteration++);
+			} else {
+				log.error("Couldn't run jave 5 iterations");
+				return;
+			}
 		}
 	}
 
@@ -132,7 +143,6 @@ public class MultimediaFileMetadata {
 
 	private void executeCommand(String command) {
 		try {
-			Thread.sleep(500);
 			String s;
 			Process p;
 			p = Runtime.getRuntime().exec(command);

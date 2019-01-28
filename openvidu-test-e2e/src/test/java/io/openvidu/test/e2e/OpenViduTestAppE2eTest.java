@@ -1770,7 +1770,7 @@ public class OpenViduTestAppE2eTest {
 			int framerate, String videoDecoder, String audioDecoder) {
 		// Check tracks, duration, resolution, framerate and decoders
 		MultimediaFileMetadata metadata = new MultimediaFileMetadata(file);
-		metadata.processMultimediaFile();
+		metadata.processMultimediaFile(0);
 
 		if (hasVideo) {
 			if (hasAudio) {
