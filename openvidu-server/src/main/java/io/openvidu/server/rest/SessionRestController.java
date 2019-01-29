@@ -43,6 +43,7 @@ import com.google.gson.JsonParser;
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.MediaMode;
+import io.openvidu.java.client.Recording.OutputMode;
 import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.java.client.RecordingMode;
 import io.openvidu.java.client.RecordingProperties;
@@ -87,6 +88,7 @@ public class SessionRestController {
 		if (params != null) {
 			String mediaModeString = (String) params.get("mediaMode");
 			String recordingModeString = (String) params.get("recordingMode");
+			String defaultOutputModeString = (String) params.get("defaultOutputMode");
 			String defaultRecordingLayoutString = (String) params.get("defaultRecordingLayout");
 			String defaultCustomLayout = (String) params.get("defaultCustomLayout");
 
@@ -100,6 +102,12 @@ public class SessionRestController {
 					builder = builder.recordingMode(recordingMode);
 				} else {
 					builder = builder.recordingMode(RecordingMode.MANUAL);
+				}
+				if (defaultOutputModeString != null) {
+					OutputMode defaultOutputMode = OutputMode.valueOf(defaultOutputModeString);
+					builder = builder.defaultOutputMode(defaultOutputMode);
+				} else {
+					builder.defaultOutputMode(OutputMode.COMPOSED);
 				}
 				if (defaultRecordingLayoutString != null) {
 					RecordingLayout defaultRecordingLayout = RecordingLayout.valueOf(defaultRecordingLayoutString);
@@ -120,8 +128,9 @@ public class SessionRestController {
 
 			} catch (IllegalArgumentException e) {
 				return this.generateErrorResponse("RecordingMode " + params.get("recordingMode") + " | "
-						+ "Default RecordingLayout " + params.get("defaultRecordingLayout") + " | " + "MediaMode "
-						+ params.get("mediaMode") + " are not defined", "/api/tokens", HttpStatus.BAD_REQUEST);
+						+ "Default OutputMode " + params.get("defaultOutputMode") + " | " + "Default RecordingLayout "
+						+ params.get("defaultRecordingLayout") + " | " + "MediaMode " + params.get("mediaMode")
+						+ " are not defined", "/api/tokens", HttpStatus.BAD_REQUEST);
 			}
 		}
 
@@ -360,7 +369,7 @@ public class SessionRestController {
 		try {
 			outputMode = io.openvidu.java.client.Recording.OutputMode.valueOf(outputModeString);
 		} catch (Exception e) {
-			outputMode = io.openvidu.java.client.Recording.OutputMode.COMPOSED;
+			outputMode = session.getSessionProperties().defaultOutputMode();
 		}
 		RecordingProperties.Builder builder = new RecordingProperties.Builder().name(name).outputMode(outputMode)
 				.hasAudio(hasAudio != null ? hasAudio : true).hasVideo(hasVideo != null ? hasVideo : true);
@@ -443,7 +452,7 @@ public class SessionRestController {
 		Recording stoppedRecording = this.recordingManager.stopRecording(session, recording.getId(),
 				"recordingStoppedByServer");
 
-		if (session != null) {
+		if (session != null && OutputMode.COMPOSED.equals(recording.getOutputMode()) && recording.hasVideo()) {
 			sessionManager.evictParticipant(
 					session.getParticipantByPublicId(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID), null, null,
 					"EVICT_RECORDER");

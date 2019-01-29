@@ -41,6 +41,7 @@ import com.google.gson.JsonObject;
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
+import io.openvidu.java.client.Recording;
 import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.server.cdr.CallDetailRecord;
@@ -387,9 +388,12 @@ public class KurentoSession implements Session {
 		json.addProperty("createdAt", this.startTime);
 		json.addProperty("mediaMode", this.sessionProperties.mediaMode().name());
 		json.addProperty("recordingMode", this.sessionProperties.recordingMode().name());
-		json.addProperty("defaultRecordingLayout", this.sessionProperties.defaultRecordingLayout().name());
-		if (RecordingLayout.CUSTOM.equals(this.sessionProperties.defaultRecordingLayout())) {
-			json.addProperty("defaultCustomLayout", this.sessionProperties.defaultCustomLayout());
+		json.addProperty("defaultOutputMode", this.sessionProperties.defaultOutputMode().name());
+		if (Recording.OutputMode.COMPOSED.equals(this.sessionProperties.defaultOutputMode())) {
+			json.addProperty("defaultRecordingLayout", this.sessionProperties.defaultRecordingLayout().name());
+			if (RecordingLayout.CUSTOM.equals(this.sessionProperties.defaultRecordingLayout())) {
+				json.addProperty("defaultCustomLayout", this.sessionProperties.defaultCustomLayout());
+			}
 		}
 		if (this.sessionProperties.customSessionId() != null) {
 			json.addProperty("customSessionId", this.sessionProperties.customSessionId());
