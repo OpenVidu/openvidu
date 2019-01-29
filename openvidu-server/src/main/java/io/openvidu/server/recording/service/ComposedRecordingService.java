@@ -363,7 +363,7 @@ public class ComposedRecordingService extends RecordingService {
 		String filesPath = this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/";
 		File videoFile = new File(filesPath + recording.getName() + ".webm");
 		long finalSize = videoFile.length();
-		long finalDuration = compositeWrapper.getDuration();
+		double finalDuration = (double) compositeWrapper.getDuration() / 1000;
 
 		this.updateFilePermissions(filesPath);
 
