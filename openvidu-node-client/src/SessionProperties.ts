@@ -16,6 +16,7 @@
  */
 
 import { MediaMode } from './MediaMode';
+import { Recording } from './Recording';
 import { RecordingLayout } from './RecordingLayout';
 import { RecordingMode } from './RecordingMode';
 
@@ -34,6 +35,13 @@ export interface SessionProperties {
      * Whether the Session will be automatically recorded (`RecordingMode.ALWAYS`) or not (`RecordingMode.MANUAL`)
      */
     recordingMode?: RecordingMode;
+
+    /**
+     * Default value used to initialize property [[RecordingProperties.outputMode]] of every recording of this session.
+     *
+     * You can easily override this value later by setting [[RecordingProperties.outputMode]] to any other value
+     */
+    defaultOutputMode?: Recording.OutputMode;
 
     /**
      * Default value used to initialize property [[RecordingProperties.recordingLayout]] of every recording of this session.

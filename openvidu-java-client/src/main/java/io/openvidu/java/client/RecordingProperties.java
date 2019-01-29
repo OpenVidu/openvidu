@@ -50,7 +50,9 @@ public class RecordingProperties {
 		 * Builder for {@link io.openvidu.java.client.RecordingProperties}
 		 */
 		public RecordingProperties build() {
-			this.resolution = (this.resolution == null) ? (OutputMode.COMPOSED.equals(this.outputMode) ? "1920x1080" : null) : this.resolution;
+			this.resolution = (this.resolution == null)
+					? (OutputMode.COMPOSED.equals(this.outputMode) ? "1920x1080" : null)
+					: this.resolution;
 			return new RecordingProperties(this.name, this.outputMode, this.recordingLayout, this.customLayout,
 					this.resolution, this.hasAudio, this.hasVideo);
 		}
@@ -121,7 +123,7 @@ public class RecordingProperties {
 		}
 
 		/**
-		 * Call this method to specify whether or not to record the audio track
+		 * Call this method to specify whether to record audio or not. Cannot be set to false at the same time as {@link hasVideo(boolean)}
 		 */
 		public RecordingProperties.Builder hasAudio(boolean hasAudio) {
 			this.hasAudio = hasAudio;
@@ -129,7 +131,7 @@ public class RecordingProperties {
 		}
 
 		/**
-		 * Call this method to specify whether or not to record the video track
+		 * Call this method to specify whether to record video or not. Cannot be set to false at the same time as {@link hasAudio(boolean)} 
 		 */
 		public RecordingProperties.Builder hasVideo(boolean hasVideo) {
 			this.hasVideo = hasVideo;
@@ -159,15 +161,20 @@ public class RecordingProperties {
 	}
 
 	/**
-	 * Defines the mode of recording: COMPOSED for a single archive in a grid layout
-	 * or INDIVIDUAL for one archive for each stream
+	 * Defines the mode of recording: {@link Recording.OutputMode#COMPOSED} for a
+	 * single archive in a grid layout or {@link Recording.OutputMode#INDIVIDUAL}
+	 * for one archive for each stream
 	 */
 	public Recording.OutputMode outputMode() {
 		return this.outputMode;
 	}
 
 	/**
-	 * Defines the layout to be used in the recording
+	 * Defines the layout to be used in the recording.<br>
+	 * Will only have effect if
+	 * {@link io.openvidu.java.client.RecordingProperties.Builder#outputMode(Recording.OutputMode)}
+	 * has been called with value
+	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED}
 	 */
 	public RecordingLayout recordingLayout() {
 		return this.recordingLayout;
@@ -176,8 +183,8 @@ public class RecordingProperties {
 	/**
 	 * If {@link io.openvidu.java.client.RecordingProperties#recordingLayout()} is
 	 * set to {@link io.openvidu.java.client.RecordingLayout#CUSTOM}, this property
-	 * defines the relative path to the specific custom layout you want to use. See
-	 * <a href=
+	 * defines the relative path to the specific custom layout you want to use.<br>
+	 * See <a href=
 	 * "https://openvidu.io/docs/advanced-features/recording#custom-recording-layouts"
 	 * target="_blank">Custom recording layouts</a> to learn more
 	 */
@@ -186,21 +193,28 @@ public class RecordingProperties {
 	}
 
 	/**
-	 * Defines the resolution of the recorded video
+	 * Defines the resolution of the recorded video.<br>
+	 * Will only have effect if
+	 * {@link io.openvidu.java.client.RecordingProperties.Builder#outputMode(Recording.OutputMode)}
+	 * has been called with value
+	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED}. For
+	 * {@link io.openvidu.java.client.Recording.OutputMode#INDIVIDUAL} all
+	 * individual video files will have the native resolution of the published
+	 * stream
 	 */
 	public String resolution() {
 		return this.resolution;
 	}
 
 	/**
-	 * Defines if the recording has an audio track or not
+	 * Defines whether to record audio or not. Cannot be set to false at the same time as {@link hasVideo()}
 	 */
 	public boolean hasAudio() {
 		return this.hasAudio;
 	}
 
 	/**
-	 * Defines if the recording has a video track or not
+	 * Defines whether to record video or not. Cannot be set to false at the same time as {@link hasAudio()}
 	 */
 	public boolean hasVideo() {
 		return this.hasVideo;

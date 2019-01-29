@@ -17,6 +17,8 @@
 
 package io.openvidu.java.client;
 
+import io.openvidu.java.client.Recording.OutputMode;
+
 /**
  * See {@link io.openvidu.java.client.OpenVidu#createSession(SessionProperties)}
  */
@@ -24,6 +26,7 @@ public class SessionProperties {
 
 	private MediaMode mediaMode;
 	private RecordingMode recordingMode;
+	private OutputMode defaultOutputMode;
 	private RecordingLayout defaultRecordingLayout;
 	private String defaultCustomLayout;
 	private String customSessionId;
@@ -35,6 +38,7 @@ public class SessionProperties {
 
 		private MediaMode mediaMode = MediaMode.ROUTED;
 		private RecordingMode recordingMode = RecordingMode.MANUAL;
+		private OutputMode defaultOutputMode = OutputMode.COMPOSED;
 		private RecordingLayout defaultRecordingLayout = RecordingLayout.BEST_FIT;
 		private String defaultCustomLayout = "";
 		private String customSessionId = "";
@@ -44,8 +48,8 @@ public class SessionProperties {
 		 * configured
 		 */
 		public SessionProperties build() {
-			return new SessionProperties(this.mediaMode, this.recordingMode, this.defaultRecordingLayout,
-					this.defaultCustomLayout, this.customSessionId);
+			return new SessionProperties(this.mediaMode, this.recordingMode, this.defaultOutputMode,
+					this.defaultRecordingLayout, this.defaultCustomLayout, this.customSessionId);
 		}
 
 		/**
@@ -63,10 +67,8 @@ public class SessionProperties {
 
 		/**
 		 * Call this method to set whether the Session will be automatically recorded
-		 * (<code>RecordingMode.ALWAYS</code>) or not
-		 * (<code>RecordingMode.MANUAL</code>)
-		 * 
-		 * Default value is <code>RecordingMode.MANUAL</code>
+		 * ({@link RecordingMode#ALWAYS}) or not ({@link RecordingMode#MANUAL})<br>
+		 * Default value is {@link RecordingMode#MANUAL}
 		 */
 		public SessionProperties.Builder recordingMode(RecordingMode recordingMode) {
 			this.recordingMode = recordingMode;
@@ -75,13 +77,29 @@ public class SessionProperties {
 
 		/**
 		 * Call this method to set the the default value used to initialize property
+		 * {@link io.openvidu.java.client.RecordingProperties#outputMode()} of every
+		 * recording of this session. You can easily override this value later when
+		 * starting a {@link io.openvidu.java.client.Recording} by calling
+		 * {@link io.openvidu.java.client.RecordingProperties.Builder#outputMode(Recording.OutputMode)}
+		 * with any other value.<br>
+		 * Default value is {@link Recording.OutputMode#COMPOSED}
+		 */
+		public SessionProperties.Builder defaultOutputMode(OutputMode outputMode) {
+			this.defaultOutputMode = outputMode;
+			return this;
+		}
+
+		/**
+		 * Call this method to set the the default value used to initialize property
 		 * {@link io.openvidu.java.client.RecordingProperties#recordingLayout()} of
 		 * every recording of this session. You can easily override this value later
-		 * when initializing a {@link io.openvidu.java.client.Recording} by calling
+		 * when starting a {@link io.openvidu.java.client.Recording} by calling
 		 * {@link io.openvidu.java.client.RecordingProperties.Builder#recordingLayout(RecordingLayout)}
-		 * with any other value
-		 * 
-		 * Default value is <code>RecordingLayout.BEST_FIT</code>
+		 * with any other value.<br>
+		 * Default value is {@link RecordingLayout#BEST_FIT}<br>
+		 * <br>
+		 * Recording layouts are only applicable to recordings with OutputMode
+		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED}
 		 */
 		public SessionProperties.Builder defaultRecordingLayout(RecordingLayout layout) {
 			this.defaultRecordingLayout = layout;
@@ -92,9 +110,13 @@ public class SessionProperties {
 		 * Call this method to set the default value used to initialize property
 		 * {@link io.openvidu.java.client.RecordingProperties#customLayout()} of every
 		 * recording of this session. You can easily override this value later when
-		 * initializing a {@link io.openvidu.java.client.Recording} by calling
+		 * starting a {@link io.openvidu.java.client.Recording} by calling
 		 * {@link io.openvidu.java.client.RecordingProperties.Builder#customLayout(String)}
-		 * with any other value
+		 * with any other value.<br><br>
+		 * 
+		 * Custom layouts are only applicable to recordings with OutputMode
+		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} and
+		 * RecordingLayout {@link io.openvidu.java.client.RecordingLayout#CUSTOM}
 		 */
 		public SessionProperties.Builder defaultCustomLayout(String path) {
 			this.defaultCustomLayout = path;
@@ -118,27 +140,20 @@ public class SessionProperties {
 	protected SessionProperties() {
 		this.mediaMode = MediaMode.ROUTED;
 		this.recordingMode = RecordingMode.MANUAL;
+		this.defaultOutputMode = OutputMode.COMPOSED;
 		this.defaultRecordingLayout = RecordingLayout.BEST_FIT;
 		this.defaultCustomLayout = "";
 		this.customSessionId = "";
 	}
 
-	private SessionProperties(MediaMode mediaMode, RecordingMode recordingMode, RecordingLayout layout,
-			String defaultCustomLayout, String customSessionId) {
+	private SessionProperties(MediaMode mediaMode, RecordingMode recordingMode, OutputMode outputMode,
+			RecordingLayout layout, String defaultCustomLayout, String customSessionId) {
 		this.mediaMode = mediaMode;
 		this.recordingMode = recordingMode;
+		this.defaultOutputMode = outputMode;
 		this.defaultRecordingLayout = layout;
 		this.defaultCustomLayout = defaultCustomLayout;
 		this.customSessionId = customSessionId;
-	}
-
-	/**
-	 * Defines whether the Session will be automatically recorded
-	 * (<code>RecordingMode.ALWAYS</code>) or not
-	 * (<code>RecordingMode.MANUAL</code>)
-	 */
-	public RecordingMode recordingMode() {
-		return this.recordingMode;
 	}
 
 	/**
@@ -152,12 +167,34 @@ public class SessionProperties {
 	}
 
 	/**
+	 * Defines whether the Session will be automatically recorded
+	 * ({@link RecordingMode#ALWAYS}) or not ({@link RecordingMode#MANUAL})
+	 */
+	public RecordingMode recordingMode() {
+		return this.recordingMode;
+	}
+
+	/**
+	 * Defines the default value used to initialize property
+	 * {@link io.openvidu.java.client.RecordingProperties#outputMode()} of every
+	 * recording of this session. You can easily override this value later when
+	 * starting a {@link io.openvidu.java.client.Recording} by calling
+	 * {@link io.openvidu.java.client.RecordingProperties.Builder#outputMode(Recording.OutputMode)}
+	 * with any other value
+	 */
+	public OutputMode defaultOutputMode() {
+		return this.defaultOutputMode;
+	}
+
+	/**
 	 * Defines the default value used to initialize property
 	 * {@link io.openvidu.java.client.RecordingProperties#recordingLayout()} of
 	 * every recording of this session. You can easily override this value later
-	 * when initializing a {@link io.openvidu.java.client.Recording} by calling
+	 * when starting a {@link io.openvidu.java.client.Recording} by calling
 	 * {@link io.openvidu.java.client.RecordingProperties.Builder#recordingLayout(RecordingLayout)}
-	 * with any other value
+	 * with any other value.<br>
+	 * Recording layouts are only applicable to recordings with OutputMode
+	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED}
 	 */
 	public RecordingLayout defaultRecordingLayout() {
 		return this.defaultRecordingLayout;
@@ -167,9 +204,12 @@ public class SessionProperties {
 	 * Defines the default value used to initialize property
 	 * {@link io.openvidu.java.client.RecordingProperties#customLayout()} of every
 	 * recording of this session. You can easily override this value later when
-	 * initializing a {@link io.openvidu.java.client.Recording} by calling
+	 * starting a {@link io.openvidu.java.client.Recording} by calling
 	 * {@link io.openvidu.java.client.RecordingProperties.Builder#customLayout(String)}
-	 * with any other value
+	 * with any other value.<br>
+	 * Custom layouts are only applicable to recordings with OutputMode
+	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} and
+	 * RecordingLayout {@link io.openvidu.java.client.RecordingLayout#CUSTOM}
 	 */
 	public String defaultCustomLayout() {
 		return this.defaultCustomLayout;

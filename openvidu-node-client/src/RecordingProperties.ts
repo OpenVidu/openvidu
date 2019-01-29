@@ -57,12 +57,12 @@ export interface RecordingProperties {
     resolution?: string;
 
     /**
-     * Whether or not to record the audio track (currently fixed to true)
+     * Whether or not to record audio. Cannot be set to false at the same time as [[RecordingProperties.hasVideo]]
      */
     hasAudio?: boolean;
 
     /**
-     * Whether or not to record the video track (currently fixed to true)
+     * Whether or not to record video. Cannot be set to false at the same time as [[RecordingProperties.hasAudio]]
      */
     hasVideo?: boolean;
 }
