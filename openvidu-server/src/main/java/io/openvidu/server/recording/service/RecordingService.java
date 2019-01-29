@@ -54,6 +54,17 @@ public abstract class RecordingService {
 	 * store Recording entity)
 	 */
 	protected void generateRecordingMetadataFile(Recording recording) {
+		String folder = this.openviduConfig.getOpenViduRecordingPath() + recording.getId();
+		boolean newFolderCreated = this.fileWriter.createFolderIfNotExists(folder);
+
+		if (newFolderCreated) {
+			log.info(
+					"New folder {} created. This means the recording started for a session with no publishers or no media type compatible publishers",
+					folder);
+		} else {
+			log.info("Folder {} already existed. Some publisher is already being recorded", folder);
+		}
+
 		String filePath = this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/"
 				+ RecordingManager.RECORDING_ENTITY_FILE + recording.getId();
 		String text = recording.toJson().toString();

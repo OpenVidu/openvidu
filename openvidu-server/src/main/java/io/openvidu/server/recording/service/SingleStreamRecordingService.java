@@ -58,7 +58,6 @@ import io.openvidu.server.kurento.core.KurentoParticipant;
 import io.openvidu.server.kurento.endpoint.PublisherEndpoint;
 import io.openvidu.server.recording.RecorderEndpointWrapper;
 import io.openvidu.server.recording.Recording;
-import io.openvidu.server.utils.CommandExecutor;
 
 public class SingleStreamRecordingService extends RecordingService {
 
@@ -90,7 +89,6 @@ public class SingleStreamRecordingService extends RecordingService {
 
 		final int activePublishers = session.getActivePublishers();
 		final CountDownLatch recordingStartedCountdown = new CountDownLatch(activePublishers);
-		int incompatibleMediaTypePublishers = 0;
 
 		for (Participant p : session.getParticipants()) {
 			if (p.isStreaming()) {
@@ -102,7 +100,6 @@ public class SingleStreamRecordingService extends RecordingService {
 					log.error(
 							"Cannot start single stream recorder for stream {} in session {}: {}. Skipping to next stream being published",
 							p.getPublisherStreamId(), session.getSessionId(), e.getMessage());
-					incompatibleMediaTypePublishers++;
 					recordingStartedCountdown.countDown();
 					continue;
 				}
@@ -119,13 +116,6 @@ public class SingleStreamRecordingService extends RecordingService {
 		} catch (InterruptedException e) {
 			recording.setStatus(io.openvidu.java.client.Recording.Status.failed);
 			log.error("Exception while waiting for state change", e);
-		}
-
-		if (activePublishers == 0 || incompatibleMediaTypePublishers == activePublishers) {
-			// Recording started for a session with some user connected but no publishers
-			// or with no publisher having a compatible media type stream with the recording
-			// configuration. Must create recording root folder for storing metadata archive
-			this.fileWriter.createFolder(this.openviduConfig.getOpenViduRecordingPath() + recording.getId());
 		}
 
 		this.generateRecordingMetadataFile(recording);

@@ -176,11 +176,9 @@ public class KurentoSessionManager extends SessionManager {
 			if (remainingParticipants.isEmpty()) {
 				if (openviduConfig.isRecordingModuleEnabled()
 						&& MediaMode.ROUTED.equals(session.getSessionProperties().mediaMode())
-						&& (this.recordingManager.sessionIsBeingRecordedIndividual(sessionId)
-								|| (this.recordingManager.sessionIsBeingRecordedComposed(sessionId)
-										&& this.recordingManager.sessionIsBeingRecordedOnlyAudio(sessionId)))) {
-					// Start countdown to stop recording if INDIVIDUAL mode or COMPOSED audio-only
-					// (will be aborted if a Publisher starts before timeout)
+						&& (this.recordingManager.sessionIsBeingRecorded(sessionId))) {
+					// Start countdown to stop recording. Will be aborted if a Publisher starts
+					// before timeout
 					log.info(
 							"Last participant left. Starting {} seconds countdown for stopping recording of session {}",
 							this.openviduConfig.getOpenviduRecordingAutostopTimeout(), sessionId);
@@ -192,25 +190,13 @@ public class KurentoSessionManager extends SessionManager {
 				}
 			} else if (remainingParticipants.size() == 1 && openviduConfig.isRecordingModuleEnabled()
 					&& MediaMode.ROUTED.equals(session.getSessionProperties().mediaMode())
-					&& this.recordingManager.sessionIsBeingRecordedComposed(sessionId)
-					&& !this.recordingManager.sessionIsBeingRecordedOnlyAudio(sessionId)
+					&& this.recordingManager.sessionIsBeingRecorded(sessionId)
 					&& ProtocolElements.RECORDER_PARTICIPANT_PUBLICID
 							.equals(remainingParticipants.iterator().next().getParticipantPublicId())) {
-				if (RecordingMode.ALWAYS.equals(session.getSessionProperties().recordingMode())) {
-					// Immediately stop recording when last real participant left if
-					// RecordingMode.ALWAYS
-					log.info("Last participant left. Stopping recording for session {}", sessionId);
-					recordingManager.stopRecording(session, null, reason);
-					evictParticipant(session.getParticipantByPublicId(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID),
-							null, null, "EVICT_RECORDER");
-				} else if (RecordingMode.MANUAL.equals(session.getSessionProperties().recordingMode())) {
-					// Start countdown to stop recording if RecordingMode.MANUAL (will be aborted if
-					// a Publisher starts before timeout)
-					log.info(
-							"Last participant left. Starting {} seconds countdown for stopping recording of session {}",
-							this.openviduConfig.getOpenviduRecordingAutostopTimeout(), sessionId);
-					recordingManager.initAutomaticRecordingStopThread(session);
-				}
+				// Start countdown
+				log.info("Last participant left. Starting {} seconds countdown for stopping recording of session {}",
+						this.openviduConfig.getOpenviduRecordingAutostopTimeout(), sessionId);
+				recordingManager.initAutomaticRecordingStopThread(session);
 			}
 		}
 
@@ -300,11 +286,11 @@ public class KurentoSessionManager extends SessionManager {
 				&& session.getActivePublishers() == 0) {
 			if (RecordingMode.ALWAYS.equals(session.getSessionProperties().recordingMode())
 					&& !recordingManager.sessionIsBeingRecorded(session.getSessionId())) {
-				// Insecure session recording
+				// Start automatic recording for sessions configured with RecordingMode.ALWAYS
 				new Thread(() -> {
 					recordingManager.startRecording(session,
 							new RecordingProperties.Builder().name("")
-									.outputMode(io.openvidu.java.client.Recording.OutputMode.COMPOSED)
+									.outputMode(session.getSessionProperties().defaultOutputMode())
 									.recordingLayout(session.getSessionProperties().defaultRecordingLayout())
 									.customLayout(session.getSessionProperties().defaultCustomLayout()).build());
 				}).start();
@@ -313,7 +299,7 @@ public class KurentoSessionManager extends SessionManager {
 				// Abort automatic recording stop (user published before timeout)
 				log.info("Participant {} published before timeout finished. Aborting automatic recording stop",
 						participant.getParticipantPublicId());
-				boolean stopAborted = recordingManager.abortAutomaticRecordingStopThread(session.getSessionId());
+				boolean stopAborted = recordingManager.abortAutomaticRecordingStopThread(session);
 				if (stopAborted) {
 					log.info("Automatic recording stopped succesfully aborted");
 				} else {

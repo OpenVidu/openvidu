@@ -33,7 +33,7 @@ public class CustomFileWriter {
 		try {
 			this.writeAndCloseOnOutputStreamWriter(new FileOutputStream(filePath), text);
 		} catch (IOException e) {
-			log.error("Couldn't create file {}. Error: ", filePath, e.getMessage());
+			log.error("Couldn't create file {}. Error: {}", filePath, e.getMessage());
 		}
 	}
 
@@ -41,12 +41,18 @@ public class CustomFileWriter {
 		try {
 			this.writeAndCloseOnOutputStreamWriter(new FileOutputStream(filePath, false), text);
 		} catch (IOException e) {
-			log.error("Couldn't overwrite file {}. Error: ", filePath, e.getMessage());
+			log.error("Couldn't overwrite file {}. Error: {}", filePath, e.getMessage());
 		}
 	}
 
-	public boolean createFolder(String path) {
-		return new File(path).mkdir();
+	public boolean createFolderIfNotExists(String path) {
+		File folder = new File(path);
+		if (!folder.exists()) {
+			return folder.mkdir();
+		} else {
+			return false;
+		}
+
 	}
 
 	private void writeAndCloseOnOutputStreamWriter(FileOutputStream fos, String text) throws IOException {
