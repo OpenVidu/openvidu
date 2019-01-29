@@ -88,6 +88,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   sessionProperties: SessionPropertiesAPI = {
     mediaMode: MediaMode.ROUTED,
     recordingMode: RecordingMode.MANUAL,
+    defaultOutputMode: Recording.OutputMode.COMPOSED,
     defaultRecordingLayout: RecordingLayout.BEST_FIT,
     defaultCustomLayout: '',
     customSessionId: ''
@@ -557,7 +558,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         recordingProperties: !!this.recordingProperties ? this.recordingProperties :
           {
             name: '',
-            outputMode: Recording.OutputMode.COMPOSED,
+            outputMode: this.sessionProperties.defaultOutputMode,
             recordingLayout: this.sessionProperties.defaultRecordingLayout,
             customLayout: this.sessionProperties.defaultCustomLayout,
             resolution: '1920x1080',

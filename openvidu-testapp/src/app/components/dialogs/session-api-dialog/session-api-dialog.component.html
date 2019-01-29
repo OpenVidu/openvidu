@@ -37,7 +37,7 @@
           </mat-select>
         </mat-form-field>
       </div>
-      <div *ngIf="recordingProperties.outputMode.toString() === recMode[recMode.COMPOSED]" id="rec-layout-div">
+      <div *ngIf="recordingProperties.outputMode.toString() === recMode[recMode.COMPOSED] && recordingProperties.hasVideo" id="rec-layout-div">
         <mat-form-field class="inner-text-input" [style.fontSize.px]=14>
           <mat-select placeholder="Recording layout" [(ngModel)]="recordingProperties.recordingLayout">
             <mat-option *ngFor="let enumerator of enumToArray(recLayouts)" [value]="enumerator">
@@ -45,7 +45,7 @@
             </mat-option>
           </mat-select>
         </mat-form-field>
-        <mat-form-field *ngIf="recordingProperties.recordingLayout.toString() === recLayouts[recLayouts.CUSTOM]" class="inner-text-input"
+        <mat-form-field *ngIf="recordingProperties.hasVideo && recordingProperties.recordingLayout.toString() === recLayouts[recLayouts.CUSTOM]" class="inner-text-input"
           [style.fontSize.px]=14>
           <input matInput placeholder="Custom layout" type="text" [(ngModel)]="recordingProperties.customLayout">
         </mat-form-field>
@@ -53,7 +53,7 @@
       <div>
         <mat-checkbox id="rec-hasaudio-checkbox" [(ngModel)]="recordingProperties.hasAudio">Has audio</mat-checkbox>
         <mat-checkbox id="rec-hasvideo-checkbox" [(ngModel)]="recordingProperties.hasVideo">Has video</mat-checkbox>
-        <mat-form-field *ngIf="recordingProperties.outputMode.toString() === recMode[recMode.COMPOSED]" id="recording-resolution-form"
+        <mat-form-field *ngIf="recordingProperties.hasVideo && recordingProperties.outputMode.toString() === recMode[recMode.COMPOSED]" id="recording-resolution-form"
           class="inner-text-input" [style.fontSize.px]=14>
           <input matInput id="recording-resolution-field" placeholder="Resolution" type="text" [(ngModel)]="recordingProperties.resolution">
         </mat-form-field>
