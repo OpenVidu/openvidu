@@ -21,6 +21,7 @@ import { MediaMode } from './MediaMode';
 import { OpenVidu } from './OpenVidu';
 import { OpenViduRole } from './OpenViduRole';
 import { Publisher } from './Publisher';
+import { Recording } from './Recording';
 import { RecordingLayout } from './RecordingLayout';
 import { RecordingMode } from './RecordingMode';
 import { SessionProperties } from './SessionProperties';
@@ -80,6 +81,7 @@ export class Session {
         }
         this.properties.mediaMode = !!this.properties.mediaMode ? this.properties.mediaMode : MediaMode.ROUTED;
         this.properties.recordingMode = !!this.properties.recordingMode ? this.properties.recordingMode : RecordingMode.MANUAL;
+        this.properties.defaultOutputMode = !!this.properties.defaultOutputMode ? this.properties.defaultOutputMode : Recording.OutputMode.COMPOSED;
         this.properties.defaultRecordingLayout = !!this.properties.defaultRecordingLayout ? this.properties.defaultRecordingLayout : RecordingLayout.BEST_FIT;
     }
 
@@ -396,6 +398,7 @@ export class Session {
             const data = JSON.stringify({
                 mediaMode: !!this.properties.mediaMode ? this.properties.mediaMode : MediaMode.ROUTED,
                 recordingMode: !!this.properties.recordingMode ? this.properties.recordingMode : RecordingMode.MANUAL,
+                defaultOutputMode: !!this.properties.defaultOutputMode ? this.properties.defaultOutputMode : Recording.OutputMode.COMPOSED,
                 defaultRecordingLayout: !!this.properties.defaultRecordingLayout ? this.properties.defaultRecordingLayout : RecordingLayout.BEST_FIT,
                 defaultCustomLayout: !!this.properties.defaultCustomLayout ? this.properties.defaultCustomLayout : '',
                 customSessionId: !!this.properties.customSessionId ? this.properties.customSessionId : ''
@@ -462,6 +465,7 @@ export class Session {
         this.properties = {
             mediaMode: json.mediaMode,
             recordingMode: json.recordingMode,
+            defaultOutputMode: json.defaultOutputMode,
             defaultRecordingLayout: json.defaultRecordingLayout
         };
         if (!!customSessionId) {

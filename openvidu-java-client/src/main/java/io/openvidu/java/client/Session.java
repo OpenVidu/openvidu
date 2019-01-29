@@ -215,7 +215,8 @@ public class Session {
 	 * {@link io.openvidu.java.client.Session#forceDisconnect(Connection)} or
 	 * {@link io.openvidu.java.client.Session#forceUnpublish(Publisher)}. <br>
 	 * 
-	 * To update every Session object owned by OpenVidu object, call {@link io.openvidu.java.client.OpenVidu#fetch()}
+	 * To update every Session object owned by OpenVidu object, call
+	 * {@link io.openvidu.java.client.OpenVidu#fetch()}
 	 * 
 	 * @return true if the Session status has changed with respect to the server,
 	 *         false if not. This applies to any property or sub-property of the
@@ -449,6 +450,7 @@ public class Session {
 		JSONObject json = new JSONObject();
 		json.put("mediaMode", properties.mediaMode().name());
 		json.put("recordingMode", properties.recordingMode().name());
+		json.put("defaultOutputMode", properties.defaultOutputMode().name());
 		json.put("defaultRecordingLayout", properties.defaultRecordingLayout().name());
 		json.put("defaultCustomLayout", properties.defaultCustomLayout());
 		json.put("customSessionId", properties.customSessionId());
@@ -509,6 +511,7 @@ public class Session {
 		SessionProperties.Builder builder = new SessionProperties.Builder()
 				.mediaMode(MediaMode.valueOf((String) json.get("mediaMode")))
 				.recordingMode(RecordingMode.valueOf((String) json.get("recordingMode")))
+				.defaultOutputMode(Recording.OutputMode.valueOf((String) json.get("defaultOutputMode")))
 				.defaultRecordingLayout(RecordingLayout.valueOf((String) json.get("defaultRecordingLayout")));
 		if (json.containsKey("defaultCustomLayout")) {
 			builder.defaultCustomLayout((String) json.get("defaultCustomLayout"));
@@ -560,6 +563,7 @@ public class Session {
 		json.put("recording", this.recording);
 		json.put("mediaMode", this.properties.mediaMode());
 		json.put("recordingMode", this.properties.recordingMode());
+		json.put("defaultOutputMode", this.properties.defaultOutputMode());
 		json.put("defaultRecordingLayout", this.properties.defaultRecordingLayout());
 		json.put("defaultCustomLayout", this.properties.defaultCustomLayout());
 		JSONObject connections = new JSONObject();
