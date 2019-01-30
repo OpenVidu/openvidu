@@ -45,6 +45,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
 import io.openvidu.client.OpenViduException;
+import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.server.cdr.CDRLoggerFile;
 import io.openvidu.server.cdr.CallDetailRecord;
 import io.openvidu.server.config.OpenviduConfig;
@@ -237,9 +238,15 @@ public class OpenViduServer implements JsonRpcConfigurer {
 			try {
 				this.recordingManager().initializeRecordingManager();
 			} catch (OpenViduException e) {
-				log.error(
-						"Error initializing recording path \"{}\" set with system property \"openvidu.recording.path\". Shutting down OpenVidu Server",
-						this.openviduConfig().getOpenViduRecordingPath());
+				String finalErrorMessage = "";
+				if (e.getCodeValue() == Code.RECORDING_ENABLED_BUT_DOCKER_NOT_FOUND.getValue()) {
+					finalErrorMessage = "Error connecting to Docker daemon. Enabling OpenVidu recording module requires Docker";
+				} else if (e.getCodeValue() == Code.RECORDING_PATH_NOT_VALID.getValue()) {
+					finalErrorMessage = "Error initializing recording path \""
+							+ this.openviduConfig().getOpenViduRecordingPath()
+							+ "\" set with system property \"openvidu.recording.path\". Shutting down OpenVidu Server";
+				}
+				log.error(finalErrorMessage);
 				System.exit(1);
 			}
 		}
