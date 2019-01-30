@@ -44,6 +44,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
+import io.openvidu.client.OpenViduException;
 import io.openvidu.server.cdr.CDRLoggerFile;
 import io.openvidu.server.cdr.CallDetailRecord;
 import io.openvidu.server.config.OpenviduConfig;
@@ -233,7 +234,14 @@ public class OpenViduServer implements JsonRpcConfigurer {
 		}
 
 		if (this.openviduConfig().isRecordingModuleEnabled()) {
-			this.recordingManager().initializeRecordingManager();
+			try {
+				this.recordingManager().initializeRecordingManager();
+			} catch (OpenViduException e) {
+				log.error(
+						"Error initializing recording path \"{}\" set with system property \"openvidu.recording.path\". Shutting down OpenVidu Server",
+						this.openviduConfig().getOpenViduRecordingPath());
+				System.exit(1);
+			}
 		}
 
 		httpUrl = openviduConf.getFinalUrl();

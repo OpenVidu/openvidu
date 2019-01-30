@@ -39,7 +39,11 @@ import java.util.stream.Collectors;
 import javax.ws.rs.ProcessingException;
 
 import org.apache.commons.io.FileUtils;
+import org.kurento.client.ErrorEvent;
+import org.kurento.client.EventListener;
+import org.kurento.client.MediaPipeline;
 import org.kurento.client.MediaProfileSpecType;
+import org.kurento.client.RecorderEndpoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,7 +66,11 @@ import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.core.SessionEventsHandler;
 import io.openvidu.server.core.SessionManager;
+import io.openvidu.server.kurento.KurentoClientProvider;
+import io.openvidu.server.kurento.KurentoClientSessionInfo;
+import io.openvidu.server.kurento.OpenViduKurentoClientSessionInfo;
 import io.openvidu.server.recording.Recording;
+import io.openvidu.server.utils.CustomFileManager;
 
 public class RecordingManager {
 
@@ -80,6 +88,9 @@ public class RecordingManager {
 
 	@Autowired
 	protected OpenviduConfig openviduConfig;
+
+	@Autowired
+	private KurentoClientProvider kcProvider;
 
 	protected Map<String, Recording> startingRecordings = new ConcurrentHashMap<>();
 	protected Map<String, Recording> startedRecordings = new ConcurrentHashMap<>();
@@ -100,7 +111,7 @@ public class RecordingManager {
 		return this.sessionHandler;
 	}
 
-	public void initializeRecordingManager() {
+	public void initializeRecordingManager() throws OpenViduException {
 
 		RecordingManager.IMAGE_TAG = openviduConfig.getOpenViduRecordingVersion();
 
@@ -513,18 +524,77 @@ public class RecordingManager {
 		return fileNamesNoExtension;
 	}
 
-	private File initRecordingPath() throws OpenViduException {
+	private void initRecordingPath() throws OpenViduException {
+		log.info("Initializing recording path");
 		try {
-			Path path = Files.createDirectories(Paths.get(this.openviduConfig.getOpenViduRecordingPath()));
+			final String recPath = this.openviduConfig.getOpenViduRecordingPath();
+			final String testFolderPath = recPath + "/TEST_RECORDING_PATH_" + System.currentTimeMillis();
+			final String testFilePath = testFolderPath + "/TEST_RECORDING_PATH.webm";
+			Path path = Files.createDirectories(Paths.get(recPath));
 
+			// Check OpenVidu Server write permissions in recording path
 			if (!Files.isWritable(path)) {
-				throw new OpenViduException(Code.RECORDING_PATH_NOT_VALID,
-						"The recording path '" + this.openviduConfig.getOpenViduRecordingPath()
-								+ "' is not valid. Reason: OpenVidu Server process needs write permissions");
+				String errorMessage = "The recording path \"" + recPath
+						+ "\" is not valid. Reason: OpenVidu Server needs write permissions. Try running command \"sudo chmod 777 "
+						+ recPath + "\"";
+				log.error(errorMessage);
+				throw new OpenViduException(Code.RECORDING_PATH_NOT_VALID, errorMessage);
+			} else {
+				log.info("OpenVidu Server has write permissions on recording path: {}", recPath);
 			}
 
-			log.info("Recording path: {}", this.openviduConfig.getOpenViduRecordingPath());
-			return path.toFile();
+			// Check Kurento Media Server write permissions in recording path
+			KurentoClientSessionInfo kcSessionInfo = new OpenViduKurentoClientSessionInfo("TEST_RECORDING_PATH",
+					"TEST_RECORDING_PATH");
+			MediaPipeline pipeline = this.kcProvider.getKurentoClient(kcSessionInfo).createMediaPipeline();
+			RecorderEndpoint recorder = new RecorderEndpoint.Builder(pipeline, "file://" + testFilePath).build();
+
+			recorder.addErrorListener(new EventListener<ErrorEvent>() {
+				@Override
+				public void onEvent(ErrorEvent event) {
+					if (event.getErrorCode() == 6) {
+						// KMS write permissions error
+						log.error("The recording path \"" + recPath
+								+ "\" is not valid. Reason: Kurento Media Server needs write permissions. Try running command \"sudo chmod 777 "
+								+ recPath + "\"");
+						log.error(
+								"Error initializing recording path \"{}\" set with system property \"openvidu.recording.path\". Shutting down OpenVidu Server",
+								recPath);
+						System.exit(1);
+					}
+				}
+			});
+
+			recorder.record();
+
+			try {
+				Thread.sleep(250);
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			}
+
+			recorder.release();
+			pipeline.release();
+
+			log.info("Kurento Media Server has write permissions on recording path: {}", recPath);
+
+			try {
+				new CustomFileManager().deleteFolder(testFolderPath);
+				log.info("OpenVidu Server has write permissions over files created by Kurento Media Server");
+			} catch (IOException e) {
+				String errorMessage = "The recording path \"" + recPath
+						+ "\" is not valid. Reason: OpenVidu Server does not have write permissions over files created by Kurento Media Server. "
+						+ "Try running Kurento Media Server as user \"" + System.getProperty("user.name")
+						+ "\" or run OpenVidu Server as superuser";
+				log.error(errorMessage);
+				log.error(
+						"Be aware that a folder \"{}\" was created and should be manually deleted (\"sudo rm -rf {}\")",
+						testFolderPath, testFolderPath);
+				throw new OpenViduException(Code.RECORDING_PATH_NOT_VALID, errorMessage);
+			}
+
+			log.info("Recording path successfully initialized at {}", this.openviduConfig.getOpenViduRecordingPath());
+
 		} catch (IOException e) {
 			throw new OpenViduException(Code.RECORDING_PATH_NOT_VALID,
 					"The recording path '" + this.openviduConfig.getOpenViduRecordingPath() + "' is not valid. Reason: "

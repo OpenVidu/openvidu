@@ -22,12 +22,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CustomFileWriter {
+public class CustomFileManager {
 
-	private static final Logger log = LoggerFactory.getLogger(CustomFileWriter.class);
+	private static final Logger log = LoggerFactory.getLogger(CustomFileManager.class);
 
 	public void createAndWriteFile(String filePath, String text) {
 		try {
@@ -52,7 +53,10 @@ public class CustomFileWriter {
 		} else {
 			return false;
 		}
+	}
 
+	public void deleteFolder(String path) throws IOException {
+		FileUtils.deleteDirectory(new File(path));
 	}
 
 	private void writeAndCloseOnOutputStreamWriter(FileOutputStream fos, String text) throws IOException {

@@ -30,7 +30,7 @@ import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.utils.CommandExecutor;
-import io.openvidu.server.utils.CustomFileWriter;
+import io.openvidu.server.utils.CustomFileManager;
 
 public abstract class RecordingService {
 
@@ -38,7 +38,7 @@ public abstract class RecordingService {
 
 	protected OpenviduConfig openviduConfig;
 	protected RecordingManager recordingManager;
-	protected CustomFileWriter fileWriter = new CustomFileWriter();
+	protected CustomFileManager fileWriter = new CustomFileManager();
 
 	RecordingService(RecordingManager recordingManager, OpenviduConfig openviduConfig) {
 		this.recordingManager = recordingManager;
