@@ -1901,7 +1901,7 @@ public class OpenViduTestAppE2eTest {
 
 		List<File> unzippedWebmFiles = new Unzipper().unzipFile(recPath, recording.getName() + ".zip");
 
-		File jsonSyncFile = new File(recPath + recording.getId() + ".json");
+		File jsonSyncFile = new File(recPath + recording.getName() + ".json");
 		Assert.assertTrue(jsonSyncFile.exists() && jsonSyncFile.length() > 0);
 		JsonObject jsonSyncMetadata;
 		try {

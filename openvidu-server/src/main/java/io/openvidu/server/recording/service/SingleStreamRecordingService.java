@@ -328,7 +328,7 @@ public class SingleStreamRecordingService extends RecordingService {
 		String folderPath = this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/";
 
 		String metadataFilePath = folderPath + RecordingManager.RECORDING_ENTITY_FILE + recording.getId();
-		String syncFilePath = folderPath + recording.getId() + ".json";
+		String syncFilePath = folderPath + recording.getName() + ".json";
 
 		recording = this.recordingManager.getRecordingFromEntityFile(new File(metadataFilePath));
 
@@ -342,7 +342,7 @@ public class SingleStreamRecordingService extends RecordingService {
 		Reader reader = null;
 		Gson gson = new Gson();
 
-		// Sync metadata json object to store in "RECORDING_ID.json"
+		// Sync metadata json object to store in "RECORDING_NAME.json"
 		JsonObject json = new JsonObject();
 		json.addProperty("createdAt", recording.getCreatedAt());
 		json.addProperty("id", recording.getId());
