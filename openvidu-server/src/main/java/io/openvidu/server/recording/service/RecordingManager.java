@@ -531,30 +531,53 @@ public class RecordingManager {
 	private void initRecordingPath() throws OpenViduException {
 		log.info("Initializing recording path");
 
-		final String recPath = this.openviduConfig.getOpenViduRecordingPath();
-		final String testFolderPath = recPath + "/TEST_RECORDING_PATH_" + System.currentTimeMillis();
+		final String recordingPathString = this.openviduConfig.getOpenViduRecordingPath();
+		final String testFolderPath = recordingPathString + "/TEST_RECORDING_PATH_" + System.currentTimeMillis();
 		final String testFilePath = testFolderPath + "/TEST_RECORDING_PATH.webm";
 
-		Path path = null;
+		Path recordingPath = null;
 		try {
-			path = Files.createDirectories(Paths.get(recPath));
+			recordingPath = Files.createDirectories(Paths.get(recordingPathString));
 		} catch (IOException e) {
-			String errorMessage = "The recording path \"" + recPath
-					+ "\" is not valid. Reason: OpenVidu Server cannot find path \"" + recPath
+			String errorMessage = "The recording path \"" + recordingPathString
+					+ "\" is not valid. Reason: OpenVidu Server cannot find path \"" + recordingPathString
 					+ "\" and doesn't have permissions to create it";
 			log.error(errorMessage);
 			throw new OpenViduException(Code.RECORDING_PATH_NOT_VALID, errorMessage);
 		}
 
 		// Check OpenVidu Server write permissions in recording path
-		if (!Files.isWritable(path)) {
-			String errorMessage = "The recording path \"" + recPath
+		if (!Files.isWritable(recordingPath)) {
+			String errorMessage = "The recording path \"" + recordingPathString
 					+ "\" is not valid. Reason: OpenVidu Server needs write permissions. Try running command \"sudo chmod 777 "
-					+ recPath + "\"";
+					+ recordingPathString + "\"";
 			log.error(errorMessage);
 			throw new OpenViduException(Code.RECORDING_PATH_NOT_VALID, errorMessage);
 		} else {
-			log.info("OpenVidu Server has write permissions on recording path: {}", recPath);
+			log.info("OpenVidu Server has write permissions on recording path: {}", recordingPathString);
+		}
+
+		if (openviduConfig.openviduRecordingCustomLayoutChanged()) {
+			// Property openvidu.recording.custom-layout changed
+			File dir = new File(openviduConfig.getOpenviduRecordingCustomLayout());
+			if (dir.exists()) {
+				if (dir.listFiles() == null) {
+					String errorMessage = "The custom layouts path \""
+							+ openviduConfig.getOpenviduRecordingCustomLayout()
+							+ "\" is not valid. Reason: OpenVidu Server needs read permissions. Try running command \"sudo chmod 755 "
+							+ openviduConfig.getOpenviduRecordingCustomLayout() + "\"";
+					log.error(errorMessage);
+					throw new OpenViduException(Code.RECORDING_PATH_NOT_VALID, errorMessage);
+				} else {
+					log.info("OpenVidu Server has read permissions on custom layout path: {}",
+							openviduConfig.getOpenviduRecordingCustomLayout());
+				}
+			} else {
+				String errorMessage = "The custom layouts path \"" + recordingPathString
+						+ "\" is not valid. Reason: OpenVidu Server cannot find path \"" + recordingPathString + "\"";
+				log.error(errorMessage);
+				throw new OpenViduException(Code.RECORDING_PATH_NOT_VALID, errorMessage);
+			}
 		}
 
 		// Check Kurento Media Server write permissions in recording path
@@ -568,12 +591,12 @@ public class RecordingManager {
 			public void onEvent(ErrorEvent event) {
 				if (event.getErrorCode() == 6) {
 					// KMS write permissions error
-					log.error("The recording path \"" + recPath
+					log.error("The recording path \"" + recordingPathString
 							+ "\" is not valid. Reason: Kurento Media Server needs write permissions. Try running command \"sudo chmod 777 "
-							+ recPath + "\"");
+							+ recordingPathString + "\"");
 					log.error(
 							"Error initializing recording path \"{}\" set with system property \"openvidu.recording.path\". Shutting down OpenVidu Server",
-							recPath);
+							recordingPathString);
 					System.exit(1);
 				}
 			}
@@ -590,13 +613,13 @@ public class RecordingManager {
 		recorder.release();
 		pipeline.release();
 
-		log.info("Kurento Media Server has write permissions on recording path: {}", recPath);
+		log.info("Kurento Media Server has write permissions on recording path: {}", recordingPathString);
 
 		try {
 			new CustomFileManager().deleteFolder(testFolderPath);
 			log.info("OpenVidu Server has write permissions over files created by Kurento Media Server");
 		} catch (IOException e) {
-			String errorMessage = "The recording path \"" + recPath
+			String errorMessage = "The recording path \"" + recordingPathString
 					+ "\" is not valid. Reason: OpenVidu Server does not have write permissions over files created by Kurento Media Server. "
 					+ "Try running Kurento Media Server as user \"" + System.getProperty("user.name")
 					+ "\" or run OpenVidu Server as superuser";

@@ -138,6 +138,10 @@ public class OpenviduConfig {
 	public void setOpenViduRecordingCustomLayout(String recordingCustomLayout) {
 		this.openviduRecordingCustomLayout = recordingCustomLayout;
 	}
+	
+	public boolean openviduRecordingCustomLayoutChanged() {
+		return !"/opt/openvidu/custom-layout".equals(this.openviduRecordingCustomLayout);
+	}
 
 	public String getFinalUrl() {
 		return finalUrl;

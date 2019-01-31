@@ -58,6 +58,10 @@ public class CustomFileManager {
 	public void deleteFolder(String path) throws IOException {
 		FileUtils.deleteDirectory(new File(path));
 	}
+	
+	public void deleteFile(String path) throws IOException {
+		new File(path).delete();
+	}
 
 	private void writeAndCloseOnOutputStreamWriter(FileOutputStream fos, String text) throws IOException {
 		OutputStreamWriter osw = null;
