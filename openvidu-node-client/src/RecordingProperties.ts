@@ -49,7 +49,8 @@ export interface RecordingProperties {
     customLayout?: string;
 
     /**
-     * Recording video file resolution.<br>
+     * Recording video file resolution. Must be a string with format "WIDTHxHEIGHT",
+     * being both WIDTH and HEIGHT the number of pixels between 100 and 1999.<br>
      * Will only have effect if [[RecordingProperties.outputMode]]
      * is set to [[Recording.OutputMode.COMPOSED]]. For [[Recording.OutputMode.INDIVIDUAL]] all
      * individual video files will have the native resolution of the published stream

@@ -126,9 +126,12 @@ export class OpenVidu {
    * @param sessionId The `sessionId` of the [[Session]] you want to start recording
    * @param name The name you want to give to the video file. You can access this same value in your clients on recording events (`recordingStarted`, `recordingStopped`)
    *
-   * @returns A Promise that is resolved to the [[Recording]] if it successfully started (the recording can be stopped with guarantees) and rejected with an Error object if not. This Error object has as `message` property with the following values:
+   * @returns A Promise that is resolved to the [[Recording]] if it successfully started (the recording can be stopped with guarantees) and rejected with an Error
+   * object if not. This Error object has as `message` property with the following values:
    * - `404`: no session exists for the passed `sessionId`
-   * - `400`: the session has no connected participants
+   * - `406`: the session has no connected participants
+   * - `422`: when passing [[RecordingProperties]], `resolution` parameter exceeds acceptable values (for both width and height, min 100px and max 1999px) or trying
+   * to start a recording with both `hasAudio` and `hasVideo` to false
    * - `409`: the session is not configured for using [[MediaMode.ROUTED]] or it is already being recorded
    * - `501`: OpenVidu Server recording module is disabled (`openvidu.recording` property set to `false`)
    */

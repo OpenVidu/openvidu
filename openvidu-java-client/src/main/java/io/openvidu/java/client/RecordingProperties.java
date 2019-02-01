@@ -108,8 +108,10 @@ public class RecordingProperties {
 		}
 
 		/**
-		 * Call this method to specify the recording resolution. Will only have effect
-		 * if
+		 * Call this method to specify the recording resolution. Must be a string with
+		 * format "WIDTHxHEIGHT", being both WIDTH and HEIGHT the number of pixels
+		 * between 100 and 1999.<br>
+		 * Will only have effect if
 		 * {@link io.openvidu.java.client.RecordingProperties.Builder#outputMode(Recording.OutputMode)}
 		 * has been called with value
 		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED}. For
@@ -165,7 +167,8 @@ public class RecordingProperties {
 	/**
 	 * Defines the mode of recording: {@link Recording.OutputMode#COMPOSED} for a
 	 * single archive in a grid layout or {@link Recording.OutputMode#INDIVIDUAL}
-	 * for one archive for each stream.<br><br>
+	 * for one archive for each stream.<br>
+	 * <br>
 	 * 
 	 * Default to {@link Recording.OutputMode#COMPOSED}
 	 */
@@ -177,8 +180,8 @@ public class RecordingProperties {
 	 * Defines the layout to be used in the recording.<br>
 	 * Will only have effect if
 	 * {@link io.openvidu.java.client.RecordingProperties.Builder#outputMode(Recording.OutputMode)}
-	 * has been called with value
-	 * {@link Recording.OutputMode#COMPOSED}.<br><br>
+	 * has been called with value {@link Recording.OutputMode#COMPOSED}.<br>
+	 * <br>
 	 * 
 	 * Default to {@link RecordingLayout#BEST_FIT}
 	 */
@@ -206,7 +209,8 @@ public class RecordingProperties {
 	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED}. For
 	 * {@link io.openvidu.java.client.Recording.OutputMode#INDIVIDUAL} all
 	 * individual video files will have the native resolution of the published
-	 * stream.<br><br>
+	 * stream.<br>
+	 * <br>
 	 * 
 	 * Default to "1920x1080"
 	 */
@@ -216,7 +220,8 @@ public class RecordingProperties {
 
 	/**
 	 * Defines whether to record audio or not. Cannot be set to false at the same
-	 * time as {@link hasVideo()}.<br><br>
+	 * time as {@link hasVideo()}.<br>
+	 * <br>
 	 * 
 	 * Default to true
 	 */
@@ -226,7 +231,8 @@ public class RecordingProperties {
 
 	/**
 	 * Defines whether to record video or not. Cannot be set to false at the same
-	 * time as {@link hasAudio()}.<br><br>
+	 * time as {@link hasAudio()}.<br>
+	 * <br>
 	 * 
 	 * Default to true
 	 */
