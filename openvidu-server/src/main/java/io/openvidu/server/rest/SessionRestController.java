@@ -86,11 +86,22 @@ public class SessionRestController {
 		String customSessionId = null;
 
 		if (params != null) {
-			String mediaModeString = (String) params.get("mediaMode");
-			String recordingModeString = (String) params.get("recordingMode");
-			String defaultOutputModeString = (String) params.get("defaultOutputMode");
-			String defaultRecordingLayoutString = (String) params.get("defaultRecordingLayout");
-			String defaultCustomLayout = (String) params.get("defaultCustomLayout");
+
+			String mediaModeString;
+			String recordingModeString;
+			String defaultOutputModeString;
+			String defaultRecordingLayoutString;
+			String defaultCustomLayout;
+			try {
+				mediaModeString = (String) params.get("mediaMode");
+				recordingModeString = (String) params.get("recordingMode");
+				defaultOutputModeString = (String) params.get("defaultOutputMode");
+				defaultRecordingLayoutString = (String) params.get("defaultRecordingLayout");
+				defaultCustomLayout = (String) params.get("defaultCustomLayout");
+			} catch (ClassCastException e) {
+				return this.generateErrorResponse("Type error in some parameter", "/api/sessions",
+						HttpStatus.BAD_REQUEST);
+			}
 
 			customSessionId = (String) params.get("customSessionId");
 
@@ -130,7 +141,7 @@ public class SessionRestController {
 				return this.generateErrorResponse("RecordingMode " + params.get("recordingMode") + " | "
 						+ "Default OutputMode " + params.get("defaultOutputMode") + " | " + "Default RecordingLayout "
 						+ params.get("defaultRecordingLayout") + " | " + "MediaMode " + params.get("mediaMode")
-						+ " are not defined", "/api/tokens", HttpStatus.BAD_REQUEST);
+						+ ". Some parameter is not defined", "/api/sessions", HttpStatus.BAD_REQUEST);
 			}
 		}
 
@@ -248,81 +259,94 @@ public class SessionRestController {
 
 		log.info("REST API: POST /api/tokens {}", params.toString());
 
+		String sessionId;
+		String roleString;
+		String metadata;
 		try {
-			String sessionId = (String) params.get("session");
-			String roleString = (String) params.get("role");
-			String metadata = (String) params.get("data");
+			sessionId = (String) params.get("session");
+			roleString = (String) params.get("role");
+			metadata = (String) params.get("data");
+		} catch (ClassCastException e) {
+			return this.generateErrorResponse("Type error in some parameter", "/api/tokens", HttpStatus.BAD_REQUEST);
+		}
 
-			JsonObject kurentoOptions = null;
+		JsonObject kurentoOptions = null;
 
-			if (params.get("kurentoOptions") != null) {
-				kurentoOptions = new JsonParser().parse(params.get("kurentoOptions").toString()).getAsJsonObject();
-			}
-
-			ParticipantRole role;
+		if (params.get("kurentoOptions") != null) {
 			try {
-				if (roleString != null) {
-					role = ParticipantRole.valueOf(roleString);
-				} else {
-					role = ParticipantRole.PUBLISHER;
-				}
-			} catch (IllegalArgumentException e) {
-				return this.generateErrorResponse("Role " + params.get("role") + " is not defined", "/api/tokens",
+				kurentoOptions = new JsonParser().parse(params.get("kurentoOptions").toString()).getAsJsonObject();
+			} catch (Exception e) {
+				return this.generateErrorResponse("Error in parameter 'kurentoOptions'. It is not a valid JSON object",
+						"/api/tokens", HttpStatus.BAD_REQUEST);
+			}
+		}
+
+		ParticipantRole role;
+		try {
+			if (roleString != null) {
+				role = ParticipantRole.valueOf(roleString);
+			} else {
+				role = ParticipantRole.PUBLISHER;
+			}
+		} catch (IllegalArgumentException e) {
+			return this.generateErrorResponse("Parameter role " + params.get("role") + " is not defined", "/api/tokens",
+					HttpStatus.BAD_REQUEST);
+		}
+
+		KurentoTokenOptions kurentoTokenOptions = null;
+		if (kurentoOptions != null) {
+			try {
+				kurentoTokenOptions = new KurentoTokenOptions(kurentoOptions);
+			} catch (Exception e) {
+				return this.generateErrorResponse("Type error in some parameter of 'kurentoOptions'", "/api/tokens",
 						HttpStatus.BAD_REQUEST);
 			}
+		}
 
-			KurentoTokenOptions kurentoTokenOptions = null;
-			if (kurentoOptions != null) {
-				try {
-					kurentoTokenOptions = new KurentoTokenOptions(kurentoOptions);
-				} catch (Exception e) {
-					return this.generateErrorResponse("Error in some parameter of 'kurentoOptions'", "/api/tokens",
-							HttpStatus.BAD_REQUEST);
-				}
-			}
+		metadata = (metadata != null) ? metadata : "";
 
-			metadata = (metadata != null) ? metadata : "";
-
-			String token = sessionManager.newToken(sessionId, role, metadata, kurentoTokenOptions);
-			JsonObject responseJson = new JsonObject();
-			responseJson.addProperty("id", token);
-			responseJson.addProperty("session", sessionId);
-			responseJson.addProperty("role", role.toString());
-			responseJson.addProperty("data", metadata);
-			responseJson.addProperty("token", token);
-
-			if (kurentoOptions != null) {
-				JsonObject kurentoOptsResponse = new JsonObject();
-				if (kurentoTokenOptions.getVideoMaxRecvBandwidth() != null) {
-					kurentoOptsResponse.addProperty("videoMaxRecvBandwidth",
-							kurentoTokenOptions.getVideoMaxRecvBandwidth());
-				}
-				if (kurentoTokenOptions.getVideoMinRecvBandwidth() != null) {
-					kurentoOptsResponse.addProperty("videoMinRecvBandwidth",
-							kurentoTokenOptions.getVideoMinRecvBandwidth());
-				}
-				if (kurentoTokenOptions.getVideoMaxSendBandwidth() != null) {
-					kurentoOptsResponse.addProperty("videoMaxSendBandwidth",
-							kurentoTokenOptions.getVideoMaxSendBandwidth());
-				}
-				if (kurentoTokenOptions.getVideoMinSendBandwidth() != null) {
-					kurentoOptsResponse.addProperty("videoMinSendBandwidth",
-							kurentoTokenOptions.getVideoMinSendBandwidth());
-				}
-				if (kurentoTokenOptions.getAllowedFilters().length > 0) {
-					JsonArray filters = new JsonArray();
-					for (String filter : kurentoTokenOptions.getAllowedFilters()) {
-						filters.add(filter);
-					}
-					kurentoOptsResponse.add("allowedFilters", filters);
-				}
-				responseJson.add("kurentoOptions", kurentoOptsResponse);
-			}
-			return new ResponseEntity<>(responseJson.toString(), getResponseHeaders(), HttpStatus.OK);
+		String token;
+		try {
+			token = sessionManager.newToken(sessionId, role, metadata, kurentoTokenOptions);
 		} catch (OpenViduException e) {
-			// sessionId was not found
+			// Session was not found
 			return this.generateErrorResponse(e.getMessage(), "/api/tokens", HttpStatus.NOT_FOUND);
 		}
+		JsonObject responseJson = new JsonObject();
+		responseJson.addProperty("id", token);
+		responseJson.addProperty("session", sessionId);
+		responseJson.addProperty("role", role.toString());
+		responseJson.addProperty("data", metadata);
+		responseJson.addProperty("token", token);
+
+		if (kurentoOptions != null) {
+			JsonObject kurentoOptsResponse = new JsonObject();
+			if (kurentoTokenOptions.getVideoMaxRecvBandwidth() != null) {
+				kurentoOptsResponse.addProperty("videoMaxRecvBandwidth",
+						kurentoTokenOptions.getVideoMaxRecvBandwidth());
+			}
+			if (kurentoTokenOptions.getVideoMinRecvBandwidth() != null) {
+				kurentoOptsResponse.addProperty("videoMinRecvBandwidth",
+						kurentoTokenOptions.getVideoMinRecvBandwidth());
+			}
+			if (kurentoTokenOptions.getVideoMaxSendBandwidth() != null) {
+				kurentoOptsResponse.addProperty("videoMaxSendBandwidth",
+						kurentoTokenOptions.getVideoMaxSendBandwidth());
+			}
+			if (kurentoTokenOptions.getVideoMinSendBandwidth() != null) {
+				kurentoOptsResponse.addProperty("videoMinSendBandwidth",
+						kurentoTokenOptions.getVideoMinSendBandwidth());
+			}
+			if (kurentoTokenOptions.getAllowedFilters().length > 0) {
+				JsonArray filters = new JsonArray();
+				for (String filter : kurentoTokenOptions.getAllowedFilters()) {
+					filters.add(filter);
+				}
+				kurentoOptsResponse.add("allowedFilters", filters);
+			}
+			responseJson.add("kurentoOptions", kurentoOptsResponse);
+		}
+		return new ResponseEntity<>(responseJson.toString(), getResponseHeaders(), HttpStatus.OK);
 	}
 
 	@RequestMapping(value = "/recordings/start", method = RequestMethod.POST)
@@ -330,18 +354,32 @@ public class SessionRestController {
 
 		log.info("REST API: POST /api/recordings/start {}", params.toString());
 
-		String sessionId = (String) params.get("session");
-		String name = (String) params.get("name");
-		String outputModeString = (String) params.get("outputMode");
-		String resolution = (String) params.get("resolution");
-		Boolean hasAudio = (Boolean) params.get("hasAudio");
-		Boolean hasVideo = (Boolean) params.get("hasVideo");
-		String recordingLayoutString = (String) params.get("recordingLayout");
-		String customLayout = (String) params.get("customLayout");
+		String sessionId;
+		String name;
+		String outputModeString;
+		String resolution;
+		Boolean hasAudio;
+		Boolean hasVideo;
+		String recordingLayoutString;
+		String customLayout;
+		try {
+			sessionId = (String) params.get("session");
+			name = (String) params.get("name");
+			outputModeString = (String) params.get("outputMode");
+			resolution = (String) params.get("resolution");
+			hasAudio = (Boolean) params.get("hasAudio");
+			hasVideo = (Boolean) params.get("hasVideo");
+			recordingLayoutString = (String) params.get("recordingLayout");
+			customLayout = (String) params.get("customLayout");
+		} catch (ClassCastException e) {
+			return this.generateErrorResponse("Type error in some parameter", "/api/recordings/start",
+					HttpStatus.BAD_REQUEST);
+		}
 
 		if (sessionId == null) {
 			// "session" parameter not found
-			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+			return this.generateErrorResponse("session parameter is mandatory", "/api/recordings/start",
+					HttpStatus.BAD_REQUEST);
 		}
 
 		if (!this.openviduConfig.isRecordingModuleEnabled()) {
@@ -357,7 +395,7 @@ public class SessionRestController {
 		}
 		if (session.getParticipants().isEmpty()) {
 			// Session has no participants
-			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
 		}
 		if (!(session.getSessionProperties().mediaMode().equals(MediaMode.ROUTED))
 				|| this.recordingManager.sessionIsBeingRecorded(session.getSessionId())) {
