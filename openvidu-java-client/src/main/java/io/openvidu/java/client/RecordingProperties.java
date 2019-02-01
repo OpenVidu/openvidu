@@ -123,7 +123,8 @@ public class RecordingProperties {
 		}
 
 		/**
-		 * Call this method to specify whether to record audio or not. Cannot be set to false at the same time as {@link hasVideo(boolean)}
+		 * Call this method to specify whether to record audio or not. Cannot be set to
+		 * false at the same time as {@link hasVideo(boolean)}
 		 */
 		public RecordingProperties.Builder hasAudio(boolean hasAudio) {
 			this.hasAudio = hasAudio;
@@ -131,7 +132,8 @@ public class RecordingProperties {
 		}
 
 		/**
-		 * Call this method to specify whether to record video or not. Cannot be set to false at the same time as {@link hasAudio(boolean)} 
+		 * Call this method to specify whether to record video or not. Cannot be set to
+		 * false at the same time as {@link hasAudio(boolean)}
 		 */
 		public RecordingProperties.Builder hasVideo(boolean hasVideo) {
 			this.hasVideo = hasVideo;
@@ -163,7 +165,9 @@ public class RecordingProperties {
 	/**
 	 * Defines the mode of recording: {@link Recording.OutputMode#COMPOSED} for a
 	 * single archive in a grid layout or {@link Recording.OutputMode#INDIVIDUAL}
-	 * for one archive for each stream
+	 * for one archive for each stream.<br><br>
+	 * 
+	 * Default to {@link Recording.OutputMode#COMPOSED}
 	 */
 	public Recording.OutputMode outputMode() {
 		return this.outputMode;
@@ -174,7 +178,9 @@ public class RecordingProperties {
 	 * Will only have effect if
 	 * {@link io.openvidu.java.client.RecordingProperties.Builder#outputMode(Recording.OutputMode)}
 	 * has been called with value
-	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED}
+	 * {@link Recording.OutputMode#COMPOSED}.<br><br>
+	 * 
+	 * Default to {@link RecordingLayout#BEST_FIT}
 	 */
 	public RecordingLayout recordingLayout() {
 		return this.recordingLayout;
@@ -200,21 +206,29 @@ public class RecordingProperties {
 	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED}. For
 	 * {@link io.openvidu.java.client.Recording.OutputMode#INDIVIDUAL} all
 	 * individual video files will have the native resolution of the published
-	 * stream
+	 * stream.<br><br>
+	 * 
+	 * Default to "1920x1080"
 	 */
 	public String resolution() {
 		return this.resolution;
 	}
 
 	/**
-	 * Defines whether to record audio or not. Cannot be set to false at the same time as {@link hasVideo()}
+	 * Defines whether to record audio or not. Cannot be set to false at the same
+	 * time as {@link hasVideo()}.<br><br>
+	 * 
+	 * Default to true
 	 */
 	public boolean hasAudio() {
 		return this.hasAudio;
 	}
 
 	/**
-	 * Defines whether to record video or not. Cannot be set to false at the same time as {@link hasAudio()}
+	 * Defines whether to record video or not. Cannot be set to false at the same
+	 * time as {@link hasAudio()}.<br><br>
+	 * 
+	 * Default to true
 	 */
 	public boolean hasVideo() {
 		return this.hasVideo;

@@ -112,7 +112,8 @@ public class SessionProperties {
 		 * recording of this session. You can easily override this value later when
 		 * starting a {@link io.openvidu.java.client.Recording} by calling
 		 * {@link io.openvidu.java.client.RecordingProperties.Builder#customLayout(String)}
-		 * with any other value.<br><br>
+		 * with any other value.<br>
+		 * <br>
 		 * 
 		 * Custom layouts are only applicable to recordings with OutputMode
 		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} and
