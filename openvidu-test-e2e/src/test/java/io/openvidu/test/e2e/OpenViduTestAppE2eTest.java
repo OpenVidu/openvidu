@@ -29,7 +29,9 @@ import java.math.RoundingMode;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -108,6 +110,7 @@ public class OpenViduTestAppE2eTest {
 	private static final Logger log = LoggerFactory.getLogger(OpenViduTestAppE2eTest.class);
 
 	BrowserUser user;
+	Collection<BrowserUser> otherUsers = new ArrayList<>();
 	volatile static boolean isRecordingTest;
 
 	@BeforeAll()
@@ -200,6 +203,12 @@ public class OpenViduTestAppE2eTest {
 	@AfterEach
 	void dispose() {
 		user.dispose();
+		Iterator<BrowserUser> it = otherUsers.iterator();
+		while (it.hasNext()) {
+			BrowserUser other = it.next();
+			other.dispose();
+			it.remove();
+		}
 		if (isRecordingTest) {
 			try {
 				FileUtils.cleanDirectory(new File("/opt/openvidu/recordings"));
@@ -443,6 +452,7 @@ public class OpenViduTestAppE2eTest {
 
 		Thread t = new Thread(() -> {
 			BrowserUser user2 = new FirefoxUser("TestUser", 30);
+			otherUsers.add(user2);
 			user2.getDriver().get(APP_URL);
 			WebElement urlInput = user2.getDriver().findElement(By.id("openvidu-url"));
 			urlInput.clear();
@@ -1255,6 +1265,7 @@ public class OpenViduTestAppE2eTest {
 
 		Thread t = new Thread(() -> {
 			BrowserUser user2 = new FirefoxUser("FirefoxUser", 30);
+			otherUsers.add(user2);
 			user2.getDriver().get(APP_URL);
 			WebElement urlInput = user2.getDriver().findElement(By.id("openvidu-url"));
 			urlInput.clear();
@@ -1424,8 +1435,8 @@ public class OpenViduTestAppE2eTest {
 		// Check video-only COMPOSED recording
 		String recPath = recordingsPath + SESSION_NAME + "/";
 		Recording recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME);
-		this.checkMultimediaFile(new File(recPath + recording.getName() + ".mp4"), false, true,
-				recording.getDuration(), recording.getResolution(), null, "h264");
+		this.checkMultimediaFile(new File(recPath + recording.getName() + ".mp4"), false, true, recording.getDuration(),
+				recording.getResolution(), null, "h264");
 
 		// Check audio-only COMPOSED recording
 		recPath = recordingsPath + SESSION_NAME + "-1/";
@@ -1864,8 +1875,7 @@ public class OpenViduTestAppE2eTest {
 	}
 
 	private boolean recordedFileFine(File file, Recording recording) {
-		this.checkMultimediaFile(file, true, true, recording.getDuration(), recording.getResolution(), "aac",
-				"h264");
+		this.checkMultimediaFile(file, true, true, recording.getDuration(), recording.getResolution(), "aac", "h264");
 
 		boolean isFine = false;
 		Picture frame;
@@ -1925,13 +1935,15 @@ public class OpenViduTestAppE2eTest {
 			for (int i = 0; i < syncArray.size(); i++) {
 				JsonObject j = syncArray.get(i).getAsJsonObject();
 				if (webmFile.getName().contains(j.get("streamId").getAsString())) {
-					durationInSeconds = (double) (j.get("endTimeOffset").getAsDouble() - j.get("startTimeOffset").getAsDouble()) / 1000;
+					durationInSeconds = (double) (j.get("endTimeOffset").getAsDouble()
+							- j.get("startTimeOffset").getAsDouble()) / 1000;
 					found = true;
 					break;
 				}
 			}
 			Assert.assertTrue(found);
-			log.info("Duration of {} according to sync metadata json file: {} s", webmFile.getName(), durationInSeconds);
+			log.info("Duration of {} according to sync metadata json file: {} s", webmFile.getName(),
+					durationInSeconds);
 			this.checkMultimediaFile(webmFile, recording.hasAudio(), recording.hasVideo(), durationInSeconds,
 					recording.getResolution(), audioDecoder, videoDecoder);
 			webmFile.delete();
@@ -1971,7 +1983,7 @@ public class OpenViduTestAppE2eTest {
 		log.info("Duration of {} according to ffmpeg: {} s", file.getName(), metadata.getDuration());
 		log.info("Duration of {} according to 'duration' property: {} s", file.getName(), duration);
 		log.info("Difference in s duration: {}", Math.abs(metadata.getDuration() - duration));
-		Assert.assertTrue(Math.abs((metadata.getDuration() - duration)) < 0.25);
+		Assert.assertTrue(Math.abs((metadata.getDuration() - duration)) < 0.3);
 	}
 
 	private boolean thumbnailIsFine(File file) {
