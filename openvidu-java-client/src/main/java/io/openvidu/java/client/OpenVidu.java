@@ -267,8 +267,14 @@ public class OpenVidu {
 	 *                                     <ul>
 	 *                                     <li><code>404</code>: no session exists
 	 *                                     for the passed <i>sessionId</i></li>
-	 *                                     <li><code>400</code>: the session has no
+	 *                                     <li><code>406</code>: the session has no
 	 *                                     connected participants</li>
+	 *                                     <li><code>422</code>: "resolution"
+	 *                                     parameter exceeds acceptable values (for
+	 *                                     both width and height, min 100px and max
+	 *                                     1999px) or trying to start a recording
+	 *                                     with both "hasAudio" and "hasVideo" to
+	 *                                     false</li>
 	 *                                     <li><code>409</code>: the session is not
 	 *                                     configured for using
 	 *                                     {@link io.openvidu.java.client.MediaMode#ROUTED}
@@ -302,8 +308,14 @@ public class OpenVidu {
 	 *                                     <ul>
 	 *                                     <li><code>404</code>: no session exists
 	 *                                     for the passed <i>sessionId</i></li>
-	 *                                     <li><code>400</code>: the session has no
+	 *                                     <li><code>406</code>: the session has no
 	 *                                     connected participants</li>
+	 *                                     <li><code>422</code>: "resolution"
+	 *                                     parameter exceeds acceptable values (for
+	 *                                     both width and height, min 100px and max
+	 *                                     1999px) or trying to start a recording
+	 *                                     with both "hasAudio" and "hasVideo" to
+	 *                                     false</li>
 	 *                                     <li><code>409</code>: the session is not
 	 *                                     configured for using
 	 *                                     {@link io.openvidu.java.client.MediaMode#ROUTED}
