@@ -1425,7 +1425,7 @@ public class OpenViduTestAppE2eTest {
 		String recPath = recordingsPath + SESSION_NAME + "/";
 		Recording recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME);
 		this.checkMultimediaFile(new File(recPath + recording.getName() + ".mp4"), false, true,
-				recording.getDuration() * 1000, recording.getResolution(), null, "h264");
+				recording.getDuration(), recording.getResolution(), null, "h264");
 
 		// Check audio-only COMPOSED recording
 		recPath = recordingsPath + SESSION_NAME + "-1/";
@@ -1864,7 +1864,7 @@ public class OpenViduTestAppE2eTest {
 	}
 
 	private boolean recordedFileFine(File file, Recording recording) {
-		this.checkMultimediaFile(file, true, true, recording.getDuration() * 1000, recording.getResolution(), "aac",
+		this.checkMultimediaFile(file, true, true, recording.getDuration(), recording.getResolution(), "aac",
 				"h264");
 
 		boolean isFine = false;
@@ -1920,19 +1920,19 @@ public class OpenViduTestAppE2eTest {
 		for (File webmFile : unzippedWebmFiles) {
 			totalFileSize += webmFile.length();
 			Assert.assertTrue(webmFile.exists() && webmFile.length() > 0);
-			double duration = 0;
+			double durationInSeconds = 0;
 			boolean found = false;
 			for (int i = 0; i < syncArray.size(); i++) {
 				JsonObject j = syncArray.get(i).getAsJsonObject();
 				if (webmFile.getName().contains(j.get("streamId").getAsString())) {
-					duration = (j.get("endTimeOffset").getAsDouble() - j.get("startTimeOffset").getAsDouble());
+					durationInSeconds = (double) (j.get("endTimeOffset").getAsDouble() - j.get("startTimeOffset").getAsDouble()) / 1000;
 					found = true;
 					break;
 				}
 			}
 			Assert.assertTrue(found);
-			log.info("Duration of {} according to sync metadata json file: {} ms", webmFile.getName(), duration);
-			this.checkMultimediaFile(webmFile, recording.hasAudio(), recording.hasVideo(), duration,
+			log.info("Duration of {} according to sync metadata json file: {} s", webmFile.getName(), durationInSeconds);
+			this.checkMultimediaFile(webmFile, recording.hasAudio(), recording.hasVideo(), durationInSeconds,
 					recording.getResolution(), audioDecoder, videoDecoder);
 			webmFile.delete();
 		}
@@ -1968,9 +1968,10 @@ public class OpenViduTestAppE2eTest {
 		// Check duration with 1 decimal precision
 		DecimalFormat df = new DecimalFormat("#0.0");
 		df.setRoundingMode(RoundingMode.UP);
-		log.info("Duration of {} according to ffmpeg: {} ms", file.getName(), metadata.getDuration());
-		log.info("Difference in ms duration: {}", Math.abs(metadata.getDuration() - duration));
-		Assert.assertTrue((metadata.getDuration() - duration) < 250);
+		log.info("Duration of {} according to ffmpeg: {} s", file.getName(), metadata.getDuration());
+		log.info("Duration of {} according to 'duration' property: {} s", file.getName(), duration);
+		log.info("Difference in s duration: {}", Math.abs(metadata.getDuration() - duration));
+		Assert.assertTrue(Math.abs((metadata.getDuration() - duration)) < 0.25);
 	}
 
 	private boolean thumbnailIsFine(File file) {
