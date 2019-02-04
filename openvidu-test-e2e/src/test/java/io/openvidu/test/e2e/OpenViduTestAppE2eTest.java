@@ -1431,7 +1431,7 @@ public class OpenViduTestAppE2eTest {
 		recPath = recordingsPath + SESSION_NAME + "-1/";
 		recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME + "-1");
 		this.checkMultimediaFile(new File(recPath + recording.getName() + ".webm"), true, false,
-				recording.getDuration() * 1000, null, "opus", null);
+				recording.getDuration(), null, "opus", null);
 
 		// Check video-only INDIVIDUAL recording
 		recPath = recordingsPath + SESSION_NAME + "-2/";
