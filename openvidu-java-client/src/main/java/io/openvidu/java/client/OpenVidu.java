@@ -196,7 +196,7 @@ public class OpenVidu {
 		JSONObject json = new JSONObject();
 		json.put("session", sessionId);
 		json.put("name", properties.name());
-		json.put("outputMode", properties.outputMode());
+		json.put("outputMode", properties.outputMode().name());
 		json.put("hasAudio", properties.hasAudio());
 		json.put("hasVideo", properties.hasVideo());
 

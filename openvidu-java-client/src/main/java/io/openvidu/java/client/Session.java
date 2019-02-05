@@ -561,10 +561,10 @@ public class Session {
 		json.put("createdAt", this.createdAt);
 		json.put("customSessionId", this.properties.customSessionId());
 		json.put("recording", this.recording);
-		json.put("mediaMode", this.properties.mediaMode());
-		json.put("recordingMode", this.properties.recordingMode());
-		json.put("defaultOutputMode", this.properties.defaultOutputMode());
-		json.put("defaultRecordingLayout", this.properties.defaultRecordingLayout());
+		json.put("mediaMode", this.properties.mediaMode().name());
+		json.put("recordingMode", this.properties.recordingMode().name());
+		json.put("defaultOutputMode", this.properties.defaultOutputMode().name());
+		json.put("defaultRecordingLayout", this.properties.defaultRecordingLayout().name());
 		json.put("defaultCustomLayout", this.properties.defaultCustomLayout());
 		JSONObject connections = new JSONObject();
 		connections.put("numberOfElements", this.getActiveConnections().size());
@@ -572,7 +572,7 @@ public class Session {
 		this.getActiveConnections().forEach(con -> {
 			JSONObject c = new JSONObject();
 			c.put("connectionId", con.getConnectionId());
-			c.put("role", con.getRole());
+			c.put("role", con.getRole().name());
 			c.put("token", con.getToken());
 			c.put("clientData", con.getClientData());
 			c.put("serverData", con.getServerData());
