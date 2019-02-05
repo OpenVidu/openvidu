@@ -260,6 +260,8 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 4);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
 
+		System.out.println(this.getBase64Screenshot(user));
+
 		Assert.assertEquals(user.getDriver().findElements(By.tagName("video")).size(), 4);
 		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
 				true, false));
