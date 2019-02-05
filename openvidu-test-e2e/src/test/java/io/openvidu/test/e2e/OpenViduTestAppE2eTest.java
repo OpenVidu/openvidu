@@ -1213,7 +1213,7 @@ public class OpenViduTestAppE2eTest {
 		String recPath = recordingsPath + sessionName + "/";
 
 		Recording recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(sessionName);
-		this.checkIndividualRecording(recPath, recording, 1, "opus", "vp8");
+		this.checkIndividualRecording(recPath, recording, 2, "opus", "vp8");
 
 		// Try to get the stopped recording
 		user.getDriver().findElement(By.id("get-recording-btn")).click();
