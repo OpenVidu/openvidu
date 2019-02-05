@@ -114,6 +114,7 @@ public class OpenViduTestAppE2eTest {
 	BrowserUser user;
 	Collection<BrowserUser> otherUsers = new ArrayList<>();
 	volatile static boolean isRecordingTest;
+	private static OpenVidu OV;
 
 	@BeforeAll()
 	static void setupAll() {
@@ -154,6 +155,7 @@ public class OpenViduTestAppE2eTest {
 		} catch (IOException e) {
 			log.error(e.getMessage());
 		}
+		OV = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET);
 	}
 
 	void setupBrowser(String browser) {
@@ -211,13 +213,19 @@ public class OpenViduTestAppE2eTest {
 			other.dispose();
 			it.remove();
 		}
-		new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getActiveSessions().forEach(session -> {
+		try {
+			OV.fetch();
+		} catch (OpenViduJavaClientException | OpenViduHttpException e1) {
+			log.error("Error fetching sessions: {}", e1.getMessage());
+		}
+		OV.getActiveSessions().forEach(session -> {
 			try {
 				session.close();
+				log.info("Session {} successfully closed", session.getSessionId());
 			} catch (OpenViduJavaClientException e) {
-				e.printStackTrace();
+				log.error("Error closing session: {}", e.getMessage());
 			} catch (OpenViduHttpException e) {
-				e.printStackTrace();
+				log.error("Error closing session: {}", e.getMessage());
 			}
 		});
 		if (isRecordingTest) {
