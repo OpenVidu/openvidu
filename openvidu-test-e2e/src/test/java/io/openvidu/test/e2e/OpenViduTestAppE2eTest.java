@@ -79,6 +79,8 @@ import com.google.gson.stream.JsonReader;
 import io.github.bonigarcia.SeleniumExtension;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import io.openvidu.java.client.OpenVidu;
+import io.openvidu.java.client.OpenViduHttpException;
+import io.openvidu.java.client.OpenViduJavaClientException;
 import io.openvidu.java.client.Recording;
 import io.openvidu.test.e2e.browser.BrowserUser;
 import io.openvidu.test.e2e.browser.ChromeAndroidUser;
@@ -209,6 +211,15 @@ public class OpenViduTestAppE2eTest {
 			other.dispose();
 			it.remove();
 		}
+		new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getActiveSessions().forEach(session -> {
+			try {
+				session.close();
+			} catch (OpenViduJavaClientException e) {
+				e.printStackTrace();
+			} catch (OpenViduHttpException e) {
+				e.printStackTrace();
+			}
+		});
 		if (isRecordingTest) {
 			try {
 				FileUtils.cleanDirectory(new File("/opt/openvidu/recordings"));
