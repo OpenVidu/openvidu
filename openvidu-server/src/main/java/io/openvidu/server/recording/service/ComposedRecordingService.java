@@ -302,12 +302,19 @@ public class ComposedRecordingService extends RecordingService {
 				RecordingInfoUtils infoUtils = new RecordingInfoUtils(
 						this.openviduConfig.getOpenViduRecordingPath() + recordingId + "/" + recordingId + ".info");
 
-				recording.setStatus(io.openvidu.java.client.Recording.Status.stopped);
-				recording.setDuration(infoUtils.getDurationInSeconds());
-				recording.setSize(infoUtils.getSizeInBytes());
-				recording.setResolution(infoUtils.videoWidth() + "x" + infoUtils.videoHeight());
-				recording.setHasAudio(infoUtils.hasAudio());
-				recording.setHasVideo(infoUtils.hasVideo());
+				if (!infoUtils.hasVideo()) {
+					log.error("COMPOSED recording {} with hasVideo=true has not video track", recordingId);
+					recording.setStatus(io.openvidu.java.client.Recording.Status.failed);
+					recording.setHasAudio(false);
+					recording.setHasVideo(false);
+				} else {
+					recording.setStatus(io.openvidu.java.client.Recording.Status.stopped);
+					recording.setDuration(infoUtils.getDurationInSeconds());
+					recording.setSize(infoUtils.getSizeInBytes());
+					recording.setResolution(infoUtils.videoWidth() + "x" + infoUtils.videoHeight());
+					recording.setHasAudio(infoUtils.hasAudio());
+					recording.setHasVideo(infoUtils.hasVideo());
+				}
 
 				infoUtils.deleteFilePath();
 
