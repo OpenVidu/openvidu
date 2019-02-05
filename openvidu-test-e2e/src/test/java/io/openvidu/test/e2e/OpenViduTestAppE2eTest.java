@@ -1213,7 +1213,7 @@ public class OpenViduTestAppE2eTest {
 		String recPath = recordingsPath + sessionName + "/";
 
 		Recording recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(sessionName);
-		this.checkIndividualRecording(recPath, recording, "opus", "vp8");
+		this.checkIndividualRecording(recPath, recording, 1, "opus", "vp8");
 
 		// Try to get the stopped recording
 		user.getDriver().findElement(By.id("get-recording-btn")).click();
@@ -1447,12 +1447,12 @@ public class OpenViduTestAppE2eTest {
 		// Check video-only INDIVIDUAL recording
 		recPath = recordingsPath + SESSION_NAME + "-2/";
 		recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME + "-2");
-		this.checkIndividualRecording(recPath, recording, "opus", "vp8");
+		this.checkIndividualRecording(recPath, recording, 3, "opus", "vp8");
 
 		// Check audio-only INDIVIDUAL recording
 		recPath = recordingsPath + SESSION_NAME + "-3/";
 		recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME + "-3");
-		this.checkIndividualRecording(recPath, recording, "opus", "vp8");
+		this.checkIndividualRecording(recPath, recording, 2, "opus", "vp8");
 
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 		Thread.sleep(500);
@@ -1896,8 +1896,8 @@ public class OpenViduTestAppE2eTest {
 		return isFine;
 	}
 
-	private void checkIndividualRecording(String recPath, Recording recording, String audioDecoder,
-			String videoDecoder) {
+	private void checkIndividualRecording(String recPath, Recording recording, int numberOfVideoFiles,
+			String audioDecoder, String videoDecoder) {
 
 		// Should be only 2 files: zip and metadata
 		File folder = new File(recPath);
@@ -1910,6 +1910,9 @@ public class OpenViduTestAppE2eTest {
 		Assert.assertTrue(file2.exists() && file2.length() > 0);
 
 		List<File> unzippedWebmFiles = new Unzipper().unzipFile(recPath, recording.getName() + ".zip");
+
+		log.info("Expected {} video files and ZIP file has {}", numberOfVideoFiles, unzippedWebmFiles.size());
+		Assert.assertEquals(numberOfVideoFiles, unzippedWebmFiles.size());
 
 		File jsonSyncFile = new File(recPath + recording.getName() + ".json");
 		Assert.assertTrue(jsonSyncFile.exists() && jsonSyncFile.length() > 0);
