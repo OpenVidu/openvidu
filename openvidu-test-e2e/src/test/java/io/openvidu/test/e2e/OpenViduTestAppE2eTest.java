@@ -254,9 +254,10 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 4);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
 
-		Assert.assertEquals(user.getDriver().findElements(By.tagName("video")).size(), 4);
-		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
-				true, true));
+		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assert.assertEquals("Expected 4 videos but found " + numberOfVideos, numberOfVideos, 4);
+		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
+				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
 		gracefullyLeaveParticipants(2);
 	}
@@ -281,9 +282,10 @@ public class OpenViduTestAppE2eTest {
 
 		System.out.println(this.getBase64Screenshot(user));
 
-		Assert.assertEquals(user.getDriver().findElements(By.tagName("video")).size(), 4);
-		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
-				true, false));
+		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assert.assertEquals("Expected 4 videos but found " + numberOfVideos, numberOfVideos, 4);
+		Assert.assertTrue("Videos were expected to only have audio tracks", user.getEventManager()
+				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, false));
 
 		gracefullyLeaveParticipants(2);
 	}
@@ -306,9 +308,10 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 4);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
 
-		Assert.assertEquals(user.getDriver().findElements(By.tagName("video")).size(), 4);
-		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
-				false, true));
+		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assert.assertEquals("Expected 4 videos but found " + numberOfVideos, numberOfVideos, 4);
+		Assert.assertTrue("Videos were expected to only have video tracks", user.getEventManager()
+				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), false, true));
 
 		gracefullyLeaveParticipants(2);
 	}
@@ -329,8 +332,10 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 4);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
 
-		Assert.assertEquals(user.getDriver().findElements(By.tagName("video")).size(), 4);
-		user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true);
+		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assert.assertEquals("Expected 4 videos but found " + numberOfVideos, numberOfVideos, 4);
+		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
+				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
 		gracefullyLeaveParticipants(4);
 	}
@@ -352,9 +357,10 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 1);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
 
-		Assert.assertEquals(user.getDriver().findElements(By.tagName("video")).size(), 1);
-		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
-				true, true));
+		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assert.assertEquals("Expected 1 video but found " + numberOfVideos, numberOfVideos, 1);
+		Assert.assertTrue("Video was expected to have audio and video tracks", user.getEventManager()
+				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
 		gracefullyLeaveParticipants(1);
 	}
@@ -373,8 +379,13 @@ public class OpenViduTestAppE2eTest {
 
 		user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
 		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 1);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
 
-		Thread.sleep(3000);
+		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assert.assertEquals("Expected 1 video but found " + numberOfVideos, numberOfVideos, 1);
+		Assert.assertTrue("Video was expected to have audio and video tracks", user.getEventManager()
+				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
 		gracefullyLeaveParticipants(1);
 	}
@@ -397,9 +408,10 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 1);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
 
-		Assert.assertEquals(user.getDriver().findElements(By.tagName("video")).size(), 1);
-		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
-				true, true));
+		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assert.assertEquals("Expected 1 video but found " + numberOfVideos, numberOfVideos, 1);
+		Assert.assertTrue("Video was expected to have audio and video tracks", user.getEventManager()
+				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
 		gracefullyLeaveParticipants(1);
 	}
@@ -424,9 +436,10 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 16);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 16);
 
-		Assert.assertEquals(user.getDriver().findElements(By.tagName("video")).size(), 16);
-		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
-				true, true));
+		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assert.assertEquals("Expected 16 videos but found " + numberOfVideos, numberOfVideos, 16);
+		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
+				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
 		gracefullyLeaveParticipants(4);
 	}
@@ -447,9 +460,10 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 4);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
 
-		Assert.assertEquals(user.getDriver().findElements(By.tagName("video")).size(), 4);
-		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
-				true, true));
+		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assert.assertEquals("Expected 4 videos but found " + numberOfVideos, numberOfVideos, 4);
+		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
+				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
 		gracefullyLeaveParticipants(2);
 	}
@@ -492,9 +506,10 @@ public class OpenViduTestAppE2eTest {
 				user2.getEventManager().waitUntilEventReaches("streamCreated", 2);
 				user2.getEventManager().waitUntilEventReaches("streamPlaying", 2);
 
-				Assert.assertEquals(user2.getDriver().findElements(By.tagName("video")).size(), 2);
-				Assert.assertTrue(user2.getEventManager()
-						.assertMediaTracks(user2.getDriver().findElements(By.tagName("video")), true, true));
+				final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+				Assert.assertEquals("Expected 2 videos but found " + numberOfVideos, numberOfVideos, 2);
+				Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
+						.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
 				user2.getEventManager().waitUntilEventReaches("streamDestroyed", 1);
 				user2.getEventManager().waitUntilEventReaches("connectionDestroyed", 1);
@@ -518,9 +533,10 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
 
-		Assert.assertEquals(user.getDriver().findElements(By.tagName("video")).size(), 2);
-		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
-				true, true));
+		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assert.assertEquals("Expected 2 videos but found " + numberOfVideos, numberOfVideos, 2);
+		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
+				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
 		gracefullyLeaveParticipants(1);
 
@@ -551,10 +567,9 @@ public class OpenViduTestAppE2eTest {
 
 		user.getEventManager().waitUntilEventReaches("connectionCreated", 16);
 		user.getDriver().findElements(By.className(("message-btn"))).get(0).click();
-		user.getEventManager().waitUntilEventReaches("signal", 4);
+		user.getEventManager().waitUntilEventReaches("signal:chat", 4);
 
 		gracefullyLeaveParticipants(4);
-
 	}
 
 	@Test
@@ -575,9 +590,10 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
 
-		Assert.assertEquals(user.getDriver().findElements(By.tagName("video")).size(), 2);
-		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
-				true, true));
+		int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assert.assertEquals("Expected 2 videos but found " + numberOfVideos, numberOfVideos, 2);
+		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
+				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
 		// Global unsubscribe-subscribe
 		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video"));
@@ -586,39 +602,42 @@ public class OpenViduTestAppE2eTest {
 
 		user.getWaiter()
 				.until(ExpectedConditions.not(ExpectedConditions.attributeToBeNotEmpty(subscriberVideo, "srcObject")));
-		Assert.assertFalse(user.getEventManager().hasMediaStream(subscriberVideo));
+		Assert.assertFalse("Subscriber video should not have srcObject defined after unsubscribe",
+				user.getEventManager().hasMediaStream(subscriberVideo, "#openvidu-instance-0"));
 
 		subBtn.click();
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 3);
 
-		Assert.assertEquals(user.getDriver().findElements(By.tagName("video")).size(), 2);
-		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
-				true, true));
+		numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assert.assertEquals("Expected 2 videos but found " + numberOfVideos, numberOfVideos, 2);
+		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
+				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
 		// Video unsubscribe
 		subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 video"));
 		Iterable<WebElement> firstVideo = Arrays.asList(subscriberVideo);
 		user.getDriver().findElement(By.cssSelector(("#openvidu-instance-0 .sub-video-btn"))).click();
 		Thread.sleep(1000);
-		Assert.assertTrue(user.getEventManager().assertMediaTracks(firstVideo, true, false));
+		Assert.assertTrue("Subscriber video was expected to only have audio track",
+				user.getEventManager().assertMediaTracks(firstVideo, true, false));
 
 		// Audio unsubscribe
-
 		user.getDriver().findElement(By.cssSelector(("#openvidu-instance-0 .sub-audio-btn"))).click();
 		Thread.sleep(1000);
-		Assert.assertTrue(user.getEventManager().assertMediaTracks(firstVideo, false, false));
+		Assert.assertTrue("Subscriber video was expected to not have video or audio tracks",
+				user.getEventManager().assertMediaTracks(firstVideo, false, false));
 
 		// Video and audio subscribe
-
 		user.getDriver().findElement(By.cssSelector(("#openvidu-instance-0 .sub-video-btn"))).click();
 		Thread.sleep(1000);
-		Assert.assertTrue(user.getEventManager().assertMediaTracks(firstVideo, false, true));
+		Assert.assertTrue("Subscriber video was expected to only have video track",
+				user.getEventManager().assertMediaTracks(firstVideo, false, true));
 		user.getDriver().findElement(By.cssSelector(("#openvidu-instance-0 .sub-audio-btn"))).click();
 		Thread.sleep(1000);
-		Assert.assertTrue(user.getEventManager().assertMediaTracks(firstVideo, true, true));
+		Assert.assertTrue("Subscriber video was expected to have audio and video tracks",
+				user.getEventManager().assertMediaTracks(firstVideo, true, true));
 
 		gracefullyLeaveParticipants(2);
-
 	}
 
 	@Test
@@ -637,11 +656,10 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 4);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
 
-		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 4));
-		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
-				true, true));
-
-		Thread.sleep(2000);
+		int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assert.assertEquals("Expected 4 videos but found " + numberOfVideos, numberOfVideos, 4);
+		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
+				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
 		List<WebElement> publishButtons = user.getDriver().findElements(By.className("pub-btn"));
 		for (WebElement el : publishButtons) {
@@ -652,7 +670,8 @@ public class OpenViduTestAppE2eTest {
 		for (WebElement video : user.getDriver().findElements(By.tagName("video"))) {
 			user.getWaiter()
 					.until(ExpectedConditions.not(ExpectedConditions.attributeToBeNotEmpty(video, "srcObject")));
-			Assert.assertFalse(user.getEventManager().hasMediaStream(video));
+			Assert.assertFalse("Videos were expected to lack srcObject property",
+					user.getEventManager().hasMediaStream(video, ""));
 		}
 
 		for (WebElement el : publishButtons) {
@@ -662,11 +681,10 @@ public class OpenViduTestAppE2eTest {
 
 		user.getEventManager().waitUntilEventReaches("streamCreated", 8);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 8);
-		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
-				true, true));
+		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
+				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
 		gracefullyLeaveParticipants(2);
-
 	}
 
 	@Test
@@ -689,77 +707,78 @@ public class OpenViduTestAppE2eTest {
 
 		// First publication (audio + video [CAMERA])
 		user.getEventManager().on("streamPlaying", (event) -> {
-			if (event.get("eventContent") != null) {
-				threadAssertions.add(((String) event.get("eventContent")).contains("CAMERA"));
-			}
+			JsonObject stream = event.get("target").getAsJsonObject().get("stream").getAsJsonObject();
+			threadAssertions.add("CAMERA".equals(stream.get("typeOfVideo").getAsString()));
+			threadAssertions.add(stream.get("hasAudio").getAsBoolean());
+
 			latch1.countDown();
 		});
 		user.getDriver().findElement(By.id("one2many-btn")).click();
-
-		Thread.sleep(2000);
 
 		user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
 		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
 		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
 
-		if (!latch1.await(8000, TimeUnit.MILLISECONDS)) {
+		if (!latch1.await(5000, TimeUnit.MILLISECONDS)) {
 			gracefullyLeaveParticipants(2);
-			fail();
+			fail("Waiting for 2 streamPlaying events to happen in total");
 			return;
 		}
 
 		user.getEventManager().off("streamPlaying");
+		log.info("Thread assertions: {}", threadAssertions.toString());
 		for (Iterator<Boolean> iter = threadAssertions.iterator(); iter.hasNext();) {
-			Assert.assertTrue(iter.next());
+			Assert.assertTrue("Some Event property was wrong", iter.next());
 			iter.remove();
 		}
 
-		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 2));
-		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
-				true, true));
-
-		Thread.sleep(2000);
+		int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assert.assertEquals("Expected 2 videos but found " + numberOfVideos, numberOfVideos, 2);
+		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
+				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
 		final CountDownLatch latch2 = new CountDownLatch(2);
 
 		// Second publication (only video (SCREEN))
 		user.getEventManager().on("streamPlaying", (event) -> {
-			if (event.get("eventContent") != null) {
-				threadAssertions.add(((String) event.get("eventContent")).contains("SCREEN"));
-			}
+			JsonObject stream = event.get("target").getAsJsonObject().get("stream").getAsJsonObject();
+			threadAssertions.add("SCREEN".equals(stream.get("typeOfVideo").getAsString()));
+			threadAssertions.add(!stream.get("hasAudio").getAsBoolean());
 			latch2.countDown();
 		});
 		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .change-publisher-btn")).click();
+
 		user.getEventManager().waitUntilEventReaches("streamDestroyed", 2);
 		user.getEventManager().waitUntilEventReaches("accessAllowed", 2);
 		user.getEventManager().waitUntilEventReaches("streamCreated", 4);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
 
-		if (!latch2.await(8000, TimeUnit.MILLISECONDS)) {
+		if (!latch2.await(5000, TimeUnit.MILLISECONDS)) {
 			gracefullyLeaveParticipants(2);
-			fail();
+			fail("Waiting for 4 streamPlaying events to happen in total");
 			return;
 		}
 
 		user.getEventManager().off("streamPlaying");
+		log.info("Thread assertions: {}", threadAssertions.toString());
 		for (Iterator<Boolean> iter = threadAssertions.iterator(); iter.hasNext();) {
-			Assert.assertTrue(iter.next());
+			Assert.assertTrue("Some Event property was wrong", iter.next());
 			iter.remove();
 		}
 
-		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
-				false, true));
-
-		Thread.sleep(2000);
+		numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assert.assertEquals("Expected 2 videos but found " + numberOfVideos, numberOfVideos, 2);
+		Assert.assertTrue("Videos were expected to only have audio tracks", user.getEventManager()
+				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), false, true));
 
 		final CountDownLatch latch3 = new CountDownLatch(2);
 
 		// Third publication (audio + video [CAMERA])
 		user.getEventManager().on("streamPlaying", (event) -> {
-			if (event.get("eventContent") != null) {
-				threadAssertions.add(((String) event.get("eventContent")).contains("CAMERA"));
-			}
+			JsonObject stream = event.get("target").getAsJsonObject().get("stream").getAsJsonObject();
+			threadAssertions.add("CAMERA".equals(stream.get("typeOfVideo").getAsString()));
+			threadAssertions.add(stream.get("hasAudio").getAsBoolean());
 			latch3.countDown();
 		});
 		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .change-publisher-btn")).click();
@@ -770,21 +789,23 @@ public class OpenViduTestAppE2eTest {
 
 		if (!latch3.await(8000, TimeUnit.MILLISECONDS)) {
 			gracefullyLeaveParticipants(2);
-			fail();
+			fail("Waiting for 6 streamPlaying events to happen in total");
 			return;
 		}
 
 		user.getEventManager().off("streamPlaying");
+		log.info("Thread assertions: {}", threadAssertions.toString());
 		for (Iterator<Boolean> iter = threadAssertions.iterator(); iter.hasNext();) {
-			Assert.assertTrue(iter.next());
+			Assert.assertTrue("Some Event property was wrong", iter.next());
 			iter.remove();
 		}
 
-		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
-				true, true));
+		numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assert.assertEquals("Expected 2 videos but found " + numberOfVideos, numberOfVideos, 2);
+		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
+				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
 		gracefullyLeaveParticipants(2);
-
 	}
 
 	@Test
@@ -819,23 +840,30 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 3);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 3);
 
-		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 3));
-		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
-				true, true));
+		int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assert.assertEquals("Expected 3 videos but found " + numberOfVideos, numberOfVideos, 3);
+		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
+				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
 		// Moderator forces unpublish
 		user.getDriver().findElement(By.cssSelector("#openvidu-instance-2 .force-unpub-btn")).click();
 		user.getEventManager().waitUntilEventReaches("streamDestroyed", 3);
-		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 1));
+
+		List<WebElement> videos = user.getDriver().findElements(By.tagName("video"));
+		numberOfVideos = videos.size();
+		Assert.assertEquals("Expected 1 video but found " + numberOfVideos, numberOfVideos, 1);
+		Assert.assertFalse("Publisher video should not have srcObject defined after force unpublish",
+				user.getEventManager().hasMediaStream(videos.get(0), ""));
 
 		// Publisher publishes again
 		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .pub-btn")).click();
 		user.getEventManager().waitUntilEventReaches("streamCreated", 6);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 6);
 
-		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 3));
-		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
-				true, true));
+		numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assert.assertEquals("Expected 3 videos but found " + numberOfVideos, numberOfVideos, 3);
+		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
+				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
 		// Moderator forces disconnect of publisher
 		user.getDriver().findElement(By.cssSelector("#openvidu-instance-2 .force-disconnect-btn")).click();
@@ -845,7 +873,6 @@ public class OpenViduTestAppE2eTest {
 		user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 0));
 
 		gracefullyLeaveParticipants(3);
-
 	}
 
 	@Test
@@ -878,7 +905,8 @@ public class OpenViduTestAppE2eTest {
 		// Unpublish video
 		final CountDownLatch latch1 = new CountDownLatch(2);
 		user.getEventManager().on("streamPropertyChanged", (event) -> {
-			threadAssertions.add(((String) event.get("eventContent")).contains("videoActive [false]"));
+			threadAssertions.add("videoActive".equals(event.get("changedProperty").getAsString()));
+			threadAssertions.add(!event.get("newValue").getAsBoolean());
 			latch1.countDown();
 		});
 		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .pub-video-btn")).click();
@@ -891,15 +919,17 @@ public class OpenViduTestAppE2eTest {
 		}
 
 		user.getEventManager().off("streamPropertyChanged");
+		log.info("Thread assertions: {}", threadAssertions.toString());
 		for (Iterator<Boolean> iter = threadAssertions.iterator(); iter.hasNext();) {
-			Assert.assertTrue(iter.next());
+			Assert.assertTrue("Some Event property was wrong", iter.next());
 			iter.remove();
 		}
 
 		// Unpublish audio
 		final CountDownLatch latch2 = new CountDownLatch(2);
 		user.getEventManager().on("streamPropertyChanged", (event) -> {
-			threadAssertions.add(((String) event.get("eventContent")).contains("audioActive [false]"));
+			threadAssertions.add("audioActive".equals(event.get("changedProperty").getAsString()));
+			threadAssertions.add(!event.get("newValue").getAsBoolean());
 			latch2.countDown();
 		});
 		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .pub-audio-btn")).click();
@@ -912,8 +942,9 @@ public class OpenViduTestAppE2eTest {
 		}
 
 		user.getEventManager().off("streamPropertyChanged");
+		log.info("Thread assertions: {}", threadAssertions.toString());
 		for (Iterator<Boolean> iter = threadAssertions.iterator(); iter.hasNext();) {
-			Assert.assertTrue(iter.next());
+			Assert.assertTrue("Some Event property was wrong", iter.next());
 			iter.remove();
 		}
 
@@ -925,8 +956,10 @@ public class OpenViduTestAppE2eTest {
 		final long[] expectedWidthHeight = new long[2];
 
 		user.getEventManager().on("streamPropertyChanged", (event) -> {
-			threadAssertions.add(((String) event.get("eventContent")).contains("videoDimensions [{\"width\":"
-					+ expectedWidthHeight[0] + ",\"height\":" + expectedWidthHeight[1] + "}]"));
+			String expectedDimensions = "{\"width\":" + expectedWidthHeight[0] + ",\"height\":" + expectedWidthHeight[1]
+					+ "}";
+			threadAssertions.add("videoDimensions".equals(event.get("changedProperty").getAsString()));
+			threadAssertions.add(expectedDimensions.equals(event.get("newValue").getAsJsonObject().toString()));
 			latch3.countDown();
 		});
 
@@ -949,8 +982,9 @@ public class OpenViduTestAppE2eTest {
 		}
 
 		user.getEventManager().off("streamPropertyChanged");
+		log.info("Thread assertions: {}", threadAssertions.toString());
 		for (Iterator<Boolean> iter = threadAssertions.iterator(); iter.hasNext();) {
-			Assert.assertTrue(iter.next());
+			Assert.assertTrue("Some Event property was wrong", iter.next());
 			iter.remove();
 		}
 
@@ -973,8 +1007,10 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 1);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
 
-		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
-				true, true));
+		int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assert.assertEquals("Expected 1 video but found " + numberOfVideos, numberOfVideos, 1);
+		Assert.assertTrue("Video was expected to have audio and video tracks", user.getEventManager()
+				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
 		WebElement recordBtn = user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .publisher-rec-btn"));
 		recordBtn.click();
@@ -1063,8 +1099,10 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 1);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
 
-		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
-				true, true));
+		int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assert.assertEquals("Expected 1 video but found " + numberOfVideos, numberOfVideos, 1);
+		Assert.assertTrue("Video was expected to have audio and video tracks", user.getEventManager()
+				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
 		user.getDriver().findElement(By.id("session-api-btn-0")).click();
 		Thread.sleep(1000);
@@ -1118,13 +1156,16 @@ public class OpenViduTestAppE2eTest {
 		File file2 = new File(recordingsPath + sessionName + "/" + ".recording." + sessionName);
 		File file3 = new File(recordingsPath + sessionName + "/" + sessionName + ".jpg");
 
-		Assert.assertTrue(file1.exists() && file1.length() > 0);
-		Assert.assertTrue(file2.exists() && file2.length() > 0);
-		Assert.assertTrue(file3.exists() && file3.length() > 0);
+		Assert.assertTrue("File " + file1.getAbsolutePath() + " does not exist or is empty",
+				file1.exists() && file1.length() > 0);
+		Assert.assertTrue("File " + file2.getAbsolutePath() + " does not exist or is empty",
+				file2.exists() && file2.length() > 0);
+		Assert.assertTrue("File " + file3.getAbsolutePath() + " does not exist or is empty",
+				file3.exists() && file3.length() > 0);
 
-		Assert.assertTrue(
+		Assert.assertTrue("Recorded file " + file1.getAbsolutePath() + " is not fine",
 				this.recordedFileFine(file1, new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(sessionName)));
-		Assert.assertTrue(this.thumbnailIsFine(file3));
+		Assert.assertTrue("Thumbnail " + file3.getAbsolutePath() + " is not fine", this.thumbnailIsFine(file3));
 
 		// Try to get the stopped recording
 		user.getDriver().findElement(By.id("get-recording-btn")).click();
@@ -1141,9 +1182,9 @@ public class OpenViduTestAppE2eTest {
 		user.getWaiter()
 				.until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Recording deleted"));
 
-		Assert.assertFalse(file1.exists());
-		Assert.assertFalse(file2.exists());
-		Assert.assertFalse(file3.exists());
+		Assert.assertFalse("File " + file1.getAbsolutePath() + " shouldn't exist", file1.exists());
+		Assert.assertFalse("File " + file2.getAbsolutePath() + " shouldn't exist", file2.exists());
+		Assert.assertFalse("File " + file3.getAbsolutePath() + " shouldn't exist", file3.exists());
 
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 		Thread.sleep(500);
@@ -1175,8 +1216,10 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 4);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
 
-		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
-				true, true));
+		int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assert.assertEquals("Expected 4 videos but found " + numberOfVideos, numberOfVideos, 4);
+		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
+				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
 		user.getDriver().findElement(By.id("session-api-btn-0")).click();
 		Thread.sleep(1000);
@@ -1251,7 +1294,7 @@ public class OpenViduTestAppE2eTest {
 		user.getWaiter()
 				.until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Recording deleted"));
 
-		Assert.assertFalse(new File(recPath).exists());
+		Assert.assertFalse("Recording folder " + recPath + " shouldn't exist", new File(recPath).exists());
 
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 		Thread.sleep(500);
@@ -1359,7 +1402,8 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 8);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 8);
 
-		Assert.assertEquals(user.getDriver().findElements(By.tagName("video")).size(), 8);
+		int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assert.assertEquals("Expected 8 videos but found " + numberOfVideos, numberOfVideos, 8);
 
 		user.getDriver().findElement(By.id("session-api-btn-0")).click();
 		Thread.sleep(1000);
@@ -1529,8 +1573,10 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 4);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
 
-		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
-				true, true));
+		int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assert.assertEquals("Expected 4 videos but found " + numberOfVideos, numberOfVideos, 4);
+		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
+				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
 		// Fetch existing session (change)
 		user.getDriver().findElement(By.id("session-api-btn-0")).click();
@@ -1564,6 +1610,15 @@ public class OpenViduTestAppE2eTest {
 		user.getWaiter().until(
 				ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Stream unpublished"));
 		user.getEventManager().waitUntilEventReaches("streamDestroyed", 2);
+
+		numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assert.assertEquals("Expected 3 videos but found " + numberOfVideos, numberOfVideos, 3);
+		WebElement v = user.getDriver().findElements(By.cssSelector("#openvidu-instance-1 video")).get(0);
+		Assert.assertFalse("Publisher video should not have srcObject defined after force unpublish",
+				user.getEventManager().hasMediaStream(v, "#openvidu-instance-1"));
+		Iterable<WebElement> vs = user.getDriver().findElements(By.cssSelector("#openvidu-instance-0 video"));
+		Assert.assertTrue("Videos were expected to have audio and video tracks",
+				user.getEventManager().assertMediaTracks(vs, true, true));
 
 		// Force disconnect wrong
 		user.getDriver().findElement(By.id("resource-id-field")).clear();
@@ -1623,16 +1678,17 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
 
-		Assert.assertEquals(user.getDriver().findElements(By.tagName("video")).size(), 2);
-		Assert.assertTrue(user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")),
-				false, true));
+		int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assert.assertEquals("Expected 2 videos but found " + numberOfVideos, numberOfVideos, 2);
+		Assert.assertTrue("Videos were expected to have a video only track", user.getEventManager()
+				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), false, true));
 
 		WebElement subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video"));
 
 		// Analyze Chrome fake video stream without gray filter (GREEN color)
 		Map<String, Long> rgb = user.getEventManager().getAverageRgbFromVideo(subscriberVideo);
 		System.out.println(rgb.toString());
-		Assert.assertTrue(checkVideoAverageRgbGreen(rgb));
+		Assert.assertTrue("Video is not average green", checkVideoAverageRgbGreen(rgb));
 
 		// Try to apply none allowed filter
 		user.getDriver().findElement(By.cssSelector(".filter-btn")).click();
@@ -1668,7 +1724,7 @@ public class OpenViduTestAppE2eTest {
 		Thread.sleep(500);
 		rgb = user.getEventManager().getAverageRgbFromVideo(subscriberVideo);
 		System.out.println(rgb.toString());
-		Assert.assertTrue(checkVideoAverageRgbGray(rgb));
+		Assert.assertTrue("Video is not average gray", checkVideoAverageRgbGray(rgb));
 
 		// Execute filter method
 		WebElement filterMethodInput = user.getDriver().findElement(By.id("filter-method-field"));
@@ -1686,7 +1742,7 @@ public class OpenViduTestAppE2eTest {
 		Thread.sleep(500);
 		rgb = user.getEventManager().getAverageRgbFromVideo(subscriberVideo);
 		System.out.println(rgb.toString());
-		Assert.assertTrue(checkVideoAverageRgbGreen(rgb));
+		Assert.assertTrue("Video is not average green", checkVideoAverageRgbGreen(rgb));
 
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 		Thread.sleep(500);
@@ -1711,7 +1767,7 @@ public class OpenViduTestAppE2eTest {
 		subscriberVideo = user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 video"));
 		rgb = user.getEventManager().getAverageRgbFromVideo(subscriberVideo);
 		System.out.println(rgb.toString());
-		Assert.assertTrue(checkVideoAverageRgbGray(rgb));
+		Assert.assertTrue("Video is not average gray", checkVideoAverageRgbGray(rgb));
 
 		// Remove filter
 		user.getDriver().findElement(By.cssSelector(".filter-btn")).click();
@@ -1725,7 +1781,7 @@ public class OpenViduTestAppE2eTest {
 		// Analyze Chrome fake video stream with gray filter (GREEN color)
 		rgb = user.getEventManager().getAverageRgbFromVideo(subscriberVideo);
 		System.out.println(rgb.toString());
-		Assert.assertTrue(checkVideoAverageRgbGreen(rgb));
+		Assert.assertTrue("Video is not average green", checkVideoAverageRgbGreen(rgb));
 
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 		Thread.sleep(500);
@@ -1773,10 +1829,10 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
 
-		Assert.assertEquals(user.getDriver().findElements(By.tagName("video")).size(), 2);
-		// Assert no audio track only for the moderator incoming video
-		Assert.assertTrue(user.getEventManager().assertMediaTracks(
-				user.getDriver().findElements(By.cssSelector("#openvidu-instance-1 video")), false, true));
+		int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assert.assertEquals("Expected 2 videos but found " + numberOfVideos, numberOfVideos, 2);
+		Assert.assertTrue("Videos were expected to have only a video track", user.getEventManager()
+				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), false, true));
 
 		// Publisher applies ZBarCode filter to itself
 		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .filter-btn")).click();
@@ -1801,7 +1857,7 @@ public class OpenViduTestAppE2eTest {
 		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value",
 				"Filter event listener added"));
 
-		user.getEventManager().waitUntilEventReaches("filterEvent", 2);
+		user.getEventManager().waitUntilEventReaches("CodeFound", 2);
 
 		// Publisher unsubscribes from "CodeFound" filter event
 		user.getDriver().findElement(By.id("unsub-filter-event-btn")).click();
@@ -1809,7 +1865,7 @@ public class OpenViduTestAppE2eTest {
 		try {
 			// If this active wait finishes successfully, then the removal of the event
 			// listener has not worked fine
-			user.getEventManager().waitUntilEventReaches("filterEvent", 3, 3, false);
+			user.getEventManager().waitUntilEventReaches("CodeFound", 3, 3, false);
 			Assert.fail("'filterEvent' was received. Filter.removeEventListener() failed");
 		} catch (Exception e) {
 			System.out.println("Filter event removal worked fine");
@@ -1828,7 +1884,7 @@ public class OpenViduTestAppE2eTest {
 		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value",
 				"Filter event listener added"));
 
-		user.getEventManager().waitUntilEventReaches("filterEvent", 4);
+		user.getEventManager().waitUntilEventReaches("CodeFound", 4);
 
 		// Moderator removes the Publisher's filter
 		user.getDriver().findElement(By.id("remove-filter-btn")).click();
@@ -1839,7 +1895,7 @@ public class OpenViduTestAppE2eTest {
 		try {
 			// If this active wait finishes successfully, then the removal of the filter has
 			// not worked fine
-			user.getEventManager().waitUntilEventReaches("filterEvent", 5, 3, false);
+			user.getEventManager().waitUntilEventReaches("CodeFound", 5, 3, false);
 			Assert.fail("'filterEvent' was received. Stream.removeFilter() failed");
 		} catch (Exception e) {
 			System.out.println("Filter removal worked fine");
@@ -1906,7 +1962,11 @@ public class OpenViduTestAppE2eTest {
 			BufferedImage image = AWTUtil.toBufferedImage(frame);
 			Map<String, Long> colorMap = this.averageColor(image);
 
-			Assert.assertEquals(image.getWidth() + "x" + image.getHeight(), recording.getResolution());
+			String realResolution = image.getWidth() + "x" + image.getHeight();
+			Assert.assertEquals(
+					"Resolution (" + recording.getResolution()
+							+ ") of recording entity is not equal to real video resolution (" + realResolution + ")",
+					realResolution, recording.getResolution());
 
 			log.info("Recording map color: {}", colorMap.toString());
 			isFine = this.checkVideoAverageRgbGreen(colorMap);
@@ -1922,21 +1982,27 @@ public class OpenViduTestAppE2eTest {
 
 		// Should be only 2 files: zip and metadata
 		File folder = new File(recPath);
-		Assert.assertEquals(folder.listFiles().length, 2);
+		Assert.assertEquals(
+				"There are more than 2 files (ZIP and metadata) inside individual recording folder " + recPath,
+				folder.listFiles().length, 2);
 
 		File file1 = new File(recPath + recording.getName() + ".zip");
 		File file2 = new File(recPath + ".recording." + recording.getId());
 
-		Assert.assertTrue(file1.exists() && file1.length() > 0);
-		Assert.assertTrue(file2.exists() && file2.length() > 0);
+		Assert.assertTrue("File " + file1.getAbsolutePath() + " does not exist or is empty",
+				file1.exists() && file1.length() > 0);
+		Assert.assertTrue("File " + file2.getAbsolutePath() + " does not exist or is empty",
+				file2.exists() && file2.length() > 0);
 
 		List<File> unzippedWebmFiles = new Unzipper().unzipFile(recPath, recording.getName() + ".zip");
 
-		log.info("Expected {} video files and ZIP file has {}", numberOfVideoFiles, unzippedWebmFiles.size());
-		Assert.assertEquals(numberOfVideoFiles, unzippedWebmFiles.size());
+		Assert.assertEquals("Expecting " + numberOfVideoFiles + " inside ZIP file but " + unzippedWebmFiles.size()
+				+ " found: " + unzippedWebmFiles.toString(), numberOfVideoFiles, unzippedWebmFiles.size());
 
 		File jsonSyncFile = new File(recPath + recording.getName() + ".json");
-		Assert.assertTrue(jsonSyncFile.exists() && jsonSyncFile.length() > 0);
+		Assert.assertTrue("JSON sync file " + jsonSyncFile.getAbsolutePath() + "does not exist or is empty",
+				jsonSyncFile.exists() && jsonSyncFile.length() > 0);
+
 		JsonObject jsonSyncMetadata;
 		try {
 			Gson gson = new Gson();
@@ -1945,7 +2011,7 @@ public class OpenViduTestAppE2eTest {
 		} catch (Exception e) {
 			log.error("Cannot read JSON sync metadata file from {}. Error: {}", jsonSyncFile.getAbsolutePath(),
 					e.getMessage());
-			Assert.fail();
+			Assert.fail("Cannot read JSON sync metadata file from " + jsonSyncFile.getAbsolutePath());
 			return;
 		}
 
@@ -1953,7 +2019,10 @@ public class OpenViduTestAppE2eTest {
 		JsonArray syncArray = jsonSyncMetadata.get("files").getAsJsonArray();
 		for (File webmFile : unzippedWebmFiles) {
 			totalFileSize += webmFile.length();
-			Assert.assertTrue(webmFile.exists() && webmFile.length() > 0);
+
+			Assert.assertTrue("WEBM file " + webmFile.getAbsolutePath() + " does not exist or is empty",
+					webmFile.exists() && webmFile.length() > 0);
+
 			double durationInSeconds = 0;
 			boolean found = false;
 			for (int i = 0; i < syncArray.size(); i++) {
@@ -1965,14 +2034,19 @@ public class OpenViduTestAppE2eTest {
 					break;
 				}
 			}
-			Assert.assertTrue(found);
+
+			Assert.assertTrue("Couldn't find in JSON sync object information for webm file " + webmFile.getName(),
+					found);
+
 			log.info("Duration of {} according to sync metadata json file: {} s", webmFile.getName(),
 					durationInSeconds);
 			this.checkMultimediaFile(webmFile, recording.hasAudio(), recording.hasVideo(), durationInSeconds,
 					recording.getResolution(), audioDecoder, videoDecoder);
 			webmFile.delete();
 		}
-		Assert.assertEquals(recording.getSize(), totalFileSize);
+
+		Assert.assertEquals("Size of recording entity (" + recording.getSessionId()
+				+ ") is not equal to real file size (" + totalFileSize + ")", recording.getSize(), totalFileSize);
 
 		jsonSyncFile.delete();
 	}
@@ -2007,7 +2081,11 @@ public class OpenViduTestAppE2eTest {
 		log.info("Duration of {} according to ffmpeg: {} s", file.getName(), metadata.getDuration());
 		log.info("Duration of {} according to 'duration' property: {} s", file.getName(), duration);
 		log.info("Difference in s duration: {}", Math.abs(metadata.getDuration() - duration));
-		Assert.assertTrue(Math.abs((metadata.getDuration() - duration)) < 0.3);
+		final double difference = 0.3;
+		Assert.assertTrue(
+				"Difference between recording entity duration (" + duration + ") and real video duration ("
+						+ metadata.getDuration() + ") is greater than " + difference,
+				Math.abs((metadata.getDuration() - duration)) < difference);
 	}
 
 	private boolean thumbnailIsFine(File file) {

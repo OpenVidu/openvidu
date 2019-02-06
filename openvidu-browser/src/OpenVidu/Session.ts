@@ -532,7 +532,14 @@ export class Session implements EventDispatcher {
             }
 
             signalMessage['data'] = signal.data ? signal.data : '';
-            signalMessage['type'] = signal.type ? signal.type : '';
+
+            let typeAux: string = signal.type ? signal.type : 'signal';
+            if (!!typeAux) {
+                if (typeAux.substring(0, 7) !== 'signal:') {
+                    typeAux = 'signal:' + typeAux;
+                }
+            }
+            signalMessage['type'] = typeAux;
 
             this.openvidu.sendRequest('sendMessage', {
                 message: JSON.stringify(signalMessage)
@@ -776,7 +783,9 @@ export class Session implements EventDispatcher {
 
             .then(connection => {
                 this.ee.emitEvent('signal', [new SignalEvent(this, msg.type, msg.data, connection)]);
-                this.ee.emitEvent('signal:' + msg.type, [new SignalEvent(this, msg.type, msg.data, connection)]);
+                if (msg.type !== 'signal') {
+                    this.ee.emitEvent(msg.type, [new SignalEvent(this, msg.type, msg.data, connection)]);
+                }
             })
             .catch(openViduError => {
                 console.error(openViduError);

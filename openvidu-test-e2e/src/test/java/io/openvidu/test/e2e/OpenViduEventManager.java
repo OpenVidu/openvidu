@@ -18,6 +18,7 @@
 package io.openvidu.test.e2e;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Queue;
@@ -32,14 +33,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 /**
  * Manager event class for BrowserUser. Collects, cleans and stores events from
@@ -49,19 +50,19 @@ import org.slf4j.LoggerFactory;
  * @since 1.1.1
  */
 public class OpenViduEventManager {
-	
+
 	private static final Logger log = LoggerFactory.getLogger(OpenViduEventManager.class);
 
 	private static class RunnableCallback implements Runnable {
 
-		private final Consumer<JSONObject> callback;
-		private JSONObject eventResult;
+		private final Consumer<JsonObject> callback;
+		private JsonObject eventResult;
 
-		public RunnableCallback(Consumer<JSONObject> callback) {
+		public RunnableCallback(Consumer<JsonObject> callback) {
 			this.callback = callback;
 		}
 
-		public void setEventResult(JSONObject json) {
+		public void setEventResult(JsonObject json) {
 			this.eventResult = json;
 		}
 
@@ -74,7 +75,7 @@ public class OpenViduEventManager {
 	private Thread pollingThread;
 	private ExecutorService execService = Executors.newCachedThreadPool();
 	private WebDriver driver;
-	private Queue<JSONObject> eventQueue;
+	private Queue<JsonObject> eventQueue;
 	private Map<String, Collection<RunnableCallback>> eventCallbacks;
 	private Map<String, AtomicInteger> eventNumbers;
 	private Map<String, CountDownLatch> eventCountdowns;
@@ -83,7 +84,7 @@ public class OpenViduEventManager {
 
 	public OpenViduEventManager(WebDriver driver, int timeOfWaitInSeconds) {
 		this.driver = driver;
-		this.eventQueue = new ConcurrentLinkedQueue<JSONObject>();
+		this.eventQueue = new ConcurrentLinkedQueue<JsonObject>();
 		this.eventCallbacks = new ConcurrentHashMap<>();
 		this.eventNumbers = new ConcurrentHashMap<>();
 		this.eventCountdowns = new ConcurrentHashMap<>();
@@ -104,6 +105,11 @@ public class OpenViduEventManager {
 			while (!this.isInterrupted.get()) {
 				this.getEventsFromBrowser();
 				this.emitEvents();
+				try {
+					Thread.sleep(25);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 			}
 		});
 		this.pollingThread.setUncaughtExceptionHandler(h);
@@ -118,7 +124,7 @@ public class OpenViduEventManager {
 		this.pollingThread.interrupt();
 	}
 
-	public void on(String eventName, Consumer<JSONObject> callback) {
+	public void on(String eventName, Consumer<JsonObject> callback) {
 		this.eventCallbacks.putIfAbsent(eventName, new HashSet<>());
 		this.eventCallbacks.get(eventName).add(new RunnableCallback(callback));
 	}
@@ -149,12 +155,30 @@ public class OpenViduEventManager {
 		}
 	}
 
+	public boolean assertMediaTracks(WebElement videoElement, boolean audioTransmission, boolean videoTransmission,
+			String parentSelector) {
+		return this.assertMediaTracks(Collections.singleton(videoElement), audioTransmission, videoTransmission,
+				parentSelector);
+	}
+
 	public boolean assertMediaTracks(Iterable<WebElement> videoElements, boolean audioTransmission,
 			boolean videoTransmission) {
 		boolean success = true;
 		for (WebElement video : videoElements) {
-			success = success && (audioTransmission == this.hasAudioTracks(video))
-					&& (videoTransmission == this.hasVideoTracks(video));
+			success = success && (audioTransmission == this.hasAudioTracks(video, ""))
+					&& (videoTransmission == this.hasVideoTracks(video, ""));
+			if (!success)
+				break;
+		}
+		return success;
+	}
+
+	public boolean assertMediaTracks(Iterable<WebElement> videoElements, boolean audioTransmission,
+			boolean videoTransmission, String parentSelector) {
+		boolean success = true;
+		for (WebElement video : videoElements) {
+			success = success && (audioTransmission == this.hasAudioTracks(video, parentSelector))
+					&& (videoTransmission == this.hasVideoTracks(video, parentSelector));
 			if (!success)
 				break;
 		}
@@ -174,12 +198,13 @@ public class OpenViduEventManager {
 
 	private void emitEvents() {
 		while (!this.eventQueue.isEmpty()) {
-			JSONObject event = this.eventQueue.poll();
+			JsonObject event = this.eventQueue.poll();
+			final String eventType = event.get("type").getAsString();
 
-			log.info(event.get("event") + ": " + event);
+			log.info(eventType + ": " + event);
 
-			if (this.eventCallbacks.containsKey(event.get("event"))) {
-				for (RunnableCallback callback : this.eventCallbacks.get(event.get("event"))) {
+			if (this.eventCallbacks.containsKey(eventType)) {
+				for (RunnableCallback callback : this.eventCallbacks.get(eventType)) {
 					callback.setEventResult(event);
 					execService.submit(callback);
 				}
@@ -195,20 +220,16 @@ public class OpenViduEventManager {
 		}
 
 		String[] events = rawEvents.replaceFirst("^<br>", "").split("<br>");
-		JSONParser parser = new JSONParser();
+		JsonParser parser = new JsonParser();
 		for (String e : events) {
-			try {
-				JSONObject event = (JSONObject) parser.parse(e);
-				String eventName = (String) event.get("event");
+			JsonObject event = (JsonObject) parser.parse(e);
+			final String eventType = event.get("type").getAsString();
 
-				this.eventQueue.add(event);
-				getNumEvents(eventName).incrementAndGet();
+			this.eventQueue.add(event);
+			getNumEvents(eventType).incrementAndGet();
 
-				if (this.eventCountdowns.get(eventName) != null) {
-					this.eventCountdowns.get(eventName).countDown();
-				}
-			} catch (ParseException exc) {
-				exc.printStackTrace();
+			if (this.eventCountdowns.get(eventType) != null) {
+				this.eventCountdowns.get(eventType).countDown();
 			}
 		}
 	}
@@ -219,62 +240,40 @@ public class OpenViduEventManager {
 		return events;
 	}
 
-	public boolean hasMediaStream(WebElement videoElement) {
+	public boolean hasMediaStream(WebElement videoElement, String parentSelector) {
 		boolean hasMediaStream = (boolean) ((JavascriptExecutor) driver).executeScript(
-				"return (!!(document.getElementById('" + videoElement.getAttribute("id") + "').srcObject))");
+				"return (!!(document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ") + "#"
+						+ videoElement.getAttribute("id") + "').srcObject))");
 		return hasMediaStream;
 	}
 
 	public Map<String, Long> getAverageRgbFromVideo(WebElement videoElement) {
-		String script = "var callback = arguments[arguments.length - 1];" +
-		        "var video = document.getElementById('" + videoElement.getAttribute("id") + "');" + 
-				"var canvas = document.createElement('canvas');" + 
-		        "canvas.height = video.videoHeight;" +
-		        "canvas.width = video.videoWidth;" +
-		        "var context = canvas.getContext('2d');" +
-		        "context.drawImage(video, 0, 0, canvas.width, canvas.height);" +
-		        "var imgEl = document.createElement('img');" +
-		        "imgEl.src = canvas.toDataURL();" +
-		        "var blockSize = 5;" +
-		        "var defaultRGB = { r: 0, g: 0, b: 0 };" +
-		        "context.drawImage(video, 0, 0, 220, 150);" +
-		        "var dataURL = canvas.toDataURL();" +
-		        "imgEl.onload = function () {" +
-		          "let i = -4;" +
-		          "var rgb = { r: 0, g: 0, b: 0 };" +
-		          "let count = 0;" +
-		          "if (!context) {" +
-		          "  return defaultRGB;" +
-		          "}" +
+		String script = "var callback = arguments[arguments.length - 1];" + "var video = document.getElementById('"
+				+ videoElement.getAttribute("id") + "');" + "var canvas = document.createElement('canvas');"
+				+ "canvas.height = video.videoHeight;" + "canvas.width = video.videoWidth;"
+				+ "var context = canvas.getContext('2d');"
+				+ "context.drawImage(video, 0, 0, canvas.width, canvas.height);"
+				+ "var imgEl = document.createElement('img');" + "imgEl.src = canvas.toDataURL();"
+				+ "var blockSize = 5;" + "var defaultRGB = { r: 0, g: 0, b: 0 };"
+				+ "context.drawImage(video, 0, 0, 220, 150);" + "var dataURL = canvas.toDataURL();"
+				+ "imgEl.onload = function () {" + "let i = -4;" + "var rgb = { r: 0, g: 0, b: 0 };" + "let count = 0;"
+				+ "if (!context) {" + "  return defaultRGB;" + "}" +
 
-		          "var height = canvas.height = imgEl.naturalHeight || imgEl.offsetHeight || imgEl.height;" +
-		          "var width = canvas.width = imgEl.naturalWidth || imgEl.offsetWidth || imgEl.width;" +
-		          "let data;" +
-		          "context.drawImage(imgEl, 0, 0);" +
+				"var height = canvas.height = imgEl.naturalHeight || imgEl.offsetHeight || imgEl.height;"
+				+ "var width = canvas.width = imgEl.naturalWidth || imgEl.offsetWidth || imgEl.width;" + "let data;"
+				+ "context.drawImage(imgEl, 0, 0);" +
 
-		          "try {" +
-		            "data = context.getImageData(0, 0, width, height);" +
-		          "} catch (e) {" +
-		            "return defaultRGB;" +
-		          "}" +
+				"try {" + "data = context.getImageData(0, 0, width, height);" + "} catch (e) {" + "return defaultRGB;"
+				+ "}" +
 
-		          "length = data.data.length;" +
-		          "while ((i += blockSize * 4) < length) {" +
-		            "++count;" +
-		            "rgb.r += data.data[i];" +
-		            "rgb.g += data.data[i + 1];" +
-		            "rgb.b += data.data[i + 2];" +
-		          "}" +
+				"length = data.data.length;" + "while ((i += blockSize * 4) < length) {" + "++count;"
+				+ "rgb.r += data.data[i];" + "rgb.g += data.data[i + 1];" + "rgb.b += data.data[i + 2];" + "}" +
 
-		          "rgb.r = ~~(rgb.r / count);" +
-		          "rgb.g = ~~(rgb.g / count);" +
-		          "rgb.b = ~~(rgb.b / count);" +
+				"rgb.r = ~~(rgb.r / count);" + "rgb.g = ~~(rgb.g / count);" + "rgb.b = ~~(rgb.b / count);" +
 
-		          "console.warn(rgb);" +
-		          "callback(rgb);" +
-		        "};";
+				"console.warn(rgb);" + "callback(rgb);" + "};";
 		Object averageRgb = ((JavascriptExecutor) driver).executeAsyncScript(script);
-        return (Map<String, Long>)averageRgb;
+		return (Map<String, Long>) averageRgb;
 	}
 
 	public String getDimensionOfViewport() {
@@ -283,18 +282,20 @@ public class OpenViduEventManager {
 		return dimension;
 	}
 
-	private boolean hasAudioTracks(WebElement videoElement) {
-		boolean audioTracks = (boolean) ((JavascriptExecutor) driver)
-				.executeScript("return ((document.getElementById('" + videoElement.getAttribute("id")
-						+ "').srcObject.getAudioTracks().length > 0)" + "&& (document.getElementById('"
+	private boolean hasAudioTracks(WebElement videoElement, String parentSelector) {
+		boolean audioTracks = (boolean) ((JavascriptExecutor) driver).executeScript(
+				"return ((document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ") + "#"
+						+ videoElement.getAttribute("id") + "').srcObject.getAudioTracks().length > 0)"
+						+ "&& (document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ") + "#"
 						+ videoElement.getAttribute("id") + "').srcObject.getAudioTracks()[0].enabled))");
 		return audioTracks;
 	}
 
-	private boolean hasVideoTracks(WebElement videoElement) {
-		boolean videoTracks = (boolean) ((JavascriptExecutor) driver)
-				.executeScript("return ((document.getElementById('" + videoElement.getAttribute("id")
-						+ "').srcObject.getVideoTracks().length > 0)" + "&& (document.getElementById('"
+	private boolean hasVideoTracks(WebElement videoElement, String parentSelector) {
+		boolean videoTracks = (boolean) ((JavascriptExecutor) driver).executeScript(
+				"return ((document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ") + "#"
+						+ videoElement.getAttribute("id") + "').srcObject.getVideoTracks().length > 0)"
+						+ "&& (document.querySelector('" + parentSelector + (parentSelector.isEmpty() ? "" : " ") + "#"
 						+ videoElement.getAttribute("id") + "').srcObject.getVideoTracks()[0].enabled))");
 		return videoTracks;
 	}

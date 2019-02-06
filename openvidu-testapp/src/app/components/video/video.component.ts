@@ -10,7 +10,8 @@ import {
     OpenVidu,
     Publisher,
     StreamEvent,
-    VideoInsertMode
+    VideoInsertMode,
+    FilterEvent
 } from 'openvidu-browser';
 
 import { EventsDialogComponent } from '../dialogs/events-dialog/events-dialog.component';
@@ -19,6 +20,7 @@ import { Subscription } from 'rxjs';
 import { LocalRecordingDialogComponent } from '../dialogs/local-recording-dialog/local-recording-dialog.component';
 import { ExtensionDialogComponent } from '../dialogs/extension-dialog/extension-dialog.component';
 import { FilterDialogComponent } from '../dialogs/filter-dialog/filter-dialog.component';
+import { OpenViduEvent } from '../openvidu-instance/openvidu-instance.component';
 
 @Component({
     selector: 'app-video',
@@ -32,7 +34,7 @@ export class VideoComponent implements OnInit, OnDestroy {
     @Input() OV: OpenVidu;
     @Input() eventCollection: any;
 
-    @Output() updateEventListInParent = new EventEmitter();
+    @Output() updateEventListInParent = new EventEmitter<OpenViduEvent>();
     @Output() reSubbed = new EventEmitter();
 
     subbed = true;
@@ -312,8 +314,9 @@ export class VideoComponent implements OnInit, OnDestroy {
             if (!oldValues.videoElementCreated) {
                 sub.on('videoElementCreated', (event: VideoElementEvent) => {
                     this.updateEventListInParent.emit({
-                        event: 'videoElementCreated',
-                        content: event.element.id
+                        eventName: 'videoElementCreated',
+                        eventContent: event.element.id,
+                        event
                     });
                 });
             }
@@ -326,8 +329,9 @@ export class VideoComponent implements OnInit, OnDestroy {
                 sub.on('videoElementDestroyed', (event: VideoElementEvent) => {
                     this.showButtons = false;
                     this.updateEventListInParent.emit({
-                        event: 'videoElementDestroyed',
-                        content: event.element.id
+                        eventName: 'videoElementDestroyed',
+                        eventContent: event.element.id,
+                        event
                     });
                 });
             }
@@ -347,8 +351,9 @@ export class VideoComponent implements OnInit, OnDestroy {
                     }
                     this.showButtons = true;
                     this.updateEventListInParent.emit({
-                        event: 'streamPlaying',
-                        content: this.streamManager.stream.streamId
+                        eventName: 'streamPlaying',
+                        eventContent: this.streamManager.stream.streamId,
+                        event
                     });
                 });
             }
@@ -360,8 +365,9 @@ export class VideoComponent implements OnInit, OnDestroy {
             if (!oldValues.streamAudioVolumeChange) {
                 sub.on('streamAudioVolumeChange', (event: StreamManagerEvent) => {
                     this.updateEventListInParent.emit({
-                        event: 'streamAudioVolumeChange',
-                        content: event.value['newValue']
+                        eventName: 'streamAudioVolumeChange',
+                        eventContent: event.value['newValue'],
+                        event
                     });
                 });
             }
@@ -371,11 +377,13 @@ export class VideoComponent implements OnInit, OnDestroy {
 
         if (this.eventCollection.streamPropertyChanged) {
             if (!oldValues.streamPropertyChanged) {
-                sub.on('streamPropertyChanged', (e: StreamPropertyChangedEvent) => {
-                    const newValue = e.changedProperty === 'videoDimensions' ? JSON.stringify(e.newValue) : e.newValue.toString();
+                sub.on('streamPropertyChanged', (event: StreamPropertyChangedEvent) => {
+                    const newValue = event.changedProperty === 'videoDimensions' ?
+                        JSON.stringify(event.newValue) : event.newValue.toString();
                     this.updateEventListInParent.emit({
-                        event: 'streamPropertyChanged',
-                        content: e.changedProperty + ' [' + newValue + ']'
+                        eventName: 'streamPropertyChanged',
+                        eventContent: event.changedProperty + ' [' + newValue + ']',
+                        event
                     });
                 });
             }
@@ -389,8 +397,9 @@ export class VideoComponent implements OnInit, OnDestroy {
             if (!oldValues.videoElementCreated) {
                 pub.on('videoElementCreated', (event: VideoElementEvent) => {
                     this.updateEventListInParent.emit({
-                        event: 'videoElementCreated',
-                        content: event.element.id
+                        eventName: 'videoElementCreated',
+                        eventContent: event.element.id,
+                        event
                     });
                 });
             }
@@ -400,10 +409,19 @@ export class VideoComponent implements OnInit, OnDestroy {
 
         if (this.eventCollection.accessAllowed) {
             if (!oldValues.accessAllowed) {
-                pub.on('accessAllowed', (e) => {
+                pub.on('accessAllowed', () => {
                     this.updateEventListInParent.emit({
-                        event: 'accessAllowed',
-                        content: ''
+                        eventName: 'accessAllowed',
+                        eventContent: '',
+                        event: {
+                            type: 'accessAllowed',
+                            target: pub,
+                            cancelable: false,
+                            hasBeenPrevented: false,
+                            isDefaultPrevented: () => false,
+                            preventDefault: () => { },
+                            callDefaultBehavior: () => { }
+                        }
                     });
                 });
             }
@@ -413,10 +431,19 @@ export class VideoComponent implements OnInit, OnDestroy {
 
         if (this.eventCollection.accessDenied) {
             if (!oldValues.accessDenied) {
-                pub.on('accessDenied', (e) => {
+                pub.on('accessDenied', (error) => {
                     this.updateEventListInParent.emit({
-                        event: 'accessDenied',
-                        content: ''
+                        eventName: 'accessDenied',
+                        eventContent: JSON.stringify(error),
+                        event: {
+                            type: 'accessDenied',
+                            target: pub,
+                            cancelable: false,
+                            hasBeenPrevented: false,
+                            isDefaultPrevented: () => false,
+                            preventDefault: () => { },
+                            callDefaultBehavior: () => { }
+                        }
                     });
                 });
             }
@@ -428,8 +455,17 @@ export class VideoComponent implements OnInit, OnDestroy {
             if (!oldValues.accessDialogOpened) {
                 pub.on('accessDialogOpened', (e) => {
                     this.updateEventListInParent.emit({
-                        event: 'accessDialogOpened',
-                        content: ''
+                        eventName: 'accessDialogOpened',
+                        eventContent: '',
+                        event: {
+                            type: 'accessDialogOpened',
+                            target: pub,
+                            cancelable: false,
+                            hasBeenPrevented: false,
+                            isDefaultPrevented: () => false,
+                            preventDefault: () => { },
+                            callDefaultBehavior: () => { }
+                        }
                     });
                 });
             }
@@ -441,8 +477,17 @@ export class VideoComponent implements OnInit, OnDestroy {
             if (!oldValues.accessDialogClosed) {
                 pub.on('accessDialogClosed', (e) => {
                     this.updateEventListInParent.emit({
-                        event: 'accessDialogClosed',
-                        content: ''
+                        eventName: 'accessDialogClosed',
+                        eventContent: '',
+                        event: {
+                            type: 'accessDialogClosed',
+                            target: pub,
+                            cancelable: false,
+                            hasBeenPrevented: false,
+                            isDefaultPrevented: () => false,
+                            preventDefault: () => { },
+                            callDefaultBehavior: () => { }
+                        }
                     });
                 });
             }
@@ -452,10 +497,11 @@ export class VideoComponent implements OnInit, OnDestroy {
 
         if (this.eventCollection.streamCreated) {
             if (!oldValues.streamCreated) {
-                pub.on('streamCreated', (e: StreamEvent) => {
+                pub.on('streamCreated', (event: StreamEvent) => {
                     this.updateEventListInParent.emit({
-                        event: 'streamCreated',
-                        content: e.stream.streamId
+                        eventName: 'streamCreated',
+                        eventContent: event.stream.streamId,
+                        event
                     });
                 });
             }
@@ -465,12 +511,13 @@ export class VideoComponent implements OnInit, OnDestroy {
 
         if (this.eventCollection.streamDestroyed) {
             if (!oldValues.streamDestroyed) {
-                pub.on('streamDestroyed', (e: StreamEvent) => {
+                pub.on('streamDestroyed', (event: StreamEvent) => {
                     this.updateEventListInParent.emit({
-                        event: 'streamDestroyed',
-                        content: e.stream.streamId
+                        eventName: 'streamDestroyed',
+                        eventContent: event.stream.streamId,
+                        event
                     });
-                    if (e.reason.indexOf('forceUnpublish') !== -1) {
+                    if (event.reason.indexOf('forceUnpublish') !== -1) {
                         this.unpublished = !this.unpublished;
                         this.unpublished ? this.pubSubIcon = 'play_arrow' : this.pubSubIcon = 'stop';
                     }
@@ -482,11 +529,13 @@ export class VideoComponent implements OnInit, OnDestroy {
 
         if (this.eventCollection.streamPropertyChanged) {
             if (!oldValues.streamPropertyChanged) {
-                pub.on('streamPropertyChanged', (e: StreamPropertyChangedEvent) => {
-                    const newValue = e.changedProperty === 'videoDimensions' ? JSON.stringify(e.newValue) : e.newValue.toString();
+                pub.on('streamPropertyChanged', (event: StreamPropertyChangedEvent) => {
+                    const newValue = event.changedProperty === 'videoDimensions' ?
+                        JSON.stringify(event.newValue) : event.newValue.toString();
                     this.updateEventListInParent.emit({
-                        event: 'streamPropertyChanged',
-                        content: e.changedProperty + ' [' + newValue + ']'
+                        eventName: 'streamPropertyChanged',
+                        eventContent: event.changedProperty + ' [' + newValue + ']',
+                        event
                     });
                 });
             }
@@ -496,10 +545,11 @@ export class VideoComponent implements OnInit, OnDestroy {
 
         if (this.eventCollection.videoElementDestroyed) {
             if (!oldValues.videoElementDestroyed) {
-                pub.on('videoElementDestroyed', (e: VideoElementEvent) => {
+                pub.on('videoElementDestroyed', (event: VideoElementEvent) => {
                     this.updateEventListInParent.emit({
-                        event: 'videoElementDestroyed',
-                        content: '(Publisher)'
+                        eventName: 'videoElementDestroyed',
+                        eventContent: '(Publisher)',
+                        event
                     });
                 });
             }
@@ -519,8 +569,9 @@ export class VideoComponent implements OnInit, OnDestroy {
                     }
                     this.showButtons = true;
                     this.updateEventListInParent.emit({
-                        event: 'streamPlaying',
-                        content: pub.stream.streamId
+                        eventName: 'streamPlaying',
+                        eventContent: pub.stream.streamId,
+                        event
                     });
                 });
             }
@@ -532,8 +583,9 @@ export class VideoComponent implements OnInit, OnDestroy {
             if (!oldValues.streamAudioVolumeChange) {
                 pub.on('streamAudioVolumeChange', (event: StreamManagerEvent) => {
                     this.updateEventListInParent.emit({
-                        event: 'streamAudioVolumeChange',
-                        content: event.value['newValue']
+                        eventName: 'streamAudioVolumeChange',
+                        eventContent: event.value['newValue'],
+                        event
                     });
                 });
             }
@@ -667,10 +719,11 @@ export class VideoComponent implements OnInit, OnDestroy {
         });
     }
 
-    emitFilterEventToParent(event) {
+    emitFilterEventToParent(event: FilterEvent) {
         this.updateEventListInParent.emit({
-            event: 'filterEvent',
-            content: event.data
+            eventName: 'filterEvent',
+            eventContent: JSON.stringify(event.data),
+            event
         });
     }
 

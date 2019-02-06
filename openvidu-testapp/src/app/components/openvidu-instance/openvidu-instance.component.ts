@@ -4,7 +4,7 @@ import {
 } from '@angular/core';
 
 import {
-  OpenVidu, Session, Subscriber, Publisher, VideoInsertMode, StreamEvent, ConnectionEvent,
+  OpenVidu, Session, Subscriber, Publisher, Event, VideoInsertMode, StreamEvent, ConnectionEvent,
   SessionDisconnectedEvent, SignalEvent, RecordingEvent,
   PublisherSpeakingEvent, PublisherProperties, StreamPropertyChangedEvent, OpenViduError
 } from 'openvidu-browser';
@@ -36,8 +36,9 @@ export interface SessionConf {
 }
 
 export interface OpenViduEvent {
-  name: string;
-  content: string;
+  eventName: string;
+  eventContent: string;
+  event: Event;
 }
 
 @Component({
@@ -249,9 +250,10 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     this.subscribers = [];
   }
 
-  updateEventList(event: string, content: string) {
-    this.events.push({ name: event, content: content });
-    this.testFeedService.pushNewEvent(this.sessionName, this.session.connection.connectionId, event, content);
+  updateEventList(eventName: string, eventContent: string, event: Event) {
+    const eventInterface: OpenViduEvent = { eventName, eventContent, event };
+    this.events.push(eventInterface);
+    this.testFeedService.pushNewEvent(this.sessionName, this.session.connection.connectionId, event);
   }
 
   toggleSubscribeTo(): void {
@@ -330,7 +332,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
           if (this.subscribeTo) {
             this.syncSubscribe(this.session, event);
           }
-          this.updateEventList('streamCreated', event.stream.streamId);
+          this.updateEventList('streamCreated', event.stream.streamId, event);
         });
       }
     }
@@ -343,7 +345,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
           if (index > -1) {
             this.subscribers.splice(index, 1);
           }
-          this.updateEventList('streamDestroyed', event.stream.streamId);
+          this.updateEventList('streamDestroyed', event.stream.streamId, event);
         });
       }
     }
@@ -358,7 +360,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
           } else {
             newValue = event.changedProperty === 'videoDimensions' ? JSON.stringify(event.newValue) : event.newValue.toString();
           }
-          this.updateEventList('streamPropertyChanged', event.changedProperty + ' [' + newValue + ']');
+          this.updateEventList('streamPropertyChanged', event.changedProperty + ' [' + newValue + ']', event);
         });
       }
     }
@@ -367,7 +369,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       this.session.off('connectionCreated');
       if (this.sessionEvents.connectionCreated) {
         this.session.on('connectionCreated', (event: ConnectionEvent) => {
-          this.updateEventList('connectionCreated', event.connection.connectionId);
+          this.updateEventList('connectionCreated', event.connection.connectionId, event);
         });
       }
     }
@@ -377,7 +379,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       if (this.sessionEvents.connectionDestroyed) {
         this.session.on('connectionDestroyed', (event: ConnectionEvent) => {
           delete this.subscribers[event.connection.connectionId];
-          this.updateEventList('connectionDestroyed', event.connection.connectionId);
+          this.updateEventList('connectionDestroyed', event.connection.connectionId, event);
         });
       }
     }
@@ -386,7 +388,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       this.session.off('sessionDisconnected');
       if (this.sessionEvents.sessionDisconnected) {
         this.session.on('sessionDisconnected', (event: SessionDisconnectedEvent) => {
-          this.updateEventList('sessionDisconnected', 'No data');
+          this.updateEventList('sessionDisconnected', '', event);
           this.subscribers = [];
           delete this.publisher;
           delete this.session;
@@ -399,7 +401,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       this.session.off('signal');
       if (this.sessionEvents.signal) {
         this.session.on('signal', (event: SignalEvent) => {
-          this.updateEventList('signal', event.from.connectionId + '-' + event.data);
+          this.updateEventList('signal', event.from.connectionId + '-' + event.data, event);
         });
       }
     }
@@ -408,7 +410,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       this.session.off('recordingStarted');
       if (this.sessionEvents.recordingStarted) {
         this.session.on('recordingStarted', (event: RecordingEvent) => {
-          this.updateEventList('recordingStarted', event.id);
+          this.updateEventList('recordingStarted', event.id, event);
         });
       }
     }
@@ -417,7 +419,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       this.session.off('recordingStopped');
       if (this.sessionEvents.recordingStopped) {
         this.session.on('recordingStopped', (event: RecordingEvent) => {
-          this.updateEventList('recordingStopped', event.id);
+          this.updateEventList('recordingStopped', event.id, event);
         });
       }
     }
@@ -426,7 +428,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       this.session.off('publisherStartSpeaking');
       if (this.sessionEvents.publisherStartSpeaking) {
         this.session.on('publisherStartSpeaking', (event: PublisherSpeakingEvent) => {
-          this.updateEventList('publisherStartSpeaking', event.connection.connectionId);
+          this.updateEventList('publisherStartSpeaking', event.connection.connectionId, event);
         });
       }
     }
@@ -437,7 +439,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       }
       if (this.sessionEvents.publisherStopSpeaking) {
         this.session.on('publisherStopSpeaking', (event: PublisherSpeakingEvent) => {
-          this.updateEventList('publisherStopSpeaking', event.connection.connectionId);
+          this.updateEventList('publisherStopSpeaking', event.connection.connectionId, event);
         });
       }
     }
@@ -656,8 +658,8 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       });
   }
 
-  updateEventFromChild(event) {
-    this.updateEventList(event.event, event.content);
+  updateEventFromChild(event: OpenViduEvent) {
+    this.updateEventList(event.eventName, event.eventContent, event.event);
   }
 
   updateSubscriberFromChild(newSubscriber: Subscriber) {

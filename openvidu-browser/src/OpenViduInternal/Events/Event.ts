@@ -37,7 +37,10 @@ export abstract class Event {
      */
     type: string;
 
-    private hasBeenPrevented = false;
+    /**
+     * @hidden
+     */
+    hasBeenPrevented = false;
 
     /**
      * @hidden
@@ -75,6 +78,9 @@ export abstract class Event {
         this.hasBeenPrevented = true;
     }
 
-    protected abstract callDefaultBehavior();
+    /**
+     * @hidden
+     */
+    abstract callDefaultBehavior();
 
 }
