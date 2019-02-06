@@ -88,7 +88,14 @@ HAS_VIDEO_AUX=$(echo $INFO | jq '.streams[] | select(.codec_type == "video")')
 if [ -z "$HAS_VIDEO_AUX" ]; then HAS_VIDEO=false; else HAS_VIDEO=true; fi
 SIZE=$(echo $INFO | jq '.format.size | tonumber')
 DURATION=$(echo $INFO | jq '.format.duration | tonumber')
-STATUS="stopped"
+
+if [[ "$HAS_AUDIO" == false && "$HAS_VIDEO" == false ]]
+  then
+    STATUS="failed"
+  else
+    STATUS="stopped"
+fi
+
 jq -c -r ".hasAudio=$HAS_AUDIO | .hasVideo=$HAS_VIDEO | .duration=$DURATION | .size=$SIZE | .status=\"$STATUS\"" "/recordings/$VIDEO_ID/.recording.$VIDEO_ID" > $TMP && mv $TMP /recordings/$VIDEO_ID/.recording.$VIDEO_ID
 
 ### Generate video thumbnail ###

@@ -284,14 +284,14 @@ public class ComposedRecordingService extends RecordingService {
 			try {
 				stopped = latch.await(60, TimeUnit.SECONDS);
 			} catch (InterruptedException e) {
-				recording.setStatus(io.openvidu.java.client.Recording.Status.failed);
-				failRecordingCompletion(containerId, new OpenViduException(Code.RECORDING_COMPLETION_ERROR_CODE,
-						"The recording completion process has been unexpectedly interrupted"));
+				failRecordingCompletion(recording, containerId,
+						new OpenViduException(Code.RECORDING_COMPLETION_ERROR_CODE,
+								"The recording completion process has been unexpectedly interrupted"));
 			}
 			if (!stopped) {
-				recording.setStatus(io.openvidu.java.client.Recording.Status.failed);
-				failRecordingCompletion(containerId, new OpenViduException(Code.RECORDING_COMPLETION_ERROR_CODE,
-						"The recording completion process couldn't finish in 60 seconds"));
+				failRecordingCompletion(recording, containerId,
+						new OpenViduException(Code.RECORDING_COMPLETION_ERROR_CODE,
+								"The recording completion process couldn't finish in 60 seconds"));
 			}
 
 			// Remove container
@@ -305,8 +305,6 @@ public class ComposedRecordingService extends RecordingService {
 				if (!infoUtils.hasVideo()) {
 					log.error("COMPOSED recording {} with hasVideo=true has not video track", recordingId);
 					recording.setStatus(io.openvidu.java.client.Recording.Status.failed);
-					recording.setHasAudio(false);
-					recording.setHasVideo(false);
 				} else {
 					recording.setStatus(io.openvidu.java.client.Recording.Status.stopped);
 					recording.setDuration(infoUtils.getDurationInSeconds());
@@ -441,7 +439,9 @@ public class ComposedRecordingService extends RecordingService {
 		}
 	}
 
-	private void failRecordingCompletion(String containerId, OpenViduException e) throws OpenViduException {
+	private void failRecordingCompletion(Recording recording, String containerId, OpenViduException e)
+			throws OpenViduException {
+		recording.setStatus(io.openvidu.java.client.Recording.Status.failed);
 		this.stopDockerContainer(containerId);
 		this.removeDockerContainer(containerId);
 		throw e;
