@@ -2084,7 +2084,7 @@ public class OpenViduTestAppE2eTest {
 		final double difference = 0.3;
 		Assert.assertTrue(
 				"Difference between recording entity duration (" + duration + ") and real video duration ("
-						+ metadata.getDuration() + ") is greater than " + difference,
+						+ metadata.getDuration() + ") is greater than " + difference + "  in file " + file.getName(),
 				Math.abs((metadata.getDuration() - duration)) < difference);
 	}
 
