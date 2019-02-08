@@ -8,12 +8,14 @@ node('container') {
       mycontainer.pull()
       mycontainer.inside("-p 4200:4200 -p 4443:4443 -u root -e MY_UID=0 -v /var/run/docker.sock:/var/run/docker.sock:rw -v /dev/shm:/dev/shm -v /opt/openvidu:/opt/openvidu") {
         stage('Preparation') {
+          sh 'rm -rf ~/.m2 || true'
           sh 'rm -rf openvidu || true'
           sh 'rm -rf /opt/openvidu/recordings/* || true'
           sh 'git clone https://github.com/OpenVidu/openvidu.git'
         }
         stage('OpenVidu parent build') {
-          sh 'cd openvidu && mvn -DskipTests=true install'
+          sh 'cd openvidu/openvidu-java-client && mvn versions:set -DnewVersion=1.0.0-TEST'
+          sh 'cd openvidu && mvn -DskipTests=true clean -DskipTests=true compile -DskipTests=true install'
         }
         stage('OpenVidu Browser build') {
           sh 'cd openvidu/openvidu-browser && npm install --unsafe-perm && npm run build && npm link'
