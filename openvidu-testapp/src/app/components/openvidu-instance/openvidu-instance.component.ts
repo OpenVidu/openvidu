@@ -229,7 +229,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       .then(() => {
         this.changeDetector.detectChanges();
 
-        if (this.publishTo) {
+        if (this.publishTo && this.session.capabilities.publish) {
           // this.asyncInitPublisher();
           this.syncInitPublisher();
         }
