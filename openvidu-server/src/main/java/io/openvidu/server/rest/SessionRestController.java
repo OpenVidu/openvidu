@@ -98,12 +98,11 @@ public class SessionRestController {
 				defaultOutputModeString = (String) params.get("defaultOutputMode");
 				defaultRecordingLayoutString = (String) params.get("defaultRecordingLayout");
 				defaultCustomLayout = (String) params.get("defaultCustomLayout");
+				customSessionId = (String) params.get("customSessionId");
 			} catch (ClassCastException e) {
 				return this.generateErrorResponse("Type error in some parameter", "/api/sessions",
 						HttpStatus.BAD_REQUEST);
 			}
-
-			customSessionId = (String) params.get("customSessionId");
 
 			try {
 
@@ -175,7 +174,6 @@ public class SessionRestController {
 		Session session = this.sessionManager.getSession(sessionId);
 		if (session != null) {
 			JsonObject response = (webRtcStats == true) ? session.withStatsToJson() : session.toJson();
-			response.addProperty("recording", this.recordingManager.sessionIsBeingRecorded(sessionId));
 			return new ResponseEntity<>(response.toString(), getResponseHeaders(), HttpStatus.OK);
 		} else {
 			Session sessionNotActive = this.sessionManager.getSessionNotActive(sessionId);
@@ -200,7 +198,6 @@ public class SessionRestController {
 		JsonArray jsonArray = new JsonArray();
 		sessions.forEach(s -> {
 			JsonObject sessionJson = (webRtcStats == true) ? s.withStatsToJson() : s.toJson();
-			sessionJson.addProperty("recording", this.recordingManager.sessionIsBeingRecorded(s.getSessionId()));
 			jsonArray.add(sessionJson);
 		});
 		json.addProperty("numberOfElements", sessions.size());

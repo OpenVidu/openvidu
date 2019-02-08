@@ -159,6 +159,7 @@ public class Session implements SessionInterface {
 		connections.addProperty("numberOfElements", participants.size());
 		connections.add("content", participants);
 		json.add("connections", connections);
+		json.addProperty("recording", this.recordingManager.sessionIsBeingRecorded(this.sessionId));
 		return json;
 	}
 
