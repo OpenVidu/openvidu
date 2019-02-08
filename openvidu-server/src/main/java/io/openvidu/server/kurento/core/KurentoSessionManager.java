@@ -80,13 +80,19 @@ public class KurentoSessionManager extends SessionManager {
 			KurentoSession session = (KurentoSession) sessions.get(sessionId);
 
 			if (session == null && kcSessionInfo != null) {
-				SessionProperties properties = sessionProperties.get(sessionId);
-				if (properties == null && this.isInsecureParticipant(participant.getParticipantPrivateId())) {
-					properties = new SessionProperties.Builder().mediaMode(MediaMode.ROUTED)
-							.recordingMode(RecordingMode.ALWAYS).defaultRecordingLayout(RecordingLayout.BEST_FIT)
-							.build();
+				// First user connecting to the session
+				Session sessionNotActive = sessionsNotActive.remove(sessionId);
+
+				if (sessionNotActive == null && this.isInsecureParticipant(participant.getParticipantPrivateId())) {
+					// Insecure user directly call joinRoom RPC method, without REST API use
+					sessionNotActive = new Session(sessionId,
+							new SessionProperties.Builder().mediaMode(MediaMode.ROUTED)
+									.recordingMode(RecordingMode.ALWAYS)
+									.defaultRecordingLayout(RecordingLayout.BEST_FIT).build(),
+							CDR, openviduConfig, recordingManager);
 				}
-				createSession(kcSessionInfo, properties);
+
+				createSession(sessionNotActive, kcSessionInfo);
 			}
 			session = (KurentoSession) sessions.get(sessionId);
 			if (session == null) {
@@ -489,7 +495,7 @@ public class KurentoSessionManager extends SessionManager {
 	 *                      {@link KurentoClient} that will be used by the room
 	 * @throws OpenViduException in case of error while creating the session
 	 */
-	public void createSession(KurentoClientSessionInfo kcSessionInfo, SessionProperties sessionProperties)
+	public void createSession(Session sessionNotActive, KurentoClientSessionInfo kcSessionInfo)
 			throws OpenViduException {
 		String sessionId = kcSessionInfo.getRoomName();
 		KurentoSession session = (KurentoSession) sessions.get(sessionId);
@@ -498,9 +504,8 @@ public class KurentoSessionManager extends SessionManager {
 					"Session '" + sessionId + "' already exists");
 		}
 		this.kurentoClient = kcProvider.getKurentoClient(kcSessionInfo);
-		session = new KurentoSession(sessionId, this.sessionCreationTime.get(sessionId), sessionProperties,
-				kurentoClient, kurentoSessionEventsHandler, kcProvider.destroyWhenUnused(), this.CDR,
-				this.openviduConfig, this.recordingManager);
+		session = new KurentoSession(sessionNotActive, kurentoClient, kurentoSessionEventsHandler,
+				kcProvider.destroyWhenUnused());
 
 		KurentoSession oldSession = (KurentoSession) sessions.putIfAbsent(sessionId, session);
 		if (oldSession != null) {

@@ -158,11 +158,10 @@ public class SessionRestController {
 			sessionManager.sessionidTokenTokenobj.putIfAbsent(sessionId, new ConcurrentHashMap<>());
 		}
 
-		Long creationTime = System.currentTimeMillis();
-		sessionManager.storeSessionId(sessionId, creationTime, sessionProperties);
+		Session sessionNotActive = sessionManager.storeSessionNotActive(sessionId, sessionProperties);
 		JsonObject responseJson = new JsonObject();
-		responseJson.addProperty("id", sessionId);
-		responseJson.addProperty("createdAt", creationTime);
+		responseJson.addProperty("id", sessionNotActive.getSessionId());
+		responseJson.addProperty("createdAt", sessionNotActive.getStartTime());
 
 		return new ResponseEntity<>(responseJson.toString(), getResponseHeaders(), HttpStatus.OK);
 	}
@@ -179,7 +178,14 @@ public class SessionRestController {
 			response.addProperty("recording", this.recordingManager.sessionIsBeingRecorded(sessionId));
 			return new ResponseEntity<>(response.toString(), getResponseHeaders(), HttpStatus.OK);
 		} else {
-			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+			Session sessionNotActive = this.sessionManager.getSessionNotActive(sessionId);
+			if (sessionNotActive != null) {
+				JsonObject response = (webRtcStats == true) ? sessionNotActive.withStatsToJson()
+						: sessionNotActive.toJson();
+				return new ResponseEntity<>(response.toString(), getResponseHeaders(), HttpStatus.OK);
+			} else {
+				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+			}
 		}
 	}
 
@@ -189,7 +195,7 @@ public class SessionRestController {
 
 		log.info("REST API: GET /api/sessions");
 
-		Collection<Session> sessions = this.sessionManager.getSessionObjects();
+		Collection<Session> sessions = this.sessionManager.getSessionsWithNotActive();
 		JsonObject json = new JsonObject();
 		JsonArray jsonArray = new JsonArray();
 		sessions.forEach(s -> {
@@ -212,7 +218,13 @@ public class SessionRestController {
 			this.sessionManager.closeSession(sessionId, "sessionClosedByServer");
 			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 		} else {
-			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+			Session sessionNotActive = this.sessionManager.getSessionNotActive(sessionId);
+			if (sessionNotActive != null) {
+				this.sessionManager.closeSessionAndEmptyCollections(sessionNotActive, "sessionClosedByServer");
+				return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+			} else {
+				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+			}
 		}
 	}
 
@@ -232,6 +244,9 @@ public class SessionRestController {
 				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 			}
 		} else {
+			if (this.sessionManager.getSessionNotActive(sessionId) != null) {
+				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+			}
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 	}
@@ -250,6 +265,9 @@ public class SessionRestController {
 				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 			}
 		} else {
+			if (this.sessionManager.getSessionNotActive(sessionId) != null) {
+				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+			}
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 	}
@@ -390,6 +408,10 @@ public class SessionRestController {
 		Session session = sessionManager.getSession(sessionId);
 
 		if (session == null) {
+			if (sessionManager.getSessionNotActive(sessionId) != null) {
+				// Session is not active
+				return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
+			}
 			// Session does not exist
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}

@@ -17,14 +17,9 @@
 
 package io.openvidu.server.kurento.core;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
 
 import org.kurento.client.Continuation;
 import org.kurento.client.ErrorEvent;
@@ -35,36 +30,19 @@ import org.kurento.client.MediaPipeline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
-import io.openvidu.java.client.Recording;
-import io.openvidu.java.client.RecordingLayout;
-import io.openvidu.java.client.SessionProperties;
-import io.openvidu.server.cdr.CallDetailRecord;
-import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
-import io.openvidu.server.recording.service.RecordingManager;
 
 /**
  * @author Pablo Fuente (pablofuenteperez@gmail.com)
  */
-public class KurentoSession implements Session {
+public class KurentoSession extends Session {
 
 	private final static Logger log = LoggerFactory.getLogger(Session.class);
 	public static final int ASYNC_LATCH_TIMEOUT = 30;
-
-	private OpenviduConfig openviduConfig;
-	private RecordingManager recordingManager;
-
-	private final ConcurrentMap<String, KurentoParticipant> participants = new ConcurrentHashMap<>();
-	private String sessionId;
-	private SessionProperties sessionProperties;
-	private Long startTime;
 
 	private MediaPipeline pipeline;
 	private CountDownLatch pipelineLatch = new CountDownLatch(1);
@@ -72,44 +50,22 @@ public class KurentoSession implements Session {
 	private KurentoClient kurentoClient;
 	private KurentoSessionEventsHandler kurentoSessionHandler;
 
-	private volatile boolean closed = false;
-
 	private final ConcurrentHashMap<String, String> filterStates = new ConcurrentHashMap<>();
-	private AtomicInteger activePublishers = new AtomicInteger(0);
 
 	private Object pipelineCreateLock = new Object();
 	private Object pipelineReleaseLock = new Object();
 	private volatile boolean pipelineReleased = false;
 	private boolean destroyKurentoClient;
 
-	private CallDetailRecord CDR;
-
 	public final ConcurrentHashMap<String, String> publishedStreamIds = new ConcurrentHashMap<>();
 
-	public KurentoSession(String sessionId, Long startTime, SessionProperties sessionProperties,
-			KurentoClient kurentoClient, KurentoSessionEventsHandler kurentoSessionHandler,
-			boolean destroyKurentoClient, CallDetailRecord CDR, OpenviduConfig openviduConfig,
-			RecordingManager recordingManager) {
-		this.sessionId = sessionId;
-		this.sessionProperties = sessionProperties;
+	public KurentoSession(Session sessionNotActive, KurentoClient kurentoClient,
+			KurentoSessionEventsHandler kurentoSessionHandler, boolean destroyKurentoClient) {
+		super(sessionNotActive);
 		this.kurentoClient = kurentoClient;
 		this.destroyKurentoClient = destroyKurentoClient;
 		this.kurentoSessionHandler = kurentoSessionHandler;
-		this.CDR = CDR;
-		this.openviduConfig = openviduConfig;
-		this.recordingManager = recordingManager;
-		this.startTime = startTime;
 		log.debug("New SESSION instance with id '{}'", sessionId);
-	}
-
-	@Override
-	public String getSessionId() {
-		return this.sessionId;
-	}
-
-	@Override
-	public SessionProperties getSessionProperties() {
-		return this.sessionProperties;
 	}
 
 	@Override
@@ -137,11 +93,11 @@ public class KurentoSession implements Session {
 		registerPublisher();
 
 		// pre-load endpoints to recv video from the new publisher
-		for (KurentoParticipant p : participants.values()) {
+		for (Participant p : participants.values()) {
 			if (participant.equals(p)) {
 				continue;
 			}
-			p.getNewOrExistingSubscriber(participant.getParticipantPublicId());
+			((KurentoParticipant) p).getNewOrExistingSubscriber(participant.getParticipantPublicId());
 		}
 
 		log.debug("SESSION {}: Virtually subscribed other participants {} to new publisher {}", sessionId,
@@ -152,11 +108,11 @@ public class KurentoSession implements Session {
 		deregisterPublisher();
 
 		// cancel recv video from this publisher
-		for (KurentoParticipant subscriber : participants.values()) {
+		for (Participant subscriber : participants.values()) {
 			if (participant.equals(subscriber)) {
 				continue;
 			}
-			subscriber.cancelReceivingMedia(participant.getParticipantPublicId(), reason);
+			((KurentoParticipant) subscriber).cancelReceivingMedia(participant.getParticipantPublicId(), reason);
 
 		}
 
@@ -170,7 +126,7 @@ public class KurentoSession implements Session {
 
 		checkClosed();
 
-		KurentoParticipant participant = participants.get(participantPrivateId);
+		KurentoParticipant participant = (KurentoParticipant) participants.get(participantPrivateId);
 		if (participant == null) {
 			throw new OpenViduException(Code.USER_NOT_FOUND_ERROR_CODE, "Participant with private id "
 					+ participantPrivateId + " not found in session '" + sessionId + "'");
@@ -190,35 +146,12 @@ public class KurentoSession implements Session {
 	}
 
 	@Override
-	public Set<Participant> getParticipants() {
-		checkClosed();
-		return new HashSet<Participant>(this.participants.values());
-	}
-
-	@Override
-	public Participant getParticipantByPrivateId(String participantPrivateId) {
-		checkClosed();
-		return participants.get(participantPrivateId);
-	}
-
-	@Override
-	public Participant getParticipantByPublicId(String participantPublicId) {
-		checkClosed();
-		for (Participant p : participants.values()) {
-			if (p.getParticipantPublicId().equals(participantPublicId)) {
-				return p;
-			}
-		}
-		return null;
-	}
-
-	@Override
 	public boolean close(String reason) {
 		if (!closed) {
 
-			for (KurentoParticipant participant : participants.values()) {
-				participant.releaseAllFilters();
-				participant.close(reason);
+			for (Participant participant : participants.values()) {
+				((KurentoParticipant) participant).releaseAllFilters();
+				((KurentoParticipant) participant).close(reason);
 			}
 
 			participants.clear();
@@ -247,17 +180,6 @@ public class KurentoSession implements Session {
 		this.kurentoSessionHandler.onMediaElementError(sessionId, participantId, description);
 	}
 
-	@Override
-	public boolean isClosed() {
-		return closed;
-	}
-
-	private void checkClosed() {
-		if (isClosed()) {
-			throw new OpenViduException(Code.ROOM_CLOSED_ERROR_CODE, "The session '" + sessionId + "' is closed");
-		}
-	}
-
 	private void removeParticipant(Participant participant, String reason) {
 
 		checkClosed();
@@ -266,22 +188,9 @@ public class KurentoSession implements Session {
 
 		log.debug("SESSION {}: Cancel receiving media from participant '{}' for other participant", this.sessionId,
 				participant.getParticipantPublicId());
-		for (KurentoParticipant other : participants.values()) {
-			other.cancelReceivingMedia(participant.getParticipantPublicId(), reason);
+		for (Participant other : participants.values()) {
+			((KurentoParticipant) other).cancelReceivingMedia(participant.getParticipantPublicId(), reason);
 		}
-	}
-
-	@Override
-	public int getActivePublishers() {
-		return activePublishers.get();
-	}
-
-	public void registerPublisher() {
-		this.activePublishers.incrementAndGet();
-	}
-
-	public void deregisterPublisher() {
-		this.activePublishers.decrementAndGet();
 	}
 
 	public MediaPipeline getPipeline() {
@@ -361,63 +270,8 @@ public class KurentoSession implements Session {
 		}
 	}
 
-	public synchronized void updateFilter(String filterId) {
-		String state = filterStates.get(filterId);
-		String newState = kurentoSessionHandler.getNextFilterState(filterId, state);
-
-		filterStates.put(filterId, newState);
-
-		for (Participant participant : participants.values()) {
-			kurentoSessionHandler.updateFilter(this.sessionId, participant, filterId, newState);
-		}
-	}
-
-	@Override
-	public JsonObject toJson() {
-		return this.sharedJson(KurentoParticipant::toJson);
-	}
-
-	@Override
-	public JsonObject withStatsToJson() {
-		return this.sharedJson(KurentoParticipant::withStatsToJson);
-	}
-
-	private JsonObject sharedJson(Function<KurentoParticipant, JsonObject> toJsonFunction) {
-		JsonObject json = new JsonObject();
-		json.addProperty("sessionId", this.sessionId);
-		json.addProperty("createdAt", this.startTime);
-		json.addProperty("mediaMode", this.sessionProperties.mediaMode().name());
-		json.addProperty("recordingMode", this.sessionProperties.recordingMode().name());
-		json.addProperty("defaultOutputMode", this.sessionProperties.defaultOutputMode().name());
-		if (Recording.OutputMode.COMPOSED.equals(this.sessionProperties.defaultOutputMode())) {
-			json.addProperty("defaultRecordingLayout", this.sessionProperties.defaultRecordingLayout().name());
-			if (RecordingLayout.CUSTOM.equals(this.sessionProperties.defaultRecordingLayout())) {
-				json.addProperty("defaultCustomLayout", this.sessionProperties.defaultCustomLayout());
-			}
-		}
-		if (this.sessionProperties.customSessionId() != null) {
-			json.addProperty("customSessionId", this.sessionProperties.customSessionId());
-		}
-		JsonObject connections = new JsonObject();
-		JsonArray participants = new JsonArray();
-		this.participants.values().forEach(p -> {
-			if (!ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(p.getParticipantPublicId())) {
-				participants.add(toJsonFunction.apply(p));
-			}
-		});
-		connections.addProperty("numberOfElements", participants.size());
-		connections.add("content", participants);
-		json.add("connections", connections);
-		return json;
-	}
-
 	public String getParticipantPrivateIdFromStreamId(String streamId) {
 		return this.publishedStreamIds.get(streamId);
-	}
-
-	@Override
-	public Long getStartTime() {
-		return this.startTime;
 	}
 
 }

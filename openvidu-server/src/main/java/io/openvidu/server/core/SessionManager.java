@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
 
 import javax.annotation.PreDestroy;
 
@@ -69,9 +70,9 @@ public abstract class SessionManager {
 	public FormatChecker formatChecker = new FormatChecker();
 
 	protected ConcurrentMap<String, Session> sessions = new ConcurrentHashMap<>();
-	protected ConcurrentMap<String, SessionProperties> sessionProperties = new ConcurrentHashMap<>();
-	protected ConcurrentMap<String, Long> sessionCreationTime = new ConcurrentHashMap<>();
+	protected ConcurrentMap<String, Session> sessionsNotActive = new ConcurrentHashMap<>();
 	protected ConcurrentMap<String, ConcurrentHashMap<String, Participant>> sessionidParticipantpublicidParticipant = new ConcurrentHashMap<>();
+
 	protected ConcurrentMap<String, Boolean> insecureUsers = new ConcurrentHashMap<>();
 	public ConcurrentMap<String, ConcurrentHashMap<String, Token>> sessionidTokenTokenobj = new ConcurrentHashMap<>();
 
@@ -137,17 +138,21 @@ public abstract class SessionManager {
 	 *
 	 * @return set of the session's identifiers
 	 */
-	public Set<String> getSessions() {
-		return new HashSet<String>(sessions.keySet());
+	public Collection<Session> getSessions() {
+		return sessions.values();
 	}
 
-	/**
-	 * Returns all currently active (opened) sessions.
-	 *
-	 * @return set of the session's identifiers
-	 */
-	public Collection<Session> getSessionObjects() {
-		return sessions.values();
+	public Session getSessionNotActive(String sessionId) {
+		return this.sessionsNotActive.get(sessionId);
+	}
+
+	public Collection<Session> getSessionsWithNotActive() {
+		Collection<Session> allSessions = new HashSet<>();
+		allSessions.addAll(this.sessionsNotActive.values().stream()
+				.filter(sessionNotActive -> !sessions.containsKey(sessionNotActive.getSessionId()))
+				.collect(Collectors.toSet()));
+		allSessions.addAll(this.getSessions());
+		return allSessions;
 	}
 
 	/**
@@ -212,11 +217,12 @@ public abstract class SessionManager {
 		return null;
 	}
 
-	public void storeSessionId(String sessionId, Long creationTime, SessionProperties sessionProperties) {
+	public Session storeSessionNotActive(String sessionId, SessionProperties sessionProperties) {
+		Session sessionNotActive = new Session(sessionId, sessionProperties, CDR, openviduConfig, recordingManager);
+		this.sessionsNotActive.put(sessionId, sessionNotActive);
 		this.sessionidParticipantpublicidParticipant.putIfAbsent(sessionId, new ConcurrentHashMap<>());
-		this.sessionProperties.putIfAbsent(sessionId, sessionProperties);
-		this.sessionCreationTime.putIfAbsent(sessionId, creationTime);
 		showTokens();
+		return sessionNotActive;
 	}
 
 	public String newToken(String sessionId, ParticipantRole role, String serverMetadata,
@@ -254,7 +260,6 @@ public abstract class SessionManager {
 			log.error("sessionId [" + sessionId + "] was not found");
 			throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE, "sessionId [" + sessionId + "] not found");
 		}
-
 	}
 
 	public boolean isTokenValidInSession(String token, String sessionId, String participanPrivatetId) {
@@ -266,7 +271,6 @@ public abstract class SessionManager {
 			}
 		} else {
 			this.sessionidParticipantpublicidParticipant.putIfAbsent(sessionId, new ConcurrentHashMap<>());
-			this.sessionCreationTime.putIfAbsent(sessionId, System.currentTimeMillis());
 			this.sessionidTokenTokenobj.putIfAbsent(sessionId, new ConcurrentHashMap<>());
 			this.sessionidTokenTokenobj.get(sessionId).putIfAbsent(token,
 					new Token(token, ParticipantRole.PUBLISHER, "",
@@ -275,15 +279,6 @@ public abstract class SessionManager {
 									: null,
 							null));
 			return true;
-		}
-	}
-
-	public boolean isParticipantInSession(String sessionId, Participant participant) {
-		Session session = this.sessions.get(sessionId);
-		if (session != null) {
-			return (session.getParticipantByPrivateId(participant.getParticipantPrivateId()) != null);
-		} else {
-			throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE, "[" + sessionId + "] is not a valid sessionId");
 		}
 	}
 
@@ -371,14 +366,6 @@ public abstract class SessionManager {
 		log.info("<SESSIONID, TOKENS>: {}", this.sessionidTokenTokenobj.toString());
 	}
 
-	public void showInsecureParticipants() {
-		log.info("<INSECURE_PARTICIPANTS>: {}", this.insecureUsers.toString());
-	}
-
-	public void showAllParticipants() {
-		log.info("<SESSIONID, PARTICIPANTS>: {}", this.sessionidParticipantpublicidParticipant.toString());
-	}
-
 	public String generateRandomChain() {
 		return RandomStringUtils.randomAlphanumeric(16).toLowerCase();
 	}
@@ -454,8 +441,7 @@ public abstract class SessionManager {
 		}
 
 		sessions.remove(session.getSessionId());
-		sessionProperties.remove(session.getSessionId());
-		sessionCreationTime.remove(session.getSessionId());
+		sessionsNotActive.remove(session.getSessionId());
 		sessionidParticipantpublicidParticipant.remove(session.getSessionId());
 		sessionidTokenTokenobj.remove(session.getSessionId());
 
