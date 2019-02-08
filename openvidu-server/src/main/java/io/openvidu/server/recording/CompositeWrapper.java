@@ -94,6 +94,7 @@ public class CompositeWrapper {
 				log.info("Recording stopped event for audio-only RecorderEndpoint of Composite in session {}",
 						session.getSessionId());
 				recorderEndpoint.release();
+				compositeToRecorderHubPort.release();
 				stopLatch.countDown();
 			}
 		});
