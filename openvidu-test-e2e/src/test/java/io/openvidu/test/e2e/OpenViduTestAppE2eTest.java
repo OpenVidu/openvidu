@@ -44,6 +44,7 @@ import java.util.concurrent.TimeUnit;
 import javax.imageio.ImageIO;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.http.HttpStatus;
 import org.jcodec.api.FrameGrab;
 import org.jcodec.api.JCodecException;
 import org.jcodec.common.model.Picture;
@@ -75,19 +76,29 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonReader;
+import com.mashape.unirest.http.HttpMethod;
 
 import io.github.bonigarcia.SeleniumExtension;
 import io.github.bonigarcia.wdm.WebDriverManager;
+import io.openvidu.java.client.KurentoOptions;
+import io.openvidu.java.client.MediaMode;
 import io.openvidu.java.client.OpenVidu;
 import io.openvidu.java.client.OpenViduHttpException;
 import io.openvidu.java.client.OpenViduJavaClientException;
+import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.java.client.Recording;
+import io.openvidu.java.client.Recording.OutputMode;
+import io.openvidu.java.client.RecordingMode;
+import io.openvidu.java.client.Session;
+import io.openvidu.java.client.SessionProperties;
+import io.openvidu.java.client.TokenOptions;
 import io.openvidu.test.e2e.browser.BrowserUser;
 import io.openvidu.test.e2e.browser.ChromeAndroidUser;
 import io.openvidu.test.e2e.browser.ChromeUser;
 import io.openvidu.test.e2e.browser.FirefoxUser;
 import io.openvidu.test.e2e.browser.OperaUser;
 import io.openvidu.test.e2e.utils.CommandLineExecuter;
+import io.openvidu.test.e2e.utils.CustomHttpClient;
 import io.openvidu.test.e2e.utils.MultimediaFileMetadata;
 import io.openvidu.test.e2e.utils.Unzipper;
 
@@ -206,7 +217,9 @@ public class OpenViduTestAppE2eTest {
 
 	@AfterEach
 	void dispose() {
-		user.dispose();
+		if (user != null) {
+			user.dispose();
+		}
 		Iterator<BrowserUser> it = otherUsers.iterator();
 		while (it.hasNext()) {
 			BrowserUser other = it.next();
@@ -1896,6 +1909,153 @@ public class OpenViduTestAppE2eTest {
 		}
 
 		gracefullyLeaveParticipants(2);
+	}
+
+	@Test
+	@DisplayName("openvidu-java-client test")
+	void openViduJavaClientTest() throws Exception {
+
+		setupBrowser("chrome");
+
+		log.info("openvidu-java-client test");
+
+		user.getDriver().findElement(By.id("one2one-btn")).click();
+
+		final String customSessionId = "openviduJavaClientSession";
+		final String serverData1 = "SERVER_DATA_1";
+		final String serverData2 = "SERVER_DATA_2";
+
+		Assert.assertFalse("OV.fetch() should return false if OV.createSession() has not been called", OV.fetch());
+		List<Session> sessions = OV.getActiveSessions();
+		Assert.assertEquals("Expected no active sessions but found " + sessions.size(), sessions.size(), 0);
+
+		SessionProperties properties = new SessionProperties.Builder().customSessionId(customSessionId)
+				.mediaMode(MediaMode.ROUTED).recordingMode(RecordingMode.ALWAYS)
+				.defaultOutputMode(OutputMode.INDIVIDUAL).build();
+		Session session = OV.createSession(properties);
+
+		Assert.assertFalse("Session.fetch() should return false after OpenVidu.createSession()", session.fetch());
+		Assert.assertFalse("OpenVidu.fetch() should return false after OpenVidu.createSession()", OV.fetch());
+		sessions = OV.getActiveSessions();
+		Assert.assertEquals("Expected 1 active session but found " + sessions.size(), 1, sessions.size());
+
+		KurentoOptions kurentoOptions = new KurentoOptions.Builder().videoMaxRecvBandwidth(250)
+				.allowedFilters(new String[] { "GStreamerFilter" }).build();
+		TokenOptions tokenOptions1 = new TokenOptions.Builder().role(OpenViduRole.MODERATOR).data(serverData1)
+				.kurentoOptions(kurentoOptions).build();
+		String token1 = session.generateToken(tokenOptions1);
+
+		TokenOptions tokenOptions2 = new TokenOptions.Builder().role(OpenViduRole.SUBSCRIBER).data(serverData2).build();
+		String token2 = session.generateToken(tokenOptions2);
+
+		Assert.assertFalse("Session.fetch() should return false until a user has connected", session.fetch());
+
+		user.getDriver().findElement(By.id("session-settings-btn-0")).click();
+		Thread.sleep(1000);
+
+		// Set token 1
+		WebElement tokeInput = user.getDriver().findElement(By.cssSelector("#custom-token-div input"));
+		tokeInput.clear();
+		tokeInput.sendKeys(token1);
+
+		user.getDriver().findElement(By.id("save-btn")).click();
+		Thread.sleep(1000);
+
+		user.getDriver().findElement(By.id("session-settings-btn-1")).click();
+		Thread.sleep(1000);
+
+		// Set token 2
+		tokeInput = user.getDriver().findElement(By.cssSelector("#custom-token-div input"));
+		tokeInput.clear();
+		tokeInput.sendKeys(token2);
+
+		user.getDriver().findElement(By.id("save-btn")).click();
+		Thread.sleep(1000);
+
+		user.getDriver().findElements(By.className("join-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
+
+		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assert.assertEquals("Expected 2 videos but found " + numberOfVideos, numberOfVideos, 2);
+		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
+				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
+
+		Assert.assertTrue("Session.fetch() should return true after users connected", session.fetch());
+
+		// Verify that users have the role and data they were assigned through
+		// TokenOptions
+
+		gracefullyLeaveParticipants(2);
+	}
+
+	@Test
+	@DisplayName("REST API test")
+	void restApiTest() throws Exception {
+
+		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, OPENVIDU_SECRET);
+
+		// 401
+		restClient.testAuthorizationError();
+
+		// GET /api/sessions before any session created
+		restClient.rest(HttpMethod.GET, "/api/sessions/NOT_EXISTS", HttpStatus.SC_NOT_FOUND);
+		Map<String, Object> returnValues = new HashMap<>();
+		returnValues.put("numberOfElements", new Integer(0));
+		returnValues.put("content", "[]");
+		restClient.rest(HttpMethod.GET, "/api/sessions", null, HttpStatus.SC_OK, true, returnValues);
+
+		/** POST /api/sessions **/
+		// 400
+		String body = "{'mediaMode': 'ROUTED', 'recordingMode': 'ALWAYS', 'customSessionId': 999}";
+		restClient.rest(HttpMethod.POST, "/api/sessions", body, HttpStatus.SC_BAD_REQUEST);
+		body = "{'mediaMode': 'ROUTED', 'recordingMode': false}";
+		restClient.rest(HttpMethod.POST, "/api/sessions", body, HttpStatus.SC_BAD_REQUEST);
+		body = "{'mediaMode': 'NOT_EXISTS'}";
+		restClient.rest(HttpMethod.POST, "/api/sessions", body, HttpStatus.SC_BAD_REQUEST);
+		body = "{'mediaMode': 'ROUTED', 'recordingMode': 'NOT_EXISTS'}";
+		restClient.rest(HttpMethod.POST, "/api/sessions", body, HttpStatus.SC_BAD_REQUEST);
+		body = "{'mediaMode': 'ROUTED',  'recordingMode': 'ALWAYS', 'defaultOutputMode': 'NOT_EXISTS'}";
+		restClient.rest(HttpMethod.POST, "/api/sessions", body, HttpStatus.SC_BAD_REQUEST);
+		body = "{'mediaMode': 'ROUTED', 'recordingMode': 'ALWAYS', 'defaultOutputMode': 'INDIVIDUAL', 'defaultRecordingLayout': 'NOT_EXISTS'}";
+		restClient.rest(HttpMethod.POST, "/api/sessions", body, HttpStatus.SC_BAD_REQUEST);
+
+		// 200
+		body = "{'mediaMode': 'ROUTED', 'recordingMode': 'ALWAYS', 'customSessionId': 'CUSTOM_SESSION_ID', 'defaultOutputMode': 'INDIVIDUAL', 'defaultRecordingLayout': 'BEST_FIT'}";
+		restClient.rest(HttpMethod.POST, "/api/sessions", body, HttpStatus.SC_OK, true,
+				"{'id': 'STR', 'createdAt': 0}");
+
+		// 409
+		body = "{'customSessionId': 'CUSTOM_SESSION_ID'}";
+		restClient.rest(HttpMethod.POST, "/api/sessions", body, HttpStatus.SC_CONFLICT);
+
+		// GET /api/sessions after session created
+		restClient.rest(HttpMethod.GET, "/api/sessions/CUSTOM_SESSION_ID", null, HttpStatus.SC_OK, true,
+				"{'sessionId':'STR','createdAt':0,'mediaMode':'STR','recordingMode':'STR','defaultOutputMode':'STR','customSessionId':'STR','connections':{'numberOfElements':0,'content':[]},'recording':true}");
+		returnValues = new HashMap<>();
+		returnValues.put("numberOfElements", new Integer(1));
+		returnValues.put("content", new org.json.JSONArray());
+		restClient.rest(HttpMethod.GET, "/api/sessions", null, HttpStatus.SC_OK, true, returnValues);
+
+		/** POST /api/tokens **/
+		// 400
+		body = "{'session': true}";
+		restClient.rest(HttpMethod.POST, "/api/tokens", body, HttpStatus.SC_BAD_REQUEST);
+		body = "{'session': 'CUSTOM_SESSION_ID', 'role': 'NOT_EXISTS', 'data': 'DATA'}";
+		restClient.rest(HttpMethod.POST, "/api/tokens", body, HttpStatus.SC_BAD_REQUEST);
+		body = "{'session': 'CUSTOM_SESSION_ID', 'role': 'MODERATOR', 'data': 999}";
+		restClient.rest(HttpMethod.POST, "/api/tokens", body, HttpStatus.SC_BAD_REQUEST);
+		body = "{'session': 'CUSTOM_SESSION_ID', 'role': 'MODERATOR', 'data': 'SERVER_DATA', 'kurentoOptions': false}";
+		restClient.rest(HttpMethod.POST, "/api/tokens", body, HttpStatus.SC_BAD_REQUEST);
+		body = "{'session': 'CUSTOM_SESSION_ID', 'role': 'MODERATOR', 'data': 'SERVER_DATA', 'kurentoOptions': {'allowedFilters': 'NOT_EXISTS'}}";
+		restClient.rest(HttpMethod.POST, "/api/tokens", body, HttpStatus.SC_BAD_REQUEST);
+
+		// 200
+		body = "{'session': 'CUSTOM_SESSION_ID', 'role': 'MODERATOR', 'data': 'SERVER_DATA', 'kurentoOptions': {'allowedFilters': ['GStreamerFilter']}}";
+		restClient.rest(HttpMethod.POST, "/api/tokens", body, HttpStatus.SC_OK);
 	}
 
 	private void listEmptyRecordings() {
