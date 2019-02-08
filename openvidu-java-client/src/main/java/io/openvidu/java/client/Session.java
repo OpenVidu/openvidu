@@ -511,8 +511,10 @@ public class Session {
 		SessionProperties.Builder builder = new SessionProperties.Builder()
 				.mediaMode(MediaMode.valueOf((String) json.get("mediaMode")))
 				.recordingMode(RecordingMode.valueOf((String) json.get("recordingMode")))
-				.defaultOutputMode(Recording.OutputMode.valueOf((String) json.get("defaultOutputMode")))
-				.defaultRecordingLayout(RecordingLayout.valueOf((String) json.get("defaultRecordingLayout")));
+				.defaultOutputMode(Recording.OutputMode.valueOf((String) json.get("defaultOutputMode")));
+		if (json.containsKey("defaultRecordingLayout")) {
+			builder.defaultRecordingLayout(RecordingLayout.valueOf((String) json.get("defaultRecordingLayout")));
+		}
 		if (json.containsKey("defaultCustomLayout")) {
 			builder.defaultCustomLayout((String) json.get("defaultCustomLayout"));
 		}

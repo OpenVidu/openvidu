@@ -574,7 +574,7 @@ public class OpenVidu {
 					if (fetchedSessionIds.contains(entry.getKey())) {
 						return true;
 					} else {
-						log.info("Removing closed session {}" + entry.getKey());
+						log.info("Removing closed session {}", entry.getKey());
 						hasChanged[0] = true;
 						return false;
 					}
