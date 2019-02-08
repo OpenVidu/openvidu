@@ -1613,12 +1613,6 @@ public class OpenViduTestAppE2eTest {
 
 		numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
 		Assert.assertEquals("Expected 3 videos but found " + numberOfVideos, numberOfVideos, 3);
-		WebElement v = user.getDriver().findElements(By.cssSelector("#openvidu-instance-1 video")).get(0);
-		Assert.assertFalse("Publisher video should not have srcObject defined after force unpublish",
-				user.getEventManager().hasMediaStream(v, "#openvidu-instance-1"));
-		Iterable<WebElement> vs = user.getDriver().findElements(By.cssSelector("#openvidu-instance-0 video"));
-		Assert.assertTrue("Videos were expected to have audio and video tracks",
-				user.getEventManager().assertMediaTracks(vs, true, true));
 
 		// Force disconnect wrong
 		user.getDriver().findElement(By.id("resource-id-field")).clear();
