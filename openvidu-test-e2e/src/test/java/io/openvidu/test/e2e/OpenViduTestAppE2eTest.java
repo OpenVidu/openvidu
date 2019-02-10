@@ -268,7 +268,7 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
 
 		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
-		Assert.assertEquals("Expected 4 videos but found " + numberOfVideos, numberOfVideos, 4);
+		Assert.assertEquals("Expected 4 videos but found " + numberOfVideos, 4, numberOfVideos);
 		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
@@ -296,7 +296,7 @@ public class OpenViduTestAppE2eTest {
 		System.out.println(this.getBase64Screenshot(user));
 
 		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
-		Assert.assertEquals("Expected 4 videos but found " + numberOfVideos, numberOfVideos, 4);
+		Assert.assertEquals("Expected 4 videos but found " + numberOfVideos, 4, numberOfVideos);
 		Assert.assertTrue("Videos were expected to only have audio tracks", user.getEventManager()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, false));
 
@@ -322,7 +322,7 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
 
 		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
-		Assert.assertEquals("Expected 4 videos but found " + numberOfVideos, numberOfVideos, 4);
+		Assert.assertEquals("Expected 4 videos but found " + numberOfVideos, 4, numberOfVideos);
 		Assert.assertTrue("Videos were expected to only have video tracks", user.getEventManager()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), false, true));
 
@@ -346,7 +346,7 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
 
 		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
-		Assert.assertEquals("Expected 4 videos but found " + numberOfVideos, numberOfVideos, 4);
+		Assert.assertEquals("Expected 4 videos but found " + numberOfVideos, 4, numberOfVideos);
 		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
@@ -371,7 +371,7 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
 
 		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
-		Assert.assertEquals("Expected 1 video but found " + numberOfVideos, numberOfVideos, 1);
+		Assert.assertEquals("Expected 1 video but found " + numberOfVideos, 1, numberOfVideos);
 		Assert.assertTrue("Video was expected to have audio and video tracks", user.getEventManager()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
@@ -396,7 +396,7 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
 
 		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
-		Assert.assertEquals("Expected 1 video but found " + numberOfVideos, numberOfVideos, 1);
+		Assert.assertEquals("Expected 1 video but found " + numberOfVideos, 1, numberOfVideos);
 		Assert.assertTrue("Video was expected to have audio and video tracks", user.getEventManager()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
@@ -422,7 +422,7 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
 
 		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
-		Assert.assertEquals("Expected 1 video but found " + numberOfVideos, numberOfVideos, 1);
+		Assert.assertEquals("Expected 1 video but found " + numberOfVideos, 1, numberOfVideos);
 		Assert.assertTrue("Video was expected to have audio and video tracks", user.getEventManager()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
@@ -450,7 +450,7 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 16);
 
 		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
-		Assert.assertEquals("Expected 16 videos but found " + numberOfVideos, numberOfVideos, 16);
+		Assert.assertEquals("Expected 16 videos but found " + numberOfVideos, 16, numberOfVideos);
 		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
@@ -474,7 +474,7 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
 
 		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
-		Assert.assertEquals("Expected 4 videos but found " + numberOfVideos, numberOfVideos, 4);
+		Assert.assertEquals("Expected 4 videos but found " + numberOfVideos, 4, numberOfVideos);
 		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
@@ -520,7 +520,7 @@ public class OpenViduTestAppE2eTest {
 				user2.getEventManager().waitUntilEventReaches("streamPlaying", 2);
 
 				final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
-				Assert.assertEquals("Expected 2 videos but found " + numberOfVideos, numberOfVideos, 2);
+				Assert.assertEquals("Expected 2 videos but found " + numberOfVideos, 2, numberOfVideos);
 				Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
 						.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
@@ -547,7 +547,7 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
 
 		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
-		Assert.assertEquals("Expected 2 videos but found " + numberOfVideos, numberOfVideos, 2);
+		Assert.assertEquals("Expected 2 videos but found " + numberOfVideos, 2, numberOfVideos);
 		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
@@ -604,7 +604,7 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
 
 		int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
-		Assert.assertEquals("Expected 2 videos but found " + numberOfVideos, numberOfVideos, 2);
+		Assert.assertEquals("Expected 2 videos but found " + numberOfVideos, 2, numberOfVideos);
 		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
@@ -622,7 +622,7 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 3);
 
 		numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
-		Assert.assertEquals("Expected 2 videos but found " + numberOfVideos, numberOfVideos, 2);
+		Assert.assertEquals("Expected 2 videos but found " + numberOfVideos, 2, numberOfVideos);
 		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
@@ -670,7 +670,7 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
 
 		int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
-		Assert.assertEquals("Expected 4 videos but found " + numberOfVideos, numberOfVideos, 4);
+		Assert.assertEquals("Expected 4 videos but found " + numberOfVideos, 4, numberOfVideos);
 		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
@@ -747,7 +747,7 @@ public class OpenViduTestAppE2eTest {
 		}
 
 		int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
-		Assert.assertEquals("Expected 2 videos but found " + numberOfVideos, numberOfVideos, 2);
+		Assert.assertEquals("Expected 2 videos but found " + numberOfVideos, 2, numberOfVideos);
 		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
@@ -781,7 +781,7 @@ public class OpenViduTestAppE2eTest {
 		}
 
 		numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
-		Assert.assertEquals("Expected 2 videos but found " + numberOfVideos, numberOfVideos, 2);
+		Assert.assertEquals("Expected 2 videos but found " + numberOfVideos, 2, numberOfVideos);
 		Assert.assertTrue("Videos were expected to only have audio tracks", user.getEventManager()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), false, true));
 
@@ -814,7 +814,7 @@ public class OpenViduTestAppE2eTest {
 		}
 
 		numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
-		Assert.assertEquals("Expected 2 videos but found " + numberOfVideos, numberOfVideos, 2);
+		Assert.assertEquals("Expected 2 videos but found " + numberOfVideos, 2, numberOfVideos);
 		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
@@ -854,7 +854,7 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 3);
 
 		int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
-		Assert.assertEquals("Expected 3 videos but found " + numberOfVideos, numberOfVideos, 3);
+		Assert.assertEquals("Expected 3 videos but found " + numberOfVideos, 3, numberOfVideos);
 		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
@@ -864,7 +864,7 @@ public class OpenViduTestAppE2eTest {
 
 		List<WebElement> videos = user.getDriver().findElements(By.tagName("video"));
 		numberOfVideos = videos.size();
-		Assert.assertEquals("Expected 1 video but found " + numberOfVideos, numberOfVideos, 1);
+		Assert.assertEquals("Expected 1 video but found " + numberOfVideos, 1, numberOfVideos);
 		Assert.assertFalse("Publisher video should not have srcObject defined after force unpublish",
 				user.getEventManager().hasMediaStream(videos.get(0), ""));
 
@@ -874,7 +874,7 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 6);
 
 		numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
-		Assert.assertEquals("Expected 3 videos but found " + numberOfVideos, numberOfVideos, 3);
+		Assert.assertEquals("Expected 3 videos but found " + numberOfVideos, 3, numberOfVideos);
 		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
@@ -1021,7 +1021,7 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
 
 		int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
-		Assert.assertEquals("Expected 1 video but found " + numberOfVideos, numberOfVideos, 1);
+		Assert.assertEquals("Expected 1 video but found " + numberOfVideos, 1, numberOfVideos);
 		Assert.assertTrue("Video was expected to have audio and video tracks", user.getEventManager()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
@@ -1113,7 +1113,7 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
 
 		int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
-		Assert.assertEquals("Expected 1 video but found " + numberOfVideos, numberOfVideos, 1);
+		Assert.assertEquals("Expected 1 video but found " + numberOfVideos, 1, numberOfVideos);
 		Assert.assertTrue("Video was expected to have audio and video tracks", user.getEventManager()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
@@ -1230,7 +1230,7 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
 
 		int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
-		Assert.assertEquals("Expected 4 videos but found " + numberOfVideos, numberOfVideos, 4);
+		Assert.assertEquals("Expected 4 videos but found " + numberOfVideos, 4, numberOfVideos);
 		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
@@ -1369,7 +1369,8 @@ public class OpenViduTestAppE2eTest {
 				user2.getEventManager().waitUntilEventReaches("streamCreated", 8);
 				user2.getEventManager().waitUntilEventReaches("streamPlaying", 8);
 
-				Assert.assertEquals(user2.getDriver().findElements(By.tagName("video")).size(), 8);
+				int nVideos = user2.getDriver().findElements(By.tagName("video")).size();
+				Assert.assertEquals("Expected 8 videos in Firefox user but found " + nVideos, 8, nVideos);
 
 				user2.getEventManager().waitUntilEventReaches("recordingStarted", 2);
 				user2.getEventManager().waitUntilEventReaches("recordingStopped", 2);
@@ -1416,7 +1417,7 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 8);
 
 		int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
-		Assert.assertEquals("Expected 8 videos but found " + numberOfVideos, numberOfVideos, 8);
+		Assert.assertEquals("Expected 8 videos but found " + numberOfVideos, 8, numberOfVideos);
 
 		user.getDriver().findElement(By.id("session-api-btn-0")).click();
 		Thread.sleep(1000);
@@ -1587,7 +1588,7 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
 
 		int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
-		Assert.assertEquals("Expected 4 videos but found " + numberOfVideos, numberOfVideos, 4);
+		Assert.assertEquals("Expected 4 videos but found " + numberOfVideos, 4, numberOfVideos);
 		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
@@ -1625,7 +1626,7 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamDestroyed", 2);
 
 		numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
-		Assert.assertEquals("Expected 3 videos but found " + numberOfVideos, numberOfVideos, 3);
+		Assert.assertEquals("Expected 3 videos but found " + numberOfVideos, 3, numberOfVideos);
 
 		// Force disconnect wrong
 		user.getDriver().findElement(By.id("resource-id-field")).clear();
@@ -1686,7 +1687,7 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
 
 		int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
-		Assert.assertEquals("Expected 2 videos but found " + numberOfVideos, numberOfVideos, 2);
+		Assert.assertEquals("Expected 2 videos but found " + numberOfVideos, 2, numberOfVideos);
 		Assert.assertTrue("Videos were expected to have a video only track", user.getEventManager()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), false, true));
 
@@ -1837,7 +1838,7 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
 
 		int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
-		Assert.assertEquals("Expected 2 videos but found " + numberOfVideos, numberOfVideos, 2);
+		Assert.assertEquals("Expected 2 videos but found " + numberOfVideos, 2, numberOfVideos);
 		Assert.assertTrue("Videos were expected to have only a video track", user.getEventManager()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), false, true));
 
@@ -1927,7 +1928,7 @@ public class OpenViduTestAppE2eTest {
 
 		Assert.assertFalse("OV.fetch() should return false if OV.createSession() has not been called", OV.fetch());
 		List<Session> sessions = OV.getActiveSessions();
-		Assert.assertEquals("Expected no active sessions but found " + sessions.size(), sessions.size(), 0);
+		Assert.assertEquals("Expected no active sessions but found " + sessions.size(), 0, sessions.size());
 
 		SessionProperties properties = new SessionProperties.Builder().customSessionId(customSessionId)
 				.mediaMode(MediaMode.ROUTED).recordingMode(RecordingMode.ALWAYS)
@@ -1980,7 +1981,7 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
 
 		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
-		Assert.assertEquals("Expected 2 videos but found " + numberOfVideos, numberOfVideos, 2);
+		Assert.assertEquals("Expected 2 videos but found " + numberOfVideos, 2, numberOfVideos);
 		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
@@ -1996,12 +1997,14 @@ public class OpenViduTestAppE2eTest {
 	@DisplayName("REST API test")
 	void restApiTest() throws Exception {
 
+		log.info("REST API test");
+
 		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, OPENVIDU_SECRET);
 
 		// 401
 		restClient.testAuthorizationError();
 
-		// GET /api/sessions before any session created
+		/** GET /api/sessions (before session created) **/
 		restClient.rest(HttpMethod.GET, "/api/sessions/NOT_EXISTS", HttpStatus.SC_NOT_FOUND);
 		Map<String, Object> returnValues = new HashMap<>();
 		returnValues.put("numberOfElements", new Integer(0));
@@ -2010,11 +2013,11 @@ public class OpenViduTestAppE2eTest {
 
 		/** POST /api/sessions **/
 		// 400
-		String body = "{'mediaMode': 'ROUTED', 'recordingMode': 'ALWAYS', 'customSessionId': 999}";
+		String body = "{'mediaMode': 'NOT_EXISTS'}";
 		restClient.rest(HttpMethod.POST, "/api/sessions", body, HttpStatus.SC_BAD_REQUEST);
 		body = "{'mediaMode': 'ROUTED', 'recordingMode': false}";
 		restClient.rest(HttpMethod.POST, "/api/sessions", body, HttpStatus.SC_BAD_REQUEST);
-		body = "{'mediaMode': 'NOT_EXISTS'}";
+		body = "{'mediaMode': 'ROUTED', 'recordingMode': 'ALWAYS', 'customSessionId': 999}";
 		restClient.rest(HttpMethod.POST, "/api/sessions", body, HttpStatus.SC_BAD_REQUEST);
 		body = "{'mediaMode': 'ROUTED', 'recordingMode': 'NOT_EXISTS'}";
 		restClient.rest(HttpMethod.POST, "/api/sessions", body, HttpStatus.SC_BAD_REQUEST);
@@ -2024,17 +2027,21 @@ public class OpenViduTestAppE2eTest {
 		restClient.rest(HttpMethod.POST, "/api/sessions", body, HttpStatus.SC_BAD_REQUEST);
 
 		// 200
-		body = "{'mediaMode': 'ROUTED', 'recordingMode': 'ALWAYS', 'customSessionId': 'CUSTOM_SESSION_ID', 'defaultOutputMode': 'INDIVIDUAL', 'defaultRecordingLayout': 'BEST_FIT'}";
+		body = "{'mediaMode': 'ROUTED', 'recordingMode': 'MANUAL', 'customSessionId': 'CUSTOM_SESSION_ID', 'defaultOutputMode': 'COMPOSED', 'defaultRecordingLayout': 'BEST_FIT'}";
 		restClient.rest(HttpMethod.POST, "/api/sessions", body, HttpStatus.SC_OK, true,
 				"{'id': 'STR', 'createdAt': 0}");
+		// Default values
+		org.json.JSONObject res = restClient.rest(HttpMethod.POST, "/api/sessions", "{}", HttpStatus.SC_OK, true,
+				"{'id': 'STR', 'createdAt': 0}");
+		restClient.rest(HttpMethod.DELETE, "/api/sessions/" + res.getString("id"), HttpStatus.SC_NO_CONTENT);
 
 		// 409
 		body = "{'customSessionId': 'CUSTOM_SESSION_ID'}";
 		restClient.rest(HttpMethod.POST, "/api/sessions", body, HttpStatus.SC_CONFLICT);
 
-		// GET /api/sessions after session created
+		/** GET /api/sessions (after session created) **/
 		restClient.rest(HttpMethod.GET, "/api/sessions/CUSTOM_SESSION_ID", null, HttpStatus.SC_OK, true,
-				"{'sessionId':'STR','createdAt':0,'mediaMode':'STR','recordingMode':'STR','defaultOutputMode':'STR','customSessionId':'STR','connections':{'numberOfElements':0,'content':[]},'recording':true}");
+				"{'sessionId':'STR','createdAt':0,'mediaMode':'STR','recordingMode':'STR','defaultOutputMode':'STR','defaultRecordingLayout':'STR','customSessionId':'STR','connections':{'numberOfElements':0,'content':[]},'recording':true}");
 		returnValues = new HashMap<>();
 		returnValues.put("numberOfElements", new Integer(1));
 		returnValues.put("content", new org.json.JSONArray());
@@ -2042,9 +2049,11 @@ public class OpenViduTestAppE2eTest {
 
 		/** POST /api/tokens **/
 		// 400
+		body = "{}";
+		restClient.rest(HttpMethod.POST, "/api/tokens", body, HttpStatus.SC_BAD_REQUEST);
 		body = "{'session': true}";
 		restClient.rest(HttpMethod.POST, "/api/tokens", body, HttpStatus.SC_BAD_REQUEST);
-		body = "{'session': 'CUSTOM_SESSION_ID', 'role': 'NOT_EXISTS', 'data': 'DATA'}";
+		body = "{'session': 'CUSTOM_SESSION_ID', 'role': 'NOT_EXISTS'}";
 		restClient.rest(HttpMethod.POST, "/api/tokens", body, HttpStatus.SC_BAD_REQUEST);
 		body = "{'session': 'CUSTOM_SESSION_ID', 'role': 'MODERATOR', 'data': 999}";
 		restClient.rest(HttpMethod.POST, "/api/tokens", body, HttpStatus.SC_BAD_REQUEST);
@@ -2055,7 +2064,176 @@ public class OpenViduTestAppE2eTest {
 
 		// 200
 		body = "{'session': 'CUSTOM_SESSION_ID', 'role': 'MODERATOR', 'data': 'SERVER_DATA', 'kurentoOptions': {'allowedFilters': ['GStreamerFilter']}}";
-		restClient.rest(HttpMethod.POST, "/api/tokens", body, HttpStatus.SC_OK);
+		res = restClient.rest(HttpMethod.POST, "/api/tokens", body, HttpStatus.SC_OK, true,
+				"{'id':'STR','session':'STR','role':'STR','data':'STR','token':'STR','kurentoOptions':{'allowedFilters':['STR']}}");
+		final String token1 = res.getString("token");
+		Assert.assertEquals("JSON return value from /api/tokens should have equal srtings in 'id' and 'token'",
+				res.getString("id"), token1);
+		Assert.assertEquals("Wrong session parameter", "CUSTOM_SESSION_ID", res.getString("session"));
+
+		// Default values
+		body = "{'session': 'CUSTOM_SESSION_ID'}";
+		res = restClient.rest(HttpMethod.POST, "/api/tokens", body, HttpStatus.SC_OK, true,
+				"{'id':'STR','session':'STR','role':'STR','data':'STR','token':'STR'}");
+		final String token2 = res.getString("id");
+
+		/** POST /api/recordings/start (NOT ACTIVE SESSION) **/
+		// 400
+		body = "{}";
+		restClient.rest(HttpMethod.POST, "/api/recordings/start", body, HttpStatus.SC_BAD_REQUEST);
+		body = "{'session': true}";
+		restClient.rest(HttpMethod.POST, "/api/recordings/start", body, HttpStatus.SC_BAD_REQUEST);
+		body = "{'session':'SESSION_ID','name':999}";
+		restClient.rest(HttpMethod.POST, "/api/recordings/start", body, HttpStatus.SC_BAD_REQUEST);
+		body = "{'session':'SESSION_ID','name':'NAME','outputMode':'NOT_EXISTS'}";
+		restClient.rest(HttpMethod.POST, "/api/recordings/start", body, HttpStatus.SC_BAD_REQUEST);
+		body = "{'session':'SESSION_ID','name':'NAME','outputMode':'COMPOSED','recordingLayout':'NOT_EXISTS'}";
+		restClient.rest(HttpMethod.POST, "/api/recordings/start", body, HttpStatus.SC_BAD_REQUEST);
+		body = "{'session':'SESSION_ID','name':'NAME','outputMode':'COMPOSED','recordingLayout':'BEST_FIT','customLayout':'CUSTOM_LAYOUT','hasAudio':true,'hasVideo':true,'resolution':999}";
+		restClient.rest(HttpMethod.POST, "/api/recordings/start", body, HttpStatus.SC_BAD_REQUEST);
+
+		// 422
+		body = "{'session':'SESSION_ID','name':'NAME','outputMode':'COMPOSED','recordingLayout':'BEST_FIT','customLayout':'CUSTOM_LAYOUT','hasAudio':false,'hasVideo':false}";
+		restClient.rest(HttpMethod.POST, "/api/recordings/start", body, HttpStatus.SC_UNPROCESSABLE_ENTITY);
+		body = "{'session':'SESSION_ID','name':'NAME','outputMode':'COMPOSED','recordingLayout':'BEST_FIT','customLayout':'CUSTOM_LAYOUT','hasAudio':true,'hasVideo':true,'resolution':'1920x2000'}";
+		restClient.rest(HttpMethod.POST, "/api/recordings/start", body, HttpStatus.SC_UNPROCESSABLE_ENTITY);
+
+		// 404
+		body = "{'session':'SESSION_ID'}";
+		restClient.rest(HttpMethod.POST, "/api/recordings/start", body, HttpStatus.SC_NOT_FOUND);
+
+		// 406
+		body = "{'session':'CUSTOM_SESSION_ID'}";
+		restClient.rest(HttpMethod.POST, "/api/recordings/start", body, HttpStatus.SC_NOT_ACCEPTABLE);
+
+		// 409 (RELAYED media mode)
+		res = restClient.rest(HttpMethod.POST, "/api/sessions", "{'mediaMode':'RELAYED'}", HttpStatus.SC_OK, true,
+				"{'id': 'STR', 'createdAt': 0}");
+		body = "{'session':'" + res.getString("id") + "'}";
+		restClient.rest(HttpMethod.POST, "/api/recordings/start", body, HttpStatus.SC_CONFLICT);
+		restClient.rest(HttpMethod.DELETE, "/api/sessions/" + res.getString("id"), HttpStatus.SC_NO_CONTENT);
+
+		// Start session
+		setupBrowser("chrome");
+		user.getDriver().findElement(By.id("one2one-btn")).click();
+		user.getDriver().findElement(By.id("session-settings-btn-0")).click();
+		Thread.sleep(1000);
+
+		// Set token 1
+		WebElement tokeInput = user.getDriver().findElement(By.cssSelector("#custom-token-div input"));
+		tokeInput.clear();
+		tokeInput.sendKeys(token1);
+
+		user.getDriver().findElement(By.id("save-btn")).click();
+		Thread.sleep(1000);
+		user.getDriver().findElement(By.id("session-settings-btn-1")).click();
+		Thread.sleep(1000);
+
+		// Set token 2
+		tokeInput = user.getDriver().findElement(By.cssSelector("#custom-token-div input"));
+		tokeInput.clear();
+		tokeInput.sendKeys(token2);
+		user.getDriver().findElement(By.id("save-btn")).click();
+		Thread.sleep(1000);
+
+		user.getDriver().findElements(By.className("join-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 2);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 4);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
+
+		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assert.assertEquals("Expected 4 videos but found " + numberOfVideos, 4, numberOfVideos);
+		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
+				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
+
+		/** GET /api/recordings (before recording started) **/
+		restClient.rest(HttpMethod.GET, "/api/recordings/NOT_EXISTS", HttpStatus.SC_NOT_FOUND);
+		returnValues = new HashMap<>();
+		returnValues.put("count", new Integer(0));
+		returnValues.put("items", "[]");
+		restClient.rest(HttpMethod.GET, "/api/recordings", null, HttpStatus.SC_OK, true, returnValues);
+
+		/** POST /api/recordings/start (ACTIVE SESSION) **/
+		// 200
+		body = "{'session':'CUSTOM_SESSION_ID'}";
+		restClient.rest(HttpMethod.POST, "/api/recordings/start", body, HttpStatus.SC_OK, true,
+				"{'id':'STR','sessionId':'STR','name':'STR','outputMode':'STR','recordingLayout':'STR','hasAudio':false,'hasVideo':false,'resolution':'STR','createdAt':0,'size':0,'duration':0,'url':null,'status':'STR'}");
+
+		// 409 (already recording)
+		restClient.rest(HttpMethod.POST, "/api/recordings/start", body, HttpStatus.SC_CONFLICT);
+
+		/** POST /api/recordings/stop **/
+		// 405
+		restClient.rest(HttpMethod.POST, "/api/recordings/stop", body, HttpStatus.SC_METHOD_NOT_ALLOWED);
+
+		// 404
+		restClient.rest(HttpMethod.POST, "/api/recordings/stop/NOT_EXISTS", body, HttpStatus.SC_NOT_FOUND);
+
+		// 200
+		restClient.rest(HttpMethod.DELETE, "/api/recordings/CUSTOM_SESSION_ID", HttpStatus.SC_CONFLICT);
+		restClient.rest(HttpMethod.POST, "/api/recordings/stop/CUSTOM_SESSION_ID", body, HttpStatus.SC_OK, true,
+				"{'id':'STR','sessionId':'STR','name':'STR','outputMode':'STR','recordingLayout':'STR','hasAudio':false,'hasVideo':false,'resolution':'STR','createdAt':0,'size':0,'duration':0,'url':null,'status':'STR'}");
+		/** GET /api/recordings (after recording created) **/
+		restClient.rest(HttpMethod.GET, "/api/recordings/CUSTOM_SESSION_ID", null, HttpStatus.SC_OK, true,
+				"{'id':'STR','sessionId':'STR','name':'STR','outputMode':'STR','hasAudio':false,'hasVideo':false,'createdAt':0,'size':0,'duration':0,'url':null,'status':'STR'}");
+		returnValues = new HashMap<>();
+		returnValues.put("count", new Integer(1));
+		returnValues.put("items", new org.json.JSONArray());
+		restClient.rest(HttpMethod.GET, "/api/recordings", null, HttpStatus.SC_OK, true, returnValues);
+
+		/** DELETE /api/recordings **/
+		restClient.rest(HttpMethod.DELETE, "/api/recordings", HttpStatus.SC_METHOD_NOT_ALLOWED);
+		restClient.rest(HttpMethod.DELETE, "/api/recordings/NOT_EXISTS", HttpStatus.SC_NOT_FOUND);
+		restClient.rest(HttpMethod.DELETE, "/api/recordings/CUSTOM_SESSION_ID", HttpStatus.SC_NO_CONTENT);
+
+		// GET /api/recordings should return empty again
+		returnValues = new HashMap<>();
+		returnValues.put("count", new Integer(0));
+		returnValues.put("items", "[]");
+		restClient.rest(HttpMethod.GET, "/api/recordings", null, HttpStatus.SC_OK, true, returnValues);
+
+		/** DELETE /api/sessions/<SESSION_ID>/stream/<STREAM_ID> **/
+		restClient.rest(HttpMethod.DELETE, "/api/sessions/NOT_EXISTS/stream/NOT_EXISTS", HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.DELETE, "/api/sessions/CUSTOM_SESSION_ID/stream/NOT_EXISTS",
+				HttpStatus.SC_NOT_FOUND);
+		res = restClient.rest(HttpMethod.GET, "/api/sessions/CUSTOM_SESSION_ID", null, HttpStatus.SC_OK, true,
+				"{'sessionId':'STR','createdAt':0,'mediaMode':'STR','recordingMode':'STR','defaultOutputMode':'STR','defaultRecordingLayout':'STR','customSessionId':'STR','connections':{'numberOfElements':2,'content'"
+						+ ":[{'connectionId':'STR','createdAt':0,'location':'STR','platform':'STR','token':'STR','role':'STR','serverData':'STR','clientData':'STR','publishers':["
+						+ "{'createdAt':0,'streamId':'STR','mediaOptions':{'hasAudio':false,'audioActive':false,'hasVideo':false,'videoActive':false,'typeOfVideo':'STR','frameRate':0,"
+						+ "'videoDimensions':'STR','filter':{}}}],'subscribers':[{'createdAt':0,'streamId':'STR','publisher':'STR'}]},{'connectionId':'STR','createdAt':0,'location':'STR',"
+						+ "'platform':'STR','token':'STR','role':'STR','serverData':'STR','clientData':'STR','publishers':[{'createdAt':0,'streamId':'STR','mediaOptions':{'hasAudio':false,"
+						+ "'audioActive':false,'hasVideo':false,'videoActive':false,'typeOfVideo':'STR','frameRate':0,'videoDimensions':'STR','filter':{}}}],'subscribers':[{'createdAt':0,'streamId':'STR','publisher':'STR'}]}]},'recording':false}");
+		String streamId = ((org.json.JSONObject) ((org.json.JSONObject) res.getJSONObject("connections")
+				.getJSONArray("content").get(0)).getJSONArray("publishers").get(0)).getString("streamId");
+		restClient.rest(HttpMethod.DELETE, "/api/sessions/CUSTOM_SESSION_ID/stream/" + streamId,
+				HttpStatus.SC_NO_CONTENT);
+
+		/** DELETE /api/sessions/<SESSION_ID>/connection/<CONNECTION_ID> **/
+		restClient.rest(HttpMethod.DELETE, "/api/sessions/NOT_EXISTS/connection/NOT_EXISTS", HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.DELETE, "/api/sessions/CUSTOM_SESSION_ID/connection/NOT_EXISTS",
+				HttpStatus.SC_NOT_FOUND);
+		String connectionId = ((org.json.JSONObject) res.getJSONObject("connections").getJSONArray("content").get(0))
+				.getString("connectionId");
+		restClient.rest(HttpMethod.DELETE, "/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
+				HttpStatus.SC_NO_CONTENT);
+
+		/** DELETE /api/sessions **/
+		restClient.rest(HttpMethod.DELETE, "/api/sessions", HttpStatus.SC_METHOD_NOT_ALLOWED);
+		restClient.rest(HttpMethod.DELETE, "/api/sessions/NOT_EXISTS", HttpStatus.SC_NOT_FOUND);
+		restClient.rest(HttpMethod.DELETE, "/api/sessions/CUSTOM_SESSION_ID", HttpStatus.SC_NO_CONTENT);
+
+		// GET /api/sessions should return empty again
+		returnValues = new HashMap<>();
+		returnValues.put("numberOfElements", new Integer(0));
+		returnValues.put("content", "[]");
+		restClient.rest(HttpMethod.GET, "/api/sessions", null, HttpStatus.SC_OK, true, returnValues);
+
+		/** GET /config **/
+		restClient.rest(HttpMethod.GET, "/config", null, HttpStatus.SC_OK, true,
+				"{'version':'STR','openviduPublicurl':'STR','openviduCdr':false,'maxRecvBandwidth':0,'minRecvBandwidth':0,'maxSendBandwidth':0,'minSendBandwidth':0,'openviduRecording':false,"
+						+ "'openviduRecordingVersion':'STR','openviduRecordingPath':'STR','openviduRecordingPublicAccess':false,'openviduRecordingNotification':'STR','openviduRecordingCustomLayout':'STR'}");
 	}
 
 	private void listEmptyRecordings() {
@@ -2120,7 +2298,7 @@ public class OpenViduTestAppE2eTest {
 			Assert.assertEquals(
 					"Resolution (" + recording.getResolution()
 							+ ") of recording entity is not equal to real video resolution (" + realResolution + ")",
-					realResolution, recording.getResolution());
+					recording.getResolution(), realResolution);
 
 			log.info("Recording map color: {}", colorMap.toString());
 			isFine = this.checkVideoAverageRgbGreen(colorMap);
@@ -2137,8 +2315,8 @@ public class OpenViduTestAppE2eTest {
 		// Should be only 2 files: zip and metadata
 		File folder = new File(recPath);
 		Assert.assertEquals(
-				"There are more than 2 files (ZIP and metadata) inside individual recording folder " + recPath,
-				folder.listFiles().length, 2);
+				"There are more than 2 files (ZIP and metadata) inside individual recording folder " + recPath, 2,
+				folder.listFiles().length);
 
 		File file1 = new File(recPath + recording.getName() + ".zip");
 		File file2 = new File(recPath + ".recording." + recording.getId());

@@ -37,7 +37,6 @@ import org.apache.http.ssl.SSLContextBuilder;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.json.simple.parser.JSONParser;
 import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,8 +55,6 @@ public class CustomHttpClient {
 
 	private String openviduUrl;
 	private String headerAuth;
-
-	private JSONParser parser = new JSONParser();
 
 	public CustomHttpClient(String openviduUrl, String openviduSecret) {
 		this.openviduUrl = openviduUrl.replaceFirst("/*$", "");
@@ -89,39 +86,40 @@ public class CustomHttpClient {
 		}
 	}
 
-	public void rest(HttpMethod method, String path, int status) {
-		this.commonRest(method, path, null, status);
+	public JSONObject rest(HttpMethod method, String path, int status) {
+		return this.commonRest(method, path, null, status);
 	}
 
-	public void rest(HttpMethod method, String path, String body, int status) {
-		this.commonRest(method, path, body, status);
+	public JSONObject rest(HttpMethod method, String path, String body, int status) {
+		return this.commonRest(method, path, body, status);
 	}
 
-	public void rest(HttpMethod method, String path, String body, int status, boolean exactFields,
-			String jsonElmentString) {
+	public JSONObject rest(HttpMethod method, String path, String body, int status, boolean exactReturnedFields,
+			String jsonReturnedValue) {
 		JSONObject json = this.commonRest(method, path, body, status);
 		JSONObject jsonObjExpected = null;
-		jsonElmentString.replaceAll("'", "\"");
+		jsonReturnedValue.replaceAll("'", "\"");
 		try {
-			jsonObjExpected = new JSONObject((String) jsonElmentString);
+			jsonObjExpected = new JSONObject((String) jsonReturnedValue);
 		} catch (JSONException e1) {
-			Assert.fail("Expected json element is a string without a JSON format: " + jsonElmentString);
+			Assert.fail("Expected json element is a string without a JSON format: " + jsonReturnedValue);
 		}
 
-		if (exactFields) {
+		if (exactReturnedFields) {
 			Assert.assertEquals("Error in number of keys in JSON response to POST " + path, jsonObjExpected.length(),
 					json.length());
 		}
 		for (String key : jsonObjExpected.keySet()) {
 			json.get(key);
 		}
+		return json;
 	}
 
-	public void rest(HttpMethod method, String path, String body, int status, boolean exactFields,
+	public JSONObject rest(HttpMethod method, String path, String body, int status, boolean exactReturnedFields,
 			Map<String, ?> jsonResponse) {
 		org.json.JSONObject json = this.commonRest(method, path, body, status);
 
-		if (exactFields) {
+		if (exactReturnedFields) {
 			Assert.assertEquals("Error in number of keys in JSON response to POST " + path, jsonResponse.size(),
 					json.length());
 		}
@@ -166,6 +164,7 @@ public class CustomHttpClient {
 				Assert.fail("JSON response field cannot be parsed: " + entry.toString());
 			}
 		}
+		return json;
 	}
 
 	private org.json.JSONObject commonRest(HttpMethod method, String path, String body, int status) {

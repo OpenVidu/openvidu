@@ -285,6 +285,10 @@ public class SessionRestController {
 			return this.generateErrorResponse("Type error in some parameter", "/api/tokens", HttpStatus.BAD_REQUEST);
 		}
 
+		if (sessionId == null) {
+			return this.generateErrorResponse("Type error in some parameter", "/api/tokens", HttpStatus.BAD_REQUEST);
+		}
+
 		JsonObject kurentoOptions = null;
 
 		if (params.get("kurentoOptions") != null) {
@@ -369,6 +373,11 @@ public class SessionRestController {
 
 		log.info("REST API: POST /api/recordings/start {}", params.toString());
 
+		if (!this.openviduConfig.isRecordingModuleEnabled()) {
+			// OpenVidu Server configuration property "openvidu.recording" is set to false
+			return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+		}
+
 		String sessionId;
 		String name;
 		String outputModeString;
@@ -397,81 +406,83 @@ public class SessionRestController {
 					HttpStatus.BAD_REQUEST);
 		}
 
-		if (!this.openviduConfig.isRecordingModuleEnabled()) {
-			// OpenVidu Server configuration property "openvidu.recording" is set to false
-			return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+		io.openvidu.java.client.Recording.OutputMode finalOutputMode = null;
+		RecordingLayout recordingLayout = null;
+		if (outputModeString != null && !outputModeString.isEmpty()) {
+			try {
+				finalOutputMode = io.openvidu.java.client.Recording.OutputMode.valueOf(outputModeString);
+			} catch (Exception e) {
+				return this.generateErrorResponse("Type error in some parameter", "/api/recordings/start",
+						HttpStatus.BAD_REQUEST);
+			}
+		}
+		if (io.openvidu.java.client.Recording.OutputMode.COMPOSED.equals(finalOutputMode)) {
+			if (resolution != null && !sessionManager.formatChecker.isAcceptableRecordingResolution(resolution)) {
+				return this.generateErrorResponse(
+						"Wrong \"resolution\" parameter. Acceptable values from 100 to 1999 for both width and height",
+						"/api/recordings/start", HttpStatus.UNPROCESSABLE_ENTITY);
+			}
+			if (recordingLayoutString != null && !recordingLayoutString.isEmpty()) {
+				try {
+					recordingLayout = RecordingLayout.valueOf(recordingLayoutString);
+				} catch (Exception e) {
+					return this.generateErrorResponse("Type error in some parameter", "/api/recordings/start",
+							HttpStatus.BAD_REQUEST);
+				}
+			}
+		}
+		if ((hasAudio != null && hasVideo != null) && !hasAudio && !hasVideo) {
+			// Cannot start a recording with both "hasAudio" and "hasVideo" to false
+			return this.generateErrorResponse(
+					"Cannot start a recording with both \"hasAudio\" and \"hasVideo\" set to false",
+					"/api/recordings/start", HttpStatus.UNPROCESSABLE_ENTITY);
 		}
 
 		Session session = sessionManager.getSession(sessionId);
-
 		if (session == null) {
-			if (sessionManager.getSessionNotActive(sessionId) != null) {
-				// Session is not active
-				return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
+			session = sessionManager.getSessionNotActive(sessionId);
+			if (session != null) {
+				if (!(MediaMode.ROUTED.equals(session.getSessionProperties().mediaMode()))
+						|| this.recordingManager.sessionIsBeingRecorded(session.getSessionId())) {
+					// Session is not in ROUTED MediMode or it is already being recorded
+					return new ResponseEntity<>(HttpStatus.CONFLICT);
+				} else {
+					// Session is not active
+					return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
+				}
 			}
 			// Session does not exist
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
+		if (!(MediaMode.ROUTED.equals(session.getSessionProperties().mediaMode()))
+				|| this.recordingManager.sessionIsBeingRecorded(session.getSessionId())) {
+			// Session is not in ROUTED MediMode or it is already being recorded
+			return new ResponseEntity<>(HttpStatus.CONFLICT);
 		}
 		if (session.getParticipants().isEmpty()) {
 			// Session has no participants
 			return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
 		}
-		if (!(session.getSessionProperties().mediaMode().equals(MediaMode.ROUTED))
-				|| this.recordingManager.sessionIsBeingRecorded(session.getSessionId())) {
-			// Session is not in ROUTED MediMode or it is already being recorded
-			return new ResponseEntity<>(HttpStatus.CONFLICT);
+
+		RecordingProperties.Builder builder = new RecordingProperties.Builder();
+		if (finalOutputMode == null) {
+			builder.outputMode(session.getSessionProperties().defaultOutputMode());
 		}
-
-		io.openvidu.java.client.Recording.OutputMode outputMode;
-		try {
-			outputMode = io.openvidu.java.client.Recording.OutputMode.valueOf(outputModeString);
-		} catch (Exception e) {
-			outputMode = session.getSessionProperties().defaultOutputMode();
-		}
-		RecordingProperties.Builder builder = new RecordingProperties.Builder().name(name).outputMode(outputMode)
-				.hasAudio(hasAudio != null ? hasAudio : true).hasVideo(hasVideo != null ? hasVideo : true);
-
-		if (outputMode.equals(io.openvidu.java.client.Recording.OutputMode.COMPOSED)) {
-
+		if (io.openvidu.java.client.Recording.OutputMode.COMPOSED.equals(finalOutputMode)) {
 			if (resolution != null) {
-				if (sessionManager.formatChecker.isAcceptableRecordingResolution(resolution)) {
-					builder.resolution(resolution);
-				} else {
-					return new ResponseEntity<>(
-							"Wrong \"resolution\" parameter. Acceptable values from 100 to 1999 for both width and height",
-							HttpStatus.UNPROCESSABLE_ENTITY);
-				}
+				builder.resolution(resolution);
 			}
-
-			RecordingLayout recordingLayout;
-			if (recordingLayoutString == null || recordingLayoutString.isEmpty()) {
-				// "recordingLayout" parameter not defined. Use global layout from
-				// SessionProperties (it is always configured as it has RecordingLayout.BEST_FIT
-				// as default value)
-				recordingLayout = session.getSessionProperties().defaultRecordingLayout();
-			} else {
-				recordingLayout = RecordingLayout.valueOf(recordingLayoutString);
-			}
-
-			builder.recordingLayout(recordingLayout);
-
+			builder.recordingLayout(recordingLayout == null ? session.getSessionProperties().defaultRecordingLayout()
+					: recordingLayout);
 			if (RecordingLayout.CUSTOM.equals(recordingLayout)) {
-				customLayout = (customLayout == null || customLayout.isEmpty())
-						? session.getSessionProperties().defaultCustomLayout()
-						: customLayout;
-				builder.customLayout(customLayout);
+				builder.customLayout(
+						customLayout == null ? session.getSessionProperties().defaultCustomLayout() : customLayout);
 			}
 		}
-
-		RecordingProperties properties = builder.build();
-		if (!properties.hasAudio() && !properties.hasVideo()) {
-			// Cannot start a recording with both "hasAudio" and "hasVideo" to false
-			return new ResponseEntity<>("Cannot start a recording with both \"hasAudio\" and \"hasVideo\" set to false",
-					HttpStatus.UNPROCESSABLE_ENTITY);
-		}
+		builder.name(name).hasAudio(hasAudio != null ? hasAudio : true).hasVideo(hasVideo != null ? hasVideo : true);
 
 		try {
-			Recording startedRecording = this.recordingManager.startRecording(session, properties);
+			Recording startedRecording = this.recordingManager.startRecording(session, builder.build());
 			return new ResponseEntity<>(startedRecording.toJson().toString(), getResponseHeaders(), HttpStatus.OK);
 		} catch (OpenViduException e) {
 			return new ResponseEntity<>("Error starting recording: " + e.getMessage(), getResponseHeaders(),
@@ -483,11 +494,6 @@ public class SessionRestController {
 	public ResponseEntity<?> stopRecordingSession(@PathVariable("recordingId") String recordingId) {
 
 		log.info("REST API: POST /api/recordings/stop/{}", recordingId);
-
-		if (recordingId == null) {
-			// "recordingId" parameter not found
-			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-		}
 
 		Recording recording = recordingManager.getStartedRecording(recordingId);
 
