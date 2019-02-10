@@ -34,19 +34,18 @@ public class ChromeAndroidUser extends BrowserUser {
 		super(userName, timeOfWaitInSeconds);
 
 		Map<String, String> mobileEmulation = new HashMap<>();
-		mobileEmulation.put("deviceName", "Nexus 5");
+		mobileEmulation.put("deviceName", "Pixel 2");
 
-		ChromeOptions options = new ChromeOptions();
-		options.setExperimentalOption("mobileEmulation", mobileEmulation);
+		ChromeOptions chromeOptions = new ChromeOptions();
+		chromeOptions.setExperimentalOption("mobileEmulation", mobileEmulation);
 
 		DesiredCapabilities capabilities = DesiredCapabilities.chrome();
 		capabilities.setAcceptInsecureCerts(true);
 
 		// This flag avoids to grant the user media
-		options.addArguments("--use-fake-ui-for-media-stream");
+		chromeOptions.addArguments("--use-fake-ui-for-media-stream");
 		// This flag fakes user media with synthetic video
-		options.addArguments("--use-fake-device-for-media-stream");
-		capabilities.setCapability(ChromeOptions.CAPABILITY, options);
+		chromeOptions.addArguments("--use-fake-device-for-media-stream");
 
 		String REMOTE_URL = System.getProperty("REMOTE_URL_CHROME");
 		if (REMOTE_URL != null) {
@@ -58,7 +57,7 @@ public class ChromeAndroidUser extends BrowserUser {
 			}
 		} else {
 			log.info("Using local web driver");
-			this.driver = new ChromeDriver(capabilities);
+			this.driver = new ChromeDriver(chromeOptions);
 		}
 
 		this.driver.manage().timeouts().setScriptTimeout(this.timeOfWaitInSeconds, TimeUnit.SECONDS);
