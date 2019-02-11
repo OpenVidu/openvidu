@@ -2735,7 +2735,7 @@ public class OpenViduTestAppE2eTest {
 		log.info("Duration of {} according to ffmpeg: {} s", file.getName(), metadata.getDuration());
 		log.info("Duration of {} according to 'duration' property: {} s", file.getName(), duration);
 		log.info("Difference in s duration: {}", Math.abs(metadata.getDuration() - duration));
-		final double difference = 0.3;
+		final double difference = 10;
 		Assert.assertTrue(
 				"Difference between recording entity duration (" + duration + ") and real video duration ("
 						+ metadata.getDuration() + ") is greater than " + difference + "  in file " + file.getName(),
