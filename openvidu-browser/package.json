@@ -1,13 +1,13 @@
 {
     "author": "OpenVidu",
     "dependencies": {
-        "@types/node": "10.12.18",
-        "@types/platform": "1.3.1",
+        "@types/node": "10.12.24",
+        "@types/platform": "1.3.2",
         "freeice": "2.2.2",
         "hark": "1.2.3",
         "platform": "1.3.5",
         "uuid": "3.3.2",
-        "webrtc-adapter": "7.1.1",
+        "webrtc-adapter": "7.2.0",
         "wolfy87-eventemitter": "5.2.5"
     },
     "description": "OpenVidu Browser",
@@ -21,11 +21,11 @@
         "grunt-contrib-uglify": "4.0.0",
         "grunt-contrib-watch": "1.1.0",
         "grunt-string-replace": "1.3.1",
-        "grunt-ts": "6.0.0-beta.21",
+        "grunt-ts": "6.0.0-beta.22",
         "tsify": "4.0.1",
         "tslint": "5.12.1",
         "typedoc": "0.14.2",
-        "typescript": "3.2.4",
+        "typescript": "3.3.3",
         "uglify-js": "3.4.9"
     },
     "license": "Apache-2.0",
@@ -36,10 +36,10 @@
         "url": "git://github.com/OpenVidu/openvidu"
     },
     "scripts": {
-        "browserify": "VERSION=${VERSION:-}; cd src && browserify Main.ts -p [ tsify ] --exclude kurento-browser-extensions --debug -o ../static/js/openvidu-browser-$VERSION.js -v",
-        "browserify-prod": "VERSION=${VERSION:-}; cd src && browserify --debug Main.ts -p [ tsify ] --exclude kurento-browser-extensions | uglifyjs --source-map content=inline --output ../static/js/openvidu-browser-$VERSION.min.js",
-        "build": "cd src/OpenVidu && tsc && cd ../.. && tsc --declaration src/index.ts --outDir ./lib --sourceMap --lib dom,es5,es2015.promise,scripthost",
-        "docs": "grunt --gruntfile config/typedoc/custom-theme/gruntfile.js && typedoc --options ./config/typedoc/typedoc.js --out ./docs ./src && rm -rf ../../openvidu.io/api/openvidu-browser/* && cp -R ./docs/. ../../openvidu.io/api/openvidu-browser",
+        "browserify": "VERSION=${VERSION:-}; cd src && ../node_modules/browserify/bin/cmd.js Main.ts -p [ tsify ] --exclude kurento-browser-extensions --debug -o ../static/js/openvidu-browser-$VERSION.js -v",
+        "browserify-prod": "VERSION=${VERSION:-}; cd src && ../node_modules/browserify/bin/cmd.js --debug Main.ts -p [ tsify ] --exclude kurento-browser-extensions | ../node_modules/uglify-js/bin/uglifyjs --source-map content=inline --output ../static/js/openvidu-browser-$VERSION.min.js",
+        "build": "cd src/OpenVidu && ./../../node_modules/typescript/bin/tsc && cd ../.. && ./node_modules/typescript/bin/tsc --declaration src/index.ts --outDir ./lib --sourceMap --lib dom,es5,es2015.promise,scripthost",
+        "docs": "./node_modules/grunt/bin/grunt --gruntfile config/typedoc/custom-theme/gruntfile.js && ./node_modules/typedoc/bin/typedoc --options ./config/typedoc/typedoc.js --out ./docs ./src && rm -rf ../../openvidu.io/api/openvidu-browser/* && cp -R ./docs/. ../../openvidu.io/api/openvidu-browser",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "types": "lib/index.d.ts",

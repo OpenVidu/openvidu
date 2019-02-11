@@ -27,14 +27,8 @@ RUN apt-get install -y maven
 # git
 RUN apt-get install -y git
 
-# angular-cli
-RUN npm install -g @angular/cli@latest
-
 # http-server
 RUN npm install -g http-server@latest
-
-# typescript
-RUN npm install -g typescript@latest
 
 # sudo
 RUN apt-get -y install sudo
