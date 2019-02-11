@@ -465,9 +465,8 @@ public class SessionRestController {
 		}
 
 		RecordingProperties.Builder builder = new RecordingProperties.Builder();
-		if (finalOutputMode == null) {
-			builder.outputMode(session.getSessionProperties().defaultOutputMode());
-		}
+		builder.outputMode(
+				finalOutputMode == null ? session.getSessionProperties().defaultOutputMode() : finalOutputMode);
 		if (io.openvidu.java.client.Recording.OutputMode.COMPOSED.equals(finalOutputMode)) {
 			if (resolution != null) {
 				builder.resolution(resolution);

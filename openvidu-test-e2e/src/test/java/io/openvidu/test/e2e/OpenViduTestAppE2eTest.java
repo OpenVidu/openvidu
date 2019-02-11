@@ -80,6 +80,7 @@ import com.mashape.unirest.http.HttpMethod;
 
 import io.github.bonigarcia.SeleniumExtension;
 import io.github.bonigarcia.wdm.WebDriverManager;
+import io.openvidu.java.client.Connection;
 import io.openvidu.java.client.KurentoOptions;
 import io.openvidu.java.client.MediaMode;
 import io.openvidu.java.client.OpenVidu;
@@ -1915,6 +1916,7 @@ public class OpenViduTestAppE2eTest {
 	@Test
 	@DisplayName("openvidu-java-client test")
 	void openViduJavaClientTest() throws Exception {
+		isRecordingTest = true;
 
 		setupBrowser("chrome");
 
@@ -1923,8 +1925,10 @@ public class OpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.id("one2one-btn")).click();
 
 		final String customSessionId = "openviduJavaClientSession";
-		final String serverData1 = "SERVER_DATA_1";
-		final String serverData2 = "SERVER_DATA_2";
+		final String serverDataModerator = "SERVER_DATA_MODERATOR";
+		final String serverDataSubscriber = "SERVER_DATA_SUBSCRIBER";
+		final String clientDataModerator = "CLIENT_DATA_MODERATOR";
+		final String clientDataSubscriber = "CLIENT_DATA_SUBSCRIBER";
 
 		Assert.assertFalse("OV.fetch() should return false if OV.createSession() has not been called", OV.fetch());
 		List<Session> sessions = OV.getActiveSessions();
@@ -1942,33 +1946,42 @@ public class OpenViduTestAppE2eTest {
 
 		KurentoOptions kurentoOptions = new KurentoOptions.Builder().videoMaxRecvBandwidth(250)
 				.allowedFilters(new String[] { "GStreamerFilter" }).build();
-		TokenOptions tokenOptions1 = new TokenOptions.Builder().role(OpenViduRole.MODERATOR).data(serverData1)
-				.kurentoOptions(kurentoOptions).build();
-		String token1 = session.generateToken(tokenOptions1);
+		TokenOptions tokenOptionsModerator = new TokenOptions.Builder().role(OpenViduRole.MODERATOR)
+				.data(serverDataModerator).kurentoOptions(kurentoOptions).build();
+		String tokenModerator = session.generateToken(tokenOptionsModerator);
 
-		TokenOptions tokenOptions2 = new TokenOptions.Builder().role(OpenViduRole.SUBSCRIBER).data(serverData2).build();
-		String token2 = session.generateToken(tokenOptions2);
+		TokenOptions tokenOptionsSubscriber = new TokenOptions.Builder().role(OpenViduRole.SUBSCRIBER)
+				.data(serverDataSubscriber).build();
+		String tokenSubscriber = session.generateToken(tokenOptionsSubscriber);
 
 		Assert.assertFalse("Session.fetch() should return false until a user has connected", session.fetch());
 
-		user.getDriver().findElement(By.id("session-settings-btn-0")).click();
-		Thread.sleep(1000);
+		// Set client data 1
+		WebElement clientDataInput = user.getDriver().findElement(By.cssSelector("#client-data-input-0"));
+		clientDataInput.clear();
+		clientDataInput.sendKeys(clientDataModerator);
 
 		// Set token 1
+		user.getDriver().findElement(By.id("session-settings-btn-0")).click();
+		Thread.sleep(1000);
 		WebElement tokeInput = user.getDriver().findElement(By.cssSelector("#custom-token-div input"));
 		tokeInput.clear();
-		tokeInput.sendKeys(token1);
+		tokeInput.sendKeys(tokenModerator);
 
 		user.getDriver().findElement(By.id("save-btn")).click();
 		Thread.sleep(1000);
 
-		user.getDriver().findElement(By.id("session-settings-btn-1")).click();
-		Thread.sleep(1000);
+		// Set client data 2
+		clientDataInput = user.getDriver().findElement(By.cssSelector("#client-data-input-1"));
+		clientDataInput.clear();
+		clientDataInput.sendKeys(clientDataSubscriber);
 
 		// Set token 2
+		user.getDriver().findElement(By.id("session-settings-btn-1")).click();
+		Thread.sleep(1000);
 		tokeInput = user.getDriver().findElement(By.cssSelector("#custom-token-div input"));
 		tokeInput.clear();
-		tokeInput.sendKeys(token2);
+		tokeInput.sendKeys(tokenSubscriber);
 
 		user.getDriver().findElement(By.id("save-btn")).click();
 		Thread.sleep(1000);
@@ -1979,6 +1992,7 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
 		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
+		user.getEventManager().waitUntilEventReaches("recordingStarted", 1);
 
 		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
 		Assert.assertEquals("Expected 2 videos but found " + numberOfVideos, 2, numberOfVideos);
@@ -1988,6 +2002,48 @@ public class OpenViduTestAppE2eTest {
 		Assert.assertTrue("Session.fetch() should return true after users connected", OV.fetch());
 		Assert.assertFalse("Session.fetch() should return false after OpenVidu.fetch() has been called",
 				session.fetch());
+		Assert.assertEquals("Wrong sessionId", customSessionId, session.getSessionId());
+		Assert.assertEquals("Wrong recording mode", RecordingMode.ALWAYS, session.getProperties().recordingMode());
+		Assert.assertEquals("Wrong default output mode", Recording.OutputMode.INDIVIDUAL,
+				session.getProperties().defaultOutputMode());
+		Assert.assertTrue("Session should be being recorded", session.isBeingRecorded());
+		Assert.assertEquals("Expected 2 active connections but found " + session.getActiveConnections().size(), 2,
+				session.getActiveConnections().size());
+
+		Connection connectionModerator;
+		Connection connectionSubscriber;
+		if (OpenViduRole.MODERATOR.equals(session.getActiveConnections().get(0).getRole())) {
+			connectionModerator = session.getActiveConnections().get(0);
+			connectionSubscriber = session.getActiveConnections().get(1);
+		} else {
+			connectionModerator = session.getActiveConnections().get(1);
+			connectionSubscriber = session.getActiveConnections().get(0);
+		}
+
+		Assert.assertEquals(OpenViduRole.SUBSCRIBER, connectionSubscriber.getRole());
+		Assert.assertTrue("Wrong platform for moderator connection",
+				connectionModerator.getPlatform().startsWith("Chrome"));
+		Assert.assertTrue("Wrong platform for subscriber connection",
+				connectionSubscriber.getPlatform().startsWith("Chrome"));
+
+		// connection1 is moderator
+		Assert.assertEquals("Expected 1 publisher for connection " + connectionModerator.getConnectionId()
+				+ " but found " + connectionModerator.getPublishers().size(), 1,
+				connectionModerator.getPublishers().size());
+		Assert.assertEquals("Expected 0 subscribers for connection " + connectionModerator.getConnectionId()
+				+ " but found " + connectionModerator.getSubscribers().size(), 0,
+				connectionModerator.getSubscribers().size());
+		Assert.assertEquals("Expected 0 publishers for connection " + connectionSubscriber.getConnectionId()
+				+ " but found " + connectionSubscriber.getPublishers().size(), 0,
+				connectionSubscriber.getPublishers().size());
+		Assert.assertEquals(
+				"Expected 1 subscriber for connection " + connectionSubscriber.getConnectionId() + " but found "
+						+ connectionSubscriber.getSubscribers().size(),
+				1, connectionSubscriber.getSubscribers().size());
+		Assert.assertEquals("Server data doesn't match", serverDataModerator, connectionModerator.getServerData());
+		Assert.assertEquals("Server data doesn't match", serverDataSubscriber, connectionSubscriber.getServerData());
+		Assert.assertEquals("Client data doesn't match", clientDataModerator, connectionModerator.getClientData());
+		Assert.assertEquals("Client data doesn't match", clientDataSubscriber, connectionSubscriber.getClientData());
 
 		// Verify that users have the role and data they were assigned through
 		// TokenOptions
@@ -1998,6 +2054,7 @@ public class OpenViduTestAppE2eTest {
 	@Test
 	@DisplayName("REST API test")
 	void restApiTest() throws Exception {
+		isRecordingTest = true;
 
 		log.info("REST API test");
 
