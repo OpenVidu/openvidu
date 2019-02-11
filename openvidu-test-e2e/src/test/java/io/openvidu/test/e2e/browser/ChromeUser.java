@@ -47,6 +47,7 @@ public class ChromeUser extends BrowserUser {
 		super(userName, timeOfWaitInSeconds);
 		DesiredCapabilities capabilities = DesiredCapabilities.chrome();
 		capabilities.setAcceptInsecureCerts(true);
+		capabilities.setCapability(ChromeOptions.CAPABILITY, options);
 
 		String REMOTE_URL = System.getProperty("REMOTE_URL_CHROME");
 		if (REMOTE_URL != null) {
@@ -58,7 +59,7 @@ public class ChromeUser extends BrowserUser {
 			}
 		} else {
 			log.info("Using local web driver");
-			this.driver = new ChromeDriver(options);
+			this.driver = new ChromeDriver(capabilities);
 		}
 
 		this.driver.manage().timeouts().setScriptTimeout(this.timeOfWaitInSeconds, TimeUnit.SECONDS);

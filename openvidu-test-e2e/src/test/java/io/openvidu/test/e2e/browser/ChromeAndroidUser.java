@@ -41,6 +41,7 @@ public class ChromeAndroidUser extends BrowserUser {
 
 		DesiredCapabilities capabilities = DesiredCapabilities.chrome();
 		capabilities.setAcceptInsecureCerts(true);
+		capabilities.setCapability(ChromeOptions.CAPABILITY, chromeOptions);
 
 		// This flag avoids to grant the user media
 		chromeOptions.addArguments("--use-fake-ui-for-media-stream");
@@ -57,7 +58,7 @@ public class ChromeAndroidUser extends BrowserUser {
 			}
 		} else {
 			log.info("Using local web driver");
-			this.driver = new ChromeDriver(chromeOptions);
+			this.driver = new ChromeDriver(capabilities);
 		}
 
 		this.driver.manage().timeouts().setScriptTimeout(this.timeOfWaitInSeconds, TimeUnit.SECONDS);

@@ -2009,7 +2009,8 @@ public class OpenViduTestAppE2eTest {
 		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
-		Assert.assertTrue("Session.fetch() should return true after users connected", session.fetch());
+		Assert.assertTrue("Session.fetch() should return true after users connected", OV.fetch());
+		Assert.assertFalse("Session.fetch() should return false after OpenVidu.fetch() has been called", session.fetch());
 
 		// Verify that users have the role and data they were assigned through
 		// TokenOptions
