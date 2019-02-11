@@ -40,8 +40,8 @@ public class RecordingProperties {
 
 		private String name = "";
 		private Recording.OutputMode outputMode = Recording.OutputMode.COMPOSED;
-		private RecordingLayout recordingLayout = RecordingLayout.BEST_FIT;
-		private String customLayout = "";
+		private RecordingLayout recordingLayout;
+		private String customLayout;
 		private String resolution;
 		private boolean hasAudio = true;
 		private boolean hasVideo = true;
@@ -50,9 +50,13 @@ public class RecordingProperties {
 		 * Builder for {@link io.openvidu.java.client.RecordingProperties}
 		 */
 		public RecordingProperties build() {
-			this.resolution = (this.resolution == null)
-					? (OutputMode.COMPOSED.equals(this.outputMode) ? "1920x1080" : null)
-					: this.resolution;
+			if (OutputMode.COMPOSED.equals(this.outputMode)) {
+				this.recordingLayout = this.recordingLayout != null ? this.recordingLayout : RecordingLayout.BEST_FIT;
+				this.resolution = this.resolution != null ? this.resolution : "1920x1080";
+				if (RecordingLayout.CUSTOM.equals(this.recordingLayout)) {
+					this.customLayout = this.customLayout != null ? this.customLayout : "";
+				}
+			}
 			return new RecordingProperties(this.name, this.outputMode, this.recordingLayout, this.customLayout,
 					this.resolution, this.hasAudio, this.hasVideo);
 		}
