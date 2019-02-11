@@ -21,6 +21,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
@@ -51,6 +52,8 @@ public class Session implements SessionInterface {
 
 	protected volatile boolean closed = false;
 	protected AtomicInteger activePublishers = new AtomicInteger(0);
+
+	public final AtomicBoolean recordingManuallyStopped = new AtomicBoolean(false);
 
 	public Session(Session previousSession) {
 		this.sessionId = previousSession.getSessionId();

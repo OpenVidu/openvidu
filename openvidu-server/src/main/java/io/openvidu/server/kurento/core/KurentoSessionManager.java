@@ -250,7 +250,7 @@ public class KurentoSessionManager extends SessionManager {
 				participant.getParticipantPublicId());
 
 		SdpType sdpType = kurentoOptions.isOffer ? SdpType.OFFER : SdpType.ANSWER;
-		KurentoSession session = kParticipant.getSession();
+		KurentoSession kSession = kParticipant.getSession();
 
 		kParticipant.createPublishingEndpoint(mediaOptions);
 
@@ -271,7 +271,7 @@ public class KurentoSessionManager extends SessionManager {
 				log.error("PARTICIPANT {}: Error applying filter. The token has no permissions to apply filter {}",
 						participant.getParticipantPublicId(), kurentoOptions.getFilter().getType(), e);
 				sessionEventsHandler.onPublishMedia(participant, null, kParticipant.getPublisher().createdAt(),
-						session.getSessionId(), mediaOptions, sdpAnswer, participants, transactionId, e);
+						kSession.getSessionId(), mediaOptions, sdpAnswer, participants, transactionId, e);
 				throw e;
 			}
 		}
@@ -284,44 +284,45 @@ public class KurentoSessionManager extends SessionManager {
 					"Error generating SDP response for publishing user " + participant.getParticipantPublicId());
 			log.error("PARTICIPANT {}: Error publishing media", participant.getParticipantPublicId(), e);
 			sessionEventsHandler.onPublishMedia(participant, null, kParticipant.getPublisher().createdAt(),
-					session.getSessionId(), mediaOptions, sdpAnswer, participants, transactionId, e);
+					kSession.getSessionId(), mediaOptions, sdpAnswer, participants, transactionId, e);
 		}
 
 		if (this.openviduConfig.isRecordingModuleEnabled()
-				&& MediaMode.ROUTED.equals(session.getSessionProperties().mediaMode())
-				&& session.getActivePublishers() == 0) {
-			if (RecordingMode.ALWAYS.equals(session.getSessionProperties().recordingMode())
-					&& !recordingManager.sessionIsBeingRecorded(session.getSessionId())) {
+				&& MediaMode.ROUTED.equals(kSession.getSessionProperties().mediaMode())
+				&& kSession.getActivePublishers() == 0) {
+			if (RecordingMode.ALWAYS.equals(kSession.getSessionProperties().recordingMode())
+					&& !recordingManager.sessionIsBeingRecorded(kSession.getSessionId())
+					&& !kSession.recordingManuallyStopped.get()) {
 				// Start automatic recording for sessions configured with RecordingMode.ALWAYS
 				new Thread(() -> {
-					recordingManager.startRecording(session,
+					recordingManager.startRecording(kSession,
 							new RecordingProperties.Builder().name("")
-									.outputMode(session.getSessionProperties().defaultOutputMode())
-									.recordingLayout(session.getSessionProperties().defaultRecordingLayout())
-									.customLayout(session.getSessionProperties().defaultCustomLayout()).build());
+									.outputMode(kSession.getSessionProperties().defaultOutputMode())
+									.recordingLayout(kSession.getSessionProperties().defaultRecordingLayout())
+									.customLayout(kSession.getSessionProperties().defaultCustomLayout()).build());
 				}).start();
-			} else if (RecordingMode.MANUAL.equals(session.getSessionProperties().recordingMode())
-					&& recordingManager.sessionIsBeingRecorded(session.getSessionId())) {
+			} else if (RecordingMode.MANUAL.equals(kSession.getSessionProperties().recordingMode())
+					&& recordingManager.sessionIsBeingRecorded(kSession.getSessionId())) {
 				// Abort automatic recording stop (user published before timeout)
 				log.info("Participant {} published before timeout finished. Aborting automatic recording stop",
 						participant.getParticipantPublicId());
-				boolean stopAborted = recordingManager.abortAutomaticRecordingStopThread(session);
+				boolean stopAborted = recordingManager.abortAutomaticRecordingStopThread(kSession);
 				if (stopAborted) {
 					log.info("Automatic recording stopped succesfully aborted");
 				} else {
 					log.info("Automatic recording stopped couldn't be aborted. Recording of session {} has stopped",
-							session.getSessionId());
+							kSession.getSessionId());
 				}
 			}
 		}
 
-		session.newPublisher(participant);
+		kSession.newPublisher(participant);
 
 		participants = kParticipant.getSession().getParticipants();
 
 		if (sdpAnswer != null) {
 			sessionEventsHandler.onPublishMedia(participant, participant.getPublisherStreamId(),
-					kParticipant.getPublisher().createdAt(), session.getSessionId(), mediaOptions, sdpAnswer,
+					kParticipant.getPublisher().createdAt(), kSession.getSessionId(), mediaOptions, sdpAnswer,
 					participants, transactionId, null);
 		}
 	}

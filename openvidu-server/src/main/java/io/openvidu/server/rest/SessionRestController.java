@@ -514,6 +514,8 @@ public class SessionRestController {
 		Recording stoppedRecording = this.recordingManager.stopRecording(session, recording.getId(),
 				"recordingStoppedByServer");
 
+		session.recordingManuallyStopped.set(true);
+
 		if (session != null && OutputMode.COMPOSED.equals(recording.getOutputMode()) && recording.hasVideo()) {
 			sessionManager.evictParticipant(
 					session.getParticipantByPublicId(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID), null, null,
