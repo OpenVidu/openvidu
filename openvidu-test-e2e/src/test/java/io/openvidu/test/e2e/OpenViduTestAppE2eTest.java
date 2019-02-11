@@ -1986,7 +1986,8 @@ public class OpenViduTestAppE2eTest {
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
 		Assert.assertTrue("Session.fetch() should return true after users connected", OV.fetch());
-		Assert.assertFalse("Session.fetch() should return false after OpenVidu.fetch() has been called", session.fetch());
+		Assert.assertFalse("Session.fetch() should return false after OpenVidu.fetch() has been called",
+				session.fetch());
 
 		// Verify that users have the role and data they were assigned through
 		// TokenOptions
@@ -2315,9 +2316,8 @@ public class OpenViduTestAppE2eTest {
 
 		// Should be only 2 files: zip and metadata
 		File folder = new File(recPath);
-		Assert.assertEquals(
-				"There are more than 2 files (ZIP and metadata) inside individual recording folder " + recPath, 2,
-				folder.listFiles().length);
+		Assert.assertEquals("There are more than 2 files (ZIP and metadata) inside individual recording folder "
+				+ recPath + ": " + Arrays.toString(folder.listFiles()), 2, folder.listFiles().length);
 
 		File file1 = new File(recPath + recording.getName() + ".zip");
 		File file2 = new File(recPath + ".recording." + recording.getId());
@@ -2329,8 +2329,9 @@ public class OpenViduTestAppE2eTest {
 
 		List<File> unzippedWebmFiles = new Unzipper().unzipFile(recPath, recording.getName() + ".zip");
 
-		Assert.assertEquals("Expecting " + numberOfVideoFiles + " inside ZIP file but " + unzippedWebmFiles.size()
-				+ " found: " + unzippedWebmFiles.toString(), numberOfVideoFiles, unzippedWebmFiles.size());
+		Assert.assertEquals("Expecting " + numberOfVideoFiles + " videos inside ZIP file but "
+				+ unzippedWebmFiles.size() + " found: " + unzippedWebmFiles.toString(), numberOfVideoFiles,
+				unzippedWebmFiles.size());
 
 		File jsonSyncFile = new File(recPath + recording.getName() + ".json");
 		Assert.assertTrue("JSON sync file " + jsonSyncFile.getAbsolutePath() + "does not exist or is empty",
