@@ -18,6 +18,7 @@
 package io.openvidu.server.recording;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
@@ -25,7 +26,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 import io.openvidu.server.config.OpenviduConfig;
 
 @Configuration
-public class LayoutsHttpHandler extends WebMvcConfigurerAdapter {
+@ConditionalOnProperty(name = "openvidu.recording", havingValue = "true")
+public class CustomLayoutsHttpHandler extends WebMvcConfigurerAdapter {
 
 	@Autowired
 	OpenviduConfig openviduConfig;
