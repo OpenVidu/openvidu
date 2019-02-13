@@ -48,6 +48,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
 
 import com.github.dockerjava.api.exception.DockerClientException;
 import com.github.dockerjava.api.exception.InternalServerErrorException;
@@ -72,6 +73,7 @@ import io.openvidu.server.kurento.OpenViduKurentoClientSessionInfo;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.utils.CustomFileManager;
 
+@Service
 public class RecordingManager {
 
 	private static final Logger log = LoggerFactory.getLogger(RecordingManager.class);
