@@ -569,16 +569,17 @@ public class RecordingManager {
 							+ "\" is not valid. Reason: OpenVidu Server needs read permissions. Try running command \"sudo chmod 755 "
 							+ openviduConfig.getOpenviduRecordingCustomLayout() + "\"";
 					log.error(errorMessage);
-					throw new OpenViduException(Code.RECORDING_PATH_NOT_VALID, errorMessage);
+					throw new OpenViduException(Code.RECORDING_FILE_EMPTY_ERROR, errorMessage);
 				} else {
 					log.info("OpenVidu Server has read permissions on custom layout path: {}",
 							openviduConfig.getOpenviduRecordingCustomLayout());
 				}
 			} else {
-				String errorMessage = "The custom layouts path \"" + recordingPathString
-						+ "\" is not valid. Reason: OpenVidu Server cannot find path \"" + recordingPathString + "\"";
+				String errorMessage = "The custom layouts path \"" + openviduConfig.getOpenviduRecordingCustomLayout()
+						+ "\" is not valid. Reason: OpenVidu Server cannot find path \""
+						+ openviduConfig.getOpenviduRecordingCustomLayout() + "\"";
 				log.error(errorMessage);
-				throw new OpenViduException(Code.RECORDING_PATH_NOT_VALID, errorMessage);
+				throw new OpenViduException(Code.RECORDING_FILE_EMPTY_ERROR, errorMessage);
 			}
 		}
 

@@ -245,6 +245,10 @@ public class OpenViduServer implements JsonRpcConfigurer {
 					finalErrorMessage = "Error initializing recording path \""
 							+ this.openviduConfig().getOpenViduRecordingPath()
 							+ "\" set with system property \"openvidu.recording.path\". Shutting down OpenVidu Server";
+				} else if (e.getCodeValue() == Code.RECORDING_FILE_EMPTY_ERROR.getValue()) {
+					finalErrorMessage = "Error initializing recording custom layouts path \""
+							+ this.openviduConfig().getOpenviduRecordingCustomLayout()
+							+ "\" set with system property \"openvidu.recording.custom-layout\". Shutting down OpenVidu Server";
 				}
 				log.error(finalErrorMessage);
 				System.exit(1);
