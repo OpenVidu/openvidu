@@ -161,7 +161,7 @@ public class RecordingManager {
 	public void checkRecordingRequirements(String openviduRecordingPath, String openviduRecordingCustomLayout)
 			throws OpenViduException {
 		this.checkDockerEnabled();
-		this.checkRecordingPaths();
+		this.checkRecordingPaths(openviduRecordingPath, openviduRecordingCustomLayout);
 	}
 
 	public Recording startRecording(Session session, RecordingProperties properties) throws OpenViduException {
@@ -441,6 +441,11 @@ public class RecordingManager {
 			imageExists = false;
 		} catch (ProcessingException e) {
 			throw e;
+		} catch (NullPointerException e) {
+			// Restarting openvidu-server from openvidu.recording=false
+			// ComposedRecordingService was not initialized
+			this.composedRecordingService = new ComposedRecordingService(this, openviduConfig);
+			return this.recordingImageExistsLocally();
 		}
 		return imageExists;
 	}
@@ -539,19 +544,16 @@ public class RecordingManager {
 		}
 	}
 
-	private void checkRecordingPaths() throws OpenViduException {
-		log.info("Initializing recording path");
-
-		final String recordingPathString = this.openviduConfig.getOpenViduRecordingPath();
-		final String testFolderPath = recordingPathString + "/TEST_RECORDING_PATH_" + System.currentTimeMillis();
-		final String testFilePath = testFolderPath + "/TEST_RECORDING_PATH.webm";
+	private void checkRecordingPaths(String openviduRecordingPath, String openviduRecordingCustomLayout)
+			throws OpenViduException {
+		log.info("Initializing recording paths");
 
 		Path recordingPath = null;
 		try {
-			recordingPath = Files.createDirectories(Paths.get(recordingPathString));
+			recordingPath = Files.createDirectories(Paths.get(openviduRecordingPath));
 		} catch (IOException e) {
-			String errorMessage = "The recording path \"" + recordingPathString
-					+ "\" is not valid. Reason: OpenVidu Server cannot find path \"" + recordingPathString
+			String errorMessage = "The recording path \"" + openviduRecordingPath
+					+ "\" is not valid. Reason: OpenVidu Server cannot find path \"" + openviduRecordingPath
 					+ "\" and doesn't have permissions to create it";
 			log.error(errorMessage);
 			throw new OpenViduException(Code.RECORDING_PATH_NOT_VALID, errorMessage);
@@ -559,14 +561,17 @@ public class RecordingManager {
 
 		// Check OpenVidu Server write permissions in recording path
 		if (!Files.isWritable(recordingPath)) {
-			String errorMessage = "The recording path \"" + recordingPathString
+			String errorMessage = "The recording path \"" + openviduRecordingPath
 					+ "\" is not valid. Reason: OpenVidu Server needs write permissions. Try running command \"sudo chmod 777 "
-					+ recordingPathString + "\"";
+					+ openviduRecordingPath + "\"";
 			log.error(errorMessage);
 			throw new OpenViduException(Code.RECORDING_PATH_NOT_VALID, errorMessage);
 		} else {
-			log.info("OpenVidu Server has write permissions on recording path: {}", recordingPathString);
+			log.info("OpenVidu Server has write permissions on recording path: {}", openviduRecordingPath);
 		}
+
+		final String testFolderPath = openviduRecordingPath + "/TEST_RECORDING_PATH_" + System.currentTimeMillis();
+		final String testFilePath = testFolderPath + "/TEST_RECORDING_PATH.webm";
 
 		// Check Kurento Media Server write permissions in recording path
 		KurentoClientSessionInfo kcSessionInfo = new OpenViduKurentoClientSessionInfo("TEST_RECORDING_PATH",
@@ -596,9 +601,9 @@ public class RecordingManager {
 		}
 
 		if (kurentoRecorderError.get()) {
-			String errorMessage = "The recording path \"" + recordingPathString
+			String errorMessage = "The recording path \"" + openviduRecordingPath
 					+ "\" is not valid. Reason: Kurento Media Server needs write permissions. Try running command \"sudo chmod 777 "
-					+ recordingPathString + "\"";
+					+ openviduRecordingPath + "\"";
 			log.error(errorMessage);
 			throw new OpenViduException(Code.RECORDING_PATH_NOT_VALID, errorMessage);
 		}
@@ -607,13 +612,13 @@ public class RecordingManager {
 		recorder.release();
 		pipeline.release();
 
-		log.info("Kurento Media Server has write permissions on recording path: {}", recordingPathString);
+		log.info("Kurento Media Server has write permissions on recording path: {}", openviduRecordingPath);
 
 		try {
 			new CustomFileManager().deleteFolder(testFolderPath);
 			log.info("OpenVidu Server has write permissions over files created by Kurento Media Server");
 		} catch (IOException e) {
-			String errorMessage = "The recording path \"" + recordingPathString
+			String errorMessage = "The recording path \"" + openviduRecordingPath
 					+ "\" is not valid. Reason: OpenVidu Server does not have write permissions over files created by Kurento Media Server. "
 					+ "Try running Kurento Media Server as user \"" + System.getProperty("user.name")
 					+ "\" or run OpenVidu Server as superuser";
@@ -623,31 +628,31 @@ public class RecordingManager {
 			throw new OpenViduException(Code.RECORDING_PATH_NOT_VALID, errorMessage);
 		}
 
-		if (openviduConfig.openviduRecordingCustomLayoutChanged()) {
+		if (openviduConfig.openviduRecordingCustomLayoutChanged(openviduRecordingCustomLayout)) {
 			// Property openvidu.recording.custom-layout changed
-			File dir = new File(openviduConfig.getOpenviduRecordingCustomLayout());
+			File dir = new File(openviduRecordingCustomLayout);
 			if (dir.exists()) {
 				if (dir.listFiles() == null) {
-					String errorMessage = "The custom layouts path \""
-							+ openviduConfig.getOpenviduRecordingCustomLayout()
+					String errorMessage = "The custom layouts path \"" + openviduRecordingCustomLayout
 							+ "\" is not valid. Reason: OpenVidu Server needs read permissions. Try running command \"sudo chmod 755 "
-							+ openviduConfig.getOpenviduRecordingCustomLayout() + "\"";
+							+ openviduRecordingCustomLayout + "\"";
 					log.error(errorMessage);
 					throw new OpenViduException(Code.RECORDING_FILE_EMPTY_ERROR, errorMessage);
 				} else {
 					log.info("OpenVidu Server has read permissions on custom layout path: {}",
-							openviduConfig.getOpenviduRecordingCustomLayout());
+							openviduRecordingCustomLayout);
+					log.info("Custom layouts path successfully initialized at {}", openviduRecordingCustomLayout);
 				}
 			} else {
-				String errorMessage = "The custom layouts path \"" + openviduConfig.getOpenviduRecordingCustomLayout()
-						+ "\" is not valid. Reason: OpenVidu Server cannot find path \""
-						+ openviduConfig.getOpenviduRecordingCustomLayout() + "\"";
+				String errorMessage = "The custom layouts path \"" + openviduRecordingCustomLayout
+						+ "\" is not valid. Reason: OpenVidu Server cannot find path \"" + openviduRecordingCustomLayout
+						+ "\" and doesn't have permissions to create it";
 				log.error(errorMessage);
 				throw new OpenViduException(Code.RECORDING_FILE_EMPTY_ERROR, errorMessage);
 			}
 		}
 
-		log.info("Recording path successfully initialized at {}", this.openviduConfig.getOpenViduRecordingPath());
+		log.info("Recording path successfully initialized at {}", openviduRecordingPath);
 	}
 
 	public static String finalReason(String reason) {

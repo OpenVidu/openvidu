@@ -2552,7 +2552,7 @@ public class OpenViduTestAppE2eTest {
 		/** GET /config **/
 		restClient.rest(HttpMethod.GET, "/config", null, HttpStatus.SC_OK, true,
 				"{'version':'STR','openviduPublicurl':'STR','openviduCdr':false,'maxRecvBandwidth':0,'minRecvBandwidth':0,'maxSendBandwidth':0,'minSendBandwidth':0,'openviduRecording':false,"
-						+ "'openviduRecordingVersion':'STR','openviduRecordingPath':'STR','openviduRecordingPublicAccess':false,'openviduRecordingNotification':'STR','openviduRecordingCustomLayout':'STR'}");
+						+ "'openviduRecordingVersion':'STR','openviduRecordingPath':'STR','openviduRecordingPublicAccess':false,'openviduRecordingNotification':'STR','openviduRecordingCustomLayout':'STR','openviduRecordingAutostopTimeout':0}");
 	}
 
 	private void listEmptyRecordings() {
