@@ -17,6 +17,8 @@
 
 package io.openvidu.server.rest;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -40,36 +42,55 @@ import io.openvidu.server.config.OpenviduConfig;
 @RequestMapping("/config")
 public class ConfigRestController {
 
+	private static final Logger log = LoggerFactory.getLogger(ConfigRestController.class);
+
 	@Autowired
 	protected OpenviduConfig openviduConfig;
 
 	@RequestMapping(value = "/openvidu-version", method = RequestMethod.GET)
 	public String getOpenViduServerVersion() {
+
+		log.info("REST API: GET /config/openvidu-version");
+
 		return openviduConfig.getOpenViduServerVersion();
 	}
 
 	@RequestMapping(value = "/openvidu-publicurl", method = RequestMethod.GET)
 	public String getOpenViduPublicUrl() {
+
+		log.info("REST API: GET /config/openvidu-publicurl");
+
 		return openviduConfig.getFinalUrl();
 	}
 
 	@RequestMapping(value = "/openvidu-recording", method = RequestMethod.GET)
 	public Boolean getOpenViduRecordingEnabled() {
+
+		log.info("REST API: GET /config/openvidu-recording");
+
 		return openviduConfig.isRecordingModuleEnabled();
 	}
 
 	@RequestMapping(value = "/openvidu-recording-path", method = RequestMethod.GET)
 	public String getOpenViduRecordingPath() {
+
+		log.info("REST API: GET /config/openvidu-recording-path");
+
 		return openviduConfig.getOpenViduRecordingPath();
 	}
 
 	@RequestMapping(value = "/openvidu-cdr", method = RequestMethod.GET)
 	public Boolean getOpenViduCdrEnabled() {
+
+		log.info("REST API: GET /config/openvidu-cdr");
+
 		return openviduConfig.isCdrEnabled();
 	}
 
 	@RequestMapping(method = RequestMethod.GET)
 	public ResponseEntity<String> getOpenViduConfiguration() {
+
+		log.info("REST API: GET /config");
 
 		JsonObject json = new JsonObject();
 		json.addProperty("version", openviduConfig.getVersion());
