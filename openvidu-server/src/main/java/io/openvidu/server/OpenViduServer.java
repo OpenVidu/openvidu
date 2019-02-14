@@ -244,13 +244,13 @@ public class OpenViduServer implements JsonRpcConfigurer {
 				} else if (e.getCodeValue() == Code.RECORDING_PATH_NOT_VALID.getValue()) {
 					finalErrorMessage = "Error initializing recording path \""
 							+ this.openviduConfig().getOpenViduRecordingPath()
-							+ "\" set with system property \"openvidu.recording.path\". Shutting down OpenVidu Server";
+							+ "\" set with system property \"openvidu.recording.path\"";
 				} else if (e.getCodeValue() == Code.RECORDING_FILE_EMPTY_ERROR.getValue()) {
 					finalErrorMessage = "Error initializing recording custom layouts path \""
 							+ this.openviduConfig().getOpenviduRecordingCustomLayout()
-							+ "\" set with system property \"openvidu.recording.custom-layout\". Shutting down OpenVidu Server";
+							+ "\" set with system property \"openvidu.recording.custom-layout\"";
 				}
-				log.error(finalErrorMessage);
+				log.error(finalErrorMessage + ". Shutting down OpenVidu Server");
 				System.exit(1);
 			}
 		}

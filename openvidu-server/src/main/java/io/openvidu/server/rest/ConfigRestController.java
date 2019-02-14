@@ -86,6 +86,7 @@ public class ConfigRestController {
 			json.addProperty("openviduRecordingPublicAccess", openviduConfig.getOpenViduRecordingPublicAccess());
 			json.addProperty("openviduRecordingNotification", openviduConfig.getOpenViduRecordingNotification());
 			json.addProperty("openviduRecordingCustomLayout", openviduConfig.getOpenviduRecordingCustomLayout());
+			json.addProperty("openviduRecordingAutostopTimeout", openviduConfig.getOpenviduRecordingAutostopTimeout());
 		}
 
 		HttpHeaders responseHeaders = new HttpHeaders();

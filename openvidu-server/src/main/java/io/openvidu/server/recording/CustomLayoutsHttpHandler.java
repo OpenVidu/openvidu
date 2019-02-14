@@ -34,10 +34,8 @@ public class CustomLayoutsHttpHandler extends WebMvcConfigurerAdapter {
 
 	@Override
 	public void addResourceHandlers(ResourceHandlerRegistry registry) {
-
 		String customLayoutsPath = openviduConfig.getOpenviduRecordingCustomLayout();
 		customLayoutsPath = customLayoutsPath.endsWith("/") ? customLayoutsPath : customLayoutsPath + "/";
-
 		openviduConfig.setOpenViduRecordingCustomLayout(customLayoutsPath);
 
 		registry.addResourceHandler("/layouts/custom/**").addResourceLocations("file:" + customLayoutsPath);
