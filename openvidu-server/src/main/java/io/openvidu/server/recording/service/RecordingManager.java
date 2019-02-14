@@ -34,6 +34,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.ProcessingException;
@@ -123,29 +124,10 @@ public class RecordingManager {
 		log.info("Recording module required: Downloading openvidu/openvidu-recording:"
 				+ openviduConfig.getOpenViduRecordingVersion() + " Docker image (800 MB aprox)");
 
-		boolean imageExists = false;
-		try {
-			imageExists = this.recordingImageExistsLocally();
-		} catch (ProcessingException exception) {
-			String message = "Exception connecting to Docker daemon: ";
-			if ("docker".equals(openviduConfig.getSpringProfile())) {
-				final String NEW_LINE = System.getProperty("line.separator");
-				message += "make sure you include the following flags in your \"docker run\" command:" + NEW_LINE
-						+ "    -e openvidu.recording.path=/YOUR/PATH/TO/VIDEO/FILES" + NEW_LINE
-						+ "    -e MY_UID=$(id -u $USER)" + NEW_LINE + "    -v /var/run/docker.sock:/var/run/docker.sock"
-						+ NEW_LINE + "    -v /YOUR/PATH/TO/VIDEO/FILES:/YOUR/PATH/TO/VIDEO/FILES" + NEW_LINE;
-			} else {
-				message += "you need Docker CE installed in this machine to enable OpenVidu recording service. "
-						+ "If Docker CE is already installed, make sure to add OpenVidu Server user to "
-						+ "\"docker\" group: " + System.lineSeparator() + "   1) $ sudo usermod -aG docker $USER"
-						+ System.lineSeparator()
-						+ "   2) Log out and log back to the host to reevaluate group membership";
-			}
-			log.error(message);
-			throw new OpenViduException(Code.RECORDING_ENABLED_BUT_DOCKER_NOT_FOUND, message);
-		}
+		this.checkRecordingRequirements(this.openviduConfig.getOpenViduRecordingPath(),
+				this.openviduConfig.getOpenviduRecordingCustomLayout());
 
-		if (imageExists) {
+		if (this.recordingImageExistsLocally()) {
 			log.info("Docker image already exists locally");
 		} else {
 			Thread t = new Thread(() -> {
@@ -174,8 +156,12 @@ public class RecordingManager {
 
 		// Clean any stranded openvidu/openvidu-recording container on startup
 		this.removeExistingRecordingContainers();
+	}
 
-		this.initRecordingPath();
+	public void checkRecordingRequirements(String openviduRecordingPath, String openviduRecordingCustomLayout)
+			throws OpenViduException {
+		this.checkDockerEnabled();
+		this.checkRecordingPaths();
 	}
 
 	public Recording startRecording(Session session, RecordingProperties properties) throws OpenViduException {
@@ -530,7 +516,30 @@ public class RecordingManager {
 		return fileNamesNoExtension;
 	}
 
-	private void initRecordingPath() throws OpenViduException {
+	private void checkDockerEnabled() throws OpenViduException {
+		try {
+			this.recordingImageExistsLocally();
+		} catch (ProcessingException exception) {
+			String message = "Exception connecting to Docker daemon: ";
+			if ("docker".equals(openviduConfig.getSpringProfile())) {
+				final String NEW_LINE = System.getProperty("line.separator");
+				message += "make sure you include the following flags in your \"docker run\" command:" + NEW_LINE
+						+ "    -e openvidu.recording.path=/YOUR/PATH/TO/VIDEO/FILES" + NEW_LINE
+						+ "    -e MY_UID=$(id -u $USER)" + NEW_LINE + "    -v /var/run/docker.sock:/var/run/docker.sock"
+						+ NEW_LINE + "    -v /YOUR/PATH/TO/VIDEO/FILES:/YOUR/PATH/TO/VIDEO/FILES" + NEW_LINE;
+			} else {
+				message += "you need Docker CE installed in this machine to enable OpenVidu recording service. "
+						+ "If Docker CE is already installed, make sure to add OpenVidu Server user to "
+						+ "\"docker\" group: " + System.lineSeparator() + "   1) $ sudo usermod -aG docker $USER"
+						+ System.lineSeparator()
+						+ "   2) Log out and log back to the host to reevaluate group membership";
+			}
+			log.error(message);
+			throw new OpenViduException(Code.RECORDING_ENABLED_BUT_DOCKER_NOT_FOUND, message);
+		}
+	}
+
+	private void checkRecordingPaths() throws OpenViduException {
 		log.info("Initializing recording path");
 
 		final String recordingPathString = this.openviduConfig.getOpenViduRecordingPath();
@@ -559,6 +568,61 @@ public class RecordingManager {
 			log.info("OpenVidu Server has write permissions on recording path: {}", recordingPathString);
 		}
 
+		// Check Kurento Media Server write permissions in recording path
+		KurentoClientSessionInfo kcSessionInfo = new OpenViduKurentoClientSessionInfo("TEST_RECORDING_PATH",
+				"TEST_RECORDING_PATH");
+		MediaPipeline pipeline = this.kcProvider.getKurentoClient(kcSessionInfo).createMediaPipeline();
+		RecorderEndpoint recorder = new RecorderEndpoint.Builder(pipeline, "file://" + testFilePath).build();
+
+		final AtomicBoolean kurentoRecorderError = new AtomicBoolean(false);
+
+		recorder.addErrorListener(new EventListener<ErrorEvent>() {
+			@Override
+			public void onEvent(ErrorEvent event) {
+				if (event.getErrorCode() == 6) {
+					// KMS write permissions error
+					kurentoRecorderError.compareAndSet(false, true);
+				}
+			}
+		});
+
+		recorder.record();
+
+		try {
+			// Give the error event some time to trigger if necessary
+			Thread.sleep(500);
+		} catch (InterruptedException e1) {
+			e1.printStackTrace();
+		}
+
+		if (kurentoRecorderError.get()) {
+			String errorMessage = "The recording path \"" + recordingPathString
+					+ "\" is not valid. Reason: Kurento Media Server needs write permissions. Try running command \"sudo chmod 777 "
+					+ recordingPathString + "\"";
+			log.error(errorMessage);
+			throw new OpenViduException(Code.RECORDING_PATH_NOT_VALID, errorMessage);
+		}
+
+		recorder.stop();
+		recorder.release();
+		pipeline.release();
+
+		log.info("Kurento Media Server has write permissions on recording path: {}", recordingPathString);
+
+		try {
+			new CustomFileManager().deleteFolder(testFolderPath);
+			log.info("OpenVidu Server has write permissions over files created by Kurento Media Server");
+		} catch (IOException e) {
+			String errorMessage = "The recording path \"" + recordingPathString
+					+ "\" is not valid. Reason: OpenVidu Server does not have write permissions over files created by Kurento Media Server. "
+					+ "Try running Kurento Media Server as user \"" + System.getProperty("user.name")
+					+ "\" or run OpenVidu Server as superuser";
+			log.error(errorMessage);
+			log.error("Be aware that a folder \"{}\" was created and should be manually deleted (\"sudo rm -rf {}\")",
+					testFolderPath, testFolderPath);
+			throw new OpenViduException(Code.RECORDING_PATH_NOT_VALID, errorMessage);
+		}
+
 		if (openviduConfig.openviduRecordingCustomLayoutChanged()) {
 			// Property openvidu.recording.custom-layout changed
 			File dir = new File(openviduConfig.getOpenviduRecordingCustomLayout());
@@ -581,55 +645,6 @@ public class RecordingManager {
 				log.error(errorMessage);
 				throw new OpenViduException(Code.RECORDING_FILE_EMPTY_ERROR, errorMessage);
 			}
-		}
-
-		// Check Kurento Media Server write permissions in recording path
-		KurentoClientSessionInfo kcSessionInfo = new OpenViduKurentoClientSessionInfo("TEST_RECORDING_PATH",
-				"TEST_RECORDING_PATH");
-		MediaPipeline pipeline = this.kcProvider.getKurentoClient(kcSessionInfo).createMediaPipeline();
-		RecorderEndpoint recorder = new RecorderEndpoint.Builder(pipeline, "file://" + testFilePath).build();
-
-		recorder.addErrorListener(new EventListener<ErrorEvent>() {
-			@Override
-			public void onEvent(ErrorEvent event) {
-				if (event.getErrorCode() == 6) {
-					// KMS write permissions error
-					log.error("The recording path \"" + recordingPathString
-							+ "\" is not valid. Reason: Kurento Media Server needs write permissions. Try running command \"sudo chmod 777 "
-							+ recordingPathString + "\"");
-					log.error(
-							"Error initializing recording path \"{}\" set with system property \"openvidu.recording.path\". Shutting down OpenVidu Server",
-							recordingPathString);
-					System.exit(1);
-				}
-			}
-		});
-
-		recorder.record();
-
-		try {
-			Thread.sleep(250);
-		} catch (InterruptedException e1) {
-			e1.printStackTrace();
-		}
-
-		recorder.release();
-		pipeline.release();
-
-		log.info("Kurento Media Server has write permissions on recording path: {}", recordingPathString);
-
-		try {
-			new CustomFileManager().deleteFolder(testFolderPath);
-			log.info("OpenVidu Server has write permissions over files created by Kurento Media Server");
-		} catch (IOException e) {
-			String errorMessage = "The recording path \"" + recordingPathString
-					+ "\" is not valid. Reason: OpenVidu Server does not have write permissions over files created by Kurento Media Server. "
-					+ "Try running Kurento Media Server as user \"" + System.getProperty("user.name")
-					+ "\" or run OpenVidu Server as superuser";
-			log.error(errorMessage);
-			log.error("Be aware that a folder \"{}\" was created and should be manually deleted (\"sudo rm -rf {}\")",
-					testFolderPath, testFolderPath);
-			throw new OpenViduException(Code.RECORDING_PATH_NOT_VALID, errorMessage);
 		}
 
 		log.info("Recording path successfully initialized at {}", this.openviduConfig.getOpenViduRecordingPath());
