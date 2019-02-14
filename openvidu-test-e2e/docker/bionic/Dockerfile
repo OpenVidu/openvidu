@@ -18,8 +18,8 @@ RUN echo "deb [arch=amd64] http://ubuntu.openvidu.io/dev bionic kms6" | tee /etc
 RUN apt-get update && apt-get install -y curl
 RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - && apt-get install -y nodejs
 
-# Java
-RUN apt-get install -y default-jdk
+# Java 8
+RUN apt-get install -y openjdk-8-jdk-headless
 
 # Maven
 RUN apt-get install -y maven
