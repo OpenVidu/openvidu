@@ -17,6 +17,7 @@
 
 package io.openvidu.server.cdr;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -84,7 +85,7 @@ public class CallDetailRecord {
 	@Autowired
 	protected OpenviduConfig openviduConfig;
 
-	private CDRLogger logger;
+	private Collection<CDRLogger> loggers;
 
 	private Map<String, CDREventSession> sessions = new ConcurrentHashMap<>();
 	private Map<String, CDREventParticipant> participants = new ConcurrentHashMap<>();
@@ -92,34 +93,30 @@ public class CallDetailRecord {
 	private Map<String, Set<CDREventWebrtcConnection>> subscriptions = new ConcurrentHashMap<>();
 	private Map<String, CDREventRecording> recordings = new ConcurrentHashMap<>();
 
-	public CallDetailRecord(CDRLogger logger) {
-		this.logger = logger;
+	public CallDetailRecord(Collection<CDRLogger> loggers) {
+		this.loggers = loggers;
 	}
 
 	public void recordSessionCreated(Session session) {
 		CDREventSession e = new CDREventSession(session);
 		this.sessions.put(session.getSessionId(), e);
-		if (openviduConfig.isCdrEnabled())
-			this.logger.log(e);
+		this.log(e);
 	}
 
 	public void recordSessionDestroyed(String sessionId, String reason) {
 		CDREvent e = this.sessions.remove(sessionId);
-		if (openviduConfig.isCdrEnabled())
-			this.logger.log(new CDREventSession(e, RecordingManager.finalReason(reason)));
+		this.log(new CDREventSession(e, RecordingManager.finalReason(reason)));
 	}
 
 	public void recordParticipantJoined(Participant participant, String sessionId) {
 		CDREventParticipant e = new CDREventParticipant(sessionId, participant);
 		this.participants.put(participant.getParticipantPublicId(), e);
-		if (openviduConfig.isCdrEnabled())
-			this.logger.log(e);
+		this.log(e);
 	}
 
 	public void recordParticipantLeft(Participant participant, String sessionId, String reason) {
 		CDREvent e = this.participants.remove(participant.getParticipantPublicId());
-		if (openviduConfig.isCdrEnabled())
-			this.logger.log(new CDREventParticipant(e, reason));
+		this.log(new CDREventParticipant(e, reason));
 	}
 
 	public void recordNewPublisher(Participant participant, String sessionId, MediaOptions mediaOptions,
@@ -127,16 +124,14 @@ public class CallDetailRecord {
 		CDREventWebrtcConnection publisher = new CDREventWebrtcConnection(sessionId,
 				participant.getParticipantPublicId(), mediaOptions, null, timestamp);
 		this.publications.put(participant.getParticipantPublicId(), publisher);
-		if (openviduConfig.isCdrEnabled())
-			this.logger.log(publisher);
+		this.log(publisher);
 	}
 
 	public boolean stopPublisher(String participantPublicId, String reason) {
 		CDREventWebrtcConnection publisher = this.publications.remove(participantPublicId);
 		if (publisher != null) {
 			publisher = new CDREventWebrtcConnection(publisher, reason);
-			if (openviduConfig.isCdrEnabled())
-				this.logger.log(publisher);
+			this.log(publisher);
 			return true;
 		}
 		return false;
@@ -148,8 +143,7 @@ public class CallDetailRecord {
 				participant.getParticipantPublicId(), publisher.mediaOptions, senderPublicId, timestamp);
 		this.subscriptions.putIfAbsent(participant.getParticipantPublicId(), new ConcurrentSkipListSet<>());
 		this.subscriptions.get(participant.getParticipantPublicId()).add(subscriber);
-		if (openviduConfig.isCdrEnabled())
-			this.logger.log(subscriber);
+		this.log(subscriber);
 	}
 
 	public boolean stopSubscriber(String participantPublicId, String senderPublicId, String reason) {
@@ -161,8 +155,7 @@ public class CallDetailRecord {
 				if (senderPublicId.equals(subscription.receivingFrom)) {
 					it.remove();
 					subscription = new CDREventWebrtcConnection(subscription, reason);
-					if (openviduConfig.isCdrEnabled())
-						this.logger.log(subscription);
+					this.log(subscription);
 					return true;
 				}
 			}
@@ -173,14 +166,20 @@ public class CallDetailRecord {
 	public void recordRecordingStarted(String sessionId, Recording recording) {
 		CDREventRecording recordingStartedEvent = new CDREventRecording(sessionId, recording);
 		this.recordings.putIfAbsent(recording.getId(), recordingStartedEvent);
-		if (openviduConfig.isCdrEnabled())
-			this.logger.log(new CDREventRecording(sessionId, recording));
+		this.log(new CDREventRecording(sessionId, recording));
 	}
 
 	public void recordRecordingStopped(String sessionId, Recording recording, String reason) {
 		CDREventRecording recordingStartedEvent = this.recordings.remove(recording.getId());
-		if (openviduConfig.isCdrEnabled())
-			this.logger.log(new CDREventRecording(recordingStartedEvent, RecordingManager.finalReason(reason)));
+		this.log(new CDREventRecording(recordingStartedEvent, RecordingManager.finalReason(reason)));
+	}
+
+	private void log(CDREvent event) {
+		this.loggers.forEach(logger -> {
+			if (openviduConfig.isCdrEnabled() || !logger.canBeDisabled()) {
+				logger.log(event);
+			}
+		});
 	}
 
 }

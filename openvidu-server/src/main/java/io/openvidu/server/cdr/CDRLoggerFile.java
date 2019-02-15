@@ -29,4 +29,9 @@ public class CDRLoggerFile implements CDRLogger {
 		log.info("{}", event);
 	}
 
+	@Override
+	public boolean canBeDisabled() {
+		return true;
+	}
+
 }

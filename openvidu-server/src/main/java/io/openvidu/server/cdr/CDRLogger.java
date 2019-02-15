@@ -18,7 +18,9 @@
 package io.openvidu.server.cdr;
 
 public interface CDRLogger {
-	
+
 	public void log(CDREvent event);
-	
+
+	public boolean canBeDisabled();
+
 }

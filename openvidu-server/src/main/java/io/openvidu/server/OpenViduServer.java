@@ -20,6 +20,7 @@ package io.openvidu.server;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
@@ -137,7 +138,7 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	@Bean
 	@ConditionalOnMissingBean
 	public CallDetailRecord cdr() {
-		return new CallDetailRecord(new CDRLoggerFile());
+		return new CallDetailRecord(Arrays.asList(new CDRLoggerFile()));
 	}
 
 	@Bean
