@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
@@ -44,15 +45,13 @@
 		<version.kurento>6.9.0</version.kurento>
 		<version.spring-boot>1.4.2.RELEASE</version.spring-boot>
 		<version.junit>4.12</version.junit>
-		<version.slf4j>1.7.13</version.slf4j>
 		<version.mockito>1.10.19</version.mockito>
-		<version.powermock>1.6.3</version.powermock>
-		<version.hamcrest-core>1.3</version.hamcrest-core>
-		<version.hamcrest-library>1.3</version.hamcrest-library>
+		<version.powermock>1.7.4</version.powermock>
+		<version.hamcrest-core>2.1</version.hamcrest-core>
+		<version.hamcrest-library>2.1</version.hamcrest-library>
 		<version.json-simple>1.1.1</version.json-simple>
-		<version.httpclient>4.5.6</version.httpclient>
-		<version.enforcer.plugin>1.4.1</version.enforcer.plugin>
-		<version.eclipse.plugin>2.10</version.eclipse.plugin>
+		<version.httpclient>4.5.7</version.httpclient>
+		<version.enforcer.plugin>3.0.0-M2</version.enforcer.plugin>
 
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<maven.compiler.source>1.8</maven.compiler.source>
@@ -182,7 +181,7 @@
 					<dependency>
 						<groupId>org.codehaus.mojo</groupId>
 						<artifactId>extra-enforcer-rules</artifactId>
-						<version>1.0-beta-4</version>
+						<version>1.1</version>
 					</dependency>
 				</dependencies>
 			</plugin>
@@ -244,19 +243,6 @@
 					</plugin>
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-javadoc-plugin</artifactId>
-						<version>2.10.4</version>
-						<executions>
-							<execution>
-								<id>attach-javadocs</id>
-								<goals>
-									<goal>jar</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-gpg-plugin</artifactId>
 						<version>1.6</version>
 						<executions>
@@ -279,26 +265,6 @@
 							<nexusUrl>https://oss.sonatype.org/</nexusUrl>
 							<autoReleaseAfterClose>false</autoReleaseAfterClose>
 						</configuration>
-					</plugin>
-					<plugin>
-						<artifactId>maven-resources-plugin</artifactId>
-						<executions>
-							<execution>
-								<id>copy-resources</id>
-								<phase>validate</phase>
-								<goals>
-									<goal>copy-resources</goal>
-								</goals>
-								<configuration>
-									<outputDirectory>${basedir}/target/classes/static/</outputDirectory>
-									<resources>
-										<resource>
-											<directory>${basedir}/../elastest-torm-gui/dist</directory>
-										</resource>
-									</resources>
-								</configuration>
-							</execution>
-						</executions>
 					</plugin>
 				</plugins>
 			</build>

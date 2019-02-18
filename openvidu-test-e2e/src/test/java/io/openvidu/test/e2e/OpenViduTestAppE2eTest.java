@@ -58,7 +58,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
 import org.openqa.selenium.By;
@@ -78,7 +77,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonReader;
 import com.mashape.unirest.http.HttpMethod;
 
-import io.github.bonigarcia.SeleniumExtension;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import io.openvidu.java.client.Connection;
 import io.openvidu.java.client.KurentoOptions;
@@ -114,7 +112,6 @@ import io.openvidu.test.e2e.utils.Unzipper;
  */
 @Tag("e2e")
 @DisplayName("E2E tests for OpenVidu TestApp")
-@ExtendWith(SeleniumExtension.class)
 @RunWith(JUnitPlatform.class)
 public class OpenViduTestAppE2eTest {
 
