@@ -39,6 +39,10 @@ public class CDREvent {
 		return this.timeStamp;
 	}
 
+	public CDREventName getEventName() {
+		return this.eventName;
+	}
+
 	public JsonObject toJson() {
 		JsonObject json = new JsonObject();
 		json.addProperty("sessionId", this.sessionId);
