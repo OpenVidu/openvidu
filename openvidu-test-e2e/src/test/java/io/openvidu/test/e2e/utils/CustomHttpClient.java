@@ -210,6 +210,9 @@ public class CustomHttpClient {
 			log.error(e.getMessage());
 			Assert.fail("Error sending request to " + path + ": " + e.getMessage());
 		}
+		if (jsonResponse.getStatus() == 500) {
+			log.error("Internal Server Error: {}", jsonResponse.getBody().toString());
+		}
 		Assert.assertEquals(path + " expected to return status " + status, status, jsonResponse.getStatus());
 		return json;
 	}
