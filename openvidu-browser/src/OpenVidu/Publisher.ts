@@ -460,8 +460,58 @@ export class Publisher extends StreamManager {
                         constraintsAux.video = constraints.video;
                         let startTime = Date.now();
                         this.setPermissionDialogTimer(timeForDialogEvent);
+                       
+                        if (navigator.mediaDevices['getDisplayMedia'] && this.stream.isSendScreen()) {
+                            navigator.mediaDevices['getDisplayMedia']({ video: true })
+                            .then(mediaStream => {
+                                this.clearPermissionDialogTimer(startTime, timeForDialogEvent);
+                                if (this.stream.isSendAudio) {
+                                    // When getting desktop as user media audio constraint must be false. Now we can ask for it if required
+                                    constraintsAux.audio = definedAudioConstraint;
+                                    constraintsAux.video = false;
+                                    startTime = Date.now();
+                                    this.setPermissionDialogTimer(timeForDialogEvent);
 
-                        navigator.mediaDevices.getUserMedia(constraintsAux)
+                                    navigator.mediaDevices.getUserMedia(constraintsAux)
+                                        .then(audioOnlyStream => {
+                                            this.clearPermissionDialogTimer(startTime, timeForDialogEvent);
+                                            mediaStream.addTrack(audioOnlyStream.getAudioTracks()[0]);
+                                            successCallback(mediaStream);
+                                        })
+                                        .catch(error => {
+                                            this.clearPermissionDialogTimer(startTime, timeForDialogEvent);
+                                            if (error.name === 'Error') {
+                                                // Safari OverConstrainedError has as name property 'Error' instead of 'OverConstrainedError'
+                                                error.name = error.constructor.name;
+                                            }
+                                            let errorName, errorMessage;
+                                            switch (error.name.toLowerCase()) {
+                                                case 'notfounderror':
+                                                    errorName = OpenViduErrorName.INPUT_AUDIO_DEVICE_NOT_FOUND;
+                                                    errorMessage = error.toString();
+                                                    errorCallback(new OpenViduError(errorName, errorMessage));
+                                                    break;
+                                                case 'notallowederror':
+                                                    errorName = OpenViduErrorName.DEVICE_ACCESS_DENIED;
+                                                    errorMessage = error.toString();
+                                                    errorCallback(new OpenViduError(errorName, errorMessage));
+                                                    break;
+                                                case 'overconstrainederror':
+                                                    if (error.constraint.toLowerCase() === 'deviceid') {
+                                                        errorName = OpenViduErrorName.INPUT_AUDIO_DEVICE_NOT_FOUND;
+                                                        errorMessage = "Audio input device with deviceId '" + (<ConstrainDOMStringParameters>(<MediaTrackConstraints>constraints.video).deviceId!!).exact + "' not found";
+                                                    } else {
+                                                        errorName = OpenViduErrorName.PUBLISHER_PROPERTIES_ERROR;
+                                                        errorMessage = "Audio input device doesn't support the value passed for constraint '" + error.constraint + "'";
+                                                    }
+                                                    errorCallback(new OpenViduError(errorName, errorMessage));
+                                                    break;
+                                            }
+                                        });
+                                }
+                            });
+                        } else {
+                            navigator.mediaDevices.getUserMedia(constraintsAux)
                             .then(mediaStream => {
                                 this.clearPermissionDialogTimer(startTime, timeForDialogEvent);
 
@@ -571,19 +621,9 @@ export class Publisher extends StreamManager {
                                                 errorCallback(new OpenViduError(errorName, errorMessage));
                                             });
                                         break;
-                                    case 'aborterror':
-                                    case 'notreadableerror':
-                                        errorName = OpenViduErrorName.DEVICE_ALREADY_IN_USE;
-                                        errorMessage = error.toString();
-                                        errorCallback(new OpenViduError(errorName, errorMessage));
-                                        break;
-                                    default:
-                                        errorName = OpenViduErrorName.GENERIC_ERROR;
-                                        errorMessage = error.toString();
-                                        errorCallback(new OpenViduError(errorName, errorMessage));
-                                        break;
                                 }
                             });
+                        }
                     } else {
                         reject(new OpenViduError(OpenViduErrorName.NO_INPUT_SOURCE_SET,
                             "Properties 'audioSource' and 'videoSource' cannot be set to false or null at the same time when calling 'OpenVidu.initPublisher'"));
