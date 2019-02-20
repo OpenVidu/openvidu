@@ -1,13 +1,12 @@
 {
     "author": "OpenVidu",
     "dependencies": {
-        "@types/node": "10.12.24",
+        "@types/node": "11.9.4",
         "@types/platform": "1.3.2",
         "freeice": "2.2.2",
         "hark": "1.2.3",
         "platform": "1.3.5",
         "uuid": "3.3.2",
-        "webrtc-adapter": "7.2.0",
         "wolfy87-eventemitter": "5.2.5"
     },
     "description": "OpenVidu Browser",
