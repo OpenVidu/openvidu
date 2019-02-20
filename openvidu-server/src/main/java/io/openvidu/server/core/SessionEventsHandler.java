@@ -36,6 +36,7 @@ import com.google.gson.JsonObject;
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
+import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.server.cdr.CallDetailRecord;
 import io.openvidu.server.config.InfoHandler;
 import io.openvidu.server.config.OpenviduConfig;
@@ -552,13 +553,13 @@ public class SessionEventsHandler {
 		return this.infoHandler;
 	}
 
-	private Set<Participant> filterParticipantsByRole(ParticipantRole[] roles, Set<Participant> participants) {
+	private Set<Participant> filterParticipantsByRole(OpenViduRole[] roles, Set<Participant> participants) {
 		return participants.stream().filter(part -> {
 			if (ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(part.getParticipantPublicId())) {
 				return false;
 			}
 			boolean isRole = false;
-			for (ParticipantRole role : roles) {
+			for (OpenViduRole role : roles) {
 				isRole = role.equals(part.getToken().getRole());
 				if (isRole)
 					break;

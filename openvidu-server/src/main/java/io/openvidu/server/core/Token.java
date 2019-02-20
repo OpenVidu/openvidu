@@ -17,13 +17,14 @@
 
 package io.openvidu.server.core;
 
+import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.server.coturn.TurnCredentials;
 import io.openvidu.server.kurento.core.KurentoTokenOptions;
 
 public class Token {
 
 	private String token;
-	private ParticipantRole role;
+	private OpenViduRole role;
 	private String serverMetadata = "";
 	private TurnCredentials turnCredentials;
 
@@ -33,7 +34,7 @@ public class Token {
 		this.token = token;
 	}
 
-	public Token(String token, ParticipantRole role, String serverMetadata, TurnCredentials turnCredentials,
+	public Token(String token, OpenViduRole role, String serverMetadata, TurnCredentials turnCredentials,
 			KurentoTokenOptions kurentoTokenOptions) {
 		this.token = token;
 		this.role = role;
@@ -46,7 +47,7 @@ public class Token {
 		return token;
 	}
 
-	public ParticipantRole getRole() {
+	public OpenViduRole getRole() {
 		return role;
 	}
 

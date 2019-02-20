@@ -43,6 +43,7 @@ import com.google.gson.JsonParser;
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.MediaMode;
+import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.java.client.Recording.OutputMode;
 import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.java.client.RecordingMode;
@@ -50,7 +51,6 @@ import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.Participant;
-import io.openvidu.server.core.ParticipantRole;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.kurento.core.KurentoTokenOptions;
@@ -300,12 +300,12 @@ public class SessionRestController {
 			}
 		}
 
-		ParticipantRole role;
+		OpenViduRole role;
 		try {
 			if (roleString != null) {
-				role = ParticipantRole.valueOf(roleString);
+				role = OpenViduRole.valueOf(roleString);
 			} else {
-				role = ParticipantRole.PUBLISHER;
+				role = OpenViduRole.PUBLISHER;
 			}
 		} catch (IllegalArgumentException e) {
 			return this.generateErrorResponse("Parameter role " + params.get("role") + " is not defined", "/api/tokens",

@@ -38,6 +38,7 @@ import com.google.gson.JsonObject;
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
+import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.server.OpenViduServer;
 import io.openvidu.server.cdr.CallDetailRecord;
@@ -225,7 +226,7 @@ public abstract class SessionManager {
 		return sessionNotActive;
 	}
 
-	public String newToken(String sessionId, ParticipantRole role, String serverMetadata,
+	public String newToken(String sessionId, OpenViduRole role, String serverMetadata,
 			KurentoTokenOptions kurentoTokenOptions) throws OpenViduException {
 
 		ConcurrentHashMap<String, Token> map = this.sessionidTokenTokenobj.putIfAbsent(sessionId,
@@ -273,7 +274,7 @@ public abstract class SessionManager {
 			this.sessionidParticipantpublicidParticipant.putIfAbsent(sessionId, new ConcurrentHashMap<>());
 			this.sessionidTokenTokenobj.putIfAbsent(sessionId, new ConcurrentHashMap<>());
 			this.sessionidTokenTokenobj.get(sessionId).putIfAbsent(token,
-					new Token(token, ParticipantRole.PUBLISHER, "",
+					new Token(token, OpenViduRole.PUBLISHER, "",
 							this.coturnCredentialsService.isCoturnAvailable()
 									? this.coturnCredentialsService.createUser()
 									: null,
@@ -285,8 +286,8 @@ public abstract class SessionManager {
 	public boolean isPublisherInSession(String sessionId, Participant participant) {
 		if (!this.isInsecureParticipant(participant.getParticipantPrivateId())) {
 			if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
-				return (ParticipantRole.PUBLISHER.equals(participant.getToken().getRole())
-						|| ParticipantRole.MODERATOR.equals(participant.getToken().getRole()));
+				return (OpenViduRole.PUBLISHER.equals(participant.getToken().getRole())
+						|| OpenViduRole.MODERATOR.equals(participant.getToken().getRole()));
 			} else {
 				return false;
 			}
@@ -298,7 +299,7 @@ public abstract class SessionManager {
 	public boolean isModeratorInSession(String sessionId, Participant participant) {
 		if (!this.isInsecureParticipant(participant.getParticipantPrivateId())) {
 			if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
-				return ParticipantRole.MODERATOR.equals(participant.getToken().getRole());
+				return OpenViduRole.MODERATOR.equals(participant.getToken().getRole());
 			} else {
 				return false;
 			}

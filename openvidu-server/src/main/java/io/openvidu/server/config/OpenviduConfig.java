@@ -22,7 +22,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.info.BuildProperties;
 import org.springframework.stereotype.Component;
 
-import io.openvidu.server.core.ParticipantRole;
+import io.openvidu.java.client.OpenViduRole;
 
 @Component
 public class OpenviduConfig {
@@ -200,24 +200,23 @@ public class OpenviduConfig {
 		return this.openviduRecordingNotification;
 	}
 
-	public ParticipantRole[] getRolesFromRecordingNotification() {
-		ParticipantRole[] roles;
+	public OpenViduRole[] getRolesFromRecordingNotification() {
+		OpenViduRole[] roles;
 		switch (this.openviduRecordingNotification) {
 		case "none":
-			roles = new ParticipantRole[0];
+			roles = new OpenViduRole[0];
 			break;
 		case "moderator":
-			roles = new ParticipantRole[] { ParticipantRole.MODERATOR };
+			roles = new OpenViduRole[] { OpenViduRole.MODERATOR };
 			break;
 		case "publisher_moderator":
-			roles = new ParticipantRole[] { ParticipantRole.PUBLISHER, ParticipantRole.MODERATOR };
+			roles = new OpenViduRole[] { OpenViduRole.PUBLISHER, OpenViduRole.MODERATOR };
 			break;
 		case "all":
-			roles = new ParticipantRole[] { ParticipantRole.SUBSCRIBER, ParticipantRole.PUBLISHER,
-					ParticipantRole.MODERATOR };
+			roles = new OpenViduRole[] { OpenViduRole.SUBSCRIBER, OpenViduRole.PUBLISHER, OpenViduRole.MODERATOR };
 			break;
 		default:
-			roles = new ParticipantRole[] { ParticipantRole.PUBLISHER, ParticipantRole.MODERATOR };
+			roles = new OpenViduRole[] { OpenViduRole.PUBLISHER, OpenViduRole.MODERATOR };
 		}
 		return roles;
 	}
