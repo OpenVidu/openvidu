@@ -106,7 +106,7 @@ public class CustomHttpClient {
 		}
 
 		if (exactReturnedFields) {
-			Assert.assertEquals("Error in number of keys in JSON response to POST " + path, jsonObjExpected.length(),
+			Assert.assertEquals("Error in number of keys in JSON response to POST (" + json.toString() + ")" + path, jsonObjExpected.length(),
 					json.length());
 		}
 		for (String key : jsonObjExpected.keySet()) {
