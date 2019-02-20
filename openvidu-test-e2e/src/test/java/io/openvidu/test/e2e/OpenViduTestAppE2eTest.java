@@ -2477,6 +2477,8 @@ public class OpenViduTestAppE2eTest {
 		restClient.rest(HttpMethod.POST, "/api/recordings/start", body, HttpStatus.SC_OK, true,
 				"{'id':'STR','sessionId':'STR','name':'STR','outputMode':'STR','recordingLayout':'STR','hasAudio':false,'hasVideo':false,'resolution':'STR','createdAt':0,'size':0,'duration':0,'url':null,'status':'STR'}");
 
+		user.getEventManager().waitUntilEventReaches("recordingStarted", 2);
+		
 		// 409 (already recording)
 		restClient.rest(HttpMethod.POST, "/api/recordings/start", body, HttpStatus.SC_CONFLICT);
 
@@ -2498,6 +2500,8 @@ public class OpenViduTestAppE2eTest {
 		returnValues.put("count", new Integer(1));
 		returnValues.put("items", new org.json.JSONArray());
 		restClient.rest(HttpMethod.GET, "/api/recordings", null, HttpStatus.SC_OK, true, returnValues);
+		
+		user.getEventManager().waitUntilEventReaches("recordingStopped", 2);
 
 		/** DELETE /api/recordings **/
 		restClient.rest(HttpMethod.DELETE, "/api/recordings", HttpStatus.SC_METHOD_NOT_ALLOWED);
