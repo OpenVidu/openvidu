@@ -32,11 +32,11 @@ import org.springframework.core.io.ClassPathResource;
 public class ChromeUser extends BrowserUser {
 
 	public ChromeUser(String userName, int timeOfWaitInSeconds) {
-		this(userName, timeOfWaitInSeconds, "Entire screen");
+		this(userName, timeOfWaitInSeconds, "Entire screen", false);
 	}
 
-	public ChromeUser(String userName, int timeOfWaitInSeconds, String screenToCapture) {
-		this(userName, timeOfWaitInSeconds, generateScreenChromeOptions(screenToCapture));
+	public ChromeUser(String userName, int timeOfWaitInSeconds, String screenToCapture, boolean runningAsRoot) {
+		this(userName, timeOfWaitInSeconds, generateScreenChromeOptions(screenToCapture, runningAsRoot));
 	}
 
 	public ChromeUser(String userName, int timeOfWaitInSeconds, Path fakeVideoLocation) {
@@ -66,7 +66,7 @@ public class ChromeUser extends BrowserUser {
 		this.configureDriver();
 	}
 
-	private static ChromeOptions generateScreenChromeOptions(String screenToCapture) {
+	private static ChromeOptions generateScreenChromeOptions(String screenToCapture, boolean runningAsRoot) {
 		ChromeOptions options = new ChromeOptions();
 		// This flag avoids to grant the user media
 		options.addArguments("--use-fake-ui-for-media-stream");
@@ -80,6 +80,11 @@ public class ChromeUser extends BrowserUser {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+
+		if (runningAsRoot) {
+			options.addArguments("--no-sandbox");
+		}
+
 		return options;
 	}
 

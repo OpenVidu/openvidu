@@ -20,7 +20,7 @@ package io.openvidu.test.e2e.utils;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
-public class CommandLineExecuter {
+public class CommandLineExecutor {
 
 	public String executeCommand(String command) {
 		String output = "";

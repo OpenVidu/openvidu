@@ -28,7 +28,7 @@ public class MultimediaFileMetadata {
 
 	private static final Logger log = LoggerFactory.getLogger(MultimediaFileMetadata.class);
 
-	private CommandLineExecuter executer = new CommandLineExecuter();
+	private CommandLineExecutor executer = new CommandLineExecutor();
 	private JsonParser parser = new JsonParser();
 
 	private JsonObject json;

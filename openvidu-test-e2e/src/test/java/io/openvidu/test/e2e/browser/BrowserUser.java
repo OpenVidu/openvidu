@@ -73,7 +73,7 @@ public class BrowserUser {
 	}
 
 	public void dispose() {
-		this.eventManager.stopPolling();
+		this.eventManager.stopPolling(true);
 		this.driver.quit();
 	}
 

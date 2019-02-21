@@ -60,6 +60,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
+import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.Keys;
@@ -99,7 +100,7 @@ import io.openvidu.test.e2e.browser.ChromeAndroidUser;
 import io.openvidu.test.e2e.browser.ChromeUser;
 import io.openvidu.test.e2e.browser.FirefoxUser;
 import io.openvidu.test.e2e.browser.OperaUser;
-import io.openvidu.test.e2e.utils.CommandLineExecuter;
+import io.openvidu.test.e2e.utils.CommandLineExecutor;
 import io.openvidu.test.e2e.utils.CustomHttpClient;
 import io.openvidu.test.e2e.utils.MultimediaFileMetadata;
 import io.openvidu.test.e2e.utils.Unzipper;
@@ -126,12 +127,13 @@ public class OpenViduTestAppE2eTest {
 	BrowserUser user;
 	Collection<BrowserUser> otherUsers = new ArrayList<>();
 	volatile static boolean isRecordingTest;
+	volatile static boolean isKurentoRestartTest;
 	private static OpenVidu OV;
 
 	@BeforeAll()
 	static void setupAll() {
 
-		String ffmpegOutput = new CommandLineExecuter().executeCommand("which ffmpeg");
+		String ffmpegOutput = new CommandLineExecutor().executeCommand("which ffmpeg");
 		if (ffmpegOutput == null || ffmpegOutput.isEmpty()) {
 			log.error("ffmpeg package is not installed in the host machine");
 			Assert.fail();
@@ -186,7 +188,10 @@ public class OpenViduTestAppE2eTest {
 			this.user = new ChromeAndroidUser("TestUser", 50);
 			break;
 		case "chromeAlternateScreenShare":
-			this.user = new ChromeUser("TestUser", 50, "OpenVidu TestApp");
+			this.user = new ChromeUser("TestUser", 50, "OpenVidu TestApp", false);
+			break;
+		case "chromeAsRoot":
+			this.user = new ChromeUser("TestUser", 50, "Entire screen", true);
 			break;
 		default:
 			this.user = new ChromeUser("TestUser", 50);
@@ -249,6 +254,9 @@ public class OpenViduTestAppE2eTest {
 				log.error(e.getMessage());
 			}
 			isRecordingTest = false;
+		}
+		if (isKurentoRestartTest) {
+			new CommandLineExecutor().executeCommand("sudo service kurento-media-server restart");
 		}
 	}
 
@@ -2556,6 +2564,150 @@ public class OpenViduTestAppE2eTest {
 		restClient.rest(HttpMethod.GET, "/config", null, HttpStatus.SC_OK, true,
 				"{'version':'STR','openviduPublicurl':'STR','openviduCdr':false,'maxRecvBandwidth':0,'minRecvBandwidth':0,'maxSendBandwidth':0,'minSendBandwidth':0,'openviduRecording':false,"
 						+ "'openviduRecordingVersion':'STR','openviduRecordingPath':'STR','openviduRecordingPublicAccess':false,'openviduRecordingNotification':'STR','openviduRecordingCustomLayout':'STR','openviduRecordingAutostopTimeout':0}");
+	}
+
+	@Test
+	@DisplayName("Kurento reconnect test")
+	void kurentoReconnectTest() throws Exception {
+		isRecordingTest = true;
+		isKurentoRestartTest = true;
+
+		log.info("Kurento reconnect test");
+
+		List<Session> sessions = OV.getActiveSessions();
+		Assert.assertEquals("Expected no active sessions but found " + sessions.size(), 0, sessions.size());
+
+		final CommandLineExecutor exec = new CommandLineExecutor();
+
+		exec.executeCommand("sudo service kurento-media-server stop");
+
+		OV.fetch();
+
+		setupBrowser("chromeAsRoot");
+
+		// Connect one publisher with no connection to KMS
+
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.className("subscribe-remote-check")).click();
+		user.getDriver().findElement(By.className("join-btn")).click();
+
+		user.getWaiter().until(ExpectedConditions.alertIsPresent());
+		Alert alert = user.getDriver().switchTo().alert();
+
+		final String alertMessage = "Exception connecting to WebSocket server ws://localhost:8888/kurento";
+		Assert.assertTrue("Alert message wrong. Expected to contain: \"" + alertMessage + "\". Actual message: \""
+				+ alert.getText() + "\"", alert.getText().contains(alertMessage));
+		alert.accept();
+
+		user.getDriver().findElement(By.id("remove-user-btn")).sendKeys(Keys.ENTER);
+
+		exec.executeCommand("sudo service kurento-media-server start");
+		Thread.sleep(3000);
+
+		// Connect one subscriber with connection to KMS -> restart KMS -> connect a
+		// publisher -> restart KMS -> check streamDestroyed events
+
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElements(By.className("publish-checkbox")).forEach(el -> el.click());
+		user.getDriver().findElement(By.className("join-btn")).click();
+
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
+
+		OV.fetch();
+		sessions = OV.getActiveSessions();
+		Assert.assertEquals("Expected 1 active sessions but found " + sessions.size(), 1, sessions.size());
+
+		exec.executeCommand("sudo service kurento-media-server restart");
+		Thread.sleep(3000);
+
+		OV.fetch();
+		sessions = OV.getActiveSessions();
+		Assert.assertEquals("Expected 1 active sessions but found " + sessions.size(), 1, sessions.size());
+
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .join-btn")).click();
+
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
+
+		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assert.assertEquals("Expected 2 videos but found " + numberOfVideos, 2, numberOfVideos);
+		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
+				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
+
+		OV.fetch();
+		Session session = OV.getActiveSessions().get(0);
+		Assert.assertEquals("Expected 2 active connections but found " + session.getActiveConnections(), 2,
+				session.getActiveConnections().size());
+		int pubs = session.getActiveConnections().stream().mapToInt(con -> con.getPublishers().size()).sum();
+		int subs = session.getActiveConnections().stream().mapToInt(con -> con.getSubscribers().size()).sum();
+		Assert.assertEquals("Expected 1 active publisher but found " + pubs, 1, pubs);
+		Assert.assertEquals("Expected 1 active subscriber but found " + subs, 1, subs);
+
+		OV.startRecording(session.getSessionId(),
+				new RecordingProperties.Builder().outputMode(OutputMode.INDIVIDUAL).build());
+		user.getEventManager().waitUntilEventReaches("recordingStarted", 2);
+
+		long recStartTime = System.currentTimeMillis();
+
+		final CountDownLatch latch = new CountDownLatch(4);
+
+		user.getEventManager().on("recordingStopped", (event) -> {
+			String reason = event.get("reason").getAsString();
+			Assert.assertEquals("Expected 'recordingStopped' reason 'mediaServerDisconnect'", "mediaServerDisconnect",
+					reason);
+			latch.countDown();
+		});
+		user.getEventManager().on("streamDestroyed", (event) -> {
+			String reason = event.get("reason").getAsString();
+			Assert.assertEquals("Expected 'streamDestroyed' reason 'mediaServerDisconnect'", "mediaServerDisconnect",
+					reason);
+			latch.countDown();
+		});
+		exec.executeCommand("sudo service kurento-media-server restart");
+		long recEndTime = System.currentTimeMillis();
+		user.getEventManager().waitUntilEventReaches("recordingStopped", 2);
+		user.getEventManager().waitUntilEventReaches("streamDestroyed", 2);
+		if (!latch.await(5000, TimeUnit.MILLISECONDS)) {
+			gracefullyLeaveParticipants(2);
+			fail("Waiting for 2 streamDestroyed events with reason 'mediaServerDisconnect' to happen in total");
+			return;
+		}
+		user.getEventManager().off("streamDestroyed");
+
+		session.fetch();
+		Assert.assertEquals("Expected 2 active connections but found " + session.getActiveConnections(), 2,
+				session.getActiveConnections().size());
+		pubs = session.getActiveConnections().stream().mapToInt(con -> con.getPublishers().size()).sum();
+		subs = session.getActiveConnections().stream().mapToInt(con -> con.getSubscribers().size()).sum();
+		Assert.assertEquals("Expected no active publishers but found " + pubs, 0, pubs);
+		Assert.assertEquals("Expected no active subscribers but found " + subs, 0, subs);
+
+		Recording rec = OV.getRecording("TestSession");
+		double differenceInDuration = Math.abs(rec.getDuration() - ((recEndTime - recStartTime) / 1000));
+		Assert.assertTrue("Recording duration exceeds valid value. Expected no more than 0.2 seconds, got "
+				+ differenceInDuration, differenceInDuration < 0.2);
+
+		this.checkIndividualRecording("/opt/openvidu/recordings/TestSession/", rec, 1, "opus", "vp8", true);
+
+		WebElement pubBtn = user.getDriver().findElements(By.cssSelector("#openvidu-instance-1 .pub-btn")).get(0);
+		pubBtn.click();
+		user.getEventManager().waitUntilEventReaches("streamDestroyed", 3); // This is not real, only in testapp
+		pubBtn.click();
+		user.getEventManager().waitUntilEventReaches("streamCreated", 4);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
+
+		session.fetch();
+		Assert.assertEquals("Expected 2 active connections but found " + session.getActiveConnections(), 2,
+				session.getActiveConnections().size());
+		pubs = session.getActiveConnections().stream().mapToInt(con -> con.getPublishers().size()).sum();
+		subs = session.getActiveConnections().stream().mapToInt(con -> con.getSubscribers().size()).sum();
+		Assert.assertEquals("Expected 1 active publisher but found " + pubs, 1, pubs);
+		Assert.assertEquals("Expected 1 active subscriber but found " + subs, 1, subs);
+
+		gracefullyLeaveParticipants(2);
 	}
 
 	private void listEmptyRecordings() {
