@@ -124,6 +124,48 @@
 			"type": "java.lang.Integer",
 			"description": "Timeout in seconds when OpenVidu Server is connecting to Redis database to store TURN credentials",
 			"defaultValue": 30
+		},
+		{
+			"name": "jsonRpcClientWebSocket.reconnectionDelay",
+			"type": "java.lang.Integer",
+			"description": "Reconnection delay when Kurento Media Server connection is lost (ms)",
+			"defaultValue": 2000
+		},
+		{
+			"name": "jsonRpcClientWebSocket.timeout",
+			"type": "java.lang.Integer",
+			"description": "Timeout for RPC operations sent to KMS through websocket (ms)",
+			"defaultValue": 60000
+		},
+		{
+			"name": "jsonRpcClientWebSocket.packetSize",
+			"type": "java.lang.Integer",
+			"description": "Maximum size of packets sent through websocket",
+			"defaultValue": 1000000
+		},
+		{
+			"name": "jsonRpcClientWebSocket.connectionTimeout",
+			"type": "java.lang.Integer",
+			"description": "Timeout for openvidu-server to connect through websocket to KMS (ms)",
+			"defaultValue": 5000
+		},
+		{
+			"name": "kurento.client.keepAliveTime",
+			"type": "java.lang.Integer",
+			"description": "Heartbeat frecuency between openvidu-server and KMS (ms)",
+			"defaultValue": 240000
+		},
+		{
+			"name": "ws.sessionReconnectionTime",
+			"type": "java.lang.Integer",
+			"description": "Reconnection timeout between clients and openvidu-server (seconds)",
+			"defaultValue": 10
+		},
+		{
+			"name": "ws.maxSessions",
+			"type": "java.lang.Long",
+			"description": "Maximum number of websocket sessions that openvidu-server will be able to hold",
+			"defaultValue": 9223372036854775807
 		}
 	]
 }
