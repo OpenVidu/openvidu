@@ -2478,7 +2478,9 @@ public class OpenViduTestAppE2eTest {
 				"{'id':'STR','sessionId':'STR','name':'STR','outputMode':'STR','recordingLayout':'STR','hasAudio':false,'hasVideo':false,'resolution':'STR','createdAt':0,'size':0,'duration':0,'url':null,'status':'STR'}");
 
 		user.getEventManager().waitUntilEventReaches("recordingStarted", 2);
-		
+
+		Thread.sleep(1000);
+
 		// 409 (already recording)
 		restClient.rest(HttpMethod.POST, "/api/recordings/start", body, HttpStatus.SC_CONFLICT);
 
@@ -2495,12 +2497,12 @@ public class OpenViduTestAppE2eTest {
 				"{'id':'STR','sessionId':'STR','name':'STR','outputMode':'STR','recordingLayout':'STR','hasAudio':false,'hasVideo':false,'resolution':'STR','createdAt':0,'size':0,'duration':0,'url':null,'status':'STR'}");
 		/** GET /api/recordings (after recording created) **/
 		restClient.rest(HttpMethod.GET, "/api/recordings/CUSTOM_SESSION_ID", null, HttpStatus.SC_OK, true,
-				"{'id':'STR','sessionId':'STR','name':'STR','outputMode':'STR','hasAudio':false,'hasVideo':false,'createdAt':0,'size':0,'duration':0,'url':null,'status':'STR'}");
+				"{'id':'STR','sessionId':'STR','name':'STR','outputMode':'STR','recordingLayout':'STR','hasAudio':false,'hasVideo':false,'resolution':'STR','createdAt':0,'size':0,'duration':0,'url':null,'status':'STR'}");
 		returnValues = new HashMap<>();
 		returnValues.put("count", new Integer(1));
 		returnValues.put("items", new org.json.JSONArray());
 		restClient.rest(HttpMethod.GET, "/api/recordings", null, HttpStatus.SC_OK, true, returnValues);
-		
+
 		user.getEventManager().waitUntilEventReaches("recordingStopped", 2);
 
 		/** DELETE /api/recordings **/
