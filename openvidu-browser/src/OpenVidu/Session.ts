@@ -950,7 +950,7 @@ export class Session implements EventDispatcher {
      * @hidden
      */
     onRecordingStopped(response): void {
-        this.ee.emitEvent('recordingStopped', [new RecordingEvent(this, 'recordingStopped', response.id, response.name)]);
+        this.ee.emitEvent('recordingStopped', [new RecordingEvent(this, 'recordingStopped', response.id, response.name, response.reason)]);
     }
 
     /**

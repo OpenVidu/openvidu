@@ -171,6 +171,7 @@ public class ProtocolElements {
 	public static final String RECORDINGSTARTED_METHOD = "recordingStarted";
 	public static final String RECORDINGSTARTED_ID_PARAM = "id";
 	public static final String RECORDINGSTARTED_NAME_PARAM = "name";
+	public static final String RECORDINGSTOPPED_REASON_PARAM = "reason";
 
 	public static final String RECORDINGSTOPPED_METHOD = "recordingStopped";
 	public static final String RECORDINGSTOPPED_ID_PARAM = "id";

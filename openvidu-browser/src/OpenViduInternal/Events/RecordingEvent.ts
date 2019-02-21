@@ -42,14 +42,26 @@ export class RecordingEvent extends Event {
     name?: string;
 
     /**
+     * For 'recordingStopped' event:
+     * - "recordingStoppedByServer": the recording has been gracefully stopped by the application
+     * - "sessionClosedByServer": the Session has been closed by the application
+     * - "automaticStop": see [Automatic stop of recordings](https://openvidu.io/docs/advanced-features/recording/#automatic-stop-of-recordings)
+     * - "mediaServerDisconnect": OpenVidu Media Server has crashed or lost its connection. A new media server instance is active and the recording has been stopped (no media streams are available in the new media server)
+     *
+     * For 'recordingStarted' empty string
+     */
+    reason?: string;
+
+    /**
      * @hidden
      */
-    constructor(target: Session, type: string, id: string, name: string) {
+    constructor(target: Session, type: string, id: string, name: string, reason?: string) {
         super(false, target, type);
         this.id = id;
         if (name !== id) {
             this.name = name;
         }
+        this.reason = reason;
     }
 
     /**
