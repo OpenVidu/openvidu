@@ -414,6 +414,7 @@ public abstract class SessionManager {
 			throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE, "Session '" + sessionId + "' not found");
 		}
 		if (session.isClosed()) {
+			this.closeSessionAndEmptyCollections(session, reason);
 			throw new OpenViduException(Code.ROOM_CLOSED_ERROR_CODE, "Session '" + sessionId + "' already closed");
 		}
 		Set<Participant> participants = getParticipants(sessionId);

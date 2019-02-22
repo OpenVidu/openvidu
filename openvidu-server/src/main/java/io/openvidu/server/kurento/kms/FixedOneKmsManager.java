@@ -17,14 +17,27 @@
 
 package io.openvidu.server.kurento.kms;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.kurento.client.KurentoClient;
 import org.kurento.client.KurentoConnectionListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import io.openvidu.server.core.SessionManager;
+import io.openvidu.server.kurento.core.KurentoSession;
 
 public class FixedOneKmsManager extends KmsManager {
 
 	private static final Logger log = LoggerFactory.getLogger(FixedOneKmsManager.class);
+
+	@Autowired
+	SessionManager sessionManager;
+
+	public static final AtomicBoolean CONNECTED_TO_KMS = new AtomicBoolean(false);
+	public static final AtomicLong TIME_OF_DISCONNECTION = new AtomicLong(0);
 
 	public FixedOneKmsManager(String kmsWsUri) {
 		this(kmsWsUri, 1);
@@ -36,21 +49,37 @@ public class FixedOneKmsManager extends KmsManager {
 
 				@Override
 				public void reconnected(boolean isReconnected) {
-					log.warn("Kurento Client reconnected ({}) to KMS with uri {}", isReconnected, kmsWsUri);
+					CONNECTED_TO_KMS.compareAndSet(false, true);
+					if (!isReconnected) {
+						// Different KMS. Reset sessions status (no Publisher or SUbscriber endpoints)
+						log.warn("Kurento Client reconnected to a different KMS instance, with uri {}", kmsWsUri);
+						log.warn("Updating all webrtc endpoints for active sessions");
+						sessionManager.getSessions().forEach(s -> {
+							((KurentoSession) s).restartStatusInKurento();
+						});
+					} else {
+						// Same KMS. We can infer that openvidu-server/KMS connection has been lost, but
+						// not the clients/KMS connections
+						log.warn("Kurento Client reconnected to same KMS with uri {}", kmsWsUri);
+					}
 				}
 
 				@Override
 				public void disconnected() {
+					CONNECTED_TO_KMS.compareAndSet(true, false);
+					TIME_OF_DISCONNECTION.set(System.currentTimeMillis());
 					log.warn("Kurento Client disconnected from KMS with uri {}", kmsWsUri);
 				}
 
 				@Override
 				public void connectionFailed() {
+					CONNECTED_TO_KMS.set(false);
 					log.warn("Kurento Client failed connecting to KMS with uri {}", kmsWsUri);
 				}
 
 				@Override
 				public void connected() {
+					CONNECTED_TO_KMS.compareAndSet(false, true);
 					log.warn("Kurento Client is now connected to KMS with uri {}", kmsWsUri);
 				}
 			}), kmsWsUri));

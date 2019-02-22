@@ -33,8 +33,11 @@ import org.slf4j.LoggerFactory;
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
+import io.openvidu.java.client.OpenViduRole;
+import io.openvidu.java.client.Recording.OutputMode;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
+import io.openvidu.server.recording.Recording;
 
 /**
  * @author Pablo Fuente (pablofuenteperez@gmail.com)
@@ -54,7 +57,6 @@ public class KurentoSession extends Session {
 
 	private Object pipelineCreateLock = new Object();
 	private Object pipelineReleaseLock = new Object();
-	private volatile boolean pipelineReleased = false;
 	private boolean destroyKurentoClient;
 
 	public final ConcurrentHashMap<String, String> publishedStreamIds = new ConcurrentHashMap<>();
@@ -73,7 +75,7 @@ public class KurentoSession extends Session {
 		checkClosed();
 		createPipeline();
 
-		KurentoParticipant kurentoParticipant = new KurentoParticipant(participant, this, getPipeline(),
+		KurentoParticipant kurentoParticipant = new KurentoParticipant(participant, this,
 				kurentoSessionHandler.getInfoHandler(), this.CDR, this.openviduConfig, this.recordingManager);
 		participants.put(participant.getParticipantPrivateId(), kurentoParticipant);
 
@@ -105,15 +107,12 @@ public class KurentoSession extends Session {
 	}
 
 	public void cancelPublisher(Participant participant, String reason) {
-		deregisterPublisher();
-
-		// cancel recv video from this publisher
+		// Cancel all subscribers for this publisher
 		for (Participant subscriber : participants.values()) {
 			if (participant.equals(subscriber)) {
 				continue;
 			}
 			((KurentoParticipant) subscriber).cancelReceivingMedia(participant.getParticipantPublicId(), reason);
-
 		}
 
 		log.debug("SESSION {}: Unsubscribed other participants {} from the publisher {}", sessionId,
@@ -134,11 +133,9 @@ public class KurentoSession extends Session {
 		participant.releaseAllFilters();
 
 		log.info("PARTICIPANT {}: Leaving session {}", participant.getParticipantPublicId(), this.sessionId);
-		if (participant.isStreaming()) {
-			this.deregisterPublisher();
-		}
+
 		this.removeParticipant(participant, reason);
-		participant.close(reason);
+		participant.close(reason, true);
 
 		if (!ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(participant.getParticipantPublicId())) {
 			CDR.recordParticipantLeft(participant, participant.getSession().getSessionId(), reason);
@@ -151,12 +148,12 @@ public class KurentoSession extends Session {
 
 			for (Participant participant : participants.values()) {
 				((KurentoParticipant) participant).releaseAllFilters();
-				((KurentoParticipant) participant).close(reason);
+				((KurentoParticipant) participant).close(reason, true);
 			}
 
 			participants.clear();
 
-			closePipeline();
+			closePipeline(null);
 
 			log.debug("Session {} closed", this.sessionId);
 
@@ -248,23 +245,30 @@ public class KurentoSession extends Session {
 		}
 	}
 
-	private void closePipeline() {
+	private void closePipeline(Runnable callback) {
 		synchronized (pipelineReleaseLock) {
-			if (pipeline == null || pipelineReleased) {
+			if (pipeline == null) {
 				return;
 			}
 			getPipeline().release(new Continuation<Void>() {
-
 				@Override
 				public void onSuccess(Void result) throws Exception {
 					log.debug("SESSION {}: Released Pipeline", sessionId);
-					pipelineReleased = true;
+					pipeline = null;
+					pipelineLatch = new CountDownLatch(1);
+					if (callback != null) {
+						callback.run();
+					}
 				}
 
 				@Override
 				public void onError(Throwable cause) throws Exception {
 					log.warn("SESSION {}: Could not successfully release Pipeline", sessionId, cause);
-					pipelineReleased = true;
+					pipeline = null;
+					pipelineLatch = new CountDownLatch(1);
+					if (callback != null) {
+						callback.run();
+					}
 				}
 			});
 		}
@@ -272,6 +276,51 @@ public class KurentoSession extends Session {
 
 	public String getParticipantPrivateIdFromStreamId(String streamId) {
 		return this.publishedStreamIds.get(streamId);
+	}
+
+	public void restartStatusInKurento() {
+
+		log.info("Reseting remote media objects for active session {}", this.sessionId);
+
+		// Stop recording if session is being recorded
+		if (recordingManager.sessionIsBeingRecorded(this.sessionId)) {
+			Recording stoppedRecording = this.recordingManager.forceStopRecording(this, "mediaServerDisconnect");
+			if (OutputMode.COMPOSED.equals(stoppedRecording.getOutputMode()) && stoppedRecording.hasVideo()) {
+				recordingManager.getSessionManager().evictParticipant(
+						this.getParticipantByPublicId(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID), null, null,
+						"EVICT_RECORDER");
+			}
+		}
+
+		// Close all MediaEndpoints of participants
+		this.getParticipants().forEach(p -> {
+			KurentoParticipant kParticipant = (KurentoParticipant) p;
+			final boolean wasStreaming = kParticipant.isStreaming();
+			kParticipant.releaseAllFilters();
+			kParticipant.close("mediaServerDisconnect", false);
+			if (wasStreaming) {
+				kurentoSessionHandler.onUnpublishMedia(kParticipant, this.getParticipants(), null, null, null,
+						"mediaServerDisconnect");
+			}
+		});
+
+		// Release pipeline, create a new one and prepare new PublisherEndpoints for
+		// allowed users
+		this.closePipeline(() -> {
+			createPipeline();
+			try {
+				if (!pipelineLatch.await(20, TimeUnit.SECONDS)) {
+					throw new Exception("MediaPipleine was not created in 20 seconds");
+				}
+				getParticipants().forEach(p -> {
+					if (!OpenViduRole.SUBSCRIBER.equals(p.getToken().getRole())) {
+						((KurentoParticipant) p).resetPublisherEndpoint();
+					}
+				});
+			} catch (Exception e) {
+				log.error("Error waiting to new MediaPipeline on KurentoSession restart: {}", e.getMessage());
+			}
+		});
 	}
 
 }

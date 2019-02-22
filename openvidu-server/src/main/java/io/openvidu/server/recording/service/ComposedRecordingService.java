@@ -100,10 +100,14 @@ public class ComposedRecordingService extends RecordingService {
 
 	@Override
 	public Recording stopRecording(Session session, Recording recording, String reason) {
+		return this.stopRecording(session, recording, reason, false);
+	}
+
+	public Recording stopRecording(Session session, Recording recording, String reason, boolean forceAfterKmsRestart) {
 		if (recording.hasVideo()) {
 			return this.stopRecordingWithVideo(session, recording, reason);
 		} else {
-			return this.stopRecordingAudioOnly(session, recording, reason);
+			return this.stopRecordingAudioOnly(session, recording, reason, forceAfterKmsRestart);
 		}
 	}
 
@@ -330,7 +334,8 @@ public class ComposedRecordingService extends RecordingService {
 		return recording;
 	}
 
-	private Recording stopRecordingAudioOnly(Session session, Recording recording, String reason) {
+	private Recording stopRecordingAudioOnly(Session session, Recording recording, String reason,
+			boolean forceAfterKmsRestart) {
 
 		log.info("Stopping composed (audio-only) recording {} of session {}. Reason: {}", recording.getId(),
 				recording.getSessionId(), reason);
@@ -349,7 +354,8 @@ public class ComposedRecordingService extends RecordingService {
 		CompositeWrapper compositeWrapper = this.composites.remove(sessionId);
 
 		final CountDownLatch stoppedCountDown = new CountDownLatch(1);
-		compositeWrapper.stopCompositeRecording(stoppedCountDown);
+
+		compositeWrapper.stopCompositeRecording(stoppedCountDown, forceAfterKmsRestart);
 		try {
 			if (!stoppedCountDown.await(5, TimeUnit.SECONDS)) {
 				recording.setStatus(io.openvidu.java.client.Recording.Status.failed);

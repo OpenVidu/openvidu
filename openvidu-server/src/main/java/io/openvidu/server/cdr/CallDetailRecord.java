@@ -67,10 +67,10 @@ import io.openvidu.server.recording.service.RecordingManager;
  * - resolution			string
  * - recordingLayout:	string
  * - size: 				number
- * - webrtcConnectionDestroyed.reason: 	"unsubscribe", "unpublish", "disconnect", "networkDisconnect", "openviduServerStopped"
+ * - webrtcConnectionDestroyed.reason: 	"unsubscribe", "unpublish", "disconnect", "networkDisconnect", "mediaServerDisconnect", "openviduServerStopped"
  * - participantLeft.reason: 			"unsubscribe", "unpublish", "disconnect", "networkDisconnect", "openviduServerStopped"
  * - sessionDestroyed.reason: 			"lastParticipantLeft", "openviduServerStopped"
- * - recordingStopped.reason:			"recordingStoppedByServer", "lastParticipantLeft", "sessionClosedByServer", "automaticStop", "openviduServerStopped"
+ * - recordingStopped.reason:			"recordingStoppedByServer", "lastParticipantLeft", "sessionClosedByServer", "automaticStop", "mediaServerDisconnect", "openviduServerStopped"
  * 
  * [OPTIONAL_PROPERTIES]:
  * - receivingFrom:		only if connection = "INBOUND"
@@ -105,7 +105,9 @@ public class CallDetailRecord {
 
 	public void recordSessionDestroyed(String sessionId, String reason) {
 		CDREvent e = this.sessions.remove(sessionId);
-		this.log(new CDREventSession(e, RecordingManager.finalReason(reason)));
+		if (e != null) {
+			this.log(new CDREventSession(e, RecordingManager.finalReason(reason)));
+		}
 	}
 
 	public void recordParticipantJoined(Participant participant, String sessionId) {

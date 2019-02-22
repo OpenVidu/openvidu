@@ -56,6 +56,7 @@ import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.kurento.core.KurentoParticipant;
 import io.openvidu.server.kurento.endpoint.PublisherEndpoint;
+import io.openvidu.server.kurento.kms.FixedOneKmsManager;
 import io.openvidu.server.recording.RecorderEndpointWrapper;
 import io.openvidu.server.recording.Recording;
 
@@ -127,7 +128,10 @@ public class SingleStreamRecordingService extends RecordingService {
 
 	@Override
 	public Recording stopRecording(Session session, Recording recording, String reason) {
+		return this.stopRecording(session, recording, reason, false);
+	}
 
+	public Recording stopRecording(Session session, Recording recording, String reason, boolean forceAfterKmsRestart) {
 		log.info("Stopping individual ({}) recording {} of session {}. Reason: {}",
 				recording.hasVideo() ? (recording.hasAudio() ? "video+audio" : "video-only") : "audioOnly",
 				recording.getId(), recording.getSessionId(), reason);
@@ -137,7 +141,7 @@ public class SingleStreamRecordingService extends RecordingService {
 
 		for (RecorderEndpointWrapper wrapper : recorders.get(recording.getSessionId()).values()) {
 			this.stopRecorderEndpointOfPublisherEndpoint(recording.getSessionId(), wrapper.getStreamId(),
-					stoppedCountDown);
+					stoppedCountDown, forceAfterKmsRestart);
 		}
 		try {
 			if (!stoppedCountDown.await(5, TimeUnit.SECONDS)) {
@@ -219,10 +223,10 @@ public class SingleStreamRecordingService extends RecordingService {
 	}
 
 	public void stopRecorderEndpointOfPublisherEndpoint(String sessionId, String streamId,
-			CountDownLatch globalStopLatch) {
+			CountDownLatch globalStopLatch, boolean forceAfterKmsRestart) {
 		log.info("Stopping single stream recorder for stream {} in session {}", streamId, sessionId);
 		final RecorderEndpointWrapper finalWrapper = this.recorders.get(sessionId).remove(streamId);
-		if (finalWrapper != null) {
+		if (finalWrapper != null && !forceAfterKmsRestart) {
 			finalWrapper.getRecorder().addStoppedListener(new EventListener<StoppedEvent>() {
 				@Override
 				public void onEvent(StoppedEvent event) {
@@ -235,7 +239,14 @@ public class SingleStreamRecordingService extends RecordingService {
 			});
 			finalWrapper.getRecorder().stop();
 		} else {
-			log.error("Stream {} wasn't being recorded in session {}", streamId, sessionId);
+			if (forceAfterKmsRestart) {
+				finalWrapper.setEndTime(FixedOneKmsManager.TIME_OF_DISCONNECTION.get());
+				generateIndividualMetadataFile(finalWrapper);
+				log.warn("Forcing individual recording stop after KMS restart for stream {} in session {}", streamId,
+						sessionId);
+			} else {
+				log.error("Stream {} wasn't being recorded in session {}", streamId, sessionId);
+			}
 			globalStopLatch.countDown();
 		}
 	}

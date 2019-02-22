@@ -114,6 +114,10 @@ public class RecordingManager {
 		return this.sessionHandler;
 	}
 
+	public SessionManager getSessionManager() {
+		return this.sessionManager;
+	}
+
 	public void initializeRecordingManager() throws OpenViduException {
 
 		RecordingManager.IMAGE_TAG = openviduConfig.getOpenViduRecordingVersion();
@@ -207,6 +211,21 @@ public class RecordingManager {
 		return recording;
 	}
 
+	public Recording forceStopRecording(Session session, String reason) {
+		Recording recording;
+		recording = this.sessionsRecordings.get(session.getSessionId());
+		switch (recording.getOutputMode()) {
+		case COMPOSED:
+			recording = this.composedRecordingService.stopRecording(session, recording, reason, true);
+			break;
+		case INDIVIDUAL:
+			recording = this.singleStreamRecordingService.stopRecording(session, recording, reason, true);
+			break;
+		}
+		this.abortAutomaticRecordingStopThread(session);
+		return recording;
+	}
+
 	public void startOneIndividualStreamRecording(Session session, String recordingId, MediaProfileSpecType profile,
 			Participant participant) {
 		Recording recording = this.sessionsRecordings.get(session.getSessionId());
@@ -230,7 +249,7 @@ public class RecordingManager {
 		}
 	}
 
-	public void stopOneIndividualStreamRecording(String sessionId, String streamId) {
+	public void stopOneIndividualStreamRecording(String sessionId, String streamId, boolean forceAfterKmsRestart) {
 		Recording recording = this.sessionsRecordings.get(sessionId);
 		if (recording == null) {
 			log.error("Cannot stop recording of existing stream {}. Session {} is not being recorded", streamId,
@@ -241,7 +260,7 @@ public class RecordingManager {
 			log.info("Stopping RecorderEndpoint in session {} for stream of participant {}", sessionId, streamId);
 			final CountDownLatch stoppedCountDown = new CountDownLatch(1);
 			this.singleStreamRecordingService.stopRecorderEndpointOfPublisherEndpoint(sessionId, streamId,
-					stoppedCountDown);
+					stoppedCountDown, forceAfterKmsRestart);
 			try {
 				if (!stoppedCountDown.await(5, TimeUnit.SECONDS)) {
 					log.error("Error waiting for recorder endpoint of stream {} to stop in session {}", streamId,
@@ -362,7 +381,7 @@ public class RecordingManager {
 					sessionManager.closeSessionAndEmptyCollections(session, "automaticStop");
 					sessionManager.showTokens();
 				} else {
-					this.stopRecording(null, recordingId, "automaticStop");
+					this.stopRecording(session, recordingId, "automaticStop");
 				}
 			} else {
 				// This code is reachable if there already was an automatic stop of a recording
