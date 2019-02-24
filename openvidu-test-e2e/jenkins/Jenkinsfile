@@ -15,7 +15,7 @@ node('container') {
         }
         stage('OpenVidu parent build') {
           sh 'cd openvidu/openvidu-java-client && mvn --batch-mode versions:set -DnewVersion=1.0.0-TEST'
-          sh 'cd openvidu && mvn --batch-mode -DskipTests=true clean -DskipTests=true compile -DskipTests=true install'
+          sh 'cd openvidu && mvn --batch-mode -DskipTests=true clean install'
         }
         stage('OpenVidu Browser build') {
           sh 'cd openvidu/openvidu-browser && npm install --unsafe-perm && npm run build && npm link'
