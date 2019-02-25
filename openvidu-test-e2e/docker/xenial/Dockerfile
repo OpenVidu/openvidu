@@ -13,6 +13,7 @@ RUN echo "deb [arch=amd64] http://ubuntu.openvidu.io/6.9.0 xenial kms6" | tee /e
 	&& apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 5AFA7A83 \
 	&& apt-get update \
 	&& apt-get -y install kurento-media-server
+RUN sed -i "s/DAEMON_USER=\"kurento\"/DAEMON_USER=\"root\"/g" /etc/default/kurento-media-server
 
 # Install Node
 RUN apt-get update && apt-get install -y curl
