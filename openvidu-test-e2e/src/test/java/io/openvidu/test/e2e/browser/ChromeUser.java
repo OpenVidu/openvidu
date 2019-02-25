@@ -17,26 +17,25 @@
 
 package io.openvidu.test.e2e.browser;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
-import org.springframework.core.io.ClassPathResource;
 
 public class ChromeUser extends BrowserUser {
 
 	public ChromeUser(String userName, int timeOfWaitInSeconds) {
-		this(userName, timeOfWaitInSeconds, "Entire screen", false);
+		this(userName, timeOfWaitInSeconds, generateDefaultScreenChromeOptions());
 	}
 
 	public ChromeUser(String userName, int timeOfWaitInSeconds, String screenToCapture, boolean runningAsRoot) {
-		this(userName, timeOfWaitInSeconds, generateScreenChromeOptions(screenToCapture, runningAsRoot));
+		this(userName, timeOfWaitInSeconds, generateCustomScreenChromeOptions(screenToCapture, runningAsRoot));
 	}
 
 	public ChromeUser(String userName, int timeOfWaitInSeconds, Path fakeVideoLocation) {
@@ -45,41 +44,46 @@ public class ChromeUser extends BrowserUser {
 
 	private ChromeUser(String userName, int timeOfWaitInSeconds, ChromeOptions options) {
 		super(userName, timeOfWaitInSeconds);
-		DesiredCapabilities capabilities = DesiredCapabilities.chrome();
-		capabilities.setAcceptInsecureCerts(true);
-		capabilities.setCapability(ChromeOptions.CAPABILITY, options);
+		options.setAcceptInsecureCerts(true);
+
+		Map<String, Object> prefs = new HashMap<String, Object>();
+		prefs.put("profile.default_content_setting_values.media_stream_mic", 1);
+		prefs.put("profile.default_content_setting_values.media_stream_camera", 1);
+		options.setExperimentalOption("prefs", prefs);
 
 		String REMOTE_URL = System.getProperty("REMOTE_URL_CHROME");
 		if (REMOTE_URL != null) {
 			log.info("Using URL {} to connect to remote web driver", REMOTE_URL);
 			try {
-				this.driver = new RemoteWebDriver(new URL(REMOTE_URL), capabilities);
+				this.driver = new RemoteWebDriver(new URL(REMOTE_URL), options);
 			} catch (MalformedURLException e) {
 				e.printStackTrace();
 			}
 		} else {
 			log.info("Using local web driver");
-			this.driver = new ChromeDriver(capabilities);
+			this.driver = new ChromeDriver(options);
 		}
 
 		this.driver.manage().timeouts().setScriptTimeout(this.timeOfWaitInSeconds, TimeUnit.SECONDS);
 		this.configureDriver();
 	}
 
-	private static ChromeOptions generateScreenChromeOptions(String screenToCapture, boolean runningAsRoot) {
+	private static ChromeOptions generateDefaultScreenChromeOptions() {
 		ChromeOptions options = new ChromeOptions();
 		// This flag avoids to grant the user media
 		options.addArguments("--use-fake-ui-for-media-stream");
 		// This flag fakes user media with synthetic video
 		options.addArguments("--use-fake-device-for-media-stream");
 		// This flag selects the entire screen as video source when screen sharing
+		options.addArguments("--auto-select-desktop-capture-source=Entire screen");
+
+		return options;
+	}
+
+	private static ChromeOptions generateCustomScreenChromeOptions(String screenToCapture, boolean runningAsRoot) {
+		ChromeOptions options = new ChromeOptions();
+		// This flag selects the entire screen as video source when screen sharing
 		options.addArguments("--auto-select-desktop-capture-source=" + screenToCapture);
-		try {
-			// Add Screen Sharing extension
-			options.addExtensions(new ClassPathResource("ScreenCapturing.crx").getFile());
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 
 		if (runningAsRoot) {
 			options.addArguments("--no-sandbox");
