@@ -972,8 +972,8 @@ public class OpenViduTestAppE2eTest {
 
 		// Resize captured window
 		final CountDownLatch latch3 = new CountDownLatch(2);
-		int newWidth = 1500;
-		int newHeight = 500;
+		int newWidth = 1000;
+		int newHeight = 700;
 
 		final long[] expectedWidthHeight = new long[2];
 
