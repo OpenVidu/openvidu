@@ -44,6 +44,7 @@ RUN rm -rf /var/lib/apt/lists/*
 RUN apt-get autoremove --purge -y
 
 COPY barcode.y4m /opt/openvidu/barcode.y4m
+COPY fakeaudio.wav /opt/openvidu/fakeaudio.wav
 COPY entrypoint.sh /entrypoint.sh
 RUN ["chmod", "+x", "/entrypoint.sh"]
 
