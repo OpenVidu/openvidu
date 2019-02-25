@@ -20,6 +20,7 @@ package io.openvidu.test.e2e.browser;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -35,7 +36,8 @@ public class ChromeUser extends BrowserUser {
 	}
 
 	public ChromeUser(String userName, int timeOfWaitInSeconds, String screenToCapture, boolean runningAsRoot) {
-		this(userName, timeOfWaitInSeconds, generateCustomScreenChromeOptions(screenToCapture, runningAsRoot));
+		this(userName, timeOfWaitInSeconds, generateCustomScreenChromeOptions(screenToCapture, runningAsRoot,
+				Paths.get("/opt/openvidu/fakeaudio.wav")));
 	}
 
 	public ChromeUser(String userName, int timeOfWaitInSeconds, Path fakeVideoLocation) {
@@ -45,6 +47,8 @@ public class ChromeUser extends BrowserUser {
 	private ChromeUser(String userName, int timeOfWaitInSeconds, ChromeOptions options) {
 		super(userName, timeOfWaitInSeconds);
 		options.setAcceptInsecureCerts(true);
+		
+		options.addArguments("--disable-infobars");
 
 		Map<String, Object> prefs = new HashMap<String, Object>();
 		prefs.put("profile.default_content_setting_values.media_stream_mic", 1);
@@ -84,10 +88,13 @@ public class ChromeUser extends BrowserUser {
 		return options;
 	}
 
-	private static ChromeOptions generateCustomScreenChromeOptions(String screenToCapture, boolean runningAsRoot) {
+	private static ChromeOptions generateCustomScreenChromeOptions(String screenToCapture, boolean runningAsRoot,
+			Path audioFileLocation) {
 		ChromeOptions options = new ChromeOptions();
 		// This flag selects the entire screen as video source when screen sharing
 		options.addArguments("--auto-select-desktop-capture-source=" + screenToCapture);
+		options.addArguments("--use-fake-device-for-media-stream");
+		options.addArguments("--use-file-for-fake-audio-capture=" + audioFileLocation.toString());
 
 		if (runningAsRoot) {
 			options.addArguments("--no-sandbox");
