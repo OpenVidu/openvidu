@@ -2,6 +2,7 @@
 [![Documentation badge](https://readthedocs.org/projects/fiware-orion/badge/?version=latest)](https://openvidu.io/docs/home/)
 [![Docker badge](https://img.shields.io/docker/pulls/fiware/orion.svg)](https://hub.docker.com/r/openvidu/)
 [![Support badge](https://img.shields.io/badge/support-sof-yellowgreen.svg)](https://groups.google.com/forum/#!forum/openvidu)
+[![Twitter Follow](https://img.shields.io/twitter/follow/openvidu.svg?style=social)](https://twitter.com/openvidu)
 
 [![][OpenViduLogo]](https://openvidu.io)
 
