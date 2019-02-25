@@ -1927,6 +1927,8 @@ public class OpenViduTestAppE2eTest {
 		isRecordingTest = true;
 
 		setupBrowser("chromeAlternateScreenShare");
+		
+		user.getDriver().manage().window().setSize(new Dimension(1000, 800));
 
 		log.info("openvidu-java-client test");
 
