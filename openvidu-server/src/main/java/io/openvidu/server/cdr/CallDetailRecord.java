@@ -97,6 +97,10 @@ public class CallDetailRecord {
 		this.loggers = loggers;
 	}
 
+	public Collection<CDRLogger> getLoggers() {
+		return this.loggers;
+	}
+
 	public void recordSessionCreated(Session session) {
 		CDREventSession e = new CDREventSession(session);
 		this.sessions.put(session.getSessionId(), e);
