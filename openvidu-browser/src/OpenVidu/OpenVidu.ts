@@ -521,9 +521,9 @@ export class OpenVidu {
               reject(error);
             } else {
 
-              if (!!this.advancedConfiguration.screenShareChromeExtension && !(platform.name!.indexOf('Firefox') !== -1)) {
+              if (!!this.advancedConfiguration.screenShareChromeExtension && !(platform.name!.indexOf('Firefox') !== -1) && !navigator.mediaDevices['getDisplayMedia']) {
 
-                // Custom screen sharing extension for Chrome (and Opera)
+                // Custom screen sharing extension for Chrome (and Opera) and no support for MediaDevices.getDisplayMedia()
 
                 screenSharing.getScreenConstraints((error, screenConstraints) => {
                   if (!!error || !!screenConstraints.mandatory && screenConstraints.mandatory.chromeMediaSource === 'screen') {
@@ -553,32 +553,36 @@ export class OpenVidu {
                 });
               } else {
 
-                // Default screen sharing extension for Chrome (or is Firefox)
+                if ((platform.name === 'Chrome' || platform.name === 'Opera') && navigator.mediaDevices['getDisplayMedia']) {
+                  // Chrome or Opera with MediaDevices.getDisplayMedia() support
+                  resolve(mediaConstraints);
+                } else {
+                  // Default screen sharing extension for Chrome/Opera, or is Firefox
+                  const firefoxString = platform.name!.indexOf('Firefox') !== -1 ? publisherProperties.videoSource : undefined;
 
-                const firefoxString = platform.name!.indexOf('Firefox') !== -1 ? publisherProperties.videoSource : undefined;
-
-                screenSharingAuto.getScreenId(firefoxString, (error, sourceId, screenConstraints) => {
-                  if (!!error) {
-                    if (error === 'not-installed') {
-                      const extensionUrl = !!this.advancedConfiguration.screenShareChromeExtension ? this.advancedConfiguration.screenShareChromeExtension :
-                        'https://chrome.google.com/webstore/detail/openvidu-screensharing/lfcgfepafnobdloecchnfaclibenjold';
-                      const error = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_NOT_INSTALLED, extensionUrl);
-                      console.error(error);
-                      reject(error);
-                    } else if (error === 'installed-disabled') {
-                      const error = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_DISABLED, 'You must enable the screen extension');
-                      console.error(error);
-                      reject(error);
-                    } else if (error === 'permission-denied') {
-                      const error = new OpenViduError(OpenViduErrorName.SCREEN_CAPTURE_DENIED, 'You must allow access to one window of your desktop');
-                      console.error(error);
-                      reject(error);
+                  screenSharingAuto.getScreenId(firefoxString, (error, sourceId, screenConstraints) => {
+                    if (!!error) {
+                      if (error === 'not-installed') {
+                        const extensionUrl = !!this.advancedConfiguration.screenShareChromeExtension ? this.advancedConfiguration.screenShareChromeExtension :
+                          'https://chrome.google.com/webstore/detail/openvidu-screensharing/lfcgfepafnobdloecchnfaclibenjold';
+                        const error = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_NOT_INSTALLED, extensionUrl);
+                        console.error(error);
+                        reject(error);
+                      } else if (error === 'installed-disabled') {
+                        const error = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_DISABLED, 'You must enable the screen extension');
+                        console.error(error);
+                        reject(error);
+                      } else if (error === 'permission-denied') {
+                        const error = new OpenViduError(OpenViduErrorName.SCREEN_CAPTURE_DENIED, 'You must allow access to one window of your desktop');
+                        console.error(error);
+                        reject(error);
+                      }
+                    } else {
+                      mediaConstraints.video = screenConstraints.video;
+                      resolve(mediaConstraints);
                     }
-                  } else {
-                    mediaConstraints.video = screenConstraints.video;
-                    resolve(mediaConstraints);
-                  }
-                });
+                  });
+                }
               }
 
               publisherProperties.videoSource = 'screen';
