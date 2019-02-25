@@ -176,7 +176,7 @@ public class OpenViduTestAppE2eTest {
 
 		switch (browser) {
 		case "chrome":
-			this.user = new ChromeUser("TestUser", 50);
+			this.user = new ChromeUser("TestUser", 50, false);
 			break;
 		case "firefox":
 			this.user = new FirefoxUser("TestUser", 50);
@@ -191,10 +191,10 @@ public class OpenViduTestAppE2eTest {
 			this.user = new ChromeUser("TestUser", 50, "OpenVidu TestApp", false);
 			break;
 		case "chromeAsRoot":
-			this.user = new ChromeUser("TestUser", 50, "Entire screen", true);
+			this.user = new ChromeUser("TestUser", 50, true);
 			break;
 		default:
-			this.user = new ChromeUser("TestUser", 50);
+			this.user = new ChromeUser("TestUser", 50, false);
 		}
 
 		user.getDriver().get(APP_URL);

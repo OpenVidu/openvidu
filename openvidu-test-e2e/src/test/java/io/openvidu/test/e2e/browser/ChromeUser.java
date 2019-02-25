@@ -30,8 +30,8 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 
 public class ChromeUser extends BrowserUser {
 
-	public ChromeUser(String userName, int timeOfWaitInSeconds) {
-		this(userName, timeOfWaitInSeconds, generateDefaultScreenChromeOptions());
+	public ChromeUser(String userName, int timeOfWaitInSeconds, boolean runningAsRoot) {
+		this(userName, timeOfWaitInSeconds, generateDefaultScreenChromeOptions(runningAsRoot));
 	}
 
 	public ChromeUser(String userName, int timeOfWaitInSeconds, String screenToCapture, boolean runningAsRoot) {
@@ -68,7 +68,7 @@ public class ChromeUser extends BrowserUser {
 		this.configureDriver();
 	}
 
-	private static ChromeOptions generateDefaultScreenChromeOptions() {
+	private static ChromeOptions generateDefaultScreenChromeOptions(boolean runningAsRoot) {
 		ChromeOptions options = new ChromeOptions();
 		// This flag avoids to grant the user media
 		options.addArguments("--use-fake-ui-for-media-stream");
@@ -76,6 +76,10 @@ public class ChromeUser extends BrowserUser {
 		options.addArguments("--use-fake-device-for-media-stream");
 		// This flag selects the entire screen as video source when screen sharing
 		options.addArguments("--auto-select-desktop-capture-source=Entire screen");
+
+		if (runningAsRoot) {
+			options.addArguments("--no-sandbox");
+		}
 
 		return options;
 	}
