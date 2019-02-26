@@ -1,1 +1,2 @@
-*/config/typedoc/custom-theme/* linguist-detectable=false
+openvidu-browser/config/typedoc/custom-theme/* linguist-detectable=false
+openvidu-node-client/config/typedoc/custom-theme/* linguist-detectable=false
