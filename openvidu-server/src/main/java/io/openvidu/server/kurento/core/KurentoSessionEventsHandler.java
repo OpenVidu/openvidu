@@ -32,13 +32,16 @@ public class KurentoSessionEventsHandler extends SessionEventsHandler {
 	public KurentoSessionEventsHandler() {
 	}
 
-	public void onIceCandidate(String roomName, String participantId, String endpointName, IceCandidate candidate) {
+	public void onIceCandidate(String roomName, String participantPrivateId, String senderPublicId, String endpointName,
+			IceCandidate candidate) {
 		JsonObject params = new JsonObject();
+
+		params.addProperty(ProtocolElements.ICECANDIDATE_SENDERCONNECTIONID_PARAM, senderPublicId);
 		params.addProperty(ProtocolElements.ICECANDIDATE_EPNAME_PARAM, endpointName);
 		params.addProperty(ProtocolElements.ICECANDIDATE_SDPMLINEINDEX_PARAM, candidate.getSdpMLineIndex());
 		params.addProperty(ProtocolElements.ICECANDIDATE_SDPMID_PARAM, candidate.getSdpMid());
 		params.addProperty(ProtocolElements.ICECANDIDATE_CANDIDATE_PARAM, candidate.getCandidate());
-		rpcNotificationService.sendNotification(participantId, ProtocolElements.ICECANDIDATE_METHOD, params);
+		rpcNotificationService.sendNotification(participantPrivateId, ProtocolElements.ICECANDIDATE_METHOD, params);
 	}
 
 	public void onPipelineError(String roomName, Set<Participant> participants, String description) {

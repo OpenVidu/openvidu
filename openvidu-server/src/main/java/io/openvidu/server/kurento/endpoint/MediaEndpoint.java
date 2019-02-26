@@ -73,7 +73,10 @@ public abstract class MediaEndpoint {
 	private final int minSendKbps;
 
 	private KurentoParticipant owner;
-	private String endpointName;
+	protected String endpointName; // KMS media object identifier. Unique for every MediaEndpoint
+	protected String streamId; // OpenVidu Stream identifier. Common property for a
+								// PublisherEndpoint->SubscriberEndpoint flow. Equal to endpointName for
+								// PublisherEndpoints, different for SubscriberEndpoints
 	protected Long createdAt; // Timestamp when this [publisher / subscriber] started [publishing / receiving]
 
 	private MediaPipeline pipeline = null;
@@ -208,20 +211,20 @@ public abstract class MediaEndpoint {
 		this.pipeline = pipeline;
 	}
 
-	/**
-	 * @return name of this endpoint (as indicated by the browser)
-	 */
 	public String getEndpointName() {
-		return endpointName;
+		return endpointName != null ? endpointName : this.getEndpoint().getName();
 	}
 
-	/**
-	 * Sets the endpoint's name (as indicated by the browser).
-	 *
-	 * @param endpointName the name
-	 */
 	public void setEndpointName(String endpointName) {
 		this.endpointName = endpointName;
+	}
+
+	public String getStreamId() {
+		return streamId;
+	}
+
+	public void setStreamId(String streamId) {
+		this.streamId = streamId;
 	}
 
 	/**
@@ -413,7 +416,7 @@ public abstract class MediaEndpoint {
 	 * @see Participant#sendIceCandidate(String, IceCandidate)
 	 * @throws OpenViduException if thrown, unable to register the listener
 	 */
-	protected void registerOnIceCandidateEventListener() throws OpenViduException {
+	protected void registerOnIceCandidateEventListener(String senderPublicId) throws OpenViduException {
 		if (!this.isWeb()) {
 			return;
 		}
@@ -424,7 +427,7 @@ public abstract class MediaEndpoint {
 		webEndpoint.addOnIceCandidateListener(new EventListener<OnIceCandidateEvent>() {
 			@Override
 			public void onEvent(OnIceCandidateEvent event) {
-				owner.sendIceCandidate(endpointName, event.getCandidate());
+				owner.sendIceCandidate(senderPublicId, endpointName, event.getCandidate());
 			}
 		});
 	}

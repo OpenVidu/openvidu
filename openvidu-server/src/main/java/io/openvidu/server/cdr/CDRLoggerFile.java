@@ -20,6 +20,8 @@ package io.openvidu.server.cdr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.openvidu.server.kurento.endpoint.KmsEvent;
+
 public class CDRLoggerFile implements CDRLogger {
 
 	private Logger log = LoggerFactory.getLogger(CDRLoggerFile.class);
@@ -27,6 +29,10 @@ public class CDRLoggerFile implements CDRLogger {
 	@Override
 	public void log(CDREvent event) {
 		log.info("{}", event);
+	}
+
+	@Override
+	public void log(KmsEvent event) {
 	}
 
 	@Override

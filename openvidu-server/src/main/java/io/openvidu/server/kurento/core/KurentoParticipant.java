@@ -28,7 +28,6 @@ import org.kurento.client.Continuation;
 import org.kurento.client.ErrorEvent;
 import org.kurento.client.Filter;
 import org.kurento.client.IceCandidate;
-import org.kurento.client.IceComponentState;
 import org.kurento.client.MediaElement;
 import org.kurento.client.MediaPipeline;
 import org.kurento.client.MediaType;
@@ -110,8 +109,12 @@ public class KurentoParticipant extends Participant {
 		String publisherStreamId = this.getParticipantPublicId() + "_"
 				+ (mediaOptions.hasVideo() ? mediaOptions.getTypeOfVideo() : "MICRO") + "_"
 				+ RandomStringUtils.random(5, true, false).toUpperCase();
+
+		this.publisher.setEndpointName(publisherStreamId);
+		this.publisher.getEndpoint().setName(publisherStreamId);
 		this.publisher.setStreamId(publisherStreamId);
-		addEndpointListeners(this.publisher);
+
+		addEndpointListeners(this.publisher, "publisher");
 
 		// Remove streamId from publisher's map
 		this.session.publishedStreamIds.putIfAbsent(this.getPublisherStreamId(), this.getParticipantPrivateId());
@@ -246,11 +249,13 @@ public class KurentoParticipant extends Participant {
 				throw new OpenViduException(Code.MEDIA_ENDPOINT_ERROR_CODE, "Unable to create subscriber endpoint");
 			}
 
-			String subscriberStreamId = this.getParticipantPublicId() + "_" + kSender.getPublisherStreamId();
+			String subscriberEndpointName = this.getParticipantPublicId() + "_" + kSender.getPublisherStreamId();
 
-			subscriber.getEndpoint().setName(subscriberStreamId);
+			subscriber.setEndpointName(subscriberEndpointName);
+			subscriber.getEndpoint().setName(subscriberEndpointName);
+			subscriber.setStreamId(kSender.getPublisherStreamId());
 
-			addEndpointListeners(subscriber);
+			addEndpointListeners(subscriber, "subscriber");
 
 		} catch (OpenViduException e) {
 			this.subscribers.remove(senderName);
@@ -329,13 +334,12 @@ public class KurentoParticipant extends Participant {
 	 * @return the endpoint instance
 	 */
 	public SubscriberEndpoint getNewOrExistingSubscriber(String senderPublicId) {
-
-		SubscriberEndpoint sendingEndpoint = new SubscriberEndpoint(webParticipant, this, senderPublicId,
+		SubscriberEndpoint subscriberEndpoint = new SubscriberEndpoint(webParticipant, this, senderPublicId,
 				this.getPipeline(), this.openviduConfig);
 
-		SubscriberEndpoint existingSendingEndpoint = this.subscribers.putIfAbsent(senderPublicId, sendingEndpoint);
+		SubscriberEndpoint existingSendingEndpoint = this.subscribers.putIfAbsent(senderPublicId, subscriberEndpoint);
 		if (existingSendingEndpoint != null) {
-			sendingEndpoint = existingSendingEndpoint;
+			subscriberEndpoint = existingSendingEndpoint;
 			log.trace("PARTICIPANT {}: Already exists a subscriber endpoint to user {}", this.getParticipantPublicId(),
 					senderPublicId);
 		} else {
@@ -343,7 +347,7 @@ public class KurentoParticipant extends Participant {
 					senderPublicId);
 		}
 
-		return sendingEndpoint;
+		return subscriberEndpoint;
 	}
 
 	public void addIceCandidate(String endpointName, IceCandidate iceCandidate) {
@@ -354,8 +358,8 @@ public class KurentoParticipant extends Participant {
 		}
 	}
 
-	public void sendIceCandidate(String endpointName, IceCandidate candidate) {
-		session.sendIceCandidate(this.getParticipantPrivateId(), endpointName, candidate);
+	public void sendIceCandidate(String senderPublicId, String endpointName, IceCandidate candidate) {
+		session.sendIceCandidate(this.getParticipantPrivateId(), senderPublicId, endpointName, candidate);
 	}
 
 	public void sendMediaError(ErrorEvent event) {
@@ -429,104 +433,103 @@ public class KurentoParticipant extends Participant {
 		}
 	}
 
-	private void addEndpointListeners(MediaEndpoint endpoint) {
-
-		/*
-		 * endpoint.getWebEndpoint().addElementConnectedListener((element) -> { String
-		 * msg = "                  Element connected (" +
-		 * endpoint.getEndpoint().getName() + ") -> " + "SINK: " +
-		 * element.getSink().getName() + " | SOURCE: " + element.getSource().getName() +
-		 * " | MEDIATYPE: " + element.getMediaType(); System.out.println(msg);
-		 * this.infoHandler.sendInfo(msg); });
-		 */
-
-		/*
-		 * endpoint.getWebEndpoint().addElementDisconnectedListener((event) -> { String
-		 * msg = "                  Element disconnected (" +
-		 * endpoint.getEndpoint().getName() + ") -> " + "SINK: " +
-		 * event.getSinkMediaDescription() + " | SOURCE: " +
-		 * event.getSourceMediaDescription() + " | MEDIATYPE: " + event.getMediaType();
-		 * System.out.println(msg); this.infoHandler.sendInfo(msg); });
-		 */
-
-		/*
-		 * endpoint.getWebEndpoint().addErrorListener((event) -> { String msg =
-		 * "                  Error (PUBLISHER) -> " + "ERRORCODE: " +
-		 * event.getErrorCode() + " | DESCRIPTION: " + event.getDescription() +
-		 * " | TIMESTAMP: " + System.currentTimeMillis(); log.debug(msg);
-		 * this.infoHandler.sendInfo(msg); });
-		 * 
-		 * endpoint.getWebEndpoint().addMediaSessionStartedListener((event) -> { String
-		 * msg = "                  Media session started (" +
-		 * endpoint.getEndpoint().getName() + ") | TIMESTAMP: " +
-		 * System.currentTimeMillis(); log.debug(msg); this.infoHandler.sendInfo(msg);
-		 * });
-		 * 
-		 * endpoint.getWebEndpoint().addMediaSessionTerminatedListener((event) -> {
-		 * String msg = "                  Media session terminated (" +
-		 * endpoint.getEndpoint().getName() + ") | TIMESTAMP: " +
-		 * System.currentTimeMillis(); log.debug(msg); this.infoHandler.sendInfo(msg);
-		 * });
-		 * 
-		 * endpoint.getWebEndpoint().addMediaStateChangedListener((event) -> { String
-		 * msg = "                  Media state changed (" +
-		 * endpoint.getEndpoint().getName() + ") from " + event.getOldState() + " to " +
-		 * event.getNewState(); log.debug(msg); this.infoHandler.sendInfo(msg); });
-		 * 
-		 * endpoint.getWebEndpoint().addIceCandidateFoundListener((event) -> { String
-		 * msg = "                  ICE CANDIDATE FOUND (" +
-		 * endpoint.getEndpoint().getName() + "): CANDIDATE: " +
-		 * event.getCandidate().getCandidate() + " | TIMESTAMP: " +
-		 * System.currentTimeMillis(); log.debug(msg); this.infoHandler.sendInfo(msg);
-		 * });
-		 */
+	private void addEndpointListeners(MediaEndpoint endpoint, String typeOfEndpoint) {
 
 		endpoint.getWebEndpoint().addMediaFlowInStateChangeListener(event -> {
-			String msg1 = "Media flow in state change (" + endpoint.getEndpoint().getName() + ") -> " + "STATE: "
-					+ event.getState() + " | SOURCE: " + event.getSource().getName() + " | PAD: " + event.getPadName()
-					+ " | MEDIATYPE: " + event.getMediaType() + " | TIMESTAMP: " + System.currentTimeMillis();
-			endpoint.kmsEvents.add(new KmsMediaEvent(event, event.getMediaType(), endpoint.createdAt()));
-			log.info(msg1);
-			this.infoHandler.sendInfo(msg1);
+			String msg = "KMS event [MediaFlowInStateChange] -> endpoint: " + endpoint.getEndpointName() + " ("
+					+ typeOfEndpoint + ") | state: " + event.getState() + " | pad: " + event.getPadName()
+					+ " | mediaType: " + event.getMediaType() + " | timestamp: " + event.getTimestamp();
+			KmsEvent kmsEvent = new KmsMediaEvent(event, endpoint.getEndpointName(), event.getMediaType(),
+					endpoint.createdAt());
+			endpoint.kmsEvents.add(kmsEvent);
+			this.CDR.recordKmsEvent(kmsEvent);
+			this.infoHandler.sendInfo(msg);
+			log.warn(msg);
 		});
 
 		endpoint.getWebEndpoint().addMediaFlowOutStateChangeListener(event -> {
-			String msg1 = "Media flow out state change (" + endpoint.getEndpoint().getName() + ") -> " + "STATE: "
-					+ event.getState() + " | SOURCE: " + event.getSource().getName() + " | PAD: " + event.getPadName()
-					+ " | MEDIATYPE: " + event.getMediaType() + " | TIMESTAMP: " + System.currentTimeMillis();
-			endpoint.kmsEvents.add(new KmsMediaEvent(event, event.getMediaType(), endpoint.createdAt()));
-			log.info(msg1);
-			this.infoHandler.sendInfo(msg1);
+			String msg = "KMS event [MediaFlowOutStateChange] -> endpoint: " + endpoint.getEndpointName() + " ("
+					+ typeOfEndpoint + ") | state: " + event.getState() + " | pad: " + event.getPadName()
+					+ " | mediaType: " + event.getMediaType() + " | timestamp: " + event.getTimestamp();
+			KmsEvent kmsEvent = new KmsMediaEvent(event, endpoint.getEndpointName(), event.getMediaType(),
+					endpoint.createdAt());
+			endpoint.kmsEvents.add(kmsEvent);
+			this.CDR.recordKmsEvent(kmsEvent);
+			this.infoHandler.sendInfo(msg);
+			log.warn(msg);
 		});
 
 		endpoint.getWebEndpoint().addIceGatheringDoneListener(event -> {
-			endpoint.kmsEvents.add(new KmsEvent(event, endpoint.createdAt()));
+			String msg = "KMS event [IceGatheringDone] -> endpoint: " + endpoint.getEndpointName() + " ("
+					+ typeOfEndpoint + ") | timestamp: " + event.getTimestamp();
+			KmsEvent kmsEvent = new KmsEvent(event, endpoint.getEndpointName(), endpoint.createdAt());
+			endpoint.kmsEvents.add(kmsEvent);
+			this.CDR.recordKmsEvent(kmsEvent);
+			this.infoHandler.sendInfo(msg);
+			log.warn(msg);
 		});
 
 		endpoint.getWebEndpoint().addConnectionStateChangedListener(event -> {
-			endpoint.kmsEvents.add(new KmsEvent(event, endpoint.createdAt()));
+			String msg = "KMS event [ConnectionStateChanged]: -> endpoint: " + endpoint.getEndpointName() + " ("
+					+ typeOfEndpoint + ") | oldState: " + event.getOldState() + " | newState: " + event.getNewState()
+					+ " | timestamp: " + event.getTimestamp();
+			KmsEvent kmsEvent = new KmsEvent(event, endpoint.getEndpointName(), endpoint.createdAt());
+			endpoint.kmsEvents.add(kmsEvent);
+			this.CDR.recordKmsEvent(kmsEvent);
+			this.infoHandler.sendInfo(msg);
+			log.warn(msg);
 		});
 
 		endpoint.getWebEndpoint().addNewCandidatePairSelectedListener(event -> {
 			endpoint.selectedLocalIceCandidate = event.getCandidatePair().getLocalCandidate();
 			endpoint.selectedRemoteIceCandidate = event.getCandidatePair().getRemoteCandidate();
-			endpoint.kmsEvents.add(new KmsEvent(event, endpoint.createdAt()));
-			String msg = "ICE CANDIDATE SELECTED (" + endpoint.getEndpoint().getName() + "): LOCAL CANDIDATE: "
-					+ endpoint.selectedLocalIceCandidate + " | REMOTE CANDIDATE: " + endpoint.selectedRemoteIceCandidate
-					+ " | TIMESTAMP: " + System.currentTimeMillis();
-			log.warn(msg);
+			String msg = "KMS event [NewCandidatePairSelected]: -> endpoint: " + endpoint.getEndpointName() + " ("
+					+ typeOfEndpoint + ") | local: " + endpoint.selectedLocalIceCandidate + " | remote: "
+					+ endpoint.selectedRemoteIceCandidate + " | timestamp: " + event.getTimestamp();
+			KmsEvent kmsEvent = new KmsEvent(event, endpoint.getEndpointName(), endpoint.createdAt());
+			endpoint.kmsEvents.add(kmsEvent);
+			this.CDR.recordKmsEvent(kmsEvent);
 			this.infoHandler.sendInfo(msg);
+			log.warn(msg);
 		});
 
 		endpoint.getEndpoint().addMediaTranscodingStateChangeListener(event -> {
-			endpoint.kmsEvents.add(new KmsMediaEvent(event, event.getMediaType(), endpoint.createdAt()));
+			String msg = "KMS event [MediaTranscodingStateChange]: -> endpoint: " + endpoint.getEndpointName() + " ("
+					+ typeOfEndpoint + ") | state: " + event.getState().name() + " | mediaType: " + event.getMediaType()
+					+ " | binName: " + event.getBinName() + " | timestamp: " + event.getTimestamp();
+			KmsEvent kmsEvent = new KmsMediaEvent(event, endpoint.getEndpointName(), event.getMediaType(),
+					endpoint.createdAt());
+			endpoint.kmsEvents.add(kmsEvent);
+			this.CDR.recordKmsEvent(kmsEvent);
+			this.infoHandler.sendInfo(msg);
+			log.warn(msg);
 		});
 
 		endpoint.getWebEndpoint().addIceComponentStateChangeListener(event -> {
-			if (!event.getState().equals(IceComponentState.READY)) {
-				endpoint.kmsEvents.add(new KmsEvent(event, endpoint.createdAt()));
-			}
+			// if (!event.getState().equals(IceComponentState.READY)) {
+			String msg = "KMS event [IceComponentStateChange]: -> endpoint: " + endpoint.getEndpointName() + " ("
+					+ typeOfEndpoint + ") | state: " + event.getState().name() + " | componentId: "
+					+ event.getComponentId() + " | streamId: " + event.getStreamId() + " | timestamp: "
+					+ event.getTimestamp();
+			KmsEvent kmsEvent = new KmsEvent(event, endpoint.getEndpointName(), endpoint.createdAt());
+			endpoint.kmsEvents.add(kmsEvent);
+			this.CDR.recordKmsEvent(kmsEvent);
+			this.infoHandler.sendInfo(msg);
+			log.warn(msg);
+			// }
 		});
+
+		endpoint.getWebEndpoint().addErrorListener(event -> {
+			String msg = "KMS event [ERROR]: -> endpoint: " + endpoint.getEndpointName() + " (" + typeOfEndpoint
+					+ ") | errorCode: " + event.getErrorCode() + " | description: " + event.getDescription()
+					+ " | timestamp: " + event.getTimestamp();
+			KmsEvent kmsEvent = new KmsEvent(event, endpoint.getEndpointName(), endpoint.createdAt());
+			endpoint.kmsEvents.add(kmsEvent);
+			this.CDR.recordKmsEvent(kmsEvent);
+			this.infoHandler.sendInfo(msg);
+			log.error(msg);
+		});
+
 	}
 
 	public MediaPipeline getPipeline() {

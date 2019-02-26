@@ -169,8 +169,10 @@ public class KurentoSession extends Session {
 		}
 	}
 
-	public void sendIceCandidate(String participantId, String endpointName, IceCandidate candidate) {
-		this.kurentoSessionHandler.onIceCandidate(sessionId, participantId, endpointName, candidate);
+	public void sendIceCandidate(String participantPrivateId, String senderPublicId, String endpointName,
+			IceCandidate candidate) {
+		this.kurentoSessionHandler.onIceCandidate(sessionId, participantPrivateId, senderPublicId, endpointName,
+				candidate);
 	}
 
 	public void sendMediaError(String participantId, String description) {

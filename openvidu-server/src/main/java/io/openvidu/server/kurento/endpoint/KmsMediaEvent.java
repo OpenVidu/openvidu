@@ -20,13 +20,22 @@ package io.openvidu.server.kurento.endpoint;
 import org.kurento.client.MediaEvent;
 import org.kurento.client.MediaType;
 
+import com.google.gson.JsonObject;
+
 public class KmsMediaEvent extends KmsEvent {
 
 	MediaType mediaType;
 
-	public KmsMediaEvent(MediaEvent event, MediaType mediaType, long createdAt) {
-		super(event, createdAt);
+	public KmsMediaEvent(MediaEvent event, String endpointName, MediaType mediaType, long createdAt) {
+		super(event, endpointName, createdAt);
 		this.mediaType = mediaType;
+	}
+
+	@Override
+	public JsonObject toJson() {
+		JsonObject json = super.toJson();
+		json.addProperty("mediaType", this.mediaType.name());
+		return json;
 	}
 
 }

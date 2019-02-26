@@ -877,7 +877,7 @@ export class Session implements EventDispatcher {
                 return { candidate: msg.candidate };
             }
         };
-        this.getConnection(msg.endpointName, 'Connection not found for endpoint ' + msg.endpointName + '. Ice candidate will be ignored: ' + candidate)
+        this.getConnection(msg.senderConnectionId, 'Connection not found for connectionId ' + msg.senderConnectionId + ' owning endpoint ' + msg.endpointName + '. Ice candidate will be ignored: ' + candidate)
             .then(connection => {
                 const stream = connection.stream;
                 stream.getWebRtcPeer().addIceCandidate(candidate).catch(error => {

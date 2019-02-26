@@ -30,6 +30,7 @@ import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
+import io.openvidu.server.kurento.endpoint.KmsEvent;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.recording.service.RecordingManager;
 
@@ -180,11 +181,21 @@ public class CallDetailRecord {
 		this.log(new CDREventRecording(recordingStartedEvent, RecordingManager.finalReason(reason)));
 	}
 
+	public void recordKmsEvent(KmsEvent event) {
+		this.log(event);
+	}
+
 	private void log(CDREvent event) {
 		this.loggers.forEach(logger -> {
 			if (openviduConfig.isCdrEnabled() || !logger.canBeDisabled()) {
 				logger.log(event);
 			}
+		});
+	}
+
+	private void log(KmsEvent event) {
+		this.loggers.forEach(logger -> {
+			logger.log(event);
 		});
 	}
 

@@ -17,20 +17,43 @@
 
 package io.openvidu.server.kurento.endpoint;
 
+import org.kurento.client.ErrorEvent;
 import org.kurento.client.MediaEvent;
+import org.kurento.client.RaiseBaseEvent;
+
+import com.google.gson.JsonObject;
 
 public class KmsEvent {
 
 	long timestamp;
 	long msSinceCreation;
 	String endpoint;
-	MediaEvent event;
+	RaiseBaseEvent event;
 
-	public KmsEvent(MediaEvent event, long createdAt) {
+	public KmsEvent(RaiseBaseEvent event, String endpointName, long createdAt) {
 		this.event = event;
-		this.endpoint = event.getSource().getName();
-		this.event.setSource(null);
+		this.endpoint = endpointName;
 		this.timestamp = System.currentTimeMillis();
 		this.msSinceCreation = this.timestamp - createdAt;
 	}
+
+	public JsonObject toJson() {
+		JsonObject json = new JsonObject();
+
+		if (event instanceof ErrorEvent) {
+			ErrorEvent errorEvent = (ErrorEvent) event;
+			json.addProperty("eventType", errorEvent.getType());
+			json.addProperty("errorCode", errorEvent.getErrorCode());
+			json.addProperty("description", errorEvent.getDescription());
+		} else {
+			MediaEvent mediaEvent = (MediaEvent) event;
+			json.addProperty("eventType", mediaEvent.getType());
+		}
+
+		json.addProperty("timestamp", timestamp);
+		json.addProperty("msSinceEndpointCreation", msSinceCreation);
+		json.addProperty("endpoint", this.endpoint);
+		return json;
+	}
+
 }

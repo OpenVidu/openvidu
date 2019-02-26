@@ -74,8 +74,6 @@ public class PublisherEndpoint extends MediaEndpoint {
 
 	private Map<String, ListenerSubscription> elementsErrorSubscriptions = new HashMap<String, ListenerSubscription>();
 
-	private String streamId;
-
 	public PublisherEndpoint(boolean web, KurentoParticipant owner, String endpointName, MediaPipeline pipeline,
 			OpenviduConfig openviduConfig) {
 		super(web, owner, endpointName, pipeline, openviduConfig, log);
@@ -177,7 +175,7 @@ public class PublisherEndpoint extends MediaEndpoint {
 	 */
 	public synchronized String publish(SdpType sdpType, String sdpString, boolean doLoopback,
 			MediaElement loopbackAlternativeSrc, MediaType loopbackConnectionType) {
-		registerOnIceCandidateEventListener();
+		registerOnIceCandidateEventListener(this.getOwner().getParticipantPublicId());
 		if (doLoopback) {
 			if (loopbackAlternativeSrc == null) {
 				connect(this.getEndpoint(), loopbackConnectionType);
@@ -576,12 +574,4 @@ public class PublisherEndpoint extends MediaEndpoint {
 				+ this.filterListeners.toString() + ", subscribers: " + this.subscribersToFilterEvents.toString() + "}";
 	}
 
-	public void setStreamId(String publisherStreamId) {
-		this.streamId = publisherStreamId;
-		this.getEndpoint().setName(publisherStreamId);
-	}
-
-	public String getStreamId() {
-		return this.streamId != null ? this.streamId : this.getEndpoint().getName();
-	}
 }

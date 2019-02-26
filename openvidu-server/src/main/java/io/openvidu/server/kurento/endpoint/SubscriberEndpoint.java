@@ -47,7 +47,7 @@ public class SubscriberEndpoint extends MediaEndpoint {
 	}
 
 	public synchronized String subscribe(String sdpOffer, PublisherEndpoint publisher) {
-		registerOnIceCandidateEventListener();
+		registerOnIceCandidateEventListener(publisher.getOwner().getParticipantPublicId());
 		String sdpAnswer = processOffer(sdpOffer);
 		gatherCandidates();
 		publisher.connect(this.getEndpoint());
@@ -81,11 +81,6 @@ public class SubscriberEndpoint extends MediaEndpoint {
 			json.addProperty("streamId", this.publisher.getStreamId());
 		} catch (NullPointerException ex) {
 			json.addProperty("streamId", "NOT_FOUND");
-		}
-		try {
-			json.addProperty("publisher", this.publisher.getEndpointName());
-		} catch (NullPointerException ex) {
-			json.addProperty("publisher", "NOT_FOUND");
 		}
 		return json;
 	}

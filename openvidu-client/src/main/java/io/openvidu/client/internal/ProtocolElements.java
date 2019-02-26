@@ -163,6 +163,7 @@ public class ProtocolElements {
 	public static final String MEDIAERROR_ERROR_PARAM = "error";
 
 	public static final String ICECANDIDATE_METHOD = "iceCandidate";
+	public static final String ICECANDIDATE_SENDERCONNECTIONID_PARAM = "senderConnectionId";
 	public static final String ICECANDIDATE_EPNAME_PARAM = "endpointName";
 	public static final String ICECANDIDATE_CANDIDATE_PARAM = "candidate";
 	public static final String ICECANDIDATE_SDPMID_PARAM = "sdpMid";
