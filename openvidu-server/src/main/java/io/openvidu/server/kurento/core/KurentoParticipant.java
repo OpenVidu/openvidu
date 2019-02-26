@@ -444,7 +444,7 @@ public class KurentoParticipant extends Participant {
 			endpoint.kmsEvents.add(kmsEvent);
 			this.CDR.recordKmsEvent(kmsEvent);
 			this.infoHandler.sendInfo(msg);
-			log.warn(msg);
+			log.info(msg);
 		});
 
 		endpoint.getWebEndpoint().addMediaFlowOutStateChangeListener(event -> {
@@ -456,7 +456,7 @@ public class KurentoParticipant extends Participant {
 			endpoint.kmsEvents.add(kmsEvent);
 			this.CDR.recordKmsEvent(kmsEvent);
 			this.infoHandler.sendInfo(msg);
-			log.warn(msg);
+			log.info(msg);
 		});
 
 		endpoint.getWebEndpoint().addIceGatheringDoneListener(event -> {
@@ -466,7 +466,7 @@ public class KurentoParticipant extends Participant {
 			endpoint.kmsEvents.add(kmsEvent);
 			this.CDR.recordKmsEvent(kmsEvent);
 			this.infoHandler.sendInfo(msg);
-			log.warn(msg);
+			log.info(msg);
 		});
 
 		endpoint.getWebEndpoint().addConnectionStateChangedListener(event -> {
@@ -477,7 +477,7 @@ public class KurentoParticipant extends Participant {
 			endpoint.kmsEvents.add(kmsEvent);
 			this.CDR.recordKmsEvent(kmsEvent);
 			this.infoHandler.sendInfo(msg);
-			log.warn(msg);
+			log.info(msg);
 		});
 
 		endpoint.getWebEndpoint().addNewCandidatePairSelectedListener(event -> {
@@ -490,7 +490,7 @@ public class KurentoParticipant extends Participant {
 			endpoint.kmsEvents.add(kmsEvent);
 			this.CDR.recordKmsEvent(kmsEvent);
 			this.infoHandler.sendInfo(msg);
-			log.warn(msg);
+			log.info(msg);
 		});
 
 		endpoint.getEndpoint().addMediaTranscodingStateChangeListener(event -> {
@@ -502,7 +502,7 @@ public class KurentoParticipant extends Participant {
 			endpoint.kmsEvents.add(kmsEvent);
 			this.CDR.recordKmsEvent(kmsEvent);
 			this.infoHandler.sendInfo(msg);
-			log.warn(msg);
+			log.info(msg);
 		});
 
 		endpoint.getWebEndpoint().addIceComponentStateChangeListener(event -> {
@@ -515,7 +515,7 @@ public class KurentoParticipant extends Participant {
 			endpoint.kmsEvents.add(kmsEvent);
 			this.CDR.recordKmsEvent(kmsEvent);
 			this.infoHandler.sendInfo(msg);
-			log.warn(msg);
+			log.info(msg);
 			// }
 		});
 
