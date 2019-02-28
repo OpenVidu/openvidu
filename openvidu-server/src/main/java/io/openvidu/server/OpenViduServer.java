@@ -49,6 +49,7 @@ import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.server.cdr.CDRLoggerFile;
 import io.openvidu.server.cdr.CallDetailRecord;
+import io.openvidu.server.config.HttpHandshakeInterceptor;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.SessionEventsHandler;
 import io.openvidu.server.core.SessionManager;
@@ -166,7 +167,8 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 	@Override
 	public void registerJsonRpcHandlers(JsonRpcHandlerRegistry registry) {
-		registry.addHandler(rpcHandler().withPingWatchdog(true), "/openvidu");
+		registry.addHandler(rpcHandler().withPingWatchdog(true).withInterceptors(new HttpHandshakeInterceptor()),
+				"/openvidu");
 	}
 
 	private static String getContainerIp() throws IOException, InterruptedException {

@@ -77,9 +77,9 @@ public class KurentoSessionManager extends SessionManager {
 
 			KurentoClientSessionInfo kcSessionInfo = new OpenViduKurentoClientSessionInfo(
 					participant.getParticipantPrivateId(), sessionId);
-			KurentoSession session = (KurentoSession) sessions.get(sessionId);
+			KurentoSession kSession = (KurentoSession) sessions.get(sessionId);
 
-			if (session == null && kcSessionInfo != null) {
+			if (kSession == null && kcSessionInfo != null) {
 				// First user connecting to the session
 				Session sessionNotActive = sessionsNotActive.remove(sessionId);
 
@@ -94,21 +94,20 @@ public class KurentoSessionManager extends SessionManager {
 
 				createSession(sessionNotActive, kcSessionInfo);
 			}
-			session = (KurentoSession) sessions.get(sessionId);
-			if (session == null) {
+			kSession = (KurentoSession) sessions.get(sessionId);
+			if (kSession == null) {
 				log.warn("Session '{}' not found");
 				throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE, "Session '" + sessionId
 						+ "' was not found, must be created before '" + sessionId + "' can join");
 			}
-			if (session.isClosed()) {
+			if (kSession.isClosed()) {
 				log.warn("'{}' is trying to join session '{}' but it is closing", participant.getParticipantPublicId(),
 						sessionId);
 				throw new OpenViduException(Code.ROOM_CLOSED_ERROR_CODE, "'" + participant.getParticipantPublicId()
 						+ "' is trying to join session '" + sessionId + "' but it is closing");
 			}
 			existingParticipants = getParticipants(sessionId);
-			session.join(participant);
-
+			kSession.join(participant);
 		} catch (OpenViduException e) {
 			log.warn("PARTICIPANT {}: Error joining/creating session {}", participant.getParticipantPublicId(),
 					sessionId, e);

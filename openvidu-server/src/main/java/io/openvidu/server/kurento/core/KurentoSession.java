@@ -136,10 +136,6 @@ public class KurentoSession extends Session {
 
 		this.removeParticipant(participant, reason);
 		participant.close(reason, true);
-
-		if (!ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(participant.getParticipantPublicId())) {
-			CDR.recordParticipantLeft(participant, participant.getSession().getSessionId(), reason);
-		}
 	}
 
 	@Override

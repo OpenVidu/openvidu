@@ -30,8 +30,13 @@ public class CDREventSession extends CDREventEnd {
 	}
 
 	// sessionDestroyed
-	public CDREventSession(CDREvent event, String reason) {
+	public CDREventSession(CDREventSession event, String reason) {
 		super(CDREventName.sessionDestroyed, event.getSessionId(), event.getTimestamp(), reason);
+		this.session = event.session;
+	}
+
+	public Session getSession() {
+		return this.session;
 	}
 
 }

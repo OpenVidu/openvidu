@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.openvidu.server.kurento.endpoint.KmsEvent;
+import io.openvidu.server.summary.SessionSummary;
 
 public class CDRLoggerFile implements CDRLogger {
 
@@ -33,6 +34,10 @@ public class CDRLoggerFile implements CDRLogger {
 
 	@Override
 	public void log(KmsEvent event) {
+	}
+
+	@Override
+	public void log(SessionSummary sessionSummary) {
 	}
 
 	@Override

@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import javax.servlet.http.HttpSession;
+
 import org.kurento.jsonrpc.DefaultJsonRpcHandler;
 import org.kurento.jsonrpc.Session;
 import org.kurento.jsonrpc.Transaction;
@@ -186,6 +188,34 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 			}
 		}
 
+		HttpSession httpSession = (HttpSession) rpcConnection.getSession().getAttributes().get("httpSession");
+
+		JsonObject sessions = (JsonObject) httpSession.getAttribute("openviduSessions");
+		if (sessions == null) {
+			// First time this final user connects to an OpenVidu session in this active
+			// WebSocketSession. This is a new final user connecting to OpenVidu Server
+			JsonObject json = new JsonObject();
+			json.addProperty(sessionId, System.currentTimeMillis());
+			httpSession.setAttribute("openviduSessions", json);
+		} else {
+			// This final user has already been connected to an OpenVidu session in this
+			// active WebSocketSession
+			if (sessions.has(sessionId)) {
+				if (sessionManager.getSession(sessionId) != null) {
+					// The previously existing final user is reconnecting to an OpenVidu session
+					log.info("Final user reconnecting");
+				} else if (sessionManager.getSessionNotActive(sessionId) != null) {
+					// The previously existing final user is the first one connecting to a new
+					// OpenVidu session that shares a sessionId with a previously closed session
+					// (same customSessionId)
+					sessions.addProperty(sessionId, System.currentTimeMillis());
+				}
+			} else {
+				// The previously existing final user is connecting to a new session
+				sessions.addProperty(sessionId, System.currentTimeMillis());
+			}
+		}
+
 		boolean recorder = false;
 
 		try {
@@ -218,7 +248,7 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 							clientMetadata);
 				} else {
 					participant = sessionManager.newParticipant(sessionId, participantPrivatetId, tokenObj,
-							clientMetadata, location, platform);
+							clientMetadata, location, platform, httpSession.getId());
 				}
 
 				rpcConnection.setSessionId(sessionId);
@@ -555,6 +585,10 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 				address = ((WebSocketServerSession) rpcSession).getWebSocketSession().getRemoteAddress().getAddress();
 			}
 			rpcSession.getAttributes().put("remoteAddress", address);
+
+			HttpSession httpSession = (HttpSession) ((WebSocketServerSession) rpcSession).getWebSocketSession()
+					.getAttributes().get("httpSession");
+			rpcSession.getAttributes().put("httpSession", httpSession);
 		}
 	}
 

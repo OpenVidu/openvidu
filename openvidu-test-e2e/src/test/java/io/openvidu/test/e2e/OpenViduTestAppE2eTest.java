@@ -2489,7 +2489,7 @@ public class OpenViduTestAppE2eTest {
 
 		user.getEventManager().waitUntilEventReaches("recordingStarted", 2);
 
-		Thread.sleep(1000);
+		Thread.sleep(2000);
 
 		// 409 (already recording)
 		restClient.rest(HttpMethod.POST, "/api/recordings/start", body, HttpStatus.SC_CONFLICT);

@@ -186,6 +186,10 @@ public class SessionEventsHandler {
 			// leaving the session
 			rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, new JsonObject());
 		}
+
+		if (!ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(participant.getParticipantPublicId())) {
+			CDR.recordParticipantLeft(participant, sessionId, reason);
+		}
 	}
 
 	public void onPublishMedia(Participant participant, String streamId, Long createdAt, String sessionId,

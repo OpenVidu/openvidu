@@ -77,9 +77,9 @@ public class KurentoParticipant extends Participant {
 
 	public KurentoParticipant(Participant participant, KurentoSession kurentoSession, InfoHandler infoHandler,
 			CallDetailRecord CDR, OpenviduConfig openviduConfig, RecordingManager recordingManager) {
-		super(participant.getParticipantPrivateId(), participant.getParticipantPublicId(), participant.getToken(),
-				participant.getClientMetadata(), participant.getLocation(), participant.getPlatform(),
-				participant.getCreatedAt());
+		super(participant.getFinalUserId(), participant.getParticipantPrivateId(), participant.getParticipantPublicId(),
+				participant.getToken(), participant.getClientMetadata(), participant.getLocation(),
+				participant.getPlatform(), participant.getCreatedAt());
 		this.infoHandler = infoHandler;
 		this.CDR = CDR;
 		this.openviduConfig = openviduConfig;
@@ -185,8 +185,8 @@ public class KurentoParticipant extends Participant {
 			this.recordingManager.startOneIndividualStreamRecording(session, null, null, this);
 		}
 
-		CDR.recordNewPublisher(this, this.session.getSessionId(), this.publisher.getMediaOptions(),
-				this.publisher.createdAt());
+		CDR.recordNewPublisher(this, session.getSessionId(), publisher.getStreamId(), publisher.getMediaOptions(),
+				publisher.createdAt());
 
 		return sdpResponse;
 	}
@@ -270,8 +270,8 @@ public class KurentoParticipant extends Participant {
 					senderName, this.session.getSessionId());
 
 			if (!ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(this.getParticipantPublicId())) {
-				CDR.recordNewSubscriber(this, this.session.getSessionId(), sender.getParticipantPublicId(),
-						subscriber.createdAt());
+				CDR.recordNewSubscriber(this, this.session.getSessionId(), sender.getPublisherStreamId(),
+						sender.getParticipantPublicId(), subscriber.createdAt());
 			}
 
 			return sdpAnswer;
@@ -386,10 +386,10 @@ public class KurentoParticipant extends Participant {
 			}
 			releaseElement(getParticipantPublicId(), publisher.getEndpoint());
 			this.streaming = false;
-			publisher = null;
 			this.session.deregisterPublisher();
 
-			CDR.stopPublisher(this.getParticipantPublicId(), reason);
+			CDR.stopPublisher(this.getParticipantPublicId(), publisher.getStreamId(), reason);
+			publisher = null;
 
 		} else {
 			log.warn("PARTICIPANT {}: Trying to release publisher endpoint but is null", getParticipantPublicId());
@@ -402,7 +402,7 @@ public class KurentoParticipant extends Participant {
 			releaseElement(senderName, subscriber.getEndpoint());
 
 			if (!ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(this.getParticipantPublicId())) {
-				CDR.stopSubscriber(this.getParticipantPublicId(), senderName, reason);
+				CDR.stopSubscriber(this.getParticipantPublicId(), senderName, subscriber.getStreamId(), reason);
 			}
 
 		} else {
@@ -442,7 +442,7 @@ public class KurentoParticipant extends Participant {
 			KmsEvent kmsEvent = new KmsMediaEvent(event, endpoint.getEndpointName(), event.getMediaType(),
 					endpoint.createdAt());
 			endpoint.kmsEvents.add(kmsEvent);
-			this.CDR.recordKmsEvent(kmsEvent);
+			this.CDR.log(kmsEvent);
 			this.infoHandler.sendInfo(msg);
 			log.info(msg);
 		});
@@ -454,7 +454,7 @@ public class KurentoParticipant extends Participant {
 			KmsEvent kmsEvent = new KmsMediaEvent(event, endpoint.getEndpointName(), event.getMediaType(),
 					endpoint.createdAt());
 			endpoint.kmsEvents.add(kmsEvent);
-			this.CDR.recordKmsEvent(kmsEvent);
+			this.CDR.log(kmsEvent);
 			this.infoHandler.sendInfo(msg);
 			log.info(msg);
 		});
@@ -464,7 +464,7 @@ public class KurentoParticipant extends Participant {
 					+ typeOfEndpoint + ") | timestamp: " + event.getTimestamp();
 			KmsEvent kmsEvent = new KmsEvent(event, endpoint.getEndpointName(), endpoint.createdAt());
 			endpoint.kmsEvents.add(kmsEvent);
-			this.CDR.recordKmsEvent(kmsEvent);
+			this.CDR.log(kmsEvent);
 			this.infoHandler.sendInfo(msg);
 			log.info(msg);
 		});
@@ -475,7 +475,7 @@ public class KurentoParticipant extends Participant {
 					+ " | timestamp: " + event.getTimestamp();
 			KmsEvent kmsEvent = new KmsEvent(event, endpoint.getEndpointName(), endpoint.createdAt());
 			endpoint.kmsEvents.add(kmsEvent);
-			this.CDR.recordKmsEvent(kmsEvent);
+			this.CDR.log(kmsEvent);
 			this.infoHandler.sendInfo(msg);
 			log.info(msg);
 		});
@@ -488,7 +488,7 @@ public class KurentoParticipant extends Participant {
 					+ endpoint.selectedRemoteIceCandidate + " | timestamp: " + event.getTimestamp();
 			KmsEvent kmsEvent = new KmsEvent(event, endpoint.getEndpointName(), endpoint.createdAt());
 			endpoint.kmsEvents.add(kmsEvent);
-			this.CDR.recordKmsEvent(kmsEvent);
+			this.CDR.log(kmsEvent);
 			this.infoHandler.sendInfo(msg);
 			log.info(msg);
 		});
@@ -500,7 +500,7 @@ public class KurentoParticipant extends Participant {
 			KmsEvent kmsEvent = new KmsMediaEvent(event, endpoint.getEndpointName(), event.getMediaType(),
 					endpoint.createdAt());
 			endpoint.kmsEvents.add(kmsEvent);
-			this.CDR.recordKmsEvent(kmsEvent);
+			this.CDR.log(kmsEvent);
 			this.infoHandler.sendInfo(msg);
 			log.info(msg);
 		});
@@ -513,7 +513,7 @@ public class KurentoParticipant extends Participant {
 					+ event.getTimestamp();
 			KmsEvent kmsEvent = new KmsEvent(event, endpoint.getEndpointName(), endpoint.createdAt());
 			endpoint.kmsEvents.add(kmsEvent);
-			this.CDR.recordKmsEvent(kmsEvent);
+			this.CDR.log(kmsEvent);
 			this.infoHandler.sendInfo(msg);
 			log.info(msg);
 			// }
@@ -525,7 +525,7 @@ public class KurentoParticipant extends Participant {
 					+ " | timestamp: " + event.getTimestamp();
 			KmsEvent kmsEvent = new KmsEvent(event, endpoint.getEndpointName(), endpoint.createdAt());
 			endpoint.kmsEvents.add(kmsEvent);
-			this.CDR.recordKmsEvent(kmsEvent);
+			this.CDR.log(kmsEvent);
 			this.infoHandler.sendInfo(msg);
 			log.error(msg);
 		});

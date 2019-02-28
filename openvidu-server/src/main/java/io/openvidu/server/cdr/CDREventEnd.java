@@ -51,4 +51,16 @@ public class CDREventEnd extends CDREvent {
 		return json;
 	}
 
+	public Long getStartTime() {
+		return startTime;
+	}
+
+	public Integer getDuration() {
+		return duration;
+	}
+
+	public String getReason() {
+		return reason;
+	}
+
 }

@@ -20,35 +20,43 @@ package io.openvidu.server.cdr;
 import com.google.gson.JsonObject;
 
 import io.openvidu.server.core.MediaOptions;
+import io.openvidu.server.core.Participant;
 
 public class CDREventWebrtcConnection extends CDREventEnd implements Comparable<CDREventWebrtcConnection> {
 
-	String participantId;
+	String streamId;
+	Participant participant;
 	MediaOptions mediaOptions;
 	String receivingFrom;
 
 	// webrtcConnectionCreated
-	public CDREventWebrtcConnection(String sessionId, String participantId, MediaOptions mediaOptions,
-			String receivingFrom, Long timestamp) {
+	public CDREventWebrtcConnection(String sessionId, String streamId, Participant participant,
+			MediaOptions mediaOptions, String receivingFrom, Long timestamp) {
 		super(CDREventName.webrtcConnectionCreated, sessionId, timestamp);
-		this.participantId = participantId;
+		this.streamId = streamId;
+		this.participant = participant;
 		this.mediaOptions = mediaOptions;
 		this.receivingFrom = receivingFrom;
 	}
 
 	// webrtcConnectionDestroyed
-	public CDREventWebrtcConnection(CDREvent event, String reason) {
+	public CDREventWebrtcConnection(CDREventWebrtcConnection event, String reason) {
 		super(CDREventName.webrtcConnectionDestroyed, event.getSessionId(), event.getTimestamp(), reason);
-		CDREventWebrtcConnection e = (CDREventWebrtcConnection) event;
-		this.participantId = e.participantId;
-		this.mediaOptions = e.mediaOptions;
-		this.receivingFrom = e.receivingFrom;
+		this.streamId = event.streamId;
+		this.participant = event.participant;
+		this.mediaOptions = event.mediaOptions;
+		this.receivingFrom = event.receivingFrom;
+	}
+
+	public Participant getParticipant() {
+		return this.participant;
 	}
 
 	@Override
 	public JsonObject toJson() {
 		JsonObject json = super.toJson();
-		json.addProperty("participantId", this.participantId);
+		json.addProperty("streamId", this.streamId);
+		json.addProperty("participantId", this.participant.getParticipantPublicId());
 		if (this.receivingFrom != null) {
 			json.addProperty("connection", "INBOUND");
 			json.addProperty("receivingFrom", this.receivingFrom);
@@ -66,7 +74,7 @@ public class CDREventWebrtcConnection extends CDREventEnd implements Comparable<
 	}
 
 	public int compareTo(CDREventWebrtcConnection other) {
-		if (this.participantId.equals(other.participantId)) {
+		if (this.participant.getParticipantPublicId().equals(other.participant.getParticipantPublicId())) {
 			if (this.receivingFrom != null && other.receivingFrom != null) {
 				if (this.receivingFrom.equals(other.receivingFrom)) {
 					return 0;

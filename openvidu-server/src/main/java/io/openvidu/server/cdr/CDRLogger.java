@@ -18,12 +18,15 @@
 package io.openvidu.server.cdr;
 
 import io.openvidu.server.kurento.endpoint.KmsEvent;
+import io.openvidu.server.summary.SessionSummary;
 
 public interface CDRLogger {
 
 	public void log(CDREvent event);
 
 	public void log(KmsEvent event);
+
+	public void log(SessionSummary sessionSummary);
 
 	public boolean canBeDisabled();
 

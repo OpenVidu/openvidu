@@ -21,6 +21,7 @@ import com.google.gson.JsonObject;
 
 public class Participant {
 
+	private String finalUserId; // ID to match this connection with a final user (HttpSession id)
 	private String participantPrivatetId; // ID to identify the user on server (org.kurento.jsonrpc.Session.id)
 	private String participantPublicId; // ID to identify the user on clients
 	private Long createdAt; // Timestamp when this connection was established
@@ -35,8 +36,9 @@ public class Participant {
 
 	private final String METADATA_SEPARATOR = "%/%";
 
-	public Participant(String participantPrivatetId, String participantPublicId, Token token, String clientMetadata,
-			String location, String platform, Long createdAt) {
+	public Participant(String finalUserId, String participantPrivatetId, String participantPublicId, Token token,
+			String clientMetadata, String location, String platform, Long createdAt) {
+		this.finalUserId = finalUserId;
 		this.participantPrivatetId = participantPrivatetId;
 		this.participantPublicId = participantPublicId;
 		if (createdAt != null) {
@@ -50,6 +52,10 @@ public class Participant {
 			this.serverMetadata = token.getServerMetadata();
 		this.location = location;
 		this.platform = platform;
+	}
+
+	public String getFinalUserId() {
+		return finalUserId;
 	}
 
 	public String getParticipantPrivateId() {

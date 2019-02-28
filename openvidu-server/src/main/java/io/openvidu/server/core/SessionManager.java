@@ -19,8 +19,10 @@ package io.openvidu.server.core;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
@@ -41,6 +43,7 @@ import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.server.OpenViduServer;
+import io.openvidu.server.cdr.CDREventRecording;
 import io.openvidu.server.cdr.CallDetailRecord;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.coturn.CoturnCredentialsService;
@@ -73,6 +76,8 @@ public abstract class SessionManager {
 	protected ConcurrentMap<String, Session> sessions = new ConcurrentHashMap<>();
 	protected ConcurrentMap<String, Session> sessionsNotActive = new ConcurrentHashMap<>();
 	protected ConcurrentMap<String, ConcurrentHashMap<String, Participant>> sessionidParticipantpublicidParticipant = new ConcurrentHashMap<>();
+	protected ConcurrentMap<String, ConcurrentHashMap<String, FinalUser>> sessionidFinalUsers = new ConcurrentHashMap<>();
+	protected ConcurrentMap<String, ConcurrentLinkedQueue<CDREventRecording>> sessionidAccumulatedRecordings = new ConcurrentHashMap<>();
 
 	protected ConcurrentMap<String, Boolean> insecureUsers = new ConcurrentHashMap<>();
 	public ConcurrentMap<String, ConcurrentHashMap<String, Token>> sessionidTokenTokenobj = new ConcurrentHashMap<>();
@@ -214,6 +219,22 @@ public abstract class SessionManager {
 				"No participant with private id '" + participantPrivateId + "' was found");
 	}
 
+	public Map<String, FinalUser> getFinalUsers(String sessionId) {
+		return this.sessionidFinalUsers.get(sessionId);
+	}
+
+	public Map<String, FinalUser> removeFinalUsers(String sessionId) {
+		return this.sessionidFinalUsers.remove(sessionId);
+	}
+
+	public Collection<CDREventRecording> getAccumulatedRecordings(String sessionId) {
+		return this.sessionidAccumulatedRecordings.get(sessionId);
+	}
+
+	public Collection<CDREventRecording> removeAccumulatedRecordings(String sessionId) {
+		return this.sessionidAccumulatedRecordings.remove(sessionId);
+	}
+
 	public MediaOptions generateMediaOptions(Request<JsonObject> request) {
 		return null;
 	}
@@ -222,6 +243,10 @@ public abstract class SessionManager {
 		Session sessionNotActive = new Session(sessionId, sessionProperties, CDR, openviduConfig, recordingManager);
 		this.sessionsNotActive.put(sessionId, sessionNotActive);
 		this.sessionidParticipantpublicidParticipant.putIfAbsent(sessionId, new ConcurrentHashMap<>());
+		this.sessionidFinalUsers.putIfAbsent(sessionId, new ConcurrentHashMap<>());
+		if (this.openviduConfig.isRecordingModuleEnabled()) {
+			this.sessionidAccumulatedRecordings.putIfAbsent(sessionId, new ConcurrentLinkedQueue<>());
+		}
 		showTokens();
 		return sessionNotActive;
 	}
@@ -272,6 +297,10 @@ public abstract class SessionManager {
 			}
 		} else {
 			this.sessionidParticipantpublicidParticipant.putIfAbsent(sessionId, new ConcurrentHashMap<>());
+			this.sessionidFinalUsers.putIfAbsent(sessionId, new ConcurrentHashMap<>());
+			if (this.openviduConfig.isRecordingModuleEnabled()) {
+				this.sessionidAccumulatedRecordings.putIfAbsent(sessionId, new ConcurrentLinkedQueue<>());
+			}
 			this.sessionidTokenTokenobj.putIfAbsent(sessionId, new ConcurrentHashMap<>());
 			this.sessionidTokenTokenobj.get(sessionId).putIfAbsent(token,
 					new Token(token, OpenViduRole.PUBLISHER, "",
@@ -321,16 +350,30 @@ public abstract class SessionManager {
 	}
 
 	public Participant newParticipant(String sessionId, String participantPrivatetId, Token token,
-			String clientMetadata, String location, String platform) {
+			String clientMetadata, String location, String platform, String finalUserId) {
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
 			String participantPublicId = this.generateRandomChain();
-			Participant p = new Participant(participantPrivatetId, participantPublicId, token, clientMetadata, location,
-					platform, null);
+			Participant p = new Participant(finalUserId, participantPrivatetId, participantPublicId, token,
+					clientMetadata, location, platform, null);
 			while (this.sessionidParticipantpublicidParticipant.get(sessionId).putIfAbsent(participantPublicId,
 					p) != null) {
 				participantPublicId = this.generateRandomChain();
 				p.setParticipantPublicId(participantPublicId);
 			}
+
+			FinalUser finalUser = this.sessionidFinalUsers.get(sessionId).get(finalUserId);
+			if (finalUser == null) {
+				// First connection for new final user
+				log.info("Participant {} of session {} belongs to a new final user", p.getParticipantPublicId(),
+						sessionId);
+				this.sessionidFinalUsers.get(sessionId).put(finalUserId, new FinalUser(finalUserId, sessionId, p));
+			} else {
+				// New connection for previously existing final user
+				log.info("Participant {} of session {} belongs to a previously existing user",
+						p.getParticipantPublicId(), sessionId);
+				finalUser.addConnection(p);
+			}
+
 			return p;
 		} else {
 			throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE, sessionId);
@@ -340,7 +383,7 @@ public abstract class SessionManager {
 	public Participant newRecorderParticipant(String sessionId, String participantPrivatetId, Token token,
 			String clientMetadata) {
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
-			Participant p = new Participant(participantPrivatetId, ProtocolElements.RECORDER_PARTICIPANT_PUBLICID,
+			Participant p = new Participant(null, participantPrivatetId, ProtocolElements.RECORDER_PARTICIPANT_PUBLICID,
 					token, clientMetadata, null, null, null);
 			this.sessionidParticipantpublicidParticipant.get(sessionId)
 					.put(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID, p);
@@ -445,6 +488,8 @@ public abstract class SessionManager {
 		sessions.remove(session.getSessionId());
 		sessionsNotActive.remove(session.getSessionId());
 		sessionidParticipantpublicidParticipant.remove(session.getSessionId());
+		sessionidFinalUsers.remove(session.getSessionId());
+		sessionidAccumulatedRecordings.remove(session.getSessionId());
 		sessionidTokenTokenobj.remove(session.getSessionId());
 
 		log.warn("Session '{}' removed and closed", session.getSessionId());

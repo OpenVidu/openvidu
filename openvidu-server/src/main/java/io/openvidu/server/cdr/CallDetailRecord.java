@@ -30,9 +30,11 @@ import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
+import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.kurento.endpoint.KmsEvent;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.recording.service.RecordingManager;
+import io.openvidu.server.summary.SessionSummary;
 
 /**
  * CDR logger to register all information of a Session.
@@ -84,6 +86,9 @@ import io.openvidu.server.recording.service.RecordingManager;
 public class CallDetailRecord {
 
 	@Autowired
+	protected SessionManager sessionManager;
+
+	@Autowired
 	protected OpenviduConfig openviduConfig;
 
 	private Collection<CDRLogger> loggers;
@@ -109,9 +114,14 @@ public class CallDetailRecord {
 	}
 
 	public void recordSessionDestroyed(String sessionId, String reason) {
-		CDREvent e = this.sessions.remove(sessionId);
+		CDREventSession e = this.sessions.remove(sessionId);
 		if (e != null) {
-			this.log(new CDREventSession(e, RecordingManager.finalReason(reason)));
+			CDREventSession eventSessionEnd = new CDREventSession(e, RecordingManager.finalReason(reason));
+			this.log(eventSessionEnd);
+
+			// Summary: log closed session
+			this.log(new SessionSummary(eventSessionEnd, sessionManager.removeFinalUsers(sessionId),
+					sessionManager.removeAccumulatedRecordings(sessionId)));
 		}
 	}
 
@@ -122,52 +132,63 @@ public class CallDetailRecord {
 	}
 
 	public void recordParticipantLeft(Participant participant, String sessionId, String reason) {
-		CDREvent e = this.participants.remove(participant.getParticipantPublicId());
-		this.log(new CDREventParticipant(e, reason));
+		CDREventParticipant e = this.participants.remove(participant.getParticipantPublicId());
+		CDREventParticipant eventParticipantEnd = new CDREventParticipant(e, reason);
+		this.log(eventParticipantEnd);
+
+		// Summary: update final user ended connection
+		sessionManager.getFinalUsers(sessionId).get(participant.getFinalUserId()).setConnection(eventParticipantEnd);
 	}
 
-	public void recordNewPublisher(Participant participant, String sessionId, MediaOptions mediaOptions,
-			Long timestamp) {
-		CDREventWebrtcConnection publisher = new CDREventWebrtcConnection(sessionId,
-				participant.getParticipantPublicId(), mediaOptions, null, timestamp);
+	public void recordNewPublisher(Participant participant, String sessionId, String streamId,
+			MediaOptions mediaOptions, Long timestamp) {
+		CDREventWebrtcConnection publisher = new CDREventWebrtcConnection(sessionId, streamId, participant,
+				mediaOptions, null, timestamp);
 		this.publications.put(participant.getParticipantPublicId(), publisher);
 		this.log(publisher);
 	}
 
-	public boolean stopPublisher(String participantPublicId, String reason) {
-		CDREventWebrtcConnection publisher = this.publications.remove(participantPublicId);
-		if (publisher != null) {
-			publisher = new CDREventWebrtcConnection(publisher, reason);
-			this.log(publisher);
-			return true;
+	public void stopPublisher(String participantPublicId, String streamId, String reason) {
+		CDREventWebrtcConnection eventPublisherEnd = this.publications.remove(participantPublicId);
+		if (eventPublisherEnd != null) {
+			eventPublisherEnd = new CDREventWebrtcConnection(eventPublisherEnd, reason);
+			this.log(eventPublisherEnd);
+
+			// Summary: update final user ended publisher
+			sessionManager.getFinalUsers(eventPublisherEnd.getSessionId())
+					.get(eventPublisherEnd.getParticipant().getFinalUserId()).getConnections().get(participantPublicId)
+					.addPublisherClosed(streamId, eventPublisherEnd);
 		}
-		return false;
 	}
 
-	public void recordNewSubscriber(Participant participant, String sessionId, String senderPublicId, Long timestamp) {
+	public void recordNewSubscriber(Participant participant, String sessionId, String streamId, String senderPublicId,
+			Long timestamp) {
 		CDREventWebrtcConnection publisher = this.publications.get(senderPublicId);
-		CDREventWebrtcConnection subscriber = new CDREventWebrtcConnection(sessionId,
-				participant.getParticipantPublicId(), publisher.mediaOptions, senderPublicId, timestamp);
+		CDREventWebrtcConnection subscriber = new CDREventWebrtcConnection(sessionId, streamId, participant,
+				publisher.mediaOptions, senderPublicId, timestamp);
 		this.subscriptions.putIfAbsent(participant.getParticipantPublicId(), new ConcurrentSkipListSet<>());
 		this.subscriptions.get(participant.getParticipantPublicId()).add(subscriber);
 		this.log(subscriber);
 	}
 
-	public boolean stopSubscriber(String participantPublicId, String senderPublicId, String reason) {
+	public void stopSubscriber(String participantPublicId, String senderPublicId, String streamId, String reason) {
 		Set<CDREventWebrtcConnection> participantSubscriptions = this.subscriptions.get(participantPublicId);
 		if (participantSubscriptions != null) {
-			CDREventWebrtcConnection subscription;
+			CDREventWebrtcConnection eventSubscriberEnd;
 			for (Iterator<CDREventWebrtcConnection> it = participantSubscriptions.iterator(); it.hasNext();) {
-				subscription = it.next();
-				if (senderPublicId.equals(subscription.receivingFrom)) {
+				eventSubscriberEnd = it.next();
+				if (senderPublicId.equals(eventSubscriberEnd.receivingFrom)) {
 					it.remove();
-					subscription = new CDREventWebrtcConnection(subscription, reason);
-					this.log(subscription);
-					return true;
+					eventSubscriberEnd = new CDREventWebrtcConnection(eventSubscriberEnd, reason);
+					this.log(eventSubscriberEnd);
+
+					// Summary: update final user ended subscriber
+					sessionManager.getFinalUsers(eventSubscriberEnd.getSessionId())
+							.get(eventSubscriberEnd.getParticipant().getFinalUserId()).getConnections()
+							.get(participantPublicId).addSubscriberClosed(streamId, eventSubscriberEnd);
 				}
 			}
 		}
-		return false;
 	}
 
 	public void recordRecordingStarted(String sessionId, Recording recording) {
@@ -178,11 +199,12 @@ public class CallDetailRecord {
 
 	public void recordRecordingStopped(String sessionId, Recording recording, String reason) {
 		CDREventRecording recordingStartedEvent = this.recordings.remove(recording.getId());
-		this.log(new CDREventRecording(recordingStartedEvent, RecordingManager.finalReason(reason)));
-	}
+		CDREventRecording recordingStoppedEvent = new CDREventRecording(recordingStartedEvent, recording,
+				RecordingManager.finalReason(reason));
+		this.log(recordingStoppedEvent);
 
-	public void recordKmsEvent(KmsEvent event) {
-		this.log(event);
+		// Summary: update ended recording
+		sessionManager.getAccumulatedRecordings(sessionId).add(recordingStoppedEvent);
 	}
 
 	private void log(CDREvent event) {
@@ -193,9 +215,15 @@ public class CallDetailRecord {
 		});
 	}
 
-	private void log(KmsEvent event) {
+	public void log(KmsEvent event) {
 		this.loggers.forEach(logger -> {
 			logger.log(event);
+		});
+	}
+
+	public void log(SessionSummary sessionSummary) {
+		this.loggers.forEach(logger -> {
+			logger.log(sessionSummary);
 		});
 	}
 

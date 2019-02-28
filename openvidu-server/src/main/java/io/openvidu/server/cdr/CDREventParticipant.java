@@ -32,9 +32,9 @@ public class CDREventParticipant extends CDREventEnd {
 	}
 
 	// participantLeft
-	public CDREventParticipant(CDREvent event, String reason) {
+	public CDREventParticipant(CDREventParticipant event, String reason) {
 		super(CDREventName.participantLeft, event.getSessionId(), event.getTimestamp(), reason);
-		this.participant = ((CDREventParticipant) event).participant;
+		this.participant = event.participant;
 	}
 
 	@Override
@@ -44,6 +44,10 @@ public class CDREventParticipant extends CDREventEnd {
 		json.addProperty("location", this.participant.getLocation());
 		json.addProperty("platform", this.participant.getPlatform());
 		return json;
+	}
+
+	public Participant getParticipant() {
+		return this.participant;
 	}
 
 }
