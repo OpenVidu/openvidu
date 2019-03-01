@@ -28,7 +28,6 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PreDestroy;
 
-import org.apache.commons.lang3.RandomStringUtils;
 import org.kurento.jsonrpc.message.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,15 +41,14 @@ import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.java.client.SessionProperties;
-import io.openvidu.server.OpenViduServer;
 import io.openvidu.server.cdr.CDREventRecording;
 import io.openvidu.server.cdr.CallDetailRecord;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.coturn.CoturnCredentialsService;
-import io.openvidu.server.coturn.TurnCredentials;
 import io.openvidu.server.kurento.core.KurentoTokenOptions;
 import io.openvidu.server.recording.service.RecordingManager;
 import io.openvidu.server.utils.FormatChecker;
+import io.openvidu.server.utils.RandomStringGenerator;
 
 public abstract class SessionManager {
 
@@ -70,6 +68,9 @@ public abstract class SessionManager {
 
 	@Autowired
 	protected CoturnCredentialsService coturnCredentialsService;
+
+	@Autowired
+	protected TokenGenerator tokenGenerator;
 
 	public FormatChecker formatChecker = new FormatChecker();
 
@@ -263,23 +264,11 @@ public abstract class SessionManager {
 				throw new OpenViduException(Code.GENERIC_ERROR_CODE, "Data invalid format");
 			}
 
-			String token = OpenViduServer.wsUrl;
-			token += "?sessionId=" + sessionId;
-			token += "&token=" + this.generateRandomChain();
-			token += "&role=" + role.name();
-			TurnCredentials turnCredentials = null;
-			if (this.coturnCredentialsService.isCoturnAvailable()) {
-				turnCredentials = coturnCredentialsService.createUser();
-				if (turnCredentials != null) {
-					token += "&turnUsername=" + turnCredentials.getUsername();
-					token += "&turnCredential=" + turnCredentials.getCredential();
-				}
-			}
-			Token t = new Token(token, role, serverMetadata, turnCredentials, kurentoTokenOptions);
+			Token token = tokenGenerator.generateToken(sessionId, role, serverMetadata, kurentoTokenOptions);
 
-			map.putIfAbsent(token, t);
+			map.putIfAbsent(token.getToken(), token);
 			showTokens();
-			return token;
+			return token.getToken();
 
 		} else {
 			this.sessionidTokenTokenobj.remove(sessionId);
@@ -352,12 +341,12 @@ public abstract class SessionManager {
 	public Participant newParticipant(String sessionId, String participantPrivatetId, Token token,
 			String clientMetadata, String location, String platform, String finalUserId) {
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
-			String participantPublicId = this.generateRandomChain();
+			String participantPublicId = RandomStringGenerator.generateRandomChain();
 			Participant p = new Participant(finalUserId, participantPrivatetId, participantPublicId, token,
 					clientMetadata, location, platform, null);
 			while (this.sessionidParticipantpublicidParticipant.get(sessionId).putIfAbsent(participantPublicId,
 					p) != null) {
-				participantPublicId = this.generateRandomChain();
+				participantPublicId = RandomStringGenerator.generateRandomChain();
 				p.setParticipantPublicId(participantPublicId);
 			}
 
@@ -408,10 +397,6 @@ public abstract class SessionManager {
 
 	public void showTokens() {
 		log.info("<SESSIONID, TOKENS>: {}", this.sessionidTokenTokenobj.toString());
-	}
-
-	public String generateRandomChain() {
-		return RandomStringUtils.randomAlphanumeric(16).toLowerCase();
 	}
 
 	/**

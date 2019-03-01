@@ -53,6 +53,8 @@ import io.openvidu.server.config.HttpHandshakeInterceptor;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.SessionEventsHandler;
 import io.openvidu.server.core.SessionManager;
+import io.openvidu.server.core.TokenGenerator;
+import io.openvidu.server.core.TokenGeneratorDefault;
 import io.openvidu.server.coturn.CoturnCredentialsService;
 import io.openvidu.server.coturn.CoturnCredentialsServiceFactory;
 import io.openvidu.server.kurento.AutodiscoveryKurentoClientProvider;
@@ -140,6 +142,12 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	@ConditionalOnMissingBean
 	public CallDetailRecord cdr() {
 		return new CallDetailRecord(Arrays.asList(new CDRLoggerFile()));
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public TokenGenerator tokenGenerator() {
+		return new TokenGeneratorDefault();
 	}
 
 	@Bean

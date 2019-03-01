@@ -56,6 +56,7 @@ import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.kurento.core.KurentoTokenOptions;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.recording.service.RecordingManager;
+import io.openvidu.server.utils.RandomStringGenerator;
 
 /**
  *
@@ -153,7 +154,7 @@ public class SessionRestController {
 			}
 			sessionId = customSessionId;
 		} else {
-			sessionId = sessionManager.generateRandomChain();
+			sessionId = RandomStringGenerator.generateRandomChain();
 			sessionManager.sessionidTokenTokenobj.putIfAbsent(sessionId, new ConcurrentHashMap<>());
 		}
 

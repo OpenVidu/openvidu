@@ -50,6 +50,7 @@ import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.core.Token;
 import io.openvidu.server.utils.GeoLocationByIp;
+import io.openvidu.server.utils.RandomStringGenerator;
 
 public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
@@ -228,7 +229,7 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 		if (openviduConfig.isOpenViduSecret(secret)) {
 			sessionManager.newInsecureParticipant(participantPrivatetId);
-			token = sessionManager.generateRandomChain();
+			token = RandomStringGenerator.generateRandomChain();
 			if (recorder) {
 				generateRecorderParticipant = true;
 			}
