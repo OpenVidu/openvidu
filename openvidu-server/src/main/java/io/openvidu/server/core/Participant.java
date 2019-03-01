@@ -21,15 +21,15 @@ import com.google.gson.JsonObject;
 
 public class Participant {
 
-	private String finalUserId; // ID to match this connection with a final user (HttpSession id)
-	private String participantPrivatetId; // ID to identify the user on server (org.kurento.jsonrpc.Session.id)
-	private String participantPublicId; // ID to identify the user on clients
-	private Long createdAt; // Timestamp when this connection was established
-	private String clientMetadata = ""; // Metadata provided on client side
-	private String serverMetadata = ""; // Metadata provided on server side
-	private Token token; // Token associated to this participant
-	private String location; // Remote IP of the participant
-	private String platform; // Platform used by the participant to connect to the session
+	protected String finalUserId; // ID to match this connection with a final user (HttpSession id)
+	protected String participantPrivatetId; // ID to identify the user on server (org.kurento.jsonrpc.Session.id)
+	protected String participantPublicId; // ID to identify the user on clients
+	protected Long createdAt; // Timestamp when this connection was established
+	protected String clientMetadata = ""; // Metadata provided on client side
+	protected String serverMetadata = ""; // Metadata provided on server side
+	protected Token token; // Token associated to this participant
+	protected String location; // Remote IP of the participant
+	protected String platform; // Platform used by the participant to connect to the session
 
 	protected boolean streaming = false;
 	protected volatile boolean closed;

@@ -27,14 +27,20 @@ public class KmsEvent {
 
 	long timestamp;
 	long msSinceCreation;
+	String sessionId;
+	String connectionId;
 	String endpoint;
 	RaiseBaseEvent event;
 
-	public KmsEvent(RaiseBaseEvent event, String endpointName, long createdAt) {
+	public KmsEvent(RaiseBaseEvent event, String sessionId, String connectionId, String endpointName, long createdAt) {
 		this.event = event;
+		this.sessionId = sessionId;
+		this.connectionId = connectionId;
 		this.endpoint = endpointName;
-		this.timestamp = System.currentTimeMillis();
+		this.timestamp = System.currentTimeMillis(); // TODO: Change to event.getTimestampMillis()
 		this.msSinceCreation = this.timestamp - createdAt;
+
+		this.removeSourceForJsonCompatibility();
 	}
 
 	public JsonObject toJson() {
@@ -50,10 +56,18 @@ public class KmsEvent {
 			json.addProperty("eventType", mediaEvent.getType());
 		}
 
+		json.addProperty("session", sessionId);
+		json.addProperty("connection", connectionId);
+		json.addProperty("endpoint", this.endpoint);
 		json.addProperty("timestamp", timestamp);
 		json.addProperty("msSinceEndpointCreation", msSinceCreation);
-		json.addProperty("endpoint", this.endpoint);
 		return json;
+	}
+
+	private void removeSourceForJsonCompatibility() {
+		// This avoids stack overflow error when transforming RaiseBaseEvent into
+		// JsonObject
+		this.event.setSource(null);
 	}
 
 }

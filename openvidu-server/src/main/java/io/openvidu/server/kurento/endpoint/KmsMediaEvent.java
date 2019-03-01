@@ -26,8 +26,9 @@ public class KmsMediaEvent extends KmsEvent {
 
 	MediaType mediaType;
 
-	public KmsMediaEvent(MediaEvent event, String endpointName, MediaType mediaType, long createdAt) {
-		super(event, endpointName, createdAt);
+	public KmsMediaEvent(MediaEvent event, String sessionId, String connectionId, String endpointName,
+			MediaType mediaType, long createdAt) {
+		super(event, sessionId, connectionId, endpointName, createdAt);
 		this.mediaType = mediaType;
 	}
 
