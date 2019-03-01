@@ -21,7 +21,7 @@ node('container') {
             cd ../openvidu && mvn versions:set-property -Dproperty=version.kurento -DnewVersion=$MVN_VERSION
             fi
         '''.stripIndent()).result
-          echo "Kurento Java build status: ${BUILD_STATUS}"
+          sh 'echo "Kurento Java build status: ${BUILD_STATUS}"'
         }
         stage('OpenVidu parent build') {
           sh 'cd openvidu/openvidu-java-client && mvn --batch-mode versions:set -DnewVersion=1.0.0-TEST'
