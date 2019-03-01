@@ -17,8 +17,8 @@ node('container') {
           BUILD_STATUS = sh(returnStatus: true, script: '''#!/bin/bash
             if $KURENTO_JAVA_SNAPSHOT ; then
             git clone https://github.com/Kurento/kurento-java.git
-            cd kurento-java && mvn clean install && MVN_VERSION=$(mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
-            cd ../openvidu && mvn versions:set-property -Dproperty=version.kurento -DnewVersion=$MVN_VERSION
+            cd kurento-java && mvn --batch-mode clean install && MVN_VERSION=$(mvn --batch-mode -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
+            cd ../openvidu && mvn --batch-mode versions:set-property -Dproperty=version.kurento -DnewVersion=$MVN_VERSION
             fi
         '''.stripIndent()).result
           sh 'echo "Kurento Java build status: ${BUILD_STATUS}"'
