@@ -17,9 +17,8 @@
 
 package io.openvidu.server.kurento.endpoint;
 
-import org.kurento.client.ErrorEvent;
-import org.kurento.client.MediaEvent;
 import org.kurento.client.RaiseBaseEvent;
+import org.kurento.jsonrpc.JsonUtils;
 
 import com.google.gson.JsonObject;
 
@@ -44,22 +43,12 @@ public class KmsEvent {
 	}
 
 	public JsonObject toJson() {
-		JsonObject json = new JsonObject();
-
-		if (event instanceof ErrorEvent) {
-			ErrorEvent errorEvent = (ErrorEvent) event;
-			json.addProperty("eventType", errorEvent.getType());
-			json.addProperty("errorCode", errorEvent.getErrorCode());
-			json.addProperty("description", errorEvent.getDescription());
-		} else {
-			MediaEvent mediaEvent = (MediaEvent) event;
-			json.addProperty("eventType", mediaEvent.getType());
-		}
-
+		JsonObject json = JsonUtils.toJsonObject(event);
+		json.remove("tags");
+		json.addProperty("timestamp", timestamp);
 		json.addProperty("session", sessionId);
 		json.addProperty("connection", connectionId);
 		json.addProperty("endpoint", this.endpoint);
-		json.addProperty("timestamp", timestamp);
 		json.addProperty("msSinceEndpointCreation", msSinceCreation);
 		return json;
 	}

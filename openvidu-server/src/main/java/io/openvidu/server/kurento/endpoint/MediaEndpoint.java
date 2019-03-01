@@ -34,7 +34,6 @@ import org.kurento.client.OnIceCandidateEvent;
 import org.kurento.client.RtpEndpoint;
 import org.kurento.client.SdpEndpoint;
 import org.kurento.client.WebRtcEndpoint;
-import org.kurento.jsonrpc.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -501,14 +500,13 @@ public abstract class MediaEndpoint {
 		}
 
 		JsonArray jsonArray = new JsonArray();
-		for (KmsEvent event : this.kmsEvents) {
-			JsonObject jsonKmsEvent = JsonUtils.toJsonObject(event.event);
-			// Set custom more precise timestamp
-			jsonKmsEvent.addProperty("timestamp", event.timestamp);
-			// Set milliseconds since the Publisher or Subscriber started transmitting media
-			jsonKmsEvent.addProperty("msSinceCreation", event.msSinceCreation);
-			jsonArray.add(jsonKmsEvent);
-		}
+		this.kmsEvents.forEach(ev -> {
+			JsonObject j = ev.toJson();
+			j.remove("session");
+			j.remove("connection");
+			j.remove("endpoint");
+			jsonArray.add(j);
+		});
 		json.add("events", jsonArray);
 
 		return json;
