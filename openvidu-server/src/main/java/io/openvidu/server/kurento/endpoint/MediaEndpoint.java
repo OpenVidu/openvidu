@@ -212,7 +212,10 @@ public abstract class MediaEndpoint {
 	}
 
 	public String getEndpointName() {
-		return endpointName != null ? endpointName : this.getEndpoint().getName();
+		if (endpointName == null) {
+			endpointName = this.getEndpoint().getName();
+		}
+		return endpointName;
 	}
 
 	public void setEndpointName(String endpointName) {
@@ -487,7 +490,7 @@ public abstract class MediaEndpoint {
 	public JsonObject withStatsToJson() {
 		JsonObject json = new JsonObject();
 		json.addProperty("createdAt", this.createdAt);
-		json.addProperty("webrtcEndpointName", this.getEndpoint().getName());
+		json.addProperty("webrtcEndpointName", this.getEndpointName());
 		json.addProperty("remoteSdp", this.getEndpoint().getRemoteSessionDescriptor());
 		json.addProperty("localSdp", this.getEndpoint().getLocalSessionDescriptor());
 		json.add("receivedCandidates", new GsonBuilder().create().toJsonTree(this.receivedCandidateList));
@@ -500,8 +503,6 @@ public abstract class MediaEndpoint {
 		JsonArray jsonArray = new JsonArray();
 		for (KmsEvent event : this.kmsEvents) {
 			JsonObject jsonKmsEvent = JsonUtils.toJsonObject(event.event);
-			// Set source name
-			jsonKmsEvent.addProperty("source", event.endpoint);
 			// Set custom more precise timestamp
 			jsonKmsEvent.addProperty("timestamp", event.timestamp);
 			// Set milliseconds since the Publisher or Subscriber started transmitting media
