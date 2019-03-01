@@ -13,6 +13,13 @@ node('container') {
           sh 'rm -rf openvidu || true'
           sh 'rm -rf /opt/openvidu/recordings/* || true'
           sh 'git clone https://github.com/OpenVidu/openvidu.git'
+          sh(returnStdout: true, script: '''#!/bin/bash
+            if $KURENTO_JAVA_SNAPSHOT ; then
+            git clone https://github.com/Kurento/kurento-java.git
+            cd kurento && mvn clean install && MVN_VERSION=$(mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
+            cd openvidu && mvn versions:set-property -Dproperty=version.kurento -DnewVersion=$MVN_VERSION
+            fi
+        '''.stripIndent())
         }
         stage('OpenVidu parent build') {
           sh 'cd openvidu/openvidu-java-client && mvn --batch-mode versions:set -DnewVersion=1.0.0-TEST'
