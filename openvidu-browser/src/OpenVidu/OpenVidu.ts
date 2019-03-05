@@ -56,6 +56,10 @@ export class OpenVidu {
   /**
    * @hidden
    */
+  httpUri: string;
+  /**
+   * @hidden
+   */
   secret = '';
   /**
    * @hidden
@@ -73,6 +77,10 @@ export class OpenVidu {
    * @hidden
    */
   advancedConfiguration: OpenViduAdvancedConfiguration = {};
+  /**
+   * @hidden
+   */
+  webrtcStatsInterval: number = 0;
 
   constructor() {
     console.info("'OpenVidu' initialized");

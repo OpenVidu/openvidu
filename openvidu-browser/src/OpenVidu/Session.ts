@@ -1144,6 +1144,7 @@ export class Session implements EventDispatcher {
         const turnUsername = url.searchParams.get('turnUsername');
         const turnCredential = url.searchParams.get('turnCredential');
         const role = url.searchParams.get('role');
+        const webrtcStatsInterval = url.searchParams.get('webrtcStatsInterval');
 
         if (!!secret) {
             this.openvidu.secret = secret;
@@ -1164,8 +1165,12 @@ export class Session implements EventDispatcher {
         if (!!role) {
             this.openvidu.role = role;
         }
+        if (!!webrtcStatsInterval) {
+            this.openvidu.webrtcStatsInterval = +webrtcStatsInterval;
+        }
 
         this.openvidu.wsUri = 'wss://' + url.host + '/openvidu';
+        this.openvidu.httpUri = 'https://' + url.host;
     }
 
 }
