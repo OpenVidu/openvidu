@@ -833,7 +833,9 @@ export class Session implements EventDispatcher {
                         break;
                 }
                 this.ee.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this, stream, msg.property, msg.newValue, oldValue, msg.reason)]);
-                stream.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(stream.streamManager, stream, msg.property, msg.newValue, oldValue, msg.reason)]);
+                if (!!stream.streamManager) {
+                    stream.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(stream.streamManager, stream, msg.property, msg.newValue, oldValue, msg.reason)]);
+                }
             } else {
                 console.error("No stream with streamId '" + msg.streamId + "' found for connection '" + msg.connectionId + "' on 'streamPropertyChanged' event");
             }
