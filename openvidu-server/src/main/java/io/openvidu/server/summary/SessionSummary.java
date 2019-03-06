@@ -18,6 +18,7 @@
 package io.openvidu.server.summary;
 
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.Map;
 
 import com.google.gson.JsonArray;
@@ -38,7 +39,7 @@ public class SessionSummary {
 			Collection<CDREventRecording> recordings) {
 		this.eventSessionEnd = event;
 		this.users = users;
-		this.recordings = recordings;
+		this.recordings = recordings == null ? new LinkedList<>() : recordings;
 	}
 
 	public JsonObject toJson() {
