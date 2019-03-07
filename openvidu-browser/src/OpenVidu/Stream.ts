@@ -846,6 +846,23 @@ export class Stream implements EventDispatcher {
     private initWebRtcStats(): void {
         this.webRtcStats = new WebRtcStats(this);
         this.webRtcStats.initWebRtcStats();
+        
+        //TODO: send common webrtc stats from client to openvidu-server
+        /*if (this.session.openvidu.webrtcStatsInterval > 0) {
+            setInterval(() => {
+                this.gatherStatsForPeer().then(jsonStats => {
+                    const body = {
+                        sessionId: this.session.sessionId,
+                        participantPrivateId: this.connection.rpcSessionId,
+                        stats: jsonStats
+                    }
+                    var xhr = new XMLHttpRequest();
+                    xhr.open('POST', this.session.openvidu.httpUri + '/elasticsearch/webrtc-stats', true);
+                    xhr.setRequestHeader('Content-Type', 'application/json');
+                    xhr.send(JSON.stringify(body));
+                })
+            }, this.session.openvidu.webrtcStatsInterval * 1000);
+        }*/
     }
 
     private stopWebRtcStats(): void {
@@ -866,6 +883,140 @@ export class Stream implements EventDispatcher {
             returnValue = undefined;
         }
         return returnValue;
+    }
+
+    private gatherStatsForPeer(): Promise<any> {
+        return new Promise((resolve, reject) => {
+            if (this.isLocal()) {
+
+                // Publisher stream stats
+
+                this.getRTCPeerConnection().getSenders().forEach(sender => sender.getStats()
+                    .then(
+                        response => {
+                            response.forEach(report => {
+
+                                if (this.isReportWanted(report)) {
+
+                                    const finalReport = {};
+
+                                    finalReport['type'] = report.type;
+                                    finalReport['timestamp'] = report.timestamp;
+                                    finalReport['id'] = report.id;
+
+                                    // Common to Chrome, Firefox and Safari
+                                    if (report.type === 'outbound-rtp') {
+                                        finalReport['ssrc'] = report.ssrc;
+                                        finalReport['firCount'] = report.firCount;
+                                        finalReport['pliCount'] = report.pliCount;
+                                        finalReport['nackCount'] = report.nackCount;
+                                        finalReport['qpSum'] = report.qpSum;
+
+                                        // Set media type
+                                        if (!!report.kind) {
+                                            finalReport['mediaType'] = report.kind;
+                                        } else if (!!report.mediaType) {
+                                            finalReport['mediaType'] = report.mediaType;
+                                        } else {
+                                            // Safari does not have 'mediaType' defined for inbound-rtp. Must be inferred from 'id' field
+                                            finalReport['mediaType'] = (report.id.indexOf('VideoStream') !== -1) ? 'video' : 'audio';
+                                        }
+
+                                        if (finalReport['mediaType'] === 'video') {
+                                            finalReport['framesEncoded'] = report.framesEncoded;
+                                        }
+
+                                        finalReport['packetsSent'] = report.packetsSent;
+                                        finalReport['bytesSent'] = report.bytesSent;
+                                    }
+
+                                    // Only for Chrome and Safari
+                                    if (report.type === 'candidate-pair' && report.totalRoundTripTime !== undefined) {
+                                        // This is the final selected candidate pair
+                                        finalReport['availableOutgoingBitrate'] = report.availableOutgoingBitrate;
+                                        finalReport['rtt'] = report.currentRoundTripTime;
+                                        finalReport['averageRtt'] = report.totalRoundTripTime / report.responsesReceived;
+                                    }
+
+                                    // Only for Firefox >= 66.0
+                                    if (report.type === 'remote-inbound-rtp' || report.type === 'remote-outbound-rtp') {
+
+                                    }
+
+                                    console.log(finalReport);
+                                }
+                            });
+                        }));
+            } else {
+
+                // Subscriber stream stats
+
+                this.getRTCPeerConnection().getReceivers().forEach(receiver => receiver.getStats()
+                    .then(
+                        response => {
+                            response.forEach(report => {
+
+                                if (this.isReportWanted(report)) {
+
+                                    const finalReport = {};
+
+                                    finalReport['type'] = report.type;
+                                    finalReport['timestamp'] = report.timestamp;
+                                    finalReport['id'] = report.id;
+
+                                    // Common to Chrome, Firefox and Safari
+                                    if (report.type === 'inbound-rtp') {
+                                        finalReport['ssrc'] = report.ssrc;
+                                        finalReport['firCount'] = report.firCount;
+                                        finalReport['pliCount'] = report.pliCount;
+                                        finalReport['nackCount'] = report.nackCount;
+                                        finalReport['qpSum'] = report.qpSum;
+
+                                        // Set media type
+                                        if (!!report.kind) {
+                                            finalReport['mediaType'] = report.kind;
+                                        } else if (!!report.mediaType) {
+                                            finalReport['mediaType'] = report.mediaType;
+                                        } else {
+                                            // Safari does not have 'mediaType' defined for inbound-rtp. Must be inferred from 'id' field
+                                            finalReport['mediaType'] = (report.id.indexOf('VideoStream') !== -1) ? 'video' : 'audio';
+                                        }
+
+                                        if (finalReport['mediaType'] === 'video') {
+                                            finalReport['framesDecoded'] = report.framesDecoded;
+                                        }
+
+                                        finalReport['packetsReceived'] = report.packetsReceived;
+                                        finalReport['packetsLost'] = report.packetsLost;
+                                        finalReport['jitter'] = report.jitter;
+                                        finalReport['bytesReceived'] = report.bytesReceived;
+                                    }
+
+                                    // Only for Chrome and Safari
+                                    if (report.type === 'candidate-pair' && report.totalRoundTripTime !== undefined) {
+                                        // This is the final selected candidate pair
+                                        finalReport['availableIncomingBitrate'] = report.availableIncomingBitrate;
+                                        finalReport['rtt'] = report.currentRoundTripTime;
+                                        finalReport['averageRtt'] = report.totalRoundTripTime / report.responsesReceived;
+                                    }
+
+                                    // Only for Firefox >= 66.0
+                                    if (report.type === 'remote-inbound-rtp' || report.type === 'remote-outbound-rtp') {
+
+                                    }
+                                    console.log(finalReport);
+                                }
+                            })
+                        })
+                )
+            }
+        });
+    }
+
+    private isReportWanted(report: any): boolean {
+        return report.type === 'inbound-rtp' && !this.isLocal() ||
+            report.type === 'outbound-rtp' && this.isLocal() ||
+            (report.type === 'candidate-pair' && report.nominated && report.bytesSent > 0);
     }
 
 }
