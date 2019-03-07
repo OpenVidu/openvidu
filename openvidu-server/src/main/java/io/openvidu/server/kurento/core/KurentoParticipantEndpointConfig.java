@@ -43,9 +43,8 @@ public class KurentoParticipantEndpointConfig {
 			String msg = "KMS event [MediaFlowInStateChange] -> endpoint: " + endpoint.getEndpointName() + " ("
 					+ typeOfEndpoint + ") | state: " + event.getState() + " | pad: " + event.getPadName()
 					+ " | mediaType: " + event.getMediaType() + " | timestamp: " + event.getTimestamp();
-			KmsEvent kmsEvent = new KmsMediaEvent(event, endpoint.getOwner().getSessionId(),
-					endpoint.getOwner().getParticipantPublicId(), endpoint.getEndpointName(), event.getMediaType(),
-					endpoint.createdAt());
+			KmsEvent kmsEvent = new KmsMediaEvent(event, endpoint.getOwner(), endpoint.getEndpointName(),
+					event.getMediaType(), endpoint.createdAt());
 			endpoint.kmsEvents.add(kmsEvent);
 			this.CDR.log(kmsEvent);
 			this.infoHandler.sendInfo(msg);
@@ -56,9 +55,8 @@ public class KurentoParticipantEndpointConfig {
 			String msg = "KMS event [MediaFlowOutStateChange] -> endpoint: " + endpoint.getEndpointName() + " ("
 					+ typeOfEndpoint + ") | state: " + event.getState() + " | pad: " + event.getPadName()
 					+ " | mediaType: " + event.getMediaType() + " | timestamp: " + event.getTimestamp();
-			KmsEvent kmsEvent = new KmsMediaEvent(event, endpoint.getOwner().getSessionId(),
-					endpoint.getOwner().getParticipantPublicId(), endpoint.getEndpointName(), event.getMediaType(),
-					endpoint.createdAt());
+			KmsEvent kmsEvent = new KmsMediaEvent(event, endpoint.getOwner(), endpoint.getEndpointName(),
+					event.getMediaType(), endpoint.createdAt());
 			endpoint.kmsEvents.add(kmsEvent);
 			this.CDR.log(kmsEvent);
 			this.infoHandler.sendInfo(msg);
@@ -68,8 +66,8 @@ public class KurentoParticipantEndpointConfig {
 		endpoint.getWebEndpoint().addIceGatheringDoneListener(event -> {
 			String msg = "KMS event [IceGatheringDone] -> endpoint: " + endpoint.getEndpointName() + " ("
 					+ typeOfEndpoint + ") | timestamp: " + event.getTimestamp();
-			KmsEvent kmsEvent = new KmsEvent(event, endpoint.getOwner().getSessionId(),
-					endpoint.getOwner().getParticipantPublicId(), endpoint.getEndpointName(), endpoint.createdAt());
+			KmsEvent kmsEvent = new KmsEvent(event, endpoint.getOwner(), endpoint.getEndpointName(),
+					endpoint.createdAt());
 			endpoint.kmsEvents.add(kmsEvent);
 			this.CDR.log(kmsEvent);
 			this.infoHandler.sendInfo(msg);
@@ -80,8 +78,8 @@ public class KurentoParticipantEndpointConfig {
 			String msg = "KMS event [ConnectionStateChanged]: -> endpoint: " + endpoint.getEndpointName() + " ("
 					+ typeOfEndpoint + ") | oldState: " + event.getOldState() + " | newState: " + event.getNewState()
 					+ " | timestamp: " + event.getTimestamp();
-			KmsEvent kmsEvent = new KmsEvent(event, endpoint.getOwner().getSessionId(),
-					endpoint.getOwner().getParticipantPublicId(), endpoint.getEndpointName(), endpoint.createdAt());
+			KmsEvent kmsEvent = new KmsEvent(event, endpoint.getOwner(), endpoint.getEndpointName(),
+					endpoint.createdAt());
 			endpoint.kmsEvents.add(kmsEvent);
 			this.CDR.log(kmsEvent);
 			this.infoHandler.sendInfo(msg);
@@ -94,8 +92,8 @@ public class KurentoParticipantEndpointConfig {
 			String msg = "KMS event [NewCandidatePairSelected]: -> endpoint: " + endpoint.getEndpointName() + " ("
 					+ typeOfEndpoint + ") | local: " + endpoint.selectedLocalIceCandidate + " | remote: "
 					+ endpoint.selectedRemoteIceCandidate + " | timestamp: " + event.getTimestamp();
-			KmsEvent kmsEvent = new KmsEvent(event, endpoint.getOwner().getSessionId(),
-					endpoint.getOwner().getParticipantPublicId(), endpoint.getEndpointName(), endpoint.createdAt());
+			KmsEvent kmsEvent = new KmsEvent(event, endpoint.getOwner(), endpoint.getEndpointName(),
+					endpoint.createdAt());
 			endpoint.kmsEvents.add(kmsEvent);
 			this.CDR.log(kmsEvent);
 			this.infoHandler.sendInfo(msg);
@@ -106,9 +104,8 @@ public class KurentoParticipantEndpointConfig {
 			String msg = "KMS event [MediaTranscodingStateChange]: -> endpoint: " + endpoint.getEndpointName() + " ("
 					+ typeOfEndpoint + ") | state: " + event.getState().name() + " | mediaType: " + event.getMediaType()
 					+ " | binName: " + event.getBinName() + " | timestamp: " + event.getTimestamp();
-			KmsEvent kmsEvent = new KmsMediaEvent(event, endpoint.getOwner().getSessionId(),
-					endpoint.getOwner().getParticipantPublicId(), endpoint.getEndpointName(), event.getMediaType(),
-					endpoint.createdAt());
+			KmsEvent kmsEvent = new KmsMediaEvent(event, endpoint.getOwner(), endpoint.getEndpointName(),
+					event.getMediaType(), endpoint.createdAt());
 			endpoint.kmsEvents.add(kmsEvent);
 			this.CDR.log(kmsEvent);
 			this.infoHandler.sendInfo(msg);
@@ -121,8 +118,8 @@ public class KurentoParticipantEndpointConfig {
 					+ typeOfEndpoint + ") | state: " + event.getState().name() + " | componentId: "
 					+ event.getComponentId() + " | streamId: " + event.getStreamId() + " | timestamp: "
 					+ event.getTimestamp();
-			KmsEvent kmsEvent = new KmsEvent(event, endpoint.getOwner().getSessionId(),
-					endpoint.getOwner().getParticipantPublicId(), endpoint.getEndpointName(), endpoint.createdAt());
+			KmsEvent kmsEvent = new KmsEvent(event, endpoint.getOwner(), endpoint.getEndpointName(),
+					endpoint.createdAt());
 			endpoint.kmsEvents.add(kmsEvent);
 			this.CDR.log(kmsEvent);
 			this.infoHandler.sendInfo(msg);
@@ -134,8 +131,8 @@ public class KurentoParticipantEndpointConfig {
 			String msg = "KMS event [ERROR]: -> endpoint: " + endpoint.getEndpointName() + " (" + typeOfEndpoint
 					+ ") | errorCode: " + event.getErrorCode() + " | description: " + event.getDescription()
 					+ " | timestamp: " + event.getTimestamp();
-			KmsEvent kmsEvent = new KmsEvent(event, endpoint.getOwner().getSessionId(),
-					endpoint.getOwner().getParticipantPublicId(), endpoint.getEndpointName(), endpoint.createdAt());
+			KmsEvent kmsEvent = new KmsEvent(event, endpoint.getOwner(), endpoint.getEndpointName(),
+					endpoint.createdAt());
 			endpoint.kmsEvents.add(kmsEvent);
 			this.CDR.log(kmsEvent);
 			this.infoHandler.sendInfo(msg);

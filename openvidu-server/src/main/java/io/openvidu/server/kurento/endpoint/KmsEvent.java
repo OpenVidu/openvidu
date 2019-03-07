@@ -22,19 +22,19 @@ import org.kurento.jsonrpc.JsonUtils;
 
 import com.google.gson.JsonObject;
 
+import io.openvidu.server.core.Participant;
+
 public class KmsEvent {
 
 	long timestamp;
 	long msSinceCreation;
-	String sessionId;
-	String connectionId;
+	Participant participant;
 	String endpoint;
 	RaiseBaseEvent event;
 
-	public KmsEvent(RaiseBaseEvent event, String sessionId, String connectionId, String endpointName, long createdAt) {
+	public KmsEvent(RaiseBaseEvent event, Participant participant, String endpointName, long createdAt) {
 		this.event = event;
-		this.sessionId = sessionId;
-		this.connectionId = connectionId;
+		this.participant = participant;
 		this.endpoint = endpointName;
 		this.timestamp = System.currentTimeMillis(); // TODO: Change to event.getTimestampMillis()
 		this.msSinceCreation = this.timestamp - createdAt;
@@ -46,8 +46,9 @@ public class KmsEvent {
 		JsonObject json = JsonUtils.toJsonObject(event);
 		json.remove("tags");
 		json.addProperty("timestamp", timestamp);
-		json.addProperty("session", sessionId);
-		json.addProperty("connection", connectionId);
+		json.addProperty("session", participant.getSessionId());
+		json.addProperty("user", participant.getFinalUserId());
+		json.addProperty("connection", participant.getParticipantPublicId());
 		json.addProperty("endpoint", this.endpoint);
 		json.addProperty("msSinceEndpointCreation", msSinceCreation);
 		return json;
