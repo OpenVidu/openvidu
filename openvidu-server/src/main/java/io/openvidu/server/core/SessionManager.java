@@ -473,7 +473,7 @@ public abstract class SessionManager {
 		sessionidAccumulatedRecordings.remove(session.getSessionId());
 		sessionidTokenTokenobj.remove(session.getSessionId());
 
-		log.warn("Session '{}' removed and closed", session.getSessionId());
+		log.info("Session '{}' removed and closed", session.getSessionId());
 	}
 
 }
