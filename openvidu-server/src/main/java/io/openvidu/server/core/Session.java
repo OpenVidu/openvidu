@@ -34,7 +34,6 @@ import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.Recording;
 import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.java.client.SessionProperties;
-import io.openvidu.server.cdr.CallDetailRecord;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.kurento.core.KurentoParticipant;
 import io.openvidu.server.recording.service.RecordingManager;
@@ -43,7 +42,6 @@ public class Session implements SessionInterface {
 
 	protected OpenviduConfig openviduConfig;
 	protected RecordingManager recordingManager;
-	protected CallDetailRecord CDR;
 
 	protected final ConcurrentMap<String, Participant> participants = new ConcurrentHashMap<>();
 	protected String sessionId;
@@ -59,17 +57,15 @@ public class Session implements SessionInterface {
 		this.sessionId = previousSession.getSessionId();
 		this.startTime = previousSession.getStartTime();
 		this.sessionProperties = previousSession.getSessionProperties();
-		this.CDR = previousSession.CDR;
 		this.openviduConfig = previousSession.openviduConfig;
 		this.recordingManager = previousSession.recordingManager;
 	}
 
-	public Session(String sessionId, SessionProperties sessionProperties, CallDetailRecord CDR,
-			OpenviduConfig openviduConfig, RecordingManager recordingManager) {
+	public Session(String sessionId, SessionProperties sessionProperties, OpenviduConfig openviduConfig,
+			RecordingManager recordingManager) {
 		this.sessionId = sessionId;
 		this.startTime = System.currentTimeMillis();
 		this.sessionProperties = sessionProperties;
-		this.CDR = CDR;
 		this.openviduConfig = openviduConfig;
 		this.recordingManager = recordingManager;
 	}

@@ -52,6 +52,7 @@ public class KurentoSession extends Session {
 
 	private KurentoClient kurentoClient;
 	private KurentoSessionEventsHandler kurentoSessionHandler;
+	private KurentoParticipantEndpointConfig kurentoEndpointConfig;
 
 	private final ConcurrentHashMap<String, String> filterStates = new ConcurrentHashMap<>();
 
@@ -62,11 +63,13 @@ public class KurentoSession extends Session {
 	public final ConcurrentHashMap<String, String> publishedStreamIds = new ConcurrentHashMap<>();
 
 	public KurentoSession(Session sessionNotActive, KurentoClient kurentoClient,
-			KurentoSessionEventsHandler kurentoSessionHandler, boolean destroyKurentoClient) {
+			KurentoSessionEventsHandler kurentoSessionHandler, KurentoParticipantEndpointConfig kurentoEndpointConfig,
+			boolean destroyKurentoClient) {
 		super(sessionNotActive);
 		this.kurentoClient = kurentoClient;
 		this.destroyKurentoClient = destroyKurentoClient;
 		this.kurentoSessionHandler = kurentoSessionHandler;
+		this.kurentoEndpointConfig = kurentoEndpointConfig;
 		log.debug("New SESSION instance with id '{}'", sessionId);
 	}
 
@@ -75,8 +78,8 @@ public class KurentoSession extends Session {
 		checkClosed();
 		createPipeline();
 
-		KurentoParticipant kurentoParticipant = new KurentoParticipant(participant, this,
-				kurentoSessionHandler.getInfoHandler(), this.CDR, this.openviduConfig, this.recordingManager);
+		KurentoParticipant kurentoParticipant = new KurentoParticipant(participant, this, this.kurentoEndpointConfig,
+				this.openviduConfig, this.recordingManager);
 		participants.put(participant.getParticipantPrivateId(), kurentoParticipant);
 
 		filterStates.forEach((filterId, state) -> {
@@ -87,7 +90,7 @@ public class KurentoSession extends Session {
 		log.info("SESSION {}: Added participant {}", sessionId, participant);
 
 		if (!ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(participant.getParticipantPublicId())) {
-			CDR.recordParticipantJoined(participant, sessionId);
+			kurentoEndpointConfig.getCdr().recordParticipantJoined(participant, sessionId);
 		}
 	}
 

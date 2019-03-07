@@ -42,7 +42,6 @@ import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.server.cdr.CDREventRecording;
-import io.openvidu.server.cdr.CallDetailRecord;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.coturn.CoturnCredentialsService;
 import io.openvidu.server.kurento.core.KurentoTokenOptions;
@@ -59,9 +58,6 @@ public abstract class SessionManager {
 
 	@Autowired
 	protected RecordingManager recordingManager;
-
-	@Autowired
-	protected CallDetailRecord CDR;
 
 	@Autowired
 	protected OpenviduConfig openviduConfig;
@@ -241,7 +237,7 @@ public abstract class SessionManager {
 	}
 
 	public Session storeSessionNotActive(String sessionId, SessionProperties sessionProperties) {
-		Session sessionNotActive = new Session(sessionId, sessionProperties, CDR, openviduConfig, recordingManager);
+		Session sessionNotActive = new Session(sessionId, sessionProperties, openviduConfig, recordingManager);
 		this.sessionsNotActive.put(sessionId, sessionNotActive);
 		this.sessionidParticipantpublicidParticipant.putIfAbsent(sessionId, new ConcurrentHashMap<>());
 		this.sessionidFinalUsers.putIfAbsent(sessionId, new ConcurrentHashMap<>());
@@ -342,7 +338,7 @@ public abstract class SessionManager {
 			String clientMetadata, String location, String platform, String finalUserId) {
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
 			String participantPublicId = RandomStringGenerator.generateRandomChain();
-			Participant p = new Participant(finalUserId, participantPrivatetId, participantPublicId, token,
+			Participant p = new Participant(finalUserId, participantPrivatetId, participantPublicId, sessionId, token,
 					clientMetadata, location, platform, null);
 			while (this.sessionidParticipantpublicidParticipant.get(sessionId).putIfAbsent(participantPublicId,
 					p) != null) {
@@ -373,7 +369,7 @@ public abstract class SessionManager {
 			String clientMetadata) {
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
 			Participant p = new Participant(null, participantPrivatetId, ProtocolElements.RECORDER_PARTICIPANT_PUBLICID,
-					token, clientMetadata, null, null, null);
+					sessionId, token, clientMetadata, null, null, null);
 			this.sessionidParticipantpublicidParticipant.get(sessionId)
 					.put(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID, p);
 			return p;

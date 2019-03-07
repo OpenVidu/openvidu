@@ -68,6 +68,9 @@ public class KurentoSessionManager extends SessionManager {
 	@Autowired
 	private KurentoSessionEventsHandler kurentoSessionEventsHandler;
 
+	@Autowired
+	private KurentoParticipantEndpointConfig kurentoEndpointConfig;
+
 	private KurentoClient kurentoClient;
 
 	@Override
@@ -89,7 +92,7 @@ public class KurentoSessionManager extends SessionManager {
 							new SessionProperties.Builder().mediaMode(MediaMode.ROUTED)
 									.recordingMode(RecordingMode.ALWAYS)
 									.defaultRecordingLayout(RecordingLayout.BEST_FIT).build(),
-							CDR, openviduConfig, recordingManager);
+							openviduConfig, recordingManager);
 				}
 
 				createSession(sessionNotActive, kcSessionInfo);
@@ -505,7 +508,7 @@ public class KurentoSessionManager extends SessionManager {
 		}
 		this.kurentoClient = kcProvider.getKurentoClient(kcSessionInfo);
 		session = new KurentoSession(sessionNotActive, kurentoClient, kurentoSessionEventsHandler,
-				kcProvider.destroyWhenUnused());
+				kurentoEndpointConfig, kcProvider.destroyWhenUnused());
 
 		KurentoSession oldSession = (KurentoSession) sessions.putIfAbsent(sessionId, session);
 		if (oldSession != null) {

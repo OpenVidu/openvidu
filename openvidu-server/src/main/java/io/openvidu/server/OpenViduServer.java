@@ -59,6 +59,7 @@ import io.openvidu.server.coturn.CoturnCredentialsService;
 import io.openvidu.server.coturn.CoturnCredentialsServiceFactory;
 import io.openvidu.server.kurento.AutodiscoveryKurentoClientProvider;
 import io.openvidu.server.kurento.KurentoClientProvider;
+import io.openvidu.server.kurento.core.KurentoParticipantEndpointConfig;
 import io.openvidu.server.kurento.core.KurentoSessionEventsHandler;
 import io.openvidu.server.kurento.core.KurentoSessionManager;
 import io.openvidu.server.kurento.kms.FixedOneKmsManager;
@@ -142,6 +143,12 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	@ConditionalOnMissingBean
 	public CallDetailRecord cdr() {
 		return new CallDetailRecord(Arrays.asList(new CDRLoggerFile()));
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public KurentoParticipantEndpointConfig kurentoEndpointConfig() {
+		return new KurentoParticipantEndpointConfig();
 	}
 
 	@Bean

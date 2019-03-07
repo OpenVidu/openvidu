@@ -43,13 +43,9 @@ import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.OpenViduRole;
-import io.openvidu.server.cdr.CallDetailRecord;
-import io.openvidu.server.config.InfoHandler;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
-import io.openvidu.server.kurento.endpoint.KmsEvent;
-import io.openvidu.server.kurento.endpoint.KmsMediaEvent;
 import io.openvidu.server.kurento.endpoint.MediaEndpoint;
 import io.openvidu.server.kurento.endpoint.PublisherEndpoint;
 import io.openvidu.server.kurento.endpoint.SdpType;
@@ -60,14 +56,13 @@ public class KurentoParticipant extends Participant {
 
 	private static final Logger log = LoggerFactory.getLogger(KurentoParticipant.class);
 
-	private InfoHandler infoHandler;
-	private CallDetailRecord CDR;
 	private OpenviduConfig openviduConfig;
 	private RecordingManager recordingManager;
 
 	private boolean webParticipant = true;
 
 	private final KurentoSession session;
+	private KurentoParticipantEndpointConfig endpointConfig;
 
 	private PublisherEndpoint publisher;
 	private CountDownLatch endPointLatch = new CountDownLatch(1);
@@ -75,13 +70,13 @@ public class KurentoParticipant extends Participant {
 	private final ConcurrentMap<String, Filter> filters = new ConcurrentHashMap<>();
 	private final ConcurrentMap<String, SubscriberEndpoint> subscribers = new ConcurrentHashMap<String, SubscriberEndpoint>();
 
-	public KurentoParticipant(Participant participant, KurentoSession kurentoSession, InfoHandler infoHandler,
-			CallDetailRecord CDR, OpenviduConfig openviduConfig, RecordingManager recordingManager) {
+	public KurentoParticipant(Participant participant, KurentoSession kurentoSession,
+			KurentoParticipantEndpointConfig endpointConfig, OpenviduConfig openviduConfig,
+			RecordingManager recordingManager) {
 		super(participant.getFinalUserId(), participant.getParticipantPrivateId(), participant.getParticipantPublicId(),
-				participant.getToken(), participant.getClientMetadata(), participant.getLocation(),
-				participant.getPlatform(), participant.getCreatedAt());
-		this.infoHandler = infoHandler;
-		this.CDR = CDR;
+				kurentoSession.getSessionId(), participant.getToken(), participant.getClientMetadata(),
+				participant.getLocation(), participant.getPlatform(), participant.getCreatedAt());
+		this.endpointConfig = endpointConfig;
 		this.openviduConfig = openviduConfig;
 		this.recordingManager = recordingManager;
 		this.session = kurentoSession;
@@ -114,7 +109,7 @@ public class KurentoParticipant extends Participant {
 		this.publisher.getEndpoint().setName(publisherStreamId);
 		this.publisher.setStreamId(publisherStreamId);
 
-		addEndpointListeners(this.publisher, "publisher");
+		endpointConfig.addEndpointListeners(this.publisher, "publisher");
 
 		// Remove streamId from publisher's map
 		this.session.publishedStreamIds.putIfAbsent(this.getPublisherStreamId(), this.getParticipantPrivateId());
@@ -185,8 +180,8 @@ public class KurentoParticipant extends Participant {
 			this.recordingManager.startOneIndividualStreamRecording(session, null, null, this);
 		}
 
-		CDR.recordNewPublisher(this, session.getSessionId(), publisher.getStreamId(), publisher.getMediaOptions(),
-				publisher.createdAt());
+		endpointConfig.getCdr().recordNewPublisher(this, session.getSessionId(), publisher.getStreamId(),
+				publisher.getMediaOptions(), publisher.createdAt());
 
 		return sdpResponse;
 	}
@@ -255,7 +250,7 @@ public class KurentoParticipant extends Participant {
 			subscriber.getEndpoint().setName(subscriberEndpointName);
 			subscriber.setStreamId(kSender.getPublisherStreamId());
 
-			addEndpointListeners(subscriber, "subscriber");
+			endpointConfig.addEndpointListeners(subscriber, "subscriber");
 
 		} catch (OpenViduException e) {
 			this.subscribers.remove(senderName);
@@ -270,8 +265,8 @@ public class KurentoParticipant extends Participant {
 					senderName, this.session.getSessionId());
 
 			if (!ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(this.getParticipantPublicId())) {
-				CDR.recordNewSubscriber(this, this.session.getSessionId(), sender.getPublisherStreamId(),
-						sender.getParticipantPublicId(), subscriber.createdAt());
+				endpointConfig.getCdr().recordNewSubscriber(this, this.session.getSessionId(),
+						sender.getPublisherStreamId(), sender.getParticipantPublicId(), subscriber.createdAt());
 			}
 
 			return sdpAnswer;
@@ -388,7 +383,7 @@ public class KurentoParticipant extends Participant {
 			this.streaming = false;
 			this.session.deregisterPublisher();
 
-			CDR.stopPublisher(this.getParticipantPublicId(), publisher.getStreamId(), reason);
+			endpointConfig.getCdr().stopPublisher(this.getParticipantPublicId(), publisher.getStreamId(), reason);
 			publisher = null;
 
 		} else {
@@ -402,7 +397,8 @@ public class KurentoParticipant extends Participant {
 			releaseElement(senderName, subscriber.getEndpoint());
 
 			if (!ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(this.getParticipantPublicId())) {
-				CDR.stopSubscriber(this.getParticipantPublicId(), senderName, subscriber.getStreamId(), reason);
+				endpointConfig.getCdr().stopSubscriber(this.getParticipantPublicId(), senderName,
+						subscriber.getStreamId(), reason);
 			}
 
 		} else {
@@ -431,110 +427,6 @@ public class KurentoParticipant extends Participant {
 			log.error("PARTICIPANT {}: Error calling release on elem #{} for {}", getParticipantPublicId(), eid,
 					senderName, e);
 		}
-	}
-
-	private void addEndpointListeners(MediaEndpoint endpoint, String typeOfEndpoint) {
-
-		endpoint.getWebEndpoint().addMediaFlowInStateChangeListener(event -> {
-			String msg = "KMS event [MediaFlowInStateChange] -> endpoint: " + endpoint.getEndpointName() + " ("
-					+ typeOfEndpoint + ") | state: " + event.getState() + " | pad: " + event.getPadName()
-					+ " | mediaType: " + event.getMediaType() + " | timestamp: " + event.getTimestamp();
-			KmsEvent kmsEvent = new KmsMediaEvent(event, this.session.getSessionId(), participantPublicId,
-					endpoint.getEndpointName(), event.getMediaType(), endpoint.createdAt());
-			endpoint.kmsEvents.add(kmsEvent);
-			this.CDR.log(kmsEvent);
-			this.infoHandler.sendInfo(msg);
-			log.info(msg);
-		});
-
-		endpoint.getWebEndpoint().addMediaFlowOutStateChangeListener(event -> {
-			String msg = "KMS event [MediaFlowOutStateChange] -> endpoint: " + endpoint.getEndpointName() + " ("
-					+ typeOfEndpoint + ") | state: " + event.getState() + " | pad: " + event.getPadName()
-					+ " | mediaType: " + event.getMediaType() + " | timestamp: " + event.getTimestamp();
-			KmsEvent kmsEvent = new KmsMediaEvent(event, this.session.getSessionId(), participantPublicId,
-					endpoint.getEndpointName(), event.getMediaType(), endpoint.createdAt());
-			endpoint.kmsEvents.add(kmsEvent);
-			this.CDR.log(kmsEvent);
-			this.infoHandler.sendInfo(msg);
-			log.info(msg);
-		});
-
-		endpoint.getWebEndpoint().addIceGatheringDoneListener(event -> {
-			String msg = "KMS event [IceGatheringDone] -> endpoint: " + endpoint.getEndpointName() + " ("
-					+ typeOfEndpoint + ") | timestamp: " + event.getTimestamp();
-			KmsEvent kmsEvent = new KmsEvent(event, this.session.getSessionId(), participantPublicId,
-					endpoint.getEndpointName(), endpoint.createdAt());
-			endpoint.kmsEvents.add(kmsEvent);
-			this.CDR.log(kmsEvent);
-			this.infoHandler.sendInfo(msg);
-			log.info(msg);
-		});
-
-		endpoint.getWebEndpoint().addConnectionStateChangedListener(event -> {
-			String msg = "KMS event [ConnectionStateChanged]: -> endpoint: " + endpoint.getEndpointName() + " ("
-					+ typeOfEndpoint + ") | oldState: " + event.getOldState() + " | newState: " + event.getNewState()
-					+ " | timestamp: " + event.getTimestamp();
-			KmsEvent kmsEvent = new KmsEvent(event, this.session.getSessionId(), participantPublicId,
-					endpoint.getEndpointName(), endpoint.createdAt());
-			endpoint.kmsEvents.add(kmsEvent);
-			this.CDR.log(kmsEvent);
-			this.infoHandler.sendInfo(msg);
-			log.info(msg);
-		});
-
-		endpoint.getWebEndpoint().addNewCandidatePairSelectedListener(event -> {
-			endpoint.selectedLocalIceCandidate = event.getCandidatePair().getLocalCandidate();
-			endpoint.selectedRemoteIceCandidate = event.getCandidatePair().getRemoteCandidate();
-			String msg = "KMS event [NewCandidatePairSelected]: -> endpoint: " + endpoint.getEndpointName() + " ("
-					+ typeOfEndpoint + ") | local: " + endpoint.selectedLocalIceCandidate + " | remote: "
-					+ endpoint.selectedRemoteIceCandidate + " | timestamp: " + event.getTimestamp();
-			KmsEvent kmsEvent = new KmsEvent(event, this.session.getSessionId(), participantPublicId,
-					endpoint.getEndpointName(), endpoint.createdAt());
-			endpoint.kmsEvents.add(kmsEvent);
-			this.CDR.log(kmsEvent);
-			this.infoHandler.sendInfo(msg);
-			log.info(msg);
-		});
-
-		endpoint.getEndpoint().addMediaTranscodingStateChangeListener(event -> {
-			String msg = "KMS event [MediaTranscodingStateChange]: -> endpoint: " + endpoint.getEndpointName() + " ("
-					+ typeOfEndpoint + ") | state: " + event.getState().name() + " | mediaType: " + event.getMediaType()
-					+ " | binName: " + event.getBinName() + " | timestamp: " + event.getTimestamp();
-			KmsEvent kmsEvent = new KmsMediaEvent(event, this.session.getSessionId(), participantPublicId,
-					endpoint.getEndpointName(), event.getMediaType(), endpoint.createdAt());
-			endpoint.kmsEvents.add(kmsEvent);
-			this.CDR.log(kmsEvent);
-			this.infoHandler.sendInfo(msg);
-			log.info(msg);
-		});
-
-		endpoint.getWebEndpoint().addIceComponentStateChangeListener(event -> {
-			// if (!event.getState().equals(IceComponentState.READY)) {
-			String msg = "KMS event [IceComponentStateChange]: -> endpoint: " + endpoint.getEndpointName() + " ("
-					+ typeOfEndpoint + ") | state: " + event.getState().name() + " | componentId: "
-					+ event.getComponentId() + " | streamId: " + event.getStreamId() + " | timestamp: "
-					+ event.getTimestamp();
-			KmsEvent kmsEvent = new KmsEvent(event, this.session.getSessionId(), participantPublicId,
-					endpoint.getEndpointName(), endpoint.createdAt());
-			endpoint.kmsEvents.add(kmsEvent);
-			this.CDR.log(kmsEvent);
-			this.infoHandler.sendInfo(msg);
-			log.info(msg);
-			// }
-		});
-
-		endpoint.getWebEndpoint().addErrorListener(event -> {
-			String msg = "KMS event [ERROR]: -> endpoint: " + endpoint.getEndpointName() + " (" + typeOfEndpoint
-					+ ") | errorCode: " + event.getErrorCode() + " | description: " + event.getDescription()
-					+ " | timestamp: " + event.getTimestamp();
-			KmsEvent kmsEvent = new KmsEvent(event, this.session.getSessionId(), participantPublicId,
-					endpoint.getEndpointName(), endpoint.createdAt());
-			endpoint.kmsEvents.add(kmsEvent);
-			this.CDR.log(kmsEvent);
-			this.infoHandler.sendInfo(msg);
-			log.error(msg);
-		});
-
 	}
 
 	public MediaPipeline getPipeline() {

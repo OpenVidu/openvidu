@@ -554,10 +554,6 @@ public class SessionEventsHandler {
 		this.recordingsStarted.put(sessionId, recording);
 	}
 
-	public InfoHandler getInfoHandler() {
-		return this.infoHandler;
-	}
-
 	private Set<Participant> filterParticipantsByRole(OpenViduRole[] roles, Set<Participant> participants) {
 		return participants.stream().filter(part -> {
 			if (ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(part.getParticipantPublicId())) {

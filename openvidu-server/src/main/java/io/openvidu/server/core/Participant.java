@@ -24,6 +24,7 @@ public class Participant {
 	protected String finalUserId; // ID to match this connection with a final user (HttpSession id)
 	protected String participantPrivatetId; // ID to identify the user on server (org.kurento.jsonrpc.Session.id)
 	protected String participantPublicId; // ID to identify the user on clients
+	private String sessionId; // ID of the session to which the participant belongs
 	protected Long createdAt; // Timestamp when this connection was established
 	protected String clientMetadata = ""; // Metadata provided on client side
 	protected String serverMetadata = ""; // Metadata provided on server side
@@ -36,11 +37,12 @@ public class Participant {
 
 	private final String METADATA_SEPARATOR = "%/%";
 
-	public Participant(String finalUserId, String participantPrivatetId, String participantPublicId, Token token,
-			String clientMetadata, String location, String platform, Long createdAt) {
+	public Participant(String finalUserId, String participantPrivatetId, String participantPublicId, String sessionId,
+			Token token, String clientMetadata, String location, String platform, Long createdAt) {
 		this.finalUserId = finalUserId;
 		this.participantPrivatetId = participantPrivatetId;
 		this.participantPublicId = participantPublicId;
+		this.sessionId = sessionId;
 		if (createdAt != null) {
 			this.createdAt = createdAt;
 		} else {
@@ -72,6 +74,10 @@ public class Participant {
 
 	public void setParticipantPublicId(String participantPublicId) {
 		this.participantPublicId = participantPublicId;
+	}
+
+	public String getSessionId() {
+		return sessionId;
 	}
 
 	public Long getCreatedAt() {
