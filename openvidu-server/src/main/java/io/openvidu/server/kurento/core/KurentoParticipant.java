@@ -376,6 +376,10 @@ public class KurentoParticipant extends Participant {
 			}
 
 			publisher.unregisterErrorListeners();
+			if (publisher.kmsWebrtcStatsThread != null) {
+				publisher.kmsWebrtcStatsThread.cancel(true);
+			}
+
 			for (MediaElement el : publisher.getMediaElements()) {
 				releaseElement(getParticipantPublicId(), el);
 			}
@@ -393,7 +397,12 @@ public class KurentoParticipant extends Participant {
 
 	private void releaseSubscriberEndpoint(String senderName, SubscriberEndpoint subscriber, String reason) {
 		if (subscriber != null) {
+
 			subscriber.unregisterErrorListeners();
+			if (subscriber.kmsWebrtcStatsThread != null) {
+				subscriber.kmsWebrtcStatsThread.cancel(true);
+			}
+
 			releaseElement(senderName, subscriber.getEndpoint());
 
 			if (!ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(this.getParticipantPublicId())) {
