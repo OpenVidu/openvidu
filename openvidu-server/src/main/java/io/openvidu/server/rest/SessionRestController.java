@@ -81,7 +81,7 @@ public class SessionRestController {
 	@RequestMapping(value = "/sessions", method = RequestMethod.POST)
 	public ResponseEntity<?> getSessionId(@RequestBody(required = false) Map<?, ?> params) {
 
-		log.info("REST API: POST /api/sessions {}", params.toString());
+		log.info("REST API: POST /api/sessions {}", params != null ? params.toString() : "{}");
 
 		SessionProperties.Builder builder = new SessionProperties.Builder();
 		String customSessionId = null;
@@ -273,6 +273,11 @@ public class SessionRestController {
 	@RequestMapping(value = "/tokens", method = RequestMethod.POST)
 	public ResponseEntity<String> newToken(@RequestBody Map<?, ?> params) {
 
+		if (params == null) {
+			return this.generateErrorResponse("Error in body parameters. Cannot be empty", "/api/tokens",
+					HttpStatus.BAD_REQUEST);
+		}
+
 		log.info("REST API: POST /api/tokens {}", params.toString());
 
 		String sessionId;
@@ -287,7 +292,8 @@ public class SessionRestController {
 		}
 
 		if (sessionId == null) {
-			return this.generateErrorResponse("Type error in some parameter", "/api/tokens", HttpStatus.BAD_REQUEST);
+			return this.generateErrorResponse("\"session\" parameter is mandatory", "/api/tokens",
+					HttpStatus.BAD_REQUEST);
 		}
 
 		JsonObject kurentoOptions = null;
@@ -372,6 +378,11 @@ public class SessionRestController {
 	@RequestMapping(value = "/recordings/start", method = RequestMethod.POST)
 	public ResponseEntity<?> startRecordingSession(@RequestBody Map<?, ?> params) {
 
+		if (params == null) {
+			return this.generateErrorResponse("Error in body parameters. Cannot be empty", "/api/recordings/start",
+					HttpStatus.BAD_REQUEST);
+		}
+
 		log.info("REST API: POST /api/recordings/start {}", params.toString());
 
 		if (!this.openviduConfig.isRecordingModuleEnabled()) {
@@ -403,7 +414,7 @@ public class SessionRestController {
 
 		if (sessionId == null) {
 			// "session" parameter not found
-			return this.generateErrorResponse("session parameter is mandatory", "/api/recordings/start",
+			return this.generateErrorResponse("\"session\" parameter is mandatory", "/api/recordings/start",
 					HttpStatus.BAD_REQUEST);
 		}
 
