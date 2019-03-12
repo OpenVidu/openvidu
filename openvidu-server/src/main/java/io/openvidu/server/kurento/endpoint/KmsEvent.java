@@ -53,6 +53,10 @@ public class KmsEvent {
 		json.addProperty("msSinceEndpointCreation", msSinceCreation);
 		return json;
 	}
+	
+	public long getTimestamp() {
+		return this.timestamp;
+	}
 
 	private void removeSourceForJsonCompatibility() {
 		// This avoids stack overflow error when transforming RaiseBaseEvent into

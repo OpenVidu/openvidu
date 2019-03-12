@@ -30,7 +30,6 @@ import io.openvidu.server.core.FinalUser;
 
 public class SessionSummary {
 
-	private long totalStreamedMinutes; // Minutes
 	private CDREventSession eventSessionEnd;
 	private Map<String, FinalUser> users;
 	private Collection<CDREventRecording> recordings;
@@ -78,6 +77,10 @@ public class SessionSummary {
 		json.add("recordings", recordingsJson);
 
 		return json;
+	}
+	
+	public CDREventSession getEventSessionEnd() {
+		return this.eventSessionEnd;
 	}
 
 }
