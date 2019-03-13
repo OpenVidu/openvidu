@@ -47,6 +47,7 @@ import io.openvidu.server.coturn.CoturnCredentialsService;
 import io.openvidu.server.kurento.core.KurentoTokenOptions;
 import io.openvidu.server.recording.service.RecordingManager;
 import io.openvidu.server.utils.FormatChecker;
+import io.openvidu.server.utils.GeoLocation;
 import io.openvidu.server.utils.RandomStringGenerator;
 
 public abstract class SessionManager {
@@ -335,7 +336,7 @@ public abstract class SessionManager {
 	}
 
 	public Participant newParticipant(String sessionId, String participantPrivatetId, Token token,
-			String clientMetadata, String location, String platform, String finalUserId) {
+			String clientMetadata, GeoLocation location, String platform, String finalUserId) {
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
 			String participantPublicId = RandomStringGenerator.generateRandomChain();
 			Participant p = new Participant(finalUserId, participantPrivatetId, participantPublicId, sessionId, token,

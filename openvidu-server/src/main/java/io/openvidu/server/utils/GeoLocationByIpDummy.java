@@ -7,8 +7,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class GeoLocationByIpDummy implements GeoLocationByIp {
 
-	public String getLocationByIp(InetAddress ipAddress) throws Exception {
-		return "";
+	@Override
+	public GeoLocation getLocationByIp(InetAddress ipAddress) throws Exception {
+		return null;
 	}
 
 }

@@ -19,6 +19,8 @@ package io.openvidu.server.core;
 
 import com.google.gson.JsonObject;
 
+import io.openvidu.server.utils.GeoLocation;
+
 public class Participant {
 
 	protected String finalUserId; // ID to match this connection with a final user (HttpSession id)
@@ -29,7 +31,7 @@ public class Participant {
 	protected String clientMetadata = ""; // Metadata provided on client side
 	protected String serverMetadata = ""; // Metadata provided on server side
 	protected Token token; // Token associated to this participant
-	protected String location; // Remote IP of the participant
+	protected GeoLocation location; // Location of the participant
 	protected String platform; // Platform used by the participant to connect to the session
 
 	protected boolean streaming = false;
@@ -38,7 +40,7 @@ public class Participant {
 	private final String METADATA_SEPARATOR = "%/%";
 
 	public Participant(String finalUserId, String participantPrivatetId, String participantPublicId, String sessionId,
-			Token token, String clientMetadata, String location, String platform, Long createdAt) {
+			Token token, String clientMetadata, GeoLocation location, String platform, Long createdAt) {
 		this.finalUserId = finalUserId;
 		this.participantPrivatetId = participantPrivatetId;
 		this.participantPublicId = participantPublicId;
@@ -108,11 +110,11 @@ public class Participant {
 		this.token = token;
 	}
 
-	public String getLocation() {
+	public GeoLocation getLocation() {
 		return this.location;
 	}
 
-	public void setLocation(String location) {
+	public void setLocation(GeoLocation location) {
 		this.location = location;
 	}
 
@@ -209,8 +211,7 @@ public class Participant {
 	public JsonObject toJson() {
 		JsonObject json = new JsonObject();
 		json.addProperty("connectionId", this.participantPublicId);
-		json.addProperty("createdAt", this.createdAt);
-		json.addProperty("location", this.location);
+		json.addProperty("location", this.location != null ? this.location.toString() : "unknown");
 		json.addProperty("platform", this.platform);
 		json.addProperty("token", this.token.getToken());
 		json.addProperty("role", this.token.getRole().name());

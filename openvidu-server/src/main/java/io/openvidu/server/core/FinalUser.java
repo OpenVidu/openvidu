@@ -25,12 +25,13 @@ import com.google.gson.JsonObject;
 
 import io.openvidu.server.cdr.CDREventParticipant;
 import io.openvidu.server.summary.ParticipantSummary;
+import io.openvidu.server.utils.GeoLocation;
 
 public class FinalUser {
 
 	private String id;
 	private String sessionId;
-	private String location;
+	private GeoLocation location;
 	private String platform;
 	private Map<String, ParticipantSummary> connections = new ConcurrentHashMap<>();
 
@@ -51,7 +52,7 @@ public class FinalUser {
 		return sessionId;
 	}
 
-	public String getLocation() {
+	public GeoLocation getLocation() {
 		return location;
 	}
 
@@ -76,7 +77,7 @@ public class FinalUser {
 	public JsonObject toJson() {
 		JsonObject json = new JsonObject();
 		json.addProperty("id", id);
-		json.addProperty("location", location);
+		json.addProperty("location", this.location != null ? this.location.toString() : "unknown");
 		json.addProperty("platform", platform);
 
 		JsonObject connectionsJson = new JsonObject();

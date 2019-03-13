@@ -49,6 +49,7 @@ import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.core.Token;
+import io.openvidu.server.utils.GeoLocation;
 import io.openvidu.server.utils.GeoLocationByIp;
 import io.openvidu.server.utils.RandomStringGenerator;
 
@@ -174,7 +175,7 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		String participantPrivatetId = rpcConnection.getParticipantPrivateId();
 
 		InetAddress remoteAddress = null;
-		String location = "";
+		GeoLocation location = null;
 		Object obj = rpcConnection.getSession().getAttributes().get("remoteAddress");
 		if (obj != null && obj instanceof InetAddress) {
 			remoteAddress = (InetAddress) obj;
@@ -182,10 +183,10 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 				location = this.geoLocationByIp.getLocationByIp(remoteAddress);
 			} catch (IOException e) {
 				e.printStackTrace();
-				location = "error";
+				location = null;
 			} catch (Exception e) {
 				log.warn("Error getting address location: {}", e.getMessage());
-				location = "unknown";
+				location = null;
 			}
 		}
 

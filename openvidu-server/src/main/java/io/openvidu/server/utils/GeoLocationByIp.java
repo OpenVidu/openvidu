@@ -21,6 +21,6 @@ import java.net.InetAddress;
 
 public interface GeoLocationByIp {
 
-	public String getLocationByIp(InetAddress ipAddress) throws Exception;
+	public GeoLocation getLocationByIp(InetAddress ipAddress) throws Exception;
 
 }

@@ -41,7 +41,8 @@ public class CDREventParticipant extends CDREventEnd {
 	public JsonObject toJson() {
 		JsonObject json = super.toJson();
 		json.addProperty("participantId", this.participant.getParticipantPublicId());
-		json.addProperty("location", this.participant.getLocation());
+		json.addProperty("location",
+				this.participant.getLocation() != null ? this.participant.getLocation().toString() : "unknown");
 		json.addProperty("platform", this.participant.getPlatform());
 		return json;
 	}

@@ -78,9 +78,13 @@ public class SessionSummary {
 
 		return json;
 	}
-	
+
 	public CDREventSession getEventSessionEnd() {
 		return this.eventSessionEnd;
+	}
+
+	public Map<String, FinalUser> getUsers() {
+		return this.users;
 	}
 
 }
