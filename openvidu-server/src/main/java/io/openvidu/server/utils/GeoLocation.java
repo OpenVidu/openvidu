@@ -4,13 +4,15 @@ public class GeoLocation {
 
 	private String country;
 	private String city;
+	private String timezone;
 	private Double latitude;
 	private Double longitude;
 
-	public GeoLocation(String country, String city, Double latitude, Double longitude) {
+	public GeoLocation(String country, String city, String timezone, Double latitude, Double longitude) {
 		super();
 		this.country = country;
 		this.city = city;
+		this.timezone = timezone;
 		this.latitude = latitude;
 		this.longitude = longitude;
 	}
@@ -21,6 +23,10 @@ public class GeoLocation {
 
 	public String getCity() {
 		return city;
+	}
+
+	public String getTimezone() {
+		return timezone;
 	}
 
 	public Double getLatitude() {
