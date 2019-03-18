@@ -211,6 +211,7 @@ public class Participant {
 	public JsonObject toJson() {
 		JsonObject json = new JsonObject();
 		json.addProperty("connectionId", this.participantPublicId);
+		json.addProperty("createdAt", this.createdAt);
 		json.addProperty("location", this.location != null ? this.location.toString() : "unknown");
 		json.addProperty("platform", this.platform);
 		json.addProperty("token", this.token.getToken());
