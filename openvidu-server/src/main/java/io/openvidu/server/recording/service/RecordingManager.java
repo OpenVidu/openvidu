@@ -653,23 +653,38 @@ public class RecordingManager {
 			// Property openvidu.recording.custom-layout changed
 			File dir = new File(openviduRecordingCustomLayout);
 			if (dir.exists()) {
-				if (dir.listFiles() == null) {
+				if (!dir.isDirectory()) {
 					String errorMessage = "The custom layouts path \"" + openviduRecordingCustomLayout
-							+ "\" is not valid. Reason: OpenVidu Server needs read permissions. Try running command \"sudo chmod 755 "
-							+ openviduRecordingCustomLayout + "\"";
+							+ "\" is not valid. Reason: path already exists but it is not a directory";
 					log.error(errorMessage);
 					throw new OpenViduException(Code.RECORDING_FILE_EMPTY_ERROR, errorMessage);
 				} else {
-					log.info("OpenVidu Server has read permissions on custom layout path: {}",
-							openviduRecordingCustomLayout);
-					log.info("Custom layouts path successfully initialized at {}", openviduRecordingCustomLayout);
+					if (dir.listFiles() == null) {
+						String errorMessage = "The custom layouts path \"" + openviduRecordingCustomLayout
+								+ "\" is not valid. Reason: OpenVidu Server needs read permissions. Try running command \"sudo chmod 755 "
+								+ openviduRecordingCustomLayout + "\"";
+						log.error(errorMessage);
+						throw new OpenViduException(Code.RECORDING_FILE_EMPTY_ERROR, errorMessage);
+					} else {
+						log.info("OpenVidu Server has read permissions on custom layout path: {}",
+								openviduRecordingCustomLayout);
+						log.info("Custom layouts path successfully initialized at {}", openviduRecordingCustomLayout);
+					}
 				}
 			} else {
-				String errorMessage = "The custom layouts path \"" + openviduRecordingCustomLayout
-						+ "\" is not valid. Reason: OpenVidu Server cannot find path \"" + openviduRecordingCustomLayout
-						+ "\" and doesn't have permissions to create it";
-				log.error(errorMessage);
-				throw new OpenViduException(Code.RECORDING_FILE_EMPTY_ERROR, errorMessage);
+				try {
+					Files.createDirectories(dir.toPath());
+					log.warn(
+							"OpenVidu custom layouts path (system property 'openvidu.recording.custom-layout') has been created, being folder {}. "
+									+ "It is an empty folder, so no custom layout is currently present",
+							dir.getAbsolutePath());
+				} catch (IOException e) {
+					String errorMessage = "The custom layouts path \"" + openviduRecordingCustomLayout
+							+ "\" is not valid. Reason: OpenVidu Server cannot find path \""
+							+ openviduRecordingCustomLayout + "\" and doesn't have permissions to create it";
+					log.error(errorMessage);
+					throw new OpenViduException(Code.RECORDING_FILE_EMPTY_ERROR, errorMessage);
+				}
 			}
 		}
 
