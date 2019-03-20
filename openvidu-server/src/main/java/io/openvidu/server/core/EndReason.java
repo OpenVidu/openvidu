@@ -17,38 +17,10 @@
 
 package io.openvidu.server.core;
 
-import java.util.Set;
+public enum EndReason {
 
-import com.google.gson.JsonObject;
-
-import io.openvidu.java.client.SessionProperties;
-
-public interface SessionInterface {
-
-	String getSessionId();
-
-	SessionProperties getSessionProperties();
-
-	void join(Participant participant);
-
-	void leave(String participantPrivateId, EndReason reason);
-
-	boolean close(EndReason reason);
-
-	boolean isClosed();
-
-	Set<Participant> getParticipants();
-
-	Participant getParticipantByPrivateId(String participantPrivateId);
-
-	Participant getParticipantByPublicId(String participantPublicId);
-
-	int getActivePublishers();
-
-	JsonObject toJson();
-
-	JsonObject withStatsToJson();
-
-	Long getStartTime();
+	unsubscribe, unpublish, disconnect, forceUnpublishByUser, forceUnpublishByServer, forceDisconnectByUser,
+	forceDisconnectByServer, lastParticipantLeft, networkDisconnect, mediaServerDisconnect, openviduServerStopped,
+	recordingStoppedByServer, automaticStop, sessionClosedByServer
 
 }

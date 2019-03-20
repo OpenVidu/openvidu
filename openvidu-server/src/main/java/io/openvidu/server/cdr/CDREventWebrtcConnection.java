@@ -19,6 +19,7 @@ package io.openvidu.server.cdr;
 
 import com.google.gson.JsonObject;
 
+import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
 
@@ -40,7 +41,7 @@ public class CDREventWebrtcConnection extends CDREventEnd implements Comparable<
 	}
 
 	// webrtcConnectionDestroyed
-	public CDREventWebrtcConnection(CDREventWebrtcConnection event, String reason) {
+	public CDREventWebrtcConnection(CDREventWebrtcConnection event, EndReason reason) {
 		super(CDREventName.webrtcConnectionDestroyed, event.getSessionId(), event.getTimestamp(), reason);
 		this.streamId = event.streamId;
 		this.participant = event.participant;

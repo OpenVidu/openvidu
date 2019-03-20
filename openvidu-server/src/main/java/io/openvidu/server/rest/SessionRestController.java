@@ -50,6 +50,7 @@ import io.openvidu.java.client.RecordingMode;
 import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.server.config.OpenviduConfig;
+import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.core.SessionManager;
@@ -213,12 +214,12 @@ public class SessionRestController {
 
 		Session session = this.sessionManager.getSession(sessionId);
 		if (session != null) {
-			this.sessionManager.closeSession(sessionId, "sessionClosedByServer");
+			this.sessionManager.closeSession(sessionId, EndReason.sessionClosedByServer);
 			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 		} else {
 			Session sessionNotActive = this.sessionManager.getSessionNotActive(sessionId);
 			if (sessionNotActive != null) {
-				this.sessionManager.closeSessionAndEmptyCollections(sessionNotActive, "sessionClosedByServer");
+				this.sessionManager.closeSessionAndEmptyCollections(sessionNotActive, EndReason.sessionClosedByServer);
 				return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 			} else {
 				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -236,7 +237,7 @@ public class SessionRestController {
 		if (session != null) {
 			Participant participant = session.getParticipantByPublicId(participantPublicId);
 			if (participant != null) {
-				this.sessionManager.evictParticipant(participant, null, null, "forceDisconnectByServer");
+				this.sessionManager.evictParticipant(participant, null, null, EndReason.forceDisconnectByServer);
 				return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 			} else {
 				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -257,7 +258,7 @@ public class SessionRestController {
 
 		Session session = this.sessionManager.getSession(sessionId);
 		if (session != null) {
-			if (this.sessionManager.unpublishStream(session, streamId, null, null, "forceUnpublishByServer")) {
+			if (this.sessionManager.unpublishStream(session, streamId, null, null, EndReason.forceUnpublishByServer)) {
 				return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 			} else {
 				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -524,14 +525,13 @@ public class SessionRestController {
 		Session session = sessionManager.getSession(recording.getSessionId());
 
 		Recording stoppedRecording = this.recordingManager.stopRecording(session, recording.getId(),
-				"recordingStoppedByServer");
+				EndReason.recordingStoppedByServer);
 
 		session.recordingManuallyStopped.set(true);
 
 		if (session != null && OutputMode.COMPOSED.equals(recording.getOutputMode()) && recording.hasVideo()) {
 			sessionManager.evictParticipant(
-					session.getParticipantByPublicId(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID), null, null,
-					"EVICT_RECORDER");
+					session.getParticipantByPublicId(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID), null, null, null);
 		}
 
 		return new ResponseEntity<>(stoppedRecording.toJson().toString(), getResponseHeaders(), HttpStatus.OK);

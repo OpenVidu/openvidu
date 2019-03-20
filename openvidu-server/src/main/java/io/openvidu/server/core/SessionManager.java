@@ -84,13 +84,13 @@ public abstract class SessionManager {
 
 	public abstract void joinRoom(Participant participant, String sessionId, Integer transactionId);
 
-	public abstract void leaveRoom(Participant participant, Integer transactionId, String reason,
+	public abstract void leaveRoom(Participant participant, Integer transactionId, EndReason reason,
 			boolean closeWebSocket);
 
 	public abstract void publishVideo(Participant participant, MediaOptions mediaOptions, Integer transactionId);
 
 	public abstract void unpublishVideo(Participant participant, Participant moderator, Integer transactionId,
-			String reason);
+			EndReason reason);
 
 	public abstract void subscribe(Participant participant, String senderName, String sdpOffer, Integer transactionId);
 
@@ -99,16 +99,16 @@ public abstract class SessionManager {
 	public abstract void sendMessage(Participant participant, String message, Integer transactionId);
 
 	public abstract void streamPropertyChanged(Participant participant, Integer transactionId, String streamId,
-			String property, JsonElement newValue, String reason);
+			String property, JsonElement newValue, String changeReason);
 
 	public abstract void onIceCandidate(Participant participant, String endpointName, String candidate,
 			int sdpMLineIndex, String sdpMid, Integer transactionId);
 
 	public abstract boolean unpublishStream(Session session, String streamId, Participant moderator,
-			Integer transactionId, String reason);
+			Integer transactionId, EndReason reason);
 
 	public abstract void evictParticipant(Participant evictedParticipant, Participant moderator, Integer transactionId,
-			String reason);
+			EndReason reason);
 
 	public abstract void applyFilter(Session session, String streamId, String filterType, JsonObject filterOptions,
 			Participant moderator, Integer transactionId, String reason);
@@ -411,7 +411,7 @@ public abstract class SessionManager {
 		log.info("Closing all sessions");
 		for (String sessionId : sessions.keySet()) {
 			try {
-				closeSession(sessionId, "openviduServerStopped");
+				closeSession(sessionId, EndReason.openviduServerStopped);
 			} catch (Exception e) {
 				log.warn("Error closing session '{}'", sessionId, e);
 			}
@@ -433,7 +433,7 @@ public abstract class SessionManager {
 	 * @throws OpenViduException in case the session doesn't exist or has been
 	 *                           already closed
 	 */
-	public Set<Participant> closeSession(String sessionId, String reason) {
+	public Set<Participant> closeSession(String sessionId, EndReason reason) {
 		Session session = sessions.get(sessionId);
 		if (session == null) {
 			throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE, "Session '" + sessionId + "' not found");
@@ -456,7 +456,7 @@ public abstract class SessionManager {
 		return participants;
 	}
 
-	public void closeSessionAndEmptyCollections(Session session, String reason) {
+	public void closeSessionAndEmptyCollections(Session session, EndReason reason) {
 
 		if (openviduConfig.isRecordingModuleEnabled()
 				&& this.recordingManager.sessionIsBeingRecorded(session.getSessionId())) {

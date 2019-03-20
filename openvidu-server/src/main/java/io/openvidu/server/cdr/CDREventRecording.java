@@ -20,6 +20,7 @@ package io.openvidu.server.cdr;
 import com.google.gson.JsonObject;
 
 import io.openvidu.java.client.RecordingLayout;
+import io.openvidu.server.core.EndReason;
 import io.openvidu.server.recording.Recording;
 
 public class CDREventRecording extends CDREventEnd {
@@ -33,7 +34,7 @@ public class CDREventRecording extends CDREventEnd {
 	}
 
 	// recordingStopped
-	public CDREventRecording(CDREventRecording event, Recording recording, String reason) {
+	public CDREventRecording(CDREventRecording event, Recording recording, EndReason reason) {
 		super(CDREventName.recordingStopped, event.getSessionId(), event.getTimestamp(), reason);
 		this.recording = recording;
 	}

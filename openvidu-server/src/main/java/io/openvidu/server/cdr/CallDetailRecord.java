@@ -27,6 +27,7 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import io.openvidu.server.config.OpenviduConfig;
+import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
@@ -113,7 +114,7 @@ public class CallDetailRecord {
 		this.log(e);
 	}
 
-	public void recordSessionDestroyed(String sessionId, String reason) {
+	public void recordSessionDestroyed(String sessionId, EndReason reason) {
 		CDREventSession e = this.sessions.remove(sessionId);
 		if (e != null) {
 			CDREventSession eventSessionEnd = new CDREventSession(e, RecordingManager.finalReason(reason));
@@ -131,7 +132,7 @@ public class CallDetailRecord {
 		this.log(e);
 	}
 
-	public void recordParticipantLeft(Participant participant, String sessionId, String reason) {
+	public void recordParticipantLeft(Participant participant, String sessionId, EndReason reason) {
 		CDREventParticipant e = this.participants.remove(participant.getParticipantPublicId());
 		CDREventParticipant eventParticipantEnd = new CDREventParticipant(e, reason);
 		this.log(eventParticipantEnd);
@@ -148,7 +149,7 @@ public class CallDetailRecord {
 		this.log(publisher);
 	}
 
-	public void stopPublisher(String participantPublicId, String streamId, String reason) {
+	public void stopPublisher(String participantPublicId, String streamId, EndReason reason) {
 		CDREventWebrtcConnection eventPublisherEnd = this.publications.remove(participantPublicId);
 		if (eventPublisherEnd != null) {
 			eventPublisherEnd = new CDREventWebrtcConnection(eventPublisherEnd, reason);
@@ -171,7 +172,7 @@ public class CallDetailRecord {
 		this.log(subscriber);
 	}
 
-	public void stopSubscriber(String participantPublicId, String senderPublicId, String streamId, String reason) {
+	public void stopSubscriber(String participantPublicId, String senderPublicId, String streamId, EndReason reason) {
 		Set<CDREventWebrtcConnection> participantSubscriptions = this.subscriptions.get(participantPublicId);
 		if (participantSubscriptions != null) {
 			CDREventWebrtcConnection eventSubscriberEnd;
@@ -197,7 +198,7 @@ public class CallDetailRecord {
 		this.log(new CDREventRecording(sessionId, recording));
 	}
 
-	public void recordRecordingStopped(String sessionId, Recording recording, String reason) {
+	public void recordRecordingStopped(String sessionId, Recording recording, EndReason reason) {
 		CDREventRecording recordingStartedEvent = this.recordings.remove(recording.getId());
 		CDREventRecording recordingStoppedEvent = new CDREventRecording(recordingStartedEvent, recording,
 				RecordingManager.finalReason(reason));

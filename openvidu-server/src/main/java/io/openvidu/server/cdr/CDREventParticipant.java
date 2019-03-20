@@ -19,6 +19,7 @@ package io.openvidu.server.cdr;
 
 import com.google.gson.JsonObject;
 
+import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.Participant;
 
 public class CDREventParticipant extends CDREventEnd {
@@ -32,7 +33,7 @@ public class CDREventParticipant extends CDREventEnd {
 	}
 
 	// participantLeft
-	public CDREventParticipant(CDREventParticipant event, String reason) {
+	public CDREventParticipant(CDREventParticipant event, EndReason reason) {
 		super(CDREventName.participantLeft, event.getSessionId(), event.getTimestamp(), reason);
 		this.participant = event.participant;
 	}

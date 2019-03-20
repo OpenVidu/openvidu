@@ -52,6 +52,7 @@ import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.server.config.OpenviduConfig;
+import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.kurento.core.KurentoParticipant;
@@ -127,11 +128,12 @@ public class SingleStreamRecordingService extends RecordingService {
 	}
 
 	@Override
-	public Recording stopRecording(Session session, Recording recording, String reason) {
+	public Recording stopRecording(Session session, Recording recording, EndReason reason) {
 		return this.stopRecording(session, recording, reason, false);
 	}
 
-	public Recording stopRecording(Session session, Recording recording, String reason, boolean forceAfterKmsRestart) {
+	public Recording stopRecording(Session session, Recording recording, EndReason reason,
+			boolean forceAfterKmsRestart) {
 		log.info("Stopping individual ({}) recording {} of session {}. Reason: {}",
 				recording.hasVideo() ? (recording.hasAudio() ? "video+audio" : "video-only") : "audioOnly",
 				recording.getId(), recording.getSessionId(), reason);

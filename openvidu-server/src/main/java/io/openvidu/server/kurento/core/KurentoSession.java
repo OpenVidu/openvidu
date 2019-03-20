@@ -35,6 +35,7 @@ import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.java.client.Recording.OutputMode;
+import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.recording.Recording;
@@ -109,7 +110,7 @@ public class KurentoSession extends Session {
 				participants.values(), participant.getParticipantPublicId());
 	}
 
-	public void cancelPublisher(Participant participant, String reason) {
+	public void cancelPublisher(Participant participant, EndReason reason) {
 		// Cancel all subscribers for this publisher
 		for (Participant subscriber : participants.values()) {
 			if (participant.equals(subscriber)) {
@@ -124,7 +125,7 @@ public class KurentoSession extends Session {
 	}
 
 	@Override
-	public void leave(String participantPrivateId, String reason) throws OpenViduException {
+	public void leave(String participantPrivateId, EndReason reason) throws OpenViduException {
 
 		checkClosed();
 
@@ -142,7 +143,7 @@ public class KurentoSession extends Session {
 	}
 
 	@Override
-	public boolean close(String reason) {
+	public boolean close(EndReason reason) {
 		if (!closed) {
 
 			for (Participant participant : participants.values()) {
@@ -178,7 +179,7 @@ public class KurentoSession extends Session {
 		this.kurentoSessionHandler.onMediaElementError(sessionId, participantId, description);
 	}
 
-	private void removeParticipant(Participant participant, String reason) {
+	private void removeParticipant(Participant participant, EndReason reason) {
 
 		checkClosed();
 
@@ -285,11 +286,12 @@ public class KurentoSession extends Session {
 
 		// Stop recording if session is being recorded
 		if (recordingManager.sessionIsBeingRecorded(this.sessionId)) {
-			Recording stoppedRecording = this.recordingManager.forceStopRecording(this, "mediaServerDisconnect");
+			Recording stoppedRecording = this.recordingManager.forceStopRecording(this,
+					EndReason.mediaServerDisconnect);
 			if (OutputMode.COMPOSED.equals(stoppedRecording.getOutputMode()) && stoppedRecording.hasVideo()) {
 				recordingManager.getSessionManager().evictParticipant(
 						this.getParticipantByPublicId(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID), null, null,
-						"EVICT_RECORDER");
+						null);
 			}
 		}
 
@@ -298,10 +300,10 @@ public class KurentoSession extends Session {
 			KurentoParticipant kParticipant = (KurentoParticipant) p;
 			final boolean wasStreaming = kParticipant.isStreaming();
 			kParticipant.releaseAllFilters();
-			kParticipant.close("mediaServerDisconnect", false);
+			kParticipant.close(EndReason.mediaServerDisconnect, false);
 			if (wasStreaming) {
 				kurentoSessionHandler.onUnpublishMedia(kParticipant, this.getParticipants(), null, null, null,
-						"mediaServerDisconnect");
+						EndReason.mediaServerDisconnect);
 			}
 		});
 

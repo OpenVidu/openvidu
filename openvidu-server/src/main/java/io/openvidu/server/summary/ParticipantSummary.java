@@ -69,7 +69,8 @@ public class ParticipantSummary {
 		long duration = (this.eventParticipantEnd.getTimestamp() - this.eventParticipantEnd.getStartTime()) / 1000;
 		json.addProperty("duration", duration);
 
-		json.addProperty("reason", this.eventParticipantEnd.getReason());
+		json.addProperty("reason",
+				this.eventParticipantEnd.getReason().name() != null ? this.eventParticipantEnd.getReason().name() : "");
 
 		// Publishers summary
 		JsonObject publishersJson = new JsonObject();

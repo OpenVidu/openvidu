@@ -49,6 +49,7 @@ import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.server.OpenViduServer;
 import io.openvidu.server.config.OpenviduConfig;
+import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.kurento.core.KurentoParticipant;
@@ -99,11 +100,12 @@ public class ComposedRecordingService extends RecordingService {
 	}
 
 	@Override
-	public Recording stopRecording(Session session, Recording recording, String reason) {
+	public Recording stopRecording(Session session, Recording recording, EndReason reason) {
 		return this.stopRecording(session, recording, reason, false);
 	}
 
-	public Recording stopRecording(Session session, Recording recording, String reason, boolean forceAfterKmsRestart) {
+	public Recording stopRecording(Session session, Recording recording, EndReason reason,
+			boolean forceAfterKmsRestart) {
 		if (recording.hasVideo()) {
 			return this.stopRecordingWithVideo(session, recording, reason);
 		} else {
@@ -207,7 +209,7 @@ public class ComposedRecordingService extends RecordingService {
 		return recording;
 	}
 
-	private Recording stopRecordingWithVideo(Session session, Recording recording, String reason) {
+	private Recording stopRecordingWithVideo(Session session, Recording recording, EndReason reason) {
 
 		log.info("Stopping composed ({}) recording {} of session {}. Reason: {}",
 				recording.hasAudio() ? "video + audio" : "audio-only", recording.getId(), recording.getSessionId(),
@@ -334,7 +336,7 @@ public class ComposedRecordingService extends RecordingService {
 		return recording;
 	}
 
-	private Recording stopRecordingAudioOnly(Session session, Recording recording, String reason,
+	private Recording stopRecordingAudioOnly(Session session, Recording recording, EndReason reason,
 			boolean forceAfterKmsRestart) {
 
 		log.info("Stopping composed (audio-only) recording {} of session {}. Reason: {}", recording.getId(),

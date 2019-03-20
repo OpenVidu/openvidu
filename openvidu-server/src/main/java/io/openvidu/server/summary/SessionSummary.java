@@ -54,7 +54,8 @@ public class SessionSummary {
 		long duration = (this.eventSessionEnd.getTimestamp() - this.eventSessionEnd.getStartTime()) / 1000;
 		json.addProperty("duration", duration);
 
-		json.addProperty("reason", this.eventSessionEnd.getReason());
+		json.addProperty("reason",
+				this.eventSessionEnd.getReason() != null ? this.eventSessionEnd.getReason().name() : "");
 
 		// Final users
 		JsonObject usersJson = new JsonObject();

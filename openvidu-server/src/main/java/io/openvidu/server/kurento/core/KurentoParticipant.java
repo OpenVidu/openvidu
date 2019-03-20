@@ -44,6 +44,7 @@ import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.server.config.OpenviduConfig;
+import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.kurento.endpoint.MediaEndpoint;
@@ -186,7 +187,7 @@ public class KurentoParticipant extends Participant {
 		return sdpResponse;
 	}
 
-	public void unpublishMedia(String reason) {
+	public void unpublishMedia(EndReason reason) {
 		log.info("PARTICIPANT {}: unpublishing media stream from room {}", this.getParticipantPublicId(),
 				this.session.getSessionId());
 		releasePublisherEndpoint(reason);
@@ -279,12 +280,12 @@ public class KurentoParticipant extends Participant {
 				log.error("Exception connecting subscriber endpoint " + "to publisher endpoint", e);
 			}
 			this.subscribers.remove(senderName);
-			releaseSubscriberEndpoint(senderName, subscriber, "");
+			releaseSubscriberEndpoint(senderName, subscriber, null);
 		}
 		return null;
 	}
 
-	public void cancelReceivingMedia(String senderName, String reason) {
+	public void cancelReceivingMedia(String senderName, EndReason reason) {
 		log.info("PARTICIPANT {}: cancel receiving media from {}", this.getParticipantPublicId(), senderName);
 		SubscriberEndpoint subscriberEndpoint = subscribers.remove(senderName);
 		if (subscriberEndpoint == null || subscriberEndpoint.getEndpoint() == null) {
@@ -297,7 +298,7 @@ public class KurentoParticipant extends Participant {
 		}
 	}
 
-	public void close(String reason, boolean definitelyClosed) {
+	public void close(EndReason reason, boolean definitelyClosed) {
 		log.debug("PARTICIPANT {}: Closing user", this.getParticipantPublicId());
 		if (isClosed()) {
 			log.warn("PARTICIPANT {}: Already closed", this.getParticipantPublicId());
@@ -363,7 +364,7 @@ public class KurentoParticipant extends Participant {
 		session.sendMediaError(this.getParticipantPrivateId(), desc);
 	}
 
-	private void releasePublisherEndpoint(String reason) {
+	private void releasePublisherEndpoint(EndReason reason) {
 		if (publisher != null && publisher.getEndpoint() != null) {
 
 			// Remove streamId from publisher's map
@@ -395,7 +396,7 @@ public class KurentoParticipant extends Participant {
 		}
 	}
 
-	private void releaseSubscriberEndpoint(String senderName, SubscriberEndpoint subscriber, String reason) {
+	private void releaseSubscriberEndpoint(String senderName, SubscriberEndpoint subscriber, EndReason reason) {
 		if (subscriber != null) {
 
 			subscriber.unregisterErrorListeners();

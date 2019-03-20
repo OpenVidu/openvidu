@@ -167,11 +167,11 @@ public class Session implements SessionInterface {
 	}
 
 	@Override
-	public void leave(String participantPrivateId, String reason) {
+	public void leave(String participantPrivateId, EndReason reason) {
 	}
 
 	@Override
-	public boolean close(String reason) {
+	public boolean close(EndReason reason) {
 		return false;
 	}
 

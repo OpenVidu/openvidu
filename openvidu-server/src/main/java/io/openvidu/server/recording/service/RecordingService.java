@@ -27,6 +27,7 @@ import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.server.config.OpenviduConfig;
+import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.utils.CommandExecutor;
@@ -47,7 +48,7 @@ public abstract class RecordingService {
 
 	public abstract Recording startRecording(Session session, RecordingProperties properties) throws OpenViduException;
 
-	public abstract Recording stopRecording(Session session, Recording recording, String reason);
+	public abstract Recording stopRecording(Session session, Recording recording, EndReason reason);
 
 	/**
 	 * Generates metadata recording file (".recording.RECORDING_ID" JSON file to

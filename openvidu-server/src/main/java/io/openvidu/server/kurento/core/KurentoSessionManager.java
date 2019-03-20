@@ -45,6 +45,7 @@ import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.java.client.RecordingMode;
 import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.java.client.SessionProperties;
+import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
@@ -122,7 +123,7 @@ public class KurentoSessionManager extends SessionManager {
 	}
 
 	@Override
-	public synchronized void leaveRoom(Participant participant, Integer transactionId, String reason,
+	public synchronized void leaveRoom(Participant participant, Integer transactionId, EndReason reason,
 			boolean closeWebSocket) {
 		log.debug("Request [LEAVE_ROOM] ({})", participant.getParticipantPublicId());
 
@@ -177,7 +178,7 @@ public class KurentoSessionManager extends SessionManager {
 		sessionEventsHandler.onParticipantLeft(participant, sessionId, remainingParticipants, transactionId, null,
 				reason);
 
-		if (!"sessionClosedByServer".equals(reason)) {
+		if (!EndReason.sessionClosedByServer.equals(reason)) {
 			// If session is closed by a call to "DELETE /api/sessions" do NOT stop the
 			// recording. Will be stopped after in method
 			// "SessionManager.closeSessionAndEmptyCollections"
@@ -330,7 +331,8 @@ public class KurentoSessionManager extends SessionManager {
 	}
 
 	@Override
-	public void unpublishVideo(Participant participant, Participant moderator, Integer transactionId, String reason) {
+	public void unpublishVideo(Participant participant, Participant moderator, Integer transactionId,
+			EndReason reason) {
 		try {
 			KurentoParticipant kParticipant = (KurentoParticipant) participant;
 			KurentoSession session = kParticipant.getSession();
@@ -355,7 +357,7 @@ public class KurentoSessionManager extends SessionManager {
 		} catch (OpenViduException e) {
 			log.warn("PARTICIPANT {}: Error unpublishing media", participant.getParticipantPublicId(), e);
 			sessionEventsHandler.onUnpublishMedia(participant, new HashSet<>(Arrays.asList(participant)), moderator,
-					transactionId, e, "");
+					transactionId, e, null);
 		}
 	}
 
@@ -420,7 +422,7 @@ public class KurentoSessionManager extends SessionManager {
 					"User " + senderName + " not found in session " + session.getSessionId());
 		}
 
-		kParticipant.cancelReceivingMedia(senderName, "unsubscribe");
+		kParticipant.cancelReceivingMedia(senderName, EndReason.unsubscribe);
 
 		sessionEventsHandler.onUnsubscribe(participant, transactionId, null);
 	}
@@ -526,7 +528,7 @@ public class KurentoSessionManager extends SessionManager {
 
 	@Override
 	public void evictParticipant(Participant evictedParticipant, Participant moderator, Integer transactionId,
-			String reason) throws OpenViduException {
+			EndReason reason) throws OpenViduException {
 		if (evictedParticipant != null) {
 			KurentoParticipant kParticipant = (KurentoParticipant) evictedParticipant;
 			Set<Participant> participants = kParticipant.getSession().getParticipants();
@@ -540,7 +542,7 @@ public class KurentoSessionManager extends SessionManager {
 						new HashSet<>(Arrays.asList(moderator)), transactionId,
 						new OpenViduException(Code.USER_NOT_FOUND_ERROR_CODE,
 								"Connection not found when calling 'forceDisconnect'"),
-						"");
+						null);
 			}
 		}
 	}
@@ -602,7 +604,7 @@ public class KurentoSessionManager extends SessionManager {
 
 	@Override
 	public boolean unpublishStream(Session session, String streamId, Participant moderator, Integer transactionId,
-			String reason) {
+			EndReason reason) {
 		String participantPrivateId = ((KurentoSession) session).getParticipantPrivateIdFromStreamId(streamId);
 		if (participantPrivateId != null) {
 			Participant participant = this.getParticipant(participantPrivateId);
@@ -619,14 +621,14 @@ public class KurentoSessionManager extends SessionManager {
 
 	@Override
 	public void applyFilter(Session session, String streamId, String filterType, JsonObject filterOptions,
-			Participant moderator, Integer transactionId, String reason) {
+			Participant moderator, Integer transactionId, String filterReason) {
 		String participantPrivateId = ((KurentoSession) session).getParticipantPrivateIdFromStreamId(streamId);
 		if (participantPrivateId != null) {
 			Participant publisher = this.getParticipant(participantPrivateId);
 			moderator = (moderator != null
 					&& publisher.getParticipantPublicId().equals(moderator.getParticipantPublicId())) ? null
 							: moderator;
-			log.debug("Request [APPLY_FILTER] over stream [{}] for reason [{}]", streamId, reason);
+			log.debug("Request [APPLY_FILTER] over stream [{}] for reason [{}]", streamId, filterReason);
 			KurentoParticipant kParticipantPublisher = (KurentoParticipant) publisher;
 			if (!publisher.isStreaming()) {
 				log.warn(
@@ -652,7 +654,7 @@ public class KurentoSessionManager extends SessionManager {
 					this.applyFilterInPublisher(kParticipantPublisher, filter);
 					Set<Participant> participants = kParticipantPublisher.getSession().getParticipants();
 					sessionEventsHandler.onFilterChanged(publisher, moderator, transactionId, participants, streamId,
-							filter, null, reason);
+							filter, null, filterReason);
 				} catch (OpenViduException e) {
 					log.warn("PARTICIPANT {}: Error applying filter", publisher.getParticipantPublicId(), e);
 					sessionEventsHandler.onFilterChanged(publisher, moderator, transactionId, new HashSet<>(), streamId,
@@ -673,11 +675,11 @@ public class KurentoSessionManager extends SessionManager {
 
 	@Override
 	public void removeFilter(Session session, String streamId, Participant moderator, Integer transactionId,
-			String reason) {
+			String filterReason) {
 		String participantPrivateId = ((KurentoSession) session).getParticipantPrivateIdFromStreamId(streamId);
 		if (participantPrivateId != null) {
 			Participant participant = this.getParticipant(participantPrivateId);
-			log.debug("Request [REMOVE_FILTER] over stream [{}] for reason [{}]", streamId, reason);
+			log.debug("Request [REMOVE_FILTER] over stream [{}] for reason [{}]", streamId, filterReason);
 			KurentoParticipant kParticipant = (KurentoParticipant) participant;
 			if (!participant.isStreaming()) {
 				log.warn(
@@ -701,7 +703,7 @@ public class KurentoSessionManager extends SessionManager {
 				this.removeFilterInPublisher(kParticipant);
 				Set<Participant> participants = kParticipant.getSession().getParticipants();
 				sessionEventsHandler.onFilterChanged(participant, moderator, transactionId, participants, streamId,
-						null, null, reason);
+						null, null, filterReason);
 			}
 
 			log.info("State of filter for participant {}: {}", kParticipant.getParticipantPublicId(),
@@ -717,11 +719,11 @@ public class KurentoSessionManager extends SessionManager {
 
 	@Override
 	public void execFilterMethod(Session session, String streamId, String filterMethod, JsonObject filterParams,
-			Participant moderator, Integer transactionId, String reason) {
+			Participant moderator, Integer transactionId, String filterReason) {
 		String participantPrivateId = ((KurentoSession) session).getParticipantPrivateIdFromStreamId(streamId);
 		if (participantPrivateId != null) {
 			Participant participant = this.getParticipant(participantPrivateId);
-			log.debug("Request [EXEC_FILTER_MTEHOD] over stream [{}] for reason [{}]", streamId, reason);
+			log.debug("Request [EXEC_FILTER_MTEHOD] over stream [{}] for reason [{}]", streamId, filterReason);
 			KurentoParticipant kParticipant = (KurentoParticipant) participant;
 			if (!participant.isStreaming()) {
 				log.warn(
@@ -746,7 +748,7 @@ public class KurentoSessionManager extends SessionManager {
 						filterParams);
 				Set<Participant> participants = kParticipant.getSession().getParticipants();
 				sessionEventsHandler.onFilterChanged(participant, moderator, transactionId, participants, streamId,
-						updatedFilter, null, reason);
+						updatedFilter, null, filterReason);
 			}
 		} else {
 			log.warn("PARTICIPANT {}: Requesting to removeFilter to stream {} "

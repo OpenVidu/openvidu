@@ -64,6 +64,7 @@ import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.server.config.OpenviduConfig;
+import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.core.SessionEventsHandler;
@@ -107,8 +108,9 @@ public class RecordingManager {
 	static final String IMAGE_NAME = "openvidu/openvidu-recording";
 	static String IMAGE_TAG;
 
-	private static final List<String> LAST_PARTICIPANT_LEFT_REASONS = Arrays.asList(
-			new String[] { "disconnect", "forceDisconnectByUser", "forceDisconnectByServer", "networkDisconnect" });
+	private static final List<EndReason> LAST_PARTICIPANT_LEFT_REASONS = Arrays
+			.asList(new EndReason[] { EndReason.disconnect, EndReason.forceDisconnectByUser,
+					EndReason.forceDisconnectByServer, EndReason.networkDisconnect });
 
 	public SessionEventsHandler getSessionEventsHandler() {
 		return this.sessionHandler;
@@ -192,7 +194,7 @@ public class RecordingManager {
 		return recording;
 	}
 
-	public Recording stopRecording(Session session, String recordingId, String reason) {
+	public Recording stopRecording(Session session, String recordingId, EndReason reason) {
 		Recording recording;
 		if (session == null) {
 			recording = this.startedRecordings.get(recordingId);
@@ -211,7 +213,7 @@ public class RecordingManager {
 		return recording;
 	}
 
-	public Recording forceStopRecording(Session session, String reason) {
+	public Recording forceStopRecording(Session session, EndReason reason) {
 		Recording recording;
 		recording = this.sessionsRecordings.get(session.getSessionId());
 		switch (recording.getOutputMode()) {
@@ -378,10 +380,10 @@ public class RecordingManager {
 					// but never publishing (publishers automatically abort this thread)
 					log.info("Closing session {} after automatic stop of recording {}", session.getSessionId(),
 							recordingId);
-					sessionManager.closeSessionAndEmptyCollections(session, "automaticStop");
+					sessionManager.closeSessionAndEmptyCollections(session, EndReason.automaticStop);
 					sessionManager.showTokens();
 				} else {
-					this.stopRecording(session, recordingId, "automaticStop");
+					this.stopRecording(session, recordingId, EndReason.automaticStop);
 				}
 			} else {
 				// This code is reachable if there already was an automatic stop of a recording
@@ -406,7 +408,7 @@ public class RecordingManager {
 				log.info(
 						"Ongoing recording of session {} was explicetly stopped within timeout for automatic recording stop. Closing session",
 						session.getSessionId());
-				sessionManager.closeSessionAndEmptyCollections(session, "automaticStop");
+				sessionManager.closeSessionAndEmptyCollections(session, EndReason.automaticStop);
 				sessionManager.showTokens();
 			}
 			return cancelled;
@@ -674,9 +676,9 @@ public class RecordingManager {
 		log.info("Recording path successfully initialized at {}", openviduRecordingPath);
 	}
 
-	public static String finalReason(String reason) {
+	public static EndReason finalReason(EndReason reason) {
 		if (RecordingManager.LAST_PARTICIPANT_LEFT_REASONS.contains(reason)) {
-			return "lastParticipantLeft";
+			return EndReason.lastParticipantLeft;
 		} else {
 			return reason;
 		}

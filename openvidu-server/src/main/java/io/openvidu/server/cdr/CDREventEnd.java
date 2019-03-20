@@ -19,17 +19,19 @@ package io.openvidu.server.cdr;
 
 import com.google.gson.JsonObject;
 
+import io.openvidu.server.core.EndReason;
+
 public class CDREventEnd extends CDREvent {
 
 	protected Long startTime;
 	protected Integer duration;
-	protected String reason;
+	protected EndReason reason;
 
 	public CDREventEnd(CDREventName eventName, String sessionId, Long timestamp) {
 		super(eventName, sessionId, timestamp);
 	}
 
-	public CDREventEnd(CDREventName eventName, String sessionId, Long startTime, String reason) {
+	public CDREventEnd(CDREventName eventName, String sessionId, Long startTime, EndReason reason) {
 		super(eventName, sessionId, System.currentTimeMillis());
 		this.startTime = startTime;
 		this.duration = (int) ((this.timeStamp - this.startTime) / 1000);
@@ -46,7 +48,7 @@ public class CDREventEnd extends CDREvent {
 			json.addProperty("duration", this.duration);
 		}
 		if (this.reason != null) {
-			json.addProperty("reason", this.reason);
+			json.addProperty("reason", this.reason != null ? reason.name() : "");
 		}
 		return json;
 	}
@@ -59,7 +61,7 @@ public class CDREventEnd extends CDREvent {
 		return duration;
 	}
 
-	public String getReason() {
+	public EndReason getReason() {
 		return reason;
 	}
 
