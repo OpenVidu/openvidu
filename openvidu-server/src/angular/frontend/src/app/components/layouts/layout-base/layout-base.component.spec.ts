@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { LayoutBestFitComponent } from './layout-best-fit.component';
+import { LayoutBaseComponent } from './layout-base.component';
 
-describe('SessionDetailsComponent', () => {
-  let component: LayoutBestFitComponent;
-  let fixture: ComponentFixture<LayoutBestFitComponent>;
+describe('LayoutBaseComponent', () => {
+  let component: LayoutBaseComponent;
+  let fixture: ComponentFixture<LayoutBaseComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ LayoutBestFitComponent ]
+      declarations: [ LayoutBaseComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(LayoutBestFitComponent);
+    fixture = TestBed.createComponent(LayoutBaseComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

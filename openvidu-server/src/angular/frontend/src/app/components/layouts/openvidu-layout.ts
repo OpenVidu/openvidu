@@ -10,7 +10,8 @@ export interface OpenViduLayoutOptions {
     bigFixedRatio: any;
     bigMaxRatio: any;
     bigMinRatio: any;
-    bigFirst: any;
+    bigFirst: boolean;
+    vertical: boolean;
 }
 
 export class OpenViduLayout {
@@ -41,7 +42,7 @@ export class OpenViduLayout {
 
         this.fixAspectRatio(elem, width);
 
-        if (animate && $) {
+        if (!!animate && $) {
             $(elem).stop();
             $(elem).animate(targetPosition, animate.duration || 200, animate.easing || 'swing',
                 () => {
@@ -296,21 +297,39 @@ export class OpenViduLayout {
         if (bigOnes.length > 0 && smallOnes.length > 0) {
             let bigWidth, bigHeight;
 
-            if (availableRatio > this.getVideoRatio(bigOnes[0])) {
-                // We are tall, going to take up the whole width and arrange small
-                // guys at the bottom
+            const horizontal = () => {
                 bigWidth = WIDTH;
                 bigHeight = Math.floor(HEIGHT * this.opts.bigPercentage);
                 offsetTop = bigHeight;
                 bigOffsetTop = HEIGHT - offsetTop;
-            } else {
-                // We are wide, going to take up the whole height and arrange the small
-                // guys on the right
+            }
+            const vertical = () => {
                 bigHeight = HEIGHT;
                 bigWidth = Math.floor(WIDTH * this.opts.bigPercentage);
                 offsetLeft = bigWidth;
                 bigOffsetLeft = WIDTH - offsetLeft;
             }
+            if (this.opts.vertical != null) {
+                if (!this.opts.vertical) {
+                    // Horizontal presentation
+                    horizontal();
+                } else {
+                    // Vertical presentation
+                    vertical();
+                }
+            } else {
+                // Dynamic presentation
+                if (availableRatio > this.getVideoRatio(bigOnes[0])) {
+                    // We are tall, going to take up the whole width and arrange small
+                    // guys at the bottom
+                    horizontal();
+                } else {
+                    // We are wide, going to take up the whole height and arrange the small
+                    // guys on the right
+                    vertical();
+                }
+            }
+
             if (this.opts.bigFirst) {
                 this.arrange(bigOnes, bigWidth, bigHeight, 0, 0, this.opts.bigFixedRatio, this.opts.bigMinRatio,
                     this.opts.bigMaxRatio, this.opts.animate);
@@ -344,7 +363,8 @@ export class OpenViduLayout {
             bigFixedRatio: (opts.bigFixedRatio != null) ? opts.bigFixedRatio : false,
             bigMaxRatio: (opts.bigMaxRatio != null) ? opts.bigMaxRatio : 3 / 2,
             bigMinRatio: (opts.bigMinRatio != null) ? opts.bigMinRatio : 9 / 16,
-            bigFirst: (opts.bigFirst != null) ? opts.bigFirst : true
+            bigFirst: (opts.bigFirst != null) ? opts.bigFirst : true,
+            vertical: opts.vertical
         };
         this.layoutContainer = typeof (container) === 'string' ? $(container) : container;
     }
