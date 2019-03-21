@@ -392,10 +392,11 @@ public class ComposedRecordingService extends RecordingService {
 
 	private String runRecordingContainer(List<String> envs, String containerName) throws Exception {
 		Volume volume1 = new Volume("/recordings");
+		Volume volume2 = new Volume("/dev/shm");
 		CreateContainerCmd cmd = dockerClient
 				.createContainerCmd(RecordingManager.IMAGE_NAME + ":" + RecordingManager.IMAGE_TAG)
 				.withName(containerName).withEnv(envs).withNetworkMode("host").withVolumes(volume1)
-				.withBinds(new Bind(openviduConfig.getOpenViduRecordingPath(), volume1));
+				.withBinds(new Bind(openviduConfig.getOpenViduRecordingPath(), volume1), new Bind("/dev/shm", volume2));
 		CreateContainerResponse container = null;
 		try {
 			container = cmd.exec();
