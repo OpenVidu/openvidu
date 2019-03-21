@@ -199,7 +199,7 @@ public class SingleStreamRecordingService extends RecordingService {
 			@Override
 			public void onEvent(RecordingEvent event) {
 				recorders.get(session.getSessionId()).get(participant.getPublisherStreamId())
-						.setStartTime(System.currentTimeMillis());
+						.setStartTime(Long.parseLong(event.getTimestampMillis()));
 				log.info("Recording started event for stream {}", participant.getPublisherStreamId());
 				globalStartLatch.countDown();
 			}
@@ -232,7 +232,7 @@ public class SingleStreamRecordingService extends RecordingService {
 			finalWrapper.getRecorder().addStoppedListener(new EventListener<StoppedEvent>() {
 				@Override
 				public void onEvent(StoppedEvent event) {
-					finalWrapper.setEndTime(System.currentTimeMillis());
+					finalWrapper.setEndTime(Long.parseLong(event.getTimestampMillis()));
 					generateIndividualMetadataFile(finalWrapper);
 					log.info("Recording stopped event for stream {}", streamId);
 					finalWrapper.getRecorder().release();

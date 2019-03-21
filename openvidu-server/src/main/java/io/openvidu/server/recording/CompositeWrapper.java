@@ -70,7 +70,7 @@ public class CompositeWrapper {
 		this.recorderEndpoint.addRecordingListener(new EventListener<RecordingEvent>() {
 			@Override
 			public void onEvent(RecordingEvent event) {
-				startTime = System.currentTimeMillis();
+				startTime = Long.parseLong(event.getTimestampMillis());
 				log.info("Recording started event for audio-only RecorderEndpoint of Composite in session {}",
 						session.getSessionId());
 				startLatch.countDown();
@@ -92,7 +92,7 @@ public class CompositeWrapper {
 			this.recorderEndpoint.addStoppedListener(new EventListener<StoppedEvent>() {
 				@Override
 				public void onEvent(StoppedEvent event) {
-					endTime = System.currentTimeMillis();
+					endTime = Long.parseLong(event.getTimestampMillis());
 					log.info("Recording stopped event for audio-only RecorderEndpoint of Composite in session {}",
 							session.getSessionId());
 					recorderEndpoint.release();

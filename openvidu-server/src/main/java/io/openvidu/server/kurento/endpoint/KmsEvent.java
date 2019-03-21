@@ -36,7 +36,7 @@ public class KmsEvent {
 		this.event = event;
 		this.participant = participant;
 		this.endpoint = endpointName;
-		this.timestamp = System.currentTimeMillis(); // TODO: Change to event.getTimestampMillis()
+		this.timestamp = Long.parseLong(event.getTimestampMillis());
 		this.msSinceCreation = this.timestamp - createdAt;
 
 		this.removeSourceForJsonCompatibility();
