@@ -503,10 +503,13 @@ public abstract class MediaEndpoint {
 
 		JsonArray jsonArray = new JsonArray();
 		this.kmsEvents.forEach(ev -> {
+			// Remove unwanted properties
 			JsonObject j = ev.toJson();
 			j.remove("session");
+			j.remove("user");
 			j.remove("connection");
 			j.remove("endpoint");
+			j.remove("timestampMillis");
 			jsonArray.add(j);
 		});
 		json.add("events", jsonArray);
