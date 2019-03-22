@@ -17,6 +17,7 @@ node('container') {
           sh(script: '''#!/bin/bash
             if $KURENTO_JAVA_SNAPSHOT ; then
             git clone https://github.com/Kurento/kurento-java.git
+            cd kurento-java/kurento-client && mvn --batch-mode compile org.kurento:kurento-maven-plugin:6.7.0:generate-kurento-client
             cd kurento-java && mvn --batch-mode clean install && MVN_VERSION=$(mvn --batch-mode -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
             cd ../openvidu && mvn --batch-mode versions:set-property -Dproperty=version.kurento -DnewVersion=$MVN_VERSION
             fi
