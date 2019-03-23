@@ -28,8 +28,8 @@ node('container') {
           sh(script: '''#!/bin/bash
             if $KURENTO_MEDIA_SERVER_DEV ; then
             DISTRO=`lsb_release --codename | cut -f2`
-            echo "deb [arch=amd64] http://ubuntu.openvidu.io/dev $DISTRO kms6" | tee /etc/apt/sources.list.d/kurento.list
-            apt-get update && apt-get upgrade -y kurento-media-server
+            sudo echo "deb [arch=amd64] http://ubuntu.openvidu.io/dev $DISTRO kms6" | sudo tee /etc/apt/sources.list.d/kurento.list
+            sudo apt-get update && sudo apt-get upgrade -y kurento-media-server
             fi
         '''.stripIndent())
         }
