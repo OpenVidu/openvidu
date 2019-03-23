@@ -25,6 +25,11 @@ node('container') {
             mvn dependency:get -DrepoUrl=https://maven.openvidu.io/repository/snapshots/ -Dartifact=org.kurento:kurento-jsonrpc-server:$MVN_VERSION
             fi
         '''.stripIndent())
+          sh(script: '''#!/bin/bash
+            if $KURENTO_MEDIA_SERVER_DEV ; then
+            sudo apt-get install --only-upgrade kurento-media-server
+            fi
+        '''.stripIndent())
         }
         stage('OpenVidu parent build') {
           sh 'cd openvidu/openvidu-java-client && mvn --batch-mode versions:set -DnewVersion=1.0.0-TEST'
