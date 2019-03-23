@@ -27,7 +27,9 @@ node('container') {
         '''.stripIndent())
           sh(script: '''#!/bin/bash
             if $KURENTO_MEDIA_SERVER_DEV ; then
-            sudo apt-get install --only-upgrade kurento-media-server
+            DISTRO=`lsb_release --codename | cut -f2`
+            echo "deb [arch=amd64] http://ubuntu.openvidu.io/dev $DISTRO kms6" | tee /etc/apt/sources.list.d/kurento.list
+            apt-get update && apt-get upgrade -y kurento-media-server
             fi
         '''.stripIndent())
         }
