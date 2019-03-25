@@ -98,7 +98,8 @@ public class OpenViduEventManager {
 				if (ex.getClass().getSimpleName().equals("UnhandledAlertException")
 						&& ex.getMessage().contains("unexpected alert open")) {
 					stopPolling(false);
-					System.err.println("Alert opened. Waiting 1 second and restarting polling");
+					System.err
+							.println("Alert opened (" + ex.getMessage() + "). Waiting 1 second and restarting polling");
 					try {
 						Thread.sleep(1000);
 					} catch (InterruptedException e) {
