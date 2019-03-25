@@ -17,7 +17,7 @@ RUN sed -i "s/DAEMON_USER=\"kurento\"/DAEMON_USER=\"root\"/g" /etc/default/kuren
 
 # Install Node
 RUN apt-get update && apt-get install -y curl
-RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - && apt-get install -y nodejs
+RUN curl -sL https://deb.nodesource.com/setup_10.x | bash - && apt-get install -y nodejs
 
 # Java 8
 RUN apt-get install -y openjdk-8-jdk-headless
