@@ -123,6 +123,7 @@ public class OpenViduTestAppE2eTest {
 	private final Object lock = new Object();
 
 	private static final Logger log = LoggerFactory.getLogger(OpenViduTestAppE2eTest.class);
+	private static final CommandLineExecutor commandLine = new CommandLineExecutor();
 
 	MyUser user;
 	Collection<MyUser> otherUsers = new ArrayList<>();
@@ -133,7 +134,7 @@ public class OpenViduTestAppE2eTest {
 	@BeforeAll()
 	static void setupAll() {
 
-		String ffmpegOutput = new CommandLineExecutor().executeCommand("which ffmpeg");
+		String ffmpegOutput = commandLine.executeCommand("which ffmpeg");
 		if (ffmpegOutput == null || ffmpegOutput.isEmpty()) {
 			log.error("ffmpeg package is not installed in the host machine");
 			Assert.fail();
@@ -260,7 +261,7 @@ public class OpenViduTestAppE2eTest {
 			isRecordingTest = false;
 		}
 		if (isKurentoRestartTest) {
-			new CommandLineExecutor().executeCommand("sudo service kurento-media-server restart");
+			this.restartKms();
 		}
 	}
 
@@ -2583,9 +2584,7 @@ public class OpenViduTestAppE2eTest {
 		List<Session> sessions = OV.getActiveSessions();
 		Assert.assertEquals("Expected no active sessions but found " + sessions.size(), 0, sessions.size());
 
-		final CommandLineExecutor exec = new CommandLineExecutor();
-
-		exec.executeCommand("sudo service kurento-media-server stop");
+		this.stopKms();
 
 		OV.fetch();
 
@@ -2607,7 +2606,7 @@ public class OpenViduTestAppE2eTest {
 
 		user.getDriver().findElement(By.id("remove-user-btn")).sendKeys(Keys.ENTER);
 
-		exec.executeCommand("sudo service kurento-media-server start");
+		this.startKms();
 		Thread.sleep(3000);
 
 		// Connect one subscriber with connection to KMS -> restart KMS -> connect a
@@ -2623,7 +2622,7 @@ public class OpenViduTestAppE2eTest {
 		sessions = OV.getActiveSessions();
 		Assert.assertEquals("Expected 1 active sessions but found " + sessions.size(), 1, sessions.size());
 
-		exec.executeCommand("sudo service kurento-media-server restart");
+		this.restartKms();
 		Thread.sleep(3000);
 
 		OV.fetch();
@@ -2672,7 +2671,7 @@ public class OpenViduTestAppE2eTest {
 					reason);
 			latch.countDown();
 		});
-		exec.executeCommand("sudo service kurento-media-server restart");
+		this.restartKms();
 		long recEndTime = System.currentTimeMillis();
 		user.getEventManager().waitUntilEventReaches("recordingStopped", 2);
 		user.getEventManager().waitUntilEventReaches("streamDestroyed", 2);
@@ -2943,6 +2942,19 @@ public class OpenViduTestAppE2eTest {
 		colorMap.put("g", (long) (sumg / num));
 		colorMap.put("b", (long) (sumb / num));
 		return colorMap;
+	}
+
+	private void stopKms() {
+		commandLine.executeCommand("sudo kill -9 $(pidof kurento-media-server)");
+	}
+
+	private void startKms() {
+		commandLine.executeCommand("/usr/bin/kurento-media-server");
+	}
+
+	private void restartKms() {
+		this.stopKms();
+		this.startKms();
 	}
 
 }
