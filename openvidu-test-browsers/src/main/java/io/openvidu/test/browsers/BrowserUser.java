@@ -15,27 +15,20 @@
  *
  */
 
-package io.openvidu.test.e2e.browser;
+package io.openvidu.test.browsers;
 
-import static java.lang.invoke.MethodHandles.lookup;
-import static org.slf4j.LoggerFactory.getLogger;
-
-import org.openqa.selenium.Dimension;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import org.slf4j.Logger;
-
-import io.openvidu.test.e2e.OpenViduEventManager;
+import org.slf4j.LoggerFactory;
 
 public class BrowserUser {
 
-	final static Logger log = getLogger(lookup().lookupClass());
+	protected static final org.slf4j.Logger log = LoggerFactory.getLogger(BrowserUser.class);
 
 	protected WebDriver driver;
 	protected WebDriverWait waiter;
 	protected String clientData;
 	protected int timeOfWaitInSeconds;
-	protected OpenViduEventManager eventManager;
 
 	public BrowserUser(String clientData, int timeOfWaitInSeconds) {
 		this.clientData = clientData;
@@ -48,10 +41,6 @@ public class BrowserUser {
 
 	public WebDriverWait getWaiter() {
 		return this.waiter;
-	}
-
-	public OpenViduEventManager getEventManager() {
-		return this.eventManager;
 	}
 
 	public String getClientData() {
@@ -68,12 +57,10 @@ public class BrowserUser {
 
 	protected void configureDriver() {
 		this.waiter = new WebDriverWait(this.driver, this.timeOfWaitInSeconds);
-		this.eventManager = new OpenViduEventManager(this.driver, this.timeOfWaitInSeconds);
-		this.driver.manage().window().setSize(new Dimension(1920,1080));
+		this.driver.manage().window().setSize(new org.openqa.selenium.Dimension(1920, 1080));
 	}
 
 	public void dispose() {
-		this.eventManager.stopPolling(true);
 		this.driver.quit();
 	}
 

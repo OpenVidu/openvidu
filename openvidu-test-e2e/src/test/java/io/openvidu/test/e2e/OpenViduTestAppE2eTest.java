@@ -95,11 +95,11 @@ import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.java.client.Session;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.java.client.TokenOptions;
-import io.openvidu.test.e2e.browser.BrowserUser;
-import io.openvidu.test.e2e.browser.ChromeAndroidUser;
-import io.openvidu.test.e2e.browser.ChromeUser;
-import io.openvidu.test.e2e.browser.FirefoxUser;
-import io.openvidu.test.e2e.browser.OperaUser;
+import io.openvidu.test.browsers.BrowserUser;
+import io.openvidu.test.browsers.ChromeAndroidUser;
+import io.openvidu.test.browsers.ChromeUser;
+import io.openvidu.test.browsers.FirefoxUser;
+import io.openvidu.test.browsers.OperaUser;
 import io.openvidu.test.e2e.utils.CommandLineExecutor;
 import io.openvidu.test.e2e.utils.CustomHttpClient;
 import io.openvidu.test.e2e.utils.MultimediaFileMetadata;
@@ -124,8 +124,8 @@ public class OpenViduTestAppE2eTest {
 
 	private static final Logger log = LoggerFactory.getLogger(OpenViduTestAppE2eTest.class);
 
-	BrowserUser user;
-	Collection<BrowserUser> otherUsers = new ArrayList<>();
+	MyUser user;
+	Collection<MyUser> otherUsers = new ArrayList<>();
 	volatile static boolean isRecordingTest;
 	volatile static boolean isKurentoRestartTest;
 	private static OpenVidu OV;
@@ -174,28 +174,32 @@ public class OpenViduTestAppE2eTest {
 
 	void setupBrowser(String browser) {
 
+		BrowserUser browserUser;
+
 		switch (browser) {
 		case "chrome":
-			this.user = new ChromeUser("TestUser", 50, false);
+			browserUser = new ChromeUser("TestUser", 50, false);
 			break;
 		case "firefox":
-			this.user = new FirefoxUser("TestUser", 50);
+			browserUser = new FirefoxUser("TestUser", 50);
 			break;
 		case "opera":
-			this.user = new OperaUser("TestUser", 50);
+			browserUser = new OperaUser("TestUser", 50);
 			break;
 		case "chromeAndroid":
-			this.user = new ChromeAndroidUser("TestUser", 50);
+			browserUser = new ChromeAndroidUser("TestUser", 50);
 			break;
 		case "chromeAlternateScreenShare":
-			this.user = new ChromeUser("TestUser", 50, "OpenVidu TestApp", false);
+			browserUser = new ChromeUser("TestUser", 50, "OpenVidu TestApp", false);
 			break;
 		case "chromeAsRoot":
-			this.user = new ChromeUser("TestUser", 50, true);
+			browserUser = new ChromeUser("TestUser", 50, true);
 			break;
 		default:
-			this.user = new ChromeUser("TestUser", 50, false);
+			browserUser = new ChromeUser("TestUser", 50, false);
 		}
+
+		this.user = new MyUser(browserUser);
 
 		user.getDriver().get(APP_URL);
 
@@ -210,7 +214,7 @@ public class OpenViduTestAppE2eTest {
 	}
 
 	void setupChromeWithFakeVideo(Path videoFileLocation) {
-		this.user = new ChromeUser("TestUser", 50, videoFileLocation);
+		this.user = new MyUser(new ChromeUser("TestUser", 50, videoFileLocation));
 		user.getDriver().get(APP_URL);
 		WebElement urlInput = user.getDriver().findElement(By.id("openvidu-url"));
 		urlInput.clear();
@@ -226,9 +230,9 @@ public class OpenViduTestAppE2eTest {
 		if (user != null) {
 			user.dispose();
 		}
-		Iterator<BrowserUser> it = otherUsers.iterator();
+		Iterator<MyUser> it = otherUsers.iterator();
 		while (it.hasNext()) {
-			BrowserUser other = it.next();
+			MyUser other = it.next();
 			other.dispose();
 			it.remove();
 		}
@@ -508,7 +512,7 @@ public class OpenViduTestAppE2eTest {
 		};
 
 		Thread t = new Thread(() -> {
-			BrowserUser user2 = new FirefoxUser("TestUser", 30);
+			MyUser user2 = new MyUser(new FirefoxUser("TestUser", 30));
 			otherUsers.add(user2);
 			user2.getDriver().get(APP_URL);
 			WebElement urlInput = user2.getDriver().findElement(By.id("openvidu-url"));
@@ -1350,7 +1354,7 @@ public class OpenViduTestAppE2eTest {
 		};
 
 		Thread t = new Thread(() -> {
-			BrowserUser user2 = new FirefoxUser("FirefoxUser", 30);
+			MyUser user2 = new MyUser(new FirefoxUser("FirefoxUser", 30));
 			otherUsers.add(user2);
 			user2.getDriver().get(APP_URL);
 			WebElement urlInput = user2.getDriver().findElement(By.id("openvidu-url"));
@@ -1927,7 +1931,7 @@ public class OpenViduTestAppE2eTest {
 		isRecordingTest = true;
 
 		setupBrowser("chromeAlternateScreenShare");
-		
+
 		user.getDriver().manage().window().setSize(new Dimension(1000, 800));
 
 		log.info("openvidu-java-client test");
@@ -2754,7 +2758,7 @@ public class OpenViduTestAppE2eTest {
 		}
 	}
 
-	private String getBase64Screenshot(BrowserUser user) throws Exception {
+	private String getBase64Screenshot(MyUser user) throws Exception {
 		String screenshotBase64 = ((TakesScreenshot) user.getDriver()).getScreenshotAs(BASE64);
 		return "data:image/png;base64," + screenshotBase64;
 	}

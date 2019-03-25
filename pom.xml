@@ -199,6 +199,7 @@
 				<module>openvidu-client</module>
 				<module>openvidu-test</module>
 				<module>openvidu-test-e2e</module>
+				<module>openvidu-test-browsers</module>
 				<module>openvidu-java-client</module>
 			</modules>
 		</profile>
@@ -209,6 +210,7 @@
 				<module>openvidu-client</module>
 				<module>openvidu-test</module>
 				<module>openvidu-test-e2e</module>
+				<module>openvidu-test-browsers</module>
 			</modules>
 		</profile>
 		<profile>
@@ -288,6 +290,10 @@
 			<dependency>
 				<groupId>io.openvidu</groupId>
 				<artifactId>openvidu-test-e2e</artifactId>
+			</dependency>
+			<dependency>
+				<groupId>io.openvidu</groupId>
+				<artifactId>openvidu-test-browsers</artifactId>
 			</dependency>
 			<dependency>
 				<groupId>io.openvidu</groupId>

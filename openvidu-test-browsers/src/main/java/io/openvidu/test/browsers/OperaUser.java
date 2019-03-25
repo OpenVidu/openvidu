@@ -1,4 +1,4 @@
-package io.openvidu.test.e2e.browser;
+package io.openvidu.test.browsers;
 
 import java.net.MalformedURLException;
 import java.net.URL;
