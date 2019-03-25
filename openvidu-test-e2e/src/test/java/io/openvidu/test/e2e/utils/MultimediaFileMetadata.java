@@ -17,6 +17,12 @@
 
 package io.openvidu.test.e2e.utils;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,12 +54,20 @@ public class MultimediaFileMetadata {
 	private int videoHeight;
 	private int framerate;
 
-	public MultimediaFileMetadata(String fileAbsolutePath) {
+	public MultimediaFileMetadata(String fileAbsolutePath) throws IOException {
 
 		log.info("Extracting media metadata info from file {}", fileAbsolutePath);
 
 		this.json = this.executeFfprobeCommand(fileAbsolutePath);
 		this.formatJson = json.get("format").getAsJsonObject();
+
+		if (formatJson.get("duration") == null) {
+			// Webm file has not been properly closed (i.e. media server stopped)
+			this.fixWebmFile(fileAbsolutePath);
+			this.json = this.executeFfprobeCommand(fileAbsolutePath);
+			this.formatJson = json.get("format").getAsJsonObject();
+		}
+
 		JsonArray streams = json.get("streams").getAsJsonArray();
 
 		streams.forEach(e -> { // Only supposed for 2 streams max
@@ -140,6 +154,16 @@ public class MultimediaFileMetadata {
 		log.info("Running ffprobe command on '{}'", filePath);
 		String cmd = "ffprobe -v quiet -print_format json -show_format -show_streams " + filePath;
 		return this.parser.parse(this.executer.executeCommand(cmd)).getAsJsonObject();
+	}
+
+	private void fixWebmFile(String filePath) throws IOException {
+		Path source = Paths.get(filePath);
+		String pathCopy = null;
+		pathCopy = Files.move(source, source.resolveSibling("COPY.webm")).toString();
+		log.warn("Fixing file '{}' with ffmpeg", filePath);
+		String cmd = "ffmpeg -i " + pathCopy + " -vcodec copy -acodec copy " + filePath;
+		this.executer.executeCommand(cmd);
+		new File(pathCopy).delete();
 	}
 
 	@Override

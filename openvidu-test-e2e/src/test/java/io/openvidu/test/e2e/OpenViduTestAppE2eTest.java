@@ -2762,7 +2762,7 @@ public class OpenViduTestAppE2eTest {
 		return "data:image/png;base64," + screenshotBase64;
 	}
 
-	private boolean recordedFileFine(File file, Recording recording) {
+	private boolean recordedFileFine(File file, Recording recording) throws IOException {
 		this.checkMultimediaFile(file, recording.hasAudio(), recording.hasVideo(), recording.getDuration(),
 				recording.getResolution(), "aac", "h264", true);
 
@@ -2790,7 +2790,7 @@ public class OpenViduTestAppE2eTest {
 	}
 
 	private void checkIndividualRecording(String recPath, Recording recording, int numberOfVideoFiles,
-			String audioDecoder, String videoDecoder, boolean checkAudio) {
+			String audioDecoder, String videoDecoder, boolean checkAudio) throws IOException {
 
 		// Should be only 2 files: zip and metadata
 		File folder = new File(recPath);
@@ -2864,7 +2864,7 @@ public class OpenViduTestAppE2eTest {
 	}
 
 	private void checkMultimediaFile(File file, boolean hasAudio, boolean hasVideo, double duration, String resolution,
-			String audioDecoder, String videoDecoder, boolean checkAudio) {
+			String audioDecoder, String videoDecoder, boolean checkAudio) throws IOException {
 		// Check tracks, duration, resolution, framerate and decoders
 		MultimediaFileMetadata metadata = new MultimediaFileMetadata(file.getAbsolutePath());
 
@@ -2945,11 +2945,13 @@ public class OpenViduTestAppE2eTest {
 	}
 
 	private void stopKms() {
+		log.info("Stopping KMS");
 		commandLine.executeCommand("sudo kill -9 $(pidof kurento-media-server)");
 	}
 
 	private void startKms() {
-		commandLine.executeCommand("/usr/bin/kurento-media-server");
+		log.info("Starting KMS");
+		commandLine.executeCommand("/usr/bin/kurento-media-server &> /kms.log &");
 	}
 
 	private void restartKms() {
