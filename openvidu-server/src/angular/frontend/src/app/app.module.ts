@@ -9,6 +9,7 @@ import { AppMaterialModule } from './app.material.module';
 import { routing } from './app.routing';
 import { CredentialsDialogComponent } from './components/dashboard/credentials-dialog.component';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
+import { LayoutBaseComponent } from './components/layouts/layout-base/layout-base.component';
 import { LayoutBestFitComponent } from './components/layouts/layout-best-fit/layout-best-fit.component';
 import { LayoutHorizontalPresentationComponent } from './components/layouts/layout-horizontal-presentation/layout-horizontal-presentation.component';
 import { LayoutVerticalPresentationComponent } from './components/layouts/layout-vertical-presentation/layout-vertical-presentation.component';
@@ -23,6 +24,7 @@ import { RestService } from './services/rest.service';
     DashboardComponent,
     SessionDetailsComponent,
     CredentialsDialogComponent,
+    LayoutBaseComponent,
     LayoutBestFitComponent,
     LayoutVerticalPresentationComponent,
     LayoutHorizontalPresentationComponent,
