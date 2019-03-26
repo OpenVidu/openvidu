@@ -376,7 +376,7 @@ export class Stream implements EventDispatcher {
      * @hidden
      */
     updateMediaStreamInVideos() {
-        this.ee.emitEvent('mediastream-updated');
+        this.ee.emitEvent('mediastream-updated', []);
     }
 
     /**
@@ -724,7 +724,7 @@ export class Stream implements EventDispatcher {
                                 if (this.displayMyRemote()) {
                                     this.remotePeerSuccessfullyEstablished();
                                 }
-                                this.ee.emitEvent('stream-created-by-publisher');
+                                this.ee.emitEvent('stream-created-by-publisher', []);
                                 this.initWebRtcStats();
                                 resolve();
                             })
@@ -836,7 +836,7 @@ export class Stream implements EventDispatcher {
                 }
             }
 
-            this.ee.emitEvent('mediastream-updated');
+            this.ee.emitEvent('mediastream-updated', []);
             if (!this.displayMyRemote() && !!this.mediaStream.getAudioTracks()[0] && this.session.speakingEventsEnabled) {
                 this.enableSpeakingEvents();
             }
