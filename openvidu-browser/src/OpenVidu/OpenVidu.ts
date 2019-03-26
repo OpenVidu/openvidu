@@ -523,7 +523,7 @@ export class OpenVidu {
           if (publisherProperties.videoSource === 'screen' ||
             (platform.name!.indexOf('Firefox') !== -1 && publisherProperties.videoSource === 'window')) {
 
-            if (platform.name !== 'Chrome' && platform.name!.indexOf('Firefox') === -1 && platform.name !== 'Opera') {
+            if (platform.name !== 'Chrome' && platform.name !== 'Opera' && platform.name!.indexOf('Firefox') === -1) {
               const error = new OpenViduError(OpenViduErrorName.SCREEN_SHARING_NOT_SUPPORTED, 'You can only screen share in desktop Chrome, Firefox or Opera. Detected browser: ' + platform.name);
               console.error(error);
               reject(error);
@@ -561,11 +561,11 @@ export class OpenVidu {
                 });
               } else {
 
-                if ((platform.name === 'Chrome' || platform.name === 'Opera') && navigator.mediaDevices['getDisplayMedia']) {
-                  // Chrome or Opera with MediaDevices.getDisplayMedia() support
+                if (navigator.mediaDevices['getDisplayMedia']) {
+                  // getDisplayMedia support (Chrome >= 72, Firefox >= 52)
                   resolve(mediaConstraints);
                 } else {
-                  // Default screen sharing extension for Chrome/Opera, or is Firefox
+                  // Default screen sharing extension for Chrome/Opera, or is Firefox < 66
                   const firefoxString = platform.name!.indexOf('Firefox') !== -1 ? publisherProperties.videoSource : undefined;
 
                   screenSharingAuto.getScreenId(firefoxString, (error, sourceId, screenConstraints) => {
