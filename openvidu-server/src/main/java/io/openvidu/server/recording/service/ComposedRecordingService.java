@@ -222,7 +222,7 @@ public class ComposedRecordingService extends RecordingService {
 
 		if (session == null) {
 			log.warn(
-					"Existing recording {} does not have an active session associated. This usually means the recording"
+					"Existing recording {} does not have an active session associated. This usually means a custom recording"
 							+ " layout did not join a recorded participant or the recording has been automatically"
 							+ " stopped after last user left and timeout passed",
 					recording.getId());
@@ -288,7 +288,7 @@ public class ComposedRecordingService extends RecordingService {
 
 			boolean stopped = false;
 			try {
-				stopped = latch.await(60, TimeUnit.SECONDS);
+				stopped = latch.await(30, TimeUnit.SECONDS);
 			} catch (InterruptedException e) {
 				failRecordingCompletion(recording, containerId,
 						new OpenViduException(Code.RECORDING_COMPLETION_ERROR_CODE,
@@ -297,7 +297,7 @@ public class ComposedRecordingService extends RecordingService {
 			if (!stopped) {
 				failRecordingCompletion(recording, containerId,
 						new OpenViduException(Code.RECORDING_COMPLETION_ERROR_CODE,
-								"The recording completion process couldn't finish in 60 seconds"));
+								"The recording completion process couldn't finish in 30 seconds"));
 			}
 
 			// Remove container
