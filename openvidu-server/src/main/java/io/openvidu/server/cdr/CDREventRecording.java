@@ -35,7 +35,8 @@ public class CDREventRecording extends CDREventEnd {
 
 	// recordingStopped
 	public CDREventRecording(CDREventRecording event, Recording recording, EndReason reason) {
-		super(CDREventName.recordingStopped, event.getSessionId(), event.getTimestamp(), reason);
+		super(CDREventName.recordingStopped, event == null ? recording.getSessionId() : event.getSessionId(),
+				event == null ? recording.getCreatedAt() : event.getTimestamp(), reason);
 		this.recording = recording;
 	}
 
