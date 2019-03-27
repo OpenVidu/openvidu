@@ -45,6 +45,7 @@ public class KmsEvent {
 	public JsonObject toJson() {
 		JsonObject json = JsonUtils.toJsonObject(event);
 		json.remove("tags");
+		json.remove("timestampMillis");
 		json.addProperty("timestamp", timestamp);
 		json.addProperty("session", participant.getSessionId());
 		json.addProperty("user", participant.getFinalUserId());
@@ -53,7 +54,7 @@ public class KmsEvent {
 		json.addProperty("msSinceEndpointCreation", msSinceCreation);
 		return json;
 	}
-	
+
 	public long getTimestamp() {
 		return this.timestamp;
 	}
