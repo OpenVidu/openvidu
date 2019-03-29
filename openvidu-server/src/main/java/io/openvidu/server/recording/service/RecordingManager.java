@@ -37,8 +37,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
-import javax.ws.rs.ProcessingException;
-
 import org.apache.commons.io.FileUtils;
 import org.kurento.client.ErrorEvent;
 import org.kurento.client.EventListener;
@@ -51,11 +49,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import com.github.dockerjava.api.exception.DockerClientException;
-import com.github.dockerjava.api.exception.InternalServerErrorException;
-import com.github.dockerjava.api.exception.NotFoundException;
-import com.github.dockerjava.api.model.Container;
-import com.github.dockerjava.core.command.PullImageResultCallback;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -74,6 +67,7 @@ import io.openvidu.server.kurento.KurentoClientSessionInfo;
 import io.openvidu.server.kurento.OpenViduKurentoClientSessionInfo;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.utils.CustomFileManager;
+import io.openvidu.server.utils.DockerManager;
 
 @Service
 public class RecordingManager {
@@ -83,6 +77,7 @@ public class RecordingManager {
 	RecordingService recordingService;
 	private ComposedRecordingService composedRecordingService;
 	private SingleStreamRecordingService singleStreamRecordingService;
+	private DockerManager dockerManager;
 
 	@Autowired
 	protected SessionEventsHandler sessionHandler;
@@ -105,7 +100,7 @@ public class RecordingManager {
 			Runtime.getRuntime().availableProcessors());
 
 	static final String RECORDING_ENTITY_FILE = ".recording.";
-	static final String IMAGE_NAME = "openvidu/openvidu-recording";
+	public static final String IMAGE_NAME = "openvidu/openvidu-recording";
 	static String IMAGE_TAG;
 
 	private static final List<EndReason> LAST_PARTICIPANT_LEFT_REASONS = Arrays
@@ -124,6 +119,7 @@ public class RecordingManager {
 
 		RecordingManager.IMAGE_TAG = openviduConfig.getOpenViduRecordingVersion();
 
+		this.dockerManager = new DockerManager();
 		this.composedRecordingService = new ComposedRecordingService(this, openviduConfig);
 		this.singleStreamRecordingService = new SingleStreamRecordingService(this, openviduConfig);
 
@@ -133,7 +129,7 @@ public class RecordingManager {
 		this.checkRecordingRequirements(this.openviduConfig.getOpenViduRecordingPath(),
 				this.openviduConfig.getOpenviduRecordingCustomLayout());
 
-		if (this.recordingImageExistsLocally()) {
+		if (dockerManager.dockerImageExistsLocally(IMAGE_NAME + ":" + IMAGE_TAG)) {
 			log.info("Docker image already exists locally");
 		} else {
 			Thread t = new Thread(() -> {
@@ -150,7 +146,7 @@ public class RecordingManager {
 				}
 			});
 			t.start();
-			this.downloadRecordingImage();
+			dockerManager.downloadDockerImage(IMAGE_NAME + ":" + IMAGE_TAG);
 			t.interrupt();
 			try {
 				t.join();
@@ -161,12 +157,15 @@ public class RecordingManager {
 		}
 
 		// Clean any stranded openvidu/openvidu-recording container on startup
-		this.removeExistingRecordingContainers();
+		dockerManager.cleanStrandedContainers(RecordingManager.IMAGE_NAME);
 	}
 
 	public void checkRecordingRequirements(String openviduRecordingPath, String openviduRecordingCustomLayout)
 			throws OpenViduException {
-		this.checkDockerEnabled();
+		if (dockerManager == null) {
+			this.dockerManager = new DockerManager();
+		}
+		dockerManager.checkDockerEnabled(openviduConfig.getSpringProfile());
 		this.checkRecordingPaths(openviduRecordingPath, openviduRecordingCustomLayout);
 	}
 
@@ -441,53 +440,6 @@ public class RecordingManager {
 		return recording;
 	}
 
-	private void removeExistingRecordingContainers() {
-		List<Container> existingContainers = this.composedRecordingService.dockerClient.listContainersCmd()
-				.withShowAll(true).exec();
-		for (Container container : existingContainers) {
-			if (container.getImage().startsWith(RecordingManager.IMAGE_NAME)) {
-				log.info("Stranded openvidu/openvidu-recording Docker container ({}) removed on startup",
-						container.getId());
-				this.composedRecordingService.dockerClient.removeContainerCmd(container.getId()).withForce(true).exec();
-			}
-		}
-	}
-
-	private boolean recordingImageExistsLocally() {
-		boolean imageExists = false;
-		try {
-			this.composedRecordingService.dockerClient.inspectImageCmd(IMAGE_NAME + ":" + IMAGE_TAG).exec();
-			imageExists = true;
-		} catch (NotFoundException nfe) {
-			imageExists = false;
-		} catch (ProcessingException e) {
-			throw e;
-		} catch (NullPointerException e) {
-			// Restarting openvidu-server from openvidu.recording=false
-			// ComposedRecordingService was not initialized
-			this.composedRecordingService = new ComposedRecordingService(this, openviduConfig);
-			return this.recordingImageExistsLocally();
-		}
-		return imageExists;
-	}
-
-	private void downloadRecordingImage() {
-		try {
-			this.composedRecordingService.dockerClient.pullImageCmd(IMAGE_NAME + ":" + IMAGE_TAG)
-					.exec(new PullImageResultCallback()).awaitSuccess();
-		} catch (NotFoundException | InternalServerErrorException e) {
-			if (recordingImageExistsLocally()) {
-				log.info("Docker image '{}' exists locally", IMAGE_NAME + ":" + IMAGE_TAG);
-			} else {
-				throw e;
-			}
-		} catch (DockerClientException e) {
-			log.info("Error on Pulling '{}' image. Probably because the user has stopped the execution",
-					IMAGE_NAME + ":" + IMAGE_TAG);
-			throw e;
-		}
-	}
-
 	private Recording getRecordingFromHost(String recordingId) {
 		log.info(this.openviduConfig.getOpenViduRecordingPath() + recordingId + "/"
 				+ RecordingManager.RECORDING_ENTITY_FILE + recordingId);
@@ -540,29 +492,6 @@ public class RecordingManager {
 			}
 		}
 		return fileNamesNoExtension;
-	}
-
-	private void checkDockerEnabled() throws OpenViduException {
-		try {
-			this.recordingImageExistsLocally();
-		} catch (ProcessingException exception) {
-			String message = "Exception connecting to Docker daemon: ";
-			if ("docker".equals(openviduConfig.getSpringProfile())) {
-				final String NEW_LINE = System.getProperty("line.separator");
-				message += "make sure you include the following flags in your \"docker run\" command:" + NEW_LINE
-						+ "    -e openvidu.recording.path=/YOUR/PATH/TO/VIDEO/FILES" + NEW_LINE
-						+ "    -e MY_UID=$(id -u $USER)" + NEW_LINE + "    -v /var/run/docker.sock:/var/run/docker.sock"
-						+ NEW_LINE + "    -v /YOUR/PATH/TO/VIDEO/FILES:/YOUR/PATH/TO/VIDEO/FILES" + NEW_LINE;
-			} else {
-				message += "you need Docker CE installed in this machine to enable OpenVidu recording service. "
-						+ "If Docker CE is already installed, make sure to add OpenVidu Server user to "
-						+ "\"docker\" group: " + System.lineSeparator() + "   1) $ sudo usermod -aG docker $USER"
-						+ System.lineSeparator()
-						+ "   2) Log out and log back to the host to reevaluate group membership";
-			}
-			log.error(message);
-			throw new OpenViduException(Code.RECORDING_ENABLED_BUT_DOCKER_NOT_FOUND, message);
-		}
 	}
 
 	private void checkRecordingPaths(String openviduRecordingPath, String openviduRecordingCustomLayout)

@@ -30,18 +30,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 
-import com.github.dockerjava.api.DockerClient;
-import com.github.dockerjava.api.command.CreateContainerCmd;
-import com.github.dockerjava.api.command.CreateContainerResponse;
-import com.github.dockerjava.api.command.ExecCreateCmdResponse;
-import com.github.dockerjava.api.exception.ConflictException;
-import com.github.dockerjava.api.exception.NotFoundException;
 import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.Volume;
-import com.github.dockerjava.core.DefaultDockerClientConfig;
-import com.github.dockerjava.core.DockerClientBuilder;
-import com.github.dockerjava.core.DockerClientConfig;
-import com.github.dockerjava.core.command.ExecStartResultCallback;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
@@ -57,6 +47,7 @@ import io.openvidu.server.kurento.core.KurentoSession;
 import io.openvidu.server.recording.CompositeWrapper;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.recording.RecordingInfoUtils;
+import io.openvidu.server.utils.DockerManager;
 
 public class ComposedRecordingService extends RecordingService {
 
@@ -66,12 +57,11 @@ public class ComposedRecordingService extends RecordingService {
 	private Map<String, String> sessionsContainers = new ConcurrentHashMap<>();
 	private Map<String, CompositeWrapper> composites = new ConcurrentHashMap<>();
 
-	DockerClient dockerClient;
+	private DockerManager dockerManager;
 
 	public ComposedRecordingService(RecordingManager recordingManager, OpenviduConfig openviduConfig) {
 		super(recordingManager, openviduConfig);
-		DockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder().build();
-		this.dockerClient = DockerClientBuilder.getInstance(config).build();
+		this.dockerManager = new DockerManager();
 	}
 
 	@Override
@@ -160,7 +150,20 @@ public class ComposedRecordingService extends RecordingService {
 
 		String containerId;
 		try {
-			containerId = this.runRecordingContainer(envs, "recording_" + recording.getId());
+			final String container = RecordingManager.IMAGE_NAME + ":" + RecordingManager.IMAGE_TAG;
+			final String containerName = "recording_" + recording.getId();
+			Volume volume1 = new Volume("/recordings");
+			Volume volume2 = new Volume("/dev/shm");
+			List<Volume> volumes = new ArrayList<>();
+			volumes.add(volume1);
+			volumes.add(volume2);
+			Bind bind1 = new Bind(openviduConfig.getOpenViduRecordingPath(), volume1);
+			Bind bind2 = new Bind("/dev/shm", volume2);
+			List<Bind> binds = new ArrayList<>();
+			binds.add(bind1);
+			binds.add(bind2);
+			containerId = dockerManager.runContainer(container, containerName, volumes, binds, envs);
+			containers.put(containerId, containerName);
 		} catch (Exception e) {
 			this.cleanRecordingMaps(recording);
 			throw this.failStartRecording(session, recording,
@@ -251,8 +254,9 @@ public class ComposedRecordingService extends RecordingService {
 					} else {
 						log.warn("Removing container {} for closed session {}...", containerIdAux,
 								session.getSessionId());
-						dockerClient.stopContainerCmd(containerIdAux).exec();
-						this.removeDockerContainer(containerIdAux);
+						dockerManager.stopDockerContainer(containerIdAux);
+						dockerManager.removeDockerContainer(containerIdAux, false);
+						containers.remove(containerId);
 						containerClosed = true;
 						log.warn("Container {} for closed session {} succesfully stopped and removed", containerIdAux,
 								session.getSessionId());
@@ -272,36 +276,25 @@ public class ComposedRecordingService extends RecordingService {
 		} else {
 
 			// Gracefully stop ffmpeg process
-			ExecCreateCmdResponse execCreateCmdResponse = dockerClient.execCreateCmd(containerId).withAttachStdout(true)
-					.withAttachStderr(true).withCmd("bash", "-c", "echo 'q' > stop").exec();
 			try {
-				dockerClient.execStartCmd(execCreateCmdResponse.getId()).exec(new ExecStartResultCallback())
-						.awaitCompletion();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+				dockerManager.runCommandInContainer(containerId, "echo 'q' > stop");
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
 			}
 
 			// Wait for the container to be gracefully self-stopped
-			CountDownLatch latch = new CountDownLatch(1);
-			WaitForContainerStoppedCallback callback = new WaitForContainerStoppedCallback(latch);
-			dockerClient.waitContainerCmd(containerId).exec(callback);
-
-			boolean stopped = false;
+			final int timeOfWait = 30;
 			try {
-				stopped = latch.await(30, TimeUnit.SECONDS);
-			} catch (InterruptedException e) {
+				dockerManager.waitForContainerStopped(containerId, timeOfWait);
+			} catch (Exception e) {
 				failRecordingCompletion(recording, containerId,
 						new OpenViduException(Code.RECORDING_COMPLETION_ERROR_CODE,
-								"The recording completion process has been unexpectedly interrupted"));
-			}
-			if (!stopped) {
-				failRecordingCompletion(recording, containerId,
-						new OpenViduException(Code.RECORDING_COMPLETION_ERROR_CODE,
-								"The recording completion process couldn't finish in 30 seconds"));
+								"The recording completion process couldn't finish in " + timeOfWait + " seconds"));
 			}
 
 			// Remove container
-			this.removeDockerContainer(containerId);
+			dockerManager.removeDockerContainer(containerId, false);
+			containers.remove(containerId);
 
 			// Update recording attributes reading from video report file
 			try {
@@ -390,41 +383,6 @@ public class ComposedRecordingService extends RecordingService {
 		return recording;
 	}
 
-	private String runRecordingContainer(List<String> envs, String containerName) throws Exception {
-		Volume volume1 = new Volume("/recordings");
-		Volume volume2 = new Volume("/dev/shm");
-		CreateContainerCmd cmd = dockerClient
-				.createContainerCmd(RecordingManager.IMAGE_NAME + ":" + RecordingManager.IMAGE_TAG)
-				.withName(containerName).withEnv(envs).withNetworkMode("host").withVolumes(volume1)
-				.withBinds(new Bind(openviduConfig.getOpenViduRecordingPath(), volume1), new Bind("/dev/shm", volume2));
-		CreateContainerResponse container = null;
-		try {
-			container = cmd.exec();
-			dockerClient.startContainerCmd(container.getId()).exec();
-			containers.put(container.getId(), containerName);
-			log.info("Container ID: {}", container.getId());
-			return container.getId();
-		} catch (ConflictException e) {
-			log.error(
-					"The container name {} is already in use. Probably caused by a session with unique publisher re-publishing a stream",
-					containerName);
-			throw e;
-		} catch (NotFoundException e) {
-			log.error("Docker image {} couldn't be found in docker host",
-					RecordingManager.IMAGE_NAME + ":" + RecordingManager.IMAGE_TAG);
-			throw e;
-		}
-	}
-
-	private void removeDockerContainer(String containerId) {
-		dockerClient.removeContainerCmd(containerId).exec();
-		containers.remove(containerId);
-	}
-
-	private void stopDockerContainer(String containerId) {
-		dockerClient.stopContainerCmd(containerId).exec();
-	}
-
 	private void waitForVideoFileNotEmpty(Recording recording) throws OpenViduException {
 		boolean isPresent = false;
 		int i = 1;
@@ -451,8 +409,9 @@ public class ComposedRecordingService extends RecordingService {
 	private void failRecordingCompletion(Recording recording, String containerId, OpenViduException e)
 			throws OpenViduException {
 		recording.setStatus(io.openvidu.java.client.Recording.Status.failed);
-		this.stopDockerContainer(containerId);
-		this.removeDockerContainer(containerId);
+		dockerManager.stopDockerContainer(containerId);
+		dockerManager.removeDockerContainer(containerId, true);
+		containers.remove(containerId);
 		throw e;
 	}
 

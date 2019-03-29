@@ -257,7 +257,7 @@ public class OpenViduServer implements JsonRpcConfigurer {
 				this.recordingManager().initializeRecordingManager();
 			} catch (OpenViduException e) {
 				String finalErrorMessage = "";
-				if (e.getCodeValue() == Code.RECORDING_ENABLED_BUT_DOCKER_NOT_FOUND.getValue()) {
+				if (e.getCodeValue() == Code.DOCKER_NOT_FOUND.getValue()) {
 					finalErrorMessage = "Error connecting to Docker daemon. Enabling OpenVidu recording module requires Docker";
 				} else if (e.getCodeValue() == Code.RECORDING_PATH_NOT_VALID.getValue()) {
 					finalErrorMessage = "Error initializing recording path \""
