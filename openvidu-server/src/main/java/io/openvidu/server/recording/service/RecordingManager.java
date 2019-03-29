@@ -146,7 +146,11 @@ public class RecordingManager {
 				}
 			});
 			t.start();
-			dockerManager.downloadDockerImage(IMAGE_NAME + ":" + IMAGE_TAG);
+			try {
+				dockerManager.downloadDockerImage(IMAGE_NAME + ":" + IMAGE_TAG, 600);
+			} catch (Exception e) {
+				log.error("Error downloading docker image {}:{}", IMAGE_NAME, IMAGE_TAG);
+			}
 			t.interrupt();
 			try {
 				t.join();

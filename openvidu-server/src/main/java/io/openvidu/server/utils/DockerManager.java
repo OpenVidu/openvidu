@@ -36,6 +36,7 @@ import com.github.dockerjava.api.exception.InternalServerErrorException;
 import com.github.dockerjava.api.exception.NotFoundException;
 import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.Container;
+import com.github.dockerjava.api.model.HostConfig;
 import com.github.dockerjava.api.model.Volume;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientBuilder;
@@ -58,9 +59,10 @@ public class DockerManager {
 		this.dockerClient = DockerClientBuilder.getInstance(config).build();
 	}
 
-	public void downloadDockerImage(String image) {
+	public void downloadDockerImage(String image, int secondsOfWait) throws Exception {
 		try {
-			this.dockerClient.pullImageCmd(image).exec(new PullImageResultCallback()).awaitSuccess();
+			this.dockerClient.pullImageCmd(image).exec(new PullImageResultCallback()).awaitCompletion(secondsOfWait,
+					TimeUnit.SECONDS);
 		} catch (NotFoundException | InternalServerErrorException e) {
 			if (dockerImageExistsLocally(image)) {
 				log.info("Docker image '{}' exists locally", image);
@@ -69,6 +71,9 @@ public class DockerManager {
 			}
 		} catch (DockerClientException e) {
 			log.info("Error on Pulling '{}' image. Probably because the user has stopped the execution", image);
+			throw e;
+		} catch (InterruptedException e) {
+			log.info("Error on Pulling '{}' image. Thread was interrupted: {}", image, e.getMessage());
 			throw e;
 		}
 	}
@@ -112,8 +117,9 @@ public class DockerManager {
 
 	public String runContainer(String container, String containerName, List<Volume> volumes, List<Bind> binds,
 			List<String> envs) throws Exception {
+		HostConfig hostConfig = new HostConfig().withNetworkMode("host").withBinds(binds);
 		CreateContainerCmd cmd = dockerClient.createContainerCmd(container).withName(containerName).withEnv(envs)
-				.withNetworkMode("host").withVolumes(volumes).withBinds(binds);
+				.withHostConfig(hostConfig).withVolumes(volumes);
 		CreateContainerResponse response = null;
 		try {
 			response = cmd.exec();
