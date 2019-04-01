@@ -124,7 +124,7 @@ public class RecordingManager {
 		this.singleStreamRecordingService = new SingleStreamRecordingService(this, openviduConfig);
 
 		log.info("Recording module required: Downloading openvidu/openvidu-recording:"
-				+ openviduConfig.getOpenViduRecordingVersion() + " Docker image (800 MB aprox)");
+				+ openviduConfig.getOpenViduRecordingVersion() + " Docker image (400MB aprox)");
 
 		this.checkRecordingRequirements(this.openviduConfig.getOpenViduRecordingPath(),
 				this.openviduConfig.getOpenviduRecordingCustomLayout());
