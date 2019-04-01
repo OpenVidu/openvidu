@@ -1,5 +1,14 @@
 #!/bin/bash
 
+### Use container as a single headless chrome ###
+
+if [ "$HEADLESS_CHROME_ONLY" == true ]; then
+    java -jar -Dwebdriver.chrome.driver="$CHROME_DRIVER_PATH" /selenium-server-standalone.jar &> /selenium-server.log &
+    sleep 100000000
+else
+
+### Use container as OpenVidu recording module ###
+
 ### Variables ###
 
 URL=${URL:-https://www.youtube.com/watch?v=JMuzlEQz3uo}
@@ -107,3 +116,5 @@ ffmpeg -ss $MIDDLE_TIME -i /recordings/$VIDEO_ID/$VIDEO_NAME.$VIDEO_FORMAT -vfra
 ### Change permissions to all generated files ###
 
 sudo chmod -R 777 /recordings/$VIDEO_ID
+
+fi
