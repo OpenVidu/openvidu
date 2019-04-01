@@ -162,7 +162,7 @@ public class ComposedRecordingService extends RecordingService {
 			List<Bind> binds = new ArrayList<>();
 			binds.add(bind1);
 			binds.add(bind2);
-			containerId = dockerManager.runContainer(container, containerName, volumes, binds, envs);
+			containerId = dockerManager.runContainer(container, containerName, volumes, binds, null, envs);
 			containers.put(containerId, containerName);
 		} catch (Exception e) {
 			this.cleanRecordingMaps(recording);
@@ -277,7 +277,7 @@ public class ComposedRecordingService extends RecordingService {
 
 			// Gracefully stop ffmpeg process
 			try {
-				dockerManager.runCommandInContainer(containerId, "echo 'q' > stop");
+				dockerManager.runCommandInContainer(containerId, "echo 'q' > stop", 0);
 			} catch (InterruptedException e1) {
 				e1.printStackTrace();
 			}

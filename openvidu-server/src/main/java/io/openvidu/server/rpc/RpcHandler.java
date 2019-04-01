@@ -637,7 +637,7 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 	@Override
 	public void handleTransportError(Session rpcSession, Throwable exception) throws Exception {
 		log.error("Transport exception for WebSocket session: {} - Exception: {}", rpcSession.getSessionId(),
-				exception);
+				exception.getMessage());
 		if ("IOException".equals(exception.getClass().getSimpleName())
 				&& "Broken pipe".equals(exception.getCause().getMessage())) {
 			log.warn("Parcipant with private id {} unexpectedly closed the websocket", rpcSession.getSessionId());

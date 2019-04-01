@@ -46,6 +46,26 @@ public class CustomFileManager {
 		}
 	}
 
+	public void moveFile(String filePath, String newFilePath, boolean deleteFoldersWhileEmpty) {
+		try {
+			FileUtils.moveFile(FileUtils.getFile(filePath), FileUtils.getFile(newFilePath));
+		} catch (IOException e) {
+			log.error("Error moving file '{}' to new path '{}': {}", filePath, newFilePath, e.getMessage());
+		}
+		if (deleteFoldersWhileEmpty) {
+			boolean keepDeleting = true;
+			File folder = new File(filePath).getParentFile();
+			while (keepDeleting) {
+				if (folder.exists() && folder.isDirectory() && folder.listFiles().length == 0) {
+					folder.delete();
+					folder = folder.getParentFile();
+				} else {
+					keepDeleting = false;
+				}
+			}
+		}
+	}
+
 	public boolean createFolderIfNotExists(String path) {
 		File folder = new File(path);
 		if (!folder.exists()) {
@@ -58,7 +78,7 @@ public class CustomFileManager {
 	public void deleteFolder(String path) throws IOException {
 		FileUtils.deleteDirectory(new File(path));
 	}
-	
+
 	public void deleteFile(String path) throws IOException {
 		new File(path).delete();
 	}

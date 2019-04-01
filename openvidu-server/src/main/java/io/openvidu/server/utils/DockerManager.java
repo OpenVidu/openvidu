@@ -17,6 +17,8 @@
 
 package io.openvidu.server.utils;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -36,7 +38,11 @@ import com.github.dockerjava.api.exception.InternalServerErrorException;
 import com.github.dockerjava.api.exception.NotFoundException;
 import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.Container;
+import com.github.dockerjava.api.model.ExposedPort;
+import com.github.dockerjava.api.model.Frame;
 import com.github.dockerjava.api.model.HostConfig;
+import com.github.dockerjava.api.model.Ports;
+import com.github.dockerjava.api.model.Ports.Binding;
 import com.github.dockerjava.api.model.Volume;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientBuilder;
@@ -116,10 +122,30 @@ public class DockerManager {
 	}
 
 	public String runContainer(String container, String containerName, List<Volume> volumes, List<Bind> binds,
-			List<String> envs) throws Exception {
-		HostConfig hostConfig = new HostConfig().withNetworkMode("host").withBinds(binds);
-		CreateContainerCmd cmd = dockerClient.createContainerCmd(container).withName(containerName).withEnv(envs)
-				.withHostConfig(hostConfig).withVolumes(volumes);
+			List<Integer> exposedPorts, List<String> envs) throws Exception {
+
+		CreateContainerCmd cmd = dockerClient.createContainerCmd(container).withName(containerName).withEnv(envs);
+		HostConfig hostConfig = new HostConfig().withNetworkMode("host");
+		if (volumes != null) {
+			cmd.withVolumes(volumes);
+		}
+		if (binds != null) {
+			hostConfig.withBinds(binds);
+		}
+		if (exposedPorts != null) {
+			Ports ps = new Ports();
+			List<ExposedPort> expPorts = new ArrayList<>();
+			exposedPorts.forEach(p -> {
+				ExposedPort port = ExposedPort.tcp(p);
+				expPorts.add(port);
+				ps.bind(port, Binding.bindPort(p));
+			});
+			hostConfig.withPortBindings(ps);
+			cmd.withExposedPorts(expPorts);
+		}
+
+		cmd.withHostConfig(hostConfig);
+
 		CreateContainerResponse response = null;
 		try {
 			response = cmd.exec();
@@ -155,10 +181,21 @@ public class DockerManager {
 		}
 	}
 
-	public void runCommandInContainer(String containerId, String command) throws InterruptedException {
+	public String runCommandInContainer(String containerId, String command, int secondsOfWait)
+			throws InterruptedException {
 		ExecCreateCmdResponse execCreateCmdResponse = dockerClient.execCreateCmd(containerId).withAttachStdout(true)
 				.withAttachStderr(true).withCmd("bash", "-c", command).exec();
-		dockerClient.execStartCmd(execCreateCmdResponse.getId()).exec(new ExecStartResultCallback()).awaitCompletion();
+		CountDownLatch latch = new CountDownLatch(1);
+		final String[] stringResponse = new String[1];
+		dockerClient.execStartCmd(execCreateCmdResponse.getId()).exec(new ExecStartResultCallback() {
+			@Override
+			public void onNext(Frame item) {
+				stringResponse[0] = new String(item.getPayload());
+				latch.countDown();
+			}
+		});
+		latch.await(secondsOfWait, TimeUnit.SECONDS);
+		return stringResponse[0];
 	}
 
 	public void waitForContainerStopped(String containerId, int secondsOfWait) throws Exception {
@@ -173,6 +210,16 @@ public class DockerManager {
 		}
 		if (!stopped) {
 			throw new Exception();
+		}
+	}
+
+	static public String getDokerGatewayIp() {
+		try {
+			return CommandExecutor.execCommand("/bin/sh", "-c",
+					"docker network inspect bridge --format='{{(index .IPAM.Config 0).Gateway}}'");
+		} catch (IOException | InterruptedException e) {
+			log.error(e.getMessage());
+			return null;
 		}
 	}
 
