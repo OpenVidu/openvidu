@@ -7,12 +7,6 @@
 			"defaultValue": "[\"ws://localhost:8888/kurento\"]"
 		},
 		{
-			"name": "kms.stats-enabled",
-			"type": "java.lang.Boolean",
-			"description": "Whether to activate the KMS WebRTC statistics feature or not. This may increase the processor consumption",
-			"defaultValue": false
-		},
-		{
 			"name": "openvidu.secret",
 			"type": "java.lang.String",
 			"description": "Secret used to connect to OpenVidu Server. This value is required when using the REST API or any server client, as well as when connecting to openvidu-server dashboard",

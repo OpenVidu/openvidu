@@ -497,9 +497,6 @@ public abstract class MediaEndpoint {
 		json.add("receivedCandidates", new GsonBuilder().create().toJsonTree(this.receivedCandidateList));
 		json.addProperty("localCandidate", this.selectedLocalIceCandidate);
 		json.addProperty("remoteCandidate", this.selectedRemoteIceCandidate);
-		if (openviduConfig.isKmsStatsEnabled()) {
-			json.addProperty("serverStats", new Gson().toJson(this.webEndpoint.getStats()));
-		}
 
 		JsonArray jsonArray = new JsonArray();
 		this.kmsEvents.forEach(ev -> {

@@ -212,10 +212,6 @@ public class KurentoSession extends Session {
 					@Override
 					public void onSuccess(MediaPipeline result) throws Exception {
 						pipeline = result;
-						if (openviduConfig.isKmsStatsEnabled()) {
-							pipeline.setLatencyStats(true);
-							log.debug("SESSION {}: WebRTC server stats enabled", sessionId);
-						}
 						pipelineLatch.countDown();
 						log.debug("SESSION {}: Created MediaPipeline", sessionId);
 					}
