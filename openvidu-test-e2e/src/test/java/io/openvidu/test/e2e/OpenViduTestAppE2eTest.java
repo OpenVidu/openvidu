@@ -996,7 +996,7 @@ public class OpenViduTestAppE2eTest {
 		JSONObject obj = (JSONObject) new JSONParser().parse(widthAndHeight);
 
 		expectedWidthHeight[0] = (long) obj.get("width");
-		expectedWidthHeight[1] = (long) obj.get("height") - 1;
+		expectedWidthHeight[1] = (long) obj.get("height");
 
 		System.out.println("New viewport dimension: " + obj.toJSONString());
 
@@ -2116,7 +2116,7 @@ public class OpenViduTestAppE2eTest {
 		String widthAndHeight = user.getEventManager().getDimensionOfViewport();
 		JSONObject obj = (JSONObject) new JSONParser().parse(widthAndHeight);
 		Assert.assertEquals(
-				"{\"width\":" + (long) obj.get("width") + ",\"height\":" + ((long) obj.get("height") - 1) + "}",
+				"{\"width\":" + (long) obj.get("width") + ",\"height\":" + ((long) obj.get("height")) + "}",
 				pub.getVideoDimensions());
 		Assert.assertEquals(new Integer(30), pub.getFrameRate());
 		Assert.assertEquals("SCREEN", pub.getTypeOfVideo());
