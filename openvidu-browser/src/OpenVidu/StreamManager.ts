@@ -283,7 +283,7 @@ export class StreamManager implements EventDispatcher {
     createVideoElement(targetElement?: string | HTMLElement, insertMode?: VideoInsertMode): HTMLVideoElement {
         let targEl;
         if (typeof targetElement === 'string') {
-            targEl = document.getElementById(targEl);
+            targEl = document.getElementById(targetElement);
             if (!targEl) {
                 throw new Error("The provided 'targetElement' couldn't be resolved to any HTML element: " + targetElement);
             }
