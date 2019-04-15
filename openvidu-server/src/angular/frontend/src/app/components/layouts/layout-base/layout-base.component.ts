@@ -29,6 +29,7 @@ export class LayoutBaseComponent implements OnInit, OnDestroy {
   sessionId: string;
   secret: string;
   onlyVideo = false;
+  port: number;
 
   session: Session;
   subscribers: Subscriber[] = [];
@@ -45,6 +46,9 @@ export class LayoutBaseComponent implements OnInit, OnDestroy {
       this.secret = params.secret;
       if (params.onlyVideo != null) {
         this.onlyVideo = JSON.parse(params.onlyVideo);
+      }
+      if (params.port != null) {
+        this.port = params.port;
       }
     });
   }
@@ -101,8 +105,8 @@ export class LayoutBaseComponent implements OnInit, OnDestroy {
       this.updateLayout(changeFixedRatio);
     });
 
-    const port = !!location.port ? (':' + location.port) : '';
-    const token = 'wss://' + location.hostname + port + '?sessionId=' + this.sessionId + '&secret=' + this.secret + '&recorder=true';
+    const p = !!this.port ? (':' + this.port) : (!!location.port ? (':' + location.port) : '');
+    const token = 'wss://' + location.hostname + p + '?sessionId=' + this.sessionId + '&secret=' + this.secret + '&recorder=true';
     this.session.connect(token)
       .catch(error => {
         console.error(error);

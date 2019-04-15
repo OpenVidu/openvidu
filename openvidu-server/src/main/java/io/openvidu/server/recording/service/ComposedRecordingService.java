@@ -19,6 +19,8 @@ package io.openvidu.server.recording.service;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -417,9 +419,22 @@ public class ComposedRecordingService extends RecordingService {
 
 	private String getLayoutUrl(Recording recording, String shortSessionId) {
 		String secret = openviduConfig.getOpenViduSecret();
-		String location = OpenViduServer.wsUrl.replaceFirst("wss://", "");
-		String layout, finalUrl;
+		boolean recordingUrlDefined = openviduConfig.getOpenViduRecordingComposedUrl() != null
+				&& !openviduConfig.getOpenViduRecordingComposedUrl().isEmpty();
+		String recordingUrl = recordingUrlDefined ? openviduConfig.getOpenViduRecordingComposedUrl()
+				: OpenViduServer.wsUrl;
+		recordingUrl = recordingUrl.replaceFirst("wss://", "").replaceFirst("https://", "");
+		boolean startsWithHttp = recordingUrl.startsWith("http://") || recordingUrl.startsWith("ws://");
 
+		if (startsWithHttp) {
+			recordingUrl = recordingUrl.replaceFirst("http://", "").replaceFirst("ws://", "");
+		}
+
+		if (recordingUrl.endsWith("/")) {
+			recordingUrl = recordingUrl.substring(0, recordingUrl.length() - 1);
+		}
+
+		String layout, finalUrl;
 		if (RecordingLayout.CUSTOM.equals(recording.getRecordingLayout())) {
 			layout = recording.getCustomLayout();
 			if (!layout.isEmpty()) {
@@ -427,12 +442,19 @@ public class ComposedRecordingService extends RecordingService {
 				layout = layout.endsWith("/") ? layout.substring(0, layout.length() - 1) : layout;
 			}
 			layout += "/index.html";
-			finalUrl = "https://OPENVIDUAPP:" + secret + "@" + location + "/layouts/custom" + layout + "?sessionId="
-					+ shortSessionId + "&secret=" + secret;
+			finalUrl = (startsWithHttp ? "http" : "https") + "://OPENVIDUAPP:" + secret + "@" + recordingUrl
+					+ "/layouts/custom" + layout + "?sessionId=" + shortSessionId + "&secret=" + secret;
 		} else {
 			layout = recording.getRecordingLayout().name().toLowerCase().replaceAll("_", "-");
-			finalUrl = "https://OPENVIDUAPP:" + secret + "@" + location + "/#/layout-" + layout + "/" + shortSessionId
-					+ "/" + secret + "/" + !recording.hasAudio();
+			Integer port = null;
+			try {
+				port = new URL(openviduConfig.getOpenViduPublicUrl()).getPort();
+			} catch (MalformedURLException e) {
+				log.error(e.getMessage());
+			}
+			finalUrl = (startsWithHttp ? "http" : "https") + "://OPENVIDUAPP:" + secret + "@" + recordingUrl
+					+ "/#/layout-" + layout + "/" + shortSessionId + "/" + secret + "/" + !recording.hasAudio()
+					+ ((port != null) ? ("/" + port) : "");
 		}
 
 		return finalUrl;

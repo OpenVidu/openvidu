@@ -63,6 +63,9 @@ public class OpenviduConfig {
 	@Value("${openvidu.recording.autostop-timeout}")
 	private int openviduRecordingAutostopTimeout;
 
+	@Value("${openvidu.recording.composed-url}")
+	private String openviduRecordingComposedUrl;
+
 	@Value("${openvidu.streams.video.max-recv-bandwidth}")
 	private int openviduStreamsVideoMaxRecvBandwidth;
 
@@ -191,6 +194,10 @@ public class OpenviduConfig {
 
 	public String getOpenViduRecordingNotification() {
 		return this.openviduRecordingNotification;
+	}
+
+	public String getOpenViduRecordingComposedUrl() {
+		return this.openviduRecordingComposedUrl;
 	}
 
 	public OpenViduRole[] getRolesFromRecordingNotification() {

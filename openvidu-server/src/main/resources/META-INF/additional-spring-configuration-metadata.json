@@ -66,6 +66,12 @@
 			"defaultValue": 120
 		},
 		{
+			"name": "openvidu.recording.composed-url",
+			"type": "java.lang.String",
+			"description": "URL where the composed-video recording dockerized Chrome will connect to receive published videos",
+			"defaultValue": ""
+		},
+		{
 			"name": "coturn.sqlite",
 			"type": "java.lang.String",
 			"description": "Path to COTURN sqlite database to add and remove TURN user credentials",
