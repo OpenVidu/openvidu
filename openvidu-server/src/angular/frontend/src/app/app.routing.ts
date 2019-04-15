@@ -20,7 +20,7 @@ const appRoutes: Routes = [
     component: LayoutBestFitComponent
   },
   {
-    path: 'layout-best-fit/:sessionId/:secret/:onlyVideo/:port',
+    path: 'layout-best-fit/:sessionId/:secret/:port/:onlyVideo',
     component: LayoutBestFitComponent
   },
   {
@@ -28,7 +28,7 @@ const appRoutes: Routes = [
     component: LayoutVerticalPresentationComponent
   },
   {
-    path: 'layout-vertical-presentation/:sessionId/:secret/:onlyVideo/:port',
+    path: 'layout-vertical-presentation/:sessionId/:secret/:port/:onlyVideo',
     component: LayoutVerticalPresentationComponent
   },
   {
@@ -36,7 +36,7 @@ const appRoutes: Routes = [
     component: LayoutHorizontalPresentationComponent
   },
   {
-    path: 'layout-horizontal-presentation/:sessionId/:secret/:onlyVideo/:port',
+    path: 'layout-horizontal-presentation/:sessionId/:secret/:port/:onlyVideo',
     component: LayoutHorizontalPresentationComponent
   }
 ];

@@ -208,7 +208,6 @@ public class OpenViduServer implements JsonRpcConfigurer {
 			try {
 				String containerIp = getContainerIp();
 				OpenViduServer.wsUrl = "wss://" + containerIp + ":" + openviduConf.getServerPort();
-				openviduConf.setFinalUrl("https://" + containerIp + ":" + openviduConf.getServerPort());
 			} catch (Exception e) {
 				log.error("Docker container IP was configured, but there was an error obtaining IP: "
 						+ e.getClass().getName() + " " + e.getMessage());
@@ -235,8 +234,6 @@ public class OpenViduServer implements JsonRpcConfigurer {
 				OpenViduServer.wsUrl = publicUrl.replace("http://", "wss://");
 			}
 
-			openviduConf.setFinalUrl(url.toString());
-
 			if (!OpenViduServer.wsUrl.startsWith("wss://")) {
 				OpenViduServer.wsUrl = "wss://" + OpenViduServer.wsUrl;
 			}
@@ -245,7 +242,6 @@ public class OpenViduServer implements JsonRpcConfigurer {
 		if (OpenViduServer.wsUrl == null) {
 			type = "local";
 			OpenViduServer.wsUrl = "wss://localhost:" + openviduConf.getServerPort();
-			openviduConf.setFinalUrl("https://localhost:" + openviduConf.getServerPort());
 		}
 
 		if (OpenViduServer.wsUrl.endsWith("/")) {
@@ -273,6 +269,8 @@ public class OpenViduServer implements JsonRpcConfigurer {
 			}
 		}
 
+		String finalUrl = OpenViduServer.wsUrl.replaceFirst("wss://", "https://").replaceFirst("ws://", "http://");
+		openviduConf.setFinalUrl(finalUrl);
 		httpUrl = openviduConf.getFinalUrl();
 		log.info("OpenVidu Server using " + type + " URL: [" + OpenViduServer.wsUrl + "]");
 	}

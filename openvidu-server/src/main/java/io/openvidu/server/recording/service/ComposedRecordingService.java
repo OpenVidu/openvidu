@@ -446,15 +446,15 @@ public class ComposedRecordingService extends RecordingService {
 					+ "/layouts/custom" + layout + "?sessionId=" + shortSessionId + "&secret=" + secret;
 		} else {
 			layout = recording.getRecordingLayout().name().toLowerCase().replaceAll("_", "-");
-			Integer port = null;
+			int port = startsWithHttp ? 80 : 443;
 			try {
-				port = new URL(openviduConfig.getOpenViduPublicUrl()).getPort();
+				port = new URL(openviduConfig.getFinalUrl()).getPort();
 			} catch (MalformedURLException e) {
 				log.error(e.getMessage());
 			}
 			finalUrl = (startsWithHttp ? "http" : "https") + "://OPENVIDUAPP:" + secret + "@" + recordingUrl
-					+ "/#/layout-" + layout + "/" + shortSessionId + "/" + secret + "/" + !recording.hasAudio()
-					+ ((port != null) ? ("/" + port) : "");
+					+ "/#/layout-" + layout + "/" + shortSessionId + "/" + secret + "/" + port + "/"
+					+ !recording.hasAudio();
 		}
 
 		return finalUrl;
