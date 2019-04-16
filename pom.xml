@@ -42,7 +42,7 @@
 	</developers>
 
 	<properties>
-		<version.kurento>6.9.1</version.kurento>
+		<version.kurento>6.10.0</version.kurento>
 		<version.spring-boot>1.4.2.RELEASE</version.spring-boot>
 		<version.junit>4.12</version.junit>
 		<version.mockito>1.10.19</version.mockito>
