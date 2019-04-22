@@ -24,6 +24,7 @@
         "outDir": "../../lib",
         "preserveConstEnums": true,
         "removeComments": true,
+        "rootDir": "./src",
         "skipDefaultLibCheck": true,
         "skipLibCheck": true,
         "sourceMap": true,
