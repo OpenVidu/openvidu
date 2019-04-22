@@ -222,7 +222,11 @@ public class OpenviduConfig {
 	}
 
 	public String getOpenViduServerVersion() {
-		return this.buildProperties.get("version.openvidu.server");
+		String v = this.buildProperties.get("version.openvidu.server");
+		if (v == null) {
+			v = this.getVersion();
+		}
+		return v;
 	}
 
 	public String getVersion() {

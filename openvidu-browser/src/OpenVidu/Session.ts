@@ -1145,6 +1145,7 @@ export class Session implements EventDispatcher {
         const turnCredential = url.searchParams.get('turnCredential');
         const role = url.searchParams.get('role');
         const webrtcStatsInterval = url.searchParams.get('webrtcStatsInterval');
+        const openviduServerVersion = url.searchParams.get('version');
 
         if (!!secret) {
             this.openvidu.secret = secret;
@@ -1167,6 +1168,14 @@ export class Session implements EventDispatcher {
         }
         if (!!webrtcStatsInterval) {
             this.openvidu.webrtcStatsInterval = +webrtcStatsInterval;
+        }
+        if (!!openviduServerVersion) {
+            console.info("openvidu-server version: " + openviduServerVersion);
+            if (openviduServerVersion !== this.openvidu.libraryVersion) {
+                console.error('OpenVidu Server (' + openviduServerVersion +
+                    ') and OpenVidu Browser (' + this.openvidu.libraryVersion +
+                    ') versions do NOT match. There may be incompatibilities')
+            }
         }
 
         this.openvidu.wsUri = 'wss://' + url.host + '/openvidu';

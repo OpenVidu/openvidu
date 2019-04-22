@@ -33,6 +33,8 @@ import RpcBuilder = require('../OpenViduInternal/KurentoUtils/kurento-jsonrpc');
 import platform = require('platform');
 platform['isIonicIos'] = (platform.product === 'iPhone' || platform.product === 'iPad') && platform.ua!!.indexOf('Safari') === -1;
 
+const packageJson = require('../../package.json');
+
 /**
  * Entrypoint of OpenVidu Browser library.
  * Use it to initialize objects of type [[Session]], [[Publisher]] and [[LocalRecorder]]
@@ -81,9 +83,16 @@ export class OpenVidu {
    * @hidden
    */
   webrtcStatsInterval: number = 0;
+  /**
+   * @hidden
+   */
+  libraryVersion: string;
 
   constructor() {
+    this.libraryVersion = packageJson.version;
+
     console.info("'OpenVidu' initialized");
+    console.info("openvidu-browser version: " + this.libraryVersion);
 
     if (platform.os!!.family === 'iOS' || platform.os!!.family === 'Android') {
       // Listen to orientationchange only on mobile devices

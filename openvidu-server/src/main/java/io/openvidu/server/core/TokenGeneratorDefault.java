@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.server.OpenViduServer;
+import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.coturn.CoturnCredentialsService;
 import io.openvidu.server.coturn.TurnCredentials;
 import io.openvidu.server.kurento.core.KurentoTokenOptions;
@@ -31,6 +32,9 @@ public class TokenGeneratorDefault implements TokenGenerator {
 	@Autowired
 	private CoturnCredentialsService coturnCredentialsService;
 
+	@Autowired
+	protected OpenviduConfig openviduConfig;
+
 	@Override
 	public Token generateToken(String sessionId, OpenViduRole role, String serverMetadata,
 			KurentoTokenOptions kurentoTokenOptions) {
@@ -38,6 +42,7 @@ public class TokenGeneratorDefault implements TokenGenerator {
 		token += "?sessionId=" + sessionId;
 		token += "&token=" + RandomStringGenerator.generateRandomChain();
 		token += "&role=" + role.name();
+		token += "&version=" + openviduConfig.getOpenViduServerVersion();
 		TurnCredentials turnCredentials = null;
 		if (this.coturnCredentialsService.isCoturnAvailable()) {
 			turnCredentials = coturnCredentialsService.createUser();
