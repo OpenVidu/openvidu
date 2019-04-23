@@ -17,6 +17,6 @@ module.exports = {
     ],
     excludeExternals: true,
     excludePrivate: true,
-    theme: "./config/typedoc/custom-theme/bin",
+    theme: "default",
     readme: "none"
 }

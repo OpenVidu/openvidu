@@ -33,6 +33,9 @@ import RpcBuilder = require('../OpenViduInternal/KurentoUtils/kurento-jsonrpc');
 import platform = require('platform');
 platform['isIonicIos'] = (platform.product === 'iPhone' || platform.product === 'iPad') && platform.ua!!.indexOf('Safari') === -1;
 
+/**
+ * @hidden
+ */
 const packageJson = require('../../package.json');
 
 /**
