@@ -35,6 +35,9 @@ import EventEmitter = require('wolfy87-eventemitter');
 import hark = require('hark');
 import platform = require('platform');
 platform['isIonicIos'] = (platform.product === 'iPhone' || platform.product === 'iPad') && platform.ua!!.indexOf('Safari') === -1;
+platform['isInternetExplorer'] = platform.name === 'IE' && platform.version !== undefined && parseInt(platform.version) >= 11;
+platform['isReactNative'] = navigator.product === 'ReactNative';
+declare const AdapterJS: any;
 
 
 /**
@@ -221,7 +224,7 @@ export class Stream implements EventDispatcher {
             if (this.hasVideo) {
                 this.videoActive = !!this.outboundStreamOpts.publisherProperties.publishVideo;
                 this.frameRate = this.outboundStreamOpts.publisherProperties.frameRate;
-                if (this.outboundStreamOpts.publisherProperties.videoSource instanceof MediaStreamTrack) {
+                if (typeof MediaStreamTrack !== 'undefined' && this.outboundStreamOpts.publisherProperties.videoSource instanceof MediaStreamTrack) {
                     this.typeOfVideo = 'CUSTOM';
                 } else {
                     this.typeOfVideo = this.isSendScreen() ? 'SCREEN' : 'CAMERA';
@@ -455,7 +458,7 @@ export class Stream implements EventDispatcher {
     disposeWebRtcPeer(): void {
         if (this.webRtcPeer) {
             const isSenderAndCustomTrack: boolean = !!this.outboundStreamOpts &&
-                this.outboundStreamOpts.publisherProperties.videoSource instanceof MediaStreamTrack;
+            typeof MediaStreamTrack !== 'undefined' && this.outboundStreamOpts.publisherProperties.videoSource instanceof MediaStreamTrack;
             this.webRtcPeer.dispose(isSenderAndCustomTrack);
         }
         if (this.speechEvent) {
@@ -693,7 +696,7 @@ export class Stream implements EventDispatcher {
 
                 let typeOfVideo = '';
                 if (this.isSendVideo()) {
-                    typeOfVideo = this.outboundStreamOpts.publisherProperties.videoSource instanceof MediaStreamTrack ? 'CUSTOM' : (this.isSendScreen() ? 'SCREEN' : 'CAMERA');
+                    typeOfVideo = (typeof MediaStreamTrack !== 'undefined' && this.outboundStreamOpts.publisherProperties.videoSource instanceof MediaStreamTrack) ? 'CUSTOM' : (this.isSendScreen() ? 'SCREEN' : 'CAMERA');
                 }
 
                 this.session.openvidu.sendRequest('publishVideo', {
@@ -795,20 +798,30 @@ export class Stream implements EventDispatcher {
                 });
             };
 
-            this.webRtcPeer = new WebRtcPeerRecvonly(options);
-            this.webRtcPeer.generateOffer()
-                .then(offer => {
-                    successCallback(offer);
-                })
-                .catch(error => {
-                    reject(new Error('(subscribe) SDP offer error: ' + JSON.stringify(error)));
+            const initWebRtcPeer = () => {
+                this.webRtcPeer = new WebRtcPeerRecvonly(options);
+                this.webRtcPeer.generateOffer()
+                    .then(offer => {
+                        successCallback(offer);
+                    })
+                    .catch(error => {
+                        reject(new Error('(subscribe) SDP offer error: ' + JSON.stringify(error)));
+                    });
+            };
+
+            if (platform['isInternetExplorer']) {
+                AdapterJS.webRTCReady(isUsingPlugin => {
+                    initWebRtcPeer();
                 });
+            } else {
+                initWebRtcPeer();
+            }
         });
     }
 
     private remotePeerSuccessfullyEstablished(): void {
-        if (platform['isIonicIos']) {
-            // iOS Ionic. LIMITATION: must use deprecated WebRTC API
+        if (platform['isIonicIos'] || platform['isInternetExplorer']) {
+            // iOS Ionic or IExplorer. LIMITATION: must use deprecated WebRTC API
             const pc1: any = this.webRtcPeer.pc;
             this.mediaStream = pc1.getRemoteStreams()[0];
         } else {
@@ -836,7 +849,7 @@ export class Stream implements EventDispatcher {
                 }
             }
 
-            this.ee.emitEvent('mediastream-updated', []);
+            this.updateMediaStreamInVideos();
             if (!this.displayMyRemote() && !!this.mediaStream.getAudioTracks()[0] && this.session.speakingEventsEnabled) {
                 this.enableSpeakingEvents();
             }

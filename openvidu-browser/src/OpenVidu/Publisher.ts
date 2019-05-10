@@ -30,6 +30,9 @@ import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
 
 import platform = require('platform');
 platform['isIonicIos'] = (platform.product === 'iPhone' || platform.product === 'iPad') && platform.ua!!.indexOf('Safari') === -1;
+platform['isInternetExplorer'] = platform.name === 'IE' && platform.version !== undefined && parseInt(platform.version) >= 11;
+platform['isReactNative'] = navigator.product === 'ReactNative';
+declare const AdapterJS: any, attachMediaStream;
 
 /**
  * Packs local media streams. Participants can publish it to a session. Initialized with [[OpenVidu.initPublisher]] method
@@ -67,6 +70,10 @@ export class Publisher extends StreamManager {
      * @hidden
      */
     screenShareResizeInterval: NodeJS.Timer;
+    /**
+     * @hidden
+     */
+    IEAdapter: any;
 
     /**
      * @hidden
@@ -284,12 +291,12 @@ export class Publisher extends StreamManager {
                 this.accessAllowed = true;
                 this.accessDenied = false;
 
-                if (this.properties.audioSource instanceof MediaStreamTrack) {
+                if (typeof MediaStreamTrack !== 'undefined' && this.properties.audioSource instanceof MediaStreamTrack) {
                     mediaStream.removeTrack(mediaStream.getAudioTracks()[0]);
                     mediaStream.addTrack((<MediaStreamTrack>this.properties.audioSource));
                 }
 
-                if (this.properties.videoSource instanceof MediaStreamTrack) {
+                if (typeof MediaStreamTrack !== 'undefined' && this.properties.videoSource instanceof MediaStreamTrack) {
                     mediaStream.removeTrack(mediaStream.getVideoTracks()[0]);
                     mediaStream.addTrack((<MediaStreamTrack>this.properties.videoSource));
                 }
@@ -309,18 +316,61 @@ export class Publisher extends StreamManager {
                 if (platform.name === 'Safari') {
                     this.videoReference.setAttribute('playsinline', 'true');
                 }
-
-                this.videoReference.srcObject = mediaStream;
+                
+                if (!!this.firstVideoElement) {
+                    let video = this.createVideoElement(this.firstVideoElement.targetElement, <VideoInsertMode>this.properties.insertMode);
+                    if (platform['isInternetExplorer']) {
+                        this.videoReference = video;
+                    }
+                }
 
                 this.stream.setMediaStream(mediaStream);
+
+                if (platform['isInternetExplorer']) {
+                    AdapterJS.webRTCReady(isUsingPlugin => {
+                        this.videoReference = this.customAttachMediaStreamIE(this.videoReference, mediaStream);
+                        if (this.stream.isSendVideo()) {
+                            if (!this.stream.isSendScreen()) {
+                                /*this.videoReference.onloadedmetadata = () => {
+                                    this.stream.videoDimensions = {
+                                        width: this.videoReference.videoWidth,
+                                        height: this.videoReference.videoHeight
+                                    };
+
+                                    // TODO: if screen-share, set this.screenShareResizeInterval
+
+                                    console.warn(this.stream.videoDimensions);
+                                    this.stream.isLocalStreamReadyToPublish = true;
+                                    this.stream.ee.emitEvent('stream-ready-to-publish', []);
+                                }*/
+
+                                this.stream.videoDimensions = {
+                                    width: this.videoReference.videoWidth,
+                                    height: this.videoReference.videoHeight
+                                };
+
+                                // TODO: if screen-share, set this.screenShareResizeInterval
+
+                                console.warn(this.stream.videoDimensions);
+                                this.stream.isLocalStreamReadyToPublish = true;
+                                this.stream.ee.emitEvent('stream-ready-to-publish', []);
+
+                                this.videoReference.onplaying = () => {
+                                    console.warn("PLAYINNNGNGNGNGNGNG!!!");
+                                }
+
+                            }
+                        }
+
+                    });
+                } else {
+                    this.videoReference.srcObject = mediaStream;
+                }
+
                 if (!this.stream.displayMyRemote()) {
                     // When we are subscribed to our remote we don't still set the MediaStream object in the video elements to
                     // avoid early 'streamPlaying' event
                     this.stream.updateMediaStreamInVideos();
-                }
-
-                if (!!this.firstVideoElement) {
-                    this.createVideoElement(this.firstVideoElement.targetElement, <VideoInsertMode>this.properties.insertMode);
                 }
                 delete this.firstVideoElement;
 
@@ -357,8 +407,8 @@ export class Publisher extends StreamManager {
                                     videoDimensionsSet();
                                 }
                             };
-                        } else {
-                            // Rest of platforms
+                        } else if (platform.name !== 'IE') {
+                            // Rest of platforms except IE
                             // With no screen share, video dimension can be set directly from MediaStream (getSettings)
                             // Orientation must be checked for mobile devices (width and height are reversed)
                             const { width, height } = mediaStream.getVideoTracks()[0].getSettings();
@@ -480,14 +530,14 @@ export class Publisher extends StreamManager {
             // - video track is given and no audio
             // - audio track is given and no video
             // - both video and audio tracks are given
-            if ((this.properties.videoSource instanceof MediaStreamTrack && !this.properties.audioSource)
-                || (this.properties.audioSource instanceof MediaStreamTrack && !this.properties.videoSource)
-                || (this.properties.videoSource instanceof MediaStreamTrack && this.properties.audioSource instanceof MediaStreamTrack)) {
+            if ((typeof MediaStreamTrack !== 'undefined' && this.properties.videoSource instanceof MediaStreamTrack && !this.properties.audioSource)
+                || (typeof MediaStreamTrack !== 'undefined' && this.properties.audioSource instanceof MediaStreamTrack && !this.properties.videoSource)
+                || (typeof MediaStreamTrack !== 'undefined' && this.properties.videoSource instanceof MediaStreamTrack && this.properties.audioSource instanceof MediaStreamTrack)) {
                 const mediaStream = new MediaStream();
-                if (this.properties.videoSource instanceof MediaStreamTrack) {
+                if (typeof MediaStreamTrack !== 'undefined' && this.properties.videoSource instanceof MediaStreamTrack) {
                     mediaStream.addTrack((<MediaStreamTrack>this.properties.videoSource));
                 }
-                if (this.properties.audioSource instanceof MediaStreamTrack) {
+                if (typeof MediaStreamTrack !== 'undefined' && this.properties.audioSource instanceof MediaStreamTrack) {
                     mediaStream.addTrack((<MediaStreamTrack>this.properties.audioSource));
                 }
                 // MediaStreamTracks are handled within callback - just call callback with new MediaStream() and let it handle the sources
@@ -521,11 +571,16 @@ export class Publisher extends StreamManager {
                                     afterGetMedia(mediaStream, definedAudioConstraint);
                                 });
                         } else {
-                            navigator.mediaDevices.getUserMedia(constraintsAux)
+
+                            let userMediaFunc = () => {
+                                navigator.mediaDevices.getUserMedia(constraintsAux)
                                 .then(mediaStream => {
                                     afterGetMedia(mediaStream, definedAudioConstraint);
                                 })
                                 .catch(error => {
+
+                                    console.error(error);
+
                                     this.clearPermissionDialogTimer(startTime, timeForDialogEvent);
                                     if (error.name === 'Error') {
                                         // Safari OverConstrainedError has as name property 'Error' instead of 'OverConstrainedError'
@@ -598,6 +653,16 @@ export class Publisher extends StreamManager {
 
                                     }
                                 });
+                            }
+
+                            if (platform['isInternetExplorer']) {
+                                AdapterJS.webRTCReady(isUsingPlugin => {
+                                    userMediaFunc();
+                                })
+                            } else {
+                                userMediaFunc();
+                            }
+
                         }
                     } else {
                         reject(new OpenViduError(OpenViduErrorName.NO_INPUT_SOURCE_SET,

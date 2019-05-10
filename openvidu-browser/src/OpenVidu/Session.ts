@@ -160,7 +160,7 @@ export class Session implements EventDispatcher {
                     reject(error);
                 });
             } else {
-                reject(new OpenViduError(OpenViduErrorName.BROWSER_NOT_SUPPORTED, 'Browser ' + platform.name + ' for ' + platform.os!!.family + ' is not supported in OpenVidu'));
+                reject(new OpenViduError(OpenViduErrorName.BROWSER_NOT_SUPPORTED, 'Browser ' + platform.name + ' (version ' + platform.version + ') for ' + platform.os!!.family + ' is not supported in OpenVidu'));
             }
         });
     }
@@ -882,10 +882,17 @@ export class Session implements EventDispatcher {
         this.getConnection(msg.senderConnectionId, 'Connection not found for connectionId ' + msg.senderConnectionId + ' owning endpoint ' + msg.endpointName + '. Ice candidate will be ignored: ' + candidate)
             .then(connection => {
                 const stream = connection.stream;
-                stream.getWebRtcPeer().addIceCandidate(candidate).catch(error => {
-                    console.error('Error adding candidate for ' + stream.streamId
-                        + ' stream of endpoint ' + msg.endpointName + ': ' + error);
-                });
+                if (platform['isInternetExplorer']) {
+                    (<any>stream.getWebRtcPeer()).addIceCandidate(candidate, () => {}, error => {
+                        console.error('Error adding candidate for ' + stream.streamId
+                            + ' stream of endpoint ' + msg.endpointName + ': ' + error);
+                    });
+                } else {
+                    stream.getWebRtcPeer().addIceCandidate(candidate).catch(error => {
+                        console.error('Error adding candidate for ' + stream.streamId
+                            + ' stream of endpoint ' + msg.endpointName + ': ' + error);
+                    });
+                }
             })
             .catch(openViduError => {
                 console.error(openViduError);
@@ -1023,10 +1030,10 @@ export class Session implements EventDispatcher {
                     const joinParams = {
                         token: (!!token) ? token : '',
                         session: this.sessionId,
-                        platform: platform.description,
+                        platform: !!platform.description ? platform.description : 'unknown',
                         metadata: !!this.options.metadata ? this.options.metadata : '',
                         secret: this.openvidu.getSecret(),
-                        recorder: this.openvidu.getRecorder(),
+                        recorder: this.openvidu.getRecorder()
                     };
 
                     this.openvidu.sendRequest('joinRoom', joinParams, (error, response) => {

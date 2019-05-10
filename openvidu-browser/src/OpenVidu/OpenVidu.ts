@@ -32,6 +32,9 @@ import * as screenSharing from '../OpenViduInternal/ScreenSharing/Screen-Capturi
 import RpcBuilder = require('../OpenViduInternal/KurentoUtils/kurento-jsonrpc');
 import platform = require('platform');
 platform['isIonicIos'] = (platform.product === 'iPhone' || platform.product === 'iPad') && platform.ua!!.indexOf('Safari') === -1;
+platform['isInternetExplorer'] = platform.name === 'IE' && platform.version !== undefined && parseInt(platform.version) >= 11;
+platform['isReactNative'] = navigator.product === 'ReactNative';
+declare const AdapterJS: any;
 
 /**
  * @hidden
@@ -96,6 +99,10 @@ export class OpenVidu {
 
     console.info("'OpenVidu' initialized");
     console.info("openvidu-browser version: " + this.libraryVersion);
+    
+    if (platform['isInternetExplorer']) {
+     this.importIEAdapterJS();
+    }
 
     if (platform.os!!.family === 'iOS' || platform.os!!.family === 'Android') {
       // Listen to orientationchange only on mobile devices
@@ -216,12 +223,12 @@ export class OpenVidu {
 
       properties = {
         audioSource: (typeof properties.audioSource !== 'undefined') ? properties.audioSource : undefined,
-        frameRate: (properties.videoSource instanceof MediaStreamTrack) ? undefined : ((typeof properties.frameRate !== 'undefined') ? properties.frameRate : undefined),
+        frameRate: (typeof MediaStreamTrack !== 'undefined' && properties.videoSource instanceof MediaStreamTrack) ? undefined : ((typeof properties.frameRate !== 'undefined') ? properties.frameRate : undefined),
         insertMode: (typeof properties.insertMode !== 'undefined') ? ((typeof properties.insertMode === 'string') ? VideoInsertMode[properties.insertMode] : properties.insertMode) : VideoInsertMode.APPEND,
         mirror: (typeof properties.mirror !== 'undefined') ? properties.mirror : true,
         publishAudio: (typeof properties.publishAudio !== 'undefined') ? properties.publishAudio : true,
         publishVideo: (typeof properties.publishVideo !== 'undefined') ? properties.publishVideo : true,
-        resolution: (properties.videoSource instanceof MediaStreamTrack) ? undefined : ((typeof properties.resolution !== 'undefined') ? properties.resolution : '640x480'),
+        resolution: (typeof MediaStreamTrack !== 'undefined' && properties.videoSource instanceof MediaStreamTrack) ? undefined : ((typeof properties.resolution !== 'undefined') ? properties.resolution : '640x480'),
         videoSource: (typeof properties.videoSource !== 'undefined') ? properties.videoSource : undefined,
         filter: properties.filter
       };
@@ -325,7 +332,8 @@ export class OpenVidu {
       (browser !== 'Chrome') && (browser !== 'Chrome Mobile') &&
       (browser !== 'Firefox') && (browser !== 'Firefox Mobile') &&
       (browser !== 'Opera') && (browser !== 'Opera Mobile') &&
-      (browser !== 'Android Browser')
+      (browser !== 'Android Browser') &&
+      (browser !== 'IE' || platform.version !== undefined && parseInt(platform.version) < 11)
     ) {
       return 0;
     } else {
@@ -431,7 +439,9 @@ export class OpenVidu {
     return new Promise<MediaStream>((resolve, reject) => {
       this.generateMediaConstraints(options)
         .then(constraints => {
-          navigator.mediaDevices.getUserMedia(constraints)
+
+          let userMediaFunc = () => {
+            navigator.mediaDevices.getUserMedia(constraints)
             .then(mediaStream => {
               resolve(mediaStream);
             })
@@ -445,6 +455,15 @@ export class OpenVidu {
               }
               reject(new OpenViduError(errorName, errorMessage));
             });
+          }
+
+          if (platform['isInternetExplorer']) {
+            AdapterJS.webRTCReady(isUsingPlugin => {
+                userMediaFunc();
+            });
+          } else {
+            userMediaFunc();
+          }
         })
         .catch((error: OpenViduError) => {
           reject(error);
@@ -739,6 +758,21 @@ export class OpenVidu {
     } else {
       console.warn('Session instance not found');
       return false;
+    }
+  }
+
+  private importIEAdapterJS(): void {
+    const moduleSpecifier = 'https://cdn.temasys.io/adapterjs/0.15.x/adapter.screenshare.min.js';
+    //Create a script tag
+    var script = document.createElement('script');
+    // Assign a URL to the script element
+    script.src = moduleSpecifier;
+    // Get the first script tag on the page (we'll insert our new one before it)
+    var ref = document.querySelector('script');
+    // Insert the new node before the reference node
+    if (ref && ref.parentNode) {
+        ref.parentNode.insertBefore(script, ref); 
+        console.info("Detected IE Explorer " + platform.version + ". IEAdapter imported");
     }
   }
 

@@ -96,8 +96,8 @@ export class Connection {
      */
     sendIceCandidate(candidate: RTCIceCandidate): void {
 
-        console.debug((!!this.stream.outboundStreamOpts ? 'Local' : 'Remote'), 'candidate for',
-            this.connectionId, JSON.stringify(candidate));
+        console.debug((!!this.stream.outboundStreamOpts ? 'Local' : 'Remote') + 'candidate for' +
+            this.connectionId, candidate);
 
         this.session.openvidu.sendRequest('onIceCandidate', {
             endpointName: this.connectionId,

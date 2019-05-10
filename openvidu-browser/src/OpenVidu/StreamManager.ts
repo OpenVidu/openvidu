@@ -26,6 +26,9 @@ import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
 import EventEmitter = require('wolfy87-eventemitter');
 import platform = require('platform');
 platform['isIonicIos'] = (platform.product === 'iPhone' || platform.product === 'iPad') && platform.ua!!.indexOf('Safari') === -1;
+platform['isInternetExplorer'] = platform.name === 'IE' && platform.version !== undefined && parseInt(platform.version) >= 11;
+platform['isReactNative'] = navigator.product === 'ReactNative';
+declare const attachMediaStream;
 
 /**
  * Interface in charge of displaying the media streams in the HTML DOM. This wraps any [[Publisher]] and [[Subscriber]] object.
@@ -240,6 +243,10 @@ export class StreamManager implements EventDispatcher {
             video.srcObject = this.stream.getMediaStream();
         }
 
+        if (platform['isInternetExplorer'] && !!this.stream.getMediaStream()) {
+            video = this.customAttachMediaStreamIE(video, this.stream.getMediaStream());
+        }
+
         // If the video element is already part of this StreamManager do nothing
         for (const v of this.videos) {
             if (v.video === video) {
@@ -293,7 +300,7 @@ export class StreamManager implements EventDispatcher {
             throw new Error("The provided 'targetElement' couldn't be resolved to any HTML element: " + targetElement);
         }
 
-        const video = document.createElement('video');
+        let video = document.createElement('video');
         this.initializeVideoProperties(video);
 
         let insMode = !!insertMode ? insertMode : VideoInsertMode.APPEND;
@@ -319,6 +326,10 @@ export class StreamManager implements EventDispatcher {
                 break;
         }
 
+        if (platform['isInternetExplorer'] && !!this.stream.getMediaStream()) {
+            video = this.customAttachMediaStreamIE(video, this.stream.getMediaStream());
+        }
+
         const v: StreamManagerVideo = {
             targetElement: targEl,
             video,
@@ -327,9 +338,12 @@ export class StreamManager implements EventDispatcher {
         };
         this.pushNewStreamManagerVideo(v);
 
-        this.ee.emitEvent('videoElementCreated', [new VideoElementEvent(v.video, this, 'videoElementCreated')]);
-
-        this.lazyLaunchVideoElementCreatedEvent = !!this.firstVideoElement;
+        let launchVideoCreatedEvent = !platform['isInternetExplorer'];
+        if (launchVideoCreatedEvent) {
+            // For IE the event is called in this.customAttachMediaStreamIE
+            this.ee.emitEvent('videoElementCreated', [new VideoElementEvent(v.video, this, 'videoElementCreated')]);
+        }
+        this.lazyLaunchVideoElementCreatedEvent = !!this.firstVideoElement && launchVideoCreatedEvent;
 
         return video;
     }
@@ -432,6 +446,9 @@ export class StreamManager implements EventDispatcher {
                 vParent!!.replaceChild(newVideo, streamManagerVideo.video);
                 streamManagerVideo.video = newVideo;
             }
+            if (platform['isInternetExplorer']) {
+                this.customAttachMediaStreamIE(streamManagerVideo.video, mediaStream);
+            }
         });
     }
 
@@ -460,6 +477,23 @@ export class StreamManager implements EventDispatcher {
     private removeMirrorVideo(video): void {
         video.style.transform = 'unset';
         video.style.webkitTransform = 'unset';
+    }
+
+    protected customAttachMediaStreamIE(video: HTMLVideoElement, mediaStream: MediaStream): HTMLVideoElement {
+        var simVideo = attachMediaStream(video, mediaStream);
+
+        // Replace HTMLVideoElemet (if exists) with new HTMLObjectElement returned by IE plugin
+        for (let i = 0; i < this.videos.length; i++) {
+            if (this.videos[i].video === video) {
+                this.videos[i].video = simVideo;
+                break;
+            }
+        }
+
+        // Always launch videoElementCreated event after IE plugin has inserted simulated video into DOM
+        this.ee.emitEvent('videoElementCreated', [new VideoElementEvent(simVideo, this, 'videoElementCreated')]);
+        this.addPlayEventToFirstVideo();
+        return simVideo;
     }
 
 }
