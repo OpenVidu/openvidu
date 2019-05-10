@@ -29,6 +29,7 @@ import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
 import * as screenSharingAuto from '../OpenViduInternal/ScreenSharing/Screen-Capturing-Auto';
 import * as screenSharing from '../OpenViduInternal/ScreenSharing/Screen-Capturing';
 
+import EventEmitter = require('wolfy87-eventemitter');
 import RpcBuilder = require('../OpenViduInternal/KurentoUtils/kurento-jsonrpc');
 import platform = require('platform');
 platform['isIonicIos'] = (platform.product === 'iPhone' || platform.product === 'iPad') && platform.ua!!.indexOf('Safari') === -1;
@@ -93,6 +94,10 @@ export class OpenVidu {
    * @hidden
    */
   libraryVersion: string;
+  /**
+   * @hidden
+   */
+  ee = new EventEmitter()
 
   constructor() {
     this.libraryVersion = packageJson.version;
@@ -101,7 +106,9 @@ export class OpenVidu {
     console.info("openvidu-browser version: " + this.libraryVersion);
     
     if (platform['isInternetExplorer']) {
+     console.info("Detected IE Explorer " + platform.version);
      this.importIEAdapterJS();
+     this.importURLLibrary();
     }
 
     if (platform.os!!.family === 'iOS' || platform.os!!.family === 'Android') {
@@ -763,16 +770,33 @@ export class OpenVidu {
 
   private importIEAdapterJS(): void {
     const moduleSpecifier = 'https://cdn.temasys.io/adapterjs/0.15.x/adapter.screenshare.min.js';
-    //Create a script tag
     var script = document.createElement('script');
-    // Assign a URL to the script element
     script.src = moduleSpecifier;
-    // Get the first script tag on the page (we'll insert our new one before it)
     var ref = document.querySelector('script');
-    // Insert the new node before the reference node
+    
     if (ref && ref.parentNode) {
         ref.parentNode.insertBefore(script, ref); 
-        console.info("Detected IE Explorer " + platform.version + ". IEAdapter imported");
+        console.info("IE AdapterJS imported");
+    }
+  }
+
+  private importURLLibrary(): void {
+    const moduleSpecifier = 'https://polyfill.io/v3/polyfill.min.js?features=URL';
+    const scriptId = 'url-script-element';
+    var script = document.createElement('script');
+    script.async = false;
+    script.id = scriptId;
+    script.src = moduleSpecifier;
+    script.onload = () => {
+      // URL feature is now available
+      this.ee.emitEvent(scriptId, []);
+      document.getElementById(scriptId)!.classList.add(scriptId);
+    };
+    var ref = document.querySelector('script');
+    // Insert the new script node before the first reference node
+    if (ref && ref.parentNode) {
+        ref.parentNode.insertBefore(script, ref);
+        console.info("URL polyfill imported");
     }
   }
 

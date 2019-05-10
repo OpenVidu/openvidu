@@ -143,9 +143,9 @@ export class Session implements EventDispatcher {
      *
      */
     connect(token: string, metadata?: any): Promise<any> {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
 
-            this.processToken(token);
+            await this.processToken(token);
 
             if (this.openvidu.checkSystemRequirements()) {
                 // Early configuration to deactivate automatic subscription to streams
@@ -1143,50 +1143,74 @@ export class Session implements EventDispatcher {
         });
     }
 
-    private processToken(token: string): void {
-        const url = new URL(token);
-        this.sessionId = <string>url.searchParams.get('sessionId');
-        const secret = url.searchParams.get('secret');
-        const recorder = url.searchParams.get('recorder');
-        const turnUsername = url.searchParams.get('turnUsername');
-        const turnCredential = url.searchParams.get('turnCredential');
-        const role = url.searchParams.get('role');
-        const webrtcStatsInterval = url.searchParams.get('webrtcStatsInterval');
-        const openviduServerVersion = url.searchParams.get('version');
+    private async processToken(token: string): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
 
-        if (!!secret) {
-            this.openvidu.secret = secret;
-        }
-        if (!!recorder) {
-            this.openvidu.recorder = true;
-        }
-        if (!!turnUsername && !!turnCredential) {
-            const stunUrl = 'stun:' + url.hostname + ':3478';
-            const turnUrl1 = 'turn:' + url.hostname + ':3478';
-            const turnUrl2 = turnUrl1 + '?transport=tcp';
-            this.openvidu.iceServers = [
-                { urls: [stunUrl] },
-                { urls: [turnUrl1, turnUrl2], username: turnUsername, credential: turnCredential }
-            ];
-            console.log('TURN temp credentials [' + turnUsername + ':' + turnCredential + ']');
-        }
-        if (!!role) {
-            this.openvidu.role = role;
-        }
-        if (!!webrtcStatsInterval) {
-            this.openvidu.webrtcStatsInterval = +webrtcStatsInterval;
-        }
-        if (!!openviduServerVersion) {
-            console.info("openvidu-server version: " + openviduServerVersion);
-            if (openviduServerVersion !== this.openvidu.libraryVersion) {
-                console.error('OpenVidu Server (' + openviduServerVersion +
-                    ') and OpenVidu Browser (' + this.openvidu.libraryVersion +
-                    ') versions do NOT match. There may be incompatibilities')
+            const processTokenAux: Function = token => {
+                const url = new URL(token);
+                this.sessionId = <string>url.searchParams.get('sessionId');
+                const secret = url.searchParams.get('secret');
+                const recorder = url.searchParams.get('recorder');
+                const turnUsername = url.searchParams.get('turnUsername');
+                const turnCredential = url.searchParams.get('turnCredential');
+                const role = url.searchParams.get('role');
+                const webrtcStatsInterval = url.searchParams.get('webrtcStatsInterval');
+                const openviduServerVersion = url.searchParams.get('version');
+        
+                if (!!secret) {
+                    this.openvidu.secret = secret;
+                }
+                if (!!recorder) {
+                    this.openvidu.recorder = true;
+                }
+                if (!!turnUsername && !!turnCredential) {
+                    const stunUrl = 'stun:' + url.hostname + ':3478';
+                    const turnUrl1 = 'turn:' + url.hostname + ':3478';
+                    const turnUrl2 = turnUrl1 + '?transport=tcp';
+                    this.openvidu.iceServers = [
+                        { urls: [stunUrl] },
+                        { urls: [turnUrl1, turnUrl2], username: turnUsername, credential: turnCredential }
+                    ];
+                    console.log('TURN temp credentials [' + turnUsername + ':' + turnCredential + ']');
+                }
+                if (!!role) {
+                    this.openvidu.role = role;
+                }
+                if (!!webrtcStatsInterval) {
+                    this.openvidu.webrtcStatsInterval = +webrtcStatsInterval;
+                }
+                if (!!openviduServerVersion) {
+                    console.info("openvidu-server version: " + openviduServerVersion);
+                    if (openviduServerVersion !== this.openvidu.libraryVersion) {
+                        console.error('OpenVidu Server (' + openviduServerVersion +
+                            ') and OpenVidu Browser (' + this.openvidu.libraryVersion +
+                            ') versions do NOT match. There may be incompatibilities')
+                    }
+                }
+        
+                this.openvidu.wsUri = 'wss://' + url.host + '/openvidu';
+                this.openvidu.httpUri = 'https://' + url.host;
+
+                resolve();
+            };
+
+            if (platform['isInternetExplorer']) {
+                // Wait for URL polyfill to be available
+                const scriptId = 'url-script-element';
+                const script = document.getElementById(scriptId);
+                if (script!.classList.contains(scriptId)) {
+                    // URL polyfill is already available
+                    processTokenAux(token);
+                } else {
+                    // Wait for the script tag to be loaded
+                    this.openvidu.ee.once(scriptId, () => {
+                        processTokenAux(token);
+                    });
+                }
+            } else {
+                processTokenAux(token);
             }
-        }
-
-        this.openvidu.wsUri = 'wss://' + url.host + '/openvidu';
-        this.openvidu.httpUri = 'https://' + url.host;
+        });
     }
 
 }
