@@ -322,6 +322,16 @@ export class Publisher extends StreamManager {
                     if (platform['isInternetExplorer']) {
                         this.videoReference = video;
                     }
+                } else {
+                    if (platform['isInternetExplorer']) {
+                        // IE cannot have a video reference not inserted into DOM
+                        // Pick up the first video element of videos array
+                        this.videoReference =  this.videos[0].video;
+                        if (!this.videoReference) {
+                            console.warn('IE requires the video element to be defined when initializing a Publisher. ' +
+                            'Be sure to initialize the publisher passing a pre-existing targetElement')
+                        }
+                    }
                 }
 
                 this.stream.setMediaStream(mediaStream);
@@ -331,43 +341,15 @@ export class Publisher extends StreamManager {
                         this.videoReference = this.customAttachMediaStreamIE(this.videoReference, mediaStream);
                         if (this.stream.isSendVideo()) {
                             if (!this.stream.isSendScreen()) {
-                                /*this.videoReference.onloadedmetadata = () => {
-                                    this.stream.videoDimensions = {
-                                        width: this.videoReference.videoWidth,
-                                        height: this.videoReference.videoHeight
-                                    };
-
-                                    // TODO: if screen-share, set this.screenShareResizeInterval
-
-                                    console.warn(this.stream.videoDimensions);
-                                    this.stream.isLocalStreamReadyToPublish = true;
-                                    this.stream.ee.emitEvent('stream-ready-to-publish', []);
-                                }*/
-
-                                this.stream.videoDimensions = {
-                                    width: this.videoReference.videoWidth,
-                                    height: this.videoReference.videoHeight
-                                };
-
-                                // TODO: if screen-share, set this.screenShareResizeInterval
-
-                                console.warn(this.stream.videoDimensions);
-                                this.stream.isLocalStreamReadyToPublish = true;
-                                this.stream.ee.emitEvent('stream-ready-to-publish', []);
-
-                                this.videoReference.onplaying = () => {
-                                    console.warn("PLAYINNNGNGNGNGNGNG!!!");
-                                }
-
+                                this.videoReference.addEventListener('loadedmetadata', (<any>window).IEOnLoadedMetadata(this.videoReference, this.stream));
                             }
                         }
-
                     });
                 } else {
                     this.videoReference.srcObject = mediaStream;
                 }
 
-                if (!this.stream.displayMyRemote()) {
+                if (!this.stream.displayMyRemote() && (platform.name !== 'IE')) {
                     // When we are subscribed to our remote we don't still set the MediaStream object in the video elements to
                     // avoid early 'streamPlaying' event
                     this.stream.updateMediaStreamInVideos();
@@ -395,18 +377,18 @@ export class Publisher extends StreamManager {
                             };
 
                             let interval;
-                            this.videoReference.onloadedmetadata = () => {
+                            this.videoReference.addEventListener('loadedmetadata', () => {
                                 if (this.videoReference.videoWidth === 0) {
                                     interval = setInterval(() => {
                                         if (this.videoReference.videoWidth !== 0) {
-                                            videoDimensionsSet();
                                             clearInterval(interval);
+                                            videoDimensionsSet();
                                         }
-                                    }, 10);
+                                    }, 40);
                                 } else {
                                     videoDimensionsSet();
                                 }
-                            };
+                            });
                         } else if (platform.name !== 'IE') {
                             // Rest of platforms except IE
                             // With no screen share, video dimension can be set directly from MediaStream (getSettings)
@@ -430,7 +412,7 @@ export class Publisher extends StreamManager {
                         }
                     } else {
                         // With screen share, video dimension must be got from a video element (onloadedmetadata event)
-                        this.videoReference.onloadedmetadata = () => {
+                        this.videoReference.addEventListener('loadedmetadata', () => {
                             this.stream.videoDimensions = {
                                 width: this.videoReference.videoWidth,
                                 height: this.videoReference.videoHeight
@@ -467,7 +449,7 @@ export class Publisher extends StreamManager {
                             }, 500);
                             this.stream.isLocalStreamReadyToPublish = true;
                             this.stream.ee.emitEvent('stream-ready-to-publish', []);
-                        };
+                        });
                     }
                 } else {
                     this.stream.isLocalStreamReadyToPublish = true;
