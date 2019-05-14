@@ -358,10 +358,18 @@ public class RecordingManager {
 	public Recording getRecordingFromEntityFile(File file) {
 		if (file.isFile() && file.getName().startsWith(RecordingManager.RECORDING_ENTITY_FILE)) {
 			JsonObject json = null;
+			FileReader fr = null;
 			try {
-				json = new JsonParser().parse(new FileReader(file)).getAsJsonObject();
+				fr = new FileReader(file);
+				json = new JsonParser().parse(fr).getAsJsonObject();
 			} catch (IOException e) {
 				return null;
+			} finally {
+				try {
+					fr.close();
+				} catch (Exception e) {
+					log.error("Exception while closing FileReader: {}", e.getMessage());
+				}
 			}
 			return new Recording(json);
 		}
