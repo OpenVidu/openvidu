@@ -34,9 +34,6 @@ import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/Open
 import EventEmitter = require('wolfy87-eventemitter');
 import hark = require('hark');
 import platform = require('platform');
-platform['isIonicIos'] = (platform.product === 'iPhone' || platform.product === 'iPad') && platform.ua!!.indexOf('Safari') === -1;
-platform['isInternetExplorer'] = platform.name === 'IE' && platform.version !== undefined && parseInt(platform.version) >= 11;
-platform['isReactNative'] = navigator.product === 'ReactNative';
 declare const AdapterJS: any;
 
 

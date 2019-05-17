@@ -773,7 +773,7 @@ export class OpenVidu {
   }
 
   private importIEAdapterJS(): void {
-    const moduleSpecifier = 'https://cdn.temasys.io/adapterjs/0.15.x/adapter.screenshare.min.js';
+    const moduleSpecifier = 'https://cdn.temasys.io/adapterjs/0.15.x/adapter.min.js';
     var script = document.createElement('script');
     script.src = moduleSpecifier;
     var ref = document.querySelector('script');

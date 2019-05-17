@@ -25,9 +25,6 @@ import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
 
 import EventEmitter = require('wolfy87-eventemitter');
 import platform = require('platform');
-platform['isIonicIos'] = (platform.product === 'iPhone' || platform.product === 'iPad') && platform.ua!!.indexOf('Safari') === -1;
-platform['isInternetExplorer'] = platform.name === 'IE' && platform.version !== undefined && parseInt(platform.version) >= 11;
-platform['isReactNative'] = navigator.product === 'ReactNative';
 declare const attachMediaStream;
 
 /**
