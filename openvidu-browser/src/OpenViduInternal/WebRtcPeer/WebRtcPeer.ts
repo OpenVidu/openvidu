@@ -18,9 +18,6 @@
 import freeice = require('freeice');
 import uuid = require('uuid');
 import platform = require('platform');
-platform['isIonicIos'] = (platform.product === 'iPhone' || platform.product === 'iPad') && platform.ua!!.indexOf('Safari') === -1;
-platform['isInternetExplorer'] = platform.name === 'IE' && platform.version !== undefined && parseInt(platform.version) >= 11;
-platform['isReactNative'] = navigator.product === 'ReactNative';
 
 export interface WebRtcPeerConfiguration {
     mediaConstraints: {
@@ -69,7 +66,16 @@ export class WebRtcPeer {
             if (this.pc.signalingState === 'stable') {
                 while (this.iceCandidateList.length > 0) {
                     if (platform['isInternetExplorer']) {
-                        (<any>this.pc).addIceCandidate(<RTCIceCandidate>this.iceCandidateList.shift(), () => {}, () => {});
+                        const iceCandidate = this.iceCandidateList.shift();
+                        if (!!iceCandidate) {
+                            const iceCandidateAuxIE = {
+                                candidate: iceCandidate.candidate,
+                                sdpMid: iceCandidate.sdpMid,
+                                sdpMLineIndex: iceCandidate.sdpMLineIndex
+                            };
+                            const finalIECandidate = new RTCIceCandidate(iceCandidateAuxIE);
+                            (<any>this.pc).addIceCandidate(finalIECandidate, () => {}, () => {});
+                        }
                     } else {
                         this.pc.addIceCandidate(<RTCIceCandidate>this.iceCandidateList.shift());
                     }
@@ -311,10 +317,19 @@ export class WebRtcPeer {
                 case 'stable':
                     if (!!this.pc.remoteDescription) {
                         if (platform['isInternetExplorer']) {
-                            (<any>this.pc).addIceCandidate(iceCandidate, () => resolve(), error => reject(error));
+                            const iceCandidateAuxIE = {
+                                candidate: iceCandidate.candidate,
+                                sdpMid: iceCandidate.sdpMid,
+                                sdpMLineIndex: iceCandidate.sdpMLineIndex
+                            };
+                            const finalIECandidate = new RTCIceCandidate(iceCandidateAuxIE);
+                            (<any>this.pc).addIceCandidate(finalIECandidate, () => resolve(), error => reject(error));
                         } else {
                             this.pc.addIceCandidate(iceCandidate).then(() => resolve()).catch(error => reject(error));
                         }
+                    } else {
+                        this.iceCandidateList.push(iceCandidate);
+                        resolve();
                     }
                     break;
                 default:
