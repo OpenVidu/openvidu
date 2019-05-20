@@ -814,9 +814,6 @@ export class OpenVidu {
               width: simVideo.videoWidth,
               height: simVideo.videoHeight
           };
-
-          // TODO: if screen-share, set this.screenShareResizeInterval
-
           str.isLocalStreamReadyToPublish = true;
           str.ee.emitEvent('stream-ready-to-publish', []);
       };

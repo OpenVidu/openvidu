@@ -427,7 +427,14 @@ export class StreamManager implements EventDispatcher {
      */
     addPlayEventToFirstVideo() {
         if ((!!this.videos[0]) && (!!this.videos[0].video) && (this.videos[0].video.oncanplay === null)) {
-            this.videos[0].video.addEventListener('canplay', platform['isInternetExplorer'] ? (<any>window).IEOnCanPlay(this) : this.canPlayListener);
+            if (platform['isInternetExplorer']) {
+                if (!(this.videos[0].video instanceof HTMLVideoElement)) {
+                    // Add canplay event listener only after plugin has inserted custom video element (not a DOM HTMLVideoElement)
+                    (<any>this.videos[0].video).addEventListener('canplay', (<any>window).IEOnCanPlay(this));
+                }
+            } else {
+                this.videos[0].video.addEventListener('canplay', this.canPlayListener);
+            }
         }
     }
 
@@ -497,6 +504,10 @@ export class StreamManager implements EventDispatcher {
 
         // Always launch videoElementCreated event after IE plugin has inserted simulated video into DOM
         this.ee.emitEvent('videoElementCreated', [new VideoElementEvent(simVideo, this, 'videoElementCreated')]);
+
+        // Add streamPlaying event to newly inserted video if necessary
+        this.addPlayEventToFirstVideo();
+
         return simVideo;
     }
 
