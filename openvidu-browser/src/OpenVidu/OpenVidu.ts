@@ -111,7 +111,6 @@ export class OpenVidu {
     if (platform['isInternetExplorer']) {
      console.info("Detected IE Explorer " + platform.version);
      this.importIEAdapterJS();
-     this.importURLLibrary();
      this.setGlobalIEFunctions();
     }
 
@@ -781,26 +780,6 @@ export class OpenVidu {
     if (ref && ref.parentNode) {
         ref.parentNode.insertBefore(script, ref); 
         console.info("IE AdapterJS imported");
-    }
-  }
-
-  private importURLLibrary(): void {
-    const moduleSpecifier = 'https://cdn.jsdelivr.net/npm/url-polyfill@1.1.5/url-polyfill.min.js';
-    const scriptId = 'url-script-element';
-    var script = document.createElement('script');
-    script.async = false;
-    script.id = scriptId;
-    script.src = moduleSpecifier;
-    script.onload = () => {
-      // URL feature is now available
-      this.ee.emitEvent(scriptId, []);
-      document.getElementById(scriptId)!.classList.add(scriptId);
-    };
-    var ref = document.querySelector('script');
-    // Insert the new script node before the first reference node
-    if (ref && ref.parentNode) {
-        ref.parentNode.insertBefore(script, ref);
-        console.info("URL polyfill imported");
     }
   }
 
