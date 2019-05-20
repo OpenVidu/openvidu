@@ -453,7 +453,7 @@ export class OpenVidu {
                 console.log("Available session '" + storedSession.sessionId + "' info fetched. Any change: " + changed);
                 hasChanged = hasChanged || changed;
               } else {
-                this.activeSessions.push(new Session(session));
+                this.activeSessions.push(new Session(this.hostname, session));
                 console.log("New session '" + session.sessionId + "' info fetched");
                 hasChanged = true;
               }
@@ -638,7 +638,7 @@ export class OpenVidu {
                 sessionChanges[storedSession.sessionId] = changed;
                 globalChanges = globalChanges || changed;
               } else {
-                const newSession = new Session(session);
+                const newSession = new Session(this.hostname, session);
                 newSession.activeConnections.forEach(connection => {
                   addWebRtcStatsToConnections(connection, session.connections.content);
                 });
