@@ -25,7 +25,7 @@
         "tslint": "5.16.0",
         "typedoc": "0.14.2",
         "typescript": "3.4.5",
-        "uglify-js": "3.5.11"
+        "uglify-js": "3.5.14"
     },
     "license": "Apache-2.0",
     "main": "lib/index.js",
