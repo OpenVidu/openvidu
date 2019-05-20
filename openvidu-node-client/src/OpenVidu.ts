@@ -37,7 +37,7 @@ export class OpenVidu {
   /**
    * @hidden
    */
-  static hostname: string;
+  private hostname: string;
   /**
    * @hidden
    */
@@ -104,7 +104,7 @@ export class OpenVidu {
    */
   public createSession(properties?: SessionProperties): Promise<Session> {
     return new Promise<Session>((resolve, reject) => {
-      const session = new Session(properties);
+      const session = new Session(this.hostname, properties);
       session.getSessionIdHttp()
         .then(sessionId => {
           this.activeSessions.push(session);
@@ -174,7 +174,7 @@ export class OpenVidu {
       }
 
       axios.post(
-        'https://' + OpenVidu.hostname + ':' + OpenVidu.port + OpenVidu.API_RECORDINGS + OpenVidu.API_RECORDINGS_START,
+        'https://' + this.hostname + ':' + OpenVidu.port + OpenVidu.API_RECORDINGS + OpenVidu.API_RECORDINGS_START,
         data,
         {
           headers: {
@@ -228,7 +228,7 @@ export class OpenVidu {
     return new Promise<Recording>((resolve, reject) => {
 
       axios.post(
-        'https://' + OpenVidu.hostname + ':' + OpenVidu.port + OpenVidu.API_RECORDINGS + OpenVidu.API_RECORDINGS_STOP + '/' + recordingId,
+        'https://' + this.hostname + ':' + OpenVidu.port + OpenVidu.API_RECORDINGS + OpenVidu.API_RECORDINGS_STOP + '/' + recordingId,
         undefined,
         {
           headers: {
@@ -280,7 +280,7 @@ export class OpenVidu {
     return new Promise<Recording>((resolve, reject) => {
 
       axios.get(
-        'https://' + OpenVidu.hostname + ':' + OpenVidu.port + OpenVidu.API_RECORDINGS + '/' + recordingId,
+        'https://' + this.hostname + ':' + OpenVidu.port + OpenVidu.API_RECORDINGS + '/' + recordingId,
         {
           headers: {
             'Authorization': OpenVidu.basicAuth,
@@ -322,7 +322,7 @@ export class OpenVidu {
     return new Promise<Recording[]>((resolve, reject) => {
 
       axios.get(
-        'https://' + OpenVidu.hostname + ':' + OpenVidu.port + OpenVidu.API_RECORDINGS,
+        'https://' + this.hostname + ':' + OpenVidu.port + OpenVidu.API_RECORDINGS,
         {
           headers: {
             Authorization: OpenVidu.basicAuth
@@ -374,7 +374,7 @@ export class OpenVidu {
     return new Promise<Error>((resolve, reject) => {
 
       axios.delete(
-        'https://' + OpenVidu.hostname + ':' + OpenVidu.port + OpenVidu.API_RECORDINGS + '/' + recordingId,
+        'https://' + this.hostname + ':' + OpenVidu.port + OpenVidu.API_RECORDINGS + '/' + recordingId,
         {
           headers: {
             'Authorization': OpenVidu.basicAuth,
@@ -417,7 +417,7 @@ export class OpenVidu {
   public fetch(): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
       axios.get(
-        'https://' + OpenVidu.hostname + ':' + OpenVidu.port + OpenVidu.API_SESSIONS,
+        'https://' + this.hostname + ':' + OpenVidu.port + OpenVidu.API_SESSIONS,
         {
           headers: {
             Authorization: OpenVidu.basicAuth
@@ -444,7 +444,7 @@ export class OpenVidu {
                 }
               });
               if (!!storedSession) {
-                const fetchedSession: Session = new Session().resetSessionWithJson(session);
+                const fetchedSession: Session = new Session(this.hostname).resetSessionWithJson(session);
                 const changed: boolean = !storedSession.equalTo(fetchedSession);
                 if (changed) {
                   storedSession = fetchedSession;
@@ -587,7 +587,7 @@ export class OpenVidu {
 
     return new Promise<{ changes: boolean, sessionChanges: ObjMap<boolean> }>((resolve, reject) => {
       axios.get(
-        'https://' + OpenVidu.hostname + ':' + OpenVidu.port + OpenVidu.API_SESSIONS + '?webRtcStats=true',
+        'https://' + this.hostname + ':' + OpenVidu.port + OpenVidu.API_SESSIONS + '?webRtcStats=true',
         {
           headers: {
             Authorization: OpenVidu.basicAuth
@@ -616,7 +616,7 @@ export class OpenVidu {
                 }
               });
               if (!!storedSession) {
-                const fetchedSession: Session = new Session().resetSessionWithJson(session);
+                const fetchedSession: Session = new Session(this.hostname).resetSessionWithJson(session);
                 fetchedSession.activeConnections.forEach(connection => {
                   addWebRtcStatsToConnections(connection, session.connections.content);
                 });
@@ -690,10 +690,10 @@ export class OpenVidu {
   private setHostnameAndPort(): void {
     const urlSplitted = this.urlOpenViduServer.split(':');
     if (urlSplitted.length === 3) { // URL has format: http:// + hostname + :port
-      OpenVidu.hostname = this.urlOpenViduServer.split(':')[1].replace(/\//g, '');
+      this.hostname = this.urlOpenViduServer.split(':')[1].replace(/\//g, '');
       OpenVidu.port = parseInt(this.urlOpenViduServer.split(':')[2].replace(/\//g, ''));
     } else if (urlSplitted.length === 2) { // URL has format: hostname + :port
-      OpenVidu.hostname = this.urlOpenViduServer.split(':')[0].replace(/\//g, '');
+      this.hostname = this.urlOpenViduServer.split(':')[0].replace(/\//g, '');
       OpenVidu.port = parseInt(this.urlOpenViduServer.split(':')[1].replace(/\//g, ''));
     } else {
       console.error("URL format incorrect: it must contain hostname and port (current value: '" + this.urlOpenViduServer + "')");

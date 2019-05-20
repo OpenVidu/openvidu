@@ -65,7 +65,7 @@ export class Session {
     /**
      * @hidden
      */
-    constructor(propertiesOrJson?) {
+    constructor(private hostname: string, propertiesOrJson?) {
         if (!!propertiesOrJson) {
             // Defined parameter
             if (!!propertiesOrJson.sessionId) {
@@ -108,7 +108,7 @@ export class Session {
             });
 
             axios.post(
-                'https://' + OpenVidu.hostname + ':' + OpenVidu.port + OpenVidu.API_TOKENS,
+                'https://' + this.hostname + ':' + OpenVidu.port + OpenVidu.API_TOKENS,
                 data,
                 {
                     headers: {
@@ -152,7 +152,7 @@ export class Session {
     public close(): Promise<any> {
         return new Promise<any>((resolve, reject) => {
             axios.delete(
-                'https://' + OpenVidu.hostname + ':' + OpenVidu.port + OpenVidu.API_SESSIONS + '/' + this.sessionId,
+                'https://' + this.hostname + ':' + OpenVidu.port + OpenVidu.API_SESSIONS + '/' + this.sessionId,
                 {
                     headers: {
                         'Authorization': OpenVidu.basicAuth,
@@ -202,7 +202,7 @@ export class Session {
         return new Promise<boolean>((resolve, reject) => {
             const beforeJSON: string = JSON.stringify(this);
             axios.get(
-                'https://' + OpenVidu.hostname + ':' + OpenVidu.port + OpenVidu.API_SESSIONS + '/' + this.sessionId,
+                'https://' + this.hostname + ':' + OpenVidu.port + OpenVidu.API_SESSIONS + '/' + this.sessionId,
                 {
                     headers: {
                         'Authorization': OpenVidu.basicAuth,
@@ -254,7 +254,7 @@ export class Session {
         return new Promise<any>((resolve, reject) => {
             const connectionId: string = typeof connection === 'string' ? connection : (<Connection>connection).connectionId;
             axios.delete(
-                'https://' + OpenVidu.hostname + ':' + OpenVidu.port + OpenVidu.API_SESSIONS + '/' + this.sessionId + '/connection/' + connectionId,
+                'https://' + this.hostname + ':' + OpenVidu.port + OpenVidu.API_SESSIONS + '/' + this.sessionId + '/connection/' + connectionId,
                 {
                     headers: {
                         'Authorization': OpenVidu.basicAuth,
@@ -333,7 +333,7 @@ export class Session {
         return new Promise<any>((resolve, reject) => {
             const streamId: string = typeof publisher === 'string' ? publisher : (<Publisher>publisher).streamId;
             axios.delete(
-                'https://' + OpenVidu.hostname + ':' + OpenVidu.port + OpenVidu.API_SESSIONS + '/' + this.sessionId + '/stream/' + streamId,
+                'https://' + this.hostname + ':' + OpenVidu.port + OpenVidu.API_SESSIONS + '/' + this.sessionId + '/stream/' + streamId,
                 {
                     headers: {
                         'Authorization': OpenVidu.basicAuth,
@@ -405,7 +405,7 @@ export class Session {
             });
 
             axios.post(
-                'https://' + OpenVidu.hostname + ':' + OpenVidu.port + OpenVidu.API_SESSIONS,
+                'https://' + this.hostname + ':' + OpenVidu.port + OpenVidu.API_SESSIONS,
                 data,
                 {
                     headers: {
