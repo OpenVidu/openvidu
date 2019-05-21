@@ -313,7 +313,9 @@ export class Publisher extends StreamManager {
                 if (platform.name === 'Safari') {
                     this.videoReference.setAttribute('playsinline', 'true');
                 }
-                
+
+                this.stream.setMediaStream(mediaStream);
+
                 if (!!this.firstVideoElement) {
                     let video = this.createVideoElement(this.firstVideoElement.targetElement, <VideoInsertMode>this.properties.insertMode);
                     if (platform['isInternetExplorer']) {
@@ -330,8 +332,6 @@ export class Publisher extends StreamManager {
                         }
                     }
                 }
-
-                this.stream.setMediaStream(mediaStream);
 
                 if (platform['isInternetExplorer']) {
                     AdapterJS.webRTCReady(isUsingPlugin => {
