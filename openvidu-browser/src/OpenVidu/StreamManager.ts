@@ -362,6 +362,14 @@ export class StreamManager implements EventDispatcher {
             video.setAttribute('playsinline', 'true');
         }
 
+        if (!video.id && !platform['isInternetExplorer']) {	
+            video.id = (this.remote ? 'remote-' : 'local-') + 'video-' + this.stream.streamId;	
+            // DEPRECATED property: assign once the property id if the user provided a valid targetElement	
+            if (!this.id && !!this.targetElement) {	
+                this.id = video.id;	
+            }	
+        }
+
         if (!this.remote && !this.stream.displayMyRemote()) {
             video.muted = true;
             if (video.style.transform === 'rotateY(180deg)' && !this.stream.outboundStreamOpts.publisherProperties.mirror) {
