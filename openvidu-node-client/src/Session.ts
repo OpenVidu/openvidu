@@ -66,7 +66,6 @@ export class Session {
      * @hidden
      */
     constructor(private ov: OpenVidu, propertiesOrJson?) {
-        console.log(ov)
         if (!!propertiesOrJson) {
             // Defined parameter
             if (!!propertiesOrJson.sessionId) {
