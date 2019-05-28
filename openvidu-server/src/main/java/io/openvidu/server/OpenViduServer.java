@@ -19,7 +19,6 @@ package io.openvidu.server;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 
@@ -223,8 +222,6 @@ public class OpenViduServer implements JsonRpcConfigurer {
 			break;
 
 		default:
-
-			URL url = new URL(publicUrl);
 
 			type = "custom";
 
