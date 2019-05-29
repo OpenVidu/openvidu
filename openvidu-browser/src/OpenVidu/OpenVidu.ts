@@ -107,11 +107,11 @@ export class OpenVidu {
 
     console.info("'OpenVidu' initialized");
     console.info("openvidu-browser version: " + this.libraryVersion);
-    
+
     if (platform['isInternetExplorer']) {
-     console.info("Detected IE Explorer " + platform.version);
-     this.importIEAdapterJS();
-     this.setGlobalIEFunctions();
+      console.info("Detected IE Explorer " + platform.version);
+      this.importIEAdapterJS();
+      this.setGlobalIEFunctions();
     }
 
     if (platform.os!!.family === 'iOS' || platform.os!!.family === 'Android') {
@@ -378,7 +378,7 @@ export class OpenVidu {
    */
   getDevices(): Promise<Device[]> {
     return new Promise<Device[]>((resolve, reject) => {
-      navigator.mediaDevices.enumerateDevices().then((deviceInfos) => {
+      navigator.mediaDevices.enumerateDevices().then(deviceInfos => {
         const devices: Device[] = [];
         deviceInfos.forEach(deviceInfo => {
           if (deviceInfo.kind === 'audioinput' || deviceInfo.kind === 'videoinput') {
@@ -452,24 +452,24 @@ export class OpenVidu {
 
           let userMediaFunc = () => {
             navigator.mediaDevices.getUserMedia(constraints)
-            .then(mediaStream => {
-              resolve(mediaStream);
-            })
-            .catch(error => {
-              let errorName: OpenViduErrorName;
-              const errorMessage = error.toString();
-              if (!(options.videoSource === 'screen')) {
-                errorName = OpenViduErrorName.DEVICE_ACCESS_DENIED;
-              } else {
-                errorName = OpenViduErrorName.SCREEN_CAPTURE_DENIED;
-              }
-              reject(new OpenViduError(errorName, errorMessage));
-            });
+              .then(mediaStream => {
+                resolve(mediaStream);
+              })
+              .catch(error => {
+                let errorName: OpenViduErrorName;
+                const errorMessage = error.toString();
+                if (!(options.videoSource === 'screen')) {
+                  errorName = OpenViduErrorName.DEVICE_ACCESS_DENIED;
+                } else {
+                  errorName = OpenViduErrorName.SCREEN_CAPTURE_DENIED;
+                }
+                reject(new OpenViduError(errorName, errorMessage));
+              });
           }
 
           if (platform['isInternetExplorer']) {
             AdapterJS.webRTCReady(isUsingPlugin => {
-                userMediaFunc();
+              userMediaFunc();
             });
           } else {
             userMediaFunc();
@@ -776,51 +776,51 @@ export class OpenVidu {
     var script = document.createElement('script');
     script.src = moduleSpecifier;
     var ref = document.querySelector('script');
-    
+
     if (ref && ref.parentNode) {
-        ref.parentNode.insertBefore(script, ref); 
-        console.info("IE AdapterJS imported");
+      ref.parentNode.insertBefore(script, ref);
+      console.info("IE AdapterJS imported");
     }
   }
 
   private setGlobalIEFunctions(): void {
-  // FIX: the IE plugin seems to require the handler functions to be globally accessible. Store the functions with unique streamId
+    // FIX: the IE plugin seems to require the handler functions to be globally accessible. Store the functions with unique streamId
 
     // Global handler for onloadedmetadata
     (<any>window).IEOnLoadedMetadata = (simVideo: HTMLVideoElement, str: Stream) => {
       const videoDimensionsSet = () => {
-          str.videoDimensions = {
-              width: simVideo.videoWidth,
-              height: simVideo.videoHeight
-          };
-          str.isLocalStreamReadyToPublish = true;
-          str.ee.emitEvent('stream-ready-to-publish', []);
+        str.videoDimensions = {
+          width: simVideo.videoWidth,
+          height: simVideo.videoHeight
+        };
+        str.isLocalStreamReadyToPublish = true;
+        str.ee.emitEvent('stream-ready-to-publish', []);
       };
       let interval;
       if (simVideo.videoWidth === 0) {
-          interval = setInterval(() => {
-              if (simVideo.videoWidth !== 0) {
-                  clearInterval(interval);
-                  videoDimensionsSet();
-              }
-          }, 40);
+        interval = setInterval(() => {
+          if (simVideo.videoWidth !== 0) {
+            clearInterval(interval);
+            videoDimensionsSet();
+          }
+        }, 40);
       } else {
-          videoDimensionsSet();
+        videoDimensionsSet();
       }
     };
     // Global handler for oncanplay
     (<any>window).IEOnCanPlay = (strManager: StreamManager) => {
       if (strManager.stream.isLocal()) {
-          if (!strManager.stream.displayMyRemote()) {
-              console.info("Your local 'Stream' with id [" + strManager.stream.streamId + '] video is now playing');
-              strManager.ee.emitEvent('videoPlaying', [new VideoElementEvent(strManager.videos[0].video, strManager, 'videoPlaying')]);
-          } else {
-              console.info("Your own remote 'Stream' with id [" + strManager.stream.streamId + '] video is now playing');
-              strManager.ee.emitEvent('remoteVideoPlaying', [new VideoElementEvent(strManager.videos[0].video, strManager, 'remoteVideoPlaying')]);
-          }
-      } else {
-          console.info("Remote 'Stream' with id [" + strManager.stream.streamId + '] video is now playing');
+        if (!strManager.stream.displayMyRemote()) {
+          console.info("Your local 'Stream' with id [" + strManager.stream.streamId + '] video is now playing');
           strManager.ee.emitEvent('videoPlaying', [new VideoElementEvent(strManager.videos[0].video, strManager, 'videoPlaying')]);
+        } else {
+          console.info("Your own remote 'Stream' with id [" + strManager.stream.streamId + '] video is now playing');
+          strManager.ee.emitEvent('remoteVideoPlaying', [new VideoElementEvent(strManager.videos[0].video, strManager, 'remoteVideoPlaying')]);
+        }
+      } else {
+        console.info("Remote 'Stream' with id [" + strManager.stream.streamId + '] video is now playing');
+        strManager.ee.emitEvent('videoPlaying', [new VideoElementEvent(strManager.videos[0].video, strManager, 'videoPlaying')]);
       }
       strManager.ee.emitEvent('streamPlaying', [new StreamManagerEvent(strManager, 'streamPlaying', undefined)]);
     };

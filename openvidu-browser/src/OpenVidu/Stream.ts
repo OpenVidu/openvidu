@@ -455,7 +455,7 @@ export class Stream implements EventDispatcher {
     disposeWebRtcPeer(): void {
         if (this.webRtcPeer) {
             const isSenderAndCustomTrack: boolean = !!this.outboundStreamOpts &&
-            typeof MediaStreamTrack !== 'undefined' && this.outboundStreamOpts.publisherProperties.videoSource instanceof MediaStreamTrack;
+                typeof MediaStreamTrack !== 'undefined' && this.outboundStreamOpts.publisherProperties.videoSource instanceof MediaStreamTrack;
             this.webRtcPeer.dispose(isSenderAndCustomTrack);
         }
         if (this.speechEvent) {
@@ -856,7 +856,7 @@ export class Stream implements EventDispatcher {
     private initWebRtcStats(): void {
         this.webRtcStats = new WebRtcStats(this);
         this.webRtcStats.initWebRtcStats();
-        
+
         //TODO: send common webrtc stats from client to openvidu-server
         /*if (this.session.openvidu.webrtcStatsInterval > 0) {
             setInterval(() => {

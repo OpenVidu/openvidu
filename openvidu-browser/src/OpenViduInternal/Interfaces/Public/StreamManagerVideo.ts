@@ -15,8 +15,6 @@
  *
  */
 
-import { Connection } from '../../../OpenVidu/Connection';
-import { StreamManager } from '../../../OpenVidu/StreamManager';
 import { VideoInsertMode } from '../../Enums/VideoInsertMode';
 
 
@@ -53,5 +51,11 @@ export interface StreamManagerVideo {
      * - [[StreamManager.addVideoElement]] has been called.
      */
     insertMode?: VideoInsertMode;
+
+    /**
+     * @hidden
+     */
+    canplayListenerAdded: boolean;
+
 
 }

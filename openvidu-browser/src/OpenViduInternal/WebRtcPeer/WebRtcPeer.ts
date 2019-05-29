@@ -74,7 +74,7 @@ export class WebRtcPeer {
                                 sdpMLineIndex: iceCandidate.sdpMLineIndex
                             };
                             const finalIECandidate = new RTCIceCandidate(iceCandidateAuxIE);
-                            (<any>this.pc).addIceCandidate(finalIECandidate, () => {}, () => {});
+                            (<any>this.pc).addIceCandidate(finalIECandidate, () => { }, () => { });
                         }
                     } else {
                         this.pc.addIceCandidate(<RTCIceCandidate>this.iceCandidateList.shift());
@@ -223,7 +223,7 @@ export class WebRtcPeer {
                     .catch(error => reject(error));
 
             } else if (platform['isInternetExplorer']) {
-                
+
                 // IE Explorer cannot use Promise base API
                 let setLocalDescriptionOnSuccess = () => {
                     const localDescription = this.pc.localDescription;
@@ -257,16 +257,16 @@ export class WebRtcPeer {
                     console.debug('Created SDP offer');
                     return this.pc.setLocalDescription(offer);
                 })
-                .then(() => {
-                    const localDescription = this.pc.localDescription;
-                    if (!!localDescription) {
-                        console.debug('Local description set', localDescription.sdp);
-                        resolve(localDescription.sdp);
-                    } else {
-                        reject('Local description is not defined');
-                    }
-                })
-                .catch(error => reject(error));
+                    .then(() => {
+                        const localDescription = this.pc.localDescription;
+                        if (!!localDescription) {
+                            console.debug('Local description set', localDescription.sdp);
+                            resolve(localDescription.sdp);
+                        } else {
+                            reject('Local description is not defined');
+                        }
+                    })
+                    .catch(error => reject(error));
             }
         });
     }

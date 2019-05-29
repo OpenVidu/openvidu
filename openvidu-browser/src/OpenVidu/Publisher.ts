@@ -325,10 +325,10 @@ export class Publisher extends StreamManager {
                     if (platform['isInternetExplorer']) {
                         // IE cannot have a video reference not inserted into DOM
                         // Pick up the first video element of videos array
-                        this.videoReference =  this.videos[0].video;
+                        this.videoReference = this.videos[0].video;
                         if (!this.videoReference) {
                             console.warn('IE requires the video element to be defined when initializing a Publisher. ' +
-                            'Be sure to initialize the publisher passing a pre-existing targetElement')
+                                'Be sure to initialize the publisher passing a pre-existing targetElement')
                         }
                     }
                 }
@@ -553,85 +553,85 @@ export class Publisher extends StreamManager {
 
                             let userMediaFunc = () => {
                                 navigator.mediaDevices.getUserMedia(constraintsAux)
-                                .then(mediaStream => {
-                                    afterGetMedia(mediaStream, definedAudioConstraint);
-                                })
-                                .catch(error => {
+                                    .then(mediaStream => {
+                                        afterGetMedia(mediaStream, definedAudioConstraint);
+                                    })
+                                    .catch(error => {
 
-                                    console.error(error);
+                                        console.error(error);
 
-                                    this.clearPermissionDialogTimer(startTime, timeForDialogEvent);
-                                    if (error.name === 'Error') {
-                                        // Safari OverConstrainedError has as name property 'Error' instead of 'OverConstrainedError'
-                                        error.name = error.constructor.name;
-                                    }
-                                    let errorName, errorMessage;
-                                    switch (error.name.toLowerCase()) {
-                                        case 'notfounderror':
-                                            navigator.mediaDevices.getUserMedia({
-                                                audio: false,
-                                                video: constraints.video
-                                            })
-                                                .then(mediaStream => {
-                                                    mediaStream.getVideoTracks().forEach((track) => {
-                                                        track.stop();
-                                                    });
-                                                    errorName = OpenViduErrorName.INPUT_AUDIO_DEVICE_NOT_FOUND;
-                                                    errorMessage = error.toString();
-                                                    errorCallback(new OpenViduError(errorName, errorMessage));
-                                                }).catch(e => {
-                                                    errorName = OpenViduErrorName.INPUT_VIDEO_DEVICE_NOT_FOUND;
-                                                    errorMessage = error.toString();
-                                                    errorCallback(new OpenViduError(errorName, errorMessage));
-                                                });
-                                            break;
-                                        case 'notallowederror':
-                                            errorName = this.stream.isSendScreen() ? OpenViduErrorName.SCREEN_CAPTURE_DENIED : OpenViduErrorName.DEVICE_ACCESS_DENIED;
-                                            errorMessage = error.toString();
-                                            errorCallback(new OpenViduError(errorName, errorMessage));
-                                            break;
-                                        case 'overconstrainederror':
-                                            navigator.mediaDevices.getUserMedia({
-                                                audio: false,
-                                                video: constraints.video
-                                            })
-                                                .then(mediaStream => {
-                                                    mediaStream.getVideoTracks().forEach((track) => {
-                                                        track.stop();
-                                                    });
-                                                    if (error.constraint.toLowerCase() === 'deviceid') {
+                                        this.clearPermissionDialogTimer(startTime, timeForDialogEvent);
+                                        if (error.name === 'Error') {
+                                            // Safari OverConstrainedError has as name property 'Error' instead of 'OverConstrainedError'
+                                            error.name = error.constructor.name;
+                                        }
+                                        let errorName, errorMessage;
+                                        switch (error.name.toLowerCase()) {
+                                            case 'notfounderror':
+                                                navigator.mediaDevices.getUserMedia({
+                                                    audio: false,
+                                                    video: constraints.video
+                                                })
+                                                    .then(mediaStream => {
+                                                        mediaStream.getVideoTracks().forEach((track) => {
+                                                            track.stop();
+                                                        });
                                                         errorName = OpenViduErrorName.INPUT_AUDIO_DEVICE_NOT_FOUND;
-                                                        errorMessage = "Audio input device with deviceId '" + (<ConstrainDOMStringParameters>(<MediaTrackConstraints>constraints.audio).deviceId!!).exact + "' not found";
-                                                    } else {
-                                                        errorName = OpenViduErrorName.PUBLISHER_PROPERTIES_ERROR;
-                                                        errorMessage = "Audio input device doesn't support the value passed for constraint '" + error.constraint + "'";
-                                                    }
-                                                    errorCallback(new OpenViduError(errorName, errorMessage));
-                                                }).catch(e => {
-                                                    if (error.constraint.toLowerCase() === 'deviceid') {
+                                                        errorMessage = error.toString();
+                                                        errorCallback(new OpenViduError(errorName, errorMessage));
+                                                    }).catch(e => {
                                                         errorName = OpenViduErrorName.INPUT_VIDEO_DEVICE_NOT_FOUND;
-                                                        errorMessage = "Video input device with deviceId '" + (<ConstrainDOMStringParameters>(<MediaTrackConstraints>constraints.video).deviceId!!).exact + "' not found";
-                                                    } else {
-                                                        errorName = OpenViduErrorName.PUBLISHER_PROPERTIES_ERROR;
-                                                        errorMessage = "Video input device doesn't support the value passed for constraint '" + error.constraint + "'";
-                                                    }
-                                                    errorCallback(new OpenViduError(errorName, errorMessage));
-                                                });
-                                            break;
-                                        case 'aborterror':
-                                        case 'notreadableerror':
-                                            errorName = OpenViduErrorName.DEVICE_ALREADY_IN_USE;
-                                            errorMessage = error.toString();
-                                            errorCallback(new OpenViduError(errorName, errorMessage));
-                                            break;
-                                        default:
-                                            errorName = OpenViduErrorName.GENERIC_ERROR;
-                                            errorMessage = error.toString();
-                                            errorCallback(new OpenViduError(errorName, errorMessage));
-                                            break;
+                                                        errorMessage = error.toString();
+                                                        errorCallback(new OpenViduError(errorName, errorMessage));
+                                                    });
+                                                break;
+                                            case 'notallowederror':
+                                                errorName = this.stream.isSendScreen() ? OpenViduErrorName.SCREEN_CAPTURE_DENIED : OpenViduErrorName.DEVICE_ACCESS_DENIED;
+                                                errorMessage = error.toString();
+                                                errorCallback(new OpenViduError(errorName, errorMessage));
+                                                break;
+                                            case 'overconstrainederror':
+                                                navigator.mediaDevices.getUserMedia({
+                                                    audio: false,
+                                                    video: constraints.video
+                                                })
+                                                    .then(mediaStream => {
+                                                        mediaStream.getVideoTracks().forEach((track) => {
+                                                            track.stop();
+                                                        });
+                                                        if (error.constraint.toLowerCase() === 'deviceid') {
+                                                            errorName = OpenViduErrorName.INPUT_AUDIO_DEVICE_NOT_FOUND;
+                                                            errorMessage = "Audio input device with deviceId '" + (<ConstrainDOMStringParameters>(<MediaTrackConstraints>constraints.audio).deviceId!!).exact + "' not found";
+                                                        } else {
+                                                            errorName = OpenViduErrorName.PUBLISHER_PROPERTIES_ERROR;
+                                                            errorMessage = "Audio input device doesn't support the value passed for constraint '" + error.constraint + "'";
+                                                        }
+                                                        errorCallback(new OpenViduError(errorName, errorMessage));
+                                                    }).catch(e => {
+                                                        if (error.constraint.toLowerCase() === 'deviceid') {
+                                                            errorName = OpenViduErrorName.INPUT_VIDEO_DEVICE_NOT_FOUND;
+                                                            errorMessage = "Video input device with deviceId '" + (<ConstrainDOMStringParameters>(<MediaTrackConstraints>constraints.video).deviceId!!).exact + "' not found";
+                                                        } else {
+                                                            errorName = OpenViduErrorName.PUBLISHER_PROPERTIES_ERROR;
+                                                            errorMessage = "Video input device doesn't support the value passed for constraint '" + error.constraint + "'";
+                                                        }
+                                                        errorCallback(new OpenViduError(errorName, errorMessage));
+                                                    });
+                                                break;
+                                            case 'aborterror':
+                                            case 'notreadableerror':
+                                                errorName = OpenViduErrorName.DEVICE_ALREADY_IN_USE;
+                                                errorMessage = error.toString();
+                                                errorCallback(new OpenViduError(errorName, errorMessage));
+                                                break;
+                                            default:
+                                                errorName = OpenViduErrorName.GENERIC_ERROR;
+                                                errorMessage = error.toString();
+                                                errorCallback(new OpenViduError(errorName, errorMessage));
+                                                break;
 
-                                    }
-                                });
+                                        }
+                                    });
                             }
 
                             if (platform['isInternetExplorer']) {
