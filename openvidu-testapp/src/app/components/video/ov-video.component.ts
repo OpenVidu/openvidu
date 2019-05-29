@@ -8,7 +8,7 @@ import { StreamManager } from 'openvidu-browser';
 })
 export class OpenViduVideoComponent implements OnInit, AfterViewInit {
 
-    @ViewChild('videoElement') elementRef: ElementRef;
+    @ViewChild('videoElement', { static: false }) elementRef: ElementRef;
 
     @Input() poster = '';
     @Input() attrstyle = '';
