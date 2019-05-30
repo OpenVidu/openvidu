@@ -1610,9 +1610,10 @@ public class OpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.id("session-api-btn-0")).click();
 		Thread.sleep(1000);
 		user.getDriver().findElement(By.id("get-session-btn")).click();
-		
+
 		Thread.sleep(1000);
 		System.out.println(getBase64Screenshot(user));
+		System.out.println(user.getDriver().findElement(By.id("api-response-text-area")).getAttribute("value"));
 		
 		user.getWaiter()
 				.until(ExpectedConditions.attributeContains(By.id("api-response-text-area"), "value", "Changes: true"));
