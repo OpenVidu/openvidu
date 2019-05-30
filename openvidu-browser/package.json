@@ -24,7 +24,7 @@
         "tsify": "4.0.1",
         "tslint": "5.16.0",
         "typedoc": "0.14.2",
-        "typescript": "3.5.1",
+        "typescript": "3.4.5",
         "uglify-js": "3.5.15"
     },
     "license": "Apache-2.0",
