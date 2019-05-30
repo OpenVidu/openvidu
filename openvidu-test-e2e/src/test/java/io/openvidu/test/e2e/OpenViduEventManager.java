@@ -220,7 +220,7 @@ public class OpenViduEventManager {
 			JsonObject event = this.eventQueue.poll();
 			final String eventType = event.get("type").getAsString();
 
-			log.info(eventType + ": " + event);
+			log.info(eventType);
 
 			if (this.eventCallbacks.containsKey(eventType)) {
 				for (RunnableCallback callback : this.eventCallbacks.get(eventType)) {
