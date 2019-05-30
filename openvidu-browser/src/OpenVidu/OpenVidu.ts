@@ -342,7 +342,7 @@ export class OpenVidu {
       (browser !== 'Chrome') && (browser !== 'Chrome Mobile') &&
       (browser !== 'Firefox') && (browser !== 'Firefox Mobile') &&
       (browser !== 'Opera') && (browser !== 'Opera Mobile') &&
-      (browser !== 'Android Browser') && browser !== 'Electron' &&
+      (browser !== 'Android Browser') && (browser !== 'Electron') &&
       (browser !== 'IE' || platform.version !== undefined && parseInt(platform.version) < 11)
     ) {
       return 0;
