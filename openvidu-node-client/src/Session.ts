@@ -200,7 +200,7 @@ export class Session {
      */
     public fetch(): Promise<boolean> {
         return new Promise<boolean>((resolve, reject) => {
-            const beforeJSON: string = JSON.stringify(this);
+            const beforeJSON: string = JSON.stringify(this, this.removeCircularOpenViduReference);
             axios.get(
                 'https://' + this.ov.hostname + ':' + this.ov.port + OpenVidu.API_SESSIONS + '/' + this.sessionId,
                 {
@@ -214,7 +214,7 @@ export class Session {
                     if (res.status === 200) {
                         // SUCCESS response from openvidu-server
                         this.resetSessionWithJson(res.data);
-                        const afterJSON: string = JSON.stringify(this);
+                        const afterJSON: string = JSON.stringify(this, this.removeCircularOpenViduReference);
                         const hasChanged: boolean = !(beforeJSON === afterJSON);
                         console.log("Session info fetched for session '" + this.sessionId + "'. Any change: " + hasChanged);
                         resolve(hasChanged);
@@ -525,6 +525,17 @@ export class Session {
             return equals;
         } else {
             return false;
+        }
+    }
+
+    /**
+     * @hidden
+     */
+    private removeCircularOpenViduReference(key: string, value: any) {
+        if (key === 'ov' && value instanceof OpenVidu) {
+            return;
+        } else {
+            return value;
         }
     }
 
