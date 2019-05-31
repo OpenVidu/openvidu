@@ -513,8 +513,12 @@ export class Stream implements EventDispatcher {
      * @hidden
      */
     isSendScreen(): boolean {
-        return (!!this.outboundStreamOpts &&
-            this.outboundStreamOpts.publisherProperties.videoSource === 'screen');
+        let screen = this.outboundStreamOpts.publisherProperties.videoSource === 'screen';
+        if (platform.name === 'Electron') {
+            screen = typeof this.outboundStreamOpts.publisherProperties.videoSource === 'string' &&
+                this.outboundStreamOpts.publisherProperties.videoSource.startsWith('screen:');
+        }
+        return !!this.outboundStreamOpts && screen;
     }
 
     /**

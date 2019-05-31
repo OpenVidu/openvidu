@@ -618,7 +618,7 @@ export class Publisher extends StreamManager {
                         startTime = Date.now();
                         this.setPermissionDialogTimer(timeForDialogEvent);
 
-                        if (this.stream.isSendScreen() && navigator.mediaDevices['getDisplayMedia']) {
+                        if (this.stream.isSendScreen() && navigator.mediaDevices['getDisplayMedia'] && platform.name !== 'Electron') {
 
                             navigator.mediaDevices['getDisplayMedia']({ video: true })
                                 .then(mediaStream => {
@@ -627,6 +627,7 @@ export class Publisher extends StreamManager {
                                 .catch(error => {
                                     getMediaError(error);
                                 });
+
                         } else {
 
                             let userMediaFunc = () => {
