@@ -50,7 +50,7 @@
 		<version.hamcrest-core>2.1</version.hamcrest-core>
 		<version.hamcrest-library>2.1</version.hamcrest-library>
 		<version.json-simple>1.1.1</version.json-simple>
-		<version.httpclient>4.5.7</version.httpclient>
+		<version.httpclient>4.5.8</version.httpclient>
 		<version.enforcer.plugin>3.0.0-M2</version.enforcer.plugin>
 
 		<maven.compiler.target>1.8</maven.compiler.target>
@@ -233,7 +233,7 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-source-plugin</artifactId>
-						<version>3.0.1</version>
+						<version>3.1.0</version>
 						<executions>
 							<execution>
 								<id>attach-sources</id>
