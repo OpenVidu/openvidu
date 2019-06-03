@@ -564,7 +564,7 @@ public class OpenVidu {
 					this.activeSessions.computeIfAbsent(sessionId, sId -> {
 						log.info("New session '{}' fetched", sessionId);
 						hasChanged[0] = true;
-						return new Session((JSONObject) session);
+						return new Session(this, (JSONObject) session);
 					});
 				});
 

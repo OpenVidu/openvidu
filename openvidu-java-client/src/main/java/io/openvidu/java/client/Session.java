@@ -27,7 +27,6 @@ import java.util.stream.Collectors;
 
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -64,7 +63,8 @@ public class Session {
 		this.getSessionIdHttp();
 	}
 
-	protected Session(JSONObject json) {
+	protected Session(OpenVidu openVidu, JSONObject json) {
+		this.openVidu = openVidu;
 		this.resetSessionWithJson(json);
 	}
 
