@@ -385,7 +385,7 @@ export class StreamManager implements EventDispatcher {
             if (video.style.transform === 'rotateY(180deg)' && !this.stream.outboundStreamOpts.publisherProperties.mirror) {
                 // If the video was already rotated and now is set to not mirror
                 this.removeMirrorVideo(video);
-            } else if (this.stream.outboundStreamOpts.publisherProperties.mirror) {
+            } else if (this.stream.outboundStreamOpts.publisherProperties.mirror && !this.stream.isSendScreen()) {
                 this.mirrorVideo(video);
             }
         }
