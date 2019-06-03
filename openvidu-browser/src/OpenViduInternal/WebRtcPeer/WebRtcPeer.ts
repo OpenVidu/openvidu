@@ -65,20 +65,7 @@ export class WebRtcPeer {
         this.pc.onsignalingstatechange = () => {
             if (this.pc.signalingState === 'stable') {
                 while (this.iceCandidateList.length > 0) {
-                    if (platform['isInternetExplorer']) {
-                        const iceCandidate = this.iceCandidateList.shift();
-                        if (!!iceCandidate) {
-                            const iceCandidateAuxIE = {
-                                candidate: iceCandidate.candidate,
-                                sdpMid: iceCandidate.sdpMid,
-                                sdpMLineIndex: iceCandidate.sdpMLineIndex
-                            };
-                            const finalIECandidate = new RTCIceCandidate(iceCandidateAuxIE);
-                            (<any>this.pc).addIceCandidate(finalIECandidate, () => { }, () => { });
-                        }
-                    } else {
-                        this.pc.addIceCandidate(<RTCIceCandidate>this.iceCandidateList.shift());
-                    }
+                    this.pc.addIceCandidate(<RTCIceCandidate>this.iceCandidateList.shift());
                 }
             }
         };
@@ -99,8 +86,8 @@ export class WebRtcPeer {
                 reject('The peer connection object is in "closed" state. This is most likely due to an invocation of the dispose method before accepting in the dialogue');
             }
             if (!!this.configuration.mediaStream) {
-                if (platform['isIonicIos'] || platform['isInternetExplorer']) {
-                    // iOS Ionic and IExplorer. LIMITATION: must use deprecated WebRTC API
+                if (platform['isIonicIos']) {
+                    // iOS Ionic. LIMITATION: must use deprecated WebRTC API
                     const pc2: any = this.pc;
                     pc2.addStream(this.configuration.mediaStream);
                 } else {
@@ -126,8 +113,8 @@ export class WebRtcPeer {
                 this.remoteCandidatesQueue = [];
                 this.localCandidatesQueue = [];
 
-                if (platform['isIonicIos'] || platform['isInternetExplorer']) {
-                    // iOS Ionic or IExplorer. LIMITATION: must use deprecated WebRTC API
+                if (platform['isIonicIos']) {
+                    // iOS Ionic. LIMITATION: must use deprecated WebRTC API
                     // Stop senders deprecated
                     const pc1: any = this.pc;
                     for (const sender of pc1.getLocalStreams()) {
@@ -222,34 +209,6 @@ export class WebRtcPeer {
                     })
                     .catch(error => reject(error));
 
-            } else if (platform['isInternetExplorer']) {
-
-                // IE Explorer cannot use Promise base API
-                let setLocalDescriptionOnSuccess = () => {
-                    const localDescription = this.pc.localDescription;
-                    if (!!localDescription) {
-                        console.debug('Local description set', localDescription.sdp);
-                        resolve(localDescription.sdp);
-                    } else {
-                        reject('Local description is not defined');
-                    }
-                }
-                let setLocalDescriptionOnError = error => {
-                    reject(error);
-                }
-                let createOfferOnSuccess = offer => {
-                    console.debug('Created SDP offer');
-                    (<any>this.pc).setLocalDescription(offer, setLocalDescriptionOnSuccess, setLocalDescriptionOnError);
-                };
-                let createOfferOnError = error => {
-                    reject(error);
-                };
-
-                // FIX: for IExplorer WebRTC peer connections must be negotiated to receive video and audio
-                constraints.offerToReceiveAudio = true;
-                constraints.offerToReceiveVideo = true;
-                (<any>this.pc).createOffer(createOfferOnSuccess, createOfferOnError, constraints);
-
             } else {
 
                 // Rest of platforms
@@ -292,13 +251,8 @@ export class WebRtcPeer {
                     this.pc.setRemoteDescription(answer).then(() => resolve()).catch(error => reject(error));
                 }, 250);
             } else {
-                if (platform['isInternetExplorer']) {
-                    // IE Explorer cannot use Promise base API
-                    (<any>this.pc).setRemoteDescription(answer, resolve(), error => reject(error));
-                } else {
-                    // Rest of platforms
-                    this.pc.setRemoteDescription(answer).then(() => resolve()).catch(error => reject(error));
-                }
+                // Rest of platforms
+                this.pc.setRemoteDescription(answer).then(() => resolve()).catch(error => reject(error));
             }
         });
     }
@@ -316,17 +270,7 @@ export class WebRtcPeer {
                     break;
                 case 'stable':
                     if (!!this.pc.remoteDescription) {
-                        if (platform['isInternetExplorer']) {
-                            const iceCandidateAuxIE = {
-                                candidate: iceCandidate.candidate,
-                                sdpMid: iceCandidate.sdpMid,
-                                sdpMLineIndex: iceCandidate.sdpMLineIndex
-                            };
-                            const finalIECandidate = new RTCIceCandidate(iceCandidateAuxIE);
-                            (<any>this.pc).addIceCandidate(finalIECandidate, () => resolve(), error => reject(error));
-                        } else {
-                            this.pc.addIceCandidate(iceCandidate).then(() => resolve()).catch(error => reject(error));
-                        }
+                        this.pc.addIceCandidate(iceCandidate).then(() => resolve()).catch(error => reject(error));
                     } else {
                         this.iceCandidateList.push(iceCandidate);
                         resolve();

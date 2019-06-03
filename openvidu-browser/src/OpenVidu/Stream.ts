@@ -34,7 +34,6 @@ import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/Open
 import EventEmitter = require('wolfy87-eventemitter');
 import hark = require('hark');
 import platform = require('platform');
-declare const AdapterJS: any;
 
 
 /**
@@ -799,30 +798,20 @@ export class Stream implements EventDispatcher {
                 });
             };
 
-            const initWebRtcPeer = () => {
-                this.webRtcPeer = new WebRtcPeerRecvonly(options);
-                this.webRtcPeer.generateOffer()
-                    .then(offer => {
-                        successCallback(offer);
-                    })
-                    .catch(error => {
-                        reject(new Error('(subscribe) SDP offer error: ' + JSON.stringify(error)));
-                    });
-            };
-
-            if (platform['isInternetExplorer']) {
-                AdapterJS.webRTCReady(isUsingPlugin => {
-                    initWebRtcPeer();
+            this.webRtcPeer = new WebRtcPeerRecvonly(options);
+            this.webRtcPeer.generateOffer()
+                .then(offer => {
+                    successCallback(offer);
+                })
+                .catch(error => {
+                    reject(new Error('(subscribe) SDP offer error: ' + JSON.stringify(error)));
                 });
-            } else {
-                initWebRtcPeer();
-            }
         });
     }
 
     private remotePeerSuccessfullyEstablished(): void {
-        if (platform['isIonicIos'] || platform['isInternetExplorer']) {
-            // iOS Ionic or IExplorer. LIMITATION: must use deprecated WebRTC API
+        if (platform['isIonicIos']) {
+            // iOS Ionic. LIMITATION: must use deprecated WebRTC API
             const pc1: any = this.webRtcPeer.pc;
             this.mediaStream = pc1.getRemoteStreams()[0];
         } else {

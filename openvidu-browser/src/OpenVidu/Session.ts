@@ -882,17 +882,10 @@ export class Session implements EventDispatcher {
         this.getConnection(msg.senderConnectionId, 'Connection not found for connectionId ' + msg.senderConnectionId + ' owning endpoint ' + msg.endpointName + '. Ice candidate will be ignored: ' + candidate)
             .then(connection => {
                 const stream = connection.stream;
-                if (platform['isInternetExplorer']) {
-                    (<any>stream.getWebRtcPeer()).addIceCandidate(candidate, () => { }, error => {
-                        console.error('Error adding candidate for ' + stream.streamId
-                            + ' stream of endpoint ' + msg.endpointName + ': ' + error);
-                    });
-                } else {
-                    stream.getWebRtcPeer().addIceCandidate(candidate).catch(error => {
-                        console.error('Error adding candidate for ' + stream.streamId
-                            + ' stream of endpoint ' + msg.endpointName + ': ' + error);
-                    });
-                }
+                stream.getWebRtcPeer().addIceCandidate(candidate).catch(error => {
+                    console.error('Error adding candidate for ' + stream.streamId
+                        + ' stream of endpoint ' + msg.endpointName + ': ' + error);
+                });
             })
             .catch(openViduError => {
                 console.error(openViduError);

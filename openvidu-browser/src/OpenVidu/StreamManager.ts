@@ -25,7 +25,6 @@ import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
 
 import EventEmitter = require('wolfy87-eventemitter');
 import platform = require('platform');
-declare const attachMediaStream;
 
 /**
  * Interface in charge of displaying the media streams in the HTML DOM. This wraps any [[Publisher]] and [[Subscriber]] object.
@@ -121,23 +120,22 @@ export class StreamManager implements EventDispatcher {
                 this.element = targEl;
             }
         }
-        if (!platform['isInternetExplorer']) {
-            this.canPlayListener = () => {
-                if (this.stream.isLocal()) {
-                    if (!this.stream.displayMyRemote()) {
-                        console.info("Your local 'Stream' with id [" + this.stream.streamId + '] video is now playing');
-                        this.ee.emitEvent('videoPlaying', [new VideoElementEvent(this.videos[0].video, this, 'videoPlaying')]);
-                    } else {
-                        console.info("Your own remote 'Stream' with id [" + this.stream.streamId + '] video is now playing');
-                        this.ee.emitEvent('remoteVideoPlaying', [new VideoElementEvent(this.videos[0].video, this, 'remoteVideoPlaying')]);
-                    }
-                } else {
-                    console.info("Remote 'Stream' with id [" + this.stream.streamId + '] video is now playing');
+
+        this.canPlayListener = () => {
+            if (this.stream.isLocal()) {
+                if (!this.stream.displayMyRemote()) {
+                    console.info("Your local 'Stream' with id [" + this.stream.streamId + '] video is now playing');
                     this.ee.emitEvent('videoPlaying', [new VideoElementEvent(this.videos[0].video, this, 'videoPlaying')]);
+                } else {
+                    console.info("Your own remote 'Stream' with id [" + this.stream.streamId + '] video is now playing');
+                    this.ee.emitEvent('remoteVideoPlaying', [new VideoElementEvent(this.videos[0].video, this, 'remoteVideoPlaying')]);
                 }
-                this.ee.emitEvent('streamPlaying', [new StreamManagerEvent(this, 'streamPlaying', undefined)]);
-            };
-        }
+            } else {
+                console.info("Remote 'Stream' with id [" + this.stream.streamId + '] video is now playing');
+                this.ee.emitEvent('videoPlaying', [new VideoElementEvent(this.videos[0].video, this, 'videoPlaying')]);
+            }
+            this.ee.emitEvent('streamPlaying', [new StreamManagerEvent(this, 'streamPlaying', undefined)]);
+        };
     }
 
     /**
@@ -245,10 +243,6 @@ export class StreamManager implements EventDispatcher {
             }
         }
 
-        if (platform['isInternetExplorer'] && !!this.stream.getMediaStream()) {
-            video = this.customAttachMediaStreamIE(video, this.stream.getMediaStream());
-        }
-
         // If the video element is already part of this StreamManager do nothing
         for (const v of this.videos) {
             if (v.video === video) {
@@ -305,7 +299,7 @@ export class StreamManager implements EventDispatcher {
             throw new Error("The provided 'targetElement' couldn't be resolved to any HTML element: " + targetElement);
         }
 
-        let video = document.createElement('video');
+        const video = document.createElement('video');
         this.initializeVideoProperties(video);
 
         let insMode = !!insertMode ? insertMode : VideoInsertMode.APPEND;
@@ -331,10 +325,6 @@ export class StreamManager implements EventDispatcher {
                 break;
         }
 
-        if (platform['isInternetExplorer'] && !!this.stream.getMediaStream()) {
-            video = this.customAttachMediaStreamIE(video, this.stream.getMediaStream());
-        }
-
         const v: StreamManagerVideo = {
             targetElement: targEl,
             video,
@@ -344,12 +334,8 @@ export class StreamManager implements EventDispatcher {
         };
         this.pushNewStreamManagerVideo(v);
 
-        let launchVideoCreatedEvent = !platform['isInternetExplorer'];
-        if (launchVideoCreatedEvent) {
-            // For IE the event is called in this.customAttachMediaStreamIE
-            this.ee.emitEvent('videoElementCreated', [new VideoElementEvent(v.video, this, 'videoElementCreated')]);
-        }
-        this.lazyLaunchVideoElementCreatedEvent = !!this.firstVideoElement && launchVideoCreatedEvent;
+        this.ee.emitEvent('videoElementCreated', [new VideoElementEvent(v.video, this, 'videoElementCreated')]);
+        this.lazyLaunchVideoElementCreatedEvent = !!this.firstVideoElement;
 
         return video;
     }
@@ -372,7 +358,7 @@ export class StreamManager implements EventDispatcher {
             video.setAttribute('playsinline', 'true');
         }
 
-        if (!video.id && !platform['isInternetExplorer']) {
+        if (!video.id) {
             video.id = (this.remote ? 'remote-' : 'local-') + 'video-' + this.stream.streamId;
             // DEPRECATED property: assign once the property id if the user provided a valid targetElement	
             if (!this.id && !!this.targetElement) {
@@ -403,7 +389,7 @@ export class StreamManager implements EventDispatcher {
 
         this.videos.forEach(streamManagerVideo => {
             // Remove oncanplay event listener (only OpenVidu browser listener, not the user ones)
-            streamManagerVideo.video.removeEventListener('canplay', platform['isInternetExplorer'] ? (<any>window).IEOnCanPlay : this.canPlayListener);
+            streamManagerVideo.video.removeEventListener('canplay', this.canPlayListener);
             streamManagerVideo.canplayListenerAdded = false;
             if (!!streamManagerVideo.targetElement) {
                 // Only remove from DOM videos created by OpenVidu Browser (those generated by passing a valid targetElement in OpenVidu.initPublisher
@@ -425,7 +411,7 @@ export class StreamManager implements EventDispatcher {
         let disassociated = false;
         for (let i = 0; i < this.videos.length; i++) {
             if (this.videos[i].video === video) {
-                this.videos[i].video.removeEventListener('canplay', platform['isInternetExplorer'] ? (<any>window).IEOnCanPlay : this.canPlayListener);
+                this.videos[i].video.removeEventListener('canplay', this.canPlayListener);
                 this.videos.splice(i, 1);
                 disassociated = true;
                 console.info('Video element disassociated from ', this);
@@ -440,14 +426,7 @@ export class StreamManager implements EventDispatcher {
      */
     addPlayEventToFirstVideo() {
         if ((!!this.videos[0]) && (!!this.videos[0].video) && (!this.videos[0].canplayListenerAdded)) {
-            if (platform['isInternetExplorer']) {
-                if (!(this.videos[0].video instanceof HTMLVideoElement)) {
-                    // Add canplay event listener only after plugin has inserted custom video element (not a DOM HTMLVideoElement)
-                    (<any>this.videos[0].video).addEventListener('canplay', (<any>window).IEOnCanPlay(this));
-                }
-            } else {
-                this.videos[0].video.addEventListener('canplay', this.canPlayListener);
-            }
+            this.videos[0].video.addEventListener('canplay', this.canPlayListener);
             this.videos[0].canplayListenerAdded = true;
         }
     }
@@ -465,9 +444,6 @@ export class StreamManager implements EventDispatcher {
                 const newVideo = streamManagerVideo.video;
                 vParent!!.replaceChild(newVideo, streamManagerVideo.video);
                 streamManagerVideo.video = newVideo;
-            }
-            if (platform['isInternetExplorer']) {
-                this.customAttachMediaStreamIE(streamManagerVideo.video, mediaStream);
             }
         });
     }
@@ -497,32 +473,6 @@ export class StreamManager implements EventDispatcher {
     private removeMirrorVideo(video): void {
         video.style.transform = 'unset';
         video.style.webkitTransform = 'unset';
-    }
-
-    protected customAttachMediaStreamIE(video: HTMLVideoElement, mediaStream: MediaStream): HTMLVideoElement {
-        var simVideo = attachMediaStream(video, mediaStream);
-
-        if (!simVideo) {
-            console.error('The video element used by IE to insert its custom media element is not properly added to DOM (must be inserted and visible)');
-            console.error(video);
-            return simVideo;
-        }
-
-        // Replace HTMLVideoElemet (if exists) with new HTMLObjectElement returned by IE plugin
-        for (let i = 0; i < this.videos.length; i++) {
-            if (this.videos[i].video === video) {
-                this.videos[i].video = simVideo;
-                break;
-            }
-        }
-
-        // Always launch videoElementCreated event after IE plugin has inserted simulated video into DOM
-        this.ee.emitEvent('videoElementCreated', [new VideoElementEvent(simVideo, this, 'videoElementCreated')]);
-
-        // Add streamPlaying event to newly inserted video if necessary
-        this.addPlayEventToFirstVideo();
-
-        return simVideo;
     }
 
 }

@@ -29,7 +29,6 @@ import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/Open
 import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
 
 import platform = require('platform');
-declare const AdapterJS: any;
 
 /**
  * Packs local media streams. Participants can publish it to a session. Initialized with [[OpenVidu.initPublisher]] method
@@ -317,36 +316,12 @@ export class Publisher extends StreamManager {
                 this.stream.setMediaStream(mediaStream);
 
                 if (!!this.firstVideoElement) {
-                    let video = this.createVideoElement(this.firstVideoElement.targetElement, <VideoInsertMode>this.properties.insertMode);
-                    if (platform['isInternetExplorer']) {
-                        this.videoReference = video;
-                    }
-                } else {
-                    if (platform['isInternetExplorer']) {
-                        // IE cannot have a video reference not inserted into DOM
-                        // Pick up the first video element of videos array
-                        this.videoReference = this.videos[0].video;
-                        if (!this.videoReference) {
-                            console.warn('IE requires the video element to be defined when initializing a Publisher. ' +
-                                'Be sure to initialize the publisher passing a pre-existing targetElement')
-                        }
-                    }
+                    this.createVideoElement(this.firstVideoElement.targetElement, <VideoInsertMode>this.properties.insertMode);
                 }
 
-                if (platform['isInternetExplorer']) {
-                    AdapterJS.webRTCReady(isUsingPlugin => {
-                        this.videoReference = this.customAttachMediaStreamIE(this.videoReference, mediaStream);
-                        if (this.stream.isSendVideo()) {
-                            if (!this.stream.isSendScreen()) {
-                                this.videoReference.addEventListener('loadedmetadata', (<any>window).IEOnLoadedMetadata(this.videoReference, this.stream));
-                            }
-                        }
-                    });
-                } else {
-                    this.videoReference.srcObject = mediaStream;
-                }
+                this.videoReference.srcObject = mediaStream;
 
-                if (!this.stream.displayMyRemote() && (platform.name !== 'IE')) {
+                if (!this.stream.displayMyRemote()) {
                     // When we are subscribed to our remote we don't still set the MediaStream object in the video elements to
                     // avoid early 'streamPlaying' event
                     this.stream.updateMediaStreamInVideos();
@@ -386,8 +361,8 @@ export class Publisher extends StreamManager {
                                     videoDimensionsSet();
                                 }
                             });
-                        } else if (platform.name !== 'IE') {
-                            // Rest of platforms except IE
+                        } else {
+                            // Rest of platforms
                             // With no screen share, video dimension can be set directly from MediaStream (getSettings)
                             // Orientation must be checked for mobile devices (width and height are reversed)
                             const { width, height } = mediaStream.getVideoTracks()[0].getSettings();
@@ -630,23 +605,13 @@ export class Publisher extends StreamManager {
 
                         } else {
 
-                            let userMediaFunc = () => {
-                                navigator.mediaDevices.getUserMedia(constraintsAux)
-                                    .then(mediaStream => {
-                                        getMediaSuccess(mediaStream, definedAudioConstraint);
-                                    })
-                                    .catch(error => {
-                                        getMediaError(error);
-                                    });
-                            }
-
-                            if (platform['isInternetExplorer']) {
-                                AdapterJS.webRTCReady(isUsingPlugin => {
-                                    userMediaFunc();
+                            navigator.mediaDevices.getUserMedia(constraintsAux)
+                                .then(mediaStream => {
+                                    getMediaSuccess(mediaStream, definedAudioConstraint);
                                 })
-                            } else {
-                                userMediaFunc();
-                            }
+                                .catch(error => {
+                                    getMediaError(error);
+                                });
 
                         }
                     } else {
