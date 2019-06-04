@@ -15,7 +15,7 @@
         "core-js": "2.6.5",
         "hammerjs": "2.0.8",
         "jquery": "3.4.1",
-        "openvidu-browser": "2.9.0",
+        "openvidu-browser": "2.10.0",
         "rxjs": "6.4.0",
         "zone.js": "0.9.0"
     },
