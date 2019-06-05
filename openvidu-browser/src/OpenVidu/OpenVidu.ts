@@ -556,7 +556,7 @@ export class OpenVidu {
 
                 const prefix = "screen:";
                 const videoSourceString: string = publisherProperties.videoSource;
-                const electronScreenId = videoSourceString.substr(videoSourceString.lastIndexOf(prefix) + prefix.length);
+                const electronScreenId = videoSourceString.substr(videoSourceString.indexOf(prefix) + prefix.length);
                 (<any>mediaConstraints['video']) = {
                   mandatory: {
                     chromeMediaSource: 'desktop',
