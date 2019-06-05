@@ -7,7 +7,7 @@ import { Subscriber } from 'openvidu-browser';
 })
 export class OpenViduVideoComponent implements AfterViewInit {
 
-    @ViewChild('videoElement') elementRef: ElementRef;
+    @ViewChild('videoElement', { static: false }) elementRef: ElementRef;
 
     _subscriber: Subscriber;
 

@@ -17,7 +17,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   websocket: WebSocket;
 
-  @ViewChild('scrollMe') private myScrollContainer: ElementRef;
+  @ViewChild('scrollMe', { static: false }) private myScrollContainer: ElementRef;
   lockScroll = false;
 
   infoSubscription: Subscription;
