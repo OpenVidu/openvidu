@@ -109,7 +109,7 @@ export class OpenVidu {
       // Listen to orientationchange only on mobile devices
       (<any>window).addEventListener('orientationchange', () => {
         this.publishers.forEach(publisher => {
-          if (!!publisher.stream && !!publisher.stream.hasVideo && !!publisher.stream.streamManager.videos[0]) {
+          if (publisher.stream.isLocalStreamPublished && !!publisher.stream && !!publisher.stream.hasVideo && !!publisher.stream.streamManager.videos[0]) {
 
             let attempts = 0;
 
