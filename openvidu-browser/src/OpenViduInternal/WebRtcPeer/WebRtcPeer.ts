@@ -234,7 +234,7 @@ export class WebRtcPeer {
      * Function invoked when a SDP answer is received. Final step in SDP negotiation, the peer
      * just needs to set the answer as its remote description
      */
-    processAnswer(sdpAnswer: string, needsTimeoutOnProcessAswer: boolean): Promise<string> {
+    processAnswer(sdpAnswer: string): Promise<string> {
         return new Promise((resolve, reject) => {
             const answer: RTCSessionDescriptionInit = {
                 type: 'answer',
@@ -245,7 +245,7 @@ export class WebRtcPeer {
             if (this.pc.signalingState === 'closed') {
                 reject('RTCPeerConnection is closed');
             }
-            if (needsTimeoutOnProcessAswer && platform['isIonicIos']) {
+            if (platform['isIonicIos']) {
                 setTimeout(() => {
                     console.info('setRemoteDescription run after timout for iOS device');
                     this.pc.setRemoteDescription(answer).then(() => resolve()).catch(error => reject(error));

@@ -718,7 +718,7 @@ export class Stream implements EventDispatcher {
                             reject('Error on publishVideo: ' + JSON.stringify(error));
                         }
                     } else {
-                        this.webRtcPeer.processAnswer(response.sdpAnswer, false)
+                        this.webRtcPeer.processAnswer(response.sdpAnswer)
                             .then(() => {
                                 this.streamId = response.id;
                                 this.creationTime = response.createdAt;
@@ -778,16 +778,7 @@ export class Stream implements EventDispatcher {
                     if (error) {
                         reject(new Error('Error on recvVideoFrom: ' + JSON.stringify(error)));
                     } else {
-                        // Ios Ionic. Limitation: some bug in iosrtc cordova plugin makes
-                        // it necessary to add a timeout before processAnswer method
-                        if (this.session.isFirstIonicIosSubscriber) {
-                            this.session.isFirstIonicIosSubscriber = false;
-                            this.session['iosInterval'] = setTimeout(() => {
-                                this.session.countDownForIonicIosSubscribers = false;
-                            }, 400);
-                        }
-                        const needsTimeoutOnProcessAswer = this.session.countDownForIonicIosSubscribers;
-                        this.webRtcPeer.processAnswer(response.sdpAnswer, needsTimeoutOnProcessAswer).then(() => {
+                        this.webRtcPeer.processAnswer(response.sdpAnswer).then(() => {
                             this.remotePeerSuccessfullyEstablished();
                             this.initWebRtcStats();
                             resolve();
