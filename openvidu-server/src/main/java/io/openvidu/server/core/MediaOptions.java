@@ -19,7 +19,7 @@ package io.openvidu.server.core;
 
 import com.google.gson.JsonObject;
 
-import io.openvidu.server.kurento.KurentoFilter;
+import io.openvidu.server.kurento.endpoint.KurentoFilter;
 
 public class MediaOptions {
 

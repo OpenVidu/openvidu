@@ -15,19 +15,18 @@
  *
  */
 
-package io.openvidu.server.kurento;
+package io.openvidu.server.kurento.kms;
 
-import org.kurento.client.KurentoClient;
+public class DummyLoadManager implements LoadManager {
 
-/**
- * Interface for beans holding information required to obtain a {@link KurentoClient}.
- *
- * @author <a href="mailto:rvlad@naevatec.com">Radu Tom Vlad</a>
- *
- */
-public interface KurentoClientSessionInfo {
-  /**
-   * @return the room's name (or id) for whom a {@link KurentoClient} will be needed
-   */
-  public String getRoomName();
+	@Override
+	public double calculateLoad(Kms kms) {
+		return 1;
+	}
+
+	@Override
+	public boolean allowMoreElements(Kms kms) {
+		return true;
+	}
+
 }

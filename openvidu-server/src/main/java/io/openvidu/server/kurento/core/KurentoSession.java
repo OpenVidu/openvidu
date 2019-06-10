@@ -25,7 +25,6 @@ import org.kurento.client.Continuation;
 import org.kurento.client.ErrorEvent;
 import org.kurento.client.EventListener;
 import org.kurento.client.IceCandidate;
-import org.kurento.client.KurentoClient;
 import org.kurento.client.MediaPipeline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +37,7 @@ import io.openvidu.java.client.Recording.OutputMode;
 import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
+import io.openvidu.server.kurento.kms.Kms;
 import io.openvidu.server.recording.Recording;
 
 /**
@@ -51,7 +51,7 @@ public class KurentoSession extends Session {
 	private MediaPipeline pipeline;
 	private CountDownLatch pipelineLatch = new CountDownLatch(1);
 
-	private KurentoClient kurentoClient;
+	private Kms kms;
 	private KurentoSessionEventsHandler kurentoSessionHandler;
 	private KurentoParticipantEndpointConfig kurentoEndpointConfig;
 
@@ -63,11 +63,10 @@ public class KurentoSession extends Session {
 
 	public final ConcurrentHashMap<String, String> publishedStreamIds = new ConcurrentHashMap<>();
 
-	public KurentoSession(Session sessionNotActive, KurentoClient kurentoClient,
-			KurentoSessionEventsHandler kurentoSessionHandler, KurentoParticipantEndpointConfig kurentoEndpointConfig,
-			boolean destroyKurentoClient) {
+	public KurentoSession(Session sessionNotActive, Kms kms, KurentoSessionEventsHandler kurentoSessionHandler,
+			KurentoParticipantEndpointConfig kurentoEndpointConfig, boolean destroyKurentoClient) {
 		super(sessionNotActive);
-		this.kurentoClient = kurentoClient;
+		this.kms = kms;
 		this.destroyKurentoClient = destroyKurentoClient;
 		this.kurentoSessionHandler = kurentoSessionHandler;
 		this.kurentoEndpointConfig = kurentoEndpointConfig;
@@ -158,7 +157,7 @@ public class KurentoSession extends Session {
 			log.debug("Session {} closed", this.sessionId);
 
 			if (destroyKurentoClient) {
-				kurentoClient.destroy();
+				kms.getKurentoClient().destroy();
 			}
 
 			this.closed = true;
@@ -192,6 +191,10 @@ public class KurentoSession extends Session {
 		}
 	}
 
+	public Kms getKms() {
+		return this.kms;
+	}
+
 	public MediaPipeline getPipeline() {
 		try {
 			pipelineLatch.await(KurentoSession.ASYNC_LATCH_TIMEOUT, TimeUnit.SECONDS);
@@ -208,7 +211,7 @@ public class KurentoSession extends Session {
 			}
 			log.info("SESSION {}: Creating MediaPipeline", sessionId);
 			try {
-				kurentoClient.createMediaPipeline(new Continuation<MediaPipeline>() {
+				kms.getKurentoClient().createMediaPipeline(new Continuation<MediaPipeline>() {
 					@Override
 					public void onSuccess(MediaPipeline result) throws Exception {
 						pipeline = result;

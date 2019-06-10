@@ -21,7 +21,7 @@ import org.kurento.client.MediaElement;
 import org.kurento.client.MediaType;
 
 import io.openvidu.server.core.MediaOptions;
-import io.openvidu.server.kurento.KurentoFilter;
+import io.openvidu.server.kurento.endpoint.KurentoFilter;
 
 public class KurentoMediaOptions extends MediaOptions {
 

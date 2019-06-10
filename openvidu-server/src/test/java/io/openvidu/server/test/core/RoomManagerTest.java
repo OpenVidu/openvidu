@@ -16,41 +16,9 @@
 
 package io.openvidu.server.test.core;
 
-import static org.junit.matchers.JUnitMatchers.containsString;
-import static org.junit.matchers.JUnitMatchers.hasItem;
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.powermock.api.mockito.PowerMockito.whenNew;
-
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
-import org.hamcrest.CoreMatchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -62,9 +30,7 @@ import org.kurento.client.ErrorEvent;
 import org.kurento.client.EventListener;
 import org.kurento.client.FaceOverlayFilter;
 import org.kurento.client.HubPort;
-import org.kurento.client.IceCandidate;
 import org.kurento.client.KurentoClient;
-import org.kurento.client.MediaElement;
 import org.kurento.client.MediaPipeline;
 import org.kurento.client.MediaType;
 import org.kurento.client.Mixer;
@@ -75,25 +41,15 @@ import org.kurento.client.ServerManager;
 import org.kurento.client.WebRtcEndpoint;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.mockito.Matchers;
 import org.mockito.Mock;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-import org.springframework.context.ConfigurableApplicationContext;
 
-import io.openvidu.client.OpenViduException;
-import io.openvidu.client.OpenViduException.Code;
-import io.openvidu.server.OpenViduServer;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.SessionManager;
-import io.openvidu.server.core.Token;
-import io.openvidu.server.kurento.KurentoClientProvider;
-import io.openvidu.server.kurento.KurentoClientSessionInfo;
 import io.openvidu.server.kurento.core.KurentoSessionEventsHandler;
-import io.openvidu.server.kurento.core.KurentoSessionManager;
+import io.openvidu.server.kurento.kms.KmsManager;
 
 /**
  * Tests for {@link RoomManager} when using mocked {@link KurentoClient} resources.
@@ -124,7 +80,7 @@ public class RoomManagerTest {
   private SessionManager manager;
 
   @Mock
-  private KurentoClientProvider kcProvider;
+  private KmsManager kcProvider;
   @Mock
   private KurentoSessionEventsHandler roomHandler;
 

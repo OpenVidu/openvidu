@@ -46,7 +46,6 @@ import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.MediaOptions;
-import io.openvidu.server.kurento.TrackType;
 import io.openvidu.server.kurento.core.KurentoParticipant;
 import io.openvidu.server.utils.JsonUtils;
 

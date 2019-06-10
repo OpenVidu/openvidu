@@ -17,36 +17,67 @@
 
 package io.openvidu.server.kurento.kms;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.kurento.client.KurentoClient;
 
+/**
+ * Abstraction of a KMS instance: an object of this class corresponds to a KMS
+ * process running somewhere.
+ * 
+ * It is uniquely identified by the KMS ws URI endpoint. It encapsulates the
+ * WebSocket client to communicate openvidu-server Java process with it and has
+ * a specific LoadManager service to calculate the load of this KMS based on
+ * different measures
+ * 
+ * @author Pablo Fuente (pablofuenteperez@gmail.com)
+ */
 public class Kms {
 
-  private LoadManager loadManager = new MaxWebRtcLoadManager(10000);
-  private KurentoClient client;
-  private String kmsUri;
+	private String kmsUri;
+	private KurentoClient client;
+	private LoadManager loadManager;
 
-  public Kms(KurentoClient client, String kmsUri) {
-    this.client = client;
-    this.kmsUri = kmsUri;
-  }
+	private AtomicBoolean isKurentoClientConnected = new AtomicBoolean(false);
+	private AtomicLong timeOfKurentoClientDisconnection = new AtomicLong(0);
 
-  public void setLoadManager(LoadManager loadManager) {
-    this.loadManager = loadManager;
-  }
+	public Kms(String kmsUri, KurentoClient client, LoadManager loadManager) {
+		this.kmsUri = kmsUri;
+		this.client = client;
+		this.loadManager = loadManager;
+	}
 
-  public double getLoad() {
-    return loadManager.calculateLoad(this);
-  }
+	public String getUri() {
+		return kmsUri;
+	}
 
-  public boolean allowMoreElements() {
-    return loadManager.allowMoreElements(this);
-  }
+	public KurentoClient getKurentoClient() {
+		return this.client;
+	}
 
-  public String getUri() {
-    return kmsUri;
-  }
+	public double getLoad() {
+		return loadManager.calculateLoad(this);
+	}
 
-  public KurentoClient getKurentoClient() {
-    return this.client;
-  }
+	public boolean allowMoreElements() {
+		return loadManager.allowMoreElements(this);
+	}
+
+	public boolean isKurentoClientConnected() {
+		return this.isKurentoClientConnected.get();
+	}
+
+	public void setKurentoClientConnected(boolean isConnected) {
+		this.isKurentoClientConnected.set(isConnected);
+	}
+
+	public long getTimeOfKurentoClientDisconnection() {
+		return this.timeOfKurentoClientDisconnection.get();
+	}
+
+	public void setTimeOfKurentoClientDisconnection(long time) {
+		this.timeOfKurentoClientDisconnection.set(time);
+	}
+
 }

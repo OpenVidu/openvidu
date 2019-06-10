@@ -38,7 +38,6 @@ import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.server.kurento.core.KurentoSession;
 import io.openvidu.server.kurento.endpoint.PublisherEndpoint;
-import io.openvidu.server.kurento.kms.FixedOneKmsManager;
 
 public class CompositeWrapper {
 
@@ -87,8 +86,8 @@ public class CompositeWrapper {
 		this.recorderEndpoint.record();
 	}
 
-	public synchronized void stopCompositeRecording(CountDownLatch stopLatch, boolean forceAfterKmsRestart) {
-		if (!forceAfterKmsRestart) {
+	public synchronized void stopCompositeRecording(CountDownLatch stopLatch, Long timeOfKmsDisconnection) {
+		if (timeOfKmsDisconnection == 0) {
 			this.recorderEndpoint.addStoppedListener(new EventListener<StoppedEvent>() {
 				@Override
 				public void onEvent(StoppedEvent event) {
@@ -102,7 +101,7 @@ public class CompositeWrapper {
 			});
 			this.recorderEndpoint.stop();
 		} else {
-			endTime = FixedOneKmsManager.TIME_OF_DISCONNECTION.get();
+			endTime = timeOfKmsDisconnection;
 			stopLatch.countDown();
 			log.warn("Forcing composed audio-only recording stop after KMS restart in session {}",
 					this.session.getSessionId());

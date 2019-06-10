@@ -372,8 +372,7 @@ public class KurentoParticipant extends Participant {
 
 			if (this.openviduConfig.isRecordingModuleEnabled()
 					&& this.recordingManager.sessionIsBeingRecorded(session.getSessionId())) {
-				this.recordingManager.stopOneIndividualStreamRecording(session.getSessionId(),
-						this.getPublisherStreamId(), false);
+				this.recordingManager.stopOneIndividualStreamRecording(session, this.getPublisherStreamId());
 			}
 
 			publisher.unregisterErrorListeners();

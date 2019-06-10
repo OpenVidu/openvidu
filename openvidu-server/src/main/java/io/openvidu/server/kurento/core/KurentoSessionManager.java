@@ -24,7 +24,6 @@ import java.util.Set;
 
 import org.kurento.client.GenericMediaElement;
 import org.kurento.client.IceCandidate;
-import org.kurento.client.KurentoClient;
 import org.kurento.client.ListenerSubscription;
 import org.kurento.jsonrpc.Props;
 import org.kurento.jsonrpc.message.Request;
@@ -50,12 +49,11 @@ import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.core.SessionManager;
-import io.openvidu.server.kurento.KurentoClientProvider;
-import io.openvidu.server.kurento.KurentoClientSessionInfo;
-import io.openvidu.server.kurento.KurentoFilter;
-import io.openvidu.server.kurento.OpenViduKurentoClientSessionInfo;
+import io.openvidu.server.kurento.endpoint.KurentoFilter;
 import io.openvidu.server.kurento.endpoint.PublisherEndpoint;
 import io.openvidu.server.kurento.endpoint.SdpType;
+import io.openvidu.server.kurento.kms.Kms;
+import io.openvidu.server.kurento.kms.KmsManager;
 import io.openvidu.server.rpc.RpcHandler;
 import io.openvidu.server.utils.JsonUtils;
 
@@ -64,7 +62,7 @@ public class KurentoSessionManager extends SessionManager {
 	private static final Logger log = LoggerFactory.getLogger(KurentoSessionManager.class);
 
 	@Autowired
-	private KurentoClientProvider kcProvider;
+	private KmsManager kmsManager;
 
 	@Autowired
 	private KurentoSessionEventsHandler kurentoSessionEventsHandler;
@@ -72,18 +70,14 @@ public class KurentoSessionManager extends SessionManager {
 	@Autowired
 	private KurentoParticipantEndpointConfig kurentoEndpointConfig;
 
-	private KurentoClient kurentoClient;
-
 	@Override
 	public synchronized void joinRoom(Participant participant, String sessionId, Integer transactionId) {
 		Set<Participant> existingParticipants = null;
 		try {
 
-			KurentoClientSessionInfo kcSessionInfo = new OpenViduKurentoClientSessionInfo(
-					participant.getParticipantPrivateId(), sessionId);
 			KurentoSession kSession = (KurentoSession) sessions.get(sessionId);
 
-			if (kSession == null && kcSessionInfo != null) {
+			if (kSession == null) {
 				// First user connecting to the session
 				Session sessionNotActive = sessionsNotActive.remove(sessionId);
 
@@ -96,20 +90,18 @@ public class KurentoSessionManager extends SessionManager {
 							openviduConfig, recordingManager);
 				}
 
-				createSession(sessionNotActive, kcSessionInfo);
+				Kms lessLoadedKms = this.kmsManager.getLessLoadedKms();
+				log.info("KMS less loaded is {} with a load of {}", lessLoadedKms.getUri(), lessLoadedKms.getLoad());
+				kSession = createSession(sessionNotActive, lessLoadedKms);
 			}
-			kSession = (KurentoSession) sessions.get(sessionId);
-			if (kSession == null) {
-				log.warn("Session '{}' not found");
-				throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE, "Session '" + sessionId
-						+ "' was not found, must be created before '" + sessionId + "' can join");
-			}
+
 			if (kSession.isClosed()) {
 				log.warn("'{}' is trying to join session '{}' but it is closing", participant.getParticipantPublicId(),
 						sessionId);
 				throw new OpenViduException(Code.ROOM_CLOSED_ERROR_CODE, "'" + participant.getParticipantPublicId()
 						+ "' is trying to join session '" + sessionId + "' but it is closing");
 			}
+
 			existingParticipants = getParticipants(sessionId);
 			kSession.join(participant);
 		} catch (OpenViduException e) {
@@ -492,38 +484,29 @@ public class KurentoSessionManager extends SessionManager {
 	}
 
 	/**
-	 * Creates a session if it doesn't already exist. The session's id will be
-	 * indicated by the session info bean.
-	 *
-	 * @param kcSessionInfo bean that will be passed to the
-	 *                      {@link KurentoClientProvider} in order to obtain the
-	 *                      {@link KurentoClient} that will be used by the room
+	 * Creates a session with the already existing not-active session in the
+	 * indicated KMS, if it doesn't already exist
+	 * 
 	 * @throws OpenViduException in case of error while creating the session
 	 */
-	public void createSession(Session sessionNotActive, KurentoClientSessionInfo kcSessionInfo)
-			throws OpenViduException {
-		String sessionId = kcSessionInfo.getRoomName();
-		KurentoSession session = (KurentoSession) sessions.get(sessionId);
+	public KurentoSession createSession(Session sessionNotActive, Kms kms) throws OpenViduException {
+		KurentoSession session = (KurentoSession) sessions.get(sessionNotActive.getSessionId());
 		if (session != null) {
 			throw new OpenViduException(Code.ROOM_CANNOT_BE_CREATED_ERROR_CODE,
-					"Session '" + sessionId + "' already exists");
+					"Session '" + session.getSessionId() + "' already exists");
 		}
-		this.kurentoClient = kcProvider.getKurentoClient(kcSessionInfo);
-		session = new KurentoSession(sessionNotActive, kurentoClient, kurentoSessionEventsHandler,
-				kurentoEndpointConfig, kcProvider.destroyWhenUnused());
+		session = new KurentoSession(sessionNotActive, kms, kurentoSessionEventsHandler, kurentoEndpointConfig,
+				kmsManager.destroyWhenUnused());
 
-		KurentoSession oldSession = (KurentoSession) sessions.putIfAbsent(sessionId, session);
+		KurentoSession oldSession = (KurentoSession) sessions.putIfAbsent(session.getSessionId(), session);
 		if (oldSession != null) {
-			log.warn("Session '{}' has just been created by another thread", sessionId);
-			return;
+			log.warn("Session '{}' has just been created by another thread", session.getSessionId());
+			return oldSession;
 		}
-		String kcName = "[NAME NOT AVAILABLE]";
-		if (kurentoClient.getServerManager() != null) {
-			kcName = kurentoClient.getServerManager().getName();
-		}
-		log.warn("No session '{}' exists yet. Created one using KurentoClient '{}'.", sessionId, kcName);
+		log.warn("No session '{}' exists yet. Created one on KMS '{}'", session.getSessionId(), kms.getUri());
 
 		sessionEventsHandler.onSessionCreated(session);
+		return session;
 	}
 
 	@Override
@@ -850,6 +833,10 @@ public class KurentoSessionManager extends SessionManager {
 	public String getParticipantPrivateIdFromStreamId(String sessionId, String streamId) {
 		Session session = this.getSession(sessionId);
 		return ((KurentoSession) session).getParticipantPrivateIdFromStreamId(streamId);
+	}
+
+	public KmsManager getKmsManager() {
+		return this.kmsManager;
 	}
 
 	private void applyFilterInPublisher(KurentoParticipant kParticipant, KurentoFilter filter)

@@ -62,9 +62,8 @@ import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.core.SessionEventsHandler;
 import io.openvidu.server.core.SessionManager;
-import io.openvidu.server.kurento.KurentoClientProvider;
-import io.openvidu.server.kurento.KurentoClientSessionInfo;
-import io.openvidu.server.kurento.OpenViduKurentoClientSessionInfo;
+import io.openvidu.server.kurento.core.KurentoSession;
+import io.openvidu.server.kurento.kms.KmsManager;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.utils.CustomFileManager;
 import io.openvidu.server.utils.DockerManager;
@@ -89,7 +88,7 @@ public class RecordingManager {
 	protected OpenviduConfig openviduConfig;
 
 	@Autowired
-	private KurentoClientProvider kcProvider;
+	private KmsManager kmsManager;
 
 	protected Map<String, Recording> startingRecordings = new ConcurrentHashMap<>();
 	protected Map<String, Recording> startedRecordings = new ConcurrentHashMap<>();
@@ -221,10 +220,10 @@ public class RecordingManager {
 		recording = this.sessionsRecordings.get(session.getSessionId());
 		switch (recording.getOutputMode()) {
 		case COMPOSED:
-			recording = this.composedRecordingService.stopRecording(session, recording, reason, true);
+			recording = this.composedRecordingService.stopRecording(session, recording, reason);
 			break;
 		case INDIVIDUAL:
-			recording = this.singleStreamRecordingService.stopRecording(session, recording, reason, true);
+			recording = this.singleStreamRecordingService.stopRecording(session, recording, reason);
 			break;
 		}
 		this.abortAutomaticRecordingStopThread(session);
@@ -254,22 +253,23 @@ public class RecordingManager {
 		}
 	}
 
-	public void stopOneIndividualStreamRecording(String sessionId, String streamId, boolean forceAfterKmsRestart) {
-		Recording recording = this.sessionsRecordings.get(sessionId);
+	public void stopOneIndividualStreamRecording(KurentoSession session, String streamId) {
+		Recording recording = this.sessionsRecordings.get(session.getSessionId());
 		if (recording == null) {
 			log.error("Cannot stop recording of existing stream {}. Session {} is not being recorded", streamId,
-					sessionId);
+					session.getSessionId());
 		}
 		if (io.openvidu.java.client.Recording.OutputMode.INDIVIDUAL.equals(recording.getOutputMode())) {
 			// Stop specific RecorderEndpoint for this stream
-			log.info("Stopping RecorderEndpoint in session {} for stream of participant {}", sessionId, streamId);
+			log.info("Stopping RecorderEndpoint in session {} for stream of participant {}", session.getSessionId(),
+					streamId);
 			final CountDownLatch stoppedCountDown = new CountDownLatch(1);
-			this.singleStreamRecordingService.stopRecorderEndpointOfPublisherEndpoint(sessionId, streamId,
-					stoppedCountDown, forceAfterKmsRestart);
+			this.singleStreamRecordingService.stopRecorderEndpointOfPublisherEndpoint(session.getSessionId(), streamId,
+					stoppedCountDown, session.getKms().getTimeOfKurentoClientDisconnection());
 			try {
 				if (!stoppedCountDown.await(5, TimeUnit.SECONDS)) {
 					log.error("Error waiting for recorder endpoint of stream {} to stop in session {}", streamId,
-							sessionId);
+							session.getSessionId());
 				}
 			} catch (InterruptedException e) {
 				log.error("Exception while waiting for state change", e);
@@ -277,9 +277,9 @@ public class RecordingManager {
 		} else if (io.openvidu.java.client.Recording.OutputMode.COMPOSED.equals(recording.getOutputMode())
 				&& !recording.hasVideo()) {
 			// Disconnect this stream from existing Composite recorder
-			log.info("Removing PublisherEndpoint from Composite in session {} for stream of participant {}", sessionId,
-					streamId);
-			this.composedRecordingService.removePublisherEndpointFromComposite(sessionId, streamId);
+			log.info("Removing PublisherEndpoint from Composite in session {} for stream of participant {}",
+					session.getSessionId(), streamId);
+			this.composedRecordingService.removePublisherEndpointFromComposite(session.getSessionId(), streamId);
 		}
 	}
 
@@ -536,9 +536,7 @@ public class RecordingManager {
 		final String testFilePath = testFolderPath + "/TEST_RECORDING_PATH.webm";
 
 		// Check Kurento Media Server write permissions in recording path
-		KurentoClientSessionInfo kcSessionInfo = new OpenViduKurentoClientSessionInfo("TEST_RECORDING_PATH",
-				"TEST_RECORDING_PATH");
-		MediaPipeline pipeline = this.kcProvider.getKurentoClient(kcSessionInfo).createMediaPipeline();
+		MediaPipeline pipeline = this.kmsManager.getLessLoadedKms().getKurentoClient().createMediaPipeline();
 		RecorderEndpoint recorder = new RecorderEndpoint.Builder(pipeline, "file://" + testFilePath).build();
 
 		final AtomicBoolean kurentoRecorderError = new AtomicBoolean(false);

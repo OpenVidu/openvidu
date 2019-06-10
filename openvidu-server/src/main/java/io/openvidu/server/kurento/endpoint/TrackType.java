@@ -15,8 +15,8 @@
  *
  */
 
-package io.openvidu.server.kurento;
+package io.openvidu.server.kurento.endpoint;
 
 public enum TrackType {
-  ALL, VIDEO, AUDIO;
+	ALL, VIDEO, AUDIO;
 }

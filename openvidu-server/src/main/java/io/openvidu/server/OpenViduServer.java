@@ -56,12 +56,13 @@ import io.openvidu.server.core.TokenGenerator;
 import io.openvidu.server.core.TokenGeneratorDefault;
 import io.openvidu.server.coturn.CoturnCredentialsService;
 import io.openvidu.server.coturn.CoturnCredentialsServiceFactory;
-import io.openvidu.server.kurento.AutodiscoveryKurentoClientProvider;
-import io.openvidu.server.kurento.KurentoClientProvider;
 import io.openvidu.server.kurento.core.KurentoParticipantEndpointConfig;
 import io.openvidu.server.kurento.core.KurentoSessionEventsHandler;
 import io.openvidu.server.kurento.core.KurentoSessionManager;
+import io.openvidu.server.kurento.kms.DummyLoadManager;
 import io.openvidu.server.kurento.kms.FixedOneKmsManager;
+import io.openvidu.server.kurento.kms.KmsManager;
+import io.openvidu.server.kurento.kms.LoadManager;
 import io.openvidu.server.recording.service.RecordingManager;
 import io.openvidu.server.rpc.RpcHandler;
 import io.openvidu.server.rpc.RpcNotificationService;
@@ -91,8 +92,7 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public KurentoClientProvider kmsManager() {
-
+	public KmsManager kmsManager() {
 		JsonParser parser = new JsonParser();
 		String uris = env.getProperty(KMSS_URIS_PROPERTY);
 		JsonElement elem = parser.parse(uris);
@@ -104,14 +104,8 @@ public class OpenViduServer implements JsonRpcConfigurer {
 		}
 
 		String firstKmsWsUri = kmsWsUris.get(0);
-
-		if (firstKmsWsUri.equals("autodiscovery")) {
-			log.info("Using autodiscovery rules to locate KMS on every pipeline");
-			return new AutodiscoveryKurentoClientProvider();
-		} else {
-			log.info("Configuring OpenVidu Server to use first of the following kmss: " + kmsWsUris);
-			return new FixedOneKmsManager(firstKmsWsUri);
-		}
+		log.info("OpenVidu Server using one KMS: {}", kmsWsUris);
+		return new FixedOneKmsManager(firstKmsWsUri);
 	}
 
 	@Bean
@@ -154,6 +148,12 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	@ConditionalOnMissingBean
 	public TokenGenerator tokenGenerator() {
 		return new TokenGeneratorDefault();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public LoadManager loadManager() {
+		return new DummyLoadManager();
 	}
 
 	@Bean
@@ -275,12 +275,8 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	@EventListener(ApplicationReadyEvent.class)
 	public void whenReady() {
 		final String NEW_LINE = System.lineSeparator();
-		String str = 	NEW_LINE +
-						NEW_LINE + "    ACCESS IP            " + 
-						NEW_LINE + "-------------------------" + 
-						NEW_LINE + httpUrl                     + 
-						NEW_LINE + "-------------------------" + 
-						NEW_LINE;
+		String str = NEW_LINE + NEW_LINE + "    ACCESS IP            " + NEW_LINE + "-------------------------"
+				+ NEW_LINE + httpUrl + NEW_LINE + "-------------------------" + NEW_LINE;
 		log.info(str);
 	}
 

@@ -15,7 +15,7 @@
  *
  */
 
-package io.openvidu.server.kurento;
+package io.openvidu.server.kurento.endpoint;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;

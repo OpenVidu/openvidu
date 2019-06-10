@@ -17,6 +17,9 @@
 
 package io.openvidu.server.kurento.kms;
 
+import org.springframework.stereotype.Service;
+
+@Service
 public interface LoadManager {
 
   double calculateLoad(Kms kms);
