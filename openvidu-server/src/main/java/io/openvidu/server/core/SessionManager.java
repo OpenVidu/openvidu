@@ -80,8 +80,6 @@ public abstract class SessionManager {
 	protected ConcurrentMap<String, Boolean> insecureUsers = new ConcurrentHashMap<>();
 	public ConcurrentMap<String, ConcurrentHashMap<String, Token>> sessionidTokenTokenobj = new ConcurrentHashMap<>();
 
-	private volatile boolean closed = false;
-
 	public abstract void joinRoom(Participant participant, String sessionId, Integer transactionId);
 
 	public abstract void leaveRoom(Participant participant, Integer transactionId, EndReason reason,
@@ -407,7 +405,6 @@ public abstract class SessionManager {
 	 */
 	@PreDestroy
 	public void close() {
-		closed = true;
 		log.info("Closing all sessions");
 		for (String sessionId : sessions.keySet()) {
 			try {

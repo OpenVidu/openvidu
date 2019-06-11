@@ -20,12 +20,12 @@ package io.openvidu.server.recording;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import io.openvidu.server.config.OpenviduConfig;
 
 @Configuration
-public class RecordingsHttpHandler extends WebMvcConfigurerAdapter {
+public class RecordingsHttpHandler implements WebMvcConfigurer {
 
 	@Autowired
 	OpenviduConfig openviduConfig;
