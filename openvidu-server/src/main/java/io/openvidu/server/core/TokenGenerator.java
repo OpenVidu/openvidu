@@ -17,9 +17,12 @@
 
 package io.openvidu.server.core;
 
+import org.springframework.stereotype.Service;
+
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.server.kurento.core.KurentoTokenOptions;
 
+@Service
 public interface TokenGenerator {
 
 	public Token generateToken(String sessionId, OpenViduRole role, String serverMetadata,

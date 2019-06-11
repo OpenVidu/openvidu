@@ -219,6 +219,11 @@ public class RecordingManager {
 		switch (recording.getOutputMode()) {
 		case COMPOSED:
 			recording = this.composedRecordingService.stopRecording(session, recording, reason);
+			if (recording.hasVideo()) {
+				this.sessionManager.evictParticipant(
+						session.getParticipantByPublicId(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID), null, null,
+						null);
+			}
 			break;
 		case INDIVIDUAL:
 			recording = this.singleStreamRecordingService.stopRecording(session, recording, reason);

@@ -61,7 +61,6 @@ public abstract class KmsManager {
 	@Autowired
 	protected SessionManager sessionManager;
 
-	@Autowired
 	protected LoadManager loadManager;
 
 	private final Logger log = LoggerFactory.getLogger(KmsManager.class);
@@ -70,6 +69,10 @@ public abstract class KmsManager {
 	private Map<String, Kms> kmss = new ConcurrentHashMap<>();
 
 	private Iterator<Kms> usageIterator = null;
+
+	public KmsManager(LoadManager loadManager) {
+		this.loadManager = loadManager;
+	}
 
 	public synchronized void addKms(Kms kms) {
 		this.kmss.put(kms.getUri(), kms);

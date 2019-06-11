@@ -105,7 +105,7 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 		String firstKmsWsUri = kmsWsUris.get(0);
 		log.info("OpenVidu Server using one KMS: {}", kmsWsUris);
-		return new FixedOneKmsManager(firstKmsWsUri);
+		return new FixedOneKmsManager(firstKmsWsUri, new DummyLoadManager());
 	}
 
 	@Bean
@@ -148,12 +148,6 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	@ConditionalOnMissingBean
 	public TokenGenerator tokenGenerator() {
 		return new TokenGeneratorDefault();
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	public LoadManager loadManager() {
-		return new DummyLoadManager();
 	}
 
 	@Bean

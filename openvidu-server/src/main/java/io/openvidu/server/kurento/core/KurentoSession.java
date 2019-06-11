@@ -287,11 +287,6 @@ public class KurentoSession extends Session {
 		if (recordingManager.sessionIsBeingRecorded(this.sessionId)) {
 			Recording stoppedRecording = this.recordingManager.forceStopRecording(this,
 					EndReason.mediaServerDisconnect);
-			if (OutputMode.COMPOSED.equals(stoppedRecording.getOutputMode()) && stoppedRecording.hasVideo()) {
-				recordingManager.getSessionManager().evictParticipant(
-						this.getParticipantByPublicId(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID), null, null,
-						null);
-			}
 		}
 
 		// Close all MediaEndpoints of participants

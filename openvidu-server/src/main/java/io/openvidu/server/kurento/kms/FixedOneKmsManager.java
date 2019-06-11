@@ -29,7 +29,9 @@ public class FixedOneKmsManager extends KmsManager {
 
 	private static final Logger log = LoggerFactory.getLogger(FixedOneKmsManager.class);
 
-	public FixedOneKmsManager(String kmsWsUri) {
+	public FixedOneKmsManager(String kmsWsUri, LoadManager loadManager) {
+		super(loadManager);
+
 		KurentoClient kClient = KurentoClient.create(kmsWsUri, new KurentoConnectionListener() {
 
 			@Override
