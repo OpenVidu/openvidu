@@ -42,16 +42,42 @@
 	</developers>
 
 	<properties>
-		<version.kurento>6.10.0</version.kurento>
+		<version.kurento>6.10.1-SNAPSHOT</version.kurento>
 		<version.spring-boot>2.1.5.RELEASE</version.spring-boot>
 		<version.junit>4.12</version.junit>
-		<version.mockito>1.10.19</version.mockito>
+		<version.junit.jupiter>5.5.0-M1</version.junit.jupiter>
+		<version.junit.platform>1.5.0-M1</version.junit.platform>
+		<version.selenium>3.141.59</version.selenium>
+		<version.mockito.all>1.10.19</version.mockito.all>
+		<version.mockito.core>2.28.2</version.mockito.core>
 		<version.powermock>1.7.4</version.powermock>
+		<version.powermock.junit4>2.0.2</version.powermock.junit4>
 		<version.hamcrest-core>2.1</version.hamcrest-core>
 		<version.hamcrest-library>2.1</version.hamcrest-library>
 		<version.json-simple>1.1.1</version.json-simple>
 		<version.httpclient>4.5.8</version.httpclient>
+		<version.janino>3.0.12</version.janino>
+		<version.commonslang>3.9</version.commonslang>
+		<version.dockerjava>3.1.2</version.dockerjava>
+		<version.thymeleaf>3.0.11.RELEASE</version.thymeleaf>
+		<version.thymeleaflayout>2.4.1</version.thymeleaflayout>
+
+		<version.webdrivermanager>3.6.1</version.webdrivermanager>
+		<version.selenium.jupiter>3.2.1</version.selenium.jupiter>
+
+		<version.openvidu.java.client>2.10.0</version.openvidu.java.client>
+		<version.openvidu.client>1.1.0</version.openvidu.client>
+		<version.openvidu.test>1.1.0</version.openvidu.test>
+		<version.openvidu.test.browsers>1.0.0</version.openvidu.test.browsers>
+
 		<version.enforcer.plugin>3.0.0-M2</version.enforcer.plugin>
+		<version.extra.enforcer.rules.plugin>1.2</version.extra.enforcer.rules.plugin>
+		<version.source.plugin>3.1.0</version.source.plugin>
+		<version.surefire.plugin>3.0.0-M3</version.surefire.plugin>
+		<version.gpg.plugin>1.6</version.gpg.plugin>
+		<version.nexus.staging.plugin>1.6.8</version.nexus.staging.plugin>
+		<version.exec.plugin>1.6.0</version.exec.plugin>
+		<version.javadoc.plugin>3.1.0</version.javadoc.plugin>
 
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<maven.compiler.source>1.8</maven.compiler.source>
@@ -181,7 +207,7 @@
 					<dependency>
 						<groupId>org.codehaus.mojo</groupId>
 						<artifactId>extra-enforcer-rules</artifactId>
-						<version>1.1</version>
+						<version>${version.extra.enforcer.rules.plugin}</version>
 					</dependency>
 				</dependencies>
 			</plugin>
@@ -233,7 +259,7 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-source-plugin</artifactId>
-						<version>3.1.0</version>
+						<version>${version.source.plugin}</version>
 						<executions>
 							<execution>
 								<id>attach-sources</id>
@@ -246,7 +272,7 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-gpg-plugin</artifactId>
-						<version>1.6</version>
+						<version>${version.gpg.plugin}</version>
 						<executions>
 							<execution>
 								<id>sign-artifacts</id>
@@ -260,7 +286,7 @@
 					<plugin>
 						<groupId>org.sonatype.plugins</groupId>
 						<artifactId>nexus-staging-maven-plugin</artifactId>
-						<version>1.6.8</version>
+						<version>${version.nexus.staging.plugin}</version>
 						<extensions>true</extensions>
 						<configuration>
 							<serverId>ossrh</serverId>

@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>io.openvidu</groupId>
 		<artifactId>openvidu-parent</artifactId>
-		<version>1.9.0-beta-1</version>
+		<version>2.0.0</version>
 	</parent>
 
 	<artifactId>openvidu-java-client</artifactId>
@@ -105,7 +105,7 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-javadoc-plugin</artifactId>
-						<version>3.1.0</version>
+						<version>${version.javadoc.plugin}</version>
 						<configuration>
 							<show>public</show>
 						</configuration>
@@ -127,7 +127,7 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-source-plugin</artifactId>
-						<version>3.1.0</version>
+						<version>${version.source.plugin}</version>
 						<executions>
 							<execution>
 								<id>attach-sources</id>
@@ -140,7 +140,7 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-javadoc-plugin</artifactId>
-						<version>3.1.0</version>
+						<version>${version.javadoc.plugin}</version>
 						<configuration>
 							<show>public</show>
 						</configuration>
@@ -156,7 +156,7 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-gpg-plugin</artifactId>
-						<version>1.6</version>
+						<version>${version.gpg.plugin}</version>
 						<executions>
 							<execution>
 								<id>sign-artifacts</id>
@@ -170,7 +170,7 @@
 					<plugin>
 						<groupId>org.sonatype.plugins</groupId>
 						<artifactId>nexus-staging-maven-plugin</artifactId>
-						<version>1.6.8</version>
+						<version>${version.nexus.staging.plugin}</version>
 						<extensions>true</extensions>
 						<configuration>
 							<serverId>ossrh</serverId>

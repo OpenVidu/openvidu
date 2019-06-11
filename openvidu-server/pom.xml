@@ -1,5 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
@@ -94,7 +96,7 @@
 					<plugin>
 						<groupId>org.codehaus.mojo</groupId>
 						<artifactId>exec-maven-plugin</artifactId>
-						<version>1.6.0</version>
+						<version>${version.exec.plugin}</version>
 						<configuration>
 							<mainClass>${start-class}</mainClass>
 						</configuration>
@@ -149,7 +151,7 @@
 					<plugin>
 						<groupId>org.codehaus.mojo</groupId>
 						<artifactId>exec-maven-plugin</artifactId>
-						<version>1.6.0</version>
+						<version>{version.exec.plugin}</version>
 						<configuration>
 							<mainClass>${start-class}</mainClass>
 						</configuration>
@@ -189,7 +191,7 @@
 		<dependency>
 			<groupId>io.openvidu</groupId>
 			<artifactId>openvidu-client</artifactId>
-			<version>1.1.0</version>
+			<version>${version.openvidu.client}</version>
 			<exclusions>
 				<exclusion>
 					<groupId>org.slf4j</groupId>
@@ -244,7 +246,7 @@
 		<dependency>
 			<groupId>org.thymeleaf</groupId>
 			<artifactId>thymeleaf-spring4</artifactId>
-			<version>3.0.9.RELEASE</version>
+			<version>${version.thymeleaf}</version>
 			<exclusions>
 				<exclusion>
 					<groupId>org.slf4j</groupId>
@@ -255,7 +257,7 @@
 		<dependency>
 			<groupId>nz.net.ultraq.thymeleaf</groupId>
 			<artifactId>thymeleaf-layout-dialect</artifactId>
-			<version>2.2.2</version>
+			<version>${version.thymeleaflayout}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -265,22 +267,22 @@
 		<dependency>
 			<groupId>com.github.docker-java</groupId>
 			<artifactId>docker-java</artifactId>
-			<version>3.1.1</version>
-		</dependency>
-		<dependency>
-			<groupId>io.openvidu</groupId>
-			<artifactId>openvidu-java-client</artifactId>
-			<version>2.10.0</version>
+			<version>${version.dockerjava}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.codehaus.janino</groupId>
 			<artifactId>janino</artifactId>
-			<version>3.0.7</version>
+			<version>${version.janino}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
-			<version>3.7</version>
+			<version>${version.commonslang}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.openvidu</groupId>
+			<artifactId>openvidu-java-client</artifactId>
+			<version>${version.openvidu.java.client}</version>
 		</dependency>
 
 		<!-- Test dependencies -->
@@ -288,7 +290,7 @@
 		<dependency>
 			<groupId>io.openvidu</groupId>
 			<artifactId>openvidu-test</artifactId>
-			<version>1.1.0</version>
+			<version>${version.openvidu.test}</version>
 			<scope>test</scope>
 			<exclusions>
 				<exclusion>
@@ -321,13 +323,13 @@
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-all</artifactId>
-			<version>${version.mockito}</version>
+			<version>${version.mockito.all}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
-			<version>${version.mockito}</version>
+			<version>${version.mockito.core}</version>
 			<scope>test</scope>
 			<exclusions>
 				<exclusion>
@@ -345,7 +347,7 @@
 		<dependency>
 			<groupId>org.powermock</groupId>
 			<artifactId>powermock-module-junit4</artifactId>
-			<version>${version.powermock}</version>
+			<version>${version.powermock.junit4}</version>
 			<scope>test</scope>
 		</dependency>
 

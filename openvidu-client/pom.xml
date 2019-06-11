@@ -1,11 +1,12 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
 		<groupId>io.openvidu</groupId>
 		<artifactId>openvidu-parent</artifactId>
-		<version>1.9.0-beta-1</version>
+		<version>2.0.0</version>
 	</parent>
 
 	<artifactId>openvidu-client</artifactId>
@@ -67,7 +68,7 @@
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
-			<version>${version.mockito}</version>
+			<version>${version.mockito.core}</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

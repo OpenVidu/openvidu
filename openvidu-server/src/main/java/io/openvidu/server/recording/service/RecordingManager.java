@@ -220,6 +220,7 @@ public class RecordingManager {
 		case COMPOSED:
 			recording = this.composedRecordingService.stopRecording(session, recording, reason);
 			if (recording.hasVideo()) {
+				// Evict the recorder participant if composed recording with video
 				this.sessionManager.evictParticipant(
 						session.getParticipantByPublicId(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID), null, null,
 						null);

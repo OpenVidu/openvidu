@@ -33,12 +33,10 @@ import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.OpenViduRole;
-import io.openvidu.java.client.Recording.OutputMode;
 import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.kurento.kms.Kms;
-import io.openvidu.server.recording.Recording;
 
 /**
  * @author Pablo Fuente (pablofuenteperez@gmail.com)
@@ -285,8 +283,7 @@ public class KurentoSession extends Session {
 
 		// Stop recording if session is being recorded
 		if (recordingManager.sessionIsBeingRecorded(this.sessionId)) {
-			Recording stoppedRecording = this.recordingManager.forceStopRecording(this,
-					EndReason.mediaServerDisconnect);
+			this.recordingManager.forceStopRecording(this, EndReason.mediaServerDisconnect);
 		}
 
 		// Close all MediaEndpoints of participants
