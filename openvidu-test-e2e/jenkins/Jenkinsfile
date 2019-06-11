@@ -23,6 +23,7 @@ node('container') {
             mvn dependency:get -DrepoUrl=https://maven.openvidu.io/repository/snapshots/ -Dartifact=org.kurento:kurento-client:$MVN_VERSION
             mvn dependency:get -DrepoUrl=https://maven.openvidu.io/repository/snapshots/ -Dartifact=org.kurento:kurento-jsonrpc-client-jetty:$MVN_VERSION
             mvn dependency:get -DrepoUrl=https://maven.openvidu.io/repository/snapshots/ -Dartifact=org.kurento:kurento-jsonrpc-server:$MVN_VERSION
+            mvn dependency:get -DrepoUrl=https://maven.openvidu.io/repository/snapshots/ -Dartifact=org.kurento:kurento-test:$MVN_VERSION
             fi
         '''.stripIndent())
           sh(script: '''#!/bin/bash
