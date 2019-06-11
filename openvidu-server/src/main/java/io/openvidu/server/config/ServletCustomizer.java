@@ -17,20 +17,20 @@
 
 package io.openvidu.server.config;
 
-import org.springframework.boot.context.embedded.ConfigurableEmbeddedServletContainer;
-import org.springframework.boot.context.embedded.EmbeddedServletContainerCustomizer;
-import org.springframework.boot.context.embedded.MimeMappings;
+import org.springframework.boot.web.server.MimeMappings;
+import org.springframework.boot.web.server.WebServerFactoryCustomizer;
+import org.springframework.boot.web.servlet.server.ConfigurableServletWebServerFactory;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ServletCustomizer implements EmbeddedServletContainerCustomizer {
+public class ServletCustomizer implements WebServerFactoryCustomizer<ConfigurableServletWebServerFactory> {
 
 	@Override
-	public void customize(ConfigurableEmbeddedServletContainer container) {
+	public void customize(ConfigurableServletWebServerFactory factory) {
 		MimeMappings mappings = new MimeMappings(MimeMappings.DEFAULT);
 		mappings.add("mp4", "video/mp4");
 		mappings.add("webm", "video/webm");
-		container.setMimeMappings(mappings);
+		factory.setMimeMappings(mappings);
 	}
 
 }

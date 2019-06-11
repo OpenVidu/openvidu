@@ -121,8 +121,6 @@ public class SingleStreamRecordingService extends RecordingService {
 		}
 
 		this.generateRecordingMetadataFile(recording);
-		this.updateRecordingManagerCollections(session, recording);
-		this.sendRecordingStartedNotification(session, recording);
 
 		return recording;
 	}

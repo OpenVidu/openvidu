@@ -86,8 +86,6 @@ public class ComposedRecordingService extends RecordingService {
 			recording = this.startRecordingAudioOnly(session, recording, properties);
 		}
 
-		this.updateRecordingManagerCollections(session, recording);
-
 		return recording;
 	}
 
@@ -204,7 +202,6 @@ public class ComposedRecordingService extends RecordingService {
 		}
 
 		this.generateRecordingMetadataFile(recording);
-		this.sendRecordingStartedNotification(session, recording);
 
 		return recording;
 	}

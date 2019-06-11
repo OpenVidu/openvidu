@@ -95,24 +95,6 @@ public abstract class RecordingService {
 	}
 
 	/**
-	 * Changes recording from starting to started, updates global recording
-	 * collections and sends RPC response to clients
-	 */
-	protected void updateRecordingManagerCollections(Session session, Recording recording) {
-		this.recordingManager.sessionHandler.setRecordingStarted(session.getSessionId(), recording);
-		this.recordingManager.sessionsRecordings.put(session.getSessionId(), recording);
-		this.recordingManager.startingRecordings.remove(recording.getId());
-		this.recordingManager.startedRecordings.put(recording.getId(), recording);
-	}
-
-	/**
-	 * Sends RPC response for recording started event
-	 */
-	protected void sendRecordingStartedNotification(Session session, Recording recording) {
-		this.recordingManager.getSessionEventsHandler().sendRecordingStartedNotification(session, recording);
-	}
-
-	/**
 	 * Returns a new available recording identifier (adding a number tag at the end
 	 * of the sessionId if it already exists) and rebuilds RecordinProperties object
 	 * to set the final value of "name" property

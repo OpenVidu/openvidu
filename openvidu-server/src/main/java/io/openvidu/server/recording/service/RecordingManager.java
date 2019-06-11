@@ -55,6 +55,7 @@ import com.google.gson.JsonParser;
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
+import io.openvidu.java.client.Recording.OutputMode;
 import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.EndReason;
@@ -73,7 +74,6 @@ public class RecordingManager {
 
 	private static final Logger log = LoggerFactory.getLogger(RecordingManager.class);
 
-	RecordingService recordingService;
 	private ComposedRecordingService composedRecordingService;
 	private SingleStreamRecordingService singleStreamRecordingService;
 	private DockerManager dockerManager;
@@ -105,14 +105,6 @@ public class RecordingManager {
 	private static final List<EndReason> LAST_PARTICIPANT_LEFT_REASONS = Arrays
 			.asList(new EndReason[] { EndReason.disconnect, EndReason.forceDisconnectByUser,
 					EndReason.forceDisconnectByServer, EndReason.networkDisconnect });
-
-	public SessionEventsHandler getSessionEventsHandler() {
-		return this.sessionHandler;
-	}
-
-	public SessionManager getSessionManager() {
-		return this.sessionManager;
-	}
 
 	public void initializeRecordingManager() throws OpenViduException {
 
@@ -185,6 +177,12 @@ public class RecordingManager {
 			}
 		} catch (OpenViduException e) {
 			throw e;
+		}
+		this.updateRecordingManagerCollections(session, recording);
+		if (!OutputMode.COMPOSED.equals(properties.outputMode()) && properties.hasVideo()) {
+			// Directly send recording started notification for all cases except for
+			// COMPOSED recordings with video (will be sent on first RECORDER subscriber)
+			this.sessionHandler.sendRecordingStartedNotification(session, recording);
 		}
 		if (session.getActivePublishers() == 0) {
 			// Init automatic recording stop if there are now publishers when starting
@@ -636,6 +634,17 @@ public class RecordingManager {
 		} else {
 			return reason;
 		}
+	}
+
+	/**
+	 * Changes recording from starting to started, updates global recording
+	 * collections and sends RPC response to clients
+	 */
+	private void updateRecordingManagerCollections(Session session, Recording recording) {
+		this.sessionHandler.setRecordingStarted(session.getSessionId(), recording);
+		this.sessionsRecordings.put(session.getSessionId(), recording);
+		this.startingRecordings.remove(recording.getId());
+		this.startedRecordings.put(recording.getId(), recording);
 	}
 
 }
