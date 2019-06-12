@@ -48,6 +48,7 @@ public class KurentoSession extends Session {
 
 	private MediaPipeline pipeline;
 	private CountDownLatch pipelineLatch = new CountDownLatch(1);
+	private Throwable pipelineCreationErrorCause;
 
 	private Kms kms;
 	private KurentoSessionEventsHandler kurentoSessionHandler;
@@ -219,6 +220,7 @@ public class KurentoSession extends Session {
 
 					@Override
 					public void onError(Throwable cause) throws Exception {
+						pipelineCreationErrorCause = cause;
 						pipelineLatch.countDown();
 						log.error("SESSION {}: Failed to create MediaPipeline", sessionId, cause);
 					}
@@ -228,8 +230,11 @@ public class KurentoSession extends Session {
 				pipelineLatch.countDown();
 			}
 			if (getPipeline() == null) {
-				throw new OpenViduException(Code.ROOM_CANNOT_BE_CREATED_ERROR_CODE,
-						"Unable to create media pipeline for session '" + sessionId + "'");
+				final String message = pipelineCreationErrorCause != null
+						? pipelineCreationErrorCause.getLocalizedMessage()
+						: "Unable to create media pipeline for session '" + sessionId + "'";
+				pipelineCreationErrorCause = null;
+				throw new OpenViduException(Code.ROOM_CANNOT_BE_CREATED_ERROR_CODE, message);
 			}
 
 			pipeline.addErrorListener(new EventListener<ErrorEvent>() {
@@ -246,6 +251,10 @@ public class KurentoSession extends Session {
 
 	private void closePipeline(Runnable callback) {
 		synchronized (pipelineReleaseLock) {
+
+			this.pipelineLatch = new CountDownLatch(1);
+			this.pipelineCreationErrorCause = null;
+
 			if (pipeline == null) {
 				return;
 			}

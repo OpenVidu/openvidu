@@ -66,7 +66,7 @@ public abstract class KmsManager {
 	private final Logger log = LoggerFactory.getLogger(KmsManager.class);
 
 	// Using KMS websocket uris as unique identifiers
-	private Map<String, Kms> kmss = new ConcurrentHashMap<>();
+	protected Map<String, Kms> kmss = new ConcurrentHashMap<>();
 
 	private Iterator<Kms> usageIterator = null;
 
@@ -80,13 +80,6 @@ public abstract class KmsManager {
 
 	public synchronized void removeKms(Kms kms) {
 		this.kmss.remove(kms.getUri());
-	}
-
-	public synchronized Kms getKms(String sessionId) {
-		if (usageIterator == null || !usageIterator.hasNext()) {
-			usageIterator = kmss.values().iterator();
-		}
-		return usageIterator.next();
 	}
 
 	/**
