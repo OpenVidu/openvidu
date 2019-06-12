@@ -1614,7 +1614,7 @@ public class OpenViduTestAppE2eTest {
 		Thread.sleep(1000);
 		System.out.println(getBase64Screenshot(user));
 		System.out.println(user.getDriver().findElement(By.id("api-response-text-area")).getAttribute("value"));
-		
+
 		user.getWaiter()
 				.until(ExpectedConditions.attributeContains(By.id("api-response-text-area"), "value", "Changes: true"));
 
@@ -2120,8 +2120,7 @@ public class OpenViduTestAppE2eTest {
 
 		String widthAndHeight = user.getEventManager().getDimensionOfViewport();
 		JSONObject obj = (JSONObject) new JSONParser().parse(widthAndHeight);
-		Assert.assertEquals(
-				"{\"width\":" + (long) obj.get("width") + ",\"height\":" + ((long) obj.get("height")) + "}",
+		Assert.assertEquals("{\"width\":" + (long) obj.get("width") + ",\"height\":" + ((long) obj.get("height")) + "}",
 				pub.getVideoDimensions());
 		Assert.assertEquals(new Integer(30), pub.getFrameRate());
 		Assert.assertEquals("SCREEN", pub.getTypeOfVideo());
@@ -2201,10 +2200,13 @@ public class OpenViduTestAppE2eTest {
 
 		user.getEventManager().waitUntilEventReaches("recordingStopped", 1);
 
-		Assert.assertTrue("Wrong recording duration", recording.getDuration() > 0);
-		Assert.assertTrue("Wrong recording size", recording.getSize() > 0);
-		Assert.assertNull("Wrong recording url", recording.getUrl());
-		Assert.assertEquals("Wrong recording status", Recording.Status.stopped, recording.getStatus());
+		Assert.assertTrue("Wrong recording duration. Expected > 0 and was " + recording.getDuration(),
+				recording.getDuration() > 0);
+		Assert.assertTrue("Wrong recording size. Excepected > 0 and was " + recording.getSize(),
+				recording.getSize() > 0);
+		Assert.assertNull("Wrong recording url. Expected not null and was null", recording.getUrl());
+		Assert.assertEquals("Wrong recording status. Expected stopped and was " + recording.getStatus().name(),
+				Recording.Status.stopped, recording.getStatus());
 		Assert.assertFalse("Session shouldn't be being recorded", session.isBeingRecorded());
 		Assert.assertFalse("OpenVidu.fetch() should return false", OV.fetch());
 
