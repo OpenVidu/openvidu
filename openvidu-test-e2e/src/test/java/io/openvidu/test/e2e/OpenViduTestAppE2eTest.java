@@ -2189,7 +2189,7 @@ public class OpenViduTestAppE2eTest {
 		Assert.assertTrue("Wrong recording hasAudio", recording.hasAudio());
 		Assert.assertTrue("Wrong recording hasVideo", recording.hasVideo());
 
-		Thread.sleep(3000);
+		Thread.sleep(5000);
 
 		try {
 			OV.stopRecording("NOT_EXISTS");
