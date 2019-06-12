@@ -117,10 +117,6 @@ public abstract class KmsManager {
 		return this.kmss.get(kms.getUri()).isKurentoClientConnected();
 	}
 
-	public long getTimeOfKurentoClientDisconnection(Kms kms) {
-		return this.kmss.get(kms.getUri()).getTimeOfKurentoClientDisconnection();
-	}
-
 	public void setKurentoClientConnectedToKms(String kmsUri, boolean isConnected) {
 		this.kmss.get(kmsUri).setKurentoClientConnected(isConnected);
 	}

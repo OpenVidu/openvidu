@@ -137,7 +137,7 @@ public class KurentoSession extends Session {
 		log.info("PARTICIPANT {}: Leaving session {}", participant.getParticipantPublicId(), this.sessionId);
 
 		this.removeParticipant(participant, reason);
-		participant.close(reason, true);
+		participant.close(reason, true, 0);
 	}
 
 	@Override
@@ -146,7 +146,7 @@ public class KurentoSession extends Session {
 
 			for (Participant participant : participants.values()) {
 				((KurentoParticipant) participant).releaseAllFilters();
-				((KurentoParticipant) participant).close(reason, true);
+				((KurentoParticipant) participant).close(reason, true, 0);
 			}
 
 			participants.clear();
@@ -288,13 +288,13 @@ public class KurentoSession extends Session {
 		return this.publishedStreamIds.get(streamId);
 	}
 
-	public void restartStatusInKurento() {
+	public void restartStatusInKurento(long kmsDisconnectionTime) {
 
 		log.info("Reseting process: reseting remote media objects for active session {}", this.sessionId);
 
 		// Stop recording if session is being recorded
 		if (recordingManager.sessionIsBeingRecorded(this.sessionId)) {
-			this.recordingManager.forceStopRecording(this, EndReason.mediaServerDisconnect);
+			this.recordingManager.forceStopRecording(this, EndReason.mediaServerDisconnect, kmsDisconnectionTime);
 		}
 
 		// Close all MediaEndpoints of participants
@@ -302,7 +302,7 @@ public class KurentoSession extends Session {
 			KurentoParticipant kParticipant = (KurentoParticipant) p;
 			final boolean wasStreaming = kParticipant.isStreaming();
 			kParticipant.releaseAllFilters();
-			kParticipant.close(EndReason.mediaServerDisconnect, false);
+			kParticipant.close(EndReason.mediaServerDisconnect, false, kmsDisconnectionTime);
 			if (wasStreaming) {
 				kurentoSessionHandler.onUnpublishMedia(kParticipant, this.getParticipants(), null, null, null,
 						EndReason.mediaServerDisconnect);

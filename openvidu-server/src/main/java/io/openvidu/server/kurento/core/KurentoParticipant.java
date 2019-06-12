@@ -187,10 +187,10 @@ public class KurentoParticipant extends Participant {
 		return sdpResponse;
 	}
 
-	public void unpublishMedia(EndReason reason) {
+	public void unpublishMedia(EndReason reason, long kmsDisconnectionTime) {
 		log.info("PARTICIPANT {}: unpublishing media stream from room {}", this.getParticipantPublicId(),
 				this.session.getSessionId());
-		releasePublisherEndpoint(reason);
+		releasePublisherEndpoint(reason, kmsDisconnectionTime);
 		this.publisher = new PublisherEndpoint(webParticipant, this, this.getParticipantPublicId(), this.getPipeline(),
 				this.openviduConfig);
 		log.info("PARTICIPANT {}: released publisher endpoint and left it initialized (ready for future streaming)",
@@ -298,7 +298,7 @@ public class KurentoParticipant extends Participant {
 		}
 	}
 
-	public void close(EndReason reason, boolean definitelyClosed) {
+	public void close(EndReason reason, boolean definitelyClosed, long kmsDisconnectionTime) {
 		log.debug("PARTICIPANT {}: Closing user", this.getParticipantPublicId());
 		if (isClosed()) {
 			log.warn("PARTICIPANT {}: Already closed", this.getParticipantPublicId());
@@ -319,7 +319,7 @@ public class KurentoParticipant extends Participant {
 			}
 		}
 		this.subscribers.clear();
-		releasePublisherEndpoint(reason);
+		releasePublisherEndpoint(reason, kmsDisconnectionTime);
 	}
 
 	/**
@@ -364,7 +364,7 @@ public class KurentoParticipant extends Participant {
 		session.sendMediaError(this.getParticipantPrivateId(), desc);
 	}
 
-	private void releasePublisherEndpoint(EndReason reason) {
+	private void releasePublisherEndpoint(EndReason reason, long kmsDisconnectionTime) {
 		if (publisher != null && publisher.getEndpoint() != null) {
 
 			// Remove streamId from publisher's map
@@ -372,7 +372,7 @@ public class KurentoParticipant extends Participant {
 
 			if (this.openviduConfig.isRecordingModuleEnabled()
 					&& this.recordingManager.sessionIsBeingRecorded(session.getSessionId())) {
-				this.recordingManager.stopOneIndividualStreamRecording(session, this.getPublisherStreamId());
+				this.recordingManager.stopOneIndividualStreamRecording(session, this.getPublisherStreamId(), kmsDisconnectionTime);
 			}
 
 			publisher.unregisterErrorListeners();

@@ -213,12 +213,12 @@ public class RecordingManager {
 		return recording;
 	}
 
-	public Recording forceStopRecording(Session session, EndReason reason) {
+	public Recording forceStopRecording(Session session, EndReason reason, long kmsDisconnectionTime) {
 		Recording recording;
 		recording = this.sessionsRecordings.get(session.getSessionId());
 		switch (recording.getOutputMode()) {
 		case COMPOSED:
-			recording = this.composedRecordingService.stopRecording(session, recording, reason);
+			recording = this.composedRecordingService.stopRecording(session, recording, reason, kmsDisconnectionTime);
 			if (recording.hasVideo()) {
 				// Evict the recorder participant if composed recording with video
 				this.sessionManager.evictParticipant(
@@ -227,7 +227,7 @@ public class RecordingManager {
 			}
 			break;
 		case INDIVIDUAL:
-			recording = this.singleStreamRecordingService.stopRecording(session, recording, reason);
+			recording = this.singleStreamRecordingService.stopRecording(session, recording, reason, kmsDisconnectionTime);
 			break;
 		}
 		this.abortAutomaticRecordingStopThread(session);
@@ -257,7 +257,7 @@ public class RecordingManager {
 		}
 	}
 
-	public void stopOneIndividualStreamRecording(KurentoSession session, String streamId) {
+	public void stopOneIndividualStreamRecording(KurentoSession session, String streamId, long kmsDisconnectionTime) {
 		Recording recording = this.sessionsRecordings.get(session.getSessionId());
 		if (recording == null) {
 			log.error("Cannot stop recording of existing stream {}. Session {} is not being recorded", streamId,
@@ -269,7 +269,7 @@ public class RecordingManager {
 					streamId);
 			final CountDownLatch stoppedCountDown = new CountDownLatch(1);
 			this.singleStreamRecordingService.stopRecorderEndpointOfPublisherEndpoint(session.getSessionId(), streamId,
-					stoppedCountDown, session.getKms().getTimeOfKurentoClientDisconnection());
+					stoppedCountDown, kmsDisconnectionTime);
 			try {
 				if (!stoppedCountDown.await(5, TimeUnit.SECONDS)) {
 					log.error("Error waiting for recorder endpoint of stream {} to stop in session {}", streamId,

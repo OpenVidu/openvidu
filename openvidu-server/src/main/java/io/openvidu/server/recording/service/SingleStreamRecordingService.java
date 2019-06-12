@@ -56,7 +56,6 @@ import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.kurento.core.KurentoParticipant;
-import io.openvidu.server.kurento.core.KurentoSession;
 import io.openvidu.server.kurento.endpoint.PublisherEndpoint;
 import io.openvidu.server.recording.RecorderEndpointWrapper;
 import io.openvidu.server.recording.Recording;
@@ -127,6 +126,10 @@ public class SingleStreamRecordingService extends RecordingService {
 
 	@Override
 	public Recording stopRecording(Session session, Recording recording, EndReason reason) {
+		return this.stopRecording(session, recording, reason, 0);
+	}
+
+	public Recording stopRecording(Session session, Recording recording, EndReason reason, long kmsDisconnectionTime) {
 		log.info("Stopping individual ({}) recording {} of session {}. Reason: {}",
 				recording.hasVideo() ? (recording.hasAudio() ? "video+audio" : "video-only") : "audioOnly",
 				recording.getId(), recording.getSessionId(), reason);
@@ -134,11 +137,9 @@ public class SingleStreamRecordingService extends RecordingService {
 		final int numberOfActiveRecorders = recorders.get(recording.getSessionId()).size();
 		final CountDownLatch stoppedCountDown = new CountDownLatch(numberOfActiveRecorders);
 
-		final long timeOfKurentoClientDisconnection = ((KurentoSession) session).getKms()
-				.getTimeOfKurentoClientDisconnection();
 		for (RecorderEndpointWrapper wrapper : recorders.get(recording.getSessionId()).values()) {
 			this.stopRecorderEndpointOfPublisherEndpoint(recording.getSessionId(), wrapper.getStreamId(),
-					stoppedCountDown, timeOfKurentoClientDisconnection);
+					stoppedCountDown, kmsDisconnectionTime);
 		}
 		try {
 			if (!stoppedCountDown.await(5, TimeUnit.SECONDS)) {
@@ -237,6 +238,7 @@ public class SingleStreamRecordingService extends RecordingService {
 			finalWrapper.getRecorder().stop();
 		} else {
 			if (kmsDisconnectionTime != 0) {
+				// Stopping recorder endpoint because of a KMS disconnection
 				finalWrapper.setEndTime(kmsDisconnectionTime);
 				generateIndividualMetadataFile(finalWrapper);
 				log.warn("Forcing individual recording stop after KMS restart for stream {} in session {}", streamId,

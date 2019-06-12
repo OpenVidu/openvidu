@@ -41,9 +41,12 @@ public class FixedOneKmsManager extends KmsManager {
 					// Different KMS. Reset sessions status (no Publisher or SUbscriber endpoints)
 					log.warn("Kurento Client reconnected to a different KMS instance, with uri {}", kmsWsUri);
 					log.warn("Updating all webrtc endpoints for active sessions");
+					final Kms kms = ((KurentoSessionManager) sessionManager).getKmsManager().kmss.get(kmsWsUri);
+					final long timeOfKurentoDisconnection = kms.getTimeOfKurentoClientDisconnection();
 					sessionManager.getSessions().forEach(s -> {
-						((KurentoSession) s).restartStatusInKurento();
+						((KurentoSession) s).restartStatusInKurento(timeOfKurentoDisconnection);
 					});
+					kms.setTimeOfKurentoClientDisconnection(0);
 				} else {
 					// Same KMS. We may infer that openvidu-server/KMS connection has been lost, but
 					// not the clients/KMS connections

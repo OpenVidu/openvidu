@@ -94,7 +94,15 @@ public class ComposedRecordingService extends RecordingService {
 		if (recording.hasVideo()) {
 			return this.stopRecordingWithVideo(session, recording, reason);
 		} else {
-			return this.stopRecordingAudioOnly(session, recording, reason);
+			return this.stopRecordingAudioOnly(session, recording, reason, 0);
+		}
+	}
+
+	public Recording stopRecording(Session session, Recording recording, EndReason reason, long kmsDisconnectionTime) {
+		if (recording.hasVideo()) {
+			return this.stopRecordingWithVideo(session, recording, reason);
+		} else {
+			return this.stopRecordingAudioOnly(session, recording, reason, kmsDisconnectionTime);
 		}
 	}
 
@@ -323,7 +331,8 @@ public class ComposedRecordingService extends RecordingService {
 		return recording;
 	}
 
-	private Recording stopRecordingAudioOnly(Session session, Recording recording, EndReason reason) {
+	private Recording stopRecordingAudioOnly(Session session, Recording recording, EndReason reason,
+			long kmsDisconnectionTime) {
 
 		log.info("Stopping composed (audio-only) recording {} of session {}. Reason: {}", recording.getId(),
 				recording.getSessionId(), reason);
@@ -341,7 +350,7 @@ public class ComposedRecordingService extends RecordingService {
 
 		CompositeWrapper compositeWrapper = this.composites.remove(sessionId);
 		final CountDownLatch stoppedCountDown = new CountDownLatch(1);
-		compositeWrapper.stopCompositeRecording(stoppedCountDown, ((KurentoSession)session).getKms().getTimeOfKurentoClientDisconnection());
+		compositeWrapper.stopCompositeRecording(stoppedCountDown, kmsDisconnectionTime);
 
 		try {
 			if (!stoppedCountDown.await(5, TimeUnit.SECONDS)) {
