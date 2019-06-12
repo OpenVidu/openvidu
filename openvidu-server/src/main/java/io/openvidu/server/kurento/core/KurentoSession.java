@@ -251,19 +251,20 @@ public class KurentoSession extends Session {
 
 	private void closePipeline(Runnable callback) {
 		synchronized (pipelineReleaseLock) {
-
-			this.pipelineLatch = new CountDownLatch(1);
-			this.pipelineCreationErrorCause = null;
-
 			if (pipeline == null) {
+				if (callback != null) {
+					callback.run();
+				}
 				return;
 			}
+
 			getPipeline().release(new Continuation<Void>() {
 				@Override
 				public void onSuccess(Void result) throws Exception {
 					log.debug("SESSION {}: Released Pipeline", sessionId);
 					pipeline = null;
 					pipelineLatch = new CountDownLatch(1);
+					pipelineCreationErrorCause = null;
 					if (callback != null) {
 						callback.run();
 					}
@@ -274,6 +275,7 @@ public class KurentoSession extends Session {
 					log.warn("SESSION {}: Could not successfully release Pipeline", sessionId, cause);
 					pipeline = null;
 					pipelineLatch = new CountDownLatch(1);
+					pipelineCreationErrorCause = null;
 					if (callback != null) {
 						callback.run();
 					}
@@ -288,7 +290,7 @@ public class KurentoSession extends Session {
 
 	public void restartStatusInKurento() {
 
-		log.info("Reseting remote media objects for active session {}", this.sessionId);
+		log.info("Reseting process: reseting remote media objects for active session {}", this.sessionId);
 
 		// Stop recording if session is being recorded
 		if (recordingManager.sessionIsBeingRecorded(this.sessionId)) {
@@ -309,7 +311,9 @@ public class KurentoSession extends Session {
 
 		// Release pipeline, create a new one and prepare new PublisherEndpoints for
 		// allowed users
+		log.info("Reseting process: closing media pipeline for active session {}", this.sessionId);
 		this.closePipeline(() -> {
+			log.info("Reseting process: media pipeline closed for active session {}", this.sessionId);
 			createPipeline();
 			try {
 				if (!pipelineLatch.await(20, TimeUnit.SECONDS)) {
@@ -320,6 +324,9 @@ public class KurentoSession extends Session {
 						((KurentoParticipant) p).resetPublisherEndpoint();
 					}
 				});
+				log.info(
+						"Reseting process: media pipeline created and publisher endpoints reseted for active session {}",
+						this.sessionId);
 			} catch (Exception e) {
 				log.error("Error waiting to new MediaPipeline on KurentoSession restart: {}", e.getMessage());
 			}
