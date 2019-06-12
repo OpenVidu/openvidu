@@ -179,7 +179,7 @@ public class RecordingManager {
 			throw e;
 		}
 		this.updateRecordingManagerCollections(session, recording);
-		if (!OutputMode.COMPOSED.equals(properties.outputMode()) && properties.hasVideo()) {
+		if (!(OutputMode.COMPOSED.equals(properties.outputMode()) && properties.hasVideo())) {
 			// Directly send recording started notification for all cases except for
 			// COMPOSED recordings with video (will be sent on first RECORDER subscriber)
 			this.sessionHandler.sendRecordingStartedNotification(session, recording);

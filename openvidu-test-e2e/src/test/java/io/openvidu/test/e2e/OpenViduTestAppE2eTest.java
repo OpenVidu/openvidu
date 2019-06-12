@@ -1378,7 +1378,7 @@ public class OpenViduTestAppE2eTest {
 			user2.getDriver().findElements(By.className("join-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
 
 			try {
-				user2.getEventManager().waitUntilEventReaches("connectionCreated", 4);
+				user2.getEventManager().waitUntilEventReaches("connectionCreated", 8);
 				user2.getEventManager().waitUntilEventReaches("accessAllowed", 2);
 				user2.getEventManager().waitUntilEventReaches("streamCreated", 8);
 				user2.getEventManager().waitUntilEventReaches("streamPlaying", 8);
@@ -1425,7 +1425,7 @@ public class OpenViduTestAppE2eTest {
 		// Join Chrome users
 		user.getDriver().findElements(By.className("join-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
 
-		user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 8);
 		user.getEventManager().waitUntilEventReaches("accessAllowed", 2);
 		user.getEventManager().waitUntilEventReaches("streamCreated", 8);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 8);
