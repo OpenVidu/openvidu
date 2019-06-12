@@ -20,8 +20,10 @@ package io.openvidu.test.browsers;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import org.openqa.selenium.UnexpectedAlertBehaviour;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxProfile;
+import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
@@ -32,6 +34,7 @@ public class FirefoxUser extends BrowserUser {
 
 		DesiredCapabilities capabilities = DesiredCapabilities.firefox();
 		capabilities.setAcceptInsecureCerts(true);
+		capabilities.setCapability(CapabilityType.UNEXPECTED_ALERT_BEHAVIOUR, UnexpectedAlertBehaviour.IGNORE);
 		FirefoxProfile profile = new FirefoxProfile();
 
 		// This flag avoids granting the access to the camera

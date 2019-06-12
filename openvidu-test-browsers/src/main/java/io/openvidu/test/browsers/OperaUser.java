@@ -4,8 +4,10 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.concurrent.TimeUnit;
 
+import org.openqa.selenium.UnexpectedAlertBehaviour;
 import org.openqa.selenium.opera.OperaDriver;
 import org.openqa.selenium.opera.OperaOptions;
+import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
@@ -18,6 +20,7 @@ public class OperaUser extends BrowserUser {
 		options.setBinary("/usr/bin/opera");
 		DesiredCapabilities capabilities = DesiredCapabilities.operaBlink();
 		capabilities.setAcceptInsecureCerts(true);
+		capabilities.setCapability(CapabilityType.UNEXPECTED_ALERT_BEHAVIOUR, UnexpectedAlertBehaviour.IGNORE);
 
 		options.addArguments("--use-fake-ui-for-media-stream");
 		options.addArguments("--use-fake-device-for-media-stream");

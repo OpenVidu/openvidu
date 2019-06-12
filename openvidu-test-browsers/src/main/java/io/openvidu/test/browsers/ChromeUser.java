@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import org.openqa.selenium.UnexpectedAlertBehaviour;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.RemoteWebDriver;
@@ -47,7 +48,8 @@ public class ChromeUser extends BrowserUser {
 	private ChromeUser(String userName, int timeOfWaitInSeconds, ChromeOptions options) {
 		super(userName, timeOfWaitInSeconds);
 		options.setAcceptInsecureCerts(true);
-		
+		options.setUnhandledPromptBehaviour(UnexpectedAlertBehaviour.IGNORE);
+
 		options.addArguments("--disable-infobars");
 
 		Map<String, Object> prefs = new HashMap<String, Object>();
