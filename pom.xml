@@ -230,23 +230,6 @@
 			</modules>
 		</profile>
 		<profile>
-			<id>deploy</id>
-			<modules>
-				<module>openvidu-server</module>
-				<module>openvidu-client</module>
-				<module>openvidu-test</module>
-				<module>openvidu-test-e2e</module>
-				<module>openvidu-test-browsers</module>
-			</modules>
-		</profile>
-		<profile>
-			<id>integration</id>
-			<modules>
-				<module>openvidu-demo</module>
-				<module>openvidu-sampleapp-minimal</module>
-			</modules>
-		</profile>
-		<profile>
 			<id>release-sign-artifacts</id>
 			<activation>
 				<property>
