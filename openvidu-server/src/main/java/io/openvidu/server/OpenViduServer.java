@@ -62,6 +62,7 @@ import io.openvidu.server.kurento.core.KurentoSessionManager;
 import io.openvidu.server.kurento.kms.DummyLoadManager;
 import io.openvidu.server.kurento.kms.FixedOneKmsManager;
 import io.openvidu.server.kurento.kms.KmsManager;
+import io.openvidu.server.kurento.kms.LoadManager;
 import io.openvidu.server.recording.service.RecordingManager;
 import io.openvidu.server.rpc.RpcHandler;
 import io.openvidu.server.rpc.RpcNotificationService;
@@ -104,7 +105,13 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 		String firstKmsWsUri = kmsWsUris.get(0);
 		log.info("OpenVidu Server using one KMS: {}", firstKmsWsUri);
-		return new FixedOneKmsManager(firstKmsWsUri, new DummyLoadManager());
+		return new FixedOneKmsManager(firstKmsWsUri);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public LoadManager loadManager() {
+		return new DummyLoadManager();
 	}
 
 	@Bean

@@ -35,7 +35,7 @@ import io.openvidu.server.config.OpenviduConfig;
 
 /**
  *
- * @author Pablo Fuente Pérez
+ * @author Pablo Fuente (pablofuenteperez@gmail.com)
  */
 @RestController
 @CrossOrigin
@@ -110,9 +110,13 @@ public class ConfigRestController {
 			json.addProperty("openviduRecordingAutostopTimeout", openviduConfig.getOpenviduRecordingAutostopTimeout());
 		}
 
+		return new ResponseEntity<>(json.toString(), getResponseHeaders(), HttpStatus.OK);
+	}
+
+	protected HttpHeaders getResponseHeaders() {
 		HttpHeaders responseHeaders = new HttpHeaders();
 		responseHeaders.setContentType(MediaType.APPLICATION_JSON);
-		return new ResponseEntity<>(json.toString(), responseHeaders, HttpStatus.OK);
+		return responseHeaders;
 	}
 
 }

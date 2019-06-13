@@ -18,23 +18,26 @@
 package io.openvidu.server.kurento.kms;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.annotation.PostConstruct;
+
 import org.kurento.client.KurentoConnectionListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+
+import com.google.gson.JsonObject;
 
 import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.kurento.core.KurentoSession;
 import io.openvidu.server.kurento.core.KurentoSessionManager;
 
-@Service
 public abstract class KmsManager {
 
 	public class KmsLoad implements Comparable<KmsLoad> {
@@ -59,11 +62,19 @@ public abstract class KmsManager {
 		public int compareTo(KmsLoad o) {
 			return Double.compare(this.load, o.load);
 		}
+
+		public JsonObject toJson() {
+			JsonObject json = this.kms.toJson();
+			json.addProperty("load", this.load);
+			return json;
+		}
+
 	}
 
 	@Autowired
 	protected SessionManager sessionManager;
 
+	@Autowired
 	protected LoadManager loadManager;
 
 	private static final Logger log = LoggerFactory.getLogger(KmsManager.class);
@@ -72,10 +83,6 @@ public abstract class KmsManager {
 	protected Map<String, Kms> kmss = new ConcurrentHashMap<>();
 
 	private Iterator<Kms> usageIterator = null;
-
-	public KmsManager(LoadManager loadManager) {
-		this.loadManager = loadManager;
-	}
 
 	public synchronized void addKms(Kms kms) {
 		this.kmss.put(kms.getUri(), kms);
@@ -108,6 +115,10 @@ public abstract class KmsManager {
 		} else {
 			return sortedLoads.get(0).kms;
 		}
+	}
+
+	public synchronized Collection<Kms> getKmss() {
+		return this.kmss.values();
 	}
 
 	public synchronized List<KmsLoad> getKmssSortedByLoad() {
@@ -187,6 +198,13 @@ public abstract class KmsManager {
 				log.warn("Kurento Client is now connected to KMS with uri {}", kmsWsUri);
 			}
 		};
+	}
+
+	protected abstract void initializeKurentoClients();
+
+	@PostConstruct
+	private void postConstruct() {
+		initializeKurentoClients();
 	}
 
 }

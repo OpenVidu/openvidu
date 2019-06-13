@@ -22,6 +22,8 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.kurento.client.KurentoClient;
 
+import com.google.gson.JsonObject;
+
 /**
  * Abstraction of a KMS instance: an object of this class corresponds to a KMS
  * process running somewhere.
@@ -78,6 +80,14 @@ public class Kms {
 
 	public void setTimeOfKurentoClientDisconnection(long time) {
 		this.timeOfKurentoClientDisconnection.set(time);
+	}
+
+	public JsonObject toJson() {
+		JsonObject json = new JsonObject();
+		json.addProperty("id", this.kmsUri);
+		json.addProperty("uri", this.kmsUri);
+		// json.addProperty("createdAt", this.client.getServerManager().getInfo().getVersion());
+		return json;
 	}
 
 }

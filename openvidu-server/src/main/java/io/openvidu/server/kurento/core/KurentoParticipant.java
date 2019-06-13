@@ -17,6 +17,7 @@
 
 package io.openvidu.server.kurento.core;
 
+import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
@@ -66,7 +67,7 @@ public class KurentoParticipant extends Participant {
 	private KurentoParticipantEndpointConfig endpointConfig;
 
 	private PublisherEndpoint publisher;
-	private CountDownLatch endPointLatch = new CountDownLatch(1);
+	private CountDownLatch publisherLatch = new CountDownLatch(1);
 
 	private final ConcurrentMap<String, Filter> filters = new ConcurrentHashMap<>();
 	private final ConcurrentMap<String, SubscriberEndpoint> subscribers = new ConcurrentHashMap<String, SubscriberEndpoint>();
@@ -96,7 +97,7 @@ public class KurentoParticipant extends Participant {
 
 	public void createPublishingEndpoint(MediaOptions mediaOptions) {
 
-		publisher.createEndpoint(endPointLatch);
+		publisher.createEndpoint(publisherLatch);
 		if (getPublisher().getEndpoint() == null) {
 			throw new OpenViduException(Code.MEDIA_ENDPOINT_ERROR_CODE, "Unable to create publisher endpoint");
 		}
@@ -139,7 +140,7 @@ public class KurentoParticipant extends Participant {
 
 	public PublisherEndpoint getPublisher() {
 		try {
-			if (!endPointLatch.await(KurentoSession.ASYNC_LATCH_TIMEOUT, TimeUnit.SECONDS)) {
+			if (!publisherLatch.await(KurentoSession.ASYNC_LATCH_TIMEOUT, TimeUnit.SECONDS)) {
 				throw new OpenViduException(Code.MEDIA_ENDPOINT_ERROR_CODE,
 						"Timeout reached while waiting for publisher endpoint to be ready");
 			}
@@ -148,6 +149,10 @@ public class KurentoParticipant extends Participant {
 					"Interrupted while waiting for publisher endpoint to be ready: " + e.getMessage());
 		}
 		return this.publisher;
+	}
+
+	public Collection<SubscriberEndpoint> getSubscribers() {
+		return this.subscribers.values();
 	}
 
 	public MediaOptions getPublisherMediaOptions() {
@@ -372,7 +377,8 @@ public class KurentoParticipant extends Participant {
 
 			if (this.openviduConfig.isRecordingModuleEnabled()
 					&& this.recordingManager.sessionIsBeingRecorded(session.getSessionId())) {
-				this.recordingManager.stopOneIndividualStreamRecording(session, this.getPublisherStreamId(), kmsDisconnectionTime);
+				this.recordingManager.stopOneIndividualStreamRecording(session, this.getPublisherStreamId(),
+						kmsDisconnectionTime);
 			}
 
 			publisher.unregisterErrorListeners();

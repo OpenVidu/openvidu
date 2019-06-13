@@ -21,11 +21,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
 
 import io.openvidu.server.config.OpenviduConfig;
 
-@Service
 public abstract class CoturnCredentialsService {
 
 	protected static final Logger log = LoggerFactory.getLogger(CoturnCredentialsService.class);

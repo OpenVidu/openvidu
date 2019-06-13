@@ -61,7 +61,7 @@ import io.openvidu.server.utils.RandomStringGenerator;
 
 /**
  *
- * @author Pablo Fuente Pérez
+ * @author Pablo Fuente (pablofuenteperez@gmail.com)
  */
 @RestController
 @CrossOrigin

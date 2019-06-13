@@ -17,10 +17,7 @@
 
 package io.openvidu.server.kurento.kms;
 
-import org.springframework.stereotype.Service;
-
-@Service
-public class DummyLoadManager implements LoadManager {
+public class DummyLoadManager extends LoadManager {
 
 	@Override
 	public double calculateLoad(Kms kms) {
