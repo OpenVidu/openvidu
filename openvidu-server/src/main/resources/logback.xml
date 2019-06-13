@@ -2,10 +2,11 @@
 <configuration>
 	<timestamp key="myTimestamp" timeReference="contextBirth"
 		datePattern="HH-mm-ss" />
-	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-		<layout class="ch.qos.logback.classic.PatternLayout">
-			<Pattern>[%p] %d [%.12t] %c \(%M\) - %msg%n</Pattern>
-		</layout>
+	<appender name="STDOUT"
+		class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>[%p] %d [%.12t] %c \(%M\) - %msg%n</pattern>
+		</encoder>
 	</appender>
 	<root>
 		<level value="INFO" />
@@ -15,15 +16,16 @@
 		<then>
 			<appender name="CDR"
 				class="ch.qos.logback.core.rolling.RollingFileAppender">
-				<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+				<rollingPolicy
+					class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
 					<FileNamePattern>log/CDR.%d{yyyy-MM-dd}_${myTimestamp}.log
 					</FileNamePattern>
 					<MaxHistory>30</MaxHistory>
 					<TotalSizeCap>20GB</TotalSizeCap>
 				</rollingPolicy>
-				<layout>
+				<encoder>
 					<pattern>%m\n</pattern>
-				</layout>
+				</encoder>
 			</appender>
 			<logger name="io.openvidu.server.cdr.CDRLoggerFile">
 				<level value="INFO" />
