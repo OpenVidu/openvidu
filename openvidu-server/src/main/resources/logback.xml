@@ -5,14 +5,23 @@
 	<appender name="STDOUT"
 		class="ch.qos.logback.core.ConsoleAppender">
 		<encoder>
-			<pattern>[%p] %d [%.12t] %c \(%M\) - %msg%n</pattern>
+			<if condition='property("logging.colors").equalsIgnoreCase("false")'>
+				<then>
+					<pattern>[%p] %d [%.15t] %c \(%M\) - %msg%n
+					</pattern>
+				</then>
+				<else>
+					<pattern>%highlight([%p]) %d %magenta([%.15t]) %c \(%M\) - %msg%n
+					</pattern>
+				</else>
+			</if>
 		</encoder>
 	</appender>
 	<root>
 		<level value="INFO" />
 		<appender-ref ref="STDOUT" />
 	</root>
-	<if condition='property("openvidu.cdr").contains("true")'>
+	<if condition='property("openvidu.cdr").equalsIgnoreCase("true")'>
 		<then>
 			<appender name="CDR"
 				class="ch.qos.logback.core.rolling.RollingFileAppender">
