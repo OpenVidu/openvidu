@@ -1723,6 +1723,9 @@ public class OpenViduTestAppE2eTest {
 		WebElement filterTypeInput = user.getDriver().findElement(By.id("filter-type-field"));
 		filterTypeInput.clear();
 		filterTypeInput.sendKeys("NotAllowedFilter");
+		
+		Thread.sleep(1000);
+		
 		user.getDriver().findElement(By.id("apply-filter-btn")).click();
 		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value",
 				"Error [You don't have permissions to apply a filter]"));

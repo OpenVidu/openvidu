@@ -5,18 +5,32 @@
 	<appender name="STDOUT"
 		class="ch.qos.logback.core.ConsoleAppender">
 		<encoder>
-			<if condition='property("logging.colors").equalsIgnoreCase("false")'>
+			<if
+				condition='property("logging.colors").equalsIgnoreCase("true")'>
 				<then>
-					<pattern>[%p] %d [%.15t] %c \(%M\) - %msg%n
+					<pattern>%highlight([%p]) %d %magenta([%.15t]) %c \(%M\) - %msg%n
 					</pattern>
 				</then>
 				<else>
-					<pattern>%highlight([%p]) %d %magenta([%.15t]) %c \(%M\) - %msg%n
+					<pattern>[%p] %d [%.15t] %c \(%M\) - %msg%n
 					</pattern>
 				</else>
 			</if>
 		</encoder>
 	</appender>
+
+	<!--<appender name="CUSTOMCLASS"
+		class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>%highlight([%p]) %d %magenta([%.15t]) %boldGreen(%c \(%M\) - %msg%n)
+			</pattern>
+		</encoder>
+	</appender>
+	<logger
+		name="io.openvidu.server.kurento.core.KurentoSessionManager">
+		<appender-ref ref="CUSTOMCLASS" />
+	</logger>-->
+	
 	<root>
 		<level value="INFO" />
 		<appender-ref ref="STDOUT" />
