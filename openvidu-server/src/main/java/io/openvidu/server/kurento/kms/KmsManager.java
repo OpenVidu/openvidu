@@ -25,8 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.annotation.PostConstruct;
-
 import org.kurento.client.KurentoConnectionListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,12 +67,17 @@ public abstract class KmsManager {
 			return json;
 		}
 
+		public JsonObject toJsonExtended(boolean withSessions, boolean withExtraInfo) {
+			JsonObject json = this.kms.toJsonExtended(withSessions, withExtraInfo);
+			json.addProperty("load", this.load);
+			return json;
+		}
+
 	}
 
 	@Autowired
 	protected SessionManager sessionManager;
 
-	@Autowired
 	protected LoadManager loadManager;
 
 	private static final Logger log = LoggerFactory.getLogger(KmsManager.class);
@@ -83,6 +86,10 @@ public abstract class KmsManager {
 	protected Map<String, Kms> kmss = new ConcurrentHashMap<>();
 
 	private Iterator<Kms> usageIterator = null;
+
+	public KmsManager(LoadManager loadManager) {
+		this.loadManager = loadManager;
+	}
 
 	public synchronized void addKms(Kms kms) {
 		this.kmss.put(kms.getUri(), kms);
@@ -198,13 +205,6 @@ public abstract class KmsManager {
 				log.warn("Kurento Client is now connected to KMS with uri {}", kmsWsUri);
 			}
 		};
-	}
-
-	protected abstract void initializeKurentoClients();
-
-	@PostConstruct
-	private void postConstruct() {
-		initializeKurentoClients();
 	}
 
 }

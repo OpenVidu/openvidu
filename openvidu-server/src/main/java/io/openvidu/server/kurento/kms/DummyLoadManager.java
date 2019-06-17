@@ -17,7 +17,7 @@
 
 package io.openvidu.server.kurento.kms;
 
-public class DummyLoadManager extends LoadManager {
+public class DummyLoadManager implements LoadManager {
 
 	@Override
 	public double calculateLoad(Kms kms) {

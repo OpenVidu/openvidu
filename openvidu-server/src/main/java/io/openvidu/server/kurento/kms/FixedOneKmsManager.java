@@ -23,12 +23,10 @@ public class FixedOneKmsManager extends KmsManager {
 
 	String kmsWsUri;
 
-	public FixedOneKmsManager(String kmsWsUri) {
+	public FixedOneKmsManager(String kmsWsUri, LoadManager loadManager) {
+		super(loadManager);
 		this.kmsWsUri = kmsWsUri;
-	}
 
-	@Override
-	protected void initializeKurentoClients() {
 		KurentoClient kClient = KurentoClient.create(kmsWsUri, this.generateKurentoConnectionListener(kmsWsUri));
 		this.addKms(new Kms(kmsWsUri, kClient, loadManager));
 	}

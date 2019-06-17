@@ -18,6 +18,7 @@
 package io.openvidu.server.kurento.endpoint;
 
 import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.kurento.client.MediaPipeline;
 import org.slf4j.Logger;
@@ -37,7 +38,7 @@ import io.openvidu.server.kurento.core.KurentoParticipant;
 public class SubscriberEndpoint extends MediaEndpoint {
 	private final static Logger log = LoggerFactory.getLogger(SubscriberEndpoint.class);
 
-	private boolean connectedToPublisher = false;
+	private AtomicBoolean connectedToPublisher = new AtomicBoolean(false);
 
 	private PublisherEndpoint publisher = null;
 
@@ -58,16 +59,11 @@ public class SubscriberEndpoint extends MediaEndpoint {
 	}
 
 	public boolean isConnectedToPublisher() {
-		return connectedToPublisher;
+		return connectedToPublisher.get();
 	}
 
 	public void setConnectedToPublisher(boolean connectedToPublisher) {
-		this.connectedToPublisher = connectedToPublisher;
-	}
-
-	@Override
-	public PublisherEndpoint getPublisher() {
-		return this.publisher;
+		this.connectedToPublisher.set(connectedToPublisher);
 	}
 
 	public void setPublisher(PublisherEndpoint publisher) {

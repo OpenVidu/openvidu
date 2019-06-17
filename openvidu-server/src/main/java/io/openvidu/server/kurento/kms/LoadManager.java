@@ -17,17 +17,10 @@
 
 package io.openvidu.server.kurento.kms;
 
-import org.springframework.beans.factory.annotation.Autowired;
+public interface LoadManager {
 
-import io.openvidu.server.core.SessionManager;
+	public double calculateLoad(Kms kms);
 
-public abstract class LoadManager {
-
-	@Autowired
-	protected SessionManager sessionManager;
-
-	protected abstract double calculateLoad(Kms kms);
-
-	protected abstract boolean allowMoreElements(Kms kms);
+	public boolean allowMoreElements(Kms kms);
 
 }

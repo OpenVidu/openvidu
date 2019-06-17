@@ -503,6 +503,10 @@ public class KurentoSessionManager extends SessionManager {
 			log.warn("Session '{}' has just been created by another thread", session.getSessionId());
 			return oldSession;
 		}
+
+		// Also associate the KurentoSession with the Kms
+		kms.addKurentoSession(session);
+
 		log.warn("No session '{}' exists yet. Created one on KMS '{}'", session.getSessionId(), kms.getUri());
 
 		sessionEventsHandler.onSessionCreated(session);

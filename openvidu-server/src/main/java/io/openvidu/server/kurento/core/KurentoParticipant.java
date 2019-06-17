@@ -84,12 +84,16 @@ public class KurentoParticipant extends Participant {
 		this.session = kurentoSession;
 
 		if (!OpenViduRole.SUBSCRIBER.equals(participant.getToken().getRole())) {
+			// Initialize a PublisherEndpoint
 			this.publisher = new PublisherEndpoint(webParticipant, this, participant.getParticipantPublicId(),
 					this.session.getPipeline(), this.openviduConfig);
 		}
 
 		for (Participant other : session.getParticipants()) {
-			if (!other.getParticipantPublicId().equals(this.getParticipantPublicId())) {
+			if (!other.getParticipantPublicId().equals(this.getParticipantPublicId())
+					&& !OpenViduRole.SUBSCRIBER.equals(other.getToken().getRole())) {
+				// Initialize a SubscriberEndpoint for each other user connected with PUBLISHER
+				// or MODERATOR role
 				getNewOrExistingSubscriber(other.getParticipantPublicId());
 			}
 		}

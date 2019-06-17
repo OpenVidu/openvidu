@@ -159,6 +159,9 @@ public class KurentoSession extends Session {
 				kms.getKurentoClient().destroy();
 			}
 
+			// Also disassociate the KurentoSession from the Kms
+			kms.removeKurentoSession(this.sessionId);
+
 			this.closed = true;
 			return true;
 		} else {

@@ -17,12 +17,20 @@
 
 package io.openvidu.server.kurento.kms;
 
+import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.kurento.client.KurentoClient;
+import org.kurento.client.ModuleInfo;
+import org.kurento.client.ServerInfo;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+
+import io.openvidu.server.kurento.core.KurentoSession;
 
 /**
  * Abstraction of a KMS instance: an object of this class corresponds to a KMS
@@ -43,6 +51,8 @@ public class Kms {
 
 	private AtomicBoolean isKurentoClientConnected = new AtomicBoolean(false);
 	private AtomicLong timeOfKurentoClientDisconnection = new AtomicLong(0);
+
+	private Map<String, KurentoSession> kurentoSessions = new ConcurrentHashMap<>();
 
 	public Kms(String kmsUri, KurentoClient client, LoadManager loadManager) {
 		this.kmsUri = kmsUri;
@@ -82,11 +92,58 @@ public class Kms {
 		this.timeOfKurentoClientDisconnection.set(time);
 	}
 
+	public Collection<KurentoSession> getKurentoSessions() {
+		return this.kurentoSessions.values();
+	}
+
+	public void addKurentoSession(KurentoSession session) {
+		this.kurentoSessions.put(session.getSessionId(), session);
+	}
+
+	public void removeKurentoSession(String sessionId) {
+		this.kurentoSessions.remove(sessionId);
+	}
+
 	public JsonObject toJson() {
 		JsonObject json = new JsonObject();
 		json.addProperty("id", this.kmsUri);
 		json.addProperty("uri", this.kmsUri);
-		// json.addProperty("createdAt", this.client.getServerManager().getInfo().getVersion());
+		return json;
+	}
+
+	public JsonObject toJsonExtended(boolean withSessions, boolean withExtraInfo) {
+
+		JsonObject json = this.toJson();
+
+		if (withSessions) {
+			JsonArray sessions = new JsonArray();
+			for (KurentoSession session : this.kurentoSessions.values()) {
+				sessions.add(session.toJson());
+			}
+			json.add("sessions", sessions);
+		}
+
+		if (withExtraInfo) {
+			json.addProperty("memory", this.client.getServerManager().getUsedMemory() / 1024);
+
+			ServerInfo info = this.client.getServerManager().getInfo();
+			json.addProperty("version", info.getVersion());
+			json.addProperty("capabilities", info.getCapabilities().toString());
+
+			JsonArray modules = new JsonArray();
+			for (ModuleInfo moduleInfo : info.getModules()) {
+				JsonObject moduleJson = new JsonObject();
+				moduleJson.addProperty("name", moduleInfo.getName());
+				moduleJson.addProperty("version", moduleInfo.getVersion());
+				moduleJson.addProperty("generationTime", moduleInfo.getGenerationTime());
+				JsonArray factories = new JsonArray();
+				moduleInfo.getFactories().forEach(fact -> factories.add(fact));
+				moduleJson.add("factories", factories);
+				modules.add(moduleJson);
+			}
+			json.add("modules", modules);
+		}
+
 		return json;
 	}
 
