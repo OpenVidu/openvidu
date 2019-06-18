@@ -20,11 +20,9 @@ package io.openvidu.server;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.Arrays;
-import java.util.List;
 
 import javax.annotation.PostConstruct;
 
-import org.kurento.jsonrpc.JsonUtils;
 import org.kurento.jsonrpc.internal.server.config.JsonRpcConfiguration;
 import org.kurento.jsonrpc.server.JsonRpcConfigurer;
 import org.kurento.jsonrpc.server.JsonRpcHandlerRegistry;
@@ -38,11 +36,6 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.event.EventListener;
-import org.springframework.core.env.Environment;
-
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
@@ -62,6 +55,7 @@ import io.openvidu.server.kurento.core.KurentoSessionManager;
 import io.openvidu.server.kurento.kms.DummyLoadManager;
 import io.openvidu.server.kurento.kms.FixedOneKmsManager;
 import io.openvidu.server.kurento.kms.KmsManager;
+import io.openvidu.server.kurento.kms.LoadManager;
 import io.openvidu.server.recording.service.RecordingManager;
 import io.openvidu.server.rpc.RpcHandler;
 import io.openvidu.server.rpc.RpcNotificationService;
@@ -81,7 +75,7 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	private static final Logger log = LoggerFactory.getLogger(OpenViduServer.class);
 
 	@Autowired
-	private Environment env;
+	OpenviduConfig openviduConfig;
 
 	public static final String KMSS_URIS_PROPERTY = "kms.uris";
 
@@ -92,19 +86,18 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	@Bean
 	@ConditionalOnMissingBean
 	public KmsManager kmsManager() {
-		JsonParser parser = new JsonParser();
-		String uris = env.getProperty(KMSS_URIS_PROPERTY);
-		JsonElement elem = parser.parse(uris);
-		JsonArray kmsUris = elem.getAsJsonArray();
-		List<String> kmsWsUris = JsonUtils.toStringList(kmsUris);
-
-		if (kmsWsUris.isEmpty()) {
+		if (openviduConfig.getKmsUris().isEmpty()) {
 			throw new IllegalArgumentException(KMSS_URIS_PROPERTY + " should contain at least one kms url");
 		}
-
-		String firstKmsWsUri = kmsWsUris.get(0);
+		String firstKmsWsUri = openviduConfig.getKmsUris().get(0);
 		log.info("OpenVidu Server using one KMS: {}", firstKmsWsUri);
-		return new FixedOneKmsManager(firstKmsWsUri, new DummyLoadManager());
+		return new FixedOneKmsManager();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public LoadManager loadManager() {
+		return new DummyLoadManager();
 	}
 
 	@Bean
@@ -151,19 +144,14 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public OpenviduConfig openviduConfig() {
-		return new OpenviduConfig();
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
 	public RecordingManager recordingManager() {
 		return new RecordingManager();
 	}
 
 	@Bean
+	@ConditionalOnMissingBean
 	public CoturnCredentialsService coturnCredentialsService() {
-		return new CoturnCredentialsServiceFactory(openviduConfig()).getCoturnCredentialsService();
+		return new CoturnCredentialsServiceFactory().getCoturnCredentialsService(openviduConfig.getSpringProfile());
 	}
 
 	@Bean
@@ -190,16 +178,14 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 	@PostConstruct
 	public void init() throws MalformedURLException, InterruptedException {
-		OpenviduConfig openviduConf = openviduConfig();
-
-		String publicUrl = openviduConf.getOpenViduPublicUrl();
+		String publicUrl = this.openviduConfig.getOpenViduPublicUrl();
 		String type = publicUrl;
 
 		switch (publicUrl) {
 		case "docker":
 			try {
 				String containerIp = getContainerIp();
-				OpenViduServer.wsUrl = "wss://" + containerIp + ":" + openviduConf.getServerPort();
+				OpenViduServer.wsUrl = "wss://" + containerIp + ":" + openviduConfig.getServerPort();
 			} catch (Exception e) {
 				log.error("Docker container IP was configured, but there was an error obtaining IP: "
 						+ e.getClass().getName() + " " + e.getMessage());
@@ -231,14 +217,14 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 		if (OpenViduServer.wsUrl == null) {
 			type = "local";
-			OpenViduServer.wsUrl = "wss://localhost:" + openviduConf.getServerPort();
+			OpenViduServer.wsUrl = "wss://localhost:" + openviduConfig.getServerPort();
 		}
 
 		if (OpenViduServer.wsUrl.endsWith("/")) {
 			OpenViduServer.wsUrl = OpenViduServer.wsUrl.substring(0, OpenViduServer.wsUrl.length() - 1);
 		}
 
-		if (this.openviduConfig().isRecordingModuleEnabled()) {
+		if (this.openviduConfig.isRecordingModuleEnabled()) {
 			try {
 				this.recordingManager().initializeRecordingManager();
 			} catch (OpenViduException e) {
@@ -247,11 +233,11 @@ public class OpenViduServer implements JsonRpcConfigurer {
 					finalErrorMessage = "Error connecting to Docker daemon. Enabling OpenVidu recording module requires Docker";
 				} else if (e.getCodeValue() == Code.RECORDING_PATH_NOT_VALID.getValue()) {
 					finalErrorMessage = "Error initializing recording path \""
-							+ this.openviduConfig().getOpenViduRecordingPath()
+							+ this.openviduConfig.getOpenViduRecordingPath()
 							+ "\" set with system property \"openvidu.recording.path\"";
 				} else if (e.getCodeValue() == Code.RECORDING_FILE_EMPTY_ERROR.getValue()) {
 					finalErrorMessage = "Error initializing recording custom layouts path \""
-							+ this.openviduConfig().getOpenviduRecordingCustomLayout()
+							+ this.openviduConfig.getOpenviduRecordingCustomLayout()
 							+ "\" set with system property \"openvidu.recording.custom-layout\"";
 				}
 				log.error(finalErrorMessage + ". Shutting down OpenVidu Server");
@@ -260,8 +246,8 @@ public class OpenViduServer implements JsonRpcConfigurer {
 		}
 
 		String finalUrl = OpenViduServer.wsUrl.replaceFirst("wss://", "https://").replaceFirst("ws://", "http://");
-		openviduConf.setFinalUrl(finalUrl);
-		httpUrl = openviduConf.getFinalUrl();
+		openviduConfig.setFinalUrl(finalUrl);
+		httpUrl = openviduConfig.getFinalUrl();
 		log.info("OpenVidu Server using " + type + " URL: [" + OpenViduServer.wsUrl + "]");
 	}
 

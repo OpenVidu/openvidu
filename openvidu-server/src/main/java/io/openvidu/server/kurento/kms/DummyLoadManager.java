@@ -20,13 +20,8 @@ package io.openvidu.server.kurento.kms;
 public class DummyLoadManager implements LoadManager {
 
 	@Override
-	public double calculateLoad(Kms kms) {
+	public int calculateLoad(Kms kms) {
 		return 1;
-	}
-
-	@Override
-	public boolean allowMoreElements(Kms kms) {
-		return true;
 	}
 
 }

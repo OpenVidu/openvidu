@@ -22,7 +22,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.lang3.RandomStringUtils;
 
-import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.utils.CommandExecutor;
 
 public class BashCoturnCredentialsService extends CoturnCredentialsService {
@@ -31,8 +30,7 @@ public class BashCoturnCredentialsService extends CoturnCredentialsService {
 	private AtomicLong logCounter = new AtomicLong(0);
 	private final long LOG_LIMIT = 30;
 
-	public BashCoturnCredentialsService(OpenviduConfig openviduConfig) {
-		super(openviduConfig);
+	public BashCoturnCredentialsService() {
 		try {
 			String response = CommandExecutor.execCommand("/bin/sh", "-c",
 					"turnadmin -l -N " + this.coturnDatabaseString);

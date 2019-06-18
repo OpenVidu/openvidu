@@ -18,17 +18,25 @@
 package io.openvidu.server.kurento.kms;
 
 import org.kurento.client.KurentoClient;
+import org.kurento.commons.exception.KurentoException;
 
 public class FixedOneKmsManager extends KmsManager {
 
-	String kmsWsUri;
-
-	public FixedOneKmsManager(String kmsWsUri, LoadManager loadManager) {
-		super(loadManager);
-		this.kmsWsUri = kmsWsUri;
-
-		KurentoClient kClient = KurentoClient.create(kmsWsUri, this.generateKurentoConnectionListener(kmsWsUri));
-		this.addKms(new Kms(kmsWsUri, kClient, loadManager));
+	@Override
+	protected void initializeKurentoClients() {
+		final String kmsUri = this.openviduConfig.getKmsUris().get(0);
+		KurentoClient kClient = null;
+		try {
+			kClient = KurentoClient.create(kmsUri, this.generateKurentoConnectionListener(kmsUri));
+		} catch (KurentoException e) {
+			log.error("KMS in {} is not reachable by OpenVidu Server", kmsUri);
+			log.error("Shutting down OpenVidu Server");
+			System.exit(1);
+		}
+		Kms kms = new Kms(kmsUri, kClient, loadManager);
+		kms.setKurentoClientConnected(true);
+		kms.setTimeOfKurentoClientConnection(System.currentTimeMillis());
+		this.addKms(kms);
 	}
 
 }

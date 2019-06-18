@@ -17,10 +17,17 @@
 
 package io.openvidu.server.config;
 
+import java.util.List;
+
+import org.kurento.jsonrpc.JsonUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.info.BuildProperties;
 import org.springframework.stereotype.Component;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 
 import io.openvidu.java.client.OpenViduRole;
 
@@ -29,6 +36,11 @@ public class OpenviduConfig {
 
 	@Autowired
 	BuildProperties buildProperties;
+
+	@Value("${kms.uris}")
+	private String kmsUris;
+
+	private List<String> kmsUrisList;
 
 	@Value("${openvidu.publicurl}")
 	private String openviduPublicUrl; // local, docker, [FINAL_URL]
@@ -94,6 +106,19 @@ public class OpenviduConfig {
 	private String springProfile;
 
 	private String finalUrl;
+
+	public List<String> getKmsUris() {
+		if (kmsUrisList == null) {
+			this.kmsUris = this.kmsUris.replaceAll("\\s", "");
+			JsonParser parser = new JsonParser();
+			JsonElement elem = parser.parse(this.kmsUris);
+			JsonArray kmsUris = elem.getAsJsonArray();
+			this.kmsUrisList = JsonUtils.toStringList(kmsUris);
+			return this.kmsUrisList;
+		} else {
+			return this.kmsUrisList;
+		}
+	}
 
 	public String getOpenViduPublicUrl() {
 		return this.openviduPublicUrl;

@@ -20,10 +20,11 @@ package io.openvidu.server.kurento.kms;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import javax.annotation.PostConstruct;
 
 import org.kurento.client.KurentoConnectionListener;
 import org.slf4j.Logger;
@@ -32,9 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.gson.JsonObject;
 
-import io.openvidu.server.core.SessionManager;
-import io.openvidu.server.kurento.core.KurentoSession;
-import io.openvidu.server.kurento.core.KurentoSessionManager;
+import io.openvidu.server.config.OpenviduConfig;
 
 public abstract class KmsManager {
 
@@ -75,21 +74,16 @@ public abstract class KmsManager {
 
 	}
 
-	@Autowired
-	protected SessionManager sessionManager;
+	protected static final Logger log = LoggerFactory.getLogger(KmsManager.class);
 
+	@Autowired
+	protected OpenviduConfig openviduConfig;
+
+	@Autowired
 	protected LoadManager loadManager;
 
-	private static final Logger log = LoggerFactory.getLogger(KmsManager.class);
-
 	// Using KMS websocket uris as unique identifiers
-	protected Map<String, Kms> kmss = new ConcurrentHashMap<>();
-
-	private Iterator<Kms> usageIterator = null;
-
-	public KmsManager(LoadManager loadManager) {
-		this.loadManager = loadManager;
-	}
+	final protected Map<String, Kms> kmss = new ConcurrentHashMap<>();
 
 	public synchronized void addKms(Kms kms) {
 		this.kmss.put(kms.getUri(), kms);
@@ -97,18 +91,6 @@ public abstract class KmsManager {
 
 	public synchronized void removeKms(Kms kms) {
 		this.kmss.remove(kms.getUri());
-	}
-
-	/**
-	 * Returns a {@link Kms} using a round-robin strategy.
-	 *
-	 * @param sessionInfo session's id
-	 */
-	public synchronized Kms getKmsRoundRobin() {
-		if (usageIterator == null || !usageIterator.hasNext()) {
-			usageIterator = kmss.values().iterator();
-		}
-		return usageIterator.next();
 	}
 
 	public synchronized Kms getLessLoadedKms() {
@@ -134,18 +116,6 @@ public abstract class KmsManager {
 		return kmsLoads;
 	}
 
-	public boolean isKurentoClientConnectedToKms(Kms kms) {
-		return this.kmss.get(kms.getUri()).isKurentoClientConnected();
-	}
-
-	public void setKurentoClientConnectedToKms(String kmsUri, boolean isConnected) {
-		this.kmss.get(kmsUri).setKurentoClientConnected(isConnected);
-	}
-
-	public void setTimeOfKurentoClientDisconnection(String kmsUri, long time) {
-		this.kmss.get(kmsUri).setTimeOfKurentoClientDisconnection(time);
-	}
-
 	private List<KmsLoad> getKmsLoads() {
 		ArrayList<KmsLoad> kmsLoads = new ArrayList<>();
 		for (Kms kms : kmss.values()) {
@@ -160,51 +130,60 @@ public abstract class KmsManager {
 		return false;
 	}
 
-	protected KurentoConnectionListener generateKurentoConnectionListener(String kmsWsUri) {
+	protected KurentoConnectionListener generateKurentoConnectionListener(String kmsUri) {
 		return new KurentoConnectionListener() {
 
 			@Override
 			public void reconnected(boolean isReconnected) {
-				((KurentoSessionManager) sessionManager).getKmsManager().setKurentoClientConnectedToKms(kmsWsUri, true);
+				final Kms kms = kmss.get(kmsUri);
+				kms.setKurentoClientConnected(true);
+				kms.setTimeOfKurentoClientConnection(System.currentTimeMillis());
 				if (!isReconnected) {
 					// Different KMS. Reset sessions status (no Publisher or SUbscriber endpoints)
-					log.warn("Kurento Client reconnected to a different KMS instance, with uri {}", kmsWsUri);
+					log.warn("Kurento Client reconnected to a different KMS instance, with uri {}", kmsUri);
 					log.warn("Updating all webrtc endpoints for active sessions");
-					final Kms kms = ((KurentoSessionManager) sessionManager).getKmsManager().kmss.get(kmsWsUri);
 					final long timeOfKurentoDisconnection = kms.getTimeOfKurentoClientDisconnection();
-					sessionManager.getSessions().forEach(s -> {
-						((KurentoSession) s).restartStatusInKurento(timeOfKurentoDisconnection);
+					kms.getKurentoSessions().forEach(kSession -> {
+						kSession.restartStatusInKurento(timeOfKurentoDisconnection);
 					});
 					kms.setTimeOfKurentoClientDisconnection(0);
 				} else {
 					// Same KMS. We may infer that openvidu-server/KMS connection has been lost, but
 					// not the clients/KMS connections
-					log.warn("Kurento Client reconnected to same KMS with uri {}", kmsWsUri);
+					log.warn("Kurento Client reconnected to same KMS with uri {}", kmsUri);
 				}
 			}
 
 			@Override
 			public void disconnected() {
-				((KurentoSessionManager) sessionManager).getKmsManager().setKurentoClientConnectedToKms(kmsWsUri,
-						false);
-				((KurentoSessionManager) sessionManager).getKmsManager().setTimeOfKurentoClientDisconnection(kmsWsUri,
-						System.currentTimeMillis());
-				log.warn("Kurento Client disconnected from KMS with uri {}", kmsWsUri);
+				final Kms kms = kmss.get(kmsUri);
+				kms.setKurentoClientConnected(false);
+				kms.setTimeOfKurentoClientDisconnection(System.currentTimeMillis());
+				log.warn("Kurento Client disconnected from KMS with uri {}", kmsUri);
 			}
 
 			@Override
 			public void connectionFailed() {
-				((KurentoSessionManager) sessionManager).getKmsManager().setKurentoClientConnectedToKms(kmsWsUri,
-						false);
-				log.warn("Kurento Client failed connecting to KMS with uri {}", kmsWsUri);
+				final Kms kms = kmss.get(kmsUri);
+				kms.setKurentoClientConnected(false);
+				log.warn("Kurento Client failed connecting to KMS with uri {}", kmsUri);
 			}
 
 			@Override
 			public void connected() {
-				((KurentoSessionManager) sessionManager).getKmsManager().setKurentoClientConnectedToKms(kmsWsUri, true);
-				log.warn("Kurento Client is now connected to KMS with uri {}", kmsWsUri);
+				final Kms kms = kmss.get(kmsUri);
+				kms.setKurentoClientConnected(true);
+				kms.setTimeOfKurentoClientConnection(System.currentTimeMillis());
+				log.warn("Kurento Client is now connected to KMS with uri {}", kmsUri);
 			}
 		};
+	}
+
+	protected abstract void initializeKurentoClients();
+
+	@PostConstruct
+	protected void postConstruct() {
+		this.initializeKurentoClients();
 	}
 
 }

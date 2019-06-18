@@ -1,13 +1,6 @@
 package io.openvidu.server.coturn;
 
-import io.openvidu.server.config.OpenviduConfig;
-
 public class DockerCoturnCredentialsService extends CoturnCredentialsService {
-
-	public DockerCoturnCredentialsService(OpenviduConfig openviduConfig) {
-		super(openviduConfig);
-		// TODO Auto-generated constructor stub
-	}
 
 	@Override
 	public TurnCredentials createUser() {

@@ -17,6 +17,8 @@
 
 package io.openvidu.server.kurento.kms;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,6 +28,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.kurento.client.KurentoClient;
 import org.kurento.client.ModuleInfo;
 import org.kurento.client.ServerInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -45,23 +49,40 @@ import io.openvidu.server.kurento.core.KurentoSession;
  */
 public class Kms {
 
+	private static final Logger log = LoggerFactory.getLogger(Kms.class);
+
 	private String kmsUri;
+	private String ip;
 	private KurentoClient client;
 	private LoadManager loadManager;
 
 	private AtomicBoolean isKurentoClientConnected = new AtomicBoolean(false);
+	private AtomicLong timeOfKurentoClientConnection = new AtomicLong(0);
 	private AtomicLong timeOfKurentoClientDisconnection = new AtomicLong(0);
 
 	private Map<String, KurentoSession> kurentoSessions = new ConcurrentHashMap<>();
 
 	public Kms(String kmsUri, KurentoClient client, LoadManager loadManager) {
 		this.kmsUri = kmsUri;
+
+		try {
+			String parsedUri = "http://" + kmsUri.replaceAll("^ws://", "").replaceAll("^wss://", "");
+			URL url = new URL(parsedUri);
+			this.ip = url.getHost();
+		} catch (MalformedURLException e) {
+			log.error("KMS uri {} is not a valid WebSocket endpoint", kmsUri);
+		}
+
 		this.client = client;
 		this.loadManager = loadManager;
 	}
 
 	public String getUri() {
 		return kmsUri;
+	}
+
+	public String getIp() {
+		return ip;
 	}
 
 	public KurentoClient getKurentoClient() {
@@ -73,7 +94,7 @@ public class Kms {
 	}
 
 	public boolean allowMoreElements() {
-		return loadManager.allowMoreElements(this);
+		return true; // loadManager.allowMoreElements(this);
 	}
 
 	public boolean isKurentoClientConnected() {
@@ -82,6 +103,14 @@ public class Kms {
 
 	public void setKurentoClientConnected(boolean isConnected) {
 		this.isKurentoClientConnected.set(isConnected);
+	}
+
+	public long getTimeOfKurentoClientConnection() {
+		return this.timeOfKurentoClientConnection.get();
+	}
+
+	public void setTimeOfKurentoClientConnection(long time) {
+		this.timeOfKurentoClientConnection.set(time);
 	}
 
 	public long getTimeOfKurentoClientDisconnection() {
@@ -108,6 +137,14 @@ public class Kms {
 		JsonObject json = new JsonObject();
 		json.addProperty("id", this.kmsUri);
 		json.addProperty("uri", this.kmsUri);
+		json.addProperty("ip", this.ip);
+		final boolean connected = this.isKurentoClientConnected();
+		json.addProperty("connected", connected);
+		json.addProperty("connectionTime", this.getTimeOfKurentoClientConnection());
+		if (!connected) {
+			json.addProperty("disconnectionTime", this.getTimeOfKurentoClientDisconnection());
+		}
+
 		return json;
 	}
 
@@ -124,24 +161,32 @@ public class Kms {
 		}
 
 		if (withExtraInfo) {
-			json.addProperty("memory", this.client.getServerManager().getUsedMemory() / 1024);
 
-			ServerInfo info = this.client.getServerManager().getInfo();
-			json.addProperty("version", info.getVersion());
-			json.addProperty("capabilities", info.getCapabilities().toString());
+			if (json.get("connected").getAsBoolean()) {
 
-			JsonArray modules = new JsonArray();
-			for (ModuleInfo moduleInfo : info.getModules()) {
-				JsonObject moduleJson = new JsonObject();
-				moduleJson.addProperty("name", moduleInfo.getName());
-				moduleJson.addProperty("version", moduleInfo.getVersion());
-				moduleJson.addProperty("generationTime", moduleInfo.getGenerationTime());
-				JsonArray factories = new JsonArray();
-				moduleInfo.getFactories().forEach(fact -> factories.add(fact));
-				moduleJson.add("factories", factories);
-				modules.add(moduleJson);
+				JsonObject kurentoExtraInfo = new JsonObject();
+
+				kurentoExtraInfo.addProperty("memory", this.client.getServerManager().getUsedMemory() / 1024);
+
+				ServerInfo info = this.client.getServerManager().getInfo();
+				kurentoExtraInfo.addProperty("version", info.getVersion());
+				kurentoExtraInfo.addProperty("capabilities", info.getCapabilities().toString());
+
+				JsonArray modules = new JsonArray();
+				for (ModuleInfo moduleInfo : info.getModules()) {
+					JsonObject moduleJson = new JsonObject();
+					moduleJson.addProperty("name", moduleInfo.getName());
+					moduleJson.addProperty("version", moduleInfo.getVersion());
+					moduleJson.addProperty("generationTime", moduleInfo.getGenerationTime());
+					JsonArray factories = new JsonArray();
+					moduleInfo.getFactories().forEach(fact -> factories.add(fact));
+					moduleJson.add("factories", factories);
+					modules.add(moduleJson);
+				}
+				kurentoExtraInfo.add("modules", modules);
+
+				json.add("kurentoInfo", kurentoExtraInfo);
 			}
-			json.add("modules", modules);
 		}
 
 		return json;
