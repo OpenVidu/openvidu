@@ -704,7 +704,6 @@ public class OpenViduTestAppE2eTest {
 
 		for (WebElement el : publishButtons) {
 			el.click();
-			Thread.sleep(1000);
 		}
 
 		user.getEventManager().waitUntilEventReaches("streamCreated", 8);
@@ -1720,12 +1719,12 @@ public class OpenViduTestAppE2eTest {
 
 		// Try to apply none allowed filter
 		user.getDriver().findElement(By.cssSelector(".filter-btn")).click();
+		Thread.sleep(1000);
+
 		WebElement filterTypeInput = user.getDriver().findElement(By.id("filter-type-field"));
 		filterTypeInput.clear();
 		filterTypeInput.sendKeys("NotAllowedFilter");
-		
-		Thread.sleep(1000);
-		
+
 		user.getDriver().findElement(By.id("apply-filter-btn")).click();
 		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value",
 				"Error [You don't have permissions to apply a filter]"));
