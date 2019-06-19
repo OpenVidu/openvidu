@@ -56,6 +56,8 @@ import io.openvidu.server.kurento.kms.DummyLoadManager;
 import io.openvidu.server.kurento.kms.FixedOneKmsManager;
 import io.openvidu.server.kurento.kms.KmsManager;
 import io.openvidu.server.kurento.kms.LoadManager;
+import io.openvidu.server.recording.DummyRecordingDownloader;
+import io.openvidu.server.recording.RecordingDownloader;
 import io.openvidu.server.recording.service.RecordingManager;
 import io.openvidu.server.rpc.RpcHandler;
 import io.openvidu.server.rpc.RpcNotificationService;
@@ -149,6 +151,12 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	@ConditionalOnMissingBean
 	public RecordingManager recordingManager() {
 		return new RecordingManager();
+	}
+	
+	@Bean
+	@ConditionalOnMissingBean
+	public RecordingDownloader recordingDownload() {
+		return new DummyRecordingDownloader();
 	}
 
 	@Bean

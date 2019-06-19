@@ -65,6 +65,7 @@ import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.kurento.core.KurentoSession;
 import io.openvidu.server.kurento.kms.KmsManager;
 import io.openvidu.server.recording.Recording;
+import io.openvidu.server.recording.RecordingDownloader;
 import io.openvidu.server.utils.CustomFileManager;
 import io.openvidu.server.utils.DockerManager;
 
@@ -81,6 +82,9 @@ public class RecordingManager {
 
 	@Autowired
 	private SessionManager sessionManager;
+
+	@Autowired
+	private RecordingDownloader recordingDownloader;
 
 	@Autowired
 	protected OpenviduConfig openviduConfig;
@@ -109,8 +113,8 @@ public class RecordingManager {
 		RecordingManager.IMAGE_TAG = openviduConfig.getOpenViduRecordingVersion();
 
 		this.dockerManager = new DockerManager();
-		this.composedRecordingService = new ComposedRecordingService(this, openviduConfig);
-		this.singleStreamRecordingService = new SingleStreamRecordingService(this, openviduConfig);
+		this.composedRecordingService = new ComposedRecordingService(this, recordingDownloader, openviduConfig);
+		this.singleStreamRecordingService = new SingleStreamRecordingService(this, recordingDownloader, openviduConfig);
 
 		log.info("Recording module required: Downloading openvidu/openvidu-recording:"
 				+ openviduConfig.getOpenViduRecordingVersion() + " Docker image (350MB aprox)");
@@ -225,7 +229,8 @@ public class RecordingManager {
 			}
 			break;
 		case INDIVIDUAL:
-			recording = this.singleStreamRecordingService.stopRecording(session, recording, reason, kmsDisconnectionTime);
+			recording = this.singleStreamRecordingService.stopRecording(session, recording, reason,
+					kmsDisconnectionTime);
 			break;
 		}
 		this.abortAutomaticRecordingStopThread(session);

@@ -45,6 +45,12 @@ public class Recording {
 		stopped,
 
 		/**
+		 * The recording has stopped but is being processed. This status will change to
+		 * stopped/available or failed
+		 */
+		processing,
+
+		/**
 		 * The recording is available for downloading. This status is reached for all
 		 * stopped recordings if
 		 * <a href="https://openvidu.io/docs/reference-docs/openvidu-server-params/"
