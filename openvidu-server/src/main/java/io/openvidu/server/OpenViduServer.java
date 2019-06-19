@@ -127,6 +127,9 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	@Bean
 	@ConditionalOnMissingBean
 	public CallDetailRecord cdr() {
+		if (this.openviduConfig.isCdrEnabled()) {
+			log.info("OpenVidu CDR is enabled");
+		}
 		return new CallDetailRecord(Arrays.asList(new CDRLoggerFile()));
 	}
 

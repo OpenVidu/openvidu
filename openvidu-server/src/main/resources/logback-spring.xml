@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
+
+	<springProperty scope="context" name="cdrPath" source="openvidu.cdr.path"/>
+
 	<timestamp key="myTimestamp" timeReference="contextBirth"
 		datePattern="HH-mm-ss" />
 	<appender name="STDOUT"
@@ -41,7 +44,7 @@
 				class="ch.qos.logback.core.rolling.RollingFileAppender">
 				<rollingPolicy
 					class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-					<FileNamePattern>log/CDR.%d{yyyy-MM-dd}_${myTimestamp}.log
+					<FileNamePattern>${cdrPath}/CDR.%d{yyyy-MM-dd}_${myTimestamp}.log
 					</FileNamePattern>
 					<MaxHistory>30</MaxHistory>
 					<TotalSizeCap>20GB</TotalSizeCap>

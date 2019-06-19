@@ -25,6 +25,12 @@
 			"defaultValue": false
 		},
 		{
+			"name": "openvidu.cdr.path",
+			"type": "java.lang.String",
+			"description": "Where to store CDR files",
+			"defaultValue": "log"
+		},
+		{
 			"name": "openvidu.recording",
 			"type": "java.lang.Boolean",
 			"description": "Whether to start OpenVidu Server with recording module service available or not (a Docker image will be downloaded during the first execution). Apart from setting this param to true, it is also necessary to explicitly configure sessions to be recorded",

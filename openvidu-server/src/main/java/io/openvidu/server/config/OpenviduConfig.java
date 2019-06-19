@@ -53,6 +53,9 @@ public class OpenviduConfig {
 
 	@Value("${openvidu.cdr}")
 	private boolean openviduCdr;
+	
+	@Value("${openvidu.cdr.path}")
+	private String openviduCdrPath;
 
 	@Value("${openvidu.recording}")
 	private boolean openviduRecording;
@@ -138,6 +141,10 @@ public class OpenviduConfig {
 
 	public boolean isCdrEnabled() {
 		return this.openviduCdr;
+	}
+	
+	public String getOpenviduCdrPath() {
+		return this.openviduCdrPath;
 	}
 
 	public boolean isRecordingModuleEnabled() {
