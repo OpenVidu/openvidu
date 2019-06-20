@@ -246,10 +246,7 @@ export class WebRtcPeer {
                 reject('RTCPeerConnection is closed');
             }
             if (platform['isIonicIos']) {
-                setTimeout(() => {
-                    console.info('setRemoteDescription run after timout for iOS device');
-                    this.pc.setRemoteDescription(answer).then(() => resolve()).catch(error => reject(error));
-                }, 250);
+                this.pc.setRemoteDescription(new RTCSessionDescription(answer)).then(() => resolve()).catch(error => reject(error));
             } else {
                 // Rest of platforms
                 this.pc.setRemoteDescription(answer).then(() => resolve()).catch(error => reject(error));
