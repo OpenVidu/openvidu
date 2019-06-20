@@ -30,19 +30,23 @@ public class CustomFileManager {
 
 	private static final Logger log = LoggerFactory.getLogger(CustomFileManager.class);
 
-	public void createAndWriteFile(String filePath, String text) {
+	public boolean createAndWriteFile(String filePath, String text) {
 		try {
 			this.writeAndCloseOnOutputStreamWriter(new FileOutputStream(filePath), text);
+			return true;
 		} catch (IOException e) {
 			log.error("Couldn't create file {}. Error: {}", filePath, e.getMessage());
+			return false;
 		}
 	}
 
-	public void overwriteFile(String filePath, String text) {
+	public boolean overwriteFile(String filePath, String text) {
 		try {
 			this.writeAndCloseOnOutputStreamWriter(new FileOutputStream(filePath, false), text);
+			return true;
 		} catch (IOException e) {
 			log.error("Couldn't overwrite file {}. Error: {}", filePath, e.getMessage());
+			return false;
 		}
 	}
 

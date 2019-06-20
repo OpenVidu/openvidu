@@ -48,6 +48,7 @@ import io.openvidu.server.kurento.core.KurentoParticipant;
 import io.openvidu.server.kurento.core.KurentoSession;
 import io.openvidu.server.recording.CompositeWrapper;
 import io.openvidu.server.recording.Recording;
+import io.openvidu.server.recording.RecordingDownloader;
 import io.openvidu.server.recording.RecordingInfoUtils;
 import io.openvidu.server.utils.DockerManager;
 
@@ -61,8 +62,9 @@ public class ComposedRecordingService extends RecordingService {
 
 	private DockerManager dockerManager;
 
-	public ComposedRecordingService(RecordingManager recordingManager, OpenviduConfig openviduConfig) {
-		super(recordingManager, openviduConfig);
+	public ComposedRecordingService(RecordingManager recordingManager, RecordingDownloader recordingDownloader,
+			OpenviduConfig openviduConfig) {
+		super(recordingManager, recordingDownloader, openviduConfig);
 		this.dockerManager = new DockerManager();
 	}
 
@@ -94,6 +96,7 @@ public class ComposedRecordingService extends RecordingService {
 		if (recording.hasVideo()) {
 			return this.stopRecordingWithVideo(session, recording, reason);
 		} else {
+			recording = this.sealRecordingMetadataFileAsProcessing(recording);
 			return this.stopRecordingAudioOnly(session, recording, reason, 0);
 		}
 	}
@@ -367,21 +370,28 @@ public class ComposedRecordingService extends RecordingService {
 
 		this.cleanRecordingMaps(recording);
 
-		String filesPath = this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/";
-		File videoFile = new File(filesPath + recording.getName() + ".webm");
-		long finalSize = videoFile.length();
-		double finalDuration = (double) compositeWrapper.getDuration() / 1000;
-
-		this.updateFilePermissions(filesPath);
-
-		this.sealRecordingMetadataFile(recording, finalSize, finalDuration,
-				filesPath + RecordingManager.RECORDING_ENTITY_FILE + recording.getId());
+		// TODO: DOWNLOAD FILE IF SCALABILITY MODE
+		final Recording[] finalRecordingArray = new Recording[1];
+		try {
+			this.recordingDownloader.downloadRecording(recording, null, () -> {
+				String filesPath = this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/";
+				File videoFile = new File(filesPath + recording.getName() + ".webm");
+				long finalSize = videoFile.length();
+				double finalDuration = (double) compositeWrapper.getDuration() / 1000;
+				this.updateFilePermissions(filesPath);
+				this.sealRecordingMetadataFileAsStopped(recording, finalSize, finalDuration,
+						filesPath + RecordingManager.RECORDING_ENTITY_FILE + recording.getId());
+			});
+		} catch (IOException e) {
+			log.error("Error while downloading recording {}: {}", recording.getName(), e.getMessage());
+		}
+		Recording finalRecording = finalRecordingArray[0] != null ? finalRecordingArray[0] : recording;
 
 		if (reason != null && session != null) {
-			this.recordingManager.sessionHandler.sendRecordingStoppedNotification(session, recording, reason);
+			this.recordingManager.sessionHandler.sendRecordingStoppedNotification(session, finalRecording, reason);
 		}
 
-		return recording;
+		return finalRecording;
 	}
 
 	private void waitForVideoFileNotEmpty(Recording recording) throws OpenViduException {

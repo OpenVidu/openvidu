@@ -152,7 +152,7 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	public RecordingManager recordingManager() {
 		return new RecordingManager();
 	}
-	
+
 	@Bean
 	@ConditionalOnMissingBean
 	public RecordingDownloader recordingDownload() {

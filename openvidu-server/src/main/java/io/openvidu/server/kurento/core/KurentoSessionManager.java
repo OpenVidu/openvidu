@@ -265,7 +265,7 @@ public class KurentoSessionManager extends SessionManager {
 								+ kurentoOptions.getFilter().getType());
 				log.error("PARTICIPANT {}: Error applying filter. The token has no permissions to apply filter {}",
 						participant.getParticipantPublicId(), kurentoOptions.getFilter().getType(), e);
-				sessionEventsHandler.onPublishMedia(participant, null, kParticipant.getPublisher().createdAt(),
+				sessionEventsHandler.onPublishMedia(participant, null, System.currentTimeMillis(),
 						kSession.getSessionId(), mediaOptions, sdpAnswer, participants, transactionId, e);
 				throw e;
 			}

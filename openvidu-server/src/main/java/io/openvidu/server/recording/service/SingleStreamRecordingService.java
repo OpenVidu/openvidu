@@ -24,10 +24,12 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiFunction;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -59,6 +61,7 @@ import io.openvidu.server.kurento.core.KurentoParticipant;
 import io.openvidu.server.kurento.endpoint.PublisherEndpoint;
 import io.openvidu.server.recording.RecorderEndpointWrapper;
 import io.openvidu.server.recording.Recording;
+import io.openvidu.server.recording.RecordingDownloader;
 
 public class SingleStreamRecordingService extends RecordingService {
 
@@ -67,8 +70,9 @@ public class SingleStreamRecordingService extends RecordingService {
 	private Map<String, Map<String, RecorderEndpointWrapper>> recorders = new ConcurrentHashMap<>();
 	private final String INDIVIDUAL_STREAM_METADATA_FILE = ".stream.";
 
-	public SingleStreamRecordingService(RecordingManager recordingManager, OpenviduConfig openviduConfig) {
-		super(recordingManager, openviduConfig);
+	public SingleStreamRecordingService(RecordingManager recordingManager, RecordingDownloader recordingDownloader,
+			OpenviduConfig openviduConfig) {
+		super(recordingManager, recordingDownloader, openviduConfig);
 	}
 
 	@Override
@@ -126,6 +130,7 @@ public class SingleStreamRecordingService extends RecordingService {
 
 	@Override
 	public Recording stopRecording(Session session, Recording recording, EndReason reason) {
+		recording = this.sealRecordingMetadataFileAsProcessing(recording);
 		return this.stopRecording(session, recording, reason, 0);
 	}
 
@@ -134,8 +139,9 @@ public class SingleStreamRecordingService extends RecordingService {
 				recording.hasVideo() ? (recording.hasAudio() ? "video+audio" : "video-only") : "audioOnly",
 				recording.getId(), recording.getSessionId(), reason);
 
-		final int numberOfActiveRecorders = recorders.get(recording.getSessionId()).size();
-		final CountDownLatch stoppedCountDown = new CountDownLatch(numberOfActiveRecorders);
+		final HashMap<String, RecorderEndpointWrapper> wrappers = new HashMap<>(
+				recorders.get(recording.getSessionId()));
+		final CountDownLatch stoppedCountDown = new CountDownLatch(wrappers.size());
 
 		for (RecorderEndpointWrapper wrapper : recorders.get(recording.getSessionId()).values()) {
 			this.stopRecorderEndpointOfPublisherEndpoint(recording.getSessionId(), wrapper.getStreamId(),
@@ -152,15 +158,29 @@ public class SingleStreamRecordingService extends RecordingService {
 		}
 
 		this.cleanRecordingMaps(recording);
-		this.recorders.remove(recording.getSessionId());
 
-		recording = this.sealMetadataFiles(recording);
+		// TODO: DOWNLOAD FILES IF SCALABILITY MODE
+		final Recording[] finalRecordingArray = new Recording[1];
+		try {
+			this.recordingDownloader.downloadRecording(recording, wrappers.keySet(), () -> {
+				// Update recording entity files with final file size
+				for (RecorderEndpointWrapper wrapper : wrappers.values()) {
+					if (wrapper.getSize() == 0) {
+						updateIndividualMetadataFile(wrapper);
+					}
+				}
+				finalRecordingArray[0] = this.sealMetadataFiles(recording);
+			});
+		} catch (IOException e) {
+			log.error("Error while downloading recording {}", recording.getName());
+		}
+		Recording finalRecording = finalRecordingArray[0] != null ? finalRecordingArray[0] : recording;
 
 		if (reason != null && session != null) {
-			this.recordingManager.sessionHandler.sendRecordingStoppedNotification(session, recording, reason);
+			this.recordingManager.sessionHandler.sendRecordingStoppedNotification(session, finalRecording, reason);
 		}
 
-		return recording;
+		return finalRecording;
 	}
 
 	public void startRecorderEndpointForPublisherEndpoint(Session session, String recordingId,
@@ -223,7 +243,7 @@ public class SingleStreamRecordingService extends RecordingService {
 	public void stopRecorderEndpointOfPublisherEndpoint(String sessionId, String streamId,
 			CountDownLatch globalStopLatch, Long kmsDisconnectionTime) {
 		log.info("Stopping single stream recorder for stream {} in session {}", streamId, sessionId);
-		final RecorderEndpointWrapper finalWrapper = this.recorders.get(sessionId).remove(streamId);
+		final RecorderEndpointWrapper finalWrapper = recorders.get(sessionId).remove(streamId);
 		if (finalWrapper != null && kmsDisconnectionTime == 0) {
 			finalWrapper.getRecorder().addStoppedListener(new EventListener<StoppedEvent>() {
 				@Override
@@ -323,12 +343,21 @@ public class SingleStreamRecordingService extends RecordingService {
 	}
 
 	private void generateIndividualMetadataFile(RecorderEndpointWrapper wrapper) {
+		this.commonWriteIndividualMetadataFile(wrapper, this.fileWriter::createAndWriteFile);
+	}
+
+	private void updateIndividualMetadataFile(RecorderEndpointWrapper wrapper) {
+		this.commonWriteIndividualMetadataFile(wrapper, this.fileWriter::overwriteFile);
+	}
+
+	private void commonWriteIndividualMetadataFile(RecorderEndpointWrapper wrapper,
+			BiFunction<String, String, Boolean> writeFunction) {
 		String filesPath = this.openviduConfig.getOpenViduRecordingPath() + wrapper.getRecordingId() + "/";
 		File videoFile = new File(filesPath + wrapper.getStreamId() + ".webm");
 		wrapper.setSize(videoFile.length());
 		String metadataFilePath = filesPath + INDIVIDUAL_STREAM_METADATA_FILE + wrapper.getStreamId();
 		String metadataFileContent = wrapper.toJson().toString();
-		this.fileWriter.createAndWriteFile(metadataFilePath, metadataFileContent);
+		writeFunction.apply(metadataFilePath, metadataFileContent);
 	}
 
 	private Recording sealMetadataFiles(Recording recording) {
@@ -336,7 +365,6 @@ public class SingleStreamRecordingService extends RecordingService {
 		// individual recordings) and "size" (sum of all individual recordings size)
 
 		String folderPath = this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/";
-
 		String metadataFilePath = folderPath + RecordingManager.RECORDING_ENTITY_FILE + recording.getId();
 		String syncFilePath = folderPath + recording.getName() + ".json";
 
@@ -397,7 +425,7 @@ public class SingleStreamRecordingService extends RecordingService {
 		double duration = (double) (maxEndTime - minStartTime) / 1000;
 		duration = duration > 0 ? duration : 0;
 
-		recording = this.sealRecordingMetadataFile(recording, accumulatedSize, duration, metadataFilePath);
+		recording = this.sealRecordingMetadataFileAsStopped(recording, accumulatedSize, duration, metadataFilePath);
 
 		return recording;
 	}

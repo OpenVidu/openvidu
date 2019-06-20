@@ -63,8 +63,8 @@ public abstract class RecordingService {
 		boolean newFolderCreated = this.fileWriter.createFolderIfNotExists(folder);
 
 		if (newFolderCreated) {
-			log.info(
-					"New folder {} created. This means the recording started for a session with no publishers or no media type compatible publishers",
+			log.warn(
+					"New folder {} created. This means A) Cluster mode is enabled B) The recording started for a session with no publishers or C) No media type compatible publishers",
 					folder);
 		} else {
 			log.info("Folder {} already existed. Some publisher is already being recorded", folder);
@@ -78,22 +78,50 @@ public abstract class RecordingService {
 	}
 
 	/**
-	 * Update and overwrites metadata recording file with final values on recording
-	 * stop (".recording.RECORDING_ID" JSON file to store Recording entity).
+	 * Update and overwrites metadata recording file to set it in "processing"
+	 * status. Recording size and duration will remain as 0
 	 * 
 	 * @return updated Recording object
 	 */
-	protected Recording sealRecordingMetadataFile(Recording recording, long size, double duration,
+	protected Recording sealRecordingMetadataFileAsProcessing(Recording recording) {
+
+		log.info("Recording {} is processing", recording.getId());
+
+		final String entityFile = this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/"
+				+ RecordingManager.RECORDING_ENTITY_FILE + recording.getId();
+		return this.sealRecordingMetadataFile(recording, 0, 0, io.openvidu.java.client.Recording.Status.processing,
+				entityFile);
+	}
+
+	/**
+	 * Update and overwrites metadata recording file to set it in "stopped" (or
+	 * "failed") status
+	 * 
+	 * @return updated Recording object
+	 */
+	protected Recording sealRecordingMetadataFileAsStopped(Recording recording, long size, double duration,
 			String metadataFilePath) {
+
+		log.info("Recording {} is processing", recording.getId());
+
+		io.openvidu.java.client.Recording.Status status = io.openvidu.java.client.Recording.Status.failed
+				.equals(recording.getStatus()) ? io.openvidu.java.client.Recording.Status.failed
+						: io.openvidu.java.client.Recording.Status.stopped;
+
+		final String entityFile = this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/"
+				+ RecordingManager.RECORDING_ENTITY_FILE + recording.getId();
+		return this.sealRecordingMetadataFile(recording, size, duration, status, entityFile);
+	}
+
+	private Recording sealRecordingMetadataFile(Recording recording, long size, double duration,
+			io.openvidu.java.client.Recording.Status status, String metadataFilePath) {
+		recording.setStatus(status);
 		recording.setSize(size); // Size in bytes
 		recording.setDuration(duration > 0 ? duration : 0); // Duration in seconds
-		if (!io.openvidu.java.client.Recording.Status.failed.equals(recording.getStatus())) {
-			recording.setStatus(io.openvidu.java.client.Recording.Status.stopped);
-		}
 		this.fileWriter.overwriteFile(metadataFilePath, recording.toJson().toString());
 		recording = this.recordingManager.updateRecordingUrl(recording);
 
-		log.info("Sealed recording metadata file at {}", metadataFilePath);
+		log.info("Sealed recording metadata file at {} with status [{}]", metadataFilePath, status.name());
 
 		return recording;
 	}
