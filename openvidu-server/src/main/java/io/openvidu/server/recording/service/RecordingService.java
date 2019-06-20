@@ -84,9 +84,6 @@ public abstract class RecordingService {
 	 * @return updated Recording object
 	 */
 	protected Recording sealRecordingMetadataFileAsProcessing(Recording recording) {
-
-		log.info("Recording {} is processing", recording.getId());
-
 		final String entityFile = this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/"
 				+ RecordingManager.RECORDING_ENTITY_FILE + recording.getId();
 		return this.sealRecordingMetadataFile(recording, 0, 0, io.openvidu.java.client.Recording.Status.processing,
@@ -101,9 +98,6 @@ public abstract class RecordingService {
 	 */
 	protected Recording sealRecordingMetadataFileAsStopped(Recording recording, long size, double duration,
 			String metadataFilePath) {
-
-		log.info("Recording {} is processing", recording.getId());
-
 		io.openvidu.java.client.Recording.Status status = io.openvidu.java.client.Recording.Status.failed
 				.equals(recording.getStatus()) ? io.openvidu.java.client.Recording.Status.failed
 						: io.openvidu.java.client.Recording.Status.stopped;
