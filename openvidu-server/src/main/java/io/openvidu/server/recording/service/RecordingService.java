@@ -160,12 +160,12 @@ public abstract class RecordingService {
 		try {
 			String response = CommandExecutor.execCommand("/bin/sh", "-c", command);
 			if ("".equals(response)) {
-				log.info("Individual recording file permissions successfully updated");
+				log.info("KMS recording file permissions successfully updated");
 			} else {
-				log.error("Individual recording file permissions failed to update: {}", response);
+				log.error("KMS recording file permissions failed to update: {}", response);
 			}
 		} catch (IOException | InterruptedException e) {
-			log.error("Individual recording file permissions failed to update. Error: {}", e.getMessage());
+			log.error("KMS recording file permissions failed to update. Error: {}", e.getMessage());
 		}
 	}
 
