@@ -1,7 +1,5 @@
 node('container') {
-  stage('Containers clean up') {
-    sh 'docker rm -f chrome firefox e2e'
-  }
+  sh 'docker rm -f chrome firefox e2e  || true'
   docker.image('selenium/standalone-chrome:latest').pull()
   docker.image('selenium/standalone-firefox:latest').pull()
   docker.image('selenium/standalone-chrome:latest').withRun('-p 4444:4444 --name chrome --shm-size=1g -v /opt/openvidu:/opt/openvidu') { c ->
