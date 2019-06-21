@@ -17,9 +17,18 @@
 
 package io.openvidu.server.config;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 
+import javax.annotation.PostConstruct;
+
+import org.apache.http.Header;
+import org.apache.http.message.BasicHeader;
 import org.kurento.jsonrpc.JsonUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.info.BuildProperties;
@@ -30,17 +39,18 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
 import io.openvidu.java.client.OpenViduRole;
+import io.openvidu.server.cdr.CDREventName;
 
 @Component
 public class OpenviduConfig {
+
+	private static final Logger log = LoggerFactory.getLogger(OpenviduConfig.class);
 
 	@Autowired
 	BuildProperties buildProperties;
 
 	@Value("${kms.uris}")
 	private String kmsUris;
-
-	private List<String> kmsUrisList;
 
 	@Value("${openvidu.publicurl}")
 	private String openviduPublicUrl; // local, docker, [FINAL_URL]
@@ -53,7 +63,7 @@ public class OpenviduConfig {
 
 	@Value("${openvidu.cdr}")
 	private boolean openviduCdr;
-	
+
 	@Value("${openvidu.cdr.path}")
 	private String openviduCdrPath;
 
@@ -80,6 +90,18 @@ public class OpenviduConfig {
 
 	@Value("${openvidu.recording.composed-url}")
 	private String openviduRecordingComposedUrl;
+
+	@Value("${openvidu.webhook}")
+	private boolean openviduWebhook;
+
+	@Value("${openvidu.webhook.endpoint}")
+	private String openviduWebhookEndpoint;
+
+	@Value("${openvidu.webhook.headers}")
+	private String openviduWebhookHeaders;
+
+	@Value("${openvidu.webhook.events}")
+	private String openviduWebhookEvents;
 
 	@Value("${openvidu.streams.video.max-recv-bandwidth}")
 	private int openviduStreamsVideoMaxRecvBandwidth;
@@ -109,18 +131,48 @@ public class OpenviduConfig {
 	private String springProfile;
 
 	private String finalUrl;
+	private List<String> kmsUrisList;
+	private List<Header> webhookHeadersList;
+	private List<CDREventName> webhookEventsList;
+
+	@PostConstruct
+	public void init() {
+		try {
+			this.initiateKmsUris();
+		} catch (Exception e) {
+			log.error("Error in 'kms.uris' system property: " + e.getMessage());
+			log.error("Shutting down OpenVidu Server");
+			System.exit(1);
+		}
+		if (this.isWebhookEnabled()) {
+			log.info("OpenVidu Webhook service enabled");
+			try {
+				new URL(this.openviduWebhookEndpoint);
+				log.info("OpenVidu Webhook endpoint is {}", this.getOpenViduWebhookEndpoint());
+			} catch (MalformedURLException e) {
+				log.error("Error in 'openvidu.webhook.endpoint' system property. Malformed URL: " + e.getMessage());
+				log.error("Shutting down OpenVidu Server");
+				System.exit(1);
+			}
+			try {
+				this.initiateOpenViduWebhookHeaders();
+			} catch (Exception e) {
+				log.error("Error in 'openvidu.webhook.headers' system property: " + e.getMessage());
+				log.error("Shutting down OpenVidu Server");
+				System.exit(1);
+			}
+			try {
+				this.initiateOpenViduWebhookEvents();
+			} catch (Exception e) {
+				log.error("Error in 'openvidu.webhook.events' system property: " + e.getMessage());
+				log.error("Shutting down OpenVidu Server");
+				System.exit(1);
+			}
+		}
+	}
 
 	public List<String> getKmsUris() {
-		if (kmsUrisList == null) {
-			this.kmsUris = this.kmsUris.replaceAll("\\s", "");
-			JsonParser parser = new JsonParser();
-			JsonElement elem = parser.parse(this.kmsUris);
-			JsonArray kmsUris = elem.getAsJsonArray();
-			this.kmsUrisList = JsonUtils.toStringList(kmsUris);
-			return this.kmsUrisList;
-		} else {
-			return this.kmsUrisList;
-		}
+		return this.kmsUrisList;
 	}
 
 	public String getOpenViduPublicUrl() {
@@ -142,7 +194,7 @@ public class OpenviduConfig {
 	public boolean isCdrEnabled() {
 		return this.openviduCdr;
 	}
-	
+
 	public String getOpenviduCdrPath() {
 		return this.openviduCdrPath;
 	}
@@ -232,6 +284,22 @@ public class OpenviduConfig {
 		return this.openviduRecordingComposedUrl;
 	}
 
+	public boolean isWebhookEnabled() {
+		return this.openviduWebhook;
+	}
+
+	public String getOpenViduWebhookEndpoint() {
+		return this.openviduWebhookEndpoint;
+	}
+
+	public List<Header> getOpenViduWebhookHeaders() {
+		return this.webhookHeadersList;
+	}
+
+	public List<CDREventName> getOpenViduWebhookEvents() {
+		return this.webhookEventsList;
+	}
+
 	public OpenViduRole[] getRolesFromRecordingNotification() {
 		OpenViduRole[] roles;
 		switch (this.openviduRecordingNotification) {
@@ -263,6 +331,58 @@ public class OpenviduConfig {
 
 	public String getVersion() {
 		return this.buildProperties.getVersion();
+	}
+
+	private void initiateKmsUris() throws Exception {
+		if (kmsUrisList == null) {
+			this.kmsUris = this.kmsUris.replaceAll("\\s", "");
+			JsonParser parser = new JsonParser();
+			JsonElement elem = parser.parse(this.kmsUris);
+			JsonArray kmsUris = elem.getAsJsonArray();
+			this.kmsUrisList = JsonUtils.toStringList(kmsUris);
+		}
+	}
+
+	private void initiateOpenViduWebhookHeaders() throws Exception {
+		if (webhookHeadersList == null) {
+			JsonParser parser = new JsonParser();
+			JsonElement elem = parser.parse(this.openviduWebhookHeaders);
+			JsonArray headersJsonArray = elem.getAsJsonArray();
+			this.webhookHeadersList = new ArrayList<>();
+
+			for (JsonElement jsonElement : headersJsonArray) {
+				String headerString = jsonElement.getAsString();
+				String[] headerSplit = headerString.split(": ", 2);
+				if (headerSplit.length != 2) {
+					throw new Exception("HTTP header '" + headerString
+							+ "' syntax is not correct. Must be 'HEADER_NAME: HEADER_VALUE'. For example: 'Authorization: Basic YWxhZGRpbjpvcGVuc2VzYW1l'");
+				}
+				String headerName = headerSplit[0];
+				String headerValue = headerSplit[1];
+				this.webhookHeadersList.add(new BasicHeader(headerName, headerValue));
+			}
+			log.info("OpenVidu Webhook headers: {}", this.getOpenViduWebhookHeaders().toString());
+		}
+	}
+
+	private void initiateOpenViduWebhookEvents() throws Exception {
+		if (webhookEventsList == null) {
+			JsonParser parser = new JsonParser();
+			JsonElement elem = parser.parse(this.openviduWebhookEvents);
+			JsonArray eventsJsonArray = elem.getAsJsonArray();
+			this.webhookEventsList = new ArrayList<>();
+
+			for (JsonElement jsonElement : eventsJsonArray) {
+				String eventString = jsonElement.getAsString();
+				try {
+					CDREventName.valueOf(eventString);
+				} catch (IllegalArgumentException e) {
+					throw new Exception("Event name '" + eventString + "' does not exist");
+				}
+				this.webhookEventsList.add(CDREventName.valueOf(eventString));
+			}
+			log.info("OpenVidu Webhook events: {}", this.getOpenViduWebhookEvents().toString());
+		}
 	}
 
 }

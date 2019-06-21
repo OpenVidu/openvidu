@@ -78,10 +78,28 @@
 			"defaultValue": ""
 		},
 		{
-			"name": "coturn.sqlite",
+			"name": "openvidu.webhook",
+			"type": "java.lang.Boolean",
+			"description": "'true' to enable OpenVidu Server Webhook service. 'false' otherwise",
+			"defaultValue": false
+		},
+		{
+			"name": "openvidu.webhook.endpoint",
 			"type": "java.lang.String",
-			"description": "Path to COTURN sqlite database to add and remove TURN user credentials",
-			"defaultValue": "/opt/openvidu/coturn/turndb"
+			"description": "HTTP endpoint where OpenVidu Server will send Webhook HTTP POST messages",
+			"defaultValue": ""
+		},
+		{
+			"name": "openvidu.webhook.headers",
+			"type": "java.lang.String",
+			"description": "List of headers that OpenVidu Server Webhook service will attach to HTTP POST messages",
+			"defaultValue": "[]"
+		},
+		{
+			"name": "openvidu.webhook.events",
+			"type": "java.lang.String",
+			"description": "List of events that will be sent by OpenVidu Server Webhook service",
+			"defaultValue": "[\"sessionCreated\",\"sessionDestroyed\",\"participantJoined\",\"participantLeft\",\"webrtcConnectionCreated\",\"webrtcConnectionDestroyed\",\"recordingStatusChanged\"]"
 		},
 		{
 			"name": "openvidu.streams.video.max-recv-bandwidth",
@@ -130,6 +148,12 @@
 			"type": "java.lang.Integer",
 			"description": "Timeout in seconds when OpenVidu Server is connecting to Redis database to store TURN credentials",
 			"defaultValue": 30
+		},
+		{
+			"name": "coturn.sqlite",
+			"type": "java.lang.String",
+			"description": "Path to COTURN sqlite database to add and remove TURN user credentials",
+			"defaultValue": "/opt/openvidu/coturn/turndb"
 		},
 		{
 			"name": "jsonRpcClientWebSocket.reconnectionDelay",
