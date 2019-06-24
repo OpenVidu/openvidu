@@ -26,6 +26,7 @@ import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.java.client.RecordingProperties;
+import io.openvidu.server.cdr.CallDetailRecord;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.Session;
@@ -41,13 +42,15 @@ public abstract class RecordingService {
 	protected OpenviduConfig openviduConfig;
 	protected RecordingManager recordingManager;
 	protected RecordingDownloader recordingDownloader;
+	protected CallDetailRecord cdr;
 	protected CustomFileManager fileWriter = new CustomFileManager();
 
 	RecordingService(RecordingManager recordingManager, RecordingDownloader recordingDownloader,
-			OpenviduConfig openviduConfig) {
+			OpenviduConfig openviduConfig, CallDetailRecord cdr) {
 		this.recordingManager = recordingManager;
 		this.recordingDownloader = recordingDownloader;
 		this.openviduConfig = openviduConfig;
+		this.cdr = cdr;
 	}
 
 	public abstract Recording startRecording(Session session, RecordingProperties properties) throws OpenViduException;

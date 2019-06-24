@@ -102,6 +102,7 @@ import io.openvidu.test.browsers.FirefoxUser;
 import io.openvidu.test.browsers.OperaUser;
 import io.openvidu.test.e2e.utils.CommandLineExecutor;
 import io.openvidu.test.e2e.utils.CustomHttpClient;
+import io.openvidu.test.e2e.utils.CustomWebhook;
 import io.openvidu.test.e2e.utils.MultimediaFileMetadata;
 import io.openvidu.test.e2e.utils.Unzipper;
 
@@ -2723,6 +2724,70 @@ public class OpenViduTestAppE2eTest {
 		Assert.assertEquals("Expected 1 active subscriber but found " + subs, 1, subs);
 
 		gracefullyLeaveParticipants(2);
+	}
+
+	@Test
+	@DisplayName("Webhook test")
+	void webhookTest() throws Exception {
+		isRecordingTest = true;
+
+		setupBrowser("chrome");
+
+		log.info("Webhook test");
+
+		CountDownLatch initLatch = new CountDownLatch(1);
+		CustomWebhook.main(new String[0], initLatch);
+
+		try {
+
+			if (!initLatch.await(30, TimeUnit.SECONDS)) {
+				Assert.fail("Tiemout waiting for webhook springboot app to start");
+				CustomWebhook.shutDown();
+				return;
+			}
+
+			user.getDriver().findElement(By.id("add-user-btn")).click();
+			user.getDriver().findElement(By.id("session-settings-btn-0")).click();
+			Thread.sleep(1000);
+			user.getDriver().findElement(By.id("recording-mode-select")).click();
+			Thread.sleep(500);
+			user.getDriver().findElement(By.id("option-ALWAYS")).click();
+			Thread.sleep(500);
+			user.getDriver().findElement(By.id("output-mode-select")).click();
+			Thread.sleep(500);
+			user.getDriver().findElement(By.id("option-INDIVIDUAL")).click();
+			Thread.sleep(500);
+			user.getDriver().findElement(By.id("save-btn")).click();
+			Thread.sleep(1000);
+
+			user.getDriver().findElement(By.className("join-btn")).click();
+
+			CustomWebhook.waitForEvent("sessionCreated", 2);
+			CustomWebhook.waitForEvent("participantJoined", 2);
+			CustomWebhook.waitForEvent("webrtcConnectionCreated", 2);
+			JsonObject event = CustomWebhook.waitForEvent("recordingStatusChanged", 10);
+
+			Assert.assertEquals("Wrong recording status in webhook event", "started", event.get("status").getAsString());
+
+			user.getDriver().findElement(By.id("session-api-btn-0")).click();
+			Thread.sleep(1000);
+			user.getDriver().findElement(By.id("close-session-btn")).click();
+			user.getDriver().findElement(By.id("close-dialog-btn")).click();
+			Thread.sleep(1000);
+
+			CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 2);
+			CustomWebhook.waitForEvent("participantLeft", 2);
+			event = CustomWebhook.waitForEvent("recordingStatusChanged", 2);
+			Assert.assertEquals("Wrong recording status in webhook event", "processing", event.get("status").getAsString());
+			event = CustomWebhook.waitForEvent("recordingStatusChanged", 2);
+			Assert.assertEquals("Wrong recording status in webhook event", "stopped", event.get("status").getAsString());
+
+			CustomWebhook.waitForEvent("sessionDestroyed", 2);
+
+		} finally {
+			CustomWebhook.shutDown();
+		}
+
 	}
 
 	private void listEmptyRecordings() {

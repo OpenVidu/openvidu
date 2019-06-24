@@ -28,6 +28,4 @@ public interface CDRLogger {
 
 	public void log(SessionSummary sessionSummary);
 
-	public boolean canBeDisabled();
-
 }

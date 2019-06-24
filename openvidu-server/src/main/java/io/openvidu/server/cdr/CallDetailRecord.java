@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentSkipListSet;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import io.openvidu.java.client.Recording.Status;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.MediaOptions;
@@ -49,6 +50,7 @@ import io.openvidu.server.summary.SessionSummary;
  * - 'webrtcConnectionDestroyed'	{sessionId, timestamp, participantId, startTime, duration, connection, [receivingFrom], audioEnabled, videoEnabled, [videoSource], [videoFramerate], reason}
  * - 'recordingStarted'				{sessionId, timestamp, id, name, hasAudio, hasVideo, resolution, recordingLayout, size}
  * - 'recordingStopped'				{sessionId, timestamp, id, name, hasAudio, hasVideo, resolution, recordingLayout, size}
+ * - 'recordingStatusChanged'		{sessionId, timestamp, id, name, hasAudio, hasVideo, resolution, recordingLayout, size, status}
  * 
  * PROPERTIES VALUES:
  * 
@@ -71,6 +73,7 @@ import io.openvidu.server.summary.SessionSummary;
  * - resolution			string
  * - recordingLayout:	string
  * - size: 				number
+ * - status:            string
  * - webrtcConnectionDestroyed.reason: 	"unsubscribe", "unpublish", "disconnect", "networkDisconnect", "mediaServerDisconnect", "openviduServerStopped"
  * - participantLeft.reason: 			"unsubscribe", "unpublish", "disconnect", "networkDisconnect", "openviduServerStopped"
  * - sessionDestroyed.reason: 			"lastParticipantLeft", "openviduServerStopped"
@@ -117,7 +120,8 @@ public class CallDetailRecord {
 	public void recordSessionDestroyed(String sessionId, EndReason reason) {
 		CDREventSession e = this.sessions.remove(sessionId);
 		if (e != null) {
-			CDREventSession eventSessionEnd = new CDREventSession(e, RecordingManager.finalReason(reason));
+			CDREventSession eventSessionEnd = new CDREventSession(e, RecordingManager.finalReason(reason),
+					System.currentTimeMillis());
 			this.log(eventSessionEnd);
 
 			// Summary: log closed session
@@ -134,7 +138,7 @@ public class CallDetailRecord {
 
 	public void recordParticipantLeft(Participant participant, String sessionId, EndReason reason) {
 		CDREventParticipant e = this.participants.remove(participant.getParticipantPublicId());
-		CDREventParticipant eventParticipantEnd = new CDREventParticipant(e, reason);
+		CDREventParticipant eventParticipantEnd = new CDREventParticipant(e, reason, System.currentTimeMillis());
 		this.log(eventParticipantEnd);
 
 		// Summary: update final user ended connection
@@ -152,7 +156,7 @@ public class CallDetailRecord {
 	public void stopPublisher(String participantPublicId, String streamId, EndReason reason) {
 		CDREventWebrtcConnection eventPublisherEnd = this.publications.remove(participantPublicId);
 		if (eventPublisherEnd != null) {
-			eventPublisherEnd = new CDREventWebrtcConnection(eventPublisherEnd, reason);
+			eventPublisherEnd = new CDREventWebrtcConnection(eventPublisherEnd, reason, System.currentTimeMillis());
 			this.log(eventPublisherEnd);
 
 			// Summary: update final user ended publisher
@@ -180,7 +184,8 @@ public class CallDetailRecord {
 				eventSubscriberEnd = it.next();
 				if (senderPublicId.equals(eventSubscriberEnd.receivingFrom)) {
 					it.remove();
-					eventSubscriberEnd = new CDREventWebrtcConnection(eventSubscriberEnd, reason);
+					eventSubscriberEnd = new CDREventWebrtcConnection(eventSubscriberEnd, reason,
+							System.currentTimeMillis());
 					this.log(eventSubscriberEnd);
 
 					// Summary: update final user ended subscriber
@@ -196,23 +201,35 @@ public class CallDetailRecord {
 		CDREventRecording recordingStartedEvent = new CDREventRecording(sessionId, recording);
 		this.recordings.putIfAbsent(recording.getId(), recordingStartedEvent);
 		this.log(new CDREventRecording(sessionId, recording));
+		this.recordRecordingStatusChanged(sessionId, recording, Status.started);
 	}
 
 	public void recordRecordingStopped(String sessionId, Recording recording, EndReason reason) {
 		CDREventRecording recordingStartedEvent = this.recordings.remove(recording.getId());
+		final long timestamp = System.currentTimeMillis();
 		CDREventRecording recordingStoppedEvent = new CDREventRecording(recordingStartedEvent, recording,
-				RecordingManager.finalReason(reason));
+				RecordingManager.finalReason(reason), timestamp);
 		this.log(recordingStoppedEvent);
+
+		this.recordRecordingStatusChanged(recordingStartedEvent, recording, RecordingManager.finalReason(reason),
+				timestamp, Status.stopped);
 
 		// Summary: update ended recording
 		sessionManager.getAccumulatedRecordings(sessionId).add(recordingStoppedEvent);
 	}
 
+	public void recordRecordingStatusChanged(String sessionId, Recording recording, Status status) {
+		this.log(new CDREventRecordingStatus(sessionId, recording, status));
+	}
+
+	public void recordRecordingStatusChanged(CDREventRecording recordingStartedEvent, Recording recording,
+			EndReason finalReason, long timestamp, Status status) {
+		this.log(new CDREventRecordingStatus(recordingStartedEvent, recording, finalReason, timestamp, status));
+	}
+
 	private void log(CDREvent event) {
 		this.loggers.forEach(logger -> {
-			if (openviduConfig.isCdrEnabled() || !logger.canBeDisabled()) {
-				logger.log(event);
-			}
+			logger.log(event);
 		});
 	}
 

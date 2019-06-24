@@ -37,9 +37,11 @@ import com.github.dockerjava.api.model.Volume;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
+import io.openvidu.java.client.Recording.Status;
 import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.server.OpenViduServer;
+import io.openvidu.server.cdr.CallDetailRecord;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.Participant;
@@ -63,8 +65,8 @@ public class ComposedRecordingService extends RecordingService {
 	private DockerManager dockerManager;
 
 	public ComposedRecordingService(RecordingManager recordingManager, RecordingDownloader recordingDownloader,
-			OpenviduConfig openviduConfig) {
-		super(recordingManager, recordingDownloader, openviduConfig);
+			OpenviduConfig openviduConfig, CallDetailRecord cdr) {
+		super(recordingManager, recordingDownloader, openviduConfig, cdr);
 		this.dockerManager = new DockerManager();
 	}
 
@@ -97,6 +99,7 @@ public class ComposedRecordingService extends RecordingService {
 			return this.stopRecordingWithVideo(session, recording, reason);
 		} else {
 			recording = this.sealRecordingMetadataFileAsProcessing(recording);
+			this.cdr.recordRecordingStatusChanged(session.getSessionId(), recording, Status.processing);
 			return this.stopRecordingAudioOnly(session, recording, reason, 0);
 		}
 	}

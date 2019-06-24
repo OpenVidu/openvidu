@@ -25,7 +25,7 @@ import io.openvidu.server.recording.Recording;
 
 public class CDREventRecording extends CDREventEnd {
 
-	private Recording recording;
+	protected Recording recording;
 
 	// recordingStarted
 	public CDREventRecording(String sessionId, Recording recording) {
@@ -34,9 +34,9 @@ public class CDREventRecording extends CDREventEnd {
 	}
 
 	// recordingStopped
-	public CDREventRecording(CDREventRecording event, Recording recording, EndReason reason) {
+	public CDREventRecording(CDREventRecording event, Recording recording, EndReason reason, Long timestamp) {
 		super(CDREventName.recordingStopped, event == null ? recording.getSessionId() : event.getSessionId(),
-				event == null ? recording.getCreatedAt() : event.getTimestamp(), reason);
+				event == null ? recording.getCreatedAt() : event.getTimestamp(), reason, timestamp);
 		this.recording = recording;
 	}
 

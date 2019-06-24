@@ -23,7 +23,7 @@ public class CDREvent {
 
 	protected String sessionId;
 	protected Long timeStamp;
-	private CDREventName eventName;
+	protected CDREventName eventName;
 
 	public CDREvent(CDREventName eventName, String sessionId, Long timeStamp) {
 		this.eventName = eventName;

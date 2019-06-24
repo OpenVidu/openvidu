@@ -11,16 +11,18 @@
           </mat-select>
         </mat-form-field>
         <mat-form-field>
-          <mat-select placeholder="RecordingMode" [(ngModel)]="sessionProperties.recordingMode">
+          <mat-select placeholder="RecordingMode" [(ngModel)]="sessionProperties.recordingMode"
+            id="recording-mode-select">
             <mat-option *ngFor="let enumerator of enumToArray(recordingMode)" [value]="enumerator">
-              {{ enumerator }}
+              <span [attr.id]="'option-' + enumerator">{{ enumerator }}</span>
             </mat-option>
           </mat-select>
         </mat-form-field>
         <mat-form-field>
-          <mat-select placeholder="DefaultOutputMode" [(ngModel)]="sessionProperties.defaultOutputMode">
+          <mat-select placeholder="DefaultOutputMode" [(ngModel)]="sessionProperties.defaultOutputMode"
+            id="output-mode-select">
             <mat-option *ngFor="let enumerator of enumToArray(defaultOutputMode)" [value]="enumerator">
-              {{ enumerator }}
+              <span [attr.id]="'option-' + enumerator">{{ enumerator }}</span>
             </mat-option>
           </mat-select>
         </mat-form-field>
@@ -31,8 +33,10 @@
             </mat-option>
           </mat-select>
         </mat-form-field>
-        <mat-form-field *ngIf="this.sessionProperties.defaultOutputMode === 'COMPOSED' && this.sessionProperties.defaultRecordingLayout === 'CUSTOM'">
-          <input matInput placeholder="DefaultCustomLayout" type="text" [(ngModel)]="sessionProperties.defaultCustomLayout">
+        <mat-form-field
+          *ngIf="this.sessionProperties.defaultOutputMode === 'COMPOSED' && this.sessionProperties.defaultRecordingLayout === 'CUSTOM'">
+          <input matInput placeholder="DefaultCustomLayout" type="text"
+            [(ngModel)]="sessionProperties.defaultCustomLayout">
         </mat-form-field>
         <mat-form-field>
           <input matInput placeholder="CustomSessionId" type="text" [(ngModel)]="sessionProperties.customSessionId">
@@ -73,26 +77,32 @@
         <label class="label" style="margin-bottom: 8px">Kurento config</label>
         <div id="kurento-config-div">
           <mat-form-field style="width: 39%; margin-right: 5px">
-            <input matInput placeholder="Max recv" type="number" [(ngModel)]="tokenOptions.kurentoOptions.videoMaxRecvBandwidth">
+            <input matInput placeholder="Max recv" type="number"
+              [(ngModel)]="tokenOptions.kurentoOptions.videoMaxRecvBandwidth">
           </mat-form-field>
           <mat-form-field style="width: 39%">
-            <input matInput placeholder="Min recv" type="number" [(ngModel)]="tokenOptions.kurentoOptions.videoMinRecvBandwidth">
+            <input matInput placeholder="Min recv" type="number"
+              [(ngModel)]="tokenOptions.kurentoOptions.videoMinRecvBandwidth">
           </mat-form-field>
           <mat-form-field style="width: 39%; margin-right: 5px">
-            <input matInput placeholder="Max send" type="number" [(ngModel)]="tokenOptions.kurentoOptions.videoMaxSendBandwidth">
+            <input matInput placeholder="Max send" type="number"
+              [(ngModel)]="tokenOptions.kurentoOptions.videoMaxSendBandwidth">
           </mat-form-field>
           <mat-form-field style="width: 39%">
-            <input matInput placeholder="Min send" type="number" [(ngModel)]="tokenOptions.kurentoOptions.videoMinSendBandwidth">
+            <input matInput placeholder="Min send" type="number"
+              [(ngModel)]="tokenOptions.kurentoOptions.videoMinSendBandwidth">
           </mat-form-field>
           <mat-chip-list *ngIf="filters.length > 0">
-            <mat-chip style="height: 20px" *ngFor="let filterName of filters" (click)="filters.splice(filters.indexOf(filterName, 1))">{{filterName}}</mat-chip>
+            <mat-chip style="height: 20px" *ngFor="let filterName of filters"
+              (click)="filters.splice(filters.indexOf(filterName, 1))">{{filterName}}</mat-chip>
           </mat-chip-list>
           <mat-form-field style="width: 70%">
             <input matInput placeholder="Allowed filter" id="allowed-filter-input" type="text" [(ngModel)]="filterName">
           </mat-form-field>
           <button id="add-allowed-filter-btn" mat-icon-button style="width: 24px; height: 24px; line-height: 24px;"
             title="Add allowed filter" (click)="filters.push(filterName); filterName = '';">
-            <mat-icon style="font-size: 18px; line-height: 18px; width: 18px; height: 18px" aria-label="Add allowed filter">add_circle</mat-icon>
+            <mat-icon style="font-size: 18px; line-height: 18px; width: 18px; height: 18px"
+              aria-label="Add allowed filter">add_circle</mat-icon>
           </button>
         </div>
 
@@ -108,6 +118,7 @@
 
   <mat-dialog-actions>
     <button id="cancel-btn" mat-button [mat-dialog-close]="undefined">CANCEL</button>
-    <button id="save-btn" mat-button [mat-dialog-close]="{sessionProperties: sessionProperties, turnConf: turnConf, manualTurnConf: manualTurnConf, tokenOptions: generateTokenOptions(), customToken: customToken}">SAVE</button>
+    <button id="save-btn" mat-button
+      [mat-dialog-close]="{sessionProperties: sessionProperties, turnConf: turnConf, manualTurnConf: manualTurnConf, tokenOptions: generateTokenOptions(), customToken: customToken}">SAVE</button>
   </mat-dialog-actions>
 </div>

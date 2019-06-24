@@ -41,8 +41,8 @@ public class CDREventWebrtcConnection extends CDREventEnd implements Comparable<
 	}
 
 	// webrtcConnectionDestroyed
-	public CDREventWebrtcConnection(CDREventWebrtcConnection event, EndReason reason) {
-		super(CDREventName.webrtcConnectionDestroyed, event.getSessionId(), event.getTimestamp(), reason);
+	public CDREventWebrtcConnection(CDREventWebrtcConnection event, EndReason reason, Long timestamp) {
+		super(CDREventName.webrtcConnectionDestroyed, event.getSessionId(), event.getTimestamp(), reason, timestamp);
 		this.streamId = event.streamId;
 		this.participant = event.participant;
 		this.mediaOptions = event.mediaOptions;

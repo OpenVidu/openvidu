@@ -56,6 +56,7 @@ import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.Recording.OutputMode;
 import io.openvidu.java.client.RecordingProperties;
+import io.openvidu.server.cdr.CallDetailRecord;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.Participant;
@@ -91,6 +92,9 @@ public class RecordingManager {
 
 	@Autowired
 	private KmsManager kmsManager;
+	
+	@Autowired
+	private CallDetailRecord cdr;
 
 	protected Map<String, Recording> startingRecordings = new ConcurrentHashMap<>();
 	protected Map<String, Recording> startedRecordings = new ConcurrentHashMap<>();
@@ -113,8 +117,8 @@ public class RecordingManager {
 		RecordingManager.IMAGE_TAG = openviduConfig.getOpenViduRecordingVersion();
 
 		this.dockerManager = new DockerManager();
-		this.composedRecordingService = new ComposedRecordingService(this, recordingDownloader, openviduConfig);
-		this.singleStreamRecordingService = new SingleStreamRecordingService(this, recordingDownloader, openviduConfig);
+		this.composedRecordingService = new ComposedRecordingService(this, recordingDownloader, openviduConfig, cdr);
+		this.singleStreamRecordingService = new SingleStreamRecordingService(this, recordingDownloader, openviduConfig, cdr);
 
 		log.info("Recording module required: Downloading openvidu/openvidu-recording:"
 				+ openviduConfig.getOpenViduRecordingVersion() + " Docker image (350MB aprox)");

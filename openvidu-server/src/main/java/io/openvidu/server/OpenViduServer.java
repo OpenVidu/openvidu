@@ -19,7 +19,8 @@ package io.openvidu.server;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.annotation.PostConstruct;
 
@@ -39,6 +40,7 @@ import org.springframework.context.event.EventListener;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
+import io.openvidu.server.cdr.CDRLogger;
 import io.openvidu.server.cdr.CDRLoggerFile;
 import io.openvidu.server.cdr.CallDetailRecord;
 import io.openvidu.server.config.HttpHandshakeInterceptor;
@@ -64,6 +66,7 @@ import io.openvidu.server.rpc.RpcNotificationService;
 import io.openvidu.server.utils.CommandExecutor;
 import io.openvidu.server.utils.GeoLocationByIp;
 import io.openvidu.server.utils.GeoLocationByIpDummy;
+import io.openvidu.server.webhook.CDRLoggerWebhook;
 
 /**
  * OpenVidu Server application
@@ -129,10 +132,15 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	@Bean
 	@ConditionalOnMissingBean
 	public CallDetailRecord cdr() {
-		if (this.openviduConfig.isCdrEnabled()) {
+		List<CDRLogger> loggers = new ArrayList<>();
+		if (openviduConfig.isCdrEnabled()) {
 			log.info("OpenVidu CDR is enabled");
+			loggers.add(new CDRLoggerFile());
 		}
-		return new CallDetailRecord(Arrays.asList(new CDRLoggerFile()));
+		if (openviduConfig.isWebhookEnabled()) {
+			loggers.add(new CDRLoggerWebhook(openviduConfig));
+		}
+		return new CallDetailRecord(loggers);
 	}
 
 	@Bean
