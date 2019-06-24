@@ -92,7 +92,7 @@ public class RecordingManager {
 
 	@Autowired
 	private KmsManager kmsManager;
-	
+
 	@Autowired
 	private CallDetailRecord cdr;
 
@@ -118,7 +118,8 @@ public class RecordingManager {
 
 		this.dockerManager = new DockerManager();
 		this.composedRecordingService = new ComposedRecordingService(this, recordingDownloader, openviduConfig, cdr);
-		this.singleStreamRecordingService = new SingleStreamRecordingService(this, recordingDownloader, openviduConfig, cdr);
+		this.singleStreamRecordingService = new SingleStreamRecordingService(this, recordingDownloader, openviduConfig,
+				cdr);
 
 		log.info("Recording module required: Downloading openvidu/openvidu-recording:"
 				+ openviduConfig.getOpenViduRecordingVersion() + " Docker image (350MB aprox)");
@@ -185,6 +186,9 @@ public class RecordingManager {
 			throw e;
 		}
 		this.updateRecordingManagerCollections(session, recording);
+
+		this.cdr.recordRecordingStarted(session.getSessionId(), recording);
+
 		if (!(OutputMode.COMPOSED.equals(properties.outputMode()) && properties.hasVideo())) {
 			// Directly send recording started notification for all cases except for
 			// COMPOSED recordings with video (will be sent on first RECORDER subscriber)

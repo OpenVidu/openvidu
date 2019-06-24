@@ -423,8 +423,6 @@ public class SessionEventsHandler {
 
 	public void sendRecordingStartedNotification(Session session, Recording recording) {
 
-		CDR.recordRecordingStarted(session.getSessionId(), recording);
-
 		// Filter participants by roles according to "openvidu.recording.notification"
 		Set<Participant> filteredParticipants = this.filterParticipantsByRole(
 				this.openviduConfig.getRolesFromRecordingNotification(), session.getParticipants());

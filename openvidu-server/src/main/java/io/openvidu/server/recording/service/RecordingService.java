@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
+import io.openvidu.java.client.Recording.Status;
 import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.server.cdr.CallDetailRecord;
@@ -89,8 +90,10 @@ public abstract class RecordingService {
 	protected Recording sealRecordingMetadataFileAsProcessing(Recording recording) {
 		final String entityFile = this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/"
 				+ RecordingManager.RECORDING_ENTITY_FILE + recording.getId();
-		return this.sealRecordingMetadataFile(recording, 0, 0, io.openvidu.java.client.Recording.Status.processing,
-				entityFile);
+		Recording rec = this.sealRecordingMetadataFile(recording, 0, 0,
+				io.openvidu.java.client.Recording.Status.processing, entityFile);
+		this.cdr.recordRecordingStatusChanged(recording.getSessionId(), recording, Status.processing);
+		return rec;
 	}
 
 	/**

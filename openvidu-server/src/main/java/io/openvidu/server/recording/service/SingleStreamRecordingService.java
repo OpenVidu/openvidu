@@ -52,7 +52,6 @@ import com.google.gson.JsonObject;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
-import io.openvidu.java.client.Recording.Status;
 import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.server.cdr.CallDetailRecord;
 import io.openvidu.server.config.OpenviduConfig;
@@ -133,7 +132,6 @@ public class SingleStreamRecordingService extends RecordingService {
 	@Override
 	public Recording stopRecording(Session session, Recording recording, EndReason reason) {
 		recording = this.sealRecordingMetadataFileAsProcessing(recording);
-		this.cdr.recordRecordingStatusChanged(session.getSessionId(), recording, Status.processing);
 		return this.stopRecording(session, recording, reason, 0);
 	}
 
