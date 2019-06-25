@@ -37,6 +37,7 @@ import io.openvidu.server.kurento.endpoint.KmsEvent;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.recording.service.RecordingManager;
 import io.openvidu.server.summary.SessionSummary;
+import io.openvidu.server.webhook.CDRLoggerWebhook;
 
 /**
  * CDR logger to register all information of a Session.
@@ -229,7 +230,14 @@ public class CallDetailRecord {
 
 	private void log(CDREvent event) {
 		this.loggers.forEach(logger -> {
-			logger.log(event);
+
+			// TEMP FIX: AVOID SENDING recordingStarted AND recordingStopped EVENTS TO
+			// WEBHOOK. ONLY recordingStatusChanged
+			if (!(logger instanceof CDRLoggerWebhook && (CDREventName.recordingStarted.equals(event.getEventName())
+					|| CDREventName.recordingStopped.equals(event.getEventName())))) {
+				logger.log(event);
+			}
+
 		});
 	}
 
