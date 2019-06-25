@@ -20,6 +20,8 @@ package io.openvidu.server.coturn;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 
+import javax.annotation.PostConstruct;
+
 import org.apache.commons.lang3.RandomStringUtils;
 
 import io.openvidu.server.utils.CommandExecutor;
@@ -30,7 +32,8 @@ public class BashCoturnCredentialsService extends CoturnCredentialsService {
 	private AtomicLong logCounter = new AtomicLong(0);
 	private final long LOG_LIMIT = 30;
 
-	public BashCoturnCredentialsService() {
+	@PostConstruct
+	private void initialize() {
 		try {
 			String response = CommandExecutor.execCommand("/bin/sh", "-c",
 					"turnadmin -l -N " + this.coturnDatabaseString);
