@@ -2767,7 +2767,20 @@ public class OpenViduTestAppE2eTest {
 			CustomWebhook.waitForEvent("webrtcConnectionCreated", 2);
 			JsonObject event = CustomWebhook.waitForEvent("recordingStatusChanged", 10);
 
-			Assert.assertEquals("Wrong recording status in webhook event", "started", event.get("status").getAsString());
+			Assert.assertEquals("Wrong recording status in webhook event", "started",
+					event.get("status").getAsString());
+			Assert.assertEquals("Wrong recording outputMode in webhook event", "INDIVIDUAL",
+					event.get("outputMode").getAsString());
+			Assert.assertEquals("Wrong recording outputMode in webhook event", 0, event.get("size").getAsLong());
+			Assert.assertEquals("Wrong recording outputMode in webhook event", 0, event.get("duration").getAsLong());
+
+			user.getDriver().findElement(By.id("add-user-btn")).click();
+			user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .join-btn")).click();
+
+			CustomWebhook.waitForEvent("participantJoined", 2);
+			CustomWebhook.waitForEvent("webrtcConnectionCreated", 2);
+			CustomWebhook.waitForEvent("webrtcConnectionCreated", 2);
+			CustomWebhook.waitForEvent("webrtcConnectionCreated", 2);
 
 			user.getDriver().findElement(By.id("session-api-btn-0")).click();
 			Thread.sleep(1000);
@@ -2776,11 +2789,23 @@ public class OpenViduTestAppE2eTest {
 			Thread.sleep(1000);
 
 			CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 2);
+			CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 2);
+			CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 2);
+			CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 2);
+			CustomWebhook.waitForEvent("participantLeft", 2);
 			CustomWebhook.waitForEvent("participantLeft", 2);
 			event = CustomWebhook.waitForEvent("recordingStatusChanged", 2);
-			Assert.assertEquals("Wrong recording status in webhook event", "processing", event.get("status").getAsString());
+
+			Assert.assertEquals("Wrong recording status in webhook event", "processing",
+					event.get("status").getAsString());
+			Assert.assertEquals("Wrong recording outputMode in webhook event", 0, event.get("size").getAsLong());
+			Assert.assertEquals("Wrong recording outputMode in webhook event", 0, event.get("duration").getAsLong());
+
 			event = CustomWebhook.waitForEvent("recordingStatusChanged", 2);
-			Assert.assertEquals("Wrong recording status in webhook event", "stopped", event.get("status").getAsString());
+			Assert.assertEquals("Wrong recording status in webhook event", "stopped",
+					event.get("status").getAsString());
+			Assert.assertTrue("Wrong recording outputMode in webhook event", event.get("size").getAsLong() > 0);
+			Assert.assertTrue("Wrong recording outputMode in webhook event", event.get("duration").getAsLong() > 0);
 
 			CustomWebhook.waitForEvent("sessionDestroyed", 2);
 
