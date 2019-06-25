@@ -328,6 +328,9 @@ public class ComposedRecordingService extends RecordingService {
 				throw new OpenViduException(Code.RECORDING_REPORT_ERROR_CODE,
 						"There was an error generating the metadata report file for the recording");
 			}
+
+			this.cdr.recordRecordingStopped(recording.getSessionId(), recording, reason);
+
 			if (session != null && reason != null) {
 				this.recordingManager.sessionHandler.sendRecordingStoppedNotification(session, recording, reason);
 			}
@@ -380,8 +383,9 @@ public class ComposedRecordingService extends RecordingService {
 				long finalSize = videoFile.length();
 				double finalDuration = (double) compositeWrapper.getDuration() / 1000;
 				this.updateFilePermissions(filesPath);
-				this.sealRecordingMetadataFileAsStopped(recording, finalSize, finalDuration,
+				finalRecordingArray[0] = this.sealRecordingMetadataFileAsStopped(recording, finalSize, finalDuration,
 						filesPath + RecordingManager.RECORDING_ENTITY_FILE + recording.getId());
+				cdr.recordRecordingStopped(finalRecordingArray[0].getSessionId(), finalRecordingArray[0], reason);
 			});
 		} catch (IOException e) {
 			log.error("Error while downloading recording {}: {}", recording.getName(), e.getMessage());

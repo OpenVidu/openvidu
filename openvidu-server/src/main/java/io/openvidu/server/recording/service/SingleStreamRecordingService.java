@@ -171,6 +171,7 @@ public class SingleStreamRecordingService extends RecordingService {
 					}
 				}
 				finalRecordingArray[0] = this.sealMetadataFiles(recording);
+				cdr.recordRecordingStopped(finalRecordingArray[0].getSessionId(), finalRecordingArray[0], reason);
 			});
 		} catch (IOException e) {
 			log.error("Error while downloading recording {}", recording.getName());
