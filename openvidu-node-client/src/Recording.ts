@@ -101,7 +101,8 @@ export namespace Recording {
     export enum Status {
 
         /**
-         * The recording is starting (cannot be stopped)
+         * The recording is starting (cannot be stopped). Some recording may not go
+		 * through this status and directly reach "started" status
          */
         starting = 'starting',
 
@@ -111,25 +112,21 @@ export namespace Recording {
         started = 'started',
 
         /**
-         * The recording has finished OK
-         */
+		 * The recording has stopped and is being processed. At some point it will reach
+		 * "ready" status
+		 */
         stopped = 'stopped',
 
         /**
-		 * The recording has stopped but is being processed. This status will change to
-		 * stopped/available or failed when processing ends
-		 */
-        processing = 'processing',
-
-        /**
-         * The recording is available for downloading. This status is reached for all
-         * stopped recordings if [OpenVidu Server configuration](https://openvidu.io/docs/reference-docs/openvidu-server-params/)
-         * property `openvidu.recording.public-access` is true
+         * The recording has finished OK and is available for download through OpenVidu
+		 * Server recordings endpoint:
+		 * https://YOUR_OPENVIDUSERVER_IP/recordings/{RECORDING_ID}/{RECORDING_NAME}.{EXTENSION}
          */
-        available = 'available',
+        ready = 'ready',
 
         /**
-         * The recording has failed
+         * The recording has failed. This status may be reached from "starting",
+		 * "started" and "stopped" status
          */
         failed = 'failed'
     }

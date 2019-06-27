@@ -198,34 +198,25 @@ public class CallDetailRecord {
 		}
 	}
 
-	public void recordRecordingStarted(String sessionId, Recording recording) {
-		CDREventRecording recordingStartedEvent = new CDREventRecording(sessionId, recording);
+	public void recordRecordingStarted(Recording recording) {
+		CDREventRecording recordingStartedEvent = new CDREventRecording(recording);
 		this.recordings.putIfAbsent(recording.getId(), recordingStartedEvent);
-		this.log(new CDREventRecording(sessionId, recording));
-		this.recordRecordingStatusChanged(sessionId, recording, Status.started);
+		this.log(recordingStartedEvent);
 	}
 
-	public void recordRecordingStopped(String sessionId, Recording recording, EndReason reason) {
+	public void recordRecordingStopped(Recording recording, EndReason reason, long timestamp) {
 		CDREventRecording recordingStartedEvent = this.recordings.remove(recording.getId());
-		final long timestamp = System.currentTimeMillis();
 		CDREventRecording recordingStoppedEvent = new CDREventRecording(recordingStartedEvent, recording,
 				RecordingManager.finalReason(reason), timestamp);
 		this.log(recordingStoppedEvent);
 
-		this.recordRecordingStatusChanged(recordingStartedEvent, recording, RecordingManager.finalReason(reason),
-				timestamp, Status.stopped);
-
 		// Summary: update ended recording
-		sessionManager.getAccumulatedRecordings(sessionId).add(recordingStoppedEvent);
+		sessionManager.getAccumulatedRecordings(recording.getSessionId()).add(recordingStoppedEvent);
 	}
 
-	public void recordRecordingStatusChanged(String sessionId, Recording recording, Status status) {
-		this.log(new CDREventRecordingStatus(sessionId, recording, status));
-	}
-
-	public void recordRecordingStatusChanged(CDREventRecording recordingStartedEvent, Recording recording,
-			EndReason finalReason, long timestamp, Status status) {
-		this.log(new CDREventRecordingStatus(recordingStartedEvent, recording, finalReason, timestamp, status));
+	public void recordRecordingStatusChanged(Recording recording, EndReason finalReason, long timestamp,
+			Status status) {
+		this.log(new CDREventRecordingStatus(recording, recording.getCreatedAt(), finalReason, timestamp, status));
 	}
 
 	private void log(CDREvent event) {

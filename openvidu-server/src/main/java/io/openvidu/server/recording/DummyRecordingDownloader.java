@@ -13,4 +13,8 @@ public class DummyRecordingDownloader implements RecordingDownloader {
 		return;
 	}
 
+	@Override
+	public void cancelDownload(String recordingId) {
+	}
+
 }

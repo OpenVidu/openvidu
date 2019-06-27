@@ -55,6 +55,7 @@ import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.Recording.OutputMode;
+import io.openvidu.java.client.Recording.Status;
 import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.server.cdr.CallDetailRecord;
 import io.openvidu.server.config.OpenviduConfig;
@@ -187,7 +188,9 @@ public class RecordingManager {
 		}
 		this.updateRecordingManagerCollections(session, recording);
 
-		this.cdr.recordRecordingStarted(session.getSessionId(), recording);
+		this.cdr.recordRecordingStarted(recording);
+		this.cdr.recordRecordingStatusChanged(recording, null, recording.getCreatedAt(),
+				io.openvidu.java.client.Recording.Status.started);
 
 		if (!(OutputMode.COMPOSED.equals(properties.outputMode()) && properties.hasVideo())) {
 			// Directly send recording started notification for all cases except for
@@ -211,6 +214,10 @@ public class RecordingManager {
 		} else {
 			recording = this.sessionsRecordings.get(session.getSessionId());
 		}
+
+		final long timestamp = System.currentTimeMillis();
+		this.cdr.recordRecordingStatusChanged(recording, reason, timestamp, Status.stopped);
+
 		switch (recording.getOutputMode()) {
 		case COMPOSED:
 			recording = this.composedRecordingService.stopRecording(session, recording, reason);
@@ -312,8 +319,7 @@ public class RecordingManager {
 
 	public Collection<Recording> getFinishedRecordings() {
 		return this.getAllRecordingsFromHost().stream()
-				.filter(recording -> (recording.getStatus().equals(io.openvidu.java.client.Recording.Status.stopped)
-						|| recording.getStatus().equals(io.openvidu.java.client.Recording.Status.available)))
+				.filter(recording -> recording.getStatus().equals(io.openvidu.java.client.Recording.Status.ready))
 				.collect(Collectors.toSet());
 	}
 
@@ -351,6 +357,11 @@ public class RecordingManager {
 		Recording recording = getRecordingFromHost(recordingId);
 		if (recording == null) {
 			return HttpStatus.NOT_FOUND;
+		}
+		if (io.openvidu.java.client.Recording.Status.stopped.equals(recording.getStatus())) {
+			// Recording is being downloaded from remote host
+			log.warn("Cancelling ongoing download process of recording {}", recording.getId());
+			this.recordingDownloader.cancelDownload(recording.getId());
 		}
 
 		File folder = new File(this.openviduConfig.getOpenViduRecordingPath());
@@ -443,30 +454,6 @@ public class RecordingManager {
 		}
 	}
 
-	public Recording updateRecordingUrl(Recording recording) {
-		if (openviduConfig.getOpenViduRecordingPublicAccess()) {
-			if (io.openvidu.java.client.Recording.Status.stopped.equals(recording.getStatus())) {
-
-				String extension;
-				switch (recording.getOutputMode()) {
-				case COMPOSED:
-					extension = recording.hasVideo() ? "mp4" : "webm";
-					break;
-				case INDIVIDUAL:
-					extension = "zip";
-					break;
-				default:
-					extension = "mp4";
-				}
-
-				recording.setUrl(this.openviduConfig.getFinalUrl() + "recordings/" + recording.getId() + "/"
-						+ recording.getName() + "." + extension);
-				recording.setStatus(io.openvidu.java.client.Recording.Status.available);
-			}
-		}
-		return recording;
-	}
-
 	private Recording getRecordingFromHost(String recordingId) {
 		log.info(this.openviduConfig.getOpenViduRecordingPath() + recordingId + "/"
 				+ RecordingManager.RECORDING_ENTITY_FILE + recordingId);
@@ -474,9 +461,6 @@ public class RecordingManager {
 				+ RecordingManager.RECORDING_ENTITY_FILE + recordingId);
 		log.info("File exists: " + file.exists());
 		Recording recording = this.getRecordingFromEntityFile(file);
-		if (recording != null) {
-			this.updateRecordingUrl(recording);
-		}
 		return recording;
 	}
 
@@ -491,7 +475,6 @@ public class RecordingManager {
 				for (int j = 0; j < innerFiles.length; j++) {
 					Recording recording = this.getRecordingFromEntityFile(innerFiles[j]);
 					if (recording != null) {
-						this.updateRecordingUrl(recording);
 						recordingEntities.add(recording);
 					}
 				}

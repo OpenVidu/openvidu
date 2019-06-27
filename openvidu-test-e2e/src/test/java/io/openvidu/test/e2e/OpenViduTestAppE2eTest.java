@@ -2209,8 +2209,8 @@ public class OpenViduTestAppE2eTest {
 		Assert.assertTrue("Wrong recording size. Excepected > 0 and was " + recording.getSize(),
 				recording.getSize() > 0);
 		Assert.assertNull("Wrong recording url. Expected not null and was null", recording.getUrl());
-		Assert.assertEquals("Wrong recording status. Expected stopped and was " + recording.getStatus().name(),
-				Recording.Status.stopped, recording.getStatus());
+		Assert.assertEquals("Wrong recording status. Expected ready and was " + recording.getStatus().name(),
+				Recording.Status.ready, recording.getStatus());
 		Assert.assertFalse("Session shouldn't be being recorded", session.isBeingRecorded());
 		Assert.assertFalse("OpenVidu.fetch() should return false", OV.fetch());
 
@@ -2261,7 +2261,7 @@ public class OpenViduTestAppE2eTest {
 		Assert.assertTrue("Wrong recording duration", recording2.getDuration() > 0);
 		Assert.assertTrue("Wrong recording size", recording2.getSize() > 0);
 		Assert.assertNull("Wrong recording url", recording2.getUrl());
-		Assert.assertEquals("Wrong recording status", Recording.Status.stopped, recording2.getStatus());
+		Assert.assertEquals("Wrong recording status", Recording.Status.ready, recording2.getStatus());
 		Assert.assertFalse("Session shouldn't be being recorded", session.isBeingRecorded());
 		Assert.assertFalse("Session.fetch() should return false", session.fetch());
 
@@ -2773,6 +2773,9 @@ public class OpenViduTestAppE2eTest {
 					event.get("outputMode").getAsString());
 			Assert.assertEquals("Wrong recording outputMode in webhook event", 0, event.get("size").getAsLong());
 			Assert.assertEquals("Wrong recording outputMode in webhook event", 0, event.get("duration").getAsLong());
+			Assert.assertEquals("Wrong recording startTime/timestamp in webhook event",
+					event.get("startTime").getAsLong(), event.get("timestamp").getAsLong());
+			Assert.assertNull("Wrong recording reason in webhook event (should be null)", event.get("reason"));
 
 			user.getDriver().findElement(By.id("add-user-btn")).click();
 			user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .join-btn")).click();
@@ -2796,16 +2799,34 @@ public class OpenViduTestAppE2eTest {
 			CustomWebhook.waitForEvent("participantLeft", 2);
 			event = CustomWebhook.waitForEvent("recordingStatusChanged", 2);
 
-			Assert.assertEquals("Wrong recording status in webhook event", "processing",
+			OV.fetch();
+			List<Recording> recs = OV.listRecordings();
+			Assert.assertEquals("Wrong number of recording entities", 1, recs.size());
+			Recording rec = recs.get(0);
+
+			Assert.assertEquals("Wrong recording status in webhook event", "stopped",
 					event.get("status").getAsString());
 			Assert.assertEquals("Wrong recording outputMode in webhook event", 0, event.get("size").getAsLong());
 			Assert.assertEquals("Wrong recording outputMode in webhook event", 0, event.get("duration").getAsLong());
+			Assert.assertEquals("Wrong recording reason in webhook event", "sessionClosedByServer",
+					event.get("reason").getAsString());
+			Assert.assertEquals("Wrong recording reason in webhook event", rec.getCreatedAt(),
+					event.get("startTime").getAsLong());
 
 			event = CustomWebhook.waitForEvent("recordingStatusChanged", 2);
-			Assert.assertEquals("Wrong recording status in webhook event", "stopped",
-					event.get("status").getAsString());
+
+			OV.fetch();
+			recs = OV.listRecordings();
+			Assert.assertEquals("Wrong number of recording entities", 1, recs.size());
+			rec = recs.get(0);
+
+			Assert.assertEquals("Wrong recording status in webhook event", "ready", event.get("status").getAsString());
 			Assert.assertTrue("Wrong recording outputMode in webhook event", event.get("size").getAsLong() > 0);
 			Assert.assertTrue("Wrong recording outputMode in webhook event", event.get("duration").getAsLong() > 0);
+			Assert.assertEquals("Wrong recording reason in webhook event", "sessionClosedByServer",
+					event.get("reason").getAsString());
+			Assert.assertEquals("Wrong recording reason in webhook event", rec.getCreatedAt(),
+					event.get("startTime").getAsLong());
 
 			CustomWebhook.waitForEvent("sessionDestroyed", 2);
 

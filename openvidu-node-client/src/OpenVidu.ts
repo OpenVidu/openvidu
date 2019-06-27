@@ -359,7 +359,7 @@ export class OpenVidu {
   }
 
   /**
-   * Deletes a [[Recording]]. The recording must have status `stopped` or `available`
+   * Deletes a [[Recording]]. The recording must have status `stopped`, `ready` or `failed`
    *
    * @param recordingId
    *

@@ -20,33 +20,41 @@ package io.openvidu.server.cdr;
 import com.google.gson.JsonObject;
 
 import io.openvidu.java.client.Recording.Status;
+import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.server.core.EndReason;
 import io.openvidu.server.recording.Recording;
 
-public class CDREventRecordingStatus extends CDREventRecording {
+public class CDREventRecordingStatus extends CDREventEnd {
 
+	private Recording recording;
 	private Status status;
 
-	public CDREventRecordingStatus(String sessionId, Recording recording, Status status) {
-		super(sessionId, recording);
-		this.eventName = CDREventName.recordingStatusChanged;
+	public CDREventRecordingStatus(Recording recording, Long startTime, EndReason reason, Long timestamp,
+			Status status) {
+		super(CDREventName.recordingStatusChanged, recording.getSessionId(), startTime, reason, timestamp);
+		this.recording = recording;
 		this.status = status;
-	}
-
-	public CDREventRecordingStatus(CDREventRecording recordingStartedEvent, Recording recording, EndReason finalReason,
-			long timestamp, Status status) {
-		super(recordingStartedEvent, recording, finalReason, timestamp);
-		this.eventName = CDREventName.recordingStatusChanged;
-		this.status = status;
-	}
-
-	public Status getStatus() {
-		return status;
 	}
 
 	@Override
 	public JsonObject toJson() {
 		JsonObject json = super.toJson();
+		json.addProperty("id", this.recording.getId());
+		json.addProperty("name", this.recording.getName());
+		json.addProperty("outputMode", this.recording.getOutputMode().name());
+		if (io.openvidu.java.client.Recording.OutputMode.COMPOSED.equals(this.recording.getOutputMode())
+				&& this.recording.hasVideo()) {
+			json.addProperty("resolution", this.recording.getResolution());
+			json.addProperty("recordingLayout", this.recording.getRecordingLayout().name());
+			if (RecordingLayout.CUSTOM.equals(this.recording.getRecordingLayout())
+					&& this.recording.getCustomLayout() != null && !this.recording.getCustomLayout().isEmpty()) {
+				json.addProperty("customLayout", this.recording.getCustomLayout());
+			}
+		}
+		json.addProperty("hasAudio", this.recording.hasAudio());
+		json.addProperty("hasVideo", this.recording.hasVideo());
+		json.addProperty("size", this.recording.getSize());
+		json.addProperty("duration", this.recording.getDuration());
 		json.addProperty("status", this.status.name());
 		return json;
 	}

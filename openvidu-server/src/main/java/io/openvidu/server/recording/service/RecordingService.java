@@ -24,7 +24,6 @@ import org.slf4j.LoggerFactory;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
-import io.openvidu.java.client.Recording.Status;
 import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.server.cdr.CallDetailRecord;
@@ -82,31 +81,29 @@ public abstract class RecordingService {
 	}
 
 	/**
-	 * Update and overwrites metadata recording file to set it in "processing"
-	 * status. Recording size and duration will remain as 0
+	 * Update and overwrites metadata recording file to set it in "stopped" status.
+	 * Recording size and duration will remain as 0
 	 * 
 	 * @return updated Recording object
 	 */
-	protected Recording sealRecordingMetadataFileAsProcessing(Recording recording) {
+	protected Recording sealRecordingMetadataFileAsStopped(Recording recording) {
 		final String entityFile = this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/"
 				+ RecordingManager.RECORDING_ENTITY_FILE + recording.getId();
-		Recording rec = this.sealRecordingMetadataFile(recording, 0, 0,
-				io.openvidu.java.client.Recording.Status.processing, entityFile);
-		this.cdr.recordRecordingStatusChanged(recording.getSessionId(), recording, Status.processing);
-		return rec;
+		return this.sealRecordingMetadataFile(recording, 0, 0, io.openvidu.java.client.Recording.Status.stopped,
+				entityFile);
 	}
 
 	/**
-	 * Update and overwrites metadata recording file to set it in "stopped" (or
+	 * Update and overwrites metadata recording file to set it in "ready" (or
 	 * "failed") status
 	 * 
 	 * @return updated Recording object
 	 */
-	protected Recording sealRecordingMetadataFileAsStopped(Recording recording, long size, double duration,
+	protected Recording sealRecordingMetadataFileAsReady(Recording recording, long size, double duration,
 			String metadataFilePath) {
 		io.openvidu.java.client.Recording.Status status = io.openvidu.java.client.Recording.Status.failed
 				.equals(recording.getStatus()) ? io.openvidu.java.client.Recording.Status.failed
-						: io.openvidu.java.client.Recording.Status.stopped;
+						: io.openvidu.java.client.Recording.Status.ready;
 
 		final String entityFile = this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/"
 				+ RecordingManager.RECORDING_ENTITY_FILE + recording.getId();
@@ -119,7 +116,6 @@ public abstract class RecordingService {
 		recording.setSize(size); // Size in bytes
 		recording.setDuration(duration > 0 ? duration : 0); // Duration in seconds
 		this.fileWriter.overwriteFile(metadataFilePath, recording.toJson().toString());
-		recording = this.recordingManager.updateRecordingUrl(recording);
 
 		log.info("Sealed recording metadata file at {} with status [{}]", metadataFilePath, status.name());
 

@@ -28,8 +28,8 @@ public class CDREventRecording extends CDREventEnd {
 	protected Recording recording;
 
 	// recordingStarted
-	public CDREventRecording(String sessionId, Recording recording) {
-		super(CDREventName.recordingStarted, sessionId, recording.getCreatedAt());
+	public CDREventRecording(Recording recording) {
+		super(CDREventName.recordingStarted, recording.getSessionId(), recording.getCreatedAt());
 		this.recording = recording;
 	}
 

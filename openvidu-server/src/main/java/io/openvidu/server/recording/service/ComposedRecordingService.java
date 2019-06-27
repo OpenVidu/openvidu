@@ -94,10 +94,10 @@ public class ComposedRecordingService extends RecordingService {
 
 	@Override
 	public Recording stopRecording(Session session, Recording recording, EndReason reason) {
+		recording = this.sealRecordingMetadataFileAsStopped(recording);
 		if (recording.hasVideo()) {
 			return this.stopRecordingWithVideo(session, recording, reason);
 		} else {
-			recording = this.sealRecordingMetadataFileAsProcessing(recording);
 			return this.stopRecordingAudioOnly(session, recording, reason, 0);
 		}
 	}
@@ -240,7 +240,7 @@ public class ComposedRecordingService extends RecordingService {
 		if (containerId == null) {
 
 			// Session was closed while recording container was initializing
-			// Wait until containerId is available and force its stop and removal
+			// Wait until containerId is available and force its stop and deletion
 			new Thread(() -> {
 				log.warn("Session closed while starting recording container");
 				boolean containerClosed = false;
@@ -311,25 +311,23 @@ public class ComposedRecordingService extends RecordingService {
 					log.error("COMPOSED recording {} with hasVideo=true has not video track", recordingId);
 					recording.setStatus(io.openvidu.java.client.Recording.Status.failed);
 				} else {
-					recording.setStatus(io.openvidu.java.client.Recording.Status.stopped);
+					recording.setStatus(io.openvidu.java.client.Recording.Status.ready);
 					recording.setDuration(infoUtils.getDurationInSeconds());
 					recording.setSize(infoUtils.getSizeInBytes());
 					recording.setResolution(infoUtils.videoWidth() + "x" + infoUtils.videoHeight());
 					recording.setHasAudio(infoUtils.hasAudio());
 					recording.setHasVideo(infoUtils.hasVideo());
 				}
-
 				infoUtils.deleteFilePath();
-
-				recording = this.recordingManager.updateRecordingUrl(recording);
-
 			} catch (IOException e) {
 				recording.setStatus(io.openvidu.java.client.Recording.Status.failed);
 				throw new OpenViduException(Code.RECORDING_REPORT_ERROR_CODE,
 						"There was an error generating the metadata report file for the recording");
 			}
 
-			this.cdr.recordRecordingStopped(recording.getSessionId(), recording, reason);
+			final long timestamp = System.currentTimeMillis();
+			this.cdr.recordRecordingStopped(recording, reason, timestamp);
+			this.cdr.recordRecordingStatusChanged(recording, reason, timestamp, recording.getStatus());
 
 			if (session != null && reason != null) {
 				this.recordingManager.sessionHandler.sendRecordingStoppedNotification(session, recording, reason);
@@ -383,9 +381,13 @@ public class ComposedRecordingService extends RecordingService {
 				long finalSize = videoFile.length();
 				double finalDuration = (double) compositeWrapper.getDuration() / 1000;
 				this.updateFilePermissions(filesPath);
-				finalRecordingArray[0] = this.sealRecordingMetadataFileAsStopped(recording, finalSize, finalDuration,
+				finalRecordingArray[0] = this.sealRecordingMetadataFileAsReady(recording, finalSize, finalDuration,
 						filesPath + RecordingManager.RECORDING_ENTITY_FILE + recording.getId());
-				cdr.recordRecordingStopped(finalRecordingArray[0].getSessionId(), finalRecordingArray[0], reason);
+
+				final long timestamp = System.currentTimeMillis();
+				cdr.recordRecordingStopped(finalRecordingArray[0], reason, timestamp);
+				cdr.recordRecordingStatusChanged(finalRecordingArray[0], reason, timestamp,
+						finalRecordingArray[0].getStatus());
 			});
 		} catch (IOException e) {
 			log.error("Error while downloading recording {}: {}", recording.getName(), e.getMessage());

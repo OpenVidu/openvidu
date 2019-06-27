@@ -450,8 +450,9 @@ public class OpenVidu {
 
 	/**
 	 * Deletes a recording. The recording must have status
-	 * {@link io.openvidu.java.client.Recording.Status#stopped} or
-	 * {@link io.openvidu.java.client.Recording.Status#available}
+	 * {@link io.openvidu.java.client.Recording.Status#stopped},
+	 * {@link io.openvidu.java.client.Recording.Status#ready} or
+	 * {@link io.openvidu.java.client.Recording.Status#failed}
 	 *
 	 * @param recordingId The id property of the recording you want to delete
 	 * 

@@ -131,7 +131,7 @@ public class SingleStreamRecordingService extends RecordingService {
 
 	@Override
 	public Recording stopRecording(Session session, Recording recording, EndReason reason) {
-		recording = this.sealRecordingMetadataFileAsProcessing(recording);
+		recording = this.sealRecordingMetadataFileAsStopped(recording);
 		return this.stopRecording(session, recording, reason, 0);
 	}
 
@@ -171,7 +171,11 @@ public class SingleStreamRecordingService extends RecordingService {
 					}
 				}
 				finalRecordingArray[0] = this.sealMetadataFiles(recording);
-				cdr.recordRecordingStopped(finalRecordingArray[0].getSessionId(), finalRecordingArray[0], reason);
+
+				final long timestamp = System.currentTimeMillis();
+				cdr.recordRecordingStopped(finalRecordingArray[0], reason, timestamp);
+				cdr.recordRecordingStatusChanged(finalRecordingArray[0], reason, timestamp,
+						finalRecordingArray[0].getStatus());
 			});
 		} catch (IOException e) {
 			log.error("Error while downloading recording {}", recording.getName());
@@ -427,7 +431,7 @@ public class SingleStreamRecordingService extends RecordingService {
 		double duration = (double) (maxEndTime - minStartTime) / 1000;
 		duration = duration > 0 ? duration : 0;
 
-		recording = this.sealRecordingMetadataFileAsStopped(recording, accumulatedSize, duration, metadataFilePath);
+		recording = this.sealRecordingMetadataFileAsReady(recording, accumulatedSize, duration, metadataFilePath);
 
 		return recording;
 	}

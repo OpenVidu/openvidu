@@ -30,7 +30,8 @@ public class Recording {
 	public enum Status {
 
 		/**
-		 * The recording is starting (cannot be stopped)
+		 * The recording is starting (cannot be stopped). Some recording may not go
+		 * through this status and directly reach "started" status
 		 */
 		starting,
 
@@ -40,27 +41,21 @@ public class Recording {
 		started,
 
 		/**
-		 * The recording has finished OK
+		 * The recording has stopped and is being processed. At some point it will reach
+		 * "ready" status
 		 */
 		stopped,
 
 		/**
-		 * The recording has stopped but is being processed. This status will change to
-		 * stopped/available or failed
+		 * The recording has finished OK and is available for download through OpenVidu
+		 * Server recordings endpoint:
+		 * https://YOUR_OPENVIDUSERVER_IP/recordings/{RECORDING_ID}/{RECORDING_NAME}.{EXTENSION}
 		 */
-		processing,
+		ready,
 
 		/**
-		 * The recording is available for downloading. This status is reached for all
-		 * stopped recordings if
-		 * <a href="https://openvidu.io/docs/reference-docs/openvidu-server-params/"
-		 * target="_blank">OpenVidu Server configuration</a> property
-		 * <code>openvidu.recording.public-access</code> is true
-		 */
-		available,
-
-		/**
-		 * The recording has failed
+		 * The recording has failed. This status may be reached from "starting",
+		 * "started" and "stopped" status
 		 */
 		failed;
 	}
