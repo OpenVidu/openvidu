@@ -17,6 +17,7 @@
 
 package io.openvidu.server.rest;
 
+import org.apache.http.Header;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,8 +30,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
+import io.openvidu.server.cdr.CDREventName;
 import io.openvidu.server.config.OpenviduConfig;
 
 /**
@@ -108,6 +111,20 @@ public class ConfigRestController {
 			json.addProperty("openviduRecordingNotification", openviduConfig.getOpenViduRecordingNotification());
 			json.addProperty("openviduRecordingCustomLayout", openviduConfig.getOpenviduRecordingCustomLayout());
 			json.addProperty("openviduRecordingAutostopTimeout", openviduConfig.getOpenviduRecordingAutostopTimeout());
+		}
+		json.addProperty("openviduWebhook", openviduConfig.isWebhookEnabled());
+		if (openviduConfig.isWebhookEnabled()) {
+			json.addProperty("openviduWebhookEndpoint", openviduConfig.getOpenViduWebhookEndpoint());
+			JsonArray webhookHeaders = new JsonArray();
+			for (Header header : openviduConfig.getOpenViduWebhookHeaders()) {
+				webhookHeaders.add(header.getName() + ": " + header.getValue());
+			}
+			json.add("openviduWebhookHeaders", webhookHeaders);
+			JsonArray webhookEvents = new JsonArray();
+			for (CDREventName eventName : openviduConfig.getOpenViduWebhookEvents()) {
+				webhookEvents.add(eventName.name());
+			}
+			json.add("openviduWebhookEvents", webhookEvents);
 		}
 
 		return new ResponseEntity<>(json.toString(), getResponseHeaders(), HttpStatus.OK);

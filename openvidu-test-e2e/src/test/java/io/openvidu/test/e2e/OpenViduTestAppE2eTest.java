@@ -2833,7 +2833,6 @@ public class OpenViduTestAppE2eTest {
 		} finally {
 			CustomWebhook.shutDown();
 		}
-
 	}
 
 	private void listEmptyRecordings() {

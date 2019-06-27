@@ -147,22 +147,21 @@ public class OpenviduConfig {
 		if (this.isWebhookEnabled()) {
 			log.info("OpenVidu Webhook service enabled");
 			try {
-				new URL(this.openviduWebhookEndpoint);
-				log.info("OpenVidu Webhook endpoint is {}", this.getOpenViduWebhookEndpoint());
-			} catch (MalformedURLException e) {
-				log.error("Error in 'openvidu.webhook.endpoint' system property. Malformed URL: " + e.getMessage());
+				this.initiateOpenViduWebhookEndpoint(this.openviduWebhookEndpoint);
+			} catch (Exception e) {
+				log.error("Error in 'openvidu.webhook.endpoint' system property. " + e.getMessage());
 				log.error("Shutting down OpenVidu Server");
 				System.exit(1);
 			}
 			try {
-				this.initiateOpenViduWebhookHeaders();
+				this.initiateOpenViduWebhookHeaders(this.openviduWebhookHeaders);
 			} catch (Exception e) {
 				log.error("Error in 'openvidu.webhook.headers' system property: " + e.getMessage());
 				log.error("Shutting down OpenVidu Server");
 				System.exit(1);
 			}
 			try {
-				this.initiateOpenViduWebhookEvents();
+				this.initiateOpenViduWebhookEvents(this.openviduWebhookEvents);
 			} catch (Exception e) {
 				log.error("Error in 'openvidu.webhook.events' system property: " + e.getMessage());
 				log.error("Shutting down OpenVidu Server");
@@ -343,10 +342,19 @@ public class OpenviduConfig {
 		}
 	}
 
-	private void initiateOpenViduWebhookHeaders() throws Exception {
+	public void initiateOpenViduWebhookEndpoint(String endpoint) throws Exception {
+		try {
+			new URL(endpoint);
+			log.info("OpenVidu Webhook endpoint is {}", endpoint);
+		} catch (MalformedURLException e) {
+			throw new Exception("Webhook endpoint '" + endpoint + "' is not correct. Malformed URL: " + e.getMessage());
+		}
+	}
+
+	public void initiateOpenViduWebhookHeaders(String headers) throws Exception {
 		if (webhookHeadersList == null) {
 			JsonParser parser = new JsonParser();
-			JsonElement elem = parser.parse(this.openviduWebhookHeaders);
+			JsonElement elem = parser.parse(headers);
 			JsonArray headersJsonArray = elem.getAsJsonArray();
 			this.webhookHeadersList = new ArrayList<>();
 
@@ -365,10 +373,10 @@ public class OpenviduConfig {
 		}
 	}
 
-	private void initiateOpenViduWebhookEvents() throws Exception {
+	public void initiateOpenViduWebhookEvents(String events) throws Exception {
 		if (webhookEventsList == null) {
 			JsonParser parser = new JsonParser();
-			JsonElement elem = parser.parse(this.openviduWebhookEvents);
+			JsonElement elem = parser.parse(events);
 			JsonArray eventsJsonArray = elem.getAsJsonArray();
 			this.webhookEventsList = new ArrayList<>();
 
