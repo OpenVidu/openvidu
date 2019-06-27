@@ -110,8 +110,13 @@ public class CustomHttpClient {
 					jsonObjExpected.length(), json.length());
 		}
 		for (String key : jsonObjExpected.keySet()) {
-			Assert.assertTrue("Wrong class of property " + key,
-					jsonObjExpected.get(key).getClass().equals(json.get(key).getClass()));
+			Class<?> c1 = jsonObjExpected.get(key).getClass();
+			Class<?> c2 = json.get(key).getClass();
+
+			c1 = unifyNumberType(c1);
+			c2 = unifyNumberType(c2);
+
+			Assert.assertTrue("Wrong class of property " + key, c1.equals(c2));
 		}
 		return json;
 	}
@@ -217,4 +222,12 @@ public class CustomHttpClient {
 		Assert.assertEquals(path + " expected to return status " + status, status, jsonResponse.getStatus());
 		return json;
 	}
+
+	private Class<?> unifyNumberType(Class<?> myClass) {
+		if (Number.class.isAssignableFrom(myClass)) {
+			return Number.class;
+		}
+		return myClass;
+	}
+
 }

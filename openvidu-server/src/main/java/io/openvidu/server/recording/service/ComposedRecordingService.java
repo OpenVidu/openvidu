@@ -325,6 +325,10 @@ public class ComposedRecordingService extends RecordingService {
 						"There was an error generating the metadata report file for the recording");
 			}
 
+			String filesPath = this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/";
+			recording = this.sealRecordingMetadataFileAsReady(recording, recording.getSize(), recording.getDuration(),
+					filesPath + RecordingManager.RECORDING_ENTITY_FILE + recording.getId());
+
 			final long timestamp = System.currentTimeMillis();
 			this.cdr.recordRecordingStopped(recording, reason, timestamp);
 			this.cdr.recordRecordingStatusChanged(recording, reason, timestamp, recording.getStatus());
