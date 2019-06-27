@@ -100,17 +100,18 @@ public class CustomHttpClient {
 		JSONObject jsonObjExpected = null;
 		jsonReturnedValue.replaceAll("'", "\"");
 		try {
-			jsonObjExpected = new JSONObject((String) jsonReturnedValue);
+			jsonObjExpected = new JSONObject(jsonReturnedValue);
 		} catch (JSONException e1) {
 			Assert.fail("Expected json element is a string without a JSON format: " + jsonReturnedValue);
 		}
 
 		if (exactReturnedFields) {
-			Assert.assertEquals("Error in number of keys in JSON response to POST (" + json.toString() + ")" + path, jsonObjExpected.length(),
-					json.length());
+			Assert.assertEquals("Error in number of keys in JSON response to POST (" + json.toString() + ")" + path,
+					jsonObjExpected.length(), json.length());
 		}
 		for (String key : jsonObjExpected.keySet()) {
-			json.get(key);
+			Assert.assertTrue("Wrong class of property " + key,
+					jsonObjExpected.get(key).getClass().equals(json.get(key).getClass()));
 		}
 		return json;
 	}
