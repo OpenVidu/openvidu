@@ -162,15 +162,16 @@ public class SingleStreamRecordingService extends RecordingService {
 
 		// TODO: DOWNLOAD FILES IF SCALABILITY MODE
 		final Recording[] finalRecordingArray = new Recording[1];
+		finalRecordingArray[0] = recording;
 		try {
-			this.recordingDownloader.downloadRecording(recording, wrappers.keySet(), () -> {
+			this.recordingDownloader.downloadRecording(finalRecordingArray[0], wrappers.keySet(), () -> {
 				// Update recording entity files with final file size
 				for (RecorderEndpointWrapper wrapper : wrappers.values()) {
 					if (wrapper.getSize() == 0) {
 						updateIndividualMetadataFile(wrapper);
 					}
 				}
-				finalRecordingArray[0] = this.sealMetadataFiles(recording);
+				finalRecordingArray[0] = this.sealMetadataFiles(finalRecordingArray[0]);
 
 				final long timestamp = System.currentTimeMillis();
 				cdr.recordRecordingStopped(finalRecordingArray[0], reason, timestamp);
@@ -178,15 +179,15 @@ public class SingleStreamRecordingService extends RecordingService {
 						finalRecordingArray[0].getStatus());
 			});
 		} catch (IOException e) {
-			log.error("Error while downloading recording {}", recording.getName());
+			log.error("Error while downloading recording {}", finalRecordingArray[0].getName());
 		}
-		Recording finalRecording = finalRecordingArray[0] != null ? finalRecordingArray[0] : recording;
 
 		if (reason != null && session != null) {
-			this.recordingManager.sessionHandler.sendRecordingStoppedNotification(session, finalRecording, reason);
+			this.recordingManager.sessionHandler.sendRecordingStoppedNotification(session, finalRecordingArray[0],
+					reason);
 		}
 
-		return finalRecording;
+		return finalRecordingArray[0];
 	}
 
 	public void startRecorderEndpointForPublisherEndpoint(Session session, String recordingId,

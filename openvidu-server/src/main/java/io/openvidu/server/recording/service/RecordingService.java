@@ -115,9 +115,10 @@ public abstract class RecordingService {
 		recording.setStatus(status);
 		recording.setSize(size); // Size in bytes
 		recording.setDuration(duration > 0 ? duration : 0); // Duration in seconds
-		this.fileWriter.overwriteFile(metadataFilePath, recording.toJson().toString());
 
-		log.info("Sealed recording metadata file at {} with status [{}]", metadataFilePath, status.name());
+		if (this.fileWriter.overwriteFile(metadataFilePath, recording.toJson().toString())) {
+			log.info("Sealed recording metadata file at {} with status [{}]", metadataFilePath, status.name());
+		}
 
 		return recording;
 	}

@@ -378,15 +378,18 @@ public class ComposedRecordingService extends RecordingService {
 
 		// TODO: DOWNLOAD FILE IF SCALABILITY MODE
 		final Recording[] finalRecordingArray = new Recording[1];
+		finalRecordingArray[0] = recording;
 		try {
-			this.recordingDownloader.downloadRecording(recording, null, () -> {
-				String filesPath = this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/";
-				File videoFile = new File(filesPath + recording.getName() + ".webm");
+			this.recordingDownloader.downloadRecording(finalRecordingArray[0], null, () -> {
+				String filesPath = this.openviduConfig.getOpenViduRecordingPath() + finalRecordingArray[0].getId()
+						+ "/";
+				File videoFile = new File(filesPath + finalRecordingArray[0].getName() + ".webm");
 				long finalSize = videoFile.length();
 				double finalDuration = (double) compositeWrapper.getDuration() / 1000;
 				this.updateFilePermissions(filesPath);
-				finalRecordingArray[0] = this.sealRecordingMetadataFileAsReady(recording, finalSize, finalDuration,
-						filesPath + RecordingManager.RECORDING_ENTITY_FILE + recording.getId());
+				finalRecordingArray[0] = this.sealRecordingMetadataFileAsReady(finalRecordingArray[0], finalSize,
+						finalDuration,
+						filesPath + RecordingManager.RECORDING_ENTITY_FILE + finalRecordingArray[0].getId());
 
 				final long timestamp = System.currentTimeMillis();
 				cdr.recordRecordingStopped(finalRecordingArray[0], reason, timestamp);
@@ -394,15 +397,15 @@ public class ComposedRecordingService extends RecordingService {
 						finalRecordingArray[0].getStatus());
 			});
 		} catch (IOException e) {
-			log.error("Error while downloading recording {}: {}", recording.getName(), e.getMessage());
+			log.error("Error while downloading recording {}: {}", finalRecordingArray[0].getName(), e.getMessage());
 		}
-		Recording finalRecording = finalRecordingArray[0] != null ? finalRecordingArray[0] : recording;
 
 		if (reason != null && session != null) {
-			this.recordingManager.sessionHandler.sendRecordingStoppedNotification(session, finalRecording, reason);
+			this.recordingManager.sessionHandler.sendRecordingStoppedNotification(session, finalRecordingArray[0],
+					reason);
 		}
 
-		return finalRecording;
+		return finalRecordingArray[0];
 	}
 
 	private void waitForVideoFileNotEmpty(Recording recording) throws OpenViduException {
