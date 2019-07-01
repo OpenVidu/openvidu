@@ -352,45 +352,49 @@ public class OpenviduConfig {
 	}
 
 	public void initiateOpenViduWebhookHeaders(String headers) throws Exception {
-		if (webhookHeadersList == null) {
-			JsonParser parser = new JsonParser();
-			JsonElement elem = parser.parse(headers);
-			JsonArray headersJsonArray = elem.getAsJsonArray();
-			this.webhookHeadersList = new ArrayList<>();
+		JsonParser parser = new JsonParser();
+		JsonElement elem = parser.parse(headers);
+		JsonArray headersJsonArray = elem.getAsJsonArray();
+		this.webhookHeadersList = new ArrayList<>();
 
-			for (JsonElement jsonElement : headersJsonArray) {
-				String headerString = jsonElement.getAsString();
-				String[] headerSplit = headerString.split(": ", 2);
-				if (headerSplit.length != 2) {
-					throw new Exception("HTTP header '" + headerString
-							+ "' syntax is not correct. Must be 'HEADER_NAME: HEADER_VALUE'. For example: 'Authorization: Basic YWxhZGRpbjpvcGVuc2VzYW1l'");
-				}
-				String headerName = headerSplit[0];
-				String headerValue = headerSplit[1];
-				this.webhookHeadersList.add(new BasicHeader(headerName, headerValue));
+		for (JsonElement jsonElement : headersJsonArray) {
+			String headerString = jsonElement.getAsString();
+			String[] headerSplit = headerString.split(": ", 2);
+			if (headerSplit.length != 2) {
+				throw new Exception("HTTP header '" + headerString
+						+ "' syntax is not correct. Must be 'HEADER_NAME: HEADER_VALUE'. For example: 'Authorization: Basic YWxhZGRpbjpvcGVuc2VzYW1l'");
 			}
-			log.info("OpenVidu Webhook headers: {}", this.getOpenViduWebhookHeaders().toString());
+			String headerName = headerSplit[0];
+			String headerValue = headerSplit[1];
+			if (headerName.isEmpty()) {
+				throw new Exception(
+						"HTTP header '" + headerString + "' syntax is not correct. Header name cannot be empty");
+			}
+			if (headerValue.isEmpty()) {
+				throw new Exception(
+						"HTTP header '" + headerString + "' syntax is not correct. Header value cannot be empty");
+			}
+			this.webhookHeadersList.add(new BasicHeader(headerName, headerValue));
 		}
+		log.info("OpenVidu Webhook headers: {}", this.getOpenViduWebhookHeaders().toString());
 	}
 
 	public void initiateOpenViduWebhookEvents(String events) throws Exception {
-		if (webhookEventsList == null) {
-			JsonParser parser = new JsonParser();
-			JsonElement elem = parser.parse(events);
-			JsonArray eventsJsonArray = elem.getAsJsonArray();
-			this.webhookEventsList = new ArrayList<>();
+		JsonParser parser = new JsonParser();
+		JsonElement elem = parser.parse(events);
+		JsonArray eventsJsonArray = elem.getAsJsonArray();
+		this.webhookEventsList = new ArrayList<>();
 
-			for (JsonElement jsonElement : eventsJsonArray) {
-				String eventString = jsonElement.getAsString();
-				try {
-					CDREventName.valueOf(eventString);
-				} catch (IllegalArgumentException e) {
-					throw new Exception("Event name '" + eventString + "' does not exist");
-				}
-				this.webhookEventsList.add(CDREventName.valueOf(eventString));
+		for (JsonElement jsonElement : eventsJsonArray) {
+			String eventString = jsonElement.getAsString();
+			try {
+				CDREventName.valueOf(eventString);
+			} catch (IllegalArgumentException e) {
+				throw new Exception("Event name '" + eventString + "' does not exist");
 			}
-			log.info("OpenVidu Webhook events: {}", this.getOpenViduWebhookEvents().toString());
+			this.webhookEventsList.add(CDREventName.valueOf(eventString));
 		}
+		log.info("OpenVidu Webhook events: {}", this.getOpenViduWebhookEvents().toString());
 	}
 
 }

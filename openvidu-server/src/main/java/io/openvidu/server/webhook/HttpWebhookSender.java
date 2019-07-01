@@ -24,6 +24,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -57,26 +58,25 @@ public class HttpWebhookSender {
 
 	private HttpClient httpClient;
 	private String httpEndpoint;
-	private List<Header> headers;
+	private List<Header> customHeaders;
 	private List<CDREventName> events;
 
 	public HttpWebhookSender(String httpEndpoint, List<Header> headers, List<CDREventName> events) {
 		this.httpEndpoint = httpEndpoint;
-		this.headers = headers;
+		this.events = events;
 
+		this.customHeaders = new ArrayList<>();
 		boolean contentTypeHeaderAdded = false;
-		for (Header header : this.headers) {
-			if (HttpHeaders.CONTENT_TYPE.equals(header.getName()) && "application/json".equals(header.getValue())) {
+		for (Header header : headers) {
+			this.customHeaders.add(header);
+			if (!contentTypeHeaderAdded && HttpHeaders.CONTENT_TYPE.equals(header.getName())
+					&& "application/json".equals(header.getValue())) {
 				contentTypeHeaderAdded = true;
-				break;
 			}
 		}
-
 		if (!contentTypeHeaderAdded) {
-			headers.add(new BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json"));
+			this.customHeaders.add(new BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json"));
 		}
-
-		this.events = events;
 
 		TrustStrategy trustStrategy = new TrustStrategy() {
 			@Override
@@ -124,7 +124,7 @@ public class HttpWebhookSender {
 			log.error("Cannot create StringEntity from JSON CDREvent. Default HTTP charset is not supported");
 		}
 
-		for (Header header : this.headers) {
+		for (Header header : this.customHeaders) {
 			request.setHeader(header);
 		}
 		request.setEntity(params);
