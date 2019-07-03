@@ -23,7 +23,7 @@ public class OpenViduException extends JsonRpcErrorException {
 	private static final long serialVersionUID = 1L;
 
 	public static enum Code {
-		GENERIC_ERROR_CODE(999),
+		GENERIC_ERROR_CODE(999), WRONG_PATH_CODE(998),
 
 		TRANSPORT_ERROR_CODE(803), TRANSPORT_RESPONSE_ERROR_CODE(802), TRANSPORT_REQUEST_ERROR_CODE(801),
 

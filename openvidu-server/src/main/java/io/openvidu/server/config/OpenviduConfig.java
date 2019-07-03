@@ -17,10 +17,14 @@
 
 package io.openvidu.server.config;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import javax.annotation.PostConstruct;
 
@@ -32,6 +36,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.info.BuildProperties;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.support.PropertiesLoaderUtils;
 import org.springframework.stereotype.Component;
 
 import com.google.gson.JsonArray;
@@ -45,6 +51,9 @@ import io.openvidu.server.cdr.CDREventName;
 public class OpenviduConfig {
 
 	private static final Logger log = LoggerFactory.getLogger(OpenviduConfig.class);
+
+	@Value("#{'${spring.config.additional-location:}'.length() > 0 ? '${spring.config.additional-location:}' : \"\"}")
+	private String springConfigLocation;
 
 	@Autowired
 	BuildProperties buildProperties;
@@ -134,9 +143,33 @@ public class OpenviduConfig {
 	private List<String> kmsUrisList;
 	private List<Header> webhookHeadersList;
 	private List<CDREventName> webhookEventsList;
+	private Properties externalizedProperties;
 
 	@PostConstruct
 	public void init() {
+
+		if (!this.springConfigLocation.isEmpty()) {
+			// Properties file has been manually configured in certain path
+			FileSystemResource resource = new FileSystemResource(this.springConfigLocation);
+			try {
+				this.externalizedProperties = PropertiesLoaderUtils.loadProperties(resource);
+				log.info("Properties file found at \"{}\". Content: {}", this.springConfigLocation,
+						externalizedProperties);
+			} catch (IOException e) {
+				log.error("Error in 'spring.config.additional-location' system property: {}", e.getMessage());
+				log.error("Shutting down OpenVidu Server");
+				System.exit(1);
+			}
+			// Check OpenVidu Server write permissions in properties path
+			if (!Files.isWritable(Paths.get(this.springConfigLocation))) {
+				log.warn(
+						"The properties path '{}' set with property 'spring.config.additional-location' is not valid. Reason: OpenVidu Server needs write permissions. Try running command \"sudo chmod 777 {}\". If not, OpenVidu won't be able to overwrite preexisting properties on reboot",
+						this.springConfigLocation, this.springConfigLocation);
+			} else {
+				log.info("OpenVidu Server has write permissions on properties path: {}", this.springConfigLocation);
+			}
+		}
+
 		try {
 			this.initiateKmsUris();
 		} catch (Exception e) {
@@ -147,6 +180,12 @@ public class OpenviduConfig {
 		if (this.isWebhookEnabled()) {
 			log.info("OpenVidu Webhook service enabled");
 			try {
+				if (this.openviduWebhookEndpoint == null || this.openviduWebhookEndpoint.isEmpty()) {
+					log.error(
+							"If OpenVidu Webhook service is enabled property 'openvidu.webhook.endpoint' must be defined");
+					log.error("Shutting down OpenVidu Server");
+					System.exit(1);
+				}
 				this.initiateOpenViduWebhookEndpoint(this.openviduWebhookEndpoint);
 			} catch (Exception e) {
 				log.error("Error in 'openvidu.webhook.endpoint' system property. " + e.getMessage());
@@ -330,6 +369,18 @@ public class OpenviduConfig {
 
 	public String getVersion() {
 		return this.buildProperties.getVersion();
+	}
+
+	public String getSpringConfigLocation() {
+		return this.springConfigLocation;
+	}
+
+	public boolean hasExternalizedProperties() {
+		return !this.springConfigLocation.isEmpty();
+	}
+
+	public Properties getExternalizedProperties() {
+		return this.externalizedProperties;
 	}
 
 	private void initiateKmsUris() throws Exception {

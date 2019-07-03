@@ -18,9 +18,11 @@
 package io.openvidu.server.utils;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -85,6 +87,18 @@ public class CustomFileManager {
 
 	public void deleteFile(String path) throws IOException {
 		new File(path).delete();
+	}
+
+	public void overwriteProperties(Properties props, String filePath) throws FileNotFoundException, IOException {
+		FileOutputStream output = null;
+		try {
+			output = new FileOutputStream(filePath, false);
+			props.store(output, "");
+		} finally {
+			if (output != null) {
+				output.close();
+			}
+		}
 	}
 
 	private void writeAndCloseOnOutputStreamWriter(FileOutputStream fos, String text) throws IOException {

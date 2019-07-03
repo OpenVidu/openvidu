@@ -40,10 +40,10 @@ public class BashCoturnCredentialsService extends CoturnCredentialsService {
 			if (response.contains("turnadmin: not found")) {
 				// No coturn installed in the host machine
 				log.warn("No COTURN server is installed in the host machine. Response: " + response);
-				log.warn("No COTURN server will be automatically configured for clients");
+				log.error("No COTURN server will be automatically configured for clients");
 			} else if (response.contains("Cannot initialize Redis DB connection")) {
 				log.warn("Redis DB is not accesible with connection string " + this.coturnDatabaseString);
-				log.warn("No COTURN server will be automatically configured for clients");
+				log.error("No COTURN server will be automatically configured for clients");
 			} else {
 				log.info("COTURN Redis DB accessible with string " + this.coturnDatabaseString);
 				log.info("Cleaning COTURN DB...");
