@@ -452,12 +452,12 @@ export class Stream implements EventDispatcher {
      * @hidden
      */
     disposeWebRtcPeer(): void {
-        if (this.webRtcPeer) {
+        if (!!this.webRtcPeer) {
             const isSenderAndCustomTrack: boolean = !!this.outboundStreamOpts &&
                 typeof MediaStreamTrack !== 'undefined' && this.outboundStreamOpts.publisherProperties.videoSource instanceof MediaStreamTrack;
             this.webRtcPeer.dispose(isSenderAndCustomTrack);
         }
-        if (this.speechEvent) {
+        if (!!this.speechEvent && !!this.speechEvent.stop) {
             this.speechEvent.stop();
             delete this.speechEvent;
         }
