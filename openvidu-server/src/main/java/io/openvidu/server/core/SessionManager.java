@@ -82,7 +82,7 @@ public abstract class SessionManager {
 
 	public abstract void joinRoom(Participant participant, String sessionId, Integer transactionId);
 
-	public abstract void leaveRoom(Participant participant, Integer transactionId, EndReason reason,
+	public abstract boolean leaveRoom(Participant participant, Integer transactionId, EndReason reason,
 			boolean closeWebSocket);
 
 	public abstract void publishVideo(Participant participant, MediaOptions mediaOptions, Integer transactionId);
@@ -105,8 +105,8 @@ public abstract class SessionManager {
 	public abstract boolean unpublishStream(Session session, String streamId, Participant moderator,
 			Integer transactionId, EndReason reason);
 
-	public abstract void evictParticipant(Participant evictedParticipant, Participant moderator, Integer transactionId,
-			EndReason reason);
+	public abstract boolean evictParticipant(Participant evictedParticipant, Participant moderator,
+			Integer transactionId, EndReason reason);
 
 	public abstract void applyFilter(Session session, String streamId, String filterType, JsonObject filterOptions,
 			Participant moderator, Integer transactionId, String reason);
@@ -237,6 +237,18 @@ public abstract class SessionManager {
 
 	public Session storeSessionNotActive(String sessionId, SessionProperties sessionProperties) {
 		Session sessionNotActive = new Session(sessionId, sessionProperties, openviduConfig, recordingManager);
+		this.sessionsNotActive.put(sessionId, sessionNotActive);
+		this.sessionidParticipantpublicidParticipant.putIfAbsent(sessionId, new ConcurrentHashMap<>());
+		this.sessionidFinalUsers.putIfAbsent(sessionId, new ConcurrentHashMap<>());
+		if (this.openviduConfig.isRecordingModuleEnabled()) {
+			this.sessionidAccumulatedRecordings.putIfAbsent(sessionId, new ConcurrentLinkedQueue<>());
+		}
+		showTokens();
+		return sessionNotActive;
+	}
+
+	public Session storeSessionNotActive(Session sessionNotActive) {
+		final String sessionId = sessionNotActive.getSessionId();
 		this.sessionsNotActive.put(sessionId, sessionNotActive);
 		this.sessionidParticipantpublicidParticipant.putIfAbsent(sessionId, new ConcurrentHashMap<>());
 		this.sessionidFinalUsers.putIfAbsent(sessionId, new ConcurrentHashMap<>());
@@ -440,15 +452,22 @@ public abstract class SessionManager {
 			throw new OpenViduException(Code.ROOM_CLOSED_ERROR_CODE, "Session '" + sessionId + "' already closed");
 		}
 		Set<Participant> participants = getParticipants(sessionId);
+
+		boolean sessionClosedByLastParticipant = false;
+
 		for (Participant p : participants) {
 			try {
-				this.evictParticipant(p, null, null, reason);
+				sessionClosedByLastParticipant = this.evictParticipant(p, null, null, reason);
 			} catch (OpenViduException e) {
 				log.warn("Error evicting participant '{}' from session '{}'", p.getParticipantPublicId(), sessionId, e);
 			}
 		}
 
-		this.closeSessionAndEmptyCollections(session, reason);
+		if (!sessionClosedByLastParticipant) {
+			// This code should never be executed, as last evicted participant must trigger
+			// session close
+			this.closeSessionAndEmptyCollections(session, reason);
+		}
 
 		return participants;
 	}
@@ -464,14 +483,18 @@ public abstract class SessionManager {
 			sessionEventsHandler.onSessionClosed(session.getSessionId(), reason);
 		}
 
-		sessions.remove(session.getSessionId());
-		sessionsNotActive.remove(session.getSessionId());
-		sessionidParticipantpublicidParticipant.remove(session.getSessionId());
-		sessionidFinalUsers.remove(session.getSessionId());
-		sessionidAccumulatedRecordings.remove(session.getSessionId());
-		sessionidTokenTokenobj.remove(session.getSessionId());
+		this.cleanCollections(session.getSessionId());
 
 		log.info("Session '{}' removed and closed", session.getSessionId());
+	}
+
+	protected void cleanCollections(String sessionId) {
+		sessions.remove(sessionId);
+		sessionsNotActive.remove(sessionId);
+		sessionidParticipantpublicidParticipant.remove(sessionId);
+		sessionidFinalUsers.remove(sessionId);
+		sessionidAccumulatedRecordings.remove(sessionId);
+		sessionidTokenTokenobj.remove(sessionId);
 	}
 
 }
