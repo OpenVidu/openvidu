@@ -90,8 +90,8 @@ public abstract class KmsManager {
 		this.kmss.put(kms.getUri(), kms);
 	}
 
-	public synchronized void removeKms(String kmsUri) {
-		this.kmss.remove(kmsUri);
+	public synchronized Kms removeKms(String kmsUri) {
+		return this.kmss.remove(kmsUri);
 	}
 
 	public synchronized Kms getLessLoadedKms() throws NoSuchElementException {
