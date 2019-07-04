@@ -718,7 +718,7 @@ export class Stream implements EventDispatcher {
                             reject('Error on publishVideo: ' + JSON.stringify(error));
                         }
                     } else {
-                        this.webRtcPeer.processAnswer(response.sdpAnswer)
+                        this.webRtcPeer.processAnswer(response.sdpAnswer, false)
                             .then(() => {
                                 this.streamId = response.id;
                                 this.creationTime = response.createdAt;
@@ -778,7 +778,19 @@ export class Stream implements EventDispatcher {
                     if (error) {
                         reject(new Error('Error on recvVideoFrom: ' + JSON.stringify(error)));
                     } else {
-                        this.webRtcPeer.processAnswer(response.sdpAnswer).then(() => {
+                        // Ios Ionic. Limitation: some bug in iosrtc cordova plugin makes it necessary
+                        // to add a timeout before calling PeerConnection#setRemoteDescription during
+                        // some time (400 ms) from the moment first subscriber stream is received
+                        if (this.session.isFirstIonicIosSubscriber) {
+                            this.session.isFirstIonicIosSubscriber = false;
+                            setTimeout(() => {
+                                // After 400 ms Ionic iOS subscribers won't need to run
+                                // PeerConnection#setRemoteDescription after 250 ms timeout anymore
+                                this.session.countDownForIonicIosSubscribersActive = false;
+                            }, 400);
+                        }
+                        const needsTimeoutOnProcessAnswer = this.session.countDownForIonicIosSubscribersActive;
+                        this.webRtcPeer.processAnswer(response.sdpAnswer, needsTimeoutOnProcessAnswer).then(() => {
                             this.remotePeerSuccessfullyEstablished();
                             this.initWebRtcStats();
                             resolve();

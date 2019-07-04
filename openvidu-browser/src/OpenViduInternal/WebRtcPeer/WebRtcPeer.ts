@@ -119,14 +119,14 @@ export class WebRtcPeer {
                     const pc1: any = this.pc;
                     for (const sender of pc1.getLocalStreams()) {
                         if (!videoSourceIsMediaStreamTrack) {
-                            (<MediaStream>sender).stop();
+                            sender.stop();
                         }
                         pc1.removeStream(sender);
                     }
                     // Stop receivers deprecated
                     for (const receiver of pc1.getRemoteStreams()) {
                         if (!!receiver.track) {
-                            (<MediaStream>receiver).stop();
+                            receiver.stop();
                         }
                     }
                 } else {
@@ -234,7 +234,7 @@ export class WebRtcPeer {
      * Function invoked when a SDP answer is received. Final step in SDP negotiation, the peer
      * just needs to set the answer as its remote description
      */
-    processAnswer(sdpAnswer: string): Promise<string> {
+    processAnswer(sdpAnswer: string, needsTimeoutOnProcessAnswer: boolean): Promise<string> {
         return new Promise((resolve, reject) => {
             const answer: RTCSessionDescriptionInit = {
                 type: 'answer',
@@ -246,7 +246,17 @@ export class WebRtcPeer {
                 reject('RTCPeerConnection is closed');
             }
             if (platform['isIonicIos']) {
-                this.pc.setRemoteDescription(new RTCSessionDescription(answer)).then(() => resolve()).catch(error => reject(error));
+                // Ionic iOS platform
+                if (needsTimeoutOnProcessAnswer) {
+                    // 400 ms have not elapsed yet since first remote stream triggered Stream#initWebRtcPeerReceive
+                    setTimeout(() => {
+                        console.info('setRemoteDescription run after timeout for Ionic iOS device');
+                        this.pc.setRemoteDescription(new RTCSessionDescription(answer)).then(() => resolve()).catch(error => reject(error));
+                    }, 250);
+                } else {
+                    // 400 ms have elapsed
+                    this.pc.setRemoteDescription(new RTCSessionDescription(answer)).then(() => resolve()).catch(error => reject(error));
+                }
             } else {
                 // Rest of platforms
                 this.pc.setRemoteDescription(answer).then(() => resolve()).catch(error => reject(error));
