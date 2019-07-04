@@ -226,7 +226,7 @@ public class RecordingManager {
 			recording = this.singleStreamRecordingService.stopRecording(session, recording, reason);
 			break;
 		}
-		this.abortAutomaticRecordingStopThread(session);
+		this.abortAutomaticRecordingStopThread(session, reason);
 		return recording;
 	}
 
@@ -248,7 +248,7 @@ public class RecordingManager {
 					kmsDisconnectionTime);
 			break;
 		}
-		this.abortAutomaticRecordingStopThread(session);
+		this.abortAutomaticRecordingStopThread(session, reason);
 		return recording;
 	}
 
@@ -433,7 +433,7 @@ public class RecordingManager {
 		this.automaticRecordingStopThreads.putIfAbsent(session.getSessionId(), future);
 	}
 
-	public boolean abortAutomaticRecordingStopThread(Session session) {
+	public boolean abortAutomaticRecordingStopThread(Session session, EndReason reason) {
 		ScheduledFuture<?> future = this.automaticRecordingStopThreads.remove(session.getSessionId());
 		if (future != null) {
 			boolean cancelled = future.cancel(false);
@@ -445,7 +445,7 @@ public class RecordingManager {
 				log.info(
 						"Ongoing recording of session {} was explicetly stopped within timeout for automatic recording stop. Closing session",
 						session.getSessionId());
-				sessionManager.closeSessionAndEmptyCollections(session, EndReason.automaticStop);
+				sessionManager.closeSessionAndEmptyCollections(session, reason);
 				sessionManager.showTokens();
 			}
 			return cancelled;

@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.PostConstruct;
@@ -89,24 +90,19 @@ public abstract class KmsManager {
 		this.kmss.put(kms.getUri(), kms);
 	}
 
-	public synchronized void removeKms(Kms kms) {
-		this.kmss.remove(kms.getUri());
+	public synchronized void removeKms(String kmsUri) {
+		this.kmss.remove(kmsUri);
 	}
 
-	public synchronized Kms getLessLoadedKms() {
+	public synchronized Kms getLessLoadedKms() throws NoSuchElementException {
 		return Collections.min(getKmsLoads()).kms;
 	}
 
-	public synchronized Kms getNextLessLoadedKms() {
-		List<KmsLoad> sortedLoads = getKmssSortedByLoad();
-		if (sortedLoads.size() > 1) {
-			return sortedLoads.get(1).kms;
-		} else {
-			return sortedLoads.get(0).kms;
-		}
+	public Kms getKms(String kmsUri) {
+		return this.kmss.get(kmsUri);
 	}
 
-	public synchronized Collection<Kms> getKmss() {
+	public Collection<Kms> getKmss() {
 		return this.kmss.values();
 	}
 
@@ -179,11 +175,17 @@ public abstract class KmsManager {
 		};
 	}
 
-	protected abstract void initializeKurentoClients();
+	public abstract void initializeKurentoClients(List<String> kmsUris) throws Exception;
 
 	@PostConstruct
-	protected void postConstruct() {
-		this.initializeKurentoClients();
+	private void postConstruct() {
+		try {
+			this.initializeKurentoClients(this.openviduConfig.getKmsUris());
+		} catch (Exception e) {
+			// Some KMS wasn't reachable
+			log.error("Shutting down OpenVidu Server");
+			System.exit(1);
+		}
 	}
 
 }

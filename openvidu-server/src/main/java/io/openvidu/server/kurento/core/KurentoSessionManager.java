@@ -20,6 +20,7 @@ package io.openvidu.server.kurento.core;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.kurento.client.GenericMediaElement;
@@ -90,7 +91,13 @@ public class KurentoSessionManager extends SessionManager {
 							openviduConfig, recordingManager);
 				}
 
-				Kms lessLoadedKms = this.kmsManager.getLessLoadedKms();
+				Kms lessLoadedKms = null;
+				try {
+					lessLoadedKms = this.kmsManager.getLessLoadedKms();
+				} catch (NoSuchElementException e) {
+					throw new OpenViduException(Code.ROOM_CANNOT_BE_CREATED_ERROR_CODE,
+							"There is no available media server where to initialize session '" + sessionId + "'");
+				}
 				log.info("KMS less loaded is {} with a load of {}", lessLoadedKms.getUri(), lessLoadedKms.getLoad());
 				kSession = createSession(sessionNotActive, lessLoadedKms);
 			}
@@ -301,9 +308,10 @@ public class KurentoSessionManager extends SessionManager {
 				// Abort automatic recording stop (user published before timeout)
 				log.info("Participant {} published before timeout finished. Aborting automatic recording stop",
 						participant.getParticipantPublicId());
-				boolean stopAborted = recordingManager.abortAutomaticRecordingStopThread(kSession);
+				boolean stopAborted = recordingManager.abortAutomaticRecordingStopThread(kSession,
+						EndReason.automaticStop);
 				if (stopAborted) {
-					log.info("Automatic recording stopped succesfully aborted");
+					log.info("Automatic recording stopped successfully aborted");
 				} else {
 					log.info("Automatic recording stopped couldn't be aborted. Recording of session {} has stopped",
 							kSession.getSessionId());

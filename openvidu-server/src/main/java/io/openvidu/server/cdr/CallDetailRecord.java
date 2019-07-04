@@ -76,8 +76,8 @@ import io.openvidu.server.webhook.CDRLoggerWebhook;
  * - size: 				number
  * - status:            string
  * - webrtcConnectionDestroyed.reason: 	"unsubscribe", "unpublish", "disconnect", "networkDisconnect", "mediaServerDisconnect", "openviduServerStopped"
- * - participantLeft.reason: 			"unsubscribe", "unpublish", "disconnect", "networkDisconnect", "openviduServerStopped"
- * - sessionDestroyed.reason: 			"lastParticipantLeft", "openviduServerStopped"
+ * - participantLeft.reason: 			"unsubscribe", "unpublish", "disconnect", "networkDisconnect", "mediaServerDisconnect", "openviduServerStopped"
+ * - sessionDestroyed.reason: 			"lastParticipantLeft", "mediaServerDisconnect", "openviduServerStopped"
  * - recordingStopped.reason:			"recordingStoppedByServer", "lastParticipantLeft", "sessionClosedByServer", "automaticStop", "mediaServerDisconnect", "openviduServerStopped"
  * 
  * [OPTIONAL_PROPERTIES]:
@@ -210,8 +210,11 @@ public class CallDetailRecord {
 				RecordingManager.finalReason(reason), timestamp);
 		this.log(recordingStoppedEvent);
 
-		// Summary: update ended recording
-		sessionManager.getAccumulatedRecordings(recording.getSessionId()).add(recordingStoppedEvent);
+		// FIXME: Summary: update ended recording if recordSessionDestroyed has not been
+		// already called
+		if (sessionManager.getAccumulatedRecordings(recording.getSessionId()) != null) {
+			sessionManager.getAccumulatedRecordings(recording.getSessionId()).add(recordingStoppedEvent);
+		}
 	}
 
 	public void recordRecordingStatusChanged(Recording recording, EndReason finalReason, long timestamp,
