@@ -457,8 +457,10 @@ export class Stream implements EventDispatcher {
                 typeof MediaStreamTrack !== 'undefined' && this.outboundStreamOpts.publisherProperties.videoSource instanceof MediaStreamTrack;
             this.webRtcPeer.dispose(isSenderAndCustomTrack);
         }
-        if (!!this.speechEvent && !!this.speechEvent.stop) {
-            this.speechEvent.stop();
+        if (!!this.speechEvent) {
+            if (!!this.speechEvent.stop) {
+                this.speechEvent.stop();
+            }
             delete this.speechEvent;
         }
 
