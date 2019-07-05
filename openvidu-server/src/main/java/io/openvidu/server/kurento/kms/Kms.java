@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.kurento.client.KurentoClient;
 import org.kurento.client.ModuleInfo;
 import org.kurento.client.ServerInfo;
@@ -51,7 +52,8 @@ public class Kms {
 
 	private static final Logger log = LoggerFactory.getLogger(Kms.class);
 
-	private String kmsUri;
+	private String id;
+	private String uri;
 	private String ip;
 	private KurentoClient client;
 	private LoadManager loadManager;
@@ -62,23 +64,28 @@ public class Kms {
 
 	private Map<String, KurentoSession> kurentoSessions = new ConcurrentHashMap<>();
 
-	public Kms(String kmsUri, KurentoClient client, LoadManager loadManager) {
-		this.kmsUri = kmsUri;
+	public Kms(String uri, KurentoClient client, LoadManager loadManager) {
+		this.uri = uri;
+		this.id = "KMS-" + RandomStringUtils.randomAlphanumeric(6).toUpperCase();
 
 		try {
-			String parsedUri = "http://" + kmsUri.replaceAll("^ws://", "").replaceAll("^wss://", "");
+			String parsedUri = "http://" + uri.replaceAll("^ws://", "").replaceAll("^wss://", "");
 			URL url = new URL(parsedUri);
 			this.ip = url.getHost();
 		} catch (MalformedURLException e) {
-			log.error("KMS uri {} is not a valid WebSocket endpoint", kmsUri);
+			log.error("KMS uri {} is not a valid WebSocket endpoint", uri);
 		}
 
 		this.client = client;
 		this.loadManager = loadManager;
 	}
 
+	public String getId() {
+		return id;
+	}
+
 	public String getUri() {
-		return kmsUri;
+		return uri;
 	}
 
 	public String getIp() {
@@ -135,8 +142,8 @@ public class Kms {
 
 	public JsonObject toJson() {
 		JsonObject json = new JsonObject();
-		json.addProperty("id", this.kmsUri);
-		json.addProperty("uri", this.kmsUri);
+		json.addProperty("id", this.id);
+		json.addProperty("uri", this.uri);
 		json.addProperty("ip", this.ip);
 		final boolean connected = this.isKurentoClientConnected();
 		json.addProperty("connected", connected);

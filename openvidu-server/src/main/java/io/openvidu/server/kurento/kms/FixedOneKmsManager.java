@@ -17,6 +17,7 @@
 
 package io.openvidu.server.kurento.kms;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.kurento.client.KurentoClient;
@@ -25,7 +26,7 @@ import org.kurento.commons.exception.KurentoException;
 public class FixedOneKmsManager extends KmsManager {
 
 	@Override
-	public void initializeKurentoClients(List<String> kmsUris) throws Exception {
+	public List<Kms> initializeKurentoClients(List<String> kmsUris) throws Exception {
 		final String kmsUri = kmsUris.get(0);
 		KurentoClient kClient = null;
 		try {
@@ -38,6 +39,8 @@ public class FixedOneKmsManager extends KmsManager {
 		kms.setKurentoClientConnected(true);
 		kms.setTimeOfKurentoClientConnection(System.currentTimeMillis());
 		this.addKms(kms);
+
+		return Arrays.asList(kms);
 	}
 
 }
