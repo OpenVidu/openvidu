@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import javax.servlet.http.HttpSession;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.kurento.jsonrpc.DefaultJsonRpcHandler;
 import org.kurento.jsonrpc.Session;
 import org.kurento.jsonrpc.Transaction;
@@ -52,7 +53,6 @@ import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.core.Token;
 import io.openvidu.server.utils.GeoLocation;
 import io.openvidu.server.utils.GeoLocationByIp;
-import io.openvidu.server.utils.RandomStringGenerator;
 
 public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
@@ -231,7 +231,7 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 		if (openviduConfig.isOpenViduSecret(secret)) {
 			sessionManager.newInsecureParticipant(participantPrivatetId);
-			token = RandomStringGenerator.generateRandomChain();
+			token = RandomStringUtils.randomAlphanumeric(16).toLowerCase();
 			if (recorder) {
 				generateRecorderParticipant = true;
 			}

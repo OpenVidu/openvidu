@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,7 +58,6 @@ import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.kurento.core.KurentoTokenOptions;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.recording.service.RecordingManager;
-import io.openvidu.server.utils.RandomStringGenerator;
 
 /**
  *
@@ -155,7 +155,7 @@ public class SessionRestController {
 			}
 			sessionId = customSessionId;
 		} else {
-			sessionId = RandomStringGenerator.generateRandomChain();
+			sessionId = RandomStringUtils.randomAlphanumeric(16).toLowerCase();
 			sessionManager.sessionidTokenTokenobj.putIfAbsent(sessionId, new ConcurrentHashMap<>());
 		}
 

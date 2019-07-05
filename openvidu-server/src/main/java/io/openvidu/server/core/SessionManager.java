@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PreDestroy;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.kurento.jsonrpc.message.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +49,6 @@ import io.openvidu.server.kurento.core.KurentoTokenOptions;
 import io.openvidu.server.recording.service.RecordingManager;
 import io.openvidu.server.utils.FormatChecker;
 import io.openvidu.server.utils.GeoLocation;
-import io.openvidu.server.utils.RandomStringGenerator;
 
 public abstract class SessionManager {
 
@@ -348,12 +348,12 @@ public abstract class SessionManager {
 	public Participant newParticipant(String sessionId, String participantPrivatetId, Token token,
 			String clientMetadata, GeoLocation location, String platform, String finalUserId) {
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
-			String participantPublicId = RandomStringGenerator.generateRandomChain();
+			String participantPublicId = RandomStringUtils.randomAlphanumeric(16).toLowerCase();
 			Participant p = new Participant(finalUserId, participantPrivatetId, participantPublicId, sessionId, token,
 					clientMetadata, location, platform, null);
 			while (this.sessionidParticipantpublicidParticipant.get(sessionId).putIfAbsent(participantPublicId,
 					p) != null) {
-				participantPublicId = RandomStringGenerator.generateRandomChain();
+				participantPublicId = RandomStringUtils.randomAlphanumeric(16).toLowerCase();
 				p.setParticipantPublicId(participantPublicId);
 			}
 
