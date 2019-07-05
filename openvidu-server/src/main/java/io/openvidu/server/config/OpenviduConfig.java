@@ -40,6 +40,7 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.support.PropertiesLoaderUtils;
 import org.springframework.stereotype.Component;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
@@ -171,7 +172,7 @@ public class OpenviduConfig {
 		}
 
 		try {
-			this.initiateKmsUris();
+			this.initiateKmsUris(this.kmsUris);
 		} catch (Exception e) {
 			log.error("Error in 'kms.uris' system property: " + e.getMessage());
 			log.error("Shutting down OpenVidu Server");
@@ -383,14 +384,16 @@ public class OpenviduConfig {
 		return this.externalizedProperties;
 	}
 
-	private void initiateKmsUris() throws Exception {
-		if (kmsUrisList == null) {
-			this.kmsUris = this.kmsUris.replaceAll("\\s", "");
-			JsonParser parser = new JsonParser();
-			JsonElement elem = parser.parse(this.kmsUris);
-			JsonArray kmsUris = elem.getAsJsonArray();
-			this.kmsUrisList = JsonUtils.toStringList(kmsUris);
-		}
+	private void initiateKmsUris(String kmsUris) throws Exception {
+		kmsUris = kmsUris.replaceAll("\\s", ""); // Remove all white spaces
+		kmsUris = kmsUris.replaceAll("\\\\", ""); // Remove previous escapes
+		kmsUris = kmsUris.replaceAll("\"", ""); // Remove previous double quotes
+		kmsUris = kmsUris.replaceFirst("^\\[", "[\\\""); // Escape first char
+		kmsUris = kmsUris.replaceFirst("\\]$", "\\\"]"); // Escape last char
+		kmsUris = kmsUris.replaceAll(",", "\\\",\\\""); // Escape middle uris
+		Gson gson = new Gson();
+		JsonArray kmsUrisArray = gson.fromJson(kmsUris, JsonArray.class);
+		this.kmsUrisList = JsonUtils.toStringList(kmsUrisArray);
 	}
 
 	public void initiateOpenViduWebhookEndpoint(String endpoint) throws Exception {
