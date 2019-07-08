@@ -28,8 +28,6 @@ import java.util.concurrent.TimeUnit;
 import org.openqa.selenium.UnexpectedAlertBehaviour;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.remote.CapabilityType;
-import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
 public class ChromeUser extends BrowserUser {
@@ -54,10 +52,6 @@ public class ChromeUser extends BrowserUser {
 
 		options.addArguments("--disable-infobars");
 
-		final DesiredCapabilities chromeCapabilities = DesiredCapabilities.chrome();
-		chromeCapabilities.setCapability(CapabilityType.UNEXPECTED_ALERT_BEHAVIOUR, UnexpectedAlertBehaviour.IGNORE);
-		chromeCapabilities.setCapability(ChromeOptions.CAPABILITY, options);
-
 		Map<String, Object> prefs = new HashMap<String, Object>();
 		prefs.put("profile.default_content_setting_values.media_stream_mic", 1);
 		prefs.put("profile.default_content_setting_values.media_stream_camera", 1);
@@ -67,7 +61,7 @@ public class ChromeUser extends BrowserUser {
 		if (REMOTE_URL != null) {
 			log.info("Using URL {} to connect to remote web driver", REMOTE_URL);
 			try {
-				this.driver = new RemoteWebDriver(new URL(REMOTE_URL), chromeCapabilities);
+				this.driver = new RemoteWebDriver(new URL(REMOTE_URL), options);
 			} catch (MalformedURLException e) {
 				e.printStackTrace();
 			}
