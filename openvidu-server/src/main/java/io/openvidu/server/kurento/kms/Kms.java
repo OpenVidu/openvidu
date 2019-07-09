@@ -64,7 +64,7 @@ public class Kms {
 
 	private Map<String, KurentoSession> kurentoSessions = new ConcurrentHashMap<>();
 
-	public Kms(String uri, KurentoClient client, LoadManager loadManager) {
+	public Kms(String uri, LoadManager loadManager) {
 		this.uri = uri;
 		this.id = "KMS-" + RandomStringUtils.randomAlphanumeric(6).toUpperCase();
 
@@ -75,9 +75,11 @@ public class Kms {
 		} catch (MalformedURLException e) {
 			log.error("KMS uri {} is not a valid WebSocket endpoint", uri);
 		}
-
-		this.client = client;
 		this.loadManager = loadManager;
+	}
+
+	public void setKurentoClient(KurentoClient client) {
+		this.client = client;
 	}
 
 	public String getId() {
@@ -173,26 +175,32 @@ public class Kms {
 
 				JsonObject kurentoExtraInfo = new JsonObject();
 
-				kurentoExtraInfo.addProperty("memory", this.client.getServerManager().getUsedMemory() / 1024);
+				try {
 
-				ServerInfo info = this.client.getServerManager().getInfo();
-				kurentoExtraInfo.addProperty("version", info.getVersion());
-				kurentoExtraInfo.addProperty("capabilities", info.getCapabilities().toString());
+					kurentoExtraInfo.addProperty("memory", this.client.getServerManager().getUsedMemory() / 1024);
 
-				JsonArray modules = new JsonArray();
-				for (ModuleInfo moduleInfo : info.getModules()) {
-					JsonObject moduleJson = new JsonObject();
-					moduleJson.addProperty("name", moduleInfo.getName());
-					moduleJson.addProperty("version", moduleInfo.getVersion());
-					moduleJson.addProperty("generationTime", moduleInfo.getGenerationTime());
-					JsonArray factories = new JsonArray();
-					moduleInfo.getFactories().forEach(fact -> factories.add(fact));
-					moduleJson.add("factories", factories);
-					modules.add(moduleJson);
+					ServerInfo info = this.client.getServerManager().getInfo();
+					kurentoExtraInfo.addProperty("version", info.getVersion());
+					kurentoExtraInfo.addProperty("capabilities", info.getCapabilities().toString());
+
+					JsonArray modules = new JsonArray();
+					for (ModuleInfo moduleInfo : info.getModules()) {
+						JsonObject moduleJson = new JsonObject();
+						moduleJson.addProperty("name", moduleInfo.getName());
+						moduleJson.addProperty("version", moduleInfo.getVersion());
+						moduleJson.addProperty("generationTime", moduleInfo.getGenerationTime());
+						JsonArray factories = new JsonArray();
+						moduleInfo.getFactories().forEach(fact -> factories.add(fact));
+						moduleJson.add("factories", factories);
+						modules.add(moduleJson);
+					}
+					kurentoExtraInfo.add("modules", modules);
+
+					json.add("kurentoInfo", kurentoExtraInfo);
+
+				} catch (Exception e) {
+					log.warn("KMS {} extra info was requested but there's no connection to it", this.id);
 				}
-				kurentoExtraInfo.add("modules", modules);
-
-				json.add("kurentoInfo", kurentoExtraInfo);
 			}
 		}
 
