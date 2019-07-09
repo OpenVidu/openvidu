@@ -19,15 +19,12 @@ import { LocalRecorder } from './LocalRecorder';
 import { Publisher } from './Publisher';
 import { Session } from './Session';
 import { Stream } from './Stream';
-import { StreamManager } from './StreamManager';
 import { StreamPropertyChangedEvent } from '../OpenViduInternal/Events/StreamPropertyChangedEvent';
 import { Device } from '../OpenViduInternal/Interfaces/Public/Device';
 import { OpenViduAdvancedConfiguration } from '../OpenViduInternal/Interfaces/Public/OpenViduAdvancedConfiguration';
 import { PublisherProperties } from '../OpenViduInternal/Interfaces/Public/PublisherProperties';
 import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/OpenViduError';
 import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
-import { VideoElementEvent } from '../OpenViduInternal/Events/VideoElementEvent';
-import { StreamManagerEvent } from '../OpenViduInternal/Events/StreamManagerEvent';
 
 import * as screenSharingAuto from '../OpenViduInternal/ScreenSharing/Screen-Capturing-Auto';
 import * as screenSharing from '../OpenViduInternal/ScreenSharing/Screen-Capturing';
@@ -36,11 +33,16 @@ import EventEmitter = require('wolfy87-eventemitter');
 import RpcBuilder = require('../OpenViduInternal/KurentoUtils/kurento-jsonrpc');
 import platform = require('platform');
 platform['isIonicIos'] = (platform.product === 'iPhone' || platform.product === 'iPad') && platform.ua!!.indexOf('Safari') === -1;
+platform['isIonicAndroid'] = platform.os!!.family === 'Android' && platform.name == "Android Browser";
 
 /**
  * @hidden
  */
 const packageJson = require('../../package.json');
+/**
+ * @hidden
+ */
+declare var cordova: any;
 
 /**
  * Entrypoint of OpenVidu Browser library.
@@ -368,24 +370,106 @@ export class OpenVidu {
    */
   getDevices(): Promise<Device[]> {
     return new Promise<Device[]>((resolve, reject) => {
-      navigator.mediaDevices.enumerateDevices().then(deviceInfos => {
+      navigator.mediaDevices.enumerateDevices().then((deviceInfos) => {
         const devices: Device[] = [];
-        deviceInfos.forEach(deviceInfo => {
-          if (deviceInfo.kind === 'audioinput' || deviceInfo.kind === 'videoinput') {
-            devices.push({
-              kind: deviceInfo.kind,
-              deviceId: deviceInfo.deviceId,
-              label: deviceInfo.label
+
+        // Ionic Android  devices
+        if (platform['isIonicAndroid'] && cordova.plugins && cordova.plugins.EnumerateDevicesPlugin) {
+          cordova.plugins.EnumerateDevicesPlugin.getEnumerateDevices().then((pluginDevices: Device[]) => {
+            let pluginAudioDevices: Device[] = [];
+            let videoDevices: Device[] = [];
+            let audioDevices: Device[] = [];
+            pluginAudioDevices = pluginDevices.filter((device: Device) => device.kind === 'audioinput');
+            videoDevices = deviceInfos.filter((device: Device) => device.kind === 'videoinput');
+            audioDevices = deviceInfos.filter((device: Device) => device.kind === 'audioinput');
+            videoDevices.forEach((deviceInfo, index) => {
+              if (!deviceInfo.label) {
+                let label = "";
+                if (index === 0) {
+                  label = "Front Camera";
+                } else if (index === 1) {
+                  label = "Back Camera";
+                } else {
+                  label = "Unknown Camera";
+                }
+                devices.push({
+                  kind: deviceInfo.kind,
+                  deviceId: deviceInfo.deviceId,
+                  label: label
+                });
+
+              } else {
+                devices.push({
+                  kind: deviceInfo.kind,
+                  deviceId: deviceInfo.deviceId,
+                  label: deviceInfo.label
+                });
+              }
             });
-          }
-        });
-        resolve(devices);
+            audioDevices.forEach((deviceInfo, index) => {
+              if (!deviceInfo.label) {
+                let label = "";
+                switch (index) {
+                  case 0: // Default Microphone
+                    label = 'Default';
+                    break;
+                  case 1: // Microphone + Speakerphone
+                    const defaultMatch = pluginAudioDevices.filter((d) => d.label.includes('Built'))[0];
+                    label = defaultMatch ? defaultMatch.label : 'Built-in Microphone';
+                    break;
+                  case 2: // Headset Microphone
+                    const wiredMatch = pluginAudioDevices.filter((d) => d.label.includes('Wired'))[0];
+                    if (wiredMatch) {
+                      label = wiredMatch.label;
+                    } else {
+                      label = 'Headset earpiece';
+                    }
+                    break;
+                  case 3:
+                    const wirelessMatch = pluginAudioDevices.filter((d) => d.label.includes('Bluetooth'))[0];
+                    label = wirelessMatch ? wirelessMatch.label : 'Wireless';
+                    break;
+                  default:
+                    label = "Unknown Microphone";
+                    break;
+                }
+                devices.push({
+                  kind: deviceInfo.kind,
+                  deviceId: deviceInfo.deviceId,
+                  label: label
+                });
+
+              } else {
+                devices.push({
+                  kind: deviceInfo.kind,
+                  deviceId: deviceInfo.deviceId,
+                  label: deviceInfo.label
+                });
+              }
+            });
+            resolve(devices);
+          });
+        } else {
+
+          // Rest of platforms
+          deviceInfos.forEach(deviceInfo => {
+            if (deviceInfo.kind === 'audioinput' || deviceInfo.kind === 'videoinput') {
+              devices.push({
+                kind: deviceInfo.kind,
+                deviceId: deviceInfo.deviceId,
+                label: deviceInfo.label
+              });
+            }
+          });
+          resolve(devices);
+        }
       }).catch((error) => {
         console.error('Error getting devices', error);
         reject(error);
       });
     });
   }
+
 
 
   /**
