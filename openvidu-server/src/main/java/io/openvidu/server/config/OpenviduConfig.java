@@ -394,6 +394,9 @@ public class OpenviduConfig {
 		Gson gson = new Gson();
 		JsonArray kmsUrisArray = gson.fromJson(kmsUris, JsonArray.class);
 		this.kmsUrisList = JsonUtils.toStringList(kmsUrisArray);
+		for (String uri : kmsUrisList) {
+			this.checkWebsocketUri(uri);
+		}
 	}
 
 	public void initiateOpenViduWebhookEndpoint(String endpoint) throws Exception {
@@ -449,6 +452,16 @@ public class OpenviduConfig {
 			this.webhookEventsList.add(CDREventName.valueOf(eventString));
 		}
 		log.info("OpenVidu Webhook events: {}", this.getOpenViduWebhookEvents().toString());
+	}
+
+	public void checkWebsocketUri(String uri) throws MalformedURLException {
+		try {
+			String parsedUri = uri.replaceAll("^ws://", "http://").replaceAll("^wss://", "https://");
+			new URL(parsedUri);
+		} catch (MalformedURLException e) {
+			log.error("URI {} is not a valid WebSocket endpoint", uri);
+			throw e;
+		}
 	}
 
 }

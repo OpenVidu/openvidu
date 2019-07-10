@@ -68,13 +68,15 @@ public class Kms {
 		this.uri = uri;
 		this.id = "KMS-" + RandomStringUtils.randomAlphanumeric(6).toUpperCase();
 
+		String parsedUri = uri.replaceAll("^ws://", "http://").replaceAll("^wss://", "https://");
+		URL url = null;
 		try {
-			String parsedUri = "http://" + uri.replaceAll("^ws://", "").replaceAll("^wss://", "");
-			URL url = new URL(parsedUri);
-			this.ip = url.getHost();
+			url = new URL(parsedUri);
 		} catch (MalformedURLException e) {
-			log.error("KMS uri {} is not a valid WebSocket endpoint", uri);
+			log.error(e.getMessage());
 		}
+		this.ip = url.getHost();
+
 		this.loadManager = loadManager;
 	}
 
