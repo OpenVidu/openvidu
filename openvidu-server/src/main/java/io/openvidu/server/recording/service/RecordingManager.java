@@ -217,6 +217,7 @@ public class RecordingManager {
 
 		final long timestamp = System.currentTimeMillis();
 		this.cdr.recordRecordingStatusChanged(recording, reason, timestamp, Status.stopped);
+		cdr.recordRecordingStopped(recording, reason, timestamp);
 
 		switch (recording.getOutputMode()) {
 		case COMPOSED:

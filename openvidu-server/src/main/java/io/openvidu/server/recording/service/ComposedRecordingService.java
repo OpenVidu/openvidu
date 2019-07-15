@@ -392,7 +392,6 @@ public class ComposedRecordingService extends RecordingService {
 						filesPath + RecordingManager.RECORDING_ENTITY_FILE + finalRecordingArray[0].getId());
 
 				final long timestamp = System.currentTimeMillis();
-				cdr.recordRecordingStopped(finalRecordingArray[0], reason, timestamp);
 				cdr.recordRecordingStatusChanged(finalRecordingArray[0], reason, timestamp,
 						finalRecordingArray[0].getStatus());
 			});

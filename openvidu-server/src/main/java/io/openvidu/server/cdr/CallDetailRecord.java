@@ -210,11 +210,8 @@ public class CallDetailRecord {
 				RecordingManager.finalReason(reason), timestamp);
 		this.log(recordingStoppedEvent);
 
-		// FIXME: Summary: update ended recording if recordSessionDestroyed has not been
-		// already called
-		if (sessionManager.getAccumulatedRecordings(recording.getSessionId()) != null) {
-			sessionManager.getAccumulatedRecordings(recording.getSessionId()).add(recordingStoppedEvent);
-		}
+		// Summary: update ended recording
+		sessionManager.getAccumulatedRecordings(recording.getSessionId()).add(recordingStoppedEvent);
 	}
 
 	public void recordRecordingStatusChanged(Recording recording, EndReason finalReason, long timestamp,

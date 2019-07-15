@@ -177,7 +177,6 @@ public class SingleStreamRecordingService extends RecordingService {
 				finalRecordingArray[0] = this.sealMetadataFiles(finalRecordingArray[0]);
 
 				final long timestamp = System.currentTimeMillis();
-				cdr.recordRecordingStopped(finalRecordingArray[0], reason, timestamp);
 				cdr.recordRecordingStatusChanged(finalRecordingArray[0], reason, timestamp,
 						finalRecordingArray[0].getStatus());
 
