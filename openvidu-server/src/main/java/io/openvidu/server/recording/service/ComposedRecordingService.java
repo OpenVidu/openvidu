@@ -330,7 +330,6 @@ public class ComposedRecordingService extends RecordingService {
 					filesPath + RecordingManager.RECORDING_ENTITY_FILE + recording.getId());
 
 			final long timestamp = System.currentTimeMillis();
-			this.cdr.recordRecordingStopped(recording, reason, timestamp);
 			this.cdr.recordRecordingStatusChanged(recording, reason, timestamp, recording.getStatus());
 
 			if (session != null && reason != null) {
