@@ -13,7 +13,9 @@ module.exports = {
     exclude: [
         "**/OpenViduInternal/Interfaces/Private/**",
         "**/OpenViduInternal/WebRtcStats/WebRtcStats.ts",
-        "**/OpenViduInternal/WebRtcPeer/WebRtcPeer.ts"
+        "**/OpenViduInternal/WebRtcPeer/WebRtcPeer.ts",
+        "**/OpenViduInternal/ScreenSharing/**",
+        "**/OpenViduInternal/KurentoUtils/**"
     ],
     excludeExternals: true,
     excludePrivate: true,
