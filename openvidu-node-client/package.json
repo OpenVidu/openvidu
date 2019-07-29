@@ -33,5 +33,5 @@
         "docs": "./node_modules/typedoc/bin/typedoc --options ./config/typedoc.js --out ./docs ./src && rm -rf ../../openvidu.io/api/openvidu-node-client/* && cp -R ./docs/. ../../openvidu.io/api/openvidu-node-client"
     },
     "typings": "lib/index.d.ts",
-    "version": "2.10.0"
+    "version": "2.11.0"
 }
