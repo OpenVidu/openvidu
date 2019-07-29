@@ -1,7 +1,7 @@
 {
     "author": "OpenVidu",
     "dependencies": {
-        "@types/node": "12.0.3",
+        "@types/node": "12.6.8",
         "@types/platform": "1.3.2",
         "freeice": "2.2.2",
         "hark": "1.2.3",
@@ -11,7 +11,7 @@
     },
     "description": "OpenVidu Browser",
     "devDependencies": {
-        "browserify": "16.2.3",
+        "browserify": "16.3.0",
         "grunt": "1.0.4",
         "grunt-autoprefixer": "3.0.4",
         "grunt-cli": "1.3.2",
@@ -22,10 +22,10 @@
         "grunt-string-replace": "1.3.1",
         "grunt-ts": "6.0.0-beta.22",
         "tsify": "4.0.1",
-        "tslint": "5.16.0",
-        "typedoc": "0.14.2",
-        "typescript": "3.4.5",
-        "uglify-js": "3.5.15"
+        "tslint": "5.18.0",
+        "typedoc": "0.15.0",
+        "typescript": "3.5.3",
+        "uglify-js": "3.6.0"
     },
     "license": "Apache-2.0",
     "main": "lib/index.js",

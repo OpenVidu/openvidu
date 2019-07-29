@@ -630,7 +630,7 @@ export class OpenVidu {
 
             if (!this.checkScreenSharingCapabilities()) {
 
-              const error = new OpenViduError(OpenViduErrorName.SCREEN_SHARING_NOT_SUPPORTED, 'You can only screen share in desktop Chrome, Firefox or Opera. Detected browser: ' + platform.name);
+              const error = new OpenViduError(OpenViduErrorName.SCREEN_SHARING_NOT_SUPPORTED, 'You can only screen share in desktop Chrome, Firefox, Opera or Electron. Detected client: ' + platform.name);
               console.error(error);
               reject(error);
 
