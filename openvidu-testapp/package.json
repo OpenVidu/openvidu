@@ -15,7 +15,7 @@
         "colormap": "2.3.1", 
         "core-js": "3.1.3", 
         "hammerjs": "2.0.8", 
-        "openvidu-browser": "2.10.0", 
+        "openvidu-browser": "2.11.0", 
         "openvidu-node-client": "2.9.0", 
         "rxjs": "6.5.2", 
         "zone.js": "0.9.1"
@@ -44,5 +44,5 @@
         "start": "ng serve", 
         "test": "ng test"
     }, 
-    "version": "2.10.0"
+    "version": "2.11.0"
 }
