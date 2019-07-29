@@ -65,7 +65,7 @@
 		<version.webdrivermanager>3.6.1</version.webdrivermanager>
 		<version.selenium.jupiter>3.2.1</version.selenium.jupiter>
 
-		<version.openvidu.java.client>2.10.0</version.openvidu.java.client>
+		<version.openvidu.java.client>2.11.0</version.openvidu.java.client>
 		<version.openvidu.client>1.1.0</version.openvidu.client>
 		<version.openvidu.test>1.1.0</version.openvidu.test>
 		<version.openvidu.test.browsers>1.1.0</version.openvidu.test.browsers>
