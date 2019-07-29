@@ -138,11 +138,11 @@ public abstract class KmsManager {
 		return new KurentoConnectionListener() {
 
 			@Override
-			public void reconnected(boolean isReconnected) {
+			public void reconnected(boolean sameServer) {
 				final Kms kms = kmss.get(kmsId);
 				kms.setKurentoClientConnected(true);
 				kms.setTimeOfKurentoClientConnection(System.currentTimeMillis());
-				if (!isReconnected) {
+				if (!sameServer) {
 					// Different KMS. Reset sessions status (no Publisher or SUbscriber endpoints)
 					log.warn("Kurento Client reconnected to a different KMS instance, with uri {}", kms.getUri());
 					log.warn("Updating all webrtc endpoints for active sessions");
@@ -150,12 +150,12 @@ public abstract class KmsManager {
 					kms.getKurentoSessions().forEach(kSession -> {
 						kSession.restartStatusInKurento(timeOfKurentoDisconnection);
 					});
-					kms.setTimeOfKurentoClientDisconnection(0);
 				} else {
 					// Same KMS. We may infer that openvidu-server/KMS connection has been lost, but
 					// not the clients/KMS connections
 					log.warn("Kurento Client reconnected to same KMS {} with uri {}", kmsId, kms.getUri());
 				}
+				kms.setTimeOfKurentoClientDisconnection(0);
 			}
 
 			@Override
