@@ -63,9 +63,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 		// Security for recorded videos
 		if (openviduConf.getOpenViduRecordingPublicAccess()) {
-			conf = conf.antMatchers("/recordings/*").permitAll();
+			conf = conf.antMatchers("/recordings/**").permitAll();
 		} else {
-			conf = conf.antMatchers("/recordings/*").authenticated();
+			conf = conf.antMatchers("/recordings/**").authenticated();
 		}
 
 		conf.and().httpBasic();
