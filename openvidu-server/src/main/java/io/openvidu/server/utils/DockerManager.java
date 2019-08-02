@@ -122,7 +122,7 @@ public class DockerManager {
 	}
 
 	public String runContainer(String container, String containerName, List<Volume> volumes, List<Bind> binds,
-			List<Integer> exposedPorts, String networkMode, List<String> envs) throws Exception {
+			List<Integer> exposedPorts, Ports portBindings, String networkMode, List<String> envs) throws Exception {
 
 		CreateContainerCmd cmd = dockerClient.createContainerCmd(container).withName(containerName).withEnv(envs);
 		HostConfig hostConfig = new HostConfig().withNetworkMode(networkMode);
@@ -133,14 +133,14 @@ public class DockerManager {
 			hostConfig.withBinds(binds);
 		}
 		if (exposedPorts != null) {
-			Ports ps = new Ports();
+			Ports symmetricPortBindings = new Ports();
 			List<ExposedPort> expPorts = new ArrayList<>();
 			exposedPorts.forEach(p -> {
 				ExposedPort port = ExposedPort.tcp(p);
 				expPorts.add(port);
-				ps.bind(port, Binding.bindPort(p));
+				symmetricPortBindings.bind(port, Binding.bindPort(p));
 			});
-			hostConfig.withPortBindings(ps);
+			hostConfig.withPortBindings((portBindings == null) ? symmetricPortBindings : portBindings);
 			cmd.withExposedPorts(expPorts);
 		}
 
@@ -213,7 +213,17 @@ public class DockerManager {
 		}
 	}
 
-	static public String getDokerGatewayIp() {
+	public String getContainerIp(String containerId) {
+		try {
+			return CommandExecutor.execCommand("/bin/sh", "-c",
+					"docker inspect -f \"{{ .NetworkSettings.IPAddress }}\" " + containerId);
+		} catch (IOException | InterruptedException e) {
+			log.error(e.getMessage());
+			return null;
+		}
+	}
+
+	static public String getDockerGatewayIp() {
 		try {
 			return CommandExecutor.execCommand("/bin/sh", "-c",
 					"docker network inspect bridge --format='{{(index .IPAM.Config 0).Gateway}}'");
