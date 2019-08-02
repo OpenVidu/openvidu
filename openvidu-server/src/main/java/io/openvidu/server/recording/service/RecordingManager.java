@@ -168,7 +168,26 @@ public class RecordingManager {
 		if (dockerManager == null) {
 			this.dockerManager = new DockerManager();
 		}
-		dockerManager.checkDockerEnabled(openviduConfig.getSpringProfile());
+		try {
+			dockerManager.checkDockerEnabled();
+		} catch (OpenViduException e) {
+			String message = e.getMessage();
+			if ("docker".equals(openviduConfig.getSpringProfile())) {
+				final String NEW_LINE = System.getProperty("line.separator");
+				message += ": make sure you include the following flags in your \"docker run\" command:" + NEW_LINE
+						+ "    -e openvidu.recording.path=/YOUR/PATH/TO/VIDEO/FILES" + NEW_LINE
+						+ "    -e MY_UID=$(id -u $USER)" + NEW_LINE + "    -v /var/run/docker.sock:/var/run/docker.sock"
+						+ NEW_LINE + "    -v /YOUR/PATH/TO/VIDEO/FILES:/YOUR/PATH/TO/VIDEO/FILES" + NEW_LINE;
+			} else {
+				message += ": you need Docker CE installed in this machine to enable OpenVidu recording service. "
+						+ "If Docker CE is already installed, make sure to add OpenVidu Server user to "
+						+ "\"docker\" group: " + System.lineSeparator() + "   1) $ sudo usermod -aG docker $USER"
+						+ System.lineSeparator()
+						+ "   2) Log out and log back to the host to reevaluate group membership";
+			}
+			log.error(message);
+			throw e;
+		}
 		this.checkRecordingPaths(openviduRecordingPath, openviduRecordingCustomLayout);
 	}
 
