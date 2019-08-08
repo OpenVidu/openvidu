@@ -417,9 +417,23 @@ public class RecordingManager {
 					log.error("Exception while closing FileReader: {}", e.getMessage());
 				}
 			}
-			return new Recording(json);
+			Recording recording = new Recording(json);
+			String recordingUrl = openviduConfig.getFinalUrl() + "recordings/" + recording.getId() + "/"
+					+ recording.getName() + "." + this.getExtensionFromRecording(recording);
+			recording.setUrl(recordingUrl);
+			return recording;
 		}
 		return null;
+	}
+
+	public String getExtensionFromRecording(Recording recording) {
+		if (io.openvidu.java.client.Recording.OutputMode.INDIVIDUAL.equals(recording.getOutputMode())) {
+			return "zip";
+		} else if (recording.hasVideo()) {
+			return "mp4";
+		} else {
+			return "webm";
+		}
 	}
 
 	public void initAutomaticRecordingStopThread(final Session session) {

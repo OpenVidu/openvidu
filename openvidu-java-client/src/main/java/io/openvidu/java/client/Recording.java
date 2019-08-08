@@ -190,10 +190,11 @@ public class Recording {
 
 	/**
 	 * URL of the recording. You can access the file from there. It is
-	 * <code>null</code> until recording is stopped or if
+	 * <code>null</code> until recording is stopped. If
 	 * <a href="https://openvidu.io/docs/reference-docs/openvidu-server-params/"
 	 * target="_blank">OpenVidu Server configuration</a> property
-	 * <code>openvidu.recording.public-access</code> is false
+	 * <code>openvidu.recording.public-access</code> is false, this path will be
+	 * secured with OpenVidu credentials
 	 */
 	public String getUrl() {
 		return url;
