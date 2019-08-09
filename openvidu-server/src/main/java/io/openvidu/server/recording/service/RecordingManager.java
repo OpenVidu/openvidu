@@ -420,16 +420,19 @@ public class RecordingManager {
 			Recording recording = new Recording(json);
 			if (io.openvidu.java.client.Recording.Status.ready.equals(recording.getStatus())
 					|| io.openvidu.java.client.Recording.Status.failed.equals(recording.getStatus())) {
-				String recordingUrl = openviduConfig.getFinalUrl() + "recordings/" + recording.getId() + "/"
-						+ recording.getName() + "." + this.getExtensionFromRecording(recording);
-				recording.setUrl(recordingUrl);
+				recording.setUrl(getRecordingUrl(recording));
 			}
 			return recording;
 		}
 		return null;
 	}
 
-	public String getExtensionFromRecording(Recording recording) {
+	public String getRecordingUrl(Recording recording) {
+		return openviduConfig.getFinalUrl() + "recordings/" + recording.getId() + "/"
+						+ recording.getName() + "." + this.getExtensionFromRecording(recording);
+	}
+
+	private String getExtensionFromRecording(Recording recording) {
 		if (io.openvidu.java.client.Recording.OutputMode.INDIVIDUAL.equals(recording.getOutputMode())) {
 			return "zip";
 		} else if (recording.hasVideo()) {

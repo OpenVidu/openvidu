@@ -104,6 +104,9 @@ public abstract class RecordingService {
 		io.openvidu.java.client.Recording.Status status = io.openvidu.java.client.Recording.Status.failed
 				.equals(recording.getStatus()) ? io.openvidu.java.client.Recording.Status.failed
 						: io.openvidu.java.client.Recording.Status.ready;
+		
+		// Status is now failed or ready. Url property must be defined
+		recording.setUrl(recordingManager.getRecordingUrl(recording));
 
 		final String entityFile = this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/"
 				+ RecordingManager.RECORDING_ENTITY_FILE + recording.getId();
