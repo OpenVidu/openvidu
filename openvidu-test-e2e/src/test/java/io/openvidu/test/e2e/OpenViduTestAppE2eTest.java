@@ -2184,7 +2184,7 @@ public class OpenViduTestAppE2eTest {
 		Assert.assertEquals("Wrong recording session id", session.getSessionId(), recording.getSessionId());
 		Assert.assertEquals("Wrong recording duration", 0, recording.getDuration(), 0.0001);
 		Assert.assertEquals("Wrong recording size", 0, recording.getSize());
-		Assert.assertNull("Wrong recording url", recording.getUrl());
+		Assert.assertNotNull("Wrong recording url", recording.getUrl());
 		Assert.assertEquals("Wrong recording output mode", Recording.OutputMode.INDIVIDUAL, recording.getOutputMode());
 		Assert.assertNull("Wrong recording layout", recording.getRecordingLayout());
 		Assert.assertNull("Wrong recording custom layout", recording.getCustomLayout());
@@ -2523,7 +2523,7 @@ public class OpenViduTestAppE2eTest {
 				"{'id':'STR','sessionId':'STR','name':'STR','outputMode':'STR','recordingLayout':'STR','hasAudio':false,'hasVideo':false,'resolution':'STR','createdAt':0,'size':0,'duration':0,'url':null,'status':'STR'}");
 		/** GET /api/recordings (after recording created) **/
 		restClient.rest(HttpMethod.GET, "/api/recordings/CUSTOM_SESSION_ID", null, HttpStatus.SC_OK, true,
-				"{'id':'STR','sessionId':'STR','name':'STR','outputMode':'STR','recordingLayout':'STR','hasAudio':false,'hasVideo':false,'resolution':'STR','createdAt':0,'size':0,'duration':0,'url':null,'status':'STR'}");
+				"{'id':'STR','sessionId':'STR','name':'STR','outputMode':'STR','recordingLayout':'STR','hasAudio':false,'hasVideo':false,'resolution':'STR','createdAt':0,'size':0,'duration':0,'url':'STR','status':'STR'}");
 		returnValues = new HashMap<>();
 		returnValues.put("count", new Integer(1));
 		returnValues.put("items", new org.json.JSONArray());
