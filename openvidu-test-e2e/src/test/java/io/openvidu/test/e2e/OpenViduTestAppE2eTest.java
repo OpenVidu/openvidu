@@ -2208,7 +2208,7 @@ public class OpenViduTestAppE2eTest {
 				recording.getDuration() > 0);
 		Assert.assertTrue("Wrong recording size. Excepected > 0 and was " + recording.getSize(),
 				recording.getSize() > 0);
-		Assert.assertNotNull(recording.getUrl());
+		Assert.assertNotNull("Wrong recording url", recording.getUrl());
 		Assert.assertEquals("Wrong recording status. Expected ready and was " + recording.getStatus().name(),
 				Recording.Status.ready, recording.getStatus());
 		Assert.assertFalse("Session shouldn't be being recorded", session.isBeingRecorded());
