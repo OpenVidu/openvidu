@@ -43,7 +43,8 @@
     "name": "frontend",
     "private": true,
     "scripts": {
-        "build": "ng build",
+        "build": "ng build --output-path ../main/resources/static",
+        "build-prod": "ng build --prod --output-path ../main/resources/static",
         "e2e": "ng e2e",
         "lint": "ng lint",
         "ng": "ng",
