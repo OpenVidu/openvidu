@@ -2184,7 +2184,7 @@ public class OpenViduTestAppE2eTest {
 		Assert.assertEquals("Wrong recording session id", session.getSessionId(), recording.getSessionId());
 		Assert.assertEquals("Wrong recording duration", 0, recording.getDuration(), 0.0001);
 		Assert.assertEquals("Wrong recording size", 0, recording.getSize());
-		Assert.assertNotNull("Wrong recording url", recording.getUrl());
+		Assert.assertNull("Wrong recording url", recording.getUrl());
 		Assert.assertEquals("Wrong recording output mode", Recording.OutputMode.INDIVIDUAL, recording.getOutputMode());
 		Assert.assertNull("Wrong recording layout", recording.getRecordingLayout());
 		Assert.assertNull("Wrong recording custom layout", recording.getCustomLayout());
@@ -2208,7 +2208,7 @@ public class OpenViduTestAppE2eTest {
 				recording.getDuration() > 0);
 		Assert.assertTrue("Wrong recording size. Excepected > 0 and was " + recording.getSize(),
 				recording.getSize() > 0);
-		Assert.assertNull("Wrong recording url. Expected not null and was null", recording.getUrl());
+		Assert.assertNotNull(recording.getUrl());
 		Assert.assertEquals("Wrong recording status. Expected ready and was " + recording.getStatus().name(),
 				Recording.Status.ready, recording.getStatus());
 		Assert.assertFalse("Session shouldn't be being recorded", session.isBeingRecorded());
@@ -2260,7 +2260,7 @@ public class OpenViduTestAppE2eTest {
 
 		Assert.assertTrue("Wrong recording duration", recording2.getDuration() > 0);
 		Assert.assertTrue("Wrong recording size", recording2.getSize() > 0);
-		Assert.assertNull("Wrong recording url", recording2.getUrl());
+		Assert.assertNotNull("Wrong recording url", recording2.getUrl());
 		Assert.assertEquals("Wrong recording status", Recording.Status.ready, recording2.getStatus());
 		Assert.assertFalse("Session shouldn't be being recorded", session.isBeingRecorded());
 		Assert.assertFalse("Session.fetch() should return false", session.fetch());

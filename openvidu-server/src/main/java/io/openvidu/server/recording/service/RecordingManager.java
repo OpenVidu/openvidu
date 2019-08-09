@@ -418,9 +418,12 @@ public class RecordingManager {
 				}
 			}
 			Recording recording = new Recording(json);
-			String recordingUrl = openviduConfig.getFinalUrl() + "recordings/" + recording.getId() + "/"
-					+ recording.getName() + "." + this.getExtensionFromRecording(recording);
-			recording.setUrl(recordingUrl);
+			if (io.openvidu.java.client.Recording.Status.ready.equals(recording.getStatus())
+					|| io.openvidu.java.client.Recording.Status.failed.equals(recording.getStatus())) {
+				String recordingUrl = openviduConfig.getFinalUrl() + "recordings/" + recording.getId() + "/"
+						+ recording.getName() + "." + this.getExtensionFromRecording(recording);
+				recording.setUrl(recordingUrl);
+			}
 			return recording;
 		}
 		return null;

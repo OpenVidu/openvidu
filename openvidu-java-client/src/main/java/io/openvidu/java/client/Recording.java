@@ -190,7 +190,7 @@ public class Recording {
 
 	/**
 	 * URL of the recording. You can access the file from there. It is
-	 * <code>null</code> until recording is stopped. If
+	 * <code>null</code> until recording reaches "ready" or "failed" status. If
 	 * <a href="https://openvidu.io/docs/reference-docs/openvidu-server-params/"
 	 * target="_blank">OpenVidu Server configuration</a> property
 	 * <code>openvidu.recording.public-access</code> is false, this path will be
