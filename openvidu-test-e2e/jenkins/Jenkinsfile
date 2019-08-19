@@ -49,11 +49,14 @@ node('container') {
         stage('OpenVidu TestApp build') {
           sh 'cd openvidu/openvidu-testapp && npm install --unsafe-perm && npm link openvidu-browser && npm link openvidu-node-client && ./node_modules/@angular/cli/bin/ng build --prod'
         }
+        stage('OpenVidu Server build') {
+          sh 'cd openvidu/openvidu-server/src/dashboard && npm install --unsafe-perm && npm link openvidu-browser && ./node_modules/@angular/cli/bin/ng build --prod --output-path ../main/resources/static'
+          sh 'cd openvidu/openvidu-server && mvn --batch-mode clean compile package'
+        }
         stage ('Environment Launch') {
           sh 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/CN=www.mydom.com/O=My Company LTD./C=US" -keyout openvidu/openvidu-testapp/dist/key.pem -out openvidu/openvidu-testapp/dist/cert.pem'  
           sh 'cd openvidu/openvidu-testapp/dist && http-server -S -p 4200 &> /testapp.log &'
           sh '/usr/bin/kurento-media-server &> /kms.log &'
-          sh 'cd openvidu/openvidu-server && mvn --batch-mode clean compile package'
           sh(script: '''#!/bin/bash
             if [ "$DOCKER_RECORDING_VERSION" != "default" ]; then
               echo "Using custom openvidu-recording tag: $DOCKER_RECORDING_VERSION"
