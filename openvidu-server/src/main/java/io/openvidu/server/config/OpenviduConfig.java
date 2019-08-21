@@ -394,8 +394,13 @@ public class OpenviduConfig {
 		Gson gson = new Gson();
 		JsonArray kmsUrisArray = gson.fromJson(kmsUris, JsonArray.class);
 		this.kmsUrisList = JsonUtils.toStringList(kmsUrisArray);
-		for (String uri : kmsUrisList) {
-			this.checkWebsocketUri(uri);
+		if (kmsUrisList.size() == 1 && kmsUrisList.get(0).isEmpty()) {
+			log.warn("Array kms.uris is empty");
+			this.kmsUrisList = new ArrayList<>();
+		} else {
+			for (String uri : kmsUrisList) {
+				this.checkWebsocketUri(uri);
+			}
 		}
 	}
 

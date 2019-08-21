@@ -208,6 +208,17 @@ public class DockerManager {
 		}
 	}
 
+	public List<String> getRunningContainers(String fullImageName) {
+		List<String> containerIds = new ArrayList<>();
+		List<Container> existingContainers = this.dockerClient.listContainersCmd().exec();
+		for (Container container : existingContainers) {
+			if (container.getImage().startsWith(fullImageName)) {
+				containerIds.add(container.getId());
+			}
+		}
+		return containerIds;
+	}
+
 	static public String getDockerGatewayIp() {
 		try {
 			return CommandExecutor.execCommand("/bin/sh", "-c",

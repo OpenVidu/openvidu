@@ -183,12 +183,13 @@ public abstract class KmsManager {
 		};
 	}
 
-	public abstract List<Kms> initializeKurentoClients(List<String> kmsUris) throws Exception;
+	public abstract List<Kms> initializeKurentoClients(List<String> kmsUris, boolean disconnectUponFailure)
+			throws Exception;
 
 	@PostConstruct
 	private void postConstruct() {
 		try {
-			this.initializeKurentoClients(this.openviduConfig.getKmsUris());
+			this.initializeKurentoClients(this.openviduConfig.getKmsUris(), true);
 		} catch (Exception e) {
 			// Some KMS wasn't reachable
 			log.error("Shutting down OpenVidu Server");
