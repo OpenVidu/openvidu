@@ -152,10 +152,6 @@ public class DockerManager {
 		dockerClient.removeContainerCmd(containerId).withForce(force).exec();
 	}
 
-	public void stopDockerContainer(String containerId) {
-		dockerClient.stopContainerCmd(containerId).exec();
-	}
-
 	public void cleanStrandedContainers(String imageName) {
 		List<Container> existingContainers = this.dockerClient.listContainersCmd().withShowAll(true).exec();
 		for (Container container : existingContainers) {

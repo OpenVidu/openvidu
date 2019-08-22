@@ -261,8 +261,7 @@ public class ComposedRecordingService extends RecordingService {
 					} else {
 						log.warn("Removing container {} for closed session {}...", containerIdAux,
 								session.getSessionId());
-						dockerManager.stopDockerContainer(containerIdAux);
-						dockerManager.removeDockerContainer(containerIdAux, false);
+						dockerManager.removeDockerContainer(containerIdAux, true);
 						containers.remove(containerId);
 						containerClosed = true;
 						log.warn("Container {} for closed session {} succesfully stopped and removed", containerIdAux,
@@ -433,7 +432,6 @@ public class ComposedRecordingService extends RecordingService {
 	private void failRecordingCompletion(Recording recording, String containerId, OpenViduException e)
 			throws OpenViduException {
 		recording.setStatus(io.openvidu.java.client.Recording.Status.failed);
-		dockerManager.stopDockerContainer(containerId);
 		dockerManager.removeDockerContainer(containerId, true);
 		containers.remove(containerId);
 		throw e;
