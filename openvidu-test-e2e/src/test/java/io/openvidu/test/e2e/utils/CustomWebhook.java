@@ -74,9 +74,9 @@ public class CustomWebhook {
 	}
 
 	@RestController
-	public class GreetingController {
+	public class WebhookController {
 		@RequestMapping("/webhook")
-		public void greeting(@RequestBody String eventString) {
+		public void webhook(@RequestBody String eventString) {
 			JsonObject event = (JsonObject) jsonParser.parse(eventString);
 			final String eventName = event.get("event").getAsString();
 			log.info("Webhook event: {}", event.toString());

@@ -2763,11 +2763,19 @@ public class OpenViduTestAppE2eTest {
 
 			user.getDriver().findElement(By.className("join-btn")).click();
 
-			CustomWebhook.waitForEvent("sessionCreated", 2);
-			CustomWebhook.waitForEvent("participantJoined", 2);
-			CustomWebhook.waitForEvent("webrtcConnectionCreated", 2);
-			JsonObject event = CustomWebhook.waitForEvent("recordingStatusChanged", 10);
+			JsonObject event = CustomWebhook.waitForEvent("sessionCreated", 2);
+			Assert.assertEquals("Wrong number of properties in event 'sessionCreated'", event.keySet().size(), 2);
 
+			event = CustomWebhook.waitForEvent("participantJoined", 2);
+			Assert.assertEquals("Wrong number of properties in event 'participantJoined'", event.keySet().size(), 7);
+
+			event = CustomWebhook.waitForEvent("webrtcConnectionCreated", 2);
+			Assert.assertEquals("Wrong number of properties in event 'webrtcConnectionCreated'", event.keySet().size(),
+					10);
+
+			event = CustomWebhook.waitForEvent("recordingStatusChanged", 10);
+			Assert.assertEquals("Wrong number of properties in event 'recordingStatusChanged'", event.keySet().size(),
+					11);
 			Assert.assertEquals("Wrong recording status in webhook event", "started",
 					event.get("status").getAsString());
 			Assert.assertEquals("Wrong recording outputMode in webhook event", "INDIVIDUAL",
@@ -2805,6 +2813,8 @@ public class OpenViduTestAppE2eTest {
 			Assert.assertEquals("Wrong number of recording entities", 1, recs.size());
 			Recording rec = recs.get(0);
 
+			Assert.assertEquals("Wrong number of properties in event 'recordingStatusChanged'", event.keySet().size(),
+					12);
 			Assert.assertEquals("Wrong recording status in webhook event", "stopped",
 					event.get("status").getAsString());
 			Assert.assertEquals("Wrong recording outputMode in webhook event", 0, event.get("size").getAsLong());
@@ -2821,6 +2831,8 @@ public class OpenViduTestAppE2eTest {
 			Assert.assertEquals("Wrong number of recording entities", 1, recs.size());
 			rec = recs.get(0);
 
+			Assert.assertEquals("Wrong number of properties in event 'recordingStatusChanged'", event.keySet().size(),
+					12);
 			Assert.assertEquals("Wrong recording status in webhook event", "ready", event.get("status").getAsString());
 			Assert.assertTrue("Wrong recording outputMode in webhook event", event.get("size").getAsLong() > 0);
 			Assert.assertTrue("Wrong recording outputMode in webhook event", event.get("duration").getAsLong() > 0);
@@ -2829,7 +2841,10 @@ public class OpenViduTestAppE2eTest {
 			Assert.assertEquals("Wrong recording reason in webhook event", rec.getCreatedAt(),
 					event.get("startTime").getAsLong());
 
-			CustomWebhook.waitForEvent("sessionDestroyed", 2);
+			event = CustomWebhook.waitForEvent("sessionDestroyed", 2);
+			Assert.assertEquals("Wrong number of properties in event 'sessionDestroyed'", event.keySet().size(), 5);
+			Assert.assertEquals("Wrong session destroyed reason in webhook event", "sessionClosedByServer",
+					event.get("reason").getAsString());
 
 		} finally {
 			CustomWebhook.shutDown();
