@@ -26,6 +26,7 @@ import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 
 import org.kurento.client.KurentoConnectionListener;
 import org.slf4j.Logger;
@@ -195,6 +196,14 @@ public abstract class KmsManager {
 			log.error("Shutting down OpenVidu Server");
 			System.exit(1);
 		}
+	}
+
+	@PreDestroy
+	public void close() {
+		log.info("Closing all KurentoClients");
+		this.kmss.values().forEach(kms -> {
+			kms.getKurentoClient().destroy();
+		});
 	}
 
 }
