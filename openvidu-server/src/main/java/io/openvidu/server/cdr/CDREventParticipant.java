@@ -45,6 +45,8 @@ public class CDREventParticipant extends CDREventEnd {
 		json.addProperty("location",
 				this.participant.getLocation() != null ? this.participant.getLocation().toString() : "unknown");
 		json.addProperty("platform", this.participant.getPlatform());
+		json.addProperty("clientData", this.participant.getClientMetadata());
+		json.addProperty("serverData", this.participant.getServerMetadata());
 		return json;
 	}
 
