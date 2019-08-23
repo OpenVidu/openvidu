@@ -109,7 +109,11 @@ public class DockerManager {
 	public String runContainer(String container, String containerName, List<Volume> volumes, List<Bind> binds,
 			List<Integer> exposedPorts, Ports portBindings, String networkMode, List<String> envs) throws Exception {
 
-		CreateContainerCmd cmd = dockerClient.createContainerCmd(container).withName(containerName).withEnv(envs);
+		CreateContainerCmd cmd = dockerClient.createContainerCmd(container).withEnv(envs);
+		if (containerName != null) {
+			cmd.withName(containerName);
+		}
+
 		HostConfig hostConfig = new HostConfig().withNetworkMode(networkMode);
 		if (volumes != null) {
 			cmd.withVolumes(volumes);
