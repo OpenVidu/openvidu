@@ -47,7 +47,7 @@ public class KmsEvent {
 		json.remove("tags");
 		json.remove("timestampMillis");
 		json.addProperty("timestamp", timestamp);
-		json.addProperty("session", participant.getSessionId());
+		json.addProperty("sessionId", participant.getSessionId());
 		json.addProperty("user", participant.getFinalUserId());
 		json.addProperty("connection", participant.getParticipantPublicId());
 		json.addProperty("endpoint", this.endpoint);

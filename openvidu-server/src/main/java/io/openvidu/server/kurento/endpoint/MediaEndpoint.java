@@ -499,7 +499,7 @@ public abstract class MediaEndpoint {
 		this.kmsEvents.forEach(ev -> {
 			// Remove unwanted properties
 			JsonObject j = ev.toJson();
-			j.remove("session");
+			j.remove("sessionId");
 			j.remove("user");
 			j.remove("connection");
 			j.remove("endpoint");
