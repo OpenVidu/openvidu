@@ -355,6 +355,10 @@ export class Stream implements EventDispatcher {
         });
     }
 
+    getRTCPeerConnection(): RTCPeerConnection {
+        return this.webRtcPeer.pc;
+    }
+
     /* Hidden methods */
 
     /**
@@ -383,13 +387,6 @@ export class Stream implements EventDispatcher {
      */
     getWebRtcPeer(): WebRtcPeer {
         return this.webRtcPeer;
-    }
-
-    /**
-     * @hidden
-     */
-    getRTCPeerConnection(): RTCPeerConnection {
-        return this.webRtcPeer.pc;
     }
 
     /**
