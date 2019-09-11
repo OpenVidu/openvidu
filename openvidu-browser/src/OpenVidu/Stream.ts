@@ -355,6 +355,11 @@ export class Stream implements EventDispatcher {
         });
     }
 
+    /**
+     * Returns the internal RTCPeerConnection object associated to this stream (https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection)
+     * 
+     * @returns Native RTCPeerConnection Web API object
+     */
     getRTCPeerConnection(): RTCPeerConnection {
         return this.webRtcPeer.pc;
     }
