@@ -49,12 +49,12 @@ public class SubscriberEndpoint extends MediaEndpoint {
 
 	public synchronized String subscribe(String sdpOffer, PublisherEndpoint publisher) {
 		registerOnIceCandidateEventListener(publisher.getOwner().getParticipantPublicId());
+		this.createdAt = System.currentTimeMillis();
 		String sdpAnswer = processOffer(sdpOffer);
 		gatherCandidates();
 		publisher.connect(this.getEndpoint());
 		setConnectedToPublisher(true);
 		setPublisher(publisher);
-		this.createdAt = System.currentTimeMillis();
 		return sdpAnswer;
 	}
 

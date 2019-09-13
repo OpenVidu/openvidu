@@ -184,6 +184,7 @@ public class PublisherEndpoint extends MediaEndpoint {
 		} else {
 			innerConnect();
 		}
+		this.createdAt = System.currentTimeMillis();
 		String sdpResponse = null;
 		switch (sdpType) {
 		case ANSWER:
@@ -196,7 +197,6 @@ public class PublisherEndpoint extends MediaEndpoint {
 			throw new OpenViduException(Code.MEDIA_SDP_ERROR_CODE, "Sdp type not supported: " + sdpType);
 		}
 		gatherCandidates();
-		this.createdAt = System.currentTimeMillis();
 		return sdpResponse;
 	}
 
