@@ -14,7 +14,7 @@
 	<name>OpenVidu Server</name>
 	<version>2.11.0</version>
 	<description>OpenVidu Server</description>
-	<url>https://github.com/OpenVidu/openvidu</url>
+	<url>https://openvidu.io</url>
 
 	<licenses>
 		<license>
@@ -266,11 +266,6 @@
 			<groupId>com.github.docker-java</groupId>
 			<artifactId>docker-java</artifactId>
 			<version>${version.dockerjava}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.codehaus.janino</groupId>
-			<artifactId>janino</artifactId>
-			<version>${version.janino}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
