@@ -2579,6 +2579,8 @@ public class OpenViduTestAppE2eTest {
 		/** POST /api/signal (ACTIVE SESSION) **/
 		body = "{'session':'CUSTOM_SESSION_ID','to':['wrongConnectionId']}";
 		restClient.rest(HttpMethod.POST, "/api/signal", body, HttpStatus.SC_NOT_ACCEPTABLE); // No valid connectionId
+		body = "{'session':'CUSTOM_SESSION_ID','to':['" + connectionId + "','wrongConnectionId']}";
+		restClient.rest(HttpMethod.POST, "/api/signal", body, HttpStatus.SC_NOT_ACCEPTABLE); // No valid connectionId
 		body = "{'session':'CUSTOM_SESSION_ID'}";
 		restClient.rest(HttpMethod.POST, "/api/signal", body, HttpStatus.SC_OK);
 		user.getEventManager().waitUntilEventReaches("signal", 2);

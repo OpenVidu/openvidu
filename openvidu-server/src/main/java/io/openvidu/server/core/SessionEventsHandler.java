@@ -356,16 +356,16 @@ public class SessionEventsHandler {
 		} else {
 			Set<String> participantPublicIds = participants.stream().map(Participant::getParticipantPublicId)
 					.collect(Collectors.toSet());
-			for (String to : toSet) {
-				if (participantPublicIds.contains(to)) {
+			if (participantPublicIds.containsAll(toSet)) {
+				for (String to : toSet) {
 					Optional<Participant> p = participants.stream().filter(x -> to.equals(x.getParticipantPublicId()))
 							.findFirst();
 					rpcNotificationService.sendNotification(p.get().getParticipantPrivateId(),
 							ProtocolElements.PARTICIPANTSENDMESSAGE_METHOD, params);
-				} else {
-					throw new OpenViduException(Code.SIGNAL_TO_INVALID_ERROR_CODE,
-							"Signal \"to\" field invalid format: Connection [" + to + "] does not exist");
 				}
+			} else {
+				throw new OpenViduException(Code.SIGNAL_TO_INVALID_ERROR_CODE,
+						"Signal \"to\" field invalid format: some connectionId does not exist in this session");
 			}
 		}
 
