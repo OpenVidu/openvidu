@@ -18,7 +18,6 @@
 import { Filter } from '../../OpenVidu/Filter';
 import { StreamManager } from '../../OpenVidu/StreamManager';
 import { Session } from '../../OpenVidu/Session';
-import { Stream } from '../../OpenVidu/Stream';
 
 export abstract class Event {
 

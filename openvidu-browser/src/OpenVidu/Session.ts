@@ -780,18 +780,29 @@ export class Session implements EventDispatcher {
 
         console.info('New signal: ' + JSON.stringify(msg));
 
-        this.getConnection(msg.from, "Connection '" + msg.from + "' unknow when 'onNewMessage'. Existing remote connections: "
-            + JSON.stringify(Object.keys(this.remoteConnections)) + '. Existing local connection: ' + this.connection.connectionId)
+        const strippedType: string = !!msg.type ? msg.type.replace(/^(signal:)/, '') : undefined;
 
-            .then(connection => {
-                this.ee.emitEvent('signal', [new SignalEvent(this, msg.type, msg.data, connection)]);
-                if (msg.type !== 'signal') {
-                    this.ee.emitEvent(msg.type, [new SignalEvent(this, msg.type, msg.data, connection)]);
-                }
-            })
-            .catch(openViduError => {
-                console.error(openViduError);
-            });
+        if (!!msg.from) {
+            // Signal sent by other client
+            this.getConnection(msg.from, "Connection '" + msg.from + "' unknow when 'onNewMessage'. Existing remote connections: "
+                + JSON.stringify(Object.keys(this.remoteConnections)) + '. Existing local connection: ' + this.connection.connectionId)
+
+                .then(connection => {
+                    this.ee.emitEvent('signal', [new SignalEvent(this, strippedType, msg.data, connection)]);
+                    if (msg.type !== 'signal') {
+                        this.ee.emitEvent(msg.type, [new SignalEvent(this, strippedType, msg.data, connection)]);
+                    }
+                })
+                .catch(openViduError => {
+                    console.error(openViduError);
+                });
+        } else {
+            // Signal sent by server
+            this.ee.emitEvent('signal', [new SignalEvent(this, strippedType, msg.data, undefined)]);
+            if (msg.type !== 'signal') {
+                this.ee.emitEvent(msg.type, [new SignalEvent(this, strippedType, msg.data, undefined)]);
+            }
+        }
     }
 
     /**
