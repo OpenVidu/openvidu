@@ -999,7 +999,7 @@ public class OpenViduTestAppE2eTest {
 		JSONObject obj = (JSONObject) new JSONParser().parse(widthAndHeight);
 
 		expectedWidthHeight[0] = (long) obj.get("width");
-		expectedWidthHeight[1] = (long) obj.get("height") + 48; // + 48 because of new "Sharing tab" infobar
+		expectedWidthHeight[1] = (long) obj.get("height");
 
 		System.out.println("New viewport dimension: " + obj.toJSONString());
 
@@ -2127,8 +2127,8 @@ public class OpenViduTestAppE2eTest {
 		String widthAndHeight = user.getEventManager().getDimensionOfViewport();
 		JSONObject obj = (JSONObject) new JSONParser().parse(widthAndHeight);
 		Assert.assertEquals(
-				"{\"width\":" + (long) obj.get("width") + ",\"height\":" + (((long) obj.get("height")) + 48) + "}",
-				pub.getVideoDimensions()); // + 48 because of new "Sharing tab" infobar
+				"{\"width\":" + (long) obj.get("width") + ",\"height\":" + (((long) obj.get("height"))) + "}",
+				pub.getVideoDimensions());
 		Assert.assertEquals(new Integer(30), pub.getFrameRate());
 		Assert.assertEquals("SCREEN", pub.getTypeOfVideo());
 		Assert.assertTrue(pub.hasVideo());
@@ -2767,7 +2767,7 @@ public class OpenViduTestAppE2eTest {
 	void webhookTest() throws Exception {
 		isRecordingTest = true;
 
-		setupBrowser("chrome");
+		setupChromeWithFakeVideo(Paths.get("/opt/openvidu/barcode.y4m"));
 
 		log.info("Webhook test");
 
@@ -2793,6 +2793,12 @@ public class OpenViduTestAppE2eTest {
 			Thread.sleep(500);
 			user.getDriver().findElement(By.id("option-INDIVIDUAL")).click();
 			Thread.sleep(500);
+
+			WebElement allowedFilterInput = user.getDriver().findElement(By.id("allowed-filter-input"));
+			allowedFilterInput.clear();
+			allowedFilterInput.sendKeys("ZBarFilter");
+			user.getDriver().findElement(By.id("add-allowed-filter-btn")).click();
+
 			user.getDriver().findElement(By.id("save-btn")).click();
 			Thread.sleep(1000);
 
@@ -2821,6 +2827,30 @@ public class OpenViduTestAppE2eTest {
 			Assert.assertEquals("Wrong recording startTime/timestamp in webhook event",
 					event.get("startTime").getAsLong(), event.get("timestamp").getAsLong());
 			Assert.assertNull("Wrong recording reason in webhook event (should be null)", event.get("reason"));
+
+			// Filter event webhook
+			user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .filter-btn")).click();
+			Thread.sleep(500);
+			WebElement input = user.getDriver().findElement(By.id("filter-type-field"));
+			input.clear();
+			input.sendKeys("ZBarFilter");
+			input = user.getDriver().findElement(By.id("filter-options-field"));
+			input.clear();
+			input.sendKeys("{}");
+			user.getDriver().findElement(By.id("apply-filter-btn")).click();
+			user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 1);
+
+			// Apply listener
+			input = user.getDriver().findElement(By.id("filter-event-type-field"));
+			input.clear();
+			input.sendKeys("CodeFound");
+			user.getDriver().findElement(By.id("sub-filter-event-btn")).click();
+			user.getWaiter().until(ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value",
+					"Filter event listener added"));
+			CustomWebhook.waitForEvent("filterEventDispatched", 2);
+			user.getDriver().findElement(By.id("unsub-filter-event-btn")).click();
+			user.getDriver().findElement(By.id("close-dialog-btn")).click();
+			Thread.sleep(500);
 
 			user.getDriver().findElement(By.id("add-user-btn")).click();
 			user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .join-btn")).click();
