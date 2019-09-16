@@ -17,6 +17,7 @@
 
 package io.openvidu.server.rest;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -37,6 +38,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -460,7 +463,7 @@ public class SessionRestController {
 					// Session is not in ROUTED MediMode or it is already being recorded
 					return new ResponseEntity<>(HttpStatus.CONFLICT);
 				} else {
-					// Session is not active
+					// Session is not active (no connected participants)
 					return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
 				}
 			}
@@ -473,7 +476,7 @@ public class SessionRestController {
 			return new ResponseEntity<>(HttpStatus.CONFLICT);
 		}
 		if (session.getParticipants().isEmpty()) {
-			// Session has no participants
+			// Session is not active (no connected participants)
 			return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
 		}
 
@@ -580,6 +583,76 @@ public class SessionRestController {
 		log.info("REST API: DELETE /api/recordings/{}", recordingId);
 
 		return new ResponseEntity<>(this.recordingManager.deleteRecordingFromHost(recordingId, false));
+	}
+
+	@RequestMapping(value = "/signal", method = RequestMethod.POST)
+	public ResponseEntity<?> signal(@RequestBody Map<?, ?> params) {
+
+		if (params == null) {
+			return this.generateErrorResponse("Error in body parameters. Cannot be empty", "/api/signal",
+					HttpStatus.BAD_REQUEST);
+		}
+
+		log.info("REST API: POST /api/signal {}", params.toString());
+
+		String sessionId;
+		String type;
+		ArrayList<String> to;
+		String data;
+		try {
+			sessionId = (String) params.get("session");
+			to = (ArrayList<String>) params.get("to");
+			type = (String) params.get("type");
+			data = (String) params.get("data");
+		} catch (ClassCastException e) {
+			return this.generateErrorResponse("Type error in some parameter", "/api/signal", HttpStatus.BAD_REQUEST);
+		}
+
+		JsonObject completeMessage = new JsonObject();
+
+		if (sessionId == null) {
+			// "session" parameter not found
+			return this.generateErrorResponse("\"session\" parameter is mandatory", "/api/signal",
+					HttpStatus.BAD_REQUEST);
+		}
+		Session session = sessionManager.getSession(sessionId);
+		if (session == null) {
+			session = sessionManager.getSessionNotActive(sessionId);
+			if (session != null) {
+				// Session is not active (no connected participants)
+				return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
+			}
+			// Session does not exist
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
+
+		if (type != null) {
+			completeMessage.addProperty("type", type);
+		}
+
+		if (data != null) {
+			completeMessage.addProperty("data", data);
+		}
+
+		if (to != null) {
+			try {
+				Gson gson = new GsonBuilder().create();
+				JsonArray toArray = gson.toJsonTree(to).getAsJsonArray();
+				completeMessage.add("to", toArray);
+			} catch (IllegalStateException exception) {
+				return this.generateErrorResponse("\"to\" parameter is not a valid JSON array", "/api/signal",
+						HttpStatus.BAD_REQUEST);
+			}
+		}
+
+		try {
+			sessionManager.sendMessage(completeMessage.toString(), sessionId);
+		} catch (OpenViduException e) {
+			return this.generateErrorResponse("\"to\" array has no valid connection identifiers", "/api/signal",
+					HttpStatus.NOT_ACCEPTABLE);
+		}
+
+		return new ResponseEntity<>(HttpStatus.OK);
 	}
 
 	private ResponseEntity<String> generateErrorResponse(String errorMessage, String path, HttpStatus status) {

@@ -436,19 +436,6 @@ public class KurentoSessionManager extends SessionManager {
 	}
 
 	@Override
-	public void sendMessage(Participant participant, String message, Integer transactionId) {
-		try {
-			JsonObject messageJson = new JsonParser().parse(message).getAsJsonObject();
-			KurentoParticipant kParticipant = (KurentoParticipant) participant;
-			sessionEventsHandler.onSendMessage(participant, messageJson,
-					getParticipants(kParticipant.getSession().getSessionId()), transactionId, null);
-		} catch (JsonSyntaxException | IllegalStateException e) {
-			throw new OpenViduException(Code.SIGNAL_FORMAT_INVALID_ERROR_CODE,
-					"Provided signal object '" + message + "' has not a valid JSON format");
-		}
-	}
-
-	@Override
 	public void streamPropertyChanged(Participant participant, Integer transactionId, String streamId, String property,
 			JsonElement newValue, String reason) {
 		KurentoParticipant kParticipant = (KurentoParticipant) participant;

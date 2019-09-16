@@ -36,6 +36,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
@@ -94,7 +96,26 @@ public abstract class SessionManager {
 
 	public abstract void unsubscribe(Participant participant, String senderName, Integer transactionId);
 
-	public abstract void sendMessage(Participant participant, String message, Integer transactionId);
+	public void sendMessage(String message, String sessionId) {
+		try {
+			JsonObject messageJson = new JsonParser().parse(message).getAsJsonObject();
+			sessionEventsHandler.onSendMessage(null, messageJson, getParticipants(sessionId), null, null);
+		} catch (JsonSyntaxException | IllegalStateException e) {
+			throw new OpenViduException(Code.SIGNAL_FORMAT_INVALID_ERROR_CODE,
+					"Provided signal object '" + message + "' has not a valid JSON format");
+		}
+	}
+
+	public void sendMessage(Participant participant, String message, Integer transactionId) {
+		try {
+			JsonObject messageJson = new JsonParser().parse(message).getAsJsonObject();
+			sessionEventsHandler.onSendMessage(participant, messageJson, getParticipants(participant.getSessionId()),
+					transactionId, null);
+		} catch (JsonSyntaxException | IllegalStateException e) {
+			throw new OpenViduException(Code.SIGNAL_FORMAT_INVALID_ERROR_CODE,
+					"Provided signal object '" + message + "' has not a valid JSON format");
+		}
+	}
 
 	public abstract void streamPropertyChanged(Participant participant, Integer transactionId, String streamId,
 			String property, JsonElement newValue, String changeReason);

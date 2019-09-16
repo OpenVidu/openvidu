@@ -312,15 +312,27 @@ public class SessionEventsHandler {
 
 	public void onSendMessage(Participant participant, JsonObject message, Set<Participant> participants,
 			Integer transactionId, OpenViduException error) {
-		if (error != null) {
-			rpcNotificationService.sendErrorResponse(participant.getParticipantPrivateId(), transactionId, null, error);
-			return;
+
+		boolean isRpcCall = transactionId != null;
+		if (isRpcCall) {
+			if (error != null) {
+				rpcNotificationService.sendErrorResponse(participant.getParticipantPrivateId(), transactionId, null,
+						error);
+				return;
+			}
 		}
 
 		JsonObject params = new JsonObject();
-		params.addProperty(ProtocolElements.PARTICIPANTSENDMESSAGE_DATA_PARAM, message.get("data").getAsString());
-		params.addProperty(ProtocolElements.PARTICIPANTSENDMESSAGE_FROM_PARAM, participant.getParticipantPublicId());
-		params.addProperty(ProtocolElements.PARTICIPANTSENDMESSAGE_TYPE_PARAM, message.get("type").getAsString());
+		if (message.has("data")) {
+			params.addProperty(ProtocolElements.PARTICIPANTSENDMESSAGE_DATA_PARAM, message.get("data").getAsString());
+		}
+		if (message.has("type")) {
+			params.addProperty(ProtocolElements.PARTICIPANTSENDMESSAGE_TYPE_PARAM, message.get("type").getAsString());
+		}
+		if (participant != null) {
+			params.addProperty(ProtocolElements.PARTICIPANTSENDMESSAGE_FROM_PARAM,
+					participant.getParticipantPublicId());
+		}
 
 		Set<String> toSet = new HashSet<String>();
 
@@ -357,7 +369,9 @@ public class SessionEventsHandler {
 			}
 		}
 
-		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, new JsonObject());
+		if (isRpcCall) {
+			rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, new JsonObject());
+		}
 	}
 
 	public void onStreamPropertyChanged(Participant participant, Integer transactionId, Set<Participant> participants,
