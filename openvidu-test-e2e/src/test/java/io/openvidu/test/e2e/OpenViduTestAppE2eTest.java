@@ -2127,8 +2127,8 @@ public class OpenViduTestAppE2eTest {
 		String widthAndHeight = user.getEventManager().getDimensionOfViewport();
 		JSONObject obj = (JSONObject) new JSONParser().parse(widthAndHeight);
 		Assert.assertEquals(
-				"{\"width\":" + (long) obj.get("width") + ",\"height\":" + (((long) obj.get("height"))) + "}",
-				pub.getVideoDimensions());
+				"{\"width\":" + (long) obj.get("width") + ",\"height\":" + (((long) obj.get("height")) + 48) + "}",
+				pub.getVideoDimensions()); // + 48 because of share tab infobar
 		Assert.assertEquals(new Integer(30), pub.getFrameRate());
 		Assert.assertEquals("SCREEN", pub.getTypeOfVideo());
 		Assert.assertTrue(pub.hasVideo());
