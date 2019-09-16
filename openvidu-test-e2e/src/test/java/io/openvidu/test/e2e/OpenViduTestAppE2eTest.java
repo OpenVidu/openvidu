@@ -2419,6 +2419,20 @@ public class OpenViduTestAppE2eTest {
 				"{'id':'STR','session':'STR','role':'STR','data':'STR','token':'STR'}");
 		final String token2 = res.getString("id");
 
+		/** POST /api/signal (NOT ACTIVE SESSION) **/
+		body = "{}";
+		restClient.rest(HttpMethod.POST, "/api/signal", body, HttpStatus.SC_BAD_REQUEST);
+		body = "{'session': true}";
+		restClient.rest(HttpMethod.POST, "/api/signal", body, HttpStatus.SC_BAD_REQUEST);
+		body = "{'session':'CUSTOM_SESSION_ID','to':12}";
+		restClient.rest(HttpMethod.POST, "/api/signal", body, HttpStatus.SC_BAD_REQUEST);
+		body = "{'session':'CUSTOM_SESSION_ID','to':[],'data':false}";
+		restClient.rest(HttpMethod.POST, "/api/signal", body, HttpStatus.SC_BAD_REQUEST);
+		body = "{'session':'CUSTOM_SESSION_ID','to':[],'data': 'SERVERMESSAGE', 'type': true}";
+		restClient.rest(HttpMethod.POST, "/api/signal", body, HttpStatus.SC_BAD_REQUEST);
+		body = "{'session':'CUSTOM_SESSION_ID'}";
+		restClient.rest(HttpMethod.POST, "/api/signal", body, HttpStatus.SC_NOT_ACCEPTABLE); // No connections
+
 		/** POST /api/recordings/start (NOT ACTIVE SESSION) **/
 		// 400
 		body = "{}";
@@ -2558,12 +2572,27 @@ public class OpenViduTestAppE2eTest {
 		restClient.rest(HttpMethod.DELETE, "/api/sessions/CUSTOM_SESSION_ID/stream/" + streamId,
 				HttpStatus.SC_NO_CONTENT);
 
+		final String connectionId = ((org.json.JSONObject) res.getJSONObject("connections").getJSONArray("content")
+				.get(0)).getString("connectionId");
+
+		/** POST /api/signal (ACTIVE SESSION) **/
+		body = "{'session':'CUSTOM_SESSION_ID','to':['wrongConnectionId']}";
+		restClient.rest(HttpMethod.POST, "/api/signal", body, HttpStatus.SC_NOT_ACCEPTABLE); // No valid connectionId
+		body = "{'session':'CUSTOM_SESSION_ID'}";
+		restClient.rest(HttpMethod.POST, "/api/signal", body, HttpStatus.SC_OK);
+		user.getEventManager().waitUntilEventReaches("signal", 2);
+		body = "{'session':'CUSTOM_SESSION_ID','to':[],'type':'server1','data':'SERVER EVENT!'}";
+		restClient.rest(HttpMethod.POST, "/api/signal", body, HttpStatus.SC_OK);
+		user.getEventManager().waitUntilEventReaches("signal:server1", 2);
+		body = "{'session':'CUSTOM_SESSION_ID','to':['" + connectionId + "'],'type':'server2','data':'SERVER EVENT!'}";
+		restClient.rest(HttpMethod.POST, "/api/signal", body, HttpStatus.SC_OK);
+		user.getEventManager().waitUntilEventReaches("signal:server2", 1);
+		Assert.assertEquals("", 1, user.getDriver().findElements(By.xpath("//*[text()='server - signal:server2 - SERVER EVENT!']")).size());
+
 		/** DELETE /api/sessions/<SESSION_ID>/connection/<CONNECTION_ID> **/
 		restClient.rest(HttpMethod.DELETE, "/api/sessions/NOT_EXISTS/connection/NOT_EXISTS", HttpStatus.SC_BAD_REQUEST);
 		restClient.rest(HttpMethod.DELETE, "/api/sessions/CUSTOM_SESSION_ID/connection/NOT_EXISTS",
 				HttpStatus.SC_NOT_FOUND);
-		String connectionId = ((org.json.JSONObject) res.getJSONObject("connections").getJSONArray("content").get(0))
-				.getString("connectionId");
 		restClient.rest(HttpMethod.DELETE, "/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
 				HttpStatus.SC_NO_CONTENT);
 

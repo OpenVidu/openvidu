@@ -401,7 +401,9 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       this.session.off('signal');
       if (this.sessionEvents.signal) {
         this.session.on('signal', (event: SignalEvent) => {
-          this.updateEventList('signal', event.from.connectionId + '-' + event.data, event);
+          this.updateEventList('signal', !!event.from ? event.from.connectionId : 'server'
+            + ' - ' + event.type
+            + ' - ' + event.data, event);
         });
       }
     }
