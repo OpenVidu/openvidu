@@ -51,6 +51,7 @@ public class ChromeUser extends BrowserUser {
 		options.setUnhandledPromptBehaviour(UnexpectedAlertBehaviour.IGNORE);
 
 		options.addArguments("--disable-infobars");
+		options.setExperimentalOption("excludeSwitches", new String[]{"enable-automation"}); 
 
 		Map<String, Object> prefs = new HashMap<String, Object>();
 		prefs.put("profile.default_content_setting_values.media_stream_mic", 1);
