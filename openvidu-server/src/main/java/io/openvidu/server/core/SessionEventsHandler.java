@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
+import org.kurento.client.GenericMediaEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -540,14 +541,18 @@ public class SessionEventsHandler {
 		}
 	}
 
-	public void onFilterEventDispatched(String connectionId, String streamId, String filterType, String eventType,
-			Object data, Set<Participant> participants, Set<String> subscribedParticipants) {
+	public void onFilterEventDispatched(String sessionId, String connectionId, String streamId, String filterType,
+			GenericMediaEvent event, Set<Participant> participants, Set<String> subscribedParticipants) {
+
+		CDR.recordFilterEventDispatched(sessionId, connectionId, streamId, filterType, event);
+
 		JsonObject params = new JsonObject();
 		params.addProperty(ProtocolElements.FILTEREVENTLISTENER_CONNECTIONID_PARAM, connectionId);
 		params.addProperty(ProtocolElements.FILTEREVENTLISTENER_STREAMID_PARAM, streamId);
 		params.addProperty(ProtocolElements.FILTEREVENTLISTENER_FILTERTYPE_PARAM, filterType);
-		params.addProperty(ProtocolElements.FILTEREVENTLISTENER_EVENTTYPE_PARAM, eventType);
-		params.addProperty(ProtocolElements.FILTEREVENTLISTENER_DATA_PARAM, data.toString());
+		params.addProperty(ProtocolElements.FILTEREVENTLISTENER_EVENTTYPE_PARAM, event.getType());
+		params.addProperty(ProtocolElements.FILTEREVENTLISTENER_DATA_PARAM, event.getData().toString());
+
 		for (Participant p : participants) {
 			if (subscribedParticipants.contains(p.getParticipantPublicId())) {
 				rpcNotificationService.sendNotification(p.getParticipantPrivateId(),

@@ -34,8 +34,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.JsonSyntaxException;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
@@ -882,13 +880,14 @@ public class KurentoSessionManager extends SessionManager {
 			throws OpenViduException {
 		PublisherEndpoint pub = kParticipant.getPublisher();
 		if (!pub.isListenerAddedToFilterEvent(eventType)) {
+			final String sessionId = kParticipant.getSessionId();
 			final String connectionId = kParticipant.getParticipantPublicId();
 			final String streamId = kParticipant.getPublisherStreamId();
 			final String filterType = kParticipant.getPublisherMediaOptions().getFilter().getType();
 			try {
 				ListenerSubscription listener = pub.getFilter().addEventListener(eventType, event -> {
-					sessionEventsHandler.onFilterEventDispatched(connectionId, streamId, filterType, event.getType(),
-							event.getData(), kParticipant.getSession().getParticipants(),
+					sessionEventsHandler.onFilterEventDispatched(sessionId, connectionId, streamId, filterType, event,
+							kParticipant.getSession().getParticipants(),
 							kParticipant.getPublisher().getPartipantsListentingToFilterEvent(eventType));
 				});
 				pub.storeListener(eventType, listener);

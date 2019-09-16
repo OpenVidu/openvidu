@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
+import org.kurento.client.GenericMediaEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import io.openvidu.java.client.Recording.Status;
@@ -52,6 +53,7 @@ import io.openvidu.server.webhook.CDRLoggerWebhook;
  * - 'recordingStarted'				{sessionId, timestamp, id, name, hasAudio, hasVideo, resolution, recordingLayout, size}
  * - 'recordingStopped'				{sessionId, timestamp, id, name, hasAudio, hasVideo, resolution, recordingLayout, size}
  * - 'recordingStatusChanged'		{sessionId, timestamp, id, name, hasAudio, hasVideo, resolution, recordingLayout, size, status}
+ * - 'filterEventDispatched'		{sessionId, timestamp, participantId, streamId, filterType, eventType, data}
  * 
  * PROPERTIES VALUES:
  * 
@@ -217,6 +219,11 @@ public class CallDetailRecord {
 	public void recordRecordingStatusChanged(Recording recording, EndReason finalReason, long timestamp,
 			Status status) {
 		this.log(new CDREventRecordingStatus(recording, recording.getCreatedAt(), finalReason, timestamp, status));
+	}
+
+	public void recordFilterEventDispatched(String sessionId, String participantId, String streamId, String filterType,
+			GenericMediaEvent event) {
+		this.log(new CDREventFilterEvent(sessionId, participantId, streamId, filterType, event));
 	}
 
 	private void log(CDREvent event) {
