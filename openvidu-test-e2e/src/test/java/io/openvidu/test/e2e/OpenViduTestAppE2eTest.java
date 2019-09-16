@@ -986,6 +986,8 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().on("streamPropertyChanged", (event) -> {
 			String expectedDimensions = "{\"width\":" + expectedWidthHeight[0] + ",\"height\":" + expectedWidthHeight[1]
 					+ "}";
+			System.out.println("Publisher dimensions: " + event.get("newValue").getAsJsonObject().toString());
+			System.out.println("Real dimensions of viewport: " + expectedDimensions);
 			threadAssertions.add("videoDimensions".equals(event.get("changedProperty").getAsString()));
 			threadAssertions.add(expectedDimensions.equals(event.get("newValue").getAsJsonObject().toString()));
 			latch3.countDown();
