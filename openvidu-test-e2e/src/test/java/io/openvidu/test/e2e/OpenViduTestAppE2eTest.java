@@ -2115,6 +2115,16 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 4);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
 
+		try {
+			// FIX: Chrome now shows an infobar when screen sharing that triggers
+			// streamPropertyChanged event for videoDimensions of Publisher
+			// Wait until this is triggered to not affect future assertions
+			user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 1);
+		} catch (Exception e) {
+			log.warn(
+					"Screen sharing publisher didn't trigger streamPropertyChanged event for videoDimensions (screen sharing infobar)");
+		}
+
 		Assert.assertTrue("Session.fetch() should return true after publisher changed", session.fetch());
 		Assert.assertFalse("OpenVidu.fetch() should return false after Session.fetch()", OV.fetch());
 
@@ -2130,9 +2140,8 @@ public class OpenViduTestAppE2eTest {
 
 		String widthAndHeight = user.getEventManager().getDimensionOfViewport();
 		JSONObject obj = (JSONObject) new JSONParser().parse(widthAndHeight);
-		Assert.assertEquals(
-				"{\"width\":" + (long) obj.get("width") + ",\"height\":" + (((long) obj.get("height")) + 48) + "}",
-				pub.getVideoDimensions()); // + 48 because of share tab infobar
+		Assert.assertEquals("{\"width\":" + (long) obj.get("width") + ",\"height\":" + ((long) obj.get("height")) + "}",
+				pub.getVideoDimensions());
 		Assert.assertEquals(new Integer(30), pub.getFrameRate());
 		Assert.assertEquals("SCREEN", pub.getTypeOfVideo());
 		Assert.assertTrue(pub.hasVideo());
@@ -2161,7 +2170,7 @@ public class OpenViduTestAppE2eTest {
 			} catch (OpenViduHttpException e2) {
 				Assert.assertEquals("Wrong HTTP status on Session.fetch()", 404, e2.getStatus());
 			}
-			Assert.assertFalse("OpenVidu.fetch() should return true", OV.fetch());
+			Assert.assertFalse("OpenVidu.fetch() should return false", OV.fetch());
 		}
 		try {
 			recordingProperties = new RecordingProperties.Builder().hasAudio(false).hasVideo(false).build();
