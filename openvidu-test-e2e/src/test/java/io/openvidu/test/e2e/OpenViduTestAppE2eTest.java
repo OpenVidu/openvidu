@@ -1011,6 +1011,8 @@ public class OpenViduTestAppE2eTest {
 			return;
 		}
 
+		System.out.println(getBase64Screenshot(user));
+
 		user.getEventManager().off("streamPropertyChanged");
 		log.info("Thread assertions: {}", threadAssertions.toString());
 		for (Iterator<Boolean> iter = threadAssertions.iterator(); iter.hasNext();) {
@@ -1947,6 +1949,8 @@ public class OpenViduTestAppE2eTest {
 		user.getDriver().manage().window().setSize(new Dimension(1000, 800));
 
 		log.info("openvidu-java-client test");
+
+		System.out.println(getBase64Screenshot(user));
 
 		user.getDriver().findElement(By.id("one2one-btn")).click();
 
