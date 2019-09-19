@@ -263,6 +263,30 @@ export class Publisher extends StreamManager {
         return this;
     }
 
+    /**
+     * Replaces the current video or audio track with a different one. This allows you to replace an ongoing track with a different one
+     * without having to renegotiate the whole WebRTC connection (that is, initializing a new Publisher, unpublishing the previous one
+     * and publishing the new one).
+     * 
+     * You can get this new MediaStreamTrack by using the native Web API or simply with [[OpenVidu.getUserMedia]] method.
+     * 
+     * **WARNING: this method has been proven to work, but there may be some combinations of published/replaced tracks that may be incompatible between them and break the connection in OpenVidu Server**
+     * **A complete renegotiation may be the only solution in this case**
+     * 
+     * @param track The [MediaStreamTrack](https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamTrack) object to replace the current one. If it is an audio track, the current audio track will be the replaced one. If it
+     * is a video track, the current video track will be the replaced one.
+     * 
+     * @returns A Promise (to which you can optionally subscribe to) that is resolved if the track was successfully replaced and rejected with an Error object in other case
+     */
+    replaceTrack(track: MediaStreamTrack): Promise<any> {
+        return new Promise((resolve, reject) => {
+            this.stream.getRTCPeerConnection().getSenders()[0].replaceTrack(track).then(() => {
+                resolve();
+            }).catch(error => {
+                reject(error);
+            })
+        });
+    }
 
     /* Hidden methods */
 

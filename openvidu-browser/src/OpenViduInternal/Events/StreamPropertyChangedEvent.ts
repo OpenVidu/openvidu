@@ -42,6 +42,7 @@ export class StreamPropertyChangedEvent extends Event {
      * - For `videoActive`: `"publishVideo"`
      * - For `audioActive`: `"publishAudio"`
      * - For `videoDimensions`: `"deviceRotated"` or `"screenResized"`
+     * - For `filter`: `"applyFilter"`, `"execFilterMethod"` or `"removeFilter"`
      */
     reason: string;
 
