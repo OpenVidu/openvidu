@@ -167,7 +167,7 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		}
 	}
 
-	public void joinRoom(RpcConnection rpcConnection, Request<JsonObject> request) {
+	private void joinRoom(RpcConnection rpcConnection, Request<JsonObject> request) {
 
 		String sessionId = getStringParam(request, ProtocolElements.JOINROOM_ROOM_PARAM);
 		String token = getStringParam(request, ProtocolElements.JOINROOM_TOKEN_PARAM);
@@ -661,8 +661,10 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 	public static String getStringParam(Request<JsonObject> request, String key) {
 		if (request.getParams() == null || request.getParams().get(key) == null) {
-			throw new RuntimeException("Request element '" + key + "' is missing in method '" + request.getMethod()
-					+ "'. CHECK THAT 'openvidu-server' AND 'openvidu-browser' SHARE THE SAME VERSION NUMBER");
+			throw new RuntimeException("Request element '" + key + "' is missing in method '" + request != null
+					? request.getMethod()
+					: "[NO REQUEST OBJECT]"
+							+ "'. CHECK THAT 'openvidu-server' AND 'openvidu-browser' SHARE THE SAME VERSION NUMBER");
 		}
 		return request.getParams().get(key).getAsString();
 	}
