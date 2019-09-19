@@ -86,15 +86,15 @@ export class WebRtcPeer {
                 reject('The peer connection object is in "closed" state. This is most likely due to an invocation of the dispose method before accepting in the dialogue');
             }
             if (!!this.configuration.mediaStream) {
-                if (platform['isIonicIos']) {
+                /*if (platform['isIonicIos']) {
                     // iOS Ionic. LIMITATION: must use deprecated WebRTC API
                     const pc2: any = this.pc;
                     pc2.addStream(this.configuration.mediaStream);
-                } else {
+                } else {*/
                     for (const track of this.configuration.mediaStream.getTracks()) {
                         this.pc.addTrack(track, this.configuration.mediaStream);
                     }
-                }
+                // }
                 resolve();
             }
         });
@@ -113,7 +113,7 @@ export class WebRtcPeer {
                 this.remoteCandidatesQueue = [];
                 this.localCandidatesQueue = [];
 
-                if (platform['isIonicIos']) {
+               /* if (platform['isIonicIos']) {
                     // iOS Ionic. LIMITATION: must use deprecated WebRTC API
                     // Stop senders deprecated
                     const pc1: any = this.pc;
@@ -129,7 +129,7 @@ export class WebRtcPeer {
                             receiver.stop();
                         }
                     }
-                } else {
+                } else {*/
                     // Stop senders
                     for (const sender of this.pc.getSenders()) {
                         if (!videoSourceIsMediaStreamTrack) {
@@ -145,7 +145,7 @@ export class WebRtcPeer {
                             receiver.track.stop();
                         }
                     }
-                }
+                // }
 
                 this.pc.close();
             }

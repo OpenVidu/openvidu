@@ -817,11 +817,11 @@ export class Stream implements EventDispatcher {
     }
 
     private remotePeerSuccessfullyEstablished(): void {
-        if (platform['isIonicIos']) {
+        /*if (platform['isIonicIos']) {
             // iOS Ionic. LIMITATION: must use deprecated WebRTC API
             const pc1: any = this.webRtcPeer.pc;
             this.mediaStream = pc1.getRemoteStreams()[0];
-        } else {
+        } else {*/
             this.mediaStream = new MediaStream();
             let receiver: RTCRtpReceiver;
             for (receiver of this.webRtcPeer.pc.getReceivers()) {
@@ -829,7 +829,7 @@ export class Stream implements EventDispatcher {
                     this.mediaStream.addTrack(receiver.track);
                 }
             }
-        }
+        // }
         console.debug('Peer remote stream', this.mediaStream);
 
         if (!!this.mediaStream) {
