@@ -265,6 +265,7 @@ public class OpenViduTestAppE2eTest {
 			this.restartKms();
 			isKurentoRestartTest = false;
 		}
+		OV = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET);
 	}
 
 	@Test
@@ -2641,6 +2642,7 @@ public class OpenViduTestAppE2eTest {
 
 		log.info("Kurento reconnect test");
 
+		OV.fetch();
 		List<Session> sessions = OV.getActiveSessions();
 		Assert.assertEquals("Expected no active sessions but found " + sessions.size(), 0, sessions.size());
 
