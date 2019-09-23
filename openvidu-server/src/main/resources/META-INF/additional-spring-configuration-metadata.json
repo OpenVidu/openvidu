@@ -74,7 +74,7 @@
 		{
 			"name": "openvidu.recording.composed-url",
 			"type": "java.lang.String",
-			"description": "URL where the composed-video recording dockerized Chrome will connect to receive published videos",
+			"description": "URL the composed-video recording dockerized Chrome will use to connect to the recording layouts inside OpenVidu Server host. This will affect all video recording layouts (default one BEST_FIT, all CUSTOM layouts). This allows changing the default URL, which is 'openvidu.publicurl', for those cases where OpenVidu Server host does not allow back and forth connections using the public url from inside the host",
 			"defaultValue": ""
 		},
 		{
