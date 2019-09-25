@@ -364,14 +364,16 @@ export class Stream implements EventDispatcher {
         return this.webRtcPeer.pc;
     }
 
-    /* Hidden methods */
-
     /**
-     * @hidden
+     * Returns the internal MediaStream object associated to this stream (https://developer.mozilla.org/en-US/docs/Web/API/MediaStream)
+     * 
+     * @returns Native MediaStream Web API object
      */
     getMediaStream(): MediaStream {
         return this.mediaStream;
     }
+
+    /* Hidden methods */
 
     /**
      * @hidden
