@@ -34,7 +34,8 @@ export enum OpenViduErrorName {
 
     /**
      * The required input device is probably being used by other process when the browser asked for it.
-     * Accuracy of this property is only granted for Chrome and Firefox clients. 
+     * This error can also be triggered when the user granted permission to use the devices but a hardware
+     * error occurred at the OS, browser or web page level, which prevented access to the device.
      * Returned upon unsuccessful [[OpenVidu.initPublisher]] or [[OpenVidu.getUserMedia]]
      */
     DEVICE_ALREADY_IN_USE = "DEVICE_ALREADY_IN_USE",
@@ -47,36 +48,42 @@ export enum OpenViduErrorName {
 
     /**
      * Browser does not support screen sharing.
-     * Returned upon unsuccessful [[OpenVidu.initPublisher]]
+     * Returned upon unsuccessful [[OpenVidu.initPublisher]] or [[OpenVidu.getUserMedia]]
      */
     SCREEN_SHARING_NOT_SUPPORTED = 'SCREEN_SHARING_NOT_SUPPORTED',
 
     /**
      * Only for Chrome, there's no screen sharing extension installed
-     * Returned upon unsuccessful [[OpenVidu.initPublisher]]
+     * Returned upon unsuccessful [[OpenVidu.initPublisher]] or [[OpenVidu.getUserMedia]]
      */
     SCREEN_EXTENSION_NOT_INSTALLED = 'SCREEN_EXTENSION_NOT_INSTALLED',
 
     /**
      * Only for Chrome, the screen sharing extension is installed but is disabled
-     * Returned upon unsuccessful [[OpenVidu.initPublisher]]
+     * Returned upon unsuccessful [[OpenVidu.initPublisher]] or [[OpenVidu.getUserMedia]]
      */
     SCREEN_EXTENSION_DISABLED = 'SCREEN_EXTENSION_DISABLED',
 
     /**
      * No video input device found with the provided deviceId (property [[PublisherProperties.videoSource]])
-     * Returned upon unsuccessful [[OpenVidu.initPublisher]]
+     * Returned upon unsuccessful [[OpenVidu.initPublisher]] or [[OpenVidu.getUserMedia]]
      */
     INPUT_VIDEO_DEVICE_NOT_FOUND = 'INPUT_VIDEO_DEVICE_NOT_FOUND',
 
     /**
      * No audio input device found with the provided deviceId (property [[PublisherProperties.audioSource]])
-     * Returned upon unsuccessful [[OpenVidu.initPublisher]]
+     * Returned upon unsuccessful [[OpenVidu.initPublisher]] or [[OpenVidu.getUserMedia]]
      */
     INPUT_AUDIO_DEVICE_NOT_FOUND = 'INPUT_AUDIO_DEVICE_NOT_FOUND',
 
     /**
-     * Method [[OpenVidu.initPublisher]] has been called with properties `videoSource` and `audioSource` of
+     * There was an unknown error when trying to access the specified audio device
+     * Returned upon unsuccessful [[OpenVidu.initPublisher]] or [[OpenVidu.getUserMedia]]
+     */
+    INPUT_AUDIO_DEVICE_GENERIC_ERROR = 'INPUT_AUDIO_DEVICE_GENERIC_ERROR',
+
+    /**
+     * Method [[OpenVidu.initPublisher]] or  [[OpenVidu.getUserMedia]] has been called with properties `videoSource` and `audioSource` of
      * [[PublisherProperties]] parameter both set to *false* or *null*
      */
     NO_INPUT_SOURCE_SET = 'NO_INPUT_SOURCE_SET',
@@ -84,7 +91,7 @@ export enum OpenViduErrorName {
     /**
      * Some media property of [[PublisherProperties]] such as `frameRate` or `resolution` is not supported
      * by the input devices (whenever it is possible they are automatically adjusted to the most similar value).
-     * Returned upon unsuccessful [[OpenVidu.initPublisher]]
+     * Returned upon unsuccessful [[OpenVidu.initPublisher]] or [[OpenVidu.getUserMedia]]
      */
     PUBLISHER_PROPERTIES_ERROR = 'PUBLISHER_PROPERTIES_ERROR',
 

@@ -270,8 +270,7 @@ export class Publisher extends StreamManager {
      * 
      * You can get this new MediaStreamTrack by using the native Web API or simply with [[OpenVidu.getUserMedia]] method.
      * 
-     * **WARNING: this method has been proven to work, but there may be some combinations of published/replaced tracks that may be incompatible between them and break the connection in OpenVidu Server.**
-     * **A complete renegotiation may be the only solution in this case**
+     * **WARNING: this method has been proven to work, but there may be some combinations of published/replaced tracks that may be incompatible between them and break the connection in OpenVidu Server. A complete renegotiation may be the only solution in this case**
      * 
      * @param track The [MediaStreamTrack](https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamTrack) object to replace the current one. If it is an audio track, the current audio track will be the replaced one. If it
      * is a video track, the current video track will be the replaced one.
@@ -281,6 +280,15 @@ export class Publisher extends StreamManager {
     replaceTrack(track: MediaStreamTrack): Promise<any> {
         return new Promise((resolve, reject) => {
             this.stream.getRTCPeerConnection().getSenders()[0].replaceTrack(track).then(() => {
+                let removedTrack: MediaStreamTrack;
+                if (track.kind === 'video') {
+                    removedTrack = this.stream.getMediaStream().getVideoTracks()[0];
+                } else {
+                    removedTrack = this.stream.getMediaStream().getAudioTracks()[0];
+                }
+                this.stream.getMediaStream().removeTrack(removedTrack);
+                removedTrack.stop();
+                this.stream.getMediaStream().addTrack(track);
                 resolve();
             }).catch(error => {
                 reject(error);
@@ -471,33 +479,14 @@ export class Publisher extends StreamManager {
                         })
                         .catch(error => {
                             this.clearPermissionDialogTimer(startTime, timeForDialogEvent);
-                            if (error.name === 'Error') {
-                                // Safari OverConstrainedError has as name property 'Error' instead of 'OverConstrainedError'
-                                error.name = error.constructor.name;
-                            }
-                            let errorName, errorMessage;
-                            switch (error.name.toLowerCase()) {
-                                case 'notfounderror':
-                                    errorName = OpenViduErrorName.INPUT_AUDIO_DEVICE_NOT_FOUND;
-                                    errorMessage = error.toString();
-                                    errorCallback(new OpenViduError(errorName, errorMessage));
-                                    break;
-                                case 'notallowederror':
-                                    errorName = OpenViduErrorName.DEVICE_ACCESS_DENIED;
-                                    errorMessage = error.toString();
-                                    errorCallback(new OpenViduError(errorName, errorMessage));
-                                    break;
-                                case 'overconstrainederror':
-                                    if (error.constraint.toLowerCase() === 'deviceid') {
-                                        errorName = OpenViduErrorName.INPUT_AUDIO_DEVICE_NOT_FOUND;
-                                        errorMessage = "Audio input device with deviceId '" + (<ConstrainDOMStringParameters>(<MediaTrackConstraints>constraints.video).deviceId!!).exact + "' not found";
-                                    } else {
-                                        errorName = OpenViduErrorName.PUBLISHER_PROPERTIES_ERROR;
-                                        errorMessage = "Audio input device doesn't support the value passed for constraint '" + error.constraint + "'";
-                                    }
-                                    errorCallback(new OpenViduError(errorName, errorMessage));
-                                    break;
-                            }
+                            mediaStream.getAudioTracks().forEach((track) => {
+                                track.stop();
+                            });
+                            mediaStream.getVideoTracks().forEach((track) => {
+                                track.stop();
+                            });
+                            errorCallback(this.openvidu.generateAudioDeviceError(error, constraints));
+                            return;
                         });
                 } else {
                     successCallback(mediaStream);
@@ -607,41 +596,35 @@ export class Publisher extends StreamManager {
                         mediaConstraints: constraints,
                         publisherProperties: this.properties
                     };
-
                     this.stream.setOutboundStreamOptions(outboundStreamOptions);
 
-                    if (this.stream.isSendVideo() || this.stream.isSendAudio()) {
-                        const definedAudioConstraint = ((constraints.audio === undefined) ? true : constraints.audio);
-                        constraintsAux.audio = this.stream.isSendScreen() ? false : definedAudioConstraint;
-                        constraintsAux.video = constraints.video;
-                        startTime = Date.now();
-                        this.setPermissionDialogTimer(timeForDialogEvent);
+                    const definedAudioConstraint = ((constraints.audio === undefined) ? true : constraints.audio);
+                    constraintsAux.audio = this.stream.isSendScreen() ? false : definedAudioConstraint;
+                    constraintsAux.video = constraints.video;
+                    startTime = Date.now();
+                    this.setPermissionDialogTimer(timeForDialogEvent);
 
-                        if (this.stream.isSendScreen() && navigator.mediaDevices['getDisplayMedia'] && platform.name !== 'Electron') {
+                    if (this.stream.isSendScreen() && navigator.mediaDevices['getDisplayMedia'] && platform.name !== 'Electron') {
 
-                            navigator.mediaDevices['getDisplayMedia']({ video: true })
-                                .then(mediaStream => {
-                                    getMediaSuccess(mediaStream, definedAudioConstraint);
-                                })
-                                .catch(error => {
-                                    getMediaError(error);
-                                });
+                        navigator.mediaDevices['getDisplayMedia']({ video: true })
+                            .then(mediaStream => {
+                                getMediaSuccess(mediaStream, definedAudioConstraint);
+                            })
+                            .catch(error => {
+                                getMediaError(error);
+                            });
 
-                        } else {
-
-                            navigator.mediaDevices.getUserMedia(constraintsAux)
-                                .then(mediaStream => {
-                                    getMediaSuccess(mediaStream, definedAudioConstraint);
-                                })
-                                .catch(error => {
-                                    getMediaError(error);
-                                });
-
-                        }
                     } else {
-                        reject(new OpenViduError(OpenViduErrorName.NO_INPUT_SOURCE_SET,
-                            "Properties 'audioSource' and 'videoSource' cannot be set to false or null at the same time when calling 'OpenVidu.initPublisher'"));
+
+                        navigator.mediaDevices.getUserMedia(constraintsAux)
+                            .then(mediaStream => {
+                                getMediaSuccess(mediaStream, definedAudioConstraint);
+                            })
+                            .catch(error => {
+                                getMediaError(error);
+                            });
                     }
+
                 })
                 .catch((error: OpenViduError) => {
                     errorCallback(error);

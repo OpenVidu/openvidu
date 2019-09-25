@@ -521,11 +521,61 @@ export class OpenVidu {
    */
   getUserMedia(options: PublisherProperties): Promise<MediaStream> {
     return new Promise<MediaStream>((resolve, reject) => {
+
+      const askForAudioStreamOnly = (previousMediaStream: MediaStream, constraints: MediaStreamConstraints) => {
+        const definedAudioConstraint = ((constraints.audio === undefined) ? true : constraints.audio);
+        const constraintsAux: MediaStreamConstraints = { audio: definedAudioConstraint, video: false };
+        navigator.mediaDevices.getUserMedia(constraintsAux)
+          .then(audioOnlyStream => {
+            previousMediaStream.addTrack(audioOnlyStream.getAudioTracks()[0]);
+            resolve(previousMediaStream);
+          })
+          .catch(error => {
+            previousMediaStream.getAudioTracks().forEach((track) => {
+              track.stop();
+            });
+            previousMediaStream.getVideoTracks().forEach((track) => {
+              track.stop();
+            });
+            reject(this.generateAudioDeviceError(error, constraintsAux));
+          });
+      }
+
       this.generateMediaConstraints(options)
         .then(constraints => {
-          navigator.mediaDevices.getUserMedia(constraints)
+          let mustAskForAudioTrackLater = false;
+          if (typeof options.videoSource === 'string') {
+            if (options.videoSource === 'screen' ||
+              (platform.name!.indexOf('Firefox') !== -1 && options.videoSource === 'window')) {
+              // Screen sharing
+              mustAskForAudioTrackLater = options.audioSource !== null && options.audioSource !== false;
+              if (navigator.mediaDevices['getDisplayMedia'] && platform.name !== 'Electron') {
+                navigator.mediaDevices['getDisplayMedia']({ video: true })
+                  .then(mediaStream => {
+                    if (mustAskForAudioTrackLater) {
+                      askForAudioStreamOnly(mediaStream, constraints);
+                      return;
+                    } else {
+                      resolve(mediaStream);
+                    }
+                  })
+                  .catch(error => {
+                    let errorName: OpenViduErrorName = OpenViduErrorName.SCREEN_CAPTURE_DENIED;
+                    const errorMessage = error.toString();
+                    reject(new OpenViduError(errorName, errorMessage));
+                  });
+              }
+            }
+          }
+          const constraintsAux = mustAskForAudioTrackLater ? { video: constraints.video } : constraints;
+          navigator.mediaDevices.getUserMedia(constraintsAux)
             .then(mediaStream => {
-              resolve(mediaStream);
+              if (mustAskForAudioTrackLater) {
+                askForAudioStreamOnly(mediaStream, constraints);
+                return;
+              } else {
+                resolve(mediaStream);
+              }
             })
             .catch(error => {
               let errorName: OpenViduErrorName;
@@ -597,6 +647,11 @@ export class OpenVidu {
             ideal: 640
           }
         };
+      }
+
+      if (audio === false && video === false) {
+        reject(new OpenViduError(OpenViduErrorName.NO_INPUT_SOURCE_SET,
+          "Properties 'audioSource' and 'videoSource' cannot be set to false or null at the same time"));
       }
 
       const mediaConstraints: MediaStreamConstraints = {
@@ -806,6 +861,42 @@ export class OpenVidu {
    */
   getRecorder(): boolean {
     return this.recorder;
+  }
+
+  /**
+   * @hidden
+   */
+  generateAudioDeviceError(error, constraints: MediaStreamConstraints): OpenViduError {
+    if (error.name === 'Error') {
+      // Safari OverConstrainedError has as name property 'Error' instead of 'OverConstrainedError'
+      error.name = error.constructor.name;
+    }
+    let errorName, errorMessage: string;
+    switch (error.name.toLowerCase()) {
+      case 'notfounderror':
+        errorName = OpenViduErrorName.INPUT_AUDIO_DEVICE_NOT_FOUND;
+        errorMessage = error.toString();
+        return new OpenViduError(errorName, errorMessage);
+      case 'notallowederror':
+        errorName = OpenViduErrorName.DEVICE_ACCESS_DENIED;
+        errorMessage = error.toString();
+        return new OpenViduError(errorName, errorMessage);
+      case 'overconstrainederror':
+        if (error.constraint.toLowerCase() === 'deviceid') {
+          errorName = OpenViduErrorName.INPUT_AUDIO_DEVICE_NOT_FOUND;
+          errorMessage = "Audio input device with deviceId '" + (<ConstrainDOMStringParameters>(<MediaTrackConstraints>constraints.audio).deviceId!!).exact + "' not found";
+        } else {
+          errorName = OpenViduErrorName.PUBLISHER_PROPERTIES_ERROR;
+          errorMessage = "Audio input device doesn't support the value passed for constraint '" + error.constraint + "'";
+        }
+        return new OpenViduError(errorName, errorMessage);
+      case 'notreadableerror':
+        errorName = OpenViduErrorName.DEVICE_ALREADY_IN_USE;
+        errorMessage = error.toString();
+        return (new OpenViduError(errorName, errorMessage));
+      default:
+        return new OpenViduError(OpenViduErrorName.INPUT_AUDIO_DEVICE_GENERIC_ERROR, error.toString());
+    }
   }
 
 
