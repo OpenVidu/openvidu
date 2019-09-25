@@ -651,7 +651,7 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 	@Override
 	public void handleUncaughtException(Session rpcSession, Exception exception) {
-		log.error("Uncaught exception for WebSocket session: {} - Exception: {}", rpcSession.getSessionId(), exception);
+		log.error("Uncaught exception for WebSocket session: {} - Exception: {}", rpcSession != null ? rpcSession.getSessionId() : "RpcSession NULL", exception);
 	}
 
 	@Override
