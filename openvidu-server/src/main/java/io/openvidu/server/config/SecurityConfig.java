@@ -59,7 +59,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 				.antMatchers("/").authenticated();
 
 		// Security for layouts
-		conf.antMatchers("/layouts/*").authenticated();
+		conf.antMatchers("/layouts/**").authenticated();
 
 		// Security for recorded videos
 		if (openviduConf.getOpenViduRecordingPublicAccess()) {
