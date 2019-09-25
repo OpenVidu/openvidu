@@ -546,7 +546,8 @@ export class OpenVidu {
           let mustAskForAudioTrackLater = false;
           if (typeof options.videoSource === 'string') {
             if (options.videoSource === 'screen' ||
-              (platform.name!.indexOf('Firefox') !== -1 && options.videoSource === 'window')) {
+              options.videoSource === 'window' ||
+              (platform.name === 'Electron' && options.videoSource.startsWith('screen:'))) {
               // Screen sharing
               mustAskForAudioTrackLater = options.audioSource !== null && options.audioSource !== false;
               if (navigator.mediaDevices['getDisplayMedia'] && platform.name !== 'Electron') {
@@ -680,7 +681,7 @@ export class OpenVidu {
         if (!!publisherProperties.videoSource && typeof publisherProperties.videoSource === 'string') {
 
           if (publisherProperties.videoSource === 'screen' ||
-            (platform.name!.indexOf('Firefox') !== -1 && publisherProperties.videoSource === 'window') ||
+            publisherProperties.videoSource === 'window' ||
             (platform.name === 'Electron' && publisherProperties.videoSource.startsWith('screen:'))) {
 
             if (!this.checkScreenSharingCapabilities()) {
@@ -740,7 +741,7 @@ export class OpenVidu {
                 } else {
 
                   if (navigator.mediaDevices['getDisplayMedia']) {
-                    // getDisplayMedia support (Chrome >= 72, Firefox >= 52)
+                    // getDisplayMedia support (Chrome >= 72, Firefox >= 66)
                     resolve(mediaConstraints);
                   } else {
                     // Default screen sharing extension for Chrome/Opera, or is Firefox < 66

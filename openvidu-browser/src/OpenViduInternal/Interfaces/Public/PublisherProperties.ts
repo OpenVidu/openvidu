@@ -75,7 +75,7 @@ export interface PublisherProperties {
      * - `"screen"` to screen-share. We provide a default screen-shraring extension for Chrome that can run in any domain, but you can customize it so it has your own icon, your own name, etc. Visit this
      * [GitHub repository](https://github.com/OpenVidu/openvidu-screen-sharing-chrome-extension/) to learn how. Once you have uploaded your own extension to Chrome Web Store,
      * simply call `OpenVidu.setAdvancedConfiguration({screenShareChromeExtension : "https://chrome.google.com/webstore/detail/YOUR_EXTENSION_NAME/YOUR_EXTENSION_ID"})` before calling `OpenVidu.initPublisher(targetElement, {videoSource: "screen"})`.
-     * For Firefox `"screen"` string will ask for permissions to share the entire screen. To ask for a specific window or application, use `"window"` string instead (this only applies to Firefox).
+     * For Firefox (<66) `"screen"` string will ask for permissions to share the entire screen. To ask for a specific window or application, use `"window"` string instead (this only applies to Firefox).
      * - A MediaStreamTrack obtained from a MediaStream object with [[OpenVidu.getUserMedia]]
      * - `false` or null to have an audio-only publisher
      * @default _Default camera_
