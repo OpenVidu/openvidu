@@ -38,11 +38,8 @@ import com.github.dockerjava.api.exception.InternalServerErrorException;
 import com.github.dockerjava.api.exception.NotFoundException;
 import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.Container;
-import com.github.dockerjava.api.model.ExposedPort;
 import com.github.dockerjava.api.model.Frame;
 import com.github.dockerjava.api.model.HostConfig;
-import com.github.dockerjava.api.model.Ports;
-import com.github.dockerjava.api.model.Ports.Binding;
 import com.github.dockerjava.api.model.Volume;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientBuilder;
@@ -107,7 +104,7 @@ public class DockerManager {
 	}
 
 	public String runContainer(String container, String containerName, List<Volume> volumes, List<Bind> binds,
-			List<Integer> exposedPorts, Ports portBindings, String networkMode, List<String> envs) throws Exception {
+			String networkMode, List<String> envs) throws Exception {
 
 		CreateContainerCmd cmd = dockerClient.createContainerCmd(container).withEnv(envs);
 		if (containerName != null) {
@@ -120,17 +117,6 @@ public class DockerManager {
 		}
 		if (binds != null) {
 			hostConfig.withBinds(binds);
-		}
-		if (exposedPorts != null) {
-			Ports symmetricPortBindings = new Ports();
-			List<ExposedPort> expPorts = new ArrayList<>();
-			exposedPorts.forEach(p -> {
-				ExposedPort port = ExposedPort.tcp(p);
-				expPorts.add(port);
-				symmetricPortBindings.bind(port, Binding.bindPort(p));
-			});
-			hostConfig.withPortBindings((portBindings == null) ? symmetricPortBindings : portBindings);
-			cmd.withExposedPorts(expPorts);
 		}
 
 		cmd.withHostConfig(hostConfig);
