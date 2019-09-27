@@ -676,7 +676,7 @@ public class OpenViduTestAppE2eTest {
 
 		setupBrowser("chrome");
 
-		log.info("Signal message");
+		log.info("Publisher unpublish");
 
 		user.getDriver().findElement(By.id("auto-join-checkbox")).click();
 		user.getDriver().findElement(By.id("one2one-btn")).click();
@@ -1236,10 +1236,6 @@ public class OpenViduTestAppE2eTest {
 
 		final String sessionName = "TestSession";
 		final String recordingName = "CUSTOM_NAME";
-
-		user.getDriver().findElement(By.id("add-user-btn")).click();
-		user.getDriver().findElement(By.id("session-name-input-0")).clear();
-		user.getDriver().findElement(By.id("session-name-input-0")).sendKeys(sessionName);
 
 		user.getDriver().findElement(By.id("auto-join-checkbox")).click();
 		user.getDriver().findElement(By.id("one2one-btn")).click();
