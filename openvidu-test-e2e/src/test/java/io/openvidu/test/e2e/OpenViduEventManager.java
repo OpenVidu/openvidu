@@ -17,6 +17,8 @@
 
 package io.openvidu.test.e2e;
 
+import static org.openqa.selenium.OutputType.BASE64;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -34,6 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
@@ -164,6 +167,9 @@ public class OpenViduEventManager {
 		this.setCountDown(eventName, eventSignal);
 		try {
 			if (!eventSignal.await(secondsOfWait * 1000, TimeUnit.MILLISECONDS)) {
+				String screenshot = "data:image/png;base64," + ((TakesScreenshot) driver).getScreenshotAs(BASE64);
+				System.out.println("TIMEOUT SCREENSHOT");
+				System.out.println(screenshot);
 				throw (new TimeoutException());
 			}
 		} catch (InterruptedException | TimeoutException e) {
