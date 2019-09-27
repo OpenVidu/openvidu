@@ -18,7 +18,6 @@
 package io.openvidu.server.recording.service;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -48,8 +47,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 
+import com.google.gson.JsonIOException;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
@@ -70,6 +70,7 @@ import io.openvidu.server.recording.Recording;
 import io.openvidu.server.recording.RecordingDownloader;
 import io.openvidu.server.utils.CustomFileManager;
 import io.openvidu.server.utils.DockerManager;
+import io.openvidu.server.utils.JsonUtils;
 
 public class RecordingManager {
 
@@ -101,6 +102,8 @@ public class RecordingManager {
 	protected Map<String, Recording> startedRecordings = new ConcurrentHashMap<>();
 	protected Map<String, Recording> sessionsRecordings = new ConcurrentHashMap<>();
 	private final Map<String, ScheduledFuture<?>> automaticRecordingStopThreads = new ConcurrentHashMap<>();
+
+	private JsonUtils jsonUtils = new JsonUtils();
 
 	private ScheduledThreadPoolExecutor automaticRecordingStopExecutor = new ScheduledThreadPoolExecutor(
 			Runtime.getRuntime().availableProcessors());
@@ -403,19 +406,12 @@ public class RecordingManager {
 
 	public Recording getRecordingFromEntityFile(File file) {
 		if (file.isFile() && file.getName().startsWith(RecordingManager.RECORDING_ENTITY_FILE)) {
-			JsonObject json = null;
-			FileReader fr = null;
+			JsonObject json;
 			try {
-				fr = new FileReader(file);
-				json = new JsonParser().parse(fr).getAsJsonObject();
-			} catch (IOException e) {
+				json = jsonUtils.fromFileToJson(file.getAbsolutePath());
+			} catch (JsonIOException | JsonSyntaxException | IOException e) {
+				log.error("Error reading recording entity file {}: {}", file.getAbsolutePath(), (e.getMessage()));
 				return null;
-			} finally {
-				try {
-					fr.close();
-				} catch (Exception e) {
-					log.error("Exception while closing FileReader: {}", e.getMessage());
-				}
 			}
 			Recording recording = new Recording(json);
 			if (io.openvidu.java.client.Recording.Status.ready.equals(recording.getStatus())

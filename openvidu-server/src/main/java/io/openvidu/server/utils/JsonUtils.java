@@ -17,12 +17,17 @@
 
 package io.openvidu.server.utils;
 
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.Map.Entry;
 
 import org.kurento.jsonrpc.Props;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonIOException;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 
 public class JsonUtils {
 
@@ -36,6 +41,18 @@ public class JsonUtils {
 			}
 		}
 		return props;
+	}
+
+	public JsonObject fromFileToJson(String filePath) throws JsonIOException, JsonSyntaxException, IOException {
+		JsonObject json;
+		JsonParser parser = new JsonParser();
+		FileReader reader = new FileReader(filePath);
+		try {
+			json = parser.parse(new FileReader(filePath)).getAsJsonObject();
+		} finally {
+			reader.close();
+		}
+		return json;
 	}
 
 }

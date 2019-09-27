@@ -19,21 +19,19 @@ package io.openvidu.server.recording;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
+import io.openvidu.server.utils.JsonUtils;
 
 public class RecordingInfoUtils {
 
-	private JsonParser parser;
 	private JsonObject json;
 	private JsonObject jsonFormat;
 	private JsonObject videoStream;
@@ -44,10 +42,9 @@ public class RecordingInfoUtils {
 	public RecordingInfoUtils(String infoFilePath) throws FileNotFoundException, IOException, OpenViduException {
 
 		this.infoFilePath = infoFilePath;
-		this.parser = new JsonParser();
 
 		try {
-			this.json = parser.parse(new FileReader(infoFilePath)).getAsJsonObject();
+			this.json = new JsonUtils().fromFileToJson(infoFilePath);
 		} catch (JsonIOException | JsonSyntaxException e) {
 			// Recording metadata from ffprobe is not a JSON: video file is corrupted
 			throw new OpenViduException(Code.RECORDING_FILE_EMPTY_ERROR, "The recording file is corrupted");

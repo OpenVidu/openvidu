@@ -327,7 +327,7 @@ public class ComposedRecordingService extends RecordingService {
 			} catch (IOException e) {
 				recording.setStatus(io.openvidu.java.client.Recording.Status.failed);
 				throw new OpenViduException(Code.RECORDING_REPORT_ERROR_CODE,
-						"There was an error generating the metadata report file for the recording");
+						"There was an error generating the metadata report file for the recording: " + e.getMessage());
 			}
 
 			String filesPath = this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/";

@@ -443,7 +443,7 @@ public abstract class SessionManager {
 			try {
 				closeSession(sessionId, EndReason.openviduServerStopped);
 			} catch (Exception e) {
-				log.warn("Error closing session '{}'", sessionId, e);
+				log.warn("Error closing session '{}': {}", sessionId, e.getMessage());
 			}
 		}
 	}

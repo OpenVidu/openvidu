@@ -18,16 +18,32 @@
 package io.openvidu.server.utils;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
 public class CommandExecutor {
 
 	public static String execCommand(String... command) throws IOException, InterruptedException {
-
 		ProcessBuilder processBuilder = new ProcessBuilder(command);
 		processBuilder.redirectErrorStream(true);
+		return commonExecCommand(processBuilder);
+	}
 
+	public static String execCommandRedirectError(File errorOutputFile, String... command)
+			throws IOException, InterruptedException {
+		ProcessBuilder processBuilder = new ProcessBuilder(command).redirectError(errorOutputFile);
+		return commonExecCommand(processBuilder);
+	}
+
+	public static String execCommandRedirectStandardOutputAndError(File standardOutputFile, File errorOutputFile,
+			String... command) throws IOException, InterruptedException {
+		ProcessBuilder processBuilder = new ProcessBuilder(command).redirectOutput(standardOutputFile)
+				.redirectError(errorOutputFile);
+		return commonExecCommand(processBuilder);
+	}
+
+	private static String commonExecCommand(ProcessBuilder processBuilder) throws IOException, InterruptedException {
 		Process process = processBuilder.start();
 		StringBuilder processOutput = new StringBuilder();
 
@@ -40,7 +56,6 @@ public class CommandExecutor {
 			}
 			process.waitFor();
 		}
-
 		return processOutput.toString().trim();
 	}
 
