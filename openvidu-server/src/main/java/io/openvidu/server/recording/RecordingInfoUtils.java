@@ -44,7 +44,7 @@ public class RecordingInfoUtils {
 		this.infoFilePath = infoFilePath;
 
 		try {
-			this.json = new JsonUtils().fromFileToJson(infoFilePath);
+			this.json = new JsonUtils().fromFileToJsonObject(infoFilePath);
 		} catch (JsonIOException | JsonSyntaxException e) {
 			// Recording metadata from ffprobe is not a JSON: video file is corrupted
 			throw new OpenViduException(Code.RECORDING_FILE_EMPTY_ERROR, "The recording file is corrupted");

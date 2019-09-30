@@ -28,6 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.kurento.client.KurentoConnectionListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -184,13 +185,19 @@ public abstract class KmsManager {
 		};
 	}
 
-	public abstract List<Kms> initializeKurentoClients(List<String> kmsUris, boolean disconnectUponFailure)
+	public abstract List<Kms> initializeKurentoClients(List<KmsProperties> kmsProperties, boolean disconnectUponFailure)
 			throws Exception;
 
 	@PostConstruct
 	private void postConstruct() {
 		try {
-			this.initializeKurentoClients(this.openviduConfig.getKmsUris(), true);
+			List<KmsProperties> kmsProps = new ArrayList<>();
+			String kmsId;
+			for (String kmsUri : this.openviduConfig.getKmsUris()) {
+				kmsId = "KMS-" + RandomStringUtils.randomAlphanumeric(6).toUpperCase();
+				kmsProps.add(new KmsProperties(kmsId, kmsUri));
+			}
+			this.initializeKurentoClients(kmsProps, true);
 		} catch (Exception e) {
 			// Some KMS wasn't reachable
 			log.error("Shutting down OpenVidu Server");

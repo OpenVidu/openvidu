@@ -17,17 +17,18 @@
 
 package io.openvidu.server.utils;
 
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Map.Entry;
 
 import org.kurento.jsonrpc.Props;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonIOException;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
-import com.google.gson.JsonSyntaxException;
 
 public class JsonUtils {
 
@@ -43,14 +44,36 @@ public class JsonUtils {
 		return props;
 	}
 
-	public JsonObject fromFileToJson(String filePath) throws JsonIOException, JsonSyntaxException, IOException {
-		JsonObject json;
+	public JsonObject fromFileToJsonObject(String filePath)
+			throws IOException, FileNotFoundException, JsonParseException, IllegalStateException {
+		return this.fromFileToJsonElement(filePath).getAsJsonObject();
+	}
+
+	public JsonArray fromFileToJsonArray(String filePath)
+			throws IOException, FileNotFoundException, JsonParseException, IllegalStateException {
+		return this.fromFileToJsonElement(filePath).getAsJsonArray();
+	}
+
+	public JsonElement fromFileToJsonElement(String filePath)
+			throws IOException, FileNotFoundException, JsonParseException, IllegalStateException {
+		JsonElement json = null;
 		JsonParser parser = new JsonParser();
-		FileReader reader = new FileReader(filePath);
+		FileReader reader = null;
 		try {
-			json = parser.parse(new FileReader(filePath)).getAsJsonObject();
+			reader = new FileReader(filePath);
+		} catch (FileNotFoundException e) {
+			throw e;
+		}
+		try {
+			json = parser.parse(reader);
+		} catch (JsonParseException | IllegalStateException exception) {
+			throw exception;
 		} finally {
-			reader.close();
+			try {
+				reader.close();
+			} catch (IOException e) {
+				throw e;
+			}
 		}
 		return json;
 	}

@@ -408,7 +408,7 @@ public class RecordingManager {
 		if (file.isFile() && file.getName().startsWith(RecordingManager.RECORDING_ENTITY_FILE)) {
 			JsonObject json;
 			try {
-				json = jsonUtils.fromFileToJson(file.getAbsolutePath());
+				json = jsonUtils.fromFileToJsonObject(file.getAbsolutePath());
 			} catch (JsonIOException | JsonSyntaxException | IOException e) {
 				log.error("Error reading recording entity file {}: {}", file.getAbsolutePath(), (e.getMessage()));
 				return null;

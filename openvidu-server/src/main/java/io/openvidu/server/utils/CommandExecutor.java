@@ -36,11 +36,11 @@ public class CommandExecutor {
 		return commonExecCommand(processBuilder);
 	}
 
-	public static String execCommandRedirectStandardOutputAndError(File standardOutputFile, File errorOutputFile,
+	public static void execCommandRedirectStandardOutputAndError(File standardOutputFile, File errorOutputFile,
 			String... command) throws IOException, InterruptedException {
 		ProcessBuilder processBuilder = new ProcessBuilder(command).redirectOutput(standardOutputFile)
 				.redirectError(errorOutputFile);
-		return commonExecCommand(processBuilder);
+		commonExecCommand(processBuilder);
 	}
 
 	private static String commonExecCommand(ProcessBuilder processBuilder) throws IOException, InterruptedException {

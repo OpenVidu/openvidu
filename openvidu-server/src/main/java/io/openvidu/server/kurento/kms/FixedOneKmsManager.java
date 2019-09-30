@@ -26,15 +26,16 @@ import org.kurento.commons.exception.KurentoException;
 public class FixedOneKmsManager extends KmsManager {
 
 	@Override
-	public List<Kms> initializeKurentoClients(List<String> kmsUris, boolean disconnectUponFailure) throws Exception {
-		final String kmsUri = kmsUris.get(0);
+	public List<Kms> initializeKurentoClients(List<KmsProperties> kmsProperties, boolean disconnectUponFailure)
+			throws Exception {
+		KmsProperties firstProps = kmsProperties.get(0);
 		KurentoClient kClient = null;
-		Kms kms = new Kms(kmsUri, loadManager);
+		Kms kms = new Kms(firstProps, loadManager);
 		this.addKms(kms);
 		try {
-			kClient = KurentoClient.create(kmsUri, this.generateKurentoConnectionListener(kms.getId()));
+			kClient = KurentoClient.create(firstProps.getUri(), this.generateKurentoConnectionListener(kms.getId()));
 		} catch (KurentoException e) {
-			log.error("KMS in {} is not reachable by OpenVidu Server", kmsUri);
+			log.error("KMS in {} is not reachable by OpenVidu Server", firstProps.getUri());
 			if (kClient != null) {
 				kClient.destroy();
 			}

@@ -25,7 +25,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.commons.lang3.RandomStringUtils;
 import org.kurento.client.KurentoClient;
 import org.kurento.client.ModuleInfo;
 import org.kurento.client.ServerInfo;
@@ -64,9 +63,9 @@ public class Kms {
 
 	private Map<String, KurentoSession> kurentoSessions = new ConcurrentHashMap<>();
 
-	public Kms(String uri, LoadManager loadManager) {
-		this.uri = uri;
-		this.id = "KMS-" + RandomStringUtils.randomAlphanumeric(6).toUpperCase();
+	public Kms(KmsProperties props, LoadManager loadManager) {
+		this.id = props.getId();
+		this.uri = props.getUri();
 
 		String parsedUri = uri.replaceAll("^ws://", "http://").replaceAll("^wss://", "https://");
 		URL url = null;
