@@ -22,6 +22,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+/**
+ * @author Pablo Fuente (pablofuenteperez@gmail.com)
+ */
 public class CommandExecutor {
 
 	public static String execCommand(String... command) throws IOException, InterruptedException {
@@ -40,23 +43,34 @@ public class CommandExecutor {
 			String... command) throws IOException, InterruptedException {
 		ProcessBuilder processBuilder = new ProcessBuilder(command).redirectOutput(standardOutputFile)
 				.redirectError(errorOutputFile);
-		commonExecCommand(processBuilder);
+		Process process = processBuilder.start();
+		process.waitFor();
 	}
 
 	private static String commonExecCommand(ProcessBuilder processBuilder) throws IOException, InterruptedException {
 		Process process = processBuilder.start();
 		StringBuilder processOutput = new StringBuilder();
-
-		try (BufferedReader processOutputReader = new BufferedReader(
-				new InputStreamReader(process.getInputStream()));) {
-
+		String output;
+		InputStreamReader inputStreamReader = null;
+		BufferedReader processOutputReader = null;
+		try {
+			inputStreamReader = new InputStreamReader(process.getInputStream());
+			processOutputReader = new BufferedReader(inputStreamReader);
 			String readLine;
 			while ((readLine = processOutputReader.readLine()) != null) {
 				processOutput.append(readLine + System.lineSeparator());
 			}
 			process.waitFor();
+			output = processOutput.toString().trim();
+		} finally {
+			if (inputStreamReader != null) {
+				inputStreamReader.close();
+			}
+			if (processOutputReader != null) {
+				processOutputReader.close();
+			}
 		}
-		return processOutput.toString().trim();
+		return output;
 	}
 
 }
