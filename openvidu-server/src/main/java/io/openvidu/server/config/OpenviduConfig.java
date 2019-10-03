@@ -172,7 +172,7 @@ public class OpenviduConfig {
 		}
 
 		try {
-			this.initiateKmsUris(this.kmsUris);
+			this.kmsUrisList = this.kmsUrisStringToList(this.kmsUris);
 		} catch (Exception e) {
 			log.error("Error in 'kms.uris' system property: " + e.getMessage());
 			log.error("Shutting down OpenVidu Server");
@@ -380,7 +380,7 @@ public class OpenviduConfig {
 		return this.externalizedProperties;
 	}
 
-	private void initiateKmsUris(String kmsUris) throws Exception {
+	public List<String> kmsUrisStringToList(String kmsUris) throws Exception {
 		kmsUris = kmsUris.replaceAll("\\s", ""); // Remove all white spaces
 		kmsUris = kmsUris.replaceAll("\\\\", ""); // Remove previous escapes
 		kmsUris = kmsUris.replaceAll("\"", ""); // Remove previous double quotes
@@ -389,15 +389,17 @@ public class OpenviduConfig {
 		kmsUris = kmsUris.replaceAll(",", "\\\",\\\""); // Escape middle uris
 		Gson gson = new Gson();
 		JsonArray kmsUrisArray = gson.fromJson(kmsUris, JsonArray.class);
-		this.kmsUrisList = JsonUtils.toStringList(kmsUrisArray);
-		if (kmsUrisList.size() == 1 && kmsUrisList.get(0).isEmpty()) {
+
+		List<String> list = JsonUtils.toStringList(kmsUrisArray);
+		if (list.size() == 1 && list.get(0).isEmpty()) {
 			log.warn("Array kms.uris is empty");
-			this.kmsUrisList = new ArrayList<>();
+			list = new ArrayList<>();
 		} else {
 			for (String uri : kmsUrisList) {
 				this.checkWebsocketUri(uri);
 			}
 		}
+		return list;
 	}
 
 	public void initiateOpenViduWebhookEndpoint(String endpoint) throws Exception {
