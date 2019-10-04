@@ -395,7 +395,7 @@ public class OpenviduConfig {
 			log.warn("Array kms.uris is empty");
 			list = new ArrayList<>();
 		} else {
-			for (String uri : kmsUrisList) {
+			for (String uri : list) {
 				this.checkWebsocketUri(uri);
 			}
 		}
