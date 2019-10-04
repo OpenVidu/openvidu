@@ -28,7 +28,6 @@ import org.kurento.client.GenericMediaEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import io.openvidu.java.client.Recording.Status;
-import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
@@ -94,9 +93,6 @@ public class CallDetailRecord {
 
 	@Autowired
 	private SessionManager sessionManager;
-
-	@Autowired
-	private OpenviduConfig openviduConfig;
 
 	private Collection<CDRLogger> loggers;
 
