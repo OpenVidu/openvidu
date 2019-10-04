@@ -118,6 +118,10 @@ public class Session implements SessionInterface {
 		return closed;
 	}
 
+	public String getMediaServerId() {
+		return null;
+	}
+
 	protected void checkClosed() {
 		if (isClosed()) {
 			throw new OpenViduException(Code.ROOM_CLOSED_ERROR_CODE, "The session '" + sessionId + "' is closed");

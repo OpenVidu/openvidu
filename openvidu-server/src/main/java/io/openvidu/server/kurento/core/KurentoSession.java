@@ -170,6 +170,11 @@ public class KurentoSession extends Session {
 		}
 	}
 
+	@Override
+	public String getMediaServerId() {
+		return this.kms.getId();
+	}
+
 	public void sendIceCandidate(String participantPrivateId, String senderPublicId, String endpointName,
 			IceCandidate candidate) {
 		this.kurentoSessionHandler.onIceCandidate(sessionId, participantPrivateId, senderPublicId, endpointName,
