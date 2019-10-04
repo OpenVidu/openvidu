@@ -66,6 +66,8 @@ import io.openvidu.server.rpc.RpcNotificationService;
 import io.openvidu.server.utils.CommandExecutor;
 import io.openvidu.server.utils.GeoLocationByIp;
 import io.openvidu.server.utils.GeoLocationByIpDummy;
+import io.openvidu.server.utils.QuarantineKiller;
+import io.openvidu.server.utils.QuarantineKillerDummy;
 import io.openvidu.server.webhook.CDRLoggerWebhook;
 
 /**
@@ -177,6 +179,12 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	@ConditionalOnMissingBean
 	public GeoLocationByIp geoLocationByIp() {
 		return new GeoLocationByIpDummy();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public QuarantineKiller quarantineKiller() {
+		return new QuarantineKillerDummy();
 	}
 
 	@Override

@@ -51,6 +51,7 @@ import io.openvidu.server.kurento.core.KurentoTokenOptions;
 import io.openvidu.server.recording.service.RecordingManager;
 import io.openvidu.server.utils.FormatChecker;
 import io.openvidu.server.utils.GeoLocation;
+import io.openvidu.server.utils.QuarantineKiller;
 
 public abstract class SessionManager {
 
@@ -70,6 +71,9 @@ public abstract class SessionManager {
 
 	@Autowired
 	protected TokenGenerator tokenGenerator;
+
+	@Autowired
+	protected QuarantineKiller quarantineKiller;
 
 	public FormatChecker formatChecker = new FormatChecker();
 
@@ -500,6 +504,8 @@ public abstract class SessionManager {
 			recordingManager.stopRecording(session, null, RecordingManager.finalReason(reason));
 		}
 
+		final String mediaServerId = session.getMediaServerId();
+
 		if (session.close(reason)) {
 			sessionEventsHandler.onSessionClosed(session.getSessionId(), reason);
 		}
@@ -507,6 +513,10 @@ public abstract class SessionManager {
 		this.cleanCollections(session.getSessionId());
 
 		log.info("Session '{}' removed and closed", session.getSessionId());
+
+		if (mediaServerId != null) {
+			this.quarantineKiller.dropMediaServer(mediaServerId);
+		}
 	}
 
 	protected void cleanCollections(String sessionId) {
