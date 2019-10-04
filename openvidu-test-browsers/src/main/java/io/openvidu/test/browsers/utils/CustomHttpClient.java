@@ -17,6 +17,7 @@
 
 package io.openvidu.test.browsers.utils;
 
+import java.io.IOException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -71,12 +72,11 @@ public class CustomHttpClient {
 				.setSSLHostnameVerifier(new NoopHostnameVerifier()).build();
 		Unirest.setHttpClient(unsafeHttpClient);
 	}
-	
+
 	public int getAndReturnStatus(String path, String credentials) throws Exception {
 		path = openviduUrl + (path.startsWith("/") ? path : ("/" + path));
 		return Unirest.get(path).header("Authorization", credentials).asJson().getStatus();
 	}
-
 
 	public JSONObject rest(HttpMethod method, String path, int status) throws Exception {
 		return this.commonRest(method, path, null, status);
@@ -179,8 +179,12 @@ public class CustomHttpClient {
 		return json;
 	}
 
+	public void shutdown() throws IOException {
+		Unirest.shutdown();
+	}
+
 	private org.json.JSONObject commonRest(HttpMethod method, String path, String body, int status) throws Exception {
-		HttpResponse<JsonNode> jsonResponse = null;
+		HttpResponse<?> jsonResponse = null;
 		org.json.JSONObject json = null;
 		path = openviduUrl + (path.startsWith("/") ? path : ("/" + path));
 
@@ -201,27 +205,42 @@ public class CustomHttpClient {
 			switch (method) {
 			case GET:
 				request = Unirest.get(path);
+				request.header("Content-Type", "application/x-www-form-urlencoded");
 				break;
 			case POST:
 				request = Unirest.post(path);
 				break;
 			case DELETE:
 				request = Unirest.delete(path);
+				request.header("Content-Type", "application/x-www-form-urlencoded");
 				break;
 			default:
 				break;
 			}
-			request.header("Content-Type", "application/x-www-form-urlencoded");
 		}
+
+		request = request.header("Authorization", this.headerAuth);
 		try {
-			jsonResponse = request.header("Authorization", this.headerAuth).asJson();
+			jsonResponse = request.asJson();
 			if (jsonResponse.getBody() != null) {
-				json = jsonResponse.getBody().getObject();
+				json = ((JsonNode) jsonResponse.getBody()).getObject();
 			}
 		} catch (UnirestException e) {
-			log.error(e.getMessage());
-			throw new Exception("Error sending request to " + path + ": " + e.getMessage());
+			try {
+				if (e.getCause().getCause().getCause() instanceof org.json.JSONException) {
+					try {
+						jsonResponse = request.asString();
+					} catch (UnirestException e1) {
+						throw new Exception("Error sending request to " + path + ": " + e.getMessage());
+					}
+				} else {
+					throw new Exception("Error sending request to " + path + ": " + e.getMessage());
+				}
+			} catch (NullPointerException e2) {
+				throw new Exception("Error sending request to " + path + ": " + e.getMessage());
+			}
 		}
+
 		if (jsonResponse.getStatus() == 500) {
 			log.error("Internal Server Error: {}", jsonResponse.getBody().toString());
 		}
