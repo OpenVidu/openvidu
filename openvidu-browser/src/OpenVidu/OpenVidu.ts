@@ -566,6 +566,7 @@ export class OpenVidu {
                     reject(new OpenViduError(errorName, errorMessage));
                   });
               }
+              return;
             }
           }
           const constraintsAux = mustAskForAudioTrackLater ? { video: constraints.video } : constraints;
