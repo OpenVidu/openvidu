@@ -15,7 +15,7 @@
  *
  */
 
-package io.openvidu.test.e2e.utils;
+package io.openvidu.test.browsers.utils;
 
 import java.util.Collections;
 import java.util.Map;

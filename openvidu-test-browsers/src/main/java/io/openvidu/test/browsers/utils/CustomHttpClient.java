@@ -15,7 +15,7 @@
  *
  */
 
-package io.openvidu.test.e2e.utils;
+package io.openvidu.test.browsers.utils;
 
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
@@ -24,11 +24,9 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.net.ssl.SSLContext;
 
-import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
@@ -37,7 +35,6 @@ import org.apache.http.ssl.SSLContextBuilder;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,9 +53,9 @@ public class CustomHttpClient {
 	private String openviduUrl;
 	private String headerAuth;
 
-	public CustomHttpClient(String openviduUrl, String openviduSecret) {
-		this.openviduUrl = openviduUrl.replaceFirst("/*$", "");
-		this.headerAuth = "Basic " + Base64.getEncoder().encodeToString(("OPENVIDUAPP:" + openviduSecret).getBytes());
+	public CustomHttpClient(String url, String user, String pass) throws Exception {
+		this.openviduUrl = url.replaceFirst("/*$", "");
+		this.headerAuth = "Basic " + Base64.getEncoder().encodeToString((user + ":" + pass).getBytes());
 
 		SSLContext sslContext = null;
 		try {
@@ -68,46 +65,43 @@ public class CustomHttpClient {
 				}
 			}).build();
 		} catch (KeyManagementException | NoSuchAlgorithmException | KeyStoreException e) {
-			Assert.fail("Error building custom HttpClient: " + e.getMessage());
+			throw new Exception("Error building custom HttpClient: " + e.getMessage());
 		}
 		HttpClient unsafeHttpClient = HttpClients.custom().setSSLContext(sslContext)
 				.setSSLHostnameVerifier(new NoopHostnameVerifier()).build();
 		Unirest.setHttpClient(unsafeHttpClient);
 	}
-
-	public void testAuthorizationError() {
-		try {
-			String wrongCredentials = "Basic "
-					+ Base64.getEncoder().encodeToString(("OPENVIDUAPP:WRONG_SECRET").getBytes());
-			Assert.assertEquals("Expected 401 status (unauthorized)", HttpStatus.SC_UNAUTHORIZED, Unirest
-					.get(openviduUrl + "/config").header("Authorization", wrongCredentials).asJson().getStatus());
-		} catch (UnirestException e) {
-			Assert.fail("Error testing UNAUTHORIZED rest method: " + e.getMessage());
-		}
+	
+	public int getAndReturnStatus(String path, String credentials) throws Exception {
+		path = openviduUrl + (path.startsWith("/") ? path : ("/" + path));
+		return Unirest.get(path).header("Authorization", credentials).asJson().getStatus();
 	}
 
-	public JSONObject rest(HttpMethod method, String path, int status) {
+
+	public JSONObject rest(HttpMethod method, String path, int status) throws Exception {
 		return this.commonRest(method, path, null, status);
 	}
 
-	public JSONObject rest(HttpMethod method, String path, String body, int status) {
+	public JSONObject rest(HttpMethod method, String path, String body, int status) throws Exception {
 		return this.commonRest(method, path, body, status);
 	}
 
 	public JSONObject rest(HttpMethod method, String path, String body, int status, boolean exactReturnedFields,
-			String jsonReturnedValue) {
+			String jsonReturnedValue) throws Exception {
 		JSONObject json = this.commonRest(method, path, body, status);
 		JSONObject jsonObjExpected = null;
 		jsonReturnedValue.replaceAll("'", "\"");
 		try {
 			jsonObjExpected = new JSONObject(jsonReturnedValue);
 		} catch (JSONException e1) {
-			Assert.fail("Expected json element is a string without a JSON format: " + jsonReturnedValue);
+			throw new Exception("Expected json element is a string without a JSON format: " + jsonReturnedValue);
 		}
 
 		if (exactReturnedFields) {
-			Assert.assertEquals("Error in number of keys in JSON response to POST (" + json.toString() + ")" + path,
-					jsonObjExpected.length(), json.length());
+			if (jsonObjExpected.length() != json.length()) {
+				throw new Exception(
+						"Error in number of keys in JSON response to POST (" + json.toString() + ")" + path);
+			}
 		}
 		for (String key : jsonObjExpected.keySet()) {
 			Class<?> c1 = jsonObjExpected.get(key).getClass();
@@ -116,21 +110,23 @@ public class CustomHttpClient {
 			c1 = unifyNumberType(c1);
 			c2 = unifyNumberType(c2);
 
-			Assert.assertTrue("Wrong class of property " + key, c1.equals(c2));
+			if (!c1.equals(c2)) {
+				throw new Exception("Wrong class of property " + key);
+			}
 		}
 		return json;
 	}
 
 	public JSONObject rest(HttpMethod method, String path, String body, int status, boolean exactReturnedFields,
-			Map<String, ?> jsonResponse) {
+			Map<String, ?> jsonResponse) throws Exception {
 		org.json.JSONObject json = this.commonRest(method, path, body, status);
 
 		if (exactReturnedFields) {
-			Assert.assertEquals("Error in number of keys in JSON response to POST " + path, jsonResponse.size(),
-					json.length());
+			if (jsonResponse.size() != json.length())
+				throw new Exception("Error in number of keys in JSON response to POST " + path);
 		}
 
-		for (Entry<String, ?> entry : jsonResponse.entrySet()) {
+		for (Map.Entry<String, ?> entry : jsonResponse.entrySet()) {
 			Object value = entry.getValue();
 
 			if (value instanceof String) {
@@ -146,34 +142,44 @@ public class CustomHttpClient {
 						// COMPARE
 
 					} catch (JSONException e2) {
-						Assert.assertEquals("JSON field " + entry.getKey() + " has not expected value", (String) value,
-								json.getInt(entry.getKey()));
+						if (((String) value) != json.getString(entry.getKey())) {
+							throw new Exception("JSON field " + entry.getKey() + " has not expected value. Expected: "
+									+ value + ". Actual: " + json.getString(entry.getKey()));
+						}
 					}
 				}
 			} else if (value instanceof Integer) {
-				Assert.assertEquals("JSON field " + entry.getKey() + " has not expected value", (int) value,
-						json.getInt(entry.getKey()));
+				if (((int) value) != json.getInt(entry.getKey())) {
+					throw new Exception("JSON field " + entry.getKey() + " has not expected value. Expected: " + value
+							+ ". Actual: " + json.getInt(entry.getKey()));
+				}
 			} else if (value instanceof Long) {
-				Assert.assertEquals("JSON field " + entry.getKey() + " has not expected value", (long) value,
-						json.getLong(entry.getKey()));
+				if (((long) value) != json.getLong(entry.getKey())) {
+					throw new Exception("JSON field " + entry.getKey() + " has not expected value. Expected: " + value
+							+ ". Actual: " + json.getLong(entry.getKey()));
+				}
 			} else if (value instanceof Double) {
-				Assert.assertEquals("JSON field " + entry.getKey() + " has not expected value", (double) value,
-						json.getDouble(entry.getKey()), 0.001);
+				if (((double) value) != json.getDouble(entry.getKey())) {
+					throw new Exception("JSON field " + entry.getKey() + " has not expected value. Expected: " + value
+							+ ". Actual: " + json.getDouble(entry.getKey()));
+				}
 			} else if (value instanceof Boolean) {
-				Assert.assertEquals("JSON field " + entry.getKey() + " has not expected value", (boolean) value,
-						json.getBoolean(entry.getKey()));
+				if (((boolean) value) != json.getBoolean(entry.getKey())) {
+					throw new Exception("JSON field " + entry.getKey() + " has not expected value. Expected: " + value
+							+ ". Actual: " + json.getBoolean(entry.getKey()));
+				}
 			} else if (value instanceof JSONArray) {
 				json.getJSONArray(entry.getKey());
 			} else if (value instanceof JSONObject) {
 				json.getJSONObject(entry.getKey());
 			} else {
-				Assert.fail("JSON response field cannot be parsed: " + entry.toString());
+				throw new Exception("JSON response field cannot be parsed: " + entry.toString());
 			}
 		}
 		return json;
 	}
 
-	private org.json.JSONObject commonRest(HttpMethod method, String path, String body, int status) {
+	private org.json.JSONObject commonRest(HttpMethod method, String path, String body, int status) throws Exception {
 		HttpResponse<JsonNode> jsonResponse = null;
 		org.json.JSONObject json = null;
 		path = openviduUrl + (path.startsWith("/") ? path : ("/" + path));
@@ -214,12 +220,16 @@ public class CustomHttpClient {
 			}
 		} catch (UnirestException e) {
 			log.error(e.getMessage());
-			Assert.fail("Error sending request to " + path + ": " + e.getMessage());
+			throw new Exception("Error sending request to " + path + ": " + e.getMessage());
 		}
 		if (jsonResponse.getStatus() == 500) {
 			log.error("Internal Server Error: {}", jsonResponse.getBody().toString());
 		}
-		Assert.assertEquals(path + " expected to return status " + status, status, jsonResponse.getStatus());
+
+		if (status != jsonResponse.getStatus()) {
+			throw new Exception(path + " expected to return status " + status + " but got " + jsonResponse.getStatus());
+		}
+
 		return json;
 	}
 

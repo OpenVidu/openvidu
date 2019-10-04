@@ -31,6 +31,7 @@ import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -101,9 +102,9 @@ import io.openvidu.test.browsers.ChromeAndroidUser;
 import io.openvidu.test.browsers.ChromeUser;
 import io.openvidu.test.browsers.FirefoxUser;
 import io.openvidu.test.browsers.OperaUser;
+import io.openvidu.test.browsers.utils.CustomHttpClient;
+import io.openvidu.test.browsers.utils.CustomWebhook;
 import io.openvidu.test.e2e.utils.CommandLineExecutor;
-import io.openvidu.test.e2e.utils.CustomHttpClient;
-import io.openvidu.test.e2e.utils.CustomWebhook;
 import io.openvidu.test.e2e.utils.MultimediaFileMetadata;
 import io.openvidu.test.e2e.utils.Unzipper;
 
@@ -2355,10 +2356,13 @@ public class OpenViduTestAppE2eTest {
 
 		log.info("REST API test");
 
-		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, OPENVIDU_SECRET);
+		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
 
 		// 401
-		restClient.testAuthorizationError();
+		String wrongCredentials = "Basic "
+				+ Base64.getEncoder().encodeToString(("OPENVIDUAPP:WRONG_SECRET").getBytes());
+		Assert.assertEquals("Expected unauthorized status", HttpStatus.SC_UNAUTHORIZED,
+				restClient.getAndReturnStatus("/config", wrongCredentials));
 
 		/** GET /api/sessions (before session created) **/
 		restClient.rest(HttpMethod.GET, "/api/sessions/NOT_EXISTS", HttpStatus.SC_NOT_FOUND);
@@ -2609,7 +2613,8 @@ public class OpenViduTestAppE2eTest {
 		restClient.rest(HttpMethod.DELETE, "/api/sessions/CUSTOM_SESSION_ID", HttpStatus.SC_NO_CONTENT);
 
 		// GET /api/sessions should return empty again
-		restClient.rest(HttpMethod.GET, "/api/sessions", null, HttpStatus.SC_OK, true, ImmutableMap.of("numberOfElements", new Integer(0), "content", new org.json.JSONArray()));
+		restClient.rest(HttpMethod.GET, "/api/sessions", null, HttpStatus.SC_OK, true,
+				ImmutableMap.of("numberOfElements", new Integer(0), "content", new org.json.JSONArray()));
 
 		/** GET /config **/
 		restClient.rest(HttpMethod.GET, "/config", null, HttpStatus.SC_OK, true,
@@ -2771,7 +2776,7 @@ public class OpenViduTestAppE2eTest {
 		log.info("Webhook test");
 
 		CountDownLatch initLatch = new CountDownLatch(1);
-		CustomWebhook.main(new String[0], initLatch);
+		io.openvidu.test.browsers.utils.CustomWebhook.main(new String[0], initLatch);
 
 		try {
 
