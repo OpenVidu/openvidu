@@ -72,6 +72,7 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -2361,10 +2362,8 @@ public class OpenViduTestAppE2eTest {
 
 		/** GET /api/sessions (before session created) **/
 		restClient.rest(HttpMethod.GET, "/api/sessions/NOT_EXISTS", HttpStatus.SC_NOT_FOUND);
-		Map<String, Object> returnValues = new HashMap<>();
-		returnValues.put("numberOfElements", new Integer(0));
-		returnValues.put("content", "[]");
-		restClient.rest(HttpMethod.GET, "/api/sessions", null, HttpStatus.SC_OK, true, returnValues);
+		restClient.rest(HttpMethod.GET, "/api/sessions", null, HttpStatus.SC_OK, true,
+				ImmutableMap.of("numberOfElements", new Integer(0), "content", new org.json.JSONArray()));
 
 		/** POST /api/sessions **/
 		// 400
@@ -2397,10 +2396,8 @@ public class OpenViduTestAppE2eTest {
 		/** GET /api/sessions (after session created) **/
 		restClient.rest(HttpMethod.GET, "/api/sessions/CUSTOM_SESSION_ID", null, HttpStatus.SC_OK, true,
 				"{'sessionId':'STR','createdAt':0,'mediaMode':'STR','recordingMode':'STR','defaultOutputMode':'STR','defaultRecordingLayout':'STR','customSessionId':'STR','connections':{'numberOfElements':0,'content':[]},'recording':true}");
-		returnValues = new HashMap<>();
-		returnValues.put("numberOfElements", new Integer(1));
-		returnValues.put("content", new org.json.JSONArray());
-		restClient.rest(HttpMethod.GET, "/api/sessions", null, HttpStatus.SC_OK, true, returnValues);
+		restClient.rest(HttpMethod.GET, "/api/sessions", null, HttpStatus.SC_OK, true,
+				ImmutableMap.of("numberOfElements", new Integer(1), "content", new org.json.JSONArray()));
 
 		/** POST /api/tokens **/
 		// 400
@@ -2519,10 +2516,8 @@ public class OpenViduTestAppE2eTest {
 
 		/** GET /api/recordings (before recording started) **/
 		restClient.rest(HttpMethod.GET, "/api/recordings/NOT_EXISTS", HttpStatus.SC_NOT_FOUND);
-		returnValues = new HashMap<>();
-		returnValues.put("count", new Integer(0));
-		returnValues.put("items", "[]");
-		restClient.rest(HttpMethod.GET, "/api/recordings", null, HttpStatus.SC_OK, true, returnValues);
+		restClient.rest(HttpMethod.GET, "/api/recordings", null, HttpStatus.SC_OK, true,
+				ImmutableMap.of("count", new Integer(0), "items", new org.json.JSONArray()));
 
 		/** POST /api/recordings/start (ACTIVE SESSION) **/
 		// 200
@@ -2551,10 +2546,8 @@ public class OpenViduTestAppE2eTest {
 		/** GET /api/recordings (after recording created) **/
 		restClient.rest(HttpMethod.GET, "/api/recordings/CUSTOM_SESSION_ID", null, HttpStatus.SC_OK, true,
 				"{'id':'STR','sessionId':'STR','name':'STR','outputMode':'STR','recordingLayout':'STR','hasAudio':false,'hasVideo':false,'resolution':'STR','createdAt':0,'size':0,'duration':0,'url':'STR','status':'STR'}");
-		returnValues = new HashMap<>();
-		returnValues.put("count", new Integer(1));
-		returnValues.put("items", new org.json.JSONArray());
-		restClient.rest(HttpMethod.GET, "/api/recordings", null, HttpStatus.SC_OK, true, returnValues);
+		restClient.rest(HttpMethod.GET, "/api/recordings", null, HttpStatus.SC_OK, true,
+				ImmutableMap.of("count", new Integer(1), "items", new org.json.JSONArray()));
 
 		user.getEventManager().waitUntilEventReaches("recordingStopped", 2);
 
@@ -2564,10 +2557,8 @@ public class OpenViduTestAppE2eTest {
 		restClient.rest(HttpMethod.DELETE, "/api/recordings/CUSTOM_SESSION_ID", HttpStatus.SC_NO_CONTENT);
 
 		// GET /api/recordings should return empty again
-		returnValues = new HashMap<>();
-		returnValues.put("count", new Integer(0));
-		returnValues.put("items", "[]");
-		restClient.rest(HttpMethod.GET, "/api/recordings", null, HttpStatus.SC_OK, true, returnValues);
+		restClient.rest(HttpMethod.GET, "/api/recordings", null, HttpStatus.SC_OK, true,
+				ImmutableMap.of("count", new Integer(0), "items", new org.json.JSONArray()));
 
 		/** DELETE /api/sessions/<SESSION_ID>/stream/<STREAM_ID> **/
 		restClient.rest(HttpMethod.DELETE, "/api/sessions/NOT_EXISTS/stream/NOT_EXISTS", HttpStatus.SC_BAD_REQUEST);
@@ -2618,10 +2609,7 @@ public class OpenViduTestAppE2eTest {
 		restClient.rest(HttpMethod.DELETE, "/api/sessions/CUSTOM_SESSION_ID", HttpStatus.SC_NO_CONTENT);
 
 		// GET /api/sessions should return empty again
-		returnValues = new HashMap<>();
-		returnValues.put("numberOfElements", new Integer(0));
-		returnValues.put("content", "[]");
-		restClient.rest(HttpMethod.GET, "/api/sessions", null, HttpStatus.SC_OK, true, returnValues);
+		restClient.rest(HttpMethod.GET, "/api/sessions", null, HttpStatus.SC_OK, true, ImmutableMap.of("numberOfElements", new Integer(0), "content", new org.json.JSONArray()));
 
 		/** GET /config **/
 		restClient.rest(HttpMethod.GET, "/config", null, HttpStatus.SC_OK, true,
