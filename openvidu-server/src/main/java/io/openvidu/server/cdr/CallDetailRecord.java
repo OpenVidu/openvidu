@@ -93,10 +93,10 @@ import io.openvidu.server.webhook.CDRLoggerWebhook;
 public class CallDetailRecord {
 
 	@Autowired
-	protected SessionManager sessionManager;
+	private SessionManager sessionManager;
 
 	@Autowired
-	protected OpenviduConfig openviduConfig;
+	private OpenviduConfig openviduConfig;
 
 	private Collection<CDRLogger> loggers;
 
@@ -226,7 +226,7 @@ public class CallDetailRecord {
 		this.log(new CDREventFilterEvent(sessionId, participantId, streamId, filterType, event));
 	}
 
-	private void log(CDREvent event) {
+	protected void log(CDREvent event) {
 		this.loggers.forEach(logger -> {
 
 			// TEMP FIX: AVOID SENDING recordingStarted AND recordingStopped EVENTS TO

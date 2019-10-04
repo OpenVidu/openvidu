@@ -45,7 +45,9 @@ public class CDREvent {
 
 	public JsonObject toJson() {
 		JsonObject json = new JsonObject();
-		json.addProperty("sessionId", this.sessionId);
+		if (sessionId != null) {
+			json.addProperty("sessionId", this.sessionId);
+		}
 		json.addProperty("timestamp", this.timeStamp);
 		return json;
 	}
