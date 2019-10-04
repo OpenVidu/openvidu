@@ -58,15 +58,13 @@ public class KurentoSession extends Session {
 
 	private Object pipelineCreateLock = new Object();
 	private Object pipelineReleaseLock = new Object();
-	private boolean destroyKurentoClient;
 
 	public final ConcurrentHashMap<String, String> publishedStreamIds = new ConcurrentHashMap<>();
 
 	public KurentoSession(Session sessionNotActive, Kms kms, KurentoSessionEventsHandler kurentoSessionHandler,
-			KurentoParticipantEndpointConfig kurentoEndpointConfig, boolean destroyKurentoClient) {
+			KurentoParticipantEndpointConfig kurentoEndpointConfig) {
 		super(sessionNotActive);
 		this.kms = kms;
-		this.destroyKurentoClient = destroyKurentoClient;
 		this.kurentoSessionHandler = kurentoSessionHandler;
 		this.kurentoEndpointConfig = kurentoEndpointConfig;
 		log.debug("New SESSION instance with id '{}'", sessionId);
@@ -154,10 +152,6 @@ public class KurentoSession extends Session {
 			closePipeline(null);
 
 			log.debug("Session {} closed", this.sessionId);
-
-			if (destroyKurentoClient) {
-				kms.getKurentoClient().destroy();
-			}
 
 			// Also disassociate the KurentoSession from the Kms
 			kms.removeKurentoSession(this.sessionId);

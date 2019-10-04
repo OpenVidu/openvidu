@@ -496,8 +496,7 @@ public class KurentoSessionManager extends SessionManager {
 			throw new OpenViduException(Code.ROOM_CANNOT_BE_CREATED_ERROR_CODE,
 					"Session '" + session.getSessionId() + "' already exists");
 		}
-		session = new KurentoSession(sessionNotActive, kms, kurentoSessionEventsHandler, kurentoEndpointConfig,
-				kmsManager.destroyWhenUnused());
+		session = new KurentoSession(sessionNotActive, kms, kurentoSessionEventsHandler, kurentoEndpointConfig);
 
 		KurentoSession oldSession = (KurentoSession) sessions.putIfAbsent(session.getSessionId(), session);
 		if (oldSession != null) {
@@ -843,10 +842,6 @@ public class KurentoSessionManager extends SessionManager {
 	public String getParticipantPrivateIdFromStreamId(String sessionId, String streamId) {
 		Session session = this.getSession(sessionId);
 		return ((KurentoSession) session).getParticipantPrivateIdFromStreamId(streamId);
-	}
-
-	public KmsManager getKmsManager() {
-		return this.kmsManager;
 	}
 
 	private void applyFilterInPublisher(KurentoParticipant kParticipant, KurentoFilter filter)

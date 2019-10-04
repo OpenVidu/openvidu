@@ -132,10 +132,6 @@ public abstract class KmsManager {
 		return kmsLoads;
 	}
 
-	public boolean destroyWhenUnused() {
-		return false;
-	}
-
 	protected KurentoConnectionListener generateKurentoConnectionListener(String kmsId) {
 		return new KurentoConnectionListener() {
 

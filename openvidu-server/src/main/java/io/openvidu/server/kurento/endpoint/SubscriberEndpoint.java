@@ -40,7 +40,7 @@ public class SubscriberEndpoint extends MediaEndpoint {
 
 	private AtomicBoolean connectedToPublisher = new AtomicBoolean(false);
 
-	private PublisherEndpoint publisher = null;
+	private String publisherStreamId;
 
 	public SubscriberEndpoint(boolean web, KurentoParticipant owner, String endpointName, MediaPipeline pipeline,
 			OpenviduConfig openviduConfig) {
@@ -54,7 +54,7 @@ public class SubscriberEndpoint extends MediaEndpoint {
 		gatherCandidates();
 		publisher.connect(this.getEndpoint());
 		setConnectedToPublisher(true);
-		setPublisher(publisher);
+		this.publisherStreamId = publisher.getStreamId();
 		return sdpAnswer;
 	}
 
@@ -66,15 +66,11 @@ public class SubscriberEndpoint extends MediaEndpoint {
 		this.connectedToPublisher.set(connectedToPublisher);
 	}
 
-	public void setPublisher(PublisherEndpoint publisher) {
-		this.publisher = publisher;
-	}
-
 	@Override
 	public JsonObject toJson() {
 		JsonObject json = super.toJson();
 		try {
-			json.addProperty("streamId", this.publisher.getStreamId());
+			json.addProperty("streamId", this.publisherStreamId);
 		} catch (NullPointerException ex) {
 			json.addProperty("streamId", "NOT_FOUND");
 		}
