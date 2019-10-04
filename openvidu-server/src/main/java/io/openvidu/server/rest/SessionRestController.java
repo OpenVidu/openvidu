@@ -153,13 +153,12 @@ public class SessionRestController {
 
 		String sessionId;
 		if (customSessionId != null && !customSessionId.isEmpty()) {
-			if (sessionManager.sessionidTokenTokenobj.putIfAbsent(customSessionId, new ConcurrentHashMap<>()) != null) {
+			if (sessionManager.getSessionWithNotActive(customSessionId) != null) {
 				return new ResponseEntity<>(HttpStatus.CONFLICT);
 			}
 			sessionId = customSessionId;
 		} else {
 			sessionId = RandomStringUtils.randomAlphanumeric(16).toLowerCase();
-			sessionManager.sessionidTokenTokenobj.putIfAbsent(sessionId, new ConcurrentHashMap<>());
 		}
 
 		Session sessionNotActive = sessionManager.storeSessionNotActive(sessionId, sessionProperties);
@@ -236,20 +235,17 @@ public class SessionRestController {
 
 		log.info("REST API: DELETE /api/sessions/{}/connection/{}", sessionId, participantPublicId);
 
-		Session session = this.sessionManager.getSession(sessionId);
-		if (session != null) {
-			Participant participant = session.getParticipantByPublicId(participantPublicId);
-			if (participant != null) {
-				this.sessionManager.evictParticipant(participant, null, null, EndReason.forceDisconnectByServer);
-				return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-			} else {
-				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-			}
-		} else {
-			if (this.sessionManager.getSessionNotActive(sessionId) != null) {
-				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-			}
+		Session session = this.sessionManager.getSessionWithNotActive(sessionId);
+		if (session == null) {
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		}
+
+		Participant participant = session.getParticipantByPublicId(participantPublicId);
+		if (participant != null) {
+			this.sessionManager.evictParticipant(participant, null, null, EndReason.forceDisconnectByServer);
+			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+		} else {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
 	}
 
@@ -259,7 +255,12 @@ public class SessionRestController {
 
 		log.info("REST API: DELETE /api/sessions/{}/stream/{}", sessionId, streamId);
 
-		Session session = this.sessionManager.getSession(sessionId);
+		Session session = this.sessionManager.getSessionWithNotActive(sessionId);
+		if (session == null) {
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		}
+
+		session = this.sessionManager.getSession(sessionId);
 		if (session != null) {
 			if (this.sessionManager.unpublishStream(session, streamId, null, null, EndReason.forceUnpublishByServer)) {
 				return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -267,10 +268,7 @@ public class SessionRestController {
 				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 			}
 		} else {
-			if (this.sessionManager.getSessionNotActive(sessionId) != null) {
-				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-			}
-			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
 	}
 
@@ -298,6 +296,11 @@ public class SessionRestController {
 		if (sessionId == null) {
 			return this.generateErrorResponse("\"session\" parameter is mandatory", "/api/tokens",
 					HttpStatus.BAD_REQUEST);
+		}
+
+		if (this.sessionManager.getSessionWithNotActive(sessionId) == null) {
+			return this.generateErrorResponse("Session " + sessionId + " not found", "/api/tokens",
+					HttpStatus.NOT_FOUND);
 		}
 
 		JsonObject kurentoOptions = null;
@@ -335,13 +338,8 @@ public class SessionRestController {
 
 		metadata = (metadata != null) ? metadata : "";
 
-		String token;
-		try {
-			token = sessionManager.newToken(sessionId, role, metadata, kurentoTokenOptions);
-		} catch (OpenViduException e) {
-			// Session was not found
-			return this.generateErrorResponse(e.getMessage(), "/api/tokens", HttpStatus.NOT_FOUND);
-		}
+		String token = sessionManager.newToken(sessionId, role, metadata, kurentoTokenOptions);
+
 		JsonObject responseJson = new JsonObject();
 		responseJson.addProperty("id", token);
 		responseJson.addProperty("session", sessionId);

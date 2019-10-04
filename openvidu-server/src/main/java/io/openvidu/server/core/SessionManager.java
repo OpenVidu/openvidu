@@ -173,6 +173,10 @@ public abstract class SessionManager {
 		return this.sessionsNotActive.get(sessionId);
 	}
 
+	public Session getSessionWithNotActive(String sessionId) {
+		return (sessions.get(sessionId) != null ? sessions.get(sessionId) : sessionsNotActive.get(sessionId));
+	}
+
 	public Collection<Session> getSessionsWithNotActive() {
 		Collection<Session> allSessions = new HashSet<>();
 		allSessions.addAll(this.sessionsNotActive.values().stream()
@@ -262,24 +266,13 @@ public abstract class SessionManager {
 
 	public Session storeSessionNotActive(String sessionId, SessionProperties sessionProperties) {
 		Session sessionNotActive = new Session(sessionId, sessionProperties, openviduConfig, recordingManager);
-		this.sessionsNotActive.put(sessionId, sessionNotActive);
-		this.sessionidParticipantpublicidParticipant.putIfAbsent(sessionId, new ConcurrentHashMap<>());
-		this.sessionidFinalUsers.putIfAbsent(sessionId, new ConcurrentHashMap<>());
-		if (this.openviduConfig.isRecordingModuleEnabled()) {
-			this.sessionidAccumulatedRecordings.putIfAbsent(sessionId, new ConcurrentLinkedQueue<>());
-		}
-		showTokens();
-		return sessionNotActive;
+		return this.storeSessionNotActive(sessionNotActive);
 	}
 
 	public Session storeSessionNotActive(Session sessionNotActive) {
 		final String sessionId = sessionNotActive.getSessionId();
 		this.sessionsNotActive.put(sessionId, sessionNotActive);
-		this.sessionidParticipantpublicidParticipant.putIfAbsent(sessionId, new ConcurrentHashMap<>());
-		this.sessionidFinalUsers.putIfAbsent(sessionId, new ConcurrentHashMap<>());
-		if (this.openviduConfig.isRecordingModuleEnabled()) {
-			this.sessionidAccumulatedRecordings.putIfAbsent(sessionId, new ConcurrentLinkedQueue<>());
-		}
+		this.initializeCollections(sessionId);
 		showTokens();
 		return sessionNotActive;
 	}
@@ -287,9 +280,9 @@ public abstract class SessionManager {
 	public String newToken(String sessionId, OpenViduRole role, String serverMetadata,
 			KurentoTokenOptions kurentoTokenOptions) throws OpenViduException {
 
-		ConcurrentHashMap<String, Token> map = this.sessionidTokenTokenobj.putIfAbsent(sessionId,
-				new ConcurrentHashMap<>());
-		if (map != null) {
+		Map<String, Token> tokenMap = this.sessionidTokenTokenobj.get(sessionId);
+
+		if (tokenMap != null) {
 
 			if (!formatChecker.isServerMetadataFormatCorrect(serverMetadata)) {
 				log.error("Data invalid format");
@@ -297,14 +290,12 @@ public abstract class SessionManager {
 			}
 
 			Token token = tokenGenerator.generateToken(sessionId, role, serverMetadata, kurentoTokenOptions);
-
-			map.putIfAbsent(token.getToken(), token);
+			tokenMap.putIfAbsent(token.getToken(), token);
 			showTokens();
 			return token.getToken();
 
 		} else {
-			this.sessionidTokenTokenobj.remove(sessionId);
-			log.error("sessionId [" + sessionId + "] was not found");
+			log.error("sessionId [" + sessionId + "] was not found (race condition error)");
 			throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE, "sessionId [" + sessionId + "] not found");
 		}
 	}
@@ -317,12 +308,7 @@ public abstract class SessionManager {
 				return false;
 			}
 		} else {
-			this.sessionidParticipantpublicidParticipant.putIfAbsent(sessionId, new ConcurrentHashMap<>());
-			this.sessionidFinalUsers.putIfAbsent(sessionId, new ConcurrentHashMap<>());
-			if (this.openviduConfig.isRecordingModuleEnabled()) {
-				this.sessionidAccumulatedRecordings.putIfAbsent(sessionId, new ConcurrentLinkedQueue<>());
-			}
-			this.sessionidTokenTokenobj.putIfAbsent(sessionId, new ConcurrentHashMap<>());
+			this.initializeCollections(sessionId);
 			this.sessionidTokenTokenobj.get(sessionId).putIfAbsent(token,
 					new Token(token, OpenViduRole.PUBLISHER, "",
 							this.coturnCredentialsService.isCoturnAvailable()
@@ -526,6 +512,15 @@ public abstract class SessionManager {
 		sessionidFinalUsers.remove(sessionId);
 		sessionidAccumulatedRecordings.remove(sessionId);
 		sessionidTokenTokenobj.remove(sessionId);
+	}
+
+	private void initializeCollections(String sessionId) {
+		this.sessionidParticipantpublicidParticipant.putIfAbsent(sessionId, new ConcurrentHashMap<>());
+		this.sessionidFinalUsers.putIfAbsent(sessionId, new ConcurrentHashMap<>());
+		this.sessionidTokenTokenobj.putIfAbsent(sessionId, new ConcurrentHashMap<>());
+		if (this.openviduConfig.isRecordingModuleEnabled()) {
+			this.sessionidAccumulatedRecordings.putIfAbsent(sessionId, new ConcurrentLinkedQueue<>());
+		}
 	}
 
 }
