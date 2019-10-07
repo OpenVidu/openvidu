@@ -2722,8 +2722,10 @@ public class OpenViduTestAppE2eTest {
 					reason);
 			latch.countDown();
 		});
-		this.restartKms();
+
 		long recEndTime = System.currentTimeMillis();
+		this.restartKms();
+
 		user.getEventManager().waitUntilEventReaches("recordingStopped", 2);
 		user.getEventManager().waitUntilEventReaches("streamDestroyed", 2);
 		if (!latch.await(5000, TimeUnit.MILLISECONDS)) {
