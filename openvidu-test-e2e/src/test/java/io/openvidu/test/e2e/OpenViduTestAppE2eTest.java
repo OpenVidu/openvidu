@@ -2251,7 +2251,7 @@ public class OpenViduTestAppE2eTest {
 		OV.deleteRecording(recording2.getId());
 
 		recording2 = OV.startRecording(session.getSessionId(), recordingProperties);
-		user.getEventManager().waitUntilEventReaches("recordingStarted", 3);
+		user.getEventManager().waitUntilEventReaches("recordingStarted", 2);
 
 		Assert.assertEquals("Wrong recording name", customRecordingName, recording2.getName());
 		Assert.assertEquals("Wrong recording id", session.getSessionId() + "-1", recording2.getId());
