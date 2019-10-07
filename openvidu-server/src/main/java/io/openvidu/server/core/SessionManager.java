@@ -368,18 +368,11 @@ public abstract class SessionManager {
 				p.setParticipantPublicId(participantPublicId);
 			}
 
-			FinalUser finalUser = this.sessionidFinalUsers.get(sessionId).get(finalUserId);
-			if (finalUser == null) {
-				// First connection for new final user
-				log.info("Participant {} of session {} belongs to a new final user", p.getParticipantPublicId(),
-						sessionId);
-				this.sessionidFinalUsers.get(sessionId).put(finalUserId, new FinalUser(finalUserId, sessionId, p));
-			} else {
-				// New connection for previously existing final user
-				log.info("Participant {} of session {} belongs to a previously existing user",
+			this.sessionidFinalUsers.get(sessionId).computeIfAbsent(finalUserId, k -> {
+				log.info("Participant {} of session {} is a final user connecting to this session for the first time",
 						p.getParticipantPublicId(), sessionId);
-				finalUser.addConnection(p);
-			}
+				return new FinalUser(finalUserId, sessionId, p);
+			}).addConnectionIfAbsent(p);
 
 			return p;
 		} else {

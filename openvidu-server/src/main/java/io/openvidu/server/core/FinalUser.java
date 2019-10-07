@@ -64,14 +64,14 @@ public class FinalUser {
 		return connections;
 	}
 
-	public void addConnection(Participant participant) {
-		this.connections.put(participant.getParticipantPublicId(), new ParticipantSummary(this.sessionId, participant));
+	public void addConnectionIfAbsent(Participant participant) {
+		this.connections.putIfAbsent(participant.getParticipantPublicId(), new ParticipantSummary(this.sessionId, participant));
 	}
 
 	public void setConnection(CDREventParticipant event) {
-		ParticipantSummary oldSummary = this.connections.remove(event.getParticipant().getParticipantPublicId());
-		this.connections.put(event.getParticipant().getParticipantPublicId(),
-				new ParticipantSummary(event, oldSummary));
+		final String participantPublicId = event.getParticipant().getParticipantPublicId();
+		ParticipantSummary oldSummary = this.connections.remove(participantPublicId);
+		this.connections.put(participantPublicId, new ParticipantSummary(event, oldSummary));
 	}
 
 	public JsonObject toJson() {
