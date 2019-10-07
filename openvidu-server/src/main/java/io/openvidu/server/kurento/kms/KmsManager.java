@@ -185,7 +185,7 @@ public abstract class KmsManager {
 			throws Exception;
 
 	@PostConstruct
-	private void postConstruct() {
+	protected void postConstruct() {
 		try {
 			List<KmsProperties> kmsProps = new ArrayList<>();
 			String kmsId;

@@ -30,6 +30,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import io.openvidu.test.browsers.utils.CommandLineExecutor;
+
 public class MultimediaFileMetadata {
 
 	private static final Logger log = LoggerFactory.getLogger(MultimediaFileMetadata.class);

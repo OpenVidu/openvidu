@@ -102,9 +102,9 @@ import io.openvidu.test.browsers.ChromeAndroidUser;
 import io.openvidu.test.browsers.ChromeUser;
 import io.openvidu.test.browsers.FirefoxUser;
 import io.openvidu.test.browsers.OperaUser;
+import io.openvidu.test.browsers.utils.CommandLineExecutor;
 import io.openvidu.test.browsers.utils.CustomHttpClient;
 import io.openvidu.test.browsers.utils.CustomWebhook;
-import io.openvidu.test.e2e.utils.CommandLineExecutor;
 import io.openvidu.test.e2e.utils.MultimediaFileMetadata;
 import io.openvidu.test.e2e.utils.Unzipper;
 
@@ -3162,6 +3162,11 @@ public class OpenViduTestAppE2eTest {
 
 	private void restartKms() {
 		this.stopKms();
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		this.startKms();
 	}
 
