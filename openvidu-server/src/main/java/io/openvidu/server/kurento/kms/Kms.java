@@ -218,4 +218,9 @@ public class Kms {
 		return json;
 	}
 
+	@Override
+	public String toString() {
+		return this.uri;
+	}
+
 }
