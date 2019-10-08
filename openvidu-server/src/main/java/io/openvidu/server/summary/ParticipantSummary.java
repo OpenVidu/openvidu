@@ -33,8 +33,8 @@ public class ParticipantSummary {
 	private Map<String, CDREventWebrtcConnection> publishers = new ConcurrentHashMap<>();
 	private Map<String, CDREventWebrtcConnection> subscribers = new ConcurrentHashMap<>();
 
-	public ParticipantSummary(String sessionId, Participant participant) {
-		this.eventParticipantEnd = new CDREventParticipant(sessionId, participant);
+	public ParticipantSummary(Participant participant) {
+		this.eventParticipantEnd = new CDREventParticipant(participant);
 	}
 
 	public ParticipantSummary(CDREventParticipant event, ParticipantSummary oldSummary) {

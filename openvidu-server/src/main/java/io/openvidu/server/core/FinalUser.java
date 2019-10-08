@@ -30,26 +30,19 @@ import io.openvidu.server.utils.GeoLocation;
 public class FinalUser {
 
 	private String id;
-	private String sessionId;
 	private GeoLocation location;
 	private String platform;
 	private Map<String, ParticipantSummary> connections = new ConcurrentHashMap<>();
 
 	public FinalUser(String id, String sessionId, Participant firstConnection) {
 		this.id = id;
-		this.sessionId = sessionId;
 		this.location = firstConnection.getLocation();
 		this.platform = firstConnection.getPlatform();
-		this.connections.put(firstConnection.getParticipantPublicId(),
-				new ParticipantSummary(this.sessionId, firstConnection));
+		this.connections.put(firstConnection.getParticipantPublicId(), new ParticipantSummary(firstConnection));
 	}
 
 	public String getId() {
 		return id;
-	}
-
-	public String getSessionId() {
-		return sessionId;
 	}
 
 	public GeoLocation getLocation() {
@@ -65,7 +58,7 @@ public class FinalUser {
 	}
 
 	public void addConnectionIfAbsent(Participant participant) {
-		this.connections.putIfAbsent(participant.getParticipantPublicId(), new ParticipantSummary(this.sessionId, participant));
+		this.connections.putIfAbsent(participant.getParticipantPublicId(), new ParticipantSummary(participant));
 	}
 
 	public void setConnection(CDREventParticipant event) {

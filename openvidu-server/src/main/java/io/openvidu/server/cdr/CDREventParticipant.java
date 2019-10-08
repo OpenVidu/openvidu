@@ -27,8 +27,8 @@ public class CDREventParticipant extends CDREventEnd {
 	private Participant participant;
 
 	// participantJoined
-	public CDREventParticipant(String sessionId, Participant participant) {
-		super(CDREventName.participantJoined, sessionId, participant.getCreatedAt());
+	public CDREventParticipant(Participant participant) {
+		super(CDREventName.participantJoined, participant.getSessionId(), participant.getCreatedAt());
 		this.participant = participant;
 	}
 
