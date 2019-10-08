@@ -36,6 +36,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+import javax.annotation.PostConstruct;
+
 import org.apache.commons.io.FileUtils;
 import org.kurento.client.ErrorEvent;
 import org.kurento.client.EventListener;
@@ -115,6 +117,30 @@ public class RecordingManager {
 	private static final List<EndReason> LAST_PARTICIPANT_LEFT_REASONS = Arrays
 			.asList(new EndReason[] { EndReason.disconnect, EndReason.forceDisconnectByUser,
 					EndReason.forceDisconnectByServer, EndReason.networkDisconnect });
+
+	@PostConstruct
+	public void init() {
+		if (this.openviduConfig.isRecordingModuleEnabled()) {
+			try {
+				this.initializeRecordingManager();
+			} catch (OpenViduException e) {
+				String finalErrorMessage = "";
+				if (e.getCodeValue() == Code.DOCKER_NOT_FOUND.getValue()) {
+					finalErrorMessage = "Error connecting to Docker daemon. Enabling OpenVidu recording module requires Docker";
+				} else if (e.getCodeValue() == Code.RECORDING_PATH_NOT_VALID.getValue()) {
+					finalErrorMessage = "Error initializing recording path \""
+							+ this.openviduConfig.getOpenViduRecordingPath()
+							+ "\" set with system property \"openvidu.recording.path\"";
+				} else if (e.getCodeValue() == Code.RECORDING_FILE_EMPTY_ERROR.getValue()) {
+					finalErrorMessage = "Error initializing recording custom layouts path \""
+							+ this.openviduConfig.getOpenviduRecordingCustomLayout()
+							+ "\" set with system property \"openvidu.recording.custom-layout\"";
+				}
+				log.error(finalErrorMessage + ". Shutting down OpenVidu Server");
+				System.exit(1);
+			}
+		}
+	}
 
 	public void initializeRecordingManager() throws OpenViduException {
 

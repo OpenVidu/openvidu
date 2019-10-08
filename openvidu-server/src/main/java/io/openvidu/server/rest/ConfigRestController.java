@@ -48,7 +48,7 @@ public class ConfigRestController {
 	private static final Logger log = LoggerFactory.getLogger(ConfigRestController.class);
 
 	@Autowired
-	protected OpenviduConfig openviduConfig;
+	private OpenviduConfig openviduConfig;
 
 	@RequestMapping(value = "/openvidu-version", method = RequestMethod.GET)
 	public String getOpenViduServerVersion() {
@@ -108,7 +108,7 @@ public class ConfigRestController {
 			json.addProperty("openviduRecordingVersion", openviduConfig.getOpenViduRecordingVersion());
 			json.addProperty("openviduRecordingPath", openviduConfig.getOpenViduRecordingPath());
 			json.addProperty("openviduRecordingPublicAccess", openviduConfig.getOpenViduRecordingPublicAccess());
-			json.addProperty("openviduRecordingNotification", openviduConfig.getOpenViduRecordingNotification());
+			json.addProperty("openviduRecordingNotification", openviduConfig.getOpenViduRecordingNotification().name());
 			json.addProperty("openviduRecordingCustomLayout", openviduConfig.getOpenviduRecordingCustomLayout());
 			json.addProperty("openviduRecordingAutostopTimeout", openviduConfig.getOpenviduRecordingAutostopTimeout());
 		}
