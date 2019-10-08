@@ -130,7 +130,7 @@ public class CallDetailRecord {
 	}
 
 	public void recordParticipantJoined(Participant participant, String sessionId) {
-		CDREventParticipant e = new CDREventParticipant(sessionId, participant);
+		CDREventParticipant e = new CDREventParticipant(participant);
 		this.participants.put(participant.getParticipantPublicId(), e);
 		this.log(e);
 	}
