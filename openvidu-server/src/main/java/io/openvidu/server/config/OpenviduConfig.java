@@ -62,7 +62,7 @@ public class OpenviduConfig {
 
 	private static final Logger log = LoggerFactory.getLogger(OpenviduConfig.class);
 
-	private static volatile boolean FIRST_INITIALIZATION = true;
+	public static volatile boolean FIRST_INITIALIZATION = true;
 
 	public static final List<String> OPENVIDU_STRING_PROPERTIES = Arrays.asList(new String[] { "openvidu.secret",
 			"openvidu.publicurl", "openvidu.recording.path", "openvidu.recording.notification",
@@ -175,9 +175,9 @@ public class OpenviduConfig {
 	private String springProfile;
 
 	private String finalUrl;
-	private List<String> kmsUrisList;
-	private List<Header> webhookHeadersList;
-	private List<CDREventName> webhookEventsList;
+	private List<String> kmsUrisList = new ArrayList<>();
+	private List<Header> webhookHeadersList = new ArrayList<>();
+	private List<CDREventName> webhookEventsList = new ArrayList<>();
 
 	private Properties externalizedProperties;
 
