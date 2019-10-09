@@ -455,7 +455,7 @@ public class OpenviduConfig {
 				String kmsUris;
 				try {
 					// First check if castable to a List
-					List<?> list = checkArray(parameters, parameter, admitStringified);
+					List<String> list = checkStringArray(parameters, parameter, admitStringified);
 					String elementString;
 					for (Object element : list) {
 						try {
@@ -484,7 +484,7 @@ public class OpenviduConfig {
 				String webhookHeaders;
 				try {
 					// First check if castable to a List
-					List<?> list = checkArray(parameters, parameter, admitStringified);
+					List<String> list = checkStringArray(parameters, parameter, admitStringified);
 					String elementString;
 					for (Object element : list) {
 						try {
@@ -496,7 +496,7 @@ public class OpenviduConfig {
 											+ ") that is not a string: " + e.getMessage());
 						}
 					}
-					webhookHeaders = list.toString();
+					webhookHeaders = listToQuotedStringifiedArray(list);
 				} catch (Exception e) {
 					// If it is not a list, try casting to String
 					webhookHeaders = checkString(parameters, parameter);
@@ -512,7 +512,7 @@ public class OpenviduConfig {
 				String webhookEvents;
 				try {
 					// First check if castable to a List
-					List<?> list = checkArray(parameters, parameter, admitStringified);
+					List<String> list = checkStringArray(parameters, parameter, admitStringified);
 					String elementString;
 					for (Object element : list) {
 						try {
@@ -523,7 +523,7 @@ public class OpenviduConfig {
 									+ element + ") that is not a string: " + e.getMessage());
 						}
 					}
-					webhookEvents = list.toString();
+					webhookEvents = listToQuotedStringifiedArray(list);
 				} catch (Exception e) {
 					// If it is not a list, try casting to String
 					webhookEvents = checkString(parameters, parameter);
@@ -606,15 +606,16 @@ public class OpenviduConfig {
 		}
 	}
 
-	public List<?> checkArray(Map<String, ?> parameters, String key, boolean admitStringified) throws Exception {
-		List<?> list;
+	public List<String> checkStringArray(Map<String, ?> parameters, String key, boolean admitStringified)
+			throws Exception {
+		List<String> list;
 		try {
 			if (parameters.get(key) instanceof Collection<?>) {
 				list = (List<String>) parameters.get(key);
 			} else if (admitStringified) {
 				list = this.stringifiedArrayOfStringToListOfStrings((String) parameters.get(key));
 			} else {
-				throw new Exception("Property '" + key + "' must be an integer");
+				throw new Exception("Property '" + key + "' must be an array");
 			}
 			return list;
 		} catch (ClassCastException e) {
@@ -655,12 +656,6 @@ public class OpenviduConfig {
 	}
 
 	public List<String> stringifiedArrayOfStringToListOfStrings(String json) {
-		json = json.replaceAll("\\s", ""); // Remove all white spaces
-		json = json.replaceAll("\\\\", ""); // Remove previous escapes
-		json = json.replaceAll("\"", ""); // Remove previous double quotes
-		json = json.replaceFirst("^\\[", "[\\\""); // Escape first char
-		json = json.replaceFirst("\\]$", "\\\"]"); // Escape last char
-		json = json.replaceAll(",", "\\\",\\\""); // Escape middle strings
 		Gson gson = new Gson();
 		JsonArray jsonArray = gson.fromJson(json, JsonArray.class);
 		List<String> list = JsonUtils.toStringList(jsonArray);
@@ -829,6 +824,10 @@ public class OpenviduConfig {
 		this.setFinalUrl(finalUrl);
 		OpenViduServer.httpUrl = this.getFinalUrl();
 		OpenViduServer.publicurlType = type;
+	}
+
+	private String listToQuotedStringifiedArray(List<String> list) {
+		return "[" + list.stream().map(s -> "\"" + s + "\"").collect(Collectors.joining(", ")) + "]";
 	}
 
 }
