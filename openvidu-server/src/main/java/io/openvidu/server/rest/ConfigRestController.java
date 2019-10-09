@@ -111,6 +111,10 @@ public class ConfigRestController {
 			json.addProperty("openviduRecordingNotification", openviduConfig.getOpenViduRecordingNotification().name());
 			json.addProperty("openviduRecordingCustomLayout", openviduConfig.getOpenviduRecordingCustomLayout());
 			json.addProperty("openviduRecordingAutostopTimeout", openviduConfig.getOpenviduRecordingAutostopTimeout());
+			if (openviduConfig.getOpenViduRecordingComposedUrl() != null
+					&& !openviduConfig.getOpenViduRecordingComposedUrl().isEmpty()) {
+				json.addProperty("openviduRecordingComposedUrl", openviduConfig.getOpenViduRecordingComposedUrl());
+			}
 		}
 		json.addProperty("openviduWebhook", openviduConfig.isWebhookEnabled());
 		if (openviduConfig.isWebhookEnabled()) {
