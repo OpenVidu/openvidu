@@ -62,6 +62,8 @@ public class OpenviduConfig {
 
 	private static final Logger log = LoggerFactory.getLogger(OpenviduConfig.class);
 
+	private static volatile boolean FIRST_INITIALIZATION = true;
+
 	public static final List<String> OPENVIDU_STRING_PROPERTIES = Arrays.asList(new String[] { "openvidu.secret",
 			"openvidu.publicurl", "openvidu.recording.path", "openvidu.recording.notification",
 			"openvidu.recording.custom-layout", "openvidu.recording.composed-url", "openvidu.recording.version",
@@ -742,7 +744,13 @@ public class OpenviduConfig {
 	}
 
 	@PostConstruct
-	public void init() {
+	protected void init() {
+
+		if (!FIRST_INITIALIZATION) {
+			return;
+		} else {
+			FIRST_INITIALIZATION = false;
+		}
 
 		// Check configuration parameters
 		Map<String, ?> props = null;

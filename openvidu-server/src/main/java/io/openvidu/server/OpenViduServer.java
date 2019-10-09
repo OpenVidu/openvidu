@@ -26,12 +26,12 @@ import org.kurento.jsonrpc.server.JsonRpcConfigurer;
 import org.kurento.jsonrpc.server.JsonRpcHandlerRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.event.EventListener;
 
@@ -81,12 +81,10 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	public static String wsUrl;
 	public static String httpUrl;
 
-	@Autowired
-	OpenviduConfig openviduConfig;
-
 	@Bean
 	@ConditionalOnMissingBean
-	public KmsManager kmsManager() {
+	@DependsOn("openviduConfig")
+	public KmsManager kmsManager(OpenviduConfig openviduConfig) {
 		if (openviduConfig.getKmsUris().isEmpty()) {
 			throw new IllegalArgumentException("'kms.uris' should contain at least one KMS url");
 		}
@@ -97,7 +95,8 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public CallDetailRecord cdr() {
+	@DependsOn("openviduConfig")
+	public CallDetailRecord cdr(OpenviduConfig openviduConfig) {
 		List<CDRLogger> loggers = new ArrayList<>();
 		if (openviduConfig.isCdrEnabled()) {
 			log.info("OpenVidu CDR is enabled");
@@ -111,8 +110,44 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public CoturnCredentialsService coturnCredentialsService() {
+	@DependsOn("openviduConfig")
+	public CoturnCredentialsService coturnCredentialsService(OpenviduConfig openviduConfig) {
 		return new CoturnCredentialsServiceFactory().getCoturnCredentialsService(openviduConfig.getSpringProfile());
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	@DependsOn("openviduConfig")
+	public SessionManager sessionManager() {
+		return new KurentoSessionManager();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	@DependsOn("openviduConfig")
+	public RpcHandler rpcHandler() {
+		return new RpcHandler();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	@DependsOn("openviduConfig")
+	public SessionEventsHandler sessionEventsHandler() {
+		return new KurentoSessionEventsHandler();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	@DependsOn("openviduConfig")
+	public TokenGenerator tokenGenerator() {
+		return new TokenGeneratorDefault();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	@DependsOn("openviduConfig")
+	public RecordingManager recordingManager() {
+		return new RecordingManager();
 	}
 
 	@Bean
@@ -129,38 +164,8 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public SessionManager sessionManager() {
-		return new KurentoSessionManager();
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	public RpcHandler rpcHandler() {
-		return new RpcHandler();
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	public SessionEventsHandler sessionEventsHandler() {
-		return new KurentoSessionEventsHandler();
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
 	public KurentoParticipantEndpointConfig kurentoEndpointConfig() {
 		return new KurentoParticipantEndpointConfig();
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	public TokenGenerator tokenGenerator() {
-		return new TokenGeneratorDefault();
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	public RecordingManager recordingManager() {
-		return new RecordingManager();
 	}
 
 	@Bean
