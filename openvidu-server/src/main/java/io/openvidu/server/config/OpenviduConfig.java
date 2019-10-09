@@ -612,7 +612,7 @@ public class OpenviduConfig {
 			if (parameters.get(key) instanceof Collection<?>) {
 				list = (List<String>) parameters.get(key);
 			} else if (admitStringified) {
-				list = this.kmsUrisStringToList((String) parameters.get(key));
+				list = this.stringifiedArrayOfStringToListOfStrings((String) parameters.get(key));
 			} else {
 				throw new Exception("Property '" + key + "' must be an integer");
 			}
@@ -652,6 +652,22 @@ public class OpenviduConfig {
 			log.info("OpenVidu Server has write permissions on properties path {}", this.springConfigLocation);
 		}
 		return externalizedProps;
+	}
+
+	public List<String> stringifiedArrayOfStringToListOfStrings(String json) {
+		kmsUris = kmsUris.replaceAll("\\s", ""); // Remove all white spaces
+		kmsUris = kmsUris.replaceAll("\\\\", ""); // Remove previous escapes
+		kmsUris = kmsUris.replaceAll("\"", ""); // Remove previous double quotes
+		kmsUris = kmsUris.replaceFirst("^\\[", "[\\\""); // Escape first char
+		kmsUris = kmsUris.replaceFirst("\\]$", "\\\"]"); // Escape last char
+		kmsUris = kmsUris.replaceAll(",", "\\\",\\\""); // Escape middle strings
+		Gson gson = new Gson();
+		JsonArray kmsUrisArray = gson.fromJson(kmsUris, JsonArray.class);
+		List<String> list = JsonUtils.toStringList(kmsUrisArray);
+		if (list.size() == 1 && list.get(0).isEmpty()) {
+			list = new ArrayList<>();
+		}
+		return list;
 	}
 
 	public List<String> kmsUrisStringToList(String kmsUris) throws Exception {
