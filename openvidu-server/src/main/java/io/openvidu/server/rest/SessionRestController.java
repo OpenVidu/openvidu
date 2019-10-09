@@ -20,7 +20,6 @@ package io.openvidu.server.rest;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
