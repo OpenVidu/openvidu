@@ -655,15 +655,15 @@ public class OpenviduConfig {
 	}
 
 	public List<String> stringifiedArrayOfStringToListOfStrings(String json) {
-		kmsUris = kmsUris.replaceAll("\\s", ""); // Remove all white spaces
-		kmsUris = kmsUris.replaceAll("\\\\", ""); // Remove previous escapes
-		kmsUris = kmsUris.replaceAll("\"", ""); // Remove previous double quotes
-		kmsUris = kmsUris.replaceFirst("^\\[", "[\\\""); // Escape first char
-		kmsUris = kmsUris.replaceFirst("\\]$", "\\\"]"); // Escape last char
-		kmsUris = kmsUris.replaceAll(",", "\\\",\\\""); // Escape middle strings
+		json = json.replaceAll("\\s", ""); // Remove all white spaces
+		json = json.replaceAll("\\\\", ""); // Remove previous escapes
+		json = json.replaceAll("\"", ""); // Remove previous double quotes
+		json = json.replaceFirst("^\\[", "[\\\""); // Escape first char
+		json = json.replaceFirst("\\]$", "\\\"]"); // Escape last char
+		json = json.replaceAll(",", "\\\",\\\""); // Escape middle strings
 		Gson gson = new Gson();
-		JsonArray kmsUrisArray = gson.fromJson(kmsUris, JsonArray.class);
-		List<String> list = JsonUtils.toStringList(kmsUrisArray);
+		JsonArray jsonArray = gson.fromJson(json, JsonArray.class);
+		List<String> list = JsonUtils.toStringList(jsonArray);
 		if (list.size() == 1 && list.get(0).isEmpty()) {
 			list = new ArrayList<>();
 		}
