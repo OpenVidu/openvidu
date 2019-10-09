@@ -181,8 +181,8 @@ public abstract class KmsManager {
 		};
 	}
 
-	public abstract List<Kms> initializeKurentoClients(List<KmsProperties> kmsProperties, boolean disconnectUponFailure)
-			throws Exception;
+	public abstract List<Kms> initializeKurentoClients(List<KmsProperties> kmsProperties, boolean disconnectUponFailure,
+			boolean sendMediaNodeAddedEvent) throws Exception;
 
 	@PostConstruct
 	protected void postConstruct() {
@@ -193,7 +193,7 @@ public abstract class KmsManager {
 				kmsId = "KMS-" + RandomStringUtils.randomAlphanumeric(6).toUpperCase();
 				kmsProps.add(new KmsProperties(kmsId, kmsUri));
 			}
-			this.initializeKurentoClients(kmsProps, true);
+			this.initializeKurentoClients(kmsProps, true, false);
 		} catch (Exception e) {
 			// Some KMS wasn't reachable
 			log.error("Shutting down OpenVidu Server");

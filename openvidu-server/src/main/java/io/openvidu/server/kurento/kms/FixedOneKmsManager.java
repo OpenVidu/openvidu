@@ -26,8 +26,8 @@ import org.kurento.commons.exception.KurentoException;
 public class FixedOneKmsManager extends KmsManager {
 
 	@Override
-	public List<Kms> initializeKurentoClients(List<KmsProperties> kmsProperties, boolean disconnectUponFailure)
-			throws Exception {
+	public List<Kms> initializeKurentoClients(List<KmsProperties> kmsProperties, boolean disconnectUponFailure,
+			boolean sendMediaNodeAddedEvent) throws Exception {
 		KmsProperties firstProps = kmsProperties.get(0);
 		KurentoClient kClient = null;
 		Kms kms = new Kms(firstProps, loadManager);
