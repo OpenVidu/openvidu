@@ -3154,7 +3154,7 @@ public class OpenViduTestAppE2eTest {
 
 	private void stopKms() {
 		log.info("Stopping KMS");
-		commandLine.executeCommand("sudo kill -9 $(pidof kurento-media-server)");
+		commandLine.executeCommand("kill -9 $(pidof kurento-media-server)");
 	}
 
 	private void startKms() {

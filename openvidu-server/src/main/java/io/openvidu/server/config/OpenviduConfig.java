@@ -17,6 +17,7 @@
 
 package io.openvidu.server.config;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
@@ -63,7 +64,8 @@ public class OpenviduConfig {
 
 	public static final List<String> OPENVIDU_STRING_PROPERTIES = Arrays.asList(new String[] { "openvidu.secret",
 			"openvidu.publicurl", "openvidu.recording.path", "openvidu.recording.notification",
-			"openvidu.recording.custom-layout", "openvidu.webhook.endpoint" });
+			"openvidu.recording.custom-layout", "openvidu.recording.composed-url", "openvidu.recording.version",
+			"openvidu.webhook.endpoint", "openvidu.cdr.path" });
 
 	public static final List<String> OPENVIDU_INTEGER_PROPERTIES = Arrays
 			.asList(new String[] { "openvidu.recording.autostop-timeout", "openvidu.streams.video.max-recv-bandwidth",
@@ -359,7 +361,29 @@ public class OpenviduConfig {
 		}
 	}
 
-	public void checkConfigurationParameters(Map<String, ?> parameters, Collection<String> validKeys) throws Exception {
+	public void checkUrl(String url) throws Exception {
+		try {
+			new URL(url).toURI();
+		} catch (MalformedURLException | URISyntaxException e) {
+			throw new Exception("String '" + url + "' has not a valid URL format: " + e.getMessage());
+		}
+	}
+
+	public void checkStringValidPathFormat(Map<String, ?> parameters, String key) throws Exception {
+		try {
+			String stringPath = this.checkString(parameters, key);
+			Paths.get(stringPath);
+			File f = new File(stringPath);
+			f.getCanonicalPath();
+			f.toURI().toString();
+		} catch (Exception e) {
+			throw new Exception(
+					"Property '" + key + "' must be a string with a valid system path format: " + e.getMessage());
+		}
+	}
+
+	public void checkConfigurationParameters(Map<String, ?> parameters, Collection<String> validKeys,
+			boolean admitStringified) throws Exception {
 
 		parameters = this.filterValidParameters(parameters, validKeys);
 
@@ -376,26 +400,24 @@ public class OpenviduConfig {
 			case "openvidu.publicurl":
 				String publicurl = checkString(parameters, parameter);
 				if (!OPENVIDU_VALID_PUBLICURL_VALUES.contains(publicurl)) {
-					// Must be a valid URL
 					try {
-						new URL(publicurl).toURI();
-					} catch (MalformedURLException | URISyntaxException e) {
-						throw new Exception(
-								"Property 'openvidu.publicurl' has not a valid URL format: " + e.getMessage());
+						checkUrl(publicurl);
+					} catch (Exception e) {
+						throw new Exception("Property 'openvidu.publicurl' not valid. " + e.getMessage());
 					}
 				}
 				break;
 			case "openvidu.cdr":
-				checkBoolean(parameters, parameter);
+				checkBoolean(parameters, parameter, admitStringified);
 				break;
 			case "openvidu.recording":
-				checkBoolean(parameters, parameter);
+				checkBoolean(parameters, parameter, admitStringified);
 				break;
 			case "openvidu.recording.public-access":
-				checkBoolean(parameters, parameter);
+				checkBoolean(parameters, parameter, admitStringified);
 				break;
 			case "openvidu.recording.autostop-timeout":
-				checkIntegerNonNegative(parameters, parameter);
+				checkIntegerNonNegative(parameters, parameter, admitStringified);
 				break;
 			case "openvidu.recording.notification":
 				String recordingNotif = checkString(parameters, parameter);
@@ -407,7 +429,7 @@ public class OpenviduConfig {
 				}
 				break;
 			case "openvidu.webhook":
-				checkBoolean(parameters, parameter);
+				checkBoolean(parameters, parameter, admitStringified);
 				break;
 			case "openvidu.webhook.endpoint":
 				String webhookEndpoint = checkString(parameters, parameter);
@@ -418,22 +440,22 @@ public class OpenviduConfig {
 				}
 				break;
 			case "openvidu.streams.video.max-recv-bandwidth":
-				checkIntegerNonNegative(parameters, parameter);
+				checkIntegerNonNegative(parameters, parameter, admitStringified);
 				break;
 			case "openvidu.streams.video.min-recv-bandwidth":
-				checkIntegerNonNegative(parameters, parameter);
+				checkIntegerNonNegative(parameters, parameter, admitStringified);
 				break;
 			case "openvidu.streams.video.max-send-bandwidth":
-				checkIntegerNonNegative(parameters, parameter);
+				checkIntegerNonNegative(parameters, parameter, admitStringified);
 				break;
 			case "openvidu.streams.video.min-send-bandwidth":
-				checkIntegerNonNegative(parameters, parameter);
+				checkIntegerNonNegative(parameters, parameter, admitStringified);
 				break;
 			case "kms.uris":
 				String kmsUris;
 				try {
 					// First check if castable to a List
-					List<?> list = checkArray(parameters, parameter);
+					List<?> list = checkArray(parameters, parameter, admitStringified);
 					String elementString;
 					for (Object element : list) {
 						try {
@@ -462,7 +484,7 @@ public class OpenviduConfig {
 				String webhookHeaders;
 				try {
 					// First check if castable to a List
-					List<?> list = checkArray(parameters, parameter);
+					List<?> list = checkArray(parameters, parameter, admitStringified);
 					String elementString;
 					for (Object element : list) {
 						try {
@@ -490,7 +512,7 @@ public class OpenviduConfig {
 				String webhookEvents;
 				try {
 					// First check if castable to a List
-					List<?> list = checkArray(parameters, parameter);
+					List<?> list = checkArray(parameters, parameter, admitStringified);
 					String elementString;
 					for (Object element : list) {
 						try {
@@ -514,10 +536,24 @@ public class OpenviduConfig {
 				}
 				break;
 			case "openvidu.recording.path":
-				checkString(parameters, parameter);
+				checkStringValidPathFormat(parameters, parameter);
 				break;
 			case "openvidu.recording.custom-layout":
+				checkStringValidPathFormat(parameters, parameter);
+				break;
+			case "openvidu.recording.composed-url":
+				String composedUrl = checkString(parameters, parameter);
+				try {
+					checkUrl(composedUrl);
+				} catch (Exception e) {
+					throw new Exception("Property 'openvidu.recording.composed-url' not valid. " + e.getMessage());
+				}
+				break;
+			case "openvidu.recording.version":
 				checkString(parameters, parameter);
+				break;
+			case "openvidu.cdr.path":
+				checkStringValidPathFormat(parameters, parameter);
 				break;
 			default:
 				log.warn("Unknown configuration parameter '{}'", parameter);
@@ -534,18 +570,32 @@ public class OpenviduConfig {
 		}
 	}
 
-	public boolean checkBoolean(Map<String, ?> parameters, String key) throws Exception {
+	public boolean checkBoolean(Map<String, ?> parameters, String key, boolean admitStringified) throws Exception {
 		try {
-			boolean booleanValue = Boolean.parseBoolean((String) parameters.get(key));
-			return booleanValue;
+			if (parameters.get(key) instanceof Boolean) {
+				return (Boolean) parameters.get(key);
+			} else if (admitStringified) {
+				boolean booleanValue = Boolean.parseBoolean((String) parameters.get(key));
+				return booleanValue;
+			} else {
+				throw new Exception("Property '" + key + "' must be a boolean");
+			}
 		} catch (ClassCastException e) {
 			throw new Exception("Property '" + key + "' must be a boolean: " + e.getMessage());
 		}
 	}
 
-	public Integer checkIntegerNonNegative(Map<String, ?> parameters, String key) throws Exception {
+	public Integer checkIntegerNonNegative(Map<String, ?> parameters, String key, boolean admitStringified)
+			throws Exception {
 		try {
-			Integer integerValue = Integer.parseInt((String) parameters.get(key));
+			Integer integerValue;
+			if (parameters.get(key) instanceof Integer) {
+				integerValue = (Integer) parameters.get(key);
+			} else if (admitStringified) {
+				integerValue = Integer.parseInt((String) parameters.get(key));
+			} else {
+				throw new Exception("Property '" + key + "' must be an integer");
+			}
 			if (integerValue < 0) {
 				throw new Exception("Property '" + key + "' is an integer but cannot be less than 0 (current value: "
 						+ integerValue + ")");
@@ -556,9 +606,16 @@ public class OpenviduConfig {
 		}
 	}
 
-	public List<?> checkArray(Map<String, ?> parameters, String key) throws Exception {
+	public List<?> checkArray(Map<String, ?> parameters, String key, boolean admitStringified) throws Exception {
+		List<?> list;
 		try {
-			List<String> list = (List<String>) parameters.get(key);
+			if (parameters.get(key) instanceof Collection<?>) {
+				list = (List<String>) parameters.get(key);
+			} else if (admitStringified) {
+				list = this.kmsUrisStringToList((String) parameters.get(key));
+			} else {
+				throw new Exception("Property '" + key + "' must be an integer");
+			}
 			return list;
 		} catch (ClassCastException e) {
 			throw new Exception("Property '" + key + "' must be an array: " + e.getMessage());
@@ -692,7 +749,7 @@ public class OpenviduConfig {
 		}
 
 		try {
-			this.checkConfigurationParameters(props, OPENVIDU_PROPERTIES);
+			this.checkConfigurationParameters(props, OPENVIDU_PROPERTIES, true);
 		} catch (Exception e) {
 			log.error(e.getMessage());
 			log.error("Shutting down OpenVidu Server");
