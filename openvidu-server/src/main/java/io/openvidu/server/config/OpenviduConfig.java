@@ -27,9 +27,11 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -62,127 +64,124 @@ public class OpenviduConfig {
 
 	private static final Logger log = LoggerFactory.getLogger(OpenviduConfig.class);
 
-	public static volatile boolean FIRST_INITIALIZATION = true;
-
-	public static final List<String> OPENVIDU_STRING_PROPERTIES = Arrays.asList(new String[] { "openvidu.secret",
+	public static final Set<String> OPENVIDU_STRING_PROPERTIES = new HashSet<>(Arrays.asList("openvidu.secret",
 			"openvidu.publicurl", "openvidu.recording.path", "openvidu.recording.notification",
 			"openvidu.recording.custom-layout", "openvidu.recording.composed-url", "openvidu.recording.version",
-			"openvidu.webhook.endpoint", "openvidu.cdr.path" });
+			"openvidu.webhook.endpoint", "openvidu.cdr.path"));
 
-	public static final List<String> OPENVIDU_INTEGER_PROPERTIES = Arrays
-			.asList(new String[] { "openvidu.recording.autostop-timeout", "openvidu.streams.video.max-recv-bandwidth",
+	public static final Set<String> OPENVIDU_INTEGER_PROPERTIES = new HashSet<>(
+			Arrays.asList("openvidu.recording.autostop-timeout", "openvidu.streams.video.max-recv-bandwidth",
 					"openvidu.streams.video.min-recv-bandwidth", "openvidu.streams.video.max-send-bandwidth",
-					"openvidu.streams.video.min-send-bandwidth" });
+					"openvidu.streams.video.min-send-bandwidth"));
 
-	public static final List<String> OPENVIDU_BOOLEAN_PROPERTIES = Arrays.asList(new String[] { "openvidu.cdr",
-			"openvidu.recording", "openvidu.recording.public-access", "openvidu.webhook", });
+	public static final Set<String> OPENVIDU_BOOLEAN_PROPERTIES = new HashSet<>(Arrays.asList("openvidu.cdr",
+			"openvidu.recording", "openvidu.recording.public-access", "openvidu.webhook"));
 
-	public static final List<String> OPENVIDU_ARRAY_PROPERTIES = Arrays
-			.asList(new String[] { "kms.uris", "openvidu.webhook.headers", "openvidu.webhook.events", });
+	public static final Set<String> OPENVIDU_ARRAY_PROPERTIES = new HashSet<>(
+			Arrays.asList("kms.uris", "openvidu.webhook.headers", "openvidu.webhook.events"));
 
-	public static final List<String> OPENVIDU_PROPERTIES = Stream.of(OPENVIDU_STRING_PROPERTIES,
+	public static final Set<String> OPENVIDU_PROPERTIES = Stream.of(OPENVIDU_STRING_PROPERTIES,
 			OPENVIDU_INTEGER_PROPERTIES, OPENVIDU_BOOLEAN_PROPERTIES, OPENVIDU_ARRAY_PROPERTIES)
-			.flatMap(Collection::stream).collect(Collectors.toList());
+			.flatMap(Collection::stream).collect(Collectors.toSet());
 
 	public static final List<String> OPENVIDU_VALID_PUBLICURL_VALUES = Arrays
 			.asList(new String[] { "local", "docker", "" });
 
 	@Value("#{'${spring.config.additional-location:}'.length() > 0 ? '${spring.config.additional-location:}' : \"\"}")
-	private String springConfigLocation;
+	protected String springConfigLocation;
 
 	@Autowired
 	private BuildProperties buildProperties;
 
 	@Value("${kms.uris}")
-	private String kmsUris;
+	protected String kmsUris;
 
 	@Value("${openvidu.publicurl}")
-	private String openviduPublicUrl; // local, docker, [FINAL_URL]
+	protected String openviduPublicUrl; // local, docker, [FINAL_URL]
 
 	@Value("${server.port}")
-	private String serverPort;
+	protected String serverPort;
 
 	@Value("${openvidu.secret}")
-	private String openviduSecret;
+	protected String openviduSecret;
 
 	@Value("${openvidu.cdr}")
-	private boolean openviduCdr;
+	protected boolean openviduCdr;
 
 	@Value("${openvidu.cdr.path}")
-	private String openviduCdrPath;
+	protected String openviduCdrPath;
 
 	@Value("${openvidu.recording}")
-	private boolean openviduRecording;
+	protected boolean openviduRecording;
 
 	@Value("${openvidu.recording.path}")
-	private String openviduRecordingPath;
+	protected String openviduRecordingPath;
 
 	@Value("${openvidu.recording.public-access}")
-	private boolean openviduRecordingPublicAccess;
+	protected boolean openviduRecordingPublicAccess;
 
 	@Value("${openvidu.recording.notification}")
-	private RecordingNotification openviduRecordingNotification;
+	protected RecordingNotification openviduRecordingNotification;
 
 	@Value("${openvidu.recording.custom-layout}")
-	private String openviduRecordingCustomLayout;
+	protected String openviduRecordingCustomLayout;
 
 	@Value("${openvidu.recording.version}")
-	private String openviduRecordingVersion;
+	protected String openviduRecordingVersion;
 
 	@Value("${openvidu.recording.autostop-timeout}")
-	private int openviduRecordingAutostopTimeout;
+	protected int openviduRecordingAutostopTimeout;
 
 	@Value("${openvidu.recording.composed-url}")
-	private String openviduRecordingComposedUrl;
+	protected String openviduRecordingComposedUrl;
 
 	@Value("${openvidu.webhook}")
-	private boolean openviduWebhook;
+	protected boolean openviduWebhook;
 
 	@Value("${openvidu.webhook.endpoint}")
-	private String openviduWebhookEndpoint;
+	protected String openviduWebhookEndpoint;
 
 	@Value("${openvidu.webhook.headers}")
-	private String openviduWebhookHeaders;
+	protected String openviduWebhookHeaders;
 
 	@Value("${openvidu.webhook.events}")
-	private String openviduWebhookEvents;
+	protected String openviduWebhookEvents;
 
 	@Value("${openvidu.streams.video.max-recv-bandwidth}")
-	private int openviduStreamsVideoMaxRecvBandwidth;
+	protected int openviduStreamsVideoMaxRecvBandwidth;
 
 	@Value("${openvidu.streams.video.min-recv-bandwidth}")
-	private int openviduStreamsVideoMinRecvBandwidth;
+	protected int openviduStreamsVideoMinRecvBandwidth;
 
 	@Value("${openvidu.streams.video.max-send-bandwidth}")
-	private int openviduStreamsVideoMaxSendBandwidth;
+	protected int openviduStreamsVideoMaxSendBandwidth;
 
 	@Value("${openvidu.streams.video.min-send-bandwidth}")
-	private int openviduStreamsVideoMinSendBandwidth;
+	protected int openviduStreamsVideoMinSendBandwidth;
 
 	@Value("${coturn.redis.ip}")
-	private String coturnRedisIp;
+	protected String coturnRedisIp;
 
 	@Value("${coturn.redis.dbname}")
-	private String coturnRedisDbname;
+	protected String coturnRedisDbname;
 
 	@Value("${coturn.redis.password}")
-	private String coturnRedisPassword;
+	protected String coturnRedisPassword;
 
 	@Value("${coturn.redis.connect-timeout}")
-	private String coturnRedisConnectTimeout;
+	protected String coturnRedisConnectTimeout;
 
 	@Value("#{'${spring.profiles.active:}'.length() > 0 ? '${spring.profiles.active:}'.split(',') : \"default\"}")
-	private String springProfile;
+	protected String springProfile;
 
-	private String finalUrl;
-	private List<String> kmsUrisList = new ArrayList<>();
-	private List<Header> webhookHeadersList = new ArrayList<>();
-	private List<CDREventName> webhookEventsList = new ArrayList<>();
-
-	private Properties externalizedProperties;
+	public static String finalUrl;
+	public static List<String> kmsUrisList = new ArrayList<>();
+	public static List<Header> webhookHeadersList = new ArrayList<>();
+	public static List<CDREventName> webhookEventsList = new ArrayList<>();
+	public static Properties externalizedProperties;
 
 	public List<String> getKmsUris() {
-		return this.kmsUrisList;
+		return kmsUrisList;
 	}
 
 	public String getOpenViduPublicUrl() {
@@ -242,7 +241,7 @@ public class OpenviduConfig {
 	}
 
 	public void setFinalUrl(String finalUrl) {
-		this.finalUrl = finalUrl.endsWith("/") ? (finalUrl) : (finalUrl + "/");
+		OpenviduConfig.finalUrl = finalUrl.endsWith("/") ? (finalUrl) : (finalUrl + "/");
 	}
 
 	public String getOpenViduRecordingVersion() {
@@ -299,11 +298,11 @@ public class OpenviduConfig {
 	}
 
 	public List<Header> getOpenViduWebhookHeaders() {
-		return this.webhookHeadersList;
+		return webhookHeadersList;
 	}
 
 	public List<CDREventName> getOpenViduWebhookEvents() {
-		return this.webhookEventsList;
+		return webhookEventsList;
 	}
 
 	public OpenViduRole[] getRolesFromRecordingNotification() {
@@ -348,7 +347,7 @@ public class OpenviduConfig {
 	}
 
 	public Properties getExternalizedProperties() {
-		return this.externalizedProperties;
+		return externalizedProperties;
 	}
 
 	public void checkWebsocketUri(String uri) throws Exception {
@@ -384,12 +383,17 @@ public class OpenviduConfig {
 		}
 	}
 
-	public void checkConfigurationParameters(Map<String, ?> parameters, Collection<String> validKeys,
+	public Properties checkConfigurationParameters(Map<String, ?> parameters, Collection<String> validKeys,
 			boolean admitStringified) throws Exception {
+
+		Properties stringifiedProperties = new Properties();
 
 		parameters = this.filterValidParameters(parameters, validKeys);
 
 		log.info("Checking configuration parameters: {}", parameters.keySet());
+
+		boolean webhookEnabled = this.isWebhookEnabled();
+		String webhookEndpoint = this.getOpenViduWebhookEndpoint();
 
 		for (String parameter : parameters.keySet()) {
 			switch (parameter) {
@@ -431,10 +435,10 @@ public class OpenviduConfig {
 				}
 				break;
 			case "openvidu.webhook":
-				checkBoolean(parameters, parameter, admitStringified);
+				webhookEnabled = checkBoolean(parameters, parameter, admitStringified);
 				break;
 			case "openvidu.webhook.endpoint":
-				String webhookEndpoint = checkString(parameters, parameter);
+				webhookEndpoint = checkString(parameters, parameter);
 				try {
 					checkWebhookEndpoint(webhookEndpoint);
 				} catch (Exception e) {
@@ -481,6 +485,7 @@ public class OpenviduConfig {
 							"Property 'kms.uris' is an array of strings, but contains some value that has not a valid WbeSocket URI format: "
 									+ e.getMessage());
 				}
+				stringifiedProperties.setProperty(parameter, kmsUris);
 				break;
 			case "openvidu.webhook.headers":
 				String webhookHeaders;
@@ -509,6 +514,7 @@ public class OpenviduConfig {
 					throw new Exception(
 							"Property 'openvidu.webhook.headers' contains a value not valid: " + e.getMessage());
 				}
+				stringifiedProperties.setProperty(parameter, webhookHeaders);
 				break;
 			case "openvidu.webhook.events":
 				String webhookEvents;
@@ -536,6 +542,7 @@ public class OpenviduConfig {
 					throw new Exception(
 							"Property 'openvidu.webhook.events' contains a value not valid: " + e.getMessage());
 				}
+				stringifiedProperties.setProperty(parameter, webhookEvents);
 				break;
 			case "openvidu.recording.path":
 				checkStringValidPathFormat(parameters, parameter);
@@ -560,7 +567,18 @@ public class OpenviduConfig {
 			default:
 				log.warn("Unknown configuration parameter '{}'", parameter);
 			}
+
+			if (!stringifiedProperties.containsKey(parameter)) {
+				stringifiedProperties.setProperty(parameter, parameters.get(parameter).toString());
+			}
 		}
+
+		if (webhookEnabled && (webhookEndpoint == null || webhookEndpoint.isEmpty())) {
+			throw new Exception(
+					"Property 'openvidu.webhook' set to true requires 'openvidu.webhook.endpoint' to be defined");
+		}
+
+		return stringifiedProperties;
 	}
 
 	public String checkString(Map<String, ?> parameters, String key) throws Exception {
@@ -743,20 +761,30 @@ public class OpenviduConfig {
 		return eventList;
 	}
 
+	public void checkFinalWebHookConfiguration() throws Exception {
+		if (this.isWebhookEnabled()) {
+			if (this.openviduWebhookEndpoint != null) {
+				this.checkWebhookEndpoint(this.openviduWebhookEndpoint);
+			} else {
+				throw new Exception(
+						"OpenVidu WebHook is enabled but no endpoint was set (property 'openvidu.webhook.endpoint' is not defined)");
+			}
+			webhookHeadersList = this.checkWebhookHeaders(this.openviduWebhookHeaders);
+			webhookEventsList = this.checkWebhookEvents(this.openviduWebhookEvents);
+			log.info("OpenVidu Webhook endpoint: {}", this.openviduWebhookEndpoint);
+			log.info("OpenVidu Webhook headers: {}", this.getOpenViduWebhookHeaders().toString());
+			log.info("OpenVidu Webhook events: {}", this.getOpenViduWebhookEvents().toString());
+		}
+	}
+
 	@PostConstruct
 	protected void init() {
-
-		if (!FIRST_INITIALIZATION) {
-			return;
-		} else {
-			FIRST_INITIALIZATION = false;
-		}
 
 		// Check configuration parameters
 		Map<String, ?> props = null;
 		if (!this.springConfigLocation.isEmpty()) {
 			try {
-				this.externalizedProperties = this.retrieveExternalizedProperties();
+				externalizedProperties = this.retrieveExternalizedProperties();
 				props = (Map) this.externalizedProperties;
 			} catch (Exception e) {
 				log.error(e.getMessage());
@@ -776,14 +804,10 @@ public class OpenviduConfig {
 		}
 
 		try {
-			this.kmsUrisList = this.kmsUrisStringToList(this.kmsUris);
-			if (this.isWebhookEnabled()) {
-				this.webhookHeadersList = this.checkWebhookHeaders(this.openviduWebhookHeaders);
-				this.webhookEventsList = this.checkWebhookEvents(this.openviduWebhookEvents);
-				log.info("OpenVidu Webhook endpoint: {}", this.openviduWebhookEndpoint);
-				log.info("OpenVidu Webhook headers: {}", this.getOpenViduWebhookHeaders().toString());
-				log.info("OpenVidu Webhook events: {}", this.getOpenViduWebhookEvents().toString());
+			if (OPENVIDU_PROPERTIES.contains("kms.uris")) {
+				kmsUrisList = this.kmsUrisStringToList(this.kmsUris);
 			}
+			this.checkFinalWebHookConfiguration();
 		} catch (Exception e) {
 			log.error("Unexpected exception when setting final value of configuration parameters: {}", e.getMessage());
 		}

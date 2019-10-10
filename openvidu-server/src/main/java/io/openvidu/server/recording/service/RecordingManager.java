@@ -596,7 +596,7 @@ public class RecordingManager {
 		final String testFilePath = testFolderPath + "/TEST_RECORDING_PATH.webm";
 
 		// Check Kurento Media Server write permissions in recording path
-		if (this.openviduConfig.getKmsUris().isEmpty()) {
+		if (this.kmsManager.getKmss().isEmpty()) {
 			log.warn("No KMSs were defined in kms.uris array. Recording path check aborted");
 		} else {
 
