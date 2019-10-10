@@ -58,7 +58,7 @@
 		<version.httpclient>4.5.8</version.httpclient>
 		<version.janino>3.0.12</version.janino>
 		<version.commonslang>3.9</version.commonslang>
-		<version.dockerjava>3.1.2</version.dockerjava>
+		<version.dockerjava>3.1.5</version.dockerjava>
 		<version.thymeleaf>3.0.11.RELEASE</version.thymeleaf>
 		<version.thymeleaflayout>2.4.1</version.thymeleaflayout>
 
