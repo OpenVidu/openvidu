@@ -43,7 +43,7 @@ export class StreamEvent extends Event {
      * - "forceDisconnectByServer": the user has been evicted from the Session by the application
      * - "sessionClosedByServer": the Session has been closed by the application
      * - "networkDisconnect": the user's network connection has dropped
-     * - "mediaServerDisconnect": OpenVidu Media Server has crashed or lost its connection. A new media server instance is active and no media streams are available in the media server
+     * - "mediaServerDisconnect": OpenVidu Media Node has crashed or lost its connection. A new Media Node instance is active and no media streams are available in the Media Node
      *
      * For 'streamCreated' empty string
      */

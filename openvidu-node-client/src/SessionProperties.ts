@@ -26,7 +26,7 @@ import { RecordingMode } from './RecordingMode';
 export interface SessionProperties {
 
     /**
-     * How the media streams will be sent and received by your clients: routed through OpenVidu Media Server
+     * How the media streams will be sent and received by your clients: routed through OpenVidu Media Node
      * (`MediaMode.ROUTED`) or attempting direct p2p connections (`MediaMode.RELAYED`, _not available yet_)
      */
     mediaMode?: MediaMode;

@@ -46,7 +46,7 @@ export class RecordingEvent extends Event {
      * - "recordingStoppedByServer": the recording has been gracefully stopped by the application
      * - "sessionClosedByServer": the Session has been closed by the application
      * - "automaticStop": see [Automatic stop of recordings](https://openvidu.io/docs/advanced-features/recording/#automatic-stop-of-recordings)
-     * - "mediaServerDisconnect": OpenVidu Media Server has crashed or lost its connection. A new media server instance is active and the recording has been stopped (no media streams are available in the new media server)
+     * - "mediaServerDisconnect": OpenVidu Media Node has crashed or lost its connection. A new Media Node instance is active and the recording has been stopped (no media streams are available in the new Media Node)
      *
      * For 'recordingStarted' empty string
      */

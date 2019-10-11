@@ -26,7 +26,7 @@ export enum MediaMode {
     RELAYED = 'RELAYED',
 
     /**
-     * The session will transmit streams using OpenVidu Media Server
+     * The session will transmit streams using OpenVidu Media Node
      */
     ROUTED = 'ROUTED'
 }
