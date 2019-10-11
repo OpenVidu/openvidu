@@ -97,7 +97,7 @@ public class KurentoSessionManager extends SessionManager {
 					this.cleanCollections(sessionId);
 					this.storeSessionNotActive(sessionNotActive);
 					throw new OpenViduException(Code.ROOM_CANNOT_BE_CREATED_ERROR_CODE,
-							"There is no available media server where to initialize session '" + sessionId + "'");
+							"There is no available Media Node where to initialize session '" + sessionId + "'");
 				}
 				log.info("KMS less loaded is {} with a load of {}", lessLoadedKms.getUri(), lessLoadedKms.getLoad());
 				kSession = createSession(sessionNotActive, lessLoadedKms);

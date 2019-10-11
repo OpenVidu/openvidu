@@ -64,7 +64,7 @@ public class MultimediaFileMetadata {
 		this.formatJson = json.get("format").getAsJsonObject();
 
 		if (formatJson.get("duration") == null) {
-			// Webm file has not been properly closed (i.e. media server stopped)
+			// Webm file has not been properly closed (i.e. Media Node stopped)
 			this.fixWebmFile(fileAbsolutePath);
 			this.json = this.executeFfprobeCommand(fileAbsolutePath);
 			this.formatJson = json.get("format").getAsJsonObject();
