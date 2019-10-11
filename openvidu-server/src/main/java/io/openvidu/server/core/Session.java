@@ -118,7 +118,7 @@ public class Session implements SessionInterface {
 		return closed;
 	}
 
-	public String getMediaServerId() {
+	public String getMediaNodeId() {
 		return null;
 	}
 

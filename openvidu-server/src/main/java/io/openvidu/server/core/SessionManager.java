@@ -483,7 +483,7 @@ public abstract class SessionManager {
 			recordingManager.stopRecording(session, null, RecordingManager.finalReason(reason));
 		}
 
-		final String mediaServerId = session.getMediaServerId();
+		final String mediaNodeId = session.getMediaNodeId();
 
 		if (session.close(reason)) {
 			sessionEventsHandler.onSessionClosed(session.getSessionId(), reason);
@@ -493,8 +493,8 @@ public abstract class SessionManager {
 
 		log.info("Session '{}' removed and closed", session.getSessionId());
 
-		if (mediaServerId != null) {
-			this.quarantineKiller.dropMediaServer(mediaServerId);
+		if (mediaNodeId != null) {
+			this.quarantineKiller.dropMediaNode(mediaNodeId);
 		}
 	}
 

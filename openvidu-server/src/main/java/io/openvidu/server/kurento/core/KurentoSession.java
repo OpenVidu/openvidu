@@ -165,7 +165,7 @@ public class KurentoSession extends Session {
 	}
 
 	@Override
-	public String getMediaServerId() {
+	public String getMediaNodeId() {
 		return this.kms.getId();
 	}
 

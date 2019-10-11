@@ -45,7 +45,7 @@ public interface SessionInterface {
 
 	int getActivePublishers();
 
-	String getMediaServerId();
+	String getMediaNodeId();
 
 	JsonObject toJson();
 
