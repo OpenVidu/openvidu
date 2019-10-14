@@ -197,7 +197,9 @@ public class CustomHttpClient {
 			case PUT:
 				request = Unirest.put(path);
 				break;
+			case PATCH:
 			default:
+				request = Unirest.patch(path);
 				break;
 			}
 			((HttpRequestWithBody) request).header("Content-Type", "application/json").body(body.replaceAll("'", "\""));
