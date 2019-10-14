@@ -17,7 +17,6 @@
 
 package io.openvidu.test.browsers.utils;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,11 +26,14 @@ import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -52,9 +54,8 @@ public class CustomWebhook {
 
 	public static void main(String[] args, CountDownLatch initLatch) {
 		CustomWebhook.initLatch = initLatch;
-		SpringApplication app = new SpringApplication(CustomWebhook.class);
-		app.setDefaultProperties(Collections.singletonMap("server.port", "7777"));
-		CustomWebhook.context = app.run(args);
+		CustomWebhook.context = new SpringApplicationBuilder(CustomWebhook.class)
+				.properties("spring.config.location:classpath:aplication-pro-webhook.properties").build().run(args);
 	}
 
 	public static void shutDown() {
@@ -90,6 +91,15 @@ public class CustomWebhook {
 	@EventListener(ApplicationReadyEvent.class)
 	public void doSomethingAfterStartup() {
 		CustomWebhook.initLatch.countDown();
+	}
+
+	@Configuration
+	public class SecurityConfig extends WebSecurityConfigurerAdapter {
+		@Override
+		protected void configure(HttpSecurity http) throws Exception {
+			http.requiresChannel().antMatchers("/webhook").requiresInsecure();
+			http.csrf().disable().authorizeRequests().antMatchers("/webhook").permitAll();
+		}
 	}
 
 }
