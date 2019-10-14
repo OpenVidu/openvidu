@@ -105,8 +105,8 @@ import io.openvidu.test.browsers.OperaUser;
 import io.openvidu.test.browsers.utils.CommandLineExecutor;
 import io.openvidu.test.browsers.utils.CustomHttpClient;
 import io.openvidu.test.browsers.utils.CustomWebhook;
-import io.openvidu.test.e2e.utils.MultimediaFileMetadata;
-import io.openvidu.test.e2e.utils.Unzipper;
+import io.openvidu.test.browsers.utils.MultimediaFileMetadata;
+import io.openvidu.test.browsers.utils.Unzipper;
 
 /**
  * E2E tests for openvidu-testapp.
