@@ -97,6 +97,9 @@ public class ConfigRestController {
 
 		JsonObject json = new JsonObject();
 		json.addProperty("version", openviduConfig.getVersion());
+		JsonArray kmsUris = new JsonArray();
+		openviduConfig.getKmsUris().forEach(uri -> kmsUris.add(uri));
+		json.add("kmsUris", kmsUris);
 		json.addProperty("openviduPublicurl", openviduConfig.getOpenViduPublicUrl());
 		json.addProperty("openviduCdr", openviduConfig.isCdrEnabled());
 		json.addProperty("maxRecvBandwidth", openviduConfig.getVideoMaxRecvBandwidth());
