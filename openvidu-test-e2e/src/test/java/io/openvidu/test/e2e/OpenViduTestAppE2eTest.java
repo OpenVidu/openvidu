@@ -2620,7 +2620,7 @@ public class OpenViduTestAppE2eTest {
 		restClient.rest(HttpMethod.GET, "/config", null, HttpStatus.SC_OK, true,
 				"{'version':'STR','openviduPublicurl':'STR','openviduCdr':false,'maxRecvBandwidth':0,'minRecvBandwidth':0,'maxSendBandwidth':0,'minSendBandwidth':0,'openviduRecording':false,"
 						+ "'openviduRecordingVersion':'STR','openviduRecordingPath':'STR','openviduRecordingPublicAccess':false,'openviduRecordingNotification':'STR',"
-						+ "'openviduRecordingCustomLayout':'STR','openviduRecordingAutostopTimeout':0,'openviduWebhook':false,'openviduWebhookEndpoint':'STR','openviduWebhookHeaders':[],'openviduWebhookEvents':[],}");
+						+ "'openviduRecordingCustomLayout':'STR','openviduRecordingAutostopTimeout':0,'openviduWebhook':false,'openviduWebhookEndpoint':'STR','openviduWebhookHeaders':[],'openviduWebhookEvents':[], 'kmsUris':[]}");
 	}
 
 	@Test
