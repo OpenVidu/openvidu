@@ -54,6 +54,7 @@ public class CustomWebhook {
 
 	public static void main(String[] args, CountDownLatch initLatch) {
 		CustomWebhook.initLatch = initLatch;
+		CustomWebhook.events.clear();
 		CustomWebhook.context = new SpringApplicationBuilder(CustomWebhook.class)
 				.properties("spring.config.location:classpath:aplication-pro-webhook.properties").build().run(args);
 	}
