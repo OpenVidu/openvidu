@@ -60,6 +60,7 @@ public class CustomWebhook {
 	}
 
 	public static void shutDown() {
+		CustomWebhook.events.clear();
 		CustomWebhook.context.close();
 	}
 
