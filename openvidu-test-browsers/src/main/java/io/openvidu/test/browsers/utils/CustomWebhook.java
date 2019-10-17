@@ -24,8 +24,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -43,8 +41,6 @@ import com.google.gson.JsonParser;
 
 @SpringBootApplication
 public class CustomWebhook {
-
-	private static final Logger log = LoggerFactory.getLogger(CustomWebhook.class);
 
 	private static ConfigurableApplicationContext context;
 
@@ -82,7 +78,7 @@ public class CustomWebhook {
 		public void webhook(@RequestBody String eventString) {
 			JsonObject event = (JsonObject) jsonParser.parse(eventString);
 			final String eventName = event.get("event").getAsString();
-			log.info("Webhook event: {}", event.toString());
+			System.out.println("Webhook event: " + event.toString());
 			if (events.get(eventName) == null) {
 				events.put(eventName, new LinkedBlockingDeque<>());
 			}
