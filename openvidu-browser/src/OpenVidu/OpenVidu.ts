@@ -947,4 +947,3 @@ export class OpenVidu {
     }
   }
 
-}
