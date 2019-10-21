@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -97,6 +98,12 @@ public abstract class KmsManager {
 
 	public synchronized Kms getLessLoadedKms() throws NoSuchElementException {
 		return Collections.min(getKmsLoads()).kms;
+	}
+
+	public synchronized Kms getLessLoadedAndNoQuarantinedKms() throws NoSuchElementException {
+		List<KmsLoad> kmsLoads = getKmsLoads().stream().filter(kmsLoad -> !kmsLoad.kms.isQuarantined())
+				.collect(Collectors.toList());
+		return Collections.min(kmsLoads).kms;
 	}
 
 	public Kms getKms(String kmsId) {
