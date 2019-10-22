@@ -51,10 +51,9 @@ public class Kms {
 
 	private static final Logger log = LoggerFactory.getLogger(Kms.class);
 
-	private String id;
+	private String id; // Dynamic ID
 	private String uri;
 	private String ip;
-	private boolean quarantined;
 	private KurentoClient client;
 	private LoadManager loadManager;
 
@@ -67,7 +66,6 @@ public class Kms {
 	public Kms(KmsProperties props, LoadManager loadManager) {
 		this.id = props.getId();
 		this.uri = props.getUri();
-		this.quarantined = false;
 
 		String parsedUri = uri.replaceAll("^ws://", "http://").replaceAll("^wss://", "https://");
 		URL url = null;
@@ -95,14 +93,6 @@ public class Kms {
 
 	public String getIp() {
 		return ip;
-	}
-
-	public synchronized boolean isQuarantined() {
-		return this.quarantined;
-	}
-
-	public synchronized void setQuarantined(boolean quarantined) {
-		this.quarantined = quarantined;
 	}
 
 	public KurentoClient getKurentoClient() {
@@ -156,9 +146,9 @@ public class Kms {
 	public JsonObject toJson() {
 		JsonObject json = new JsonObject();
 		json.addProperty("id", this.id);
-		json.addProperty("uri", this.uri);
 		json.addProperty("ip", this.ip);
-		json.addProperty("quarantined", this.quarantined);
+		json.addProperty("uri", this.uri);
+
 		final boolean connected = this.isKurentoClientConnected();
 		json.addProperty("connected", connected);
 		json.addProperty("connectionTime", this.getTimeOfKurentoClientConnection());

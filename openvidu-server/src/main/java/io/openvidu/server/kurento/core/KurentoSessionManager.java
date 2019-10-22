@@ -91,7 +91,7 @@ public class KurentoSessionManager extends SessionManager {
 
 				Kms lessLoadedKms = null;
 				try {
-					lessLoadedKms = this.kmsManager.getLessLoadedAndNoQuarantinedKms();
+					lessLoadedKms = this.kmsManager.getLessLoadedAndRunningKms();
 				} catch (NoSuchElementException e) {
 					// Restore session not active
 					this.cleanCollections(sessionId);

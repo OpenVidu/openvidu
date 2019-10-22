@@ -31,9 +31,10 @@ public class FixedOneKmsManager extends KmsManager {
 		KmsProperties firstProps = kmsProperties.get(0);
 		KurentoClient kClient = null;
 		Kms kms = new Kms(firstProps, loadManager);
-		this.addKms(kms);
 		try {
 			kClient = KurentoClient.create(firstProps.getUri(), this.generateKurentoConnectionListener(kms.getId()));
+			this.addKms(kms);
+			kms.setKurentoClient(kClient);
 		} catch (KurentoException e) {
 			log.error("KMS in {} is not reachable by OpenVidu Server", firstProps.getUri());
 			if (kClient != null) {
@@ -41,9 +42,6 @@ public class FixedOneKmsManager extends KmsManager {
 			}
 			throw new Exception();
 		}
-
-		kms.setKurentoClient(kClient);
-
 		return Arrays.asList(kms);
 	}
 

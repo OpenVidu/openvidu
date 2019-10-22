@@ -19,7 +19,7 @@ package io.openvidu.server.kurento.kms;
 
 public class KmsProperties {
 
-	private String id;
+	private String id; // Dynamic ID
 	private String uri;
 
 	public KmsProperties(String id, String uri) {

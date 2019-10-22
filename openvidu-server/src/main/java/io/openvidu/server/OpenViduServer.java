@@ -61,6 +61,8 @@ import io.openvidu.server.rpc.RpcNotificationService;
 import io.openvidu.server.utils.CommandExecutor;
 import io.openvidu.server.utils.GeoLocationByIp;
 import io.openvidu.server.utils.GeoLocationByIpDummy;
+import io.openvidu.server.utils.MediaNodeStatusManager;
+import io.openvidu.server.utils.MediaNodeStatusManagerDummy;
 import io.openvidu.server.utils.QuarantineKiller;
 import io.openvidu.server.utils.QuarantineKillerDummy;
 import io.openvidu.server.webhook.CDRLoggerWebhook;
@@ -184,6 +186,12 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	@ConditionalOnMissingBean
 	public QuarantineKiller quarantineKiller() {
 		return new QuarantineKillerDummy();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public MediaNodeStatusManager mediaNodeStatusManager() {
+		return new MediaNodeStatusManagerDummy();
 	}
 
 	@Override
