@@ -29,7 +29,6 @@ import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
-import org.apache.commons.lang3.RandomStringUtils;
 import org.kurento.client.KurentoConnectionListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,8 +89,6 @@ public abstract class KmsManager {
 	protected MediaNodeStatusManager mediaNodeStatusManager;
 
 	final protected Map<String, Kms> kmss = new ConcurrentHashMap<>();
-
-	protected Map<String, String> forceKmsUrisToHaveKmsIds;
 
 	public synchronized void addKms(Kms kms) {
 		this.kmss.put(kms.getId(), kms);
@@ -203,29 +200,7 @@ public abstract class KmsManager {
 	}
 
 	@PostConstruct
-	protected List<Kms> postConstruct() {
-		try {
-			List<KmsProperties> kmsProps = new ArrayList<>();
-			if (forceKmsUrisToHaveKmsIds != null) {
-				for (String kmsUri : this.openviduConfig.getKmsUris()) {
-					String kmsId = forceKmsUrisToHaveKmsIds.get(kmsUri);
-					kmsProps.add(new KmsProperties(kmsId, kmsUri));
-				}
-				return this.initializeKurentoClients(kmsProps, true, true);
-			} else {
-				for (String kmsUri : this.openviduConfig.getKmsUris()) {
-					String kmsId = "kms-" + RandomStringUtils.randomAlphanumeric(6).toUpperCase();
-					kmsProps.add(new KmsProperties(kmsId, kmsUri));
-				}
-				return this.initializeKurentoClients(kmsProps, true, false);
-			}
-		} catch (Exception e) {
-			// Some KMS wasn't reachable
-			log.error("Shutting down OpenVidu Server");
-			System.exit(1);
-		}
-		return null;
-	}
+	protected abstract void postConstructInitKurentoClients();
 
 	@PreDestroy
 	public void close() {

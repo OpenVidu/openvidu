@@ -17,9 +17,13 @@
 
 package io.openvidu.server.kurento.kms;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.annotation.PostConstruct;
+
+import org.apache.commons.lang3.RandomStringUtils;
 import org.kurento.client.KurentoClient;
 import org.kurento.commons.exception.KurentoException;
 
@@ -44,6 +48,23 @@ public class FixedOneKmsManager extends KmsManager {
 			throw new Exception();
 		}
 		return Arrays.asList(kms);
+	}
+
+	@Override
+	@PostConstruct
+	protected void postConstructInitKurentoClients() {
+		try {
+			List<KmsProperties> kmsProps = new ArrayList<>();
+			for (String kmsUri : this.openviduConfig.getKmsUris()) {
+				String kmsId = "kms-" + RandomStringUtils.randomAlphanumeric(6).toUpperCase();
+				kmsProps.add(new KmsProperties(kmsId, kmsUri));
+			}
+			this.initializeKurentoClients(kmsProps, true, false);
+		} catch (Exception e) {
+			// Some KMS wasn't reachable
+			log.error("Shutting down OpenVidu Server");
+			System.exit(1);
+		}
 	}
 
 }
