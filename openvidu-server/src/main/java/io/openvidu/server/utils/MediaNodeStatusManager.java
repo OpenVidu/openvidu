@@ -8,7 +8,7 @@ public interface MediaNodeStatusManager {
 
 	public boolean isTerminating(String mediaNodeId);
 
-	public boolean isWaitingIdleToTerminating(String mediaNodeId);
+	public boolean isWaitingIdleToTerminate(String mediaNodeId);
 
 	public void setStatus(String mediaNodeId, String uri, String status, boolean sendConnectedEvent);
 

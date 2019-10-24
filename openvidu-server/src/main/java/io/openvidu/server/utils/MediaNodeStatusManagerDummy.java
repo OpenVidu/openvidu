@@ -18,7 +18,7 @@ public class MediaNodeStatusManagerDummy implements MediaNodeStatusManager {
 	}
 
 	@Override
-	public boolean isWaitingIdleToTerminating(String mediaNodeId) {
+	public boolean isWaitingIdleToTerminate(String mediaNodeId) {
 		return false;
 	}
 
