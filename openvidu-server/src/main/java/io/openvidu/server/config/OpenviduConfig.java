@@ -20,6 +20,7 @@ package io.openvidu.server.config;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -350,13 +351,13 @@ public class OpenviduConfig {
 		return externalizedProperties;
 	}
 
-	public void checkWebsocketUri(String uri) throws Exception {
+	public URI checkWebsocketUri(String uri) throws Exception {
 		try {
 			if (!uri.startsWith("ws://") || uri.startsWith("wss://")) {
 				throw new Exception("WebSocket protocol not found");
 			}
 			String parsedUri = uri.replaceAll("^ws://", "http://").replaceAll("^wss://", "https://");
-			new URL(parsedUri).toURI();
+			return new URL(parsedUri).toURI();
 		} catch (Exception e) {
 			throw new Exception("URI '" + uri + "' has not a valid WebSocket endpoint format: " + e.getMessage());
 		}

@@ -144,7 +144,8 @@ public abstract class KmsManager {
 		return kmsLoads;
 	}
 
-	protected KurentoConnectionListener generateKurentoConnectionListener(final String kmsId) {
+	protected KurentoConnectionListener generateKurentoConnectionListener(final String kmsId,
+			final boolean sendConnectedEvent) {
 		return new KurentoConnectionListener() {
 
 			@Override
@@ -188,7 +189,7 @@ public abstract class KmsManager {
 				final Kms kms = kmss.get(kmsId);
 				kms.setKurentoClientConnected(true);
 				kms.setTimeOfKurentoClientConnection(System.currentTimeMillis());
-				mediaNodeStatusManager.setStatus(kmsId, "running");
+				mediaNodeStatusManager.setStatus(kmsId, kms.getUri(), "running", sendConnectedEvent);
 				log.warn("Kurento Client is now connected to KMS {} with uri {}", kmsId, kms.getUri());
 			}
 		};
@@ -205,12 +206,19 @@ public abstract class KmsManager {
 	protected List<Kms> postConstruct() {
 		try {
 			List<KmsProperties> kmsProps = new ArrayList<>();
-			for (String kmsUri : this.openviduConfig.getKmsUris()) {
-				String kmsId = forceKmsUrisToHaveKmsIds != null ? forceKmsUrisToHaveKmsIds.get(kmsUri)
-						: "KMS-" + RandomStringUtils.randomAlphanumeric(6).toUpperCase();
-				kmsProps.add(new KmsProperties(kmsId, kmsUri));
+			if (forceKmsUrisToHaveKmsIds != null) {
+				for (String kmsUri : this.openviduConfig.getKmsUris()) {
+					String kmsId = forceKmsUrisToHaveKmsIds.get(kmsUri);
+					kmsProps.add(new KmsProperties(kmsId, kmsUri));
+				}
+				return this.initializeKurentoClients(kmsProps, true, true);
+			} else {
+				for (String kmsUri : this.openviduConfig.getKmsUris()) {
+					String kmsId = "kms-" + RandomStringUtils.randomAlphanumeric(6).toUpperCase();
+					kmsProps.add(new KmsProperties(kmsId, kmsUri));
+				}
+				return this.initializeKurentoClients(kmsProps, true, false);
 			}
-			return this.initializeKurentoClients(kmsProps, true, false);
 		} catch (Exception e) {
 			// Some KMS wasn't reachable
 			log.error("Shutting down OpenVidu Server");

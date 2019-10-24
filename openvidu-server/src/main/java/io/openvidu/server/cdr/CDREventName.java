@@ -19,6 +19,8 @@ package io.openvidu.server.cdr;
 
 public enum CDREventName {
 
-	sessionCreated, sessionDestroyed, participantJoined, participantLeft, webrtcConnectionCreated, webrtcConnectionDestroyed, recordingStarted, recordingStopped, recordingStatusChanged, filterEventDispatched, mediaNodeAdded, mediaNodeRemoved
+	sessionCreated, sessionDestroyed, participantJoined, participantLeft, webrtcConnectionCreated,
+	webrtcConnectionDestroyed, recordingStarted, recordingStopped, recordingStatusChanged, filterEventDispatched,
+	mediaNodeStatusChanged
 
 }

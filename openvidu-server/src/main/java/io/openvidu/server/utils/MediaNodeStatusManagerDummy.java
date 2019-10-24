@@ -3,7 +3,7 @@ package io.openvidu.server.utils;
 public class MediaNodeStatusManagerDummy implements MediaNodeStatusManager {
 
 	@Override
-	public boolean isPending(String mediaNodeId) {
+	public boolean isLaunching(String mediaNodeId) {
 		return false;
 	}
 
@@ -13,17 +13,17 @@ public class MediaNodeStatusManagerDummy implements MediaNodeStatusManager {
 	}
 
 	@Override
-	public boolean isShuttingDown(String mediaNodeId) {
+	public boolean isTerminating(String mediaNodeId) {
 		return false;
 	}
 
 	@Override
-	public boolean isWaitingIdleToShuttingDown(String mediaNodeId) {
+	public boolean isWaitingIdleToTerminating(String mediaNodeId) {
 		return false;
 	}
 
 	@Override
-	public void setStatus(String mediaNodeId, String status) {
+	public void setStatus(String mediaNodeId, String uri, String status, boolean sendConnectedEvent) {
 	}
 
 }

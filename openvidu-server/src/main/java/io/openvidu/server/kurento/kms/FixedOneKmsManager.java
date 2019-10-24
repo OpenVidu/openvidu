@@ -32,7 +32,8 @@ public class FixedOneKmsManager extends KmsManager {
 		KurentoClient kClient = null;
 		Kms kms = new Kms(firstProps, loadManager);
 		try {
-			kClient = KurentoClient.create(firstProps.getUri(), this.generateKurentoConnectionListener(kms.getId()));
+			kClient = KurentoClient.create(firstProps.getUri(),
+					this.generateKurentoConnectionListener(kms.getId(), false));
 			this.addKms(kms);
 			kms.setKurentoClient(kClient);
 		} catch (KurentoException e) {
