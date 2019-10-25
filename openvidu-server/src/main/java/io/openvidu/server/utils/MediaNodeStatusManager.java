@@ -10,6 +10,4 @@ public interface MediaNodeStatusManager {
 
 	public boolean isWaitingIdleToTerminate(String mediaNodeId);
 
-	public void setStatus(String mediaNodeId, String uri, String status, boolean sendConnectedEvent);
-
 }

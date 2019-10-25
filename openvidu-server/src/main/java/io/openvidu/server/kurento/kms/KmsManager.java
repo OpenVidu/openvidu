@@ -141,8 +141,7 @@ public abstract class KmsManager {
 		return kmsLoads;
 	}
 
-	protected KurentoConnectionListener generateKurentoConnectionListener(final String kmsId,
-			final boolean sendConnectedEvent) {
+	protected KurentoConnectionListener generateKurentoConnectionListener(final String kmsId) {
 		return new KurentoConnectionListener() {
 
 			@Override
@@ -184,9 +183,8 @@ public abstract class KmsManager {
 			@Override
 			public void connected() {
 				final Kms kms = kmss.get(kmsId);
-				kms.setKurentoClientConnected(true);
-				kms.setTimeOfKurentoClientConnection(System.currentTimeMillis());
-				mediaNodeStatusManager.setStatus(kmsId, kms.getUri(), "running", sendConnectedEvent);
+				// kms.setKurentoClientConnected(true);
+				// kms.setTimeOfKurentoClientConnection(System.currentTimeMillis());
 				log.warn("Kurento Client is now connected to KMS {} with uri {}", kmsId, kms.getUri());
 			}
 		};

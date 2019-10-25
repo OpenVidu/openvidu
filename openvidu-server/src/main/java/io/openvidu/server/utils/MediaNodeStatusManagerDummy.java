@@ -22,8 +22,4 @@ public class MediaNodeStatusManagerDummy implements MediaNodeStatusManager {
 		return false;
 	}
 
-	@Override
-	public void setStatus(String mediaNodeId, String uri, String status, boolean sendConnectedEvent) {
-	}
-
 }
