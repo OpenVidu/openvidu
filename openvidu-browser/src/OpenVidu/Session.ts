@@ -521,9 +521,10 @@ export class Session implements EventDispatcher {
 
             if (signal.to && signal.to.length > 0) {
                 const connectionIds: string[] = [];
-
                 signal.to.forEach(connection => {
-                    connectionIds.push(connection.connectionId);
+                    if (!!connection.connectionId) {
+                        connectionIds.push(connection.connectionId);
+                    }
                 });
                 signalMessage['to'] = connectionIds;
             } else {
