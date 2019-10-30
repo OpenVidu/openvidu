@@ -17,8 +17,7 @@
 
 package io.openvidu.server.kurento.core;
 
-import org.kurento.client.MediaElement;
-import org.kurento.client.MediaType;
+import com.google.gson.JsonObject;
 
 import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.kurento.endpoint.KurentoFilter;
@@ -28,21 +27,38 @@ public class KurentoMediaOptions extends MediaOptions {
 	public boolean isOffer;
 	public String sdpOffer;
 	public boolean doLoopback;
-	public MediaElement loopbackAlternativeSrc;
-	public MediaType loopbackConnectionType;
-	public MediaElement[] mediaElements;
 
-	public KurentoMediaOptions(boolean isOffer, String sdpOffer, MediaElement loopbackAlternativeSrc,
-			MediaType loopbackConnectionType, Boolean hasAudio, Boolean hasVideo, Boolean audioActive,
-			Boolean videoActive, String typeOfVideo, Integer frameRate, String videoDimensions, KurentoFilter filter,
-			boolean doLoopback, MediaElement... mediaElements) {
+	// IPCAM properties
+	public String rtspUri;
+	public Boolean adaptativeBitrate;
+
+	public KurentoMediaOptions(boolean isOffer, String sdpOffer, Boolean hasAudio, Boolean hasVideo,
+			Boolean audioActive, Boolean videoActive, String typeOfVideo, Integer frameRate, String videoDimensions,
+			KurentoFilter filter, boolean doLoopback) {
 		super(hasAudio, hasVideo, audioActive, videoActive, typeOfVideo, frameRate, videoDimensions, filter);
 		this.isOffer = isOffer;
 		this.sdpOffer = sdpOffer;
-		this.loopbackAlternativeSrc = loopbackAlternativeSrc;
-		this.loopbackConnectionType = loopbackConnectionType;
 		this.doLoopback = doLoopback;
-		this.mediaElements = mediaElements;
+	}
+
+	public KurentoMediaOptions(boolean isOffer, String sdpOffer, Boolean hasAudio, Boolean hasVideo,
+			Boolean audioActive, Boolean videoActive, String typeOfVideo, Integer frameRate, String videoDimensions,
+			KurentoFilter filter, boolean doLoopback, String rtspUri, Boolean adaptativeBitrate) {
+		super(hasAudio, hasVideo, audioActive, videoActive, typeOfVideo, frameRate, videoDimensions, filter);
+		this.isOffer = isOffer;
+		this.sdpOffer = sdpOffer;
+		this.doLoopback = doLoopback;
+		this.rtspUri = rtspUri;
+		this.adaptativeBitrate = adaptativeBitrate;
+	}
+
+	@Override
+	public JsonObject toJson() {
+		JsonObject json = super.toJson();
+		if (adaptativeBitrate != null) {
+			json.addProperty("adaptativeBitrate", adaptativeBitrate);
+		}
+		return json;
 	}
 
 }

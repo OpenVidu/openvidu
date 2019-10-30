@@ -36,6 +36,7 @@ import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.kurento.core.KurentoParticipant;
+import io.openvidu.server.kurento.endpoint.EndpointType;
 import io.openvidu.server.recording.service.RecordingManager;
 
 public class Session implements SessionInterface {
@@ -167,7 +168,7 @@ public class Session implements SessionInterface {
 	}
 
 	@Override
-	public void join(Participant participant) {
+	public void join(Participant participant, EndpointType endpointType) {
 	}
 
 	@Override

@@ -25,6 +25,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 
 import org.kurento.client.Continuation;
+import org.kurento.client.Endpoint;
 import org.kurento.client.ErrorEvent;
 import org.kurento.client.EventListener;
 import org.kurento.client.IceCandidate;
@@ -32,6 +33,7 @@ import org.kurento.client.ListenerSubscription;
 import org.kurento.client.MediaElement;
 import org.kurento.client.MediaPipeline;
 import org.kurento.client.OnIceCandidateEvent;
+import org.kurento.client.PlayerEndpoint;
 import org.kurento.client.RtpEndpoint;
 import org.kurento.client.SdpEndpoint;
 import org.kurento.client.WebRtcEndpoint;
@@ -46,12 +48,14 @@ import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.Participant;
+import io.openvidu.server.kurento.core.KurentoMediaOptions;
 import io.openvidu.server.kurento.core.KurentoParticipant;
 import io.openvidu.server.kurento.core.KurentoTokenOptions;
 
 /**
- * {@link WebRtcEndpoint} wrapper that supports buffering of
- * {@link IceCandidate}s until the {@link WebRtcEndpoint} is created.
+ * {@link Endpoint} wrapper. Can be based on WebRtcEndpoint (that supports
+ * buffering of {@link IceCandidate}s until the {@link WebRtcEndpoint} is
+ * created), PlayerEndpoint (to play RTSP or file streams) and RtpEndpoint.
  * Connections to other peers are opened using the corresponding method of the
  * internal endpoint.
  *
@@ -61,10 +65,11 @@ public abstract class MediaEndpoint {
 	private static Logger log;
 	private OpenviduConfig openviduConfig;
 
-	private boolean web = false;
+	private EndpointType endpointType;
 
 	private WebRtcEndpoint webEndpoint = null;
 	private RtpEndpoint endpoint = null;
+	private PlayerEndpoint playerEndpoint = null;
 
 	private final int maxRecvKbps;
 	private final int minRecvKbps;
@@ -98,14 +103,14 @@ public abstract class MediaEndpoint {
 	 * @param pipeline
 	 * @param log
 	 */
-	public MediaEndpoint(boolean web, KurentoParticipant owner, String endpointName, MediaPipeline pipeline,
-			OpenviduConfig openviduConfig, Logger log) {
+	public MediaEndpoint(EndpointType endpointType, KurentoParticipant owner, String endpointName,
+			MediaPipeline pipeline, OpenviduConfig openviduConfig, Logger log) {
 		if (log == null) {
 			MediaEndpoint.log = LoggerFactory.getLogger(MediaEndpoint.class);
 		} else {
 			MediaEndpoint.log = log;
 		}
-		this.web = web;
+		this.endpointType = endpointType;
 		this.owner = owner;
 		this.setEndpointName(endpointName);
 		this.setMediaPipeline(pipeline);
@@ -135,7 +140,11 @@ public abstract class MediaEndpoint {
 	}
 
 	public boolean isWeb() {
-		return web;
+		return EndpointType.WEBRTC_ENDPOINT.equals(this.endpointType);
+	}
+
+	public boolean isPlayerEndpoint() {
+		return EndpointType.PLAYER_ENDPOINT.equals(this.endpointType);
 	}
 
 	/**
@@ -148,9 +157,11 @@ public abstract class MediaEndpoint {
 	/**
 	 * @return the internal endpoint ({@link RtpEndpoint} or {@link WebRtcEndpoint})
 	 */
-	public SdpEndpoint getEndpoint() {
+	public Endpoint getEndpoint() {
 		if (this.isWeb()) {
 			return this.webEndpoint;
+		} else if (this.isPlayerEndpoint()) {
+			return this.playerEndpoint;
 		} else {
 			return this.endpoint;
 		}
@@ -164,8 +175,12 @@ public abstract class MediaEndpoint {
 		return webEndpoint;
 	}
 
-	protected RtpEndpoint getRtpEndpoint() {
+	public RtpEndpoint getRtpEndpoint() {
 		return endpoint;
+	}
+
+	public PlayerEndpoint getPlayerEndpoint() {
+		return playerEndpoint;
 	}
 
 	/**
@@ -179,8 +194,8 @@ public abstract class MediaEndpoint {
 	 *
 	 * @return the existing endpoint, if any
 	 */
-	public synchronized SdpEndpoint createEndpoint(CountDownLatch endpointLatch) {
-		SdpEndpoint old = this.getEndpoint();
+	public synchronized Endpoint createEndpoint(CountDownLatch endpointLatch) {
+		Endpoint old = this.getEndpoint();
 		if (old == null) {
 			internalEndpointInitialization(endpointLatch);
 		} else {
@@ -271,6 +286,31 @@ public abstract class MediaEndpoint {
 					log.error("EP {}: Failed to create a new WebRtcEndpoint", endpointName, cause);
 				}
 			});
+		} else if (this.isPlayerEndpoint()) {
+			KurentoMediaOptions mediaOptions = (KurentoMediaOptions) this.owner.getPublisherMediaOptions();
+			PlayerEndpoint.Builder playerBuilder = new PlayerEndpoint.Builder(pipeline, mediaOptions.rtspUri);
+
+			if (!mediaOptions.adaptativeBitrate) {
+				playerBuilder = playerBuilder.useEncodedMedia();
+			}
+
+			playerBuilder.buildAsync(new Continuation<PlayerEndpoint>() {
+
+				@Override
+				public void onSuccess(PlayerEndpoint result) throws Exception {
+					playerEndpoint = result;
+					log.trace("EP {}: Created a new PlayerEndpoint", endpointName);
+					endpointSubscription = registerElemErrListener(playerEndpoint);
+					playerEndpoint.play();
+					endpointLatch.countDown();
+				}
+
+				@Override
+				public void onError(Throwable cause) throws Exception {
+					endpointLatch.countDown();
+					log.error("EP {}: Failed to create a new PlayerEndpoint", endpointName, cause);
+				}
+			});
 		} else {
 			new RtpEndpoint.Builder(pipeline).buildAsync(new Continuation<RtpEndpoint>() {
 				@Override
@@ -353,35 +393,14 @@ public abstract class MediaEndpoint {
 						"Can't process offer when WebRtcEndpoint is null (ep: " + endpointName + ")");
 			}
 			return webEndpoint.processOffer(offer);
+		} else if (this.isPlayerEndpoint()) {
+			return "";
 		} else {
 			if (endpoint == null) {
 				throw new OpenViduException(Code.MEDIA_RTP_ENDPOINT_ERROR_CODE,
 						"Can't process offer when RtpEndpoint is null (ep: " + endpointName + ")");
 			}
 			return endpoint.processOffer(offer);
-		}
-	}
-
-	/**
-	 * Orders the internal endpoint ({@link RtpEndpoint} or {@link WebRtcEndpoint})
-	 * to generate the offer String that can be used to initiate a connection.
-	 *
-	 * @see SdpEndpoint#generateOffer()
-	 * @return the Sdp offer
-	 */
-	protected String generateOffer() throws OpenViduException {
-		if (this.isWeb()) {
-			if (webEndpoint == null) {
-				throw new OpenViduException(Code.MEDIA_WEBRTC_ENDPOINT_ERROR_CODE,
-						"Can't generate offer when WebRtcEndpoint is null (ep: " + endpointName + ")");
-			}
-			return webEndpoint.generateOffer();
-		} else {
-			if (endpoint == null) {
-				throw new OpenViduException(Code.MEDIA_RTP_ENDPOINT_ERROR_CODE,
-						"Can't generate offer when RtpEndpoint is null (ep: " + endpointName + ")");
-			}
-			return endpoint.generateOffer();
 		}
 	}
 
@@ -400,6 +419,8 @@ public abstract class MediaEndpoint {
 						"Can't process answer when WebRtcEndpoint is null (ep: " + endpointName + ")");
 			}
 			return webEndpoint.processAnswer(answer);
+		} else if (this.isPlayerEndpoint()) {
+			return "";
 		} else {
 			if (endpoint == null) {
 				throw new OpenViduException(Code.MEDIA_RTP_ENDPOINT_ERROR_CODE,
@@ -489,8 +510,10 @@ public abstract class MediaEndpoint {
 		JsonObject json = new JsonObject();
 		json.addProperty("createdAt", this.createdAt);
 		json.addProperty("webrtcEndpointName", this.getEndpointName());
-		json.addProperty("remoteSdp", this.getEndpoint().getRemoteSessionDescriptor());
-		json.addProperty("localSdp", this.getEndpoint().getLocalSessionDescriptor());
+		if (!this.isPlayerEndpoint()) {
+			json.addProperty("remoteSdp", ((SdpEndpoint) this.getEndpoint()).getRemoteSessionDescriptor());
+			json.addProperty("localSdp", ((SdpEndpoint) this.getEndpoint()).getLocalSessionDescriptor());
+		}
 		json.add("receivedCandidates", new GsonBuilder().create().toJsonTree(this.receivedCandidateList));
 		json.addProperty("localCandidate", this.selectedLocalIceCandidate);
 		json.addProperty("remoteCandidate", this.selectedRemoteIceCandidate);

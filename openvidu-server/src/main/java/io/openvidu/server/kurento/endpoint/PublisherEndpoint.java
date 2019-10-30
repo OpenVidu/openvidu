@@ -46,6 +46,7 @@ import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.MediaOptions;
+import io.openvidu.server.kurento.core.KurentoMediaOptions;
 import io.openvidu.server.kurento.core.KurentoParticipant;
 import io.openvidu.server.utils.JsonUtils;
 
@@ -73,9 +74,9 @@ public class PublisherEndpoint extends MediaEndpoint {
 
 	private Map<String, ListenerSubscription> elementsErrorSubscriptions = new HashMap<String, ListenerSubscription>();
 
-	public PublisherEndpoint(boolean web, KurentoParticipant owner, String endpointName, MediaPipeline pipeline,
-			OpenviduConfig openviduConfig) {
-		super(web, owner, endpointName, pipeline, openviduConfig, log);
+	public PublisherEndpoint(EndpointType endpointType, KurentoParticipant owner, String endpointName,
+			MediaPipeline pipeline, OpenviduConfig openviduConfig) {
+		super(endpointType, owner, endpointName, pipeline, openviduConfig, log);
 	}
 
 	@Override
@@ -172,15 +173,10 @@ public class PublisherEndpoint extends MediaEndpoint {
 	 * @return the SDP response (the answer if processing an offer SDP, otherwise is
 	 *         the updated offer generated previously by this endpoint)
 	 */
-	public synchronized String publish(SdpType sdpType, String sdpString, boolean doLoopback,
-			MediaElement loopbackAlternativeSrc, MediaType loopbackConnectionType) {
+	public synchronized String publish(SdpType sdpType, String sdpString, boolean doLoopback) {
 		registerOnIceCandidateEventListener(this.getOwner().getParticipantPublicId());
 		if (doLoopback) {
-			if (loopbackAlternativeSrc == null) {
-				connect(this.getEndpoint(), loopbackConnectionType);
-			} else {
-				connectAltLoopbackSrc(loopbackAlternativeSrc, loopbackConnectionType);
-			}
+			connect(this.getEndpoint(), null);
 		} else {
 			innerConnect();
 		}
@@ -198,10 +194,6 @@ public class PublisherEndpoint extends MediaEndpoint {
 		}
 		gatherCandidates();
 		return sdpResponse;
-	}
-
-	public synchronized String preparePublishConnection() {
-		return generateOffer();
 	}
 
 	public synchronized void connect(MediaElement sink) {
@@ -415,13 +407,6 @@ public class PublisherEndpoint extends MediaEndpoint {
 		return elementIds.get(idx - 1);
 	}
 
-	private void connectAltLoopbackSrc(MediaElement loopbackAlternativeSrc, MediaType loopbackConnectionType) {
-		if (!connected) {
-			innerConnect();
-		}
-		internalSinkConnect(loopbackAlternativeSrc, this.getEndpoint(), loopbackConnectionType);
-	}
-
 	private void innerConnect() {
 		if (this.getEndpoint() == null) {
 			throw new OpenViduException(Code.MEDIA_ENDPOINT_ERROR_CODE,
@@ -549,6 +534,9 @@ public class PublisherEndpoint extends MediaEndpoint {
 	public JsonObject toJson() {
 		JsonObject json = super.toJson();
 		json.addProperty("streamId", this.getStreamId());
+		if (this.isPlayerEndpoint()) {
+			json.addProperty("rtspUri", ((KurentoMediaOptions) this.mediaOptions).rtspUri);
+		}
 		json.add("mediaOptions", this.mediaOptions.toJson());
 		return json;
 	}

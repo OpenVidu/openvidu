@@ -22,6 +22,7 @@ import java.util.Set;
 import com.google.gson.JsonObject;
 
 import io.openvidu.java.client.SessionProperties;
+import io.openvidu.server.kurento.endpoint.EndpointType;
 
 public interface SessionInterface {
 
@@ -29,7 +30,7 @@ public interface SessionInterface {
 
 	SessionProperties getSessionProperties();
 
-	void join(Participant participant);
+	void join(Participant participant, EndpointType endpointType);
 
 	void leave(String participantPrivateId, EndReason reason);
 

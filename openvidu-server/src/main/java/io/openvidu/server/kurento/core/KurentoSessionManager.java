@@ -17,12 +17,19 @@
 
 package io.openvidu.server.kurento.core;
 
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.kurento.client.GenericMediaElement;
 import org.kurento.client.IceCandidate;
 import org.kurento.client.ListenerSubscription;
@@ -44,16 +51,20 @@ import io.openvidu.java.client.RecordingMode;
 import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.server.core.EndReason;
+import io.openvidu.server.core.FinalUser;
 import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.core.SessionManager;
+import io.openvidu.server.core.Token;
+import io.openvidu.server.kurento.endpoint.EndpointType;
 import io.openvidu.server.kurento.endpoint.KurentoFilter;
 import io.openvidu.server.kurento.endpoint.PublisherEndpoint;
 import io.openvidu.server.kurento.endpoint.SdpType;
 import io.openvidu.server.kurento.kms.Kms;
 import io.openvidu.server.kurento.kms.KmsManager;
 import io.openvidu.server.rpc.RpcHandler;
+import io.openvidu.server.utils.GeoLocation;
 import io.openvidu.server.utils.JsonUtils;
 
 public class KurentoSessionManager extends SessionManager {
@@ -111,7 +122,7 @@ public class KurentoSessionManager extends SessionManager {
 			}
 
 			existingParticipants = getParticipants(sessionId);
-			kSession.join(participant);
+			kSession.join(participant, EndpointType.WEBRTC_ENDPOINT);
 		} catch (OpenViduException e) {
 			log.warn("PARTICIPANT {}: Error joining/creating session {}", participant.getParticipantPublicId(),
 					sessionId, e);
@@ -252,9 +263,8 @@ public class KurentoSessionManager extends SessionManager {
 
 		log.debug(
 				"Request [PUBLISH_MEDIA] isOffer={} sdp={} "
-						+ "loopbackAltSrc={} lpbkConnType={} doLoopback={} mediaElements={} ({})",
-				kurentoOptions.isOffer, kurentoOptions.sdpOffer, kurentoOptions.loopbackAlternativeSrc,
-				kurentoOptions.loopbackConnectionType, kurentoOptions.doLoopback, kurentoOptions.mediaElements,
+						+ "loopbackAltSrc={} lpbkConnType={} doLoopback={} rtspUri={} ({})",
+				kurentoOptions.isOffer, kurentoOptions.sdpOffer, kurentoOptions.doLoopback, kurentoOptions.rtspUri,
 				participant.getParticipantPublicId());
 
 		SdpType sdpType = kurentoOptions.isOffer ? SdpType.OFFER : SdpType.ANSWER;
@@ -284,8 +294,7 @@ public class KurentoSessionManager extends SessionManager {
 			}
 		}
 
-		sdpAnswer = kParticipant.publishToRoom(sdpType, kurentoOptions.sdpOffer, kurentoOptions.doLoopback,
-				kurentoOptions.loopbackAlternativeSrc, kurentoOptions.loopbackConnectionType);
+		sdpAnswer = kParticipant.publishToRoom(sdpType, kurentoOptions.sdpOffer, kurentoOptions.doLoopback);
 
 		if (sdpAnswer == null) {
 			OpenViduException e = new OpenViduException(Code.MEDIA_SDP_ERROR_CODE,
@@ -590,8 +599,8 @@ public class KurentoSessionManager extends SessionManager {
 
 		boolean doLoopback = RpcHandler.getBooleanParam(request, ProtocolElements.PUBLISHVIDEO_DOLOOPBACK_PARAM);
 
-		return new KurentoMediaOptions(true, sdpOffer, null, null, hasAudio, hasVideo, audioActive, videoActive,
-				typeOfVideo, frameRate, videoDimensions, kurentoFilter, doLoopback);
+		return new KurentoMediaOptions(true, sdpOffer, hasAudio, hasVideo, audioActive, videoActive, typeOfVideo,
+				frameRate, videoDimensions, kurentoFilter, doLoopback);
 	}
 
 	@Override
@@ -836,6 +845,68 @@ public class KurentoSessionManager extends SessionManager {
 					kParticipantPublishing.getPublisher().filterCollectionsToString());
 
 		}
+	}
+
+	@Override
+	public Participant publishIpcam(Session session, MediaOptions mediaOptions) throws Exception {
+		KurentoSession kSession = (KurentoSession) session;
+		KurentoMediaOptions kMediaOptions = (KurentoMediaOptions) mediaOptions;
+
+		// Generate the location for the IpCam
+		GeoLocation location = null;
+		URL url = null;
+		String protocol = null;
+		try {
+			Pattern pattern = Pattern.compile("^(file|rtsp)://");
+			Matcher matcher = pattern.matcher(kMediaOptions.rtspUri);
+			if (matcher.find()) {
+				protocol = matcher.group(0).replaceAll("://$", "");
+			} else {
+				throw new MalformedURLException();
+			}
+			String parsedUrl = kMediaOptions.rtspUri.replaceAll("^.*?://", "http://");
+			url = new URL(parsedUrl);
+		} catch (Exception e) {
+			throw new MalformedURLException();
+		}
+
+		try {
+			location = this.geoLocationByIp.getLocationByIp(InetAddress.getByName(url.getHost()));
+		} catch (IOException e) {
+			e.printStackTrace();
+			location = null;
+		} catch (Exception e) {
+			log.warn("Error getting address location: {}", e.getMessage());
+			location = null;
+		}
+
+		final String rtspConnectionId = kMediaOptions.getTypeOfVideo() + "-" + protocol + "-"
+				+ RandomStringUtils.randomAlphanumeric(4).toLowerCase() + "-" + url.getAuthority()
+				+ url.getPath().replaceAll("/", "-").replaceAll("_", "-");
+
+		// Store a "fake" participant for the IpCam connection
+		this.newInsecureParticipant(rtspConnectionId);
+		String token = RandomStringUtils.randomAlphanumeric(16).toLowerCase();
+		Token tokenObj = null;
+		if (this.isTokenValidInSession(token, session.getSessionId(), rtspConnectionId)) {
+			tokenObj = this.consumeToken(session.getSessionId(), rtspConnectionId, token);
+		}
+		Participant ipcamParticipant = this.newIpcamParticipant(session.getSessionId(), rtspConnectionId, tokenObj,
+				location, mediaOptions.getTypeOfVideo());
+
+		// Store a "fake" final user for the IpCam connection
+		final String finalUserId = rtspConnectionId;
+		this.sessionidFinalUsers.get(session.getSessionId()).computeIfAbsent(finalUserId, k -> {
+			return new FinalUser(finalUserId, session.getSessionId(), ipcamParticipant);
+		}).addConnectionIfAbsent(ipcamParticipant);
+
+		// Join the participant to the session
+		kSession.join(ipcamParticipant, EndpointType.PLAYER_ENDPOINT);
+
+		// Publish the IpCam stream into the session
+		KurentoParticipant kParticipant = (KurentoParticipant) this.getParticipant(rtspConnectionId);
+		this.publishVideo(kParticipant, mediaOptions, null);
+		return kParticipant;
 	}
 
 	@Override

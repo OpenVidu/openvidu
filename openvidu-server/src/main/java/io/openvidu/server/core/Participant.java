@@ -51,9 +51,12 @@ public class Participant {
 			this.createdAt = System.currentTimeMillis();
 		}
 		this.token = token;
-		this.clientMetadata = clientMetadata;
-		if (!token.getServerMetadata().isEmpty())
+		if (clientMetadata != null) {
+			this.clientMetadata = clientMetadata;
+		}
+		if (!token.getServerMetadata().isEmpty()) {
 			this.serverMetadata = token.getServerMetadata();
+		}
 		this.location = location;
 		this.platform = platform;
 	}
@@ -132,6 +135,10 @@ public class Participant {
 
 	public boolean isClosed() {
 		return closed;
+	}
+
+	public boolean isIpcam() {
+		return this.platform.equals("IPCAM") && this.participantPrivatetId.startsWith("IPCAM-");
 	}
 
 	public void setStreaming(boolean streaming) {

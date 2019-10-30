@@ -26,13 +26,12 @@ import java.util.function.Function;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.kurento.client.Continuation;
+import org.kurento.client.Endpoint;
 import org.kurento.client.ErrorEvent;
 import org.kurento.client.Filter;
 import org.kurento.client.IceCandidate;
 import org.kurento.client.MediaElement;
 import org.kurento.client.MediaPipeline;
-import org.kurento.client.MediaType;
-import org.kurento.client.SdpEndpoint;
 import org.kurento.client.internal.server.KurentoServerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +47,7 @@ import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
+import io.openvidu.server.kurento.endpoint.EndpointType;
 import io.openvidu.server.kurento.endpoint.MediaEndpoint;
 import io.openvidu.server.kurento.endpoint.PublisherEndpoint;
 import io.openvidu.server.kurento.endpoint.SdpType;
@@ -61,7 +61,7 @@ public class KurentoParticipant extends Participant {
 	private OpenviduConfig openviduConfig;
 	private RecordingManager recordingManager;
 
-	private boolean webParticipant = true;
+	private EndpointType endpointType;
 
 	private final KurentoSession session;
 	private KurentoParticipantEndpointConfig endpointConfig;
@@ -72,12 +72,13 @@ public class KurentoParticipant extends Participant {
 	private final ConcurrentMap<String, Filter> filters = new ConcurrentHashMap<>();
 	private final ConcurrentMap<String, SubscriberEndpoint> subscribers = new ConcurrentHashMap<String, SubscriberEndpoint>();
 
-	public KurentoParticipant(Participant participant, KurentoSession kurentoSession,
+	public KurentoParticipant(Participant participant, KurentoSession kurentoSession, EndpointType endpointType,
 			KurentoParticipantEndpointConfig endpointConfig, OpenviduConfig openviduConfig,
 			RecordingManager recordingManager) {
 		super(participant.getFinalUserId(), participant.getParticipantPrivateId(), participant.getParticipantPublicId(),
 				kurentoSession.getSessionId(), participant.getToken(), participant.getClientMetadata(),
 				participant.getLocation(), participant.getPlatform(), participant.getCreatedAt());
+		this.endpointType = endpointType;
 		this.endpointConfig = endpointConfig;
 		this.openviduConfig = openviduConfig;
 		this.recordingManager = recordingManager;
@@ -85,7 +86,7 @@ public class KurentoParticipant extends Participant {
 
 		if (!OpenViduRole.SUBSCRIBER.equals(participant.getToken().getRole())) {
 			// Initialize a PublisherEndpoint
-			this.publisher = new PublisherEndpoint(webParticipant, this, participant.getParticipantPublicId(),
+			this.publisher = new PublisherEndpoint(endpointType, this, participant.getParticipantPublicId(),
 					this.session.getPipeline(), this.openviduConfig);
 		}
 
@@ -101,11 +102,11 @@ public class KurentoParticipant extends Participant {
 
 	public void createPublishingEndpoint(MediaOptions mediaOptions) {
 
+		publisher.setMediaOptions(mediaOptions);
 		publisher.createEndpoint(publisherLatch);
 		if (getPublisher().getEndpoint() == null) {
 			throw new OpenViduException(Code.MEDIA_ENDPOINT_ERROR_CODE, "Unable to create publisher endpoint");
 		}
-		publisher.setMediaOptions(mediaOptions);
 
 		String publisherStreamId = this.getParticipantPublicId() + "_"
 				+ (mediaOptions.hasVideo() ? mediaOptions.getTypeOfVideo() : "MICRO") + "_"
@@ -171,14 +172,12 @@ public class KurentoParticipant extends Participant {
 		return session;
 	}
 
-	public String publishToRoom(SdpType sdpType, String sdpString, boolean doLoopback,
-			MediaElement loopbackAlternativeSrc, MediaType loopbackConnectionType) {
+	public String publishToRoom(SdpType sdpType, String sdpString, boolean doLoopback) {
 		log.info("PARTICIPANT {}: Request to publish video in room {} (sdp type {})", this.getParticipantPublicId(),
 				this.session.getSessionId(), sdpType);
 		log.trace("PARTICIPANT {}: Publishing Sdp ({}) is {}", this.getParticipantPublicId(), sdpType, sdpString);
 
-		String sdpResponse = this.getPublisher().publish(sdpType, sdpString, doLoopback, loopbackAlternativeSrc,
-				loopbackConnectionType);
+		String sdpResponse = this.getPublisher().publish(sdpType, sdpString, doLoopback);
 		this.streaming = true;
 
 		log.trace("PARTICIPANT {}: Publishing Sdp ({}) is {}", this.getParticipantPublicId(), sdpType, sdpResponse);
@@ -200,7 +199,7 @@ public class KurentoParticipant extends Participant {
 		log.info("PARTICIPANT {}: unpublishing media stream from room {}", this.getParticipantPublicId(),
 				this.session.getSessionId());
 		releasePublisherEndpoint(reason, kmsDisconnectionTime);
-		this.publisher = new PublisherEndpoint(webParticipant, this, this.getParticipantPublicId(), this.getPipeline(),
+		this.publisher = new PublisherEndpoint(endpointType, this, this.getParticipantPublicId(), this.getPipeline(),
 				this.openviduConfig);
 		log.info("PARTICIPANT {}: released publisher endpoint and left it initialized (ready for future streaming)",
 				this.getParticipantPublicId());
@@ -233,7 +232,7 @@ public class KurentoParticipant extends Participant {
 
 		try {
 			CountDownLatch subscriberLatch = new CountDownLatch(1);
-			SdpEndpoint oldMediaEndpoint = subscriber.createEndpoint(subscriberLatch);
+			Endpoint oldMediaEndpoint = subscriber.createEndpoint(subscriberLatch);
 			try {
 				if (!subscriberLatch.await(KurentoSession.ASYNC_LATCH_TIMEOUT, TimeUnit.SECONDS)) {
 					throw new OpenViduException(Code.MEDIA_ENDPOINT_ERROR_CODE,
@@ -339,7 +338,7 @@ public class KurentoParticipant extends Participant {
 	 * @return the endpoint instance
 	 */
 	public SubscriberEndpoint getNewOrExistingSubscriber(String senderPublicId) {
-		SubscriberEndpoint subscriberEndpoint = new SubscriberEndpoint(webParticipant, this, senderPublicId,
+		SubscriberEndpoint subscriberEndpoint = new SubscriberEndpoint(endpointType, this, senderPublicId,
 				this.getPipeline(), this.openviduConfig);
 
 		SubscriberEndpoint existingSendingEndpoint = this.subscribers.putIfAbsent(senderPublicId, subscriberEndpoint);
@@ -459,7 +458,7 @@ public class KurentoParticipant extends Participant {
 
 	public void resetPublisherEndpoint() {
 		log.info("Reseting publisher endpoint for participant {}", this.getParticipantPublicId());
-		this.publisher = new PublisherEndpoint(webParticipant, this, this.getParticipantPublicId(),
+		this.publisher = new PublisherEndpoint(endpointType, this, this.getParticipantPublicId(),
 				this.session.getPipeline(), this.openviduConfig);
 	}
 

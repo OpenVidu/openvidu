@@ -22,6 +22,7 @@ import com.google.gson.JsonObject;
 import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
+import io.openvidu.server.kurento.core.KurentoMediaOptions;
 
 public class CDREventWebrtcConnection extends CDREventEnd implements Comparable<CDREventWebrtcConnection> {
 
@@ -63,6 +64,13 @@ public class CDREventWebrtcConnection extends CDREventEnd implements Comparable<
 			json.addProperty("receivingFrom", this.receivingFrom);
 		} else {
 			json.addProperty("connection", "OUTBOUND");
+			if (mediaOptions instanceof KurentoMediaOptions) {
+				KurentoMediaOptions kMediaOptions = (KurentoMediaOptions)mediaOptions;
+				if (kMediaOptions.rtspUri != null) {
+					json.addProperty("rtspUri", kMediaOptions.rtspUri);
+					json.addProperty("adaptativeBitrate", kMediaOptions.adaptativeBitrate);
+				}
+			}
 		}
 		if (this.mediaOptions.hasVideo()) {
 			json.addProperty("videoSource", this.mediaOptions.getTypeOfVideo());

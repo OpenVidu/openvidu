@@ -51,6 +51,7 @@ import io.openvidu.server.kurento.core.KurentoTokenOptions;
 import io.openvidu.server.recording.service.RecordingManager;
 import io.openvidu.server.utils.FormatChecker;
 import io.openvidu.server.utils.GeoLocation;
+import io.openvidu.server.utils.GeoLocationByIp;
 import io.openvidu.server.utils.QuarantineKiller;
 
 public abstract class SessionManager {
@@ -74,6 +75,9 @@ public abstract class SessionManager {
 
 	@Autowired
 	protected QuarantineKiller quarantineKiller;
+
+	@Autowired
+	protected GeoLocationByIp geoLocationByIp;
 
 	public FormatChecker formatChecker = new FormatChecker();
 
@@ -147,6 +151,8 @@ public abstract class SessionManager {
 
 	public abstract void removeFilterEventListener(Session session, Participant subscriber, String streamId,
 			String eventType);
+
+	public abstract Participant publishIpcam(Session session, MediaOptions mediaOptions) throws Exception;
 
 	public abstract String getParticipantPrivateIdFromStreamId(String sessionId, String streamId)
 			throws OpenViduException;
@@ -387,6 +393,16 @@ public abstract class SessionManager {
 					sessionId, token, clientMetadata, null, null, null);
 			this.sessionidParticipantpublicidParticipant.get(sessionId)
 					.put(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID, p);
+			return p;
+		} else {
+			throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE, sessionId);
+		}
+	}
+
+	public Participant newIpcamParticipant(String sessionId, String ipcamId, Token token, GeoLocation location, String platform) {
+		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
+			Participant p = new Participant(ipcamId, ipcamId, ipcamId, sessionId, token, null, location, platform, null);
+			this.sessionidParticipantpublicidParticipant.get(sessionId).put(ipcamId, p);
 			return p;
 		} else {
 			throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE, sessionId);

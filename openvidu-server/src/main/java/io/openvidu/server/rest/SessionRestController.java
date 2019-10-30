@@ -17,6 +17,7 @@
 
 package io.openvidu.server.rest;
 
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
@@ -57,6 +58,7 @@ import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.core.SessionManager;
+import io.openvidu.server.kurento.core.KurentoMediaOptions;
 import io.openvidu.server.kurento.core.KurentoTokenOptions;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.recording.service.RecordingManager;
@@ -217,14 +219,14 @@ public class SessionRestController {
 		if (session != null) {
 			this.sessionManager.closeSession(sessionId, EndReason.sessionClosedByServer);
 			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+		}
+
+		Session sessionNotActive = this.sessionManager.getSessionNotActive(sessionId);
+		if (sessionNotActive != null) {
+			this.sessionManager.closeSessionAndEmptyCollections(sessionNotActive, EndReason.sessionClosedByServer);
+			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 		} else {
-			Session sessionNotActive = this.sessionManager.getSessionNotActive(sessionId);
-			if (sessionNotActive != null) {
-				this.sessionManager.closeSessionAndEmptyCollections(sessionNotActive, EndReason.sessionClosedByServer);
-				return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-			} else {
-				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-			}
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
 	}
 
@@ -261,11 +263,21 @@ public class SessionRestController {
 
 		session = this.sessionManager.getSession(sessionId);
 		if (session != null) {
-			if (this.sessionManager.unpublishStream(session, streamId, null, null, EndReason.forceUnpublishByServer)) {
-				return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-			} else {
+
+			final String participantPrivateId = this.sessionManager.getParticipantPrivateIdFromStreamId(sessionId,
+					streamId);
+
+			if (participantPrivateId == null) {
 				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 			}
+
+			Participant participant = this.sessionManager.getParticipant(participantPrivateId);
+			if (participant.isIpcam()) {
+				return new ResponseEntity<>(HttpStatus.METHOD_NOT_ALLOWED);
+			}
+
+			this.sessionManager.unpublishStream(session, streamId, null, null, EndReason.forceUnpublishByServer);
+			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 		} else {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
@@ -650,6 +662,62 @@ public class SessionRestController {
 		}
 
 		return new ResponseEntity<>(HttpStatus.OK);
+	}
+
+	@RequestMapping(value = "/sessions/{sessionId}/connection", method = RequestMethod.POST)
+	public ResponseEntity<?> publishIpcam(@PathVariable("sessionId") String sessionId, @RequestBody Map<?, ?> params) {
+
+		if (params == null) {
+			return this.generateErrorResponse("Error in body parameters. Cannot be empty", "/api/rtsp",
+					HttpStatus.BAD_REQUEST);
+		}
+
+		log.info("REST API: POST /api/sessions/{}/connection {}", sessionId, params.toString());
+
+		Session session = this.sessionManager.getSession(sessionId);
+		if (session == null) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
+
+		String type;
+		String rtspUri;
+		Boolean adaptativeBitrate;
+		try {
+			type = (String) params.get("type");
+			rtspUri = (String) params.get("rtspUri");
+			adaptativeBitrate = (Boolean) params.get("adaptativeBitrate");
+		} catch (ClassCastException e) {
+			return this.generateErrorResponse("Type error in some parameter",
+					"/api/sessions/" + sessionId + "/connection", HttpStatus.BAD_REQUEST);
+		}
+		if (rtspUri == null) {
+			return this.generateErrorResponse("\"rtspUri\" parameter is mandatory",
+					"/api/sessions/" + sessionId + "/connection", HttpStatus.BAD_REQUEST);
+		}
+
+		type = type != null ? type : "IPCAM";
+		adaptativeBitrate = adaptativeBitrate != null ? adaptativeBitrate : true;
+
+		boolean hasAudio = true;
+		boolean hasVideo = true;
+		boolean audioActive = true;
+		boolean videoActive = true;
+		String typeOfVideo = type;
+		Integer frameRate = null;
+		String videoDimensions = null;
+		KurentoMediaOptions mediaOptions = new KurentoMediaOptions(true, null, hasAudio, hasVideo, audioActive,
+				videoActive, typeOfVideo, frameRate, videoDimensions, null, false, rtspUri, adaptativeBitrate);
+
+		try {
+			Participant ipcamParticipant = this.sessionManager.publishIpcam(session, mediaOptions);
+			return new ResponseEntity<>(ipcamParticipant.toJson().toString(), getResponseHeaders(), HttpStatus.OK);
+		} catch (MalformedURLException e) {
+			return this.generateErrorResponse("\"rtspUri\" parameter is not a valid rtsp uri",
+					"/api/sessions/" + sessionId + "/connection", HttpStatus.BAD_REQUEST);
+		} catch (Exception e) {
+			return this.generateErrorResponse(e.getMessage(), "/api/sessions/" + sessionId + "/connection",
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
 	}
 
 	private ResponseEntity<String> generateErrorResponse(String errorMessage, String path, HttpStatus status) {

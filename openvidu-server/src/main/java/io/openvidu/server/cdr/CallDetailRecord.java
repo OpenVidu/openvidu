@@ -65,7 +65,7 @@ import io.openvidu.server.webhook.CDRLoggerWebhook;
  * - receivingFrom: 	string
  * - audioEnabled: 		boolean
  * - videoEnabled: 		boolean
- * - videoSource: 		"CAMERA", "SCREEN"
+ * - videoSource: 		"CAMERA", "SCREEN", "CUSTOM", "IPCAM"
  * - videoFramerate:	number
  * - videoDimensions:	string
  * - id:				string

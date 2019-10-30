@@ -42,9 +42,9 @@ public class SubscriberEndpoint extends MediaEndpoint {
 
 	private String publisherStreamId;
 
-	public SubscriberEndpoint(boolean web, KurentoParticipant owner, String endpointName, MediaPipeline pipeline,
-			OpenviduConfig openviduConfig) {
-		super(web, owner, endpointName, pipeline, openviduConfig, log);
+	public SubscriberEndpoint(EndpointType endpointType, KurentoParticipant owner, String endpointName,
+			MediaPipeline pipeline, OpenviduConfig openviduConfig) {
+		super(endpointType, owner, endpointName, pipeline, openviduConfig, log);
 	}
 
 	public synchronized String subscribe(String sdpOffer, PublisherEndpoint publisher) {

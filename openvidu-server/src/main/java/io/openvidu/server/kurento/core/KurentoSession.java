@@ -36,6 +36,7 @@ import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
+import io.openvidu.server.kurento.endpoint.EndpointType;
 import io.openvidu.server.kurento.kms.Kms;
 
 /**
@@ -54,8 +55,6 @@ public class KurentoSession extends Session {
 	private KurentoSessionEventsHandler kurentoSessionHandler;
 	private KurentoParticipantEndpointConfig kurentoEndpointConfig;
 
-	private final ConcurrentHashMap<String, String> filterStates = new ConcurrentHashMap<>();
-
 	private Object pipelineCreateLock = new Object();
 	private Object pipelineReleaseLock = new Object();
 
@@ -71,18 +70,13 @@ public class KurentoSession extends Session {
 	}
 
 	@Override
-	public void join(Participant participant) {
+	public void join(Participant participant, EndpointType endpointType) {
 		checkClosed();
 		createPipeline();
 
-		KurentoParticipant kurentoParticipant = new KurentoParticipant(participant, this, this.kurentoEndpointConfig,
-				this.openviduConfig, this.recordingManager);
+		KurentoParticipant kurentoParticipant = new KurentoParticipant(participant, this, endpointType,
+				this.kurentoEndpointConfig, this.openviduConfig, this.recordingManager);
 		participants.put(participant.getParticipantPrivateId(), kurentoParticipant);
-
-		filterStates.forEach((filterId, state) -> {
-			log.info("Adding filter {}", filterId);
-			kurentoSessionHandler.updateFilter(sessionId, participant, filterId, state);
-		});
 
 		log.info("SESSION {}: Added participant {}", sessionId, participant);
 
