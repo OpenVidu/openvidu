@@ -74,6 +74,8 @@ public class PublisherEndpoint extends MediaEndpoint {
 
 	private Map<String, ListenerSubscription> elementsErrorSubscriptions = new HashMap<String, ListenerSubscription>();
 
+	public int numberOfSubscribers = 0;
+
 	public PublisherEndpoint(EndpointType endpointType, KurentoParticipant owner, String endpointName,
 			MediaPipeline pipeline, OpenviduConfig openviduConfig) {
 		super(endpointType, owner, endpointName, pipeline, openviduConfig, log);
@@ -201,6 +203,7 @@ public class PublisherEndpoint extends MediaEndpoint {
 			innerConnect();
 		}
 		internalSinkConnect(passThru, sink);
+		this.enableIpCameraIfNecessary();
 	}
 
 	public synchronized void connect(MediaElement sink, MediaType type) {
@@ -208,14 +211,24 @@ public class PublisherEndpoint extends MediaEndpoint {
 			innerConnect();
 		}
 		internalSinkConnect(passThru, sink, type);
+		this.enableIpCameraIfNecessary();
+	}
+
+	private void enableIpCameraIfNecessary() {
+		numberOfSubscribers++;
+		if (this.isPlayerEndpoint() && ((KurentoMediaOptions) this.mediaOptions).onlyPlayWithSubscribers
+				&& numberOfSubscribers == 1) {
+			try {
+				this.getPlayerEndpoint().play();
+				log.info("IP Camera stream {} feed is now enabled", streamId);
+			} catch (Exception e) {
+				log.info("Error while enabling feed for IP camera {}: {}", streamId, e.getMessage());
+			}
+		}
 	}
 
 	public synchronized void disconnectFrom(MediaElement sink) {
 		internalSinkDisconnect(passThru, sink);
-	}
-
-	public synchronized void disconnectFrom(MediaElement sink, MediaType type) {
-		internalSinkDisconnect(passThru, sink, type);
 	}
 
 	/**

@@ -18,6 +18,8 @@
 package io.openvidu.server.kurento.core;
 
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
@@ -98,6 +100,11 @@ public class KurentoParticipant extends Participant {
 	}
 
 	public void createPublishingEndpoint(MediaOptions mediaOptions) {
+		final String publisherStreamId = this.getParticipantPublicId() + "_"
+				+ (mediaOptions.hasVideo() ? mediaOptions.getTypeOfVideo() : "MICRO") + "_"
+				+ RandomStringUtils.random(5, true, false).toUpperCase();
+		this.publisher.setStreamId(publisherStreamId);
+		this.publisher.setEndpointName(publisherStreamId);
 
 		publisher.setMediaOptions(mediaOptions);
 		publisher.createEndpoint(publisherLatch);
@@ -105,13 +112,7 @@ public class KurentoParticipant extends Participant {
 			throw new OpenViduException(Code.MEDIA_ENDPOINT_ERROR_CODE, "Unable to create publisher endpoint");
 		}
 
-		String publisherStreamId = this.getParticipantPublicId() + "_"
-				+ (mediaOptions.hasVideo() ? mediaOptions.getTypeOfVideo() : "MICRO") + "_"
-				+ RandomStringUtils.random(5, true, false).toUpperCase();
-
-		this.publisher.setEndpointName(publisherStreamId);
 		this.publisher.getEndpoint().setName(publisherStreamId);
-		this.publisher.setStreamId(publisherStreamId);
 
 		endpointConfig.addEndpointListeners(this.publisher, "publisher");
 
@@ -310,8 +311,12 @@ public class KurentoParticipant extends Participant {
 			return;
 		}
 		this.closed = definitelyClosed;
-		for (String remoteParticipantName : subscribers.keySet()) {
-			SubscriberEndpoint subscriber = this.subscribers.get(remoteParticipantName);
+		Iterator<Entry<String, SubscriberEndpoint>> it = subscribers.entrySet().iterator();
+		while (it.hasNext()) {
+			final Entry<String, SubscriberEndpoint> entry = it.next();
+			final String remoteParticipantName = entry.getKey();
+			final SubscriberEndpoint subscriber = entry.getValue();
+			it.remove();
 			if (subscriber != null && subscriber.getEndpoint() != null) {
 				releaseSubscriberEndpoint(remoteParticipantName, subscriber, reason);
 				log.debug("PARTICIPANT {}: Released subscriber endpoint to {}", this.getParticipantPublicId(),
@@ -323,7 +328,6 @@ public class KurentoParticipant extends Participant {
 						this.getParticipantPublicId(), remoteParticipantName);
 			}
 		}
-		this.subscribers.clear();
 		releasePublisherEndpoint(reason, kmsDisconnectionTime);
 	}
 
@@ -410,6 +414,27 @@ public class KurentoParticipant extends Participant {
 			}
 
 			releaseElement(senderName, subscriber.getEndpoint());
+
+			// Stop PlayerEndpoint of IP CAM if last subscriber disconnected
+			final KurentoParticipant sender = (KurentoParticipant) this.session.getParticipantByPublicId(senderName);
+			if (sender != null && ((KurentoMediaOptions) sender.getPublisherMediaOptions()).onlyPlayWithSubscribers) {
+				final PublisherEndpoint publisher = sender.publisher;
+				if (publisher != null) {
+					synchronized (publisher) {
+						publisher.numberOfSubscribers--;
+						if (publisher.isPlayerEndpoint() && publisher.numberOfSubscribers == 0) {
+							try {
+								publisher.getPlayerEndpoint().stop();
+								log.info("IP Camera stream {} feed is now disabled because there are no subscribers",
+										publisher.getStreamId());
+							} catch (Exception e) {
+								log.info("Error while disabling feed for IP camera {}: {}", publisher.getStreamId(),
+										e.getMessage());
+							}
+						}
+					}
+				}
+			}
 
 			if (!ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(this.getParticipantPublicId())) {
 				endpointConfig.getCdr().stopSubscriber(this.getParticipantPublicId(), senderName,

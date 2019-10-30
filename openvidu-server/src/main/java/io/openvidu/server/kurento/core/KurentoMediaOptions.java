@@ -31,6 +31,7 @@ public class KurentoMediaOptions extends MediaOptions {
 	// IPCAM properties
 	public String rtspUri;
 	public Boolean adaptativeBitrate;
+	public Boolean onlyPlayWithSubscribers;
 
 	public KurentoMediaOptions(boolean isOffer, String sdpOffer, Boolean hasAudio, Boolean hasVideo,
 			Boolean audioActive, Boolean videoActive, String typeOfVideo, Integer frameRate, String videoDimensions,
@@ -43,13 +44,15 @@ public class KurentoMediaOptions extends MediaOptions {
 
 	public KurentoMediaOptions(boolean isOffer, String sdpOffer, Boolean hasAudio, Boolean hasVideo,
 			Boolean audioActive, Boolean videoActive, String typeOfVideo, Integer frameRate, String videoDimensions,
-			KurentoFilter filter, boolean doLoopback, String rtspUri, Boolean adaptativeBitrate) {
+			KurentoFilter filter, boolean doLoopback, String rtspUri, Boolean adaptativeBitrate,
+			Boolean onlyPlayWithSubscribers) {
 		super(hasAudio, hasVideo, audioActive, videoActive, typeOfVideo, frameRate, videoDimensions, filter);
 		this.isOffer = isOffer;
 		this.sdpOffer = sdpOffer;
 		this.doLoopback = doLoopback;
 		this.rtspUri = rtspUri;
 		this.adaptativeBitrate = adaptativeBitrate;
+		this.onlyPlayWithSubscribers = onlyPlayWithSubscribers;
 	}
 
 	@Override
@@ -57,6 +60,9 @@ public class KurentoMediaOptions extends MediaOptions {
 		JsonObject json = super.toJson();
 		if (adaptativeBitrate != null) {
 			json.addProperty("adaptativeBitrate", adaptativeBitrate);
+		}
+		if (onlyPlayWithSubscribers != null) {
+			json.addProperty("onlyPlayWithSubscribers", onlyPlayWithSubscribers);
 		}
 		return json;
 	}

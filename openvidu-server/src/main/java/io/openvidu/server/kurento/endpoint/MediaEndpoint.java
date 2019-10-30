@@ -287,7 +287,7 @@ public abstract class MediaEndpoint {
 				}
 			});
 		} else if (this.isPlayerEndpoint()) {
-			KurentoMediaOptions mediaOptions = (KurentoMediaOptions) this.owner.getPublisherMediaOptions();
+			final KurentoMediaOptions mediaOptions = (KurentoMediaOptions) this.owner.getPublisherMediaOptions();
 			PlayerEndpoint.Builder playerBuilder = new PlayerEndpoint.Builder(pipeline, mediaOptions.rtspUri);
 
 			if (!mediaOptions.adaptativeBitrate) {
@@ -299,9 +299,24 @@ public abstract class MediaEndpoint {
 				@Override
 				public void onSuccess(PlayerEndpoint result) throws Exception {
 					playerEndpoint = result;
+
+					if (!mediaOptions.onlyPlayWithSubscribers) {
+						playerEndpoint.play(new Continuation<Void>() {
+							@Override
+							public void onSuccess(Void result) throws Exception {
+								log.info("IP Camera stream {} feed is now enabled", streamId);
+							}
+
+							@Override
+							public void onError(Throwable cause) throws Exception {
+								log.info("Error while enabling feed for IP camera {}: {}", streamId,
+										cause.getMessage());
+							}
+						});
+					}
+
 					log.trace("EP {}: Created a new PlayerEndpoint", endpointName);
 					endpointSubscription = registerElemErrListener(playerEndpoint);
-					playerEndpoint.play();
 					endpointLatch.countDown();
 				}
 

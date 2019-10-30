@@ -132,7 +132,7 @@ public class Participant {
 	public void setPlatform(String platform) {
 		this.platform = platform;
 	}
-	
+
 	public EndpointType getEndpointType() {
 		return this.endpointType;
 	}
@@ -147,10 +147,6 @@ public class Participant {
 
 	public boolean isIpcam() {
 		return this.platform.equals("IPCAM") && this.participantPrivatetId.startsWith("IPCAM-");
-	}
-
-	public void setStreaming(boolean streaming) {
-		this.streaming = streaming;
 	}
 
 	public String getPublisherStreamId() {
