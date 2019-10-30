@@ -55,6 +55,18 @@ public class KurentoMediaOptions extends MediaOptions {
 		this.onlyPlayWithSubscribers = onlyPlayWithSubscribers;
 	}
 
+	public KurentoMediaOptions(Boolean hasAudio, Boolean hasVideo, Boolean audioActive, Boolean videoActive,
+			String typeOfVideo, Integer frameRate, String videoDimensions, KurentoFilter filter,
+			KurentoMediaOptions streamProperties) {
+		super(hasAudio, hasVideo, audioActive, videoActive, typeOfVideo, frameRate, videoDimensions, filter);
+		this.isOffer = streamProperties.isOffer;
+		this.sdpOffer = streamProperties.sdpOffer;
+		this.doLoopback = streamProperties.doLoopback;
+		this.rtspUri = streamProperties.rtspUri;
+		this.adaptativeBitrate = streamProperties.adaptativeBitrate;
+		this.onlyPlayWithSubscribers = streamProperties.onlyPlayWithSubscribers;
+	}
+
 	@Override
 	public JsonObject toJson() {
 		JsonObject json = super.toJson();

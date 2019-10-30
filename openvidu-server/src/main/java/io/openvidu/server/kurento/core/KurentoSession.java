@@ -105,7 +105,7 @@ public class KurentoSession extends Session {
 			if (participant.equals(subscriber)) {
 				continue;
 			}
-			((KurentoParticipant) subscriber).cancelReceivingMedia(participant.getParticipantPublicId(), reason);
+			((KurentoParticipant) subscriber).cancelReceivingMedia((KurentoParticipant) participant, reason);
 		}
 
 		log.debug("SESSION {}: Unsubscribed other participants {} from the publisher {}", sessionId,
@@ -176,12 +176,12 @@ public class KurentoSession extends Session {
 
 		checkClosed();
 
-		participants.remove(participant.getParticipantPrivateId());
+		KurentoParticipant removedParticipant = (KurentoParticipant) participants.remove(participant.getParticipantPrivateId());
 
 		log.debug("SESSION {}: Cancel receiving media from participant '{}' for other participant", this.sessionId,
 				participant.getParticipantPublicId());
 		for (Participant other : participants.values()) {
-			((KurentoParticipant) other).cancelReceivingMedia(participant.getParticipantPublicId(), reason);
+			((KurentoParticipant) other).cancelReceivingMedia(removedParticipant, reason);
 		}
 	}
 

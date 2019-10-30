@@ -436,7 +436,7 @@ public class KurentoSessionManager extends SessionManager {
 					"User " + senderName + " not found in session " + session.getSessionId());
 		}
 
-		kParticipant.cancelReceivingMedia(senderName, EndReason.unsubscribe);
+		kParticipant.cancelReceivingMedia((KurentoParticipant) sender, EndReason.unsubscribe);
 
 		sessionEventsHandler.onUnsubscribe(participant, transactionId, null);
 	}
@@ -446,7 +446,7 @@ public class KurentoSessionManager extends SessionManager {
 			JsonElement newValue, String reason) {
 		KurentoParticipant kParticipant = (KurentoParticipant) participant;
 		streamId = kParticipant.getPublisherStreamId();
-		MediaOptions streamProperties = kParticipant.getPublisherMediaOptions();
+		KurentoMediaOptions streamProperties = (KurentoMediaOptions) kParticipant.getPublisherMediaOptions();
 
 		Boolean hasAudio = streamProperties.hasAudio();
 		Boolean hasVideo = streamProperties.hasVideo();
@@ -469,8 +469,8 @@ public class KurentoSessionManager extends SessionManager {
 			break;
 		}
 
-		kParticipant.setPublisherMediaOptions(new MediaOptions(hasAudio, hasVideo, audioActive, videoActive,
-				typeOfVideo, frameRate, videoDimensions, filter));
+		kParticipant.setPublisherMediaOptions(new KurentoMediaOptions(hasAudio, hasVideo, audioActive, videoActive,
+				typeOfVideo, frameRate, videoDimensions, filter, streamProperties));
 
 		sessionEventsHandler.onStreamPropertyChanged(participant, transactionId,
 				kParticipant.getSession().getParticipants(), streamId, property, newValue, reason);
