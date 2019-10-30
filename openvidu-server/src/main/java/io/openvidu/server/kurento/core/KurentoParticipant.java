@@ -47,7 +47,6 @@ import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
-import io.openvidu.server.kurento.endpoint.EndpointType;
 import io.openvidu.server.kurento.endpoint.MediaEndpoint;
 import io.openvidu.server.kurento.endpoint.PublisherEndpoint;
 import io.openvidu.server.kurento.endpoint.SdpType;
@@ -61,8 +60,6 @@ public class KurentoParticipant extends Participant {
 	private OpenviduConfig openviduConfig;
 	private RecordingManager recordingManager;
 
-	private EndpointType endpointType;
-
 	private final KurentoSession session;
 	private KurentoParticipantEndpointConfig endpointConfig;
 
@@ -72,13 +69,13 @@ public class KurentoParticipant extends Participant {
 	private final ConcurrentMap<String, Filter> filters = new ConcurrentHashMap<>();
 	private final ConcurrentMap<String, SubscriberEndpoint> subscribers = new ConcurrentHashMap<String, SubscriberEndpoint>();
 
-	public KurentoParticipant(Participant participant, KurentoSession kurentoSession, EndpointType endpointType,
+	public KurentoParticipant(Participant participant, KurentoSession kurentoSession,
 			KurentoParticipantEndpointConfig endpointConfig, OpenviduConfig openviduConfig,
 			RecordingManager recordingManager) {
 		super(participant.getFinalUserId(), participant.getParticipantPrivateId(), participant.getParticipantPublicId(),
 				kurentoSession.getSessionId(), participant.getToken(), participant.getClientMetadata(),
-				participant.getLocation(), participant.getPlatform(), participant.getCreatedAt());
-		this.endpointType = endpointType;
+				participant.getLocation(), participant.getPlatform(), participant.getEndpointType(),
+				participant.getCreatedAt());
 		this.endpointConfig = endpointConfig;
 		this.openviduConfig = openviduConfig;
 		this.recordingManager = recordingManager;

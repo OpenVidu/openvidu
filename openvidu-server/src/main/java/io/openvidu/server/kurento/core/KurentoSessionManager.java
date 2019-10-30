@@ -57,7 +57,6 @@ import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.core.Token;
-import io.openvidu.server.kurento.endpoint.EndpointType;
 import io.openvidu.server.kurento.endpoint.KurentoFilter;
 import io.openvidu.server.kurento.endpoint.PublisherEndpoint;
 import io.openvidu.server.kurento.endpoint.SdpType;
@@ -122,7 +121,7 @@ public class KurentoSessionManager extends SessionManager {
 			}
 
 			existingParticipants = getParticipants(sessionId);
-			kSession.join(participant, EndpointType.WEBRTC_ENDPOINT);
+			kSession.join(participant);
 		} catch (OpenViduException e) {
 			log.warn("PARTICIPANT {}: Error joining/creating session {}", participant.getParticipantPublicId(),
 					sessionId, e);
@@ -849,8 +848,8 @@ public class KurentoSessionManager extends SessionManager {
 
 	@Override
 	public Participant publishIpcam(Session session, MediaOptions mediaOptions) throws Exception {
-		KurentoSession kSession = (KurentoSession) session;
-		KurentoMediaOptions kMediaOptions = (KurentoMediaOptions) mediaOptions;
+		final String sessionId = session.getSessionId();
+		final KurentoMediaOptions kMediaOptions = (KurentoMediaOptions) mediaOptions;
 
 		// Generate the location for the IpCam
 		GeoLocation location = null;
@@ -888,20 +887,20 @@ public class KurentoSessionManager extends SessionManager {
 		this.newInsecureParticipant(rtspConnectionId);
 		String token = RandomStringUtils.randomAlphanumeric(16).toLowerCase();
 		Token tokenObj = null;
-		if (this.isTokenValidInSession(token, session.getSessionId(), rtspConnectionId)) {
-			tokenObj = this.consumeToken(session.getSessionId(), rtspConnectionId, token);
+		if (this.isTokenValidInSession(token, sessionId, rtspConnectionId)) {
+			tokenObj = this.consumeToken(sessionId, rtspConnectionId, token);
 		}
-		Participant ipcamParticipant = this.newIpcamParticipant(session.getSessionId(), rtspConnectionId, tokenObj,
-				location, mediaOptions.getTypeOfVideo());
+		Participant ipcamParticipant = this.newIpcamParticipant(sessionId, rtspConnectionId, tokenObj, location,
+				mediaOptions.getTypeOfVideo());
 
 		// Store a "fake" final user for the IpCam connection
 		final String finalUserId = rtspConnectionId;
-		this.sessionidFinalUsers.get(session.getSessionId()).computeIfAbsent(finalUserId, k -> {
-			return new FinalUser(finalUserId, session.getSessionId(), ipcamParticipant);
+		this.sessionidFinalUsers.get(sessionId).computeIfAbsent(finalUserId, k -> {
+			return new FinalUser(finalUserId, sessionId, ipcamParticipant);
 		}).addConnectionIfAbsent(ipcamParticipant);
 
 		// Join the participant to the session
-		kSession.join(ipcamParticipant, EndpointType.PLAYER_ENDPOINT);
+		this.joinRoom(ipcamParticipant, sessionId, null);
 
 		// Publish the IpCam stream into the session
 		KurentoParticipant kParticipant = (KurentoParticipant) this.getParticipant(rtspConnectionId);

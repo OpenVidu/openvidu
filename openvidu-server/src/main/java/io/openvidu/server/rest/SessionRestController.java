@@ -674,7 +674,7 @@ public class SessionRestController {
 
 		log.info("REST API: POST /api/sessions/{}/connection {}", sessionId, params.toString());
 
-		Session session = this.sessionManager.getSession(sessionId);
+		Session session = this.sessionManager.getSessionWithNotActive(sessionId);
 		if (session == null) {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}

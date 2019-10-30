@@ -19,6 +19,7 @@ package io.openvidu.server.core;
 
 import com.google.gson.JsonObject;
 
+import io.openvidu.server.kurento.endpoint.EndpointType;
 import io.openvidu.server.utils.GeoLocation;
 
 public class Participant {
@@ -33,6 +34,7 @@ public class Participant {
 	protected Token token; // Token associated to this participant
 	protected GeoLocation location; // Location of the participant
 	protected String platform; // Platform used by the participant to connect to the session
+	protected EndpointType endpointType; // Type of participant (web participant, IP cam participant...)
 
 	protected boolean streaming = false;
 	protected volatile boolean closed;
@@ -40,7 +42,8 @@ public class Participant {
 	private final String METADATA_SEPARATOR = "%/%";
 
 	public Participant(String finalUserId, String participantPrivatetId, String participantPublicId, String sessionId,
-			Token token, String clientMetadata, GeoLocation location, String platform, Long createdAt) {
+			Token token, String clientMetadata, GeoLocation location, String platform, EndpointType endpointType,
+			Long createdAt) {
 		this.finalUserId = finalUserId;
 		this.participantPrivatetId = participantPrivatetId;
 		this.participantPublicId = participantPublicId;
@@ -59,6 +62,7 @@ public class Participant {
 		}
 		this.location = location;
 		this.platform = platform;
+		this.endpointType = endpointType;
 	}
 
 	public String getFinalUserId() {
@@ -127,6 +131,10 @@ public class Participant {
 
 	public void setPlatform(String platform) {
 		this.platform = platform;
+	}
+	
+	public EndpointType getEndpointType() {
+		return this.endpointType;
 	}
 
 	public boolean isStreaming() {

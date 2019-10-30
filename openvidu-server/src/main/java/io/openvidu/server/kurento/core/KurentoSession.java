@@ -36,7 +36,6 @@ import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
-import io.openvidu.server.kurento.endpoint.EndpointType;
 import io.openvidu.server.kurento.kms.Kms;
 
 /**
@@ -70,12 +69,12 @@ public class KurentoSession extends Session {
 	}
 
 	@Override
-	public void join(Participant participant, EndpointType endpointType) {
+	public void join(Participant participant) {
 		checkClosed();
 		createPipeline();
 
-		KurentoParticipant kurentoParticipant = new KurentoParticipant(participant, this, endpointType,
-				this.kurentoEndpointConfig, this.openviduConfig, this.recordingManager);
+		KurentoParticipant kurentoParticipant = new KurentoParticipant(participant, this, this.kurentoEndpointConfig,
+				this.openviduConfig, this.recordingManager);
 		participants.put(participant.getParticipantPrivateId(), kurentoParticipant);
 
 		log.info("SESSION {}: Added participant {}", sessionId, participant);

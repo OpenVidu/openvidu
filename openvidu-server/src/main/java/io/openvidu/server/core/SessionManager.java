@@ -48,6 +48,7 @@ import io.openvidu.server.cdr.CDREventRecording;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.coturn.CoturnCredentialsService;
 import io.openvidu.server.kurento.core.KurentoTokenOptions;
+import io.openvidu.server.kurento.endpoint.EndpointType;
 import io.openvidu.server.recording.service.RecordingManager;
 import io.openvidu.server.utils.FormatChecker;
 import io.openvidu.server.utils.GeoLocation;
@@ -367,7 +368,7 @@ public abstract class SessionManager {
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
 			String participantPublicId = RandomStringUtils.randomAlphanumeric(16).toLowerCase();
 			Participant p = new Participant(finalUserId, participantPrivatetId, participantPublicId, sessionId, token,
-					clientMetadata, location, platform, null);
+					clientMetadata, location, platform, EndpointType.WEBRTC_ENDPOINT, null);
 			while (this.sessionidParticipantpublicidParticipant.get(sessionId).putIfAbsent(participantPublicId,
 					p) != null) {
 				participantPublicId = RandomStringUtils.randomAlphanumeric(16).toLowerCase();
@@ -390,7 +391,7 @@ public abstract class SessionManager {
 			String clientMetadata) {
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
 			Participant p = new Participant(null, participantPrivatetId, ProtocolElements.RECORDER_PARTICIPANT_PUBLICID,
-					sessionId, token, clientMetadata, null, null, null);
+					sessionId, token, clientMetadata, null, null, EndpointType.WEBRTC_ENDPOINT, null);
 			this.sessionidParticipantpublicidParticipant.get(sessionId)
 					.put(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID, p);
 			return p;
@@ -399,9 +400,11 @@ public abstract class SessionManager {
 		}
 	}
 
-	public Participant newIpcamParticipant(String sessionId, String ipcamId, Token token, GeoLocation location, String platform) {
+	public Participant newIpcamParticipant(String sessionId, String ipcamId, Token token, GeoLocation location,
+			String platform) {
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
-			Participant p = new Participant(ipcamId, ipcamId, ipcamId, sessionId, token, null, location, platform, null);
+			Participant p = new Participant(ipcamId, ipcamId, ipcamId, sessionId, token, null, location, platform,
+					EndpointType.PLAYER_ENDPOINT, null);
 			this.sessionidParticipantpublicidParticipant.get(sessionId).put(ipcamId, p);
 			return p;
 		} else {
