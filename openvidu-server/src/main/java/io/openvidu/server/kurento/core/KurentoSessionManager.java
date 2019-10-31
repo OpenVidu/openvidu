@@ -847,7 +847,7 @@ public class KurentoSessionManager extends SessionManager {
 	}
 
 	@Override
-	public Participant publishIpcam(Session session, MediaOptions mediaOptions) throws Exception {
+	public Participant publishIpcam(Session session, MediaOptions mediaOptions, String serverMetadata) throws Exception {
 		final String sessionId = session.getSessionId();
 		final KurentoMediaOptions kMediaOptions = (KurentoMediaOptions) mediaOptions;
 
@@ -887,7 +887,7 @@ public class KurentoSessionManager extends SessionManager {
 		this.newInsecureParticipant(rtspConnectionId);
 		String token = RandomStringUtils.randomAlphanumeric(16).toLowerCase();
 		Token tokenObj = null;
-		if (this.isTokenValidInSession(token, sessionId, rtspConnectionId)) {
+		if (this.isTokenValidInSession(token, sessionId, rtspConnectionId, serverMetadata)) {
 			tokenObj = this.consumeToken(sessionId, rtspConnectionId, token);
 		}
 		Participant ipcamParticipant = this.newIpcamParticipant(sessionId, rtspConnectionId, tokenObj, location,

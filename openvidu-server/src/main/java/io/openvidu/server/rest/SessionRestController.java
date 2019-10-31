@@ -683,11 +683,13 @@ public class SessionRestController {
 		String rtspUri;
 		Boolean adaptativeBitrate;
 		Boolean onlyPlayWithSubscribers;
+		String data;
 		try {
 			type = (String) params.get("type");
 			rtspUri = (String) params.get("rtspUri");
 			adaptativeBitrate = (Boolean) params.get("adaptativeBitrate");
 			onlyPlayWithSubscribers = (Boolean) params.get("onlyPlayWithSubscribers");
+			data = (String) params.get("data");
 		} catch (ClassCastException e) {
 			return this.generateErrorResponse("Type error in some parameter",
 					"/api/sessions/" + sessionId + "/connection", HttpStatus.BAD_REQUEST);
@@ -700,6 +702,7 @@ public class SessionRestController {
 		type = type != null ? type : "IPCAM";
 		adaptativeBitrate = adaptativeBitrate != null ? adaptativeBitrate : true;
 		onlyPlayWithSubscribers = onlyPlayWithSubscribers != null ? onlyPlayWithSubscribers : true;
+		data = data != null ? data : "";
 
 		boolean hasAudio = true;
 		boolean hasVideo = true;
@@ -709,10 +712,11 @@ public class SessionRestController {
 		Integer frameRate = null;
 		String videoDimensions = null;
 		KurentoMediaOptions mediaOptions = new KurentoMediaOptions(true, null, hasAudio, hasVideo, audioActive,
-				videoActive, typeOfVideo, frameRate, videoDimensions, null, false, rtspUri, adaptativeBitrate, onlyPlayWithSubscribers);
+				videoActive, typeOfVideo, frameRate, videoDimensions, null, false, rtspUri, adaptativeBitrate,
+				onlyPlayWithSubscribers);
 
 		try {
-			Participant ipcamParticipant = this.sessionManager.publishIpcam(session, mediaOptions);
+			Participant ipcamParticipant = this.sessionManager.publishIpcam(session, mediaOptions, data);
 			return new ResponseEntity<>(ipcamParticipant.toJson().toString(), getResponseHeaders(), HttpStatus.OK);
 		} catch (MalformedURLException e) {
 			return this.generateErrorResponse("\"rtspUri\" parameter is not a valid rtsp uri",

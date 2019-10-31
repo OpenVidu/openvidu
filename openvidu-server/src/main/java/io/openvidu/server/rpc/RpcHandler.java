@@ -237,7 +237,7 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 			}
 		}
 
-		if (sessionManager.isTokenValidInSession(token, sessionId, participantPrivatetId)) {
+		if (sessionManager.isTokenValidInSession(token, sessionId, participantPrivatetId, "")) {
 
 			String clientMetadata = getStringParam(request, ProtocolElements.JOINROOM_METADATA_PARAM);
 
@@ -651,7 +651,8 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 	@Override
 	public void handleUncaughtException(Session rpcSession, Exception exception) {
-		log.error("Uncaught exception for WebSocket session: {} - Exception: {}", rpcSession != null ? rpcSession.getSessionId() : "RpcSession NULL", exception);
+		log.error("Uncaught exception for WebSocket session: {} - Exception: {}",
+				rpcSession != null ? rpcSession.getSessionId() : "RpcSession NULL", exception);
 	}
 
 	@Override

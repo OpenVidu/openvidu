@@ -153,7 +153,8 @@ public abstract class SessionManager {
 	public abstract void removeFilterEventListener(Session session, Participant subscriber, String streamId,
 			String eventType);
 
-	public abstract Participant publishIpcam(Session session, MediaOptions mediaOptions) throws Exception;
+	public abstract Participant publishIpcam(Session session, MediaOptions mediaOptions, String serverMetadata)
+			throws Exception;
 
 	public abstract String getParticipantPrivateIdFromStreamId(String sessionId, String streamId)
 			throws OpenViduException;
@@ -307,7 +308,8 @@ public abstract class SessionManager {
 		}
 	}
 
-	public boolean isTokenValidInSession(String token, String sessionId, String participanPrivatetId) {
+	public boolean isTokenValidInSession(String token, String sessionId, String participanPrivatetId,
+			String serverMetadata) {
 		if (!this.isInsecureParticipant(participanPrivatetId)) {
 			if (this.sessionidTokenTokenobj.get(sessionId) != null) {
 				return this.sessionidTokenTokenobj.get(sessionId).containsKey(token);
@@ -317,7 +319,7 @@ public abstract class SessionManager {
 		} else {
 			this.initializeCollections(sessionId);
 			this.sessionidTokenTokenobj.get(sessionId).putIfAbsent(token,
-					new Token(token, OpenViduRole.PUBLISHER, "",
+					new Token(token, OpenViduRole.PUBLISHER, serverMetadata,
 							this.coturnCredentialsService.isCoturnAvailable()
 									? this.coturnCredentialsService.createUser()
 									: null,
