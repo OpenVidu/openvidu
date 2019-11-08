@@ -292,7 +292,7 @@ export class Publisher extends StreamManager {
                 resolve();
             }).catch(error => {
                 reject(error);
-            })
+            });
         });
     }
 
