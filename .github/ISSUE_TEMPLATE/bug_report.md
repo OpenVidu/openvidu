@@ -9,7 +9,9 @@ assignees: ''
 
 <!--
 Hi! First of all, welcome to OpenVidu issue tracker. Please, carefully read the two points below before opening a new issue:
+
 1. Is your question really a bug? In other words: did you actually get an unexpected behavior from OpenVidu platform? If you are not sure about the answer or you just want support for a particular use case, you can post a new question in our official Google Group forum (https://groups.google.com/forum/#!forum/openvidu). OpenVidu community or a team's member will reply ASAP.
+
 2. If your question is undoubtedly a bug, check that there's no other issue (opened or closed) talking about it. Your question may have already been answered! If you cannot find anything useful, please fill the report below.
 -->
 
