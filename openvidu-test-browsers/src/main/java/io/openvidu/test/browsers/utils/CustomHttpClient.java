@@ -248,7 +248,7 @@ public class CustomHttpClient {
 		}
 
 		if (status != jsonResponse.getStatus()) {
-			System.err.println(jsonResponse.toString());
+			System.err.println(jsonResponse.getBody().toString());
 			throw new Exception(path + " expected to return status " + status + " but got " + jsonResponse.getStatus());
 		}
 
