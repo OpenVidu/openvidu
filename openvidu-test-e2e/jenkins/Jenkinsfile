@@ -47,10 +47,10 @@ node('container') {
           sh 'cd openvidu/openvidu-node-client && npm install --unsafe-perm && npm run build && npm link'
         }
         stage('OpenVidu TestApp build') {
-          sh 'cd openvidu/openvidu-testapp && npm install --unsafe-perm && npm link openvidu-browser && npm link openvidu-node-client && ./node_modules/@angular/cli/bin/ng build --prod'
+          sh 'cd openvidu/openvidu-testapp && npm install --unsafe-perm && npm link openvidu-browser && npm link openvidu-node-client && export NG_CLI_ANALYTICS=ci && ./node_modules/@angular/cli/bin/ng build --prod'
         }
         stage('OpenVidu Server build') {
-          sh 'cd openvidu/openvidu-server/src/dashboard && npm install --unsafe-perm && npm link openvidu-browser && ./node_modules/@angular/cli/bin/ng build --prod --output-path ../main/resources/static'
+          sh 'cd openvidu/openvidu-server/src/dashboard && npm install --unsafe-perm && npm link openvidu-browser && export NG_CLI_ANALYTICS=ci && ./node_modules/@angular/cli/bin/ng build --prod --output-path ../main/resources/static'
           sh 'cd openvidu/openvidu-server && mvn --batch-mode clean compile package'
         }
         stage ('Environment Launch') {

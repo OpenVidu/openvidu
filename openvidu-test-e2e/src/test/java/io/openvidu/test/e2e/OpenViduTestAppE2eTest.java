@@ -2752,7 +2752,9 @@ public class OpenViduTestAppE2eTest {
 
 		WebElement pubBtn = user.getDriver().findElements(By.cssSelector("#openvidu-instance-1 .pub-btn")).get(0);
 		pubBtn.click();
-		user.getEventManager().waitUntilEventReaches("streamDestroyed", 3); // This is not real, only in testapp
+		// This is not real, only in testapp (user is not streaming media after KMS
+		// restarted)
+		user.getEventManager().waitUntilEventReaches("streamDestroyed", 3);
 		pubBtn.click();
 		user.getEventManager().waitUntilEventReaches("streamCreated", 4);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
@@ -2783,7 +2785,7 @@ public class OpenViduTestAppE2eTest {
 		try {
 
 			if (!initLatch.await(30, TimeUnit.SECONDS)) {
-				Assert.fail("Tiemout waiting for webhook springboot app to start");
+				Assert.fail("Timeout waiting for webhook springboot app to start");
 				CustomWebhook.shutDown();
 				return;
 			}
@@ -2917,6 +2919,148 @@ public class OpenViduTestAppE2eTest {
 			Assert.assertEquals("Wrong number of properties in event 'sessionDestroyed'", 5 + 1, event.keySet().size());
 			Assert.assertEquals("Wrong session destroyed reason in webhook event", "sessionClosedByServer",
 					event.get("reason").getAsString());
+
+		} finally {
+			CustomWebhook.shutDown();
+		}
+	}
+
+	@Test
+	@DisplayName("IP camera test")
+	void ipCameraTest() throws Exception {
+		isRecordingTest = true;
+
+		log.info("IP camera test");
+
+		CountDownLatch initLatch = new CountDownLatch(1);
+		io.openvidu.test.browsers.utils.CustomWebhook.main(new String[0], initLatch);
+
+		try {
+
+			if (!initLatch.await(30, TimeUnit.SECONDS)) {
+				Assert.fail("Timeout waiting for webhook springboot app to start");
+				CustomWebhook.shutDown();
+				return;
+			}
+
+			CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
+
+			// Wrong session [404]
+			restClient.rest(HttpMethod.POST, "/api/sessions/WRONG_SESSION/connection", "{}", HttpStatus.SC_NOT_FOUND);
+
+			// Init a session and publish IP camera AS FIRST PARTICIPANT
+			restClient.rest(HttpMethod.POST, "/api/sessions", "{'customSessionId':'IP_CAM_SESSION'}", HttpStatus.SC_OK,
+					true, "{'id': 'STR', 'createdAt': 0}");
+
+			// No rtspUri [400]
+			restClient.rest(HttpMethod.POST, "/api/sessions/IP_CAM_SESSION/connection", "{}",
+					HttpStatus.SC_BAD_REQUEST);
+
+			// Wrong rtspUri (invalid url format) [400]
+			restClient.rest(HttpMethod.POST, "/api/sessions/IP_CAM_SESSION/connection", "{'rtspUri': 'NOT_A_URL'}",
+					HttpStatus.SC_BAD_REQUEST);
+
+			// Publish IP camera. Dummy URL because no user will subscribe to it [200]
+			String ipCamBody = "{'type':'IPCAM','rtspUri':'rtsp://dummyurl.com','adaptativeBitrate':true,'onlyPlayWithSubscribers':true,'data':'MY_IP_CAMERA'}";
+			org.json.JSONObject response = restClient.rest(HttpMethod.POST, "/api/sessions/IP_CAM_SESSION/connection",
+					ipCamBody, HttpStatus.SC_OK, true,
+					"{'connectionId':'STR','createdAt':0,'location':'STR','platform':'STR','token':'STR','role':'STR','serverData':'STR','clientData':'STR','publishers':[],'subscribers':[]}");
+
+			CustomWebhook.waitForEvent("sessionCreated", 1);
+			CustomWebhook.waitForEvent("participantJoined", 1);
+			CustomWebhook.waitForEvent("webrtcConnectionCreated", 1);
+
+			Assert.assertEquals("Wrong serverData property", "MY_IP_CAMERA", response.get("serverData"));
+			Assert.assertEquals("Wrong platform property", "IPCAM", response.get("platform"));
+			Assert.assertEquals("Wrong role property", "PUBLISHER", response.get("role"));
+
+			Assert.assertEquals("Wrong number of publishers in IPCAM participant", 1,
+					response.getJSONArray("publishers").length());
+			org.json.JSONObject ipCamPublisher = response.getJSONArray("publishers").getJSONObject(0);
+			Assert.assertEquals("Wrong number of properties in IPCAM publisher", 4, ipCamPublisher.length());
+			Assert.assertEquals("Wrong rtspUri property", "rtsp://dummyurl.com", ipCamPublisher.get("rtspUri"));
+			org.json.JSONObject mediaOptions = ipCamPublisher.getJSONObject("mediaOptions");
+			Assert.assertEquals("Wrong number of properties in MediaOptions", 10, mediaOptions.length());
+			Assert.assertTrue("Wrong adaptativeBitrate property", mediaOptions.getBoolean("adaptativeBitrate"));
+			Assert.assertTrue("Wrong onlyPlayWithSubscribers property",
+					mediaOptions.getBoolean("onlyPlayWithSubscribers"));
+
+			// Can't delete the stream [405]
+			restClient.rest(HttpMethod.DELETE,
+					"/api/sessions/IP_CAM_SESSION/stream/" + ipCamPublisher.getString("streamId"),
+					HttpStatus.SC_METHOD_NOT_ALLOWED);
+
+			// Can delete the connection [204]
+			restClient.rest(HttpMethod.DELETE,
+					"/api/sessions/IP_CAM_SESSION/connection/" + response.getString("connectionId"),
+					HttpStatus.SC_NO_CONTENT);
+
+			CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 1);
+			CustomWebhook.waitForEvent("participantLeft", 1);
+			CustomWebhook.waitForEvent("sessionDestroyed", 1);
+
+			setupBrowser("chrome");
+
+			// Record a session to get an MP4 file
+
+			user.getDriver().findElement(By.id("add-user-btn")).click();
+			user.getDriver().findElement(By.className("join-btn")).click();
+			user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
+			user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
+			user.getEventManager().waitUntilEventReaches("streamCreated", 1);
+			user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
+			final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+			Assert.assertEquals("Expected 1 video but found " + numberOfVideos, 1, numberOfVideos);
+			Assert.assertTrue("Video was expected to have audio and video tracks", user.getEventManager()
+					.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
+
+			CustomWebhook.waitForEvent("sessionCreated", 1);
+			CustomWebhook.waitForEvent("participantJoined", 1);
+			CustomWebhook.waitForEvent("webrtcConnectionCreated", 1);
+
+			restClient.rest(HttpMethod.POST, "/api/recordings/start", "{'session':'TestSession'}", HttpStatus.SC_OK);
+			user.getEventManager().waitUntilEventReaches("recordingStarted", 1); // Started
+			CustomWebhook.waitForEvent("recordingStatusChanged", 1);
+			Thread.sleep(4000);
+			restClient.rest(HttpMethod.POST, "/api/recordings/stop/TestSession", HttpStatus.SC_OK);
+			user.getEventManager().waitUntilEventReaches("recordingStopped", 1);
+			CustomWebhook.waitForEvent("recordingStatusChanged", 1); // Stopped
+			CustomWebhook.waitForEvent("recordingStatusChanged", 1); // Ready
+
+			String recPath = restClient.rest(HttpMethod.GET, "/config", HttpStatus.SC_OK)
+					.getString("openviduRecordingPath");
+			recPath = recPath.endsWith("/") ? recPath : (recPath + "/");
+			String fullRecordingPath = "file://" + recPath + "TestSession/TestSession.mp4";
+			ipCamBody = "{'type':'IPCAM','rtspUri':'" + fullRecordingPath
+					+ "','adaptativeBitrate':true,'onlyPlayWithSubscribers':true,'data':'MY_IP_CAMERA'}";
+
+			response = restClient.rest(HttpMethod.POST, "/api/sessions/TestSession/connection", ipCamBody,
+					HttpStatus.SC_OK, true,
+					"{'connectionId':'STR','createdAt':0,'location':'STR','platform':'STR','token':'STR','role':'STR','serverData':'STR','clientData':'STR','publishers':[],'subscribers':[]}");
+
+			user.getEventManager().waitUntilEventReaches("connectionCreated", 2);
+			user.getEventManager().waitUntilEventReaches("streamCreated", 2);
+			user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
+
+			CustomWebhook.waitForEvent("participantJoined", 1);
+			CustomWebhook.waitForEvent("webrtcConnectionCreated", 1);
+			CustomWebhook.waitForEvent("webrtcConnectionCreated", 1);
+
+			// Removing browser user shouldn't close the session if IP cam participant
+			// remains
+
+			user.getDriver().findElement(By.id("remove-user-btn")).click();
+			user.getEventManager().waitUntilEventReaches("sessionDisconnected", 1);
+
+			CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 1);
+			CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 1);
+			CustomWebhook.waitForEvent("participantLeft", 1);
+
+			restClient.rest(HttpMethod.DELETE, "/api/sessions/TestSession", HttpStatus.SC_NO_CONTENT);
+
+			CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 1);
+			CustomWebhook.waitForEvent("participantLeft", 1);
+			CustomWebhook.waitForEvent("sessionDestroyed", 1);
 
 		} finally {
 			CustomWebhook.shutDown();

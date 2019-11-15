@@ -668,8 +668,8 @@ public class SessionRestController {
 	public ResponseEntity<?> publishIpcam(@PathVariable("sessionId") String sessionId, @RequestBody Map<?, ?> params) {
 
 		if (params == null) {
-			return this.generateErrorResponse("Error in body parameters. Cannot be empty", "/api/rtsp",
-					HttpStatus.BAD_REQUEST);
+			return this.generateErrorResponse("Error in body parameters. Cannot be empty",
+					"/api/sessions/" + sessionId + "/connection", HttpStatus.BAD_REQUEST);
 		}
 
 		log.info("REST API: POST /api/sessions/{}/connection {}", sessionId, params.toString());
