@@ -103,9 +103,8 @@ public class KurentoParticipant extends Participant {
 		final String publisherStreamId = this.getParticipantPublicId() + "_"
 				+ (mediaOptions.hasVideo() ? mediaOptions.getTypeOfVideo() : "MICRO") + "_"
 				+ RandomStringUtils.random(5, true, false).toUpperCase();
-		this.publisher.setStreamId(publisherStreamId);
-		this.publisher.setEndpointName(publisherStreamId);
-
+		publisher.setStreamId(publisherStreamId);
+		publisher.setEndpointName(publisherStreamId);
 		publisher.setMediaOptions(mediaOptions);
 		publisher.createEndpoint(publisherLatch);
 		if (getPublisher().getEndpoint() == null) {
@@ -218,7 +217,7 @@ public class KurentoParticipant extends Participant {
 		KurentoParticipant kSender = (KurentoParticipant) sender;
 
 		if (kSender.getPublisher() == null) {
-			log.warn("PARTICIPANT {}: Trying to connect to a user without " + "a publishing endpoint",
+			log.warn("PARTICIPANT {}: Trying to connect to a user without a publishing endpoint",
 					this.getParticipantPublicId());
 			return null;
 		}
@@ -423,18 +422,21 @@ public class KurentoParticipant extends Participant {
 
 			// Stop PlayerEndpoint of IP CAM if last subscriber disconnected
 			final PublisherEndpoint senderPublisher = senderKurentoParticipant.publisher;
-			final KurentoMediaOptions options = (KurentoMediaOptions) senderPublisher.getMediaOptions();
-			if (options.onlyPlayWithSubscribers != null && options.onlyPlayWithSubscribers) {
-				synchronized (senderPublisher) {
-					senderPublisher.numberOfSubscribers--;
-					if (senderPublisher.isPlayerEndpoint() && senderPublisher.numberOfSubscribers == 0) {
-						try {
-							senderPublisher.getPlayerEndpoint().stop();
-							log.info("IP Camera stream {} feed is now disabled because there are no subscribers",
-									senderPublisher.getStreamId());
-						} catch (Exception e) {
-							log.info("Error while disabling feed for IP camera {}: {}", senderPublisher.getStreamId(),
-									e.getMessage());
+			if (senderPublisher != null) {
+				// If no PublisherEndpoint, then it means that the publisher already closed it
+				final KurentoMediaOptions options = (KurentoMediaOptions) senderPublisher.getMediaOptions();
+				if (options.onlyPlayWithSubscribers != null && options.onlyPlayWithSubscribers) {
+					synchronized (senderPublisher) {
+						senderPublisher.numberOfSubscribers--;
+						if (senderPublisher.isPlayerEndpoint() && senderPublisher.numberOfSubscribers == 0) {
+							try {
+								senderPublisher.getPlayerEndpoint().stop();
+								log.info("IP Camera stream {} feed is now disabled because there are no subscribers",
+										senderPublisher.getStreamId());
+							} catch (Exception e) {
+								log.info("Error while disabling feed for IP camera {}: {}",
+										senderPublisher.getStreamId(), e.getMessage());
+							}
 						}
 					}
 				}
@@ -483,18 +485,10 @@ public class KurentoParticipant extends Participant {
 	}
 
 	public void resetPublisherEndpoint(MediaOptions mediaOptions) {
-		log.info("Reseting publisher endpoint for participant {}", this.getParticipantPublicId());
+		log.info("Resetting publisher endpoint for participant {}", this.getParticipantPublicId());
 		this.publisher = new PublisherEndpoint(endpointType, this, this.getParticipantPublicId(),
 				this.session.getPipeline(), this.openviduConfig);
 		this.publisher.setMediaOptions(mediaOptions);
-	}
-
-	public void resetPublisherEndpoint() {
-		MediaOptions mediaOptions = null;
-		if (this.getPublisher() != null) {
-			mediaOptions = this.getPublisher().getMediaOptions();
-		}
-		this.resetPublisherEndpoint(mediaOptions);
 	}
 
 	@Override
