@@ -59,8 +59,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.platform.runner.JUnitPlatform;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
@@ -72,6 +71,7 @@ import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
@@ -116,7 +116,7 @@ import io.openvidu.test.browsers.utils.Unzipper;
  */
 @Tag("e2e")
 @DisplayName("E2E tests for OpenVidu TestApp")
-@RunWith(JUnitPlatform.class)
+@ExtendWith(SpringExtension.class)
 public class OpenViduTestAppE2eTest {
 
 	static String OPENVIDU_SECRET = "MY_SECRET";
@@ -3296,14 +3296,14 @@ public class OpenViduTestAppE2eTest {
 		return colorMap;
 	}
 
+	private void startKms() {
+		log.info("Starting KMS");
+		commandLine.executeCommand("/usr/bin/kurento-media-server &>> /kms.log &");
+	}
+
 	private void stopKms() {
 		log.info("Stopping KMS");
 		commandLine.executeCommand("kill -9 $(pidof kurento-media-server)");
-	}
-
-	private void startKms() {
-		log.info("Starting KMS");
-		commandLine.executeCommand("/usr/bin/kurento-media-server &> /kms.log &");
 	}
 
 	private void restartKms() {

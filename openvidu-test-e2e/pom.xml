@@ -68,6 +68,24 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<version>${version.spring-boot}</version>
+			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>org.skyscreamer</groupId>
+					<artifactId>jsonassert</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<version>${version.junit.jupiter}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
 			<groupId>io.github.bonigarcia</groupId>
 			<artifactId>selenium-jupiter</artifactId>
 			<version>${version.selenium.jupiter}</version>
@@ -79,7 +97,6 @@
 			<version>${version.webdrivermanager}</version>
 			<scope>test</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>org.seleniumhq.selenium</groupId>
 			<artifactId>selenium-java</artifactId>
