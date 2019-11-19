@@ -440,11 +440,6 @@ public class OpenviduConfig {
 				break;
 			case "openvidu.webhook.endpoint":
 				webhookEndpoint = checkString(parameters, parameter);
-				try {
-					checkWebhookEndpoint(webhookEndpoint);
-				} catch (Exception e) {
-					throw new Exception("Property 'openvidu.webhook.endpoint' is not valid: " + e.getMessage());
-				}
 				break;
 			case "openvidu.streams.video.max-recv-bandwidth":
 				checkIntegerNonNegative(parameters, parameter, admitStringified);

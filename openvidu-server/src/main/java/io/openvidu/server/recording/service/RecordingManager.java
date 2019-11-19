@@ -121,6 +121,7 @@ public class RecordingManager {
 	@PostConstruct
 	public void init() {
 		if (this.openviduConfig.isRecordingModuleEnabled()) {
+			log.info("OpenVidu recording service is enabled");
 			try {
 				this.initializeRecordingManager();
 			} catch (OpenViduException e) {
@@ -139,6 +140,8 @@ public class RecordingManager {
 				log.error(finalErrorMessage + ". Shutting down OpenVidu Server");
 				System.exit(1);
 			}
+		} else {
+			log.info("OpenVidu recording service is disabled");
 		}
 	}
 
