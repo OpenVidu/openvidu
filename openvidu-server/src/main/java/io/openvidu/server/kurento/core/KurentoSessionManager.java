@@ -515,7 +515,8 @@ public class KurentoSessionManager extends SessionManager {
 		// Also associate the KurentoSession with the Kms
 		kms.addKurentoSession(session);
 
-		log.warn("No session '{}' exists yet. Created one on KMS '{}'", session.getSessionId(), kms.getUri());
+		log.info("No session '{}' exists yet. Created one on KMS '{}' with ip '{}'", session.getSessionId(),
+				kms.getId(), kms.getIp());
 
 		sessionEventsHandler.onSessionCreated(session);
 		return session;
@@ -847,7 +848,8 @@ public class KurentoSessionManager extends SessionManager {
 	}
 
 	@Override
-	public Participant publishIpcam(Session session, MediaOptions mediaOptions, String serverMetadata) throws Exception {
+	public Participant publishIpcam(Session session, MediaOptions mediaOptions, String serverMetadata)
+			throws Exception {
 		final String sessionId = session.getSessionId();
 		final KurentoMediaOptions kMediaOptions = (KurentoMediaOptions) mediaOptions;
 

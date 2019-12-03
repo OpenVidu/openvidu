@@ -98,22 +98,20 @@ public abstract class KmsManager {
 		return this.kmss.remove(kmsId);
 	}
 
-	public synchronized Kms getLessLoadedKms() throws NoSuchElementException {
-		return Collections.min(getKmsLoads()).kms;
-	}
-
 	public synchronized Kms getLessLoadedAndRunningKms() throws NoSuchElementException {
 		List<KmsLoad> kmsLoads = getKmsLoads().stream()
 				.filter(kmsLoad -> mediaNodeStatusManager.isRunning(kmsLoad.kms.getId())).collect(Collectors.toList());
 		return Collections.min(kmsLoads).kms;
 	}
 
-	public Kms getKms(String kmsId) {
-		return this.kmss.get(kmsId);
+	public synchronized List<KmsLoad> getKmssSortedByLoad() {
+		List<KmsLoad> kmsLoads = getKmsLoads();
+		Collections.sort(kmsLoads);
+		return kmsLoads;
 	}
 
-	public boolean kmsWithUriExists(String kmsUri) {
-		return this.kmss.values().stream().anyMatch(kms -> kms.getUri().equals(kmsUri));
+	public Kms getKms(String kmsId) {
+		return this.kmss.get(kmsId);
 	}
 
 	public KmsLoad getKmsLoad(String kmsId) {
@@ -125,10 +123,8 @@ public abstract class KmsManager {
 		return this.kmss.values();
 	}
 
-	public synchronized List<KmsLoad> getKmssSortedByLoad() {
-		List<KmsLoad> kmsLoads = getKmsLoads();
-		Collections.sort(kmsLoads);
-		return kmsLoads;
+	public boolean kmsWithUriExists(String kmsUri) {
+		return this.kmss.values().stream().anyMatch(kms -> kms.getUri().equals(kmsUri));
 	}
 
 	private List<KmsLoad> getKmsLoads() {

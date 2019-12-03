@@ -331,7 +331,9 @@ public class KurentoParticipant extends Participant {
 						this.getParticipantPublicId(), remoteParticipantName);
 			}
 		}
-		releasePublisherEndpoint(reason, kmsDisconnectionTime);
+		if (publisher != null && publisher.getEndpoint() != null) {
+			releasePublisherEndpoint(reason, kmsDisconnectionTime);
+		}
 	}
 
 	/**
