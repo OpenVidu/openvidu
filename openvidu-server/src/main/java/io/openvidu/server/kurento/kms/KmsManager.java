@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -40,6 +42,8 @@ import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.utils.MediaNodeStatusManager;
 
 public abstract class KmsManager {
+
+	public static final Lock selectAndRemoveKmsLock = new ReentrantLock(true);
 
 	public class KmsLoad implements Comparable<KmsLoad> {
 

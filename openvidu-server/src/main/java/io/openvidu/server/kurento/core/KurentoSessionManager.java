@@ -82,6 +82,7 @@ public class KurentoSessionManager extends SessionManager {
 	@Override
 	public synchronized void joinRoom(Participant participant, String sessionId, Integer transactionId) {
 		Set<Participant> existingParticipants = null;
+		boolean lockAcquired = false;
 		try {
 
 			KurentoSession kSession = (KurentoSession) sessions.get(sessionId);
@@ -98,6 +99,9 @@ public class KurentoSessionManager extends SessionManager {
 									.defaultRecordingLayout(RecordingLayout.BEST_FIT).build(),
 							openviduConfig, recordingManager);
 				}
+
+				lockAcquired = true;
+				KmsManager.selectAndRemoveKmsLock.lock();
 
 				Kms lessLoadedKms = null;
 				try {
@@ -126,6 +130,10 @@ public class KurentoSessionManager extends SessionManager {
 			log.warn("PARTICIPANT {}: Error joining/creating session {}", participant.getParticipantPublicId(),
 					sessionId, e);
 			sessionEventsHandler.onParticipantJoined(participant, sessionId, null, transactionId, e);
+		} finally {
+			if (lockAcquired) {
+				KmsManager.selectAndRemoveKmsLock.unlock();
+			}
 		}
 		if (existingParticipants != null) {
 			sessionEventsHandler.onParticipantJoined(participant, sessionId, existingParticipants, transactionId, null);
