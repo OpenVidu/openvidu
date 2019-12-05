@@ -100,7 +100,19 @@ export class Session implements EventDispatcher {
     /**
      * @hidden
      */
-    speakingEventsEnabled = false;
+    startSpeakingEventsEnabled = false;
+    /**
+     * @hidden
+     */
+    startSpeakingEventsEnabledOnce = false;
+    /**
+     * @hidden
+     */
+    stopSpeakingEventsEnabled = false;
+    /**
+     * @hidden
+     */
+    stopSpeakingEventsEnabledOnce = false;
 
     private ee = new EventEmitter();
 
@@ -569,13 +581,23 @@ export class Session implements EventDispatcher {
             handler(event);
         });
 
-        if (type === 'publisherStartSpeaking' || type === 'publisherStopSpeaking') {
-            this.speakingEventsEnabled = true;
+        if (type === 'publisherStartSpeaking') {
+            this.startSpeakingEventsEnabled = true;
             // If there are already available remote streams, enable hark 'speaking' event in all of them
             for (const connectionId in this.remoteConnections) {
                 const str = this.remoteConnections[connectionId].stream;
                 if (!!str && str.hasAudio) {
-                    str.enableSpeakingEvents();
+                    str.enableStartSpeakingEvent();
+                }
+            }
+        }
+        if (type === 'publisherStopSpeaking') {
+            this.stopSpeakingEventsEnabled = true;
+            // If there are already available remote streams, enable hark 'stopped_speaking' event in all of them
+            for (const connectionId in this.remoteConnections) {
+                const str = this.remoteConnections[connectionId].stream;
+                if (!!str && str.hasAudio) {
+                    str.enableStopSpeakingEvent();
                 }
             }
         }
@@ -591,20 +613,30 @@ export class Session implements EventDispatcher {
 
         this.ee.once(type, event => {
             if (event) {
-                console.info("Event '" + type + "' triggered by 'Session'", event);
+                console.info("Event '" + type + "' triggered once by 'Session'", event);
             } else {
-                console.info("Event '" + type + "' triggered by 'Session'");
+                console.info("Event '" + type + "' triggered once by 'Session'");
             }
             handler(event);
         });
 
-        if (type === 'publisherStartSpeaking' || type === 'publisherStopSpeaking') {
-            this.speakingEventsEnabled = true;
-            // If there are already available remote streams, enable hark in all of them
+        if (type === 'publisherStartSpeaking') {
+            this.startSpeakingEventsEnabledOnce = true;
+            // If there are already available remote streams, enable hark 'speaking' event in all of them once
             for (const connectionId in this.remoteConnections) {
                 const str = this.remoteConnections[connectionId].stream;
                 if (!!str && str.hasAudio) {
-                    str.enableOnceSpeakingEvents();
+                    str.enableOnceStartSpeakingEvent();
+                }
+            }
+        }
+        if (type === 'publisherStopSpeaking') {
+            this.stopSpeakingEventsEnabledOnce = true;
+            // If there are already available remote streams, enable hark 'stopped_speaking' event in all of them once
+            for (const connectionId in this.remoteConnections) {
+                const str = this.remoteConnections[connectionId].stream;
+                if (!!str && str.hasAudio) {
+                    str.enableOnceStopSpeakingEvent();
                 }
             }
         }
@@ -617,21 +649,35 @@ export class Session implements EventDispatcher {
      * See [[EventDispatcher.off]]
      */
     off(type: string, handler?: (event: SessionDisconnectedEvent | SignalEvent | StreamEvent | ConnectionEvent | PublisherSpeakingEvent | RecordingEvent) => void): Session {
-
         if (!handler) {
             this.ee.removeAllListeners(type);
         } else {
             this.ee.off(type, handler);
         }
 
-        if (type === 'publisherStartSpeaking' || type === 'publisherStopSpeaking') {
-            this.speakingEventsEnabled = false;
-
-            // If there are already available remote streams, disable hark in all of them
-            for (const connectionId in this.remoteConnections) {
-                const str = this.remoteConnections[connectionId].stream;
-                if (!!str) {
-                    str.disableSpeakingEvents();
+        if (type === 'publisherStartSpeaking') {
+            let remainingStartSpeakingListeners = this.ee.getListeners(type).length;
+            if (remainingStartSpeakingListeners === 0) {
+                this.startSpeakingEventsEnabled = false;
+                // If there are already available remote streams, disable hark in all of them
+                for (const connectionId in this.remoteConnections) {
+                    const str = this.remoteConnections[connectionId].stream;
+                    if (!!str) {
+                        str.disableStartSpeakingEvent(false);
+                    }
+                }
+            }
+        }
+        if (type === 'publisherStopSpeaking') {
+            let remainingStopSpeakingListeners = this.ee.getListeners(type).length;
+            if (remainingStopSpeakingListeners === 0) {
+                this.stopSpeakingEventsEnabled = false;
+                // If there are already available remote streams, disable hark in all of them
+                for (const connectionId in this.remoteConnections) {
+                    const str = this.remoteConnections[connectionId].stream;
+                    if (!!str) {
+                        str.disableStopSpeakingEvent(false);
+                    }
                 }
             }
         }

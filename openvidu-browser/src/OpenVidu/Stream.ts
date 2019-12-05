@@ -171,11 +171,23 @@ export class Stream implements EventDispatcher {
     /**
      * @hidden
      */
+    publisherStartSpeakingEventEnabledOnce = false;
+    /**
+     * @hidden
+     */
     publisherStopSpeakingEventEnabled = false;
     /**
      * @hidden
      */
+    publisherStopSpeakingEventEnabledOnce = false;
+    /**
+     * @hidden
+     */
     volumeChangeEventEnabled = false;
+    /**
+     * @hidden
+     */
+    volumeChangeEventEnabledOnce = false;
 
 
     /**
@@ -529,30 +541,73 @@ export class Stream implements EventDispatcher {
     /**
      * @hidden
      */
-    setSpeechEventIfNotExists(): void {
-        if (!this.speechEvent) {
-            const harkOptions = this.session.openvidu.advancedConfiguration.publisherSpeakingEventsOptions || {};
-            harkOptions.interval = (typeof harkOptions.interval === 'number') ? harkOptions.interval : 50;
-            harkOptions.threshold = (typeof harkOptions.threshold === 'number') ? harkOptions.threshold : -50;
-            this.speechEvent = hark(this.mediaStream, harkOptions);
-        }
-    }
-
-    /**
-     * @hidden
-     */
-    enableSpeakingEvents(): void {
+    enableStartSpeakingEvent(): void {
         this.setSpeechEventIfNotExists();
         if (!this.publisherStartSpeakingEventEnabled) {
             this.publisherStartSpeakingEventEnabled = true;
             this.speechEvent.on('speaking', () => {
                 this.session.emitEvent('publisherStartSpeaking', [new PublisherSpeakingEvent(this.session, 'publisherStartSpeaking', this.connection, this.streamId)]);
+                this.publisherStartSpeakingEventEnabledOnce = false; // Disable 'once' version if 'on' version was triggered
             });
         }
+    }
+
+    /**
+     * @hidden
+     */
+    enableOnceStartSpeakingEvent(): void {
+        this.setSpeechEventIfNotExists();
+        if (!this.publisherStartSpeakingEventEnabledOnce) {
+            this.publisherStartSpeakingEventEnabledOnce = true;
+            this.speechEvent.once('speaking', () => {
+                if (this.publisherStartSpeakingEventEnabledOnce) {
+                    // If the listener has been disabled in the meantime (for example by the 'on' version) do not trigger the event
+                    this.session.emitEvent('publisherStartSpeaking', [new PublisherSpeakingEvent(this.session, 'publisherStartSpeaking', this.connection, this.streamId)]);
+                }
+                this.disableStartSpeakingEvent(true);
+            });
+        }
+    }
+
+    /**
+     * @hidden
+     */
+    disableStartSpeakingEvent(disabledByOnce: boolean): void {
+        if (!!this.speechEvent) {
+            this.publisherStartSpeakingEventEnabledOnce = false;
+            if (disabledByOnce) {
+                if (this.publisherStartSpeakingEventEnabled) {
+                    // The 'on' version of this same event is enabled too. Do not remove the hark listener
+                    return;
+                }
+            } else {
+                this.publisherStartSpeakingEventEnabled = false;
+            }
+            // Shutting down the hark event
+            if (this.volumeChangeEventEnabled ||
+                this.volumeChangeEventEnabledOnce ||
+                this.publisherStopSpeakingEventEnabled ||
+                this.publisherStopSpeakingEventEnabledOnce) {
+                // Some other hark event is enabled. Cannot stop the hark process, just remove the specific listener
+                this.speechEvent.off('speaking');
+            } else {
+                // No other hark event is enabled. We can get entirely rid of it
+                this.speechEvent.stop();
+                delete this.speechEvent;
+            }
+        }
+    }
+
+    /**
+     * @hidden
+     */
+    enableStopSpeakingEvent(): void {
+        this.setSpeechEventIfNotExists();
         if (!this.publisherStopSpeakingEventEnabled) {
             this.publisherStopSpeakingEventEnabled = true;
             this.speechEvent.on('stopped_speaking', () => {
                 this.session.emitEvent('publisherStopSpeaking', [new PublisherSpeakingEvent(this.session, 'publisherStopSpeaking', this.connection, this.streamId)]);
+                this.publisherStopSpeakingEventEnabledOnce = false; // Disable 'once' version if 'on' version was triggered
             });
         }
     }
@@ -560,89 +615,119 @@ export class Stream implements EventDispatcher {
     /**
      * @hidden
      */
-    enableOnceSpeakingEvents(): void {
+    enableOnceStopSpeakingEvent(): void {
         this.setSpeechEventIfNotExists();
-        if (!this.publisherStartSpeakingEventEnabled) {
-            this.publisherStartSpeakingEventEnabled = true;
-            this.speechEvent.once('speaking', () => {
-                this.session.emitEvent('publisherStartSpeaking', [new PublisherSpeakingEvent(this.session, 'publisherStartSpeaking', this.connection, this.streamId)]);
-                this.disableSpeakingEvents();
-            });
-        }
-        if (!this.publisherStopSpeakingEventEnabled) {
-            this.publisherStopSpeakingEventEnabled = true;
+        if (!this.publisherStopSpeakingEventEnabledOnce) {
+            this.publisherStopSpeakingEventEnabledOnce = true;
             this.speechEvent.once('stopped_speaking', () => {
-                this.session.emitEvent('publisherStopSpeaking', [new PublisherSpeakingEvent(this.session, 'publisherStopSpeaking', this.connection, this.streamId)]);
-                this.disableSpeakingEvents();
+                if (this.publisherStopSpeakingEventEnabledOnce) {
+                    // If the listener has been disabled in the meantime (for example by the 'on' version) do not trigger the event
+                    this.session.emitEvent('publisherStopSpeaking', [new PublisherSpeakingEvent(this.session, 'publisherStopSpeaking', this.connection, this.streamId)]);
+                }
+                this.disableStopSpeakingEvent(true);
             });
         }
     }
 
     /**
-     * @hidden
-     */
-    disableSpeakingEvents(): void {
+    * @hidden
+    */
+    disableStopSpeakingEvent(disabledByOnce: boolean): void {
         if (!!this.speechEvent) {
-            if (this.volumeChangeEventEnabled) {
-                // 'streamAudioVolumeChange' event is enabled. Cannot stop the hark process
-                this.speechEvent.off('speaking');
+            this.publisherStopSpeakingEventEnabledOnce = false;
+            if (disabledByOnce) {
+                if (this.publisherStopSpeakingEventEnabled) {
+                    // We are cancelling the 'once' listener for this event, but the 'on' version
+                    // of this same event is enabled too. Do not remove the hark listener
+                    return;
+                }
+            } else {
+                this.publisherStopSpeakingEventEnabled = false;
+            }
+            // Shutting down the hark event
+            if (this.volumeChangeEventEnabled ||
+                this.volumeChangeEventEnabledOnce ||
+                this.publisherStartSpeakingEventEnabled ||
+                this.publisherStartSpeakingEventEnabledOnce) {
+                // Some other hark event is enabled. Cannot stop the hark process, just remove the specific listener
                 this.speechEvent.off('stopped_speaking');
             } else {
+                // No other hark event is enabled. We can get entirely rid of it
                 this.speechEvent.stop();
                 delete this.speechEvent;
             }
         }
-        this.publisherStartSpeakingEventEnabled = false;
-        this.publisherStopSpeakingEventEnabled = false;
     }
 
     /**
      * @hidden
      */
-    enableVolumeChangeEvent(): void {
-        this.setSpeechEventIfNotExists();
-        if (!this.volumeChangeEventEnabled) {
+    enableVolumeChangeEvent(force: boolean): void {
+        if (this.setSpeechEventIfNotExists()) {
+            if (!this.volumeChangeEventEnabled || force) {
+                this.volumeChangeEventEnabled = true;
+                this.speechEvent.on('volume_change', harkEvent => {
+                    const oldValue = this.speechEvent.oldVolumeValue;
+                    const value = { newValue: harkEvent, oldValue };
+                    this.speechEvent.oldVolumeValue = harkEvent;
+                    this.streamManager.emitEvent('streamAudioVolumeChange', [new StreamManagerEvent(this.streamManager, 'streamAudioVolumeChange', value)]);
+                });
+            }
+        } else {
+            // This way whenever the MediaStream object is available, the event listener will be automatically added
             this.volumeChangeEventEnabled = true;
-            this.speechEvent.on('volume_change', harkEvent => {
-                const oldValue = this.speechEvent.oldVolumeValue;
-                const value = { newValue: harkEvent, oldValue };
-                this.speechEvent.oldVolumeValue = harkEvent;
-                this.streamManager.emitEvent('streamAudioVolumeChange', [new StreamManagerEvent(this.streamManager, 'streamAudioVolumeChange', value)]);
-            });
         }
     }
 
     /**
      * @hidden
      */
-    enableOnceVolumeChangeEvent(): void {
-        this.setSpeechEventIfNotExists();
-        if (!this.volumeChangeEventEnabled) {
-            this.volumeChangeEventEnabled = true;
-            this.speechEvent.once('volume_change', harkEvent => {
-                const oldValue = this.speechEvent.oldVolumeValue;
-                const value = { newValue: harkEvent, oldValue };
-                this.speechEvent.oldVolumeValue = harkEvent;
-                this.disableVolumeChangeEvent();
-                this.streamManager.emitEvent('streamAudioVolumeChange', [new StreamManagerEvent(this.streamManager, 'streamAudioVolumeChange', value)]);
-            });
+    enableOnceVolumeChangeEvent(force: boolean): void {
+        if (this.setSpeechEventIfNotExists()) {
+            if (!this.volumeChangeEventEnabledOnce || force) {
+                this.volumeChangeEventEnabledOnce = true;
+                this.speechEvent.once('volume_change', harkEvent => {
+                    const oldValue = this.speechEvent.oldVolumeValue;
+                    const value = { newValue: harkEvent, oldValue };
+                    this.speechEvent.oldVolumeValue = harkEvent;
+                    this.disableVolumeChangeEvent(true);
+                    this.streamManager.emitEvent('streamAudioVolumeChange', [new StreamManagerEvent(this.streamManager, 'streamAudioVolumeChange', value)]);
+                });
+            }
+        } else {
+            // This way whenever the MediaStream object is available, the event listener will be automatically added
+            this.volumeChangeEventEnabledOnce = true;
         }
     }
 
     /**
      * @hidden
      */
-    disableVolumeChangeEvent(): void {
+    disableVolumeChangeEvent(disabledByOnce: boolean): void {
         if (!!this.speechEvent) {
-            if (this.session.speakingEventsEnabled) {
-                // 'publisherStartSpeaking' and/or publisherStopSpeaking` events are enabled. Cannot stop the hark process
+            this.volumeChangeEventEnabledOnce = false;
+            if (disabledByOnce) {
+                if (this.volumeChangeEventEnabled) {
+                    // We are cancelling the 'once' listener for this event, but the 'on' version
+                    // of this same event is enabled too. Do not remove the hark listener
+                    return;
+                }
+            } else {
+                this.volumeChangeEventEnabled = false;
+            }
+            // Shutting down the hark event
+            if (this.publisherStartSpeakingEventEnabled ||
+                this.publisherStartSpeakingEventEnabledOnce ||
+                this.publisherStopSpeakingEventEnabled ||
+                this.publisherStopSpeakingEventEnabledOnce) {
+                // Some other hark event is enabled. Cannot stop the hark process, just remove the specific listener
                 this.speechEvent.off('volume_change');
             } else {
+                // No other hark event is enabled. We can get entirely rid of it
                 this.speechEvent.stop();
                 delete this.speechEvent;
             }
         }
-        this.volumeChangeEventEnabled = false;
     }
 
     /**
@@ -680,8 +765,23 @@ export class Stream implements EventDispatcher {
 
     /* Private methods */
 
+    private setSpeechEventIfNotExists(): boolean {
+        if (!!this.mediaStream) {
+            if (!this.speechEvent) {
+                const harkOptions = this.session.openvidu.advancedConfiguration.publisherSpeakingEventsOptions || {};
+                harkOptions.interval = (typeof harkOptions.interval === 'number') ? harkOptions.interval : 50;
+                harkOptions.threshold = (typeof harkOptions.threshold === 'number') ? harkOptions.threshold : -50;
+                this.speechEvent = hark(this.mediaStream, harkOptions);
+            }
+            return true;
+        }
+        return false;
+    }
+
     private initWebRtcPeerSend(): Promise<any> {
         return new Promise((resolve, reject) => {
+
+            this.initHarkEvents(); // Init hark events for the local stream
 
             const userMediaConstraints = {
                 audio: this.isSendAudio(),
@@ -849,8 +949,34 @@ export class Stream implements EventDispatcher {
             }
 
             this.updateMediaStreamInVideos();
-            if (!this.displayMyRemote() && !!this.mediaStream.getAudioTracks()[0] && this.session.speakingEventsEnabled) {
-                this.enableSpeakingEvents();
+            this.initHarkEvents(); // Init hark events for the remote stream
+        }
+    }
+
+    private initHarkEvents(): void {
+        if (!!this.mediaStream.getAudioTracks()[0]) {
+            // Hark events can only be set if audio track is available
+            if (this.streamManager.remote) {
+                // publisherStartSpeaking/publisherStopSpeaking is only defined for remote streams
+                if (this.session.startSpeakingEventsEnabled) {
+                    this.enableStartSpeakingEvent();
+                }
+                if (this.session.startSpeakingEventsEnabledOnce) {
+                    this.enableOnceStartSpeakingEvent();
+                }
+                if (this.session.stopSpeakingEventsEnabled) {
+                    this.enableStopSpeakingEvent();
+                }
+                if (this.session.stopSpeakingEventsEnabledOnce) {
+                    this.enableOnceStopSpeakingEvent();
+                }
+            }
+            // streamAudioVolumeChange event is defined for both Publishers and Subscribers
+            if (this.volumeChangeEventEnabled) {
+                this.enableVolumeChangeEvent(true);
+            }
+            if (this.volumeChangeEventEnabledOnce) {
+                this.enableOnceVolumeChangeEvent(true);
             }
         }
     }

@@ -167,7 +167,7 @@ export class StreamManager implements EventDispatcher {
             }
         }
         if (type === 'streamAudioVolumeChange' && this.stream.hasAudio) {
-            this.stream.enableVolumeChangeEvent();
+            this.stream.enableVolumeChangeEvent(false);
         }
         return this;
     }
@@ -178,9 +178,9 @@ export class StreamManager implements EventDispatcher {
     once(type: string, handler: (event: Event) => void): StreamManager {
         this.ee.once(type, event => {
             if (event) {
-                console.info("Event '" + type + "' triggered once", event);
+                console.info("Event '" + type + "' triggered once by '" + (this.remote ? 'Subscriber' : 'Publisher') + "'", event);
             } else {
-                console.info("Event '" + type + "' triggered once");
+                console.info("Event '" + type + "' triggered once by '" + (this.remote ? 'Subscriber' : 'Publisher') + "'");
             }
             handler(event);
         });
@@ -200,7 +200,7 @@ export class StreamManager implements EventDispatcher {
             }
         }
         if (type === 'streamAudioVolumeChange' && this.stream.hasAudio) {
-            this.stream.enableOnceVolumeChangeEvent();
+            this.stream.enableOnceVolumeChangeEvent(false);
         }
         return this;
     }
@@ -216,7 +216,10 @@ export class StreamManager implements EventDispatcher {
         }
 
         if (type === 'streamAudioVolumeChange') {
-            this.stream.disableVolumeChangeEvent();
+            let remainingVolumeEventListeners = this.ee.getListeners(type).length;
+            if (remainingVolumeEventListeners === 0) {
+                this.stream.disableVolumeChangeEvent(false);
+            }
         }
 
         return this;
