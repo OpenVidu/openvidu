@@ -2943,6 +2943,9 @@ public class OpenViduTestAppE2eTest {
 				return;
 			}
 
+			// Extra wait time for the webhook endpoint to be ready
+			Thread.sleep(3000);
+
 			CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
 
 			// Wrong session [404]
