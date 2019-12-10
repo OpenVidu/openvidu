@@ -75,7 +75,7 @@ node('container') {
               cd openvidu/openvidu-test-e2e && sudo mvn --batch-mode -DAPP_URL=https://172.17.0.1:4200/ -DOPENVIDU_URL=https://172.17.0.1:4443/ -DREMOTE_URL_CHROME=http://172.17.0.1:6666/wd/hub/ -DREMOTE_URL_FIREFOX=http://172.17.0.1:6667/wd/hub/ test
               if [[ "$?" -ne 0 ]] ; then
                 echo "ERROR RUNNING TESTS"
-                echo "/openvidu-server.log"
+                cat /openvidu-server.log
               fi
             '''.stripIndent())
           }
