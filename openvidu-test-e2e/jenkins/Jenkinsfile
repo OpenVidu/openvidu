@@ -80,8 +80,8 @@ node('container') {
             '''.stripIndent())
           }
           finally {
-            junit "openvidu/openvidu-test-e2e/**/target/surefire-reports/TEST-*.xml"
-            archive "/openvidu-server.log"
+            junit 'openvidu/openvidu-test-e2e/**/target/surefire-reports/TEST-*.xml'
+            archiveArtifacts '/openvidu-server.log'
           }
         }
       }
