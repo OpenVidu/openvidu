@@ -344,6 +344,33 @@ export class StreamManager implements EventDispatcher {
     }
 
     /**
+     * Updates the current configuration for the [[PublisherSpeakingEvent]] feature and the [StreamManagerEvent.streamAudioVolumeChange](/api/openvidu-browser/classes/streammanagerevent.html) feature for this specific
+     * StreamManager audio stream, overriding the global options set with [[OpenVidu.setAdvancedConfiguration]]. This way you can customize the audio events options
+     * for each specific StreamManager and change them dynamically.
+     * 
+     * @param publisherSpeakingEventsOptions New options to be applied to this StreamManager's audio stream. It is an object which includes the following optional properties:
+     * - `interval`: (number) how frequently the analyser polls the audio stream to check if speaking has started/stopped or audio volume has changed. Default **100** (ms)
+     * - `threshold`: (number) the volume at which _publisherStartSpeaking_, _publisherStopSpeaking_ events will be fired. Default **-50** (dB)
+     */
+    updatePublisherSpeakingEventsOptions(publisherSpeakingEventsOptions): void {
+        const currentHarkOptions = !!this.stream.harkOptions ? this.stream.harkOptions : (this.stream.session.openvidu.advancedConfiguration.publisherSpeakingEventsOptions || {});
+        const newInterval = (typeof publisherSpeakingEventsOptions.interval === 'number') ?
+            publisherSpeakingEventsOptions.interval : ((typeof currentHarkOptions.interval === 'number') ? currentHarkOptions.interval : 100);
+        const newThreshold = (typeof publisherSpeakingEventsOptions.threshold === 'number') ?
+            publisherSpeakingEventsOptions.threshold : ((typeof currentHarkOptions.threshold === 'number') ? currentHarkOptions.threshold : -50);
+        this.stream.harkOptions = {
+            interval: newInterval,
+            threshold: newThreshold
+        };
+        if (!!this.stream.speechEvent) {
+            this.stream.speechEvent.setInterval(newInterval);
+            this.stream.speechEvent.setThreshold(newThreshold);
+        }
+    }
+
+    /* Hidden methods */
+
+    /**
      * @hidden
      */
     initializeVideoProperties(video: HTMLVideoElement): void {
@@ -457,6 +484,8 @@ export class StreamManager implements EventDispatcher {
     emitEvent(type: string, eventArray: any[]): void {
         this.ee.emitEvent(type, eventArray);
     }
+
+    /* Private methods */
 
     private pushNewStreamManagerVideo(streamManagerVideo: StreamManagerVideo) {
         this.videos.push(streamManagerVideo);

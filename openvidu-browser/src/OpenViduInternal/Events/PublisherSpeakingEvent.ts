@@ -27,8 +27,6 @@ import { Session } from '../..';
  *
  * More information:
  * - This events will only be triggered for **remote streams that have audio tracks** ([[Stream.hasAudio]] must be true)
- * - Both events share the same lifecycle. That means that you can subscribe to only one of them if you want, but if you call `Session.off('publisherStopSpeaking')`,
- * keep in mind that this will also internally remove any 'publisherStartSpeaking' event
  * - You can further configure how the events are dispatched by setting property `publisherSpeakingEventsOptions` in the call of [[OpenVidu.setAdvancedConfiguration]]
  */
 export class PublisherSpeakingEvent extends Event {

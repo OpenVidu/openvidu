@@ -188,6 +188,10 @@ export class Stream implements EventDispatcher {
      * @hidden
      */
     volumeChangeEventEnabledOnce = false;
+    /**
+     * @hidden
+     */
+    harkOptions;
 
 
     /**
@@ -768,8 +772,8 @@ export class Stream implements EventDispatcher {
     private setSpeechEventIfNotExists(): boolean {
         if (!!this.mediaStream) {
             if (!this.speechEvent) {
-                const harkOptions = this.session.openvidu.advancedConfiguration.publisherSpeakingEventsOptions || {};
-                harkOptions.interval = (typeof harkOptions.interval === 'number') ? harkOptions.interval : 50;
+                const harkOptions = !!this.harkOptions ? this.harkOptions : (this.session.openvidu.advancedConfiguration.publisherSpeakingEventsOptions || {});
+                harkOptions.interval = (typeof harkOptions.interval === 'number') ? harkOptions.interval : 100;
                 harkOptions.threshold = (typeof harkOptions.threshold === 'number') ? harkOptions.threshold : -50;
                 this.speechEvent = hark(this.mediaStream, harkOptions);
             }

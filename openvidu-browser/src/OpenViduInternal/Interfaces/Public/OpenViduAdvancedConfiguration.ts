@@ -33,9 +33,11 @@ export interface OpenViduAdvancedConfiguration {
     screenShareChromeExtension?: string;
 
     /**
-     * Custom configuration for the [[PublisherSpeakingEvent]] feature. It is an object which includes the following optional properties:
-     * - `interval`: (number) how frequently the analyser polls the audio stream to check if speaking has started or stopped. Default **50** (ms)
+     * Custom configuration for the [[PublisherSpeakingEvent]] feature and the [StreamManagerEvent.streamAudioVolumeChange](/api/openvidu-browser/classes/streammanagerevent.html) feature. It is an object which includes the following optional properties:
+     * - `interval`: (number) how frequently the analyser polls the audio stream to check if speaking has started/stopped or audio volume has changed. Default **100** (ms)
      * - `threshold`: (number) the volume at which _publisherStartSpeaking_ and _publisherStopSpeaking_ events will be fired. Default **-50** (dB)
+     * 
+     * This sets the global default configuration that will affect all streams, but you can later customize these values for each specific stream by calling [[StreamManager.updatePublisherSpeakingEventsOptions]]
      */
     publisherSpeakingEventsOptions?: any;
 
