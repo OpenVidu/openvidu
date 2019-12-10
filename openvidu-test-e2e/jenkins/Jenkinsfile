@@ -61,10 +61,10 @@ node('container') {
           sh(script: '''#!/bin/bash
             if [ "$DOCKER_RECORDING_VERSION" != "default" ]; then
               echo "Using custom openvidu-recording tag: $DOCKER_RECORDING_VERSION"
-              cd openvidu/openvidu-server/target && java -jar -Dopenvidu.publicurl=https://172.17.0.1:4443/ -Dopenvidu.recording=true -Dopenvidu.recording.version=$DOCKER_RECORDING_VERSION -Dopenvidu.webhook=true -Dopenvidu.webhook.endpoint=http://127.0.0.1:7777/webhook openvidu-server-*.jar &> /openvidu-server.log &
+              cd openvidu/openvidu-server/target && java -jar -Dopenvidu.publicurl=https://172.17.0.1:4443/ -Dopenvidu.recording=true -Dopenvidu.recording.version=$DOCKER_RECORDING_VERSION -Dopenvidu.webhook=true -Dopenvidu.webhook.endpoint=http://127.0.0.1:7777/webhook openvidu-server-*.jar &> openvidu-server.log &
             else
               echo "Using default openvidu-recording tag"
-              cd openvidu/openvidu-server/target && java -jar -Dopenvidu.publicurl=https://172.17.0.1:4443/ -Dopenvidu.recording=true -Dopenvidu.webhook=true -Dopenvidu.webhook.endpoint=http://127.0.0.1:7777/webhook openvidu-server-*.jar &> /openvidu-server.log &
+              cd openvidu/openvidu-server/target && java -jar -Dopenvidu.publicurl=https://172.17.0.1:4443/ -Dopenvidu.recording=true -Dopenvidu.webhook=true -Dopenvidu.webhook.endpoint=http://127.0.0.1:7777/webhook openvidu-server-*.jar &> openvidu-server.log &
             fi
           '''.stripIndent())
           sh 'until $(curl --insecure --output /dev/null --silent --head --fail https://OPENVIDUAPP:MY_SECRET@localhost:4443/); do echo "Waiting for openvidu-server..."; sleep 2; done'
@@ -75,13 +75,13 @@ node('container') {
               cd openvidu/openvidu-test-e2e && sudo mvn --batch-mode -DAPP_URL=https://172.17.0.1:4200/ -DOPENVIDU_URL=https://172.17.0.1:4443/ -DREMOTE_URL_CHROME=http://172.17.0.1:6666/wd/hub/ -DREMOTE_URL_FIREFOX=http://172.17.0.1:6667/wd/hub/ test
               if [[ "$?" -ne 0 ]] ; then
                 echo "ERROR RUNNING TESTS"
-                cat /openvidu-server.log
+                cat openvidu/openvidu-server/target/openvidu-server.log
               fi
             '''.stripIndent())
           }
           finally {
             junit 'openvidu/openvidu-test-e2e/**/target/surefire-reports/TEST-*.xml'
-            archiveArtifacts '/openvidu-server.log'
+            archiveArtifacts artifacts: '**/openvidu-server.log'
           }
         }
       }
