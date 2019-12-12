@@ -21,6 +21,4 @@ public interface LoadManager {
 
 	public int calculateLoad(Kms kms);
 
-	// public boolean allowMoreElements(Kms kms);
-
 }
