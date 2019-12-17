@@ -42,6 +42,15 @@ public class CustomFileManager {
 		}
 	}
 
+	public boolean createAndWriteFileWithFolders(String filePath, String text) {
+		File f = new File(filePath);
+		if (!f.exists()) {
+			// This doesn't fail if no permissions
+			f.getParentFile().mkdirs();
+		}
+		return this.createAndWriteFile(filePath, text);
+	}
+
 	public boolean overwriteFile(String filePath, String text) {
 		try {
 			this.writeAndCloseOnOutputStreamWriter(new FileOutputStream(filePath, false), text);
