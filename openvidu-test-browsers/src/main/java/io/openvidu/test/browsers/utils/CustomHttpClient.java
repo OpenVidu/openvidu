@@ -216,6 +216,8 @@ public class CustomHttpClient {
 				request = Unirest.delete(path);
 				request.header("Content-Type", "application/x-www-form-urlencoded");
 				break;
+			case PUT:
+				request = Unirest.put(path);
 			default:
 				break;
 			}
