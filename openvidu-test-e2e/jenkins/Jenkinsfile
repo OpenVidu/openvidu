@@ -29,9 +29,12 @@ node('container') {
         '''.stripIndent())
           sh(script: '''#!/bin/bash
             if $KURENTO_MEDIA_SERVER_DEV ; then
-            DISTRO=`lsb_release --codename | cut -f2`
-            sudo echo "deb [arch=amd64] http://ubuntu.openvidu.io/dev $DISTRO kms6" | sudo tee /etc/apt/sources.list.d/kurento.list
-            sudo apt-get update && sudo apt-get upgrade -y kurento-media-server
+              echo "Upgrading KMS to dev version"
+              sudo apt-get update && sudo apt-get install -y aptitude
+              sudo aptitude remove -y kurento-media-server
+              DISTRO=`lsb_release --codename | cut -f2`
+              sudo echo "deb [arch=amd64] http://ubuntu.openvidu.io/dev $DISTRO kms6" | sudo tee /etc/apt/sources.list.d/kurento.list
+              sudo apt-get update && sudo apt-get --yes -o Dpkg::Options::="--force-confnew" install kurento-media-server
             fi
         '''.stripIndent())
         }
