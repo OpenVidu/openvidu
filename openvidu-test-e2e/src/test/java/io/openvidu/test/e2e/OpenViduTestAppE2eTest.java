@@ -1895,11 +1895,16 @@ public class OpenViduTestAppE2eTest {
 
 		// Publisher unsubscribes from "CodeFound" filter event
 		user.getDriver().findElement(By.id("unsub-filter-event-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value",
+				"Filter event listener removed"));
+
+		// In case some filter event was receive while waiting for unsubscription
+		user.getEventManager().clearCurrentEvents("CodeFound");
 
 		try {
 			// If this active wait finishes successfully, then the removal of the event
 			// listener has not worked fine
-			user.getEventManager().waitUntilEventReaches("CodeFound", 3, 3, false);
+			user.getEventManager().waitUntilEventReaches("CodeFound", 1, 3, false);
 			Assert.fail("'filterEvent' was received. Filter.removeEventListener() failed");
 		} catch (Exception e) {
 			System.out.println("Filter event removal worked fine");
@@ -1918,18 +1923,22 @@ public class OpenViduTestAppE2eTest {
 		user.getWaiter().until(ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value",
 				"Filter event listener added"));
 
-		user.getEventManager().waitUntilEventReaches("CodeFound", 4);
+		user.getEventManager().waitUntilEventReaches("CodeFound", 1);
 
 		// Moderator removes the Publisher's filter
 		user.getDriver().findElement(By.id("remove-filter-btn")).click();
 		user.getWaiter().until(
 				ExpectedConditions.attributeContains(By.id("filter-response-text-area"), "value", "Filter removed"));
+
+		// In case some filter event was receive while waiting for filter removal
+		user.getEventManager().clearCurrentEvents("CodeFound");
+
 		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 4);
 
 		try {
 			// If this active wait finishes successfully, then the removal of the filter has
 			// not worked fine
-			user.getEventManager().waitUntilEventReaches("CodeFound", 5, 3, false);
+			user.getEventManager().waitUntilEventReaches("CodeFound", 1, 3, false);
 			Assert.fail("'filterEvent' was received. Stream.removeFilter() failed");
 		} catch (Exception e) {
 			System.out.println("Filter removal worked fine");

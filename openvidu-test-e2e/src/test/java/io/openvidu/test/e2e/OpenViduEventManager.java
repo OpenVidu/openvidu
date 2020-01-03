@@ -180,6 +180,12 @@ public class OpenViduEventManager {
 		}
 	}
 
+	// Sets any event count to 0
+	public synchronized void clearCurrentEvents(String eventName) {
+		this.eventNumbers.put(eventName, new AtomicInteger(0));
+		this.setCountDown(eventName, new CountDownLatch(0));
+	}
+
 	public boolean assertMediaTracks(WebElement videoElement, boolean audioTransmission, boolean videoTransmission,
 			String parentSelector) {
 		return this.assertMediaTracks(Collections.singleton(videoElement), audioTransmission, videoTransmission,
@@ -237,7 +243,7 @@ public class OpenViduEventManager {
 		}
 	}
 
-	private void getEventsFromBrowser() {
+	private synchronized void getEventsFromBrowser() {
 		String rawEvents = this.getAndClearEventsInBrowser();
 
 		if (rawEvents == null || rawEvents.length() == 0) {
