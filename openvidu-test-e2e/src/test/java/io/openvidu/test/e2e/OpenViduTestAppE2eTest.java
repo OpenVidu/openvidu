@@ -1064,6 +1064,8 @@ public class OpenViduTestAppE2eTest {
 
 		recordBtn.click();
 
+		Thread.sleep(2000);
+
 		user.getWaiter().until(ExpectedConditions.elementToBeClickable(By.cssSelector("#recorder-preview video")));
 
 		user.getWaiter().until(
