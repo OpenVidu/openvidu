@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
-  - name: OpenVidu Google Group Community forum
-    url: https://groups.google.com/forum/#!forum/openvidu
-    about: If your question is about a certain feature or getting support for a specific use case, please use OpenVidu Google Group forum
+  - name: OpenVidu Discourse forum
+    url: https://openvidu.discourse.group/
+    about: If your question is about a certain feature or getting support for a specific use case, please use OpenVidu Discourse Group forum
