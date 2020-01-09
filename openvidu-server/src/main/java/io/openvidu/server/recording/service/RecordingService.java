@@ -34,6 +34,7 @@ import io.openvidu.server.recording.Recording;
 import io.openvidu.server.recording.RecordingDownloader;
 import io.openvidu.server.utils.CommandExecutor;
 import io.openvidu.server.utils.CustomFileManager;
+import io.openvidu.server.utils.QuarantineKiller;
 
 public abstract class RecordingService {
 
@@ -43,14 +44,16 @@ public abstract class RecordingService {
 	protected RecordingManager recordingManager;
 	protected RecordingDownloader recordingDownloader;
 	protected CallDetailRecord cdr;
+	protected QuarantineKiller quarantineKiller;
 	protected CustomFileManager fileWriter = new CustomFileManager();
 
 	RecordingService(RecordingManager recordingManager, RecordingDownloader recordingDownloader,
-			OpenviduConfig openviduConfig, CallDetailRecord cdr) {
+			OpenviduConfig openviduConfig, CallDetailRecord cdr, QuarantineKiller quarantineKiller) {
 		this.recordingManager = recordingManager;
 		this.recordingDownloader = recordingDownloader;
 		this.openviduConfig = openviduConfig;
 		this.cdr = cdr;
+		this.quarantineKiller = quarantineKiller;
 	}
 
 	public abstract Recording startRecording(Session session, RecordingProperties properties) throws OpenViduException;
@@ -104,7 +107,7 @@ public abstract class RecordingService {
 		io.openvidu.java.client.Recording.Status status = io.openvidu.java.client.Recording.Status.failed
 				.equals(recording.getStatus()) ? io.openvidu.java.client.Recording.Status.failed
 						: io.openvidu.java.client.Recording.Status.ready;
-		
+
 		// Status is now failed or ready. Url property must be defined
 		recording.setUrl(recordingManager.getRecordingUrl(recording));
 

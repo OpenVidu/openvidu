@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.kurento.client.KurentoClient;
@@ -62,6 +63,7 @@ public class Kms {
 	private AtomicLong timeOfKurentoClientDisconnection = new AtomicLong(0);
 
 	private Map<String, KurentoSession> kurentoSessions = new ConcurrentHashMap<>();
+	private AtomicInteger activeRecordings = new AtomicInteger(0);
 
 	public Kms(KmsProperties props, LoadManager loadManager) {
 		this.id = props.getId();
@@ -141,6 +143,10 @@ public class Kms {
 
 	public void removeKurentoSession(String sessionId) {
 		this.kurentoSessions.remove(sessionId);
+	}
+
+	public AtomicInteger getActiveRecordings() {
+		return this.activeRecordings;
 	}
 
 	public JsonObject toJson() {

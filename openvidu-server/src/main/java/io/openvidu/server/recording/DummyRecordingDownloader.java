@@ -10,7 +10,6 @@ public class DummyRecordingDownloader implements RecordingDownloader {
 			throws IOException {
 		// Just immediately run callback function
 		callback.run();
-		return;
 	}
 
 	@Override

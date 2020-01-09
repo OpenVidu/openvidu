@@ -73,6 +73,7 @@ import io.openvidu.server.recording.RecordingDownloader;
 import io.openvidu.server.utils.CustomFileManager;
 import io.openvidu.server.utils.DockerManager;
 import io.openvidu.server.utils.JsonUtils;
+import io.openvidu.server.utils.QuarantineKiller;
 
 public class RecordingManager {
 
@@ -96,6 +97,9 @@ public class RecordingManager {
 
 	@Autowired
 	private KmsManager kmsManager;
+
+	@Autowired
+	protected QuarantineKiller quarantineKiller;
 
 	@Autowired
 	private CallDetailRecord cdr;
@@ -150,9 +154,10 @@ public class RecordingManager {
 		RecordingManager.IMAGE_TAG = openviduConfig.getOpenViduRecordingVersion();
 
 		this.dockerManager = new DockerManager();
-		this.composedRecordingService = new ComposedRecordingService(this, recordingDownloader, openviduConfig, cdr);
+		this.composedRecordingService = new ComposedRecordingService(this, recordingDownloader, openviduConfig, cdr,
+				quarantineKiller);
 		this.singleStreamRecordingService = new SingleStreamRecordingService(this, recordingDownloader, openviduConfig,
-				cdr);
+				cdr, quarantineKiller);
 
 		log.info("Recording module required: Downloading openvidu/openvidu-recording:"
 				+ openviduConfig.getOpenViduRecordingVersion() + " Docker image (350MB aprox)");
@@ -603,7 +608,8 @@ public class RecordingManager {
 			log.warn("No KMSs were defined in kms.uris array. Recording path check aborted");
 		} else {
 
-			MediaPipeline pipeline = this.kmsManager.getLessLoadedAndRunningKms().getKurentoClient().createMediaPipeline();
+			MediaPipeline pipeline = this.kmsManager.getLessLoadedAndRunningKms().getKurentoClient()
+					.createMediaPipeline();
 			RecorderEndpoint recorder = new RecorderEndpoint.Builder(pipeline, "file://" + testFilePath).build();
 
 			final AtomicBoolean kurentoRecorderError = new AtomicBoolean(false);

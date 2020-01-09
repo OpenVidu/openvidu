@@ -59,10 +59,12 @@ import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.kurento.core.KurentoParticipant;
+import io.openvidu.server.kurento.core.KurentoSession;
 import io.openvidu.server.kurento.endpoint.PublisherEndpoint;
 import io.openvidu.server.recording.RecorderEndpointWrapper;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.recording.RecordingDownloader;
+import io.openvidu.server.utils.QuarantineKiller;
 
 public class SingleStreamRecordingService extends RecordingService {
 
@@ -74,8 +76,8 @@ public class SingleStreamRecordingService extends RecordingService {
 	private final String INDIVIDUAL_STREAM_METADATA_FILE = ".stream.";
 
 	public SingleStreamRecordingService(RecordingManager recordingManager, RecordingDownloader recordingDownloader,
-			OpenviduConfig openviduConfig, CallDetailRecord cdr) {
-		super(recordingManager, recordingDownloader, openviduConfig, cdr);
+			OpenviduConfig openviduConfig, CallDetailRecord cdr, QuarantineKiller quarantineKiller) {
+		super(recordingManager, recordingDownloader, openviduConfig, cdr, quarantineKiller);
 	}
 
 	@Override
@@ -129,6 +131,9 @@ public class SingleStreamRecordingService extends RecordingService {
 
 		this.generateRecordingMetadataFile(recording);
 
+		// Increment active recordings
+		((KurentoSession) session).getKms().getActiveRecordings().incrementAndGet();
+
 		return recording;
 	}
 
@@ -163,7 +168,6 @@ public class SingleStreamRecordingService extends RecordingService {
 
 		this.cleanRecordingMaps(recording);
 
-		// TODO: DOWNLOAD FILES IF SCALABILITY MODE
 		final Recording[] finalRecordingArray = new Recording[1];
 		finalRecordingArray[0] = recording;
 		try {
@@ -181,6 +185,13 @@ public class SingleStreamRecordingService extends RecordingService {
 						finalRecordingArray[0].getStatus());
 
 				storedRecorders.remove(finalRecordingArray[0].getSessionId());
+
+				// Decrement active recordings once it is downloaded
+				((KurentoSession) session).getKms().getActiveRecordings().decrementAndGet();
+
+				// Now we can drop Media Node if waiting-idle-to-terminate
+				this.quarantineKiller.dropMediaNode(session.getMediaNodeId());
+
 			});
 		} catch (IOException e) {
 			log.error("Error while downloading recording {}", finalRecordingArray[0].getName());
