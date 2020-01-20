@@ -1068,8 +1068,13 @@ public class OpenViduTestAppE2eTest {
 
 		user.getWaiter().until(ExpectedConditions.elementToBeClickable(By.cssSelector("#recorder-preview video")));
 
-		user.getWaiter().until(
-				waitForVideoDuration(user.getDriver().findElement(By.cssSelector("#recorder-preview video")), 4));
+		try {
+			user.getWaiter().until(
+					waitForVideoDuration(user.getDriver().findElement(By.cssSelector("#recorder-preview video")), 4));
+		} catch (Exception e) {
+			System.out.println(getBase64Screenshot(user));
+			Assert.fail();
+		}
 
 		user.getDriver().findElement(By.id("close-record-btn")).click();
 
