@@ -474,48 +474,50 @@ public class RecordingManager {
 
 	public void initAutomaticRecordingStopThread(final Session session) {
 		final String recordingId = this.sessionsRecordings.get(session.getSessionId()).getId();
-		ScheduledFuture<?> future = this.automaticRecordingStopExecutor.schedule(() -> {
 
-			log.info("Stopping recording {} after {} seconds wait (no publisher published before timeout)", recordingId,
-					this.openviduConfig.getOpenviduRecordingAutostopTimeout());
+		this.automaticRecordingStopThreads.computeIfAbsent(session.getSessionId(), f -> {
 
-			if (this.automaticRecordingStopThreads.remove(session.getSessionId()) != null) {
-				if (session.getParticipants().size() == 0 || (session.getParticipants().size() == 1
-						&& session.getParticipantByPublicId(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID) != null)) {
-					// Close session if there are no participants connected (except for RECORDER).
-					// This code won't be executed only when some user reconnects to the session
-					// but never publishing (publishers automatically abort this thread)
-					log.info("Closing session {} after automatic stop of recording {}", session.getSessionId(),
-							recordingId);
-					sessionManager.closeSessionAndEmptyCollections(session, EndReason.automaticStop);
-					sessionManager.showTokens();
+			ScheduledFuture<?> future = this.automaticRecordingStopExecutor.schedule(() -> {
+				log.info("Stopping recording {} after {} seconds wait (no publisher published before timeout)",
+						recordingId, this.openviduConfig.getOpenviduRecordingAutostopTimeout());
+
+				if (this.automaticRecordingStopThreads.remove(session.getSessionId()) != null) {
+					if (session.getParticipants().size() == 0 || session.onlyRecorderParticipant()) {
+						// Close session if there are no participants connected (RECORDER does not
+						// count) and publishing
+						log.info("Closing session {} after automatic stop of recording {}", session.getSessionId(),
+								recordingId);
+						sessionManager.closeSessionAndEmptyCollections(session, EndReason.automaticStop, true);
+						sessionManager.showTokens();
+					} else {
+						// There are users connected, but no one is publishing
+						log.info(
+								"Automatic stopping recording {}. There are users connected to session {}, but no one is publishing",
+								recordingId, session.getSessionId());
+						this.stopRecording(session, recordingId, EndReason.automaticStop);
+					}
 				} else {
-					this.stopRecording(session, recordingId, EndReason.automaticStop);
+					// This code shouldn't be reachable
+					log.warn("Recording {} was already automatically stopped by a previous thread", recordingId);
 				}
-			} else {
-				// This code is reachable if there already was an automatic stop of a recording
-				// caused by not user publishing within timeout after recording started, and a
-				// new automatic stop thread was started by last user leaving the session
-				log.warn("Recording {} was already automatically stopped by a previous thread", recordingId);
-			}
+			}, this.openviduConfig.getOpenviduRecordingAutostopTimeout(), TimeUnit.SECONDS);
 
-		}, this.openviduConfig.getOpenviduRecordingAutostopTimeout(), TimeUnit.SECONDS);
-		this.automaticRecordingStopThreads.putIfAbsent(session.getSessionId(), future);
+			return future;
+		});
 	}
 
 	public boolean abortAutomaticRecordingStopThread(Session session, EndReason reason) {
 		ScheduledFuture<?> future = this.automaticRecordingStopThreads.remove(session.getSessionId());
 		if (future != null) {
 			boolean cancelled = future.cancel(false);
-			if (session.getParticipants().size() == 0 || (session.getParticipants().size() == 1
-					&& session.getParticipantByPublicId(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID) != null)) {
+			if (session.getParticipants().size() == 0 || session.onlyRecorderParticipant()) {
 				// Close session if there are no participants connected (except for RECORDER).
 				// This code will only be executed if recording is manually stopped during the
 				// automatic stop timeout, so the session must be also closed
 				log.info(
 						"Ongoing recording of session {} was explicetly stopped within timeout for automatic recording stop. Closing session",
 						session.getSessionId());
-				sessionManager.closeSessionAndEmptyCollections(session, reason);
+				sessionManager.closeSessionAndEmptyCollections(session, reason, false);
 				sessionManager.showTokens();
 			}
 			return cancelled;

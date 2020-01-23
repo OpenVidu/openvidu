@@ -214,7 +214,7 @@ public class KurentoSessionManager extends SessionManager {
 					recordingManager.initAutomaticRecordingStopThread(session);
 				} else {
 					log.info("No more participants in session '{}', removing it and closing it", sessionId);
-					this.closeSessionAndEmptyCollections(session, reason);
+					this.closeSessionAndEmptyCollections(session, reason, true);
 					sessionClosedByLastParticipant = true;
 					showTokens();
 				}
@@ -223,7 +223,7 @@ public class KurentoSessionManager extends SessionManager {
 					&& this.recordingManager.sessionIsBeingRecorded(sessionId)
 					&& ProtocolElements.RECORDER_PARTICIPANT_PUBLICID
 							.equals(remainingParticipants.iterator().next().getParticipantPublicId())) {
-				// Start countdown
+				// RECORDER participant is the last one standing. Start countdown
 				log.info("Last participant left. Starting {} seconds countdown for stopping recording of session {}",
 						this.openviduConfig.getOpenviduRecordingAutostopTimeout(), sessionId);
 				recordingManager.initAutomaticRecordingStopThread(session);

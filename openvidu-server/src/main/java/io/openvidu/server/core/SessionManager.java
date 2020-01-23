@@ -461,19 +461,16 @@ public abstract class SessionManager {
 	 * was forcibly closed.
 	 *
 	 * @param sessionId identifier of the session
-	 * @return
-	 * @return set of {@link Participant} POJOS representing the session's
-	 *         participants
 	 * @throws OpenViduException in case the session doesn't exist or has been
 	 *                           already closed
 	 */
-	public Set<Participant> closeSession(String sessionId, EndReason reason) {
+	public void closeSession(String sessionId, EndReason reason) {
 		Session session = sessions.get(sessionId);
 		if (session == null) {
 			throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE, "Session '" + sessionId + "' not found");
 		}
 		if (session.isClosed()) {
-			this.closeSessionAndEmptyCollections(session, reason);
+			this.cleanCollections(sessionId);
 			throw new OpenViduException(Code.ROOM_CLOSED_ERROR_CODE, "Session '" + sessionId + "' already closed");
 		}
 		Set<Participant> participants = getParticipants(sessionId);
@@ -489,19 +486,25 @@ public abstract class SessionManager {
 		}
 
 		if (!sessionClosedByLastParticipant) {
-			// This code should never be executed, as last evicted participant must trigger
-			// session close
-			this.closeSessionAndEmptyCollections(session, reason);
+			// This code should only be executed when there were no participants connected
+			// to the session. That is: if the session was in the automatic recording stop
+			// timeout with INDIVIDUAL recording (no docker participant connected)
+			this.closeSessionAndEmptyCollections(session, reason, true);
 		}
-
-		return participants;
 	}
 
-	public void closeSessionAndEmptyCollections(Session session, EndReason reason) {
+	public void closeSessionAndEmptyCollections(Session session, EndReason reason, boolean stopRecording) {
 
-		if (openviduConfig.isRecordingModuleEnabled()
+		if (openviduConfig.isRecordingModuleEnabled() && stopRecording
 				&& this.recordingManager.sessionIsBeingRecorded(session.getSessionId())) {
 			recordingManager.stopRecording(session, null, RecordingManager.finalReason(reason));
+		}
+
+		if (EndReason.automaticStop.equals(reason) && !session.getParticipants().isEmpty()
+				&& !session.onlyRecorderParticipant()) {
+			log.warn(
+					"Some user connected to the session between automatic recording stop and session close up. Canceling session close up");
+			return;
 		}
 
 		final String mediaNodeId = session.getMediaNodeId();

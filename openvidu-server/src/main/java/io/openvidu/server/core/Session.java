@@ -102,6 +102,11 @@ public class Session implements SessionInterface {
 		return null;
 	}
 
+	public boolean onlyRecorderParticipant() {
+		return this.participants.size() == 1 && ProtocolElements.RECORDER_PARTICIPANT_PUBLICID
+				.equals(this.participants.values().iterator().next().getParticipantPublicId());
+	}
+
 	public int getActivePublishers() {
 		return activePublishers.get();
 	}

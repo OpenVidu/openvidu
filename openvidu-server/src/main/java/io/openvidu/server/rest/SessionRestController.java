@@ -223,7 +223,8 @@ public class SessionRestController {
 
 		Session sessionNotActive = this.sessionManager.getSessionNotActive(sessionId);
 		if (sessionNotActive != null) {
-			this.sessionManager.closeSessionAndEmptyCollections(sessionNotActive, EndReason.sessionClosedByServer);
+			this.sessionManager.closeSessionAndEmptyCollections(sessionNotActive, EndReason.sessionClosedByServer,
+					true);
 			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 		} else {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -541,7 +542,8 @@ public class SessionRestController {
 
 		session.recordingManuallyStopped.set(true);
 
-		if (session != null && OutputMode.COMPOSED.equals(recording.getOutputMode()) && recording.hasVideo()) {
+		if (session != null && !session.isClosed() && OutputMode.COMPOSED.equals(recording.getOutputMode())
+				&& recording.hasVideo()) {
 			sessionManager.evictParticipant(
 					session.getParticipantByPublicId(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID), null, null, null);
 		}
