@@ -483,7 +483,7 @@ export class OpenVidu {
    * var FRAME_RATE = 10;
    *
    * OV.getUserMedia({
-   *    audioSource: false;
+   *    audioSource: false,
    *    videoSource: undefined,
    *    resolution: '1280x720',
    *    frameRate: FRAME_RATE
