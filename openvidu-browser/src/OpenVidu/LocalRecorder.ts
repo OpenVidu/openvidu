@@ -57,13 +57,15 @@ export class LocalRecorder {
 
     /**
      * Starts the recording of the Stream. [[state]] property must be `READY`. After method succeeds is set to `RECORDING`
+     * 
+     * @param mimeType The [MediaRecorder.mimeType](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/mimeType) to be used to record this Stream.
+     * Make sure the platform supports it or the promise will return an error. If this parameter is not provided, the MediaRecorder will use the default codecs available in the platform
+     * 
      * @returns A Promise (to which you can optionally subscribe to) that is resolved if the recording successfully started and rejected with an Error object if not
      */
-    record(): Promise<any> {
+    record(mimeType?: string): Promise<any> {
         return new Promise((resolve, reject) => {
-
             try {
-
                 if (typeof MediaRecorder === 'undefined') {
                     console.error('MediaRecorder not supported on your browser. See compatibility in https://caniuse.com/#search=MediaRecorder');
                     throw (Error('MediaRecorder not supported on your browser. See compatibility in https://caniuse.com/#search=MediaRecorder'));
@@ -73,23 +75,21 @@ export class LocalRecorder {
                 }
                 console.log("Starting local recording of stream '" + this.stream.streamId + "' of connection '" + this.connectionId + "'");
 
-
+                let options = {};
                 if (typeof MediaRecorder.isTypeSupported === 'function') {
-                    let options;
-                    if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) {
-                        options = { mimeType: 'video/webm;codecs=vp9' };
-                    } else if (MediaRecorder.isTypeSupported('video/webm;codecs=h264')) {
-                        options = { mimeType: 'video/webm;codecs=h264' };
-                    } else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8')) {
-                        options = { mimeType: 'video/webm;codecs=vp8' };
+                    if (!!mimeType) {
+                        if (!MediaRecorder.isTypeSupported(mimeType)) {
+                            reject(new Error('mimeType "' + mimeType + '" is not supported'));
+                        }
+                        options = { mimeType };
+                    } else {
+                        console.log('No mimeType parameter provided. Using default codecs');
                     }
-                    console.log('Using mimeType ' + options.mimeType);
-                    this.mediaRecorder = new MediaRecorder(this.stream.getMediaStream(), options);
                 } else {
-                    console.warn('isTypeSupported is not supported, using default codecs for browser');
-                    this.mediaRecorder = new MediaRecorder(this.stream.getMediaStream());
+                    console.warn('MediaRecorder#isTypeSupported is not supported. Using default codecs');
                 }
 
+                this.mediaRecorder = new MediaRecorder(this.stream.getMediaStream(), options);
                 this.mediaRecorder.start(10);
 
             } catch (err) {
