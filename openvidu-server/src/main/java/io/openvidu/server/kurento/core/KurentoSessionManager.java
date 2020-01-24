@@ -89,7 +89,7 @@ public class KurentoSessionManager extends SessionManager {
 
 			if (kSession == null) {
 				// First user connecting to the session
-				Session sessionNotActive = sessionsNotActive.remove(sessionId);
+				Session sessionNotActive = sessionsNotActive.get(sessionId);
 
 				if (sessionNotActive == null && this.isInsecureParticipant(participant.getParticipantPrivateId())) {
 					// Insecure user directly call joinRoom RPC method, without REST API use
@@ -213,10 +213,19 @@ public class KurentoSessionManager extends SessionManager {
 							this.openviduConfig.getOpenviduRecordingAutostopTimeout(), sessionId);
 					recordingManager.initAutomaticRecordingStopThread(session);
 				} else {
-					log.info("No more participants in session '{}', removing it and closing it", sessionId);
-					this.closeSessionAndEmptyCollections(session, reason, true);
-					sessionClosedByLastParticipant = true;
-					showTokens();
+					try {
+						session.closingLock.writeLock().lock();
+						if (session.isClosed()) {
+							return false;
+						}
+						log.info("No more participants in session '{}', removing it and closing it", sessionId);
+						this.closeSessionAndEmptyCollections(session, reason, true);
+						sessionClosedByLastParticipant = true;
+						showTokens();
+					} finally {
+						session.closingLock.writeLock().unlock();
+					}
+
 				}
 			} else if (remainingParticipants.size() == 1 && openviduConfig.isRecordingModuleEnabled()
 					&& MediaMode.ROUTED.equals(session.getSessionProperties().mediaMode())
@@ -514,6 +523,7 @@ public class KurentoSessionManager extends SessionManager {
 		}
 		session = new KurentoSession(sessionNotActive, kms, kurentoSessionEventsHandler, kurentoEndpointConfig);
 
+		sessionsNotActive.remove(session.getSessionId());
 		KurentoSession oldSession = (KurentoSession) sessions.putIfAbsent(session.getSessionId(), session);
 		if (oldSession != null) {
 			log.warn("Session '{}' has just been created by another thread", session.getSessionId());

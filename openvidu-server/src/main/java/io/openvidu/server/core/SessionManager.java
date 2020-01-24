@@ -489,7 +489,15 @@ public abstract class SessionManager {
 			// This code should only be executed when there were no participants connected
 			// to the session. That is: if the session was in the automatic recording stop
 			// timeout with INDIVIDUAL recording (no docker participant connected)
-			this.closeSessionAndEmptyCollections(session, reason, true);
+			try {
+				session.closingLock.writeLock().lock();
+				if (session.isClosed()) {
+					return;
+				}
+				this.closeSessionAndEmptyCollections(session, reason, true);
+			} finally {
+				session.closingLock.writeLock().unlock();
+			}
 		}
 	}
 
@@ -498,13 +506,6 @@ public abstract class SessionManager {
 		if (openviduConfig.isRecordingModuleEnabled() && stopRecording
 				&& this.recordingManager.sessionIsBeingRecorded(session.getSessionId())) {
 			recordingManager.stopRecording(session, null, RecordingManager.finalReason(reason));
-		}
-
-		if (EndReason.automaticStop.equals(reason) && !session.getParticipants().isEmpty()
-				&& !session.onlyRecorderParticipant()) {
-			log.warn(
-					"Some user connected to the session between automatic recording stop and session close up. Canceling session close up");
-			return;
 		}
 
 		final String mediaNodeId = session.getMediaNodeId();

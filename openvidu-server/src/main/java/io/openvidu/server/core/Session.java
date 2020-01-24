@@ -23,6 +23,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
 
 import com.google.gson.JsonArray;
@@ -50,6 +52,17 @@ public class Session implements SessionInterface {
 
 	protected volatile boolean closed = false;
 	protected AtomicInteger activePublishers = new AtomicInteger(0);
+
+	/**
+	 * This lock protects the following operations with read lock: [REST API](POST
+	 * /api/tokens, POST /sessions/{sessionId}/connection), [RPC](joinRoom).
+	 * 
+	 * All of them get it with tryLock, immediately failing if written locked
+	 * 
+	 * Lock is written-locked upon session close up. That is: everywhere in the code
+	 * calling method SessionManager#closeSessionAndEmptyCollections (5 times)
+	 */
+	public ReadWriteLock closingLock = new ReentrantReadWriteLock();
 
 	public final AtomicBoolean recordingManuallyStopped = new AtomicBoolean(false);
 

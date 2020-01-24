@@ -223,9 +223,17 @@ public class SessionRestController {
 
 		Session sessionNotActive = this.sessionManager.getSessionNotActive(sessionId);
 		if (sessionNotActive != null) {
-			this.sessionManager.closeSessionAndEmptyCollections(sessionNotActive, EndReason.sessionClosedByServer,
-					true);
-			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+			try {
+				sessionNotActive.closingLock.writeLock().lock();
+				if (sessionNotActive.isClosed()) {
+					return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+				}
+				this.sessionManager.closeSessionAndEmptyCollections(sessionNotActive, EndReason.sessionClosedByServer,
+						true);
+				return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+			} finally {
+				sessionNotActive.closingLock.writeLock().unlock();
+			}
 		} else {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
@@ -310,7 +318,8 @@ public class SessionRestController {
 					HttpStatus.BAD_REQUEST);
 		}
 
-		if (this.sessionManager.getSessionWithNotActive(sessionId) == null) {
+		final Session session = this.sessionManager.getSessionWithNotActive(sessionId);
+		if (session == null) {
 			return this.generateErrorResponse("Session " + sessionId + " not found", "/api/tokens",
 					HttpStatus.NOT_FOUND);
 		}
@@ -350,43 +359,54 @@ public class SessionRestController {
 
 		metadata = (metadata != null) ? metadata : "";
 
-		String token = sessionManager.newToken(sessionId, role, metadata, kurentoTokenOptions);
+		// While closing a session tokens can't be generated
+		if (session.closingLock.readLock().tryLock()) {
+			try {
+				String token = sessionManager.newToken(sessionId, role, metadata, kurentoTokenOptions);
 
-		JsonObject responseJson = new JsonObject();
-		responseJson.addProperty("id", token);
-		responseJson.addProperty("session", sessionId);
-		responseJson.addProperty("role", role.toString());
-		responseJson.addProperty("data", metadata);
-		responseJson.addProperty("token", token);
+				JsonObject responseJson = new JsonObject();
+				responseJson.addProperty("id", token);
+				responseJson.addProperty("session", sessionId);
+				responseJson.addProperty("role", role.toString());
+				responseJson.addProperty("data", metadata);
+				responseJson.addProperty("token", token);
 
-		if (kurentoOptions != null) {
-			JsonObject kurentoOptsResponse = new JsonObject();
-			if (kurentoTokenOptions.getVideoMaxRecvBandwidth() != null) {
-				kurentoOptsResponse.addProperty("videoMaxRecvBandwidth",
-						kurentoTokenOptions.getVideoMaxRecvBandwidth());
-			}
-			if (kurentoTokenOptions.getVideoMinRecvBandwidth() != null) {
-				kurentoOptsResponse.addProperty("videoMinRecvBandwidth",
-						kurentoTokenOptions.getVideoMinRecvBandwidth());
-			}
-			if (kurentoTokenOptions.getVideoMaxSendBandwidth() != null) {
-				kurentoOptsResponse.addProperty("videoMaxSendBandwidth",
-						kurentoTokenOptions.getVideoMaxSendBandwidth());
-			}
-			if (kurentoTokenOptions.getVideoMinSendBandwidth() != null) {
-				kurentoOptsResponse.addProperty("videoMinSendBandwidth",
-						kurentoTokenOptions.getVideoMinSendBandwidth());
-			}
-			if (kurentoTokenOptions.getAllowedFilters().length > 0) {
-				JsonArray filters = new JsonArray();
-				for (String filter : kurentoTokenOptions.getAllowedFilters()) {
-					filters.add(filter);
+				if (kurentoOptions != null) {
+					JsonObject kurentoOptsResponse = new JsonObject();
+					if (kurentoTokenOptions.getVideoMaxRecvBandwidth() != null) {
+						kurentoOptsResponse.addProperty("videoMaxRecvBandwidth",
+								kurentoTokenOptions.getVideoMaxRecvBandwidth());
+					}
+					if (kurentoTokenOptions.getVideoMinRecvBandwidth() != null) {
+						kurentoOptsResponse.addProperty("videoMinRecvBandwidth",
+								kurentoTokenOptions.getVideoMinRecvBandwidth());
+					}
+					if (kurentoTokenOptions.getVideoMaxSendBandwidth() != null) {
+						kurentoOptsResponse.addProperty("videoMaxSendBandwidth",
+								kurentoTokenOptions.getVideoMaxSendBandwidth());
+					}
+					if (kurentoTokenOptions.getVideoMinSendBandwidth() != null) {
+						kurentoOptsResponse.addProperty("videoMinSendBandwidth",
+								kurentoTokenOptions.getVideoMinSendBandwidth());
+					}
+					if (kurentoTokenOptions.getAllowedFilters().length > 0) {
+						JsonArray filters = new JsonArray();
+						for (String filter : kurentoTokenOptions.getAllowedFilters()) {
+							filters.add(filter);
+						}
+						kurentoOptsResponse.add("allowedFilters", filters);
+					}
+					responseJson.add("kurentoOptions", kurentoOptsResponse);
 				}
-				kurentoOptsResponse.add("allowedFilters", filters);
+				return new ResponseEntity<>(responseJson.toString(), getResponseHeaders(), HttpStatus.OK);
+			} finally {
+				session.closingLock.readLock().unlock();
 			}
-			responseJson.add("kurentoOptions", kurentoOptsResponse);
+		} else {
+			log.error("Session {} is in the process of closing. Token couldn't be generated", sessionId);
+			return this.generateErrorResponse("Session " + sessionId + " not found", "/api/tokens",
+					HttpStatus.NOT_FOUND);
 		}
-		return new ResponseEntity<>(responseJson.toString(), getResponseHeaders(), HttpStatus.OK);
 	}
 
 	@RequestMapping(value = "/recordings/start", method = RequestMethod.POST)
@@ -717,15 +737,25 @@ public class SessionRestController {
 				videoActive, typeOfVideo, frameRate, videoDimensions, null, false, rtspUri, adaptativeBitrate,
 				onlyPlayWithSubscribers);
 
-		try {
-			Participant ipcamParticipant = this.sessionManager.publishIpcam(session, mediaOptions, data);
-			return new ResponseEntity<>(ipcamParticipant.toJson().toString(), getResponseHeaders(), HttpStatus.OK);
-		} catch (MalformedURLException e) {
-			return this.generateErrorResponse("\"rtspUri\" parameter is not a valid rtsp uri",
-					"/api/sessions/" + sessionId + "/connection", HttpStatus.BAD_REQUEST);
-		} catch (Exception e) {
-			return this.generateErrorResponse(e.getMessage(), "/api/sessions/" + sessionId + "/connection",
-					HttpStatus.INTERNAL_SERVER_ERROR);
+		// While closing a session IP cameras can't be published
+		if (session.closingLock.readLock().tryLock()) {
+			try {
+				if (session.isClosed()) {
+					return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+				}
+				Participant ipcamParticipant = this.sessionManager.publishIpcam(session, mediaOptions, data);
+				return new ResponseEntity<>(ipcamParticipant.toJson().toString(), getResponseHeaders(), HttpStatus.OK);
+			} catch (MalformedURLException e) {
+				return this.generateErrorResponse("\"rtspUri\" parameter is not a valid rtsp uri",
+						"/api/sessions/" + sessionId + "/connection", HttpStatus.BAD_REQUEST);
+			} catch (Exception e) {
+				return this.generateErrorResponse(e.getMessage(), "/api/sessions/" + sessionId + "/connection",
+						HttpStatus.INTERNAL_SERVER_ERROR);
+			} finally {
+				session.closingLock.readLock().unlock();
+			}
+		} else {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
 	}
 

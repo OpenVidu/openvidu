@@ -245,19 +245,33 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 				Token tokenObj = sessionManager.consumeToken(sessionId, participantPrivatetId, token);
 				Participant participant;
+				io.openvidu.server.core.Session session = sessionManager.getSessionWithNotActive(sessionId);
 
-				if (generateRecorderParticipant) {
-					participant = sessionManager.newRecorderParticipant(sessionId, participantPrivatetId, tokenObj,
-							clientMetadata);
+				// While closing a session users can't join
+				if (session.closingLock.readLock().tryLock()) {
+					try {
+						if (generateRecorderParticipant) {
+							participant = sessionManager.newRecorderParticipant(sessionId, participantPrivatetId,
+									tokenObj, clientMetadata);
+						} else {
+							participant = sessionManager.newParticipant(sessionId, participantPrivatetId, tokenObj,
+									clientMetadata, location, platform,
+									httpSession.getId().substring(0, Math.min(16, httpSession.getId().length())));
+						}
+
+						rpcConnection.setSessionId(sessionId);
+						sessionManager.joinRoom(participant, sessionId, request.getId());
+
+					} finally {
+						session.closingLock.readLock().unlock();
+					}
 				} else {
-					participant = sessionManager.newParticipant(sessionId, participantPrivatetId, tokenObj,
-							clientMetadata, location, platform,
-							httpSession.getId().substring(0, Math.min(16, httpSession.getId().length())));
+					log.error(
+							"ERROR: The session {} is in the process of closing while participant {} (privateId) was joining",
+							sessionId, participantPrivatetId);
+					throw new OpenViduException(Code.ROOM_CLOSED_ERROR_CODE,
+							"Unable to join the session. Session " + sessionId + " was in the process of closing");
 				}
-
-				rpcConnection.setSessionId(sessionId);
-				sessionManager.joinRoom(participant, sessionId, request.getId());
-
 			} else {
 				log.error("ERROR: Metadata format set in client-side is incorrect");
 				throw new OpenViduException(Code.USER_METADATA_FORMAT_INVALID_ERROR_CODE,
