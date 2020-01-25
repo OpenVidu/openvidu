@@ -77,12 +77,12 @@ export class Session implements EventDispatcher {
      */
     remoteStreamsCreated: ObjMap<boolean> = {};
 
-    /**	
-     * @hidden	
+    /**
+     * @hidden
      */
     isFirstIonicIosSubscriber = true;
-    /**	
-     * @hidden	
+    /**
+     * @hidden
      */
     countDownForIonicIosSubscribersActive = true;
     /**
@@ -1221,6 +1221,7 @@ export class Session implements EventDispatcher {
             this.sessionId = <string>queryParams['sessionId'];
             const secret = queryParams['secret'];
             const recorder = queryParams['recorder'];
+            const coturnIp = queryParams['coturnIp'];
             const turnUsername = queryParams['turnUsername'];
             const turnCredential = queryParams['turnCredential'];
             const role = queryParams['role'];
@@ -1234,13 +1235,14 @@ export class Session implements EventDispatcher {
                 this.openvidu.recorder = true;
             }
             if (!!turnUsername && !!turnCredential) {
-                const stunUrl = 'stun:' + url.hostname + ':3478';
-                const turnUrl1 = 'turn:' + url.hostname + ':3478';
+                const stunUrl = 'stun:' + coturnIp + ':3478';
+                const turnUrl1 = 'turn:' + coturnIp + ':3478';
                 const turnUrl2 = turnUrl1 + '?transport=tcp';
                 this.openvidu.iceServers = [
                     { urls: [stunUrl] },
                     { urls: [turnUrl1, turnUrl2], username: turnUsername, credential: turnCredential }
                 ];
+                console.log("STUN/TURN server IP" + coturnIp);
                 console.log('TURN temp credentials [' + turnUsername + ':' + turnCredential + ']');
             }
             if (!!role) {
