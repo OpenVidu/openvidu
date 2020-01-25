@@ -1242,7 +1242,7 @@ export class Session implements EventDispatcher {
                     { urls: [stunUrl] },
                     { urls: [turnUrl1, turnUrl2], username: turnUsername, credential: turnCredential }
                 ];
-                console.log("STUN/TURN server IP" + coturnIp);
+                console.log("STUN/TURN server IP: " + coturnIp);
                 console.log('TURN temp credentials [' + turnUsername + ':' + turnCredential + ']');
             }
             if (!!role) {
