@@ -38,6 +38,11 @@ import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+
 import org.apache.http.Header;
 import org.apache.http.message.BasicHeader;
 import org.kurento.jsonrpc.JsonUtils;
@@ -49,11 +54,6 @@ import org.springframework.boot.info.BuildProperties;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.support.PropertiesLoaderUtils;
 import org.springframework.stereotype.Component;
-
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.server.OpenViduServer;
@@ -159,6 +159,9 @@ public class OpenviduConfig {
 
 	@Value("${openvidu.streams.video.min-send-bandwidth}")
 	protected int openviduStreamsVideoMinSendBandwidth;
+
+	@Value("${coturn.ip}")
+	protected String coturnIp;
 
 	@Value("${coturn.redis.ip}")
 	protected String coturnRedisIp;
@@ -271,6 +274,10 @@ public class OpenviduConfig {
 
 	public int getVideoMinSendBandwidth() {
 		return this.openviduStreamsVideoMinSendBandwidth;
+	}
+
+	public String getCoturnIp() {
+		return this.coturnIp;
 	}
 
 	public String getCoturnDatabaseString() {

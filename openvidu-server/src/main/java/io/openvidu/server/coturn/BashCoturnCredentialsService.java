@@ -45,6 +45,7 @@ public class BashCoturnCredentialsService extends CoturnCredentialsService {
 				log.warn("Redis DB is not accesible with connection string " + this.coturnDatabaseString);
 				log.error("No COTURN server will be automatically configured for clients");
 			} else {
+				log.info("COTURN IP: " + this.openviduConfig.getCoturnIp());
 				log.info("COTURN Redis DB accessible with string " + this.coturnDatabaseString);
 				log.info("Cleaning COTURN DB...");
 				if (response.contains("log file opened")) {
