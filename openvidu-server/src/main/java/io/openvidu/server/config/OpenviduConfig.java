@@ -19,10 +19,12 @@ package io.openvidu.server.config;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.Inet6Address;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -68,7 +70,7 @@ public class OpenviduConfig {
 	public static final Set<String> OPENVIDU_STRING_PROPERTIES = new HashSet<>(Arrays.asList("openvidu.secret",
 			"openvidu.publicurl", "openvidu.recording.path", "openvidu.recording.notification",
 			"openvidu.recording.custom-layout", "openvidu.recording.composed-url", "openvidu.recording.version",
-			"openvidu.webhook.endpoint", "openvidu.cdr.path"));
+			"openvidu.webhook.endpoint", "openvidu.cdr.path", "coturn.ip", "coturn.redis.ip"));
 
 	public static final Set<String> OPENVIDU_INTEGER_PROPERTIES = new HashSet<>(
 			Arrays.asList("openvidu.recording.autostop-timeout", "openvidu.streams.video.max-recv-bandwidth",
@@ -160,9 +162,6 @@ public class OpenviduConfig {
 	@Value("${openvidu.streams.video.min-send-bandwidth}")
 	protected int openviduStreamsVideoMinSendBandwidth;
 
-	@Value("${coturn.ip}")
-	protected String coturnIp;
-
 	@Value("${coturn.redis.ip}")
 	protected String coturnRedisIp;
 
@@ -174,6 +173,9 @@ public class OpenviduConfig {
 
 	@Value("${coturn.redis.connect-timeout}")
 	protected String coturnRedisConnectTimeout;
+
+	@Value("#{'${coturn.ip:}'.length() > 0 ? '${coturn.ip:}' : \"\"}")
+	protected String coturnIp;
 
 	@Value("#{'${spring.profiles.active:}'.length() > 0 ? '${spring.profiles.active:}'.split(',') : \"default\"}")
 	protected String springProfile;
@@ -378,6 +380,21 @@ public class OpenviduConfig {
 		}
 	}
 
+	/*
+	 * This method checks all types of internet addresses (IPv4, IPv6 and Domains)
+	 */
+	public void checkStringValidInetAddress(Map<String, ?> parameters, String key) throws Exception {
+		String inetAddress = this.checkString(parameters, key);
+		if (!inetAddress.isEmpty()) {
+			try {
+				Inet6Address.getByName(inetAddress).getHostAddress();
+			} catch (UnknownHostException e) {
+				throw new Exception("String value: ''" + inetAddress + "' with key: '" + key +
+					"' is not a valid Internet Address (IP or Domain Name): " + e.getMessage());
+			}
+		}
+    }
+
 	public void checkStringValidPathFormat(Map<String, ?> parameters, String key) throws Exception {
 		try {
 			String stringPath = this.checkString(parameters, key);
@@ -566,6 +583,12 @@ public class OpenviduConfig {
 				break;
 			case "openvidu.cdr.path":
 				checkStringValidPathFormat(parameters, parameter);
+				break;
+			case "coturn.ip":
+				checkStringValidInetAddress(parameters, parameter);
+				break;
+			case "coturn.redis.ip":
+				checkStringValidInetAddress(parameters, parameter);
 				break;
 			default:
 				log.warn("Unknown configuration parameter '{}'", parameter);
@@ -859,6 +882,17 @@ public class OpenviduConfig {
 		this.setFinalUrl(finalUrl);
 		OpenViduServer.httpUrl = this.getFinalUrl();
 		OpenViduServer.publicurlType = type;
+
+		if (this.coturnIp.isEmpty()) {
+
+			try {
+				this.coturnIp = new URL(this.getFinalUrl()).getHost();
+				log.info("Coturn IP: " + coturnIp);
+			} catch(MalformedURLException e) {
+				log.error("Can't get Domain name from OpenVidu public Url: " + e.getMessage());
+			}
+		}
+
 	}
 
 	private String listToQuotedStringifiedArray(List<String> list) {
