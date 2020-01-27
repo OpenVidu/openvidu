@@ -3098,7 +3098,7 @@ public class OpenViduTestAppE2eTest {
 			@Override
 			public Boolean apply(WebDriver input) {
 				return element.getAttribute("duration").matches(
-						durationInSeconds - 1 + "\\.[8-9][0-9]{0,5}|" + durationInSeconds + "\\.[0-2][0-9]{0,5}");
+						durationInSeconds - 1 + "\\.[5-9][0-9]{0,5}|" + durationInSeconds + "\\.[0-5][0-9]{0,5}");
 			}
 		};
 	}
