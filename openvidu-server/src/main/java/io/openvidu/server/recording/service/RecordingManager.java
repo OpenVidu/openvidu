@@ -388,18 +388,16 @@ public class RecordingManager {
 		return this.getAllRecordingsFromHost();
 	}
 
-	public String getFreeRecordingId(String sessionId, String shortSessionId) {
+	public String getFreeRecordingId(String sessionId) {
 		Set<String> recordingIds = this.getRecordingIdsFromHost();
-		String recordingId = shortSessionId;
+		String recordingId = sessionId;
 		boolean isPresent = recordingIds.contains(recordingId);
 		int i = 1;
-
 		while (isPresent) {
-			recordingId = shortSessionId + "-" + i;
+			recordingId = sessionId + "-" + i;
 			i++;
 			isPresent = recordingIds.contains(recordingId);
 		}
-
 		return recordingId;
 	}
 

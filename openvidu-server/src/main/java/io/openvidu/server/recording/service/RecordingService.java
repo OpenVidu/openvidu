@@ -136,8 +136,7 @@ public abstract class RecordingService {
 	 */
 	protected PropertiesRecordingId setFinalRecordingNameAndGetFreeRecordingId(Session session,
 			RecordingProperties properties) {
-		String recordingId = this.recordingManager.getFreeRecordingId(session.getSessionId(),
-				this.getShortSessionId(session));
+		String recordingId = this.recordingManager.getFreeRecordingId(session.getSessionId());
 		if (properties.name() == null || properties.name().isEmpty()) {
 			// No name provided for the recording file. Use recordingId
 			RecordingProperties.Builder builder = new RecordingProperties.Builder().name(recordingId)
@@ -170,11 +169,6 @@ public abstract class RecordingService {
 		} catch (IOException | InterruptedException e) {
 			log.error("KMS recording file permissions failed to update. Error: {}", e.getMessage());
 		}
-	}
-
-	protected String getShortSessionId(Session session) {
-		return session.getSessionId().substring(session.getSessionId().lastIndexOf('/') + 1,
-				session.getSessionId().length());
 	}
 
 	protected OpenViduException failStartRecording(Session session, Recording recording, String errorMessage) {

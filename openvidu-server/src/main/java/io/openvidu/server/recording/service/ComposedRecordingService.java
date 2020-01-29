@@ -151,7 +151,7 @@ public class ComposedRecordingService extends RecordingService {
 
 		List<String> envs = new ArrayList<>();
 
-		String layoutUrl = this.getLayoutUrl(recording, this.getShortSessionId(session));
+		String layoutUrl = this.getLayoutUrl(recording);
 
 		envs.add("URL=" + layoutUrl);
 		envs.add("ONLY_VIDEO=" + !properties.hasAudio());
@@ -471,7 +471,7 @@ public class ComposedRecordingService extends RecordingService {
 		throw e;
 	}
 
-	private String getLayoutUrl(Recording recording, String shortSessionId) throws OpenViduException {
+	private String getLayoutUrl(Recording recording) throws OpenViduException {
 		String secret = openviduConfig.getOpenViduSecret();
 
 		// Check if "customLayout" property defines a final URL
@@ -482,7 +482,7 @@ public class ComposedRecordingService extends RecordingService {
 					URL url = new URL(layout);
 					log.info("\"customLayout\" property has a URL format ({}). Using it to connect to custom layout",
 							url.toString());
-					return this.processCustomLayoutUrlFormat(url, shortSessionId);
+					return this.processCustomLayoutUrlFormat(url, recording.getSessionId());
 				} catch (MalformedURLException e) {
 					String layoutPath = openviduConfig.getOpenviduRecordingCustomLayout() + layout;
 					layoutPath = layoutPath.endsWith("/") ? layoutPath : (layoutPath + "/");
@@ -530,7 +530,7 @@ public class ComposedRecordingService extends RecordingService {
 			}
 			layout += "/index.html";
 			finalUrl = (startsWithHttp ? "http" : "https") + "://OPENVIDUAPP:" + secret + "@" + recordingUrl
-					+ "/layouts/custom" + layout + "?sessionId=" + shortSessionId + "&secret=" + secret;
+					+ "/layouts/custom" + layout + "?sessionId=" + recording.getSessionId() + "&secret=" + secret;
 		} else {
 			layout = recording.getRecordingLayout().name().toLowerCase().replaceAll("_", "-");
 			int port = startsWithHttp ? 80 : 443;
@@ -540,8 +540,7 @@ public class ComposedRecordingService extends RecordingService {
 				log.error(e.getMessage());
 			}
 			finalUrl = (startsWithHttp ? "http" : "https") + "://OPENVIDUAPP:" + secret + "@" + recordingUrl
-					+ "/#/layout-" + layout + "/" + shortSessionId + "/" + secret + "/" + port + "/"
-					+ !recording.hasAudio();
+					+ "/#/layout-" + layout + "/" + recording.getSessionId() + "/" + secret + "/" + port + "/" + !recording.hasAudio();
 		}
 
 		return finalUrl;
