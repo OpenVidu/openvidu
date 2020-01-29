@@ -151,7 +151,7 @@ public class RpcNotificationService {
 	}
 
 	private boolean isIpcamParticipant(String participantPrivateId) {
-		return participantPrivateId.startsWith("IPCAM-");
+		return participantPrivateId.startsWith("ipc_");
 	}
 
 }

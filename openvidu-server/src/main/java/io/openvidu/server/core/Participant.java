@@ -146,7 +146,7 @@ public class Participant {
 	}
 
 	public boolean isIpcam() {
-		return this.platform.equals("IPCAM") && this.participantPrivatetId.startsWith("IPCAM-");
+		return this.platform.equals("IPCAM") && this.participantPrivatetId.startsWith("ipc_");
 	}
 
 	public String getPublisherStreamId() {
