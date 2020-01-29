@@ -104,7 +104,7 @@ public class KurentoParticipant extends Participant {
 		String type = mediaOptions.hasVideo() ? mediaOptions.getTypeOfVideo() : "MICRO";
 		final String publisherStreamId = IdentifierPrefixes.STREAM_ID + type.substring(0, Math.min(type.length(), 3))
 				+ "_" + RandomStringUtils.randomAlphabetic(1).toUpperCase() + RandomStringUtils.randomAlphanumeric(3)
-				+ "_" + this.getParticipantPublicId().substring(4, this.getParticipantPublicId().length());
+				+ "_" + this.getParticipantPublicId();
 		publisher.setStreamId(publisherStreamId);
 		publisher.setEndpointName(publisherStreamId);
 		publisher.setMediaOptions(mediaOptions);

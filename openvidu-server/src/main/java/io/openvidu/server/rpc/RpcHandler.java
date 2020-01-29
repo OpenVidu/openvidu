@@ -326,9 +326,19 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		}
 
 		String senderPublicId = getStringParam(request, ProtocolElements.RECEIVEVIDEO_SENDER_PARAM);
+
 		// Parse sender public id from stream id
-		senderPublicId = IdentifierPrefixes.PARTICIPANT_PUBLIC_ID
-				+ senderPublicId.substring(senderPublicId.lastIndexOf("_") + 1, senderPublicId.length());
+		if (senderPublicId.startsWith(IdentifierPrefixes.STREAM_ID + "IPC_")
+				&& senderPublicId.contains(IdentifierPrefixes.IPCAM_ID)) {
+			// If IPCAM
+			senderPublicId = senderPublicId.substring(senderPublicId.indexOf("_" + IdentifierPrefixes.IPCAM_ID) + 1,
+					senderPublicId.length());
+		} else {
+			// Not IPCAM
+			senderPublicId = senderPublicId.substring(
+					senderPublicId.lastIndexOf(IdentifierPrefixes.PARTICIPANT_PUBLIC_ID), senderPublicId.length());
+		}
+
 		String sdpOffer = getStringParam(request, ProtocolElements.RECEIVEVIDEO_SDPOFFER_PARAM);
 
 		sessionManager.subscribe(participant, senderPublicId, sdpOffer, request.getId());
