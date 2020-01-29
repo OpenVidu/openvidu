@@ -35,15 +35,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
-
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 
 import org.apache.http.Header;
 import org.apache.http.message.BasicHeader;
@@ -53,9 +50,18 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.info.BuildProperties;
+import org.springframework.core.env.AbstractEnvironment;
+import org.springframework.core.env.EnumerablePropertySource;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.PropertySource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.support.PropertiesLoaderUtils;
 import org.springframework.stereotype.Component;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.server.OpenViduServer;
@@ -185,6 +191,9 @@ public class OpenviduConfig {
 	public static List<Header> webhookHeadersList = new ArrayList<>();
 	public static List<CDREventName> webhookEventsList = new ArrayList<>();
 	public static Properties externalizedProperties;
+
+	@Autowired
+	protected Environment env;
 
 	public List<String> getKmsUris() {
 		return kmsUrisList;
@@ -389,11 +398,11 @@ public class OpenviduConfig {
 			try {
 				Inet6Address.getByName(inetAddress).getHostAddress();
 			} catch (UnknownHostException e) {
-				throw new Exception("String value: ''" + inetAddress + "' with key: '" + key +
-					"' is not a valid Internet Address (IP or Domain Name): " + e.getMessage());
+				throw new Exception("String value: ''" + inetAddress + "' with key: '" + key
+						+ "' is not a valid Internet Address (IP or Domain Name): " + e.getMessage());
 			}
 		}
-    }
+	}
 
 	public void checkStringValidPathFormat(Map<String, ?> parameters, String key) throws Exception {
 		try {
@@ -573,7 +582,9 @@ public class OpenviduConfig {
 			case "openvidu.recording.composed-url":
 				String composedUrl = checkString(parameters, parameter);
 				try {
-					checkUrl(composedUrl);
+					if (!composedUrl.isEmpty()) {
+						checkUrl(composedUrl);
+					}
 				} catch (Exception e) {
 					throw new Exception("Property 'openvidu.recording.composed-url' not valid. " + e.getMessage());
 				}
@@ -805,21 +816,8 @@ public class OpenviduConfig {
 
 	@PostConstruct
 	protected void init() {
-
 		// Check configuration parameters
-		Map<String, ?> props = null;
-		if (!this.springConfigLocation.isEmpty()) {
-			try {
-				externalizedProperties = this.retrieveExternalizedProperties();
-				props = (Map) this.externalizedProperties;
-			} catch (Exception e) {
-				log.error(e.getMessage());
-				log.error("Shutting down OpenVidu Server");
-				System.exit(1);
-			}
-		} else {
-			props = (Map) System.getProperties();
-		}
+		Map<String, ?> props = getFinalPropertiesInUse();
 
 		try {
 			this.checkConfigurationParameters(props, OPENVIDU_PROPERTIES, true);
@@ -888,11 +886,22 @@ public class OpenviduConfig {
 			try {
 				this.coturnIp = new URL(this.getFinalUrl()).getHost();
 				log.info("Coturn IP: " + coturnIp);
-			} catch(MalformedURLException e) {
+			} catch (MalformedURLException e) {
 				log.error("Can't get Domain name from OpenVidu public Url: " + e.getMessage());
 			}
 		}
 
+	}
+
+	protected Map<String, Object> getFinalPropertiesInUse() {
+		final SortedMap<String, Object> props = new TreeMap<>();
+		for (final PropertySource<?> propertySource : ((AbstractEnvironment) env).getPropertySources()) {
+			if (!(propertySource instanceof EnumerablePropertySource))
+				continue;
+			for (final String name : ((EnumerablePropertySource<?>) propertySource).getPropertyNames())
+				props.computeIfAbsent(name, propertySource::getProperty);
+		}
+		return props;
 	}
 
 	private String listToQuotedStringifiedArray(List<String> list) {
