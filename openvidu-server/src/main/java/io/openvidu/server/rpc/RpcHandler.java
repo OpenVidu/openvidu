@@ -47,6 +47,7 @@ import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.EndReason;
+import io.openvidu.server.core.IdentifierPrefixes;
 import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.SessionManager;
@@ -231,7 +232,7 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 		if (openviduConfig.isOpenViduSecret(secret)) {
 			sessionManager.newInsecureParticipant(participantPrivatetId);
-			token = "tok_" + RandomStringUtils.randomAlphabetic(1).toUpperCase()
+			token = IdentifierPrefixes.TOKEN_ID + RandomStringUtils.randomAlphabetic(1).toUpperCase()
 					+ RandomStringUtils.randomAlphanumeric(15);
 			if (recorder) {
 				generateRecorderParticipant = true;
@@ -326,7 +327,8 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 		String senderPublicId = getStringParam(request, ProtocolElements.RECEIVEVIDEO_SENDER_PARAM);
 		// Parse sender public id from stream id
-		senderPublicId = "con" + senderPublicId.substring(senderPublicId.lastIndexOf("_"), senderPublicId.length());
+		senderPublicId = IdentifierPrefixes.PARTICIPANT_PUBLIC_ID
+				+ senderPublicId.substring(senderPublicId.lastIndexOf("_") + 1, senderPublicId.length());
 		String sdpOffer = getStringParam(request, ProtocolElements.RECEIVEVIDEO_SDPOFFER_PARAM);
 
 		sessionManager.subscribe(participant, senderPublicId, sdpOffer, request.getId());

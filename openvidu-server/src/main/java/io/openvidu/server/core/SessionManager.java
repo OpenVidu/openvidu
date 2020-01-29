@@ -368,14 +368,14 @@ public abstract class SessionManager {
 	public Participant newParticipant(String sessionId, String participantPrivatetId, Token token,
 			String clientMetadata, GeoLocation location, String platform, String finalUserId) {
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
-			String participantPublicId = "con_" + RandomStringUtils.randomAlphabetic(1).toUpperCase()
-					+ RandomStringUtils.randomAlphanumeric(9);
+			String participantPublicId = IdentifierPrefixes.PARTICIPANT_PUBLIC_ID
+					+ RandomStringUtils.randomAlphabetic(1).toUpperCase() + RandomStringUtils.randomAlphanumeric(9);
 			Participant p = new Participant(finalUserId, participantPrivatetId, participantPublicId, sessionId, token,
 					clientMetadata, location, platform, EndpointType.WEBRTC_ENDPOINT, null);
 			while (this.sessionidParticipantpublicidParticipant.get(sessionId).putIfAbsent(participantPublicId,
 					p) != null) {
-				participantPublicId = "con_" + RandomStringUtils.randomAlphabetic(1).toUpperCase()
-						+ RandomStringUtils.randomAlphanumeric(9);
+				participantPublicId = IdentifierPrefixes.PARTICIPANT_PUBLIC_ID
+						+ RandomStringUtils.randomAlphabetic(1).toUpperCase() + RandomStringUtils.randomAlphanumeric(9);
 				p.setParticipantPublicId(participantPublicId);
 			}
 

@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import com.google.gson.JsonObject;
 
 import io.openvidu.client.OpenViduException;
+import io.openvidu.server.core.IdentifierPrefixes;
 
 public class RpcNotificationService {
 
@@ -151,7 +152,7 @@ public class RpcNotificationService {
 	}
 
 	private boolean isIpcamParticipant(String participantPrivateId) {
-		return participantPrivateId.startsWith("ipc_");
+		return participantPrivateId.startsWith(IdentifierPrefixes.IPCAM_ID);
 	}
 
 }

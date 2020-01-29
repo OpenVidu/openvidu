@@ -47,6 +47,7 @@ import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.EndReason;
+import io.openvidu.server.core.IdentifierPrefixes;
 import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.kurento.endpoint.MediaEndpoint;
@@ -101,9 +102,9 @@ public class KurentoParticipant extends Participant {
 
 	public void createPublishingEndpoint(MediaOptions mediaOptions) {
 		String type = mediaOptions.hasVideo() ? mediaOptions.getTypeOfVideo() : "MICRO";
-		final String publisherStreamId = "str_" + type.substring(0, Math.min(type.length(), 3)) + "_"
-				+ RandomStringUtils.randomAlphabetic(1).toUpperCase() + RandomStringUtils.randomAlphanumeric(3) + "_"
-				+ this.getParticipantPublicId().substring(4, this.getParticipantPublicId().length());
+		final String publisherStreamId = IdentifierPrefixes.STREAM_ID + type.substring(0, Math.min(type.length(), 3))
+				+ "_" + RandomStringUtils.randomAlphabetic(1).toUpperCase() + RandomStringUtils.randomAlphanumeric(3)
+				+ "_" + this.getParticipantPublicId().substring(4, this.getParticipantPublicId().length());
 		publisher.setStreamId(publisherStreamId);
 		publisher.setEndpointName(publisherStreamId);
 		publisher.setMediaOptions(mediaOptions);

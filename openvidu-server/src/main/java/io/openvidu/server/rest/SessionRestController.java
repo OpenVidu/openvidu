@@ -55,6 +55,7 @@ import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.EndReason;
+import io.openvidu.server.core.IdentifierPrefixes;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.core.SessionManager;
@@ -159,7 +160,7 @@ public class SessionRestController {
 			}
 			sessionId = customSessionId;
 		} else {
-			sessionId = "ses_" + RandomStringUtils.randomAlphabetic(1).toUpperCase()
+			sessionId = IdentifierPrefixes.SESSION_ID + RandomStringUtils.randomAlphabetic(1).toUpperCase()
 					+ RandomStringUtils.randomAlphanumeric(9);
 		}
 

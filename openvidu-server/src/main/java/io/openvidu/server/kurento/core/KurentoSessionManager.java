@@ -52,6 +52,7 @@ import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.FinalUser;
+import io.openvidu.server.core.IdentifierPrefixes;
 import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
@@ -900,14 +901,13 @@ public class KurentoSessionManager extends SessionManager {
 		}
 
 		String rtspConnectionId = kMediaOptions.getTypeOfVideo() + "_" + protocol + "_"
-				+ RandomStringUtils.randomAlphanumeric(4).toUpperCase() + "_" + url.getAuthority()
-				+ url.getPath();
+				+ RandomStringUtils.randomAlphanumeric(4).toUpperCase() + "_" + url.getAuthority() + url.getPath();
 		rtspConnectionId = rtspConnectionId.replace("/", "_").replace("-", "").replace(".", "_");
-		rtspConnectionId = "ipc_" + rtspConnectionId;
+		rtspConnectionId = IdentifierPrefixes.IPCAM_ID + rtspConnectionId;
 
 		// Store a "fake" participant for the IpCam connection
 		this.newInsecureParticipant(rtspConnectionId);
-		String token = "tok_" + RandomStringUtils.randomAlphabetic(1).toUpperCase()
+		String token = IdentifierPrefixes.TOKEN_ID + RandomStringUtils.randomAlphabetic(1).toUpperCase()
 				+ RandomStringUtils.randomAlphanumeric(15);
 		Token tokenObj = null;
 		if (this.isTokenValidInSession(token, sessionId, rtspConnectionId, serverMetadata)) {

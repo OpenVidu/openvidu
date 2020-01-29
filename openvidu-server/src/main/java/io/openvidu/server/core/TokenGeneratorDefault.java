@@ -40,7 +40,7 @@ public class TokenGeneratorDefault implements TokenGenerator {
 			KurentoTokenOptions kurentoTokenOptions) {
 		String token = OpenViduServer.wsUrl;
 		token += "?sessionId=" + sessionId;
-		token += "&token=" + "tok_" + RandomStringUtils.randomAlphabetic(1).toUpperCase()
+		token += "&token=" + IdentifierPrefixes.TOKEN_ID + RandomStringUtils.randomAlphabetic(1).toUpperCase()
 				+ RandomStringUtils.randomAlphanumeric(15);
 		token += "&role=" + role.name();
 		token += "&version=" + openviduConfig.getOpenViduServerVersion();

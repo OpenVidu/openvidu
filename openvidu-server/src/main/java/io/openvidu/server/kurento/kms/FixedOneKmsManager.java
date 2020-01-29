@@ -27,6 +27,8 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.kurento.client.KurentoClient;
 import org.kurento.commons.exception.KurentoException;
 
+import io.openvidu.server.core.IdentifierPrefixes;
+
 public class FixedOneKmsManager extends KmsManager {
 
 	@Override
@@ -60,7 +62,7 @@ public class FixedOneKmsManager extends KmsManager {
 		try {
 			List<KmsProperties> kmsProps = new ArrayList<>();
 			for (String kmsUri : this.openviduConfig.getKmsUris()) {
-				String kmsId = "kms_" + RandomStringUtils.randomAlphabetic(1).toUpperCase()
+				String kmsId = IdentifierPrefixes.KMS_ID + RandomStringUtils.randomAlphabetic(1).toUpperCase()
 						+ RandomStringUtils.randomAlphanumeric(7);
 				kmsProps.add(new KmsProperties(kmsId, kmsUri));
 			}
