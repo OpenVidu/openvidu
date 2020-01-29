@@ -324,11 +324,12 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 			return;
 		}
 
-		String senderName = getStringParam(request, ProtocolElements.RECEIVEVIDEO_SENDER_PARAM);
-		senderName = senderName.substring(0, senderName.indexOf("_"));
+		String senderPublicId = getStringParam(request, ProtocolElements.RECEIVEVIDEO_SENDER_PARAM);
+		// Parse sender public id from stream id
+		senderPublicId = "con" + senderPublicId.substring(senderPublicId.lastIndexOf("_"), senderPublicId.length());
 		String sdpOffer = getStringParam(request, ProtocolElements.RECEIVEVIDEO_SDPOFFER_PARAM);
 
-		sessionManager.subscribe(participant, senderName, sdpOffer, request.getId());
+		sessionManager.subscribe(participant, senderPublicId, sdpOffer, request.getId());
 	}
 
 	private void unsubscribeFromVideo(RpcConnection rpcConnection, Request<JsonObject> request) {
