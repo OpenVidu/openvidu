@@ -100,9 +100,10 @@ public class KurentoParticipant extends Participant {
 	}
 
 	public void createPublishingEndpoint(MediaOptions mediaOptions) {
-		final String publisherStreamId = this.getParticipantPublicId() + "_"
-				+ (mediaOptions.hasVideo() ? mediaOptions.getTypeOfVideo() : "MICRO") + "_"
-				+ RandomStringUtils.random(5, true, false).toUpperCase();
+		String type = mediaOptions.hasVideo() ? mediaOptions.getTypeOfVideo() : "MICRO";
+		final String publisherStreamId = "str_" + type.substring(0, Math.min(type.length(), 3)) + "_"
+				+ RandomStringUtils.randomAlphabetic(1).toUpperCase() + RandomStringUtils.randomAlphanumeric(3) + "_"
+				+ this.getParticipantPublicId().substring(4, this.getParticipantPublicId().length());
 		publisher.setStreamId(publisherStreamId);
 		publisher.setEndpointName(publisherStreamId);
 		publisher.setMediaOptions(mediaOptions);

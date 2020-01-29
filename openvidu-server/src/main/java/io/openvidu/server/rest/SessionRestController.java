@@ -159,7 +159,8 @@ public class SessionRestController {
 			}
 			sessionId = customSessionId;
 		} else {
-			sessionId = RandomStringUtils.randomAlphanumeric(16).toLowerCase();
+			sessionId = "ses_" + RandomStringUtils.randomAlphabetic(1).toUpperCase()
+					+ RandomStringUtils.randomAlphanumeric(9);
 		}
 
 		Session sessionNotActive = sessionManager.storeSessionNotActive(sessionId, sessionProperties);
