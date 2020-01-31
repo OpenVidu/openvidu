@@ -524,8 +524,8 @@ public class KurentoSessionManager extends SessionManager {
 		}
 		session = new KurentoSession(sessionNotActive, kms, kurentoSessionEventsHandler, kurentoEndpointConfig);
 
-		sessionsNotActive.remove(session.getSessionId());
 		KurentoSession oldSession = (KurentoSession) sessions.putIfAbsent(session.getSessionId(), session);
+		sessionsNotActive.remove(session.getSessionId());
 		if (oldSession != null) {
 			log.warn("Session '{}' has just been created by another thread", session.getSessionId());
 			return oldSession;

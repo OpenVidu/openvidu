@@ -206,8 +206,8 @@ public class SingleStreamRecordingService extends RecordingService {
 		return finalRecordingArray[0];
 	}
 
-	public void startRecorderEndpointForPublisherEndpoint(Session session, String recordingId,
-			MediaProfileSpecType profile, Participant participant, CountDownLatch globalStartLatch) {
+	public void startRecorderEndpointForPublisherEndpoint(final Session session, String recordingId,
+			MediaProfileSpecType profile, final Participant participant, CountDownLatch globalStartLatch) {
 		log.info("Starting single stream recorder for stream {} in session {}", participant.getPublisherStreamId(),
 				session.getSessionId());
 
