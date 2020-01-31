@@ -494,7 +494,6 @@ public class RecordingManager {
 							log.info("Closing session {} after automatic stop of recording {}", session.getSessionId(),
 									recordingId);
 							sessionManager.closeSessionAndEmptyCollections(session, EndReason.automaticStop, true);
-							sessionManager.showTokens();
 						} else {
 							// There are users connected, but no one is publishing
 							session.closingLock.writeLock().unlock(); // We don't need the lock if session's not closing
@@ -536,7 +535,6 @@ public class RecordingManager {
 							"Ongoing recording of session {} was explicetly stopped within timeout for automatic recording stop. Closing session",
 							session.getSessionId());
 					sessionManager.closeSessionAndEmptyCollections(session, reason, false);
-					sessionManager.showTokens();
 				}
 				return cancelled;
 			} finally {

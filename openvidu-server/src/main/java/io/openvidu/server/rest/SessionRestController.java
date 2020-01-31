@@ -21,6 +21,7 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
@@ -165,6 +166,8 @@ public class SessionRestController {
 		}
 
 		Session sessionNotActive = sessionManager.storeSessionNotActive(sessionId, sessionProperties);
+		log.info("New session {} initialized {}", sessionId, this.sessionManager.getSessionsWithNotActive().stream()
+				.map(Session::getSessionId).collect(Collectors.toList()).toString());
 		JsonObject responseJson = new JsonObject();
 		responseJson.addProperty("id", sessionNotActive.getSessionId());
 		responseJson.addProperty("createdAt", sessionNotActive.getStartTime());
@@ -364,7 +367,7 @@ public class SessionRestController {
 		// While closing a session tokens can't be generated
 		if (session.closingLock.readLock().tryLock()) {
 			try {
-				String token = sessionManager.newToken(sessionId, role, metadata, kurentoTokenOptions);
+				String token = sessionManager.newToken(session, role, metadata, kurentoTokenOptions);
 
 				JsonObject responseJson = new JsonObject();
 				responseJson.addProperty("id", token);

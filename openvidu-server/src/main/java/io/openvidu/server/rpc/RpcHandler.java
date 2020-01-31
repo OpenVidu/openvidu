@@ -176,6 +176,13 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		String platform = getStringParam(request, ProtocolElements.JOINROOM_PLATFORM_PARAM);
 		String participantPrivatetId = rpcConnection.getParticipantPrivateId();
 
+		final io.openvidu.server.core.Session session = sessionManager.getSessionWithNotActive(sessionId);
+		if (session == null) {
+			log.error("ERROR: Session {} not found", sessionId);
+			throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE,
+					"Unable to join session. Session " + sessionId + " cannot be found");
+		}
+
 		InetAddress remoteAddress = null;
 		GeoLocation location = null;
 		Object obj = rpcConnection.getSession().getAttributes().get("remoteAddress");
@@ -234,24 +241,25 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 			sessionManager.newInsecureParticipant(participantPrivatetId);
 			token = IdentifierPrefixes.TOKEN_ID + RandomStringUtils.randomAlphabetic(1).toUpperCase()
 					+ RandomStringUtils.randomAlphanumeric(15);
+			sessionManager.newTokenForInsecureUser(session, token, null);
 			if (recorder) {
 				generateRecorderParticipant = true;
 			}
 		}
 
-		if (sessionManager.isTokenValidInSession(token, sessionId, participantPrivatetId, "")) {
-
+		Token tokenObj = session.consumeToken(token);
+		if (tokenObj != null) {
 			String clientMetadata = getStringParam(request, ProtocolElements.JOINROOM_METADATA_PARAM);
-
 			if (sessionManager.formatChecker.isServerMetadataFormatCorrect(clientMetadata)) {
-
-				Token tokenObj = sessionManager.consumeToken(sessionId, participantPrivatetId, token);
-				Participant participant;
-				io.openvidu.server.core.Session session = sessionManager.getSessionWithNotActive(sessionId);
 
 				// While closing a session users can't join
 				if (session.closingLock.readLock().tryLock()) {
+					if (session.isClosed()) {
+						throw new OpenViduException(Code.ROOM_CLOSED_ERROR_CODE,
+								"Unable to join the session. Session " + sessionId + " is closed");
+					}
 					try {
+						Participant participant;
 						if (generateRecorderParticipant) {
 							participant = sessionManager.newRecorderParticipant(sessionId, participantPrivatetId,
 									tokenObj, clientMetadata);
@@ -276,13 +284,13 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 				}
 			} else {
 				log.error("ERROR: Metadata format set in client-side is incorrect");
-				throw new OpenViduException(Code.USER_METADATA_FORMAT_INVALID_ERROR_CODE,
-						"Unable to join room. The metadata received from the client-side has an invalid format");
+				throw new OpenViduException(Code.USER_METADATA_FORMAT_INVALID_ERROR_CODE, "Unable to join session "
+						+ sessionId + ". The metadata received from the client-side has an invalid format");
 			}
 		} else {
-			log.error("ERROR: sessionId or token not valid");
+			log.error("ERROR: token not valid");
 			throw new OpenViduException(Code.USER_UNAUTHORIZED_ERROR_CODE,
-					"Unable to join room. The user is not authorized");
+					"Unable to join session " + sessionId + ". Token " + token + "is not valid");
 		}
 	}
 

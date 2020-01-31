@@ -170,9 +170,6 @@ public class KurentoSessionManager extends SessionManager {
 				this.coturnCredentialsService.deleteUser(p.getToken().getTurnCredentials().getUsername());
 			}
 
-			if (sessionidTokenTokenobj.get(sessionId) != null) {
-				sessionidTokenTokenobj.get(sessionId).remove(p.getToken().getToken());
-			}
 			boolean stillParticipant = false;
 			for (Session s : sessions.values()) {
 				if (s.getParticipantByPrivateId(p.getParticipantPrivateId()) != null) {
@@ -184,8 +181,6 @@ public class KurentoSessionManager extends SessionManager {
 				insecureUsers.remove(p.getParticipantPrivateId());
 			}
 		}
-
-		showTokens();
 
 		// Close Session if no more participants
 
@@ -222,7 +217,6 @@ public class KurentoSessionManager extends SessionManager {
 						log.info("No more participants in session '{}', removing it and closing it", sessionId);
 						this.closeSessionAndEmptyCollections(session, reason, true);
 						sessionClosedByLastParticipant = true;
-						showTokens();
 					} finally {
 						session.closingLock.writeLock().unlock();
 					}
@@ -909,10 +903,9 @@ public class KurentoSessionManager extends SessionManager {
 		this.newInsecureParticipant(rtspConnectionId);
 		String token = IdentifierPrefixes.TOKEN_ID + RandomStringUtils.randomAlphabetic(1).toUpperCase()
 				+ RandomStringUtils.randomAlphanumeric(15);
-		Token tokenObj = null;
-		if (this.isTokenValidInSession(token, sessionId, rtspConnectionId, serverMetadata)) {
-			tokenObj = this.consumeToken(sessionId, rtspConnectionId, token);
-		}
+		this.newTokenForInsecureUser(session, token, serverMetadata);
+		final Token tokenObj = session.consumeToken(token);
+
 		Participant ipcamParticipant = this.newIpcamParticipant(sessionId, rtspConnectionId, tokenObj, location,
 				mediaOptions.getTypeOfVideo());
 

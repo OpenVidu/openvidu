@@ -89,7 +89,6 @@ public abstract class SessionManager {
 	protected ConcurrentMap<String, ConcurrentLinkedQueue<CDREventRecording>> sessionidAccumulatedRecordings = new ConcurrentHashMap<>();
 
 	protected ConcurrentMap<String, Boolean> insecureUsers = new ConcurrentHashMap<>();
-	public ConcurrentMap<String, ConcurrentHashMap<String, Token>> sessionidTokenTokenobj = new ConcurrentHashMap<>();
 
 	public abstract void joinRoom(Participant participant, String sessionId, Integer transactionId);
 
@@ -281,51 +280,29 @@ public abstract class SessionManager {
 		final String sessionId = sessionNotActive.getSessionId();
 		this.sessionsNotActive.put(sessionId, sessionNotActive);
 		this.initializeCollections(sessionId);
-		showTokens();
 		return sessionNotActive;
 	}
 
-	public String newToken(String sessionId, OpenViduRole role, String serverMetadata,
+	public String newToken(Session session, OpenViduRole role, String serverMetadata,
 			KurentoTokenOptions kurentoTokenOptions) throws OpenViduException {
-
-		Map<String, Token> tokenMap = this.sessionidTokenTokenobj.get(sessionId);
-
-		if (tokenMap != null) {
-
-			if (!formatChecker.isServerMetadataFormatCorrect(serverMetadata)) {
-				log.error("Data invalid format");
-				throw new OpenViduException(Code.GENERIC_ERROR_CODE, "Data invalid format");
-			}
-
-			Token token = tokenGenerator.generateToken(sessionId, role, serverMetadata, kurentoTokenOptions);
-			tokenMap.putIfAbsent(token.getToken(), token);
-			showTokens();
-			return token.getToken();
-
-		} else {
-			log.error("sessionId [" + sessionId + "] was not found (race condition error)");
-			throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE, "sessionId [" + sessionId + "] not found");
+		if (!formatChecker.isServerMetadataFormatCorrect(serverMetadata)) {
+			log.error("Data invalid format");
+			throw new OpenViduException(Code.GENERIC_ERROR_CODE, "Data invalid format");
 		}
+		Token tokenObj = tokenGenerator.generateToken(session.getSessionId(), role, serverMetadata,
+				kurentoTokenOptions);
+		session.storeToken(tokenObj);
+		session.showTokens("Token created");
+		return tokenObj.getToken();
 	}
 
-	public boolean isTokenValidInSession(String token, String sessionId, String participanPrivatetId,
-			String serverMetadata) {
-		if (!this.isInsecureParticipant(participanPrivatetId)) {
-			if (this.sessionidTokenTokenobj.get(sessionId) != null) {
-				return this.sessionidTokenTokenobj.get(sessionId).containsKey(token);
-			} else {
-				return false;
-			}
-		} else {
-			this.initializeCollections(sessionId);
-			this.sessionidTokenTokenobj.get(sessionId).putIfAbsent(token,
-					new Token(token, OpenViduRole.PUBLISHER, serverMetadata,
-							this.coturnCredentialsService.isCoturnAvailable()
-									? this.coturnCredentialsService.createUser()
-									: null,
-							null));
-			return true;
-		}
+	public Token newTokenForInsecureUser(Session session, String token, String serverMetadata) {
+		Token tokenObj = new Token(token, OpenViduRole.PUBLISHER, serverMetadata != null ? serverMetadata : "",
+				this.coturnCredentialsService.isCoturnAvailable() ? this.coturnCredentialsService.createUser() : null,
+				null);
+		session.storeToken(tokenObj);
+		session.showTokens("Token created for insecure user");
+		return tokenObj;
 	}
 
 	public boolean isPublisherInSession(String sessionId, Participant participant) {
@@ -414,23 +391,6 @@ public abstract class SessionManager {
 		} else {
 			throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE, sessionId);
 		}
-	}
-
-	public Token consumeToken(String sessionId, String participantPrivateId, String token) {
-		if (this.sessionidTokenTokenobj.get(sessionId) != null) {
-			Token t = this.sessionidTokenTokenobj.get(sessionId).remove(token);
-			if (t != null) {
-				return t;
-			} else {
-				throw new OpenViduException(Code.TOKEN_CANNOT_BE_CREATED_ERROR_CODE, sessionId);
-			}
-		} else {
-			throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE, sessionId);
-		}
-	}
-
-	public void showTokens() {
-		log.info("<SESSIONID, TOKENS>: {}", this.sessionidTokenTokenobj.toString());
 	}
 
 	/**
@@ -531,13 +491,11 @@ public abstract class SessionManager {
 		sessionidParticipantpublicidParticipant.remove(sessionId);
 		sessionidFinalUsers.remove(sessionId);
 		sessionidAccumulatedRecordings.remove(sessionId);
-		sessionidTokenTokenobj.remove(sessionId);
 	}
 
 	private void initializeCollections(String sessionId) {
 		this.sessionidParticipantpublicidParticipant.putIfAbsent(sessionId, new ConcurrentHashMap<>());
 		this.sessionidFinalUsers.putIfAbsent(sessionId, new ConcurrentHashMap<>());
-		this.sessionidTokenTokenobj.putIfAbsent(sessionId, new ConcurrentHashMap<>());
 		if (this.openviduConfig.isRecordingModuleEnabled()) {
 			this.sessionidAccumulatedRecordings.putIfAbsent(sessionId, new ConcurrentLinkedQueue<>());
 		}

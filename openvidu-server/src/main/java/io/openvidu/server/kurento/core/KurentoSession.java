@@ -138,6 +138,8 @@ public class KurentoSession extends Session {
 	public boolean close(EndReason reason) {
 		if (!closed) {
 
+			this.tokens.clear();
+
 			for (Participant participant : participants.values()) {
 				((KurentoParticipant) participant).releaseAllFilters();
 				((KurentoParticipant) participant).close(reason, true, 0);

@@ -27,6 +27,9 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
@@ -42,9 +45,12 @@ import io.openvidu.server.recording.service.RecordingManager;
 
 public class Session implements SessionInterface {
 
+	private static final Logger log = LoggerFactory.getLogger(Session.class);
+
 	protected OpenviduConfig openviduConfig;
 	protected RecordingManager recordingManager;
 
+	protected ConcurrentMap<String, Token> tokens = new ConcurrentHashMap<>();
 	protected final ConcurrentMap<String, Participant> participants = new ConcurrentHashMap<>();
 	protected String sessionId;
 	protected SessionProperties sessionProperties;
@@ -72,6 +78,7 @@ public class Session implements SessionInterface {
 		this.sessionProperties = previousSession.getSessionProperties();
 		this.openviduConfig = previousSession.openviduConfig;
 		this.recordingManager = previousSession.recordingManager;
+		this.tokens = previousSession.tokens;
 	}
 
 	public Session(String sessionId, SessionProperties sessionProperties, OpenviduConfig openviduConfig,
@@ -130,6 +137,24 @@ public class Session implements SessionInterface {
 
 	public void deregisterPublisher() {
 		this.activePublishers.decrementAndGet();
+	}
+
+	public void storeToken(Token token) {
+		this.tokens.put(token.getToken(), token);
+	}
+
+	public boolean isTokenValid(String token) {
+		return this.tokens.containsKey(token);
+	}
+
+	public Token consumeToken(String token) {
+		Token tokenObj = this.tokens.remove(token);
+		showTokens("Token consumed");
+		return tokenObj;
+	}
+
+	public void showTokens(String preMessage) {
+		log.info("{} { Session: {} | Tokens: {} }", preMessage, this.sessionId, this.tokens.keySet().toString());
 	}
 
 	public boolean isClosed() {
