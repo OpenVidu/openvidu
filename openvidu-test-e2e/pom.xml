@@ -72,6 +72,12 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<version>${version.spring-boot}</version>
 			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>org.skyscreamer</groupId>
+					<artifactId>jsonassert</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>io.github.bonigarcia</groupId>

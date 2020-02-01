@@ -2383,7 +2383,7 @@ public class OpenViduTestAppE2eTest {
 		/** GET /api/sessions (before session created) **/
 		restClient.rest(HttpMethod.GET, "/api/sessions/NOT_EXISTS", HttpStatus.SC_NOT_FOUND);
 		restClient.rest(HttpMethod.GET, "/api/sessions", null, HttpStatus.SC_OK, true,
-				ImmutableMap.of("numberOfElements", new Integer(0), "content", new org.json.JSONArray()));
+				ImmutableMap.of("numberOfElements", new Integer(0), "content", new JsonArray()));
 
 		/** POST /api/sessions **/
 		// 400
@@ -2417,7 +2417,7 @@ public class OpenViduTestAppE2eTest {
 		restClient.rest(HttpMethod.GET, "/api/sessions/CUSTOM_SESSION_ID", null, HttpStatus.SC_OK, true,
 				"{'sessionId':'STR','createdAt':0,'mediaMode':'STR','recordingMode':'STR','defaultOutputMode':'STR','defaultRecordingLayout':'STR','customSessionId':'STR','connections':{'numberOfElements':0,'content':[]},'recording':true}");
 		restClient.rest(HttpMethod.GET, "/api/sessions", null, HttpStatus.SC_OK, true,
-				ImmutableMap.of("numberOfElements", new Integer(1), "content", new org.json.JSONArray()));
+				ImmutableMap.of("numberOfElements", new Integer(1), "content", new JsonArray()));
 
 		/** POST /api/tokens **/
 		// 400
@@ -2537,7 +2537,7 @@ public class OpenViduTestAppE2eTest {
 		/** GET /api/recordings (before recording started) **/
 		restClient.rest(HttpMethod.GET, "/api/recordings/NOT_EXISTS", HttpStatus.SC_NOT_FOUND);
 		restClient.rest(HttpMethod.GET, "/api/recordings", null, HttpStatus.SC_OK, true,
-				ImmutableMap.of("count", new Integer(0), "items", new org.json.JSONArray()));
+				ImmutableMap.of("count", new Integer(0), "items", new JsonArray()));
 
 		/** POST /api/recordings/start (ACTIVE SESSION) **/
 		// 200
@@ -2567,7 +2567,7 @@ public class OpenViduTestAppE2eTest {
 		restClient.rest(HttpMethod.GET, "/api/recordings/CUSTOM_SESSION_ID", null, HttpStatus.SC_OK, true,
 				"{'id':'STR','sessionId':'STR','name':'STR','outputMode':'STR','recordingLayout':'STR','hasAudio':false,'hasVideo':false,'resolution':'STR','createdAt':0,'size':0,'duration':0,'url':'STR','status':'STR'}");
 		restClient.rest(HttpMethod.GET, "/api/recordings", null, HttpStatus.SC_OK, true,
-				ImmutableMap.of("count", new Integer(1), "items", new org.json.JSONArray()));
+				ImmutableMap.of("count", new Integer(1), "items", new JsonArray()));
 
 		user.getEventManager().waitUntilEventReaches("recordingStopped", 2);
 
@@ -2578,7 +2578,7 @@ public class OpenViduTestAppE2eTest {
 
 		// GET /api/recordings should return empty again
 		restClient.rest(HttpMethod.GET, "/api/recordings", null, HttpStatus.SC_OK, true,
-				ImmutableMap.of("count", new Integer(0), "items", new org.json.JSONArray()));
+				ImmutableMap.of("count", new Integer(0), "items", new JsonArray()));
 
 		/** DELETE /api/sessions/<SESSION_ID>/stream/<STREAM_ID> **/
 		restClient.rest(HttpMethod.DELETE, "/api/sessions/NOT_EXISTS/stream/NOT_EXISTS", HttpStatus.SC_BAD_REQUEST);
@@ -2631,7 +2631,7 @@ public class OpenViduTestAppE2eTest {
 
 		// GET /api/sessions should return empty again
 		restClient.rest(HttpMethod.GET, "/api/sessions", null, HttpStatus.SC_OK, true,
-				ImmutableMap.of("numberOfElements", new Integer(0), "content", new org.json.JSONArray()));
+				ImmutableMap.of("numberOfElements", new Integer(0), "content", new JsonArray()));
 
 		/** GET /config **/
 		restClient.rest(HttpMethod.GET, "/config", null, HttpStatus.SC_OK, true,
@@ -2998,7 +2998,8 @@ public class OpenViduTestAppE2eTest {
 					response.get("publishers").getAsJsonArray().size());
 			JsonObject ipCamPublisher = response.get("publishers").getAsJsonArray().get(0).getAsJsonObject();
 			Assert.assertEquals("Wrong number of properties in IPCAM publisher", 4, ipCamPublisher.size());
-			Assert.assertEquals("Wrong rtspUri property", "rtsp://dummyurl.com", ipCamPublisher.get("rtspUri").getAsString());
+			Assert.assertEquals("Wrong rtspUri property", "rtsp://dummyurl.com",
+					ipCamPublisher.get("rtspUri").getAsString());
 			JsonObject mediaOptions = ipCamPublisher.get("mediaOptions").getAsJsonObject();
 			Assert.assertEquals("Wrong number of properties in MediaOptions", 10, mediaOptions.size());
 			Assert.assertTrue("Wrong adaptativeBitrate property", mediaOptions.get("adaptativeBitrate").getAsBoolean());
