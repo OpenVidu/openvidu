@@ -251,8 +251,6 @@ public class SingleStreamRecordingService extends RecordingService {
 			}
 		});
 
-		connectAccordingToProfile(kurentoParticipant.getPublisher(), recorder, profile);
-
 		RecorderEndpointWrapper wrapper = new RecorderEndpointWrapper(recorder, participant.getParticipantPublicId(),
 				recordingId, participant.getPublisherStreamId(), participant.getClientMetadata(),
 				participant.getServerMetadata(), kurentoParticipant.getPublisher().getMediaOptions().hasAudio(),
@@ -261,6 +259,8 @@ public class SingleStreamRecordingService extends RecordingService {
 
 		activeRecorders.get(session.getSessionId()).put(participant.getPublisherStreamId(), wrapper);
 		storedRecorders.get(session.getSessionId()).put(participant.getPublisherStreamId(), wrapper);
+
+		connectAccordingToProfile(kurentoParticipant.getPublisher(), recorder, profile);
 		wrapper.getRecorder().record();
 	}
 
