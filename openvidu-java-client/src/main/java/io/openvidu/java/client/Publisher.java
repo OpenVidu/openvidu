@@ -17,7 +17,8 @@
 
 package io.openvidu.java.client;
 
-import org.json.simple.JSONObject;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 /**
  * See {@link io.openvidu.java.client.Connection#getPublishers()}.
@@ -39,19 +40,27 @@ public class Publisher {
 	private String typeOfVideo;
 	private String videoDimensions;
 
-	protected Publisher(String streamId, long createdAt, boolean hasAudio, boolean hasVideo, Object audioActive,
-			Object videoActive, Object frameRate, Object typeOfVideo, Object videoDimensions) {
+	protected Publisher(String streamId, long createdAt, boolean hasAudio, boolean hasVideo, JsonElement audioActive,
+			JsonElement videoActive, JsonElement frameRate, JsonElement typeOfVideo, JsonElement videoDimensions) {
 		this.streamId = streamId;
 		this.createdAt = createdAt;
 		this.hasAudio = hasAudio;
 		this.hasVideo = hasVideo;
-		this.audioActive = (Boolean) audioActive;
-		this.videoActive = (Boolean) videoActive;
-		if (frameRate != null) {
-			this.frameRate = ((Long) frameRate).intValue();
+		if (audioActive != null && !audioActive.isJsonNull()) {
+			this.audioActive = audioActive.getAsBoolean();
 		}
-		this.typeOfVideo = (String) typeOfVideo;
-		this.videoDimensions = (String) videoDimensions;
+		if (videoActive != null && !videoActive.isJsonNull()) {
+			this.videoActive = videoActive.getAsBoolean();
+		}
+		if (frameRate != null && !frameRate.isJsonNull()) {
+			this.frameRate = frameRate.getAsInt();
+		}
+		if (typeOfVideo != null && !typeOfVideo.isJsonNull()) {
+			this.typeOfVideo = typeOfVideo.getAsString();
+		}
+		if (videoDimensions != null && !videoDimensions.isJsonNull()) {
+			this.videoDimensions = videoDimensions.getAsString();
+		}
 	}
 
 	/**
@@ -130,17 +139,16 @@ public class Publisher {
 		return this.videoDimensions;
 	}
 
-	@SuppressWarnings("unchecked")
-	protected JSONObject toJson() {
-		JSONObject json = new JSONObject();
-		json.put("streamId", this.streamId);
-		json.put("hasAudio", this.hasAudio());
-		json.put("hasVideo", this.hasVideo());
-		json.put("audioActive", this.isAudioActive());
-		json.put("videoActive", this.isVideoActive());
-		json.put("frameRate", this.getFrameRate());
-		json.put("typeOfVideo", this.getTypeOfVideo());
-		json.put("videoDimensions", this.getVideoDimensions());
+	protected JsonObject toJson() {
+		JsonObject json = new JsonObject();
+		json.addProperty("streamId", this.streamId);
+		json.addProperty("hasAudio", this.hasAudio());
+		json.addProperty("hasVideo", this.hasVideo());
+		json.addProperty("audioActive", this.isAudioActive());
+		json.addProperty("videoActive", this.isVideoActive());
+		json.addProperty("frameRate", this.getFrameRate());
+		json.addProperty("typeOfVideo", this.getTypeOfVideo());
+		json.addProperty("videoDimensions", this.getVideoDimensions());
 		return json;
 	}
 

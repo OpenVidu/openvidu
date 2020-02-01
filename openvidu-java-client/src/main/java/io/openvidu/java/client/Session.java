@@ -27,17 +27,19 @@ import java.util.stream.Collectors;
 
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
+import org.apache.http.ParseException;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 
 public class Session {
 
@@ -63,7 +65,7 @@ public class Session {
 		this.getSessionIdHttp();
 	}
 
-	protected Session(OpenVidu openVidu, JSONObject json) {
+	protected Session(OpenVidu openVidu, JsonObject json) {
 		this.openVidu = openVidu;
 		this.resetSessionWithJson(json);
 	}
@@ -109,7 +111,6 @@ public class Session {
 	 * @throws OpenViduJavaClientException
 	 * @throws OpenViduHttpException
 	 */
-	@SuppressWarnings("unchecked")
 	public String generateToken(TokenOptions tokenOptions) throws OpenViduJavaClientException, OpenViduHttpException {
 
 		if (!this.hasSessionId()) {
@@ -118,36 +119,36 @@ public class Session {
 
 		HttpPost request = new HttpPost(this.openVidu.hostname + OpenVidu.API_TOKENS);
 
-		JSONObject json = new JSONObject();
-		json.put("session", this.sessionId);
-		json.put("role", tokenOptions.getRole().name());
-		json.put("data", tokenOptions.getData());
+		JsonObject json = new JsonObject();
+		json.addProperty("session", this.sessionId);
+		json.addProperty("role", tokenOptions.getRole().name());
+		json.addProperty("data", tokenOptions.getData());
 		if (tokenOptions.getKurentoOptions() != null) {
-			JSONObject kurentoOptions = new JSONObject();
+			JsonObject kurentoOptions = new JsonObject();
 			if (tokenOptions.getKurentoOptions().getVideoMaxRecvBandwidth() != null) {
-				kurentoOptions.put("videoMaxRecvBandwidth",
+				kurentoOptions.addProperty("videoMaxRecvBandwidth",
 						tokenOptions.getKurentoOptions().getVideoMaxRecvBandwidth());
 			}
 			if (tokenOptions.getKurentoOptions().getVideoMinRecvBandwidth() != null) {
-				kurentoOptions.put("videoMinRecvBandwidth",
+				kurentoOptions.addProperty("videoMinRecvBandwidth",
 						tokenOptions.getKurentoOptions().getVideoMinRecvBandwidth());
 			}
 			if (tokenOptions.getKurentoOptions().getVideoMaxSendBandwidth() != null) {
-				kurentoOptions.put("videoMaxSendBandwidth",
+				kurentoOptions.addProperty("videoMaxSendBandwidth",
 						tokenOptions.getKurentoOptions().getVideoMaxSendBandwidth());
 			}
 			if (tokenOptions.getKurentoOptions().getVideoMinSendBandwidth() != null) {
-				kurentoOptions.put("videoMinSendBandwidth",
+				kurentoOptions.addProperty("videoMinSendBandwidth",
 						tokenOptions.getKurentoOptions().getVideoMinSendBandwidth());
 			}
 			if (tokenOptions.getKurentoOptions().getAllowedFilters().length > 0) {
-				JSONArray allowedFilters = new JSONArray();
+				JsonArray allowedFilters = new JsonArray();
 				for (String filter : tokenOptions.getKurentoOptions().getAllowedFilters()) {
 					allowedFilters.add(filter);
 				}
-				kurentoOptions.put("allowedFilters", allowedFilters);
+				kurentoOptions.add("allowedFilters", allowedFilters);
 			}
-			json.put("kurentoOptions", kurentoOptions);
+			json.add("kurentoOptions", kurentoOptions);
 		}
 		StringEntity params;
 		try {
@@ -169,7 +170,7 @@ public class Session {
 		try {
 			int statusCode = response.getStatusLine().getStatusCode();
 			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
-				String token = (String) httpResponseToJson(response).get("id");
+				String token = httpResponseToJson(response).get("id").getAsString();
 				log.info("Returning a TOKEN: {}", token);
 				return token;
 			} else {
@@ -444,7 +445,6 @@ public class Session {
 		return (this.sessionId != null && !this.sessionId.isEmpty());
 	}
 
-	@SuppressWarnings("unchecked")
 	private void getSessionIdHttp() throws OpenViduJavaClientException, OpenViduHttpException {
 		if (this.hasSessionId()) {
 			return;
@@ -452,13 +452,13 @@ public class Session {
 
 		HttpPost request = new HttpPost(this.openVidu.hostname + OpenVidu.API_SESSIONS);
 
-		JSONObject json = new JSONObject();
-		json.put("mediaMode", properties.mediaMode().name());
-		json.put("recordingMode", properties.recordingMode().name());
-		json.put("defaultOutputMode", properties.defaultOutputMode().name());
-		json.put("defaultRecordingLayout", properties.defaultRecordingLayout().name());
-		json.put("defaultCustomLayout", properties.defaultCustomLayout());
-		json.put("customSessionId", properties.customSessionId());
+		JsonObject json = new JsonObject();
+		json.addProperty("mediaMode", properties.mediaMode().name());
+		json.addProperty("recordingMode", properties.recordingMode().name());
+		json.addProperty("defaultOutputMode", properties.defaultOutputMode().name());
+		json.addProperty("defaultRecordingLayout", properties.defaultRecordingLayout().name());
+		json.addProperty("defaultCustomLayout", properties.defaultCustomLayout());
+		json.addProperty("customSessionId", properties.customSessionId());
 		StringEntity params = null;
 		try {
 			params = new StringEntity(json.toString());
@@ -478,9 +478,9 @@ public class Session {
 		try {
 			int statusCode = response.getStatusLine().getStatusCode();
 			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
-				JSONObject responseJson = httpResponseToJson(response);
-				this.sessionId = (String) responseJson.get("id");
-				this.createdAt = (long) responseJson.get("createdAt");
+				JsonObject responseJson = httpResponseToJson(response);
+				this.sessionId = responseJson.get("id").getAsString();
+				this.createdAt = responseJson.get("createdAt").getAsLong();
 				log.info("Session '{}' created", this.sessionId);
 			} else if (statusCode == org.apache.http.HttpStatus.SC_CONFLICT) {
 				// 'customSessionId' already existed
@@ -493,12 +493,11 @@ public class Session {
 		}
 	}
 
-	private JSONObject httpResponseToJson(HttpResponse response) throws OpenViduJavaClientException {
-		JSONParser parser = new JSONParser();
-		JSONObject json;
+	private JsonObject httpResponseToJson(HttpResponse response) throws OpenViduJavaClientException {
+		JsonObject json;
 		try {
-			json = (JSONObject) parser.parse(EntityUtils.toString(response.getEntity()));
-		} catch (org.apache.http.ParseException | ParseException | IOException e) {
+			json = JsonParser.parseString(EntityUtils.toString(response.getEntity())).getAsJsonObject();
+		} catch (JsonSyntaxException | ParseException | IOException e) {
 			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
 		}
 		return json;
@@ -508,96 +507,96 @@ public class Session {
 		this.recording = recording;
 	}
 
-	@SuppressWarnings("unchecked")
-	protected Session resetSessionWithJson(JSONObject json) {
-		this.sessionId = (String) json.get("sessionId");
-		this.createdAt = (long) json.get("createdAt");
-		this.recording = (boolean) json.get("recording");
+	protected Session resetSessionWithJson(JsonObject json) {
+		this.sessionId = json.get("sessionId").getAsString();
+		this.createdAt = json.get("createdAt").getAsLong();
+		this.recording = json.get("recording").getAsBoolean();
 		SessionProperties.Builder builder = new SessionProperties.Builder()
-				.mediaMode(MediaMode.valueOf((String) json.get("mediaMode")))
-				.recordingMode(RecordingMode.valueOf((String) json.get("recordingMode")))
-				.defaultOutputMode(Recording.OutputMode.valueOf((String) json.get("defaultOutputMode")));
-		if (json.containsKey("defaultRecordingLayout")) {
-			builder.defaultRecordingLayout(RecordingLayout.valueOf((String) json.get("defaultRecordingLayout")));
+				.mediaMode(MediaMode.valueOf(json.get("mediaMode").getAsString()))
+				.recordingMode(RecordingMode.valueOf(json.get("recordingMode").getAsString()))
+				.defaultOutputMode(Recording.OutputMode.valueOf(json.get("defaultOutputMode").getAsString()));
+		if (json.has("defaultRecordingLayout")) {
+			builder.defaultRecordingLayout(RecordingLayout.valueOf(json.get("defaultRecordingLayout").getAsString()));
 		}
-		if (json.containsKey("defaultCustomLayout")) {
-			builder.defaultCustomLayout((String) json.get("defaultCustomLayout"));
+		if (json.has("defaultCustomLayout")) {
+			builder.defaultCustomLayout(json.get("defaultCustomLayout").getAsString());
 		}
 		if (this.properties != null && this.properties.customSessionId() != null) {
 			builder.customSessionId(this.properties.customSessionId());
-		} else if (json.containsKey("customSessionId")) {
-			builder.customSessionId((String) json.get("customSessionId"));
+		} else if (json.has("customSessionId")) {
+			builder.customSessionId(json.get("customSessionId").getAsString());
 		}
 		this.properties = builder.build();
-		JSONArray jsonArrayConnections = (JSONArray) ((JSONObject) json.get("connections")).get("content");
+		JsonArray jsonArrayConnections = (json.get("connections").getAsJsonObject()).get("content").getAsJsonArray();
 		this.activeConnections.clear();
 		jsonArrayConnections.forEach(connection -> {
-			JSONObject con = (JSONObject) connection;
+			JsonObject con = connection.getAsJsonObject();
 
 			Map<String, Publisher> publishers = new ConcurrentHashMap<>();
-			JSONArray jsonArrayPublishers = (JSONArray) con.get("publishers");
+			JsonArray jsonArrayPublishers = con.get("publishers").getAsJsonArray();
 			jsonArrayPublishers.forEach(publisher -> {
-				JSONObject pubJson = (JSONObject) publisher;
-				JSONObject mediaOptions = (JSONObject) pubJson.get("mediaOptions");
-				Publisher pub = new Publisher((String) pubJson.get("streamId"), (long) pubJson.get("createdAt"),
-						(boolean) mediaOptions.get("hasAudio"), (boolean) mediaOptions.get("hasVideo"),
-						mediaOptions.get("audioActive"), mediaOptions.get("videoActive"), mediaOptions.get("frameRate"),
-						mediaOptions.get("typeOfVideo"), mediaOptions.get("videoDimensions"));
+				JsonObject pubJson = publisher.getAsJsonObject();
+				JsonObject mediaOptions = pubJson.get("mediaOptions").getAsJsonObject();
+				Publisher pub = new Publisher(pubJson.get("streamId").getAsString(),
+						pubJson.get("createdAt").getAsLong(), mediaOptions.get("hasAudio").getAsBoolean(),
+						mediaOptions.get("hasVideo").getAsBoolean(), mediaOptions.get("audioActive"),
+						mediaOptions.get("videoActive"), mediaOptions.get("frameRate"), mediaOptions.get("typeOfVideo"),
+						mediaOptions.get("videoDimensions"));
 				publishers.put(pub.getStreamId(), pub);
 			});
 
 			List<String> subscribers = new ArrayList<>();
-			JSONArray jsonArraySubscribers = (JSONArray) con.get("subscribers");
+			JsonArray jsonArraySubscribers = con.get("subscribers").getAsJsonArray();
 			jsonArraySubscribers.forEach(subscriber -> {
-				subscribers.add((String) ((JSONObject) subscriber).get("streamId"));
+				subscribers.add((subscriber.getAsJsonObject()).get("streamId").getAsString());
 			});
 
-			this.activeConnections.put((String) con.get("connectionId"),
-					new Connection((String) con.get("connectionId"), (long) con.get("createdAt"),
-							OpenViduRole.valueOf((String) con.get("role")), (String) con.get("token"),
-							(String) con.get("location"), (String) con.get("platform"), (String) con.get("serverData"),
-							(String) con.get("clientData"), publishers, subscribers));
+			this.activeConnections.put(con.get("connectionId").getAsString(),
+					new Connection(con.get("connectionId").getAsString(), con.get("createdAt").getAsLong(),
+							OpenViduRole.valueOf(con.get("role").getAsString()), con.get("token").getAsString(),
+							con.get("location").getAsString(), con.get("platform").getAsString(),
+							con.get("serverData").getAsString(), con.get("clientData").getAsString(), publishers,
+							subscribers));
 		});
 		return this;
 	}
 
-	@SuppressWarnings("unchecked")
 	protected String toJson() {
-		JSONObject json = new JSONObject();
-		json.put("sessionId", this.sessionId);
-		json.put("createdAt", this.createdAt);
-		json.put("customSessionId", this.properties.customSessionId());
-		json.put("recording", this.recording);
-		json.put("mediaMode", this.properties.mediaMode().name());
-		json.put("recordingMode", this.properties.recordingMode().name());
-		json.put("defaultOutputMode", this.properties.defaultOutputMode().name());
-		json.put("defaultRecordingLayout", this.properties.defaultRecordingLayout().name());
-		json.put("defaultCustomLayout", this.properties.defaultCustomLayout());
-		JSONObject connections = new JSONObject();
-		connections.put("numberOfElements", this.getActiveConnections().size());
-		JSONArray jsonArrayConnections = new JSONArray();
+		JsonObject json = new JsonObject();
+		json.addProperty("sessionId", this.sessionId);
+		json.addProperty("createdAt", this.createdAt);
+		json.addProperty("customSessionId", this.properties.customSessionId());
+		json.addProperty("recording", this.recording);
+		json.addProperty("mediaMode", this.properties.mediaMode().name());
+		json.addProperty("recordingMode", this.properties.recordingMode().name());
+		json.addProperty("defaultOutputMode", this.properties.defaultOutputMode().name());
+		json.addProperty("defaultRecordingLayout", this.properties.defaultRecordingLayout().name());
+		json.addProperty("defaultCustomLayout", this.properties.defaultCustomLayout());
+		JsonObject connections = new JsonObject();
+		connections.addProperty("numberOfElements", this.getActiveConnections().size());
+		JsonArray jsonArrayConnections = new JsonArray();
 		this.getActiveConnections().forEach(con -> {
-			JSONObject c = new JSONObject();
-			c.put("connectionId", con.getConnectionId());
-			c.put("role", con.getRole().name());
-			c.put("token", con.getToken());
-			c.put("clientData", con.getClientData());
-			c.put("serverData", con.getServerData());
-			JSONArray pubs = new JSONArray();
+			JsonObject c = new JsonObject();
+			c.addProperty("connectionId", con.getConnectionId());
+			c.addProperty("role", con.getRole().name());
+			c.addProperty("token", con.getToken());
+			c.addProperty("clientData", con.getClientData());
+			c.addProperty("serverData", con.getServerData());
+			JsonArray pubs = new JsonArray();
 			con.getPublishers().forEach(p -> {
 				pubs.add(p.toJson());
 			});
-			JSONArray subs = new JSONArray();
+			JsonArray subs = new JsonArray();
 			con.getSubscribers().forEach(s -> {
 				subs.add(s);
 			});
-			c.put("publishers", pubs);
-			c.put("subscribers", subs);
+			c.add("publishers", pubs);
+			c.add("subscribers", subs);
 			jsonArrayConnections.add(c);
 		});
-		connections.put("content", jsonArrayConnections);
-		json.put("connections", connections);
-		return json.toJSONString();
+		connections.add("content", jsonArrayConnections);
+		json.add("connections", connections);
+		return json.toString();
 	}
 
 }

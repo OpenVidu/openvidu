@@ -50,9 +50,6 @@ import org.jcodec.api.FrameGrab;
 import org.jcodec.api.JCodecException;
 import org.jcodec.common.model.Picture;
 import org.jcodec.scale.AWTUtil;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 import org.junit.Assert;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -77,6 +74,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.mashape.unirest.http.HttpMethod;
 
@@ -999,12 +997,12 @@ public class OpenViduTestAppE2eTest {
 		user.getDriver().manage().window().setSize(new Dimension(newWidth, newHeight));
 
 		String widthAndHeight = user.getEventManager().getDimensionOfViewport();
-		JSONObject obj = (JSONObject) new JSONParser().parse(widthAndHeight);
+		JsonObject obj = JsonParser.parseString(widthAndHeight).getAsJsonObject();
 
-		expectedWidthHeight[0] = (long) obj.get("width");
-		expectedWidthHeight[1] = (long) obj.get("height");
+		expectedWidthHeight[0] = obj.get("width").getAsLong();
+		expectedWidthHeight[1] = obj.get("height").getAsLong();
 
-		System.out.println("New viewport dimension: " + obj.toJSONString());
+		System.out.println("New viewport dimension: " + obj.toString());
 
 		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 6);
 
@@ -1631,9 +1629,10 @@ public class OpenViduTestAppE2eTest {
 
 		// Store connectionId and streamId
 		String response = user.getDriver().findElement(By.id("api-response-text-area")).getAttribute("value");
-		JSONObject json = (JSONObject) ((JSONArray) new JSONParser().parse(response.split("%")[1])).get(0);
-		String connectionId = (String) json.keySet().iterator().next();
-		String streamId = (String) ((JSONObject) ((JSONArray) json.get(connectionId)).get(0)).get("streamId");
+		JsonObject json = JsonParser.parseString(response.split("%")[1]).getAsJsonArray().get(0).getAsJsonObject();
+		String connectionId = json.keySet().iterator().next();
+		String streamId = json.get(connectionId).getAsJsonArray().get(0).getAsJsonObject().get("streamId")
+				.getAsString();
 
 		// Fetch all sessions (no change)
 		user.getDriver().findElement(By.id("list-sessions-btn")).click();
@@ -2154,8 +2153,9 @@ public class OpenViduTestAppE2eTest {
 		pub = connectionModerator.getPublishers().get(0);
 
 		String widthAndHeight = user.getEventManager().getDimensionOfViewport();
-		JSONObject obj = (JSONObject) new JSONParser().parse(widthAndHeight);
-		Assert.assertEquals("{\"width\":" + (long) obj.get("width") + ",\"height\":" + ((long) obj.get("height")) + "}",
+		JsonObject obj = JsonParser.parseString(widthAndHeight).getAsJsonObject();
+		Assert.assertEquals(
+				"{\"width\":" + obj.get("width").getAsLong() + ",\"height\":" + (obj.get("height").getAsLong()) + "}",
 				pub.getVideoDimensions());
 		Assert.assertEquals(new Integer(30), pub.getFrameRate());
 		Assert.assertEquals("SCREEN", pub.getTypeOfVideo());
@@ -2405,9 +2405,9 @@ public class OpenViduTestAppE2eTest {
 		restClient.rest(HttpMethod.POST, "/api/sessions", body, HttpStatus.SC_OK, true,
 				"{'id': 'STR', 'createdAt': 0}");
 		// Default values
-		org.json.JSONObject res = restClient.rest(HttpMethod.POST, "/api/sessions", "{}", HttpStatus.SC_OK, true,
+		JsonObject res = restClient.rest(HttpMethod.POST, "/api/sessions", "{}", HttpStatus.SC_OK, true,
 				"{'id': 'STR', 'createdAt': 0}");
-		restClient.rest(HttpMethod.DELETE, "/api/sessions/" + res.getString("id"), HttpStatus.SC_NO_CONTENT);
+		restClient.rest(HttpMethod.DELETE, "/api/sessions/" + res.get("id").getAsString(), HttpStatus.SC_NO_CONTENT);
 
 		// 409
 		body = "{'customSessionId': 'CUSTOM_SESSION_ID'}";
@@ -2438,16 +2438,16 @@ public class OpenViduTestAppE2eTest {
 		body = "{'session': 'CUSTOM_SESSION_ID', 'role': 'MODERATOR', 'data': 'SERVER_DATA', 'kurentoOptions': {'allowedFilters': ['GStreamerFilter']}}";
 		res = restClient.rest(HttpMethod.POST, "/api/tokens", body, HttpStatus.SC_OK, true,
 				"{'id':'STR','session':'STR','role':'STR','data':'STR','token':'STR','kurentoOptions':{'allowedFilters':['STR']}}");
-		final String token1 = res.getString("token");
+		final String token1 = res.get("token").getAsString();
 		Assert.assertEquals("JSON return value from /api/tokens should have equal srtings in 'id' and 'token'",
-				res.getString("id"), token1);
-		Assert.assertEquals("Wrong session parameter", "CUSTOM_SESSION_ID", res.getString("session"));
+				res.get("id").getAsString(), token1);
+		Assert.assertEquals("Wrong session parameter", "CUSTOM_SESSION_ID", res.get("session").getAsString());
 
 		// Default values
 		body = "{'session': 'CUSTOM_SESSION_ID'}";
 		res = restClient.rest(HttpMethod.POST, "/api/tokens", body, HttpStatus.SC_OK, true,
 				"{'id':'STR','session':'STR','role':'STR','data':'STR','token':'STR'}");
-		final String token2 = res.getString("id");
+		final String token2 = res.get("id").getAsString();
 
 		/** POST /api/signal (NOT ACTIVE SESSION) **/
 		body = "{}";
@@ -2495,9 +2495,9 @@ public class OpenViduTestAppE2eTest {
 		// 409 (RELAYED media mode)
 		res = restClient.rest(HttpMethod.POST, "/api/sessions", "{'mediaMode':'RELAYED'}", HttpStatus.SC_OK, true,
 				"{'id': 'STR', 'createdAt': 0}");
-		body = "{'session':'" + res.getString("id") + "'}";
+		body = "{'session':'" + res.get("id").getAsString() + "'}";
 		restClient.rest(HttpMethod.POST, "/api/recordings/start", body, HttpStatus.SC_CONFLICT);
-		restClient.rest(HttpMethod.DELETE, "/api/sessions/" + res.getString("id"), HttpStatus.SC_NO_CONTENT);
+		restClient.rest(HttpMethod.DELETE, "/api/sessions/" + res.get("id").getAsString(), HttpStatus.SC_NO_CONTENT);
 
 		// Start session
 		setupBrowser("chrome");
@@ -2591,13 +2591,14 @@ public class OpenViduTestAppE2eTest {
 						+ "'videoDimensions':'STR','filter':{}}}],'subscribers':[{'createdAt':0,'streamId':'STR','publisher':'STR'}]},{'connectionId':'STR','createdAt':0,'location':'STR',"
 						+ "'platform':'STR','token':'STR','role':'STR','serverData':'STR','clientData':'STR','publishers':[{'createdAt':0,'streamId':'STR','mediaOptions':{'hasAudio':false,"
 						+ "'audioActive':false,'hasVideo':false,'videoActive':false,'typeOfVideo':'STR','frameRate':0,'videoDimensions':'STR','filter':{}}}],'subscribers':[{'createdAt':0,'streamId':'STR','publisher':'STR'}]}]},'recording':false}");
-		String streamId = ((org.json.JSONObject) ((org.json.JSONObject) res.getJSONObject("connections")
-				.getJSONArray("content").get(0)).getJSONArray("publishers").get(0)).getString("streamId");
+		String streamId = res.get("connections").getAsJsonObject().get("content").getAsJsonArray().get(0)
+				.getAsJsonObject().get("publishers").getAsJsonArray().get(0).getAsJsonObject().get("streamId")
+				.getAsString();
 		restClient.rest(HttpMethod.DELETE, "/api/sessions/CUSTOM_SESSION_ID/stream/" + streamId,
 				HttpStatus.SC_NO_CONTENT);
 
-		final String connectionId = ((org.json.JSONObject) res.getJSONObject("connections").getJSONArray("content")
-				.get(0)).getString("connectionId");
+		final String connectionId = res.get("connections").getAsJsonObject().get("content").getAsJsonArray().get(0)
+				.getAsJsonObject().get("connectionId").getAsString();
 
 		/** POST /api/signal (ACTIVE SESSION) **/
 		body = "{'session':'CUSTOM_SESSION_ID','to':['wrongConnectionId']}";
@@ -2981,37 +2982,37 @@ public class OpenViduTestAppE2eTest {
 
 			// Publish IP camera. Dummy URL because no user will subscribe to it [200]
 			String ipCamBody = "{'type':'IPCAM','rtspUri':'rtsp://dummyurl.com','adaptativeBitrate':true,'onlyPlayWithSubscribers':true,'data':'MY_IP_CAMERA'}";
-			org.json.JSONObject response = restClient.rest(HttpMethod.POST, "/api/sessions/IP_CAM_SESSION/connection",
-					ipCamBody, HttpStatus.SC_OK, true,
+			JsonObject response = restClient.rest(HttpMethod.POST, "/api/sessions/IP_CAM_SESSION/connection", ipCamBody,
+					HttpStatus.SC_OK, true,
 					"{'connectionId':'STR','createdAt':0,'location':'STR','platform':'STR','token':'STR','role':'STR','serverData':'STR','clientData':'STR','publishers':[],'subscribers':[]}");
 
 			CustomWebhook.waitForEvent("sessionCreated", 1);
 			CustomWebhook.waitForEvent("participantJoined", 1);
 			CustomWebhook.waitForEvent("webrtcConnectionCreated", 1);
 
-			Assert.assertEquals("Wrong serverData property", "MY_IP_CAMERA", response.get("serverData"));
-			Assert.assertEquals("Wrong platform property", "IPCAM", response.get("platform"));
-			Assert.assertEquals("Wrong role property", "PUBLISHER", response.get("role"));
+			Assert.assertEquals("Wrong serverData property", "MY_IP_CAMERA", response.get("serverData").getAsString());
+			Assert.assertEquals("Wrong platform property", "IPCAM", response.get("platform").getAsString());
+			Assert.assertEquals("Wrong role property", "PUBLISHER", response.get("role").getAsString());
 
 			Assert.assertEquals("Wrong number of publishers in IPCAM participant", 1,
-					response.getJSONArray("publishers").length());
-			org.json.JSONObject ipCamPublisher = response.getJSONArray("publishers").getJSONObject(0);
-			Assert.assertEquals("Wrong number of properties in IPCAM publisher", 4, ipCamPublisher.length());
-			Assert.assertEquals("Wrong rtspUri property", "rtsp://dummyurl.com", ipCamPublisher.get("rtspUri"));
-			org.json.JSONObject mediaOptions = ipCamPublisher.getJSONObject("mediaOptions");
-			Assert.assertEquals("Wrong number of properties in MediaOptions", 10, mediaOptions.length());
-			Assert.assertTrue("Wrong adaptativeBitrate property", mediaOptions.getBoolean("adaptativeBitrate"));
+					response.get("publishers").getAsJsonArray().size());
+			JsonObject ipCamPublisher = response.get("publishers").getAsJsonArray().get(0).getAsJsonObject();
+			Assert.assertEquals("Wrong number of properties in IPCAM publisher", 4, ipCamPublisher.size());
+			Assert.assertEquals("Wrong rtspUri property", "rtsp://dummyurl.com", ipCamPublisher.get("rtspUri").getAsString());
+			JsonObject mediaOptions = ipCamPublisher.get("mediaOptions").getAsJsonObject();
+			Assert.assertEquals("Wrong number of properties in MediaOptions", 10, mediaOptions.size());
+			Assert.assertTrue("Wrong adaptativeBitrate property", mediaOptions.get("adaptativeBitrate").getAsBoolean());
 			Assert.assertTrue("Wrong onlyPlayWithSubscribers property",
-					mediaOptions.getBoolean("onlyPlayWithSubscribers"));
+					mediaOptions.get("onlyPlayWithSubscribers").getAsBoolean());
 
 			// Can't delete the stream [405]
 			restClient.rest(HttpMethod.DELETE,
-					"/api/sessions/IP_CAM_SESSION/stream/" + ipCamPublisher.getString("streamId"),
+					"/api/sessions/IP_CAM_SESSION/stream/" + ipCamPublisher.get("streamId").getAsString(),
 					HttpStatus.SC_METHOD_NOT_ALLOWED);
 
 			// Can delete the connection [204]
 			restClient.rest(HttpMethod.DELETE,
-					"/api/sessions/IP_CAM_SESSION/connection/" + response.getString("connectionId"),
+					"/api/sessions/IP_CAM_SESSION/connection/" + response.get("connectionId").getAsString(),
 					HttpStatus.SC_NO_CONTENT);
 
 			CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 1);
@@ -3046,8 +3047,8 @@ public class OpenViduTestAppE2eTest {
 			CustomWebhook.waitForEvent("recordingStatusChanged", 1); // Stopped
 			CustomWebhook.waitForEvent("recordingStatusChanged", 1); // Ready
 
-			String recPath = restClient.rest(HttpMethod.GET, "/config", HttpStatus.SC_OK)
-					.getString("openviduRecordingPath");
+			String recPath = restClient.rest(HttpMethod.GET, "/config", HttpStatus.SC_OK).get("openviduRecordingPath")
+					.getAsString();
 			recPath = recPath.endsWith("/") ? recPath : (recPath + "/");
 			String fullRecordingPath = "file://" + recPath + "TestSession/TestSession.mp4";
 			ipCamBody = "{'type':'IPCAM','rtspUri':'" + fullRecordingPath

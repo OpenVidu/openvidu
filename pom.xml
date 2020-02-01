@@ -43,24 +43,25 @@
 
 	<properties>
 		<version.kurento>6.13.0</version.kurento>
-		<version.spring-boot>2.1.7.RELEASE</version.spring-boot>
+		<version.spring-boot>2.2.4.RELEASE</version.spring-boot>
 		<version.junit>4.12</version.junit>
 		<version.junit.jupiter>5.6.0</version.junit.jupiter>
 		<version.junit.platform>1.6.0</version.junit.platform>
 		<version.selenium>3.141.59</version.selenium>
-		<version.mockito.core>3.2.4</version.mockito.core>
+		<version.mockito.core>2.23.4</version.mockito.core>
 		<version.powermock>2.0.5</version.powermock>
 		<version.hamcrest>2.2</version.hamcrest>
-		<version.json-simple>1.1.1</version.json-simple>
 		<version.httpclient>4.5.11</version.httpclient>
 		<version.janino>3.1.0</version.janino>
 		<version.commonslang>3.9</version.commonslang>
 		<version.dockerjava>3.1.5</version.dockerjava>
+		<version.slf4j>1.7.30</version.slf4j>
+		<version.gson>2.8.6</version.gson>
+		<version.unirest>1.4.9</version.unirest>
 		<version.thymeleaf>3.0.11.RELEASE</version.thymeleaf>
 		<version.thymeleaflayout>2.4.1</version.thymeleaflayout>
 
 		<version.webdrivermanager>3.8.1</version.webdrivermanager>
-		<version.selenium.jupiter>3.2.1</version.selenium.jupiter>
 
 		<version.openvidu.java.client>2.11.0</version.openvidu.java.client>
 		<version.openvidu.client>1.1.0</version.openvidu.client>

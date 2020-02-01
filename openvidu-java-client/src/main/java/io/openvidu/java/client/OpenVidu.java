@@ -37,6 +37,7 @@ import javax.net.ssl.SSLContext;
 
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
+import org.apache.http.ParseException;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
@@ -52,12 +53,13 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.ssl.TrustStrategy;
 import org.apache.http.util.EntityUtils;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 
 public class OpenVidu {
 
@@ -187,25 +189,24 @@ public class OpenVidu {
 	 *                                     to <i>false</i>)</li>
 	 *                                     </ul>
 	 */
-	@SuppressWarnings("unchecked")
 	public Recording startRecording(String sessionId, RecordingProperties properties)
 			throws OpenViduJavaClientException, OpenViduHttpException {
 
 		HttpPost request = new HttpPost(this.hostname + API_RECORDINGS + API_RECORDINGS_START);
 
-		JSONObject json = new JSONObject();
-		json.put("session", sessionId);
-		json.put("name", properties.name());
-		json.put("outputMode", properties.outputMode().name());
-		json.put("hasAudio", properties.hasAudio());
-		json.put("hasVideo", properties.hasVideo());
+		JsonObject json = new JsonObject();
+		json.addProperty("session", sessionId);
+		json.addProperty("name", properties.name());
+		json.addProperty("outputMode", properties.outputMode().name());
+		json.addProperty("hasAudio", properties.hasAudio());
+		json.addProperty("hasVideo", properties.hasVideo());
 
 		if (Recording.OutputMode.COMPOSED.equals(properties.outputMode()) && properties.hasVideo()) {
-			json.put("resolution", properties.resolution());
-			json.put("recordingLayout",
+			json.addProperty("resolution", properties.resolution());
+			json.addProperty("recordingLayout",
 					(properties.recordingLayout() != null) ? properties.recordingLayout().name() : "");
 			if (RecordingLayout.CUSTOM.equals(properties.recordingLayout())) {
-				json.put("customLayout", (properties.customLayout() != null) ? properties.customLayout() : "");
+				json.addProperty("customLayout", (properties.customLayout() != null) ? properties.customLayout() : "");
 			}
 		}
 
@@ -420,7 +421,6 @@ public class OpenVidu {
 	 * @throws OpenViduJavaClientException
 	 * @throws OpenViduHttpException
 	 */
-	@SuppressWarnings("unchecked")
 	public List<Recording> listRecordings() throws OpenViduJavaClientException, OpenViduHttpException {
 		HttpGet request = new HttpGet(this.hostname + API_RECORDINGS);
 		HttpResponse response;
@@ -434,10 +434,10 @@ public class OpenVidu {
 			int statusCode = response.getStatusLine().getStatusCode();
 			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
 				List<Recording> recordings = new ArrayList<>();
-				JSONObject json = httpResponseToJson(response);
-				JSONArray array = (JSONArray) json.get("items");
+				JsonObject json = httpResponseToJson(response);
+				JsonArray array = json.get("items").getAsJsonArray();
 				array.forEach(item -> {
-					recordings.add(new Recording((JSONObject) item));
+					recordings.add(new Recording(item.getAsJsonObject()));
 				});
 				return recordings;
 			} else {
@@ -529,7 +529,6 @@ public class OpenVidu {
 	 * @throws OpenViduHttpException
 	 * @throws OpenViduJavaClientException
 	 */
-	@SuppressWarnings("unchecked")
 	public boolean fetch() throws OpenViduJavaClientException, OpenViduHttpException {
 		HttpGet request = new HttpGet(this.hostname + API_SESSIONS);
 
@@ -543,19 +542,19 @@ public class OpenVidu {
 		try {
 			int statusCode = response.getStatusLine().getStatusCode();
 			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
-				JSONObject jsonSessions = httpResponseToJson(response);
-				JSONArray jsonArraySessions = (JSONArray) jsonSessions.get("content");
+				JsonObject jsonSessions = httpResponseToJson(response);
+				JsonArray jsonArraySessions = jsonSessions.get("content").getAsJsonArray();
 
 				// Set to store fetched sessionIds and later remove closed sessions
 				Set<String> fetchedSessionIds = new HashSet<>();
 				// Boolean to store if any Session has changed
 				final boolean[] hasChanged = { false };
 				jsonArraySessions.forEach(session -> {
-					String sessionId = (String) ((JSONObject) session).get("sessionId");
+					String sessionId = (session.getAsJsonObject()).get("sessionId").getAsString();
 					fetchedSessionIds.add(sessionId);
 					this.activeSessions.computeIfPresent(sessionId, (sId, s) -> {
 						String beforeJSON = s.toJson();
-						s = s.resetSessionWithJson((JSONObject) session);
+						s = s.resetSessionWithJson(session.getAsJsonObject());
 						String afterJSON = s.toJson();
 						boolean changed = !beforeJSON.equals(afterJSON);
 						hasChanged[0] = hasChanged[0] || changed;
@@ -565,7 +564,7 @@ public class OpenVidu {
 					this.activeSessions.computeIfAbsent(sessionId, sId -> {
 						log.info("New session '{}' fetched", sessionId);
 						hasChanged[0] = true;
-						return new Session(this, (JSONObject) session);
+						return new Session(this, session.getAsJsonObject());
 					});
 				});
 
@@ -589,15 +588,13 @@ public class OpenVidu {
 		}
 	}
 
-	private JSONObject httpResponseToJson(HttpResponse response) throws OpenViduJavaClientException {
-		JSONParser parser = new JSONParser();
-		JSONObject json;
+	private JsonObject httpResponseToJson(HttpResponse response) throws OpenViduJavaClientException {
 		try {
-			json = (JSONObject) parser.parse(EntityUtils.toString(response.getEntity()));
-		} catch (org.apache.http.ParseException | ParseException | IOException e) {
+			JsonObject json = JsonParser.parseString(EntityUtils.toString(response.getEntity())).getAsJsonObject();
+			return json;
+		} catch (JsonSyntaxException | ParseException | IOException e) {
 			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
 		}
-		return json;
 	}
 
 }

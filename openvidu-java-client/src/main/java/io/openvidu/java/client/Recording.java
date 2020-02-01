@@ -17,7 +17,8 @@
 
 package io.openvidu.java.client;
 
-import org.json.simple.JSONObject;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 /**
  * See {@link io.openvidu.java.client.OpenVidu#startRecording(String)}
@@ -86,27 +87,30 @@ public class Recording {
 	private String url;
 	private RecordingProperties recordingProperties;
 
-	protected Recording(JSONObject json) {
-		this.id = (String) json.get("id");
-		this.sessionId = (String) json.get("sessionId");
-		this.createdAt = (long) json.get("createdAt");
-		this.size = (long) json.get("size");
-		this.duration = (double) json.get("duration");
-		this.url = (String) json.get("url");
-		this.status = Recording.Status.valueOf((String) json.get("status"));
+	protected Recording(JsonObject json) {
+		this.id = json.get("id").getAsString();
+		this.sessionId = json.get("sessionId").getAsString();
+		this.createdAt = json.get("createdAt").getAsLong();
+		this.size = json.get("size").getAsLong();
+		this.duration = json.get("duration").getAsDouble();
+		JsonElement urlElement = json.get("url");
+		if (!urlElement.isJsonNull()) {
+			this.url = urlElement.getAsString();
+		}
+		this.status = Recording.Status.valueOf(json.get("status").getAsString());
 
-		boolean hasAudio = (boolean) json.get("hasAudio");
-		boolean hasVideo = (boolean) json.get("hasVideo");
+		boolean hasAudio = json.get("hasAudio").getAsBoolean();
+		boolean hasVideo = json.get("hasVideo").getAsBoolean();
 
-		OutputMode outputMode = OutputMode.valueOf((String) json.get("outputMode"));
-		RecordingProperties.Builder builder = new RecordingProperties.Builder().name((String) json.get("name"))
+		OutputMode outputMode = OutputMode.valueOf(json.get("outputMode").getAsString());
+		RecordingProperties.Builder builder = new RecordingProperties.Builder().name(json.get("name").getAsString())
 				.outputMode(outputMode).hasAudio(hasAudio).hasVideo(hasVideo);
 		if (OutputMode.COMPOSED.equals(outputMode) && hasVideo) {
-			builder.resolution((String) json.get("resolution"));
-			builder.recordingLayout(RecordingLayout.valueOf((String) json.get("recordingLayout")));
-			String customLayout = (String) json.get("customLayout");
+			builder.resolution(json.get("resolution").getAsString());
+			builder.recordingLayout(RecordingLayout.valueOf(json.get("recordingLayout").getAsString()));
+			JsonElement customLayout = json.get("customLayout");
 			if (customLayout != null) {
-				builder.customLayout(customLayout);
+				builder.customLayout(customLayout.getAsString());
 			}
 		}
 		this.recordingProperties = builder.build();
