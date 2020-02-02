@@ -184,7 +184,7 @@ public class SingleStreamRecordingService extends RecordingService {
 				cdr.recordRecordingStatusChanged(finalRecordingArray[0], reason, timestamp,
 						finalRecordingArray[0].getStatus());
 
-				storedRecorders.remove(finalRecordingArray[0].getSessionId());
+				cleanRecordingWrappers(finalRecordingArray[0].getSessionId());
 
 				// Decrement active recordings once it is downloaded
 				((KurentoSession) session).getKms().getActiveRecordings().decrementAndGet();
@@ -195,7 +195,7 @@ public class SingleStreamRecordingService extends RecordingService {
 			});
 		} catch (IOException e) {
 			log.error("Error while downloading recording {}", finalRecordingArray[0].getName());
-			storedRecorders.remove(finalRecordingArray[0].getSessionId());
+			cleanRecordingWrappers(finalRecordingArray[0].getSessionId());
 		}
 
 		if (reason != null && session != null) {
@@ -502,6 +502,11 @@ public class SingleStreamRecordingService extends RecordingService {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	private void cleanRecordingWrappers(String sessionId) {
+		this.storedRecorders.remove(sessionId);
+		this.activeRecorders.remove(sessionId);
 	}
 
 }
