@@ -31,7 +31,7 @@ public class FormatChecker {
 
 	public boolean isValidCustomSessionId(String customSessionId) {
 		// Alphanumeric string
-		return customSessionId.matches("[a-zA-Z0-9]+");
+		return customSessionId.matches("[a-zA-Z0-9_-]+");
 	}
 
 }

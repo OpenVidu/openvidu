@@ -188,6 +188,11 @@
 					<artifactId>spring-websocket</artifactId>
 				</exclusion>
 				<exclusion>
+					<!-- Until kurento-java spring-boot dependency is updated to 2.2.4.RELEASE -->
+					<groupId>org.apache.tomcat.embed</groupId>
+					<artifactId>tomcat-embed-websocket</artifactId>
+				</exclusion>
+				<exclusion>
 					<groupId>org.slf4j</groupId>
 					<artifactId>slf4j-api</artifactId>
 				</exclusion>
