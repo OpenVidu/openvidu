@@ -24,9 +24,14 @@ public class FormatChecker {
 		// with 0 and 3 digits long or 4 digits long if they start with 1
 		return stringResolution.matches("^(?!(0))(([0-9]{3})|1([0-9]{3}))x(?!0)(([0-9]{3})|1([0-9]{3}))$");
 	}
-	
+
 	public boolean isServerMetadataFormatCorrect(String metadata) {
 		return true;
+	}
+
+	public boolean isValidCustomSessionId(String customSessionId) {
+		// Alphanumeric string
+		return customSessionId.matches("[a-zA-Z0-9]+");
 	}
 
 }

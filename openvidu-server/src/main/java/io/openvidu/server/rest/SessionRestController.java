@@ -140,6 +140,11 @@ public class SessionRestController {
 					builder = builder.mediaMode(MediaMode.ROUTED);
 				}
 				if (customSessionId != null && !customSessionId.isEmpty()) {
+					if (!sessionManager.formatChecker.isValidCustomSessionId(customSessionId)) {
+						return this.generateErrorResponse(
+								"Parameter \"customSessionId\" is wrong. Must be an alphanumeric string",
+								"/api/sessions", HttpStatus.BAD_REQUEST);
+					}
 					builder = builder.customSessionId(customSessionId);
 				}
 				builder = builder.defaultCustomLayout((defaultCustomLayout != null) ? defaultCustomLayout : "");
