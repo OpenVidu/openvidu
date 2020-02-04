@@ -57,7 +57,6 @@ public class JsonUtils {
 	public JsonElement fromFileToJsonElement(String filePath)
 			throws IOException, FileNotFoundException, JsonParseException, IllegalStateException {
 		JsonElement json = null;
-		JsonParser parser = new JsonParser();
 		FileReader reader = null;
 		try {
 			reader = new FileReader(filePath);
@@ -65,7 +64,7 @@ public class JsonUtils {
 			throw e;
 		}
 		try {
-			json = parser.parse(reader);
+			json = JsonParser.parseReader(reader);
 		} catch (JsonParseException | IllegalStateException exception) {
 			throw exception;
 		} finally {

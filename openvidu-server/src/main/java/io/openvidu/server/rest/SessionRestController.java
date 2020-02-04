@@ -338,7 +338,7 @@ public class SessionRestController {
 
 		if (params.get("kurentoOptions") != null) {
 			try {
-				kurentoOptions = new JsonParser().parse(params.get("kurentoOptions").toString()).getAsJsonObject();
+				kurentoOptions = JsonParser.parseString(params.get("kurentoOptions").toString()).getAsJsonObject();
 			} catch (Exception e) {
 				return this.generateErrorResponse("Error in parameter 'kurentoOptions'. It is not a valid JSON object",
 						"/api/tokens", HttpStatus.BAD_REQUEST);

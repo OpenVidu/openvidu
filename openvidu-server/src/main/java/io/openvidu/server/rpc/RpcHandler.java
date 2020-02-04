@@ -477,7 +477,7 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 				&& participant.getToken().getKurentoTokenOptions().isFilterAllowed(filterType))) {
 			JsonObject filterOptions;
 			try {
-				filterOptions = new JsonParser().parse(getStringParam(request, ProtocolElements.FILTER_OPTIONS_PARAM))
+				filterOptions = JsonParser.parseString(getStringParam(request, ProtocolElements.FILTER_OPTIONS_PARAM))
 						.getAsJsonObject();
 			} catch (JsonSyntaxException e) {
 				throw new OpenViduException(Code.FILTER_NOT_APPLIED_ERROR_CODE,
@@ -525,7 +525,7 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		}
 		String streamId = getStringParam(request, ProtocolElements.FILTER_STREAMID_PARAM);
 		String filterMethod = getStringParam(request, ProtocolElements.FILTER_METHOD_PARAM);
-		JsonObject filterParams = new JsonParser().parse(getStringParam(request, ProtocolElements.FILTER_PARAMS_PARAM))
+		JsonObject filterParams = JsonParser.parseString(getStringParam(request, ProtocolElements.FILTER_PARAMS_PARAM))
 				.getAsJsonObject();
 		boolean isModerator = this.sessionManager.isModeratorInSession(rpcConnection.getSessionId(), participant);
 

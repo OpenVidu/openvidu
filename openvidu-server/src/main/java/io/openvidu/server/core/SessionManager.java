@@ -106,7 +106,7 @@ public abstract class SessionManager {
 
 	public void sendMessage(String message, String sessionId) {
 		try {
-			JsonObject messageJson = new JsonParser().parse(message).getAsJsonObject();
+			JsonObject messageJson = JsonParser.parseString(message).getAsJsonObject();
 			sessionEventsHandler.onSendMessage(null, messageJson, getParticipants(sessionId), null, null);
 		} catch (JsonSyntaxException | IllegalStateException e) {
 			throw new OpenViduException(Code.SIGNAL_FORMAT_INVALID_ERROR_CODE,
@@ -116,7 +116,7 @@ public abstract class SessionManager {
 
 	public void sendMessage(Participant participant, String message, Integer transactionId) {
 		try {
-			JsonObject messageJson = new JsonParser().parse(message).getAsJsonObject();
+			JsonObject messageJson = JsonParser.parseString(message).getAsJsonObject();
 			sessionEventsHandler.onSendMessage(participant, messageJson, getParticipants(participant.getSessionId()),
 					transactionId, null);
 		} catch (JsonSyntaxException | IllegalStateException e) {

@@ -753,8 +753,7 @@ public class OpenviduConfig {
 	}
 
 	private List<Header> checkWebhookHeaders(String headers) throws Exception {
-		JsonParser parser = new JsonParser();
-		JsonElement elem = parser.parse(headers);
+		JsonElement elem = JsonParser.parseString(headers);
 		JsonArray headersJsonArray = elem.getAsJsonArray();
 		List<Header> headerList = new ArrayList<>();
 
@@ -781,8 +780,7 @@ public class OpenviduConfig {
 	}
 
 	private List<CDREventName> checkWebhookEvents(String events) throws Exception {
-		JsonParser parser = new JsonParser();
-		JsonElement elem = parser.parse(events);
+		JsonElement elem = JsonParser.parseString(events);
 		JsonArray eventsJsonArray = elem.getAsJsonArray();
 		List<CDREventName> eventList = new ArrayList<>();
 
