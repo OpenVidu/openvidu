@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2017-2019 OpenVidu (https://openvidu.io/)
+ * (C) Copyright 2017-2020 OpenVidu (https://openvidu.io)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -237,8 +237,13 @@ public class SingleStreamRecordingService extends RecordingService {
 		recorder.addRecordingListener(new EventListener<RecordingEvent>() {
 			@Override
 			public void onEvent(RecordingEvent event) {
-				activeRecorders.get(session.getSessionId()).get(participant.getPublisherStreamId())
-						.setStartTime(Long.parseLong(event.getTimestampMillis()));
+				activeRecorders
+				.get(session
+						.getSessionId())
+				.get(participant
+						.getPublisherStreamId())
+						.setStartTime(Long.parseLong(event
+								.getTimestampMillis()));
 				log.info("Recording started event for stream {}", participant.getPublisherStreamId());
 				globalStartLatch.countDown();
 			}
