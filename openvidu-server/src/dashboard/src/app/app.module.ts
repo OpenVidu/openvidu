@@ -35,9 +35,6 @@ import { RestService } from './services/rest.service';
     AppMaterialModule,
     FlexLayoutModule
   ],
-  entryComponents: [
-    CredentialsDialogComponent
-  ],
   providers: [InfoService, RestService],
   bootstrap: [AppComponent]
 })
