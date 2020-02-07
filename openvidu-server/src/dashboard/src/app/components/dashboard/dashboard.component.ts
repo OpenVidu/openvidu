@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewChild, ElementRef, HostListener, OnDestroy } from '@angular/core';
-import { MatDialog, MatDialogRef } from '@angular/material';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { Subscription } from 'rxjs';
 
 import { InfoService } from '../../services/info.service';

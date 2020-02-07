@@ -2,7 +2,6 @@ import { NgModule } from '@angular/core';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { FormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
-import 'hammerjs';
 import { AppComponent } from './app.component';
 import { AppMaterialModule } from './app.material.module';
 import { routing } from './app.routing';
