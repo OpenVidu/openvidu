@@ -33,7 +33,6 @@ import org.kurento.client.IceCandidate;
 import org.kurento.client.ListenerSubscription;
 import org.kurento.client.MediaElement;
 import org.kurento.client.MediaPipeline;
-import org.kurento.client.PassThrough;
 import org.kurento.client.PlayerEndpoint;
 import org.kurento.client.RtpEndpoint;
 import org.kurento.client.SdpEndpoint;
@@ -472,11 +471,8 @@ public abstract class MediaEndpoint {
 			throw new OpenViduException(Code.MEDIA_WEBRTC_ENDPOINT_ERROR_CODE,
 					"Can't register event listener for null WebRtcEndpoint (ep: " + endpointName + ")");
 		}
-		webEndpoint.addOnIceCandidateListener(new EventListener<OnIceCandidateEvent>() {
-			@Override
-			public void onEvent(OnIceCandidateEvent event) {
-				owner.sendIceCandidate(senderPublicId, endpointName, event.getCandidate());
-			}
+		webEndpoint.addOnIceCandidateListener(event -> {
+			owner.sendIceCandidate(senderPublicId, endpointName, event.getCandidate());
 		});
 	}
 
