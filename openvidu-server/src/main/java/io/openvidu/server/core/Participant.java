@@ -37,7 +37,7 @@ public class Participant {
 	protected EndpointType endpointType; // Type of participant (web participant, IP cam participant...)
 
 	protected boolean streaming = false;
-	protected volatile boolean closed;
+	protected volatile boolean closed = false;
 
 	private final String METADATA_SEPARATOR = "%/%";
 
