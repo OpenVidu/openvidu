@@ -1034,18 +1034,24 @@ export class Session implements EventDispatcher {
      * @hidden
      */
     reconnectBrokenStreams(): void {
-        console.info('Re-establishing media connections');
+        console.info('Re-establishing media connections...');
+        let someReconnection = false;
         // Re-establish Publisher stream
         if (!!this.connection.stream && this.connection.stream.streamIceConnectionStateBroken()) {
             console.warn('Re-establishing Publisher ' + this.connection.stream.streamId);
             this.connection.stream.initWebRtcPeerSend(true);
+            someReconnection = true;
         }
         // Re-establish Subscriber streams
         for (let remoteConnection of Object.values(this.remoteConnections)) {
             if (!!remoteConnection.stream && remoteConnection.stream.streamIceConnectionStateBroken()) {
                 console.warn('Re-establishing Subscriber ' + remoteConnection.stream.streamId);
                 remoteConnection.stream.initWebRtcPeerReceive(true);
+                someReconnection = true;
             }
+        }
+        if (!someReconnection) {
+            console.info('There were no media streams in need of a reconnection');
         }
     }
 
