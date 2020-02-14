@@ -118,6 +118,10 @@ public class ProtocolElements {
 	public static final String FILTEREVENTLISTENER_EVENTTYPE_PARAM = "eventType";
 	public static final String FILTEREVENTLISTENER_DATA_PARAM = "data";
 
+	public static final String RECONNECTSTREAM_METHOD = "reconnectStream";
+	public static final String RECONNECTSTREAM_STREAM_PARAM = "stream";
+	public static final String RECONNECTSTREAM_SDPOFFER_PARAM = "sdpOffer";
+
 	// ---------------------------- SERVER RESPONSES & EVENTS -----------------
 
 	public static final String PARTICIPANTJOINED_METHOD = "participantJoined";
