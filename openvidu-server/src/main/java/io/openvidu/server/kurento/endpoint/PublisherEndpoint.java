@@ -77,15 +77,18 @@ public class PublisherEndpoint extends MediaEndpoint {
 	public int numberOfSubscribers = 0;
 
 	public PublisherEndpoint(EndpointType endpointType, KurentoParticipant owner, String endpointName,
-			MediaPipeline pipeline, OpenviduConfig openviduConfig) {
+			MediaPipeline pipeline, OpenviduConfig openviduConfig, PassThrough passThru) {
 		super(endpointType, owner, endpointName, pipeline, openviduConfig, log);
+		this.passThru = passThru;
 	}
 
 	@Override
 	protected void internalEndpointInitialization(final CountDownLatch endpointLatch) {
 		super.internalEndpointInitialization(endpointLatch);
-		passThru = new PassThrough.Builder(getPipeline()).build();
-		passThruSubscription = registerElemErrListener(passThru);
+		if (this.passThru == null) {
+			passThru = new PassThrough.Builder(getPipeline()).build();
+			passThruSubscription = registerElemErrListener(passThru);
+		}
 	}
 
 	@Override
@@ -402,6 +405,11 @@ public class PublisherEndpoint extends MediaEndpoint {
 			internalSinkConnect(this.getEndpoint(), sink, MediaType.VIDEO);
 			break;
 		}
+	}
+
+	public synchronized PassThrough disconnectFromPassThrough() {
+		this.internalSinkDisconnect(this.getWebEndpoint(), this.passThru);
+		return this.passThru;
 	}
 
 	private String getNext(String uid) {

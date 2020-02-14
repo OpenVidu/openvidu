@@ -24,6 +24,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 
+import org.kurento.client.BaseRtpEndpoint;
 import org.kurento.client.Continuation;
 import org.kurento.client.Endpoint;
 import org.kurento.client.ErrorEvent;
@@ -32,7 +33,7 @@ import org.kurento.client.IceCandidate;
 import org.kurento.client.ListenerSubscription;
 import org.kurento.client.MediaElement;
 import org.kurento.client.MediaPipeline;
-import org.kurento.client.OnIceCandidateEvent;
+import org.kurento.client.PassThrough;
 import org.kurento.client.PlayerEndpoint;
 import org.kurento.client.RtpEndpoint;
 import org.kurento.client.SdpEndpoint;
@@ -155,7 +156,8 @@ public abstract class MediaEndpoint {
 	}
 
 	/**
-	 * @return the internal endpoint ({@link RtpEndpoint} or {@link WebRtcEndpoint})
+	 * @return the internal endpoint ({@link RtpEndpoint} or {@link WebRtcEndpoint}
+	 *         or {@link PlayerEndpoint})
 	 */
 	public Endpoint getEndpoint() {
 		if (this.isWeb()) {
@@ -165,6 +167,13 @@ public abstract class MediaEndpoint {
 		} else {
 			return this.endpoint;
 		}
+	}
+
+	public BaseRtpEndpoint getBaseRtpEndpoint() {
+		if (this.isWeb()) {
+			return this.webEndpoint;
+		}
+		return this.endpoint;
 	}
 
 	public long createdAt() {

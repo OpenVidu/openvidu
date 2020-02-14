@@ -155,6 +155,9 @@ public abstract class SessionManager {
 	public abstract Participant publishIpcam(Session session, MediaOptions mediaOptions, String serverMetadata)
 			throws Exception;
 
+	public abstract void reconnectStream(Participant participant, String streamId, String sdpOffer,
+			Integer transactionId);
+
 	public abstract String getParticipantPrivateIdFromStreamId(String sessionId, String streamId)
 			throws OpenViduException;
 

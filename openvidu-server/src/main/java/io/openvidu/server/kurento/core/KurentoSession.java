@@ -108,7 +108,7 @@ public class KurentoSession extends Session {
 			if (participant.equals(subscriber)) {
 				continue;
 			}
-			((KurentoParticipant) subscriber).cancelReceivingMedia((KurentoParticipant) participant, reason);
+			((KurentoParticipant) subscriber).cancelReceivingMedia((KurentoParticipant) participant, reason, false);
 		}
 
 		log.debug("SESSION {}: Unsubscribed other participants {} from the publisher {}", sessionId,
@@ -187,7 +187,7 @@ public class KurentoSession extends Session {
 		log.debug("SESSION {}: Cancel receiving media from participant '{}' for other participant", this.sessionId,
 				participant.getParticipantPublicId());
 		for (Participant other : participants.values()) {
-			((KurentoParticipant) other).cancelReceivingMedia(removedParticipant, reason);
+			((KurentoParticipant) other).cancelReceivingMedia(removedParticipant, reason, false);
 		}
 	}
 
@@ -329,8 +329,9 @@ public class KurentoSession extends Session {
 				}
 				getParticipants().forEach(p -> {
 					if (!OpenViduRole.SUBSCRIBER.equals(p.getToken().getRole())) {
-						((KurentoParticipant) p)
-								.resetPublisherEndpoint(mediaOptionsMap.get(p.getParticipantPublicId()));
+
+						((KurentoParticipant) p).resetPublisherEndpoint(mediaOptionsMap.get(p.getParticipantPublicId()),
+								null);
 					}
 				});
 				log.info(
