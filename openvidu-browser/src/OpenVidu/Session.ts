@@ -971,7 +971,7 @@ export class Session implements EventDispatcher {
      * @hidden
      */
     onLostConnection(reason: string): void {
-        console.warn('Lost connection in session ' + this.sessionId + ' waiting for reconnect');
+        console.warn('Lost connection in Session ' + this.sessionId);
         if (!!this.sessionId && !this.connection.disposed) {
             this.leave(true, reason);
         }
@@ -981,15 +981,15 @@ export class Session implements EventDispatcher {
      * @hidden
      */
     onRecoveredConnection(): void {
-        console.warn('Recovered connection in Session ' + this.sessionId);
-        // this.ee.emitEvent('connectionRecovered', []);
+        console.info('Recovered connection in Session ' + this.sessionId);
+        this.reconnectBrokenStreams();
+        this.ee.emitEvent('reconnected', []);
     }
 
     /**
      * @hidden
      */
     onMediaError(params): void {
-
         console.error('Media error: ' + JSON.stringify(params));
         const err = params.error;
         if (err) {
@@ -1028,6 +1028,25 @@ export class Session implements EventDispatcher {
                 const stream: Stream = connection.stream;
                 stream.filter.handlers[response.eventType](new FilterEvent(stream.filter, response.eventType, response.data));
             });
+    }
+
+    /**
+     * @hidden
+     */
+    reconnectBrokenStreams(): void {
+        console.info('Re-establishing media connections');
+        // Re-establish Publisher stream
+        if (!!this.connection.stream && this.connection.stream.streamIceConnectionStateBroken()) {
+            console.warn('Re-establishing Publisher ' + this.connection.stream.streamId);
+            this.connection.stream.initWebRtcPeerSend(true);
+        }
+        // Re-establish Subscriber streams
+        for (let remoteConnection of Object.values(this.remoteConnections)) {
+            if (!!remoteConnection.stream && remoteConnection.stream.streamIceConnectionStateBroken()) {
+                console.warn('Re-establishing Subscriber ' + remoteConnection.stream.streamId);
+                remoteConnection.stream.initWebRtcPeerReceive(true);
+            }
+        }
     }
 
     /**

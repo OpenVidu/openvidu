@@ -97,34 +97,15 @@ export class WebRtcPeer {
     /**
      * This method frees the resources used by WebRtcPeer
      */
-    dispose(videoSourceIsMediaStreamTrack: boolean) {
+    dispose() {
         console.debug('Disposing WebRtcPeer');
-        try {
-            if (this.pc) {
-                if (this.pc.signalingState === 'closed') {
-                    return;
-                }
-                this.remoteCandidatesQueue = [];
-                this.localCandidatesQueue = [];
-                // Stop senders
-                for (const sender of this.pc.getSenders()) {
-                    if (!videoSourceIsMediaStreamTrack) {
-                        if (!!sender.track) {
-                            sender.track.stop();
-                        }
-                    }
-                    this.pc.removeTrack(sender);
-                }
-                // Stop receivers
-                for (const receiver of this.pc.getReceivers()) {
-                    if (!!receiver.track) {
-                        receiver.track.stop();
-                    }
-                }
-                this.pc.close();
+        if (this.pc) {
+            if (this.pc.signalingState === 'closed') {
+                return;
             }
-        } catch (err) {
-            console.warn('Exception disposing webrtc peer ' + err);
+            this.pc.close();
+            this.remoteCandidatesQueue = [];
+            this.localCandidatesQueue = [];
         }
     }
 
@@ -262,6 +243,36 @@ export class WebRtcPeer {
                     resolve();
             }
         });
+    }
+
+    addIceConnectionStateChangeListener(otherId: string) {
+        this.pc.oniceconnectionstatechange = () => {
+            const iceConnectionState: RTCIceConnectionState = this.pc.iceConnectionState;
+            switch (iceConnectionState) {
+                case 'disconnected':
+                    // Possible network disconnection
+                    console.warn('IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') change to "disconnected". Possible network disconnection');
+                    break;
+                case 'failed':
+                    console.error('IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') to "failed"');
+                    break;
+                case 'closed':
+                    console.log('IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') change to "closed"');
+                    break;
+                case 'new':
+                    console.log('IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') change to "new"');
+                    break;
+                case 'checking':
+                    console.log('IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') change to "checking"');
+                    break;
+                case 'connected':
+                    console.log('IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') change to "connected"');
+                    break;
+                case 'completed':
+                    console.log('IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') change to "completed"');
+                    break;
+            }
+        }
     }
 
 }

@@ -919,6 +919,8 @@ export class OpenVidu {
     console.warn('Websocket connection lost (reconnecting)');
     if (!this.isRoomAvailable()) {
       alert('Connection error. Please reload page.');
+    } else {
+      this.session.emitEvent('reconnecting', []);
     }
   }
 
@@ -928,6 +930,7 @@ export class OpenVidu {
       this.sendRequest('connect', { sessionId: this.session.connection.rpcSessionId }, (error, response) => {
         if (!!error) {
           console.error(error);
+          console.warn('Websocket was able to reconnect to OpenVidu Server, but your Connection was already destroyed due to timeout. You are no longer a participant of the Session and your media streams have been destroyed');
           this.session.onLostConnection("networkDisconnect");
           this.jsonRpcClient.close(4101, "Reconnection fault");
         } else {

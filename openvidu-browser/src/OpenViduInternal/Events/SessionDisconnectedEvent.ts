@@ -29,7 +29,10 @@ export class SessionDisconnectedEvent extends Event {
      * - "forceDisconnectByUser": you have been evicted from the Session by other user calling `Session.forceDisconnect()`
      * - "forceDisconnectByServer": you have been evicted from the Session by the application
      * - "sessionClosedByServer": the Session has been closed by the application
-     * - "networkDisconnect": your network connection has dropped
+     * - "networkDisconnect": your network connection has dropped. Before a SessionDisconnectedEvent with this reason is triggered,
+     *      Session object will always have previously dispatched a `reconnecting` event. If the reconnection process succeeds,
+     *      Session object will dispatch a `reconnected` event. If it fails, Session object will dispatch a SessionDisconnectedEvent
+     *      with reason "networkDisconnect"
      */
     reason: string;
 

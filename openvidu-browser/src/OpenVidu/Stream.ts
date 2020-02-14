@@ -431,7 +431,7 @@ export class Stream implements EventDispatcher {
      */
     subscribe(): Promise<any> {
         return new Promise((resolve, reject) => {
-            this.initWebRtcPeerReceive()
+            this.initWebRtcPeerReceive(false)
                 .then(() => {
                     resolve();
                 })
@@ -447,7 +447,7 @@ export class Stream implements EventDispatcher {
     publish(): Promise<any> {
         return new Promise((resolve, reject) => {
             if (this.isLocalStreamReadyToPublish) {
-                this.initWebRtcPeerSend()
+                this.initWebRtcPeerSend(false)
                     .then(() => {
                         resolve();
                     })
@@ -473,19 +473,9 @@ export class Stream implements EventDispatcher {
      */
     disposeWebRtcPeer(): void {
         if (!!this.webRtcPeer) {
-            const isSenderAndCustomTrack: boolean = !!this.outboundStreamOpts &&
-                typeof MediaStreamTrack !== 'undefined' && this.outboundStreamOpts.publisherProperties.videoSource instanceof MediaStreamTrack;
-            this.webRtcPeer.dispose(isSenderAndCustomTrack);
+            this.webRtcPeer.dispose();
+            this.stopWebRtcStats();
         }
-        if (!!this.speechEvent) {
-            if (!!this.speechEvent.stop) {
-                this.speechEvent.stop();
-            }
-            delete this.speechEvent;
-        }
-
-        this.stopWebRtcStats();
-
         console.info((!!this.outboundStreamOpts ? 'Outbound ' : 'Inbound ') + "WebRTCPeer from 'Stream' with id [" + this.streamId + '] is now closed');
     }
 
@@ -501,6 +491,12 @@ export class Stream implements EventDispatcher {
                 track.stop();
             });
             delete this.mediaStream;
+        }
+        if (!!this.speechEvent) {
+            if (!!this.speechEvent.stop) {
+                this.speechEvent.stop();
+            }
+            delete this.speechEvent;
         }
         console.info((!!this.outboundStreamOpts ? 'Local ' : 'Remote ') + "MediaStream from 'Stream' with id [" + this.streamId + '] is now disposed');
     }
@@ -767,6 +763,17 @@ export class Stream implements EventDispatcher {
         return this.webRtcPeer.localCandidatesQueue;
     }
 
+    /**
+     * @hidden
+     */
+    streamIceConnectionStateBroken() {
+        if (!this.getWebRtcPeer() || !this.getRTCPeerConnection()) {
+            return false;
+        }
+        const iceConnectionState: RTCIceConnectionState = this.getRTCPeerConnection().iceConnectionState;
+        return iceConnectionState === 'disconnected' || iceConnectionState === 'failed';
+    }
+
     /* Private methods */
 
     private setSpeechEventIfNotExists(): boolean {
@@ -782,10 +789,15 @@ export class Stream implements EventDispatcher {
         return false;
     }
 
-    private initWebRtcPeerSend(): Promise<any> {
+    /**
+     * @hidden
+     */
+    initWebRtcPeerSend(reconnect: boolean): Promise<any> {
         return new Promise((resolve, reject) => {
 
-            this.initHarkEvents(); // Init hark events for the local stream
+            if (!reconnect) {
+                this.initHarkEvents(); // Init hark events for the local stream
+            }
 
             const userMediaConstraints = {
                 audio: this.isSendAudio(),
@@ -804,23 +816,32 @@ export class Stream implements EventDispatcher {
                 console.debug('Sending SDP offer to publish as '
                     + this.streamId, sdpOfferParam);
 
-                let typeOfVideo = '';
-                if (this.isSendVideo()) {
-                    typeOfVideo = (typeof MediaStreamTrack !== 'undefined' && this.outboundStreamOpts.publisherProperties.videoSource instanceof MediaStreamTrack) ? 'CUSTOM' : (this.isSendScreen() ? 'SCREEN' : 'CAMERA');
+                const method = reconnect ? 'reconnectStream' : 'publishVideo';
+                let params;
+                if (reconnect) {
+                    params = {
+                        stream: this.streamId
+                    }
+                } else {
+                    let typeOfVideo = '';
+                    if (this.isSendVideo()) {
+                        typeOfVideo = (typeof MediaStreamTrack !== 'undefined' && this.outboundStreamOpts.publisherProperties.videoSource instanceof MediaStreamTrack) ? 'CUSTOM' : (this.isSendScreen() ? 'SCREEN' : 'CAMERA');
+                    }
+                    params = {
+                        doLoopback: this.displayMyRemote() || false,
+                        hasAudio: this.isSendAudio(),
+                        hasVideo: this.isSendVideo(),
+                        audioActive: this.audioActive,
+                        videoActive: this.videoActive,
+                        typeOfVideo,
+                        frameRate: !!this.frameRate ? this.frameRate : -1,
+                        videoDimensions: JSON.stringify(this.videoDimensions),
+                        filter: this.outboundStreamOpts.publisherProperties.filter
+                    }
                 }
+                params['sdpOffer'] = sdpOfferParam;
 
-                this.session.openvidu.sendRequest('publishVideo', {
-                    sdpOffer: sdpOfferParam,
-                    doLoopback: this.displayMyRemote() || false,
-                    hasAudio: this.isSendAudio(),
-                    hasVideo: this.isSendVideo(),
-                    audioActive: this.audioActive,
-                    videoActive: this.videoActive,
-                    typeOfVideo,
-                    frameRate: !!this.frameRate ? this.frameRate : -1,
-                    videoDimensions: JSON.stringify(this.videoDimensions),
-                    filter: this.outboundStreamOpts.publisherProperties.filter
-                }, (error, response) => {
+                this.session.openvidu.sendRequest(method, params, (error, response) => {
                     if (error) {
                         if (error.code === 401) {
                             reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to publish"));
@@ -837,32 +858,43 @@ export class Stream implements EventDispatcher {
                                 if (this.displayMyRemote()) {
                                     this.remotePeerSuccessfullyEstablished();
                                 }
-                                this.ee.emitEvent('stream-created-by-publisher', []);
+                                if (reconnect) {
+                                    this.ee.emitEvent('stream-reconnected-by-publisher', []);
+                                } else {
+                                    this.ee.emitEvent('stream-created-by-publisher', []);
+                                }
                                 this.initWebRtcStats();
+                                console.info("'Publisher' (" + this.streamId + ") successfully " + (reconnect ? "reconnected" : "published") + " to session");
                                 resolve();
                             })
                             .catch(error => {
                                 reject(error);
                             });
-                        console.info("'Publisher' successfully published to session");
                     }
                 });
             };
 
+            if (reconnect) {
+                this.disposeWebRtcPeer();
+            }
             if (this.displayMyRemote()) {
                 this.webRtcPeer = new WebRtcPeerSendrecv(options);
             } else {
                 this.webRtcPeer = new WebRtcPeerSendonly(options);
             }
-            this.webRtcPeer.generateOffer().then(offer => {
-                successCallback(offer);
+            this.webRtcPeer.addIceConnectionStateChangeListener('publisher of ' + this.connection.connectionId);
+            this.webRtcPeer.generateOffer().then(sdpOffer => {
+                successCallback(sdpOffer);
             }).catch(error => {
                 reject(new Error('(publish) SDP offer error: ' + JSON.stringify(error)));
             });
         });
     }
 
-    private initWebRtcPeerReceive(): Promise<any> {
+    /**
+     * @hidden
+     */
+    initWebRtcPeerReceive(reconnect: boolean): Promise<any> {
         return new Promise((resolve, reject) => {
 
             const offerConstraints = {
@@ -881,10 +913,12 @@ export class Stream implements EventDispatcher {
             const successCallback = (sdpOfferParam) => {
                 console.debug('Sending SDP offer to subscribe to '
                     + this.streamId, sdpOfferParam);
-                this.session.openvidu.sendRequest('receiveVideoFrom', {
-                    sender: this.streamId,
-                    sdpOffer: sdpOfferParam
-                }, (error, response) => {
+
+                const method = reconnect ? 'reconnectStream' : 'receiveVideoFrom';
+                const params = { sdpOffer: sdpOfferParam };
+                params[reconnect ? 'stream' : 'sender'] = this.streamId;
+
+                this.session.openvidu.sendRequest(method, params, (error, response) => {
                     if (error) {
                         reject(new Error('Error on recvVideoFrom: ' + JSON.stringify(error)));
                     } else {
@@ -901,6 +935,7 @@ export class Stream implements EventDispatcher {
                         }
                         const needsTimeoutOnProcessAnswer = this.session.countDownForIonicIosSubscribersActive;
                         this.webRtcPeer.processAnswer(response.sdpAnswer, needsTimeoutOnProcessAnswer).then(() => {
+                            console.info("'Subscriber' (" + this.streamId + ") successfully " + (reconnect ? "reconnected" : "subscribed"));
                             this.remotePeerSuccessfullyEstablished();
                             this.initWebRtcStats();
                             resolve();
@@ -912,9 +947,10 @@ export class Stream implements EventDispatcher {
             };
 
             this.webRtcPeer = new WebRtcPeerRecvonly(options);
+            this.webRtcPeer.addIceConnectionStateChangeListener(this.streamId);
             this.webRtcPeer.generateOffer()
-                .then(offer => {
-                    successCallback(offer);
+                .then(sdpOffer => {
+                    successCallback(sdpOffer);
                 })
                 .catch(error => {
                     reject(new Error('(subscribe) SDP offer error: ' + JSON.stringify(error)));
