@@ -470,7 +470,11 @@ public abstract class SessionManager {
 
 		if (openviduConfig.isRecordingModuleEnabled() && stopRecording
 				&& this.recordingManager.sessionIsBeingRecorded(session.getSessionId())) {
-			recordingManager.stopRecording(session, null, RecordingManager.finalReason(reason));
+			try {
+				recordingManager.stopRecording(session, null, RecordingManager.finalReason(reason));
+			} catch (OpenViduException e) {
+				log.error("Error stopping recording of session {}: {}", session.getSessionId(), e.getMessage());
+			}
 		}
 
 		final String mediaNodeId = session.getMediaNodeId();

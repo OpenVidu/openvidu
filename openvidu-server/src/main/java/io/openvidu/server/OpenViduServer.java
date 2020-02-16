@@ -104,13 +104,13 @@ public class OpenViduServer implements JsonRpcConfigurer {
 			log.info("OpenVidu CDR service is enabled");
 			loggers.add(new CDRLoggerFile());
 		} else {
-			log.info("OpenVidu CDR service is disabled");
+			log.info("OpenVidu CDR service is disabled (may be enable with 'openvidu.cdr=true')");
 		}
 		if (openviduConfig.isWebhookEnabled()) {
 			log.info("OpenVidu Webhook service is enabled");
 			loggers.add(new CDRLoggerWebhook(openviduConfig));
 		} else {
-			log.info("OpenVidu Webhook service is disabled");
+			log.info("OpenVidu Webhook service is disabled (may be enabled with 'openvidu.webhook=true')");
 		}
 		return new CallDetailRecord(loggers);
 	}

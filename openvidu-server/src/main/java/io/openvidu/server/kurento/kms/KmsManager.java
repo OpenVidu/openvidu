@@ -186,7 +186,7 @@ public abstract class KmsManager {
 				// TODO: This should be done here instead of after KurentoClient.create method returns
 				// kms.setKurentoClientConnected(true);
 				// kms.setTimeOfKurentoClientConnection(System.currentTimeMillis());
-				log.warn("Kurento Client is now connected to KMS {} with uri {}", kmsId, kms.getUri());
+				log.info("Kurento Client is now connected to KMS {} with uri {}", kmsId, kms.getUri());
 			}
 		};
 	}
