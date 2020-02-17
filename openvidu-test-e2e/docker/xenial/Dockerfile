@@ -9,7 +9,7 @@ RUN apt-get update && apt-get -y upgrade
 RUN apt-get install -y software-properties-common && apt-get install -y --no-install-recommends apt-utils
 
 # Install Kurento Media Server (KMS)
-RUN echo "deb [arch=amd64] http://ubuntu.openvidu.io/6.12.0 xenial kms6" | tee /etc/apt/sources.list.d/kurento.list \
+RUN echo "deb [arch=amd64] http://ubuntu.openvidu.io/6.13.0 xenial kms6" | tee /etc/apt/sources.list.d/kurento.list \
 	&& apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 5AFA7A83 \
 	&& apt-get update \
 	&& apt-get -y install kurento-media-server
@@ -17,7 +17,7 @@ RUN sed -i "s/DAEMON_USER=\"kurento\"/DAEMON_USER=\"root\"/g" /etc/default/kuren
 
 # Install Node
 RUN apt-get update && apt-get install -y curl
-RUN curl -sL https://deb.nodesource.com/setup_10.x | bash - && apt-get install -y nodejs
+RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - && apt-get install -y nodejs
 
 # Java 8
 RUN apt-get install -y openjdk-8-jdk-headless
