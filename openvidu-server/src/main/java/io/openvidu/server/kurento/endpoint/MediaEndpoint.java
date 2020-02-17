@@ -510,12 +510,13 @@ public abstract class MediaEndpoint {
 		this.webEndpoint.addIceCandidate(candidate, new Continuation<Void>() {
 			@Override
 			public void onSuccess(Void result) throws Exception {
-				log.trace("Ice candidate added to the internal endpoint");
+				log.trace("Ice candidate \"{}\" added to the internal endpoint", candidate.getCandidate());
 			}
 
 			@Override
 			public void onError(Throwable cause) throws Exception {
-				log.warn("EP {}: Failed to add ice candidate to the internal endpoint", endpointName, cause);
+				log.warn("EP {}: Failed to add ice candidate \"{}\" to the internal endpoint: {}", endpointName,
+						candidate.getCandidate(), cause.getMessage());
 			}
 		});
 	}
