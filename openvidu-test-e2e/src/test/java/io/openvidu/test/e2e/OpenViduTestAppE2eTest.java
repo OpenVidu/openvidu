@@ -2984,7 +2984,7 @@ public class OpenViduTestAppE2eTest {
 			String ipCamBody = "{'type':'IPCAM','rtspUri':'rtsp://dummyurl.com','adaptativeBitrate':true,'onlyPlayWithSubscribers':true,'data':'MY_IP_CAMERA'}";
 			JsonObject response = restClient.rest(HttpMethod.POST, "/api/sessions/IP_CAM_SESSION/connection", ipCamBody,
 					HttpStatus.SC_OK, true,
-					"{'connectionId':'STR','createdAt':0,'location':'STR','platform':'STR','token':'STR','role':'STR','serverData':'STR','clientData':'STR','publishers':[],'subscribers':[]}");
+					"{'connectionId':'STR','createdAt':0,'location':'STR','platform':'STR','role':'STR','serverData':'STR','clientData':'STR','publishers':[],'subscribers':[]}");
 
 			CustomWebhook.waitForEvent("sessionCreated", 1);
 			CustomWebhook.waitForEvent("participantJoined", 1);
