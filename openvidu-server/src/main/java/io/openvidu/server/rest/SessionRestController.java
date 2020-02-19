@@ -731,7 +731,7 @@ public class SessionRestController {
 					"/api/sessions/" + sessionId + "/connection", HttpStatus.BAD_REQUEST);
 		}
 
-		type = type != null ? type : "IPCAM";
+		type = "IPCAM"; // Other possible values in the future
 		adaptativeBitrate = adaptativeBitrate != null ? adaptativeBitrate : true;
 		onlyPlayWithSubscribers = onlyPlayWithSubscribers != null ? onlyPlayWithSubscribers : true;
 		data = data != null ? data : "";
