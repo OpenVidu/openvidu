@@ -39,7 +39,11 @@ public class GeoLocation {
 
 	@Override
 	public String toString() {
-		return this.city + ", " + this.country;
+		String location = this.country;
+		if (this.city != null) {
+			location = this.city + ", " + location;
+		}
+		return location;
 	}
 
 }

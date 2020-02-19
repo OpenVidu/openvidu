@@ -897,7 +897,7 @@ public class KurentoSessionManager extends SessionManager {
 
 		String rtspConnectionId = kMediaOptions.getTypeOfVideo() + "_" + protocol + "_"
 				+ RandomStringUtils.randomAlphanumeric(4).toUpperCase() + "_" + url.getAuthority() + url.getPath();
-		rtspConnectionId = rtspConnectionId.replace("/", "_").replace("-", "").replace(".", "_");
+		rtspConnectionId = rtspConnectionId.replace("/", "_").replace("-", "").replace(".", "_").replace(":", "_");
 		rtspConnectionId = IdentifierPrefixes.IPCAM_ID + rtspConnectionId;
 
 		// Store a "fake" participant for the IpCam connection
