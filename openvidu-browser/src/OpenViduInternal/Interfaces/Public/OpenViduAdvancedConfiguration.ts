@@ -41,4 +41,15 @@ export interface OpenViduAdvancedConfiguration {
      */
     publisherSpeakingEventsOptions?: any;
 
+    /**
+     * Determines the automatic reconnection process policy. Whenever the client's network drops, OpenVidu Browser starts a reconnection process with OpenVidu Server. After network is recovered, OpenVidu Browser automatically
+     * inspects all of its media streams to see their status. For any of them that are broken, it asks OpenVidu Server for a forced and silent reconnection.
+     * 
+     * This policy is technically enough to recover any broken media connection after a network drop, but in practice it has been proven that OpenVidu Browser may think a media connection has properly recovered when in fact it has not.
+     * This is not a common case, and it only affects Publisher streams, but it may occur. This property allows **forcing OpenVidu Browser to reconnect all of its outgoing media streams** after a network drop regardless of their supposed status.
+     * 
+     * Default to `false`.
+     */
+    forceMediaReconnectionAfterNetworkDrop?: boolean;
+
 }

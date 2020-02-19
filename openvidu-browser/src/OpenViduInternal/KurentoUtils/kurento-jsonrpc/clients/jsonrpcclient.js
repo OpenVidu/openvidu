@@ -37,7 +37,6 @@ var Logger = console;
  * <pre>
  * ws : {
  * 	uri : URI to conntect to,
- *  useSockJS : true (use SockJS) / false (use WebSocket) by default,
  * 	onconnected : callback method to invoke when connection is successful,
  * 	ondisconnect : callback method to invoke when the connection is lost (max retries for reconnecting reached),
  * 	onreconnecting : callback method to invoke when the client is reconnecting,

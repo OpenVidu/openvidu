@@ -29,9 +29,19 @@ import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
 import * as screenSharingAuto from '../OpenViduInternal/ScreenSharing/Screen-Capturing-Auto';
 import * as screenSharing from '../OpenViduInternal/ScreenSharing/Screen-Capturing';
 
+/**
+ * @hidden
+ */
 import EventEmitter = require('wolfy87-eventemitter');
+/**
+ * @hidden
+ */
 import RpcBuilder = require('../OpenViduInternal/KurentoUtils/kurento-jsonrpc');
+/**
+ * @hidden
+ */
 import platform = require('platform');
+
 platform['isIonicIos'] = (platform.product === 'iPhone' || platform.product === 'iPad') && platform.ua!!.indexOf('Safari') === -1;
 platform['isIonicAndroid'] = platform.os!!.family === 'Android' && platform.name == "Android Browser";
 
@@ -802,7 +812,6 @@ export class OpenVidu {
       sendCloseMessage: false,
       ws: {
         uri: this.wsUri,
-        useSockJS: false,
         onconnected: onConnectSucces,
         ondisconnect: this.disconnectCallback.bind(this),
         onreconnecting: this.reconnectingCallback.bind(this),

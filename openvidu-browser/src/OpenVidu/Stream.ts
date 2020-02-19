@@ -31,8 +31,11 @@ import { StreamManagerEvent } from '../OpenViduInternal/Events/StreamManagerEven
 import { StreamPropertyChangedEvent } from '../OpenViduInternal/Events/StreamPropertyChangedEvent';
 import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/OpenViduError';
 
-import EventEmitter = require('wolfy87-eventemitter');
+/**
+ * @hidden
+ */
 import hark = require('hark');
+import EventEmitter = require('wolfy87-eventemitter');
 import platform = require('platform');
 
 
@@ -769,6 +772,10 @@ export class Stream implements EventDispatcher {
     streamIceConnectionStateBroken() {
         if (!this.getWebRtcPeer() || !this.getRTCPeerConnection()) {
             return false;
+        }
+        if (this.isLocal && !!this.session.openvidu.advancedConfiguration.forceMediaReconnectionAfterNetworkDrop) {
+            console.warn('OpenVidu Browser advanced configuration option "forceMediaReconnectionAfterNetworkDrop" is enabled. Publisher stream ' + this.streamId + 'will force a reconnection');
+            return true;
         }
         const iceConnectionState: RTCIceConnectionState = this.getRTCPeerConnection().iceConnectionState;
         return iceConnectionState === 'disconnected' || iceConnectionState === 'failed';
