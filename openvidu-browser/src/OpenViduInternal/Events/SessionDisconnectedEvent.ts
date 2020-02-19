@@ -20,7 +20,7 @@ import { Session } from '../../OpenVidu/Session';
 
 
 /**
- * Defines event `sessionDisconnected` dispatched by [[Session]]
+ * Defines event `sessionDisconnected` dispatched by [[Session]] after the local user has left the session. This is the local version of the `connectionDestroyed` event, which is only dispatched by remote users
  */
 export class SessionDisconnectedEvent extends Event {
 

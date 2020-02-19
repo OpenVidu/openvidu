@@ -23,8 +23,8 @@ import { Stream } from '../../OpenVidu/Stream';
 
 /**
  * Defines the following events:
- * - `streamCreated`: dispatched by [[Session]] and [[Publisher]]
- * - `streamDestroyed`: dispatched by [[Session]] and [[Publisher]]
+ * - `streamCreated`: dispatched by [[Session]] and [[Publisher]] after some user has started publishing to the session
+ * - `streamDestroyed`: dispatched by [[Session]] and [[Publisher]] after some user has stopped publishing to the session
  */
 export class StreamEvent extends Event {
 

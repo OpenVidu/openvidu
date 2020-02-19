@@ -21,8 +21,8 @@ import { Session } from '../../OpenVidu/Session';
 
 /**
  * Defines the following events:
- * - `recordingStarted`: dispatched by [[Session]]
- * - `recordingStopped`: dispatched by [[Session]]
+ * - `recordingStarted`: dispatched by [[Session]] after the session has started being recorded
+ * - `recordingStopped`: dispatched by [[Session]] after the session has stopped being recorded
  */
 export class RecordingEvent extends Event {
 

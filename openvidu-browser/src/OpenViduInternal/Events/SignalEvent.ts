@@ -22,8 +22,8 @@ import { Session } from '../../OpenVidu/Session';
 
 /**
  * Defines the following events:
- * - `signal`: dispatched by [[Session]]
- * - `signal:TYPE`: dispatched by [[Session]]
+ * - `signal`: dispatched by [[Session]] when a signal is received
+ * - `signal:TYPE`: dispatched by [[Session]] when a signal of type TYPE is received
  */
 export class SignalEvent extends Event {
 

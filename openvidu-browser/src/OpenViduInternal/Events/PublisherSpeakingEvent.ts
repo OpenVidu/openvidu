@@ -22,8 +22,8 @@ import { Session } from '../..';
 
 /**
  * Defines the following events:
- * - `publisherStartSpeaking`: dispatched by [[Session]]
- * - `publisherStopSpeaking`: dispatched by [[Session]]
+ * - `publisherStartSpeaking`: dispatched by [[Session]] when a remote user has started speaking
+ * - `publisherStopSpeaking`: dispatched by [[Session]] when a remote user has stopped speaking
  *
  * More information:
  * - This events will only be triggered for **remote streams that have audio tracks** ([[Stream.hasAudio]] must be true)
