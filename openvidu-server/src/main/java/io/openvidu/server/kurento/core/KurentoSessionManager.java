@@ -624,6 +624,10 @@ public class KurentoSessionManager extends SessionManager {
 		if (participantPrivateId != null) {
 			Participant participant = this.getParticipant(participantPrivateId);
 			if (participant != null) {
+				if (participant.isIpcam()) {
+					throw new OpenViduException(Code.USER_GENERIC_ERROR_CODE, "Stream '" + streamId
+							+ " belonging to an IPCAM participant cannot be unpublished. IPCAM streams can only be unpublished by forcing the disconnection of the IPCAM connection");
+				}
 				this.unpublishVideo(participant, moderator, transactionId, reason);
 				return true;
 			} else {
@@ -921,6 +925,8 @@ public class KurentoSessionManager extends SessionManager {
 
 		// Publish the IpCam stream into the session
 		KurentoParticipant kParticipant = (KurentoParticipant) this.getParticipant(rtspConnectionId);
+		kParticipant.deleteIpcamProperties();
+
 		this.publishVideo(kParticipant, mediaOptions, null);
 		return kParticipant;
 	}
