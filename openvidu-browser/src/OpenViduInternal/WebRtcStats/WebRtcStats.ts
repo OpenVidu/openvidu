@@ -183,10 +183,7 @@ export class WebRtcStats {
                     if ((stat.type === 'inbound-rtp') &&
                         (
                             // Avoid firefox empty outbound-rtp statistics
-                            stat.nackCount !== null &&
-                            stat.isRemote === false &&
-                            stat.id.startsWith('inbound') &&
-                            stat.remoteId.startsWith('inbound')
+                            stat.nackCount !== null
                         )) {
 
                         const metricId = 'webrtc_inbound_' + stat.mediaType + '_' + stat.ssrc;
@@ -231,12 +228,7 @@ export class WebRtcStats {
 
                         sendPost(JSON.stringify(json));
 
-                    } else if ((stat.type === 'outbound-rtp') &&
-                        (
-                            // Avoid firefox empty inbound-rtp statistics
-                            stat.isRemote === false &&
-                            stat.id.toLowerCase().includes('outbound')
-                        )) {
+                    } else if (stat.type === 'outbound-rtp'){
 
                         const metricId = 'webrtc_outbound_' + stat.mediaType + '_' + stat.ssrc;
 
