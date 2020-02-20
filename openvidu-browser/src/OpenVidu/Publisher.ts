@@ -279,7 +279,22 @@ export class Publisher extends StreamManager {
      */
     replaceTrack(track: MediaStreamTrack): Promise<any> {
         return new Promise((resolve, reject) => {
-            this.stream.getRTCPeerConnection().getSenders()[0].replaceTrack(track).then(() => {
+            const senders: RTCRtpSender[] = this.stream.getRTCPeerConnection().getSenders();
+            let sender: RTCRtpSender | undefined;
+            if (track.kind === 'video') {
+                sender = senders.find(s => !!s.track && s.track.kind === 'video');
+                if (!sender) {
+                    reject(new Error('There\'s no replaceable track for that kind of MediaStreamTrack in this Publisher object'))
+                }
+            } else if (track.kind === 'audio') {
+                sender = senders.find(s => !!s.track && s.track.kind === 'audio');
+                if (!sender) {
+                    reject(new Error('There\'s no replaceable track for that kind of MediaStreamTrack in this Publisher object'))
+                }
+            } else {
+                reject(new Error('Unknown track kind ' + track.kind));
+            }
+            (<any>sender).replaceTrack(track).then(() => {
                 let removedTrack: MediaStreamTrack;
                 if (track.kind === 'video') {
                     removedTrack = this.stream.getMediaStream().getVideoTracks()[0];
@@ -567,30 +582,17 @@ export class Publisher extends StreamManager {
                 }
             }
 
-            // Check if new constraints need to be generated. No constraints needed if
-            // - video track is given and no audio
-            // - audio track is given and no video
-            // - both video and audio tracks are given
-            if ((typeof MediaStreamTrack !== 'undefined' && this.properties.videoSource instanceof MediaStreamTrack && !this.properties.audioSource)
-                || (typeof MediaStreamTrack !== 'undefined' && this.properties.audioSource instanceof MediaStreamTrack && !this.properties.videoSource)
-                || (typeof MediaStreamTrack !== 'undefined' && this.properties.videoSource instanceof MediaStreamTrack && this.properties.audioSource instanceof MediaStreamTrack)) {
-                const mediaStream = new MediaStream();
-                if (typeof MediaStreamTrack !== 'undefined' && this.properties.videoSource instanceof MediaStreamTrack) {
-                    mediaStream.addTrack((<MediaStreamTrack>this.properties.videoSource));
-                }
-                if (typeof MediaStreamTrack !== 'undefined' && this.properties.audioSource instanceof MediaStreamTrack) {
-                    mediaStream.addTrack((<MediaStreamTrack>this.properties.audioSource));
-                }
-                // MediaStreamTracks are handled within callback - just call callback with new MediaStream() and let it handle the sources
-                successCallback(mediaStream);
-                // Return as we do not need to process further
-                return;
-            }
-
             this.openvidu.generateMediaConstraints(this.properties)
                 .then(myConstraints => {
 
-                    constraints = myConstraints;
+                    if (myConstraints.constraints === undefined) {
+                        // No need to call getUserMedia at all. MediaStreamTracks already provided
+                        successCallback(this.openvidu.addAlreadyProvidedTracks(myConstraints, new MediaStream()));
+                        // Return as we do not need to process further
+                        return;
+                    }
+
+                    constraints = myConstraints.constraints;
 
                     const outboundStreamOptions = {
                         mediaConstraints: constraints,
@@ -605,19 +607,18 @@ export class Publisher extends StreamManager {
                     this.setPermissionDialogTimer(timeForDialogEvent);
 
                     if (this.stream.isSendScreen() && navigator.mediaDevices['getDisplayMedia'] && platform.name !== 'Electron') {
-
                         navigator.mediaDevices['getDisplayMedia']({ video: true })
                             .then(mediaStream => {
+                                this.openvidu.addAlreadyProvidedTracks(myConstraints, mediaStream);
                                 getMediaSuccess(mediaStream, definedAudioConstraint);
                             })
                             .catch(error => {
                                 getMediaError(error);
                             });
-
                     } else {
-
                         navigator.mediaDevices.getUserMedia(constraintsAux)
                             .then(mediaStream => {
+                                this.openvidu.addAlreadyProvidedTracks(myConstraints, mediaStream);
                                 getMediaSuccess(mediaStream, definedAudioConstraint);
                             })
                             .catch(error => {

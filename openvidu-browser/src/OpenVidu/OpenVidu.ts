@@ -23,6 +23,7 @@ import { StreamPropertyChangedEvent } from '../OpenViduInternal/Events/StreamPro
 import { Device } from '../OpenViduInternal/Interfaces/Public/Device';
 import { OpenViduAdvancedConfiguration } from '../OpenViduInternal/Interfaces/Public/OpenViduAdvancedConfiguration';
 import { PublisherProperties } from '../OpenViduInternal/Interfaces/Public/PublisherProperties';
+import { CustomMediaStreamConstraints } from '../OpenViduInternal/Interfaces/Private/CustomMediaStreamConstraints';
 import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/OpenViduError';
 import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
 
@@ -551,20 +552,41 @@ export class OpenVidu {
           });
       }
 
-      this.generateMediaConstraints(options)
-        .then(constraints => {
+      this.generateMediaConstraints(options).then(myConstraints => {
+
+        if (!!myConstraints.videoTrack && !!myConstraints.audioTrack ||
+          !!myConstraints.audioTrack && myConstraints.constraints?.video === false ||
+          !!myConstraints.videoTrack && myConstraints.constraints?.audio === false) {
+
+          // No need to call getUserMedia at all. Both tracks provided, or only AUDIO track provided or only VIDEO track provided
+          resolve(this.addAlreadyProvidedTracks(myConstraints, new MediaStream()));
+
+        } else {
+          // getUserMedia must be called. AUDIO or VIDEO are requesting a new track
+
+          // Delete already provided constraints for audio or video
+          if (!!myConstraints.videoTrack) {
+            delete myConstraints.constraints!.video;
+          }
+          if (!!myConstraints.audioTrack) {
+            delete myConstraints.constraints!.audio;
+          }
+
           let mustAskForAudioTrackLater = false;
           if (typeof options.videoSource === 'string') {
+            // Video is deviceId or screen sharing
             if (options.videoSource === 'screen' ||
               options.videoSource === 'window' ||
               (platform.name === 'Electron' && options.videoSource.startsWith('screen:'))) {
-              // Screen sharing
-              mustAskForAudioTrackLater = options.audioSource !== null && options.audioSource !== false;
+              // Video is screen sharing
+              mustAskForAudioTrackLater = !myConstraints.audioTrack && (options.audioSource !== null && options.audioSource !== false);
               if (navigator.mediaDevices['getDisplayMedia'] && platform.name !== 'Electron') {
+                // getDisplayMedia supported
                 navigator.mediaDevices['getDisplayMedia']({ video: true })
                   .then(mediaStream => {
+                    this.addAlreadyProvidedTracks(myConstraints, mediaStream);
                     if (mustAskForAudioTrackLater) {
-                      askForAudioStreamOnly(mediaStream, constraints);
+                      askForAudioStreamOnly(mediaStream, <MediaStreamConstraints>myConstraints.constraints);
                       return;
                     } else {
                       resolve(mediaStream);
@@ -575,15 +597,21 @@ export class OpenVidu {
                     const errorMessage = error.toString();
                     reject(new OpenViduError(errorName, errorMessage));
                   });
+                return;
+              } else {
+                // getDisplayMedia NOT supported. Can perform getUserMedia below with already calculated constraints
               }
-              return;
+            } else {
+              // Video is deviceId. Can perform getUserMedia below with already calculated constraints
             }
           }
-          const constraintsAux = mustAskForAudioTrackLater ? { video: constraints.video } : constraints;
+          // Use already calculated constraints
+          const constraintsAux = mustAskForAudioTrackLater ? { video: myConstraints.constraints!.video } : myConstraints.constraints;
           navigator.mediaDevices.getUserMedia(constraintsAux)
             .then(mediaStream => {
+              this.addAlreadyProvidedTracks(myConstraints, mediaStream);
               if (mustAskForAudioTrackLater) {
-                askForAudioStreamOnly(mediaStream, constraints);
+                askForAudioStreamOnly(mediaStream, <MediaStreamConstraints>myConstraints.constraints);
                 return;
               } else {
                 resolve(mediaStream);
@@ -599,10 +627,10 @@ export class OpenVidu {
               }
               reject(new OpenViduError(errorName, errorMessage));
             });
-        })
-        .catch((error: OpenViduError) => {
-          reject(error);
-        });
+        }
+      }).catch((error: OpenViduError) => {
+        reject(error);
+      });
     });
   }
 
@@ -638,168 +666,192 @@ export class OpenVidu {
   /**
    * @hidden
    */
-  generateMediaConstraints(publisherProperties: PublisherProperties): Promise<MediaStreamConstraints> {
-    return new Promise<MediaStreamConstraints>((resolve, reject) => {
-      let audio, video;
+  generateMediaConstraints(publisherProperties: PublisherProperties): Promise<CustomMediaStreamConstraints> {
+    return new Promise<CustomMediaStreamConstraints>((resolve, reject) => {
 
-      if (publisherProperties.audioSource === null || publisherProperties.audioSource === false) {
-        audio = false;
-      } else if (publisherProperties.audioSource === undefined) {
-        audio = true;
-      } else {
-        audio = publisherProperties.audioSource;
+      const myConstraints: CustomMediaStreamConstraints = {
+        audioTrack: undefined,
+        videoTrack: undefined,
+        constraints: {
+          audio: undefined,
+          video: undefined
+        }
       }
+      const audioSource = publisherProperties.audioSource;
+      const videoSource = publisherProperties.videoSource;
 
-      if (publisherProperties.videoSource === null || publisherProperties.videoSource === false) {
-        video = false;
-      } else {
-        video = {
-          height: {
-            ideal: 480
-          },
-          width: {
-            ideal: 640
-          }
-        };
+      // CASE 1: null/false
+      if (audioSource === null || audioSource === false) {
+        // No audio track
+        myConstraints.constraints!.audio = false;
       }
-
-      if (audio === false && video === false) {
+      if (videoSource === null || videoSource === false) {
+        // No video track
+        myConstraints.constraints!.video = false;
+      }
+      if (myConstraints.constraints!.audio === false && myConstraints.constraints!.video === false) {
+        // ERROR! audioSource and videoSource cannot be both false at the same time
         reject(new OpenViduError(OpenViduErrorName.NO_INPUT_SOURCE_SET,
           "Properties 'audioSource' and 'videoSource' cannot be set to false or null at the same time"));
       }
 
-      const mediaConstraints: MediaStreamConstraints = {
-        audio,
-        video
-      };
-
-      if (typeof mediaConstraints.audio === 'string') {
-        mediaConstraints.audio = { deviceId: { exact: mediaConstraints.audio } };
+      // CASE 2: MediaStreamTracks
+      if (typeof MediaStreamTrack !== 'undefined' && audioSource instanceof MediaStreamTrack) {
+        // Already provided audio track
+        myConstraints.audioTrack = audioSource;
+      }
+      if (typeof MediaStreamTrack !== 'undefined' && videoSource instanceof MediaStreamTrack) {
+        // Already provided video track
+        myConstraints.videoTrack = videoSource;
       }
 
-      if (mediaConstraints.video) {
+      // CASE 3: Default tracks
+      if (audioSource === undefined) {
+        myConstraints.constraints!.audio = true;
+      }
+      if (videoSource === undefined) {
+        myConstraints.constraints!.video = {
+          width: {
+            ideal: 640
+          },
+          height: {
+            ideal: 480
+          }
+        };
+      }
 
+      // CASE 3.5: give values to resolution and frameRate if video not null/false
+      if (videoSource !== null && videoSource !== false) {
         if (!!publisherProperties.resolution) {
           const widthAndHeight = publisherProperties.resolution.toLowerCase().split('x');
-          const width = Number(widthAndHeight[0]);
-          const height = Number(widthAndHeight[1]);
-          (mediaConstraints.video as any).width.ideal = width;
-          (mediaConstraints.video as any).height.ideal = height;
+          const idealWidth = Number(widthAndHeight[0]);
+          const idealHeight = Number(widthAndHeight[1]);
+          myConstraints.constraints!.video = {
+            width: {
+              ideal: idealWidth
+            },
+            height: {
+              ideal: idealHeight
+            }
+          }
         }
-
         if (!!publisherProperties.frameRate) {
-          (mediaConstraints.video as any).frameRate = { ideal: publisherProperties.frameRate };
+          (<MediaTrackConstraints>myConstraints.constraints!.video).frameRate = { ideal: publisherProperties.frameRate };
         }
+      }
 
-        if (!!publisherProperties.videoSource && typeof publisherProperties.videoSource === 'string') {
+      // CASE 4: deviceId or screen sharing
+      if (typeof audioSource === 'string') {
+        myConstraints.constraints!.audio = { deviceId: { exact: audioSource } };
+      }
+      if (typeof videoSource === 'string') {
 
-          if (publisherProperties.videoSource === 'screen' ||
-            publisherProperties.videoSource === 'window' ||
-            (platform.name === 'Electron' && publisherProperties.videoSource.startsWith('screen:'))) {
+        if (!this.isScreenShare(videoSource)) {
+          if (!myConstraints.constraints!.video) {
+            myConstraints.constraints!.video = {};
+          }
+          (<MediaTrackConstraints>myConstraints.constraints!.video)['deviceId'] = { exact: videoSource };
+        } else {
 
-            if (!this.checkScreenSharingCapabilities()) {
+          // Screen sharing
 
-              const error = new OpenViduError(OpenViduErrorName.SCREEN_SHARING_NOT_SUPPORTED, 'You can only screen share in desktop Chrome, Firefox, Opera or Electron. Detected client: ' + platform.name);
-              console.error(error);
-              reject(error);
+          if (!this.checkScreenSharingCapabilities()) {
+            const error = new OpenViduError(OpenViduErrorName.SCREEN_SHARING_NOT_SUPPORTED, 'You can only screen share in desktop Chrome, Firefox, Opera or Electron. Detected client: ' + platform.name);
+            console.error(error);
+            reject(error);
+          } else {
+
+            if (platform.name === 'Electron') {
+              const prefix = "screen:";
+              const videoSourceString: string = videoSource;
+              const electronScreenId = videoSourceString.substr(videoSourceString.indexOf(prefix) + prefix.length);
+              (<any>myConstraints.constraints!.video) = {
+                mandatory: {
+                  chromeMediaSource: 'desktop',
+                  chromeMediaSourceId: electronScreenId
+                }
+              };
+              resolve(myConstraints);
 
             } else {
 
-              if (platform.name === 'Electron') {
+              if (!!this.advancedConfiguration.screenShareChromeExtension && !(platform.name!.indexOf('Firefox') !== -1) && !navigator.mediaDevices['getDisplayMedia']) {
 
-                const prefix = "screen:";
-                const videoSourceString: string = publisherProperties.videoSource;
-                const electronScreenId = videoSourceString.substr(videoSourceString.indexOf(prefix) + prefix.length);
-                (<any>mediaConstraints['video']) = {
-                  mandatory: {
-                    chromeMediaSource: 'desktop',
-                    chromeMediaSourceId: electronScreenId
-                  }
-                };
-                resolve(mediaConstraints);
+                // Custom screen sharing extension for Chrome (and Opera) and no support for MediaDevices.getDisplayMedia()
 
-              } else {
-
-                if (!!this.advancedConfiguration.screenShareChromeExtension && !(platform.name!.indexOf('Firefox') !== -1) && !navigator.mediaDevices['getDisplayMedia']) {
-
-                  // Custom screen sharing extension for Chrome (and Opera) and no support for MediaDevices.getDisplayMedia()
-
-                  screenSharing.getScreenConstraints((error, screenConstraints) => {
-                    if (!!error || !!screenConstraints.mandatory && screenConstraints.mandatory.chromeMediaSource === 'screen') {
-                      if (error === 'permission-denied' || error === 'PermissionDeniedError') {
-                        const error = new OpenViduError(OpenViduErrorName.SCREEN_CAPTURE_DENIED, 'You must allow access to one window of your desktop');
-                        console.error(error);
-                        reject(error);
-                      } else {
-                        const extensionId = this.advancedConfiguration.screenShareChromeExtension!.split('/').pop()!!.trim();
-                        screenSharing.getChromeExtensionStatus(extensionId, (status) => {
-                          if (status === 'installed-disabled') {
-                            const error = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_DISABLED, 'You must enable the screen extension');
-                            console.error(error);
-                            reject(error);
-                          }
-                          if (status === 'not-installed') {
-                            const error = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_NOT_INSTALLED, (<string>this.advancedConfiguration.screenShareChromeExtension));
-                            console.error(error);
-                            reject(error);
-                          }
-                        });
-                      }
+                screenSharing.getScreenConstraints((error, screenConstraints) => {
+                  if (!!error || !!screenConstraints.mandatory && screenConstraints.mandatory.chromeMediaSource === 'screen') {
+                    if (error === 'permission-denied' || error === 'PermissionDeniedError') {
+                      const error = new OpenViduError(OpenViduErrorName.SCREEN_CAPTURE_DENIED, 'You must allow access to one window of your desktop');
+                      console.error(error);
+                      reject(error);
                     } else {
-                      mediaConstraints.video = screenConstraints;
-                      resolve(mediaConstraints);
-                    }
-                  });
-
-                } else {
-
-                  if (navigator.mediaDevices['getDisplayMedia']) {
-                    // getDisplayMedia support (Chrome >= 72, Firefox >= 66)
-                    resolve(mediaConstraints);
-                  } else {
-                    // Default screen sharing extension for Chrome/Opera, or is Firefox < 66
-                    const firefoxString = platform.name!.indexOf('Firefox') !== -1 ? publisherProperties.videoSource : undefined;
-
-                    screenSharingAuto.getScreenId(firefoxString, (error, sourceId, screenConstraints) => {
-                      if (!!error) {
-                        if (error === 'not-installed') {
-                          const extensionUrl = !!this.advancedConfiguration.screenShareChromeExtension ? this.advancedConfiguration.screenShareChromeExtension :
-                            'https://chrome.google.com/webstore/detail/openvidu-screensharing/lfcgfepafnobdloecchnfaclibenjold';
-                          const error = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_NOT_INSTALLED, extensionUrl);
-                          console.error(error);
-                          reject(error);
-                        } else if (error === 'installed-disabled') {
+                      const extensionId = this.advancedConfiguration.screenShareChromeExtension!.split('/').pop()!!.trim();
+                      screenSharing.getChromeExtensionStatus(extensionId, status => {
+                        if (status === 'installed-disabled') {
                           const error = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_DISABLED, 'You must enable the screen extension');
                           console.error(error);
                           reject(error);
-                        } else if (error === 'permission-denied') {
-                          const error = new OpenViduError(OpenViduErrorName.SCREEN_CAPTURE_DENIED, 'You must allow access to one window of your desktop');
+                        }
+                        if (status === 'not-installed') {
+                          const error = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_NOT_INSTALLED, (<string>this.advancedConfiguration.screenShareChromeExtension));
                           console.error(error);
                           reject(error);
                         }
-                      } else {
-                        mediaConstraints.video = screenConstraints.video;
-                        resolve(mediaConstraints);
-                      }
-                    });
+                      });
+                      return;
+                    }
+                  } else {
+                    myConstraints.constraints!.video = screenConstraints;
+                    resolve(myConstraints);
                   }
+                });
+                return;
+              } else {
+
+                if (navigator.mediaDevices['getDisplayMedia']) {
+                  // getDisplayMedia support (Chrome >= 72, Firefox >= 66)
+                  resolve(myConstraints);
+                } else {
+                  // Default screen sharing extension for Chrome/Opera, or is Firefox < 66
+                  const firefoxString = platform.name!.indexOf('Firefox') !== -1 ? publisherProperties.videoSource : undefined;
+
+                  screenSharingAuto.getScreenId(firefoxString, (error, sourceId, screenConstraints) => {
+                    if (!!error) {
+                      if (error === 'not-installed') {
+                        const extensionUrl = !!this.advancedConfiguration.screenShareChromeExtension ? this.advancedConfiguration.screenShareChromeExtension :
+                          'https://chrome.google.com/webstore/detail/openvidu-screensharing/lfcgfepafnobdloecchnfaclibenjold';
+                        const err = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_NOT_INSTALLED, extensionUrl);
+                        console.error(err);
+                        reject(err);
+                      } else if (error === 'installed-disabled') {
+                        const err = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_DISABLED, 'You must enable the screen extension');
+                        console.error(err);
+                        reject(err);
+                      } else if (error === 'permission-denied') {
+                        const err = new OpenViduError(OpenViduErrorName.SCREEN_CAPTURE_DENIED, 'You must allow access to one window of your desktop');
+                        console.error(err);
+                        reject(err);
+                      } else {
+                        const err = new OpenViduError(OpenViduErrorName.GENERIC_ERROR, 'Unknown error when accessing screen share');
+                        console.error(err);
+                        console.error(error);
+                        reject(err);
+                      }
+                    } else {
+                      myConstraints.constraints!.video = screenConstraints.video;
+                      resolve(myConstraints);
+                    }
+                  });
+                  return;
                 }
-
-                publisherProperties.videoSource = 'screen';
-
               }
             }
-          } else {
-            // tslint:disable-next-line:no-string-literal
-            mediaConstraints.video['deviceId'] = { exact: publisherProperties.videoSource };
-            resolve(mediaConstraints);
           }
-        } else {
-          resolve(mediaConstraints);
         }
-      } else {
-        resolve(mediaConstraints);
       }
+
+      resolve(myConstraints);
     });
   }
 
@@ -912,6 +964,18 @@ export class OpenVidu {
     }
   }
 
+  /**
+   * @hidden
+   */
+  addAlreadyProvidedTracks(myConstraints: CustomMediaStreamConstraints, mediaStream: MediaStream) {
+    if (!!myConstraints.videoTrack) {
+      mediaStream.addTrack(myConstraints.videoTrack);
+    }
+    if (!!myConstraints.audioTrack) {
+      mediaStream.addTrack(myConstraints.audioTrack);
+    }
+    return mediaStream;
+  }
 
   /* Private methods */
 
@@ -959,6 +1023,12 @@ export class OpenVidu {
       console.warn('Session instance not found');
       return false;
     }
+  }
+
+  private isScreenShare(videoSource: string) {
+    return videoSource === 'screen' ||
+      videoSource === 'window' ||
+      (platform.name === 'Electron' && videoSource.startsWith('screen:'))
   }
 
 }
