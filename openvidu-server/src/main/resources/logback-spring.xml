@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
-	<springProperty scope="context" name="cdrPath" source="openvidu.cdr.path"/>
+	<springProperty scope="context" name="cdrPath" source="openvidu.cdr.path" />
 
 	<timestamp key="myTimestamp" timeReference="contextBirth"
 		datePattern="HH-mm-ss" />
@@ -11,10 +11,10 @@
 			<if
 				condition='property("logging.colors").equalsIgnoreCase("true")'>
 				<then>
-					<pattern>%highlight([%p]) %black(%d) %magenta([%.15t]) %black(%c) %cyan(\(%M\)) - %black(%msg%n)</pattern>
+					<pattern>%black(%highlight([%p]) %d{dd MMM HH:mm:ss.SSS} %magenta([%.15t]) \(%file:%line\) - %msg%n)</pattern>
 				</then>
 				<else>
-					<pattern>[%p] %d [%.15t] %c \(%M\) - %msg%n
+					<pattern>[%p] %d [%.15t] %c - %msg%n
 					</pattern>
 				</else>
 			</if>
@@ -32,7 +32,7 @@
 		name="io.openvidu.server.kurento.core.KurentoSessionManager">
 		<appender-ref ref="CUSTOMCLASS" />
 	</logger>-->
-	
+
 	<root>
 		<level value="INFO" />
 		<appender-ref ref="STDOUT" />
