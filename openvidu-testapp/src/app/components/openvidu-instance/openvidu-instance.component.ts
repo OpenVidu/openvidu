@@ -503,11 +503,13 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   initGrayVideo(): void {
+
     this.OV.getUserMedia(
       {
+        audioSource: undefined,
         videoSource: undefined,
         resolution: '1280x720',
-        frameRate: 30,
+        frameRate: 3,
       }
     )
       .then((mediaStream: MediaStream) => {
@@ -530,18 +532,17 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
           loop();
         });
         const grayVideoTrack: MediaStreamTrack = (<MediaStream>canvas.captureStream(30)).getVideoTracks()[0];
-        this.publisher = this.OV.initPublisher(
-          document.body,
-          {
-            audioSource: false,
-            videoSource: grayVideoTrack,
-            insertMode: VideoInsertMode.APPEND
-          });
-        this.session.publish(this.publisher).catch((error: OpenViduError) => {
-          console.error(error);
-          this.session.unpublish(this.publisher);
+        this.OV.getUserMedia({
+          audioSource: false,
+          videoSource: grayVideoTrack
+        }).then(mediastream => {
+          this.publisher.replaceTrack(mediastream.getVideoTracks()[0])
+            .then(() => console.log('New track is being published'))
+            .catch(error => {
+              console.error('Error replacing track');
+              console.error(error);
+            });
         });
-
       })
       .catch(error => {
         console.error(error);
