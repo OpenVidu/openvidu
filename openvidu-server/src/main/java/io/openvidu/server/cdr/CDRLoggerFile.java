@@ -27,6 +27,9 @@ public class CDRLoggerFile implements CDRLogger {
 
 	private Logger log = LoggerFactory.getLogger(CDRLoggerFile.class);
 
+	/**
+	 * This logs directly to the file thanks to logback configuration
+	 */
 	@Override
 	public void log(CDREvent event) {
 		log.info("{}", event);

@@ -11,8 +11,7 @@
 			<if
 				condition='property("logging.colors").equalsIgnoreCase("true")'>
 				<then>
-					<pattern>%highlight([%p]) %d %magenta([%.15t]) %c \(%M\) - %msg%n
-					</pattern>
+					<pattern>%highlight([%p]) %black(%d) %magenta([%.15t]) %black(%c) %cyan(\(%M\)) - %black(%msg%n)</pattern>
 				</then>
 				<else>
 					<pattern>[%p] %d [%.15t] %c \(%M\) - %msg%n
