@@ -30,10 +30,17 @@ import platform = require('platform');
  * Interface in charge of displaying the media streams in the HTML DOM. This wraps any [[Publisher]] and [[Subscriber]] object.
  * You can insert as many video players fo the same Stream as you want by calling [[StreamManager.addVideoElement]] or
  * [[StreamManager.createVideoElement]].
- *
  * The use of StreamManager wrapper is particularly useful when you don't need to differentiate between Publisher or Subscriber streams or just
  * want to directly manage your own video elements (even more than one video element per Stream). This scenario is pretty common in
  * declarative, MVC frontend frameworks such as Angular, React or Vue.js
+ * 
+ * ### Available event listeners (and events dispatched)
+ * 
+ * - videoElementCreated ([[VideoElementEvent]])
+ * - videoElementDestroyed ([[VideoElementEvent]])
+ * - streamPlaying ([[StreamManagerEvent]])
+ * - streamAudioVolumeChange ([[StreamManagerEvent]])
+ * 
  */
 export class StreamManager implements EventDispatcher {
 

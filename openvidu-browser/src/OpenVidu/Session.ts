@@ -46,7 +46,24 @@ import platform = require('platform');
 /**
  * Represents a video call. It can also be seen as a videoconference room where multiple users can connect.
  * Participants who publish their videos to a session can be seen by the rest of users connected to that specific session.
- * Initialized with [[OpenVidu.initSession]] method
+ * Initialized with [[OpenVidu.initSession]] method.
+ * 
+ * ### Available event listeners (and events dispatched)
+ * 
+ * - connectionCreated ([[ConnectionEvent]])
+ * - connectionDestroyed ([[ConnectionEvent]])
+ * - sessionDisconnected ([[SessionDisconnectedEvent]])
+ * - streamCreated ([[StreamEvent]])
+ * - streamDestroyed ([[StreamEvent]])
+ * - streamPropertyChanged ([[StreamPropertyChangedEvent]])
+ * - publisherStartSpeaking ([[PublisherSpeakingEvent]])
+ * - publisherStopSpeaking ([[PublisherSpeakingEvent]])
+ * - signal ([[SignalEvent]])
+ * - recordingStarted ([[RecordingEvent]])
+ * - recordingStopped ([[RecordingEvent]])
+ * - reconnecting
+ * - reconnected
+ * 
  */
 export class Session implements EventDispatcher {
 

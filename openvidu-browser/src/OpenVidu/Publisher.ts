@@ -32,6 +32,16 @@ import platform = require('platform');
 
 /**
  * Packs local media streams. Participants can publish it to a session. Initialized with [[OpenVidu.initPublisher]] method
+ * 
+ * ### Available event listeners (and events dispatched)
+ * 
+ * - accessAllowed
+ * - accessDenied
+ * - accessDialogOpened
+ * - accessDialogClosed
+ * - streamCreated ([[StreamEvent]])
+ * - streamDestroyed ([[StreamEvent]])
+ * - streamPropertyChanged ([[StreamPropertyChangedEvent]])
  */
 export class Publisher extends StreamManager {
 
