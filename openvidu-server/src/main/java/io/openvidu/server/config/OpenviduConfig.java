@@ -190,7 +190,6 @@ public class OpenviduConfig {
 	public static List<String> kmsUrisList = new ArrayList<>();
 	public static List<Header> webhookHeadersList = new ArrayList<>();
 	public static List<CDREventName> webhookEventsList = new ArrayList<>();
-	public static Properties externalizedProperties;
 
 	@Autowired
 	protected Environment env;
@@ -363,10 +362,6 @@ public class OpenviduConfig {
 
 	public boolean hasExternalizedProperties() {
 		return !this.springConfigLocation.isEmpty();
-	}
-
-	public Properties getExternalizedProperties() {
-		return externalizedProperties;
 	}
 
 	public URI checkWebsocketUri(String uri) throws Exception {
