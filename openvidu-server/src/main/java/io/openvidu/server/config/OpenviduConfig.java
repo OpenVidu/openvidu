@@ -42,6 +42,11 @@ import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+
 import org.apache.http.Header;
 import org.apache.http.message.BasicHeader;
 import org.kurento.jsonrpc.JsonUtils;
@@ -57,11 +62,6 @@ import org.springframework.core.env.PropertySource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.support.PropertiesLoaderUtils;
 import org.springframework.stereotype.Component;
-
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.server.OpenViduServer;
