@@ -128,13 +128,13 @@
 		{
 			"name": "coturn.ip",
 			"type": "java.lang.String",
-			"description": "Coturn IP of a deployed coturn server",
-			"defaultValue": "127.0.0.1"
+			"description": "Coturn IP of a deployed coturn server"
 		},
 		{
 			"name": "coturn.redis.ip",
 			"type": "java.lang.String",
-			"description": "Redis IP where OpenVidu Server should connect to store TURN credentials"
+			"description": "Redis IP where OpenVidu Server should connect to store TURN credentials",
+			"defaultValue": "127.0.0.1"
 		},
 		{
 			"name": "coturn.redis.dbname",
