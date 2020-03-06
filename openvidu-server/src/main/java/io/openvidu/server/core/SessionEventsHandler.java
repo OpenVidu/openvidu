@@ -374,7 +374,6 @@ public class SessionEventsHandler {
 			CDR.recordSendMessage(participant, message, transactionId);
 			rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, new JsonObject());
 		}
-		
 	}
 
 	public void onStreamPropertyChanged(Participant participant, Integer transactionId, Set<Participant> participants,
