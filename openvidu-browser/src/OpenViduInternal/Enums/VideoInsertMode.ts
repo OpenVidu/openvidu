@@ -39,6 +39,11 @@ export enum VideoInsertMode {
     /**
      * Video replaces target element
      */
-    REPLACE = 'REPLACE'
+    REPLACE = 'REPLACE',
+
+    /**
+     * Video is not inserted into the target element
+     */
+    NONE = 'NONE'
 
 }

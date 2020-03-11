@@ -329,6 +329,8 @@ export class StreamManager implements EventDispatcher {
             case VideoInsertMode.REPLACE:
                 targEl.parentNode!!.replaceChild(video, targEl);
                 break;
+            case VideoInsertMode.NONE:
+                break;
             default:
                 insMode = VideoInsertMode.APPEND;
                 targEl.appendChild(video);
