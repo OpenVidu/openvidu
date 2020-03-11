@@ -42,7 +42,7 @@
 	</developers>
 
 	<properties>
-		<version.kurento>6.13.1-SNAPSHOT</version.kurento>
+		<version.kurento>6.13.1</version.kurento>
 		<version.spring-boot>2.2.4.RELEASE</version.spring-boot>
 		<version.junit>4.12</version.junit>
 		<version.junit.jupiter>5.6.0</version.junit.jupiter>
@@ -97,8 +97,8 @@
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<maven.compiler.source>1.8</maven.compiler.source>
 
-		<!-- Options to override the compiler arguments directly on the compiler
-			arument line to separate between what the IDE understands as the source level
+		<!-- Options to override the compiler arguments directly on the compiler 
+			arument line to separate between what the IDE understands as the source level 
 			and what the Maven compiler actually use. -->
 		<maven.compiler.argument.target>${maven.compiler.target}</maven.compiler.argument.target>
 		<maven.compiler.argument.source>${maven.compiler.source}</maven.compiler.argument.source>
@@ -124,7 +124,7 @@
 		<plugins>
 			<plugin>
 
-				<!-- Check for the minimum version of Java and Maven. Runs during the
+				<!-- Check for the minimum version of Java and Maven. Runs during the 
 					validate phase. -->
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-enforcer-plugin</artifactId>
@@ -308,4 +308,5 @@
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
+
 </project>

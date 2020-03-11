@@ -183,16 +183,6 @@
 					<artifactId>spring-boot-starter-web</artifactId>
 				</exclusion>
 				<exclusion>
-					<!-- Until kurento-java spring-boot dependency is updated to 2.2.4.RELEASE -->
-					<groupId>org.springframework</groupId>
-					<artifactId>spring-websocket</artifactId>
-				</exclusion>
-				<exclusion>
-					<!-- Until kurento-java spring-boot dependency is updated to 2.2.4.RELEASE -->
-					<groupId>org.apache.tomcat.embed</groupId>
-					<artifactId>tomcat-embed-websocket</artifactId>
-				</exclusion>
-				<exclusion>
 					<groupId>org.slf4j</groupId>
 					<artifactId>slf4j-api</artifactId>
 				</exclusion>
@@ -333,12 +323,6 @@
 			<groupId>io.openvidu</groupId>
 			<artifactId>openvidu-java-client</artifactId>
 			<version>${version.openvidu.java.client}</version>
-		</dependency>
-		<dependency>
-			<!-- Until kurento-java spring-boot dependency is updated to 2.2.4.RELEASE -->
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-websocket</artifactId>
-			<version>5.2.3.RELEASE</version>
 		</dependency>
 
 		<!-- Test dependencies -->
