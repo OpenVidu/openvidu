@@ -41,5 +41,5 @@
         "docs": "./node_modules/typedoc/bin/typedoc --options ./config/typedoc.js --out ./docs ./src && rm -rf ../../openvidu.io/api/openvidu-browser/* && cp -R ./docs/. ../../openvidu.io/api/openvidu-browser"
     },
     "types": "lib/index.d.ts",
-    "version": "2.11.0"
+    "version": "2.12.0"
 }
