@@ -58,8 +58,6 @@
 		<version.slf4j>1.7.30</version.slf4j>
 		<version.gson>2.8.6</version.gson>
 		<version.unirest>1.4.9</version.unirest>
-		<version.thymeleaf>3.0.11.RELEASE</version.thymeleaf>
-		<version.thymeleaflayout>2.4.1</version.thymeleaflayout>
 
 		<version.webdrivermanager>3.8.1</version.webdrivermanager>
 
