@@ -27,7 +27,6 @@ import java.util.stream.Collectors;
 
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
-import org.apache.http.ParseException;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -36,9 +35,9 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 
 public class Session {
@@ -496,8 +495,8 @@ public class Session {
 	private JsonObject httpResponseToJson(HttpResponse response) throws OpenViduJavaClientException {
 		JsonObject json;
 		try {
-			json = JsonParser.parseString(EntityUtils.toString(response.getEntity())).getAsJsonObject();
-		} catch (JsonSyntaxException | ParseException | IOException e) {
+			json = new Gson().fromJson(EntityUtils.toString(response.getEntity()), JsonObject.class);
+		} catch (JsonSyntaxException | IOException e) {
 			throw new OpenViduJavaClientException(e.getMessage(), e.getCause());
 		}
 		return json;
