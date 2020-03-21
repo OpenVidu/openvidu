@@ -44,7 +44,7 @@ export interface RecordingProperties {
     /**
      * The relative path to the specific custom layout you want to use.<br>
      * Will only have effect if [[RecordingProperties.outputMode]] is `COMPOSED` and [[RecordingProperties.recordingLayout]] is `CUSTOM`<br>
-     * See [Custom recording layouts](https://openvidu.io/docs/advanced-features/recording#custom-recording-layouts) to learn more
+     * See [Custom recording layouts](https://docs.openvidu.io/en/stable/advanced-features/recording#custom-recording-layouts) to learn more
      */
     customLayout?: string;
 

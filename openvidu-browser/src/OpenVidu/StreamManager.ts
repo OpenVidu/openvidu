@@ -234,7 +234,7 @@ export class StreamManager implements EventDispatcher {
 
     /**
      * Makes `video` element parameter display this [[stream]]. This is useful when you are
-     * [managing the video elements on your own](/docs/how-do-i/manage-videos/#you-take-care-of-the-video-players)
+     * [managing the video elements on your own](https://docs.openvidu.io/en/stable/cheatsheet/manage-videos/#you-take-care-of-the-video-players)
      *
      * Calling this method with a video already added to other Publisher/Subscriber will cause the video element to be
      * disassociated from that previous Publisher/Subscriber and to be associated to this one.

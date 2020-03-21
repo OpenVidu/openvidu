@@ -22,7 +22,7 @@ import { StreamManager } from '../../OpenVidu/StreamManager';
 /**
  * Defines the following events:
  * - `videoElementCreated`: dispatched by [[Publisher]] and [[Subscriber]] whenever a new HTML video element has been inserted into DOM by OpenVidu Browser library. See
- * [Manage video players](/docs/how-do-i/manage-videos) section.
+ * [Manage video players](https://docs.openvidu.io/en/stable/cheatsheet/manage-videos) section.
  * - `videoElementDestroyed`: dispatched by [[Publisher]] and [[Subscriber]] whenever an HTML video element has been removed from DOM by OpenVidu Browser library.
  */
 export class VideoElementEvent extends Event {

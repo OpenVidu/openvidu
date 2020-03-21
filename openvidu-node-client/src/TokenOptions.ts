@@ -41,20 +41,20 @@ export interface TokenOptions {
      * Some advanced properties setting the configuration that the WebRTC streams of the user owning the token will have in Kurento Media Server.
      * You can adjust:
      * - `videoMaxRecvBandwidth`: maximum number of Kbps that the client owning the token will be able to receive from Kurento Media Server. 0 means unconstrained. Giving a value to this property will override
-     * the global configuration set in [OpenVidu Server configuration](https://openvidu.io/docs/reference-docs/openvidu-server-params/#configuration-parameters-for-openvidu-server)
+     * the global configuration set in [OpenVidu Server configuration](https://docs.openvidu.io/en/stable/reference-docs/openvidu-server-params/#configuration-parameters-for-openvidu-server)
      * (parameter `openvidu.streams.video.max-recv-bandwidth`) for every incoming stream of the user owning the token.
      * _**WARNING**: the lower value set to this property limits every other bandwidth of the WebRTC pipeline this server-to-client stream belongs to. This includes the user publishing the stream and every other user subscribed to the stream_
      * - `videoMinRecvBandwidth`: minimum number of Kbps that the client owning the token will try to receive from Kurento Media Server. 0 means unconstrained. Giving a value to this property will override
-     * the global configuration set in [OpenVidu Server configuration](https://openvidu.io/docs/reference-docs/openvidu-server-params/#configuration-parameters-for-openvidu-server)
+     * the global configuration set in [OpenVidu Server configuration](https://docs.openvidu.io/en/stable/reference-docs/openvidu-server-params/#configuration-parameters-for-openvidu-server)
      * (parameter `openvidu.streams.video.min-recv-bandwidth`) for every incoming stream of the user owning the token
      * - `videoMaxSendBandwidth`: maximum number of Kbps that the client owning the token will be able to send to Kurento Media Server. 0 means unconstrained. Giving a value to this property will override
-     * the global configuration set in [OpenVidu Server configuration](https://openvidu.io/docs/reference-docs/openvidu-server-params/#configuration-parameters-for-openvidu-server)
+     * the global configuration set in [OpenVidu Server configuration](https://docs.openvidu.io/en/stable/reference-docs/openvidu-server-params/#configuration-parameters-for-openvidu-server)
      * (parameter `openvidu.streams.video.max-send-bandwidth`) for every outgoing stream of the user owning the token.
      * _**WARNING**: this value limits every other bandwidth of the WebRTC pipeline this client-to-server stream belongs to. This includes every other user subscribed to the stream_
      * - `videoMinSendBandwidth`: minimum number of Kbps that the client owning the token will try to send to Kurento Media Server. 0 means unconstrained. Giving a value to this property will override
-     * the global configuration set in [OpenVidu Server configuration](https://openvidu.io/docs/reference-docs/openvidu-server-params/#configuration-parameters-for-openvidu-server)
+     * the global configuration set in [OpenVidu Server configuration](https://docs.openvidu.io/en/stable/reference-docs/openvidu-server-params/#configuration-parameters-for-openvidu-server)
      * (parameter `openvidu.streams.video.min-send-bandwidth`) for every outgoing stream of the user owning the token
-     * - `allowedFilters`: names of the filters the user owning the token will be able to apply. See [Voice and video filters](https://openvidu.io/docs/advanced-features/filters/)
+     * - `allowedFilters`: names of the filters the user owning the token will be able to apply. See [Voice and video filters](https://docs.openvidu.io/en/stable/advanced-features/filters/)
      */
     kurentoOptions?: {
         videoMaxRecvBandwidth?: number,
