@@ -1,0 +1,49 @@
+version: '3.1'
+
+services:
+    redis-db:
+        image: redis
+        network_mode: host
+
+    openvidu-coturn:
+        image: openvidu-coturn
+        network_mode: host
+        environment:
+            - REDIS_IP=${openvidu_public_ip}
+            - TURN_PUBLIC_IP=${openvidu_public_ip}
+            - TURN_LISTEN_PORT=3478
+            - DB_NAME=0
+            - DB_PASSWORD=turn
+            - MIN_PORT=40000
+            - MAX_PORT=65535
+        
+    kms:
+        image: kurento/kurento-media-server
+        network_mode: host
+        environment:
+            - KMS_EXTERNAL_ADDRESS=${openvidu_public_ip}
+
+    openvidu-ce:
+        image: openvidu/openvidu-server
+        entrypoint: ["java", "-jar", "-Dserver.ssl.enabled=false", "-Dopenvidu.publicurl=https://${openvidu_public_ip}:4443", "-Dserver.port=5443", "/openvidu-server.jar"]
+        network_mode: host
+        environment:
+            - openvidu.secret=${openvidu_secret}
+            - kms.uris="[\"ws://${openvidu_public_ip}:8888/kurento\"]"
+
+    proxy:
+        image: nginx
+        network_mode: host
+        volumes:
+            - ./kms.conf:/etc/nginx/conf.d/kms.conf
+            - ./openvidu-call.conf:/etc/nginx/conf.d/openvidu-call.conf
+            - ./openvidu.cert:/etc/ssl/openvidu/openvidu.cert
+            - ./openvidu.key:/etc/ssl/openvidu/openvidu.key
+        command: /bin/bash -c "rm /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'"
+
+    openvidu-call:
+        image: openvidu-call
+        network_mode: host
+        environment: 
+            - OPENVIDU_URL=https://${openvidu_public_ip}:4443
+            - OPENVIDU_SECRET=${openvidu_secret}
