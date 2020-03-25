@@ -1,21 +1,42 @@
 #!/bin/bash
 
-if [[ ! -z "${whichcert}" && ! -z "${domain_name}" && ! -z "${letsencrypt_email}" ]]; then
-  sed -i "s/{domain_name}/${domain_name}/" /etc/nginx/conf.d/*.conf
-else
-    domain_name="openvidu"
+# Start with default certbot conf
+service nginx start
+
+# Show input enviroment variables
+echo "Domain name: ${DOMAIN_OR_PUBLIC_IP}"
+echo "Certificated: ${CERTIFICATE_TYPE}"
+echo "Letsencrypt Email: ${LETSENCRYPT_EMAIL}"
+
+case ${CERTIFICATE_TYPE} in
+
+  "selfsigned")
+    echo "Creating selfsigned..."
+  
+    DOMAIN_OR_PUBLIC_IP="openvidu"
     mkdir -p /etc/letsencrypt/live/openvidu
+    openssl req -new -nodes -x509 \
+      -subj "/CN=openvidu" -days 365 \
+      -keyout /etc/letsencrypt/live/openvidu/privkey.pem -out /etc/letsencrypt/live/openvidu/fullchain.pem -extensions v3_ca
+    ;;
 
-    openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 \
-      -subj "/C=/ST=/L=/O=/CN=openvidu" \
-      -keyout /etc/letsencrypt/live/openvidu/privkey.pem \
-      -out /etc/letsencrypt/live/openvidu/fullchain.pem
-fi
+  "owncert")
+    echo "Using owncert..."
 
-CONFIG_FILES=/etc/nginx/conf.d/*
-for file in ${CONFIG_FILES}
-do
-  echo "$( cat ${file} | sed "s/{domain_name}/${domain_name}/")" > ${file}
-done
+    mkdir -p /etc/letsencrypt/live/${DOMAIN_OR_PUBLIC_IP}
+    cp /owncert/certificate.key /etc/letsencrypt/live/${DOMAIN_OR_PUBLIC_IP}/privkey.pem
+    cp /owncert/certificate.cert /etc/letsencrypt/live/${DOMAIN_OR_PUBLIC_IP}/fullchain.pem
+    ;;
 
+  "letsencrypt")
+    echo "Requesting letsencrypt..."
+
+    certbot certonly -n --webroot -w /var/www/certbot -m ${LETSENCRYPT_EMAIL} --agree-tos -d ${DOMAIN_OR_PUBLIC_IP}
+    ;;
+esac
+
+[ -d "/nginx_conf" ] && rm /etc/nginx/conf.d/* && cp /nginx_conf/* /etc/nginx/conf.d
+sed -i "s/{domain_name}/${DOMAIN_OR_PUBLIC_IP}/" /etc/nginx/conf.d/*
+
+service nginx restart
 tail -f /var/log/nginx/*.log
