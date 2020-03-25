@@ -2,7 +2,7 @@ version: '3.1'
 
 services:
     openvidu-server:
-        image: openvidu/openvidu-server:2.12.0
+        image: openvidu/openvidu-server
         entrypoint: ["java", "-jar", "/openvidu-server.jar"]
         restart: on-failure
         network_mode: host
@@ -12,12 +12,12 @@ services:
         environment:
             - SERVER_SSL_ENABLED=false
             - SERVER_PORT=5443
-            - OPENVIDU_PUBLICURL=https://${DOMAIN_OR_PUBLIC_IP}:4443
+            - OPENVIDU_PUBLICURL=https://${DOMAIN_OR_PUBLIC_IP}
             - OPENVIDU_SECRET=${OPENVIDU_SECRET}
             - OPENVIDU_RECORDING=true
             - OPENVIDU_RECORDING_PATH=${OPENVIDU_RECORDING_FOLDER}
             - KMS_URIS="[\"ws://127.0.0.1:8888/kurento\"]"
-            - COTURN_IP=127.0.0.1
+            - COTURN_IP=${DOMAIN_OR_PUBLIC_IP}
             - COTURN_REDIS_IP=127.0.0.1
 
     kms:
@@ -38,7 +38,6 @@ services:
         network_mode: host
         environment:
             - REDIS_IP=127.0.0.1
-            - TURN_PUBLIC_IP=127.0.0.1
             - TURN_LISTEN_PORT=3478
             - DB_NAME=0
             - DB_PASSWORD=turn
@@ -63,6 +62,6 @@ services:
         ports:
             - "5442:80"
         environment: 
-            - OPENVIDU_URL=https://${DOMAIN_OR_PUBLIC_IP}:4443
+            - OPENVIDU_URL=https://${DOMAIN_OR_PUBLIC_IP}
             - OPENVIDU_SECRET=${OPENVIDU_SECRET}
 
