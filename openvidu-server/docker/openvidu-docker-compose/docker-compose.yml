@@ -1,7 +1,7 @@
 version: '3.1'
 
 services:
-    openvidu-ce:
+    openvidu-server:
         image: openvidu/openvidu-server:2.12.0
         entrypoint: ["java", "-jar", "/openvidu-server.jar"]
         restart: on-failure
@@ -45,7 +45,7 @@ services:
             - MIN_PORT=40000
             - MAX_PORT=65535
         
-    proxy:
+    openvidu-proxy:
         image: openvidu-nginx
         restart: on-failure
         network_mode: host

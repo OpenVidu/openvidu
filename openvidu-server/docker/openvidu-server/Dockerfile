@@ -5,6 +5,7 @@ MAINTAINER openvidu@gmail.com
 RUN apt-get update && apt-get install -y \
   openjdk-8-jre \
   supervisor \
+  coturn \
 && rm -rf /var/lib/apt/lists/*
 
 # Configure supervisor
