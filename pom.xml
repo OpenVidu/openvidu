@@ -63,7 +63,6 @@
 
 		<version.openvidu.java.client>2.12.1</version.openvidu.java.client>
 		<version.openvidu.client>1.1.0</version.openvidu.client>
-		<version.openvidu.test>1.1.0</version.openvidu.test>
 		<version.openvidu.test.browsers>1.1.0</version.openvidu.test.browsers>
 
 		<version.enforcer.plugin>3.0.0-M3</version.enforcer.plugin>
@@ -219,7 +218,6 @@
 			<modules>
 				<module>openvidu-server</module>
 				<module>openvidu-client</module>
-				<module>openvidu-test</module>
 				<module>openvidu-test-e2e</module>
 				<module>openvidu-test-browsers</module>
 				<module>openvidu-java-client</module>
@@ -287,10 +285,6 @@
 			<dependency>
 				<groupId>io.openvidu</groupId>
 				<artifactId>openvidu-client</artifactId>
-			</dependency>
-			<dependency>
-				<groupId>io.openvidu</groupId>
-				<artifactId>openvidu-test</artifactId>
 			</dependency>
 			<dependency>
 				<groupId>io.openvidu</groupId>
