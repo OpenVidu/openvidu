@@ -11,6 +11,6 @@ openvidu-node-client
 
 - **Docs**: [openvidu-node-client API](https://docs.openvidu.io/en/stable/reference-docs/openvidu-node-client/)
 
-- **Release**: [OpenVidu Artifacts](https://docs.openvidu.io/en/stable/reference-docs/openvidu-artifacts/)
+- **Release**: [OpenVidu Artifacts](https://docs.openvidu.io/en/stable/releases/)
 
 [OpenViduLogo]: https://secure.gravatar.com/avatar/5daba1d43042f2e4e85849733c8e5702?s=120
