@@ -2,7 +2,7 @@ version: '3.1'
 
 services:
     openvidu-server:
-        image: openvidu/openvidu-server
+        image: openvidu/openvidu-server:2.13.0-beta1
         entrypoint: ["java", "-jar", "/openvidu-server.jar"]
         restart: on-failure
         network_mode: host
@@ -33,7 +33,7 @@ services:
         network_mode: host
 
     openvidu-coturn:
-        image: openvidu-coturn
+        image: openvidu/openvidu-coturn:1.0.0-beta1
         restart: on-failure
         network_mode: host
         environment:
@@ -45,7 +45,7 @@ services:
             - MAX_PORT=65535
         
     openvidu-proxy:
-        image: openvidu-nginx
+        image: openvidu/openvidu-proxy:1.0.0-beta1
         restart: on-failure
         network_mode: host
         volumes:
@@ -57,7 +57,7 @@ services:
             - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
 
     openvidu-call:
-        image: openvidu-call
+        image: openvidu/openvidu-call:2.13.0-beta1
         restart: on-failure
         ports:
             - "5442:80"
