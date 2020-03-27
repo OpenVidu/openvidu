@@ -21,11 +21,13 @@ services:
             - COTURN_REDIS_IP=127.0.0.1
 
     kms:
-        image: kurento/kurento-media-server:6.13.0
+        image: kurento/kurento-media-server-dev:6.13
         restart: on-failure
         network_mode: host
         environment:
             - KMS_EXTERNAL_ADDRESS=auto
+            - KMS_MIN_PORT=40000
+            - KMS_MAX_PORT=57000
 
     redis-db:
         image: redis:5.0.7
@@ -41,7 +43,7 @@ services:
             - TURN_LISTEN_PORT=3478
             - DB_NAME=0
             - DB_PASSWORD=turn
-            - MIN_PORT=40000
+            - MIN_PORT=57001
             - MAX_PORT=65535
         
     openvidu-proxy:
@@ -49,19 +51,9 @@ services:
         restart: on-failure
         network_mode: host
         volumes:
-            - ./nginx_conf:/nginx_conf
+            - ./certificates:/etc/letsencrypt
             - ./owncert:/owncert
         environment: 
             - DOMAIN_OR_PUBLIC_IP=${DOMAIN_OR_PUBLIC_IP}
             - CERTIFICATE_TYPE=${CERTIFICATE_TYPE}
             - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
-
-    openvidu-call:
-        image: openvidu/openvidu-call:2.13.0-beta1
-        restart: on-failure
-        ports:
-            - "5442:80"
-        environment: 
-            - OPENVIDU_URL=https://${DOMAIN_OR_PUBLIC_IP}
-            - OPENVIDU_SECRET=${OPENVIDU_SECRET}
-
