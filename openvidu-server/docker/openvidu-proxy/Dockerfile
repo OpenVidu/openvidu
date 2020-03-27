@@ -2,7 +2,7 @@ FROM nginx:1.17.9
 
 # Install certbot
 RUN apt-get update && \
-    apt-get install -y python python-dev libffi6 libffi-dev libssl-dev curl build-essential procps && \
+    apt-get install -y python python-dev libffi6 libffi-dev libssl-dev curl build-essential procps cron && \
     curl -L 'https://bootstrap.pypa.io/get-pip.py' | python && \
     pip install -U cffi certbot && \
     mkdir -p /var/www/certbot && \
@@ -13,6 +13,7 @@ RUN apt-get update && \
 
 # Default nginx conf
 COPY ./default.conf /etc/nginx/conf.d/default.conf
+COPY ./default_nginx_conf /default_nginx_conf
 
 # Entrypoint
 COPY ./entrypoint.sh /usr/local/bin
