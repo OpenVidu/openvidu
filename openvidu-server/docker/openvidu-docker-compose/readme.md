@@ -11,12 +11,14 @@ This docker-compose running in Ubuntu 16.04 or Ubuntu 18.04. We need have a dock
 
 We need open the next ports in the host:
 
-- 443 TCP (OpenVidu Inspector is served on port 443 by default)
-- 4443 TCP (OpenVidu Server Pro REST API endpoint listens on port 4443 by default)
+- 80 TCP (Letsencrypt getting certificated by default in this port)
+- 443 TCP (OpenVidu Server and Openvidu Call view Services section for more information)
 - 3478 TCP (coturn listens on port 3478 by default)
 - 3478 UDP (opening also UDP port has been proved to facilitate connections with certain type of clients)
-- 40000 - 65535 UDP (WebRTC connections with clients may be established using a random port inside this range)
-- 40000 - 65535 TCP (WebRTC connections with clients may be established using a random port inside this range, if UDP can't be used because client network is blocking it)
+- 40000 - 57000 UDP (Kurento Media Server listens on this ports)
+- 40000 - 57000 UDP (Kurento Media Server listens on this ports)
+- 57001 - 65535 UDP (WebRTC connections with clients may be established using a random port inside this range)
+- 57001 - 65535 TCP (WebRTC connections with clients may be established using a random port inside this range, if UDP can't be used because client network is blocking it)
 
 ## 2. Deploy
 
@@ -40,8 +42,24 @@ Open the file `.env` and configure the following variables:
 - CERTIFICATE_TYPE: Only used if you have a dns name. Choose selfsigned for generate autfirmated certificated, this option will show a error menssage. Choose owncert if you have a certificateds or choose letsencrypt for auto generate certificated using letsencrypt.
 - LETSENCRYPT_EMAIL: If you use letsencrypt certificated you need configurate a valid email for this propuse
 
+### Deployment application
+
+The application Openvidu Call is deployment by default in this docker-compose. The configuration of this application can will see in the file `docker-compose.override.yml`.
+
+If your want deploy your own application change the `app` service in the `docker-compose.override.yml`. Just keep in mind expose your own application in the port `5442` and use `http`. 
+
 ### Run the application
 
 For to start the application exec this command:
 
 `docker-compose up`
+
+When you see the message in console `OPENVIDU SERVER IP` the page is ready for enjoy it
+
+
+### Stop the application
+
+For to stop the application exec this command:
+
+`docker-compose down`
+

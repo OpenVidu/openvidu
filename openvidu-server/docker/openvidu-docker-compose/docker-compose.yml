@@ -1,6 +1,9 @@
 version: '3.1'
 
 services:
+    # In this docker-compose are deployed the Openvidu services.
+    # This file not necessary change, you only need change 
+    # the .env file with the necessaries variables.
     openvidu-server:
         image: openvidu/openvidu-server:2.13.0-beta1
         entrypoint: ["java", "-jar", "/openvidu-server.jar"]
@@ -21,7 +24,7 @@ services:
             - COTURN_REDIS_IP=127.0.0.1
 
     kms:
-        image: kurento/kurento-media-server-dev:6.13
+        image: kurento/${KMS_IMAGE:-kurento-media-server-dev:6.13}
         restart: on-failure
         network_mode: host
         environment:

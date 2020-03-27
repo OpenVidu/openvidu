@@ -1,6 +1,9 @@
 version: '3.1'
 
 services:
+    # Change this if your want use your own application.
+    # It's very important expose your application in port 5443
+    # and use the http protocol.
     app:
         image: openvidu/openvidu-call:2.13.0-beta1
         restart: on-failure
