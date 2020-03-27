@@ -46,7 +46,7 @@ import io.openvidu.server.kurento.kms.Kms;
  */
 public class KurentoSession extends Session {
 
-	private final static Logger log = LoggerFactory.getLogger(Session.class);
+	private final static Logger log = LoggerFactory.getLogger(KurentoSession.class);
 	public static final int ASYNC_LATCH_TIMEOUT = 30;
 
 	private MediaPipeline pipeline;
@@ -128,7 +128,8 @@ public class KurentoSession extends Session {
 		}
 		participant.releaseAllFilters();
 
-		log.info("PARTICIPANT {}: Leaving session {}", participant.getParticipantPublicId(), this.sessionId);
+		log.info("PARTICIPANT {}: Leaving session {} for reason {}", participant.getParticipantPublicId(),
+				this.sessionId, reason.name());
 
 		this.removeParticipant(participant, reason);
 		participant.close(reason, true, 0);
