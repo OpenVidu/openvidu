@@ -22,6 +22,7 @@ services:
             - KMS_URIS="[\"ws://127.0.0.1:8888/kurento\"]"
             - COTURN_IP=${DOMAIN_OR_PUBLIC_IP}
             - COTURN_REDIS_IP=127.0.0.1
+            - LOGGING_LEVEL_ROOT=${OV_CE_DEBUG_LEVEL:-INFO}
 
     kms:
         image: kurento/${KMS_IMAGE:-kurento-media-server-dev:6.13}
@@ -31,6 +32,7 @@ services:
             - KMS_EXTERNAL_ADDRESS=auto
             - KMS_MIN_PORT=40000
             - KMS_MAX_PORT=57000
+            - GST_DEBUG=${KMS_DEBUG_LEVEL:-3,Kurento*:4,kms*:4,sdp*:4,webrtc*:4,*rtpendpoint:4,rtp*handler:4,rtpsynchronizer:4,agnosticbin:4}
 
     redis-db:
         image: redis:5.0.7

@@ -63,3 +63,30 @@ For to stop the application exec this command:
 
 `docker-compose down`
 
+### Troubleshooting
+
+#### Show service logs
+
+If you need show the service logs only need exec this command:
+
+`docker-compose logs NAME_SERVICE`
+
+Change `NAME_SERVICE` using one the next names:
+
+- openvidu-server: For show the Openvidu Server logs
+- kms: For show theKurento Media Server logs
+- openvidu-proxy: For show the Openvidu Proxy logs
+- openvidu-coturn: For show the COTURN logs
+- app: For show the app logs
+
+#### Level logs of services
+
+##### Kurento Media Server Level logs
+If it was necessary to change the level of the kms logs. In the .en file we go to the section "Kurento Media Server Level logs" and change the variable `KMS_DEBUG_LEVEL` for more information https://doc-kurento.readthedocs.io/en/stable/features/logging.html
+
+##### Openvidu Server Level logs
+If it was necessary to change the level of the kms logs. In the .en file we go to the section "Openvidu Server Level logs" and change the variable `OV_CE_DEBUG_LEVEL`
+
+#### Change Kurento Media Server
+
+If is necessaries change the Kurento Media Server image, go to the Kurento Media Server image section in the .env file and change the variable `KMS_IMAGE` with the new image that your want use
