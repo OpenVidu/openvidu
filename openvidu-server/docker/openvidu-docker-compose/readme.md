@@ -87,6 +87,6 @@ If it was necessary to change the level of the kms logs. In the .en file we go t
 ##### Openvidu Server Level logs
 If it was necessary to change the level of the kms logs. In the .en file we go to the section "Openvidu Server Level logs" and change the variable `OV_CE_DEBUG_LEVEL`
 
-#### Change Kurento Media Server
+### Change Kurento Media Server
 
 If is necessaries change the Kurento Media Server image, go to the Kurento Media Server image section in the .env file and change the variable `KMS_IMAGE` with the new image that your want use
