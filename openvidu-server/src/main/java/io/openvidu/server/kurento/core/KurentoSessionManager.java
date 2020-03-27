@@ -82,6 +82,7 @@ public class KurentoSessionManager extends SessionManager {
 	private KurentoParticipantEndpointConfig kurentoEndpointConfig;
 
 	@Override
+	/* Protected by Session.closingLock.readLock */
 	public synchronized void joinRoom(Participant participant, String sessionId, Integer transactionId) {
 		Set<Participant> existingParticipants = null;
 		boolean lockAcquired = false;
@@ -866,6 +867,7 @@ public class KurentoSessionManager extends SessionManager {
 	}
 
 	@Override
+	/* Protected by Session.closingLock.readLock */
 	public Participant publishIpcam(Session session, MediaOptions mediaOptions, String serverMetadata)
 			throws Exception {
 		final String sessionId = session.getSessionId();

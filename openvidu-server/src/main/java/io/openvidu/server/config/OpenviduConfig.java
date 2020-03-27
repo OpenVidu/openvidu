@@ -42,11 +42,6 @@ import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
-
 import org.apache.http.Header;
 import org.apache.http.message.BasicHeader;
 import org.kurento.jsonrpc.JsonUtils;
@@ -62,6 +57,11 @@ import org.springframework.core.env.PropertySource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.support.PropertiesLoaderUtils;
 import org.springframework.stereotype.Component;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.server.OpenViduServer;
@@ -81,7 +81,8 @@ public class OpenviduConfig {
 	public static final Set<String> OPENVIDU_INTEGER_PROPERTIES = new HashSet<>(
 			Arrays.asList("openvidu.recording.autostop-timeout", "openvidu.streams.video.max-recv-bandwidth",
 					"openvidu.streams.video.min-recv-bandwidth", "openvidu.streams.video.max-send-bandwidth",
-					"openvidu.streams.video.min-send-bandwidth"));
+					"openvidu.streams.video.min-send-bandwidth", "openvidu.sessions.garbage.interval",
+					"openvidu.sessions.garbage.threshold"));
 
 	public static final Set<String> OPENVIDU_BOOLEAN_PROPERTIES = new HashSet<>(Arrays.asList("openvidu.cdr",
 			"openvidu.recording", "openvidu.recording.public-access", "openvidu.webhook"));
@@ -167,6 +168,12 @@ public class OpenviduConfig {
 
 	@Value("${openvidu.streams.video.min-send-bandwidth}")
 	protected int openviduStreamsVideoMinSendBandwidth;
+
+	@Value("${openvidu.sessions.garbage.interval}")
+	protected int openviduSessionsGarbageInterval;
+
+	@Value("${openvidu.sessions.garbage.threshold}")
+	protected int openviduSessionsGarbageThreshold;
 
 	@Value("${coturn.redis.ip}")
 	protected String coturnRedisIp;
@@ -284,6 +291,14 @@ public class OpenviduConfig {
 
 	public int getVideoMinSendBandwidth() {
 		return this.openviduStreamsVideoMinSendBandwidth;
+	}
+
+	public int getSessionGarbageInterval() {
+		return this.openviduSessionsGarbageInterval;
+	}
+
+	public int getSessionGarbageThreshold() {
+		return this.openviduSessionsGarbageThreshold;
 	}
 
 	public String getCoturnIp() {
@@ -479,6 +494,12 @@ public class OpenviduConfig {
 				checkIntegerNonNegative(parameters, parameter, admitStringified);
 				break;
 			case "openvidu.streams.video.min-send-bandwidth":
+				checkIntegerNonNegative(parameters, parameter, admitStringified);
+				break;
+			case "openvidu.sessions.garbage.interval":
+				checkIntegerNonNegative(parameters, parameter, admitStringified);
+				break;
+			case "openvidu.sessions.garbage.threshold":
 				checkIntegerNonNegative(parameters, parameter, admitStringified);
 				break;
 			case "kms.uris":

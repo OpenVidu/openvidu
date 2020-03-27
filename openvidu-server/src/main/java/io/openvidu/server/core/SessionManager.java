@@ -19,13 +19,18 @@ package io.openvidu.server.core;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
 import org.apache.commons.lang3.RandomStringUtils;
@@ -82,8 +87,8 @@ public abstract class SessionManager {
 
 	public FormatChecker formatChecker = new FormatChecker();
 
-	protected ConcurrentMap<String, Session> sessions = new ConcurrentHashMap<>();
-	protected ConcurrentMap<String, Session> sessionsNotActive = new ConcurrentHashMap<>();
+	final protected ConcurrentMap<String, Session> sessions = new ConcurrentHashMap<>();
+	final protected ConcurrentMap<String, Session> sessionsNotActive = new ConcurrentHashMap<>();
 	protected ConcurrentMap<String, ConcurrentHashMap<String, Participant>> sessionidParticipantpublicidParticipant = new ConcurrentHashMap<>();
 	protected ConcurrentMap<String, ConcurrentHashMap<String, FinalUser>> sessionidFinalUsers = new ConcurrentHashMap<>();
 	protected ConcurrentMap<String, ConcurrentLinkedQueue<CDREventRecording>> sessionidAccumulatedRecordings = new ConcurrentHashMap<>();
@@ -415,6 +420,58 @@ public abstract class SessionManager {
 				log.warn("Error closing session '{}': {}", sessionId, e.getMessage());
 			}
 		}
+	}
+
+	@PostConstruct
+	private void startSessionGarbageCollector() {
+		if (openviduConfig.getSessionGarbageInterval() == 0) {
+			log.info(
+					"Garbage collector for non active sessions is disabled (property 'openvidu.sessions.garbage.interval' is 0)");
+			return;
+		}
+		TimerTask task = new TimerTask() {
+			@Override
+			public void run() {
+				// Remove all non active sessions created more than the specified time
+				log.info("Running non active sessions garbage collector...");
+				final long currentMillis = System.currentTimeMillis();
+
+				// Loop through all non active sessions. Safely remove them and clean all of
+				// their data if their threshold has elapsed
+				for (Iterator<Entry<String, Session>> iter = sessionsNotActive.entrySet().iterator(); iter.hasNext();) {
+					final Session sessionNotActive = iter.next().getValue();
+					final String sessionId = sessionNotActive.getSessionId();
+					long sessionExistsSince = currentMillis - sessionNotActive.getStartTime();
+					if (sessionExistsSince > (openviduConfig.getSessionGarbageThreshold() * 1000)) {
+						try {
+							sessionNotActive.closingLock.writeLock().lock();
+							if (sessions.containsKey(sessionId)) {
+								// The session passed to active during lock wait
+								continue;
+							}
+							iter.remove();
+							cleanCollections(sessionId);
+							log.info("Non active session {} cleaned up by garbage collector", sessionId);
+						} finally {
+							sessionNotActive.closingLock.writeLock().unlock();
+						}
+					}
+				}
+
+				// Warn about possible ghost sessions
+				for (Iterator<Entry<String, Session>> iter = sessions.entrySet().iterator(); iter.hasNext();) {
+					final Session sessionActive = iter.next().getValue();
+					if (sessionActive.getParticipants().size() == 0) {
+						log.warn("Possible ghost session {}", sessionActive.getSessionId());
+					}
+				}
+			}
+		};
+		new Timer().scheduleAtFixedRate(task, openviduConfig.getSessionGarbageInterval() * 1000,
+				openviduConfig.getSessionGarbageInterval() * 1000);
+		log.info(
+				"Garbage collector for non active sessions initialized. Running every {} seconds and cleaning up non active Sessions more than {} seconds old",
+				openviduConfig.getSessionGarbageInterval(), openviduConfig.getSessionGarbageThreshold());
 	}
 
 	/**

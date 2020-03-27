@@ -128,8 +128,7 @@ public class KurentoSession extends Session {
 		}
 		participant.releaseAllFilters();
 
-		log.info("PARTICIPANT {}: Leaving session {} for reason {}", participant.getParticipantPublicId(),
-				this.sessionId, reason.name());
+		log.info("PARTICIPANT {}: Leaving session {}", participant.getParticipantPublicId(), this.sessionId);
 
 		this.removeParticipant(participant, reason);
 		participant.close(reason, true, 0);
