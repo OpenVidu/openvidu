@@ -5,12 +5,12 @@ DEBUG=${DEBUG:-false}
 [ "$DEBUG" == "true" ] && set -x
 
 #Check parameters
-[[ ! -z "${TURN_PUBLIC_IP}" ]] && echo "TURN public IP: ${TURN_PUBLIC_IP}" ||
-    export TURN_PUBLIC_IP=$(curl ifconfig.co)
+[[ ! -z "${TURN_PUBLIC_IP}" ]] || export TURN_PUBLIC_IP=$(curl ifconfig.co)
+
+echo "TURN public IP: ${TURN_PUBLIC_IP}"
 
 [[ ! -z "${TURN_LISTEN_PORT}" ]] && echo "TURN listening port: ${TURN_LISTEN_PORT}" ||
     { echo "TURN_LISTEN_PORT environment variable is not defined"; exit 1; }
-
 
 [[ ! -z "${REDIS_IP}" ]] && echo "REDIS IP: ${REDIS_IP}" || { echo "REDIS_IP environment variable is not defined"; exit 1; }
 
