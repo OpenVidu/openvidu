@@ -39,10 +39,12 @@ Open ports:
 
 First clone this repository and move to openvidu-docker-compose folder:
 
-`$ git clone https://github.com/OpenVidu/openvidu.git`
-`$ cd openvidu`
-`$ git checkout -b deploy-docker-compose origin/deploy-docker-compose`
-`$ cd openvidu-server/docker/openvidu-docker-compose`
+```
+$ git clone https://github.com/OpenVidu/openvidu.git
+$ cd openvidu
+$ git checkout -b deploy-docker-compose origin/deploy-docker-compose
+$ cd openvidu-server/docker/openvidu-docker-compose
+```
 
 ### OpenVidu configuration
 
@@ -155,12 +157,14 @@ If you want to see logs of all services execute this command:
 
 If you only want to see the logs of a service execute any of the following commands:
 
-`$ docker-compose logs -f openvidu-server`
-`$ docker-compose logs -f kms`
-`$ docker-compose logs -f openvidu-proxy`
-`$ docker-compose logs -f openvidu-coturn`
-`$ docker-compose logs -f redis-db`
-`$ docker-compose logs -f app`
+```
+$ docker-compose logs -f openvidu-server
+$ docker-compose logs -f kms
+$ docker-compose logs -f openvidu-proxy
+$ docker-compose logs -f openvidu-coturn
+$ docker-compose logs -f redis-db
+$ docker-compose logs -f app
+```
 
 #### Updating the log level of the services
 
