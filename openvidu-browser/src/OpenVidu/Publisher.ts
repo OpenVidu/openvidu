@@ -117,7 +117,8 @@ export class Publisher extends StreamManager {
      */
     publishAudio(value: boolean): void {
         if (this.stream.audioActive !== value) {
-            this.stream.getMediaStream().getAudioTracks().forEach((track) => {
+            const affectedMediaStream: MediaStream = this.stream.displayMyRemote() ? this.stream.localMediaStreamWhenSubscribedToRemote : this.stream.getMediaStream();
+            affectedMediaStream.getAudioTracks().forEach((track) => {
                 track.enabled = value;
             });
             if (!!this.session && !!this.stream.streamId) {
@@ -163,7 +164,8 @@ export class Publisher extends StreamManager {
      */
     publishVideo(value: boolean): void {
         if (this.stream.videoActive !== value) {
-            this.stream.getMediaStream().getVideoTracks().forEach((track) => {
+            const affectedMediaStream: MediaStream = this.stream.displayMyRemote() ? this.stream.localMediaStreamWhenSubscribedToRemote : this.stream.getMediaStream();
+            affectedMediaStream.getVideoTracks().forEach((track) => {
                 track.enabled = value;
             });
             if (!!this.session && !!this.stream.streamId) {
@@ -305,15 +307,16 @@ export class Publisher extends StreamManager {
                 reject(new Error('Unknown track kind ' + track.kind));
             }
             (<any>sender).replaceTrack(track).then(() => {
+                const mediaStream: MediaStream = this.stream.displayMyRemote() ? this.stream.localMediaStreamWhenSubscribedToRemote : this.stream.getMediaStream();
                 let removedTrack: MediaStreamTrack;
                 if (track.kind === 'video') {
-                    removedTrack = this.stream.getMediaStream().getVideoTracks()[0];
+                    removedTrack = mediaStream.getVideoTracks()[0];
                 } else {
-                    removedTrack = this.stream.getMediaStream().getAudioTracks()[0];
+                    removedTrack = mediaStream.getAudioTracks()[0];
                 }
-                this.stream.getMediaStream().removeTrack(removedTrack);
+                mediaStream.removeTrack(removedTrack);
                 removedTrack.stop();
-                this.stream.getMediaStream().addTrack(track);
+                mediaStream.addTrack(track);
                 resolve();
             }).catch(error => {
                 reject(error);

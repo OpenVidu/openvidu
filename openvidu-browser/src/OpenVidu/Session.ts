@@ -941,7 +941,6 @@ export class Session implements EventDispatcher {
             candidate: msg.candidate,
             component: msg.component,
             foundation: msg.foundation,
-            ip: msg.ip,
             port: msg.port,
             priority: msg.priority,
             protocol: msg.protocol,
