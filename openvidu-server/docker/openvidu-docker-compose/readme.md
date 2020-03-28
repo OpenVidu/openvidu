@@ -1,92 +1,174 @@
-# Deploy Openvidu using Docker Compose
+# Openvidu CE deployment with docker-compose
 
-In this repository we explain how deploy a video call application stack using Openvidu Server and Openvidu Call.
+> **IMPORTANT NOTE:** This procedure is in development an can change in any moment. Please use it with care and visit the page with frecuency.
 
-## 1. Prerequisites:
+This document describes how to deploy OpenVidu CE alongside OpenVidu Call (a basic videoconference application) using docker-compose.
 
-This docker-compose running in Ubuntu 16.04 or Ubuntu 18.04. We need have a docker and docker-compose installed in the machine. For this propuse we proportionally the next documentation for how install docker and docker compose in Ubuntu.
+Services installed following these instructions are:
+- **OpenVidu Server (openvidu-server)**: This is the brain of OpenVidu platform. The signaling plane.
+- **Kurento Media Server (kms)**: This is the hearth of the OpenVidu platform. In charge of media plane.
+- **TURN Server (openvidu-coturn)**: Service used to allow media communications with browsers in certain networks.
+- **Redis (redis-db)**: Database to manage users in TURN server.
+- **Nginx (openvidu-proxy)**: A reverse proxy used to configure SSL certificate and to allow both Openvidu Server and the Application in the standard https port (443).
+- **Videoconference Application (app)**: A videoconference application deployed for demo porpouses. This application can be easily unistalled or changed by other application.
+
+> TODO: Change the service names for generic ones: openvidu-coturn > coturn, redis-db > redis, openvidu-proxy > nginx.
+
+## 1. Prerequisites
+
+You will need docker and docker-compose installed in your linux distribution. In theory, you can use any modern linux distribution, but we have tested with Ubuntu 18.04.
 
 - [Install Docker](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
 - [Install Docker Compose](https://docs.docker.com/compose/install/)
 
-We need open the next ports in the host:
+It is recommended to know basic concepts about docker and docker-compose to deploy and operate OpenVidu CE platform.
 
-- 80 TCP (Letsencrypt getting certificated by default in this port)
-- 443 TCP (OpenVidu Server and Openvidu Call view Services section for more information)
-- 3478 TCP (coturn listens on port 3478 by default)
-- 3478 UDP (opening also UDP port has been proved to facilitate connections with certain type of clients)
-- 40000 - 57000 UDP (Kurento Media Server listens on this ports)
-- 40000 - 57000 UDP (Kurento Media Server listens on this ports)
-- 57001 - 65535 UDP (WebRTC connections with clients may be established using a random port inside this range)
-- 57001 - 65535 TCP (WebRTC connections with clients may be established using a random port inside this range, if UDP can't be used because client network is blocking it)
+Open ports:
 
-## 2. Deploy
+- 80 TCP: If you select Let's Encrypt to generate an SSL certificate this port is used by the generation process.
+- 443 TCP: OpenVidu server and application are published in standard https port.
+- 3478 TCP: Used by TURN Server to stablish media connections.
+- 3478 UDP: Used by TURN Server to stablish media connections.
+- 40000 - 57000 UDP: Ports used by Kurento Media Server to stablish media connections.
+- 57001 - 65535 UDP: Used by TURN Server to stablish media connections.
+- 57001 - 65535 TCP: Used by TURN Server to stablish media connections.
+
+## 2. Deployment Instructions
 
 ### Clone Repository
 
-First clone this repository:
+First clone this repository and move to openvidu-docker-compose folder:
 
 `$ git clone https://github.com/OpenVidu/openvidu.git`
+`$ cd openvidu`
+`$ git checkout -b deploy-docker-compose origin/deploy-docker-compose`
+`$ cd openvidu-server/docker/openvidu-docker-compose`
 
-Change to this directory:
+### OpenVidu configuration
 
-`cd openvidu/openvidu-server/docker/openvidu-docker-compose`
+OpenVidu configuration is specified in the `.env` file with environment variables. 
 
-### Configure enviroment variables
+**YOU MUST** specify the public IP or public domain name of your machine and OpenVidu password. All other values have sane defaults.
 
-Open the file `.env` and configure the following variables:
+```
+# OpenVidu configuration
+# ----------------------
+# Documentation: https://openvidu.io/docs/reference-docs/openvidu-server-params/
 
-- OPENVIDU_SECRET: Used for apps and to acces to the inspector. Change it with yout secret
-- DOMAIN_OR_PUBLIC_IP: Used for access the application, write the ip if you don't have a dns name or use your dns name if you have one
-- OPENVIDU_RECORDING_FOLDER: Used for openvidu server recorder, select a valid folder for your host
-- CERTIFICATE_TYPE: Only used if you have a dns name. Choose selfsigned for generate autfirmated certificated, this option will show a error menssage. Choose owncert if you have a certificateds or choose letsencrypt for auto generate certificated using letsencrypt.
-- LETSENCRYPT_EMAIL: If you use letsencrypt certificated you need configurate a valid email for this propuse
+# OpenVidu SECRET used for apps and to access to the inspector. Change it.
+OPENVIDU_SECRET=MY_SECRET
 
-### Deployment application
+# Domain name. If you do not have one, the public IP of the machine.
+DOMAIN_OR_PUBLIC_IP=openvidu.example.com
 
-The application Openvidu Call is deployment by default in this docker-compose. The configuration of this application can will see in the file `docker-compose.override.yml`.
+# Openvidu Folder Record used for save the openvidu recording videos. Change it 
+# with the folder you want to use from your host.
+OPENVIDU_RECORDING_FOLDER=/opt/recordings
 
-If your want deploy your own application change the `app` service in the `docker-compose.override.yml`. Just keep in mind expose your own application in the port `5442` and use `http`. 
+# Certificate type: 
+# - selfsigned:  Self signed certificate. Not recommended for production use.  
+#                Users will see an ERROR when connected to web page.
+# - owncert:     Valid certificate purchased in a Internet services company.
+#                Please put the certificates in same folder as docker-compose.yml
+#                file with names certificate.key and certificate.cert.
+# - letsencrypt: Generate a new certificate using letsencrypt. Please set the 
+#                required contact email for Let's Encrypt in LETSENCRYPT_EMAIL 
+#                variable.
+CERTIFICATE_TYPE=selfsigned
 
-### Run the application
+# If CERTIFICATE_TYPE=letsencrypt, you need to configure a valid email for 
+# notifications
+LETSENCRYPT_EMAIL=user@example.com
+```
 
-For to start the application exec this command:
+### Videoconference application
 
-`docker-compose up`
+By default, the [OpenVidu Call application](https://openvidu.io/docs/demos/openvidu-call/) is deployed alongside OpenVide CE platform. This application is defined in the file `docker-compose.override.yml`.
 
-When you see the message in console `OPENVIDU SERVER IP` the page is ready for enjoy it
+```
+version: '3.1'
 
+services:
+    # Change this if your want use your own application.
+    # It's very important expose your application in port 5443
+    # and use the http protocol.
+    app:
+        image: openvidu/openvidu-call:2.13.0-beta1
+        restart: on-failure
+        ports:
+            - "5442:80"
+        environment: 
+            - OPENVIDU_URL=https://${DOMAIN_OR_PUBLIC_IP}
+            - OPENVIDU_SECRET=${OPENVIDU_SECRET}
+```
 
-### Stop the application
+You can disable it deleting the file `docker-compose.override.yml` (or renaming it in case you want to enable again in the future).
 
-For to stop the application exec this command:
+You can configure other dockerized application if you want updating the content of `docker-compose.override.yml` with the following requirements:
+* You have to bind your application port to 5442 in the host, as this port is used by NGINX to publish your app in port 443.
+* The application must be served in plain http as NGINX is the responsible of managing SSL certificate.
+* Remember that application needs to know how to connect to OpenVidu, for that, you can use the variables ${DOMAIN_OR_PUBLIC_IP} and ${OPENVIDU_SECRET} as shown in the sample file.
 
-`docker-compose down`
+### Start services
 
-### Troubleshooting
+To download and start the services (OpenVidu platform and the application) you can execute this command:
+
+`$ docker-compose up -d`
+
+Then, all services will be downloaded (only the first time) and executed. 
+
+The services will be started when you see this output in the shell:
+
+```
+Creating openvidu-docker-compose_openvidu-coturn_1 ... done
+Creating openvidu-docker-compose_app_1             ... done
+Creating openvidu-docker-compose_kms_1             ... done
+Creating openvidu-docker-compose_openvidu-proxy_1  ... done
+Creating openvidu-docker-compose_redis-db_1        ... done
+Creating openvidu-docker-compose_openvidu-server_1 ... done
+```
+
+Then you can visit https://<DOMAIN_OR_PUBLIC_IP>/ and the application will appear. If get any error, please retry in a few seconds as it is possible that services are still starting.
+
+### Stop services
+
+To stop the application exec this command:
+
+`docker-compose stop`
+
+### How to operate the services
+
+#### Change configuration
+
+To change the configuration follow this steps:
+* Stop the services: `$ docker-compose stop`
+* Change configuration in `.env` file
+* Start the services: `$ docker-compose up -d`
+
+> TODO: Review that changing domain name with CERTIFICATE_TYPE=letsencrypt regenerates the certificate.
 
 #### Show service logs
 
-If you need show the service logs only need exec this command:
+If you want to see logs of all services execute this command:
 
-`docker-compose logs NAME_SERVICE`
+`$ docker-compose logs -f`
 
-Change `NAME_SERVICE` using one the next names:
+If you only want to see the logs of a service execute any of the following commands:
 
-- openvidu-server: For show the Openvidu Server logs
-- kms: For show theKurento Media Server logs
-- openvidu-proxy: For show the Openvidu Proxy logs
-- openvidu-coturn: For show the COTURN logs
-- app: For show the app logs
+`$ docker-compose logs -f openvidu-server`
+`$ docker-compose logs -f kms`
+`$ docker-compose logs -f openvidu-proxy`
+`$ docker-compose logs -f openvidu-coturn`
+`$ docker-compose logs -f redis-db`
+`$ docker-compose logs -f app`
 
-#### Level logs of services
-
-##### Kurento Media Server Level logs
-If it was necessary to change the level of the kms logs. In the .en file we go to the section "Kurento Media Server Level logs" and change the variable `KMS_DEBUG_LEVEL` for more information https://doc-kurento.readthedocs.io/en/stable/features/logging.html
+#### Updating the log level of the services
 
 ##### Openvidu Server Level logs
 If it was necessary to change the level of the kms logs. In the .en file we go to the section "Openvidu Server Level logs" and change the variable `OV_CE_DEBUG_LEVEL`
 
-### Change Kurento Media Server
+##### Kurento Media Server Level logs
+If it was necessary to change the level of the kms logs. In the .en file we go to the section "Kurento Media Server Level logs" and change the variable `KMS_DEBUG_LEVEL` for more information https://doc-kurento.readthedocs.io/en/stable/features/logging.html
 
+### Use other Kurento Media Server docker image
 If is necessaries change the Kurento Media Server image, go to the Kurento Media Server image section in the .env file and change the variable `KMS_IMAGE` with the new image that your want use
