@@ -500,7 +500,7 @@ public class SessionRestController {
 			if (session != null) {
 				if (!(MediaMode.ROUTED.equals(session.getSessionProperties().mediaMode()))
 						|| this.recordingManager.sessionIsBeingRecorded(session.getSessionId())) {
-					// Session is not in ROUTED MediMode or it is already being recorded
+					// Session is not in ROUTED MediaMode or it is already being recorded
 					return new ResponseEntity<>(HttpStatus.CONFLICT);
 				} else {
 					// Session is not active (no connected participants)
