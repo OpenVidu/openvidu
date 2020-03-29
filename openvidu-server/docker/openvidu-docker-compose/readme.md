@@ -148,9 +148,11 @@ When OpenVidu Platform is ready you will see this message:
 ----------------------------------------------------
 ```
 
+In case OpenVidu sever founds any problem, it will be shown instead of this message.
+
 You can press `Ctrl+C` to come back to the shell.
 
-Then you can open OpenVidu Dashboard to verify if videoconference is working as expected. The user is `OPENVIDUAPP` and the password what you have configured in `.env` file.
+If all is ok, you can open OpenVidu Dashboard to verify if videoconference is working as expected. The user is `OPENVIDUAPP` and the password what you have configured in `.env` file.
 
 If videoconference application is started, it is available in https://server/
 
@@ -163,7 +165,7 @@ To stop the application exec this command:
 ### Change configuration
 
 To change the configuration follow this steps:
-* Stop the services: `$ docker-compose stop`
+* Reset the services: `$ docker-compose down`
 * Change configuration in `.env` file
 * Start the services: `$ docker-compose up -d`
 

@@ -26,6 +26,7 @@ import org.kurento.jsonrpc.server.JsonRpcConfigurer;
 import org.kurento.jsonrpc.server.JsonRpcHandlerRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -82,6 +83,9 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	public static String publicurlType;
 	public static String wsUrl;
 	public static String httpUrl;
+	
+	@Autowired
+	OpenviduConfig config;
 
 	@Bean
 	@ConditionalOnMissingBean
@@ -217,23 +221,61 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 	@EventListener(ApplicationReadyEvent.class)
 	public void whenReady() {
-		log.info("OpenVidu Server listening for client websocket connections on"
-				+ (OpenViduServer.publicurlType.isEmpty() ? "" : (" " + OpenViduServer.publicurlType)) + " url "
-				+ OpenViduServer.wsUrl + WS_PATH);
 		
-		String dashboardUrl = httpUrl+"dashboard/";
+		String startMessage;
 		
-		String startMessage = 
-			"\n\n----------------------------------------------------\n" +
-			"\n"+
-			"   OpenVidu Platform is ready!\n" +
-			"   ---------------------------\n" +
-			"\n"+
-			"   * OpenVidu Server: " + httpUrl + "\n"+
-			"\n"+
-			"   * OpenVidu Dashboard: " + dashboardUrl + "\n"+
-			"\n"+
-			"----------------------------------------------------\n";
+		if(!config.getConfErrors().isEmpty()) {
+
+			// @formatter:off
+			startMessage = 
+				"\n\n----------------------------------------------------\n" +
+				"\n"+
+				"   Configuration errors\n" +
+				"   --------------------\n" +
+				"\n";
+			
+				for(String msg : config.getConfErrors()) {					
+					startMessage += "   * "+ msg + "\n";					
+				}
+			
+				startMessage += "\n"+
+				"\n"+
+				"   Instructions\n" +
+				"   ------------\n" +
+				"\n"+				
+				"   1) Stop OpenVidu services with command:\n" +
+				"\n"+
+				"      $ docker-compose down\n"+
+				"\n"+
+				"   2) Fix configuration errors in .env file.\n" +
+				"\n"+
+				"   3) Start OpenVidu services with command:\n"+
+				"\n"+
+				"      $ docker-compose up -d\n"+
+				"\n"+
+				"----------------------------------------------------\n";
+			// @formatter:on
+		
+			
+		} else {
+		
+			String dashboardUrl = httpUrl+"dashboard/";
+			
+			// @formatter:off
+			startMessage = 
+				"\n\n----------------------------------------------------\n" +
+				"\n"+
+				"   OpenVidu Platform is ready!\n" +
+				"   ---------------------------\n" +
+				"\n"+
+				"   * OpenVidu Server: " + httpUrl + "\n"+
+				"\n"+
+				"   * OpenVidu Dashboard: " + dashboardUrl + "\n"+
+				"\n"+
+				"----------------------------------------------------\n";
+			// @formatter:on
+		}
+		
 		log.info(startMessage);
 	}
 

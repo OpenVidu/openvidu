@@ -37,6 +37,8 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.concurrent.Callable;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -94,7 +96,9 @@ public class OpenviduConfig {
 			.flatMap(Collection::stream).collect(Collectors.toSet());
 
 	public static final List<String> OPENVIDU_VALID_PUBLICURL_VALUES = Arrays
-			.asList(new String[] { "local", "docker", "" });
+			.asList(new String[] { "local", "docker" });
+
+	private static final boolean SHOW_PROPERTIES_AS_ENV_VARS = true;
 
 	@Value("#{'${spring.config.additional-location:}'.length() > 0 ? '${spring.config.additional-location:}' : \"\"}")
 	protected String springConfigLocation;
@@ -191,8 +195,19 @@ public class OpenviduConfig {
 	public static List<Header> webhookHeadersList = new ArrayList<>();
 	public static List<CDREventName> webhookEventsList = new ArrayList<>();
 
+	private List<String> confWarnings = new ArrayList<>();
+	private List<String> confErrors = new ArrayList<>();
+
 	@Autowired
 	protected Environment env;
+
+	public List<String> getConfErrors() {
+		return confErrors;
+	}
+
+	public List<String> getConfWarnings() {
+		return confWarnings;
+	}
 
 	public List<String> getKmsUris() {
 		return kmsUrisList;
@@ -364,7 +379,7 @@ public class OpenviduConfig {
 		return !this.springConfigLocation.isEmpty();
 	}
 
-	public URI checkWebsocketUri(String uri) throws Exception {
+	public URI checkWebsocketUri(String uri) throws RuntimeException {
 		try {
 			if (!uri.startsWith("ws://") || uri.startsWith("wss://")) {
 				throw new Exception("WebSocket protocol not found");
@@ -372,7 +387,8 @@ public class OpenviduConfig {
 			String parsedUri = uri.replaceAll("^ws://", "http://").replaceAll("^wss://", "https://");
 			return new URL(parsedUri).toURI();
 		} catch (Exception e) {
-			throw new Exception("URI '" + uri + "' has not a valid WebSocket endpoint format: " + e.getMessage());
+			throw new RuntimeException(
+					"URI '" + uri + "' has not a valid WebSocket endpoint format: " + e.getMessage());
 		}
 	}
 
@@ -387,297 +403,252 @@ public class OpenviduConfig {
 	/*
 	 * This method checks all types of internet addresses (IPv4, IPv6 and Domains)
 	 */
-	public void checkStringValidInetAddress(Map<String, ?> parameters, String key) throws Exception {
-		String inetAddress = this.checkString(parameters, key);
-		if (!inetAddress.isEmpty()) {
+	public void checkStringValidInetAddress(String property) throws Exception {
+		String inetAddress = this.checkString(property);
+		if (inetAddress != null && !inetAddress.isEmpty()) {
 			try {
 				Inet6Address.getByName(inetAddress).getHostAddress();
 			} catch (UnknownHostException e) {
-				throw new Exception("String value: ''" + inetAddress + "' with key: '" + key
-						+ "' is not a valid Internet Address (IP or Domain Name): " + e.getMessage());
+				throw new Exception("String value: ''" + inetAddress + "' with key: " + getPropertyName(property)
+						+ " is not a valid Internet Address (IP or Domain Name): " + e.getMessage());
 			}
 		}
 	}
 
-	public void checkStringValidPathFormat(Map<String, ?> parameters, String key) throws Exception {
+	public void checkStringValidPathFormat(String property) throws Exception {
 		try {
-			String stringPath = this.checkString(parameters, key);
+			String stringPath = this.checkString(property);
 			Paths.get(stringPath);
 			File f = new File(stringPath);
 			f.getCanonicalPath();
 			f.toURI().toString();
 		} catch (Exception e) {
-			throw new Exception(
-					"Property '" + key + "' must be a string with a valid system path format: " + e.getMessage());
+			throw new Exception("Property " + getPropertyName(property)
+					+ " must be a string with a valid system path format: " + e.getMessage());
 		}
 	}
 
-	public Properties checkConfigurationParameters(Map<String, ?> parameters, Collection<String> validKeys,
-			boolean admitStringified) throws Exception {
-
-		Properties stringifiedProperties = new Properties();
-
-		parameters = this.filterValidParameters(parameters, validKeys);
-
-		log.info("Checking configuration parameters: {}", parameters.keySet());
+	public void checkConfigurationParameters(boolean admitStringified) throws Exception {
 
 		boolean webhookEnabled = this.isWebhookEnabled();
 		String webhookEndpoint = this.getOpenViduWebhookEndpoint();
 
-		for (String parameter : parameters.keySet()) {
-			switch (parameter) {
-			case "openvidu.secret":
-				String secret = checkString(parameters, parameter);
-				if (secret.isEmpty()) {
-					throw new Exception("Property 'openvidu.secret' cannot be empty");
-				}
-				break;
-			case "openvidu.publicurl":
-				String publicurl = checkString(parameters, parameter);
-				if (!OPENVIDU_VALID_PUBLICURL_VALUES.contains(publicurl)) {
-					try {
-						checkUrl(publicurl);
-					} catch (Exception e) {
-						throw new Exception("Property 'openvidu.publicurl' not valid. " + e.getMessage());
-					}
-				}
-				break;
-			case "openvidu.cdr":
-				checkBoolean(parameters, parameter, admitStringified);
-				break;
-			case "openvidu.recording":
-				checkBoolean(parameters, parameter, admitStringified);
-				break;
-			case "openvidu.recording.public-access":
-				checkBoolean(parameters, parameter, admitStringified);
-				break;
-			case "openvidu.recording.autostop-timeout":
-				checkIntegerNonNegative(parameters, parameter, admitStringified);
-				break;
-			case "openvidu.recording.notification":
-				String recordingNotif = checkString(parameters, parameter);
-				try {
-					RecordingNotification.valueOf(recordingNotif);
-				} catch (IllegalArgumentException e) {
-					throw new Exception("Property 'openvidu.recording.notification' has not a valid value ('"
-							+ recordingNotif + "'). Must be one of " + Arrays.asList(RecordingNotification.values()));
-				}
-				break;
-			case "openvidu.webhook":
-				webhookEnabled = checkBoolean(parameters, parameter, admitStringified);
-				break;
-			case "openvidu.webhook.endpoint":
-				webhookEndpoint = checkString(parameters, parameter);
-				break;
-			case "openvidu.streams.video.max-recv-bandwidth":
-				checkIntegerNonNegative(parameters, parameter, admitStringified);
-				break;
-			case "openvidu.streams.video.min-recv-bandwidth":
-				checkIntegerNonNegative(parameters, parameter, admitStringified);
-				break;
-			case "openvidu.streams.video.max-send-bandwidth":
-				checkIntegerNonNegative(parameters, parameter, admitStringified);
-				break;
-			case "openvidu.streams.video.min-send-bandwidth":
-				checkIntegerNonNegative(parameters, parameter, admitStringified);
-				break;
-			case "kms.uris":
-				String kmsUris;
-				try {
-					// First check if castable to a List
-					List<String> list = checkStringArray(parameters, parameter, admitStringified);
-					String elementString;
-					for (Object element : list) {
-						try {
-							// Check every object is a String value
-							elementString = (String) element;
-						} catch (ClassCastException e) {
-							throw new Exception("Property 'kms.uris' is an array, but contains a value (" + element
-									+ ") that is not a string: " + e.getMessage());
-						}
-					}
-					kmsUris = list.toString();
-				} catch (Exception e) {
-					// If it is not a list, try casting to String
-					kmsUris = checkString(parameters, parameter);
-				}
-				// Finally check all strings have a valid WebSocket URI format
-				try {
-					kmsUrisStringToList(kmsUris);
-				} catch (Exception e) {
-					throw new Exception(
-							"Property 'kms.uris' is an array of strings, but contains some value that has not a valid WbeSocket URI format: "
-									+ e.getMessage());
-				}
-				stringifiedProperties.setProperty(parameter, kmsUris);
-				break;
-			case "openvidu.webhook.headers":
-				String webhookHeaders;
-				try {
-					// First check if castable to a List
-					List<String> list = checkStringArray(parameters, parameter, admitStringified);
-					String elementString;
-					for (Object element : list) {
-						try {
-							// Check every object is a String value
-							elementString = (String) element;
-						} catch (ClassCastException e) {
-							throw new Exception(
-									"Property 'openvidu.webhook.headers' is an array, but contains a value (" + element
-											+ ") that is not a string: " + e.getMessage());
-						}
-					}
-					webhookHeaders = listToQuotedStringifiedArray(list);
-				} catch (Exception e) {
-					// If it is not a list, try casting to String
-					webhookHeaders = checkString(parameters, parameter);
-				}
-				try {
-					checkWebhookHeaders(webhookHeaders);
-				} catch (Exception e) {
-					throw new Exception(
-							"Property 'openvidu.webhook.headers' contains a value not valid: " + e.getMessage());
-				}
-				stringifiedProperties.setProperty(parameter, webhookHeaders);
-				break;
-			case "openvidu.webhook.events":
-				String webhookEvents;
-				try {
-					// First check if castable to a List
-					List<String> list = checkStringArray(parameters, parameter, admitStringified);
-					String elementString;
-					for (Object element : list) {
-						try {
-							// Check every object is a String value
-							elementString = (String) element;
-						} catch (ClassCastException e) {
-							throw new Exception("Property 'openvidu.webhook.events' is an array, but contains a value ("
-									+ element + ") that is not a string: " + e.getMessage());
-						}
-					}
-					webhookEvents = listToQuotedStringifiedArray(list);
-				} catch (Exception e) {
-					// If it is not a list, try casting to String
-					webhookEvents = checkString(parameters, parameter);
-				}
-				try {
-					checkWebhookEvents(webhookEvents);
-				} catch (Exception e) {
-					throw new Exception(
-							"Property 'openvidu.webhook.events' contains a value not valid: " + e.getMessage());
-				}
-				stringifiedProperties.setProperty(parameter, webhookEvents);
-				break;
-			case "openvidu.recording.path":
-				checkStringValidPathFormat(parameters, parameter);
-				break;
-			case "openvidu.recording.custom-layout":
-				checkStringValidPathFormat(parameters, parameter);
-				break;
-			case "openvidu.recording.composed-url":
-				String composedUrl = checkString(parameters, parameter);
-				try {
-					if (!composedUrl.isEmpty()) {
-						checkUrl(composedUrl);
-					}
-				} catch (Exception e) {
-					throw new Exception("Property 'openvidu.recording.composed-url' not valid. " + e.getMessage());
-				}
-				break;
-			case "openvidu.recording.version":
-				checkString(parameters, parameter);
-				break;
-			case "openvidu.cdr.path":
-				checkStringValidPathFormat(parameters, parameter);
-				break;
-			case "coturn.ip":
-				checkStringValidInetAddress(parameters, parameter);
-				break;
-			case "coturn.redis.ip":
-				checkStringValidInetAddress(parameters, parameter);
-				break;
-			default:
-				log.warn("Unknown configuration parameter '{}'", parameter);
-			}
+		checkOpenviduSecret();
 
-			if (!stringifiedProperties.containsKey(parameter)) {
-				stringifiedProperties.setProperty(parameter, parameters.get(parameter).toString());
-			}
-		}
+		checkOpenviduPublicurl();
+
+		checkBoolean("openvidu.cdr", admitStringified);
+
+		checkBoolean("openvidu.recording", admitStringified);
+
+		checkBoolean("openvidu.recording.public-access", admitStringified);
+
+		checkIntegerNonNegative("openvidu.recording.autostop-timeout", admitStringified);
+
+		checkOpenviduRecordingNotification();
+
+		webhookEnabled = checkBoolean("openvidu.webhook", admitStringified);
+
+		webhookEndpoint = checkString("openvidu.webhook.endpoint");
+
+		checkIntegerNonNegative("openvidu.streams.video.max-recv-bandwidth", admitStringified);
+
+		checkIntegerNonNegative("openvidu.streams.video.min-recv-bandwidth", admitStringified);
+
+		checkIntegerNonNegative("openvidu.streams.video.max-send-bandwidth", admitStringified);
+
+		checkIntegerNonNegative("openvidu.streams.video.min-send-bandwidth", admitStringified);
+
+		checkKmsUris(admitStringified);
+
+		checkWebHookHandlers(admitStringified);
+
+		checkWebhookEvents(admitStringified);
+
+		checkStringValidPathFormat("openvidu.recording.path");
+
+		checkStringValidPathFormat("openvidu.recording.custom-layout");
+
+		checkOpenviduRecordingComposedUrl();
+
+		checkString("openvidu.recording.version");
+
+		checkStringValidPathFormat("openvidu.cdr.path");
+
+		checkStringValidInetAddress("coturn.ip");
+
+		checkStringValidInetAddress("coturn.redis.ip");
 
 		if (webhookEnabled && (webhookEndpoint == null || webhookEndpoint.isEmpty())) {
-			throw new Exception(
-					"Property 'openvidu.webhook' set to true requires 'openvidu.webhook.endpoint' to be defined");
+			throw new Exception("Property " + getPropertyName("openvidu.webhook") + " set to true requires "
+					+ getPropertyName("openvidu.webhook.endpoint") + " to be defined");
 		}
-
-		return stringifiedProperties;
 	}
 
-	public String checkString(Map<String, ?> parameters, String key) throws Exception {
+	private void checkOpenviduRecordingComposedUrl() throws Exception {
+		String composedUrl = checkString("openvidu.recording.composed-url");
 		try {
-			String stringValue = (String) parameters.get(key);
+			if (!composedUrl.isEmpty()) {
+				checkUrl(composedUrl);
+			}
+		} catch (Exception e) {
+			throw new Exception(
+					"Property " + getPropertyName("openvidu.recording.composed-url") + " not valid. " + e.getMessage());
+		}
+	}
+
+	private void checkWebhookEvents(boolean admitStringified) throws Exception {
+
+		verifyList(admitStringified, "openvidu.webhook.events", list -> checkWebhookEvents(list));
+	}
+
+	private void checkWebHookHandlers(boolean admitStringified) throws Exception {
+
+		verifyList(admitStringified, "openvidu.webhook.headers", list -> checkWebhookHeaders(list));
+	}
+
+	private void checkKmsUris(boolean admitStringified) throws Exception {
+
+		verifyList(admitStringified, "kms.uris", list -> kmsUrisStringToList(list));
+	}
+
+	private void checkOpenviduRecordingNotification() throws Exception {
+		String recordingNotif = checkString("openvidu.recording.notification");
+		try {
+			RecordingNotification.valueOf(recordingNotif);
+		} catch (IllegalArgumentException e) {
+			throw new Exception(
+					"Property " + getPropertyName("openvidu.recording.notification") + " has not a valid value ('"
+							+ recordingNotif + "'). Must be one of " + Arrays.asList(RecordingNotification.values()));
+		}
+	}
+
+	private void checkOpenviduPublicurl() throws Exception {
+		
+		final String property = "openvidu.domain.or.public.ip";
+		
+		String domain = checkString(property);
+		
+		if (domain != null && !domain.isEmpty()) {
+			
+			this.openviduPublicUrl = "https://"+domain;
+			
+		} else {
+			
+			final String urlProperty = "openvidu.publicurl";
+
+			String publicurl = checkString(urlProperty);
+
+			if (publicurl == null || publicurl.isEmpty()) {
+			
+				error(getPropertyName(property) + " property cannot be empty");
+			
+			} else {
+
+				if (!OPENVIDU_VALID_PUBLICURL_VALUES.contains(publicurl)) {
+					try {
+						checkUrl(publicurl);					
+					} catch (Exception e) {
+						throw new Exception("Property " + getPropertyName(property) + " not valid. " + e.getMessage());
+					}
+				}
+			}
+		}
+	}
+
+	private void checkOpenviduSecret() throws Exception {
+		String secret = checkString("openvidu.secret");
+		if (secret.isEmpty()) {
+			throw new Exception("Property " + getPropertyName("openvidu.secret") + " cannot be empty");
+		}
+	}
+
+	public String checkString(String property) throws Exception {
+		try {
+			String stringValue = env.getProperty(property);
 			return stringValue;
 		} catch (ClassCastException e) {
-			throw new Exception("Property '" + key + "' must be a string: " + e.getMessage());
+			throw new Exception("Property " + getPropertyName(property) + " must be a string: " + e.getMessage());
 		}
 	}
 
-	public boolean checkBoolean(Map<String, ?> parameters, String key, boolean admitStringified) throws Exception {
+	public boolean checkBoolean(String property, boolean admitStringified) throws Exception {
 		try {
-			if (parameters.get(key) instanceof Boolean) {
-				return (Boolean) parameters.get(key);
-			} else if (admitStringified) {
-				boolean booleanValue = Boolean.parseBoolean((String) parameters.get(key));
-				return booleanValue;
+			if (admitStringified) {
+				return Boolean.parseBoolean(env.getProperty(property));
 			} else {
-				throw new Exception("Property '" + key + "' must be a boolean");
+				throw new Exception("Property " + getPropertyName(property) + " must be a boolean");
 			}
 		} catch (ClassCastException e) {
-			throw new Exception("Property '" + key + "' must be a boolean: " + e.getMessage());
+			throw new Exception("Property " + getPropertyName(property) + " must be a boolean: " + e.getMessage());
 		}
 	}
 
-	public Integer checkIntegerNonNegative(Map<String, ?> parameters, String key, boolean admitStringified)
-			throws Exception {
+	public Integer checkIntegerNonNegative(String property, boolean admitStringified) throws Exception {
 		try {
 			Integer integerValue;
-			if (parameters.get(key) instanceof Integer) {
-				integerValue = (Integer) parameters.get(key);
-			} else if (admitStringified) {
-				integerValue = Integer.parseInt((String) parameters.get(key));
+			if (admitStringified) {
+				integerValue = Integer.parseInt(env.getProperty(property));
 			} else {
-				throw new Exception("Property '" + key + "' must be an integer");
+				throw new Exception("Property " + getPropertyName(property) + " must be an integer");
 			}
 			if (integerValue < 0) {
-				throw new Exception("Property '" + key + "' is an integer but cannot be less than 0 (current value: "
-						+ integerValue + ")");
+				throw new Exception("Property " + getPropertyName(property)
+						+ " is an integer but cannot be less than 0 (current value: " + integerValue + ")");
 			}
 			return integerValue;
 		} catch (ClassCastException e) {
-			throw new Exception("Property '" + key + "' must be an integer: " + e.getMessage());
+			throw new Exception("Property " + getPropertyName(property) + " must be an integer: " + e.getMessage());
 		}
 	}
 
-	public List<String> checkStringArray(Map<String, ?> parameters, String key, boolean admitStringified)
-			throws Exception {
+	public List<String> checkStringArray(String property, boolean admitStringified) throws Exception {
 		List<String> list;
 		try {
-			if (parameters.get(key) instanceof Collection<?>) {
-				list = (List<String>) parameters.get(key);
-			} else if (admitStringified) {
-				list = this.stringifiedArrayOfStringToListOfStrings((String) parameters.get(key));
+			if (admitStringified) {
+				list = this.stringifiedArrayOfStringToListOfStrings(env.getProperty(property));
 			} else {
-				throw new Exception("Property '" + key + "' must be an array");
+				throw new Exception("Property " + getPropertyName(property) + " must be an array");
 			}
 			return list;
 		} catch (ClassCastException e) {
-			throw new Exception("Property '" + key + "' must be an array: " + e.getMessage());
+			throw new Exception("Property " + getPropertyName(property) + " must be an array: " + e.getMessage());
 		}
 	}
 
-	public Map<String, ?> filterValidParameters(Map<String, ?> parameters, Collection<String> validKeys) {
-		return parameters.entrySet().stream().filter(x -> validKeys.contains(x.getKey()))
-				.collect(Collectors.toMap(x -> x.getKey(), x -> x.getValue()));
+	private void verifyList(boolean admitStringified, final String property, Consumer<String> c) throws Exception {
+
+		String webhookHeaders = extractList(admitStringified, property);
+		try {
+			c.accept(webhookHeaders);
+		} catch (Exception e) {
+			throw new Exception(
+					"Property " + getPropertyName(property) + " contains a value not valid: " + e.getMessage());
+		}
+	}
+
+	private String extractList(boolean admitStringified, final String property) throws Exception {
+
+		String strList;
+		try {
+			// First check if castable to a List
+			List<String> list = checkStringArray(property, admitStringified);
+			String elementString;
+			for (Object element : list) {
+				try {
+					// Check every object is a String value
+					elementString = (String) element;
+				} catch (ClassCastException e) {
+					throw new Exception("Property " + getPropertyName(property) + " is an array, but contains a value ("
+							+ element + ") that is not a string: " + e.getMessage());
+				}
+			}
+			strList = listToQuotedStringifiedArray(list);
+		} catch (Exception e) {
+			// If it is not a list, try casting to String
+			strList = checkString(property);
+		}
+		return strList;
 	}
 
 	public Properties retrieveExternalizedProperties() throws Exception {
@@ -717,7 +688,12 @@ public class OpenviduConfig {
 		return list;
 	}
 
-	public List<String> kmsUrisStringToList(String kmsUris) throws Exception {
+	public List<String> kmsUrisStringToList(String kmsUris) throws RuntimeException {
+
+		if (kmsUris == null || kmsUris.isEmpty()) {
+			return new ArrayList<>();
+		}
+
 		kmsUris = kmsUris.replaceAll("\\s", ""); // Remove all white spaces
 		kmsUris = kmsUris.replaceAll("\\\\", ""); // Remove previous escapes
 		kmsUris = kmsUris.replaceAll("\"", ""); // Remove previous double quotes
@@ -747,7 +723,7 @@ public class OpenviduConfig {
 		}
 	}
 
-	private List<Header> checkWebhookHeaders(String headers) throws Exception {
+	private List<Header> checkWebhookHeaders(String headers) throws RuntimeException {
 		JsonElement elem = JsonParser.parseString(headers);
 		JsonArray headersJsonArray = elem.getAsJsonArray();
 		List<Header> headerList = new ArrayList<>();
@@ -756,17 +732,17 @@ public class OpenviduConfig {
 			String headerString = jsonElement.getAsString();
 			String[] headerSplit = headerString.split(": ", 2);
 			if (headerSplit.length != 2) {
-				throw new Exception("HTTP header '" + headerString
+				throw new RuntimeException("HTTP header '" + headerString
 						+ "' syntax is not correct. Must be 'HEADER_NAME: HEADER_VALUE'. For example: 'Authorization: Basic YWxhZGRpbjpvcGVuc2VzYW1l'");
 			}
 			String headerName = headerSplit[0];
 			String headerValue = headerSplit[1];
 			if (headerName.isEmpty()) {
-				throw new Exception(
+				throw new RuntimeException(
 						"HTTP header '" + headerString + "' syntax is not correct. Header name cannot be empty");
 			}
 			if (headerValue.isEmpty()) {
-				throw new Exception(
+				throw new RuntimeException(
 						"HTTP header '" + headerString + "' syntax is not correct. Header value cannot be empty");
 			}
 			headerList.add(new BasicHeader(headerName, headerValue));
@@ -774,7 +750,7 @@ public class OpenviduConfig {
 		return headerList;
 	}
 
-	private List<CDREventName> checkWebhookEvents(String events) throws Exception {
+	private List<CDREventName> checkWebhookEvents(String events) throws RuntimeException {
 		JsonElement elem = JsonParser.parseString(events);
 		JsonArray eventsJsonArray = elem.getAsJsonArray();
 		List<CDREventName> eventList = new ArrayList<>();
@@ -784,7 +760,7 @@ public class OpenviduConfig {
 			try {
 				CDREventName.valueOf(eventString);
 			} catch (IllegalArgumentException e) {
-				throw new Exception("Event '" + eventString + "' does not exist");
+				throw new RuntimeException("Event '" + eventString + "' does not exist");
 			}
 			eventList.add(CDREventName.valueOf(eventString));
 		}
@@ -809,28 +785,32 @@ public class OpenviduConfig {
 
 	@PostConstruct
 	protected void init() {
-		// Check configuration parameters
-		Map<String, ?> props = getFinalPropertiesInUse();
 
-		try {
-			this.checkConfigurationParameters(props, OPENVIDU_PROPERTIES, true);
-		} catch (Exception e) {
-			log.error(e.getMessage());
-			log.error("Shutting down OpenVidu Server");
-			System.exit(1);
-		}
+		checkConfProperties();
 
-		try {
-			if (OPENVIDU_PROPERTIES.contains("kms.uris")) {
-				kmsUrisList = this.kmsUrisStringToList(this.kmsUris);
+		calculatePublicUrl();
+
+		setCoturnIp();
+
+	}
+
+	private void setCoturnIp() {
+
+		if (this.coturnIp.isEmpty()) {
+
+			try {
+				this.coturnIp = new URL(this.getFinalUrl()).getHost();
+				log.info("Coturn IP: " + coturnIp);
+			} catch (MalformedURLException e) {
+				log.error("Can't get Domain name from OpenVidu public Url: " + e.getMessage());
 			}
-			this.checkFinalWebHookConfiguration();
-		} catch (Exception e) {
-			log.error("Unexpected exception when setting final value of configuration parameters: {}", e.getMessage());
 		}
+	}
 
-		// Generate final public url
+	private void calculatePublicUrl() {
+
 		String publicUrl = this.getOpenViduPublicUrl();
+
 		String type = "";
 		switch (publicUrl) {
 		case "docker":
@@ -873,29 +853,48 @@ public class OpenviduConfig {
 		this.setFinalUrl(finalUrl);
 		OpenViduServer.httpUrl = this.getFinalUrl();
 		OpenViduServer.publicurlType = type;
-
-		if (this.coturnIp.isEmpty()) {
-
-			try {
-				this.coturnIp = new URL(this.getFinalUrl()).getHost();
-				log.info("Coturn IP: " + coturnIp);
-			} catch (MalformedURLException e) {
-				log.error("Can't get Domain name from OpenVidu public Url: " + e.getMessage());
-			}
-		}
-
 	}
 
-	protected Map<String, Object> getFinalPropertiesInUse() {
-		final SortedMap<String, Object> props = new TreeMap<>();
-		for (final PropertySource<?> propertySource : ((AbstractEnvironment) env).getPropertySources()) {
-			if (!(propertySource instanceof EnumerablePropertySource))
-				continue;
-			for (final String name : ((EnumerablePropertySource<?>) propertySource).getPropertyNames())
-				props.computeIfAbsent(name, propertySource::getProperty);
+	private void checkConfProperties() {
+
+		try {
+			this.checkConfigurationParameters(true);
+		} catch (Exception e) {
+			log.error("Exception checking configuration",e);
+			error(e.getMessage());
 		}
-		return props;
+
+		try {
+			kmsUrisList = this.kmsUrisStringToList(this.kmsUris);
+			this.checkFinalWebHookConfiguration();
+		} catch (Exception e) {
+			error(e.getMessage());
+		}
 	}
+
+	private void error(String msg) {
+		log.error(msg);
+		this.confErrors.add(msg);
+	}
+
+	private String getPropertyName(String propertyName) {
+		if (SHOW_PROPERTIES_AS_ENV_VARS) {
+			return propertyName.replace('.', '_').toUpperCase();
+		} else {
+			return propertyName;
+		}
+	}
+
+//	protected Map<String, Object> getFinalPropertiesInUse() {
+//		final SortedMap<String, Object> props = new TreeMap<>();
+//		for (final PropertySource<?> propertySource : ((AbstractEnvironment) env).getPropertySources()) {
+//			if (!(propertySource instanceof EnumerablePropertySource))
+//				continue;
+//			for (final String name : ((EnumerablePropertySource<?>) propertySource).getPropertyNames())
+//				props.computeIfAbsent(name, propertySource::getProperty);
+//		}
+//		return props;
+//	}
 
 	private String listToQuotedStringifiedArray(List<String> list) {
 		return "[" + list.stream().map(s -> "\"" + s + "\"").collect(Collectors.joining(", ")) + "]";

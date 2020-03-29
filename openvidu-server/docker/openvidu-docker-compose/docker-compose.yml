@@ -11,15 +11,17 @@ services:
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
             - ${OPENVIDU_RECORDING_FOLDER}:${OPENVIDU_RECORDING_FOLDER}
+        env_file: 
+            - .env
         environment:
             - SERVER_SSL_ENABLED=false
             - SERVER_PORT=5443
-            - OPENVIDU_PUBLICURL=https://${DOMAIN_OR_PUBLIC_IP}
             - OPENVIDU_SECRET=${OPENVIDU_SECRET}
+            - OPENVIDU_PUBLICURL=
             - OPENVIDU_RECORDING=true
             - OPENVIDU_RECORDING_PATH=${OPENVIDU_RECORDING_FOLDER}
             - KMS_URIS="[\"ws://127.0.0.1:8888/kurento\"]"
-            - COTURN_IP=${DOMAIN_OR_PUBLIC_IP}
+            - COTURN_IP=${OPENVIDU_DOMAIN_OR_PUBLIC_IP}
             - COTURN_REDIS_IP=127.0.0.1
             - LOGGING_LEVEL_ROOT=${OV_CE_DEBUG_LEVEL:-INFO}
 
@@ -58,6 +60,6 @@ services:
             - ./certificates:/etc/letsencrypt
             - ./owncert:/owncert
         environment: 
-            - DOMAIN_OR_PUBLIC_IP=${DOMAIN_OR_PUBLIC_IP}
+            - DOMAIN_OR_PUBLIC_IP=${OPENVIDU_DOMAIN_OR_PUBLIC_IP}
             - CERTIFICATE_TYPE=${CERTIFICATE_TYPE}
             - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
