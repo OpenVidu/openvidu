@@ -48,7 +48,9 @@ $ cd openvidu-server/docker/openvidu-docker-compose
 
 OpenVidu configuration is specified in the `.env` file with environment variables. 
 
-**YOU MUST** specify the public IP or public domain name of your machine and OpenVidu password. All other values have sane defaults.
+**YOU MUST** specify the **domain or public IP** of the machine and the OpenVidu **secret**. 
+
+All other values have sane defaults.
 
 ```
 # OpenVidu configuration
@@ -56,10 +58,10 @@ OpenVidu configuration is specified in the `.env` file with environment variable
 # Documentation: https://openvidu.io/docs/reference-docs/openvidu-server-params/
 
 # OpenVidu SECRET used for apps and to access to the inspector. Change it.
-OPENVIDU_SECRET=MY_SECRET
+OPENVIDU_SECRET=
 
 # Domain name. If you do not have one, the public IP of the machine.
-DOMAIN_OR_PUBLIC_IP=openvidu.example.com
+DOMAIN_OR_PUBLIC_IP=
 
 # Openvidu Folder Record used for save the openvidu recording videos. Change it 
 # with the folder you want to use from your host.
@@ -98,7 +100,7 @@ services:
         ports:
             - "5442:80"
         environment: 
-            - OPENVIDU_URL=https://${DOMAIN_OR_PUBLIC_IP}
+            - OPENVIDU_URL=https://${OPENVIDU_DOMAIN_OR_PUBLIC_IP}
             - OPENVIDU_SECRET=${OPENVIDU_SECRET}
 ```
 
