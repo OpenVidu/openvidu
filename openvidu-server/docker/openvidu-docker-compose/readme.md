@@ -7,12 +7,10 @@ This document describes how to deploy OpenVidu CE alongside OpenVidu Call (a bas
 Services installed following these instructions are:
 - **OpenVidu Server (openvidu-server)**: This is the brain of OpenVidu platform. The signaling plane.
 - **Kurento Media Server (kms)**: This is the hearth of the OpenVidu platform. In charge of media plane.
-- **TURN Server (openvidu-coturn)**: Service used to allow media communications with browsers in certain networks.
-- **Redis (redis-db)**: Database to manage users in TURN server.
-- **Nginx (openvidu-proxy)**: A reverse proxy used to configure SSL certificate and to allow both Openvidu Server and the Application in the standard https port (443).
+- **Coturn (coturn)**: Service used to allow media communications with browsers in certain special networks.
+- **Redis (redis)**: Database to manage users in Coturn server.
+- **Nginx (nginx)**: A reverse proxy used to configure SSL certificate and to allow both Openvidu Server and the Application in the standard https port (443).
 - **Videoconference Application (app)**: A videoconference application deployed for demo porpouses. This application can be easily unistalled or changed by other application.
-
-> TODO: Change the service names for generic ones: openvidu-coturn > coturn, redis-db > redis, openvidu-proxy > nginx.
 
 ## 1. Prerequisites
 
@@ -117,20 +115,44 @@ To download and start the services (OpenVidu platform and the application) you c
 
 `$ docker-compose up -d`
 
-Then, all services will be downloaded (only the first time) and executed. 
+Then, all services will be downloaded (only the first time) and executed.
 
-The services will be started when you see this output in the shell:
+The services will start its execution when you see this output in the shell:
 
 ```
-Creating openvidu-docker-compose_openvidu-coturn_1 ... done
+Creating openvidu-docker-compose_coturn_1          ... done
 Creating openvidu-docker-compose_app_1             ... done
 Creating openvidu-docker-compose_kms_1             ... done
-Creating openvidu-docker-compose_openvidu-proxy_1  ... done
-Creating openvidu-docker-compose_redis-db_1        ... done
+Creating openvidu-docker-compose_nginx_1           ... done
+Creating openvidu-docker-compose_redis_1           ... done
 Creating openvidu-docker-compose_openvidu-server_1 ... done
 ```
 
-Then you can visit https://<DOMAIN_OR_PUBLIC_IP>/ and the application will appear. If get any error, please retry in a few seconds as it is possible that services are still starting.
+Then, you should check openvidu-server logs to verify if all is configured and working as expected with the following command:
+
+```
+$ docker-compose logs -f openvidu-server
+```
+
+When OpenVidu Platform is ready you will see this message:
+```
+----------------------------------------------------
+
+   OpenVidu Platform is ready!
+   ---------------------------
+
+   * OpenVidu Server: https://server/
+
+   * OpenVidu Dashboard: https://server/dashboard/
+
+----------------------------------------------------
+```
+
+You can press `Ctrl+C` to come back to the shell.
+
+Then you can open OpenVidu Dashboard to verify if videoconference is working as expected. The user is `OPENVIDUAPP` and the password what you have configured in `.env` file.
+
+If videoconference application is started, it is available in https://server/
 
 ### Stop services
 
@@ -138,9 +160,7 @@ To stop the application exec this command:
 
 `docker-compose stop`
 
-### How to operate the services
-
-#### Change configuration
+### Change configuration
 
 To change the configuration follow this steps:
 * Stop the services: `$ docker-compose stop`
@@ -149,20 +169,27 @@ To change the configuration follow this steps:
 
 > TODO: Review that changing domain name with CERTIFICATE_TYPE=letsencrypt regenerates the certificate.
 
+### What to do if OpenVidu is not working
+
 #### Show service logs
 
-If you want to see logs of all services execute this command:
-
-`$ docker-compose logs -f`
-
-If you only want to see the logs of a service execute any of the following commands:
+Take a look to service logs to see what happen. First, see openvidu-server logs:
 
 ```
 $ docker-compose logs -f openvidu-server
+```
+
+Then, you can see all service logs togheter: 
+
+`$ docker-compose logs -f`
+
+Or you can inspect one by one the other services:
+
+```
 $ docker-compose logs -f kms
-$ docker-compose logs -f openvidu-proxy
-$ docker-compose logs -f openvidu-coturn
-$ docker-compose logs -f redis-db
+$ docker-compose logs -f nginx
+$ docker-compose logs -f coturn
+$ docker-compose logs -f redis
 $ docker-compose logs -f app
 ```
 

@@ -6,7 +6,6 @@ services:
     # the .env file with the necessaries variables.
     openvidu-server:
         image: openvidu/openvidu-server:2.13.0-beta1
-        entrypoint: ["java", "-jar", "/openvidu-server.jar"]
         restart: on-failure
         network_mode: host
         volumes:
@@ -34,12 +33,12 @@ services:
             - KMS_MAX_PORT=57000
             - GST_DEBUG=${KMS_DEBUG_LEVEL:-3,Kurento*:4,kms*:4,sdp*:4,webrtc*:4,*rtpendpoint:4,rtp*handler:4,rtpsynchronizer:4,agnosticbin:4}
 
-    redis-db:
+    redis:
         image: redis:5.0.7
         restart: on-failure
         network_mode: host
 
-    openvidu-coturn:
+    coturn:
         image: openvidu/openvidu-coturn:1.0.0-beta1
         restart: on-failure
         network_mode: host
@@ -51,7 +50,7 @@ services:
             - MIN_PORT=57001
             - MAX_PORT=65535
         
-    openvidu-proxy:
+    nginx:
         image: openvidu/openvidu-proxy:1.0.0-beta1
         restart: on-failure
         network_mode: host
