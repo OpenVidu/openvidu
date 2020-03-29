@@ -1,4 +1,4 @@
-cp ../../target/openvidu-server-"$1".jar ./openvidu-server.jar
+cp ../../target/openvidu-server-*.jar ./openvidu-server.jar
 
 docker build -t openvidu/openvidu-server .
 
