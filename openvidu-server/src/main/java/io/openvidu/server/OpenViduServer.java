@@ -220,10 +220,21 @@ public class OpenViduServer implements JsonRpcConfigurer {
 		log.info("OpenVidu Server listening for client websocket connections on"
 				+ (OpenViduServer.publicurlType.isEmpty() ? "" : (" " + OpenViduServer.publicurlType)) + " url "
 				+ OpenViduServer.wsUrl + WS_PATH);
-		final String NEW_LINE = System.lineSeparator();
-		String str = NEW_LINE + NEW_LINE + "    OPENVIDU SERVER IP          " + NEW_LINE + "--------------------------"
-				+ NEW_LINE + httpUrl + NEW_LINE + "--------------------------" + NEW_LINE;
-		log.info(str);
+		
+		String dashboardUrl = httpUrl+"dashboard/";
+		
+		String startMessage = 
+			"\n\n----------------------------------------------------\n" +
+			"\n"+
+			"   OpenVidu Platform is ready!\n" +
+			"   ---------------------------\n" +
+			"\n"+
+			"   * OpenVidu Server: " + httpUrl + "\n"+
+			"\n"+
+			"   * OpenVidu Dashboard: " + dashboardUrl + "\n"+
+			"\n"+
+			"----------------------------------------------------\n";
+		log.info(startMessage);
 	}
 
 }
