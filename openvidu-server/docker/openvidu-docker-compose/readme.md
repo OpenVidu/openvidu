@@ -148,7 +148,7 @@ When OpenVidu Platform is ready you will see this message:
 ----------------------------------------------------
 ```
 
-In case OpenVidu sever founds any problem, it will be shown instead of this message.
+In case OpenVidu server founds any problem, it will be shown instead of this message.
 
 You can press `Ctrl+C` to come back to the shell.
 
