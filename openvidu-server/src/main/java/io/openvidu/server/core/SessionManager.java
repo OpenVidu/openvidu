@@ -286,7 +286,10 @@ public abstract class SessionManager {
 
 	public Session storeSessionNotActive(Session sessionNotActive) {
 		final String sessionId = sessionNotActive.getSessionId();
-		this.sessionsNotActive.put(sessionId, sessionNotActive);
+		if (this.sessionsNotActive.putIfAbsent(sessionId, sessionNotActive) != null) {
+			log.warn("Concurrent initialization of session {}", sessionId);
+			return this.sessionsNotActive.get(sessionId);
+		}
 		this.initializeCollections(sessionId);
 		return sessionNotActive;
 	}
@@ -537,7 +540,12 @@ public abstract class SessionManager {
 		final String mediaNodeId = session.getMediaNodeId();
 
 		if (session.close(reason)) {
-			sessionEventsHandler.onSessionClosed(session.getSessionId(), reason);
+			try {
+				sessionEventsHandler.onSessionClosed(session.getSessionId(), reason);
+			} catch (Exception e) {
+				log.error("Error recording 'sessionDestroyed' event for session {}: {} - {}", session.getSessionId(),
+						e.getClass().getName(), e.getMessage());
+			}
 		}
 
 		this.cleanCollections(session.getSessionId());

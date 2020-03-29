@@ -43,7 +43,7 @@ public class RpcNotificationService {
 		RpcConnection connection = new RpcConnection(t.getSession());
 		RpcConnection oldConnection = rpcConnections.putIfAbsent(participantPrivateId, connection);
 		if (oldConnection != null) {
-			log.warn("Concurrent initialization of rpcSession #{}", participantPrivateId);
+			log.warn("Concurrent initialization of rpcSession {}", participantPrivateId);
 			connection = oldConnection;
 		}
 		return connection;
