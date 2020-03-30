@@ -19,8 +19,12 @@ package io.openvidu.server;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Semaphore;
 
+import org.bouncycastle.util.Arrays;
 import org.kurento.jsonrpc.internal.server.config.JsonRpcConfiguration;
 import org.kurento.jsonrpc.server.JsonRpcConfigurer;
 import org.kurento.jsonrpc.server.JsonRpcHandlerRegistry;
@@ -31,6 +35,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Import;
@@ -41,6 +46,7 @@ import io.openvidu.server.cdr.CDRLoggerFile;
 import io.openvidu.server.cdr.CallDetailRecord;
 import io.openvidu.server.config.HttpHandshakeInterceptor;
 import io.openvidu.server.config.OpenviduConfig;
+import io.openvidu.server.config.OpenviduConfig.Error;
 import io.openvidu.server.core.SessionEventsHandler;
 import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.core.TokenGenerator;
@@ -83,7 +89,7 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	public static String publicurlType;
 	public static String wsUrl;
 	public static String httpUrl;
-	
+
 	@Autowired
 	OpenviduConfig config;
 
@@ -214,69 +220,82 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	}
 
 	public static void main(String[] args) throws Exception {
+
+		checkConfigProperties();
+
 		log.info("Using /dev/urandom for secure random generation");
 		System.setProperty("java.security.egd", "file:/dev/./urandom");
-		SpringApplication.run(OpenViduServer.class, args);
+		SpringApplication.run(OpenViduServer.class, Arrays.append(args, "--spring.main.banner-mode=off"));
+
+	}
+
+	private static void checkConfigProperties() throws InterruptedException {
+		
+		ConfigurableApplicationContext app = SpringApplication.run(OpenviduConfig.class,
+				new String[] { "--spring.main.web-application-type=none" });
+		OpenviduConfig config = app.getBean(OpenviduConfig.class);
+		List<Error> errors = config.getConfigErrors();
+
+		if (!errors.isEmpty()) {
+
+			// @formatter:off
+			String msg = "\n\n\n" + "   Configuration errors\n" + "   --------------------\n" + "\n";
+
+			for (Error error : config.getConfigErrors()) {
+
+				msg += "   * Property " + config.getPropertyName(error.getProperty());
+
+				if (error.getValue() == null || error.getValue().equals("")) {
+					msg += " is not set. ";
+				} else {
+					msg += "=" + error.getValue() + ". ";
+				}
+
+				msg += error.getMessage() + "\n";
+			}
+
+			msg += "\n" + "\n" + "   Fix config errors\n" + "   ---------------\n" + "\n"
+					+ "   1) Return to shell pressing Ctrl+C\n"
+					+ "   2) Set correct values in '.env' configuration file\n" + "   3) Restart OpenVidu with:\n"
+					+ "\n" + "      $ ./openvidu-restart.sh\n" + "\n";
+			// @formatter:on
+
+			log.info(msg);
+
+			// Wait forever
+			new Semaphore(0).acquire();
+		
+		} else {
+		
+			String msg = "\n\n\n" + "   Configuration properties\n" + "   ----------------------\n" + "\n";
+			
+			Map<String, String> configProps = config.getConfigProps();
+			List<String> configPropNames = new ArrayList<>(config.getUserProperties());
+			Collections.sort(configPropNames);
+						
+			for(String property : configPropNames) {
+				String value = configProps.get(property);
+				msg += "   * "+config.getPropertyName(property)+"="+(value == null? "": value)+"\n";				
+			}
+			msg += "\n\n";
+			
+			log.info(msg);
+		}
 	}
 
 	@EventListener(ApplicationReadyEvent.class)
 	public void whenReady() {
-		
-		String startMessage;
-		
-		if(!config.getConfErrors().isEmpty()) {
 
-			// @formatter:off
-			startMessage = 
-				"\n\n----------------------------------------------------\n" +
-				"\n"+
-				"   Configuration errors\n" +
-				"   --------------------\n" +
-				"\n";
-			
-				for(String msg : config.getConfErrors()) {					
-					startMessage += "   * "+ msg + "\n";					
-				}
-			
-				startMessage += "\n"+
-				"\n"+
-				"   Instructions\n" +
-				"   ------------\n" +
-				"\n"+				
-				"   1) Stop OpenVidu services with command:\n" +
-				"\n"+
-				"      $ docker-compose down\n"+
-				"\n"+
-				"   2) Fix configuration errors in .env file.\n" +
-				"\n"+
-				"   3) Start OpenVidu services with command:\n"+
-				"\n"+
-				"      $ docker-compose up -d\n"+
-				"\n"+
-				"----------------------------------------------------\n";
-			// @formatter:on
-		
-			
-		} else {
-		
-			String dashboardUrl = httpUrl+"dashboard/";
-			
-			// @formatter:off
-			startMessage = 
-				"\n\n----------------------------------------------------\n" +
-				"\n"+
-				"   OpenVidu Platform is ready!\n" +
-				"   ---------------------------\n" +
-				"\n"+
-				"   * OpenVidu Server: " + httpUrl + "\n"+
-				"\n"+
-				"   * OpenVidu Dashboard: " + dashboardUrl + "\n"+
-				"\n"+
-				"----------------------------------------------------\n";
-			// @formatter:on
-		}
-		
-		log.info(startMessage);
+		String dashboardUrl = httpUrl + "dashboard/";
+
+		// @formatter:off
+		String msg = "\n\n----------------------------------------------------\n" + "\n"
+				+ "   OpenVidu Platform is ready!\n" + "   ---------------------------\n" + "\n"
+				+ "   * OpenVidu Server: " + httpUrl + "\n" + "\n" + "   * OpenVidu Dashboard: " + dashboardUrl + "\n"
+				+ "\n" + "----------------------------------------------------\n";
+		// @formatter:on
+
+		log.info(msg);
 	}
 
 }

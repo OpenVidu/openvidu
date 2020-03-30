@@ -31,6 +31,8 @@ Open ports:
 - 57001 - 65535 UDP: Used by TURN Server to stablish media connections.
 - 57001 - 65535 TCP: Used by TURN Server to stablish media connections.
 
+It is important to have a **domain name** pointing to the machine where you are are going to deploy OpenVidu. The platform is deployed using https because is mandatory to use WebRTC. Then, if you do not have a domain name, an ugly warning will appear to your users when enter to your site. And, of course, you can suffer a man in the middle attack. You don't need a valid SSL certificate as one can be created by Let's Encrypt in the installation process.
+
 ## 2. Deployment Instructions
 
 ### Clone Repository
@@ -48,9 +50,11 @@ $ cd openvidu-server/docker/openvidu-docker-compose
 
 OpenVidu configuration is specified in the `.env` file with environment variables. 
 
-**YOU MUST** specify the **domain or public IP** of the machine and the OpenVidu **secret**. 
+**YOU MUST** specify the **DOMAIN_OR_PUBLIC_IP** of the machine and the **OPENVIDU_SECRET**. 
 
-All other values have sane defaults.
+If you have a domain name, generate a certificate with Let's Encrypt or put your own certificate. 
+
+All other config properties have sane defaults.
 
 ```
 # OpenVidu configuration
@@ -104,7 +108,7 @@ services:
             - OPENVIDU_SECRET=${OPENVIDU_SECRET}
 ```
 
-You can disable it deleting the file `docker-compose.override.yml` (or renaming it in case you want to enable again in the future).
+You can disable OpenVidu Call application deleting the file `docker-compose.override.yml` (or renaming it in case you want to enable again in the future).
 
 You can configure other dockerized application if you want updating the content of `docker-compose.override.yml` with the following requirements:
 * You have to bind your application port to 5442 in the host, as this port is used by NGINX to publish your app in port 443.
@@ -130,10 +134,16 @@ Creating openvidu-docker-compose_redis_1           ... done
 Creating openvidu-docker-compose_openvidu-server_1 ... done
 ```
 
-Then, you should check openvidu-server logs to verify if all is configured and working as expected with the following command:
+Then, you should check openvidu-server logs to verify if all is configured and working as expected. Use the following command:
 
 ```
 $ docker-compose logs -f openvidu-server
+```
+
+For your convenience, you can execute the following script to perform these two commands (and stop previously started OpenVidu platform, just in case)
+
+```
+$ ./openvidu-restart.sh
 ```
 
 When OpenVidu Platform is ready you will see this message:
@@ -173,9 +183,9 @@ To change the configuration follow this steps:
 
 > TODO: Review that changing domain name with CERTIFICATE_TYPE=letsencrypt regenerates the certificate.
 
-### What to do if OpenVidu is not working
+## 3. What to do if OpenVidu is not working
 
-#### Show service logs
+### Show service logs
 
 Take a look to service logs to see what happen. First, see openvidu-server logs:
 
@@ -196,14 +206,36 @@ $ docker-compose logs -f coturn
 $ docker-compose logs -f redis
 $ docker-compose logs -f app
 ```
+### Review the configuration
 
-#### Updating the log level of the services
+Sometimes, we can have a typo when writing a property name. For this reason, openvidu-server print in the log all the configuration properties you are configured in the file and the default values for all other config properties. In that way, you can double check what openvidu-server *see*.
 
-##### Openvidu Server Level logs
-If it was necessary to change the level of the kms logs. In the .en file we go to the section "Openvidu Server Level logs" and change the variable `OV_CE_DEBUG_LEVEL`
+If `openvidu-server` detects some error, it will show it in the log.
 
-##### Kurento Media Server Level logs
-If it was necessary to change the level of the kms logs. In the .en file we go to the section "Kurento Media Server Level logs" and change the variable `KMS_DEBUG_LEVEL` for more information https://doc-kurento.readthedocs.io/en/stable/features/logging.html
+```
+   Configuration properties
+   ---------------------  
+   * CERTIFICATE_TYPE=selfsigned
+   * OPENVIDU_CDR=false
+   * OPENVIDU_CDR_PATH=log
+   * OPENVIDU_DOMAIN_OR_PUBLIC_IP=d
+   * OPENVIDU_RECORDING=true
+   * OPENVIDU_RECORDING_AUTOSTOP-TIMEOUT=120
+   * OPENVIDU_RECORDING_COMPOSED-URL=
 
-### Use other Kurento Media Server docker image
-If is necessaries change the Kurento Media Server image, go to the Kurento Media Server image section in the .env file and change the variable `KMS_IMAGE` with the new image that your want use
+...
+```
+
+### Change log level of the services
+
+#### Openvidu Server Level logs
+
+To change the level of `openvidu-server` logs change the property `OV_CE_DEBUG_LEVEL`.
+
+#### Kurento Media Server Level logs
+
+To change the level of Kurento Media Server `kms` logs change the property `KMS_DEBUG_LEVEL`. For more information about possible values visit https://doc-kurento.readthedocs.io/en/stable/features/logging.html
+
+### Change Kurento Media Server docker image
+
+OpenVidu and Kurento Media Server evolves at different rithm. Sometimes, it is possible that a new KMS is released but OpenVidu is not still updated. In that case, in case you hit a bug and that bug is solved in last KMS version, you can test if updating only KMS is working for you. `KMS_IMAGE` property allows you to specify the new KMS image.

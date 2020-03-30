@@ -20,7 +20,7 @@ services:
             - OPENVIDU_PUBLICURL=
             - OPENVIDU_RECORDING=true
             - OPENVIDU_RECORDING_PATH=${OPENVIDU_RECORDING_FOLDER}
-            - KMS_URIS="[\"ws://127.0.0.1:8888/kurento\"]"
+            - KMS_URIS=["ws://localhost:8888/kurento"]
             - COTURN_IP=${OPENVIDU_DOMAIN_OR_PUBLIC_IP}
             - COTURN_REDIS_IP=127.0.0.1
             - LOGGING_LEVEL_ROOT=${OV_CE_DEBUG_LEVEL:-INFO}
@@ -29,7 +29,8 @@ services:
         image: kurento/${KMS_IMAGE:-kurento-media-server-dev:6.13}
         restart: on-failure
         network_mode: host
-        ulimits: -1
+        ulimits:
+          core: -1
         environment:
             - KMS_EXTERNAL_ADDRESS=auto
             - KMS_MIN_PORT=40000
