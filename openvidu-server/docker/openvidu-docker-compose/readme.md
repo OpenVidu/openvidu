@@ -202,11 +202,22 @@ To stop the application exec this command:
 ### Change configuration
 
 To change the configuration follow this steps:
-* Reset the services: `$ docker-compose down`
 * Change configuration in `.env` file
-* Start the services: `$ docker-compose up -d`
+* Restart the service 
 
-> TODO: Review that changing domain name with CERTIFICATE_TYPE=letsencrypt regenerates the certificate.
+```
+$ docker-compose down
+$ docker-compose up -d
+$ docker-compose logs -f openvidu-server
+```
+
+Or using the provided script:
+
+```
+$ ./openvidu-restart.sh
+```
+
+* Start the services: `$ docker-compose up -d`
 
 ## 3. What to do if OpenVidu is not working
 
