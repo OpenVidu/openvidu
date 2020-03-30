@@ -160,13 +160,34 @@ When OpenVidu Platform is ready you will see this message:
 ----------------------------------------------------
 ```
 
-In case OpenVidu server founds any problem, it will be shown instead of this message.
-
-You can press `Ctrl+C` to come back to the shell.
+You can press `Ctrl+C` to come back to the shell and OpenVidu will be executed in the background. 
 
 If all is ok, you can open OpenVidu Dashboard to verify if videoconference is working as expected. The user is `OPENVIDUAPP` and the password what you have configured in `.env` file.
 
-If videoconference application is started, it is available in https://server/
+If video conference application is started, it is available in https://server/
+
+In case OpenVidu server founds any problem with the configuration, it will show a report instead of this message. For example, if you try to use the provided .env file without configuring OPENVIDU_SECRET and OPENVIDU_DOMAIN_OR_PUBLIC_IP you will see the following report
+
+```
+ 
+    Configuration errors
+    --------------------
+ 
+    * Property OPENVIDU_SECRET is not set. Cannot be empty.
+    * Property OPENVIDU_DOMAIN_OR_PUBLIC_IP is not set. Cannot be empty
+ 
+ 
+    Fix config errors
+    ---------------
+ 
+    1) Return to shell pressing Ctrl+C
+    2) Set correct values in '.env' configuration file
+    3) Restart OpenVidu with:
+ 
+       $ ./openvidu-restart.sh
+ 
+```
+
 
 ### Stop services
 
