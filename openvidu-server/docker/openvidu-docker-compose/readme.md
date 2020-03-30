@@ -65,7 +65,7 @@ All other config properties have sane defaults.
 OPENVIDU_SECRET=
 
 # Domain name. If you do not have one, the public IP of the machine.
-DOMAIN_OR_PUBLIC_IP=
+OPENVIDU_DOMAIN_OR_PUBLIC_IP=
 
 # Openvidu Folder Record used for save the openvidu recording videos. Change it 
 # with the folder you want to use from your host.
@@ -86,6 +86,10 @@ CERTIFICATE_TYPE=selfsigned
 # notifications
 LETSENCRYPT_EMAIL=user@example.com
 ```
+
+> **NOTE:** If you want to try OpenVidu in local, take into account the following aspects:
+* If you set `OPENVIDU_DOMAIN_OR_PUBLIC_IP=localhost` then in your browser you have to use `https://localhost/`. If you use `127.0.0.1` instead, you will have some issues.
+* OpenVidu is dockerized, but it uses network_mode=host due to WebRTC needs. That is important to know because OpenVidu services will use some host ports that have to be available: 8888, 5443, 3478, 5442, 80 and 6379.
 
 ### Videoconference application
 
