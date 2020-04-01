@@ -102,9 +102,9 @@ public abstract class KmsManager {
 		return this.kmss.remove(kmsId);
 	}
 
-	public synchronized Kms getLessLoadedAndRunningKms() throws NoSuchElementException {
-		List<KmsLoad> kmsLoads = getKmsLoads().stream()
-				.filter(kmsLoad -> mediaNodeStatusManager.isRunning(kmsLoad.kms.getId())).collect(Collectors.toList());
+	public synchronized Kms getLessLoadedConnectedAndRunningKms() throws NoSuchElementException {
+		List<KmsLoad> kmsLoads = getKmsLoads().stream().filter(kmsLoad -> kmsLoad.kms.isKurentoClientConnected()
+				&& mediaNodeStatusManager.isRunning(kmsLoad.kms.getId())).collect(Collectors.toList());
 		return Collections.min(kmsLoads).kms;
 	}
 
@@ -183,7 +183,8 @@ public abstract class KmsManager {
 			@Override
 			public void connected() {
 				final Kms kms = kmss.get(kmsId);
-				// TODO: This should be done here instead of after KurentoClient.create method returns
+				// TODO: This should be done here instead of after KurentoClient.create method
+				// returns
 				// kms.setKurentoClientConnected(true);
 				// kms.setTimeOfKurentoClientConnection(System.currentTimeMillis());
 				log.info("Kurento Client is now connected to KMS {} with uri {}", kmsId, kms.getUri());
