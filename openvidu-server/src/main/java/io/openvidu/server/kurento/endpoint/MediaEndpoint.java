@@ -93,7 +93,9 @@ public abstract class MediaEndpoint {
 	public String selectedLocalIceCandidate;
 	public String selectedRemoteIceCandidate;
 	public Queue<KmsEvent> kmsEvents = new ConcurrentLinkedQueue<>();
+
 	public Future<?> kmsWebrtcStatsThread;
+	public Runnable kmsWebrtcStatsRunnable;
 	public AtomicInteger statsNotFoundErrors = new AtomicInteger(0);
 
 	/**
