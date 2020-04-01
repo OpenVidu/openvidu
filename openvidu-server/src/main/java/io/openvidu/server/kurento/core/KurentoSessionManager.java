@@ -88,6 +88,7 @@ public class KurentoSessionManager extends SessionManager {
 	/* Protected by Session.closingLock.readLock */
 	public synchronized void joinRoom(Participant participant, String sessionId, Integer transactionId) {
 		Set<Participant> existingParticipants = null;
+		boolean lockAcquired = false;
 		try {
 
 			KurentoSession kSession = (KurentoSession) sessions.get(sessionId);
@@ -107,24 +108,21 @@ public class KurentoSessionManager extends SessionManager {
 
 				try {
 					if (KmsManager.selectAndRemoveKmsLock.tryLock(MS_MAX_LOCK_WAIT, TimeUnit.SECONDS)) {
+						lockAcquired = true;
+						Kms lessLoadedKms = null;
 						try {
-							Kms lessLoadedKms = null;
-							try {
-								lessLoadedKms = this.kmsManager.getLessLoadedAndRunningKms();
-							} catch (NoSuchElementException e) {
-								// Restore session not active
-								this.cleanCollections(sessionId);
-								this.storeSessionNotActive(sessionNotActive);
-								throw new OpenViduException(Code.ROOM_CANNOT_BE_CREATED_ERROR_CODE,
-										"There is no available Media Node where to initialize session '" + sessionId
-												+ "'");
-							}
-							log.info("KMS less loaded is {} with a load of {}", lessLoadedKms.getUri(),
-									lessLoadedKms.getLoad());
-							kSession = createSession(sessionNotActive, lessLoadedKms);
-						} finally {
-							KmsManager.selectAndRemoveKmsLock.unlock();
+							lessLoadedKms = this.kmsManager.getLessLoadedAndRunningKms();
+						} catch (NoSuchElementException e) {
+							// Restore session not active
+							this.cleanCollections(sessionId);
+							this.storeSessionNotActive(sessionNotActive);
+							throw new OpenViduException(Code.ROOM_CANNOT_BE_CREATED_ERROR_CODE,
+									"There is no available Media Node where to initialize session '" + sessionId + "'");
 						}
+						log.info("KMS less loaded is {} with a load of {}", lessLoadedKms.getUri(),
+								lessLoadedKms.getLoad());
+						kSession = createSession(sessionNotActive, lessLoadedKms);
+
 					} else {
 						String error = "Timeout of " + MS_MAX_LOCK_WAIT + " seconds waiting to acquire lock";
 						log.error(error);
@@ -153,6 +151,10 @@ public class KurentoSessionManager extends SessionManager {
 			log.warn("PARTICIPANT {}: Error joining/creating session {}", participant.getParticipantPublicId(),
 					sessionId, e);
 			sessionEventsHandler.onParticipantJoined(participant, sessionId, null, transactionId, e);
+		} finally {
+			if (lockAcquired) {
+				KmsManager.selectAndRemoveKmsLock.unlock();
+			}
 		}
 		if (existingParticipants != null) {
 			sessionEventsHandler.onParticipantJoined(participant, sessionId, existingParticipants, transactionId, null);
