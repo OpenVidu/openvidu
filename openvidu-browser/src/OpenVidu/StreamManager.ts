@@ -149,14 +149,7 @@ export class StreamManager implements EventDispatcher {
      * See [[EventDispatcher.on]]
      */
     on(type: string, handler: (event: Event) => void): EventDispatcher {
-        this.ee.on(type, event => {
-            if (event) {
-                console.info("Event '" + type + "' triggered by '" + (this.remote ? 'Subscriber' : 'Publisher') + "'", event);
-            } else {
-                console.info("Event '" + type + "' triggered by '" + (this.remote ? 'Subscriber' : 'Publisher') + "'");
-            }
-            handler(event);
-        });
+        this.ee.on(type, handler);
         if (type === 'videoElementCreated') {
             if (!!this.stream && this.lazyLaunchVideoElementCreatedEvent) {
                 this.ee.emitEvent('videoElementCreated', [new VideoElementEvent(this.videos[0].video, this, 'videoElementCreated')]);
@@ -183,14 +176,7 @@ export class StreamManager implements EventDispatcher {
      * See [[EventDispatcher.once]]
      */
     once(type: string, handler: (event: Event) => void): StreamManager {
-        this.ee.once(type, event => {
-            if (event) {
-                console.info("Event '" + type + "' triggered once by '" + (this.remote ? 'Subscriber' : 'Publisher') + "'", event);
-            } else {
-                console.info("Event '" + type + "' triggered once by '" + (this.remote ? 'Subscriber' : 'Publisher') + "'");
-            }
-            handler(event);
-        });
+        this.ee.once(type, handler);
         if (type === 'videoElementCreated') {
             if (!!this.stream && this.lazyLaunchVideoElementCreatedEvent) {
                 this.ee.emitEvent('videoElementCreated', [new VideoElementEvent(this.videos[0].video, this, 'videoElementCreated')]);
