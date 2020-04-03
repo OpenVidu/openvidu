@@ -539,8 +539,8 @@ public class OpenviduConfig {
 				OpenViduServer.wsUrl = publicUrl.replace("http://", "wss://");
 			}
 
-			if (!OpenViduServer.wsUrl.startsWith("wss://")) {
-				OpenViduServer.wsUrl = "wss://" + OpenViduServer.wsUrl;
+			if (!publicUrl.startsWith("wss://")) {
+				OpenViduServer.wsUrl = "wss://" + publicUrl;
 			}
 		}
 
