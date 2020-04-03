@@ -118,7 +118,7 @@ public class Connection {
 	/**
 	 * Returns the data associated to the connection on the client-side. This value
 	 * is set with second parameter of method <a href=
-	 * "https://openvidu.io/api/openvidu-browser/classes/session.html#connect"
+	 * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/session.html#connect"
 	 * target="_blank">Session.connect</a> in OpenVidu Browser
 	 */
 	public String getClientData() {
