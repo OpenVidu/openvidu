@@ -381,7 +381,7 @@ public class OpenviduConfig {
 
 	public URI checkWebsocketUri(String uri) throws Exception {
 		try {
-			if (!uri.startsWith("ws://") || !uri.startsWith("wss://")) {
+			if (!uri.startsWith("ws://") && !uri.startsWith("wss://")) {
 				throw new Exception("WebSocket protocol not found");
 			}
 			String parsedUri = uri.replaceAll("^ws://", "http://").replaceAll("^wss://", "https://");
