@@ -102,8 +102,7 @@ public class RecordingProperties {
 		 * {@link io.openvidu.java.client.RecordingProperties.Builder#outputMode(Recording.OutputMode)}
 		 * has been called with value
 		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED}.<br>
-		 * See <a href=
-		 * "https://docs.openvidu.io/en/stable/advanced-features/recording#custom-recording-layouts"
+		 * See <a href="/en/stable/advanced-features/recording#custom-recording-layouts"
 		 * target="_blank">Custom recording layouts</a> to learn more
 		 */
 		public RecordingProperties.Builder customLayout(String path) {
@@ -197,8 +196,7 @@ public class RecordingProperties {
 	 * If {@link io.openvidu.java.client.RecordingProperties#recordingLayout()} is
 	 * set to {@link io.openvidu.java.client.RecordingLayout#CUSTOM}, this property
 	 * defines the relative path to the specific custom layout you want to use.<br>
-	 * See <a href=
-	 * "https://docs.openvidu.io/en/stable/advanced-features/recording#custom-recording-layouts"
+	 * See <a href="/en/stable/advanced-features/recording#custom-recording-layouts"
 	 * target="_blank">Custom recording layouts</a> to learn more
 	 */
 	public String customLayout() {
