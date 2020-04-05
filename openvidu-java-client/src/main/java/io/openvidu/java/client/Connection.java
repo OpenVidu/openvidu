@@ -85,7 +85,7 @@ public class Connection {
 	}
 
 	/**
-	 * <a href="/en/stable/openvidu-pro/" target="_blank" style="display:
+	 * <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" target="_blank" style="display:
 	 * inline-block; background-color: rgb(0, 136, 170); color: white; font-weight:
 	 * bold; padding: 0px 5px; margin-right: 5px; border-radius: 3px; font-size:
 	 * 13px; line-height:21px; font-family: Montserrat, sans-serif">PRO</a>
@@ -118,7 +118,7 @@ public class Connection {
 	/**
 	 * Returns the data associated to the connection on the client-side. This value
 	 * is set with second parameter of method
-	 * <a href="/en/stable/api/openvidu-browser/classes/session.html#connect" target
+	 * <a href="https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/session.html#connect" target
 	 * ="_blank">Session.connect</a> in OpenVidu Browser
 	 */
 	public String getClientData() {
