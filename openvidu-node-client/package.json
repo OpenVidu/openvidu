@@ -30,7 +30,7 @@
     },
     "scripts": {
         "build": "./node_modules/typescript/bin/tsc",
-        "docs": "./node_modules/typedoc/bin/typedoc --options ./config/typedoc.js ./src && rm -rf ../../openvidu.io-docs/docs/api/openvidu-node-client/* && cp -R ./docs/. ../../openvidu.io-docs/docs/api/openvidu-node-client"
+        "docs": "./generate-docs.sh"
     },
     "typings": "lib/index.d.ts",
     "version": "2.12.0"
