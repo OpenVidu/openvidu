@@ -61,7 +61,7 @@ export class Connection {
 
     /**
      * Data associated to the connection on the client-side. This value is set with second parameter of method
-     * [Session.connect](api/openvidu-browser/classes/session.html#connect) in OpenVidu Browser
+     * [Session.connect](/en/stable/api/openvidu-browser/classes/session.html#connect) in OpenVidu Browser
      */
     clientData: string;
 

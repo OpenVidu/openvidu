@@ -12,6 +12,10 @@ module.exports = {
     externalPattern: "node_modules",
     excludeExternals: true,
     excludePrivate: true,
+    excludeNotExported: true,
     theme: "default",
-    readme: "none"
+    readme: "none",
+    includeVersion: true,
+    listInvalidSymbolLinks: true,
+    out: "./docs"
 }
