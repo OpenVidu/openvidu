@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -81,7 +82,10 @@ public class KurentoSessionManager extends SessionManager {
 	@Autowired
 	private KurentoParticipantEndpointConfig kurentoEndpointConfig;
 
+	private final int MS_MAX_LOCK_WAIT = 15;
+
 	@Override
+	/* Protected by Session.closingLock.readLock */
 	public synchronized void joinRoom(Participant participant, String sessionId, Integer transactionId) {
 		Set<Participant> existingParticipants = null;
 		boolean lockAcquired = false;
@@ -102,21 +106,36 @@ public class KurentoSessionManager extends SessionManager {
 							openviduConfig, recordingManager);
 				}
 
-				lockAcquired = true;
-				KmsManager.selectAndRemoveKmsLock.lock();
-
-				Kms lessLoadedKms = null;
 				try {
-					lessLoadedKms = this.kmsManager.getLessLoadedAndRunningKms();
-				} catch (NoSuchElementException e) {
-					// Restore session not active
-					this.cleanCollections(sessionId);
-					this.storeSessionNotActive(sessionNotActive);
-					throw new OpenViduException(Code.ROOM_CANNOT_BE_CREATED_ERROR_CODE,
-							"There is no available Media Node where to initialize session '" + sessionId + "'");
+					if (KmsManager.selectAndRemoveKmsLock.tryLock(MS_MAX_LOCK_WAIT, TimeUnit.SECONDS)) {
+						lockAcquired = true;
+						Kms lessLoadedKms = null;
+						try {
+							lessLoadedKms = this.kmsManager.getLessLoadedConnectedAndRunningKms();
+						} catch (NoSuchElementException e) {
+							// Restore session not active
+							this.cleanCollections(sessionId);
+							this.storeSessionNotActive(sessionNotActive);
+							throw new OpenViduException(Code.ROOM_CANNOT_BE_CREATED_ERROR_CODE,
+									"There is no available Media Node where to initialize session '" + sessionId + "'");
+						}
+						log.info("KMS less loaded is {} with a load of {}", lessLoadedKms.getUri(),
+								lessLoadedKms.getLoad());
+						kSession = createSession(sessionNotActive, lessLoadedKms);
+
+					} else {
+						String error = "Timeout of " + MS_MAX_LOCK_WAIT + " seconds waiting to acquire lock";
+						log.error(error);
+						sessionEventsHandler.onParticipantJoined(participant, sessionId, null, transactionId,
+								new OpenViduException(Code.ROOM_CANNOT_BE_CREATED_ERROR_CODE, error));
+						return;
+					}
+				} catch (InterruptedException e) {
+					String error = "'" + participant.getParticipantPublicId() + "' is trying to join session '"
+							+ sessionId + "' but was interrupted while waiting to acquire lock: " + e.getMessage();
+					log.error(error);
+					throw new OpenViduException(Code.ROOM_CLOSED_ERROR_CODE, error);
 				}
-				log.info("KMS less loaded is {} with a load of {}", lessLoadedKms.getUri(), lessLoadedKms.getLoad());
-				kSession = createSession(sessionNotActive, lessLoadedKms);
 			}
 
 			if (kSession.isClosed()) {
@@ -145,7 +164,9 @@ public class KurentoSessionManager extends SessionManager {
 	@Override
 	public synchronized boolean leaveRoom(Participant participant, Integer transactionId, EndReason reason,
 			boolean closeWebSocket) {
-		log.debug("Request [LEAVE_ROOM] ({})", participant.getParticipantPublicId());
+		log.info("Request [LEAVE_ROOM] for participant {} of session {} with reason {}",
+				participant.getParticipantPublicId(), participant.getSessionId(),
+				reason != null ? reason.name() : "NULL");
 
 		boolean sessionClosedByLastParticipant = false;
 
@@ -171,15 +192,18 @@ public class KurentoSessionManager extends SessionManager {
 				this.coturnCredentialsService.deleteUser(p.getToken().getTurnCredentials().getUsername());
 			}
 
-			boolean stillParticipant = false;
-			for (Session s : sessions.values()) {
-				if (s.getParticipantByPrivateId(p.getParticipantPrivateId()) != null) {
-					stillParticipant = true;
-					break;
+			// TODO: why is this necessary??
+			if (insecureUsers.containsKey(p.getParticipantPrivateId())) {
+				boolean stillParticipant = false;
+				for (Session s : sessions.values()) {
+					if (!s.isClosed() && (s.getParticipantByPrivateId(p.getParticipantPrivateId()) != null)) {
+						stillParticipant = true;
+						break;
+					}
 				}
-			}
-			if (!stillParticipant) {
-				insecureUsers.remove(p.getParticipantPrivateId());
+				if (!stillParticipant) {
+					insecureUsers.remove(p.getParticipantPrivateId());
+				}
 			}
 		}
 
@@ -866,6 +890,7 @@ public class KurentoSessionManager extends SessionManager {
 	}
 
 	@Override
+	/* Protected by Session.closingLock.readLock */
 	public Participant publishIpcam(Session session, MediaOptions mediaOptions, String serverMetadata)
 			throws Exception {
 		final String sessionId = session.getSessionId();

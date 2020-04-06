@@ -52,6 +52,9 @@ node('container') {
         stage('OpenVidu TestApp build') {
           sh 'cd openvidu/openvidu-testapp && npm install --unsafe-perm && npm link openvidu-browser && npm link openvidu-node-client && export NG_CLI_ANALYTICS=ci && ./node_modules/@angular/cli/bin/ng build --prod'
         }
+        stage('OpenVidu Server integration tests') {
+          sh 'cd openvidu/openvidu-server && mvn --batch-mode -Dtest=*IntegrationTest test'
+        }
         stage('OpenVidu Server build') {
           sh 'cd openvidu/openvidu-server/src/dashboard && npm install --unsafe-perm && npm link openvidu-browser && export NG_CLI_ANALYTICS=ci && ./node_modules/@angular/cli/bin/ng build --prod --output-path ../main/resources/static'
           sh 'cd openvidu/openvidu-server && mvn --batch-mode clean compile package'

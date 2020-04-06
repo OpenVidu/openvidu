@@ -23,6 +23,7 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.kurento.client.BaseRtpEndpoint;
 import org.kurento.client.Continuation;
@@ -92,7 +93,10 @@ public abstract class MediaEndpoint {
 	public String selectedLocalIceCandidate;
 	public String selectedRemoteIceCandidate;
 	public Queue<KmsEvent> kmsEvents = new ConcurrentLinkedQueue<>();
+
 	public Future<?> kmsWebrtcStatsThread;
+	public Runnable kmsWebrtcStatsRunnable;
+	public AtomicInteger statsNotFoundErrors = new AtomicInteger(0);
 
 	/**
 	 * Constructor to set the owner, the endpoint's name and the media pipeline.

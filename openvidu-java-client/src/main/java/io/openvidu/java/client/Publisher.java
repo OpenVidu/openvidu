@@ -25,7 +25,7 @@ import com.google.gson.JsonObject;
  * 
  * <br>
  * This is a backend representation of a published media stream (see
- * <a href="/api/openvidu-browser/classes/stream.html" target="_blank"> OpenVidu
+ * <a href="https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/stream.html" target="_blank"> OpenVidu
  * Browser Stream class</a>).
  */
 public class Publisher {
@@ -65,10 +65,10 @@ public class Publisher {
 
 	/**
 	 * Returns the unique identifier of the
-	 * <a href="/api/openvidu-browser/classes/stream.html" target=
+	 * <a href="https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/stream.html" target=
 	 * "_blank">Stream</a> associated to this Publisher. Each Publisher is paired
 	 * with only one Stream, so you can identify each Publisher by its
-	 * <a href="/api/openvidu-browser/classes/stream.html#streamid" target=
+	 * <a href="https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/stream.html#streamid" target=
 	 * "_blank"><code>Stream.streamId</code></a>
 	 */
 	public String getStreamId() {
@@ -84,7 +84,7 @@ public class Publisher {
 	}
 
 	/**
-	 * See properties of <a href="/api/openvidu-browser/classes/stream.html" target=
+	 * See properties of <a href="https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/stream.html" target=
 	 * "_blank">Stream</a> object in OpenVidu Browser library to find out more
 	 */
 	public boolean hasVideo() {
@@ -92,7 +92,7 @@ public class Publisher {
 	}
 
 	/**
-	 * See properties of <a href="/api/openvidu-browser/classes/stream.html" target=
+	 * See properties of <a href="https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/stream.html" target=
 	 * "_blank">Stream</a> object in OpenVidu Browser library to find out more
 	 */
 	public boolean hasAudio() {
@@ -100,7 +100,7 @@ public class Publisher {
 	}
 
 	/**
-	 * See properties of <a href="/api/openvidu-browser/classes/stream.html" target=
+	 * See properties of <a href="https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/stream.html" target=
 	 * "_blank">Stream</a> object in OpenVidu Browser library to find out more
 	 */
 	public Boolean isAudioActive() {
@@ -108,7 +108,7 @@ public class Publisher {
 	}
 
 	/**
-	 * See properties of <a href="/api/openvidu-browser/classes/stream.html" target=
+	 * See properties of <a href="https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/stream.html" target=
 	 * "_blank">Stream</a> object in OpenVidu Browser library to find out more
 	 */
 	public Boolean isVideoActive() {
@@ -116,7 +116,7 @@ public class Publisher {
 	}
 
 	/**
-	 * See properties of <a href="/api/openvidu-browser/classes/stream.html" target=
+	 * See properties of <a href="https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/stream.html" target=
 	 * "_blank">Stream</a> object in OpenVidu Browser library to find out more
 	 */
 	public Integer getFrameRate() {
@@ -124,7 +124,7 @@ public class Publisher {
 	}
 
 	/**
-	 * See properties of <a href="/api/openvidu-browser/classes/stream.html" target=
+	 * See properties of <a href="https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/stream.html" target=
 	 * "_blank">Stream</a> object in OpenVidu Browser library to find out more
 	 */
 	public String getTypeOfVideo() {
@@ -132,7 +132,7 @@ public class Publisher {
 	}
 
 	/**
-	 * See properties of <a href="/api/openvidu-browser/classes/stream.html" target=
+	 * See properties of <a href="https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/stream.html" target=
 	 * "_blank">Stream</a> object in OpenVidu Browser library to find out more
 	 */
 	public String getVideoDimensions() {

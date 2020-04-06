@@ -2667,7 +2667,7 @@ public class OpenViduTestAppE2eTest {
 		user.getWaiter().until(ExpectedConditions.alertIsPresent());
 		Alert alert = user.getDriver().switchTo().alert();
 
-		final String alertMessage = "Exception connecting to WebSocket server ws://localhost:8888/kurento";
+		final String alertMessage = "Error connecting to the session: There is no available Media Node where to initialize session 'TestSession'. Code: 204";
 		Assert.assertTrue("Alert message wrong. Expected to contain: \"" + alertMessage + "\". Actual message: \""
 				+ alert.getText() + "\"", alert.getText().contains(alertMessage));
 		alert.accept();

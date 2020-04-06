@@ -234,7 +234,7 @@ export class StreamManager implements EventDispatcher {
 
     /**
      * Makes `video` element parameter display this [[stream]]. This is useful when you are
-     * [managing the video elements on your own](https://docs.openvidu.io/en/stable/cheatsheet/manage-videos/#you-take-care-of-the-video-players)
+     * [managing the video elements on your own](/en/stable/cheatsheet/manage-videos/#you-take-care-of-the-video-players)
      *
      * Calling this method with a video already added to other Publisher/Subscriber will cause the video element to be
      * disassociated from that previous Publisher/Subscriber and to be associated to this one.
@@ -351,7 +351,7 @@ export class StreamManager implements EventDispatcher {
     }
 
     /**
-     * Updates the current configuration for the [[PublisherSpeakingEvent]] feature and the [StreamManagerEvent.streamAudioVolumeChange](/api/openvidu-browser/classes/streammanagerevent.html) feature for this specific
+     * Updates the current configuration for the [[PublisherSpeakingEvent]] feature and the [StreamManagerEvent.streamAudioVolumeChange](/en/stable/api/openvidu-browser/classes/streammanagerevent.html) feature for this specific
      * StreamManager audio stream, overriding the global options set with [[OpenVidu.setAdvancedConfiguration]]. This way you can customize the audio events options
      * for each specific StreamManager and change them dynamically.
      * 

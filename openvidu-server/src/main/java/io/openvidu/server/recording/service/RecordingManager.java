@@ -629,7 +629,7 @@ public class RecordingManager {
 			log.warn("No KMSs were defined in kms.uris array. Recording path check aborted");
 		} else {
 
-			MediaPipeline pipeline = this.kmsManager.getLessLoadedAndRunningKms().getKurentoClient()
+			MediaPipeline pipeline = this.kmsManager.getLessLoadedConnectedAndRunningKms().getKurentoClient()
 					.createMediaPipeline();
 			RecorderEndpoint recorder = new RecorderEndpoint.Builder(pipeline, "file://" + testFilePath).build();
 

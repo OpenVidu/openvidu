@@ -157,6 +157,11 @@ public class OpenviduConfig {
 
 	private String certificateType;
 
+	protected int openviduSessionsGarbageInterval;
+
+	protected int openviduSessionsGarbageThreshold;
+
+	
 	// Derived properties
 
 	public static String finalUrl;
@@ -267,6 +272,14 @@ public class OpenviduConfig {
 		return webhookEventsList;
 	}
 
+	public int getSessionGarbageInterval() {
+		return openviduSessionsGarbageInterval;
+	}
+	
+	public int getSessionGarbageThreshold() {
+		return openviduSessionsGarbageThreshold;
+	}
+	
 	// Derived properties methods
 
 	public String getSpringProfile() {

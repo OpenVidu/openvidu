@@ -195,6 +195,10 @@ export class Stream implements EventDispatcher {
      * @hidden
      */
     harkOptions;
+    /**
+     * @hidden
+     */
+    localMediaStreamWhenSubscribedToRemote: MediaStream;
 
 
     /**
@@ -494,6 +498,16 @@ export class Stream implements EventDispatcher {
                 track.stop();
             });
             delete this.mediaStream;
+        }
+        // If subscribeToRemote local MediaStream must be stopped
+        if (this.localMediaStreamWhenSubscribedToRemote) {
+            this.localMediaStreamWhenSubscribedToRemote.getAudioTracks().forEach((track) => {
+                track.stop();
+            });
+            this.localMediaStreamWhenSubscribedToRemote.getVideoTracks().forEach((track) => {
+                track.stop();
+            });
+            delete this.localMediaStreamWhenSubscribedToRemote;
         }
         if (!!this.speechEvent) {
             if (!!this.speechEvent.stop) {
@@ -863,6 +877,7 @@ export class Stream implements EventDispatcher {
                                 this.isLocalStreamPublished = true;
                                 this.publishedOnce = true;
                                 if (this.displayMyRemote()) {
+                                    this.localMediaStreamWhenSubscribedToRemote = this.mediaStream;
                                     this.remotePeerSuccessfullyEstablished();
                                 }
                                 if (reconnect) {

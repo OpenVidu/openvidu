@@ -117,7 +117,8 @@ export class Publisher extends StreamManager {
      */
     publishAudio(value: boolean): void {
         if (this.stream.audioActive !== value) {
-            this.stream.getMediaStream().getAudioTracks().forEach((track) => {
+            const affectedMediaStream: MediaStream = this.stream.displayMyRemote() ? this.stream.localMediaStreamWhenSubscribedToRemote : this.stream.getMediaStream();
+            affectedMediaStream.getAudioTracks().forEach((track) => {
                 track.enabled = value;
             });
             if (!!this.session && !!this.stream.streamId) {
@@ -163,7 +164,8 @@ export class Publisher extends StreamManager {
      */
     publishVideo(value: boolean): void {
         if (this.stream.videoActive !== value) {
-            this.stream.getMediaStream().getVideoTracks().forEach((track) => {
+            const affectedMediaStream: MediaStream = this.stream.displayMyRemote() ? this.stream.localMediaStreamWhenSubscribedToRemote : this.stream.getMediaStream();
+            affectedMediaStream.getVideoTracks().forEach((track) => {
                 track.enabled = value;
             });
             if (!!this.session && !!this.stream.streamId) {
@@ -288,36 +290,49 @@ export class Publisher extends StreamManager {
      * @returns A Promise (to which you can optionally subscribe to) that is resolved if the track was successfully replaced and rejected with an Error object in other case
      */
     replaceTrack(track: MediaStreamTrack): Promise<any> {
-        return new Promise((resolve, reject) => {
-            const senders: RTCRtpSender[] = this.stream.getRTCPeerConnection().getSenders();
-            let sender: RTCRtpSender | undefined;
+
+        const replaceMediaStreamTrack = () => {
+            const mediaStream: MediaStream = this.stream.displayMyRemote() ? this.stream.localMediaStreamWhenSubscribedToRemote : this.stream.getMediaStream();
+            let removedTrack: MediaStreamTrack;
             if (track.kind === 'video') {
-                sender = senders.find(s => !!s.track && s.track.kind === 'video');
-                if (!sender) {
-                    reject(new Error('There\'s no replaceable track for that kind of MediaStreamTrack in this Publisher object'))
-                }
-            } else if (track.kind === 'audio') {
-                sender = senders.find(s => !!s.track && s.track.kind === 'audio');
-                if (!sender) {
-                    reject(new Error('There\'s no replaceable track for that kind of MediaStreamTrack in this Publisher object'))
-                }
+                removedTrack = mediaStream.getVideoTracks()[0];
             } else {
-                reject(new Error('Unknown track kind ' + track.kind));
+                removedTrack = mediaStream.getAudioTracks()[0];
             }
-            (<any>sender).replaceTrack(track).then(() => {
-                let removedTrack: MediaStreamTrack;
+            mediaStream.removeTrack(removedTrack);
+            removedTrack.stop();
+            mediaStream.addTrack(track);
+        }
+
+        return new Promise((resolve, reject) => {
+            if (this.stream.isLocalStreamPublished) {
+                // Only if the Publisher has been published is necessary to call native Web API RTCRtpSender.replaceTrack
+                const senders: RTCRtpSender[] = this.stream.getRTCPeerConnection().getSenders();
+                let sender: RTCRtpSender | undefined;
                 if (track.kind === 'video') {
-                    removedTrack = this.stream.getMediaStream().getVideoTracks()[0];
+                    sender = senders.find(s => !!s.track && s.track.kind === 'video');
+                    if (!sender) {
+                        reject(new Error('There\'s no replaceable track for that kind of MediaStreamTrack in this Publisher object'))
+                    }
+                } else if (track.kind === 'audio') {
+                    sender = senders.find(s => !!s.track && s.track.kind === 'audio');
+                    if (!sender) {
+                        reject(new Error('There\'s no replaceable track for that kind of MediaStreamTrack in this Publisher object'))
+                    }
                 } else {
-                    removedTrack = this.stream.getMediaStream().getAudioTracks()[0];
+                    reject(new Error('Unknown track kind ' + track.kind));
                 }
-                this.stream.getMediaStream().removeTrack(removedTrack);
-                removedTrack.stop();
-                this.stream.getMediaStream().addTrack(track);
+                (<any>sender).replaceTrack(track).then(() => {
+                    replaceMediaStreamTrack();
+                    resolve();
+                }).catch(error => {
+                    reject(error);
+                });
+            } else {
+                // Publisher not published. Simply modify local MediaStream tracks
+                replaceMediaStreamTrack();
                 resolve();
-            }).catch(error => {
-                reject(error);
-            });
+            }
         });
     }
 

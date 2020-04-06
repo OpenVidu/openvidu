@@ -48,7 +48,7 @@ public class CDREventEnd extends CDREvent {
 			json.addProperty("duration", this.duration);
 		}
 		if (this.reason != null) {
-			json.addProperty("reason", this.reason != null ? reason.name() : "");
+			json.addProperty("reason", reason.name());
 		}
 		return json;
 	}

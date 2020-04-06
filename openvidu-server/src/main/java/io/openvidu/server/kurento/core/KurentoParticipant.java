@@ -520,9 +520,9 @@ public class KurentoParticipant extends Participant {
 
 	private JsonObject sharedJson(Function<MediaEndpoint, JsonObject> toJsonFunction) {
 		JsonObject json = super.toJson();
-		JsonArray publisherEnpoints = new JsonArray();
+		JsonArray publisherEndpoints = new JsonArray();
 		if (this.streaming && this.publisher.getEndpoint() != null) {
-			publisherEnpoints.add(toJsonFunction.apply(this.publisher));
+			publisherEndpoints.add(toJsonFunction.apply(this.publisher));
 		}
 		JsonArray subscriberEndpoints = new JsonArray();
 		for (MediaEndpoint sub : this.subscribers.values()) {
@@ -530,7 +530,7 @@ public class KurentoParticipant extends Participant {
 				subscriberEndpoints.add(toJsonFunction.apply(sub));
 			}
 		}
-		json.add("publishers", publisherEnpoints);
+		json.add("publishers", publisherEndpoints);
 		json.add("subscribers", subscriberEndpoints);
 		return json;
 	}

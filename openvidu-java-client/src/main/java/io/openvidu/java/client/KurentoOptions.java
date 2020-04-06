@@ -107,8 +107,8 @@ public class KurentoOptions {
 	/**
 	 * Defines the maximum number of Kbps that the client owning the token will be
 	 * able to receive from Kurento Media Server. 0 means unconstrained. Giving a
-	 * value to this property will override the global configuration set in <a href=
-	 * "https://docs.openvidu.io/en/stable/reference-docs/openvidu-server-params/#configuration-parameters-for-openvidu-server"
+	 * value to this property will override the global configuration set in <a
+	 * href="https://docs.openvidu.io/en/stable/reference-docs/openvidu-server-params/#configuration-parameters-for-openvidu-server"
 	 * target="_blank">OpenVidu Server configuration</a> (parameter
 	 * <code>openvidu.streams.video.max-recv-bandwidth</code>) for every incoming
 	 * stream of the user owning the token. <br>
@@ -166,8 +166,8 @@ public class KurentoOptions {
 	/**
 	 * Defines the names of the filters the user owning the token will be able to
 	 * apply. See
-	 * <a href="https://docs.openvidu.io/en/stable/advanced-features/filters/" target=
-	 * "_blank">Voice and video filters</a>
+	 * <a href="https://docs.openvidu.io/en/stable/advanced-features/filters/" target= "_blank">Voice and
+	 * video filters</a>
 	 */
 	public String[] getAllowedFilters() {
 		return allowedFilters;

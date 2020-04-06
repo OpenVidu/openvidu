@@ -257,11 +257,11 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 				// While closing a session users can't join
 				if (session.closingLock.readLock().tryLock()) {
-					if (session.isClosed()) {
-						throw new OpenViduException(Code.ROOM_CLOSED_ERROR_CODE,
-								"Unable to join the session. Session " + sessionId + " is closed");
-					}
 					try {
+						if (session.isClosed()) {
+							throw new OpenViduException(Code.ROOM_CLOSED_ERROR_CODE,
+									"Unable to join the session. Session " + sessionId + " is closed");
+						}
 						Participant participant;
 						if (generateRecorderParticipant) {
 							participant = sessionManager.newRecorderParticipant(sessionId, participantPrivatetId,
