@@ -972,9 +972,7 @@ public class KurentoSessionManager extends SessionManager {
 			final PassThrough passThru = publisher.disconnectFromPassThrough();
 
 			// 2) Destroy the broken PublisherEndpoint and nothing else
-			if (publisher.kmsWebrtcStatsThread != null) {
-				publisher.kmsWebrtcStatsThread.cancel(true);
-			}
+			publisher.cancelStatsLoop.set(true);
 			kParticipant.releaseElement(participant.getParticipantPublicId(), publisher.getEndpoint());
 
 			// 3) Create a new PublisherEndpoint connecting it to the previous PassThrough
