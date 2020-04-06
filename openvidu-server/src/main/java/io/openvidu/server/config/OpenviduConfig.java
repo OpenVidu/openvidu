@@ -381,13 +381,18 @@ public class OpenviduConfig {
 		}
 
 		userConfigProps = new ArrayList<>(configProps.keySet());
-		userConfigProps.removeAll(Arrays.asList("coturn.ip", "coturn.redis.ip", "kms.uris", "server.port",
-				"coturn.redis.dbname", "coturn.redis.password", "coturn.redis.connect-timeout"));
+		
+		userConfigProps.removeAll(getNonUserProperties());
+	}
+
+	protected List<String> getNonUserProperties() {
+		return Arrays.asList("coturn.ip", "coturn.redis.ip", "kms.uris", "server.port",
+				"coturn.redis.dbname", "coturn.redis.password", "coturn.redis.connect-timeout");
 	}
 
 	// Properties
 
-	public void checkConfigurationParameters() throws Exception {
+	protected void checkConfigurationParameters() {
 
 		serverPort = getConfigValue("server.port");
 
@@ -428,6 +433,9 @@ public class OpenviduConfig {
 		checkWebhook();
 		
 		checkCertificateType();
+		
+		openviduSessionsGarbageInterval = asNonNegativeInteger("openvidu.sessions.garbage.interval");
+		openviduSessionsGarbageThreshold = asNonNegativeInteger("openvidu.sessions.garbage.threshold");
 
 	}
 
@@ -453,7 +461,6 @@ public class OpenviduConfig {
 
 			try {
 				this.coturnIp = new URL(this.getFinalUrl()).getHost();
-				log.info("Coturn IP: " + coturnIp);
 			} catch (MalformedURLException e) {
 				log.error("Can't get Domain name from OpenVidu public Url: " + e.getMessage());
 			}
@@ -461,7 +468,7 @@ public class OpenviduConfig {
 	}
 
 	
-	private void checkWebhook() throws Exception {
+	private void checkWebhook() {
 
 		openviduWebhookEnabled = asBoolean("openvidu.webhook");
 		openviduWebhookEndpoint = asOptionalURL("openvidu.webhook.endpoint");
@@ -474,7 +481,7 @@ public class OpenviduConfig {
 		}
 	}
 
-	private void checkOpenviduRecordingNotification() throws Exception {
+	private void checkOpenviduRecordingNotification() {
 
 		String recordingNotif = asNonEmptyString("openvidu.recording.notification");
 		try {
@@ -485,7 +492,7 @@ public class OpenviduConfig {
 		}
 	}
 
-	private void checkOpenviduPublicurl() throws Exception {
+	private void checkOpenviduPublicurl() {
 
 		final String property = "openvidu.domain.or.public.ip";
 
@@ -550,10 +557,6 @@ public class OpenviduConfig {
 				OpenViduServer.wsUrl = publicUrl.replace("https://", "wss://");
 			} else if (publicUrl.startsWith("http://")) {
 				OpenViduServer.wsUrl = publicUrl.replace("http://", "wss://");
-			}
-
-			if (!publicUrl.startsWith("wss://")) {
-				OpenViduServer.wsUrl = "wss://" + publicUrl;
 			}
 		}
 
@@ -654,7 +657,7 @@ public class OpenviduConfig {
 	// Format Checkers
 	// -------------------------------------------------------
 
-	private String asOptionalURL(String property) {
+	protected String asOptionalURL(String property) {
 
 		String optionalUrl = getConfigValue(property);
 		try {
@@ -668,7 +671,7 @@ public class OpenviduConfig {
 		}
 	}
 
-	public String asNonEmptyString(String property) {
+	protected String asNonEmptyString(String property) {
 
 		String stringValue = getConfigValue(property);
 
@@ -679,8 +682,12 @@ public class OpenviduConfig {
 			return null;
 		}
 	}
+	
+	protected String asOptionalString(String property) {
+		return getConfigValue(property);
+	}
 
-	public boolean asBoolean(String property) {
+	protected boolean asBoolean(String property) {
 
 		String value = getConfigValue(property);
 
@@ -697,7 +704,7 @@ public class OpenviduConfig {
 		}
 	}
 
-	public Integer asNonNegativeInteger(String property) {
+	protected Integer asNonNegativeInteger(String property) {
 		try {
 			Integer integerValue = Integer.parseInt(getConfigValue(property));
 
@@ -714,7 +721,7 @@ public class OpenviduConfig {
 	/*
 	 * This method checks all types of internet addresses (IPv4, IPv6 and Domains)
 	 */
-	public String asOptionalInetAddress(String property) {
+	protected String asOptionalInetAddress(String property) {
 		String inetAddress = getConfigValue(property);
 		if (inetAddress != null && !inetAddress.isEmpty()) {
 			try {
@@ -726,7 +733,7 @@ public class OpenviduConfig {
 		return inetAddress;
 	}
 
-	public String asFileSystemPath(String property) {
+	protected String asFileSystemPath(String property) {
 		try {
 			String stringPath = this.asNonEmptyString(property);
 			Paths.get(stringPath);
@@ -740,7 +747,7 @@ public class OpenviduConfig {
 		}
 	}
 
-	public List<String> asJsonStringsArray(String property) {
+	protected List<String> asJsonStringsArray(String property) {
 
 		try {
 
@@ -757,6 +764,17 @@ public class OpenviduConfig {
 			return Arrays.asList();
 		}
 	}
+	
+	protected <E extends Enum<E>> E asEnumValue(String property, Class<E> enumType) {
+		
+		String value = this.getConfigValue(property);
+		try {
+			return Enum.valueOf(enumType, value);
+		} catch (IllegalArgumentException e) {
+			addError(property, "Must be one of " + Arrays.asList(enumType.getEnumConstants()));
+			return null;
+		}		
+	}
 
 	public URI checkWebsocketUri(String uri) throws Exception {
 		try {
@@ -771,7 +789,7 @@ public class OpenviduConfig {
 		}
 	}
 
-	public void checkUrl(String url) throws Exception {
+	protected void checkUrl(String url) throws Exception {
 		try {
 			new URL(url).toURI();
 		} catch (MalformedURLException | URISyntaxException e) {

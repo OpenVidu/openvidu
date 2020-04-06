@@ -221,7 +221,7 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 	public static void main(String[] args) throws Exception {
 
-		checkConfigProperties();
+		checkConfigProperties(OpenviduConfig.class);
 
 		log.info("Using /dev/urandom for secure random generation");
 		System.setProperty("java.security.egd", "file:/dev/./urandom");
@@ -229,9 +229,9 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 	}
 
-	private static void checkConfigProperties() throws InterruptedException {
+	public static <T> void checkConfigProperties(Class<T> configClass) throws InterruptedException {
 		
-		ConfigurableApplicationContext app = SpringApplication.run(OpenviduConfig.class,
+		ConfigurableApplicationContext app = SpringApplication.run(configClass,
 				new String[] { "--spring.main.web-application-type=none" });
 		OpenviduConfig config = app.getBean(OpenviduConfig.class);
 		List<Error> errors = config.getConfigErrors();
