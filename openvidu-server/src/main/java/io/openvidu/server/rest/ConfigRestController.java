@@ -34,7 +34,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import io.openvidu.server.cdr.CDREventName;
-import io.openvidu.server.config.OpenviduBuildConfig;
+import io.openvidu.server.config.OpenviduBuildInfo;
 import io.openvidu.server.config.OpenviduConfig;
 
 /**
@@ -52,14 +52,14 @@ public class ConfigRestController {
 	private OpenviduConfig openviduConfig;
 	
 	@Autowired
-	private OpenviduBuildConfig openviduBuildConfig;
+	private OpenviduBuildInfo openviduBuildInfo;
 
 	@RequestMapping(value = "/openvidu-version", method = RequestMethod.GET)
 	public String getOpenViduServerVersion() {
 
 		log.info("REST API: GET /config/openvidu-version");
 
-		return openviduBuildConfig.getOpenViduServerVersion();
+		return openviduBuildInfo.getOpenViduServerVersion();
 	}
 
 	@RequestMapping(value = "/openvidu-publicurl", method = RequestMethod.GET)
@@ -100,7 +100,7 @@ public class ConfigRestController {
 		log.info("REST API: GET /config");
 
 		JsonObject json = new JsonObject();
-		json.addProperty("version", openviduBuildConfig.getVersion());
+		json.addProperty("version", openviduBuildInfo.getVersion());
 		JsonArray kmsUris = new JsonArray();
 		openviduConfig.getKmsUris().forEach(uri -> kmsUris.add(uri));
 		json.add("kmsUris", kmsUris);

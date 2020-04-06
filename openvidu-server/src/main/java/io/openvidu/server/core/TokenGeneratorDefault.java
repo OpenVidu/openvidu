@@ -22,7 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.server.OpenViduServer;
-import io.openvidu.server.config.OpenviduBuildConfig;
+import io.openvidu.server.config.OpenviduBuildInfo;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.coturn.CoturnCredentialsService;
 import io.openvidu.server.coturn.TurnCredentials;
@@ -37,7 +37,7 @@ public class TokenGeneratorDefault implements TokenGenerator {
 	protected OpenviduConfig openviduConfig;
 	
 	@Autowired
-	protected OpenviduBuildConfig openviduBuildConfig;
+	protected OpenviduBuildInfo openviduBuildConfig;
 
 	@Override
 	public Token generateToken(String sessionId, OpenViduRole role, String serverMetadata,

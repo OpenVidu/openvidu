@@ -22,7 +22,7 @@ import org.springframework.boot.info.BuildProperties;
 import org.springframework.stereotype.Component;
 
 @Component
-public class OpenviduBuildConfig {
+public class OpenviduBuildInfo {
 
 	@Autowired
 	private BuildProperties buildProperties;
