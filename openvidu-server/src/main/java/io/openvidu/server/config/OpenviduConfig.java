@@ -371,7 +371,7 @@ public class OpenviduConfig {
 	}
 
 	@PostConstruct
-	public void checkConfigurationProperties() {
+	protected void checkConfigurationProperties() {
 
 		try {
 			this.checkConfigurationParameters();
