@@ -21,10 +21,8 @@ RUN mkdir -p /opt/openvidu /usr/local/bin/ && \
         https://pro-stripe.openvidu.io/openvidu-server-pro-${OPENVIDU_VERSION}.jar \
         --tries=0 --read-timeout=20
 
-RUN mkdir -p /opt/openvidu/recordings /opt/openvidu/cluster/aws
-COPY ./aws/* /opt/openvidu/cluster/aws/
 COPY ./entrypoint.sh /usr/local/bin
-RUN chmod +x /opt/openvidu/cluster/aws/* && \
+RUN mkdir -p /opt/openvidu/recordings && \
     chmod +x /usr/local/bin/entrypoint.sh
 
 WORKDIR /opt/openvidu
