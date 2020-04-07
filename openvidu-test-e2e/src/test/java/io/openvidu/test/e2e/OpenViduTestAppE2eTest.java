@@ -2283,16 +2283,16 @@ public class OpenViduTestAppE2eTest {
 		Assert.assertFalse("Wrong recording hasAudio", recording2.hasAudio());
 		Assert.assertTrue("Wrong recording hasVideo", recording2.hasVideo());
 
-		Thread.sleep(5000);
+		Thread.sleep(7000);
 
 		recording2 = OV.stopRecording(recording2.getId());
 
 		user.getEventManager().waitUntilEventReaches("recordingStopped", 3);
 
-		Assert.assertTrue("Wrong recording duration", recording2.getDuration() > 0);
 		Assert.assertTrue("Wrong recording size", recording2.getSize() > 0);
 		Assert.assertNotNull("Wrong recording url", recording2.getUrl());
 		Assert.assertEquals("Wrong recording status", Recording.Status.ready, recording2.getStatus());
+		Assert.assertTrue("Wrong recording duration", recording2.getDuration() > 0);
 		Assert.assertFalse("Session shouldn't be being recorded", session.isBeingRecorded());
 		Assert.assertFalse("Session.fetch() should return false", session.fetch());
 
