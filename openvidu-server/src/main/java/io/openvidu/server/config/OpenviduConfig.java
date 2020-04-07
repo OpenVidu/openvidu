@@ -161,7 +161,6 @@ public class OpenviduConfig {
 
 	protected int openviduSessionsGarbageThreshold;
 
-	
 	// Derived properties
 
 	public static String finalUrl;
@@ -275,11 +274,11 @@ public class OpenviduConfig {
 	public int getSessionGarbageInterval() {
 		return openviduSessionsGarbageInterval;
 	}
-	
+
 	public int getSessionGarbageThreshold() {
 		return openviduSessionsGarbageThreshold;
 	}
-	
+
 	// Derived properties methods
 
 	public String getSpringProfile() {
@@ -381,13 +380,13 @@ public class OpenviduConfig {
 		}
 
 		userConfigProps = new ArrayList<>(configProps.keySet());
-		
+
 		userConfigProps.removeAll(getNonUserProperties());
 	}
 
 	protected List<String> getNonUserProperties() {
-		return Arrays.asList("coturn.ip", "coturn.redis.ip", "kms.uris", "server.port",
-				"coturn.redis.dbname", "coturn.redis.password", "coturn.redis.connect-timeout");
+		return Arrays.asList("coturn.ip", "coturn.redis.ip", "kms.uris", "server.port", "coturn.redis.dbname",
+				"coturn.redis.password", "coturn.redis.connect-timeout");
 	}
 
 	// Properties
@@ -431,34 +430,30 @@ public class OpenviduConfig {
 		coturnRedisIp = asOptionalInetAddress("coturn.redis.ip");
 
 		checkWebhook();
-		
+
 		checkCertificateType();
-		
+
 		openviduSessionsGarbageInterval = asNonNegativeInteger("openvidu.sessions.garbage.interval");
 		openviduSessionsGarbageThreshold = asNonNegativeInteger("openvidu.sessions.garbage.threshold");
 
 	}
 
 	private void checkCertificateType() {
-		
 		String property = "certificate.type";
-		
 		certificateType = asNonEmptyString(property);
-		
-		if(certificateType != null && !certificateType.isEmpty()) {
+
+		if (certificateType != null && !certificateType.isEmpty()) {
 			List<String> validValues = Arrays.asList("selfsigned", "owncert", "letsencrypt");
-			if(!validValues.contains(certificateType)) {
-				addError(property,"Invalid value '"+certificateType+"'. Valid values are "+validValues);
+			if (!validValues.contains(certificateType)) {
+				addError(property, "Invalid value '" + certificateType + "'. Valid values are " + validValues);
 			}
-		}		
+		}
 	}
 
 	private void checkCoturnIp() {
-
 		coturnIp = getConfigValue("coturn.ip");
 
 		if (coturnIp == null || this.coturnIp.isEmpty()) {
-
 			try {
 				this.coturnIp = new URL(this.getFinalUrl()).getHost();
 			} catch (MalformedURLException e) {
@@ -467,9 +462,7 @@ public class OpenviduConfig {
 		}
 	}
 
-	
 	private void checkWebhook() {
-
 		openviduWebhookEnabled = asBoolean("openvidu.webhook");
 		openviduWebhookEndpoint = asOptionalURL("openvidu.webhook.endpoint");
 		webhookHeadersList = checkWebhookHeaders();
@@ -493,27 +486,17 @@ public class OpenviduConfig {
 	}
 
 	private void checkOpenviduPublicurl() {
-
 		final String property = "openvidu.domain.or.public.ip";
-
 		String domain = getConfigValue(property);
 
 		if (domain != null && !domain.isEmpty()) {
-
 			this.openviduPublicUrl = "https://" + domain;
-
 		} else {
-
 			final String urlProperty = "openvidu.publicurl";
-
 			String publicurl = getConfigValue(urlProperty);
-
 			if (publicurl == null || publicurl.isEmpty()) {
-
 				addError(property, "Cannot be empty");
-
 			} else {
-
 				if (!OPENVIDU_VALID_PUBLICURL_VALUES.contains(publicurl)) {
 					try {
 						checkUrl(publicurl);
@@ -521,18 +504,16 @@ public class OpenviduConfig {
 						addError(property, "Is not a valid URL. " + e.getMessage());
 					}
 				}
-
 				this.openviduPublicUrl = publicurl;
 			}
 		}
 
-		if(openviduPublicUrl != null && !openviduPublicUrl.isEmpty()) {
+		if (openviduPublicUrl != null && !openviduPublicUrl.isEmpty()) {
 			calculatePublicUrl();
 		}
 	}
-	
-	private void calculatePublicUrl() {
 
+	private void calculatePublicUrl() {
 		String publicUrl = this.getOpenViduPublicUrl();
 
 		String type = "";
@@ -564,7 +545,6 @@ public class OpenviduConfig {
 			type = "local";
 			OpenViduServer.wsUrl = "wss://localhost:" + this.getServerPort();
 		}
-
 		if (OpenViduServer.wsUrl.endsWith("/")) {
 			OpenViduServer.wsUrl = OpenViduServer.wsUrl.substring(0, OpenViduServer.wsUrl.length() - 1);
 		}
@@ -575,13 +555,9 @@ public class OpenviduConfig {
 		OpenViduServer.publicurlType = type;
 	}
 
-
 	public List<String> checkKmsUris() {
-
 		String property = "kms.uris";
-
 		String kmsUris = getConfigValue(property);
-
 		if (kmsUris == null || kmsUris.isEmpty()) {
 			return Arrays.asList();
 		}
@@ -594,7 +570,6 @@ public class OpenviduConfig {
 		kmsUris = kmsUris.replaceAll(",", "\\\",\\\""); // Escape middle uris
 
 		List<String> kmsUrisArray = asJsonStringsArray(property);
-
 		for (String uri : kmsUrisArray) {
 			try {
 				this.checkWebsocketUri(uri);
@@ -607,15 +582,11 @@ public class OpenviduConfig {
 	}
 
 	private List<Header> checkWebhookHeaders() {
-
 		String property = "openvidu.webhook.headers";
-
 		List<String> headers = asJsonStringsArray(property);
-
 		List<Header> headerList = new ArrayList<>();
 
 		for (String header : headers) {
-
 			String[] headerSplit = header.split(": ", 2);
 			if (headerSplit.length != 2) {
 				addError(property, "HTTP header '" + header
@@ -636,11 +607,8 @@ public class OpenviduConfig {
 	}
 
 	private List<CDREventName> getWebhookEvents() {
-
 		String property = "openvidu.webhook.events";
-
 		List<String> events = asJsonStringsArray(property);
-
 		List<CDREventName> eventList = new ArrayList<>();
 
 		for (String event : events) {
@@ -658,7 +626,6 @@ public class OpenviduConfig {
 	// -------------------------------------------------------
 
 	protected String asOptionalURL(String property) {
-
 		String optionalUrl = getConfigValue(property);
 		try {
 			if (!optionalUrl.isEmpty()) {
@@ -672,9 +639,7 @@ public class OpenviduConfig {
 	}
 
 	protected String asNonEmptyString(String property) {
-
 		String stringValue = getConfigValue(property);
-
 		if (stringValue != null && !stringValue.isEmpty()) {
 			return stringValue;
 		} else {
@@ -682,15 +647,13 @@ public class OpenviduConfig {
 			return null;
 		}
 	}
-	
+
 	protected String asOptionalString(String property) {
 		return getConfigValue(property);
 	}
 
 	protected boolean asBoolean(String property) {
-
 		String value = getConfigValue(property);
-
 		if (value == null) {
 			addError(property, "Cannot be empty");
 			return false;
@@ -719,7 +682,7 @@ public class OpenviduConfig {
 	}
 
 	/*
-	 * This method checks all types of internet addresses (IPv4, IPv6 and Domains)
+	 * This method checks all types of Internet addresses (IPv4, IPv6 and Domains)
 	 */
 	protected String asOptionalInetAddress(String property) {
 		String inetAddress = getConfigValue(property);
@@ -748,9 +711,7 @@ public class OpenviduConfig {
 	}
 
 	protected List<String> asJsonStringsArray(String property) {
-
 		try {
-
 			Gson gson = new Gson();
 			JsonArray jsonArray = gson.fromJson(getConfigValue(property), JsonArray.class);
 			List<String> list = JsonUtils.toStringList(jsonArray);
@@ -758,22 +719,20 @@ public class OpenviduConfig {
 				list = new ArrayList<>();
 			}
 			return list;
-
 		} catch (JsonSyntaxException e) {
 			addError(property, "Is not a valid strings array in JSON format. " + e.getMessage());
 			return Arrays.asList();
 		}
 	}
-	
+
 	protected <E extends Enum<E>> E asEnumValue(String property, Class<E> enumType) {
-		
 		String value = this.getConfigValue(property);
 		try {
 			return Enum.valueOf(enumType, value);
 		} catch (IllegalArgumentException e) {
 			addError(property, "Must be one of " + Arrays.asList(enumType.getEnumConstants()));
 			return null;
-		}		
+		}
 	}
 
 	public URI checkWebsocketUri(String uri) throws Exception {
