@@ -50,7 +50,7 @@ $ cd openvidu/openvidu-server/docker/openvidu-docker-compose
 
 Exec the following command:
 
-`curl https://raw.githubusercontent.com/OpenVidu/openvidu/master/openvidu-server/docker/openvidu-docker-compose/install_docker_compose.sh | bash`
+`curl https://raw.githubusercontent.com/OpenVidu/openvidu/master/openvidu-server/docker/openvidu-docker-compose/install_ov_ce.sh | bash`
 
 
 ### OpenVidu configuration
