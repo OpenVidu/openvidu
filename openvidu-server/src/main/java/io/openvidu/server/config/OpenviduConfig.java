@@ -18,6 +18,7 @@
 package io.openvidu.server.config;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.Inet6Address;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -50,6 +51,7 @@ import com.google.gson.JsonSyntaxException;
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.server.OpenViduServer;
 import io.openvidu.server.cdr.CDREventName;
+import io.openvidu.server.config.Dotenv.DotenvFormatException;
 import io.openvidu.server.recording.RecordingNotification;
 
 @Component
@@ -96,6 +98,8 @@ public class OpenviduConfig {
 	@Autowired
 	protected Environment env;
 
+	protected Dotenv dotenv;
+	
 	@Value("#{'${spring.profiles.active:}'.length() > 0 ? '${spring.profiles.active:}'.split(',') : \"default\"}")
 	protected String springProfile;
 
@@ -371,7 +375,17 @@ public class OpenviduConfig {
 
 	@PostConstruct
 	protected void checkConfigurationProperties() {
-
+		
+		dotenv = new Dotenv();
+		
+		try {
+			dotenv.read();
+		} catch (IOException e) {
+			log.warn("Exception reading .env file. "+ e.getClass()+":"+e.getMessage());
+		} catch (DotenvFormatException e) {
+			log.warn("Format error in .env file. "+ e.getClass()+":"+e.getMessage());
+		}
+		
 		try {
 			this.checkConfigurationParameters();
 		} catch (Exception e) {
@@ -556,8 +570,15 @@ public class OpenviduConfig {
 	}
 
 	public List<String> checkKmsUris() {
+		
 		String property = "kms.uris";
-		String kmsUris = getConfigValue(property);
+		
+		return asKmsUris(property, getConfigValue(property));
+		
+	}
+
+	public List<String> asKmsUris(String property, String kmsUris) {
+		
 		if (kmsUris == null || kmsUris.isEmpty()) {
 			return Arrays.asList();
 		}
@@ -577,7 +598,6 @@ public class OpenviduConfig {
 				addError(property, uri + " is not a valid WebSocket URL");
 			}
 		}
-
 		return kmsUrisArray;
 	}
 

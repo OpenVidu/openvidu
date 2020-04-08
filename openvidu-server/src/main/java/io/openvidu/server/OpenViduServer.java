@@ -242,12 +242,16 @@ public class OpenViduServer implements JsonRpcConfigurer {
 			String msg = "\n\n\n" + "   Configuration errors\n" + "   --------------------\n" + "\n";
 
 			for (Error error : config.getConfigErrors()) {
-				msg += "   * Property " + config.getPropertyName(error.getProperty());
-				if (error.getValue() == null || error.getValue().equals("")) {
-					msg += " is not set. ";
-				} else {
-					msg += "=" + error.getValue() + ". ";
+				msg += "   * ";
+				if(error.getProperty() != null) {
+					msg += "Property " + config.getPropertyName(error.getProperty());
+					if (error.getValue() == null || error.getValue().equals("")) {
+						msg += " is not set. ";
+					} else {
+						msg += "=" + error.getValue() + ". ";
+					}
 				}
+				
 				msg += error.getMessage() + "\n";
 			}
 
