@@ -23,23 +23,19 @@ services:
         network_mode: host
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
-            - ${OPENVIDU_RECORDING_FOLDER}:${OPENVIDU_RECORDING_FOLDER}
+            - ${OPENVIDU_RECORDING_PATH}:${OPENVIDU_RECORDING_PATH}
         env_file:
             - .env
         environment:
             - SERVER_SSL_ENABLED=false
             - SERVER_PORT=5443
-            - OPENVIDU_SECRET=${OPENVIDU_SECRET}
-            - OPENVIDU_PUBLICURL=
             - OPENVIDU_RECORDING=true
-            - OPENVIDU_RECORDING_PATH=${OPENVIDU_RECORDING_FOLDER}
             - KMS_URIS=["ws://localhost:8888/kurento"]
             - COTURN_IP=${OPENVIDU_DOMAIN_OR_PUBLIC_IP}
             - COTURN_REDIS_IP=127.0.0.1
-            - LOGGING_LEVEL_ROOT=${OV_CE_DEBUG_LEVEL:-INFO}
 
     kms:
-        image: ${KMS_IMAGE:-kurento/kurento-media-server-dev:6.13}
+        image: ${KMS_IMAGE:-kurento/kurento-media-server-dev:6.13.1}
         restart: on-failure
         network_mode: host
         ulimits:
@@ -68,7 +64,7 @@ services:
             - MAX_PORT=65535
 
     nginx:
-        image: openvidu/openvidu-proxy:1.0.0-beta2
+        image: openvidu/openvidu-proxy:1.0.0-beta3
         restart: on-failure
         network_mode: host
         volumes:
@@ -78,3 +74,5 @@ services:
             - DOMAIN_OR_PUBLIC_IP=${OPENVIDU_DOMAIN_OR_PUBLIC_IP}
             - CERTIFICATE_TYPE=${CERTIFICATE_TYPE}
             - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
+            - PROXY_MODE=CE
+            - WITH_DEMOS=true
