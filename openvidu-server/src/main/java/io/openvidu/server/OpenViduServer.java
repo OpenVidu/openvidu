@@ -230,7 +230,7 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	}
 
 	public static <T> void checkConfigProperties(Class<T> configClass) throws InterruptedException {
-		
+
 		ConfigurableApplicationContext app = SpringApplication.run(configClass,
 				new String[] { "--spring.main.web-application-type=none" });
 		OpenviduConfig config = app.getBean(OpenviduConfig.class);
@@ -243,7 +243,7 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 			for (Error error : config.getConfigErrors()) {
 				msg += "   * ";
-				if(error.getProperty() != null) {
+				if (error.getProperty() != null) {
 					msg += "Property " + config.getPropertyName(error.getProperty());
 					if (error.getValue() == null || error.getValue().equals("")) {
 						msg += " is not set. ";
@@ -251,7 +251,7 @@ public class OpenViduServer implements JsonRpcConfigurer {
 						msg += "=" + error.getValue() + ". ";
 					}
 				}
-				
+
 				msg += error.getMessage() + "\n";
 			}
 
@@ -265,21 +265,21 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 			// Wait forever
 			new Semaphore(0).acquire();
-		
+
 		} else {
-		
-			String msg = "\n\n\n" + "   Configuration properties\n" + "   ----------------------\n" + "\n";
-			
+
+			String msg = "\n\n\n" + "   Configuration properties\n" + "   ------------------------\n" + "\n";
+
 			Map<String, String> configProps = config.getConfigProps();
 			List<String> configPropNames = new ArrayList<>(config.getUserProperties());
 			Collections.sort(configPropNames);
-						
-			for(String property : configPropNames) {
+
+			for (String property : configPropNames) {
 				String value = configProps.get(property);
-				msg += "   * "+config.getPropertyName(property)+"="+(value == null? "": value)+"\n";				
+				msg += "   * " + config.getPropertyName(property) + "=" + (value == null ? "" : value) + "\n";
 			}
 			msg += "\n\n";
-			
+
 			log.info(msg);
 		}
 	}
@@ -290,10 +290,10 @@ public class OpenViduServer implements JsonRpcConfigurer {
 		String dashboardUrl = httpUrl + "dashboard/";
 
 		// @formatter:off
-		String msg = "\n\n----------------------------------------------------\n" + "\n"
-				+ "   OpenVidu Platform is ready!\n" + "   ---------------------------\n" + "\n"
-				+ "   * OpenVidu Server: " + httpUrl + "\n" + "\n" + "   * OpenVidu Dashboard: " + dashboardUrl + "\n"
-				+ "\n" + "----------------------------------------------------\n";
+		String msg = "\n\n----------------------------------------------------\n" + "\n" + "   OpenVidu is ready!\n"
+				+ "   ---------------------------\n" + "\n" + "   * OpenVidu Server: " + httpUrl + "\n" + "\n"
+				+ "   * OpenVidu Dashboard: " + dashboardUrl + "\n" + "\n"
+				+ "----------------------------------------------------\n";
 		// @formatter:on
 
 		log.info(msg);

@@ -436,6 +436,9 @@ public class OpenviduConfig {
 		openviduStreamsVideoMinRecvBandwidth = asNonNegativeInteger("openvidu.streams.video.min-recv-bandwidth");
 		openviduStreamsVideoMaxSendBandwidth = asNonNegativeInteger("openvidu.streams.video.max-send-bandwidth");
 		openviduStreamsVideoMinSendBandwidth = asNonNegativeInteger("openvidu.streams.video.min-send-bandwidth");
+		
+		openviduSessionsGarbageInterval = asNonNegativeInteger("openvidu.sessions.garbage.interval");
+		openviduSessionsGarbageThreshold = asNonNegativeInteger("openvidu.sessions.garbage.threshold");
 
 		kmsUrisList = checkKmsUris();
 
@@ -446,9 +449,6 @@ public class OpenviduConfig {
 		checkWebhook();
 
 		checkCertificateType();
-
-		openviduSessionsGarbageInterval = asNonNegativeInteger("openvidu.sessions.garbage.interval");
-		openviduSessionsGarbageThreshold = asNonNegativeInteger("openvidu.sessions.garbage.threshold");
 
 	}
 
