@@ -27,5 +27,5 @@ mkdir ${DOCKER_COMPOSE_FOLDER}/owncert
 printf "\n========================================"
 printf "\nOpenvidu CE has successfully installed."
 printf '\nNow run "./openvidu-restart.sh" in folder "openvidu-docker-compose" for setup.'
-printf '"Check "readme.md" in folder "openvidu-docker-compose" for more details.\n\n'
+printf '\n"Check "readme.md" in folder "openvidu-docker-compose" for more details.\n\n'
 exit 0

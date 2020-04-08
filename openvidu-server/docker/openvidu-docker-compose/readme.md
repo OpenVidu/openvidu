@@ -35,6 +35,8 @@ It is important to have a **domain name** pointing to the machine where you are 
 
 ## 2. Deployment Instructions
 
+For download the necessaries files your choose between options: Clone all repository or install with a bash command.
+
 ### Clone Repository
 
 First clone this repository and move to openvidu-docker-compose folder:
@@ -43,6 +45,13 @@ First clone this repository and move to openvidu-docker-compose folder:
 $ git clone https://github.com/OpenVidu/openvidu.git
 $ cd openvidu/openvidu-server/docker/openvidu-docker-compose
 ```
+
+### Install with bash command
+
+Exec the following command:
+
+`curl https://raw.githubusercontent.com/OpenVidu/openvidu/master/openvidu-server/docker/openvidu-docker-compose/install_docker_compose.sh | bash`
+
 
 ### OpenVidu configuration
 
