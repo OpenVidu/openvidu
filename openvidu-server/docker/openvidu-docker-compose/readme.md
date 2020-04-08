@@ -41,9 +41,7 @@ First clone this repository and move to openvidu-docker-compose folder:
 
 ```
 $ git clone https://github.com/OpenVidu/openvidu.git
-$ cd openvidu
-$ git checkout -b deploy-docker-compose origin/deploy-docker-compose
-$ cd openvidu-server/docker/openvidu-docker-compose
+$ cd openvidu/openvidu-server/docker/openvidu-docker-compose
 ```
 
 ### OpenVidu configuration

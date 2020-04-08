@@ -89,15 +89,6 @@ public class KurentoSession extends Session {
 
 	public void newPublisher(Participant participant) {
 		registerPublisher();
-
-		// pre-load endpoints to recv video from the new publisher
-		for (Participant p : participants.values()) {
-			if (participant.equals(p)) {
-				continue;
-			}
-			((KurentoParticipant) p).getNewOrExistingSubscriber(participant.getParticipantPublicId());
-		}
-
 		log.debug("SESSION {}: Virtually subscribed other participants {} to new publisher {}", sessionId,
 				participants.values(), participant.getParticipantPublicId());
 	}
