@@ -88,11 +88,9 @@ public class KurentoSessionManager extends SessionManager {
 	/* Protected by Session.closingLock.readLock */
 	public void joinRoom(Participant participant, String sessionId, Integer transactionId) {
 		Set<Participant> existingParticipants = null;
-		boolean lockAcquired = false;
 		try {
 
 			KurentoSession kSession = (KurentoSession) sessions.get(sessionId);
-
 			if (kSession == null) {
 				// First user connecting to the session
 				Session sessionNotActive = sessionsNotActive.get(sessionId);
@@ -108,20 +106,29 @@ public class KurentoSessionManager extends SessionManager {
 
 				try {
 					if (KmsManager.selectAndRemoveKmsLock.tryLock(MS_MAX_LOCK_WAIT, TimeUnit.SECONDS)) {
-						lockAcquired = true;
-						Kms lessLoadedKms = null;
 						try {
-							lessLoadedKms = this.kmsManager.getLessLoadedConnectedAndRunningKms();
-						} catch (NoSuchElementException e) {
-							// Restore session not active
-							this.cleanCollections(sessionId);
-							this.storeSessionNotActive(sessionNotActive);
-							throw new OpenViduException(Code.ROOM_CANNOT_BE_CREATED_ERROR_CODE,
-									"There is no available Media Node where to initialize session '" + sessionId + "'");
+							kSession = (KurentoSession) sessions.get(sessionId);
+
+							if (kSession == null) {
+								// Session still null. It was not created by other thread while waiting for lock
+								Kms lessLoadedKms = null;
+								try {
+									lessLoadedKms = this.kmsManager.getLessLoadedConnectedAndRunningKms();
+								} catch (NoSuchElementException e) {
+									// Restore session not active
+									this.cleanCollections(sessionId);
+									this.storeSessionNotActive(sessionNotActive);
+									throw new OpenViduException(Code.ROOM_CANNOT_BE_CREATED_ERROR_CODE,
+											"There is no available Media Node where to initialize session '" + sessionId
+													+ "'");
+								}
+								log.info("KMS less loaded is {} with a load of {}", lessLoadedKms.getUri(),
+										lessLoadedKms.getLoad());
+								kSession = createSession(sessionNotActive, lessLoadedKms);
+							}
+						} finally {
+							KmsManager.selectAndRemoveKmsLock.unlock();
 						}
-						log.info("KMS less loaded is {} with a load of {}", lessLoadedKms.getUri(),
-								lessLoadedKms.getLoad());
-						kSession = createSession(sessionNotActive, lessLoadedKms);
 
 					} else {
 						String error = "Timeout of " + MS_MAX_LOCK_WAIT + " seconds waiting to acquire lock";
@@ -145,19 +152,35 @@ public class KurentoSessionManager extends SessionManager {
 						+ "' is trying to join session '" + sessionId + "' but it is closing");
 			}
 
-			existingParticipants = getParticipants(sessionId);
-			kSession.join(participant);
+			try {
+				if (kSession.joinLeaveLock.tryLock(15, TimeUnit.SECONDS)) {
+					try {
+						existingParticipants = getParticipants(sessionId);
+						kSession.join(participant);
+						sessionEventsHandler.onParticipantJoined(participant, sessionId, existingParticipants,
+								transactionId, null);
+					} finally {
+						kSession.joinLeaveLock.unlock();
+					}
+				} else {
+					log.error(
+							"Timeout waiting for join-leave Session lock to be available for participant {} of session {} in joinRoom",
+							participant.getParticipantPublicId(), sessionId);
+					sessionEventsHandler.onParticipantJoined(participant, sessionId, null, transactionId,
+							new OpenViduException(Code.GENERIC_ERROR_CODE, "Timeout waiting for Session lock"));
+				}
+			} catch (InterruptedException e) {
+				log.error(
+						"InterruptedException waiting for join-leave Session lock to be available for participant {} of session {} in joinRoom",
+						participant.getParticipantPublicId(), sessionId);
+				sessionEventsHandler.onParticipantJoined(participant, sessionId, null, transactionId,
+						new OpenViduException(Code.GENERIC_ERROR_CODE,
+								"InterruptedException waiting for Session lock"));
+			}
 		} catch (OpenViduException e) {
-			log.warn("PARTICIPANT {}: Error joining/creating session {}", participant.getParticipantPublicId(),
+			log.error("PARTICIPANT {}: Error joining/creating session {}", participant.getParticipantPublicId(),
 					sessionId, e);
 			sessionEventsHandler.onParticipantJoined(participant, sessionId, null, transactionId, e);
-		} finally {
-			if (lockAcquired) {
-				KmsManager.selectAndRemoveKmsLock.unlock();
-			}
-		}
-		if (existingParticipants != null) {
-			sessionEventsHandler.onParticipantJoined(participant, sessionId, existingParticipants, transactionId, null);
 		}
 	}
 
@@ -179,101 +202,125 @@ public class KurentoSessionManager extends SessionManager {
 			throw new OpenViduException(Code.ROOM_CLOSED_ERROR_CODE, "'" + participant.getParticipantPublicId()
 					+ "' is trying to leave from session '" + sessionId + "' but it is closing");
 		}
-		session.leave(participant.getParticipantPrivateId(), reason);
 
-		// Update control data structures
-
-		if (sessionidParticipantpublicidParticipant.get(sessionId) != null) {
-			Participant p = sessionidParticipantpublicidParticipant.get(sessionId)
-					.remove(participant.getParticipantPublicId());
-
-			if (this.coturnCredentialsService.isCoturnAvailable()) {
-				this.coturnCredentialsService.deleteUser(p.getToken().getTurnCredentials().getUsername());
-			}
-
-			// TODO: why is this necessary??
-			if (insecureUsers.containsKey(p.getParticipantPrivateId())) {
-				boolean stillParticipant = false;
-				for (Session s : sessions.values()) {
-					if (!s.isClosed() && (s.getParticipantByPrivateId(p.getParticipantPrivateId()) != null)) {
-						stillParticipant = true;
-						break;
-					}
-				}
-				if (!stillParticipant) {
-					insecureUsers.remove(p.getParticipantPrivateId());
-				}
-			}
-		}
-
-		// Close Session if no more participants
-
-		Set<Participant> remainingParticipants = null;
 		try {
-			remainingParticipants = getParticipants(sessionId);
-		} catch (OpenViduException e) {
-			log.info("Possible collision when closing the session '{}' (not found)", sessionId);
-			remainingParticipants = Collections.emptySet();
-		}
-		sessionEventsHandler.onParticipantLeft(participant, sessionId, remainingParticipants, transactionId, null,
-				reason);
+			if (session.joinLeaveLock.tryLock(15, TimeUnit.SECONDS)) {
+				try {
 
-		if (!EndReason.sessionClosedByServer.equals(reason)) {
-			// If session is closed by a call to "DELETE /api/sessions" do NOT stop the
-			// recording. Will be stopped after in method
-			// "SessionManager.closeSessionAndEmptyCollections"
-			if (remainingParticipants.isEmpty()) {
-				if (openviduConfig.isRecordingModuleEnabled()
-						&& MediaMode.ROUTED.equals(session.getSessionProperties().mediaMode())
-						&& (this.recordingManager.sessionIsBeingRecorded(sessionId))) {
-					// Start countdown to stop recording. Will be aborted if a Publisher starts
-					// before timeout
-					log.info(
-							"Last participant left. Starting {} seconds countdown for stopping recording of session {}",
-							this.openviduConfig.getOpenviduRecordingAutostopTimeout(), sessionId);
-					recordingManager.initAutomaticRecordingStopThread(session);
-				} else {
-					try {
-						if (session.closingLock.writeLock().tryLock(15, TimeUnit.SECONDS)) {
-							try {
-								if (session.isClosed()) {
-									return false;
-								}
-								log.info("No more participants in session '{}', removing it and closing it", sessionId);
-								this.closeSessionAndEmptyCollections(session, reason, true);
-								sessionClosedByLastParticipant = true;
-							} finally {
-								session.closingLock.writeLock().unlock();
-							}
-						} else {
-							log.error(
-									"Timeout waiting for Session {} closing lock to be available for closing as last participant left",
-									sessionId);
+					session.leave(participant.getParticipantPrivateId(), reason);
+
+					// Update control data structures
+
+					if (sessionidParticipantpublicidParticipant.get(sessionId) != null) {
+						Participant p = sessionidParticipantpublicidParticipant.get(sessionId)
+								.remove(participant.getParticipantPublicId());
+
+						if (this.coturnCredentialsService.isCoturnAvailable()) {
+							this.coturnCredentialsService.deleteUser(p.getToken().getTurnCredentials().getUsername());
 						}
-					} catch (InterruptedException e) {
-						log.error(
-								"InterruptedException while waiting for Session {} closing lock to be available for closing as last participant left",
-								sessionId);
+
+						// TODO: why is this necessary??
+						if (insecureUsers.containsKey(p.getParticipantPrivateId())) {
+							boolean stillParticipant = false;
+							for (Session s : sessions.values()) {
+								if (!s.isClosed()
+										&& (s.getParticipantByPrivateId(p.getParticipantPrivateId()) != null)) {
+									stillParticipant = true;
+									break;
+								}
+							}
+							if (!stillParticipant) {
+								insecureUsers.remove(p.getParticipantPrivateId());
+							}
+						}
 					}
+
+					// Close Session if no more participants
+
+					Set<Participant> remainingParticipants = null;
+					try {
+						remainingParticipants = getParticipants(sessionId);
+					} catch (OpenViduException e) {
+						log.info("Possible collision when closing the session '{}' (not found)", sessionId);
+						remainingParticipants = Collections.emptySet();
+					}
+					sessionEventsHandler.onParticipantLeft(participant, sessionId, remainingParticipants, transactionId,
+							null, reason);
+
+					if (!EndReason.sessionClosedByServer.equals(reason)) {
+						// If session is closed by a call to "DELETE /api/sessions" do NOT stop the
+						// recording. Will be stopped after in method
+						// "SessionManager.closeSessionAndEmptyCollections"
+						if (remainingParticipants.isEmpty()) {
+							if (openviduConfig.isRecordingModuleEnabled()
+									&& MediaMode.ROUTED.equals(session.getSessionProperties().mediaMode())
+									&& (this.recordingManager.sessionIsBeingRecorded(sessionId))) {
+								// Start countdown to stop recording. Will be aborted if a Publisher starts
+								// before timeout
+								log.info(
+										"Last participant left. Starting {} seconds countdown for stopping recording of session {}",
+										this.openviduConfig.getOpenviduRecordingAutostopTimeout(), sessionId);
+								recordingManager.initAutomaticRecordingStopThread(session);
+							} else {
+								try {
+									if (session.closingLock.writeLock().tryLock(15, TimeUnit.SECONDS)) {
+										try {
+											if (session.isClosed()) {
+												return false;
+											}
+											log.info("No more participants in session '{}', removing it and closing it",
+													sessionId);
+											this.closeSessionAndEmptyCollections(session, reason, true);
+											sessionClosedByLastParticipant = true;
+										} finally {
+											session.closingLock.writeLock().unlock();
+										}
+									} else {
+										log.error(
+												"Timeout waiting for Session {} closing lock to be available for closing as last participant left",
+												sessionId);
+									}
+								} catch (InterruptedException e) {
+									log.error(
+											"InterruptedException while waiting for Session {} closing lock to be available for closing as last participant left",
+											sessionId);
+								}
+							}
+						} else if (remainingParticipants.size() == 1 && openviduConfig.isRecordingModuleEnabled()
+								&& MediaMode.ROUTED.equals(session.getSessionProperties().mediaMode())
+								&& this.recordingManager.sessionIsBeingRecorded(sessionId)
+								&& ProtocolElements.RECORDER_PARTICIPANT_PUBLICID
+										.equals(remainingParticipants.iterator().next().getParticipantPublicId())) {
+							// RECORDER participant is the last one standing. Start countdown
+							log.info(
+									"Last participant left. Starting {} seconds countdown for stopping recording of session {}",
+									this.openviduConfig.getOpenviduRecordingAutostopTimeout(), sessionId);
+							recordingManager.initAutomaticRecordingStopThread(session);
+						}
+					}
+
+					// Finally close websocket session if required
+					if (closeWebSocket) {
+						sessionEventsHandler.closeRpcSession(participant.getParticipantPrivateId());
+					}
+
+					return sessionClosedByLastParticipant;
+
+				} finally {
+					session.joinLeaveLock.unlock();
 				}
-			} else if (remainingParticipants.size() == 1 && openviduConfig.isRecordingModuleEnabled()
-					&& MediaMode.ROUTED.equals(session.getSessionProperties().mediaMode())
-					&& this.recordingManager.sessionIsBeingRecorded(sessionId)
-					&& ProtocolElements.RECORDER_PARTICIPANT_PUBLICID
-							.equals(remainingParticipants.iterator().next().getParticipantPublicId())) {
-				// RECORDER participant is the last one standing. Start countdown
-				log.info("Last participant left. Starting {} seconds countdown for stopping recording of session {}",
-						this.openviduConfig.getOpenviduRecordingAutostopTimeout(), sessionId);
-				recordingManager.initAutomaticRecordingStopThread(session);
+			} else {
+				log.error(
+						"Timeout waiting for join-leave Session lock to be available for participant {} of session {} in leaveRoom",
+						kParticipant.getParticipantPublicId(), session.getSessionId());
+				return false;
 			}
+		} catch (InterruptedException e) {
+			log.error(
+					"Timeout waiting for join-leave Session lock to be available for participant {} of session {} in leaveRoom",
+					kParticipant.getParticipantPublicId(), session.getSessionId());
+			return false;
 		}
-
-		// Finally close websocket session if required
-		if (closeWebSocket) {
-			sessionEventsHandler.closeRpcSession(participant.getParticipantPrivateId());
-		}
-
-		return sessionClosedByLastParticipant;
 	}
 
 	/**

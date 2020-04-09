@@ -23,7 +23,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
 
@@ -69,6 +71,12 @@ public class Session implements SessionInterface {
 	 * calling method SessionManager#closeSessionAndEmptyCollections (5 times)
 	 */
 	public ReadWriteLock closingLock = new ReentrantReadWriteLock();
+
+	/**
+	 * This lock protects the operations of SessionManager#joinRoom and
+	 * SessionManager#leaveRoom
+	 */
+	public Lock joinLeaveLock = new ReentrantLock();
 
 	public final AtomicBoolean recordingManuallyStopped = new AtomicBoolean(false);
 
