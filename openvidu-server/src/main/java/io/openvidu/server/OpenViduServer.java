@@ -258,7 +258,7 @@ public class OpenViduServer implements JsonRpcConfigurer {
 			msg += "\n" + "\n" + "   Fix config errors\n" + "   ---------------\n" + "\n"
 					+ "   1) Return to shell pressing Ctrl+C\n"
 					+ "   2) Set correct values in '.env' configuration file\n" + "   3) Restart OpenVidu with:\n"
-					+ "\n" + "      $ ./openvidu-restart.sh\n" + "\n";
+					+ "\n" + "      $ ./openvidu restart\n" + "\n";
 			// @formatter:on
 
 			log.info(msg);
