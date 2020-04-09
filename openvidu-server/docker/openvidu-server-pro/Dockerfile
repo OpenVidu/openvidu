@@ -4,16 +4,15 @@ MAINTAINER openvidu@gmail.com
 ARG OPENVIDU_VERSION
 
 # Install main components
-RUN apt-get update && apt-get install --yes \
-    --no-install-recommends \
-    openjdk-8-jre \
+RUN apt-get update && apt-get install -y \
+  openjdk-8-jre \
     jq \
     coturn \
     wget \
     curl \
-    apt-get autoremove -y && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+  coturn \
+  docker.io \
+&& rm -rf /var/lib/apt/lists/*
     
 # OpenVidu
 RUN mkdir -p /opt/openvidu /usr/local/bin/ && \

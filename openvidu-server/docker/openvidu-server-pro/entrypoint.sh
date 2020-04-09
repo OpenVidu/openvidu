@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Wait for kibana
-if [ -z "${WAIT_KIBANA_URL}"]; then 
+if [ ! -z "${WAIT_KIBANA_URL}" ]; then 
   while true
   do
     HTTP_STATUS=$(curl -s -o /dev/null -I -w "%{http_code}" ${WAIT_KIBANA_URL})
