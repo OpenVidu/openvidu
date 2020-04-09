@@ -28,6 +28,7 @@ import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -447,16 +448,27 @@ public abstract class SessionManager {
 					long sessionExistsSince = currentMillis - sessionNotActive.getStartTime();
 					if (sessionExistsSince > (openviduConfig.getSessionGarbageThreshold() * 1000)) {
 						try {
-							sessionNotActive.closingLock.writeLock().lock();
-							if (sessions.containsKey(sessionId)) {
-								// The session passed to active during lock wait
-								continue;
+							if (sessionNotActive.closingLock.writeLock().tryLock(15, TimeUnit.SECONDS)) {
+								try {
+									if (sessions.containsKey(sessionId)) {
+										// The session passed to active during lock wait
+										continue;
+									}
+									iter.remove();
+									cleanCollections(sessionId);
+									log.info("Non active session {} cleaned up by garbage collector", sessionId);
+								} finally {
+									sessionNotActive.closingLock.writeLock().unlock();
+								}
+							} else {
+								log.error(
+										"Timeout waiting for Session closing lock to be available for garbage collector to clean session {}",
+										sessionId);
 							}
-							iter.remove();
-							cleanCollections(sessionId);
-							log.info("Non active session {} cleaned up by garbage collector", sessionId);
-						} finally {
-							sessionNotActive.closingLock.writeLock().unlock();
+						} catch (InterruptedException e) {
+							log.error(
+									"InterruptedException while waiting for Session closing lock to be available for garbage collector to clean session {}",
+									sessionId);
 						}
 					}
 				}
@@ -515,13 +527,20 @@ public abstract class SessionManager {
 			// to the session. That is: if the session was in the automatic recording stop
 			// timeout with INDIVIDUAL recording (no docker participant connected)
 			try {
-				session.closingLock.writeLock().lock();
-				if (session.isClosed()) {
-					return;
+				if (session.closingLock.writeLock().tryLock(15, TimeUnit.SECONDS)) {
+					try {
+						if (session.isClosed()) {
+							return;
+						}
+						this.closeSessionAndEmptyCollections(session, reason, true);
+					} finally {
+						session.closingLock.writeLock().unlock();
+					}
+				} else {
+					log.error("Timeout waiting for Session {} closing lock to be available", sessionId);
 				}
-				this.closeSessionAndEmptyCollections(session, reason, true);
-			} finally {
-				session.closingLock.writeLock().unlock();
+			} catch (InterruptedException e) {
+				log.error("InterruptedException while waiting for Session {} closing lock to be available", sessionId);
 			}
 		}
 	}

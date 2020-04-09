@@ -21,6 +21,7 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.RandomStringUtils;
@@ -234,15 +235,28 @@ public class SessionRestController {
 		Session sessionNotActive = this.sessionManager.getSessionNotActive(sessionId);
 		if (sessionNotActive != null) {
 			try {
-				sessionNotActive.closingLock.writeLock().lock();
-				if (sessionNotActive.isClosed()) {
-					return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+				if (sessionNotActive.closingLock.writeLock().tryLock(15, TimeUnit.SECONDS)) {
+					try {
+						if (sessionNotActive.isClosed()) {
+							return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+						}
+						this.sessionManager.closeSessionAndEmptyCollections(sessionNotActive,
+								EndReason.sessionClosedByServer, true);
+						return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+					} finally {
+						sessionNotActive.closingLock.writeLock().unlock();
+					}
+				} else {
+					String errorMsg = "Timeout waiting for Session " + sessionId
+							+ " closing lock to be available for closing from DELETE /api/sessions";
+					log.error(errorMsg);
+					return this.generateErrorResponse(errorMsg, "/api/sessions", HttpStatus.BAD_REQUEST);
 				}
-				this.sessionManager.closeSessionAndEmptyCollections(sessionNotActive, EndReason.sessionClosedByServer,
-						true);
-				return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-			} finally {
-				sessionNotActive.closingLock.writeLock().unlock();
+			} catch (InterruptedException e) {
+				String errorMsg = "InterruptedException while waiting for Session " + sessionId
+						+ " closing lock to be available for closing from DELETE /api/sessions";
+				log.error(errorMsg);
+				return this.generateErrorResponse(errorMsg, "/api/sessions", HttpStatus.BAD_REQUEST);
 			}
 		} else {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);

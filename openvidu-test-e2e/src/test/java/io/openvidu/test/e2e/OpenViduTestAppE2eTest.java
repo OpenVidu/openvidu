@@ -22,6 +22,7 @@ import static org.openqa.selenium.OutputType.BASE64;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -3259,12 +3260,30 @@ public class OpenViduTestAppE2eTest {
 					recording.getResolution(), realResolution);
 
 			log.info("Recording map color: {}", colorMap.toString());
+			log.info("Recording frame below");
+			System.out.println(bufferedImageToBase64PngString(image));
 			isFine = this.checkVideoAverageRgbGreen(colorMap);
 		} catch (IOException | JCodecException e) {
 			log.warn("Error getting frame from video recording: {}", e.getMessage());
 			isFine = false;
 		}
 		return isFine;
+	}
+
+	private String bufferedImageToBase64PngString(BufferedImage image) {
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		String imageString = null;
+		try {
+			ImageIO.write(image, "png", bos);
+			byte[] imageBytes = bos.toByteArray();
+			imageString = "data:image/png;base64," + Base64.getEncoder().encodeToString(imageBytes);
+			bos.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return imageString;
 	}
 
 	private void checkIndividualRecording(String recPath, Recording recording, int numberOfVideoFiles,
