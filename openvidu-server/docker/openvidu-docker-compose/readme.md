@@ -126,6 +126,10 @@ You can configure any other application updating the content of `docker-compose.
 * Application server port must to be binded to 5442 in the host, as this port is used by NGINX to publish your app in port default https port (443).
 * The application must be served in plain http as NGINX is the responsible of managing SSL certificate.
 * Application has to know OpenVidu Server URL. You can use the variables ${DOMAIN_OR_PUBLIC_IP} and ${OPENVIDU_SECRET} in `docker-compose.override.yml` file.
+* The application and OpenVidu platform are deployed in the same domain. For that reason, the following URLs are reserved for OpenVidu and you cannot use them in the application:
+  * `/api/`
+  * `/openvidu/`
+  * `/dashboard/`
 
 ## 4. Execution
 
