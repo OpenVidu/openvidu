@@ -24,6 +24,7 @@ services:
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
             - ${OPENVIDU_RECORDING_PATH}:${OPENVIDU_RECORDING_PATH}
+            - /opt/openvidu/custom-layout:/opt/openvidu/custom-layout
         env_file:
             - .env
         environment:
@@ -70,6 +71,7 @@ services:
         volumes:
             - ./certificates:/etc/letsencrypt
             - ./owncert:/owncert
+            - /opt/openvidu/custom-layout:/opt/openvidu/custom-layout
         environment:
             - DOMAIN_OR_PUBLIC_IP=${OPENVIDU_DOMAIN_OR_PUBLIC_IP}
             - CERTIFICATE_TYPE=${CERTIFICATE_TYPE}
