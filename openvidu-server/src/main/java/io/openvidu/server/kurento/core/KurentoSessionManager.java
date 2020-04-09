@@ -86,7 +86,7 @@ public class KurentoSessionManager extends SessionManager {
 
 	@Override
 	/* Protected by Session.closingLock.readLock */
-	public synchronized void joinRoom(Participant participant, String sessionId, Integer transactionId) {
+	public void joinRoom(Participant participant, String sessionId, Integer transactionId) {
 		Set<Participant> existingParticipants = null;
 		boolean lockAcquired = false;
 		try {
@@ -162,8 +162,7 @@ public class KurentoSessionManager extends SessionManager {
 	}
 
 	@Override
-	public synchronized boolean leaveRoom(Participant participant, Integer transactionId, EndReason reason,
-			boolean closeWebSocket) {
+	public boolean leaveRoom(Participant participant, Integer transactionId, EndReason reason, boolean closeWebSocket) {
 		log.info("Request [LEAVE_ROOM] for participant {} of session {} with reason {}",
 				participant.getParticipantPublicId(), participant.getSessionId(),
 				reason != null ? reason.name() : "NULL");
@@ -235,17 +234,27 @@ public class KurentoSessionManager extends SessionManager {
 					recordingManager.initAutomaticRecordingStopThread(session);
 				} else {
 					try {
-						session.closingLock.writeLock().lock();
-						if (session.isClosed()) {
-							return false;
+						if (session.closingLock.writeLock().tryLock(15, TimeUnit.SECONDS)) {
+							try {
+								if (session.isClosed()) {
+									return false;
+								}
+								log.info("No more participants in session '{}', removing it and closing it", sessionId);
+								this.closeSessionAndEmptyCollections(session, reason, true);
+								sessionClosedByLastParticipant = true;
+							} finally {
+								session.closingLock.writeLock().unlock();
+							}
+						} else {
+							log.error(
+									"Timeout waiting for Session {} closing lock to be available for closing as last participant left",
+									sessionId);
 						}
-						log.info("No more participants in session '{}', removing it and closing it", sessionId);
-						this.closeSessionAndEmptyCollections(session, reason, true);
-						sessionClosedByLastParticipant = true;
-					} finally {
-						session.closingLock.writeLock().unlock();
+					} catch (InterruptedException e) {
+						log.error(
+								"InterruptedException while waiting for Session {} closing lock to be available for closing as last participant left",
+								sessionId);
 					}
-
 				}
 			} else if (remainingParticipants.size() == 1 && openviduConfig.isRecordingModuleEnabled()
 					&& MediaMode.ROUTED.equals(session.getSessionProperties().mediaMode())
