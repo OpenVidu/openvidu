@@ -7,28 +7,23 @@ service nginx start
 echo "Domain name: ${DOMAIN_OR_PUBLIC_IP}"
 echo "Certificated: ${CERTIFICATE_TYPE}"
 echo "Letsencrypt Email: ${LETSENCRYPT_EMAIL}"
-
-if [ -z "${NGINX_CONF}" ]; then
-  NGINX_CONF=default
-fi
-
-echo "NGINX Conf: ${NGINX_CONF}"
+echo "Proxy mode: ${PROXY_MODE:-CE}"
+echo "Demos mode: ${WITH_DEMOS:-true}"
 
 case ${CERTIFICATE_TYPE} in
 
   "selfsigned")
     echo "===Mode selfsigned==="
-    DOMAIN_OR_PUBLIC_IP="openvidu"
 
-    if [[ ! -f "/etc/letsencrypt/live/openvidu/privkey.pem" && ! -f "/etc/letsencrypt/live/openvidu/fullchain.pem" ]]; then
+    if [[ ! -f "/etc/letsencrypt/live/${DOMAIN_OR_PUBLIC_IP}/privkey.pem" && ! -f "/etc/letsencrypt/live/${DOMAIN_OR_PUBLIC_IP}/fullchain.pem" ]]; then
       echo "Generating certificated..."
       
       rm -rf /etc/letsencrypt/live/*
-      mkdir -p /etc/letsencrypt/live/openvidu
+      mkdir -p /etc/letsencrypt/live/${DOMAIN_OR_PUBLIC_IP}
 
       openssl req -new -nodes -x509 \
-        -subj "/CN=openvidu" -days 365 \
-        -keyout /etc/letsencrypt/live/openvidu/privkey.pem -out /etc/letsencrypt/live/openvidu/fullchain.pem -extensions v3_ca
+        -subj "/CN=${DOMAIN_OR_PUBLIC_IP}" -days 365 \
+        -keyout /etc/letsencrypt/live/${DOMAIN_OR_PUBLIC_IP}/privkey.pem -out /etc/letsencrypt/live/${DOMAIN_OR_PUBLIC_IP}/fullchain.pem -extensions v3_ca
     else
       echo "The certificate already exists, using them..."
     fi
@@ -69,14 +64,40 @@ esac
 # All permission certificated folder
 chmod -R 777 /etc/letsencrypt
 
-if [ "${NGINX_CONF}" == "custom" ]; then
-  rm /etc/nginx/conf.d/*
-  cp /custom_nginx_conf/* /etc/nginx/conf.d
-else
-  rm /etc/nginx/conf.d/*
-  cp /default_nginx_conf/* /etc/nginx/conf.d
+# Use certificates in folder '/default_nginx_conf'
+if [ "${PROXY_MODE}" == "CE" ]; then
+  if [ "${WITH_DEMOS}" == "true" ]; then
+    mv /default_nginx_conf/ce/default-app.conf /default_nginx_conf/default-app.conf
+    mv /default_nginx_conf/ce/default.conf /default_nginx_conf/default.conf
+  else
+    mv /default_nginx_conf/ce/default-app-without-demos.conf /default_nginx_conf/default-app.conf
+    mv /default_nginx_conf/ce/default.conf /default_nginx_conf/default.conf
+  fi
+
+  rm -rf /default_nginx_conf/ce
+  rm -rf /default_nginx_conf/pro
 fi
 
+if [ "${PROXY_MODE}" == "PRO" ]; then
+  if [ "${WITH_DEMOS}" == "true" ]; then
+    mv /default_nginx_conf/pro/default.conf /default_nginx_conf/default.conf
+  else
+    mv /default_nginx_conf/pro/default-app-without-demos.conf /default_nginx_conf/default.conf
+  fi
+
+  rm -rf /default_nginx_conf/ce
+  rm -rf /default_nginx_conf/pro
+fi
+
+# Create index.html
+mkdir -p /var/www/html
+cat> /var/www/html/index.html<<EOF
+Welcome to OpenVidu Server
+EOF
+
+# Load nginx conf files
+rm /etc/nginx/conf.d/*
+cp /default_nginx_conf/* /etc/nginx/conf.d
 sed -i "s/{domain_name}/${DOMAIN_OR_PUBLIC_IP}/" /etc/nginx/conf.d/*
 
 # Restart nginx service
