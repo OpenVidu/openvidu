@@ -1,4 +1,4 @@
-package io.openvidu.server.config;
+package io.openvidu.server.test.unit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -9,6 +9,7 @@ import java.nio.file.StandardCopyOption;
 
 import org.junit.jupiter.api.Test;
 
+import io.openvidu.server.config.Dotenv;
 import io.openvidu.server.config.Dotenv.DotenvFormatException;
 
 class DotenvTest {
@@ -40,7 +41,7 @@ class DotenvTest {
 
 		// When
 		dotenv.read(envFile);
-		
+
 		Files.delete(envFile);
 
 		dotenv.write();
