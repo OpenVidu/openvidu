@@ -202,6 +202,9 @@ public abstract class KmsManager {
 			@Override
 			public void disconnected() {
 				final Kms kms = kmss.get(kmsId);
+				
+				kms.setKurentoClientConnected(false);
+				kms.setTimeOfKurentoClientDisconnection(System.currentTimeMillis());
 
 				if(kms.getKurentoClient().isClosed()) {
 					log.info("Kurento Client \"disconnected\" event for KMS {} [{}]. Closed explicitely", kms.getUri(),
@@ -210,10 +213,7 @@ public abstract class KmsManager {
 				} else {
 					log.info("Kurento Client \"disconnected\" event for KMS {} [{}]. Waiting reconnection", kms.getUri(),
 							kms.getKurentoClient().toString());					
-				}			
-				
-				kms.setKurentoClientConnected(false);
-				kms.setTimeOfKurentoClientDisconnection(System.currentTimeMillis());
+				}
 
 				// TODO: this is a fix for the lack of reconnected event
 				kmsReconnectionLocks.putIfAbsent(kms.getId(), new ReentrantLock());
@@ -242,7 +242,7 @@ public abstract class KmsManager {
 									timer.cancel();
 									return;
 								}
-								
+
 								kms.getKurentoClient().getServerManager().getInfo();
 								log.info("According to Timer KMS with uri {} and KurentoClient [{}] is now reconnected",
 										kms.getUri(), kms.getKurentoClient().toString());
