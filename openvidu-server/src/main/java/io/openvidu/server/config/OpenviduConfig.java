@@ -81,6 +81,11 @@ public class OpenviduConfig {
 		public String getMessage() {
 			return message;
 		}
+
+		@Override
+		public String toString() {
+			return "Error [property=" + property + ", value=" + value + ", message=" + message + "]";
+		}		
 	}
 
 	private static final Logger log = LoggerFactory.getLogger(OpenviduConfig.class);
@@ -95,11 +100,13 @@ public class OpenviduConfig {
 
 	private List<String> userConfigProps;
 
+	private Map<String, ?> propertiesSource;
+
 	@Autowired
 	protected Environment env;
 
 	protected Dotenv dotenv;
-	
+
 	@Value("#{'${spring.profiles.active:}'.length() > 0 ? '${spring.profiles.active:}'.split(',') : \"default\"}")
 	protected String springProfile;
 
@@ -332,6 +339,17 @@ public class OpenviduConfig {
 	}
 
 	// Properties management methods
+	
+	public OpenviduConfig deriveWithAdditionalPropertiesSource(Map<String, ?> propertiesSource) {
+		OpenviduConfig config = newOpenviduConfig();
+		config.propertiesSource = propertiesSource;
+		config.env = env;
+		return config;
+	}
+
+	protected OpenviduConfig newOpenviduConfig() {
+		return new OpenviduConfig();
+	}
 
 	public List<Error> getConfigErrors() {
 		return configErrors;
@@ -345,9 +363,25 @@ public class OpenviduConfig {
 		return userConfigProps;
 	}
 
-	public String getConfigValue(String property) {
+	private String getValue(String property) {
 
-		String value = env.getProperty(property);
+		String value = null;
+
+		if (propertiesSource != null) {
+
+			Object valueObj = propertiesSource.get(property);
+			if (valueObj != null) {
+				if(valueObj instanceof Iterable) {
+					value = JsonUtils.toJson(valueObj);
+				} else {
+					value = valueObj.toString();					
+				}
+			}
+		}
+
+		if (value == null) {
+			value = env.getProperty(property);
+		}
 
 		this.configProps.put(property, value);
 
@@ -367,27 +401,27 @@ public class OpenviduConfig {
 		String value = null;
 
 		if (property != null) {
-			value = getConfigValue(property);
+			value = getValue(property);
 		}
 
 		this.configErrors.add(new Error(property, value, msg));
 	}
 
 	@PostConstruct
-	protected void checkConfigurationProperties() {
-		
+	public void checkConfiguration() {
+
 		dotenv = new Dotenv();
-		
+
 		try {
 			dotenv.read();
 		} catch (IOException e) {
-			log.warn("Exception reading .env file. "+ e.getClass()+":"+e.getMessage());
+			log.warn("Exception reading .env file. " + e.getClass() + ":" + e.getMessage());
 		} catch (DotenvFormatException e) {
-			log.warn("Format error in .env file. "+ e.getClass()+":"+e.getMessage());
+			log.warn("Format error in .env file. " + e.getClass() + ":" + e.getMessage());
 		}
-		
+
 		try {
-			this.checkConfigurationParameters();
+			this.checkConfigurationProperties();
 		} catch (Exception e) {
 			log.error("Exception checking configuration", e);
 			addError(null, "Exception checking configuration." + e.getClass().getName() + ":" + e.getMessage());
@@ -405,15 +439,15 @@ public class OpenviduConfig {
 
 	// Properties
 
-	protected void checkConfigurationParameters() {
+	protected void checkConfigurationProperties() {
 
-		serverPort = getConfigValue("server.port");
+		serverPort = getValue("server.port");
 
-		coturnRedisDbname = getConfigValue("coturn.redis.dbname");
+		coturnRedisDbname = getValue("coturn.redis.dbname");
 
-		coturnRedisPassword = getConfigValue("coturn.redis.password");
+		coturnRedisPassword = getValue("coturn.redis.password");
 
-		coturnRedisConnectTimeout = getConfigValue("coturn.redis.connect-timeout");
+		coturnRedisConnectTimeout = getValue("coturn.redis.connect-timeout");
 
 		openviduSecret = asNonEmptyString("openvidu.secret");
 
@@ -465,7 +499,7 @@ public class OpenviduConfig {
 	}
 
 	private void checkCoturnIp() {
-		coturnIp = getConfigValue("coturn.ip");
+		coturnIp = getValue("coturn.ip");
 
 		if (coturnIp == null || this.coturnIp.isEmpty()) {
 			try {
@@ -501,13 +535,13 @@ public class OpenviduConfig {
 
 	private void checkOpenviduPublicurl() {
 		final String property = "openvidu.domain.or.public.ip";
-		String domain = getConfigValue(property);
+		String domain = getValue(property);
 
 		if (domain != null && !domain.isEmpty()) {
 			this.openviduPublicUrl = "https://" + domain;
 		} else {
 			final String urlProperty = "openvidu.publicurl";
-			String publicurl = getConfigValue(urlProperty);
+			String publicurl = getValue(urlProperty);
 			if (publicurl == null || publicurl.isEmpty()) {
 				addError(property, "Cannot be empty");
 			} else {
@@ -570,15 +604,15 @@ public class OpenviduConfig {
 	}
 
 	public List<String> checkKmsUris() {
-		
+
 		String property = "kms.uris";
-		
-		return asKmsUris(property, getConfigValue(property));
-		
+
+		return asKmsUris(property, getValue(property));
+
 	}
 
 	public List<String> asKmsUris(String property, String kmsUris) {
-		
+
 		if (kmsUris == null || kmsUris.isEmpty()) {
 			return Arrays.asList();
 		}
@@ -646,7 +680,7 @@ public class OpenviduConfig {
 	// -------------------------------------------------------
 
 	protected String asOptionalURL(String property) {
-		String optionalUrl = getConfigValue(property);
+		String optionalUrl = getValue(property);
 		try {
 			if (!optionalUrl.isEmpty()) {
 				checkUrl(optionalUrl);
@@ -659,7 +693,7 @@ public class OpenviduConfig {
 	}
 
 	protected String asNonEmptyString(String property) {
-		String stringValue = getConfigValue(property);
+		String stringValue = getValue(property);
 		if (stringValue != null && !stringValue.isEmpty()) {
 			return stringValue;
 		} else {
@@ -669,11 +703,11 @@ public class OpenviduConfig {
 	}
 
 	protected String asOptionalString(String property) {
-		return getConfigValue(property);
+		return getValue(property);
 	}
 
 	protected boolean asBoolean(String property) {
-		String value = getConfigValue(property);
+		String value = getValue(property);
 		if (value == null) {
 			addError(property, "Cannot be empty");
 			return false;
@@ -689,7 +723,7 @@ public class OpenviduConfig {
 
 	protected Integer asNonNegativeInteger(String property) {
 		try {
-			Integer integerValue = Integer.parseInt(getConfigValue(property));
+			Integer integerValue = Integer.parseInt(getValue(property));
 
 			if (integerValue < 0) {
 				addError(property, "Is not a non negative integer");
@@ -705,7 +739,7 @@ public class OpenviduConfig {
 	 * This method checks all types of Internet addresses (IPv4, IPv6 and Domains)
 	 */
 	protected String asOptionalInetAddress(String property) {
-		String inetAddress = getConfigValue(property);
+		String inetAddress = getValue(property);
 		if (inetAddress != null && !inetAddress.isEmpty()) {
 			try {
 				Inet6Address.getByName(inetAddress).getHostAddress();
@@ -733,7 +767,7 @@ public class OpenviduConfig {
 	protected List<String> asJsonStringsArray(String property) {
 		try {
 			Gson gson = new Gson();
-			JsonArray jsonArray = gson.fromJson(getConfigValue(property), JsonArray.class);
+			JsonArray jsonArray = gson.fromJson(getValue(property), JsonArray.class);
 			List<String> list = JsonUtils.toStringList(jsonArray);
 			if (list.size() == 1 && list.get(0).isEmpty()) {
 				list = new ArrayList<>();
@@ -746,7 +780,7 @@ public class OpenviduConfig {
 	}
 
 	protected <E extends Enum<E>> E asEnumValue(String property, Class<E> enumType) {
-		String value = this.getConfigValue(property);
+		String value = this.getValue(property);
 		try {
 			return Enum.valueOf(enumType, value);
 		} catch (IllegalArgumentException e) {
