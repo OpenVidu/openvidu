@@ -18,7 +18,6 @@
 package io.openvidu.server.config;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.Inet6Address;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -51,7 +50,6 @@ import com.google.gson.JsonSyntaxException;
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.server.OpenViduServer;
 import io.openvidu.server.cdr.CDREventName;
-import io.openvidu.server.config.Dotenv.DotenvFormatException;
 import io.openvidu.server.recording.RecordingNotification;
 
 @Component
@@ -104,8 +102,6 @@ public class OpenviduConfig {
 
 	@Autowired
 	protected Environment env;
-
-	protected Dotenv dotenv;
 
 	@Value("#{'${spring.profiles.active:}'.length() > 0 ? '${spring.profiles.active:}'.split(',') : \"default\"}")
 	protected String springProfile;
@@ -171,6 +167,8 @@ public class OpenviduConfig {
 	protected int openviduSessionsGarbageInterval;
 
 	protected int openviduSessionsGarbageThreshold;
+
+	private String dotenvPath;
 
 	// Derived properties
 
@@ -289,9 +287,13 @@ public class OpenviduConfig {
 	public int getSessionGarbageThreshold() {
 		return openviduSessionsGarbageThreshold;
 	}
+	
+	public String getDotenvPath() {
+		return dotenvPath;
+	}
 
 	// Derived properties methods
-
+	
 	public String getSpringProfile() {
 		return springProfile;
 	}
@@ -371,11 +373,7 @@ public class OpenviduConfig {
 
 			Object valueObj = propertiesSource.get(property);
 			if (valueObj != null) {
-				if(valueObj instanceof Iterable) {
-					value = JsonUtils.toJson(valueObj);
-				} else {
-					value = valueObj.toString();					
-				}
+				value = valueObj.toString();
 			}
 		}
 
@@ -410,16 +408,6 @@ public class OpenviduConfig {
 	@PostConstruct
 	public void checkConfiguration() {
 
-		dotenv = new Dotenv();
-
-		try {
-			dotenv.read();
-		} catch (IOException e) {
-			log.warn("Exception reading .env file. " + e.getClass() + ":" + e.getMessage());
-		} catch (DotenvFormatException e) {
-			log.warn("Format error in .env file. " + e.getClass() + ":" + e.getMessage());
-		}
-
 		try {
 			this.checkConfigurationProperties();
 		} catch (Exception e) {
@@ -441,6 +429,8 @@ public class OpenviduConfig {
 
 	protected void checkConfigurationProperties() {
 
+		
+		
 		serverPort = getValue("server.port");
 
 		coturnRedisDbname = getValue("coturn.redis.dbname");
@@ -483,7 +473,8 @@ public class OpenviduConfig {
 		checkWebhook();
 
 		checkCertificateType();
-
+		
+		dotenvPath = getValue("dotenv.path");
 	}
 
 	private void checkCertificateType() {
