@@ -333,12 +333,12 @@ public class KurentoParticipant extends Participant {
 					}
 				} else {
 					log.error(
-							"Timeout waiting for PublisherEndpoint closing lock of participant {} to be available for participant {} to call cancelReceveivingMedia",
+							"Timeout waiting for PublisherEndpoint closing lock of participant {} to be available for participant {} to call cancelReceivingMedia",
 							senderName, this.getParticipantPublicId());
 				}
 			} catch (InterruptedException e) {
 				log.error(
-						"InterruptedException while waiting for PublisherEndpoint closing lock of participant {} to be available for participant {} to call cancelReceveivingMedia",
+						"InterruptedException while waiting for PublisherEndpoint closing lock of participant {} to be available for participant {} to call cancelReceivingMedia",
 						senderName, this.getParticipantPublicId());
 			} finally {
 				// Always clean map
