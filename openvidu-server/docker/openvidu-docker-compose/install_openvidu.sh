@@ -25,7 +25,7 @@ curl --silent https://raw.githubusercontent.com/OpenVidu/openvidu/master/openvid
      --output ${OPENVIDU_FOLDER}/docker-compose.override.yml
 curl --silent https://raw.githubusercontent.com/OpenVidu/openvidu/master/openvidu-server/docker/openvidu-docker-compose/docker-compose.yml \
      --output ${OPENVIDU_FOLDER}/docker-compose.yml
-curl --silent https://raw.githubusercontent.com/OpenVidu/openvidu/master/openvidu-server/docker/openvidu-docker-compose/openvidu.sh \
+curl --silent https://raw.githubusercontent.com/OpenVidu/openvidu/master/openvidu-server/docker/openvidu-docker-compose/openvidu \
     --output ${OPENVIDU_FOLDER}/openvidu.sh
 curl --silent https://raw.githubusercontent.com/OpenVidu/openvidu/master/openvidu-server/docker/openvidu-docker-compose/readme.md \
     --output ${OPENVIDU_FOLDER}/readme.md
