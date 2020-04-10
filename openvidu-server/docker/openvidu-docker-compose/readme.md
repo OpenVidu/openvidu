@@ -26,7 +26,7 @@ You will need docker and docker-compose installed in your linux distribution.
 - [Install Docker Compose](https://docs.docker.com/compose/install/)
 
 Open ports:
-
+- 22 TCP: To connect using SSH to admin OpenVidu.
 - 80 TCP: If you select Let's Encrypt to generate an SSL certificate this port is used by the generation process.
 - 443 TCP: OpenVidu server and application are published in standard https port.
 - 3478 TCP: Used by TURN Server to stablish media connections.
