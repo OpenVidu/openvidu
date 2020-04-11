@@ -17,9 +17,9 @@
 
 package io.openvidu.test.browsers.utils;
 
-import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
@@ -45,7 +45,7 @@ public class CustomWebhook {
 	private static ConfigurableApplicationContext context;
 
 	public static CountDownLatch initLatch;
-	private static Map<String, BlockingQueue<JsonObject>> events = new ConcurrentHashMap<>();
+	static ConcurrentMap<String, BlockingQueue<JsonObject>> events = new ConcurrentHashMap<>();
 
 	public static void main(String[] args, CountDownLatch initLatch) {
 		CustomWebhook.initLatch = initLatch;
@@ -77,11 +77,13 @@ public class CustomWebhook {
 		public void webhook(@RequestBody String eventString) {
 			JsonObject event = JsonParser.parseString(eventString).getAsJsonObject();
 			final String eventName = event.get("event").getAsString();
-			System.out.println("Webhook event: " + event.toString());
-			if (events.get(eventName) == null) {
-				events.put(eventName, new LinkedBlockingDeque<>());
+			final BlockingQueue<JsonObject> queue = new LinkedBlockingDeque<>();
+			if (!CustomWebhook.events.computeIfAbsent(eventName, e -> {
+				queue.add(event);
+				return queue;
+			}).equals(queue)) {
+				CustomWebhook.events.get(eventName).add(event);
 			}
-			CustomWebhook.events.get(eventName).add(event);
 		}
 	}
 
