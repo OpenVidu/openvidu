@@ -76,6 +76,7 @@ public class CustomWebhook {
 		@RequestMapping("/webhook")
 		public void webhook(@RequestBody String eventString) {
 			JsonObject event = JsonParser.parseString(eventString).getAsJsonObject();
+			System.out.println("Webhook event: " + event.toString());
 			final String eventName = event.get("event").getAsString();
 			final BlockingQueue<JsonObject> queue = new LinkedBlockingDeque<>();
 			if (!CustomWebhook.events.computeIfAbsent(eventName, e -> {
