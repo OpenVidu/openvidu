@@ -9,8 +9,9 @@ RUN apt-get update && apt-get install -y \
 
 # Copy OpenVidu Server
 COPY openvidu-server.jar /
+COPY ./entrypoint.sh /usr/local/bin
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 EXPOSE 4443
 
-# Exec supervisord
-CMD ["java", "-jar", "openvidu-server.jar"]
+CMD /usr/local/bin/entrypoint.sh
