@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+OPENVIDU_FOLDER=openvidu
+OPENVIDU_VERSION=master
+
 # Check docker and docker-compose installation
 docker -v > /dev/null 2>&1
 if [ $? -ne 0 ]; then
@@ -13,21 +16,19 @@ if [ $? -ne 0 ]; then
      exit 0
 fi
 
-OPENVIDU_FOLDER=openvidu
-
 # Create folder openvidu-docker-compose
 mkdir ${OPENVIDU_FOLDER}
 
 # Download necessaries files
-curl --silent https://raw.githubusercontent.com/OpenVidu/openvidu/master/openvidu-server/docker/openvidu-docker-compose/.env \
+curl --silent https://raw.githubusercontent.com/OpenVidu/openvidu/${OPENVIDU_VERSION}/openvidu-server/docker/openvidu-docker-compose/.env \
      --output ${OPENVIDU_FOLDER}/.env
-curl --silent https://raw.githubusercontent.com/OpenVidu/openvidu/master/openvidu-server/docker/openvidu-docker-compose/docker-compose.override.yml \
+curl --silent https://raw.githubusercontent.com/OpenVidu/openvidu/${OPENVIDU_VERSION}/openvidu-server/docker/openvidu-docker-compose/docker-compose.override.yml \
      --output ${OPENVIDU_FOLDER}/docker-compose.override.yml
-curl --silent https://raw.githubusercontent.com/OpenVidu/openvidu/master/openvidu-server/docker/openvidu-docker-compose/docker-compose.yml \
+curl --silent https://raw.githubusercontent.com/OpenVidu/openvidu/${OPENVIDU_VERSION}/openvidu-server/docker/openvidu-docker-compose/docker-compose.yml \
      --output ${OPENVIDU_FOLDER}/docker-compose.yml
-curl --silent https://raw.githubusercontent.com/OpenVidu/openvidu/master/openvidu-server/docker/openvidu-docker-compose/openvidu \
+curl --silent https://raw.githubusercontent.com/OpenVidu/openvidu/${OPENVIDU_VERSION}/openvidu-server/docker/openvidu-docker-compose/openvidu \
     --output ${OPENVIDU_FOLDER}/openvidu
-curl --silent https://raw.githubusercontent.com/OpenVidu/openvidu/master/openvidu-server/docker/openvidu-docker-compose/readme.md \
+curl --silent https://raw.githubusercontent.com/OpenVidu/openvidu/${OPENVIDU_VERSION}/openvidu-server/docker/openvidu-docker-compose/readme.md \
     --output ${OPENVIDU_FOLDER}/readme.md
 
 # Add execution permissions
