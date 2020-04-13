@@ -194,12 +194,6 @@ To change the configuration:
 $ ./openvidu restart
 ```
 
-Or using the provided script:
-
-```
-$ ./openvidu-restart.sh
-```
-
 ## 5. Problems
 
 ### Configuration errors

@@ -37,7 +37,7 @@ services:
 
     kms:
         image: ${KMS_IMAGE:-kurento/kurento-media-server-dev:6.13.1}
-        restart: on-failure
+        restart: always
         network_mode: host
         ulimits:
           core: -1
