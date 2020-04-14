@@ -18,23 +18,16 @@
 package io.openvidu.java.client;
 
 /**
- * Defines error responses from OpenVidu Server
+ * Defines a generic OpenVidu exception
  */
-public class OpenViduHttpException extends OpenViduException {
+public class OpenViduException extends Exception {
 
-	private static final long serialVersionUID = 1L;
-	private int status;
-
-	protected OpenViduHttpException(int status) {
-		super(Integer.toString(status));
-		this.status = status;
+	protected OpenViduException(String message) {
+		super(message);
 	}
 
-	/**
-	 * @return The unexpected status of the HTTP request
-	 */
-	public int getStatus() {
-		return this.status;
+	protected OpenViduException(String message, Throwable cause) {
+		super(message, cause);
 	}
 
 }
