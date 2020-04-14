@@ -92,8 +92,8 @@ OPENVIDU_SECRET=
 # - selfsigned:  Self signed certificate. Not recommended for production use.
 #                Users will see an ERROR when connected to web page.
 # - owncert:     Valid certificate purchased in a Internet services company.
-#                Please put the certificates in same folder as docker-compose.yml
-#                file with names certificate.key and certificate.cert.
+#                Please put the certificates files inside folder ./owncert
+#                with names certificate.key and certificate.cert
 # - letsencrypt: Generate a new certificate using letsencrypt. Please set the
 #                required contact email for Let's Encrypt in LETSENCRYPT_EMAIL
 #                variable.
