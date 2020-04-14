@@ -20,6 +20,9 @@ package io.openvidu.server.summary;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
@@ -28,6 +31,8 @@ import io.openvidu.server.cdr.CDREventWebrtcConnection;
 import io.openvidu.server.core.Participant;
 
 public class ParticipantSummary {
+
+	private static final Logger log = LoggerFactory.getLogger(ParticipantSummary.class);
 
 	private CDREventParticipant eventParticipantEnd;
 	private Map<String, CDREventWebrtcConnection> publishers = new ConcurrentHashMap<>();
@@ -53,20 +58,26 @@ public class ParticipantSummary {
 
 	public JsonObject toJson() {
 		JsonObject json = new JsonObject();
+		Participant p = this.eventParticipantEnd.getParticipant();
 
-		json.addProperty("createdAt", this.eventParticipantEnd.getStartTime());
+		Long START_TIME = this.eventParticipantEnd.getStartTime();
+		if (START_TIME == null) {
+			log.error("Participant {} startTime is not defined", p.getParticipantPublicId());
+			log.error("Setting startTime to (endTime-1)", p.getParticipantPublicId());
+			START_TIME = this.eventParticipantEnd.getTimestamp() - 1;
+		}
+		json.addProperty("createdAt", START_TIME);
 		json.addProperty("destroyedAt", this.eventParticipantEnd.getTimestamp());
 
-		Participant p = this.eventParticipantEnd.getParticipant();
 		json.addProperty("connectionId", p.getParticipantPublicId());
 		json.addProperty("clientData", p.getClientMetadata());
 		json.addProperty("serverData", p.getServerMetadata());
 
-		long duration = (this.eventParticipantEnd.getTimestamp() - this.eventParticipantEnd.getStartTime()) / 1000;
+		long duration = (this.eventParticipantEnd.getTimestamp() - START_TIME) / 1000;
 		json.addProperty("duration", duration);
 
 		json.addProperty("reason",
-				this.eventParticipantEnd.getReason().name() != null ? this.eventParticipantEnd.getReason().name() : "");
+				this.eventParticipantEnd.getReason() != null ? this.eventParticipantEnd.getReason().name() : "NULL");
 
 		// Publishers summary
 		JsonObject publishersJson = new JsonObject();
