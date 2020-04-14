@@ -76,7 +76,7 @@ The `.env` file looks like this:
 ```
 # OpenVidu configuration
 # ----------------------
-# Documentation: https://openvidu.io/docs/reference-docs/openvidu-server-params/
+# Documentation: https://docs.openvidu.io/en/stable/reference-docs/openvidu-server-params/
 
 # NOTE: This file doesn't need to quote assignment values, like most shells do.
 # All values are stored as-is, even if they contain spaces, so don't quote them.
@@ -112,7 +112,7 @@ LETSENCRYPT_EMAIL=user@example.com
 
 ### Videoconference application
 
-By default, the [OpenVidu Call application](https://openvidu.io/docs/demos/openvidu-call/) is deployed alongside OpenVide Platform. It is accesible in the URL:
+By default, the [OpenVidu Call application](https://docs.openvidu.io/en/stable/demos/openvidu-call/) is deployed alongside OpenVide Platform. It is accesible in the URL:
 
 ```
 https://openvidu_domain_or_public_ip/

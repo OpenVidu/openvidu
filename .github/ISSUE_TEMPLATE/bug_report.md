@@ -36,7 +36,7 @@ This is an EXTREMELY IMPORTANT STEP. If we are able to replicate the error in an
 **OpenVidu deployment info**
 How is your OpenVidu Server instance deployed when you get the bug. A couple of possible examples are listed below:
 - Docker container as explained in OpenVidu tutorials, run with command `docker run ...` on macOS Catalina 10.15.1
-- AWS deployment as explained in OpenVidu Docs (https://openvidu.io/docs/deployment/deploying-aws/)
+- AWS deployment as explained in OpenVidu Docs (https://docs.openvidu.io/en/stable/deployment/deploying-aws/)
 
 > **IMPORTANT NOTE**: please, if you think the bug might be related to OpenVidu Server side, specify here if you are also getting the error by using OpenVidu Server Demos instance. This instance is publicly available (use it only for this test, because it is not secure!!!): **URL**: `https://demos.openvidu.io:4443`, **SECRET**: `MY_SECRET`
 
