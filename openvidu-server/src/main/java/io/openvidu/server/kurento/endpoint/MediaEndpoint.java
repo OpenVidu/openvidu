@@ -38,11 +38,13 @@ import org.kurento.client.PlayerEndpoint;
 import org.kurento.client.RtpEndpoint;
 import org.kurento.client.SdpEndpoint;
 import org.kurento.client.WebRtcEndpoint;
+import org.kurento.client.internal.server.KurentoServerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 
 import io.openvidu.client.OpenViduException;
@@ -536,7 +538,13 @@ public abstract class MediaEndpoint {
 		json.addProperty("createdAt", this.createdAt);
 		json.addProperty("webrtcEndpointName", this.getEndpointName());
 		if (!this.isPlayerEndpoint()) {
-			json.addProperty("remoteSdp", ((SdpEndpoint) this.getEndpoint()).getRemoteSessionDescriptor());
+			try {
+				json.addProperty("remoteSdp", ((SdpEndpoint) this.getEndpoint()).getRemoteSessionDescriptor());
+			} catch (KurentoServerException e) {
+				log.error("Error retrieving remote SDP for endpoint {} of stream {}: {}", this.endpointName,
+						this.streamId, e.getMessage());
+				json.add("remoteSdp", JsonNull.INSTANCE);
+			}
 			json.addProperty("localSdp", ((SdpEndpoint) this.getEndpoint()).getLocalSessionDescriptor());
 		}
 		json.add("receivedCandidates", new GsonBuilder().create().toJsonTree(this.receivedCandidateList));
