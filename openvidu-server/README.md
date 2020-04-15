@@ -10,8 +10,8 @@ openvidu-server
 
 - **Description**: OpenVidu server side. It receives the remote procedure calls from openvidu-browser and manage all the media streams operations. You don't have to make direct use of it. Just to run it.
 
-- **Docs**: [REST API](https://openvidu.io/docs/reference-docs/REST-API/)
+- **Docs**: [REST API](https://docs.openvidu.io/en/stable/reference-docs/REST-API/)
 
-- **Release**: [OpenVidu Artifacts](https://openvidu.io/docs/releases/)
+- **Release**: [OpenVidu Artifacts](https://docs.openvidu.io/en/stable/releases/)
 
 [OpenViduLogo]: https://secure.gravatar.com/avatar/5daba1d43042f2e4e85849733c8e5702?s=120

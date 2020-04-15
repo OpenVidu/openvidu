@@ -76,7 +76,7 @@ The `.env` file looks like this:
 ```
 # OpenVidu configuration
 # ----------------------
-# Documentation: https://openvidu.io/docs/reference-docs/openvidu-server-params/
+# Documentation: https://docs.openvidu.io/en/stable/reference-docs/openvidu-server-params/
 
 # NOTE: This file doesn't need to quote assignment values, like most shells do.
 # All values are stored as-is, even if they contain spaces, so don't quote them.
@@ -92,15 +92,14 @@ OPENVIDU_SECRET=
 # - selfsigned:  Self signed certificate. Not recommended for production use.
 #                Users will see an ERROR when connected to web page.
 # - owncert:     Valid certificate purchased in a Internet services company.
-#                Please put the certificates in same folder as docker-compose.yml
-#                file with names certificate.key and certificate.cert.
+#                Please put the certificates files inside folder ./owncert
+#                with names certificate.key and certificate.cert
 # - letsencrypt: Generate a new certificate using letsencrypt. Please set the
 #                required contact email for Let's Encrypt in LETSENCRYPT_EMAIL
 #                variable.
 CERTIFICATE_TYPE=selfsigned
 
-# If CERTIFICATE_TYPE=letsencrypt, you need to configure a valid email for
-# notifications
+# If CERTIFICATE_TYPE=letsencrypt, you need to configure a valid email for notifications
 LETSENCRYPT_EMAIL=user@example.com
 
 ...
@@ -112,7 +111,7 @@ LETSENCRYPT_EMAIL=user@example.com
 
 ### Videoconference application
 
-By default, the [OpenVidu Call application](https://openvidu.io/docs/demos/openvidu-call/) is deployed alongside OpenVide Platform. It is accesible in the URL:
+By default, the [OpenVidu Call application](https://docs.openvidu.io/en/stable/demos/openvidu-call/) is deployed alongside OpenVide Platform. It is accesible in the URL:
 
 ```
 https://openvidu_domain_or_public_ip/
