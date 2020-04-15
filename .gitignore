@@ -4,8 +4,10 @@
 
 /target
 .classpath
+.idea
 .project
 .settings
+*.iml
 *orig
 .springBeans
 *tmp/

@@ -20,7 +20,7 @@ package io.openvidu.java.client;
 /**
  * Defines unexpected internal errors in OpenVidu Java Client
  */
-public class OpenViduJavaClientException extends Exception {
+public class OpenViduJavaClientException extends OpenViduException {
 
 	private static final long serialVersionUID = 1L;
 
