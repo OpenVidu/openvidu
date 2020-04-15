@@ -284,14 +284,61 @@ public abstract class MediaEndpoint {
 				public void onSuccess(WebRtcEndpoint result) throws Exception {
 					webEndpoint = result;
 
-					webEndpoint.setMaxVideoRecvBandwidth(maxRecvKbps);
-					webEndpoint.setMinVideoRecvBandwidth(minRecvKbps);
-					webEndpoint.setMaxVideoSendBandwidth(maxSendKbps);
-					webEndpoint.setMinVideoSendBandwidth(minSendKbps);
+					if (openviduConfig.getCoturnIp() != null && !openviduConfig.getCoturnIp().isEmpty()
+							&& !openviduConfig.getCoturnIp().equals("localhost")) {
+						webEndpoint.setStunServerAddress(openviduConfig.getCoturnIp());
+						webEndpoint.setStunServerPort(3478);
+					}
 
 					endpointLatch.countDown();
 					log.trace("EP {}: Created a new WebRtcEndpoint", endpointName);
 					endpointSubscription = registerElemErrListener(webEndpoint);
+
+					// This can be done after unlocking latch. Not necessary to wait
+					webEndpoint.setMaxVideoRecvBandwidth(maxRecvKbps, new Continuation<Void>() {
+						@Override
+						public void onSuccess(Void result) throws Exception {
+						}
+
+						@Override
+						public void onError(Throwable cause) throws Exception {
+							log.error("Error setting max video receive bandwidth for endpoint {}: {}", endpointName,
+									cause.getMessage());
+						}
+					});
+					webEndpoint.setMinVideoRecvBandwidth(minRecvKbps, new Continuation<Void>() {
+						@Override
+						public void onSuccess(Void result) throws Exception {
+						}
+
+						@Override
+						public void onError(Throwable cause) throws Exception {
+							log.error("Error setting min video receive bandwidth for endpoint {}: {}", endpointName,
+									cause.getMessage());
+						}
+					});
+					webEndpoint.setMaxVideoSendBandwidth(maxSendKbps, new Continuation<Void>() {
+						@Override
+						public void onSuccess(Void result) throws Exception {
+						}
+
+						@Override
+						public void onError(Throwable cause) throws Exception {
+							log.error("Error setting max video send bandwidth for endpoint {}: {}", endpointName,
+									cause.getMessage());
+						}
+					});
+					webEndpoint.setMinVideoSendBandwidth(minSendKbps, new Continuation<Void>() {
+						@Override
+						public void onSuccess(Void result) throws Exception {
+						}
+
+						@Override
+						public void onError(Throwable cause) throws Exception {
+							log.error("Error setting min video send bandwidth for endpoint {}: {}", endpointName,
+									cause.getMessage());
+						}
+					});
 				}
 
 				@Override
