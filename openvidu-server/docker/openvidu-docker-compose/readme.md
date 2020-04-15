@@ -280,6 +280,13 @@ If `openvidu-server` detects some error, it will show it in the log.
 ...
 ```
 
+### Java options
+
+To use java options in openvidu-server change the property `JAVA_OPTIONS` in configuration file `.env`
+
+For more information about posible values for java option visit [Configuring Java Options](https://docs.oracle.com/cd/E37116_01/install.111210/e23737/configuring_jvm.htm#OUDIG00007)
+
+
 ### Change log level of the services
 
 To change the level of `openvidu-server` logs change the property `OV_CE_DEBUG_LEVEL`.
