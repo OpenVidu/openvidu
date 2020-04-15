@@ -18,7 +18,9 @@
 package io.openvidu.server.config;
 
 import java.io.File;
+import java.net.Inet4Address;
 import java.net.Inet6Address;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -83,7 +85,7 @@ public class OpenviduConfig {
 		@Override
 		public String toString() {
 			return "Error [property=" + property + ", value=" + value + ", message=" + message + "]";
-		}		
+		}
 	}
 
 	private static final Logger log = LoggerFactory.getLogger(OpenviduConfig.class);
@@ -287,13 +289,13 @@ public class OpenviduConfig {
 	public int getSessionGarbageThreshold() {
 		return openviduSessionsGarbageThreshold;
 	}
-	
+
 	public String getDotenvPath() {
 		return dotenvPath;
 	}
 
 	// Derived properties methods
-	
+
 	public String getSpringProfile() {
 		return springProfile;
 	}
@@ -341,7 +343,7 @@ public class OpenviduConfig {
 	}
 
 	// Properties management methods
-	
+
 	public OpenviduConfig deriveWithAdditionalPropertiesSource(Map<String, ?> propertiesSource) {
 		OpenviduConfig config = newOpenviduConfig();
 		config.propertiesSource = propertiesSource;
@@ -429,8 +431,6 @@ public class OpenviduConfig {
 
 	protected void checkConfigurationProperties() {
 
-		
-		
 		serverPort = getValue("server.port");
 
 		coturnRedisDbname = getValue("coturn.redis.dbname");
@@ -460,7 +460,7 @@ public class OpenviduConfig {
 		openviduStreamsVideoMinRecvBandwidth = asNonNegativeInteger("openvidu.streams.video.min-recv-bandwidth");
 		openviduStreamsVideoMaxSendBandwidth = asNonNegativeInteger("openvidu.streams.video.max-send-bandwidth");
 		openviduStreamsVideoMinSendBandwidth = asNonNegativeInteger("openvidu.streams.video.min-send-bandwidth");
-		
+
 		openviduSessionsGarbageInterval = asNonNegativeInteger("openvidu.sessions.garbage.interval");
 		openviduSessionsGarbageThreshold = asNonNegativeInteger("openvidu.sessions.garbage.threshold");
 
@@ -473,7 +473,7 @@ public class OpenviduConfig {
 		checkWebhook();
 
 		checkCertificateType();
-		
+
 		dotenvPath = getValue("dotenv.path");
 	}
 
@@ -490,7 +490,8 @@ public class OpenviduConfig {
 	}
 
 	private void checkCoturnIp() {
-		coturnIp = getValue("coturn.ip");
+		String property = "coturn.ip";
+		coturnIp = asOptionalIPv4OrIPv6(property);
 
 		if (coturnIp == null || this.coturnIp.isEmpty()) {
 			try {
@@ -739,6 +740,26 @@ public class OpenviduConfig {
 			}
 		}
 		return inetAddress;
+	}
+
+	protected String asOptionalIPv4OrIPv6(String property) {
+		String ip = getValue(property);
+		if (ip != null && !ip.isEmpty()) {
+			boolean isIP;
+			try {
+				final InetAddress inet = InetAddress.getByName(ip);
+				isIP = inet instanceof Inet4Address || inet instanceof Inet6Address;
+				if (isIP) {
+					ip = inet.getHostAddress();
+				}
+			} catch (final UnknownHostException e) {
+				isIP = false;
+			}
+			if (!isIP) {
+				addError(property, "Is not a valid IP Address (IPv4 or IPv6)");
+			}
+		}
+		return ip;
 	}
 
 	protected String asFileSystemPath(String property) {
