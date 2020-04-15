@@ -22,6 +22,8 @@ package io.openvidu.java.client;
  */
 public class OpenViduException extends Exception {
 
+	private static final long serialVersionUID = 1L;
+
 	protected OpenViduException(String message) {
 		super(message);
 	}
