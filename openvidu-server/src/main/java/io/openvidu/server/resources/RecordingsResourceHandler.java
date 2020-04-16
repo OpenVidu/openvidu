@@ -15,7 +15,7 @@
  *
  */
 
-package io.openvidu.server.recording;
+package io.openvidu.server.resources;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -24,8 +24,14 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import io.openvidu.server.config.OpenviduConfig;
 
+/**
+ * This class serves recording files from host folder indicated in configuration
+ * property openvidu.recording.path
+ * 
+ * @author Pablo Fuente (pablofuenteperez@gmail.com)
+ */
 @Configuration
-public class RecordingsHttpHandler implements WebMvcConfigurer {
+public class RecordingsResourceHandler implements WebMvcConfigurer {
 
 	@Autowired
 	OpenviduConfig openviduConfig;

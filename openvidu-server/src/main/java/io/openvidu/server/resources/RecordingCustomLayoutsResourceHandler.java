@@ -15,7 +15,7 @@
  *
  */
 
-package io.openvidu.server.recording;
+package io.openvidu.server.resources;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -25,9 +25,15 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import io.openvidu.server.config.OpenviduConfig;
 
+/**
+ * This class serves custom recording layouts from host folder indicated in
+ * configuration property openvidu.recording.custom-layout
+ * 
+ * @author Pablo Fuente (pablofuenteperez@gmail.com)
+ */
 @Configuration
 @ConditionalOnProperty(name = "openvidu.recording", havingValue = "true")
-public class CustomLayoutsHttpHandler implements WebMvcConfigurer {
+public class RecordingCustomLayoutsResourceHandler implements WebMvcConfigurer {
 
 	@Autowired
 	OpenviduConfig openviduConfig;
