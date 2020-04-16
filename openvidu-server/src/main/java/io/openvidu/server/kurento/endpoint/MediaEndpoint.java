@@ -285,7 +285,7 @@ public abstract class MediaEndpoint {
 					webEndpoint = result;
 
 					if (openviduConfig.getCoturnIp() != null && !openviduConfig.getCoturnIp().isEmpty()
-							&& !openviduConfig.getCoturnIp().equals("localhost")) {
+							&& openviduConfig.isTurnadminAvailable()) {
 						webEndpoint.setStunServerAddress(openviduConfig.getCoturnIp());
 						webEndpoint.setStunServerPort(3478);
 					}
