@@ -52,7 +52,7 @@ services:
 
     redis:
         image: redis:5.0.7
-        restart: on-failure
+        restart: always
         network_mode: host
 
     coturn:
