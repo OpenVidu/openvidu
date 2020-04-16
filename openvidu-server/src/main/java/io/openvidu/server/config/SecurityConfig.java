@@ -37,31 +37,22 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		// Security for API REST
 		ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry conf = http.cors().and()
 				.csrf().disable().authorizeRequests()
-				// /api/sessions
-				.antMatchers(HttpMethod.GET, "/api/sessions").authenticated()
-				.antMatchers(HttpMethod.GET, "/api/sessions/**").authenticated()
-				.antMatchers(HttpMethod.POST, "/api/sessions").authenticated()
-				.antMatchers(HttpMethod.POST, "/api/sessions/**").authenticated()
-				// /api/tokens
-				.antMatchers(HttpMethod.POST, "/api/tokens").authenticated()
-				// /api/recordings
-				.antMatchers(HttpMethod.GET, "/api/recordings").authenticated()
-				.antMatchers(HttpMethod.GET, "/api/recordings/**").authenticated()
-				.antMatchers(HttpMethod.POST, "/api/recordings/start").authenticated()
-				.antMatchers(HttpMethod.POST, "/api/recordings/stop").authenticated()
-				.antMatchers(HttpMethod.DELETE, "/api/recordings/**").authenticated()
+				// /api
+				.antMatchers("/api/**").authenticated()
 				// /config
 				.antMatchers(HttpMethod.GET, "/config/openvidu-publicurl").permitAll()
 				.antMatchers(HttpMethod.GET, "/config/**").authenticated()
 				// /cdr
 				.antMatchers(HttpMethod.GET, "/cdr/**").authenticated()
+				// /accept-certificate
+				.antMatchers(HttpMethod.GET, "/accept-certificate").permitAll()
 				// Dashboard
-				.antMatchers("/").authenticated();
+				.antMatchers("/dashboard").authenticated();
 
-		// Security for layouts
+		// Security for recording layouts
 		conf.antMatchers("/layouts/**").authenticated();
 
-		// Security for recorded videos
+		// Security for recorded video files
 		if (openviduConf.getOpenViduRecordingPublicAccess()) {
 			conf = conf.antMatchers("/recordings/**").permitAll();
 		} else {
