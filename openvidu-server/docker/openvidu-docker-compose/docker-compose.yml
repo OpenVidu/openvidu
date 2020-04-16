@@ -24,7 +24,8 @@ services:
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
             - ${OPENVIDU_RECORDING_PATH}:${OPENVIDU_RECORDING_PATH}
-            - /opt/openvidu/custom-layout:/opt/openvidu/custom-layout
+            - ${OPENVIDU_RECORDING_CUSTOM_LAYOUT}:${OPENVIDU_RECORDING_CUSTOM_LAYOUT}
+            - ${OPENVIDU_CDR_PATH}:${OPENVIDU_CDR_PATH}
         env_file:
             - .env
         environment:
