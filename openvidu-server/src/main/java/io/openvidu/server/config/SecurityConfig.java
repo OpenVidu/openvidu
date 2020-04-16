@@ -47,7 +47,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 				// /accept-certificate
 				.antMatchers(HttpMethod.GET, "/accept-certificate").permitAll()
 				// Dashboard
-				.antMatchers("/dashboard").authenticated();
+				.antMatchers(HttpMethod.GET, "/dashboard/**").authenticated();
 
 		// Security for recording layouts
 		conf.antMatchers("/layouts/**").authenticated();
