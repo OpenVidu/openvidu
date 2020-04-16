@@ -18,7 +18,7 @@ version: '3.1'
 services:
 
     openvidu-server:
-        image: openvidu/openvidu-server:2.13.0-beta3
+        image: openvidu/openvidu-server:2.13.0-beta4
         restart: on-failure
         network_mode: host
         volumes:
@@ -68,7 +68,7 @@ services:
             - MAX_PORT=65535
 
     nginx:
-        image: openvidu/openvidu-proxy:1.0.0-beta3
+        image: openvidu/openvidu-proxy:1.0.0-beta4
         restart: on-failure
         network_mode: host
         volumes:
