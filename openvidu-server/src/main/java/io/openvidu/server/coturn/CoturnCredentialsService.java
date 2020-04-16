@@ -17,8 +17,6 @@
 
 package io.openvidu.server.coturn;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import javax.annotation.PostConstruct;
 
 import org.slf4j.Logger;
@@ -37,15 +35,9 @@ public abstract class CoturnCredentialsService {
 	protected String coturnDatabaseString;
 	protected String trimmedCoturnDatabaseString;
 
-	protected AtomicBoolean coturnAvailable = new AtomicBoolean(false);
-
 	public abstract TurnCredentials createUser();
 
 	public abstract boolean deleteUser(String user);
-
-	public boolean isCoturnAvailable() {
-		return this.coturnAvailable.get();
-	}
 
 	@PostConstruct
 	protected void initDatabse() {

@@ -176,6 +176,8 @@ public class OpenviduConfig {
 
 	public static String finalUrl;
 
+	private boolean isTurnadminAvailable = false;
+
 	// Plain config properties getters
 
 	public String getServerPort() {
@@ -306,6 +308,14 @@ public class OpenviduConfig {
 
 	public void setFinalUrl(String finalUrlParam) {
 		finalUrl = finalUrlParam.endsWith("/") ? (finalUrlParam) : (finalUrlParam + "/");
+	}
+
+	public boolean isTurnadminAvailable() {
+		return this.isTurnadminAvailable;
+	}
+
+	public void setTurnadminAvailable(boolean available) {
+		this.isTurnadminAvailable = available;
 	}
 
 	public OpenViduRole[] getRolesFromRecordingNotification() {

@@ -63,7 +63,7 @@ public class BashCoturnCredentialsService extends CoturnCredentialsService {
 				} else {
 					log.error("COTURN DB is not empty");
 				}
-				this.coturnAvailable.compareAndSet(false, true);
+				this.openviduConfig.setTurnadminAvailable(true);
 				log.info("Using COTURN credentials service for BASH environment");
 			}
 		} catch (IOException | InterruptedException e) {

@@ -49,7 +49,7 @@ public class TokenGeneratorDefault implements TokenGenerator {
 		token += "&role=" + role.name();
 		token += "&version=" + openviduBuildConfig.getOpenViduServerVersion();
 		TurnCredentials turnCredentials = null;
-		if (this.coturnCredentialsService.isCoturnAvailable()) {
+		if (this.openviduConfig.isTurnadminAvailable()) {
 			turnCredentials = coturnCredentialsService.createUser();
 			if (turnCredentials != null) {
 				token += "&coturnIp=" + openviduConfig.getCoturnIp();

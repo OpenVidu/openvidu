@@ -310,8 +310,7 @@ public abstract class SessionManager {
 
 	public Token newTokenForInsecureUser(Session session, String token, String serverMetadata) {
 		Token tokenObj = new Token(token, OpenViduRole.PUBLISHER, serverMetadata != null ? serverMetadata : "",
-				this.coturnCredentialsService.isCoturnAvailable() ? this.coturnCredentialsService.createUser() : null,
-				null);
+				this.openviduConfig.isTurnadminAvailable() ? this.coturnCredentialsService.createUser() : null, null);
 		session.storeToken(tokenObj);
 		session.showTokens("Token created for insecure user");
 		return tokenObj;
