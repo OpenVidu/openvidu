@@ -15,30 +15,36 @@
  *
  */
 
-package io.openvidu.server.recording;
+package io.openvidu.server.resources;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import io.openvidu.server.config.OpenviduConfig;
 
+/**
+ * This class serves custom recording layouts from host folder indicated in
+ * configuration property openvidu.recording.custom-layout
+ * 
+ * @author Pablo Fuente (pablofuenteperez@gmail.com)
+ */
 @Configuration
-public class RecordingsHttpHandler implements WebMvcConfigurer {
+@ConditionalOnProperty(name = "openvidu.recording", havingValue = "true")
+public class RecordingCustomLayoutsResourceHandler implements WebMvcConfigurer {
 
 	@Autowired
 	OpenviduConfig openviduConfig;
 
 	@Override
 	public void addResourceHandlers(ResourceHandlerRegistry registry) {
+		String customLayoutsPath = openviduConfig.getOpenviduRecordingCustomLayout();
+		customLayoutsPath = customLayoutsPath.endsWith("/") ? customLayoutsPath : customLayoutsPath + "/";
+		openviduConfig.setOpenViduRecordingCustomLayout(customLayoutsPath);
 
-		String recordingsPath = openviduConfig.getOpenViduRecordingPath();
-		recordingsPath = recordingsPath.endsWith("/") ? recordingsPath : (recordingsPath + "/");
-
-		openviduConfig.setOpenViduRecordingPath(recordingsPath);
-
-		registry.addResourceHandler("/recordings/**").addResourceLocations("file:" + recordingsPath);
+		registry.addResourceHandler("/layouts/custom/**").addResourceLocations("file:" + customLayoutsPath);
 	}
 
 }
