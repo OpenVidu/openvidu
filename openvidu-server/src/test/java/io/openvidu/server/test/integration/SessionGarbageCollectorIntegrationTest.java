@@ -47,7 +47,7 @@ import io.openvidu.server.test.integration.config.IntegrationTestConfiguration;
 /**
  * @author Pablo Fuente (pablofuenteperez@gmail.com)
  */
-@SpringBootTest(properties = { "openvidu.sessions.garbage.interval=1", "openvidu.sessions.garbage.threshold=1" })
+@SpringBootTest(properties = { "OPENVIDU_SESSIONS_GARBAGE_INTERVAL=1", "OPENVIDU_SESSIONS_GARBAGE_THRESHOLD=1" })
 @TestPropertySource(locations = "classpath:integration-test.properties")
 @ContextConfiguration(classes = { IntegrationTestConfiguration.class })
 @WebAppConfiguration

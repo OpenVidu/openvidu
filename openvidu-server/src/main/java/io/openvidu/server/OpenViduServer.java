@@ -98,7 +98,7 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	@DependsOn("openviduConfig")
 	public KmsManager kmsManager(OpenviduConfig openviduConfig) {
 		if (openviduConfig.getKmsUris().isEmpty()) {
-			throw new IllegalArgumentException("'kms.uris' should contain at least one KMS url");
+			throw new IllegalArgumentException("'KMS_URIS' should contain at least one KMS url");
 		}
 		String firstKmsWsUri = openviduConfig.getKmsUris().get(0);
 		log.info("OpenVidu Server using one KMS: {}", firstKmsWsUri);
@@ -114,13 +114,13 @@ public class OpenViduServer implements JsonRpcConfigurer {
 			log.info("OpenVidu CDR service is enabled");
 			loggers.add(new CDRLoggerFile());
 		} else {
-			log.info("OpenVidu CDR service is disabled (may be enable with 'openvidu.cdr=true')");
+			log.info("OpenVidu CDR service is disabled (may be enable with 'OPENVIDU_CDR=true')");
 		}
 		if (openviduConfig.isWebhookEnabled()) {
 			log.info("OpenVidu Webhook service is enabled");
 			loggers.add(new CDRLoggerWebhook(openviduConfig));
 		} else {
-			log.info("OpenVidu Webhook service is disabled (may be enabled with 'openvidu.webhook=true')");
+			log.info("OpenVidu Webhook service is disabled (may be enabled with 'OPENVIDU_WEBHOOK=true')");
 		}
 		return new CallDetailRecord(loggers);
 	}

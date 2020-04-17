@@ -130,7 +130,7 @@ export class OpenVidu {
    * - `422`: when passing [[RecordingProperties]], `resolution` parameter exceeds acceptable values (for both width and height, min 100px and max 1999px) or trying
    * to start a recording with both `hasAudio` and `hasVideo` to false
    * - `409`: the session is not configured for using [[MediaMode.ROUTED]] or it is already being recorded
-   * - `501`: OpenVidu Server recording module is disabled (`openvidu.recording` property set to `false`)
+   * - `501`: OpenVidu Server recording module is disabled (`OPENVIDU_RECORDING` property set to `false`)
    */
   public startRecording(sessionId: string, param2?: string | RecordingProperties): Promise<Recording> {
     return new Promise<Recording>((resolve, reject) => {

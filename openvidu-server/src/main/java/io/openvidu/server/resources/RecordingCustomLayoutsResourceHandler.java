@@ -27,12 +27,12 @@ import io.openvidu.server.config.OpenviduConfig;
 
 /**
  * This class serves custom recording layouts from host folder indicated in
- * configuration property openvidu.recording.custom-layout
+ * configuration property OPENVIDU_RECORDING_CUSTOM_LAYOUT
  * 
  * @author Pablo Fuente (pablofuenteperez@gmail.com)
  */
 @Configuration
-@ConditionalOnProperty(name = "openvidu.recording", havingValue = "true")
+@ConditionalOnProperty(name = "OPENVIDU_RECORDING", havingValue = "true")
 public class RecordingCustomLayoutsResourceHandler implements WebMvcConfigurer {
 
 	@Autowired
