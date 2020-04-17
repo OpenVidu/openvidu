@@ -858,13 +858,14 @@ export class OpenVidu {
   /**
    * @hidden
    */
-  startWs(onConnectSucces: (error: Error) => void): void {
+  startWs(onConnectOrError: (error: Error) => void): void {
     const config = {
       heartbeat: 5000,
       sendCloseMessage: false,
       ws: {
         uri: this.wsUri,
-        onconnected: onConnectSucces,
+        onconnected: onConnectOrError,
+        onerror: onConnectOrError,
         ondisconnect: this.disconnectCallback.bind(this),
         onreconnecting: this.reconnectingCallback.bind(this),
         onreconnected: this.reconnectedCallback.bind(this)
