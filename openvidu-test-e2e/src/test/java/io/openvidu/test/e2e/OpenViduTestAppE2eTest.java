@@ -2636,9 +2636,11 @@ public class OpenViduTestAppE2eTest {
 
 		/** GET /config **/
 		restClient.rest(HttpMethod.GET, "/config", null, HttpStatus.SC_OK, true,
-				"{'version':'STR','openviduPublicurl':'STR','openviduCdr':false,'maxRecvBandwidth':0,'minRecvBandwidth':0,'maxSendBandwidth':0,'minSendBandwidth':0,'openviduRecording':false,"
-						+ "'openviduRecordingVersion':'STR','openviduRecordingPath':'STR','openviduRecordingPublicAccess':false,'openviduRecordingNotification':'STR',"
-						+ "'openviduRecordingCustomLayout':'STR','openviduRecordingAutostopTimeout':0,'openviduWebhook':false,'openviduWebhookEndpoint':'STR','openviduWebhookHeaders':[],'openviduWebhookEvents':[], 'kmsUris':[]}");
+				"{'VERSION':'STR','OPENVIDU_PUBLIC_URL':'STR','OPENVIDU_CDR':false,'OPENVIDU_STREAMS_VIDEO_MAX_RECV_BANDWIDTH':0,'OPENVIDU_STREAMS_VIDEO_MIN_RECV_BANDWIDTH':0,"
+						+ "'OPENVIDU_STREAMS_VIDEO_MAX_SEND_BANDWIDTH':0,'OPENVIDU_STREAMS_VIDEO_MIN_SEND_BANDWIDTH':0,'OPENVIDU_SESSIONS_GARBAGE_INTERVAL':0,'OPENVIDU_SESSIONS_GARBAGE_THRESHOLD':0,"
+						+ "'OPENVIDU_RECORDING':false,'OPENVIDU_RECORDING_VERSION':'STR','OPENVIDU_RECORDING_PATH':'STR','OPENVIDU_RECORDING_PUBLIC_ACCESS':false,'OPENVIDU_RECORDING_NOTIFICATION':'STR',"
+						+ "'OPENVIDU_RECORDING_CUSTOM_LAYOUT':'STR','OPENVIDU_RECORDING_AUTOSTOP_TIMEOUT':0,'OPENVIDU_WEBHOOK':false,'OPENVIDU_WEBHOOK_ENDPOINT':'STR','OPENVIDU_WEBHOOK_HEADERS':[],"
+						+ "'OPENVIDU_WEBHOOK_EVENTS':[], 'KMS_URIS':[]}");
 	}
 
 	@Test
@@ -3074,7 +3076,7 @@ public class OpenViduTestAppE2eTest {
 			CustomWebhook.waitForEvent("recordingStatusChanged", 1); // Ready
 
 			// Publish the MP4 file as an IPCAM
-			String recPath = restClient.rest(HttpMethod.GET, "/config", HttpStatus.SC_OK).get("openviduRecordingPath")
+			String recPath = restClient.rest(HttpMethod.GET, "/config", HttpStatus.SC_OK).get("OPENVIDU_RECORDING_PATH")
 					.getAsString();
 			recPath = recPath.endsWith("/") ? recPath : (recPath + "/");
 			String fullRecordingPath = "file://" + recPath + "TestSession/audioVideo.mp4";
