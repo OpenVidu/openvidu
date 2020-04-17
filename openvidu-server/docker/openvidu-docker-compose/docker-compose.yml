@@ -44,7 +44,7 @@ services:
         ulimits:
           core: -1
         volumes:
-            - /core:/core
+            - /opt/openvidu/kms-crashes:/opt/openvidu/kms-crashes
         environment:
             - KMS_MIN_PORT=40000
             - KMS_MAX_PORT=57000
