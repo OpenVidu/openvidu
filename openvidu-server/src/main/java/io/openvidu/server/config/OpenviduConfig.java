@@ -433,7 +433,7 @@ public class OpenviduConfig {
 	}
 
 	protected List<String> getNonUserProperties() {
-		return Arrays.asList("COTURN_IP", "COTURN_REDIS_IP", "KMS_URIS", "SERVER_PORT", "COTURN_REDIS_DBNAME",
+		return Arrays.asList("server.port", "COTURN_IP", "COTURN_REDIS_IP", "KMS_URIS", "COTURN_REDIS_DBNAME",
 				"COTURN_REDIS_PASSWORD", "COTURN_REDIS_CONNECT_TIMEOUT");
 	}
 
@@ -441,7 +441,7 @@ public class OpenviduConfig {
 
 	protected void checkConfigurationProperties() {
 
-		serverPort = getValue("SERVER_PORT");
+		serverPort = getValue("server.port");
 
 		coturnRedisDbname = getValue("COTURN_REDIS_DBNAME");
 
