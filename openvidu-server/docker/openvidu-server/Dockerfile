@@ -3,6 +3,8 @@ MAINTAINER openvidu@gmail.com
 
 # Install Java, supervisor and netstat
 RUN apt-get update && apt-get install -y \
+  curl \
+  wget \
   openjdk-8-jre \
   coturn \
 && rm -rf /var/lib/apt/lists/*
