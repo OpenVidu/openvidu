@@ -1,4 +1,4 @@
 /target/
 *.factorypath
 
-/src/main/resources/static/
+/src/main/resources/static/dashboard/
