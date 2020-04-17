@@ -18,9 +18,10 @@ version: '3.1'
 services:
 
     openvidu-server:
-        image: openvidu/openvidu-server:2.13.0-beta3
+        image: openvidu/openvidu-server:2.13.0-beta6
         restart: on-failure
         network_mode: host
+        entrypoint: ['/bin/bash', '-c', 'export COTURN_IP=`curl --silent ifconfig.co`; /usr/local/bin/entrypoint.sh']
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
             - ${OPENVIDU_RECORDING_PATH}:${OPENVIDU_RECORDING_PATH}
@@ -32,12 +33,12 @@ services:
             - SERVER_SSL_ENABLED=false
             - SERVER_PORT=5443
             - OPENVIDU_RECORDING=true
+            - OPENVIDU_RECORDING_COMPOSED_URL=https://${OPENVIDU_DOMAIN_OR_PUBLIC_IP}/dashboard
             - KMS_URIS=["ws://localhost:8888/kurento"]
-            - COTURN_IP=${OPENVIDU_DOMAIN_OR_PUBLIC_IP}
             - COTURN_REDIS_IP=127.0.0.1
 
     kms:
-        image: ${KMS_IMAGE:-kurento/kurento-media-server-dev:6.13.1}
+        image: ${KMS_IMAGE:-kurento/kurento-media-server:6.13.1}
         restart: always
         network_mode: host
         ulimits:
@@ -45,7 +46,6 @@ services:
         volumes:
             - /core:/core
         environment:
-            - KMS_EXTERNAL_ADDRESS=auto
             - KMS_MIN_PORT=40000
             - KMS_MAX_PORT=57000
             - GST_DEBUG=${KMS_DEBUG_LEVEL:-}
@@ -68,7 +68,7 @@ services:
             - MAX_PORT=65535
 
     nginx:
-        image: openvidu/openvidu-proxy:1.0.0-beta4
+        image: openvidu/openvidu-proxy:1.0.0-beta5
         restart: on-failure
         network_mode: host
         volumes:
