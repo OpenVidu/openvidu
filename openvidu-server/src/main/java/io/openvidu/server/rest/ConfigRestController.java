@@ -50,7 +50,7 @@ public class ConfigRestController {
 
 	@Autowired
 	private OpenviduConfig openviduConfig;
-	
+
 	@Autowired
 	private OpenviduBuildInfo openviduBuildInfo;
 
@@ -100,42 +100,44 @@ public class ConfigRestController {
 		log.info("REST API: GET /config");
 
 		JsonObject json = new JsonObject();
-		json.addProperty("version", openviduBuildInfo.getVersion());
+		json.addProperty("VERSION", openviduBuildInfo.getVersion());
 		JsonArray kmsUris = new JsonArray();
 		openviduConfig.getKmsUris().forEach(uri -> kmsUris.add(uri));
-		json.add("kmsUris", kmsUris);
-		json.addProperty("openviduPublicurl", openviduConfig.getOpenViduPublicUrl());
-		json.addProperty("openviduCdr", openviduConfig.isCdrEnabled());
-		json.addProperty("maxRecvBandwidth", openviduConfig.getVideoMaxRecvBandwidth());
-		json.addProperty("minRecvBandwidth", openviduConfig.getVideoMinRecvBandwidth());
-		json.addProperty("maxSendBandwidth", openviduConfig.getVideoMaxSendBandwidth());
-		json.addProperty("minSendBandwidth", openviduConfig.getVideoMinSendBandwidth());
-		json.addProperty("openviduRecording", openviduConfig.isRecordingModuleEnabled());
+		json.add("KMS_URIS", kmsUris);
+		json.addProperty("OPENVIDU_PUBLICURL", openviduConfig.getOpenViduPublicUrl());
+		json.addProperty("OPENVIDU_CDR", openviduConfig.isCdrEnabled());
+		json.addProperty("OPENVIDU_STREAMS_VIDEO_MAX_RECV_BANDWIDTH", openviduConfig.getVideoMaxRecvBandwidth());
+		json.addProperty("OPENVIDU_STREAMS_VIDEO_MIN_RECV_BANDWIDTH", openviduConfig.getVideoMinRecvBandwidth());
+		json.addProperty("OPENVIDU_STREAMS_VIDEO_MAX_SEND_BANDWIDTH", openviduConfig.getVideoMaxSendBandwidth());
+		json.addProperty("OPENVIDU_STREAMS_VIDEO_MIN_SEND_BANDWIDTH", openviduConfig.getVideoMinSendBandwidth());
+		json.addProperty("OPENVIDU_RECORDING", openviduConfig.isRecordingModuleEnabled());
 		if (openviduConfig.isRecordingModuleEnabled()) {
-			json.addProperty("openviduRecordingVersion", openviduConfig.getOpenViduRecordingVersion());
-			json.addProperty("openviduRecordingPath", openviduConfig.getOpenViduRecordingPath());
-			json.addProperty("openviduRecordingPublicAccess", openviduConfig.getOpenViduRecordingPublicAccess());
-			json.addProperty("openviduRecordingNotification", openviduConfig.getOpenViduRecordingNotification().name());
-			json.addProperty("openviduRecordingCustomLayout", openviduConfig.getOpenviduRecordingCustomLayout());
-			json.addProperty("openviduRecordingAutostopTimeout", openviduConfig.getOpenviduRecordingAutostopTimeout());
+			json.addProperty("OPENVIDU_RECORDING_VERSION", openviduConfig.getOpenViduRecordingVersion());
+			json.addProperty("OPENVIDU_RECORDING_PATH", openviduConfig.getOpenViduRecordingPath());
+			json.addProperty("OPENVIDU_RECORDING_PUBLIC_ACCESS", openviduConfig.getOpenViduRecordingPublicAccess());
+			json.addProperty("OPENVIDU_RECORDING_NOTIFICATION",
+					openviduConfig.getOpenViduRecordingNotification().name());
+			json.addProperty("OPENVIDU_RECORDING_CUSTOM_LAYOUT", openviduConfig.getOpenviduRecordingCustomLayout());
+			json.addProperty("OPENVIDU_RECORDING_AUTOSTOP_TIMEOUT",
+					openviduConfig.getOpenviduRecordingAutostopTimeout());
 			if (openviduConfig.getOpenViduRecordingComposedUrl() != null
 					&& !openviduConfig.getOpenViduRecordingComposedUrl().isEmpty()) {
-				json.addProperty("openviduRecordingComposedUrl", openviduConfig.getOpenViduRecordingComposedUrl());
+				json.addProperty("OPENVIDU_RECORDING_COMPOSED_URL", openviduConfig.getOpenViduRecordingComposedUrl());
 			}
 		}
-		json.addProperty("openviduWebhook", openviduConfig.isWebhookEnabled());
+		json.addProperty("OPENVIDU_WEBHOOK", openviduConfig.isWebhookEnabled());
 		if (openviduConfig.isWebhookEnabled()) {
-			json.addProperty("openviduWebhookEndpoint", openviduConfig.getOpenViduWebhookEndpoint());
+			json.addProperty("OPENVIDU_WEBHOOK_ENDPOINT", openviduConfig.getOpenViduWebhookEndpoint());
 			JsonArray webhookHeaders = new JsonArray();
 			for (Header header : openviduConfig.getOpenViduWebhookHeaders()) {
 				webhookHeaders.add(header.getName() + ": " + header.getValue());
 			}
-			json.add("openviduWebhookHeaders", webhookHeaders);
+			json.add("OPENVIDU_WEBHOOK_HEADERS", webhookHeaders);
 			JsonArray webhookEvents = new JsonArray();
 			for (CDREventName eventName : openviduConfig.getOpenViduWebhookEvents()) {
 				webhookEvents.add(eventName.name());
 			}
-			json.add("openviduWebhookEvents", webhookEvents);
+			json.add("OPENVIDU_WEBHOOK_EVENTS", webhookEvents);
 		}
 
 		return new ResponseEntity<>(json.toString(), getResponseHeaders(), HttpStatus.OK);
