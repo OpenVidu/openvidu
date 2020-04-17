@@ -49,7 +49,7 @@ export class Recording {
     duration = 0;
 
     /**
-     * URL of the recording. You can access the file from there. It is `null` until recording reaches "ready" or "failed" status. If OpenVidu Server configuration property `openvidu.recording.public-access` is false, this path will be secured with OpenVidu credentials
+     * URL of the recording. You can access the file from there. It is `null` until recording reaches "ready" or "failed" status. If OpenVidu Server configuration property `OPENVIDU_RECORDING_PUBLIC_ACCESS` is false, this path will be secured with OpenVidu credentials
      */
     url: string;
 

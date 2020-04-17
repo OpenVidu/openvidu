@@ -185,7 +185,7 @@ public class OpenVidu {
 	 *                                     or it is already being recorded</li>
 	 *                                     <li><code>501</code>: OpenVidu Server
 	 *                                     recording module is disabled
-	 *                                     (<i>openvidu.recording</i> property set
+	 *                                     (<i>OPENVIDU_RECORDING</i> property set
 	 *                                     to <i>false</i>)</li>
 	 *                                     </ul>
 	 */
@@ -282,7 +282,7 @@ public class OpenVidu {
 	 *                                     or it is already being recorded</li>
 	 *                                     <li><code>501</code>: OpenVidu Server
 	 *                                     recording module is disabled
-	 *                                     (<i>openvidu.recording</i> property set
+	 *                                     (<i>OPENVIDU_RECORDING</i> property set
 	 *                                     to <i>false</i>)</li>
 	 *                                     </ul>
 	 */
@@ -323,7 +323,7 @@ public class OpenVidu {
 	 *                                     or it is already being recorded</li>
 	 *                                     <li><code>501</code>: OpenVidu Server
 	 *                                     recording module is disabled
-	 *                                     (<i>openvidu.recording</i> property set
+	 *                                     (<i>OPENVIDU_RECORDING</i> property set
 	 *                                     to <i>false</i>)</li>
 	 *                                     </ul>
 	 */

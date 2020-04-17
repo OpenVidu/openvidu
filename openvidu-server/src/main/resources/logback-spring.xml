@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
-	<springProperty scope="context" name="cdrPath" source="openvidu.cdr.path" />
+	<springProperty scope="context" name="cdrPath" source="OPENVIDU_CDR_PATH" />
 
 	<timestamp key="myTimestamp" timeReference="contextBirth"
 		datePattern="HH-mm-ss" />
@@ -37,7 +37,7 @@
 		<level value="INFO" />
 		<appender-ref ref="STDOUT" />
 	</root>
-	<if condition='property("openvidu.cdr").equalsIgnoreCase("true")'>
+	<if condition='property("OPENVIDU_CDR").equalsIgnoreCase("true")'>
 		<then>
 			<appender name="CDR"
 				class="ch.qos.logback.core.rolling.RollingFileAppender">

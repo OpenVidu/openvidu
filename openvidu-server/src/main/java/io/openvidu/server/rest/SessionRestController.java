@@ -444,7 +444,7 @@ public class SessionRestController {
 		log.info("REST API: POST /api/recordings/start {}", params.toString());
 
 		if (!this.openviduConfig.isRecordingModuleEnabled()) {
-			// OpenVidu Server configuration property "openvidu.recording" is set to false
+			// OpenVidu Server configuration property "OPENVIDU_RECORDING" is set to false
 			return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
 		}
 

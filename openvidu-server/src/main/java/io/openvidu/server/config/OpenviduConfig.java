@@ -433,8 +433,8 @@ public class OpenviduConfig {
 	}
 
 	protected List<String> getNonUserProperties() {
-		return Arrays.asList("coturn.ip", "coturn.redis.ip", "kms.uris", "server.port", "coturn.redis.dbname",
-				"coturn.redis.password", "coturn.redis.connect-timeout");
+		return Arrays.asList("server.port", "COTURN_IP", "COTURN_REDIS_IP", "KMS_URIS", "COTURN_REDIS_DBNAME",
+				"COTURN_REDIS_PASSWORD", "COTURN_REDIS_CONNECT_TIMEOUT");
 	}
 
 	// Properties
@@ -443,52 +443,52 @@ public class OpenviduConfig {
 
 		serverPort = getValue("server.port");
 
-		coturnRedisDbname = getValue("coturn.redis.dbname");
+		coturnRedisDbname = getValue("COTURN_REDIS_DBNAME");
 
-		coturnRedisPassword = getValue("coturn.redis.password");
+		coturnRedisPassword = getValue("COTURN_REDIS_PASSWORD");
 
-		coturnRedisConnectTimeout = getValue("coturn.redis.connect-timeout");
+		coturnRedisConnectTimeout = getValue("COTURN_REDIS_CONNECT_TIMEOUT");
 
-		openviduSecret = asNonEmptyString("openvidu.secret");
+		openviduSecret = asNonEmptyString("OPENVIDU_SECRET");
 
 		checkOpenviduPublicurl();
 
-		openviduCdr = asBoolean("openvidu.cdr");
+		openviduCdr = asBoolean("OPENVIDU_CDR");
 
-		openviduCdrPath = asFileSystemPath("openvidu.cdr.path");
+		openviduCdrPath = asFileSystemPath("OPENVIDU_CDR_PATH");
 
-		openviduRecording = asBoolean("openvidu.recording");
-		openviduRecordingPublicAccess = asBoolean("openvidu.recording.public-access");
-		openviduRecordingAutostopTimeout = asNonNegativeInteger("openvidu.recording.autostop-timeout");
-		openviduRecordingPath = asFileSystemPath("openvidu.recording.path");
-		openviduRecordingCustomLayout = asFileSystemPath("openvidu.recording.custom-layout");
-		openviduRecordingVersion = asNonEmptyString("openvidu.recording.version");
-		openviduRecordingComposedUrl = asOptionalURL("openvidu.recording.composed-url");
+		openviduRecording = asBoolean("OPENVIDU_RECORDING");
+		openviduRecordingPublicAccess = asBoolean("OPENVIDU_RECORDING_PUBLIC_ACCESS");
+		openviduRecordingAutostopTimeout = asNonNegativeInteger("OPENVIDU_RECORDING_AUTOSTOP_TIMEOUT");
+		openviduRecordingPath = asFileSystemPath("OPENVIDU_RECORDING_PATH");
+		openviduRecordingCustomLayout = asFileSystemPath("OPENVIDU_RECORDING_CUSTOM_LAYOUT");
+		openviduRecordingVersion = asNonEmptyString("OPENVIDU_RECORDING_VERSION");
+		openviduRecordingComposedUrl = asOptionalURL("OPENVIDU_RECORDING_COMPOSED_URL");
 		checkOpenviduRecordingNotification();
 
-		openviduStreamsVideoMaxRecvBandwidth = asNonNegativeInteger("openvidu.streams.video.max-recv-bandwidth");
-		openviduStreamsVideoMinRecvBandwidth = asNonNegativeInteger("openvidu.streams.video.min-recv-bandwidth");
-		openviduStreamsVideoMaxSendBandwidth = asNonNegativeInteger("openvidu.streams.video.max-send-bandwidth");
-		openviduStreamsVideoMinSendBandwidth = asNonNegativeInteger("openvidu.streams.video.min-send-bandwidth");
+		openviduStreamsVideoMaxRecvBandwidth = asNonNegativeInteger("OPENVIDU_STREAMS_VIDEO_MAX_RECV_BANDWIDTH");
+		openviduStreamsVideoMinRecvBandwidth = asNonNegativeInteger("OPENVIDU_STREAMS_VIDEO_MIN_RECV_BANDWIDTH");
+		openviduStreamsVideoMaxSendBandwidth = asNonNegativeInteger("OPENVIDU_STREAMS_VIDEO_MAX_SEND_BANDWIDTH");
+		openviduStreamsVideoMinSendBandwidth = asNonNegativeInteger("OPENVIDU_STREAMS_VIDEO_MIN_SEND_BANDWIDTH");
 
-		openviduSessionsGarbageInterval = asNonNegativeInteger("openvidu.sessions.garbage.interval");
-		openviduSessionsGarbageThreshold = asNonNegativeInteger("openvidu.sessions.garbage.threshold");
+		openviduSessionsGarbageInterval = asNonNegativeInteger("OPENVIDU_SESSIONS_GARBAGE_INTERVAL");
+		openviduSessionsGarbageThreshold = asNonNegativeInteger("OPENVIDU_SESSIONS_GARBAGE_THRESHOLD");
 
 		kmsUrisList = checkKmsUris();
 
 		checkCoturnIp();
 
-		coturnRedisIp = asOptionalInetAddress("coturn.redis.ip");
+		coturnRedisIp = asOptionalInetAddress("COTURN_REDIS_IP");
 
 		checkWebhook();
 
 		checkCertificateType();
 
-		dotenvPath = getValue("dotenv.path");
+		dotenvPath = getValue("DOTENV_PATH");
 	}
 
 	private void checkCertificateType() {
-		String property = "certificate.type";
+		String property = "CERTIFICATE_TYPE";
 		certificateType = asNonEmptyString(property);
 
 		if (certificateType != null && !certificateType.isEmpty()) {
@@ -500,7 +500,7 @@ public class OpenviduConfig {
 	}
 
 	private void checkCoturnIp() {
-		String property = "coturn.ip";
+		String property = "COTURN_IP";
 		coturnIp = asOptionalIPv4OrIPv6(property);
 
 		if (coturnIp == null || this.coturnIp.isEmpty()) {
@@ -513,36 +513,35 @@ public class OpenviduConfig {
 	}
 
 	private void checkWebhook() {
-		openviduWebhookEnabled = asBoolean("openvidu.webhook");
-		openviduWebhookEndpoint = asOptionalURL("openvidu.webhook.endpoint");
+		openviduWebhookEnabled = asBoolean("OPENVIDU_WEBHOOK");
+		openviduWebhookEndpoint = asOptionalURL("OPENVIDU_WEBHOOK_ENDPOINT");
 		webhookHeadersList = checkWebhookHeaders();
 		webhookEventsList = getWebhookEvents();
 
 		if (openviduWebhookEnabled && (openviduWebhookEndpoint == null || openviduWebhookEndpoint.isEmpty())) {
-			addError("openvidu.webhook.endpoint",
-					"With " + getPropertyName("openvidu.webhook") + "=true, this property cannot be empty");
+			addError("OPENVIDU_WEBHOOK_ENDPOINT",
+					"With " + getPropertyName("OPENVIDU_WEBHOOK") + "=true, this property cannot be empty");
 		}
 	}
 
 	private void checkOpenviduRecordingNotification() {
-
-		String recordingNotif = asNonEmptyString("openvidu.recording.notification");
+		String recordingNotif = asNonEmptyString("OPENVIDU_RECORDING_NOTIFICATION");
 		try {
 			openviduRecordingNotification = RecordingNotification.valueOf(recordingNotif);
 		} catch (IllegalArgumentException e) {
-			addError("openvidu.recording.notification",
+			addError("OPENVIDU_RECORDING_NOTIFICATION",
 					"Must be one of the values " + Arrays.asList(RecordingNotification.values()));
 		}
 	}
 
 	private void checkOpenviduPublicurl() {
-		final String property = "openvidu.domain.or.public.ip";
+		final String property = "OPENVIDU_DOMAIN_OR_PUBLIC_IP";
 		String domain = getValue(property);
 
 		if (domain != null && !domain.isEmpty()) {
 			this.openviduPublicUrl = "https://" + domain;
 		} else {
-			final String urlProperty = "openvidu.publicurl";
+			final String urlProperty = "OPENVIDU_PUBLICURL";
 			String publicurl = getValue(urlProperty);
 			if (publicurl == null || publicurl.isEmpty()) {
 				addError(property, "Cannot be empty");
@@ -607,7 +606,7 @@ public class OpenviduConfig {
 
 	public List<String> checkKmsUris() {
 
-		String property = "kms.uris";
+		String property = "KMS_URIS";
 
 		return asKmsUris(property, getValue(property));
 
@@ -638,7 +637,7 @@ public class OpenviduConfig {
 	}
 
 	private List<Header> checkWebhookHeaders() {
-		String property = "openvidu.webhook.headers";
+		String property = "OPENVIDU_WEBHOOK_HEADERS";
 		List<String> headers = asJsonStringsArray(property);
 		List<Header> headerList = new ArrayList<>();
 
@@ -663,7 +662,7 @@ public class OpenviduConfig {
 	}
 
 	private List<CDREventName> getWebhookEvents() {
-		String property = "openvidu.webhook.events";
+		String property = "OPENVIDU_WEBHOOK_EVENTS";
 		List<String> events = asJsonStringsArray(property);
 		List<CDREventName> eventList = new ArrayList<>();
 

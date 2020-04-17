@@ -26,7 +26,7 @@ import io.openvidu.server.config.OpenviduConfig;
 
 /**
  * This class serves recording files from host folder indicated in configuration
- * property openvidu.recording.path
+ * property OPENVIDU_RECORDING_PATH
  * 
  * @author Pablo Fuente (pablofuenteperez@gmail.com)
  */

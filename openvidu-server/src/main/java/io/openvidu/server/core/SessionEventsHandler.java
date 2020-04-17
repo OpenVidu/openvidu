@@ -438,7 +438,7 @@ public class SessionEventsHandler {
 
 	public void sendRecordingStartedNotification(Session session, Recording recording) {
 
-		// Filter participants by roles according to "openvidu.recording.notification"
+		// Filter participants by roles according to "OPENVIDU_RECORDING_NOTIFICATION"
 		Set<Participant> filteredParticipants = this.filterParticipantsByRole(
 				this.openviduConfig.getRolesFromRecordingNotification(), session.getParticipants());
 
@@ -457,7 +457,7 @@ public class SessionEventsHandler {
 		// Be sure to clean this map (this should return null)
 		this.recordingsStarted.remove(session.getSessionId());
 
-		// Filter participants by roles according to "openvidu.recording.notification"
+		// Filter participants by roles according to "OPENVIDU_RECORDING_NOTIFICATION"
 		Set<Participant> existingParticipants;
 		try {
 			existingParticipants = session.getParticipants();

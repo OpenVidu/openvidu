@@ -43,7 +43,7 @@ import io.openvidu.server.webhook.CDRLoggerWebhook;
 
 /**
  * CDR logger to register all information of a Session.
- * Enabled by property 'openvidu.cdr=true'
+ * Enabled by property 'OPENVIDU_CDR=true'
  * 
  * - 'sessionCreated':				{sessionId, timestamp}
  * - 'sessionDestroyed':			{sessionId, timestamp, startTime, duration, reason}

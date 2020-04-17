@@ -110,7 +110,7 @@ public class KurentoOptions {
 	 * value to this property will override the global configuration set in <a
 	 * href="https://docs.openvidu.io/en/stable/reference-docs/openvidu-server-params/#configuration-parameters-for-openvidu-server"
 	 * target="_blank">OpenVidu Server configuration</a> (parameter
-	 * <code>openvidu.streams.video.max-recv-bandwidth</code>) for every incoming
+	 * <code>OPENVIDU_STREAMS_VIDEO_MAX_RECV_BANDWIDTH</code>) for every incoming
 	 * stream of the user owning the token. <br>
 	 * <strong>WARNING</strong>: the lower value set to this property limits every
 	 * other bandwidth of the WebRTC pipeline this server-to-client stream belongs
@@ -127,7 +127,7 @@ public class KurentoOptions {
 	 * to this property will override the global configuration set in <a href=
 	 * "https://docs.openvidu.io/en/stable/reference-docs/openvidu-server-params/#configuration-parameters-for-openvidu-server"
 	 * target="_blank">OpenVidu Server configuration</a> (parameter
-	 * <code>openvidu.streams.video.min-recv-bandwidth</code>) for every incoming
+	 * <code>OPENVIDU_STREAMS_VIDEO_MIN_RECV_BANDWIDTH</code>) for every incoming
 	 * stream of the user owning the token.
 	 */
 	public Integer getVideoMinRecvBandwidth() {
@@ -140,7 +140,7 @@ public class KurentoOptions {
 	 * to this property will override the global configuration set in <a href=
 	 * "https://docs.openvidu.io/en/stable/reference-docs/openvidu-server-params/#configuration-parameters-for-openvidu-server"
 	 * target="_blank">OpenVidu Server configuration</a> (parameter
-	 * <code>openvidu.streams.video.max-send-bandwidth</code>) for every outgoing
+	 * <code>OPENVIDU_STREAMS_VIDEO_MAX_SEND_BANDWIDTH</code>) for every outgoing
 	 * stream of the user owning the token. <br>
 	 * <strong>WARNING</strong>: this value limits every other bandwidth of the
 	 * WebRTC pipeline this client-to-server stream belongs to. This includes every
@@ -156,7 +156,7 @@ public class KurentoOptions {
 	 * this property will override the global configuration set in <a href=
 	 * "https://docs.openvidu.io/en/stable/reference-docs/openvidu-server-params/#configuration-parameters-for-openvidu-server"
 	 * target="_blank">OpenVidu Server configuration</a> (parameter
-	 * <code>openvidu.streams.video.min-send-bandwidth</code>) for every outgoing
+	 * <code>OPENVIDU_STREAMS_VIDEO_MIN_SEND_BANDWIDTH</code>) for every outgoing
 	 * stream of the user owning the token.
 	 */
 	public Integer getVideoMinSendBandwidth() {

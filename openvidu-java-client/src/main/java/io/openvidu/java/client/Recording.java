@@ -197,7 +197,7 @@ public class Recording {
 	 * <code>null</code> until recording reaches "ready" or "failed" status. If
 	 * <a href="https://docs.openvidu.io/en/stable/reference-docs/openvidu-server-params/" target=
 	 * "_blank">OpenVidu Server configuration</a> property
-	 * <code>openvidu.recording.public-access</code> is false, this path will be
+	 * <code>OPENVIDU_RECORDING_PUBLIC_ACCESS</code> is false, this path will be
 	 * secured with OpenVidu credentials
 	 */
 	public String getUrl() {
