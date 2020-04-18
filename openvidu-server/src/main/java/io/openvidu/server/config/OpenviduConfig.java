@@ -459,12 +459,15 @@ public class OpenviduConfig {
 
 		openviduCdr = asBoolean("OPENVIDU_CDR");
 
-		openviduCdrPath = asFileSystemPath("OPENVIDU_CDR_PATH");
+		openviduCdrPath = openviduCdr ? asWritableFileSystemPath("OPENVIDU_CDR_PATH")
+				: asFileSystemPath("OPENVIDU_CDR_PATH");
 
 		openviduRecording = asBoolean("OPENVIDU_RECORDING");
+		openviduRecordingPath = openviduRecording ? asWritableFileSystemPath("OPENVIDU_RECORDING_PATH")
+				: asFileSystemPath("OPENVIDU_RECORDING_PATH");
+
 		openviduRecordingPublicAccess = asBoolean("OPENVIDU_RECORDING_PUBLIC_ACCESS");
 		openviduRecordingAutostopTimeout = asNonNegativeInteger("OPENVIDU_RECORDING_AUTOSTOP_TIMEOUT");
-		openviduRecordingPath = asFileSystemPath("OPENVIDU_RECORDING_PATH");
 		openviduRecordingCustomLayout = asFileSystemPath("OPENVIDU_RECORDING_CUSTOM_LAYOUT");
 		openviduRecordingVersion = asNonEmptyString("OPENVIDU_RECORDING_VERSION");
 		openviduRecordingComposedUrl = asOptionalURL("OPENVIDU_RECORDING_COMPOSED_URL");
@@ -785,6 +788,30 @@ public class OpenviduConfig {
 			return stringPath;
 		} catch (Exception e) {
 			addError(property, "Is not a valid file system path. " + e.getMessage());
+			return null;
+		}
+	}
+
+	protected String asWritableFileSystemPath(String property) {
+		try {
+			String stringPath = this.asNonEmptyString(property);
+			Paths.get(stringPath);
+			File f = new File(stringPath);
+			f.getCanonicalPath();
+			f.toURI().toString();
+			if (!f.exists()) {
+				if (!f.mkdirs()) {
+					throw new Exception(
+							"The path does not exist and OpenVidu Server does not have enough permissions to create it");
+				}
+			}
+			if (!f.canWrite()) {
+				throw new Exception(
+						"OpenVidu Server does not have permissions to write on path " + f.getCanonicalPath());
+			}
+			return stringPath;
+		} catch (Exception e) {
+			addError(property, "Is not a valid writable file system path. " + e.getMessage());
 			return null;
 		}
 	}
