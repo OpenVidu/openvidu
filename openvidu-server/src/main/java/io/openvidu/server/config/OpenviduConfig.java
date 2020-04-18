@@ -458,14 +458,12 @@ public class OpenviduConfig {
 		checkOpenviduPublicurl();
 
 		openviduCdr = asBoolean("OPENVIDU_CDR");
-
 		openviduCdrPath = openviduCdr ? asWritableFileSystemPath("OPENVIDU_CDR_PATH")
 				: asFileSystemPath("OPENVIDU_CDR_PATH");
 
 		openviduRecording = asBoolean("OPENVIDU_RECORDING");
 		openviduRecordingPath = openviduRecording ? asWritableFileSystemPath("OPENVIDU_RECORDING_PATH")
 				: asFileSystemPath("OPENVIDU_RECORDING_PATH");
-
 		openviduRecordingPublicAccess = asBoolean("OPENVIDU_RECORDING_PUBLIC_ACCESS");
 		openviduRecordingAutostopTimeout = asNonNegativeInteger("OPENVIDU_RECORDING_AUTOSTOP_TIMEOUT");
 		openviduRecordingCustomLayout = asFileSystemPath("OPENVIDU_RECORDING_CUSTOM_LAYOUT");
