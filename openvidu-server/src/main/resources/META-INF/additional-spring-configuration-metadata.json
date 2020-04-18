@@ -33,7 +33,7 @@
 			"name": "OPENVIDU_CDR_PATH",
 			"type": "java.lang.String",
 			"description": "Where to store CDR files",
-			"defaultValue": "cdr"
+			"defaultValue": "/opt/openvidu/cdr"
 		},
 		{
 			"name": "OPENVIDU_RECORDING",
