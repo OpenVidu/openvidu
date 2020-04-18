@@ -271,7 +271,7 @@ If `openvidu-server` detects some error, it will show it in the log.
    ---------------------  
    * CERTIFICATE_TYPE=selfsigned
    * OPENVIDU_CDR=false
-   * OPENVIDU_CDR_PATH=log
+   * OPENVIDU_CDR_PATH=cdr
    * OPENVIDU_DOMAIN_OR_PUBLIC_IP=d
    * OPENVIDU_RECORDING=true
    * OPENVIDU_RECORDING_AUTOSTOP-TIMEOUT=120
