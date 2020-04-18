@@ -45,7 +45,6 @@ import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.java.client.RecordingProperties;
-import io.openvidu.server.OpenViduServer;
 import io.openvidu.server.cdr.CallDetailRecord;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.EndReason;
@@ -506,15 +505,15 @@ public class ComposedRecordingService extends RecordingService {
 			}
 		}
 
-		boolean recordingUrlDefined = openviduConfig.getOpenViduRecordingComposedUrl() != null
+		boolean recordingComposedUrlDefined = openviduConfig.getOpenViduRecordingComposedUrl() != null
 				&& !openviduConfig.getOpenViduRecordingComposedUrl().isEmpty();
-		String recordingUrl = recordingUrlDefined ? openviduConfig.getOpenViduRecordingComposedUrl()
-				: OpenViduServer.wsUrl;
-		recordingUrl = recordingUrl.replaceFirst("wss://", "").replaceFirst("https://", "");
-		boolean startsWithHttp = recordingUrl.startsWith("http://") || recordingUrl.startsWith("ws://");
+		String recordingUrl = recordingComposedUrlDefined ? openviduConfig.getOpenViduRecordingComposedUrl()
+				: openviduConfig.getFinalUrl();
+		recordingUrl = recordingUrl.replaceFirst("https://", "");
+		boolean startsWithHttp = recordingUrl.startsWith("http://");
 
 		if (startsWithHttp) {
-			recordingUrl = recordingUrl.replaceFirst("http://", "").replaceFirst("ws://", "");
+			recordingUrl = recordingUrl.replaceFirst("http://", "");
 		}
 
 		if (recordingUrl.endsWith("/")) {
@@ -539,8 +538,11 @@ public class ComposedRecordingService extends RecordingService {
 			} catch (MalformedURLException e) {
 				log.error(e.getMessage());
 			}
+			String defaultPathForDefaultLayout = recordingComposedUrlDefined ? ""
+					: ("/" + openviduConfig.getOpenViduRecordingDefaultLayoutsPath());
 			finalUrl = (startsWithHttp ? "http" : "https") + "://OPENVIDUAPP:" + secret + "@" + recordingUrl
-					+ "/#/layout-" + layout + "/" + recording.getSessionId() + "/" + secret + "/" + port + "/" + !recording.hasAudio();
+					+ defaultPathForDefaultLayout + "/#/layout-" + layout + "/" + recording.getSessionId() + "/"
+					+ secret + "/" + port + "/" + !recording.hasAudio();
 		}
 
 		return finalUrl;

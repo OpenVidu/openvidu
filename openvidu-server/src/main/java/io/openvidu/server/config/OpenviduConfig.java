@@ -352,6 +352,10 @@ public class OpenviduConfig {
 		return !"/opt/openvidu/custom-layout".equals(path);
 	}
 
+	public String getOpenViduRecordingDefaultLayoutsPath() {
+		return "dashboard";
+	}
+
 	// Properties management methods
 
 	public OpenviduConfig deriveWithAdditionalPropertiesSource(Map<String, ?> propertiesSource) {
