@@ -48,7 +48,8 @@
 					<MaxHistory>30</MaxHistory>
 					<TotalSizeCap>20GB</TotalSizeCap>
 				</rollingPolicy>
-				<encoder>
+				<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+					<charset>UTF-8</charset>
 					<pattern>%m\n</pattern>
 				</encoder>
 			</appender>
