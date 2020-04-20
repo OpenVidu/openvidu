@@ -18,7 +18,7 @@ version: '3.1'
 services:
 
     openvidu-server:
-        image: openvidu/openvidu-server:2.13.0-beta6
+        image: openvidu/openvidu-server:2.13.0-beta7
         restart: on-failure
         network_mode: host
         entrypoint: ['/bin/bash', '-c', 'export COTURN_IP=`curl --silent ifconfig.co`; /usr/local/bin/entrypoint.sh']
@@ -33,7 +33,6 @@ services:
             - SERVER_SSL_ENABLED=false
             - SERVER_PORT=5443
             - OPENVIDU_RECORDING=true
-            - OPENVIDU_RECORDING_COMPOSED_URL=https://${OPENVIDU_DOMAIN_OR_PUBLIC_IP}/dashboard
             - KMS_URIS=["ws://localhost:8888/kurento"]
             - COTURN_REDIS_IP=127.0.0.1
 
