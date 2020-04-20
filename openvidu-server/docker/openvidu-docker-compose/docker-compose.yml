@@ -18,7 +18,7 @@ version: '3.1'
 services:
 
     openvidu-server:
-        image: openvidu/openvidu-server:2.13.0-beta7
+        image: openvidu/openvidu-server:2.13.0-beta8
         restart: on-failure
         network_mode: host
         entrypoint: ['/bin/bash', '-c', 'export COTURN_IP=`curl --silent ifconfig.co`; /usr/local/bin/entrypoint.sh']
@@ -44,6 +44,7 @@ services:
           core: -1
         volumes:
             - /opt/openvidu/kms-crashes:/opt/openvidu/kms-crashes
+            - ${OPENVIDU_RECORDING_PATH}:${OPENVIDU_RECORDING_PATH}
         environment:
             - KMS_MIN_PORT=40000
             - KMS_MAX_PORT=57000
@@ -67,13 +68,13 @@ services:
             - MAX_PORT=65535
 
     nginx:
-        image: openvidu/openvidu-proxy:1.0.0-beta5
+        image: openvidu/openvidu-proxy:1.0.0-beta6
         restart: on-failure
         network_mode: host
         volumes:
             - ./certificates:/etc/letsencrypt
             - ./owncert:/owncert
-            - /opt/openvidu/custom-layout:/opt/openvidu/custom-layout
+            - ${OPENVIDU_RECORDING_CUSTOM_LAYOUT}:/opt/openvidu/custom-layout
         environment:
             - DOMAIN_OR_PUBLIC_IP=${OPENVIDU_DOMAIN_OR_PUBLIC_IP}
             - CERTIFICATE_TYPE=${CERTIFICATE_TYPE}
