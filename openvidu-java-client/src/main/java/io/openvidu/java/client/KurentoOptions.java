@@ -108,7 +108,7 @@ public class KurentoOptions {
 	 * Defines the maximum number of Kbps that the client owning the token will be
 	 * able to receive from Kurento Media Server. 0 means unconstrained. Giving a
 	 * value to this property will override the global configuration set in <a
-	 * href="https://docs.openvidu.io/en/stable/reference-docs/openvidu-server-params/#configuration-parameters-for-openvidu-server"
+	 * href="https://docs.openvidu.io/en/stable/reference-docs/openvidu-server-params/"
 	 * target="_blank">OpenVidu Server configuration</a> (parameter
 	 * <code>OPENVIDU_STREAMS_VIDEO_MAX_RECV_BANDWIDTH</code>) for every incoming
 	 * stream of the user owning the token. <br>
@@ -125,7 +125,7 @@ public class KurentoOptions {
 	 * Defines the minimum number of Kbps that the client owning the token will try
 	 * to receive from Kurento Media Server. 0 means unconstrained. Giving a value
 	 * to this property will override the global configuration set in <a href=
-	 * "https://docs.openvidu.io/en/stable/reference-docs/openvidu-server-params/#configuration-parameters-for-openvidu-server"
+	 * "https://docs.openvidu.io/en/stable/reference-docs/openvidu-server-params/"
 	 * target="_blank">OpenVidu Server configuration</a> (parameter
 	 * <code>OPENVIDU_STREAMS_VIDEO_MIN_RECV_BANDWIDTH</code>) for every incoming
 	 * stream of the user owning the token.
@@ -138,7 +138,7 @@ public class KurentoOptions {
 	 * Defines the maximum number of Kbps that the client owning the token will be
 	 * able to send to Kurento Media Server. 0 means unconstrained. Giving a value
 	 * to this property will override the global configuration set in <a href=
-	 * "https://docs.openvidu.io/en/stable/reference-docs/openvidu-server-params/#configuration-parameters-for-openvidu-server"
+	 * "https://docs.openvidu.io/en/stable/reference-docs/openvidu-server-params/"
 	 * target="_blank">OpenVidu Server configuration</a> (parameter
 	 * <code>OPENVIDU_STREAMS_VIDEO_MAX_SEND_BANDWIDTH</code>) for every outgoing
 	 * stream of the user owning the token. <br>
@@ -154,7 +154,7 @@ public class KurentoOptions {
 	 * Defines the minimum number of Kbps that the client owning the token will try
 	 * to send to Kurento Media Server. 0 means unconstrained. Giving a value to
 	 * this property will override the global configuration set in <a href=
-	 * "https://docs.openvidu.io/en/stable/reference-docs/openvidu-server-params/#configuration-parameters-for-openvidu-server"
+	 * "https://docs.openvidu.io/en/stable/reference-docs/openvidu-server-params/"
 	 * target="_blank">OpenVidu Server configuration</a> (parameter
 	 * <code>OPENVIDU_STREAMS_VIDEO_MIN_SEND_BANDWIDTH</code>) for every outgoing
 	 * stream of the user owning the token.
