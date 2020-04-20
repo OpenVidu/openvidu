@@ -2,19 +2,25 @@ package io.openvidu.server.utils;
 
 public class GeoLocation {
 
+	private String ip;
 	private String country;
 	private String city;
 	private String timezone;
 	private Double latitude;
 	private Double longitude;
 
-	public GeoLocation(String country, String city, String timezone, Double latitude, Double longitude) {
+	public GeoLocation(String ip, String country, String city, String timezone, Double latitude, Double longitude) {
 		super();
+		this.ip = ip;
 		this.country = country;
 		this.city = city;
 		this.timezone = timezone;
 		this.latitude = latitude;
 		this.longitude = longitude;
+	}
+
+	public String getIp() {
+		return this.ip;
 	}
 
 	public String getCountry() {
