@@ -380,6 +380,9 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		String sdpMid = getStringParam(request, ProtocolElements.ONICECANDIDATE_SDPMIDPARAM);
 		int sdpMLineIndex = getIntParam(request, ProtocolElements.ONICECANDIDATE_SDPMLINEINDEX_PARAM);
 
+		log.info("New candidate received from client: {connectionId: \"{}\", sdpMid: {}, sdpMLineIndex: {}, candidate: \"{}\"}",
+				endpointName, sdpMid, sdpMLineIndex, candidate);
+
 		sessionManager.onIceCandidate(participant, endpointName, candidate, sdpMLineIndex, sdpMid, request.getId());
 	}
 
