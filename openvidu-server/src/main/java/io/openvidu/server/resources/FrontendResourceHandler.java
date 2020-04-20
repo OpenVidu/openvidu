@@ -17,23 +17,35 @@
 
 package io.openvidu.server.resources;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
+import io.openvidu.server.config.OpenviduConfig;
+
 /**
  * This class changes the path where static files are served from / to
- * /dashboard. Entrypoint file index.html must have tag <base href="/dashboard/">
+ * /NEW_FRONTEND_PATH. Entrypoint file index.html must have tag
+ * <base href="/NEW_FRONTEND_PATH/">
+ * 
+ * By default in OpenVidu CE this path is /dashbaord and in OpenVidu PRO is
+ * /inspector
  *
  * @author Pablo Fuente (pablofuenteperez@gmail.com)
  */
 @Configuration
-public class DashboardResourceHandler extends WebMvcConfigurerAdapter {
+public class FrontendResourceHandler extends WebMvcConfigurerAdapter {
+
+	@Autowired
+	OpenviduConfig openviduConfig;
 
 	@Override
 	public void addViewControllers(ViewControllerRegistry registry) {
-		registry.addViewController("/dashboard").setViewName("redirect:/dashboard/");
-		registry.addViewController("/dashboard/").setViewName("forward:/dashboard/index.html");
+		registry.addViewController("/" + openviduConfig.getOpenViduFrontendDefaultPath())
+				.setViewName("redirect:/" + openviduConfig.getOpenViduFrontendDefaultPath() + "/");
+		registry.addViewController("/" + openviduConfig.getOpenViduFrontendDefaultPath() + "/")
+				.setViewName("forward:/" + openviduConfig.getOpenViduFrontendDefaultPath() + "/index.html");
 		super.addViewControllers(registry);
 	}
 

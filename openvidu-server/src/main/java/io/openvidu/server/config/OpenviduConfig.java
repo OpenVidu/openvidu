@@ -352,7 +352,7 @@ public class OpenviduConfig {
 		return !"/opt/openvidu/custom-layout".equals(path);
 	}
 
-	public String getOpenViduRecordingDefaultLayoutsPath() {
+	public String getOpenViduFrontendDefaultPath() {
 		return "dashboard";
 	}
 

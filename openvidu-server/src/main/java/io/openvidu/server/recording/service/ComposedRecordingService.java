@@ -539,7 +539,7 @@ public class ComposedRecordingService extends RecordingService {
 				log.error(e.getMessage());
 			}
 			String defaultPathForDefaultLayout = recordingComposedUrlDefined ? ""
-					: ("/" + openviduConfig.getOpenViduRecordingDefaultLayoutsPath());
+					: ("/" + openviduConfig.getOpenViduFrontendDefaultPath());
 			finalUrl = (startsWithHttp ? "http" : "https") + "://OPENVIDUAPP:" + secret + "@" + recordingUrl
 					+ defaultPathForDefaultLayout + "/#/layout-" + layout + "/" + recording.getSessionId() + "/"
 					+ secret + "/" + port + "/" + !recording.hasAudio();
