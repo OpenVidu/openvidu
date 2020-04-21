@@ -23,6 +23,7 @@ SERVICES=(
     "curl --silent -sw :%{http_code} ifconfig.me"
     "curl --silent -sw :%{http_code} ipecho.net/plain"
     "curl --silent -sw :%{http_code} ipinfo.io/ip"
+    "curl --silent -sw :%{http_code} checkip.amazonaws.com"
     "curl --silent -sw :%{http_code} ident.me"
     "curl --silent -sw :%{http_code} icanhazip.com"
 )
