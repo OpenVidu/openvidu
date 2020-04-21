@@ -32,7 +32,6 @@ services:
         environment:
             - SERVER_SSL_ENABLED=false
             - SERVER_PORT=5443
-            - OPENVIDU_RECORDING=true
             - KMS_URIS=["ws://localhost:8888/kurento"]
             - COTURN_REDIS_IP=127.0.0.1
 
