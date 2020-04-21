@@ -5,7 +5,7 @@ DEBUG=${DEBUG:-false}
 [ "$DEBUG" == "true" ] && set -x
 
 #Check parameters
-[[ ! -z "${TURN_PUBLIC_IP}" ]] || export TURN_PUBLIC_IP=$(curl ifconfig.co)
+[[ ! -z "${TURN_PUBLIC_IP}" ]] || export TURN_PUBLIC_IP=$(/usr/local/bin/discover_my_public_ip.sh)
 
 echo "TURN public IP: ${TURN_PUBLIC_IP}"
 

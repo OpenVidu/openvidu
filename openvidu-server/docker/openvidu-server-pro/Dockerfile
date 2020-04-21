@@ -14,15 +14,15 @@ RUN apt-get update && apt-get install -y \
   docker.io \
 && rm -rf /var/lib/apt/lists/*
     
-# OpenVidu
-RUN mkdir -p /opt/openvidu /usr/local/bin/ && \
-    wget -O /opt/openvidu/openvidu-server.jar \
-        https://pro-stripe.openvidu.io/openvidu-server-pro-${OPENVIDU_VERSION}.jar \
-        --tries=0 --read-timeout=20
+RUN mkdir -p /opt/openvidu /usr/local/bin/
+COPY openvidu-server.jar /opt/openvidu/openvidu-server.jar 
 
 COPY ./entrypoint.sh /usr/local/bin
+COPY ./discover_my_public_ip.sh /usr/local/bin
+    
 RUN mkdir -p /opt/openvidu/recordings && \
-    chmod +x /usr/local/bin/entrypoint.sh
+    chmod +x /usr/local/bin/entrypoint.sh && \
+    chmod +x /usr/local/bin/discover_my_public_ip.sh
 
 WORKDIR /opt/openvidu
 
