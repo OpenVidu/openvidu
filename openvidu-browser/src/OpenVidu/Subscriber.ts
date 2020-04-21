@@ -48,7 +48,8 @@ export class Subscriber extends StreamManager {
         this.stream.getMediaStream().getAudioTracks().forEach((track) => {
             track.enabled = value;
         });
-        console.info("'Subscriber' has " + (value ? 'subscribed to' : 'unsubscribed from') + ' its audio stream');
+        this.stream.audioActive = value;
+        logger.info("'Subscriber' has " + (value ? 'subscribed to' : 'unsubscribed from') + ' its audio stream');
         return this;
     }
 
@@ -60,7 +61,8 @@ export class Subscriber extends StreamManager {
         this.stream.getMediaStream().getVideoTracks().forEach((track) => {
             track.enabled = value;
         });
-        console.info("'Subscriber' has " + (value ? 'subscribed to' : 'unsubscribed from') + ' its video stream');
+        this.stream.videoActive = value;
+        logger.info("'Subscriber' has " + (value ? 'subscribed to' : 'unsubscribed from') + ' its video stream');
         return this;
     }
 
