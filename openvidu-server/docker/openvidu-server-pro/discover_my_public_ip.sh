@@ -21,10 +21,10 @@ function valid_ip()
 # Services to get public ip
 SERVICES=(
     "curl --silent -sw :%{http_code} ifconfig.me"
-    "curl --silent -sw :%{http_code} ident.me"
-    "curl --silent -sw :%{http_code} icanhazip.com"
     "curl --silent -sw :%{http_code} ipecho.net/plain"
     "curl --silent -sw :%{http_code} ipinfo.io/ip"
+    "curl --silent -sw :%{http_code} ident.me"
+    "curl --silent -sw :%{http_code} icanhazip.com"
 )
 
 # Get public ip
