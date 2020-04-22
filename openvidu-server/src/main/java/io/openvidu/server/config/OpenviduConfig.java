@@ -27,6 +27,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -886,28 +887,31 @@ public class OpenviduConfig {
 		}
 	}
 
+	public Path getDotenvFilePathFromDotenvPath(String dotenvPathProperty) {
+		if (dotenvPathProperty.endsWith(".env")) {
+			// Is file
+			return Paths.get(dotenvPathProperty);
+		} else if (dotenvPathProperty.endsWith("/")) {
+			// Is folder
+			return Paths.get(dotenvPathProperty + ".env");
+		} else {
+			// Is a folder not ending in "/"
+			return Paths.get(dotenvPathProperty + "/.env");
+		}
+	}
+
 	public File getDotenvFile() {
-		if (this.getDotenvPath() != null && !this.getDotenvPath().isEmpty()) {
-			File file = new File(this.getDotenvPath());
+		if (getDotenvPath() != null && !getDotenvPath().isEmpty()) {
+
+			Path path = getDotenvFilePathFromDotenvPath(getDotenvPath());
+			File file = path.toFile();
+
 			if (file.exists()) {
-				if (file.isDirectory()) {
-					file = new File(file, ".env");
-					if (file.exists() && file.isFile()) {
-						return file;
-					} else {
-						log.error(".env file not found at folder {}", this.getDotenvPath());
-					}
-				} else {
-					if (".env".equals(file.getName())) {
-						return file;
-					} else {
-						log.error("DOTEN_PATH configuration property refers to a file which is not .env ({})",
-								this.getDotenvPath());
-					}
-				}
+				return file;
 			} else {
-				log.error(".env file not found at {}", this.getDotenvPath());
+				log.error(".env file not found at {}", path.toAbsolutePath().toString());
 			}
+
 		} else {
 			log.warn("DOTENV_PATH configuration property is not defined");
 		}
