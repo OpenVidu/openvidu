@@ -44,6 +44,10 @@ public class Dotenv {
 		return properties.get(property);
 	}
 
+	public Map<String, String> getAll() {
+		return properties;
+	}
+
 	public Path getEnvFile() {
 		return envFile;
 	}
@@ -55,26 +59,25 @@ public class Dotenv {
 	public void write(Path envFile) throws IOException {
 
 		List<String> outLines = new ArrayList<>();
-		
+
+		int lineNumber = 1;
 		for (String line : lines) {
-
 			try {
-
-				Pair<String, String> propValue = parseLine(envFile, line);
-				if(propValue == null) {
+				Pair<String, String> propValue = parseLine(envFile, line, lineNumber);
+				if (propValue == null) {
 					outLines.add(line);
 				} else {
-					outLines.add(propValue.getKey()+"="+properties.get(propValue.getKey()));
+					outLines.add(propValue.getKey() + "=" + properties.get(propValue.getKey()));
 				}
-
 			} catch (DotenvFormatException e) {
 				log.error("Previously parsed line is producing a parser error", e);
 			}
+			lineNumber++;
 		}
-		
-		if(!additionalProperties.isEmpty()) {
-			for(String prop : additionalProperties) {
-				outLines.add(prop+"="+properties.get(prop));
+
+		if (!additionalProperties.isEmpty()) {
+			for (String prop : additionalProperties) {
+				outLines.add(prop + "=" + properties.get(prop));
 			}
 		}
 
@@ -88,12 +91,13 @@ public class Dotenv {
 
 		lines = Files.readAllLines(envFile);
 
+		int lineNumber = 1;
 		properties = new HashMap<>();
 		for (String line : lines) {
 
 			log.debug("Reading line '{}'", line);
 
-			Pair<String, String> propValue = parseLine(envFile, line);
+			Pair<String, String> propValue = parseLine(envFile, line, lineNumber);
 
 			if (propValue != null) {
 
@@ -101,10 +105,12 @@ public class Dotenv {
 
 				properties.put(propValue.getKey(), propValue.getValue());
 			}
+
+			lineNumber++;
 		}
 	}
 
-	private Pair<String, String> parseLine(Path envFile, String line) throws DotenvFormatException {
+	private Pair<String, String> parseLine(Path envFile, String line, int lineNumber) throws DotenvFormatException {
 
 		if (isWhitespace(line) || isComment(line)) {
 			return null;
@@ -113,13 +119,15 @@ public class Dotenv {
 		int index = line.indexOf("=");
 
 		if (index == -1) {
-			throw new DotenvFormatException("File " + envFile + " has a malformed line with content \"" + line + "\"");
+			throw new DotenvFormatException("File " + envFile + " has a malformed line at position " + lineNumber
+					+ " with content \"" + line + "\"");
 		}
 
 		String property = line.substring(0, index).trim();
 
 		if (property.equals("")) {
-			throw new DotenvFormatException("File " + envFile + " has a malformed line with content \"" + line + "\"");
+			throw new DotenvFormatException("File " + envFile + " has a malformed line at position " + lineNumber
+					+ " with content \"" + line + "\"");
 		}
 
 		String value = line.substring(index + 1);

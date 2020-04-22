@@ -18,6 +18,7 @@
 package io.openvidu.server.config;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
@@ -52,6 +53,7 @@ import com.google.gson.JsonSyntaxException;
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.server.OpenViduServer;
 import io.openvidu.server.cdr.CDREventName;
+import io.openvidu.server.config.Dotenv.DotenvFormatException;
 import io.openvidu.server.recording.RecordingNotification;
 
 @Component
@@ -421,29 +423,35 @@ public class OpenviduConfig {
 		this.configErrors.add(new Error(property, value, msg));
 	}
 
-	@PostConstruct
-	public void checkConfiguration() {
-
+	public void checkConfiguration(boolean loadDotenv) {
 		try {
-			this.checkConfigurationProperties();
+			this.checkConfigurationProperties(loadDotenv);
 		} catch (Exception e) {
 			log.error("Exception checking configuration", e);
 			addError(null, "Exception checking configuration." + e.getClass().getName() + ":" + e.getMessage());
 		}
-
 		userConfigProps = new ArrayList<>(configProps.keySet());
-
 		userConfigProps.removeAll(getNonUserProperties());
 	}
 
+	@PostConstruct
+	public void checkConfiguration() {
+		this.checkConfiguration(true);
+	}
+
 	protected List<String> getNonUserProperties() {
-		return Arrays.asList("server.port", "COTURN_IP", "COTURN_REDIS_IP", "KMS_URIS", "COTURN_REDIS_DBNAME",
-				"COTURN_REDIS_PASSWORD", "COTURN_REDIS_CONNECT_TIMEOUT");
+		return Arrays.asList("server.port", "DOTENV_PATH", "COTURN_IP", "COTURN_REDIS_IP", "KMS_URIS",
+				"COTURN_REDIS_DBNAME", "COTURN_REDIS_PASSWORD", "COTURN_REDIS_CONNECT_TIMEOUT");
 	}
 
 	// Properties
 
-	protected void checkConfigurationProperties() {
+	protected void checkConfigurationProperties(boolean loadDotenv) {
+
+		if (loadDotenv) {
+			dotenvPath = getValue("DOTENV_PATH");
+			this.populatePropertySourceFromDotenv();
+		}
 
 		serverPort = getValue("server.port");
 
@@ -489,7 +497,6 @@ public class OpenviduConfig {
 
 		checkCertificateType();
 
-		dotenvPath = getValue("DOTENV_PATH");
 	}
 
 	private void checkCertificateType() {
@@ -858,6 +865,53 @@ public class OpenviduConfig {
 		} catch (MalformedURLException | URISyntaxException e) {
 			throw new Exception("String '" + url + "' has not a valid URL format: " + e.getMessage());
 		}
+	}
+
+	protected void populatePropertySourceFromDotenv() {
+		File dotenvFile = this.getDotenvFile();
+		if (dotenvFile != null) {
+			if (dotenvFile.canRead()) {
+				Dotenv dotenv = new Dotenv();
+				try {
+					dotenv.read(dotenvFile.toPath());
+					this.propertiesSource = dotenv.getAll();
+					log.info("Configuration properties read from file {}", dotenvFile.getAbsolutePath());
+				} catch (IOException | DotenvFormatException e) {
+					log.error("Error reading properties from .env file: {}", e.getMessage());
+					addError(null, e.getMessage());
+				}
+			} else {
+				log.error("OpenVidu does not have read permissions over .env file at {}", this.getDotenvPath());
+			}
+		}
+	}
+
+	public File getDotenvFile() {
+		if (this.getDotenvPath() != null && !this.getDotenvPath().isEmpty()) {
+			File file = new File(this.getDotenvPath());
+			if (file.exists()) {
+				if (file.isDirectory()) {
+					file = new File(file, ".env");
+					if (file.exists() && file.isFile()) {
+						return file;
+					} else {
+						log.error(".env file not found at folder {}", this.getDotenvPath());
+					}
+				} else {
+					if (".env".equals(file.getName())) {
+						return file;
+					} else {
+						log.error("DOTEN_PATH configuration property refers to a file which is not .env ({})",
+								this.getDotenvPath());
+					}
+				}
+			} else {
+				log.error(".env file not found at {}", this.getDotenvPath());
+			}
+		} else {
+			log.warn("DOTENV_PATH configuration property is not defined");
+		}
+		return null;
 	}
 
 }
