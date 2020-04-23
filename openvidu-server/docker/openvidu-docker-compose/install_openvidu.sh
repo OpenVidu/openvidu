@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 OPENVIDU_FOLDER=openvidu
-OPENVIDU_VERSION=master
+OPENVIDU_VERSION=2.13.0
 
 # Check docker and docker-compose installation
 docker -v > /dev/null 2>&1
