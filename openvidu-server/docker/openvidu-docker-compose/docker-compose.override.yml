@@ -5,7 +5,7 @@ services:
     # It's very important expose your application in port 5442
     # and use the http protocol.
     app:
-        image: openvidu/openvidu-call:2.13.0-beta5
+        image: openvidu/openvidu-call:2.12.0
         restart: on-failure
         ports:
             - "5442:80"

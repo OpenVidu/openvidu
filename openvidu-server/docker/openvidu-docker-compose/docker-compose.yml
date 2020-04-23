@@ -18,7 +18,7 @@ version: '3.1'
 services:
 
     openvidu-server:
-        image: openvidu/openvidu-server:2.13.0-beta9
+        image: openvidu/openvidu-server:2.13.0
         restart: on-failure
         network_mode: host
         entrypoint: ['/bin/bash', '-c', 'export COTURN_IP=`/usr/local/bin/discover_my_public_ip.sh`; /usr/local/bin/entrypoint.sh']
@@ -55,7 +55,7 @@ services:
         network_mode: host
 
     coturn:
-        image: openvidu/openvidu-coturn:1.0.0-beta2
+        image: openvidu/openvidu-coturn:1.0.0
         restart: on-failure
         network_mode: host
         environment:
@@ -67,7 +67,7 @@ services:
             - MAX_PORT=65535
 
     nginx:
-        image: openvidu/openvidu-proxy:1.0.0-beta6
+        image: openvidu/openvidu-proxy:1.0.0
         restart: on-failure
         network_mode: host
         volumes:
