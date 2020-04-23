@@ -1,17 +1,17 @@
 {
     "author": "OpenVidu",
     "dependencies": {
-        "@types/node": "13.9.5",
+        "@types/node": "13.13.2",
         "@types/platform": "1.3.2",
         "freeice": "2.2.2",
         "hark": "1.2.3",
         "platform": "1.3.5",
-        "uuid": "7.0.2",
+        "uuid": "7.0.3",
         "wolfy87-eventemitter": "5.2.9"
     },
     "description": "OpenVidu Browser",
     "devDependencies": {
-        "browserify": "16.5.0",
+        "browserify": "16.5.1",
         "grunt": "1.1.0",
         "grunt-cli": "1.3.2",
         "grunt-contrib-copy": "1.0.0",
@@ -21,11 +21,11 @@
         "grunt-postcss": "0.9.0",
         "grunt-string-replace": "1.3.1",
         "grunt-ts": "6.0.0-beta.22",
+        "terser": "4.6.11",
         "tsify": "4.0.1",
-        "tslint": "6.1.0",
-        "typedoc": "0.17.3",
-        "typescript": "3.8.3",
-        "uglify-js": "3.8.1"
+        "tslint": "6.1.1",
+        "typedoc": "0.17.4",
+        "typescript": "3.8.3"
     },
     "license": "Apache-2.0",
     "main": "lib/index.js",
@@ -36,7 +36,7 @@
     },
     "scripts": {
         "browserify": "VERSION=${VERSION:-dev}; cd src && ../node_modules/browserify/bin/cmd.js Main.ts -p [ tsify ] --exclude kurento-browser-extensions --debug -o ../static/js/openvidu-browser-$VERSION.js -v",
-        "browserify-prod": "VERSION=${VERSION:-dev}; cd src && ../node_modules/browserify/bin/cmd.js --debug Main.ts -p [ tsify ] --exclude kurento-browser-extensions | ../node_modules/uglify-js/bin/uglifyjs --source-map content=inline --output ../static/js/openvidu-browser-$VERSION.min.js",
+        "browserify-prod": "VERSION=${VERSION:-dev}; cd src && ../node_modules/browserify/bin/cmd.js --debug Main.ts -p [ tsify ] --exclude kurento-browser-extensions | ../node_modules/terser/bin/terser --source-map content=inline --output ../static/js/openvidu-browser-$VERSION.min.js",
         "build": "cd src/OpenVidu && ./../../node_modules/typescript/bin/tsc && cd ../.. && ./node_modules/typescript/bin/tsc --declaration src/index.ts --outDir ./lib --sourceMap --lib dom,es5,es2015.promise,scripthost",
         "docs": "./generate-docs.sh"
     },
