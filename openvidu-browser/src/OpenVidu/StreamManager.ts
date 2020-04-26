@@ -16,14 +16,13 @@
  */
 
 import { Stream } from './Stream';
-import { EventDispatcher } from '../OpenViduInternal/Interfaces/Public/EventDispatcher';
+import { EventDispatcher } from './EventDispatcher';
 import { StreamManagerVideo } from '../OpenViduInternal/Interfaces/Public/StreamManagerVideo';
 import { Event } from '../OpenViduInternal/Events/Event';
 import { StreamManagerEvent } from '../OpenViduInternal/Events/StreamManagerEvent';
 import { VideoElementEvent } from '../OpenViduInternal/Events/VideoElementEvent';
 import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
 
-import EventEmitter = require('wolfy87-eventemitter');
 import platform = require('platform');
 
 /**
@@ -42,7 +41,7 @@ import platform = require('platform');
  * - streamAudioVolumeChange ([[StreamManagerEvent]])
  * 
  */
-export class StreamManager implements EventDispatcher {
+export class StreamManager extends EventDispatcher {
 
     /**
      * The Stream represented in the DOM by the Publisher/Subscriber
@@ -90,17 +89,14 @@ export class StreamManager implements EventDispatcher {
     /**
      * @hidden
      */
-    ee = new EventEmitter();
-    /**
-     * @hidden
-     */
     protected canPlayListener: EventListener;
-
 
     /**
      * @hidden
      */
     constructor(stream: Stream, targetElement?: HTMLElement | string) {
+        super();
+
         this.stream = stream;
         this.stream.streamManager = this;
         this.remote = !this.stream.isLocal();
@@ -149,14 +145,9 @@ export class StreamManager implements EventDispatcher {
      * See [[EventDispatcher.on]]
      */
     on(type: string, handler: (event: Event) => void): EventDispatcher {
-        this.ee.on(type, event => {
-            if (event) {
-                console.info("Event '" + type + "' triggered by '" + (this.remote ? 'Subscriber' : 'Publisher') + "'", event);
-            } else {
-                console.info("Event '" + type + "' triggered by '" + (this.remote ? 'Subscriber' : 'Publisher') + "'");
-            }
-            handler(event);
-        });
+
+        super.onAux(type, "Event '" + type + "' triggered by '" + (this.remote ? 'Subscriber' : 'Publisher') + "'", handler)
+
         if (type === 'videoElementCreated') {
             if (!!this.stream && this.lazyLaunchVideoElementCreatedEvent) {
                 this.ee.emitEvent('videoElementCreated', [new VideoElementEvent(this.videos[0].video, this, 'videoElementCreated')]);
@@ -183,14 +174,9 @@ export class StreamManager implements EventDispatcher {
      * See [[EventDispatcher.once]]
      */
     once(type: string, handler: (event: Event) => void): StreamManager {
-        this.ee.once(type, event => {
-            if (event) {
-                console.info("Event '" + type + "' triggered once by '" + (this.remote ? 'Subscriber' : 'Publisher') + "'", event);
-            } else {
-                console.info("Event '" + type + "' triggered once by '" + (this.remote ? 'Subscriber' : 'Publisher') + "'");
-            }
-            handler(event);
-        });
+
+        super.onceAux(type, "Event '" + type + "' triggered once by '" + (this.remote ? 'Subscriber' : 'Publisher') + "'", handler);
+
         if (type === 'videoElementCreated') {
             if (!!this.stream && this.lazyLaunchVideoElementCreatedEvent) {
                 this.ee.emitEvent('videoElementCreated', [new VideoElementEvent(this.videos[0].video, this, 'videoElementCreated')]);
@@ -216,11 +202,8 @@ export class StreamManager implements EventDispatcher {
      * See [[EventDispatcher.off]]
      */
     off(type: string, handler?: (event: Event) => void): StreamManager {
-        if (!handler) {
-            this.ee.removeAllListeners(type);
-        } else {
-            this.ee.off(type, handler);
-        }
+
+        super.off(type, handler);
 
         if (type === 'streamAudioVolumeChange') {
             let remainingVolumeEventListeners = this.ee.getListeners(type).length;
