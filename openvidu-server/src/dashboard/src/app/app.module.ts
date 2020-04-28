@@ -15,6 +15,7 @@ import { OpenViduVideoComponent } from './components/layouts/ov-video.component'
 import { SessionDetailsComponent } from './components/session-details/session-details.component';
 import { InfoService } from './services/info.service';
 import { RestService } from './services/rest.service';
+import { HttpClientModule } from '@angular/common/http';
 
 @NgModule({
   declarations: [
@@ -31,6 +32,7 @@ import { RestService } from './services/rest.service';
   imports: [
     BrowserModule,
     FormsModule,
+    HttpClientModule,
     routing,
     AppMaterialModule,
     FlexLayoutModule
