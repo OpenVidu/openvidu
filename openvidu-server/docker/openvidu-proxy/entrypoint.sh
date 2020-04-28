@@ -1,9 +1,14 @@
-#!/bin/bash
+#!/bin/sh
+
+[ -z "${PROXY_HTTP_PORT}" ] && export PROXY_HTTP_PORT=80
+[ -z "${PROXY_HTTPS_PORT}" ] && export PROXY_HTTPS_PORT=443
 
 # Start with default certbot conf
-service nginx start
+nginx -g "daemon on;"
 
 # Show input enviroment variables
+echo "Http Port: ${PROXY_HTTP_PORT}"
+echo "Https Port: ${PROXY_HTTPS_PORT}"
 echo "Domain name: ${DOMAIN_OR_PUBLIC_IP}"
 echo "Certificated: ${CERTIFICATE_TYPE}"
 echo "Letsencrypt Email: ${LETSENCRYPT_EMAIL}"
@@ -19,11 +24,12 @@ case ${CERTIFICATE_TYPE} in
       echo "Generating certificated..."
       
       rm -rf /etc/letsencrypt/live/*
-      mkdir -p /etc/letsencrypt/live/${DOMAIN_OR_PUBLIC_IP}
+      mkdir -p "/etc/letsencrypt/live/${DOMAIN_OR_PUBLIC_IP}"
 
       openssl req -new -nodes -x509 \
         -subj "/CN=${DOMAIN_OR_PUBLIC_IP}" -days 365 \
-        -keyout /etc/letsencrypt/live/${DOMAIN_OR_PUBLIC_IP}/privkey.pem -out /etc/letsencrypt/live/${DOMAIN_OR_PUBLIC_IP}/fullchain.pem -extensions v3_ca
+        -keyout "/etc/letsencrypt/live/${DOMAIN_OR_PUBLIC_IP}/privkey.pem" \
+        -out "/etc/letsencrypt/live/${DOMAIN_OR_PUBLIC_IP}/fullchain.pem" -extensions v3_ca
     else
       echo "The certificate already exists, using them..."
     fi
@@ -36,9 +42,9 @@ case ${CERTIFICATE_TYPE} in
       echo "Using owmcert..."
 
       rm -rf /etc/letsencrypt/live/*
-      mkdir -p /etc/letsencrypt/live/${DOMAIN_OR_PUBLIC_IP}
-      cp /owncert/certificate.key /etc/letsencrypt/live/${DOMAIN_OR_PUBLIC_IP}/privkey.pem
-      cp /owncert/certificate.cert /etc/letsencrypt/live/${DOMAIN_OR_PUBLIC_IP}/fullchain.pem
+      mkdir -p "/etc/letsencrypt/live/${DOMAIN_OR_PUBLIC_IP}"
+      cp /owncert/certificate.key "/etc/letsencrypt/live/${DOMAIN_OR_PUBLIC_IP}/privkey.pem"
+      cp /owncert/certificate.cert "/etc/letsencrypt/live/${DOMAIN_OR_PUBLIC_IP}/fullchain.pem"
 
     else
       echo "The certificate already exists, using them..."
@@ -49,12 +55,12 @@ case ${CERTIFICATE_TYPE} in
     echo "===Mode letsencrypt==="
 
     # Auto renew cert
-    echo "0 12 * * * certbot renew >> /var/log/nginx/cron-letsencrypt.log" | crontab
+    echo "0 12 * * * certbot renew >> /var/log/nginx/cron-letsencrypt.log" | crontab -
 
     if [[ ! -f "/etc/letsencrypt/live/${DOMAIN_OR_PUBLIC_IP}/privkey.pem" && ! -f "/etc/letsencrypt/live/${DOMAIN_OR_PUBLIC_IP}/fullchain.pem" ]]; then
       echo "Requesting certificate..."
 
-    certbot certonly -n --webroot -w /var/www/certbot -m ${LETSENCRYPT_EMAIL} --agree-tos -d ${DOMAIN_OR_PUBLIC_IP}
+    certbot certonly -n --webroot -w /var/www/certbot -m "${LETSENCRYPT_EMAIL}" --agree-tos -d "${DOMAIN_OR_PUBLIC_IP}"
     else
       echo "The certificate already exists, using them..."
     fi
@@ -98,12 +104,15 @@ EOF
 # Load nginx conf files
 rm /etc/nginx/conf.d/*
 cp /default_nginx_conf/* /etc/nginx/conf.d
-sed -i "s/{domain_name}/${DOMAIN_OR_PUBLIC_IP}/" /etc/nginx/conf.d/*
+sed -i "s/{domain_name}/${DOMAIN_OR_PUBLIC_IP}/g" /etc/nginx/conf.d/*
+sed -i "s/{http_port}/${PROXY_HTTP_PORT}/g" /etc/nginx/conf.d/*
+sed -i "s/{https_port}/${PROXY_HTTPS_PORT}/g" /etc/nginx/conf.d/*
 
 # Restart nginx service
-service nginx restart
+nginx -s reload
 
 # Init cron
-cron -f
+/usr/sbin/crond -f &
 
+# nginx logs
 tail -f /var/log/nginx/*.log

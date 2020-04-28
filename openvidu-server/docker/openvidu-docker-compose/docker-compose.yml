@@ -67,7 +67,7 @@ services:
             - MAX_PORT=65535
 
     nginx:
-        image: openvidu/openvidu-proxy:1.0.0
+        image: openvidu/openvidu-proxy:2.0.0-beta1
         restart: on-failure
         network_mode: host
         volumes:
@@ -78,5 +78,7 @@ services:
             - DOMAIN_OR_PUBLIC_IP=${OPENVIDU_DOMAIN_OR_PUBLIC_IP}
             - CERTIFICATE_TYPE=${CERTIFICATE_TYPE}
             - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
+            - PROXY_HTTP_PORT=${PROXY_HTTP_PORT:-}
+            - PROXY_HTTPS_PORT=${PROXY_HTTPS_PORT:-}
             - PROXY_MODE=CE
             - WITH_DEMOS=true
