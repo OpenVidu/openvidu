@@ -19,7 +19,7 @@ import { OpenVidu } from './OpenVidu';
 import { Session } from './Session';
 import { Stream } from './Stream';
 import { StreamManager } from './StreamManager';
-import { EventDispatcher } from '../OpenViduInternal/Interfaces/Public/EventDispatcher';
+import { EventDispatcher } from './EventDispatcher';
 import { PublisherProperties } from '../OpenViduInternal/Interfaces/Public/PublisherProperties';
 import { Event } from '../OpenViduInternal/Events/Event';
 import { StreamEvent } from '../OpenViduInternal/Events/StreamEvent';

@@ -23,7 +23,7 @@ import { Stream } from './Stream';
 import { StreamManager } from './StreamManager';
 import { Subscriber } from './Subscriber';
 import { Capabilities } from '../OpenViduInternal/Interfaces/Public/Capabilities';
-import { EventDispatcher } from '../OpenViduInternal/Interfaces/Public/EventDispatcher';
+import { EventDispatcher } from './EventDispatcher';
 import { SignalOptions } from '../OpenViduInternal/Interfaces/Public/SignalOptions';
 import { SubscriberProperties } from '../OpenViduInternal/Interfaces/Public/SubscriberProperties';
 import { ConnectionOptions } from '../OpenViduInternal/Interfaces/Private/ConnectionOptions';
@@ -40,7 +40,6 @@ import { StreamPropertyChangedEvent } from '../OpenViduInternal/Events/StreamPro
 import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/OpenViduError';
 import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
 
-import EventEmitter = require('wolfy87-eventemitter');
 import platform = require('platform');
 
 /**
@@ -65,7 +64,7 @@ import platform = require('platform');
  * - reconnected
  * 
  */
-export class Session implements EventDispatcher {
+export class Session extends EventDispatcher {
 
     /**
      * Local connection to the Session. This object is defined only after [[Session.connect]] has been successfully executed, and can be retrieved subscribing to `connectionCreated` event
@@ -131,12 +130,11 @@ export class Session implements EventDispatcher {
      */
     stopSpeakingEventsEnabledOnce = false;
 
-    private ee = new EventEmitter();
-
     /**
      * @hidden
      */
     constructor(openvidu: OpenVidu) {
+        super();
         this.openvidu = openvidu;
     }
 
@@ -589,14 +587,7 @@ export class Session implements EventDispatcher {
      */
     on(type: string, handler: (event: SessionDisconnectedEvent | SignalEvent | StreamEvent | ConnectionEvent | PublisherSpeakingEvent | RecordingEvent) => void): EventDispatcher {
 
-        this.ee.on(type, event => {
-            if (event) {
-                console.info("Event '" + type + "' triggered by 'Session'", event);
-            } else {
-                console.info("Event '" + type + "' triggered by 'Session'");
-            }
-            handler(event);
-        });
+        super.onAux(type, "Event '" + type + "' triggered by 'Session'", handler);
 
         if (type === 'publisherStartSpeaking') {
             this.startSpeakingEventsEnabled = true;
@@ -628,14 +619,7 @@ export class Session implements EventDispatcher {
      */
     once(type: string, handler: (event: SessionDisconnectedEvent | SignalEvent | StreamEvent | ConnectionEvent | PublisherSpeakingEvent | RecordingEvent) => void): Session {
 
-        this.ee.once(type, event => {
-            if (event) {
-                console.info("Event '" + type + "' triggered once by 'Session'", event);
-            } else {
-                console.info("Event '" + type + "' triggered once by 'Session'");
-            }
-            handler(event);
-        });
+        super.onceAux(type, "Event '" + type + "' triggered once by 'Session'", handler);
 
         if (type === 'publisherStartSpeaking') {
             this.startSpeakingEventsEnabledOnce = true;
@@ -666,11 +650,8 @@ export class Session implements EventDispatcher {
      * See [[EventDispatcher.off]]
      */
     off(type: string, handler?: (event: SessionDisconnectedEvent | SignalEvent | StreamEvent | ConnectionEvent | PublisherSpeakingEvent | RecordingEvent) => void): Session {
-        if (!handler) {
-            this.ee.removeAllListeners(type);
-        } else {
-            this.ee.off(type, handler);
-        }
+
+        super.off(type, handler);
 
         if (type === 'publisherStartSpeaking') {
             let remainingStartSpeakingListeners = this.ee.getListeners(type).length;

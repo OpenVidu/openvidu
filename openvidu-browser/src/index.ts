@@ -26,7 +26,7 @@ export { FilterEvent } from './OpenViduInternal/Events/FilterEvent';
 
 export { Capabilities } from './OpenViduInternal/Interfaces/Public/Capabilities';
 export { Device } from './OpenViduInternal/Interfaces/Public/Device';
-export { EventDispatcher } from './OpenViduInternal/Interfaces/Public/EventDispatcher';
+export { EventDispatcher } from './OpenVidu/EventDispatcher';
 export { OpenViduAdvancedConfiguration } from './OpenViduInternal/Interfaces/Public/OpenViduAdvancedConfiguration';
 export { PublisherProperties } from './OpenViduInternal/Interfaces/Public/PublisherProperties';
 export { SignalOptions } from './OpenViduInternal/Interfaces/Public/SignalOptions';
