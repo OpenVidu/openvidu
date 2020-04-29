@@ -4,6 +4,7 @@ FROM nginx:1.18.0-alpine
 RUN apk update && \
     apk add certbot && \
     apk add openssl && \
+    apk add apache2-utils && \
     rm -rf /var/cache/apk/*
 
 # Default nginx conf
