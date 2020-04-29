@@ -159,7 +159,7 @@ public class OpenviduConfig {
 
 	private String openviduRecordingComposedUrl;
 
-	private String serverPort;
+	private int serverPort;
 
 	private String coturnRedisDbname;
 
@@ -183,7 +183,7 @@ public class OpenviduConfig {
 
 	// Plain config properties getters
 
-	public String getServerPort() {
+	public int getServerPort() {
 		return this.serverPort;
 	}
 
@@ -385,29 +385,29 @@ public class OpenviduConfig {
 	}
 
 	private String getValue(String property) {
+		return this.getValue(property, true);
+	}
 
+	private String getValue(String property, boolean storeInConfigProps) {
 		String value = null;
-
 		if (propertiesSource != null) {
-
 			Object valueObj = propertiesSource.get(property);
 			if (valueObj != null) {
 				value = valueObj.toString();
 			}
 		}
-
 		if (value == null) {
 			value = env.getProperty(property);
 		}
-
-		this.configProps.put(property, value);
-
+		if (storeInConfigProps) {
+			this.configProps.put(property, value);
+		}
 		return value;
 	}
 
 	public String getPropertyName(String propertyName) {
 		if (SHOW_PROPERTIES_AS_ENV_VARS) {
-			return propertyName.replace('.', '_').toUpperCase();
+			return propertyName.replace('.', '_').replace('-', '_').toUpperCase();
 		} else {
 			return propertyName;
 		}
@@ -441,7 +441,7 @@ public class OpenviduConfig {
 	}
 
 	protected List<String> getNonUserProperties() {
-		return Arrays.asList("server.port", "DOTENV_PATH", "COTURN_IP", "COTURN_REDIS_IP", "KMS_URIS",
+		return Arrays.asList("server.port", "SERVER_PORT", "DOTENV_PATH", "COTURN_IP", "COTURN_REDIS_IP", "KMS_URIS",
 				"COTURN_REDIS_DBNAME", "COTURN_REDIS_PASSWORD", "COTURN_REDIS_CONNECT_TIMEOUT");
 	}
 
@@ -454,7 +454,8 @@ public class OpenviduConfig {
 			this.populatePropertySourceFromDotenv();
 		}
 
-		serverPort = getValue("server.port");
+		checkHttpsPort();
+		checkOpenviduPublicurl();
 
 		coturnRedisDbname = getValue("COTURN_REDIS_DBNAME");
 
@@ -463,8 +464,6 @@ public class OpenviduConfig {
 		coturnRedisConnectTimeout = getValue("COTURN_REDIS_CONNECT_TIMEOUT");
 
 		openviduSecret = asNonEmptyString("OPENVIDU_SECRET");
-
-		checkOpenviduPublicurl();
 
 		openviduCdr = asBoolean("OPENVIDU_CDR");
 		openviduCdrPath = openviduCdr ? asWritableFileSystemPath("OPENVIDU_CDR_PATH")
@@ -532,8 +531,7 @@ public class OpenviduConfig {
 		webhookEventsList = getWebhookEvents();
 
 		if (openviduWebhookEnabled && (openviduWebhookEndpoint == null || openviduWebhookEndpoint.isEmpty())) {
-			addError("OPENVIDU_WEBHOOK_ENDPOINT",
-					"With " + getPropertyName("OPENVIDU_WEBHOOK") + "=true, this property cannot be empty");
+			addError("OPENVIDU_WEBHOOK_ENDPOINT", "With OPENVIDU_WEBHOOK=true, this property cannot be empty");
 		}
 	}
 
@@ -553,6 +551,9 @@ public class OpenviduConfig {
 
 		if (domain != null && !domain.isEmpty()) {
 			this.openviduPublicUrl = "https://" + domain;
+			if (this.serverPort != 443) {
+				this.openviduPublicUrl += (":" + this.serverPort);
+			}
 		} else {
 			final String urlProperty = "OPENVIDU_PUBLICURL";
 			String publicurl = getValue(urlProperty);
@@ -572,6 +573,38 @@ public class OpenviduConfig {
 
 		if (openviduPublicUrl != null && !openviduPublicUrl.isEmpty()) {
 			calculatePublicUrl();
+		}
+	}
+
+	private void checkHttpsPort() {
+		String property = "HTTPS_PORT";
+		String httpsPort = getValue(property);
+		if (httpsPort == null) {
+			// This should only occur on dev container
+			property = "SERVER_PORT";
+			httpsPort = getValue(property);
+			if (httpsPort == null) {
+				property = "server.port";
+				httpsPort = getValue(property, false);
+				if (httpsPort == null || httpsPort.isEmpty()) {
+					addError(property, "Cannot be undefined");
+					return;
+				}
+			}
+		}
+		int httpsPortNumber = 0;
+		try {
+			httpsPortNumber = Integer.parseInt(httpsPort);
+		} catch (NumberFormatException e) {
+			addError(property, "Is not a valid port. Must be an integer. " + e.getMessage());
+			return;
+		}
+
+		if (httpsPortNumber > 0 && httpsPortNumber <= 65535) {
+			serverPort = httpsPortNumber;
+		} else {
+			addError(property, "Is not a valid port. Valid port range exceeded with value " + httpsPortNumber);
+			return;
 		}
 	}
 
