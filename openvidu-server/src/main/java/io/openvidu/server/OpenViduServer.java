@@ -86,7 +86,6 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	private static final Logger log = LoggerFactory.getLogger(OpenViduServer.class);
 
 	public static final String WS_PATH = "/openvidu";
-	public static String publicurlType;
 	public static String wsUrl;
 	public static String httpUrl;
 
@@ -221,7 +220,32 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 	public static void main(String[] args) throws Exception {
 
-		checkConfigProperties(OpenviduConfig.class);
+		Map<String, String> CONFIG_PROPS = checkConfigProperties(OpenviduConfig.class);
+
+		if (CONFIG_PROPS.get("SERVER_PORT") != null) {
+
+			// Configuration property SERVER_PORT has been explicitly defined.
+			// Must initialize the application in that port on the host regardless of what
+			// HTTPS_PORT says. HTTPS_PORT does get used in the public URL.
+
+			System.setProperty("server.port", CONFIG_PROPS.get("SERVER_PORT"));
+
+			log.warn(
+					"You have set property server.port (or SERVER_PORT). This will serve OpenVidu Server on your host at port "
+							+ CONFIG_PROPS.get("SERVER_PORT") + ". But property HTTPS_PORT ("
+							+ CONFIG_PROPS.get("HTTPS_PORT")
+							+ ") still configures the port that should be used to connect to OpenVidu Server from outside. "
+							+ "Bear this in mind when configuring a proxy in front of OpenVidu Server");
+
+		} else if (CONFIG_PROPS.get("HTTPS_PORT") != null) {
+
+			// Configuration property SERVER_PORT has NOT been explicitly defined.
+			// Must initialize the application in port HTTPS_PORT on the host. HTTPS_PORT
+			// does get used in the public URL as well.
+
+			System.setProperty("server.port", CONFIG_PROPS.get("HTTPS_PORT"));
+
+		}
 
 		log.info("Using /dev/urandom for secure random generation");
 		System.setProperty("java.security.egd", "file:/dev/./urandom");
@@ -229,7 +253,7 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 	}
 
-	public static <T> void checkConfigProperties(Class<T> configClass) throws InterruptedException {
+	public static <T> Map<String, String> checkConfigProperties(Class<T> configClass) throws InterruptedException {
 
 		ConfigurableApplicationContext app = SpringApplication.run(configClass,
 				new String[] { "--spring.main.web-application-type=none" });
@@ -270,18 +294,21 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 			String msg = "\n\n\n" + "   Configuration properties\n" + "   ------------------------\n" + "\n";
 
-			Map<String, String> configProps = config.getConfigProps();
+			final Map<String, String> CONFIG_PROPS = config.getConfigProps();
 			List<String> configPropNames = new ArrayList<>(config.getUserProperties());
 			Collections.sort(configPropNames);
 
 			for (String property : configPropNames) {
-				String value = configProps.get(property);
+				String value = CONFIG_PROPS.get(property);
 				msg += "   * " + config.getPropertyName(property) + "=" + (value == null ? "" : value) + "\n";
 			}
 			msg += "\n\n";
 
 			log.info(msg);
+
+			return CONFIG_PROPS;
 		}
+		return null;
 	}
 
 	@EventListener(ApplicationReadyEvent.class)

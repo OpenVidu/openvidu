@@ -3,7 +3,18 @@
 		{
 			"name": "DOTENV_PATH",
 			"type": "java.lang.String",
-			"description": "Path to the .env configuration file"
+			"description": "Path to the .env configuration file",
+			"defaultValue": "."
+		},
+		{
+			"name": "DOMAIN_OR_PUBLIC_IP",
+			"type": "java.lang.String",
+			"description": "Public domain or ip where OpenVidu Server will be accessible"
+		},
+		{
+			"name": "HTTPS_PORT",
+			"type": "java.lang.Integer",
+			"description": "Secure port where OpenVidu Server will listen"
 		},
 		{
 			"name": "KMS_URIS",
@@ -16,12 +27,6 @@
 			"type": "java.lang.String",
 			"description": "Secret used to connect to OpenVidu Server. This value is required when using the REST API or any server client, as well as when connecting to openvidu-server dashboard",
 			"defaultValue": "MY_SECRET"
-		},
-		{
-			"name": "OPENVIDU_PUBLICURL",
-			"type": "java.lang.String",
-			"description": "URL to connect clients to OpenVidu Server. This must be the full IP of your OpenVidu Server, including protocol, host and port (for example: https://my.openvidu.server.ip:4443). If no port argument is provided, 'server.port' param will be appended to it",
-			"defaultValue": "local"
 		},
 		{
 			"name": "OPENVIDU_CDR",
@@ -79,7 +84,7 @@
 		{
 			"name": "OPENVIDU_RECORDING_COMPOSED_URL",
 			"type": "java.lang.String",
-			"description": "URL the composed-video recording dockerized Chrome will use to connect to the recording layouts inside OpenVidu Server host. This will affect all video recording layouts (default one BEST_FIT, all CUSTOM layouts). This allows changing the default URL, which is 'OPENVIDU_PUBLICURL', for those cases where OpenVidu Server host does not allow back and forth connections using the public url from inside the host",
+			"description": "URL the composed-video recording dockerized Chrome will use to connect to the recording layouts inside OpenVidu Server host. This will affect all video recording layouts (default one BEST_FIT, all CUSTOM layouts). This allows changing the default URL, which is the public URL 'https://DOMAIN_OR_PUBLIC_IP:HTTPS_PORT/', for those cases where OpenVidu Server host does not allow back and forth connections using the public url from inside the host",
 			"defaultValue": ""
 		},
 		{

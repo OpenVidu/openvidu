@@ -95,8 +95,6 @@ public class OpenviduConfig {
 
 	private static final boolean SHOW_PROPERTIES_AS_ENV_VARS = true;
 
-	public static final List<String> OPENVIDU_VALID_PUBLICURL_VALUES = Arrays.asList("local", "docker");
-
 	private List<Error> configErrors = new ArrayList<>();
 
 	private Map<String, String> configProps = new HashMap<>();
@@ -153,13 +151,15 @@ public class OpenviduConfig {
 
 	private List<String> kmsUrisList;
 
-	private String openviduSecret;
+	private String domainOrPublicIp;
 
 	private String openviduPublicUrl;
 
-	private String openviduRecordingComposedUrl;
+	private Integer httpsPort;
 
-	private int serverPort;
+	private String openviduSecret;
+
+	private String openviduRecordingComposedUrl;
 
 	private String coturnRedisDbname;
 
@@ -183,10 +183,6 @@ public class OpenviduConfig {
 
 	// Plain config properties getters
 
-	public int getServerPort() {
-		return this.serverPort;
-	}
-
 	public String getCoturnDatabaseDbname() {
 		return this.coturnRedisDbname;
 	}
@@ -195,8 +191,16 @@ public class OpenviduConfig {
 		return kmsUrisList;
 	}
 
+	public String getDomainOrPublicIp() {
+		return this.domainOrPublicIp;
+	}
+
 	public String getOpenViduPublicUrl() {
 		return this.openviduPublicUrl;
+	}
+
+	public Integer getHttpsPort() {
+		return this.httpsPort;
 	}
 
 	public String getOpenViduSecret() {
@@ -441,7 +445,7 @@ public class OpenviduConfig {
 	}
 
 	protected List<String> getNonUserProperties() {
-		return Arrays.asList("server.port", "SERVER_PORT", "DOTENV_PATH", "COTURN_IP", "COTURN_REDIS_IP", "KMS_URIS",
+		return Arrays.asList("server.port", "SERVER_PORT", "DOTENV_PATH", "COTURN_IP", "COTURN_REDIS_IP",
 				"COTURN_REDIS_DBNAME", "COTURN_REDIS_PASSWORD", "COTURN_REDIS_CONNECT_TIMEOUT");
 	}
 
@@ -455,7 +459,8 @@ public class OpenviduConfig {
 		}
 
 		checkHttpsPort();
-		checkOpenviduPublicurl();
+		checkDomainOrPublicIp();
+		populateSpringServerPort();
 
 		coturnRedisDbname = getValue("COTURN_REDIS_DBNAME");
 
@@ -545,34 +550,19 @@ public class OpenviduConfig {
 		}
 	}
 
-	private void checkOpenviduPublicurl() {
-		final String property = "OPENVIDU_DOMAIN_OR_PUBLIC_IP";
-		String domain = getValue(property);
+	private void checkDomainOrPublicIp() {
+		final String property = "DOMAIN_OR_PUBLIC_IP";
+		String domain = asOptionalInetAddress(property);
 
 		if (domain != null && !domain.isEmpty()) {
+			this.domainOrPublicIp = domain;
 			this.openviduPublicUrl = "https://" + domain;
-			if (this.serverPort != 443) {
-				this.openviduPublicUrl += (":" + this.serverPort);
+			if (this.httpsPort != 443) {
+				this.openviduPublicUrl += (":" + this.httpsPort);
 			}
-		} else {
-			final String urlProperty = "OPENVIDU_PUBLICURL";
-			String publicurl = getValue(urlProperty);
-			if (publicurl == null || publicurl.isEmpty()) {
-				addError(property, "Cannot be empty");
-			} else {
-				if (!OPENVIDU_VALID_PUBLICURL_VALUES.contains(publicurl)) {
-					try {
-						checkUrl(publicurl);
-					} catch (Exception e) {
-						addError(property, "Is not a valid URL. " + e.getMessage());
-					}
-				}
-				this.openviduPublicUrl = publicurl;
-			}
-		}
-
-		if (openviduPublicUrl != null && !openviduPublicUrl.isEmpty()) {
 			calculatePublicUrl();
+		} else {
+			addError(property, "Cannot be empty");
 		}
 	}
 
@@ -580,17 +570,7 @@ public class OpenviduConfig {
 		String property = "HTTPS_PORT";
 		String httpsPort = getValue(property);
 		if (httpsPort == null) {
-			// This should only occur on dev container
-			property = "SERVER_PORT";
-			httpsPort = getValue(property);
-			if (httpsPort == null) {
-				property = "server.port";
-				httpsPort = getValue(property, false);
-				if (httpsPort == null || httpsPort.isEmpty()) {
-					addError(property, "Cannot be undefined");
-					return;
-				}
-			}
+			addError(property, "Cannot be undefined");
 		}
 		int httpsPortNumber = 0;
 		try {
@@ -599,55 +579,43 @@ public class OpenviduConfig {
 			addError(property, "Is not a valid port. Must be an integer. " + e.getMessage());
 			return;
 		}
-
 		if (httpsPortNumber > 0 && httpsPortNumber <= 65535) {
-			serverPort = httpsPortNumber;
+			this.httpsPort = httpsPortNumber;
 		} else {
 			addError(property, "Is not a valid port. Valid port range exceeded with value " + httpsPortNumber);
 			return;
 		}
 	}
 
-	private void calculatePublicUrl() {
-		String publicUrl = this.getOpenViduPublicUrl();
-
-		String type = "";
-		switch (publicUrl) {
-		case "docker":
-			try {
-				String containerIp = OpenViduServer.getContainerIp();
-				OpenViduServer.wsUrl = "wss://" + containerIp + ":" + this.getServerPort();
-			} catch (Exception e) {
-				log.error("Docker container IP was configured, but there was an error obtaining IP: "
-						+ e.getClass().getName() + " " + e.getMessage());
-				log.error("Fallback to local URL");
-				OpenViduServer.wsUrl = null;
-			}
-			break;
-		case "local":
-			break;
-		case "":
-			break;
-		default:
-			if (publicUrl.startsWith("https://")) {
-				OpenViduServer.wsUrl = publicUrl.replace("https://", "wss://");
-			} else if (publicUrl.startsWith("http://")) {
-				OpenViduServer.wsUrl = publicUrl.replace("http://", "wss://");
-			}
+	/**
+	 * Will add to collection of configuration properties the property "SERVER_PORT"
+	 * only if property "SERVER_PORT" or "server.port" was explicitly defined. This
+	 * doesn't mean this property won't have a default value if not explicitly
+	 * defined (8080 is the default value given by Spring)
+	 */
+	private void populateSpringServerPort() {
+		String springServerPort = getValue("server.port", false);
+		if (springServerPort == null) {
+			springServerPort = getValue("SERVER_PORT", false);
 		}
+		if (springServerPort != null) {
+			this.configProps.put("SERVER_PORT", springServerPort);
+		}
+	}
 
-		if (OpenViduServer.wsUrl == null) {
-			type = "local";
-			OpenViduServer.wsUrl = "wss://localhost:" + this.getServerPort();
+	private void calculatePublicUrl() {
+		final String publicUrl = this.getOpenViduPublicUrl();
+		if (publicUrl.startsWith("https://")) {
+			OpenViduServer.wsUrl = publicUrl.replace("https://", "wss://");
+		} else if (publicUrl.startsWith("http://")) {
+			OpenViduServer.wsUrl = publicUrl.replace("http://", "wss://");
 		}
 		if (OpenViduServer.wsUrl.endsWith("/")) {
 			OpenViduServer.wsUrl = OpenViduServer.wsUrl.substring(0, OpenViduServer.wsUrl.length() - 1);
 		}
-
 		String finalUrl = OpenViduServer.wsUrl.replaceFirst("wss://", "https://").replaceFirst("ws://", "http://");
 		this.setFinalUrl(finalUrl);
 		OpenViduServer.httpUrl = this.getFinalUrl();
-		OpenViduServer.publicurlType = type;
 	}
 
 	public List<String> checkKmsUris() {

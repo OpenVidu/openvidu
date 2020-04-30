@@ -103,6 +103,8 @@ public class ConfigRestController {
 		json.addProperty("VERSION", openviduBuildInfo.getVersion());
 		JsonArray kmsUris = new JsonArray();
 		openviduConfig.getKmsUris().forEach(uri -> kmsUris.add(uri));
+		json.addProperty("DOMAIN_OR_PUBLIC_IP", openviduConfig.getDomainOrPublicIp());
+		json.addProperty("HTTPS_PORT", openviduConfig.getHttpsPort());
 		json.add("KMS_URIS", kmsUris);
 		json.addProperty("OPENVIDU_PUBLICURL", openviduConfig.getOpenViduPublicUrl());
 		json.addProperty("OPENVIDU_CDR", openviduConfig.isCdrEnabled());
