@@ -340,7 +340,7 @@ export class OpenVidu {
     }
 
     // Accept: Chrome (desktop and Android), Firefox (desktop and Android), Opera (desktop and Android),
-    // Safari (OSX and iOS), Ionic (Android and iOS), Safari Internet Browser (Android)
+    // Safari (OSX and iOS), Ionic (Android and iOS), Samsung Internet Browser (Android)
     if (
       (browser !== 'Safari') &&
       (browser !== 'Chrome') && (browser !== 'Chrome Mobile') &&
