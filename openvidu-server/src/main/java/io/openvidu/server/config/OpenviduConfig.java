@@ -554,10 +554,17 @@ public class OpenviduConfig {
 		final String property = "DOMAIN_OR_PUBLIC_IP";
 		String domain = asOptionalInetAddress(property);
 
+		// TODO: remove when possible deprecated OPENVIDU_DOMAIN_OR_PUBLIC_IP
+		if (domain == null || domain.isEmpty()) {
+			domain = asOptionalInetAddress("OPENVIDU_DOMAIN_OR_PUBLIC_IP");
+			this.configProps.put("DOMAIN_OR_PUBLIC_IP", domain);
+			this.configProps.remove("OPENVIDU_DOMAIN_OR_PUBLIC_IP");
+		}
+
 		if (domain != null && !domain.isEmpty()) {
 			this.domainOrPublicIp = domain;
 			this.openviduPublicUrl = "https://" + domain;
-			if (this.httpsPort != 443) {
+			if (this.httpsPort != null && this.httpsPort != 443) {
 				this.openviduPublicUrl += (":" + this.httpsPort);
 			}
 			calculatePublicUrl();
