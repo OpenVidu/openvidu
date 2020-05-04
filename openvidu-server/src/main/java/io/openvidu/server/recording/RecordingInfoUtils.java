@@ -71,8 +71,8 @@ public class RecordingInfoUtils {
 		return jsonFormat.get("duration").getAsDouble();
 	}
 
-	public int getSizeInBytes() {
-		return jsonFormat.get("size").getAsInt();
+	public long getSizeInBytes() {
+		return jsonFormat.get("size").getAsLong();
 	}
 
 	public int getNumberOfStreams() {
