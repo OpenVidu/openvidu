@@ -9,6 +9,8 @@ services:
         restart: on-failure
         ports:
             - "5442:80"
-        environment: 
+        environment:
             - OPENVIDU_URL=https://${DOMAIN_OR_PUBLIC_IP}:${HTTPS_PORT:-443}
             - OPENVIDU_SECRET=${OPENVIDU_SECRET}
+        depends_on:
+            - openvidu-server

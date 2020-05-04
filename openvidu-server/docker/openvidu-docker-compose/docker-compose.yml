@@ -34,6 +34,10 @@ services:
             - SERVER_PORT=5443
             - KMS_URIS=["ws://localhost:8888/kurento"]
             - COTURN_REDIS_IP=127.0.0.1
+        depends_on:
+            - kms
+            - coturn
+            - nginx
 
     kms:
         image: ${KMS_IMAGE:-kurento/kurento-media-server:6.13.1}
@@ -65,6 +69,8 @@ services:
             - DB_PASSWORD=turn
             - MIN_PORT=57001
             - MAX_PORT=65535
+        depends_on:
+            - redis
 
     nginx:
         image: openvidu/openvidu-proxy:2.0.0-beta3
