@@ -10,5 +10,5 @@ services:
         ports:
             - "5442:80"
         environment: 
-            - OPENVIDU_URL=https://${OPENVIDU_DOMAIN_OR_PUBLIC_IP}:${HTTPS_PORT:-443}
+            - OPENVIDU_URL=https://${DOMAIN_OR_PUBLIC_IP}:${HTTPS_PORT:-443}
             - OPENVIDU_SECRET=${OPENVIDU_SECRET}

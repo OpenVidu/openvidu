@@ -51,7 +51,7 @@ It will donwload all required files into `openvidu` folder and will show this me
    1. Go to openvidu folder:
    $ cd openvidu
 
-   2. Configure OPENVIDU_DOMAIN_OR_PUBLIC_IP and OPENVIDU_SECRET in .env file:
+   2. Configure DOMAIN_OR_PUBLIC_IP and OPENVIDU_SECRET in .env file:
    $ nano .env
 
    3. Start OpenVidu
@@ -66,7 +66,7 @@ It will donwload all required files into `openvidu` folder and will show this me
 
 OpenVidu Platform configuration is specified in the `.env` file with environment variables. 
 
-**YOU MUST** specify the **OPENVIDU_DOMAIN_OR_PUBLIC_IP** of the machine and the **OPENVIDU_SECRET**. They are empty and execution will fail if you do not specify them. 
+**YOU MUST** specify the **DOMAIN_OR_PUBLIC_IP** of the machine and the **OPENVIDU_SECRET**. They are empty and execution will fail if you do not specify them. 
 
 If you have a domain name, generate a certificate with Let's Encrypt or put your own certificate. 
 
@@ -83,7 +83,7 @@ The `.env` file looks like this:
 
 # Domain name. If you do not have one, the public IP of the machine.
 # For example: 198.51.100.1, or openvidu.example.com
-OPENVIDU_DOMAIN_OR_PUBLIC_IP=
+DOMAIN_OR_PUBLIC_IP=
 
 # OpenVidu SECRET used for apps to connect to OpenVidu server and users to access to OpenVidu Dashboard
 OPENVIDU_SECRET=
@@ -106,7 +106,7 @@ LETSENCRYPT_EMAIL=user@example.com
 ```
 
 > **NOTE:** If you want to try OpenVidu in your linux development machine:
-> * If you set `OPENVIDU_DOMAIN_OR_PUBLIC_IP=localhost` then in your browser you have to use `https://localhost/`. If you use `https://127.0.0.1/` instead, you will have some issues.
+> * If you set `DOMAIN_OR_PUBLIC_IP=localhost` then in your browser you have to use `https://localhost/`. If you use `https://127.0.0.1/` instead, you will have some issues.
 > * OpenVidu services will use some host ports that have to be available: 80, 3478, 5442, 5443, 8888 and 6379.
 
 ### Videoconference application
@@ -205,7 +205,7 @@ If you have any problem with the configuration, when you start OpenVidu the foll
     --------------------
  
     * Property OPENVIDU_SECRET is not set. Cannot be empty.
-    * Property OPENVIDU_DOMAIN_OR_PUBLIC_IP is not set. Cannot be empty
+    * Property DOMAIN_OR_PUBLIC_IP is not set. Cannot be empty
  
  
     Fix config errors
@@ -272,7 +272,7 @@ If `openvidu-server` detects some error, it will show it in the log.
    * CERTIFICATE_TYPE=selfsigned
    * OPENVIDU_CDR=false
    * OPENVIDU_CDR_PATH=/opt/openvidu/cdr
-   * OPENVIDU_DOMAIN_OR_PUBLIC_IP=my.domain.com
+   * DOMAIN_OR_PUBLIC_IP=my.domain.com
    * OPENVIDU_RECORDING=false
    * OPENVIDU_RECORDING_AUTOSTOP-TIMEOUT=120
    * OPENVIDU_RECORDING_COMPOSED-URL=
