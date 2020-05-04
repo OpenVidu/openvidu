@@ -8,9 +8,12 @@ assignees: ''
 ---
 
 <!--
+IMPORTANT!!! IMPORTANT!!! IMPORTANT!!! IMPORTANT!!!
+YOU SHOULD NEVER DELETE THE CONTENT OF THIS TEMPLATE WHEN OPENING AN ISSUE. IF YOUR QUESTION DOES NOT FIT THE TEMPLATE THEN IT MOST PROBABLY BELONGS TO OPENVIDU FORUM (https://openvidu.discourse.group/)
+
 Hi! First of all, welcome to OpenVidu issue tracker. Please, carefully read the two points below before opening a new issue:
 
-1. Is your question really a bug? In other words: did you actually get an unexpected behavior from OpenVidu platform? If you are not sure about the answer or you just want support for a particular use case, you can post a new question in our official Google Group forum (https://groups.google.com/forum/#!forum/openvidu). OpenVidu community or a team's member will reply ASAP.
+1. Is your question really a bug? In other words: did you actually get an unexpected behavior from OpenVidu platform? If you are not sure about the answer or you just want support for a particular use case, you can post a new question in our official Discourse Forum (https://openvidu.discourse.group/). OpenVidu community or a team's member will reply ASAP.
 
 2. If your question is undoubtedly a bug, check that there's no other issue (opened or closed) talking about it. Your question may have already been answered! If you cannot find anything useful, please fill the report below.
 -->
