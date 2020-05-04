@@ -20,7 +20,12 @@ import { FilterEvent } from '../OpenViduInternal/Events/FilterEvent';
 import { StreamPropertyChangedEvent } from '../OpenViduInternal/Events/StreamPropertyChangedEvent';
 import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/OpenViduError';
 import { ObjMap } from '../OpenViduInternal/Interfaces/Private/ObjMap';
+import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
 
+/**
+ * @hidden
+ */
+const logger: OpenViduLogger = OpenViduLogger.getInstance();
 
 /**
  * **WARNING**: experimental option. This interface may change in the near future
@@ -67,6 +72,7 @@ export class Filter {
      * @hidden
      */
     stream: Stream;
+    private logger: OpenViduLogger;
 
 
     /**
@@ -86,14 +92,14 @@ export class Filter {
      */
     execMethod(method: string, params: Object): Promise<any> {
         return new Promise((resolve, reject) => {
-            console.info('Executing filter method to stream ' + this.stream.streamId);
+            logger.info('Executing filter method to stream ' + this.stream.streamId);
             let stringParams;
             if (typeof params !== 'string') {
                 try {
                     stringParams = JSON.stringify(params);
                 } catch (error) {
                     const errorMsg = "'params' property must be a JSON formatted object";
-                    console.error(errorMsg);
+                    logger.error(errorMsg);
                     reject(errorMsg);
                 }
             } else {
@@ -104,14 +110,14 @@ export class Filter {
                 { streamId: this.stream.streamId, method, params: stringParams },
                 (error, response) => {
                     if (error) {
-                        console.error('Error executing filter method for Stream ' + this.stream.streamId, error);
+                        logger.error('Error executing filter method for Stream ' + this.stream.streamId, error);
                         if (error.code === 401) {
                             reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to execute a filter method"));
                         } else {
                             reject(error);
                         }
                     } else {
-                        console.info('Filter method successfully executed on Stream ' + this.stream.streamId);
+                        logger.info('Filter method successfully executed on Stream ' + this.stream.streamId);
                         const oldValue = (<any>Object).assign({}, this.stream.filter);
                         this.stream.filter.lastExecMethod = { method, params: JSON.parse(stringParams) };
                         this.stream.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.stream.session, this.stream, 'filter', this.stream.filter, oldValue, 'execFilterMethod')]);
@@ -134,13 +140,13 @@ export class Filter {
      */
     addEventListener(eventType: string, handler: (event: FilterEvent) => void): Promise<any> {
         return new Promise((resolve, reject) => {
-            console.info('Adding filter event listener to event ' + eventType + ' to stream ' + this.stream.streamId);
+            logger.info('Adding filter event listener to event ' + eventType + ' to stream ' + this.stream.streamId);
             this.stream.session.openvidu.sendRequest(
                 'addFilterEventListener',
                 { streamId: this.stream.streamId, eventType },
                 (error, response) => {
                     if (error) {
-                        console.error('Error adding filter event listener to event ' + eventType + 'for Stream ' + this.stream.streamId, error);
+                        logger.error('Error adding filter event listener to event ' + eventType + 'for Stream ' + this.stream.streamId, error);
                         if (error.code === 401) {
                             reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to add a filter event listener"));
                         } else {
@@ -148,7 +154,7 @@ export class Filter {
                         }
                     } else {
                         this.handlers[eventType] = handler;
-                        console.info('Filter event listener to event ' + eventType + ' successfully applied on Stream ' + this.stream.streamId);
+                        logger.info('Filter event listener to event ' + eventType + ' successfully applied on Stream ' + this.stream.streamId);
                         resolve();
                     }
                 }
@@ -166,13 +172,13 @@ export class Filter {
      */
     removeEventListener(eventType: string): Promise<any> {
         return new Promise((resolve, reject) => {
-            console.info('Removing filter event listener to event ' + eventType + ' to stream ' + this.stream.streamId);
+            logger.info('Removing filter event listener to event ' + eventType + ' to stream ' + this.stream.streamId);
             this.stream.session.openvidu.sendRequest(
                 'removeFilterEventListener',
                 { streamId: this.stream.streamId, eventType },
                 (error, response) => {
                     if (error) {
-                        console.error('Error removing filter event listener to event ' + eventType + 'for Stream ' + this.stream.streamId, error);
+                        logger.error('Error removing filter event listener to event ' + eventType + 'for Stream ' + this.stream.streamId, error);
                         if (error.code === 401) {
                             reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to add a filter event listener"));
                         } else {
@@ -180,7 +186,7 @@ export class Filter {
                         }
                     } else {
                         delete this.handlers[eventType];
-                        console.info('Filter event listener to event ' + eventType + ' successfully removed on Stream ' + this.stream.streamId);
+                        logger.info('Filter event listener to event ' + eventType + ' successfully removed on Stream ' + this.stream.streamId);
                         resolve();
                     }
                 }

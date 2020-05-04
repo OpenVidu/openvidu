@@ -18,7 +18,12 @@
 import { Stream } from './Stream';
 import { StreamManager } from './StreamManager';
 import { SubscriberProperties } from '../OpenViduInternal/Interfaces/Public/SubscriberProperties';
+import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
 
+/**
+ * @hidden
+ */
+const logger: OpenViduLogger = OpenViduLogger.getInstance();
 
 /**
  * Packs remote media streams. Participants automatically receive them when others publish their streams. Initialized with [[Session.subscribe]] method
@@ -48,7 +53,7 @@ export class Subscriber extends StreamManager {
         this.stream.getMediaStream().getAudioTracks().forEach((track) => {
             track.enabled = value;
         });
-        console.info("'Subscriber' has " + (value ? 'subscribed to' : 'unsubscribed from') + ' its audio stream');
+        logger.info("'Subscriber' has " + (value ? 'subscribed to' : 'unsubscribed from') + ' its audio stream');
         return this;
     }
 
@@ -60,7 +65,7 @@ export class Subscriber extends StreamManager {
         this.stream.getMediaStream().getVideoTracks().forEach((track) => {
             track.enabled = value;
         });
-        console.info("'Subscriber' has " + (value ? 'subscribed to' : 'unsubscribed from') + ' its video stream');
+        logger.info("'Subscriber' has " + (value ? 'subscribed to' : 'unsubscribed from') + ' its video stream');
         return this;
     }
 

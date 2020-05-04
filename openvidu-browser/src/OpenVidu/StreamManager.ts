@@ -24,6 +24,11 @@ import { VideoElementEvent } from '../OpenViduInternal/Events/VideoElementEvent'
 import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
 
 import platform = require('platform');
+import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
+/**
+ * @hidden
+ */
+const logger: OpenViduLogger = OpenViduLogger.getInstance();
 
 /**
  * Interface in charge of displaying the media streams in the HTML DOM. This wraps any [[Publisher]] and [[Subscriber]] object.
@@ -32,14 +37,14 @@ import platform = require('platform');
  * The use of StreamManager wrapper is particularly useful when you don't need to differentiate between Publisher or Subscriber streams or just
  * want to directly manage your own video elements (even more than one video element per Stream). This scenario is pretty common in
  * declarative, MVC frontend frameworks such as Angular, React or Vue.js
- * 
+ *
  * ### Available event listeners (and events dispatched)
- * 
+ *
  * - videoElementCreated ([[VideoElementEvent]])
  * - videoElementDestroyed ([[VideoElementEvent]])
  * - streamPlaying ([[StreamManagerEvent]])
  * - streamAudioVolumeChange ([[StreamManagerEvent]])
- * 
+ *
  */
 export class StreamManager extends EventDispatcher {
 
@@ -127,14 +132,14 @@ export class StreamManager extends EventDispatcher {
         this.canPlayListener = () => {
             if (this.stream.isLocal()) {
                 if (!this.stream.displayMyRemote()) {
-                    console.info("Your local 'Stream' with id [" + this.stream.streamId + '] video is now playing');
+                    logger.info("Your local 'Stream' with id [" + this.stream.streamId + '] video is now playing');
                     this.ee.emitEvent('videoPlaying', [new VideoElementEvent(this.videos[0].video, this, 'videoPlaying')]);
                 } else {
-                    console.info("Your own remote 'Stream' with id [" + this.stream.streamId + '] video is now playing');
+                    logger.info("Your own remote 'Stream' with id [" + this.stream.streamId + '] video is now playing');
                     this.ee.emitEvent('remoteVideoPlaying', [new VideoElementEvent(this.videos[0].video, this, 'remoteVideoPlaying')]);
                 }
             } else {
-                console.info("Remote 'Stream' with id [" + this.stream.streamId + '] video is now playing');
+                logger.info("Remote 'Stream' with id [" + this.stream.streamId + '] video is now playing');
                 this.ee.emitEvent('videoPlaying', [new VideoElementEvent(this.videos[0].video, this, 'videoPlaying')]);
             }
             this.ee.emitEvent('streamPlaying', [new StreamManagerEvent(this, 'streamPlaying', undefined)]);
@@ -262,7 +267,7 @@ export class StreamManager extends EventDispatcher {
             canplayListenerAdded: false
         });
 
-        console.info('New video element associated to ', this);
+        logger.info('New video element associated to ', this);
 
         return returnNumber;
     }
@@ -337,7 +342,7 @@ export class StreamManager extends EventDispatcher {
      * Updates the current configuration for the [[PublisherSpeakingEvent]] feature and the [StreamManagerEvent.streamAudioVolumeChange](/en/stable/api/openvidu-browser/classes/streammanagerevent.html) feature for this specific
      * StreamManager audio stream, overriding the global options set with [[OpenVidu.setAdvancedConfiguration]]. This way you can customize the audio events options
      * for each specific StreamManager and change them dynamically.
-     * 
+     *
      * @param publisherSpeakingEventsOptions New options to be applied to this StreamManager's audio stream. It is an object which includes the following optional properties:
      * - `interval`: (number) how frequently the analyser polls the audio stream to check if speaking has started/stopped or audio volume has changed. Default **100** (ms)
      * - `threshold`: (number) the volume at which _publisherStartSpeaking_, _publisherStopSpeaking_ events will be fired. Default **-50** (dB)
@@ -380,7 +385,7 @@ export class StreamManager extends EventDispatcher {
 
         if (!video.id) {
             video.id = (this.remote ? 'remote-' : 'local-') + 'video-' + this.stream.streamId;
-            // DEPRECATED property: assign once the property id if the user provided a valid targetElement	
+            // DEPRECATED property: assign once the property id if the user provided a valid targetElement
             if (!this.id && !!this.targetElement) {
                 this.id = video.id;
             }
@@ -434,7 +439,7 @@ export class StreamManager extends EventDispatcher {
                 this.videos[i].video.removeEventListener('canplay', this.canPlayListener);
                 this.videos.splice(i, 1);
                 disassociated = true;
-                console.info('Video element disassociated from ', this);
+                logger.info('Video element disassociated from ', this);
                 break;
             }
         }

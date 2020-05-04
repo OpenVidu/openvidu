@@ -29,12 +29,18 @@ import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/Open
 import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
 
 import platform = require('platform');
+import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
+
+/**
+ * @hidden
+ */
+const logger: OpenViduLogger = OpenViduLogger.getInstance();
 
 /**
  * Packs local media streams. Participants can publish it to a session. Initialized with [[OpenVidu.initPublisher]] method
- * 
+ *
  * ### Available event listeners (and events dispatched)
- * 
+ *
  * - accessAllowed
  * - accessDenied
  * - accessDialogOpened
@@ -132,7 +138,7 @@ export class Publisher extends StreamManager {
                     },
                     (error, response) => {
                         if (error) {
-                            console.error("Error sending 'streamPropertyChanged' event", error);
+                            logger.error("Error sending 'streamPropertyChanged' event", error);
                         } else {
                             this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this.stream, 'audioActive', value, !value, 'publishAudio')]);
                             this.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this, this.stream, 'audioActive', value, !value, 'publishAudio')]);
@@ -140,7 +146,7 @@ export class Publisher extends StreamManager {
                     });
             }
             this.stream.audioActive = value;
-            console.info("'Publisher' has " + (value ? 'published' : 'unpublished') + ' its audio stream');
+            logger.info("'Publisher' has " + (value ? 'published' : 'unpublished') + ' its audio stream');
         }
     }
 
@@ -179,7 +185,7 @@ export class Publisher extends StreamManager {
                     },
                     (error, response) => {
                         if (error) {
-                            console.error("Error sending 'streamPropertyChanged' event", error);
+                            logger.error("Error sending 'streamPropertyChanged' event", error);
                         } else {
                             this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this.stream, 'videoActive', value, !value, 'publishVideo')]);
                             this.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this, this.stream, 'videoActive', value, !value, 'publishVideo')]);
@@ -187,7 +193,7 @@ export class Publisher extends StreamManager {
                     });
             }
             this.stream.videoActive = value;
-            console.info("'Publisher' has " + (value ? 'published' : 'unpublished') + ' its video stream');
+            logger.info("'Publisher' has " + (value ? 'published' : 'unpublished') + ' its video stream');
         }
     }
 
@@ -279,14 +285,14 @@ export class Publisher extends StreamManager {
      * Replaces the current video or audio track with a different one. This allows you to replace an ongoing track with a different one
      * without having to renegotiate the whole WebRTC connection (that is, initializing a new Publisher, unpublishing the previous one
      * and publishing the new one).
-     * 
+     *
      * You can get this new MediaStreamTrack by using the native Web API or simply with [[OpenVidu.getUserMedia]] method.
-     * 
+     *
      * **WARNING: this method has been proven to work, but there may be some combinations of published/replaced tracks that may be incompatible between them and break the connection in OpenVidu Server. A complete renegotiation may be the only solution in this case**
-     * 
+     *
      * @param track The [MediaStreamTrack](https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamTrack) object to replace the current one. If it is an audio track, the current audio track will be the replaced one. If it
      * is a video track, the current video track will be the replaced one.
-     * 
+     *
      * @returns A Promise (to which you can optionally subscribe to) that is resolved if the track was successfully replaced and rejected with an Error object in other case
      */
     replaceTrack(track: MediaStreamTrack): Promise<any> {
@@ -483,7 +489,7 @@ export class Publisher extends StreamManager {
                                         },
                                         (error, response) => {
                                             if (error) {
-                                                console.error("Error sending 'streamPropertyChanged' event", error);
+                                                logger.error("Error sending 'streamPropertyChanged' event", error);
                                             } else {
                                                 this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this.stream, 'videoDimensions', this.stream.videoDimensions, oldValue, 'screenResized')]);
                                                 this.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this, this.stream, 'videoDimensions', this.stream.videoDimensions, oldValue, 'screenResized')]);
@@ -534,7 +540,7 @@ export class Publisher extends StreamManager {
             };
 
             const getMediaError = error => {
-                console.error(error);
+                logger.error(error);
                 this.clearPermissionDialogTimer(startTime, timeForDialogEvent);
                 if (error.name === 'Error') {
                     // Safari OverConstrainedError has as name property 'Error' instead of 'OverConstrainedError'

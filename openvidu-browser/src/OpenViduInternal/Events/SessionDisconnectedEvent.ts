@@ -17,6 +17,12 @@
 
 import { Event } from './Event';
 import { Session } from '../../OpenVidu/Session';
+import { OpenViduLogger } from '../Logger/OpenViduLogger';
+
+/**
+ * @hidden
+ */
+const logger: OpenViduLogger = OpenViduLogger.getInstance();
 
 
 /**
@@ -49,7 +55,7 @@ export class SessionDisconnectedEvent extends Event {
      */
     callDefaultBehavior() {
 
-        console.info("Calling default behavior upon '" + this.type + "' event dispatched by 'Session'");
+        logger.info("Calling default behavior upon '" + this.type + "' event dispatched by 'Session'");
 
         const session = <Session>this.target;
 

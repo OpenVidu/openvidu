@@ -20,6 +20,12 @@ import { Stream } from './Stream';
 import { ConnectionOptions } from '../OpenViduInternal/Interfaces/Private/ConnectionOptions';
 import { InboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/InboundStreamOptions';
 import { StreamOptionsServer } from '../OpenViduInternal/Interfaces/Private/StreamOptionsServer';
+import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
+
+/**
+ * @hidden
+ */
+const logger: OpenViduLogger = OpenViduLogger.getInstance();
 
 
 /**
@@ -85,7 +91,7 @@ export class Connection {
             // Connection is local
             msg += '(local)';
         }
-        console.info(msg);
+        logger.info(msg);
     }
 
 
@@ -96,7 +102,7 @@ export class Connection {
      */
     sendIceCandidate(candidate: RTCIceCandidate): void {
 
-        console.debug((!!this.stream.outboundStreamOpts ? 'Local' : 'Remote') + 'candidate for' +
+        logger.debug((!!this.stream.outboundStreamOpts ? 'Local' : 'Remote') + 'candidate for' +
             this.connectionId, candidate);
 
         this.session.openvidu.sendRequest('onIceCandidate', {
@@ -106,7 +112,7 @@ export class Connection {
             sdpMLineIndex: candidate.sdpMLineIndex
         }, (error, response) => {
             if (error) {
-                console.error('Error sending ICE candidate: '
+                logger.error('Error sending ICE candidate: '
                     + JSON.stringify(error));
             }
         });
@@ -138,7 +144,7 @@ export class Connection {
             this.addStream(stream);
         });
 
-        console.info("Remote 'Connection' with 'connectionId' [" + this.connectionId + '] is now configured for receiving Streams with options: ', this.stream.inboundStreamOpts);
+        logger.info("Remote 'Connection' with 'connectionId' [" + this.connectionId + '] is now configured for receiving Streams with options: ', this.stream.inboundStreamOpts);
     }
 
     /**

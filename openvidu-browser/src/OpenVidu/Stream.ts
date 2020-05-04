@@ -36,6 +36,12 @@ import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/Open
  */
 import hark = require('hark');
 import platform = require('platform');
+import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
+/**
+ * @hidden
+ */
+const logger: OpenViduLogger = OpenViduLogger.getInstance();
+
 
 
 /**
@@ -252,7 +258,7 @@ export class Stream extends EventDispatcher {
 
         this.ee.on('mediastream-updated', () => {
             this.streamManager.updateMediaStream(this.mediaStream);
-            console.debug('Video srcObject [' + this.mediaStream + '] updated in stream [' + this.streamId + ']');
+            logger.debug('Video srcObject [' + this.mediaStream + '] updated in stream [' + this.streamId + ']');
         });
     }
 
@@ -294,7 +300,7 @@ export class Stream extends EventDispatcher {
      */
     applyFilter(type: string, options: Object): Promise<Filter> {
         return new Promise((resolve, reject) => {
-            console.info('Applying filter to stream ' + this.streamId);
+            logger.info('Applying filter to stream ' + this.streamId);
             options = !!options ? options : {};
             if (typeof options !== 'string') {
                 options = JSON.stringify(options);
@@ -304,14 +310,14 @@ export class Stream extends EventDispatcher {
                 { streamId: this.streamId, type, options },
                 (error, response) => {
                     if (error) {
-                        console.error('Error applying filter for Stream ' + this.streamId, error);
+                        logger.error('Error applying filter for Stream ' + this.streamId, error);
                         if (error.code === 401) {
                             reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to apply a filter"));
                         } else {
                             reject(error);
                         }
                     } else {
-                        console.info('Filter successfully applied on Stream ' + this.streamId);
+                        logger.info('Filter successfully applied on Stream ' + this.streamId);
                         const oldValue: Filter = this.filter;
                         this.filter = new Filter(type, options);
                         this.filter.stream = this;
@@ -331,20 +337,20 @@ export class Stream extends EventDispatcher {
      */
     removeFilter(): Promise<any> {
         return new Promise((resolve, reject) => {
-            console.info('Removing filter of stream ' + this.streamId);
+            logger.info('Removing filter of stream ' + this.streamId);
             this.session.openvidu.sendRequest(
                 'removeFilter',
                 { streamId: this.streamId },
                 (error, response) => {
                     if (error) {
-                        console.error('Error removing filter for Stream ' + this.streamId, error);
+                        logger.error('Error removing filter for Stream ' + this.streamId, error);
                         if (error.code === 401) {
                             reject(new OpenViduError(OpenViduErrorName.OPENVIDU_PERMISSION_DENIED, "You don't have permissions to remove a filter"));
                         } else {
                             reject(error);
                         }
                     } else {
-                        console.info('Filter successfully removed from Stream ' + this.streamId);
+                        logger.info('Filter successfully removed from Stream ' + this.streamId);
                         const oldValue = this.filter;
                         delete this.filter;
                         this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this, 'filter', this.filter, oldValue, 'applyFilter')]);
@@ -358,7 +364,7 @@ export class Stream extends EventDispatcher {
 
     /**
      * Returns the internal RTCPeerConnection object associated to this stream (https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection)
-     * 
+     *
      * @returns Native RTCPeerConnection Web API object
      */
     getRTCPeerConnection(): RTCPeerConnection {
@@ -367,7 +373,7 @@ export class Stream extends EventDispatcher {
 
     /**
      * Returns the internal MediaStream object associated to this stream (https://developer.mozilla.org/en-US/docs/Web/API/MediaStream)
-     * 
+     *
      * @returns Native MediaStream Web API object
      */
     getMediaStream(): MediaStream {
@@ -461,7 +467,7 @@ export class Stream extends EventDispatcher {
             this.webRtcPeer.dispose();
             this.stopWebRtcStats();
         }
-        console.info((!!this.outboundStreamOpts ? 'Outbound ' : 'Inbound ') + "WebRTCPeer from 'Stream' with id [" + this.streamId + '] is now closed');
+        logger.info((!!this.outboundStreamOpts ? 'Outbound ' : 'Inbound ') + "WebRTCPeer from 'Stream' with id [" + this.streamId + '] is now closed');
     }
 
     /**
@@ -493,7 +499,7 @@ export class Stream extends EventDispatcher {
             }
             delete this.speechEvent;
         }
-        console.info((!!this.outboundStreamOpts ? 'Local ' : 'Remote ') + "MediaStream from 'Stream' with id [" + this.streamId + '] is now disposed');
+        logger.info((!!this.outboundStreamOpts ? 'Local ' : 'Remote ') + "MediaStream from 'Stream' with id [" + this.streamId + '] is now disposed');
     }
 
     /**
@@ -766,7 +772,7 @@ export class Stream extends EventDispatcher {
             return false;
         }
         if (this.isLocal && !!this.session.openvidu.advancedConfiguration.forceMediaReconnectionAfterNetworkDrop) {
-            console.warn('OpenVidu Browser advanced configuration option "forceMediaReconnectionAfterNetworkDrop" is enabled. Publisher stream ' + this.streamId + 'will force a reconnection');
+            logger.warn('OpenVidu Browser advanced configuration option "forceMediaReconnectionAfterNetworkDrop" is enabled. Publisher stream ' + this.streamId + 'will force a reconnection');
             return true;
         }
         const iceConnectionState: RTCIceConnectionState = this.getRTCPeerConnection().iceConnectionState;
@@ -812,7 +818,7 @@ export class Stream extends EventDispatcher {
             };
 
             const successCallback = (sdpOfferParam) => {
-                console.debug('Sending SDP offer to publish as '
+                logger.debug('Sending SDP offer to publish as '
                     + this.streamId, sdpOfferParam);
 
                 const method = reconnect ? 'reconnectStream' : 'publishVideo';
@@ -864,7 +870,7 @@ export class Stream extends EventDispatcher {
                                     this.ee.emitEvent('stream-created-by-publisher', []);
                                 }
                                 this.initWebRtcStats();
-                                console.info("'Publisher' (" + this.streamId + ") successfully " + (reconnect ? "reconnected" : "published") + " to session");
+                                logger.info("'Publisher' (" + this.streamId + ") successfully " + (reconnect ? "reconnected" : "published") + " to session");
                                 resolve();
                             })
                             .catch(error => {
@@ -901,7 +907,7 @@ export class Stream extends EventDispatcher {
                 audio: this.inboundStreamOpts.hasAudio,
                 video: this.inboundStreamOpts.hasVideo
             };
-            console.debug("'Session.subscribe(Stream)' called. Constraints of generate SDP offer",
+            logger.debug("'Session.subscribe(Stream)' called. Constraints of generate SDP offer",
                 offerConstraints);
             const options = {
                 onicecandidate: this.connection.sendIceCandidate.bind(this.connection),
@@ -911,7 +917,7 @@ export class Stream extends EventDispatcher {
             };
 
             const successCallback = (sdpOfferParam) => {
-                console.debug('Sending SDP offer to subscribe to '
+                logger.debug('Sending SDP offer to subscribe to '
                     + this.streamId, sdpOfferParam);
 
                 const method = reconnect ? 'reconnectStream' : 'receiveVideoFrom';
@@ -935,7 +941,7 @@ export class Stream extends EventDispatcher {
                         }
                         const needsTimeoutOnProcessAnswer = this.session.countDownForIonicIosSubscribersActive;
                         this.webRtcPeer.processAnswer(response.sdpAnswer, needsTimeoutOnProcessAnswer).then(() => {
-                            console.info("'Subscriber' (" + this.streamId + ") successfully " + (reconnect ? "reconnected" : "subscribed"));
+                            logger.info("'Subscriber' (" + this.streamId + ") successfully " + (reconnect ? "reconnected" : "subscribed"));
                             this.remotePeerSuccessfullyEstablished();
                             this.initWebRtcStats();
                             resolve();
@@ -972,7 +978,7 @@ export class Stream extends EventDispatcher {
                 }
             }
         }
-        console.debug('Peer remote stream', this.mediaStream);
+        logger.debug('Peer remote stream', this.mediaStream);
 
         if (!!this.mediaStream) {
 
@@ -1121,7 +1127,7 @@ export class Stream extends EventDispatcher {
 
                                     }
 
-                                    console.log(finalReport);
+                                    logger.log(finalReport);
                                 }
                             });
                         }));
@@ -1182,7 +1188,7 @@ export class Stream extends EventDispatcher {
                                     if (report.type === 'remote-inbound-rtp' || report.type === 'remote-outbound-rtp') {
 
                                     }
-                                    console.log(finalReport);
+                                    logger.log(finalReport);
                                 }
                             })
                         })

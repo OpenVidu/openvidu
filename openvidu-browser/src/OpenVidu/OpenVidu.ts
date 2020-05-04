@@ -26,6 +26,7 @@ import { PublisherProperties } from '../OpenViduInternal/Interfaces/Public/Publi
 import { CustomMediaStreamConstraints } from '../OpenViduInternal/Interfaces/Private/CustomMediaStreamConstraints';
 import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/OpenViduError';
 import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
+import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
 
 import * as screenSharingAuto from '../OpenViduInternal/ScreenSharing/Screen-Capturing-Auto';
 import * as screenSharing from '../OpenViduInternal/ScreenSharing/Screen-Capturing';
@@ -54,6 +55,10 @@ const packageJson = require('../../package.json');
  * @hidden
  */
 declare var cordova: any;
+/**
+ * @hidden
+ */
+const logger: OpenViduLogger = OpenViduLogger.getInstance();
 
 /**
  * Entrypoint of OpenVidu Browser library.
@@ -114,9 +119,8 @@ export class OpenVidu {
 
   constructor() {
     this.libraryVersion = packageJson.version;
-
-    console.info("'OpenVidu' initialized");
-    console.info("openvidu-browser version: " + this.libraryVersion);
+    logger.info("'OpenVidu' initialized");
+    logger.info("openvidu-browser version: " + this.libraryVersion);
 
     if (platform.os!!.family === 'iOS' || platform.os!!.family === 'Android') {
       // Listen to orientationchange only on mobile devices
@@ -175,7 +179,7 @@ export class OpenVidu {
                   },
                   (error, response) => {
                     if (error) {
-                      console.error("Error sending 'streamPropertyChanged' event", error);
+                      logger.error("Error sending 'streamPropertyChanged' event", error);
                     } else {
                       this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, publisher.stream, 'videoDimensions', publisher.stream.videoDimensions, { width: oldWidth, height: oldHeight }, 'deviceRotated')]);
                       publisher.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(publisher, publisher.stream, 'videoDimensions', publisher.stream.videoDimensions, { width: oldWidth, height: oldHeight }, 'deviceRotated')]);
@@ -476,7 +480,7 @@ export class OpenVidu {
           resolve(devices);
         }
       }).catch((error) => {
-        console.error('Error getting devices', error);
+        logger.error('Error getting devices', error);
         reject(error);
       });
     });
@@ -641,10 +645,7 @@ export class OpenVidu {
    * Disable all logging except error level
    */
   enableProdMode(): void {
-    console.log = () => { };
-    console.debug = () => { };
-    console.info = () => { };
-    console.warn = () => { };
+    logger.enableProdMode();
   }
   /* tslint:enable:no-empty */
 
@@ -758,7 +759,7 @@ export class OpenVidu {
 
           if (!this.checkScreenSharingCapabilities()) {
             const error = new OpenViduError(OpenViduErrorName.SCREEN_SHARING_NOT_SUPPORTED, 'You can only screen share in desktop Chrome, Firefox, Opera or Electron. Detected client: ' + platform.name);
-            console.error(error);
+            logger.error(error);
             reject(error);
           } else {
 
@@ -784,19 +785,19 @@ export class OpenVidu {
                   if (!!error || !!screenConstraints.mandatory && screenConstraints.mandatory.chromeMediaSource === 'screen') {
                     if (error === 'permission-denied' || error === 'PermissionDeniedError') {
                       const error = new OpenViduError(OpenViduErrorName.SCREEN_CAPTURE_DENIED, 'You must allow access to one window of your desktop');
-                      console.error(error);
+                      logger.error(error);
                       reject(error);
                     } else {
                       const extensionId = this.advancedConfiguration.screenShareChromeExtension!.split('/').pop()!!.trim();
                       screenSharing.getChromeExtensionStatus(extensionId, status => {
                         if (status === 'installed-disabled') {
                           const error = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_DISABLED, 'You must enable the screen extension');
-                          console.error(error);
+                          logger.error(error);
                           reject(error);
                         }
                         if (status === 'not-installed') {
                           const error = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_NOT_INSTALLED, (<string>this.advancedConfiguration.screenShareChromeExtension));
-                          console.error(error);
+                          logger.error(error);
                           reject(error);
                         }
                       });
@@ -823,20 +824,20 @@ export class OpenVidu {
                         const extensionUrl = !!this.advancedConfiguration.screenShareChromeExtension ? this.advancedConfiguration.screenShareChromeExtension :
                           'https://chrome.google.com/webstore/detail/openvidu-screensharing/lfcgfepafnobdloecchnfaclibenjold';
                         const err = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_NOT_INSTALLED, extensionUrl);
-                        console.error(err);
+                        logger.error(err);
                         reject(err);
                       } else if (error === 'installed-disabled') {
                         const err = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_DISABLED, 'You must enable the screen extension');
-                        console.error(err);
+                        logger.error(err);
                         reject(err);
                       } else if (error === 'permission-denied') {
                         const err = new OpenViduError(OpenViduErrorName.SCREEN_CAPTURE_DENIED, 'You must allow access to one window of your desktop');
-                        console.error(err);
+                        logger.error(err);
                         reject(err);
                       } else {
                         const err = new OpenViduError(OpenViduErrorName.GENERIC_ERROR, 'Unknown error when accessing screen share');
-                        console.error(err);
-                        console.error(error);
+                        logger.error(err);
+                        logger.error(error);
                         reject(err);
                       }
                     } else {
@@ -904,7 +905,7 @@ export class OpenVidu {
       callback = params;
       params = {};
     }
-    console.debug('Sending request: {method:"' + method + '", params: ' + JSON.stringify(params) + '}');
+    logger.debug('Sending request: {method:"' + method + '", params: ' + JSON.stringify(params) + '}');
     this.jsonRpcClient.send(method, params, callback);
   }
 
@@ -981,7 +982,7 @@ export class OpenVidu {
   /* Private methods */
 
   private disconnectCallback(): void {
-    console.warn('Websocket connection lost');
+    logger.warn('Websocket connection lost');
     if (this.isRoomAvailable()) {
       this.session.onLostConnection('networkDisconnect');
     } else {
@@ -990,7 +991,7 @@ export class OpenVidu {
   }
 
   private reconnectingCallback(): void {
-    console.warn('Websocket connection lost (reconnecting)');
+    logger.warn('Websocket connection lost (reconnecting)');
     if (!this.isRoomAvailable()) {
       alert('Connection error. Please reload page.');
     } else {
@@ -999,12 +1000,12 @@ export class OpenVidu {
   }
 
   private reconnectedCallback(): void {
-    console.warn('Websocket reconnected');
+    logger.warn('Websocket reconnected');
     if (this.isRoomAvailable()) {
       this.sendRequest('connect', { sessionId: this.session.connection.rpcSessionId }, (error, response) => {
         if (!!error) {
-          console.error(error);
-          console.warn('Websocket was able to reconnect to OpenVidu Server, but your Connection was already destroyed due to timeout. You are no longer a participant of the Session and your media streams have been destroyed');
+          logger.error(error);
+          logger.warn('Websocket was able to reconnect to OpenVidu Server, but your Connection was already destroyed due to timeout. You are no longer a participant of the Session and your media streams have been destroyed');
           this.session.onLostConnection("networkDisconnect");
           this.jsonRpcClient.close(4101, "Reconnection fault");
         } else {
@@ -1021,7 +1022,7 @@ export class OpenVidu {
     if (this.session !== undefined && this.session instanceof Session) {
       return true;
     } else {
-      console.warn('Session instance not found');
+      logger.warn('Session instance not found');
       return false;
     }
   }

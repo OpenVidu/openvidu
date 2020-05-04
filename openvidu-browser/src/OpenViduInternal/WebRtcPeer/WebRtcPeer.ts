@@ -18,6 +18,12 @@
 import freeice = require('freeice');
 import uuid = require('uuid');
 import platform = require('platform');
+import { OpenViduLogger } from '../Logger/OpenViduLogger';
+/**
+ * @hidden
+ */
+const logger: OpenViduLogger = OpenViduLogger.getInstance();
+
 
 export interface WebRtcPeerConfiguration {
     mediaConstraints: {
@@ -98,7 +104,7 @@ export class WebRtcPeer {
      * This method frees the resources used by WebRtcPeer
      */
     dispose() {
-        console.debug('Disposing WebRtcPeer');
+        logger.debug('Disposing WebRtcPeer');
         if (this.pc) {
             if (this.pc.signalingState === 'closed') {
                 return;
@@ -130,7 +136,7 @@ export class WebRtcPeer {
                 offerToReceiveVideo: (this.configuration.mode !== 'sendonly' && offerVideo)
             };
 
-            console.debug('RTCPeerConnection constraints: ' + JSON.stringify(constraints));
+            logger.debug('RTCPeerConnection constraints: ' + JSON.stringify(constraints));
 
             if (platform.name === 'Safari' && platform.ua!!.indexOf('Safari') !== -1) {
                 // Safari (excluding Ionic), at least on iOS just seems to support unified plan, whereas in other browsers is not yet ready and considered experimental
@@ -149,14 +155,14 @@ export class WebRtcPeer {
                 this.pc
                     .createOffer()
                     .then(offer => {
-                        console.debug('Created SDP offer');
+                        logger.debug('Created SDP offer');
                         return this.pc.setLocalDescription(offer);
                     })
                     .then(() => {
                         const localDescription = this.pc.localDescription;
 
                         if (!!localDescription) {
-                            console.debug('Local description set', localDescription.sdp);
+                            logger.debug('Local description set', localDescription.sdp);
                             resolve(localDescription.sdp);
                         } else {
                             reject('Local description is not defined');
@@ -168,13 +174,13 @@ export class WebRtcPeer {
 
                 // Rest of platforms
                 this.pc.createOffer(constraints).then(offer => {
-                    console.debug('Created SDP offer');
+                    logger.debug('Created SDP offer');
                     return this.pc.setLocalDescription(offer);
                 })
                     .then(() => {
                         const localDescription = this.pc.localDescription;
                         if (!!localDescription) {
-                            console.debug('Local description set', localDescription.sdp);
+                            logger.debug('Local description set', localDescription.sdp);
                             resolve(localDescription.sdp);
                         } else {
                             reject('Local description is not defined');
@@ -195,7 +201,7 @@ export class WebRtcPeer {
                 type: 'answer',
                 sdp: sdpAnswer
             };
-            console.debug('SDP answer received, setting remote description');
+            logger.debug('SDP answer received, setting remote description');
 
             if (this.pc.signalingState === 'closed') {
                 reject('RTCPeerConnection is closed');
@@ -205,7 +211,7 @@ export class WebRtcPeer {
                 if (needsTimeoutOnProcessAnswer) {
                     // 400 ms have not elapsed yet since first remote stream triggered Stream#initWebRtcPeerReceive
                     setTimeout(() => {
-                        console.info('setRemoteDescription run after timeout for Ionic iOS device');
+                        logger.info('setRemoteDescription run after timeout for Ionic iOS device');
                         this.pc.setRemoteDescription(new RTCSessionDescription(answer)).then(() => resolve()).catch(error => reject(error));
                     }, 250);
                 } else {
@@ -224,7 +230,7 @@ export class WebRtcPeer {
      */
     addIceCandidate(iceCandidate: RTCIceCandidate): Promise<void> {
         return new Promise((resolve, reject) => {
-            console.debug('Remote ICE candidate received', iceCandidate);
+            logger.debug('Remote ICE candidate received', iceCandidate);
             this.remoteCandidatesQueue.push(iceCandidate);
             switch (this.pc.signalingState) {
                 case 'closed':
@@ -251,25 +257,25 @@ export class WebRtcPeer {
             switch (iceConnectionState) {
                 case 'disconnected':
                     // Possible network disconnection
-                    console.warn('IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') change to "disconnected". Possible network disconnection');
+                    logger.warn('IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') change to "disconnected". Possible network disconnection');
                     break;
                 case 'failed':
-                    console.error('IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') to "failed"');
+                    logger.error('IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') to "failed"');
                     break;
                 case 'closed':
-                    console.log('IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') change to "closed"');
+                    logger.log('IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') change to "closed"');
                     break;
                 case 'new':
-                    console.log('IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') change to "new"');
+                    logger.log('IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') change to "new"');
                     break;
                 case 'checking':
-                    console.log('IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') change to "checking"');
+                    logger.log('IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') change to "checking"');
                     break;
                 case 'connected':
-                    console.log('IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') change to "connected"');
+                    logger.log('IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') change to "connected"');
                     break;
                 case 'completed':
-                    console.log('IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') change to "completed"');
+                    logger.log('IceConnectionState of RTCPeerConnection ' + this.id + ' (' + otherId + ') change to "completed"');
                     break;
             }
         }
