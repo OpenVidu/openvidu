@@ -111,10 +111,10 @@ LETSENCRYPT_EMAIL=user@example.com
 
 ### Videoconference application
 
-By default, the [OpenVidu Call application](https://docs.openvidu.io/en/stable/demos/openvidu-call/) is deployed alongside OpenVide Platform. It is accesible in the URL:
+By default, the [OpenVidu Call application](https://docs.openvidu.io/en/stable/demos/openvidu-call/) is deployed alongside OpenVide Platform. It is accessible in the URL:
 
 ```
-https://openvidu_domain_or_public_ip/
+https://DOMAIN_OR_PUBLIC_IP/
 ```
 
 This application is defined in the file `docker-compose.override.yml`.
