@@ -67,20 +67,17 @@ printf "\n    - New configuration: %s" "${CERTIFICATE_TYPE}"
 
 if [ -z "${CERTIFICATED_OLD_CONFIG}" ]; then
   printf "\n    - Old configuration: none"
-
-  rm -rf "${CERTIFICATES_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}" | true
 else
   printf "\n    - Old configuration: %s" "${CERTIFICATED_OLD_CONFIG}"
 
   if [ "${CERTIFICATED_OLD_CONFIG}" != "${CERTIFICATE_TYPE}" ]; then
-    printf "\n   - Restarting configuration... Removing old certificated..."
+    printf "\n    - Restarting configuration... Removing old certificated..."
 
-    rm -rf "${CERTIFICATES_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}"
+    rm -rf "${CERTIFICATES_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}/"*
   fi
 fi
 
-# Create certificate folder if don't exist and save actual conf
-[ ! -d "${CERTIFICATES_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}" ] && mkdir -p "${CERTIFICATES_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}" 
+# Save actual conf
 sed -i "/${DOMAIN_OR_PUBLIC_IP}/d" "${CERTIFICATES_CONF}"
 echo -e "${DOMAIN_OR_PUBLIC_IP}\t${CERTIFICATE_TYPE}" >> "${CERTIFICATES_CONF}"
 
@@ -91,6 +88,10 @@ case ${CERTIFICATE_TYPE} in
           ! -f "${CERTIFICATES_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}/fullchain.pem" ]]; then
       printf "\n    - Generating selfsigned certificate...\n"
       
+      # Delete and create certificate folder
+      rm -rf "${CERTIFICATES_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}" | true
+      mkdir -p "${CERTIFICATES_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}" 
+
       openssl req -new -nodes -x509 \
         -subj "/CN=${DOMAIN_OR_PUBLIC_IP}" -days 365 \
         -keyout "${CERTIFICATES_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}/privkey.pem" \
@@ -104,12 +105,16 @@ case ${CERTIFICATE_TYPE} in
   "owncert")
     if [[ ! -f "${CERTIFICATES_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}/privkey.pem" && \
           ! -f "${CERTIFICATES_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}/fullchain.pem" ]]; then
-      printf "\n   - Copying owmcert certificate..."
+      printf "\n    - Copying owmcert certificate..."
+
+      # Delete and create certificate folder
+      rm -rf "${CERTIFICATES_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}" | true
+      mkdir -p "${CERTIFICATES_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}" 
 
       cp /owncert/certificate.key "${CERTIFICATES_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}/privkey.pem"
       cp /owncert/certificate.cert "${CERTIFICATES_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}/fullchain.pem"
     else
-      printf "\n   - Owmcert certificate already exists, using them..."
+      printf "\n    - Owmcert certificate already exists, using them..."
     fi
     ;;
 
@@ -118,13 +123,16 @@ case ${CERTIFICATE_TYPE} in
 
     if [[ ! -f "${CERTIFICATES_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}/privkey.pem" && \
           ! -f "${CERTIFICATES_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}/fullchain.pem" ]]; then
-      printf "\n   - Requesting LetsEncrypt certificate..."
+      printf "\n    - Requesting LetsEncrypt certificate..."
+
+      # Delete certificate folder
+      rm -rf "${CERTIFICATES_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}" | true
 
       certbot certonly -n --webroot -w /var/www/certbot \
                                     -m "${LETSENCRYPT_EMAIL}" \
                                     --agree-tos -d "${DOMAIN_OR_PUBLIC_IP}"
     else
-      printf "\n   - LetsEncrypt certificate already exists, using them..."
+      printf "\n    - LetsEncrypt certificate already exists, using them..."
     fi
     ;;
 esac
