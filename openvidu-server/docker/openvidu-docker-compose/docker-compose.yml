@@ -67,7 +67,7 @@ services:
             - MAX_PORT=65535
 
     nginx:
-        image: openvidu/openvidu-proxy:2.0.0-beta2
+        image: openvidu/openvidu-proxy:2.0.0-beta3
         restart: on-failure
         network_mode: host
         volumes:
@@ -83,4 +83,4 @@ services:
             - ALLOWED_ACCESS_TO_DASHBOARD=${ALLOWED_ACCESS_TO_DASHBOARD:-}
             - ALLOWED_ACCESS_TO_RESTAPI=${ALLOWED_ACCESS_TO_RESTAPI:-}
             - PROXY_MODE=CE
-            - WITH_DEMOS=true
+            - WITH_APP=true

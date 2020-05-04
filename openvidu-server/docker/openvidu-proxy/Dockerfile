@@ -1,12 +1,11 @@
 FROM nginx:1.18.0-alpine
 
 # Install required software
-RUN apk update && \
-    apk add bash && \
-    apk add certbot && \
-    apk add openssl && \
-    apk add apache2-utils && \
-    apk add ipcalc && \
+RUN apk update && \ 
+    apk add bash \
+            certbot \
+            openssl \
+            apache2-utils && \
     rm -rf /var/cache/apk/*
 
 # Default nginx conf
