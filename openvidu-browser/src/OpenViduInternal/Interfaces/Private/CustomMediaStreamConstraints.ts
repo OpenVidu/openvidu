@@ -16,7 +16,7 @@
  */
 
 export interface CustomMediaStreamConstraints {
-    constraints: MediaStreamConstraints | undefined;
+    constraints: MediaStreamConstraints;
     audioTrack: MediaStreamTrack | undefined;
     videoTrack: MediaStreamTrack | undefined;
 }

@@ -610,8 +610,7 @@ export class Publisher extends StreamManager {
             this.openvidu.generateMediaConstraints(this.properties)
                 .then(myConstraints => {
 
-                    if (myConstraints.constraints === undefined ||
-                      !!myConstraints.videoTrack && !!myConstraints.audioTrack ||
+                    if (!!myConstraints.videoTrack && !!myConstraints.audioTrack ||
                       !!myConstraints.audioTrack && myConstraints.constraints?.video === false ||
                       !!myConstraints.videoTrack && myConstraints.constraints?.audio === false) {
                         // No need to call getUserMedia at all. MediaStreamTracks already provided
