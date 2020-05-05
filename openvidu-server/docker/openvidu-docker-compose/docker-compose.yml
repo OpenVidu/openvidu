@@ -11,6 +11,8 @@
 #
 #    This file will be overridden when update OpenVidu Platform
 #
+#    Openvidu Version: 2.13.0
+#
 # ------------------------------------------------------------------------------
 
 version: '3.1'
