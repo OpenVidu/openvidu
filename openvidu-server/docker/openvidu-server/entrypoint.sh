@@ -2,7 +2,7 @@
 
 printf "\n"
 printf "\n  ======================================="
-printf "\n  =           LAUNCH JAVA               ="
+printf "\n  =       LAUNCH OPENVIDU-SERVER        ="
 printf "\n  ======================================="
 printf "\n"
 
