@@ -13,7 +13,7 @@ COPY ./default.conf /etc/nginx/conf.d/default.conf
 COPY ./default_nginx_conf /default_nginx_conf
 
 # Entrypoint and discover public ip scripts
-COPY ./discover_my_public_ip.sh /usr/local/bin
+COPY ../utils/discover_my_public_ip.sh /usr/local/bin
 COPY ./entrypoint.sh /usr/local/bin
 
 RUN mkdir -p /var/www/certbot && \
