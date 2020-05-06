@@ -122,14 +122,14 @@ upgrade_ov() {
      USE_OV_CALL=$(grep -E '^        image: openvidu/openvidu-call:2.12.0$' "${OPENVIDU_PREVIOUS_FOLDER}/docker-compose.override.yml" | tr -d '[:space:]')
 
      printf '\n     => Moving previous installation files:'
-     mv "${OPENVIDU_PREVIOUS_FOLDER}/docker-compose.yml" "${ROLL_BACK_FOLDER}"
+     mv "${OPENVIDU_PREVIOUS_FOLDER}/docker-compose.yml" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous 'docker-compose.yml'"
      printf '\n          - docker-compose.yml'
-     mv "${OPENVIDU_PREVIOUS_FOLDER}/openvidu" "${ROLL_BACK_FOLDER}"
+     mv "${OPENVIDU_PREVIOUS_FOLDER}/openvidu" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous 'openvidu'"
      printf '\n          - openvidu'
-     mv "${OPENVIDU_PREVIOUS_FOLDER}/readme.md" "${ROLL_BACK_FOLDER}"
+     mv "${OPENVIDU_PREVIOUS_FOLDER}/readme.md" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous 'readme.md'"
      printf '\n          - readme.md'
      if [ ! -z "${USE_OV_CALL}" ]; then
-          mv "${OPENVIDU_PREVIOUS_FOLDER}/docker-compose.override.yml" "${ROLL_BACK_FOLDER}"
+          mv "${OPENVIDU_PREVIOUS_FOLDER}/docker-compose.override.yml" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous 'docker-compose.override.yml'"
           printf '\n          - docker-compose.override.yml'
      fi
 
@@ -173,15 +173,18 @@ upgrade_ov() {
      printf '\n     Openvidu Platform successfully upgrade.'
      printf '\n     ======================================='
      printf '\n'
-     printf "\n     A new file 'docker-compose.yml' has been created with the new services"
+     printf "\n     1. A new file 'docker-compose.yml' has been created with the new services"
      printf '\n'
-     printf "\n     The current file '.env' has been kept but a new file '.env-VERSION' has been created." 
-     printf "\n     Please check the new file '.env-VERSION' use your data from the file '.env' and replace it'"
+     printf "\n     2. The current file '.env' has been kept but a new file '.env-VERSION' has been created." 
+     printf "\n     Please check the new file '.env-VERSION' use your data from the file '.env' and replace it"
      printf '\n     to have the new improvements.' 
      printf '\n'
-     printf "\n     If you were using Openvidu Call it has been updated in the file 'docker-compose.override.yml'"
+     printf "\n     3. If you were using Openvidu Call it has been updated in the file 'docker-compose.override.yml'"
      printf "\n     however if you are using your own application a file called 'docker-compose.override.yml-VERSION'"
-     printf "\n     has been created with the latest version of Openvidu Call, you can delete it or use it if you wish.'"
+     printf "\n     has been created with the latest version of Openvidu Call, you can delete it or use it if you wish."
+     printf '\n'
+     printf '\n     4. Start new version of Openvidu'
+     printf '\n     $ ./openvidu start'
      printf '\n'
      printf '\n     For more information, check readme.md'
      printf '\n'
