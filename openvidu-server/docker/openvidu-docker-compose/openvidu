@@ -59,6 +59,20 @@ case $1 in
       upgrade_ov "$2"
     fi
     ;;
+  upgrade-restart)
+    OLD_OPENVIDU_FOLDER=$(ls -tda .old* | head -1)
+
+    if [ ! -z ${OLD_OPENVIDU_FOLDER} ]; then
+      docker-compose -f "${OLD_OPENVIDU_FOLDER}/docker-compose.yml" down
+      docker-compose up -d
+      docker-compose logs -f openvidu-server
+    else
+      printf "\n     =======¡ERROR!======="
+      printf "\n     There are no Openvidu CE previous updates"
+      printf "\n"
+      exit 0
+    fi
+    ;;
   *)
     usage
     ;;
