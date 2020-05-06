@@ -202,7 +202,7 @@ upgrade_ov() {
      mv "${TMP_FOLDER}/readme.md" "${OPENVIDU_PREVIOUS_FOLDER}" || fatal_error "Error while updating 'readme.md'"
      printf '\n          - readme.md'
 
-     printf "\n     Deleting 'tmp' folder"
+     printf "\n     => Deleting 'tmp' folder"
      rm -rf "${TMP_FOLDER}" || fatal_error "Error deleting 'tmp' folder"
 
      # Add execution permissions

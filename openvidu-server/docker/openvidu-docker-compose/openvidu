@@ -4,16 +4,16 @@ upgrade_ov() {
   UPGRADE_SCRIPT_URL="https://s3-eu-west-1.amazonaws.com/aws.openvidu.io/install_openvidu_OVVERSION.sh"
   HTTP_STATUS=$(curl -s -o /dev/null -I -w "%{http_code}" ${UPGRADE_SCRIPT_URL//OVVERSION/$1})
 
-  printf "  => Upgrading Openvidu CE to %s Version" "$1"
+  printf "  => Upgrading Openvidu CE to '%s' version" "$1"
 
   if [ "$HTTP_STATUS" == "200" ]; then
-    printf "\n    => Downloading and upgrading new Version"
+    printf "\n    => Downloading and upgrading new version"
     printf "\n"
 
-    curl ${UPGRADE_SCRIPT_URL//OVVERSION/$1} | bash -s upgrade
+    curl --silent ${UPGRADE_SCRIPT_URL//OVVERSION/$1} | bash -s upgrade
   else
      printf "\n     =======¡ERROR!======="
-     printf "\n     Openvidu CE Version %s not exist" "$1"
+     printf "\n     Openvidu CE Version '%s' not exist" "$1"
      printf "\n"
      exit 0
   fi
@@ -55,11 +55,22 @@ case $1 in
 
   upgrade)
     if [ -z "$2" ]; then
-      upgrade_ov latest
+      UPGRADE_VERSION="latest"
     else
-      upgrade_ov "$2"
+      UPGRADE_VERSION="$2"
     fi
+
+    read -r -p "  You're about to update Openvidu CE to '${UPGRADE_VERSION}' version. Are you sure? [y/N]: " response
+        case "$response" in
+        [yY][eE][sS]|[yY]) 
+            upgrade_ov "${UPGRADE_VERSION}"
+            ;;
+        *)
+            exit 0
+            ;;
+    esac
     ;;
+
   *)
     usage
     ;;
