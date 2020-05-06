@@ -7,9 +7,9 @@ upgrade_ov() {
   printf "  => Upgrading Openvidu CE to %s Version" "$1"
 
   if [ "$HTTP_STATUS" == "200" ]; then
-    printf "\n    => Downloading new Version"
+    printf "\n    => Downloading and upgrading new Version"
     printf "\n"
-    docker-compose down
+
     curl ${UPGRADE_SCRIPT_URL//OVVERSION/$1} | bash -s upgrade
   else
      printf "\n     =======¡ERROR!======="

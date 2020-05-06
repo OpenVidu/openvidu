@@ -127,23 +127,17 @@ upgrade_ov() {
      # Download necessaries files
      printf '\n     => Downloading new Openvidu CE files:'
 
-     curl --silent https://raw.githubusercontent.com/OpenVidu/openvidu/${OPENVIDU_VERSION}/openvidu-server/docker/openvidu-docker-compose/.env \
-          --output "${TMP_FOLDER}/.env-${OPENVIDU_VERSION}" || fatal_error "Error when downloading the file '.env'"
-     printf '\n          - .env-%s' "${OPENVIDU_VERSION}"
-
-     if [ ! -z "${USE_OV_CALL}" ]; then
-          curl --silent https://raw.githubusercontent.com/OpenVidu/openvidu/${OPENVIDU_VERSION}/openvidu-server/docker/openvidu-docker-compose/docker-compose.override.yml \
-               --output "${TMP_FOLDER}/docker-compose.override.yml" || fatal_error "Error when downloading the file 'docker-compose.override.yml'"
-          printf "\n          - docker-compose.override.yml"
-     else 
-          curl --silent https://raw.githubusercontent.com/OpenVidu/openvidu/${OPENVIDU_VERSION}/openvidu-server/docker/openvidu-docker-compose/docker-compose.override.yml \
-               --output "${TMP_FOLDER}/docker-compose.override.yml-${OPENVIDU_VERSION}" || fatal_error "Error when downloading the file 'docker-compose.override.yml'"
-          printf '\n          - docker-compose.override.yml-%s' "${OPENVIDU_VERSION}"
-     fi
-
      curl --silent https://raw.githubusercontent.com/OpenVidu/openvidu/${OPENVIDU_VERSION}/openvidu-server/docker/openvidu-docker-compose/docker-compose.yml \
           --output "${TMP_FOLDER}/docker-compose.yml" || fatal_error "Error when downloading the file 'docker-compose.yml'"
      printf '\n          - docker-compose.yml'
+
+     curl --silent https://raw.githubusercontent.com/OpenVidu/openvidu/${OPENVIDU_VERSION}/openvidu-server/docker/openvidu-docker-compose/docker-compose.override.yml \
+          --output "${TMP_FOLDER}/docker-compose.override.yml" || fatal_error "Error when downloading the file 'docker-compose.override.yml'"
+     printf "\n          - docker-compose.override.yml"
+
+     curl --silent https://raw.githubusercontent.com/OpenVidu/openvidu/${OPENVIDU_VERSION}/openvidu-server/docker/openvidu-docker-compose/.env \
+          --output "${TMP_FOLDER}/.env" || fatal_error "Error when downloading the file '.env'"
+     printf '\n          - .env'
 
      curl --silent https://raw.githubusercontent.com/OpenVidu/openvidu/${OPENVIDU_VERSION}/openvidu-server/docker/openvidu-docker-compose/openvidu \
           --output "${TMP_FOLDER}/openvidu" || fatal_error "Error when downloading the file 'openvidu'"
@@ -153,39 +147,54 @@ upgrade_ov() {
           --output "${TMP_FOLDER}/readme.md" || fatal_error "Error when downloading the file 'readme.md'"
      printf '\n          - readme.md'
 
-
      # Dowloading new images and stoped actual Openvidu
      printf '\n     => Dowloading new images...'
      [ -f "${TMP_FOLDER}/docker-compose.yml" ] && docker-compose -f "${TMP_FOLDER}/docker-compose.yml" pull
      [ -f "${TMP_FOLDER}/docker-compose.override.yml" ] && docker-compose -f "${TMP_FOLDER}/docker-compose.override.yml" pull
      printf '\n     => Stoping Openvidu...'
+     printf '\n'
      docker-compose down
+     printf '\n'
 
      # Move old files to roll back folder
      printf '\n     => Moving previous installation files to rollback folder:'
+
      mv "${OPENVIDU_PREVIOUS_FOLDER}/docker-compose.yml" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous 'docker-compose.yml'"
      printf '\n          - docker-compose.yml'
-     mv "${OPENVIDU_PREVIOUS_FOLDER}/openvidu" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous 'openvidu'"
-     printf '\n          - openvidu'
-     mv "${OPENVIDU_PREVIOUS_FOLDER}/readme.md" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous 'readme.md'"
-     printf '\n          - readme.md'
+
      if [ ! -z "${USE_OV_CALL}" ]; then
           mv "${OPENVIDU_PREVIOUS_FOLDER}/docker-compose.override.yml" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous 'docker-compose.override.yml'"
           printf '\n          - docker-compose.override.yml'
      fi
 
+     mv "${OPENVIDU_PREVIOUS_FOLDER}/openvidu" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous 'openvidu'"
+     printf '\n          - openvidu'
+
+     mv "${OPENVIDU_PREVIOUS_FOLDER}/readme.md" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous 'readme.md'"
+     printf '\n          - readme.md'
+
      # Move tmp files to Openvidu
      printf '\n     => Updating files:'
+
      mv "${TMP_FOLDER}/docker-compose.yml" "${OPENVIDU_PREVIOUS_FOLDER}" || fatal_error "Error while updating 'docker-compose.yml'"
      printf '\n          - docker-compose.yml'
-     mv "${TMP_FOLDER}/openvidu" "${OPENVIDU_PREVIOUS_FOLDER}" || fatal_error "Error while updating 'openvidu'"
-     printf '\n          - openvidu'
-     mv "${TMP_FOLDER}/readme.md" "${OPENVIDU_PREVIOUS_FOLDER}" || fatal_error "Error while updating 'readme.md'"
-     printf '\n          - readme.md'
+
      if [ ! -z "${USE_OV_CALL}" ]; then
           mv "${TMP_FOLDER}/docker-compose.override.yml" "${OPENVIDU_PREVIOUS_FOLDER}" || fatal_error "Error while updating 'docker-compose.override.yml'"
           printf '\n          - docker-compose.override.yml'
+     else
+          mv "${TMP_FOLDER}/docker-compose.override.yml" "${OPENVIDU_PREVIOUS_FOLDER}/docker-compose.override.yml-${OPENVIDU_VERSION}" || fatal_error "Error while updating 'docker-compose.override.yml'"
+          printf '\n          - docker-compose.override.yml-%s' "${OPENVIDU_VERSION}"
      fi
+
+     mv "${OPENVIDU_PREVIOUS_FOLDER}/.env" "${ROLL_BACK_FOLDER}/.env-${OPENVIDU_VERSION}" || fatal_error "Error while moving previous '.env'"
+     printf '\n          - .env-%s' "${OPENVIDU_VERSION}"
+
+     mv "${TMP_FOLDER}/openvidu" "${OPENVIDU_PREVIOUS_FOLDER}" || fatal_error "Error while updating 'openvidu'"
+     printf '\n          - openvidu'
+
+     mv "${TMP_FOLDER}/readme.md" "${OPENVIDU_PREVIOUS_FOLDER}" || fatal_error "Error while updating 'readme.md'"
+     printf '\n          - readme.md'
 
      # Add execution permissions
      printf "\n     => Adding permission to 'openvidu' program..."
