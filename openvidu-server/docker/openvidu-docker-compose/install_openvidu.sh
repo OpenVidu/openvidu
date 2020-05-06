@@ -173,8 +173,19 @@ upgrade_ov() {
      printf '\n     Openvidu Platform successfully upgrade.'
      printf '\n     ======================================='
      printf '\n'
+     printf "\n     A new file 'docker-compose.yml' has been created with the new services"
      printf '\n'
-     exit 0
+     printf "\n     The current file '.env' has been kept but a new file '.env-VERSION' has been created." 
+     printf "\n     Please check the new file '.env-VERSION' use your data from the file '.env' and replace it'"
+     printf '\n     to have the new improvements.' 
+     printf '\n'
+     printf "\n     If you were using Openvidu Call it has been updated in the file 'docker-compose.override.yml'"
+     printf "\n     however if you are using your own application a file called 'docker-compose.override.yml-VERSION'"
+     printf "\n     has been created with the latest version of Openvidu Call, you can delete it or use it if you wish.'"
+     printf '\n'
+     printf '\n     For more information, check readme.md'
+     printf '\n'
+     printf '\n'
 }
 
 # Check docker and docker-compose installation
