@@ -149,10 +149,16 @@ upgrade_ov() {
 
      # Dowloading new images and stoped actual Openvidu
      printf '\n     => Dowloading new images...'
+     printf '\n'
+     sleep 1
+
      [ -f "${TMP_FOLDER}/docker-compose.yml" ] && docker-compose -f "${TMP_FOLDER}/docker-compose.yml" pull
      [ -f "${TMP_FOLDER}/docker-compose.override.yml" ] && docker-compose -f "${TMP_FOLDER}/docker-compose.override.yml" pull
+     
      printf '\n     => Stoping Openvidu...'
      printf '\n'
+     sleep 1
+
      docker-compose down
      printf '\n'
 
@@ -187,7 +193,7 @@ upgrade_ov() {
           printf '\n          - docker-compose.override.yml-%s' "${OPENVIDU_VERSION}"
      fi
 
-     mv "${OPENVIDU_PREVIOUS_FOLDER}/.env" "${ROLL_BACK_FOLDER}/.env-${OPENVIDU_VERSION}" || fatal_error "Error while moving previous '.env'"
+     mv "${TMP_FOLDER}/.env" "${OPENVIDU_PREVIOUS_FOLDER}/.env-${OPENVIDU_VERSION}" || fatal_error "Error while moving previous '.env'"
      printf '\n          - .env-%s' "${OPENVIDU_VERSION}"
 
      mv "${TMP_FOLDER}/openvidu" "${OPENVIDU_PREVIOUS_FOLDER}" || fatal_error "Error while updating 'openvidu'"
@@ -195,6 +201,9 @@ upgrade_ov() {
 
      mv "${TMP_FOLDER}/readme.md" "${OPENVIDU_PREVIOUS_FOLDER}" || fatal_error "Error while updating 'readme.md'"
      printf '\n          - readme.md'
+
+     printf "\n     Deleting 'tmp' folder"
+     rm -rf "${TMP_FOLDER}" || fatal_error "Error deleting 'tmp' folder"
 
      # Add execution permissions
      printf "\n     => Adding permission to 'openvidu' program..."
