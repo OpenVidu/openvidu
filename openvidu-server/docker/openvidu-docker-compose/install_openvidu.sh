@@ -154,6 +154,7 @@ upgrade_ov() {
      sleep 1
 
      printf "\n          => Moving to 'tmp' folder..."
+     printf '\n'
      cd "${TMP_FOLDER}" || fatal_error "Error when moving to 'tmp' folder"
      docker-compose pull | true
 
@@ -168,7 +169,6 @@ upgrade_ov() {
 
      printf '\n'
      printf '\n     => Moving to working dir...'
-     printf '\n'
      cd "${ACTUAL_FOLDER}" || fatal_error "Error when moving to working dir"
 
      # Move old files to roll back folder
