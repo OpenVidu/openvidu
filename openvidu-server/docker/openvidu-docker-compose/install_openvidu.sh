@@ -116,6 +116,7 @@ upgrade_ov() {
 
      ROLL_BACK_FOLDER="${OPENVIDU_PREVIOUS_FOLDER}/.old-${OPENVIDU_PREVIOUS_VERSION}"
      TMP_FOLDER="${OPENVIDU_PREVIOUS_FOLDER}/tmp"
+     ACTUAL_FOLDER="$PWD"
      USE_OV_CALL=$(grep -E '^        image: openvidu/openvidu-call:2.12.0$' "${OPENVIDU_PREVIOUS_FOLDER}/docker-compose.override.yml" | tr -d '[:space:]')
 
      printf "\n     Creating roll back folder '%s'..." ".old-${OPENVIDU_PREVIOUS_VERSION}"
@@ -152,15 +153,21 @@ upgrade_ov() {
      printf '\n'
      sleep 1
 
-     [ -f "${TMP_FOLDER}/docker-compose.yml" ] && docker-compose -f "${TMP_FOLDER}/docker-compose.yml" pull
-     [ -f "${TMP_FOLDER}/docker-compose.override.yml" ] && docker-compose -f "${TMP_FOLDER}/docker-compose.override.yml" pull
+     printf "\n          => Moving to 'tmp' folder..."
+     cd "${TMP_FOLDER}" || fatal_error "Error when moving to 'tmp' folder"
+     docker-compose pull | true
      
      printf '\n     => Stoping Openvidu...'
      printf '\n'
      sleep 1
 
-     docker-compose down
+     printf "\n          => Moving to 'openvidu' folder..."
+     cd "${OPENVIDU_PREVIOUS_FOLDER}" || fatal_error "Error when moving to 'openvidu' folder"
+     docker-compose down | true
+
      printf '\n'
+     printf '\n     => Moving to working dir...'
+     cd "${ACTUAL_FOLDER}" || fatal_error "Error when moving to working dir"
 
      # Move old files to roll back folder
      printf '\n     => Moving previous installation files to rollback folder:'
