@@ -35,7 +35,7 @@ new_ov_installation() {
 
      curl --silent https://raw.githubusercontent.com/OpenVidu/openvidu/${OPENVIDU_VERSION}/openvidu-server/docker/openvidu-docker-compose/docker-compose.yml \
           --output "${OPENVIDU_FOLDER}/docker-compose.yml" || fatal_error "Error when downloading the file 'docker-compose.yml'"
-     printf '\n          - docker-compose.yml'   
+     printf '\n          - docker-compose.yml'
 
      curl --silent https://raw.githubusercontent.com/OpenVidu/openvidu/${OPENVIDU_VERSION}/openvidu-server/docker/openvidu-docker-compose/openvidu \
           --output "${OPENVIDU_FOLDER}/openvidu" || fatal_error "Error when downloading the file 'openvidu'"
@@ -64,7 +64,7 @@ new_ov_installation() {
      printf '\n     $ cd openvidu'
      printf '\n'
      printf '\n     2. Configure DOMAIN_OR_PUBLIC_IP and OPENVIDU_SECRET in .env file:'
-     printf '\n     $ nano .env' 
+     printf '\n     $ nano .env'
      printf '\n'
      printf '\n     3. Start OpenVidu'
      printf '\n     $ ./openvidu start'
@@ -84,8 +84,8 @@ upgrade_ov() {
      printf '\n'
 
      SEARCH_IN_FOLDERS=(
-          "." 
-          "/opt/openvidu"
+          "${PWD}"
+          "/opt/${OPENVIDU_FOLDER}"
      )
 
      for folder in "${SEARCH_IN_FOLDERS[@]}"; do
@@ -105,7 +105,7 @@ upgrade_ov() {
      OPENVIDU_PREVIOUS_VERSION=$(grep 'Openvidu Version:' "${OPENVIDU_PREVIOUS_FOLDER}/docker-compose.yml" | awk '{ print $4 }')
      [ -z "${OPENVIDU_PREVIOUS_VERSION}" ] && OPENVIDU_PREVIOUS_VERSION=2.13.0
 
-     # In this point using the variable 'OPENVIDU_PREVIOUS_VERSION' we can verify if the upgrade is 
+     # In this point using the variable 'OPENVIDU_PREVIOUS_VERSION' we can verify if the upgrade is
      # posible or not. If it is not posible launch a warning and stop the upgrade.
 
      printf '\n'
@@ -156,17 +156,19 @@ upgrade_ov() {
      printf "\n          => Moving to 'tmp' folder..."
      cd "${TMP_FOLDER}" || fatal_error "Error when moving to 'tmp' folder"
      docker-compose pull | true
-     
+
      printf '\n     => Stoping Openvidu...'
      printf '\n'
      sleep 1
 
      printf "\n          => Moving to 'openvidu' folder..."
+     printf '\n'
      cd "${OPENVIDU_PREVIOUS_FOLDER}" || fatal_error "Error when moving to 'openvidu' folder"
      docker-compose down | true
 
      printf '\n'
      printf '\n     => Moving to working dir...'
+     printf '\n'
      cd "${ACTUAL_FOLDER}" || fatal_error "Error when moving to working dir"
 
      # Move old files to roll back folder
@@ -227,7 +229,7 @@ upgrade_ov() {
      printf '\n'
      printf "\n     2. The current file '.env' has been kept but a new file '.env-%s' has been created." "${OPENVIDU_VERSION}"
      printf "\n     Please check the new file '.env-%s' use your data from the file '.env' and replace it" "${OPENVIDU_VERSION}"
-     printf '\n     to have the new improvements.' 
+     printf '\n     to have the new improvements.'
      printf '\n'
      printf "\n     3. If you were using Openvidu Call it has been updated in the file 'docker-compose.override.yml'"
      printf "\n     however if you are using your own application a file called 'docker-compose.override.yml-%s'" "${OPENVIDU_VERSION}"
