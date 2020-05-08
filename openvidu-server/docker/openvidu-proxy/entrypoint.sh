@@ -41,6 +41,7 @@ CERTIFICATES_CONF="${CERTIFICATES_FOLDER}/certificates.conf"
 [ -z "${ALLOWED_ACCESS_TO_RESTAPI}" ] && export ALLOWED_ACCESS_TO_RESTAPI=all
 
 # Start with default certbot conf
+sed -i "s/{http_port}/${PROXY_HTTP_PORT}/" /etc/nginx/conf.d/default.conf
 nginx -g "daemon on;"
 
 # Show input enviroment variables
