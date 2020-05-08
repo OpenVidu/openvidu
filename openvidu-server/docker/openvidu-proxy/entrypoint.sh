@@ -14,7 +14,13 @@ if [ -z "${CERTIFICATE_TYPE}" ]; then
 fi
 
 if [[ "${CERTIFICATE_TYPE}" == "letsencrypt" && \
-      "${LETSENCRYPT_EMAIL}" == "user@example.com" || \
+      "${LETSENCRYPT_EMAIL}" == "user@example.com" ]]; then
+  printf "\n  =======¡ERROR!======="
+  printf "\n  If your use LetsEncrypt mode it's necessary a correct email in 'LETSENCRYPT_EMAIL' variable\n"
+  exit 0
+fi
+
+if [[ "${CERTIFICATE_TYPE}" == "letsencrypt" && \
       -z "${LETSENCRYPT_EMAIL}" ]]; then
   printf "\n  =======¡ERROR!======="
   printf "\n  If your use LetsEncrypt mode it's necessary a correct email in 'LETSENCRYPT_EMAIL' variable\n"
