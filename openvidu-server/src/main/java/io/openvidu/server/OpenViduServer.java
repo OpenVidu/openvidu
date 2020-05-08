@@ -306,6 +306,9 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 			log.info(msg);
 
+			// Close the auxiliary ApplicationContext
+			app.close();
+
 			return CONFIG_PROPS;
 		}
 		return null;

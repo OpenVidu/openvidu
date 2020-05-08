@@ -91,7 +91,7 @@ public class OpenviduConfig {
 		}
 	}
 
-	private static final Logger log = LoggerFactory.getLogger(OpenviduConfig.class);
+	protected static final Logger log = LoggerFactory.getLogger(OpenviduConfig.class);
 
 	private static final boolean SHOW_PROPERTIES_AS_ENV_VARS = true;
 
