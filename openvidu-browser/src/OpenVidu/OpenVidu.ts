@@ -366,6 +366,7 @@ export class OpenVidu {
    */
   checkScreenSharingCapabilities(): number {
     const browser = platform.name;
+    const version = platform.version;
     const family = platform.os!!.family;
 
     // Reject mobile devices
@@ -373,7 +374,8 @@ export class OpenVidu {
       return 0;
     }
 
-    if ((browser !== 'Chrome') && (browser !== 'Firefox') && (browser !== 'Opera') && (browser !== 'Electron')) {
+    if ((browser !== 'Chrome') && (browser !== 'Firefox') && (browser !== 'Opera') && (browser !== 'Electron') && 
+       ((browser !== 'Safari') || ((browser === 'Safari') && ((typeof version === 'undefined') || (parseInt(version, 10) < 13))))) {
       return 0;
     } else {
       return 1;
@@ -758,7 +760,7 @@ export class OpenVidu {
           // Screen sharing
 
           if (!this.checkScreenSharingCapabilities()) {
-            const error = new OpenViduError(OpenViduErrorName.SCREEN_SHARING_NOT_SUPPORTED, 'You can only screen share in desktop Chrome, Firefox, Opera or Electron. Detected client: ' + platform.name);
+            const error = new OpenViduError(OpenViduErrorName.SCREEN_SHARING_NOT_SUPPORTED, 'You can only screen share in desktop Chrome, Firefox, Opera, Safari (>=13.0) or Electron. Detected client: ' + platform.name);
             logger.error(error);
             reject(error);
           } else {
@@ -812,7 +814,7 @@ export class OpenVidu {
               } else {
 
                 if (navigator.mediaDevices['getDisplayMedia']) {
-                  // getDisplayMedia support (Chrome >= 72, Firefox >= 66)
+                  // getDisplayMedia support (Chrome >= 72, Firefox >= 66, Safari >= 13)
                   resolve(myConstraints);
                 } else {
                   // Default screen sharing extension for Chrome/Opera, or is Firefox < 66
