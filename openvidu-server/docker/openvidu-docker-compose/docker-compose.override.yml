@@ -13,10 +13,11 @@ services:
     #
     # --------------------------------------------------------------
     app:
-        image: openvidu/openvidu-call:2.14.0-beta10
+        image: openvidu/openvidu-call:2.14.0-beta11
         restart: on-failure
         ports:
             - "5442:5000"
         environment: 
             - OPENVIDU_URL=https://${DOMAIN_OR_PUBLIC_IP}:${HTTPS_PORT:-443}
             - OPENVIDU_SECRET=${OPENVIDU_SECRET}
+            - CALL_OPENVIDU_CERTTYPE=${CERTIFICATE_TYPE}
