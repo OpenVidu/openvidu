@@ -13,7 +13,7 @@ services:
     #
     # --------------------------------------------------------------
     app:
-        image: openvidu/openvidu-call:2.14.0-beta11
+        image: openvidu/openvidu-call:2.14.0
         restart: on-failure
         ports:
             - "5442:5000"
