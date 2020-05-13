@@ -20,7 +20,7 @@ version: '3.1'
 services:
 
     openvidu-server:
-        image: openvidu/openvidu-server:2.14.0
+        image: openvidu/openvidu-server:2.14.1-beta1
         restart: on-failure
         network_mode: host
         entrypoint: ['/bin/bash', '-c', 'export COTURN_IP=`/usr/local/bin/discover_my_public_ip.sh`; /usr/local/bin/entrypoint.sh']
