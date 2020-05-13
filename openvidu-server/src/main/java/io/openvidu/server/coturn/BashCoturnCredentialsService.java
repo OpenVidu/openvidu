@@ -55,9 +55,11 @@ public class BashCoturnCredentialsService extends CoturnCredentialsService {
 					log.info("Path of COTURN log files: " + this.logPath);
 				}
 				response = CommandExecutor.execCommand("/bin/sh", "-c",
-						"redis-cli -n " + this.openviduConfig.getCoturnDatabaseDbname() + " flushdb");
+						"redis-cli -a " + this.openviduConfig.getCoturnDatabasePassword() + " -n "
+								+ this.openviduConfig.getCoturnDatabaseDbname() + " flushdb");
 				String response2 = CommandExecutor.execCommand("/bin/sh", "-c",
-						"redis-cli -n " + this.openviduConfig.getCoturnDatabaseDbname() + " --scan --pattern '*'");
+						"redis-cli -a " + this.openviduConfig.getCoturnDatabasePassword() + " -n "
+								+ this.openviduConfig.getCoturnDatabaseDbname() + " --scan --pattern '*'");
 				if ("OK".equals(response) && response2.isEmpty()) {
 					log.info("COTURN DB is now empty");
 				} else {

@@ -187,6 +187,10 @@ public class OpenviduConfig {
 		return this.coturnRedisDbname;
 	}
 
+	public String getCoturnDatabasePassword() {
+		return this.coturnRedisPassword;
+	}
+
 	public List<String> getKmsUris() {
 		return kmsUrisList;
 	}
