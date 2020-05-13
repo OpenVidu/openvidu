@@ -36,6 +36,7 @@ services:
             - SERVER_PORT=5443
             - KMS_URIS=["ws://localhost:8888/kurento"]
             - COTURN_REDIS_IP=127.0.0.1
+            - COTURN_REDIS_PASSWORD=${OPENVIDU_SECRET}
 
     kms:
         image: ${KMS_IMAGE:-kurento/kurento-media-server:6.13.2}
@@ -52,9 +53,11 @@ services:
             - GST_DEBUG=${KMS_DEBUG_LEVEL:-}
 
     redis:
-        image: redis:5.0.7
+        image: openvidu/openvidu-redis:1.0.0
         restart: always
         network_mode: host
+        environment:
+            - REDIS_PASSWORD=${OPENVIDU_SECRET}
 
     coturn:
         image: openvidu/openvidu-coturn:1.0.0
@@ -64,7 +67,7 @@ services:
             - REDIS_IP=127.0.0.1
             - TURN_LISTEN_PORT=3478
             - DB_NAME=0
-            - DB_PASSWORD=turn
+            - DB_PASSWORD=${OPENVIDU_SECRET}
             - MIN_PORT=57001
             - MAX_PORT=65535
 
