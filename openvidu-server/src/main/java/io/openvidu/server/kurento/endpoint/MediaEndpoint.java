@@ -18,6 +18,7 @@
 package io.openvidu.server.kurento.endpoint;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -92,8 +93,8 @@ public abstract class MediaEndpoint {
 	private MediaPipeline pipeline = null;
 	private ListenerSubscription endpointSubscription = null;
 
-	private final List<IceCandidate> receivedCandidateList = new ArrayList<IceCandidate>();
-	private final List<IceCandidate> gatheredCandidateList = new ArrayList<IceCandidate>();
+	private final List<IceCandidate> receivedCandidateList = Collections.synchronizedList(new ArrayList<>());
+	private final List<IceCandidate> gatheredCandidateList = Collections.synchronizedList(new ArrayList<>());
 	private LinkedList<IceCandidate> candidates = new LinkedList<IceCandidate>();
 
 	public String selectedLocalIceCandidate;
