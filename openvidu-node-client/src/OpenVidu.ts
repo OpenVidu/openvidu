@@ -525,6 +525,7 @@ export class OpenVidu {
               localCandidate: publisherExtended.localCandidate,
               remoteCandidate: publisherExtended.remoteCandidate,
               receivedCandidates: publisherExtended.receivedCandidates,
+              gatheredCandidates: publisherExtended.gatheredCandidates,
               webrtcEndpointName: publisherExtended.webrtcEndpointName,
               localSdp: publisherExtended.localSdp,
               remoteSdp: publisherExtended.remoteSdp
@@ -551,6 +552,7 @@ export class OpenVidu {
               localCandidate: subscriberExtended.localCandidate,
               remoteCandidate: subscriberExtended.remoteCandidate,
               receivedCandidates: subscriberExtended.receivedCandidates,
+              gatheredCandidates: subscriberExtended.gatheredCandidates,
               webrtcEndpointName: subscriberExtended.webrtcEndpointName,
               localSdp: subscriberExtended.localSdp,
               remoteSdp: subscriberExtended.remoteSdp

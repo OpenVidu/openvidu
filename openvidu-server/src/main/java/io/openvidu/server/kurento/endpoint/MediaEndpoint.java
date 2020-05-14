@@ -92,7 +92,7 @@ public abstract class MediaEndpoint {
 	private ListenerSubscription endpointSubscription = null;
 
 	private final List<IceCandidate> receivedCandidateList = new LinkedList<IceCandidate>();
-	private final List<IceCandidate> generatedCandidateList = new LinkedList<IceCandidate>();
+	private final List<IceCandidate> gatheredCandidateList = new LinkedList<IceCandidate>();
 	private LinkedList<IceCandidate> candidates = new LinkedList<IceCandidate>();
 
 	public String selectedLocalIceCandidate;
@@ -534,7 +534,7 @@ public abstract class MediaEndpoint {
 		}
 		webEndpoint.addIceCandidateFoundListener(event -> {
 			final IceCandidate candidate = event.getCandidate();
-			generatedCandidateList.add(candidate);
+			gatheredCandidateList.add(candidate);
 			owner.sendIceCandidate(senderPublicId, endpointName, candidate);
 		});
 	}
@@ -612,17 +612,17 @@ public abstract class MediaEndpoint {
 		}
 		Gson gson = new GsonBuilder().create();
 		JsonArray receivedCandidates = new JsonArray();
-		Iterator<IceCandidate> it = this.receivedCandidateList.iterator();
-		while (it.hasNext()) {
-			receivedCandidates.add(gson.toJsonTree(it.next()));
+		Iterator<IceCandidate> it1 = this.receivedCandidateList.iterator();
+		while (it1.hasNext()) {
+			receivedCandidates.add(gson.toJsonTree(it1.next()));
 		}
 		json.add("receivedCandidates", receivedCandidates);
-		JsonArray generatedCandidates = new JsonArray();
-		it = this.receivedCandidateList.iterator();
-		while (it.hasNext()) {
-			generatedCandidates.add(gson.toJsonTree(it.next()));
+		JsonArray gatheredCandidates = new JsonArray();
+		Iterator<IceCandidate> it2 = this.gatheredCandidateList.iterator();
+		while (it2.hasNext()) {
+			gatheredCandidates.add(gson.toJsonTree(it2.next()));
 		}
-		json.add("generatedCandidates", generatedCandidates);
+		json.add("gatheredCandidates", gatheredCandidates);
 		json.addProperty("localCandidate", this.selectedLocalIceCandidate);
 		json.addProperty("remoteCandidate", this.selectedRemoteIceCandidate);
 
