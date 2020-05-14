@@ -1288,8 +1288,10 @@ export class Session extends EventDispatcher {
                 }
             }
 
-            this.openvidu.wsUri = 'wss://' + url.host + '/openvidu';
-            this.openvidu.httpUri = 'https://' + url.host;
+            const isHttps = token.startsWith("wss://");
+
+            this.openvidu.wsUri = url.protocol + url.host + '/openvidu';
+            this.openvidu.httpUri = (isHttps ? 'https://': 'http://') + url.host;
 
         } else {
             logger.error('Token "' + token + '" is not valid')
