@@ -11,10 +11,10 @@
 			<if
 				condition='property("logging.colors").equalsIgnoreCase("true")'>
 				<then>
-					<pattern>%black(%highlight([%p]) %d{dd MMM HH:mm:ss.SSS} %magenta([%.15t]) \(%file:%line\) - %msg%n)</pattern>
+					<pattern>%black(%highlight([%p]) %d{dd MMM HH:mm:ss.SSS} %magenta([%.80t]) \(%file:%line\) - %msg%n)</pattern>
 				</then>
 				<else>
-					<pattern>[%p] %d [%.15t] %c - %msg%n
+					<pattern>[%p] %d [%.80t] %c - %msg%n
 					</pattern>
 				</else>
 			</if>
