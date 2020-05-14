@@ -39,15 +39,15 @@ import org.kurento.client.MediaPipeline;
 import org.kurento.client.PlayerEndpoint;
 import org.kurento.client.RtpEndpoint;
 import org.kurento.client.SdpEndpoint;
-import org.kurento.client.TFuture;
-import org.kurento.client.Transaction;
 import org.kurento.client.WebRtcEndpoint;
+import org.kurento.client.internal.server.KurentoServerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 
 import io.openvidu.client.OpenViduException;
@@ -597,29 +597,18 @@ public abstract class MediaEndpoint {
 		json.addProperty("webrtcEndpointName", this.getEndpointName());
 		if (!this.isPlayerEndpoint()) {
 			try {
-				Transaction tx = this.getEndpoint().getMediaPipeline().beginTransaction();
-				TFuture<String> future1 = ((SdpEndpoint) this.getEndpoint()).getRemoteSessionDescriptor(tx);
-				TFuture<String> future2 = ((SdpEndpoint) this.getEndpoint()).getLocalSessionDescriptor(tx);
-				TFuture<String> future3 = this.getWebEndpoint().getExternalAddress(tx);
-				TFuture<String> future4 = this.getWebEndpoint().getNetworkInterfaces(tx);
-				TFuture<String> future5 = this.getWebEndpoint().getStunServerAddress(tx);
-				TFuture<Integer> future6 = this.getWebEndpoint().getStunServerPort(tx);
-				TFuture<String> future7 = this.getWebEndpoint().getTurnUrl(tx);
-				TFuture<String> future8 = this.getWebEndpoint().getId(tx);
-				tx.commit();
-
-				json.addProperty("externalAddress", future3.get());
-				json.addProperty("networkInterfaces", future4.get());
-				json.addProperty("stunServerAddress", future5.get());
-				json.addProperty("stunServerPort", future6.get());
-				json.addProperty("turnUrl", future7.get());
-				json.addProperty("mediaObjectId", future8.get());
-				json.addProperty("remoteSdp", future1.get());
-				json.addProperty("localSdp", future2.get());
-
-			} catch (Exception e) {
-				log.error("Exception while getting remote information of WebRtcEndpoint {}: {} - {}", this.streamId,
-						e.getClass().getName(), e.getMessage());
+				json.addProperty("remoteSdp", ((SdpEndpoint) this.getEndpoint()).getRemoteSessionDescriptor());
+			} catch (KurentoServerException e) {
+				log.error("Error retrieving remote SDP for endpoint {} of stream {}: {}", this.endpointName,
+						this.streamId, e.getMessage());
+				json.add("remoteSdp", JsonNull.INSTANCE);
+			}
+			try {
+				json.addProperty("localSdp", ((SdpEndpoint) this.getEndpoint()).getLocalSessionDescriptor());
+			} catch (KurentoServerException e) {
+				log.error("Error retrieving local SDP for endpoint {} of stream {}: {}", this.endpointName,
+						this.streamId, e.getMessage());
+				json.add("localSdp", JsonNull.INSTANCE);
 			}
 		}
 		Gson gson = new GsonBuilder().create();
