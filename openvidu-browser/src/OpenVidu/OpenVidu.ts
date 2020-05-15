@@ -366,7 +366,7 @@ export class OpenVidu {
    */
   checkScreenSharingCapabilities(): number {
     const browser = platform.name;
-    const version = platform.version;
+    const version = platform?.version ? parseFloat(platform.version) : -1;
     const family = platform.os!!.family;
 
     // Reject mobile devices
@@ -375,7 +375,7 @@ export class OpenVidu {
     }
 
     if ((browser !== 'Chrome') && (browser !== 'Firefox') && (browser !== 'Opera') && (browser !== 'Electron') && 
-       ((browser !== 'Safari') || ((browser === 'Safari') && ((typeof version === 'undefined') || (parseInt(version, 10) < 13))))) {
+       (browser === 'Safari' && version < 13)) {
       return 0;
     } else {
       return 1;
