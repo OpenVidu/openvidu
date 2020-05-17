@@ -82,8 +82,6 @@ public class KurentoSessionManager extends SessionManager {
 	@Autowired
 	private KurentoParticipantEndpointConfig kurentoEndpointConfig;
 
-	private final int MS_MAX_LOCK_WAIT = 15;
-
 	@Override
 	/* Protected by Session.closingLock.readLock */
 	public void joinRoom(Participant participant, String sessionId, Integer transactionId) {
@@ -105,7 +103,7 @@ public class KurentoSessionManager extends SessionManager {
 				}
 
 				try {
-					if (KmsManager.selectAndRemoveKmsLock.tryLock(MS_MAX_LOCK_WAIT, TimeUnit.SECONDS)) {
+					if (KmsManager.selectAndRemoveKmsLock.tryLock(KmsManager.MAX_SECONDS_LOCK_WAIT, TimeUnit.SECONDS)) {
 						try {
 							kSession = (KurentoSession) sessions.get(sessionId);
 
@@ -131,7 +129,7 @@ public class KurentoSessionManager extends SessionManager {
 						}
 
 					} else {
-						String error = "Timeout of " + MS_MAX_LOCK_WAIT + " seconds waiting to acquire lock";
+						String error = "Timeout of " + KmsManager.MAX_SECONDS_LOCK_WAIT + " seconds waiting to acquire lock";
 						log.error(error);
 						sessionEventsHandler.onParticipantJoined(participant, sessionId, null, transactionId,
 								new OpenViduException(Code.ROOM_CANNOT_BE_CREATED_ERROR_CODE, error));

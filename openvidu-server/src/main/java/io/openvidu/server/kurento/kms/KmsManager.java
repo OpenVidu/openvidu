@@ -49,6 +49,7 @@ public abstract class KmsManager {
 	protected static final Logger log = LoggerFactory.getLogger(KmsManager.class);
 
 	public static final Lock selectAndRemoveKmsLock = new ReentrantLock(true);
+	public static final int MAX_SECONDS_LOCK_WAIT = 15;
 
 	private Map<String, Lock> kmsReconnectionLocks = new ConcurrentHashMap<>();
 
