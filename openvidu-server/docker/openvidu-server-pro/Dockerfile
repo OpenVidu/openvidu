@@ -5,12 +5,12 @@ ARG OPENVIDU_VERSION
 
 # Install main components
 RUN apt-get update && apt-get install -y \
+  curl \
+  wget \
   openjdk-8-jre \
-    jq \
-    coturn \
-    wget \
-    curl \
   coturn \
+  redis-tools \
+  jq \
   docker.io \
 && rm -rf /var/lib/apt/lists/*
     
