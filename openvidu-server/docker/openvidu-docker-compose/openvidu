@@ -122,6 +122,13 @@ generate_report() {
     cat < "${OV_FOLDER}/.env" | sed -r -e "s/OPENVIDU_SECRET=.+/OPENVIDU_SECRET=****/"
 
     printf '\n'
+    printf '\n  ========= docker-compose.yml =========='
+    printf '\n'
+    printf '\n'
+
+    cat "${OV_FOLDER}/docker-compose.yml"
+    
+    printf '\n'
     printf '\n  ==== docker-compose.override.yml ===='
     printf '\n'
     printf '\n'
