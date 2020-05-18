@@ -3,21 +3,21 @@ version: '3.1'
 services:
     # --------------------------------------------------------------
     #
-    # Change this if your want use your own application.
-    # It's very important expose your application in port 5442
-    # and use the http protocol.
+    #   Change this if your want use your own application.
+    #   It's very important expose your application in port 5442
+    #   and use the http protocol.
     # 
-    # Default Application
+    #   Default Application
     #
-    # Openvidu-Call Version: 2.14.0
+    #   Openvidu-Call Version: 2.14.0
     #
     # --------------------------------------------------------------
     app:
         image: openvidu/openvidu-call:2.14.0
         restart: on-failure
-        ports:
-            - "5442:5000"
+        network_mode: host
         environment: 
-            - OPENVIDU_URL=https://${DOMAIN_OR_PUBLIC_IP}:${HTTPS_PORT:-443}
+            - SERVER_PORT=5442
+            - OPENVIDU_URL=http://localhost:5443
             - OPENVIDU_SECRET=${OPENVIDU_SECRET}
             - CALL_OPENVIDU_CERTTYPE=${CERTIFICATE_TYPE}

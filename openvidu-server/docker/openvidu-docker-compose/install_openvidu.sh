@@ -117,7 +117,7 @@ upgrade_ov() {
      ROLL_BACK_FOLDER="${OPENVIDU_PREVIOUS_FOLDER}/.old-${OPENVIDU_PREVIOUS_VERSION}"
      TMP_FOLDER="${OPENVIDU_PREVIOUS_FOLDER}/tmp"
      ACTUAL_FOLDER="$PWD"
-     USE_OV_CALL=$(grep -E '^        image: openvidu/openvidu-call:2.12.0$' "${OPENVIDU_PREVIOUS_FOLDER}/docker-compose.override.yml" | tr -d '[:space:]')
+     USE_OV_CALL=$(grep -E '^        image: openvidu/openvidu-call:.*$' "${OPENVIDU_PREVIOUS_FOLDER}/docker-compose.override.yml" | tr -d '[:space:]')
 
      printf "\n     Creating rollback folder '%s'..." ".old-${OPENVIDU_PREVIOUS_VERSION}"
      mkdir "${ROLL_BACK_FOLDER}" || fatal_error "Error while creating the folder '.old-${OPENVIDU_PREVIOUS_VERSION}'"
