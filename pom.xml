@@ -53,7 +53,7 @@
 		<version.hamcrest>2.2</version.hamcrest>
 		<version.httpclient>4.5.11</version.httpclient>
 		<version.janino>3.1.0</version.janino>
-		<version.commonslang>3.9</version.commonslang>
+		<version.commonslang>3.10</version.commonslang>
 		<version.dockerjava>3.1.5</version.dockerjava>
 		<version.slf4j>1.7.30</version.slf4j>
 		<version.gson>2.8.6</version.gson>
