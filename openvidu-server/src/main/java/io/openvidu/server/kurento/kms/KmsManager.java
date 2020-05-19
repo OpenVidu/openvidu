@@ -208,7 +208,7 @@ public abstract class KmsManager {
 				kms.setTimeOfKurentoClientDisconnection(System.currentTimeMillis());
 
 				if (kms.getKurentoClient().isClosed()) {
-					log.info("Kurento Client \"disconnected\" event for KMS {} [{}]. Closed explicitely", kms.getUri(),
+					log.info("Kurento Client \"disconnected\" event for KMS {} [{}]. Closed explicitly", kms.getUri(),
 							kms.getKurentoClient().toString());
 					return;
 				} else {
