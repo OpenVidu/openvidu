@@ -37,6 +37,7 @@ import java.util.Map;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.http.Header;
 import org.apache.http.message.BasicHeader;
 import org.kurento.jsonrpc.JsonUtils;
@@ -916,12 +917,13 @@ public class OpenviduConfig {
 		if (getDotenvPath() != null && !getDotenvPath().isEmpty()) {
 
 			Path path = getDotenvFilePathFromDotenvPath(getDotenvPath());
-			File file = path.toFile();
+			String normalizePath = FilenameUtils.normalize(path.toAbsolutePath().toString());
+			File file = new File(normalizePath);
 
 			if (file.exists()) {
 				return file;
 			} else {
-				log.error(".env file not found at {}", path.toAbsolutePath().toString());
+				log.error(".env file not found at {}", file.getAbsolutePath().toString());
 			}
 
 		} else {
