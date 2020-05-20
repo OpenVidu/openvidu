@@ -59,7 +59,7 @@
 		<version.gson>2.8.6</version.gson>
 		<version.unirest>1.4.9</version.unirest>
 
-		<version.webdrivermanager>3.8.1</version.webdrivermanager>
+		<version.webdrivermanager>4.0.0</version.webdrivermanager>
 
 		<version.openvidu.java.client>2.14.0</version.openvidu.java.client>
 		<version.openvidu.client>1.1.0</version.openvidu.client>
