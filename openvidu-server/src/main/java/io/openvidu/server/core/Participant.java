@@ -17,6 +17,9 @@
 
 package io.openvidu.server.core;
 
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
 import com.google.gson.JsonObject;
 
 import io.openvidu.server.kurento.endpoint.EndpointType;
@@ -40,6 +43,12 @@ public class Participant {
 	protected volatile boolean closed = false;
 
 	private final String METADATA_SEPARATOR = "%/%";
+
+	/**
+	 * This lock protects the initialization of a RecorderEndpoint when INDIVIDUAL
+	 * recording
+	 */
+	public Lock singleRecordingLock = new ReentrantLock();
 
 	public Participant(String finalUserId, String participantPrivatetId, String participantPublicId, String sessionId,
 			Token token, String clientMetadata, GeoLocation location, String platform, EndpointType endpointType,
