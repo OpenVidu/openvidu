@@ -175,6 +175,7 @@ public abstract class RecordingService {
 		log.error("Recording start failed for session {}: {}", session.getSessionId(), errorMessage);
 		recording.setStatus(io.openvidu.java.client.Recording.Status.failed);
 		this.recordingManager.startingRecordings.remove(recording.getId());
+		this.recordingManager.sessionsRecordingsStarting.remove(session.getSessionId());
 		this.stopRecording(session, recording, null);
 		return new OpenViduException(Code.RECORDING_START_ERROR_CODE, errorMessage);
 	}

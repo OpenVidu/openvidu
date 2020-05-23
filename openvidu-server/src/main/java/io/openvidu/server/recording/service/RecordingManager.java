@@ -107,6 +107,7 @@ public class RecordingManager {
 	protected Map<String, Recording> startingRecordings = new ConcurrentHashMap<>();
 	protected Map<String, Recording> startedRecordings = new ConcurrentHashMap<>();
 	protected Map<String, Recording> sessionsRecordings = new ConcurrentHashMap<>();
+	protected Map<String, Recording> sessionsRecordingsStarting = new ConcurrentHashMap<>();
 	private final Map<String, ScheduledFuture<?>> automaticRecordingStopThreads = new ConcurrentHashMap<>();
 
 	private JsonUtils jsonUtils = new JsonUtils();
@@ -239,10 +240,10 @@ public class RecordingManager {
 				recording = this.singleStreamRecordingService.startRecording(session, properties);
 				break;
 			}
-		} catch (OpenViduException e) {
+		} catch (Exception e) {
 			throw e;
 		}
-		this.updateRecordingManagerCollections(session, recording);
+		this.recordingFromStartingToStarted(recording);
 
 		this.cdr.recordRecordingStarted(recording);
 		this.cdr.recordRecordingStatusChanged(recording, null, recording.getCreatedAt(),
@@ -313,8 +314,12 @@ public class RecordingManager {
 			Participant participant) {
 		Recording recording = this.sessionsRecordings.get(session.getSessionId());
 		if (recording == null) {
-			log.error("Cannot start recording of new stream {}. Session {} is not being recorded",
-					participant.getPublisherStreamId(), session.getSessionId());
+			recording = this.sessionsRecordingsStarting.get(session.getSessionId());
+			if (recording == null) {
+				log.error("Cannot start recording of new stream {}. Session {} is not being recorded",
+						participant.getPublisherStreamId(), session.getSessionId());
+				return;
+			}
 		}
 		if (io.openvidu.java.client.Recording.OutputMode.INDIVIDUAL.equals(recording.getOutputMode())) {
 			// Start new RecorderEndpoint for this stream
@@ -363,7 +368,8 @@ public class RecordingManager {
 	}
 
 	public boolean sessionIsBeingRecorded(String sessionId) {
-		return (this.sessionsRecordings.get(sessionId) != null);
+		return (this.sessionsRecordings.get(sessionId) != null
+				|| this.sessionsRecordingsStarting.get(sessionId) != null);
 	}
 
 	public Recording getStartedRecording(String recordingId) {
@@ -758,13 +764,25 @@ public class RecordingManager {
 	}
 
 	/**
-	 * Changes recording from starting to started, updates global recording
-	 * collections and sends RPC response to clients
+	 * New starting recording
 	 */
-	private void updateRecordingManagerCollections(Session session, Recording recording) {
-		this.sessionHandler.setRecordingStarted(session.getSessionId(), recording);
-		this.sessionsRecordings.put(session.getSessionId(), recording);
+	public void recordingToStarting(Recording recording) throws RuntimeException {
+		if ((startingRecordings.putIfAbsent(recording.getId(), recording) != null)
+				|| (sessionsRecordingsStarting.putIfAbsent(recording.getSessionId(), recording) != null)) {
+			log.error("Concurrent session recording initialization. Aborting this thread");
+			throw new RuntimeException("Concurrent initialization of recording " + recording.getId());
+		}
+	}
+
+	/**
+	 * Changes recording from starting to started, updating global recording
+	 * collection
+	 */
+	private void recordingFromStartingToStarted(Recording recording) {
+		this.sessionHandler.setRecordingStarted(recording.getSessionId(), recording);
+		this.sessionsRecordings.put(recording.getSessionId(), recording);
 		this.startingRecordings.remove(recording.getId());
+		this.sessionsRecordingsStarting.remove(recording.getSessionId());
 		this.startedRecordings.put(recording.getId(), recording);
 	}
 

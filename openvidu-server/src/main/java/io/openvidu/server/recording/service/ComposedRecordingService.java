@@ -85,7 +85,7 @@ public class ComposedRecordingService extends RecordingService {
 
 		// Instantiate and store recording object
 		Recording recording = new Recording(session.getSessionId(), recordingId, properties);
-		this.recordingManager.startingRecordings.put(recording.getId(), recording);
+		this.recordingManager.recordingToStarting(recording);
 
 		if (properties.hasVideo()) {
 			// Docker container used

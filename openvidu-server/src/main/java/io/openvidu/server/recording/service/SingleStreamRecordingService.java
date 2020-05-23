@@ -93,7 +93,7 @@ public class SingleStreamRecordingService extends RecordingService {
 				recordingId, session.getSessionId());
 
 		Recording recording = new Recording(session.getSessionId(), recordingId, properties);
-		this.recordingManager.startingRecordings.put(recording.getId(), recording);
+		this.recordingManager.recordingToStarting(recording);
 
 		activeRecorders.put(session.getSessionId(), new ConcurrentHashMap<String, RecorderEndpointWrapper>());
 		storedRecorders.put(session.getSessionId(), new ConcurrentHashMap<String, RecorderEndpointWrapper>());
@@ -216,6 +216,15 @@ public class SingleStreamRecordingService extends RecordingService {
 			// session. If recordingId is defined is because Stream is being recorded from
 			// "startRecording" method
 			Recording recording = this.recordingManager.sessionsRecordings.get(session.getSessionId());
+			if (recording == null) {
+				recording = this.recordingManager.sessionsRecordingsStarting.get(session.getSessionId());
+				if (recording == null) {
+					log.error(
+							"Cannot start single stream recorder for stream {} in session {}. The recording {} cannot be found",
+							participant.getPublisherStreamId(), session.getSessionId(), recordingId);
+					return;
+				}
+			}
 			recordingId = recording.getId();
 
 			try {
@@ -237,13 +246,8 @@ public class SingleStreamRecordingService extends RecordingService {
 		recorder.addRecordingListener(new EventListener<RecordingEvent>() {
 			@Override
 			public void onEvent(RecordingEvent event) {
-				activeRecorders
-				.get(session
-						.getSessionId())
-				.get(participant
-						.getPublisherStreamId())
-						.setStartTime(Long.parseLong(event
-								.getTimestampMillis()));
+				activeRecorders.get(session.getSessionId()).get(participant.getPublisherStreamId())
+						.setStartTime(Long.parseLong(event.getTimestampMillis()));
 				log.info("Recording started event for stream {}", participant.getPublisherStreamId());
 				globalStartLatch.countDown();
 			}

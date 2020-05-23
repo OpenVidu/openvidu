@@ -397,31 +397,52 @@ public class KurentoSessionManager extends SessionManager {
 		if (this.openviduConfig.isRecordingModuleEnabled()
 				&& MediaMode.ROUTED.equals(kSession.getSessionProperties().mediaMode())
 				&& kSession.getActivePublishers() == 0) {
-			if (RecordingMode.ALWAYS.equals(kSession.getSessionProperties().recordingMode())
-					&& !recordingManager.sessionIsBeingRecorded(kSession.getSessionId())
-					&& !kSession.recordingManuallyStopped.get()) {
-				// Start automatic recording for sessions configured with RecordingMode.ALWAYS
-				new Thread(() -> {
-					recordingManager.startRecording(kSession,
-							new RecordingProperties.Builder().name("")
-									.outputMode(kSession.getSessionProperties().defaultOutputMode())
-									.recordingLayout(kSession.getSessionProperties().defaultRecordingLayout())
-									.customLayout(kSession.getSessionProperties().defaultCustomLayout()).build());
-				}).start();
-			} else if (RecordingMode.MANUAL.equals(kSession.getSessionProperties().recordingMode())
-					&& recordingManager.sessionIsBeingRecorded(kSession.getSessionId())) {
-				// Abort automatic recording stop (user published before timeout)
-				log.info("Participant {} published before timeout finished. Aborting automatic recording stop",
-						participant.getParticipantPublicId());
-				boolean stopAborted = recordingManager.abortAutomaticRecordingStopThread(kSession,
-						EndReason.automaticStop);
-				if (stopAborted) {
-					log.info("Automatic recording stopped successfully aborted");
+
+			try {
+				if (kSession.recordingLock.tryLock(15, TimeUnit.SECONDS)) {
+					try {
+
+						if (RecordingMode.ALWAYS.equals(kSession.getSessionProperties().recordingMode())
+								&& !recordingManager.sessionIsBeingRecorded(kSession.getSessionId())
+								&& !kSession.recordingManuallyStopped.get()) {
+							// Start automatic recording for sessions configured with RecordingMode.ALWAYS
+							new Thread(() -> {
+								recordingManager.startRecording(kSession, new RecordingProperties.Builder().name("")
+										.outputMode(kSession.getSessionProperties().defaultOutputMode())
+										.recordingLayout(kSession.getSessionProperties().defaultRecordingLayout())
+										.customLayout(kSession.getSessionProperties().defaultCustomLayout()).build());
+							}).start();
+						} else if (RecordingMode.MANUAL.equals(kSession.getSessionProperties().recordingMode())
+								&& recordingManager.sessionIsBeingRecorded(kSession.getSessionId())) {
+							// Abort automatic recording stop (user published before timeout)
+							log.info(
+									"Participant {} published before timeout finished. Aborting automatic recording stop",
+									participant.getParticipantPublicId());
+							boolean stopAborted = recordingManager.abortAutomaticRecordingStopThread(kSession,
+									EndReason.automaticStop);
+							if (stopAborted) {
+								log.info("Automatic recording stopped successfully aborted");
+							} else {
+								log.info(
+										"Automatic recording stopped couldn't be aborted. Recording of session {} has stopped",
+										kSession.getSessionId());
+							}
+						}
+
+					} finally {
+						kSession.recordingLock.unlock();
+					}
 				} else {
-					log.info("Automatic recording stopped couldn't be aborted. Recording of session {} has stopped",
-							kSession.getSessionId());
+					log.error(
+							"Timeout waiting for recording Session lock to be available for participant {} of session {} in publishVideo",
+							participant.getParticipantPublicId(), kSession.getSessionId());
 				}
+			} catch (InterruptedException e) {
+				log.error(
+						"InterruptedException waiting for recording Session lock to be available for participant {} of session {} in publishVideo",
+						participant.getParticipantPublicId(), kSession.getSessionId());
 			}
+
 		}
 
 		kSession.newPublisher(participant);

@@ -78,6 +78,12 @@ public class Session implements SessionInterface {
 	 */
 	public Lock joinLeaveLock = new ReentrantLock();
 
+	/**
+	 * This lock protects initialization of ALWAYS recordings upon first user
+	 * publishing
+	 */
+	public Lock recordingLock = new ReentrantLock();
+
 	public final AtomicBoolean recordingManuallyStopped = new AtomicBoolean(false);
 
 	public Session(Session previousSession) {
