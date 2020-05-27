@@ -104,7 +104,7 @@ public class DockerManager {
 	}
 
 	public String runContainer(String container, String containerName, List<Volume> volumes, List<Bind> binds,
-			String networkMode, List<String> envs) throws Exception {
+			String networkMode, List<String> envs, List<String> command) throws Exception {
 
 		CreateContainerCmd cmd = dockerClient.createContainerCmd(container).withEnv(envs);
 		if (containerName != null) {
@@ -117,6 +117,10 @@ public class DockerManager {
 		}
 		if (binds != null) {
 			hostConfig.withBinds(binds);
+		}
+
+		if(command != null) {
+			cmd.withCmd(command);
 		}
 
 		cmd.withHostConfig(hostConfig);
