@@ -32,8 +32,7 @@ import io.openvidu.server.core.IdentifierPrefixes;
 public class FixedOneKmsManager extends KmsManager {
 
 	@Override
-	public List<Kms> initializeKurentoClients(List<KmsProperties> kmsProperties, boolean disconnectUponFailure,
-			boolean sendMediaNodeAddedEvent) throws Exception {
+	public List<Kms> initializeKurentoClients(List<KmsProperties> kmsProperties, boolean disconnectUponFailure) throws Exception {
 		KmsProperties firstProps = kmsProperties.get(0);
 		KurentoClient kClient = null;
 		Kms kms = new Kms(firstProps, loadManager);
@@ -66,7 +65,7 @@ public class FixedOneKmsManager extends KmsManager {
 						+ RandomStringUtils.randomAlphanumeric(7);
 				kmsProps.add(new KmsProperties(kmsId, kmsUri));
 			}
-			this.initializeKurentoClients(kmsProps, true, false);
+			this.initializeKurentoClients(kmsProps, true);
 		} catch (Exception e) {
 			// Some KMS wasn't reachable
 			log.error("Shutting down OpenVidu Server");

@@ -58,7 +58,7 @@ public class IntegrationTestConfiguration {
 				successfullyConnectedKmss.add(kms);
 			}
 			return successfullyConnectedKmss;
-		}).when(spy).initializeKurentoClients(any(List.class), any(Boolean.class), any(Boolean.class));
+		}).when(spy).initializeKurentoClients(any(List.class), any(Boolean.class));
 		return spy;
 	}
 

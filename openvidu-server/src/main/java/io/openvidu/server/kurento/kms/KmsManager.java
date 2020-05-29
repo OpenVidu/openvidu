@@ -291,8 +291,8 @@ public abstract class KmsManager {
 		};
 	}
 
-	public abstract List<Kms> initializeKurentoClients(List<KmsProperties> kmsProperties, boolean disconnectUponFailure,
-			boolean sendMediaNodeAddedEvent) throws Exception;
+	public abstract List<Kms> initializeKurentoClients(List<KmsProperties> kmsProperties, boolean disconnectUponFailure)
+			throws Exception;
 
 	public LoadManager getLoadManager() {
 		return this.loadManager;
