@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.kurento.client.KurentoConnectionListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +43,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.google.gson.JsonObject;
 
 import io.openvidu.server.config.OpenviduConfig;
+import io.openvidu.server.core.IdentifierPrefixes;
 import io.openvidu.server.utils.MediaNodeStatusManager;
 
 public abstract class KmsManager {
@@ -307,6 +309,11 @@ public abstract class KmsManager {
 		this.kmss.values().forEach(kms -> {
 			kms.getKurentoClient().destroy();
 		});
+	}
+
+	public static String generateKmsId() {
+		return IdentifierPrefixes.KMS_ID + RandomStringUtils.randomAlphabetic(1).toUpperCase()
+				+ RandomStringUtils.randomAlphanumeric(7);
 	}
 
 }

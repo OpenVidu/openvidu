@@ -61,8 +61,7 @@ public class FixedOneKmsManager extends KmsManager {
 		try {
 			List<KmsProperties> kmsProps = new ArrayList<>();
 			for (String kmsUri : this.openviduConfig.getKmsUris()) {
-				String kmsId = IdentifierPrefixes.KMS_ID + RandomStringUtils.randomAlphabetic(1).toUpperCase()
-						+ RandomStringUtils.randomAlphanumeric(7);
+				String kmsId = KmsManager.generateKmsId();
 				kmsProps.add(new KmsProperties(kmsId, kmsUri));
 			}
 			this.initializeKurentoClients(kmsProps, true);
