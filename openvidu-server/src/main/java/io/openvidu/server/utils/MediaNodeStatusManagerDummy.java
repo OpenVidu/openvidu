@@ -8,6 +8,11 @@ public class MediaNodeStatusManagerDummy implements MediaNodeStatusManager {
 	}
 
 	@Override
+	public boolean isCanceled(String mediaNodeId) {
+		return false;
+	}
+
+	@Override
 	public boolean isRunning(String mediaNodeId) {
 		return true;
 	}
