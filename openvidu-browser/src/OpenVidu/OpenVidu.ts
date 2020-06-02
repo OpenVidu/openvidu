@@ -351,7 +351,7 @@ export class OpenVidu {
       (browser !== 'Firefox') && (browser !== 'Firefox Mobile') &&
       (browser !== 'Opera') && (browser !== 'Opera Mobile') &&
       (browser !== 'Android Browser') && (browser !== 'Electron') &&
-      (browser !== 'Samsung Internet Mobile')
+      (browser !== 'Samsung Internet Mobile') && (browser !== 'Samsung Internet')
     ) {
       return 0;
     } else {
@@ -374,7 +374,7 @@ export class OpenVidu {
       return 0;
     }
 
-    if ((browser !== 'Chrome') && (browser !== 'Firefox') && (browser !== 'Opera') && (browser !== 'Electron') && 
+    if ((browser !== 'Chrome') && (browser !== 'Firefox') && (browser !== 'Opera') && (browser !== 'Electron') &&
        (browser === 'Safari' && version < 13)) {
       return 0;
     } else {
