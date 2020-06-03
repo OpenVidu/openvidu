@@ -422,7 +422,7 @@ public class OpenviduConfig {
 		}
 	}
 
-	private void addError(String property, String msg) {
+	protected void addError(String property, String msg) {
 
 		String value = null;
 
