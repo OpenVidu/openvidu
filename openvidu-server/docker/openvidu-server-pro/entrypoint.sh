@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Wait for kibana
-if [ ! -z "${WAIT_KIBANA_URL}" ]; then 
+if [ ! -z "${WAIT_KIBANA_URL}" ]; then
   printf "\n"
   printf "\n  ======================================="
   printf "\n  =            WAIT KIBANA              ="
@@ -10,7 +10,7 @@ if [ ! -z "${WAIT_KIBANA_URL}" ]; then
 
   while true
   do
-    HTTP_STATUS=$(curl -s -o /dev/null -I -w "%{http_code}" "${WAIT_KIBANA_URL}")
+    HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${WAIT_KIBANA_URL}")
 
     printf "\n  Waiting for kibana in '%s' URL..." "${WAIT_KIBANA_URL}"
 
