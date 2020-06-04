@@ -21,11 +21,20 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Pablo Fuente (pablofuenteperez@gmail.com)
  */
 public class CommandExecutor {
+
+	private static final Logger log = LoggerFactory.getLogger(CommandExecutor.class);
+
+	private static final long MILLIS_TIMEOUT = 10000;
 
 	public static String execCommand(String... command) throws IOException, InterruptedException {
 		ProcessBuilder processBuilder = new ProcessBuilder(command);
@@ -44,7 +53,12 @@ public class CommandExecutor {
 		ProcessBuilder processBuilder = new ProcessBuilder(command).redirectOutput(standardOutputFile)
 				.redirectError(errorOutputFile);
 		Process process = processBuilder.start();
-		process.waitFor();
+		if (!process.waitFor(MILLIS_TIMEOUT, TimeUnit.MILLISECONDS)) {
+			log.error("Command {} did not receive a response in {} ms", Arrays.toString(command), MILLIS_TIMEOUT);
+			String errorMsg = "Current process status of host:\n" + gatherLinuxHostInformation();
+			log.error(errorMsg);
+			throw new IOException(errorMsg);
+		}
 	}
 
 	private static String commonExecCommand(ProcessBuilder processBuilder) throws IOException, InterruptedException {
@@ -60,7 +74,14 @@ public class CommandExecutor {
 			while ((readLine = processOutputReader.readLine()) != null) {
 				processOutput.append(readLine + System.lineSeparator());
 			}
-			process.waitFor();
+
+			if (!process.waitFor(MILLIS_TIMEOUT, TimeUnit.MILLISECONDS)) {
+				log.error("Command {} did not receive a response in {} ms",
+						Arrays.toString(processBuilder.command().toArray()), MILLIS_TIMEOUT);
+				String errorMsg = "Current process status of host:\n" + gatherLinuxHostInformation();
+				log.error(errorMsg);
+				throw new IOException(errorMsg);
+			}
 			output = processOutput.toString().trim();
 		} finally {
 			if (inputStreamReader != null) {
@@ -71,6 +92,11 @@ public class CommandExecutor {
 			}
 		}
 		return output;
+	}
+
+	public static String gatherLinuxHostInformation() throws IOException, InterruptedException {
+		final String psCommand = "ps -eo pid,ppid,user,%mem,%cpu,cmd --sort=-%cpu";
+		return execCommand("/bin/sh", "-c", psCommand);
 	}
 
 }

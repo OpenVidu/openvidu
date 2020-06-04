@@ -35,7 +35,7 @@ public abstract class CoturnCredentialsService {
 	protected String coturnDatabaseString;
 	protected String trimmedCoturnDatabaseString;
 
-	public abstract TurnCredentials createUser();
+	public abstract TurnCredentials createUser() throws Exception;
 
 	public abstract boolean deleteUser(String user);
 

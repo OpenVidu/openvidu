@@ -74,23 +74,19 @@ public class BashCoturnCredentialsService extends CoturnCredentialsService {
 	}
 
 	@Override
-	public TurnCredentials createUser() {
+	public TurnCredentials createUser() throws IOException, InterruptedException {
 		TurnCredentials credentials = null;
 		log.info("Creating COTURN user");
 		String user = RandomStringUtils.randomAlphanumeric(6).toUpperCase();
 		String pass = RandomStringUtils.randomAlphanumeric(6).toLowerCase();
 		String command = "turnadmin -a -u " + user + " -r openvidu -p " + pass + " -N " + this.coturnDatabaseString;
-		try {
-			String response = CommandExecutor.execCommand("/bin/sh", "-c", command);
-			if (response.contains("connection success: " + this.trimmedCoturnDatabaseString)) {
-				credentials = new TurnCredentials(user, pass);
-				this.cleanTurnLogFiles();
-				log.info("COTURN user created: true");
-			} else {
-				log.info("COTURN user created: false");
-			}
-		} catch (IOException | InterruptedException e) {
-			e.printStackTrace();
+		String response = CommandExecutor.execCommand("/bin/sh", "-c", command);
+		if (response.contains("connection success: " + this.trimmedCoturnDatabaseString)) {
+			credentials = new TurnCredentials(user, pass);
+			this.cleanTurnLogFiles();
+			log.info("COTURN user created: true");
+		} else {
+			log.info("COTURN user created: false");
 		}
 		return credentials;
 	}
