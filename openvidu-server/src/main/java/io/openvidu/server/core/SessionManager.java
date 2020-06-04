@@ -295,7 +295,7 @@ public abstract class SessionManager {
 	}
 
 	public String newToken(Session session, OpenViduRole role, String serverMetadata,
-			KurentoTokenOptions kurentoTokenOptions) throws OpenViduException {
+			KurentoTokenOptions kurentoTokenOptions) throws Exception {
 		if (!formatChecker.isServerMetadataFormatCorrect(serverMetadata)) {
 			log.error("Data invalid format");
 			throw new OpenViduException(Code.GENERIC_ERROR_CODE, "Data invalid format");
@@ -307,7 +307,7 @@ public abstract class SessionManager {
 		return tokenObj.getToken();
 	}
 
-	public Token newTokenForInsecureUser(Session session, String token, String serverMetadata) {
+	public Token newTokenForInsecureUser(Session session, String token, String serverMetadata) throws Exception {
 		Token tokenObj = new Token(token, OpenViduRole.PUBLISHER, serverMetadata != null ? serverMetadata : "",
 				this.openviduConfig.isTurnadminAvailable() ? this.coturnCredentialsService.createUser() : null, null);
 		session.storeToken(tokenObj);

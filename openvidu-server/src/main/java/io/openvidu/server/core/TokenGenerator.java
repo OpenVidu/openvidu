@@ -23,6 +23,6 @@ import io.openvidu.server.kurento.core.KurentoTokenOptions;
 public interface TokenGenerator {
 
 	public Token generateToken(String sessionId, OpenViduRole role, String serverMetadata,
-			KurentoTokenOptions kurentoTokenOptions);
+			KurentoTokenOptions kurentoTokenOptions) throws Exception;
 
 }

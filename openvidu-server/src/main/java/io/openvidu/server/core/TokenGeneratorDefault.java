@@ -35,13 +35,13 @@ public class TokenGeneratorDefault implements TokenGenerator {
 
 	@Autowired
 	protected OpenviduConfig openviduConfig;
-	
+
 	@Autowired
 	protected OpenviduBuildInfo openviduBuildConfig;
 
 	@Override
 	public Token generateToken(String sessionId, OpenViduRole role, String serverMetadata,
-			KurentoTokenOptions kurentoTokenOptions) {
+			KurentoTokenOptions kurentoTokenOptions) throws Exception {
 		String token = OpenViduServer.wsUrl;
 		token += "?sessionId=" + sessionId;
 		token += "&token=" + IdentifierPrefixes.TOKEN_ID + RandomStringUtils.randomAlphabetic(1).toUpperCase()

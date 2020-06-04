@@ -207,7 +207,7 @@ public class SessionRestController {
 	public ResponseEntity<?> listSessions(
 			@RequestParam(value = "webRtcStats", defaultValue = "false", required = false) boolean webRtcStats) {
 
-		log.info("REST API: GET /api/sessions");
+		log.info("REST API: GET /api/sessions?webRtcStats={}", webRtcStats);
 
 		Collection<Session> sessions = this.sessionManager.getSessionsWithNotActive();
 		JsonObject json = new JsonObject();
@@ -423,6 +423,10 @@ public class SessionRestController {
 					responseJson.add("kurentoOptions", kurentoOptsResponse);
 				}
 				return new ResponseEntity<>(responseJson.toString(), getResponseHeaders(), HttpStatus.OK);
+			} catch (Exception e) {
+				return this.generateErrorResponse(
+						"Error generating token for session " + sessionId + ": " + e.getMessage(), "/api/tokens",
+						HttpStatus.INTERNAL_SERVER_ERROR);
 			} finally {
 				session.closingLock.readLock().unlock();
 			}

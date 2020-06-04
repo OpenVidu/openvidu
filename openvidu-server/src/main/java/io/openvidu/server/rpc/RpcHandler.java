@@ -244,7 +244,12 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 			sessionManager.newInsecureParticipant(participantPrivatetId);
 			token = IdentifierPrefixes.TOKEN_ID + RandomStringUtils.randomAlphabetic(1).toUpperCase()
 					+ RandomStringUtils.randomAlphanumeric(15);
-			sessionManager.newTokenForInsecureUser(session, token, null);
+			try {
+				sessionManager.newTokenForInsecureUser(session, token, null);
+			} catch (Exception e) {
+				throw new OpenViduException(Code.TOKEN_CANNOT_BE_CREATED_ERROR_CODE,
+						"Unable to create token for session " + sessionId + ": " + e.getMessage());
+			}
 			if (recorder) {
 				generateRecorderParticipant = true;
 			}
