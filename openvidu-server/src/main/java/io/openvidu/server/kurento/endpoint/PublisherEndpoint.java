@@ -193,7 +193,7 @@ public class PublisherEndpoint extends MediaEndpoint {
 	public synchronized String publish(SdpType sdpType, String sdpString, boolean doLoopback) {
 		registerOnIceCandidateEventListener(this.getOwner().getParticipantPublicId());
 		if (doLoopback) {
-			connect(this.getEndpoint(), null);
+			connect(this.getEndpoint());
 		} else {
 			innerConnect();
 		}

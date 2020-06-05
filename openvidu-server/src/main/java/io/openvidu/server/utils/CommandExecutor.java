@@ -34,34 +34,33 @@ public class CommandExecutor {
 
 	private static final Logger log = LoggerFactory.getLogger(CommandExecutor.class);
 
-	private static final long MILLIS_TIMEOUT = 10000;
-
-	public static String execCommand(String... command) throws IOException, InterruptedException {
+	public static String execCommand(long msTimeout, String... command) throws IOException, InterruptedException {
 		ProcessBuilder processBuilder = new ProcessBuilder(command);
 		processBuilder.redirectErrorStream(true);
-		return commonExecCommand(processBuilder);
+		return commonExecCommand(msTimeout, processBuilder);
 	}
 
-	public static String execCommandRedirectError(File errorOutputFile, String... command)
+	public static String execCommandRedirectError(long msTimeout, File errorOutputFile, String... command)
 			throws IOException, InterruptedException {
 		ProcessBuilder processBuilder = new ProcessBuilder(command).redirectError(errorOutputFile);
-		return commonExecCommand(processBuilder);
+		return commonExecCommand(msTimeout, processBuilder);
 	}
 
-	public static void execCommandRedirectStandardOutputAndError(File standardOutputFile, File errorOutputFile,
-			String... command) throws IOException, InterruptedException {
+	public static void execCommandRedirectStandardOutputAndError(long msTimeout, File standardOutputFile,
+			File errorOutputFile, String... command) throws IOException, InterruptedException {
 		ProcessBuilder processBuilder = new ProcessBuilder(command).redirectOutput(standardOutputFile)
 				.redirectError(errorOutputFile);
 		Process process = processBuilder.start();
-		if (!process.waitFor(MILLIS_TIMEOUT, TimeUnit.MILLISECONDS)) {
-			log.error("Command {} did not receive a response in {} ms", Arrays.toString(command), MILLIS_TIMEOUT);
+		if (!process.waitFor(msTimeout, TimeUnit.MILLISECONDS)) {
+			log.error("Command {} did not receive a response in {} ms", Arrays.toString(command), msTimeout);
 			String errorMsg = "Current process status of host:\n" + gatherLinuxHostInformation();
 			log.error(errorMsg);
 			throw new IOException(errorMsg);
 		}
 	}
 
-	private static String commonExecCommand(ProcessBuilder processBuilder) throws IOException, InterruptedException {
+	private static String commonExecCommand(long msTimeout, ProcessBuilder processBuilder)
+			throws IOException, InterruptedException {
 		Process process = processBuilder.start();
 		StringBuilder processOutput = new StringBuilder();
 		String output;
@@ -75,9 +74,9 @@ public class CommandExecutor {
 				processOutput.append(readLine + System.lineSeparator());
 			}
 
-			if (!process.waitFor(MILLIS_TIMEOUT, TimeUnit.MILLISECONDS)) {
+			if (!process.waitFor(msTimeout, TimeUnit.MILLISECONDS)) {
 				log.error("Command {} did not receive a response in {} ms",
-						Arrays.toString(processBuilder.command().toArray()), MILLIS_TIMEOUT);
+						Arrays.toString(processBuilder.command().toArray()), msTimeout);
 				String errorMsg = "Current process status of host:\n" + gatherLinuxHostInformation();
 				log.error(errorMsg);
 				throw new IOException(errorMsg);
@@ -96,7 +95,7 @@ public class CommandExecutor {
 
 	public static String gatherLinuxHostInformation() throws IOException, InterruptedException {
 		final String psCommand = "ps -eo pid,ppid,user,%mem,%cpu,cmd --sort=-%cpu";
-		return execCommand("/bin/sh", "-c", psCommand);
+		return execCommand(5000, "/bin/sh", "-c", psCommand);
 	}
 
 }

@@ -215,7 +215,7 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	}
 
 	public static String getContainerIp() throws IOException, InterruptedException {
-		return CommandExecutor.execCommand("/bin/sh", "-c", "hostname -i | awk '{print $1}'");
+		return CommandExecutor.execCommand(5000, "/bin/sh", "-c", "hostname -i | awk '{print $1}'");
 	}
 
 	public static void main(String[] args) throws Exception {

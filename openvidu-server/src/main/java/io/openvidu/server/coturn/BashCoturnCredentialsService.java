@@ -35,7 +35,7 @@ public class BashCoturnCredentialsService extends CoturnCredentialsService {
 	@PostConstruct
 	private void initialize() {
 		try {
-			String response = CommandExecutor.execCommand("/bin/sh", "-c",
+			String response = CommandExecutor.execCommand(10000, "/bin/sh", "-c",
 					"turnadmin -l -N " + this.coturnDatabaseString);
 			if (response.contains("turnadmin: not found")) {
 				// No coturn installed in the host machine
@@ -54,10 +54,10 @@ public class BashCoturnCredentialsService extends CoturnCredentialsService {
 					this.logPath = logFile.substring(0, logFile.lastIndexOf('/') + 1);
 					log.info("Path of COTURN log files: " + this.logPath);
 				}
-				response = CommandExecutor.execCommand("/bin/sh", "-c",
+				response = CommandExecutor.execCommand(10000, "/bin/sh", "-c",
 						"redis-cli -a " + this.openviduConfig.getCoturnDatabasePassword() + " -n "
 								+ this.openviduConfig.getCoturnDatabaseDbname() + " flushdb");
-				String response2 = CommandExecutor.execCommand("/bin/sh", "-c",
+				String response2 = CommandExecutor.execCommand(10000, "/bin/sh", "-c",
 						"redis-cli -a " + this.openviduConfig.getCoturnDatabasePassword() + " -n "
 								+ this.openviduConfig.getCoturnDatabaseDbname() + " --scan --pattern '*'");
 				if ("OK".equals(response) && response2.isEmpty()) {
@@ -80,7 +80,7 @@ public class BashCoturnCredentialsService extends CoturnCredentialsService {
 		String user = RandomStringUtils.randomAlphanumeric(6).toUpperCase();
 		String pass = RandomStringUtils.randomAlphanumeric(6).toLowerCase();
 		String command = "turnadmin -a -u " + user + " -r openvidu -p " + pass + " -N " + this.coturnDatabaseString;
-		String response = CommandExecutor.execCommand("/bin/sh", "-c", command);
+		String response = CommandExecutor.execCommand(10000, "/bin/sh", "-c", command);
 		if (response.contains("connection success: " + this.trimmedCoturnDatabaseString)) {
 			credentials = new TurnCredentials(user, pass);
 			this.cleanTurnLogFiles();
@@ -99,7 +99,7 @@ public class BashCoturnCredentialsService extends CoturnCredentialsService {
 		String command = "turnadmin -d -u " + user + " -r openvidu -N " + this.coturnDatabaseString;
 		String response = "";
 		try {
-			response = CommandExecutor.execCommand("/bin/sh", "-c", command);
+			response = CommandExecutor.execCommand(10000, "/bin/sh", "-c", command);
 			this.cleanTurnLogFiles();
 		} catch (IOException | InterruptedException e) {
 			e.printStackTrace();
@@ -111,7 +111,7 @@ public class BashCoturnCredentialsService extends CoturnCredentialsService {
 
 	private void cleanTurnLogFiles() throws IOException, InterruptedException {
 		if (this.logCounter.incrementAndGet() > LOG_LIMIT) {
-			CommandExecutor.execCommand("/bin/sh", "-c", "rm " + this.logPath + "turn_*.log");
+			CommandExecutor.execCommand(10000, "/bin/sh", "-c", "rm " + this.logPath + "turn_*.log");
 			log.info("Garbage collector cleaning turn log files at path " + this.logPath);
 			this.logCounter.set(0);
 		}

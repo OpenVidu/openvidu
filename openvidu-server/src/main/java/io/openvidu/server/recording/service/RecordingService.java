@@ -160,7 +160,7 @@ public abstract class RecordingService {
 	protected void updateFilePermissions(String folder) {
 		String command = "chmod -R 777 " + folder;
 		try {
-			String response = CommandExecutor.execCommand("/bin/sh", "-c", command);
+			String response = CommandExecutor.execCommand(5000, "/bin/sh", "-c", command);
 			if ("".equals(response)) {
 				log.info("KMS recording file permissions successfully updated");
 			} else {

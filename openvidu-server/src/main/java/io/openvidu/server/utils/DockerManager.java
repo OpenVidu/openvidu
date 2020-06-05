@@ -103,8 +103,8 @@ public class DockerManager {
 		}
 	}
 
-	public String runContainer(String container, String containerName, String user, List<Volume> volumes, List<Bind> binds,
-			String networkMode, List<String> envs, List<String> command) throws Exception {
+	public String runContainer(String container, String containerName, String user, List<Volume> volumes,
+			List<Bind> binds, String networkMode, List<String> envs, List<String> command) throws Exception {
 
 		CreateContainerCmd cmd = dockerClient.createContainerCmd(container).withEnv(envs);
 		if (containerName != null) {
@@ -123,7 +123,7 @@ public class DockerManager {
 			hostConfig.withBinds(binds);
 		}
 
-		if(command != null) {
+		if (command != null) {
 			cmd.withCmd(command);
 		}
 
@@ -194,7 +194,7 @@ public class DockerManager {
 
 	public String getContainerIp(String containerId) {
 		try {
-			return CommandExecutor.execCommand("/bin/sh", "-c",
+			return CommandExecutor.execCommand(5000, "/bin/sh", "-c",
 					"docker inspect -f \"{{ .NetworkSettings.IPAddress }}\" " + containerId);
 		} catch (IOException | InterruptedException e) {
 			log.error(e.getMessage());
@@ -215,7 +215,7 @@ public class DockerManager {
 
 	static public String getDockerGatewayIp() {
 		try {
-			return CommandExecutor.execCommand("/bin/sh", "-c",
+			return CommandExecutor.execCommand(5000, "/bin/sh", "-c",
 					"docker network inspect bridge --format='{{(index .IPAM.Config 0).Gateway}}'");
 		} catch (IOException | InterruptedException e) {
 			log.error(e.getMessage());
