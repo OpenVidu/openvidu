@@ -3,15 +3,17 @@ var chromeMediaSource = 'screen';
 var sourceId;
 var screenCallback;
 var isFirefox = typeof window.InstallTrigger !== 'undefined';
-var isOpera = !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0;
+var isOpera = !!window.opera || (navigator.userAgent && navigator.userAgent.indexOf(' OPR/') >= 0);
 var isChrome = !!window.chrome && !isOpera;
 
-window.addEventListener('message', function (event) {
-    if (event.origin != window.location.origin) {
-        return;
-    }
-    onMessageCallback(event.data);
-});
+if(window.addEventListener){
+    window.addEventListener('message', function (event) {
+        if (event.origin != window.location.origin) {
+            return;
+        }
+        onMessageCallback(event.data);
+    });
+}
 
 // and the function that handles received messages
 function onMessageCallback(data) {
