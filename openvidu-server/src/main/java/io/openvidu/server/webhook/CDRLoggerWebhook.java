@@ -17,11 +17,6 @@
 
 package io.openvidu.server.webhook;
 
-import java.io.IOException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import io.openvidu.server.cdr.CDREvent;
 import io.openvidu.server.cdr.CDRLogger;
 import io.openvidu.server.config.OpenviduConfig;
@@ -29,8 +24,6 @@ import io.openvidu.server.kurento.endpoint.KmsEvent;
 import io.openvidu.server.summary.SessionSummary;
 
 public class CDRLoggerWebhook implements CDRLogger {
-
-	private Logger log = LoggerFactory.getLogger(CDRLoggerWebhook.class);
 
 	private HttpWebhookSender webhookSender;
 
@@ -41,11 +34,7 @@ public class CDRLoggerWebhook implements CDRLogger {
 
 	@Override
 	public void log(CDREvent event) {
-		try {
-			this.webhookSender.sendHttpPostCallback(event);
-		} catch (IOException e) {
-			log.error("Error sending webhook event: {}", e.getMessage());
-		}
+		this.webhookSender.sendHttpPostCallbackAsync(event);
 	}
 
 	@Override

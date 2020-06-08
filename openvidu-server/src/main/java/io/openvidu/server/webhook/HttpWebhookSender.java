@@ -26,6 +26,8 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
@@ -60,6 +62,8 @@ public class HttpWebhookSender {
 	private String httpEndpoint;
 	private List<Header> customHeaders;
 	private List<CDREventName> events;
+
+	private ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
 	public HttpWebhookSender(String httpEndpoint, List<Header> headers, List<CDREventName> events) {
 		this.httpEndpoint = httpEndpoint;
@@ -102,12 +106,22 @@ public class HttpWebhookSender {
 				.setSSLContext(sslContext).build();
 	}
 
+	public void sendHttpPostCallbackAsync(CDREvent event) {
+		executor.execute(() -> {
+			try {
+				this.sendHttpPostCallbackBlocking(event);
+			} catch (IOException e) {
+				log.error("Error sending webhook event: {}", e.getMessage());
+			}
+		});
+	}
+
 	/**
 	 * @throws IOException If: A) The HTTP connection cannot be established to the
 	 *                     endpoint B) The response received from the endpoint is
 	 *                     not 200
 	 */
-	public void sendHttpPostCallback(CDREvent event) throws IOException {
+	public void sendHttpPostCallbackBlocking(CDREvent event) throws IOException {
 
 		if (!this.events.contains(event.getEventName())) {
 			return;
