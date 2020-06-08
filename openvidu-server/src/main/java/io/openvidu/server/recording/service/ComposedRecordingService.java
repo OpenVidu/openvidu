@@ -169,17 +169,13 @@ public class ComposedRecordingService extends RecordingService {
 			final String container = RecordingManager.IMAGE_NAME + ":" + RecordingManager.IMAGE_TAG;
 			final String containerName = "recording_" + recording.getId();
 			Volume volume1 = new Volume("/recordings");
-			Volume volume2 = new Volume("/dev/shm");
 			List<Volume> volumes = new ArrayList<>();
 			volumes.add(volume1);
-			volumes.add(volume2);
 			Bind bind1 = new Bind(openviduConfig.getOpenViduRecordingPath(), volume1);
-			Bind bind2 = new Bind("/dev/shm", volume2);
 			List<Bind> binds = new ArrayList<>();
 			binds.add(bind1);
-			binds.add(bind2);
-			containerId = dockerManager.runContainer(container, containerName, null,
-					volumes, binds, "host", envs, null);
+			containerId = dockerManager.runContainer(container, containerName, null, volumes, binds, "host", envs, null,
+					536870912L);
 			containers.put(containerId, containerName);
 		} catch (Exception e) {
 			this.cleanRecordingMaps(recording);

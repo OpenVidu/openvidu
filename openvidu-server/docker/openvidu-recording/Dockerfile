@@ -1,23 +1,25 @@
-FROM ubuntu:16.04
+FROM ubuntu:20.04
 MAINTAINER openvidu@gmail.com
 
-# Install Chrome
-RUN apt-get update && apt-get -y upgrade && apt-get install -y wget sudo
-RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - && \
-  echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | tee /etc/apt/sources.list.d/google-chrome.list && \
-  apt-get update && apt-get install -y google-chrome-stable
+# Install packages
+RUN apt-get update && apt-get -y upgrade && apt-get install -y \
+    wget \
+    sudo \
+    gnupg2 \
+    apt-utils \
+    software-properties-common \
+    ffmpeg \
+    pulseaudio \
+    xvfb \
+    jq \
+  && rm -rf /var/lib/apt/lists/*
 
-# Install media packages
-RUN apt-get install -y software-properties-common
-RUN add-apt-repository ppa:jonathonf/ffmpeg-4
-RUN apt-get update
-RUN apt-get install -y ffmpeg pulseaudio xvfb
-
-# Install jq for managing JSON
-RUN apt-get install -y jq
+RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - && \
+  sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
+RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y google-chrome-stable && rm -rf /var/lib/apt/lists/*
 
 # Clean
-RUN apt-get autoclean
+RUN apt-get clean && apt-get autoclean && apt-get autoremove
 
 COPY entrypoint.sh /entrypoint.sh
 RUN ["chmod", "+x", "/entrypoint.sh"]
