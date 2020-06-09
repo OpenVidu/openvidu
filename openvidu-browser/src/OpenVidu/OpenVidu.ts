@@ -338,27 +338,30 @@ export class OpenVidu {
     const family = platform.os!!.family;
     const userAgent = !!platform.ua ? platform.ua : navigator.userAgent;
 
-    // Reject iPhones and iPads if not Safari ('Safari' also covers Ionic for iOS)
-    if (family === 'iOS' && (browser !== 'Safari' || userAgent.indexOf('CriOS') !== -1 || userAgent.indexOf('FxiOS') !== -1)) {
+    if(this.isIPhoneOrIPad(userAgent)) {
+        if(this.isIOSWithSafari(userAgent)){
+          return 1;
+        }
       return 0;
     }
 
     // Accept: Chrome (desktop and Android), Firefox (desktop and Android), Opera (desktop and Android),
     // Safari (OSX and iOS), Ionic (Android and iOS), Samsung Internet Browser (Android)
     if (
-      (browser !== 'Safari') &&
-      (browser !== 'Chrome') && (browser !== 'Chrome Mobile') &&
-      (browser !== 'Firefox') && (browser !== 'Firefox Mobile') &&
-      (browser !== 'Opera') && (browser !== 'Opera Mobile') &&
-      (browser !== 'Android Browser') && (browser !== 'Electron') &&
-      (browser !== 'Samsung Internet Mobile') && (browser !== 'Samsung Internet')
+      (browser === 'Safari') ||
+      (browser === 'Chrome') || (browser === 'Chrome Mobile') ||
+      (browser === 'Firefox') || (browser === 'Firefox Mobile') ||
+      (browser === 'Opera') || (browser === 'Opera Mobile') ||
+      (browser === 'Android Browser') || (browser === 'Electron') ||
+      (browser === 'Samsung Internet Mobile') || (browser === 'Samsung Internet')
     ) {
-      return 0;
-    } else {
       return 1;
     }
-  }
+    // Reject iPhones and iPads if not Safari ('Safari' also covers Ionic for iOS)
+    // Reject others browsers not mentioned above
+    return 0;
 
+  }
 
   /**
    * Checks if the browser supports screen-sharing. Desktop Chrome, Firefox and Opera support screen-sharing
@@ -1034,5 +1037,19 @@ export class OpenVidu {
       videoSource === 'window' ||
       (platform.name === 'Electron' && videoSource.startsWith('screen:'))
   }
+
+  private isIPhoneOrIPad(userAgent): boolean {
+    const isTouchable = 'ontouchend' in document;
+    const isIPad = /\b(\w*Macintosh\w*)\b/.test(userAgent) && isTouchable;
+    const isIPhone = /\b(\w*iPhone\w*)\b/.test(userAgent) && /\b(\w*Mobile\w*)\b/.test(userAgent) && isTouchable;
+
+    return isIPad || isIPhone;
+  }
+
+  private isIOSWithSafari(userAgent): boolean{
+    return /\b(\w*Apple\w*)\b/.test(navigator.vendor) && /\b(\w*Safari\w*)\b/.test(userAgent)
+          && !/\b(\w*CriOS\w*)\b/.test(userAgent) && !/\b(\w*FxiOS\w*)\b/.test(userAgent);
+  }
+
 
 }
