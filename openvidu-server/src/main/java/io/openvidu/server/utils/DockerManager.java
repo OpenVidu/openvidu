@@ -104,7 +104,7 @@ public class DockerManager {
 	}
 
 	public String runContainer(String container, String containerName, String user, List<Volume> volumes,
-			List<Bind> binds, String networkMode, List<String> envs, List<String> command, Long shmSize)
+			List<Bind> binds, String networkMode, List<String> envs, List<String> command, Long shmSize, boolean privileged)
 			throws Exception {
 
 		CreateContainerCmd cmd = dockerClient.createContainerCmd(container).withEnv(envs);
@@ -116,7 +116,7 @@ public class DockerManager {
 			cmd.withUser(user);
 		}
 
-		HostConfig hostConfig = new HostConfig().withNetworkMode(networkMode);
+		HostConfig hostConfig = new HostConfig().withNetworkMode(networkMode).withPrivileged(privileged);
 		if (shmSize != null) {
 			hostConfig.withShmSize(shmSize);
 		}
