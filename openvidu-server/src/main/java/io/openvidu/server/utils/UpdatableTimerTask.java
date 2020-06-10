@@ -54,6 +54,12 @@ public class UpdatableTimerTask extends TimerTask {
 		}
 	}
 
+	public final void cancelTimer() {
+		cancel();
+		timer.cancel();
+		timer.purge();
+	}
+
 	@Override
 	public void run() {
 		// Protect the inner run method so if any exception is thrown, the following
