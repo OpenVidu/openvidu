@@ -20,11 +20,13 @@ package io.openvidu.server.utils;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.ProcessingException;
 
+import com.github.dockerjava.api.command.InspectContainerResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -104,7 +106,8 @@ public class DockerManager {
 	}
 
 	public String runContainer(String container, String containerName, String user, List<Volume> volumes,
-			List<Bind> binds, String networkMode, List<String> envs, List<String> command, Long shmSize, boolean privileged)
+			List<Bind> binds, String networkMode, List<String> envs, List<String> command, Long shmSize, boolean privileged,
+		    Map<String, String> labels)
 			throws Exception {
 
 		CreateContainerCmd cmd = dockerClient.createContainerCmd(container).withEnv(envs);
@@ -125,6 +128,10 @@ public class DockerManager {
 		}
 		if (binds != null) {
 			hostConfig.withBinds(binds);
+		}
+
+		if (labels != null) {
+			cmd.withLabels(labels);
 		}
 
 		if (command != null) {
@@ -215,6 +222,11 @@ public class DockerManager {
 			}
 		}
 		return containerIds;
+	}
+
+	public Map<String, String> getLabels(String containerId) {
+		InspectContainerResponse containerInfo = dockerClient.inspectContainerCmd(containerId).exec();
+		return containerInfo.getConfig().getLabels();
 	}
 
 	static public String getDockerGatewayIp() {

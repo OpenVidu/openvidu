@@ -175,7 +175,7 @@ public class ComposedRecordingService extends RecordingService {
 			List<Bind> binds = new ArrayList<>();
 			binds.add(bind1);
 			containerId = dockerManager.runContainer(container, containerName, null, volumes, binds, "host", envs, null,
-					536870912L, false);
+					536870912L, false, null);
 			containers.put(containerId, containerName);
 		} catch (Exception e) {
 			this.cleanRecordingMaps(recording);
