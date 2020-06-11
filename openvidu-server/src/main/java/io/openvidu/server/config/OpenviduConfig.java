@@ -228,20 +228,12 @@ public class OpenviduConfig {
 		return this.openviduRecordingPath;
 	}
 
-	public void setOpenViduRecordingPath(String recordingPath) {
-		this.openviduRecordingPath = recordingPath;
-	}
-
 	public boolean getOpenViduRecordingPublicAccess() {
 		return this.openviduRecordingPublicAccess;
 	}
 
 	public String getOpenviduRecordingCustomLayout() {
 		return this.openviduRecordingCustomLayout;
-	}
-
-	public void setOpenViduRecordingCustomLayout(String recordingCustomLayout) {
-		this.openviduRecordingCustomLayout = recordingCustomLayout;
 	}
 
 	public String getOpenViduRecordingVersion() {
@@ -804,6 +796,7 @@ public class OpenviduConfig {
 			File f = new File(stringPath);
 			f.getCanonicalPath();
 			f.toURI().toString();
+			stringPath = stringPath.endsWith("/") ? stringPath : (stringPath + "/");
 			return stringPath;
 		} catch (Exception e) {
 			addError(property, "Is not a valid file system path. " + e.getMessage());
@@ -828,6 +821,7 @@ public class OpenviduConfig {
 				throw new Exception(
 						"OpenVidu Server does not have permissions to write on path " + f.getCanonicalPath());
 			}
+			stringPath = stringPath.endsWith("/") ? stringPath : (stringPath + "/");
 			return stringPath;
 		} catch (Exception e) {
 			addError(property, "Is not a valid writable file system path. " + e.getMessage());

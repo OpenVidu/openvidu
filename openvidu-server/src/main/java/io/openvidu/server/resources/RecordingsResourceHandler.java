@@ -38,12 +38,7 @@ public class RecordingsResourceHandler implements WebMvcConfigurer {
 
 	@Override
 	public void addResourceHandlers(ResourceHandlerRegistry registry) {
-
 		String recordingsPath = openviduConfig.getOpenViduRecordingPath();
-		recordingsPath = recordingsPath.endsWith("/") ? recordingsPath : (recordingsPath + "/");
-
-		openviduConfig.setOpenViduRecordingPath(recordingsPath);
-
 		registry.addResourceHandler("/recordings/**").addResourceLocations("file:" + recordingsPath);
 	}
 
