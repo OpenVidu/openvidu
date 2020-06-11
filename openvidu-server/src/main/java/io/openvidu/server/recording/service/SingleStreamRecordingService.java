@@ -251,7 +251,7 @@ public class SingleStreamRecordingService extends RecordingService {
 					MediaPipeline pipeline = kurentoParticipant.getPublisher().getPipeline();
 
 					RecorderEndpoint recorder = new RecorderEndpoint.Builder(pipeline,
-							"file://" + this.openviduConfig.getOpenViduRecordingPath() + recordingId + "/"
+							"file://" + openviduConfig.getOpenViduRemoteRecordingPath() + recordingId + "/"
 									+ participant.getPublisherStreamId() + ".webm").withMediaProfile(profile).build();
 
 					recorder.addRecordingListener(new EventListener<RecordingEvent>() {

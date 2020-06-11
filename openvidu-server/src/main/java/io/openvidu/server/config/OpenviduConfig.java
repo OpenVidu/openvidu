@@ -228,6 +228,10 @@ public class OpenviduConfig {
 		return this.openviduRecordingPath;
 	}
 
+	public String getOpenViduRemoteRecordingPath() {
+		return getOpenViduRecordingPath();
+	}
+
 	public boolean getOpenViduRecordingPublicAccess() {
 		return this.openviduRecordingPublicAccess;
 	}
