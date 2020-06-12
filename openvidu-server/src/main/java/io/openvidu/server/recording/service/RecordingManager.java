@@ -230,38 +230,59 @@ public class RecordingManager {
 	}
 
 	public Recording startRecording(Session session, RecordingProperties properties) throws OpenViduException {
-		Recording recording = null;
 		try {
-			switch (properties.outputMode()) {
-			case COMPOSED:
-				recording = this.composedRecordingService.startRecording(session, properties);
-				break;
-			case INDIVIDUAL:
-				recording = this.singleStreamRecordingService.startRecording(session, properties);
-				break;
+			if (session.recordingLock.tryLock(15, TimeUnit.SECONDS)) {
+				try {
+					if (sessionIsBeingRecorded(session.getSessionId())) {
+						throw new OpenViduException(Code.RECORDING_START_ERROR_CODE,
+								"Concurrent start of recording for session " + session.getSessionId());
+					} else {
+						Recording recording = null;
+						try {
+							switch (properties.outputMode()) {
+							case COMPOSED:
+								recording = this.composedRecordingService.startRecording(session, properties);
+								break;
+							case INDIVIDUAL:
+								recording = this.singleStreamRecordingService.startRecording(session, properties);
+								break;
+							}
+						} catch (Exception e) {
+							throw e;
+						}
+						this.recordingFromStartingToStarted(recording);
+
+						this.cdr.recordRecordingStarted(recording);
+						this.cdr.recordRecordingStatusChanged(recording, null, recording.getCreatedAt(),
+								io.openvidu.java.client.Recording.Status.started);
+
+						if (!(OutputMode.COMPOSED.equals(properties.outputMode()) && properties.hasVideo())) {
+							// Directly send recording started notification for all cases except for
+							// COMPOSED recordings with video (will be sent on first RECORDER subscriber)
+							this.sessionHandler.sendRecordingStartedNotification(session, recording);
+						}
+						if (session.getActivePublishers() == 0) {
+							// Init automatic recording stop if there are now publishers when starting
+							// recording
+							log.info("No publisher in session {}. Starting {} seconds countdown for stopping recording",
+									session.getSessionId(), this.openviduConfig.getOpenviduRecordingAutostopTimeout());
+							this.initAutomaticRecordingStopThread(session);
+						}
+						return recording;
+					}
+				} finally {
+					session.recordingLock.unlock();
+				}
+			} else {
+				throw new OpenViduException(Code.RECORDING_START_ERROR_CODE,
+						"Timeout waiting for recording Session lock to be available for session "
+								+ session.getSessionId());
 			}
-		} catch (Exception e) {
-			throw e;
+		} catch (InterruptedException e) {
+			throw new OpenViduException(Code.RECORDING_START_ERROR_CODE,
+					"InterruptedException waiting for recording Session lock to be available for session "
+							+ session.getSessionId());
 		}
-		this.recordingFromStartingToStarted(recording);
-
-		this.cdr.recordRecordingStarted(recording);
-		this.cdr.recordRecordingStatusChanged(recording, null, recording.getCreatedAt(),
-				io.openvidu.java.client.Recording.Status.started);
-
-		if (!(OutputMode.COMPOSED.equals(properties.outputMode()) && properties.hasVideo())) {
-			// Directly send recording started notification for all cases except for
-			// COMPOSED recordings with video (will be sent on first RECORDER subscriber)
-			this.sessionHandler.sendRecordingStartedNotification(session, recording);
-		}
-		if (session.getActivePublishers() == 0) {
-			// Init automatic recording stop if there are now publishers when starting
-			// recording
-			log.info("No publisher in session {}. Starting {} seconds countdown for stopping recording",
-					session.getSessionId(), this.openviduConfig.getOpenviduRecordingAutostopTimeout());
-			this.initAutomaticRecordingStopThread(session);
-		}
-		return recording;
 	}
 
 	public Recording stopRecording(Session session, String recordingId, EndReason reason) {

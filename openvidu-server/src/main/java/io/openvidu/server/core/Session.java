@@ -80,7 +80,7 @@ public class Session implements SessionInterface {
 
 	/**
 	 * This lock protects initialization of ALWAYS recordings upon first user
-	 * publishing
+	 * publishing, as well as POST /api/recordings/start
 	 */
 	public Lock recordingLock = new ReentrantLock();
 
