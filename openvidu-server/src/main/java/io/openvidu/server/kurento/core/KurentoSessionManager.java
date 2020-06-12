@@ -129,7 +129,8 @@ public class KurentoSessionManager extends SessionManager {
 						}
 
 					} else {
-						String error = "Timeout of " + KmsManager.MAX_SECONDS_LOCK_WAIT + " seconds waiting to acquire lock";
+						String error = "Timeout of " + KmsManager.MAX_SECONDS_LOCK_WAIT
+								+ " seconds waiting to acquire lock";
 						log.error(error);
 						sessionEventsHandler.onParticipantJoined(participant, sessionId, null, transactionId,
 								new OpenViduException(Code.ROOM_CANNOT_BE_CREATED_ERROR_CODE, error));
@@ -398,6 +399,8 @@ public class KurentoSessionManager extends SessionManager {
 				&& MediaMode.ROUTED.equals(kSession.getSessionProperties().mediaMode())
 				&& kSession.getActivePublishers() == 0) {
 
+			// There were no previous publishers in the session
+
 			try {
 				if (kSession.recordingLock.tryLock(15, TimeUnit.SECONDS)) {
 					try {
@@ -406,15 +409,16 @@ public class KurentoSessionManager extends SessionManager {
 								&& !recordingManager.sessionIsBeingRecorded(kSession.getSessionId())
 								&& !kSession.recordingManuallyStopped.get()) {
 							// Start automatic recording for sessions configured with RecordingMode.ALWAYS
+							// that have not been been manually stopped
 							new Thread(() -> {
 								recordingManager.startRecording(kSession, new RecordingProperties.Builder().name("")
 										.outputMode(kSession.getSessionProperties().defaultOutputMode())
 										.recordingLayout(kSession.getSessionProperties().defaultRecordingLayout())
 										.customLayout(kSession.getSessionProperties().defaultCustomLayout()).build());
 							}).start();
-						} else if (RecordingMode.MANUAL.equals(kSession.getSessionProperties().recordingMode())
-								&& recordingManager.sessionIsBeingRecorded(kSession.getSessionId())) {
-							// Abort automatic recording stop (user published before timeout)
+						} else if (recordingManager.sessionIsBeingRecorded(kSession.getSessionId())) {
+							// Abort automatic recording stop thread for any recorded session in which a
+							// user published before timeout
 							log.info(
 									"Participant {} published before timeout finished. Aborting automatic recording stop",
 									participant.getParticipantPublicId());
