@@ -114,7 +114,11 @@ public abstract class KmsManager {
 	public synchronized Kms getLessLoadedConnectedAndRunningKms() throws NoSuchElementException {
 		List<KmsLoad> kmsLoads = getKmsLoads().stream().filter(kmsLoad -> kmsLoad.kms.isKurentoClientConnected()
 				&& mediaNodeStatusManager.isRunning(kmsLoad.kms.getId())).collect(Collectors.toList());
-		return Collections.min(kmsLoads).kms;
+		if (kmsLoads.isEmpty()) {
+			throw new NoSuchElementException();
+		} else {
+			return Collections.min(kmsLoads).kms;
+		}
 	}
 
 	public synchronized List<KmsLoad> getKmssSortedByLoad() {
