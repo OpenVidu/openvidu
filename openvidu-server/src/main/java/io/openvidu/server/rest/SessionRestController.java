@@ -460,6 +460,7 @@ public class SessionRestController {
 		Boolean hasVideo;
 		String recordingLayoutString;
 		String customLayout;
+		Long shmSize;
 		try {
 			sessionId = (String) params.get("session");
 			name = (String) params.get("name");
@@ -469,7 +470,8 @@ public class SessionRestController {
 			hasVideo = (Boolean) params.get("hasVideo");
 			recordingLayoutString = (String) params.get("recordingLayout");
 			customLayout = (String) params.get("customLayout");
-		} catch (ClassCastException e) {
+			shmSize = new Long(params.get("shmSize").toString());
+		} catch (ClassCastException | NumberFormatException e) {
 			return this.generateErrorResponse("Type error in some parameter", "/api/recordings/start",
 					HttpStatus.BAD_REQUEST);
 		}
@@ -480,7 +482,7 @@ public class SessionRestController {
 					HttpStatus.BAD_REQUEST);
 		}
 
-		io.openvidu.java.client.Recording.OutputMode finalOutputMode = null;
+		io.openvidu.java.client.Recording.OutputMode finalOutputMode = OutputMode.COMPOSED;
 		RecordingLayout recordingLayout = null;
 		if (outputModeString != null && !outputModeString.isEmpty()) {
 			try {
@@ -550,6 +552,13 @@ public class SessionRestController {
 			if (RecordingLayout.CUSTOM.equals(recordingLayout)) {
 				builder.customLayout(
 						customLayout == null ? session.getSessionProperties().defaultCustomLayout() : customLayout);
+			}
+			if (shmSize != null) {
+				if (shmSize < 134217728L) {
+					return this.generateErrorResponse("Wrong \"shmSize\" parameter. Must be 134217728 (128 MB) minimum",
+							"/api/recordings/start", HttpStatus.UNPROCESSABLE_ENTITY);
+				}
+				builder.shmSize(shmSize);
 			}
 		}
 		builder.name(name).hasAudio(hasAudio != null ? hasAudio : true).hasVideo(hasVideo != null ? hasVideo : true);

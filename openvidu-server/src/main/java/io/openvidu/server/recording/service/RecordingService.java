@@ -149,6 +149,7 @@ public abstract class RecordingService {
 				if (RecordingLayout.CUSTOM.equals(properties.recordingLayout())) {
 					builder.customLayout(properties.customLayout());
 				}
+				builder.shmSize(properties.shmSize());
 			}
 			properties = builder.build();
 		}

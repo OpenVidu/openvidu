@@ -32,6 +32,7 @@ public class RecordingProperties {
 	private String resolution;
 	private boolean hasAudio;
 	private boolean hasVideo;
+	private long shmSize; // For COMPOSED recording
 
 	/**
 	 * Builder for {@link io.openvidu.java.client.RecordingProperties}
@@ -45,6 +46,7 @@ public class RecordingProperties {
 		private String resolution;
 		private boolean hasAudio = true;
 		private boolean hasVideo = true;
+		private long shmSize = 536870912L;
 
 		/**
 		 * Builder for {@link io.openvidu.java.client.RecordingProperties}
@@ -58,7 +60,7 @@ public class RecordingProperties {
 				}
 			}
 			return new RecordingProperties(this.name, this.outputMode, this.recordingLayout, this.customLayout,
-					this.resolution, this.hasAudio, this.hasVideo);
+					this.resolution, this.hasAudio, this.hasVideo, this.shmSize);
 		}
 
 		/**
@@ -145,10 +147,20 @@ public class RecordingProperties {
 			return this;
 		}
 
+		/**
+		 * If COMPOSED recording, call this method to specify the amount of shared
+		 * memory reserved for the recording process in bytes. Minimum 134217728 (128
+		 * MB). Property ignored if INDIVIDUAL recording
+		 */
+		public RecordingProperties.Builder shmSize(long shmSize) {
+			this.shmSize = shmSize;
+			return this;
+		}
+
 	}
 
 	protected RecordingProperties(String name, Recording.OutputMode outputMode, RecordingLayout layout,
-			String customLayout, String resolution, boolean hasAudio, boolean hasVideo) {
+			String customLayout, String resolution, boolean hasAudio, boolean hasVideo, long shmSize) {
 		this.name = name;
 		this.outputMode = outputMode;
 		this.recordingLayout = layout;
@@ -156,6 +168,7 @@ public class RecordingProperties {
 		this.resolution = resolution;
 		this.hasAudio = hasAudio;
 		this.hasVideo = hasVideo;
+		this.shmSize = shmSize;
 	}
 
 	/**
@@ -240,6 +253,18 @@ public class RecordingProperties {
 	 */
 	public boolean hasVideo() {
 		return this.hasVideo;
+	}
+
+	/**
+	 * If COMPOSED recording, the amount of shared memory reserved for the recording
+	 * process in bytes. Minimum 134217728 (128MB). Property ignored if INDIVIDUAL
+	 * recording<br>
+	 * <br>
+	 * 
+	 * Default to 536870912 (512 MB)
+	 */
+	public long shmSize() {
+		return this.shmSize;
 	}
 
 }
