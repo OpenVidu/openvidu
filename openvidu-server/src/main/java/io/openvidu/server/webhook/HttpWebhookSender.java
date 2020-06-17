@@ -63,7 +63,7 @@ public class HttpWebhookSender {
 	private List<Header> customHeaders;
 	private List<CDREventName> events;
 
-	private ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+	private ExecutorService executor = Executors.newSingleThreadExecutor();
 
 	public HttpWebhookSender(String httpEndpoint, List<Header> headers, List<CDREventName> events) {
 		this.httpEndpoint = httpEndpoint;
