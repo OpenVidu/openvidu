@@ -210,23 +210,14 @@ public class SessionRestController {
 		log.info("REST API: GET /api/sessions?webRtcStats={}", webRtcStats);
 
 		Collection<Session> sessions = this.sessionManager.getSessionsWithNotActive();
-
-		log.info("1. Session collection retrieved");
-
 		JsonObject json = new JsonObject();
 		JsonArray jsonArray = new JsonArray();
 		sessions.forEach(s -> {
-
-			log.info("2. Gathering info for session {}", s.getSessionId());
-
 			JsonObject sessionJson = (webRtcStats == true) ? s.withStatsToJson() : s.toJson();
 			jsonArray.add(sessionJson);
 		});
 		json.addProperty("numberOfElements", sessions.size());
 		json.add("content", jsonArray);
-
-		log.info("3. Sending response back");
-
 		return new ResponseEntity<>(json.toString(), getResponseHeaders(), HttpStatus.OK);
 	}
 
