@@ -210,14 +210,23 @@ public class SessionRestController {
 		log.info("REST API: GET /api/sessions?webRtcStats={}", webRtcStats);
 
 		Collection<Session> sessions = this.sessionManager.getSessionsWithNotActive();
+
+		log.info("1. Session collection retrieved");
+
 		JsonObject json = new JsonObject();
 		JsonArray jsonArray = new JsonArray();
 		sessions.forEach(s -> {
+
+			log.info("2. Gathering info for session {}", s.getSessionId());
+
 			JsonObject sessionJson = (webRtcStats == true) ? s.withStatsToJson() : s.toJson();
 			jsonArray.add(sessionJson);
 		});
 		json.addProperty("numberOfElements", sessions.size());
 		json.add("content", jsonArray);
+
+		log.info("3. Sending response back");
+
 		return new ResponseEntity<>(json.toString(), getResponseHeaders(), HttpStatus.OK);
 	}
 
@@ -460,7 +469,7 @@ public class SessionRestController {
 		Boolean hasVideo;
 		String recordingLayoutString;
 		String customLayout;
-		Long shmSize;
+		Long shmSize = null;
 		try {
 			sessionId = (String) params.get("session");
 			name = (String) params.get("name");
@@ -470,7 +479,9 @@ public class SessionRestController {
 			hasVideo = (Boolean) params.get("hasVideo");
 			recordingLayoutString = (String) params.get("recordingLayout");
 			customLayout = (String) params.get("customLayout");
-			shmSize = new Long(params.get("shmSize").toString());
+			if (params.get("shmSize") != null) {
+				shmSize = new Long(params.get("shmSize").toString());
+			}
 		} catch (ClassCastException | NumberFormatException e) {
 			return this.generateErrorResponse("Type error in some parameter", "/api/recordings/start",
 					HttpStatus.BAD_REQUEST);
