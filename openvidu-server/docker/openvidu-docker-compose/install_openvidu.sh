@@ -188,6 +188,9 @@ upgrade_ov() {
      mv "${OPENVIDU_PREVIOUS_FOLDER}/readme.md" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous 'readme.md'"
      printf '\n          - readme.md'
 
+     cp "${OPENVIDU_PREVIOUS_FOLDER}/.env" "${ROLL_BACK_FOLDER}" || fatal_error "Error while moving previous '.env'"
+     printf '\n          - .env'
+
      # Move tmp files to Openvidu
      printf '\n     => Updating files:'
 
