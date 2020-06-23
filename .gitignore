@@ -19,6 +19,7 @@ nbactions.xml
 .externalToolBuilders
 *bin/
 */.vscode/*
+.vscode/*
 */.sts4-cache/*
 */.project
 */.classpath
