@@ -26,14 +26,11 @@ import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.ProcessingException;
 
-import com.github.dockerjava.api.command.InspectContainerResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.CreateContainerCmd;
 import com.github.dockerjava.api.command.CreateContainerResponse;
 import com.github.dockerjava.api.command.ExecCreateCmdResponse;
+import com.github.dockerjava.api.command.InspectContainerResponse;
 import com.github.dockerjava.api.exception.ConflictException;
 import com.github.dockerjava.api.exception.DockerClientException;
 import com.github.dockerjava.api.exception.InternalServerErrorException;
@@ -48,6 +45,9 @@ import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.core.DockerClientConfig;
 import com.github.dockerjava.core.command.ExecStartResultCallback;
 import com.github.dockerjava.core.command.PullImageResultCallback;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
@@ -66,8 +66,10 @@ public class DockerManager {
 
 	public void downloadDockerImage(String image, int secondsOfWait) throws Exception {
 		try {
+			// Pull image
 			this.dockerClient.pullImageCmd(image).exec(new PullImageResultCallback()).awaitCompletion(secondsOfWait,
 					TimeUnit.SECONDS);
+			
 		} catch (NotFoundException | InternalServerErrorException e) {
 			if (dockerImageExistsLocally(image)) {
 				log.info("Docker image '{}' exists locally", image);
@@ -207,6 +209,15 @@ public class DockerManager {
 		try {
 			return CommandExecutor.execCommand(5000, "/bin/sh", "-c",
 					"docker inspect -f \"{{ .NetworkSettings.IPAddress }}\" " + containerId);
+		} catch (IOException | InterruptedException e) {
+			log.error(e.getMessage());
+			return null;
+		}
+	}
+	
+	public String getImageSha256(String image) {
+		try {
+			return CommandExecutor.execCommand(5000, "/bin/sh", "-c", "docker inspect " + image + " -f \"{{ .Id }}\"");	
 		} catch (IOException | InterruptedException e) {
 			log.error(e.getMessage());
 			return null;
