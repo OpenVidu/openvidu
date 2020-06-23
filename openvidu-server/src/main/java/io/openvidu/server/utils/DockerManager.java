@@ -27,19 +27,13 @@ import java.util.concurrent.TimeUnit;
 import javax.ws.rs.ProcessingException;
 
 import com.github.dockerjava.api.DockerClient;
-import com.github.dockerjava.api.command.CreateContainerCmd;
-import com.github.dockerjava.api.command.CreateContainerResponse;
-import com.github.dockerjava.api.command.ExecCreateCmdResponse;
-import com.github.dockerjava.api.command.InspectContainerResponse;
+import com.github.dockerjava.api.async.ResultCallback;
+import com.github.dockerjava.api.command.*;
 import com.github.dockerjava.api.exception.ConflictException;
 import com.github.dockerjava.api.exception.DockerClientException;
 import com.github.dockerjava.api.exception.InternalServerErrorException;
 import com.github.dockerjava.api.exception.NotFoundException;
-import com.github.dockerjava.api.model.Bind;
-import com.github.dockerjava.api.model.Container;
-import com.github.dockerjava.api.model.Frame;
-import com.github.dockerjava.api.model.HostConfig;
-import com.github.dockerjava.api.model.Volume;
+import com.github.dockerjava.api.model.*;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.core.DockerClientConfig;
@@ -214,15 +208,6 @@ public class DockerManager {
 			return null;
 		}
 	}
-	
-	public String getImageSha256(String image) {
-		try {
-			return CommandExecutor.execCommand(5000, "/bin/sh", "-c", "docker inspect " + image + " -f \"{{ .Id }}\"");	
-		} catch (IOException | InterruptedException e) {
-			log.error(e.getMessage());
-			return null;
-		}
-	}
 
 	public List<String> getRunningContainers(String fullImageName) {
 		List<String> containerIds = new ArrayList<>();
@@ -231,8 +216,16 @@ public class DockerManager {
 			if (container.getImage().startsWith(fullImageName)) {
 				containerIds.add(container.getId());
 			}
+			if (container.getImageId().startsWith(fullImageName)) {
+				containerIds.add(container.getId());
+			}
 		}
 		return containerIds;
+	}
+
+	public String getImageId(String fullImageName) {
+		InspectImageResponse imageResponse = this.dockerClient.inspectImageCmd(fullImageName).exec();
+		return imageResponse.getId();
 	}
 
 	public Map<String, String> getLabels(String containerId) {
