@@ -216,7 +216,7 @@ public class DockerManager {
 			if (container.getImage().startsWith(fullImageName)) {
 				containerIds.add(container.getId());
 			}
-			if (container.getImageId().startsWith(fullImageName)) {
+			if (container.getImageId().contains(fullImageName)) {
 				containerIds.add(container.getId());
 			}
 		}
