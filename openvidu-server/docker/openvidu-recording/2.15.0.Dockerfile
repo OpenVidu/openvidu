@@ -21,8 +21,8 @@ RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y google
 # Clean
 RUN apt-get clean && apt-get autoclean && apt-get autoremove
 
-COPY entrypoint.sh /entrypoint.sh
-RUN ["chmod", "+x", "/entrypoint.sh"]
+COPY entrypoint.sh scripts/composed.sh scripts/composed_quick_start.sh ./
+RUN ["chmod", "+x", "/entrypoint.sh", "/composed.sh", "/composed_quick_start.sh"]
 
 RUN mkdir /recordings
 RUN chmod 777 /recordings

@@ -1,1 +1,1 @@
-docker build --rm -t openvidu/openvidu-recording .
+docker build --rm -f $1.Dockerfile -t openvidu/openvidu-recording .
