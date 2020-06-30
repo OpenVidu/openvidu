@@ -1098,6 +1098,21 @@ export class Session extends EventDispatcher {
         }
     }
 
+    /**
+     * @hidden
+     */
+    initializeParams(token: string) {
+        const joinParams = {
+            token: (!!token) ? token : '',
+            session: this.sessionId,
+            platform: !!platform.description ? platform.description : 'unknown',
+            metadata: !!this.options.metadata ? this.options.metadata : '',
+            secret: this.openvidu.getSecret(),
+            recorder: this.openvidu.getRecorder()
+        };
+        return joinParams;
+    }
+
 
     /* Private methods */
 
@@ -1108,14 +1123,7 @@ export class Session extends EventDispatcher {
                     reject(error);
                 } else {
 
-                    const joinParams = {
-                        token: (!!token) ? token : '',
-                        session: this.sessionId,
-                        platform: !!platform.description ? platform.description : 'unknown',
-                        metadata: !!this.options.metadata ? this.options.metadata : '',
-                        secret: this.openvidu.getSecret(),
-                        recorder: this.openvidu.getRecorder()
-                    };
+                    const joinParams = this.initializeParams(token);
 
                     this.openvidu.sendRequest('joinRoom', joinParams, (error, response) => {
                         if (!!error) {
@@ -1193,7 +1201,7 @@ export class Session extends EventDispatcher {
         }
     }
 
-    private getConnection(connectionId: string, errorMessage: string): Promise<Connection> {
+    protected getConnection(connectionId: string, errorMessage: string): Promise<Connection> {
         return new Promise<Connection>((resolve, reject) => {
             const connection = this.remoteConnections[connectionId];
             if (!!connection) {
