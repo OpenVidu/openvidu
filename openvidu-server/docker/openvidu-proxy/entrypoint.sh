@@ -127,8 +127,10 @@ case ${CERTIFICATE_TYPE} in
     fi
     ;;
 
-  "letsencrypt")  
-    echo "0 12 * * * certbot renew >> /var/log/nginx/cron-letsencrypt.log" | crontab - # Auto renew cert
+  "letsencrypt")
+    # Init cron
+    /usr/sbin/crond -f &
+    echo '0 */12 * * * certbot renew --post-hook "nginx -s reload" >> /var/log/cron-letsencrypt.log' | crontab - # Auto renew cert
 
     if [[ ! -f "${CERTIFICATES_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}/privkey.pem" && \
           ! -f "${CERTIFICATES_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}/fullchain.pem" ]]; then
@@ -336,9 +338,6 @@ printf "\n  =         START OPENVIDU PROXY        ="
 printf "\n  ======================================="
 printf "\n\n"
 nginx -s reload
-
-# Init cron
-/usr/sbin/crond -f &
 
 # nginx logs
 tail -f /var/log/nginx/*.log
