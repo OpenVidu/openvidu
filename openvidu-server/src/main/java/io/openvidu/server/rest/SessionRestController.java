@@ -484,17 +484,17 @@ public class SessionRestController {
 					HttpStatus.BAD_REQUEST);
 		}
 
-		io.openvidu.java.client.Recording.OutputMode finalOutputMode = OutputMode.COMPOSED;
+		OutputMode finalOutputMode = OutputMode.COMPOSED;
 		RecordingLayout recordingLayout = null;
 		if (outputModeString != null && !outputModeString.isEmpty()) {
 			try {
-				finalOutputMode = io.openvidu.java.client.Recording.OutputMode.valueOf(outputModeString);
+				finalOutputMode = OutputMode.valueOf(outputModeString);
 			} catch (Exception e) {
 				return this.generateErrorResponse("Type error in some parameter", "/api/recordings/start",
 						HttpStatus.BAD_REQUEST);
 			}
 		}
-		if (io.openvidu.java.client.Recording.OutputMode.COMPOSED.equals(finalOutputMode)) {
+		if (OutputMode.COMPOSED.equals(finalOutputMode)) {
 			if (resolution != null && !sessionManager.formatChecker.isAcceptableRecordingResolution(resolution)) {
 				return this.generateErrorResponse(
 						"Wrong \"resolution\" parameter. Acceptable values from 100 to 1999 for both width and height",
@@ -544,17 +544,15 @@ public class SessionRestController {
 
 		// If outputMode is COMPOSED when defaultOutputMode is COMPOSED_QUICK_START,
 		// change outputMode to COMPOSED_QUICK_START
-		io.openvidu.java.client.Recording.OutputMode defaultOutputMode = session.getSessionProperties().defaultOutputMode();
-		io.openvidu.java.client.Recording.OutputMode propertiesOutputMode = finalOutputMode;
-		if(defaultOutputMode.equals(io.openvidu.java.client.Recording.OutputMode.COMPOSED_QUICK_START)
-				&& propertiesOutputMode.equals(io.openvidu.java.client.Recording.OutputMode.COMPOSED)) {
-			finalOutputMode = io.openvidu.java.client.Recording.OutputMode.COMPOSED_QUICK_START;
+		OutputMode defaultOutputMode = session.getSessionProperties().defaultOutputMode();
+		if (OutputMode.COMPOSED_QUICK_START.equals(defaultOutputMode) && OutputMode.COMPOSED.equals(finalOutputMode)) {
+			finalOutputMode = OutputMode.COMPOSED_QUICK_START;
 		}
 
 		RecordingProperties.Builder builder = new RecordingProperties.Builder();
 		builder.outputMode(
 				finalOutputMode == null ? session.getSessionProperties().defaultOutputMode() : finalOutputMode);
-		if (io.openvidu.java.client.Recording.OutputMode.COMPOSED.equals(finalOutputMode)) {
+		if (finalOutputMode.equals(OutputMode.COMPOSED)) {
 			if (resolution != null) {
 				builder.resolution(resolution);
 			}
