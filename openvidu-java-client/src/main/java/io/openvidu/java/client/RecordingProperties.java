@@ -52,7 +52,7 @@ public class RecordingProperties {
 		 * Builder for {@link io.openvidu.java.client.RecordingProperties}
 		 */
 		public RecordingProperties build() {
-			if (OutputMode.COMPOSED.equals(this.outputMode)) {
+			if (OutputMode.COMPOSED.equals(this.outputMode) || OutputMode.COMPOSED_QUICK_START.equals(this.outputMode)) {
 				this.recordingLayout = this.recordingLayout != null ? this.recordingLayout : RecordingLayout.BEST_FIT;
 				this.resolution = this.resolution != null ? this.resolution : "1920x1080";
 				if (RecordingLayout.CUSTOM.equals(this.recordingLayout)) {

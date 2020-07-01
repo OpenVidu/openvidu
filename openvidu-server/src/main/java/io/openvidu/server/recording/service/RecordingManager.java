@@ -76,12 +76,14 @@ import io.openvidu.server.utils.CustomFileManager;
 import io.openvidu.server.utils.DockerManager;
 import io.openvidu.server.utils.JsonUtils;
 import io.openvidu.server.utils.QuarantineKiller;
+import org.springframework.http.ResponseEntity;
 
 public class RecordingManager {
 
 	private static final Logger log = LoggerFactory.getLogger(RecordingManager.class);
 
 	private ComposedRecordingService composedRecordingService;
+	private ComposedQuickStartRecordingService composedQuickStartRecordingService;
 	private SingleStreamRecordingService singleStreamRecordingService;
 	private DockerManager dockerManager;
 
@@ -159,6 +161,8 @@ public class RecordingManager {
 		this.dockerManager = new DockerManager();
 		this.composedRecordingService = new ComposedRecordingService(this, recordingDownloader, openviduConfig, cdr,
 				quarantineKiller);
+		this.composedQuickStartRecordingService = new ComposedQuickStartRecordingService(this, recordingDownloader, openviduConfig, cdr,
+				quarantineKiller);
 		this.singleStreamRecordingService = new SingleStreamRecordingService(this, recordingDownloader, openviduConfig,
 				cdr, quarantineKiller);
 
@@ -231,6 +235,14 @@ public class RecordingManager {
 		this.checkRecordingPaths(openviduRecordingPath, openviduRecordingCustomLayout);
 	}
 
+	public void startComposedQuickStartContainer(Session session) {
+		this.composedQuickStartRecordingService.runComposedQuickStartContainer(session);
+	}
+
+	public void stopComposedQuickStartContainer(Session session, EndReason reason) {
+		this.composedQuickStartRecordingService.stopRecordingContainer(session, reason);
+	}
+
 	public Recording startRecording(Session session, RecordingProperties properties) throws OpenViduException {
 		try {
 			if (session.recordingLock.tryLock(15, TimeUnit.SECONDS)) {
@@ -244,6 +256,9 @@ public class RecordingManager {
 							switch (properties.outputMode()) {
 							case COMPOSED:
 								recording = this.composedRecordingService.startRecording(session, properties);
+								break;
+							case COMPOSED_QUICK_START:
+								recording = this.composedQuickStartRecordingService.startRecording(session, properties);
 								break;
 							case INDIVIDUAL:
 								recording = this.singleStreamRecordingService.startRecording(session, properties);
@@ -287,7 +302,7 @@ public class RecordingManager {
 		}
 	}
 
-	public Recording stopRecording(Session session, String recordingId, EndReason reason) {
+	public Recording stopRecording(Session session, String recordingId, EndReason reason, boolean hasSessionEnded) {
 		Recording recording;
 		if (session == null) {
 			recording = this.startedRecordings.get(recordingId);
@@ -301,10 +316,13 @@ public class RecordingManager {
 
 		switch (recording.getOutputMode()) {
 		case COMPOSED:
-			recording = this.composedRecordingService.stopRecording(session, recording, reason);
+			recording = this.composedRecordingService.stopRecording(session, recording, reason, hasSessionEnded);
+			break;
+		case COMPOSED_QUICK_START:
+			recording = this.composedQuickStartRecordingService.stopRecording(session, recording, reason, hasSessionEnded);
 			break;
 		case INDIVIDUAL:
-			recording = this.singleStreamRecordingService.stopRecording(session, recording, reason);
+			recording = this.singleStreamRecordingService.stopRecording(session, recording, reason, hasSessionEnded);
 			break;
 		}
 		this.abortAutomaticRecordingStopThread(session, reason);
@@ -316,7 +334,16 @@ public class RecordingManager {
 		recording = this.sessionsRecordings.get(session.getSessionId());
 		switch (recording.getOutputMode()) {
 		case COMPOSED:
-			recording = this.composedRecordingService.stopRecording(session, recording, reason, kmsDisconnectionTime);
+			recording = this.composedRecordingService.stopRecording(session, recording, reason, kmsDisconnectionTime, true);
+			if (recording.hasVideo()) {
+				// Evict the recorder participant if composed recording with video
+				this.sessionManager.evictParticipant(
+						session.getParticipantByPublicId(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID), null, null,
+						null);
+			}
+			break;
+		case COMPOSED_QUICK_START:
+			recording = this.composedQuickStartRecordingService.stopRecording(session, recording, reason, kmsDisconnectionTime, true);
 			if (recording.hasVideo()) {
 				// Evict the recorder participant if composed recording with video
 				this.sessionManager.evictParticipant(
@@ -531,7 +558,7 @@ public class RecordingManager {
 									log.info(
 											"Automatic stopping recording {}. There are users connected to session {}, but no one is publishing",
 											recordingId, session.getSessionId());
-									this.stopRecording(session, recordingId, EndReason.automaticStop);
+									this.stopRecording(session, recordingId, EndReason.automaticStop, true);
 								}
 							} finally {
 								if (!alreadyUnlocked) {

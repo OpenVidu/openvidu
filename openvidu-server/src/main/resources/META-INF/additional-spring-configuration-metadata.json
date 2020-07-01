@@ -47,6 +47,12 @@
 			"defaultValue": false
 		},
 		{
+			"name": "OPENVIDU_RECORDING_DEBUG",
+			"type": "java.lang.Boolean",
+			"description": "If true, start recording service in debug mode",
+			"defaultValue": false
+		},
+		{
 			"name": "OPENVIDU_RECORDING_PATH",
 			"type": "java.lang.String",
 			"description": "Where to store the recorded video files",

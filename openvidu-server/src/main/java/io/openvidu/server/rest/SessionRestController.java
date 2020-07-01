@@ -597,7 +597,7 @@ public class SessionRestController {
 		Session session = sessionManager.getSession(recording.getSessionId());
 
 		Recording stoppedRecording = this.recordingManager.stopRecording(session, recording.getId(),
-				EndReason.recordingStoppedByServer);
+				EndReason.recordingStoppedByServer, false);
 
 		session.recordingManuallyStopped.set(true);
 

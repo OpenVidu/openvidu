@@ -58,7 +58,7 @@ public abstract class RecordingService {
 
 	public abstract Recording startRecording(Session session, RecordingProperties properties) throws OpenViduException;
 
-	public abstract Recording stopRecording(Session session, Recording recording, EndReason reason);
+	public abstract Recording stopRecording(Session session, Recording recording, EndReason reason, boolean hasSessionEnded);
 
 	/**
 	 * Generates metadata recording file (".recording.RECORDING_ID" JSON file to
@@ -177,7 +177,7 @@ public abstract class RecordingService {
 		recording.setStatus(io.openvidu.java.client.Recording.Status.failed);
 		this.recordingManager.startingRecordings.remove(recording.getId());
 		this.recordingManager.sessionsRecordingsStarting.remove(session.getSessionId());
-		this.stopRecording(session, recording, null);
+		this.stopRecording(session, recording, null, true);
 		return new OpenViduException(Code.RECORDING_START_ERROR_CODE, errorMessage);
 	}
 

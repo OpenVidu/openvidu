@@ -118,6 +118,8 @@ public class OpenviduConfig {
 
 	private boolean openviduRecording;
 
+	private boolean openViduRecordingDebug;
+
 	private boolean openviduRecordingPublicAccess;
 
 	private Integer openviduRecordingAutostopTimeout;
@@ -222,6 +224,10 @@ public class OpenviduConfig {
 
 	public boolean isRecordingModuleEnabled() {
 		return this.openviduRecording;
+	}
+
+	public boolean isOpenViduRecordingDebug() {
+		return openViduRecordingDebug;
 	}
 
 	public String getOpenViduRecordingPath() {
@@ -476,6 +482,7 @@ public class OpenviduConfig {
 				: asFileSystemPath("OPENVIDU_CDR_PATH");
 
 		openviduRecording = asBoolean("OPENVIDU_RECORDING");
+		openViduRecordingDebug = asBoolean("OPENVIDU_RECORDING_DEBUG");
 		openviduRecordingPath = openviduRecording ? asWritableFileSystemPath("OPENVIDU_RECORDING_PATH")
 				: asFileSystemPath("OPENVIDU_RECORDING_PATH");
 		openviduRecordingPublicAccess = asBoolean("OPENVIDU_RECORDING_PUBLIC_ACCESS");

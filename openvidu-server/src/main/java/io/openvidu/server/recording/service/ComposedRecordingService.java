@@ -63,11 +63,11 @@ public class ComposedRecordingService extends RecordingService {
 
 	private static final Logger log = LoggerFactory.getLogger(ComposedRecordingService.class);
 
-	private Map<String, String> containers = new ConcurrentHashMap<>();
-	private Map<String, String> sessionsContainers = new ConcurrentHashMap<>();
+	protected Map<String, String> containers = new ConcurrentHashMap<>();
+	protected Map<String, String> sessionsContainers = new ConcurrentHashMap<>();
 	private Map<String, CompositeWrapper> composites = new ConcurrentHashMap<>();
 
-	private DockerManager dockerManager;
+	protected DockerManager dockerManager;
 
 	public ComposedRecordingService(RecordingManager recordingManager, RecordingDownloader recordingDownloader,
 			OpenviduConfig openviduConfig, CallDetailRecord cdr, QuarantineKiller quarantineKiller) {
@@ -102,18 +102,18 @@ public class ComposedRecordingService extends RecordingService {
 	}
 
 	@Override
-	public Recording stopRecording(Session session, Recording recording, EndReason reason) {
+	public Recording stopRecording(Session session, Recording recording, EndReason reason, boolean hasSessionEnded) {
 		recording = this.sealRecordingMetadataFileAsStopped(recording);
 		if (recording.hasVideo()) {
-			return this.stopRecordingWithVideo(session, recording, reason);
+			return this.stopRecordingWithVideo(session, recording, reason, hasSessionEnded);
 		} else {
 			return this.stopRecordingAudioOnly(session, recording, reason, 0);
 		}
 	}
 
-	public Recording stopRecording(Session session, Recording recording, EndReason reason, long kmsDisconnectionTime) {
+	public Recording stopRecording(Session session, Recording recording, EndReason reason, long kmsDisconnectionTime, boolean hasSessionEnded) {
 		if (recording.hasVideo()) {
-			return this.stopRecordingWithVideo(session, recording, reason);
+			return this.stopRecordingWithVideo(session, recording, reason, hasSessionEnded);
 		} else {
 			return this.stopRecordingAudioOnly(session, recording, reason, kmsDisconnectionTime);
 		}
@@ -142,7 +142,7 @@ public class ComposedRecordingService extends RecordingService {
 		compositeWrapper.disconnectPublisherEndpoint(streamId);
 	}
 
-	private Recording startRecordingWithVideo(Session session, Recording recording, RecordingProperties properties)
+	protected Recording startRecordingWithVideo(Session session, Recording recording, RecordingProperties properties)
 			throws OpenViduException {
 
 		log.info("Starting composed ({}) recording {} of session {}",
@@ -152,6 +152,7 @@ public class ComposedRecordingService extends RecordingService {
 
 		String layoutUrl = this.getLayoutUrl(recording);
 
+		envs.add("DEBUG_MODE=" + openviduConfig.isOpenViduRecordingDebug());
 		envs.add("URL=" + layoutUrl);
 		envs.add("ONLY_VIDEO=" + !properties.hasAudio());
 		envs.add("RESOLUTION=" + properties.resolution());
@@ -227,7 +228,7 @@ public class ComposedRecordingService extends RecordingService {
 		return recording;
 	}
 
-	private Recording stopRecordingWithVideo(Session session, Recording recording, EndReason reason) {
+	protected Recording stopRecordingWithVideo(Session session, Recording recording, EndReason reason, boolean hasSessionEnded) {
 
 		log.info("Stopping composed ({}) recording {} of session {}. Reason: {}",
 				recording.hasAudio() ? "video + audio" : "audio-only", recording.getId(), recording.getSessionId(),
@@ -389,7 +390,7 @@ public class ComposedRecordingService extends RecordingService {
 		return finalRecordingArray[0];
 	}
 
-	private void stopAndRemoveRecordingContainer(Recording recording, String containerId, int secondsOfWait) {
+	protected void stopAndRemoveRecordingContainer(Recording recording, String containerId, int secondsOfWait) {
 		// Gracefully stop ffmpeg process
 		try {
 			dockerManager.runCommandInContainer(containerId, "echo 'q' > stop", 0);
@@ -411,7 +412,7 @@ public class ComposedRecordingService extends RecordingService {
 		containers.remove(containerId);
 	}
 
-	private Recording updateRecordingAttributes(Recording recording) {
+	protected Recording updateRecordingAttributes(Recording recording) {
 		try {
 			RecordingInfoUtils infoUtils = new RecordingInfoUtils(this.openviduConfig.getOpenViduRecordingPath()
 					+ recording.getId() + "/" + recording.getId() + ".info");
@@ -436,7 +437,7 @@ public class ComposedRecordingService extends RecordingService {
 		}
 	}
 
-	private void waitForVideoFileNotEmpty(Recording recording) throws OpenViduException {
+	protected void waitForVideoFileNotEmpty(Recording recording) throws OpenViduException {
 		boolean isPresent = false;
 		int i = 1;
 		int timeout = 150; // Wait for 150*150 = 22500 = 22.5 seconds
@@ -459,7 +460,7 @@ public class ComposedRecordingService extends RecordingService {
 		}
 	}
 
-	private void failRecordingCompletion(Recording recording, String containerId, OpenViduException e)
+	protected void failRecordingCompletion(Recording recording, String containerId, OpenViduException e)
 			throws OpenViduException {
 		recording.setStatus(io.openvidu.java.client.Recording.Status.failed);
 		dockerManager.removeDockerContainer(containerId, true);
@@ -467,7 +468,7 @@ public class ComposedRecordingService extends RecordingService {
 		throw e;
 	}
 
-	private String getLayoutUrl(Recording recording) throws OpenViduException {
+	protected String getLayoutUrl(Recording recording) throws OpenViduException {
 		String secret = openviduConfig.getOpenViduSecret();
 
 		// Check if "customLayout" property defines a final URL

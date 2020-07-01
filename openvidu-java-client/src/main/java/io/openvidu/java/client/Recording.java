@@ -74,7 +74,14 @@ public class Recording {
 		/**
 		 * Record each stream individually
 		 */
-		INDIVIDUAL;
+		INDIVIDUAL,
+		
+		/**
+		 * EXPERIMENTAL
+		 * This option is intended to keep a recorder session openned for
+		 * incoming recording requests to be recorded as fast as possible
+		 */
+		COMPOSED_QUICK_START;
 	}
 
 	private Recording.Status status;
@@ -105,7 +112,7 @@ public class Recording {
 		OutputMode outputMode = OutputMode.valueOf(json.get("outputMode").getAsString());
 		RecordingProperties.Builder builder = new RecordingProperties.Builder().name(json.get("name").getAsString())
 				.outputMode(outputMode).hasAudio(hasAudio).hasVideo(hasVideo);
-		if (OutputMode.COMPOSED.equals(outputMode) && hasVideo) {
+		if ((OutputMode.COMPOSED.equals(outputMode) || OutputMode.COMPOSED_QUICK_START.equals(outputMode)) && hasVideo) {
 			builder.resolution(json.get("resolution").getAsString());
 			builder.recordingLayout(RecordingLayout.valueOf(json.get("recordingLayout").getAsString()));
 			JsonElement customLayout = json.get("customLayout");

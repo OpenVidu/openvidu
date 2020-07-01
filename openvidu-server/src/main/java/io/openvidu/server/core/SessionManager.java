@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
+import io.openvidu.java.client.Recording;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.kurento.jsonrpc.message.Request;
 import org.slf4j.Logger;
@@ -545,9 +546,18 @@ public abstract class SessionManager {
 		if (openviduConfig.isRecordingModuleEnabled() && stopRecording
 				&& this.recordingManager.sessionIsBeingRecorded(session.getSessionId())) {
 			try {
-				recordingManager.stopRecording(session, null, RecordingManager.finalReason(reason));
+				recordingManager.stopRecording(session, null, RecordingManager.finalReason(reason), true);
 			} catch (OpenViduException e) {
 				log.error("Error stopping recording of session {}: {}", session.getSessionId(), e.getMessage());
+			}
+		} else if(openviduConfig.isRecordingModuleEnabled() && stopRecording
+				&& !this.recordingManager.sessionIsBeingRecorded(session.getSessionId())
+				&& session.getSessionProperties().defaultOutputMode().equals(Recording.OutputMode.COMPOSED_QUICK_START)
+				&& this.recordingManager.getStartedRecording(session.getSessionId()) != null) {
+			try {
+				this.recordingManager.stopComposedQuickStartContainer(session, reason);
+			} catch (OpenViduException e) {
+				log.error("Error stopping COMPOSED_QUICK_START container of session {}", session.getSessionId());
 			}
 		}
 

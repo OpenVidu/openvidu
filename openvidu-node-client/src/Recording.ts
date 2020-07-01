@@ -82,7 +82,8 @@ export class Recording {
             hasAudio: !!(json['hasAudio']),
             hasVideo: !!json['hasVideo']
         };
-        if (this.properties.outputMode.toString() === Recording.OutputMode[Recording.OutputMode.COMPOSED]) {
+        if (this.properties.outputMode.toString() === Recording.OutputMode[Recording.OutputMode.COMPOSED]
+        || this.properties.outputMode.toString() === Recording.OutputMode[Recording.OutputMode.COMPOSED_QUICK_START]) {
             this.properties.resolution = !!(json['resolution']) ? json['resolution'] : '1920x1080';
             this.properties.recordingLayout = !!(json['recordingLayout']) ? json['recordingLayout'] : RecordingLayout.BEST_FIT;
             if (this.properties.recordingLayout.toString() === RecordingLayout[RecordingLayout.CUSTOM]) {
@@ -140,6 +141,9 @@ export namespace Recording {
          * Record all streams in a grid layout in a single archive
          */
         COMPOSED = 'COMPOSED',
+        
+        
+        COMPOSED_QUICK_START = 'COMPOSED_QUICK_START',
 
         /**
          * Record each stream individually
