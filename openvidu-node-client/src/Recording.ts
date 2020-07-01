@@ -142,7 +142,11 @@ export namespace Recording {
          */
         COMPOSED = 'COMPOSED',
         
-        
+        /**
+		 * EXPERIMENTAL
+		 * This option is intended to keep a recorder session openned for
+		 * incoming recording requests to be recorded as fast as possible
+		 */
         COMPOSED_QUICK_START = 'COMPOSED_QUICK_START',
 
         /**
