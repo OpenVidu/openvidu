@@ -542,6 +542,15 @@ public class SessionRestController {
 			return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
 		}
 
+		// If outputMode is COMPOSED when defaultOutputMode is COMPOSED_QUICK_START,
+		// change outputMode to COMPOSED_QUICK_START
+		io.openvidu.java.client.Recording.OutputMode defaultOutputMode = session.getSessionProperties().defaultOutputMode();
+		io.openvidu.java.client.Recording.OutputMode propertiesOutputMode = finalOutputMode;
+		if(defaultOutputMode.equals(io.openvidu.java.client.Recording.OutputMode.COMPOSED_QUICK_START)
+				&& propertiesOutputMode.equals(io.openvidu.java.client.Recording.OutputMode.COMPOSED)) {
+			finalOutputMode = io.openvidu.java.client.Recording.OutputMode.COMPOSED_QUICK_START;
+		}
+
 		RecordingProperties.Builder builder = new RecordingProperties.Builder();
 		builder.outputMode(
 				finalOutputMode == null ? session.getSessionProperties().defaultOutputMode() : finalOutputMode);
