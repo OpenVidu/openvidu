@@ -157,13 +157,13 @@ elif [[ "${COMPOSED_QUICK_START_ACTION}" == "--stop-recording" ]]; then
         ### Change permissions to metadata file ###
         sudo chmod 777 /recordings/$VIDEO_ID/.recording.$VIDEO_ID
         
-        echo "Recording finished /recordings/$VIDEO_ID/$VIDEO_NAME.$VIDEO_FORMAT"
-        
         ### Generate video thumbnail ###
 
         MIDDLE_TIME=$(ffmpeg -i /recordings/$VIDEO_ID/$VIDEO_NAME.$VIDEO_FORMAT 2>&1 | grep Duration | awk '{print $2}' | tr -d , | awk -F ':' '{print ($3+$2*60+$1*3600)/2}')
         THUMBNAIL_HEIGHT=$((480*$HEIGHT/$WIDTH))
         ffmpeg -ss $MIDDLE_TIME -i /recordings/$VIDEO_ID/$VIDEO_NAME.$VIDEO_FORMAT -vframes 1 -s 480x$THUMBNAIL_HEIGHT /recordings/$VIDEO_ID/$VIDEO_ID.jpg &> /tmp/ffmpeg-thumbnail.log
+        
+        echo "Recording finished /recordings/$VIDEO_ID/$VIDEO_NAME.$VIDEO_FORMAT"
         
     } 2>&1 | tee -a /tmp/container-stop-recording.log
 fi
