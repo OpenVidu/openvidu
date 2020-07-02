@@ -87,7 +87,8 @@ public class RecordingProperties {
 		 * have effect if
 		 * {@link io.openvidu.java.client.RecordingProperties.Builder#outputMode(Recording.OutputMode)}
 		 * has been called with value
-		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED}
+		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} or
+		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START}
 		 */
 		public RecordingProperties.Builder recordingLayout(RecordingLayout layout) {
 			this.recordingLayout = layout;
@@ -103,7 +104,8 @@ public class RecordingProperties {
 		 * Will only have effect if
 		 * {@link io.openvidu.java.client.RecordingProperties.Builder#outputMode(Recording.OutputMode)}
 		 * has been called with value
-		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED}.<br>
+		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} or
+		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START}.<br>
 		 * See <a href="https://docs.openvidu.io/en/stable/advanced-features/recording#custom-recording-layouts"
 		 * target="_blank">Custom recording layouts</a> to learn more
 		 */
@@ -119,7 +121,8 @@ public class RecordingProperties {
 		 * Will only have effect if
 		 * {@link io.openvidu.java.client.RecordingProperties.Builder#outputMode(Recording.OutputMode)}
 		 * has been called with value
-		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED}. For
+		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} or
+		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START}. For
 		 * {@link io.openvidu.java.client.Recording.OutputMode#INDIVIDUAL} all
 		 * individual video files will have the native resolution of the published
 		 * stream
@@ -181,7 +184,8 @@ public class RecordingProperties {
 	}
 
 	/**
-	 * Defines the mode of recording: {@link Recording.OutputMode#COMPOSED} for a
+	 * Defines the mode of recording: {@link Recording.OutputMode#COMPOSED} or
+	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START} for a
 	 * single archive in a grid layout or {@link Recording.OutputMode#INDIVIDUAL}
 	 * for one archive for each stream.<br>
 	 * <br>
@@ -196,7 +200,8 @@ public class RecordingProperties {
 	 * Defines the layout to be used in the recording.<br>
 	 * Will only have effect if
 	 * {@link io.openvidu.java.client.RecordingProperties.Builder#outputMode(Recording.OutputMode)}
-	 * has been called with value {@link Recording.OutputMode#COMPOSED}.<br>
+	 * has been called with value {@link Recording.OutputMode#COMPOSED} or
+	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START}.<br>
 	 * <br>
 	 * 
 	 * Default to {@link RecordingLayout#BEST_FIT}
@@ -221,7 +226,8 @@ public class RecordingProperties {
 	 * Will only have effect if
 	 * {@link io.openvidu.java.client.RecordingProperties.Builder#outputMode(Recording.OutputMode)}
 	 * has been called with value
-	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED}. For
+	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} or
+	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START}. For
 	 * {@link io.openvidu.java.client.Recording.OutputMode#INDIVIDUAL} all
 	 * individual video files will have the native resolution of the published
 	 * stream.<br>

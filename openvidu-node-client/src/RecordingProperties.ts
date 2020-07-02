@@ -37,13 +37,13 @@ export interface RecordingProperties {
 
     /**
      * The layout to be used in the recording.<br>
-     * Will only have effect if [[RecordingProperties.outputMode]] is `COMPOSED`
+     * Will only have effect if [[RecordingProperties.outputMode]] is `COMPOSED` or `COMPOSED_QUICK_START`
      */
     recordingLayout?: RecordingLayout;
 
     /**
      * The relative path to the specific custom layout you want to use.<br>
-     * Will only have effect if [[RecordingProperties.outputMode]] is `COMPOSED` and [[RecordingProperties.recordingLayout]] is `CUSTOM`<br>
+     * Will only have effect if [[RecordingProperties.outputMode]] is `COMPOSED` (or `COMPOSED_QUICK_START`) and [[RecordingProperties.recordingLayout]] is `CUSTOM`<br>
      * See [Custom recording layouts](/en/stable/advanced-features/recording#custom-recording-layouts) to learn more
      */
     customLayout?: string;
@@ -52,7 +52,8 @@ export interface RecordingProperties {
      * Recording video file resolution. Must be a string with format "WIDTHxHEIGHT",
      * being both WIDTH and HEIGHT the number of pixels between 100 and 1999.<br>
      * Will only have effect if [[RecordingProperties.outputMode]]
-     * is set to [[Recording.OutputMode.COMPOSED]]. For [[Recording.OutputMode.INDIVIDUAL]] all
+     * is set to [[Recording.OutputMode.COMPOSED]] or [[Recording.OutputMode.COMPOSED_QUICK_START]].
+     * For [[Recording.OutputMode.INDIVIDUAL]] all
      * individual video files will have the native resolution of the published stream
      */
     resolution?: string;

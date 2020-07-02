@@ -99,7 +99,8 @@ public class SessionProperties {
 		 * Default value is {@link RecordingLayout#BEST_FIT}<br>
 		 * <br>
 		 * Recording layouts are only applicable to recordings with OutputMode
-		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED}
+		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} or
+		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START}
 		 */
 		public SessionProperties.Builder defaultRecordingLayout(RecordingLayout layout) {
 			this.defaultRecordingLayout = layout;
@@ -116,7 +117,8 @@ public class SessionProperties {
 		 * <br>
 		 * 
 		 * Custom layouts are only applicable to recordings with OutputMode
-		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} and
+		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} (or 
+		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START}) and
 		 * RecordingLayout {@link io.openvidu.java.client.RecordingLayout#CUSTOM}
 		 */
 		public SessionProperties.Builder defaultCustomLayout(String path) {
@@ -195,7 +197,8 @@ public class SessionProperties {
 	 * {@link io.openvidu.java.client.RecordingProperties.Builder#recordingLayout(RecordingLayout)}
 	 * with any other value.<br>
 	 * Recording layouts are only applicable to recordings with OutputMode
-	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED}
+	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} or
+	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START}
 	 */
 	public RecordingLayout defaultRecordingLayout() {
 		return this.defaultRecordingLayout;
@@ -209,7 +212,8 @@ public class SessionProperties {
 	 * {@link io.openvidu.java.client.RecordingProperties.Builder#customLayout(String)}
 	 * with any other value.<br>
 	 * Custom layouts are only applicable to recordings with OutputMode
-	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} and
+	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} (or
+	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START}) and
 	 * RecordingLayout {@link io.openvidu.java.client.RecordingLayout#CUSTOM}
 	 */
 	public String defaultCustomLayout() {

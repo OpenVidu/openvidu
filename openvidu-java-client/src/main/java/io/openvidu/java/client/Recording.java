@@ -230,7 +230,7 @@ public class Recording {
 
 	/**
 	 * Resolution of the video file. Only defined if OutputMode of the Recording is
-	 * set to {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED}
+	 * set to {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} or {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START}
 	 */
 	public String getResolution() {
 		return this.recordingProperties.resolution();
