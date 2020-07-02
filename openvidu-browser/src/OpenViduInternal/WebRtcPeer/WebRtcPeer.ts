@@ -49,11 +49,11 @@ export class WebRtcPeer {
 
     private candidategatheringdone = false;
 
-    constructor(private configuration: WebRtcPeerConfiguration) {
+    constructor(protected configuration: WebRtcPeerConfiguration) {
         this.configuration.iceServers = (!!this.configuration.iceServers && this.configuration.iceServers.length > 0) ? this.configuration.iceServers : freeice();
 
         this.pc = new RTCPeerConnection({ iceServers: this.configuration.iceServers });
-        this.id = !!configuration.id ? configuration.id : uuid.v4();
+        this.id = !!configuration.id ? configuration.id : this.generateUniqueId();
 
         this.pc.onicecandidate = event => {
             if (!!event.candidate) {
@@ -71,7 +71,8 @@ export class WebRtcPeer {
         this.pc.onsignalingstatechange = () => {
             if (this.pc.signalingState === 'stable') {
                 while (this.iceCandidateList.length > 0) {
-                    this.pc.addIceCandidate(<RTCIceCandidate>this.iceCandidateList.shift());
+                    let candidate = this.iceCandidateList.shift();
+                    this.pc.addIceCandidate(<RTCIceCandidate>candidate);
                 }
             }
         };
@@ -206,23 +207,32 @@ export class WebRtcPeer {
             if (this.pc.signalingState === 'closed') {
                 reject('RTCPeerConnection is closed');
             }
-            if (platform['isIonicIos']) {
-                // Ionic iOS platform
-                if (needsTimeoutOnProcessAnswer) {
-                    // 400 ms have not elapsed yet since first remote stream triggered Stream#initWebRtcPeerReceive
-                    setTimeout(() => {
-                        logger.info('setRemoteDescription run after timeout for Ionic iOS device');
-                        this.pc.setRemoteDescription(new RTCSessionDescription(answer)).then(() => resolve()).catch(error => reject(error));
-                    }, 250);
-                } else {
-                    // 400 ms have elapsed
-                    this.pc.setRemoteDescription(new RTCSessionDescription(answer)).then(() => resolve()).catch(error => reject(error));
-                }
-            } else {
-                // Rest of platforms
-                this.pc.setRemoteDescription(answer).then(() => resolve()).catch(error => reject(error));
-            }
+
+            this.setRemoteDescription(answer, needsTimeoutOnProcessAnswer, resolve, reject);
+
         });
+    }
+
+    /**
+     * @hidden
+     */
+    setRemoteDescription(answer: RTCSessionDescriptionInit, needsTimeoutOnProcessAnswer: boolean, resolve: (value?: string | PromiseLike<string> | undefined) => void, reject: (reason?: any) => void) {
+        if (platform['isIonicIos']) {
+            // Ionic iOS platform
+            if (needsTimeoutOnProcessAnswer) {
+                // 400 ms have not elapsed yet since first remote stream triggered Stream#initWebRtcPeerReceive
+                setTimeout(() => {
+                    logger.info('setRemoteDescription run after timeout for Ionic iOS device');
+                    this.pc.setRemoteDescription(new RTCSessionDescription(answer)).then(() => resolve()).catch(error => reject(error));
+                }, 250);
+            } else {
+                // 400 ms have elapsed
+                this.pc.setRemoteDescription(new RTCSessionDescription(answer)).then(() => resolve()).catch(error => reject(error));
+            }
+        } else {
+            // Rest of platforms
+            this.pc.setRemoteDescription(answer).then(() => resolve()).catch(error => reject(error));
+        }
     }
 
     /**
@@ -279,6 +289,13 @@ export class WebRtcPeer {
                     break;
             }
         }
+    }
+
+    /**
+     * @hidden
+     */
+    generateUniqueId(): string {
+        return uuid.v4();
     }
 
 }

@@ -133,8 +133,8 @@ export class Stream extends EventDispatcher {
      */
     filter: Filter;
 
-    private webRtcPeer: WebRtcPeer;
-    private mediaStream: MediaStream;
+    protected webRtcPeer: WebRtcPeer;
+    protected mediaStream: MediaStream;
     private webRtcStats: WebRtcStats;
 
     private isSubscribeToRemote = false;
@@ -964,7 +964,10 @@ export class Stream extends EventDispatcher {
         });
     }
 
-    private remotePeerSuccessfullyEstablished(): void {
+    /**
+     * @hidden
+     */
+    remotePeerSuccessfullyEstablished(): void {
         this.mediaStream = new MediaStream();
         let receiver: RTCRtpReceiver;
         for (receiver of this.webRtcPeer.pc.getReceivers()) {

@@ -2,16 +2,19 @@
 var chromeMediaSource = 'screen';
 var sourceId;
 var screenCallback;
-var isFirefox = typeof window.InstallTrigger !== 'undefined';
-var isOpera = !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0;
-var isChrome = !!window.chrome && !isOpera;
 
-window.addEventListener('message', function (event) {
-    if (event.origin != window.location.origin) {
-        return;
-    }
-    onMessageCallback(event.data);
-});
+if(typeof window !== 'undefined' && typeof navigator !== 'undefined' && typeof navigator.userAgent !== 'undefined'){
+    var isFirefox = typeof window.InstallTrigger !== 'undefined';
+    var isOpera = !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0;
+    var isChrome = !!window.chrome && !isOpera;
+
+    window.addEventListener('message', function (event) {
+        if (event.origin != window.location.origin) {
+            return;
+        }
+        onMessageCallback(event.data);
+    });
+}
 
 // and the function that handles received messages
 function onMessageCallback(data) {
@@ -148,7 +151,7 @@ function getScreenConstraints(callback, captureSourceIdWithAudio) {
         return;
     }
 
-    // this statement sets gets 'sourceId" and sets "chromeMediaSourceId" 
+    // this statement sets gets 'sourceId" and sets "chromeMediaSourceId"
     if (chromeMediaSource == 'desktop') {
         screen_constraints.mandatory.chromeMediaSourceId = sourceId;
     }

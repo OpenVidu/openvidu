@@ -67,7 +67,7 @@ export class Publisher extends StreamManager {
     session: Session; // Initialized by Session.publish(Publisher)
 
     private accessDenied = false;
-    private properties: PublisherProperties;
+    protected properties: PublisherProperties;
     private permissionDialogTimeout: NodeJS.Timer;
 
     /**
@@ -385,19 +385,7 @@ export class Publisher extends StreamManager {
                     mediaStream.getVideoTracks()[0].enabled = enabled;
                 }
 
-                this.videoReference = document.createElement('video');
-
-                if (platform.name === 'Safari') {
-                    this.videoReference.setAttribute('playsinline', 'true');
-                }
-
-                this.stream.setMediaStream(mediaStream);
-
-                if (!!this.firstVideoElement) {
-                    this.createVideoElement(this.firstVideoElement.targetElement, <VideoInsertMode>this.properties.insertMode);
-                }
-
-                this.videoReference.srcObject = mediaStream;
+                this.initializeVideoReference(mediaStream);
 
                 if (!this.stream.displayMyRemote()) {
                     // When we are subscribed to our remote we don't still set the MediaStream object in the video elements to
@@ -443,7 +431,7 @@ export class Publisher extends StreamManager {
                             // Rest of platforms
                             // With no screen share, video dimension can be set directly from MediaStream (getSettings)
                             // Orientation must be checked for mobile devices (width and height are reversed)
-                            const { width, height } = mediaStream.getVideoTracks()[0].getSettings();
+                            const { width, height } = this.getVideoDimensions(mediaStream);
 
                             if ((platform.os!!.family === 'iOS' || platform.os!!.family === 'Android') && (window.innerHeight > window.innerWidth)) {
                                 // Mobile portrait mode
@@ -669,10 +657,36 @@ export class Publisher extends StreamManager {
     /**
      * @hidden
      */
+    getVideoDimensions(mediaStream: MediaStream): MediaTrackSettings {
+        return mediaStream.getVideoTracks()[0].getSettings();
+    }
+
+    /**
+     * @hidden
+     */
     reestablishStreamPlayingEvent() {
         if (this.ee.getListeners('streamPlaying').length > 0) {
             this.addPlayEventToFirstVideo();
         }
+    }
+
+    /**
+     * @hidden
+     */
+    initializeVideoReference(mediaStream: MediaStream) {
+        this.videoReference = document.createElement('video');
+
+        if (platform.name === 'Safari') {
+            this.videoReference.setAttribute('playsinline', 'true');
+        }
+
+        this.stream.setMediaStream(mediaStream);
+
+        if (!!this.firstVideoElement) {
+            this.createVideoElement(this.firstVideoElement.targetElement, <VideoInsertMode>this.properties.insertMode);
+        }
+
+        this.videoReference.srcObject = mediaStream;
     }
 
 
