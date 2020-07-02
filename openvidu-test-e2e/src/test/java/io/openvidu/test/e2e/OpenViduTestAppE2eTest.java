@@ -126,6 +126,7 @@ public class OpenViduTestAppE2eTest {
 
 	private static final Logger log = LoggerFactory.getLogger(OpenViduTestAppE2eTest.class);
 	private static final CommandLineExecutor commandLine = new CommandLineExecutor();
+	private static final String RECORDING_IMAGE = "openvidu/openvidu-recording";
 
 	MyUser user;
 	Collection<MyUser> otherUsers = new ArrayList<>();
@@ -255,6 +256,7 @@ public class OpenViduTestAppE2eTest {
 			}
 		});
 		if (isRecordingTest) {
+			removeAllRecordingContiners();
 			try {
 				FileUtils.cleanDirectory(new File("/opt/openvidu/recordings"));
 			} catch (IOException e) {
@@ -1231,6 +1233,70 @@ public class OpenViduTestAppE2eTest {
 		Thread.sleep(500);
 
 		gracefullyLeaveParticipants(1);
+	}
+
+	@Test
+	@DisplayName("Remote composed quick start record")
+	void remoteComposedQuickStartRecordTest() throws Exception {
+		isRecordingTest = true;
+
+		setupBrowser("chrome");
+
+		log.info("Remote composed quick start record");
+
+		final String sessionName = "COMPOSED_QUICK_START_RECORDED_SESSION";
+
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.id("session-name-input-0")).clear();
+		user.getDriver().findElement(By.id("session-name-input-0")).sendKeys(sessionName);
+
+		user.getDriver().findElement(By.id("session-settings-btn-0")).click();
+		Thread.sleep(1000);
+		user.getDriver().findElement(By.id("output-mode-select")).click();
+		Thread.sleep(500);
+		user.getDriver().findElement(By.id("option-COMPOSED_QUICK_START")).click();
+		Thread.sleep(500);
+		user.getDriver().findElement(By.id("save-btn")).click();
+		Thread.sleep(1000);
+
+		// Join the subscriber user to the session
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .publish-checkbox")).click();
+		user.getDriver().findElement(By.className("join-btn")).click();
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
+
+		// Check the recording container is up and running but no ongoing recordings
+		checkDockerContainerRunning(RECORDING_IMAGE, 1);
+		Assert.assertEquals("Wrong number of recordings found", 0, OV.listRecordings().size());
+
+		// Join the publisher user to the session
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.id("session-name-input-1")).clear();
+		user.getDriver().findElement(By.id("session-name-input-1")).sendKeys(sessionName);
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .join-btn")).click();
+
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
+
+		// Start recording
+		OV.fetch();
+		String recId = OV.startRecording(sessionName).getId();
+		user.getEventManager().waitUntilEventReaches("recordingStarted", 2);
+		checkDockerContainerRunning("openvidu/openvidu-recording", 1);
+
+		Thread.sleep(1000);
+
+		Assert.assertEquals("Wrong number of recordings found", 1, OV.listRecordings().size());
+		OV.stopRecording(recId);
+		user.getEventManager().waitUntilEventReaches("recordingStopped", 2);
+		checkDockerContainerRunning("openvidu/openvidu-recording", 1);
+
+		Assert.assertEquals("Wrong number of sessions", 1, OV.getActiveSessions().size());
+		Session session = OV.getActiveSessions().get(0);
+		session.close();
+
+		checkDockerContainerRunning("openvidu/openvidu-recording", 0);
 	}
 
 	@Test
@@ -2928,7 +2994,7 @@ public class OpenViduTestAppE2eTest {
 			Assert.assertEquals("Wrong number of properties in event 'recordingStatusChanged'", 12 + 1,
 					event.keySet().size());
 			Assert.assertEquals("Wrong recording status in webhook event", "ready", event.get("status").getAsString());
-			Assert.assertTrue("Wrong recording outputMode in webhook event", event.get("size").getAsLong() > 0);
+			Assert.assertTrue("Wrong recording size in webhook event", event.get("size").getAsLong() > 0);
 			Assert.assertTrue("Wrong recording outputMode in webhook event", event.get("duration").getAsLong() > 0);
 			Assert.assertEquals("Wrong recording reason in webhook event", "sessionClosedByServer",
 					event.get("reason").getAsString());
@@ -3461,6 +3527,16 @@ public class OpenViduTestAppE2eTest {
 			e.printStackTrace();
 		}
 		this.startKms();
+	}
+
+	private void checkDockerContainerRunning(String imageName, int amount) {
+		int number = Integer.parseInt(commandLine.executeCommand("docker ps | grep " + imageName + " | wc -l"));
+		Assert.assertEquals("Wrong number of Docker containers for image " + imageName + " running", amount, number);
+	}
+
+	private void removeAllRecordingContiners() {
+		commandLine.executeCommand("docker ps -a | awk '{ print $1,$2 }' | grep " + RECORDING_IMAGE
+				+ " | awk '{print $1 }' | xargs -I {} docker rm -f {}");
 	}
 
 }

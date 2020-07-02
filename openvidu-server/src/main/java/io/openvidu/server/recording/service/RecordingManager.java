@@ -302,7 +302,7 @@ public class RecordingManager {
 		}
 	}
 
-	public Recording stopRecording(Session session, String recordingId, EndReason reason, boolean hasSessionEnded) {
+	public Recording stopRecording(Session session, String recordingId, EndReason reason) {
 		Recording recording;
 		if (session == null) {
 			recording = this.startedRecordings.get(recordingId);
@@ -316,14 +316,13 @@ public class RecordingManager {
 
 		switch (recording.getOutputMode()) {
 		case COMPOSED:
-			recording = this.composedRecordingService.stopRecording(session, recording, reason, hasSessionEnded);
+			recording = this.composedRecordingService.stopRecording(session, recording, reason);
 			break;
 		case COMPOSED_QUICK_START:
-			recording = this.composedQuickStartRecordingService.stopRecording(session, recording, reason,
-					hasSessionEnded);
+			recording = this.composedQuickStartRecordingService.stopRecording(session, recording, reason);
 			break;
 		case INDIVIDUAL:
-			recording = this.singleStreamRecordingService.stopRecording(session, recording, reason, hasSessionEnded);
+			recording = this.singleStreamRecordingService.stopRecording(session, recording, reason);
 			break;
 		}
 		this.abortAutomaticRecordingStopThread(session, reason);
@@ -335,8 +334,7 @@ public class RecordingManager {
 		recording = this.sessionsRecordings.get(session.getSessionId());
 		switch (recording.getOutputMode()) {
 		case COMPOSED:
-			recording = this.composedRecordingService.stopRecording(session, recording, reason, kmsDisconnectionTime,
-					true);
+			recording = this.composedRecordingService.stopRecording(session, recording, reason, kmsDisconnectionTime);
 			if (recording.hasVideo()) {
 				// Evict the recorder participant if composed recording with video
 				this.sessionManager.evictParticipant(
@@ -346,7 +344,7 @@ public class RecordingManager {
 			break;
 		case COMPOSED_QUICK_START:
 			recording = this.composedQuickStartRecordingService.stopRecording(session, recording, reason,
-					kmsDisconnectionTime, true);
+					kmsDisconnectionTime);
 			if (recording.hasVideo()) {
 				// Evict the recorder participant if composed recording with video
 				this.sessionManager.evictParticipant(
@@ -557,7 +555,7 @@ public class RecordingManager {
 									log.info(
 											"Automatic stopping recording {}. There are users connected to session {}, but no one is publishing",
 											recordingId, session.getSessionId());
-									this.stopRecording(session, recordingId, EndReason.automaticStop, true);
+									this.stopRecording(session, recordingId, EndReason.automaticStop);
 								}
 							} finally {
 								if (!alreadyUnlocked) {

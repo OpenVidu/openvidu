@@ -90,7 +90,7 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
     }
 
     @Override
-    protected Recording stopRecordingWithVideo(Session session, Recording recording, EndReason reason, boolean hasSessionEnded) {
+    protected Recording stopRecordingWithVideo(Session session, Recording recording, EndReason reason) {
         log.info("Stopping COMPOSED_QUICK_START ({}) recording {} of session {}. Reason: {}",
                 recording.hasAudio() ? "video + audio" : "audio-only", recording.getId(), recording.getSessionId(),
                 RecordingManager.finalReason(reason));
@@ -106,31 +106,12 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
                     recording.getId());
         }
 
-        if (hasSessionEnded) {
-            // Gracefully stop ffmpeg process
-            try {
-                dockerManager.runCommandInContainer(containerId, "./composed_quick_start.sh --stop-recording", 10);
-            } catch (InterruptedException e1) {
-                e1.printStackTrace();
-            }
-
-            try {
-                dockerManager.removeDockerContainer(containerId, true);
-            } catch (Exception e) {
-                failRecordingCompletion(recording, containerId, new OpenViduException(OpenViduException.Code.RECORDING_COMPLETION_ERROR_CODE,
-                        "Can't remove COMPOSED_QUICK_START recording container from session" + session.getSessionId()));
-            }
-
-            containers.remove(containerId);
-            sessionsContainers.remove(recording.getSessionId());
-        } else {
-            try {
-                dockerManager.runCommandInContainer(containerId, "./composed_quick_start.sh --stop-recording", 10);
-            } catch (InterruptedException e1) {
-                cleanRecordingMaps(recording);
-                log.error("Error stopping recording for session id: {}", session.getSessionId());
-                e1.printStackTrace();
-            }
+        try {
+            dockerManager.runCommandInContainer(containerId, "./composed_quick_start.sh --stop-recording", 10);
+        } catch (InterruptedException e1) {
+            cleanRecordingMaps(recording);
+            log.error("Error stopping recording for session id: {}", session.getSessionId());
+            e1.printStackTrace();
         }
 
         recording = updateRecordingAttributes(recording);

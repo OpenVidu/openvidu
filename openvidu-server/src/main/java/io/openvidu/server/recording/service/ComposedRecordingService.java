@@ -102,18 +102,18 @@ public class ComposedRecordingService extends RecordingService {
 	}
 
 	@Override
-	public Recording stopRecording(Session session, Recording recording, EndReason reason, boolean hasSessionEnded) {
+	public Recording stopRecording(Session session, Recording recording, EndReason reason) {
 		recording = this.sealRecordingMetadataFileAsStopped(recording);
 		if (recording.hasVideo()) {
-			return this.stopRecordingWithVideo(session, recording, reason, hasSessionEnded);
+			return this.stopRecordingWithVideo(session, recording, reason);
 		} else {
 			return this.stopRecordingAudioOnly(session, recording, reason, 0);
 		}
 	}
 
-	public Recording stopRecording(Session session, Recording recording, EndReason reason, long kmsDisconnectionTime, boolean hasSessionEnded) {
+	public Recording stopRecording(Session session, Recording recording, EndReason reason, long kmsDisconnectionTime) {
 		if (recording.hasVideo()) {
-			return this.stopRecordingWithVideo(session, recording, reason, hasSessionEnded);
+			return this.stopRecordingWithVideo(session, recording, reason);
 		} else {
 			return this.stopRecordingAudioOnly(session, recording, reason, kmsDisconnectionTime);
 		}
@@ -228,7 +228,7 @@ public class ComposedRecordingService extends RecordingService {
 		return recording;
 	}
 
-	protected Recording stopRecordingWithVideo(Session session, Recording recording, EndReason reason, boolean hasSessionEnded) {
+	protected Recording stopRecordingWithVideo(Session session, Recording recording, EndReason reason) {
 
 		log.info("Stopping composed ({}) recording {} of session {}. Reason: {}",
 				recording.hasAudio() ? "video + audio" : "audio-only", recording.getId(), recording.getSessionId(),

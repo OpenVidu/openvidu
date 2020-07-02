@@ -32,7 +32,6 @@ import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
-import io.openvidu.java.client.Recording;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.kurento.jsonrpc.message.Request;
 import org.slf4j.Logger;
@@ -48,6 +47,7 @@ import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.OpenViduRole;
+import io.openvidu.java.client.Recording;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.server.cdr.CDREventRecording;
 import io.openvidu.server.config.OpenviduConfig;
@@ -543,21 +543,20 @@ public abstract class SessionManager {
 
 	public void closeSessionAndEmptyCollections(Session session, EndReason reason, boolean stopRecording) {
 
-		if (openviduConfig.isRecordingModuleEnabled() && stopRecording
-				&& this.recordingManager.sessionIsBeingRecorded(session.getSessionId())) {
-			try {
-				recordingManager.stopRecording(session, null, RecordingManager.finalReason(reason), true);
-			} catch (OpenViduException e) {
-				log.error("Error stopping recording of session {}: {}", session.getSessionId(), e.getMessage());
+		if (openviduConfig.isRecordingModuleEnabled()) {
+			if (stopRecording && this.recordingManager.sessionIsBeingRecorded(session.getSessionId())) {
+				try {
+					recordingManager.stopRecording(session, null, RecordingManager.finalReason(reason));
+				} catch (OpenViduException e) {
+					log.error("Error stopping recording of session {}: {}", session.getSessionId(), e.getMessage());
+				}
 			}
-		} else if(openviduConfig.isRecordingModuleEnabled() && stopRecording
-				&& !this.recordingManager.sessionIsBeingRecorded(session.getSessionId())
-				&& session.getSessionProperties().defaultOutputMode().equals(Recording.OutputMode.COMPOSED_QUICK_START)
-				&& this.recordingManager.getStartedRecording(session.getSessionId()) != null) {
-			try {
-				this.recordingManager.stopComposedQuickStartContainer(session, reason);
-			} catch (OpenViduException e) {
-				log.error("Error stopping COMPOSED_QUICK_START container of session {}", session.getSessionId());
+			if (Recording.OutputMode.COMPOSED_QUICK_START.equals(session.getSessionProperties().defaultOutputMode())) {
+				try {
+					this.recordingManager.stopComposedQuickStartContainer(session, reason);
+				} catch (OpenViduException e) {
+					log.error("Error stopping COMPOSED_QUICK_START container of session {}", session.getSessionId());
+				}
 			}
 		}
 
