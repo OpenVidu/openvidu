@@ -26,6 +26,7 @@ collect_basic_information() {
   DOCKER_COMPOSE_VERSION=$(docker-compose version --short)
   OV_FOLDER="${PWD}"
   OV_VERSION=$(grep 'Openvidu Version:' "${OV_FOLDER}/docker-compose.yml" | awk '{ print $4 }')
+  CONTAINERS=$(docker ps | awk '{if(NR>1) print $NF}')
 
   if [ ! -z "$(grep -E '^        image: openvidu/openvidu-call:.*$' "${OV_FOLDER}/docker-compose.override.yml" | tr -d '[:space:]')" ]; then
     OV_CALL_VERSION=$(grep -E 'Openvidu-Call Version:' "${OV_FOLDER}/docker-compose.override.yml" | awk '{ print $4 }')
@@ -142,25 +143,40 @@ generate_report() {
     printf '\n'
     printf '\n'
     printf "\n  ======================================="
-    printf "\n  =            DOCKER LOGS              ="
+    printf "\n  =                LOGS                 ="
     printf "\n  ======================================="
-    printf '\n'
-    printf '\n  ================ PROXY ================'
-    printf '\n'
-    printf '\n'
 
-    docker-compose logs nginx
+    for CONTAINER in $CONTAINERS
+    do
+      printf '\n'
+      printf "\n  ---------------------------------------"
+      printf "\n  %s" $CONTAINER
+      printf "\n  ---------------------------------------"
+      printf '\n'
+      docker logs $CONTAINER
+      printf "\n  ---------------------------------------"
+      printf '\n'
+      printf '\n'
+    done
 
-    printf '\n'
-    printf '\n'
-    printf '\n  =========== OPENVIDU SERVER ============'
-    printf '\n'
-    printf '\n'
-    printf '\n'
+    printf "\n  ======================================="
+    printf "\n  =       CONTAINER ENVS VARIABLES      ="
+    printf "\n  ======================================="
 
-    docker-compose logs openvidu-server
+    for CONTAINER in $CONTAINERS
+    do
+      printf '\n'
+      printf "\n  ======================================="
+      printf "\n  %s" $CONTAINER
+      printf "\n  ---------------------------------------"
+      printf '\n'
+      docker exec $CONTAINER env
+      printf "\n  ---------------------------------------"
+      printf '\n'
+      printf '\n'
+    done
 
-  } >> "${REPORT_OUPUT}"
+  } >> "${REPORT_OUPUT}" 2>&1
 
   printf "\n  Generation of the report completed with success"
   printf "\n  You can get your report at path '%s'" "${REPORT_OUPUT}"
