@@ -1246,6 +1246,8 @@ public class OpenViduTestAppE2eTest {
 
 		final String sessionName = "COMPOSED_QUICK_START_RECORDED_SESSION";
 
+		// 1. MANUAL mode and recording explicitly stopped
+
 		user.getDriver().findElement(By.id("add-user-btn")).click();
 		user.getDriver().findElement(By.id("session-name-input-0")).clear();
 		user.getDriver().findElement(By.id("session-name-input-0")).sendKeys(sessionName);
@@ -1294,6 +1296,40 @@ public class OpenViduTestAppE2eTest {
 
 		Assert.assertEquals("Wrong number of sessions", 1, OV.getActiveSessions().size());
 		Session session = OV.getActiveSessions().get(0);
+		session.close();
+
+		checkDockerContainerRunning("openvidu/openvidu-recording", 0);
+
+		// 2. ALWAYS mode and recording stopped by session close up
+		user.getDriver().findElement(By.id("remove-all-users-btn")).click();
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.id("session-name-input-0")).clear();
+		user.getDriver().findElement(By.id("session-name-input-0")).sendKeys(sessionName);
+
+		user.getDriver().findElement(By.id("session-settings-btn-0")).click();
+		Thread.sleep(1000);
+		user.getDriver().findElement(By.id("recording-mode-select")).click();
+		Thread.sleep(500);
+		user.getDriver().findElement(By.id("option-ALWAYS")).click();
+		Thread.sleep(500);
+		user.getDriver().findElement(By.id("output-mode-select")).click();
+		Thread.sleep(500);
+		user.getDriver().findElement(By.id("option-COMPOSED_QUICK_START")).click();
+		Thread.sleep(500);
+		user.getDriver().findElement(By.id("save-btn")).click();
+		Thread.sleep(1000);
+
+		user.getDriver().findElement(By.className("join-btn")).click();
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 5);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 2);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 3);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 3);
+		user.getEventManager().waitUntilEventReaches("recordingStarted", 3);
+
+		checkDockerContainerRunning("openvidu/openvidu-recording", 1);
+
+		OV.fetch();
+		session = OV.getActiveSessions().get(0);
 		session.close();
 
 		checkDockerContainerRunning("openvidu/openvidu-recording", 0);
