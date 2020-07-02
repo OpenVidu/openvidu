@@ -74,7 +74,7 @@ services:
             - MAX_PORT=65535
 
     nginx:
-        image: openvidu/openvidu-proxy:3.0.0-beta1
+        image: openvidu/openvidu-proxy:3.0.0
         restart: on-failure
         network_mode: host
         volumes:
