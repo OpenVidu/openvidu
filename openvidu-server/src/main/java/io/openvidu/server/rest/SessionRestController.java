@@ -544,11 +544,12 @@ public class SessionRestController {
 		}
 
 		// If outputMode is COMPOSED when defaultOutputMode is COMPOSED_QUICK_START,
-		// change outputMode to COMPOSED_QUICK_START
+		// change outputMode to COMPOSED_QUICK_START (and vice versa)
 		OutputMode defaultOutputMode = session.getSessionProperties().defaultOutputMode();
 		if (OutputMode.COMPOSED_QUICK_START.equals(defaultOutputMode) && OutputMode.COMPOSED.equals(finalOutputMode)) {
 			finalOutputMode = OutputMode.COMPOSED_QUICK_START;
-		} else if (OutputMode.COMPOSED.equals(defaultOutputMode) && OutputMode.COMPOSED_QUICK_START.equals(finalOutputMode)) {
+		} else if (OutputMode.COMPOSED.equals(defaultOutputMode)
+				&& OutputMode.COMPOSED_QUICK_START.equals(finalOutputMode)) {
 			finalOutputMode = OutputMode.COMPOSED;
 		}
 
