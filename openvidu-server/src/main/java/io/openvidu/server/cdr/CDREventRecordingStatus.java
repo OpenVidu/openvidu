@@ -23,6 +23,7 @@ import io.openvidu.java.client.Recording.Status;
 import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.server.core.EndReason;
 import io.openvidu.server.recording.Recording;
+import io.openvidu.server.utils.RecordingUtils;
 
 public class CDREventRecordingStatus extends CDREventEnd {
 
@@ -42,8 +43,7 @@ public class CDREventRecordingStatus extends CDREventEnd {
 		json.addProperty("id", this.recording.getId());
 		json.addProperty("name", this.recording.getName());
 		json.addProperty("outputMode", this.recording.getOutputMode().name());
-		if (RecordingUtils.IS_COMPOSED(this.recording.getOutputMode())
-				&& this.recording.hasVideo()) {
+		if (RecordingUtils.IS_COMPOSED(this.recording.getOutputMode()) && this.recording.hasVideo()) {
 			json.addProperty("resolution", this.recording.getResolution());
 			json.addProperty("recordingLayout", this.recording.getRecordingLayout().name());
 			if (RecordingLayout.CUSTOM.equals(this.recording.getRecordingLayout())

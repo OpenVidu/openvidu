@@ -22,6 +22,7 @@ import com.google.gson.JsonObject;
 import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.server.core.EndReason;
 import io.openvidu.server.recording.Recording;
+import io.openvidu.server.utils.RecordingUtils;
 
 public class CDREventRecording extends CDREventEnd {
 
