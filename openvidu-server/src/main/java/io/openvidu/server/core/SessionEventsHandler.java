@@ -437,18 +437,19 @@ public class SessionEventsHandler {
 	}
 
 	public void sendRecordingStartedNotification(Session session, Recording recording) {
+		if (recording.recordingNotificationSent.compareAndSet(false, true)) {
+			// Filter participants by roles according to "OPENVIDU_RECORDING_NOTIFICATION"
+			Set<Participant> filteredParticipants = this.filterParticipantsByRole(
+					this.openviduConfig.getRolesFromRecordingNotification(), session.getParticipants());
 
-		// Filter participants by roles according to "OPENVIDU_RECORDING_NOTIFICATION"
-		Set<Participant> filteredParticipants = this.filterParticipantsByRole(
-				this.openviduConfig.getRolesFromRecordingNotification(), session.getParticipants());
+			JsonObject params = new JsonObject();
+			params.addProperty(ProtocolElements.RECORDINGSTARTED_ID_PARAM, recording.getId());
+			params.addProperty(ProtocolElements.RECORDINGSTARTED_NAME_PARAM, recording.getName());
 
-		JsonObject params = new JsonObject();
-		params.addProperty(ProtocolElements.RECORDINGSTARTED_ID_PARAM, recording.getId());
-		params.addProperty(ProtocolElements.RECORDINGSTARTED_NAME_PARAM, recording.getName());
-
-		for (Participant p : filteredParticipants) {
-			rpcNotificationService.sendNotification(p.getParticipantPrivateId(),
-					ProtocolElements.RECORDINGSTARTED_METHOD, params);
+			for (Participant p : filteredParticipants) {
+				rpcNotificationService.sendNotification(p.getParticipantPrivateId(),
+						ProtocolElements.RECORDINGSTARTED_METHOD, params);
+			}
 		}
 	}
 

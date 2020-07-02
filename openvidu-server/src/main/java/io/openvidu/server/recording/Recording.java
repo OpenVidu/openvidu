@@ -17,6 +17,8 @@
 
 package io.openvidu.server.recording;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import com.google.gson.JsonObject;
 
 import io.openvidu.java.client.RecordingLayout;
@@ -37,6 +39,8 @@ public class Recording {
 	private boolean hasAudio = true;
 	private boolean hasVideo = true;
 	private RecordingProperties recordingProperties;
+
+	public AtomicBoolean recordingNotificationSent = new AtomicBoolean(false);
 
 	public Recording(String sessionId, String id, RecordingProperties recordingProperties) {
 		this.sessionId = sessionId;
