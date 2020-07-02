@@ -62,7 +62,7 @@ if [[ -z "${COMPOSED_QUICK_START_ACTION}" ]]; then
         echo "export DISPLAY_NUM=$DISPLAY_NUM" > /tmp/display_num
 
     } 2>&1 | tee -a /tmp/container-start.log
-    
+    zzz
     sleep infinity
 
 elif [[ "${COMPOSED_QUICK_START_ACTION}" == "--start-recording" ]]; then
@@ -168,7 +168,8 @@ elif [[ "${COMPOSED_QUICK_START_ACTION}" == "--stop-recording" ]]; then
     } 2>&1 | tee -a /tmp/container-stop-recording.log
 fi
 
-if [[ ${DEBUG_MODE} == "true" ]]; then
+if [[ ${DEBUG_MODE} == "true" && ! -z $VIDEO_ID ]]; then
+    export $(cat /tmp/display_num | xargs)
     [[ -f /tmp/container-start.log ]] && cp /tmp/container-start.log /recordings/$VIDEO_ID/$VIDEO_ID-container-start.log || echo "/tmp/container-start.log not found"
     [[ -f /tmp/container-start-recording.log ]] && cp /tmp/container-start-recording.log /recordings/$VIDEO_ID/$VIDEO_ID-container-start-recording.log || echo "/tmp/container-start-recording.log not found"
     [[ -f /tmp/container-stop-recording.log ]] && cp /tmp/container-stop-recording.log /recordings/$VIDEO_ID/$VIDEO_ID-container-stop-recording.log || echo "/tmp/container-stop-recording.log not found"
