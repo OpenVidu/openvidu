@@ -46,8 +46,7 @@ public class CDREventRecording extends CDREventEnd {
 		json.addProperty("id", this.recording.getId());
 		json.addProperty("name", this.recording.getName());
 		json.addProperty("outputMode", this.recording.getOutputMode().name());
-		if (io.openvidu.java.client.Recording.OutputMode.COMPOSED.equals(this.recording.getOutputMode())
-				&& this.recording.hasVideo()) {
+		if (RecordingUtils.IS_COMPOSED(this.recording.getOutputMode()) && this.recording.hasVideo()) {
 			json.addProperty("resolution", this.recording.getResolution());
 			json.addProperty("recordingLayout", this.recording.getRecordingLayout().name());
 			if (RecordingLayout.CUSTOM.equals(this.recording.getRecordingLayout())

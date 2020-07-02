@@ -76,7 +76,7 @@ import io.openvidu.server.utils.CustomFileManager;
 import io.openvidu.server.utils.DockerManager;
 import io.openvidu.server.utils.JsonUtils;
 import io.openvidu.server.utils.QuarantineKiller;
-import org.springframework.http.ResponseEntity;
+import io.openvidu.server.utils.RecordingUtils;
 
 public class RecordingManager {
 
@@ -161,8 +161,8 @@ public class RecordingManager {
 		this.dockerManager = new DockerManager();
 		this.composedRecordingService = new ComposedRecordingService(this, recordingDownloader, openviduConfig, cdr,
 				quarantineKiller);
-		this.composedQuickStartRecordingService = new ComposedQuickStartRecordingService(this, recordingDownloader, openviduConfig, cdr,
-				quarantineKiller);
+		this.composedQuickStartRecordingService = new ComposedQuickStartRecordingService(this, recordingDownloader,
+				openviduConfig, cdr, quarantineKiller);
 		this.singleStreamRecordingService = new SingleStreamRecordingService(this, recordingDownloader, openviduConfig,
 				cdr, quarantineKiller);
 
@@ -271,9 +271,9 @@ public class RecordingManager {
 
 						this.cdr.recordRecordingStarted(recording);
 						this.cdr.recordRecordingStatusChanged(recording, null, recording.getCreatedAt(),
-								io.openvidu.java.client.Recording.Status.started);
+								Status.started);
 
-						if (!(OutputMode.COMPOSED.equals(properties.outputMode()) && properties.hasVideo())) {
+						if (!(RecordingUtils.IS_COMPOSED(properties.outputMode()) && properties.hasVideo())) {
 							// Directly send recording started notification for all cases except for
 							// COMPOSED recordings with video (will be sent on first RECORDER subscriber)
 							this.sessionHandler.sendRecordingStartedNotification(session, recording);
@@ -319,7 +319,8 @@ public class RecordingManager {
 			recording = this.composedRecordingService.stopRecording(session, recording, reason, hasSessionEnded);
 			break;
 		case COMPOSED_QUICK_START:
-			recording = this.composedQuickStartRecordingService.stopRecording(session, recording, reason, hasSessionEnded);
+			recording = this.composedQuickStartRecordingService.stopRecording(session, recording, reason,
+					hasSessionEnded);
 			break;
 		case INDIVIDUAL:
 			recording = this.singleStreamRecordingService.stopRecording(session, recording, reason, hasSessionEnded);
@@ -334,7 +335,8 @@ public class RecordingManager {
 		recording = this.sessionsRecordings.get(session.getSessionId());
 		switch (recording.getOutputMode()) {
 		case COMPOSED:
-			recording = this.composedRecordingService.stopRecording(session, recording, reason, kmsDisconnectionTime, true);
+			recording = this.composedRecordingService.stopRecording(session, recording, reason, kmsDisconnectionTime,
+					true);
 			if (recording.hasVideo()) {
 				// Evict the recorder participant if composed recording with video
 				this.sessionManager.evictParticipant(
@@ -343,7 +345,8 @@ public class RecordingManager {
 			}
 			break;
 		case COMPOSED_QUICK_START:
-			recording = this.composedQuickStartRecordingService.stopRecording(session, recording, reason, kmsDisconnectionTime, true);
+			recording = this.composedQuickStartRecordingService.stopRecording(session, recording, reason,
+					kmsDisconnectionTime, true);
 			if (recording.hasVideo()) {
 				// Evict the recorder participant if composed recording with video
 				this.sessionManager.evictParticipant(
@@ -371,15 +374,14 @@ public class RecordingManager {
 				return;
 			}
 		}
-		if (io.openvidu.java.client.Recording.OutputMode.INDIVIDUAL.equals(recording.getOutputMode())) {
+		if (OutputMode.INDIVIDUAL.equals(recording.getOutputMode())) {
 			// Start new RecorderEndpoint for this stream
 			log.info("Starting new RecorderEndpoint in session {} for new stream of participant {}",
 					session.getSessionId(), participant.getParticipantPublicId());
 			final CountDownLatch startedCountDown = new CountDownLatch(1);
 			this.singleStreamRecordingService.startRecorderEndpointForPublisherEndpoint(session, recordingId, profile,
 					participant, startedCountDown);
-		} else if (io.openvidu.java.client.Recording.OutputMode.COMPOSED.equals(recording.getOutputMode())
-				&& !recording.hasVideo()) {
+		} else if (RecordingUtils.IS_COMPOSED(recording.getOutputMode()) && !recording.hasVideo()) {
 			// Connect this stream to existing Composite recorder
 			log.info("Joining PublisherEndpoint to existing Composite in session {} for new stream of participant {}",
 					session.getSessionId(), participant.getParticipantPublicId());
@@ -393,7 +395,7 @@ public class RecordingManager {
 			log.error("Cannot stop recording of existing stream {}. Session {} is not being recorded", streamId,
 					session.getSessionId());
 		}
-		if (io.openvidu.java.client.Recording.OutputMode.INDIVIDUAL.equals(recording.getOutputMode())) {
+		if (OutputMode.INDIVIDUAL.equals(recording.getOutputMode())) {
 			// Stop specific RecorderEndpoint for this stream
 			log.info("Stopping RecorderEndpoint in session {} for stream of participant {}", session.getSessionId(),
 					streamId);
@@ -408,8 +410,7 @@ public class RecordingManager {
 			} catch (InterruptedException e) {
 				log.error("Exception while waiting for state change", e);
 			}
-		} else if (io.openvidu.java.client.Recording.OutputMode.COMPOSED.equals(recording.getOutputMode())
-				&& !recording.hasVideo()) {
+		} else if (RecordingUtils.IS_COMPOSED(recording.getOutputMode()) && !recording.hasVideo()) {
 			// Disconnect this stream from existing Composite recorder
 			log.info("Removing PublisherEndpoint from Composite in session {} for stream of participant {}",
 					session.getSessionId(), streamId);
@@ -431,8 +432,7 @@ public class RecordingManager {
 	}
 
 	public Collection<Recording> getFinishedRecordings() {
-		return this.getAllRecordingsFromHost().stream()
-				.filter(recording -> recording.getStatus().equals(io.openvidu.java.client.Recording.Status.ready))
+		return this.getAllRecordingsFromHost().stream().filter(recording -> recording.getStatus().equals(Status.ready))
 				.collect(Collectors.toSet());
 	}
 
@@ -469,7 +469,7 @@ public class RecordingManager {
 		if (recording == null) {
 			return HttpStatus.NOT_FOUND;
 		}
-		if (io.openvidu.java.client.Recording.Status.stopped.equals(recording.getStatus())) {
+		if (Status.stopped.equals(recording.getStatus())) {
 			// Recording is being downloaded from remote host
 			log.warn("Cancelling ongoing download process of recording {}", recording.getId());
 			this.recordingDownloader.cancelDownload(recording.getId());
@@ -502,8 +502,7 @@ public class RecordingManager {
 				return null;
 			}
 			Recording recording = new Recording(json);
-			if (io.openvidu.java.client.Recording.Status.ready.equals(recording.getStatus())
-					|| io.openvidu.java.client.Recording.Status.failed.equals(recording.getStatus())) {
+			if (Status.ready.equals(recording.getStatus()) || Status.failed.equals(recording.getStatus())) {
 				recording.setUrl(getRecordingUrl(recording));
 			}
 			return recording;
@@ -517,7 +516,7 @@ public class RecordingManager {
 	}
 
 	private String getExtensionFromRecording(Recording recording) {
-		if (io.openvidu.java.client.Recording.OutputMode.INDIVIDUAL.equals(recording.getOutputMode())) {
+		if (OutputMode.INDIVIDUAL.equals(recording.getOutputMode())) {
 			return "zip";
 		} else if (recording.hasVideo()) {
 			return "mp4";

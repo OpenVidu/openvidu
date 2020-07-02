@@ -200,7 +200,7 @@ public class Session implements SessionInterface {
 		json.addProperty("mediaMode", this.sessionProperties.mediaMode().name());
 		json.addProperty("recordingMode", this.sessionProperties.recordingMode().name());
 		json.addProperty("defaultOutputMode", this.sessionProperties.defaultOutputMode().name());
-		if (Recording.OutputMode.COMPOSED.equals(this.sessionProperties.defaultOutputMode())) {
+		if (RecordingUtils.IS_COMPOSED(this.sessionProperties.defaultOutputMode())) {
 			json.addProperty("defaultRecordingLayout", this.sessionProperties.defaultRecordingLayout().name());
 			if (RecordingLayout.CUSTOM.equals(this.sessionProperties.defaultRecordingLayout())) {
 				json.addProperty("defaultCustomLayout", this.sessionProperties.defaultCustomLayout());

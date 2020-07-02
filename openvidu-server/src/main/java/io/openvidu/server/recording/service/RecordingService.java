@@ -35,6 +35,7 @@ import io.openvidu.server.recording.RecordingDownloader;
 import io.openvidu.server.utils.CommandExecutor;
 import io.openvidu.server.utils.CustomFileManager;
 import io.openvidu.server.utils.QuarantineKiller;
+import io.openvidu.server.utils.RecordingUtils;
 
 public abstract class RecordingService {
 
@@ -58,7 +59,8 @@ public abstract class RecordingService {
 
 	public abstract Recording startRecording(Session session, RecordingProperties properties) throws OpenViduException;
 
-	public abstract Recording stopRecording(Session session, Recording recording, EndReason reason, boolean hasSessionEnded);
+	public abstract Recording stopRecording(Session session, Recording recording, EndReason reason,
+			boolean hasSessionEnded);
 
 	/**
 	 * Generates metadata recording file (".recording.RECORDING_ID" JSON file to
@@ -131,8 +133,8 @@ public abstract class RecordingService {
 
 	/**
 	 * Returns a new available recording identifier (adding a number tag at the end
-	 * of the sessionId if it already exists) and rebuilds RecordinProperties object
-	 * to set the final value of "name" property
+	 * of the sessionId if it already exists) and rebuilds RecordingProperties
+	 * object to set the final value of "name" property
 	 */
 	protected PropertiesRecordingId setFinalRecordingNameAndGetFreeRecordingId(Session session,
 			RecordingProperties properties) {
@@ -142,8 +144,7 @@ public abstract class RecordingService {
 			RecordingProperties.Builder builder = new RecordingProperties.Builder().name(recordingId)
 					.outputMode(properties.outputMode()).hasAudio(properties.hasAudio())
 					.hasVideo(properties.hasVideo());
-			if (io.openvidu.java.client.Recording.OutputMode.COMPOSED.equals(properties.outputMode())
-					&& properties.hasVideo()) {
+			if (RecordingUtils.IS_COMPOSED(properties.outputMode()) && properties.hasVideo()) {
 				builder.resolution(properties.resolution());
 				builder.recordingLayout(properties.recordingLayout());
 				if (RecordingLayout.CUSTOM.equals(properties.recordingLayout())) {

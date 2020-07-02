@@ -65,6 +65,7 @@ import io.openvidu.server.kurento.core.KurentoMediaOptions;
 import io.openvidu.server.kurento.core.KurentoTokenOptions;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.recording.service.RecordingManager;
+import io.openvidu.server.utils.RecordingUtils;
 
 /**
  *
@@ -494,7 +495,7 @@ public class SessionRestController {
 						HttpStatus.BAD_REQUEST);
 			}
 		}
-		if (OutputMode.COMPOSED.equals(finalOutputMode)) {
+		if (RecordingUtils.IS_COMPOSED(finalOutputMode)) {
 			if (resolution != null && !sessionManager.formatChecker.isAcceptableRecordingResolution(resolution)) {
 				return this.generateErrorResponse(
 						"Wrong \"resolution\" parameter. Acceptable values from 100 to 1999 for both width and height",
@@ -552,7 +553,7 @@ public class SessionRestController {
 		RecordingProperties.Builder builder = new RecordingProperties.Builder();
 		builder.outputMode(
 				finalOutputMode == null ? session.getSessionProperties().defaultOutputMode() : finalOutputMode);
-		if (finalOutputMode.equals(OutputMode.COMPOSED)) {
+		if (RecordingUtils.IS_COMPOSED(finalOutputMode)) {
 			if (resolution != null) {
 				builder.resolution(resolution);
 			}
