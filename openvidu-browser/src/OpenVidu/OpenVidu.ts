@@ -395,7 +395,7 @@ export class OpenVidu {
         const devices: Device[] = [];
 
         // Ionic Android  devices
-        if (platform['isIonicAndroid'] && cordova.plugins && cordova.plugins.EnumerateDevicesPlugin) {
+        if (platform['isIonicAndroid'] && typeof cordova != "undefined" && cordova?.plugins?.EnumerateDevicesPlugin) {
           cordova.plugins.EnumerateDevicesPlugin.getEnumerateDevices().then((pluginDevices: Device[]) => {
             let pluginAudioDevices: Device[] = [];
             let videoDevices: Device[] = [];
