@@ -548,6 +548,8 @@ public class SessionRestController {
 		OutputMode defaultOutputMode = session.getSessionProperties().defaultOutputMode();
 		if (OutputMode.COMPOSED_QUICK_START.equals(defaultOutputMode) && OutputMode.COMPOSED.equals(finalOutputMode)) {
 			finalOutputMode = OutputMode.COMPOSED_QUICK_START;
+		} else if (OutputMode.COMPOSED.equals(defaultOutputMode) && OutputMode.COMPOSED_QUICK_START.equals(finalOutputMode)) {
+			finalOutputMode = OutputMode.COMPOSED;
 		}
 
 		RecordingProperties.Builder builder = new RecordingProperties.Builder();
