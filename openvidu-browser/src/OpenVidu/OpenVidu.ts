@@ -30,7 +30,6 @@ import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
 
 import * as screenSharingAuto from '../OpenViduInternal/ScreenSharing/Screen-Capturing-Auto';
 import * as screenSharing from '../OpenViduInternal/ScreenSharing/Screen-Capturing';
-
 /**
  * @hidden
  */
@@ -395,7 +394,7 @@ export class OpenVidu {
         const devices: Device[] = [];
 
         // Ionic Android  devices
-        if (platform['isIonicAndroid'] && cordova.plugins && cordova.plugins.EnumerateDevicesPlugin) {
+        if (platform['isIonicAndroid'] && typeof cordova != "undefined" && cordova?.plugins?.EnumerateDevicesPlugin) {
           cordova.plugins.EnumerateDevicesPlugin.getEnumerateDevices().then((pluginDevices: Device[]) => {
             let pluginAudioDevices: Device[] = [];
             let videoDevices: Device[] = [];
@@ -748,115 +747,7 @@ export class OpenVidu {
       }
 
       // CASE 4: deviceId or screen sharing
-      if (typeof audioSource === 'string') {
-        myConstraints.constraints!.audio = { deviceId: { exact: audioSource } };
-      }
-      if (typeof videoSource === 'string') {
-
-        if (!this.isScreenShare(videoSource)) {
-          if (!myConstraints.constraints!.video) {
-            myConstraints.constraints!.video = {};
-          }
-          (<MediaTrackConstraints>myConstraints.constraints!.video)['deviceId'] = { exact: videoSource };
-        } else {
-
-          // Screen sharing
-
-          if (!this.checkScreenSharingCapabilities()) {
-            const error = new OpenViduError(OpenViduErrorName.SCREEN_SHARING_NOT_SUPPORTED, 'You can only screen share in desktop Chrome, Firefox, Opera, Safari (>=13.0) or Electron. Detected client: ' + platform.name);
-            logger.error(error);
-            reject(error);
-          } else {
-
-            if (platform.name === 'Electron') {
-              const prefix = "screen:";
-              const videoSourceString: string = videoSource;
-              const electronScreenId = videoSourceString.substr(videoSourceString.indexOf(prefix) + prefix.length);
-              (<any>myConstraints.constraints!.video) = {
-                mandatory: {
-                  chromeMediaSource: 'desktop',
-                  chromeMediaSourceId: electronScreenId
-                }
-              };
-              resolve(myConstraints);
-
-            } else {
-
-              if (!!this.advancedConfiguration.screenShareChromeExtension && !(platform.name!.indexOf('Firefox') !== -1) && !navigator.mediaDevices['getDisplayMedia']) {
-
-                // Custom screen sharing extension for Chrome (and Opera) and no support for MediaDevices.getDisplayMedia()
-
-                screenSharing.getScreenConstraints((error, screenConstraints) => {
-                  if (!!error || !!screenConstraints.mandatory && screenConstraints.mandatory.chromeMediaSource === 'screen') {
-                    if (error === 'permission-denied' || error === 'PermissionDeniedError') {
-                      const error = new OpenViduError(OpenViduErrorName.SCREEN_CAPTURE_DENIED, 'You must allow access to one window of your desktop');
-                      logger.error(error);
-                      reject(error);
-                    } else {
-                      const extensionId = this.advancedConfiguration.screenShareChromeExtension!.split('/').pop()!!.trim();
-                      screenSharing.getChromeExtensionStatus(extensionId, status => {
-                        if (status === 'installed-disabled') {
-                          const error = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_DISABLED, 'You must enable the screen extension');
-                          logger.error(error);
-                          reject(error);
-                        }
-                        if (status === 'not-installed') {
-                          const error = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_NOT_INSTALLED, (<string>this.advancedConfiguration.screenShareChromeExtension));
-                          logger.error(error);
-                          reject(error);
-                        }
-                      });
-                      return;
-                    }
-                  } else {
-                    myConstraints.constraints!.video = screenConstraints;
-                    resolve(myConstraints);
-                  }
-                });
-                return;
-              } else {
-
-                if (navigator.mediaDevices['getDisplayMedia']) {
-                  // getDisplayMedia support (Chrome >= 72, Firefox >= 66, Safari >= 13)
-                  resolve(myConstraints);
-                } else {
-                  // Default screen sharing extension for Chrome/Opera, or is Firefox < 66
-                  const firefoxString = platform.name!.indexOf('Firefox') !== -1 ? publisherProperties.videoSource : undefined;
-
-                  screenSharingAuto.getScreenId(firefoxString, (error, sourceId, screenConstraints) => {
-                    if (!!error) {
-                      if (error === 'not-installed') {
-                        const extensionUrl = !!this.advancedConfiguration.screenShareChromeExtension ? this.advancedConfiguration.screenShareChromeExtension :
-                          'https://chrome.google.com/webstore/detail/openvidu-screensharing/lfcgfepafnobdloecchnfaclibenjold';
-                        const err = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_NOT_INSTALLED, extensionUrl);
-                        logger.error(err);
-                        reject(err);
-                      } else if (error === 'installed-disabled') {
-                        const err = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_DISABLED, 'You must enable the screen extension');
-                        logger.error(err);
-                        reject(err);
-                      } else if (error === 'permission-denied') {
-                        const err = new OpenViduError(OpenViduErrorName.SCREEN_CAPTURE_DENIED, 'You must allow access to one window of your desktop');
-                        logger.error(err);
-                        reject(err);
-                      } else {
-                        const err = new OpenViduError(OpenViduErrorName.GENERIC_ERROR, 'Unknown error when accessing screen share');
-                        logger.error(err);
-                        logger.error(error);
-                        reject(err);
-                      }
-                    } else {
-                      myConstraints.constraints!.video = screenConstraints.video;
-                      resolve(myConstraints);
-                    }
-                  });
-                  return;
-                }
-              }
-            }
-          }
-        }
-      }
+      this.configureDeviceIdOrScreensharing(myConstraints, publisherProperties, resolve, reject);
 
       resolve(myConstraints);
     });
@@ -983,6 +874,133 @@ export class OpenVidu {
     }
     return mediaStream;
   }
+
+  /**
+   * @hidden
+   */
+  protected configureDeviceIdOrScreensharing(myConstraints: CustomMediaStreamConstraints, publisherProperties: PublisherProperties, resolve, reject) {
+    const audioSource = publisherProperties.audioSource;
+    const videoSource = publisherProperties.videoSource;
+    if (typeof audioSource === 'string') {
+      myConstraints.constraints!.audio = { deviceId: { exact: audioSource } };
+    }
+
+    if (typeof videoSource === 'string') {
+
+      if (!this.isScreenShare(videoSource)) {
+        this.setVideoSource(myConstraints, videoSource);
+
+      } else {
+
+        // Screen sharing
+
+        if (!this.checkScreenSharingCapabilities()) {
+          const error = new OpenViduError(OpenViduErrorName.SCREEN_SHARING_NOT_SUPPORTED, 'You can only screen share in desktop Chrome, Firefox, Opera, Safari (>=13.0) or Electron. Detected client: ' + platform.name);
+          logger.error(error);
+          reject(error);
+        } else {
+
+          if (platform.name === 'Electron') {
+            const prefix = "screen:";
+            const videoSourceString: string = videoSource;
+            const electronScreenId = videoSourceString.substr(videoSourceString.indexOf(prefix) + prefix.length);
+            (<any>myConstraints.constraints!.video) = {
+              mandatory: {
+                chromeMediaSource: 'desktop',
+                chromeMediaSourceId: electronScreenId
+              }
+            };
+            resolve(myConstraints);
+
+          } else {
+
+            if (!!this.advancedConfiguration.screenShareChromeExtension && !(platform.name!.indexOf('Firefox') !== -1) && !navigator.mediaDevices['getDisplayMedia']) {
+
+              // Custom screen sharing extension for Chrome (and Opera) and no support for MediaDevices.getDisplayMedia()
+
+              screenSharing.getScreenConstraints((error, screenConstraints) => {
+                if (!!error || !!screenConstraints.mandatory && screenConstraints.mandatory.chromeMediaSource === 'screen') {
+                  if (error === 'permission-denied' || error === 'PermissionDeniedError') {
+                    const error = new OpenViduError(OpenViduErrorName.SCREEN_CAPTURE_DENIED, 'You must allow access to one window of your desktop');
+                    logger.error(error);
+                    reject(error);
+                  } else {
+                    const extensionId = this.advancedConfiguration.screenShareChromeExtension!.split('/').pop()!!.trim();
+                    screenSharing.getChromeExtensionStatus(extensionId, status => {
+                      if (status === 'installed-disabled') {
+                        const error = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_DISABLED, 'You must enable the screen extension');
+                        logger.error(error);
+                        reject(error);
+                      }
+                      if (status === 'not-installed') {
+                        const error = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_NOT_INSTALLED, (<string>this.advancedConfiguration.screenShareChromeExtension));
+                        logger.error(error);
+                        reject(error);
+                      }
+                    });
+                    return;
+                  }
+                } else {
+                  myConstraints.constraints!.video = screenConstraints;
+                  resolve(myConstraints);
+                }
+              });
+              return;
+            } else {
+
+              if (navigator.mediaDevices['getDisplayMedia']) {
+                // getDisplayMedia support (Chrome >= 72, Firefox >= 66, Safari >= 13)
+                resolve(myConstraints);
+              } else {
+                // Default screen sharing extension for Chrome/Opera, or is Firefox < 66
+                const firefoxString = platform.name!.indexOf('Firefox') !== -1 ? publisherProperties.videoSource : undefined;
+
+                screenSharingAuto.getScreenId(firefoxString, (error, sourceId, screenConstraints) => {
+                  if (!!error) {
+                    if (error === 'not-installed') {
+                      const extensionUrl = !!this.advancedConfiguration.screenShareChromeExtension ? this.advancedConfiguration.screenShareChromeExtension :
+                        'https://chrome.google.com/webstore/detail/openvidu-screensharing/lfcgfepafnobdloecchnfaclibenjold';
+                      const err = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_NOT_INSTALLED, extensionUrl);
+                      logger.error(err);
+                      reject(err);
+                    } else if (error === 'installed-disabled') {
+                      const err = new OpenViduError(OpenViduErrorName.SCREEN_EXTENSION_DISABLED, 'You must enable the screen extension');
+                      logger.error(err);
+                      reject(err);
+                    } else if (error === 'permission-denied') {
+                      const err = new OpenViduError(OpenViduErrorName.SCREEN_CAPTURE_DENIED, 'You must allow access to one window of your desktop');
+                      logger.error(err);
+                      reject(err);
+                    } else {
+                      const err = new OpenViduError(OpenViduErrorName.GENERIC_ERROR, 'Unknown error when accessing screen share');
+                      logger.error(err);
+                      logger.error(error);
+                      reject(err);
+                    }
+                  } else {
+                    myConstraints.constraints!.video = screenConstraints.video;
+                    resolve(myConstraints);
+                  }
+                });
+                return;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * @hidden
+   */
+  protected setVideoSource(myConstraints: CustomMediaStreamConstraints, videoSource: string) {
+    if (!myConstraints.constraints!.video) {
+      myConstraints.constraints!.video = {};
+    }
+    (<MediaTrackConstraints>myConstraints.constraints!.video)['deviceId'] = { exact: videoSource };
+  }
+
 
   /* Private methods */
 
