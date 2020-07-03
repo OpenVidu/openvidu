@@ -142,7 +142,7 @@ public class KurentoSessionManager extends SessionManager {
 
 			// If Recording default layout is COMPOSED_QUICK_START
 			Recording.OutputMode defaultOutputMode = kSession.getSessionProperties().defaultOutputMode();
-			if (defaultOutputMode.equals(Recording.OutputMode.COMPOSED_QUICK_START)) {
+			if (openviduConfig.isRecordingModuleEnabled() && defaultOutputMode.equals(Recording.OutputMode.COMPOSED_QUICK_START)) {
 				recordingManager.startComposedQuickStartContainer(kSession);
 			}
 
