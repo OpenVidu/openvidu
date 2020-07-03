@@ -2,7 +2,7 @@
 
 # Global variables
 OPENVIDU_FOLDER=openvidu
-OPENVIDU_VERSION=v2.15.0
+OPENVIDU_VERSION=master
 
 fatal_error() {
      printf "\n     =======¡ERROR!======="
