@@ -31,14 +31,17 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 
         String containerId = this.sessionsContainers.get(session.getSessionId());
 
-        try {
-            dockerManager.removeDockerContainer(containerId, true);
-        } catch (Exception e) {
-            log.error("Can't remove COMPOSED_QUICK_START recording container from session {}", session.getSessionId());
+        if (containerId != null) {
+            try {
+                dockerManager.removeDockerContainer(containerId, true);
+            } catch (Exception e) {
+                log.error("Can't remove COMPOSED_QUICK_START recording container from session {}", session.getSessionId());
+            }
+
+            containers.remove(containerId);
+            sessionsContainers.remove(session.getSessionId());
         }
 
-        containers.remove(containerId);
-        sessionsContainers.remove(session.getSessionId());
     }
 
     @Override
