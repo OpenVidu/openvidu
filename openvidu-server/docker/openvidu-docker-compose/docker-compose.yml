@@ -11,7 +11,7 @@
 #
 #    This file will be overridden when update OpenVidu Platform
 #
-#    Openvidu Version: 2.14.0
+#    Openvidu Version: 2.15.0
 #
 #    Installation Mode: On Premises
 #
@@ -22,7 +22,7 @@ version: '3.1'
 services:
 
     openvidu-server:
-        image: openvidu/openvidu-server:2.15.0-beta1
+        image: openvidu/openvidu-server:2.15.0
         restart: on-failure
         network_mode: host
         entrypoint: ['/bin/bash', '-c', 'export COTURN_IP=`/usr/local/bin/discover_my_public_ip.sh`; /usr/local/bin/entrypoint.sh']
