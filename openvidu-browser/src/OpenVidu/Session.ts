@@ -1290,7 +1290,7 @@ export class Session extends EventDispatcher {
             if (!!openviduServerVersion) {
                 logger.info("openvidu-server version: " + openviduServerVersion);
                 if (openviduServerVersion !== this.openvidu.libraryVersion) {
-                    logger.error('OpenVidu Server (' + openviduServerVersion +
+                    logger.warn('OpenVidu Server (' + openviduServerVersion +
                         ') and OpenVidu Browser (' + this.openvidu.libraryVersion +
                         ') versions do NOT match. There may be incompatibilities')
                 }
