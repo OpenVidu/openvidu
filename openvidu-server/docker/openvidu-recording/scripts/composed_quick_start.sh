@@ -22,32 +22,6 @@ if [[ -z "${COMPOSED_QUICK_START_ACTION}" ]]; then
         export WIDTH="$(cut -d'x' -f1 <<< $RESOLUTION)"
         export HEIGHT="$(cut -d'x' -f2 <<< $RESOLUTION)"
         export RECORDING_MODE=${RECORDING_MODE}
-        
-        ### Get a free display identificator ###
-
-        DISPLAY_NUM=99
-        DONE="no"
-        
-        echo "====== Loaded Environment Variables - Start Chrome ======"
-        env
-        echo "========================================================="
-
-        while [ "$DONE" == "no" ]
-        do
-        out=$(xdpyinfo -display :$DISPLAY_NUM 2>&1)
-        if [[ "$out" == name* ]] || [[ "$out" == Invalid* ]]
-        then
-            # Command succeeded; or failed with access error;  display exists
-            (( DISPLAY_NUM+=1 ))
-        else
-            # Display doesn't exist
-            DONE="yes"
-        fi
-        done
-        
-        export DISPLAY_NUM
-        echo "First available display -> :$DISPLAY_NUM"
-        echo "----------------------------------------"
 
         pulseaudio -D
 
@@ -55,14 +29,26 @@ if [[ -z "${COMPOSED_QUICK_START_ACTION}" ]]; then
 
         touch xvfb.log
         chmod 777 xvfb.log
-        xvfb-run --server-num=${DISPLAY_NUM} --server-args="-ac -screen 0 ${RESOLUTION}x24 -noreset" google-chrome --kiosk --start-maximized --test-type --no-sandbox --disable-infobars --disable-gpu --disable-popup-blocking --window-size=$WIDTH,$HEIGHT --window-position=0,0 --no-first-run --ignore-certificate-errors --autoplay-policy=no-user-gesture-required --enable-logging --v=1 $DEBUG_CHROME_FLAGS $URL &> xvfb.log &
+        xvfb-run --auto-servernum --server-args="-ac -screen 0 ${RESOLUTION}x24 -noreset" google-chrome --kiosk --start-maximized --test-type --no-sandbox --disable-infobars --disable-gpu --disable-popup-blocking --window-size=$WIDTH,$HEIGHT --window-position=0,0 --no-first-run --ignore-certificate-errors --autoplay-policy=no-user-gesture-required --enable-logging --v=1 $DEBUG_CHROME_FLAGS $URL &> xvfb.log &
         chmod 777 /recordings
+
+        until pids=$(pidof Xvfb)
+        do   
+            sleep 0.1
+        done
+
+        ### Calculate the display num in use parsing args of command "Xvfb"
+
+        XVFB_ARGS=$(ps -eo args | grep [X]vfb)
+        DISPLAY_NUM=$(echo $XVFB_ARGS | sed 's/Xvfb :\([0-9]\+\).*/\1/')
+        echo "Display in use -> :$DISPLAY_NUM"
+        echo "----------------------------------------"
     
         # Save Global Environment variables
         echo "export DISPLAY_NUM=$DISPLAY_NUM" > /tmp/display_num
 
     } 2>&1 | tee -a /tmp/container-start.log
-    zzz
+
     sleep infinity
 
 elif [[ "${COMPOSED_QUICK_START_ACTION}" == "--start-recording" ]]; then

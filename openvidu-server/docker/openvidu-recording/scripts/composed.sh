@@ -41,38 +41,28 @@ fi
   chmod 777 /recordings/$VIDEO_ID
   echo $RECORDING_JSON > /recordings/$VIDEO_ID/.recording.$VIDEO_ID
 
-  ### Get a free display identificator ###
-
-  DISPLAY_NUM=99
-  DONE="no"
-
-  while [ "$DONE" == "no" ]
-  do
-    out=$(xdpyinfo -display :$DISPLAY_NUM 2>&1)
-    if [[ "$out" == name* ]] || [[ "$out" == Invalid* ]]
-    then
-      # Command succeeded; or failed with access error;  display exists
-      (( DISPLAY_NUM+=1 ))
-    else
-      # Display doesn't exist
-      DONE="yes"
-    fi
-  done
-
-  export DISPLAY_NUM
-
-  echo "First available display -> :$DISPLAY_NUM"
-  echo "----------------------------------------"
-
   pulseaudio -D
 
   ### Start Chrome in headless mode with xvfb, using the display num previously obtained ###
 
   touch xvfb.log
   chmod 777 xvfb.log
-  xvfb-run --server-num=${DISPLAY_NUM} --server-args="-ac -screen 0 ${RESOLUTION}x24 -noreset" google-chrome --kiosk --start-maximized --test-type --no-sandbox --disable-infobars --disable-gpu --disable-popup-blocking --window-size=$WIDTH,$HEIGHT --window-position=0,0 --no-first-run --ignore-certificate-errors --autoplay-policy=no-user-gesture-required $DEBUG_CHROME_FLAGS $URL &> xvfb.log &
+  xvfb-run --auto-servernum --server-args="-ac -screen 0 ${RESOLUTION}x24 -noreset" google-chrome --kiosk --start-maximized --test-type --no-sandbox --disable-infobars --disable-gpu --disable-popup-blocking --window-size=$WIDTH,$HEIGHT --window-position=0,0 --no-first-run --ignore-certificate-errors --autoplay-policy=no-user-gesture-required $DEBUG_CHROME_FLAGS $URL &> xvfb.log &
   touch stop
   chmod 777 /recordings
+
+  until pids=$(pidof Xvfb)
+  do   
+      sleep 0.1
+  done
+
+  ### Calculate the display num in use parsing args of command "Xvfb"
+
+  XVFB_ARGS=$(ps -eo args | grep [X]vfb)
+  DISPLAY_NUM=$(echo $XVFB_ARGS | sed 's/Xvfb :\([0-9]\+\).*/\1/')
+  echo "Display in use -> :$DISPLAY_NUM"
+  echo "----------------------------------------"
+
   sleep 2
 
   ### Start recording with ffmpeg ###
