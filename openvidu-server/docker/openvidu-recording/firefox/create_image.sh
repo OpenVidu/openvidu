@@ -1,1 +1,1 @@
-docker build --rm -t openvidu/openvidu-recording:2.10.0-firefox .
+docker build --rm -t openvidu/openvidu-recording:2.15.0-firefox .

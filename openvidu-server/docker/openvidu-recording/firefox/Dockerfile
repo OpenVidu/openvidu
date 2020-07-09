@@ -1,21 +1,24 @@
-FROM ubuntu:16.04
+FROM ubuntu:20.04
 MAINTAINER openvidu@gmail.com
 
+# Install packages
+RUN apt-get update && apt-get -y upgrade && apt-get install -y \
+    wget \
+    sudo \
+    gnupg2 \
+    apt-utils \
+    software-properties-common \
+    ffmpeg \
+    pulseaudio \
+    xvfb \
+    jq \
+  && rm -rf /var/lib/apt/lists/*
+
 # Install Firefox
-RUN apt-get update && apt-get -y upgrade && apt-get install -y wget sudo
-RUN apt-get install -y firefox
+RUN apt-get update && apt-get -y upgrade && apt-get install -y firefox
 
-# Install media packages
-RUN apt-get install -y software-properties-common
-RUN add-apt-repository ppa:jonathonf/ffmpeg-4
-RUN apt-get update
-RUN apt-get install -y ffmpeg pulseaudio xvfb
-
-# Install jq for managing JSON
-RUN apt-get install -y jq
-
-# Clean
-RUN apt-get autoclean
+# Clean	
+RUN apt-get clean && apt-get autoclean && apt-get autoremove
 
 COPY entrypoint.sh /entrypoint.sh
 COPY configuration/autoconfig.js /usr/lib/firefox/defaults/pref/autoconfig.js
