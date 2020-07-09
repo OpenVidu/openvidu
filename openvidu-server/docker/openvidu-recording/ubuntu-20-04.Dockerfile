@@ -18,9 +18,10 @@ RUN apt-get update && apt-get -y upgrade && apt-get install -y \
 
 # Install chrome
 RUN apt-get update && apt-get -y upgrade && apt-get install -y wget sudo
-RUN wget -q -O - http://dl.google.com/linux/deb/pool/main/g/google-chrome-stable/google-chrome-stable_${CHROME_VERSION}_amd64.deb \
-  && dpkg -i google-chrome-stable_${CHROME_VERSION}_amd64.deb \
-  && rm google-chrome-stable_${CHROME_VERSION}_amd64.deb
+RUN wget http://dl.google.com/linux/deb/pool/main/g/google-chrome-stable/google-chrome-stable_${CHROME_VERSION}_amd64.deb \
+  && apt install -y ./google-chrome-stable_${CHROME_VERSION}_amd64.deb \
+  && rm google-chrome-stable_${CHROME_VERSION}_amd64.deb \
+  && google-chrome --version
 
 # Clean
 RUN apt-get clean && apt-get autoclean && apt-get autoremove
