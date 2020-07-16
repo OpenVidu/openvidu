@@ -1,0 +1,115 @@
+# ------------------------------------------------------------------------------
+#
+#    DO NOT MODIFY THIS FILE !!!
+#
+#    Configuration properties should be specified in .env file
+#
+#    Application based on OpenVidu should be specified in
+#    docker-compose.override.yml file
+#
+#    This docker-compose file coordinates all services of OpenVidu CE Platform.
+#
+#    This file will be overridden when update OpenVidu Platform
+#
+#    Openvidu Version: 2.15.1
+#
+#    Installation Mode: On Premises
+#
+# ------------------------------------------------------------------------------
+
+version: '3.1'
+
+services:
+
+    openvidu-server:
+        image: openvidu/openvidu-server-pro:2.15.1
+        restart: on-failure
+        network_mode: host
+        entrypoint: ['/bin/bash', '-c', 'export COTURN_IP=`/usr/local/bin/discover_my_public_ip.sh`; /usr/local/bin/entrypoint.sh']
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+            - ${OPENVIDU_RECORDING_PATH}:${OPENVIDU_RECORDING_PATH}
+            - ${OPENVIDU_RECORDING_CUSTOM_LAYOUT}:${OPENVIDU_RECORDING_CUSTOM_LAYOUT}
+            - ${OPENVIDU_CDR_PATH}:${OPENVIDU_CDR_PATH}
+            - ./cluster:/opt/openvidu/cluster
+            - .env:${PWD}/.env
+        env_file:
+            - .env
+        environment:
+            - SERVER_SSL_ENABLED=false
+            - SERVER_PORT=5443
+            - KMS_URIS=[]
+            - COTURN_REDIS_IP=127.0.0.1
+            - COTURN_REDIS_PASSWORD=${OPENVIDU_SECRET}
+            - OPENVIDU_PRO_CLUSTER=true
+            - OPENVIDU_PRO_KIBANA_HOST=http://127.0.0.1/kibana
+            - OPENVIDU_PRO_ELASTICSEARCH_HOST=http://127.0.0.1:9200
+            - WAIT_KIBANA_URL=http://127.0.0.1:5601/api/status
+            - DOTENV_PATH=${PWD}
+
+    redis:
+        image: openvidu/openvidu-redis:1.0.0
+        restart: always
+        network_mode: host
+        environment:
+            - REDIS_PASSWORD=${OPENVIDU_SECRET}
+
+    coturn:
+        image: openvidu/openvidu-coturn:1.0.0
+        restart: on-failure
+        network_mode: host
+        environment:
+            - REDIS_IP=127.0.0.1
+            - TURN_LISTEN_PORT=3478
+            - DB_NAME=0
+            - DB_PASSWORD=${OPENVIDU_SECRET}
+            - MIN_PORT=57001
+            - MAX_PORT=65535
+
+    nginx:
+        image: openvidu/openvidu-proxy:3.0.0
+        restart: on-failure
+        network_mode: host
+        entrypoint: ['/bin/sh', '-c', 'htpasswd -bc /etc/nginx/kibana.htpasswd "${KIBANA_USER}" "${KIBANA_PASSWORD}" && /usr/local/bin/entrypoint.sh']
+        volumes:
+            - ./certificates:/etc/letsencrypt
+            - ./owncert:/owncert
+            - ${OPENVIDU_RECORDING_CUSTOM_LAYOUT}:/opt/openvidu/custom-layout
+        environment:
+            - DOMAIN_OR_PUBLIC_IP=${DOMAIN_OR_PUBLIC_IP}
+            - CERTIFICATE_TYPE=${CERTIFICATE_TYPE}
+            - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
+            - PROXY_HTTP_PORT=${HTTP_PORT:-}
+            - PROXY_HTTPS_PORT=${HTTPS_PORT:-}
+            - ALLOWED_ACCESS_TO_DASHBOARD=${ALLOWED_ACCESS_TO_DASHBOARD:-}
+            - ALLOWED_ACCESS_TO_RESTAPI=${ALLOWED_ACCESS_TO_RESTAPI:-}
+            - PROXY_MODE=PRO
+            - WITH_APP=true
+
+    elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:7.8.0
+        restart: always
+        environment:
+            - discovery.type=single-node
+        ports:
+            - 9200:9200
+        volumes:
+            - ./elasticsearch:/usr/share/elasticsearch/data
+
+    kibana:
+        image: docker.elastic.co/kibana/kibana:7.8.0
+        restart: always
+        environment:
+            - SERVER_BASEPATH="/kibana"
+        ports:
+            - 5601:5601
+
+    filebeat:
+        image: docker.elastic.co/beats/filebeat:7.8.0
+        restart: always
+        user: root
+        volumes:
+            - ./beats/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+            - /var/lib/docker:/var/lib/docker:ro
+            - /var/run/docker.sock:/var/run/docker.sock
+        command: filebeat -e -strict.perms=false

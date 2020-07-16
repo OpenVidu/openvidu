@@ -1,0 +1,9 @@
+[
+  {"ParameterKey":"KeyName","ParameterValue":"taskcat"},
+  {"ParameterKey":"OpenViduSecret","ParameterValue":"MY_SECRET"},
+  {"ParameterKey":"LetsEncryptEmail","ParameterValue":""},
+  {"ParameterKey":"OwnCertKEY","ParameterValue":""},
+  {"ParameterKey":"PublicElasticIP","ParameterValue":""},
+  {"ParameterKey":"MyDomainName","ParameterValue":""},
+  {"ParameterKey":"OwnCertCRT","ParameterValue":""}
+]

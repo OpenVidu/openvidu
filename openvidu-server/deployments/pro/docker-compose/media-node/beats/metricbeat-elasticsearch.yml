@@ -1,0 +1,14 @@
+output:
+  elasticsearch:
+    hosts: ["${OPENVIDU_SERVER_PRO_IP}:9200"]
+metricbeat.modules:
+  - module: system
+    metricsets: [cpu]
+    enabled: true
+    period: ${OPENVIDU_PRO_CLUSTER_LOAD_INTERVAL}s
+    processes: ['.*']
+    cpu.metrics: [normalized_percentages]
+fields: {ip: "${MEDIA_NODE_IP}"}
+pipeline:
+  queue.mem.events: 0
+setup.ilm.enabled: false

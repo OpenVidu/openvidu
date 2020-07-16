@@ -1,0 +1,146 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: Kurento Media Server CloudFormation AMI template.
+
+Mappings:
+  AMIMAP:
+    eu-west-1:
+      AMI: AMIEUWEST1
+    us-east-1:
+      AMI: AMIUSEAST1
+
+Resources:
+  KurentoMediaServer:
+    Type: 'AWS::EC2::Instance'
+    Metadata:
+      Comment: "Install Kurento Media Server"
+      AWS::CloudFormation::Init:
+        config:
+          files:
+            "/etc/cfn/cfn-hup.conf":
+              content: !Sub |
+                [main]
+                stack=${AWS::StackId}
+                region=${AWS::Region}
+              mode: "000400"
+              owner: "root"
+              group: "root"
+            "/etc/cfn/hooks.d/cfn-auto-reloader.conf":
+              content: !Sub |
+                [cfn-auto-reloader-hook]
+                triggers=post.update
+                path=Resources.KurentoMediaServer.Metadata.AWS::CloudFormation::Init
+                action=/usr/local/bin/cfn-init -v --stack ${AWS::StackName} --resource KurentoMediaServer --region ${AWS::Region}
+              mode: "000400"
+              owner: "root"
+              group: "root"
+            "/usr/local/bin/installDockerAndDockerCompose.sh":
+              content: |
+                #!/bin/bash
+                set -eu -o pipefail
+
+                # Install Docker
+                apt-get update && apt-get install -y \
+                    apt-transport-https \
+                    ca-certificates \
+                    curl \
+                    gnupg-agent \
+                    software-properties-common
+
+                curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+                apt-key fingerprint 0EBFCD88
+                add-apt-repository \
+                  "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+                  $(lsb_release -cs) \
+                  stable"
+
+                apt-get update && apt-get install -y \
+                    docker-ce \
+                    docker-ce-cli \
+                    containerd.io
+
+                # Install docker-compose
+                curl -L "https://github.com/docker/compose/releases/download/1.25.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+                chmod +x /usr/local/bin/docker-compose
+                ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+              mode: "000755"
+              owner: "root"
+              group: "root"
+            "/usr/local/bin/installMediaNode.sh":
+              content: |
+                #!/bin/bash
+                set -eu -o pipefail
+
+                # Install kms
+                cd /opt
+                curl https://s3-eu-west-1.amazonaws.com/aws.openvidu.io/install_media_node_OPENVIDU_VERSION.sh | bash
+
+                # Define Installation Type
+                sed -i "s/Installation Mode: On Premises/Installation Mode: Cloud Formation/" /opt/kms/docker-compose.yml
+
+                # Create recording folder
+                mkdir -p /opt/openvidu/recordings
+                chmod 777 /opt/openvidu/recordings
+
+                # Configure crash report
+                mkdir -p /opt/openvidu/kms-crashes
+                sed -i "s/enabled=1/enabled=0/" /etc/default/apport
+                echo "kernel.core_pattern=/opt/openvidu/kms-crashes/core_%e_%p_%u_%t" >> /etc/sysctl.conf
+                sysctl --system
+              mode: "000755"
+              owner: "root"
+              group: "root"
+            "/usr/local/bin/runMediaNode.sh":
+              content: |
+                #!/bin/bash
+                set -eu -o pipefail
+
+                # Run KMS
+                cd /opt/kms
+                docker-compose up -d
+              mode: "000755"
+              owner: "root"
+              group: "root"
+    Properties:
+      ImageId: !FindInMap [AMIMAP, !Ref 'AWS::Region', AMI]
+      InstanceType: "t2.2xlarge"
+      KeyName: AWS_KEY_NAME
+      Tags:
+        - Key: Name
+          Value: !Ref AWS::StackName
+      UserData:
+        "Fn::Base64":
+          !Sub |
+            #!/bin/bash -x
+            set -eu -o pipefail
+            apt-get update && apt-get install -y \
+                python-pip \
+                ec2-instance-connect
+            pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz
+
+            cfn-init --region ${AWS::Region} --stack ${AWS::StackId} --resource KurentoMediaServer
+
+            /usr/local/bin/installDockerAndDockerCompose.sh || { echo "[Openvidu] error installing software"; exit 1; }
+
+            /usr/local/bin/installMediaNode.sh || { echo "[Openvidu] error installing Media Node"; exit 1; }
+
+            /usr/local/bin/runMediaNode.sh || { echo "[Openvidu] error running Media Node"; exit 1; }
+
+            # sending the finish call
+            /usr/local/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource WaitCondition --region ${AWS::Region}
+
+            # Cleaning the house
+            shred -v -u /var/log/cloud-init-output.log
+            shred -v -u /etc/ssh/*_key /etc/ssh/*_key.pub
+            shred -v -u /usr/local/bin/installDockerAndDockerCompose.sh
+            shred -v -u /usr/local/bin/installMediaNode.sh
+            shred -v -u /usr/local/bin/runMediaNode.sh
+            find /var/lib/cloud/instances/$(curl http://169.254.169.254/latest/meta-data/instance-id) -type f | xargs shred -v -u
+            rm -rf /var/lib/cloud/instances/$(curl http://169.254.169.254/latest/meta-data/instance-id)
+
+  WaitCondition:
+    Type: AWS::CloudFormation::WaitCondition
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT10M
+        Count: 1

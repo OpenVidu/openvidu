@@ -1,0 +1,19 @@
+  [
+    {"ParameterKey":"KeyName","ParameterValue":"taskcat"},
+    {"ParameterKey":"KurentoAvailabilityZone","ParameterValue":"$[taskcat_genaz_1]"},
+    {"ParameterKey":"AwsInstanceTypeOV","ParameterValue":"t2.2xlarge"},
+    {"ParameterKey":"AwsInstanceTypeKMS","ParameterValue":"t2.2xlarge"},
+    {"ParameterKey":"KurentoAsgSize","ParameterValue":"1"},
+    {"ParameterKey":"OpenViduSecret","ParameterValue":"MY_SECRET"},
+    {"ParameterKey":"KibanaPassword","ParameterValue":"MY_SECRET"},
+    {"ParameterKey":"HTTPSAccess","ParameterValue":"0.0.0.0/0"},
+    {"ParameterKey":"SSHCidr","ParameterValue":"0.0.0.0/0"},
+    {"ParameterKey":"UDPRange","ParameterValue":"0.0.0.0/0"},
+    {"ParameterKey":"TCPRange","ParameterValue":"0.0.0.0/0"},
+    {"ParameterKey":"LetsEncryptEmail","ParameterValue":"email@example.com"},
+    {"ParameterKey":"OwnCertCRT","ParameterValue":"AAA"},
+    {"ParameterKey":"OwnCertKEY","ParameterValue":"BBB"},
+    {"ParameterKey":"OpenViduWebhookHeaders","ParameterValue":"Authorization: Basic T1BFTlZJRFVBUFA6TVlfU0VDUkVU"},
+    {"ParameterKey":"OpenViduCidrBlock","ParameterValue":"172.16.0.0/16"},
+    {"ParameterKey":"OpenViduSubnet","ParameterValue":"172.16.0.0/24"}
+  ]

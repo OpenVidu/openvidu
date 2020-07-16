@@ -1,0 +1,32 @@
+filebeat.inputs:
+  - type: container
+    paths:
+      - '/var/lib/docker/containers/*/*.log'
+
+processors:
+  - add_docker_metadata:
+      host: "unix:///var/run/docker.sock"
+  - add_host_metadata:
+      netinfo.enabled: true
+
+  - decode_json_fields:
+      fields: ["message"]
+      target: "json"
+      overwrite_keys: true
+
+output:
+  elasticsearch:
+    hosts: ["elasticsearch:9200"]
+    indices:
+      - index: "filebeat-redis-%{+yyyy.MM.dd}"
+        when.or:
+          - contains:
+              container.image.name: openvidu/openvidu-redis
+      - index: "filebeat-coturn-%{+yyyy.MM.dd}"
+        when.or:
+          - contains:
+              container.image.name: openvidu/openvidu-coturn
+
+
+logging.json: true
+logging.metrics.enabled: false
