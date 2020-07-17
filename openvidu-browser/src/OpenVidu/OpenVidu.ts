@@ -338,7 +338,7 @@ export class OpenVidu {
     const userAgent = !!platform.ua ? platform.ua : navigator.userAgent;
 
     if(this.isIPhoneOrIPad(userAgent)) {
-        if(this.isIOSWithSafari(userAgent)){
+        if(this.isIOSWithSafari(userAgent) || platform['isIonicIos']){
           return 1;
         }
       return 0;
