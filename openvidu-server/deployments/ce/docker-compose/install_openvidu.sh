@@ -26,23 +26,23 @@ new_ov_installation() {
      # Download necessary files
      printf '\n     => Downloading Openvidu CE files:'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/docker/openvidu-docker-compose/.env \
+     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/ce/docker-compose/.env \
           --output "${OPENVIDU_FOLDER}/.env" || fatal_error "Error when downloading the file '.env'"
      printf '\n          - .env'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/docker/openvidu-docker-compose/docker-compose.override.yml \
+     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/ce/docker-compose/docker-compose.override.yml \
           --output "${OPENVIDU_FOLDER}/docker-compose.override.yml" || fatal_error "Error when downloading the file 'docker-compose.override.yml'"
      printf '\n          - docker-compose.override.yml'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/docker/openvidu-docker-compose/docker-compose.yml \
+     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/ce/docker-compose/docker-compose.yml \
           --output "${OPENVIDU_FOLDER}/docker-compose.yml" || fatal_error "Error when downloading the file 'docker-compose.yml'"
      printf '\n          - docker-compose.yml'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/docker/openvidu-docker-compose/openvidu \
+     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/ce/docker-compose/openvidu \
           --output "${OPENVIDU_FOLDER}/openvidu" || fatal_error "Error when downloading the file 'openvidu'"
      printf '\n          - openvidu'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/docker/openvidu-docker-compose/readme.md \
+     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/ce/docker-compose/readme.md \
           --output "${OPENVIDU_FOLDER}/readme.md" || fatal_error "Error when downloading the file 'readme.md'"
      printf '\n          - readme.md'
 
@@ -130,23 +130,23 @@ upgrade_ov() {
      # Download necessary files
      printf '\n     => Downloading new Openvidu CE files:'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/docker/openvidu-docker-compose/docker-compose.yml \
+     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/ce/docker-compose/docker-compose.yml \
           --output "${TMP_FOLDER}/docker-compose.yml" || fatal_error "Error when downloading the file 'docker-compose.yml'"
      printf '\n          - docker-compose.yml'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/docker/openvidu-docker-compose/docker-compose.override.yml \
+     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/ce/docker-compose/docker-compose.override.yml \
           --output "${TMP_FOLDER}/docker-compose.override.yml" || fatal_error "Error when downloading the file 'docker-compose.override.yml'"
      printf "\n          - docker-compose.override.yml"
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/docker/openvidu-docker-compose/.env \
+     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/ce/docker-compose/.env \
           --output "${TMP_FOLDER}/.env" || fatal_error "Error when downloading the file '.env'"
      printf '\n          - .env'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/docker/openvidu-docker-compose/openvidu \
+     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/ce/docker-compose/openvidu \
           --output "${TMP_FOLDER}/openvidu" || fatal_error "Error when downloading the file 'openvidu'"
      printf '\n          - openvidu'
 
-     curl --silent ${DOWNLOAD_URL}/openvidu-server/docker/openvidu-docker-compose/readme.md \
+     curl --silent ${DOWNLOAD_URL}/openvidu-server/deployments/ce/docker-compose/readme.md \
           --output "${TMP_FOLDER}/readme.md" || fatal_error "Error when downloading the file 'readme.md'"
      printf '\n          - readme.md'
 
