@@ -2,7 +2,11 @@
 set -eu -o pipefail
 
 CF_OVP_TARGET=${CF_OVP_TARGET:-nomarket}
-RELEASE=${CF_RELEASE:-false}
+CF_RELEASE=${CF_RELEASE:-false}
+
+if [[ $CF_RELEASE == "true" ]]; then
+    git checkout v$OPENVIDU_VERSION
+fi
 
 if [ ${CF_OVP_TARGET} == "market" ]; then
   export AWS_ACCESS_KEY_ID=${NAEVA_AWS_ACCESS_KEY_ID}
@@ -55,14 +59,8 @@ TEMPLATE_URL=https://s3-eu-west-1.amazonaws.com/aws.openvidu.io/cfn-mkt-ov-ce-am
 
 # Update installation script
 if [[ ${UPDATE_INSTALLATION_SCRIPT} == "true" ]]; then
-
-  if [[ $RELEASE == "true" ]]; then
-    git checkout v$OPENVIDU_VERSION
-  fi
-
   aws s3 cp  ../docker-compose/install_openvidu.sh s3://aws.openvidu.io/install_openvidu_$OPENVIDU_VERSION.sh --acl public-read
 fi
-
 
 aws cloudformation create-stack \
   --stack-name openvidu-ce-${DATESTAMP} \
