@@ -54,7 +54,7 @@ TEMPLATE_URL=https://s3-eu-west-1.amazonaws.com/aws.openvidu.io/cfn-mkt-ov-ce-am
 
 # Update installation script
 if [[ ${UPDATE_INSTALLATION_SCRIPT} == "true" ]]; then
-  aws s3 cp ../docker-compose/install_openvidu.sh s3://aws.openvidu.io/install_openvidu_$OPENVIDU_VERSION.sh
+  aws s3 cp  ../docker-compose/install_openvidu.sh s3://aws.openvidu.io/install_openvidu_$OPENVIDU_VERSION.sh --acl public-read
 fi
 
 
