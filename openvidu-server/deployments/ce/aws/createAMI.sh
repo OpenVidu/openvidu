@@ -52,6 +52,12 @@ sed -i "s/AMIUSEAST1/${AMIUSEAST1}/g" cfn-mkt-ov-ce-ami.yaml
 aws s3 cp cfn-mkt-ov-ce-ami.yaml s3://aws.openvidu.io
 TEMPLATE_URL=https://s3-eu-west-1.amazonaws.com/aws.openvidu.io/cfn-mkt-ov-ce-ami.yaml
 
+# Update installation script
+if [[ ${UPDATE_INSTALLATION_SCRIPT} == "true" ]]; then
+  aws s3 cp ../docker-compose/install_openvidu.sh s3://aws.openvidu.io/install_openvidu_$OPENVIDU_VERSION.sh
+fi
+
+
 aws cloudformation create-stack \
   --stack-name openvidu-ce-${DATESTAMP} \
   --template-url ${TEMPLATE_URL} \
