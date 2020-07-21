@@ -38,7 +38,7 @@ Resources:
               content: |
                 #!/bin/bash
                 set -eu -o pipefail
-                
+
                 # Install Docker
                 apt-get update && apt-get install -y \
                     apt-transport-https \
@@ -70,7 +70,7 @@ Resources:
               content: !Sub |
                 #!/bin/bash
                 set -eu -o pipefail
-                
+
                 # Install openvidu-ce
                 cd /opt
                 curl https://s3-eu-west-1.amazonaws.com/aws.openvidu.io/install_openvidu_OPENVIDU_VERSION.sh | bash
@@ -90,7 +90,7 @@ Resources:
               content: !Sub |
                 #!/bin/bash
                 set -eu -o pipefail
-                
+
                 # Openvidu recording
                 docker pull openvidu/openvidu-recording:OPENVIDU_RECORDING_DOCKER_TAG
 
@@ -106,6 +106,7 @@ Resources:
       Tags:
         - Key: Name
           Value: !Ref AWS::StackName
+      KeyName: AWS_KEY_NAME
       UserData:
         "Fn::Base64":
           !Sub |
@@ -115,7 +116,7 @@ Resources:
                 python-pip \
                 ec2-instance-connect
             pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz
-            
+
             cfn-init --region ${AWS::Region} --stack ${AWS::StackId} --resource OpenviduServerCE
 
             /usr/local/bin/installDockerAndDockerCompose.sh || { echo "[Openvidu] error installing docker and compose"; exit 1; }
