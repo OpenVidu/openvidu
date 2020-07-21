@@ -2,6 +2,7 @@
 set -eu -o pipefail
 
 CF_OVP_TARGET=${CF_OVP_TARGET:-nomarket}
+RELEASE=${CF_RELEASE:-false}
 
 if [ ${CF_OVP_TARGET} == "market" ]; then
   export AWS_ACCESS_KEY_ID=${NAEVA_AWS_ACCESS_KEY_ID}
