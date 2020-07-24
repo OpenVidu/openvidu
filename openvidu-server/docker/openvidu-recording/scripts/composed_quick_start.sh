@@ -42,7 +42,6 @@ if [[ -z "${COMPOSED_QUICK_START_ACTION}" ]]; then
 
         XVFB_ARGS=$(ps -eo args | grep [X]vfb)
         DISPLAY_NUM=$(echo $XVFB_ARGS | sed 's/Xvfb :\([0-9]\+\).*/\1/')
-        x11vnc -noxrecord -noxfixes -noxdamage -forever -display :$DISPLAY_NUM &
         echo "Display in use -> :$DISPLAY_NUM"
         echo "----------------------------------------"
         # Save Global Environment variables

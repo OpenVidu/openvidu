@@ -19,9 +19,6 @@ RUN apt-get install -y ffmpeg pulseaudio xvfb
 # Install jq for managing JSON
 RUN apt-get install -y jq
 
-RUN apt-get install -y x11vnc
-
-
 # Clean
 RUN apt-get autoclean
 
