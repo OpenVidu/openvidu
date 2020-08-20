@@ -550,12 +550,13 @@ public class Session {
 				subscribers.add((subscriber.getAsJsonObject()).get("streamId").getAsString());
 			});
 
-			this.activeConnections.put(con.get("connectionId").getAsString(),
-					new Connection(con.get("connectionId").getAsString(), con.get("createdAt").getAsLong(),
-							OpenViduRole.valueOf(con.get("role").getAsString()), con.get("token").getAsString(),
-							con.get("location").getAsString(), con.get("platform").getAsString(),
-							con.get("serverData").getAsString(), con.get("clientData").getAsString(), publishers,
-							subscribers));
+			Connection c = new Connection(con.get("connectionId").getAsString(), con.get("createdAt").getAsLong(),
+					OpenViduRole.valueOf(con.get("role").getAsString()),
+					(con.has("token") ? con.get("token").getAsString() : null), con.get("location").getAsString(),
+					con.get("platform").getAsString(), con.get("serverData").getAsString(),
+					con.get("clientData").getAsString(), publishers, subscribers);
+
+			this.activeConnections.put(con.get("connectionId").getAsString(), c);
 		});
 		return this;
 	}
