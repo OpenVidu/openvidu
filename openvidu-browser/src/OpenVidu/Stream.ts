@@ -103,7 +103,12 @@ export class Stream extends EventDispatcher {
     creationTime: number;
 
     /**
-     * `"CAMERA"`, `"SCREEN"` or `"CUSTOM"` (the latter when [[PublisherProperties.videoSource]] is a MediaStreamTrack when calling [[OpenVidu.initPublisher]]).
+     * Can be:
+     * - `"CAMERA"`: when the video source comes from a webcam.
+     * - `"SCREEN"`: when the video source comes from screen-sharing.
+     * - `"CUSTOM"`: when [[PublisherProperties.videoSource]] has been initialized in the Publisher side with a custom MediaStreamTrack when calling [[OpenVidu.initPublisher]]).
+     * - `"IPCAM"`: when the video source comes from an IP camera participant instead of a regular participant (see [IP cameras](/en/stable/advanced-features/ip-cameras/)).
+     * 
      * If [[hasVideo]] is false, this property is undefined
      */
     typeOfVideo?: string;
