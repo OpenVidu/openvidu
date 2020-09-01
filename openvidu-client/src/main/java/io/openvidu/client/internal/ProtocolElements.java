@@ -70,6 +70,9 @@ public class ProtocolElements {
 
 	public static final String UNPUBLISHVIDEO_METHOD = "unpublishVideo";
 
+	public static final String PREPARERECEIVEVIDEO_METHOD = "prepareReceiveVideFrom";
+	public static final String PREPARERECEIVEVIDEO_SDPOFFER_PARAM = "sdpOffer";
+
 	public static final String RECEIVEVIDEO_METHOD = "receiveVideoFrom";
 	public static final String RECEIVEVIDEO_SDPOFFER_PARAM = "sdpOffer";
 	public static final String RECEIVEVIDEO_SENDER_PARAM = "sender";
@@ -120,7 +123,7 @@ public class ProtocolElements {
 
 	public static final String RECONNECTSTREAM_METHOD = "reconnectStream";
 	public static final String RECONNECTSTREAM_STREAM_PARAM = "stream";
-	public static final String RECONNECTSTREAM_SDPOFFER_PARAM = "sdpOffer";
+	public static final String RECONNECTSTREAM_SDPSTRING_PARAM = "sdpString";
 
 	// ---------------------------- SERVER RESPONSES & EVENTS -----------------
 

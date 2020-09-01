@@ -830,7 +830,8 @@ export class Stream extends EventDispatcher {
                 let params;
                 if (reconnect) {
                     params = {
-                        stream: this.streamId
+                        stream: this.streamId,
+                        sdpString: sdpOfferParam
                     }
                 } else {
                     let typeOfVideo = '';
@@ -846,10 +847,10 @@ export class Stream extends EventDispatcher {
                         typeOfVideo,
                         frameRate: !!this.frameRate ? this.frameRate : -1,
                         videoDimensions: JSON.stringify(this.videoDimensions),
-                        filter: this.outboundStreamOpts.publisherProperties.filter
+                        filter: this.outboundStreamOpts.publisherProperties.filter,
+                        sdpOffer: sdpOfferParam
                     }
                 }
-                params['sdpOffer'] = sdpOfferParam;
 
                 this.session.openvidu.sendRequest(method, params, (error, response) => {
                     if (error) {
@@ -955,8 +956,9 @@ export class Stream extends EventDispatcher {
                     + this.streamId, sdpAnswer);
 
                 const method = reconnect ? 'reconnectStream' : 'receiveVideoFrom';
-                const params = { sdpAnswer };
+                const params = {};
                 params[reconnect ? 'stream' : 'sender'] = this.streamId;
+                params[reconnect ? 'sdpString' : 'sdpAnswer'] = sdpAnswer;
 
                 this.session.openvidu.sendRequest(method, params, (error, response) => {
                     if (error) {

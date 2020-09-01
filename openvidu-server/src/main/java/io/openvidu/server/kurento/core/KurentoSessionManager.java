@@ -30,7 +30,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import io.openvidu.java.client.*;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.kurento.client.GenericMediaElement;
 import org.kurento.client.IceCandidate;
@@ -48,6 +47,12 @@ import com.google.gson.JsonObject;
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
+import io.openvidu.java.client.MediaMode;
+import io.openvidu.java.client.Recording;
+import io.openvidu.java.client.RecordingLayout;
+import io.openvidu.java.client.RecordingMode;
+import io.openvidu.java.client.RecordingProperties;
+import io.openvidu.java.client.SessionProperties;
 import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.FinalUser;
 import io.openvidu.server.core.IdentifierPrefixes;
@@ -58,7 +63,6 @@ import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.core.Token;
 import io.openvidu.server.kurento.endpoint.KurentoFilter;
 import io.openvidu.server.kurento.endpoint.PublisherEndpoint;
-import io.openvidu.server.kurento.endpoint.SdpType;
 import io.openvidu.server.kurento.kms.Kms;
 import io.openvidu.server.kurento.kms.KmsManager;
 import io.openvidu.server.rpc.RpcHandler;
@@ -368,7 +372,6 @@ public class KurentoSessionManager extends SessionManager {
 				kurentoOptions.isOffer, kurentoOptions.sdpOffer, kurentoOptions.doLoopback, kurentoOptions.rtspUri,
 				participant.getParticipantPublicId());
 
-		SdpType sdpType = kurentoOptions.isOffer ? SdpType.OFFER : SdpType.ANSWER;
 		KurentoSession kSession = kParticipant.getSession();
 
 		kParticipant.createPublishingEndpoint(mediaOptions, null);
@@ -395,7 +398,7 @@ public class KurentoSessionManager extends SessionManager {
 			}
 		}
 
-		sdpAnswer = kParticipant.publishToRoom(sdpType, kurentoOptions.sdpOffer, kurentoOptions.doLoopback, false);
+		sdpAnswer = kParticipant.publishToRoom(kurentoOptions.sdpOffer, kurentoOptions.doLoopback, false);
 
 		if (sdpAnswer == null) {
 			OpenViduException e = new OpenViduException(Code.MEDIA_SDP_ERROR_CODE,
@@ -502,11 +505,54 @@ public class KurentoSessionManager extends SessionManager {
 	}
 
 	@Override
-	public void subscribe(Participant participant, String senderName, String sdpOffer, Integer transactionId) {
-		String sdpAnswer = null;
+	public void prepareSubscription(Participant participant, String senderPublicId, Integer transactionId) {
+		String sdpOffer = null;
 		Session session = null;
 		try {
-			log.debug("Request [SUBSCRIBE] remoteParticipant={} sdpOffer={} ({})", senderName, sdpOffer,
+			log.debug("Request [SUBSCRIBE] remoteParticipant={} sdpOffer={} ({})", senderPublicId, sdpOffer,
+					participant.getParticipantPublicId());
+
+			KurentoParticipant kParticipant = (KurentoParticipant) participant;
+			session = ((KurentoParticipant) participant).getSession();
+			Participant senderParticipant = session.getParticipantByPublicId(senderPublicId);
+
+			if (senderParticipant == null) {
+				log.warn(
+						"PARTICIPANT {}: Requesting to recv media from user {} "
+								+ "in session {} but user could not be found",
+						participant.getParticipantPublicId(), senderPublicId, session.getSessionId());
+				throw new OpenViduException(Code.USER_NOT_FOUND_ERROR_CODE,
+						"User '" + senderPublicId + " not found in session '" + session.getSessionId() + "'");
+			}
+			if (!senderParticipant.isStreaming()) {
+				log.warn(
+						"PARTICIPANT {}: Requesting to recv media from user {} "
+								+ "in session {} but user is not streaming media",
+						participant.getParticipantPublicId(), senderPublicId, session.getSessionId());
+				throw new OpenViduException(Code.USER_NOT_STREAMING_ERROR_CODE,
+						"User '" + senderPublicId + " not streaming media in session '" + session.getSessionId() + "'");
+			}
+
+			sdpOffer = kParticipant.prepareReceiveMediaFrom(senderParticipant);
+			if (sdpOffer == null) {
+				throw new OpenViduException(Code.MEDIA_SDP_ERROR_CODE, "Unable to generate SDP offer when subscribing '"
+						+ participant.getParticipantPublicId() + "' to '" + senderPublicId + "'");
+			}
+		} catch (OpenViduException e) {
+			log.error("PARTICIPANT {}: Error preparing subscription to {}", participant.getParticipantPublicId(),
+					senderPublicId, e);
+			sessionEventsHandler.onPrepareSubscription(participant, session, null, transactionId, e);
+		}
+		if (sdpOffer != null) {
+			sessionEventsHandler.onPrepareSubscription(participant, session, sdpOffer, transactionId, null);
+		}
+	}
+
+	@Override
+	public void subscribe(Participant participant, String senderName, String sdpAnswer, Integer transactionId) {
+		Session session = null;
+		try {
+			log.debug("Request [SUBSCRIBE] remoteParticipant={} sdpAnswer={} ({})", senderName, sdpAnswer,
 					participant.getParticipantPublicId());
 
 			KurentoParticipant kParticipant = (KurentoParticipant) participant;
@@ -530,18 +576,11 @@ public class KurentoSessionManager extends SessionManager {
 						"User '" + senderName + " not streaming media in session '" + session.getSessionId() + "'");
 			}
 
-			sdpAnswer = kParticipant.receiveMediaFrom(senderParticipant, sdpOffer, false);
-			if (sdpAnswer == null) {
-				throw new OpenViduException(Code.MEDIA_SDP_ERROR_CODE,
-						"Unable to generate SDP answer when subscribing '" + participant.getParticipantPublicId()
-								+ "' to '" + senderName + "'");
-			}
+			kParticipant.receiveMediaFrom(senderParticipant, sdpAnswer, false);
+			sessionEventsHandler.onSubscribe(participant, session, transactionId, null);
 		} catch (OpenViduException e) {
 			log.error("PARTICIPANT {}: Error subscribing to {}", participant.getParticipantPublicId(), senderName, e);
-			sessionEventsHandler.onSubscribe(participant, session, null, transactionId, e);
-		}
-		if (sdpAnswer != null) {
-			sessionEventsHandler.onSubscribe(participant, session, sdpAnswer, transactionId, null);
+			sessionEventsHandler.onSubscribe(participant, session, transactionId, e);
 		}
 	}
 
@@ -1046,7 +1085,7 @@ public class KurentoSessionManager extends SessionManager {
 	}
 
 	@Override
-	public void reconnectStream(Participant participant, String streamId, String sdpOffer, Integer transactionId) {
+	public void reconnectStream(Participant participant, String streamId, String sdpString, Integer transactionId) {
 		KurentoParticipant kParticipant = (KurentoParticipant) participant;
 		KurentoSession kSession = kParticipant.getSession();
 
@@ -1067,8 +1106,7 @@ public class KurentoSessionManager extends SessionManager {
 			// 3) Create a new PublisherEndpoint connecting it to the previous PassThrough
 			kParticipant.resetPublisherEndpoint(kurentoOptions, passThru);
 			kParticipant.createPublishingEndpoint(kurentoOptions, streamId);
-			SdpType sdpType = kurentoOptions.isOffer ? SdpType.OFFER : SdpType.ANSWER;
-			String sdpAnswer = kParticipant.publishToRoom(sdpType, sdpOffer, kurentoOptions.doLoopback, true);
+			String sdpAnswer = kParticipant.publishToRoom(sdpString, kurentoOptions.doLoopback, true);
 
 			sessionEventsHandler.onPublishMedia(participant, participant.getPublisherStreamId(),
 					kParticipant.getPublisher().createdAt(), kSession.getSessionId(), kurentoOptions, sdpAnswer,
@@ -1081,12 +1119,8 @@ public class KurentoSessionManager extends SessionManager {
 			if (senderPrivateId != null) {
 				KurentoParticipant sender = (KurentoParticipant) kSession.getParticipantByPrivateId(senderPrivateId);
 				kParticipant.cancelReceivingMedia(sender, null, true);
-				String sdpAnswer = kParticipant.receiveMediaFrom(sender, sdpOffer, true);
-				if (sdpAnswer == null) {
-					throw new OpenViduException(Code.MEDIA_SDP_ERROR_CODE,
-							"Unable to generate SDP answer when reconnecting subscriber to '" + streamId + "'");
-				}
-				sessionEventsHandler.onSubscribe(participant, kSession, sdpAnswer, transactionId, null);
+				kParticipant.receiveMediaFrom(sender, sdpString, true);
+				sessionEventsHandler.onSubscribe(participant, kSession, transactionId, null);
 			} else {
 				throw new OpenViduException(Code.USER_NOT_STREAMING_ERROR_CODE,
 						"Stream '" + streamId + "' does not exist in Session '" + kSession.getSessionId() + "'");

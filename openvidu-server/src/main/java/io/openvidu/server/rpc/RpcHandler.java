@@ -126,6 +126,9 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		case ProtocolElements.ONICECANDIDATE_METHOD:
 			onIceCandidate(rpcConnection, request);
 			break;
+		case ProtocolElements.PREPARERECEIVEVIDEO_METHOD:
+			prepareReceiveVideoFrom(rpcConnection, request);
+			break;
 		case ProtocolElements.RECEIVEVIDEO_METHOD:
 			receiveVideoFrom(rpcConnection, request);
 			break;
@@ -333,6 +336,20 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		}
 	}
 
+	private void prepareReceiveVideoFrom(RpcConnection rpcConnection, Request<JsonObject> request) {
+		Participant participant;
+		try {
+			participant = sanityCheckOfSession(rpcConnection, "subscribe");
+		} catch (OpenViduException e) {
+			return;
+		}
+
+		String senderStreamId = getStringParam(request, ProtocolElements.RECEIVEVIDEO_SENDER_PARAM);
+		String senderPublicId = parseSenderPublicIdFromStreamId(senderStreamId);
+
+		sessionManager.prepareSubscription(participant, senderPublicId, request.getId());
+	}
+
 	private void receiveVideoFrom(RpcConnection rpcConnection, Request<JsonObject> request) {
 		Participant participant;
 		try {
@@ -341,23 +358,12 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 			return;
 		}
 
-		String senderPublicId = getStringParam(request, ProtocolElements.RECEIVEVIDEO_SENDER_PARAM);
+		String senderStreamId = getStringParam(request, ProtocolElements.RECEIVEVIDEO_SENDER_PARAM);
+		String sdpAnswer = getStringParam(request, ProtocolElements.RECEIVEVIDEO_SDPANSWER_PARAM);
 
-		// Parse sender public id from stream id
-		if (senderPublicId.startsWith(IdentifierPrefixes.STREAM_ID + "IPC_")
-				&& senderPublicId.contains(IdentifierPrefixes.IPCAM_ID)) {
-			// If IPCAM
-			senderPublicId = senderPublicId.substring(senderPublicId.indexOf("_" + IdentifierPrefixes.IPCAM_ID) + 1,
-					senderPublicId.length());
-		} else {
-			// Not IPCAM
-			senderPublicId = senderPublicId.substring(
-					senderPublicId.lastIndexOf(IdentifierPrefixes.PARTICIPANT_PUBLIC_ID), senderPublicId.length());
-		}
+		String senderPublicId = parseSenderPublicIdFromStreamId(senderStreamId);
 
-		String sdpOffer = getStringParam(request, ProtocolElements.RECEIVEVIDEO_SDPOFFER_PARAM);
-
-		sessionManager.subscribe(participant, senderPublicId, sdpOffer, request.getId());
+		sessionManager.subscribe(participant, senderPublicId, sdpAnswer, request.getId());
 	}
 
 	private void unsubscribeFromVideo(RpcConnection rpcConnection, Request<JsonObject> request) {
@@ -622,9 +628,9 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 			return;
 		}
 		String streamId = getStringParam(request, ProtocolElements.RECONNECTSTREAM_STREAM_PARAM);
-		String sdpOffer = getStringParam(request, ProtocolElements.RECONNECTSTREAM_SDPOFFER_PARAM);
+		String sdpString = getStringParam(request, ProtocolElements.RECONNECTSTREAM_SDPSTRING_PARAM);
 		try {
-			sessionManager.reconnectStream(participant, streamId, sdpOffer, request.getId());
+			sessionManager.reconnectStream(participant, streamId, sdpString, request.getId());
 		} catch (OpenViduException e) {
 			this.notificationService.sendErrorResponse(participant.getParticipantPrivateId(), request.getId(),
 					new JsonObject(), e);
@@ -798,6 +804,22 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 	private boolean userIsStreamOwner(String sessionId, Participant participant, String streamId) {
 		return participant.getParticipantPrivateId()
 				.equals(this.sessionManager.getParticipantPrivateIdFromStreamId(sessionId, streamId));
+	}
+
+	private String parseSenderPublicIdFromStreamId(String streamId) {
+		String senderPublicId;
+		// Parse sender public id from stream id
+		if (streamId.startsWith(IdentifierPrefixes.STREAM_ID + "IPC_")
+				&& streamId.contains(IdentifierPrefixes.IPCAM_ID)) {
+			// If IPCAM
+			senderPublicId = streamId.substring(streamId.indexOf("_" + IdentifierPrefixes.IPCAM_ID) + 1,
+					streamId.length());
+		} else {
+			// Not IPCAM
+			senderPublicId = streamId.substring(streamId.lastIndexOf(IdentifierPrefixes.PARTICIPANT_PUBLIC_ID),
+					streamId.length());
+		}
+		return senderPublicId;
 	}
 
 }

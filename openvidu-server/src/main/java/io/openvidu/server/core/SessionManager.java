@@ -106,7 +106,9 @@ public abstract class SessionManager {
 	public abstract void unpublishVideo(Participant participant, Participant moderator, Integer transactionId,
 			EndReason reason);
 
-	public abstract void subscribe(Participant participant, String senderName, String sdpOffer, Integer transactionId);
+	public abstract void prepareSubscription(Participant participant, String senderPublicId, Integer id);
+
+	public abstract void subscribe(Participant participant, String senderName, String sdpAnwser, Integer transactionId);
 
 	public abstract void unsubscribe(Participant participant, String senderName, Integer transactionId);
 

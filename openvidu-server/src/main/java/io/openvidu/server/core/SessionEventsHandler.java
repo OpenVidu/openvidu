@@ -279,14 +279,24 @@ public class SessionEventsHandler {
 		}
 	}
 
-	public void onSubscribe(Participant participant, Session session, String sdpAnswer, Integer transactionId,
+	public void onPrepareSubscription(Participant participant, Session session, String sdpOffer, Integer transactionId,
 			OpenViduException error) {
 		if (error != null) {
 			rpcNotificationService.sendErrorResponse(participant.getParticipantPrivateId(), transactionId, null, error);
 			return;
 		}
 		JsonObject result = new JsonObject();
-		result.addProperty(ProtocolElements.RECEIVEVIDEO_SDPANSWER_PARAM, sdpAnswer);
+		result.addProperty(ProtocolElements.PREPARERECEIVEVIDEO_SDPOFFER_PARAM, sdpOffer);
+		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, result);
+	}
+
+	public void onSubscribe(Participant participant, Session session, Integer transactionId,
+			OpenViduException error) {
+		if (error != null) {
+			rpcNotificationService.sendErrorResponse(participant.getParticipantPrivateId(), transactionId, null, error);
+			return;
+		}
+		JsonObject result = new JsonObject();
 		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, result);
 
 		if (ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(participant.getParticipantPublicId())) {
