@@ -965,26 +965,6 @@ export class Stream extends EventDispatcher {
                         reject(new Error('Error on receiveVideFrom: ' + JSON.stringify(error)));
                     } else {
                         resolve();
-                        // // Ios Ionic. Limitation: some bug in iosrtc cordova plugin makes it necessary
-                        // // to add a timeout before calling PeerConnection#setRemoteDescription during
-                        // // some time (400 ms) from the moment first subscriber stream is received
-                        // if (this.session.isFirstIonicIosSubscriber) {
-                        //     this.session.isFirstIonicIosSubscriber = false;
-                        //     setTimeout(() => {
-                        //         // After 400 ms Ionic iOS subscribers won't need to run
-                        //         // PeerConnection#setRemoteDescription after 250 ms timeout anymore
-                        //         this.session.countDownForIonicIosSubscribersActive = false;
-                        //     }, 400);
-                        // }
-                        // const needsTimeoutOnProcessAnswer = this.session.countDownForIonicIosSubscribersActive;
-                        // this.webRtcPeer.processAnswer(response.sdpAnswer, needsTimeoutOnProcessAnswer).then(() => {
-                        //     logger.info("'Subscriber' (" + this.streamId + ") successfully " + (reconnect ? "reconnected" : "subscribed"));
-                        //     this.remotePeerSuccessfullyEstablished();
-                        //     this.initWebRtcStats();
-                        //     resolve();
-                        // }).catch(error => {
-                        //     reject(error);
-                        // });
                     }
                 });
             };

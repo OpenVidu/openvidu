@@ -232,8 +232,7 @@ export class WebRtcPeer {
             if (this.pc.signalingState === 'closed') {
                 reject('RTCPeerConnection is closed when trying to set remote description');
             }
-            // TODO: check if Ionic iOS still needs timeout on setting first remote description when subscribing
-            this.setRemoteDescription(offer, false)
+            this.setRemoteDescription(offer)
                 .then(() => {
                     resolve();
                 })
@@ -272,7 +271,7 @@ export class WebRtcPeer {
             if (this.pc.signalingState === 'closed') {
                 reject('RTCPeerConnection is closed when trying to set remote description');
             }
-            this.setRemoteDescription(answer, false)
+            this.setRemoteDescription(answer)
                 .then(() => resolve())
                 .catch(error => reject(error));
         });
@@ -281,22 +280,8 @@ export class WebRtcPeer {
     /**
      * @hidden
      */
-    async setRemoteDescription(sdp: RTCSessionDescriptionInit, needsTimeoutOnProcessAnswer: boolean): Promise<void> {
-        // if (platform['isIonicIos']) {
-        //     // Ionic iOS platform
-        //     if (needsTimeoutOnProcessAnswer) {
-        //         // 400 ms have not elapsed yet since first remote stream triggered Stream#initWebRtcPeerReceive
-        //         await new Promise(resolve => setTimeout(resolve, 250)); // Sleep for 250ms
-        //         logger.info('setRemoteDescription run after timeout for Ionic iOS device');
-        //         return this.pc.setRemoteDescription(sdp);
-        //     } else {
-        //         // 400 ms have elapsed
-        //         return this.pc.setRemoteDescription(sdp);
-        //     }
-        // } else {
-            // Rest of platforms
-            return this.pc.setRemoteDescription(sdp);
-        // }
+    async setRemoteDescription(sdp: RTCSessionDescriptionInit): Promise<void> {
+        return this.pc.setRemoteDescription(sdp);
     }
 
     /**
