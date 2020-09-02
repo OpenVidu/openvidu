@@ -913,7 +913,7 @@ export class Stream extends EventDispatcher {
      */
     initWebRtcPeerReceive(reconnect: boolean): Promise<any> {
         return new Promise((resolve, reject) => {
-            this.session.openvidu.sendRequest('prepareReceiveVideFrom', { sender: this.streamId }, (error, response) => {
+            this.session.openvidu.sendRequest('prepareReceiveVideFrom', { sender: this.streamId, reconnect }, (error, response) => {
                 if (error) {
                     reject(new Error('Error on prepareReceiveVideFrom: ' + JSON.stringify(error)));
                 } else {
