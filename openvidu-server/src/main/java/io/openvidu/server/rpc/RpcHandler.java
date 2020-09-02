@@ -339,21 +339,22 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 	private void prepareReceiveVideoFrom(RpcConnection rpcConnection, Request<JsonObject> request) {
 		Participant participant;
 		try {
-			participant = sanityCheckOfSession(rpcConnection, "subscribe");
+			participant = sanityCheckOfSession(rpcConnection, "prepareReceiveVideFrom");
 		} catch (OpenViduException e) {
 			return;
 		}
 
 		String senderStreamId = getStringParam(request, ProtocolElements.RECEIVEVIDEO_SENDER_PARAM);
 		String senderPublicId = parseSenderPublicIdFromStreamId(senderStreamId);
+		boolean reconnect = getBooleanParam(request, ProtocolElements.PREPARERECEIVEVIDEO_RECONNECT_PARAM);
 
-		sessionManager.prepareSubscription(participant, senderPublicId, request.getId());
+		sessionManager.prepareSubscription(participant, senderPublicId, reconnect, request.getId());
 	}
 
 	private void receiveVideoFrom(RpcConnection rpcConnection, Request<JsonObject> request) {
 		Participant participant;
 		try {
-			participant = sanityCheckOfSession(rpcConnection, "subscribe");
+			participant = sanityCheckOfSession(rpcConnection, "receiveVideoFrom");
 		} catch (OpenViduException e) {
 			return;
 		}

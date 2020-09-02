@@ -72,6 +72,7 @@ public class ProtocolElements {
 
 	public static final String PREPARERECEIVEVIDEO_METHOD = "prepareReceiveVideFrom";
 	public static final String PREPARERECEIVEVIDEO_SDPOFFER_PARAM = "sdpOffer";
+	public static final String PREPARERECEIVEVIDEO_RECONNECT_PARAM = "reconnect";
 
 	public static final String RECEIVEVIDEO_METHOD = "receiveVideoFrom";
 	public static final String RECEIVEVIDEO_SDPOFFER_PARAM = "sdpOffer";

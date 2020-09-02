@@ -505,7 +505,8 @@ public class KurentoSessionManager extends SessionManager {
 	}
 
 	@Override
-	public void prepareSubscription(Participant participant, String senderPublicId, Integer transactionId) {
+	public void prepareSubscription(Participant participant, String senderPublicId, boolean reconnect,
+			Integer transactionId) {
 		String sdpOffer = null;
 		Session session = null;
 		try {
@@ -531,6 +532,10 @@ public class KurentoSessionManager extends SessionManager {
 						participant.getParticipantPublicId(), senderPublicId, session.getSessionId());
 				throw new OpenViduException(Code.USER_NOT_STREAMING_ERROR_CODE,
 						"User '" + senderPublicId + " not streaming media in session '" + session.getSessionId() + "'");
+			}
+
+			if (reconnect) {
+				kParticipant.cancelReceivingMedia(((KurentoParticipant) senderParticipant), null, true);
 			}
 
 			sdpOffer = kParticipant.prepareReceiveMediaFrom(senderParticipant);
@@ -1118,7 +1123,6 @@ public class KurentoSessionManager extends SessionManager {
 			String senderPrivateId = kSession.getParticipantPrivateIdFromStreamId(streamId);
 			if (senderPrivateId != null) {
 				KurentoParticipant sender = (KurentoParticipant) kSession.getParticipantByPrivateId(senderPrivateId);
-				kParticipant.cancelReceivingMedia(sender, null, true);
 				kParticipant.receiveMediaFrom(sender, sdpString, true);
 				sessionEventsHandler.onSubscribe(participant, kSession, transactionId, null);
 			} else {
