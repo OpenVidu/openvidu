@@ -43,7 +43,11 @@ import RpcBuilder = require('../OpenViduInternal/KurentoUtils/kurento-jsonrpc');
  */
 import platform = require('platform');
 
-platform['isIonicIos'] = (platform.product === 'iPhone' || platform.product === 'iPad') && platform.ua!!.indexOf('Safari') === -1;
+const isTouchable = 'ontouchend' in document;
+const isIPad = platform.product === 'iPad' || (/\b(\w*Macintosh\w*)\b/.test(platform.ua!!) && isTouchable);
+const isIPhone = /\b(\w*iPhone\w*)\b/.test(platform.ua!!) && /\b(\w*Mobile\w*)\b/.test(platform.ua!!) && isTouchable;
+
+platform['isIonicIos'] = (platform.product === 'iPhone' || isIPad) && platform.ua!!.indexOf('Safari') === -1;
 platform['isIonicAndroid'] = platform.os!!.family === 'Android' && platform.name == "Android Browser";
 
 /**
@@ -337,7 +341,7 @@ export class OpenVidu {
     const family = platform.os!!.family;
     const userAgent = !!platform.ua ? platform.ua : navigator.userAgent;
 
-    if(this.isIPhoneOrIPad(userAgent)) {
+      if (isIPhone || isIPhone) {
         if(this.isIOSWithSafari(userAgent) || platform['isIonicIos']){
           return 1;
         }
@@ -1056,18 +1060,8 @@ export class OpenVidu {
       (platform.name === 'Electron' && videoSource.startsWith('screen:'))
   }
 
-  private isIPhoneOrIPad(userAgent): boolean {
-    const isTouchable = 'ontouchend' in document;
-    const isIPad = /\b(\w*Macintosh\w*)\b/.test(userAgent) && isTouchable;
-    const isIPhone = /\b(\w*iPhone\w*)\b/.test(userAgent) && /\b(\w*Mobile\w*)\b/.test(userAgent) && isTouchable;
-
-    return isIPad || isIPhone;
-  }
-
   private isIOSWithSafari(userAgent): boolean{
     return /\b(\w*Apple\w*)\b/.test(navigator.vendor) && /\b(\w*Safari\w*)\b/.test(userAgent)
           && !/\b(\w*CriOS\w*)\b/.test(userAgent) && !/\b(\w*FxiOS\w*)\b/.test(userAgent);
   }
-
-
 }
