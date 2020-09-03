@@ -937,6 +937,7 @@ public class OpenViduTestAppE2eTest {
 		// Unpublish video
 		final CountDownLatch latch1 = new CountDownLatch(2);
 		user.getEventManager().on("streamPropertyChanged", (event) -> {
+			System.out.println(event.toString());
 			threadAssertions.add("videoActive".equals(event.get("changedProperty").getAsString()));
 			threadAssertions.add(!event.get("newValue").getAsBoolean());
 			latch1.countDown();
@@ -960,6 +961,7 @@ public class OpenViduTestAppE2eTest {
 		// Unpublish audio
 		final CountDownLatch latch2 = new CountDownLatch(2);
 		user.getEventManager().on("streamPropertyChanged", (event) -> {
+			System.out.println(event.toString());
 			threadAssertions.add("audioActive".equals(event.get("changedProperty").getAsString()));
 			threadAssertions.add(!event.get("newValue").getAsBoolean());
 			latch2.countDown();
