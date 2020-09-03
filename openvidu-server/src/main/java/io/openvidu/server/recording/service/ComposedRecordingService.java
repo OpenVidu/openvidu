@@ -103,7 +103,6 @@ public class ComposedRecordingService extends RecordingService {
 
 	@Override
 	public Recording stopRecording(Session session, Recording recording, EndReason reason) {
-		recording = this.sealRecordingMetadataFileAsStopped(recording);
 		if (recording.hasVideo()) {
 			return this.stopRecordingWithVideo(session, recording, reason);
 		} else {
@@ -297,10 +296,8 @@ public class ComposedRecordingService extends RecordingService {
 			stopAndRemoveRecordingContainer(recording, containerId, 30);
 			recording = updateRecordingAttributes(recording);
 
-			final String folderPath = this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/";
-			final String metadataFilePath = folderPath + RecordingManager.RECORDING_ENTITY_FILE + recording.getId();
 			this.sealRecordingMetadataFileAsReady(recording, recording.getSize(), recording.getDuration(),
-					metadataFilePath);
+					getMetadataFilePath(recording));
 			cleanRecordingMaps(recording);
 
 			final long timestamp = System.currentTimeMillis();

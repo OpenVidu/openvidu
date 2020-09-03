@@ -119,10 +119,7 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 
         recording = updateRecordingAttributes(recording);
 
-        final String folderPath = this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/";
-        final String metadataFilePath = folderPath + RecordingManager.RECORDING_ENTITY_FILE + recording.getId();
-        this.sealRecordingMetadataFileAsReady(recording, recording.getSize(), recording.getDuration(),
-                metadataFilePath);
+        this.sealRecordingMetadataFileAsReady(recording, recording.getSize(), recording.getDuration(), getMetadataFilePath(recording));
         cleanRecordingMaps(recording);
 
         final long timestamp = System.currentTimeMillis();

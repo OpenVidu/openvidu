@@ -139,7 +139,6 @@ public class SingleStreamRecordingService extends RecordingService {
 
 	@Override
 	public Recording stopRecording(Session session, Recording recording, EndReason reason) {
-		recording = this.sealRecordingMetadataFileAsStopped(recording);
 		return this.stopRecording(session, recording, reason, 0);
 	}
 

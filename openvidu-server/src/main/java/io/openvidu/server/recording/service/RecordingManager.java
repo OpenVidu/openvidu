@@ -310,6 +310,8 @@ public class RecordingManager {
 			recording = this.sessionsRecordings.get(session.getSessionId());
 		}
 
+		recording = ((RecordingService) singleStreamRecordingService).sealRecordingMetadataFileAsStopped(recording);
+
 		final long timestamp = System.currentTimeMillis();
 		this.cdr.recordRecordingStatusChanged(recording, reason, timestamp, Status.stopped);
 		cdr.recordRecordingStopped(recording, reason, timestamp);
