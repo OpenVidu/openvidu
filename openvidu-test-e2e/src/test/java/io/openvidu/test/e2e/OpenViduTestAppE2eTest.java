@@ -934,6 +934,9 @@ public class OpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
 		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
 
+		// Give some time for the screen sharing warning to stop resizing the viewport
+		Thread.sleep(3000);
+
 		// Unpublish video
 		final CountDownLatch latch1 = new CountDownLatch(2);
 		user.getEventManager().on("streamPropertyChanged", (event) -> {
