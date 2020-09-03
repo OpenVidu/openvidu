@@ -24,6 +24,12 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,12 +46,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.MediaMode;
@@ -55,6 +55,7 @@ import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.java.client.RecordingMode;
 import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.java.client.SessionProperties;
+import io.openvidu.java.client.VideoCodec;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.IdentifierPrefixes;
@@ -102,6 +103,8 @@ public class SessionRestController {
 			String defaultOutputModeString;
 			String defaultRecordingLayoutString;
 			String defaultCustomLayout;
+			String forcedVideoCodec;
+			Boolean allowTranscoding;
 			try {
 				mediaModeString = (String) params.get("mediaMode");
 				recordingModeString = (String) params.get("recordingMode");
@@ -109,6 +112,8 @@ public class SessionRestController {
 				defaultRecordingLayoutString = (String) params.get("defaultRecordingLayout");
 				defaultCustomLayout = (String) params.get("defaultCustomLayout");
 				customSessionId = (String) params.get("customSessionId");
+				forcedVideoCodec = (String) params.get("forcedVideoCodec");
+				allowTranscoding = (Boolean) params.get("allowTranscoding");
 			} catch (ClassCastException e) {
 				return this.generateErrorResponse("Type error in some parameter", "/api/sessions",
 						HttpStatus.BAD_REQUEST);
@@ -150,6 +155,16 @@ public class SessionRestController {
 					builder = builder.customSessionId(customSessionId);
 				}
 				builder = builder.defaultCustomLayout((defaultCustomLayout != null) ? defaultCustomLayout : "");
+				if (forcedVideoCodec != null) {
+					builder = builder.forcedVideoCodec(VideoCodec.valueOf(forcedVideoCodec));
+				} else {
+					builder = builder.forcedVideoCodec(VideoCodec.VP8);
+				}
+				if (allowTranscoding != null) {
+					builder = builder.allowTranscoding(allowTranscoding);
+				} else {
+					builder = builder.allowTranscoding(false);
+				}
 
 			} catch (IllegalArgumentException e) {
 				return this.generateErrorResponse("RecordingMode " + params.get("recordingMode") + " | "

@@ -30,6 +30,8 @@ public class SessionProperties {
 	private RecordingLayout defaultRecordingLayout;
 	private String defaultCustomLayout;
 	private String customSessionId;
+	private VideoCodec forcedVideoCodec;
+	private boolean allowTranscoding;
 
 	/**
 	 * Builder for {@link io.openvidu.java.client.SessionProperties}
@@ -42,6 +44,8 @@ public class SessionProperties {
 		private RecordingLayout defaultRecordingLayout = RecordingLayout.BEST_FIT;
 		private String defaultCustomLayout = "";
 		private String customSessionId = "";
+		private VideoCodec forcedVideoCodec = VideoCodec.VP8;
+		private boolean allowTranscoding = false;
 
 		/**
 		 * Returns the {@link io.openvidu.java.client.SessionProperties} object properly
@@ -49,7 +53,8 @@ public class SessionProperties {
 		 */
 		public SessionProperties build() {
 			return new SessionProperties(this.mediaMode, this.recordingMode, this.defaultOutputMode,
-					this.defaultRecordingLayout, this.defaultCustomLayout, this.customSessionId);
+					this.defaultRecordingLayout, this.defaultCustomLayout, this.customSessionId,
+					this.forcedVideoCodec, this.allowTranscoding);
 		}
 
 		/**
@@ -137,6 +142,34 @@ public class SessionProperties {
 			this.customSessionId = customSessionId;
 			return this;
 		}
+		
+		/**
+		 *
+		 * Call this method to define which video codec do you want to be forcibly used for this session.
+		 * This allows browsers to use the same codec avoiding transcoding in the media server.
+		 * To force this video codec you need to set {@link #allowTranscoding(boolean)} to <code>false</code>.
+		 * 
+		 */
+		public SessionProperties.Builder forcedVideoCodec(VideoCodec forcedVideoCodec) {
+			this.forcedVideoCodec = forcedVideoCodec;
+			return this;
+		}
+		
+		/**
+		 * 
+		 * Call this method to define if you want to allowTranscoding or not. If you define it as
+		 * as <code>false</code>, the default video codec VP8 will be used for all browsers, and the media
+		 * server will not do any transcoding. If you define it as <code>true</code>, transcoding can be 
+		 * executed by the media server when necessary.
+		 * 
+		 * If you want to set a different video codec, you can configure it 
+		 * by calling {@link #forcedVideoCodec(VideoCodec)} to your preferred one.
+		 * 
+		 */
+		public SessionProperties.Builder allowTranscoding(boolean allowTranscoding) {
+			this.allowTranscoding = allowTranscoding;
+			return this;
+		}
 
 	}
 
@@ -147,16 +180,21 @@ public class SessionProperties {
 		this.defaultRecordingLayout = RecordingLayout.BEST_FIT;
 		this.defaultCustomLayout = "";
 		this.customSessionId = "";
+		this.forcedVideoCodec = VideoCodec.VP8;
+		this.allowTranscoding = false;
 	}
 
 	private SessionProperties(MediaMode mediaMode, RecordingMode recordingMode, OutputMode outputMode,
-			RecordingLayout layout, String defaultCustomLayout, String customSessionId) {
+			RecordingLayout layout, String defaultCustomLayout, String customSessionId,
+			VideoCodec forcedVideoCodec, boolean allowTranscoding) {
 		this.mediaMode = mediaMode;
 		this.recordingMode = recordingMode;
 		this.defaultOutputMode = outputMode;
 		this.defaultRecordingLayout = layout;
 		this.defaultCustomLayout = defaultCustomLayout;
 		this.customSessionId = customSessionId;
+		this.forcedVideoCodec = forcedVideoCodec;
+		this.allowTranscoding = allowTranscoding;
 	}
 
 	/**
@@ -229,6 +267,26 @@ public class SessionProperties {
 	 */
 	public String customSessionId() {
 		return this.customSessionId;
+	}
+	
+	/**
+	 * 
+	 * Defines which video codec is being forced to be used when 
+	 * {@link io.openvidu.java.client.SessionProperties.Builder#allowTranscoding(boolean)}
+	 * has been set to <code>false</code>
+	 */
+	public VideoCodec forcedVideoCodec() {
+		return this.forcedVideoCodec;
+	}
+	
+	/**
+	 * 
+	 * Defines if transcoding is allowed or not. If this method returns <code>false</code>, a video codec
+	 * will be forcibly used for all browsers (See 
+	 * {@link io.openvidu.java.client.SessionProperties.Builder#forcedVideoCodec(VideoCodec)}).
+	 */
+	public boolean isTranscodingAllowed() {
+		return this.allowTranscoding;
 	}
 
 }

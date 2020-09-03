@@ -30,6 +30,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 import org.apache.commons.lang3.RandomStringUtils;
 import org.kurento.client.GenericMediaElement;
 import org.kurento.client.IceCandidate;
@@ -41,9 +44,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
@@ -53,6 +53,7 @@ import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.java.client.RecordingMode;
 import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.java.client.SessionProperties;
+import io.openvidu.java.client.VideoCodec;
 import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.FinalUser;
 import io.openvidu.server.core.IdentifierPrefixes;
@@ -68,6 +69,7 @@ import io.openvidu.server.kurento.kms.KmsManager;
 import io.openvidu.server.rpc.RpcHandler;
 import io.openvidu.server.utils.GeoLocation;
 import io.openvidu.server.utils.JsonUtils;
+import io.openvidu.server.utils.SDPMunging;
 
 public class KurentoSessionManager extends SessionManager {
 
@@ -81,6 +83,9 @@ public class KurentoSessionManager extends SessionManager {
 
 	@Autowired
 	private KurentoParticipantEndpointConfig kurentoEndpointConfig;
+	
+	@Autowired
+	private SDPMunging sdpMunging;
 
 	@Override
 	/* Protected by Session.closingLock.readLock */
@@ -365,14 +370,28 @@ public class KurentoSessionManager extends SessionManager {
 
 		KurentoMediaOptions kurentoOptions = (KurentoMediaOptions) mediaOptions;
 		KurentoParticipant kParticipant = (KurentoParticipant) participant;
-
+		KurentoSession kSession = kParticipant.getSession();
+		
+		// Modify sdp if transcoding is not allowed
+		if(!kSession.getSessionProperties().isTranscodingAllowed()) {
+			VideoCodec forcedVideoCodec = kSession.getSessionProperties().forcedVideoCodec();
+			String sdpOffer = kurentoOptions.sdpOffer;
+		
+			try {
+				kurentoOptions.sdpOffer = modifySdpToForceCodec(forcedVideoCodec, sdpOffer);
+			} catch (OpenViduException e) {
+				String errorMessage = "Error forcing codec: ''" + forcedVideoCodec + "', for publisher on Session: '" + kSession.getSessionId()
+					+ "'\nException: " + e.getMessage() + "\nSDP:\n" + sdpOffer;
+				throw new OpenViduException(Code.FORCED_CODEC_NOT_FOUND_IN_SDPOFFER, errorMessage);
+			}
+			
+		}
+		
 		log.debug(
 				"Request [PUBLISH_MEDIA] isOffer={} sdp={} "
 						+ "loopbackAltSrc={} lpbkConnType={} doLoopback={} rtspUri={} ({})",
 				kurentoOptions.isOffer, kurentoOptions.sdpOffer, kurentoOptions.doLoopback, kurentoOptions.rtspUri,
 				participant.getParticipantPublicId());
-
-		KurentoSession kSession = kParticipant.getSession();
 
 		kParticipant.createPublishingEndpoint(mediaOptions, null);
 
@@ -397,7 +416,7 @@ public class KurentoSessionManager extends SessionManager {
 				throw e;
 			}
 		}
-
+		
 		sdpAnswer = kParticipant.publishToRoom(kurentoOptions.sdpOffer, kurentoOptions.doLoopback, false);
 
 		if (sdpAnswer == null) {
@@ -558,6 +577,18 @@ public class KurentoSessionManager extends SessionManager {
 			KurentoParticipant kParticipant = (KurentoParticipant) participant;
 			session = ((KurentoParticipant) participant).getSession();
 			Participant senderParticipant = session.getParticipantByPublicId(senderName);
+			
+			// Modify sdp if transcoding is not allowed
+			if (!session.getSessionProperties().isTranscodingAllowed()) {
+				VideoCodec forcedVideoCodec = session.getSessionProperties().forcedVideoCodec();
+				try {
+					sdpAnswer = this.modifySdpToForceCodec(forcedVideoCodec, sdpAnswer);	
+				} catch (OpenViduException e) {
+					String errorMessage = "Error forcing codec: ''" + forcedVideoCodec + "', for subscriber on Session: '" 
+						+ session.getSessionId() + "'\nException: " + e.getMessage() + "\nSDP:\n" + sdpAnswer;
+					throw new OpenViduException(Code.FORCED_CODEC_NOT_FOUND_IN_SDPOFFER, errorMessage);
+				}
+			}
 
 			if (senderParticipant == null) {
 				log.warn(
@@ -1086,10 +1117,26 @@ public class KurentoSessionManager extends SessionManager {
 
 	@Override
 	public void reconnectStream(Participant participant, String streamId, String sdpString, Integer transactionId) {
+
 		KurentoParticipant kParticipant = (KurentoParticipant) participant;
 		KurentoSession kSession = kParticipant.getSession();
+		boolean isPublisher = streamId.equals(participant.getPublisherStreamId());
+		
+		// Modify sdp if transcoding is not allowed
+		if (!kSession.getSessionProperties().isTranscodingAllowed()) {
+			VideoCodec forcedVideoCodec = kSession.getSessionProperties().forcedVideoCodec();
+			try {
+				sdpString = modifySdpToForceCodec(forcedVideoCodec, sdpString);	
+			} catch (OpenViduException e) {
+				String errorMessage = "Error on reconnecting and forcing codec: ''" + forcedVideoCodec + "', for " 
+					+ (isPublisher ? "publisher" : "subscriber") + " on Session: '" + kSession.getSessionId()
+					+ "'\nException: " + e.getMessage() + "\nSDP:\n" + sdpString;
+				throw new OpenViduException(Code.FORCED_CODEC_NOT_FOUND_IN_SDPOFFER, errorMessage);
+			}
+			
+		}
 
-		if (streamId.equals(participant.getPublisherStreamId())) {
+		if (isPublisher) {
 
 			// Reconnect publisher
 			final KurentoMediaOptions kurentoOptions = (KurentoMediaOptions) kParticipant.getPublisher()
@@ -1192,5 +1239,14 @@ public class KurentoSessionManager extends SessionManager {
 			filter.removeEventListener(pub.removeListener(eventType));
 		}
 	}
-
+	
+	
+	private String modifySdpToForceCodec(VideoCodec codec, String sdpOffer) {
+		// Modify sdpOffer if transcoding is not allowed
+		String modSdpOffer = this.sdpMunging.setCodecPreference(codec, sdpOffer);
+		if (modSdpOffer != null) {
+			sdpOffer = modSdpOffer;
+		}
+		return sdpOffer;
+	}
 }

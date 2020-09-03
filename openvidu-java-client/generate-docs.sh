@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 if [[ -z "$BASEHREF_VERSION" ]]; then
     echo "Example of use: \"BASEHREF_VERSION=2.12.0 ${0}\"" 1>&2
@@ -9,7 +9,7 @@ fi
 grep -rl '/en/stable/' ./src | xargs sed -i -e 's|/en/stable/|/en/'${BASEHREF_VERSION}'/|g'
 
 # Generate JavaDoc
-mvn javadoc:javadoc
+mvn javadoc:javadoc -DadditionalJOption=-Xdoclint:none
 rm -rf ../../openvidu.io/api/openvidu-java-client/*
 cp -R ./target/site/apidocs/. ../../openvidu.io-docs/docs/api/openvidu-java-client
 

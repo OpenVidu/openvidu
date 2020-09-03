@@ -64,4 +64,24 @@ export interface SessionProperties {
      * If this parameter is undefined or an empty string, OpenVidu Server will generate a random sessionId for you.
      */
     customSessionId?: string;
+    
+    /** 
+	 * Call this method to define which video codec do you want to be forcibly used for this session.
+	 * This allows browsers to use the same codec avoiding transcoding in the media server.
+	 * To force this video codec you need to set [[allowTranscoding]] to <code>false</code>.
+     */ 
+    forcedVideoCodec?: string;
+    
+    /**
+     * Call this method to define if you want to allowTranscoding or not. If you define it as
+     * as <code>false</code>, the default video codec VP8 will be used for all browsers, and the media
+	 * server will not do any transcoding. If you define it as <code>true</code>, transcoding can be 
+	 * executed by the media server when necessary.
+	 * 
+	 * If you want to set a different video codec, you can configure it 
+	 * by calling [[forcedVideoCodec]] to your preferred one.
+	 * 
+	 */
+    allowTranscoding?: boolean;
+    
 }
