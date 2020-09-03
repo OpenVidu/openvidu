@@ -97,7 +97,7 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
         log.info("Stopping COMPOSED_QUICK_START ({}) recording {} of session {}. Reason: {}",
                 recording.hasAudio() ? "video + audio" : "audio-only", recording.getId(), recording.getSessionId(),
                 RecordingManager.finalReason(reason));
-        log.info("Container for session {} still being ready for new recordings", session.getSessionId());
+        log.info("Container for session {} still being ready for new recordings", recording.getSessionId());
 
         String containerId = this.sessionsContainers.get(recording.getSessionId());
 
