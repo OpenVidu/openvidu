@@ -994,9 +994,11 @@ public class OpenViduTestAppE2eTest {
 					+ "}";
 			System.out.println("Publisher dimensions: " + event.get("newValue").getAsJsonObject().toString());
 			System.out.println("Real dimensions of viewport: " + expectedDimensions);
-			threadAssertions.add("videoDimensions".equals(event.get("changedProperty").getAsString()));
-			threadAssertions.add(expectedDimensions.equals(event.get("newValue").getAsJsonObject().toString()));
-			latch3.countDown();
+			if ("videoDimensions".equals(event.get("changedProperty").getAsString())) {
+				if (expectedDimensions.equals(event.get("newValue").getAsJsonObject().toString())) {
+					latch3.countDown();
+				}
+			}
 		});
 
 		user.getDriver().manage().window().setSize(new Dimension(newWidth, newHeight));
@@ -1011,7 +1013,7 @@ public class OpenViduTestAppE2eTest {
 
 		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 6);
 
-		if (!latch3.await(5000, TimeUnit.MILLISECONDS)) {
+		if (!latch3.await(6000, TimeUnit.MILLISECONDS)) {
 			gracefullyLeaveParticipants(2);
 			fail();
 			return;
@@ -1020,11 +1022,6 @@ public class OpenViduTestAppE2eTest {
 		System.out.println(getBase64Screenshot(user));
 
 		user.getEventManager().off("streamPropertyChanged");
-		log.info("Thread assertions: {}", threadAssertions.toString());
-		for (Iterator<Boolean> iter = threadAssertions.iterator(); iter.hasNext();) {
-			Assert.assertTrue("Some Event property was wrong", iter.next());
-			iter.remove();
-		}
 
 		gracefullyLeaveParticipants(2);
 	}
