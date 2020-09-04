@@ -144,11 +144,12 @@ public class SessionProperties {
 		}
 		
 		/**
-		 *
 		 * Call this method to define which video codec do you want to be forcibly used for this session.
-		 * This allows browsers to use the same codec avoiding transcoding in the media server.
-		 * To force this video codec you need to set {@link #allowTranscoding(boolean)} to <code>false</code>.
+		 * This allows browsers/clients to use the same codec avoiding transcoding in the media server.
+		 * If the browser/client is not compatible with the specified codec and {@link #allowTranscoding(boolean)} 
+		 * is <code>false</code> and exception will occur.
 		 * 
+		 * If forcedVideoCodec is set to NONE, no codec will be forced. 
 		 */
 		public SessionProperties.Builder forcedVideoCodec(VideoCodec forcedVideoCodec) {
 			this.forcedVideoCodec = forcedVideoCodec;
@@ -156,15 +157,8 @@ public class SessionProperties {
 		}
 		
 		/**
-		 * 
-		 * Call this method to define if you want to allowTranscoding or not. If you define it as
-		 * as <code>false</code>, the default video codec VP8 will be used for all browsers, and the media
-		 * server will not do any transcoding. If you define it as <code>true</code>, transcoding can be 
-		 * executed by the media server when necessary.
-		 * 
-		 * If you want to set a different video codec, you can configure it 
-		 * by calling {@link #forcedVideoCodec(VideoCodec)} to your preferred one.
-		 * 
+		 * Call this method to define if you want to allow transcoding in the media server or not
+		 * when {@link #forcedVideoCodec(VideoCodec)} is not compatible with the browser/client.
 		 */
 		public SessionProperties.Builder allowTranscoding(boolean allowTranscoding) {
 			this.allowTranscoding = allowTranscoding;
@@ -270,20 +264,15 @@ public class SessionProperties {
 	}
 	
 	/**
-	 * 
-	 * Defines which video codec is being forced to be used when 
-	 * {@link io.openvidu.java.client.SessionProperties.Builder#allowTranscoding(boolean)}
-	 * has been set to <code>false</code>
+	 * Defines which video codec is being forced to be used in the browser/client
 	 */
 	public VideoCodec forcedVideoCodec() {
 		return this.forcedVideoCodec;
 	}
 	
 	/**
-	 * 
-	 * Defines if transcoding is allowed or not. If this method returns <code>false</code>, a video codec
-	 * will be forcibly used for all browsers (See 
-	 * {@link io.openvidu.java.client.SessionProperties.Builder#forcedVideoCodec(VideoCodec)}).
+	 * Defines if transcoding is allowed or not when {@link #forcedVideoCodec}
+	 * is not a compatible codec with the browser/client.
 	 */
 	public boolean isTranscodingAllowed() {
 		return this.allowTranscoding;

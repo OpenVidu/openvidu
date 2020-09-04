@@ -158,12 +158,12 @@ public class SessionRestController {
 				if (forcedVideoCodec != null) {
 					builder = builder.forcedVideoCodec(VideoCodec.valueOf(forcedVideoCodec));
 				} else {
-					builder = builder.forcedVideoCodec(VideoCodec.VP8);
+					builder = builder.forcedVideoCodec(openviduConfig.getOpenviduForcedCodec());
 				}
 				if (allowTranscoding != null) {
 					builder = builder.allowTranscoding(allowTranscoding);
 				} else {
-					builder = builder.allowTranscoding(false);
+					builder = builder.allowTranscoding(openviduConfig.isOpenviduAllowingTranscoding());
 				}
 
 			} catch (IllegalArgumentException e) {

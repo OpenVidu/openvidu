@@ -42,7 +42,7 @@
           <mat-checkbox class="checkbox-form" [(ngModel)]="sessionProperties.allowTranscoding"
           id="allow-transcoding-checkbox">Allow Transcoding</mat-checkbox>
         </div>
-        <mat-form-field *ngIf="!sessionProperties.allowTranscoding">
+        <mat-form-field>
           <mat-select placeholder="ForcedVideoCodec" [(ngModel)]="sessionProperties.forcedVideoCodec"
             id="forced-video-codec-select">
             <mat-option *ngFor="let enumerator of enumToArray(forceVideoCodec)" [value]="enumerator">

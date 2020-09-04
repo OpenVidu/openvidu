@@ -371,20 +371,26 @@ public class KurentoSessionManager extends SessionManager {
 		KurentoMediaOptions kurentoOptions = (KurentoMediaOptions) mediaOptions;
 		KurentoParticipant kParticipant = (KurentoParticipant) participant;
 		KurentoSession kSession = kParticipant.getSession();
-		
-		// Modify sdp if transcoding is not allowed
-		if(!kSession.getSessionProperties().isTranscodingAllowed()) {
-			VideoCodec forcedVideoCodec = kSession.getSessionProperties().forcedVideoCodec();
+		boolean isTranscodingAllowed = kSession.getSessionProperties().isTranscodingAllowed();
+		VideoCodec forcedVideoCodec = kSession.getSessionProperties().forcedVideoCodec();
+
+		// Modify sdp if forced codec is defined
+		if (forcedVideoCodec != VideoCodec.NONE) {
 			String sdpOffer = kurentoOptions.sdpOffer;
-		
 			try {
-				kurentoOptions.sdpOffer = modifySdpToForceCodec(forcedVideoCodec, sdpOffer);
+				log.debug("PARTICIPANT '{}' in Session '{}' SDP Offer before munging: \n {}",
+					participant.getParticipantPublicId(), kSession.getSessionId(), kurentoOptions.sdpOffer);
+				kurentoOptions.sdpOffer = this.sdpMunging.setCodecPreference(forcedVideoCodec, sdpOffer);
 			} catch (OpenViduException e) {
-				String errorMessage = "Error forcing codec: ''" + forcedVideoCodec + "', for publisher on Session: '" + kSession.getSessionId()
-					+ "'\nException: " + e.getMessage() + "\nSDP:\n" + sdpOffer;
-				throw new OpenViduException(Code.FORCED_CODEC_NOT_FOUND_IN_SDPOFFER, errorMessage);
+				String errorMessage = "Error forcing codec: '" + forcedVideoCodec + "', for PARTICIPANT" 
+					+ participant.getParticipantPublicId() + "' publishing in Session: '" 
+					+ kSession.getSessionId() + "'\nException: " + e.getMessage() + "\nSDP:\n" + sdpAnswer;
+				if(!isTranscodingAllowed) {
+					throw new OpenViduException(Code.FORCED_CODEC_NOT_FOUND_IN_SDPOFFER, errorMessage);
+				}
+				log.info("Codec: '" + forcedVideoCodec + "' is not supported for PARTICIPANT: '" + participant.getParticipantPublicId() 
+					+ " publishing in Session: '" + kSession.getSessionId() + "'. Transcoding will be allowed");
 			}
-			
 		}
 		
 		log.debug(
@@ -418,7 +424,7 @@ public class KurentoSessionManager extends SessionManager {
 		}
 		
 		sdpAnswer = kParticipant.publishToRoom(kurentoOptions.sdpOffer, kurentoOptions.doLoopback, false);
-
+		
 		if (sdpAnswer == null) {
 			OpenViduException e = new OpenViduException(Code.MEDIA_SDP_ERROR_CODE,
 					"Error generating SDP response for publishing user " + participant.getParticipantPublicId());
@@ -582,16 +588,25 @@ public class KurentoSessionManager extends SessionManager {
 			KurentoParticipant kParticipant = (KurentoParticipant) participant;
 			session = ((KurentoParticipant) participant).getSession();
 			Participant senderParticipant = session.getParticipantByPublicId(senderName);
+			boolean isTranscodingAllowed = session.getSessionProperties().isTranscodingAllowed();
+			VideoCodec forcedVideoCodec = session.getSessionProperties().forcedVideoCodec();
 			
-			// Modify sdp if transcoding is not allowed
-			if (!session.getSessionProperties().isTranscodingAllowed()) {
-				VideoCodec forcedVideoCodec = session.getSessionProperties().forcedVideoCodec();
+			// Modify sdp if forced codec is defined
+			if (forcedVideoCodec != VideoCodec.NONE) {
 				try {
-					sdpAnswer = this.modifySdpToForceCodec(forcedVideoCodec, sdpAnswer);	
+					log.debug("PARTICIPANT '{}' in Session '{}' SDP Answer before munging: \n {}",
+						participant.getParticipantPublicId(), session.getSessionId(), sdpAnswer);
+					sdpAnswer = this.sdpMunging.setCodecPreference(forcedVideoCodec, sdpAnswer);	
 				} catch (OpenViduException e) {
-					String errorMessage = "Error forcing codec: ''" + forcedVideoCodec + "', for subscriber on Session: '" 
+					String errorMessage = "Error forcing codec: '" + forcedVideoCodec + "', for PARTICIPANT: '" 
+						+ participant.getParticipantPublicId() + "' subscribing in Session: '" 
 						+ session.getSessionId() + "'\nException: " + e.getMessage() + "\nSDP:\n" + sdpAnswer;
-					throw new OpenViduException(Code.FORCED_CODEC_NOT_FOUND_IN_SDPOFFER, errorMessage);
+					
+					if(!isTranscodingAllowed) {
+						throw new OpenViduException(Code.FORCED_CODEC_NOT_FOUND_IN_SDPOFFER, errorMessage);
+					}
+					log.info("Codec: '" + forcedVideoCodec + "' is not supported for PARTICIPANT: '" + participant.getParticipantPublicId() 
+						+ " subscribing in Session: '" + session.getSessionId() + "'. Transcoding will be allowed");
 				}
 			}
 
@@ -1126,19 +1141,26 @@ public class KurentoSessionManager extends SessionManager {
 		KurentoParticipant kParticipant = (KurentoParticipant) participant;
 		KurentoSession kSession = kParticipant.getSession();
 		boolean isPublisher = streamId.equals(participant.getPublisherStreamId());
+		boolean isTranscodingAllowed = kSession.getSessionProperties().isTranscodingAllowed();
+		VideoCodec forcedVideoCodec = kSession.getSessionProperties().forcedVideoCodec();
 		
-		// Modify sdp if transcoding is not allowed
-		if (!kSession.getSessionProperties().isTranscodingAllowed()) {
-			VideoCodec forcedVideoCodec = kSession.getSessionProperties().forcedVideoCodec();
+		// Modify sdp if forced codec is defined
+		if (forcedVideoCodec != VideoCodec.NONE) {
 			try {
-				sdpString = modifySdpToForceCodec(forcedVideoCodec, sdpString);	
+				log.debug("PARTICIPANT '{}' in Session '{}'  reconnecting SDP before munging: \n {}",
+						participant.getParticipantPublicId(), kSession.getSessionId(), sdpString);
+				sdpString = sdpMunging.setCodecPreference(forcedVideoCodec, sdpString);
 			} catch (OpenViduException e) {
-				String errorMessage = "Error on reconnecting and forcing codec: ''" + forcedVideoCodec + "', for " 
-					+ (isPublisher ? "publisher" : "subscriber") + " on Session: '" + kSession.getSessionId()
-					+ "'\nException: " + e.getMessage() + "\nSDP:\n" + sdpString;
-				throw new OpenViduException(Code.FORCED_CODEC_NOT_FOUND_IN_SDPOFFER, errorMessage);
+				String errorMessage = "Error in reconnect and forcing codec: '" + forcedVideoCodec + "', for PARTICIPANT: '" 
+						+ participant.getParticipantPublicId() + "' " + (isPublisher ? "publishing" : "subscribing") 
+						+ " in Session: '"  + kSession.getSessionId() + "'\nException: " 
+						+ e.getMessage() + "\nSDP:\n" + sdpString;	
+				if(!isTranscodingAllowed) {
+					throw new OpenViduException(Code.FORCED_CODEC_NOT_FOUND_IN_SDPOFFER, errorMessage);
+				}	
+				log.info("Codec: '" + forcedVideoCodec + "' is not supported for PARTICIPANT: '" + participant.getParticipantPublicId() 
+					+ "' " + (isPublisher ? "publishing" : "subscribing") + " in Session: '" + kSession.getSessionId() + "'. Transcoding will be allowed");
 			}
-			
 		}
 
 		if (isPublisher) {
@@ -1242,15 +1264,5 @@ public class KurentoSessionManager extends SessionManager {
 			GenericMediaElement filter = kParticipant.getPublisher().getFilter();
 			filter.removeEventListener(pub.removeListener(eventType));
 		}
-	}
-	
-	
-	private String modifySdpToForceCodec(VideoCodec codec, String sdpOffer) {
-		// Modify sdpOffer if transcoding is not allowed
-		String modSdpOffer = this.sdpMunging.setCodecPreference(codec, sdpOffer);
-		if (modSdpOffer != null) {
-			sdpOffer = modSdpOffer;
-		}
-		return sdpOffer;
 	}
 }

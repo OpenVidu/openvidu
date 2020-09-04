@@ -37,6 +37,10 @@ import java.util.Map;
 
 import javax.annotation.PostConstruct;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonSyntaxException;
+
 import org.apache.commons.io.FilenameUtils;
 import org.apache.http.Header;
 import org.apache.http.message.BasicHeader;
@@ -48,11 +52,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonSyntaxException;
-
 import io.openvidu.java.client.OpenViduRole;
+import io.openvidu.java.client.VideoCodec;
 import io.openvidu.server.OpenViduServer;
 import io.openvidu.server.cdr.CDREventName;
 import io.openvidu.server.config.Dotenv.DotenvFormatException;
@@ -176,6 +177,10 @@ public class OpenviduConfig {
 
 	protected int openviduSessionsGarbageThreshold;
 
+	private VideoCodec openviduForcedCodec;
+
+	private boolean openviduAllowTranscoding;
+
 	private String dotenvPath;
 
 	// Derived properties
@@ -188,6 +193,14 @@ public class OpenviduConfig {
 
 	public String getCoturnDatabaseDbname() {
 		return this.coturnRedisDbname;
+	}
+
+	public boolean isOpenviduAllowingTranscoding() {
+		return openviduAllowTranscoding;
+	}
+
+	public VideoCodec getOpenviduForcedCodec() {
+		return openviduForcedCodec;
 	}
 
 	public String getCoturnDatabasePassword() {
@@ -335,20 +348,20 @@ public class OpenviduConfig {
 	public OpenViduRole[] getRolesFromRecordingNotification() {
 		OpenViduRole[] roles;
 		switch (this.openviduRecordingNotification) {
-		case none:
-			roles = new OpenViduRole[0];
-			break;
-		case moderator:
-			roles = new OpenViduRole[] { OpenViduRole.MODERATOR };
-			break;
-		case publisher_moderator:
-			roles = new OpenViduRole[] { OpenViduRole.PUBLISHER, OpenViduRole.MODERATOR };
-			break;
-		case all:
-			roles = new OpenViduRole[] { OpenViduRole.SUBSCRIBER, OpenViduRole.PUBLISHER, OpenViduRole.MODERATOR };
-			break;
-		default:
-			roles = new OpenViduRole[] { OpenViduRole.PUBLISHER, OpenViduRole.MODERATOR };
+			case none:
+				roles = new OpenViduRole[0];
+				break;
+			case moderator:
+				roles = new OpenViduRole[] { OpenViduRole.MODERATOR };
+				break;
+			case publisher_moderator:
+				roles = new OpenViduRole[] { OpenViduRole.PUBLISHER, OpenViduRole.MODERATOR };
+				break;
+			case all:
+				roles = new OpenViduRole[] { OpenViduRole.SUBSCRIBER, OpenViduRole.PUBLISHER, OpenViduRole.MODERATOR };
+				break;
+			default:
+				roles = new OpenViduRole[] { OpenViduRole.PUBLISHER, OpenViduRole.MODERATOR };
 		}
 		return roles;
 	}
@@ -500,6 +513,9 @@ public class OpenviduConfig {
 		openviduSessionsGarbageInterval = asNonNegativeInteger("OPENVIDU_SESSIONS_GARBAGE_INTERVAL");
 		openviduSessionsGarbageThreshold = asNonNegativeInteger("OPENVIDU_SESSIONS_GARBAGE_THRESHOLD");
 
+		openviduForcedCodec = asEnumValue("OPENVIDU_FORCED_CODEC", VideoCodec.class);
+		openviduAllowTranscoding = asBoolean("OPENVIDU_ALLOW_TRANSCODING");
+		
 		kmsUrisList = checkKmsUris();
 
 		checkCoturnIp();
