@@ -2549,7 +2549,7 @@ public class OpenViduTestAppE2eTest {
 		// 200
 		body = "{'session': 'CUSTOM_SESSION_ID', 'role': 'MODERATOR', 'data': 'SERVER_DATA', 'kurentoOptions': {'allowedFilters': ['GStreamerFilter']}}";
 		res = restClient.rest(HttpMethod.POST, "/api/tokens", body, HttpStatus.SC_OK, true,
-				"{'id':'STR','session':'STR','role':'STR','data':'STR','token':'STR','kurentoOptions':{'allowedFilters':['STR']}}");
+				"{'id':'STR','session':'STR','role':'STR','record':true,'data':'STR','token':'STR','kurentoOptions':{'allowedFilters':['STR']}}");
 		final String token1 = res.get("token").getAsString();
 		Assert.assertEquals("JSON return value from /api/tokens should have equal srtings in 'id' and 'token'",
 				res.get("id").getAsString(), token1);
@@ -2558,7 +2558,7 @@ public class OpenViduTestAppE2eTest {
 		// Default values
 		body = "{'session': 'CUSTOM_SESSION_ID'}";
 		res = restClient.rest(HttpMethod.POST, "/api/tokens", body, HttpStatus.SC_OK, true,
-				"{'id':'STR','session':'STR','role':'STR','data':'STR','token':'STR'}");
+				"{'id':'STR','session':'STR','role':'STR','data':'STR','record':true,'token':'STR'}");
 		final String token2 = res.get("id").getAsString();
 
 		/** POST /api/signal (NOT ACTIVE SESSION) **/
