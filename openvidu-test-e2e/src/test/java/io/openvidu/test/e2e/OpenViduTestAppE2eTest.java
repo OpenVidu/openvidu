@@ -346,11 +346,20 @@ public class OpenViduTestAppE2eTest {
 
 		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
 		Assert.assertEquals("Expected 4 videos but found " + numberOfVideos, 4, numberOfVideos);
-		Assert.assertTrue("Videos were expected to only have video tracks", user.getEventManager().assertMediaTracks(
-				user.getDriver().findElements(By.cssSelector("#openvidu-instance-0 video")), false, true));
 		// TODO: subscriber should also have only video track
+		// Assert.assertTrue("Videos were expected to only have video tracks", user.getEventManager().assertMediaTracks(user.getDriver().findElements(By.tagName("video")), false, true));
+		Assert.assertTrue("Videos were expected to only have video tracks",
+				user.getEventManager().assertMediaTracks(
+						user.getDriver().findElements(By.cssSelector("#openvidu-instance-0 video")).subList(0, 1),
+						false, true));
+		Assert.assertTrue("Videos were expected to only have video track",
+				user.getEventManager().assertMediaTracks(
+						user.getDriver().findElements(By.cssSelector("#openvidu-instance-1 video")).subList(0, 1),
+						false, true));
 		Assert.assertTrue("Videos were expected to have only a video track", user.getEventManager().assertMediaTracks(
-				user.getDriver().findElements(By.cssSelector("#openvidu-instance-1 video")), true, true));
+				user.getDriver().findElements(By.cssSelector("#openvidu-instance-0 video")).subList(1, 2), true, true));
+		Assert.assertTrue("Videos were expected to have only a video track", user.getEventManager().assertMediaTracks(
+				user.getDriver().findElements(By.cssSelector("#openvidu-instance-1 video")).subList(1, 2), true, true));
 
 		gracefullyLeaveParticipants(2);
 	}
