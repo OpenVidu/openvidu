@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 
@@ -120,8 +121,22 @@ public class Session {
 
 		JsonObject json = new JsonObject();
 		json.addProperty("session", this.sessionId);
-		json.addProperty("role", tokenOptions.getRole().name());
-		json.addProperty("data", tokenOptions.getData());
+
+		if (tokenOptions.getData() != null) {
+			json.addProperty("data", tokenOptions.getData());
+		} else {
+			json.add("data", JsonNull.INSTANCE);
+		}
+		if (tokenOptions.getRole() != null) {
+			json.addProperty("role", tokenOptions.getRole().name());
+		} else {
+			json.add("role", JsonNull.INSTANCE);
+		}
+		if (tokenOptions.record() != null) {
+			json.addProperty("record", tokenOptions.record());
+		} else {
+			json.add("record", JsonNull.INSTANCE);
+		}
 		if (tokenOptions.getKurentoOptions() != null) {
 			JsonObject kurentoOptions = new JsonObject();
 			if (tokenOptions.getKurentoOptions().getVideoMaxRecvBandwidth() != null) {
