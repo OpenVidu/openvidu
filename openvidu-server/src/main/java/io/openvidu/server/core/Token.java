@@ -27,6 +27,7 @@ public class Token {
 	private OpenViduRole role;
 	private String serverMetadata = "";
 	private TurnCredentials turnCredentials;
+	private boolean record = true;
 
 	private KurentoTokenOptions kurentoTokenOptions;
 
@@ -35,11 +36,12 @@ public class Token {
 	}
 
 	public Token(String token, OpenViduRole role, String serverMetadata, TurnCredentials turnCredentials,
-			KurentoTokenOptions kurentoTokenOptions) {
+			boolean record, KurentoTokenOptions kurentoTokenOptions) {
 		this.token = token;
 		this.role = role;
 		this.serverMetadata = serverMetadata;
 		this.turnCredentials = turnCredentials;
+		this.record = record;
 		this.kurentoTokenOptions = kurentoTokenOptions;
 	}
 
@@ -50,7 +52,7 @@ public class Token {
 	public void setToken(String token) {
 		this.token = token;
 	}
-	
+
 	public OpenViduRole getRole() {
 		return role;
 	}
@@ -61,6 +63,10 @@ public class Token {
 
 	public TurnCredentials getTurnCredentials() {
 		return turnCredentials;
+	}
+
+	public boolean record() {
+		return record;
 	}
 
 	public KurentoTokenOptions getKurentoTokenOptions() {

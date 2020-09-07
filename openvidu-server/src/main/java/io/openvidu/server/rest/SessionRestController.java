@@ -330,10 +330,12 @@ public class SessionRestController {
 		String sessionId;
 		String roleString;
 		String metadata;
+		Boolean record;
 		try {
 			sessionId = (String) params.get("session");
 			roleString = (String) params.get("role");
 			metadata = (String) params.get("data");
+			record = (Boolean) params.get("record");
 		} catch (ClassCastException e) {
 			return this.generateErrorResponse("Type error in some parameter", "/api/tokens", HttpStatus.BAD_REQUEST);
 		}
@@ -383,17 +385,19 @@ public class SessionRestController {
 		}
 
 		metadata = (metadata != null) ? metadata : "";
+		record = (record != null) ? record : true;
 
 		// While closing a session tokens can't be generated
 		if (session.closingLock.readLock().tryLock()) {
 			try {
-				String token = sessionManager.newToken(session, role, metadata, kurentoTokenOptions);
+				String token = sessionManager.newToken(session, role, metadata, record, kurentoTokenOptions);
 
 				JsonObject responseJson = new JsonObject();
 				responseJson.addProperty("id", token);
 				responseJson.addProperty("session", sessionId);
 				responseJson.addProperty("role", role.toString());
 				responseJson.addProperty("data", metadata);
+				responseJson.addProperty("record", record);
 				responseJson.addProperty("token", token);
 
 				if (kurentoOptions != null) {

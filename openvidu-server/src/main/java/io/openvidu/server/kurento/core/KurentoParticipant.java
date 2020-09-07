@@ -182,7 +182,7 @@ public class KurentoParticipant extends Participant {
 				this.session.getSessionId());
 
 		if (this.openviduConfig.isRecordingModuleEnabled()
-				&& this.recordingManager.sessionIsBeingRecorded(session.getSessionId())) {
+				&& this.recordingManager.sessionIsBeingRecorded(session.getSessionId()) && this.token.record()) {
 			this.recordingManager.startOneIndividualStreamRecording(session, null, null, this);
 		}
 
@@ -461,7 +461,7 @@ public class KurentoParticipant extends Participant {
 		}
 		releaseElement(getParticipantPublicId(), publisher.getEndpoint());
 		this.streaming = false;
-		this.session.deregisterPublisher();
+		this.session.deregisterPublisher(this);
 
 		endpointConfig.getCdr().stopPublisher(this.getParticipantPublicId(), publisher.getStreamId(), reason);
 		publisher = null;

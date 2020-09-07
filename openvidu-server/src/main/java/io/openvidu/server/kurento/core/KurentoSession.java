@@ -88,7 +88,7 @@ public class KurentoSession extends Session {
 	}
 
 	public void newPublisher(Participant participant) {
-		registerPublisher();
+		registerPublisher(participant);
 		log.debug("SESSION {}: Virtually subscribed other participants {} to new publisher {}", sessionId,
 				participants.values(), participant.getParticipantPublicId());
 	}

@@ -1349,8 +1349,15 @@ public class OpenViduTestAppE2eTest {
 		final String sessionName = "TestSession";
 		final String recordingName = "CUSTOM_NAME";
 
-		user.getDriver().findElement(By.id("auto-join-checkbox")).click();
+		// Connect 2 users. One of them not recorded
 		user.getDriver().findElement(By.id("one2one-btn")).click();
+		user.getDriver().findElement(By.id("session-settings-btn-0")).click();
+		Thread.sleep(1000);
+		user.getDriver().findElement(By.id("record-checkbox")).click();
+		user.getDriver().findElement(By.id("save-btn")).click();
+		Thread.sleep(1000);
+
+		user.getDriver().findElements(By.className("join-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
 
 		user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
 		user.getEventManager().waitUntilEventReaches("accessAllowed", 2);
@@ -1418,7 +1425,7 @@ public class OpenViduTestAppE2eTest {
 		String recPath = recordingsPath + sessionName + "/";
 
 		Recording recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(sessionName);
-		this.checkIndividualRecording(recPath, recording, 2, "opus", "vp8", true);
+		this.checkIndividualRecording(recPath, recording, 1, "opus", "vp8", true);
 
 		// Try to get the stopped recording
 		user.getDriver().findElement(By.id("get-recording-btn")).click();
