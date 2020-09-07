@@ -1,7 +1,7 @@
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
 
-import { SessionProperties, MediaMode, Recording, RecordingMode, RecordingLayout, TokenOptions } from 'openvidu-node-client';
+import { SessionProperties, MediaMode, Recording, RecordingMode, RecordingLayout, TokenOptions, VideoCodec } from 'openvidu-node-client';
 
 @Component({
     selector: 'app-session-properties-dialog',
@@ -24,6 +24,7 @@ export class SessionPropertiesDialogComponent {
     recordingMode = RecordingMode;
     defaultOutputMode = Recording.OutputMode;
     defaultRecordingLayout = RecordingLayout;
+    forceVideoCodec = VideoCodec;
 
     constructor(public dialogRef: MatDialogRef<SessionPropertiesDialogComponent>,
         @Inject(MAT_DIALOG_DATA) public data) {

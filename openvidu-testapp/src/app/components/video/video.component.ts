@@ -726,5 +726,12 @@ export class VideoComponent implements OnInit, OnDestroy {
             event
         });
     }
+    
+    async showStats() {
+        let stats = await this.streamManager.stream.getWebRtcPeer().pc.getStats(null);
+        stats.forEach(report => {
+            console.log(report);
+        })
+    }
 
 }

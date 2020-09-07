@@ -29,11 +29,11 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
@@ -211,6 +211,8 @@ public class Session implements SessionInterface {
 		json.addProperty("mediaMode", this.sessionProperties.mediaMode().name());
 		json.addProperty("recordingMode", this.sessionProperties.recordingMode().name());
 		json.addProperty("defaultOutputMode", this.sessionProperties.defaultOutputMode().name());
+		json.addProperty("forcedVideoCodec", this.sessionProperties.forcedVideoCodec().name());
+		json.addProperty("allowTranscoding", this.sessionProperties.isTranscodingAllowed());
 		if (RecordingUtils.IS_COMPOSED(this.sessionProperties.defaultOutputMode())) {
 			json.addProperty("defaultRecordingLayout", this.sessionProperties.defaultRecordingLayout().name());
 			if (RecordingLayout.CUSTOM.equals(this.sessionProperties.defaultRecordingLayout())) {

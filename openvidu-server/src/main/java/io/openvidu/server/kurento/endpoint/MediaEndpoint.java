@@ -516,6 +516,24 @@ public abstract class MediaEndpoint {
 		}
 	}
 
+	protected String generateOffer() throws OpenViduException {
+		if (this.isWeb()) {
+			if (webEndpoint == null) {
+				throw new OpenViduException(Code.MEDIA_WEBRTC_ENDPOINT_ERROR_CODE,
+						"Can't generate offer when WebRtcEndpoint is null (ep: " + endpointName + ")");
+			}
+			return webEndpoint.generateOffer();
+		} else if (this.isPlayerEndpoint()) {
+			return "";
+		} else {
+			if (endpoint == null) {
+				throw new OpenViduException(Code.MEDIA_RTP_ENDPOINT_ERROR_CODE,
+						"Can't generate offer when RtpEndpoint is null (ep: " + endpointName + ")");
+			}
+			return endpoint.generateOffer();
+		}
+	}
+
 	/**
 	 * If supported, it registers a listener for when a new {@link IceCandidate} is
 	 * gathered by the internal endpoint ({@link WebRtcEndpoint}) and sends it to

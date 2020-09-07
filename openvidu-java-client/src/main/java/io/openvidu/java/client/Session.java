@@ -473,6 +473,8 @@ public class Session {
 		json.addProperty("defaultRecordingLayout", properties.defaultRecordingLayout().name());
 		json.addProperty("defaultCustomLayout", properties.defaultCustomLayout());
 		json.addProperty("customSessionId", properties.customSessionId());
+		json.addProperty("forcedVideoCodec", properties.forcedVideoCodec().name());
+		json.addProperty("allowTranscoding", properties.isTranscodingAllowed());
 		StringEntity params = null;
 		try {
 			params = new StringEntity(json.toString());
@@ -535,6 +537,12 @@ public class Session {
 		if (json.has("defaultCustomLayout")) {
 			builder.defaultCustomLayout(json.get("defaultCustomLayout").getAsString());
 		}
+		if (json.has("forcedVideoCodec")) {
+			builder.forcedVideoCodec(VideoCodec.valueOf(json.get("forcedVideoCodec").getAsString()));
+		}
+		if (json.has("allowTranscoding")) {
+			builder.allowTranscoding(json.get("allowTranscoding").getAsBoolean());
+		}
 		if (this.properties != null && this.properties.customSessionId() != null) {
 			builder.customSessionId(this.properties.customSessionId());
 		} else if (json.has("customSessionId")) {
@@ -587,6 +595,9 @@ public class Session {
 		json.addProperty("defaultOutputMode", this.properties.defaultOutputMode().name());
 		json.addProperty("defaultRecordingLayout", this.properties.defaultRecordingLayout().name());
 		json.addProperty("defaultCustomLayout", this.properties.defaultCustomLayout());
+		json.addProperty("forcedVideoCodec", this.properties.forcedVideoCodec().name());
+		json.addProperty("allowTranscoding", this.properties.isTranscodingAllowed());
+		
 		JsonObject connections = new JsonObject();
 		connections.addProperty("numberOfElements", this.getActiveConnections().size());
 		JsonArray jsonArrayConnections = new JsonArray();

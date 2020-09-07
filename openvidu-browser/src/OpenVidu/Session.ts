@@ -102,14 +102,6 @@ export class Session extends EventDispatcher {
     /**
      * @hidden
      */
-    isFirstIonicIosSubscriber = true;
-    /**
-     * @hidden
-     */
-    countDownForIonicIosSubscribersActive = true;
-    /**
-     * @hidden
-     */
     remoteConnections: ObjMap<Connection> = {};
     /**
      * @hidden
@@ -724,11 +716,6 @@ export class Session extends EventDispatcher {
                     streamEvent.callDefaultBehavior();
 
                     delete this.remoteStreamsCreated[stream.streamId];
-
-                    if (Object.keys(this.remoteStreamsCreated).length === 0) {
-                        this.isFirstIonicIosSubscriber = true;
-                        this.countDownForIonicIosSubscribersActive = true;
-                    }
                 }
                 delete this.remoteConnections[connection.connectionId];
                 this.ee.emitEvent('connectionDestroyed', [new ConnectionEvent(false, this, 'connectionDestroyed', connection, msg.reason)]);
@@ -798,12 +785,6 @@ export class Session extends EventDispatcher {
                     // Deleting the remote stream
                     const streamId: string = connection.stream.streamId;
                     delete this.remoteStreamsCreated[streamId];
-
-                    if (Object.keys(this.remoteStreamsCreated).length === 0) {
-                        this.isFirstIonicIosSubscriber = true;
-                        this.countDownForIonicIosSubscribersActive = true;
-                    }
-
                     connection.removeStream(streamId);
                 })
                 .catch(openViduError => {
