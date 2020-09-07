@@ -18,7 +18,6 @@
 package io.openvidu.server.kurento.endpoint;
 
 import java.util.Map.Entry;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.kurento.client.MediaPipeline;
 import org.slf4j.Logger;
@@ -38,8 +37,6 @@ import io.openvidu.server.kurento.core.KurentoParticipant;
 public class SubscriberEndpoint extends MediaEndpoint {
 	private final static Logger log = LoggerFactory.getLogger(SubscriberEndpoint.class);
 
-	private AtomicBoolean connectedToPublisher = new AtomicBoolean(false);
-
 	private String publisherStreamId;
 
 	public SubscriberEndpoint(EndpointType endpointType, KurentoParticipant owner, String endpointName,
@@ -47,23 +44,18 @@ public class SubscriberEndpoint extends MediaEndpoint {
 		super(endpointType, owner, endpointName, pipeline, openviduConfig, log);
 	}
 
-	public synchronized String subscribe(String sdpOffer, PublisherEndpoint publisher) {
+	public synchronized String prepareSubscription(PublisherEndpoint publisher) {
 		registerOnIceCandidateEventListener(publisher.getOwner().getParticipantPublicId());
+		publisher.connect(this.getEndpoint(), true);
 		this.createdAt = System.currentTimeMillis();
-		String sdpAnswer = processOffer(sdpOffer);
-		gatherCandidates();
-		publisher.connect(this.getEndpoint());
-		setConnectedToPublisher(true);
 		this.publisherStreamId = publisher.getStreamId();
-		return sdpAnswer;
+		String sdpOffer = generateOffer();
+		gatherCandidates();
+		return sdpOffer;
 	}
 
-	public boolean isConnectedToPublisher() {
-		return connectedToPublisher.get();
-	}
-
-	public void setConnectedToPublisher(boolean connectedToPublisher) {
-		this.connectedToPublisher.set(connectedToPublisher);
+	public synchronized void subscribe(String sdpAnswer, PublisherEndpoint publisher) {
+		processAnswer(sdpAnswer);
 	}
 
 	@Override

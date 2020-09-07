@@ -175,57 +175,42 @@ public class PublisherEndpoint extends MediaEndpoint {
 
 	/**
 	 * Initializes this media endpoint for publishing media and processes the SDP
-	 * offer or answer. If the internal endpoint is an {@link WebRtcEndpoint}, it
-	 * first registers an event listener for the ICE candidates and instructs the
-	 * endpoint to start gathering the candidates. If required, it connects to
-	 * itself (after applying the intermediate media elements and the
-	 * {@link PassThrough}) to allow loopback of the media stream.
+	 * offer. If the internal endpoint is an {@link WebRtcEndpoint}, it first
+	 * registers an event listener for the ICE candidates and instructs the endpoint
+	 * to start gathering the candidates. If required, it connects to itself (after
+	 * applying the intermediate media elements and the {@link PassThrough}) to
+	 * allow loopback of the media stream.
 	 *
-	 * @param sdpType                indicates the type of the sdpString (offer or
-	 *                               answer)
-	 * @param sdpString              offer or answer from the remote peer
-	 * @param doLoopback             loopback flag
-	 * @param loopbackAlternativeSrc alternative loopback source
-	 * @param loopbackConnectionType how to connect the loopback source
-	 * @return the SDP response (the answer if processing an offer SDP, otherwise is
-	 *         the updated offer generated previously by this endpoint)
+	 * @param sdpOffer   SDP offer from the remote peer
+	 * @param doLoopback loopback flag
+	 * @return the SDP answer
 	 */
-	public synchronized String publish(SdpType sdpType, String sdpString, boolean doLoopback) {
+	public synchronized String publish(String sdpOffer, boolean doLoopback) {
+		String sdpResponse = processOffer(sdpOffer);
 		registerOnIceCandidateEventListener(this.getOwner().getParticipantPublicId());
 		if (doLoopback) {
-			connect(this.getEndpoint());
+			connect(this.getEndpoint(), false);
 		} else {
-			innerConnect();
+			innerConnect(false);
 		}
 		this.createdAt = System.currentTimeMillis();
-		String sdpResponse = null;
-		switch (sdpType) {
-		case ANSWER:
-			sdpResponse = processAnswer(sdpString);
-			break;
-		case OFFER:
-			sdpResponse = processOffer(sdpString);
-			break;
-		default:
-			throw new OpenViduException(Code.MEDIA_SDP_ERROR_CODE, "Sdp type not supported: " + sdpType);
-		}
 		gatherCandidates();
 		return sdpResponse;
 	}
 
-	public synchronized void connect(MediaElement sink) {
+	public synchronized void connect(MediaElement sink, boolean blocking) {
 		if (!connected) {
-			innerConnect();
+			innerConnect(blocking);
 		}
-		internalSinkConnect(passThru, sink);
+		internalSinkConnect(passThru, sink, blocking);
 		this.enableIpCameraIfNecessary();
 	}
 
-	public synchronized void connect(MediaElement sink, MediaType type) {
+	public synchronized void connect(MediaElement sink, MediaType type, boolean blocking) {
 		if (!connected) {
-			innerConnect();
+			innerConnect(blocking);
 		}
-		internalSinkConnect(passThru, sink, type);
+		internalSinkConnect(passThru, sink, type, blocking);
 		this.enableIpCameraIfNecessary();
 	}
 
@@ -289,11 +274,11 @@ public class PublisherEndpoint extends MediaEndpoint {
 		}
 		if (connected) {
 			if (first != null) {
-				internalSinkConnect(first, shaper, type);
+				internalSinkConnect(first, shaper, type, false);
 			} else {
-				internalSinkConnect(this.getEndpoint(), shaper, type);
+				internalSinkConnect(this.getEndpoint(), shaper, type, false);
 			}
-			internalSinkConnect(shaper, passThru, type);
+			internalSinkConnect(shaper, passThru, type, false);
 		}
 		elementIds.addFirst(id);
 		elements.put(id, shaper);
@@ -343,7 +328,7 @@ public class PublisherEndpoint extends MediaEndpoint {
 			} else {
 				prev = passThru;
 			}
-			internalSinkConnect(next, prev);
+			internalSinkConnect(next, prev, false);
 		}
 		elementIds.remove(elementId);
 		if (releaseElement) {
@@ -408,13 +393,13 @@ public class PublisherEndpoint extends MediaEndpoint {
 		}
 		switch (muteType) {
 		case ALL:
-			internalSinkConnect(this.getEndpoint(), sink);
+			internalSinkConnect(this.getEndpoint(), sink, false);
 			break;
 		case AUDIO:
-			internalSinkConnect(this.getEndpoint(), sink, MediaType.AUDIO);
+			internalSinkConnect(this.getEndpoint(), sink, MediaType.AUDIO, false);
 			break;
 		case VIDEO:
-			internalSinkConnect(this.getEndpoint(), sink, MediaType.VIDEO);
+			internalSinkConnect(this.getEndpoint(), sink, MediaType.VIDEO, false);
 			break;
 		}
 	}
@@ -440,7 +425,7 @@ public class PublisherEndpoint extends MediaEndpoint {
 		return elementIds.get(idx - 1);
 	}
 
-	private void innerConnect() {
+	private void innerConnect(boolean blocking) {
 		if (this.getEndpoint() == null) {
 			throw new OpenViduException(Code.MEDIA_ENDPOINT_ERROR_CODE,
 					"Can't connect null endpoint (ep: " + getEndpointName() + ")");
@@ -453,28 +438,32 @@ public class PublisherEndpoint extends MediaEndpoint {
 				throw new OpenViduException(Code.MEDIA_ENDPOINT_ERROR_CODE,
 						"No media element with id " + prevId + " (ep: " + getEndpointName() + ")");
 			}
-			internalSinkConnect(current, prev);
+			internalSinkConnect(current, prev, blocking);
 			current = prev;
 			prevId = getPrevious(prevId);
 		}
-		internalSinkConnect(current, passThru);
+		internalSinkConnect(current, passThru, blocking);
 		connected = true;
 	}
 
-	private void internalSinkConnect(final MediaElement source, final MediaElement sink) {
-		source.connect(sink, new Continuation<Void>() {
-			@Override
-			public void onSuccess(Void result) throws Exception {
-				log.debug("EP {}: Elements have been connected (source {} -> sink {})", getEndpointName(),
-						source.getId(), sink.getId());
-			}
+	private void internalSinkConnect(final MediaElement source, final MediaElement sink, boolean blocking) {
+		if (blocking) {
+			source.connect(sink);
+		} else {
+			source.connect(sink, new Continuation<Void>() {
+				@Override
+				public void onSuccess(Void result) throws Exception {
+					log.debug("EP {}: Elements have been connected (source {} -> sink {})", getEndpointName(),
+							source.getId(), sink.getId());
+				}
 
-			@Override
-			public void onError(Throwable cause) throws Exception {
-				log.warn("EP {}: Failed to connect media elements (source {} -> sink {})", getEndpointName(),
-						source.getId(), sink.getId(), cause);
-			}
-		});
+				@Override
+				public void onError(Throwable cause) throws Exception {
+					log.warn("EP {}: Failed to connect media elements (source {} -> sink {})", getEndpointName(),
+							source.getId(), sink.getId(), cause);
+				}
+			});
+		}
 	}
 
 	/**
@@ -488,23 +477,28 @@ public class PublisherEndpoint extends MediaEndpoint {
 	 *               be used instead
 	 * @see #internalSinkConnect(MediaElement, MediaElement)
 	 */
-	private void internalSinkConnect(final MediaElement source, final MediaElement sink, final MediaType type) {
+	private void internalSinkConnect(final MediaElement source, final MediaElement sink, final MediaType type,
+			boolean blocking) {
 		if (type == null) {
-			internalSinkConnect(source, sink);
+			internalSinkConnect(source, sink, blocking);
 		} else {
-			source.connect(sink, type, new Continuation<Void>() {
-				@Override
-				public void onSuccess(Void result) throws Exception {
-					log.debug("EP {}: {} media elements have been connected (source {} -> sink {})", getEndpointName(),
-							type, source.getId(), sink.getId());
-				}
+			if (blocking) {
+				source.connect(sink, type);
+			} else {
+				source.connect(sink, type, new Continuation<Void>() {
+					@Override
+					public void onSuccess(Void result) throws Exception {
+						log.debug("EP {}: {} media elements have been connected (source {} -> sink {})",
+								getEndpointName(), type, source.getId(), sink.getId());
+					}
 
-				@Override
-				public void onError(Throwable cause) throws Exception {
-					log.warn("EP {}: Failed to connect {} media elements (source {} -> sink {})", getEndpointName(),
-							type, source.getId(), sink.getId(), cause);
-				}
-			});
+					@Override
+					public void onError(Throwable cause) throws Exception {
+						log.warn("EP {}: Failed to connect {} media elements (source {} -> sink {})", getEndpointName(),
+								type, source.getId(), sink.getId(), cause);
+					}
+				});
+			}
 		}
 	}
 

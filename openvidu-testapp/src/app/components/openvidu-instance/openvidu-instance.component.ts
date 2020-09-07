@@ -18,7 +18,8 @@ import {
   TokenOptions,
   OpenViduRole,
   RecordingProperties,
-  Recording
+  Recording,
+  VideoCodec
 } from 'openvidu-node-client';
 import { MatDialog, MAT_CHECKBOX_CLICK_ACTION } from '@angular/material';
 import { ExtensionDialogComponent } from '../dialogs/extension-dialog/extension-dialog.component';
@@ -92,7 +93,9 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     defaultOutputMode: Recording.OutputMode.COMPOSED,
     defaultRecordingLayout: RecordingLayout.BEST_FIT,
     defaultCustomLayout: '',
-    customSessionId: ''
+    customSessionId: '',
+    forcedVideoCodec: VideoCodec.VP8,
+    allowTranscoding: false
   };
 
   publisherProperties: PublisherProperties = {

@@ -54,7 +54,6 @@ import io.openvidu.server.core.MediaOptions;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.kurento.endpoint.MediaEndpoint;
 import io.openvidu.server.kurento.endpoint.PublisherEndpoint;
-import io.openvidu.server.kurento.endpoint.SdpType;
 import io.openvidu.server.kurento.endpoint.SubscriberEndpoint;
 import io.openvidu.server.recording.service.RecordingManager;
 
@@ -169,15 +168,15 @@ public class KurentoParticipant extends Participant {
 		return session;
 	}
 
-	public String publishToRoom(SdpType sdpType, String sdpString, boolean doLoopback, boolean silent) {
-		log.info("PARTICIPANT {}: Request to publish video in room {} (sdp type {})", this.getParticipantPublicId(),
-				this.session.getSessionId(), sdpType);
-		log.trace("PARTICIPANT {}: Publishing Sdp ({}) is {}", this.getParticipantPublicId(), sdpType, sdpString);
+	public String publishToRoom(String sdpOffer, boolean doLoopback, boolean silent) {
+		log.info("PARTICIPANT {}: Request to publish video in room {})", this.getParticipantPublicId(),
+				this.session.getSessionId());
+		log.trace("PARTICIPANT {}: Publishing Sdp Offer is {}", this.getParticipantPublicId(), sdpOffer);
 
-		String sdpResponse = this.getPublisher().publish(sdpType, sdpString, doLoopback);
+		String sdpAnswer = this.getPublisher().publish(sdpOffer, doLoopback);
 		this.streaming = true;
 
-		log.trace("PARTICIPANT {}: Publishing Sdp ({}) is {}", this.getParticipantPublicId(), sdpType, sdpResponse);
+		log.trace("PARTICIPANT {}: Publishing Sdp Answer is {}", this.getParticipantPublicId(), sdpAnswer);
 		log.info("PARTICIPANT {}: Is now publishing video in room {}", this.getParticipantPublicId(),
 				this.session.getSessionId());
 
@@ -191,7 +190,7 @@ public class KurentoParticipant extends Participant {
 					publisher.getMediaOptions(), publisher.createdAt());
 		}
 
-		return sdpResponse;
+		return sdpAnswer;
 	}
 
 	public void unpublishMedia(EndReason reason, long kmsDisconnectionTime) {
@@ -204,12 +203,11 @@ public class KurentoParticipant extends Participant {
 				this.getParticipantPublicId());
 	}
 
-	public String receiveMediaFrom(Participant sender, String sdpOffer, boolean silent) {
+	public String prepareReceiveMediaFrom(Participant sender) {
 		final String senderName = sender.getParticipantPublicId();
 
-		log.info("PARTICIPANT {}: Request to receive media from {} in room {}", this.getParticipantPublicId(),
+		log.info("PARTICIPANT {}: Request to prepare receive media from {} in room {}", this.getParticipantPublicId(),
 				senderName, this.session.getSessionId());
-		log.trace("PARTICIPANT {}: SdpOffer for {} is {}", this.getParticipantPublicId(), senderName, sdpOffer);
 
 		if (senderName.equals(this.getParticipantPublicId())) {
 			log.warn("PARTICIPANT {}: trying to configure loopback by subscribing", this.getParticipantPublicId());
@@ -269,8 +267,56 @@ public class KurentoParticipant extends Participant {
 				log.debug("PARTICIPANT {}: Created subscriber endpoint for user {}", this.getParticipantPublicId(),
 						senderName);
 				try {
-					String sdpAnswer = subscriber.subscribe(sdpOffer, kSender.getPublisher());
-					log.trace("PARTICIPANT {}: Subscribing SdpAnswer is {}", this.getParticipantPublicId(), sdpAnswer);
+					String sdpOffer = subscriber.prepareSubscription(kSender.getPublisher());
+					log.trace("PARTICIPANT {}: Subscribing SdpOffer is {}", this.getParticipantPublicId(), sdpOffer);
+					log.info("PARTICIPANT {}: offer prepared to receive media from {} in room {}",
+							this.getParticipantPublicId(), senderName, this.session.getSessionId());
+					return sdpOffer;
+				} catch (KurentoServerException e) {
+					log.error("Exception preparing subscriber endpoint for user {}: {}", this.getParticipantPublicId(),
+							e.getMessage());
+					this.subscribers.remove(senderName);
+					releaseSubscriberEndpoint(senderName, (KurentoParticipant) sender, subscriber, null, false);
+					return null;
+				}
+			} finally {
+				kSender.getPublisher().closingLock.readLock().unlock();
+			}
+		} else {
+			log.error(
+					"PublisherEndpoint of participant {} of session {} is closed. Participant {} couldn't subscribe to it ",
+					senderName, sender.getSessionId(), this.participantPublicId);
+			throw new OpenViduException(Code.MEDIA_ENDPOINT_ERROR_CODE,
+					"Unable to create subscriber endpoint. Publisher endpoint of participant " + senderName
+							+ "is closed");
+		}
+	}
+
+	public void receiveMediaFrom(Participant sender, String sdpAnswer, boolean silent) {
+		final String senderName = sender.getParticipantPublicId();
+
+		log.info("PARTICIPANT {}: Request to receive media from {} in room {}", this.getParticipantPublicId(),
+				senderName, this.session.getSessionId());
+		log.trace("PARTICIPANT {}: SdpAnswer for {} is {}", this.getParticipantPublicId(), senderName, sdpAnswer);
+
+		if (senderName.equals(this.getParticipantPublicId())) {
+			log.warn("PARTICIPANT {}: trying to configure loopback by subscribing", this.getParticipantPublicId());
+			throw new OpenViduException(Code.USER_NOT_STREAMING_ERROR_CODE, "Can loopback only when publishing media");
+		}
+
+		KurentoParticipant kSender = (KurentoParticipant) sender;
+
+		if (kSender.streaming && kSender.getPublisher() != null
+				&& kSender.getPublisher().closingLock.readLock().tryLock()) {
+
+			try {
+				final SubscriberEndpoint subscriber = getSubscriber(senderName);
+				if (subscriber.getEndpoint() == null) {
+					throw new OpenViduException(Code.MEDIA_ENDPOINT_ERROR_CODE, "Unable to create subscriber endpoint");
+				}
+
+				try {
+					subscriber.subscribe(sdpAnswer, kSender.getPublisher());
 					log.info("PARTICIPANT {}: Is now receiving video from {} in room {}", this.getParticipantPublicId(),
 							senderName, this.session.getSessionId());
 
@@ -279,8 +325,6 @@ public class KurentoParticipant extends Participant {
 						endpointConfig.getCdr().recordNewSubscriber(this, this.session.getSessionId(),
 								sender.getPublisherStreamId(), sender.getParticipantPublicId(), subscriber.createdAt());
 					}
-
-					return sdpAnswer;
 				} catch (KurentoServerException e) {
 					// TODO Check object status when KurentoClient sets this info in the object
 					if (e.getCode() == 40101) {
@@ -292,7 +336,6 @@ public class KurentoParticipant extends Participant {
 					}
 					this.subscribers.remove(senderName);
 					releaseSubscriberEndpoint(senderName, (KurentoParticipant) sender, subscriber, null, false);
-					return null;
 				}
 			} finally {
 				kSender.getPublisher().closingLock.readLock().unlock();

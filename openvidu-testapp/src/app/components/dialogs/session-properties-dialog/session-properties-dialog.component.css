@@ -37,3 +37,7 @@ mat-radio-button:first-child {
     padding-top: 6px;
     padding-bottom: 15px;
 }
+
+#allow-transcoding-div {
+    margin-bottom: 10px;   
+}

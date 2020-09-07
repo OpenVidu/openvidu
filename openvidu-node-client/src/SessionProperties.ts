@@ -19,6 +19,7 @@ import { MediaMode } from './MediaMode';
 import { Recording } from './Recording';
 import { RecordingLayout } from './RecordingLayout';
 import { RecordingMode } from './RecordingMode';
+import { VideoCodec } from './VideoCodec';
 
 /**
  * See [[OpenVidu.createSession]]
@@ -64,4 +65,21 @@ export interface SessionProperties {
      * If this parameter is undefined or an empty string, OpenVidu Server will generate a random sessionId for you.
      */
     customSessionId?: string;
+    
+    /**
+     * It defines which video codec do you want to be forcibly used for this session.
+     * This allows browsers/clients to use the same codec avoiding transcoding in the media server.
+     * If the browser/client is not compatible with the specified codec and [[allowTranscoding]] 
+     * is <code>false</code> and exception will occur.
+     * 
+     * If forcedVideoCodec is set to NONE, no codec will be forced. 
+     */
+    forcedVideoCodec?: VideoCodec;
+    
+    /**
+     * It defines if you want to allow transcoding in the media server or not
+     * when [[forcedVideoCodec]] is not compatible with the browser/client.
+     */
+    allowTranscoding?: boolean;
+    
 }
