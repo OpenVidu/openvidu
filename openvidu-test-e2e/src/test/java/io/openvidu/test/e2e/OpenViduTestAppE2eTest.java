@@ -2533,7 +2533,7 @@ public class OpenViduTestAppE2eTest {
 
 		/** GET /api/sessions (after session created) **/
 		restClient.rest(HttpMethod.GET, "/api/sessions/CUSTOM_SESSION_ID", null, HttpStatus.SC_OK, true,
-				"{'sessionId':'STR','createdAt':0,'mediaMode':'STR','recordingMode':'STR','defaultOutputMode':'STR','defaultRecordingLayout':'STR','customSessionId':'STR','forcedVideoCodec':'STR','connections':{'numberOfElements':0,'content':[]},'recording':true}");
+				"{'sessionId':'STR','createdAt':0,'mediaMode':'STR','recordingMode':'STR','defaultOutputMode':'STR','defaultRecordingLayout':'STR','customSessionId':'STR','forcedVideoCodec':'STR','allowTranscoding':false,'connections':{'numberOfElements':0,'content':[]},'recording':true}");
 		restClient.rest(HttpMethod.GET, "/api/sessions", null, HttpStatus.SC_OK, true,
 				ImmutableMap.of("numberOfElements", new Integer(1), "content", new JsonArray()));
 
@@ -2703,7 +2703,7 @@ public class OpenViduTestAppE2eTest {
 		restClient.rest(HttpMethod.DELETE, "/api/sessions/CUSTOM_SESSION_ID/stream/NOT_EXISTS",
 				HttpStatus.SC_NOT_FOUND);
 		res = restClient.rest(HttpMethod.GET, "/api/sessions/CUSTOM_SESSION_ID", null, HttpStatus.SC_OK, true,
-				"{'sessionId':'STR','createdAt':0,'mediaMode':'STR','recordingMode':'STR','defaultOutputMode':'STR','defaultRecordingLayout':'STR','customSessionId':'STR','forcedVideoCodec':'STR','connections':{'numberOfElements':2,'content'"
+				"{'sessionId':'STR','createdAt':0,'mediaMode':'STR','recordingMode':'STR','defaultOutputMode':'STR','defaultRecordingLayout':'STR','customSessionId':'STR','forcedVideoCodec':'STR','allowTranscoding':false,'connections':{'numberOfElements':2,'content'"
 						+ ":[{'connectionId':'STR','createdAt':0,'location':'STR','platform':'STR','token':'STR','role':'STR','serverData':'STR','clientData':'STR','publishers':["
 						+ "{'createdAt':0,'streamId':'STR','mediaOptions':{'hasAudio':false,'audioActive':false,'hasVideo':false,'videoActive':false,'typeOfVideo':'STR','frameRate':0,"
 						+ "'videoDimensions':'STR','filter':{}}}],'subscribers':[{'createdAt':0,'streamId':'STR','publisher':'STR'}]},{'connectionId':'STR','createdAt':0,'location':'STR',"
