@@ -15,6 +15,7 @@ export class SessionPropertiesDialogComponent {
     manualTurnConf: RTCIceServer = { urls: [] };
     customToken: string;
     tokenOptions: TokenOptions;
+    record: boolean;
 
     filterName = 'GStreamerFilter';
     filters: string[] = [];
@@ -31,6 +32,7 @@ export class SessionPropertiesDialogComponent {
         this.manualTurnConf = data.manualTurnConf;
         this.tokenOptions = data.tokenOptions;
         this.customToken = data.customToken;
+        this.record = data.record;
     }
 
     enumToArray(enumerator: any) {

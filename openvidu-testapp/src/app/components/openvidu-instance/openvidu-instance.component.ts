@@ -127,6 +127,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   turnConf = 'auto';
   manualTurnConf: RTCIceServer = { urls: [] };
   customToken: string;
+  record: boolean = true;
   tokenOptions: TokenOptions = {
     role: OpenViduRole.PUBLISHER,
     kurentoOptions: {
@@ -557,7 +558,8 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         turnConf: this.turnConf,
         manualTurnConf: this.manualTurnConf,
         customToken: this.customToken,
-        tokenOptions: this.tokenOptions
+        tokenOptions: this.tokenOptions,
+        record: this.record
       },
       width: '450px'
     });
@@ -572,6 +574,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         this.manualTurnConf = result.manualTurnConf;
         this.customToken = result.customToken;
         this.tokenOptions = result.tokenOptions;
+        this.record = result.record;
       }
       document.getElementById('session-settings-btn-' + this.index).classList.remove('cdk-program-focused');
     });
@@ -684,7 +687,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     return this.OV_NodeClient.createSession(this.sessionProperties)
       .then(session_NodeClient => {
         this.sessionAPI = session_NodeClient;
-        return session_NodeClient.generateToken({ role: this.tokenOptions.role, kurentoOptions: this.tokenOptions.kurentoOptions });
+        return session_NodeClient.generateToken({ role: this.tokenOptions.role, kurentoOptions: this.tokenOptions.kurentoOptions, record: this.record });
       });
   }
 
