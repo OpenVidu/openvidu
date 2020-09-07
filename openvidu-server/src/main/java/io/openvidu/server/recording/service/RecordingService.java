@@ -175,6 +175,10 @@ public abstract class RecordingService {
 	protected OpenViduException failStartRecording(Session session, Recording recording, String errorMessage) {
 		log.error("Recording start failed for session {}: {}", session.getSessionId(), errorMessage);
 		recording.setStatus(io.openvidu.java.client.Recording.Status.failed);
+
+		sealRecordingMetadataFileAsReady(recording, recording.getSize(), recording.getDuration(),
+				getMetadataFilePath(recording));
+
 		this.recordingManager.startingRecordings.remove(recording.getId());
 		this.recordingManager.sessionsRecordingsStarting.remove(session.getSessionId());
 		this.stopRecording(session, recording, null);
@@ -184,6 +188,11 @@ public abstract class RecordingService {
 	protected void cleanRecordingMaps(Recording recording) {
 		this.recordingManager.sessionsRecordings.remove(recording.getSessionId());
 		this.recordingManager.startedRecordings.remove(recording.getId());
+	}
+
+	protected String getMetadataFilePath(Recording recording) {
+		final String folderPath = this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/";
+		return folderPath + RecordingManager.RECORDING_ENTITY_FILE + recording.getId();
 	}
 
 	/**

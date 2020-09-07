@@ -97,7 +97,7 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
         log.info("Stopping COMPOSED_QUICK_START ({}) recording {} of session {}. Reason: {}",
                 recording.hasAudio() ? "video + audio" : "audio-only", recording.getId(), recording.getSessionId(),
                 RecordingManager.finalReason(reason));
-        log.info("Container for session {} still being ready for new recordings", session.getSessionId());
+        log.info("Container for session {} still being ready for new recordings", recording.getSessionId());
 
         String containerId = this.sessionsContainers.get(recording.getSessionId());
 
@@ -119,10 +119,7 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 
         recording = updateRecordingAttributes(recording);
 
-        final String folderPath = this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/";
-        final String metadataFilePath = folderPath + RecordingManager.RECORDING_ENTITY_FILE + recording.getId();
-        this.sealRecordingMetadataFileAsReady(recording, recording.getSize(), recording.getDuration(),
-                metadataFilePath);
+        this.sealRecordingMetadataFileAsReady(recording, recording.getSize(), recording.getDuration(), getMetadataFilePath(recording));
         cleanRecordingMaps(recording);
 
         final long timestamp = System.currentTimeMillis();

@@ -149,7 +149,7 @@ public class SessionRestController {
 				if (customSessionId != null && !customSessionId.isEmpty()) {
 					if (!sessionManager.formatChecker.isValidCustomSessionId(customSessionId)) {
 						return this.generateErrorResponse(
-								"Parameter \"customSessionId\" is wrong. Must be an alphanumeric string",
+								"Parameter 'customSessionId' is wrong. Must be an alphanumeric string [a-zA-Z0-9_-]",
 								"/api/sessions", HttpStatus.BAD_REQUEST);
 					}
 					builder = builder.customSessionId(customSessionId);
@@ -345,10 +345,12 @@ public class SessionRestController {
 		String sessionId;
 		String roleString;
 		String metadata;
+		Boolean record;
 		try {
 			sessionId = (String) params.get("session");
 			roleString = (String) params.get("role");
 			metadata = (String) params.get("data");
+			record = (Boolean) params.get("record");
 		} catch (ClassCastException e) {
 			return this.generateErrorResponse("Type error in some parameter", "/api/tokens", HttpStatus.BAD_REQUEST);
 		}
@@ -398,17 +400,19 @@ public class SessionRestController {
 		}
 
 		metadata = (metadata != null) ? metadata : "";
+		record = (record != null) ? record : true;
 
 		// While closing a session tokens can't be generated
 		if (session.closingLock.readLock().tryLock()) {
 			try {
-				String token = sessionManager.newToken(session, role, metadata, kurentoTokenOptions);
+				String token = sessionManager.newToken(session, role, metadata, record, kurentoTokenOptions);
 
 				JsonObject responseJson = new JsonObject();
 				responseJson.addProperty("id", token);
 				responseJson.addProperty("session", sessionId);
 				responseJson.addProperty("role", role.toString());
 				responseJson.addProperty("data", metadata);
+				responseJson.addProperty("record", record);
 				responseJson.addProperty("token", token);
 
 				if (kurentoOptions != null) {
@@ -500,28 +504,36 @@ public class SessionRestController {
 					HttpStatus.BAD_REQUEST);
 		}
 
+		if (name != null && !name.isEmpty()) {
+			if (!sessionManager.formatChecker.isValidRecordingName(name)) {
+				return this.generateErrorResponse(
+						"Parameter 'name' is wrong. Must be an alphanumeric string [a-zA-Z0-9_-]", "/api/sessions",
+						HttpStatus.BAD_REQUEST);
+			}
+		}
+
 		OutputMode finalOutputMode = OutputMode.COMPOSED;
 		RecordingLayout recordingLayout = null;
 		if (outputModeString != null && !outputModeString.isEmpty()) {
 			try {
 				finalOutputMode = OutputMode.valueOf(outputModeString);
 			} catch (Exception e) {
-				return this.generateErrorResponse("Type error in some parameter", "/api/recordings/start",
+				return this.generateErrorResponse("Type error in parameter 'outputMode'", "/api/recordings/start",
 						HttpStatus.BAD_REQUEST);
 			}
 		}
 		if (RecordingUtils.IS_COMPOSED(finalOutputMode)) {
 			if (resolution != null && !sessionManager.formatChecker.isAcceptableRecordingResolution(resolution)) {
 				return this.generateErrorResponse(
-						"Wrong \"resolution\" parameter. Acceptable values from 100 to 1999 for both width and height",
+						"Wrong 'resolution' parameter. Acceptable values from 100 to 1999 for both width and height",
 						"/api/recordings/start", HttpStatus.UNPROCESSABLE_ENTITY);
 			}
 			if (recordingLayoutString != null && !recordingLayoutString.isEmpty()) {
 				try {
 					recordingLayout = RecordingLayout.valueOf(recordingLayoutString);
 				} catch (Exception e) {
-					return this.generateErrorResponse("Type error in some parameter", "/api/recordings/start",
-							HttpStatus.BAD_REQUEST);
+					return this.generateErrorResponse("Type error in parameter 'recordingLayout'",
+							"/api/recordings/start", HttpStatus.BAD_REQUEST);
 				}
 			}
 		}

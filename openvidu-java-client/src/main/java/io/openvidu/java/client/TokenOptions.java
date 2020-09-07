@@ -24,6 +24,7 @@ public class TokenOptions {
 
 	private String data;
 	private OpenViduRole role;
+	private Boolean record;
 	private KurentoOptions kurentoOptions;
 
 	/**
@@ -33,15 +34,16 @@ public class TokenOptions {
 	 */
 	public static class Builder {
 
-		private String data = "";
-		private OpenViduRole role = OpenViduRole.PUBLISHER;
+		private String data;
+		private OpenViduRole role;
+		private Boolean record;
 		private KurentoOptions kurentoOptions;
 
 		/**
 		 * Builder for {@link io.openvidu.java.client.TokenOptions}
 		 */
 		public TokenOptions build() {
-			return new TokenOptions(this.data, this.role, this.kurentoOptions);
+			return new TokenOptions(this.data, this.role, this.record, this.kurentoOptions);
 		}
 
 		/**
@@ -80,6 +82,17 @@ public class TokenOptions {
 		}
 
 		/**
+		 * Call this method to flag the streams published by the participant
+		 * owning this token to be recorded or not. This only affects <a href=
+		 * "https://docs.openvidu.io/en/stable/advanced-features/recording#selecting-streams-to-be-recorded"
+		 * target="_blank">INDIVIDUAL recording</a>. If not set by default will be true
+		 */
+		public Builder record(boolean record) {
+			this.record = record;
+			return this;
+		}
+
+		/**
 		 * Call this method to set a {@link io.openvidu.java.client.KurentoOptions}
 		 * object for this token
 		 */
@@ -90,9 +103,10 @@ public class TokenOptions {
 
 	}
 
-	private TokenOptions(String data, OpenViduRole role, KurentoOptions kurentoOptions) {
+	private TokenOptions(String data, OpenViduRole role, Boolean record, KurentoOptions kurentoOptions) {
 		this.data = data;
 		this.role = role;
+		this.record = record;
 		this.kurentoOptions = kurentoOptions;
 	}
 
@@ -108,6 +122,16 @@ public class TokenOptions {
 	 */
 	public OpenViduRole getRole() {
 		return this.role;
+	}
+
+	/**
+	 * Whether the streams published by the participant owning this token will be
+	 * recorded or not. This only affects <a href=
+	 * "https://docs.openvidu.io/en/stable/advanced-features/recording#selecting-streams-to-be-recorded"
+	 * target="_blank">INDIVIDUAL recording</a>
+	 */
+	public Boolean record() {
+		return this.record;
 	}
 
 	/**

@@ -30,7 +30,7 @@ if [[ -z "${COMPOSED_QUICK_START_ACTION}" ]]; then
 
         touch xvfb.log
         chmod 777 xvfb.log
-        xvfb-run --auto-servernum --server-args="-ac -screen 0 ${RESOLUTION}x24 -noreset" google-chrome --kiosk --start-maximized --test-type --no-sandbox --disable-infobars --disable-gpu --disable-popup-blocking --window-size=$WIDTH,$HEIGHT --window-position=0,0 --no-first-run --ignore-certificate-errors --autoplay-policy=no-user-gesture-required --enable-logging --v=1 $DEBUG_CHROME_FLAGS $URL &> xvfb.log &
+        xvfb-run --auto-servernum --server-args="-ac -screen 0 ${RESOLUTION}x24 -noreset" google-chrome --kiosk --start-maximized --test-type --no-sandbox --disable-infobars --disable-gpu --disable-popup-blocking --window-size=$WIDTH,$HEIGHT --window-position=0,0 --no-first-run --ignore-certificate-errors --disable-dev-shm-usage --autoplay-policy=no-user-gesture-required --enable-logging --v=1 $DEBUG_CHROME_FLAGS $URL &> xvfb.log &
         chmod 777 /recordings
 
         until pids=$(pidof Xvfb)

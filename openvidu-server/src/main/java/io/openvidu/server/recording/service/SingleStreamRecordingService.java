@@ -98,11 +98,11 @@ public class SingleStreamRecordingService extends RecordingService {
 		activeRecorders.put(session.getSessionId(), new ConcurrentHashMap<String, RecorderEndpointWrapper>());
 		storedRecorders.put(session.getSessionId(), new ConcurrentHashMap<String, RecorderEndpointWrapper>());
 
-		final int activePublishers = session.getActivePublishers();
-		final CountDownLatch recordingStartedCountdown = new CountDownLatch(activePublishers);
+		int activePublishersToRecord = session.getActiveIndividualRecordedPublishers();
+		final CountDownLatch recordingStartedCountdown = new CountDownLatch(activePublishersToRecord);
 
 		for (Participant p : session.getParticipants()) {
-			if (p.isStreaming()) {
+			if (p.isStreaming() && p.getToken().record()) {
 
 				MediaProfileSpecType profile = null;
 				try {
@@ -139,7 +139,6 @@ public class SingleStreamRecordingService extends RecordingService {
 
 	@Override
 	public Recording stopRecording(Session session, Recording recording, EndReason reason) {
-		recording = this.sealRecordingMetadataFileAsStopped(recording);
 		return this.stopRecording(session, recording, reason, 0);
 	}
 

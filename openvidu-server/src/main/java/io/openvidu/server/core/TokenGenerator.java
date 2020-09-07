@@ -17,12 +17,45 @@
 
 package io.openvidu.server.core;
 
+import org.apache.commons.lang3.RandomStringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import io.openvidu.java.client.OpenViduRole;
+import io.openvidu.server.OpenViduServer;
+import io.openvidu.server.config.OpenviduBuildInfo;
+import io.openvidu.server.config.OpenviduConfig;
+import io.openvidu.server.coturn.CoturnCredentialsService;
+import io.openvidu.server.coturn.TurnCredentials;
 import io.openvidu.server.kurento.core.KurentoTokenOptions;
 
-public interface TokenGenerator {
+public class TokenGenerator {
 
-	public Token generateToken(String sessionId, OpenViduRole role, String serverMetadata,
-			KurentoTokenOptions kurentoTokenOptions) throws Exception;
+	@Autowired
+	private CoturnCredentialsService coturnCredentialsService;
 
+	@Autowired
+	protected OpenviduConfig openviduConfig;
+
+	@Autowired
+	protected OpenviduBuildInfo openviduBuildConfig;
+
+	public Token generateToken(String sessionId, OpenViduRole role, String serverMetadata, boolean record,
+			KurentoTokenOptions kurentoTokenOptions) throws Exception {
+		String token = OpenViduServer.wsUrl;
+		token += "?sessionId=" + sessionId;
+		token += "&token=" + IdentifierPrefixes.TOKEN_ID + RandomStringUtils.randomAlphabetic(1).toUpperCase()
+				+ RandomStringUtils.randomAlphanumeric(15);
+		token += "&role=" + role.name();
+		token += "&version=" + openviduBuildConfig.getOpenViduServerVersion();
+		TurnCredentials turnCredentials = null;
+		if (this.openviduConfig.isTurnadminAvailable()) {
+			turnCredentials = coturnCredentialsService.createUser();
+			if (turnCredentials != null) {
+				token += "&coturnIp=" + openviduConfig.getCoturnIp();
+				token += "&turnUsername=" + turnCredentials.getUsername();
+				token += "&turnCredential=" + turnCredentials.getCredential();
+			}
+		}
+		return new Token(token, role, serverMetadata, turnCredentials, record, kurentoTokenOptions);
+	}
 }
