@@ -374,8 +374,8 @@ public class KurentoSessionManager extends SessionManager {
 		boolean isTranscodingAllowed = kSession.getSessionProperties().isTranscodingAllowed();
 		VideoCodec forcedVideoCodec = kSession.getSessionProperties().forcedVideoCodec();
 
-		// Modify sdp if forced codec is defined
-		if (forcedVideoCodec != VideoCodec.NONE) {
+		// Modify sdp if forced codec is defined and this is not an IP camera
+		if (forcedVideoCodec != VideoCodec.NONE && !participant.isIpcam()) {
 			String sdpOffer = kurentoOptions.sdpOffer;
 			try {
 				log.debug("PARTICIPANT '{}' in Session '{}' SDP Offer before munging: \n {}",
