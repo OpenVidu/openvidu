@@ -376,8 +376,8 @@ public class KurentoSessionManager extends SessionManager {
 
 		log.debug("PARTICIPANT '{}' in Session '{}'  publishing SDP before munging: \n {}",
 						participant.getParticipantPublicId(), kSession.getSessionId(), kurentoOptions.sdpOffer);
-		// Modify sdp if forced codec is defined
-		if (forcedVideoCodec != VideoCodec.NONE) {
+		// Modify sdp if forced codec is defined and this is not an IP camera
+		if (forcedVideoCodec != VideoCodec.NONE && !participant.isIpcam()) {
 			String sdpOffer = kurentoOptions.sdpOffer;
 			try {
 				kurentoOptions.sdpOffer = this.sdpMunging.setCodecPreference(forcedVideoCodec, sdpOffer);
