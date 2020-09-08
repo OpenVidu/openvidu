@@ -2,6 +2,7 @@ package io.openvidu.server.utils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -127,7 +128,78 @@ public class SDPMunging {
             lines[sl] = newLine.toString();
         }
 
-        return String.join("\r\n", lines);
+        return String.join("\r\n", lines) + "\r\n";
     }
-       
+    
+    /** 
+     * Possible Kurento's bug
+     * Some browsers can't use H264 as a video codec if in the offerer SDP
+     * the parameter "a=fmtp: <...> profile-level-id=42e01f" is not defined.
+     * This munging is only used when the forced codec needs to be H264 
+     * References:
+     * https://stackoverflow.com/questions/38432137/cannot-establish-webrtc-connection-different-codecs-and-payload-type-in-sdp
+     */
+    public String setfmtpH264(String sdp) {
+        String codecStr = VideoCodec.H264.name();
+    
+        // Get all lines
+        List<String> lines = new LinkedList<String>(Arrays.asList(sdp.split("\\R+")));
+        
+        // Index to reference the line with "m=video"
+        int mVideoLineIndex = -1;
+        List<String> validCodecsPayload = new ArrayList<>();
+        
+        for(int i = 0; i < lines.size(); i++) {
+            String sdpLine = lines.get(i);
+            
+            // Check that we are in "m=video"
+            if (sdpLine.startsWith("m=video")) {
+                mVideoLineIndex = i;
+                
+                // Search for payload-type for the specified codec
+                for(int j = i+1; j < lines.size(); j++) {
+                    String auxLine = lines.get(j);
+                    
+                    // Check that the line we're going to analizae is not anoter "m="
+                    if(auxLine.startsWith("m=")) {
+                        break;
+                    }
+                    
+                    if (auxLine.startsWith("a=rtpmap")) {
+                        String[] rtpmapInfo = auxLine.split(":")[1].split(" ");
+                        String possiblePayload = rtpmapInfo[0];
+                        String possibleCodec = rtpmapInfo[1];
+                        if (possibleCodec.contains(codecStr)) {
+                            validCodecsPayload.add(possiblePayload);
+                        }
+                    }
+                }
+                // If a payload is not found, then the codec is not in the SDP
+                if (validCodecsPayload.size() == 0) {
+                    throw new OpenViduException(Code.FORCED_CODEC_NOT_FOUND_IN_SDPOFFER, String.format("Codec %s not found", codecStr));
+                }
+                continue;
+            }
+            
+        }
+        if (mVideoLineIndex == -1) {
+           throw new OpenViduException(Code.FORCED_CODEC_NOT_FOUND_IN_SDPOFFER, "This SDP does not offer video");
+        }
+        
+        if (mVideoLineIndex != -1) {
+            for (String codecPayload: validCodecsPayload) {
+                if (!sdp.contains(String.format("a=fmtp:%s", codecPayload))) {
+                    String newfmtpLine = String.format("a=fmtp:%s level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f", codecPayload);
+                    lines.add(mVideoLineIndex + 1, newfmtpLine);
+                }    
+            }
+            
+        }
+        
+        // Return munging sdp!!
+        String[] munguedSdpLines = lines.toArray(new String[lines.size()]);
+        return String.join("\r\n", munguedSdpLines) + "\r\n";
+        
+    }
+
 }

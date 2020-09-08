@@ -374,13 +374,15 @@ public class KurentoSessionManager extends SessionManager {
 		boolean isTranscodingAllowed = kSession.getSessionProperties().isTranscodingAllowed();
 		VideoCodec forcedVideoCodec = kSession.getSessionProperties().forcedVideoCodec();
 
+		log.debug("PARTICIPANT '{}' in Session '{}'  publishing SDP before munging: \n {}",
+						participant.getParticipantPublicId(), kSession.getSessionId(), kurentoOptions.sdpOffer);
 		// Modify sdp if forced codec is defined
 		if (forcedVideoCodec != VideoCodec.NONE) {
 			String sdpOffer = kurentoOptions.sdpOffer;
 			try {
-				log.debug("PARTICIPANT '{}' in Session '{}' SDP Offer before munging: \n {}",
-					participant.getParticipantPublicId(), kSession.getSessionId(), kurentoOptions.sdpOffer);
 				kurentoOptions.sdpOffer = this.sdpMunging.setCodecPreference(forcedVideoCodec, sdpOffer);
+				log.debug("PARTICIPANT '{}' in Session '{}' publishing SDP Offer after munging: \n {}",
+					participant.getParticipantPublicId(), kSession.getSessionId(), kurentoOptions.sdpOffer);
 			} catch (OpenViduException e) {
 				String errorMessage = "Error forcing codec: '" + forcedVideoCodec + "', for PARTICIPANT" 
 					+ participant.getParticipantPublicId() + "' publishing in Session: '" 
@@ -535,8 +537,6 @@ public class KurentoSessionManager extends SessionManager {
 		String sdpOffer = null;
 		Session session = null;
 		try {
-			log.debug("Request [SUBSCRIBE] remoteParticipant={} sdpOffer={} ({})", senderPublicId, sdpOffer,
-					participant.getParticipantPublicId());
 
 			KurentoParticipant kParticipant = (KurentoParticipant) participant;
 			session = ((KurentoParticipant) participant).getSession();
@@ -564,6 +564,32 @@ public class KurentoSessionManager extends SessionManager {
 			}
 
 			sdpOffer = kParticipant.prepareReceiveMediaFrom(senderParticipant);
+			VideoCodec forcedVideoCodec = session.getSessionProperties().forcedVideoCodec();
+			boolean isTranscodingAllowed = session.getSessionProperties().isTranscodingAllowed();
+			
+			if (forcedVideoCodec != VideoCodec.NONE) {
+				try {
+					log.debug("PARTICIPANT '{}' in Session '{}' SDP Offer before munging: \n {}",
+						participant.getParticipantPublicId(), session.getSessionId(), sdpOffer);
+					sdpOffer = this.sdpMunging.setCodecPreference(forcedVideoCodec, sdpOffer);
+					if (forcedVideoCodec == VideoCodec.H264) {
+						sdpOffer = this.sdpMunging.setfmtpH264(sdpOffer);
+					}
+				} catch (OpenViduException e) {
+					String errorMessage = "Error forcing codec: '" + forcedVideoCodec + "', for PARTICIPANT: '" 
+						+ participant.getParticipantPublicId() + "' subscribing in Session: '" 
+						+ session.getSessionId() + "'\nException: " + e.getMessage() + "\nSDP:\n" + sdpOffer;
+					
+					if(!isTranscodingAllowed) {
+						throw new OpenViduException(Code.FORCED_CODEC_NOT_FOUND_IN_SDPOFFER, errorMessage);
+					}
+					log.info("Codec: '" + forcedVideoCodec + "' is not supported for PARTICIPANT: '" + participant.getParticipantPublicId() 
+						+ " subscribing in Session: '" + session.getSessionId() + "'. Transcoding will be allowed");
+				}
+			}
+			log.debug("Request [SUBSCRIBE] remoteParticipant={} sdpOffer={} ({})", senderPublicId, sdpOffer,
+					participant.getParticipantPublicId());
+					
 			if (sdpOffer == null) {
 				throw new OpenViduException(Code.MEDIA_SDP_ERROR_CODE, "Unable to generate SDP offer when subscribing '"
 						+ participant.getParticipantPublicId() + "' to '" + senderPublicId + "'");
@@ -591,12 +617,14 @@ public class KurentoSessionManager extends SessionManager {
 			boolean isTranscodingAllowed = session.getSessionProperties().isTranscodingAllowed();
 			VideoCodec forcedVideoCodec = session.getSessionProperties().forcedVideoCodec();
 			
+			log.debug("PARTICIPANT '{}' subscribing in Session '{}' SDP Answer before munging: \n {}",
+				participant.getParticipantPublicId(), session.getSessionId(), sdpAnswer);
 			// Modify sdp if forced codec is defined
 			if (forcedVideoCodec != VideoCodec.NONE) {
 				try {
-					log.debug("PARTICIPANT '{}' in Session '{}' SDP Answer before munging: \n {}",
-						participant.getParticipantPublicId(), session.getSessionId(), sdpAnswer);
-					sdpAnswer = this.sdpMunging.setCodecPreference(forcedVideoCodec, sdpAnswer);	
+					sdpAnswer = this.sdpMunging.setCodecPreference(forcedVideoCodec, sdpAnswer);
+					log.debug("PARTICIPANT '{}' subscribing in Session '{}' SDP Answer after munging: \n {}",
+						participant.getParticipantPublicId(), session.getSessionId(), sdpAnswer);	
 				} catch (OpenViduException e) {
 					String errorMessage = "Error forcing codec: '" + forcedVideoCodec + "', for PARTICIPANT: '" 
 						+ participant.getParticipantPublicId() + "' subscribing in Session: '" 
@@ -609,6 +637,7 @@ public class KurentoSessionManager extends SessionManager {
 						+ " subscribing in Session: '" + session.getSessionId() + "'. Transcoding will be allowed");
 				}
 			}
+			
 
 			if (senderParticipant == null) {
 				log.warn(
@@ -1144,12 +1173,14 @@ public class KurentoSessionManager extends SessionManager {
 		boolean isTranscodingAllowed = kSession.getSessionProperties().isTranscodingAllowed();
 		VideoCodec forcedVideoCodec = kSession.getSessionProperties().forcedVideoCodec();
 		
+		log.debug("PARTICIPANT '{}' in Session '{}'  reconnecting SDP before munging: \n {}",
+						participant.getParticipantPublicId(), kSession.getSessionId(), sdpString);
 		// Modify sdp if forced codec is defined
 		if (forcedVideoCodec != VideoCodec.NONE) {
 			try {
-				log.debug("PARTICIPANT '{}' in Session '{}'  reconnecting SDP before munging: \n {}",
-						participant.getParticipantPublicId(), kSession.getSessionId(), sdpString);
 				sdpString = sdpMunging.setCodecPreference(forcedVideoCodec, sdpString);
+				log.debug("PARTICIPANT '{}' in Session '{}'  reconnecting SDP after munging: \n {}",
+						participant.getParticipantPublicId(), kSession.getSessionId(), sdpString);
 			} catch (OpenViduException e) {
 				String errorMessage = "Error in reconnect and forcing codec: '" + forcedVideoCodec + "', for PARTICIPANT: '" 
 						+ participant.getParticipantPublicId() + "' " + (isPublisher ? "publishing" : "subscribing") 
