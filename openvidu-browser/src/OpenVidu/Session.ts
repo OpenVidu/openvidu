@@ -1279,6 +1279,7 @@ export class Session extends EventDispatcher {
 
             this.openvidu.wsUri = 'wss://' + url.host + '/openvidu';
             this.openvidu.httpUri = 'https://' + url.host;
+            this.openvidu.openviduServerVersion = openviduServerVersion;
 
         } else {
             logger.error('Token "' + token + '" is not valid')

@@ -114,6 +114,10 @@ export class OpenVidu {
   /**
    * @hidden
    */
+  openviduServerVersion: string;
+  /**
+   * @hidden
+   */
   ee = new EventEmitter()
 
   constructor() {

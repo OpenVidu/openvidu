@@ -1022,7 +1022,7 @@ export class Stream extends EventDispatcher {
         }
     }
 
-    private initHarkEvents(): void {
+    protected initHarkEvents(): void {
         if (!!this.mediaStream.getAudioTracks()[0]) {
             // Hark events can only be set if audio track is available
             if (this.streamManager.remote) {
@@ -1050,7 +1050,7 @@ export class Stream extends EventDispatcher {
         }
     }
 
-    private initWebRtcStats(): void {
+    protected initWebRtcStats(): void {
         this.webRtcStats = new WebRtcStats(this);
         this.webRtcStats.initWebRtcStats();
 
@@ -1078,7 +1078,7 @@ export class Stream extends EventDispatcher {
         }
     }
 
-    private getIceServersConf(): RTCIceServer[] | undefined {
+    protected getIceServersConf(): RTCIceServer[] | undefined {
         let returnValue;
         if (!!this.session.openvidu.advancedConfiguration.iceServers) {
             returnValue = this.session.openvidu.advancedConfiguration.iceServers === 'freeice' ?
