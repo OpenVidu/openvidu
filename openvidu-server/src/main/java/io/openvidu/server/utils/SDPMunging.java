@@ -184,17 +184,14 @@ public class SDPMunging {
         }
         if (mVideoLineIndex == -1) {
            throw new OpenViduException(Code.FORCED_CODEC_NOT_FOUND_IN_SDPOFFER, "This SDP does not offer video");
-        }
-        
-        if (mVideoLineIndex != -1) {
+        } else {
             for (String codecPayload: validCodecsPayload) {
                 if (!sdp.contains(String.format("a=fmtp:%s", codecPayload))) {
                     String newfmtpLine = String.format("a=fmtp:%s level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f", codecPayload);
                     lines.add(mVideoLineIndex + 1, newfmtpLine);
                 }    
-            }
-            
-        }
+            }   
+        }  
         
         // Return munging sdp!!
         String[] munguedSdpLines = lines.toArray(new String[lines.size()]);
