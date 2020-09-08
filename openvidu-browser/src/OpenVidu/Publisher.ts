@@ -18,6 +18,7 @@
 import { OpenVidu } from './OpenVidu';
 import { Session } from './Session';
 import { Stream } from './Stream';
+import { StreamLEGACY } from './StreamLEGACY';
 import { StreamManager } from './StreamManager';
 import { EventDispatcher } from './EventDispatcher';
 import { PublisherProperties } from '../OpenViduInternal/Interfaces/Public/PublisherProperties';
@@ -91,7 +92,13 @@ export class Publisher extends StreamManager {
      * @hidden
      */
     constructor(targEl: string | HTMLElement, properties: PublisherProperties, openvidu: OpenVidu) {
-        super(new Stream((!!openvidu.session) ? openvidu.session : new Session(openvidu), { publisherProperties: properties, mediaConstraints: {} }), targEl);
+
+        // TODO: CLEAN 2.15.0 LEGACY CODE
+        // THIS LINE:
+        super(openvidu.openviduServerVersion.startsWith('2.16') ? new Stream((!!openvidu.session) ? openvidu.session : new Session(openvidu), { publisherProperties: properties, mediaConstraints: {} }) : new StreamLEGACY((!!openvidu.session) ? openvidu.session : new Session(openvidu), { publisherProperties: properties, mediaConstraints: {} }), targEl);
+        // SHOULD GET BACK TO:
+        // super(new Stream((!!openvidu.session) ? openvidu.session : new Session(openvidu), { publisherProperties: properties, mediaConstraints: {} }), targEl);
+
         this.properties = properties;
         this.openvidu = openvidu;
 

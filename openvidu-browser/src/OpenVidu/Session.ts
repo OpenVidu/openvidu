@@ -128,6 +128,19 @@ export class Session extends EventDispatcher {
      */
     stopSpeakingEventsEnabledOnce = false;
 
+
+    // TODO: CLEAN 2.15.0 LEGACY CODE
+    /**
+     * @hidden	
+     */
+    isFirstIonicIosSubscriber = true;
+    /**
+     * @hidden	
+     */
+    countDownForIonicIosSubscribersActive = true;
+    // END LEGACY CODE
+
+
     /**
      * @hidden
      */
@@ -716,6 +729,16 @@ export class Session extends EventDispatcher {
                     streamEvent.callDefaultBehavior();
 
                     delete this.remoteStreamsCreated[stream.streamId];
+
+
+                    // TODO: CLEAN 2.15.0 LEGACY CODE
+                    if (Object.keys(this.remoteStreamsCreated).length === 0) {
+                        this.isFirstIonicIosSubscriber = true;
+                        this.countDownForIonicIosSubscribersActive = true;
+                    }
+                    // END LEGACY CODE
+
+
                 }
                 delete this.remoteConnections[connection.connectionId];
                 this.ee.emitEvent('connectionDestroyed', [new ConnectionEvent(false, this, 'connectionDestroyed', connection, msg.reason)]);
@@ -785,6 +808,16 @@ export class Session extends EventDispatcher {
                     // Deleting the remote stream
                     const streamId: string = connection.stream.streamId;
                     delete this.remoteStreamsCreated[streamId];
+
+
+                    // TODO: CLEAN 2.15.0 LEGACY CODE
+                    if (Object.keys(this.remoteStreamsCreated).length === 0) {
+                        this.isFirstIonicIosSubscriber = true;
+                        this.countDownForIonicIosSubscribersActive = true;
+                    }
+                    // END LEGACY CODE
+
+
                     connection.removeStream(streamId);
                 })
                 .catch(openViduError => {

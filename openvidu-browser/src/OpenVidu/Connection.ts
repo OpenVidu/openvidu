@@ -17,6 +17,7 @@
 
 import { Session } from './Session';
 import { Stream } from './Stream';
+import { StreamLEGACY } from './StreamLEGACY';
 import { ConnectionOptions } from '../OpenViduInternal/Interfaces/Private/ConnectionOptions';
 import { InboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/InboundStreamOptions';
 import { StreamOptionsServer } from '../OpenViduInternal/Interfaces/Private/StreamOptionsServer';
@@ -139,7 +140,11 @@ export class Connection {
                 videoDimensions: !!opts.videoDimensions ? JSON.parse(opts.videoDimensions) : undefined,
                 filter: !!opts.filter ? opts.filter : undefined
             };
-            const stream = new Stream(this.session, streamOptions);
+            // TODO: CLEAN 2.15.0 LEGACY CODE
+            // THIS LINE:
+            const stream = this.session.openvidu.openviduServerVersion.startsWith('2.16') ? new Stream(this.session, streamOptions) : new StreamLEGACY(this.session, streamOptions);
+            // SHOULD GET BACK TO:
+            // const stream = new Stream(this.session, streamOptions);
 
             this.addStream(stream);
         });
