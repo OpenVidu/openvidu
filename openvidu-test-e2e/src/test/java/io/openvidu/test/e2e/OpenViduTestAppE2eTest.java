@@ -18,6 +18,7 @@
 package io.openvidu.test.e2e;
 
 import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.openqa.selenium.OutputType.BASE64;
 
 import java.awt.Color;
@@ -45,6 +46,14 @@ import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.stream.JsonReader;
+import com.mashape.unirest.http.HttpMethod;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpStatus;
 import org.jcodec.api.FrameGrab;
@@ -71,14 +80,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.stream.JsonReader;
-import com.mashape.unirest.http.HttpMethod;
-
 import io.github.bonigarcia.wdm.WebDriverManager;
 import io.openvidu.java.client.Connection;
 import io.openvidu.java.client.KurentoOptions;
@@ -96,6 +97,7 @@ import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.java.client.Session;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.java.client.TokenOptions;
+import io.openvidu.java.client.VideoCodec;
 import io.openvidu.test.browsers.BrowserUser;
 import io.openvidu.test.browsers.ChromeAndroidUser;
 import io.openvidu.test.browsers.ChromeUser;
@@ -181,26 +183,26 @@ public class OpenViduTestAppE2eTest {
 		BrowserUser browserUser;
 
 		switch (browser) {
-		case "chrome":
-			browserUser = new ChromeUser("TestUser", 50, false);
-			break;
-		case "firefox":
-			browserUser = new FirefoxUser("TestUser", 50);
-			break;
-		case "opera":
-			browserUser = new OperaUser("TestUser", 50);
-			break;
-		case "chromeAndroid":
-			browserUser = new ChromeAndroidUser("TestUser", 50);
-			break;
-		case "chromeAlternateScreenShare":
-			browserUser = new ChromeUser("TestUser", 50, "OpenVidu TestApp", false);
-			break;
-		case "chromeAsRoot":
-			browserUser = new ChromeUser("TestUser", 50, true);
-			break;
-		default:
-			browserUser = new ChromeUser("TestUser", 50, false);
+			case "chrome":
+				browserUser = new ChromeUser("TestUser", 50, false);
+				break;
+			case "firefox":
+				browserUser = new FirefoxUser("TestUser", 50);
+				break;
+			case "opera":
+				browserUser = new OperaUser("TestUser", 50);
+				break;
+			case "chromeAndroid":
+				browserUser = new ChromeAndroidUser("TestUser", 50);
+				break;
+			case "chromeAlternateScreenShare":
+				browserUser = new ChromeUser("TestUser", 50, "OpenVidu TestApp", false);
+				break;
+			case "chromeAsRoot":
+				browserUser = new ChromeUser("TestUser", 50, true);
+				break;
+			default:
+				browserUser = new ChromeUser("TestUser", 50, false);
 		}
 
 		this.user = new MyUser(browserUser);
@@ -293,6 +295,59 @@ public class OpenViduTestAppE2eTest {
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
 		gracefullyLeaveParticipants(2);
+	}
+
+	@Test
+	@DisplayName("One2One Chrome [Video + Audio] - Force VP8")
+	void oneToOneVideoAudioSessionChromeForceVP8() throws Exception {
+		setupBrowser("chrome");
+		log.info("One2One Chrome [Video + Audio] - Force VP8");
+		this.forceCodecGenericE2eTest(VideoCodec.VP8);
+	}
+	
+	@Test
+	@DisplayName("One2One Chrome [Video + Audio] - Force H264")
+	void oneToOneVideoAudioSessionChromeForceH264() throws Exception {
+		setupBrowser("chrome");
+		log.info("One2One Chrome [Video + Audio] - Force H264");
+		this.forceCodecGenericE2eTest(VideoCodec.H264);
+	}
+	
+	private void forceCodecGenericE2eTest(VideoCodec codec) throws Exception {
+		// Configure Session to force Codec
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.id("session-settings-btn-0")).click();
+		Thread.sleep(1000);
+		user.getDriver().findElement(By.id("forced-video-codec-select")).click();
+		Thread.sleep(1000);
+		user.getDriver().findElement(By.id("option-" + codec.name())).click();
+		;
+		user.getDriver().findElement(By.id("save-btn")).click();
+		Thread.sleep(1000);
+
+		// Join Session
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElements(By.className("join-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 2);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 4);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 4);
+
+		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+		Assert.assertEquals("Expected 4 videos but found " + numberOfVideos, 4, numberOfVideos);
+		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
+				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
+
+		// Check codecs
+		List<WebElement> statsButtons = user.getDriver().findElements(By.className("stats-button"));
+		for(WebElement statButton: statsButtons) {
+			statButton.click();
+			Thread.sleep(1000);
+			String videoCodecUsed = user.getDriver().findElement(By.id("video-codec-used")).getText();
+			assertEquals(videoCodecUsed, "video/" + codec.name());
+			user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		}
 	}
 
 	@Test
