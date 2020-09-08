@@ -21,6 +21,7 @@ import { LocalRecordingDialogComponent } from '../dialogs/local-recording-dialog
 import { ExtensionDialogComponent } from '../dialogs/extension-dialog/extension-dialog.component';
 import { FilterDialogComponent } from '../dialogs/filter-dialog/filter-dialog.component';
 import { OpenViduEvent } from '../openvidu-instance/openvidu-instance.component';
+import { ShowCodecDialogComponent } from '../dialogs/show-codec-dialog/show-codec-dialog.component';
 
 @Component({
     selector: 'app-video',
@@ -66,7 +67,10 @@ export class VideoComponent implements OnInit, OnDestroy {
     pubSubAudioIcon = 'mic';
     recordIcon = 'fiber_manual_record';
     pauseRecordIcon = '';
-
+    
+    // Stats
+    usedVideoCodec: string;
+    
     constructor(private dialog: MatDialog, private muteSubscribersService: MuteSubscribersService
     ) { }
 
@@ -727,11 +731,30 @@ export class VideoComponent implements OnInit, OnDestroy {
         });
     }
     
-    async showStats() {
+    async showCodecUsed() {
         let stats = await this.streamManager.stream.getWebRtcPeer().pc.getStats(null);
+        let codecIdIndex = null;
+        // Search codec Index
         stats.forEach(report => {
-            console.log(report);
+            if (!this.streamManager.remote && report.id.includes("RTCOutboundRTPVideoStream")) {
+                codecIdIndex = report.codecId;
+                
+            } else if (this.streamManager.remote && report.id.includes("RTCInboundRTPVideoStream")) {
+                codecIdIndex = report.codecId;
+            }
         })
+        // Search codec Info
+        stats.forEach(report => {
+            if (report.id === codecIdIndex) {
+                this.usedVideoCodec = report.mimeType;
+            }
+        })
+        this.dialog.open(ShowCodecDialogComponent, {
+            data: {
+              usedVideoCodec: this.usedVideoCodec
+            },
+            width: '450px'
+        });
     }
 
 }
