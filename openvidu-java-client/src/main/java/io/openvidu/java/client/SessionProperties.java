@@ -31,7 +31,7 @@ public class SessionProperties {
 	private String defaultCustomLayout;
 	private String customSessionId;
 	private VideoCodec forcedVideoCodec;
-	private boolean allowTranscoding;
+	private Boolean allowTranscoding;
 
 	/**
 	 * Builder for {@link io.openvidu.java.client.SessionProperties}
@@ -44,8 +44,8 @@ public class SessionProperties {
 		private RecordingLayout defaultRecordingLayout = RecordingLayout.BEST_FIT;
 		private String defaultCustomLayout = "";
 		private String customSessionId = "";
-		private VideoCodec forcedVideoCodec = VideoCodec.VP8;
-		private boolean allowTranscoding = false;
+		private VideoCodec forcedVideoCodec;
+		private Boolean allowTranscoding;
 
 		/**
 		 * Returns the {@link io.openvidu.java.client.SessionProperties} object properly
@@ -146,7 +146,7 @@ public class SessionProperties {
 		/**
 		 * Call this method to define which video codec do you want to be forcibly used for this session.
 		 * This allows browsers/clients to use the same codec avoiding transcoding in the media server.
-		 * If the browser/client is not compatible with the specified codec and {@link #allowTranscoding(boolean)} 
+		 * If the browser/client is not compatible with the specified codec and {@link #allowTranscoding(Boolean)} 
 		 * is <code>false</code> and exception will occur.
 		 * 
 		 * If forcedVideoCodec is set to NONE, no codec will be forced. 
@@ -160,7 +160,7 @@ public class SessionProperties {
 		 * Call this method to define if you want to allow transcoding in the media server or not
 		 * when {@link #forcedVideoCodec(VideoCodec)} is not compatible with the browser/client.
 		 */
-		public SessionProperties.Builder allowTranscoding(boolean allowTranscoding) {
+		public SessionProperties.Builder allowTranscoding(Boolean allowTranscoding) {
 			this.allowTranscoding = allowTranscoding;
 			return this;
 		}
@@ -174,13 +174,12 @@ public class SessionProperties {
 		this.defaultRecordingLayout = RecordingLayout.BEST_FIT;
 		this.defaultCustomLayout = "";
 		this.customSessionId = "";
-		this.forcedVideoCodec = VideoCodec.VP8;
 		this.allowTranscoding = false;
 	}
 
 	private SessionProperties(MediaMode mediaMode, RecordingMode recordingMode, OutputMode outputMode,
 			RecordingLayout layout, String defaultCustomLayout, String customSessionId,
-			VideoCodec forcedVideoCodec, boolean allowTranscoding) {
+			VideoCodec forcedVideoCodec, Boolean allowTranscoding) {
 		this.mediaMode = mediaMode;
 		this.recordingMode = recordingMode;
 		this.defaultOutputMode = outputMode;
@@ -274,7 +273,7 @@ public class SessionProperties {
 	 * Defines if transcoding is allowed or not when {@link #forcedVideoCodec}
 	 * is not a compatible codec with the browser/client.
 	 */
-	public boolean isTranscodingAllowed() {
+	public Boolean isTranscodingAllowed() {
 		return this.allowTranscoding;
 	}
 

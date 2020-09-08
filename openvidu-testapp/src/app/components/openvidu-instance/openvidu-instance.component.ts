@@ -94,8 +94,8 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     defaultRecordingLayout: RecordingLayout.BEST_FIT,
     defaultCustomLayout: '',
     customSessionId: '',
-    forcedVideoCodec: VideoCodec.VP8,
-    allowTranscoding: false
+    forcedVideoCodec: null,
+    allowTranscoding: null
   };
 
   publisherProperties: PublisherProperties = {

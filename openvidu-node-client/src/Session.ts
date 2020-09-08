@@ -84,8 +84,8 @@ export class Session {
         this.properties.recordingMode = !!this.properties.recordingMode ? this.properties.recordingMode : RecordingMode.MANUAL;
         this.properties.defaultOutputMode = !!this.properties.defaultOutputMode ? this.properties.defaultOutputMode : Recording.OutputMode.COMPOSED;
         this.properties.defaultRecordingLayout = !!this.properties.defaultRecordingLayout ? this.properties.defaultRecordingLayout : RecordingLayout.BEST_FIT;
-        this.properties.allowTranscoding = !!this.properties.allowTranscoding ? this.properties.allowTranscoding : false;
-        this.properties.forcedVideoCodec = !!this.properties.forcedVideoCodec ? this.properties.forcedVideoCodec : VideoCodec.VP8;
+        this.properties.allowTranscoding = !!this.properties.allowTranscoding ? this.properties.allowTranscoding : null;
+        this.properties.forcedVideoCodec = !!this.properties.forcedVideoCodec ? this.properties.forcedVideoCodec : null;
     }
 
     /**
@@ -405,8 +405,8 @@ export class Session {
                 defaultRecordingLayout: !!this.properties.defaultRecordingLayout ? this.properties.defaultRecordingLayout : RecordingLayout.BEST_FIT,
                 defaultCustomLayout: !!this.properties.defaultCustomLayout ? this.properties.defaultCustomLayout : '',
                 customSessionId: !!this.properties.customSessionId ? this.properties.customSessionId : '',
-                forcedVideoCodec: !!this.properties.forcedVideoCodec ? this.properties.forcedVideoCodec : VideoCodec.VP8,
-                allowTranscoding: !!this.properties.allowTranscoding ? this.properties.allowTranscoding : false
+                forcedVideoCodec: !!this.properties.forcedVideoCodec ? this.properties.forcedVideoCodec : null,
+                allowTranscoding: !!this.properties.allowTranscoding ? this.properties.allowTranscoding : null
                 
             });
 
@@ -473,8 +473,8 @@ export class Session {
             recordingMode: json.recordingMode,
             defaultOutputMode: json.defaultOutputMode,
             defaultRecordingLayout: json.defaultRecordingLayout,
-            forcedVideoCodec: !!json.forcedVideoCodec ? json.forcedVideoCodec : VideoCodec.VP8,
-            allowTranscoding: !!json.allowTranscoding ? json.allowTranscoding : false
+            forcedVideoCodec: !!json.forcedVideoCodec ? json.forcedVideoCodec : null,
+            allowTranscoding: !!json.allowTranscoding ? json.allowTranscoding : null
         };
         if (!!customSessionId) {
             this.properties.customSessionId = customSessionId;
