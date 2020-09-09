@@ -47,28 +47,28 @@ node('container') {
           sh(script: '''#!/bin/bash
             cd openvidu
             if [[ $OPENVIDU_BROWSER_COMMIT != "default" ]]; then
-              git checkout $OPENVIDU_BROWSER_COMMIT
+              git checkout -f $OPENVIDU_BROWSER_COMMIT
             fi
             cd openvidu-browser
             npm install --unsafe-perm && npm run build
             npm pack
             cp openvidu-browser-*.tgz /opt/openvidu
             cd ..
-            git checkout $OPENVIDU_COMMIT
+            git checkout -f $OPENVIDU_COMMIT
         '''.stripIndent())
         }
         stage('OpenVidu Node Client build') {
           sh(script: '''#!/bin/bash
             cd openvidu
             if [[ $OPENVIDU_NODE_CLIENT_COMMIT != "default" ]]; then
-              git checkout $OPENVIDU_NODE_CLIENT_COMMIT
+              git checkout -f $OPENVIDU_NODE_CLIENT_COMMIT
             fi
             cd openvidu-node-client
             npm install --unsafe-perm && npm run build
             npm pack
             cp openvidu-node-client-*.tgz /opt/openvidu
             cd ..
-            git checkout $OPENVIDU_COMMIT
+            git checkout -f $OPENVIDU_COMMIT
         '''.stripIndent())
         }
         stage('OpenVidu TestApp build') {
@@ -84,13 +84,13 @@ node('container') {
           sh(script: '''#!/bin/bash
             cd openvidu
             if [[ $OPENVIDU_SERVER_COMMIT != "default" ]]; then
-              git checkout $OPENVIDU_SERVER_COMMIT
+              git checkout -f $OPENVIDU_SERVER_COMMIT
             fi
             cd openvidu-server/src/dashboard && npm install --unsafe-perm && npm install /opt/openvidu/openvidu-browser-*.tgz && export NG_CLI_ANALYTICS=ci && npm run build-prod
             cd ../.. && mvn --batch-mode clean compile package
             cp target/openvidu-server*.jar /opt/openvidu
             cd ..
-            git checkout $OPENVIDU_COMMIT
+            git checkout -f $OPENVIDU_COMMIT
         '''.stripIndent())
         }
         stage ('Environment Launch') {
