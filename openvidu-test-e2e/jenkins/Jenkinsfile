@@ -45,34 +45,34 @@ node('container') {
         }
         stage('OpenVidu Browser build') {
           sh(script: '''#!/bin/bash
+            cd openvidu
             if [[ $OPENVIDU_BROWSER_COMMIT != "default" ]]; then
-              cd openvidu
               git checkout $OPENVIDU_BROWSER_COMMIT
-              cd openvidu-browser
-              npm install --unsafe-perm && npm run build && npm link
-              cd ..
-              git checkout $OPENVIDU_COMMIT
-            else
-              cd openvidu/openvidu-browser && npm install --unsafe-perm && npm run build && npm link
             fi
+            cd openvidu-browser
+            npm install --unsafe-perm && npm run build
+            npm pack
+            cp openvidu-browser-*.tgz /opt/openvidu
+            cd ..
+            git checkout $OPENVIDU_COMMIT
         '''.stripIndent())
         }
         stage('OpenVidu Node Client build') {
           sh(script: '''#!/bin/bash
+            cd openvidu
             if [[ $OPENVIDU_NODE_CLIENT_COMMIT != "default" ]]; then
-              cd openvidu
               git checkout $OPENVIDU_NODE_CLIENT_COMMIT
-              cd openvidu-node-client
-              npm install --unsafe-perm && npm run build && npm link
-              cd ..
-              git checkout $OPENVIDU_COMMIT
-            else
-              cd openvidu/openvidu-node-client && npm install --unsafe-perm && npm run build && npm link
             fi
+            cd openvidu-node-client
+            npm install --unsafe-perm && npm run build
+            npm pack
+            cp openvidu-node-client-*.tgz /opt/openvidu
+            cd ..
+            git checkout $OPENVIDU_COMMIT
         '''.stripIndent())
         }
         stage('OpenVidu TestApp build') {
-          sh 'cd openvidu/openvidu-testapp && npm install --unsafe-perm && npm link openvidu-browser && npm link openvidu-node-client && export NG_CLI_ANALYTICS=ci && ./node_modules/@angular/cli/bin/ng build --prod'
+          sh 'cd openvidu/openvidu-testapp && npm install --unsafe-perm && npm install /opt/openvidu/openvidu-browser-*.tgz && npm install /opt/openvidu/openvidu-node-client-*.tgz && export NG_CLI_ANALYTICS=ci && ./node_modules/@angular/cli/bin/ng build --prod'
         }
         stage('OpenVidu Server unit tests') {
           sh 'cd openvidu/openvidu-server && mvn --batch-mode -Dtest=io.openvidu.server.test.unit.*Test test'
@@ -86,7 +86,7 @@ node('container') {
             if [[ $OPENVIDU_SERVER_COMMIT != "default" ]]; then
               git checkout $OPENVIDU_SERVER_COMMIT
             fi
-            cd openvidu-server/src/dashboard && npm install --unsafe-perm && npm link openvidu-browser && export NG_CLI_ANALYTICS=ci && npm run build-prod
+            cd openvidu-server/src/dashboard && npm install --unsafe-perm && npm install /opt/openvidu/openvidu-browser-*.tgz && export NG_CLI_ANALYTICS=ci && npm run build-prod
             cd ../.. && mvn --batch-mode clean compile package
             cp target/openvidu-server*.jar /opt/openvidu
             cd ..
