@@ -72,7 +72,7 @@ node('container') {
         '''.stripIndent())
         }
         stage('OpenVidu TestApp build') {
-          sh 'cd openvidu/openvidu-testapp && npm install --unsafe-perm && npm install /opt/openvidu/openvidu-browser-*.tgz && npm install /opt/openvidu/openvidu-node-client-*.tgz && export NG_CLI_ANALYTICS=ci && ./node_modules/@angular/cli/bin/ng build --prod'
+          sh 'cd openvidu/openvidu-testapp && npm install --unsafe-perm && npm install /opt/openvidu/openvidu-browser-*.tgz && npm install /opt/openvidu/openvidu-node-client-*.tgz && export NG_CLI_ANALYTICS="false" && ./node_modules/@angular/cli/bin/ng build --prod'
         }
         stage('OpenVidu Server unit tests') {
           sh 'cd openvidu/openvidu-server && mvn --batch-mode -Dtest=io.openvidu.server.test.unit.*Test test'
@@ -86,7 +86,7 @@ node('container') {
             if [[ $OPENVIDU_SERVER_COMMIT != "default" ]]; then
               git checkout -f $OPENVIDU_SERVER_COMMIT
             fi
-            cd openvidu-server/src/dashboard && npm install --unsafe-perm && npm install /opt/openvidu/openvidu-browser-*.tgz && export NG_CLI_ANALYTICS=ci && npm run build-prod
+            cd openvidu-server/src/dashboard && npm install --unsafe-perm && npm install /opt/openvidu/openvidu-browser-*.tgz && export NG_CLI_ANALYTICS="false" && npm run build-prod
             cd ../.. && mvn --batch-mode clean compile package
             cp target/openvidu-server*.jar /opt/openvidu
             cd ..
@@ -95,7 +95,7 @@ node('container') {
         }
         stage ('Environment Launch') {
           sh 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/CN=www.mydom.com/O=My Company LTD./C=US" -keyout openvidu/openvidu-testapp/dist/key.pem -out openvidu/openvidu-testapp/dist/cert.pem'  
-          sh 'cd openvidu/openvidu-testapp/dist && http-server -S -p 4200 &> /testapp.log &'
+          sh 'cd openvidu/openvidu-testapp/dist && http-server -S -p 4200 &> /opt/openvidu/testapp.log &'
           sh '/usr/bin/kurento-media-server &> /kms.log &'
           sh 'until $(curl --insecure --output /dev/null --silent http://127.0.0.1:8888/kurento); do echo "Waiting for KMS..."; sleep 1; done'
           sh(script: '''#!/bin/bash
