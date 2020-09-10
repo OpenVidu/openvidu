@@ -155,75 +155,69 @@ export class StreamLEGACY extends Stream {
      */
     initWebRtcPeerReceive(reconnect: boolean): Promise<any> {
 
-        if (!!this.session.openvidu.openviduServerVersion) {
-            // 2.16.0
-            return super.initWebRtcPeerReceive(reconnect);
+        // 2.15.0
+        return new Promise((resolve, reject) => {
 
-        } else {
-            // 2.15.0
-            return new Promise((resolve, reject) => {
+            const offerConstraints = {
+                audio: this.inboundStreamOpts.hasAudio,
+                video: this.inboundStreamOpts.hasVideo
+            };
+            logger.debug("'Session.subscribe(Stream)' called. Constraints of generate SDP offer",
+                offerConstraints);
+            const options = {
+                onicecandidate: this.connection.sendIceCandidate.bind(this.connection),
+                mediaConstraints: offerConstraints,
+                iceServers: this.getIceServersConf(),
+                simulcast: false
+            };
 
-                const offerConstraints = {
-                    audio: this.inboundStreamOpts.hasAudio,
-                    video: this.inboundStreamOpts.hasVideo
-                };
-                logger.debug("'Session.subscribe(Stream)' called. Constraints of generate SDP offer",
-                    offerConstraints);
-                const options = {
-                    onicecandidate: this.connection.sendIceCandidate.bind(this.connection),
-                    mediaConstraints: offerConstraints,
-                    iceServers: this.getIceServersConf(),
-                    simulcast: false
-                };
+            const successCallback = (sdpOfferParam) => {
+                logger.debug('Sending SDP offer to subscribe to '
+                    + this.streamId, sdpOfferParam);
 
-                const successCallback = (sdpOfferParam) => {
-                    logger.debug('Sending SDP offer to subscribe to '
-                        + this.streamId, sdpOfferParam);
+                const method = reconnect ? 'reconnectStream' : 'receiveVideoFrom';
+                const params = { sdpOffer: sdpOfferParam };
+                params[reconnect ? 'stream' : 'sender'] = this.streamId;
 
-                    const method = reconnect ? 'reconnectStream' : 'receiveVideoFrom';
-                    const params = { sdpOffer: sdpOfferParam };
-                    params[reconnect ? 'stream' : 'sender'] = this.streamId;
-
-                    this.session.openvidu.sendRequest(method, params, (error, response) => {
-                        if (error) {
-                            reject(new Error('Error on recvVideoFrom: ' + JSON.stringify(error)));
-                        } else {
-                            // Ios Ionic. Limitation: some bug in iosrtc cordova plugin makes it necessary
-                            // to add a timeout before calling PeerConnection#setRemoteDescription during
-                            // some time (400 ms) from the moment first subscriber stream is received
-                            if (this.session.isFirstIonicIosSubscriber) {
-                                this.session.isFirstIonicIosSubscriber = false;
-                                setTimeout(() => {
-                                    // After 400 ms Ionic iOS subscribers won't need to run
-                                    // PeerConnection#setRemoteDescription after 250 ms timeout anymore
-                                    this.session.countDownForIonicIosSubscribersActive = false;
-                                }, 400);
-                            }
-                            const needsTimeoutOnProcessAnswer = this.session.countDownForIonicIosSubscribersActive;
-                            (<WebRtcPeerLEGACY>this.webRtcPeer).processAnswer(response.sdpAnswer, needsTimeoutOnProcessAnswer).then(() => {
-                                logger.info("'Subscriber' (" + this.streamId + ") successfully " + (reconnect ? "reconnected" : "subscribed"));
-                                this.remotePeerSuccessfullyEstablished();
-                                this.initWebRtcStats();
-                                resolve();
-                            }).catch(error => {
-                                reject(error);
-                            });
+                this.session.openvidu.sendRequest(method, params, (error, response) => {
+                    if (error) {
+                        reject(new Error('Error on recvVideoFrom: ' + JSON.stringify(error)));
+                    } else {
+                        // Ios Ionic. Limitation: some bug in iosrtc cordova plugin makes it necessary
+                        // to add a timeout before calling PeerConnection#setRemoteDescription during
+                        // some time (400 ms) from the moment first subscriber stream is received
+                        if (this.session.isFirstIonicIosSubscriber) {
+                            this.session.isFirstIonicIosSubscriber = false;
+                            setTimeout(() => {
+                                // After 400 ms Ionic iOS subscribers won't need to run
+                                // PeerConnection#setRemoteDescription after 250 ms timeout anymore
+                                this.session.countDownForIonicIosSubscribersActive = false;
+                            }, 400);
                         }
-                    });
-                };
+                        const needsTimeoutOnProcessAnswer = this.session.countDownForIonicIosSubscribersActive;
+                        (<WebRtcPeerLEGACY>this.webRtcPeer).processAnswer(response.sdpAnswer, needsTimeoutOnProcessAnswer).then(() => {
+                            logger.info("'Subscriber' (" + this.streamId + ") successfully " + (reconnect ? "reconnected" : "subscribed"));
+                            this.remotePeerSuccessfullyEstablished();
+                            this.initWebRtcStats();
+                            resolve();
+                        }).catch(error => {
+                            reject(error);
+                        });
+                    }
+                });
+            };
 
-                this.webRtcPeer = new WebRtcPeerRecvonlyLEGACY(options);
-                this.webRtcPeer.addIceConnectionStateChangeListener(this.streamId);
-                (<WebRtcPeerLEGACY>this.webRtcPeer).generateOffer()
-                    .then(sdpOffer => {
-                        successCallback(sdpOffer);
-                    })
-                    .catch(error => {
-                        reject(new Error('(subscribe) SDP offer error: ' + JSON.stringify(error)));
-                    });
-            });
+            this.webRtcPeer = new WebRtcPeerRecvonlyLEGACY(options);
+            this.webRtcPeer.addIceConnectionStateChangeListener(this.streamId);
+            (<WebRtcPeerLEGACY>this.webRtcPeer).generateOffer()
+                .then(sdpOffer => {
+                    successCallback(sdpOffer);
+                })
+                .catch(error => {
+                    reject(new Error('(subscribe) SDP offer error: ' + JSON.stringify(error)));
+                });
+        });
 
-        }
     }
 
     /**
@@ -231,40 +225,34 @@ export class StreamLEGACY extends Stream {
      */
     remotePeerSuccessfullyEstablished(): void {
 
-        if (!!this.session.openvidu.openviduServerVersion) {
-            // 2.16.0
-            super.remotePeerSuccessfullyEstablished();
-
-        } else {
-            // 2.15.0
-            this.mediaStream = new MediaStream();
-            let receiver: RTCRtpReceiver;
-            for (receiver of this.webRtcPeer.pc.getReceivers()) {
-                if (!!receiver.track) {
-                    this.mediaStream.addTrack(receiver.track);
-                }
+        // 2.15.0
+        this.mediaStream = new MediaStream();
+        let receiver: RTCRtpReceiver;
+        for (receiver of this.webRtcPeer.pc.getReceivers()) {
+            if (!!receiver.track) {
+                this.mediaStream.addTrack(receiver.track);
             }
-            logger.debug('Peer remote stream', this.mediaStream);
-
-            if (!!this.mediaStream) {
-
-                if (this.streamManager instanceof Subscriber) {
-                    // Apply SubscriberProperties.subscribeToAudio and SubscriberProperties.subscribeToVideo
-                    if (!!this.mediaStream.getAudioTracks()[0]) {
-                        const enabled = !!((<Subscriber>this.streamManager).properties.subscribeToAudio);
-                        this.mediaStream.getAudioTracks()[0].enabled = enabled;
-                    }
-                    if (!!this.mediaStream.getVideoTracks()[0]) {
-                        const enabled = !!((<Subscriber>this.streamManager).properties.subscribeToVideo);
-                        this.mediaStream.getVideoTracks()[0].enabled = enabled;
-                    }
-                }
-
-                this.updateMediaStreamInVideos();
-                this.initHarkEvents(); // Init hark events for the remote stream
-            }
-
         }
+        logger.debug('Peer remote stream', this.mediaStream);
+
+        if (!!this.mediaStream) {
+
+            if (this.streamManager instanceof Subscriber) {
+                // Apply SubscriberProperties.subscribeToAudio and SubscriberProperties.subscribeToVideo
+                if (!!this.mediaStream.getAudioTracks()[0]) {
+                    const enabled = !!((<Subscriber>this.streamManager).properties.subscribeToAudio);
+                    this.mediaStream.getAudioTracks()[0].enabled = enabled;
+                }
+                if (!!this.mediaStream.getVideoTracks()[0]) {
+                    const enabled = !!((<Subscriber>this.streamManager).properties.subscribeToVideo);
+                    this.mediaStream.getVideoTracks()[0].enabled = enabled;
+                }
+            }
+
+            this.updateMediaStreamInVideos();
+            this.initHarkEvents(); // Init hark events for the remote stream
+        }
+
     }
 
 }
