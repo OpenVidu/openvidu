@@ -46,14 +46,6 @@ import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.stream.JsonReader;
-import com.mashape.unirest.http.HttpMethod;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpStatus;
 import org.jcodec.api.FrameGrab;
@@ -79,6 +71,14 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.stream.JsonReader;
+import com.mashape.unirest.http.HttpMethod;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
 import io.openvidu.java.client.Connection;
@@ -183,26 +183,26 @@ public class OpenViduTestAppE2eTest {
 		BrowserUser browserUser;
 
 		switch (browser) {
-			case "chrome":
-				browserUser = new ChromeUser("TestUser", 50, false);
-				break;
-			case "firefox":
-				browserUser = new FirefoxUser("TestUser", 50);
-				break;
-			case "opera":
-				browserUser = new OperaUser("TestUser", 50);
-				break;
-			case "chromeAndroid":
-				browserUser = new ChromeAndroidUser("TestUser", 50);
-				break;
-			case "chromeAlternateScreenShare":
-				browserUser = new ChromeUser("TestUser", 50, "OpenVidu TestApp", false);
-				break;
-			case "chromeAsRoot":
-				browserUser = new ChromeUser("TestUser", 50, true);
-				break;
-			default:
-				browserUser = new ChromeUser("TestUser", 50, false);
+		case "chrome":
+			browserUser = new ChromeUser("TestUser", 50, false);
+			break;
+		case "firefox":
+			browserUser = new FirefoxUser("TestUser", 50);
+			break;
+		case "opera":
+			browserUser = new OperaUser("TestUser", 50);
+			break;
+		case "chromeAndroid":
+			browserUser = new ChromeAndroidUser("TestUser", 50);
+			break;
+		case "chromeAlternateScreenShare":
+			browserUser = new ChromeUser("TestUser", 50, "OpenVidu TestApp", false);
+			break;
+		case "chromeAsRoot":
+			browserUser = new ChromeUser("TestUser", 50, true);
+			break;
+		default:
+			browserUser = new ChromeUser("TestUser", 50, false);
 		}
 
 		this.user = new MyUser(browserUser);
@@ -304,7 +304,7 @@ public class OpenViduTestAppE2eTest {
 		log.info("One2One Chrome [Video + Audio] - Force VP8");
 		this.forceCodecGenericE2eTest(VideoCodec.VP8);
 	}
-	
+
 	@Test
 	@DisplayName("One2One Chrome [Video + Audio] - Force H264")
 	void oneToOneVideoAudioSessionChromeForceH264() throws Exception {
@@ -312,7 +312,7 @@ public class OpenViduTestAppE2eTest {
 		log.info("One2One Chrome [Video + Audio] - Force H264");
 		this.forceCodecGenericE2eTest(VideoCodec.H264);
 	}
-	
+
 	private void forceCodecGenericE2eTest(VideoCodec codec) throws Exception {
 		// Configure Session to force Codec
 		user.getDriver().findElement(By.id("add-user-btn")).click();
@@ -341,7 +341,7 @@ public class OpenViduTestAppE2eTest {
 
 		// Check codecs
 		List<WebElement> statsButtons = user.getDriver().findElements(By.className("stats-button"));
-		for(WebElement statButton: statsButtons) {
+		for (WebElement statButton : statsButtons) {
 			statButton.click();
 			Thread.sleep(1000);
 			String videoCodecUsed = user.getDriver().findElement(By.id("video-codec-used")).getText();
@@ -2585,10 +2585,11 @@ public class OpenViduTestAppE2eTest {
 		// 200
 		body = "{'mediaMode': 'ROUTED', 'recordingMode': 'MANUAL', 'customSessionId': 'CUSTOM_SESSION_ID', 'defaultOutputMode': 'COMPOSED', 'defaultRecordingLayout': 'BEST_FIT'}";
 		restClient.rest(HttpMethod.POST, "/api/sessions", body, HttpStatus.SC_OK, true,
-				"{'id': 'STR', 'createdAt': 0}");
+				"{'id':'STR','createdAt':0,'mediaMode':'STR','recordingMode':'STR','defaultOutputMode':'STR','defaultRecordingLayout':'STR','customSessionId':'STR','forcedVideoCodec':'STR','allowTranscoding':false,'connections':{'numberOfElements':0,'content':[]},'recording':true}");
+
 		// Default values
 		JsonObject res = restClient.rest(HttpMethod.POST, "/api/sessions", "{}", HttpStatus.SC_OK, true,
-				"{'id': 'STR', 'createdAt': 0}");
+				"{'id':'STR','createdAt':0,'mediaMode':'STR','recordingMode':'STR','defaultOutputMode':'STR','defaultRecordingLayout':'STR','customSessionId':'STR','forcedVideoCodec':'STR','allowTranscoding':false,'connections':{'numberOfElements':0,'content':[]},'recording':true}");
 		restClient.rest(HttpMethod.DELETE, "/api/sessions/" + res.get("id").getAsString(), HttpStatus.SC_NO_CONTENT);
 
 		// 409
@@ -2676,7 +2677,7 @@ public class OpenViduTestAppE2eTest {
 
 		// 409 (RELAYED media mode)
 		res = restClient.rest(HttpMethod.POST, "/api/sessions", "{'mediaMode':'RELAYED'}", HttpStatus.SC_OK, true,
-				"{'id': 'STR', 'createdAt': 0}");
+				"{'id':'STR','createdAt':0,'mediaMode':'STR','recordingMode':'STR','defaultOutputMode':'STR','defaultRecordingLayout':'STR','customSessionId':'STR','forcedVideoCodec':'STR','allowTranscoding':false,'connections':{'numberOfElements':0,'content':[]},'recording':true}");
 		body = "{'session':'" + res.get("id").getAsString() + "'}";
 		restClient.rest(HttpMethod.POST, "/api/recordings/start", body, HttpStatus.SC_CONFLICT);
 		restClient.rest(HttpMethod.DELETE, "/api/sessions/" + res.get("id").getAsString(), HttpStatus.SC_NO_CONTENT);
@@ -3154,7 +3155,8 @@ public class OpenViduTestAppE2eTest {
 
 			// Init a session and publish IP camera AS FIRST PARTICIPANT
 			restClient.rest(HttpMethod.POST, "/api/sessions", "{'customSessionId':'IP_CAM_SESSION'}", HttpStatus.SC_OK,
-					true, "{'id': 'STR', 'createdAt': 0}");
+					true,
+					"{'id':'STR','createdAt':0,'mediaMode':'STR','recordingMode':'STR','defaultOutputMode':'STR','defaultRecordingLayout':'STR','customSessionId':'STR','forcedVideoCodec':'STR','allowTranscoding':false,'connections':{'numberOfElements':0,'content':[]},'recording':true}");
 
 			// No rtspUri [400]
 			restClient.rest(HttpMethod.POST, "/api/sessions/IP_CAM_SESSION/connection", "{}",
