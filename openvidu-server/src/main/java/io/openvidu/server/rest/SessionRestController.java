@@ -190,10 +190,9 @@ public class SessionRestController {
 		Session sessionNotActive = sessionManager.storeSessionNotActive(sessionId, sessionProperties);
 		log.info("New session {} initialized {}", sessionId, this.sessionManager.getSessionsWithNotActive().stream()
 				.map(Session::getSessionId).collect(Collectors.toList()).toString());
-		JsonObject responseJson = new JsonObject();
+		JsonObject responseJson = sessionNotActive.toJson();
+		responseJson.remove("sessionId");
 		responseJson.addProperty("id", sessionNotActive.getSessionId());
-		responseJson.addProperty("createdAt", sessionNotActive.getStartTime());
-
 		return new ResponseEntity<>(responseJson.toString(), getResponseHeaders(), HttpStatus.OK);
 	}
 

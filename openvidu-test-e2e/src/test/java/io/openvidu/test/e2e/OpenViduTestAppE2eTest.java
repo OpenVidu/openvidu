@@ -2162,13 +2162,10 @@ public class OpenViduTestAppE2eTest {
 
 		SessionProperties properties = new SessionProperties.Builder().customSessionId(customSessionId)
 				.mediaMode(MediaMode.ROUTED).recordingMode(RecordingMode.ALWAYS)
-				.defaultOutputMode(OutputMode.INDIVIDUAL)
-				.forcedVideoCodec(VideoCodec.VP8)
-				.allowTranscoding(false)
-				.build();
+				.defaultOutputMode(OutputMode.INDIVIDUAL).build();
 		Session session = OV.createSession(properties);
 
-		Assert.assertFalse("Session.fetch() should return true after OpenVidu.createSession() because some default properties are created in the server", session.fetch());
+		Assert.assertFalse("Session.fetch() should return false after OpenVidu.createSession()", session.fetch());
 		Assert.assertFalse("OpenVidu.fetch() should return false after OpenVidu.createSession()", OV.fetch());
 		sessions = OV.getActiveSessions();
 		Assert.assertEquals("Expected 1 active session but found " + sessions.size(), 1, sessions.size());
@@ -2357,7 +2354,7 @@ public class OpenViduTestAppE2eTest {
 			Assert.assertEquals("Wrong HTTP status on OpenVidu.startRecording()", 404, e.getStatus());
 		}
 		Session sessionAux = OV.createSession();
-		Assert.assertTrue("OpenVidu.fetch() should return true", OV.fetch());
+		Assert.assertFalse("OpenVidu.fetch() should return false", OV.fetch());
 		try {
 			OV.startRecording(sessionAux.getSessionId());
 		} catch (OpenViduHttpException e) {
@@ -2452,7 +2449,7 @@ public class OpenViduTestAppE2eTest {
 		OV.deleteRecording(recording2.getId());
 
 		recording2 = OV.startRecording(session.getSessionId(), recordingProperties);
-		user.getEventManager().waitUntilEventReaches("recordingStarted", 2);
+		// user.getEventManager().waitUntilEventReaches("recordingStarted", 2);
 
 		Assert.assertEquals("Wrong recording name", customRecordingName, recording2.getName());
 		Assert.assertEquals("Wrong recording id", session.getSessionId() + "-1", recording2.getId());

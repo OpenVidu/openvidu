@@ -99,8 +99,8 @@ export class OpenVidu {
   public createSession(properties?: SessionProperties): Promise<Session> {
     return new Promise<Session>((resolve, reject) => {
       const session = new Session(this, properties);
-      session.getSessionIdHttp()
-        .then(sessionId => {
+      session.getSessionHttp()
+        .then(response => {
           this.activeSessions.push(session);
           resolve(session);
         })
