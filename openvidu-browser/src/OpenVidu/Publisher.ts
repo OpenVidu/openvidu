@@ -95,7 +95,7 @@ export class Publisher extends StreamManager {
 
         // TODO: CLEAN 2.15.0 LEGACY CODE
         // THIS LINE:
-        super(openvidu.openviduServerVersion.startsWith('2.16') ? new Stream((!!openvidu.session) ? openvidu.session : new Session(openvidu), { publisherProperties: properties, mediaConstraints: {} }) : new StreamLEGACY((!!openvidu.session) ? openvidu.session : new Session(openvidu), { publisherProperties: properties, mediaConstraints: {} }), targEl);
+        super(!openvidu.openviduServerVersion ? /*2.15.0 or 2.16.0 NOT CONNECTED (LEGACY)*/ new StreamLEGACY((!!openvidu.session) ? openvidu.session : new Session(openvidu), { publisherProperties: properties, mediaConstraints: {} }) : /*2.16.0 CONNECTED (NORMAL API)*/ new Stream(openvidu.session, { publisherProperties: properties, mediaConstraints: {} }), targEl);
         // SHOULD GET BACK TO:
         // super(new Stream((!!openvidu.session) ? openvidu.session : new Session(openvidu), { publisherProperties: properties, mediaConstraints: {} }), targEl);
 
@@ -612,8 +612,8 @@ export class Publisher extends StreamManager {
                 .then(myConstraints => {
 
                     if (!!myConstraints.videoTrack && !!myConstraints.audioTrack ||
-                      !!myConstraints.audioTrack && myConstraints.constraints?.video === false ||
-                      !!myConstraints.videoTrack && myConstraints.constraints?.audio === false) {
+                        !!myConstraints.audioTrack && myConstraints.constraints?.video === false ||
+                        !!myConstraints.videoTrack && myConstraints.constraints?.audio === false) {
                         // No need to call getUserMedia at all. MediaStreamTracks already provided
                         successCallback(this.openvidu.addAlreadyProvidedTracks(myConstraints, new MediaStream()));
                         // Return as we do not need to process further

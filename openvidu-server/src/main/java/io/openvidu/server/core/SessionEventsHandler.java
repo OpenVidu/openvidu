@@ -40,6 +40,7 @@ import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.server.cdr.CallDetailRecord;
 import io.openvidu.server.config.InfoHandler;
+import io.openvidu.server.config.OpenviduBuildInfo;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.kurento.core.KurentoParticipant;
 import io.openvidu.server.kurento.endpoint.KurentoFilter;
@@ -61,6 +62,9 @@ public class SessionEventsHandler {
 
 	@Autowired
 	protected OpenviduConfig openviduConfig;
+
+	@Autowired
+	protected OpenviduBuildInfo openviduBuildConfig;
 
 	Map<String, Recording> recordingsStarted = new ConcurrentHashMap<>();
 
@@ -156,6 +160,8 @@ public class SessionEventsHandler {
 		result.addProperty(ProtocolElements.PARTICIPANTJOINED_USER_PARAM, participant.getParticipantPublicId());
 		result.addProperty(ProtocolElements.PARTICIPANTJOINED_CREATEDAT_PARAM, participant.getCreatedAt());
 		result.addProperty(ProtocolElements.PARTICIPANTJOINED_METADATA_PARAM, participant.getFullMetadata());
+		result.addProperty(ProtocolElements.JOINROOM_OPENVIDUSERVERVERSION_PARAM,
+				openviduBuildConfig.getOpenViduServerVersion());
 		result.add("value", resultArray);
 
 		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, result);

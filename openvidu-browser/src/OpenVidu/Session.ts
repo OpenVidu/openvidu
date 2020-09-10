@@ -1154,6 +1154,7 @@ export class Session extends EventDispatcher {
 
                             // Initialize local Connection object with values returned by openvidu-server
                             this.connection = new Connection(this);
+                            this.openvidu.openviduServerVersion = response.openviduServerVersion;
                             this.connection.connectionId = response.id;
                             this.connection.creationTime = response.createdAt;
                             this.connection.data = response.metadata;
@@ -1312,7 +1313,6 @@ export class Session extends EventDispatcher {
 
             this.openvidu.wsUri = 'wss://' + url.host + '/openvidu';
             this.openvidu.httpUri = 'https://' + url.host;
-            this.openvidu.openviduServerVersion = openviduServerVersion;
 
         } else {
             logger.error('Token "' + token + '" is not valid')

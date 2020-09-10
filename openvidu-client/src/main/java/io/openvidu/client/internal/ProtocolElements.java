@@ -41,6 +41,7 @@ public class ProtocolElements {
 	public static final String JOINROOM_RECORDER_PARAM = "recorder";
 
 	public static final String JOINROOM_PEERID_PARAM = "id";
+	public static final String JOINROOM_OPENVIDUSERVERVERSION_PARAM = "openviduServerVersion";
 	public static final String JOINROOM_PEERCREATEDAT_PARAM = "createdAt";
 	public static final String JOINROOM_PEERSTREAMS_PARAM = "streams";
 	public static final String JOINROOM_PEERSTREAMID_PARAM = "id";
