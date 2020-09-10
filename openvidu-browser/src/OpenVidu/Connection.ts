@@ -142,7 +142,7 @@ export class Connection {
             };
             // TODO: CLEAN 2.15.0 LEGACY CODE
             // THIS LINE:
-            const stream = (this.session.openvidu.recorder || this.session.openvidu.openviduServerVersion.startsWith('2.16')) ? new Stream(this.session, streamOptions) : new StreamLEGACY(this.session, streamOptions);
+            const stream = this.session.openvidu.openviduServerVersion.startsWith('2.16') ? new Stream(this.session, streamOptions) : new StreamLEGACY(this.session, streamOptions);
             // SHOULD GET BACK TO:
             // const stream = new Stream(this.session, streamOptions);
 
