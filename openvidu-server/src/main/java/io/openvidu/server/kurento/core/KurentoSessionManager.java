@@ -380,7 +380,7 @@ public class KurentoSessionManager extends SessionManager {
 		if (forcedVideoCodec != VideoCodec.NONE && !participant.isIpcam()) {
 			String sdpOffer = kurentoOptions.sdpOffer;
 			try {
-				kurentoOptions.sdpOffer = this.sdpMunging.setCodecPreference(forcedVideoCodec, sdpOffer);
+				kurentoOptions.sdpOffer = this.sdpMunging.setCodecPreference(forcedVideoCodec, sdpOffer, true);
 				log.debug("PARTICIPANT '{}' in Session '{}' publishing SDP Offer after munging: \n {}",
 					participant.getParticipantPublicId(), kSession.getSessionId(), kurentoOptions.sdpOffer);
 			} catch (OpenViduException e) {
@@ -571,7 +571,7 @@ public class KurentoSessionManager extends SessionManager {
 				try {
 					log.debug("PARTICIPANT '{}' in Session '{}' SDP Offer before munging: \n {}",
 						participant.getParticipantPublicId(), session.getSessionId(), sdpOffer);
-					sdpOffer = this.sdpMunging.setCodecPreference(forcedVideoCodec, sdpOffer);
+					sdpOffer = this.sdpMunging.setCodecPreference(forcedVideoCodec, sdpOffer, false);
 					if (forcedVideoCodec == VideoCodec.H264) {
 						sdpOffer = this.sdpMunging.setfmtpH264(sdpOffer);
 					}
@@ -622,7 +622,7 @@ public class KurentoSessionManager extends SessionManager {
 			// Modify sdp if forced codec is defined
 			if (forcedVideoCodec != VideoCodec.NONE) {
 				try {
-					sdpAnswer = this.sdpMunging.setCodecPreference(forcedVideoCodec, sdpAnswer);
+					sdpAnswer = this.sdpMunging.setCodecPreference(forcedVideoCodec, sdpAnswer, true);
 					log.debug("PARTICIPANT '{}' subscribing in Session '{}' SDP Answer after munging: \n {}",
 						participant.getParticipantPublicId(), session.getSessionId(), sdpAnswer);	
 				} catch (OpenViduException e) {
@@ -1178,7 +1178,7 @@ public class KurentoSessionManager extends SessionManager {
 		// Modify sdp if forced codec is defined
 		if (forcedVideoCodec != VideoCodec.NONE) {
 			try {
-				sdpString = sdpMunging.setCodecPreference(forcedVideoCodec, sdpString);
+				sdpString = sdpMunging.setCodecPreference(forcedVideoCodec, sdpString, true);
 				log.debug("PARTICIPANT '{}' in Session '{}'  reconnecting SDP after munging: \n {}",
 						participant.getParticipantPublicId(), kSession.getSessionId(), sdpString);
 			} catch (OpenViduException e) {

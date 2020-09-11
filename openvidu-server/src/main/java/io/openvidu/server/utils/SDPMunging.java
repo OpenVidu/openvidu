@@ -42,7 +42,7 @@ public class SDPMunging {
     * ordering of formats. Browsers (tested with Chrome 84) honor this change and
     * use the first codec provided in the answer, so this operation actually works.
     */
-    public String setCodecPreference(VideoCodec codec, String sdp) throws OpenViduException {
+    public String setCodecPreference(VideoCodec codec, String sdp, boolean removeCodecs) throws OpenViduException {
         String codecStr = codec.name();
         log.info("[setCodecPreference] codec: {}", codecStr);
 
@@ -121,11 +121,12 @@ public class SDPMunging {
                 newLine.append(pt + " ");
             }
 
-            // Add the rest of PayloadTypes.
-            newLine.append(String.join(" ", lineParts));
-
             // Replace the original m= line with the one we just built.
-            lines[sl] = newLine.toString();
+            if (!removeCodecs) {
+                // Add the rest of PayloadTypes.
+                newLine.append(String.join(" ", lineParts));
+            }
+            lines[sl] = newLine.toString().trim();
         }
 
         return String.join("\r\n", lines) + "\r\n";

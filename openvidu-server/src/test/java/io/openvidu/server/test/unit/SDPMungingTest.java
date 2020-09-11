@@ -149,7 +149,7 @@ public class SDPMungingTest {
     
     private void initTestsSetCodecPrevalence(VideoCodec codec, String sdpNameFile) throws IOException {
         this.oldSdp = getSdpFile(sdpNameFile);
-        this.newSdp = this.sdpMungin.setCodecPreference(codec, oldSdp);
+        this.newSdp = this.sdpMungin.setCodecPreference(codec, oldSdp, true);
         this.forceCodecPayloads = new ArrayList<>();
         
         // Get all Payload-Type for video Codec
