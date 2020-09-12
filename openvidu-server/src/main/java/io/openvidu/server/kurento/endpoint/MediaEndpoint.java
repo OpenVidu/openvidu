@@ -364,8 +364,8 @@ public abstract class MediaEndpoint {
 			if (!mediaOptions.adaptativeBitrate) {
 				playerBuilder = playerBuilder.useEncodedMedia();
 			}
-			if (mediaOptions.network_cache != null) {
-				playerBuilder = playerBuilder.withNetworkCache(mediaOptions.network_cache);
+			if (mediaOptions.networkCache != null) {
+				playerBuilder = playerBuilder.withNetworkCache(mediaOptions.networkCache);
 			}
 
 			playerBuilder.buildAsync(new Continuation<PlayerEndpoint>() {

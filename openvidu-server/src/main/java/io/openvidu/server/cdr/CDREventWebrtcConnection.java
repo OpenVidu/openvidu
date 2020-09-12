@@ -69,7 +69,7 @@ public class CDREventWebrtcConnection extends CDREventEnd implements Comparable<
 				if (kMediaOptions.rtspUri != null) {
 					json.addProperty("rtspUri", kMediaOptions.rtspUri);
 					json.addProperty("adaptativeBitrate", kMediaOptions.adaptativeBitrate);
-					json.addProperty("networkCache", kMediaOptions.network_cache);
+					json.addProperty("networkCache", kMediaOptions.networkCache);
 					json.addProperty("onlyPlayWithSubscribers", kMediaOptions.onlyPlayWithSubscribers);
 				}
 			}

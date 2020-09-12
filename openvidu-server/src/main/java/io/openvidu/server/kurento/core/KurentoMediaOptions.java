@@ -32,7 +32,7 @@ public class KurentoMediaOptions extends MediaOptions {
 	public String rtspUri;
 	public Boolean adaptativeBitrate;
 	public Boolean onlyPlayWithSubscribers;
-	public Integer network_cache;
+	public Integer networkCache;
 
 	public KurentoMediaOptions(boolean isOffer, String sdpOffer, Boolean hasAudio, Boolean hasVideo,
 			Boolean audioActive, Boolean videoActive, String typeOfVideo, Integer frameRate, String videoDimensions,
@@ -46,7 +46,7 @@ public class KurentoMediaOptions extends MediaOptions {
 	public KurentoMediaOptions(boolean isOffer, String sdpOffer, Boolean hasAudio, Boolean hasVideo,
 			Boolean audioActive, Boolean videoActive, String typeOfVideo, Integer frameRate, String videoDimensions,
 			KurentoFilter filter, boolean doLoopback, String rtspUri, Boolean adaptativeBitrate,
-			Boolean onlyPlayWithSubscribers, Integer network_cache) {
+			Boolean onlyPlayWithSubscribers, Integer networkCache) {
 		super(hasAudio, hasVideo, audioActive, videoActive, typeOfVideo, frameRate, videoDimensions, filter);
 		this.isOffer = isOffer;
 		this.sdpOffer = sdpOffer;
@@ -54,7 +54,7 @@ public class KurentoMediaOptions extends MediaOptions {
 		this.rtspUri = rtspUri;
 		this.adaptativeBitrate = adaptativeBitrate;
 		this.onlyPlayWithSubscribers = onlyPlayWithSubscribers;
-		this.network_cache = network_cache;
+		this.networkCache = networkCache;
 	}
 
 	public KurentoMediaOptions(Boolean hasAudio, Boolean hasVideo, Boolean audioActive, Boolean videoActive,
@@ -67,7 +67,7 @@ public class KurentoMediaOptions extends MediaOptions {
 		this.rtspUri = streamProperties.rtspUri;
 		this.adaptativeBitrate = streamProperties.adaptativeBitrate;
 		this.onlyPlayWithSubscribers = streamProperties.onlyPlayWithSubscribers;
-		this.network_cache = streamProperties.network_cache;
+		this.networkCache = streamProperties.networkCache;
 	}
 
 	@Override
@@ -79,8 +79,8 @@ public class KurentoMediaOptions extends MediaOptions {
 		if (onlyPlayWithSubscribers != null) {
 			json.addProperty("onlyPlayWithSubscribers", onlyPlayWithSubscribers);
 		}
-		if (network_cache != null) {
-			json.addProperty("networkCache", network_cache);
+		if (networkCache != null) {
+			json.addProperty("networkCache", networkCache);
 		}
 		return json;
 	}
