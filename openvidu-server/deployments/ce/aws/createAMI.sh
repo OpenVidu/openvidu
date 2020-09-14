@@ -1,20 +1,14 @@
 #!/bin/bash -x
 set -eu -o pipefail
 
-CF_OVP_TARGET=${CF_OVP_TARGET:-nomarket}
 CF_RELEASE=${CF_RELEASE:-false}
 
 if [[ $CF_RELEASE == "true" ]]; then
     git checkout v$OPENVIDU_VERSION
 fi
 
-if [ ${CF_OVP_TARGET} == "market" ]; then
-  export AWS_ACCESS_KEY_ID=${NAEVA_AWS_ACCESS_KEY_ID}
-  export AWS_SECRET_ACCESS_KEY=${NAEVA_AWS_SECRET_ACCESS_KEY}
-  export AWS_DEFAULT_REGION=us-east-1
-else
-  export AWS_DEFAULT_REGION=eu-west-1
-fi
+export AWS_DEFAULT_REGION=eu-west-1
+
 
 DATESTAMP=$(date +%s)
 TEMPJSON=$(mktemp -t cloudformation-XXX --suffix .json)

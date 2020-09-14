@@ -12,10 +12,9 @@ set -eu -o pipefail
 # OV_AMI_ID     OpenVidu AMI ID
 
 export AWS_DEFAULT_REGION=eu-west-1
-if [ ${CF_OVP_TARGET} == "market" ]; then
-    export AWS_ACCESS_KEY_ID=${NAEVA_AWS_ACCESS_KEY_ID}
-    export AWS_SECRET_ACCESS_KEY=${NAEVA_AWS_SECRET_ACCESS_KEY}
-fi
+export AWS_ACCESS_KEY_ID=${NAEVA_AWS_ACCESS_KEY_ID}
+export AWS_SECRET_ACCESS_KEY=${NAEVA_AWS_SECRET_ACCESS_KEY}
+
 
 echo "Making original AMIs public"
 

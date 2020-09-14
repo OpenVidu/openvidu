@@ -1,18 +1,5 @@
 #!/bin/bash -x
-
-CF_OVP_TARGET=${CF_OVP_TARGET:-nomarket}
-
-if [ ${CF_OVP_TARGET} == "market" ]; then
-  export AWS_ACCESS_KEY_ID=${NAEVA_AWS_ACCESS_KEY_ID}
-  export AWS_SECRET_ACCESS_KEY=${NAEVA_AWS_SECRET_ACCESS_KEY}
-  export AWS_DEFAULT_REGION=us-east-1
-else
-  export AWS_DEFAULT_REGION=eu-west-1
-fi
-
-if [ "${OPENVIDU_PRO_IS_SNAPSHOT}" == "true" ]; then
-  OPENVIDU_PRO_VERSION=${OPENVIDU_PRO_VERSION}-SNAPSHOT
-fi
+export AWS_DEFAULT_REGION=eu-west-1
 
 DATESTAMP=$(date +%s)
 TEMPJSON=$(mktemp -t cloudformation-XXX --suffix .json)
@@ -61,13 +48,8 @@ sed -i "s/AMIUSEAST1/${AMIUSEAST1}/g" cfn-mkt-kms-ami.yaml
 ## KMS AMI
 
 # Copy template to S3
-if [ ${CF_OVP_TARGET} == "market" ]; then
-  aws s3 cp cfn-mkt-kms-ami.yaml s3://naeva-openvidu-pro
-  TEMPLATE_URL=https://s3-eu-west-1.amazonaws.com/naeva-openvidu-pro/cfn-mkt-kms-ami.yaml
-else
-  aws s3 cp cfn-mkt-kms-ami.yaml s3://aws.openvidu.io
-  TEMPLATE_URL=https://s3-eu-west-1.amazonaws.com/aws.openvidu.io/cfn-mkt-kms-ami.yaml
-fi
+aws s3 cp cfn-mkt-kms-ami.yaml s3://aws.openvidu.io
+TEMPLATE_URL=https://s3-eu-west-1.amazonaws.com/aws.openvidu.io/cfn-mkt-kms-ami.yaml
 
 aws cloudformation create-stack \
   --stack-name kms-${DATESTAMP} \
@@ -94,13 +76,8 @@ aws cloudformation delete-stack --stack-name kms-${DATESTAMP}
 ## OpenVidu AMI
 
 # Copy template to S3
-if [ ${CF_OVP_TARGET} == "market" ]; then
-  aws s3 cp cfn-mkt-ov-ami.yaml s3://naeva-openvidu-pro
-  TEMPLATE_URL=https://s3-eu-west-1.amazonaws.com/naeva-openvidu-pro/cfn-mkt-ov-ami.yaml
-else
   aws s3 cp cfn-mkt-ov-ami.yaml s3://aws.openvidu.io
   TEMPLATE_URL=https://s3-eu-west-1.amazonaws.com/aws.openvidu.io/cfn-mkt-ov-ami.yaml
-fi
 
 aws cloudformation create-stack \
   --stack-name openvidu-${DATESTAMP} \
@@ -128,13 +105,8 @@ aws cloudformation delete-stack --stack-name openvidu-${DATESTAMP}
 aws ec2 wait image-available --image-ids ${OV_RAW_AMI_ID}
 
 # Updating the template
-if [ ${CF_OVP_TARGET} == "market" ]; then
-  sed "s/OV_AMI_ID/${OV_RAW_AMI_ID}/" cfn-mkt-openvidu-server-pro.yaml.template > cfn-mkt-openvidu-server-pro-${OPENVIDU_PRO_VERSION}.yaml
-  sed -i "s/KMS_AMI_ID/${KMS_RAW_AMI_ID}/g" cfn-mkt-openvidu-server-pro-${OPENVIDU_PRO_VERSION}.yaml
-else
-  sed "s/OV_AMI_ID/${OV_RAW_AMI_ID}/" cfn-openvidu-server-pro-no-market.yaml.template > cfn-openvidu-server-pro-no-market-${OPENVIDU_PRO_VERSION}.yaml
-  sed -i "s/KMS_AMI_ID/${KMS_RAW_AMI_ID}/g" cfn-openvidu-server-pro-no-market-${OPENVIDU_PRO_VERSION}.yaml
-fi
+sed "s/OV_AMI_ID/${OV_RAW_AMI_ID}/" cfn-openvidu-server-pro-no-market.yaml.template > cfn-openvidu-server-pro-no-market-${OPENVIDU_PRO_VERSION}.yaml
+sed -i "s/KMS_AMI_ID/${KMS_RAW_AMI_ID}/g" cfn-openvidu-server-pro-no-market-${OPENVIDU_PRO_VERSION}.yaml
 
 rm $TEMPJSON
 rm cfn-mkt-kms-ami.yaml
