@@ -21,6 +21,8 @@ services:
         ulimits:
             core: -1
         entrypoint: ['/bin/sh', '-c', '/beats/copy_config_files.sh && /usr/local/bin/entrypoint.sh']
+        env_file:
+            - .env
         environment:
             - KMS_IMAGE=${KMS_IMAGE:-kurento/kurento-media-server:6.14.0}
             - KMS_DEBUG_LEVEL=${KMS_DEBUG_LEVEL:-}
