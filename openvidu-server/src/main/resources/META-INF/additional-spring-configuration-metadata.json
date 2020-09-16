@@ -94,6 +94,12 @@
 			"defaultValue": ""
 		},
 		{
+			"name": "OPENVIDU_RECORDING_COMPOSED_BASICAUTH",
+			"type": "java.lang.Boolean",
+			"description": "'true' to automatically add Basic Auth credentials to the URL passed to the recording container, false otherwise",
+			"defaultValue": true
+		},
+		{
 			"name": "OPENVIDU_WEBHOOK",
 			"type": "java.lang.Boolean",
 			"description": "'true' to enable OpenVidu Webhook service. 'false' otherwise",

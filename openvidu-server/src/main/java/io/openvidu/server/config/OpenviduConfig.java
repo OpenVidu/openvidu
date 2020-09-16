@@ -130,6 +130,8 @@ public class OpenviduConfig {
 
 	private String openviduRecordingCustomLayout;
 
+	private boolean openviduRecordingComposedBasicauth;
+
 	private String openviduRecordingVersion;
 
 	private Integer openviduStreamsVideoMaxRecvBandwidth;
@@ -244,6 +246,10 @@ public class OpenviduConfig {
 
 	public String getOpenviduRecordingCustomLayout() {
 		return this.openviduRecordingCustomLayout;
+	}
+
+	public boolean isOpenviduRecordingComposedBasicauth() {
+		return this.openviduRecordingComposedBasicauth;
 	}
 
 	public String getOpenViduRecordingVersion() {
@@ -488,6 +494,7 @@ public class OpenviduConfig {
 		openviduRecordingPublicAccess = asBoolean("OPENVIDU_RECORDING_PUBLIC_ACCESS");
 		openviduRecordingAutostopTimeout = asNonNegativeInteger("OPENVIDU_RECORDING_AUTOSTOP_TIMEOUT");
 		openviduRecordingCustomLayout = asFileSystemPath("OPENVIDU_RECORDING_CUSTOM_LAYOUT");
+		openviduRecordingComposedBasicauth = asBoolean("OPENVIDU_RECORDING_COMPOSED_BASICAUTH");
 		openviduRecordingVersion = asNonEmptyString("OPENVIDU_RECORDING_VERSION");
 		openviduRecordingComposedUrl = asOptionalURL("OPENVIDU_RECORDING_COMPOSED_URL");
 		checkOpenviduRecordingNotification();

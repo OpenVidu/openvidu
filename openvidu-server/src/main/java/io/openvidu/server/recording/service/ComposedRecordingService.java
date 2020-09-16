@@ -516,6 +516,8 @@ public class ComposedRecordingService extends RecordingService {
 		}
 
 		String layout, finalUrl;
+		final String basicauth = openviduConfig.isOpenviduRecordingComposedBasicauth() ? ("OPENVIDUAPP:" + secret + "@")
+				: "";
 		if (RecordingLayout.CUSTOM.equals(recording.getRecordingLayout())) {
 			layout = recording.getCustomLayout();
 			if (!layout.isEmpty()) {
@@ -523,8 +525,8 @@ public class ComposedRecordingService extends RecordingService {
 				layout = layout.endsWith("/") ? layout.substring(0, layout.length() - 1) : layout;
 			}
 			layout += "/index.html";
-			finalUrl = (startsWithHttp ? "http" : "https") + "://OPENVIDUAPP:" + secret + "@" + recordingUrl
-					+ "/layouts/custom" + layout + "?sessionId=" + recording.getSessionId() + "&secret=" + secret;
+			finalUrl = (startsWithHttp ? "http" : "https") + "://" + basicauth + recordingUrl + "/layouts/custom"
+					+ layout + "?sessionId=" + recording.getSessionId() + "&secret=" + secret;
 		} else {
 			layout = recording.getRecordingLayout().name().toLowerCase().replaceAll("_", "-");
 			int port = startsWithHttp ? 80 : 443;
@@ -535,7 +537,7 @@ public class ComposedRecordingService extends RecordingService {
 			}
 			String defaultPathForDefaultLayout = recordingComposedUrlDefined ? ""
 					: ("/" + openviduConfig.getOpenViduFrontendDefaultPath());
-			finalUrl = (startsWithHttp ? "http" : "https") + "://OPENVIDUAPP:" + secret + "@" + recordingUrl
+			finalUrl = (startsWithHttp ? "http" : "https") + "://" + basicauth + recordingUrl
 					+ defaultPathForDefaultLayout + "/#/layout-" + layout + "/" + recording.getSessionId() + "/"
 					+ secret + "/" + port + "/" + !recording.hasAudio();
 		}
