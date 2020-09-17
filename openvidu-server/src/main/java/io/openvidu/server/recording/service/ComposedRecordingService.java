@@ -56,6 +56,7 @@ import io.openvidu.server.recording.CompositeWrapper;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.recording.RecordingDownloader;
 import io.openvidu.server.recording.RecordingInfoUtils;
+import io.openvidu.server.recording.RecordingUploader;
 import io.openvidu.server.utils.DockerManager;
 import io.openvidu.server.utils.QuarantineKiller;
 
@@ -70,8 +71,9 @@ public class ComposedRecordingService extends RecordingService {
 	protected DockerManager dockerManager;
 
 	public ComposedRecordingService(RecordingManager recordingManager, RecordingDownloader recordingDownloader,
-			OpenviduConfig openviduConfig, CallDetailRecord cdr, QuarantineKiller quarantineKiller) {
-		super(recordingManager, recordingDownloader, openviduConfig, cdr, quarantineKiller);
+			RecordingUploader recordingUploader, OpenviduConfig openviduConfig, CallDetailRecord cdr,
+			QuarantineKiller quarantineKiller) {
+		super(recordingManager, recordingDownloader, recordingUploader, openviduConfig, cdr, quarantineKiller);
 		this.dockerManager = new DockerManager();
 	}
 
@@ -278,7 +280,9 @@ public class ComposedRecordingService extends RecordingService {
 							log.warn("Deleting unusable files for recording {}", recordingId);
 							if (HttpStatus.NO_CONTENT
 									.equals(this.recordingManager.deleteRecordingFromHost(recordingId, true))) {
-								log.warn("Files properly deleted");
+								log.warn("Files properly deleted for recording {}", recordingId);
+							} else {
+								log.warn("No files found for recording {}", recordingId);
 							}
 						}
 					}
@@ -300,12 +304,14 @@ public class ComposedRecordingService extends RecordingService {
 					getMetadataFilePath(recording));
 			cleanRecordingMaps(recording);
 
-			final long timestamp = System.currentTimeMillis();
-			this.cdr.recordRecordingStatusChanged(recording, reason, timestamp, recording.getStatus());
-
 			if (session != null && reason != null) {
 				this.recordingManager.sessionHandler.sendRecordingStoppedNotification(session, recording, reason);
 			}
+
+			// Upload if necessary
+			final Recording[] finalRecordingArray = new Recording[1];
+			finalRecordingArray[0] = recording;
+			this.uploadRecording(finalRecordingArray[0], reason);
 
 			// Decrement active recordings
 			// ((KurentoSession) session).getKms().getActiveRecordings().decrementAndGet();
@@ -354,6 +360,7 @@ public class ComposedRecordingService extends RecordingService {
 		finalRecordingArray[0] = recording;
 		try {
 			this.recordingDownloader.downloadRecording(finalRecordingArray[0], null, () -> {
+
 				String filesPath = this.openviduConfig.getOpenViduRecordingPath() + finalRecordingArray[0].getId()
 						+ "/";
 				File videoFile = new File(filesPath + finalRecordingArray[0].getName() + ".webm");
@@ -364,15 +371,14 @@ public class ComposedRecordingService extends RecordingService {
 						finalDuration,
 						filesPath + RecordingManager.RECORDING_ENTITY_FILE + finalRecordingArray[0].getId());
 
-				final long timestamp = System.currentTimeMillis();
-				cdr.recordRecordingStatusChanged(finalRecordingArray[0], reason, timestamp,
-						finalRecordingArray[0].getStatus());
-
 				// Decrement active recordings once it is downloaded
 				((KurentoSession) session).getKms().getActiveRecordings().decrementAndGet();
 
 				// Now we can drop Media Node if waiting-idle-to-terminate
 				this.quarantineKiller.dropMediaNode(session.getMediaNodeId());
+
+				// Upload if necessary
+				this.uploadRecording(finalRecordingArray[0], reason);
 
 			});
 		} catch (IOException e) {

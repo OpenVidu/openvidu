@@ -20,6 +20,7 @@ package io.openvidu.server.utils;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.Reader;
 import java.util.Map.Entry;
 
 import org.kurento.jsonrpc.Props;
@@ -56,13 +57,15 @@ public class JsonUtils {
 
 	public JsonElement fromFileToJsonElement(String filePath)
 			throws IOException, FileNotFoundException, JsonParseException, IllegalStateException {
+		return fromReaderToJsonElement(new FileReader(filePath));
+	}
+
+	public JsonObject fromReaderToJsonObject(Reader reader) throws IOException {
+		return this.fromReaderToJsonElement(reader).getAsJsonObject();
+	}
+
+	public JsonElement fromReaderToJsonElement(Reader reader) throws IOException {
 		JsonElement json = null;
-		FileReader reader = null;
-		try {
-			reader = new FileReader(filePath);
-		} catch (FileNotFoundException e) {
-			throw e;
-		}
 		try {
 			json = JsonParser.parseReader(reader);
 		} catch (JsonParseException | IllegalStateException exception) {

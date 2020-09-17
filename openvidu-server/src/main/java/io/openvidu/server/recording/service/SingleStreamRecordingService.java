@@ -64,6 +64,7 @@ import io.openvidu.server.kurento.endpoint.PublisherEndpoint;
 import io.openvidu.server.recording.RecorderEndpointWrapper;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.recording.RecordingDownloader;
+import io.openvidu.server.recording.RecordingUploader;
 import io.openvidu.server.utils.QuarantineKiller;
 
 public class SingleStreamRecordingService extends RecordingService {
@@ -76,8 +77,9 @@ public class SingleStreamRecordingService extends RecordingService {
 	private final String INDIVIDUAL_STREAM_METADATA_FILE = ".stream.";
 
 	public SingleStreamRecordingService(RecordingManager recordingManager, RecordingDownloader recordingDownloader,
-			OpenviduConfig openviduConfig, CallDetailRecord cdr, QuarantineKiller quarantineKiller) {
-		super(recordingManager, recordingDownloader, openviduConfig, cdr, quarantineKiller);
+			RecordingUploader recordingUploader, OpenviduConfig openviduConfig, CallDetailRecord cdr,
+			QuarantineKiller quarantineKiller) {
+		super(recordingManager, recordingDownloader, recordingUploader, openviduConfig, cdr, quarantineKiller);
 	}
 
 	@Override
@@ -179,10 +181,6 @@ public class SingleStreamRecordingService extends RecordingService {
 				}
 				finalRecordingArray[0] = this.sealMetadataFiles(finalRecordingArray[0]);
 
-				final long timestamp = System.currentTimeMillis();
-				cdr.recordRecordingStatusChanged(finalRecordingArray[0], reason, timestamp,
-						finalRecordingArray[0].getStatus());
-
 				cleanRecordingWrappers(finalRecordingArray[0].getSessionId());
 
 				// Decrement active recordings once it is downloaded
@@ -190,6 +188,9 @@ public class SingleStreamRecordingService extends RecordingService {
 
 				// Now we can drop Media Node if waiting-idle-to-terminate
 				this.quarantineKiller.dropMediaNode(session.getMediaNodeId());
+
+				// Upload if necessary
+				this.uploadRecording(finalRecordingArray[0], reason);
 
 			});
 		} catch (IOException e) {

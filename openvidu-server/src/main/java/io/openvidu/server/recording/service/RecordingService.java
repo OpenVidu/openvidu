@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
+import io.openvidu.java.client.Recording.Status;
 import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.server.cdr.CallDetailRecord;
@@ -32,6 +33,7 @@ import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.recording.RecordingDownloader;
+import io.openvidu.server.recording.RecordingUploader;
 import io.openvidu.server.utils.CommandExecutor;
 import io.openvidu.server.utils.CustomFileManager;
 import io.openvidu.server.utils.QuarantineKiller;
@@ -44,14 +46,17 @@ public abstract class RecordingService {
 	protected OpenviduConfig openviduConfig;
 	protected RecordingManager recordingManager;
 	protected RecordingDownloader recordingDownloader;
+	protected RecordingUploader recordingUploader;
 	protected CallDetailRecord cdr;
 	protected QuarantineKiller quarantineKiller;
 	protected CustomFileManager fileWriter = new CustomFileManager();
 
 	RecordingService(RecordingManager recordingManager, RecordingDownloader recordingDownloader,
-			OpenviduConfig openviduConfig, CallDetailRecord cdr, QuarantineKiller quarantineKiller) {
+			RecordingUploader recordingUploader, OpenviduConfig openviduConfig, CallDetailRecord cdr,
+			QuarantineKiller quarantineKiller) {
 		this.recordingManager = recordingManager;
 		this.recordingDownloader = recordingDownloader;
+		this.recordingUploader = recordingUploader;
 		this.openviduConfig = openviduConfig;
 		this.cdr = cdr;
 		this.quarantineKiller = quarantineKiller;
@@ -105,9 +110,14 @@ public abstract class RecordingService {
 	 */
 	protected Recording sealRecordingMetadataFileAsReady(Recording recording, long size, double duration,
 			String metadataFilePath) {
-		io.openvidu.java.client.Recording.Status status = io.openvidu.java.client.Recording.Status.failed
-				.equals(recording.getStatus()) ? io.openvidu.java.client.Recording.Status.failed
-						: io.openvidu.java.client.Recording.Status.ready;
+		Status status = Status.failed.equals(recording.getStatus()) ? Status.failed : Status.ready;
+
+		if (Status.ready.equals(status)) {
+			// Prevent uploading recordings from being retrieved from REST API with "ready"
+			// status. This will force their status back to "stopped" on GET until upload
+			// process has finished
+			storeAsUploadingRecording(recording);
+		}
 
 		// Status is now failed or ready. Url property must be defined
 		recording.setUrl(recordingManager.getRecordingUrl(recording));
@@ -193,6 +203,25 @@ public abstract class RecordingService {
 	protected String getMetadataFilePath(Recording recording) {
 		final String folderPath = this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/";
 		return folderPath + RecordingManager.RECORDING_ENTITY_FILE + recording.getId();
+	}
+
+	protected void uploadRecording(final Recording recording, EndReason reason) {
+		recordingUploader.uploadRecording(recording, () -> {
+			final long timestamp = System.currentTimeMillis();
+			cdr.recordRecordingStatusChanged(recording, reason, timestamp, recording.getStatus());
+		}, () -> {
+			final long timestamp = System.currentTimeMillis();
+			cdr.recordRecordingStatusChanged(recording, reason, timestamp,
+					io.openvidu.java.client.Recording.Status.failed);
+		});
+	}
+
+	protected void storeAsUploadingRecording(Recording recording) {
+		recordingUploader.storeAsUploadingRecording(recording.getId());
+	}
+
+	protected boolean isBeingUploaded(Recording recording) {
+		return recordingUploader.isBeingUploaded(recording.getId());
 	}
 
 	/**

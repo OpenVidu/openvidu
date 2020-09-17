@@ -72,6 +72,7 @@ import io.openvidu.server.kurento.kms.Kms;
 import io.openvidu.server.kurento.kms.KmsManager;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.recording.RecordingDownloader;
+import io.openvidu.server.recording.RecordingUploader;
 import io.openvidu.server.utils.CustomFileManager;
 import io.openvidu.server.utils.DockerManager;
 import io.openvidu.server.utils.JsonUtils;
@@ -94,7 +95,13 @@ public class RecordingManager {
 	private SessionManager sessionManager;
 
 	@Autowired
+	protected RecordingManagerUtils recordingManagerUtils;
+
+	@Autowired
 	private RecordingDownloader recordingDownloader;
+
+	@Autowired
+	private RecordingUploader recordingUploader;
 
 	@Autowired
 	protected OpenviduConfig openviduConfig;
@@ -119,7 +126,7 @@ public class RecordingManager {
 	private ScheduledThreadPoolExecutor automaticRecordingStopExecutor = new ScheduledThreadPoolExecutor(
 			Runtime.getRuntime().availableProcessors());
 
-	static final String RECORDING_ENTITY_FILE = ".recording.";
+	public static final String RECORDING_ENTITY_FILE = ".recording.";
 	public static final String IMAGE_NAME = "openvidu/openvidu-recording";
 	static String IMAGE_TAG;
 
@@ -159,12 +166,12 @@ public class RecordingManager {
 		RecordingManager.IMAGE_TAG = openviduConfig.getOpenViduRecordingVersion();
 
 		this.dockerManager = new DockerManager();
-		this.composedRecordingService = new ComposedRecordingService(this, recordingDownloader, openviduConfig, cdr,
-				quarantineKiller);
-		this.composedQuickStartRecordingService = new ComposedQuickStartRecordingService(this, recordingDownloader,
+		this.composedRecordingService = new ComposedRecordingService(this, recordingDownloader, recordingUploader,
 				openviduConfig, cdr, quarantineKiller);
-		this.singleStreamRecordingService = new SingleStreamRecordingService(this, recordingDownloader, openviduConfig,
-				cdr, quarantineKiller);
+		this.composedQuickStartRecordingService = new ComposedQuickStartRecordingService(this, recordingDownloader,
+				recordingUploader, openviduConfig, cdr, quarantineKiller);
+		this.singleStreamRecordingService = new SingleStreamRecordingService(this, recordingDownloader,
+				recordingUploader, openviduConfig, cdr, quarantineKiller);
 
 		log.info("Recording module required: Downloading openvidu/openvidu-recording:"
 				+ openviduConfig.getOpenViduRecordingVersion() + " Docker image (350MB aprox)");
@@ -432,64 +439,105 @@ public class RecordingManager {
 	}
 
 	public Collection<Recording> getFinishedRecordings() {
-		return this.getAllRecordingsFromHost().stream().filter(recording -> recording.getStatus().equals(Status.ready))
-				.collect(Collectors.toSet());
+		return recordingManagerUtils.getAllRecordingsFromStorage().stream()
+				.filter(recording -> recording.getStatus().equals(Status.ready)).collect(Collectors.toSet());
 	}
 
 	public Recording getRecording(String recordingId) {
-		return this.getRecordingFromHost(recordingId);
+		return recordingManagerUtils.getRecordingFromStorage(recordingId);
 	}
 
 	public Collection<Recording> getAllRecordings() {
-		return this.getAllRecordingsFromHost();
+		return recordingManagerUtils.getAllRecordingsFromStorage();
 	}
 
 	public String getFreeRecordingId(String sessionId) {
-		Set<String> recordingIds = this.getRecordingIdsFromHost();
-		String recordingId = sessionId;
-		boolean isPresent = recordingIds.contains(recordingId);
-		int i = 1;
-		while (isPresent) {
-			recordingId = sessionId + "-" + i;
-			i++;
-			isPresent = recordingIds.contains(recordingId);
-		}
-		return recordingId;
+		return recordingManagerUtils.getFreeRecordingId(sessionId);
 	}
 
 	public HttpStatus deleteRecordingFromHost(String recordingId, boolean force) {
 
-		if (!force && (this.startedRecordings.containsKey(recordingId)
-				|| this.startingRecordings.containsKey(recordingId))) {
-			// Cannot delete an active recording
-			return HttpStatus.CONFLICT;
+		if (this.startedRecordings.containsKey(recordingId) || this.startingRecordings.containsKey(recordingId)) {
+			if (!force) {
+				// Cannot delete an active recording
+				return HttpStatus.CONFLICT;
+			}
 		}
 
-		Recording recording = getRecordingFromHost(recordingId);
+		Recording recording = recordingManagerUtils.getRecordingFromStorage(recordingId);
 		if (recording == null) {
 			return HttpStatus.NOT_FOUND;
 		}
 		if (Status.stopped.equals(recording.getStatus())) {
-			// Recording is being downloaded from remote host
-			log.warn("Cancelling ongoing download process of recording {}", recording.getId());
+			// Recording is being downloaded from remote host or being uploaded
+			log.warn("Recording {} status is \"stopped\". Cancelling possible ongoing download process", recording.getId());
 			this.recordingDownloader.cancelDownload(recording.getId());
 		}
 
-		File folder = new File(this.openviduConfig.getOpenViduRecordingPath());
+		return recordingManagerUtils.deleteRecordingFromStorage(recordingId);
+	}
+
+	public Set<String> getAllRecordingIdsFromLocalStorage() {
+		File folder = new File(openviduConfig.getOpenViduRecordingPath());
+		File[] files = folder.listFiles();
+
+		Set<String> fileNamesNoExtension = new HashSet<>();
+		for (int i = 0; i < files.length; i++) {
+			if (files[i].isDirectory()) {
+				File[] innerFiles = files[i].listFiles();
+				for (int j = 0; j < innerFiles.length; j++) {
+					if (innerFiles[j].isFile()
+							&& innerFiles[j].getName().startsWith(RecordingManager.RECORDING_ENTITY_FILE)) {
+						fileNamesNoExtension
+								.add(innerFiles[j].getName().replaceFirst(RecordingManager.RECORDING_ENTITY_FILE, ""));
+						break;
+					}
+				}
+			}
+		}
+		return fileNamesNoExtension;
+	}
+
+	public HttpStatus deleteRecordingFromLocalStorage(String recordingId) {
+		File folder = new File(openviduConfig.getOpenViduRecordingPath());
 		File[] files = folder.listFiles();
 		for (int i = 0; i < files.length; i++) {
 			if (files[i].isDirectory() && files[i].getName().equals(recordingId)) {
 				// Correct folder. Delete it
 				try {
 					FileUtils.deleteDirectory(files[i]);
+					return HttpStatus.NO_CONTENT;
 				} catch (IOException e) {
 					log.error("Couldn't delete folder {}", files[i].getAbsolutePath());
+					return HttpStatus.INTERNAL_SERVER_ERROR;
 				}
-				break;
 			}
 		}
+		return HttpStatus.NOT_FOUND;
+	}
 
-		return HttpStatus.NO_CONTENT;
+	public File getRecordingEntityFileFromLocalStorage(String recordingId) {
+		String metadataFilePath = openviduConfig.getOpenViduRecordingPath() + recordingId + "/"
+				+ RecordingManager.RECORDING_ENTITY_FILE + recordingId;
+		return new File(metadataFilePath);
+	}
+
+	public Set<Recording> getAllRecordingsFromLocalStorage() {
+		File folder = new File(openviduConfig.getOpenViduRecordingPath());
+		File[] files = folder.listFiles();
+		Set<Recording> recordingEntities = new HashSet<>();
+		for (int i = 0; i < files.length; i++) {
+			if (files[i].isDirectory()) {
+				File[] innerFiles = files[i].listFiles();
+				for (int j = 0; j < innerFiles.length; j++) {
+					Recording recording = getRecordingFromEntityFile(innerFiles[j]);
+					if (recording != null) {
+						recordingEntities.add(recording);
+					}
+				}
+			}
+		}
+		return recordingEntities;
 	}
 
 	public Recording getRecordingFromEntityFile(File file) {
@@ -501,28 +549,27 @@ public class RecordingManager {
 				log.error("Error reading recording entity file {}: {}", file.getAbsolutePath(), (e.getMessage()));
 				return null;
 			}
-			Recording recording = new Recording(json);
-			if (Status.ready.equals(recording.getStatus()) || Status.failed.equals(recording.getStatus())) {
-				recording.setUrl(getRecordingUrl(recording));
-			}
-			return recording;
+			return getRecordingFromJson(json);
 		}
 		return null;
 	}
 
-	public String getRecordingUrl(Recording recording) {
-		return openviduConfig.getFinalUrl() + "recordings/" + recording.getId() + "/" + recording.getName() + "."
-				+ this.getExtensionFromRecording(recording);
+	public Recording getRecordingFromJson(JsonObject json) {
+		Recording recording = new Recording(json);
+		if (Status.ready.equals(recording.getStatus())
+				&& composedQuickStartRecordingService.isBeingUploaded(recording)) {
+			// Recording has finished but is being uploaded
+			recording.setStatus(Status.stopped);
+			recording.setUrl(null);
+		} else if (Status.ready.equals(recording.getStatus()) || Status.failed.equals(recording.getStatus())) {
+			// Recording has been completely processed and must include URL
+			recording.setUrl(recordingManagerUtils.getRecordingUrl(recording));
+		}
+		return recording;
 	}
 
-	private String getExtensionFromRecording(Recording recording) {
-		if (OutputMode.INDIVIDUAL.equals(recording.getOutputMode())) {
-			return "zip";
-		} else if (recording.hasVideo()) {
-			return "mp4";
-		} else {
-			return "webm";
-		}
+	public String getRecordingUrl(Recording recording) {
+		return recordingManagerUtils.getRecordingUrl(recording);
 	}
 
 	public void initAutomaticRecordingStopThread(final Session session) {
@@ -621,56 +668,6 @@ public class RecordingManager {
 		} else {
 			return true;
 		}
-	}
-
-	private Recording getRecordingFromHost(String recordingId) {
-		log.info(this.openviduConfig.getOpenViduRecordingPath() + recordingId + "/"
-				+ RecordingManager.RECORDING_ENTITY_FILE + recordingId);
-		File file = new File(this.openviduConfig.getOpenViduRecordingPath() + recordingId + "/"
-				+ RecordingManager.RECORDING_ENTITY_FILE + recordingId);
-		log.info("File exists: " + file.exists());
-		Recording recording = this.getRecordingFromEntityFile(file);
-		return recording;
-	}
-
-	private Set<Recording> getAllRecordingsFromHost() {
-		File folder = new File(this.openviduConfig.getOpenViduRecordingPath());
-		File[] files = folder.listFiles();
-
-		Set<Recording> recordingEntities = new HashSet<>();
-		for (int i = 0; i < files.length; i++) {
-			if (files[i].isDirectory()) {
-				File[] innerFiles = files[i].listFiles();
-				for (int j = 0; j < innerFiles.length; j++) {
-					Recording recording = this.getRecordingFromEntityFile(innerFiles[j]);
-					if (recording != null) {
-						recordingEntities.add(recording);
-					}
-				}
-			}
-		}
-		return recordingEntities;
-	}
-
-	private Set<String> getRecordingIdsFromHost() {
-		File folder = new File(this.openviduConfig.getOpenViduRecordingPath());
-		File[] files = folder.listFiles();
-
-		Set<String> fileNamesNoExtension = new HashSet<>();
-		for (int i = 0; i < files.length; i++) {
-			if (files[i].isDirectory()) {
-				File[] innerFiles = files[i].listFiles();
-				for (int j = 0; j < innerFiles.length; j++) {
-					if (innerFiles[j].isFile()
-							&& innerFiles[j].getName().startsWith(RecordingManager.RECORDING_ENTITY_FILE)) {
-						fileNamesNoExtension
-								.add(innerFiles[j].getName().replaceFirst(RecordingManager.RECORDING_ENTITY_FILE, ""));
-						break;
-					}
-				}
-			}
-		}
-		return fileNamesNoExtension;
 	}
 
 	private void checkRecordingPaths(String openviduRecordingPath, String openviduRecordingCustomLayout)
