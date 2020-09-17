@@ -33,7 +33,6 @@ var Logger = console;
 /**
  *
  * heartbeat: interval in ms for each heartbeat message,
- * sendCloseMessage : true / false, before closing the connection, it sends a closeSession message
  * <pre>
  * ws : {
  * 	uri : URI to conntect to,
@@ -250,25 +249,13 @@ function JsonRpcClient(configuration) {
 
     this.close = function (code, reason) {
         Logger.debug("Closing  with code: " + code + " because: " + reason);
-
         if (pingInterval != undefined) {
             Logger.debug("Clearing ping interval");
             clearInterval(pingInterval);
         }
         pingPongStarted = false;
         enabledPings = false;
-
-        if (configuration.sendCloseMessage) {
-            Logger.debug("Sending close message")
-            this.send('closeSession', null, function (error, result) {
-                if (error) {
-                    Logger.error("Error sending close message: " + JSON.stringify(error));
-                }
-                ws.close(code, reason);
-            });
-        } else {
-            ws.close(code, reason);
-        }
+        ws.close(code, reason);
     }
 
     // This method is only for testing

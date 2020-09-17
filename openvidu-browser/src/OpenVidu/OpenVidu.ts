@@ -759,7 +759,6 @@ export class OpenVidu {
   startWs(onConnectSucces: (error: Error) => void): void {
     const config = {
       heartbeat: 5000,
-      sendCloseMessage: false,
       ws: {
         uri: this.wsUri,
         onconnected: onConnectSucces,
