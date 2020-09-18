@@ -37,6 +37,7 @@ import { SessionDisconnectedEvent } from '../OpenViduInternal/Events/SessionDisc
 import { SignalEvent } from '../OpenViduInternal/Events/SignalEvent';
 import { StreamEvent } from '../OpenViduInternal/Events/StreamEvent';
 import { StreamPropertyChangedEvent } from '../OpenViduInternal/Events/StreamPropertyChangedEvent';
+import { NetworkQualityChangedEvent, NetworkQualityChangedReason } from '../OpenViduInternal/Events/NetworkQualityChangedEvent';
 import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/OpenViduError';
 import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
 
@@ -591,7 +592,7 @@ export class Session extends EventDispatcher {
     /**
      * See [[EventDispatcher.on]]
      */
-    on(type: string, handler: (event: SessionDisconnectedEvent | SignalEvent | StreamEvent | ConnectionEvent | PublisherSpeakingEvent | RecordingEvent) => void): EventDispatcher {
+    on(type: string, handler: (event: SessionDisconnectedEvent | SignalEvent | StreamEvent | ConnectionEvent | PublisherSpeakingEvent | RecordingEvent | NetworkQualityChangedEvent) => void): EventDispatcher {
 
         super.onAux(type, "Event '" + type + "' triggered by 'Session'", handler);
 
@@ -623,7 +624,7 @@ export class Session extends EventDispatcher {
     /**
      * See [[EventDispatcher.once]]
      */
-    once(type: string, handler: (event: SessionDisconnectedEvent | SignalEvent | StreamEvent | ConnectionEvent | PublisherSpeakingEvent | RecordingEvent) => void): Session {
+    once(type: string, handler: (event: SessionDisconnectedEvent | SignalEvent | StreamEvent | ConnectionEvent | PublisherSpeakingEvent | RecordingEvent | NetworkQualityChangedEvent) => void): Session {
 
         super.onceAux(type, "Event '" + type + "' triggered once by 'Session'", handler);
 
@@ -655,7 +656,7 @@ export class Session extends EventDispatcher {
     /**
      * See [[EventDispatcher.off]]
      */
-    off(type: string, handler?: (event: SessionDisconnectedEvent | SignalEvent | StreamEvent | ConnectionEvent | PublisherSpeakingEvent | RecordingEvent) => void): Session {
+    off(type: string, handler?: (event: SessionDisconnectedEvent | SignalEvent | StreamEvent | ConnectionEvent | PublisherSpeakingEvent | RecordingEvent | NetworkQualityChangedEvent) => void): Session {
 
         super.off(type, handler);
 
@@ -917,6 +918,17 @@ export class Session extends EventDispatcher {
                 .catch(openViduError => {
                     logger.error(openViduError);
                 });
+        }
+    }
+
+
+    /**
+     * @hidden
+     */
+    onNetworkQualityChangedChanged(msg): void {
+
+        if (msg.connectionId === this.connection.connectionId) {
+            this.ee.emitEvent('networkQualityChanged', [new NetworkQualityChangedEvent(this, msg.newValue, msg.oldValue, msg.reason)]);
         }
     }
 
