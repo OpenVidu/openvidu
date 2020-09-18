@@ -311,6 +311,10 @@ public class SessionEventsHandler {
 		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, new JsonObject());
 	}
 
+	public void onNetworkQualityChanged(Participant participant, JsonObject params ) {
+		rpcNotificationService.sendNotification(participant.getParticipantPrivateId(), ProtocolElements.NETWORKQUALITYCHANGED_METHOD, params);
+	}
+
 	public void onSendMessage(Participant participant, JsonObject message, Set<Participant> participants,
 			Integer transactionId, OpenViduException error) {
 
