@@ -3088,7 +3088,7 @@ public class OpenViduTestAppE2eTest {
 					HttpStatus.SC_BAD_REQUEST);
 
 			// Publish IP camera. Dummy URL because no user will subscribe to it [200]
-			String ipCamBody = "{'type':'IPCAM','rtspUri':'rtsp://dummyurl.com','adaptativeBitrate':true,'onlyPlayWithSubscribers':true,'data':'MY_IP_CAMERA'}";
+			String ipCamBody = "{'type':'IPCAM','rtspUri':'rtsp://dummyurl.com','adaptativeBitrate':true,'onlyPlayWithSubscribers':true,'networkCache':1000,'data':'MY_IP_CAMERA'}";
 			JsonObject response = restClient.rest(HttpMethod.POST, "/api/sessions/IP_CAM_SESSION/connection", ipCamBody,
 					HttpStatus.SC_OK, true,
 					"{'connectionId':'STR','createdAt':0,'location':'STR','platform':'STR','role':'STR','serverData':'STR','clientData':'STR','publishers':[],'subscribers':[]}");
@@ -3108,7 +3108,7 @@ public class OpenViduTestAppE2eTest {
 			Assert.assertEquals("Wrong rtspUri property", "rtsp://dummyurl.com",
 					ipCamPublisher.get("rtspUri").getAsString());
 			JsonObject mediaOptions = ipCamPublisher.get("mediaOptions").getAsJsonObject();
-			Assert.assertEquals("Wrong number of properties in MediaOptions", 10, mediaOptions.size());
+			Assert.assertEquals("Wrong number of properties in MediaOptions", 11, mediaOptions.size());
 			Assert.assertTrue("Wrong adaptativeBitrate property", mediaOptions.get("adaptativeBitrate").getAsBoolean());
 			Assert.assertTrue("Wrong onlyPlayWithSubscribers property",
 					mediaOptions.get("onlyPlayWithSubscribers").getAsBoolean());
@@ -3185,7 +3185,7 @@ public class OpenViduTestAppE2eTest {
 			recPath = recPath.endsWith("/") ? recPath : (recPath + "/");
 			String fullRecordingPath = "file://" + recPath + "TestSession/audioVideo.mp4";
 			ipCamBody = "{'type':'IPCAM','rtspUri':'" + fullRecordingPath
-					+ "','adaptativeBitrate':true,'onlyPlayWithSubscribers':true,'data':'MY_IP_CAMERA'}";
+					+ "','adaptativeBitrate':true,'onlyPlayWithSubscribers':true,'networkCache':1000,'data':'MY_IP_CAMERA'}";
 
 			restClient.rest(HttpMethod.POST, "/api/sessions/TestSession/connection", ipCamBody, HttpStatus.SC_OK, true,
 					"{'connectionId':'STR','createdAt':0,'location':'STR','platform':'STR','role':'STR','serverData':'STR','clientData':'STR','publishers':[],'subscribers':[]}");

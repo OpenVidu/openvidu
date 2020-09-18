@@ -763,7 +763,6 @@ public class SessionRestController {
 		String rtspUri;
 		Boolean adaptativeBitrate;
 		Boolean onlyPlayWithSubscribers;
-		String networkCacheStr;
 		Integer networkCache;
 		String data;
 		try {
@@ -771,11 +770,7 @@ public class SessionRestController {
 			rtspUri = (String) params.get("rtspUri");
 			adaptativeBitrate = (Boolean) params.get("adaptativeBitrate");
 			onlyPlayWithSubscribers = (Boolean) params.get("onlyPlayWithSubscribers");
-			networkCacheStr = (String) params.get("networkCache");
-			if (networkCacheStr != null) 
-				networkCache = Integer.parseInt(networkCacheStr);
-			else
-				networkCache = null;
+			networkCache = (Integer) params.get("networkCache");
 			data = (String) params.get("data");
 		} catch (ClassCastException e) {
 			return this.generateErrorResponse("Type error in some parameter",
