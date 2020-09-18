@@ -763,12 +763,19 @@ public class SessionRestController {
 		String rtspUri;
 		Boolean adaptativeBitrate;
 		Boolean onlyPlayWithSubscribers;
+		String networkCacheStr;
+		Integer networkCache;
 		String data;
 		try {
 			type = (String) params.get("type");
 			rtspUri = (String) params.get("rtspUri");
 			adaptativeBitrate = (Boolean) params.get("adaptativeBitrate");
 			onlyPlayWithSubscribers = (Boolean) params.get("onlyPlayWithSubscribers");
+			networkCacheStr = (String) params.get("networkCache");
+			if (networkCacheStr != null) 
+				networkCache = Integer.parseInt(networkCacheStr);
+			else
+				networkCache = null;
 			data = (String) params.get("data");
 		} catch (ClassCastException e) {
 			return this.generateErrorResponse("Type error in some parameter",
@@ -793,7 +800,7 @@ public class SessionRestController {
 		String videoDimensions = null;
 		KurentoMediaOptions mediaOptions = new KurentoMediaOptions(true, null, hasAudio, hasVideo, audioActive,
 				videoActive, typeOfVideo, frameRate, videoDimensions, null, false, rtspUri, adaptativeBitrate,
-				onlyPlayWithSubscribers);
+				onlyPlayWithSubscribers, networkCache);
 
 		// While closing a session IP cameras can't be published
 		if (session.closingLock.readLock().tryLock()) {
