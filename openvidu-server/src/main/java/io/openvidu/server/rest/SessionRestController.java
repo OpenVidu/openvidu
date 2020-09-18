@@ -784,6 +784,7 @@ public class SessionRestController {
 		type = "IPCAM"; // Other possible values in the future
 		adaptativeBitrate = adaptativeBitrate != null ? adaptativeBitrate : true;
 		onlyPlayWithSubscribers = onlyPlayWithSubscribers != null ? onlyPlayWithSubscribers : true;
+		networkCache = networkCache != null ? networkCache : 2000;
 		data = data != null ? data : "";
 
 		boolean hasAudio = true;
