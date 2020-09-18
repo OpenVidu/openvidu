@@ -116,7 +116,7 @@ public class SingleStreamRecordingService extends RecordingService {
 					recordingStartedCountdown.countDown();
 					continue;
 				}
-				this.startRecorderEndpointForPublisherEndpoint(session, recordingId, profile, p,
+				this.startRecorderEndpointForPublisherEndpoint(session, recording.getId(), profile, p,
 						recordingStartedCountdown);
 			}
 		}
@@ -205,7 +205,7 @@ public class SingleStreamRecordingService extends RecordingService {
 		return finalRecordingArray[0];
 	}
 
-	public void startRecorderEndpointForPublisherEndpoint(final Session session, String recordingId,
+	public void startRecorderEndpointForPublisherEndpoint(final Session session, final String recordingId,
 			MediaProfileSpecType profile, final Participant participant, CountDownLatch globalStartLatch) {
 
 		log.info("Starting single stream recorder for stream {} in session {}", participant.getPublisherStreamId(),
@@ -220,31 +220,6 @@ public class SingleStreamRecordingService extends RecordingService {
 						return;
 					}
 
-					if (recordingId == null) {
-						// Stream is being recorded because is a new publisher in an ongoing recorded
-						// session. If recordingId is defined is because Stream is being recorded from
-						// "startRecording" method
-						Recording recording = this.recordingManager.sessionsRecordings.get(session.getSessionId());
-						if (recording == null) {
-							recording = this.recordingManager.sessionsRecordingsStarting.get(session.getSessionId());
-							if (recording == null) {
-								log.error(
-										"Cannot start single stream recorder for stream {} in session {}. The recording {} cannot be found",
-										participant.getPublisherStreamId(), session.getSessionId(), recordingId);
-								return;
-							}
-						}
-						recordingId = recording.getId();
-
-						try {
-							profile = generateMediaProfile(recording.getRecordingProperties(), participant);
-						} catch (OpenViduException e) {
-							log.error("Cannot start single stream recorder for stream {} in session {}: {}",
-									participant.getPublisherStreamId(), session.getSessionId(), e.getMessage());
-							return;
-						}
-					}
-
 					KurentoParticipant kurentoParticipant = (KurentoParticipant) participant;
 					MediaPipeline pipeline = kurentoParticipant.getPublisher().getPipeline();
 
@@ -252,12 +227,10 @@ public class SingleStreamRecordingService extends RecordingService {
 							"file://" + openviduConfig.getOpenViduRemoteRecordingPath() + recordingId + "/"
 									+ participant.getPublisherStreamId() + ".webm").withMediaProfile(profile).build();
 
-					final String finalRecordingId = recordingId;
-
 					recorder.addRecordingListener(new EventListener<RecordingEvent>() {
 						@Override
 						public void onEvent(RecordingEvent event) {
-							activeRecorders.get(finalRecordingId).get(participant.getPublisherStreamId())
+							activeRecorders.get(recordingId).get(participant.getPublisherStreamId())
 									.setStartTime(Long.parseLong(event.getTimestampMillis()));
 							log.info("Recording started event for stream {}", participant.getPublisherStreamId());
 							globalStartLatch.countDown();
@@ -333,7 +306,7 @@ public class SingleStreamRecordingService extends RecordingService {
 		}
 	}
 
-	private MediaProfileSpecType generateMediaProfile(RecordingProperties properties, Participant participant)
+	MediaProfileSpecType generateMediaProfile(RecordingProperties properties, Participant participant)
 			throws OpenViduException {
 
 		KurentoParticipant kParticipant = (KurentoParticipant) participant;

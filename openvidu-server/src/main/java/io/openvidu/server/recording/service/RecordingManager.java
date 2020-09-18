@@ -370,8 +370,7 @@ public class RecordingManager {
 		return recording;
 	}
 
-	public void startOneIndividualStreamRecording(Session session, String recordingId, MediaProfileSpecType profile,
-			Participant participant) {
+	public void startOneIndividualStreamRecording(Session session, Participant participant) {
 		Recording recording = this.sessionsRecordings.get(session.getSessionId());
 		if (recording == null) {
 			recording = this.sessionsRecordingsStarting.get(session.getSessionId());
@@ -386,13 +385,24 @@ public class RecordingManager {
 			log.info("Starting new RecorderEndpoint in session {} for new stream of participant {}",
 					session.getSessionId(), participant.getParticipantPublicId());
 			final CountDownLatch startedCountDown = new CountDownLatch(1);
-			this.singleStreamRecordingService.startRecorderEndpointForPublisherEndpoint(session, recordingId, profile,
+
+			MediaProfileSpecType profile = null;
+			try {
+				profile = this.singleStreamRecordingService.generateMediaProfile(recording.getRecordingProperties(),
+						participant);
+			} catch (OpenViduException e) {
+				log.error("Cannot start single stream recorder for stream {} in session {}: {}",
+						participant.getPublisherStreamId(), session.getSessionId(), e.getMessage());
+				return;
+			}
+
+			this.singleStreamRecordingService.startRecorderEndpointForPublisherEndpoint(session, recording.getId(), profile,
 					participant, startedCountDown);
 		} else if (RecordingUtils.IS_COMPOSED(recording.getOutputMode()) && !recording.hasVideo()) {
 			// Connect this stream to existing Composite recorder
 			log.info("Joining PublisherEndpoint to existing Composite in session {} for new stream of participant {}",
 					session.getSessionId(), participant.getParticipantPublicId());
-			this.composedRecordingService.joinPublisherEndpointToComposite(session, recordingId, participant);
+			this.composedRecordingService.joinPublisherEndpointToComposite(session, recording.getId(), participant);
 		}
 	}
 
@@ -470,7 +480,8 @@ public class RecordingManager {
 		}
 		if (Status.stopped.equals(recording.getStatus())) {
 			// Recording is being downloaded from remote host or being uploaded
-			log.warn("Recording {} status is \"stopped\". Cancelling possible ongoing download process", recording.getId());
+			log.warn("Recording {} status is \"stopped\". Cancelling possible ongoing download process",
+					recording.getId());
 			this.recordingDownloader.cancelDownload(recording.getId());
 		}
 
