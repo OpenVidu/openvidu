@@ -407,7 +407,7 @@ public class RecordingManager {
 			log.info("Stopping RecorderEndpoint in session {} for stream of participant {}", session.getSessionId(),
 					streamId);
 			final CountDownLatch stoppedCountDown = new CountDownLatch(1);
-			this.singleStreamRecordingService.stopRecorderEndpointOfPublisherEndpoint(session.getSessionId(), streamId,
+			this.singleStreamRecordingService.stopRecorderEndpointOfPublisherEndpoint(recording.getId(), streamId,
 					stoppedCountDown, kmsDisconnectionTime);
 			try {
 				if (!stoppedCountDown.await(5, TimeUnit.SECONDS)) {
