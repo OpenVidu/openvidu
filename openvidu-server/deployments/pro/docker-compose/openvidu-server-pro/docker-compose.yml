@@ -91,7 +91,7 @@ services:
         command: 
             - '/bin/bash'
             - '-c'
-            - '/usr/share/elasticsearch/bin/elasticsearch-users useradd ${ELASTICSEARCH_USERNAME} -p ${ELASTICSEARCH_PASSWORD} -r superuser && /tini -- /usr/local/bin/docker-entrypoint.sh'
+            - '/usr/share/elasticsearch/bin/elasticsearch-users useradd ${ELASTICSEARCH_USERNAME} -p ${ELASTICSEARCH_PASSWORD} -r superuser; /tini -- /usr/local/bin/docker-entrypoint.sh'
         environment:
             - discovery.type=single-node
             - xpack.security.enabled=true
