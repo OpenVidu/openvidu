@@ -42,9 +42,9 @@ services:
             - COTURN_REDIS_IP=127.0.0.1
             - COTURN_REDIS_PASSWORD=${OPENVIDU_SECRET}
             - OPENVIDU_PRO_CLUSTER=true
-            - OPENVIDU_PRO_KIBANA_HOST=http://127.0.0.1/kibana
-            - OPENVIDU_PRO_ELASTICSEARCH_HOST=http://127.0.0.1:9200
-            - WAIT_KIBANA_URL=http://127.0.0.1:5601/api/status
+            - OPENVIDU_PRO_KIBANA_HOST=${OPENVIDU_PRO_KIBANA_HOST:-http://127.0.0.1/kibana}
+            - OPENVIDU_PRO_ELASTICSEARCH_HOST=${OPENVIDU_PRO_ELASTICSEARCH_HOST:-http://127.0.0.1:9200}
+            - WAIT_KIBANA_URL=${OPENVIDU_PRO_KIBANA_HOST:-http://127.0.0.1/kibana}
             - DOTENV_PATH=${PWD}
 
     redis:
@@ -70,7 +70,6 @@ services:
         image: openvidu/openvidu-proxy:3.0.0
         restart: on-failure
         network_mode: host
-        entrypoint: ['/bin/sh', '-c', 'htpasswd -bc /etc/nginx/kibana.htpasswd "${KIBANA_USER}" "${KIBANA_PASSWORD}" && /usr/local/bin/entrypoint.sh']
         volumes:
             - ./certificates:/etc/letsencrypt
             - ./owncert:/owncert
@@ -89,8 +88,13 @@ services:
     elasticsearch:
         image: docker.elastic.co/elasticsearch/elasticsearch:7.8.0
         restart: always
+        command: 
+            - '/bin/bash'
+            - '-c'
+            - '/usr/share/elasticsearch/bin/elasticsearch-users useradd ${ELASTICSEARCH_USERNAME} -p ${ELASTICSEARCH_PASSWORD} -r superuser && /tini -- /usr/local/bin/docker-entrypoint.sh'
         environment:
             - discovery.type=single-node
+            - xpack.security.enabled=true
         ports:
             - 9200:9200
         volumes:
@@ -101,13 +105,20 @@ services:
         restart: always
         environment:
             - SERVER_BASEPATH="/kibana"
+            - ELASTICSEARCH_USERNAME=${ELASTICSEARCH_USERNAME}
+            - ELASTICSEARCH_PASSWORD=${ELASTICSEARCH_PASSWORD}
         ports:
             - 5601:5601
 
     filebeat:
         image: docker.elastic.co/beats/filebeat:7.8.0
+        network_mode: host
         restart: always
         user: root
+        environment:
+            - ELASTICSEARCH_USERNAME=${ELASTICSEARCH_USERNAME}
+            - ELASTICSEARCH_PASSWORD=${ELASTICSEARCH_PASSWORD}
+            - OPENVIDU_PRO_ELASTICSEARCH_HOST=${OPENVIDU_PRO_ELASTICSEARCH_HOST:-http://127.0.0.1:9200}
         volumes:
             - ./beats/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
             - /var/lib/docker:/var/lib/docker:ro

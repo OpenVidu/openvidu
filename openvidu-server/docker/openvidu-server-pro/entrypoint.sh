@@ -8,19 +8,12 @@ if [ ! -z "${WAIT_KIBANA_URL}" ]; then
   printf "\n  ======================================="
   printf "\n"
 
-  while true
-  do
-    HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${WAIT_KIBANA_URL}")
-
+  until $(curl --insecure --output /dev/null --silent --head --fail ${WAIT_KIBANA_URL})
+  do 
     printf "\n  Waiting for kibana in '%s' URL..." "${WAIT_KIBANA_URL}"
-
-    if [ "$HTTP_STATUS" == "200" ]; then
-      printf "\n  ==== Kibana is Ready ===="
-      break
-    fi
-
     sleep 1
   done
+  printf "\n  ==== Kibana is Ready ===="
 fi
 
 # Launch Openvidu Pro

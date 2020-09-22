@@ -16,7 +16,9 @@ processors:
 
 output:
   elasticsearch:
-    hosts: ["elasticsearch:9200"]
+    hosts: ["${OPENVIDU_PRO_ELASTICSEARCH_HOST}"]
+    username: ${ELASTICSEARCH_USERNAME}
+    password: ${ELASTICSEARCH_PASSWORD}
     indices:
       - index: "filebeat-redis-%{+yyyy.MM.dd}"
         when.or:

@@ -105,7 +105,7 @@ new_ov_installation() {
      printf '\n     1. Go to openvidu folder:'
      printf '\n     $ cd openvidu'
      printf '\n'
-     printf '\n     2. Configure OPENVIDU_DOMAIN_OR_PUBLIC_IP, OPENVIDU_PRO_LICENSE, OPENVIDU_SECRET, and KIBANA_PASSWORD in .env file:'
+     printf '\n     2. Configure OPENVIDU_DOMAIN_OR_PUBLIC_IP, OPENVIDU_PRO_LICENSE, OPENVIDU_SECRET, and ELASTICSEARCH_PASSWORD in .env file:'
      printf '\n     $ nano .env'
      printf '\n'
      printf '\n     3. Start OpenVidu'

@@ -63,21 +63,20 @@ Parameters:
     Type: Number
     Default: 1
 
-  # Kibana configuration
-
-  KibanaUser:
-    Description: "Username for Kibana Dashboard"
+  # Elasticsearch configuration
+  ElasticsearchUser:
+    Description: "Username for Elasticsearch and Kibana"
     Type: String
     AllowedPattern: ^((?!")(?! ).)+$
-    ConstraintDescription: Kibana user is mandatory (no whitespaces or quotations allowed)
-    Default: kibanaadmin
+    ConstraintDescription: Elasticsearch user is mandatory (no whitespaces or quotations allowed)
+    Default: elasticadmin
 
-  KibanaPassword:
-    Description: "Password for Kibana Dashboard"
+  ElasticsearchPassword:
+    Description: "Password for Elasticsearch and Kibana"
     Type: String
     AllowedPattern: ^((?!")(?! ).)+$
     NoEcho: true
-    ConstraintDescription: Kibana password is mandatory (no whitespaces or quotations allowed)
+    ConstraintDescription: Elasticsearch password is mandatory (no whitespaces or quotations allowed)
 
   # EC2 Instance configuration
 
@@ -216,8 +215,8 @@ Metadata:
       - Label:
           default: Kibana configuration
         Parameters:
-          - KibanaUser
-          - KibanaPassword
+          - ElasticsearchUser
+          - ElasticsearchPassword
       - Label:
             default: EC2 Instance configuration
         Parameters:
@@ -256,10 +255,10 @@ Metadata:
       OpenViduSecret:
         default: "Openvidu Secret"
       # Kibana configuration
-      KibanaUser:
-        default: "Kibana username"
-      KibanaPassword:
-        default: "Kibana password"
+      ElasticsearchUser:
+        default: "Elasticsearch and Kibana username"
+      ElasticsearchPassword:
+        default: "Elasticsearch and Kibana password"
       # EC2 instance configuration
       AwsInstanceTypeOV:
         default: "Instance type for Openvidu Server Pro Node"
@@ -383,9 +382,9 @@ Resources:
                 sed -i "s/CERTIFICATE_TYPE=selfsigned/CERTIFICATE_TYPE=${WhichCert}/" $WORKINGDIR/.env
                 sed -i "s/LETSENCRYPT_EMAIL=user@example.com/LETSENCRYPT_EMAIL=${LetsEncryptEmail}/" $WORKINGDIR/.env
 
-                # Replace Kibana Conf
-                sed -i "s/KIBANA_USER=kibanaadmin/KIBANA_USER=${KibanaUser}/" $WORKINGDIR/.env
-                sed -i "s/KIBANA_PASSWORD=/KIBANA_PASSWORD=${KibanaPassword}/" $WORKINGDIR/.env
+                # Replace Elastic Search Conf
+                sed -i "s/ELASTICSEARCH_USERNAME=elasticadmin/ELASTICSEARCH_USERNAME=${ElasticsearchUser}/" $WORKINGDIR/.env
+                sed -i "s/ELASTICSEARCH_PASSWORD=/ELASTICSEARCH_PASSWORD=${ElasticsearchPassword}/" $WORKINGDIR/.env
 
                 # Replace vars AWS
                 sed -i "s/#AWS_DEFAULT_REGION=/AWS_DEFAULT_REGION=${AWS::Region}/" $WORKINGDIR/.env

@@ -120,7 +120,7 @@ generate_report() {
     printf '\n'
     printf '\n'
 
-    cat < "${OV_FOLDER}/.env" | sed -r -e "s/OPENVIDU_SECRET=.+/OPENVIDU_SECRET=****/" -e "s/OPENVIDU_PRO_LICENSE=.+/OPENVIDU_PRO_LICENSE=****/" -e "s/KIBANA_PASSWORD=.+/KIBANA_PASSWORD=****/"
+    cat < "${OV_FOLDER}/.env" | sed -r -e "s/OPENVIDU_SECRET=.+/OPENVIDU_SECRET=****/" -e "s/OPENVIDU_PRO_LICENSE=.+/OPENVIDU_PRO_LICENSE=****/" -e "s/ELASTICSEARCH_PASSWORD=.+/ELASTICSEARCH_PASSWORD=****/"
 
     printf '\n'
     printf '\n  ========= docker-compose.yml =========='
