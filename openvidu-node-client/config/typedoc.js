@@ -12,6 +12,7 @@ module.exports = {
     externalPattern: "node_modules",
     excludeExternals: true,
     excludePrivate: true,
+    excludeProtected: true,
     excludeNotExported: true,
     theme: "default",
     readme: "none",

@@ -19,6 +19,7 @@ module.exports = {
     ],
     excludeExternals: true,
     excludePrivate: true,
+    excludeProtected: true,
     excludeNotExported: true,
     theme: "default",
     readme: "none",
