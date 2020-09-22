@@ -598,6 +598,11 @@ public class SessionRestController {
 
 		log.info("REST API: POST /api/recordings/stop/{}", recordingId);
 
+		if (!this.openviduConfig.isRecordingModuleEnabled()) {
+			// OpenVidu Server configuration property "OPENVIDU_RECORDING" is set to false
+			return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+		}
+
 		Recording recording = recordingManager.getStartedRecording(recordingId);
 
 		if (recording == null) {
@@ -634,6 +639,11 @@ public class SessionRestController {
 
 		log.info("REST API: GET /api/recordings/{}", recordingId);
 
+		if (!this.openviduConfig.isRecordingModuleEnabled()) {
+			// OpenVidu Server configuration property "OPENVIDU_RECORDING" is set to false
+			return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+		}
+
 		try {
 			Recording recording = this.recordingManager.getRecording(recordingId);
 			if (io.openvidu.java.client.Recording.Status.started.equals(recording.getStatus())
@@ -650,6 +660,11 @@ public class SessionRestController {
 	public ResponseEntity<?> getAllRecordings() {
 
 		log.info("REST API: GET /api/recordings");
+
+		if (!this.openviduConfig.isRecordingModuleEnabled()) {
+			// OpenVidu Server configuration property "OPENVIDU_RECORDING" is set to false
+			return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+		}
 
 		Collection<Recording> recordings = this.recordingManager.getAllRecordings();
 		JsonObject json = new JsonObject();
@@ -670,6 +685,11 @@ public class SessionRestController {
 	public ResponseEntity<?> deleteRecording(@PathVariable("recordingId") String recordingId) {
 
 		log.info("REST API: DELETE /api/recordings/{}", recordingId);
+
+		if (!this.openviduConfig.isRecordingModuleEnabled()) {
+			// OpenVidu Server configuration property "OPENVIDU_RECORDING" is set to false
+			return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+		}
 
 		return new ResponseEntity<>(this.recordingManager.deleteRecordingFromHost(recordingId, false));
 	}
