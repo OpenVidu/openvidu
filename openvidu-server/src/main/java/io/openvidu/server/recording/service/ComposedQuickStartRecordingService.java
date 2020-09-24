@@ -123,7 +123,7 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 			e1.printStackTrace();
 		}
 
-		recording = updateRecordingAttributes(recording);
+		updateRecordingAttributes(recording);
 
 		this.sealRecordingMetadataFileAsReady(recording, recording.getSize(), recording.getDuration(),
 				getMetadataFilePath(recording));

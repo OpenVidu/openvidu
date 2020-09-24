@@ -298,7 +298,7 @@ public class ComposedRecordingService extends RecordingService {
 		} else {
 
 			stopAndRemoveRecordingContainer(recording, containerId, 30);
-			recording = updateRecordingAttributes(recording);
+			updateRecordingAttributes(recording);
 
 			this.sealRecordingMetadataFileAsReady(recording, recording.getSize(), recording.getDuration(),
 					getMetadataFilePath(recording));
@@ -415,7 +415,7 @@ public class ComposedRecordingService extends RecordingService {
 		containers.remove(containerId);
 	}
 
-	protected Recording updateRecordingAttributes(Recording recording) {
+	protected void updateRecordingAttributes(Recording recording) {
 		try {
 			RecordingInfoUtils infoUtils = new RecordingInfoUtils(this.openviduConfig.getOpenViduRecordingPath()
 					+ recording.getId() + "/" + recording.getId() + ".info");
@@ -432,7 +432,6 @@ public class ComposedRecordingService extends RecordingService {
 				recording.setHasVideo(infoUtils.hasVideo());
 			}
 			infoUtils.deleteFilePath();
-			return recording;
 		} catch (IOException e) {
 			recording.setStatus(io.openvidu.java.client.Recording.Status.failed);
 			throw new OpenViduException(Code.RECORDING_REPORT_ERROR_CODE,
