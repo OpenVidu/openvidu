@@ -396,8 +396,8 @@ public class RecordingManager {
 				return;
 			}
 
-			this.singleStreamRecordingService.startRecorderEndpointForPublisherEndpoint(session, recording.getId(), profile,
-					participant, startedCountDown);
+			this.singleStreamRecordingService.startRecorderEndpointForPublisherEndpoint(session, recording.getId(),
+					profile, participant, startedCountDown);
 		} else if (RecordingUtils.IS_COMPOSED(recording.getOutputMode()) && !recording.hasVideo()) {
 			// Connect this stream to existing Composite recorder
 			log.info("Joining PublisherEndpoint to existing Composite in session {} for new stream of participant {}",
@@ -571,7 +571,6 @@ public class RecordingManager {
 				&& composedQuickStartRecordingService.isBeingUploaded(recording)) {
 			// Recording has finished but is being uploaded
 			recording.setStatus(Status.stopped);
-			recording.setUrl(null);
 		} else if (Status.ready.equals(recording.getStatus()) || Status.failed.equals(recording.getStatus())) {
 			// Recording has been completely processed and must include URL
 			recording.setUrl(recordingManagerUtils.getRecordingUrl(recording));
