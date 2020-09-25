@@ -1245,96 +1245,111 @@ public class OpenViduTestAppE2eTest {
 		setupBrowser("chrome");
 
 		log.info("Remote composed quick start record");
+		
+		CountDownLatch initLatch = new CountDownLatch(1);
+		io.openvidu.test.browsers.utils.CustomWebhook.main(new String[0], initLatch);
 
-		final String sessionName = "COMPOSED_QUICK_START_RECORDED_SESSION";
+		try {
 
-		// 1. MANUAL mode and recording explicitly stopped
+			if (!initLatch.await(30, TimeUnit.SECONDS)) {
+				Assert.fail("Timeout waiting for webhook springboot app to start");
+				CustomWebhook.shutDown();
+				return;
+			}
 
-		user.getDriver().findElement(By.id("add-user-btn")).click();
-		user.getDriver().findElement(By.id("session-name-input-0")).clear();
-		user.getDriver().findElement(By.id("session-name-input-0")).sendKeys(sessionName);
-
-		user.getDriver().findElement(By.id("session-settings-btn-0")).click();
-		Thread.sleep(1000);
-		user.getDriver().findElement(By.id("output-mode-select")).click();
-		Thread.sleep(500);
-		user.getDriver().findElement(By.id("option-COMPOSED_QUICK_START")).click();
-		Thread.sleep(500);
-		user.getDriver().findElement(By.id("save-btn")).click();
-		Thread.sleep(1000);
-
-		// Join the subscriber user to the session
-		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .publish-checkbox")).click();
-		user.getDriver().findElement(By.className("join-btn")).click();
-		user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
-
-		// Check the recording container is up and running but no ongoing recordings
-		checkDockerContainerRunning(RECORDING_IMAGE, 1);
-		Assert.assertEquals("Wrong number of recordings found", 0, OV.listRecordings().size());
-
-		// Join the publisher user to the session
-		user.getDriver().findElement(By.id("add-user-btn")).click();
-		user.getDriver().findElement(By.id("session-name-input-1")).clear();
-		user.getDriver().findElement(By.id("session-name-input-1")).sendKeys(sessionName);
-		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .join-btn")).click();
-
-		user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
-		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
-		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
-		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
-
-		// Start recording
-		OV.fetch();
-		String recId = OV.startRecording(sessionName).getId();
-		user.getEventManager().waitUntilEventReaches("recordingStarted", 2);
-		checkDockerContainerRunning("openvidu/openvidu-recording", 1);
-
-		Thread.sleep(1000);
-
-		Assert.assertEquals("Wrong number of recordings found", 1, OV.listRecordings().size());
-		OV.stopRecording(recId);
-		user.getEventManager().waitUntilEventReaches("recordingStopped", 2);
-		checkDockerContainerRunning("openvidu/openvidu-recording", 1);
-
-		Assert.assertEquals("Wrong number of sessions", 1, OV.getActiveSessions().size());
-		Session session = OV.getActiveSessions().get(0);
-		session.close();
-
-		checkDockerContainerRunning("openvidu/openvidu-recording", 0);
-
-		// 2. ALWAYS mode and recording stopped by session close up
-		user.getDriver().findElement(By.id("remove-all-users-btn")).click();
-		user.getDriver().findElement(By.id("add-user-btn")).click();
-		user.getDriver().findElement(By.id("session-name-input-0")).clear();
-		user.getDriver().findElement(By.id("session-name-input-0")).sendKeys(sessionName);
-
-		user.getDriver().findElement(By.id("session-settings-btn-0")).click();
-		Thread.sleep(1000);
-		user.getDriver().findElement(By.id("recording-mode-select")).click();
-		Thread.sleep(500);
-		user.getDriver().findElement(By.id("option-ALWAYS")).click();
-		Thread.sleep(500);
-		user.getDriver().findElement(By.id("output-mode-select")).click();
-		Thread.sleep(500);
-		user.getDriver().findElement(By.id("option-COMPOSED_QUICK_START")).click();
-		Thread.sleep(500);
-		user.getDriver().findElement(By.id("save-btn")).click();
-		Thread.sleep(1000);
-
-		user.getDriver().findElement(By.className("join-btn")).click();
-		user.getEventManager().waitUntilEventReaches("connectionCreated", 5);
-		user.getEventManager().waitUntilEventReaches("accessAllowed", 2);
-		user.getEventManager().waitUntilEventReaches("streamCreated", 3);
-		user.getEventManager().waitUntilEventReaches("streamPlaying", 3);
-		user.getEventManager().waitUntilEventReaches("recordingStarted", 3);
-
-		checkDockerContainerRunning("openvidu/openvidu-recording", 1);
-
-		OV.fetch();
-		session = OV.getActiveSessions().get(0);
-		session.close();
-
-		checkDockerContainerRunning("openvidu/openvidu-recording", 0);
+			final String sessionName = "COMPOSED_QUICK_START_RECORDED_SESSION";
+	
+			// 1. MANUAL mode and recording explicitly stopped
+	
+			user.getDriver().findElement(By.id("add-user-btn")).click();
+			user.getDriver().findElement(By.id("session-name-input-0")).clear();
+			user.getDriver().findElement(By.id("session-name-input-0")).sendKeys(sessionName);
+	
+			user.getDriver().findElement(By.id("session-settings-btn-0")).click();
+			Thread.sleep(1000);
+			user.getDriver().findElement(By.id("output-mode-select")).click();
+			Thread.sleep(500);
+			user.getDriver().findElement(By.id("option-COMPOSED_QUICK_START")).click();
+			Thread.sleep(500);
+			user.getDriver().findElement(By.id("save-btn")).click();
+			Thread.sleep(1000);
+	
+			// Join the subscriber user to the session
+			user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .publish-checkbox")).click();
+			user.getDriver().findElement(By.className("join-btn")).click();
+			user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
+	
+			// Check the recording container is up and running but no ongoing recordings
+			checkDockerContainerRunning(RECORDING_IMAGE, 1);
+			Assert.assertEquals("Wrong number of recordings found", 0, OV.listRecordings().size());
+	
+			// Join the publisher user to the session
+			user.getDriver().findElement(By.id("add-user-btn")).click();
+			user.getDriver().findElement(By.id("session-name-input-1")).clear();
+			user.getDriver().findElement(By.id("session-name-input-1")).sendKeys(sessionName);
+			user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .join-btn")).click();
+	
+			user.getEventManager().waitUntilEventReaches("connectionCreated", 4);
+			user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
+			user.getEventManager().waitUntilEventReaches("streamCreated", 2);
+			user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
+	
+			// Start recording
+			OV.fetch();
+			String recId = OV.startRecording(sessionName).getId();
+			user.getEventManager().waitUntilEventReaches("recordingStarted", 2);
+			CustomWebhook.waitForEvent("recordingStatusChanged", 1);
+			checkDockerContainerRunning("openvidu/openvidu-recording", 1);
+	
+			Thread.sleep(2000);
+	
+			Assert.assertEquals("Wrong number of recordings found", 1, OV.listRecordings().size());
+			OV.stopRecording(recId);
+			user.getEventManager().waitUntilEventReaches("recordingStopped", 2);
+			checkDockerContainerRunning("openvidu/openvidu-recording", 1);
+	
+			Assert.assertEquals("Wrong number of sessions", 1, OV.getActiveSessions().size());
+			Session session = OV.getActiveSessions().get(0);
+			session.close();
+	
+			checkDockerContainerRunning("openvidu/openvidu-recording", 0);
+	
+			// 2. ALWAYS mode and recording stopped by session close up
+			user.getDriver().findElement(By.id("remove-all-users-btn")).click();
+			user.getDriver().findElement(By.id("add-user-btn")).click();
+			user.getDriver().findElement(By.id("session-name-input-0")).clear();
+			user.getDriver().findElement(By.id("session-name-input-0")).sendKeys(sessionName);
+	
+			user.getDriver().findElement(By.id("session-settings-btn-0")).click();
+			Thread.sleep(1000);
+			user.getDriver().findElement(By.id("recording-mode-select")).click();
+			Thread.sleep(500);
+			user.getDriver().findElement(By.id("option-ALWAYS")).click();
+			Thread.sleep(500);
+			user.getDriver().findElement(By.id("output-mode-select")).click();
+			Thread.sleep(500);
+			user.getDriver().findElement(By.id("option-COMPOSED_QUICK_START")).click();
+			Thread.sleep(500);
+			user.getDriver().findElement(By.id("save-btn")).click();
+			Thread.sleep(1000);
+	
+			user.getDriver().findElement(By.className("join-btn")).click();
+			user.getEventManager().waitUntilEventReaches("connectionCreated", 5);
+			user.getEventManager().waitUntilEventReaches("accessAllowed", 2);
+			user.getEventManager().waitUntilEventReaches("streamCreated", 3);
+			user.getEventManager().waitUntilEventReaches("streamPlaying", 3);
+			user.getEventManager().waitUntilEventReaches("recordingStarted", 3);
+			CustomWebhook.waitForEvent("recordingStatusChanged", 1);
+			checkDockerContainerRunning("openvidu/openvidu-recording", 1);
+	
+			OV.fetch();
+			session = OV.getActiveSessions().get(0);
+			session.close();
+	
+			checkDockerContainerRunning("openvidu/openvidu-recording", 0);
+		} finally {
+			CustomWebhook.shutDown();
+		}
 	}
 
 	@Test
