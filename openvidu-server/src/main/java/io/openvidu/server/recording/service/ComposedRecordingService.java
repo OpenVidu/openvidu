@@ -393,7 +393,7 @@ public class ComposedRecordingService extends RecordingService {
 		return finalRecordingArray[0];
 	}
 
-	protected void stopAndRemoveRecordingContainer(Recording recording, String containerId, int secondsOfWait) {
+	private void stopAndRemoveRecordingContainer(Recording recording, String containerId, int secondsOfWait) {
 		// Gracefully stop ffmpeg process
 		try {
 			dockerManager.runCommandInContainer(containerId, "echo 'q' > stop");
@@ -440,21 +440,26 @@ public class ComposedRecordingService extends RecordingService {
 	}
 
 	protected void waitForVideoFileNotEmpty(Recording recording) throws OpenViduException {
-		boolean isPresent = false;
-		int i = 1;
-		int timeout = 150; // Wait for 150*150 = 22500 = 22.5 seconds
-		while (!isPresent && timeout <= 150) {
+
+		final String VIDEO_FILE = this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/"
+				+ recording.getName() + ".mp4";
+
+		int SECONDS_MAX_WAIT = 15;
+		int MILLISECONDS_INTERVAL_WAIT = 100;
+		int LIMIT = SECONDS_MAX_WAIT * 1000 / MILLISECONDS_INTERVAL_WAIT;
+
+		int i = 0;
+		boolean arePresent = fileExistsAndHasBytes(VIDEO_FILE);
+		while (!arePresent && i < LIMIT) {
 			try {
-				Thread.sleep(150);
-				timeout++;
-				File f = new File(this.openviduConfig.getOpenViduRecordingPath() + recording.getId() + "/"
-						+ recording.getName() + ".mp4");
-				isPresent = ((f.isFile()) && (f.length() > 0));
+				Thread.sleep(MILLISECONDS_INTERVAL_WAIT);
+				arePresent = fileExistsAndHasBytes(VIDEO_FILE);
+				i++;
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 		}
-		if (i == timeout) {
+		if (!arePresent) {
 			log.error("Recorder container failed generating video file (is empty) for session {}",
 					recording.getSessionId());
 			throw new OpenViduException(Code.RECORDING_START_ERROR_CODE,
@@ -462,7 +467,12 @@ public class ComposedRecordingService extends RecordingService {
 		}
 	}
 
-	protected void failRecordingCompletion(Recording recording, String containerId, OpenViduException e)
+	private boolean fileExistsAndHasBytes(String fileName) {
+		File f = new File(fileName);
+		return (f.exists() && f.isFile() && f.length() > 0);
+	}
+
+	private void failRecordingCompletion(Recording recording, String containerId, OpenViduException e)
 			throws OpenViduException {
 		recording.setStatus(io.openvidu.java.client.Recording.Status.failed);
 		dockerManager.removeDockerContainer(containerId, true);
