@@ -26,22 +26,28 @@ import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.ProcessingException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.github.dockerjava.api.DockerClient;
-import com.github.dockerjava.api.async.ResultCallback;
-import com.github.dockerjava.api.command.*;
+import com.github.dockerjava.api.command.CreateContainerCmd;
+import com.github.dockerjava.api.command.CreateContainerResponse;
+import com.github.dockerjava.api.command.ExecCreateCmdResponse;
+import com.github.dockerjava.api.command.InspectContainerResponse;
+import com.github.dockerjava.api.command.InspectImageResponse;
 import com.github.dockerjava.api.exception.ConflictException;
 import com.github.dockerjava.api.exception.DockerClientException;
 import com.github.dockerjava.api.exception.InternalServerErrorException;
 import com.github.dockerjava.api.exception.NotFoundException;
-import com.github.dockerjava.api.model.*;
+import com.github.dockerjava.api.model.Bind;
+import com.github.dockerjava.api.model.Container;
+import com.github.dockerjava.api.model.HostConfig;
+import com.github.dockerjava.api.model.Volume;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.core.DockerClientConfig;
 import com.github.dockerjava.core.command.ExecStartResultCallback;
 import com.github.dockerjava.core.command.PullImageResultCallback;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
@@ -63,7 +69,7 @@ public class DockerManager {
 			// Pull image
 			this.dockerClient.pullImageCmd(image).exec(new PullImageResultCallback()).awaitCompletion(secondsOfWait,
 					TimeUnit.SECONDS);
-			
+
 		} catch (NotFoundException | InternalServerErrorException e) {
 			if (dockerImageExistsLocally(image)) {
 				log.info("Docker image '{}' exists locally", image);
@@ -102,9 +108,8 @@ public class DockerManager {
 	}
 
 	public String runContainer(String container, String containerName, String user, List<Volume> volumes,
-			List<Bind> binds, String networkMode, List<String> envs, List<String> command, Long shmSize, boolean privileged,
-		    Map<String, String> labels)
-			throws Exception {
+			List<Bind> binds, String networkMode, List<String> envs, List<String> command, Long shmSize,
+			boolean privileged, Map<String, String> labels) throws Exception {
 
 		CreateContainerCmd cmd = dockerClient.createContainerCmd(container).withEnv(envs);
 		if (containerName != null) {
@@ -167,21 +172,30 @@ public class DockerManager {
 		}
 	}
 
-	public String runCommandInContainer(String containerId, String command, int secondsOfWait)
+	public void runCommandInContainer(String containerId, String command) throws InterruptedException {
+		ExecCreateCmdResponse execCreateCmdResponse = dockerClient.execCreateCmd(containerId).withAttachStdout(true)
+				.withAttachStderr(true).withCmd("bash", "-c", command).exec();
+		dockerClient.execStartCmd(execCreateCmdResponse.getId()).exec(new ExecStartResultCallback() {
+		});
+	}
+
+	public void runCommandInContainerSync(String containerId, String command, int secondsOfWait)
 			throws InterruptedException {
 		ExecCreateCmdResponse execCreateCmdResponse = dockerClient.execCreateCmd(containerId).withAttachStdout(true)
 				.withAttachStderr(true).withCmd("bash", "-c", command).exec();
 		CountDownLatch latch = new CountDownLatch(1);
-		final String[] stringResponse = new String[1];
 		dockerClient.execStartCmd(execCreateCmdResponse.getId()).exec(new ExecStartResultCallback() {
 			@Override
-			public void onNext(Frame item) {
-				stringResponse[0] = new String(item.getPayload());
+			public void onComplete() {
 				latch.countDown();
 			}
 		});
-		latch.await(secondsOfWait, TimeUnit.SECONDS);
-		return stringResponse[0];
+		try {
+			latch.await(secondsOfWait, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+			throw new InterruptedException("Container " + containerId + " did not return from executing command \""
+					+ command + "\" in " + secondsOfWait + " seconds");
+		}
 	}
 
 	public void waitForContainerStopped(String containerId, int secondsOfWait) throws Exception {

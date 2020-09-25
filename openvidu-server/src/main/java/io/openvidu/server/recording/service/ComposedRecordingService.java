@@ -396,7 +396,7 @@ public class ComposedRecordingService extends RecordingService {
 	protected void stopAndRemoveRecordingContainer(Recording recording, String containerId, int secondsOfWait) {
 		// Gracefully stop ffmpeg process
 		try {
-			dockerManager.runCommandInContainer(containerId, "echo 'q' > stop", 0);
+			dockerManager.runCommandInContainer(containerId, "echo 'q' > stop");
 		} catch (InterruptedException e1) {
 			e1.printStackTrace();
 		}

@@ -78,7 +78,7 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 				recordExecCommand += "export " + envs.get(i) + " ";
 			}
 			recordExecCommand += "&& ./composed_quick_start.sh --start-recording > /var/log/ffmpeg.log 2>&1 &";
-			dockerManager.runCommandInContainer(containerId, recordExecCommand, 0);
+			dockerManager.runCommandInContainer(containerId, recordExecCommand);
 		} catch (Exception e) {
 			this.cleanRecordingMaps(recording);
 			throw this.failStartRecording(session, recording,
@@ -116,7 +116,7 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 		}
 
 		try {
-			dockerManager.runCommandInContainer(containerId, "./composed_quick_start.sh --stop-recording", 10);
+			dockerManager.runCommandInContainerSync(containerId, "./composed_quick_start.sh --stop-recording", 10);
 		} catch (InterruptedException e1) {
 			cleanRecordingMaps(recording);
 			log.error("Error stopping recording for session id: {}", session.getSessionId());
