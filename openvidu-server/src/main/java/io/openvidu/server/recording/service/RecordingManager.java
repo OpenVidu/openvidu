@@ -280,9 +280,12 @@ public class RecordingManager {
 						this.cdr.recordRecordingStatusChanged(recording, null, recording.getCreatedAt(),
 								Status.started);
 
-						if (!(OutputMode.COMPOSED.equals(properties.outputMode()) && properties.hasVideo())) {
+						if (!((properties.outputMode().equals(OutputMode.COMPOSED)
+								|| properties.outputMode().equals(OutputMode.COMPOSED_QUICK_START))
+								&& properties.hasVideo())) {
 							// Directly send recording started notification for all cases except for
-							// COMPOSED recordings with video (will be sent on first RECORDER subscriber)
+							// COMPOSED/COMPOSED_QUICK_START recordings with video (will be sent on first
+							// RECORDER subscriber)
 							this.sessionHandler.sendRecordingStartedNotification(session, recording);
 						}
 						if (session.getActivePublishers() == 0) {
@@ -835,6 +838,8 @@ public class RecordingManager {
 				|| (sessionsRecordingsStarting.putIfAbsent(recording.getSessionId(), recording) != null)) {
 			log.error("Concurrent session recording initialization. Aborting this thread");
 			throw new RuntimeException("Concurrent initialization of recording " + recording.getId());
+		} else {
+			this.sessionHandler.storeRecordingToSendClientEvent(recording);
 		}
 	}
 
@@ -843,7 +848,6 @@ public class RecordingManager {
 	 * collection
 	 */
 	private void recordingFromStartingToStarted(Recording recording) {
-		this.sessionHandler.setRecordingStarted(recording.getSessionId(), recording);
 		this.sessionsRecordings.put(recording.getSessionId(), recording);
 		this.startingRecordings.remove(recording.getId());
 		this.sessionsRecordingsStarting.remove(recording.getSessionId());
