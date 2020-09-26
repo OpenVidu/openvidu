@@ -59,6 +59,10 @@ public class CustomWebhook {
 		CustomWebhook.context.close();
 	}
 
+	public static void clean() {
+		CustomWebhook.events.clear();
+	}
+
 	public synchronized static JsonObject waitForEvent(String eventName, int maxSecondsWait) throws Exception {
 		if (events.get(eventName) == null) {
 			events.put(eventName, new LinkedBlockingDeque<>());
