@@ -1299,7 +1299,7 @@ public class OpenViduTestAppE2eTest {
 			OV.fetch();
 			String recId = OV.startRecording(sessionName).getId();
 			user.getEventManager().waitUntilEventReaches("recordingStarted", 2);
-			CustomWebhook.waitForEvent("recordingStatusChanged", 3);
+			CustomWebhook.waitForEvent("recordingStatusChanged", 5);
 			checkDockerContainerRunning("openvidu/openvidu-recording", 1);
 
 			Thread.sleep(2000);
@@ -1345,7 +1345,7 @@ public class OpenViduTestAppE2eTest {
 			user.getEventManager().waitUntilEventReaches("streamPlaying", 3);
 			user.getEventManager().waitUntilEventReaches("recordingStarted", 3);
 
-			event = CustomWebhook.waitForEvent("recordingStatusChanged", 3); // started
+			event = CustomWebhook.waitForEvent("recordingStatusChanged", 5); // started
 			Assert.assertEquals("Wrong status in recordingStatusChanged event", "started",
 					event.get("status").getAsString());
 
@@ -1395,7 +1395,7 @@ public class OpenViduTestAppE2eTest {
 			event = CustomWebhook.waitForEvent("recordingStatusChanged", 1); // stopped
 			Assert.assertEquals("Wrong status in recordingStatusChanged event", "stopped",
 					event.get("status").getAsString());
-			event = CustomWebhook.waitForEvent("recordingStatusChanged", 3); // started
+			event = CustomWebhook.waitForEvent("recordingStatusChanged", 5); // started
 			Assert.assertEquals("Wrong status in recordingStatusChanged event", "started",
 					event.get("status").getAsString());
 			event = CustomWebhook.waitForEvent("recordingStatusChanged", 1); // failed
