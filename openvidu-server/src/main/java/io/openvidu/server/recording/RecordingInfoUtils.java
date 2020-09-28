@@ -50,7 +50,7 @@ public class RecordingInfoUtils {
 			throw new OpenViduException(Code.RECORDING_FILE_EMPTY_ERROR, "The recording file is corrupted");
 		}
 		if (this.json.size() == 0) {
-			// Recording metadata from ffprobe is an emtpy JSON
+			// Recording metadata from ffprobe is an empty JSON
 			throw new OpenViduException(Code.RECORDING_FILE_EMPTY_ERROR, "The recording file is empty");
 		}
 

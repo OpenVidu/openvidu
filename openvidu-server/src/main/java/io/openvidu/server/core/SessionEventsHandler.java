@@ -22,7 +22,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import org.kurento.client.GenericMediaEvent;
@@ -62,9 +61,7 @@ public class SessionEventsHandler {
 	@Autowired
 	protected OpenviduConfig openviduConfig;
 
-	Map<String, Recording> recordingsStarted = new ConcurrentHashMap<>();
-
-	ReentrantLock lock = new ReentrantLock();
+	private Map<String, Recording> recordingsToSendClientEvents = new ConcurrentHashMap<>();
 
 	public void onSessionCreated(Session session) {
 		CDR.recordSessionCreated(session);
@@ -290,16 +287,10 @@ public class SessionEventsHandler {
 		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, result);
 
 		if (ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(participant.getParticipantPublicId())) {
-			lock.lock();
-			try {
-				Recording recording = this.recordingsStarted.remove(session.getSessionId());
-				if (recording != null) {
-					// RECORDER participant is now receiving video from the first publisher
-					this.sendRecordingStartedNotification(session, recording);
-				}
-			} finally {
-				lock.unlock();
-			}
+			recordingsToSendClientEvents.computeIfPresent(session.getSessionId(), (key, value) -> {
+				sendRecordingStartedNotification(session, value);
+				return null;
+			});
 		}
 	}
 
@@ -311,8 +302,9 @@ public class SessionEventsHandler {
 		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, new JsonObject());
 	}
 
-	public void onNetworkQualityChanged(Participant participant, JsonObject params ) {
-		rpcNotificationService.sendNotification(participant.getParticipantPrivateId(), ProtocolElements.NETWORKQUALITYCHANGED_METHOD, params);
+	public void onNetworkQualityChanged(Participant participant, JsonObject params) {
+		rpcNotificationService.sendNotification(participant.getParticipantPrivateId(),
+				ProtocolElements.NETWORKQUALITYCHANGED_METHOD, params);
 	}
 
 	public void onSendMessage(Participant participant, JsonObject message, Set<Participant> participants,
@@ -460,7 +452,7 @@ public class SessionEventsHandler {
 	public void sendRecordingStoppedNotification(Session session, Recording recording, EndReason reason) {
 
 		// Be sure to clean this map (this should return null)
-		this.recordingsStarted.remove(session.getSessionId());
+		recordingsToSendClientEvents.remove(session.getSessionId());
 
 		// Filter participants by roles according to "OPENVIDU_RECORDING_NOTIFICATION"
 		Set<Participant> existingParticipants;
@@ -570,8 +562,8 @@ public class SessionEventsHandler {
 		this.rpcNotificationService.closeRpcSession(participantPrivateId);
 	}
 
-	public void setRecordingStarted(String sessionId, Recording recording) {
-		this.recordingsStarted.put(sessionId, recording);
+	public void storeRecordingToSendClientEvent(Recording recording) {
+		recordingsToSendClientEvents.put(recording.getSessionId(), recording);
 	}
 
 	private Set<Participant> filterParticipantsByRole(OpenViduRole[] roles, Set<Participant> participants) {

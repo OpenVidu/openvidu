@@ -283,6 +283,7 @@ public class RecordingManager {
 						if (!(OutputMode.COMPOSED.equals(properties.outputMode()) && properties.hasVideo())) {
 							// Directly send recording started notification for all cases except for
 							// COMPOSED recordings with video (will be sent on first RECORDER subscriber)
+							// Both INDIVIDUAL and COMPOSED_QUICK_START should notify immediately
 							this.sessionHandler.sendRecordingStartedNotification(session, recording);
 						}
 						if (session.getActivePublishers() == 0) {
@@ -317,7 +318,19 @@ public class RecordingManager {
 			recording = this.sessionsRecordings.get(session.getSessionId());
 		}
 
-		recording = ((RecordingService) singleStreamRecordingService).sealRecordingMetadataFileAsStopped(recording);
+		if (recording == null) {
+			recording = this.sessionsRecordingsStarting.get(session.getSessionId());
+			if (recording == null) {
+				log.error("Cannot stop recording. Session {} is not being recorded", recordingId,
+						session.getSessionId());
+				return null;
+			} else {
+				// Recording is still starting
+				log.warn("Recording {} is still in \"starting\" status", recording.getId());
+			}
+		}
+
+		((RecordingService) singleStreamRecordingService).sealRecordingMetadataFileAsStopped(recording);
 
 		final long timestamp = System.currentTimeMillis();
 		this.cdr.recordRecordingStatusChanged(recording, reason, timestamp, Status.stopped);
@@ -409,8 +422,15 @@ public class RecordingManager {
 	public void stopOneIndividualStreamRecording(KurentoSession session, String streamId, long kmsDisconnectionTime) {
 		Recording recording = this.sessionsRecordings.get(session.getSessionId());
 		if (recording == null) {
-			log.error("Cannot stop recording of existing stream {}. Session {} is not being recorded", streamId,
-					session.getSessionId());
+			recording = this.sessionsRecordingsStarting.get(session.getSessionId());
+			if (recording == null) {
+				log.error("Cannot stop recording of existing stream {}. Session {} is not being recorded", streamId,
+						session.getSessionId());
+				return;
+			} else {
+				// Recording is still starting
+				log.warn("Recording {} is still in \"starting\" status", recording.getId());
+			}
 		}
 		if (OutputMode.INDIVIDUAL.equals(recording.getOutputMode())) {
 			// Stop specific RecorderEndpoint for this stream
@@ -835,6 +855,8 @@ public class RecordingManager {
 				|| (sessionsRecordingsStarting.putIfAbsent(recording.getSessionId(), recording) != null)) {
 			log.error("Concurrent session recording initialization. Aborting this thread");
 			throw new RuntimeException("Concurrent initialization of recording " + recording.getId());
+		} else {
+			this.sessionHandler.storeRecordingToSendClientEvent(recording);
 		}
 	}
 
@@ -843,7 +865,6 @@ public class RecordingManager {
 	 * collection
 	 */
 	private void recordingFromStartingToStarted(Recording recording) {
-		this.sessionHandler.setRecordingStarted(recording.getSessionId(), recording);
 		this.sessionsRecordings.put(recording.getSessionId(), recording);
 		this.startingRecordings.remove(recording.getId());
 		this.sessionsRecordingsStarting.remove(recording.getSessionId());
