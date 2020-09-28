@@ -26,8 +26,8 @@ services:
         environment:
             - KMS_IMAGE=${KMS_IMAGE:-kurento/kurento-media-server:6.14.0}
             - KMS_DEBUG_LEVEL=${KMS_DEBUG_LEVEL:-}
-            - METRICBEAT_IMAGE=${METRICBEAT_IMAGE:-docker.elastic.co/beats/metricbeat:7.8.0}
-            - FILEBEAT_IMAGE=${FILEBEAT_IMAGE:-docker.elastic.co/beats/filebeat:7.8.0}
+            - METRICBEAT_IMAGE=${METRICBEAT_IMAGE:-docker.elastic.co/beats/metricbeat-oss:7.8.0}
+            - FILEBEAT_IMAGE=${FILEBEAT_IMAGE:-docker.elastic.co/beats/filebeat-oss:7.8.0}
         ports:
             - 3000:3000
         volumes:
