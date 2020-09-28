@@ -20,10 +20,8 @@ processors:
       fields:
         ip: ${MEDIA_NODE_IP}
 
-
 output:
   elasticsearch:
-    hosts: ["${OPENVIDU_SERVER_PRO_IP}:9200"]
     indices:
       - index: "filebeat-kurento-%{+yyyy.MM.dd}"
         when.or:
@@ -37,5 +35,4 @@ output:
 
 logging.json: true
 logging.metrics.enabled: false
-setup.ilm.enabled: true
-setup.ilm.policy_name: "openvidu_cleanup_policy"
+setup.ilm.enabled: false

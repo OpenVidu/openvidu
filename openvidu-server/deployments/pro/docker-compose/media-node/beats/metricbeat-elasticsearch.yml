@@ -1,6 +1,3 @@
-output:
-  elasticsearch:
-    hosts: ["${OPENVIDU_SERVER_PRO_IP}:9200"]
 metricbeat.modules:
   - module: system
     metricsets: [cpu]

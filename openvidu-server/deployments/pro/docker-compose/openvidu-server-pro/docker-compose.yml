@@ -111,7 +111,7 @@ services:
             - 5601:5601
 
     filebeat:
-        image: docker.elastic.co/beats/filebeat:7.8.0
+        image: docker.elastic.co/beats/filebeat-oss:7.8.0
         network_mode: host
         restart: always
         user: root

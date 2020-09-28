@@ -10,3 +10,4 @@ metricbeat.modules:
 fields: {ip: "${MEDIA_NODE_IP}"}
 pipeline:
   queue.mem.events: 0
+setup.ilm.enabled: false
