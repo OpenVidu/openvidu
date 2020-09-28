@@ -57,7 +57,7 @@ public class DockerManager {
 
 	private static final Logger log = LoggerFactory.getLogger(DockerManager.class);
 
-	DockerClient dockerClient;
+	private DockerClient dockerClient;
 
 	public DockerManager() {
 		DockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder().build();
@@ -244,6 +244,14 @@ public class DockerManager {
 	public Map<String, String> getLabels(String containerId) {
 		InspectContainerResponse containerInfo = dockerClient.inspectContainerCmd(containerId).exec();
 		return containerInfo.getConfig().getLabels();
+	}
+
+	public void close() {
+		try {
+			this.dockerClient.close();
+		} catch (IOException e) {
+			log.error("Error closing DockerClient: {}", e.getMessage());
+		}
 	}
 
 	static public String getDockerGatewayIp() {

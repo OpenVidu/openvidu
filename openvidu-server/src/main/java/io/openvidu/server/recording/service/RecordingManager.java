@@ -216,10 +216,9 @@ public class RecordingManager {
 
 	public void checkRecordingRequirements(String openviduRecordingPath, String openviduRecordingCustomLayout)
 			throws OpenViduException {
-		if (dockerManager == null) {
-			this.dockerManager = new DockerManager();
-		}
+		DockerManager dockerManager = null;
 		try {
+			dockerManager = new DockerManager();
 			dockerManager.checkDockerEnabled();
 		} catch (OpenViduException e) {
 			String message = e.getMessage();
@@ -238,6 +237,8 @@ public class RecordingManager {
 			}
 			log.error(message);
 			throw e;
+		} finally {
+			dockerManager.close();
 		}
 		this.checkRecordingPaths(openviduRecordingPath, openviduRecordingCustomLayout);
 	}
