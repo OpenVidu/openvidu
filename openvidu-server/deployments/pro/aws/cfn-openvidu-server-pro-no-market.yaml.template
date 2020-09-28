@@ -213,7 +213,7 @@ Metadata:
           - OpenViduSecret
           - MediaNodesStartNumber
       - Label:
-          default: Kibana configuration
+          default: Elasticsearch and Kibana configuration
         Parameters:
           - ElasticsearchUser
           - ElasticsearchPassword

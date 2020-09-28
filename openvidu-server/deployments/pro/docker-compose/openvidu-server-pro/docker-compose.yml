@@ -88,10 +88,6 @@ services:
     elasticsearch:
         image: docker.elastic.co/elasticsearch/elasticsearch:7.8.0
         restart: always
-        command: 
-            - '/bin/bash'
-            - '-c'
-            - '/usr/share/elasticsearch/bin/elasticsearch-users useradd ${ELASTICSEARCH_USERNAME} -p ${ELASTICSEARCH_PASSWORD} -r superuser; /tini -- /usr/local/bin/docker-entrypoint.sh'
         environment:
             - discovery.type=single-node
             - xpack.security.enabled=true
@@ -99,6 +95,10 @@ services:
             - 9200:9200
         volumes:
             - ./elasticsearch:/usr/share/elasticsearch/data
+        command: > 
+            /bin/bash -c "elasticsearch-users useradd ${ELASTICSEARCH_USERNAME} 
+            -p ${ELASTICSEARCH_PASSWORD} -r superuser;
+            docker-entrypoint.sh"
 
     kibana:
         image: docker.elastic.co/kibana/kibana:7.8.0
@@ -116,11 +116,12 @@ services:
         restart: always
         user: root
         environment:
-            - ELASTICSEARCH_USERNAME=${ELASTICSEARCH_USERNAME}
-            - ELASTICSEARCH_PASSWORD=${ELASTICSEARCH_PASSWORD}
             - OPENVIDU_PRO_ELASTICSEARCH_HOST=${OPENVIDU_PRO_ELASTICSEARCH_HOST:-http://127.0.0.1:9200}
         volumes:
             - ./beats/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
             - /var/lib/docker:/var/lib/docker:ro
             - /var/run/docker.sock:/var/run/docker.sock
-        command: filebeat -e -strict.perms=false
+        command: >
+            /bin/bash -c "filebeat -e -strict.perms=false
+            `if [ ! -z $ELASTICSEARCH_USERNAME ]; then echo '-E output.elasticsearch.username=$ELASTICSEARCH_USERNAME'; fi`
+            `if [ ! -z $ELASTICSEARCH_PASSWORD ]; then echo '-E output.elasticsearch.password=$ELASTICSEARCH_PASSWORD'; fi`"
