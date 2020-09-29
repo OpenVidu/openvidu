@@ -337,10 +337,10 @@ export class OpenVidu {
     const family = platform.os!!.family;
     const userAgent = !!platform.ua ? platform.ua : navigator.userAgent;
 
-    if(this.isIPhoneOrIPad(userAgent)) {
-        if(this.isIOSWithSafari(userAgent) || platform['isIonicIos']){
-          return 1;
-        }
+    if (this.isIPhoneOrIPad(userAgent)) {
+      if (this.isIOSWithSafari(userAgent) || platform['isIonicIos']) {
+        return 1;
+      }
       return 0;
     }
 
@@ -377,7 +377,7 @@ export class OpenVidu {
     }
 
     if ((browser !== 'Chrome') && (browser !== 'Firefox') && (browser !== 'Opera') && (browser !== 'Electron') &&
-       (browser === 'Safari' && version < 13)) {
+      (browser === 'Safari' && version < 13)) {
       return 0;
     } else {
       return 1;
@@ -1025,17 +1025,21 @@ export class OpenVidu {
   private reconnectedCallback(): void {
     logger.warn('Websocket reconnected');
     if (this.isRoomAvailable()) {
-      this.sendRequest('connect', { sessionId: this.session.connection.rpcSessionId }, (error, response) => {
-        if (!!error) {
-          logger.error(error);
-          logger.warn('Websocket was able to reconnect to OpenVidu Server, but your Connection was already destroyed due to timeout. You are no longer a participant of the Session and your media streams have been destroyed');
-          this.session.onLostConnection("networkDisconnect");
-          this.jsonRpcClient.close(4101, "Reconnection fault");
-        } else {
-          this.jsonRpcClient.resetPing();
-          this.session.onRecoveredConnection();
-        }
-      });
+      if (!!this.session.connection) {
+        this.sendRequest('connect', { sessionId: this.session.connection.rpcSessionId }, (error, response) => {
+          if (!!error) {
+            logger.error(error);
+            logger.warn('Websocket was able to reconnect to OpenVidu Server, but your Connection was already destroyed due to timeout. You are no longer a participant of the Session and your media streams have been destroyed');
+            this.session.onLostConnection("networkDisconnect");
+            this.jsonRpcClient.close(4101, "Reconnection fault");
+          } else {
+            this.jsonRpcClient.resetPing();
+            this.session.onRecoveredConnection();
+          }
+        });
+      } else {
+        logger.warn('There was no previous connection when running reconnection callback');
+      }
     } else {
       alert('Connection error. Please reload page.');
     }
@@ -1064,9 +1068,9 @@ export class OpenVidu {
     return isIPad || isIPhone;
   }
 
-  private isIOSWithSafari(userAgent): boolean{
+  private isIOSWithSafari(userAgent): boolean {
     return /\b(\w*Apple\w*)\b/.test(navigator.vendor) && /\b(\w*Safari\w*)\b/.test(userAgent)
-          && !/\b(\w*CriOS\w*)\b/.test(userAgent) && !/\b(\w*FxiOS\w*)\b/.test(userAgent);
+      && !/\b(\w*CriOS\w*)\b/.test(userAgent) && !/\b(\w*FxiOS\w*)\b/.test(userAgent);
   }
 
 

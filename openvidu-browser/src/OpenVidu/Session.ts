@@ -987,7 +987,7 @@ export class Session extends EventDispatcher {
      */
     onLostConnection(reason: string): void {
         logger.warn('Lost connection in Session ' + this.sessionId);
-        if (!!this.sessionId && !this.connection.disposed) {
+        if (!!this.sessionId && !!this.connection && !this.connection.disposed) {
             this.leave(true, reason);
         }
     }
