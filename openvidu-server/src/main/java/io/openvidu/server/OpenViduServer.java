@@ -50,7 +50,6 @@ import io.openvidu.server.config.OpenviduConfig.Error;
 import io.openvidu.server.core.SessionEventsHandler;
 import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.core.TokenGenerator;
-import io.openvidu.server.core.TokenGeneratorDefault;
 import io.openvidu.server.coturn.CoturnCredentialsService;
 import io.openvidu.server.coturn.CoturnCredentialsServiceFactory;
 import io.openvidu.server.kurento.core.KurentoParticipantEndpointConfig;
@@ -160,7 +159,7 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	@ConditionalOnMissingBean
 	@DependsOn("openviduConfig")
 	public TokenGenerator tokenGenerator() {
-		return new TokenGeneratorDefault();
+		return new TokenGenerator();
 	}
 
 	@Bean
