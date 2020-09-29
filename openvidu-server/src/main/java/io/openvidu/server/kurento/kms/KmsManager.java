@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -119,6 +120,13 @@ public abstract class KmsManager {
 		} else {
 			return Collections.min(kmsLoads).kms;
 		}
+	}
+
+	public synchronized boolean atLeastOneConnectedAndRunningKms() {
+		Optional<Kms> optional = this.kmss.values().stream()
+				.filter(kms -> kms.isKurentoClientConnected() && mediaNodeStatusManager.isRunning(kms.getId()))
+				.findFirst();
+		return optional.isPresent();
 	}
 
 	public synchronized List<KmsLoad> getKmssSortedByLoad() {
