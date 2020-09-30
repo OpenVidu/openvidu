@@ -18,6 +18,8 @@
 package io.openvidu.server.core;
 
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -157,13 +159,25 @@ public class Session implements SessionInterface {
 		this.tokens.put(token.getToken(), token);
 	}
 
+	public boolean deleteTokenFromConnectionId(String connectionId) {
+		boolean deleted = false;
+		Iterator<Entry<String, Token>> iterator = this.tokens.entrySet().iterator();
+		while (iterator.hasNext() && !deleted) {
+			Entry<String, Token> entry = iterator.next();
+			if (connectionId.equals(entry.getValue().getConnetionId())) {
+				iterator.remove();
+				deleted = true;
+			}
+		}
+		return deleted;
+	}
+
 	public boolean isTokenValid(String token) {
 		return this.tokens.containsKey(token);
 	}
 
 	public Token consumeToken(String token) {
 		Token tokenObj = this.tokens.remove(token);
-		showTokens("Token consumed");
 		return tokenObj;
 	}
 

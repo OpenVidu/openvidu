@@ -32,7 +32,6 @@ import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
-import org.apache.commons.lang3.RandomStringUtils;
 import org.kurento.jsonrpc.message.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -295,7 +294,7 @@ public abstract class SessionManager {
 		return sessionNotActive;
 	}
 
-	public String newToken(Session session, OpenViduRole role, String serverMetadata,
+	public Token newToken(Session session, OpenViduRole role, String serverMetadata,
 			KurentoTokenOptions kurentoTokenOptions) throws Exception {
 		if (!formatChecker.isServerMetadataFormatCorrect(serverMetadata)) {
 			log.error("Data invalid format");
@@ -305,7 +304,7 @@ public abstract class SessionManager {
 				kurentoTokenOptions);
 		session.storeToken(tokenObj);
 		session.showTokens("Token created");
-		return tokenObj.getToken();
+		return tokenObj;
 	}
 
 	public Token newTokenForInsecureUser(Session session, String token, String serverMetadata) throws Exception {
@@ -355,17 +354,13 @@ public abstract class SessionManager {
 
 	public Participant newParticipant(String sessionId, String participantPrivatetId, Token token,
 			String clientMetadata, GeoLocation location, String platform, String finalUserId) {
+
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
-			String participantPublicId = IdentifierPrefixes.PARTICIPANT_PUBLIC_ID
-					+ RandomStringUtils.randomAlphabetic(1).toUpperCase() + RandomStringUtils.randomAlphanumeric(9);
-			Participant p = new Participant(finalUserId, participantPrivatetId, participantPublicId, sessionId, token,
-					clientMetadata, location, platform, EndpointType.WEBRTC_ENDPOINT, null);
-			while (this.sessionidParticipantpublicidParticipant.get(sessionId).putIfAbsent(participantPublicId,
-					p) != null) {
-				participantPublicId = IdentifierPrefixes.PARTICIPANT_PUBLIC_ID
-						+ RandomStringUtils.randomAlphabetic(1).toUpperCase() + RandomStringUtils.randomAlphanumeric(9);
-				p.setParticipantPublicId(participantPublicId);
-			}
+
+			Participant p = new Participant(finalUserId, participantPrivatetId, token.getConnetionId(), sessionId,
+					token, clientMetadata, location, platform, EndpointType.WEBRTC_ENDPOINT, null);
+
+			this.sessionidParticipantpublicidParticipant.get(sessionId).put(p.getParticipantPublicId(), p);
 
 			this.sessionidFinalUsers.get(sessionId).computeIfAbsent(finalUserId, k -> {
 				log.info("Participant {} of session {} is a final user connecting to this session for the first time",
@@ -374,6 +369,7 @@ public abstract class SessionManager {
 			}).addConnectionIfAbsent(p);
 
 			return p;
+
 		} else {
 			throw new OpenViduException(Code.ROOM_NOT_FOUND_ERROR_CODE, sessionId);
 		}

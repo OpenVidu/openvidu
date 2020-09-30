@@ -30,7 +30,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import io.openvidu.java.client.*;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.kurento.client.GenericMediaElement;
 import org.kurento.client.IceCandidate;
@@ -48,6 +47,12 @@ import com.google.gson.JsonObject;
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
+import io.openvidu.java.client.MediaMode;
+import io.openvidu.java.client.Recording;
+import io.openvidu.java.client.RecordingLayout;
+import io.openvidu.java.client.RecordingMode;
+import io.openvidu.java.client.RecordingProperties;
+import io.openvidu.java.client.SessionProperties;
 import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.FinalUser;
 import io.openvidu.server.core.IdentifierPrefixes;
@@ -142,7 +147,8 @@ public class KurentoSessionManager extends SessionManager {
 
 			// If Recording default layout is COMPOSED_QUICK_START
 			Recording.OutputMode defaultOutputMode = kSession.getSessionProperties().defaultOutputMode();
-			if (openviduConfig.isRecordingModuleEnabled() && defaultOutputMode.equals(Recording.OutputMode.COMPOSED_QUICK_START)) {
+			if (openviduConfig.isRecordingModuleEnabled()
+					&& defaultOutputMode.equals(Recording.OutputMode.COMPOSED_QUICK_START)) {
 				recordingManager.startComposedQuickStartContainer(kSession);
 			}
 
@@ -300,10 +306,12 @@ public class KurentoSessionManager extends SessionManager {
 
 						} else if (remainingParticipants.size() == 1 && openviduConfig.isRecordingModuleEnabled()
 								&& MediaMode.ROUTED.equals(session.getSessionProperties().mediaMode())
-								&& session.getSessionProperties().defaultOutputMode().equals(Recording.OutputMode.COMPOSED_QUICK_START)
+								&& session.getSessionProperties().defaultOutputMode()
+										.equals(Recording.OutputMode.COMPOSED_QUICK_START)
 								&& ProtocolElements.RECORDER_PARTICIPANT_PUBLICID
-								.equals(remainingParticipants.iterator().next().getParticipantPublicId())) {
-							// If no recordings are active in COMPOSED_QUICK_START output mode, stop container
+										.equals(remainingParticipants.iterator().next().getParticipantPublicId())) {
+							// If no recordings are active in COMPOSED_QUICK_START output mode, stop
+							// container
 							recordingManager.stopComposedQuickStartContainer(session, reason);
 						}
 					}

@@ -17,6 +17,8 @@
 
 package io.openvidu.server.core;
 
+import org.apache.commons.lang3.RandomStringUtils;
+
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.server.coturn.TurnCredentials;
 import io.openvidu.server.kurento.core.KurentoTokenOptions;
@@ -27,12 +29,10 @@ public class Token {
 	private OpenViduRole role;
 	private String serverMetadata = "";
 	private TurnCredentials turnCredentials;
-
 	private KurentoTokenOptions kurentoTokenOptions;
 
-	public Token(String token) {
-		this.token = token;
-	}
+	private final String connectionId = IdentifierPrefixes.PARTICIPANT_PUBLIC_ID
+			+ RandomStringUtils.randomAlphabetic(1).toUpperCase() + RandomStringUtils.randomAlphanumeric(9);
 
 	public Token(String token, OpenViduRole role, String serverMetadata, TurnCredentials turnCredentials,
 			KurentoTokenOptions kurentoTokenOptions) {
@@ -50,7 +50,7 @@ public class Token {
 	public void setToken(String token) {
 		this.token = token;
 	}
-	
+
 	public OpenViduRole getRole() {
 		return role;
 	}
@@ -65,6 +65,10 @@ public class Token {
 
 	public KurentoTokenOptions getKurentoTokenOptions() {
 		return kurentoTokenOptions;
+	}
+
+	public String getConnetionId() {
+		return connectionId;
 	}
 
 	@Override

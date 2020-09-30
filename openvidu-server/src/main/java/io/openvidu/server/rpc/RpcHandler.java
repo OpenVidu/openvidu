@@ -257,6 +257,9 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 
 		Token tokenObj = session.consumeToken(token);
 		if (tokenObj != null) {
+
+			session.showTokens("Token consumed");
+
 			String clientMetadata = getStringParam(request, ProtocolElements.JOINROOM_METADATA_PARAM);
 			if (sessionManager.formatChecker.isServerMetadataFormatCorrect(clientMetadata)) {
 

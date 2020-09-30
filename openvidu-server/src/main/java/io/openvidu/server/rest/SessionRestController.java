@@ -61,6 +61,7 @@ import io.openvidu.server.core.IdentifierPrefixes;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.core.SessionManager;
+import io.openvidu.server.core.Token;
 import io.openvidu.server.kurento.core.KurentoMediaOptions;
 import io.openvidu.server.kurento.core.KurentoTokenOptions;
 import io.openvidu.server.recording.Recording;
@@ -280,7 +281,12 @@ public class SessionRestController {
 			this.sessionManager.evictParticipant(participant, null, null, EndReason.forceDisconnectByServer);
 			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 		} else {
-			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+			// Try to delete unused token
+			if (session.deleteTokenFromConnectionId(participantPublicId)) {
+				return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+			} else {
+				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+			}
 		}
 	}
 
@@ -387,14 +393,15 @@ public class SessionRestController {
 		// While closing a session tokens can't be generated
 		if (session.closingLock.readLock().tryLock()) {
 			try {
-				String token = sessionManager.newToken(session, role, metadata, kurentoTokenOptions);
+				Token token = sessionManager.newToken(session, role, metadata, kurentoTokenOptions);
 
 				JsonObject responseJson = new JsonObject();
-				responseJson.addProperty("id", token);
+				responseJson.addProperty("id", token.getToken());
+				responseJson.addProperty("connectionId", token.getConnetionId());
 				responseJson.addProperty("session", sessionId);
 				responseJson.addProperty("role", role.toString());
 				responseJson.addProperty("data", metadata);
-				responseJson.addProperty("token", token);
+				responseJson.addProperty("token", token.getToken());
 
 				if (kurentoOptions != null) {
 					JsonObject kurentoOptsResponse = new JsonObject();
