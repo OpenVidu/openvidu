@@ -19,6 +19,7 @@ import { LocalRecorder } from './LocalRecorder';
 import { Publisher } from './Publisher';
 import { Session } from './Session';
 import { Stream } from './Stream';
+import { SessionDisconnectedEvent } from '../OpenViduInternal/Events/SessionDisconnectedEvent';
 import { StreamPropertyChangedEvent } from '../OpenViduInternal/Events/StreamPropertyChangedEvent';
 import { Device } from '../OpenViduInternal/Interfaces/Public/Device';
 import { OpenViduAdvancedConfiguration } from '../OpenViduInternal/Interfaces/Public/OpenViduAdvancedConfiguration';
@@ -1039,6 +1040,10 @@ export class OpenVidu {
         });
       } else {
         logger.warn('There was no previous connection when running reconnection callback');
+        // Make Session object dispatch 'sessionDisconnected' event
+        const sessionDisconnectEvent = new SessionDisconnectedEvent(this.session, 'networkDisconnect');
+        this.session.ee.emitEvent('sessionDisconnected', [sessionDisconnectEvent]);
+        sessionDisconnectEvent.callDefaultBehavior();
       }
     } else {
       alert('Connection error. Please reload page.');
