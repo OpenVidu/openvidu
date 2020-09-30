@@ -170,6 +170,7 @@ export class LocalRecorder {
                 }
                 this.mediaRecorder.pause();
                 this.state = LocalRecorderState.PAUSED;
+                resolve();
             } catch (error) {
                 reject(error);
             }
@@ -188,6 +189,7 @@ export class LocalRecorder {
                 }
                 this.mediaRecorder.resume();
                 this.state = LocalRecorderState.RECORDING;
+                resolve();
             } catch (error) {
                 reject(error);
             }
