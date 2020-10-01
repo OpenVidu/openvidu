@@ -2618,7 +2618,7 @@ public class OpenViduTestAppE2eTest {
 		// 200
 		body = "{'session': 'CUSTOM_SESSION_ID', 'role': 'MODERATOR', 'data': 'SERVER_DATA', 'kurentoOptions': {'allowedFilters': ['GStreamerFilter']}}";
 		res = restClient.rest(HttpMethod.POST, "/api/tokens", body, HttpStatus.SC_OK, true,
-				"{'id':'STR','session':'STR','role':'STR','data':'STR','token':'STR','kurentoOptions':{'allowedFilters':['STR']}}");
+				"{'id':'STR','connectionId':'STR','session':'STR','role':'STR','data':'STR','token':'STR','kurentoOptions':{'allowedFilters':['STR']}}");
 		final String token1 = res.get("token").getAsString();
 		Assert.assertEquals("JSON return value from /api/tokens should have equal srtings in 'id' and 'token'",
 				res.get("id").getAsString(), token1);
@@ -2627,7 +2627,7 @@ public class OpenViduTestAppE2eTest {
 		// Default values
 		body = "{'session': 'CUSTOM_SESSION_ID'}";
 		res = restClient.rest(HttpMethod.POST, "/api/tokens", body, HttpStatus.SC_OK, true,
-				"{'id':'STR','session':'STR','role':'STR','data':'STR','token':'STR'}");
+				"{'id':'STR','connectionId':'STR','session':'STR','role':'STR','data':'STR','token':'STR'}");
 		final String token2 = res.get("id").getAsString();
 
 		/** POST /api/signal (NOT ACTIVE SESSION) **/
@@ -2687,9 +2687,9 @@ public class OpenViduTestAppE2eTest {
 		Thread.sleep(1000);
 
 		// Set token 1
-		WebElement tokeInput = user.getDriver().findElement(By.cssSelector("#custom-token-div input"));
-		tokeInput.clear();
-		tokeInput.sendKeys(token1);
+		WebElement tokenInput = user.getDriver().findElement(By.cssSelector("#custom-token-div input"));
+		tokenInput.clear();
+		tokenInput.sendKeys(token1);
 
 		user.getDriver().findElement(By.id("save-btn")).click();
 		Thread.sleep(1000);
@@ -2697,9 +2697,9 @@ public class OpenViduTestAppE2eTest {
 		Thread.sleep(1000);
 
 		// Set token 2
-		tokeInput = user.getDriver().findElement(By.cssSelector("#custom-token-div input"));
-		tokeInput.clear();
-		tokeInput.sendKeys(token2);
+		tokenInput = user.getDriver().findElement(By.cssSelector("#custom-token-div input"));
+		tokenInput.clear();
+		tokenInput.sendKeys(token2);
 		user.getDriver().findElement(By.id("save-btn")).click();
 		Thread.sleep(1000);
 
@@ -2808,6 +2808,75 @@ public class OpenViduTestAppE2eTest {
 		/** DELETE /api/sessions **/
 		restClient.rest(HttpMethod.DELETE, "/api/sessions", HttpStatus.SC_METHOD_NOT_ALLOWED);
 		restClient.rest(HttpMethod.DELETE, "/api/sessions/NOT_EXISTS", HttpStatus.SC_NOT_FOUND);
+		restClient.rest(HttpMethod.DELETE, "/api/sessions/CUSTOM_SESSION_ID", HttpStatus.SC_NO_CONTENT);
+
+		// GET /api/sessions should return empty again
+		restClient.rest(HttpMethod.GET, "/api/sessions", null, HttpStatus.SC_OK, true,
+				ImmutableMap.of("numberOfElements", new Integer(0), "content", new JsonArray()));
+
+		/**
+		 * DELETE /api/sessions/<SESSION_ID>/connection/<CONNECTION_ID> (unused token)
+		 **/
+		body = "{'customSessionId': 'CUSTOM_SESSION_ID'}";
+		restClient.rest(HttpMethod.POST, "/api/sessions", body, HttpStatus.SC_OK);
+		body = "{'session': 'CUSTOM_SESSION_ID'}";
+		res = restClient.rest(HttpMethod.POST, "/api/tokens", body, HttpStatus.SC_OK);
+		final String tokenAConnectionId = res.get("connectionId").getAsString();
+		final String tokenA = res.get("token").getAsString();
+		res = restClient.rest(HttpMethod.POST, "/api/tokens", body, HttpStatus.SC_OK);
+		final String tokenB = res.get("token").getAsString();
+		final String tokenBConnectionId = res.get("connectionId").getAsString();
+
+		user.getDriver().findElement(By.id("one2one-btn")).click();
+		user.getDriver().findElement(By.id("session-settings-btn-0")).click();
+		Thread.sleep(1000);
+
+		// Set token 1
+		tokenInput = user.getDriver().findElement(By.cssSelector("#custom-token-div input"));
+		tokenInput.clear();
+		tokenInput.sendKeys(tokenA);
+
+		user.getDriver().findElement(By.id("save-btn")).click();
+		Thread.sleep(1000);
+		user.getDriver().findElement(By.id("session-settings-btn-1")).click();
+		Thread.sleep(1000);
+
+		// Set token 2
+		tokenInput = user.getDriver().findElement(By.cssSelector("#custom-token-div input"));
+		tokenInput.clear();
+		tokenInput.sendKeys(tokenB);
+		user.getDriver().findElement(By.id("save-btn")).click();
+		Thread.sleep(1000);
+
+		// Invalidate token
+		restClient.rest(HttpMethod.DELETE, "/api/sessions/CUSTOM_SESSION_ID/connection/" + tokenAConnectionId,
+				HttpStatus.SC_NO_CONTENT);
+
+		// First user should pop up invalid token
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .join-btn")).sendKeys(Keys.ENTER);
+		try {
+			user.getWaiter().until(ExpectedConditions.alertIsPresent());
+			Alert alert = user.getDriver().switchTo().alert();
+			Assert.assertTrue("Alert does not contain expected text",
+					alert.getText().contains("Token " + tokenA + "is not valid"));
+			alert.accept();
+		} catch (Exception e) {
+			Assert.fail("Alert exception");
+		}
+
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .join-btn")).sendKeys(Keys.ENTER);
+
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 5);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 3);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 5);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 5);
+
+		// connectionId should be equal to the one brought by the token
+		Assert.assertEquals("Wrong connectionId", tokenBConnectionId,
+				restClient.rest(HttpMethod.GET, "/api/sessions/CUSTOM_SESSION_ID", HttpStatus.SC_OK).get("connections")
+						.getAsJsonObject().get("content").getAsJsonArray().get(0).getAsJsonObject().get("connectionId")
+						.getAsString());
+
 		restClient.rest(HttpMethod.DELETE, "/api/sessions/CUSTOM_SESSION_ID", HttpStatus.SC_NO_CONTENT);
 
 		// GET /api/sessions should return empty again
