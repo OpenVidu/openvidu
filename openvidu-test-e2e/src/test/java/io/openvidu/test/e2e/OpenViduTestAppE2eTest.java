@@ -123,6 +123,7 @@ public class OpenViduTestAppE2eTest {
 	static String OPENVIDU_SECRET = "MY_SECRET";
 	static String OPENVIDU_URL = "https://localhost:4443/";
 	static String APP_URL = "http://localhost:4200/";
+	static String EXTERNAL_CUSTOM_LAYOUT_URL = "http://localhost:5555?sessionId=CUSTOM_LAYOUT_SESSION&secret=MY_SECRET";
 	static Exception ex = null;
 	private final Object lock = new Object();
 
@@ -156,6 +157,12 @@ public class OpenViduTestAppE2eTest {
 			APP_URL = appUrl;
 		}
 		log.info("Using URL {} to connect to openvidu-testapp", APP_URL);
+
+		String externalCustomLayoutUrl = System.getProperty("EXTERNAL_CUSTOM_LAYOUT_URL");
+		if (externalCustomLayoutUrl != null) {
+			EXTERNAL_CUSTOM_LAYOUT_URL = externalCustomLayoutUrl;
+		}
+		log.info("Using URL {} to connect to external custom layout", EXTERNAL_CUSTOM_LAYOUT_URL);
 
 		String openviduUrl = System.getProperty("OPENVIDU_URL");
 		if (openviduUrl != null) {
@@ -1833,7 +1840,7 @@ public class OpenViduTestAppE2eTest {
 			Thread.sleep(1000);
 			tokeInput = user.getDriver().findElement(By.id("default-custom-layout-input"));
 			tokeInput.clear();
-			tokeInput.sendKeys("http://localhost:5555?sessionId=CUSTOM_LAYOUT_SESSION&secret=MY_SECRET");
+			tokeInput.sendKeys(EXTERNAL_CUSTOM_LAYOUT_URL);
 			user.getDriver().findElement(By.id("save-btn")).click();
 			Thread.sleep(1000);
 
