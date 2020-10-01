@@ -43,6 +43,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.imageio.ImageIO;
 
@@ -123,7 +125,8 @@ public class OpenViduTestAppE2eTest {
 	static String OPENVIDU_SECRET = "MY_SECRET";
 	static String OPENVIDU_URL = "https://localhost:4443/";
 	static String APP_URL = "http://localhost:4200/";
-	static String EXTERNAL_CUSTOM_LAYOUT_URL = "http://localhost:5555?sessionId=CUSTOM_LAYOUT_SESSION&secret=MY_SECRET";
+	static String EXTERNAL_CUSTOM_LAYOUT_URL = "http://localhost:5555";
+	static String EXTERNAL_CUSTOM_LAYOUT_PARAMS = "sessionId,CUSTOM_LAYOUT_SESSION,secret,MY_SECRET";
 	static Exception ex = null;
 	private final Object lock = new Object();
 
@@ -163,6 +166,33 @@ public class OpenViduTestAppE2eTest {
 			EXTERNAL_CUSTOM_LAYOUT_URL = externalCustomLayoutUrl;
 		}
 		log.info("Using URL {} to connect to external custom layout", EXTERNAL_CUSTOM_LAYOUT_URL);
+
+		String externalCustomLayoutParams = System.getProperty("EXTERNAL_CUSTOM_LAYOUT_PARAMS");
+		if (externalCustomLayoutParams != null) {
+			// Parse external layout parameters and build a URL formatted params string
+			List<String> params = Stream.of(externalCustomLayoutParams.split(",", -1)).collect(Collectors.toList());
+			if (params.size() % 2 != 0) {
+				log.error(
+						"Wrong configuration property EXTERNAL_CUSTOM_LAYOUT_PARAMS. Must be a comma separated list with an even number of elements. e.g: EXTERNAL_CUSTOM_LAYOUT_PARAMS=param1,value1,param2,value2");
+				Assert.fail();
+				return;
+			} else {
+				EXTERNAL_CUSTOM_LAYOUT_PARAMS = "";
+				for (int i = 0; i < params.size(); i++) {
+					if (i % 2 == 0) {
+						// Param name
+						EXTERNAL_CUSTOM_LAYOUT_PARAMS += params.get(i) + "=";
+					} else {
+						// Param value
+						EXTERNAL_CUSTOM_LAYOUT_PARAMS += params.get(i);
+						if (i < params.size() - 1) {
+							EXTERNAL_CUSTOM_LAYOUT_PARAMS += "&";
+						}
+					}
+				}
+			}
+		}
+		log.info("Using URL {} to connect to external custom layout", EXTERNAL_CUSTOM_LAYOUT_PARAMS);
 
 		String openviduUrl = System.getProperty("OPENVIDU_URL");
 		if (openviduUrl != null) {
@@ -1840,7 +1870,7 @@ public class OpenViduTestAppE2eTest {
 			Thread.sleep(1000);
 			tokeInput = user.getDriver().findElement(By.id("default-custom-layout-input"));
 			tokeInput.clear();
-			tokeInput.sendKeys(EXTERNAL_CUSTOM_LAYOUT_URL);
+			tokeInput.sendKeys(EXTERNAL_CUSTOM_LAYOUT_URL + "?" + EXTERNAL_CUSTOM_LAYOUT_PARAMS);
 			user.getDriver().findElement(By.id("save-btn")).click();
 			Thread.sleep(1000);
 
@@ -2304,11 +2334,11 @@ public class OpenViduTestAppE2eTest {
 				.allowedFilters(new String[] { "GStreamerFilter" }).build();
 		TokenOptions tokenOptionsModerator = new TokenOptions.Builder().role(OpenViduRole.MODERATOR)
 				.data(serverDataModerator).kurentoOptions(kurentoOptions).build();
-		String tokenModerator = session.generateToken(tokenOptionsModerator);
+		String tokenModerator = session.createToken(tokenOptionsModerator).getToken();
 
 		TokenOptions tokenOptionsSubscriber = new TokenOptions.Builder().role(OpenViduRole.SUBSCRIBER)
 				.data(serverDataSubscriber).build();
-		String tokenSubscriber = session.generateToken(tokenOptionsSubscriber);
+		String tokenSubscriber = session.createToken(tokenOptionsSubscriber).getToken();
 
 		Assert.assertFalse("Session.fetch() should return false until a user has connected", session.fetch());
 
@@ -2656,9 +2686,14 @@ public class OpenViduTestAppE2eTest {
 		}
 		pub = connectionModerator.getPublishers().get(0);
 
+		// TODO: test delete unused Token, update unused Token and update ongoing
+		// Connection
+
 		session.forceUnpublish(pub);
 		user.getEventManager().waitUntilEventReaches("streamDestroyed", 6);
-		Assert.assertFalse("OpenVidu.fetch() should return false", OV.fetch());
+		Assert.assertFalse(
+				"OpenVidu.fetch() should return false because Session.forceUnpublish() already updates local objects",
+				OV.fetch());
 
 		session.getActiveConnections().forEach(con -> {
 			Assert.assertEquals("Wrong number of Publishers", 0, con.getPublishers().size());
@@ -2668,7 +2703,9 @@ public class OpenViduTestAppE2eTest {
 		session.forceDisconnect(connectionModerator);
 		user.getEventManager().waitUntilEventReaches("sessionDisconnected", 1);
 		user.getEventManager().waitUntilEventReaches("connectionDestroyed", 1);
-		Assert.assertFalse("OpenVidu.fetch() should return false", OV.fetch());
+		Assert.assertFalse(
+				"OpenVidu.fetch() should return false because Session.forceDisconnect() already updates local objects",
+				OV.fetch());
 
 		session.close();
 
