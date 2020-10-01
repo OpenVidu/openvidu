@@ -6,6 +6,7 @@ node('container') {
     sh 'rm -rf /opt/openvidu/* || true'
     sh 'wget https://github.com/OpenVidu/openvidu/raw/master/openvidu-test-e2e/docker/barcode.y4m -P /opt/openvidu'
     sh 'wget https://github.com/OpenVidu/openvidu/raw/master/openvidu-test-e2e/docker/fakeaudio.wav -P /opt/openvidu'
+    sh 'wget --directory-prefix=/opt/openvidu/test-layouts/layout1 https://github.com/OpenVidu/openvidu/blob/master/openvidu-test-e2e/docker/my-custom-layout/index.html'
     docker.image('selenium/standalone-firefox:latest').withRun('-p 6667:4444 --name firefox --shm-size=1g') { d ->
       def mycontainer = docker.image('openvidu/openvidu-test-e2e:$DISTRO')
       mycontainer.pull()
@@ -93,10 +94,10 @@ node('container') {
           sh(script: '''#!/bin/bash
             if [ "$DOCKER_RECORDING_VERSION" != "default" ]; then
               echo "Using custom openvidu-recording tag: $DOCKER_RECORDING_VERSION"
-              java -jar -DDOMAIN_OR_PUBLIC_IP=172.17.0.1 -DOPENVIDU_SECRET=MY_SECRET -DHTTPS_PORT=4443 -DOPENVIDU_RECORDING=true -DOPENVIDU_RECORDING_VERSION=$DOCKER_RECORDING_VERSION -DOPENVIDU_WEBHOOK=true -DOPENVIDU_WEBHOOK_ENDPOINT=http://127.0.0.1:7777/webhook /opt/openvidu/openvidu-server-*.jar &> openvidu-server.log &
+              java -jar -DDOMAIN_OR_PUBLIC_IP=172.17.0.1 -DOPENVIDU_SECRET=MY_SECRET -DHTTPS_PORT=4443 -DOPENVIDU_RECORDING=true -DOPENVIDU_RECORDING_CUSTOM_LAYOUT=/opt/openvidu/test-layouts -DOPENVIDU_RECORDING_VERSION=$DOCKER_RECORDING_VERSION -DOPENVIDU_WEBHOOK=true -DOPENVIDU_WEBHOOK_ENDPOINT=http://127.0.0.1:7777/webhook /opt/openvidu/openvidu-server-*.jar &> openvidu-server.log &
             else
               echo "Using default openvidu-recording tag"
-              java -jar -DDOMAIN_OR_PUBLIC_IP=172.17.0.1 -DOPENVIDU_SECRET=MY_SECRET -DHTTPS_PORT=4443 -DOPENVIDU_RECORDING=true -DOPENVIDU_WEBHOOK=true -DOPENVIDU_WEBHOOK_ENDPOINT=http://127.0.0.1:7777/webhook /opt/openvidu/openvidu-server-*.jar &> openvidu-server.log &
+              java -jar -DDOMAIN_OR_PUBLIC_IP=172.17.0.1 -DOPENVIDU_SECRET=MY_SECRET -DHTTPS_PORT=4443 -DOPENVIDU_RECORDING=true -DOPENVIDU_RECORDING_CUSTOM_LAYOUT=/opt/openvidu/test-layouts -DOPENVIDU_WEBHOOK=true -DOPENVIDU_WEBHOOK_ENDPOINT=http://127.0.0.1:7777/webhook /opt/openvidu/openvidu-server-*.jar &> openvidu-server.log &
             fi
           '''.stripIndent())
           sh 'until $(curl --insecure --output /dev/null --silent --head --fail https://OPENVIDUAPP:MY_SECRET@localhost:4443/); do echo "Waiting for openvidu-server..."; sleep 2; done'

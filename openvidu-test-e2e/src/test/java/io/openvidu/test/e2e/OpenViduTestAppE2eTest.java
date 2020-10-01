@@ -42,6 +42,7 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import javax.imageio.ImageIO;
 
@@ -103,9 +104,10 @@ import io.openvidu.test.browsers.FirefoxUser;
 import io.openvidu.test.browsers.OperaUser;
 import io.openvidu.test.browsers.utils.CommandLineExecutor;
 import io.openvidu.test.browsers.utils.CustomHttpClient;
-import io.openvidu.test.browsers.utils.CustomWebhook;
 import io.openvidu.test.browsers.utils.MultimediaFileMetadata;
 import io.openvidu.test.browsers.utils.Unzipper;
+import io.openvidu.test.browsers.utils.layout.CustomLayoutHandler;
+import io.openvidu.test.browsers.utils.webhook.CustomWebhook;
 
 /**
  * E2E tests for openvidu-testapp.
@@ -1208,9 +1210,10 @@ public class OpenViduTestAppE2eTest {
 		Assert.assertTrue("File " + file3.getAbsolutePath() + " does not exist or is empty",
 				file3.exists() && file3.length() > 0);
 
-		Assert.assertTrue("Recorded file " + file1.getAbsolutePath() + " is not fine",
-				this.recordedFileFine(file1, new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(sessionName)));
-		Assert.assertTrue("Thumbnail " + file3.getAbsolutePath() + " is not fine", this.thumbnailIsFine(file3));
+		Assert.assertTrue("Recorded file " + file1.getAbsolutePath() + " is not fine", this.recordedGreenFileFine(file1,
+				new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(sessionName)));
+		Assert.assertTrue("Thumbnail " + file3.getAbsolutePath() + " is not fine",
+				this.thumbnailIsFine(file3, OpenViduTestAppE2eTest::checkVideoAverageRgbGreen));
 
 		// Try to get the stopped recording
 		user.getDriver().findElement(By.id("get-recording-btn")).click();
@@ -1247,7 +1250,7 @@ public class OpenViduTestAppE2eTest {
 		log.info("Composed quick start record");
 
 		CountDownLatch initLatch = new CountDownLatch(1);
-		io.openvidu.test.browsers.utils.CustomWebhook.main(new String[0], initLatch);
+		io.openvidu.test.browsers.utils.webhook.CustomWebhook.main(new String[0], initLatch);
 
 		try {
 
@@ -1520,7 +1523,7 @@ public class OpenViduTestAppE2eTest {
 
 	@Test
 	@DisplayName("Record cross-browser audio-only and video-only")
-	void recordAudioOnlyVideoOnlyTest() throws Exception {
+	void audioOnlyVideoOnlyRecordTest() throws Exception {
 		isRecordingTest = true;
 
 		setupBrowser("chromeAlternateScreenShare");
@@ -1747,6 +1750,128 @@ public class OpenViduTestAppE2eTest {
 			if (OpenViduTestAppE2eTest.ex != null) {
 				throw OpenViduTestAppE2eTest.ex;
 			}
+		}
+	}
+
+	@Test
+	@DisplayName("Custom layout recording")
+	void customLayoutRecordTest() throws Exception {
+		isRecordingTest = true;
+
+		setupBrowser("chrome");
+
+		log.info("Custom layout recording");
+
+		final String SESSION_NAME = "CUSTOM_LAYOUT_SESSION";
+
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.id("session-name-input-0")).clear();
+		user.getDriver().findElement(By.id("session-name-input-0")).sendKeys(SESSION_NAME);
+
+		// Custom layout from local storage
+		user.getDriver().findElement(By.id("session-settings-btn-0")).click();
+		Thread.sleep(1000);
+		user.getDriver().findElement(By.id("recording-mode-select")).click();
+		Thread.sleep(500);
+		user.getDriver().findElement(By.id("option-ALWAYS")).click();
+		Thread.sleep(500);
+		user.getDriver().findElement(By.id("recording-layout-select")).click();
+		Thread.sleep(500);
+		user.getDriver().findElement(By.id("option-CUSTOM")).click();
+		Thread.sleep(500);
+		WebElement tokeInput = user.getDriver().findElement(By.id("default-custom-layout-input"));
+		tokeInput.clear();
+		tokeInput.sendKeys("layout1");
+		user.getDriver().findElement(By.id("save-btn")).click();
+		Thread.sleep(1000);
+
+		user.getDriver().findElement(By.className("join-btn")).sendKeys(Keys.ENTER);
+
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 1);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
+		user.getEventManager().waitUntilEventReaches("recordingStarted", 1);
+
+		Thread.sleep(4000);
+
+		user.getDriver().findElement(By.id("session-api-btn-0")).click();
+		Thread.sleep(1000);
+
+		user.getDriver().findElement(By.id("recording-id-field")).clear();
+		user.getDriver().findElement(By.id("recording-id-field")).sendKeys(SESSION_NAME);
+		user.getDriver().findElement(By.id("stop-recording-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
+				"Recording stopped [" + SESSION_NAME + "]"));
+		user.getEventManager().waitUntilEventReaches("recordingStopped", 1);
+		user.getDriver().findElement(By.id("close-session-btn")).click();
+		user.getEventManager().waitUntilEventReaches("streamDestroyed", 1);
+		user.getEventManager().waitUntilEventReaches("sessionDisconnected", 1);
+		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+
+		String recordingsPath = "/opt/openvidu/recordings/" + SESSION_NAME + "/";
+		File file1 = new File(recordingsPath + SESSION_NAME + ".mp4");
+		File file2 = new File(recordingsPath + SESSION_NAME + ".jpg");
+
+		Assert.assertTrue("Recorded file " + file1.getAbsolutePath() + " is not fine", this.recordedRedFileFine(file1,
+				new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME)));
+		Assert.assertTrue("Thumbnail " + file2.getAbsolutePath() + " is not fine",
+				this.thumbnailIsFine(file2, OpenViduTestAppE2eTest::checkVideoAverageRgbRed));
+
+		// Custom layout from external URL
+		CountDownLatch initLatch = new CountDownLatch(1);
+		CustomLayoutHandler.main(new String[0], initLatch);
+		try {
+
+			if (!initLatch.await(30, TimeUnit.SECONDS)) {
+				Assert.fail("Timeout waiting for webhook springboot app to start");
+				CustomLayoutHandler.shutDown();
+				return;
+			}
+
+			user.getDriver().findElement(By.id("session-settings-btn-0")).click();
+			Thread.sleep(1000);
+			tokeInput = user.getDriver().findElement(By.id("default-custom-layout-input"));
+			tokeInput.clear();
+			tokeInput.sendKeys("http://localhost:5555?sessionId=CUSTOM_LAYOUT_SESSION&secret=MY_SECRET");
+			user.getDriver().findElement(By.id("save-btn")).click();
+			Thread.sleep(1000);
+
+			user.getDriver().findElement(By.className("join-btn")).sendKeys(Keys.ENTER);
+
+			user.getEventManager().waitUntilEventReaches("connectionCreated", 2);
+			user.getEventManager().waitUntilEventReaches("accessAllowed", 2);
+			user.getEventManager().waitUntilEventReaches("streamCreated", 2);
+			user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
+			user.getEventManager().waitUntilEventReaches("recordingStarted", 2);
+
+			Thread.sleep(4000);
+
+			user.getDriver().findElement(By.id("session-api-btn-0")).click();
+			Thread.sleep(1000);
+
+			user.getDriver().findElement(By.id("recording-id-field")).clear();
+			user.getDriver().findElement(By.id("recording-id-field")).sendKeys(SESSION_NAME + "-1");
+			user.getDriver().findElement(By.id("stop-recording-btn")).click();
+			user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
+					"Recording stopped [" + SESSION_NAME + "-1]"));
+			user.getEventManager().waitUntilEventReaches("recordingStopped", 2);
+			user.getDriver().findElement(By.id("close-session-btn")).click();
+			user.getEventManager().waitUntilEventReaches("streamDestroyed", 2);
+			user.getEventManager().waitUntilEventReaches("sessionDisconnected", 2);
+			user.getDriver().findElement(By.id("close-dialog-btn")).click();
+
+			recordingsPath = "/opt/openvidu/recordings/" + SESSION_NAME + "-1/";
+			file1 = new File(recordingsPath + SESSION_NAME + "-1.mp4");
+			file2 = new File(recordingsPath + SESSION_NAME + "-1.jpg");
+
+			Assert.assertTrue("Recorded file " + file1.getAbsolutePath() + " is not fine", this.recordedRedFileFine(
+					file1, new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(SESSION_NAME + "-1")));
+			Assert.assertTrue("Thumbnail " + file2.getAbsolutePath() + " is not fine",
+					this.thumbnailIsFine(file2, OpenViduTestAppE2eTest::checkVideoAverageRgbRed));
+
+		} finally {
+			CustomLayoutHandler.shutDown();
 		}
 	}
 
@@ -2490,8 +2615,9 @@ public class OpenViduTestAppE2eTest {
 				file3.exists() && file3.length() > 0);
 
 		Assert.assertTrue("Recorded file " + file1.getAbsolutePath() + " is not fine",
-				this.recordedFileFine(file1, recording2));
-		Assert.assertTrue("Thumbnail " + file3.getAbsolutePath() + " is not fine", this.thumbnailIsFine(file3));
+				this.recordedGreenFileFine(file1, recording2));
+		Assert.assertTrue("Thumbnail " + file3.getAbsolutePath() + " is not fine",
+				this.thumbnailIsFine(file3, OpenViduTestAppE2eTest::checkVideoAverageRgbGreen));
 
 		try {
 			OV.deleteRecording("NOT_EXISTS");
@@ -2506,12 +2632,12 @@ public class OpenViduTestAppE2eTest {
 		try {
 			session.forceUnpublish("NOT_EXISTS");
 		} catch (OpenViduHttpException e) {
-			Assert.assertEquals("Wrong HTTP status on Session.fetch()", 404, e.getStatus());
+			Assert.assertEquals("Wrong HTTP status on Session.forceUnpublish()", 404, e.getStatus());
 		}
 		try {
 			session.forceDisconnect("NOT_EXISTS");
 		} catch (OpenViduHttpException e) {
-			Assert.assertEquals("Wrong HTTP status on Session.fetch()", 404, e.getStatus());
+			Assert.assertEquals("Wrong HTTP status on Session.forceDisconnect()", 404, e.getStatus());
 		}
 
 		if (OpenViduRole.MODERATOR.equals(session.getActiveConnections().get(0).getRole())) {
@@ -3051,7 +3177,7 @@ public class OpenViduTestAppE2eTest {
 		log.info("Webhook test");
 
 		CountDownLatch initLatch = new CountDownLatch(1);
-		io.openvidu.test.browsers.utils.CustomWebhook.main(new String[0], initLatch);
+		io.openvidu.test.browsers.utils.webhook.CustomWebhook.main(new String[0], initLatch);
 
 		try {
 
@@ -3204,7 +3330,7 @@ public class OpenViduTestAppE2eTest {
 		log.info("IP camera test");
 
 		CountDownLatch initLatch = new CountDownLatch(1);
-		io.openvidu.test.browsers.utils.CustomWebhook.main(new String[0], initLatch);
+		io.openvidu.test.browsers.utils.webhook.CustomWebhook.main(new String[0], initLatch);
 
 		try {
 
@@ -3464,17 +3590,22 @@ public class OpenViduTestAppE2eTest {
 		};
 	}
 
-	private boolean checkVideoAverageRgbGreen(Map<String, Long> rgb) {
+	private static boolean checkVideoAverageRgbGreen(Map<String, Long> rgb) {
 		// GREEN color: {r < 15, g > 130, b <15}
 		return (rgb.get("r") < 15) && (rgb.get("g") > 130) && (rgb.get("b") < 15);
 	}
 
-	private boolean checkVideoAverageRgbGray(Map<String, Long> rgb) {
+	private static boolean checkVideoAverageRgbGray(Map<String, Long> rgb) {
 		// GRAY color: {r < 50, g < 50, b < 50} and the absolute difference between them
 		// not greater than 2
 		return (rgb.get("r") < 50) && (rgb.get("g") < 50) && (rgb.get("b") < 50)
 				&& (Math.abs(rgb.get("r") - rgb.get("g")) <= 2) && (Math.abs(rgb.get("r") - rgb.get("b")) <= 2)
 				&& (Math.abs(rgb.get("b") - rgb.get("g")) <= 2);
+	}
+
+	private static boolean checkVideoAverageRgbRed(Map<String, Long> rgb) {
+		// RED color: {r > 240, g < 15, b <15}
+		return (rgb.get("r") > 240) && (rgb.get("g") < 15) && (rgb.get("b") < 15);
 	}
 
 	private void gracefullyLeaveParticipants(int numberOfParticipants) throws Exception {
@@ -3494,7 +3625,8 @@ public class OpenViduTestAppE2eTest {
 		return "data:image/png;base64," + screenshotBase64;
 	}
 
-	private boolean recordedFileFine(File file, Recording recording) throws IOException {
+	private boolean recordedFileFine(File file, Recording recording,
+			Function<Map<String, Long>, Boolean> colorCheckFunction) throws IOException {
 		this.checkMultimediaFile(file, recording.hasAudio(), recording.hasVideo(), recording.getDuration(),
 				recording.getResolution(), "aac", "h264", true);
 
@@ -3515,12 +3647,20 @@ public class OpenViduTestAppE2eTest {
 			log.info("Recording map color: {}", colorMap.toString());
 			log.info("Recording frame below");
 			System.out.println(bufferedImageToBase64PngString(image));
-			isFine = this.checkVideoAverageRgbGreen(colorMap);
+			isFine = colorCheckFunction.apply(colorMap);
 		} catch (IOException | JCodecException e) {
 			log.warn("Error getting frame from video recording: {}", e.getMessage());
 			isFine = false;
 		}
 		return isFine;
+	}
+
+	private boolean recordedGreenFileFine(File file, Recording recording) throws IOException {
+		return this.recordedFileFine(file, recording, OpenViduTestAppE2eTest::checkVideoAverageRgbGreen);
+	}
+
+	private boolean recordedRedFileFine(File file, Recording recording) throws IOException {
+		return this.recordedFileFine(file, recording, OpenViduTestAppE2eTest::checkVideoAverageRgbRed);
 	}
 
 	private String bufferedImageToBase64PngString(BufferedImage image) {
@@ -3654,7 +3794,7 @@ public class OpenViduTestAppE2eTest {
 				Math.abs((metadata.getDuration() - duration)) < difference);
 	}
 
-	private boolean thumbnailIsFine(File file) {
+	private boolean thumbnailIsFine(File file, Function<Map<String, Long>, Boolean> colorCheckFunction) {
 		boolean isFine = false;
 		BufferedImage image = null;
 		try {
@@ -3666,7 +3806,7 @@ public class OpenViduTestAppE2eTest {
 		log.info("Recording thumbnail dimensions: {}x{}", image.getWidth(), image.getHeight());
 		Map<String, Long> colorMap = this.averageColor(image);
 		log.info("Thumbnail map color: {}", colorMap.toString());
-		isFine = this.checkVideoAverageRgbGreen(colorMap);
+		isFine = colorCheckFunction.apply(colorMap);
 		return isFine;
 	}
 

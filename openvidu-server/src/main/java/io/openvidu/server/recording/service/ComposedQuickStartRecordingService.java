@@ -220,7 +220,7 @@ public class ComposedQuickStartRecordingService extends ComposedRecordingService
 				containers.remove(containerId);
 				sessionsContainers.remove(session.getSessionId());
 			}
-			log.error("Error while launchig container for COMPOSED_QUICK_START: ({})", e.getMessage());
+			log.error("Error while launching container for COMPOSED_QUICK_START: ({})", e.getMessage());
 			throw e;
 		}
 		return containerId;
