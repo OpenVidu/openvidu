@@ -2334,11 +2334,11 @@ public class OpenViduTestAppE2eTest {
 				.allowedFilters(new String[] { "GStreamerFilter" }).build();
 		TokenOptions tokenOptionsModerator = new TokenOptions.Builder().role(OpenViduRole.MODERATOR)
 				.data(serverDataModerator).kurentoOptions(kurentoOptions).build();
-		String tokenModerator = session.createToken(tokenOptionsModerator).getToken();
+		String tokenModerator = session.generateToken(tokenOptionsModerator);
 
 		TokenOptions tokenOptionsSubscriber = new TokenOptions.Builder().role(OpenViduRole.SUBSCRIBER)
 				.data(serverDataSubscriber).build();
-		String tokenSubscriber = session.createToken(tokenOptionsSubscriber).getToken();
+		String tokenSubscriber = session.generateToken(tokenOptionsSubscriber);
 
 		Assert.assertFalse("Session.fetch() should return false until a user has connected", session.fetch());
 
