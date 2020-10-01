@@ -1,0 +1,55 @@
+<html>
+
+<head>
+    <script>
+        const xmlHttp = new XMLHttpRequest();
+        xmlHttp.open('GET', 'https://api.github.com/repos/OpenVidu/openvidu/releases/latest', false);
+        xmlHttp.send(null);
+        const response = JSON.parse(xmlHttp.responseText);
+        const version = response.tag_name.replace(/^v/, '');
+        const newScript = document.createElement('script');
+        newScript.src = 'https://github.com/OpenVidu/openvidu/releases/download/v' + version +
+            '/openvidu-browser-' + version + '.min.js';
+        document.getElementsByTagName('head')[0].appendChild(newScript);
+        newScript.onload = () => {
+            startOpenVidu();
+        };
+    </script>
+    </script>
+    <style>
+        video {
+            height: 5px !important;
+            width: 10px !important;
+        }
+    </style>
+</head>
+
+<body style='background-color: red'>
+    <div id='videos'></div>
+</body>
+
+<script>
+    function startOpenVidu() {
+        var url = new URL(window.location.href);
+        var SESSION_ID = url.searchParams.get('sessionId');
+        var SECRET = url.searchParams.get('secret');
+        var TOKEN = 'wss://' + location.hostname + ':4443?sessionId=' + SESSION_ID + '&secret=' + SECRET +
+            '&recorder=true';
+
+        var OV = new OpenVidu();
+        var session = OV.initSession();
+
+        session.on('streamCreated', (event) => {
+            session.subscribe(event.stream, 'videos');
+        });
+        session.connect(TOKEN)
+            .then(() => {
+                console.log('Recorder participant connected')
+            })
+            .catch(error => {
+                console.error(error)
+            });
+    }
+</script>
+
+</html>
