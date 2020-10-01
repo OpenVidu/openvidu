@@ -57,6 +57,7 @@ import io.openvidu.server.recording.Recording;
 import io.openvidu.server.recording.RecordingDownloader;
 import io.openvidu.server.recording.RecordingInfoUtils;
 import io.openvidu.server.recording.RecordingUploader;
+import io.openvidu.server.rest.RequestMappings;
 import io.openvidu.server.utils.DockerManager;
 import io.openvidu.server.utils.QuarantineKiller;
 
@@ -540,8 +541,9 @@ public class ComposedRecordingService extends RecordingService {
 				layout = layout.endsWith("/") ? layout.substring(0, layout.length() - 1) : layout;
 			}
 			layout += "/index.html";
-			finalUrl = (startsWithHttp ? "http" : "https") + "://" + basicauth + recordingUrl + "/layouts/custom"
-					+ layout + "?sessionId=" + recording.getSessionId() + "&secret=" + secret;
+			finalUrl = (startsWithHttp ? "http" : "https") + "://" + basicauth + recordingUrl
+					+ RequestMappings.CUSTOM_LAYOUTS + layout + "?sessionId=" + recording.getSessionId() + "&secret="
+					+ secret;
 		} else {
 			layout = recording.getRecordingLayout().name().toLowerCase().replaceAll("_", "-");
 			int port = startsWithHttp ? 80 : 443;
