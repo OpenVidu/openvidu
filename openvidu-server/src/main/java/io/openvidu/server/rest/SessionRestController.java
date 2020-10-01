@@ -28,9 +28,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -67,6 +65,7 @@ import io.openvidu.server.kurento.core.KurentoTokenOptions;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.recording.service.RecordingManager;
 import io.openvidu.server.utils.RecordingUtils;
+import io.openvidu.server.utils.RestUtils;
 
 /**
  *
@@ -74,7 +73,7 @@ import io.openvidu.server.utils.RecordingUtils;
  */
 @RestController
 @CrossOrigin
-@RequestMapping("/api")
+@RequestMapping(RequestMappings.API)
 public class SessionRestController {
 
 	private static final Logger log = LoggerFactory.getLogger(SessionRestController.class);
@@ -180,7 +179,7 @@ public class SessionRestController {
 		responseJson.addProperty("id", sessionNotActive.getSessionId());
 		responseJson.addProperty("createdAt", sessionNotActive.getStartTime());
 
-		return new ResponseEntity<>(responseJson.toString(), getResponseHeaders(), HttpStatus.OK);
+		return new ResponseEntity<>(responseJson.toString(), RestUtils.getResponseHeaders(), HttpStatus.OK);
 	}
 
 	@RequestMapping(value = "/sessions/{sessionId}", method = RequestMethod.GET)
@@ -192,13 +191,13 @@ public class SessionRestController {
 		Session session = this.sessionManager.getSession(sessionId);
 		if (session != null) {
 			JsonObject response = (webRtcStats == true) ? session.withStatsToJson() : session.toJson();
-			return new ResponseEntity<>(response.toString(), getResponseHeaders(), HttpStatus.OK);
+			return new ResponseEntity<>(response.toString(), RestUtils.getResponseHeaders(), HttpStatus.OK);
 		} else {
 			Session sessionNotActive = this.sessionManager.getSessionNotActive(sessionId);
 			if (sessionNotActive != null) {
 				JsonObject response = (webRtcStats == true) ? sessionNotActive.withStatsToJson()
 						: sessionNotActive.toJson();
-				return new ResponseEntity<>(response.toString(), getResponseHeaders(), HttpStatus.OK);
+				return new ResponseEntity<>(response.toString(), RestUtils.getResponseHeaders(), HttpStatus.OK);
 			} else {
 				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 			}
@@ -220,7 +219,7 @@ public class SessionRestController {
 		});
 		json.addProperty("numberOfElements", sessions.size());
 		json.add("content", jsonArray);
-		return new ResponseEntity<>(json.toString(), getResponseHeaders(), HttpStatus.OK);
+		return new ResponseEntity<>(json.toString(), RestUtils.getResponseHeaders(), HttpStatus.OK);
 	}
 
 	@RequestMapping(value = "/sessions/{sessionId}", method = RequestMethod.DELETE)
@@ -430,7 +429,7 @@ public class SessionRestController {
 					}
 					responseJson.add("kurentoOptions", kurentoOptsResponse);
 				}
-				return new ResponseEntity<>(responseJson.toString(), getResponseHeaders(), HttpStatus.OK);
+				return new ResponseEntity<>(responseJson.toString(), RestUtils.getResponseHeaders(), HttpStatus.OK);
 			} catch (Exception e) {
 				return this.generateErrorResponse(
 						"Error generating token for session " + sessionId + ": " + e.getMessage(), "/api/tokens",
@@ -593,9 +592,10 @@ public class SessionRestController {
 
 		try {
 			Recording startedRecording = this.recordingManager.startRecording(session, builder.build());
-			return new ResponseEntity<>(startedRecording.toJson().toString(), getResponseHeaders(), HttpStatus.OK);
+			return new ResponseEntity<>(startedRecording.toJson().toString(), RestUtils.getResponseHeaders(),
+					HttpStatus.OK);
 		} catch (OpenViduException e) {
-			return new ResponseEntity<>("Error starting recording: " + e.getMessage(), getResponseHeaders(),
+			return new ResponseEntity<>("Error starting recording: " + e.getMessage(), RestUtils.getResponseHeaders(),
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -638,7 +638,8 @@ public class SessionRestController {
 					session.getParticipantByPublicId(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID), null, null, null);
 		}
 
-		return new ResponseEntity<>(stoppedRecording.toJson().toString(), getResponseHeaders(), HttpStatus.OK);
+		return new ResponseEntity<>(stoppedRecording.toJson().toString(), RestUtils.getResponseHeaders(),
+				HttpStatus.OK);
 	}
 
 	@RequestMapping(value = "/recordings/{recordingId}", method = RequestMethod.GET)
@@ -657,7 +658,7 @@ public class SessionRestController {
 					&& recordingManager.getStartingRecording(recording.getId()) != null) {
 				recording.setStatus(io.openvidu.java.client.Recording.Status.starting);
 			}
-			return new ResponseEntity<>(recording.toJson().toString(), getResponseHeaders(), HttpStatus.OK);
+			return new ResponseEntity<>(recording.toJson().toString(), RestUtils.getResponseHeaders(), HttpStatus.OK);
 		} catch (Exception e) {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
@@ -685,7 +686,7 @@ public class SessionRestController {
 		});
 		json.addProperty("count", recordings.size());
 		json.add("items", jsonArray);
-		return new ResponseEntity<>(json.toString(), getResponseHeaders(), HttpStatus.OK);
+		return new ResponseEntity<>(json.toString(), RestUtils.getResponseHeaders(), HttpStatus.OK);
 	}
 
 	@RequestMapping(value = "/recordings/{recordingId}", method = RequestMethod.DELETE)
@@ -832,7 +833,8 @@ public class SessionRestController {
 					return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 				}
 				Participant ipcamParticipant = this.sessionManager.publishIpcam(session, mediaOptions, data);
-				return new ResponseEntity<>(ipcamParticipant.toJson().toString(), getResponseHeaders(), HttpStatus.OK);
+				return new ResponseEntity<>(ipcamParticipant.toJson().toString(), RestUtils.getResponseHeaders(),
+						HttpStatus.OK);
 			} catch (MalformedURLException e) {
 				return this.generateErrorResponse("\"rtspUri\" parameter is not a valid rtsp uri",
 						"/api/sessions/" + sessionId + "/connection", HttpStatus.BAD_REQUEST);
@@ -854,12 +856,7 @@ public class SessionRestController {
 		responseJson.addProperty("error", status.getReasonPhrase());
 		responseJson.addProperty("message", errorMessage);
 		responseJson.addProperty("path", path);
-		return new ResponseEntity<>(responseJson.toString(), getResponseHeaders(), status);
+		return new ResponseEntity<>(responseJson.toString(), RestUtils.getResponseHeaders(), status);
 	}
 
-	private HttpHeaders getResponseHeaders() {
-		HttpHeaders responseHeaders = new HttpHeaders();
-		responseHeaders.setContentType(MediaType.APPLICATION_JSON);
-		return responseHeaders;
-	}
 }

@@ -35,6 +35,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.DependsOn;
@@ -66,6 +67,7 @@ import io.openvidu.server.recording.RecordingUploader;
 import io.openvidu.server.recording.service.RecordingManager;
 import io.openvidu.server.recording.service.RecordingManagerUtils;
 import io.openvidu.server.recording.service.RecordingManagerUtilsLocalStorage;
+import io.openvidu.server.rest.ApiRestPathRewriteFilter;
 import io.openvidu.server.rpc.RpcHandler;
 import io.openvidu.server.rpc.RpcNotificationService;
 import io.openvidu.server.utils.CommandExecutor;
@@ -223,6 +225,15 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	@ConditionalOnMissingBean
 	public MediaNodeStatusManager mediaNodeStatusManager() {
 		return new MediaNodeStatusManagerDummy();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public FilterRegistrationBean<ApiRestPathRewriteFilter> filterRegistrationBean() {
+		FilterRegistrationBean<ApiRestPathRewriteFilter> registrationBean = new FilterRegistrationBean<ApiRestPathRewriteFilter>();
+		ApiRestPathRewriteFilter apiRestPathRewriteFilter = new ApiRestPathRewriteFilter();
+		registrationBean.setFilter(apiRestPathRewriteFilter);
+		return registrationBean;
 	}
 
 	@Override

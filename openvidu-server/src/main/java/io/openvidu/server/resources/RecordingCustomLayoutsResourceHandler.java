@@ -24,6 +24,7 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import io.openvidu.server.config.OpenviduConfig;
+import io.openvidu.server.rest.RequestMappings;
 
 /**
  * This class serves custom recording layouts from host folder indicated in
@@ -41,7 +42,8 @@ public class RecordingCustomLayoutsResourceHandler implements WebMvcConfigurer {
 	@Override
 	public void addResourceHandlers(ResourceHandlerRegistry registry) {
 		String customLayoutsPath = openviduConfig.getOpenviduRecordingCustomLayout();
-		registry.addResourceHandler("/layouts/custom/**").addResourceLocations("file:" + customLayoutsPath);
+		registry.addResourceHandler(RequestMappings.CUSTOM_LAYOUTS + "/**")
+				.addResourceLocations("file:" + customLayoutsPath);
 	}
 
 }

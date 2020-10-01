@@ -23,6 +23,7 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import io.openvidu.server.config.OpenviduConfig;
+import io.openvidu.server.rest.RequestMappings;
 
 @Configuration
 public class CDRHttpHandler implements WebMvcConfigurer {
@@ -33,7 +34,7 @@ public class CDRHttpHandler implements WebMvcConfigurer {
 	@Override
 	public void addResourceHandlers(ResourceHandlerRegistry registry) {
 		String cdrPath = openviduConfig.getOpenviduCdrPath();
-		registry.addResourceHandler("/cdr/**.log").addResourceLocations("file:" + cdrPath);
+		registry.addResourceHandler(RequestMappings.CDR + "/**.log").addResourceLocations("file:" + cdrPath);
 	}
 
 }

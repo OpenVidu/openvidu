@@ -47,7 +47,7 @@ import io.openvidu.server.config.OpenviduConfig;
  */
 @RestController
 @CrossOrigin
-@RequestMapping("/cdr")
+@RequestMapping(RequestMappings.CDR)
 public class CDRRestController {
 
 	private static final Logger log = LoggerFactory.getLogger(CDRRestController.class);

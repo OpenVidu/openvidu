@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @CrossOrigin
-@RequestMapping("/accept-certificate")
+@RequestMapping(RequestMappings.ACCEPT_CERTIFICATE)
 public class CertificateRestController {
 
 	@RequestMapping(method = RequestMethod.GET)

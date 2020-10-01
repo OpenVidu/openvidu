@@ -29,7 +29,7 @@ import io.openvidu.server.config.OpenviduConfig;
  * /NEW_FRONTEND_PATH. Entrypoint file index.html must have tag
  * <base href="/NEW_FRONTEND_PATH/">
  * 
- * By default in OpenVidu CE this path is /dashbaord and in OpenVidu PRO is
+ * By default in OpenVidu CE this path is /dashboard and in OpenVidu PRO is
  * /inspector
  *
  * @author Pablo Fuente (pablofuenteperez@gmail.com)
@@ -42,10 +42,10 @@ public class FrontendResourceHandler extends WebMvcConfigurerAdapter {
 
 	@Override
 	public void addViewControllers(ViewControllerRegistry registry) {
-		registry.addViewController("/" + openviduConfig.getOpenViduFrontendDefaultPath())
-				.setViewName("redirect:/" + openviduConfig.getOpenViduFrontendDefaultPath() + "/");
-		registry.addViewController("/" + openviduConfig.getOpenViduFrontendDefaultPath() + "/")
-				.setViewName("forward:/" + openviduConfig.getOpenViduFrontendDefaultPath() + "/index.html");
+		registry.addViewController(openviduConfig.getOpenViduFrontendDefaultPath())
+				.setViewName("redirect:" + openviduConfig.getOpenViduFrontendDefaultPath() + "/");
+		registry.addViewController(openviduConfig.getOpenViduFrontendDefaultPath() + "/")
+				.setViewName("forward:" + openviduConfig.getOpenViduFrontendDefaultPath() + "/index.html");
 		super.addViewControllers(registry);
 	}
 
