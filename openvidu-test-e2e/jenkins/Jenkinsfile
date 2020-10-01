@@ -6,7 +6,7 @@ node('container') {
     sh 'rm -rf /opt/openvidu/* || true'
     sh 'wget https://github.com/OpenVidu/openvidu/raw/master/openvidu-test-e2e/docker/barcode.y4m -P /opt/openvidu'
     sh 'wget https://github.com/OpenVidu/openvidu/raw/master/openvidu-test-e2e/docker/fakeaudio.wav -P /opt/openvidu'
-    sh 'wget --directory-prefix=/opt/openvidu/test-layouts/layout1 https://github.com/OpenVidu/openvidu/blob/master/openvidu-test-e2e/docker/my-custom-layout/index.html'
+    sh 'wget --directory-prefix=/opt/openvidu/test-layouts/layout1 https://raw.githubusercontent.com/OpenVidu/openvidu/master/openvidu-test-e2e/docker/my-custom-layout/index.html'
     docker.image('selenium/standalone-firefox:latest').withRun('-p 6667:4444 --name firefox --shm-size=1g') { d ->
       def mycontainer = docker.image('openvidu/openvidu-test-e2e:$DISTRO')
       mycontainer.pull()
