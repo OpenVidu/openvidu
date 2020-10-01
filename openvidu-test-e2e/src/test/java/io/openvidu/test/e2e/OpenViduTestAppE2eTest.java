@@ -1030,12 +1030,12 @@ public class OpenViduTestAppE2eTest {
 	}
 
 	@Test
-	@DisplayName("Local record")
-	void localRecordTest() throws Exception {
+	@DisplayName("Local browser record")
+	void localBrowserRecordTest() throws Exception {
 
 		setupBrowser("chrome");
 
-		log.info("Local record");
+		log.info("Local browser record");
 
 		user.getDriver().findElement(By.id("add-user-btn")).click();
 		user.getDriver().findElement(By.className("join-btn")).click();
@@ -1087,13 +1087,13 @@ public class OpenViduTestAppE2eTest {
 	}
 
 	@Test
-	@DisplayName("Remote composed record")
-	void remoteComposedRecordTest() throws Exception {
+	@DisplayName("Composed record")
+	void composedRecordTest() throws Exception {
 		isRecordingTest = true;
 
 		setupBrowser("chrome");
 
-		log.info("Remote composed record");
+		log.info("Composed record");
 
 		final String sessionName = "COMPOSED_RECORDED_SESSION";
 		final String resolution = "1280x720";
@@ -1238,13 +1238,13 @@ public class OpenViduTestAppE2eTest {
 	}
 
 	@Test
-	@DisplayName("Remote composed quick start record")
-	void remoteComposedQuickStartRecordTest() throws Exception {
+	@DisplayName("Composed quick start record")
+	void composedQuickStartRecordTest() throws Exception {
 		isRecordingTest = true;
 
 		setupBrowser("chrome");
 
-		log.info("Remote composed quick start record");
+		log.info("Composed quick start record");
 
 		CountDownLatch initLatch = new CountDownLatch(1);
 		io.openvidu.test.browsers.utils.CustomWebhook.main(new String[0], initLatch);
@@ -1413,13 +1413,13 @@ public class OpenViduTestAppE2eTest {
 	}
 
 	@Test
-	@DisplayName("Remote individual record")
-	void remoteIndividualRecordTest() throws Exception {
+	@DisplayName("Individual record")
+	void individualRecordTest() throws Exception {
 		isRecordingTest = true;
 
 		setupBrowser("chrome");
 
-		log.info("Remote individual record");
+		log.info("Individual record");
 
 		final String sessionName = "TestSession";
 		final String recordingName = "CUSTOM_NAME";
@@ -1519,13 +1519,13 @@ public class OpenViduTestAppE2eTest {
 	}
 
 	@Test
-	@DisplayName("Remote record cross-browser audio-only and video-only")
-	void remoteRecordAudioOnlyVideoOnlyTest() throws Exception {
+	@DisplayName("Record cross-browser audio-only and video-only")
+	void recordAudioOnlyVideoOnlyTest() throws Exception {
 		isRecordingTest = true;
 
 		setupBrowser("chromeAlternateScreenShare");
 
-		log.info("Remote record cross-browser audio-only and video-only");
+		log.info("Record cross-browser audio-only and video-only");
 
 		final String SESSION_NAME = "TestSession";
 		final String RECORDING_COMPOSED_VIDEO = "COMPOSED_VIDEO_ONLY";
