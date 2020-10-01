@@ -2864,6 +2864,8 @@ public class OpenViduTestAppE2eTest {
 			Assert.fail("Alert exception");
 		}
 
+		Thread.sleep(500);
+
 		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .join-btn")).sendKeys(Keys.ENTER);
 
 		user.getEventManager().waitUntilEventReaches("connectionCreated", 5);
