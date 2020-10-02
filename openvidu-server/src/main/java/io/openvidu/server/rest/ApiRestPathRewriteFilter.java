@@ -74,9 +74,10 @@ public class ApiRestPathRewriteFilter implements Filter {
 			StringBuffer redirectURL = new StringBuffer(
 					((HttpServletRequest) request).getRequestURL().toString().replaceFirst(oldBasePath, newBasePath));
 
+			String logPathEnding = oldBasePath.endsWith("/") ? "**" : "/**";
 			log.warn(
 					"Path {} is deprecated. Use path {} instead. Deprecated path will be removed in a major release in the future",
-					oldBasePath, newBasePath);
+					oldBasePath + logPathEnding, newBasePath + logPathEnding);
 
 			chain.doFilter(new HttpServletRequestWrapper((HttpServletRequest) request) {
 				@Override

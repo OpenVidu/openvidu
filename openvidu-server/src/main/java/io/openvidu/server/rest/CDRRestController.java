@@ -58,7 +58,7 @@ public class CDRRestController {
 	@RequestMapping(method = RequestMethod.GET)
 	public ResponseEntity<String> listCdrFiles() {
 
-		log.info("REST API: GET /cdr");
+		log.info("REST API: GET {}", RequestMappings.CDR);
 
 		String cdrPath = openviduConfig.getOpenviduCdrPath();
 		JsonArray cdrFiles = new JsonArray();

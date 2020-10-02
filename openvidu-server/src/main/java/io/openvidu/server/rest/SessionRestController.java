@@ -90,7 +90,7 @@ public class SessionRestController {
 	@RequestMapping(value = "/sessions", method = RequestMethod.POST)
 	public ResponseEntity<?> getSessionId(@RequestBody(required = false) Map<?, ?> params) {
 
-		log.info("REST API: POST /api/sessions {}", params != null ? params.toString() : "{}");
+		log.info("REST API: POST {}/sessions {}", RequestMappings.API, params != null ? params.toString() : "{}");
 
 		SessionProperties.Builder builder = new SessionProperties.Builder();
 		String customSessionId = null;
@@ -110,8 +110,7 @@ public class SessionRestController {
 				defaultCustomLayout = (String) params.get("defaultCustomLayout");
 				customSessionId = (String) params.get("customSessionId");
 			} catch (ClassCastException e) {
-				return this.generateErrorResponse("Type error in some parameter", "/api/sessions",
-						HttpStatus.BAD_REQUEST);
+				return this.generateErrorResponse("Type error in some parameter", "/sessions", HttpStatus.BAD_REQUEST);
 			}
 
 			try {
@@ -145,7 +144,7 @@ public class SessionRestController {
 					if (!sessionManager.formatChecker.isValidCustomSessionId(customSessionId)) {
 						return this.generateErrorResponse(
 								"Parameter 'customSessionId' is wrong. Must be an alphanumeric string [a-zA-Z0-9_-]",
-								"/api/sessions", HttpStatus.BAD_REQUEST);
+								"/sessions", HttpStatus.BAD_REQUEST);
 					}
 					builder = builder.customSessionId(customSessionId);
 				}
@@ -155,7 +154,7 @@ public class SessionRestController {
 				return this.generateErrorResponse("RecordingMode " + params.get("recordingMode") + " | "
 						+ "Default OutputMode " + params.get("defaultOutputMode") + " | " + "Default RecordingLayout "
 						+ params.get("defaultRecordingLayout") + " | " + "MediaMode " + params.get("mediaMode")
-						+ ". Some parameter is not defined", "/api/sessions", HttpStatus.BAD_REQUEST);
+						+ ". Some parameter is not defined", "/sessions", HttpStatus.BAD_REQUEST);
 			}
 		}
 
@@ -186,7 +185,7 @@ public class SessionRestController {
 	public ResponseEntity<?> getSession(@PathVariable("sessionId") String sessionId,
 			@RequestParam(value = "webRtcStats", defaultValue = "false", required = false) boolean webRtcStats) {
 
-		log.info("REST API: GET /api/sessions/{}", sessionId);
+		log.info("REST API: GET {}/sessions/{}", RequestMappings.API, sessionId);
 
 		Session session = this.sessionManager.getSession(sessionId);
 		if (session != null) {
@@ -208,7 +207,7 @@ public class SessionRestController {
 	public ResponseEntity<?> listSessions(
 			@RequestParam(value = "webRtcStats", defaultValue = "false", required = false) boolean webRtcStats) {
 
-		log.info("REST API: GET /api/sessions?webRtcStats={}", webRtcStats);
+		log.info("REST API: GET {}/sessions?webRtcStats={}", RequestMappings.API, webRtcStats);
 
 		Collection<Session> sessions = this.sessionManager.getSessionsWithNotActive();
 		JsonObject json = new JsonObject();
@@ -225,7 +224,7 @@ public class SessionRestController {
 	@RequestMapping(value = "/sessions/{sessionId}", method = RequestMethod.DELETE)
 	public ResponseEntity<?> closeSession(@PathVariable("sessionId") String sessionId) {
 
-		log.info("REST API: DELETE /api/sessions/{}", sessionId);
+		log.info("REST API: DELETE {}/sessions/{}", RequestMappings.API, sessionId);
 
 		Session session = this.sessionManager.getSession(sessionId);
 		if (session != null) {
@@ -249,15 +248,16 @@ public class SessionRestController {
 					}
 				} else {
 					String errorMsg = "Timeout waiting for Session " + sessionId
-							+ " closing lock to be available for closing from DELETE /api/sessions";
+							+ " closing lock to be available for closing from DELETE " + RequestMappings.API
+							+ "/sessions";
 					log.error(errorMsg);
-					return this.generateErrorResponse(errorMsg, "/api/sessions", HttpStatus.BAD_REQUEST);
+					return this.generateErrorResponse(errorMsg, "/sessions", HttpStatus.BAD_REQUEST);
 				}
 			} catch (InterruptedException e) {
 				String errorMsg = "InterruptedException while waiting for Session " + sessionId
-						+ " closing lock to be available for closing from DELETE /api/sessions";
+						+ " closing lock to be available for closing from DELETE " + RequestMappings.API + "/sessions";
 				log.error(errorMsg);
-				return this.generateErrorResponse(errorMsg, "/api/sessions", HttpStatus.BAD_REQUEST);
+				return this.generateErrorResponse(errorMsg, "/sessions", HttpStatus.BAD_REQUEST);
 			}
 		} else {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -268,7 +268,7 @@ public class SessionRestController {
 	public ResponseEntity<?> disconnectParticipant(@PathVariable("sessionId") String sessionId,
 			@PathVariable("connectionId") String participantPublicId) {
 
-		log.info("REST API: DELETE /api/sessions/{}/connection/{}", sessionId, participantPublicId);
+		log.info("REST API: DELETE {}/sessions/{}/connection/{}", RequestMappings.API, sessionId, participantPublicId);
 
 		Session session = this.sessionManager.getSessionWithNotActive(sessionId);
 		if (session == null) {
@@ -293,7 +293,7 @@ public class SessionRestController {
 	public ResponseEntity<?> unpublishStream(@PathVariable("sessionId") String sessionId,
 			@PathVariable("streamId") String streamId) {
 
-		log.info("REST API: DELETE /api/sessions/{}/stream/{}", sessionId, streamId);
+		log.info("REST API: DELETE {}/sessions/{}/stream/{}", RequestMappings.API, sessionId, streamId);
 
 		Session session = this.sessionManager.getSessionWithNotActive(sessionId);
 		if (session == null) {
@@ -326,11 +326,11 @@ public class SessionRestController {
 	public ResponseEntity<String> newToken(@RequestBody Map<?, ?> params) {
 
 		if (params == null) {
-			return this.generateErrorResponse("Error in body parameters. Cannot be empty", "/api/tokens",
+			return this.generateErrorResponse("Error in body parameters. Cannot be empty", "/tokens",
 					HttpStatus.BAD_REQUEST);
 		}
 
-		log.info("REST API: POST /api/tokens {}", params.toString());
+		log.info("REST API: POST {}/tokens {}", RequestMappings.API, params.toString());
 
 		String sessionId;
 		String roleString;
@@ -340,18 +340,16 @@ public class SessionRestController {
 			roleString = (String) params.get("role");
 			metadata = (String) params.get("data");
 		} catch (ClassCastException e) {
-			return this.generateErrorResponse("Type error in some parameter", "/api/tokens", HttpStatus.BAD_REQUEST);
+			return this.generateErrorResponse("Type error in some parameter", "/tokens", HttpStatus.BAD_REQUEST);
 		}
 
 		if (sessionId == null) {
-			return this.generateErrorResponse("\"session\" parameter is mandatory", "/api/tokens",
-					HttpStatus.BAD_REQUEST);
+			return this.generateErrorResponse("\"session\" parameter is mandatory", "/tokens", HttpStatus.BAD_REQUEST);
 		}
 
 		final Session session = this.sessionManager.getSessionWithNotActive(sessionId);
 		if (session == null) {
-			return this.generateErrorResponse("Session " + sessionId + " not found", "/api/tokens",
-					HttpStatus.NOT_FOUND);
+			return this.generateErrorResponse("Session " + sessionId + " not found", "/tokens", HttpStatus.NOT_FOUND);
 		}
 
 		JsonObject kurentoOptions = null;
@@ -361,7 +359,7 @@ public class SessionRestController {
 				kurentoOptions = JsonParser.parseString(params.get("kurentoOptions").toString()).getAsJsonObject();
 			} catch (Exception e) {
 				return this.generateErrorResponse("Error in parameter 'kurentoOptions'. It is not a valid JSON object",
-						"/api/tokens", HttpStatus.BAD_REQUEST);
+						"/tokens", HttpStatus.BAD_REQUEST);
 			}
 		}
 
@@ -373,7 +371,7 @@ public class SessionRestController {
 				role = OpenViduRole.PUBLISHER;
 			}
 		} catch (IllegalArgumentException e) {
-			return this.generateErrorResponse("Parameter role " + params.get("role") + " is not defined", "/api/tokens",
+			return this.generateErrorResponse("Parameter role " + params.get("role") + " is not defined", "/tokens",
 					HttpStatus.BAD_REQUEST);
 		}
 
@@ -382,7 +380,7 @@ public class SessionRestController {
 			try {
 				kurentoTokenOptions = new KurentoTokenOptions(kurentoOptions);
 			} catch (Exception e) {
-				return this.generateErrorResponse("Type error in some parameter of 'kurentoOptions'", "/api/tokens",
+				return this.generateErrorResponse("Type error in some parameter of 'kurentoOptions'", "/tokens",
 						HttpStatus.BAD_REQUEST);
 			}
 		}
@@ -432,15 +430,14 @@ public class SessionRestController {
 				return new ResponseEntity<>(responseJson.toString(), RestUtils.getResponseHeaders(), HttpStatus.OK);
 			} catch (Exception e) {
 				return this.generateErrorResponse(
-						"Error generating token for session " + sessionId + ": " + e.getMessage(), "/api/tokens",
+						"Error generating token for session " + sessionId + ": " + e.getMessage(), "/tokens",
 						HttpStatus.INTERNAL_SERVER_ERROR);
 			} finally {
 				session.closingLock.readLock().unlock();
 			}
 		} else {
 			log.error("Session {} is in the process of closing. Token couldn't be generated", sessionId);
-			return this.generateErrorResponse("Session " + sessionId + " not found", "/api/tokens",
-					HttpStatus.NOT_FOUND);
+			return this.generateErrorResponse("Session " + sessionId + " not found", "/tokens", HttpStatus.NOT_FOUND);
 		}
 	}
 
@@ -448,11 +445,11 @@ public class SessionRestController {
 	public ResponseEntity<?> startRecordingSession(@RequestBody Map<?, ?> params) {
 
 		if (params == null) {
-			return this.generateErrorResponse("Error in body parameters. Cannot be empty", "/api/recordings/start",
+			return this.generateErrorResponse("Error in body parameters. Cannot be empty", "/recordings/start",
 					HttpStatus.BAD_REQUEST);
 		}
 
-		log.info("REST API: POST /api/recordings/start {}", params.toString());
+		log.info("REST API: POST {}/recordings/start {}", RequestMappings.API, params.toString());
 
 		if (!this.openviduConfig.isRecordingModuleEnabled()) {
 			// OpenVidu Server configuration property "OPENVIDU_RECORDING" is set to false
@@ -481,20 +478,20 @@ public class SessionRestController {
 				shmSize = new Long(params.get("shmSize").toString());
 			}
 		} catch (ClassCastException | NumberFormatException e) {
-			return this.generateErrorResponse("Type error in some parameter", "/api/recordings/start",
+			return this.generateErrorResponse("Type error in some parameter", "/recordings/start",
 					HttpStatus.BAD_REQUEST);
 		}
 
 		if (sessionId == null) {
 			// "session" parameter not found
-			return this.generateErrorResponse("\"session\" parameter is mandatory", "/api/recordings/start",
+			return this.generateErrorResponse("\"session\" parameter is mandatory", "/recordings/start",
 					HttpStatus.BAD_REQUEST);
 		}
 
 		if (name != null && !name.isEmpty()) {
 			if (!sessionManager.formatChecker.isValidRecordingName(name)) {
 				return this.generateErrorResponse(
-						"Parameter 'name' is wrong. Must be an alphanumeric string [a-zA-Z0-9_-]", "/api/sessions",
+						"Parameter 'name' is wrong. Must be an alphanumeric string [a-zA-Z0-9_-]", "/sessions",
 						HttpStatus.BAD_REQUEST);
 			}
 		}
@@ -505,7 +502,7 @@ public class SessionRestController {
 			try {
 				finalOutputMode = OutputMode.valueOf(outputModeString);
 			} catch (Exception e) {
-				return this.generateErrorResponse("Type error in parameter 'outputMode'", "/api/recordings/start",
+				return this.generateErrorResponse("Type error in parameter 'outputMode'", "/recordings/start",
 						HttpStatus.BAD_REQUEST);
 			}
 		}
@@ -513,14 +510,14 @@ public class SessionRestController {
 			if (resolution != null && !sessionManager.formatChecker.isAcceptableRecordingResolution(resolution)) {
 				return this.generateErrorResponse(
 						"Wrong 'resolution' parameter. Acceptable values from 100 to 1999 for both width and height",
-						"/api/recordings/start", HttpStatus.UNPROCESSABLE_ENTITY);
+						"/recordings/start", HttpStatus.UNPROCESSABLE_ENTITY);
 			}
 			if (recordingLayoutString != null && !recordingLayoutString.isEmpty()) {
 				try {
 					recordingLayout = RecordingLayout.valueOf(recordingLayoutString);
 				} catch (Exception e) {
-					return this.generateErrorResponse("Type error in parameter 'recordingLayout'",
-							"/api/recordings/start", HttpStatus.BAD_REQUEST);
+					return this.generateErrorResponse("Type error in parameter 'recordingLayout'", "/recordings/start",
+							HttpStatus.BAD_REQUEST);
 				}
 			}
 		}
@@ -528,7 +525,7 @@ public class SessionRestController {
 			// Cannot start a recording with both "hasAudio" and "hasVideo" to false
 			return this.generateErrorResponse(
 					"Cannot start a recording with both \"hasAudio\" and \"hasVideo\" set to false",
-					"/api/recordings/start", HttpStatus.UNPROCESSABLE_ENTITY);
+					"/recordings/start", HttpStatus.UNPROCESSABLE_ENTITY);
 		}
 
 		Session session = sessionManager.getSession(sessionId);
@@ -583,7 +580,7 @@ public class SessionRestController {
 			if (shmSize != null) {
 				if (shmSize < 134217728L) {
 					return this.generateErrorResponse("Wrong \"shmSize\" parameter. Must be 134217728 (128 MB) minimum",
-							"/api/recordings/start", HttpStatus.UNPROCESSABLE_ENTITY);
+							"/recordings/start", HttpStatus.UNPROCESSABLE_ENTITY);
 				}
 				builder.shmSize(shmSize);
 			}
@@ -603,7 +600,7 @@ public class SessionRestController {
 	@RequestMapping(value = "/recordings/stop/{recordingId}", method = RequestMethod.POST)
 	public ResponseEntity<?> stopRecordingSession(@PathVariable("recordingId") String recordingId) {
 
-		log.info("REST API: POST /api/recordings/stop/{}", recordingId);
+		log.info("REST API: POST {}/recordings/stop/{}", RequestMappings.API, recordingId);
 
 		if (!this.openviduConfig.isRecordingModuleEnabled()) {
 			// OpenVidu Server configuration property "OPENVIDU_RECORDING" is set to false
@@ -645,7 +642,7 @@ public class SessionRestController {
 	@RequestMapping(value = "/recordings/{recordingId}", method = RequestMethod.GET)
 	public ResponseEntity<?> getRecording(@PathVariable("recordingId") String recordingId) {
 
-		log.info("REST API: GET /api/recordings/{}", recordingId);
+		log.info("REST API: GET {}/recordings/{}", RequestMappings.API, recordingId);
 
 		if (!this.openviduConfig.isRecordingModuleEnabled()) {
 			// OpenVidu Server configuration property "OPENVIDU_RECORDING" is set to false
@@ -667,7 +664,7 @@ public class SessionRestController {
 	@RequestMapping(value = "/recordings", method = RequestMethod.GET)
 	public ResponseEntity<?> getAllRecordings() {
 
-		log.info("REST API: GET /api/recordings");
+		log.info("REST API: GET {}/recordings", RequestMappings.API);
 
 		if (!this.openviduConfig.isRecordingModuleEnabled()) {
 			// OpenVidu Server configuration property "OPENVIDU_RECORDING" is set to false
@@ -692,7 +689,7 @@ public class SessionRestController {
 	@RequestMapping(value = "/recordings/{recordingId}", method = RequestMethod.DELETE)
 	public ResponseEntity<?> deleteRecording(@PathVariable("recordingId") String recordingId) {
 
-		log.info("REST API: DELETE /api/recordings/{}", recordingId);
+		log.info("REST API: DELETE {}/recordings/{}", RequestMappings.API, recordingId);
 
 		if (!this.openviduConfig.isRecordingModuleEnabled()) {
 			// OpenVidu Server configuration property "OPENVIDU_RECORDING" is set to false
@@ -706,11 +703,11 @@ public class SessionRestController {
 	public ResponseEntity<?> signal(@RequestBody Map<?, ?> params) {
 
 		if (params == null) {
-			return this.generateErrorResponse("Error in body parameters. Cannot be empty", "/api/signal",
+			return this.generateErrorResponse("Error in body parameters. Cannot be empty", "/signal",
 					HttpStatus.BAD_REQUEST);
 		}
 
-		log.info("REST API: POST /api/signal {}", params.toString());
+		log.info("REST API: POST {}/signal {}", RequestMappings.API, params.toString());
 
 		String sessionId;
 		String type;
@@ -722,15 +719,14 @@ public class SessionRestController {
 			type = (String) params.get("type");
 			data = (String) params.get("data");
 		} catch (ClassCastException e) {
-			return this.generateErrorResponse("Type error in some parameter", "/api/signal", HttpStatus.BAD_REQUEST);
+			return this.generateErrorResponse("Type error in some parameter", "/signal", HttpStatus.BAD_REQUEST);
 		}
 
 		JsonObject completeMessage = new JsonObject();
 
 		if (sessionId == null) {
 			// "session" parameter not found
-			return this.generateErrorResponse("\"session\" parameter is mandatory", "/api/signal",
-					HttpStatus.BAD_REQUEST);
+			return this.generateErrorResponse("\"session\" parameter is mandatory", "/signal", HttpStatus.BAD_REQUEST);
 		}
 		Session session = sessionManager.getSession(sessionId);
 		if (session == null) {
@@ -757,7 +753,7 @@ public class SessionRestController {
 				JsonArray toArray = gson.toJsonTree(to).getAsJsonArray();
 				completeMessage.add("to", toArray);
 			} catch (IllegalStateException exception) {
-				return this.generateErrorResponse("\"to\" parameter is not a valid JSON array", "/api/signal",
+				return this.generateErrorResponse("\"to\" parameter is not a valid JSON array", "/signal",
 						HttpStatus.BAD_REQUEST);
 			}
 		}
@@ -765,7 +761,7 @@ public class SessionRestController {
 		try {
 			sessionManager.sendMessage(completeMessage.toString(), sessionId);
 		} catch (OpenViduException e) {
-			return this.generateErrorResponse("\"to\" array has no valid connection identifiers", "/api/signal",
+			return this.generateErrorResponse("\"to\" array has no valid connection identifiers", "/signal",
 					HttpStatus.NOT_ACCEPTABLE);
 		}
 
@@ -777,10 +773,10 @@ public class SessionRestController {
 
 		if (params == null) {
 			return this.generateErrorResponse("Error in body parameters. Cannot be empty",
-					"/api/sessions/" + sessionId + "/connection", HttpStatus.BAD_REQUEST);
+					"/sessions/" + sessionId + "/connection", HttpStatus.BAD_REQUEST);
 		}
 
-		log.info("REST API: POST /api/sessions/{}/connection {}", sessionId, params.toString());
+		log.info("REST API: POST {}/sessions/{}/connection {}", RequestMappings.API, sessionId, params.toString());
 
 		Session session = this.sessionManager.getSessionWithNotActive(sessionId);
 		if (session == null) {
@@ -801,12 +797,12 @@ public class SessionRestController {
 			networkCache = (Integer) params.get("networkCache");
 			data = (String) params.get("data");
 		} catch (ClassCastException e) {
-			return this.generateErrorResponse("Type error in some parameter",
-					"/api/sessions/" + sessionId + "/connection", HttpStatus.BAD_REQUEST);
+			return this.generateErrorResponse("Type error in some parameter", "/sessions/" + sessionId + "/connection",
+					HttpStatus.BAD_REQUEST);
 		}
 		if (rtspUri == null) {
 			return this.generateErrorResponse("\"rtspUri\" parameter is mandatory",
-					"/api/sessions/" + sessionId + "/connection", HttpStatus.BAD_REQUEST);
+					"/sessions/" + sessionId + "/connection", HttpStatus.BAD_REQUEST);
 		}
 
 		type = "IPCAM"; // Other possible values in the future
@@ -837,9 +833,9 @@ public class SessionRestController {
 						HttpStatus.OK);
 			} catch (MalformedURLException e) {
 				return this.generateErrorResponse("\"rtspUri\" parameter is not a valid rtsp uri",
-						"/api/sessions/" + sessionId + "/connection", HttpStatus.BAD_REQUEST);
+						"/sessions/" + sessionId + "/connection", HttpStatus.BAD_REQUEST);
 			} catch (Exception e) {
-				return this.generateErrorResponse(e.getMessage(), "/api/sessions/" + sessionId + "/connection",
+				return this.generateErrorResponse(e.getMessage(), "/sessions/" + sessionId + "/connection",
 						HttpStatus.INTERNAL_SERVER_ERROR);
 			} finally {
 				session.closingLock.readLock().unlock();
@@ -855,7 +851,7 @@ public class SessionRestController {
 		responseJson.addProperty("status", status.value());
 		responseJson.addProperty("error", status.getReasonPhrase());
 		responseJson.addProperty("message", errorMessage);
-		responseJson.addProperty("path", path);
+		responseJson.addProperty("path", RequestMappings.API + path);
 		return new ResponseEntity<>(responseJson.toString(), RestUtils.getResponseHeaders(), status);
 	}
 

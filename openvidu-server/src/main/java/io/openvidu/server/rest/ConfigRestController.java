@@ -58,7 +58,7 @@ public class ConfigRestController {
 	@RequestMapping(method = RequestMethod.GET)
 	public ResponseEntity<String> getOpenViduConfiguration() {
 
-		log.info("REST API: GET /config");
+		log.info("REST API: GET {}", RequestMappings.API + "/config");
 
 		return this.getConfig();
 	}
@@ -66,7 +66,7 @@ public class ConfigRestController {
 	@RequestMapping(value = "/openvidu-version", method = RequestMethod.GET)
 	public String getOpenViduServerVersion() {
 
-		log.info("REST API: GET /config/openvidu-version");
+		log.info("REST API: GET {}/openvidu-version", RequestMappings.API + "/config");
 
 		return openviduBuildInfo.getOpenViduServerVersion();
 	}
@@ -74,7 +74,7 @@ public class ConfigRestController {
 	@RequestMapping(value = "/openvidu-publicurl", method = RequestMethod.GET)
 	public String getOpenViduPublicUrl() {
 
-		log.info("REST API: GET /config/openvidu-publicurl");
+		log.info("REST API: GET {}/openvidu-publicurl", RequestMappings.API + "/config");
 
 		return openviduConfig.getFinalUrl();
 	}
@@ -82,7 +82,7 @@ public class ConfigRestController {
 	@RequestMapping(value = "/openvidu-recording", method = RequestMethod.GET)
 	public Boolean getOpenViduRecordingEnabled() {
 
-		log.info("REST API: GET /config/openvidu-recording");
+		log.info("REST API: GET {}/openvidu-recording", RequestMappings.API + "/config");
 
 		return openviduConfig.isRecordingModuleEnabled();
 	}
@@ -90,7 +90,7 @@ public class ConfigRestController {
 	@RequestMapping(value = "/openvidu-recording-path", method = RequestMethod.GET)
 	public String getOpenViduRecordingPath() {
 
-		log.info("REST API: GET /config/openvidu-recording-path");
+		log.info("REST API: GET {}/openvidu-recording-path", RequestMappings.API + "/config");
 
 		return openviduConfig.getOpenViduRecordingPath();
 	}
@@ -98,7 +98,7 @@ public class ConfigRestController {
 	@RequestMapping(value = "/openvidu-cdr", method = RequestMethod.GET)
 	public Boolean getOpenViduCdrEnabled() {
 
-		log.info("REST API: GET /config/openvidu-cdr");
+		log.info("REST API: GET {}/openvidu-cdr", RequestMappings.API + "/config");
 
 		return openviduConfig.isCdrEnabled();
 	}
