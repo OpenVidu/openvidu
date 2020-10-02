@@ -544,8 +544,6 @@ public class OpenViduTestAppE2eTest {
 	@DisplayName("Cross-Browser test")
 	void crossBrowserTest() throws Exception {
 
-		setupBrowser("chrome");
-
 		log.info("Cross-Browser test");
 
 		Thread.UncaughtExceptionHandler h = new Thread.UncaughtExceptionHandler() {
@@ -557,7 +555,9 @@ public class OpenViduTestAppE2eTest {
 			}
 		};
 
-		Thread t = new Thread(() -> {
+		final CountDownLatch latch = new CountDownLatch(2);
+
+		Thread threadFirefox = new Thread(() -> {
 			MyUser user2 = new MyUser(new FirefoxUser("TestUser", 30));
 			otherUsers.add(user2);
 			user2.getDriver().get(APP_URL);
@@ -583,36 +583,61 @@ public class OpenViduTestAppE2eTest {
 				Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
 						.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
+				latch.countDown();
+				if (!latch.await(30, TimeUnit.SECONDS)) {
+					Assert.fail("The other browser didn't play the stream within the timeout");
+				}
+
 				user2.getEventManager().waitUntilEventReaches("streamDestroyed", 1);
 				user2.getEventManager().waitUntilEventReaches("connectionDestroyed", 1);
 				user2.getDriver().findElement(By.id("remove-user-btn")).click();
 				user2.getEventManager().waitUntilEventReaches("sessionDisconnected", 1);
 			} catch (Exception e) {
 				e.printStackTrace();
-				user2.dispose();
 				Thread.currentThread().interrupt();
+				Assert.fail("Exception on Firefox participant: " + e.getMessage());
+			} finally {
+				user2.dispose();
 			}
-			user2.dispose();
 		});
-		t.setUncaughtExceptionHandler(h);
-		t.start();
 
-		user.getDriver().findElement(By.id("add-user-btn")).click();
-		user.getDriver().findElement(By.className("join-btn")).click();
+		Thread threadChrome = new Thread(() -> {
+			setupBrowser("chrome");
+			user.getDriver().findElement(By.id("add-user-btn")).click();
+			user.getDriver().findElement(By.className("join-btn")).click();
 
-		user.getEventManager().waitUntilEventReaches("connectionCreated", 2);
-		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
-		user.getEventManager().waitUntilEventReaches("streamCreated", 2);
-		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
+			try {
+				user.getEventManager().waitUntilEventReaches("connectionCreated", 2);
+				user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
+				user.getEventManager().waitUntilEventReaches("streamCreated", 2);
+				user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
 
-		final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
-		Assert.assertEquals("Expected 2 videos but found " + numberOfVideos, 2, numberOfVideos);
-		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
-				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
+				final int numberOfVideos = user.getDriver().findElements(By.tagName("video")).size();
+				Assert.assertEquals("Expected 2 videos but found " + numberOfVideos, 2, numberOfVideos);
+				Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
+						.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
-		gracefullyLeaveParticipants(1);
+				latch.countDown();
+				if (!latch.await(30, TimeUnit.SECONDS)) {
+					Assert.fail("The other browser didn't play the stream within the timeout");
+				}
 
-		t.join();
+				gracefullyLeaveParticipants(1);
+			} catch (Exception e) {
+				e.printStackTrace();
+				Assert.fail("Exception on Chrome participant: " + e.getMessage());
+				Thread.currentThread().interrupt();
+			} finally {
+				user.dispose();
+			}
+		});
+
+		threadFirefox.setUncaughtExceptionHandler(h);
+		threadChrome.setUncaughtExceptionHandler(h);
+		threadFirefox.start();
+		threadChrome.start();
+		threadFirefox.join();
+		threadChrome.join();
 
 		synchronized (lock) {
 			if (OpenViduTestAppE2eTest.ex != null) {
@@ -2729,126 +2754,128 @@ public class OpenViduTestAppE2eTest {
 		String wrongCredentials = "Basic "
 				+ Base64.getEncoder().encodeToString(("OPENVIDUAPP:WRONG_SECRET").getBytes());
 		Assert.assertEquals("Expected unauthorized status", HttpStatus.SC_UNAUTHORIZED,
-				restClient.getAndReturnStatus("/config", wrongCredentials));
+				restClient.getAndReturnStatus("/openvidu/api/config", wrongCredentials));
 
-		/** GET /api/sessions (before session created) **/
-		restClient.rest(HttpMethod.GET, "/api/sessions/NOT_EXISTS", HttpStatus.SC_NOT_FOUND);
-		restClient.rest(HttpMethod.GET, "/api/sessions", null, HttpStatus.SC_OK, true,
+		/** GET /openvidu/api/sessions (before session created) **/
+		restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/NOT_EXISTS", HttpStatus.SC_NOT_FOUND);
+		restClient.rest(HttpMethod.GET, "/openvidu/api/sessions", null, HttpStatus.SC_OK, true,
 				ImmutableMap.of("numberOfElements", new Integer(0), "content", new JsonArray()));
 
-		/** POST /api/sessions **/
+		/** POST /openvidu/api/sessions **/
 		// 400
 		String body = "{'mediaMode': 'NOT_EXISTS'}";
-		restClient.rest(HttpMethod.POST, "/api/sessions", body, HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpStatus.SC_BAD_REQUEST);
 		body = "{'mediaMode': 'ROUTED', 'recordingMode': false}";
-		restClient.rest(HttpMethod.POST, "/api/sessions", body, HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpStatus.SC_BAD_REQUEST);
 		body = "{'mediaMode': 'ROUTED', 'recordingMode': 'ALWAYS', 'customSessionId': 999}";
-		restClient.rest(HttpMethod.POST, "/api/sessions", body, HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpStatus.SC_BAD_REQUEST);
 		body = "{'mediaMode': 'ROUTED', 'recordingMode': 'NOT_EXISTS'}";
-		restClient.rest(HttpMethod.POST, "/api/sessions", body, HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpStatus.SC_BAD_REQUEST);
 		body = "{'mediaMode': 'ROUTED',  'recordingMode': 'ALWAYS', 'defaultOutputMode': 'NOT_EXISTS'}";
-		restClient.rest(HttpMethod.POST, "/api/sessions", body, HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpStatus.SC_BAD_REQUEST);
 		body = "{'mediaMode': 'ROUTED', 'recordingMode': 'ALWAYS', 'defaultOutputMode': 'INDIVIDUAL', 'defaultRecordingLayout': 'NOT_EXISTS'}";
-		restClient.rest(HttpMethod.POST, "/api/sessions", body, HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpStatus.SC_BAD_REQUEST);
 
 		// 200
 		body = "{'mediaMode': 'ROUTED', 'recordingMode': 'MANUAL', 'customSessionId': 'CUSTOM_SESSION_ID', 'defaultOutputMode': 'COMPOSED', 'defaultRecordingLayout': 'BEST_FIT'}";
-		restClient.rest(HttpMethod.POST, "/api/sessions", body, HttpStatus.SC_OK, true,
+		restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpStatus.SC_OK, true,
 				"{'id': 'STR', 'createdAt': 0}");
 		// Default values
-		JsonObject res = restClient.rest(HttpMethod.POST, "/api/sessions", "{}", HttpStatus.SC_OK, true,
+		JsonObject res = restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", "{}", HttpStatus.SC_OK, true,
 				"{'id': 'STR', 'createdAt': 0}");
-		restClient.rest(HttpMethod.DELETE, "/api/sessions/" + res.get("id").getAsString(), HttpStatus.SC_NO_CONTENT);
+		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/" + res.get("id").getAsString(),
+				HttpStatus.SC_NO_CONTENT);
 
 		// 409
 		body = "{'customSessionId': 'CUSTOM_SESSION_ID'}";
-		restClient.rest(HttpMethod.POST, "/api/sessions", body, HttpStatus.SC_CONFLICT);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpStatus.SC_CONFLICT);
 
-		/** GET /api/sessions (after session created) **/
-		restClient.rest(HttpMethod.GET, "/api/sessions/CUSTOM_SESSION_ID", null, HttpStatus.SC_OK, true,
+		/** GET /openvidu/api/sessions (after session created) **/
+		restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/CUSTOM_SESSION_ID", null, HttpStatus.SC_OK, true,
 				"{'sessionId':'STR','createdAt':0,'mediaMode':'STR','recordingMode':'STR','defaultOutputMode':'STR','defaultRecordingLayout':'STR','customSessionId':'STR','connections':{'numberOfElements':0,'content':[]},'recording':true}");
-		restClient.rest(HttpMethod.GET, "/api/sessions", null, HttpStatus.SC_OK, true,
+		restClient.rest(HttpMethod.GET, "/openvidu/api/sessions", null, HttpStatus.SC_OK, true,
 				ImmutableMap.of("numberOfElements", new Integer(1), "content", new JsonArray()));
 
-		/** POST /api/tokens **/
+		/** POST /openvidu/api/tokens **/
 		// 400
 		body = "{}";
-		restClient.rest(HttpMethod.POST, "/api/tokens", body, HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/tokens", body, HttpStatus.SC_BAD_REQUEST);
 		body = "{'session': true}";
-		restClient.rest(HttpMethod.POST, "/api/tokens", body, HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/tokens", body, HttpStatus.SC_BAD_REQUEST);
 		body = "{'session': 'CUSTOM_SESSION_ID', 'role': 'NOT_EXISTS'}";
-		restClient.rest(HttpMethod.POST, "/api/tokens", body, HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/tokens", body, HttpStatus.SC_BAD_REQUEST);
 		body = "{'session': 'CUSTOM_SESSION_ID', 'role': 'MODERATOR', 'data': 999}";
-		restClient.rest(HttpMethod.POST, "/api/tokens", body, HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/tokens", body, HttpStatus.SC_BAD_REQUEST);
 		body = "{'session': 'CUSTOM_SESSION_ID', 'role': 'MODERATOR', 'data': 'SERVER_DATA', 'kurentoOptions': false}";
-		restClient.rest(HttpMethod.POST, "/api/tokens", body, HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/tokens", body, HttpStatus.SC_BAD_REQUEST);
 		body = "{'session': 'CUSTOM_SESSION_ID', 'role': 'MODERATOR', 'data': 'SERVER_DATA', 'kurentoOptions': {'allowedFilters': 'NOT_EXISTS'}}";
-		restClient.rest(HttpMethod.POST, "/api/tokens", body, HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/tokens", body, HttpStatus.SC_BAD_REQUEST);
 
 		// 200
 		body = "{'session': 'CUSTOM_SESSION_ID', 'role': 'MODERATOR', 'data': 'SERVER_DATA', 'kurentoOptions': {'allowedFilters': ['GStreamerFilter']}}";
-		res = restClient.rest(HttpMethod.POST, "/api/tokens", body, HttpStatus.SC_OK, true,
+		res = restClient.rest(HttpMethod.POST, "/openvidu/api/tokens", body, HttpStatus.SC_OK, true,
 				"{'id':'STR','connectionId':'STR','session':'STR','role':'STR','data':'STR','token':'STR','kurentoOptions':{'allowedFilters':['STR']}}");
 		final String token1 = res.get("token").getAsString();
-		Assert.assertEquals("JSON return value from /api/tokens should have equal srtings in 'id' and 'token'",
+		Assert.assertEquals("JSON return value from /openvidu/api/tokens should have equal srtings in 'id' and 'token'",
 				res.get("id").getAsString(), token1);
 		Assert.assertEquals("Wrong session parameter", "CUSTOM_SESSION_ID", res.get("session").getAsString());
 
 		// Default values
 		body = "{'session': 'CUSTOM_SESSION_ID'}";
-		res = restClient.rest(HttpMethod.POST, "/api/tokens", body, HttpStatus.SC_OK, true,
+		res = restClient.rest(HttpMethod.POST, "/openvidu/api/tokens", body, HttpStatus.SC_OK, true,
 				"{'id':'STR','connectionId':'STR','session':'STR','role':'STR','data':'STR','token':'STR'}");
 		final String token2 = res.get("id").getAsString();
 
-		/** POST /api/signal (NOT ACTIVE SESSION) **/
+		/** POST /openvidu/api/signal (NOT ACTIVE SESSION) **/
 		body = "{}";
-		restClient.rest(HttpMethod.POST, "/api/signal", body, HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/signal", body, HttpStatus.SC_BAD_REQUEST);
 		body = "{'session': true}";
-		restClient.rest(HttpMethod.POST, "/api/signal", body, HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/signal", body, HttpStatus.SC_BAD_REQUEST);
 		body = "{'session':'CUSTOM_SESSION_ID','to':12}";
-		restClient.rest(HttpMethod.POST, "/api/signal", body, HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/signal", body, HttpStatus.SC_BAD_REQUEST);
 		body = "{'session':'CUSTOM_SESSION_ID','to':[],'data':false}";
-		restClient.rest(HttpMethod.POST, "/api/signal", body, HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/signal", body, HttpStatus.SC_BAD_REQUEST);
 		body = "{'session':'CUSTOM_SESSION_ID','to':[],'data': 'SERVERMESSAGE', 'type': true}";
-		restClient.rest(HttpMethod.POST, "/api/signal", body, HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/signal", body, HttpStatus.SC_BAD_REQUEST);
 		body = "{'session':'CUSTOM_SESSION_ID'}";
-		restClient.rest(HttpMethod.POST, "/api/signal", body, HttpStatus.SC_NOT_ACCEPTABLE); // No connections
+		restClient.rest(HttpMethod.POST, "/openvidu/api/signal", body, HttpStatus.SC_NOT_ACCEPTABLE); // No connections
 
-		/** POST /api/recordings/start (NOT ACTIVE SESSION) **/
+		/** POST /openvidu/api/recordings/start (NOT ACTIVE SESSION) **/
 		// 400
 		body = "{}";
-		restClient.rest(HttpMethod.POST, "/api/recordings/start", body, HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_BAD_REQUEST);
 		body = "{'session': true}";
-		restClient.rest(HttpMethod.POST, "/api/recordings/start", body, HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_BAD_REQUEST);
 		body = "{'session':'SESSION_ID','name':999}";
-		restClient.rest(HttpMethod.POST, "/api/recordings/start", body, HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_BAD_REQUEST);
 		body = "{'session':'SESSION_ID','name':'NAME','outputMode':'NOT_EXISTS'}";
-		restClient.rest(HttpMethod.POST, "/api/recordings/start", body, HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_BAD_REQUEST);
 		body = "{'session':'SESSION_ID','name':'NAME','outputMode':'COMPOSED','recordingLayout':'NOT_EXISTS'}";
-		restClient.rest(HttpMethod.POST, "/api/recordings/start", body, HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_BAD_REQUEST);
 		body = "{'session':'SESSION_ID','name':'NAME','outputMode':'COMPOSED','recordingLayout':'BEST_FIT','customLayout':'CUSTOM_LAYOUT','hasAudio':true,'hasVideo':true,'resolution':999}";
-		restClient.rest(HttpMethod.POST, "/api/recordings/start", body, HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_BAD_REQUEST);
 
 		// 422
 		body = "{'session':'SESSION_ID','name':'NAME','outputMode':'COMPOSED','recordingLayout':'BEST_FIT','customLayout':'CUSTOM_LAYOUT','hasAudio':false,'hasVideo':false}";
-		restClient.rest(HttpMethod.POST, "/api/recordings/start", body, HttpStatus.SC_UNPROCESSABLE_ENTITY);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_UNPROCESSABLE_ENTITY);
 		body = "{'session':'SESSION_ID','name':'NAME','outputMode':'COMPOSED','recordingLayout':'BEST_FIT','customLayout':'CUSTOM_LAYOUT','hasAudio':true,'hasVideo':true,'resolution':'1920x2000'}";
-		restClient.rest(HttpMethod.POST, "/api/recordings/start", body, HttpStatus.SC_UNPROCESSABLE_ENTITY);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_UNPROCESSABLE_ENTITY);
 
 		// 404
 		body = "{'session':'SESSION_ID'}";
-		restClient.rest(HttpMethod.POST, "/api/recordings/start", body, HttpStatus.SC_NOT_FOUND);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_NOT_FOUND);
 
 		// 406
 		body = "{'session':'CUSTOM_SESSION_ID'}";
-		restClient.rest(HttpMethod.POST, "/api/recordings/start", body, HttpStatus.SC_NOT_ACCEPTABLE);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_NOT_ACCEPTABLE);
 
 		// 409 (RELAYED media mode)
-		res = restClient.rest(HttpMethod.POST, "/api/sessions", "{'mediaMode':'RELAYED'}", HttpStatus.SC_OK, true,
-				"{'id': 'STR', 'createdAt': 0}");
+		res = restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", "{'mediaMode':'RELAYED'}", HttpStatus.SC_OK,
+				true, "{'id': 'STR', 'createdAt': 0}");
 		body = "{'session':'" + res.get("id").getAsString() + "'}";
-		restClient.rest(HttpMethod.POST, "/api/recordings/start", body, HttpStatus.SC_CONFLICT);
-		restClient.rest(HttpMethod.DELETE, "/api/sessions/" + res.get("id").getAsString(), HttpStatus.SC_NO_CONTENT);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_CONFLICT);
+		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/" + res.get("id").getAsString(),
+				HttpStatus.SC_NO_CONTENT);
 
 		// Start session
 		setupBrowser("chrome");
@@ -2885,15 +2912,15 @@ public class OpenViduTestAppE2eTest {
 		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
 
-		/** GET /api/recordings (before recording started) **/
-		restClient.rest(HttpMethod.GET, "/api/recordings/NOT_EXISTS", HttpStatus.SC_NOT_FOUND);
-		restClient.rest(HttpMethod.GET, "/api/recordings", null, HttpStatus.SC_OK, true,
+		/** GET /openvidu/api/recordings (before recording started) **/
+		restClient.rest(HttpMethod.GET, "/openvidu/api/recordings/NOT_EXISTS", HttpStatus.SC_NOT_FOUND);
+		restClient.rest(HttpMethod.GET, "/openvidu/api/recordings", null, HttpStatus.SC_OK, true,
 				ImmutableMap.of("count", new Integer(0), "items", new JsonArray()));
 
-		/** POST /api/recordings/start (ACTIVE SESSION) **/
+		/** POST /openvidu/api/recordings/start (ACTIVE SESSION) **/
 		// 200
 		body = "{'session':'CUSTOM_SESSION_ID'}";
-		restClient.rest(HttpMethod.POST, "/api/recordings/start", body, HttpStatus.SC_OK, true,
+		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_OK, true,
 				"{'id':'STR','sessionId':'STR','name':'STR','outputMode':'STR','recordingLayout':'STR','hasAudio':false,'hasVideo':false,'resolution':'STR','createdAt':0,'size':0,'duration':0,'url':null,'status':'STR'}");
 
 		user.getEventManager().waitUntilEventReaches("recordingStarted", 2);
@@ -2901,41 +2928,43 @@ public class OpenViduTestAppE2eTest {
 		Thread.sleep(2000);
 
 		// 409 (already recording)
-		restClient.rest(HttpMethod.POST, "/api/recordings/start", body, HttpStatus.SC_CONFLICT);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_CONFLICT);
 
-		/** POST /api/recordings/stop **/
+		/** POST /openvidu/api/recordings/stop **/
 		// 405
-		restClient.rest(HttpMethod.POST, "/api/recordings/stop", body, HttpStatus.SC_METHOD_NOT_ALLOWED);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/stop", body, HttpStatus.SC_METHOD_NOT_ALLOWED);
 
 		// 404
-		restClient.rest(HttpMethod.POST, "/api/recordings/stop/NOT_EXISTS", body, HttpStatus.SC_NOT_FOUND);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/stop/NOT_EXISTS", body, HttpStatus.SC_NOT_FOUND);
 
 		// 200
-		restClient.rest(HttpMethod.DELETE, "/api/recordings/CUSTOM_SESSION_ID", HttpStatus.SC_CONFLICT);
-		restClient.rest(HttpMethod.POST, "/api/recordings/stop/CUSTOM_SESSION_ID", body, HttpStatus.SC_OK, true,
+		restClient.rest(HttpMethod.DELETE, "/openvidu/api/recordings/CUSTOM_SESSION_ID", HttpStatus.SC_CONFLICT);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/stop/CUSTOM_SESSION_ID", body, HttpStatus.SC_OK,
+				true,
 				"{'id':'STR','sessionId':'STR','name':'STR','outputMode':'STR','recordingLayout':'STR','hasAudio':false,'hasVideo':false,'resolution':'STR','createdAt':0,'size':0,'duration':0,'url':'STR','status':'STR'}");
-		/** GET /api/recordings (after recording created) **/
-		restClient.rest(HttpMethod.GET, "/api/recordings/CUSTOM_SESSION_ID", null, HttpStatus.SC_OK, true,
+		/** GET /openvidu/api/recordings (after recording created) **/
+		restClient.rest(HttpMethod.GET, "/openvidu/api/recordings/CUSTOM_SESSION_ID", null, HttpStatus.SC_OK, true,
 				"{'id':'STR','sessionId':'STR','name':'STR','outputMode':'STR','recordingLayout':'STR','hasAudio':false,'hasVideo':false,'resolution':'STR','createdAt':0,'size':0,'duration':0,'url':'STR','status':'STR'}");
-		restClient.rest(HttpMethod.GET, "/api/recordings", null, HttpStatus.SC_OK, true,
+		restClient.rest(HttpMethod.GET, "/openvidu/api/recordings", null, HttpStatus.SC_OK, true,
 				ImmutableMap.of("count", new Integer(1), "items", new JsonArray()));
 
 		user.getEventManager().waitUntilEventReaches("recordingStopped", 2);
 
-		/** DELETE /api/recordings **/
-		restClient.rest(HttpMethod.DELETE, "/api/recordings", HttpStatus.SC_METHOD_NOT_ALLOWED);
-		restClient.rest(HttpMethod.DELETE, "/api/recordings/NOT_EXISTS", HttpStatus.SC_NOT_FOUND);
-		restClient.rest(HttpMethod.DELETE, "/api/recordings/CUSTOM_SESSION_ID", HttpStatus.SC_NO_CONTENT);
+		/** DELETE /openvidu/api/recordings **/
+		restClient.rest(HttpMethod.DELETE, "/openvidu/api/recordings", HttpStatus.SC_METHOD_NOT_ALLOWED);
+		restClient.rest(HttpMethod.DELETE, "/openvidu/api/recordings/NOT_EXISTS", HttpStatus.SC_NOT_FOUND);
+		restClient.rest(HttpMethod.DELETE, "/openvidu/api/recordings/CUSTOM_SESSION_ID", HttpStatus.SC_NO_CONTENT);
 
-		// GET /api/recordings should return empty again
-		restClient.rest(HttpMethod.GET, "/api/recordings", null, HttpStatus.SC_OK, true,
+		// GET /openvidu/api/recordings should return empty again
+		restClient.rest(HttpMethod.GET, "/openvidu/api/recordings", null, HttpStatus.SC_OK, true,
 				ImmutableMap.of("count", new Integer(0), "items", new JsonArray()));
 
-		/** DELETE /api/sessions/<SESSION_ID>/stream/<STREAM_ID> **/
-		restClient.rest(HttpMethod.DELETE, "/api/sessions/NOT_EXISTS/stream/NOT_EXISTS", HttpStatus.SC_BAD_REQUEST);
-		restClient.rest(HttpMethod.DELETE, "/api/sessions/CUSTOM_SESSION_ID/stream/NOT_EXISTS",
+		/** DELETE /openvidu/api/sessions/<SESSION_ID>/stream/<STREAM_ID> **/
+		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/NOT_EXISTS/stream/NOT_EXISTS",
+				HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/CUSTOM_SESSION_ID/stream/NOT_EXISTS",
 				HttpStatus.SC_NOT_FOUND);
-		res = restClient.rest(HttpMethod.GET, "/api/sessions/CUSTOM_SESSION_ID", null, HttpStatus.SC_OK, true,
+		res = restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/CUSTOM_SESSION_ID", null, HttpStatus.SC_OK, true,
 				"{'sessionId':'STR','createdAt':0,'mediaMode':'STR','recordingMode':'STR','defaultOutputMode':'STR','defaultRecordingLayout':'STR','customSessionId':'STR','connections':{'numberOfElements':2,'content'"
 						+ ":[{'connectionId':'STR','createdAt':0,'location':'STR','platform':'STR','token':'STR','role':'STR','serverData':'STR','clientData':'STR','publishers':["
 						+ "{'createdAt':0,'streamId':'STR','mediaOptions':{'hasAudio':false,'audioActive':false,'hasVideo':false,'videoActive':false,'typeOfVideo':'STR','frameRate':0,"
@@ -2945,55 +2974,59 @@ public class OpenViduTestAppE2eTest {
 		String streamId = res.get("connections").getAsJsonObject().get("content").getAsJsonArray().get(0)
 				.getAsJsonObject().get("publishers").getAsJsonArray().get(0).getAsJsonObject().get("streamId")
 				.getAsString();
-		restClient.rest(HttpMethod.DELETE, "/api/sessions/CUSTOM_SESSION_ID/stream/" + streamId,
+		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/CUSTOM_SESSION_ID/stream/" + streamId,
 				HttpStatus.SC_NO_CONTENT);
 
 		final String connectionId = res.get("connections").getAsJsonObject().get("content").getAsJsonArray().get(0)
 				.getAsJsonObject().get("connectionId").getAsString();
 
-		/** POST /api/signal (ACTIVE SESSION) **/
+		/** POST /openvidu/api/signal (ACTIVE SESSION) **/
 		body = "{'session':'CUSTOM_SESSION_ID','to':['wrongConnectionId']}";
-		restClient.rest(HttpMethod.POST, "/api/signal", body, HttpStatus.SC_NOT_ACCEPTABLE); // No valid connectionId
+		restClient.rest(HttpMethod.POST, "/openvidu/api/signal", body, HttpStatus.SC_NOT_ACCEPTABLE); // No valid
+																										// connectionId
 		body = "{'session':'CUSTOM_SESSION_ID','to':['" + connectionId + "','wrongConnectionId']}";
-		restClient.rest(HttpMethod.POST, "/api/signal", body, HttpStatus.SC_NOT_ACCEPTABLE); // No valid connectionId
+		restClient.rest(HttpMethod.POST, "/openvidu/api/signal", body, HttpStatus.SC_NOT_ACCEPTABLE); // No valid
+																										// connectionId
 		body = "{'session':'CUSTOM_SESSION_ID'}";
-		restClient.rest(HttpMethod.POST, "/api/signal", body, HttpStatus.SC_OK);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/signal", body, HttpStatus.SC_OK);
 		user.getEventManager().waitUntilEventReaches("signal", 2);
 		body = "{'session':'CUSTOM_SESSION_ID','to':[],'type':'server1','data':'SERVER EVENT!'}";
-		restClient.rest(HttpMethod.POST, "/api/signal", body, HttpStatus.SC_OK);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/signal", body, HttpStatus.SC_OK);
 		user.getEventManager().waitUntilEventReaches("signal:server1", 2);
 		body = "{'session':'CUSTOM_SESSION_ID','to':['" + connectionId + "'],'type':'server2','data':'SERVER EVENT!'}";
-		restClient.rest(HttpMethod.POST, "/api/signal", body, HttpStatus.SC_OK);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/signal", body, HttpStatus.SC_OK);
 		user.getEventManager().waitUntilEventReaches("signal:server2", 1);
 		Assert.assertEquals("", 1, user.getDriver()
 				.findElements(By.xpath("//*[text()='server - signal:server2 - SERVER EVENT!']")).size());
 
-		/** DELETE /api/sessions/<SESSION_ID>/connection/<CONNECTION_ID> **/
-		restClient.rest(HttpMethod.DELETE, "/api/sessions/NOT_EXISTS/connection/NOT_EXISTS", HttpStatus.SC_BAD_REQUEST);
-		restClient.rest(HttpMethod.DELETE, "/api/sessions/CUSTOM_SESSION_ID/connection/NOT_EXISTS",
+		/** DELETE /openvidu/api/sessions/<SESSION_ID>/connection/<CONNECTION_ID> **/
+		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/NOT_EXISTS/connection/NOT_EXISTS",
+				HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/NOT_EXISTS",
 				HttpStatus.SC_NOT_FOUND);
-		restClient.rest(HttpMethod.DELETE, "/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
+		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
 				HttpStatus.SC_NO_CONTENT);
 
-		/** DELETE /api/sessions **/
-		restClient.rest(HttpMethod.DELETE, "/api/sessions", HttpStatus.SC_METHOD_NOT_ALLOWED);
-		restClient.rest(HttpMethod.DELETE, "/api/sessions/NOT_EXISTS", HttpStatus.SC_NOT_FOUND);
-		restClient.rest(HttpMethod.DELETE, "/api/sessions/CUSTOM_SESSION_ID", HttpStatus.SC_NO_CONTENT);
+		/** DELETE /openvidu/api/sessions **/
+		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions", HttpStatus.SC_METHOD_NOT_ALLOWED);
+		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/NOT_EXISTS", HttpStatus.SC_NOT_FOUND);
+		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/CUSTOM_SESSION_ID", HttpStatus.SC_NO_CONTENT);
 
-		// GET /api/sessions should return empty again
-		restClient.rest(HttpMethod.GET, "/api/sessions", null, HttpStatus.SC_OK, true,
+		// GET /openvidu/api/sessions should return empty again
+		restClient.rest(HttpMethod.GET, "/openvidu/api/sessions", null, HttpStatus.SC_OK, true,
 				ImmutableMap.of("numberOfElements", new Integer(0), "content", new JsonArray()));
 
 		/**
-		 * DELETE /api/sessions/<SESSION_ID>/connection/<CONNECTION_ID> (unused token)
+		 * DELETE /openvidu/api/sessions/<SESSION_ID>/connection/<CONNECTION_ID> (unused
+		 * token)
 		 **/
 		body = "{'customSessionId': 'CUSTOM_SESSION_ID'}";
-		restClient.rest(HttpMethod.POST, "/api/sessions", body, HttpStatus.SC_OK);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpStatus.SC_OK);
 		body = "{'session': 'CUSTOM_SESSION_ID'}";
-		res = restClient.rest(HttpMethod.POST, "/api/tokens", body, HttpStatus.SC_OK);
+		res = restClient.rest(HttpMethod.POST, "/openvidu/api/tokens", body, HttpStatus.SC_OK);
 		final String tokenAConnectionId = res.get("connectionId").getAsString();
 		final String tokenA = res.get("token").getAsString();
-		res = restClient.rest(HttpMethod.POST, "/api/tokens", body, HttpStatus.SC_OK);
+		res = restClient.rest(HttpMethod.POST, "/openvidu/api/tokens", body, HttpStatus.SC_OK);
 		final String tokenB = res.get("token").getAsString();
 		final String tokenBConnectionId = res.get("connectionId").getAsString();
 
@@ -3019,7 +3052,7 @@ public class OpenViduTestAppE2eTest {
 		Thread.sleep(1000);
 
 		// Invalidate token
-		restClient.rest(HttpMethod.DELETE, "/api/sessions/CUSTOM_SESSION_ID/connection/" + tokenAConnectionId,
+		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + tokenAConnectionId,
 				HttpStatus.SC_NO_CONTENT);
 
 		// First user should pop up invalid token
@@ -3045,18 +3078,18 @@ public class OpenViduTestAppE2eTest {
 
 		// connectionId should be equal to the one brought by the token
 		Assert.assertEquals("Wrong connectionId", tokenBConnectionId,
-				restClient.rest(HttpMethod.GET, "/api/sessions/CUSTOM_SESSION_ID", HttpStatus.SC_OK).get("connections")
-						.getAsJsonObject().get("content").getAsJsonArray().get(0).getAsJsonObject().get("connectionId")
-						.getAsString());
+				restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/CUSTOM_SESSION_ID", HttpStatus.SC_OK)
+						.get("connections").getAsJsonObject().get("content").getAsJsonArray().get(0).getAsJsonObject()
+						.get("connectionId").getAsString());
 
-		restClient.rest(HttpMethod.DELETE, "/api/sessions/CUSTOM_SESSION_ID", HttpStatus.SC_NO_CONTENT);
+		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/CUSTOM_SESSION_ID", HttpStatus.SC_NO_CONTENT);
 
-		// GET /api/sessions should return empty again
-		restClient.rest(HttpMethod.GET, "/api/sessions", null, HttpStatus.SC_OK, true,
+		// GET /openvidu/api/sessions should return empty again
+		restClient.rest(HttpMethod.GET, "/openvidu/api/sessions", null, HttpStatus.SC_OK, true,
 				ImmutableMap.of("numberOfElements", new Integer(0), "content", new JsonArray()));
 
-		/** GET /config **/
-		restClient.rest(HttpMethod.GET, "/config", null, HttpStatus.SC_OK, true,
+		/** GET /openvidu/api/config **/
+		restClient.rest(HttpMethod.GET, "/openvidu/api/config", null, HttpStatus.SC_OK, true,
 				"{'VERSION':'STR','DOMAIN_OR_PUBLIC_IP':'STR','HTTPS_PORT':0,'OPENVIDU_PUBLICURL':'STR','OPENVIDU_CDR':false,'OPENVIDU_STREAMS_VIDEO_MAX_RECV_BANDWIDTH':0,'OPENVIDU_STREAMS_VIDEO_MIN_RECV_BANDWIDTH':0,"
 						+ "'OPENVIDU_STREAMS_VIDEO_MAX_SEND_BANDWIDTH':0,'OPENVIDU_STREAMS_VIDEO_MIN_SEND_BANDWIDTH':0,'OPENVIDU_SESSIONS_GARBAGE_INTERVAL':0,'OPENVIDU_SESSIONS_GARBAGE_THRESHOLD':0,"
 						+ "'OPENVIDU_RECORDING':false,'OPENVIDU_RECORDING_VERSION':'STR','OPENVIDU_RECORDING_PATH':'STR','OPENVIDU_RECORDING_PUBLIC_ACCESS':false,'OPENVIDU_RECORDING_NOTIFICATION':'STR',"
@@ -3390,24 +3423,25 @@ public class OpenViduTestAppE2eTest {
 			CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
 
 			// Wrong session [404]
-			restClient.rest(HttpMethod.POST, "/api/sessions/WRONG_SESSION/connection", "{}", HttpStatus.SC_NOT_FOUND);
+			restClient.rest(HttpMethod.POST, "/openvidu/api/sessions/WRONG_SESSION/connection", "{}",
+					HttpStatus.SC_NOT_FOUND);
 
 			// Init a session and publish IP camera AS FIRST PARTICIPANT
-			restClient.rest(HttpMethod.POST, "/api/sessions", "{'customSessionId':'IP_CAM_SESSION'}", HttpStatus.SC_OK,
-					true, "{'id': 'STR', 'createdAt': 0}");
+			restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", "{'customSessionId':'IP_CAM_SESSION'}",
+					HttpStatus.SC_OK, true, "{'id': 'STR', 'createdAt': 0}");
 
 			// No rtspUri [400]
-			restClient.rest(HttpMethod.POST, "/api/sessions/IP_CAM_SESSION/connection", "{}",
+			restClient.rest(HttpMethod.POST, "/openvidu/api/sessions/IP_CAM_SESSION/connection", "{}",
 					HttpStatus.SC_BAD_REQUEST);
 
 			// Wrong rtspUri (invalid url format) [400]
-			restClient.rest(HttpMethod.POST, "/api/sessions/IP_CAM_SESSION/connection", "{'rtspUri': 'NOT_A_URL'}",
-					HttpStatus.SC_BAD_REQUEST);
+			restClient.rest(HttpMethod.POST, "/openvidu/api/sessions/IP_CAM_SESSION/connection",
+					"{'rtspUri': 'NOT_A_URL'}", HttpStatus.SC_BAD_REQUEST);
 
 			// Publish IP camera. Dummy URL because no user will subscribe to it [200]
 			String ipCamBody = "{'type':'IPCAM','rtspUri':'rtsp://dummyurl.com','adaptativeBitrate':true,'onlyPlayWithSubscribers':true,'networkCache':1000,'data':'MY_IP_CAMERA'}";
-			JsonObject response = restClient.rest(HttpMethod.POST, "/api/sessions/IP_CAM_SESSION/connection", ipCamBody,
-					HttpStatus.SC_OK, true,
+			JsonObject response = restClient.rest(HttpMethod.POST, "/openvidu/api/sessions/IP_CAM_SESSION/connection",
+					ipCamBody, HttpStatus.SC_OK, true,
 					"{'connectionId':'STR','createdAt':0,'location':'STR','platform':'STR','role':'STR','serverData':'STR','clientData':'STR','publishers':[],'subscribers':[]}");
 
 			CustomWebhook.waitForEvent("sessionCreated", 1);
@@ -3432,12 +3466,12 @@ public class OpenViduTestAppE2eTest {
 
 			// Can't delete the stream [405]
 			restClient.rest(HttpMethod.DELETE,
-					"/api/sessions/IP_CAM_SESSION/stream/" + ipCamPublisher.get("streamId").getAsString(),
+					"/openvidu/api/sessions/IP_CAM_SESSION/stream/" + ipCamPublisher.get("streamId").getAsString(),
 					HttpStatus.SC_METHOD_NOT_ALLOWED);
 
 			// Can delete the connection [204]
 			restClient.rest(HttpMethod.DELETE,
-					"/api/sessions/IP_CAM_SESSION/connection/" + response.get("connectionId").getAsString(),
+					"/openvidu/api/sessions/IP_CAM_SESSION/connection/" + response.get("connectionId").getAsString(),
 					HttpStatus.SC_NO_CONTENT);
 
 			response = CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 1);
@@ -3475,36 +3509,37 @@ public class OpenViduTestAppE2eTest {
 			CustomWebhook.waitForEvent("webrtcConnectionCreated", 1);
 
 			// Composed recording to get an MP4 file AUDIO + VIDEO
-			restClient.rest(HttpMethod.POST, "/api/recordings/start",
+			restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start",
 					"{'session':'TestSession','name':'audioVideo','hasAudio':true,'hasVideo':true}", HttpStatus.SC_OK);
 			user.getEventManager().waitUntilEventReaches("recordingStarted", 1); // Started
 			CustomWebhook.waitForEvent("recordingStatusChanged", 1);
 			Thread.sleep(4000);
-			restClient.rest(HttpMethod.POST, "/api/recordings/stop/TestSession", HttpStatus.SC_OK);
+			restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/stop/TestSession", HttpStatus.SC_OK);
 			user.getEventManager().waitUntilEventReaches("recordingStopped", 1);
 			CustomWebhook.waitForEvent("recordingStatusChanged", 1); // Stopped
 			CustomWebhook.waitForEvent("recordingStatusChanged", 1); // Ready
 
 			// Composed recording to get an MP4 file ONLY VIDEO
-			restClient.rest(HttpMethod.POST, "/api/recordings/start",
+			restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start",
 					"{'session':'TestSession','name':'videoOnly','hasAudio':false,'hasVideo':true}", HttpStatus.SC_OK);
 			user.getEventManager().waitUntilEventReaches("recordingStarted", 1); // Started
 			CustomWebhook.waitForEvent("recordingStatusChanged", 1); // Started
 			Thread.sleep(4000);
-			restClient.rest(HttpMethod.POST, "/api/recordings/stop/TestSession-1", HttpStatus.SC_OK);
+			restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/stop/TestSession-1", HttpStatus.SC_OK);
 			user.getEventManager().waitUntilEventReaches("recordingStopped", 1);
 			CustomWebhook.waitForEvent("recordingStatusChanged", 1); // Stopped
 			CustomWebhook.waitForEvent("recordingStatusChanged", 1); // Ready
 
 			// Publish the MP4 file as an IPCAM
-			String recPath = restClient.rest(HttpMethod.GET, "/config", HttpStatus.SC_OK).get("OPENVIDU_RECORDING_PATH")
-					.getAsString();
+			String recPath = restClient.rest(HttpMethod.GET, "/openvidu/api/config", HttpStatus.SC_OK)
+					.get("OPENVIDU_RECORDING_PATH").getAsString();
 			recPath = recPath.endsWith("/") ? recPath : (recPath + "/");
 			String fullRecordingPath = "file://" + recPath + "TestSession/audioVideo.mp4";
 			ipCamBody = "{'type':'IPCAM','rtspUri':'" + fullRecordingPath
 					+ "','adaptativeBitrate':true,'onlyPlayWithSubscribers':true,'networkCache':1000,'data':'MY_IP_CAMERA'}";
 
-			restClient.rest(HttpMethod.POST, "/api/sessions/TestSession/connection", ipCamBody, HttpStatus.SC_OK, true,
+			restClient.rest(HttpMethod.POST, "/openvidu/api/sessions/TestSession/connection", ipCamBody,
+					HttpStatus.SC_OK, true,
 					"{'connectionId':'STR','createdAt':0,'location':'STR','platform':'STR','role':'STR','serverData':'STR','clientData':'STR','publishers':[],'subscribers':[]}");
 
 			user.getEventManager().waitUntilEventReaches("connectionCreated", 2);
@@ -3531,7 +3566,7 @@ public class OpenViduTestAppE2eTest {
 			user.getWaiter().until(ExpectedConditions.numberOfElementsToBe(By.tagName("video"), 1));
 
 			// Publish again the IPCAM
-			response = restClient.rest(HttpMethod.POST, "/api/sessions/TestSession/connection", ipCamBody,
+			response = restClient.rest(HttpMethod.POST, "/openvidu/api/sessions/TestSession/connection", ipCamBody,
 					HttpStatus.SC_OK, true,
 					"{'connectionId':'STR','createdAt':0,'location':'STR','platform':'STR','role':'STR','serverData':'STR','clientData':'STR','publishers':[],'subscribers':[]}");
 			user.getEventManager().waitUntilEventReaches("connectionCreated", 3);
@@ -3551,17 +3586,17 @@ public class OpenViduTestAppE2eTest {
 			CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 1);
 			CustomWebhook.waitForEvent("participantLeft", 1);
 
-			restClient.rest(HttpMethod.GET, "/api/sessions/TestSession", null, HttpStatus.SC_OK);
+			restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/TestSession", null, HttpStatus.SC_OK);
 
 			// Test IPCAM individual recording (IPCAM audio+video, recording audio+video)
-			response = restClient.rest(HttpMethod.POST, "/api/recordings/start",
+			response = restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start",
 					"{'session':'TestSession','outputMode':'INDIVIDUAL','hasAudio':true,'hasVideo':true}",
 					HttpStatus.SC_OK);
 			String recId = response.get("id").getAsString();
 			CustomWebhook.waitForEvent("recordingStatusChanged", 1); // Started
 
 			Thread.sleep(2000);
-			restClient.rest(HttpMethod.POST, "/api/recordings/stop/" + recId, HttpStatus.SC_OK);
+			restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/stop/" + recId, HttpStatus.SC_OK);
 			CustomWebhook.waitForEvent("recordingStatusChanged", 1); // Stopped
 			CustomWebhook.waitForEvent("recordingStatusChanged", 1); // Ready
 
@@ -3571,7 +3606,7 @@ public class OpenViduTestAppE2eTest {
 			// Test IPCAM individual recording (IPCAM video only, recording audio and video)
 
 			// Disconnect audio+video IPCAM
-			restClient.rest(HttpMethod.DELETE, "/api/sessions/TestSession/connection/" + connectionId,
+			restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/TestSession/connection/" + connectionId,
 					HttpStatus.SC_NO_CONTENT);
 
 			// Session is closed (create new session)
@@ -3579,12 +3614,13 @@ public class OpenViduTestAppE2eTest {
 			CustomWebhook.waitForEvent("participantLeft", 1);
 			CustomWebhook.waitForEvent("sessionDestroyed", 1);
 
-			restClient.rest(HttpMethod.POST, "/api/sessions", "{'customSessionId':'TestSession'}", HttpStatus.SC_OK);
+			restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", "{'customSessionId':'TestSession'}",
+					HttpStatus.SC_OK);
 
 			// Publish video only IPCAM
 			fullRecordingPath = "file://" + recPath + "TestSession-1/videoOnly.mp4";
 			ipCamBody = "{'rtspUri':'" + fullRecordingPath + "'}";
-			response = restClient.rest(HttpMethod.POST, "/api/sessions/TestSession/connection", ipCamBody,
+			response = restClient.rest(HttpMethod.POST, "/openvidu/api/sessions/TestSession/connection", ipCamBody,
 					HttpStatus.SC_OK);
 			CustomWebhook.waitForEvent("sessionCreated", 1);
 			CustomWebhook.waitForEvent("participantJoined", 1);
@@ -3592,21 +3628,21 @@ public class OpenViduTestAppE2eTest {
 
 			// Record audio and video
 			// TODO: THIS SHOULD WORK
-//			response = restClient.rest(HttpMethod.POST, "/api/recordings/start",
+//			response = restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start",
 //					"{'session':'TestSession','outputMode':'INDIVIDUAL','hasAudio':true,'hasVideo':true}",
 //					HttpStatus.SC_OK);
 //			recId = response.get("id").getAsString();
 //			CustomWebhook.waitForEvent("recordingStatusChanged", 1); // Started
 //
 //			Thread.sleep(2000);
-//			restClient.rest(HttpMethod.POST, "/api/recordings/stop/TestSession-2", HttpStatus.SC_OK);
+//			restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/stop/TestSession-2", HttpStatus.SC_OK);
 //			CustomWebhook.waitForEvent("recordingStatusChanged", 1); // Stopped
 //			CustomWebhook.waitForEvent("recordingStatusChanged", 1); // Ready
 //
 //			recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(recId);
 //			this.checkIndividualRecording(recPath + recId + "/", recording, 1, "opus", "vp8", true);
 
-			restClient.rest(HttpMethod.DELETE, "/api/sessions/TestSession", HttpStatus.SC_NO_CONTENT);
+			restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/TestSession", HttpStatus.SC_NO_CONTENT);
 
 			CustomWebhook.waitForEvent("webrtcConnectionDestroyed", 1);
 			CustomWebhook.waitForEvent("participantLeft", 1);
