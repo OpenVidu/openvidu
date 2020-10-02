@@ -7,6 +7,7 @@ import { throwError } from 'rxjs';
 export class RestService {
 
     private openviduPublicUrl: string;
+    private API_PATH: string = 'openvidu/api';
 
     constructor(private httpClient: HttpClient) { }
 
@@ -16,7 +17,7 @@ export class RestService {
                 resolve(this.openviduPublicUrl);
             } else {
                 this.httpClient.get(location.protocol + '//' + location.hostname + ((!!location.port) ? (':' + location.port) : '') +
-                    '/config/openvidu-publicurl', { responseType: 'text' }).pipe(
+                    '/' + this.API_PATH + '/config/openvidu-publicurl', { responseType: 'text' }).pipe(
                         catchError(error => {
                             reject(error);
                             return throwError(error);
@@ -44,7 +45,7 @@ export class RestService {
                     'Content-Type': 'application/json'
                 })
             };
-            this.httpClient.post(this.openviduPublicUrl + 'api/sessions', body, options)
+            this.httpClient.post(this.openviduPublicUrl + this.API_PATH + '/sessions', body, options)
                 .pipe(
                     catchError(error => {
                         reject(error);
@@ -66,7 +67,7 @@ export class RestService {
                     'Content-Type': 'application/json'
                 })
             };
-            this.httpClient.post(this.openviduPublicUrl + 'api/tokens', body, options)
+            this.httpClient.post(this.openviduPublicUrl + this.API_PATH + '/tokens', body, options)
                 .pipe(
                     catchError(error => {
                         reject(error);
