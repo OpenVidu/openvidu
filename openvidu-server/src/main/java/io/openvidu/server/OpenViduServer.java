@@ -34,6 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -229,6 +230,7 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 	@Bean
 	@ConditionalOnMissingBean
+	@ConditionalOnProperty(name = "SUPPORT_DEPRECATED_API", havingValue = "true")
 	public FilterRegistrationBean<ApiRestPathRewriteFilter> filterRegistrationBean() {
 		FilterRegistrationBean<ApiRestPathRewriteFilter> registrationBean = new FilterRegistrationBean<ApiRestPathRewriteFilter>();
 		ApiRestPathRewriteFilter apiRestPathRewriteFilter = new ApiRestPathRewriteFilter();

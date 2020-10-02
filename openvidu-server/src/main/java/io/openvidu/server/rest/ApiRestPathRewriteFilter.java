@@ -45,7 +45,8 @@ public class ApiRestPathRewriteFilter implements Filter {
 
 	@Override
 	public void init(FilterConfig filterConfig) throws ServletException {
-		log.info("Initializing API REST path rewrite filter");
+		log.warn("Support for deprecated REST API paths enabled. Update your REST API clients to use the new paths");
+		log.warn("Deprecated path support will be removed in a future version. You can disable old path support to test compatibility with property SUPPORT_DEPRECATED_API=false");
 	}
 
 	@Override
