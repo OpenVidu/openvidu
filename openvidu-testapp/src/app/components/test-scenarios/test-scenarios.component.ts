@@ -84,6 +84,8 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
   textAreaValue = '';
   isFocusedOnReport = false;
 
+  private API_PATH = 'openvidu/api';
+
   constructor(
     private openviduParamsService: OpenviduParamsService,
     private testFeedService: TestFeedService,
@@ -368,7 +370,7 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
   private updateRemoteStreamsInfo() {
     let headers = new HttpHeaders();
     headers = headers.append('Authorization', 'Basic ' + btoa('OPENVIDUAPP:' + this.openviduSecret));
-    this.http.get(this.openviduUrl + 'api/sessions/' + this.fixedSessionId + '?webRtcStats=true', { headers }).subscribe(
+    this.http.get(this.openviduUrl + this.API_PATH + '/sessions/' + this.fixedSessionId + '?webRtcStats=true', { headers }).subscribe(
       sessionInfo => {
 
         this.report.streamsOut.content.forEach(report => {
@@ -445,7 +447,7 @@ export class TestScenariosComponent implements OnInit, OnDestroy {
   /*addReportForStreamConcurrent(event: StreamManagerWrapper) {
     let headers = new HttpHeaders();
     headers = headers.append('Authorization', 'Basic ' + btoa('OPENVIDUAPP:' + this.openviduSecret));
-    this.http.get(this.openviduUrl + 'api/sessions/' + this.fixedSessionId + '?webRtcStats=true', { headers }).subscribe(
+    this.http.get(this.openviduUrl + this.API_PATH + '/sessions/' + this.fixedSessionId + '?webRtcStats=true', { headers }).subscribe(
       sessionInfo => {
 
         event.streamManager.stream.getSelectedIceCandidate()
