@@ -46,7 +46,8 @@ public class ApiRestPathRewriteFilter implements Filter {
 	@Override
 	public void init(FilterConfig filterConfig) throws ServletException {
 		log.warn("Support for deprecated REST API paths enabled. Update your REST API clients to use the new paths");
-		log.warn("Deprecated path support will be removed in a future version. You can disable old path support to test compatibility with property SUPPORT_DEPRECATED_API=false");
+		log.warn(
+				"Deprecated path support will be removed in a future release. You can disable old path support to test compatibility with property SUPPORT_DEPRECATED_API=false");
 	}
 
 	@Override
@@ -76,8 +77,7 @@ public class ApiRestPathRewriteFilter implements Filter {
 					((HttpServletRequest) request).getRequestURL().toString().replaceFirst(oldBasePath, newBasePath));
 
 			String logPathEnding = oldBasePath.endsWith("/") ? "**" : "/**";
-			log.warn(
-					"Path {} is deprecated. Use path {} instead. Deprecated path will be removed in a major release in the future",
+			log.warn("Path {} is deprecated. Use path {} instead. Deprecated path will be removed in a future release",
 					oldBasePath + logPathEnding, newBasePath + logPathEnding);
 
 			chain.doFilter(new HttpServletRequestWrapper((HttpServletRequest) request) {
