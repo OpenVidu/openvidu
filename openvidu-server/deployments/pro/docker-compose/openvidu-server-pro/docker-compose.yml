@@ -105,6 +105,7 @@ services:
         restart: always
         environment:
             - SERVER_BASEPATH="/kibana"
+            - xpack.security.enabled=true
             - ELASTICSEARCH_USERNAME=${ELASTICSEARCH_USERNAME}
             - ELASTICSEARCH_PASSWORD=${ELASTICSEARCH_PASSWORD}
         ports:
