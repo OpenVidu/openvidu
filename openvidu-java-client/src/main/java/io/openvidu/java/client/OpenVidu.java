@@ -70,16 +70,19 @@ public class OpenVidu {
 	protected HttpClient httpClient;
 	protected Map<String, Session> activeSessions = new ConcurrentHashMap<>();
 
-	protected final static String API_SESSIONS = "api/sessions";
-	protected final static String API_TOKENS = "api/tokens";
-	protected final static String API_RECORDINGS = "api/recordings";
-	protected final static String API_RECORDINGS_START = "/start";
-	protected final static String API_RECORDINGS_STOP = "/stop";
+	protected final static String API_PATH = "openvidu/api";
+	protected final static String API_SESSIONS = API_PATH + "/sessions";
+	protected final static String API_TOKENS = API_PATH + "/tokens";
+	protected final static String API_RECORDINGS = API_PATH + "/recordings";
+	protected final static String API_RECORDINGS_START = API_RECORDINGS + "/start";
+	protected final static String API_RECORDINGS_STOP = API_RECORDINGS + "/stop";
 
 	/**
-	 * @param urlOpenViduServer Public accessible IP where your instance of OpenVidu
-	 *                          Server is up an running
-	 * @param secret            Secret used on OpenVidu Server initialization
+	 * @param hostname URL where your instance of OpenVidu Server is up an running.
+	 *                 It must be the full URL (e.g.
+	 *                 <code>https://12.34.56.78:1234/</code>)
+	 * 
+	 * @param secret   Secret used on OpenVidu Server initialization
 	 */
 	public OpenVidu(String hostname, String secret) {
 
@@ -192,7 +195,7 @@ public class OpenVidu {
 	public Recording startRecording(String sessionId, RecordingProperties properties)
 			throws OpenViduJavaClientException, OpenViduHttpException {
 
-		HttpPost request = new HttpPost(this.hostname + API_RECORDINGS + API_RECORDINGS_START);
+		HttpPost request = new HttpPost(this.hostname + API_RECORDINGS_START);
 
 		JsonObject json = new JsonObject();
 		json.addProperty("session", sessionId);
@@ -201,7 +204,8 @@ public class OpenVidu {
 		json.addProperty("hasAudio", properties.hasAudio());
 		json.addProperty("hasVideo", properties.hasVideo());
 
-		if ((Recording.OutputMode.COMPOSED.equals(properties.outputMode()) || (Recording.OutputMode.COMPOSED_QUICK_START.equals(properties.outputMode())))
+		if ((Recording.OutputMode.COMPOSED.equals(properties.outputMode())
+				|| (Recording.OutputMode.COMPOSED_QUICK_START.equals(properties.outputMode())))
 				&& properties.hasVideo()) {
 			json.addProperty("resolution", properties.resolution());
 			json.addProperty("recordingLayout",
@@ -236,8 +240,9 @@ public class OpenVidu {
 				if (activeSession != null) {
 					activeSession.setIsBeingRecorded(true);
 				} else {
-					log.warn("No active session found for sessionId '" + r.getSessionId()
-							+ "'. This instance of OpenVidu Java Client didn't create this session");
+					log.warn(
+							"No active session found for sessionId '{}'. This instance of OpenVidu Java Client didn't create this session",
+							r.getSessionId());
 				}
 				return r;
 			} else {
@@ -352,7 +357,7 @@ public class OpenVidu {
 	 *                                     </ul>
 	 */
 	public Recording stopRecording(String recordingId) throws OpenViduJavaClientException, OpenViduHttpException {
-		HttpPost request = new HttpPost(this.hostname + API_RECORDINGS + API_RECORDINGS_STOP + "/" + recordingId);
+		HttpPost request = new HttpPost(this.hostname + API_RECORDINGS_STOP + "/" + recordingId);
 		HttpResponse response;
 		try {
 			response = this.httpClient.execute(request);
@@ -368,8 +373,9 @@ public class OpenVidu {
 				if (activeSession != null) {
 					activeSession.setIsBeingRecorded(false);
 				} else {
-					log.warn("No active session found for sessionId '" + r.getSessionId()
-							+ "'. This instance of OpenVidu Java Client didn't create this session");
+					log.warn(
+							"No active session found for sessionId '{}'. This instance of OpenVidu Java Client didn't create this session",
+							r.getSessionId());
 				}
 				return r;
 			} else {

@@ -47,23 +47,29 @@ export class OpenVidu {
   /**
    * @hidden
    */
-  static readonly API_RECORDINGS: string = '/api/recordings';
+  static readonly API_PATH: string = '/openvidu/api';
   /**
    * @hidden
    */
-  static readonly API_RECORDINGS_START: string = '/start';
+  static readonly API_SESSIONS = OpenVidu.API_PATH + '/sessions';
   /**
    * @hidden
    */
-  static readonly API_RECORDINGS_STOP: string = '/stop';
+  static readonly API_TOKENS = OpenVidu.API_PATH + '/tokens';
   /**
    * @hidden
    */
-  static readonly API_SESSIONS = '/api/sessions';
+  static readonly API_RECORDINGS: string = OpenVidu.API_PATH + '/recordings';
   /**
    * @hidden
    */
-  static readonly API_TOKENS = '/api/tokens';
+  static readonly API_RECORDINGS_START: string = OpenVidu.API_RECORDINGS + '/start';
+  /**
+   * @hidden
+   */
+  static readonly API_RECORDINGS_STOP: string = OpenVidu.API_RECORDINGS + '/stop';
+
+
 
 
   /**
@@ -83,7 +89,8 @@ export class OpenVidu {
   activeSessions: Session[] = [];
 
   /**
-   * @param urlOpenViduServer Public accessible IP where your instance of OpenVidu Server is up an running
+   * @param urlOpenViduServer URL where your instance of OpenVidu Server is up an running.
+   *                          It must be the full URL (e.g. `https://12.34.56.78:1234/`)
    * @param secret Secret used on OpenVidu Server initialization
    */
   constructor(private urlOpenViduServer: string, secret: string) {
@@ -144,8 +151,8 @@ export class OpenVidu {
             hasAudio: !!(properties.hasAudio),
             hasVideo: !!(properties.hasVideo)
           };
-          if (data.outputMode.toString() === Recording.OutputMode[Recording.OutputMode.COMPOSED] 
-          || data.outputMode.toString() === Recording.OutputMode[Recording.OutputMode.COMPOSED_QUICK_START]) {
+          if (data.outputMode.toString() === Recording.OutputMode[Recording.OutputMode.COMPOSED]
+            || data.outputMode.toString() === Recording.OutputMode[Recording.OutputMode.COMPOSED_QUICK_START]) {
             data.resolution = !!properties.resolution ? properties.resolution : '1920x1080';
             data.recordingLayout = !!properties.recordingLayout ? properties.recordingLayout : RecordingLayout.BEST_FIT;
             if (data.recordingLayout.toString() === RecordingLayout[RecordingLayout.CUSTOM]) {
@@ -169,7 +176,7 @@ export class OpenVidu {
       }
 
       axios.post(
-        this.host + OpenVidu.API_RECORDINGS + OpenVidu.API_RECORDINGS_START,
+        this.host + OpenVidu.API_RECORDINGS_START,
         data,
         {
           headers: {
@@ -223,7 +230,7 @@ export class OpenVidu {
     return new Promise<Recording>((resolve, reject) => {
 
       axios.post(
-        this.host + OpenVidu.API_RECORDINGS + OpenVidu.API_RECORDINGS_STOP + '/' + recordingId,
+        this.host + OpenVidu.API_RECORDINGS_STOP + '/' + recordingId,
         undefined,
         {
           headers: {
