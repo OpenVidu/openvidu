@@ -83,6 +83,7 @@ public class OpenViduEventManager {
 	private Map<String, AtomicInteger> eventNumbers;
 	private Map<String, CountDownLatch> eventCountdowns;
 	private AtomicBoolean isInterrupted = new AtomicBoolean(false);
+	private CountDownLatch pollingLatch = new CountDownLatch(1);
 	private int timeOfWaitInSeconds;
 
 	public OpenViduEventManager(WebDriver driver, int timeOfWaitInSeconds) {
@@ -130,20 +131,21 @@ public class OpenViduEventManager {
 					e.printStackTrace();
 				}
 			}
+			log.info("Polling thread is now interrupted!");
+			this.pollingLatch.countDown();
 		});
 		this.pollingThread.setUncaughtExceptionHandler(h);
 		this.pollingThread.start();
 	}
 
 	public void stopPolling(boolean stopThread) {
-		this.eventCallbacks.clear();
-		this.eventCountdowns.clear();
-		this.eventNumbers.clear();
-
 		if (stopThread) {
 			this.isInterrupted.set(true);
 			this.pollingThread.interrupt();
 		}
+		this.eventCallbacks.clear();
+		this.eventCountdowns.clear();
+		this.eventNumbers.clear();
 	}
 
 	public void on(String eventName, Consumer<JsonObject> callback) {
@@ -184,6 +186,26 @@ public class OpenViduEventManager {
 	public synchronized void clearCurrentEvents(String eventName) {
 		this.eventNumbers.put(eventName, new AtomicInteger(0));
 		this.setCountDown(eventName, new CountDownLatch(0));
+	}
+
+	public synchronized void clearAllCurrentEvents() {
+		this.eventNumbers.keySet().forEach(eventName -> {
+			this.clearCurrentEvents(eventName);
+		});
+	}
+
+	public void resetEventThread() throws InterruptedException {
+		this.stopPolling(true);
+		this.pollingLatch.await();
+		this.execService.shutdownNow();
+		this.execService.awaitTermination(10, TimeUnit.SECONDS);
+		this.execService = Executors.newCachedThreadPool();
+		this.stopPolling(false);
+		this.clearAllCurrentEvents();
+		this.isInterrupted.set(false);
+		this.pollingLatch = new CountDownLatch(1);
+		this.eventQueue.clear();
+		this.startPolling();
 	}
 
 	public boolean assertMediaTracks(WebElement videoElement, boolean audioTransmission, boolean videoTransmission,

@@ -3068,13 +3068,14 @@ public class OpenViduTestAppE2eTest {
 		}
 
 		Thread.sleep(500);
+		user.getEventManager().resetEventThread();
 
 		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .join-btn")).sendKeys(Keys.ENTER);
 
-		user.getEventManager().waitUntilEventReaches("connectionCreated", 5);
-		user.getEventManager().waitUntilEventReaches("accessAllowed", 3);
-		user.getEventManager().waitUntilEventReaches("streamCreated", 5);
-		user.getEventManager().waitUntilEventReaches("streamPlaying", 5);
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 1);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
 
 		// connectionId should be equal to the one brought by the token
 		Assert.assertEquals("Wrong connectionId", tokenBConnectionId,
