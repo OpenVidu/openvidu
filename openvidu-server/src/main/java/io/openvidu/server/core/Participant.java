@@ -122,10 +122,6 @@ public class Participant {
 		return this.token;
 	}
 
-	public void setToken(Token token) {
-		this.token = token;
-	}
-
 	public GeoLocation getLocation() {
 		return this.location;
 	}
