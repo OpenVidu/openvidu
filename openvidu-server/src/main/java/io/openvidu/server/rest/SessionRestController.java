@@ -28,6 +28,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -73,19 +74,20 @@ import io.openvidu.server.utils.RestUtils;
  */
 @RestController
 @CrossOrigin
+@ConditionalOnMissingBean(name = "sessionRestControllerPro")
 @RequestMapping(RequestMappings.API)
 public class SessionRestController {
 
 	private static final Logger log = LoggerFactory.getLogger(SessionRestController.class);
 
 	@Autowired
-	private SessionManager sessionManager;
+	protected SessionManager sessionManager;
 
 	@Autowired
-	private RecordingManager recordingManager;
+	protected RecordingManager recordingManager;
 
 	@Autowired
-	private OpenviduConfig openviduConfig;
+	protected OpenviduConfig openviduConfig;
 
 	@RequestMapping(value = "/sessions", method = RequestMethod.POST)
 	public ResponseEntity<?> getSessionId(@RequestBody(required = false) Map<?, ?> params) {
@@ -849,7 +851,7 @@ public class SessionRestController {
 		}
 	}
 
-	private ResponseEntity<String> generateErrorResponse(String errorMessage, String path, HttpStatus status) {
+	protected ResponseEntity<String> generateErrorResponse(String errorMessage, String path, HttpStatus status) {
 		JsonObject responseJson = new JsonObject();
 		responseJson.addProperty("timestamp", System.currentTimeMillis());
 		responseJson.addProperty("status", status.value());
