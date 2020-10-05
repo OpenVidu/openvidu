@@ -192,6 +192,10 @@ public class Session implements SessionInterface {
 		return tokenObj;
 	}
 
+	public Iterator<Entry<String, Token>> getTokenIterator() {
+		return this.tokens.entrySet().iterator();
+	}
+
 	public void showTokens(String preMessage) {
 		log.info("{} { Session: {} | Tokens: {} }", preMessage, this.sessionId, this.tokens.keySet().toString());
 	}

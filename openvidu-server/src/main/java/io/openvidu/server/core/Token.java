@@ -77,6 +77,14 @@ public class Token {
 		return connectionId;
 	}
 
+	public void setRole(OpenViduRole role) {
+		this.role = role;
+	}
+
+	public void setRecord(boolean record) {
+		this.record = record;
+	}
+
 	@Override
 	public String toString() {
 		if (this.role != null)
