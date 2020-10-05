@@ -39,7 +39,7 @@ public class TokenGenerator {
 	@Autowired
 	protected OpenviduBuildInfo openviduBuildConfig;
 
-	public Token generateToken(String sessionId, OpenViduRole role, String serverMetadata,
+	public Token generateToken(String sessionId, OpenViduRole role, String serverMetadata, boolean record,
 			KurentoTokenOptions kurentoTokenOptions) throws Exception {
 		String token = OpenViduServer.wsUrl;
 		token += "?sessionId=" + sessionId;
@@ -56,6 +56,6 @@ public class TokenGenerator {
 				token += "&turnCredential=" + turnCredentials.getCredential();
 			}
 		}
-		return new Token(token, role, serverMetadata, turnCredentials, kurentoTokenOptions);
+		return new Token(token, role, serverMetadata, record, turnCredentials, kurentoTokenOptions);
 	}
 }

@@ -107,6 +107,10 @@
           </button>
         </div>
 
+        <div id="record-div">
+          <mat-checkbox class="checkbox-form" [(ngModel)]="tokenOptions.record" id="record-checkbox">Record</mat-checkbox>
+        </div>
+
         <label class="label">Token</label>
         <div id="custom-token-div">
           <mat-form-field>
@@ -120,6 +124,6 @@
   <mat-dialog-actions>
     <button id="cancel-btn" mat-button [mat-dialog-close]="undefined">CANCEL</button>
     <button id="save-btn" mat-button
-      [mat-dialog-close]="{sessionProperties: sessionProperties, turnConf: turnConf, manualTurnConf: manualTurnConf, tokenOptions: generateTokenOptions(), customToken: customToken}">SAVE</button>
+      [mat-dialog-close]="{sessionProperties: sessionProperties, turnConf: turnConf, manualTurnConf: manualTurnConf, tokenOptions: generateTokenOptions(), customToken: customToken, record: record}">SAVE</button>
   </mat-dialog-actions>
 </div>

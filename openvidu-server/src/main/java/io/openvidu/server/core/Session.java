@@ -62,6 +62,7 @@ public class Session implements SessionInterface {
 
 	protected volatile boolean closed = false;
 	protected AtomicInteger activePublishers = new AtomicInteger(0);
+	protected AtomicInteger activeIndividualRecordedPublishers = new AtomicInteger(0);
 
 	/**
 	 * This lock protects the following operations with read lock: [REST API](POST
@@ -147,12 +148,22 @@ public class Session implements SessionInterface {
 		return activePublishers.get();
 	}
 
-	public void registerPublisher() {
-		this.activePublishers.incrementAndGet();
+	public int getActiveIndividualRecordedPublishers() {
+		return activeIndividualRecordedPublishers.get();
 	}
 
-	public void deregisterPublisher() {
+	public void registerPublisher(Participant participant) {
+		this.activePublishers.incrementAndGet();
+		if (participant.getToken().record()) {
+			activeIndividualRecordedPublishers.incrementAndGet();
+		}
+	}
+
+	public void deregisterPublisher(Participant participant) {
 		this.activePublishers.decrementAndGet();
+		if (participant.getToken().record()) {
+			activeIndividualRecordedPublishers.decrementAndGet();
+		}
 	}
 
 	public void storeToken(Token token) {

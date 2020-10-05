@@ -37,3 +37,7 @@ mat-radio-button:first-child {
     padding-top: 6px;
     padding-bottom: 15px;
 }
+
+#record-div {
+    padding-bottom: 20px;
+}

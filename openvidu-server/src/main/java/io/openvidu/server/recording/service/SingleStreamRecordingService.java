@@ -100,11 +100,11 @@ public class SingleStreamRecordingService extends RecordingService {
 		activeRecorders.put(recording.getId(), new ConcurrentHashMap<String, RecorderEndpointWrapper>());
 		storedRecorders.put(recording.getId(), new ConcurrentHashMap<String, RecorderEndpointWrapper>());
 
-		final int activePublishers = session.getActivePublishers();
-		final CountDownLatch recordingStartedCountdown = new CountDownLatch(activePublishers);
+		int activePublishersToRecord = session.getActiveIndividualRecordedPublishers();
+		final CountDownLatch recordingStartedCountdown = new CountDownLatch(activePublishersToRecord);
 
 		for (Participant p : session.getParticipants()) {
-			if (p.isStreaming()) {
+			if (p.isStreaming() && p.getToken().record()) {
 
 				MediaProfileSpecType profile = null;
 				try {
@@ -299,7 +299,7 @@ public class SingleStreamRecordingService extends RecordingService {
 				if (storedRecorders.get(recordingId).containsKey(streamId)) {
 					log.info("Stream {} recording of recording {} was already stopped", streamId, recordingId);
 				} else {
-					log.error("Stream {} wasn't being recorded in recording {}", streamId, recordingId);
+					log.info("Stream {} wasn't being recorded in recording {}", streamId, recordingId);
 				}
 			}
 			globalStopLatch.countDown();

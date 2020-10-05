@@ -181,7 +181,7 @@ public class KurentoParticipant extends Participant {
 		log.info("PARTICIPANT {}: Is now publishing video in room {}", this.getParticipantPublicId(),
 				this.session.getSessionId());
 
-		if (this.openviduConfig.isRecordingModuleEnabled()
+		if (this.openviduConfig.isRecordingModuleEnabled() && this.token.record()
 				&& this.recordingManager.sessionIsBeingRecorded(session.getSessionId())) {
 			this.recordingManager.startOneIndividualStreamRecording(session, this);
 		}
@@ -447,7 +447,7 @@ public class KurentoParticipant extends Participant {
 		// Remove streamId from publisher's map
 		this.session.publishedStreamIds.remove(this.getPublisherStreamId());
 
-		if (this.openviduConfig.isRecordingModuleEnabled()
+		if (this.openviduConfig.isRecordingModuleEnabled() && this.token.record()
 				&& this.recordingManager.sessionIsBeingRecorded(session.getSessionId())) {
 			this.recordingManager.stopOneIndividualStreamRecording(session, this.getPublisherStreamId(),
 					kmsDisconnectionTime);
@@ -461,7 +461,7 @@ public class KurentoParticipant extends Participant {
 		}
 		releaseElement(getParticipantPublicId(), publisher.getEndpoint());
 		this.streaming = false;
-		this.session.deregisterPublisher();
+		this.session.deregisterPublisher(this);
 
 		endpointConfig.getCdr().stopPublisher(this.getParticipantPublicId(), publisher.getStreamId(), reason);
 		publisher = null;

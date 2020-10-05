@@ -244,6 +244,7 @@ public class Participant {
 		}
 		json.addProperty("role", this.token.getRole().name());
 		json.addProperty("serverData", this.serverMetadata);
+		json.addProperty("record", this.token.record());
 		json.addProperty("clientData", this.clientMetadata);
 		return json;
 	}

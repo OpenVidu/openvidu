@@ -129,6 +129,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   customToken: string;
   tokenOptions: TokenOptions = {
     role: OpenViduRole.PUBLISHER,
+    record: true,
     kurentoOptions: {
       videoMaxRecvBandwidth: 1000,
       videoMinRecvBandwidth: 300,
@@ -684,7 +685,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     return this.OV_NodeClient.createSession(this.sessionProperties)
       .then(session_NodeClient => {
         this.sessionAPI = session_NodeClient;
-        return session_NodeClient.generateToken({ role: this.tokenOptions.role, kurentoOptions: this.tokenOptions.kurentoOptions });
+        return session_NodeClient.generateToken(this.tokenOptions);
       });
   }
 

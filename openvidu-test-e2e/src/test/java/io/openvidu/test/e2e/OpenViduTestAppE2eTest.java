@@ -1584,6 +1584,46 @@ public class OpenViduTestAppE2eTest {
 	}
 
 	@Test
+	@DisplayName("Individual dynamic record")
+	void individualDynamicRecordTest() throws Exception {
+		isRecordingTest = true;
+
+		setupBrowser("chrome");
+
+		log.info("Individual dynamic record");
+
+		// Connect 3 users. Two of them not recorded
+		for (int i = 0; i < 3; i++) {
+			user.getDriver().findElement(By.id("add-user-btn")).click();
+			if (i < 2) {
+				user.getDriver().findElement(By.id("session-settings-btn-" + i)).click();
+				Thread.sleep(1000);
+				user.getDriver().findElement(By.id("record-checkbox")).click();
+				user.getDriver().findElement(By.id("save-btn")).click();
+				Thread.sleep(1000);
+			}
+		}
+
+		String sessionName = "TestSession";
+
+		user.getDriver().findElements(By.className("join-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 6);
+
+		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start",
+				"{'session':'" + sessionName + "','outputMode':'INDIVIDUAL'}", HttpStatus.SC_OK);
+		user.getEventManager().waitUntilEventReaches("recordingStarted", 3);
+		Thread.sleep(2000);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/stop/" + sessionName, HttpStatus.SC_OK);
+		user.getEventManager().waitUntilEventReaches("recordingStopped", 3);
+
+		String recPath = "/opt/openvidu/recordings/" + sessionName + "/";
+		Recording recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(sessionName);
+		this.checkIndividualRecording(recPath, recording, 1, "opus", "vp8", true);
+
+	}
+
+	@Test
 	@DisplayName("Record cross-browser audio-only and video-only")
 	void audioOnlyVideoOnlyRecordTest() throws Exception {
 		isRecordingTest = true;
@@ -2814,7 +2854,7 @@ public class OpenViduTestAppE2eTest {
 		// 200
 		body = "{'session': 'CUSTOM_SESSION_ID', 'role': 'MODERATOR', 'data': 'SERVER_DATA', 'kurentoOptions': {'allowedFilters': ['GStreamerFilter']}}";
 		res = restClient.rest(HttpMethod.POST, "/openvidu/api/tokens", body, HttpStatus.SC_OK, true,
-				"{'id':'STR','connectionId':'STR','session':'STR','role':'STR','data':'STR','token':'STR','kurentoOptions':{'allowedFilters':['STR']}}");
+				"{'id':'STR','connectionId':'STR','session':'STR','role':'STR','data':'STR','record':true,'token':'STR','kurentoOptions':{'allowedFilters':['STR']}}");
 		final String token1 = res.get("token").getAsString();
 		Assert.assertEquals("JSON return value from /openvidu/api/tokens should have equal srtings in 'id' and 'token'",
 				res.get("id").getAsString(), token1);
@@ -2823,7 +2863,7 @@ public class OpenViduTestAppE2eTest {
 		// Default values
 		body = "{'session': 'CUSTOM_SESSION_ID'}";
 		res = restClient.rest(HttpMethod.POST, "/openvidu/api/tokens", body, HttpStatus.SC_OK, true,
-				"{'id':'STR','connectionId':'STR','session':'STR','role':'STR','data':'STR','token':'STR'}");
+				"{'id':'STR','connectionId':'STR','session':'STR','role':'STR','data':'STR','record':true,'token':'STR'}");
 		final String token2 = res.get("id").getAsString();
 
 		/** POST /openvidu/api/signal (NOT ACTIVE SESSION) **/

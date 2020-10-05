@@ -28,17 +28,19 @@ public class Token {
 	private String token;
 	private OpenViduRole role;
 	private String serverMetadata = "";
+	private boolean record;
 	private TurnCredentials turnCredentials;
 	private KurentoTokenOptions kurentoTokenOptions;
 
 	private final String connectionId = IdentifierPrefixes.PARTICIPANT_PUBLIC_ID
 			+ RandomStringUtils.randomAlphabetic(1).toUpperCase() + RandomStringUtils.randomAlphanumeric(9);
 
-	public Token(String token, OpenViduRole role, String serverMetadata, TurnCredentials turnCredentials,
-			KurentoTokenOptions kurentoTokenOptions) {
+	public Token(String token, OpenViduRole role, String serverMetadata, boolean record,
+			TurnCredentials turnCredentials, KurentoTokenOptions kurentoTokenOptions) {
 		this.token = token;
 		this.role = role;
 		this.serverMetadata = serverMetadata;
+		this.record = record;
 		this.turnCredentials = turnCredentials;
 		this.kurentoTokenOptions = kurentoTokenOptions;
 	}
@@ -57,6 +59,10 @@ public class Token {
 
 	public String getServerMetadata() {
 		return serverMetadata;
+	}
+
+	public boolean record() {
+		return record;
 	}
 
 	public TurnCredentials getTurnCredentials() {

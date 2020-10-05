@@ -288,8 +288,7 @@ public class RecordingManager {
 							this.sessionHandler.sendRecordingStartedNotification(session, recording);
 						}
 						if (session.getActivePublishers() == 0) {
-							// Init automatic recording stop if there are now publishers when starting
-							// recording
+							// Init automatic recording stop if no publishers when starting the recording
 							log.info("No publisher in session {}. Starting {} seconds countdown for stopping recording",
 									session.getSessionId(), this.openviduConfig.getOpenviduRecordingAutostopTimeout());
 							this.initAutomaticRecordingStopThread(session);
