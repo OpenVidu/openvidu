@@ -27,7 +27,14 @@ public class RecorderEndpointWrapper {
 
 	private RecorderEndpoint recorder;
 	private KurentoParticipant kParticipant;
+	private String connectionId;
 	private String recordingId;
+	private String streamId;
+	private String clientData;
+	private String serverData;
+	private boolean hasAudio;
+	private boolean hasVideo;
+	private String typeOfVideo;
 
 	private long startTime;
 	private long endTime;
@@ -37,18 +44,25 @@ public class RecorderEndpointWrapper {
 		this.recorder = recorder;
 		this.kParticipant = kParticipant;
 		this.recordingId = recordingId;
+		this.connectionId = kParticipant.getParticipantPublicId();
+		this.streamId = kParticipant.getPublisherStreamId();
+		this.clientData = kParticipant.getClientMetadata();
+		this.serverData = kParticipant.getServerMetadata();
+		this.hasAudio = kParticipant.getPublisher().getMediaOptions().hasAudio();
+		this.hasVideo = kParticipant.getPublisher().getMediaOptions().hasVideo();
+		this.typeOfVideo = kParticipant.getPublisher().getMediaOptions().getTypeOfVideo();
 	}
 
 	public RecorderEndpoint getRecorder() {
 		return recorder;
 	}
-	
+
 	public KurentoParticipant getParticipant() {
 		return this.kParticipant;
 	}
 
 	public String getConnectionId() {
-		return kParticipant.getParticipantPublicId();
+		return connectionId;
 	}
 
 	public String getRecordingId() {
@@ -56,15 +70,15 @@ public class RecorderEndpointWrapper {
 	}
 
 	public String getStreamId() {
-		return kParticipant.getPublisherStreamId();
+		return streamId;
 	}
 
 	public String getClientData() {
-		return kParticipant.getClientMetadata();
+		return clientData;
 	}
 
 	public String getServerData() {
-		return kParticipant.getServerMetadata();
+		return serverData;
 	}
 
 	public long getStartTime() {
@@ -92,15 +106,15 @@ public class RecorderEndpointWrapper {
 	}
 
 	public boolean hasAudio() {
-		return kParticipant.getPublisher().getMediaOptions().hasAudio();
+		return hasAudio;
 	}
 
 	public boolean hasVideo() {
-		return kParticipant.getPublisher().getMediaOptions().hasVideo();
+		return hasVideo;
 	}
 
 	public String getTypeOfVideo() {
-		return kParticipant.getPublisher().getMediaOptions().getTypeOfVideo();
+		return typeOfVideo;
 	}
 
 	public JsonObject toJson() {
