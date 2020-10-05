@@ -102,11 +102,11 @@ export class Session {
 
             const data = JSON.stringify({
                 session: this.sessionId,
-                role: (!!tokenOptions && !!tokenOptions.role) ? tokenOptions.role : OpenViduRole.PUBLISHER,
-                data: (!!tokenOptions && !!tokenOptions.data) ? tokenOptions.data : '',
-                kurentoOptions: (!!tokenOptions && !!tokenOptions.kurentoOptions) ? tokenOptions.kurentoOptions : {},
+                role: (!!tokenOptions && !!tokenOptions.role) ? tokenOptions.role : null,
+                data: (!!tokenOptions && !!tokenOptions.data) ? tokenOptions.data : null,
+                record: !!tokenOptions ? tokenOptions.record : null,
+                kurentoOptions: (!!tokenOptions && !!tokenOptions.kurentoOptions) ? tokenOptions.kurentoOptions : null
             });
-
             axios.post(
                 this.ov.host + OpenVidu.API_TOKENS,
                 data,
