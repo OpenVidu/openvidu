@@ -13,6 +13,9 @@ processors:
       fields: ["message"]
       target: "json"
       overwrite_keys: true
+  - add_fields:
+      fields:
+        cluster-id: ${OPENVIDU_PRO_CLUSTER_ID:undefined}
 
 output:
   elasticsearch:
