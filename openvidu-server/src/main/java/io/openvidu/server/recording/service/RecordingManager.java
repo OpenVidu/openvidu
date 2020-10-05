@@ -67,7 +67,6 @@ import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.Session;
 import io.openvidu.server.core.SessionEventsHandler;
 import io.openvidu.server.core.SessionManager;
-import io.openvidu.server.kurento.core.KurentoSession;
 import io.openvidu.server.kurento.kms.Kms;
 import io.openvidu.server.kurento.kms.KmsManager;
 import io.openvidu.server.recording.Recording;
@@ -351,7 +350,7 @@ public class RecordingManager {
 		return recording;
 	}
 
-	public Recording forceStopRecording(Session session, EndReason reason, long kmsDisconnectionTime) {
+	public Recording forceStopRecording(Session session, EndReason reason, Long kmsDisconnectionTime) {
 		Recording recording;
 		recording = this.sessionsRecordings.get(session.getSessionId());
 		switch (recording.getOutputMode()) {
@@ -409,8 +408,8 @@ public class RecordingManager {
 				return;
 			}
 
-			this.singleStreamRecordingService.startRecorderEndpointForPublisherEndpoint(session, recording.getId(),
-					profile, participant, startedCountDown);
+			this.singleStreamRecordingService.startRecorderEndpointForPublisherEndpoint(recording.getId(), profile,
+					participant, startedCountDown);
 		} else if (RecordingUtils.IS_COMPOSED(recording.getOutputMode()) && !recording.hasVideo()) {
 			// Connect this stream to existing Composite recorder
 			log.info("Joining PublisherEndpoint to existing Composite in session {} for new stream of participant {}",
@@ -419,7 +418,7 @@ public class RecordingManager {
 		}
 	}
 
-	public void stopOneIndividualStreamRecording(KurentoSession session, String streamId, long kmsDisconnectionTime) {
+	public void stopOneIndividualStreamRecording(Session session, String streamId, Long kmsDisconnectionTime) {
 		Recording recording = this.sessionsRecordings.get(session.getSessionId());
 		if (recording == null) {
 			recording = this.sessionsRecordingsStarting.get(session.getSessionId());

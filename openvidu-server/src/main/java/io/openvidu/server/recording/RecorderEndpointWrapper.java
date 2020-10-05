@@ -21,41 +21,34 @@ import org.kurento.client.RecorderEndpoint;
 
 import com.google.gson.JsonObject;
 
+import io.openvidu.server.kurento.core.KurentoParticipant;
+
 public class RecorderEndpointWrapper {
 
 	private RecorderEndpoint recorder;
-	private String connectionId;
+	private KurentoParticipant kParticipant;
 	private String recordingId;
-	private String streamId;
-	private String clientData;
-	private String serverData;
-	private boolean hasAudio;
-	private boolean hasVideo;
-	private String typeOfVideo;
 
 	private long startTime;
 	private long endTime;
 	private long size;
 
-	public RecorderEndpointWrapper(RecorderEndpoint recorder, String connectionId, String recordingId, String streamId,
-			String clientData, String serverData, boolean hasAudio, boolean hasVideo, String typeOfVideo) {
+	public RecorderEndpointWrapper(RecorderEndpoint recorder, KurentoParticipant kParticipant, String recordingId) {
 		this.recorder = recorder;
-		this.connectionId = connectionId;
+		this.kParticipant = kParticipant;
 		this.recordingId = recordingId;
-		this.streamId = streamId;
-		this.clientData = clientData;
-		this.serverData = serverData;
-		this.hasAudio = hasAudio;
-		this.hasVideo = hasVideo;
-		this.typeOfVideo = typeOfVideo;
 	}
 
 	public RecorderEndpoint getRecorder() {
 		return recorder;
 	}
+	
+	public KurentoParticipant getParticipant() {
+		return this.kParticipant;
+	}
 
 	public String getConnectionId() {
-		return connectionId;
+		return kParticipant.getParticipantPublicId();
 	}
 
 	public String getRecordingId() {
@@ -63,15 +56,15 @@ public class RecorderEndpointWrapper {
 	}
 
 	public String getStreamId() {
-		return streamId;
+		return kParticipant.getPublisherStreamId();
 	}
 
 	public String getClientData() {
-		return clientData;
+		return kParticipant.getClientMetadata();
 	}
 
 	public String getServerData() {
-		return serverData;
+		return kParticipant.getServerMetadata();
 	}
 
 	public long getStartTime() {
@@ -99,31 +92,31 @@ public class RecorderEndpointWrapper {
 	}
 
 	public boolean hasAudio() {
-		return hasAudio;
+		return kParticipant.getPublisher().getMediaOptions().hasAudio();
 	}
 
 	public boolean hasVideo() {
-		return hasVideo;
+		return kParticipant.getPublisher().getMediaOptions().hasVideo();
 	}
 
 	public String getTypeOfVideo() {
-		return typeOfVideo;
+		return kParticipant.getPublisher().getMediaOptions().getTypeOfVideo();
 	}
 
 	public JsonObject toJson() {
 		JsonObject json = new JsonObject();
-		json.addProperty("connectionId", this.connectionId);
-		json.addProperty("streamId", this.streamId);
-		json.addProperty("clientData", this.clientData);
-		json.addProperty("serverData", this.serverData);
-		json.addProperty("startTime", this.startTime);
-		json.addProperty("endTime", this.endTime);
-		json.addProperty("duration", this.endTime - this.startTime);
-		json.addProperty("size", this.size);
-		json.addProperty("hasAudio", this.hasAudio);
-		json.addProperty("hasVideo", this.hasVideo);
-		if (this.hasVideo) {
-			json.addProperty("typeOfVideo", this.typeOfVideo);
+		json.addProperty("connectionId", this.getConnectionId());
+		json.addProperty("streamId", this.getStreamId());
+		json.addProperty("clientData", this.getClientData());
+		json.addProperty("serverData", this.getServerData());
+		json.addProperty("startTime", this.getStartTime());
+		json.addProperty("endTime", this.getEndTime());
+		json.addProperty("duration", this.getEndTime() - this.getStartTime());
+		json.addProperty("size", this.getSize());
+		json.addProperty("hasAudio", this.hasAudio());
+		json.addProperty("hasVideo", this.hasVideo());
+		if (this.hasVideo()) {
+			json.addProperty("typeOfVideo", this.getTypeOfVideo());
 		}
 		return json;
 	}

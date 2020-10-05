@@ -116,7 +116,7 @@ public class SingleStreamRecordingService extends RecordingService {
 					recordingStartedCountdown.countDown();
 					continue;
 				}
-				this.startRecorderEndpointForPublisherEndpoint(session, recording.getId(), profile, p,
+				this.startRecorderEndpointForPublisherEndpoint(recording.getId(), profile, p,
 						recordingStartedCountdown);
 			}
 		}
@@ -141,10 +141,10 @@ public class SingleStreamRecordingService extends RecordingService {
 
 	@Override
 	public Recording stopRecording(Session session, Recording recording, EndReason reason) {
-		return this.stopRecording(session, recording, reason, 0);
+		return this.stopRecording(session, recording, reason, null);
 	}
 
-	public Recording stopRecording(Session session, Recording recording, EndReason reason, long kmsDisconnectionTime) {
+	public Recording stopRecording(Session session, Recording recording, EndReason reason, Long kmsDisconnectionTime) {
 		log.info("Stopping individual ({}) recording {} of session {}. Reason: {}",
 				recording.hasVideo() ? (recording.hasAudio() ? "video+audio" : "video-only") : "audioOnly",
 				recording.getId(), recording.getSessionId(), reason);
@@ -205,18 +205,18 @@ public class SingleStreamRecordingService extends RecordingService {
 		return finalRecordingArray[0];
 	}
 
-	public void startRecorderEndpointForPublisherEndpoint(final Session session, final String recordingId,
-			MediaProfileSpecType profile, final Participant participant, CountDownLatch globalStartLatch) {
+	public void startRecorderEndpointForPublisherEndpoint(final String recordingId, MediaProfileSpecType profile,
+			final Participant participant, CountDownLatch globalStartLatch) {
 
 		log.info("Starting single stream recorder for stream {} in session {}", participant.getPublisherStreamId(),
-				session.getSessionId());
+				participant.getSessionId());
 
 		try {
 			if (participant.singleRecordingLock.tryLock(15, TimeUnit.SECONDS)) {
 				try {
 					if (this.activeRecorders.get(recordingId).containsKey(participant.getPublisherStreamId())) {
 						log.warn("Concurrent initialization of RecorderEndpoint for stream {} of session {}. Returning",
-								participant.getPublisherStreamId(), session.getSessionId());
+								participant.getPublisherStreamId(), participant.getSessionId());
 						return;
 					}
 
@@ -244,13 +244,8 @@ public class SingleStreamRecordingService extends RecordingService {
 						}
 					});
 
-					RecorderEndpointWrapper wrapper = new RecorderEndpointWrapper(recorder,
-							participant.getParticipantPublicId(), recordingId, participant.getPublisherStreamId(),
-							participant.getClientMetadata(), participant.getServerMetadata(),
-							kurentoParticipant.getPublisher().getMediaOptions().hasAudio(),
-							kurentoParticipant.getPublisher().getMediaOptions().hasVideo(),
-							kurentoParticipant.getPublisher().getMediaOptions().getTypeOfVideo());
-
+					RecorderEndpointWrapper wrapper = new RecorderEndpointWrapper(recorder, kurentoParticipant,
+							recordingId);
 					activeRecorders.get(recordingId).put(participant.getPublisherStreamId(), wrapper);
 					storedRecorders.get(recordingId).put(participant.getPublisherStreamId(), wrapper);
 
@@ -262,13 +257,13 @@ public class SingleStreamRecordingService extends RecordingService {
 				}
 			} else {
 				log.error(
-						"Timeout waiting for individual recording lock to be available for participant {} of session {}",
-						participant.getParticipantPublicId(), session.getSessionId());
+						"Timeout waiting for individual recording lock to be available to start stream recording for participant {} of session {}",
+						participant.getParticipantPublicId(), participant.getSessionId());
 			}
 		} catch (InterruptedException e) {
 			log.error(
-					"InterruptedException waiting for individual recording lock to be available for participant {} of session {}",
-					participant.getParticipantPublicId(), session.getSessionId());
+					"InterruptedException waiting for individual recording lock to be available to start stream recording for participant {} of session {}",
+					participant.getParticipantPublicId(), participant.getSessionId());
 		}
 	}
 

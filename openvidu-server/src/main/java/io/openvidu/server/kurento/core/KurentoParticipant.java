@@ -194,7 +194,7 @@ public class KurentoParticipant extends Participant {
 		return sdpResponse;
 	}
 
-	public void unpublishMedia(EndReason reason, long kmsDisconnectionTime) {
+	public void unpublishMedia(EndReason reason, Long kmsDisconnectionTime) {
 		log.info("PARTICIPANT {}: unpublishing media stream from room {}", this.getParticipantPublicId(),
 				this.session.getSessionId());
 		final MediaOptions mediaOptions = this.getPublisher().getMediaOptions();
@@ -347,7 +347,7 @@ public class KurentoParticipant extends Participant {
 		}
 	}
 
-	public void close(EndReason reason, boolean definitelyClosed, long kmsDisconnectionTime) {
+	public void close(EndReason reason, boolean definitelyClosed, Long kmsDisconnectionTime) {
 		log.debug("PARTICIPANT {}: Closing user", this.getParticipantPublicId());
 		if (isClosed()) {
 			log.warn("PARTICIPANT {}: Already closed", this.getParticipantPublicId());
@@ -420,7 +420,7 @@ public class KurentoParticipant extends Participant {
 		session.sendMediaError(this.getParticipantPrivateId(), desc);
 	}
 
-	private void releasePublisherEndpoint(EndReason reason, long kmsDisconnectionTime) {
+	private void releasePublisherEndpoint(EndReason reason, Long kmsDisconnectionTime) {
 		if (publisher != null && publisher.getEndpoint() != null) {
 			final ReadWriteLock closingLock = publisher.closingLock;
 			try {
@@ -443,7 +443,7 @@ public class KurentoParticipant extends Participant {
 		}
 	}
 
-	private void releasePublisherEndpointAux(EndReason reason, long kmsDisconnectionTime) {
+	private void releasePublisherEndpointAux(EndReason reason, Long kmsDisconnectionTime) {
 		// Remove streamId from publisher's map
 		this.session.publishedStreamIds.remove(this.getPublisherStreamId());
 

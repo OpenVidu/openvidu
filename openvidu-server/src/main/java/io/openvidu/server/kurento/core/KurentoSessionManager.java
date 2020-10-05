@@ -495,7 +495,7 @@ public class KurentoSessionManager extends SessionManager {
 				throw new OpenViduException(Code.USER_NOT_STREAMING_ERROR_CODE,
 						"Participant '" + participant.getParticipantPublicId() + "' is not streaming media");
 			}
-			kParticipant.unpublishMedia(reason, 0);
+			kParticipant.unpublishMedia(reason, null);
 			session.cancelPublisher(participant, reason);
 
 			Set<Participant> participants = session.getParticipants();

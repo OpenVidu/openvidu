@@ -122,7 +122,7 @@ public class KurentoSession extends Session {
 		log.info("PARTICIPANT {}: Leaving session {}", participant.getParticipantPublicId(), this.sessionId);
 
 		this.removeParticipant(participant, reason);
-		participant.close(reason, true, 0);
+		participant.close(reason, true, null);
 	}
 
 	@Override
@@ -133,7 +133,7 @@ public class KurentoSession extends Session {
 
 			for (Participant participant : participants.values()) {
 				((KurentoParticipant) participant).releaseAllFilters();
-				((KurentoParticipant) participant).close(reason, true, 0);
+				((KurentoParticipant) participant).close(reason, true, null);
 			}
 
 			participants.clear();
@@ -280,7 +280,7 @@ public class KurentoSession extends Session {
 		return this.publishedStreamIds.get(streamId);
 	}
 
-	public void restartStatusInKurento(long kmsDisconnectionTime) {
+	public void restartStatusInKurento(Long kmsDisconnectionTime) {
 
 		log.info("Resetting process: resetting remote media objects for active session {}", this.sessionId);
 

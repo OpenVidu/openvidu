@@ -109,11 +109,11 @@ public class ComposedRecordingService extends RecordingService {
 		if (recording.hasVideo()) {
 			return this.stopRecordingWithVideo(session, recording, reason);
 		} else {
-			return this.stopRecordingAudioOnly(session, recording, reason, 0);
+			return this.stopRecordingAudioOnly(session, recording, reason, null);
 		}
 	}
 
-	public Recording stopRecording(Session session, Recording recording, EndReason reason, long kmsDisconnectionTime) {
+	public Recording stopRecording(Session session, Recording recording, EndReason reason, Long kmsDisconnectionTime) {
 		if (recording.hasVideo()) {
 			return this.stopRecordingWithVideo(session, recording, reason);
 		} else {
@@ -322,7 +322,7 @@ public class ComposedRecordingService extends RecordingService {
 	}
 
 	private Recording stopRecordingAudioOnly(Session session, Recording recording, EndReason reason,
-			long kmsDisconnectionTime) {
+			Long kmsDisconnectionTime) {
 
 		log.info("Stopping composed (audio-only) recording {} of session {}. Reason: {}", recording.getId(),
 				recording.getSessionId(), reason);
