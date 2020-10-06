@@ -343,7 +343,7 @@ Resources:
                   - 'route53:ListHostedZones'
                 Resource: '*'
               - Fn::If:
-                # Only apply this policies if S3 is configured
+                # Only apply this policy if S3 is configured
                 - RecordingStorageIsS3
                 - Effect: Allow
                   Action:
@@ -358,7 +358,7 @@ Resources:
                       - !Join [ "", [ 'arn:aws:s3:::', !Ref AWS::StackName, '-recordings', '/*'] ]
                 - Ref: AWS::NoValue
               - Fn::If:
-                # Only apply this policies if S3 is configured
+                # Only apply this policy if S3 is configured
                 - RecordingStorageIsS3
                 - Effect: Allow
                   Action: 
@@ -371,7 +371,7 @@ Resources:
                       - !Join [ "", [ 'arn:aws:s3:::', !Ref AWS::StackName, '-recordings' ] ]
                 - Ref: AWS::NoValue
               - Fn::If:
-                # Only apply this policies if S3 is configured
+                # Only apply this policy if S3 is configured
                 - RecordingStorageIsS3
                 - Effect: Allow
                   Action:
@@ -487,11 +487,11 @@ Resources:
 
                 # S3 Configuration
                 if [ "${RecordingStorage}" == "s3" ]; then
-                  sed -i "s/#OPENVIDU_PRO_RECORDING_STORAGE=/OPENVIDU_PRO_RECORDING_STORAGE=s3" $WORKINGDIR/.env
+                  sed -i "s/#OPENVIDU_PRO_RECORDING_STORAGE=/OPENVIDU_PRO_RECORDING_STORAGE=s3/" $WORKINGDIR/.env
                   if [ ! -z "${S3RecordingsBucketName}" ]; then
-                    sed -i "s/#OPENVIDU_PRO_AWS_S3_BUCKET=/OPENVIDU_PRO_AWS_S3_BUCKET=${S3RecordingsBucketName}" $WORKINGDIR/.env
+                    sed -i "s/#OPENVIDU_PRO_AWS_S3_BUCKET=/OPENVIDU_PRO_AWS_S3_BUCKET=${S3RecordingsBucketName}/" $WORKINGDIR/.env
                   else
-                    sed -i "s/#OPENVIDU_PRO_AWS_S3_BUCKET=/OPENVIDU_PRO_AWS_S3_BUCKET=${s3BucketName}" $WORKINGDIR/.env
+                    sed -i "s/#OPENVIDU_PRO_AWS_S3_BUCKET=/OPENVIDU_PRO_AWS_S3_BUCKET=${s3BucketName}/" $WORKINGDIR/.env
                   fi
                 fi
               - kmsAmi: !FindInMap [KMSAMIMAP, !Ref 'AWS::Region', AMI]
