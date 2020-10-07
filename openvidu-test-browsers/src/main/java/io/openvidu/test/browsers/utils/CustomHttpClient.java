@@ -138,14 +138,14 @@ public class CustomHttpClient {
 					JsonObject jsonObjActual = json.get(entry.getKey()).getAsJsonObject();
 					// COMPARE
 
-				} catch (JsonSyntaxException e1) {
+				} catch (Exception e1) {
 					try {
 						JsonArray jsonArrayExpected = JsonParser.parseString((String) value).getAsJsonArray();
 						JsonArray jsonArrayActual = json.get(entry.getKey()).getAsJsonArray();
 						// COMPARE
 
-					} catch (JsonSyntaxException e2) {
-						if (((String) value) != json.get(entry.getKey()).getAsString()) {
+					} catch (Exception e2) {
+						if (!((String) value).equals(json.get(entry.getKey()).getAsString())) {
 							throw new Exception("JSON field " + entry.getKey() + " has not expected value. Expected: "
 									+ value + ". Actual: " + json.get(entry.getKey()).getAsString());
 						}
