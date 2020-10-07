@@ -18,23 +18,11 @@
 package io.openvidu.test.e2e;
 
 import static org.junit.Assert.fail;
-import static org.openqa.selenium.OutputType.BASE64;
 
-import java.awt.Color;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.math.RoundingMode;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -42,21 +30,9 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import javax.imageio.ImageIO;
-
-import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpStatus;
-import org.jcodec.api.FrameGrab;
-import org.jcodec.api.JCodecException;
-import org.jcodec.common.model.Picture;
-import org.jcodec.scale.AWTUtil;
 import org.junit.Assert;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -65,30 +41,21 @@ import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.Keys;
-import org.openqa.selenium.TakesScreenshot;
-import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.stream.JsonReader;
 import com.mashape.unirest.http.HttpMethod;
 
-import io.github.bonigarcia.wdm.WebDriverManager;
 import io.openvidu.java.client.Connection;
 import io.openvidu.java.client.KurentoOptions;
 import io.openvidu.java.client.MediaMode;
 import io.openvidu.java.client.OpenVidu;
 import io.openvidu.java.client.OpenViduHttpException;
-import io.openvidu.java.client.OpenViduJavaClientException;
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.java.client.Publisher;
 import io.openvidu.java.client.Recording;
@@ -99,15 +66,8 @@ import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.java.client.Session;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.java.client.TokenOptions;
-import io.openvidu.test.browsers.BrowserUser;
-import io.openvidu.test.browsers.ChromeAndroidUser;
-import io.openvidu.test.browsers.ChromeUser;
 import io.openvidu.test.browsers.FirefoxUser;
-import io.openvidu.test.browsers.OperaUser;
-import io.openvidu.test.browsers.utils.CommandLineExecutor;
 import io.openvidu.test.browsers.utils.CustomHttpClient;
-import io.openvidu.test.browsers.utils.MultimediaFileMetadata;
-import io.openvidu.test.browsers.utils.Unzipper;
 import io.openvidu.test.browsers.utils.layout.CustomLayoutHandler;
 import io.openvidu.test.browsers.utils.webhook.CustomWebhook;
 
@@ -120,195 +80,7 @@ import io.openvidu.test.browsers.utils.webhook.CustomWebhook;
 @Tag("e2e")
 @DisplayName("E2E tests for OpenVidu TestApp")
 @ExtendWith(SpringExtension.class)
-public class OpenViduTestAppE2eTest {
-
-	static String OPENVIDU_SECRET = "MY_SECRET";
-	static String OPENVIDU_URL = "https://localhost:4443/";
-	static String APP_URL = "http://localhost:4200/";
-	static String EXTERNAL_CUSTOM_LAYOUT_URL = "http://localhost:5555";
-	static String EXTERNAL_CUSTOM_LAYOUT_PARAMS = "sessionId,CUSTOM_LAYOUT_SESSION,secret,MY_SECRET";
-	static Exception ex = null;
-	private final Object lock = new Object();
-
-	private static final Logger log = LoggerFactory.getLogger(OpenViduTestAppE2eTest.class);
-	private static final CommandLineExecutor commandLine = new CommandLineExecutor();
-	private static final String RECORDING_IMAGE = "openvidu/openvidu-recording";
-
-	MyUser user;
-	Collection<MyUser> otherUsers = new ArrayList<>();
-	volatile static boolean isRecordingTest;
-	volatile static boolean isKurentoRestartTest;
-	private static OpenVidu OV;
-
-	@BeforeAll()
-	static void setupAll() {
-
-		String ffmpegOutput = commandLine.executeCommand("which ffmpeg");
-		if (ffmpegOutput == null || ffmpegOutput.isEmpty()) {
-			log.error("ffmpeg package is not installed in the host machine");
-			Assert.fail();
-			return;
-		} else {
-			log.info("ffmpeg is installed and accesible");
-		}
-
-		WebDriverManager.chromedriver().setup();
-		WebDriverManager.firefoxdriver().setup();
-
-		String appUrl = System.getProperty("APP_URL");
-		if (appUrl != null) {
-			APP_URL = appUrl;
-		}
-		log.info("Using URL {} to connect to openvidu-testapp", APP_URL);
-
-		String externalCustomLayoutUrl = System.getProperty("EXTERNAL_CUSTOM_LAYOUT_URL");
-		if (externalCustomLayoutUrl != null) {
-			EXTERNAL_CUSTOM_LAYOUT_URL = externalCustomLayoutUrl;
-		}
-		log.info("Using URL {} to connect to external custom layout", EXTERNAL_CUSTOM_LAYOUT_URL);
-
-		String externalCustomLayoutParams = System.getProperty("EXTERNAL_CUSTOM_LAYOUT_PARAMS");
-		if (externalCustomLayoutParams != null) {
-			// Parse external layout parameters and build a URL formatted params string
-			List<String> params = Stream.of(externalCustomLayoutParams.split(",", -1)).collect(Collectors.toList());
-			if (params.size() % 2 != 0) {
-				log.error(
-						"Wrong configuration property EXTERNAL_CUSTOM_LAYOUT_PARAMS. Must be a comma separated list with an even number of elements. e.g: EXTERNAL_CUSTOM_LAYOUT_PARAMS=param1,value1,param2,value2");
-				Assert.fail();
-				return;
-			} else {
-				EXTERNAL_CUSTOM_LAYOUT_PARAMS = "";
-				for (int i = 0; i < params.size(); i++) {
-					if (i % 2 == 0) {
-						// Param name
-						EXTERNAL_CUSTOM_LAYOUT_PARAMS += params.get(i) + "=";
-					} else {
-						// Param value
-						EXTERNAL_CUSTOM_LAYOUT_PARAMS += params.get(i);
-						if (i < params.size() - 1) {
-							EXTERNAL_CUSTOM_LAYOUT_PARAMS += "&";
-						}
-					}
-				}
-			}
-		}
-		log.info("Using URL {} to connect to external custom layout", EXTERNAL_CUSTOM_LAYOUT_PARAMS);
-
-		String openviduUrl = System.getProperty("OPENVIDU_URL");
-		if (openviduUrl != null) {
-			OPENVIDU_URL = openviduUrl;
-		}
-		log.info("Using URL {} to connect to openvidu-server", OPENVIDU_URL);
-
-		String openvidusecret = System.getProperty("OPENVIDU_SECRET");
-		if (openvidusecret != null) {
-			OPENVIDU_SECRET = openvidusecret;
-		}
-		log.info("Using secret {} to connect to openvidu-server", OPENVIDU_SECRET);
-
-		try {
-			log.info("Cleaning folder /opt/openvidu/recordings");
-			FileUtils.cleanDirectory(new File("/opt/openvidu/recordings"));
-		} catch (IOException e) {
-			log.error(e.getMessage());
-		}
-		OV = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET);
-	}
-
-	void setupBrowser(String browser) {
-
-		BrowserUser browserUser;
-
-		switch (browser) {
-		case "chrome":
-			browserUser = new ChromeUser("TestUser", 50, false);
-			break;
-		case "firefox":
-			browserUser = new FirefoxUser("TestUser", 50);
-			break;
-		case "opera":
-			browserUser = new OperaUser("TestUser", 50);
-			break;
-		case "chromeAndroid":
-			browserUser = new ChromeAndroidUser("TestUser", 50);
-			break;
-		case "chromeAlternateScreenShare":
-			browserUser = new ChromeUser("TestUser", 50, "OpenVidu TestApp", false);
-			break;
-		case "chromeAsRoot":
-			browserUser = new ChromeUser("TestUser", 50, true);
-			break;
-		default:
-			browserUser = new ChromeUser("TestUser", 50, false);
-		}
-
-		this.user = new MyUser(browserUser);
-
-		user.getDriver().get(APP_URL);
-
-		WebElement urlInput = user.getDriver().findElement(By.id("openvidu-url"));
-		urlInput.clear();
-		urlInput.sendKeys(OPENVIDU_URL);
-		WebElement secretInput = user.getDriver().findElement(By.id("openvidu-secret"));
-		secretInput.clear();
-		secretInput.sendKeys(OPENVIDU_SECRET);
-
-		user.getEventManager().startPolling();
-	}
-
-	void setupChromeWithFakeVideo(Path videoFileLocation) {
-		this.user = new MyUser(new ChromeUser("TestUser", 50, videoFileLocation));
-		user.getDriver().get(APP_URL);
-		WebElement urlInput = user.getDriver().findElement(By.id("openvidu-url"));
-		urlInput.clear();
-		urlInput.sendKeys(OPENVIDU_URL);
-		WebElement secretInput = user.getDriver().findElement(By.id("openvidu-secret"));
-		secretInput.clear();
-		secretInput.sendKeys(OPENVIDU_SECRET);
-		user.getEventManager().startPolling();
-	}
-
-	@AfterEach
-	void dispose() {
-		if (user != null) {
-			user.dispose();
-		}
-		Iterator<MyUser> it = otherUsers.iterator();
-		while (it.hasNext()) {
-			MyUser other = it.next();
-			other.dispose();
-			it.remove();
-		}
-		try {
-			OV.fetch();
-		} catch (OpenViduJavaClientException | OpenViduHttpException e1) {
-			log.error("Error fetching sessions: {}", e1.getMessage());
-		}
-		OV.getActiveSessions().forEach(session -> {
-			try {
-				session.close();
-				log.info("Session {} successfully closed", session.getSessionId());
-			} catch (OpenViduJavaClientException e) {
-				log.error("Error closing session: {}", e.getMessage());
-			} catch (OpenViduHttpException e) {
-				log.error("Error closing session: {}", e.getMessage());
-			}
-		});
-		if (isRecordingTest) {
-			removeAllRecordingContiners();
-			try {
-				FileUtils.cleanDirectory(new File("/opt/openvidu/recordings"));
-			} catch (IOException e) {
-				log.error(e.getMessage());
-			}
-			isRecordingTest = false;
-		}
-		if (isKurentoRestartTest) {
-			this.restartKms();
-			isKurentoRestartTest = false;
-		}
-		OV = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET);
-	}
+public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 	@Test
 	@DisplayName("One2One Chrome [Video + Audio]")
@@ -1581,46 +1353,6 @@ public class OpenViduTestAppE2eTest {
 		Thread.sleep(500);
 
 		gracefullyLeaveParticipants(2);
-	}
-
-	@Test
-	@DisplayName("Individual dynamic record")
-	void individualDynamicRecordTest() throws Exception {
-		isRecordingTest = true;
-
-		setupBrowser("chrome");
-
-		log.info("Individual dynamic record");
-
-		// Connect 3 users. Two of them not recorded
-		for (int i = 0; i < 3; i++) {
-			user.getDriver().findElement(By.id("add-user-btn")).click();
-			if (i < 2) {
-				user.getDriver().findElement(By.id("session-settings-btn-" + i)).click();
-				Thread.sleep(1000);
-				user.getDriver().findElement(By.id("record-checkbox")).click();
-				user.getDriver().findElement(By.id("save-btn")).click();
-				Thread.sleep(1000);
-			}
-		}
-
-		String sessionName = "TestSession";
-
-		user.getDriver().findElements(By.className("join-btn")).forEach(el -> el.sendKeys(Keys.ENTER));
-		user.getEventManager().waitUntilEventReaches("streamPlaying", 6);
-
-		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
-		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start",
-				"{'session':'" + sessionName + "','outputMode':'INDIVIDUAL'}", HttpStatus.SC_OK);
-		user.getEventManager().waitUntilEventReaches("recordingStarted", 3);
-		Thread.sleep(2000);
-		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/stop/" + sessionName, HttpStatus.SC_OK);
-		user.getEventManager().waitUntilEventReaches("recordingStopped", 3);
-
-		String recPath = "/opt/openvidu/recordings/" + sessionName + "/";
-		Recording recording = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET).getRecording(sessionName);
-		this.checkIndividualRecording(recPath, recording, 1, "opus", "vp8", true);
-
 	}
 
 	@Test
@@ -3062,12 +2794,11 @@ public class OpenViduTestAppE2eTest {
 		 **/
 		body = "{'customSessionId': 'CUSTOM_SESSION_ID'}";
 		restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpStatus.SC_OK);
-		body = "{'session': 'CUSTOM_SESSION_ID'}";
+		body = "{'session': 'CUSTOM_SESSION_ID', 'role': 'SUBSCRIBER'}";
 		res = restClient.rest(HttpMethod.POST, "/openvidu/api/tokens", body, HttpStatus.SC_OK);
 		final String tokenAConnectionId = res.get("connectionId").getAsString();
 		final String tokenA = res.get("token").getAsString();
 		res = restClient.rest(HttpMethod.POST, "/openvidu/api/tokens", body, HttpStatus.SC_OK);
-		final String tokenB = res.get("token").getAsString();
 		final String tokenBConnectionId = res.get("connectionId").getAsString();
 
 		user.getDriver().findElement(By.id("one2one-btn")).click();
@@ -3081,21 +2812,12 @@ public class OpenViduTestAppE2eTest {
 
 		user.getDriver().findElement(By.id("save-btn")).click();
 		Thread.sleep(1000);
-		user.getDriver().findElement(By.id("session-settings-btn-1")).click();
-		Thread.sleep(1000);
-
-		// Set token 2
-		tokenInput = user.getDriver().findElement(By.cssSelector("#custom-token-div input"));
-		tokenInput.clear();
-		tokenInput.sendKeys(tokenB);
-		user.getDriver().findElement(By.id("save-btn")).click();
-		Thread.sleep(1000);
 
 		// Invalidate token
 		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + tokenAConnectionId,
 				HttpStatus.SC_NO_CONTENT);
 
-		// First user should pop up invalid token
+		// User should pop up invalid token
 		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .join-btn")).sendKeys(Keys.ENTER);
 		try {
 			user.getWaiter().until(ExpectedConditions.alertIsPresent());
@@ -3692,297 +3414,6 @@ public class OpenViduTestAppE2eTest {
 		} finally {
 			CustomWebhook.shutDown();
 		}
-	}
-
-	private void listEmptyRecordings() {
-		// List existing recordings (empty)
-		user.getDriver().findElement(By.id("list-recording-btn")).click();
-		user.getWaiter()
-				.until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Recording list []"));
-	}
-
-	private ExpectedCondition<Boolean> waitForVideoDuration(WebElement element, int durationInSeconds) {
-		return new ExpectedCondition<Boolean>() {
-			@Override
-			public Boolean apply(WebDriver input) {
-				return element.getAttribute("duration").matches(
-						durationInSeconds - 1 + "\\.[5-9][0-9]{0,5}|" + durationInSeconds + "\\.[0-5][0-9]{0,5}");
-			}
-		};
-	}
-
-	private static boolean checkVideoAverageRgbGreen(Map<String, Long> rgb) {
-		// GREEN color: {r < 15, g > 130, b <15}
-		return (rgb.get("r") < 15) && (rgb.get("g") > 130) && (rgb.get("b") < 15);
-	}
-
-	private static boolean checkVideoAverageRgbGray(Map<String, Long> rgb) {
-		// GRAY color: {r < 50, g < 50, b < 50} and the absolute difference between them
-		// not greater than 2
-		return (rgb.get("r") < 50) && (rgb.get("g") < 50) && (rgb.get("b") < 50)
-				&& (Math.abs(rgb.get("r") - rgb.get("g")) <= 2) && (Math.abs(rgb.get("r") - rgb.get("b")) <= 2)
-				&& (Math.abs(rgb.get("b") - rgb.get("g")) <= 2);
-	}
-
-	private static boolean checkVideoAverageRgbRed(Map<String, Long> rgb) {
-		// RED color: {r > 240, g < 15, b <15}
-		return (rgb.get("r") > 240) && (rgb.get("g") < 15) && (rgb.get("b") < 15);
-	}
-
-	private void gracefullyLeaveParticipants(int numberOfParticipants) throws Exception {
-		int accumulatedConnectionDestroyed = 0;
-		for (int j = 1; j <= numberOfParticipants; j++) {
-			user.getDriver().findElement(By.id("remove-user-btn")).sendKeys(Keys.ENTER);
-			user.getEventManager().waitUntilEventReaches("sessionDisconnected", j);
-			accumulatedConnectionDestroyed = (j != numberOfParticipants)
-					? (accumulatedConnectionDestroyed + numberOfParticipants - j)
-					: (accumulatedConnectionDestroyed);
-			user.getEventManager().waitUntilEventReaches("connectionDestroyed", accumulatedConnectionDestroyed);
-		}
-	}
-
-	private String getBase64Screenshot(MyUser user) throws Exception {
-		String screenshotBase64 = ((TakesScreenshot) user.getDriver()).getScreenshotAs(BASE64);
-		return "data:image/png;base64," + screenshotBase64;
-	}
-
-	private boolean recordedFileFine(File file, Recording recording,
-			Function<Map<String, Long>, Boolean> colorCheckFunction) throws IOException {
-		this.checkMultimediaFile(file, recording.hasAudio(), recording.hasVideo(), recording.getDuration(),
-				recording.getResolution(), "aac", "h264", true);
-
-		boolean isFine = false;
-		Picture frame;
-		try {
-			// Get a frame at 75% duration and check that it has the expected color
-			frame = FrameGrab.getFrameAtSec(file, (double) (recording.getDuration() * 0.75));
-			BufferedImage image = AWTUtil.toBufferedImage(frame);
-			Map<String, Long> colorMap = this.averageColor(image);
-
-			String realResolution = image.getWidth() + "x" + image.getHeight();
-			Assert.assertEquals(
-					"Resolution (" + recording.getResolution()
-							+ ") of recording entity is not equal to real video resolution (" + realResolution + ")",
-					recording.getResolution(), realResolution);
-
-			log.info("Recording map color: {}", colorMap.toString());
-			log.info("Recording frame below");
-			System.out.println(bufferedImageToBase64PngString(image));
-			isFine = colorCheckFunction.apply(colorMap);
-		} catch (IOException | JCodecException e) {
-			log.warn("Error getting frame from video recording: {}", e.getMessage());
-			isFine = false;
-		}
-		return isFine;
-	}
-
-	private boolean recordedGreenFileFine(File file, Recording recording) throws IOException {
-		return this.recordedFileFine(file, recording, OpenViduTestAppE2eTest::checkVideoAverageRgbGreen);
-	}
-
-	private boolean recordedRedFileFine(File file, Recording recording) throws IOException {
-		return this.recordedFileFine(file, recording, OpenViduTestAppE2eTest::checkVideoAverageRgbRed);
-	}
-
-	private String bufferedImageToBase64PngString(BufferedImage image) {
-		ByteArrayOutputStream bos = new ByteArrayOutputStream();
-		String imageString = null;
-		try {
-			ImageIO.write(image, "png", bos);
-			byte[] imageBytes = bos.toByteArray();
-			imageString = "data:image/png;base64," + Base64.getEncoder().encodeToString(imageBytes);
-			bos.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return imageString;
-	}
-
-	private void checkIndividualRecording(String recPath, Recording recording, int numberOfVideoFiles,
-			String audioDecoder, String videoDecoder, boolean checkAudio) throws IOException {
-
-		// Should be only 2 files: zip and metadata
-		File folder = new File(recPath);
-		Assert.assertEquals("There are more than 2 files (ZIP and metadata) inside individual recording folder "
-				+ recPath + ": " + Arrays.toString(folder.listFiles()), 2, folder.listFiles().length);
-
-		File file1 = new File(recPath + recording.getName() + ".zip");
-		File file2 = new File(recPath + ".recording." + recording.getId());
-
-		Assert.assertTrue("File " + file1.getAbsolutePath() + " does not exist or is empty",
-				file1.exists() && file1.length() > 0);
-		Assert.assertTrue("File " + file2.getAbsolutePath() + " does not exist or is empty",
-				file2.exists() && file2.length() > 0);
-
-		List<File> unzippedWebmFiles = new Unzipper().unzipFile(recPath, recording.getName() + ".zip");
-
-		Assert.assertEquals("Expecting " + numberOfVideoFiles + " videos inside ZIP file but "
-				+ unzippedWebmFiles.size() + " found: " + unzippedWebmFiles.toString(), numberOfVideoFiles,
-				unzippedWebmFiles.size());
-
-		File jsonSyncFile = new File(recPath + recording.getName() + ".json");
-		Assert.assertTrue("JSON sync file " + jsonSyncFile.getAbsolutePath() + "does not exist or is empty",
-				jsonSyncFile.exists() && jsonSyncFile.length() > 0);
-
-		JsonObject jsonSyncMetadata;
-		try {
-			Gson gson = new Gson();
-			JsonReader reader = new JsonReader(new FileReader(jsonSyncFile));
-			jsonSyncMetadata = gson.fromJson(reader, JsonObject.class);
-		} catch (Exception e) {
-			log.error("Cannot read JSON sync metadata file from {}. Error: {}", jsonSyncFile.getAbsolutePath(),
-					e.getMessage());
-			Assert.fail("Cannot read JSON sync metadata file from " + jsonSyncFile.getAbsolutePath());
-			return;
-		}
-
-		long totalFileSize = 0;
-		JsonArray syncArray = jsonSyncMetadata.get("files").getAsJsonArray();
-		for (File webmFile : unzippedWebmFiles) {
-			totalFileSize += webmFile.length();
-
-			Assert.assertTrue("WEBM file " + webmFile.getAbsolutePath() + " does not exist or is empty",
-					webmFile.exists() && webmFile.length() > 0);
-
-			double durationInSeconds = 0;
-			boolean found = false;
-			for (int i = 0; i < syncArray.size(); i++) {
-				JsonObject j = syncArray.get(i).getAsJsonObject();
-				if (webmFile.getName().contains(j.get("streamId").getAsString())) {
-					durationInSeconds = (double) (j.get("endTimeOffset").getAsDouble()
-							- j.get("startTimeOffset").getAsDouble()) / 1000;
-					found = true;
-					break;
-				}
-			}
-
-			Assert.assertTrue("Couldn't find in JSON sync object information for webm file " + webmFile.getName(),
-					found);
-
-			log.info("Duration of {} according to sync metadata json file: {} s", webmFile.getName(),
-					durationInSeconds);
-			this.checkMultimediaFile(webmFile, recording.hasAudio(), recording.hasVideo(), durationInSeconds,
-					recording.getResolution(), audioDecoder, videoDecoder, checkAudio);
-			webmFile.delete();
-		}
-
-		Assert.assertEquals("Size of recording entity (" + recording.getSessionId()
-				+ ") is not equal to real file size (" + totalFileSize + ")", recording.getSize(), totalFileSize);
-
-		jsonSyncFile.delete();
-	}
-
-	private void checkMultimediaFile(File file, boolean hasAudio, boolean hasVideo, double duration, String resolution,
-			String audioDecoder, String videoDecoder, boolean checkAudio) throws IOException {
-		// Check tracks, duration, resolution, framerate and decoders
-		MultimediaFileMetadata metadata = new MultimediaFileMetadata(file.getAbsolutePath());
-
-		if (hasVideo) {
-			if (checkAudio) {
-				if (hasAudio) {
-					Assert.assertTrue("Media file " + file.getAbsolutePath() + " should have audio",
-							metadata.hasAudio() && metadata.hasVideo());
-					Assert.assertTrue(metadata.getAudioDecoder().toLowerCase().contains(audioDecoder));
-				} else {
-					Assert.assertTrue("Media file " + file.getAbsolutePath() + " should have video",
-							metadata.hasVideo());
-					Assert.assertFalse(metadata.hasAudio());
-				}
-			}
-			if (resolution != null) {
-				Assert.assertEquals(resolution, metadata.getVideoWidth() + "x" + metadata.getVideoHeight());
-			}
-			Assert.assertTrue(metadata.getVideoDecoder().toLowerCase().contains(videoDecoder));
-		} else if (hasAudio && checkAudio) {
-			Assert.assertTrue(metadata.hasAudio());
-			Assert.assertFalse(metadata.hasVideo());
-			Assert.assertTrue(metadata.getAudioDecoder().toLowerCase().contains(audioDecoder));
-		} else {
-			Assert.fail("Cannot check a file witho no audio and no video");
-		}
-		// Check duration with 1 decimal precision
-		DecimalFormat df = new DecimalFormat("#0.0");
-		df.setRoundingMode(RoundingMode.UP);
-		log.info("Duration of {} according to ffmpeg: {} s", file.getName(), metadata.getDuration());
-		log.info("Duration of {} according to 'duration' property: {} s", file.getName(), duration);
-		log.info("Difference in s duration: {}", Math.abs(metadata.getDuration() - duration));
-		final double difference = 10;
-		Assert.assertTrue(
-				"Difference between recording entity duration (" + duration + ") and real video duration ("
-						+ metadata.getDuration() + ") is greater than " + difference + "  in file " + file.getName(),
-				Math.abs((metadata.getDuration() - duration)) < difference);
-	}
-
-	private boolean thumbnailIsFine(File file, Function<Map<String, Long>, Boolean> colorCheckFunction) {
-		boolean isFine = false;
-		BufferedImage image = null;
-		try {
-			image = ImageIO.read(file);
-		} catch (IOException e) {
-			log.error(e.getMessage());
-			return false;
-		}
-		log.info("Recording thumbnail dimensions: {}x{}", image.getWidth(), image.getHeight());
-		Map<String, Long> colorMap = this.averageColor(image);
-		log.info("Thumbnail map color: {}", colorMap.toString());
-		isFine = colorCheckFunction.apply(colorMap);
-		return isFine;
-	}
-
-	private Map<String, Long> averageColor(BufferedImage bi) {
-		int x0 = 0;
-		int y0 = 0;
-		int w = bi.getWidth();
-		int h = bi.getHeight();
-		int x1 = x0 + w;
-		int y1 = y0 + h;
-		long sumr = 0, sumg = 0, sumb = 0;
-		for (int x = x0; x < x1; x++) {
-			for (int y = y0; y < y1; y++) {
-				Color pixel = new Color(bi.getRGB(x, y));
-				sumr += pixel.getRed();
-				sumg += pixel.getGreen();
-				sumb += pixel.getBlue();
-			}
-		}
-		int num = w * h;
-		Map<String, Long> colorMap = new HashMap<>();
-		colorMap.put("r", (long) (sumr / num));
-		colorMap.put("g", (long) (sumg / num));
-		colorMap.put("b", (long) (sumb / num));
-		return colorMap;
-	}
-
-	private void startKms() {
-		log.info("Starting KMS");
-		commandLine.executeCommand("/usr/bin/kurento-media-server &>> /kms.log &");
-	}
-
-	private void stopKms() {
-		log.info("Stopping KMS");
-		commandLine.executeCommand("kill -9 $(pidof kurento-media-server)");
-	}
-
-	private void restartKms() {
-		this.stopKms();
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		this.startKms();
-	}
-
-	private void checkDockerContainerRunning(String imageName, int amount) {
-		int number = Integer.parseInt(commandLine.executeCommand("docker ps | grep " + imageName + " | wc -l"));
-		Assert.assertEquals("Wrong number of Docker containers for image " + imageName + " running", amount, number);
-	}
-
-	private void removeAllRecordingContiners() {
-		commandLine.executeCommand("docker ps -a | awk '{ print $1,$2 }' | grep " + RECORDING_IMAGE
-				+ " | awk '{print $1 }' | xargs -I {} docker rm -f {}");
 	}
 
 }
