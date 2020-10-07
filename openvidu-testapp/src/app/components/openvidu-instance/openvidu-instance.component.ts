@@ -127,6 +127,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   turnConf = 'auto';
   manualTurnConf: RTCIceServer = { urls: [] };
   customToken: string;
+  forcePublishing: boolean;
   tokenOptions: TokenOptions = {
     role: OpenViduRole.PUBLISHER,
     record: true,
@@ -141,6 +142,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
 
   events: OpenViduEvent[] = [];
 
+  republishPossible: boolean = false;
   openviduError: any;
 
   constructor(
@@ -234,7 +236,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       .then(() => {
         this.changeDetector.detectChanges();
 
-        if (this.publishTo && this.session.capabilities.publish) {
+        if (this.publishTo && this.session.capabilities.publish || this.forcePublishing) {
           // this.asyncInitPublisher();
           this.syncInitPublisher();
         }
@@ -493,9 +495,14 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
       this.publisher.subscribeToRemote();
     }
 
-    this.session.publish(this.publisher).catch((error: OpenViduError) => {
+    this.session.publish(this.publisher).then(() => {
+      this.republishPossible = false;
+    }).catch((error: OpenViduError) => {
       console.error(error);
+      alert(error.name + ": " + error.message);
+      this.republishPossible = true;
       this.session.unpublish(this.publisher);
+      delete this.publisher;
     });
   }
 
@@ -558,7 +565,8 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         turnConf: this.turnConf,
         manualTurnConf: this.manualTurnConf,
         customToken: this.customToken,
-        tokenOptions: this.tokenOptions
+        forcePublishing: this.forcePublishing,
+        tokenOptions: this.tokenOptions,
       },
       width: '450px'
     });
@@ -572,6 +580,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         this.turnConf = result.turnConf;
         this.manualTurnConf = result.manualTurnConf;
         this.customToken = result.customToken;
+        this.forcePublishing = result.forcePublishing;
         this.tokenOptions = result.tokenOptions;
       }
       document.getElementById('session-settings-btn-' + this.index).classList.remove('cdk-program-focused');
@@ -713,6 +722,10 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     return (this.publisherProperties.videoSource === undefined ||
       typeof this.publisherProperties.videoSource === 'string' &&
       this.publisherProperties.videoSource !== 'screen');
+  }
+
+  republishAfterError() {
+    this.syncInitPublisher();
   }
 
 }

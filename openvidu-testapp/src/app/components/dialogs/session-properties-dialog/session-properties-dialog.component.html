@@ -108,7 +108,8 @@
         </div>
 
         <div id="record-div">
-          <mat-checkbox class="checkbox-form" [(ngModel)]="tokenOptions.record" id="record-checkbox">Record</mat-checkbox>
+          <mat-checkbox class="checkbox-form" [(ngModel)]="tokenOptions.record" id="record-checkbox">Record
+          </mat-checkbox>
         </div>
 
         <label class="label">Token</label>
@@ -117,6 +118,13 @@
             <input matInput placeholder="Custom token" type="text" [(ngModel)]="customToken">
           </mat-form-field>
         </div>
+
+        <div id="force-publishing-div">
+          <mat-checkbox class="checkbox-form" [(ngModel)]="forcePublishing" id="force-publishing-checkbox">Force
+            publishing
+          </mat-checkbox>
+        </div>
+
       </mat-dialog-content>
     </div>
   </div>
@@ -124,6 +132,6 @@
   <mat-dialog-actions>
     <button id="cancel-btn" mat-button [mat-dialog-close]="undefined">CANCEL</button>
     <button id="save-btn" mat-button
-      [mat-dialog-close]="{sessionProperties: sessionProperties, turnConf: turnConf, manualTurnConf: manualTurnConf, tokenOptions: generateTokenOptions(), customToken: customToken}">SAVE</button>
+      [mat-dialog-close]="{sessionProperties: sessionProperties, turnConf: turnConf, manualTurnConf: manualTurnConf, customToken: customToken, forcePublishing: forcePublishing, tokenOptions: generateTokenOptions()}">SAVE</button>
   </mat-dialog-actions>
 </div>

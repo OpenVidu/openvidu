@@ -107,6 +107,9 @@
         <div class="session-card-inner">
           <div class="session-title">{{sessionName}}</div>
           <div class="session-actions">
+            <button *ngIf="republishPossible" class="republish-error-btn" (click)="republishAfterError()" title="Re publish">
+              <mat-icon aria-label="Re publish video" style="font-size: 20px">linked_camera</mat-icon>
+            </button>
             <button class="message-btn" (click)="sendMessage()" title="Broadcast message">
               <mat-icon aria-label="Send message button" style="font-size: 20px">chat</mat-icon>
             </button>
