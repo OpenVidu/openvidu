@@ -312,7 +312,7 @@ Rules:
 
   RecordingValidation:
     RuleCondition: 
-      Fn::Equals: [!Ref Recording, 'disabled' ]
+      Fn::Or: [ !Equals [!Ref Recording, 'disabled' ], !Equals [!Ref Recording, 'local' ] ]
     Assertions:
       - AssertDescription: If recording Storage is 'disabled', you don't need to specify a S3 bucket.
         Assert: 
