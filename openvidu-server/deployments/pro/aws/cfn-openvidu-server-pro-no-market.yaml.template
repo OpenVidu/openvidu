@@ -372,6 +372,7 @@ Resources:
                 - Effect: Allow
                   Action: 
                     - 's3:ListBucket'
+                    - 's3:GetBucketLocation'
                   Resource: 
                     - Fn::If:
                       # Get bucket name depending if the user defines a bucket name or not
