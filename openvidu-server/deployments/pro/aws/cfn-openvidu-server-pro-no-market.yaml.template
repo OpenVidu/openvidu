@@ -314,7 +314,7 @@ Rules:
     RuleCondition: 
       Fn::Or: [ !Equals [!Ref Recording, 'disabled' ], !Equals [!Ref Recording, 'local' ] ]
     Assertions:
-      - AssertDescription: If recording Storage is 'disabled', you don't need to specify a S3 bucket.
+      - AssertDescription: If recording Storage is 'disabled' or 'local', you don't need to specify a S3 bucket.
         Assert: 
           Fn::Equals: [ !Ref S3RecordingsBucketName, "" ]
 
@@ -501,7 +501,7 @@ Resources:
                   sed -i "s/#OPENVIDU_PRO_RECORDING_STORAGE=/OPENVIDU_PRO_RECORDING_STORAGE=${Recording}/" $WORKINGDIR/.env
                   if [ ! -z "${S3RecordingsBucketName}" ]; then
                     sed -i "s/#OPENVIDU_PRO_AWS_S3_BUCKET=/OPENVIDU_PRO_AWS_S3_BUCKET=${S3RecordingsBucketName}/" $WORKINGDIR/.env
-                  else
+                  elif [ "${Recording}" == "s3" ]; then
                     sed -i "s/#OPENVIDU_PRO_AWS_S3_BUCKET=/OPENVIDU_PRO_AWS_S3_BUCKET=${s3BucketName}/" $WORKINGDIR/.env
                   fi
                 fi
