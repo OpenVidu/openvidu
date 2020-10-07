@@ -494,7 +494,7 @@ Resources:
                   rm $WORKINGDIR/docker-compose.override.yml
                 fi
 
-                # S3 Configuration
+                # Recording Configuration
                 if [ "${Recording}" != "disabled" ]; then
                   sed -i "s/OPENVIDU_RECORDING=false/OPENVIDU_RECORDING=true/" $WORKINGDIR/.env
                   sed -i "s/#OPENVIDU_PRO_RECORDING_STORAGE=/OPENVIDU_PRO_RECORDING_STORAGE=${Recording}/" $WORKINGDIR/.env
