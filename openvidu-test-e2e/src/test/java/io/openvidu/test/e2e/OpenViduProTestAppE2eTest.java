@@ -24,8 +24,13 @@ import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonReader;
 import com.mashape.unirest.http.HttpMethod;
 
+import io.openvidu.java.client.Connection;
 import io.openvidu.java.client.OpenVidu;
+import io.openvidu.java.client.OpenViduHttpException;
+import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.java.client.Recording;
+import io.openvidu.java.client.Session;
+import io.openvidu.java.client.TokenOptions;
 import io.openvidu.test.browsers.utils.CustomHttpClient;
 import io.openvidu.test.browsers.utils.Unzipper;
 
@@ -211,6 +216,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		}
 		Thread.sleep(500);
 
+		// Test with REST API
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + tokenConnectionId,
 				"{'role':false}", HttpStatus.SC_BAD_REQUEST);
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + tokenConnectionId,
@@ -218,11 +224,35 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + tokenConnectionId,
 				"{'role':'PUBLISHER',record:'WRONG'}", HttpStatus.SC_BAD_REQUEST);
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + tokenConnectionId,
-				"{'role':'SUBSCRIBER','record':true}", HttpStatus.SC_NO_CONTENT);
+				"{'role':'SUBSCRIBER','record':true,'data':'OTHER DATA'}", HttpStatus.SC_NO_CONTENT);
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + tokenConnectionId,
 				"{'role':'PUBLISHER'}", HttpStatus.SC_OK);
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + tokenConnectionId,
 				"{'role':'PUBLISHER'}", HttpStatus.SC_NO_CONTENT);
+
+		// Test with openvidu-java-client
+		OpenVidu OV = new OpenVidu(OpenViduTestAppE2eTest.OPENVIDU_URL, OpenViduTestAppE2eTest.OPENVIDU_SECRET);
+		OV.fetch();
+		Session session = OV.getActiveSessions().get(0);
+		try {
+			session.updateConnection("WRONG_CONNECTION_ID", new TokenOptions.Builder().build());
+			Assert.fail("Expected OpenViduHttpException exception");
+		} catch (OpenViduHttpException exception) {
+			Assert.assertEquals("Wrong HTTP status", HttpStatus.SC_NOT_FOUND, exception.getStatus());
+		}
+		Connection connection = session.updateConnection(tokenConnectionId,
+				new TokenOptions.Builder().role(OpenViduRole.PUBLISHER).build());
+		Assert.assertEquals("Wrong connectionId in Connection object", tokenConnectionId, connection.getConnectionId());
+		Assert.assertEquals("Wrong role in Connection object", OpenViduRole.PUBLISHER, connection.getRole());
+		Assert.assertTrue("Wrong record in Connection object", connection.record());
+		connection = session.updateConnection(tokenConnectionId,
+				new TokenOptions.Builder().role(OpenViduRole.SUBSCRIBER).build());
+		Assert.assertEquals("Wrong role in Connection object", OpenViduRole.SUBSCRIBER, connection.getRole());
+		connection = session.updateConnection(tokenConnectionId,
+				new TokenOptions.Builder().role(OpenViduRole.MODERATOR).record(false).data("NO CHANGE").build());
+		Assert.assertEquals("Wrong role in Connection object", OpenViduRole.MODERATOR, connection.getRole());
+		Assert.assertFalse("Wrong record in Connection object", connection.record());
+		Assert.assertTrue("Wrong data in Connection object", connection.getServerData().isEmpty());
 
 		user.getEventManager().resetEventThread();
 
