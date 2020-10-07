@@ -660,6 +660,7 @@ export class OpenVidu {
    * - `iceServers`: set custom STUN/TURN servers to be used by OpenVidu Browser
    * - `screenShareChromeExtension`: url to a custom screen share extension for Chrome to be used instead of the default one, based on ours [https://github.com/OpenVidu/openvidu-screen-sharing-chrome-extension](https://github.com/OpenVidu/openvidu-screen-sharing-chrome-extension)
    * - `publisherSpeakingEventsOptions`: custom configuration for the [[PublisherSpeakingEvent]] feature and the [StreamManagerEvent.streamAudioVolumeChange](/en/stable/api/openvidu-browser/classes/streammanagerevent.html) feature
+   * - `forceMediaReconnectionAfterNetworkDrop`: always force WebRTC renegotiation of all the streams of a client after a network loss and reconnection. This can help reducing frozen videos in low quality networks.
    *
    * Call this method to override previous values at any moment.
    */
