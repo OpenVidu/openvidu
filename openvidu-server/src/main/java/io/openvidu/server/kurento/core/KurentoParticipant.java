@@ -88,9 +88,13 @@ public class KurentoParticipant extends Participant {
 
 		if (!OpenViduRole.SUBSCRIBER.equals(participant.getToken().getRole())) {
 			// Initialize a PublisherEndpoint
-			this.publisher = new PublisherEndpoint(endpointType, this, participant.getParticipantPublicId(),
-					this.session.getPipeline(), this.openviduConfig, null);
+			initPublisherEndpoint();
 		}
+	}
+
+	public void initPublisherEndpoint() {
+		this.publisher = new PublisherEndpoint(endpointType, this, this.participantPublicId, this.session.getPipeline(),
+				this.openviduConfig, null);
 	}
 
 	public void createPublishingEndpoint(MediaOptions mediaOptions, String streamId) {
@@ -134,6 +138,10 @@ public class KurentoParticipant extends Participant {
 		if (this.publisher != null && this.publisher.getFilter() != null) {
 			this.publisher.revert(this.publisher.getFilter());
 		}
+	}
+
+	public boolean isPublisherEndpointDefined() {
+		return this.publisher != null;
 	}
 
 	public PublisherEndpoint getPublisher() {

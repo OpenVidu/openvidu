@@ -17,16 +17,19 @@
 
 package io.openvidu.server.recording;
 
+import org.apache.commons.lang3.StringUtils;
 import org.kurento.client.RecorderEndpoint;
 
 import com.google.gson.JsonObject;
 
 import io.openvidu.server.kurento.core.KurentoParticipant;
+import io.openvidu.server.recording.service.SingleStreamRecordingService;
 
 public class RecorderEndpointWrapper {
 
 	private RecorderEndpoint recorder;
 	private KurentoParticipant kParticipant;
+	private String name;
 	private String connectionId;
 	private String recordingId;
 	private String streamId;
@@ -40,7 +43,9 @@ public class RecorderEndpointWrapper {
 	private long endTime;
 	private long size;
 
-	public RecorderEndpointWrapper(RecorderEndpoint recorder, KurentoParticipant kParticipant, String recordingId) {
+	public RecorderEndpointWrapper(RecorderEndpoint recorder, KurentoParticipant kParticipant, String recordingId,
+			String name) {
+		this.name = name;
 		this.recorder = recorder;
 		this.kParticipant = kParticipant;
 		this.recordingId = recordingId;
@@ -53,12 +58,38 @@ public class RecorderEndpointWrapper {
 		this.typeOfVideo = kParticipant.getPublisher().getMediaOptions().getTypeOfVideo();
 	}
 
+	public RecorderEndpointWrapper(JsonObject json) {
+		String nameAux = json.get("name").getAsString();
+		// If the name includes the extension, remove it
+		this.name = StringUtils.removeEnd(nameAux, SingleStreamRecordingService.INDIVIDUAL_RECORDING_EXTENSION);
+		this.connectionId = json.get("connectionId").getAsString();
+		this.streamId = json.get("streamId").getAsString();
+		this.clientData = json.get("clientData").getAsString();
+		this.serverData = json.get("serverData").getAsString();
+		this.startTime = json.get("startTime").getAsLong();
+		this.endTime = json.get("endTime").getAsLong();
+		this.size = json.get("size").getAsLong();
+		this.hasAudio = json.get("hasAudio").getAsBoolean();
+		this.hasVideo = json.get("hasVideo").getAsBoolean();
+		if (this.hasVideo) {
+			this.typeOfVideo = json.get("typeOfVideo").getAsString();
+		}
+	}
+
 	public RecorderEndpoint getRecorder() {
 		return recorder;
 	}
 
 	public KurentoParticipant getParticipant() {
 		return this.kParticipant;
+	}
+
+	public String getName() {
+		return this.name;
+	}
+
+	public String getNameWithExtension() {
+		return this.name + SingleStreamRecordingService.INDIVIDUAL_RECORDING_EXTENSION;
 	}
 
 	public String getConnectionId() {
@@ -119,6 +150,7 @@ public class RecorderEndpointWrapper {
 
 	public JsonObject toJson() {
 		JsonObject json = new JsonObject();
+		json.addProperty("name", this.getNameWithExtension());
 		json.addProperty("connectionId", this.getConnectionId());
 		json.addProperty("streamId", this.getStreamId());
 		json.addProperty("clientData", this.getClientData());

@@ -23,7 +23,7 @@ import java.util.Collection;
 public class DummyRecordingDownloader implements RecordingDownloader {
 
 	@Override
-	public void downloadRecording(Recording recording, Collection<String> streamIds, Runnable callback)
+	public void downloadRecording(Recording recording, Collection<RecorderEndpointWrapper> wrappers, Runnable callback)
 			throws IOException {
 		// Just immediately run callback function
 		callback.run();
