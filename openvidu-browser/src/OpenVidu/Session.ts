@@ -900,7 +900,6 @@ export class Session extends EventDispatcher {
                         break;
                 }
                 this.ee.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this, stream, msg.property, msg.newValue, oldValue, msg.reason)]);
-                this.sendVideoData(stream.streamManager);
                 if (!!stream.streamManager) {
                     stream.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(stream.streamManager, stream, msg.property, msg.newValue, oldValue, msg.reason)]);
                 }
