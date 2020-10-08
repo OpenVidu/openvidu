@@ -636,7 +636,7 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 					new JsonObject(), e);
 		}
 	}
-	
+
 	private void updateVideoData(RpcConnection rpcConnection, Request<JsonObject> request) {
 		Participant participant;
 		try {
@@ -648,7 +648,7 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 			sessionManager.onVideoData(participant, request.getId(), height, width, videoActive, audioActive);
 		} catch (OpenViduException e) {
 			log.error("Error getting video data: {}", e.toString());
-		}		
+		}
 	}
 
 	public void leaveRoomAfterConnClosed(String participantPrivateId, EndReason reason) {

@@ -38,6 +38,10 @@ public class Participant {
 	protected GeoLocation location; // Location of the participant
 	protected String platform; // Platform used by the participant to connect to the session
 	protected EndpointType endpointType; // Type of participant (web participant, IP cam participant...)
+
+	// TODO
+	// Unify with "PublisherEndpoint.MediaOptions"
+	// Also unify "streamPropertyChanged" and "videoData" RPCs when possible
 	protected Integer videoWidth = 0;
 	protected Integer videoHeight = 0;
 	protected Boolean videoActive = false;
@@ -145,7 +149,7 @@ public class Participant {
 	public EndpointType getEndpointType() {
 		return this.endpointType;
 	}
-	
+
 	public Integer getVideoWidth() {
 		return videoWidth;
 	}
@@ -161,7 +165,7 @@ public class Participant {
 	public void setVideoHeight(Integer videoHeight) {
 		this.videoHeight = videoHeight;
 	}
-	
+
 	public Boolean isVideoActive() {
 		return videoActive;
 	}
