@@ -1134,7 +1134,7 @@ export class Session extends EventDispatcher {
             this.openvidu.isAndroidBrowser() || this.openvidu.isSamsungBrowser() ||
             (this.openvidu.isIPhoneOrIPad() && this.openvidu.isIOSWithSafari())
         ) {
-            const statsRequest = setInterval(async () => {
+            setTimeout(async () => {
                 const statsMap = await streamManager.stream.getWebRtcPeer().pc.getStats();
                 statsMap.forEach((stats) => {
 
@@ -1148,7 +1148,6 @@ export class Session extends EventDispatcher {
                             if (error) {
                                 logger.error("Error sending 'videoData' event", error);
                             }
-                            clearInterval(statsRequest);
                         });
                     }
                 });
