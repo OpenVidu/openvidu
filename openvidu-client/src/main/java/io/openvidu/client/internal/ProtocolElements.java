@@ -95,9 +95,7 @@ public class ProtocolElements {
 
 	public static final String NETWORKQUALITYCHANGED_METHOD = "networkQualityChanged";
 	public static final String NETWORKQUALITYCHANGED_CONNECTIONID_PARAM = "connectionId";
-	public static final String NETWORKQUALITYCHANGED_NEWVALUE_PARAM = "newValue";
-	public static final String NETWORKQUALITYCHANGED_OLDVALUE_PARAM = "oldValue";
-	public static final String NETWORKQUALITYCHANGED_REASON_PARAM = "reason";
+	public static final String NETWORKQUALITYCHANGED_QUALITYLEVEL_PARAM = "qualityLevel";
 
 	public static final String FORCEDISCONNECT_METHOD = "forceDisconnect";
 	public static final String FORCEDISCONNECT_CONNECTIONID_PARAM = "connectionId";
@@ -127,6 +125,8 @@ public class ProtocolElements {
 	public static final String RECONNECTSTREAM_METHOD = "reconnectStream";
 	public static final String RECONNECTSTREAM_STREAM_PARAM = "stream";
 	public static final String RECONNECTSTREAM_SDPOFFER_PARAM = "sdpOffer";
+	
+	public static final String VIDEODATA_METHOD = "videoData";
 
 	// ---------------------------- SERVER RESPONSES & EVENTS -----------------
 
