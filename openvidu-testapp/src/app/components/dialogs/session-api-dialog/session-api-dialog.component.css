@@ -31,6 +31,7 @@ mat-dialog-content button {
 
 .inner-text-input {
   margin-left: 9px;
+  width: 42%;
 }
 
 #rec-properties-btn {

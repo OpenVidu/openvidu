@@ -1,7 +1,7 @@
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
 
-import { OpenVidu as OpenViduAPI, Session as SessionAPI, Recording, RecordingProperties, RecordingLayout } from 'openvidu-node-client';
+import { OpenVidu as OpenViduAPI, Session as SessionAPI, Recording, RecordingProperties, RecordingLayout, TokenOptions, OpenViduRole } from 'openvidu-node-client';
 
 @Component({
     selector: 'app-session-api-dialog',
@@ -14,15 +14,22 @@ export class SessionApiDialogComponent {
     session: SessionAPI;
     sessionId: string;
     recordingId: string;
-    resourceId: string;
+    connectionId: string;
+    streamId: string;
     response: string;
 
     recordingProperties: RecordingProperties;
     recMode = Recording.OutputMode;
     recLayouts = RecordingLayout;
+    openviduRoles = OpenViduRole;
     customLayout = '';
     recPropertiesIcon = 'add_circle';
     showRecProperties = false;
+
+    tokenOptions: TokenOptions = {
+        record: true,
+        role: OpenViduRole.PUBLISHER
+    };
 
     constructor(public dialogRef: MatDialogRef<SessionApiDialogComponent>,
         @Inject(MAT_DIALOG_DATA) public data) {
@@ -145,7 +152,7 @@ export class SessionApiDialogComponent {
 
     forceDisconnect() {
         console.log('Forcing disconnect');
-        this.session.forceDisconnect(this.resourceId)
+        this.session.forceDisconnect(this.connectionId)
             .then(() => {
                 this.response = 'User disconnected';
             })
@@ -156,9 +163,20 @@ export class SessionApiDialogComponent {
 
     forceUnpublish() {
         console.log('Forcing unpublish');
-        this.session.forceUnpublish(this.resourceId)
+        this.session.forceUnpublish(this.streamId)
             .then(() => {
                 this.response = 'Stream unpublished';
+            })
+            .catch(error => {
+                this.response = 'Error [' + error.message + ']';
+            });
+    }
+
+    updateConnection() {
+        console.log('Updating connection');
+        this.session.updateConnection(this.connectionId, this.tokenOptions)
+            .then(modifiedConnection => {
+                this.response = 'Connection updated: ' + JSON.stringify({ role: modifiedConnection.role, record: modifiedConnection.record });
             })
             .catch(error => {
                 this.response = 'Error [' + error.message + ']';

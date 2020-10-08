@@ -4,7 +4,7 @@ import {
 } from '@angular/core';
 
 import {
-  OpenVidu, Session, Subscriber, Publisher, Event, VideoInsertMode, StreamEvent, ConnectionEvent,
+  OpenVidu, Session, Subscriber, Publisher, Event, StreamEvent, ConnectionEvent,
   SessionDisconnectedEvent, SignalEvent, RecordingEvent,
   PublisherSpeakingEvent, PublisherProperties, StreamPropertyChangedEvent, OpenViduError
 } from 'openvidu-browser';
@@ -18,7 +18,8 @@ import {
   TokenOptions,
   OpenViduRole,
   RecordingProperties,
-  Recording
+  Recording,
+  Token
 } from 'openvidu-node-client';
 import { MatDialog, MAT_CHECKBOX_CLICK_ACTION } from '@angular/material';
 import { ExtensionDialogComponent } from '../dialogs/extension-dialog/extension-dialog.component';
@@ -189,22 +190,21 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     this.clientData = 'TestClient';
   }
 
-  joinSession(): void {
-
+  async joinSession(): Promise<void> {
     if (this.session) {
       this.leaveSession();
     }
-
+    const sessionId = !!this.customToken ? this.getSessionIdFromToken(this.customToken) : this.sessionName;
+    await this.initializeNodeClient(sessionId);
     if (!!this.customToken) {
       this.joinSessionShared(this.customToken);
     } else {
-      this.getToken().then(token => {
-        this.joinSessionShared(token);
-      });
+      const token: Token = await this.getToken();
+      this.joinSessionShared(token.token);
     }
   }
 
-  private joinSessionShared(token): void {
+  private joinSessionShared(token: string): void {
 
     this.OV = new OpenVidu();
 
@@ -686,16 +686,14 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     });
   }
 
-  getToken(): Promise<string> {
+  async initializeNodeClient(sessionId: string): Promise<any> {
     this.OV_NodeClient = new OpenViduAPI(this.openviduUrl, this.openviduSecret);
-    if (!this.sessionProperties.customSessionId) {
-      this.sessionProperties.customSessionId = this.sessionName;
-    }
-    return this.OV_NodeClient.createSession(this.sessionProperties)
-      .then(session_NodeClient => {
-        this.sessionAPI = session_NodeClient;
-        return session_NodeClient.generateToken(this.tokenOptions);
-      });
+    this.sessionProperties.customSessionId = sessionId;
+    this.sessionAPI = await this.OV_NodeClient.createSession(this.sessionProperties);
+  }
+
+  async getToken(): Promise<Token> {
+    return this.sessionAPI.createToken();
   }
 
   updateEventFromChild(event: OpenViduEvent) {
@@ -726,6 +724,17 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
 
   republishAfterError() {
     this.syncInitPublisher();
+  }
+
+  private getSessionIdFromToken(token: string): string {
+    const queryParams = decodeURI(token.split('?')[1])
+      .split('&')
+      .map(param => param.split('='))
+      .reduce((values, [key, value]) => {
+        values[key] = value
+        return values
+      }, {});
+    return queryParams['sessionId'];
   }
 
 }
