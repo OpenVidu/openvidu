@@ -142,6 +142,7 @@ export class Publisher extends StreamManager {
                         } else {
                             this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this.stream, 'audioActive', value, !value, 'publishAudio')]);
                             this.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this, this.stream, 'audioActive', value, !value, 'publishAudio')]);
+                            this.session.sendVideoData(this.stream.streamManager);
                         }
                     });
             }
@@ -189,6 +190,7 @@ export class Publisher extends StreamManager {
                         } else {
                             this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this.stream, 'videoActive', value, !value, 'publishVideo')]);
                             this.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this, this.stream, 'videoActive', value, !value, 'publishVideo')]);
+                            this.session.sendVideoData(this.stream.streamManager);
                         }
                     });
             }
@@ -308,6 +310,7 @@ export class Publisher extends StreamManager {
             mediaStream.removeTrack(removedTrack);
             removedTrack.stop();
             mediaStream.addTrack(track);
+            this.session.sendVideoData(this.stream.streamManager);
         }
 
         return new Promise((resolve, reject) => {
@@ -481,6 +484,7 @@ export class Publisher extends StreamManager {
                                             } else {
                                                 this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, this.stream, 'videoDimensions', this.stream.videoDimensions, oldValue, 'screenResized')]);
                                                 this.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this, this.stream, 'videoDimensions', this.stream.videoDimensions, oldValue, 'screenResized')]);
+                                                this.session.sendVideoData(this.stream.streamManager);
                                             }
                                         });
                                 }

@@ -183,6 +183,7 @@ export class OpenVidu {
                     } else {
                       this.session.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this.session, publisher.stream, 'videoDimensions', publisher.stream.videoDimensions, { width: oldWidth, height: oldHeight }, 'deviceRotated')]);
                       publisher.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(publisher, publisher.stream, 'videoDimensions', publisher.stream.videoDimensions, { width: oldWidth, height: oldHeight }, 'deviceRotated')]);
+                      this.session.sendVideoData(publisher);
                     }
                   });
                 clearTimeout(repeatUntilChange);
@@ -334,12 +335,9 @@ export class OpenVidu {
    * @returns 1 if the browser supports OpenVidu, 0 otherwise
    */
   checkSystemRequirements(): number {
-    const browser = platform.name;
-    const family = platform.os!!.family;
-    const userAgent = !!platform.ua ? platform.ua : navigator.userAgent;
 
-    if (this.isIPhoneOrIPad(userAgent)) {
-      if (this.isIOSWithSafari(userAgent) || platform['isIonicIos']) {
+    if (this.isIPhoneOrIPad()) {
+      if (this.isIOSWithSafari() || platform['isIonicIos']) {
         return 1;
       }
       return 0;
@@ -347,13 +345,10 @@ export class OpenVidu {
 
     // Accept: Chrome (desktop and Android), Firefox (desktop and Android), Opera (desktop and Android),
     // Safari (OSX and iOS), Ionic (Android and iOS), Samsung Internet Browser (Android)
-    if (
-      (browser === 'Safari') ||
-      (browser === 'Chrome') || (browser === 'Chrome Mobile') ||
-      (browser === 'Firefox') || (browser === 'Firefox Mobile') ||
-      (browser === 'Opera') || (browser === 'Opera Mobile') ||
-      (browser === 'Android Browser') || (browser === 'Electron') ||
-      (browser === 'Samsung Internet Mobile') || (browser === 'Samsung Internet')
+    if (this.isSafariBrowser() || this.isChromeBrowser() || this.isChromeMobileBrowser() ||
+        this.isFirefoxBrowser()  || this.isFirefoxMobileBrowser() || this.isOperaBrowser() ||
+        this.isOperaMobileBrowser() || this.isAndroidBrowser() || this.isElectron() ||
+        this.isSamsungBrowser()
     ) {
       return 1;
     }
@@ -877,6 +872,98 @@ export class OpenVidu {
     return mediaStream;
   }
 
+   /**
+   * @hidden
+   */
+  public isChromeBrowser(): boolean {
+    return platform.name === 'Chrome';
+  }
+
+  /**
+   * @hidden
+   */
+  public isSafariBrowser(): boolean {
+    return platform.name === 'Safari';
+  }
+
+  /**
+   * @hidden
+   */
+  public isChromeMobileBrowser(): boolean {
+    return platform.name === 'Chrome Mobile';
+  }
+
+  /**
+   * @hidden
+   */
+  public isFirefoxBrowser(): boolean {
+    return platform.name === 'Firefox';
+  }
+
+  /**
+   * @hidden
+   */
+  public isFirefoxMobileBrowser(): boolean {
+    return platform.name === 'Firefox Mobile';
+  }
+
+  /**
+   * @hidden
+   */
+  public isOperaBrowser(): boolean {
+    return platform.name === 'Opera';
+  }
+
+  /**
+   * @hidden
+   */
+  public isOperaMobileBrowser(): boolean {
+    return platform.name === 'Opera Mobile';
+  }
+
+  /**
+   * @hidden
+   */
+  public isAndroidBrowser(): boolean {
+    return platform.name === 'Android Browser';
+  }
+
+  /**
+   * @hidden
+   */
+  public isElectron(): boolean {
+    return platform.name === 'Electron';
+  }
+
+  /**
+   * @hidden
+   */
+  public isSamsungBrowser(): boolean {
+    return platform.name === 'Samsung Internet Mobile' || platform.name === 'Samsung Internet';
+  }
+
+  /**
+   * @hidden
+   */
+  public isIPhoneOrIPad(): boolean {
+    const userAgent = !!platform.ua ? platform.ua : navigator.userAgent;
+
+    const isTouchable = 'ontouchend' in document;
+    const isIPad = /\b(\w*Macintosh\w*)\b/.test(userAgent) && isTouchable;
+    const isIPhone = /\b(\w*iPhone\w*)\b/.test(userAgent) && /\b(\w*Mobile\w*)\b/.test(userAgent) && isTouchable;
+
+    return isIPad || isIPhone;
+  }
+
+  /**
+   * @hidden
+   */
+  public isIOSWithSafari(): boolean {
+    const userAgent = !!platform.ua ? platform.ua : navigator.userAgent;
+    return /\b(\w*Apple\w*)\b/.test(navigator.vendor) && /\b(\w*Safari\w*)\b/.test(userAgent)
+      && !/\b(\w*CriOS\w*)\b/.test(userAgent) && !/\b(\w*FxiOS\w*)\b/.test(userAgent);
+  }
+
   /**
    * @hidden
    */
@@ -1066,18 +1153,4 @@ export class OpenVidu {
       (platform.name === 'Electron' && videoSource.startsWith('screen:'))
   }
 
-  private isIPhoneOrIPad(userAgent): boolean {
-    const isTouchable = 'ontouchend' in document;
-    const isIPad = /\b(\w*Macintosh\w*)\b/.test(userAgent) && isTouchable;
-    const isIPhone = /\b(\w*iPhone\w*)\b/.test(userAgent) && /\b(\w*Mobile\w*)\b/.test(userAgent) && isTouchable;
-
-    return isIPad || isIPhone;
-  }
-
-  private isIOSWithSafari(userAgent): boolean {
-    return /\b(\w*Apple\w*)\b/.test(navigator.vendor) && /\b(\w*Safari\w*)\b/.test(userAgent)
-      && !/\b(\w*CriOS\w*)\b/.test(userAgent) && !/\b(\w*FxiOS\w*)\b/.test(userAgent);
-  }
-
-
-}
+ }

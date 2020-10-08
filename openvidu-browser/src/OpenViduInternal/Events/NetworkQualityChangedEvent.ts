@@ -24,29 +24,18 @@ import { Session } from '../../OpenVidu/Session';
  */
 export class NetworkQualityChangedEvent extends Event {
 
-    /**
-     * Cause of the change on the neteotk quality event
-     */
-    reason: NetworkQualityChangedReason;
 
     /**
      * New value of the property (after change, current value)
      */
-    newValue: Object;
-
-    /**
-     * Previous value of the property (before change)
-     */
-    oldValue: Object;
+    qualityLevel: Object;
 
     /**
      * @hidden
      */
-    constructor(target: Session, newValue: Object, oldValue: Object, reason: NetworkQualityChangedReason) {
+    constructor(target: Session, qualityLevel: Object) {
         super(false, target, 'networkQualityChanged');
-        this.newValue = newValue;
-        this.oldValue = oldValue;
-        this.reason = reason;
+        this.qualityLevel = qualityLevel;
     }
 
     /**
@@ -55,9 +44,4 @@ export class NetworkQualityChangedEvent extends Event {
     // tslint:disable-next-line:no-empty
     callDefaultBehavior() { }
 
-}
-
-export enum NetworkQualityChangedReason {
-	ABOVE_MAX = "above_max",
-	BELOW_MIN = "below_min"
 }

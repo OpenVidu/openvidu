@@ -37,7 +37,7 @@ import { SessionDisconnectedEvent } from '../OpenViduInternal/Events/SessionDisc
 import { SignalEvent } from '../OpenViduInternal/Events/SignalEvent';
 import { StreamEvent } from '../OpenViduInternal/Events/StreamEvent';
 import { StreamPropertyChangedEvent } from '../OpenViduInternal/Events/StreamPropertyChangedEvent';
-import { NetworkQualityChangedEvent, NetworkQualityChangedReason } from '../OpenViduInternal/Events/NetworkQualityChangedEvent';
+import { NetworkQualityChangedEvent } from '../OpenViduInternal/Events/NetworkQualityChangedEvent';
 import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/OpenViduError';
 import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
 
@@ -378,6 +378,7 @@ export class Session extends EventDispatcher {
                 this.connection.addStream(publisher.stream);
                 publisher.stream.publish()
                     .then(() => {
+                        this.sendVideoData(publisher, 5);
                         resolve();
                     })
                     .catch(error => {
@@ -391,6 +392,7 @@ export class Session extends EventDispatcher {
                         publisher.reestablishStreamPlayingEvent();
                         publisher.stream.publish()
                             .then(() => {
+                                this.sendVideoData(publisher, 5);
                                 resolve();
                             })
                             .catch(error => {
@@ -898,6 +900,7 @@ export class Session extends EventDispatcher {
                         break;
                 }
                 this.ee.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(this, stream, msg.property, msg.newValue, oldValue, msg.reason)]);
+                this.sendVideoData(stream.streamManager);
                 if (!!stream.streamManager) {
                     stream.streamManager.emitEvent('streamPropertyChanged', [new StreamPropertyChangedEvent(stream.streamManager, stream, msg.property, msg.newValue, oldValue, msg.reason)]);
                 }
@@ -926,9 +929,8 @@ export class Session extends EventDispatcher {
      * @hidden
      */
     onNetworkQualityChangedChanged(msg): void {
-
         if (msg.connectionId === this.connection.connectionId) {
-            this.ee.emitEvent('networkQualityChanged', [new NetworkQualityChangedEvent(this, msg.newValue, msg.oldValue, msg.reason)]);
+            this.ee.emitEvent('networkQualityChanged', [new NetworkQualityChangedEvent(this, msg.qualityLevel)]);
         }
     }
 
@@ -1125,6 +1127,36 @@ export class Session extends EventDispatcher {
         return joinParams;
     }
 
+    sendVideoData(streamManager: StreamManager, intervalSeconds: number = 1) {
+        if(
+            this.openvidu.isChromeBrowser() || this.openvidu.isChromeMobileBrowser() || this.openvidu.isOperaBrowser() ||
+            this.openvidu.isOperaMobileBrowser() || this.openvidu.isElectron() || this.openvidu.isSafariBrowser() ||
+            this.openvidu.isAndroidBrowser() || this.openvidu.isSamsungBrowser() ||
+            (this.openvidu.isIPhoneOrIPad() && this.openvidu.isIOSWithSafari())
+        ) {
+            const statsRequest = setInterval(async () => {
+                const statsMap = await streamManager.stream.getWebRtcPeer().pc.getStats();
+                statsMap.forEach((stats) => {
+
+                    if ("frameWidth" in stats) {
+                        this.openvidu.sendRequest('videoData', {
+                            height: stats.frameHeight,
+                            width: stats.frameWidth,
+                            videoActive: streamManager.stream.videoActive,
+                            audioActive: streamManager.stream.audioActive
+                        }, (error, response) => {
+                            if (error) {
+                                logger.error("Error sending 'videoData' event", error);
+                            }
+                            clearInterval(statsRequest);
+                        });
+                    }
+                });
+            }, intervalSeconds * 1000);
+        } else {
+            console.error('Browser ' + platform.name + ' (version ' + platform.version + ') for ' + platform.os!!.family + ' is not supported in OpenVidu for Network Quality');
+        }
+    }
 
     /* Private methods */
 

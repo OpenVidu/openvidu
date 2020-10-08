@@ -24,7 +24,6 @@ export { VideoElementEvent } from './OpenViduInternal/Events/VideoElementEvent';
 export { StreamPropertyChangedEvent } from './OpenViduInternal/Events/StreamPropertyChangedEvent';
 export { FilterEvent } from './OpenViduInternal/Events/FilterEvent';
 export { NetworkQualityChangedEvent } from './OpenViduInternal/Events/NetworkQualityChangedEvent';
-export { NetworkQualityChangedReason } from './OpenViduInternal/Events/NetworkQualityChangedEvent';
 
 export { Capabilities } from './OpenViduInternal/Interfaces/Public/Capabilities';
 export { Device } from './OpenViduInternal/Interfaces/Public/Device';
