@@ -11,4 +11,4 @@ RUN chmod +x /tmp/configuration-files.sh \
     && chmod +x /usr/local/bin/entrypoint.sh \
     && chmod +x /usr/local/bin/discover_my_public_ip.sh
 
-CMD /usr/local/bin/entrypoint.sh
+ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]

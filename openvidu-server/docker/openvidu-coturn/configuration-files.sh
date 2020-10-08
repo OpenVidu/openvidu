@@ -13,9 +13,16 @@ fingerprint
 lt-cred-mech
 max-port=${MAX_PORT:-65535}
 min-port=${MIN_PORT:-40000}
+simple-log
 pidfile="/var/run/turnserver.pid"
 realm=openvidu
-simple-log
-redis-userdb="ip=${REDIS_IP} dbname=${DB_NAME} password=${DB_PASSWORD} connect_timeout=30"
 verbose
 EOF
+
+if [[ ! -z "${REDIS_IP}" ]] && [[ ! -z "${DB_NAME}" ]] && [[ ! -z "${DB_PASSWORD}" ]]; then
+    echo "redis-userdb=\"ip=${REDIS_IP} dbname=${DB_NAME} password=${DB_PASSWORD} connect_timeout=30\"" >> /etc/turnserver.conf
+fi
+
+if [[ ! -z "${TURN_USERNAME_PASSWORD}" ]]; then
+    echo "user=${TURN_USERNAME_PASSWORD}" >> /etc/turnserver.conf
+fi
