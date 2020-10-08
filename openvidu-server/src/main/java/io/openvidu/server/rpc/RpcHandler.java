@@ -165,6 +165,9 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 		case ProtocolElements.RECONNECTSTREAM_METHOD:
 			reconnectStream(rpcConnection, request);
 			break;
+		case ProtocolElements.VIDEODATA_METHOD:
+			updateVideoData(rpcConnection, request);
+			break;
 		default:
 			log.error("Unrecognized request {}", request);
 			break;
@@ -632,6 +635,20 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 			this.notificationService.sendErrorResponse(participant.getParticipantPrivateId(), request.getId(),
 					new JsonObject(), e);
 		}
+	}
+	
+	private void updateVideoData(RpcConnection rpcConnection, Request<JsonObject> request) {
+		Participant participant;
+		try {
+			participant = sanityCheckOfSession(rpcConnection, "videoData");
+			int height = getIntParam(request, "height");
+			int width = getIntParam(request, "width");
+			boolean videoActive = getBooleanParam(request, "videoActive");
+			boolean audioActive = getBooleanParam(request, "audioActive");
+			sessionManager.onVideoData(participant, request.getId(), height, width, videoActive, audioActive);
+		} catch (OpenViduException e) {
+			log.error("Error getting video data: {}", e.toString());
+		}		
 	}
 
 	public void leaveRoomAfterConnClosed(String participantPrivateId, EndReason reason) {

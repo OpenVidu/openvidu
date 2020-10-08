@@ -1107,6 +1107,11 @@ public class KurentoSessionManager extends SessionManager {
 		Session session = this.getSession(sessionId);
 		return ((KurentoSession) session).getParticipantPrivateIdFromStreamId(streamId);
 	}
+	
+	@Override
+	public void onVideoData(Participant participant, Integer transactionId, Integer height, Integer width, Boolean videoActive, Boolean audioActive) {
+		sessionEventsHandler.onVideoData(participant, transactionId, height, width, videoActive, audioActive);
+	}
 
 	private void applyFilterInPublisher(KurentoParticipant kParticipant, KurentoFilter filter)
 			throws OpenViduException {

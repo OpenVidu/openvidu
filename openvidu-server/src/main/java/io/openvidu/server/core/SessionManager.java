@@ -165,6 +165,8 @@ public abstract class SessionManager {
 
 	public abstract String getParticipantPrivateIdFromStreamId(String sessionId, String streamId)
 			throws OpenViduException;
+	
+	public abstract void onVideoData(Participant participant, Integer transactionId, Integer height, Integer width, Boolean videoActive, Boolean audioActive);
 
 	/**
 	 * Returns a Session given its id

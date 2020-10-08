@@ -558,6 +558,18 @@ public class SessionEventsHandler {
 		}
 	}
 
+	public void onVideoData(Participant participant, Integer transactionId, Integer height, Integer width,
+			Boolean videoActive, Boolean audioActive) {
+		participant.setVideoHeight(height);
+		participant.setVideoWidth(width);
+		participant.setVideoActive(videoActive);
+		participant.setAudioActive(audioActive);
+		log.info(
+				"Video data of participant {} was initialized. height:{}, width:{}, isVideoActive: {}, isAudioActive: {}",
+				participant.getParticipantPublicId(), height, width, videoActive, audioActive);
+		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, new JsonObject());
+	}
+
 	public void closeRpcSession(String participantPrivateId) {
 		this.rpcNotificationService.closeRpcSession(participantPrivateId);
 	}

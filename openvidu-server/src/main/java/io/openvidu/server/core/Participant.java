@@ -38,6 +38,10 @@ public class Participant {
 	protected GeoLocation location; // Location of the participant
 	protected String platform; // Platform used by the participant to connect to the session
 	protected EndpointType endpointType; // Type of participant (web participant, IP cam participant...)
+	protected Integer videoWidth = 0;
+	protected Integer videoHeight = 0;
+	protected Boolean videoActive = false;
+	protected Boolean audioActive = false;
 
 	protected boolean streaming = false;
 	protected volatile boolean closed = false;
@@ -140,6 +144,38 @@ public class Participant {
 
 	public EndpointType getEndpointType() {
 		return this.endpointType;
+	}
+	
+	public Integer getVideoWidth() {
+		return videoWidth;
+	}
+
+	public void setVideoWidth(Integer videoWidth) {
+		this.videoWidth = videoWidth;
+	}
+
+	public Integer getVideoHeight() {
+		return videoHeight;
+	}
+
+	public void setVideoHeight(Integer videoHeight) {
+		this.videoHeight = videoHeight;
+	}
+	
+	public Boolean isVideoActive() {
+		return videoActive;
+	}
+
+	public void setVideoActive(Boolean videoActive) {
+		this.videoActive = videoActive;
+	}
+
+	public Boolean isAudioActive() {
+		return audioActive;
+	}
+
+	public void setAudioActive(Boolean audioActive) {
+		this.audioActive = audioActive;
 	}
 
 	public boolean isStreaming() {

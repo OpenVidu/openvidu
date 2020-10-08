@@ -773,20 +773,6 @@ public class OpenviduConfig {
 		}
 	}
 
-	protected Double asNonNegativeDouble(String property) {
-		try {
-			Double doubleValue = Double.parseDouble(getValue(property));
-
-			if (doubleValue < 0) {
-				addError(property, "Is not a non negative double");
-			}
-			return doubleValue;
-		} catch (NumberFormatException e) {
-			addError(property, "Is not a non negative doubleValue");
-			return 0.0;
-		}
-	}
-
 	/*
 	 * This method checks all types of Internet addresses (IPv4, IPv6 and Domains)
 	 */
