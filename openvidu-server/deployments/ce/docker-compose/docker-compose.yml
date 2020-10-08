@@ -62,7 +62,7 @@ services:
             - REDIS_PASSWORD=${OPENVIDU_SECRET}
 
     coturn:
-        image: openvidu/openvidu-coturn:1.0.0
+        image: openvidu/openvidu-coturn:2.0.0-dev1
         restart: on-failure
         network_mode: host
         environment:
