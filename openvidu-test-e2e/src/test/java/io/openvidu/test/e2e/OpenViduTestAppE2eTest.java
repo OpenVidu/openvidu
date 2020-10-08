@@ -2520,6 +2520,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 		log.info("REST API test");
 
+		final String DEFAULT_JSON_SESSION = "{'sessionId':'STR','id':'STR','createdAt':0,'mediaMode':'STR','recordingMode':'STR','defaultOutputMode':'STR','defaultRecordingLayout':'STR','customSessionId':'STR','connections':{'numberOfElements':0,'content':[]},'recording':false}";
+
 		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
 
 		// 401
@@ -2550,11 +2552,10 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 		// 200
 		body = "{'mediaMode': 'ROUTED', 'recordingMode': 'MANUAL', 'customSessionId': 'CUSTOM_SESSION_ID', 'defaultOutputMode': 'COMPOSED', 'defaultRecordingLayout': 'BEST_FIT'}";
-		restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpStatus.SC_OK, true,
-				"{'id': 'STR', 'createdAt': 0}");
+		restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpStatus.SC_OK, true, DEFAULT_JSON_SESSION);
 		// Default values
 		JsonObject res = restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", "{}", HttpStatus.SC_OK, true,
-				"{'id': 'STR', 'createdAt': 0}");
+				DEFAULT_JSON_SESSION);
 		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/" + res.get("id").getAsString(),
 				HttpStatus.SC_NO_CONTENT);
 
@@ -2564,7 +2565,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 		/** GET /openvidu/api/sessions (after session created) **/
 		restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/CUSTOM_SESSION_ID", null, HttpStatus.SC_OK, true,
-				"{'sessionId':'STR','createdAt':0,'mediaMode':'STR','recordingMode':'STR','defaultOutputMode':'STR','defaultRecordingLayout':'STR','customSessionId':'STR','connections':{'numberOfElements':0,'content':[]},'recording':true}");
+				DEFAULT_JSON_SESSION);
 		restClient.rest(HttpMethod.GET, "/openvidu/api/sessions", null, HttpStatus.SC_OK, true,
 				ImmutableMap.of("numberOfElements", new Integer(1), "content", new JsonArray()));
 
@@ -2643,7 +2644,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 		// 409 (RELAYED media mode)
 		res = restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", "{'mediaMode':'RELAYED'}", HttpStatus.SC_OK,
-				true, "{'id': 'STR', 'createdAt': 0}");
+				true, DEFAULT_JSON_SESSION);
 		body = "{'session':'" + res.get("id").getAsString() + "'}";
 		restClient.rest(HttpMethod.POST, "/openvidu/api/recordings/start", body, HttpStatus.SC_CONFLICT);
 		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/" + res.get("id").getAsString(),
@@ -2737,7 +2738,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/CUSTOM_SESSION_ID/stream/NOT_EXISTS",
 				HttpStatus.SC_NOT_FOUND);
 		res = restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/CUSTOM_SESSION_ID", null, HttpStatus.SC_OK, true,
-				"{'sessionId':'STR','createdAt':0,'mediaMode':'STR','recordingMode':'STR','defaultOutputMode':'STR','defaultRecordingLayout':'STR','customSessionId':'STR','connections':{'numberOfElements':2,'content'"
+				"{'sessionId':'STR','id':'STR','createdAt':0,'mediaMode':'STR','recordingMode':'STR','defaultOutputMode':'STR','defaultRecordingLayout':'STR','customSessionId':'STR','connections':{'numberOfElements':2,'content'"
 						+ ":[{'connectionId':'STR','createdAt':0,'location':'STR','platform':'STR','token':'STR','role':'STR','serverData':'STR','clientData':'STR','publishers':["
 						+ "{'createdAt':0,'streamId':'STR','mediaOptions':{'hasAudio':false,'audioActive':false,'hasVideo':false,'videoActive':false,'typeOfVideo':'STR','frameRate':0,"
 						+ "'videoDimensions':'STR','filter':{}}}],'subscribers':[{'createdAt':0,'streamId':'STR','publisher':'STR'}]},{'connectionId':'STR','createdAt':0,'location':'STR',"
@@ -2800,16 +2801,25 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		final String tokenA = res.get("token").getAsString();
 		res = restClient.rest(HttpMethod.POST, "/openvidu/api/tokens", body, HttpStatus.SC_OK);
 		final String tokenBConnectionId = res.get("connectionId").getAsString();
+		final String tokenB = res.get("token").getAsString();
 
 		user.getDriver().findElement(By.id("one2one-btn")).click();
-		user.getDriver().findElement(By.id("session-settings-btn-0")).click();
-		Thread.sleep(1000);
 
 		// Set token 1
+		user.getDriver().findElement(By.id("session-settings-btn-0")).click();
+		Thread.sleep(1000);
 		tokenInput = user.getDriver().findElement(By.cssSelector("#custom-token-div input"));
 		tokenInput.clear();
 		tokenInput.sendKeys(tokenA);
+		user.getDriver().findElement(By.id("save-btn")).click();
+		Thread.sleep(1000);
 
+		// Set token 2
+		user.getDriver().findElement(By.id("session-settings-btn-1")).click();
+		Thread.sleep(1000);
+		tokenInput = user.getDriver().findElement(By.cssSelector("#custom-token-div input"));
+		tokenInput.clear();
+		tokenInput.sendKeys(tokenB);
 		user.getDriver().findElement(By.id("save-btn")).click();
 		Thread.sleep(1000);
 
@@ -2835,9 +2845,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .join-btn")).sendKeys(Keys.ENTER);
 
 		user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
-		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
-		user.getEventManager().waitUntilEventReaches("streamCreated", 1);
-		user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
 
 		// connectionId should be equal to the one brought by the token
 		Assert.assertEquals("Wrong connectionId", tokenBConnectionId,

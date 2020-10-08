@@ -176,11 +176,9 @@ public class SessionRestController {
 		Session sessionNotActive = sessionManager.storeSessionNotActive(sessionId, sessionProperties);
 		log.info("New session {} initialized {}", sessionId, this.sessionManager.getSessionsWithNotActive().stream()
 				.map(Session::getSessionId).collect(Collectors.toList()).toString());
-		JsonObject responseJson = new JsonObject();
-		responseJson.addProperty("id", sessionNotActive.getSessionId());
-		responseJson.addProperty("createdAt", sessionNotActive.getStartTime());
 
-		return new ResponseEntity<>(responseJson.toString(), RestUtils.getResponseHeaders(), HttpStatus.OK);
+		return new ResponseEntity<>(sessionNotActive.toJson().toString(), RestUtils.getResponseHeaders(),
+				HttpStatus.OK);
 	}
 
 	@RequestMapping(value = "/sessions/{sessionId}", method = RequestMethod.GET)
@@ -396,44 +394,7 @@ public class SessionRestController {
 		if (session.closingLock.readLock().tryLock()) {
 			try {
 				Token token = sessionManager.newToken(session, role, metadata, record, kurentoTokenOptions);
-
-				JsonObject responseJson = new JsonObject();
-				responseJson.addProperty("id", token.getToken());
-				responseJson.addProperty("connectionId", token.getConnetionId());
-				responseJson.addProperty("session", sessionId);
-				responseJson.addProperty("role", role.toString());
-				responseJson.addProperty("data", metadata);
-				responseJson.addProperty("record", record);
-				responseJson.addProperty("token", token.getToken());
-
-				if (kurentoOptions != null) {
-					JsonObject kurentoOptsResponse = new JsonObject();
-					if (kurentoTokenOptions.getVideoMaxRecvBandwidth() != null) {
-						kurentoOptsResponse.addProperty("videoMaxRecvBandwidth",
-								kurentoTokenOptions.getVideoMaxRecvBandwidth());
-					}
-					if (kurentoTokenOptions.getVideoMinRecvBandwidth() != null) {
-						kurentoOptsResponse.addProperty("videoMinRecvBandwidth",
-								kurentoTokenOptions.getVideoMinRecvBandwidth());
-					}
-					if (kurentoTokenOptions.getVideoMaxSendBandwidth() != null) {
-						kurentoOptsResponse.addProperty("videoMaxSendBandwidth",
-								kurentoTokenOptions.getVideoMaxSendBandwidth());
-					}
-					if (kurentoTokenOptions.getVideoMinSendBandwidth() != null) {
-						kurentoOptsResponse.addProperty("videoMinSendBandwidth",
-								kurentoTokenOptions.getVideoMinSendBandwidth());
-					}
-					if (kurentoTokenOptions.getAllowedFilters().length > 0) {
-						JsonArray filters = new JsonArray();
-						for (String filter : kurentoTokenOptions.getAllowedFilters()) {
-							filters.add(filter);
-						}
-						kurentoOptsResponse.add("allowedFilters", filters);
-					}
-					responseJson.add("kurentoOptions", kurentoOptsResponse);
-				}
-				return new ResponseEntity<>(responseJson.toString(), RestUtils.getResponseHeaders(), HttpStatus.OK);
+				return new ResponseEntity<>(token.toJson().toString(), RestUtils.getResponseHeaders(), HttpStatus.OK);
 			} catch (Exception e) {
 				return this.generateErrorResponse(
 						"Error generating token for session " + sessionId + ": " + e.getMessage(), "/tokens",

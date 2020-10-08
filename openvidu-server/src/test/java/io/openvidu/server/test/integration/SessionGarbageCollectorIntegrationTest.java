@@ -115,7 +115,7 @@ public class SessionGarbageCollectorIntegrationTest {
 	}
 
 	private void joinParticipant(String sessionId, String token) {
-		Token t = new Token(token, OpenViduRole.PUBLISHER, "SERVER_METADATA", true, null, null);
+		Token t = new Token(token, sessionId, OpenViduRole.PUBLISHER, "SERVER_METADATA", true, null, null);
 		String uuid = UUID.randomUUID().toString();
 		String participantPrivateId = "PARTICIPANT_PRIVATE_ID_" + uuid;
 		String finalUserId = "FINAL_USER_ID_" + uuid;

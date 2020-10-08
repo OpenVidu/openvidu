@@ -308,7 +308,8 @@ public abstract class SessionManager {
 	}
 
 	public Token newTokenForInsecureUser(Session session, String token, String serverMetadata) throws Exception {
-		Token tokenObj = new Token(token, OpenViduRole.PUBLISHER, serverMetadata != null ? serverMetadata : "", true,
+		Token tokenObj = new Token(token, session.getSessionId(), OpenViduRole.PUBLISHER,
+				serverMetadata != null ? serverMetadata : "", true,
 				this.openviduConfig.isTurnadminAvailable() ? this.coturnCredentialsService.createUser() : null, null);
 		session.storeToken(tokenObj);
 		session.showTokens("Token created for insecure user");
@@ -357,7 +358,7 @@ public abstract class SessionManager {
 
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
 
-			Participant p = new Participant(finalUserId, participantPrivatetId, token.getConnetionId(), sessionId,
+			Participant p = new Participant(finalUserId, participantPrivatetId, token.getConnectionId(), sessionId,
 					token, clientMetadata, location, platform, EndpointType.WEBRTC_ENDPOINT, null);
 
 			this.sessionidParticipantpublicidParticipant.get(sessionId).put(p.getParticipantPublicId(), p);

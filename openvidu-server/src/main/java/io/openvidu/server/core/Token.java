@@ -19,6 +19,8 @@ package io.openvidu.server.core;
 
 import org.apache.commons.lang3.RandomStringUtils;
 
+import com.google.gson.JsonObject;
+
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.server.coturn.TurnCredentials;
 import io.openvidu.server.kurento.core.KurentoTokenOptions;
@@ -26,6 +28,7 @@ import io.openvidu.server.kurento.core.KurentoTokenOptions;
 public class Token {
 
 	private String token;
+	private String sessionId;
 	private OpenViduRole role;
 	private String serverMetadata = "";
 	private boolean record;
@@ -35,9 +38,10 @@ public class Token {
 	private final String connectionId = IdentifierPrefixes.PARTICIPANT_PUBLIC_ID
 			+ RandomStringUtils.randomAlphabetic(1).toUpperCase() + RandomStringUtils.randomAlphanumeric(9);
 
-	public Token(String token, OpenViduRole role, String serverMetadata, boolean record,
+	public Token(String token, String sessionId, OpenViduRole role, String serverMetadata, boolean record,
 			TurnCredentials turnCredentials, KurentoTokenOptions kurentoTokenOptions) {
 		this.token = token;
+		this.sessionId = sessionId;
 		this.role = role;
 		this.serverMetadata = serverMetadata;
 		this.record = record;
@@ -73,7 +77,7 @@ public class Token {
 		return kurentoTokenOptions;
 	}
 
-	public String getConnetionId() {
+	public String getConnectionId() {
 		return connectionId;
 	}
 
@@ -83,6 +87,21 @@ public class Token {
 
 	public void setRecord(boolean record) {
 		this.record = record;
+	}
+
+	public JsonObject toJson() {
+		JsonObject json = new JsonObject();
+		json.addProperty("token", this.getToken());
+		json.addProperty("id", this.getToken());
+		json.addProperty("connectionId", this.getConnectionId());
+		json.addProperty("session", this.sessionId);
+		json.addProperty("role", this.getRole().toString());
+		json.addProperty("data", this.getServerMetadata());
+		json.addProperty("record", this.record());
+		if (this.getKurentoTokenOptions() != null) {
+			json.add("kurentoOptions", this.getKurentoTokenOptions().toJson());
+		}
+		return json;
 	}
 
 	@Override

@@ -175,7 +175,7 @@ public class Session implements SessionInterface {
 		Iterator<Entry<String, Token>> iterator = this.tokens.entrySet().iterator();
 		while (iterator.hasNext() && !deleted) {
 			Entry<String, Token> entry = iterator.next();
-			if (connectionId.equals(entry.getValue().getConnetionId())) {
+			if (connectionId.equals(entry.getValue().getConnectionId())) {
 				iterator.remove();
 				deleted = true;
 			}
@@ -225,6 +225,7 @@ public class Session implements SessionInterface {
 	private JsonObject sharedJson(Function<KurentoParticipant, JsonObject> toJsonFunction) {
 		JsonObject json = new JsonObject();
 		json.addProperty("sessionId", this.sessionId);
+		json.addProperty("id", this.sessionId); // TODO: deprecated. Better use only "sessionId"
 		json.addProperty("createdAt", this.startTime);
 		json.addProperty("mediaMode", this.sessionProperties.mediaMode().name());
 		json.addProperty("recordingMode", this.sessionProperties.recordingMode().name());

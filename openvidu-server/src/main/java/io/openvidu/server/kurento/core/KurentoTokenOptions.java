@@ -79,4 +79,29 @@ public class KurentoTokenOptions {
 		return this.allowedFilters.containsKey(filterType);
 	}
 
+	public JsonObject toJson() {
+		JsonObject json = new JsonObject();
+		if (this.getVideoMaxRecvBandwidth() != null) {
+			json.addProperty("videoMaxRecvBandwidth", this.getVideoMaxRecvBandwidth());
+		}
+		if (this.getVideoMinRecvBandwidth() != null) {
+			json.addProperty("videoMinRecvBandwidth", this.getVideoMinRecvBandwidth());
+		}
+		if (this.getVideoMaxSendBandwidth() != null) {
+			json.addProperty("videoMaxSendBandwidth", this.getVideoMaxSendBandwidth());
+		}
+		if (this.getVideoMinSendBandwidth() != null) {
+			json.addProperty("videoMinSendBandwidth", this.getVideoMinSendBandwidth());
+		}
+		if (this.getAllowedFilters().length > 0) {
+			JsonArray filtersJson = new JsonArray();
+			String[] filters = this.getAllowedFilters();
+			for (String filter : filters) {
+				filtersJson.add(filter);
+			}
+			json.add("allowedFilters", filtersJson);
+		}
+		return json;
+	}
+
 }

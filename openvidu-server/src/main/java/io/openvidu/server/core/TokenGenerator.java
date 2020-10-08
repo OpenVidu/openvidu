@@ -56,6 +56,6 @@ public class TokenGenerator {
 				token += "&turnCredential=" + turnCredentials.getCredential();
 			}
 		}
-		return new Token(token, role, serverMetadata, record, turnCredentials, kurentoTokenOptions);
+		return new Token(token, sessionId, role, serverMetadata, record, turnCredentials, kurentoTokenOptions);
 	}
 }
