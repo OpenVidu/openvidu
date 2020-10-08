@@ -17,13 +17,18 @@
 
 package io.openvidu.java.client;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonNull;
+import com.google.gson.JsonObject;
+
 /**
  * See {@link io.openvidu.java.client.Session#generateToken(TokenOptions)}
  */
 public class TokenOptions {
 
-	private String data;
 	private OpenViduRole role;
+	private String data;
+	private Boolean record;
 	private KurentoOptions kurentoOptions;
 
 	/**
@@ -33,15 +38,24 @@ public class TokenOptions {
 	 */
 	public static class Builder {
 
-		private String data = "";
 		private OpenViduRole role = OpenViduRole.PUBLISHER;
+		private String data;
+		private Boolean record = true;
 		private KurentoOptions kurentoOptions;
 
 		/**
-		 * Builder for {@link io.openvidu.java.client.TokenOptions}
+		 * Builder for {@link io.openvidu.java.client.TokenOptions}.
 		 */
 		public TokenOptions build() {
-			return new TokenOptions(this.data, this.role, this.kurentoOptions);
+			return new TokenOptions(this.role, this.data, this.record, this.kurentoOptions);
+		}
+
+		/**
+		 * Call this method to set the role assigned to this token.
+		 */
+		public Builder role(OpenViduRole role) {
+			this.role = role;
+			return this;
 		}
 
 		/**
@@ -72,16 +86,19 @@ public class TokenOptions {
 		}
 
 		/**
-		 * Call this method to set the role assigned to this token
+		 * Call this method to flag the streams published by the participant owning this
+		 * token to be recorded or not. This only affects <a href=
+		 * "https://docs.openvidu.io/en/stable/advanced-features/recording#selecting-streams-to-be-recorded"
+		 * target="_blank">INDIVIDUAL recording</a>. If not set by default will be true.
 		 */
-		public Builder role(OpenViduRole role) {
-			this.role = role;
+		public Builder record(boolean record) {
+			this.record = record;
 			return this;
 		}
 
 		/**
 		 * Call this method to set a {@link io.openvidu.java.client.KurentoOptions}
-		 * object for this token
+		 * object for this token.
 		 */
 		public Builder kurentoOptions(KurentoOptions kurentoOptions) {
 			this.kurentoOptions = kurentoOptions;
@@ -90,31 +107,79 @@ public class TokenOptions {
 
 	}
 
-	private TokenOptions(String data, OpenViduRole role, KurentoOptions kurentoOptions) {
-		this.data = data;
+	TokenOptions(OpenViduRole role, String data, Boolean record, KurentoOptions kurentoOptions) {
 		this.role = role;
+		this.data = data;
+		this.record = record;
 		this.kurentoOptions = kurentoOptions;
 	}
 
 	/**
-	 * Returns the secure (server-side) metadata assigned to this token
-	 */
-	public String getData() {
-		return this.data;
-	}
-
-	/**
-	 * Returns the role assigned to this token
+	 * Returns the role assigned to this token.
 	 */
 	public OpenViduRole getRole() {
 		return this.role;
 	}
 
 	/**
-	 * Returns the Kurento options assigned to this token
+	 * Returns the secure (server-side) metadata assigned to this token.
 	 */
-	public KurentoOptions getKurentoOptions() {
-		return this.kurentoOptions;
+	public String getData() {
+		return this.data;
+	}
+
+	/**
+	 * Whether the streams published by the participant owning this token will be
+	 * recorded or not. This only affects <a href=
+	 * "https://docs.openvidu.io/en/stable/advanced-features/recording#selecting-streams-to-be-recorded"
+	 * target="_blank">INDIVIDUAL recording</a>.
+	 */
+	public Boolean record() {
+		return this.record;
+	}
+
+	protected JsonObject toJsonObject(String sessionId) {
+		JsonObject json = new JsonObject();
+		json.addProperty("session", sessionId);
+		if (getRole() != null) {
+			json.addProperty("role", getRole().name());
+		} else {
+			json.add("role", JsonNull.INSTANCE);
+		}
+		if (getData() != null) {
+			json.addProperty("data", getData());
+		} else {
+			json.add("data", JsonNull.INSTANCE);
+		}
+		if (record() != null) {
+			json.addProperty("record", record());
+		} else {
+			json.add("record", JsonNull.INSTANCE);
+		}
+		if (this.kurentoOptions != null) {
+			JsonObject kurentoOptions = new JsonObject();
+			if (this.kurentoOptions.getVideoMaxRecvBandwidth() != null) {
+				kurentoOptions.addProperty("videoMaxRecvBandwidth", this.kurentoOptions.getVideoMaxRecvBandwidth());
+			}
+			if (this.kurentoOptions.getVideoMinRecvBandwidth() != null) {
+				kurentoOptions.addProperty("videoMinRecvBandwidth", this.kurentoOptions.getVideoMinRecvBandwidth());
+			}
+			if (this.kurentoOptions.getVideoMaxSendBandwidth() != null) {
+				kurentoOptions.addProperty("videoMaxSendBandwidth", this.kurentoOptions.getVideoMaxSendBandwidth());
+			}
+			if (this.kurentoOptions.getVideoMinSendBandwidth() != null) {
+				kurentoOptions.addProperty("videoMinSendBandwidth", this.kurentoOptions.getVideoMinSendBandwidth());
+			}
+			if (this.kurentoOptions.getAllowedFilters().length > 0) {
+				JsonArray allowedFilters = new JsonArray();
+				for (String filter : this.kurentoOptions.getAllowedFilters()) {
+					allowedFilters.add(filter);
+				}
+				kurentoOptions.add("allowedFilters", allowedFilters);
+			}
+			json.add("kurentoOptions", kurentoOptions);
+		}
+		return json;
 	}
 
 }

@@ -20,6 +20,10 @@ package io.openvidu.java.client;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 /**
  * See {@link io.openvidu.java.client.Session#getActiveConnections()}
@@ -28,35 +32,52 @@ public class Connection {
 
 	private String connectionId;
 	private long createdAt;
-	private OpenViduRole role;
-	private String token;
 	private String location;
 	private String platform;
-	private String serverData;
 	private String clientData;
+	private Token token;
 
-	protected Map<String, Publisher> publishers;
-	protected List<String> subscribers;
+	protected Map<String, Publisher> publishers = new ConcurrentHashMap<>();
+	protected List<String> subscribers = new ArrayList<>();
 
-	protected Connection(String connectionId, long createdAt, OpenViduRole role, String token, String location,
-			String platform, String serverData, String clientData, Map<String, Publisher> publishers,
-			List<String> subscribers) {
-		this.connectionId = connectionId;
-		this.createdAt = createdAt;
-		this.role = role;
-		this.token = token;
-		this.location = location;
-		this.platform = platform;
-		this.serverData = serverData;
-		this.clientData = clientData;
-		this.publishers = publishers;
-		this.subscribers = subscribers;
+	protected Connection(JsonObject json) {
+		JsonArray jsonArrayPublishers = json.get("publishers").getAsJsonArray();
+		jsonArrayPublishers.forEach(publisher -> {
+			JsonObject pubJson = publisher.getAsJsonObject();
+			JsonObject mediaOptions = pubJson.get("mediaOptions").getAsJsonObject();
+			Publisher pub = new Publisher(pubJson.get("streamId").getAsString(), pubJson.get("createdAt").getAsLong(),
+					mediaOptions.get("hasAudio").getAsBoolean(), mediaOptions.get("hasVideo").getAsBoolean(),
+					mediaOptions.get("audioActive"), mediaOptions.get("videoActive"), mediaOptions.get("frameRate"),
+					mediaOptions.get("typeOfVideo"), mediaOptions.get("videoDimensions"));
+			this.publishers.put(pub.getStreamId(), pub);
+		});
+
+		JsonArray jsonArraySubscribers = json.get("subscribers").getAsJsonArray();
+		jsonArraySubscribers.forEach(subscriber -> {
+			this.subscribers.add((subscriber.getAsJsonObject()).get("streamId").getAsString());
+		});
+
+		this.connectionId = json.get("connectionId").getAsString();
+		this.createdAt = json.get("createdAt").getAsLong();
+
+		this.location = json.get("location").getAsString();
+		this.platform = json.get("platform").getAsString();
+		this.clientData = json.get("clientData").getAsString();
+
+		String token = json.has("token") ? json.get("token").getAsString() : null;
+		OpenViduRole role = OpenViduRole.valueOf(json.get("role").getAsString());
+		String data = json.get("serverData").getAsString();
+		Boolean record = json.get("record").getAsBoolean();
+
+		TokenOptions tokenOptions = new TokenOptions(role, data, record, null);
+		this.token = new Token(token, this.connectionId, tokenOptions);
 	}
 
 	/**
-	 * Returns the identifier of the connection. You can call
-	 * {@link io.openvidu.java.client.Session#forceDisconnect(String)} passing this
-	 * property as parameter
+	 * Returns the identifier of the connection. You can call methods
+	 * {@link io.openvidu.java.client.Session#forceDisconnect(String)} or
+	 * {@link io.openvidu.java.client.Session#updateConnection(String, TokenOptions)}
+	 * passing this property as parameter
 	 */
 	public String getConnectionId() {
 		return connectionId;
@@ -74,21 +95,41 @@ public class Connection {
 	 * Returns the role of the connection
 	 */
 	public OpenViduRole getRole() {
-		return role;
+		return this.token.getRole();
 	}
 
 	/**
-	 * Returns the token associated to the connection
+	 * Returns the data associated to the connection on the server-side. This value
+	 * is set with {@link io.openvidu.java.client.TokenOptions.Builder#data(String)}
+	 * when calling {@link io.openvidu.java.client.Session#generateToken()}
+	 */
+	public String getServerData() {
+		return this.token.getData();
+	}
+
+	/**
+	 * Whether the streams published by this Connection will be recorded or not.
+	 * This only affects <a href=
+	 * "https://docs.openvidu.io/en/stable/advanced-features/recording#selecting-streams-to-be-recorded"
+	 * target="_blank">INDIVIDUAL recording</a>.
+	 */
+	public boolean record() {
+		return this.token.record();
+	}
+
+	/**
+	 * Returns the token string associated to the connection
 	 */
 	public String getToken() {
-		return token;
+		return this.token.getToken();
 	}
 
 	/**
-	 * <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" target="_blank" style="display:
-	 * inline-block; background-color: rgb(0, 136, 170); color: white; font-weight:
-	 * bold; padding: 0px 5px; margin-right: 5px; border-radius: 3px; font-size:
-	 * 13px; line-height:21px; font-family: Montserrat, sans-serif">PRO</a>
+	 * <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" target="_blank"
+	 * style="display: inline-block; background-color: rgb(0, 136, 170); color:
+	 * white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius:
+	 * 3px; font-size: 13px; line-height:21px; font-family: Montserrat,
+	 * sans-serif">PRO</a>
 	 * 
 	 * Returns the geo location of the connection, with the following format:
 	 * <code>"CITY, COUNTRY"</code> (<code>"unknown"</code> if it wasn't possible to
@@ -107,19 +148,10 @@ public class Connection {
 	}
 
 	/**
-	 * Returns the data associated to the connection on the server-side. This value
-	 * is set with {@link io.openvidu.java.client.TokenOptions.Builder#data(String)}
-	 * when calling {@link io.openvidu.java.client.Session#generateToken()}
-	 */
-	public String getServerData() {
-		return serverData;
-	}
-
-	/**
 	 * Returns the data associated to the connection on the client-side. This value
-	 * is set with second parameter of method
-	 * <a href="https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/session.html#connect" target
-	 * ="_blank">Session.connect</a> in OpenVidu Browser
+	 * is set with second parameter of method <a href=
+	 * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/session.html#connect"
+	 * target ="_blank">Session.connect</a> in OpenVidu Browser
 	 */
 	public String getClientData() {
 		return clientData;
@@ -145,6 +177,16 @@ public class Connection {
 	 */
 	public List<String> getSubscribers() {
 		return this.subscribers;
+	}
+
+	/**
+	 * For now only properties data, role and record can be updated
+	 */
+	protected void overrideTokenOptions(TokenOptions tokenOptions) {
+		TokenOptions.Builder modifiableTokenOptions = new TokenOptions.Builder().role(tokenOptions.getRole())
+				.record(tokenOptions.record());
+		modifiableTokenOptions.data(this.token.getData());
+		this.token.overrideTokenOptions(modifiableTokenOptions.build());
 	}
 
 	protected void setSubscribers(List<String> subscribers) {

@@ -44,7 +44,6 @@ export interface TokenOptions {
      */
     record?: boolean;
 
-
     /**
      * **WARNING**: experimental option. This interface may change in the near future
      *

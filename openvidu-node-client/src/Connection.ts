@@ -17,6 +17,7 @@
 
 import { OpenViduRole } from './OpenViduRole';
 import { Publisher } from './Publisher';
+import { TokenOptions } from './TokenOptions';
 
 /**
  * See [[Session.activeConnections]]
@@ -24,7 +25,8 @@ import { Publisher } from './Publisher';
 export class Connection {
 
     /**
-     * Identifier of the connection. You can call [[Session.forceDisconnect]] passing this property as parameter
+     * Identifier of the connection. You can call methods [[Session.forceDisconnect]]
+     * or [[Session.updateConnection]] passing this property as parameter
      */
     connectionId: string;
 
@@ -37,6 +39,16 @@ export class Connection {
      * Role of the connection
      */
     role: OpenViduRole;
+
+    /**
+     * Data associated to the connection on the server-side. This value is set with property [[TokenOptions.data]] when calling [[Session.generateToken]]
+     */
+    serverData: string;
+
+    /**
+     * Whether to record the streams published by the participant owning this token or not. This only affects [INDIVIDUAL recording](/en/stable/advanced-features/recording#selecting-streams-to-be-recorded)
+     */
+    record: boolean;
 
     /**
      * Token associated to the connection
@@ -53,11 +65,6 @@ export class Connection {
      * A complete description of the platform used by the participant to connect to the session
      */
     platform: string;
-
-    /**
-     * Data associated to the connection on the server-side. This value is set with property [[TokenOptions.data]] when calling [[Session.generateToken]]
-     */
-    serverData: string;
 
     /**
      * Data associated to the connection on the client-side. This value is set with second parameter of method
@@ -80,18 +87,26 @@ export class Connection {
     /**
      * @hidden
      */
-    constructor(connectionId: string, createdAt: number, role: OpenViduRole, token: string, location: string, platform: string, serverData: string, clientData: string,
-        publishers: Publisher[], subscribers: string[]) {
-        this.connectionId = connectionId;
-        this.createdAt = createdAt;
-        this.role = role;
-        this.token = token;
-        this.location = location;
-        this.platform = platform;
-        this.serverData = serverData;
-        this.clientData = clientData;
-        this.publishers = publishers;
-        this.subscribers = subscribers;
+    constructor(json) {
+        if (json.publishers != null) {
+            json.publishers.forEach(publisher => {
+                this.publishers.push(new Publisher(publisher));
+            });
+        }
+        if (json.subscribers != null) {
+            json.subscribers.forEach(subscriber => {
+                this.subscribers.push(subscriber.streamId);
+            });
+        }
+        this.connectionId = json.connectionId;
+        this.createdAt = json.createdAt;
+        this.role = json.role;
+        this.serverData = json.serverData;
+        this.record = json.record;
+        this.token = json.token;
+        this.location = json.location;
+        this.platform = json.platform;
+        this.clientData = json.clientData;
     }
 
     /**
@@ -102,10 +117,11 @@ export class Connection {
             this.connectionId === other.connectionId &&
             this.createdAt === other.createdAt &&
             this.role === other.role &&
+            this.serverData === other.serverData &&
+            this.record === other.record &&
             this.token === other.token &&
             this.location === other.location &&
             this.platform === other.platform &&
-            this.serverData === other.serverData &&
             this.clientData === other.clientData &&
             this.subscribers.length === other.subscribers.length &&
             this.publishers.length === other.publishers.length);
@@ -125,4 +141,17 @@ export class Connection {
             return false;
         }
     }
+
+    /**
+     * @hidden
+     */
+    overrideTokenOptions(tokenOptions: TokenOptions): void {
+        if (tokenOptions.role != null) {
+            this.role = tokenOptions.role;
+        }
+        if (tokenOptions.record != null) {
+            this.record = tokenOptions.record
+        }
+    }
+
 }

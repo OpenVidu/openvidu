@@ -15,16 +15,16 @@
  *
  */
 
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { Connection } from './Connection';
 import { MediaMode } from './MediaMode';
 import { OpenVidu } from './OpenVidu';
-import { OpenViduRole } from './OpenViduRole';
 import { Publisher } from './Publisher';
 import { Recording } from './Recording';
 import { RecordingLayout } from './RecordingLayout';
 import { RecordingMode } from './RecordingMode';
 import { SessionProperties } from './SessionProperties';
+import { Token } from './Token';
 import { TokenOptions } from './TokenOptions';
 
 
@@ -49,8 +49,9 @@ export class Session {
      * Array of active connections to the session. This property always initialize as an empty array and
      * **will remain unchanged since the last time method [[Session.fetch]] was called**. Exceptions to this rule are:
      *
-     * - Calling [[Session.forceUnpublish]] also automatically updates each affected Connection status
-     * - Calling [[Session.forceDisconnect]] automatically updates each affected Connection status
+     * - Calling [[Session.forceUnpublish]] automatically updates each affected local Connection object.
+     * - Calling [[Session.forceDisconnect]] automatically updates each affected local Connection object.
+     * - Calling [[Session.updateConnection]] automatically updates the attributes of the affected local Connection object.
      *
      * To get the array of active connections with their current actual value, you must call [[Session.fetch]] before consulting
      * property [[activeConnections]]
@@ -93,12 +94,36 @@ export class Session {
     }
 
     /**
-     * Gets a new token associated to Session object
-     *
-     * @returns A Promise that is resolved to the _token_ if success and rejected with an Error object if not
+     * @deprecated Use [[Session.createToken]] instead to get a [[Token]] object.
+     * 
+     * @returns A Promise that is resolved to the generated _token_ string if success and rejected with an Error object if not
      */
     public generateToken(tokenOptions?: TokenOptions): Promise<string> {
         return new Promise<string>((resolve, reject) => {
+            this.createToken(tokenOptions).then(token => resolve(token.token)).catch(error => reject(error));
+        });
+    }
+
+    /**
+     * Gets a new token object associated to Session object configured with
+     * `tokenOptions`. The token string value to send to the client side
+     * is available at [[Token.token]] property.
+     * 
+     * Property [[Token.connectionId]] provides the connection identifier that will be given
+     * to the user consuming the token. With `connectionId` you can call
+     * the following methods without having to fetch and search for the actual
+     * [[Connection]] object:
+     * 
+     * - Call [[Session.forceDisconnect]] to invalidate the token if no client has used it
+     * yet or force the connected client to leave the session if it has.
+     * - Call [[Session.updateConnection]] to update the [[Connection]] options. And this is
+     * valid for unused tokens, but also for already used tokens, so you can
+     * dynamically change the user connection options on the fly.
+     * 
+     * @returns A Promise that is resolved to the generated [[Token]] object if success and rejected with an Error object if not
+     */
+    public createToken(tokenOptions?: TokenOptions): Promise<Token> {
+        return new Promise<Token>((resolve, reject) => {
 
             const data = JSON.stringify({
                 session: this.sessionId,
@@ -120,26 +145,13 @@ export class Session {
                 .then(res => {
                     if (res.status === 200) {
                         // SUCCESS response from openvidu-server. Resolve token
-                        resolve(res.data.id);
+                        resolve(new Token(res.data));
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
                         reject(new Error(res.status.toString()));
                     }
                 }).catch(error => {
-                    if (error.response) {
-                        // The request was made and the server responded with a status code (not 2xx)
-                        reject(new Error(error.response.status.toString()));
-                    } else if (error.request) {
-                        // The request was made but no response was received
-                        // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-                        // http.ClientRequest in node.js
-                        console.error(error.request);
-                        reject(new Error(error.request));
-                    } else {
-                        // Something happened in setting up the request that triggered an Error
-                        console.error('Error', error.message);
-                        reject(new Error(error.message));
-                    }
+                    this.handleError(error, reject);
                 });
         });
     }
@@ -171,29 +183,17 @@ export class Session {
                         reject(new Error(res.status.toString()));
                     }
                 }).catch(error => {
-                    if (error.response) {
-                        // The request was made and the server responded with a status code (not 2xx)
-                        reject(new Error(error.response.status.toString()));
-                    } else if (error.request) {
-                        // The request was made but no response was received
-                        // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-                        // http.ClientRequest in node.js
-                        console.error(error.request);
-                        reject(new Error(error.request));
-                    } else {
-                        // Something happened in setting up the request that triggered an Error
-                        console.error('Error', error.message);
-                        reject(new Error(error.message));
-                    }
+                    this.handleError(error, reject);
                 });
         });
     }
 
     /**
      * Updates every property of the Session with the current status it has in OpenVidu Server. This is especially useful for accessing the list of active
-     * connections of the Session ([[Session.activeConnections]]) and use those values to call [[Session.forceDisconnect]] or [[Session.forceUnpublish]].
+     * connections of the Session ([[Session.activeConnections]]) and use those values to call [[Session.forceDisconnect]], [[Session.forceUnpublish]] or 
+     * [[Session.updateConnection]].
      *
-     * To update every Session object owned by OpenVidu object, call [[OpenVidu.fetch]]
+     * To update all Session objects owned by OpenVidu object at once, call [[OpenVidu.fetch]]
      *
      * @returns A promise resolved to true if the Session status has changed with respect to the server, or to false if not.
      *          This applies to any property or sub-property of the Session object
@@ -223,31 +223,27 @@ export class Session {
                         reject(new Error(res.status.toString()));
                     }
                 }).catch(error => {
-                    if (error.response) {
-                        // The request was made and the server responded with a status code (not 2xx)
-                        reject(new Error(error.response.status.toString()));
-                    } else if (error.request) {
-                        // The request was made but no response was received
-                        // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-                        // http.ClientRequest in node.js
-                        console.error(error.request);
-                        reject(new Error(error.request));
-                    } else {
-                        // Something happened in setting up the request that triggered an Error
-                        console.error('Error', error.message);
-                        reject(new Error(error.message));
-                    }
+                    this.handleError(error, reject);
                 });
         });
     }
 
     /**
-     * Forces the user with Connection `connectionId` to leave the session. OpenVidu Browser will trigger the proper events on the client-side
-     * (`streamDestroyed`, `connectionDestroyed`, `sessionDisconnected`) with reason set to `"forceDisconnectByServer"`
+     * Forces the user with Connection `connectionId` to leave the session, or invalidates the [[Token]] associated with that
+     * `connectionId` if no user has used it yet.
      *
-     * You can get `connection` parameter from [[Session.activeConnections]] array ([[Connection.connectionId]] for getting each `connectionId` property).
-     * Remember to call [[Session.fetch]] before to fetch the current actual properties of the Session from OpenVidu Server
+     * In the first case you can get `connection` parameter from [[Session.activeConnections]] array (remember to call [[Session.fetch]] before
+     * to fetch the current actual properties of the Session from OpenVidu Server). As a result, OpenVidu Browser will trigger the proper
+     * events on the client-side (`streamDestroyed`, `connectionDestroyed`, `sessionDisconnected`) with reason set to `"forceDisconnectByServer"`.
+     * 
+     * In the second case you can get `connectionId` parameter with [[Token.connectionId]]. As a result, the token will be invalidated
+     * and no user will be able to connect to the session with it.
+     * 
+     * This method automatically updates the properties of the local affected objects. This means that there is no need to call
+     * [[Session.fetch]] to see the changes consequence of the execution of this method applied in the local objects.
      *
+     * @param connection The Connection object to disconnect from the session, or its `connectionId` property
+     * 
      * @returns A Promise that is resolved if the user was successfully disconnected and rejected with an Error object if not
      */
     public forceDisconnect(connection: string | Connection): Promise<any> {
@@ -302,20 +298,7 @@ export class Session {
                     }
                 })
                 .catch(error => {
-                    if (error.response) {
-                        // The request was made and the server responded with a status code (not 2xx)
-                        reject(new Error(error.response.status.toString()));
-                    } else if (error.request) {
-                        // The request was made but no response was received
-                        // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-                        // http.ClientRequest in node.js
-                        console.error(error.request);
-                        reject(new Error(error.request));
-                    } else {
-                        // Something happened in setting up the request that triggered an Error
-                        console.error('Error', error.message);
-                        reject(new Error(error.message));
-                    }
+                    this.handleError(error, reject);
                 });
         });
     }
@@ -327,6 +310,9 @@ export class Session {
      * You can get `publisher` parameter from [[Connection.publishers]] array ([[Publisher.streamId]] for getting each `streamId` property).
      * Remember to call [[Session.fetch]] before to fetch the current actual properties of the Session from OpenVidu Server
      *
+     * This method automatically updates the properties of the local affected objects. This means that there is no need to call
+     * [[Session.fetch]] to see the changes consequence of the execution of this method applied in the local objects.
+     * 
      * @returns A Promise that is resolved if the stream was successfully unpublished and rejected with an Error object if not
      */
     public forceUnpublish(publisher: string | Publisher): Promise<any> {
@@ -367,20 +353,70 @@ export class Session {
                         reject(new Error(res.status.toString()));
                     }
                 }).catch(error => {
-                    if (error.response) {
-                        // The request was made and the server responded with a status code (not 2xx)
-                        reject(new Error(error.response.status.toString()));
-                    } else if (error.request) {
-                        // The request was made but no response was received
-                        // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-                        // http.ClientRequest in node.js
-                        console.error(error.request);
-                        reject(new Error(error.request));
-                    } else {
-                        // Something happened in setting up the request that triggered an Error
-                        console.error('Error', error.message);
-                        reject(new Error(error.message));
+                    this.handleError(error, reject);
+                });
+        });
+    }
+
+    /**
+     * Updates the properties of a Connection. These properties are the ones defined
+     * by the [[TokenOptions]] parameter when generating the token used to create the Connection.
+     * These are the properties that can be updated:
+     * 
+     * - [[TokenOptions.role]]
+     * - [[TokenOptions.record]]
+     * 
+     * The `connectionId` parameter can be obtained from a Connection object with
+     * [[Connection.connectionId]], in which case the updated properties will
+     * modify an active Connection. But `connectionId` can also be obtained from a
+     * Token with [[Token.connectionId]], which allows modifying a still not used token.
+     * 
+     * This method automatically updates the properties of the local affected objects. This means that there is no need to call
+     * [[Session.fetch]] to see the changes consequence of the execution of this method applied in the local objects.
+     * 
+     * @param connectionId The [[Connection.connectionId]] property of the Connection object to modify,
+     * or the [[Token.connectionId]] property of a still not used token to modify
+     * @param tokenOptions A new [[TokenOptions]] object with the updated values to apply
+     * 
+     * @returns A Promise that is resolved to the updated [[Connection]] object if the operation was
+     * successful and rejected with an Error object if not
+     */
+    public updateConnection(connectionId: string, tokenOptions: TokenOptions): Promise<Connection> {
+        return new Promise<any>((resolve, reject) => {
+            axios.patch(
+                this.ov.host + OpenVidu.API_SESSIONS + "/" + this.sessionId + "/connection/" + connectionId,
+                tokenOptions,
+                {
+                    headers: {
+                        'Authorization': this.ov.basicAuth,
+                        'Content-Type': 'application/json'
                     }
+                }
+            )
+                .then(res => {
+                    if (res.status === 200) {
+                        console.log('Connection ' + connectionId + ' updated');
+                    } else if (res.status === 204) {
+                        console.log('Properties of Connection ' + connectionId + ' remain the same');
+                    } else {
+                        // ERROR response from openvidu-server. Resolve HTTP status
+                        reject(new Error(res.status.toString()));
+                        return;
+                    }
+                    // Update the actual Connection object with the new options
+                    const existingConnection: Connection = this.activeConnections.find(con => con.connectionId === connectionId);
+                    if (!existingConnection) {
+                        // The updated Connection is not available in local map
+                        const newConnection: Connection = new Connection(res.data);
+                        this.activeConnections.push(newConnection);
+                        resolve(newConnection);
+                    } else {
+                        // The updated Connection was available in local map
+                        existingConnection.overrideTokenOptions(tokenOptions);
+                        resolve(existingConnection);
+                    }
+                }).catch(error => {
+                    this.handleError(error, reject);
                 });
         });
     }
@@ -478,28 +514,8 @@ export class Session {
         }
 
         this.activeConnections = [];
-        json.connections.content.forEach(connection => {
-            const publishers: Publisher[] = [];
-            connection.publishers.forEach(publisher => {
-                publishers.push(new Publisher(publisher));
-            });
-            const subscribers: string[] = [];
-            connection.subscribers.forEach(subscriber => {
-                subscribers.push(subscriber.streamId);
-            });
-            this.activeConnections.push(
-                new Connection(
-                    connection.connectionId,
-                    connection.createdAt,
-                    connection.role,
-                    connection.token,
-                    connection.location,
-                    connection.platform,
-                    connection.serverData,
-                    connection.clientData,
-                    publishers,
-                    subscribers));
-        });
+        json.connections.content.forEach(jsonConnection => this.activeConnections.push(new Connection(jsonConnection)));
+
         // Order connections by time of creation
         this.activeConnections.sort((c1, c2) => (c1.createdAt > c2.createdAt) ? 1 : ((c2.createdAt > c1.createdAt) ? -1 : 0));
         return this;
@@ -536,6 +552,26 @@ export class Session {
             return;
         } else {
             return value;
+        }
+    }
+
+    /**
+     * @hidden
+     */
+    private handleError(error: AxiosError, reject: (reason?: any) => void) {
+        if (error.response) {
+            // The request was made and the server responded with a status code (not 2xx)
+            reject(new Error(error.response.status.toString()));
+        } else if (error.request) {
+            // The request was made but no response was received
+            // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+            // http.ClientRequest in node.js
+            console.error(error.request);
+            reject(new Error(error.request));
+        } else {
+            // Something happened in setting up the request that triggered an Error
+            console.error('Error', error.message);
+            reject(new Error(error.message));
         }
     }
 
