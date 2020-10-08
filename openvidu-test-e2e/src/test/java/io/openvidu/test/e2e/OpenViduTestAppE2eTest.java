@@ -1779,15 +1779,15 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 				"Number: 1. Changes: false"));
 
 		// Force unpublish wrong
-		user.getDriver().findElement(By.id("resource-id-field")).clear();
-		user.getDriver().findElement(By.id("resource-id-field")).sendKeys("FAIL");
+		user.getDriver().findElement(By.id("stream-id-field")).clear();
+		user.getDriver().findElement(By.id("stream-id-field")).sendKeys("FAIL");
 		user.getDriver().findElement(By.id("force-unpublish-api-btn")).click();
 		user.getWaiter()
 				.until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Error [404]"));
 
 		// Force unpublish right
-		user.getDriver().findElement(By.id("resource-id-field")).clear();
-		user.getDriver().findElement(By.id("resource-id-field")).sendKeys(streamId);
+		user.getDriver().findElement(By.id("stream-id-field")).clear();
+		user.getDriver().findElement(By.id("stream-id-field")).sendKeys(streamId);
 		user.getDriver().findElement(By.id("force-unpublish-api-btn")).click();
 		user.getWaiter().until(
 				ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Stream unpublished"));
@@ -1797,15 +1797,15 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertEquals("Expected 3 videos but found " + numberOfVideos, 3, numberOfVideos);
 
 		// Force disconnect wrong
-		user.getDriver().findElement(By.id("resource-id-field")).clear();
-		user.getDriver().findElement(By.id("resource-id-field")).sendKeys("FAIL");
+		user.getDriver().findElement(By.id("connection-id-field")).clear();
+		user.getDriver().findElement(By.id("connection-id-field")).sendKeys("FAIL");
 		user.getDriver().findElement(By.id("force-disconnect-api-btn")).click();
 		user.getWaiter()
 				.until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "Error [404]"));
 
 		// Force disconnect right
-		user.getDriver().findElement(By.id("resource-id-field")).clear();
-		user.getDriver().findElement(By.id("resource-id-field")).sendKeys(connectionId);
+		user.getDriver().findElement(By.id("connection-id-field")).clear();
+		user.getDriver().findElement(By.id("connection-id-field")).sendKeys(connectionId);
 		user.getDriver().findElement(By.id("force-disconnect-api-btn")).click();
 		user.getWaiter()
 				.until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "User disconnected"));

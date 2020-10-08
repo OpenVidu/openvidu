@@ -222,13 +222,34 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + tokenConnectionId,
 				"{'record':123}", HttpStatus.SC_BAD_REQUEST);
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + tokenConnectionId,
-				"{'role':'PUBLISHER',record:'WRONG'}", HttpStatus.SC_BAD_REQUEST);
+				"{'role':'PUBLISHER','record':'WRONG'}", HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/WRONG/connection/" + tokenConnectionId,
+				"{'role':'PUBLISHER','record':'WRONG'}", HttpStatus.SC_NOT_FOUND);
+		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/WRONG",
+				"{'role':'PUBLISHER','record':true}", HttpStatus.SC_NOT_FOUND);
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + tokenConnectionId,
-				"{'role':'SUBSCRIBER','record':true,'data':'OTHER DATA'}", HttpStatus.SC_NO_CONTENT);
+				"{'role':'SUBSCRIBER','record':true,'data':'OTHER DATA'}", HttpStatus.SC_OK);
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + tokenConnectionId,
 				"{'role':'PUBLISHER'}", HttpStatus.SC_OK);
-		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + tokenConnectionId,
-				"{'role':'PUBLISHER'}", HttpStatus.SC_NO_CONTENT);
+
+		// Test with openvidu-node-client
+		user.getDriver().findElement(By.id("session-api-btn-0")).click();
+		Thread.sleep(1000);
+		user.getDriver().findElement(By.id("connection-id-field")).clear();
+		user.getDriver().findElement(By.id("connection-id-field")).sendKeys(tokenConnectionId);
+		user.getDriver().findElement(By.id("update-connection-api-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
+				"Connection updated: {\"role\":\"PUBLISHER\",\"record\":true}"));
+		user.getDriver().findElement(By.id("record-checkbox")).click();
+		user.getDriver().findElement(By.id("token-role-select")).click();
+		Thread.sleep(500);
+		user.getDriver().findElement(By.id("option-SUBSCRIBER")).click();
+		Thread.sleep(500);
+		user.getDriver().findElement(By.id("update-connection-api-btn")).click();
+		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
+				"Connection updated: {\"role\":\"SUBSCRIBER\",\"record\":false}"));
+		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		Thread.sleep(1000);
 
 		// Test with openvidu-java-client
 		OpenVidu OV = new OpenVidu(OpenViduTestAppE2eTest.OPENVIDU_URL, OpenViduTestAppE2eTest.OPENVIDU_SECRET);
@@ -240,16 +261,20 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		} catch (OpenViduHttpException exception) {
 			Assert.assertEquals("Wrong HTTP status", HttpStatus.SC_NOT_FOUND, exception.getStatus());
 		}
+		Assert.assertFalse("Session object should not have changed", session.fetch());
 		Connection connection = session.updateConnection(tokenConnectionId,
 				new TokenOptions.Builder().role(OpenViduRole.PUBLISHER).build());
+		Assert.assertFalse("Session object should not have changed", session.fetch());
 		Assert.assertEquals("Wrong connectionId in Connection object", tokenConnectionId, connection.getConnectionId());
 		Assert.assertEquals("Wrong role in Connection object", OpenViduRole.PUBLISHER, connection.getRole());
 		Assert.assertTrue("Wrong record in Connection object", connection.record());
 		connection = session.updateConnection(tokenConnectionId,
 				new TokenOptions.Builder().role(OpenViduRole.SUBSCRIBER).build());
 		Assert.assertEquals("Wrong role in Connection object", OpenViduRole.SUBSCRIBER, connection.getRole());
+		Assert.assertFalse("Session object should not have changed", session.fetch());
 		connection = session.updateConnection(tokenConnectionId,
 				new TokenOptions.Builder().role(OpenViduRole.MODERATOR).record(false).data("NO CHANGE").build());
+		Assert.assertFalse("Session object should not have changed", session.fetch());
 		Assert.assertEquals("Wrong role in Connection object", OpenViduRole.MODERATOR, connection.getRole());
 		Assert.assertFalse("Wrong record in Connection object", connection.record());
 		Assert.assertTrue("Wrong data in Connection object", connection.getServerData().isEmpty());
