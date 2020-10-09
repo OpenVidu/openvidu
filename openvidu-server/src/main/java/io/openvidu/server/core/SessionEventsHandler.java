@@ -302,9 +302,12 @@ public class SessionEventsHandler {
 		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, new JsonObject());
 	}
 
-	public void onNetworkQualityLevelChanged(Participant participant, JsonObject params) {
-		rpcNotificationService.sendNotification(participant.getParticipantPrivateId(),
-				ProtocolElements.NETWORKQUALITYLEVELCHANGED_METHOD, params);
+	public void onNetworkQualityLevelChanged(Session session, JsonObject params) {
+		
+		session.getParticipants().forEach(p -> {
+			rpcNotificationService.sendNotification(p.getParticipantPrivateId(),
+					ProtocolElements.NETWORKQUALITYLEVELCHANGED_METHOD, params);
+		});
 	}
 
 	public void onSendMessage(Participant participant, JsonObject message, Set<Participant> participants,
