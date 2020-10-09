@@ -19,10 +19,10 @@ import { Event } from './Event';
 import { Session } from '../../OpenVidu/Session';
 
 /**
- * Defines event `networkQualityChangedEvent` dispatched by [[Session]].
+ * Defines event `networkQualityLevelChangedEvent` dispatched by [[Session]].
  * This event is fired when the network quality of the local connection changes
  */
-export class NetworkQualityChangedEvent extends Event {
+export class NetworkQualityLevelChangedEvent extends Event {
 
 
     /**
@@ -34,7 +34,7 @@ export class NetworkQualityChangedEvent extends Event {
      * @hidden
      */
     constructor(target: Session, qualityLevel: Object) {
-        super(false, target, 'networkQualityChanged');
+        super(false, target, 'networkQualityLevelChanged');
         this.qualityLevel = qualityLevel;
     }
 
