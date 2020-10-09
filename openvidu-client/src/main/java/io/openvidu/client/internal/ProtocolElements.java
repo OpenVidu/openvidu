@@ -93,7 +93,7 @@ public class ProtocolElements {
 	public static final String STREAMPROPERTYCHANGED_NEWVALUE_PARAM = "newValue";
 	public static final String STREAMPROPERTYCHANGED_REASON_PARAM = "reason";
 
-	public static final String NETWORKQUALITYCHANGED_METHOD = "networkQualityChanged";
+	public static final String NETWORKQUALITYLEVELCHANGED_METHOD = "networkQualityLevelChanged";
 	public static final String NETWORKQUALITYCHANGED_CONNECTIONID_PARAM = "connectionId";
 	public static final String NETWORKQUALITYCHANGED_QUALITYLEVEL_PARAM = "qualityLevel";
 
