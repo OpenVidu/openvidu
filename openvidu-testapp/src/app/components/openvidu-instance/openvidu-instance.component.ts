@@ -693,7 +693,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   async getToken(): Promise<Token> {
-    return this.sessionAPI.createToken();
+    return this.sessionAPI.createToken(this.tokenOptions);
   }
 
   updateEventFromChild(event: OpenViduEvent) {
