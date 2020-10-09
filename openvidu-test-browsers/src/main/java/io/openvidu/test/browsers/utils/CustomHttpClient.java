@@ -121,7 +121,7 @@ public class CustomHttpClient {
 	}
 
 	public JsonObject rest(HttpMethod method, String path, String body, int status, boolean exactReturnedFields,
-			Map<String, ?> jsonResponse) throws Exception {
+			Map<Object, Object> jsonResponse) throws Exception {
 		JsonObject json = this.commonRest(method, path, body, status);
 
 		if (exactReturnedFields) {
@@ -129,47 +129,48 @@ public class CustomHttpClient {
 				throw new Exception("Error in number of keys in JSON response to POST " + path);
 		}
 
-		for (Map.Entry<String, ?> entry : jsonResponse.entrySet()) {
+		for (Map.Entry<Object, Object> entry : jsonResponse.entrySet()) {
+			String key = entry.getKey().toString();
 			Object value = entry.getValue();
 
 			if (value instanceof String) {
 				try {
 					JsonObject jsonObjExpected = JsonParser.parseString((String) value).getAsJsonObject();
-					JsonObject jsonObjActual = json.get(entry.getKey()).getAsJsonObject();
+					JsonObject jsonObjActual = json.get(key).getAsJsonObject();
 					// COMPARE
 
 				} catch (Exception e1) {
 					try {
 						JsonArray jsonArrayExpected = JsonParser.parseString((String) value).getAsJsonArray();
-						JsonArray jsonArrayActual = json.get(entry.getKey()).getAsJsonArray();
+						JsonArray jsonArrayActual = json.get(key).getAsJsonArray();
 						// COMPARE
 
 					} catch (Exception e2) {
-						if (!((String) value).equals(json.get(entry.getKey()).getAsString())) {
+						if (!((String) value).equals(json.get(key).getAsString())) {
 							throw new Exception("JSON field " + entry.getKey() + " has not expected value. Expected: "
-									+ value + ". Actual: " + json.get(entry.getKey()).getAsString());
+									+ value + ". Actual: " + json.get(key).getAsString());
 						}
 					}
 				}
 			} else if (value instanceof Integer) {
-				if (((int) value) != json.get(entry.getKey()).getAsInt()) {
+				if (((int) value) != json.get(key).getAsInt()) {
 					throw new Exception("JSON field " + entry.getKey() + " has not expected value. Expected: " + value
-							+ ". Actual: " + json.get(entry.getKey()).getAsInt());
+							+ ". Actual: " + json.get(key).getAsInt());
 				}
 			} else if (value instanceof Long) {
-				if (((long) value) != json.get(entry.getKey()).getAsLong()) {
+				if (((long) value) != json.get(key).getAsLong()) {
 					throw new Exception("JSON field " + entry.getKey() + " has not expected value. Expected: " + value
-							+ ". Actual: " + json.get(entry.getKey()).getAsLong());
+							+ ". Actual: " + json.get(key).getAsLong());
 				}
 			} else if (value instanceof Double) {
-				if (((double) value) != json.get(entry.getKey()).getAsDouble()) {
+				if (((double) value) != json.get(key).getAsDouble()) {
 					throw new Exception("JSON field " + entry.getKey() + " has not expected value. Expected: " + value
-							+ ". Actual: " + json.get(entry.getKey()).getAsDouble());
+							+ ". Actual: " + json.get(key).getAsDouble());
 				}
 			} else if (value instanceof Boolean) {
-				if (((boolean) value) != json.get(entry.getKey()).getAsBoolean()) {
+				if (((boolean) value) != json.get(key).getAsBoolean()) {
 					throw new Exception("JSON field " + entry.getKey() + " has not expected value. Expected: " + value
-							+ ". Actual: " + json.get(entry.getKey()).getAsBoolean());
+							+ ". Actual: " + json.get(key).getAsBoolean());
 				}
 			} else if (value instanceof JSONArray || value instanceof JsonArray) {
 				JsonParser.parseString(entry.getValue().toString()).getAsJsonArray();
