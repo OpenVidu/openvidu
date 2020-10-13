@@ -32,7 +32,6 @@ import org.jcodec.common.model.Picture;
 import org.jcodec.scale.AWTUtil;
 import org.junit.Assert;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.TakesScreenshot;
@@ -82,9 +81,7 @@ public class AbstractOpenViduTestAppE2eTest {
 	protected volatile static boolean isKurentoRestartTest;
 	protected static OpenVidu OV;
 
-	@BeforeAll()
-	protected static void setupAll() {
-
+	protected static void checkFfmpegInstallation() {
 		String ffmpegOutput = commandLine.executeCommand("which ffmpeg");
 		if (ffmpegOutput == null || ffmpegOutput.isEmpty()) {
 			log.error("ffmpeg package is not installed in the host machine");
@@ -93,10 +90,24 @@ public class AbstractOpenViduTestAppE2eTest {
 		} else {
 			log.info("ffmpeg is installed and accesible");
 		}
+	}
 
+	protected static void setupBrowserDrivers() {
 		WebDriverManager.chromedriver().setup();
 		WebDriverManager.firefoxdriver().setup();
+	}
 
+	protected static void cleanFoldersAndSetUpOpenViduJavaClient() {
+		try {
+			log.info("Cleaning folder /opt/openvidu/recordings");
+			FileUtils.cleanDirectory(new File("/opt/openvidu/recordings"));
+		} catch (IOException e) {
+			log.error(e.getMessage());
+		}
+		OV = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET);
+	}
+
+	protected static void loadEnvironmentVariables() {
 		String appUrl = System.getProperty("APP_URL");
 		if (appUrl != null) {
 			APP_URL = appUrl;
@@ -147,14 +158,6 @@ public class AbstractOpenViduTestAppE2eTest {
 			OPENVIDU_SECRET = openvidusecret;
 		}
 		log.info("Using secret {} to connect to openvidu-server", OPENVIDU_SECRET);
-
-		try {
-			log.info("Cleaning folder /opt/openvidu/recordings");
-			FileUtils.cleanDirectory(new File("/opt/openvidu/recordings"));
-		} catch (IOException e) {
-			log.error(e.getMessage());
-		}
-		OV = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET);
 	}
 
 	protected void setupBrowser(String browser) {
