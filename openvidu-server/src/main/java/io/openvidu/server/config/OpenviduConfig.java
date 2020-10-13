@@ -38,6 +38,7 @@ import java.util.Map;
 import javax.annotation.PostConstruct;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.message.BasicHeader;
 import org.kurento.jsonrpc.JsonUtils;
@@ -875,7 +876,7 @@ public class OpenviduConfig {
 
 	public URI checkWebsocketUri(String uri) throws Exception {
 		try {
-			if (!uri.startsWith("ws://") || uri.startsWith("wss://")) {
+			if (!StringUtils.startsWithAny(uri, "ws://", "wss://")) {
 				throw new Exception("WebSocket protocol not found");
 			}
 			String parsedUri = uri.replaceAll("^ws://", "http://").replaceAll("^wss://", "https://");
