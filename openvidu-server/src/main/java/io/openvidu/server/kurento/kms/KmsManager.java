@@ -57,6 +57,8 @@ public abstract class KmsManager {
 
 	private Map<String, Lock> kmsReconnectionLocks = new ConcurrentHashMap<>();
 
+	private UpdatableTimerTask kurentoReconnectTimer;
+
 	public class KmsLoad implements Comparable<KmsLoad> {
 
 		private Kms kms;
@@ -231,10 +233,9 @@ public abstract class KmsManager {
 
 				// TODO: this is a fix for the lack of reconnected event
 				kmsReconnectionLocks.putIfAbsent(kms.getId(), new ReentrantLock());
-				final UpdatableTimerTask[] TIMER = new UpdatableTimerTask[1];
 				final AtomicInteger ITERATION = new AtomicInteger(0);
 
-				TIMER[0] = new UpdatableTimerTask(() -> {
+				kurentoReconnectTimer = new UpdatableTimerTask(() -> {
 					boolean lockAcquired = false;
 					try {
 						if (kmsReconnectionLocks.get(kms.getId()).tryLock(5, TimeUnit.SECONDS)) {
@@ -245,7 +246,7 @@ public abstract class KmsManager {
 								log.info(
 										"Timer of KMS with uri {} and KurentoClient [{}] cancelled (reconnected event received during interval wait)",
 										kms.getUri(), kms.getKurentoClient().toString());
-								TIMER[0].cancelTimer();
+								kurentoReconnectTimer.cancelTimer();
 								return;
 							}
 
@@ -253,14 +254,14 @@ public abstract class KmsManager {
 								log.info(
 										"Timer of KMS with uri {} and KurentoClient [{}] has been closed. Cancelling Timer",
 										kms.getUri(), kms.getKurentoClient().toString());
-								TIMER[0].cancelTimer();
+								kurentoReconnectTimer.cancelTimer();
 								return;
 							}
 
 							kms.getKurentoClient().getServerManager().getInfo();
 							log.info("According to Timer KMS with uri {} and KurentoClient [{}] is now reconnected",
 									kms.getUri(), kms.getKurentoClient().toString());
-							TIMER[0].cancelTimer();
+							kurentoReconnectTimer.cancelTimer();
 							kms.setKurentoClientConnected(true);
 							kms.setTimeOfKurentoClientConnection(System.currentTimeMillis());
 
@@ -296,7 +297,7 @@ public abstract class KmsManager {
 					}
 				}, () -> new Long(dynamicReconnectLoopSeconds(ITERATION.getAndIncrement()) * 1000));
 
-				TIMER[0].updateTimer();
+				kurentoReconnectTimer.updateTimer();
 			}
 
 			@Override
@@ -365,6 +366,9 @@ public abstract class KmsManager {
 		this.kmss.values().forEach(kms -> {
 			kms.getKurentoClient().destroy();
 		});
+		if (kurentoReconnectTimer != null) {
+			kurentoReconnectTimer.cancelTimer();
+		}
 	}
 
 	public static String generateKmsId() {

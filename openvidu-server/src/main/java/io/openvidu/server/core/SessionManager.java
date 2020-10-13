@@ -87,6 +87,8 @@ public abstract class SessionManager {
 
 	public FormatChecker formatChecker = new FormatChecker();
 
+	private UpdatableTimerTask sessionGarbageCollectorTimer;
+
 	final protected ConcurrentMap<String, Session> sessions = new ConcurrentHashMap<>();
 	final protected ConcurrentMap<String, Session> sessionsNotActive = new ConcurrentHashMap<>();
 	protected ConcurrentMap<String, ConcurrentHashMap<String, Participant>> sessionidParticipantpublicidParticipant = new ConcurrentHashMap<>();
@@ -165,8 +167,9 @@ public abstract class SessionManager {
 
 	public abstract String getParticipantPrivateIdFromStreamId(String sessionId, String streamId)
 			throws OpenViduException;
-	
-	public abstract void onVideoData(Participant participant, Integer transactionId, Integer height, Integer width, Boolean videoActive, Boolean audioActive);
+
+	public abstract void onVideoData(Participant participant, Integer transactionId, Integer height, Integer width,
+			Boolean videoActive, Boolean audioActive);
 
 	/**
 	 * Returns a Session given its id
@@ -422,6 +425,9 @@ public abstract class SessionManager {
 				log.warn("Error closing session '{}': {}", sessionId, e.getMessage());
 			}
 		}
+		if (this.sessionGarbageCollectorTimer != null) {
+			this.sessionGarbageCollectorTimer.cancelTimer();
+		}
 	}
 
 	@PostConstruct
@@ -431,7 +437,8 @@ public abstract class SessionManager {
 					"Garbage collector for non active sessions is disabled (property 'OPENVIDU_SESSIONS_GARBAGE_INTERVAL' is 0)");
 			return;
 		}
-		new UpdatableTimerTask(() -> {
+
+		this.sessionGarbageCollectorTimer = new UpdatableTimerTask(() -> {
 
 			// Remove all non active sessions created more than the specified time
 			log.info("Running non active sessions garbage collector...");
@@ -477,7 +484,9 @@ public abstract class SessionManager {
 					log.warn("Possible ghost session {}", sessionActive.getSessionId());
 				}
 			}
-		}, () -> new Long(openviduConfig.getSessionGarbageInterval() * 1000)).updateTimer();
+		}, () -> new Long(openviduConfig.getSessionGarbageInterval() * 1000));
+
+		this.sessionGarbageCollectorTimer.updateTimer();
 
 		log.info(
 				"Garbage collector for non active sessions initialized. Running every {} seconds and cleaning up non active Sessions more than {} seconds old",
