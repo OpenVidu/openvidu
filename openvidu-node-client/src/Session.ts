@@ -17,6 +17,7 @@
 
 import axios, { AxiosError } from 'axios';
 import { Connection } from './Connection';
+import { ConnectionOptions } from './ConnectionOptions';
 import { MediaMode } from './MediaMode';
 import { OpenVidu } from './OpenVidu';
 import { Publisher } from './Publisher';
@@ -359,12 +360,11 @@ export class Session {
     }
 
     /**
-     * Updates the properties of a Connection. These properties are the ones defined
-     * by the [[TokenOptions]] parameter when generating the token used to create the Connection.
-     * These are the properties that can be updated:
+     * Updates the properties of a Connection  with a [[ConnectionOptions]] object.
+     * Only these properties can be updated:
      * 
-     * - [[TokenOptions.role]]
-     * - [[TokenOptions.record]]
+     * - [[ConnectionOptions.role]]
+     * - [[ConnectionOptions.record]]
      * 
      * The `connectionId` parameter can be obtained from a Connection object with
      * [[Connection.connectionId]], in which case the updated properties will
@@ -375,17 +375,17 @@ export class Session {
      * [[Session.fetch]] to see the changes consequence of the execution of this method applied in the local objects.
      * 
      * @param connectionId The [[Connection.connectionId]] property of the Connection object to modify,
-     * or the [[Token.connectionId]] property of a still not used token to modify
-     * @param tokenOptions A new [[TokenOptions]] object with the updated values to apply
+     *                     or the [[Token.connectionId]] property of a still not used token to modify
+     * @param connectionOptions A new [[ConnectionOptions]] object with the updated values to apply
      * 
      * @returns A Promise that is resolved to the updated [[Connection]] object if the operation was
-     * successful and rejected with an Error object if not
+     *          successful and rejected with an Error object if not
      */
-    public updateConnection(connectionId: string, tokenOptions: TokenOptions): Promise<Connection> {
+    public updateConnection(connectionId: string, connectionOptions: ConnectionOptions): Promise<Connection | undefined> {
         return new Promise<any>((resolve, reject) => {
             axios.patch(
                 this.ov.host + OpenVidu.API_SESSIONS + "/" + this.sessionId + "/connection/" + connectionId,
-                tokenOptions,
+                connectionOptions,
                 {
                     headers: {
                         'Authorization': this.ov.basicAuth,
@@ -412,7 +412,7 @@ export class Session {
                         resolve(newConnection);
                     } else {
                         // The updated Connection was available in local map
-                        existingConnection.overrideTokenOptions(tokenOptions);
+                        existingConnection.overrideConnectionOptions(connectionOptions);
                         resolve(existingConnection);
                     }
                 }).catch(error => {

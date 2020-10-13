@@ -41,29 +41,42 @@ public class Connection {
 	protected List<String> subscribers = new ArrayList<>();
 
 	protected Connection(JsonObject json) {
-		JsonArray jsonArrayPublishers = json.get("publishers").getAsJsonArray();
-		jsonArrayPublishers.forEach(publisher -> {
-			JsonObject pubJson = publisher.getAsJsonObject();
-			JsonObject mediaOptions = pubJson.get("mediaOptions").getAsJsonObject();
-			Publisher pub = new Publisher(pubJson.get("streamId").getAsString(), pubJson.get("createdAt").getAsLong(),
-					mediaOptions.get("hasAudio").getAsBoolean(), mediaOptions.get("hasVideo").getAsBoolean(),
-					mediaOptions.get("audioActive"), mediaOptions.get("videoActive"), mediaOptions.get("frameRate"),
-					mediaOptions.get("typeOfVideo"), mediaOptions.get("videoDimensions"));
-			this.publishers.put(pub.getStreamId(), pub);
-		});
+		// These properties may be null
+		if (!json.get("publishers").isJsonNull()) {
+			JsonArray jsonArrayPublishers = json.get("publishers").getAsJsonArray();
+			jsonArrayPublishers.forEach(publisher -> {
+				JsonObject pubJson = publisher.getAsJsonObject();
+				JsonObject mediaOptions = pubJson.get("mediaOptions").getAsJsonObject();
+				Publisher pub = new Publisher(pubJson.get("streamId").getAsString(),
+						pubJson.get("createdAt").getAsLong(), mediaOptions.get("hasAudio").getAsBoolean(),
+						mediaOptions.get("hasVideo").getAsBoolean(), mediaOptions.get("audioActive"),
+						mediaOptions.get("videoActive"), mediaOptions.get("frameRate"), mediaOptions.get("typeOfVideo"),
+						mediaOptions.get("videoDimensions"));
+				this.publishers.put(pub.getStreamId(), pub);
+			});
+		}
 
-		JsonArray jsonArraySubscribers = json.get("subscribers").getAsJsonArray();
-		jsonArraySubscribers.forEach(subscriber -> {
-			this.subscribers.add((subscriber.getAsJsonObject()).get("streamId").getAsString());
-		});
+		if (!json.get("subscribers").isJsonNull()) {
+			JsonArray jsonArraySubscribers = json.get("subscribers").getAsJsonArray();
+			jsonArraySubscribers.forEach(subscriber -> {
+				this.subscribers.add((subscriber.getAsJsonObject()).get("streamId").getAsString());
+			});
+		}
+		if (!json.get("createdAt").isJsonNull()) {
+			this.createdAt = json.get("createdAt").getAsLong();
+		}
+		if (!json.get("location").isJsonNull()) {
+			this.location = json.get("location").getAsString();
+		}
+		if (!json.get("platform").isJsonNull()) {
+			this.platform = json.get("platform").getAsString();
+		}
+		if (!json.get("clientData").isJsonNull()) {
+			this.clientData = json.get("clientData").getAsString();
+		}
 
+		// These properties won't ever be null
 		this.connectionId = json.get("connectionId").getAsString();
-		this.createdAt = json.get("createdAt").getAsLong();
-
-		this.location = json.get("location").getAsString();
-		this.platform = json.get("platform").getAsString();
-		this.clientData = json.get("clientData").getAsString();
-
 		String token = json.has("token") ? json.get("token").getAsString() : null;
 		OpenViduRole role = OpenViduRole.valueOf(json.get("role").getAsString());
 		String data = json.get("serverData").getAsString();
@@ -179,12 +192,36 @@ public class Connection {
 		return this.subscribers;
 	}
 
+	protected JsonObject toJson() {
+		JsonObject json = new JsonObject();
+		json.addProperty("id", this.getConnectionId());
+		json.addProperty("createdAt", this.createdAt());
+		json.addProperty("location", this.getLocation());
+		json.addProperty("platform", this.getPlatform());
+		json.addProperty("token", this.getToken());
+		json.addProperty("role", this.getRole().name());
+		json.addProperty("serverData", this.getServerData());
+		json.addProperty("record", this.record());
+		json.addProperty("clientData", this.getClientData());
+		JsonArray pubs = new JsonArray();
+		this.getPublishers().forEach(p -> {
+			pubs.add(p.toJson());
+		});
+		JsonArray subs = new JsonArray();
+		this.getSubscribers().forEach(s -> {
+			subs.add(s);
+		});
+		json.add("publishers", pubs);
+		json.add("subscribers", subs);
+		return json;
+	}
+
 	/**
 	 * For now only properties data, role and record can be updated
 	 */
-	protected void overrideTokenOptions(TokenOptions tokenOptions) {
-		TokenOptions.Builder modifiableTokenOptions = new TokenOptions.Builder().role(tokenOptions.getRole())
-				.record(tokenOptions.record());
+	protected void overrideConnectionOptions(ConnectionOptions connectionOptions) {
+		TokenOptions.Builder modifiableTokenOptions = new TokenOptions.Builder().role(connectionOptions.getRole())
+				.record(connectionOptions.record());
 		modifiableTokenOptions.data(this.token.getData());
 		this.token.overrideTokenOptions(modifiableTokenOptions.build());
 	}

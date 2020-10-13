@@ -17,7 +17,7 @@
 
 import { OpenViduRole } from './OpenViduRole';
 import { Publisher } from './Publisher';
-import { TokenOptions } from './TokenOptions';
+import { ConnectionOptions } from './ConnectionOptions';
 
 /**
  * See [[Session.activeConnections]]
@@ -88,6 +88,7 @@ export class Connection {
      * @hidden
      */
     constructor(json) {
+        // These properties may be null
         if (json.publishers != null) {
             json.publishers.forEach(publisher => {
                 this.publishers.push(new Publisher(publisher));
@@ -98,15 +99,17 @@ export class Connection {
                 this.subscribers.push(subscriber.streamId);
             });
         }
-        this.connectionId = json.connectionId;
         this.createdAt = json.createdAt;
-        this.role = json.role;
-        this.serverData = json.serverData;
-        this.record = json.record;
-        this.token = json.token;
         this.location = json.location;
         this.platform = json.platform;
         this.clientData = json.clientData;
+
+        // These properties won't ever be null
+        this.connectionId = json.connectionId;
+        this.token = json.token;
+        this.role = json.role;
+        this.serverData = json.serverData;
+        this.record = json.record;
     }
 
     /**
@@ -145,12 +148,12 @@ export class Connection {
     /**
      * @hidden
      */
-    overrideTokenOptions(tokenOptions: TokenOptions): void {
-        if (tokenOptions.role != null) {
-            this.role = tokenOptions.role;
+    overrideConnectionOptions(connectionOptions: ConnectionOptions): void {
+        if (connectionOptions.role != null) {
+            this.role = connectionOptions.role;
         }
-        if (tokenOptions.record != null) {
-            this.record = tokenOptions.record
+        if (connectionOptions.record != null) {
+            this.record = connectionOptions.record
         }
     }
 

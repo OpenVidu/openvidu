@@ -268,7 +268,7 @@ public class Session {
 	 * @throws OpenViduJavaClientException
 	 */
 	public boolean fetch() throws OpenViduJavaClientException, OpenViduHttpException {
-		String beforeJSON = this.toJson();
+		final String beforeJSON = this.toJson();
 		HttpGet request = new HttpGet(this.openVidu.hostname + OpenVidu.API_SESSIONS + "/" + this.sessionId);
 		request.setHeader(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded");
 
@@ -283,7 +283,7 @@ public class Session {
 			int statusCode = response.getStatusLine().getStatusCode();
 			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
 				this.resetSessionWithJson(httpResponseToJson(response));
-				String afterJSON = this.toJson();
+				final String afterJSON = this.toJson();
 				boolean hasChanged = !beforeJSON.equals(afterJSON);
 				log.info("Session info fetched for session '{}'. Any change: {}", this.sessionId, hasChanged);
 				return hasChanged;
@@ -482,15 +482,14 @@ public class Session {
 	}
 
 	/**
-	 * Updates the properties of a Connection. These properties are the ones defined
-	 * by the {@link io.openvidu.java.client.TokenOptions} parameter when generating
-	 * the token used to create the Connection. These are the properties that can be
-	 * updated:
+	 * Updates the properties of a Connection with a
+	 * {@link io.openvidu.java.client.ConnectionOptions} object. Only these
+	 * properties can be updated:
 	 * <ul>
-	 * <li>{@link io.openvidu.java.client.TokenOptions.Builder#role(OpenViduRole)
-	 * TokenOptions.Builder.role(OpenViduRole)}</li>
-	 * <li>{@link io.openvidu.java.client.TokenOptions.Builder#record(boolean)
-	 * TokenOptions.Builder.record(boolean)}</li>
+	 * <li>{@link io.openvidu.java.client.ConnectionOptions.Builder#role(OpenViduRole)
+	 * ConnectionOptions.Builder.role(OpenViduRole)}</li>
+	 * <li>{@link io.openvidu.java.client.ConnectionOptions.Builder#record(boolean)
+	 * ConnectionOptions.Builder.record(boolean)}</li>
 	 * </ul>
 	 * <br>
 	 * 
@@ -508,9 +507,9 @@ public class Session {
 	 * changes consequence of the execution of this method applied in the local
 	 * objects.
 	 * 
-	 * @param connectionId The Connection (or a still not used Token) to modify
-	 * @param tokenOptions A new TokenOptions object with the updated values to
-	 *                     apply
+	 * @param connectionId      The Connection (or a still not used Token) to modify
+	 * @param connectionOptions A ConnectionOptions object with the new values to
+	 *                          apply
 	 * 
 	 * @return The updated {@link io.openvidu.java.client.Connection Connection}
 	 *         object
@@ -518,7 +517,7 @@ public class Session {
 	 * @throws OpenViduJavaClientException
 	 * @throws OpenViduHttpException
 	 */
-	public Connection updateConnection(String connectionId, TokenOptions tokenOptions)
+	public Connection updateConnection(String connectionId, ConnectionOptions connectionOptions)
 			throws OpenViduJavaClientException, OpenViduHttpException {
 
 		HttpPatch request = new HttpPatch(
@@ -526,7 +525,7 @@ public class Session {
 
 		StringEntity params;
 		try {
-			params = new StringEntity(tokenOptions.toJsonObject(this.sessionId).toString());
+			params = new StringEntity(connectionOptions.toJsonObject(this.sessionId).toString());
 		} catch (UnsupportedEncodingException e1) {
 			throw new OpenViduJavaClientException(e1.getMessage(), e1.getCause());
 		}
@@ -549,18 +548,19 @@ public class Session {
 			} else {
 				throw new OpenViduHttpException(statusCode);
 			}
+			JsonObject json = httpResponseToJson(response);
 
 			// Update the actual Connection object with the new options
 			Connection existingConnection = this.activeConnections.get(connectionId);
 
 			if (existingConnection == null) {
 				// The updated Connection is not available in local map
-				Connection newConnection = new Connection(httpResponseToJson(response));
+				Connection newConnection = new Connection(json);
 				this.activeConnections.put(connectionId, newConnection);
 				return newConnection;
 			} else {
 				// The updated Connection was available in local map
-				existingConnection.overrideTokenOptions(tokenOptions);
+				existingConnection.overrideConnectionOptions(connectionOptions);
 				return existingConnection;
 			}
 
@@ -717,23 +717,7 @@ public class Session {
 		connections.addProperty("numberOfElements", this.getActiveConnections().size());
 		JsonArray jsonArrayConnections = new JsonArray();
 		this.getActiveConnections().forEach(con -> {
-			JsonObject c = new JsonObject();
-			c.addProperty("connectionId", con.getConnectionId());
-			c.addProperty("role", con.getRole().name());
-			c.addProperty("token", con.getToken());
-			c.addProperty("clientData", con.getClientData());
-			c.addProperty("serverData", con.getServerData());
-			JsonArray pubs = new JsonArray();
-			con.getPublishers().forEach(p -> {
-				pubs.add(p.toJson());
-			});
-			JsonArray subs = new JsonArray();
-			con.getSubscribers().forEach(s -> {
-				subs.add(s);
-			});
-			c.add("publishers", pubs);
-			c.add("subscribers", subs);
-			jsonArrayConnections.add(c);
+			jsonArrayConnections.add(con.toJson());
 		});
 		connections.add("content", jsonArrayConnections);
 		json.add("connections", connections);

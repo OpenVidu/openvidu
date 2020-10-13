@@ -3,6 +3,7 @@ export * from './OpenViduRole';
 export * from './Session';
 export * from './SessionProperties';
 export * from './TokenOptions';
+export * from './ConnectionOptions';
 export * from './Token';
 export * from './MediaMode';
 export * from './RecordingLayout';
