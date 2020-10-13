@@ -271,7 +271,9 @@ public class Participant {
 
 	public JsonObject toJson() {
 		JsonObject json = new JsonObject();
-		json.addProperty("connectionId", this.participantPublicId);
+		json.addProperty("id", this.participantPublicId);
+		json.addProperty("object", "connection");
+		json.addProperty("connectionId", this.participantPublicId); // TODO: deprecated. Better use only "id"
 		json.addProperty("sessionId", this.sessionId);
 		json.addProperty("createdAt", this.createdAt);
 		json.addProperty("location", this.location != null ? this.location.toString() : "unknown");

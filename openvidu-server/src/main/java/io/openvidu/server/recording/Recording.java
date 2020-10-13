@@ -191,6 +191,7 @@ public class Recording {
 	public JsonObject toJson() {
 		JsonObject json = new JsonObject();
 		json.addProperty("id", this.id);
+		json.addProperty("object", "recording");
 		json.addProperty("name", this.recordingProperties.name());
 		json.addProperty("outputMode", this.getOutputMode().name());
 		if (RecordingUtils.IS_COMPOSED(this.recordingProperties.outputMode()) && this.hasVideo) {

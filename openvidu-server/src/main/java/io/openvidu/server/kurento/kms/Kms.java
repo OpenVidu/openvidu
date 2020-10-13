@@ -152,9 +152,9 @@ public class Kms {
 	public JsonObject toJson() {
 		JsonObject json = new JsonObject();
 		json.addProperty("id", this.id);
+		json.addProperty("object", "mediaNode");
 		json.addProperty("ip", this.ip);
 		json.addProperty("uri", this.uri);
-
 		final boolean connected = this.isKurentoClientConnected();
 		json.addProperty("connected", connected);
 		json.addProperty("connectionTime", this.getTimeOfKurentoClientConnection());

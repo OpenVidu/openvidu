@@ -91,8 +91,9 @@ public class Token {
 
 	public JsonObject toJson() {
 		JsonObject json = new JsonObject();
-		json.addProperty("token", this.getToken());
 		json.addProperty("id", this.getToken());
+		json.addProperty("object", "token");
+		json.addProperty("token", this.getToken());
 		json.addProperty("connectionId", this.getConnectionId());
 		json.addProperty("session", this.sessionId);
 		json.addProperty("role", this.getRole().toString());
@@ -101,6 +102,25 @@ public class Token {
 		if (this.getKurentoTokenOptions() != null) {
 			json.add("kurentoOptions", this.getKurentoTokenOptions().toJson());
 		}
+		return json;
+	}
+
+	public JsonObject toJsonAsParticipant() {
+		JsonObject json = new JsonObject();
+		json.addProperty("id", this.getConnectionId());
+		json.addProperty("object", "connection");
+		json.addProperty("connectionId", this.getConnectionId()); // DEPRECATED: better use id
+		json.addProperty("sessionId", this.sessionId);
+		json.add("createdAt", null);
+		json.add("location", null);
+		json.add("platform", null);
+		json.addProperty("token", this.getToken());
+		json.addProperty("role", this.getRole().toString());
+		json.addProperty("serverData", this.getServerMetadata());
+		json.addProperty("record", this.record());
+		json.add("clientData", null);
+		json.add("publishers", null);
+		json.add("subscribers", null);
 		return json;
 	}
 

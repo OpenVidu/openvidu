@@ -224,8 +224,9 @@ public class Session implements SessionInterface {
 
 	private JsonObject sharedJson(Function<KurentoParticipant, JsonObject> toJsonFunction) {
 		JsonObject json = new JsonObject();
-		json.addProperty("sessionId", this.sessionId);
-		json.addProperty("id", this.sessionId); // TODO: deprecated. Better use only "sessionId"
+		json.addProperty("id", this.sessionId);
+		json.addProperty("object", "session");
+		json.addProperty("sessionId", this.sessionId); // TODO: deprecated. Better use only "id"
 		json.addProperty("createdAt", this.startTime);
 		json.addProperty("mediaMode", this.sessionProperties.mediaMode().name());
 		json.addProperty("recordingMode", this.sessionProperties.recordingMode().name());
