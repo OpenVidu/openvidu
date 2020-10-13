@@ -38,6 +38,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 	@BeforeAll()
 	protected static void setupAll() {
+		checkFfmpegInstallation();
 		loadEnvironmentVariables();
 		setupBrowserDrivers();
 		cleanFoldersAndSetUpOpenViduJavaClient();
@@ -252,14 +253,6 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .join-btn")).sendKeys(Keys.ENTER);
 
-		user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
-		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
-
-		Assert.assertTrue("Session object should have changed", session.fetch());
-		connection = session.getActiveConnections().get(0);
-		Assert.assertEquals("Wrong role in Connection object", OpenViduRole.SUBSCRIBER, connection.getRole());
-		Assert.assertFalse("Wrong record in Connection object", connection.record());
-
 		try {
 			user.getWaiter().until(ExpectedConditions.alertIsPresent());
 			Alert alert = user.getDriver().switchTo().alert();
@@ -270,6 +263,14 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 			Assert.fail("Alert exception");
 		}
 		Thread.sleep(500);
+
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
+
+		Assert.assertTrue("Session object should have changed", session.fetch());
+		connection = session.getActiveConnections().get(0);
+		Assert.assertEquals("Wrong role in Connection object", OpenViduRole.SUBSCRIBER, connection.getRole());
+		Assert.assertFalse("Wrong record in Connection object", connection.record());
 
 		/** UPDATE CONNECTION **/
 

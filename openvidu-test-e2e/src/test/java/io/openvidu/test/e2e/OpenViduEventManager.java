@@ -101,7 +101,7 @@ public class OpenViduEventManager {
 			public void uncaughtException(Thread th, Throwable ex) {
 				if (ex.getClass().getSimpleName().equals("UnhandledAlertException")
 						&& ex.getMessage().contains("unexpected alert open")) {
-					stopPolling(false);
+					stopPolling(false, false);
 					System.err
 							.println("Alert opened (" + ex.getMessage() + "). Waiting 1 second and restarting polling");
 					try {
@@ -138,14 +138,16 @@ public class OpenViduEventManager {
 		this.pollingThread.start();
 	}
 
-	public void stopPolling(boolean stopThread) {
+	public void stopPolling(boolean stopThread, boolean cleanExistingEvents) {
 		if (stopThread) {
 			this.isInterrupted.set(true);
 			this.pollingThread.interrupt();
 		}
-		this.eventCallbacks.clear();
-		this.eventCountdowns.clear();
-		this.eventNumbers.clear();
+		if (cleanExistingEvents) {
+			this.eventCallbacks.clear();
+			this.eventCountdowns.clear();
+			this.eventNumbers.clear();
+		}
 	}
 
 	public void on(String eventName, Consumer<JsonObject> callback) {
@@ -195,12 +197,12 @@ public class OpenViduEventManager {
 	}
 
 	public void resetEventThread() throws InterruptedException {
-		this.stopPolling(true);
+		this.stopPolling(true, true);
 		this.pollingLatch.await();
 		this.execService.shutdownNow();
 		this.execService.awaitTermination(10, TimeUnit.SECONDS);
 		this.execService = Executors.newCachedThreadPool();
-		this.stopPolling(false);
+		this.stopPolling(false, true);
 		this.clearAllCurrentEvents();
 		this.isInterrupted.set(false);
 		this.pollingLatch = new CountDownLatch(1);

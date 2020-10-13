@@ -28,7 +28,7 @@ public class MyUser {
 	}
 
 	public void dispose() {
-		this.eventManager.stopPolling(true);
+		this.eventManager.stopPolling(true, true);
 		this.browserUser.dispose();
 	}
 
