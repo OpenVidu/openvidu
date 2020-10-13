@@ -40,14 +40,18 @@ import { StreamPropertyChangedEvent } from '../OpenViduInternal/Events/StreamPro
 import { NetworkQualityLevelChangedEvent } from '../OpenViduInternal/Events/NetworkQualityLevelChangedEvent';
 import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/OpenViduError';
 import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
-
-import platform = require('platform');
 import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
+import { PlatformUtils } from '../OpenViduInternal/Utils/Platform';
 
 /**
  * @hidden
  */
 const logger: OpenViduLogger = OpenViduLogger.getInstance();
+
+/**
+ * @hidden
+ */
+const platform: PlatformUtils = PlatformUtils.getInstance();
 
 /**
  * Represents a video call. It can also be seen as a videoconference room where multiple users can connect.
@@ -193,7 +197,7 @@ export class Session extends EventDispatcher {
                     reject(error);
                 });
             } else {
-                reject(new OpenViduError(OpenViduErrorName.BROWSER_NOT_SUPPORTED, 'Browser ' + platform.name + ' (version ' + platform.version + ') for ' + platform.os!!.family + ' is not supported in OpenVidu'));
+                reject(new OpenViduError(OpenViduErrorName.BROWSER_NOT_SUPPORTED, 'Browser ' + platform.getName() + ' (version ' + platform.getVersion() + ') for ' + platform.getFamily() + ' is not supported in OpenVidu'));
             }
         });
     }
@@ -1122,7 +1126,7 @@ export class Session extends EventDispatcher {
         const joinParams = {
             token: (!!token) ? token : '',
             session: this.sessionId,
-            platform: !!platform.description ? platform.description : 'unknown',
+            platform: !!platform.getDescription() ? platform.getDescription() : 'unknown',
             metadata: !!this.options.metadata ? this.options.metadata : '',
             secret: this.openvidu.getSecret(),
             recorder: this.openvidu.getRecorder()
@@ -1132,10 +1136,10 @@ export class Session extends EventDispatcher {
 
     sendVideoData(streamManager: StreamManager, intervalSeconds: number = 1) {
         if(
-            this.openvidu.isChromeBrowser() || this.openvidu.isChromeMobileBrowser() || this.openvidu.isOperaBrowser() ||
-            this.openvidu.isOperaMobileBrowser() || this.openvidu.isElectron() || this.openvidu.isSafariBrowser() ||
-            this.openvidu.isAndroidBrowser() || this.openvidu.isSamsungBrowser() ||
-            (this.openvidu.isIPhoneOrIPad() && this.openvidu.isIOSWithSafari())
+            platform.isChromeBrowser() || platform.isChromeMobileBrowser() || platform.isOperaBrowser() ||
+            platform.isOperaMobileBrowser() || platform.isElectron() || platform.isSafariBrowser() ||
+            platform.isAndroidBrowser() || platform.isSamsungBrowser() ||
+            (platform.isIPhoneOrIPad() && platform.isIOSWithSafari())
         ) {
             setTimeout(async () => {
                 const statsMap = await streamManager.stream.getWebRtcPeer().pc.getStats();
@@ -1154,7 +1158,7 @@ export class Session extends EventDispatcher {
                     }
                 });
             }, intervalSeconds * 1000);
-        } else if (this.openvidu.isFirefoxBrowser() || this.openvidu.isFirefoxMobileBrowser()) {
+        } else if (platform.isFirefoxBrowser() || platform.isFirefoxMobileBrowser()) {
             // Basic version for Firefox. It does not support stats
             this.openvidu.sendRequest('videoData', {
                 height: streamManager.stream.videoDimensions.height,
@@ -1167,7 +1171,7 @@ export class Session extends EventDispatcher {
                 }
             });
         } else {
-            console.error('Browser ' + platform.name + ' (version ' + platform.version + ') for ' + platform.os!!.family + ' is not supported in OpenVidu for Network Quality');
+            logger.error('Browser ' + platform.getName() + ' (version ' + platform.getVersion() + ') for ' + platform.getFamily() + ' is not supported in OpenVidu for Network Quality');
         }
     }
 

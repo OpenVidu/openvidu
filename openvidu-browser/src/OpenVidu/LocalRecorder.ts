@@ -17,8 +17,8 @@
 
 import { Stream } from './Stream';
 import { LocalRecorderState } from '../OpenViduInternal/Enums/LocalRecorderState';
-import platform = require('platform');
 import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
+import { PlatformUtils } from '../OpenViduInternal/Utils/Platform';
 
 
 /**
@@ -29,6 +29,11 @@ declare var MediaRecorder: any;
  * @hidden
  */
 const logger: OpenViduLogger = OpenViduLogger.getInstance();
+
+/**
+ * @hidden
+ */
+const platform: PlatformUtils = PlatformUtils.getInstance();
 
 
 /**
@@ -211,7 +216,7 @@ export class LocalRecorder {
         this.videoPreview.id = this.id;
         this.videoPreview.autoplay = true;
 
-        if (platform.name === 'Safari') {
+        if (platform.isSafariBrowser()) {
             this.videoPreview.setAttribute('playsinline', 'true');
         }
 

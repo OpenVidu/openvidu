@@ -17,12 +17,17 @@
 
 import freeice = require('freeice');
 import uuid = require('uuid');
-import platform = require('platform');
 import { OpenViduLogger } from '../Logger/OpenViduLogger';
+import { PlatformUtils } from '../Utils/Platform';
+
 /**
  * @hidden
  */
 const logger: OpenViduLogger = OpenViduLogger.getInstance();
+/**
+ * @hidden
+ */
+const platform: PlatformUtils = PlatformUtils.getInstance();
 
 
 export interface WebRtcPeerConfiguration {
@@ -139,7 +144,7 @@ export class WebRtcPeer {
 
             logger.debug('RTCPeerConnection constraints: ' + JSON.stringify(constraints));
 
-            if (platform.name === 'Safari' && platform.ua!!.indexOf('Safari') !== -1) {
+            if (platform.isSafariBrowser() && !platform.isIonicIos()) {
                 // Safari (excluding Ionic), at least on iOS just seems to support unified plan, whereas in other browsers is not yet ready and considered experimental
                 if (offerAudio) {
                     this.pc.addTransceiver('audio', {
@@ -217,7 +222,7 @@ export class WebRtcPeer {
      * @hidden
      */
     setRemoteDescription(answer: RTCSessionDescriptionInit, needsTimeoutOnProcessAnswer: boolean, resolve: (value?: string | PromiseLike<string> | undefined) => void, reject: (reason?: any) => void) {
-        if (platform['isIonicIos']) {
+        if (platform.isIonicIos()) {
             // Ionic iOS platform
             if (needsTimeoutOnProcessAnswer) {
                 // 400 ms have not elapsed yet since first remote stream triggered Stream#initWebRtcPeerReceive
