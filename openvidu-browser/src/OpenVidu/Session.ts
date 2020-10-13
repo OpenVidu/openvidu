@@ -1140,7 +1140,6 @@ export class Session extends EventDispatcher {
             setTimeout(async () => {
                 const statsMap = await streamManager.stream.getWebRtcPeer().pc.getStats();
                 statsMap.forEach((stats) => {
-
                     if ("frameWidth" in stats) {
                         this.openvidu.sendRequest('videoData', {
                             height: stats.frameHeight,
@@ -1155,6 +1154,18 @@ export class Session extends EventDispatcher {
                     }
                 });
             }, intervalSeconds * 1000);
+        } else if (this.openvidu.isFirefoxBrowser() || this.openvidu.isFirefoxMobileBrowser()) {
+            // Basic version for Firefox. It does not support stats
+            this.openvidu.sendRequest('videoData', {
+                height: streamManager.stream.videoDimensions.height,
+                width: streamManager.stream.videoDimensions.width,
+                videoActive: streamManager.stream.videoActive,
+                audioActive: streamManager.stream.audioActive
+            }, (error, response) => {
+                if (error) {
+                    logger.error("Error sending 'videoData' event", error);
+                }
+            });
         } else {
             console.error('Browser ' + platform.name + ' (version ' + platform.version + ') for ' + platform.os!!.family + ' is not supported in OpenVidu for Network Quality');
         }
