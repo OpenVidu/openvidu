@@ -38,7 +38,6 @@ import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.server.cdr.CallDetailRecord;
-import io.openvidu.server.config.InfoHandler;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.kurento.core.KurentoParticipant;
 import io.openvidu.server.kurento.endpoint.KurentoFilter;
@@ -51,9 +50,6 @@ public class SessionEventsHandler {
 
 	@Autowired
 	protected RpcNotificationService rpcNotificationService;
-
-	@Autowired
-	protected InfoHandler infoHandler;
 
 	@Autowired
 	protected CallDetailRecord CDR;
@@ -303,7 +299,6 @@ public class SessionEventsHandler {
 	}
 
 	public void onNetworkQualityLevelChanged(Session session, JsonObject params) {
-		
 		session.getParticipants().forEach(p -> {
 			rpcNotificationService.sendNotification(p.getParticipantPrivateId(),
 					ProtocolElements.NETWORKQUALITYLEVELCHANGED_METHOD, params);

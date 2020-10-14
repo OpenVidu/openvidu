@@ -24,13 +24,15 @@ import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
 import org.springframework.web.socket.server.standard.ServletServerContainerFactoryBean;
 
+import io.openvidu.server.rest.RequestMappings;
+
 @Configuration
 @EnableWebSocket
 public class InfoSocketConfig implements WebSocketConfigurer {
 
 	@Override
 	public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-		registry.addHandler(infoHandler(), "/info").setAllowedOrigins("*");
+		registry.addHandler(infoHandler(), RequestMappings.WS_INFO).setAllowedOrigins("*");
 	}
 
 	@Bean

@@ -69,6 +69,7 @@ import io.openvidu.server.recording.service.RecordingManager;
 import io.openvidu.server.recording.service.RecordingManagerUtils;
 import io.openvidu.server.recording.service.RecordingManagerUtilsLocalStorage;
 import io.openvidu.server.rest.ApiRestPathRewriteFilter;
+import io.openvidu.server.rest.RequestMappings;
 import io.openvidu.server.rpc.RpcHandler;
 import io.openvidu.server.rpc.RpcNotificationService;
 import io.openvidu.server.utils.CommandExecutor;
@@ -91,7 +92,6 @@ public class OpenViduServer implements JsonRpcConfigurer {
 
 	private static final Logger log = LoggerFactory.getLogger(OpenViduServer.class);
 
-	public static final String WS_PATH = "/openvidu";
 	public static String wsUrl;
 	public static String httpUrl;
 
@@ -241,7 +241,7 @@ public class OpenViduServer implements JsonRpcConfigurer {
 	@Override
 	public void registerJsonRpcHandlers(JsonRpcHandlerRegistry registry) {
 		registry.addHandler(rpcHandler().withPingWatchdog(true).withInterceptors(new HttpHandshakeInterceptor()),
-				WS_PATH);
+				RequestMappings.WS_RPC);
 	}
 
 	public static String getContainerIp() throws IOException, InterruptedException {

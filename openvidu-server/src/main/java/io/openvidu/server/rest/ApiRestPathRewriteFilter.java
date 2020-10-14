@@ -24,6 +24,8 @@ public class ApiRestPathRewriteFilter implements Filter {
 
 	protected Map<String, String> PATH_REDIRECTIONS_MAP = new HashMap<String, String>() {
 		{
+			// WS
+			put("/info", RequestMappings.WS_INFO);
 			// APIs
 			put("/api/", RequestMappings.API + "/");
 			put("/config", RequestMappings.API + "/config");
