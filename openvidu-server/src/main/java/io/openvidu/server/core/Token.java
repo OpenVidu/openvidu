@@ -22,6 +22,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import com.google.gson.JsonObject;
 
 import io.openvidu.java.client.OpenViduRole;
+import io.openvidu.server.core.Participant.ParticipantStatus;
 import io.openvidu.server.coturn.TurnCredentials;
 import io.openvidu.server.kurento.core.KurentoTokenOptions;
 
@@ -109,6 +110,7 @@ public class Token {
 		JsonObject json = new JsonObject();
 		json.addProperty("id", this.getConnectionId());
 		json.addProperty("object", "connection");
+		json.addProperty("status", ParticipantStatus.pending.name());
 		json.addProperty("connectionId", this.getConnectionId()); // DEPRECATED: better use id
 		json.addProperty("sessionId", this.sessionId);
 		json.add("createdAt", null);

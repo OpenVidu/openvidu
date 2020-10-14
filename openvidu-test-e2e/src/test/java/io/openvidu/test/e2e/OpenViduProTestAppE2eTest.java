@@ -210,14 +210,14 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		// Updating only role should let record value untouched
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + tokenConnectionId,
 				"{'role':'MODERATOR'}", HttpStatus.SC_OK, true, true, true,
-				"{'id':'" + tokenConnectionId + "','object':'connection','connectionId':'" + tokenConnectionId
-						+ "','role':'MODERATOR','record':false,'token':'" + token
+				"{'id':'" + tokenConnectionId + "','object':'connection','status':'pending','connectionId':'"
+						+ tokenConnectionId + "','role':'MODERATOR','record':false,'token':'" + token
 						+ "','sessionId':'CUSTOM_SESSION_ID','serverData':'','publishers':null,'subscribers':null,'createdAt':null,'platform':null,'location':null,'clientData':null}");
 		// Updating only record should let role value untouched
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + tokenConnectionId,
 				"{'record':true}", HttpStatus.SC_OK, true, true, true,
-				"{'id':'" + tokenConnectionId + "','object':'connection','connectionId':'" + tokenConnectionId
-						+ "','role':'MODERATOR','record':true,'token':'" + token
+				"{'id':'" + tokenConnectionId + "','object':'connection','status':'pending','connectionId':'"
+						+ tokenConnectionId + "','role':'MODERATOR','record':true,'token':'" + token
 						+ "','sessionId':'CUSTOM_SESSION_ID','serverData':'','publishers':null,'subscribers':null,'createdAt':null,'platform':null,'location':null,'clientData':null}");
 
 		// Test with openvidu-java-client
@@ -278,24 +278,24 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		// Updating only role should let record value untouched
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + tokenConnectionId,
 				"{'role':'MODERATOR'}", HttpStatus.SC_OK, false, true, true,
-				"{'id':'" + tokenConnectionId + "','object':'connection','connectionId':'" + tokenConnectionId
-						+ "','role':'MODERATOR','record':false,'token':'" + token
+				"{'id':'" + tokenConnectionId + "','object':'connection','status':'active','connectionId':'"
+						+ tokenConnectionId + "','role':'MODERATOR','record':false,'token':'" + token
 						+ "','sessionId':'CUSTOM_SESSION_ID','serverData':'','publishers':[],'subscribers':[]}");
 		// Updating only record should let role value untouched
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + tokenConnectionId,
 				"{'record':true}", HttpStatus.SC_OK, false, true, true,
-				"{'id':'" + tokenConnectionId + "','object':'connection','connectionId':'" + tokenConnectionId
-						+ "','role':'MODERATOR','record':true,'token':'" + token
+				"{'id':'" + tokenConnectionId + "','object':'connection','status':'active','connectionId':'"
+						+ tokenConnectionId + "','role':'MODERATOR','record':true,'token':'" + token
 						+ "','sessionId':'CUSTOM_SESSION_ID','serverData':'','publishers':[],'subscribers':[]}");
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + tokenConnectionId,
 				"{'role':'SUBSCRIBER','record':true,'data':'OTHER DATA'}", HttpStatus.SC_OK, false, true, true,
-				"{'id':'" + tokenConnectionId + "','object':'connection','connectionId':'" + tokenConnectionId
-						+ "','role':'SUBSCRIBER','record':true,'token':'" + token
+				"{'id':'" + tokenConnectionId + "','object':'connection','status':'active','connectionId':'"
+						+ tokenConnectionId + "','role':'SUBSCRIBER','record':true,'token':'" + token
 						+ "','sessionId':'CUSTOM_SESSION_ID','serverData':'','publishers':[],'subscribers':[]}");
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + tokenConnectionId,
 				"{'role':'PUBLISHER'}", HttpStatus.SC_OK, false, true, true,
-				"{'id':'" + tokenConnectionId + "','object':'connection','connectionId':'" + tokenConnectionId
-						+ "','role':'PUBLISHER','record':true,'token':'" + token
+				"{'id':'" + tokenConnectionId + "','object':'connection','status':'active','connectionId':'"
+						+ tokenConnectionId + "','role':'PUBLISHER','record':true,'token':'" + token
 						+ "','sessionId':'CUSTOM_SESSION_ID','serverData':'','publishers':[],'subscribers':[]}");
 
 		// Test with openvidu-node-client
@@ -332,6 +332,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertEquals("Wrong connectionId in Connection object", tokenConnectionId, connection.getConnectionId());
 		Assert.assertEquals("Wrong role in Connection object", OpenViduRole.PUBLISHER, connection.getRole());
 		Assert.assertTrue("Wrong record in Connection object", connection.record());
+		Assert.assertEquals("Wrong status in Connection object", "active", connection.getStatus());
 		connection = session.updateConnection(tokenConnectionId,
 				new ConnectionOptions.Builder().role(OpenViduRole.SUBSCRIBER).build());
 		Assert.assertEquals("Wrong role in Connection object", OpenViduRole.SUBSCRIBER, connection.getRole());
@@ -342,6 +343,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertEquals("Wrong role in Connection object", OpenViduRole.MODERATOR, connection.getRole());
 		Assert.assertFalse("Wrong record in Connection object", connection.record());
 		Assert.assertTrue("Wrong data in Connection object", connection.getServerData().isEmpty());
+		Assert.assertEquals("Wrong status in Connection object", "active", connection.getStatus());
 
 		user.getEventManager().resetEventThread();
 

@@ -31,6 +31,18 @@ export class Connection {
     connectionId: string;
 
     /**
+     * Returns the status of the connection. Can be:
+     * - `pending`: if the Connection is waiting for any user to use
+     * its internal token to connect to the session, calling method
+     * [Session.connect](https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/session.html#connect)
+     * in OpenVidu Browser.
+     * - `active`: if the internal token of the Connection has already
+     * been used by some user to connect to the session, and it cannot be used
+     * again.
+     */
+    status: string;
+
+    /**
      * Timestamp when this connection was established, in UTC milliseconds (ms since Jan 1, 1970, 00:00:00 UTC)
      */
     createdAt: number;
@@ -106,6 +118,7 @@ export class Connection {
 
         // These properties won't ever be null
         this.connectionId = json.connectionId;
+        this.status = json.status;
         this.token = json.token;
         this.role = json.role;
         this.serverData = json.serverData;
@@ -118,6 +131,7 @@ export class Connection {
     equalTo(other: Connection): boolean {
         let equals: boolean = (
             this.connectionId === other.connectionId &&
+            this.status === other.status &&
             this.createdAt === other.createdAt &&
             this.role === other.role &&
             this.serverData === other.serverData &&

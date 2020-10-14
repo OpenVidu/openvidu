@@ -31,6 +31,7 @@ import com.google.gson.JsonObject;
 public class Connection {
 
 	private String connectionId;
+	private String status;
 	private long createdAt;
 	private String location;
 	private String platform;
@@ -77,6 +78,7 @@ public class Connection {
 
 		// These properties won't ever be null
 		this.connectionId = json.get("connectionId").getAsString();
+		this.status = json.get("status").getAsString();
 		String token = json.has("token") ? json.get("token").getAsString() : null;
 		OpenViduRole role = OpenViduRole.valueOf(json.get("role").getAsString());
 		String data = json.get("serverData").getAsString();
@@ -94,6 +96,21 @@ public class Connection {
 	 */
 	public String getConnectionId() {
 		return connectionId;
+	}
+
+	/**
+	 * Returns the status of the connection. Can be:
+	 * <ul>
+	 * <li><code>pending</code>: if the Connection is waiting for any user to use
+	 * its internal token to connect to the session, calling method <a href=
+	 * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/session.html#connect"
+	 * target ="_blank">Session.connect</a> in OpenVidu Browser.</li>
+	 * <li><code>active</code>: if the internal token of the Connection has already
+	 * been used by some user to connect to the session, and it cannot be used
+	 * again.</li>
+	 */
+	public String getStatus() {
+		return this.status;
 	}
 
 	/**
@@ -195,6 +212,7 @@ public class Connection {
 	protected JsonObject toJson() {
 		JsonObject json = new JsonObject();
 		json.addProperty("id", this.getConnectionId());
+		json.addProperty("status", this.getStatus());
 		json.addProperty("createdAt", this.createdAt());
 		json.addProperty("location", this.getLocation());
 		json.addProperty("platform", this.getPlatform());

@@ -27,10 +27,27 @@ import io.openvidu.server.utils.GeoLocation;
 
 public class Participant {
 
+	enum ParticipantStatus {
+
+		/**
+		 * The participant has not called Session.publish in the client side yet. The
+		 * internal token is available.
+		 */
+		pending,
+
+		/**
+		 * The participant has called Session.publish in the client side and a WebSocket
+		 * connection is established. The internal token has been consumed and cannot be
+		 * used again.
+		 */
+		active
+	}
+
 	protected String finalUserId; // ID to match this connection with a final user (HttpSession id)
 	protected String participantPrivatetId; // ID to identify the user on server (org.kurento.jsonrpc.Session.id)
 	protected String participantPublicId; // ID to identify the user on clients
-	private String sessionId; // ID of the session to which the participant belongs
+	protected String sessionId; // ID of the session to which the participant belongs
+	protected ParticipantStatus status; // Status of the connection
 	protected Long createdAt; // Timestamp when this connection was established
 	protected String clientMetadata = ""; // Metadata provided on client side
 	protected String serverMetadata = ""; // Metadata provided on server side
@@ -65,6 +82,7 @@ public class Participant {
 		this.participantPrivatetId = participantPrivatetId;
 		this.participantPublicId = participantPublicId;
 		this.sessionId = sessionId;
+		this.status = ParticipantStatus.active;
 		if (createdAt != null) {
 			this.createdAt = createdAt;
 		} else {
@@ -273,6 +291,7 @@ public class Participant {
 		JsonObject json = new JsonObject();
 		json.addProperty("id", this.participantPublicId);
 		json.addProperty("object", "connection");
+		json.addProperty("status", this.status.name());
 		json.addProperty("connectionId", this.participantPublicId); // TODO: deprecated. Better use only "id"
 		json.addProperty("sessionId", this.sessionId);
 		json.addProperty("createdAt", this.createdAt);
