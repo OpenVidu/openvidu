@@ -16,7 +16,12 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.ExpressionUrlAuthorizationConfigurer;
 import org.springframework.web.util.WebUtils;
+
+import io.openvidu.server.config.OpenviduConfig;
 
 public class ApiRestPathRewriteFilter implements Filter {
 
@@ -50,6 +55,11 @@ public class ApiRestPathRewriteFilter implements Filter {
 		log.warn("Support for deprecated REST API paths enabled. Update your REST API clients to use the new paths");
 		log.warn(
 				"Deprecated path support will be removed in a future release. You can disable old path support to test compatibility with property SUPPORT_DEPRECATED_API=false");
+	}
+
+	@Override
+	public void destroy() {
+		// Nothing to free up...
 	}
 
 	@Override
@@ -106,9 +116,30 @@ public class ApiRestPathRewriteFilter implements Filter {
 		}
 	}
 
-	@Override
-	public void destroy() {
-		// Nothing to free up...
+	public static void protectOldPathsCe(
+			ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry conf,
+			OpenviduConfig openviduConf) throws Exception {
+
+		conf.antMatchers("/api/**").authenticated()
+				// /config
+				.antMatchers(HttpMethod.GET, "/config/openvidu-publicurl").permitAll()
+				.antMatchers(HttpMethod.GET, "/config/**").authenticated()
+				// /cdr
+				.antMatchers(HttpMethod.GET, "/cdr/**").authenticated()
+				// /accept-certificate
+				.antMatchers(HttpMethod.GET, "/accept-certificate").permitAll()
+				// Dashboard
+				.antMatchers(HttpMethod.GET, "/dashboard/**").authenticated();
+
+		// Security for recording layouts
+		conf.antMatchers("/layouts/**").authenticated();
+
+		// Security for recorded video files
+		if (openviduConf.getOpenViduRecordingPublicAccess()) {
+			conf = conf.antMatchers("/recordings/**").permitAll();
+		} else {
+			conf = conf.antMatchers("/recordings/**").authenticated();
+		}
 	}
 
 }

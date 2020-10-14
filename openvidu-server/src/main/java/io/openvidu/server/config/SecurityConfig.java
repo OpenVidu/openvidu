@@ -20,8 +20,12 @@ package io.openvidu.server.config;
 import java.util.Arrays;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -31,41 +35,45 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
-@Configuration
+import io.openvidu.server.rest.ApiRestPathRewriteFilter;
+import io.openvidu.server.rest.RequestMappings;
+
+@Configuration()
+@ConditionalOnMissingBean(name = "securityConfigPro")
+@Order(Ordered.LOWEST_PRECEDENCE)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Autowired
-	OpenviduConfig openviduConf;
+	protected OpenviduConfig openviduConf;
+
+	@Autowired
+	protected Environment environment;
 
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
 
-		// Security for API REST
 		ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry conf = http.cors().and()
 				.csrf().disable().authorizeRequests()
-				// /api
-				.antMatchers("/api/**").authenticated()
-				// /config
-				.antMatchers(HttpMethod.GET, "/config/openvidu-publicurl").permitAll()
-				.antMatchers(HttpMethod.GET, "/config/**").authenticated()
-				// /cdr
-				.antMatchers(HttpMethod.GET, "/cdr/**").authenticated()
-				// /accept-certificate
-				.antMatchers(HttpMethod.GET, "/accept-certificate").permitAll()
-				// Dashboard
-				.antMatchers(HttpMethod.GET, "/dashboard/**").authenticated();
+				.antMatchers(HttpMethod.GET, RequestMappings.API + "/config/openvidu-publicurl").permitAll()
+				.antMatchers(HttpMethod.GET, RequestMappings.ACCEPT_CERTIFICATE).permitAll()
+				.antMatchers(RequestMappings.API + "/**").authenticated()
+				.antMatchers(HttpMethod.GET, RequestMappings.CDR + "/**").authenticated()
+				.antMatchers(HttpMethod.GET, RequestMappings.FRONTEND_CE + "/**").authenticated()
+				.antMatchers(HttpMethod.GET, RequestMappings.CUSTOM_LAYOUTS + "/**").authenticated();
 
-		// Security for recording layouts
-		conf.antMatchers("/layouts/**").authenticated();
-
-		// Security for recorded video files
+		// Secure recordings depending on OPENVIDU_RECORDING_PUBLIC_ACCESS
 		if (openviduConf.getOpenViduRecordingPublicAccess()) {
-			conf = conf.antMatchers("/recordings/**").permitAll();
+			conf = conf.antMatchers(HttpMethod.GET, RequestMappings.RECORDINGS + "/**").permitAll();
 		} else {
-			conf = conf.antMatchers("/recordings/**").authenticated();
+			conf = conf.antMatchers(HttpMethod.GET, RequestMappings.RECORDINGS + "/**").authenticated();
 		}
 
 		conf.and().httpBasic();
+
+		// TODO: remove this when deprecating SUPPORT_DEPRECATED_API
+		if (Boolean.valueOf(environment.getProperty("SUPPORT_DEPRECATED_API"))) {
+			ApiRestPathRewriteFilter.protectOldPathsCe(conf, openviduConf);
+		}
 	}
 
 	@Bean
