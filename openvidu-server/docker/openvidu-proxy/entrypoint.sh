@@ -36,6 +36,7 @@ CERTIFICATES_CONF="${CERTIFICATES_FOLDER}/certificates.conf"
 [ -z "${PROXY_HTTP_PORT}" ] && export PROXY_HTTP_PORT=80
 [ -z "${PROXY_HTTPS_PORT}" ] && export PROXY_HTTPS_PORT=443
 [ -z "${WITH_APP}" ] && export WITH_APP=true
+[ -z "${SUPPORT_DEPRECATED_API}" ] && export SUPPORT_DEPRECATED_API=true
 [ -z "${PROXY_MODE}" ] && export PROXY_MODE=CE
 [ -z "${ALLOWED_ACCESS_TO_DASHBOARD}" ] && export ALLOWED_ACCESS_TO_DASHBOARD=all
 [ -z "${ALLOWED_ACCESS_TO_RESTAPI}" ] && export ALLOWED_ACCESS_TO_RESTAPI=all
@@ -153,22 +154,29 @@ chmod -R 777 /etc/letsencrypt
 
 # Use certificates in folder '/default_nginx_conf'
 if [ "${PROXY_MODE}" == "CE" ]; then
-  if [ "${WITH_APP}" == "true" ]; then
+  if [ "${WITH_APP}" == "true" ] && [ "${SUPPORT_DEPRECATED_API}" == "true" ]; then
+    mv /default_nginx_conf/ce/support_deprecated_api/default-app.conf /default_nginx_conf/default-app.conf
+  elif [ "${WITH_APP}" == "true" ] && [ "${SUPPORT_DEPRECATED_API}" == "false" ]; then
     mv /default_nginx_conf/ce/default-app.conf /default_nginx_conf/default-app.conf
-    mv /default_nginx_conf/ce/default.conf /default_nginx_conf/default.conf
-  else
+  elif [ "${WITH_APP}" == "false" ] && [ "${SUPPORT_DEPRECATED_API}" == "true" ]; then
+    mv /default_nginx_conf/ce/support_deprecated_api/default-app-without-demos.conf /default_nginx_conf/default-app.conf
+  elif [ "${WITH_APP}" == "false" ] && [ "${SUPPORT_DEPRECATED_API}" == "false" ]; then
     mv /default_nginx_conf/ce/default-app-without-demos.conf /default_nginx_conf/default-app.conf
-    mv /default_nginx_conf/ce/default.conf /default_nginx_conf/default.conf
   fi
+  mv /default_nginx_conf/ce/default.conf /default_nginx_conf/default.conf
 
   rm -rf /default_nginx_conf/ce
   rm -rf /default_nginx_conf/pro
 fi
 
 if [ "${PROXY_MODE}" == "PRO" ]; then
-  if [ "${WITH_APP}" == "true" ]; then
+  if [ "${WITH_APP}" == "true" ] && [ "${SUPPORT_DEPRECATED_API}" == "true" ]; then
+    mv /default_nginx_conf/pro/support_deprecated_api/default.conf /default_nginx_conf/default.conf
+  elif [ "${WITH_APP}" == "true" ] && [ "${SUPPORT_DEPRECATED_API}" == "false" ]; then
     mv /default_nginx_conf/pro/default.conf /default_nginx_conf/default.conf
-  else
+  elif [ "${WITH_APP}" == "false" ] && [ "${SUPPORT_DEPRECATED_API}" == "true" ]; then
+    mv /default_nginx_conf/pro/support_deprecated_api/default-app-without-demos.conf /default_nginx_conf/default.conf
+  elif [ "${WITH_APP}" == "false" ] && [ "${SUPPORT_DEPRECATED_API}" == "false" ]; then
     mv /default_nginx_conf/pro/default-app-without-demos.conf /default_nginx_conf/default.conf
   fi
 

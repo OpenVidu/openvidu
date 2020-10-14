@@ -67,7 +67,7 @@ services:
             - MAX_PORT=65535
 
     nginx:
-        image: openvidu/openvidu-proxy:4.0.0-dev1
+        image: openvidu/openvidu-proxy:4.0.0-beta1
         restart: on-failure
         network_mode: host
         volumes:
@@ -84,6 +84,7 @@ services:
             - ALLOWED_ACCESS_TO_RESTAPI=${ALLOWED_ACCESS_TO_RESTAPI:-}
             - PROXY_MODE=PRO
             - WITH_APP=true
+            - SUPPORT_DEPRECATED_API=${SUPPORT_DEPRECATED_API:-true}
 
     elasticsearch:
         image: docker.elastic.co/elasticsearch/elasticsearch:7.8.0
