@@ -28,6 +28,7 @@ import { CustomMediaStreamConstraints } from '../OpenViduInternal/Interfaces/Pri
 import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/OpenViduError';
 import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
 import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
+import { PlatformUtils } from '../OpenViduInternal/Utils/Platform';
 
 import * as screenSharingAuto from '../OpenViduInternal/ScreenSharing/Screen-Capturing-Auto';
 import * as screenSharing from '../OpenViduInternal/ScreenSharing/Screen-Capturing';
@@ -39,13 +40,6 @@ import EventEmitter = require('wolfy87-eventemitter');
  * @hidden
  */
 import RpcBuilder = require('../OpenViduInternal/KurentoUtils/kurento-jsonrpc');
-/**
- * @hidden
- */
-import platform = require('platform');
-
-platform['isIonicIos'] = (platform.product === 'iPhone' || platform.product === 'iPad') && platform.ua!!.indexOf('Safari') === -1;
-platform['isIonicAndroid'] = platform.os!!.family === 'Android' && platform.name == "Android Browser";
 
 /**
  * @hidden
@@ -59,6 +53,11 @@ declare var cordova: any;
  * @hidden
  */
 const logger: OpenViduLogger = OpenViduLogger.getInstance();
+
+/**
+ * @hidden
+ */
+const platform: PlatformUtils = PlatformUtils.getInstance();
 
 /**
  * Entrypoint of OpenVidu Browser library.
@@ -122,7 +121,7 @@ export class OpenVidu {
     logger.info("'OpenVidu' initialized");
     logger.info("openvidu-browser version: " + this.libraryVersion);
 
-    if (platform.os!!.family === 'iOS' || platform.os!!.family === 'Android') {
+    if (platform.isMobileDevice()) {
       // Listen to orientationchange only on mobile devices
       (<any>window).addEventListener('orientationchange', () => {
         this.publishers.forEach(publisher => {
@@ -135,7 +134,7 @@ export class OpenVidu {
 
             const getNewVideoDimensions = (): Promise<{ newWidth: number, newHeight: number }> => {
               return new Promise((resolve, reject) => {
-                if (platform['isIonicIos']) {
+                if (platform.isIonicIos()) {
                   // iOS Ionic. Limitation: must get new dimensions from an existing video element already inserted into DOM
                   resolve({
                     newWidth: publisher.stream.streamManager.videos[0].video.videoWidth,
@@ -146,8 +145,8 @@ export class OpenVidu {
                   // New resolution got from different places for Chrome and Firefox. Chrome needs a videoWidth and videoHeight of a videoElement.
                   // Firefox needs getSettings from the videoTrack
                   const firefoxSettings = publisher.stream.getMediaStream().getVideoTracks()[0].getSettings();
-                  const newWidth = <number>((platform.name!!.toLowerCase().indexOf('firefox') !== -1) ? firefoxSettings.width : publisher.videoReference.videoWidth);
-                  const newHeight = <number>((platform.name!!.toLowerCase().indexOf('firefox') !== -1) ? firefoxSettings.height : publisher.videoReference.videoHeight);
+                  const newWidth = <number>((platform.isFirefoxBrowser() || platform.isFirefoxMobileBrowser()) ? firefoxSettings.width : publisher.videoReference.videoWidth);
+                  const newHeight = <number>((platform.isFirefoxBrowser() || platform.isFirefoxMobileBrowser()) ? firefoxSettings.height : publisher.videoReference.videoHeight);
                   resolve({ newWidth, newHeight });
                 }
               });
@@ -336,8 +335,8 @@ export class OpenVidu {
    */
   checkSystemRequirements(): number {
 
-    if (this.isIPhoneOrIPad()) {
-      if (this.isIOSWithSafari() || platform['isIonicIos']) {
+    if (platform.isIPhoneOrIPad()) {
+      if (platform.isIOSWithSafari() || platform.isIonicIos()) {
         return 1;
       }
       return 0;
@@ -345,10 +344,10 @@ export class OpenVidu {
 
     // Accept: Chrome (desktop and Android), Firefox (desktop and Android), Opera (desktop and Android),
     // Safari (OSX and iOS), Ionic (Android and iOS), Samsung Internet Browser (Android)
-    if (this.isSafariBrowser() || this.isChromeBrowser() || this.isChromeMobileBrowser() ||
-        this.isFirefoxBrowser()  || this.isFirefoxMobileBrowser() || this.isOperaBrowser() ||
-        this.isOperaMobileBrowser() || this.isAndroidBrowser() || this.isElectron() ||
-        this.isSamsungBrowser()
+    if (platform.isSafariBrowser() || platform.isChromeBrowser() || platform.isChromeMobileBrowser() ||
+        platform.isFirefoxBrowser()  || platform.isFirefoxMobileBrowser() || platform.isOperaBrowser() ||
+        platform.isOperaMobileBrowser() || platform.isAndroidBrowser() || platform.isElectron() ||
+        platform.isSamsungBrowser()
     ) {
       return 1;
     }
@@ -362,22 +361,8 @@ export class OpenVidu {
    * Checks if the browser supports screen-sharing. Desktop Chrome, Firefox and Opera support screen-sharing
    * @returns 1 if the browser supports screen-sharing, 0 otherwise
    */
-  checkScreenSharingCapabilities(): number {
-    const browser = platform.name;
-    const version = platform?.version ? parseFloat(platform.version) : -1;
-    const family = platform.os!!.family;
-
-    // Reject mobile devices
-    if (family === 'iOS' || family === 'Android') {
-      return 0;
-    }
-
-    if ((browser !== 'Chrome') && (browser !== 'Firefox') && (browser !== 'Opera') && (browser !== 'Electron') &&
-      (browser === 'Safari' && version < 13)) {
-      return 0;
-    } else {
-      return 1;
-    }
+  checkScreenSharingCapabilities(): boolean {
+    return platform.canScreenShare();
   }
 
 
@@ -390,7 +375,7 @@ export class OpenVidu {
         const devices: Device[] = [];
 
         // Ionic Android  devices
-        if (platform['isIonicAndroid'] && typeof cordova != "undefined" && cordova?.plugins?.EnumerateDevicesPlugin) {
+        if (platform.isIonicAndroid() && typeof cordova != "undefined" && cordova?.plugins?.EnumerateDevicesPlugin) {
           cordova.plugins.EnumerateDevicesPlugin.getEnumerateDevices().then((pluginDevices: Device[]) => {
             let pluginAudioDevices: Device[] = [];
             let videoDevices: Device[] = [];
@@ -582,10 +567,10 @@ export class OpenVidu {
             // Video is deviceId or screen sharing
             if (options.videoSource === 'screen' ||
               options.videoSource === 'window' ||
-              (platform.name === 'Electron' && options.videoSource.startsWith('screen:'))) {
+              (platform.isElectron() && options.videoSource.startsWith('screen:'))) {
               // Video is screen sharing
               mustAskForAudioTrackLater = !myConstraints.audioTrack && (options.audioSource !== null && options.audioSource !== false);
-              if (navigator.mediaDevices['getDisplayMedia'] && platform.name !== 'Electron') {
+              if (navigator.mediaDevices['getDisplayMedia'] && !platform.isElectron()) {
                 // getDisplayMedia supported
                 navigator.mediaDevices['getDisplayMedia']({ video: true })
                   .then(mediaStream => {
@@ -872,98 +857,6 @@ export class OpenVidu {
     return mediaStream;
   }
 
-   /**
-   * @hidden
-   */
-  public isChromeBrowser(): boolean {
-    return platform.name === 'Chrome';
-  }
-
-  /**
-   * @hidden
-   */
-  public isSafariBrowser(): boolean {
-    return platform.name === 'Safari';
-  }
-
-  /**
-   * @hidden
-   */
-  public isChromeMobileBrowser(): boolean {
-    return platform.name === 'Chrome Mobile';
-  }
-
-  /**
-   * @hidden
-   */
-  public isFirefoxBrowser(): boolean {
-    return platform.name === 'Firefox';
-  }
-
-  /**
-   * @hidden
-   */
-  public isFirefoxMobileBrowser(): boolean {
-    return platform.name === 'Firefox Mobile';
-  }
-
-  /**
-   * @hidden
-   */
-  public isOperaBrowser(): boolean {
-    return platform.name === 'Opera';
-  }
-
-  /**
-   * @hidden
-   */
-  public isOperaMobileBrowser(): boolean {
-    return platform.name === 'Opera Mobile';
-  }
-
-  /**
-   * @hidden
-   */
-  public isAndroidBrowser(): boolean {
-    return platform.name === 'Android Browser';
-  }
-
-  /**
-   * @hidden
-   */
-  public isElectron(): boolean {
-    return platform.name === 'Electron';
-  }
-
-  /**
-   * @hidden
-   */
-  public isSamsungBrowser(): boolean {
-    return platform.name === 'Samsung Internet Mobile' || platform.name === 'Samsung Internet';
-  }
-
-  /**
-   * @hidden
-   */
-  public isIPhoneOrIPad(): boolean {
-    const userAgent = !!platform.ua ? platform.ua : navigator.userAgent;
-
-    const isTouchable = 'ontouchend' in document;
-    const isIPad = /\b(\w*Macintosh\w*)\b/.test(userAgent) && isTouchable;
-    const isIPhone = /\b(\w*iPhone\w*)\b/.test(userAgent) && /\b(\w*Mobile\w*)\b/.test(userAgent) && isTouchable;
-
-    return isIPad || isIPhone;
-  }
-
-  /**
-   * @hidden
-   */
-  public isIOSWithSafari(): boolean {
-    const userAgent = !!platform.ua ? platform.ua : navigator.userAgent;
-    return /\b(\w*Apple\w*)\b/.test(navigator.vendor) && /\b(\w*Safari\w*)\b/.test(userAgent)
-      && !/\b(\w*CriOS\w*)\b/.test(userAgent) && !/\b(\w*FxiOS\w*)\b/.test(userAgent);
-  }
-
   /**
    * @hidden
    */
@@ -984,12 +877,12 @@ export class OpenVidu {
         // Screen sharing
 
         if (!this.checkScreenSharingCapabilities()) {
-          const error = new OpenViduError(OpenViduErrorName.SCREEN_SHARING_NOT_SUPPORTED, 'You can only screen share in desktop Chrome, Firefox, Opera, Safari (>=13.0) or Electron. Detected client: ' + platform.name);
+          const error = new OpenViduError(OpenViduErrorName.SCREEN_SHARING_NOT_SUPPORTED, 'You can only screen share in desktop Chrome, Firefox, Opera, Safari (>=13.0) or Electron. Detected client: ' + platform.getName());
           logger.error(error);
           reject(error);
         } else {
 
-          if (platform.name === 'Electron') {
+          if (platform.isElectron()) {
             const prefix = "screen:";
             const videoSourceString: string = videoSource;
             const electronScreenId = videoSourceString.substr(videoSourceString.indexOf(prefix) + prefix.length);
@@ -1003,7 +896,7 @@ export class OpenVidu {
 
           } else {
 
-            if (!!this.advancedConfiguration.screenShareChromeExtension && !(platform.name!.indexOf('Firefox') !== -1) && !navigator.mediaDevices['getDisplayMedia']) {
+            if (!!this.advancedConfiguration.screenShareChromeExtension && !(platform.isFirefoxBrowser() || platform.isFirefoxMobileBrowser()) && !navigator.mediaDevices['getDisplayMedia']) {
 
               // Custom screen sharing extension for Chrome (and Opera) and no support for MediaDevices.getDisplayMedia()
 
@@ -1042,7 +935,7 @@ export class OpenVidu {
                 resolve(myConstraints);
               } else {
                 // Default screen sharing extension for Chrome/Opera, or is Firefox < 66
-                const firefoxString = platform.name!.indexOf('Firefox') !== -1 ? publisherProperties.videoSource : undefined;
+                const firefoxString = (platform.isFirefoxBrowser() || platform.isFirefoxMobileBrowser()) ? publisherProperties.videoSource : undefined;
 
                 screenSharingAuto.getScreenId(firefoxString, (error, sourceId, screenConstraints) => {
                   if (!!error) {
@@ -1150,7 +1043,7 @@ export class OpenVidu {
   private isScreenShare(videoSource: string) {
     return videoSource === 'screen' ||
       videoSource === 'window' ||
-      (platform.name === 'Electron' && videoSource.startsWith('screen:'))
+      (platform.isElectron() && videoSource.startsWith('screen:'))
   }
 
  }

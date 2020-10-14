@@ -30,19 +30,22 @@ import { PublisherSpeakingEvent } from '../OpenViduInternal/Events/PublisherSpea
 import { StreamManagerEvent } from '../OpenViduInternal/Events/StreamManagerEvent';
 import { StreamPropertyChangedEvent } from '../OpenViduInternal/Events/StreamPropertyChangedEvent';
 import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/OpenViduError';
+import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
+import { PlatformUtils } from '../OpenViduInternal/Utils/Platform';
 
 /**
  * @hidden
  */
 import hark = require('hark');
-import platform = require('platform');
-import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
 /**
  * @hidden
  */
 const logger: OpenViduLogger = OpenViduLogger.getInstance();
 
-
+/**
+ * @hidden
+ */
+const platform: PlatformUtils = PlatformUtils.getInstance();
 
 /**
  * Represents each one of the media streams available in OpenVidu Server for certain session.
@@ -108,7 +111,7 @@ export class Stream extends EventDispatcher {
      * - `"SCREEN"`: when the video source comes from screen-sharing.
      * - `"CUSTOM"`: when [[PublisherProperties.videoSource]] has been initialized in the Publisher side with a custom MediaStreamTrack when calling [[OpenVidu.initPublisher]]).
      * - `"IPCAM"`: when the video source comes from an IP camera participant instead of a regular participant (see [IP cameras](/en/stable/advanced-features/ip-cameras/)).
-     * 
+     *
      * If [[hasVideo]] is false, this property is undefined
      */
     typeOfVideo?: string;
@@ -537,7 +540,7 @@ export class Stream extends EventDispatcher {
      */
     isSendScreen(): boolean {
         let screen = this.outboundStreamOpts.publisherProperties.videoSource === 'screen';
-        if (platform.name === 'Electron') {
+        if (platform.isElectron()) {
             screen = typeof this.outboundStreamOpts.publisherProperties.videoSource === 'string' &&
                 this.outboundStreamOpts.publisherProperties.videoSource.startsWith('screen:');
         }
