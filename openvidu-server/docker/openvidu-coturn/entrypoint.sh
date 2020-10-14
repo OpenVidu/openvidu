@@ -5,9 +5,9 @@ DEBUG=${DEBUG:-false}
 [ "$DEBUG" == "true" ] && set -x
 
 #Check parameters
-[[ ! -z "${TURN_PUBLIC_IP}" ]] || export TURN_PUBLIC_IP=$(/usr/local/bin/discover_my_public_ip.sh)
+[[ "${TURN_PUBLIC_IP}" == "auto" ]] && export TURN_PUBLIC_IP=$(/usr/local/bin/discover_my_public_ip.sh)
 
-echo "TURN public IP: ${TURN_PUBLIC_IP}"
+echo "TURN public IP: ${TURN_PUBLIC_IP:-"empty"}"
 
 [[ ! -z "${TURN_LISTEN_PORT}" ]] && echo "TURN listening port: ${TURN_LISTEN_PORT}" ||
     { echo "TURN_LISTEN_PORT environment variable is not defined"; exit 1; }

@@ -28,12 +28,12 @@ docker run --rm --name some-redis -d -p 6379:6379 redis
 Get the ip of the container and after that, run coturn, you can use url as ip too, in this example I am running coturn with nip.io:
 
 ```
-docker run -it -e REDIS_IP=172.17.0.2 -e DB_NAME=0 -e DB_PASSWORD=turn -e MIN_PORT=40000 -e MAX_PORT=65535 -e TURN_LISTEN_PORT=3478 --network=host openvidu/openvidu-coturn
+docker run -it -e REDIS_IP=172.17.0.2 -e DB_NAME=0 -e DB_PASSWORD=turn -e MIN_PORT=40000 -e MAX_PORT=65535 -e TURN_PUBLIC_IP=auto -e TURN_LISTEN_PORT=3478 --network=host openvidu/openvidu-coturn
 ```
 
 ## Execute turn locally with fixed username and password
 ```
-docker run -it -e TURN_USERNAME_PASSWORD=<USER>:<PASSWORD> -e MIN_PORT=40000 -e MAX_PORT=65535 -e TURN_LISTEN_PORT=3478 --network=host openvidu/openvidu-coturn
+docker run -it -e TURN_PUBLIC_IP=auto -e TURN_USERNAME_PASSWORD=<USER>:<PASSWORD> -e MIN_PORT=40000 -e MAX_PORT=65535 -e TURN_LISTEN_PORT=3478 --network=host openvidu/openvidu-coturn
 ```
 
 

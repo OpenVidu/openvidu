@@ -52,6 +52,7 @@ services:
         environment:
             - KMS_MIN_PORT=40000
             - KMS_MAX_PORT=57000
+            - KMS_EXTERNAL_ADDRESS=auto
             - GST_DEBUG=${KMS_DEBUG_LEVEL:-}
 
     redis:
@@ -62,7 +63,7 @@ services:
             - REDIS_PASSWORD=${OPENVIDU_SECRET}
 
     coturn:
-        image: openvidu/openvidu-coturn:2.0.0-dev1
+        image: openvidu/openvidu-coturn:2.0.0-dev2
         restart: on-failure
         network_mode: host
         environment:
@@ -74,7 +75,7 @@ services:
             - MAX_PORT=65535
 
     nginx:
-        image: openvidu/openvidu-proxy:4.0.0-beta1
+        image: openvidu/openvidu-proxy:4.0.0-dev3
         restart: on-failure
         network_mode: host
         volumes:
