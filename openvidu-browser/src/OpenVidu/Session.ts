@@ -1137,8 +1137,8 @@ export class Session extends EventDispatcher {
     sendVideoData(streamManager: StreamManager, intervalSeconds: number = 1) {
         if(
             platform.isChromeBrowser() || platform.isChromeMobileBrowser() || platform.isOperaBrowser() ||
-            platform.isOperaMobileBrowser() || platform.isElectron() || platform.isSafariBrowser() ||
-            platform.isAndroidBrowser() || platform.isSamsungBrowser() ||
+            platform.isOperaMobileBrowser() || platform.isElectron() || (platform.isSafariBrowser() && !platform.isIonicIos()) ||
+            platform.isAndroidBrowser() || platform.isSamsungBrowser() || platform.isIonicAndroid() ||
             (platform.isIPhoneOrIPad() && platform.isIOSWithSafari())
         ) {
             setTimeout(async () => {
@@ -1158,8 +1158,8 @@ export class Session extends EventDispatcher {
                     }
                 });
             }, intervalSeconds * 1000);
-        } else if (platform.isFirefoxBrowser() || platform.isFirefoxMobileBrowser()) {
-            // Basic version for Firefox. It does not support stats
+        } else if (platform.isFirefoxBrowser() || platform.isFirefoxMobileBrowser() || platform.isIonicIos()) {
+            // Basic version for Firefox and Ionic iOS. They do not support stats
             this.openvidu.sendRequest('videoData', {
                 height: streamManager.stream.videoDimensions.height,
                 width: streamManager.stream.videoDimensions.width,
