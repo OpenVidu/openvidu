@@ -47,7 +47,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const protocol = location.protocol.includes('https') ? 'wss://' : 'ws://';
     const port = (location.port) ? (':' + location.port) : '';
 
-    this.websocket = new WebSocket(protocol + location.hostname + port + '/info');
+    this.websocket = new WebSocket(protocol + location.hostname + port + '/openvidu/info');
 
     this.websocket.onopen = (event) => {
       console.log('Info websocket connected');
