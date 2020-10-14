@@ -83,7 +83,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 	final String DEFAULT_JSON_SESSION = "{'id':'STR','object':'STR','sessionId':'STR','createdAt':0,'mediaMode':'STR','recordingMode':'STR','defaultOutputMode':'STR','defaultRecordingLayout':'STR','customSessionId':'STR','connections':{'numberOfElements':0,'content':[]},'recording':false}";
 	final String DEFAULT_JSON_TOKEN = "{'id':'STR','object':'STR','token':'STR','connectionId':0,'session':'STR','role':'STR','data':'STR','record':true}";
-	final String DEFAULT_JSON_CONNECTION = "{'id':'STR','object':'STR','connectionId':'STR','sessionId':'STR','createdAt':0,'location':'STR','platform':'STR','role':'STR','record':true,'serverData':'STR','clientData':'STR','publishers':[],'subscribers':[]}";
+	final String DEFAULT_JSON_CONNECTION = "{'id':'STR','object':'STR','status':'STR','connectionId':'STR','sessionId':'STR','createdAt':0,'location':'STR','platform':'STR','role':'STR','record':true,'serverData':'STR','clientData':'STR','publishers':[],'subscribers':[]}";
 
 	@BeforeAll()
 	protected static void setupAll() {
