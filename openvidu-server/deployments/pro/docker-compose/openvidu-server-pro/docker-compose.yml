@@ -68,7 +68,7 @@ services:
             - TURN_PUBLIC_IP=auto
 
     nginx:
-        image: openvidu/openvidu-proxy:4.0.0-dev3
+        image: openvidu/openvidu-proxy:4.0.0-dev4
         restart: on-failure
         network_mode: host
         volumes:
