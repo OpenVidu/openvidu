@@ -68,22 +68,23 @@ printf "\n  ======================================="
 printf "\n"
 
 printf "\n  Configure %s domain..." "${DOMAIN_OR_PUBLIC_IP}"
-OLD_DOMAIN_OR_PUBLIC_IP=$(grep "${DOMAIN_OR_PUBLIC_IP}" "${CERTIFICATES_CONF}" | cut -f1 -d$'\t')
-CERTIFICATED_OLD_CONFIG=$(grep "${DOMAIN_OR_PUBLIC_IP}" "${CERTIFICATES_CONF}" | cut -f2 -d$'\t')
+OLD_DOMAIN_OR_PUBLIC_IP=$(head -n 1 "${CERTIFICATES_CONF}" | cut -f1 -d$'\t')
+CERTIFICATED_OLD_CONFIG=$(head -n 1 "${CERTIFICATES_CONF}" | cut -f2 -d$'\t')
 
-printf "\n    - New configuration: %s" "${CERTIFICATE_TYPE}"
+printf "\n    - New configuration: %s %s" "${CERTIFICATE_TYPE}" "${DOMAIN_OR_PUBLIC_IP}"
 
 if [ -z "${CERTIFICATED_OLD_CONFIG}" ]; then
   printf "\n    - Old configuration: none"
 else
-  printf "\n    - Old configuration: %s" "${CERTIFICATED_OLD_CONFIG}"
+  printf "\n    - Old configuration: %s %s" "${CERTIFICATED_OLD_CONFIG}" "${OLD_DOMAIN_OR_PUBLIC_IP}"
 
   if [ "${CERTIFICATED_OLD_CONFIG}" != "${CERTIFICATE_TYPE}" ] || \
   [ "${OLD_DOMAIN_OR_PUBLIC_IP}" != "${DOMAIN_OR_PUBLIC_IP}" ]; then
 
     printf "\n    - Restarting configuration... Removing old certificated..."
+    # Remove certificate folder safely
+    find "${CERTIFICATES_FOLDER:?}" -mindepth 1 -delete
     # Recreate certificates folder
-    rm -rf "${CERTIFICATES_FOLDER:?}"
     mkdir -p "${CERTIFICATES_LIVE_FOLDER}"
     touch "${CERTIFICATES_CONF}"
   fi
