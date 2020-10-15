@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -467,6 +468,7 @@ public class KurentoSessionManager extends SessionManager {
 
 		}
 
+		participant.setPublishedAt(new Timestamp(System.currentTimeMillis()).getTime());
 		kSession.newPublisher(participant);
 
 		participants = kParticipant.getSession().getParticipants();

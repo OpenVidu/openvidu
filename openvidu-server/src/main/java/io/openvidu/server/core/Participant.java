@@ -63,6 +63,7 @@ public class Participant {
 	protected Integer videoHeight = 0;
 	protected Boolean videoActive = false;
 	protected Boolean audioActive = false;
+	protected Long publishedAt = null; // Timestamp when this participant was published
 
 	protected boolean streaming = false;
 	protected volatile boolean closed = false;
@@ -194,6 +195,14 @@ public class Participant {
 
 	public Boolean isAudioActive() {
 		return audioActive;
+	}
+
+	public void setPublishedAt(Long publishedAt) {
+		this.publishedAt = publishedAt;
+	}
+	
+	public Long getPublishedAt() {
+		return publishedAt;
 	}
 
 	public void setAudioActive(Boolean audioActive) {
