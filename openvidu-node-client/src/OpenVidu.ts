@@ -419,7 +419,7 @@ export class OpenVidu {
   public fetch(): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
       axios.get(
-        this.host + OpenVidu.API_SESSIONS,
+        this.host + OpenVidu.API_SESSIONS + '?pendingConnections=true',
         {
           headers: {
             Authorization: this.basicAuth

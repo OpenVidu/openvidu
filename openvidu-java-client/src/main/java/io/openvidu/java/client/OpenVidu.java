@@ -537,7 +537,7 @@ public class OpenVidu {
 	 * @throws OpenViduJavaClientException
 	 */
 	public boolean fetch() throws OpenViduJavaClientException, OpenViduHttpException {
-		HttpGet request = new HttpGet(this.hostname + API_SESSIONS);
+		HttpGet request = new HttpGet(this.hostname + API_SESSIONS + "?pendingConnections=true");
 
 		HttpResponse response;
 		try {

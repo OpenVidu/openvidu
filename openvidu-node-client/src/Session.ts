@@ -47,15 +47,25 @@ export class Session {
     properties: SessionProperties;
 
     /**
-     * Array of active connections to the session. This property always initialize as an empty array and
-     * **will remain unchanged since the last time method [[Session.fetch]] was called**. Exceptions to this rule are:
+     * Array of Connections to the Session. This property always initialize as an empty array and
+     * **will remain unchanged since the last time method [[Session.fetch]] or [[OpenVidu.fetch]] was called**.
+     * Exceptions to this rule are:
      *
      * - Calling [[Session.forceUnpublish]] automatically updates each affected local Connection object.
      * - Calling [[Session.forceDisconnect]] automatically updates each affected local Connection object.
      * - Calling [[Session.updateConnection]] automatically updates the attributes of the affected local Connection object.
      *
-     * To get the array of active connections with their current actual value, you must call [[Session.fetch]] before consulting
-     * property [[activeConnections]]
+     * To get the array of Connections with their current actual value, you must call [[Session.fetch]] or [[OpenVidu.fetch]]
+     * before consulting property [[connections]]
+     */
+    connections: Connection[] = [];
+
+    /**
+     * Array containing the active Connections of the Session. It is a subset of [[Session.connections]] array containing only
+     * those Connections with property [[Connection.status]] to `active`.
+     * 
+     * To get the array of active Connections with their current actual value, you must call [[Session.fetch]] or [[OpenVidu.fetch]]
+     * before consulting property [[activeConnections]]
      */
     activeConnections: Connection[] = [];
 
@@ -190,9 +200,9 @@ export class Session {
     }
 
     /**
-     * Updates every property of the Session with the current status it has in OpenVidu Server. This is especially useful for accessing the list of active
-     * connections of the Session ([[Session.activeConnections]]) and use those values to call [[Session.forceDisconnect]], [[Session.forceUnpublish]] or 
-     * [[Session.updateConnection]].
+     * Updates every property of the Session with the current status it has in OpenVidu Server. This is especially useful for accessing the list of
+     * Connections of the Session ([[Session.connections]], [[Session.activeConnections]]) and use those values to call [[Session.forceDisconnect]],
+     * [[Session.forceUnpublish]] or [[Session.updateConnection]].
      *
      * To update all Session objects owned by OpenVidu object at once, call [[OpenVidu.fetch]]
      *
@@ -203,7 +213,7 @@ export class Session {
         return new Promise<boolean>((resolve, reject) => {
             const beforeJSON: string = JSON.stringify(this, this.removeCircularOpenViduReference);
             axios.get(
-                this.ov.host + OpenVidu.API_SESSIONS + '/' + this.sessionId,
+                this.ov.host + OpenVidu.API_SESSIONS + '/' + this.sessionId + '?pendingConnections=true',
                 {
                     headers: {
                         'Authorization': this.ov.basicAuth,
@@ -230,22 +240,14 @@ export class Session {
     }
 
     /**
-     * Forces the user with Connection `connectionId` to leave the session, or invalidates the [[Token]] associated with that
-     * `connectionId` if no user has used it yet.
-     *
-     * In the first case you can get `connection` parameter from [[Session.activeConnections]] array (remember to call [[Session.fetch]] before
-     * to fetch the current actual properties of the Session from OpenVidu Server). As a result, OpenVidu Browser will trigger the proper
-     * events on the client-side (`streamDestroyed`, `connectionDestroyed`, `sessionDisconnected`) with reason set to `"forceDisconnectByServer"`.
-     * 
-     * In the second case you can get `connectionId` parameter with [[Token.connectionId]]. As a result, the token will be invalidated
-     * and no user will be able to connect to the session with it.
+     * Removes a Connection from the Session.
      * 
      * This method automatically updates the properties of the local affected objects. This means that there is no need to call
-     * [[Session.fetch]] to see the changes consequence of the execution of this method applied in the local objects.
+     * [[Session.fetch]] or [[OpenVidu.fetch]] to see the changes consequence of the execution of this method applied in the local objects.
      *
      * @param connection The Connection object to disconnect from the session, or its `connectionId` property
      * 
-     * @returns A Promise that is resolved if the user was successfully disconnected and rejected with an Error object if not
+     * @returns A Promise that is resolved if the Connection was successfully removed from the Session and rejected with an Error object if not
      */
     public forceDisconnect(connection: string | Connection): Promise<any> {
         return new Promise<any>((resolve, reject) => {
@@ -261,9 +263,9 @@ export class Session {
                 .then(res => {
                     if (res.status === 204) {
                         // SUCCESS response from openvidu-server
-                        // Remove connection from activeConnections array
+                        // Remove connection from connections array
                         let connectionClosed;
-                        this.activeConnections = this.activeConnections.filter(con => {
+                        this.connections = this.connections.filter(con => {
                             if (con.connectionId !== connectionId) {
                                 return true;
                             } else {
@@ -274,7 +276,7 @@ export class Session {
                         // Remove every Publisher of the closed connection from every subscriber list of other connections
                         if (!!connectionClosed) {
                             connectionClosed.publishers.forEach(publisher => {
-                                this.activeConnections.forEach(con => {
+                                this.connections.forEach(con => {
                                     con.subscribers = con.subscribers.filter(subscriber => {
                                         // tslint:disable:no-string-literal
                                         if (!!subscriber['streamId']) {
@@ -289,8 +291,9 @@ export class Session {
                                 });
                             });
                         } else {
-                            console.warn("The closed connection wasn't fetched in OpenVidu Java Client. No changes in the collection of active connections of the Session");
+                            console.warn("The closed connection wasn't fetched in OpenVidu Node Client. No changes in the collection of active connections of the Session");
                         }
+                        this.updateActiveConnectionsArray();
                         console.log("Connection '" + connectionId + "' closed");
                         resolve();
                     } else {
@@ -309,10 +312,10 @@ export class Session {
      * OpenVidu Browser will trigger the proper events on the client-side (`streamDestroyed`) with reason set to `"forceUnpublishByServer"`.
      *
      * You can get `publisher` parameter from [[Connection.publishers]] array ([[Publisher.streamId]] for getting each `streamId` property).
-     * Remember to call [[Session.fetch]] before to fetch the current actual properties of the Session from OpenVidu Server
+     * Remember to call [[Session.fetch]] or [[OpenVidu.fetch]] before to fetch the current actual properties of the Session from OpenVidu Server
      *
      * This method automatically updates the properties of the local affected objects. This means that there is no need to call
-     * [[Session.fetch]] to see the changes consequence of the execution of this method applied in the local objects.
+     * [[Session.fetch]] or [[OpenVidu.fetch]] to see the changes consequence of the execution of this method applied in the local objects.
      * 
      * @returns A Promise that is resolved if the stream was successfully unpublished and rejected with an Error object if not
      */
@@ -331,7 +334,7 @@ export class Session {
                 .then(res => {
                     if (res.status === 204) {
                         // SUCCESS response from openvidu-server
-                        this.activeConnections.forEach(connection => {
+                        this.connections.forEach(connection => {
                             // Try to remove the Publisher from the Connection publishers collection
                             connection.publishers = connection.publishers.filter(pub => pub.streamId !== streamId);
                             // Try to remove the Publisher from the Connection subscribers collection
@@ -347,6 +350,7 @@ export class Session {
                                 }
                             }
                         });
+                        this.updateActiveConnectionsArray();
                         console.log("Stream '" + streamId + "' unpublished");
                         resolve();
                     } else {
@@ -366,16 +370,10 @@ export class Session {
      * - [[ConnectionOptions.role]]
      * - [[ConnectionOptions.record]]
      * 
-     * The `connectionId` parameter can be obtained from a Connection object with
-     * [[Connection.connectionId]], in which case the updated properties will
-     * modify an active Connection. But `connectionId` can also be obtained from a
-     * Token with [[Token.connectionId]], which allows modifying a still not used token.
-     * 
      * This method automatically updates the properties of the local affected objects. This means that there is no need to call
-     * [[Session.fetch]] to see the changes consequence of the execution of this method applied in the local objects.
+     * [[Session.fetch]] or [[OpenVidu.fetch]] to see the changes consequence of the execution of this method applied in the local objects.
      * 
-     * @param connectionId The [[Connection.connectionId]] property of the Connection object to modify,
-     *                     or the [[Token.connectionId]] property of a still not used token to modify
+     * @param connectionId The [[Connection.connectionId]] of the Connection object to modify
      * @param connectionOptions A new [[ConnectionOptions]] object with the updated values to apply
      * 
      * @returns A Promise that is resolved to the updated [[Connection]] object if the operation was
@@ -404,15 +402,17 @@ export class Session {
                         return;
                     }
                     // Update the actual Connection object with the new options
-                    const existingConnection: Connection = this.activeConnections.find(con => con.connectionId === connectionId);
+                    const existingConnection: Connection = this.connections.find(con => con.connectionId === connectionId);
                     if (!existingConnection) {
                         // The updated Connection is not available in local map
                         const newConnection: Connection = new Connection(res.data);
-                        this.activeConnections.push(newConnection);
+                        this.connections.push(newConnection);
+                        this.updateActiveConnectionsArray();
                         resolve(newConnection);
                     } else {
                         // The updated Connection was available in local map
                         existingConnection.overrideConnectionOptions(connectionOptions);
+                        this.updateActiveConnectionsArray();
                         resolve(existingConnection);
                     }
                 }).catch(error => {
@@ -513,11 +513,17 @@ export class Session {
             this.properties.defaultCustomLayout = defaultCustomLayout;
         }
 
+        this.connections = [];
         this.activeConnections = [];
-        json.connections.content.forEach(jsonConnection => this.activeConnections.push(new Connection(jsonConnection)));
+        json.connections.content.forEach(jsonConnection => {
+            const con = new Connection(jsonConnection);
+            this.connections.push(con);
+        });
 
         // Order connections by time of creation
-        this.activeConnections.sort((c1, c2) => (c1.createdAt > c2.createdAt) ? 1 : ((c2.createdAt > c1.createdAt) ? -1 : 0));
+        this.connections.sort((c1, c2) => (c1.createdAt > c2.createdAt) ? 1 : ((c2.createdAt > c1.createdAt) ? -1 : 0));
+        // Populate activeConnections array
+        this.updateActiveConnectionsArray();
         return this;
     }
 
@@ -529,13 +535,13 @@ export class Session {
             this.sessionId === other.sessionId &&
             this.createdAt === other.createdAt &&
             this.recording === other.recording &&
-            this.activeConnections.length === other.activeConnections.length &&
+            this.connections.length === other.connections.length &&
             JSON.stringify(this.properties) === JSON.stringify(other.properties)
         );
         if (equals) {
             let i = 0;
-            while (equals && i < this.activeConnections.length) {
-                equals = this.activeConnections[i].equalTo(other.activeConnections[i]);
+            while (equals && i < this.connections.length) {
+                equals = this.connections[i].equalTo(other.connections[i]);
                 i++;
             }
             return equals;
@@ -553,6 +559,18 @@ export class Session {
         } else {
             return value;
         }
+    }
+
+    /**
+     * @hidden
+     */
+    private updateActiveConnectionsArray() {
+        this.activeConnections = [];
+        this.connections.forEach(con => {
+            if (con.status === 'active') {
+                this.activeConnections.push(con);
+            }
+        });
     }
 
     /**

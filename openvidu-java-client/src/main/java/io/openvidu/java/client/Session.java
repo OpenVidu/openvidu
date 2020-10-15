@@ -19,7 +19,6 @@ package io.openvidu.java.client;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -49,7 +48,7 @@ public class Session {
 	private long createdAt;
 	private OpenVidu openVidu;
 	private SessionProperties properties;
-	private Map<String, Connection> activeConnections = new ConcurrentHashMap<>();
+	private Map<String, Connection> connections = new ConcurrentHashMap<>();
 	private boolean recording = false;
 
 	protected Session(OpenVidu openVidu) throws OpenViduJavaClientException, OpenViduHttpException {
@@ -165,7 +164,7 @@ public class Session {
 	 * Session.forceDisconnect()} to invalidate the token if no client has used it
 	 * yet or force the connected client to leave the session if it has.</li>
 	 * <li>Call
-	 * {@link io.openvidu.java.client.Session#updateConnection(String, TokenOptions)
+	 * {@link io.openvidu.java.client.Session#updateConnection(String, ConnectionOptions)
 	 * Session.updateConnection()} to update the
 	 * {@link io.openvidu.java.client.Connection Connection} options. And this is
 	 * valid for unused tokens, but also for already used tokens, so you can
@@ -254,7 +253,7 @@ public class Session {
 	 * those values to call
 	 * {@link io.openvidu.java.client.Session#forceDisconnect(Connection)},
 	 * {@link io.openvidu.java.client.Session#forceUnpublish(Publisher)} or
-	 * {@link io.openvidu.java.client.Session#updateConnection(String, TokenOptions)}.<br>
+	 * {@link io.openvidu.java.client.Session#updateConnection(String, ConnectionOptions)}.<br>
 	 * <br>
 	 * 
 	 * To update all Session objects owned by OpenVidu object at once, call
@@ -269,7 +268,8 @@ public class Session {
 	 */
 	public boolean fetch() throws OpenViduJavaClientException, OpenViduHttpException {
 		final String beforeJSON = this.toJson();
-		HttpGet request = new HttpGet(this.openVidu.hostname + OpenVidu.API_SESSIONS + "/" + this.sessionId);
+		HttpGet request = new HttpGet(
+				this.openVidu.hostname + OpenVidu.API_SESSIONS + "/" + this.sessionId + "?pendingConnections=true");
 		request.setHeader(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded");
 
 		HttpResponse response;
@@ -371,13 +371,13 @@ public class Session {
 			int statusCode = response.getStatusLine().getStatusCode();
 			if ((statusCode == org.apache.http.HttpStatus.SC_NO_CONTENT)) {
 				// Remove connection from activeConnections map
-				Connection connectionClosed = this.activeConnections.remove(connectionId);
+				Connection connectionClosed = this.connections.remove(connectionId);
 				// Remove every Publisher of the closed connection from every subscriber list of
 				// other connections
 				if (connectionClosed != null) {
 					for (Publisher publisher : connectionClosed.getPublishers()) {
 						String streamId = publisher.getStreamId();
-						for (Connection connection : this.activeConnections.values()) {
+						for (Connection connection : this.connections.values()) {
 							connection.setSubscribers(connection.getSubscribers().stream()
 									.filter(subscriber -> !streamId.equals(subscriber)).collect(Collectors.toList()));
 						}
@@ -464,7 +464,7 @@ public class Session {
 		try {
 			int statusCode = response.getStatusLine().getStatusCode();
 			if ((statusCode == org.apache.http.HttpStatus.SC_NO_CONTENT)) {
-				for (Connection connection : this.activeConnections.values()) {
+				for (Connection connection : this.connections.values()) {
 					// Try to remove the Publisher from the Connection publishers collection
 					if (connection.publishers.remove(streamId) != null) {
 						continue;
@@ -493,21 +493,14 @@ public class Session {
 	 * </ul>
 	 * <br>
 	 * 
-	 * The <code>connectionId</code> parameter can be obtained from a Connection
-	 * object with {@link io.openvidu.java.client.Connection#getConnectionId()
-	 * Connection.getConnectionId()}, in which case the updated properties will
-	 * modify an active Connection. But <code>connectionId</code> can also be
-	 * obtained from a Token with {@link Token#getConnectionId()}, which allows
-	 * modifying a still not used token.<br>
-	 * <br>
-	 * 
 	 * This method automatically updates the properties of the local affected
 	 * objects. This means that there is no need to call
-	 * {@link io.openvidu.java.client.Session#fetch() Session.fetch()} to see the
+	 * {@link io.openvidu.java.client.Session#fetch() Session.fetch()} or
+	 * {@link io.openvidu.java.client.OpenVidu#fetch() OpenVidu.fetch()} to see the
 	 * changes consequence of the execution of this method applied in the local
 	 * objects.
 	 * 
-	 * @param connectionId      The Connection (or a still not used Token) to modify
+	 * @param connectionId      The Connection to modify
 	 * @param connectionOptions A ConnectionOptions object with the new values to
 	 *                          apply
 	 * 
@@ -551,12 +544,12 @@ public class Session {
 			JsonObject json = httpResponseToJson(response);
 
 			// Update the actual Connection object with the new options
-			Connection existingConnection = this.activeConnections.get(connectionId);
+			Connection existingConnection = this.connections.get(connectionId);
 
 			if (existingConnection == null) {
 				// The updated Connection is not available in local map
 				Connection newConnection = new Connection(json);
-				this.activeConnections.put(connectionId, newConnection);
+				this.connections.put(connectionId, newConnection);
 				return newConnection;
 			} else {
 				// The updated Connection was available in local map
@@ -570,27 +563,55 @@ public class Session {
 	}
 
 	/**
-	 * Returns the list of active connections to the session. <strong>This value
-	 * will remain unchanged since the last time method
-	 * {@link io.openvidu.java.client.Session#fetch()} was called</strong>.
-	 * Exceptions to this rule are:
+	 * Returns a Connection of the Session. This method only returns the local
+	 * available object and does not query OpenVidu Server. To get the current
+	 * actual value you must call first
+	 * {@link io.openvidu.java.client.Session#fetch() Session.fetch()} or
+	 * {@link io.openvidu.java.client.OpenVidu#fetch() OpenVidu.fetch()}.
+	 */
+	public Connection getConnection(String id) {
+		return this.connections.get(id);
+	}
+
+	/**
+	 * Returns all the Connections of the Session. This method only returns the
+	 * local available objects and does not query OpenVidu Server. To get the
+	 * current actual value you must call first
+	 * {@link io.openvidu.java.client.Session#fetch() Session.fetch()} or
+	 * {@link io.openvidu.java.client.OpenVidu#fetch() OpenVidu.fetch()}.
+	 */
+	public List<Connection> getConnections() {
+		return this.connections.values().stream().collect(Collectors.toList());
+	}
+
+	/**
+	 * Returns the list of active Connections of the Session. These are the
+	 * Connections returning <code>active</code> in response to
+	 * {@link io.openvidu.java.client.Connection#getStatus()}. This method only
+	 * returns the local available objects and does not query OpenVidu Server.
+	 * <strong>The list of active Connections will remain unchanged since the last
+	 * time method {@link io.openvidu.java.client.Session#fetch() Session.fetch()}
+	 * or {@link io.openvidu.java.client.OpenVidu#fetch() OpenVidu.fetch()} was
+	 * called</strong>. Exceptions to this rule are:
 	 * <ul>
 	 * <li>Calling {@link io.openvidu.java.client.Session#forceUnpublish(String)}
 	 * automatically updates each affected local Connection object.</li>
 	 * <li>Calling {@link io.openvidu.java.client.Session#forceDisconnect(String)}
 	 * automatically updates each affected local Connection object.</li>
 	 * <li>Calling
-	 * {@link io.openvidu.java.client.Session#updateConnection(String, TokenOptions)}
+	 * {@link io.openvidu.java.client.Session#updateConnection(String, ConnectionOptions)}
 	 * automatically updates the attributes of the affected local Connection
 	 * object.</li>
 	 * </ul>
 	 * <br>
 	 * To get the list of active connections with their current actual value, you
-	 * must call first {@link io.openvidu.java.client.Session#fetch()} and then
-	 * {@link io.openvidu.java.client.Session#getActiveConnections()}.
+	 * must call first {@link io.openvidu.java.client.Session#fetch()
+	 * Session.fetch()} or {@link io.openvidu.java.client.OpenVidu#fetch()
+	 * OpenVidu.fetch()}.
 	 */
 	public List<Connection> getActiveConnections() {
-		return new ArrayList<>(this.activeConnections.values());
+		return this.connections.values().stream().filter(con -> "active".equals(con.getStatus()))
+				.collect(Collectors.toList());
 	}
 
 	/**
@@ -694,10 +715,10 @@ public class Session {
 		}
 		this.properties = builder.build();
 		JsonArray jsonArrayConnections = (json.get("connections").getAsJsonObject()).get("content").getAsJsonArray();
-		this.activeConnections.clear();
+		this.connections.clear();
 		jsonArrayConnections.forEach(connectionJsonElement -> {
 			Connection connectionObj = new Connection(connectionJsonElement.getAsJsonObject());
-			this.activeConnections.put(connectionObj.getConnectionId(), connectionObj);
+			this.connections.put(connectionObj.getConnectionId(), connectionObj);
 		});
 		return this;
 	}
@@ -714,9 +735,9 @@ public class Session {
 		json.addProperty("defaultRecordingLayout", this.properties.defaultRecordingLayout().name());
 		json.addProperty("defaultCustomLayout", this.properties.defaultCustomLayout());
 		JsonObject connections = new JsonObject();
-		connections.addProperty("numberOfElements", this.getActiveConnections().size());
+		connections.addProperty("numberOfElements", this.getConnections().size());
 		JsonArray jsonArrayConnections = new JsonArray();
-		this.getActiveConnections().forEach(con -> {
+		this.getConnections().forEach(con -> {
 			jsonArrayConnections.add(con.toJson());
 		});
 		connections.add("content", jsonArrayConnections);

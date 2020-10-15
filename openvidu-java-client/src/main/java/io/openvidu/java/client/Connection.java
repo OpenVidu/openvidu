@@ -26,7 +26,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 /**
- * See {@link io.openvidu.java.client.Session#getActiveConnections()}
+ * See {@link io.openvidu.java.client.Session#getConnections()}
  */
 public class Connection {
 

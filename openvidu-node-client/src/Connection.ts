@@ -20,7 +20,7 @@ import { Publisher } from './Publisher';
 import { ConnectionOptions } from './ConnectionOptions';
 
 /**
- * See [[Session.activeConnections]]
+ * See [[Session.connections]]
  */
 export class Connection {
 
