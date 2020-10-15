@@ -28,10 +28,11 @@ if [[ "${CERTIFICATE_TYPE}" == "letsencrypt" && \
 fi
 
 # Global variables
-CERTIFICATES_FOLDER=/etc/letsencrypt/live
-CERTIFICATES_CONF="${CERTIFICATES_FOLDER}/certificates.conf"
+CERTIFICATES_FOLDER=/etc/letsencrypt
+CERTIFICATES_LIVE_FOLDER="${CERTIFICATES_FOLDER}/live"
+CERTIFICATES_CONF="${CERTIFICATES_LIVE_FOLDER}/certificates.conf"
 
-[ ! -d "${CERTIFICATES_FOLDER}" ] && mkdir -p "${CERTIFICATES_FOLDER}"
+[ ! -d "${CERTIFICATES_LIVE_FOLDER}" ] && mkdir -p "${CERTIFICATES_LIVE_FOLDER}"
 [ ! -f "${CERTIFICATES_CONF}" ] && touch "${CERTIFICATES_CONF}"
 [ -z "${PROXY_HTTP_PORT}" ] && export PROXY_HTTP_PORT=80
 [ -z "${PROXY_HTTPS_PORT}" ] && export PROXY_HTTPS_PORT=443
@@ -40,10 +41,6 @@ CERTIFICATES_CONF="${CERTIFICATES_FOLDER}/certificates.conf"
 [ -z "${PROXY_MODE}" ] && export PROXY_MODE=CE
 [ -z "${ALLOWED_ACCESS_TO_DASHBOARD}" ] && export ALLOWED_ACCESS_TO_DASHBOARD=all
 [ -z "${ALLOWED_ACCESS_TO_RESTAPI}" ] && export ALLOWED_ACCESS_TO_RESTAPI=all
-
-# Start with default certbot conf
-sed -i "s/{http_port}/${PROXY_HTTP_PORT}/" /etc/nginx/conf.d/default.conf
-nginx -g "daemon on;"
 
 # Show input enviroment variables
 printf "\n  ======================================="
@@ -71,6 +68,7 @@ printf "\n  ======================================="
 printf "\n"
 
 printf "\n  Configure %s domain..." "${DOMAIN_OR_PUBLIC_IP}"
+OLD_DOMAIN_OR_PUBLIC_IP=$(grep "${DOMAIN_OR_PUBLIC_IP}" "${CERTIFICATES_CONF}" | cut -f1 -d$'\t')
 CERTIFICATED_OLD_CONFIG=$(grep "${DOMAIN_OR_PUBLIC_IP}" "${CERTIFICATES_CONF}" | cut -f2 -d$'\t')
 
 printf "\n    - New configuration: %s" "${CERTIFICATE_TYPE}"
@@ -80,32 +78,39 @@ if [ -z "${CERTIFICATED_OLD_CONFIG}" ]; then
 else
   printf "\n    - Old configuration: %s" "${CERTIFICATED_OLD_CONFIG}"
 
-  if [ "${CERTIFICATED_OLD_CONFIG}" != "${CERTIFICATE_TYPE}" ]; then
-    printf "\n    - Restarting configuration... Removing old certificated..."
+  if [ "${CERTIFICATED_OLD_CONFIG}" != "${CERTIFICATE_TYPE}" ] || \
+  [ "${OLD_DOMAIN_OR_PUBLIC_IP}" != "${DOMAIN_OR_PUBLIC_IP}" ]; then
 
-    rm -rf "${CERTIFICATES_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}/"*
+    printf "\n    - Restarting configuration... Removing old certificated..."
+    # Recreate certificates folder
+    rm -rf "${CERTIFICATES_FOLDER:?}"
+    mkdir -p "${CERTIFICATES_LIVE_FOLDER}"
+    touch "${CERTIFICATES_CONF}"
   fi
 fi
 
 # Save actual conf
-sed -i "/${DOMAIN_OR_PUBLIC_IP}/d" "${CERTIFICATES_CONF}"
-echo -e "${DOMAIN_OR_PUBLIC_IP}\t${CERTIFICATE_TYPE}" >> "${CERTIFICATES_CONF}"
+echo -e "${DOMAIN_OR_PUBLIC_IP}\t${CERTIFICATE_TYPE}" > "${CERTIFICATES_CONF}"
+
+# Start with default certbot conf
+sed -i "s/{http_port}/${PROXY_HTTP_PORT}/" /etc/nginx/conf.d/default.conf
+nginx -g "daemon on;"
 
 case ${CERTIFICATE_TYPE} in
 
   "selfsigned")
-    if [[ ! -f "${CERTIFICATES_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}/privkey.pem" && \
-          ! -f "${CERTIFICATES_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}/fullchain.pem" ]]; then
+    if [[ ! -f "${CERTIFICATES_LIVE_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}/privkey.pem" && \
+          ! -f "${CERTIFICATES_LIVE_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}/fullchain.pem" ]]; then
       printf "\n    - Generating selfsigned certificate...\n"
       
       # Delete and create certificate folder
-      rm -rf "${CERTIFICATES_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}" | true
-      mkdir -p "${CERTIFICATES_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}" 
+      rm -rf "${CERTIFICATES_LIVE_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}" | true
+      mkdir -p "${CERTIFICATES_LIVE_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}" 
 
       openssl req -new -nodes -x509 \
         -subj "/CN=${DOMAIN_OR_PUBLIC_IP}" -days 365 \
-        -keyout "${CERTIFICATES_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}/privkey.pem" \
-        -out "${CERTIFICATES_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}/fullchain.pem" \
+        -keyout "${CERTIFICATES_LIVE_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}/privkey.pem" \
+        -out "${CERTIFICATES_LIVE_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}/fullchain.pem" \
         -extensions v3_ca
     else
       printf "\n    - Selfsigned certificate already exists, using them..."
@@ -113,16 +118,16 @@ case ${CERTIFICATE_TYPE} in
     ;;
 
   "owncert")
-    if [[ ! -f "${CERTIFICATES_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}/privkey.pem" && \
-          ! -f "${CERTIFICATES_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}/fullchain.pem" ]]; then
+    if [[ ! -f "${CERTIFICATES_LIVE_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}/privkey.pem" && \
+          ! -f "${CERTIFICATES_LIVE_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}/fullchain.pem" ]]; then
       printf "\n    - Copying owmcert certificate..."
 
       # Delete and create certificate folder
-      rm -rf "${CERTIFICATES_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}" | true
-      mkdir -p "${CERTIFICATES_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}" 
+      rm -rf "${CERTIFICATES_LIVE_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}" | true
+      mkdir -p "${CERTIFICATES_LIVE_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}" 
 
-      cp /owncert/certificate.key "${CERTIFICATES_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}/privkey.pem"
-      cp /owncert/certificate.cert "${CERTIFICATES_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}/fullchain.pem"
+      cp /owncert/certificate.key "${CERTIFICATES_LIVE_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}/privkey.pem"
+      cp /owncert/certificate.cert "${CERTIFICATES_LIVE_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}/fullchain.pem"
     else
       printf "\n    - Owmcert certificate already exists, using them..."
     fi
@@ -133,12 +138,12 @@ case ${CERTIFICATE_TYPE} in
     /usr/sbin/crond -f &
     echo '0 */12 * * * certbot renew --post-hook "nginx -s reload" >> /var/log/cron-letsencrypt.log' | crontab - # Auto renew cert
 
-    if [[ ! -f "${CERTIFICATES_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}/privkey.pem" && \
-          ! -f "${CERTIFICATES_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}/fullchain.pem" ]]; then
+    if [[ ! -f "${CERTIFICATES_LIVE_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}/privkey.pem" && \
+          ! -f "${CERTIFICATES_LIVE_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}/fullchain.pem" ]]; then
       printf "\n    - Requesting LetsEncrypt certificate..."
 
       # Delete certificate folder
-      rm -rf "${CERTIFICATES_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}" | true
+      rm -rf "${CERTIFICATES_LIVE_FOLDER:?}/${DOMAIN_OR_PUBLIC_IP}" | true
 
       certbot certonly -n --webroot -w /var/www/certbot \
                                     -m "${LETSENCRYPT_EMAIL}" \
