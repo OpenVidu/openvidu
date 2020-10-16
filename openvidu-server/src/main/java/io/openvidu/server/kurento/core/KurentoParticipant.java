@@ -568,6 +568,7 @@ public class KurentoParticipant extends Participant {
 		return this.sharedJson(MediaEndpoint::toJson);
 	}
 
+	@Override
 	public JsonObject withStatsToJson() {
 		return this.sharedJson(MediaEndpoint::withStatsToJson);
 	}

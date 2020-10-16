@@ -20,7 +20,9 @@ package io.openvidu.server.rest;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -177,25 +179,25 @@ public class SessionRestController {
 		log.info("New session {} initialized {}", sessionId, this.sessionManager.getSessionsWithNotActive().stream()
 				.map(Session::getSessionId).collect(Collectors.toList()).toString());
 
-		return new ResponseEntity<>(sessionNotActive.toJson().toString(), RestUtils.getResponseHeaders(),
+		return new ResponseEntity<>(sessionNotActive.toJson(false, false).toString(), RestUtils.getResponseHeaders(),
 				HttpStatus.OK);
 	}
 
 	@RequestMapping(value = "/sessions/{sessionId}", method = RequestMethod.GET)
 	public ResponseEntity<?> getSession(@PathVariable("sessionId") String sessionId,
+			@RequestParam(value = "pendingConnections", defaultValue = "false", required = false) boolean pendingConnections,
 			@RequestParam(value = "webRtcStats", defaultValue = "false", required = false) boolean webRtcStats) {
 
 		log.info("REST API: GET {}/sessions/{}", RequestMappings.API, sessionId);
 
 		Session session = this.sessionManager.getSession(sessionId);
 		if (session != null) {
-			JsonObject response = (webRtcStats == true) ? session.withStatsToJson() : session.toJson();
+			JsonObject response = session.toJson(pendingConnections, webRtcStats);
 			return new ResponseEntity<>(response.toString(), RestUtils.getResponseHeaders(), HttpStatus.OK);
 		} else {
 			Session sessionNotActive = this.sessionManager.getSessionNotActive(sessionId);
 			if (sessionNotActive != null) {
-				JsonObject response = (webRtcStats == true) ? sessionNotActive.withStatsToJson()
-						: sessionNotActive.toJson();
+				JsonObject response = sessionNotActive.toJson(pendingConnections, webRtcStats);
 				return new ResponseEntity<>(response.toString(), RestUtils.getResponseHeaders(), HttpStatus.OK);
 			} else {
 				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -205,15 +207,16 @@ public class SessionRestController {
 
 	@RequestMapping(value = "/sessions", method = RequestMethod.GET)
 	public ResponseEntity<?> listSessions(
+			@RequestParam(value = "pendingConnections", defaultValue = "false", required = false) boolean pendingConnections,
 			@RequestParam(value = "webRtcStats", defaultValue = "false", required = false) boolean webRtcStats) {
 
-		log.info("REST API: GET {}/sessions?webRtcStats={}", RequestMappings.API, webRtcStats);
+		log.info("REST API: GET {}/sessions", RequestMappings.API);
 
 		Collection<Session> sessions = this.sessionManager.getSessionsWithNotActive();
 		JsonObject json = new JsonObject();
 		JsonArray jsonArray = new JsonArray();
-		sessions.forEach(s -> {
-			JsonObject sessionJson = (webRtcStats == true) ? s.withStatsToJson() : s.toJson();
+		sessions.forEach(session -> {
+			JsonObject sessionJson = session.toJson(pendingConnections, webRtcStats);
 			jsonArray.add(sessionJson);
 		});
 		json.addProperty("numberOfElements", sessions.size());
@@ -735,6 +738,51 @@ public class SessionRestController {
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
 
+	@RequestMapping(value = "/sessions/{sessionId}/connection/{connectionId}", method = RequestMethod.GET)
+	public ResponseEntity<?> getConnection(@PathVariable("sessionId") String sessionId,
+			@PathVariable("connectionId") String connectionId) {
+
+		log.info("REST API: GET {}/sessions/{}/connection/{}", RequestMappings.API, sessionId, connectionId);
+
+		Session session = this.sessionManager.getSessionWithNotActive(sessionId);
+		if (session != null) {
+			Participant p = session.getParticipantByPublicId(connectionId);
+			if (p != null) {
+				return new ResponseEntity<>(p.toJson().toString(), RestUtils.getResponseHeaders(), HttpStatus.OK);
+			} else {
+				Token t = getTokenFromConnectionId(connectionId, session.getTokenIterator());
+				if (t != null) {
+					return new ResponseEntity<>(t.toJsonAsParticipant().toString(), RestUtils.getResponseHeaders(),
+							HttpStatus.OK);
+				} else {
+					return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+				}
+			}
+		} else {
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		}
+	}
+
+	@RequestMapping(value = "/sessions/{sessionId}/connection", method = RequestMethod.GET)
+	public ResponseEntity<?> listConnections(@PathVariable("sessionId") String sessionId,
+			@RequestParam(value = "pendingConnections", defaultValue = "true", required = false) boolean pendingConnections,
+			@RequestParam(value = "webRtcStats", defaultValue = "false", required = false) boolean webRtcStats) {
+
+		log.info("REST API: GET {}/sessions/{}/connection", RequestMappings.API, sessionId);
+
+		Session session = this.sessionManager.getSessionWithNotActive(sessionId);
+
+		if (session != null) {
+			JsonObject json = new JsonObject();
+			JsonArray jsonArray = session.getSnapshotOfConnectionsAsJsonArray(pendingConnections, webRtcStats);
+			json.addProperty("numberOfElements", jsonArray.size());
+			json.add("content", jsonArray);
+			return new ResponseEntity<>(json.toString(), RestUtils.getResponseHeaders(), HttpStatus.OK);
+		} else {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
+	}
+
 	@RequestMapping(value = "/sessions/{sessionId}/connection", method = RequestMethod.POST)
 	public ResponseEntity<?> publishIpcam(@PathVariable("sessionId") String sessionId, @RequestBody Map<?, ?> params) {
 
@@ -810,6 +858,19 @@ public class SessionRestController {
 		} else {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
+	}
+
+	protected Token getTokenFromConnectionId(String connectionId, Iterator<Entry<String, Token>> iterator) {
+		boolean found = false;
+		Token token = null;
+		while (iterator.hasNext() && !found) {
+			Token tAux = iterator.next().getValue();
+			found = tAux.getConnectionId().equals(connectionId);
+			if (found) {
+				token = tAux;
+			}
+		}
+		return token;
 	}
 
 	protected ResponseEntity<String> generateErrorResponse(String errorMessage, String path, HttpStatus status) {

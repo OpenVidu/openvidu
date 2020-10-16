@@ -31,6 +31,7 @@ import io.openvidu.java.client.OpenViduHttpException;
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.java.client.Recording;
 import io.openvidu.java.client.Session;
+import io.openvidu.java.client.Token;
 import io.openvidu.test.browsers.utils.CustomHttpClient;
 import io.openvidu.test.browsers.utils.Unzipper;
 
@@ -380,6 +381,23 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		/** GET /openvidu/api/health **/
 		restClient.rest(HttpMethod.GET, "/openvidu/api/health", null, HttpStatus.SC_OK, true, true, true,
 				"{'status':'UP'}");
+	}
+
+	@Test
+	@DisplayName("openvidu-java-client PRO test")
+	void openViduJavaClientProTest() throws Exception {
+		Session session = OV.createSession();
+		Assert.assertFalse(session.fetch());
+		Token token = session.createToken();
+		Assert.assertTrue(session.fetch());
+		Connection connection = session.getConnection(token.getConnectionId());
+		Assert.assertEquals("Wrong role property", OpenViduRole.PUBLISHER, connection.getRole());
+		Assert.assertTrue("Wrong record property", connection.record());
+		session.updateConnection(connection.getConnectionId(),
+				new ConnectionOptions.Builder().role(OpenViduRole.SUBSCRIBER).record(false).build());
+		Assert.assertEquals("Wrong role property", OpenViduRole.SUBSCRIBER, connection.getRole());
+		Assert.assertFalse("Wrong record property", connection.record());
+		Assert.assertFalse(session.fetch());
 	}
 
 }

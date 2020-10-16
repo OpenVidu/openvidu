@@ -171,7 +171,7 @@ public class Kms {
 		if (withSessions) {
 			JsonArray sessions = new JsonArray();
 			for (KurentoSession session : this.kurentoSessions.values()) {
-				sessions.add(session.toJson());
+				sessions.add(session.toJson(false, false));
 			}
 			json.add("sessions", sessions);
 		}

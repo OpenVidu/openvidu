@@ -42,7 +42,9 @@ import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.Keys;
+import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -64,6 +66,7 @@ import io.openvidu.java.client.RecordingMode;
 import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.java.client.Session;
 import io.openvidu.java.client.SessionProperties;
+import io.openvidu.java.client.Token;
 import io.openvidu.java.client.TokenOptions;
 import io.openvidu.test.browsers.FirefoxUser;
 import io.openvidu.test.browsers.utils.CustomHttpClient;
@@ -2114,8 +2117,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 		log.info("openvidu-java-client test");
 
-		System.out.println(getBase64Screenshot(user));
-
 		user.getDriver().findElement(By.id("one2one-btn")).click();
 
 		final String customSessionId = "openviduJavaClientSession";
@@ -2142,13 +2143,34 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 				.allowedFilters(new String[] { "GStreamerFilter" }).build();
 		TokenOptions tokenOptionsModerator = new TokenOptions.Builder().role(OpenViduRole.MODERATOR)
 				.data(serverDataModerator).kurentoOptions(kurentoOptions).build();
-		String tokenModerator = session.generateToken(tokenOptionsModerator);
+		Token tokenModerator = session.createToken(tokenOptionsModerator);
+		String tokenModeratorString = tokenModerator.getToken();
+		String connectionIdModerator = tokenModerator.getConnectionId();
 
 		TokenOptions tokenOptionsSubscriber = new TokenOptions.Builder().role(OpenViduRole.SUBSCRIBER)
 				.data(serverDataSubscriber).build();
-		String tokenSubscriber = session.generateToken(tokenOptionsSubscriber);
+		Token tokenSubscriber = session.createToken(tokenOptionsSubscriber);
+		String tokenSubscriberString = tokenSubscriber.getToken();
+		String connectionIdSubscriber = tokenSubscriber.getConnectionId();
 
-		Assert.assertFalse("Session.fetch() should return false until a user has connected", session.fetch());
+		Assert.assertTrue("Session.fetch() should return true if new pending connections", session.fetch());
+		Assert.assertFalse("OpenVidu.fetch() should return false after Session.fetch()", OV.fetch());
+
+		Assert.assertEquals("Wrong number of active connections", 0, session.getActiveConnections().size());
+		Assert.assertEquals("Wrong number of connections", 2, session.getConnections().size());
+		Connection connectionModerator = session.getConnection(connectionIdModerator);
+		Connection connectionSubscriber = session.getConnection(connectionIdSubscriber);
+		Assert.assertEquals("Wrong connectionId property", connectionIdModerator,
+				connectionModerator.getConnectionId());
+		Assert.assertEquals("Wrong status property", "pending", connectionModerator.getStatus());
+		Assert.assertEquals("Wrong role property", OpenViduRole.MODERATOR, connectionModerator.getRole());
+		Assert.assertTrue("Wrong record property", connectionModerator.record());
+		Assert.assertNull("Wrong location property", connectionModerator.getLocation());
+		Assert.assertNull("Wrong platform property", connectionModerator.getPlatform());
+		Assert.assertEquals("Wrong createdAt property", 0, connectionModerator.createdAt());
+		Assert.assertNull("Wrong clientData property", connectionModerator.getClientData());
+		Assert.assertEquals("Wrong publishers property", 0, connectionModerator.getPublishers().size());
+		Assert.assertEquals("Wrong subscribers property", 0, connectionModerator.getSubscribers().size());
 
 		// Set client data 1
 		WebElement clientDataInput = user.getDriver().findElement(By.cssSelector("#client-data-input-0"));
@@ -2160,7 +2182,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Thread.sleep(1000);
 		WebElement tokeInput = user.getDriver().findElement(By.cssSelector("#custom-token-div input"));
 		tokeInput.clear();
-		tokeInput.sendKeys(tokenModerator);
+		tokeInput.sendKeys(tokenModeratorString);
 
 		user.getDriver().findElement(By.id("save-btn")).click();
 		Thread.sleep(1000);
@@ -2175,7 +2197,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Thread.sleep(1000);
 		tokeInput = user.getDriver().findElement(By.cssSelector("#custom-token-div input"));
 		tokeInput.clear();
-		tokeInput.sendKeys(tokenSubscriber);
+		tokeInput.sendKeys(tokenSubscriberString);
 
 		user.getDriver().findElement(By.id("save-btn")).click();
 		Thread.sleep(1000);
@@ -2215,17 +2237,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertEquals("Expected 2 active connections but found " + session.getActiveConnections().size(), 2,
 				session.getActiveConnections().size());
 
-		Connection connectionModerator;
-		Connection connectionSubscriber;
-		if (OpenViduRole.MODERATOR.equals(session.getActiveConnections().get(0).getRole())) {
-			connectionModerator = session.getActiveConnections().get(0);
-			connectionSubscriber = session.getActiveConnections().get(1);
-		} else {
-			connectionModerator = session.getActiveConnections().get(1);
-			connectionSubscriber = session.getActiveConnections().get(0);
-		}
-
-		Assert.assertEquals(OpenViduRole.SUBSCRIBER, connectionSubscriber.getRole());
+		// Verify status
+		Assert.assertEquals("Wrong status for moderator connection", "active", connectionModerator.getStatus());
+		Assert.assertEquals("Wrong status for subscriber connection", "active", connectionSubscriber.getStatus());
 
 		// Verify platform
 		Assert.assertTrue("Wrong platform for moderator connection",
@@ -2579,6 +2593,15 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		restClient.rest(HttpMethod.GET, "/openvidu/api/sessions", null, HttpStatus.SC_OK, true, true, false,
 				"{'numberOfElements': 1, 'content': []}");
 
+		/** GET /openvidu/api/sessions/ID/connection (with no connections) **/
+		restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/NOT_EXISTS/connection", HttpStatus.SC_NOT_FOUND);
+		restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection", null, HttpStatus.SC_OK,
+				true, true, true, "{'numberOfElements':0,'content':[]}");
+		restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/NOT_EXISTS/connection/NOT_EXISTS",
+				HttpStatus.SC_BAD_REQUEST);
+		restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/NOT_EXISTS",
+				HttpStatus.SC_NOT_FOUND);
+
 		/** POST /openvidu/api/tokens **/
 		// 400
 		body = "{}";
@@ -2599,6 +2622,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		res = restClient.rest(HttpMethod.POST, "/openvidu/api/tokens", body, HttpStatus.SC_OK, true, false, true,
 				"{'id':'STR','object':'STR','connectionId':'STR','session':'STR','role':'STR','data':'STR','record':true,'token':'STR','kurentoOptions':{'videoMaxSendBandwidth':777,'allowedFilters':['STR']}}");
 		final String token1 = res.get("token").getAsString();
+		final String connectionId1 = res.get("connectionId").getAsString();
 		Assert.assertEquals("JSON return value from /openvidu/api/tokens should have equal srtings in 'id' and 'token'",
 				res.get("id").getAsString(), token1);
 		Assert.assertEquals("Wrong session parameter", "CUSTOM_SESSION_ID", res.get("session").getAsString());
@@ -2608,6 +2632,17 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		res = restClient.rest(HttpMethod.POST, "/openvidu/api/tokens", body, HttpStatus.SC_OK, true, false, true,
 				DEFAULT_JSON_TOKEN);
 		final String token2 = res.get("id").getAsString();
+		final String connectionId2 = res.get("connectionId").getAsString();
+
+		/** GET /openvidu/api/sessions/ID/connection (with pending connections) **/
+		restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection", null, HttpStatus.SC_OK,
+				true, true, false, "{'numberOfElements':2,'content':[]}");
+		restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId1, null,
+				HttpStatus.SC_OK, true, true, true,
+				"{'id':'" + connectionId1 + "','connectionId':'" + connectionId1
+						+ "','object':'connection','status':'pending','sessionId':'CUSTOM_SESSION_ID','token':'"
+						+ token1
+						+ "','role':'MODERATOR','serverData':'SERVER_DATA','record':true,'createdAt':null,'platform':null,'location':null,'clientData':null,'publishers':null,'subscribers':null}");
 
 		/** POST /openvidu/api/signal (NOT ACTIVE SESSION) **/
 		body = "{}";
@@ -2694,6 +2729,20 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertEquals("Expected 4 videos but found " + numberOfVideos, 4, numberOfVideos);
 		Assert.assertTrue("Videos were expected to have audio and video tracks", user.getEventManager()
 				.assertMediaTracks(user.getDriver().findElements(By.tagName("video")), true, true));
+
+		/** GET /openvidu/api/sessions/ID/connection (with active connections) **/
+		restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection", null, HttpStatus.SC_OK,
+				true, true, false, "{'numberOfElements':2,'content':[]}");
+		restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId1, null,
+				HttpStatus.SC_OK, false, true, false,
+				"{'id':'" + connectionId1 + "','connectionId':'" + connectionId1
+						+ "','object':'connection','status':'active','sessionId':'CUSTOM_SESSION_ID','token':'" + token1
+						+ "','role':'MODERATOR','serverData':'SERVER_DATA','record':true}");
+		restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId2, null,
+				HttpStatus.SC_OK, false, true, false,
+				"{'id':'" + connectionId2 + "','connectionId':'" + connectionId2
+						+ "','object':'connection','status':'active','sessionId':'CUSTOM_SESSION_ID','token':'" + token2
+						+ "','role':'PUBLISHER','serverData':'','record':true}");
 
 		/** GET /openvidu/api/recordings (before recording started) **/
 		restClient.rest(HttpMethod.GET, "/openvidu/api/recordings/NOT_EXISTS", HttpStatus.SC_NOT_FOUND);
@@ -3431,6 +3480,185 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 		} finally {
 			CustomWebhook.shutDown();
+		}
+	}
+
+	@Test
+	@DisplayName("OpenVidu SDK fetch test")
+	void openviduSdkFetchTest() throws Exception {
+		isRecordingTest = true;
+
+		setupBrowser("chrome");
+
+		log.info("OpenVidu SDK fetch test");
+
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.id("session-api-btn-0")).click();
+		Thread.sleep(1000);
+
+		Session session = OV.createSession();
+		Assert.assertFalse("Java fetch should be false", OV.fetch());
+		checkNodeFetchChanged(true, true);
+		checkNodeFetchChanged(true, false);
+
+		CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
+		restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", "{'customSessionId':'REST_SESSION'}",
+				HttpStatus.SC_OK);
+		Assert.assertTrue("Java fetch should be true", OV.fetch());
+		Assert.assertFalse("Java fetch should be false", OV.fetch());
+		Assert.assertFalse("Java fetch should be false", session.fetch());
+		checkNodeFetchChanged(true, true);
+		checkNodeFetchChanged(true, false);
+
+		Token token = session.createToken();
+		// TODO: when using createConnection this below should be false!
+		Assert.assertTrue("Java fetch should be true", session.fetch());
+		Assert.assertFalse("Java fetch should be false", OV.fetch());
+		checkNodeFetchChanged(true, true);
+		checkNodeFetchChanged(true, false);
+
+		restClient.rest(HttpMethod.POST, "/openvidu/api/tokens", "{'session':'REST_SESSION'}", HttpStatus.SC_OK);
+		Assert.assertFalse("Fetch should be true", session.fetch());
+		Assert.assertTrue("Fetch should be false", OV.fetch());
+		checkNodeFetchChanged(true, true);
+		checkNodeFetchChanged(true, false);
+
+		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/REST_SESSION", HttpStatus.SC_NO_CONTENT);
+		Assert.assertFalse("Java fetch should be true", session.fetch());
+		Assert.assertTrue("Java fetch should be true", OV.fetch());
+		Assert.assertFalse("Java fetch should be false", OV.fetch());
+		checkNodeFetchChanged(true, true);
+		checkNodeFetchChanged(true, false);
+
+		// Set token and join session
+		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		Thread.sleep(1000);
+		user.getDriver().findElement(By.id("session-settings-btn-0")).click();
+		Thread.sleep(1000);
+		WebElement tokeInput = user.getDriver().findElement(By.cssSelector("#custom-token-div input"));
+		tokeInput.clear();
+		tokeInput.sendKeys(token.getToken());
+		user.getDriver().findElement(By.id("save-btn")).click();
+		Thread.sleep(1000);
+		user.getDriver().findElement(By.className("join-btn")).click();
+
+		user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
+		user.getEventManager().waitUntilEventReaches("accessAllowed", 1);
+		user.getEventManager().waitUntilEventReaches("streamCreated", 1);
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 1);
+
+		user.getDriver().findElement(By.id("session-api-btn-0")).click();
+		Thread.sleep(1000);
+
+		Assert.assertTrue("Java fetch should be true", OV.fetch());
+		Assert.assertFalse("Java fetch should be false", session.fetch());
+		checkNodeFetchChanged(false, true);
+		checkNodeFetchChanged(true, false);
+		checkNodeFetchChanged(true, false);
+
+		// RECORD
+		user.getDriver().findElement(By.id("rec-properties-btn")).click();
+		user.getDriver().findElement(By.id("rec-hasvideo-checkbox")).click();
+		user.getDriver().findElement(By.id("rec-outputmode-select")).click();
+		Thread.sleep(500);
+		user.getDriver().findElement(By.id("option-INDIVIDUAL")).click();
+		Thread.sleep(500);
+
+		user.getDriver().findElement(By.id("start-recording-btn")).click();
+		user.getEventManager().waitUntilEventReaches("recordingStarted", 1);
+
+		// Node SDK should return false as the recording has been started with it
+		checkNodeFetchChanged(false, false);
+		checkNodeFetchChanged(true, false);
+		checkNodeFetchChanged(true, false);
+		// Java SDK should return true as it doesn't know about the recording yet
+		Assert.assertTrue("Java fetch should be true", session.fetch());
+		Assert.assertFalse("Java fetch should be false", OV.fetch());
+
+		OV.stopRecording(session.getSessionId());
+		user.getEventManager().waitUntilEventReaches("recordingStopped", 1);
+		// Java SDK should return false as the recording has been stopped with it
+		Assert.assertFalse("Java fetch should be false", session.fetch());
+		Assert.assertFalse("Java fetch should be false", OV.fetch());
+		// Node SDK should return true as it doesn't know about the recording stooped
+		checkNodeFetchChanged(false, true);
+		checkNodeFetchChanged(false, false);
+		checkNodeFetchChanged(true, false);
+
+		// NEW SUBSCRIBER
+		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		Thread.sleep(1000);
+		user.getDriver().findElement(By.id("add-user-btn")).click();
+		user.getDriver().findElement(By.id("session-name-input-1")).clear();
+		user.getDriver().findElement(By.id("session-name-input-1")).sendKeys(session.getSessionId());
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .publish-checkbox")).click();
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .join-btn")).click();
+		user.getEventManager().waitUntilEventReaches("streamPlaying", 2);
+
+		user.getDriver().findElement(By.id("session-api-btn-0")).click();
+		Thread.sleep(1000);
+		Assert.assertTrue("Java fetch should be true", OV.fetch());
+		Assert.assertFalse("Java fetch should be false", session.fetch());
+		checkNodeFetchChanged(true, true);
+		checkNodeFetchChanged(true, false);
+		checkNodeFetchChanged(false, false);
+
+		// MODIFY STREAM
+		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		Thread.sleep(1000);
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-0 .pub-video-btn")).click();
+		user.getEventManager().waitUntilEventReaches("streamPropertyChanged", 2);
+		user.getDriver().findElement(By.id("session-api-btn-0")).click();
+		Thread.sleep(1000);
+		Assert.assertTrue("Java fetch should be true", session.fetch());
+		Assert.assertFalse("Java fetch should be false", OV.fetch());
+		checkNodeFetchChanged(false, true);
+		checkNodeFetchChanged(true, false);
+		checkNodeFetchChanged(false, false);
+
+		// REMOVE STREAM
+		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		Thread.sleep(1000);
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .sub-btn")).click();
+		user.getDriver().findElement(By.id("session-api-btn-0")).click();
+		Thread.sleep(1000);
+		Assert.assertTrue("Java fetch should be true", OV.fetch());
+		Assert.assertFalse("Java fetch should be false", session.fetch());
+		checkNodeFetchChanged(true, true);
+		checkNodeFetchChanged(true, false);
+		checkNodeFetchChanged(false, false);
+
+		// REMOVE USER
+		user.getDriver().findElement(By.id("close-dialog-btn")).click();
+		Thread.sleep(1000);
+		user.getDriver().findElement(By.cssSelector("#openvidu-instance-1 .leave-btn")).click();
+		user.getEventManager().waitUntilEventReaches("connectionDestroyed", 1);
+		user.getDriver().findElement(By.id("session-api-btn-0")).click();
+		Thread.sleep(1000);
+		Assert.assertTrue("Java fetch should be true", session.fetch());
+		Assert.assertFalse("Java fetch should be false", OV.fetch());
+		checkNodeFetchChanged(false, true);
+		checkNodeFetchChanged(false, false);
+		checkNodeFetchChanged(true, false);
+	}
+
+	private void checkNodeFetchChanged(boolean global, boolean hasChanged) {
+		user.getDriver().findElement(By.id(global ? "list-sessions-btn" : "get-session-btn")).click();
+		user.getWaiter().until(new NodeFetchHasChanged(hasChanged));
+	}
+
+	private class NodeFetchHasChanged implements ExpectedCondition<Boolean> {
+
+		private boolean hasChanged;
+
+		public NodeFetchHasChanged(boolean hasChanged) {
+			this.hasChanged = hasChanged;
+		}
+
+		@Override
+		public Boolean apply(WebDriver driver) {
+			return driver.findElement(By.id("api-response-text-area")).getAttribute("value")
+					.endsWith("Changes: " + hasChanged);
 		}
 	}
 

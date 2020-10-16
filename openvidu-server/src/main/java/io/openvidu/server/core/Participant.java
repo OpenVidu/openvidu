@@ -316,4 +316,8 @@ public class Participant {
 		return json;
 	}
 
+	public JsonObject withStatsToJson() {
+		return null;
+	}
+
 }

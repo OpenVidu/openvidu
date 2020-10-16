@@ -29,7 +29,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +43,6 @@ import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.RecordingLayout;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.server.config.OpenviduConfig;
-import io.openvidu.server.kurento.core.KurentoParticipant;
 import io.openvidu.server.recording.service.RecordingManager;
 import io.openvidu.server.utils.RecordingUtils;
 
@@ -183,10 +182,6 @@ public class Session implements SessionInterface {
 		return deleted;
 	}
 
-	public boolean isTokenValid(String token) {
-		return this.tokens.containsKey(token);
-	}
-
 	public Token consumeToken(String token) {
 		Token tokenObj = this.tokens.remove(token);
 		return tokenObj;
@@ -214,15 +209,30 @@ public class Session implements SessionInterface {
 		}
 	}
 
-	public JsonObject toJson() {
-		return this.sharedJson(KurentoParticipant::toJson);
+	public JsonArray getSnapshotOfConnectionsAsJsonArray(boolean withPendingConnections, boolean withWebrtcStats) {
+
+		Set<Participant> snapshotOfActiveConnections = this.getParticipants().stream().collect(Collectors.toSet());
+		JsonArray jsonArray = new JsonArray();
+		snapshotOfActiveConnections.forEach(participant -> {
+			// Filter recorder participant
+			if (!ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(participant.getParticipantPublicId())) {
+				jsonArray.add(withWebrtcStats ? participant.withStatsToJson() : participant.toJson());
+			}
+		});
+
+		if (withPendingConnections) {
+			Set<Token> snapshotOfPendingConnections = this.tokens.values().stream().collect(Collectors.toSet());
+			// Eliminate duplicates in case some concurrent situation took place
+			Set<String> activeConnectionIds = snapshotOfActiveConnections.stream()
+					.map(participant -> participant.getParticipantPublicId()).collect(Collectors.toSet());
+			snapshotOfPendingConnections.removeIf(token -> activeConnectionIds.contains(token.getConnectionId()));
+			snapshotOfPendingConnections.forEach(token -> jsonArray.add(token.toJsonAsParticipant()));
+		}
+
+		return jsonArray;
 	}
 
-	public JsonObject withStatsToJson() {
-		return this.sharedJson(KurentoParticipant::withStatsToJson);
-	}
-
-	private JsonObject sharedJson(Function<KurentoParticipant, JsonObject> toJsonFunction) {
+	public JsonObject toJson(boolean withPendingConnections, boolean withWebrtcStats) {
 		JsonObject json = new JsonObject();
 		json.addProperty("id", this.sessionId);
 		json.addProperty("object", "session");
@@ -241,12 +251,7 @@ public class Session implements SessionInterface {
 			json.addProperty("customSessionId", this.sessionProperties.customSessionId());
 		}
 		JsonObject connections = new JsonObject();
-		JsonArray participants = new JsonArray();
-		this.participants.values().forEach(p -> {
-			if (!ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(p.getParticipantPublicId())) {
-				participants.add(toJsonFunction.apply((KurentoParticipant) p));
-			}
-		});
+		JsonArray participants = this.getSnapshotOfConnectionsAsJsonArray(withPendingConnections, withWebrtcStats);
 		connections.addProperty("numberOfElements", participants.size());
 		connections.add("content", participants);
 		json.add("connections", connections);

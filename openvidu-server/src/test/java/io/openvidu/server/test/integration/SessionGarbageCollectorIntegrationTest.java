@@ -110,7 +110,7 @@ public class SessionGarbageCollectorIntegrationTest {
 	}
 
 	private JsonObject listSessions() {
-		String stringResponse = (String) sessionRestController.listSessions(false).getBody();
+		String stringResponse = (String) sessionRestController.listSessions(false, false).getBody();
 		return new Gson().fromJson(stringResponse, JsonObject.class);
 	}
 
