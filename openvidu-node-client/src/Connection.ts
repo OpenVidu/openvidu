@@ -100,21 +100,13 @@ export class Connection {
      * @hidden
      */
     constructor(json) {
-        // These properties may be null
-        if (json.publishers != null) {
-            json.publishers.forEach(publisher => {
-                this.publishers.push(new Publisher(publisher));
-            });
-        }
-        if (json.subscribers != null) {
-            json.subscribers.forEach(subscriber => {
-                this.subscribers.push(subscriber.streamId);
-            });
-        }
-        this.createdAt = json.createdAt;
-        this.location = json.location;
-        this.platform = json.platform;
-        this.clientData = json.clientData;
+        this.resetWithJson(json);
+    }
+
+    /**
+     * @hidden
+     */
+    resetWithJson(json): Connection {
 
         // These properties won't ever be null
         this.connectionId = json.connectionId;
@@ -123,6 +115,62 @@ export class Connection {
         this.role = json.role;
         this.serverData = json.serverData;
         this.record = json.record;
+
+        // These properties may be null
+        if (json.publishers != null) {
+
+            // 1. Array to store fetched Publishers and later remove closed ones
+            const fetchedPublisherIds: string[] = [];
+            json.publishers.forEach(jsonPublisher => {
+
+                const publisherObj: Publisher = new Publisher(jsonPublisher);
+                fetchedPublisherIds.push(publisherObj.streamId);
+                let storedPublisher = this.publishers.find(c => c.streamId === publisherObj.streamId);
+
+                if (!!storedPublisher) {
+                    // 2. Update existing Publisher
+                    storedPublisher.resetWithJson(jsonPublisher);
+                } else {
+                    // 3. Add new Publisher
+                    this.publishers.push(publisherObj);
+                }
+            });
+
+            // 4. Remove closed Publishers from local collection
+            for (var i = this.publishers.length - 1; i >= 0; --i) {
+                if (!fetchedPublisherIds.includes(this.publishers[i].streamId)) {
+                    this.publishers.splice(i, 1);
+                }
+            }
+
+        }
+
+        if (json.subscribers != null) {
+
+            // 1. Array to store fetched Subscribers and later remove closed ones
+            const fetchedSubscriberIds: string[] = [];
+            json.subscribers.forEach(jsonSubscriber => {
+                fetchedSubscriberIds.push(jsonSubscriber.streamId)
+                if (this.subscribers.indexOf(jsonSubscriber.streamId) === -1) {
+                    // 2. Add new Subscriber
+                    this.subscribers.push(jsonSubscriber.streamId);
+                }
+            });
+
+            // 3. Remove closed Subscribers from local collection
+            for (var i = this.subscribers.length - 1; i >= 0; --i) {
+                if (!fetchedSubscriberIds.includes(this.subscribers[i])) {
+                    this.subscribers.splice(i, 1);
+                }
+            }
+        }
+
+        this.createdAt = json.createdAt;
+        this.location = json.location;
+        this.platform = json.platform;
+        this.clientData = json.clientData;
+
+        return this;
     }
 
     /**

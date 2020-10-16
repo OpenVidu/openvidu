@@ -19,8 +19,10 @@ package io.openvidu.java.client;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -66,7 +68,7 @@ public class Session {
 
 	protected Session(OpenVidu openVidu, JsonObject json) {
 		this.openVidu = openVidu;
-		this.resetSessionWithJson(json);
+		this.resetWithJson(json);
 	}
 
 	/**
@@ -282,7 +284,7 @@ public class Session {
 		try {
 			int statusCode = response.getStatusLine().getStatusCode();
 			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
-				this.resetSessionWithJson(httpResponseToJson(response));
+				this.resetWithJson(httpResponseToJson(response));
 				final String afterJSON = this.toJson();
 				boolean hasChanged = !beforeJSON.equals(afterJSON);
 				log.info("Session info fetched for session '{}'. Any change: {}", this.sessionId, hasChanged);
@@ -694,7 +696,7 @@ public class Session {
 		this.recording = recording;
 	}
 
-	protected Session resetSessionWithJson(JsonObject json) {
+	protected Session resetWithJson(JsonObject json) {
 		this.sessionId = json.get("sessionId").getAsString();
 		this.createdAt = json.get("createdAt").getAsLong();
 		this.recording = json.get("recording").getAsBoolean();
@@ -708,18 +710,37 @@ public class Session {
 		if (json.has("defaultCustomLayout")) {
 			builder.defaultCustomLayout(json.get("defaultCustomLayout").getAsString());
 		}
-		if (this.properties != null && this.properties.customSessionId() != null) {
-			builder.customSessionId(this.properties.customSessionId());
-		} else if (json.has("customSessionId")) {
+		if (json.has("customSessionId")) {
 			builder.customSessionId(json.get("customSessionId").getAsString());
 		}
+
 		this.properties = builder.build();
 		JsonArray jsonArrayConnections = (json.get("connections").getAsJsonObject()).get("content").getAsJsonArray();
-		this.connections.clear();
+
+		// 1. Set to store fetched connections and later remove closed ones
+		Set<String> fetchedConnectionIds = new HashSet<>();
 		jsonArrayConnections.forEach(connectionJsonElement -> {
-			Connection connectionObj = new Connection(connectionJsonElement.getAsJsonObject());
-			this.connections.put(connectionObj.getConnectionId(), connectionObj);
+
+			JsonObject connectionJson = connectionJsonElement.getAsJsonObject();
+			Connection connectionObj = new Connection(connectionJson);
+			String id = connectionObj.getConnectionId();
+			fetchedConnectionIds.add(id);
+
+			// 2. Update existing Connection
+			this.connections.computeIfPresent(id, (cId, c) -> {
+				c = c.resetWithJson(connectionJson);
+				return c;
+			});
+
+			// 3. Add new Connection
+			this.connections.computeIfAbsent(id, cId -> {
+				return connectionObj;
+			});
 		});
+
+		// 4. Remove closed connections from local collection
+		this.connections.entrySet()
+				.removeIf(entry -> !fetchedConnectionIds.contains(entry.getValue().getConnectionId()));
 		return this;
 	}
 

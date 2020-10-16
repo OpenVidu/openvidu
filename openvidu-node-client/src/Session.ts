@@ -82,7 +82,7 @@ export class Session {
             // Defined parameter
             if (!!propertiesOrJson.sessionId) {
                 // Parameter is a JSON representation of Session ('sessionId' property always defined)
-                this.resetSessionWithJson(propertiesOrJson);
+                this.resetWithJson(propertiesOrJson);
             } else {
                 // Parameter is a SessionProperties object
                 this.properties = propertiesOrJson;
@@ -224,7 +224,7 @@ export class Session {
                 .then(res => {
                     if (res.status === 200) {
                         // SUCCESS response from openvidu-server
-                        this.resetSessionWithJson(res.data);
+                        this.resetWithJson(res.data);
                         const afterJSON: string = JSON.stringify(this, this.removeCircularOpenViduReference);
                         const hasChanged: boolean = !(beforeJSON === afterJSON);
                         console.log("Session info fetched for session '" + this.sessionId + "'. Any change: " + hasChanged);
@@ -488,42 +488,57 @@ export class Session {
     /**
      * @hidden
      */
-    public resetSessionWithJson(json): Session {
+    public resetWithJson(json): Session {
         this.sessionId = json.sessionId;
         this.createdAt = json.createdAt;
         this.recording = json.recording;
-        let customSessionId: string;
-        let defaultCustomLayout: string;
-        if (!!this.properties) {
-            customSessionId = this.properties.customSessionId;
-            defaultCustomLayout = !!json.defaultCustomLayout ? json.defaultCustomLayout : this.properties.defaultCustomLayout;
-        }
         this.properties = {
+            customSessionId: json.customSessionId,
             mediaMode: json.mediaMode,
             recordingMode: json.recordingMode,
             defaultOutputMode: json.defaultOutputMode,
-            defaultRecordingLayout: json.defaultRecordingLayout
+            defaultRecordingLayout: json.defaultRecordingLayout,
+            defaultCustomLayout: json.defaultCustomLayout
         };
-        if (!!customSessionId) {
-            this.properties.customSessionId = customSessionId;
-        } else if (!!json.customSessionId) {
-            this.properties.customSessionId = json.customSessionId;
+        if (json.defaultRecordingLayout == null) {
+            delete this.properties.defaultRecordingLayout;
         }
-        if (!!defaultCustomLayout) {
-            this.properties.defaultCustomLayout = defaultCustomLayout;
+        if (json.customSessionId == null) {
+            delete this.properties.customSessionId;
+        }
+        if (json.defaultCustomLayout == null) {
+            delete this.properties.defaultCustomLayout;
         }
 
-        this.connections = [];
-        this.activeConnections = [];
+        // 1. Array to store fetched connections and later remove closed ones
+        const fetchedConnectionIds: string[] = [];
         json.connections.content.forEach(jsonConnection => {
-            const con = new Connection(jsonConnection);
-            this.connections.push(con);
+
+            const connectionObj: Connection = new Connection(jsonConnection);
+            fetchedConnectionIds.push(connectionObj.connectionId);
+            let storedConnection = this.connections.find(c => c.connectionId === connectionObj.connectionId);
+
+            if (!!storedConnection) {
+                // 2. Update existing Connection
+                storedConnection.resetWithJson(jsonConnection);
+            } else {
+                // 3. Add new Connection
+                this.connections.push(connectionObj);
+            }
         });
+
+        // 4. Remove closed sessions from local collection
+        for (var i = this.connections.length - 1; i >= 0; --i) {
+            if (!fetchedConnectionIds.includes(this.connections[i].connectionId)) {
+                this.connections.splice(i, 1);
+            }
+        }
 
         // Order connections by time of creation
         this.connections.sort((c1, c2) => (c1.createdAt > c2.createdAt) ? 1 : ((c2.createdAt > c1.createdAt) ? -1 : 0));
         // Populate activeConnections array
         this.updateActiveConnectionsArray();
+
         return this;
     }
 

@@ -74,6 +74,13 @@ export class Publisher {
      * @hidden
      */
     constructor(json) {
+        this.resetWithJson(json);
+    }
+
+    /**
+     * @hidden
+     */
+    resetWithJson(json): Publisher {
         this.streamId = json.streamId;
         this.createdAt = json.createdAt;
         this.hasAudio = json.mediaOptions.hasAudio;
@@ -83,6 +90,7 @@ export class Publisher {
         this.frameRate = json.mediaOptions.frameRate;
         this.typeOfVideo = json.mediaOptions.typeOfVideo;
         this.videoDimensions = json.mediaOptions.videoDimensions;
+        return this;
     }
 
     /**

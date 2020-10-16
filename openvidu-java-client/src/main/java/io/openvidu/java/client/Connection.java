@@ -18,8 +18,10 @@
 package io.openvidu.java.client;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.gson.JsonArray;
@@ -42,50 +44,7 @@ public class Connection {
 	protected List<String> subscribers = new ArrayList<>();
 
 	protected Connection(JsonObject json) {
-		// These properties may be null
-		if (!json.get("publishers").isJsonNull()) {
-			JsonArray jsonArrayPublishers = json.get("publishers").getAsJsonArray();
-			jsonArrayPublishers.forEach(publisher -> {
-				JsonObject pubJson = publisher.getAsJsonObject();
-				JsonObject mediaOptions = pubJson.get("mediaOptions").getAsJsonObject();
-				Publisher pub = new Publisher(pubJson.get("streamId").getAsString(),
-						pubJson.get("createdAt").getAsLong(), mediaOptions.get("hasAudio").getAsBoolean(),
-						mediaOptions.get("hasVideo").getAsBoolean(), mediaOptions.get("audioActive"),
-						mediaOptions.get("videoActive"), mediaOptions.get("frameRate"), mediaOptions.get("typeOfVideo"),
-						mediaOptions.get("videoDimensions"));
-				this.publishers.put(pub.getStreamId(), pub);
-			});
-		}
-
-		if (!json.get("subscribers").isJsonNull()) {
-			JsonArray jsonArraySubscribers = json.get("subscribers").getAsJsonArray();
-			jsonArraySubscribers.forEach(subscriber -> {
-				this.subscribers.add((subscriber.getAsJsonObject()).get("streamId").getAsString());
-			});
-		}
-		if (!json.get("createdAt").isJsonNull()) {
-			this.createdAt = json.get("createdAt").getAsLong();
-		}
-		if (!json.get("location").isJsonNull()) {
-			this.location = json.get("location").getAsString();
-		}
-		if (!json.get("platform").isJsonNull()) {
-			this.platform = json.get("platform").getAsString();
-		}
-		if (!json.get("clientData").isJsonNull()) {
-			this.clientData = json.get("clientData").getAsString();
-		}
-
-		// These properties won't ever be null
-		this.connectionId = json.get("connectionId").getAsString();
-		this.status = json.get("status").getAsString();
-		String token = json.has("token") ? json.get("token").getAsString() : null;
-		OpenViduRole role = OpenViduRole.valueOf(json.get("role").getAsString());
-		String data = json.get("serverData").getAsString();
-		Boolean record = json.get("record").getAsBoolean();
-
-		TokenOptions tokenOptions = new TokenOptions(role, data, record, null);
-		this.token = new Token(token, this.connectionId, tokenOptions);
+		this.resetWithJson(json);
 	}
 
 	/**
@@ -246,6 +205,83 @@ public class Connection {
 
 	protected void setSubscribers(List<String> subscribers) {
 		this.subscribers = subscribers;
+	}
+
+	protected Connection resetWithJson(JsonObject json) {
+
+		if (!json.get("publishers").isJsonNull()) {
+			JsonArray jsonArrayPublishers = json.get("publishers").getAsJsonArray();
+
+			// 1. Set to store fetched publishers and later remove closed ones
+			Set<String> fetchedPublisherIds = new HashSet<>();
+			jsonArrayPublishers.forEach(publisherJsonElement -> {
+
+				JsonObject publisherJson = publisherJsonElement.getAsJsonObject();
+				Publisher publisherObj = new Publisher(publisherJson);
+				String id = publisherObj.getStreamId();
+				fetchedPublisherIds.add(id);
+
+				// 2. Update existing Publisher
+				this.publishers.computeIfPresent(id, (pId, p) -> {
+					p = p.resetWithJson(publisherJson);
+					return p;
+				});
+
+				// 3. Add new Publisher
+				this.publishers.computeIfAbsent(id, pId -> {
+					return publisherObj;
+				});
+			});
+
+			// 4. Remove closed connections from local collection
+			this.publishers.entrySet().removeIf(entry -> !fetchedPublisherIds.contains(entry.getValue().getStreamId()));
+		}
+
+		if (!json.get("subscribers").isJsonNull()) {
+			JsonArray jsonArraySubscribers = json.get("subscribers").getAsJsonArray();
+
+			// 1. Array to store fetched Subscribers and later remove closed ones
+			Set<String> fetchedSubscriberIds = new HashSet<>();
+			jsonArraySubscribers.forEach(subscriber -> {
+
+				String sub = subscriber.getAsJsonObject().get("streamId").getAsString();
+				fetchedSubscriberIds.add(sub);
+
+				if (!this.subscribers.contains(sub)) {
+					// 2. Add new Subscriber
+					this.subscribers.add(sub);
+				}
+			});
+
+			// 3. Remove closed Subscribers from local collection
+			this.subscribers.removeIf(subId -> !fetchedSubscriberIds.contains(subId));
+		}
+
+		if (!json.get("createdAt").isJsonNull()) {
+			this.createdAt = json.get("createdAt").getAsLong();
+		}
+		if (!json.get("location").isJsonNull()) {
+			this.location = json.get("location").getAsString();
+		}
+		if (!json.get("platform").isJsonNull()) {
+			this.platform = json.get("platform").getAsString();
+		}
+		if (!json.get("clientData").isJsonNull()) {
+			this.clientData = json.get("clientData").getAsString();
+		}
+
+		// These properties won't ever be null
+		this.connectionId = json.get("connectionId").getAsString();
+		this.status = json.get("status").getAsString();
+		String token = json.has("token") ? json.get("token").getAsString() : null;
+		OpenViduRole role = OpenViduRole.valueOf(json.get("role").getAsString());
+		String data = json.get("serverData").getAsString();
+		Boolean record = json.get("record").getAsBoolean();
+
+		TokenOptions tokenOptions = new TokenOptions(role, data, record, null);
+		this.token = new Token(token, this.connectionId, tokenOptions);
+
+		return this;
 	}
 
 }

@@ -31,7 +31,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import javax.net.ssl.SSLContext;
 
@@ -549,44 +548,55 @@ public class OpenVidu {
 		try {
 			int statusCode = response.getStatusLine().getStatusCode();
 			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
+
 				JsonObject jsonSessions = httpResponseToJson(response);
 				JsonArray jsonArraySessions = jsonSessions.get("content").getAsJsonArray();
 
-				// Set to store fetched sessionIds and later remove closed sessions
-				Set<String> fetchedSessionIds = new HashSet<>();
 				// Boolean to store if any Session has changed
 				final boolean[] hasChanged = { false };
-				jsonArraySessions.forEach(session -> {
-					String sessionId = (session.getAsJsonObject()).get("sessionId").getAsString();
-					fetchedSessionIds.add(sessionId);
-					this.activeSessions.computeIfPresent(sessionId, (sId, s) -> {
+
+				// 1. Set to store fetched sessionIds and later remove closed ones
+				Set<String> fetchedSessionIds = new HashSet<>();
+				jsonArraySessions.forEach(sessionJsonElement -> {
+
+					JsonObject sessionJson = sessionJsonElement.getAsJsonObject();
+					final Session sessionObj = new Session(this, sessionJson);
+					String id = sessionObj.getSessionId();
+					fetchedSessionIds.add(id);
+
+					// 2. Update existing Session
+					this.activeSessions.computeIfPresent(id, (sId, s) -> {
 						String beforeJSON = s.toJson();
-						s = s.resetSessionWithJson(session.getAsJsonObject());
+						s = s.resetWithJson(sessionJson);
 						String afterJSON = s.toJson();
 						boolean changed = !beforeJSON.equals(afterJSON);
 						hasChanged[0] = hasChanged[0] || changed;
-						log.info("Available session '{}' info fetched. Any change: {}", sessionId, changed);
+						log.info("Available session '{}' info fetched. Any change: {}", id, changed);
 						return s;
 					});
-					this.activeSessions.computeIfAbsent(sessionId, sId -> {
-						log.info("New session '{}' fetched", sessionId);
+
+					// 3. Add new Session
+					this.activeSessions.computeIfAbsent(id, sId -> {
+						log.info("New session '{}' fetched", id);
 						hasChanged[0] = true;
-						return new Session(this, session.getAsJsonObject());
+						return sessionObj;
 					});
 				});
 
-				// Remove closed sessions from activeSessions map
-				this.activeSessions = this.activeSessions.entrySet().stream().filter(entry -> {
+				// 4. Remove closed sessions from local collection
+				this.activeSessions.entrySet().removeIf(entry -> {
 					if (fetchedSessionIds.contains(entry.getKey())) {
-						return true;
+						return false;
 					} else {
 						log.info("Removing closed session {}", entry.getKey());
 						hasChanged[0] = true;
-						return false;
+						return true;
 					}
-				}).collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
+				});
+
 				log.info("Active sessions info fetched: {}", this.activeSessions.keySet());
 				return hasChanged[0];
+
 			} else {
 				throw new OpenViduHttpException(statusCode);
 			}
