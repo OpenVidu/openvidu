@@ -71,6 +71,7 @@ const platform: PlatformUtils = PlatformUtils.getInstance();
  * - signal ([[SignalEvent]])
  * - recordingStarted ([[RecordingEvent]])
  * - recordingStopped ([[RecordingEvent]])
+ * - networkQualityLevelChanged ([[NetworkQualityLevelChangedEvent]])
  * - reconnecting
  * - reconnected
  *
@@ -935,9 +936,13 @@ export class Session extends EventDispatcher {
         if (msg.connectionId === this.connection.connectionId) {
             this.ee.emitEvent('networkQualityLevelChanged', [new NetworkQualityLevelChangedEvent(this, msg.qualityLevel, this.connection)]);
         } else {
-            this.getConnection(msg.connectionId, 'Connection not found for connectionId ' + msg.connectionId).then((connection: Connection) => {
-                this.ee.emitEvent('networkQualityLevelChanged', [new NetworkQualityLevelChangedEvent(this, msg.qualityLevel, connection)]);
-            });
+            this.getConnection(msg.connectionId, 'Connection not found for connectionId ' + msg.connectionId)
+                .then((connection: Connection) => {
+                    this.ee.emitEvent('networkQualityLevelChanged', [new NetworkQualityLevelChangedEvent(this, msg.qualityLevel, connection)]);
+                })
+                .catch(openViduError => {
+                    logger.error(openViduError);
+                });
         }
     }
 
@@ -1135,7 +1140,7 @@ export class Session extends EventDispatcher {
     }
 
     sendVideoData(streamManager: StreamManager, intervalSeconds: number = 1) {
-        if(
+        if (
             platform.isChromeBrowser() || platform.isChromeMobileBrowser() || platform.isOperaBrowser() ||
             platform.isOperaMobileBrowser() || platform.isElectron() || (platform.isSafariBrowser() && !platform.isIonicIos()) ||
             platform.isAndroidBrowser() || platform.isSamsungBrowser() || platform.isIonicAndroid() ||
