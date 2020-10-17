@@ -82,7 +82,7 @@ public class SessionEventsHandler {
 			participantJson.addProperty(ProtocolElements.JOINROOM_PEERID_PARAM,
 					existingParticipant.getParticipantPublicId());
 			participantJson.addProperty(ProtocolElements.JOINROOM_PEERCREATEDAT_PARAM,
-					existingParticipant.getCreatedAt());
+					existingParticipant.getActiveAt());
 
 			// Metadata associated to each existing participant
 			participantJson.addProperty(ProtocolElements.JOINROOM_METADATA_PARAM,
@@ -138,7 +138,7 @@ public class SessionEventsHandler {
 				// Metadata associated to new participant
 				notifParams.addProperty(ProtocolElements.PARTICIPANTJOINED_USER_PARAM,
 						participant.getParticipantPublicId());
-				notifParams.addProperty(ProtocolElements.PARTICIPANTJOINED_CREATEDAT_PARAM, participant.getCreatedAt());
+				notifParams.addProperty(ProtocolElements.PARTICIPANTJOINED_CREATEDAT_PARAM, participant.getActiveAt());
 				notifParams.addProperty(ProtocolElements.PARTICIPANTJOINED_METADATA_PARAM,
 						participant.getFullMetadata());
 
@@ -147,7 +147,7 @@ public class SessionEventsHandler {
 			}
 		}
 		result.addProperty(ProtocolElements.PARTICIPANTJOINED_USER_PARAM, participant.getParticipantPublicId());
-		result.addProperty(ProtocolElements.PARTICIPANTJOINED_CREATEDAT_PARAM, participant.getCreatedAt());
+		result.addProperty(ProtocolElements.PARTICIPANTJOINED_CREATEDAT_PARAM, participant.getActiveAt());
 		result.addProperty(ProtocolElements.PARTICIPANTJOINED_METADATA_PARAM, participant.getFullMetadata());
 		result.add("value", resultArray);
 

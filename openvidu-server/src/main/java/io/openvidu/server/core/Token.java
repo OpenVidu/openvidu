@@ -30,6 +30,7 @@ public class Token {
 
 	private String token;
 	private String sessionId;
+	private Long createdAt;
 	private OpenViduRole role;
 	private String serverMetadata = "";
 	private boolean record;
@@ -43,6 +44,7 @@ public class Token {
 			TurnCredentials turnCredentials, KurentoTokenOptions kurentoTokenOptions) {
 		this.token = token;
 		this.sessionId = sessionId;
+		this.createdAt = System.currentTimeMillis();
 		this.role = role;
 		this.serverMetadata = serverMetadata;
 		this.record = record;
@@ -56,6 +58,10 @@ public class Token {
 
 	public void setToken(String token) {
 		this.token = token;
+	}
+
+	public Long getCreatedAt() {
+		return this.createdAt;
 	}
 
 	public OpenViduRole getRole() {
@@ -96,6 +102,7 @@ public class Token {
 		json.addProperty("object", "token");
 		json.addProperty("token", this.getToken());
 		json.addProperty("connectionId", this.getConnectionId());
+		json.addProperty("createdAt", this.createdAt);
 		json.addProperty("session", this.sessionId);
 		json.addProperty("role", this.getRole().toString());
 		json.addProperty("data", this.getServerMetadata());
@@ -113,7 +120,8 @@ public class Token {
 		json.addProperty("status", ParticipantStatus.pending.name());
 		json.addProperty("connectionId", this.getConnectionId()); // DEPRECATED: better use id
 		json.addProperty("sessionId", this.sessionId);
-		json.add("createdAt", null);
+		json.addProperty("createdAt", this.createdAt);
+		json.add("activeAt", null);
 		json.add("location", null);
 		json.add("platform", null);
 		json.addProperty("token", this.getToken());

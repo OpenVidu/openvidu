@@ -34,6 +34,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.http.HttpStatus;
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -85,8 +86,8 @@ import io.openvidu.test.browsers.utils.webhook.CustomWebhook;
 public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 	final String DEFAULT_JSON_SESSION = "{'id':'STR','object':'STR','sessionId':'STR','createdAt':0,'mediaMode':'STR','recordingMode':'STR','defaultOutputMode':'STR','defaultRecordingLayout':'STR','customSessionId':'STR','connections':{'numberOfElements':0,'content':[]},'recording':false}";
-	final String DEFAULT_JSON_TOKEN = "{'id':'STR','object':'STR','token':'STR','connectionId':0,'session':'STR','role':'STR','data':'STR','record':true}";
-	final String DEFAULT_JSON_CONNECTION = "{'id':'STR','object':'STR','status':'STR','connectionId':'STR','sessionId':'STR','createdAt':0,'location':'STR','platform':'STR','role':'STR','record':true,'serverData':'STR','clientData':'STR','publishers':[],'subscribers':[]}";
+	final String DEFAULT_JSON_TOKEN = "{'id':'STR','object':'STR','token':'STR','connectionId':0,'session':'STR','createdAt':0,'role':'STR','data':'STR','record':true}";
+	final String DEFAULT_JSON_CONNECTION = "{'id':'STR','object':'STR','status':'STR','connectionId':'STR','sessionId':'STR','createdAt':0,'activeAt':0,'location':'STR','platform':'STR','role':'STR','record':true,'serverData':'STR','clientData':'STR','publishers':[],'subscribers':[]}";
 
 	@BeforeAll()
 	protected static void setupAll() {
@@ -2167,7 +2168,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertTrue("Wrong record property", connectionModerator.record());
 		Assert.assertNull("Wrong location property", connectionModerator.getLocation());
 		Assert.assertNull("Wrong platform property", connectionModerator.getPlatform());
-		Assert.assertEquals("Wrong createdAt property", 0, connectionModerator.createdAt());
+		Assert.assertTrue("Wrong createdAt property", connectionModerator.createdAt() > 0);
+		Assert.assertNull("Wrong activeAt property", connectionModerator.activeAt());
 		Assert.assertNull("Wrong clientData property", connectionModerator.getClientData());
 		Assert.assertEquals("Wrong publishers property", 0, connectionModerator.getPublishers().size());
 		Assert.assertEquals("Wrong subscribers property", 0, connectionModerator.getSubscribers().size());
@@ -2240,6 +2242,11 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		// Verify status
 		Assert.assertEquals("Wrong status for moderator connection", "active", connectionModerator.getStatus());
 		Assert.assertEquals("Wrong status for subscriber connection", "active", connectionSubscriber.getStatus());
+
+		// Verify createdAt and activeAt
+		Assert.assertTrue("Wrong createdAt property", connectionModerator.createdAt() > 0);
+		Assert.assertTrue("Wrong activeAt property", connectionModerator.activeAt() > 0);
+		Assert.assertTrue("Wrong activeAt property", connectionModerator.activeAt() > connectionModerator.createdAt());
 
 		// Verify platform
 		Assert.assertTrue("Wrong platform for moderator connection",
@@ -2319,7 +2326,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		String widthAndHeight = user.getEventManager().getDimensionOfViewport();
 		JsonObject obj = JsonParser.parseString(widthAndHeight).getAsJsonObject();
 		Assert.assertEquals(
-				"{\"width\":" + obj.get("width").getAsLong() + ",\"height\":" + (obj.get("height").getAsLong()) + "}",
+				"{\"width\":" + obj.get("width").getAsLong() + ",\"height\":" + obj.get("height").getAsLong() + "}",
 				pub.getVideoDimensions());
 		Assert.assertEquals(new Integer(30), pub.getFrameRate());
 		Assert.assertEquals("SCREEN", pub.getTypeOfVideo());
@@ -2620,9 +2627,10 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		// 200
 		body = "{'session': 'CUSTOM_SESSION_ID', 'role': 'MODERATOR', 'data': 'SERVER_DATA', 'kurentoOptions': {'videoMaxSendBandwidth':777,'allowedFilters': ['GStreamerFilter']}}";
 		res = restClient.rest(HttpMethod.POST, "/openvidu/api/tokens", body, HttpStatus.SC_OK, true, false, true,
-				"{'id':'STR','object':'STR','connectionId':'STR','session':'STR','role':'STR','data':'STR','record':true,'token':'STR','kurentoOptions':{'videoMaxSendBandwidth':777,'allowedFilters':['STR']}}");
+				"{'id':'STR','object':'STR','connectionId':'STR','session':'STR','createdAt':0,'role':'STR','data':'STR','record':true,'token':'STR','kurentoOptions':{'videoMaxSendBandwidth':777,'allowedFilters':['STR']}}");
 		final String token1 = res.get("token").getAsString();
 		final String connectionId1 = res.get("connectionId").getAsString();
+		final long createdAt1 = res.get("createdAt").getAsLong();
 		Assert.assertEquals("JSON return value from /openvidu/api/tokens should have equal srtings in 'id' and 'token'",
 				res.get("id").getAsString(), token1);
 		Assert.assertEquals("Wrong session parameter", "CUSTOM_SESSION_ID", res.get("session").getAsString());
@@ -2641,8 +2649,9 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 				HttpStatus.SC_OK, true, true, true,
 				"{'id':'" + connectionId1 + "','connectionId':'" + connectionId1
 						+ "','object':'connection','status':'pending','sessionId':'CUSTOM_SESSION_ID','token':'"
-						+ token1
-						+ "','role':'MODERATOR','serverData':'SERVER_DATA','record':true,'createdAt':null,'platform':null,'location':null,'clientData':null,'publishers':null,'subscribers':null}");
+						+ token1 + "','role':'MODERATOR','serverData':'SERVER_DATA','record':true,'createdAt':"
+						+ createdAt1
+						+ ",'activeAt':null,'platform':null,'location':null,'clientData':null,'publishers':null,'subscribers':null}");
 
 		/** POST /openvidu/api/signal (NOT ACTIVE SESSION) **/
 		body = "{}";
@@ -2932,6 +2941,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 	@Test
 	@DisplayName("Kurento reconnect test")
+	@Disabled
 	void kurentoReconnectTest() throws Exception {
 		isRecordingTest = true;
 		isKurentoRestartTest = true;

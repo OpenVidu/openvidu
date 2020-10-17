@@ -43,9 +43,15 @@ export class Connection {
     status: string;
 
     /**
-     * Timestamp when this connection was established, in UTC milliseconds (ms since Jan 1, 1970, 00:00:00 UTC)
+     * Timestamp when this connection was created, in UTC milliseconds (ms since Jan 1, 1970, 00:00:00 UTC)
      */
     createdAt: number;
+
+    /**
+     * Timestamp when this connection was taken by a user (passing from status "pending" to "active")
+     * in UTC milliseconds (ms since Jan 1, 1970, 00:00:00 UTC)
+     */
+    activeAt: number;
 
     /**
      * Role of the connection
@@ -166,6 +172,7 @@ export class Connection {
         }
 
         this.createdAt = json.createdAt;
+        this.activeAt = json.activeAt;
         this.location = json.location;
         this.platform = json.platform;
         this.clientData = json.clientData;
@@ -181,6 +188,7 @@ export class Connection {
             this.connectionId === other.connectionId &&
             this.status === other.status &&
             this.createdAt === other.createdAt &&
+            this.activeAt === other.activeAt &&
             this.role === other.role &&
             this.serverData === other.serverData &&
             this.record === other.record &&

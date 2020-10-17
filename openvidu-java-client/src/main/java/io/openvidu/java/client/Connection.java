@@ -34,7 +34,8 @@ public class Connection {
 
 	private String connectionId;
 	private String status;
-	private long createdAt;
+	private Long createdAt;
+	private Long activeAt;
 	private String location;
 	private String platform;
 	private String clientData;
@@ -73,11 +74,20 @@ public class Connection {
 	}
 
 	/**
-	 * Timestamp when this connection was established, in UTC milliseconds (ms since
-	 * Jan 1, 1970, 00:00:00 UTC)
+	 * Timestamp when this connection was created, in UTC milliseconds (ms since Jan
+	 * 1, 1970, 00:00:00 UTC)
 	 */
-	public long createdAt() {
+	public Long createdAt() {
 		return this.createdAt;
+	}
+
+	/**
+	 * Timestamp when this connection was taken by a user (passing from status
+	 * "pending" to "active"), in UTC milliseconds (ms since Jan 1, 1970, 00:00:00
+	 * UTC)
+	 */
+	public Long activeAt() {
+		return this.activeAt;
 	}
 
 	/**
@@ -173,6 +183,7 @@ public class Connection {
 		json.addProperty("id", this.getConnectionId());
 		json.addProperty("status", this.getStatus());
 		json.addProperty("createdAt", this.createdAt());
+		json.addProperty("activeAt", this.activeAt());
 		json.addProperty("location", this.getLocation());
 		json.addProperty("platform", this.getPlatform());
 		json.addProperty("token", this.getToken());
@@ -259,6 +270,9 @@ public class Connection {
 
 		if (!json.get("createdAt").isJsonNull()) {
 			this.createdAt = json.get("createdAt").getAsLong();
+		}
+		if (!json.get("activeAt").isJsonNull()) {
+			this.activeAt = json.get("activeAt").getAsLong();
 		}
 		if (!json.get("location").isJsonNull()) {
 			this.location = json.get("location").getAsString();

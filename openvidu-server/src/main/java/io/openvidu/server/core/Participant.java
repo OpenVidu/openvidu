@@ -48,7 +48,7 @@ public class Participant {
 	protected String participantPublicId; // ID to identify the user on clients
 	protected String sessionId; // ID of the session to which the participant belongs
 	protected ParticipantStatus status; // Status of the connection
-	protected Long createdAt; // Timestamp when this connection was established
+	protected Long activeAt; // Timestamp when this connection entered status "active"
 	protected String clientMetadata = ""; // Metadata provided on client side
 	protected String serverMetadata = ""; // Metadata provided on server side
 	protected Token token; // Token associated to this participant
@@ -78,18 +78,18 @@ public class Participant {
 
 	public Participant(String finalUserId, String participantPrivatetId, String participantPublicId, String sessionId,
 			Token token, String clientMetadata, GeoLocation location, String platform, EndpointType endpointType,
-			Long createdAt) {
+			Long activeAt) {
 		this.finalUserId = finalUserId;
 		this.participantPrivatetId = participantPrivatetId;
 		this.participantPublicId = participantPublicId;
 		this.sessionId = sessionId;
 		this.status = ParticipantStatus.active;
-		if (createdAt != null) {
-			this.createdAt = createdAt;
-		} else {
-			this.createdAt = System.currentTimeMillis();
-		}
 		this.token = token;
+		if (activeAt != null) {
+			this.activeAt = activeAt;
+		} else {
+			this.activeAt = System.currentTimeMillis();
+		}
 		if (clientMetadata != null) {
 			this.clientMetadata = clientMetadata;
 		}
@@ -125,8 +125,8 @@ public class Participant {
 		return sessionId;
 	}
 
-	public Long getCreatedAt() {
-		return this.createdAt;
+	public Long getActiveAt() {
+		return this.activeAt;
 	}
 
 	public String getClientMetadata() {
@@ -200,7 +200,7 @@ public class Participant {
 	public void setPublishedAt(Long publishedAt) {
 		this.publishedAt = publishedAt;
 	}
-	
+
 	public Long getPublishedAt() {
 		return publishedAt;
 	}
@@ -303,7 +303,8 @@ public class Participant {
 		json.addProperty("status", this.status.name());
 		json.addProperty("connectionId", this.participantPublicId); // TODO: deprecated. Better use only "id"
 		json.addProperty("sessionId", this.sessionId);
-		json.addProperty("createdAt", this.createdAt);
+		json.addProperty("createdAt", this.token.getCreatedAt());
+		json.addProperty("activeAt", this.activeAt);
 		json.addProperty("location", this.location != null ? this.location.toString() : "unknown");
 		json.addProperty("platform", this.platform);
 		if (this.token.getToken() != null) {
