@@ -483,7 +483,8 @@ public class OpenviduConfig {
 
 		coturnRedisConnectTimeout = getValue("COTURN_REDIS_CONNECT_TIMEOUT");
 
-		openviduSecret = asNonEmptyString("OPENVIDU_SECRET");
+		openviduSecret = asNonEmptyAlphanumericString("OPENVIDU_SECRET",
+				"Cannot be empty and must contain only alphanumeric characters [a-zA-Z0-9], hypens (\"-\") and underscores (\"_\")");
 
 		openviduCdr = asBoolean("OPENVIDU_CDR");
 		openviduCdrPath = openviduCdr ? asWritableFileSystemPath("OPENVIDU_CDR_PATH")
@@ -737,6 +738,17 @@ public class OpenviduConfig {
 			return stringValue;
 		} else {
 			addError(property, "Cannot be empty.");
+			return null;
+		}
+	}
+
+	protected String asNonEmptyAlphanumericString(String property, String errorMessage) {
+		final String REGEX = "^[a-zA-Z0-9_-]+$";
+		String stringValue = getValue(property);
+		if (stringValue != null && !stringValue.isEmpty() && stringValue.matches(REGEX)) {
+			return stringValue;
+		} else {
+			addError(property, errorMessage);
 			return null;
 		}
 	}
