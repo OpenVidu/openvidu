@@ -193,6 +193,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		JsonObject res = restClient.rest(HttpMethod.POST, "/openvidu/api/tokens", body, HttpStatus.SC_OK);
 		final String token = res.get("token").getAsString();
 		final String tokenConnectionId = res.get("connectionId").getAsString();
+		final long createdAt = res.get("createdAt").getAsLong();
 
 		/** UPDATE TOKEN **/
 
@@ -213,13 +214,15 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 				"{'role':'MODERATOR'}", HttpStatus.SC_OK, true, true, true,
 				"{'id':'" + tokenConnectionId + "','object':'connection','status':'pending','connectionId':'"
 						+ tokenConnectionId + "','role':'MODERATOR','record':false,'token':'" + token
-						+ "','sessionId':'CUSTOM_SESSION_ID','serverData':'','publishers':null,'subscribers':null,'createdAt':null,'platform':null,'location':null,'clientData':null}");
+						+ "','sessionId':'CUSTOM_SESSION_ID','serverData':'','publishers':null,'subscribers':null,'createdAt':"
+						+ createdAt + ",'activeAt':null,'platform':null,'location':null,'clientData':null}");
 		// Updating only record should let role value untouched
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + tokenConnectionId,
 				"{'record':true}", HttpStatus.SC_OK, true, true, true,
 				"{'id':'" + tokenConnectionId + "','object':'connection','status':'pending','connectionId':'"
 						+ tokenConnectionId + "','role':'MODERATOR','record':true,'token':'" + token
-						+ "','sessionId':'CUSTOM_SESSION_ID','serverData':'','publishers':null,'subscribers':null,'createdAt':null,'platform':null,'location':null,'clientData':null}");
+						+ "','sessionId':'CUSTOM_SESSION_ID','serverData':'','publishers':null,'subscribers':null,'createdAt':"
+						+ createdAt + ",'activeAt':null,'platform':null,'location':null,'clientData':null}");
 
 		// Test with openvidu-java-client
 		OpenVidu OV = new OpenVidu(OpenViduTestAppE2eTest.OPENVIDU_URL, OpenViduTestAppE2eTest.OPENVIDU_SECRET);
