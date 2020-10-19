@@ -20,6 +20,7 @@ package io.openvidu.server.rest;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -57,6 +58,7 @@ import io.openvidu.java.client.RecordingMode;
 import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.server.config.OpenviduConfig;
+import io.openvidu.server.core.ConnectionType;
 import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.IdentifierPrefixes;
 import io.openvidu.server.core.Participant;
@@ -92,7 +94,7 @@ public class SessionRestController {
 	protected OpenviduConfig openviduConfig;
 
 	@RequestMapping(value = "/sessions", method = RequestMethod.POST)
-	public ResponseEntity<?> getSessionId(@RequestBody(required = false) Map<?, ?> params) {
+	public ResponseEntity<?> initializeSession(@RequestBody(required = false) Map<?, ?> params) {
 
 		log.info("REST API: POST {}/sessions {}", RequestMappings.API, params != null ? params.toString() : "{}");
 
@@ -267,8 +269,99 @@ public class SessionRestController {
 		}
 	}
 
+	@RequestMapping(value = "/sessions/{sessionId}/connection", method = RequestMethod.POST)
+	public ResponseEntity<?> initializeConnection(@PathVariable("sessionId") String sessionId,
+			@RequestBody Map<?, ?> params) {
+
+		log.info("REST API: POST {}/sessions/{}/connection {}", RequestMappings.API, sessionId, params.toString());
+
+		Session session = this.sessionManager.getSessionWithNotActive(sessionId);
+		if (session == null) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
+
+		String typeString;
+		String data;
+		Boolean record;
+		try {
+			typeString = (String) params.get("type");
+			data = (String) params.get("data");
+			record = (Boolean) params.get("record");
+		} catch (ClassCastException e) {
+			return this.generateErrorResponse("Type error in parameter \"type\"",
+					"/sessions/" + sessionId + "/connection", HttpStatus.BAD_REQUEST);
+		}
+
+		ConnectionType type;
+		try {
+			if (typeString != null) {
+				type = ConnectionType.valueOf(typeString);
+			} else {
+				type = ConnectionType.WEBRTC;
+			}
+		} catch (IllegalArgumentException e) {
+			return this.generateErrorResponse("Parameter type " + params.get("typeString") + " is not defined",
+					RequestMappings.API + "/sessions/" + sessionId + "/connection", HttpStatus.BAD_REQUEST);
+		}
+
+		switch (type) {
+		case WEBRTC:
+			return this.newWebrtcConnection(session, data, record, params);
+		case IPCAM:
+			return this.newIpcamConnection(session, data, record, params);
+		default:
+			return this.generateErrorResponse("Wrong type " + typeString,
+					RequestMappings.API + "/sessions/" + sessionId + "/connection", HttpStatus.BAD_REQUEST);
+		}
+	}
+
+	@RequestMapping(value = "/sessions/{sessionId}/connection/{connectionId}", method = RequestMethod.GET)
+	public ResponseEntity<?> getConnection(@PathVariable("sessionId") String sessionId,
+			@PathVariable("connectionId") String connectionId) {
+
+		log.info("REST API: GET {}/sessions/{}/connection/{}", RequestMappings.API, sessionId, connectionId);
+
+		Session session = this.sessionManager.getSessionWithNotActive(sessionId);
+		if (session != null) {
+			Participant p = session.getParticipantByPublicId(connectionId);
+			if (p != null) {
+				return new ResponseEntity<>(p.toJson().toString(), RestUtils.getResponseHeaders(), HttpStatus.OK);
+			} else {
+				Token t = getTokenFromConnectionId(connectionId, session.getTokenIterator());
+				if (t != null) {
+					return new ResponseEntity<>(t.toJsonAsParticipant().toString(), RestUtils.getResponseHeaders(),
+							HttpStatus.OK);
+				} else {
+					return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+				}
+			}
+		} else {
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		}
+	}
+
+	@RequestMapping(value = "/sessions/{sessionId}/connection", method = RequestMethod.GET)
+	public ResponseEntity<?> listConnections(@PathVariable("sessionId") String sessionId,
+			@RequestParam(value = "pendingConnections", defaultValue = "true", required = false) boolean pendingConnections,
+			@RequestParam(value = "webRtcStats", defaultValue = "false", required = false) boolean webRtcStats) {
+
+		log.info("REST API: GET {}/sessions/{}/connection", RequestMappings.API, sessionId);
+
+		Session session = this.sessionManager.getSessionWithNotActive(sessionId);
+
+		if (session != null) {
+			JsonObject json = new JsonObject();
+			JsonArray jsonArray = session.getSnapshotOfConnectionsAsJsonArray(pendingConnections, webRtcStats);
+			json.addProperty("numberOfElements", jsonArray.size());
+			json.add("content", jsonArray);
+			return new ResponseEntity<>(json.toString(), RestUtils.getResponseHeaders(), HttpStatus.OK);
+		} else {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
+	}
+
 	@RequestMapping(value = "/sessions/{sessionId}/connection/{connectionId}", method = RequestMethod.DELETE)
-	public ResponseEntity<?> disconnectParticipant(@PathVariable("sessionId") String sessionId,
+	public ResponseEntity<?> closeConnection(@PathVariable("sessionId") String sessionId,
 			@PathVariable("connectionId") String participantPublicId) {
 
 		log.info("REST API: DELETE {}/sessions/{}/connection/{}", RequestMappings.API, sessionId, participantPublicId);
@@ -292,127 +385,8 @@ public class SessionRestController {
 		}
 	}
 
-	@RequestMapping(value = "/sessions/{sessionId}/stream/{streamId}", method = RequestMethod.DELETE)
-	public ResponseEntity<?> unpublishStream(@PathVariable("sessionId") String sessionId,
-			@PathVariable("streamId") String streamId) {
-
-		log.info("REST API: DELETE {}/sessions/{}/stream/{}", RequestMappings.API, sessionId, streamId);
-
-		Session session = this.sessionManager.getSessionWithNotActive(sessionId);
-		if (session == null) {
-			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-		}
-
-		session = this.sessionManager.getSession(sessionId);
-		if (session != null) {
-
-			final String participantPrivateId = this.sessionManager.getParticipantPrivateIdFromStreamId(sessionId,
-					streamId);
-
-			if (participantPrivateId == null) {
-				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-			}
-
-			Participant participant = this.sessionManager.getParticipant(participantPrivateId);
-			if (participant.isIpcam()) {
-				return new ResponseEntity<>(HttpStatus.METHOD_NOT_ALLOWED);
-			}
-
-			this.sessionManager.unpublishStream(session, streamId, null, null, EndReason.forceUnpublishByServer);
-			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-		} else {
-			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-		}
-	}
-
-	@RequestMapping(value = "/tokens", method = RequestMethod.POST)
-	public ResponseEntity<String> newToken(@RequestBody Map<?, ?> params) {
-
-		if (params == null) {
-			return this.generateErrorResponse("Error in body parameters. Cannot be empty", "/tokens",
-					HttpStatus.BAD_REQUEST);
-		}
-
-		log.info("REST API: POST {}/tokens {}", RequestMappings.API, params.toString());
-
-		String sessionId;
-		String roleString;
-		String metadata;
-		Boolean record;
-		try {
-			sessionId = (String) params.get("session");
-			roleString = (String) params.get("role");
-			metadata = (String) params.get("data");
-			record = (Boolean) params.get("record");
-		} catch (ClassCastException e) {
-			return this.generateErrorResponse("Type error in some parameter", "/tokens", HttpStatus.BAD_REQUEST);
-		}
-
-		if (sessionId == null) {
-			return this.generateErrorResponse("\"session\" parameter is mandatory", "/tokens", HttpStatus.BAD_REQUEST);
-		}
-
-		final Session session = this.sessionManager.getSessionWithNotActive(sessionId);
-		if (session == null) {
-			return this.generateErrorResponse("Session " + sessionId + " not found", "/tokens", HttpStatus.NOT_FOUND);
-		}
-
-		JsonObject kurentoOptions = null;
-
-		if (params.get("kurentoOptions") != null) {
-			try {
-				kurentoOptions = JsonParser.parseString(params.get("kurentoOptions").toString()).getAsJsonObject();
-			} catch (Exception e) {
-				return this.generateErrorResponse("Error in parameter 'kurentoOptions'. It is not a valid JSON object",
-						"/tokens", HttpStatus.BAD_REQUEST);
-			}
-		}
-
-		OpenViduRole role;
-		try {
-			if (roleString != null) {
-				role = OpenViduRole.valueOf(roleString);
-			} else {
-				role = OpenViduRole.PUBLISHER;
-			}
-		} catch (IllegalArgumentException e) {
-			return this.generateErrorResponse("Parameter role " + params.get("role") + " is not defined", "/tokens",
-					HttpStatus.BAD_REQUEST);
-		}
-
-		KurentoTokenOptions kurentoTokenOptions = null;
-		if (kurentoOptions != null) {
-			try {
-				kurentoTokenOptions = new KurentoTokenOptions(kurentoOptions);
-			} catch (Exception e) {
-				return this.generateErrorResponse("Type error in some parameter of 'kurentoOptions'", "/tokens",
-						HttpStatus.BAD_REQUEST);
-			}
-		}
-
-		metadata = (metadata != null) ? metadata : "";
-		record = (record != null) ? record : true;
-
-		// While closing a session tokens can't be generated
-		if (session.closingLock.readLock().tryLock()) {
-			try {
-				Token token = sessionManager.newToken(session, role, metadata, record, kurentoTokenOptions);
-				return new ResponseEntity<>(token.toJson().toString(), RestUtils.getResponseHeaders(), HttpStatus.OK);
-			} catch (Exception e) {
-				return this.generateErrorResponse(
-						"Error generating token for session " + sessionId + ": " + e.getMessage(), "/tokens",
-						HttpStatus.INTERNAL_SERVER_ERROR);
-			} finally {
-				session.closingLock.readLock().unlock();
-			}
-		} else {
-			log.error("Session {} is in the process of closing. Token couldn't be generated", sessionId);
-			return this.generateErrorResponse("Session " + sessionId + " not found", "/tokens", HttpStatus.NOT_FOUND);
-		}
-	}
-
 	@RequestMapping(value = "/recordings/start", method = RequestMethod.POST)
-	public ResponseEntity<?> startRecordingSession(@RequestBody Map<?, ?> params) {
+	public ResponseEntity<?> startRecording(@RequestBody Map<?, ?> params) {
 
 		if (params == null) {
 			return this.generateErrorResponse("Error in body parameters. Cannot be empty", "/recordings/start",
@@ -568,7 +542,7 @@ public class SessionRestController {
 	}
 
 	@RequestMapping(value = "/recordings/stop/{recordingId}", method = RequestMethod.POST)
-	public ResponseEntity<?> stopRecordingSession(@PathVariable("recordingId") String recordingId) {
+	public ResponseEntity<?> stopRecording(@PathVariable("recordingId") String recordingId) {
 
 		log.info("REST API: POST {}/recordings/stop/{}", RequestMappings.API, recordingId);
 
@@ -632,7 +606,7 @@ public class SessionRestController {
 	}
 
 	@RequestMapping(value = "/recordings", method = RequestMethod.GET)
-	public ResponseEntity<?> getAllRecordings() {
+	public ResponseEntity<?> listRecordings() {
 
 		log.info("REST API: GET {}/recordings", RequestMappings.API);
 
@@ -667,6 +641,87 @@ public class SessionRestController {
 		}
 
 		return new ResponseEntity<>(this.recordingManager.deleteRecordingFromHost(recordingId, false));
+	}
+
+	@RequestMapping(value = "/tokens", method = RequestMethod.POST)
+	public ResponseEntity<String> newToken(@RequestBody Map<?, ?> params) {
+
+		if (params == null) {
+			return this.generateErrorResponse("Error in body parameters. Cannot be empty", "/tokens",
+					HttpStatus.BAD_REQUEST);
+		}
+
+		log.info("REST API: POST {}/tokens {}", RequestMappings.API, params.toString());
+
+		String sessionId;
+		String metadata;
+		Boolean record;
+		try {
+			sessionId = (String) params.get("session");
+			metadata = (String) params.get("data");
+			record = (Boolean) params.get("record");
+		} catch (ClassCastException e) {
+			return this.generateErrorResponse("Type error in some parameter", "/tokens", HttpStatus.BAD_REQUEST);
+		}
+
+		if (sessionId == null) {
+			return this.generateErrorResponse("\"session\" parameter is mandatory", "/tokens", HttpStatus.BAD_REQUEST);
+		}
+
+		log.warn("Token API is deprecated. Use Connection API instead (POST {}/sessions/{}/connection)",
+				RequestMappings.API, sessionId);
+
+		final Session session = this.sessionManager.getSessionWithNotActive(sessionId);
+		if (session == null) {
+			return this.generateErrorResponse("Session " + sessionId + " not found", "/tokens", HttpStatus.NOT_FOUND);
+		}
+		Map<String, Object> map = new HashMap<>();
+		params.entrySet().forEach(entry -> map.put((String) entry.getKey(), entry.getValue()));
+		map.put("type", "WEBRTC");
+		ResponseEntity<?> entity = this.newWebrtcConnection(session, metadata, record, params);
+		JsonObject jsonResponse = JsonParser.parseString(entity.getBody().toString()).getAsJsonObject();
+
+		if (jsonResponse.has("error")) {
+			return this.generateErrorResponse(jsonResponse.get("message").getAsString(), "/tokens",
+					HttpStatus.valueOf(jsonResponse.get("status").getAsInt()));
+		} else {
+			String connectionId = jsonResponse.get("id").getAsString();
+			Token token = getTokenFromConnectionId(connectionId, session.getTokenIterator());
+			return new ResponseEntity<>(token.toJson().toString(), RestUtils.getResponseHeaders(), HttpStatus.OK);
+		}
+	}
+
+	@RequestMapping(value = "/sessions/{sessionId}/stream/{streamId}", method = RequestMethod.DELETE)
+	public ResponseEntity<?> unpublishStream(@PathVariable("sessionId") String sessionId,
+			@PathVariable("streamId") String streamId) {
+
+		log.info("REST API: DELETE {}/sessions/{}/stream/{}", RequestMappings.API, sessionId, streamId);
+
+		Session session = this.sessionManager.getSessionWithNotActive(sessionId);
+		if (session == null) {
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		}
+
+		session = this.sessionManager.getSession(sessionId);
+		if (session != null) {
+
+			final String participantPrivateId = this.sessionManager.getParticipantPrivateIdFromStreamId(sessionId,
+					streamId);
+
+			if (participantPrivateId == null) {
+				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+			}
+
+			Participant participant = this.sessionManager.getParticipant(participantPrivateId);
+			if (participant.isIpcam()) {
+				return new ResponseEntity<>(HttpStatus.METHOD_NOT_ALLOWED);
+			}
+
+			this.sessionManager.unpublishStream(session, streamId, null, null, EndReason.forceUnpublishByServer);
+			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+		} else {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
 	}
 
 	@RequestMapping(value = "/signal", method = RequestMethod.POST)
@@ -738,99 +793,108 @@ public class SessionRestController {
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
 
-	@RequestMapping(value = "/sessions/{sessionId}/connection/{connectionId}", method = RequestMethod.GET)
-	public ResponseEntity<?> getConnection(@PathVariable("sessionId") String sessionId,
-			@PathVariable("connectionId") String connectionId) {
+	protected ResponseEntity<?> newWebrtcConnection(Session session, String serverData, Boolean record,
+			Map<?, ?> params) {
 
-		log.info("REST API: GET {}/sessions/{}/connection/{}", RequestMappings.API, sessionId, connectionId);
+		final String REQUEST_PATH = RequestMappings.API + "/sessions/" + session.getSessionId() + "/connection";
 
-		Session session = this.sessionManager.getSessionWithNotActive(sessionId);
-		if (session != null) {
-			Participant p = session.getParticipantByPublicId(connectionId);
-			if (p != null) {
-				return new ResponseEntity<>(p.toJson().toString(), RestUtils.getResponseHeaders(), HttpStatus.OK);
+		String roleString = null;
+		try {
+			roleString = (String) params.get("role");
+		} catch (ClassCastException e) {
+			return this.generateErrorResponse("Type error in some parameter", REQUEST_PATH, HttpStatus.BAD_REQUEST);
+		}
+
+		OpenViduRole role = null;
+		try {
+			if (roleString != null) {
+				role = OpenViduRole.valueOf(roleString);
 			} else {
-				Token t = getTokenFromConnectionId(connectionId, session.getTokenIterator());
-				if (t != null) {
-					return new ResponseEntity<>(t.toJsonAsParticipant().toString(), RestUtils.getResponseHeaders(),
-							HttpStatus.OK);
-				} else {
-					return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-				}
+				role = OpenViduRole.PUBLISHER;
+			}
+		} catch (IllegalArgumentException e) {
+			return this.generateErrorResponse("Parameter role " + params.get("role") + " is not defined", REQUEST_PATH,
+					HttpStatus.BAD_REQUEST);
+		}
+
+		JsonObject kurentoOptions = null;
+		if (params.get("kurentoOptions") != null) {
+			try {
+				kurentoOptions = JsonParser.parseString(params.get("kurentoOptions").toString()).getAsJsonObject();
+			} catch (Exception e) {
+				return this.generateErrorResponse("Error in parameter 'kurentoOptions'. It is not a valid JSON object",
+						REQUEST_PATH, HttpStatus.BAD_REQUEST);
+			}
+		}
+
+		KurentoTokenOptions kurentoTokenOptions = null;
+		if (kurentoOptions != null) {
+			try {
+				kurentoTokenOptions = new KurentoTokenOptions(kurentoOptions);
+			} catch (Exception e) {
+				return this.generateErrorResponse("Type error in some parameter of 'kurentoOptions'", REQUEST_PATH,
+						HttpStatus.BAD_REQUEST);
+			}
+		}
+
+		serverData = (serverData != null) ? serverData : "";
+		record = (record != null) ? record : true;
+
+		// While closing a session tokens can't be generated
+		if (session.closingLock.readLock().tryLock()) {
+			try {
+				Token token = sessionManager.newToken(session, role, serverData, record, kurentoTokenOptions);
+				return new ResponseEntity<>(token.toJsonAsParticipant().toString(), RestUtils.getResponseHeaders(),
+						HttpStatus.OK);
+			} catch (Exception e) {
+				return this.generateErrorResponse(
+						"Error creating Connection for session " + session.getSessionId() + ": " + e.getMessage(),
+						REQUEST_PATH, HttpStatus.INTERNAL_SERVER_ERROR);
+			} finally {
+				session.closingLock.readLock().unlock();
 			}
 		} else {
-			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+			log.error("Session {} is in the process of closing. Connection couldn't be created",
+					session.getSessionId());
+			return this.generateErrorResponse("Session " + session.getSessionId() + " not found", REQUEST_PATH,
+					HttpStatus.NOT_FOUND);
 		}
 	}
 
-	@RequestMapping(value = "/sessions/{sessionId}/connection", method = RequestMethod.GET)
-	public ResponseEntity<?> listConnections(@PathVariable("sessionId") String sessionId,
-			@RequestParam(value = "pendingConnections", defaultValue = "true", required = false) boolean pendingConnections,
-			@RequestParam(value = "webRtcStats", defaultValue = "false", required = false) boolean webRtcStats) {
+	protected ResponseEntity<?> newIpcamConnection(Session session, String serverData, Boolean record,
+			Map<?, ?> params) {
 
-		log.info("REST API: GET {}/sessions/{}/connection", RequestMappings.API, sessionId);
+		final String REQUEST_PATH = RequestMappings.API + "/sessions/" + session.getSessionId() + "/connection";
 
-		Session session = this.sessionManager.getSessionWithNotActive(sessionId);
-
-		if (session != null) {
-			JsonObject json = new JsonObject();
-			JsonArray jsonArray = session.getSnapshotOfConnectionsAsJsonArray(pendingConnections, webRtcStats);
-			json.addProperty("numberOfElements", jsonArray.size());
-			json.add("content", jsonArray);
-			return new ResponseEntity<>(json.toString(), RestUtils.getResponseHeaders(), HttpStatus.OK);
-		} else {
-			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-		}
-	}
-
-	@RequestMapping(value = "/sessions/{sessionId}/connection", method = RequestMethod.POST)
-	public ResponseEntity<?> publishIpcam(@PathVariable("sessionId") String sessionId, @RequestBody Map<?, ?> params) {
-
-		if (params == null) {
-			return this.generateErrorResponse("Error in body parameters. Cannot be empty",
-					"/sessions/" + sessionId + "/connection", HttpStatus.BAD_REQUEST);
-		}
-
-		log.info("REST API: POST {}/sessions/{}/connection {}", RequestMappings.API, sessionId, params.toString());
-
-		Session session = this.sessionManager.getSessionWithNotActive(sessionId);
-		if (session == null) {
-			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-		}
-
-		String type;
 		String rtspUri;
 		Boolean adaptativeBitrate;
 		Boolean onlyPlayWithSubscribers;
 		Integer networkCache;
-		String data;
 		try {
-			type = (String) params.get("type");
 			rtspUri = (String) params.get("rtspUri");
 			adaptativeBitrate = (Boolean) params.get("adaptativeBitrate");
 			onlyPlayWithSubscribers = (Boolean) params.get("onlyPlayWithSubscribers");
 			networkCache = (Integer) params.get("networkCache");
-			data = (String) params.get("data");
 		} catch (ClassCastException e) {
-			return this.generateErrorResponse("Type error in some parameter", "/sessions/" + sessionId + "/connection",
-					HttpStatus.BAD_REQUEST);
-		}
-		if (rtspUri == null) {
-			return this.generateErrorResponse("\"rtspUri\" parameter is mandatory",
-					"/sessions/" + sessionId + "/connection", HttpStatus.BAD_REQUEST);
+			return this.generateErrorResponse("Type error in some parameter", REQUEST_PATH, HttpStatus.BAD_REQUEST);
 		}
 
-		type = "IPCAM"; // Other possible values in the future
+		if (rtspUri == null) {
+			return this.generateErrorResponse("\"rtspUri\" parameter is mandatory", REQUEST_PATH,
+					HttpStatus.BAD_REQUEST);
+		}
+
 		adaptativeBitrate = adaptativeBitrate != null ? adaptativeBitrate : true;
 		onlyPlayWithSubscribers = onlyPlayWithSubscribers != null ? onlyPlayWithSubscribers : true;
 		networkCache = networkCache != null ? networkCache : 2000;
-		data = data != null ? data : "";
+		serverData = serverData != null ? serverData : "";
+		record = (record != null) ? record : true;
 
 		boolean hasAudio = true;
 		boolean hasVideo = true;
 		boolean audioActive = true;
 		boolean videoActive = true;
-		String typeOfVideo = type;
+		String typeOfVideo = ConnectionType.IPCAM.name();
 		Integer frameRate = null;
 		String videoDimensions = null;
 		KurentoMediaOptions mediaOptions = new KurentoMediaOptions(true, null, hasAudio, hasVideo, audioActive,
@@ -843,15 +907,14 @@ public class SessionRestController {
 				if (session.isClosed()) {
 					return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 				}
-				Participant ipcamParticipant = this.sessionManager.publishIpcam(session, mediaOptions, data);
+				Participant ipcamParticipant = this.sessionManager.publishIpcam(session, mediaOptions, serverData);
 				return new ResponseEntity<>(ipcamParticipant.toJson().toString(), RestUtils.getResponseHeaders(),
 						HttpStatus.OK);
 			} catch (MalformedURLException e) {
-				return this.generateErrorResponse("\"rtspUri\" parameter is not a valid rtsp uri",
-						"/sessions/" + sessionId + "/connection", HttpStatus.BAD_REQUEST);
+				return this.generateErrorResponse("\"rtspUri\" parameter is not a valid rtsp uri", REQUEST_PATH,
+						HttpStatus.BAD_REQUEST);
 			} catch (Exception e) {
-				return this.generateErrorResponse(e.getMessage(), "/sessions/" + sessionId + "/connection",
-						HttpStatus.INTERNAL_SERVER_ERROR);
+				return this.generateErrorResponse(e.getMessage(), REQUEST_PATH, HttpStatus.INTERNAL_SERVER_ERROR);
 			} finally {
 				session.closingLock.readLock().unlock();
 			}

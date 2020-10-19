@@ -43,6 +43,7 @@ public class Participant {
 		active
 	}
 
+	protected ConnectionType type; // WEBRTC, IPCAM
 	protected String finalUserId; // ID to match this connection with a final user (HttpSession id)
 	protected String participantPrivatetId; // ID to identify the user on server (org.kurento.jsonrpc.Session.id)
 	protected String participantPublicId; // ID to identify the user on clients
@@ -76,9 +77,10 @@ public class Participant {
 	 */
 	public Lock singleRecordingLock = new ReentrantLock();
 
-	public Participant(String finalUserId, String participantPrivatetId, String participantPublicId, String sessionId,
-			Token token, String clientMetadata, GeoLocation location, String platform, EndpointType endpointType,
-			Long activeAt) {
+	public Participant(ConnectionType type, String finalUserId, String participantPrivatetId,
+			String participantPublicId, String sessionId, Token token, String clientMetadata, GeoLocation location,
+			String platform, EndpointType endpointType, Long activeAt) {
+		this.type = type;
 		this.finalUserId = finalUserId;
 		this.participantPrivatetId = participantPrivatetId;
 		this.participantPublicId = participantPublicId;
@@ -99,6 +101,10 @@ public class Participant {
 		this.location = location;
 		this.platform = platform;
 		this.endpointType = endpointType;
+	}
+
+	public ConnectionType getType() {
+		return type;
 	}
 
 	public String getFinalUserId() {
@@ -300,6 +306,7 @@ public class Participant {
 		JsonObject json = new JsonObject();
 		json.addProperty("id", this.participantPublicId);
 		json.addProperty("object", "connection");
+		json.addProperty("type", this.type.name());
 		json.addProperty("status", this.status.name());
 		json.addProperty("connectionId", this.participantPublicId); // TODO: deprecated. Better use only "id"
 		json.addProperty("sessionId", this.sessionId);

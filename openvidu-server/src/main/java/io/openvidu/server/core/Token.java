@@ -117,6 +117,7 @@ public class Token {
 		JsonObject json = new JsonObject();
 		json.addProperty("id", this.getConnectionId());
 		json.addProperty("object", "connection");
+		json.addProperty("type", ConnectionType.WEBRTC.name());
 		json.addProperty("status", ParticipantStatus.pending.name());
 		json.addProperty("connectionId", this.getConnectionId()); // DEPRECATED: better use id
 		json.addProperty("sessionId", this.sessionId);

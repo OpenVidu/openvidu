@@ -363,8 +363,9 @@ public abstract class SessionManager {
 
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
 
-			Participant p = new Participant(finalUserId, participantPrivatetId, token.getConnectionId(), sessionId,
-					token, clientMetadata, location, platform, EndpointType.WEBRTC_ENDPOINT, null);
+			Participant p = new Participant(ConnectionType.WEBRTC, finalUserId, participantPrivatetId,
+					token.getConnectionId(), sessionId, token, clientMetadata, location, platform,
+					EndpointType.WEBRTC_ENDPOINT, null);
 
 			this.sessionidParticipantpublicidParticipant.get(sessionId).put(p.getParticipantPublicId(), p);
 
@@ -384,8 +385,9 @@ public abstract class SessionManager {
 	public Participant newRecorderParticipant(String sessionId, String participantPrivatetId, Token token,
 			String clientMetadata) {
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
-			Participant p = new Participant(null, participantPrivatetId, ProtocolElements.RECORDER_PARTICIPANT_PUBLICID,
-					sessionId, token, clientMetadata, null, null, EndpointType.WEBRTC_ENDPOINT, null);
+			Participant p = new Participant(ConnectionType.WEBRTC, null, participantPrivatetId,
+					ProtocolElements.RECORDER_PARTICIPANT_PUBLICID, sessionId, token, clientMetadata, null, null,
+					EndpointType.WEBRTC_ENDPOINT, null);
 			this.sessionidParticipantpublicidParticipant.get(sessionId)
 					.put(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID, p);
 			return p;
@@ -397,8 +399,8 @@ public abstract class SessionManager {
 	public Participant newIpcamParticipant(String sessionId, String ipcamId, Token token, GeoLocation location,
 			String platform) {
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
-			Participant p = new Participant(ipcamId, ipcamId, ipcamId, sessionId, token, null, location, platform,
-					EndpointType.PLAYER_ENDPOINT, null);
+			Participant p = new Participant(ConnectionType.IPCAM, ipcamId, ipcamId, ipcamId, sessionId, token, null,
+					location, platform, EndpointType.PLAYER_ENDPOINT, null);
 			this.sessionidParticipantpublicidParticipant.get(sessionId).put(ipcamId, p);
 			return p;
 		} else {

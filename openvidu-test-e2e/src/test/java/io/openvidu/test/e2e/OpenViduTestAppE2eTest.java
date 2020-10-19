@@ -86,7 +86,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 	final String DEFAULT_JSON_SESSION = "{'id':'STR','object':'STR','sessionId':'STR','createdAt':0,'mediaMode':'STR','recordingMode':'STR','defaultOutputMode':'STR','defaultRecordingLayout':'STR','customSessionId':'STR','connections':{'numberOfElements':0,'content':[]},'recording':false}";
 	final String DEFAULT_JSON_TOKEN = "{'id':'STR','object':'STR','token':'STR','connectionId':0,'session':'STR','createdAt':0,'role':'STR','data':'STR','record':true}";
-	final String DEFAULT_JSON_CONNECTION = "{'id':'STR','object':'STR','status':'STR','connectionId':'STR','sessionId':'STR','createdAt':0,'activeAt':0,'location':'STR','platform':'STR','role':'STR','record':true,'serverData':'STR','clientData':'STR','publishers':[],'subscribers':[]}";
+	final String DEFAULT_JSON_CONNECTION = "{'id':'STR','object':'STR','type':'STR','status':'STR','connectionId':'STR','sessionId':'STR','createdAt':0,'activeAt':0,'location':'STR','platform':'STR','role':'STR','record':true,'serverData':'STR','clientData':'STR','publishers':[],'subscribers':[]}";
 
 	@BeforeAll()
 	protected static void setupAll() {
@@ -2647,7 +2647,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId1, null,
 				HttpStatus.SC_OK, true, true, true,
 				"{'id':'" + connectionId1 + "','connectionId':'" + connectionId1
-						+ "','object':'connection','status':'pending','sessionId':'CUSTOM_SESSION_ID','token':'"
+						+ "','object':'connection','type':'WEBRTC','status':'pending','sessionId':'CUSTOM_SESSION_ID','token':'"
 						+ token1 + "','role':'MODERATOR','serverData':'SERVER_DATA','record':true,'createdAt':"
 						+ createdAt1
 						+ ",'activeAt':null,'platform':null,'location':null,'clientData':null,'publishers':null,'subscribers':null}");
@@ -2744,13 +2744,13 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId1, null,
 				HttpStatus.SC_OK, false, true, false,
 				"{'id':'" + connectionId1 + "','connectionId':'" + connectionId1
-						+ "','object':'connection','status':'active','sessionId':'CUSTOM_SESSION_ID','token':'" + token1
-						+ "','role':'MODERATOR','serverData':'SERVER_DATA','record':true}");
+						+ "','object':'connection','type':'WEBRTC','status':'active','sessionId':'CUSTOM_SESSION_ID','token':'"
+						+ token1 + "','role':'MODERATOR','serverData':'SERVER_DATA','record':true}");
 		restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId2, null,
 				HttpStatus.SC_OK, false, true, false,
 				"{'id':'" + connectionId2 + "','connectionId':'" + connectionId2
-						+ "','object':'connection','status':'active','sessionId':'CUSTOM_SESSION_ID','token':'" + token2
-						+ "','role':'PUBLISHER','serverData':'','record':true}");
+						+ "','object':'connection','type':'WEBRTC','status':'active','sessionId':'CUSTOM_SESSION_ID','token':'"
+						+ token2 + "','role':'PUBLISHER','serverData':'','record':true}");
 
 		/** GET /openvidu/api/recordings (before recording started) **/
 		restClient.rest(HttpMethod.GET, "/openvidu/api/recordings/NOT_EXISTS", HttpStatus.SC_NOT_FOUND);
@@ -3291,6 +3291,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 			Assert.assertEquals("Wrong serverData property", "MY_IP_CAMERA", response.get("serverData").getAsString());
 			Assert.assertEquals("Wrong platform property", "IPCAM", response.get("platform").getAsString());
 			Assert.assertEquals("Wrong role property", "PUBLISHER", response.get("role").getAsString());
+			Assert.assertEquals("Wrong type property", "IPCAM", response.get("type").getAsString());
 
 			Assert.assertEquals("Wrong number of publishers in IPCAM participant", 1,
 					response.get("publishers").getAsJsonArray().size());

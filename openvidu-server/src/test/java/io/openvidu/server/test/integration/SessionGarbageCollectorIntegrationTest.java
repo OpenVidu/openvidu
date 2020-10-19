@@ -98,7 +98,7 @@ public class SessionGarbageCollectorIntegrationTest {
 	}
 
 	private String getSessionId() {
-		String stringResponse = (String) sessionRestController.getSessionId(new HashMap<>()).getBody();
+		String stringResponse = (String) sessionRestController.initializeSession(new HashMap<>()).getBody();
 		return new Gson().fromJson(stringResponse, JsonObject.class).get("id").getAsString();
 	}
 

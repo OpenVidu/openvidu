@@ -212,14 +212,16 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		// Updating only role should let record value untouched
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + tokenConnectionId,
 				"{'role':'MODERATOR'}", HttpStatus.SC_OK, true, true, true,
-				"{'id':'" + tokenConnectionId + "','object':'connection','status':'pending','connectionId':'"
+				"{'id':'" + tokenConnectionId
+						+ "','object':'connection','type':'WEBRTC','status':'pending','connectionId':'"
 						+ tokenConnectionId + "','role':'MODERATOR','record':false,'token':'" + token
 						+ "','sessionId':'CUSTOM_SESSION_ID','serverData':'','publishers':null,'subscribers':null,'createdAt':"
 						+ createdAt + ",'activeAt':null,'platform':null,'location':null,'clientData':null}");
 		// Updating only record should let role value untouched
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + tokenConnectionId,
 				"{'record':true}", HttpStatus.SC_OK, true, true, true,
-				"{'id':'" + tokenConnectionId + "','object':'connection','status':'pending','connectionId':'"
+				"{'id':'" + tokenConnectionId
+						+ "','object':'connection','type':'WEBRTC','status':'pending','connectionId':'"
 						+ tokenConnectionId + "','role':'MODERATOR','record':true,'token':'" + token
 						+ "','sessionId':'CUSTOM_SESSION_ID','serverData':'','publishers':null,'subscribers':null,'createdAt':"
 						+ createdAt + ",'activeAt':null,'platform':null,'location':null,'clientData':null}");
@@ -282,23 +284,28 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		// Updating only role should let record value untouched
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + tokenConnectionId,
 				"{'role':'MODERATOR'}", HttpStatus.SC_OK, false, true, true,
-				"{'id':'" + tokenConnectionId + "','object':'connection','status':'active','connectionId':'"
+				"{'id':'" + tokenConnectionId
+						+ "','object':'connection','type':'WEBRTC','status':'active','connectionId':'"
 						+ tokenConnectionId + "','role':'MODERATOR','record':false,'token':'" + token
 						+ "','sessionId':'CUSTOM_SESSION_ID','serverData':'','publishers':[],'subscribers':[]}");
 		// Updating only record should let role value untouched
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + tokenConnectionId,
 				"{'record':true}", HttpStatus.SC_OK, false, true, true,
-				"{'id':'" + tokenConnectionId + "','object':'connection','status':'active','connectionId':'"
+				"{'id':'" + tokenConnectionId
+						+ "','object':'connection','type':'WEBRTC','status':'active','connectionId':'"
 						+ tokenConnectionId + "','role':'MODERATOR','record':true,'token':'" + token
 						+ "','sessionId':'CUSTOM_SESSION_ID','serverData':'','publishers':[],'subscribers':[]}");
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + tokenConnectionId,
 				"{'role':'SUBSCRIBER','record':true,'data':'OTHER DATA'}", HttpStatus.SC_OK, false, true, true,
-				"{'id':'" + tokenConnectionId + "','object':'connection','status':'active','connectionId':'"
+				"{'id':'" + tokenConnectionId
+						+ "','object':'connection','type':'WEBRTC','status':'active','connectionId':'"
 						+ tokenConnectionId + "','role':'SUBSCRIBER','record':true,'token':'" + token
 						+ "','sessionId':'CUSTOM_SESSION_ID','serverData':'','publishers':[],'subscribers':[]}");
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + tokenConnectionId,
-				"{'role':'PUBLISHER'}", HttpStatus.SC_OK, false, true, true,
-				"{'id':'" + tokenConnectionId + "','object':'connection','status':'active','connectionId':'"
+				"{'role':'PUBLISHER'}", HttpStatus.SC_OK,
+				false, true, true,
+				"{'id':'" + tokenConnectionId
+						+ "','object':'connection','type':'WEBRTC','status':'active','connectionId':'"
 						+ tokenConnectionId + "','role':'PUBLISHER','record':true,'token':'" + token
 						+ "','sessionId':'CUSTOM_SESSION_ID','serverData':'','publishers':[],'subscribers':[]}");
 
