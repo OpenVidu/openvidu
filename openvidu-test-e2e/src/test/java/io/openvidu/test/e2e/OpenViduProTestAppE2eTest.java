@@ -302,8 +302,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 						+ tokenConnectionId + "','role':'SUBSCRIBER','record':true,'token':'" + token
 						+ "','sessionId':'CUSTOM_SESSION_ID','serverData':'','publishers':[],'subscribers':[]}");
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + tokenConnectionId,
-				"{'role':'PUBLISHER'}", HttpStatus.SC_OK,
-				false, true, true,
+				"{'role':'PUBLISHER'}", HttpStatus.SC_OK, false, true, true,
 				"{'id':'" + tokenConnectionId
 						+ "','object':'connection','type':'WEBRTC','status':'active','connectionId':'"
 						+ tokenConnectionId + "','role':'PUBLISHER','record':true,'token':'" + token

@@ -3264,7 +3264,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 			CustomHttpClient restClient = new CustomHttpClient(OPENVIDU_URL, "OPENVIDUAPP", OPENVIDU_SECRET);
 
 			// Wrong session [404]
-			restClient.rest(HttpMethod.POST, "/openvidu/api/sessions/WRONG_SESSION/connection", "{}",
+			restClient.rest(HttpMethod.POST, "/openvidu/api/sessions/WRONG_SESSION/connection", "{'type':'IPCAM'}",
 					HttpStatus.SC_NOT_FOUND);
 
 			// Init a session and publish IP camera AS FIRST PARTICIPANT
@@ -3272,12 +3272,16 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 					HttpStatus.SC_OK, true, false, true, DEFAULT_JSON_SESSION);
 
 			// No rtspUri [400]
-			restClient.rest(HttpMethod.POST, "/openvidu/api/sessions/IP_CAM_SESSION/connection", "{}",
+			restClient.rest(HttpMethod.POST, "/openvidu/api/sessions/IP_CAM_SESSION/connection", "{'type':'IPCAM'}",
 					HttpStatus.SC_BAD_REQUEST);
 
 			// Wrong rtspUri (invalid url format) [400]
 			restClient.rest(HttpMethod.POST, "/openvidu/api/sessions/IP_CAM_SESSION/connection",
-					"{'rtspUri': 'NOT_A_URL'}", HttpStatus.SC_BAD_REQUEST);
+					"{'type':'IPCAM','rtspUri': 'NOT_A_URL'}", HttpStatus.SC_BAD_REQUEST);
+			// Wrong adaptativeBitrate [400]
+			restClient.rest(HttpMethod.POST, "/openvidu/api/sessions/IP_CAM_SESSION/connection",
+					"{'type':'IPCAM','rtspUri':'rtsp://dummyurl.com','adaptativeBitrate':123,}",
+					HttpStatus.SC_BAD_REQUEST);
 
 			// Publish IP camera. Dummy URL because no user will subscribe to it [200]
 			String ipCamBody = "{'type':'IPCAM','rtspUri':'rtsp://dummyurl.com','adaptativeBitrate':true,'onlyPlayWithSubscribers':true,'networkCache':1000,'data':'MY_IP_CAMERA'}";
@@ -3458,7 +3462,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 			// Publish video only IPCAM
 			fullRecordingPath = "file://" + recPath + "TestSession-1/videoOnly.mp4";
-			ipCamBody = "{'rtspUri':'" + fullRecordingPath + "'}";
+			ipCamBody = "{'type':'IPCAM','rtspUri':'" + fullRecordingPath + "'}";
 			response = restClient.rest(HttpMethod.POST, "/openvidu/api/sessions/TestSession/connection", ipCamBody,
 					HttpStatus.SC_OK);
 			CustomWebhook.waitForEvent("sessionCreated", 1);
