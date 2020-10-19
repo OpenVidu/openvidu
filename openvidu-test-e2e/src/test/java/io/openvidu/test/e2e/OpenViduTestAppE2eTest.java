@@ -34,7 +34,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.http.HttpStatus;
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -2941,7 +2940,6 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 	@Test
 	@DisplayName("Kurento reconnect test")
-	@Disabled
 	void kurentoReconnectTest() throws Exception {
 		isRecordingTest = true;
 		isKurentoRestartTest = true;
