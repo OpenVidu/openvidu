@@ -21,6 +21,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 
 import com.google.gson.JsonObject;
 
+import io.openvidu.java.client.ConnectionType;
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.server.core.Participant.ParticipantStatus;
 import io.openvidu.server.coturn.TurnCredentials;
