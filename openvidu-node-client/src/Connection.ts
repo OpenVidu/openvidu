@@ -17,7 +17,7 @@
 
 import { Publisher } from './Publisher';
 import { ConnectionOptions } from './ConnectionOptions';
-import { OpenViduRole } from 'OpenViduRole';
+import { OpenViduRole } from './OpenViduRole';
 
 /**
  * See [[Session.connections]]

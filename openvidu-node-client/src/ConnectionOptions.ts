@@ -15,7 +15,7 @@
  *
  */
 
-import { ConnectionType } from 'ConnectionType';
+import { ConnectionType } from './ConnectionType';
 import { OpenViduRole } from './OpenViduRole';
 
 export interface ConnectionOptions {
