@@ -91,7 +91,7 @@ export class TestApirestComponent implements OnInit, OnDestroy {
   getToken() {
     const sessionId = this.data[this.selectedRadioIndex][0];
 
-    this.openviduRestService.getToken(this.openviduUrl, this.openviduSecret, sessionId, this.selectedRole, this.serverData)
+    this.openviduRestService.getToken(sessionId, this.selectedRole, this.serverData)
       .then((token) => {
         this.updateData();
       })

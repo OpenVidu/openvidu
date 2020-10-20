@@ -1,7 +1,7 @@
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
 
-import { OpenVidu as OpenViduAPI, Session as SessionAPI, Recording, RecordingProperties, RecordingLayout, TokenOptions, OpenViduRole } from 'openvidu-node-client';
+import { OpenVidu as OpenViduAPI, Session as SessionAPI, Recording, RecordingProperties, RecordingLayout, ConnectionOptions, OpenViduRole } from 'openvidu-node-client';
 
 @Component({
     selector: 'app-session-api-dialog',
@@ -26,7 +26,7 @@ export class SessionApiDialogComponent {
     recPropertiesIcon = 'add_circle';
     showRecProperties = false;
 
-    tokenOptions: TokenOptions = {
+    connectionOptions: ConnectionOptions = {
         record: true,
         role: OpenViduRole.PUBLISHER
     };
@@ -174,9 +174,9 @@ export class SessionApiDialogComponent {
 
     updateConnection() {
         console.log('Updating connection');
-        this.session.updateConnection(this.connectionId, this.tokenOptions)
+        this.session.updateConnection(this.connectionId, this.connectionOptions)
             .then(modifiedConnection => {
-                this.response = 'Connection updated: ' + JSON.stringify({ role: modifiedConnection.role, record: modifiedConnection.record });
+                this.response = 'Connection updated: ' + JSON.stringify({ role: modifiedConnection.connectionOptions.role, record: modifiedConnection.connectionOptions.record });
             })
             .catch(error => {
                 this.response = 'Error [' + error.message + ']';

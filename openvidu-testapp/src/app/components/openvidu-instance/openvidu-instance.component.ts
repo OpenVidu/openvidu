@@ -15,11 +15,11 @@ import {
   MediaMode,
   RecordingMode,
   RecordingLayout,
-  TokenOptions,
+  Connection,
+  ConnectionOptions,
   OpenViduRole,
   RecordingProperties,
   Recording,
-  Token
 } from 'openvidu-node-client';
 import { MatDialog, MAT_CHECKBOX_CLICK_ACTION } from '@angular/material';
 import { ExtensionDialogComponent } from '../dialogs/extension-dialog/extension-dialog.component';
@@ -129,7 +129,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   manualTurnConf: RTCIceServer = { urls: [] };
   customToken: string;
   forcePublishing: boolean;
-  tokenOptions: TokenOptions = {
+  connectionOptions: ConnectionOptions = {
     role: OpenViduRole.PUBLISHER,
     record: true,
     kurentoOptions: {
@@ -199,8 +199,8 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     if (!!this.customToken) {
       this.joinSessionShared(this.customToken);
     } else {
-      const token: Token = await this.getToken();
-      this.joinSessionShared(token.token);
+      const connection: Connection = await this.createConnection();
+      this.joinSessionShared(connection.token);
     }
   }
 
@@ -566,7 +566,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         manualTurnConf: this.manualTurnConf,
         customToken: this.customToken,
         forcePublishing: this.forcePublishing,
-        tokenOptions: this.tokenOptions,
+        connectionOptions: this.connectionOptions,
       },
       width: '450px'
     });
@@ -581,7 +581,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         this.manualTurnConf = result.manualTurnConf;
         this.customToken = result.customToken;
         this.forcePublishing = result.forcePublishing;
-        this.tokenOptions = result.tokenOptions;
+        this.connectionOptions = result.connectionOptions;
       }
       document.getElementById('session-settings-btn-' + this.index).classList.remove('cdk-program-focused');
     });
@@ -692,8 +692,8 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
     this.sessionAPI = await this.OV_NodeClient.createSession(this.sessionProperties);
   }
 
-  async getToken(): Promise<Token> {
-    return this.sessionAPI.createToken(this.tokenOptions);
+  async createConnection(): Promise<Connection> {
+    return this.sessionAPI.createConnection(this.connectionOptions);
   }
 
   updateEventFromChild(event: OpenViduEvent) {
