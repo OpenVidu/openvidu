@@ -213,7 +213,6 @@ export class Connection {
             this.connectionOptions.data === other.connectionOptions.data &&
             this.connectionOptions.record === other.connectionOptions.record &&
             this.connectionOptions.role === other.connectionOptions.role &&
-            this.connectionOptions.kurentoOptions === other.connectionOptions.kurentoOptions &&
             this.connectionOptions.rtspUri === other.connectionOptions.rtspUri &&
             this.connectionOptions.adaptativeBitrate === other.connectionOptions.adaptativeBitrate &&
             this.connectionOptions.onlyPlayWithSubscribers === other.connectionOptions.onlyPlayWithSubscribers &&
@@ -224,6 +223,13 @@ export class Connection {
             this.clientData === other.clientData &&
             this.subscribers.length === other.subscribers.length &&
             this.publishers.length === other.publishers.length);
+        if (equals) {
+            if (this.connectionOptions.kurentoOptions != null) {
+                equals = JSON.stringify(this.connectionOptions.kurentoOptions) === JSON.stringify(other.connectionOptions.kurentoOptions);
+            } else {
+                equals = (this.connectionOptions.kurentoOptions === other.connectionOptions.kurentoOptions);
+            }
+        }
         if (equals) {
             equals = JSON.stringify(this.subscribers) === JSON.stringify(other.subscribers);
             if (equals) {
