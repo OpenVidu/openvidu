@@ -25,9 +25,7 @@ import { Recording } from './Recording';
 import { RecordingLayout } from './RecordingLayout';
 import { RecordingMode } from './RecordingMode';
 import { SessionProperties } from './SessionProperties';
-import { Token } from './Token';
 import { TokenOptions } from './TokenOptions';
-
 
 export class Session {
 
@@ -51,6 +49,7 @@ export class Session {
      * **will remain unchanged since the last time method [[Session.fetch]] or [[OpenVidu.fetch]] was called**.
      * Exceptions to this rule are:
      *
+	 * - Calling [[Session.createConnection]] automatically adds the new Connection object to the local collection.
      * - Calling [[Session.forceUnpublish]] automatically updates each affected local Connection object.
      * - Calling [[Session.forceDisconnect]] automatically updates each affected local Connection object.
      * - Calling [[Session.updateConnection]] automatically updates the attributes of the affected local Connection object.
@@ -105,37 +104,12 @@ export class Session {
     }
 
     /**
-     * @deprecated Use [[Session.createToken]] instead to get a [[Token]] object.
+     * @deprecated Use [[Session.createConnection]] instead to get a [[Connection]] object.
      * 
      * @returns A Promise that is resolved to the generated _token_ string if success and rejected with an Error object if not
      */
     public generateToken(tokenOptions?: TokenOptions): Promise<string> {
         return new Promise<string>((resolve, reject) => {
-            this.createToken(tokenOptions).then(token => resolve(token.token)).catch(error => reject(error));
-        });
-    }
-
-    /**
-     * Gets a new token object associated to Session object configured with
-     * `tokenOptions`. The token string value to send to the client side
-     * is available at [[Token.token]] property.
-     * 
-     * Property [[Token.connectionId]] provides the connection identifier that will be given
-     * to the user consuming the token. With `connectionId` you can call
-     * the following methods without having to fetch and search for the actual
-     * [[Connection]] object:
-     * 
-     * - Call [[Session.forceDisconnect]] to invalidate the token if no client has used it
-     * yet or force the connected client to leave the session if it has.
-     * - Call [[Session.updateConnection]] to update the [[Connection]] options. And this is
-     * valid for unused tokens, but also for already used tokens, so you can
-     * dynamically change the user connection options on the fly.
-     * 
-     * @returns A Promise that is resolved to the generated [[Token]] object if success and rejected with an Error object if not
-     */
-    public createToken(tokenOptions?: TokenOptions): Promise<Token> {
-        return new Promise<Token>((resolve, reject) => {
-
             const data = JSON.stringify({
                 session: this.sessionId,
                 role: (!!tokenOptions && !!tokenOptions.role) ? tokenOptions.role : null,
@@ -156,7 +130,51 @@ export class Session {
                 .then(res => {
                     if (res.status === 200) {
                         // SUCCESS response from openvidu-server. Resolve token
-                        resolve(new Token(res.data));
+                        resolve(res.data.token);
+                    } else {
+                        // ERROR response from openvidu-server. Resolve HTTP status
+                        reject(new Error(res.status.toString()));
+                    }
+                }).catch(error => {
+                    this.handleError(error, reject);
+                });
+        });
+    }
+
+    /**
+     * Creates a new Connection object associated to Session object and configured with
+     * `connectionOptions`. Each user connecting to the Session requires a Connection.
+     * The token string value to send to the client side is available at [[Connection.token]].
+     * 
+     * @returns A Promise that is resolved to the generated [[Connection]] object if success and rejected with an Error object if not
+     */
+    public createConnection(connectionOptions?: ConnectionOptions): Promise<Connection> {
+        return new Promise<Connection>((resolve, reject) => {
+            const data = JSON.stringify({
+                role: (!!connectionOptions && !!connectionOptions.role) ? connectionOptions.role : null,
+                data: (!!connectionOptions && !!connectionOptions.data) ? connectionOptions.data : null,
+                record: !!connectionOptions ? connectionOptions.record : null,
+                kurentoOptions: (!!connectionOptions && !!connectionOptions.kurentoOptions) ? connectionOptions.kurentoOptions : null
+            });
+            axios.post(
+                this.ov.host + OpenVidu.API_SESSIONS + '/' + this.sessionId + '/connection',
+                data,
+                {
+                    headers: {
+                        'Authorization': this.ov.basicAuth,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            )
+                .then(res => {
+                    if (res.status === 200) {
+                        // SUCCESS response from openvidu-server. Store and resolve Connection
+                        const connection = new Connection(res.data);
+                        this.connections.push(connection);
+                        if (connection.status === 'active') {
+                            this.activeConnections.push(connection);
+                        }
+                        resolve(new Connection(res.data));
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
                         reject(new Error(res.status.toString()));
@@ -240,12 +258,18 @@ export class Session {
     }
 
     /**
-     * Removes a Connection from the Session.
+     * Removes the Connection from the Session. This can translate into a forced eviction of a user from the Session if the
+     * Connection had status `active` or into a token invalidation if no user had taken the Connection yet (status `pending`).
+     * 
+     * In the first case, OpenVidu Browser will trigger the proper events in the client-side (`streamDestroyed`, `connectionDestroyed`,
+     * `sessionDisconnected`) with reason set to `"forceDisconnectByServer"`.
+     * 
+     * In the second case, the token of the Connection will be invalidated and no user will be able to connect to the session with it.
      * 
      * This method automatically updates the properties of the local affected objects. This means that there is no need to call
-     * [[Session.fetch]] or [[OpenVidu.fetch]] to see the changes consequence of the execution of this method applied in the local objects.
+     * [[Session.fetch]] or [[OpenVidu.fetch]]] to see the changes consequence of the execution of this method applied in the local objects.
      *
-     * @param connection The Connection object to disconnect from the session, or its `connectionId` property
+     * @param connection The Connection object to remove from the session, or its `connectionId` property
      * 
      * @returns A Promise that is resolved if the Connection was successfully removed from the Session and rejected with an Error object if not
      */
@@ -308,7 +332,7 @@ export class Session {
     }
 
     /**
-     * Forces some user to unpublish a Stream (identified by its `streamId` or the corresponding [[Publisher]] object owning it).
+     * Forces some Connection to unpublish a Stream (identified by its `streamId` or the corresponding [[Publisher]] object owning it).
      * OpenVidu Browser will trigger the proper events on the client-side (`streamDestroyed`) with reason set to `"forceUnpublishByServer"`.
      *
      * You can get `publisher` parameter from [[Connection.publishers]] array ([[Publisher.streamId]] for getting each `streamId` property).
@@ -316,6 +340,8 @@ export class Session {
      *
      * This method automatically updates the properties of the local affected objects. This means that there is no need to call
      * [[Session.fetch]] or [[OpenVidu.fetch]] to see the changes consequence of the execution of this method applied in the local objects.
+     * 
+     * @param publisher The Publisher object to unpublish, or its `streamId` property
      * 
      * @returns A Promise that is resolved if the stream was successfully unpublished and rejected with an Error object if not
      */

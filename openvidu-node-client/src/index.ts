@@ -4,7 +4,7 @@ export * from './Session';
 export * from './SessionProperties';
 export * from './TokenOptions';
 export * from './ConnectionOptions';
-export * from './Token';
+export * from './ConnectionType';
 export * from './MediaMode';
 export * from './RecordingLayout';
 export * from './RecordingMode';

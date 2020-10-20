@@ -45,14 +45,15 @@ import com.google.gson.JsonSyntaxException;
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
+import io.openvidu.java.client.ConnectionOptions;
 import io.openvidu.java.client.ConnectionType;
+import io.openvidu.java.client.KurentoOptions;
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.java.client.Recording;
 import io.openvidu.java.client.SessionProperties;
 import io.openvidu.server.cdr.CDREventRecording;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.coturn.CoturnCredentialsService;
-import io.openvidu.server.kurento.core.KurentoTokenOptions;
 import io.openvidu.server.kurento.endpoint.EndpointType;
 import io.openvidu.server.recording.service.RecordingManager;
 import io.openvidu.server.utils.FormatChecker;
@@ -160,8 +161,8 @@ public abstract class SessionManager {
 	public abstract void removeFilterEventListener(Session session, Participant subscriber, String streamId,
 			String eventType);
 
-	public abstract Participant publishIpcam(Session session, MediaOptions mediaOptions, String serverMetadata)
-			throws Exception;
+	public abstract Participant publishIpcam(Session session, MediaOptions mediaOptions,
+			ConnectionOptions connectionOptions) throws Exception;
 
 	public abstract void reconnectStream(Participant participant, String streamId, String sdpOffer,
 			Integer transactionId);
@@ -301,22 +302,22 @@ public abstract class SessionManager {
 	}
 
 	public Token newToken(Session session, OpenViduRole role, String serverMetadata, boolean record,
-			KurentoTokenOptions kurentoTokenOptions) throws Exception {
+			KurentoOptions kurentoOptions) throws Exception {
 		if (!formatChecker.isServerMetadataFormatCorrect(serverMetadata)) {
 			log.error("Data invalid format");
 			throw new OpenViduException(Code.GENERIC_ERROR_CODE, "Data invalid format");
 		}
-		Token tokenObj = tokenGenerator.generateToken(session.getSessionId(), role, serverMetadata, record,
-				kurentoTokenOptions);
+		Token tokenObj = tokenGenerator.generateToken(session.getSessionId(), serverMetadata,
+				record, role, kurentoOptions);
 		session.storeToken(tokenObj);
 		session.showTokens("Token created");
 		return tokenObj;
 	}
 
-	public Token newTokenForInsecureUser(Session session, String token, String serverMetadata) throws Exception {
-		Token tokenObj = new Token(token, session.getSessionId(), OpenViduRole.PUBLISHER,
-				serverMetadata != null ? serverMetadata : "", true,
-				this.openviduConfig.isTurnadminAvailable() ? this.coturnCredentialsService.createUser() : null, null);
+	public Token newTokenForInsecureUser(Session session, String token, ConnectionOptions connectionOptions)
+			throws Exception {
+		Token tokenObj = new Token(token, session.getSessionId(), connectionOptions,
+				this.openviduConfig.isTurnadminAvailable() ? this.coturnCredentialsService.createUser() : null);
 		session.storeToken(tokenObj);
 		session.showTokens("Token created for insecure user");
 		return tokenObj;
@@ -364,9 +365,8 @@ public abstract class SessionManager {
 
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
 
-			Participant p = new Participant(ConnectionType.WEBRTC, finalUserId, participantPrivatetId,
-					token.getConnectionId(), sessionId, token, clientMetadata, location, platform,
-					EndpointType.WEBRTC_ENDPOINT, null);
+			Participant p = new Participant(finalUserId, participantPrivatetId, token.getConnectionId(), sessionId,
+					token, clientMetadata, location, platform, EndpointType.WEBRTC_ENDPOINT, null);
 
 			this.sessionidParticipantpublicidParticipant.get(sessionId).put(p.getParticipantPublicId(), p);
 
@@ -386,9 +386,8 @@ public abstract class SessionManager {
 	public Participant newRecorderParticipant(String sessionId, String participantPrivatetId, Token token,
 			String clientMetadata) {
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
-			Participant p = new Participant(ConnectionType.WEBRTC, null, participantPrivatetId,
-					ProtocolElements.RECORDER_PARTICIPANT_PUBLICID, sessionId, token, clientMetadata, null, null,
-					EndpointType.WEBRTC_ENDPOINT, null);
+			Participant p = new Participant(null, participantPrivatetId, ProtocolElements.RECORDER_PARTICIPANT_PUBLICID,
+					sessionId, token, clientMetadata, null, null, EndpointType.WEBRTC_ENDPOINT, null);
 			this.sessionidParticipantpublicidParticipant.get(sessionId)
 					.put(ProtocolElements.RECORDER_PARTICIPANT_PUBLICID, p);
 			return p;
@@ -400,8 +399,8 @@ public abstract class SessionManager {
 	public Participant newIpcamParticipant(String sessionId, String ipcamId, Token token, GeoLocation location,
 			String platform) {
 		if (this.sessionidParticipantpublicidParticipant.get(sessionId) != null) {
-			Participant p = new Participant(ConnectionType.IPCAM, ipcamId, ipcamId, ipcamId, sessionId, token, null,
-					location, platform, EndpointType.PLAYER_ENDPOINT, null);
+			Participant p = new Participant(ipcamId, ipcamId, ipcamId, sessionId, token, null, location, platform,
+					EndpointType.PLAYER_ENDPOINT, null);
 			this.sessionidParticipantpublicidParticipant.get(sessionId).put(ipcamId, p);
 			return p;
 		} else {

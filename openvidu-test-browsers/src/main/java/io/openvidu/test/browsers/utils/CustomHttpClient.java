@@ -110,7 +110,7 @@ public class CustomHttpClient {
 	public JsonObject rest(HttpMethod method, String path, String body, int status, boolean matchKeys,
 			boolean matchValues, boolean matchArrays, String jsonReturnedValue) throws Exception {
 		JsonObject jsonExpected = null;
-		jsonReturnedValue.replaceAll("'", "\"");
+		jsonReturnedValue = jsonReturnedValue.replaceAll("'", "\"");
 		try {
 			jsonExpected = JsonParser.parseString(jsonReturnedValue).getAsJsonObject();
 		} catch (JsonSyntaxException e1) {
@@ -171,7 +171,8 @@ public class CustomHttpClient {
 	public static void checkSameType(JsonElement expected, JsonElement actual, String key, boolean checkAlsoSameValue)
 			throws Exception {
 		if (!expected.getClass().equals(actual.getClass())) {
-			throw new Exception("Expected JSON element has not the same class as the actual JSON element. Expected: "
+			throw new Exception("Expected JSON element \"" + key
+					+ "\" has not the same class as the actual JSON element. Expected: "
 					+ expected.getClass().getSimpleName() + ". Actual: " + actual.getClass().getSimpleName());
 		}
 		if (expected.isJsonNull()) {

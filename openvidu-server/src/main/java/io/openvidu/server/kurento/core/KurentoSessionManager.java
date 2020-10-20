@@ -48,6 +48,8 @@ import com.google.gson.JsonObject;
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
+import io.openvidu.java.client.ConnectionOptions;
+import io.openvidu.java.client.KurentoOptions;
 import io.openvidu.java.client.MediaMode;
 import io.openvidu.java.client.Recording;
 import io.openvidu.java.client.RecordingLayout;
@@ -387,7 +389,7 @@ public class KurentoSessionManager extends SessionManager {
 		 * kurentoParticipant.getPublisher().apply(elem); }
 		 */
 
-		KurentoTokenOptions kurentoTokenOptions = participant.getToken().getKurentoTokenOptions();
+		KurentoOptions kurentoTokenOptions = participant.getToken().getKurentoOptions();
 		if (kurentoOptions.getFilter() != null && kurentoTokenOptions != null) {
 			if (kurentoTokenOptions.isFilterAllowed(kurentoOptions.getFilter().getType())) {
 				this.applyFilterInPublisher(kParticipant, kurentoOptions.getFilter());
@@ -990,7 +992,7 @@ public class KurentoSessionManager extends SessionManager {
 
 	@Override
 	/* Protected by Session.closingLock.readLock */
-	public Participant publishIpcam(Session session, MediaOptions mediaOptions, String serverMetadata)
+	public Participant publishIpcam(Session session, MediaOptions mediaOptions, ConnectionOptions connectionOptions)
 			throws Exception {
 		final String sessionId = session.getSessionId();
 		final KurentoMediaOptions kMediaOptions = (KurentoMediaOptions) mediaOptions;
@@ -1032,7 +1034,8 @@ public class KurentoSessionManager extends SessionManager {
 		this.newInsecureParticipant(rtspConnectionId);
 		String token = IdentifierPrefixes.TOKEN_ID + RandomStringUtils.randomAlphabetic(1).toUpperCase()
 				+ RandomStringUtils.randomAlphanumeric(15);
-		this.newTokenForInsecureUser(session, token, serverMetadata);
+
+		this.newTokenForInsecureUser(session, token, connectionOptions);
 		final Token tokenObj = session.consumeToken(token);
 
 		Participant ipcamParticipant = this.newIpcamParticipant(sessionId, rtspConnectionId, tokenObj, location,
@@ -1109,9 +1112,10 @@ public class KurentoSessionManager extends SessionManager {
 		Session session = this.getSession(sessionId);
 		return ((KurentoSession) session).getParticipantPrivateIdFromStreamId(streamId);
 	}
-	
+
 	@Override
-	public void onVideoData(Participant participant, Integer transactionId, Integer height, Integer width, Boolean videoActive, Boolean audioActive) {
+	public void onVideoData(Participant participant, Integer transactionId, Integer height, Integer width,
+			Boolean videoActive, Boolean audioActive) {
 		sessionEventsHandler.onVideoData(participant, transactionId, height, width, videoActive, audioActive);
 	}
 

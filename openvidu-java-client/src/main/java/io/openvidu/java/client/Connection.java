@@ -39,7 +39,8 @@ public class Connection {
 	private String location;
 	private String platform;
 	private String clientData;
-	private Token token;
+	private ConnectionOptions connectionOptions;
+	private String token;
 
 	protected Map<String, Publisher> publishers = new ConcurrentHashMap<>();
 	protected List<String> subscribers = new ArrayList<>();
@@ -49,7 +50,7 @@ public class Connection {
 	}
 
 	/**
-	 * Returns the identifier of the connection. You can call methods
+	 * Returns the identifier of the Connection. You can call methods
 	 * {@link io.openvidu.java.client.Session#forceDisconnect(String)} or
 	 * {@link io.openvidu.java.client.Session#updateConnection(String, TokenOptions)}
 	 * passing this property as parameter
@@ -59,7 +60,7 @@ public class Connection {
 	}
 
 	/**
-	 * Returns the status of the connection. Can be:
+	 * Returns the status of the Connection. Can be:
 	 * <ul>
 	 * <li><code>pending</code>: if the Connection is waiting for any user to use
 	 * its internal token to connect to the session, calling method <a href=
@@ -74,7 +75,7 @@ public class Connection {
 	}
 
 	/**
-	 * Timestamp when this connection was created, in UTC milliseconds (ms since Jan
+	 * Timestamp when this Connection was created, in UTC milliseconds (ms since Jan
 	 * 1, 1970, 00:00:00 UTC)
 	 */
 	public Long createdAt() {
@@ -82,7 +83,7 @@ public class Connection {
 	}
 
 	/**
-	 * Timestamp when this connection was taken by a user (passing from status
+	 * Timestamp when this Connection was taken by a user (passing from status
 	 * "pending" to "active"), in UTC milliseconds (ms since Jan 1, 1970, 00:00:00
 	 * UTC)
 	 */
@@ -91,19 +92,19 @@ public class Connection {
 	}
 
 	/**
-	 * Returns the role of the connection
+	 * Returns the type of Connection.
 	 */
-	public OpenViduRole getRole() {
-		return this.token.getRole();
+	public ConnectionType getType() {
+		return this.connectionOptions.getType();
 	}
 
 	/**
-	 * Returns the data associated to the connection on the server-side. This value
+	 * Returns the data associated to the Connection on the server-side. This value
 	 * is set with {@link io.openvidu.java.client.TokenOptions.Builder#data(String)}
 	 * when calling {@link io.openvidu.java.client.Session#generateToken()}
 	 */
 	public String getServerData() {
-		return this.token.getData();
+		return this.connectionOptions.getData();
 	}
 
 	/**
@@ -113,14 +114,86 @@ public class Connection {
 	 * target="_blank">INDIVIDUAL recording</a>.
 	 */
 	public boolean record() {
-		return this.token.record();
+		return this.connectionOptions.record();
 	}
 
 	/**
-	 * Returns the token string associated to the connection
+	 * Returns the role of the Connection.
+	 * 
+	 * <br>
+	 * <br>
+	 * <strong>Only for
+	 * {@link io.openvidu.java.client.ConnectionType#WEBRTC}</strong>
+	 */
+	public OpenViduRole getRole() {
+		return this.connectionOptions.getRole();
+	}
+
+	/**
+	 * Returns the RTSP URI of the Connection.
+	 * 
+	 * <br>
+	 * <br>
+	 * <strong>Only for
+	 * {@link io.openvidu.java.client.ConnectionType#IPCAM}</strong>
+	 */
+	public String getRtspUri() {
+		return this.connectionOptions.getRtspUri();
+	}
+
+	/**
+	 * Whether the Connection uses adaptative bitrate (and therefore adaptative
+	 * quality) or not. For local network connections that do not require media
+	 * transcoding this can be disabled to save CPU power. If you are not sure if
+	 * transcoding might be necessary, setting this property to false <strong>may
+	 * result in media connections not being established</strong>.
+	 * 
+	 * <br>
+	 * <br>
+	 * <strong>Only for
+	 * {@link io.openvidu.java.client.ConnectionType#IPCAM}</strong>
+	 */
+	public boolean adaptativeBitrate() {
+		return this.connectionOptions.adaptativeBitrate();
+	}
+
+	/**
+	 * Whether the IP camera stream of this Connection will only be enabled when
+	 * some user is subscribed to it, or not. This allows you to reduce power
+	 * consumption and network bandwidth in your server while nobody is asking to
+	 * receive the camera's video. On the counterpart, first user subscribing to the
+	 * IP camera stream will take a little longer to receive its video.
+	 * 
+	 * <br>
+	 * <br>
+	 * <strong>Only for
+	 * {@link io.openvidu.java.client.ConnectionType#IPCAM}</strong>
+	 */
+	public boolean onlyPlayWithSubscribers() {
+		return this.connectionOptions.onlyPlayWithSubscribers();
+	}
+
+	/**
+	 * Returns the size of the buffer of the endpoint receiving the IP camera's
+	 * stream, in milliseconds. The smaller it is, the less delay the signal will
+	 * have, but more problematic will be in unstable networks. Use short buffers
+	 * only if there is a quality connection between the IP camera and OpenVidu
+	 * Server.
+	 * 
+	 * <br>
+	 * <br>
+	 * <strong>Only for
+	 * {@link io.openvidu.java.client.ConnectionType#IPCAM}</strong>
+	 */
+	public int getNetworkCache() {
+		return this.connectionOptions.getNetworkCache();
+	}
+
+	/**
+	 * Returns the token string associated to the Connection
 	 */
 	public String getToken() {
-		return this.token.getToken();
+		return this.token;
 	}
 
 	/**
@@ -180,17 +253,23 @@ public class Connection {
 
 	protected JsonObject toJson() {
 		JsonObject json = new JsonObject();
-		json.addProperty("id", this.getConnectionId());
+		json.addProperty("connectionId", this.getConnectionId());
 		json.addProperty("status", this.getStatus());
 		json.addProperty("createdAt", this.createdAt());
 		json.addProperty("activeAt", this.activeAt());
 		json.addProperty("location", this.getLocation());
 		json.addProperty("platform", this.getPlatform());
-		json.addProperty("token", this.getToken());
-		json.addProperty("role", this.getRole().name());
-		json.addProperty("serverData", this.getServerData());
-		json.addProperty("record", this.record());
 		json.addProperty("clientData", this.getClientData());
+		json.addProperty("token", this.getToken());
+
+		JsonObject jsonConnectionOptions = this.connectionOptions.toJson("");
+		jsonConnectionOptions.remove("session");
+		json.addProperty("serverData", jsonConnectionOptions.get("data").getAsString());
+		jsonConnectionOptions.remove("data");
+		jsonConnectionOptions.entrySet().forEach(entry -> {
+			json.add(entry.getKey(), entry.getValue());
+		});
+
 		JsonArray pubs = new JsonArray();
 		this.getPublishers().forEach(p -> {
 			pubs.add(p.toJson());
@@ -204,14 +283,33 @@ public class Connection {
 		return json;
 	}
 
-	/**
-	 * For now only properties data, role and record can be updated
-	 */
-	protected void overrideConnectionOptions(ConnectionOptions connectionOptions) {
-		TokenOptions.Builder modifiableTokenOptions = new TokenOptions.Builder().role(connectionOptions.getRole())
-				.record(connectionOptions.record());
-		modifiableTokenOptions.data(this.token.getData());
-		this.token.overrideTokenOptions(modifiableTokenOptions.build());
+	protected void overrideConnectionOptions(ConnectionOptions newConnectionOptions) {
+		ConnectionOptions.Builder builder = new ConnectionOptions.Builder();
+		// For now only properties role and record can be updated
+		if (newConnectionOptions.getRole() != null) {
+			builder.role(newConnectionOptions.getRole());
+		} else {
+			builder.role(this.connectionOptions.getRole());
+		}
+		if (newConnectionOptions.record() != null) {
+			builder.record(newConnectionOptions.record());
+		} else {
+			builder.record(this.connectionOptions.record());
+		}
+		// Keep old configuration in the rest of properties
+		builder.type(this.connectionOptions.getType()).data(this.connectionOptions.getData())
+				.kurentoOptions(this.connectionOptions.getKurentoOptions())
+				.rtspUri(this.connectionOptions.getRtspUri());
+		if (this.connectionOptions.adaptativeBitrate() != null) {
+			builder.adaptativeBitrate(this.connectionOptions.adaptativeBitrate());
+		}
+		if (this.connectionOptions.onlyPlayWithSubscribers() != null) {
+			builder.onlyPlayWithSubscribers(this.connectionOptions.onlyPlayWithSubscribers());
+		}
+		if (this.connectionOptions.getNetworkCache() != null) {
+			builder.networkCache(this.connectionOptions.getNetworkCache());
+		}
+		this.connectionOptions = builder.build();
 	}
 
 	protected void setSubscribers(List<String> subscribers) {
@@ -219,6 +317,10 @@ public class Connection {
 	}
 
 	protected Connection resetWithJson(JsonObject json) {
+
+		this.connectionId = json.get("connectionId").getAsString();
+		this.status = json.get("status").getAsString();
+		this.token = !json.get("token").isJsonNull() ? json.get("token").getAsString() : null;
 
 		if (!json.get("publishers").isJsonNull()) {
 			JsonArray jsonArrayPublishers = json.get("publishers").getAsJsonArray();
@@ -284,16 +386,34 @@ public class Connection {
 			this.clientData = json.get("clientData").getAsString();
 		}
 
-		// These properties won't ever be null
-		this.connectionId = json.get("connectionId").getAsString();
-		this.status = json.get("status").getAsString();
-		String token = json.has("token") ? json.get("token").getAsString() : null;
-		OpenViduRole role = OpenViduRole.valueOf(json.get("role").getAsString());
-		String data = json.get("serverData").getAsString();
-		Boolean record = json.get("record").getAsBoolean();
+		// COMMON
+		ConnectionType type = ConnectionType.valueOf(json.get("type").getAsString());
+		String data = (json.has("serverData") && !json.get("serverData").isJsonNull())
+				? json.get("serverData").getAsString()
+				: null;
+		Boolean record = (json.has("record") && !json.get("record").isJsonNull()) ? json.get("record").getAsBoolean()
+				: null;
 
-		TokenOptions tokenOptions = new TokenOptions(role, data, record, null);
-		this.token = new Token(token, this.connectionId, tokenOptions);
+		// WEBRTC
+		OpenViduRole role = (json.has("role") && !json.get("role").isJsonNull())
+				? OpenViduRole.valueOf(json.get("role").getAsString())
+				: null;
+
+		// IPCAM
+		String rtspUri = (json.has("rtspUri") && !json.get("rtspUri").isJsonNull()) ? json.get("rtspUri").getAsString()
+				: null;
+		Boolean adaptativeBitrate = (json.has("adaptativeBitrate") && !json.get("adaptativeBitrate").isJsonNull())
+				? json.get("adaptativeBitrate").getAsBoolean()
+				: null;
+		Boolean onlyPlayWithSubscribers = (json.has("onlyPlayWithSubscribers")
+				&& !json.get("onlyPlayWithSubscribers").isJsonNull())
+						? json.get("onlyPlayWithSubscribers").getAsBoolean()
+						: null;
+		Integer networkCache = (json.has("networkCache") && !json.get("networkCache").isJsonNull())
+				? json.get("networkCache").getAsInt()
+				: null;
+		this.connectionOptions = new ConnectionOptions(type, data, record, role, null, rtspUri, adaptativeBitrate,
+				onlyPlayWithSubscribers, networkCache);
 
 		return this;
 	}

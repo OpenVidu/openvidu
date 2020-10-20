@@ -15,9 +15,9 @@
  *
  */
 
-import { OpenViduRole } from './OpenViduRole';
 import { Publisher } from './Publisher';
 import { ConnectionOptions } from './ConnectionOptions';
+import { OpenViduRole } from 'OpenViduRole';
 
 /**
  * See [[Session.connections]]
@@ -25,13 +25,13 @@ import { ConnectionOptions } from './ConnectionOptions';
 export class Connection {
 
     /**
-     * Identifier of the connection. You can call methods [[Session.forceDisconnect]]
+     * Identifier of the Connection. You can call methods [[Session.forceDisconnect]]
      * or [[Session.updateConnection]] passing this property as parameter
      */
     connectionId: string;
 
     /**
-     * Returns the status of the connection. Can be:
+     * Returns the status of the Connection. Can be:
      * - `pending`: if the Connection is waiting for any user to use
      * its internal token to connect to the session, calling method
      * [Session.connect](https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/session.html#connect)
@@ -43,39 +43,19 @@ export class Connection {
     status: string;
 
     /**
-     * Timestamp when this connection was created, in UTC milliseconds (ms since Jan 1, 1970, 00:00:00 UTC)
+     * Timestamp when the Connection was created, in UTC milliseconds (ms since Jan 1, 1970, 00:00:00 UTC)
      */
     createdAt: number;
 
     /**
-     * Timestamp when this connection was taken by a user (passing from status "pending" to "active")
+     * Timestamp when the Connection was taken by a user (passing from status "pending" to "active")
      * in UTC milliseconds (ms since Jan 1, 1970, 00:00:00 UTC)
      */
     activeAt: number;
 
     /**
-     * Role of the connection
-     */
-    role: OpenViduRole;
-
-    /**
-     * Data associated to the connection on the server-side. This value is set with property [[TokenOptions.data]] when calling [[Session.generateToken]]
-     */
-    serverData: string;
-
-    /**
-     * Whether to record the streams published by the participant owning this token or not. This only affects [INDIVIDUAL recording](/en/stable/advanced-features/recording#selecting-streams-to-be-recorded)
-     */
-    record: boolean;
-
-    /**
-     * Token associated to the connection
-     */
-    token: string;
-
-    /**
      * <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" target="_blank" style="display: inline-block; background-color: rgb(0, 136, 170); color: white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius: 3px; font-size: 13px; line-height:21px; font-family: Montserrat, sans-serif">PRO</a>
-     * Geo location of the connection, with the following format: `"CITY, COUNTRY"` (`"unknown"` if it wasn't possible to locate it)
+     * Geo location of the Connection, with the following format: `"CITY, COUNTRY"` (`"unknown"` if it wasn't possible to locate it)
      */
     location: string;
 
@@ -85,10 +65,20 @@ export class Connection {
     platform: string;
 
     /**
-     * Data associated to the connection on the client-side. This value is set with second parameter of method
+     * Data associated to the Connection on the client-side. This value is set with second parameter of method
      * [Session.connect](/en/stable/api/openvidu-browser/classes/session.html#connect) in OpenVidu Browser
      */
     clientData: string;
+
+    /**
+     * The [[ConnectionOptions]] assigned to the Connection
+     */
+    connectionOptions: ConnectionOptions;
+
+    /**
+     * Token associated to the Connection
+     */
+    token: string;
 
     /**
      * Array of Publisher objects this particular Connection is publishing to the Session (each Publisher object has one Stream, uniquely
@@ -103,6 +93,15 @@ export class Connection {
     subscribers: string[] = [];
 
     /**
+     * @hidden deprecated. Inside ConnectionOptions
+     */
+    role?: OpenViduRole;
+    /**
+     * @hidden deprecated. Inside ConnectionOptions
+     */
+    serverData?: string;
+
+    /**
      * @hidden
      */
     constructor(json) {
@@ -114,15 +113,41 @@ export class Connection {
      */
     resetWithJson(json): Connection {
 
-        // These properties won't ever be null
         this.connectionId = json.connectionId;
         this.status = json.status;
+        this.createdAt = json.createdAt;
+        this.activeAt = json.activeAt;
+        this.location = json.location;
+        this.platform = json.platform;
+        this.clientData = json.clientData;
         this.token = json.token;
+        if (this.connectionOptions != null) {
+            this.connectionOptions.type = json.type;
+            this.connectionOptions.data = json.data;
+            this.connectionOptions.record = json.record;
+            this.connectionOptions.role = json.role;
+            this.connectionOptions.kurentoOptions = json.kurentoOptions;
+            this.connectionOptions.rtspUri = json.rtspUri;
+            this.connectionOptions.adaptativeBitrate = json.adaptativeBitrate;
+            this.connectionOptions.onlyPlayWithSubscribers = json.onlyPlayWithSubscribers;
+            this.connectionOptions.networkCache = json.networkCache;
+        } else {
+            this.connectionOptions = {
+                type: json.type,
+                data: json.data,
+                record: json.record,
+                role: json.role,
+                kurentoOptions: json.kurentoOptions,
+                rtspUri: json.rtspUri,
+                adaptativeBitrate: json.adaptativeBitrate,
+                onlyPlayWithSubscribers: json.onlyPlayWithSubscribers,
+                networkCache: json.networkCache
+            }
+        }
         this.role = json.role;
-        this.serverData = json.serverData;
-        this.record = json.record;
+        this.serverData = json.data;
 
-        // These properties may be null
+        // publishers may be null
         if (json.publishers != null) {
 
             // 1. Array to store fetched Publishers and later remove closed ones
@@ -151,6 +176,7 @@ export class Connection {
 
         }
 
+        // subscribers may be null
         if (json.subscribers != null) {
 
             // 1. Array to store fetched Subscribers and later remove closed ones
@@ -171,12 +197,6 @@ export class Connection {
             }
         }
 
-        this.createdAt = json.createdAt;
-        this.activeAt = json.activeAt;
-        this.location = json.location;
-        this.platform = json.platform;
-        this.clientData = json.clientData;
-
         return this;
     }
 
@@ -189,9 +209,15 @@ export class Connection {
             this.status === other.status &&
             this.createdAt === other.createdAt &&
             this.activeAt === other.activeAt &&
-            this.role === other.role &&
-            this.serverData === other.serverData &&
-            this.record === other.record &&
+            this.connectionOptions.type === other.connectionOptions.type &&
+            this.connectionOptions.data === other.connectionOptions.data &&
+            this.connectionOptions.record === other.connectionOptions.record &&
+            this.connectionOptions.role === other.connectionOptions.role &&
+            this.connectionOptions.kurentoOptions === other.connectionOptions.kurentoOptions &&
+            this.connectionOptions.rtspUri === other.connectionOptions.rtspUri &&
+            this.connectionOptions.adaptativeBitrate === other.connectionOptions.adaptativeBitrate &&
+            this.connectionOptions.onlyPlayWithSubscribers === other.connectionOptions.onlyPlayWithSubscribers &&
+            this.connectionOptions.networkCache === other.connectionOptions.networkCache &&
             this.token === other.token &&
             this.location === other.location &&
             this.platform === other.platform &&
@@ -218,12 +244,13 @@ export class Connection {
     /**
      * @hidden
      */
-    overrideConnectionOptions(connectionOptions: ConnectionOptions): void {
-        if (connectionOptions.role != null) {
-            this.role = connectionOptions.role;
+    overrideConnectionOptions(newConnectionOptions: ConnectionOptions): void {
+        // For now only properties record and role
+        if (newConnectionOptions.record != null) {
+            this.connectionOptions.record = newConnectionOptions.record;
         }
-        if (connectionOptions.record != null) {
-            this.record = connectionOptions.record
+        if (newConnectionOptions.role != null) {
+            this.connectionOptions.role = newConnectionOptions.role;
         }
     }
 

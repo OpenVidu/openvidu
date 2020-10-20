@@ -45,6 +45,7 @@ import org.slf4j.LoggerFactory;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
@@ -62,6 +63,12 @@ import io.openvidu.test.browsers.utils.MultimediaFileMetadata;
 import io.openvidu.test.browsers.utils.Unzipper;
 
 public class AbstractOpenViduTestAppE2eTest {
+
+	final protected String DEFAULT_JSON_SESSION = "{'id':'STR','object':'session','sessionId':'STR','createdAt':0,'mediaMode':'STR','recordingMode':'STR','defaultOutputMode':'STR','defaultRecordingLayout':'STR','customSessionId':'STR','connections':{'numberOfElements':0,'content':[]},'recording':false}";
+	final protected String DEFAULT_JSON_PENDING_CONNECTION = "{'id':'STR','object':'connection','type':'WEBRTC','status':'pending','connectionId':'STR','sessionId':'STR','createdAt':0,'activeAt':null,'location':null,'platform':null,'token':'STR','serverData':'STR','record':true,'role':'STR','kurentoOptions':null,'rtspUri':null,'adaptativeBitrate':null,'onlyPlayWithSubscribers':null,'networkCache':null,'clientData':null,'publishers':null,'subscribers':null}";
+	final protected String DEFAULT_JSON_ACTIVE_CONNECTION = "{'id':'STR','object':'connection','type':'WEBRTC','status':'active','connectionId':'STR','sessionId':'STR','createdAt':0,'activeAt':0,'location':'STR','platform':'STR','token':'STR','serverData':'STR','record':true,'role':'STR','kurentoOptions':null,'rtspUri':null,'adaptativeBitrate':null,'onlyPlayWithSubscribers':null,'networkCache':null,'clientData':'STR','publishers':[],'subscribers':[]}";
+	final protected String DEFAULT_JSON_IPCAM_CONNECTION = "{'id':'STR','object':'connection','type':'IPCAM','status':'active','connectionId':'STR','sessionId':'STR','createdAt':0,'activeAt':0,'location':'STR','platform':'IPCAM','token':null,'serverData':'STR','record':true,'role':null,'kurentoOptions':null,'rtspUri':'STR','adaptativeBitrate':true,'onlyPlayWithSubscribers':true,'networkCache':2000,'clientData':null,'publishers':[],'subscribers':[]}";
+	final protected String DEFAULT_JSON_TOKEN = "{'id':'STR','token':'STR','connectionId':'STR','createdAt':0,'session':'STR','role':'STR','data':'STR','kurentoOptions':{}}";
 
 	protected static String OPENVIDU_SECRET = "MY_SECRET";
 	protected static String OPENVIDU_URL = "https://localhost:4443/";
@@ -544,6 +551,19 @@ public class AbstractOpenViduTestAppE2eTest {
 	protected void removeAllRecordingContiners() {
 		commandLine.executeCommand("docker ps -a | awk '{ print $1,$2 }' | grep " + RECORDING_IMAGE
 				+ " | awk '{print $1 }' | xargs -I {} docker rm -f {}");
+	}
+
+	protected String mergeJson(String json, String newProperties, String[] removeProperties) {
+		JsonObject jsonObj = JsonParser.parseString(json.replaceAll("'", "\"")).getAsJsonObject();
+		JsonObject newJsonObj = JsonParser.parseString(newProperties.replaceAll("'", "\"")).getAsJsonObject();
+		newJsonObj.entrySet().forEach(entry -> {
+			jsonObj.remove(entry.getKey());
+			jsonObj.add(entry.getKey(), entry.getValue());
+		});
+		for (String prop : removeProperties) {
+			jsonObj.remove(prop);
+		}
+		return jsonObj.toString().replaceAll("\"", "'");
 	}
 
 }

@@ -89,8 +89,9 @@ public class Session {
 	}
 
 	/**
-	 * @deprecated Use {@link Session#createToken() Session.createToken()} instead
-	 *             to get a {@link io.openvidu.java.client.Token} object.
+	 * @deprecated Use {@link Session#createConnection() Session.createConnection()}
+	 *             instead to get a {@link io.openvidu.java.client.Connection}
+	 *             object.
 	 *
 	 * @return The generated token String
 	 * 
@@ -99,14 +100,14 @@ public class Session {
 	 */
 	@Deprecated
 	public String generateToken() throws OpenViduJavaClientException, OpenViduHttpException {
-		return createToken().getToken();
+		return generateToken(new TokenOptions.Builder().data("").role(OpenViduRole.PUBLISHER).record(true).build());
 	}
 
 	/**
 	 * @deprecated Use
-	 *             {@link Session#createToken(io.openvidu.java.client.TokenOptions)
-	 *             Session.createToken(TokenOptions)} instead to get a
-	 *             {@link io.openvidu.java.client.Token} object.
+	 *             {@link Session#createConnection(io.openvidu.java.client.ConnectionOptions)
+	 *             Session.createConnection(ConnectionOptions)} instead to get a
+	 *             {@link io.openvidu.java.client.Connection} object.
 	 *
 	 * @return The generated token String
 	 * 
@@ -115,70 +116,6 @@ public class Session {
 	 */
 	@Deprecated
 	public String generateToken(TokenOptions tokenOptions) throws OpenViduJavaClientException, OpenViduHttpException {
-		return createToken(tokenOptions).getToken();
-	}
-
-	/**
-	 * Gets a new token object associated to Session object with default values for
-	 * {@link io.openvidu.java.client.TokenOptions}. The token string value to send
-	 * to the client side can be retrieved with
-	 * {@link io.openvidu.java.client.Token#getToken() Token.getToken()}. <br>
-	 * <br>
-	 * You can use method {@link io.openvidu.java.client.Token#getConnectionId()
-	 * Token.getConnectionId()} to get the connection identifier that will be given
-	 * to the user consuming the token. With <code>connectionId</code> you can call
-	 * the following methods without having to fetch and search for the actual
-	 * {@link io.openvidu.java.client.Connection Connection} object:
-	 * <ul>
-	 * <li>Call {@link io.openvidu.java.client.Session#forceDisconnect(String)
-	 * Session.forceDisconnect()} to invalidate the token if no client has used it
-	 * yet or force the connected client to leave the session if it has.</li>
-	 * <li>Call
-	 * {@link io.openvidu.java.client.Session#updateConnection(String, TokenOptions)
-	 * Session.updateConnection()} to update the
-	 * {@link io.openvidu.java.client.Connection Connection} options. And this is
-	 * valid for unused tokens, but also for already used tokens, so you can
-	 * dynamically change the connection options on the fly.</li>
-	 * </ul>
-	 *
-	 * @return The generated {@link io.openvidu.java.client.Token Token} object.
-	 * 
-	 * @throws OpenViduJavaClientException
-	 * @throws OpenViduHttpException
-	 */
-	public Token createToken() throws OpenViduJavaClientException, OpenViduHttpException {
-		return createToken(new TokenOptions.Builder().data("").role(OpenViduRole.PUBLISHER).record(true).build());
-	}
-
-	/**
-	 * Gets a new token object associated to Session object configured with
-	 * <code>tokenOptions</code>. The token string value to send to the client side
-	 * can be retrieved with {@link io.openvidu.java.client.Token#getToken()
-	 * Token.getToken()}. <br>
-	 * <br>
-	 * You can use method {@link io.openvidu.java.client.Token#getConnectionId()
-	 * Token.getConnectionId()} to get the connection identifier that will be given
-	 * to the user consuming the token. With <code>connectionId</code> you can call
-	 * the following methods without having to fetch and search for the actual
-	 * {@link io.openvidu.java.client.Connection Connection} object:
-	 * <ul>
-	 * <li>Call {@link io.openvidu.java.client.Session#forceDisconnect(String)
-	 * Session.forceDisconnect()} to invalidate the token if no client has used it
-	 * yet or force the connected client to leave the session if it has.</li>
-	 * <li>Call
-	 * {@link io.openvidu.java.client.Session#updateConnection(String, ConnectionOptions)
-	 * Session.updateConnection()} to update the
-	 * {@link io.openvidu.java.client.Connection Connection} options. And this is
-	 * valid for unused tokens, but also for already used tokens, so you can
-	 * dynamically change the user connection options on the fly.</li>
-	 * </ul>
-	 *
-	 * @return The generated {@link io.openvidu.java.client.Token Token} object.
-	 * 
-	 * @throws OpenViduJavaClientException
-	 * @throws OpenViduHttpException
-	 */
-	public Token createToken(TokenOptions tokenOptions) throws OpenViduJavaClientException, OpenViduHttpException {
 		if (!this.hasSessionId()) {
 			this.getSessionId();
 		}
@@ -205,9 +142,78 @@ public class Session {
 		try {
 			int statusCode = response.getStatusLine().getStatusCode();
 			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
-				Token token = new Token(httpResponseToJson(response));
-				log.info("Returning a TOKEN: {}", token.getToken());
+				String token = httpResponseToJson(response).get("id").getAsString();
+				log.info("Returning a TOKEN: {}", token);
 				return token;
+			} else {
+				throw new OpenViduHttpException(statusCode);
+			}
+		} finally {
+			EntityUtils.consumeQuietly(response.getEntity());
+		}
+	}
+
+	/**
+	 * Same as
+	 * {@link io.openvidu.java.client.Session#createConnection(ConnectionOptions)
+	 * but with default ConnectionOptions values.
+	 *
+	 * @return The generated {@link io.openvidu.java.client.Connection Connection}
+	 *         object.
+	 * 
+	 * @throws OpenViduJavaClientException
+	 * @throws OpenViduHttpException
+	 */
+	public Connection createConnection() throws OpenViduJavaClientException, OpenViduHttpException {
+		return createConnection(
+				new ConnectionOptions.Builder().data("").role(OpenViduRole.PUBLISHER).record(true).build());
+	}
+
+	/**
+	 * Creates a new Connection object associated to Session object and configured
+	 * with <code>connectionOptions</code>. Each user connecting to the Session
+	 * requires a Connection. The token string value to send to the client side can
+	 * be retrieved with {@link io.openvidu.java.client.Connection#getToken()
+	 * Connection.getToken()}.
+	 *
+	 * @return The generated {@link io.openvidu.java.client.Connection Connection}
+	 *         object.
+	 * 
+	 * @throws OpenViduJavaClientException
+	 * @throws OpenViduHttpException
+	 */
+	public Connection createConnection(ConnectionOptions connectionOptions)
+			throws OpenViduJavaClientException, OpenViduHttpException {
+		if (!this.hasSessionId()) {
+			this.getSessionId();
+		}
+
+		HttpPost request = new HttpPost(
+				this.openVidu.hostname + OpenVidu.API_SESSIONS + "/" + this.sessionId + "/connection");
+
+		StringEntity params;
+		try {
+			params = new StringEntity(connectionOptions.toJson(sessionId).toString());
+		} catch (UnsupportedEncodingException e1) {
+			throw new OpenViduJavaClientException(e1.getMessage(), e1.getCause());
+		}
+
+		request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+		request.setEntity(params);
+
+		HttpResponse response;
+		try {
+			response = this.openVidu.httpClient.execute(request);
+		} catch (IOException e2) {
+			throw new OpenViduJavaClientException(e2.getMessage(), e2.getCause());
+		}
+
+		try {
+			int statusCode = response.getStatusLine().getStatusCode();
+			if ((statusCode == org.apache.http.HttpStatus.SC_OK)) {
+				Connection connection = new Connection(httpResponseToJson(response));
+				this.connections.put(connection.getConnectionId(), connection);
+				return connection;
 			} else {
 				throw new OpenViduHttpException(statusCode);
 			}
@@ -298,23 +304,30 @@ public class Session {
 	}
 
 	/**
-	 * Forces the user represented by <code>connection</code> to leave the session.
-	 * OpenVidu Browser will trigger the proper events on the client-side
-	 * (<code>streamDestroyed</code>, <code>connectionDestroyed</code>,
+	 * Removes the Connection from the Session. This can translate into a forced
+	 * eviction of a user from the Session if the Connection had status
+	 * <code>active</code>, or into a token invalidation if no user had taken the
+	 * Connection yet (status <code>pending</code>). <br>
+	 * <br>
+	 * 
+	 * In the first case, OpenVidu Browser will trigger the proper events on the
+	 * client-side (<code>streamDestroyed</code>, <code>connectionDestroyed</code>,
 	 * <code>sessionDisconnected</code>) with reason set to
 	 * <code>"forceDisconnectByServer"</code>. <br>
 	 * <br>
 	 * 
-	 * You can get <code>connection</code> parameter with
-	 * {@link io.openvidu.java.client.Session#fetch()} and then
-	 * {@link io.openvidu.java.client.Session#getActiveConnections()}.<br>
+	 * In the second case, the token of the Connection will be invalidated and no
+	 * user will be able to connect to the session with it. <br>
 	 * <br>
 	 * 
 	 * This method automatically updates the properties of the local affected
 	 * objects. This means that there is no need to call
-	 * {@link io.openvidu.java.client.Session#fetch() Session.fetch()} to see the
+	 * {@link io.openvidu.java.client.Session#fetch() Session.fetch()} or
+	 * {@link io.openvidu.java.client.OpenVidu#fetch() OpenVidu.fetch()} to see the
 	 * changes consequence of the execution of this method applied in the local
 	 * objects.
+	 * 
+	 * @param connection The Connection to remove
 	 * 
 	 * @throws OpenViduJavaClientException
 	 * @throws OpenViduHttpException
@@ -324,35 +337,12 @@ public class Session {
 	}
 
 	/**
-	 * Forces the user with Connection <code>connectionId</code> to leave the
-	 * session, or invalidates the {@link Token} associated with that
-	 * <code>connectionId</code> if no user has used it yet. <br>
-	 * <br>
+	 * Same as {@link io.openvidu.java.client.Session#forceDisconnect(Connection)
+	 * forceDisconnect(ConnectionOptions)} but providing the
+	 * {@link io.openvidu.java.client.Connection#getConnectionId() connectionId}
+	 * instead of the Connection object.
 	 * 
-	 * In the first case you can get <code>connectionId</code> parameter from
-	 * {@link io.openvidu.java.client.Connection#getConnectionId()
-	 * Connection.getConnectionId()}. Connection objects can be listed with
-	 * {@link io.openvidu.java.client.Session#getActiveConnections()
-	 * Session.getActiveConnections()} (remember to use first
-	 * {@link io.openvidu.java.client.Session#fetch() Session.fetch()} to fetch the
-	 * current active connections from OpenVidu Server). As a result, OpenVidu
-	 * Browser will trigger the proper events on the client-side
-	 * (<code>streamDestroyed</code>, <code>connectionDestroyed</code>,
-	 * <code>sessionDisconnected</code>) with reason set to
-	 * <code>"forceDisconnectByServer"</code>. <br>
-	 * <br>
-	 * 
-	 * In the second case you can get <code>connectionId</code> parameter from a
-	 * {@link Token} with {@link Token#getConnectionId()}. As a result, the token
-	 * will be invalidated and no user will be able to connect to the session with
-	 * it. <br>
-	 * <br>
-	 * 
-	 * This method automatically updates the properties of the local affected
-	 * objects. This means that there is no need to call
-	 * {@link io.openvidu.java.client.Session#fetch() Session.fetch()} to see the
-	 * changes consequence of the execution of this method applied in the local
-	 * objects.
+	 * @param connectionId The identifier of the Connection object to remove
 	 * 
 	 * @throws OpenViduJavaClientException
 	 * @throws OpenViduHttpException
@@ -400,9 +390,9 @@ public class Session {
 	}
 
 	/**
-	 * Forces some user to unpublish a Stream. OpenVidu Browser will trigger the
-	 * proper events on the client-side (<code>streamDestroyed</code>) with reason
-	 * set to <code>"forceUnpublishByServer"</code>. <br>
+	 * Forces some Connection to unpublish a Stream. OpenVidu Browser will trigger
+	 * the proper events in the client-side (<code>streamDestroyed</code>) with
+	 * reason set to <code>"forceUnpublishByServer"</code>. <br>
 	 * <br>
 	 * 
 	 * You can get <code>publisher</code> parameter with
@@ -415,9 +405,12 @@ public class Session {
 	 * 
 	 * This method automatically updates the properties of the local affected
 	 * objects. This means that there is no need to call
-	 * {@link io.openvidu.java.client.Session#fetch() Session.fetch()} to see the
+	 * {@link io.openvidu.java.client.Session#fetch() Session.fetch()} or
+	 * {@link io.openvidu.java.client.OpenVidu#fetch() OpenVidu.fetch()} to see the
 	 * changes consequence of the execution of this method applied in the local
 	 * objects.
+	 * 
+	 * @param publisher The Publisher object to unpublish
 	 * 
 	 * @throws OpenViduJavaClientException
 	 * @throws OpenViduHttpException
@@ -427,26 +420,12 @@ public class Session {
 	}
 
 	/**
-	 * Forces some user to unpublish a Stream. OpenVidu Browser will trigger the
-	 * proper events on the client-side (<code>streamDestroyed</code>) with reason
-	 * set to <code>"forceUnpublishByServer"</code>. <br>
-	 * <br>
+	 * Same as {@link io.openvidu.java.client.Session#forceUnpublish(Publisher)
+	 * forceUnpublish(Publisher)} but providing the
+	 * {@link io.openvidu.java.client.Publisher#getStreamId() streamId} instead of
+	 * the Publisher object.
 	 * 
-	 * You can get <code>streamId</code> parameter with
-	 * {@link io.openvidu.java.client.Session#getActiveConnections()} and then for
-	 * each Connection you can call
-	 * {@link io.openvidu.java.client.Connection#getPublishers()}. Finally
-	 * {@link io.openvidu.java.client.Publisher#getStreamId()}) will give you the
-	 * <code>streamId</code>. Remember to call
-	 * {@link io.openvidu.java.client.Session#fetch()} before to fetch the current
-	 * actual properties of the Session from OpenVidu Server.<br>
-	 * <br>
-	 * 
-	 * This method automatically updates the properties of the local affected
-	 * objects. This means that there is no need to call
-	 * {@link io.openvidu.java.client.Session#fetch() Session.fetch()} to see the
-	 * changes consequence of the execution of this method applied in the local
-	 * objects.
+	 * @param streamId The identifier of the Publisher object to remove
 	 * 
 	 * @throws OpenViduJavaClientException
 	 * @throws OpenViduHttpException
@@ -520,7 +499,7 @@ public class Session {
 
 		StringEntity params;
 		try {
-			params = new StringEntity(connectionOptions.toJsonObject(this.sessionId).toString());
+			params = new StringEntity(connectionOptions.toJson(this.sessionId).toString());
 		} catch (UnsupportedEncodingException e1) {
 			throw new OpenViduJavaClientException(e1.getMessage(), e1.getCause());
 		}
@@ -570,6 +549,11 @@ public class Session {
 	 * actual value you must call first
 	 * {@link io.openvidu.java.client.Session#fetch() Session.fetch()} or
 	 * {@link io.openvidu.java.client.OpenVidu#fetch() OpenVidu.fetch()}.
+	 * 
+	 * @param id The Connection to get
+	 * 
+	 * @return The {@link io.openvidu.java.client.Connection Connection} object, or
+	 *         <code>null</code> if no Connection is found for param <code>id</code>
 	 */
 	public Connection getConnection(String id) {
 		return this.connections.get(id);
@@ -580,6 +564,29 @@ public class Session {
 	 * local available objects and does not query OpenVidu Server. To get the
 	 * current actual value you must call first
 	 * {@link io.openvidu.java.client.Session#fetch() Session.fetch()} or
+	 * {@link io.openvidu.java.client.OpenVidu#fetch() OpenVidu.fetch()}.
+	 * 
+	 * <strong>The list of Connections will remain unchanged since the last time
+	 * method {@link io.openvidu.java.client.Session#fetch() Session.fetch()} or
+	 * {@link io.openvidu.java.client.OpenVidu#fetch() OpenVidu.fetch()} was
+	 * called</strong>. Exceptions to this rule are:
+	 * <ul>
+	 * <li>Calling
+	 * {@link io.openvidu.java.client.Session#createConnection(ConnectionOptions)
+	 * createConnection(ConnectionOptions)} automatically adds the new Connection
+	 * object to the local collection.</li>
+	 * <li>Calling {@link io.openvidu.java.client.Session#forceUnpublish(String)}
+	 * automatically updates each affected local Connection object.</li>
+	 * <li>Calling {@link io.openvidu.java.client.Session#forceDisconnect(String)}
+	 * automatically updates each affected local Connection object.</li>
+	 * <li>Calling
+	 * {@link io.openvidu.java.client.Session#updateConnection(String, ConnectionOptions)}
+	 * automatically updates the attributes of the affected local Connection
+	 * object.</li>
+	 * </ul>
+	 * <br>
+	 * To get the list of connections with their current actual value, you must call
+	 * first {@link io.openvidu.java.client.Session#fetch() Session.fetch()} or
 	 * {@link io.openvidu.java.client.OpenVidu#fetch() OpenVidu.fetch()}.
 	 */
 	public List<Connection> getConnections() {
@@ -596,6 +603,10 @@ public class Session {
 	 * or {@link io.openvidu.java.client.OpenVidu#fetch() OpenVidu.fetch()} was
 	 * called</strong>. Exceptions to this rule are:
 	 * <ul>
+	 * <li>Calling
+	 * {@link io.openvidu.java.client.Session#createConnection(ConnectionOptions)
+	 * createConnection(ConnectionOptions)} automatically adds the new Connection
+	 * object to the local collection.</li>
 	 * <li>Calling {@link io.openvidu.java.client.Session#forceUnpublish(String)}
 	 * automatically updates each affected local Connection object.</li>
 	 * <li>Calling {@link io.openvidu.java.client.Session#forceDisconnect(String)}
@@ -609,7 +620,7 @@ public class Session {
 	 * To get the list of active connections with their current actual value, you
 	 * must call first {@link io.openvidu.java.client.Session#fetch()
 	 * Session.fetch()} or {@link io.openvidu.java.client.OpenVidu#fetch()
-	 * OpenVidu.fetch()}.
+	 * OpenVidu.fetch()} OpenVidu.fetch()}.
 	 */
 	public List<Connection> getActiveConnections() {
 		return this.connections.values().stream().filter(con -> "active".equals(con.getStatus()))

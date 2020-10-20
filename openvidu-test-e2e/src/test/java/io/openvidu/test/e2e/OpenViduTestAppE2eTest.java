@@ -48,11 +48,14 @@ import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mashape.unirest.http.HttpMethod;
 
 import io.openvidu.java.client.Connection;
+import io.openvidu.java.client.ConnectionOptions;
+import io.openvidu.java.client.ConnectionType;
 import io.openvidu.java.client.KurentoOptions;
 import io.openvidu.java.client.MediaMode;
 import io.openvidu.java.client.OpenVidu;
@@ -66,8 +69,6 @@ import io.openvidu.java.client.RecordingMode;
 import io.openvidu.java.client.RecordingProperties;
 import io.openvidu.java.client.Session;
 import io.openvidu.java.client.SessionProperties;
-import io.openvidu.java.client.Token;
-import io.openvidu.java.client.TokenOptions;
 import io.openvidu.test.browsers.FirefoxUser;
 import io.openvidu.test.browsers.utils.CustomHttpClient;
 import io.openvidu.test.browsers.utils.layout.CustomLayoutHandler;
@@ -83,10 +84,6 @@ import io.openvidu.test.browsers.utils.webhook.CustomWebhook;
 @DisplayName("E2E tests for OpenVidu TestApp")
 @ExtendWith(SpringExtension.class)
 public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
-
-	final String DEFAULT_JSON_SESSION = "{'id':'STR','object':'STR','sessionId':'STR','createdAt':0,'mediaMode':'STR','recordingMode':'STR','defaultOutputMode':'STR','defaultRecordingLayout':'STR','customSessionId':'STR','connections':{'numberOfElements':0,'content':[]},'recording':false}";
-	final String DEFAULT_JSON_TOKEN = "{'id':'STR','object':'STR','token':'STR','connectionId':0,'session':'STR','createdAt':0,'role':'STR','data':'STR','record':true}";
-	final String DEFAULT_JSON_CONNECTION = "{'id':'STR','object':'STR','type':'STR','status':'STR','connectionId':'STR','sessionId':'STR','createdAt':0,'activeAt':0,'location':'STR','platform':'STR','role':'STR','record':true,'serverData':'STR','clientData':'STR','publishers':[],'subscribers':[]}";
 
 	@BeforeAll()
 	protected static void setupAll() {
@@ -2141,27 +2138,19 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 		KurentoOptions kurentoOptions = new KurentoOptions.Builder().videoMaxRecvBandwidth(250)
 				.allowedFilters(new String[] { "GStreamerFilter" }).build();
-		TokenOptions tokenOptionsModerator = new TokenOptions.Builder().role(OpenViduRole.MODERATOR)
+		ConnectionOptions moderatorConnectionOptions = new ConnectionOptions.Builder().role(OpenViduRole.MODERATOR)
 				.data(serverDataModerator).kurentoOptions(kurentoOptions).build();
-		Token tokenModerator = session.createToken(tokenOptionsModerator);
-		String tokenModeratorString = tokenModerator.getToken();
-		String connectionIdModerator = tokenModerator.getConnectionId();
+		Connection connectionModerator = session.createConnection(moderatorConnectionOptions);
 
-		TokenOptions tokenOptionsSubscriber = new TokenOptions.Builder().role(OpenViduRole.SUBSCRIBER)
-				.data(serverDataSubscriber).build();
-		Token tokenSubscriber = session.createToken(tokenOptionsSubscriber);
-		String tokenSubscriberString = tokenSubscriber.getToken();
-		String connectionIdSubscriber = tokenSubscriber.getConnectionId();
+		ConnectionOptions subscriberConnectionOptions = new ConnectionOptions.Builder().type(ConnectionType.WEBRTC)
+				.role(OpenViduRole.SUBSCRIBER).data(serverDataSubscriber).build();
+		Connection connectionSubscriber = session.createConnection(subscriberConnectionOptions);
 
-		Assert.assertTrue("Session.fetch() should return true if new pending connections", session.fetch());
+		Assert.assertFalse("Session.fetch() should return false after Session.createConnection", session.fetch());
 		Assert.assertFalse("OpenVidu.fetch() should return false after Session.fetch()", OV.fetch());
 
 		Assert.assertEquals("Wrong number of active connections", 0, session.getActiveConnections().size());
 		Assert.assertEquals("Wrong number of connections", 2, session.getConnections().size());
-		Connection connectionModerator = session.getConnection(connectionIdModerator);
-		Connection connectionSubscriber = session.getConnection(connectionIdSubscriber);
-		Assert.assertEquals("Wrong connectionId property", connectionIdModerator,
-				connectionModerator.getConnectionId());
 		Assert.assertEquals("Wrong status property", "pending", connectionModerator.getStatus());
 		Assert.assertEquals("Wrong role property", OpenViduRole.MODERATOR, connectionModerator.getRole());
 		Assert.assertTrue("Wrong record property", connectionModerator.record());
@@ -2183,7 +2172,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Thread.sleep(1000);
 		WebElement tokeInput = user.getDriver().findElement(By.cssSelector("#custom-token-div input"));
 		tokeInput.clear();
-		tokeInput.sendKeys(tokenModeratorString);
+		tokeInput.sendKeys(connectionModerator.getToken());
 
 		user.getDriver().findElement(By.id("save-btn")).click();
 		Thread.sleep(1000);
@@ -2198,7 +2187,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Thread.sleep(1000);
 		tokeInput = user.getDriver().findElement(By.cssSelector("#custom-token-div input"));
 		tokeInput.clear();
-		tokeInput.sendKeys(tokenSubscriberString);
+		tokeInput.sendKeys(connectionSubscriber.getToken());
 
 		user.getDriver().findElement(By.id("save-btn")).click();
 		Thread.sleep(1000);
@@ -2514,8 +2503,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		}
 		pub = connectionModerator.getPublishers().get(0);
 
-		// TODO: test delete unused Token, update unused Token and update ongoing
-		// Connection
+		// TODO: test delete unused Connection
 
 		session.forceUnpublish(pub);
 		user.getEventManager().waitUntilEventReaches("streamDestroyed", 6);
@@ -2528,6 +2516,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 			Assert.assertEquals("Wrong number of Subscribers", 0, con.getSubscribers().size());
 		});
 
+		// Delete active Connection
 		session.forceDisconnect(connectionModerator);
 		user.getEventManager().waitUntilEventReaches("sessionDisconnected", 1);
 		user.getEventManager().waitUntilEventReaches("connectionDestroyed", 1);
@@ -2540,6 +2529,33 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("sessionDisconnected", 2);
 
 		Assert.assertFalse("Session.fetch() should return true", OV.fetch());
+
+		// Delete pending Connection
+		session = OV.createSession();
+		Connection con = session.createConnection();
+		Assert.assertEquals("Wrong number of Connections", 1, session.getConnections().size());
+		Assert.assertEquals("Wrong number of active Connections", 0, session.getActiveConnections().size());
+		Assert.assertFalse(session.fetch());
+		session.forceDisconnect(con);
+		Assert.assertEquals("Wrong number of Connections", 0, session.getConnections().size());
+		Assert.assertEquals("Wrong number of active Connections", 0, session.getActiveConnections().size());
+		Assert.assertFalse(session.fetch());
+
+		// Test IPCAM
+		final String rtsp = "rtsp://dummyurl.com";
+		Connection ipcamera = session.createConnection(new ConnectionOptions.Builder().type(ConnectionType.IPCAM)
+				.rtspUri(rtsp).adaptativeBitrate(false).onlyPlayWithSubscribers(false).networkCache(50).build());
+		Assert.assertFalse("OpenVidu.fetch() should return false", OV.fetch());
+		Assert.assertFalse("Session.fetch() should return false", session.fetch());
+		Assert.assertEquals("Wrong number of active connections", 1, session.getActiveConnections().size());
+		Assert.assertEquals("Wrong number of connections", 1, session.getConnections().size());
+		ipcamera = session.getConnection(ipcamera.getConnectionId());
+		Assert.assertEquals("Wrong type property of Connection object", "IPCAM", ipcamera.getType().name());
+		Assert.assertNull("Property role of an IPCAM connection should be null", ipcamera.getRole());
+		Assert.assertEquals("Wrong property rtspUri", rtsp, ipcamera.getRtspUri());
+		Assert.assertFalse("Wrong property adaptativeBitrate", ipcamera.adaptativeBitrate());
+		Assert.assertFalse("Wrong property onlyPlayWithSubscribers", ipcamera.onlyPlayWithSubscribers());
+		Assert.assertEquals("Wrong property networkCache", 50, ipcamera.getNetworkCache());
 
 		gracefullyLeaveParticipants(2);
 	}
@@ -2626,31 +2642,61 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		// 200
 		body = "{'session': 'CUSTOM_SESSION_ID', 'role': 'MODERATOR', 'data': 'SERVER_DATA', 'kurentoOptions': {'videoMaxSendBandwidth':777,'allowedFilters': ['GStreamerFilter']}}";
 		res = restClient.rest(HttpMethod.POST, "/openvidu/api/tokens", body, HttpStatus.SC_OK, true, false, true,
-				"{'id':'STR','object':'STR','connectionId':'STR','session':'STR','createdAt':0,'role':'STR','data':'STR','record':true,'token':'STR','kurentoOptions':{'videoMaxSendBandwidth':777,'allowedFilters':['STR']}}");
+				mergeJson(DEFAULT_JSON_TOKEN,
+						"{'kurentoOptions':{'videoMaxSendBandwidth':777,'allowedFilters':['STR']}}", new String[0]));
 		final String token1 = res.get("token").getAsString();
-		final String connectionId1 = res.get("connectionId").getAsString();
-		final long createdAt1 = res.get("createdAt").getAsLong();
 		Assert.assertEquals("JSON return value from /openvidu/api/tokens should have equal srtings in 'id' and 'token'",
 				res.get("id").getAsString(), token1);
 		Assert.assertEquals("Wrong session parameter", "CUSTOM_SESSION_ID", res.get("session").getAsString());
+		res = restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection", null,
+				HttpStatus.SC_OK, true, true, false, "{'numberOfElements':1,'content':[]}");
+		JsonObject connection1 = res.getAsJsonObject().get("content").getAsJsonArray().get(0).getAsJsonObject();
+		final String connectionId1 = connection1.get("id").getAsString();
+		final long createdAt1 = connection1.get("createdAt").getAsLong();
 
+		/** POST /openvidu/api/sessions/CUSTOM_SESSION_ID/connection **/
+		// 400
+		body = "{'type':false}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection", body,
+				HttpStatus.SC_BAD_REQUEST);
+		body = "{'type':'NOT_EXISTS'}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection", body,
+				HttpStatus.SC_BAD_REQUEST);
+		body = "{'type':'WEBRTC','role':123}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection", body,
+				HttpStatus.SC_BAD_REQUEST);
+		body = "{'type':'WEBRTC','role':123}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection", body,
+				HttpStatus.SC_BAD_REQUEST);
+		body = "{'type':'WEBRTC','role':'MODERATOR','data':true}";
+		restClient.rest(HttpMethod.POST, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection", body,
+				HttpStatus.SC_BAD_REQUEST);
+		// 200
+		String kurentoOpts = "'kurentoOptions':{'videoMaxSendBandwidth':777,'allowedFilters':['GStreamerFilter']}";
+		body = "{'type':'WEBRTC','role':'MODERATOR','data':'SERVER_DATA'," + kurentoOpts + "}";
+		res = restClient.rest(HttpMethod.POST, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection", body,
+				HttpStatus.SC_OK, true, false, true,
+				mergeJson(DEFAULT_JSON_PENDING_CONNECTION, "{" + kurentoOpts + "}", new String[0]));
+		restClient.rest(HttpMethod.DELETE,
+				"/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + res.get("id").getAsString(),
+				HttpStatus.SC_NO_CONTENT);
 		// Default values
-		body = "{'session': 'CUSTOM_SESSION_ID'}";
-		res = restClient.rest(HttpMethod.POST, "/openvidu/api/tokens", body, HttpStatus.SC_OK, true, false, true,
-				DEFAULT_JSON_TOKEN);
-		final String token2 = res.get("id").getAsString();
-		final String connectionId2 = res.get("connectionId").getAsString();
+		res = restClient.rest(HttpMethod.POST, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection", "{}",
+				HttpStatus.SC_OK);
+		final String token2 = res.get("token").getAsString();
+		final String connectionId2 = res.get("id").getAsString();
 
 		/** GET /openvidu/api/sessions/ID/connection (with pending connections) **/
 		restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection", null, HttpStatus.SC_OK,
 				true, true, false, "{'numberOfElements':2,'content':[]}");
 		restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId1, null,
 				HttpStatus.SC_OK, true, true, true,
-				"{'id':'" + connectionId1 + "','connectionId':'" + connectionId1
-						+ "','object':'connection','type':'WEBRTC','status':'pending','sessionId':'CUSTOM_SESSION_ID','token':'"
-						+ token1 + "','role':'MODERATOR','serverData':'SERVER_DATA','record':true,'createdAt':"
-						+ createdAt1
-						+ ",'activeAt':null,'platform':null,'location':null,'clientData':null,'publishers':null,'subscribers':null}");
+				mergeJson(DEFAULT_JSON_PENDING_CONNECTION,
+						"{'id':'" + connectionId1 + "','connectionId':'" + connectionId1
+								+ "','sessionId':'CUSTOM_SESSION_ID','token':'" + token1
+								+ "','serverData':'SERVER_DATA','role':'MODERATOR'," + kurentoOpts + ",'createdAt':"
+								+ createdAt1 + "}",
+						new String[0]));
 
 		/** POST /openvidu/api/signal (NOT ACTIVE SESSION) **/
 		body = "{}";
@@ -2864,14 +2910,14 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		 **/
 		body = "{'customSessionId': 'CUSTOM_SESSION_ID'}";
 		restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpStatus.SC_OK);
-		body = "{'session': 'CUSTOM_SESSION_ID', 'role': 'SUBSCRIBER'}";
-		res = restClient.rest(HttpMethod.POST, "/openvidu/api/tokens", body, HttpStatus.SC_OK, true, false, true,
-				DEFAULT_JSON_TOKEN);
-		final String tokenAConnectionId = res.get("connectionId").getAsString();
+		body = "{'type': 'WEBRTC', 'role': 'SUBSCRIBER'}";
+		res = restClient.rest(HttpMethod.POST, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection", body,
+				HttpStatus.SC_OK, true, false, true, DEFAULT_JSON_PENDING_CONNECTION);
+		final String connectionIdA = res.get("id").getAsString();
 		final String tokenA = res.get("token").getAsString();
-		res = restClient.rest(HttpMethod.POST, "/openvidu/api/tokens", body, HttpStatus.SC_OK, true, false, true,
-				DEFAULT_JSON_TOKEN);
-		final String tokenBConnectionId = res.get("connectionId").getAsString();
+		res = restClient.rest(HttpMethod.POST, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection", body,
+				HttpStatus.SC_OK, true, false, true, DEFAULT_JSON_PENDING_CONNECTION);
+		final String connectionIdB = res.get("connectionId").getAsString();
 		final String tokenB = res.get("token").getAsString();
 
 		user.getDriver().findElement(By.id("one2one-btn")).click();
@@ -2895,7 +2941,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Thread.sleep(1000);
 
 		// Invalidate token
-		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + tokenAConnectionId,
+		restClient.rest(HttpMethod.DELETE, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionIdA,
 				HttpStatus.SC_NO_CONTENT);
 
 		// User should pop up invalid token
@@ -2918,7 +2964,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("connectionCreated", 1);
 
 		// connectionId should be equal to the one brought by the token
-		Assert.assertEquals("Wrong connectionId", tokenBConnectionId,
+		Assert.assertEquals("Wrong connectionId", connectionIdB,
 				restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/CUSTOM_SESSION_ID", HttpStatus.SC_OK)
 						.get("connections").getAsJsonObject().get("content").getAsJsonArray().get(0).getAsJsonObject()
 						.get("connectionId").getAsString());
@@ -3286,7 +3332,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 			// Publish IP camera. Dummy URL because no user will subscribe to it [200]
 			String ipCamBody = "{'type':'IPCAM','rtspUri':'rtsp://dummyurl.com','adaptativeBitrate':true,'onlyPlayWithSubscribers':true,'networkCache':1000,'data':'MY_IP_CAMERA'}";
 			JsonObject response = restClient.rest(HttpMethod.POST, "/openvidu/api/sessions/IP_CAM_SESSION/connection",
-					ipCamBody, HttpStatus.SC_OK, true, false, true, DEFAULT_JSON_CONNECTION);
+					ipCamBody, HttpStatus.SC_OK, true, false, true, DEFAULT_JSON_IPCAM_CONNECTION);
 
 			CustomWebhook.waitForEvent("sessionCreated", 1);
 			CustomWebhook.waitForEvent("participantJoined", 1);
@@ -3294,7 +3340,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 			Assert.assertEquals("Wrong serverData property", "MY_IP_CAMERA", response.get("serverData").getAsString());
 			Assert.assertEquals("Wrong platform property", "IPCAM", response.get("platform").getAsString());
-			Assert.assertEquals("Wrong role property", "PUBLISHER", response.get("role").getAsString());
+			Assert.assertEquals("Wrong role property", JsonNull.INSTANCE, response.get("role"));
 			Assert.assertEquals("Wrong type property", "IPCAM", response.get("type").getAsString());
 
 			Assert.assertEquals("Wrong number of publishers in IPCAM participant", 1,
@@ -3384,7 +3430,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 					+ "','adaptativeBitrate':true,'onlyPlayWithSubscribers':true,'networkCache':1000,'data':'MY_IP_CAMERA'}";
 
 			restClient.rest(HttpMethod.POST, "/openvidu/api/sessions/TestSession/connection", ipCamBody,
-					HttpStatus.SC_OK, true, false, true, DEFAULT_JSON_CONNECTION);
+					HttpStatus.SC_OK, true, false, true, DEFAULT_JSON_IPCAM_CONNECTION);
 
 			user.getEventManager().waitUntilEventReaches("connectionCreated", 2);
 			user.getEventManager().waitUntilEventReaches("streamCreated", 2);
@@ -3411,7 +3457,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 			// Publish again the IPCAM
 			response = restClient.rest(HttpMethod.POST, "/openvidu/api/sessions/TestSession/connection", ipCamBody,
-					HttpStatus.SC_OK, true, false, true, DEFAULT_JSON_CONNECTION);
+					HttpStatus.SC_OK, true, false, true, DEFAULT_JSON_IPCAM_CONNECTION);
 			user.getEventManager().waitUntilEventReaches("connectionCreated", 3);
 			user.getEventManager().waitUntilEventReaches("streamCreated", 3);
 			user.getEventManager().waitUntilEventReaches("streamPlaying", 3);
@@ -3523,9 +3569,8 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		checkNodeFetchChanged(true, true);
 		checkNodeFetchChanged(true, false);
 
-		Token token = session.createToken();
-		// TODO: when using createConnection this below should be false!
-		Assert.assertTrue("Java fetch should be true", session.fetch());
+		Connection connection = session.createConnection();
+		Assert.assertFalse("Java fetch should be false", session.fetch());
 		Assert.assertFalse("Java fetch should be false", OV.fetch());
 		checkNodeFetchChanged(true, true);
 		checkNodeFetchChanged(true, false);
@@ -3550,7 +3595,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Thread.sleep(1000);
 		WebElement tokeInput = user.getDriver().findElement(By.cssSelector("#custom-token-div input"));
 		tokeInput.clear();
-		tokeInput.sendKeys(token.getToken());
+		tokeInput.sendKeys(connection.getToken());
 		user.getDriver().findElement(By.id("save-btn")).click();
 		Thread.sleep(1000);
 		user.getDriver().findElement(By.className("join-btn")).click();

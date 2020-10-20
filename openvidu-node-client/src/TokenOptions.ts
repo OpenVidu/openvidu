@@ -18,7 +18,7 @@
 import { OpenViduRole } from './OpenViduRole';
 
 /**
- * See [[Session.generateToken]]
+ * @deprecated Use [[ConnectionOptions]] instead
  */
 export interface TokenOptions {
 

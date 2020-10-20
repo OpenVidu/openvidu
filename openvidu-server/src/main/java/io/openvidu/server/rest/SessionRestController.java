@@ -20,7 +20,6 @@ package io.openvidu.server.rest;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -45,12 +44,15 @@ import org.springframework.web.bind.annotation.RestController;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.internal.ProtocolElements;
+import io.openvidu.java.client.ConnectionOptions;
 import io.openvidu.java.client.ConnectionType;
+import io.openvidu.java.client.KurentoOptions;
 import io.openvidu.java.client.MediaMode;
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.java.client.Recording.OutputMode;
@@ -66,7 +68,6 @@ import io.openvidu.server.core.Session;
 import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.core.Token;
 import io.openvidu.server.kurento.core.KurentoMediaOptions;
-import io.openvidu.server.kurento.core.KurentoTokenOptions;
 import io.openvidu.server.recording.Recording;
 import io.openvidu.server.recording.service.RecordingManager;
 import io.openvidu.server.utils.RecordingUtils;
@@ -273,45 +274,29 @@ public class SessionRestController {
 	public ResponseEntity<?> initializeConnection(@PathVariable("sessionId") String sessionId,
 			@RequestBody Map<?, ?> params) {
 
-		log.info("REST API: POST {}/sessions/{}/connection {}", RequestMappings.API, sessionId, params.toString());
+		log.info("REST API: POST {} {}", RequestMappings.API + "/sessions/" + sessionId + "/connection",
+				params.toString());
 
 		Session session = this.sessionManager.getSessionWithNotActive(sessionId);
 		if (session == null) {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
 
-		String typeString;
-		String data;
-		Boolean record;
+		ConnectionOptions connectionOptions;
 		try {
-			typeString = (String) params.get("type");
-			data = (String) params.get("data");
-			record = (Boolean) params.get("record");
-		} catch (ClassCastException e) {
-			return this.generateErrorResponse("Type error in parameter \"type\"",
-					"/sessions/" + sessionId + "/connection", HttpStatus.BAD_REQUEST);
+			connectionOptions = getConnectionOptionsFromParams(params);
+		} catch (Exception e) {
+			return this.generateErrorResponse(e.getMessage(), "/sessions/" + sessionId + "/connection",
+					HttpStatus.BAD_REQUEST);
 		}
-
-		ConnectionType type;
-		try {
-			if (typeString != null) {
-				type = ConnectionType.valueOf(typeString);
-			} else {
-				type = ConnectionType.WEBRTC;
-			}
-		} catch (IllegalArgumentException e) {
-			return this.generateErrorResponse("Parameter type " + params.get("typeString") + " is not defined",
-					RequestMappings.API + "/sessions/" + sessionId + "/connection", HttpStatus.BAD_REQUEST);
-		}
-
-		switch (type) {
+		switch (connectionOptions.getType()) {
 		case WEBRTC:
-			return this.newWebrtcConnection(session, data, record, params);
+			return this.newWebrtcConnection(session, connectionOptions);
 		case IPCAM:
-			return this.newIpcamConnection(session, data, record, params);
+			return this.newIpcamConnection(session, connectionOptions);
 		default:
-			return this.generateErrorResponse("Wrong type " + typeString,
-					RequestMappings.API + "/sessions/" + sessionId + "/connection", HttpStatus.BAD_REQUEST);
+			return this.generateErrorResponse("Wrong type parameter", "/sessions/" + sessionId + "/connection",
+					HttpStatus.BAD_REQUEST);
 		}
 	}
 
@@ -654,12 +639,8 @@ public class SessionRestController {
 		log.info("REST API: POST {}/tokens {}", RequestMappings.API, params.toString());
 
 		String sessionId;
-		String metadata;
-		Boolean record;
 		try {
 			sessionId = (String) params.get("session");
-			metadata = (String) params.get("data");
-			record = (Boolean) params.get("record");
 		} catch (ClassCastException e) {
 			return this.generateErrorResponse("Type error in some parameter", "/tokens", HttpStatus.BAD_REQUEST);
 		}
@@ -675,10 +656,15 @@ public class SessionRestController {
 		if (session == null) {
 			return this.generateErrorResponse("Session " + sessionId + " not found", "/tokens", HttpStatus.NOT_FOUND);
 		}
-		Map<String, Object> map = new HashMap<>();
-		params.entrySet().forEach(entry -> map.put((String) entry.getKey(), entry.getValue()));
-		map.put("type", "WEBRTC");
-		ResponseEntity<?> entity = this.newWebrtcConnection(session, metadata, record, params);
+
+		ConnectionOptions connectionOptions;
+		try {
+			connectionOptions = getConnectionOptionsFromParams(params);
+		} catch (Exception e) {
+			return this.generateErrorResponse(e.getMessage(), "/sessions/" + sessionId + "/connection",
+					HttpStatus.BAD_REQUEST);
+		}
+		ResponseEntity<?> entity = this.newWebrtcConnection(session, connectionOptions);
 		JsonObject jsonResponse = JsonParser.parseString(entity.getBody().toString()).getAsJsonObject();
 
 		if (jsonResponse.has("error")) {
@@ -793,57 +779,15 @@ public class SessionRestController {
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
 
-	protected ResponseEntity<?> newWebrtcConnection(Session session, String serverData, Boolean record,
-			Map<?, ?> params) {
+	protected ResponseEntity<?> newWebrtcConnection(Session session, ConnectionOptions connectionOptions) {
 
-		final String REQUEST_PATH = RequestMappings.API + "/sessions/" + session.getSessionId() + "/connection";
-
-		String roleString = null;
-		try {
-			roleString = (String) params.get("role");
-		} catch (ClassCastException e) {
-			return this.generateErrorResponse("Type error in some parameter", REQUEST_PATH, HttpStatus.BAD_REQUEST);
-		}
-
-		OpenViduRole role = null;
-		try {
-			if (roleString != null) {
-				role = OpenViduRole.valueOf(roleString);
-			} else {
-				role = OpenViduRole.PUBLISHER;
-			}
-		} catch (IllegalArgumentException e) {
-			return this.generateErrorResponse("Parameter role " + params.get("role") + " is not defined", REQUEST_PATH,
-					HttpStatus.BAD_REQUEST);
-		}
-
-		JsonObject kurentoOptions = null;
-		if (params.get("kurentoOptions") != null) {
-			try {
-				kurentoOptions = JsonParser.parseString(params.get("kurentoOptions").toString()).getAsJsonObject();
-			} catch (Exception e) {
-				return this.generateErrorResponse("Error in parameter 'kurentoOptions'. It is not a valid JSON object",
-						REQUEST_PATH, HttpStatus.BAD_REQUEST);
-			}
-		}
-
-		KurentoTokenOptions kurentoTokenOptions = null;
-		if (kurentoOptions != null) {
-			try {
-				kurentoTokenOptions = new KurentoTokenOptions(kurentoOptions);
-			} catch (Exception e) {
-				return this.generateErrorResponse("Type error in some parameter of 'kurentoOptions'", REQUEST_PATH,
-						HttpStatus.BAD_REQUEST);
-			}
-		}
-
-		serverData = (serverData != null) ? serverData : "";
-		record = (record != null) ? record : true;
+		final String REQUEST_PATH = "/sessions/" + session.getSessionId() + "/connection";
 
 		// While closing a session tokens can't be generated
 		if (session.closingLock.readLock().tryLock()) {
 			try {
-				Token token = sessionManager.newToken(session, role, serverData, record, kurentoTokenOptions);
+				Token token = sessionManager.newToken(session, connectionOptions.getRole(), connectionOptions.getData(),
+						connectionOptions.record(), connectionOptions.getKurentoOptions());
 				return new ResponseEntity<>(token.toJsonAsParticipant().toString(), RestUtils.getResponseHeaders(),
 						HttpStatus.OK);
 			} catch (Exception e) {
@@ -861,34 +805,9 @@ public class SessionRestController {
 		}
 	}
 
-	protected ResponseEntity<?> newIpcamConnection(Session session, String serverData, Boolean record,
-			Map<?, ?> params) {
+	protected ResponseEntity<?> newIpcamConnection(Session session, ConnectionOptions connectionOptions) {
 
-		final String REQUEST_PATH = RequestMappings.API + "/sessions/" + session.getSessionId() + "/connection";
-
-		String rtspUri;
-		Boolean adaptativeBitrate;
-		Boolean onlyPlayWithSubscribers;
-		Integer networkCache;
-		try {
-			rtspUri = (String) params.get("rtspUri");
-			adaptativeBitrate = (Boolean) params.get("adaptativeBitrate");
-			onlyPlayWithSubscribers = (Boolean) params.get("onlyPlayWithSubscribers");
-			networkCache = (Integer) params.get("networkCache");
-		} catch (ClassCastException e) {
-			return this.generateErrorResponse("Type error in some parameter", REQUEST_PATH, HttpStatus.BAD_REQUEST);
-		}
-
-		if (rtspUri == null) {
-			return this.generateErrorResponse("\"rtspUri\" parameter is mandatory", REQUEST_PATH,
-					HttpStatus.BAD_REQUEST);
-		}
-
-		adaptativeBitrate = adaptativeBitrate != null ? adaptativeBitrate : true;
-		onlyPlayWithSubscribers = onlyPlayWithSubscribers != null ? onlyPlayWithSubscribers : true;
-		networkCache = networkCache != null ? networkCache : 2000;
-		serverData = serverData != null ? serverData : "";
-		record = (record != null) ? record : true;
+		final String REQUEST_PATH = "/sessions/" + session.getSessionId() + "/connection";
 
 		boolean hasAudio = true;
 		boolean hasVideo = true;
@@ -898,8 +817,9 @@ public class SessionRestController {
 		Integer frameRate = null;
 		String videoDimensions = null;
 		KurentoMediaOptions mediaOptions = new KurentoMediaOptions(true, null, hasAudio, hasVideo, audioActive,
-				videoActive, typeOfVideo, frameRate, videoDimensions, null, false, rtspUri, adaptativeBitrate,
-				onlyPlayWithSubscribers, networkCache);
+				videoActive, typeOfVideo, frameRate, videoDimensions, null, false, connectionOptions.getRtspUri(),
+				connectionOptions.adaptativeBitrate(), connectionOptions.onlyPlayWithSubscribers(),
+				connectionOptions.getNetworkCache());
 
 		// While closing a session IP cameras can't be published
 		if (session.closingLock.readLock().tryLock()) {
@@ -907,7 +827,8 @@ public class SessionRestController {
 				if (session.isClosed()) {
 					return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 				}
-				Participant ipcamParticipant = this.sessionManager.publishIpcam(session, mediaOptions, serverData);
+				Participant ipcamParticipant = this.sessionManager.publishIpcam(session, mediaOptions,
+						connectionOptions);
 				return new ResponseEntity<>(ipcamParticipant.toJson().toString(), RestUtils.getResponseHeaders(),
 						HttpStatus.OK);
 			} catch (MalformedURLException e) {
@@ -934,6 +855,125 @@ public class SessionRestController {
 			}
 		}
 		return token;
+	}
+
+	protected ConnectionOptions getConnectionOptionsFromParams(Map<?, ?> params) throws Exception {
+
+		ConnectionOptions.Builder builder = new ConnectionOptions.Builder();
+
+		String typeString;
+		String data;
+		Boolean record;
+		try {
+			typeString = (String) params.get("type");
+			data = (String) params.get("data");
+			record = (Boolean) params.get("record");
+		} catch (ClassCastException e) {
+			throw new Exception("Type error in some parameter: " + e.getMessage());
+		}
+
+		ConnectionType type;
+		try {
+			if (typeString != null) {
+				type = ConnectionType.valueOf(typeString);
+			} else {
+				type = ConnectionType.WEBRTC;
+			}
+		} catch (IllegalArgumentException e) {
+			throw new Exception("Parameter 'type' " + typeString + " is not defined");
+		}
+		data = data != null ? data : "";
+		record = record != null ? record : true;
+
+		// Build COMMON options
+		builder.type(type).data(data).record(record);
+
+		OpenViduRole role = null;
+		KurentoOptions kurentoOptions = null;
+
+		if (ConnectionType.WEBRTC.equals(type)) {
+			String roleString;
+			try {
+				roleString = (String) params.get("role");
+			} catch (ClassCastException e) {
+				throw new Exception("Type error in parameter 'role': " + e.getMessage());
+			}
+			try {
+				if (roleString != null) {
+					role = OpenViduRole.valueOf(roleString);
+				} else {
+					role = OpenViduRole.PUBLISHER;
+				}
+			} catch (IllegalArgumentException e) {
+				throw new Exception("Parameter role " + params.get("role") + " is not defined");
+			}
+			JsonObject kurentoOptionsJson = null;
+			if (params.get("kurentoOptions") != null) {
+				try {
+					kurentoOptionsJson = JsonParser.parseString(params.get("kurentoOptions").toString())
+							.getAsJsonObject();
+				} catch (Exception e) {
+					throw new Exception("Error in parameter 'kurentoOptions'. It is not a valid JSON object");
+				}
+			}
+			if (kurentoOptionsJson != null) {
+				try {
+					KurentoOptions.Builder builder2 = new KurentoOptions.Builder();
+					if (kurentoOptionsJson.has("videoMaxRecvBandwidth")) {
+						builder2.videoMaxRecvBandwidth(kurentoOptionsJson.get("videoMaxRecvBandwidth").getAsInt());
+					}
+					if (kurentoOptionsJson.has("videoMinRecvBandwidth")) {
+						builder2.videoMinRecvBandwidth(kurentoOptionsJson.get("videoMinRecvBandwidth").getAsInt());
+					}
+					if (kurentoOptionsJson.has("videoMaxSendBandwidth")) {
+						builder2.videoMaxSendBandwidth(kurentoOptionsJson.get("videoMaxSendBandwidth").getAsInt());
+					}
+					if (kurentoOptionsJson.has("videoMinSendBandwidth")) {
+						builder2.videoMinSendBandwidth(kurentoOptionsJson.get("videoMinSendBandwidth").getAsInt());
+					}
+					if (kurentoOptionsJson.has("allowedFilters")) {
+						JsonArray filters = kurentoOptionsJson.get("allowedFilters").getAsJsonArray();
+						String[] arrayOfFilters = new String[filters.size()];
+						Iterator<JsonElement> it = filters.iterator();
+						int index = 0;
+						while (it.hasNext()) {
+							arrayOfFilters[index] = it.next().getAsString();
+							index++;
+						}
+						builder2.allowedFilters(arrayOfFilters);
+					}
+					kurentoOptions = builder2.build();
+				} catch (Exception e) {
+					throw new Exception("Type error in some parameter of 'kurentoOptions': " + e.getMessage());
+				}
+			}
+
+			// Build WEBRTC options
+			builder.role(role).kurentoOptions(kurentoOptions);
+
+		} else if (ConnectionType.IPCAM.equals(type)) {
+			String rtspUri;
+			Boolean adaptativeBitrate;
+			Boolean onlyPlayWithSubscribers;
+			Integer networkCache;
+			try {
+				rtspUri = (String) params.get("rtspUri");
+				adaptativeBitrate = (Boolean) params.get("adaptativeBitrate");
+				onlyPlayWithSubscribers = (Boolean) params.get("onlyPlayWithSubscribers");
+				networkCache = (Integer) params.get("networkCache");
+			} catch (ClassCastException e) {
+				throw new Exception("Type error in some parameter: " + e.getMessage());
+			}
+			adaptativeBitrate = adaptativeBitrate != null ? adaptativeBitrate : true;
+			onlyPlayWithSubscribers = onlyPlayWithSubscribers != null ? onlyPlayWithSubscribers : true;
+			networkCache = networkCache != null ? networkCache : 2000;
+
+			// Build IPCAM options
+			builder.rtspUri(rtspUri).adaptativeBitrate(adaptativeBitrate)
+					.onlyPlayWithSubscribers(onlyPlayWithSubscribers).networkCache(networkCache).build();
+		}
+
+		return builder.build();
 	}
 
 	protected ResponseEntity<String> generateErrorResponse(String errorMessage, String path, HttpStatus status) {

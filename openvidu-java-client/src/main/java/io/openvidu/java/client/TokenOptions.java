@@ -17,12 +17,12 @@
 
 package io.openvidu.java.client;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 
 /**
- * See {@link io.openvidu.java.client.Session#generateToken(TokenOptions)}
+ * @deprecated Use {@link io.openvidu.java.client.ConnectionOptions
+ *             ConnectionOptions} instead
  */
 public class TokenOptions {
 
@@ -32,9 +32,8 @@ public class TokenOptions {
 	private KurentoOptions kurentoOptions;
 
 	/**
-	 * 
-	 * Builder for {@link io.openvidu.java.client.TokenOptions}
-	 *
+	 * @deprecated Use {@link io.openvidu.java.client.ConnectionOptions.Builder
+	 *             ConnectionOptions.Builder} instead
 	 */
 	public static class Builder {
 
@@ -157,27 +156,7 @@ public class TokenOptions {
 			json.add("record", JsonNull.INSTANCE);
 		}
 		if (this.kurentoOptions != null) {
-			JsonObject kurentoOptions = new JsonObject();
-			if (this.kurentoOptions.getVideoMaxRecvBandwidth() != null) {
-				kurentoOptions.addProperty("videoMaxRecvBandwidth", this.kurentoOptions.getVideoMaxRecvBandwidth());
-			}
-			if (this.kurentoOptions.getVideoMinRecvBandwidth() != null) {
-				kurentoOptions.addProperty("videoMinRecvBandwidth", this.kurentoOptions.getVideoMinRecvBandwidth());
-			}
-			if (this.kurentoOptions.getVideoMaxSendBandwidth() != null) {
-				kurentoOptions.addProperty("videoMaxSendBandwidth", this.kurentoOptions.getVideoMaxSendBandwidth());
-			}
-			if (this.kurentoOptions.getVideoMinSendBandwidth() != null) {
-				kurentoOptions.addProperty("videoMinSendBandwidth", this.kurentoOptions.getVideoMinSendBandwidth());
-			}
-			if (this.kurentoOptions.getAllowedFilters().length > 0) {
-				JsonArray allowedFilters = new JsonArray();
-				for (String filter : this.kurentoOptions.getAllowedFilters()) {
-					allowedFilters.add(filter);
-				}
-				kurentoOptions.add("allowedFilters", allowedFilters);
-			}
-			json.add("kurentoOptions", kurentoOptions);
+			json.add("kurentoOptions", kurentoOptions.toJson());
 		}
 		return json;
 	}

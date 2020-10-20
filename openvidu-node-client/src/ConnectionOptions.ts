@@ -15,16 +15,20 @@
  *
  */
 
+import { ConnectionType } from 'ConnectionType';
 import { OpenViduRole } from './OpenViduRole';
 
 export interface ConnectionOptions {
 
     /**
-     * The role assigned to this Connection
+     * Type of Connection. The [[ConnectionType]] dictates what properties will have effect:
      * 
-     * @default PUBLISHER
+     * - **[[ConnectionType.WEBRTC]]**: [[data]], [[record]], [[role]], [[kurentoOptions]]
+     * - **[[ConnectionType.IPCAM]]**: [[data]], [[record]], [[rtspUri]], [[adaptativeBitrate]], [[onlyPlayWithSubscribers]], [[networkCache]]
+     * 
+     * @default WEBRTC
      */
-    role?: OpenViduRole;
+    type?: ConnectionType;
 
     /**
      * Secure (server-side) data associated to this Connection. Every client will receive this data in property `Connection.data`. Object `Connection` can be retrieved by subscribing to event `connectionCreated` of Session object.
@@ -40,6 +44,15 @@ export interface ConnectionOptions {
      * @default true
      */
     record?: boolean;
+
+    /**
+     * The role assigned to this Connection
+     * 
+     * **Only for [[ConnectionType.WEBRTC]]**
+     * 
+     * @default PUBLISHER
+     */
+    role?: OpenViduRole;
 
     /**
      * **WARNING**: experimental option. This interface may change in the near future
@@ -61,6 +74,8 @@ export interface ConnectionOptions {
      * the global configuration set in [OpenVidu Server configuration](/en/stable/reference-docs/openvidu-config/)
      * (parameter `OPENVIDU_STREAMS_VIDEO_MIN_SEND_BANDWIDTH`) for every outgoing stream of the Connection.
      * - `allowedFilters`: names of the filters the Connection will be able to apply. See [Voice and video filters](/en/stable/advanced-features/filters/)
+     * 
+     * **Only for [[ConnectionType.WEBRTC]]**
      */
     kurentoOptions?: {
         videoMaxRecvBandwidth?: number,
@@ -69,4 +84,45 @@ export interface ConnectionOptions {
         videoMinSendBandwidth?: number,
         allowedFilters?: string[]
     };
+
+    /**
+     * RTSP URI of an IP camera. For example: `rtsp://your.camera.ip:7777/path`
+     * 
+     * **Only for [[ConnectionType.IPCAM]]** 
+     */
+    rtspUri?: string;
+
+    /**
+     * Whether to use adaptative bitrate (and therefore adaptative quality) or not. For local network connections
+     * that do not require media transcoding this can be disabled to save CPU power. If you are not sure if transcoding
+     * might be necessary, setting this property to false **may result in media connections not being established**.
+     * 
+     * **Only for [[ConnectionType.IPCAM]]**
+     * 
+     * @default true
+     */
+    adaptativeBitrate?: boolean;
+
+    /**
+     * Whether to enable the IP camera stream only when some user is subscribed to it, or not. This allows you to reduce
+     * power consumption and network bandwidth in your server while nobody is asking to receive the camera's video.
+     * On the counterpart, first user subscribing to the IP camera stream will take a little longer to receive its video.
+     * 
+     * **Only for [[ConnectionType.IPCAM]]**
+     * 
+     * @default true
+     */
+    onlyPlayWithSubscribers?: boolean;
+
+    /**
+     * Size of the buffer of the endpoint receiving the IP camera's stream, in milliseconds. The smaller it is, the less
+     * delay the signal will have, but more problematic will be in unstable networks. Use short buffers only if there is
+     * a quality connection between the IP camera and OpenVidu Server.
+     * 
+     * **Only for [[ConnectionType.IPCAM]]**
+     * 
+     * @default 2000
+     */
+    networkCache?: number;
+
 }

@@ -22,7 +22,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import com.google.gson.JsonObject;
 
-import io.openvidu.java.client.ConnectionType;
 import io.openvidu.server.kurento.endpoint.EndpointType;
 import io.openvidu.server.utils.GeoLocation;
 
@@ -44,7 +43,6 @@ public class Participant {
 		active
 	}
 
-	protected ConnectionType type; // WEBRTC, IPCAM
 	protected String finalUserId; // ID to match this connection with a final user (HttpSession id)
 	protected String participantPrivatetId; // ID to identify the user on server (org.kurento.jsonrpc.Session.id)
 	protected String participantPublicId; // ID to identify the user on clients
@@ -52,7 +50,6 @@ public class Participant {
 	protected ParticipantStatus status; // Status of the connection
 	protected Long activeAt; // Timestamp when this connection entered status "active"
 	protected String clientMetadata = ""; // Metadata provided on client side
-	protected String serverMetadata = ""; // Metadata provided on server side
 	protected Token token; // Token associated to this participant
 	protected GeoLocation location; // Location of the participant
 	protected String platform; // Platform used by the participant to connect to the session
@@ -78,10 +75,9 @@ public class Participant {
 	 */
 	public Lock singleRecordingLock = new ReentrantLock();
 
-	public Participant(ConnectionType type, String finalUserId, String participantPrivatetId,
-			String participantPublicId, String sessionId, Token token, String clientMetadata, GeoLocation location,
-			String platform, EndpointType endpointType, Long activeAt) {
-		this.type = type;
+	public Participant(String finalUserId, String participantPrivatetId, String participantPublicId, String sessionId,
+			Token token, String clientMetadata, GeoLocation location, String platform, EndpointType endpointType,
+			Long activeAt) {
 		this.finalUserId = finalUserId;
 		this.participantPrivatetId = participantPrivatetId;
 		this.participantPublicId = participantPublicId;
@@ -96,16 +92,9 @@ public class Participant {
 		if (clientMetadata != null) {
 			this.clientMetadata = clientMetadata;
 		}
-		if (!token.getServerMetadata().isEmpty()) {
-			this.serverMetadata = token.getServerMetadata();
-		}
 		this.location = location;
 		this.platform = platform;
 		this.endpointType = endpointType;
-	}
-
-	public ConnectionType getType() {
-		return type;
 	}
 
 	public String getFinalUserId() {
@@ -145,11 +134,7 @@ public class Participant {
 	}
 
 	public String getServerMetadata() {
-		return serverMetadata;
-	}
-
-	public void setServerMetadata(String serverMetadata) {
-		this.serverMetadata = serverMetadata;
+		return this.token.getServerMetadata();
 	}
 
 	public Token getToken() {
@@ -234,16 +219,16 @@ public class Participant {
 
 	public String getFullMetadata() {
 		String fullMetadata;
-		if ((!this.clientMetadata.isEmpty()) && (!this.serverMetadata.isEmpty())) {
-			fullMetadata = this.clientMetadata + METADATA_SEPARATOR + this.serverMetadata;
+		if ((!this.clientMetadata.isEmpty()) && (!this.token.getServerMetadata().isEmpty())) {
+			fullMetadata = this.clientMetadata + METADATA_SEPARATOR + this.token.getServerMetadata();
 		} else {
-			fullMetadata = this.clientMetadata + this.serverMetadata;
+			fullMetadata = this.clientMetadata + this.token.getServerMetadata();
 		}
 		return fullMetadata;
 	}
 
 	public void deleteIpcamProperties() {
-		this.clientMetadata = "";
+		this.clientMetadata = null;
 		this.token.setToken(null);
 	}
 
@@ -305,9 +290,9 @@ public class Participant {
 
 	public JsonObject toJson() {
 		JsonObject json = new JsonObject();
+		// COMMON
 		json.addProperty("id", this.participantPublicId);
 		json.addProperty("object", "connection");
-		json.addProperty("type", this.type.name());
 		json.addProperty("status", this.status.name());
 		json.addProperty("connectionId", this.participantPublicId); // TODO: deprecated. Better use only "id"
 		json.addProperty("sessionId", this.sessionId);
@@ -317,10 +302,14 @@ public class Participant {
 		json.addProperty("platform", this.platform);
 		if (this.token.getToken() != null) {
 			json.addProperty("token", this.token.getToken());
+		} else {
+			json.add("token", null);
 		}
-		json.addProperty("role", this.token.getRole().name());
-		json.addProperty("serverData", this.serverMetadata);
-		json.addProperty("record", this.token.record());
+		// Add all ConnectionOptions
+		JsonObject connectionOptionsJson = this.token.getConnectionOptionsWithFinalJsonFormat();
+		connectionOptionsJson.entrySet().forEach(entry -> {
+			json.add(entry.getKey(), entry.getValue());
+		});
 		json.addProperty("clientData", this.clientMetadata);
 		return json;
 	}

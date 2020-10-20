@@ -497,6 +497,10 @@ public class OpenVidu {
 	 * since the last time method {@link io.openvidu.java.client.OpenVidu#fetch()}
 	 * was called</strong>. Exceptions to this rule are:
 	 * <ul>
+	 * <li>Calling
+	 * {@link io.openvidu.java.client.OpenVidu#createSession(SessionProperties)
+	 * OpenVidu.createSession} automatically adds the new Session object to the
+	 * local collection.</li>
 	 * <li>Calling {@link io.openvidu.java.client.Session#fetch()} updates that
 	 * specific Session status</li>
 	 * <li>Calling {@link io.openvidu.java.client.Session#close()} automatically

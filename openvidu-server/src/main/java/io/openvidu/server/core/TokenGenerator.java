@@ -20,13 +20,15 @@ package io.openvidu.server.core;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import io.openvidu.java.client.ConnectionOptions;
+import io.openvidu.java.client.ConnectionType;
+import io.openvidu.java.client.KurentoOptions;
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.server.OpenViduServer;
 import io.openvidu.server.config.OpenviduBuildInfo;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.coturn.CoturnCredentialsService;
 import io.openvidu.server.coturn.TurnCredentials;
-import io.openvidu.server.kurento.core.KurentoTokenOptions;
 
 public class TokenGenerator {
 
@@ -39,8 +41,8 @@ public class TokenGenerator {
 	@Autowired
 	protected OpenviduBuildInfo openviduBuildConfig;
 
-	public Token generateToken(String sessionId, OpenViduRole role, String serverMetadata, boolean record,
-			KurentoTokenOptions kurentoTokenOptions) throws Exception {
+	public Token generateToken(String sessionId, String serverMetadata, boolean record, OpenViduRole role,
+			KurentoOptions kurentoOptions) throws Exception {
 		String token = OpenViduServer.wsUrl;
 		token += "?sessionId=" + sessionId;
 		token += "&token=" + IdentifierPrefixes.TOKEN_ID + RandomStringUtils.randomAlphabetic(1).toUpperCase()
@@ -56,6 +58,8 @@ public class TokenGenerator {
 				token += "&turnCredential=" + turnCredentials.getCredential();
 			}
 		}
-		return new Token(token, sessionId, role, serverMetadata, record, turnCredentials, kurentoTokenOptions);
+		ConnectionOptions connectionOptions = new ConnectionOptions.Builder().type(ConnectionType.WEBRTC)
+				.data(serverMetadata).record(record).role(role).kurentoOptions(kurentoOptions).build();
+		return new Token(token, sessionId, connectionOptions, turnCredentials);
 	}
 }

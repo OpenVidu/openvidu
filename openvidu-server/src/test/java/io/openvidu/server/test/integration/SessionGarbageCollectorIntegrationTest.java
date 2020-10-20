@@ -36,7 +36,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
-import io.openvidu.java.client.OpenViduRole;
+import io.openvidu.java.client.ConnectionOptions;
 import io.openvidu.server.core.Participant;
 import io.openvidu.server.core.SessionManager;
 import io.openvidu.server.core.Token;
@@ -115,7 +115,8 @@ public class SessionGarbageCollectorIntegrationTest {
 	}
 
 	private void joinParticipant(String sessionId, String token) {
-		Token t = new Token(token, sessionId, OpenViduRole.PUBLISHER, "SERVER_METADATA", true, null, null);
+		ConnectionOptions connectionOptions = new ConnectionOptions.Builder().data("SERVER_METADATA").build();
+		Token t = new Token(token, sessionId, connectionOptions, null);
 		String uuid = UUID.randomUUID().toString();
 		String participantPrivateId = "PARTICIPANT_PRIVATE_ID_" + uuid;
 		String finalUserId = "FINAL_USER_ID_" + uuid;

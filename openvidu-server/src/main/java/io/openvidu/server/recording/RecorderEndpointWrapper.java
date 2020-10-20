@@ -64,7 +64,9 @@ public class RecorderEndpointWrapper {
 		this.name = StringUtils.removeEnd(nameAux, SingleStreamRecordingService.INDIVIDUAL_RECORDING_EXTENSION);
 		this.connectionId = json.get("connectionId").getAsString();
 		this.streamId = json.get("streamId").getAsString();
-		this.clientData = json.get("clientData").getAsString();
+		this.clientData = (json.has("clientData") && !json.get("clientData").isJsonNull())
+				? json.get("clientData").getAsString()
+				: null;
 		this.serverData = json.get("serverData").getAsString();
 		this.startTime = json.get("startTime").getAsLong();
 		this.endTime = json.get("endTime").getAsLong();

@@ -76,6 +76,7 @@ export class OpenVidu {
    * Array of active sessions. **This value will remain unchanged since the last time method [[OpenVidu.fetch]]
    * was called**. Exceptions to this rule are:
    *
+   * - Calling [[OpenVidu.createSession]] automatically adds the new Session object to the local collection.
    * - Calling [[Session.fetch]] updates that specific Session status
    * - Calling [[Session.close]] automatically removes the Session from the list of active Sessions
    * - Calling [[Session.forceDisconnect]] automatically updates the inner affected connections for that specific Session
