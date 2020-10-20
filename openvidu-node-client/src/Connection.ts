@@ -231,7 +231,7 @@ export class Connection {
             }
         }
         if (equals) {
-            equals = JSON.stringify(this.subscribers) === JSON.stringify(other.subscribers);
+            equals = JSON.stringify(this.subscribers.sort()) === JSON.stringify(other.subscribers.sort());
             if (equals) {
                 let i = 0;
                 while (equals && i < this.publishers.length) {
