@@ -45,7 +45,7 @@ import com.google.gson.JsonSyntaxException;
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
-import io.openvidu.java.client.ConnectionOptions;
+import io.openvidu.java.client.ConnectionProperties;
 import io.openvidu.java.client.ConnectionType;
 import io.openvidu.java.client.KurentoOptions;
 import io.openvidu.java.client.OpenViduRole;
@@ -162,7 +162,7 @@ public abstract class SessionManager {
 			String eventType);
 
 	public abstract Participant publishIpcam(Session session, MediaOptions mediaOptions,
-			ConnectionOptions connectionOptions) throws Exception;
+			ConnectionProperties connectionProperties) throws Exception;
 
 	public abstract void reconnectStream(Participant participant, String streamId, String sdpOffer,
 			Integer transactionId);
@@ -314,9 +314,9 @@ public abstract class SessionManager {
 		return tokenObj;
 	}
 
-	public Token newTokenForInsecureUser(Session session, String token, ConnectionOptions connectionOptions)
+	public Token newTokenForInsecureUser(Session session, String token, ConnectionProperties connectionProperties)
 			throws Exception {
-		Token tokenObj = new Token(token, session.getSessionId(), connectionOptions,
+		Token tokenObj = new Token(token, session.getSessionId(), connectionProperties,
 				this.openviduConfig.isTurnadminAvailable() ? this.coturnCredentialsService.createUser() : null);
 		session.storeToken(tokenObj);
 		session.showTokens("Token created for insecure user");

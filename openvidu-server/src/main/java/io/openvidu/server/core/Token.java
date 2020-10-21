@@ -21,7 +21,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 
 import com.google.gson.JsonObject;
 
-import io.openvidu.java.client.ConnectionOptions;
+import io.openvidu.java.client.ConnectionProperties;
 import io.openvidu.java.client.ConnectionType;
 import io.openvidu.java.client.KurentoOptions;
 import io.openvidu.java.client.OpenViduRole;
@@ -33,22 +33,22 @@ public class Token {
 	private String token;
 	private String sessionId;
 	private Long createdAt;
-	private ConnectionOptions connectionOptions;
+	private ConnectionProperties connectionProperties;
 	private TurnCredentials turnCredentials;
 
 	private final String connectionId = IdentifierPrefixes.PARTICIPANT_PUBLIC_ID
 			+ RandomStringUtils.randomAlphabetic(1).toUpperCase() + RandomStringUtils.randomAlphanumeric(9);
 
-	public Token(String token, String sessionId, ConnectionOptions connectionOptions, TurnCredentials turnCredentials) {
+	public Token(String token, String sessionId, ConnectionProperties connectionProperties, TurnCredentials turnCredentials) {
 		this.token = token;
 		this.sessionId = sessionId;
 		this.createdAt = System.currentTimeMillis();
-		this.connectionOptions = connectionOptions;
+		this.connectionProperties = connectionProperties;
 		this.turnCredentials = turnCredentials;
 	}
 
 	public ConnectionType getType() {
-		return this.connectionOptions.getType();
+		return this.connectionProperties.getType();
 	}
 
 	public String getToken() {
@@ -64,49 +64,49 @@ public class Token {
 	}
 
 	public String getServerMetadata() {
-		return this.connectionOptions.getData();
+		return this.connectionProperties.getData();
 	}
 
 	public boolean record() {
-		return this.connectionOptions.record();
+		return this.connectionProperties.record();
 	}
 
 	public void setRecord(boolean newRecord) {
-		this.updateConnectionOptions(connectionOptions.getType(), connectionOptions.getData(), newRecord,
-				connectionOptions.getRole(), connectionOptions.getKurentoOptions(), connectionOptions.getRtspUri(),
-				connectionOptions.adaptativeBitrate(), connectionOptions.onlyPlayWithSubscribers(),
-				connectionOptions.getNetworkCache());
+		this.updateConnectionProperties(connectionProperties.getType(), connectionProperties.getData(), newRecord,
+				connectionProperties.getRole(), connectionProperties.getKurentoOptions(), connectionProperties.getRtspUri(),
+				connectionProperties.adaptativeBitrate(), connectionProperties.onlyPlayWithSubscribers(),
+				connectionProperties.getNetworkCache());
 	}
 
 	public OpenViduRole getRole() {
-		return this.connectionOptions.getRole();
+		return this.connectionProperties.getRole();
 	}
 
 	public void setRole(OpenViduRole newRole) {
-		this.updateConnectionOptions(connectionOptions.getType(), connectionOptions.getData(),
-				connectionOptions.record(), newRole, connectionOptions.getKurentoOptions(),
-				connectionOptions.getRtspUri(), connectionOptions.adaptativeBitrate(),
-				connectionOptions.onlyPlayWithSubscribers(), connectionOptions.getNetworkCache());
+		this.updateConnectionProperties(connectionProperties.getType(), connectionProperties.getData(),
+				connectionProperties.record(), newRole, connectionProperties.getKurentoOptions(),
+				connectionProperties.getRtspUri(), connectionProperties.adaptativeBitrate(),
+				connectionProperties.onlyPlayWithSubscribers(), connectionProperties.getNetworkCache());
 	}
 
 	public KurentoOptions getKurentoOptions() {
-		return this.connectionOptions.getKurentoOptions();
+		return this.connectionProperties.getKurentoOptions();
 	}
 
 	public String getRtspUri() {
-		return this.connectionOptions.getRtspUri();
+		return this.connectionProperties.getRtspUri();
 	}
 
 	public Boolean adaptativeBitrate() {
-		return this.connectionOptions.adaptativeBitrate();
+		return this.connectionProperties.adaptativeBitrate();
 	}
 
 	public Boolean onlyPlayWithSubscribers() {
-		return this.connectionOptions.onlyPlayWithSubscribers();
+		return this.connectionProperties.onlyPlayWithSubscribers();
 	}
 
 	public Integer getNetworkCache() {
-		return this.connectionOptions.getNetworkCache();
+		return this.connectionProperties.getNetworkCache();
 	}
 
 	public TurnCredentials getTurnCredentials() {
@@ -141,9 +141,9 @@ public class Token {
 		json.addProperty("sessionId", this.sessionId);
 		json.addProperty("createdAt", this.createdAt);
 
-		// Add all ConnectionOptions
-		JsonObject connectionOptionsJson = this.getConnectionOptionsWithFinalJsonFormat();
-		connectionOptionsJson.entrySet().forEach(entry -> {
+		// Add all ConnectionProperties
+		JsonObject connectionPropertiesJson = this.getConnectionPropertiesWithFinalJsonFormat();
+		connectionPropertiesJson.entrySet().forEach(entry -> {
 			json.add(entry.getKey(), entry.getValue());
 		});
 
@@ -157,18 +157,18 @@ public class Token {
 		return json;
 	}
 
-	protected JsonObject getConnectionOptionsWithFinalJsonFormat() {
-		JsonObject json = this.connectionOptions.toJson(this.sessionId);
+	protected JsonObject getConnectionPropertiesWithFinalJsonFormat() {
+		JsonObject json = this.connectionProperties.toJson(this.sessionId);
 		json.remove("session");
 		json.addProperty("serverData", json.get("data").getAsString());
 		json.remove("data");
 		return json;
 	}
 
-	private void updateConnectionOptions(ConnectionType type, String data, Boolean record, OpenViduRole role,
+	private void updateConnectionProperties(ConnectionType type, String data, Boolean record, OpenViduRole role,
 			KurentoOptions kurentoOptions, String rtspUri, Boolean adaptativeBitrate, Boolean onlyPlayWithSubscribers,
 			Integer networkCache) {
-		ConnectionOptions.Builder builder = new ConnectionOptions.Builder();
+		ConnectionProperties.Builder builder = new ConnectionProperties.Builder();
 		if (type != null) {
 			builder.type(type);
 		}
@@ -196,13 +196,13 @@ public class Token {
 		if (networkCache != null) {
 			builder.networkCache(networkCache);
 		}
-		this.connectionOptions = builder.build();
+		this.connectionProperties = builder.build();
 	}
 
 	@Override
 	public String toString() {
-		if (this.connectionOptions.getRole() != null)
-			return this.connectionOptions.getRole().name();
+		if (this.connectionProperties.getRole() != null)
+			return this.connectionProperties.getRole().name();
 		else
 			return this.token;
 	}

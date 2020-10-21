@@ -16,7 +16,7 @@ import {
   RecordingMode,
   RecordingLayout,
   Connection,
-  ConnectionOptions,
+  ConnectionProperties,
   OpenViduRole,
   RecordingProperties,
   Recording,
@@ -129,7 +129,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   manualTurnConf: RTCIceServer = { urls: [] };
   customToken: string;
   forcePublishing: boolean;
-  connectionOptions: ConnectionOptions = {
+  connectionProperties: ConnectionProperties = {
     role: OpenViduRole.PUBLISHER,
     record: true,
     kurentoOptions: {
@@ -566,7 +566,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         manualTurnConf: this.manualTurnConf,
         customToken: this.customToken,
         forcePublishing: this.forcePublishing,
-        connectionOptions: this.connectionOptions,
+        connectionProperties: this.connectionProperties,
       },
       width: '450px'
     });
@@ -581,7 +581,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
         this.manualTurnConf = result.manualTurnConf;
         this.customToken = result.customToken;
         this.forcePublishing = result.forcePublishing;
-        this.connectionOptions = result.connectionOptions;
+        this.connectionProperties = result.connectionProperties;
       }
       document.getElementById('session-settings-btn-' + this.index).classList.remove('cdk-program-focused');
     });
@@ -693,7 +693,7 @@ export class OpenviduInstanceComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   async createConnection(): Promise<Connection> {
-    return this.sessionAPI.createConnection(this.connectionOptions);
+    return this.sessionAPI.createConnection(this.connectionProperties);
   }
 
   updateEventFromChild(event: OpenViduEvent) {

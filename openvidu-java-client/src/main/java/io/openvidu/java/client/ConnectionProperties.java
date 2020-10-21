@@ -5,9 +5,9 @@ import com.google.gson.JsonObject;
 
 /**
  * See
- * {@link io.openvidu.java.client.Session#createConnection(ConnectionOptions)}
+ * {@link io.openvidu.java.client.Session#createConnection(ConnectionProperties)}
  */
-public class ConnectionOptions {
+public class ConnectionProperties {
 
 	private ConnectionType type;
 	// COMMON
@@ -24,7 +24,7 @@ public class ConnectionOptions {
 
 	/**
 	 * 
-	 * Builder for {@link io.openvidu.java.client.ConnectionOptions}
+	 * Builder for {@link io.openvidu.java.client.ConnectionProperties}
 	 *
 	 */
 	public static class Builder {
@@ -43,10 +43,10 @@ public class ConnectionOptions {
 		private Integer networkCache;
 
 		/**
-		 * Builder for {@link io.openvidu.java.client.ConnectionOptions}.
+		 * Builder for {@link io.openvidu.java.client.ConnectionProperties}.
 		 */
-		public ConnectionOptions build() {
-			return new ConnectionOptions(this.type, this.data, this.record, this.role, this.kurentoOptions,
+		public ConnectionProperties build() {
+			return new ConnectionProperties(this.type, this.data, this.record, this.role, this.kurentoOptions,
 					this.rtspUri, this.adaptativeBitrate, this.onlyPlayWithSubscribers, this.networkCache);
 		}
 
@@ -56,24 +56,24 @@ public class ConnectionOptions {
 		 * have effect:
 		 * <ul>
 		 * <li>{@link io.openvidu.java.client.ConnectionType#WEBRTC}:
-		 * {@link io.openvidu.java.client.ConnectionOptions.Builder#data(String) data},
-		 * {@link io.openvidu.java.client.ConnectionOptions.Builder#record(boolean)
+		 * {@link io.openvidu.java.client.ConnectionProperties.Builder#data(String) data},
+		 * {@link io.openvidu.java.client.ConnectionProperties.Builder#record(boolean)
 		 * record},
-		 * {@link io.openvidu.java.client.ConnectionOptions.Builder#role(OpenViduRole)
+		 * {@link io.openvidu.java.client.ConnectionProperties.Builder#role(OpenViduRole)
 		 * role},
-		 * {@link io.openvidu.java.client.ConnectionOptions.Builder#kurentoOptions(KurentoOptions)
+		 * {@link io.openvidu.java.client.ConnectionProperties.Builder#kurentoOptions(KurentoOptions)
 		 * kurentoOptions}</li>
 		 * <li>{@link io.openvidu.java.client.ConnectionType#IPCAM}:
-		 * {@link io.openvidu.java.client.ConnectionOptions.Builder#data(String) data},
-		 * {@link io.openvidu.java.client.ConnectionOptions.Builder#record(boolean)
+		 * {@link io.openvidu.java.client.ConnectionProperties.Builder#data(String) data},
+		 * {@link io.openvidu.java.client.ConnectionProperties.Builder#record(boolean)
 		 * record},
-		 * {@link io.openvidu.java.client.ConnectionOptions.Builder#rtspUri(String)
+		 * {@link io.openvidu.java.client.ConnectionProperties.Builder#rtspUri(String)
 		 * rtspUri},
-		 * {@link io.openvidu.java.client.ConnectionOptions.Builder#adaptativeBitrate(boolean)
+		 * {@link io.openvidu.java.client.ConnectionProperties.Builder#adaptativeBitrate(boolean)
 		 * adaptativeBitrate},
-		 * {@link io.openvidu.java.client.ConnectionOptions.Builder#onlyPlayWithSubscribers(boolean)
+		 * {@link io.openvidu.java.client.ConnectionProperties.Builder#onlyPlayWithSubscribers(boolean)
 		 * onlyPlayWithSubscribers},
-		 * {@link io.openvidu.java.client.ConnectionOptions.Builder#networkCache(int)
+		 * {@link io.openvidu.java.client.ConnectionProperties.Builder#networkCache(int)
 		 * networkCache}</li>
 		 * </ul>
 		 * If not set by default will be @link
@@ -94,7 +94,7 @@ public class ConnectionOptions {
 		 * <li>If you have provided no data in your clients when calling method
 		 * <code>Session.connect(TOKEN, DATA)</code> (<code>DATA</code> not defined),
 		 * then <code>Connection.data</code> will only have this
-		 * {@link io.openvidu.java.client.ConnectionOptions.Builder#data(String)}
+		 * {@link io.openvidu.java.client.ConnectionProperties.Builder#data(String)}
 		 * property.</li>
 		 * <li>If you have provided some data when calling
 		 * <code>Session.connect(TOKEN, DATA)</code> (<code>DATA</code> defined), then
@@ -102,7 +102,7 @@ public class ConnectionOptions {
 		 * <code>&quot;CLIENT_DATA%/%SERVER_DATA&quot;</code>, being
 		 * <code>CLIENT_DATA</code> the second parameter passed in OpenVidu Browser in
 		 * method <code>Session.connect</code> and <code>SERVER_DATA</code> this
-		 * {@link io.openvidu.java.client.ConnectionOptions.Builder#data(String)}
+		 * {@link io.openvidu.java.client.ConnectionProperties.Builder#data(String)}
 		 * property.</li>
 		 * </ul>
 		 */
@@ -219,7 +219,7 @@ public class ConnectionOptions {
 		}
 	}
 
-	ConnectionOptions(ConnectionType type, String data, Boolean record, OpenViduRole role,
+	ConnectionProperties(ConnectionType type, String data, Boolean record, OpenViduRole role,
 			KurentoOptions kurentoOptions, String rtspUri, Boolean adaptativeBitrate, Boolean onlyPlayWithSubscribers,
 			Integer networkCache) {
 		this.type = type;

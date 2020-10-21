@@ -218,11 +218,20 @@ public class Participant {
 	}
 
 	public String getFullMetadata() {
-		String fullMetadata;
-		if ((!this.clientMetadata.isEmpty()) && (!this.token.getServerMetadata().isEmpty())) {
-			fullMetadata = this.clientMetadata + METADATA_SEPARATOR + this.token.getServerMetadata();
-		} else {
-			fullMetadata = this.clientMetadata + this.token.getServerMetadata();
+		String fullMetadata = "";
+		if (this.clientMetadata != null && !this.clientMetadata.isEmpty()) {
+			// Client data defined
+			fullMetadata += this.clientMetadata;
+		}
+		if (this.token.getServerMetadata() != null && !this.token.getServerMetadata().isEmpty()) {
+			// Server data defined
+			if (fullMetadata.isEmpty()) {
+				// Only server data
+				fullMetadata += this.token.getServerMetadata();
+			} else {
+				// Both client data and server data
+				fullMetadata += METADATA_SEPARATOR + this.token.getServerMetadata();
+			}
 		}
 		return fullMetadata;
 	}
@@ -305,9 +314,9 @@ public class Participant {
 		} else {
 			json.add("token", null);
 		}
-		// Add all ConnectionOptions
-		JsonObject connectionOptionsJson = this.token.getConnectionOptionsWithFinalJsonFormat();
-		connectionOptionsJson.entrySet().forEach(entry -> {
+		// Add all ConnectionProperties
+		JsonObject connectionPropertiesJson = this.token.getConnectionPropertiesWithFinalJsonFormat();
+		connectionPropertiesJson.entrySet().forEach(entry -> {
 			json.add(entry.getKey(), entry.getValue());
 		});
 		json.addProperty("clientData", this.clientMetadata);

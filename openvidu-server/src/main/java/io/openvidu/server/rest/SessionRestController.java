@@ -50,7 +50,7 @@ import com.google.gson.JsonParser;
 
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.internal.ProtocolElements;
-import io.openvidu.java.client.ConnectionOptions;
+import io.openvidu.java.client.ConnectionProperties;
 import io.openvidu.java.client.ConnectionType;
 import io.openvidu.java.client.KurentoOptions;
 import io.openvidu.java.client.MediaMode;
@@ -282,18 +282,18 @@ public class SessionRestController {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
 
-		ConnectionOptions connectionOptions;
+		ConnectionProperties connectionProperties;
 		try {
-			connectionOptions = getConnectionOptionsFromParams(params);
+			connectionProperties = getConnectionPropertiesFromParams(params);
 		} catch (Exception e) {
 			return this.generateErrorResponse(e.getMessage(), "/sessions/" + sessionId + "/connection",
 					HttpStatus.BAD_REQUEST);
 		}
-		switch (connectionOptions.getType()) {
+		switch (connectionProperties.getType()) {
 		case WEBRTC:
-			return this.newWebrtcConnection(session, connectionOptions);
+			return this.newWebrtcConnection(session, connectionProperties);
 		case IPCAM:
-			return this.newIpcamConnection(session, connectionOptions);
+			return this.newIpcamConnection(session, connectionProperties);
 		default:
 			return this.generateErrorResponse("Wrong type parameter", "/sessions/" + sessionId + "/connection",
 					HttpStatus.BAD_REQUEST);
@@ -657,14 +657,15 @@ public class SessionRestController {
 			return this.generateErrorResponse("Session " + sessionId + " not found", "/tokens", HttpStatus.NOT_FOUND);
 		}
 
-		ConnectionOptions connectionOptions;
+		ConnectionProperties connectionProperties;
+		params.remove("record");
 		try {
-			connectionOptions = getConnectionOptionsFromParams(params);
+			connectionProperties = getConnectionPropertiesFromParams(params);
 		} catch (Exception e) {
 			return this.generateErrorResponse(e.getMessage(), "/sessions/" + sessionId + "/connection",
 					HttpStatus.BAD_REQUEST);
 		}
-		ResponseEntity<?> entity = this.newWebrtcConnection(session, connectionOptions);
+		ResponseEntity<?> entity = this.newWebrtcConnection(session, connectionProperties);
 		JsonObject jsonResponse = JsonParser.parseString(entity.getBody().toString()).getAsJsonObject();
 
 		if (jsonResponse.has("error")) {
@@ -779,15 +780,15 @@ public class SessionRestController {
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
 
-	protected ResponseEntity<?> newWebrtcConnection(Session session, ConnectionOptions connectionOptions) {
+	protected ResponseEntity<?> newWebrtcConnection(Session session, ConnectionProperties connectionProperties) {
 
 		final String REQUEST_PATH = "/sessions/" + session.getSessionId() + "/connection";
 
 		// While closing a session tokens can't be generated
 		if (session.closingLock.readLock().tryLock()) {
 			try {
-				Token token = sessionManager.newToken(session, connectionOptions.getRole(), connectionOptions.getData(),
-						connectionOptions.record(), connectionOptions.getKurentoOptions());
+				Token token = sessionManager.newToken(session, connectionProperties.getRole(), connectionProperties.getData(),
+						connectionProperties.record(), connectionProperties.getKurentoOptions());
 				return new ResponseEntity<>(token.toJsonAsParticipant().toString(), RestUtils.getResponseHeaders(),
 						HttpStatus.OK);
 			} catch (Exception e) {
@@ -805,7 +806,7 @@ public class SessionRestController {
 		}
 	}
 
-	protected ResponseEntity<?> newIpcamConnection(Session session, ConnectionOptions connectionOptions) {
+	protected ResponseEntity<?> newIpcamConnection(Session session, ConnectionProperties connectionProperties) {
 
 		final String REQUEST_PATH = "/sessions/" + session.getSessionId() + "/connection";
 
@@ -817,9 +818,9 @@ public class SessionRestController {
 		Integer frameRate = null;
 		String videoDimensions = null;
 		KurentoMediaOptions mediaOptions = new KurentoMediaOptions(true, null, hasAudio, hasVideo, audioActive,
-				videoActive, typeOfVideo, frameRate, videoDimensions, null, false, connectionOptions.getRtspUri(),
-				connectionOptions.adaptativeBitrate(), connectionOptions.onlyPlayWithSubscribers(),
-				connectionOptions.getNetworkCache());
+				videoActive, typeOfVideo, frameRate, videoDimensions, null, false, connectionProperties.getRtspUri(),
+				connectionProperties.adaptativeBitrate(), connectionProperties.onlyPlayWithSubscribers(),
+				connectionProperties.getNetworkCache());
 
 		// While closing a session IP cameras can't be published
 		if (session.closingLock.readLock().tryLock()) {
@@ -828,7 +829,7 @@ public class SessionRestController {
 					return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 				}
 				Participant ipcamParticipant = this.sessionManager.publishIpcam(session, mediaOptions,
-						connectionOptions);
+						connectionProperties);
 				return new ResponseEntity<>(ipcamParticipant.toJson().toString(), RestUtils.getResponseHeaders(),
 						HttpStatus.OK);
 			} catch (MalformedURLException e) {
@@ -857,9 +858,9 @@ public class SessionRestController {
 		return token;
 	}
 
-	protected ConnectionOptions getConnectionOptionsFromParams(Map<?, ?> params) throws Exception {
+	protected ConnectionProperties getConnectionPropertiesFromParams(Map<?, ?> params) throws Exception {
 
-		ConnectionOptions.Builder builder = new ConnectionOptions.Builder();
+		ConnectionProperties.Builder builder = new ConnectionProperties.Builder();
 
 		String typeString;
 		String data;

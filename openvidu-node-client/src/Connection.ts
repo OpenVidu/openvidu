@@ -16,7 +16,7 @@
  */
 
 import { Publisher } from './Publisher';
-import { ConnectionOptions } from './ConnectionOptions';
+import { ConnectionProperties } from './ConnectionProperties';
 import { OpenViduRole } from './OpenViduRole';
 
 /**
@@ -71,9 +71,9 @@ export class Connection {
     clientData: string;
 
     /**
-     * The [[ConnectionOptions]] assigned to the Connection
+     * The [[ConnectionProperties]] assigned to the Connection
      */
-    connectionOptions: ConnectionOptions;
+    connectionProperties: ConnectionProperties;
 
     /**
      * Token associated to the Connection
@@ -93,11 +93,11 @@ export class Connection {
     subscribers: string[] = [];
 
     /**
-     * @hidden deprecated. Inside ConnectionOptions
+     * @hidden deprecated. Inside ConnectionProperties
      */
     role?: OpenViduRole;
     /**
-     * @hidden deprecated. Inside ConnectionOptions
+     * @hidden deprecated. Inside ConnectionProperties
      */
     serverData?: string;
 
@@ -121,18 +121,18 @@ export class Connection {
         this.platform = json.platform;
         this.clientData = json.clientData;
         this.token = json.token;
-        if (this.connectionOptions != null) {
-            this.connectionOptions.type = json.type;
-            this.connectionOptions.data = json.data;
-            this.connectionOptions.record = json.record;
-            this.connectionOptions.role = json.role;
-            this.connectionOptions.kurentoOptions = json.kurentoOptions;
-            this.connectionOptions.rtspUri = json.rtspUri;
-            this.connectionOptions.adaptativeBitrate = json.adaptativeBitrate;
-            this.connectionOptions.onlyPlayWithSubscribers = json.onlyPlayWithSubscribers;
-            this.connectionOptions.networkCache = json.networkCache;
+        if (this.connectionProperties != null) {
+            this.connectionProperties.type = json.type;
+            this.connectionProperties.data = json.data;
+            this.connectionProperties.record = json.record;
+            this.connectionProperties.role = json.role;
+            this.connectionProperties.kurentoOptions = json.kurentoOptions;
+            this.connectionProperties.rtspUri = json.rtspUri;
+            this.connectionProperties.adaptativeBitrate = json.adaptativeBitrate;
+            this.connectionProperties.onlyPlayWithSubscribers = json.onlyPlayWithSubscribers;
+            this.connectionProperties.networkCache = json.networkCache;
         } else {
-            this.connectionOptions = {
+            this.connectionProperties = {
                 type: json.type,
                 data: json.data,
                 record: json.record,
@@ -209,14 +209,14 @@ export class Connection {
             this.status === other.status &&
             this.createdAt === other.createdAt &&
             this.activeAt === other.activeAt &&
-            this.connectionOptions.type === other.connectionOptions.type &&
-            this.connectionOptions.data === other.connectionOptions.data &&
-            this.connectionOptions.record === other.connectionOptions.record &&
-            this.connectionOptions.role === other.connectionOptions.role &&
-            this.connectionOptions.rtspUri === other.connectionOptions.rtspUri &&
-            this.connectionOptions.adaptativeBitrate === other.connectionOptions.adaptativeBitrate &&
-            this.connectionOptions.onlyPlayWithSubscribers === other.connectionOptions.onlyPlayWithSubscribers &&
-            this.connectionOptions.networkCache === other.connectionOptions.networkCache &&
+            this.connectionProperties.type === other.connectionProperties.type &&
+            this.connectionProperties.data === other.connectionProperties.data &&
+            this.connectionProperties.record === other.connectionProperties.record &&
+            this.connectionProperties.role === other.connectionProperties.role &&
+            this.connectionProperties.rtspUri === other.connectionProperties.rtspUri &&
+            this.connectionProperties.adaptativeBitrate === other.connectionProperties.adaptativeBitrate &&
+            this.connectionProperties.onlyPlayWithSubscribers === other.connectionProperties.onlyPlayWithSubscribers &&
+            this.connectionProperties.networkCache === other.connectionProperties.networkCache &&
             this.token === other.token &&
             this.location === other.location &&
             this.platform === other.platform &&
@@ -224,10 +224,10 @@ export class Connection {
             this.subscribers.length === other.subscribers.length &&
             this.publishers.length === other.publishers.length);
         if (equals) {
-            if (this.connectionOptions.kurentoOptions != null) {
-                equals = JSON.stringify(this.connectionOptions.kurentoOptions) === JSON.stringify(other.connectionOptions.kurentoOptions);
+            if (this.connectionProperties.kurentoOptions != null) {
+                equals = JSON.stringify(this.connectionProperties.kurentoOptions) === JSON.stringify(other.connectionProperties.kurentoOptions);
             } else {
-                equals = (this.connectionOptions.kurentoOptions === other.connectionOptions.kurentoOptions);
+                equals = (this.connectionProperties.kurentoOptions === other.connectionProperties.kurentoOptions);
             }
         }
         if (equals) {
@@ -250,13 +250,13 @@ export class Connection {
     /**
      * @hidden
      */
-    overrideConnectionOptions(newConnectionOptions: ConnectionOptions): void {
+    overrideConnectionProperties(newConnectionProperties: ConnectionProperties): void {
         // For now only properties record and role
-        if (newConnectionOptions.record != null) {
-            this.connectionOptions.record = newConnectionOptions.record;
+        if (newConnectionProperties.record != null) {
+            this.connectionProperties.record = newConnectionProperties.record;
         }
-        if (newConnectionOptions.role != null) {
-            this.connectionOptions.role = newConnectionOptions.role;
+        if (newConnectionProperties.role != null) {
+            this.connectionProperties.role = newConnectionProperties.role;
         }
     }
 

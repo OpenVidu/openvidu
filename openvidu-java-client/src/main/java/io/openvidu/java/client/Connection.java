@@ -39,7 +39,7 @@ public class Connection {
 	private String location;
 	private String platform;
 	private String clientData;
-	private ConnectionOptions connectionOptions;
+	private ConnectionProperties connectionProperties;
 	private String token;
 
 	protected Map<String, Publisher> publishers = new ConcurrentHashMap<>();
@@ -95,7 +95,7 @@ public class Connection {
 	 * Returns the type of Connection.
 	 */
 	public ConnectionType getType() {
-		return this.connectionOptions.getType();
+		return this.connectionProperties.getType();
 	}
 
 	/**
@@ -104,7 +104,7 @@ public class Connection {
 	 * when calling {@link io.openvidu.java.client.Session#generateToken()}
 	 */
 	public String getServerData() {
-		return this.connectionOptions.getData();
+		return this.connectionProperties.getData();
 	}
 
 	/**
@@ -114,7 +114,7 @@ public class Connection {
 	 * target="_blank">INDIVIDUAL recording</a>.
 	 */
 	public boolean record() {
-		return this.connectionOptions.record();
+		return this.connectionProperties.record();
 	}
 
 	/**
@@ -126,7 +126,7 @@ public class Connection {
 	 * {@link io.openvidu.java.client.ConnectionType#WEBRTC}</strong>
 	 */
 	public OpenViduRole getRole() {
-		return this.connectionOptions.getRole();
+		return this.connectionProperties.getRole();
 	}
 
 	/**
@@ -138,7 +138,7 @@ public class Connection {
 	 * {@link io.openvidu.java.client.ConnectionType#IPCAM}</strong>
 	 */
 	public String getRtspUri() {
-		return this.connectionOptions.getRtspUri();
+		return this.connectionProperties.getRtspUri();
 	}
 
 	/**
@@ -154,7 +154,7 @@ public class Connection {
 	 * {@link io.openvidu.java.client.ConnectionType#IPCAM}</strong>
 	 */
 	public boolean adaptativeBitrate() {
-		return this.connectionOptions.adaptativeBitrate();
+		return this.connectionProperties.adaptativeBitrate();
 	}
 
 	/**
@@ -170,7 +170,7 @@ public class Connection {
 	 * {@link io.openvidu.java.client.ConnectionType#IPCAM}</strong>
 	 */
 	public boolean onlyPlayWithSubscribers() {
-		return this.connectionOptions.onlyPlayWithSubscribers();
+		return this.connectionProperties.onlyPlayWithSubscribers();
 	}
 
 	/**
@@ -186,7 +186,7 @@ public class Connection {
 	 * {@link io.openvidu.java.client.ConnectionType#IPCAM}</strong>
 	 */
 	public int getNetworkCache() {
-		return this.connectionOptions.getNetworkCache();
+		return this.connectionProperties.getNetworkCache();
 	}
 
 	/**
@@ -262,11 +262,11 @@ public class Connection {
 		json.addProperty("clientData", this.getClientData());
 		json.addProperty("token", this.getToken());
 
-		JsonObject jsonConnectionOptions = this.connectionOptions.toJson("");
-		jsonConnectionOptions.remove("session");
-		json.addProperty("serverData", jsonConnectionOptions.get("data").getAsString());
-		jsonConnectionOptions.remove("data");
-		jsonConnectionOptions.entrySet().forEach(entry -> {
+		JsonObject jsonConnectionProperties = this.connectionProperties.toJson("");
+		jsonConnectionProperties.remove("session");
+		json.addProperty("serverData", jsonConnectionProperties.get("data").getAsString());
+		jsonConnectionProperties.remove("data");
+		jsonConnectionProperties.entrySet().forEach(entry -> {
 			json.add(entry.getKey(), entry.getValue());
 		});
 
@@ -283,33 +283,33 @@ public class Connection {
 		return json;
 	}
 
-	protected void overrideConnectionOptions(ConnectionOptions newConnectionOptions) {
-		ConnectionOptions.Builder builder = new ConnectionOptions.Builder();
+	protected void overrideConnectionProperties(ConnectionProperties newConnectionProperties) {
+		ConnectionProperties.Builder builder = new ConnectionProperties.Builder();
 		// For now only properties role and record can be updated
-		if (newConnectionOptions.getRole() != null) {
-			builder.role(newConnectionOptions.getRole());
+		if (newConnectionProperties.getRole() != null) {
+			builder.role(newConnectionProperties.getRole());
 		} else {
-			builder.role(this.connectionOptions.getRole());
+			builder.role(this.connectionProperties.getRole());
 		}
-		if (newConnectionOptions.record() != null) {
-			builder.record(newConnectionOptions.record());
+		if (newConnectionProperties.record() != null) {
+			builder.record(newConnectionProperties.record());
 		} else {
-			builder.record(this.connectionOptions.record());
+			builder.record(this.connectionProperties.record());
 		}
 		// Keep old configuration in the rest of properties
-		builder.type(this.connectionOptions.getType()).data(this.connectionOptions.getData())
-				.kurentoOptions(this.connectionOptions.getKurentoOptions())
-				.rtspUri(this.connectionOptions.getRtspUri());
-		if (this.connectionOptions.adaptativeBitrate() != null) {
-			builder.adaptativeBitrate(this.connectionOptions.adaptativeBitrate());
+		builder.type(this.connectionProperties.getType()).data(this.connectionProperties.getData())
+				.kurentoOptions(this.connectionProperties.getKurentoOptions())
+				.rtspUri(this.connectionProperties.getRtspUri());
+		if (this.connectionProperties.adaptativeBitrate() != null) {
+			builder.adaptativeBitrate(this.connectionProperties.adaptativeBitrate());
 		}
-		if (this.connectionOptions.onlyPlayWithSubscribers() != null) {
-			builder.onlyPlayWithSubscribers(this.connectionOptions.onlyPlayWithSubscribers());
+		if (this.connectionProperties.onlyPlayWithSubscribers() != null) {
+			builder.onlyPlayWithSubscribers(this.connectionProperties.onlyPlayWithSubscribers());
 		}
-		if (this.connectionOptions.getNetworkCache() != null) {
-			builder.networkCache(this.connectionOptions.getNetworkCache());
+		if (this.connectionProperties.getNetworkCache() != null) {
+			builder.networkCache(this.connectionProperties.getNetworkCache());
 		}
-		this.connectionOptions = builder.build();
+		this.connectionProperties = builder.build();
 	}
 
 	protected void setSubscribers(List<String> subscribers) {
@@ -412,7 +412,7 @@ public class Connection {
 		Integer networkCache = (json.has("networkCache") && !json.get("networkCache").isJsonNull())
 				? json.get("networkCache").getAsInt()
 				: null;
-		this.connectionOptions = new ConnectionOptions(type, data, record, role, null, rtspUri, adaptativeBitrate,
+		this.connectionProperties = new ConnectionProperties(type, data, record, role, null, rtspUri, adaptativeBitrate,
 				onlyPlayWithSubscribers, networkCache);
 
 		return this;

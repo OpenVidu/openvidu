@@ -17,7 +17,7 @@
 
 import axios, { AxiosError } from 'axios';
 import { Connection } from './Connection';
-import { ConnectionOptions } from './ConnectionOptions';
+import { ConnectionProperties } from './ConnectionProperties';
 import { MediaMode } from './MediaMode';
 import { OpenVidu } from './OpenVidu';
 import { Publisher } from './Publisher';
@@ -143,18 +143,18 @@ export class Session {
 
     /**
      * Creates a new Connection object associated to Session object and configured with
-     * `connectionOptions`. Each user connecting to the Session requires a Connection.
+     * `connectionProperties`. Each user connecting to the Session requires a Connection.
      * The token string value to send to the client side is available at [[Connection.token]].
      * 
      * @returns A Promise that is resolved to the generated [[Connection]] object if success and rejected with an Error object if not
      */
-    public createConnection(connectionOptions?: ConnectionOptions): Promise<Connection> {
+    public createConnection(connectionProperties?: ConnectionProperties): Promise<Connection> {
         return new Promise<Connection>((resolve, reject) => {
             const data = JSON.stringify({
-                role: (!!connectionOptions && !!connectionOptions.role) ? connectionOptions.role : null,
-                data: (!!connectionOptions && !!connectionOptions.data) ? connectionOptions.data : null,
-                record: !!connectionOptions ? connectionOptions.record : null,
-                kurentoOptions: (!!connectionOptions && !!connectionOptions.kurentoOptions) ? connectionOptions.kurentoOptions : null
+                role: (!!connectionProperties && !!connectionProperties.role) ? connectionProperties.role : null,
+                data: (!!connectionProperties && !!connectionProperties.data) ? connectionProperties.data : null,
+                record: !!connectionProperties ? connectionProperties.record : null,
+                kurentoOptions: (!!connectionProperties && !!connectionProperties.kurentoOptions) ? connectionProperties.kurentoOptions : null
             });
             axios.post(
                 this.ov.host + OpenVidu.API_SESSIONS + '/' + this.sessionId + '/connection',
@@ -390,26 +390,26 @@ export class Session {
     }
 
     /**
-     * Updates the properties of a Connection  with a [[ConnectionOptions]] object.
+     * Updates the properties of a Connection  with a [[ConnectionProperties]] object.
      * Only these properties can be updated:
      * 
-     * - [[ConnectionOptions.role]]
-     * - [[ConnectionOptions.record]]
+     * - [[ConnectionProperties.role]]
+     * - [[ConnectionProperties.record]]
      * 
      * This method automatically updates the properties of the local affected objects. This means that there is no need to call
      * [[Session.fetch]] or [[OpenVidu.fetch]] to see the changes consequence of the execution of this method applied in the local objects.
      * 
      * @param connectionId The [[Connection.connectionId]] of the Connection object to modify
-     * @param connectionOptions A new [[ConnectionOptions]] object with the updated values to apply
+     * @param connectionProperties A new [[ConnectionProperties]] object with the updated values to apply
      * 
      * @returns A Promise that is resolved to the updated [[Connection]] object if the operation was
      *          successful and rejected with an Error object if not
      */
-    public updateConnection(connectionId: string, connectionOptions: ConnectionOptions): Promise<Connection | undefined> {
+    public updateConnection(connectionId: string, connectionProperties: ConnectionProperties): Promise<Connection | undefined> {
         return new Promise<any>((resolve, reject) => {
             axios.patch(
                 this.ov.host + OpenVidu.API_SESSIONS + "/" + this.sessionId + "/connection/" + connectionId,
-                connectionOptions,
+                connectionProperties,
                 {
                     headers: {
                         'Authorization': this.ov.basicAuth,
@@ -437,7 +437,7 @@ export class Session {
                         resolve(newConnection);
                     } else {
                         // The updated Connection was available in local map
-                        existingConnection.overrideConnectionOptions(connectionOptions);
+                        existingConnection.overrideConnectionProperties(connectionProperties);
                         this.updateActiveConnectionsArray();
                         resolve(existingConnection);
                     }

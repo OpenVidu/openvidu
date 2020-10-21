@@ -105,8 +105,8 @@ public class Session {
 
 	/**
 	 * @deprecated Use
-	 *             {@link Session#createConnection(io.openvidu.java.client.ConnectionOptions)
-	 *             Session.createConnection(ConnectionOptions)} instead to get a
+	 *             {@link Session#createConnection(io.openvidu.java.client.ConnectionProperties)
+	 *             Session.createConnection(ConnectionProperties)} instead to get a
 	 *             {@link io.openvidu.java.client.Connection} object.
 	 *
 	 * @return The generated token String
@@ -155,8 +155,8 @@ public class Session {
 
 	/**
 	 * Same as
-	 * {@link io.openvidu.java.client.Session#createConnection(ConnectionOptions)
-	 * but with default ConnectionOptions values.
+	 * {@link io.openvidu.java.client.Session#createConnection(ConnectionProperties)
+	 * but with default ConnectionProperties values.
 	 *
 	 * @return The generated {@link io.openvidu.java.client.Connection Connection}
 	 *         object.
@@ -166,12 +166,12 @@ public class Session {
 	 */
 	public Connection createConnection() throws OpenViduJavaClientException, OpenViduHttpException {
 		return createConnection(
-				new ConnectionOptions.Builder().data("").role(OpenViduRole.PUBLISHER).record(true).build());
+				new ConnectionProperties.Builder().data("").role(OpenViduRole.PUBLISHER).record(true).build());
 	}
 
 	/**
 	 * Creates a new Connection object associated to Session object and configured
-	 * with <code>connectionOptions</code>. Each user connecting to the Session
+	 * with <code>connectionProperties</code>. Each user connecting to the Session
 	 * requires a Connection. The token string value to send to the client side can
 	 * be retrieved with {@link io.openvidu.java.client.Connection#getToken()
 	 * Connection.getToken()}.
@@ -182,7 +182,7 @@ public class Session {
 	 * @throws OpenViduJavaClientException
 	 * @throws OpenViduHttpException
 	 */
-	public Connection createConnection(ConnectionOptions connectionOptions)
+	public Connection createConnection(ConnectionProperties connectionProperties)
 			throws OpenViduJavaClientException, OpenViduHttpException {
 		if (!this.hasSessionId()) {
 			this.getSessionId();
@@ -193,7 +193,7 @@ public class Session {
 
 		StringEntity params;
 		try {
-			params = new StringEntity(connectionOptions.toJson(sessionId).toString());
+			params = new StringEntity(connectionProperties.toJson(sessionId).toString());
 		} catch (UnsupportedEncodingException e1) {
 			throw new OpenViduJavaClientException(e1.getMessage(), e1.getCause());
 		}
@@ -261,7 +261,7 @@ public class Session {
 	 * those values to call
 	 * {@link io.openvidu.java.client.Session#forceDisconnect(Connection)},
 	 * {@link io.openvidu.java.client.Session#forceUnpublish(Publisher)} or
-	 * {@link io.openvidu.java.client.Session#updateConnection(String, ConnectionOptions)}.<br>
+	 * {@link io.openvidu.java.client.Session#updateConnection(String, ConnectionProperties)}.<br>
 	 * <br>
 	 * 
 	 * To update all Session objects owned by OpenVidu object at once, call
@@ -338,7 +338,7 @@ public class Session {
 
 	/**
 	 * Same as {@link io.openvidu.java.client.Session#forceDisconnect(Connection)
-	 * forceDisconnect(ConnectionOptions)} but providing the
+	 * forceDisconnect(ConnectionProperties)} but providing the
 	 * {@link io.openvidu.java.client.Connection#getConnectionId() connectionId}
 	 * instead of the Connection object.
 	 * 
@@ -464,13 +464,13 @@ public class Session {
 
 	/**
 	 * Updates the properties of a Connection with a
-	 * {@link io.openvidu.java.client.ConnectionOptions} object. Only these
+	 * {@link io.openvidu.java.client.ConnectionProperties} object. Only these
 	 * properties can be updated:
 	 * <ul>
-	 * <li>{@link io.openvidu.java.client.ConnectionOptions.Builder#role(OpenViduRole)
-	 * ConnectionOptions.Builder.role(OpenViduRole)}</li>
-	 * <li>{@link io.openvidu.java.client.ConnectionOptions.Builder#record(boolean)
-	 * ConnectionOptions.Builder.record(boolean)}</li>
+	 * <li>{@link io.openvidu.java.client.ConnectionProperties.Builder#role(OpenViduRole)
+	 * ConnectionProperties.Builder.role(OpenViduRole)}</li>
+	 * <li>{@link io.openvidu.java.client.ConnectionProperties.Builder#record(boolean)
+	 * ConnectionProperties.Builder.record(boolean)}</li>
 	 * </ul>
 	 * <br>
 	 * 
@@ -482,7 +482,7 @@ public class Session {
 	 * objects.
 	 * 
 	 * @param connectionId      The Connection to modify
-	 * @param connectionOptions A ConnectionOptions object with the new values to
+	 * @param connectionProperties A ConnectionProperties object with the new values to
 	 *                          apply
 	 * 
 	 * @return The updated {@link io.openvidu.java.client.Connection Connection}
@@ -491,7 +491,7 @@ public class Session {
 	 * @throws OpenViduJavaClientException
 	 * @throws OpenViduHttpException
 	 */
-	public Connection updateConnection(String connectionId, ConnectionOptions connectionOptions)
+	public Connection updateConnection(String connectionId, ConnectionProperties connectionProperties)
 			throws OpenViduJavaClientException, OpenViduHttpException {
 
 		HttpPatch request = new HttpPatch(
@@ -499,7 +499,7 @@ public class Session {
 
 		StringEntity params;
 		try {
-			params = new StringEntity(connectionOptions.toJson(this.sessionId).toString());
+			params = new StringEntity(connectionProperties.toJson(this.sessionId).toString());
 		} catch (UnsupportedEncodingException e1) {
 			throw new OpenViduJavaClientException(e1.getMessage(), e1.getCause());
 		}
@@ -534,7 +534,7 @@ public class Session {
 				return newConnection;
 			} else {
 				// The updated Connection was available in local map
-				existingConnection.overrideConnectionOptions(connectionOptions);
+				existingConnection.overrideConnectionProperties(connectionProperties);
 				return existingConnection;
 			}
 
@@ -572,15 +572,15 @@ public class Session {
 	 * called</strong>. Exceptions to this rule are:
 	 * <ul>
 	 * <li>Calling
-	 * {@link io.openvidu.java.client.Session#createConnection(ConnectionOptions)
-	 * createConnection(ConnectionOptions)} automatically adds the new Connection
+	 * {@link io.openvidu.java.client.Session#createConnection(ConnectionProperties)
+	 * createConnection(ConnectionProperties)} automatically adds the new Connection
 	 * object to the local collection.</li>
 	 * <li>Calling {@link io.openvidu.java.client.Session#forceUnpublish(String)}
 	 * automatically updates each affected local Connection object.</li>
 	 * <li>Calling {@link io.openvidu.java.client.Session#forceDisconnect(String)}
 	 * automatically updates each affected local Connection object.</li>
 	 * <li>Calling
-	 * {@link io.openvidu.java.client.Session#updateConnection(String, ConnectionOptions)}
+	 * {@link io.openvidu.java.client.Session#updateConnection(String, ConnectionProperties)}
 	 * automatically updates the attributes of the affected local Connection
 	 * object.</li>
 	 * </ul>
@@ -604,15 +604,15 @@ public class Session {
 	 * called</strong>. Exceptions to this rule are:
 	 * <ul>
 	 * <li>Calling
-	 * {@link io.openvidu.java.client.Session#createConnection(ConnectionOptions)
-	 * createConnection(ConnectionOptions)} automatically adds the new Connection
+	 * {@link io.openvidu.java.client.Session#createConnection(ConnectionProperties)
+	 * createConnection(ConnectionProperties)} automatically adds the new Connection
 	 * object to the local collection.</li>
 	 * <li>Calling {@link io.openvidu.java.client.Session#forceUnpublish(String)}
 	 * automatically updates each affected local Connection object.</li>
 	 * <li>Calling {@link io.openvidu.java.client.Session#forceDisconnect(String)}
 	 * automatically updates each affected local Connection object.</li>
 	 * <li>Calling
-	 * {@link io.openvidu.java.client.Session#updateConnection(String, ConnectionOptions)}
+	 * {@link io.openvidu.java.client.Session#updateConnection(String, ConnectionProperties)}
 	 * automatically updates the attributes of the affected local Connection
 	 * object.</li>
 	 * </ul>

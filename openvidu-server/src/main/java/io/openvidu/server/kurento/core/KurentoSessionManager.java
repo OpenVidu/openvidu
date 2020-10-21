@@ -48,7 +48,7 @@ import com.google.gson.JsonObject;
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
-import io.openvidu.java.client.ConnectionOptions;
+import io.openvidu.java.client.ConnectionProperties;
 import io.openvidu.java.client.KurentoOptions;
 import io.openvidu.java.client.MediaMode;
 import io.openvidu.java.client.Recording;
@@ -992,7 +992,7 @@ public class KurentoSessionManager extends SessionManager {
 
 	@Override
 	/* Protected by Session.closingLock.readLock */
-	public Participant publishIpcam(Session session, MediaOptions mediaOptions, ConnectionOptions connectionOptions)
+	public Participant publishIpcam(Session session, MediaOptions mediaOptions, ConnectionProperties connectionProperties)
 			throws Exception {
 		final String sessionId = session.getSessionId();
 		final KurentoMediaOptions kMediaOptions = (KurentoMediaOptions) mediaOptions;
@@ -1035,7 +1035,7 @@ public class KurentoSessionManager extends SessionManager {
 		String token = IdentifierPrefixes.TOKEN_ID + RandomStringUtils.randomAlphabetic(1).toUpperCase()
 				+ RandomStringUtils.randomAlphanumeric(15);
 
-		this.newTokenForInsecureUser(session, token, connectionOptions);
+		this.newTokenForInsecureUser(session, token, connectionProperties);
 		final Token tokenObj = session.consumeToken(token);
 
 		Participant ipcamParticipant = this.newIpcamParticipant(sessionId, rtspConnectionId, tokenObj, location,

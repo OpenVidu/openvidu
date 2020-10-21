@@ -54,7 +54,7 @@ import com.google.gson.JsonParser;
 import com.mashape.unirest.http.HttpMethod;
 
 import io.openvidu.java.client.Connection;
-import io.openvidu.java.client.ConnectionOptions;
+import io.openvidu.java.client.ConnectionProperties;
 import io.openvidu.java.client.ConnectionType;
 import io.openvidu.java.client.KurentoOptions;
 import io.openvidu.java.client.MediaMode;
@@ -2138,13 +2138,13 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 		KurentoOptions kurentoOptions = new KurentoOptions.Builder().videoMaxRecvBandwidth(250)
 				.allowedFilters(new String[] { "GStreamerFilter" }).build();
-		ConnectionOptions moderatorConnectionOptions = new ConnectionOptions.Builder().role(OpenViduRole.MODERATOR)
+		ConnectionProperties moderatorConnectionProperties = new ConnectionProperties.Builder().role(OpenViduRole.MODERATOR)
 				.data(serverDataModerator).kurentoOptions(kurentoOptions).build();
-		Connection connectionModerator = session.createConnection(moderatorConnectionOptions);
+		Connection connectionModerator = session.createConnection(moderatorConnectionProperties);
 
-		ConnectionOptions subscriberConnectionOptions = new ConnectionOptions.Builder().type(ConnectionType.WEBRTC)
+		ConnectionProperties subscriberConnectionProperties = new ConnectionProperties.Builder().type(ConnectionType.WEBRTC)
 				.role(OpenViduRole.SUBSCRIBER).data(serverDataSubscriber).build();
-		Connection connectionSubscriber = session.createConnection(subscriberConnectionOptions);
+		Connection connectionSubscriber = session.createConnection(subscriberConnectionProperties);
 
 		Assert.assertFalse("Session.fetch() should return false after Session.createConnection", session.fetch());
 		Assert.assertFalse("OpenVidu.fetch() should return false after Session.fetch()", OV.fetch());
@@ -2543,7 +2543,7 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 		// Test IPCAM
 		final String rtsp = "rtsp://dummyurl.com";
-		Connection ipcamera = session.createConnection(new ConnectionOptions.Builder().type(ConnectionType.IPCAM)
+		Connection ipcamera = session.createConnection(new ConnectionProperties.Builder().type(ConnectionType.IPCAM)
 				.rtspUri(rtsp).adaptativeBitrate(false).onlyPlayWithSubscribers(false).networkCache(50).build());
 		Assert.assertFalse("OpenVidu.fetch() should return false", OV.fetch());
 		Assert.assertFalse("Session.fetch() should return false", session.fetch());

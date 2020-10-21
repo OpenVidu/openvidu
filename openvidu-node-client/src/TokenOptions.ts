@@ -18,7 +18,7 @@
 import { OpenViduRole } from './OpenViduRole';
 
 /**
- * @deprecated Use [[ConnectionOptions]] instead
+ * @deprecated Use [[ConnectionProperties]] instead
  */
 export interface TokenOptions {
 

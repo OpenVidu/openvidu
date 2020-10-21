@@ -45,7 +45,7 @@ import com.google.gson.JsonSyntaxException;
 import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
-import io.openvidu.java.client.ConnectionOptions;
+import io.openvidu.java.client.ConnectionProperties;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.core.EndReason;
 import io.openvidu.server.core.IdentifierPrefixes;
@@ -249,7 +249,7 @@ public class RpcHandler extends DefaultJsonRpcHandler<JsonObject> {
 			token = IdentifierPrefixes.TOKEN_ID + RandomStringUtils.randomAlphabetic(1).toUpperCase()
 					+ RandomStringUtils.randomAlphanumeric(15);
 			try {
-				sessionManager.newTokenForInsecureUser(session, token, new ConnectionOptions.Builder().build());
+				sessionManager.newTokenForInsecureUser(session, token, new ConnectionProperties.Builder().build());
 			} catch (Exception e) {
 				throw new OpenViduException(Code.TOKEN_CANNOT_BE_CREATED_ERROR_CODE,
 						"Unable to create token for session " + sessionId + ": " + e.getMessage());

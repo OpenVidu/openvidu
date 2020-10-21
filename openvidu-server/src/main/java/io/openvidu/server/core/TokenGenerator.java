@@ -20,7 +20,7 @@ package io.openvidu.server.core;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import io.openvidu.java.client.ConnectionOptions;
+import io.openvidu.java.client.ConnectionProperties;
 import io.openvidu.java.client.ConnectionType;
 import io.openvidu.java.client.KurentoOptions;
 import io.openvidu.java.client.OpenViduRole;
@@ -58,8 +58,8 @@ public class TokenGenerator {
 				token += "&turnCredential=" + turnCredentials.getCredential();
 			}
 		}
-		ConnectionOptions connectionOptions = new ConnectionOptions.Builder().type(ConnectionType.WEBRTC)
+		ConnectionProperties connectionProperties = new ConnectionProperties.Builder().type(ConnectionType.WEBRTC)
 				.data(serverMetadata).record(record).role(role).kurentoOptions(kurentoOptions).build();
-		return new Token(token, sessionId, connectionOptions, turnCredentials);
+		return new Token(token, sessionId, connectionProperties, turnCredentials);
 	}
 }

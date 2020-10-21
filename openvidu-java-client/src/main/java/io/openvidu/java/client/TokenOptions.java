@@ -21,8 +21,8 @@ import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 
 /**
- * @deprecated Use {@link io.openvidu.java.client.ConnectionOptions
- *             ConnectionOptions} instead
+ * @deprecated Use {@link io.openvidu.java.client.ConnectionProperties
+ *             ConnectionProperties} instead
  */
 public class TokenOptions {
 
@@ -32,8 +32,8 @@ public class TokenOptions {
 	private KurentoOptions kurentoOptions;
 
 	/**
-	 * @deprecated Use {@link io.openvidu.java.client.ConnectionOptions.Builder
-	 *             ConnectionOptions.Builder} instead
+	 * @deprecated Use {@link io.openvidu.java.client.ConnectionProperties.Builder
+	 *             ConnectionProperties.Builder} instead
 	 */
 	public static class Builder {
 

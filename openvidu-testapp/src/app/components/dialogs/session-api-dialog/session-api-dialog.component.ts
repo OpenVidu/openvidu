@@ -1,7 +1,7 @@
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
 
-import { OpenVidu as OpenViduAPI, Session as SessionAPI, Recording, RecordingProperties, RecordingLayout, ConnectionOptions, OpenViduRole } from 'openvidu-node-client';
+import { OpenVidu as OpenViduAPI, Session as SessionAPI, Recording, RecordingProperties, RecordingLayout, ConnectionProperties, OpenViduRole } from 'openvidu-node-client';
 
 @Component({
     selector: 'app-session-api-dialog',
@@ -26,7 +26,7 @@ export class SessionApiDialogComponent {
     recPropertiesIcon = 'add_circle';
     showRecProperties = false;
 
-    connectionOptions: ConnectionOptions = {
+    connectionProperties: ConnectionProperties = {
         record: true,
         role: OpenViduRole.PUBLISHER
     };
@@ -174,7 +174,7 @@ export class SessionApiDialogComponent {
 
     createConnection() {
         console.log('Creating connection');
-        this.session.createConnection(this.connectionOptions)
+        this.session.createConnection(this.connectionProperties)
             .then(connection => {
                 this.response = 'Connection created: ' + connection.connectionId;
             })
@@ -185,9 +185,9 @@ export class SessionApiDialogComponent {
 
     updateConnection() {
         console.log('Updating connection');
-        this.session.updateConnection(this.connectionId, this.connectionOptions)
+        this.session.updateConnection(this.connectionId, this.connectionProperties)
             .then(modifiedConnection => {
-                this.response = 'Connection updated: ' + JSON.stringify({ role: modifiedConnection.connectionOptions.role, record: modifiedConnection.connectionOptions.record });
+                this.response = 'Connection updated: ' + JSON.stringify({ role: modifiedConnection.connectionProperties.role, record: modifiedConnection.connectionProperties.record });
             })
             .catch(error => {
                 this.response = 'Error [' + error.message + ']';

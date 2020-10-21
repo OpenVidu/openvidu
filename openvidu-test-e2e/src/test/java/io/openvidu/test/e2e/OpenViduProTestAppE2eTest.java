@@ -25,7 +25,7 @@ import com.google.gson.stream.JsonReader;
 import com.mashape.unirest.http.HttpMethod;
 
 import io.openvidu.java.client.Connection;
-import io.openvidu.java.client.ConnectionOptions;
+import io.openvidu.java.client.ConnectionProperties;
 import io.openvidu.java.client.OpenVidu;
 import io.openvidu.java.client.OpenViduHttpException;
 import io.openvidu.java.client.OpenViduRole;
@@ -230,14 +230,14 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertTrue("OpenVidu object should have changed", OV.fetch());
 		Session session = OV.getActiveSessions().get(0);
 		try {
-			session.updateConnection("WRONG_CONNECTION_ID", new ConnectionOptions.Builder().build());
+			session.updateConnection("WRONG_CONNECTION_ID", new ConnectionProperties.Builder().build());
 			Assert.fail("Expected OpenViduHttpException exception");
 		} catch (OpenViduHttpException exception) {
 			Assert.assertEquals("Wrong HTTP status", HttpStatus.SC_NOT_FOUND, exception.getStatus());
 		}
 		Assert.assertFalse("Session object should not have changed", session.fetch());
 		Connection connection = session.updateConnection(tokenConnectionId,
-				new ConnectionOptions.Builder().role(OpenViduRole.SUBSCRIBER).record(false).build());
+				new ConnectionProperties.Builder().role(OpenViduRole.SUBSCRIBER).record(false).build());
 		Assert.assertEquals("Wrong role Connection property", OpenViduRole.SUBSCRIBER, connection.getRole());
 		Assert.assertFalse("Wrong record Connection property", connection.record());
 
@@ -339,25 +339,25 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		// Test with openvidu-java-client
 		Assert.assertFalse("Session object should not have changed", session.fetch());
 		try {
-			session.updateConnection("WRONG_CONNECTION_ID", new ConnectionOptions.Builder().build());
+			session.updateConnection("WRONG_CONNECTION_ID", new ConnectionProperties.Builder().build());
 			Assert.fail("Expected OpenViduHttpException exception");
 		} catch (OpenViduHttpException exception) {
 			Assert.assertEquals("Wrong HTTP status", HttpStatus.SC_NOT_FOUND, exception.getStatus());
 		}
 		Assert.assertFalse("Session object should not have changed", session.fetch());
 		connection = session.updateConnection(tokenConnectionId,
-				new ConnectionOptions.Builder().role(OpenViduRole.PUBLISHER).build());
+				new ConnectionProperties.Builder().role(OpenViduRole.PUBLISHER).build());
 		Assert.assertFalse("Session object should not have changed", session.fetch());
 		Assert.assertEquals("Wrong connectionId in Connection object", tokenConnectionId, connection.getConnectionId());
 		Assert.assertEquals("Wrong role in Connection object", OpenViduRole.PUBLISHER, connection.getRole());
 		Assert.assertFalse("Wrong record in Connection object", connection.record());
 		Assert.assertEquals("Wrong status in Connection object", "active", connection.getStatus());
 		connection = session.updateConnection(tokenConnectionId,
-				new ConnectionOptions.Builder().role(OpenViduRole.SUBSCRIBER).build());
+				new ConnectionProperties.Builder().role(OpenViduRole.SUBSCRIBER).build());
 		Assert.assertEquals("Wrong role in Connection object", OpenViduRole.SUBSCRIBER, connection.getRole());
 		Assert.assertFalse("Session object should not have changed", session.fetch());
 		connection = session.updateConnection(tokenConnectionId,
-				new ConnectionOptions.Builder().role(OpenViduRole.MODERATOR).record(false).data("NO CHANGE").build());
+				new ConnectionProperties.Builder().role(OpenViduRole.MODERATOR).record(false).data("NO CHANGE").build());
 		Assert.assertFalse("Session object should not have changed", session.fetch());
 		Assert.assertEquals("Wrong role in Connection object", OpenViduRole.MODERATOR, connection.getRole());
 		Assert.assertFalse("Wrong record in Connection object", connection.record());
@@ -411,7 +411,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertEquals("Wrong role property", OpenViduRole.PUBLISHER, connection.getRole());
 		Assert.assertTrue("Wrong record property", connection.record());
 		session.updateConnection(connection.getConnectionId(),
-				new ConnectionOptions.Builder().role(OpenViduRole.SUBSCRIBER).record(false).build());
+				new ConnectionProperties.Builder().role(OpenViduRole.SUBSCRIBER).record(false).build());
 		Assert.assertEquals("Wrong role property", OpenViduRole.SUBSCRIBER, connection.getRole());
 		Assert.assertFalse("Wrong record property", connection.record());
 		Assert.assertFalse(session.fetch());
