@@ -172,6 +172,17 @@ export class SessionApiDialogComponent {
             });
     }
 
+    createConnection() {
+        console.log('Creating connection');
+        this.session.createConnection(this.connectionOptions)
+            .then(connection => {
+                this.response = 'Connection created: ' + connection.connectionId;
+            })
+            .catch(error => {
+                this.response = 'Error [' + error.message + ']';
+            });
+    }
+
     updateConnection() {
         console.log('Updating connection');
         this.session.updateConnection(this.connectionId, this.connectionOptions)

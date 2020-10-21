@@ -28,10 +28,11 @@
       </mat-form-field>
     </div>
     <div>
-      <button mat-button id="force-disconnect-api-btn" (click)="forceDisconnect()"
-        [disabled]="!connectionId">Disconnect</button>
+      <button mat-button id="crate-connection-api-btn" (click)="createConnection()">Create connection</button>
       <button mat-button id="update-connection-api-btn" (click)="updateConnection()" [disabled]="!connectionId">Update
         connection</button>
+      <button mat-button id="force-disconnect-api-btn" (click)="forceDisconnect()"
+        [disabled]="!connectionId">Disconnect</button>
       <button mat-button id="force-unpublish-api-btn" (click)="forceUnpublish()"
         [disabled]="!streamId">Unpublish</button>
       <mat-divider></mat-divider>

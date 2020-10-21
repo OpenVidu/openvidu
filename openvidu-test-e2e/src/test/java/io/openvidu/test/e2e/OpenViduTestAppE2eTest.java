@@ -3614,6 +3614,29 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		checkNodeFetchChanged(true, false);
 		checkNodeFetchChanged(true, false);
 
+		// Create and delete connection with openvidu-node-client
+		final String successMessage = "Connection created: ";
+		user.getDriver().findElement(By.id("crate-connection-api-btn")).click();
+		user.getWaiter()
+				.until(ExpectedConditions.attributeContains(By.id("api-response-text-area"), "value", successMessage));
+		String value = user.getDriver().findElement(By.id("api-response-text-area")).getAttribute("value");
+		String connectionId = value.substring(value.lastIndexOf(successMessage) + successMessage.length());
+		Assert.assertTrue("Java fetch should be true", session.fetch());
+		Assert.assertFalse("Java fetch should be false", OV.fetch());
+		checkNodeFetchChanged(true, false);
+		checkNodeFetchChanged(false, false);
+		checkNodeFetchChanged(true, false);
+		user.getDriver().findElement(By.id("connection-id-field")).clear();
+		user.getDriver().findElement(By.id("connection-id-field")).sendKeys(connectionId);
+		user.getDriver().findElement(By.id("force-disconnect-api-btn")).click();
+		user.getWaiter()
+				.until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value", "User disconnected"));
+		Assert.assertTrue("Java fetch should be true", OV.fetch());
+		Assert.assertFalse("Java fetch should be false", session.fetch());
+		checkNodeFetchChanged(false, false);
+		checkNodeFetchChanged(true, false);
+		checkNodeFetchChanged(false, false);
+
 		// RECORD
 		user.getDriver().findElement(By.id("rec-properties-btn")).click();
 		user.getDriver().findElement(By.id("rec-hasvideo-checkbox")).click();
