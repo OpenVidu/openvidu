@@ -104,7 +104,7 @@ public class OpenviduConfig {
 
 	private List<String> userConfigProps;
 
-	private Map<String, ?> propertiesSource;
+	protected Map<String, ?> propertiesSource;
 
 	@Autowired
 	protected Environment env;
