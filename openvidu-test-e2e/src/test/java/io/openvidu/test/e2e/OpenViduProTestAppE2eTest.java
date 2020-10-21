@@ -188,39 +188,39 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		 **/
 		String body = "{'customSessionId': 'CUSTOM_SESSION_ID'}";
 		restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpStatus.SC_OK);
-		body = "{'session':'CUSTOM_SESSION_ID','role':'PUBLISHER','record':false}";
-		JsonObject res = restClient.rest(HttpMethod.POST, "/openvidu/api/tokens", body, HttpStatus.SC_OK);
+		body = "{'role':'PUBLISHER','record':false}";
+		JsonObject res = restClient.rest(HttpMethod.POST, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection", body, HttpStatus.SC_OK);
 		final String token = res.get("token").getAsString();
-		final String tokenConnectionId = res.get("connectionId").getAsString();
+		final String connectionId = res.get("connectionId").getAsString();
 		final long createdAt = res.get("createdAt").getAsLong();
 
-		/** UPDATE TOKEN **/
+		/** UPDATE PENDING CONNECTION **/
 
 		// Test with REST API
-		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + tokenConnectionId,
+		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
 				"{'role':false}", HttpStatus.SC_BAD_REQUEST);
-		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + tokenConnectionId,
+		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
 				"{'record':123}", HttpStatus.SC_BAD_REQUEST);
-		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + tokenConnectionId,
+		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
 				"{'role':'PUBLISHER','record':'WRONG'}", HttpStatus.SC_BAD_REQUEST);
-		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/WRONG/connection/" + tokenConnectionId,
+		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/WRONG/connection/" + connectionId,
 				"{'role':'PUBLISHER','record':'WRONG'}", HttpStatus.SC_NOT_FOUND);
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/WRONG",
 				"{'role':'PUBLISHER','record':true}", HttpStatus.SC_NOT_FOUND);
 
 		// Updating only role should let record value untouched
-		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + tokenConnectionId,
+		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
 				"{'role':'MODERATOR'}", HttpStatus.SC_OK, true, true, true,
 				mergeJson(DEFAULT_JSON_PENDING_CONNECTION,
-						"{'id':'" + tokenConnectionId + "','connectionId':'" + tokenConnectionId
+						"{'id':'" + connectionId + "','connectionId':'" + connectionId
 								+ "','role':'MODERATOR','serverData':'','record':false,'token':'" + token
 								+ "','sessionId':'CUSTOM_SESSION_ID','createdAt':" + createdAt + "}",
 						new String[0]));
 		// Updating only record should let role value untouched
-		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + tokenConnectionId,
+		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
 				"{'record':true}", HttpStatus.SC_OK, true, true, true,
 				mergeJson(DEFAULT_JSON_PENDING_CONNECTION,
-						"{'id':'" + tokenConnectionId + "','connectionId':'" + tokenConnectionId
+						"{'id':'" + connectionId + "','connectionId':'" + connectionId
 								+ "','role':'MODERATOR','serverData':'','token':'" + token
 								+ "','sessionId':'CUSTOM_SESSION_ID','createdAt':" + createdAt + "}",
 						new String[0]));
@@ -236,7 +236,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 			Assert.assertEquals("Wrong HTTP status", HttpStatus.SC_NOT_FOUND, exception.getStatus());
 		}
 		Assert.assertFalse("Session object should not have changed", session.fetch());
-		Connection connection = session.updateConnection(tokenConnectionId,
+		Connection connection = session.updateConnection(connectionId,
 				new ConnectionProperties.Builder().role(OpenViduRole.SUBSCRIBER).record(false).build());
 		Assert.assertEquals("Wrong role Connection property", OpenViduRole.SUBSCRIBER, connection.getRole());
 		Assert.assertFalse("Wrong record Connection property", connection.record());
@@ -283,35 +283,35 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 		// Test with REST API
 		// Updating only role should let record value untouched
-		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + tokenConnectionId,
+		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
 				"{'role':'MODERATOR'}", HttpStatus.SC_OK, false, true, true,
 				mergeJson(DEFAULT_JSON_ACTIVE_CONNECTION,
-						"{'id':'" + tokenConnectionId + "','connectionId':'" + tokenConnectionId
+						"{'id':'" + connectionId + "','connectionId':'" + connectionId
 								+ "','role':'MODERATOR','record':false,'token':'" + token
 								+ "','sessionId':'CUSTOM_SESSION_ID','createdAt':" + createdAt + ",'activeAt':"
 								+ activeAt + ",'serverData':''}",
 						new String[] { "location", "platform", "clientData" }));
 		// Updating only record should let role value untouched
-		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + tokenConnectionId,
+		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
 				"{'record':true}", HttpStatus.SC_OK, false, true, true,
 				mergeJson(DEFAULT_JSON_ACTIVE_CONNECTION,
-						"{'id':'" + tokenConnectionId + "','connectionId':'" + tokenConnectionId
+						"{'id':'" + connectionId + "','connectionId':'" + connectionId
 								+ "','role':'MODERATOR','record':true,'token':'" + token
 								+ "','sessionId':'CUSTOM_SESSION_ID','createdAt':" + createdAt + ",'activeAt':"
 								+ activeAt + ",'serverData':''}",
 						new String[] { "location", "platform", "clientData" }));
-		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + tokenConnectionId,
+		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
 				"{'role':'SUBSCRIBER','record':true,'data':'OTHER DATA'}", HttpStatus.SC_OK, false, true, true,
 				mergeJson(DEFAULT_JSON_ACTIVE_CONNECTION,
-						"{'id':'" + tokenConnectionId + "','connectionId':'" + tokenConnectionId
+						"{'id':'" + connectionId + "','connectionId':'" + connectionId
 								+ "','role':'SUBSCRIBER','record':true,'token':'" + token
 								+ "','sessionId':'CUSTOM_SESSION_ID','createdAt':" + createdAt + ",'activeAt':"
 								+ activeAt + ",'serverData':''}",
 						new String[] { "location", "platform", "clientData" }));
-		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + tokenConnectionId,
+		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
 				"{'role':'PUBLISHER'}", HttpStatus.SC_OK, false, true, true,
 				mergeJson(DEFAULT_JSON_ACTIVE_CONNECTION,
-						"{'id':'" + tokenConnectionId + "','connectionId':'" + tokenConnectionId
+						"{'id':'" + connectionId + "','connectionId':'" + connectionId
 								+ "','role':'PUBLISHER','record':true,'token':'" + token
 								+ "','sessionId':'CUSTOM_SESSION_ID','createdAt':" + createdAt + ",'activeAt':"
 								+ activeAt + ",'serverData':''}",
@@ -321,7 +321,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.id("session-api-btn-0")).click();
 		Thread.sleep(1000);
 		user.getDriver().findElement(By.id("connection-id-field")).clear();
-		user.getDriver().findElement(By.id("connection-id-field")).sendKeys(tokenConnectionId);
+		user.getDriver().findElement(By.id("connection-id-field")).sendKeys(connectionId);
 		user.getDriver().findElement(By.id("update-connection-api-btn")).click();
 		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
 				"Connection updated: {\"role\":\"PUBLISHER\",\"record\":true}"));
@@ -345,18 +345,18 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 			Assert.assertEquals("Wrong HTTP status", HttpStatus.SC_NOT_FOUND, exception.getStatus());
 		}
 		Assert.assertFalse("Session object should not have changed", session.fetch());
-		connection = session.updateConnection(tokenConnectionId,
+		connection = session.updateConnection(connectionId,
 				new ConnectionProperties.Builder().role(OpenViduRole.PUBLISHER).build());
 		Assert.assertFalse("Session object should not have changed", session.fetch());
-		Assert.assertEquals("Wrong connectionId in Connection object", tokenConnectionId, connection.getConnectionId());
+		Assert.assertEquals("Wrong connectionId in Connection object", connectionId, connection.getConnectionId());
 		Assert.assertEquals("Wrong role in Connection object", OpenViduRole.PUBLISHER, connection.getRole());
 		Assert.assertFalse("Wrong record in Connection object", connection.record());
 		Assert.assertEquals("Wrong status in Connection object", "active", connection.getStatus());
-		connection = session.updateConnection(tokenConnectionId,
+		connection = session.updateConnection(connectionId,
 				new ConnectionProperties.Builder().role(OpenViduRole.SUBSCRIBER).build());
 		Assert.assertEquals("Wrong role in Connection object", OpenViduRole.SUBSCRIBER, connection.getRole());
 		Assert.assertFalse("Session object should not have changed", session.fetch());
-		connection = session.updateConnection(tokenConnectionId,
+		connection = session.updateConnection(connectionId,
 				new ConnectionProperties.Builder().role(OpenViduRole.MODERATOR).record(false).data("NO CHANGE").build());
 		Assert.assertFalse("Session object should not have changed", session.fetch());
 		Assert.assertEquals("Wrong role in Connection object", OpenViduRole.MODERATOR, connection.getRole());
@@ -374,7 +374,7 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		user.getEventManager().waitUntilEventReaches("streamCreated", 1);
 
 		// connectionId should be equal to the one brought by the token
-		Assert.assertEquals("Wrong connectionId", tokenConnectionId,
+		Assert.assertEquals("Wrong connectionId", connectionId,
 				restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/CUSTOM_SESSION_ID", HttpStatus.SC_OK)
 						.get("connections").getAsJsonObject().get("content").getAsJsonArray().get(0).getAsJsonObject()
 						.get("connectionId").getAsString());
