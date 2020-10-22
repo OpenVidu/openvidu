@@ -101,8 +101,8 @@ export class StreamEvent extends Event {
 
             // Delete StreamOptionsServer from remote Connection
             const remoteConnection = this.stream.session.remoteConnections[this.stream.connection.connectionId];
-            if (!!remoteConnection && !!remoteConnection.options) {
-                const streamOptionsServer = remoteConnection.options.streams;
+            if (!!remoteConnection && !!remoteConnection.remoteOptions) {
+                const streamOptionsServer = remoteConnection.remoteOptions.streams;
                 for (let i = streamOptionsServer.length - 1; i >= 0; --i) {
                     if (streamOptionsServer[i].id === this.stream.streamId) {
                         streamOptionsServer.splice(i, 1);

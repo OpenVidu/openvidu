@@ -38,6 +38,7 @@ import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.server.cdr.CallDetailRecord;
+import io.openvidu.server.config.OpenviduBuildInfo;
 import io.openvidu.server.config.OpenviduConfig;
 import io.openvidu.server.kurento.core.KurentoParticipant;
 import io.openvidu.server.kurento.endpoint.KurentoFilter;
@@ -56,6 +57,9 @@ public class SessionEventsHandler {
 
 	@Autowired
 	protected OpenviduConfig openviduConfig;
+
+	@Autowired
+	protected OpenviduBuildInfo openviduBuildConfig;
 
 	private Map<String, Recording> recordingsToSendClientEvents = new ConcurrentHashMap<>();
 
@@ -150,6 +154,19 @@ public class SessionEventsHandler {
 		result.addProperty(ProtocolElements.PARTICIPANTJOINED_CREATEDAT_PARAM, participant.getActiveAt());
 		result.addProperty(ProtocolElements.PARTICIPANTJOINED_METADATA_PARAM, participant.getFullMetadata());
 		result.add("value", resultArray);
+
+		if (participant.getToken() != null) {
+			result.addProperty("session", participant.getSessionId());
+			result.addProperty("coturnIp", openviduConfig.getCoturnIp());
+			if (participant.getToken().getRole() != null) {
+				result.addProperty("role", participant.getToken().getRole().name());
+			}
+			if (participant.getToken().getTurnCredentials() != null) {
+				result.addProperty("turnUsername", participant.getToken().getTurnCredentials().getUsername());
+				result.addProperty("turnCredential", participant.getToken().getTurnCredentials().getCredential());
+			}
+			result.addProperty("version", openviduBuildConfig.getOpenViduServerVersion());
+		}
 
 		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, result);
 	}

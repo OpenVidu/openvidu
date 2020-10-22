@@ -17,7 +17,8 @@
 
 import { Session } from './Session';
 import { Stream } from './Stream';
-import { ConnectionOptions } from '../OpenViduInternal/Interfaces/Private/ConnectionOptions';
+import { LocalConnectionOptions } from '../OpenViduInternal/Interfaces/Private/LocalConnectionOptions';
+import { RemoteConnectionOptions } from '../OpenViduInternal/Interfaces/Private/RemoteConnectionOptions';
 import { InboundStreamOptions } from '../OpenViduInternal/Interfaces/Private/InboundStreamOptions';
 import { StreamOptionsServer } from '../OpenViduInternal/Interfaces/Private/StreamOptionsServer';
 import { OpenViduLogger } from '../OpenViduInternal/Logger/OpenViduLogger';
@@ -58,7 +59,12 @@ export class Connection {
     /**
      * @hidden
      */
-    options: ConnectionOptions | undefined;
+    localOptions: LocalConnectionOptions | undefined;
+
+    /**
+     * @hidden
+     */
+    remoteOptions: RemoteConnectionOptions | undefined;
 
     /**
      * @hidden
@@ -73,23 +79,28 @@ export class Connection {
     /**
      * @hidden
      */
-    constructor(private session: Session, opts?: ConnectionOptions) {
+    constructor(private session: Session, connectionOptions: LocalConnectionOptions | RemoteConnectionOptions) {
         let msg = "'Connection' created ";
-        if (!!opts) {
-            // Connection is remote
-            msg += "(remote) with 'connectionId' [" + opts.id + ']';
-            this.options = opts;
-            this.connectionId = opts.id;
-            this.creationTime = opts.createdAt;
-            if (opts.metadata) {
-                this.data = opts.metadata;
-            }
-            if (opts.streams) {
-                this.initRemoteStreams(opts.streams);
-            }
-        } else {
+        if (!!(<LocalConnectionOptions>connectionOptions).role) {
             // Connection is local
+            this.localOptions = <LocalConnectionOptions>connectionOptions;
+            this.connectionId = this.localOptions.id;
+            this.creationTime = this.localOptions.createdAt;
+            this.data = this.localOptions.metadata;
+            this.rpcSessionId = this.localOptions.sessionId;
             msg += '(local)';
+        } else {
+            // Connection is remote
+            this.remoteOptions = <RemoteConnectionOptions>connectionOptions;
+            this.connectionId = this.remoteOptions.id;
+            this.creationTime = this.remoteOptions.createdAt;
+            if (this.remoteOptions.metadata) {
+                this.data = this.remoteOptions.metadata;
+            }
+            if (this.remoteOptions.streams) {
+                this.initRemoteStreams(this.remoteOptions.streams);
+            }
+            msg += "(remote) with 'connectionId' [" + this.remoteOptions.id + ']';
         }
         logger.info(msg);
     }

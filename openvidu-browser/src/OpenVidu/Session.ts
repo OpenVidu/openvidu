@@ -26,7 +26,8 @@ import { Capabilities } from '../OpenViduInternal/Interfaces/Public/Capabilities
 import { EventDispatcher } from './EventDispatcher';
 import { SignalOptions } from '../OpenViduInternal/Interfaces/Public/SignalOptions';
 import { SubscriberProperties } from '../OpenViduInternal/Interfaces/Public/SubscriberProperties';
-import { ConnectionOptions } from '../OpenViduInternal/Interfaces/Private/ConnectionOptions';
+import { RemoteConnectionOptions } from '../OpenViduInternal/Interfaces/Private/RemoteConnectionOptions';
+import { LocalConnectionOptions } from '../OpenViduInternal/Interfaces/Private/LocalConnectionOptions';
 import { ObjMap } from '../OpenViduInternal/Interfaces/Private/ObjMap';
 import { SessionOptions } from '../OpenViduInternal/Interfaces/Private/SessionOptions';
 import { ConnectionEvent } from '../OpenViduInternal/Events/ConnectionEvent';
@@ -702,7 +703,7 @@ export class Session extends EventDispatcher {
     /**
      * @hidden
      */
-    onParticipantJoined(response: ConnectionOptions): void {
+    onParticipantJoined(response: RemoteConnectionOptions): void {
         // Connection shouldn't exist
         this.getConnection(response.id, '')
 
@@ -749,9 +750,10 @@ export class Session extends EventDispatcher {
     /**
      * @hidden
      */
-    onParticipantPublished(response: ConnectionOptions): void {
+    onParticipantPublished(response: RemoteConnectionOptions): void {
 
         const afterConnectionFound = (connection) => {
+
             this.remoteConnections[connection.connectionId] = connection;
 
             if (!this.remoteStreamsCreated[connection.stream.streamId]) {
@@ -775,7 +777,7 @@ export class Session extends EventDispatcher {
                 // Update existing Connection
                 connection = con;
                 response.metadata = con.data;
-                connection.options = response;
+                connection.remoteOptions = response;
                 connection.initRemoteStreams(response.streams);
                 afterConnectionFound(connection);
             })
@@ -1191,34 +1193,24 @@ export class Session extends EventDispatcher {
 
                     const joinParams = this.initializeParams(token);
 
-                    this.openvidu.sendRequest('joinRoom', joinParams, (error, response) => {
+                    this.openvidu.sendRequest('joinRoom', joinParams, (error, response: LocalConnectionOptions) => {
                         if (!!error) {
                             reject(error);
                         } else {
 
-                            // Initialize capabilities object with the role
-                            this.capabilities = {
-                                subscribe: true,
-                                publish: this.openvidu.role !== 'SUBSCRIBER',
-                                forceUnpublish: this.openvidu.role === 'MODERATOR',
-                                forceDisconnect: this.openvidu.role === 'MODERATOR'
-                            };
+                            this.processJoinRoomResponse(response);
 
                             // Initialize local Connection object with values returned by openvidu-server
-                            this.connection = new Connection(this);
-                            this.connection.connectionId = response.id;
-                            this.connection.creationTime = response.createdAt;
-                            this.connection.data = response.metadata;
-                            this.connection.rpcSessionId = response.sessionId;
+                            this.connection = new Connection(this, response);
 
                             // Initialize remote Connections with value returned by openvidu-server
                             const events = {
                                 connections: new Array<Connection>(),
                                 streams: new Array<Stream>()
                             };
-                            const existingParticipants: ConnectionOptions[] = response.value;
-                            existingParticipants.forEach(participant => {
-                                const connection = new Connection(this, participant);
+                            const existingParticipants: RemoteConnectionOptions[] = response.value;
+                            existingParticipants.forEach((remoteConnectionOptions: RemoteConnectionOptions) => {
+                                const connection = new Connection(this, remoteConnectionOptions);
                                 this.remoteConnections[connection.connectionId] = connection;
                                 events.connections.push(connection);
                                 if (!!connection.stream) {
@@ -1323,12 +1315,7 @@ export class Session extends EventDispatcher {
             this.sessionId = <string>queryParams['sessionId'];
             const secret = queryParams['secret'];
             const recorder = queryParams['recorder'];
-            const coturnIp = queryParams['coturnIp'];
-            const turnUsername = queryParams['turnUsername'];
-            const turnCredential = queryParams['turnCredential'];
-            const role = queryParams['role'];
             const webrtcStatsInterval = queryParams['webrtcStatsInterval'];
-            const openviduServerVersion = queryParams['version'];
 
             if (!!secret) {
                 this.openvidu.secret = secret;
@@ -1336,30 +1323,8 @@ export class Session extends EventDispatcher {
             if (!!recorder) {
                 this.openvidu.recorder = true;
             }
-            if (!!turnUsername && !!turnCredential) {
-                const stunUrl = 'stun:' + coturnIp + ':3478';
-                const turnUrl1 = 'turn:' + coturnIp + ':3478';
-                const turnUrl2 = turnUrl1 + '?transport=tcp';
-                this.openvidu.iceServers = [
-                    { urls: [stunUrl] },
-                    { urls: [turnUrl1, turnUrl2], username: turnUsername, credential: turnCredential }
-                ];
-                logger.log("STUN/TURN server IP: " + coturnIp);
-                logger.log('TURN temp credentials [' + turnUsername + ':' + turnCredential + ']');
-            }
-            if (!!role) {
-                this.openvidu.role = role;
-            }
             if (!!webrtcStatsInterval) {
                 this.openvidu.webrtcStatsInterval = +webrtcStatsInterval;
-            }
-            if (!!openviduServerVersion) {
-                logger.info("openvidu-server version: " + openviduServerVersion);
-                if (openviduServerVersion !== this.openvidu.libraryVersion) {
-                    logger.warn('OpenVidu Server (' + openviduServerVersion +
-                        ') and OpenVidu Browser (' + this.openvidu.libraryVersion +
-                        ') versions do NOT match. There may be incompatibilities')
-                }
             }
 
             this.openvidu.wsUri = 'wss://' + url.host + '/openvidu';
@@ -1367,6 +1332,34 @@ export class Session extends EventDispatcher {
 
         } else {
             logger.error('Token "' + token + '" is not valid')
+        }
+    }
+
+    private processJoinRoomResponse(opts: LocalConnectionOptions) {
+        this.sessionId = opts.session;
+        if (!!opts.coturnIp && !!opts.turnUsername && !!opts.turnCredential) {
+            const stunUrl = 'stun:' + opts.coturnIp + ':3478';
+            const turnUrl1 = 'turn:' + opts.coturnIp + ':3478';
+            const turnUrl2 = turnUrl1 + '?transport=tcp';
+            this.openvidu.iceServers = [
+                { urls: [stunUrl] },
+                { urls: [turnUrl1, turnUrl2], username: opts.turnUsername, credential: opts.turnCredential }
+            ];
+            logger.log("STUN/TURN server IP: " + opts.coturnIp);
+            logger.log('TURN temp credentials [' + opts.turnUsername + ':' + opts.turnCredential + ']');
+        }
+        this.openvidu.role = opts.role;
+        this.capabilities = {
+            subscribe: true,
+            publish: this.openvidu.role !== 'SUBSCRIBER',
+            forceUnpublish: this.openvidu.role === 'MODERATOR',
+            forceDisconnect: this.openvidu.role === 'MODERATOR'
+        };
+        logger.info("openvidu-server version: " + opts.version);
+        if (opts.version !== this.openvidu.libraryVersion) {
+            logger.warn('OpenVidu Server (' + opts.version +
+                ') and OpenVidu Browser (' + this.openvidu.libraryVersion +
+                ') versions do NOT match. There may be incompatibilities')
         }
     }
 

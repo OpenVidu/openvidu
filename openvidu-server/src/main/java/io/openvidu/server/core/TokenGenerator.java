@@ -47,16 +47,9 @@ public class TokenGenerator {
 		token += "?sessionId=" + sessionId;
 		token += "&token=" + IdentifierPrefixes.TOKEN_ID + RandomStringUtils.randomAlphabetic(1).toUpperCase()
 				+ RandomStringUtils.randomAlphanumeric(15);
-		token += "&role=" + role.name();
-		token += "&version=" + openviduBuildConfig.getOpenViduServerVersion();
 		TurnCredentials turnCredentials = null;
 		if (this.openviduConfig.isTurnadminAvailable()) {
 			turnCredentials = coturnCredentialsService.createUser();
-			if (turnCredentials != null) {
-				token += "&coturnIp=" + openviduConfig.getCoturnIp();
-				token += "&turnUsername=" + turnCredentials.getUsername();
-				token += "&turnCredential=" + turnCredentials.getCredential();
-			}
 		}
 		ConnectionProperties connectionProperties = new ConnectionProperties.Builder().type(ConnectionType.WEBRTC)
 				.data(serverMetadata).record(record).role(role).kurentoOptions(kurentoOptions).build();

@@ -2138,12 +2138,12 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 
 		KurentoOptions kurentoOptions = new KurentoOptions.Builder().videoMaxRecvBandwidth(250)
 				.allowedFilters(new String[] { "GStreamerFilter" }).build();
-		ConnectionProperties moderatorConnectionProperties = new ConnectionProperties.Builder().role(OpenViduRole.MODERATOR)
-				.data(serverDataModerator).kurentoOptions(kurentoOptions).build();
+		ConnectionProperties moderatorConnectionProperties = new ConnectionProperties.Builder()
+				.role(OpenViduRole.MODERATOR).data(serverDataModerator).kurentoOptions(kurentoOptions).build();
 		Connection connectionModerator = session.createConnection(moderatorConnectionProperties);
 
-		ConnectionProperties subscriberConnectionProperties = new ConnectionProperties.Builder().type(ConnectionType.WEBRTC)
-				.role(OpenViduRole.SUBSCRIBER).data(serverDataSubscriber).build();
+		ConnectionProperties subscriberConnectionProperties = new ConnectionProperties.Builder()
+				.type(ConnectionType.WEBRTC).role(OpenViduRole.SUBSCRIBER).data(serverDataSubscriber).build();
 		Connection connectionSubscriber = session.createConnection(subscriberConnectionProperties);
 
 		Assert.assertFalse("Session.fetch() should return false after Session.createConnection", session.fetch());
