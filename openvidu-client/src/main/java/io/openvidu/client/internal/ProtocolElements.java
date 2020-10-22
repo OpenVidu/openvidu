@@ -138,6 +138,14 @@ public class ProtocolElements {
 	public static final String PARTICIPANTJOINED_USER_PARAM = "id";
 	public static final String PARTICIPANTJOINED_CREATEDAT_PARAM = "createdAt";
 	public static final String PARTICIPANTJOINED_METADATA_PARAM = "metadata";
+	public static final String PARTICIPANTJOINED_VALUE_PARAM = "value";
+	public static final String PARTICIPANTJOINED_SESSION_PARAM = "session";
+	public static final String PARTICIPANTJOINED_VERSION_PARAM = "version";
+	public static final String PARTICIPANTJOINED_RECORD_PARAM = "record";
+	public static final String PARTICIPANTJOINED_ROLE_PARAM = "role";
+	public static final String PARTICIPANTJOINED_COTURNIP_PARAM = "coturnIp";
+	public static final String PARTICIPANTJOINED_TURNUSERNAME_PARAM = "turnUsername";
+	public static final String PARTICIPANTJOINED_TURNCREDENTIAL_PARAM = "turnCredential";
 
 	public static final String PARTICIPANTLEFT_METHOD = "participantLeft";
 	public static final String PARTICIPANTLEFT_NAME_PARAM = "connectionId";

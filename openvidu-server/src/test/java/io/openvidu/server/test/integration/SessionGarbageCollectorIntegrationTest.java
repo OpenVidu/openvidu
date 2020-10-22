@@ -18,7 +18,6 @@
 package io.openvidu.server.test.integration;
 
 import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 import org.junit.Assert;
@@ -103,9 +102,8 @@ public class SessionGarbageCollectorIntegrationTest {
 	}
 
 	private String getToken(String sessionId) {
-		Map<String, String> map = new HashMap<>();
-		map.put("session", sessionId);
-		String stringResponse = (String) sessionRestController.newToken(map).getBody();
+		String stringResponse = (String) sessionRestController.initializeConnection(sessionId, new HashMap<>())
+				.getBody();
 		return new Gson().fromJson(stringResponse, JsonObject.class).get("token").getAsString();
 	}
 

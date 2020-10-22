@@ -77,7 +77,6 @@ const platform: PlatformUtils = PlatformUtils.getInstance();
  * - networkQualityLevelChanged ([[NetworkQualityLevelChangedEvent]])
  * - reconnecting
  * - reconnected
- *
  */
 export class Session extends EventDispatcher {
 
@@ -1359,7 +1358,7 @@ export class Session extends EventDispatcher {
 
     private processJoinRoomResponse(opts: LocalConnectionOptions) {
         this.sessionId = opts.session;
-        if (!!opts.coturnIp && !!opts.turnUsername && !!opts.turnCredential) {
+        if (opts.coturnIp != null && opts.turnUsername != null && opts.turnCredential != null) {
             const stunUrl = 'stun:' + opts.coturnIp + ':3478';
             const turnUrl1 = 'turn:' + opts.coturnIp + ':3478';
             const turnUrl2 = turnUrl1 + '?transport=tcp';

@@ -153,19 +153,23 @@ public class SessionEventsHandler {
 		result.addProperty(ProtocolElements.PARTICIPANTJOINED_USER_PARAM, participant.getParticipantPublicId());
 		result.addProperty(ProtocolElements.PARTICIPANTJOINED_CREATEDAT_PARAM, participant.getActiveAt());
 		result.addProperty(ProtocolElements.PARTICIPANTJOINED_METADATA_PARAM, participant.getFullMetadata());
-		result.add("value", resultArray);
+		result.add(ProtocolElements.PARTICIPANTJOINED_VALUE_PARAM, resultArray);
 
-		result.addProperty("session", participant.getSessionId());
-		result.addProperty("version", openviduBuildConfig.getOpenViduServerVersion());
+		result.addProperty(ProtocolElements.PARTICIPANTJOINED_SESSION_PARAM, participant.getSessionId());
+		result.addProperty(ProtocolElements.PARTICIPANTJOINED_VERSION_PARAM,
+				openviduBuildConfig.getOpenViduServerVersion());
 		if (participant.getToken() != null) {
-			result.addProperty("record", participant.getToken().record());
+			result.addProperty(ProtocolElements.PARTICIPANTJOINED_RECORD_PARAM, participant.getToken().record());
 			if (participant.getToken().getRole() != null) {
-				result.addProperty("role", participant.getToken().getRole().name());
+				result.addProperty(ProtocolElements.PARTICIPANTJOINED_ROLE_PARAM,
+						participant.getToken().getRole().name());
 			}
-			result.addProperty("coturnIp", openviduConfig.getCoturnIp());
+			result.addProperty(ProtocolElements.PARTICIPANTJOINED_COTURNIP_PARAM, openviduConfig.getCoturnIp());
 			if (participant.getToken().getTurnCredentials() != null) {
-				result.addProperty("turnUsername", participant.getToken().getTurnCredentials().getUsername());
-				result.addProperty("turnCredential", participant.getToken().getTurnCredentials().getCredential());
+				result.addProperty(ProtocolElements.PARTICIPANTJOINED_TURNUSERNAME_PARAM,
+						participant.getToken().getTurnCredentials().getUsername());
+				result.addProperty(ProtocolElements.PARTICIPANTJOINED_TURNCREDENTIAL_PARAM,
+						participant.getToken().getTurnCredentials().getCredential());
 			}
 		}
 

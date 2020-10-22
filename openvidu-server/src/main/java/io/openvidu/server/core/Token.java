@@ -39,7 +39,8 @@ public class Token {
 	private final String connectionId = IdentifierPrefixes.PARTICIPANT_PUBLIC_ID
 			+ RandomStringUtils.randomAlphabetic(1).toUpperCase() + RandomStringUtils.randomAlphanumeric(9);
 
-	public Token(String token, String sessionId, ConnectionProperties connectionProperties, TurnCredentials turnCredentials) {
+	public Token(String token, String sessionId, ConnectionProperties connectionProperties,
+			TurnCredentials turnCredentials) {
 		this.token = token;
 		this.sessionId = sessionId;
 		this.createdAt = System.currentTimeMillis();
@@ -67,15 +68,15 @@ public class Token {
 		return this.connectionProperties.getData();
 	}
 
-	public boolean record() {
+	public Boolean record() {
 		return this.connectionProperties.record();
 	}
 
 	public void setRecord(boolean newRecord) {
 		this.updateConnectionProperties(connectionProperties.getType(), connectionProperties.getData(), newRecord,
-				connectionProperties.getRole(), connectionProperties.getKurentoOptions(), connectionProperties.getRtspUri(),
-				connectionProperties.adaptativeBitrate(), connectionProperties.onlyPlayWithSubscribers(),
-				connectionProperties.getNetworkCache());
+				connectionProperties.getRole(), connectionProperties.getKurentoOptions(),
+				connectionProperties.getRtspUri(), connectionProperties.adaptativeBitrate(),
+				connectionProperties.onlyPlayWithSubscribers(), connectionProperties.getNetworkCache());
 	}
 
 	public OpenViduRole getRole() {
