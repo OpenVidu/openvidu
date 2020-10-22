@@ -93,6 +93,10 @@ public class ProtocolElements {
 	public static final String STREAMPROPERTYCHANGED_NEWVALUE_PARAM = "newValue";
 	public static final String STREAMPROPERTYCHANGED_REASON_PARAM = "reason";
 
+	public static final String CONNECTIONPERTYCHANGED_METHOD = "connectionPropertyChanged";
+	public static final String CONNECTIONROPERTYCHANGED_PROPERTY_PARAM = "property";
+	public static final String CONNECTIONPROPERTYCHANGED_NEWVALUE_PARAM = "newValue";
+
 	public static final String NETWORKQUALITYLEVELCHANGED_METHOD = "networkQualityLevelChanged";
 	public static final String NETWORKQUALITYCHANGED_CONNECTIONID_PARAM = "connectionId";
 	public static final String NETWORKQUALITYCHANGED_QUALITYLEVEL_PARAM = "qualityLevel";
@@ -125,7 +129,7 @@ public class ProtocolElements {
 	public static final String RECONNECTSTREAM_METHOD = "reconnectStream";
 	public static final String RECONNECTSTREAM_STREAM_PARAM = "stream";
 	public static final String RECONNECTSTREAM_SDPOFFER_PARAM = "sdpOffer";
-	
+
 	public static final String VIDEODATA_METHOD = "videoData";
 
 	// ---------------------------- SERVER RESPONSES & EVENTS -----------------

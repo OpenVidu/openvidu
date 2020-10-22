@@ -61,7 +61,7 @@ public class SessionEventsHandler {
 	@Autowired
 	protected OpenviduBuildInfo openviduBuildConfig;
 
-	private Map<String, Recording> recordingsToSendClientEvents = new ConcurrentHashMap<>();
+	protected Map<String, Recording> recordingsToSendClientEvents = new ConcurrentHashMap<>();
 
 	public void onSessionCreated(Session session) {
 		CDR.recordSessionCreated(session);
@@ -155,17 +155,18 @@ public class SessionEventsHandler {
 		result.addProperty(ProtocolElements.PARTICIPANTJOINED_METADATA_PARAM, participant.getFullMetadata());
 		result.add("value", resultArray);
 
+		result.addProperty("session", participant.getSessionId());
+		result.addProperty("version", openviduBuildConfig.getOpenViduServerVersion());
 		if (participant.getToken() != null) {
-			result.addProperty("session", participant.getSessionId());
-			result.addProperty("coturnIp", openviduConfig.getCoturnIp());
+			result.addProperty("record", participant.getToken().record());
 			if (participant.getToken().getRole() != null) {
 				result.addProperty("role", participant.getToken().getRole().name());
 			}
+			result.addProperty("coturnIp", openviduConfig.getCoturnIp());
 			if (participant.getToken().getTurnCredentials() != null) {
 				result.addProperty("turnUsername", participant.getToken().getTurnCredentials().getUsername());
 				result.addProperty("turnCredential", participant.getToken().getTurnCredentials().getCredential());
 			}
-			result.addProperty("version", openviduBuildConfig.getOpenViduServerVersion());
 		}
 
 		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, result);
@@ -313,13 +314,6 @@ public class SessionEventsHandler {
 			return;
 		}
 		rpcNotificationService.sendResponse(participant.getParticipantPrivateId(), transactionId, new JsonObject());
-	}
-
-	public void onNetworkQualityLevelChanged(Session session, JsonObject params) {
-		session.getParticipants().forEach(p -> {
-			rpcNotificationService.sendNotification(p.getParticipantPrivateId(),
-					ProtocolElements.NETWORKQUALITYLEVELCHANGED_METHOD, params);
-		});
 	}
 
 	public void onSendMessage(Participant participant, JsonObject message, Set<Participant> participants,
@@ -593,7 +587,13 @@ public class SessionEventsHandler {
 		recordingsToSendClientEvents.put(recording.getSessionId(), recording);
 	}
 
-	private Set<Participant> filterParticipantsByRole(OpenViduRole[] roles, Set<Participant> participants) {
+	public void onNetworkQualityLevelChanged(Session session, JsonObject params) {
+	}
+
+	public void onConnectionPropertyChanged(Participant participant, String property, Object newValue) {
+	}
+
+	protected Set<Participant> filterParticipantsByRole(OpenViduRole[] roles, Set<Participant> participants) {
 		return participants.stream().filter(part -> {
 			if (ProtocolElements.RECORDER_PARTICIPANT_PUBLICID.equals(part.getParticipantPublicId())) {
 				return false;

@@ -29,9 +29,6 @@ import io.openvidu.server.core.SessionEventsHandler;
 
 public class KurentoSessionEventsHandler extends SessionEventsHandler {
 
-	public KurentoSessionEventsHandler() {
-	}
-
 	public void onIceCandidate(String roomName, String participantPrivateId, String senderPublicId, String endpointName,
 			IceCandidate candidate) {
 		JsonObject params = new JsonObject();
@@ -57,13 +54,6 @@ public class KurentoSessionEventsHandler extends SessionEventsHandler {
 		JsonObject notifParams = new JsonObject();
 		notifParams.addProperty(ProtocolElements.MEDIAERROR_ERROR_PARAM, description);
 		rpcNotificationService.sendNotification(participantId, ProtocolElements.MEDIAERROR_METHOD, notifParams);
-	}
-
-	public void updateFilter(String roomName, Participant participant, String filterId, String state) {
-	}
-
-	public String getNextFilterState(String filterId, String state) {
-		return null;
 	}
 
 }

@@ -759,6 +759,7 @@ export class OpenVidu {
         recordingStopped: this.session.onRecordingStopped.bind(this.session),
         sendMessage: this.session.onNewMessage.bind(this.session),
         streamPropertyChanged: this.session.onStreamPropertyChanged.bind(this.session),
+        connectionPropertyChanged: this.session.onConnectionPropertyChanged.bind(this.session),
         networkQualityLevelChanged: this.session.onNetworkQualityLevelChangedChanged.bind(this.session),
         filterEventDispatched: this.session.onFilterEventDispatched.bind(this.session),
         iceCandidate: this.session.recvIceCandidate.bind(this.session),

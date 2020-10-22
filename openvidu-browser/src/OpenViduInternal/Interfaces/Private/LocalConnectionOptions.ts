@@ -25,6 +25,7 @@ export interface LocalConnectionOptions {
     session: string; // OpenVidu Session identifier
     sessionId: string; // JSON-RPC session identifier
     role: string;
+    record: boolean;
     coturnIp: string;
     turnUsername: string;
     turnCredential: string;

@@ -189,7 +189,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		String body = "{'customSessionId': 'CUSTOM_SESSION_ID'}";
 		restClient.rest(HttpMethod.POST, "/openvidu/api/sessions", body, HttpStatus.SC_OK);
 		body = "{'role':'PUBLISHER','record':false}";
-		JsonObject res = restClient.rest(HttpMethod.POST, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection", body, HttpStatus.SC_OK);
+		JsonObject res = restClient.rest(HttpMethod.POST, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection", body,
+				HttpStatus.SC_OK);
 		final String token = res.get("token").getAsString();
 		final String connectionId = res.get("connectionId").getAsString();
 		final long createdAt = res.get("createdAt").getAsLong();
@@ -207,6 +208,16 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 				"{'role':'PUBLISHER','record':'WRONG'}", HttpStatus.SC_NOT_FOUND);
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/WRONG",
 				"{'role':'PUBLISHER','record':true}", HttpStatus.SC_NOT_FOUND);
+
+		// No change should return 200. At this point role=PUBLISHER and record=false
+		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId, "{}",
+				HttpStatus.SC_OK);
+		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
+				"{'role':'PUBLISHER'}", HttpStatus.SC_OK);
+		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
+				"{'record':false}", HttpStatus.SC_OK);
+		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
+				"{'role':'PUBLISHER','record':false}", HttpStatus.SC_OK);
 
 		// Updating only role should let record value untouched
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
@@ -279,9 +290,20 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertEquals("Wrong role in Connection object", OpenViduRole.SUBSCRIBER, connection.getRole());
 		Assert.assertFalse("Wrong record in Connection object", connection.record());
 
-		/** UPDATE CONNECTION **/
+		/** UPDATE ACTIVE CONNECTION **/
 
 		// Test with REST API
+
+		// No change should return 200. At this point role=SUBSCRIBER and record=false
+		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId, "{}",
+				HttpStatus.SC_OK);
+		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
+				"{'role':'SUBSCRIBER'}", HttpStatus.SC_OK);
+		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
+				"{'record':false}", HttpStatus.SC_OK);
+		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
+				"{'role':'SUBSCRIBER','record':false}", HttpStatus.SC_OK);
+
 		// Updating only role should let record value untouched
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
 				"{'role':'MODERATOR'}", HttpStatus.SC_OK, false, true, true,
@@ -291,6 +313,9 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 								+ "','sessionId':'CUSTOM_SESSION_ID','createdAt':" + createdAt + ",'activeAt':"
 								+ activeAt + ",'serverData':''}",
 						new String[] { "location", "platform", "clientData" }));
+
+		user.getEventManager().waitUntilEventReaches("connectionPropertyChanged", 1);
+
 		// Updating only record should let role value untouched
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
 				"{'record':true}", HttpStatus.SC_OK, false, true, true,
@@ -300,6 +325,9 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 								+ "','sessionId':'CUSTOM_SESSION_ID','createdAt':" + createdAt + ",'activeAt':"
 								+ activeAt + ",'serverData':''}",
 						new String[] { "location", "platform", "clientData" }));
+
+		user.getEventManager().waitUntilEventReaches("connectionPropertyChanged", 2);
+
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
 				"{'role':'SUBSCRIBER','record':true,'data':'OTHER DATA'}", HttpStatus.SC_OK, false, true, true,
 				mergeJson(DEFAULT_JSON_ACTIVE_CONNECTION,
@@ -308,6 +336,9 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 								+ "','sessionId':'CUSTOM_SESSION_ID','createdAt':" + createdAt + ",'activeAt':"
 								+ activeAt + ",'serverData':''}",
 						new String[] { "location", "platform", "clientData" }));
+
+		user.getEventManager().waitUntilEventReaches("connectionPropertyChanged", 3);
+
 		restClient.rest(HttpMethod.PATCH, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection/" + connectionId,
 				"{'role':'PUBLISHER'}", HttpStatus.SC_OK, false, true, true,
 				mergeJson(DEFAULT_JSON_ACTIVE_CONNECTION,
@@ -316,6 +347,8 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 								+ "','sessionId':'CUSTOM_SESSION_ID','createdAt':" + createdAt + ",'activeAt':"
 								+ activeAt + ",'serverData':''}",
 						new String[] { "location", "platform", "clientData" }));
+
+		user.getEventManager().waitUntilEventReaches("connectionPropertyChanged", 4);
 
 		// Test with openvidu-node-client
 		user.getDriver().findElement(By.id("session-api-btn-0")).click();
@@ -333,6 +366,9 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		user.getDriver().findElement(By.id("update-connection-api-btn")).click();
 		user.getWaiter().until(ExpectedConditions.attributeToBe(By.id("api-response-text-area"), "value",
 				"Connection updated: {\"role\":\"SUBSCRIBER\",\"record\":false}"));
+
+		user.getEventManager().waitUntilEventReaches("connectionPropertyChanged", 6);
+
 		user.getDriver().findElement(By.id("close-dialog-btn")).click();
 		Thread.sleep(1000);
 
@@ -347,6 +383,9 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertFalse("Session object should not have changed", session.fetch());
 		connection = session.updateConnection(connectionId,
 				new ConnectionProperties.Builder().role(OpenViduRole.PUBLISHER).build());
+
+		user.getEventManager().waitUntilEventReaches("connectionPropertyChanged", 7);
+
 		Assert.assertFalse("Session object should not have changed", session.fetch());
 		Assert.assertEquals("Wrong connectionId in Connection object", connectionId, connection.getConnectionId());
 		Assert.assertEquals("Wrong role in Connection object", OpenViduRole.PUBLISHER, connection.getRole());
@@ -354,10 +393,16 @@ public class OpenViduProTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		Assert.assertEquals("Wrong status in Connection object", "active", connection.getStatus());
 		connection = session.updateConnection(connectionId,
 				new ConnectionProperties.Builder().role(OpenViduRole.SUBSCRIBER).build());
+
+		user.getEventManager().waitUntilEventReaches("connectionPropertyChanged", 8);
+
 		Assert.assertEquals("Wrong role in Connection object", OpenViduRole.SUBSCRIBER, connection.getRole());
 		Assert.assertFalse("Session object should not have changed", session.fetch());
-		connection = session.updateConnection(connectionId,
-				new ConnectionProperties.Builder().role(OpenViduRole.MODERATOR).record(false).data("NO CHANGE").build());
+		connection = session.updateConnection(connectionId, new ConnectionProperties.Builder()
+				.role(OpenViduRole.MODERATOR).record(false).data("NO CHANGE").build());
+
+		user.getEventManager().waitUntilEventReaches("connectionPropertyChanged", 9);
+
 		Assert.assertFalse("Session object should not have changed", session.fetch());
 		Assert.assertEquals("Wrong role in Connection object", OpenViduRole.MODERATOR, connection.getRole());
 		Assert.assertFalse("Wrong record in Connection object", connection.record());

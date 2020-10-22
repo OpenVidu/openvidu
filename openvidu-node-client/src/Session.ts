@@ -49,7 +49,7 @@ export class Session {
      * **will remain unchanged since the last time method [[Session.fetch]] or [[OpenVidu.fetch]] was called**.
      * Exceptions to this rule are:
      *
-	 * - Calling [[Session.createConnection]] automatically adds the new Connection object to the local collection.
+     * - Calling [[Session.createConnection]] automatically adds the new Connection object to the local collection.
      * - Calling [[Session.forceUnpublish]] automatically updates each affected local Connection object.
      * - Calling [[Session.forceDisconnect]] automatically updates each affected local Connection object.
      * - Calling [[Session.updateConnection]] automatically updates the attributes of the affected local Connection object.
@@ -390,6 +390,8 @@ export class Session {
     }
 
     /**
+     * **This feature is part of OpenVidu Pro tier** <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" target="_blank" style="display: inline-block; background-color: rgb(0, 136, 170); color: white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius: 3px; font-size: 13px; line-height:21px; font-family: Montserrat, sans-serif">PRO</a> 
+     * 
      * Updates the properties of a Connection  with a [[ConnectionProperties]] object.
      * Only these properties can be updated:
      * 
@@ -420,8 +422,6 @@ export class Session {
                 .then(res => {
                     if (res.status === 200) {
                         console.log('Connection ' + connectionId + ' updated');
-                    } else if (res.status === 204) {
-                        console.log('Properties of Connection ' + connectionId + ' remain the same');
                     } else {
                         // ERROR response from openvidu-server. Resolve HTTP status
                         reject(new Error(res.status.toString()));

@@ -52,6 +52,23 @@ export class Connection {
     data: string;
 
     /**
+     * Role of the connection.
+     * - `SUBSCRIBER`: can subscribe to published Streams of other users by calling [[Session.subscribe]]
+     * - `PUBLISHER`: SUBSCRIBER permissions + can publish their own Streams by calling [[Session.publish]]
+     * - `MODERATOR`: SUBSCRIBER + PUBLISHER permissions + can force the unpublishing or disconnection over a third-party Stream or Connection by call [[Session.forceUnpublish]] and [[Session.forceDisconnect]]
+     *
+     * **Only defined for the local connection. In remote connections will be `undefined`**
+     */
+    role: string;
+
+    /**
+     * Whether the streams published by this connection will be recorded or not. This only affects [INDIVIDUAL recording](/en/stable/advanced-features/recording#selecting-streams-to-be-recorded) <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" target="_blank" style="display: inline-block; background-color: rgb(0, 136, 170); color: white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius: 3px; font-size: 13px; line-height:21px; font-family: Montserrat, sans-serif">PRO</a>
+     *
+     * **Only defined for the local connection. In remote connections will be `undefined`**
+     */
+    record: boolean;
+
+    /**
      * @hidden
      */
     stream: Stream;
@@ -88,6 +105,8 @@ export class Connection {
             this.creationTime = this.localOptions.createdAt;
             this.data = this.localOptions.metadata;
             this.rpcSessionId = this.localOptions.sessionId;
+            this.role = this.localOptions.role;
+            this.record = this.localOptions.record;
             msg += '(local)';
         } else {
             // Connection is remote

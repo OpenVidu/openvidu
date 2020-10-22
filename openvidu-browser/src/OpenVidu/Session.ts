@@ -38,6 +38,7 @@ import { SessionDisconnectedEvent } from '../OpenViduInternal/Events/SessionDisc
 import { SignalEvent } from '../OpenViduInternal/Events/SignalEvent';
 import { StreamEvent } from '../OpenViduInternal/Events/StreamEvent';
 import { StreamPropertyChangedEvent } from '../OpenViduInternal/Events/StreamPropertyChangedEvent';
+import { ConnectionPropertyChangedEvent } from '../OpenViduInternal/Events/ConnectionPropertyChangedEvent';
 import { NetworkQualityLevelChangedEvent } from '../OpenViduInternal/Events/NetworkQualityLevelChangedEvent';
 import { OpenViduError, OpenViduErrorName } from '../OpenViduInternal/Enums/OpenViduError';
 import { VideoInsertMode } from '../OpenViduInternal/Enums/VideoInsertMode';
@@ -63,6 +64,7 @@ const platform: PlatformUtils = PlatformUtils.getInstance();
  *
  * - connectionCreated ([[ConnectionEvent]])
  * - connectionDestroyed ([[ConnectionEvent]])
+ * - connectionPropertyChanged ([[ConnectionPropertyChangedEvent]]) <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" target="_blank" style="display: inline-block; background-color: rgb(0, 136, 170); color: white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius: 3px; font-size: 13px; line-height:21px; font-family: Montserrat, sans-serif">PRO</a>
  * - sessionDisconnected ([[SessionDisconnectedEvent]])
  * - streamCreated ([[StreamEvent]])
  * - streamDestroyed ([[StreamEvent]])
@@ -95,7 +97,7 @@ export class Session extends EventDispatcher {
     streamManagers: StreamManager[] = [];
 
     /**
-     * Object defining the methods that the client is able to call. These are defined by the role of the token used to connect to the Session.
+     * Object defining the methods that the client is able to call. These are defined by the [[Connection.role]].
      * This object is only defined after [[Session.connect]] has been successfully resolved
      */
     capabilities: Capabilities;
@@ -930,6 +932,26 @@ export class Session extends EventDispatcher {
         }
     }
 
+    /**
+     * @hidden
+     */
+    onConnectionPropertyChanged(msg): void {
+        let oldValue;
+        switch (msg.property) {
+            case 'role':
+                oldValue = this.connection.role.slice();
+                this.connection.role = msg.newValue;
+                this.connection.localOptions!.role = msg.newValue;
+                break;
+            case 'record':
+                oldValue = this.connection.record;
+                msg.newValue = msg.newValue === 'true';
+                this.connection.record = msg.newValue;
+                this.connection.localOptions!.record = msg.newValue;
+                break;
+        }
+        this.ee.emitEvent('connectionPropertyChanged', [new ConnectionPropertyChangedEvent(this, this.connection, msg.property, msg.newValue, oldValue)]);
+    }
 
     /**
      * @hidden
