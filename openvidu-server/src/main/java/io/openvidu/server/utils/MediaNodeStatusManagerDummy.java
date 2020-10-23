@@ -27,9 +27,4 @@ public class MediaNodeStatusManagerDummy implements MediaNodeStatusManager {
 		return false;
 	}
 
-	@Override
-	public String instanceStatus(String mediaNodeId) {
-		return null;
-	}
-
 }

@@ -12,6 +12,4 @@ public interface MediaNodeStatusManager {
 
 	public boolean isWaitingIdleToTerminate(String mediaNodeId);
 
-	public String instanceStatus(String mediaNodeId);
-
 }
