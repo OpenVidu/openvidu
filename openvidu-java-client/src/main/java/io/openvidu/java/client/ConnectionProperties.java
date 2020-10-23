@@ -56,7 +56,8 @@ public class ConnectionProperties {
 		 * have effect:
 		 * <ul>
 		 * <li>{@link io.openvidu.java.client.ConnectionType#WEBRTC}:
-		 * {@link io.openvidu.java.client.ConnectionProperties.Builder#data(String) data},
+		 * {@link io.openvidu.java.client.ConnectionProperties.Builder#data(String)
+		 * data},
 		 * {@link io.openvidu.java.client.ConnectionProperties.Builder#record(boolean)
 		 * record},
 		 * {@link io.openvidu.java.client.ConnectionProperties.Builder#role(OpenViduRole)
@@ -64,7 +65,8 @@ public class ConnectionProperties {
 		 * {@link io.openvidu.java.client.ConnectionProperties.Builder#kurentoOptions(KurentoOptions)
 		 * kurentoOptions}</li>
 		 * <li>{@link io.openvidu.java.client.ConnectionType#IPCAM}:
-		 * {@link io.openvidu.java.client.ConnectionProperties.Builder#data(String) data},
+		 * {@link io.openvidu.java.client.ConnectionProperties.Builder#data(String)
+		 * data},
 		 * {@link io.openvidu.java.client.ConnectionProperties.Builder#record(boolean)
 		 * record},
 		 * {@link io.openvidu.java.client.ConnectionProperties.Builder#rtspUri(String)
@@ -248,8 +250,12 @@ public class ConnectionProperties {
 	}
 
 	/**
-	 * Whether the streams published by this Connection will be recorded or not.
-	 * This only affects <a href=
+	 * <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" target="_blank"
+	 * style="display: inline-block; background-color: rgb(0, 136, 170); color:
+	 * white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius:
+	 * 3px; font-size: 13px; line-height:21px; font-family: Montserrat,
+	 * sans-serif">PRO</a> Whether the streams published by this Connection will be
+	 * recorded or not. This only affects <a href=
 	 * "https://docs.openvidu.io/en/stable/advanced-features/recording#selecting-streams-to-be-recorded"
 	 * target="_blank">INDIVIDUAL recording</a>.
 	 */

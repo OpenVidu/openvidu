@@ -284,7 +284,7 @@ public class SessionRestController {
 
 		ConnectionProperties connectionProperties;
 		try {
-			connectionProperties = getConnectionPropertiesFromParams(params);
+			connectionProperties = getConnectionPropertiesFromParams(params).build();
 		} catch (Exception e) {
 			return this.generateErrorResponse(e.getMessage(), "/sessions/" + sessionId + "/connection",
 					HttpStatus.BAD_REQUEST);
@@ -660,7 +660,7 @@ public class SessionRestController {
 		ConnectionProperties connectionProperties;
 		params.remove("record");
 		try {
-			connectionProperties = getConnectionPropertiesFromParams(params);
+			connectionProperties = getConnectionPropertiesFromParams(params).build();
 		} catch (Exception e) {
 			return this.generateErrorResponse(e.getMessage(), "/sessions/" + sessionId + "/connection",
 					HttpStatus.BAD_REQUEST);
@@ -787,8 +787,9 @@ public class SessionRestController {
 		// While closing a session tokens can't be generated
 		if (session.closingLock.readLock().tryLock()) {
 			try {
-				Token token = sessionManager.newToken(session, connectionProperties.getRole(), connectionProperties.getData(),
-						connectionProperties.record(), connectionProperties.getKurentoOptions());
+				Token token = sessionManager.newToken(session, connectionProperties.getRole(),
+						connectionProperties.getData(), connectionProperties.record(),
+						connectionProperties.getKurentoOptions());
 				return new ResponseEntity<>(token.toJsonAsParticipant().toString(), RestUtils.getResponseHeaders(),
 						HttpStatus.OK);
 			} catch (Exception e) {
@@ -858,17 +859,15 @@ public class SessionRestController {
 		return token;
 	}
 
-	protected ConnectionProperties getConnectionPropertiesFromParams(Map<?, ?> params) throws Exception {
+	protected ConnectionProperties.Builder getConnectionPropertiesFromParams(Map<?, ?> params) throws Exception {
 
 		ConnectionProperties.Builder builder = new ConnectionProperties.Builder();
 
 		String typeString;
 		String data;
-		Boolean record;
 		try {
 			typeString = (String) params.get("type");
 			data = (String) params.get("data");
-			record = (Boolean) params.get("record");
 		} catch (ClassCastException e) {
 			throw new Exception("Type error in some parameter: " + e.getMessage());
 		}
@@ -884,10 +883,9 @@ public class SessionRestController {
 			throw new Exception("Parameter 'type' " + typeString + " is not defined");
 		}
 		data = data != null ? data : "";
-		record = record != null ? record : true;
 
 		// Build COMMON options
-		builder.type(type).data(data).record(record);
+		builder.type(type).data(data).record(true);
 
 		OpenViduRole role = null;
 		KurentoOptions kurentoOptions = null;
@@ -974,7 +972,7 @@ public class SessionRestController {
 					.onlyPlayWithSubscribers(onlyPlayWithSubscribers).networkCache(networkCache).build();
 		}
 
-		return builder.build();
+		return builder;
 	}
 
 	protected ResponseEntity<String> generateErrorResponse(String errorMessage, String path, HttpStatus status) {
