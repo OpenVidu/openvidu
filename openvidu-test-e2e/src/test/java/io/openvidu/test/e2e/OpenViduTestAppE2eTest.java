@@ -2686,6 +2686,16 @@ public class OpenViduTestAppE2eTest extends AbstractOpenViduTestAppE2eTest {
 		final String token2 = res.get("token").getAsString();
 		final String connectionId2 = res.get("id").getAsString();
 
+		/** GET /openvidu/api/sessions (with pending connections) **/
+		res = restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/CUSTOM_SESSION_ID", null, HttpStatus.SC_OK, true,
+				false, true, DEFAULT_JSON_SESSION);
+		Assert.assertEquals("GET session should not bring pending connections", 0,
+				res.get("connections").getAsJsonObject().get("numberOfElements").getAsInt());
+		res = restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/CUSTOM_SESSION_ID?pendingConnections=true", null,
+				HttpStatus.SC_OK, true, false, true, DEFAULT_JSON_SESSION);
+		Assert.assertEquals("GET session should bring pending connections if query params pendingConnections=true", 2,
+				res.get("connections").getAsJsonObject().get("numberOfElements").getAsInt());
+
 		/** GET /openvidu/api/sessions/ID/connection (with pending connections) **/
 		restClient.rest(HttpMethod.GET, "/openvidu/api/sessions/CUSTOM_SESSION_ID/connection", null, HttpStatus.SC_OK,
 				true, true, false, "{'numberOfElements':2,'content':[]}");
