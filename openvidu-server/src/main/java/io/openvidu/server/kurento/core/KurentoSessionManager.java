@@ -118,7 +118,6 @@ public class KurentoSessionManager extends SessionManager {
 						} finally {
 							KmsManager.selectAndRemoveKmsLock.unlock();
 						}
-
 					} else {
 						String error = "Timeout of " + KmsManager.MAX_SECONDS_LOCK_WAIT
 								+ " seconds waiting to acquire lock";
@@ -1174,7 +1173,7 @@ public class KurentoSessionManager extends SessionManager {
 			this.cleanCollections(session.getSessionId());
 			this.storeSessionNotActive(session);
 			throw new OpenViduException(Code.ROOM_CANNOT_BE_CREATED_ERROR_CODE,
-					"There is no available Media Node where to initialize session '" + session + "'");
+					"There is no available Media Node where to initialize session '" + session.getSessionId() + "'");
 		}
 		log.info("KMS less loaded is {} with a load of {}", lessLoadedKms.getUri(), lessLoadedKms.getLoad());
 		return lessLoadedKms;
