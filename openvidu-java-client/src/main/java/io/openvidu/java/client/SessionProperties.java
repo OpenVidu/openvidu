@@ -30,6 +30,7 @@ public class SessionProperties {
 	private RecordingLayout defaultRecordingLayout;
 	private String defaultCustomLayout;
 	private String customSessionId;
+	private String mediaNode;
 
 	/**
 	 * Builder for {@link io.openvidu.java.client.SessionProperties}
@@ -42,6 +43,7 @@ public class SessionProperties {
 		private RecordingLayout defaultRecordingLayout = RecordingLayout.BEST_FIT;
 		private String defaultCustomLayout = "";
 		private String customSessionId = "";
+		private String mediaNode;
 
 		/**
 		 * Returns the {@link io.openvidu.java.client.SessionProperties} object properly
@@ -49,7 +51,7 @@ public class SessionProperties {
 		 */
 		public SessionProperties build() {
 			return new SessionProperties(this.mediaMode, this.recordingMode, this.defaultOutputMode,
-					this.defaultRecordingLayout, this.defaultCustomLayout, this.customSessionId);
+					this.defaultRecordingLayout, this.defaultCustomLayout, this.customSessionId, this.mediaNode);
 		}
 
 		/**
@@ -117,9 +119,9 @@ public class SessionProperties {
 		 * <br>
 		 * 
 		 * Custom layouts are only applicable to recordings with OutputMode
-		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} (or 
-		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START}) and
-		 * RecordingLayout {@link io.openvidu.java.client.RecordingLayout#CUSTOM}
+		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} (or
+		 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START})
+		 * and RecordingLayout {@link io.openvidu.java.client.RecordingLayout#CUSTOM}
 		 */
 		public SessionProperties.Builder defaultCustomLayout(String path) {
 			this.defaultCustomLayout = path;
@@ -138,6 +140,19 @@ public class SessionProperties {
 			return this;
 		}
 
+		/**
+		 * <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" target="_blank"
+		 * style="display: inline-block; background-color: rgb(0, 136, 170); color:
+		 * white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius:
+		 * 3px; font-size: 13px; line-height:21px; font-family: Montserrat,
+		 * sans-serif">PRO</a> Call this method to force the session to be hosted in the
+		 * Media Node with identifier <code>mediaNodeId</code>
+		 */
+		public SessionProperties.Builder mediaNode(String mediaNodeId) {
+			this.mediaNode = mediaNodeId;
+			return this;
+		}
+
 	}
 
 	protected SessionProperties() {
@@ -147,16 +162,18 @@ public class SessionProperties {
 		this.defaultRecordingLayout = RecordingLayout.BEST_FIT;
 		this.defaultCustomLayout = "";
 		this.customSessionId = "";
+		this.mediaNode = "";
 	}
 
 	private SessionProperties(MediaMode mediaMode, RecordingMode recordingMode, OutputMode outputMode,
-			RecordingLayout layout, String defaultCustomLayout, String customSessionId) {
+			RecordingLayout layout, String defaultCustomLayout, String customSessionId, String mediaNode) {
 		this.mediaMode = mediaMode;
 		this.recordingMode = recordingMode;
 		this.defaultOutputMode = outputMode;
 		this.defaultRecordingLayout = layout;
 		this.defaultCustomLayout = defaultCustomLayout;
 		this.customSessionId = customSessionId;
+		this.mediaNode = mediaNode;
 	}
 
 	/**
@@ -213,8 +230,8 @@ public class SessionProperties {
 	 * with any other value.<br>
 	 * Custom layouts are only applicable to recordings with OutputMode
 	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED} (or
-	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START}) and
-	 * RecordingLayout {@link io.openvidu.java.client.RecordingLayout#CUSTOM}
+	 * {@link io.openvidu.java.client.Recording.OutputMode#COMPOSED_QUICK_START})
+	 * and RecordingLayout {@link io.openvidu.java.client.RecordingLayout#CUSTOM}
 	 */
 	public String defaultCustomLayout() {
 		return this.defaultCustomLayout;
@@ -229,6 +246,19 @@ public class SessionProperties {
 	 */
 	public String customSessionId() {
 		return this.customSessionId;
+	}
+
+	/**
+	 * <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" target="_blank"
+	 * style="display: inline-block; background-color: rgb(0, 136, 170); color:
+	 * white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius:
+	 * 3px; font-size: 13px; line-height:21px; font-family: Montserrat,
+	 * sans-serif">PRO</a> The Media Node where to host the session. The default
+	 * option if this property is not defined is the less loaded Media Node at the
+	 * moment the first user joins the session.
+	 */
+	public String mediaNode() {
+		return this.mediaNode;
 	}
 
 }
