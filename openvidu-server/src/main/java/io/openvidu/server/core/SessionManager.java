@@ -46,7 +46,6 @@ import io.openvidu.client.OpenViduException;
 import io.openvidu.client.OpenViduException.Code;
 import io.openvidu.client.internal.ProtocolElements;
 import io.openvidu.java.client.ConnectionProperties;
-import io.openvidu.java.client.ConnectionType;
 import io.openvidu.java.client.KurentoOptions;
 import io.openvidu.java.client.OpenViduRole;
 import io.openvidu.java.client.Recording;
@@ -307,8 +306,8 @@ public abstract class SessionManager {
 			log.error("Data invalid format");
 			throw new OpenViduException(Code.GENERIC_ERROR_CODE, "Data invalid format");
 		}
-		Token tokenObj = tokenGenerator.generateToken(session.getSessionId(), serverMetadata,
-				record, role, kurentoOptions);
+		Token tokenObj = tokenGenerator.generateToken(session.getSessionId(), serverMetadata, record, role,
+				kurentoOptions);
 		session.storeToken(tokenObj);
 		session.showTokens("Token created");
 		return tokenObj;

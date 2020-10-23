@@ -99,80 +99,19 @@ public class SessionRestController {
 
 		log.info("REST API: POST {}/sessions {}", RequestMappings.API, params != null ? params.toString() : "{}");
 
-		SessionProperties.Builder builder = new SessionProperties.Builder();
-		String customSessionId = null;
-
-		if (params != null) {
-
-			String mediaModeString;
-			String recordingModeString;
-			String defaultOutputModeString;
-			String defaultRecordingLayoutString;
-			String defaultCustomLayout;
-			try {
-				mediaModeString = (String) params.get("mediaMode");
-				recordingModeString = (String) params.get("recordingMode");
-				defaultOutputModeString = (String) params.get("defaultOutputMode");
-				defaultRecordingLayoutString = (String) params.get("defaultRecordingLayout");
-				defaultCustomLayout = (String) params.get("defaultCustomLayout");
-				customSessionId = (String) params.get("customSessionId");
-			} catch (ClassCastException e) {
-				return this.generateErrorResponse("Type error in some parameter", "/sessions", HttpStatus.BAD_REQUEST);
-			}
-
-			try {
-
-				// Safe parameter retrieval. Default values if not defined
-				if (recordingModeString != null) {
-					RecordingMode recordingMode = RecordingMode.valueOf(recordingModeString);
-					builder = builder.recordingMode(recordingMode);
-				} else {
-					builder = builder.recordingMode(RecordingMode.MANUAL);
-				}
-				if (defaultOutputModeString != null) {
-					OutputMode defaultOutputMode = OutputMode.valueOf(defaultOutputModeString);
-					builder = builder.defaultOutputMode(defaultOutputMode);
-				} else {
-					builder.defaultOutputMode(OutputMode.COMPOSED);
-				}
-				if (defaultRecordingLayoutString != null) {
-					RecordingLayout defaultRecordingLayout = RecordingLayout.valueOf(defaultRecordingLayoutString);
-					builder = builder.defaultRecordingLayout(defaultRecordingLayout);
-				} else {
-					builder.defaultRecordingLayout(RecordingLayout.BEST_FIT);
-				}
-				if (mediaModeString != null) {
-					MediaMode mediaMode = MediaMode.valueOf(mediaModeString);
-					builder = builder.mediaMode(mediaMode);
-				} else {
-					builder = builder.mediaMode(MediaMode.ROUTED);
-				}
-				if (customSessionId != null && !customSessionId.isEmpty()) {
-					if (!sessionManager.formatChecker.isValidCustomSessionId(customSessionId)) {
-						return this.generateErrorResponse(
-								"Parameter 'customSessionId' is wrong. Must be an alphanumeric string [a-zA-Z0-9_-]",
-								"/sessions", HttpStatus.BAD_REQUEST);
-					}
-					builder = builder.customSessionId(customSessionId);
-				}
-				builder = builder.defaultCustomLayout((defaultCustomLayout != null) ? defaultCustomLayout : "");
-
-			} catch (IllegalArgumentException e) {
-				return this.generateErrorResponse("RecordingMode " + params.get("recordingMode") + " | "
-						+ "Default OutputMode " + params.get("defaultOutputMode") + " | " + "Default RecordingLayout "
-						+ params.get("defaultRecordingLayout") + " | " + "MediaMode " + params.get("mediaMode")
-						+ ". Some parameter is not defined", "/sessions", HttpStatus.BAD_REQUEST);
-			}
+		SessionProperties sessionProperties;
+		try {
+			sessionProperties = getSessionPropertiesFromParams(params).build();
+		} catch (Exception e) {
+			return this.generateErrorResponse(e.getMessage(), "/sessions", HttpStatus.BAD_REQUEST);
 		}
 
-		SessionProperties sessionProperties = builder.build();
-
 		String sessionId;
-		if (customSessionId != null && !customSessionId.isEmpty()) {
-			if (sessionManager.getSessionWithNotActive(customSessionId) != null) {
+		if (sessionProperties.customSessionId() != null && !sessionProperties.customSessionId().isEmpty()) {
+			if (sessionManager.getSessionWithNotActive(sessionProperties.customSessionId()) != null) {
 				return new ResponseEntity<>(HttpStatus.CONFLICT);
 			}
-			sessionId = customSessionId;
+			sessionId = sessionProperties.customSessionId();
 		} else {
 			sessionId = IdentifierPrefixes.SESSION_ID + RandomStringUtils.randomAlphabetic(1).toUpperCase()
 					+ RandomStringUtils.randomAlphanumeric(9);
@@ -846,17 +785,76 @@ public class SessionRestController {
 		}
 	}
 
-	protected Token getTokenFromConnectionId(String connectionId, Iterator<Entry<String, Token>> iterator) {
-		boolean found = false;
-		Token token = null;
-		while (iterator.hasNext() && !found) {
-			Token tAux = iterator.next().getValue();
-			found = tAux.getConnectionId().equals(connectionId);
-			if (found) {
-				token = tAux;
+	protected SessionProperties.Builder getSessionPropertiesFromParams(Map<?, ?> params) throws Exception {
+
+		SessionProperties.Builder builder = new SessionProperties.Builder();
+		String customSessionId = null;
+
+		if (params != null) {
+
+			String mediaModeString;
+			String recordingModeString;
+			String defaultOutputModeString;
+			String defaultRecordingLayoutString;
+			String defaultCustomLayout;
+			try {
+				mediaModeString = (String) params.get("mediaMode");
+				recordingModeString = (String) params.get("recordingMode");
+				defaultOutputModeString = (String) params.get("defaultOutputMode");
+				defaultRecordingLayoutString = (String) params.get("defaultRecordingLayout");
+				defaultCustomLayout = (String) params.get("defaultCustomLayout");
+				customSessionId = (String) params.get("customSessionId");
+			} catch (ClassCastException e) {
+				throw new Exception("Type error in some parameter: " + e.getMessage());
+			}
+
+			try {
+				// Safe parameter retrieval. Default values if not defined
+				if (recordingModeString != null) {
+					RecordingMode recordingMode = RecordingMode.valueOf(recordingModeString);
+					builder = builder.recordingMode(recordingMode);
+				} else {
+					builder = builder.recordingMode(RecordingMode.MANUAL);
+				}
+				if (defaultOutputModeString != null) {
+					OutputMode defaultOutputMode = OutputMode.valueOf(defaultOutputModeString);
+					builder = builder.defaultOutputMode(defaultOutputMode);
+				} else {
+					builder.defaultOutputMode(OutputMode.COMPOSED);
+				}
+				if (defaultRecordingLayoutString != null) {
+					RecordingLayout defaultRecordingLayout = RecordingLayout.valueOf(defaultRecordingLayoutString);
+					builder = builder.defaultRecordingLayout(defaultRecordingLayout);
+				} else {
+					builder.defaultRecordingLayout(RecordingLayout.BEST_FIT);
+				}
+				if (defaultCustomLayout != null) {
+					builder.defaultCustomLayout(defaultCustomLayout);
+				} else {
+					builder.defaultCustomLayout("");
+				}
+				if (mediaModeString != null) {
+					MediaMode mediaMode = MediaMode.valueOf(mediaModeString);
+					builder = builder.mediaMode(mediaMode);
+				} else {
+					builder = builder.mediaMode(MediaMode.ROUTED);
+				}
+				if (customSessionId != null && !customSessionId.isEmpty()) {
+					if (!sessionManager.formatChecker.isValidCustomSessionId(customSessionId)) {
+						throw new Exception(
+								"Parameter 'customSessionId' is wrong. Must be an alphanumeric string [a-zA-Z0-9_-]");
+					}
+					builder = builder.customSessionId(customSessionId);
+				}
+
+			} catch (IllegalArgumentException e) {
+				throw new Exception("RecordingMode " + params.get("recordingMode") + " | " + "Default OutputMode "
+						+ params.get("defaultOutputMode") + " | " + "Default RecordingLayout "
+						+ params.get("defaultRecordingLayout") + " | " + "MediaMode " + params.get("mediaMode")
+						+ ". Some parameter is not defined");
 			}
 		}
-		return token;
+		return builder;
 	}
 
 	protected ConnectionProperties.Builder getConnectionPropertiesFromParams(Map<?, ?> params) throws Exception {
@@ -973,6 +971,19 @@ public class SessionRestController {
 		}
 
 		return builder;
+	}
+
+	protected Token getTokenFromConnectionId(String connectionId, Iterator<Entry<String, Token>> iterator) {
+		boolean found = false;
+		Token token = null;
+		while (iterator.hasNext() && !found) {
+			Token tAux = iterator.next().getValue();
+			found = tAux.getConnectionId().equals(connectionId);
+			if (found) {
+				token = tAux;
+			}
+		}
+		return token;
 	}
 
 	protected ResponseEntity<String> generateErrorResponse(String errorMessage, String path, HttpStatus status) {

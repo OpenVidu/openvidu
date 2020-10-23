@@ -78,13 +78,13 @@ public class KurentoSessionManager extends SessionManager {
 	private static final Logger log = LoggerFactory.getLogger(KurentoSessionManager.class);
 
 	@Autowired
-	private KmsManager kmsManager;
+	protected KmsManager kmsManager;
 
 	@Autowired
-	private KurentoSessionEventsHandler kurentoSessionEventsHandler;
+	protected KurentoSessionEventsHandler kurentoSessionEventsHandler;
 
 	@Autowired
-	private KurentoParticipantEndpointConfig kurentoEndpointConfig;
+	protected KurentoParticipantEndpointConfig kurentoEndpointConfig;
 
 	@Override
 	/* Protected by Session.closingLock.readLock */
@@ -110,23 +110,10 @@ public class KurentoSessionManager extends SessionManager {
 					if (KmsManager.selectAndRemoveKmsLock.tryLock(KmsManager.MAX_SECONDS_LOCK_WAIT, TimeUnit.SECONDS)) {
 						try {
 							kSession = (KurentoSession) sessions.get(sessionId);
-
 							if (kSession == null) {
 								// Session still null. It was not created by other thread while waiting for lock
-								Kms lessLoadedKms = null;
-								try {
-									lessLoadedKms = this.kmsManager.getLessLoadedConnectedAndRunningKms();
-								} catch (NoSuchElementException e) {
-									// Restore session not active
-									this.cleanCollections(sessionId);
-									this.storeSessionNotActive(sessionNotActive);
-									throw new OpenViduException(Code.ROOM_CANNOT_BE_CREATED_ERROR_CODE,
-											"There is no available Media Node where to initialize session '" + sessionId
-													+ "'");
-								}
-								log.info("KMS less loaded is {} with a load of {}", lessLoadedKms.getUri(),
-										lessLoadedKms.getLoad());
-								kSession = createSession(sessionNotActive, lessLoadedKms);
+								Kms selectedMediaNode = this.selectMediaNode(sessionNotActive);
+								kSession = createSession(sessionNotActive, selectedMediaNode);
 							}
 						} finally {
 							KmsManager.selectAndRemoveKmsLock.unlock();
@@ -992,8 +979,8 @@ public class KurentoSessionManager extends SessionManager {
 
 	@Override
 	/* Protected by Session.closingLock.readLock */
-	public Participant publishIpcam(Session session, MediaOptions mediaOptions, ConnectionProperties connectionProperties)
-			throws Exception {
+	public Participant publishIpcam(Session session, MediaOptions mediaOptions,
+			ConnectionProperties connectionProperties) throws Exception {
 		final String sessionId = session.getSessionId();
 		final KurentoMediaOptions kMediaOptions = (KurentoMediaOptions) mediaOptions;
 
@@ -1119,7 +1106,7 @@ public class KurentoSessionManager extends SessionManager {
 		sessionEventsHandler.onVideoData(participant, transactionId, height, width, videoActive, audioActive);
 	}
 
-	private void applyFilterInPublisher(KurentoParticipant kParticipant, KurentoFilter filter)
+	protected void applyFilterInPublisher(KurentoParticipant kParticipant, KurentoFilter filter)
 			throws OpenViduException {
 		GenericMediaElement.Builder builder = new GenericMediaElement.Builder(kParticipant.getPipeline(),
 				filter.getType());
@@ -1131,13 +1118,13 @@ public class KurentoSessionManager extends SessionManager {
 		kParticipant.getPublisher().getMediaOptions().setFilter(filter);
 	}
 
-	private void removeFilterInPublisher(KurentoParticipant kParticipant) {
+	protected void removeFilterInPublisher(KurentoParticipant kParticipant) {
 		kParticipant.getPublisher().cleanAllFilterListeners();
 		kParticipant.getPublisher().revert(kParticipant.getPublisher().getFilter());
 		kParticipant.getPublisher().getMediaOptions().setFilter(null);
 	}
 
-	private KurentoFilter execFilterMethodInPublisher(KurentoParticipant kParticipant, String method,
+	protected KurentoFilter execFilterMethodInPublisher(KurentoParticipant kParticipant, String method,
 			JsonObject params) {
 		kParticipant.getPublisher().execMethod(method, params);
 		KurentoFilter filter = kParticipant.getPublisher().getMediaOptions().getFilter();
@@ -1146,7 +1133,7 @@ public class KurentoSessionManager extends SessionManager {
 		return updatedFilter;
 	}
 
-	private void addFilterEventListenerInPublisher(KurentoParticipant kParticipant, String eventType)
+	protected void addFilterEventListenerInPublisher(KurentoParticipant kParticipant, String eventType)
 			throws OpenViduException {
 		PublisherEndpoint pub = kParticipant.getPublisher();
 		if (!pub.isListenerAddedToFilterEvent(eventType)) {
@@ -1170,12 +1157,27 @@ public class KurentoSessionManager extends SessionManager {
 		}
 	}
 
-	private void removeFilterEventListenerInPublisher(KurentoParticipant kParticipant, String eventType) {
+	protected void removeFilterEventListenerInPublisher(KurentoParticipant kParticipant, String eventType) {
 		PublisherEndpoint pub = kParticipant.getPublisher();
 		if (pub.isListenerAddedToFilterEvent(eventType)) {
 			GenericMediaElement filter = kParticipant.getPublisher().getFilter();
 			filter.removeEventListener(pub.removeListener(eventType));
 		}
+	}
+
+	protected Kms selectMediaNode(Session session) throws OpenViduException {
+		Kms lessLoadedKms = null;
+		try {
+			lessLoadedKms = this.kmsManager.getLessLoadedConnectedAndRunningKms();
+		} catch (NoSuchElementException e) {
+			// Restore session not active
+			this.cleanCollections(session.getSessionId());
+			this.storeSessionNotActive(session);
+			throw new OpenViduException(Code.ROOM_CANNOT_BE_CREATED_ERROR_CODE,
+					"There is no available Media Node where to initialize session '" + session + "'");
+		}
+		log.info("KMS less loaded is {} with a load of {}", lessLoadedKms.getUri(), lessLoadedKms.getLoad());
+		return lessLoadedKms;
 	}
 
 }
