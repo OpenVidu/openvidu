@@ -38,13 +38,6 @@ export interface TokenOptions {
     data?: string;
 
     /**
-     * Whether to record the streams published by the participant owning this token or not. This only affects [INDIVIDUAL recording](/en/stable/advanced-features/recording#selecting-streams-to-be-recorded)
-     * 
-     * @default true
-     */
-    record?: boolean;
-
-    /**
      * **WARNING**: experimental option. This interface may change in the near future
      *
      * Some advanced properties setting the configuration that the WebRTC streams of the user owning the token will have in Kurento Media Server.

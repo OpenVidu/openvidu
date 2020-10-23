@@ -28,7 +28,6 @@ public class TokenOptions {
 
 	private OpenViduRole role;
 	private String data;
-	private Boolean record;
 	private KurentoOptions kurentoOptions;
 
 	/**
@@ -39,14 +38,13 @@ public class TokenOptions {
 
 		private OpenViduRole role = OpenViduRole.PUBLISHER;
 		private String data;
-		private Boolean record = true;
 		private KurentoOptions kurentoOptions;
 
 		/**
 		 * Builder for {@link io.openvidu.java.client.TokenOptions}.
 		 */
 		public TokenOptions build() {
-			return new TokenOptions(this.role, this.data, this.record, this.kurentoOptions);
+			return new TokenOptions(this.role, this.data, this.kurentoOptions);
 		}
 
 		/**
@@ -85,17 +83,6 @@ public class TokenOptions {
 		}
 
 		/**
-		 * Call this method to flag the streams published by the participant owning this
-		 * token to be recorded or not. This only affects <a href=
-		 * "https://docs.openvidu.io/en/stable/advanced-features/recording#selecting-streams-to-be-recorded"
-		 * target="_blank">INDIVIDUAL recording</a>. If not set by default will be true.
-		 */
-		public Builder record(boolean record) {
-			this.record = record;
-			return this;
-		}
-
-		/**
 		 * Call this method to set a {@link io.openvidu.java.client.KurentoOptions}
 		 * object for this token.
 		 */
@@ -106,10 +93,9 @@ public class TokenOptions {
 
 	}
 
-	TokenOptions(OpenViduRole role, String data, Boolean record, KurentoOptions kurentoOptions) {
+	TokenOptions(OpenViduRole role, String data, KurentoOptions kurentoOptions) {
 		this.role = role;
 		this.data = data;
-		this.record = record;
 		this.kurentoOptions = kurentoOptions;
 	}
 
@@ -128,13 +114,10 @@ public class TokenOptions {
 	}
 
 	/**
-	 * Whether the streams published by the participant owning this token will be
-	 * recorded or not. This only affects <a href=
-	 * "https://docs.openvidu.io/en/stable/advanced-features/recording#selecting-streams-to-be-recorded"
-	 * target="_blank">INDIVIDUAL recording</a>.
+	 * Returns the Kurento options assigned to this token
 	 */
-	public Boolean record() {
-		return this.record;
+	public KurentoOptions getKurentoOptions() {
+		return this.kurentoOptions;
 	}
 
 	protected JsonObject toJsonObject(String sessionId) {
@@ -149,11 +132,6 @@ public class TokenOptions {
 			json.addProperty("data", getData());
 		} else {
 			json.add("data", JsonNull.INSTANCE);
-		}
-		if (record() != null) {
-			json.addProperty("record", record());
-		} else {
-			json.add("record", JsonNull.INSTANCE);
 		}
 		if (this.kurentoOptions != null) {
 			json.add("kurentoOptions", kurentoOptions.toJson());

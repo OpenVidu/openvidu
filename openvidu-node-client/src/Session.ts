@@ -114,7 +114,6 @@ export class Session {
                 session: this.sessionId,
                 role: (!!tokenOptions && !!tokenOptions.role) ? tokenOptions.role : null,
                 data: (!!tokenOptions && !!tokenOptions.data) ? tokenOptions.data : null,
-                record: !!tokenOptions ? tokenOptions.record : null,
                 kurentoOptions: (!!tokenOptions && !!tokenOptions.kurentoOptions) ? tokenOptions.kurentoOptions : null
             });
             axios.post(
@@ -400,6 +399,9 @@ export class Session {
      * 
      * This method automatically updates the properties of the local affected objects. This means that there is no need to call
      * [[Session.fetch]] or [[OpenVidu.fetch]] to see the changes consequence of the execution of this method applied in the local objects.
+     * 
+     * The affected client will trigger one [ConnectionPropertyChangedEvent](/en/stable/api/openvidu-browser/classes/connectionpropertychangedevent.html)
+	 * for each modified property.
      * 
      * @param connectionId The [[Connection.connectionId]] of the Connection object to modify
      * @param connectionProperties A new [[ConnectionProperties]] object with the updated values to apply

@@ -100,7 +100,7 @@ public class Session {
 	 */
 	@Deprecated
 	public String generateToken() throws OpenViduJavaClientException, OpenViduHttpException {
-		return generateToken(new TokenOptions.Builder().data("").role(OpenViduRole.PUBLISHER).record(true).build());
+		return generateToken(new TokenOptions.Builder().data("").role(OpenViduRole.PUBLISHER).build());
 	}
 
 	/**
@@ -468,7 +468,8 @@ public class Session {
 	 * white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius:
 	 * 3px; font-size: 13px; line-height:21px; font-family: Montserrat,
 	 * sans-serif">PRO</a> Updates the properties of a Connection with a
-	 * {@link io.openvidu.java.client.ConnectionProperties} object. Only these properties can be updated:
+	 * {@link io.openvidu.java.client.ConnectionProperties} object. Only these
+	 * properties can be updated:
 	 * <ul>
 	 * <li>{@link io.openvidu.java.client.ConnectionProperties.Builder#role(OpenViduRole)
 	 * ConnectionProperties.Builder.role(OpenViduRole)}</li>
@@ -482,7 +483,13 @@ public class Session {
 	 * {@link io.openvidu.java.client.Session#fetch() Session.fetch()} or
 	 * {@link io.openvidu.java.client.OpenVidu#fetch() OpenVidu.fetch()} to see the
 	 * changes consequence of the execution of this method applied in the local
-	 * objects.
+	 * objects.<br>
+	 * <br>
+	 * 
+	 * The affected client will trigger one <a href=
+	 * "/en/stable/api/openvidu-browser/classes/connectionpropertychangedevent.html"
+	 * target="_blank">ConnectionPropertyChangedEvent</a> for each modified
+	 * property.
 	 * 
 	 * @param connectionId         The Connection to modify
 	 * @param connectionProperties A ConnectionProperties object with the new values
