@@ -155,7 +155,7 @@ public class Session {
 
 	/**
 	 * Same as
-	 * {@link io.openvidu.java.client.Session#createConnection(ConnectionProperties)
+	 * {@link io.openvidu.java.client.Session#createConnection(ConnectionProperties)}
 	 * but with default ConnectionProperties values.
 	 *
 	 * @return The generated {@link io.openvidu.java.client.Connection Connection}

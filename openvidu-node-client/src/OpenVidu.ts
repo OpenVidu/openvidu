@@ -17,13 +17,11 @@
 
 import axios from 'axios';
 import { Connection } from './Connection';
-import { Publisher } from './Publisher';
 import { Recording } from './Recording';
 import { RecordingProperties } from './RecordingProperties';
 import { Session } from './Session';
 import { SessionProperties } from './SessionProperties';
 import { RecordingLayout } from './RecordingLayout';
-import { RecordingMode } from 'RecordingMode';
 
 /**
  * @hidden
@@ -90,17 +88,18 @@ export class OpenVidu {
   activeSessions: Session[] = [];
 
   /**
-   * @param urlOpenViduServer URL where your instance of OpenVidu Server is up an running.
-   *                          It must be the full URL (e.g. `https://12.34.56.78:1234/`)
+   * @param hostname URL where your instance of OpenVidu Server is up an running.
+   *                 It must be the full URL (e.g. `https://12.34.56.78:1234/`)
+   * 
    * @param secret Secret used on OpenVidu Server initialization
    */
-  constructor(private urlOpenViduServer: string, secret: string) {
+  constructor(private hostname: string, secret: string) {
     this.setHostnameAndPort();
     this.basicAuth = this.getBasicAuth(secret);
   }
 
   /**
-   * Creates an OpenVidu session. You can call [[Session.getSessionId]] inside the resolved promise to retrieve the `sessionId`
+   * Creates an OpenVidu session. The session identifier will be available at property [[Session.sessionId]]
    *
    * @returns A Promise that is resolved to the [[Session]] if success and rejected with an Error object if not.
    */
@@ -669,7 +668,7 @@ export class OpenVidu {
   private setHostnameAndPort(): void {
     let url: URL;
     try {
-      url = new URL(this.urlOpenViduServer);
+      url = new URL(this.hostname);
     } catch (error) {
       console.error('URL format incorrect', error);
       throw new Error('URL format incorrect: ' + error);

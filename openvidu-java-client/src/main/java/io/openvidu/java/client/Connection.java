@@ -52,7 +52,7 @@ public class Connection {
 	/**
 	 * Returns the identifier of the Connection. You can call methods
 	 * {@link io.openvidu.java.client.Session#forceDisconnect(String)} or
-	 * {@link io.openvidu.java.client.Session#updateConnection(String, TokenOptions)}
+	 * {@link io.openvidu.java.client.Session#updateConnection(String, ConnectionProperties)}
 	 * passing this property as parameter
 	 */
 	public String getConnectionId() {
@@ -190,7 +190,11 @@ public class Connection {
 	}
 
 	/**
-	 * Returns the token string associated to the Connection
+	 * Returns the token string associated to the Connection. This is the value that
+	 * must be sent to the client-side to be consumed in OpenVidu Browser method
+	 * <a href=
+	 * "https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/session.html#connect"
+	 * target="_blank">Session.connect</a>.
 	 */
 	public String getToken() {
 		return this.token;

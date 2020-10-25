@@ -76,7 +76,8 @@ export class Connection {
     connectionProperties: ConnectionProperties;
 
     /**
-     * Token associated to the Connection
+     * Token associated to the Connection. This is the value that must be sent to the client-side to be consumed in OpenVidu Browser
+     * method [Session.connect](https://docs.openvidu.io/en/stable/api/openvidu-browser/classes/session.html#connect).
      */
     token: string;
 

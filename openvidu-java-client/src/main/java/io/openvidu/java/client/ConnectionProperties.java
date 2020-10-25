@@ -78,8 +78,8 @@ public class ConnectionProperties {
 		 * {@link io.openvidu.java.client.ConnectionProperties.Builder#networkCache(int)
 		 * networkCache}</li>
 		 * </ul>
-		 * If not set by default will be @link
-		 * io.openvidu.java.client.ConnectionType#WEBRTC}.
+		 * If not set by default will be
+		 * {@link io.openvidu.java.client.ConnectionType#WEBRTC}.
 		 */
 		public Builder type(ConnectionType type) {
 			this.type = type;

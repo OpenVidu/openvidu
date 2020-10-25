@@ -97,13 +97,6 @@ export class Session {
     }
 
     /**
-     * Gets the unique identifier of the Session
-     */
-    public getSessionId(): string {
-        return this.sessionId;
-    }
-
-    /**
      * @deprecated Use [[Session.createConnection]] instead to get a [[Connection]] object.
      * 
      * @returns A Promise that is resolved to the generated _token_ string if success and rejected with an Error object if not
@@ -401,7 +394,7 @@ export class Session {
      * [[Session.fetch]] or [[OpenVidu.fetch]] to see the changes consequence of the execution of this method applied in the local objects.
      * 
      * The affected client will trigger one [ConnectionPropertyChangedEvent](/en/stable/api/openvidu-browser/classes/connectionpropertychangedevent.html)
-	 * for each modified property.
+     * for each modified property.
      * 
      * @param connectionId The [[Connection.connectionId]] of the Connection object to modify
      * @param connectionProperties A new [[ConnectionProperties]] object with the updated values to apply
@@ -447,6 +440,13 @@ export class Session {
                     this.handleError(error, reject);
                 });
         });
+    }
+
+    /**
+     * @hidden
+     */
+    public getSessionId(): string {
+        return this.sessionId;
     }
 
     /**
