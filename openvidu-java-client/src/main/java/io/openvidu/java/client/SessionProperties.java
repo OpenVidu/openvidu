@@ -17,6 +17,8 @@
 
 package io.openvidu.java.client;
 
+import com.google.gson.JsonObject;
+
 import io.openvidu.java.client.Recording.OutputMode;
 
 /**
@@ -259,6 +261,22 @@ public class SessionProperties {
 	 */
 	public String mediaNode() {
 		return this.mediaNode;
+	}
+
+	protected JsonObject toJson() {
+		JsonObject json = new JsonObject();
+		json.addProperty("mediaMode", mediaMode().name());
+		json.addProperty("recordingMode", recordingMode().name());
+		json.addProperty("defaultOutputMode", defaultOutputMode().name());
+		json.addProperty("defaultRecordingLayout", defaultRecordingLayout().name());
+		json.addProperty("defaultCustomLayout", defaultCustomLayout());
+		json.addProperty("customSessionId", customSessionId());
+		if (mediaNode() != null) {
+			JsonObject mediaNodeJson = new JsonObject();
+			mediaNodeJson.addProperty("id", mediaNode());
+			json.add("mediaNode", mediaNodeJson);
+		}
+		return json;
 	}
 
 }

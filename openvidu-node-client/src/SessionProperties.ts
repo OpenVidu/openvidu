@@ -69,8 +69,11 @@ export interface SessionProperties {
      * **This feature is part of OpenVidu Pro tier** <a href="https://docs.openvidu.io/en/stable/openvidu-pro/" target="_blank" style="display: inline-block; background-color: rgb(0, 136, 170); color: white; font-weight: bold; padding: 0px 5px; margin-right: 5px; border-radius: 3px; font-size: 13px; line-height:21px; font-family: Montserrat, sans-serif">PRO</a> 
      * 
      * The Media Node where to host the session. The default option if this property is not defined is the less loaded
-     * Media Node at the moment the first user joins the session.
+     * Media Node at the moment the first user joins the session. This object defines the following properties as Media Node selector:
+     * - `id`: Media Node unique identifier
      */
-    mediaNode?: string;
+    mediaNode?: {
+        id: string;
+    }
 
 }

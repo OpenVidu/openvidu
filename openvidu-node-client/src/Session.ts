@@ -465,7 +465,8 @@ export class Session {
                 defaultOutputMode: !!this.properties.defaultOutputMode ? this.properties.defaultOutputMode : Recording.OutputMode.COMPOSED,
                 defaultRecordingLayout: !!this.properties.defaultRecordingLayout ? this.properties.defaultRecordingLayout : RecordingLayout.BEST_FIT,
                 defaultCustomLayout: !!this.properties.defaultCustomLayout ? this.properties.defaultCustomLayout : '',
-                customSessionId: !!this.properties.customSessionId ? this.properties.customSessionId : ''
+                customSessionId: !!this.properties.customSessionId ? this.properties.customSessionId : '',
+                mediaNode: !!this.properties.mediaNode ? this.properties.mediaNode : undefined
             });
 
             axios.post(

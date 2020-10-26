@@ -27,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -445,38 +446,11 @@ public abstract class SessionManager {
 			log.info("Running non active sessions garbage collector...");
 			final long currentMillis = System.currentTimeMillis();
 
-			// Loop through all non active sessions. Safely remove them and clean all of
-			// their data if their threshold has elapsed
-			for (Iterator<Entry<String, Session>> iter = sessionsNotActive.entrySet().iterator(); iter.hasNext();) {
-				final Session sessionNotActive = iter.next().getValue();
-				final String sessionId = sessionNotActive.getSessionId();
-				long sessionExistsSince = currentMillis - sessionNotActive.getStartTime();
-				if (sessionExistsSince > (openviduConfig.getSessionGarbageThreshold() * 1000)) {
-					try {
-						if (sessionNotActive.closingLock.writeLock().tryLock(15, TimeUnit.SECONDS)) {
-							try {
-								if (sessions.containsKey(sessionId)) {
-									// The session passed to active during lock wait
-									continue;
-								}
-								iter.remove();
-								cleanCollections(sessionId);
-								log.info("Non active session {} cleaned up by garbage collector", sessionId);
-							} finally {
-								sessionNotActive.closingLock.writeLock().unlock();
-							}
-						} else {
-							log.error(
-									"Timeout waiting for Session closing lock to be available for garbage collector to clean session {}",
-									sessionId);
-						}
-					} catch (InterruptedException e) {
-						log.error(
-								"InterruptedException while waiting for Session closing lock to be available for garbage collector to clean session {}",
-								sessionId);
-					}
-				}
-			}
+			this.closeNonActiveSessions(sessionNotActive -> {
+				// Remove non active session if threshold has elapsed
+				return (currentMillis - sessionNotActive.getStartTime()) > (openviduConfig.getSessionGarbageThreshold()
+						* 1000);
+			});
 
 			// Warn about possible ghost sessions
 			for (Iterator<Entry<String, Session>> iter = sessions.entrySet().iterator(); iter.hasNext();) {
@@ -546,6 +520,40 @@ public abstract class SessionManager {
 				}
 			} catch (InterruptedException e) {
 				log.error("InterruptedException while waiting for Session {} closing lock to be available", sessionId);
+			}
+		}
+	}
+
+	public void closeNonActiveSessions(Function<Session, Boolean> conditionToRemove) {
+		// Loop through all non active sessions. Safely remove and clean all of
+		// the data for each non active session meeting the condition
+		for (Iterator<Entry<String, Session>> iter = sessionsNotActive.entrySet().iterator(); iter.hasNext();) {
+			final Session sessionNotActive = iter.next().getValue();
+			final String sessionId = sessionNotActive.getSessionId();
+			if (conditionToRemove.apply(sessionNotActive)) {
+				try {
+					if (sessionNotActive.closingLock.writeLock().tryLock(15, TimeUnit.SECONDS)) {
+						try {
+							if (sessions.containsKey(sessionId)) {
+								// The session passed to active during lock wait
+								continue;
+							}
+							iter.remove();
+							cleanCollections(sessionId);
+							log.info("Non active session {} cleaned up", sessionId);
+						} finally {
+							sessionNotActive.closingLock.writeLock().unlock();
+						}
+					} else {
+						log.error(
+								"Timeout waiting for Session closing lock to be available to clean up non active session {}",
+								sessionId);
+					}
+				} catch (InterruptedException e) {
+					log.error(
+							"InterruptedException while waiting for non active Session closing lock to be available to clean up non active session session {}",
+							sessionId);
+				}
 			}
 		}
 	}

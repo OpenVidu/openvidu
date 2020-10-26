@@ -661,17 +661,9 @@ public class Session {
 		}
 
 		HttpPost request = new HttpPost(this.openVidu.hostname + OpenVidu.API_SESSIONS);
-
-		JsonObject json = new JsonObject();
-		json.addProperty("mediaMode", properties.mediaMode().name());
-		json.addProperty("recordingMode", properties.recordingMode().name());
-		json.addProperty("defaultOutputMode", properties.defaultOutputMode().name());
-		json.addProperty("defaultRecordingLayout", properties.defaultRecordingLayout().name());
-		json.addProperty("defaultCustomLayout", properties.defaultCustomLayout());
-		json.addProperty("customSessionId", properties.customSessionId());
 		StringEntity params = null;
 		try {
-			params = new StringEntity(json.toString());
+			params = new StringEntity(properties.toJson().toString());
 		} catch (UnsupportedEncodingException e1) {
 			throw new OpenViduJavaClientException(e1.getMessage(), e1.getCause());
 		}
